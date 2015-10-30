@@ -10,28 +10,18 @@ import webbrowser
 
 def defaultSettings():
     wrd = bpy.data.worlds[0]
-    wrd['TargetZblendVersion'] = "0.1.0"
+    wrd['TargetVersion'] = "15.10.0"
     wrd['TargetEnum'] = 3
     wrd['TargetRenderer'] = 0
-    wrd['TargetProjectName'] = "my_project"
-    wrd['TargetProjectPackage'] = "my_project"
+    wrd['TargetProjectName'] = "myproject"
+    wrd['TargetProjectPackage'] = "myproject"
     wrd['TargetProjectWidth'] = 1136
     wrd['TargetProjectHeight'] = 640
-    wrd['TargetProjectScale'] = 1.0
-    wrd['TargetProjectOrient'] = 0
     wrd['TargetScene'] = bpy.data.scenes[0].name
     wrd['TargetGravity'] = bpy.data.scenes[0].name
     wrd['TargetClear'] = bpy.data.worlds[0].name
-    wrd['TargetFog'] = (False)
-    wrd['TargetFogColor'] = (0.5, 0.5, 0.7, 1.0)
-    wrd['TargetFogDensity'] = (0.04)
-    wrd['TargetShadowMapping'] = (False)
-    wrd['TargetShadowMapSize'] = 1024
-    wrd['TargetShading'] = 0
-    wrd['TargetShader'] = 0
     wrd['TargetAA'] = 1
     wrd['TargetPhysics'] = 1
-    wrd['TargetSSAO'] = (False)
     wrd['TargetAutoBuildNodes'] = (True)
     wrd['TargetMinimize'] = (True)
     # Make sure we are using cycles
@@ -41,7 +31,7 @@ def defaultSettings():
 
 # Store properties in the world object
 def initWorldProperties():
-    bpy.types.World.TargetZblendVersion = StringProperty(name = "ZblendVersion")
+    bpy.types.World.TargetVersion = StringProperty(name = "ZBlendVersion")
     bpy.types.World.TargetEnum = EnumProperty(
         items = [('OSX', 'OSX', 'OSX'), 
                  ('Windows', 'Windows', 'Windows'), 
@@ -50,37 +40,13 @@ def initWorldProperties():
                  ('iOS', 'iOS', 'iOS'),
                  ('Android', 'Android', 'Android')],
         name = "Target")
-    bpy.types.World.TargetRenderer = EnumProperty(
-        items = [('OGL', 'OGL', 'OGL'), 
-                 ('D3D9', 'D3D9', 'D3D9'), 
-                 ('D3D11', 'D3D11', 'D3D11')],
-        name = "Renderer")
     bpy.types.World.TargetProjectName = StringProperty(name = "Name")
     bpy.types.World.TargetProjectPackage = StringProperty(name = "Package")
     bpy.types.World.TargetProjectWidth = IntProperty(name = "Width")
     bpy.types.World.TargetProjectHeight = IntProperty(name = "Height")
-    bpy.types.World.TargetProjectScale = FloatProperty(name = "Scale", default=1.0)
-    bpy.types.World.TargetProjectOrient = EnumProperty(
-        items = [('Portrait', 'Portrait', 'Portrait'), 
-                 ('Landscape', 'Landscape', 'Landscape')],
-        name = "Orient")
     bpy.types.World.TargetScene = StringProperty(name = "Scene")
     bpy.types.World.TargetGravity = StringProperty(name = "Gravity")
     bpy.types.World.TargetClear = StringProperty(name = "Clear")
-    bpy.types.World.TargetFog = BoolProperty(name = "Fog")
-    bpy.types.World.TargetFogColor = FloatVectorProperty(name = "Fog Color", default=[0.5,0.5,0.7,1], size=4, subtype="COLOR", min=0, max=1)
-    bpy.types.World.TargetFogDensity = FloatProperty(name = "Fog Density", min=0, max=1)
-    bpy.types.World.TargetShadowMapping = BoolProperty(name = "Shadow mapping")
-    bpy.types.World.TargetShadowMapSize = IntProperty(name = "Shadow map size")
-    bpy.types.World.TargetShading = EnumProperty(
-        items = [('Forward', 'Forward', 'Forward'), 
-                 ('Deferred', 'Deferred', 'Deferred')],
-        name = "Shading")
-    bpy.types.World.TargetShader = EnumProperty(
-        items = [('Physically based', 'Physically based', 'Physically based'),
-                 ('Flat', 'Flat', 'Flat'),
-                 ('Unlit', 'Unlit', 'Unlit')],
-        name = "Shader")
     bpy.types.World.TargetAA = EnumProperty(
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('2X', '2X', '2X')],
@@ -89,13 +55,12 @@ def initWorldProperties():
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('Bullet', 'Bullet', 'Bullet')],
         name = "Physics")
-    bpy.types.World.TargetSSAO = BoolProperty(name = "SSAO")
     bpy.types.World.TargetAutoBuildNodes = BoolProperty(name = "Auto-build nodes")
     bpy.types.World.TargetMinimize = BoolProperty(name = "Minimize")
 
     # Default settings
     # todo: check version
-    if not 'TargetZblendVersion' in bpy.data.worlds[0]:
+    if not 'TargetVersion' in bpy.data.worlds[0]:
         defaultSettings()
 
     # Make sure we are using nodes for every material
@@ -108,7 +73,7 @@ def initWorldProperties():
     
     return
 
-# Store properties in world for now
+# Store properties in world
 initWorldProperties()
 
 # Info panel play
@@ -118,7 +83,7 @@ def draw_play_item(self, context):
 
 # Menu in tools region
 class ToolsPanel(bpy.types.Panel):
-    bl_label = "zblend_project"
+    bl_label = "ZBlend Project"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
@@ -133,39 +98,17 @@ class ToolsPanel(bpy.types.Panel):
         layout.prop(wrd, 'TargetProjectPackage')
         layout.prop(wrd, 'TargetProjectWidth')
         layout.prop(wrd, 'TargetProjectHeight')
-        row = layout.row()
-        row.active = False
-        row.prop(wrd, 'TargetProjectScale')
         layout.prop_search(wrd, "TargetScene", bpy.data, "scenes", "Scene")
         layout.prop(wrd, 'TargetEnum')
-        if wrd['TargetEnum'] == 4 or wrd['TargetEnum'] == 5:
-            layout.prop(wrd, 'TargetProjectOrient')
-        row = layout.row()
-        row.active = False
-        row.prop(wrd, 'TargetRenderer')
-        row = layout.row(align=True)
-        row.alignment = 'EXPAND'
-        row.operator("zblend.play")
-        row.operator("zblend.build")
-        row.operator("zblend.project")
+        layout.operator("zblend.build")
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
         row.operator("zblend.folder")
         row.operator("zblend.clean")
         layout.prop_search(wrd, "TargetGravity", bpy.data, "scenes", "Gravity")
         layout.prop_search(wrd, "TargetClear", bpy.data, "worlds", "Clear Color")
-        layout.prop(wrd, 'TargetFog')
-        if wrd['TargetFog'] == True:
-            layout.prop(wrd, 'TargetFogColor')
-            layout.prop(wrd, 'TargetFogDensity')
-        layout.prop(wrd, 'TargetShadowMapping')
-        if wrd['TargetShadowMapping'] == True:
-            layout.prop(wrd, 'TargetShadowMapSize')
-        layout.prop(wrd, 'TargetShading')
-        layout.prop(wrd, 'TargetShader')
         layout.prop(wrd, 'TargetAA')
         layout.prop(wrd, 'TargetPhysics')
-        layout.prop(wrd, 'TargetSSAO')
         row = layout.row()
         row.prop(wrd, 'TargetAutoBuildNodes')
         if wrd['TargetAutoBuildNodes'] == False:
@@ -234,7 +177,7 @@ def exportGameData():
     # Export scene data
     for scene in bpy.data.scenes:
         if scene.name[0] != '.': # Skip hidden scenes
-            bpy.ops.export_scene.zblend({"scene":scene}, filepath='Assets/' + scene.name + '.json')
+            bpy.ops.export_scene.lue({"scene":scene}, filepath='Assets/' + scene.name + '.json')
 
     # Move armatures back
     for a in armatures:
@@ -243,247 +186,240 @@ def exportGameData():
         a.armature.location.z = a.z
 
     # Export project file
-    x = Object()
-    x.format = 2
-    x.game = Object()
-    x.game.name = bpy.data.worlds[0]['TargetProjectName']
-    x.game.width = bpy.data.worlds[0]['TargetProjectWidth']
-    x.game.height = bpy.data.worlds[0]['TargetProjectHeight']
-    if bpy.data.worlds[0]['TargetAA'] == 1:
-        x.game.antiAliasingSamples = 2
-    x.libraries = ["zblend", "haxebullet", "dependencies"]
-    # Defined libraries
-    for o in bpy.data.worlds[0].my_liblist:
-        if o.enabled_prop:
-            x.libraries.append(o.name)
-    # Assets
-    x.assets = []
-    x.rooms = []
-    # - Data
-    x.assets.append(createAsset("data.json", "blob"))
-    # - Scenes
-    for s in bpy.data.scenes:
-        x.assets.append(createAsset(s.name + ".json", "blob"))
-    # - Defined assets
-    for o in bpy.data.worlds[0].my_list:
-        if o.enabled_prop:
-            if (o.type_prop == 'Atlas'):
-                x.assets.append(createAsset(o.name + "_metadata.json", "blob"))
-                x.assets.append(createAsset(o.name + "_atlas.png", "image"))
-            elif (o.type_prop == 'Font'):
-                asset = createAsset(o.name, "font")
-                asset.size = o.size_prop
-                x.assets.append(asset)
-            else:
-                typeName = o.type_prop.lower()
-                x.assets.append(createAsset(o.name, typeName))
-    # - Rooms
-    x.rooms.append(createRoom("room1", x.assets))
-    # Write project file
-    with open('project.kha', 'w') as f:
-        f.write(x.to_JSON())
+    # x = Object()
+    # x.format = 3
+    # x.game = Object()
+    # x.game.name = bpy.data.worlds[0]['TargetProjectName']
+    # x.game.width = bpy.data.worlds[0]['TargetProjectWidth']
+    # x.game.height = bpy.data.worlds[0]['TargetProjectHeight']
+    # if bpy.data.worlds[0]['TargetAA'] == 1:
+    #     x.game.antiAliasingSamples = 2
+    # x.libraries = ["zblend", "haxebullet"]
+    # # Defined libraries
+    # for o in bpy.data.worlds[0].my_liblist:
+    #     if o.enabled_prop:
+    #         x.libraries.append(o.name)
+    # # Assets
+    # x.assets = []
+    # x.rooms = []
+    # # - Data
+    # x.assets.append(createAsset("data.json", "blob"))
+    # # - Scenes
+    # for s in bpy.data.scenes:
+    #     x.assets.append(createAsset(s.name + ".json", "blob"))
+    # # - Defined assets
+    # for o in bpy.data.worlds[0].my_list:
+    #     if o.enabled_prop:
+    #         if (o.type_prop == 'Atlas'):
+    #             x.assets.append(createAsset(o.name + "_metadata.json", "blob"))
+    #             x.assets.append(createAsset(o.name + "_atlas.png", "image"))
+    #         elif (o.type_prop == 'Font'):
+    #             asset = createAsset(o.name, "font")
+    #             asset.size = o.size_prop
+    #             x.assets.append(asset)
+    #         else:
+    #             typeName = o.type_prop.lower()
+    #             x.assets.append(createAsset(o.name, typeName))
+    # # - Rooms
+    # x.rooms.append(createRoom("room1", x.assets))
+    # # Write project file
+    # with open('project.kha', 'w') as f:
+    #     f.write(x.to_JSON())
         
 
-    # Export scene properties
-    data = Object()
+    # # Export scene properties
+    # data = Object()
     
-    # Objects
-    objs = [] 
-    for o in bpy.data.objects:
-        x = Object()
-        x.name = o.name
-        x.traits = []
-        for t in o.my_traitlist:
-            # Disabled trait
-            if t.enabled_prop == False:
-                continue
+    # # Objects
+    # objs = [] 
+    # for o in bpy.data.objects:
+    #     x = Object()
+    #     x.name = o.name
+    #     x.traits = []
+    #     for t in o.my_traitlist:
+    #         # Disabled trait
+    #         if t.enabled_prop == False:
+    #             continue
             
-            y = Object()
-            y.type = t.type_prop
+    #         y = Object()
+    #         y.type = t.type_prop
 
-            # Script
-            if y.type == 'Script':
-                y.class_name = t.class_name_prop
-            # Custom traits
-            elif y.type == 'Mesh Renderer':
-                y.class_name = 'MeshRenderer'
-                if t.default_material_prop: # Use object material
-                    y.material = ""
-                else:
-                    y.material = t.material_prop
-                y.lighting = t.lighting_prop
-                y.cast_shadow = t.cast_shadow_prop
-                y.receive_shadow = t.receive_shadow_prop
-            elif y.type == 'Custom Renderer':
-                y.class_name = t.class_name_prop
+    #         # Script
+    #         if y.type == 'Script':
+    #             y.class_name = t.class_name_prop
+    #         # Custom traits
+    #         elif y.type == 'Mesh Renderer':
+    #             y.class_name = 'MeshRenderer'
+    #             if t.default_material_prop: # Use object material
+    #                 y.material = ""
+    #             else:
+    #                 y.material = t.material_prop
+    #             y.lighting = t.lighting_prop
+    #             y.cast_shadow = t.cast_shadow_prop
+    #             y.receive_shadow = t.receive_shadow_prop
+    #         elif y.type == 'Custom Renderer':
+    #             y.class_name = t.class_name_prop
                 
-                if t.default_material_prop: # Use object material
-                    y.material = ""
-                else:
-                    y.material = t.material_prop
+    #             if t.default_material_prop: # Use object material
+    #                 y.material = ""
+    #             else:
+    #                 y.material = t.material_prop
                 
-                y.shader = t.shader_prop
-                y.data = t.data_prop
-            elif y.type == 'Billboard Renderer':
-                y.type = 'Custom Renderer'
-                y.class_name = 'BillboardRenderer'
-                if t.default_material_prop: # Use object material
-                    y.material = ""
-                else:
-                    y.material = t.material_prop
-                y.shader = 'billboardshader'
-            elif y.type == 'Particles Renderer':
-                y.type = 'Custom Renderer'
-                y.class_name = 'ParticlesRenderer'
-                if t.default_material_prop: # Use object material
-                    y.material = ""
-                else:
-                    y.material = t.material_prop
-                y.shader = 'particlesshader'
-                y.data = t.data_prop
-            # Convert to scripts
-            elif y.type == 'Nodes':
-                y.type = 'Script'
-                y.class_name = t.nodes_name_prop.replace('.', '_')
-            elif y.type == 'Scene Instance':
-                y.type = 'Script'
-                y.class_name = "SceneInstance:'" + t.scene_prop + "'"
-            elif y.type == 'Animation':
-                y.type = 'Script'
-                y.class_name = "Animation:'" + t.start_track_name_prop + "':"
-                # Names
-                anim_names = []
-                anim_starts = []
-                anim_ends = []
-                for animt in o.my_animationtraitlist:
-                    if animt.enabled_prop == False:
-                        continue
-                    anim_names.append(animt.name)
-                    anim_starts.append(animt.start_prop)
-                    anim_ends.append(animt.end_prop)
-                y.class_name += str(anim_names) + ":"
-                y.class_name += str(anim_starts) + ":"
-                y.class_name += str(anim_ends)
-                # Armature offset
-                for a in armatures:
-                    if o.parent == a.armature:
-                        y.class_name += ":" + str(a.x) + ":" + str(a.y) + ":" + str(a.z)
-                        break
+    #             y.shader = t.shader_prop
+    #             y.data = t.data_prop
+    #         elif y.type == 'Billboard Renderer':
+    #             y.type = 'Custom Renderer'
+    #             y.class_name = 'BillboardRenderer'
+    #             if t.default_material_prop: # Use object material
+    #                 y.material = ""
+    #             else:
+    #                 y.material = t.material_prop
+    #             y.shader = 'billboardshader'
+    #         elif y.type == 'Particles Renderer':
+    #             y.type = 'Custom Renderer'
+    #             y.class_name = 'ParticlesRenderer'
+    #             if t.default_material_prop: # Use object material
+    #                 y.material = ""
+    #             else:
+    #                 y.material = t.material_prop
+    #             y.shader = 'particlesshader'
+    #             y.data = t.data_prop
+    #         # Convert to scripts
+    #         elif y.type == 'Nodes':
+    #             y.type = 'Script'
+    #             y.class_name = t.nodes_name_prop.replace('.', '_')
+    #         elif y.type == 'Scene Instance':
+    #             y.type = 'Script'
+    #             y.class_name = "SceneInstance:'" + t.scene_prop + "'"
+    #         elif y.type == 'Animation':
+    #             y.type = 'Script'
+    #             y.class_name = "Animation:'" + t.start_track_name_prop + "':"
+    #             # Names
+    #             anim_names = []
+    #             anim_starts = []
+    #             anim_ends = []
+    #             for animt in o.my_animationtraitlist:
+    #                 if animt.enabled_prop == False:
+    #                     continue
+    #                 anim_names.append(animt.name)
+    #                 anim_starts.append(animt.start_prop)
+    #                 anim_ends.append(animt.end_prop)
+    #             y.class_name += str(anim_names) + ":"
+    #             y.class_name += str(anim_starts) + ":"
+    #             y.class_name += str(anim_ends)
+    #             # Armature offset
+    #             for a in armatures:
+    #                 if o.parent == a.armature:
+    #                     y.class_name += ":" + str(a.x) + ":" + str(a.y) + ":" + str(a.z)
+    #                     break
 
-            elif y.type == 'Camera':
-                y.type = 'Script'
-                cam = bpy.data.cameras[t.camera_link_prop]
-                if cam.type == 'PERSP':
-                    y.class_name = 'PerspectiveCamera'
-                elif cam.type == 'ORTHO':
-                    y.class_name = 'OrthoCamera'
-            elif y.type == 'Light':
-                y.type = 'Script'
-                y.class_name = 'Light'
-            elif y.type == 'Rigid Body':
-                if bpy.data.worlds[0]['TargetPhysics'] == 0:
-                    continue
-                y.type = 'Script'
-                # Get rigid body
-                if t.default_body_prop == True:
-                    rb = o.rigid_body
-                else:
-                    rb = bpy.data.objects[t.body_link_prop].rigid_body
-                shape = '0' # BOX
-                if t.custom_shape_prop == True:
-                    if t.custom_shape_type_prop == 'Terrain':
-                        shape = '7'
-                    elif t.custom_shape_type_prop == 'Static Mesh':
-                        shape = '8'
-                elif rb.collision_shape == 'SPHERE':
-                    shape = '1'
-                elif rb.collision_shape == 'CONVEX_HULL':
-                    shape = '2'
-                elif rb.collision_shape == 'MESH':
-                    shape = '3'
-                elif rb.collision_shape == 'CONE':
-                    shape = '4'
-                elif rb.collision_shape == 'CYLINDER':
-                    shape = '5'
-                elif rb.collision_shape == 'CAPSULE':
-                    shape = '6'
-                body_mass = 0
-                if rb.enabled:
-                    body_mass = rb.mass
-                y.class_name = 'RigidBody:' + str(body_mass) + \
-                                ':' + shape + \
-                                ":" + str(rb.friction) + \
-                                ":" + str(t.shape_size_scale_prop[0]) + \
-                                ":" + str(t.shape_size_scale_prop[1]) + \
-                                ":" + str(t.shape_size_scale_prop[2])
+    #         elif y.type == 'Camera':
+    #             y.type = 'Script'
+    #             cam = bpy.data.cameras[t.camera_link_prop]
+    #             if cam.type == 'PERSP':
+    #                 y.class_name = 'PerspectiveCamera'
+    #             elif cam.type == 'ORTHO':
+    #                 y.class_name = 'OrthoCamera'
+    #         elif y.type == 'Light':
+    #             y.type = 'Script'
+    #             y.class_name = 'Light'
+    #         elif y.type == 'Rigid Body':
+    #             if bpy.data.worlds[0]['TargetPhysics'] == 0:
+    #                 continue
+    #             y.type = 'Script'
+    #             # Get rigid body
+    #             if t.default_body_prop == True:
+    #                 rb = o.rigid_body
+    #             else:
+    #                 rb = bpy.data.objects[t.body_link_prop].rigid_body
+    #             shape = '0' # BOX
+    #             if t.custom_shape_prop == True:
+    #                 if t.custom_shape_type_prop == 'Terrain':
+    #                     shape = '7'
+    #                 elif t.custom_shape_type_prop == 'Static Mesh':
+    #                     shape = '8'
+    #             elif rb.collision_shape == 'SPHERE':
+    #                 shape = '1'
+    #             elif rb.collision_shape == 'CONVEX_HULL':
+    #                 shape = '2'
+    #             elif rb.collision_shape == 'MESH':
+    #                 shape = '3'
+    #             elif rb.collision_shape == 'CONE':
+    #                 shape = '4'
+    #             elif rb.collision_shape == 'CYLINDER':
+    #                 shape = '5'
+    #             elif rb.collision_shape == 'CAPSULE':
+    #                 shape = '6'
+    #             body_mass = 0
+    #             if rb.enabled:
+    #                 body_mass = rb.mass
+    #             y.class_name = 'RigidBody:' + str(body_mass) + \
+    #                             ':' + shape + \
+    #                             ":" + str(rb.friction) + \
+    #                             ":" + str(t.shape_size_scale_prop[0]) + \
+    #                             ":" + str(t.shape_size_scale_prop[1]) + \
+    #                             ":" + str(t.shape_size_scale_prop[2])
 
-            # Append trait
-            x.traits.append(y)
+    #         # Append trait
+    #         x.traits.append(y)
 
-        # Material slots
-        x.materials = []
-        if o.material_slots:
-            for ms in o.material_slots:
-                x.materials.append(ms.name)
-        objs.append(x)
+    #     # Material slots
+    #     x.materials = []
+    #     if o.material_slots:
+    #         for ms in o.material_slots:
+    #             x.materials.append(ms.name)
+    #     objs.append(x)
 
-    # Materials
-    mats = []
-    for m in bpy.data.materials:
-        # Make sure material is using nodes
-        if m.node_tree == None:
-            continue
-        x = Object()
-        x.name = m.name
-        nodes = m.node_tree.nodes
-        # Diffuse
-        if 'Diffuse BSDF' in nodes:
-            x.diffuse = True
-            dnode = nodes['Diffuse BSDF']
-            dcol = dnode.inputs[0].default_value
-            x.diffuse_color = [dcol[0], dcol[1], dcol[2], dcol[3]]
-        else:
-            x.diffuse = False
-        # Glossy
-        if 'Glossy BSDF' in nodes:
-            x.glossy = True
-            gnode = nodes['Glossy BSDF']
-            gcol = gnode.inputs[0].default_value
-            x.glossy_color = [gcol[0], gcol[1], gcol[2], gcol[3]]
-            x.roughness = gnode.inputs[1].default_value
-        else:
-            x.glossy = False
-        # Texture
-        if 'Image Texture' in nodes:
-            x.texture = nodes['Image Texture'].image.name.split(".")[0]
-        else:
-            x.texture = ''
-        mats.append(x)
+    # # Materials
+    # mats = []
+    # for m in bpy.data.materials:
+    #     # Make sure material is using nodes
+    #     if m.node_tree == None:
+    #         continue
+    #     x = Object()
+    #     x.name = m.name
+    #     nodes = m.node_tree.nodes
+    #     # Diffuse
+    #     if 'Diffuse BSDF' in nodes:
+    #         x.diffuse = True
+    #         dnode = nodes['Diffuse BSDF']
+    #         dcol = dnode.inputs[0].default_value
+    #         x.diffuse_color = [dcol[0], dcol[1], dcol[2], dcol[3]]
+    #     else:
+    #         x.diffuse = False
+    #     # Glossy
+    #     if 'Glossy BSDF' in nodes:
+    #         x.glossy = True
+    #         gnode = nodes['Glossy BSDF']
+    #         gcol = gnode.inputs[0].default_value
+    #         x.glossy_color = [gcol[0], gcol[1], gcol[2], gcol[3]]
+    #         x.roughness = gnode.inputs[1].default_value
+    #     else:
+    #         x.glossy = False
+    #     # Texture
+    #     if 'Image Texture' in nodes:
+    #         x.texture = nodes['Image Texture'].image.name.split(".")[0]
+    #     else:
+    #         x.texture = ''
+    #     mats.append(x)
 
-    # Output data json
-    data.objects = objs
-    data.materials = mats
-    data.orient = bpy.data.worlds[0]['TargetProjectOrient']
-    data.scene = bpy.data.worlds[0]['TargetScene']
-    data.packageName = bpy.data.worlds[0]['TargetProjectPackage']
-    gravityscn = bpy.data.scenes[bpy.data.worlds[0]['TargetGravity']]
-    if gravityscn.use_gravity:
-        data.gravity = [gravityscn.gravity[0], gravityscn.gravity[1], gravityscn.gravity[2]]
-    else:
-        data.gravity = [0.0, 0.0, 0.0]
-    clearwrd = bpy.data.worlds[bpy.data.worlds[0]['TargetClear']]
-    # Only 'Background' surface for now
-    clearcol = clearwrd.node_tree.nodes['Background'].inputs[0].default_value
-    data.clear = [clearcol[0], clearcol[1], clearcol[2], clearcol[3]]
-    data.fog = bpy.data.worlds[0]['TargetFog']
-    data.fogColor = [bpy.data.worlds[0]['TargetFogColor'][0], bpy.data.worlds[0]['TargetFogColor'][1], bpy.data.worlds[0]['TargetFogColor'][2], bpy.data.worlds[0]['TargetFogColor'][3]]
-    data.fogDensity = bpy.data.worlds[0]['TargetFogDensity']
-    data.shadowMapping = bpy.data.worlds[0]['TargetShadowMapping']
-    data.shadowMapSize = bpy.data.worlds[0]['TargetShadowMapSize']
-    data.physics = bpy.data.worlds[0]['TargetPhysics']
-    data.ssao = bpy.data.worlds[0]['TargetSSAO']
-    with open('Assets/data.json', 'w') as f:
-        f.write(data.to_JSON())
+    # # Output data json
+    # data.objects = objs
+    # data.materials = mats
+    # data.scene = bpy.data.worlds[0]['TargetScene']
+    # data.packageName = bpy.data.worlds[0]['TargetProjectPackage']
+    # gravityscn = bpy.data.scenes[bpy.data.worlds[0]['TargetGravity']]
+    # if gravityscn.use_gravity:
+    #     data.gravity = [gravityscn.gravity[0], gravityscn.gravity[1], gravityscn.gravity[2]]
+    # else:
+    #     data.gravity = [0.0, 0.0, 0.0]
+    # clearwrd = bpy.data.worlds[bpy.data.worlds[0]['TargetClear']]
+    # # Only 'Background' surface for now
+    # clearcol = clearwrd.node_tree.nodes['Background'].inputs[0].default_value
+    # data.clear = [clearcol[0], clearcol[1], clearcol[2], clearcol[3]]
+    # data.physics = bpy.data.worlds[0]['TargetPhysics']
+    # with open('Assets/data.json', 'w') as f:
+    #     f.write(data.to_JSON())
         
     # Write Main.hx
     # TODO: move to separate file
@@ -552,37 +488,36 @@ def buildProject(self, build_type=0):
     bpy.ops.wm.save_mainfile()
 
     # Export
-    #self.report({'INFO'}, "Exporting game data...")
     exportGameData()
     
     # Set build command
     if (bpy.data.worlds[0]['TargetEnum'] == 0):
-        bashCommand = "Kha/make.js -t osx"
+        bashCommand = "-t osx"
     elif (bpy.data.worlds[0]['TargetEnum'] == 1):
-        bashCommand = "Kha/make.js -t windows"
+        bashCommand = "-t windows"
     elif (bpy.data.worlds[0]['TargetEnum'] == 2):
-        bashCommand = "Kha/make.js -t linux"
+        bashCommand = "-t linux"
     elif (bpy.data.worlds[0]['TargetEnum'] == 3):
-        bashCommand = "Kha/make.js -t html5"
+        bashCommand = "-t html5"
     elif (bpy.data.worlds[0]['TargetEnum'] == 4):
-        bashCommand = "Kha/make.js -t ios"
+        bashCommand = "-t ios"
     elif (bpy.data.worlds[0]['TargetEnum'] == 5):
-        bashCommand = "Kha/make.js -t android"
+        bashCommand = "-t android_native"
     
     # Build
-    prefix = "node "
-    if (platform.system() == "Darwin"):
-        prefix = "/usr/local/bin/node "
-    elif (platform.system() == "Linux"):
-        prefix = "nodejs "
-    
-    #p = Process(target=build_process, args=(prefix + bashCommand, open, run, fp, bpy.data.worlds[0]['TargetEnum'], name,))
-    #p.start()
-    #atexit.register(p.terminate)
+    haxelib_path = "haxelib"
+    if platform.system() == 'Darwin':
+        haxelib_path = "/usr/local/bin/haxelib"
+
+    prefix = haxelib_path + " run kha "
+
+    output = subprocess.check_output([haxelib_path + " path zblend"], shell=True)
+    output = str(output).split("\\n")[0].split("'")[1]
+    scripts_path = output + "blender/"
 
     blender_path = bpy.app.binary_path
     blend_path = bpy.data.filepath
-    p = subprocess.Popen([blender_path, blend_path, '-b', '-P', fp + '/Libraries/zblend/blender/zblend_build.py', '--', prefix + bashCommand, str(build_type), str(bpy.data.worlds[0]['TargetEnum'])])
+    p = subprocess.Popen([blender_path, blend_path, '-b', '-P', scripts_path + 'build.py', '--', prefix + bashCommand, str(build_type), str(bpy.data.worlds[0]['TargetEnum'])])
     atexit.register(p.terminate)
     
     self.report({'INFO'}, "Building, see console...")
@@ -607,7 +542,7 @@ def cleanProject(self):
             node_group_name = node_group.name.replace('.', '_')
             os.remove(path + node_group_name + '.hx')
 
-    self.report({'INFO'}, "Clean done")
+    self.report({'INFO'}, "Done")
 
 # Play
 class OBJECT_OT_PLAYButton(bpy.types.Operator):
@@ -625,15 +560,6 @@ class OBJECT_OT_BUILDButton(bpy.types.Operator):
  
     def execute(self, context):
         buildProject(self, 0)
-        return{'FINISHED'}
-
-# Open project
-class OBJECT_OT_PROJECTButton(bpy.types.Operator):
-    bl_idname = "zblend.project"
-    bl_label = "Project"
- 
-    def execute(self, context):
-        buildProject(self, 2)
         return{'FINISHED'}
 
 # Open project folder
@@ -686,7 +612,6 @@ class OBJECT_OT_DEFAULTSETTINGSButton(bpy.types.Operator):
 
 
 def buildNodeTrees():
-    # Set dir
     s = bpy.data.filepath.split(os.path.sep)
     s.pop()
     fp = os.path.sep.join(s)

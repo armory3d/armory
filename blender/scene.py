@@ -15,20 +15,20 @@
 # 
 #  http://creativecommons.org/licenses/by-sa/3.0/deed.en_US
 # 
-#  Adapted to ZBlend framework
-#  http://zblend.org/
+#  Adapted to Lue Rendering Engine
+#  http://lue3d.org/
 #  by Lubos Lenco
 #
 # =============================================================
 
 
 bl_info = {
-	"name": "ZBlend format (.json)",
-	"description": "ZBlend Exporter",
-	"author": "Lubos Lenco",
+	"name": "Lue format (.json)",
+	"description": "Lue Exporter",
+	"author": "Eric Lengyel & Lubos Lenco",
 	"version": (1, 0, 0, 0),
 	"location": "File > Import-Export",
-	"wiki_url": "http://zblend.org/",
+	"wiki_url": "http://lue3d.org/",
 	"category": "Import-Export"}
 
 
@@ -103,16 +103,16 @@ class ExportVertex:
 
 class Object:
     def to_JSON(self):
-        if bpy.data.worlds[0]['TargetMinimize'] == True:
-            return json.dumps(self, default=lambda o: o.__dict__, separators=(',',':'))
-        else:
-            return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+        #if bpy.data.worlds[0]['TargetMinimize'] == True:
+        #    return json.dumps(self, default=lambda o: o.__dict__, separators=(',',':'))
+        #else:
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
 
-class ZBlendExporter(bpy.types.Operator, ExportHelper):
-	"""Export to ZBlend format"""
-	bl_idname = "export_scene.zblend"
-	bl_label = "Export ZBlend"
+class LueExporter(bpy.types.Operator, ExportHelper):
+	"""Export to Lue format"""
+	bl_idname = "export_scene.lue"
+	bl_label = "Export Lue"
 	filename_ext = ".json"
 
 	option_export_selection = bpy.props.BoolProperty(name = "Export Selection Only", description = "Export only selected objects", default = False)
@@ -336,9 +336,9 @@ class ZBlendExporter(bpy.types.Operator, ExportHelper):
 	@staticmethod
 	def AnimationPresent(fcurve, kind):
 		if (kind != kAnimationBezier):
-			return (ZBlendExporter.AnimationKeysDifferent(fcurve))
+			return (LueExporter.AnimationKeysDifferent(fcurve))
 
-		return ((ZBlendExporter.AnimationKeysDifferent(fcurve)) or (ZBlendExporter.AnimationTangentsNonzero(fcurve)))
+		return ((LueExporter.AnimationKeysDifferent(fcurve)) or (LueExporter.AnimationTangentsNonzero(fcurve)))
 
 
 	@staticmethod
@@ -529,7 +529,7 @@ class ZBlendExporter(bpy.types.Operator, ExportHelper):
 		for i in range(len(exportVertexArray)):
 			ev = exportVertexArray[i]
 			bucket = ev.hash & (bucketCount - 1)
-			index = ZBlendExporter.FindExportVertex(hashTable[bucket], exportVertexArray, ev)
+			index = LueExporter.FindExportVertex(hashTable[bucket], exportVertexArray, ev)
 			if (index < 0):
 				indexTable.append(len(unifiedVertexArray))
 				unifiedVertexArray.append(ev)
@@ -591,7 +591,7 @@ class ZBlendExporter(bpy.types.Operator, ExportHelper):
 		for i in range(self.beginFrame, self.endFrame):
 			scene.frame_set(i)
 			m2 = node.matrix_local
-			if (ZBlendExporter.MatricesDifferent(m1, m2)):
+			if (LueExporter.MatricesDifferent(m1, m2)):
 				animationFlag = True
 				break
 
@@ -637,7 +637,7 @@ class ZBlendExporter(bpy.types.Operator, ExportHelper):
 		for i in range(self.beginFrame, self.endFrame):
 			scene.frame_set(i)
 			m2 = poseBone.matrix
-			if (ZBlendExporter.MatricesDifferent(m1, m2)):
+			if (LueExporter.MatricesDifferent(m1, m2)):
 				animationFlag = True
 				break
 
@@ -713,49 +713,49 @@ class ZBlendExporter(bpy.types.Operator, ExportHelper):
 			action = node.animation_data.action
 			if (action):
 				for fcurve in action.fcurves:
-					kind = ZBlendExporter.ClassifyAnimationCurve(fcurve)
+					kind = LueExporter.ClassifyAnimationCurve(fcurve)
 					if (kind != kAnimationSampled):
 						if (fcurve.data_path == "location"):
 							for i in range(3):
 								if ((fcurve.array_index == i) and (not posAnimCurve[i])):
 									posAnimCurve[i] = fcurve
 									posAnimKind[i] = kind
-									if (ZBlendExporter.AnimationPresent(fcurve, kind)):
+									if (LueExporter.AnimationPresent(fcurve, kind)):
 										posAnimated[i] = True
 						elif (fcurve.data_path == "delta_location"):
 							for i in range(3):
 								if ((fcurve.array_index == i) and (not deltaPosAnimCurve[i])):
 									deltaPosAnimCurve[i] = fcurve
 									deltaPosAnimKind[i] = kind
-									if (ZBlendExporter.AnimationPresent(fcurve, kind)):
+									if (LueExporter.AnimationPresent(fcurve, kind)):
 										deltaPosAnimated[i] = True
 						elif (fcurve.data_path == "rotation_euler"):
 							for i in range(3):
 								if ((fcurve.array_index == i) and (not rotAnimCurve[i])):
 									rotAnimCurve[i] = fcurve
 									rotAnimKind[i] = kind
-									if (ZBlendExporter.AnimationPresent(fcurve, kind)):
+									if (LueExporter.AnimationPresent(fcurve, kind)):
 										rotAnimated[i] = True
 						elif (fcurve.data_path == "delta_rotation_euler"):
 							for i in range(3):
 								if ((fcurve.array_index == i) and (not deltaRotAnimCurve[i])):
 									deltaRotAnimCurve[i] = fcurve
 									deltaRotAnimKind[i] = kind
-									if (ZBlendExporter.AnimationPresent(fcurve, kind)):
+									if (LueExporter.AnimationPresent(fcurve, kind)):
 										deltaRotAnimated[i] = True
 						elif (fcurve.data_path == "scale"):
 							for i in range(3):
 								if ((fcurve.array_index == i) and (not sclAnimCurve[i])):
 									sclAnimCurve[i] = fcurve
 									sclAnimKind[i] = kind
-									if (ZBlendExporter.AnimationPresent(fcurve, kind)):
+									if (LueExporter.AnimationPresent(fcurve, kind)):
 										sclAnimated[i] = True
 						elif (fcurve.data_path == "delta_scale"):
 							for i in range(3):
 								if ((fcurve.array_index == i) and (not deltaSclAnimCurve[i])):
 									deltaSclAnimCurve[i] = fcurve
 									deltaSclAnimKind[i] = kind
-									if (ZBlendExporter.AnimationPresent(fcurve, kind)):
+									if (LueExporter.AnimationPresent(fcurve, kind)):
 										deltaSclAnimated[i] = True
 						elif ((fcurve.data_path == "rotation_axis_angle") or (fcurve.data_path == "rotation_quaternion") or (fcurve.data_path == "delta_rotation_quaternion")):
 							sampledAnimation = True
@@ -1102,7 +1102,7 @@ class ZBlendExporter(bpy.types.Operator, ExportHelper):
 
 	def ProcessNode(self, node):
 		if ((self.exportAllFlag) or (node.select)):
-			type = ZBlendExporter.GetNodeType(node)
+			type = LueExporter.GetNodeType(node)
 			self.nodeArray[node] = {"nodeType" : type, "structName" : "node" + str(len(self.nodeArray) + 1)}
 
 			if (node.parent_type == "BONE"):
@@ -1182,6 +1182,9 @@ class ZBlendExporter(bpy.types.Operator, ExportHelper):
 		# object reference, material references (for geometries), and transform.
 		# Subnodes are then exported recursively.
 
+		if (node.name[0] == "."):
+			return; # Do not export nodes prefixed with '.'
+
 		nodeRef = self.nodeArray.get(node)
 		if (nodeRef):
 			type = nodeRef["nodeType"]
@@ -1206,7 +1209,8 @@ class ZBlendExporter(bpy.types.Operator, ExportHelper):
 
 			if (type == kNodeTypeGeometry):
 				if (not object in self.geometryArray):
-					self.geometryArray[object] = {"structName" : "geometry" + str(len(self.geometryArray) + 1), "nodeTable" : [node]}
+					#self.geometryArray[object] = {"structName" : "geometry" + str(len(self.geometryArray) + 1), "nodeTable" : [node]}
+					self.geometryArray[object] = {"structName" : node.name, "nodeTable" : [node]}
 				else:
 					self.geometryArray[object]["nodeTable"].append(node)
 
@@ -1216,7 +1220,7 @@ class ZBlendExporter(bpy.types.Operator, ExportHelper):
 				for i in range(len(node.material_slots)):
 					self.ExportMaterialRef(node.material_slots[i].material, i, o)
 
-				shapeKeys = ZBlendExporter.GetShapeKeys(object)
+				shapeKeys = LueExporter.GetShapeKeys(object)
 				#if (shapeKeys):
 				#	self.ExportMorphWeights(node, shapeKeys, scene, o)
 				# TODO
@@ -1264,6 +1268,7 @@ class ZBlendExporter(bpy.types.Operator, ExportHelper):
 				parento.nodes.append(o)
 
 
+		o.traits = [] # TODO: export only for geometry nodes and nodes
 		if not hasattr(o, 'nodes'):
 			o.nodes = []
 		for subnode in node.children:
@@ -1403,7 +1408,7 @@ class ZBlendExporter(bpy.types.Operator, ExportHelper):
 		showOnlyShapeKey = node.show_only_shape_key
 		currentMorphValue = []
 
-		shapeKeys = ZBlendExporter.GetShapeKeys(mesh)
+		shapeKeys = LueExporter.GetShapeKeys(mesh)
 		if (shapeKeys):
 			node.active_shape_key_index = 0
 			node.show_only_shape_key = True
@@ -1464,11 +1469,11 @@ class ZBlendExporter(bpy.types.Operator, ExportHelper):
 		# Triangulate mesh and remap vertices to eliminate duplicates.
 
 		materialTable = []
-		exportVertexArray = ZBlendExporter.DeindexMesh(exportMesh, materialTable)
+		exportVertexArray = LueExporter.DeindexMesh(exportMesh, materialTable)
 		triangleCount = len(materialTable)
 
 		indexTable = []
-		unifiedVertexArray = ZBlendExporter.UnifyVertices(exportVertexArray, indexTable)
+		unifiedVertexArray = LueExporter.UnifyVertices(exportVertexArray, indexTable)
 		vertexCount = len(unifiedVertexArray)
 
 		# Write the position array.
@@ -1629,7 +1634,7 @@ class ZBlendExporter(bpy.types.Operator, ExportHelper):
 		bpy.data.meshes.remove(exportMesh)
 
 		o.mesh = om
-		self.output.geometry_objects.append(o)
+		self.output.geometry_resources.append(o)
 
 
 	def ExportLight(self, objectRef):
@@ -1769,7 +1774,7 @@ class ZBlendExporter(bpy.types.Operator, ExportHelper):
 				self.IndentWrite(B"}\n")
 
 		'''
-		self.output.light_objects.append(o)
+		self.output.light_resources.append(o)
 
 	def ExportCamera(self, objectRef):
 
@@ -1799,7 +1804,7 @@ class ZBlendExporter(bpy.types.Operator, ExportHelper):
 		p3.value = self.WriteFloat(object.clip_end)
 		o.params.append(p3)
 		
-		self.output.camera_objects.append(o)
+		self.output.camera_resources.append(o)
 
 
 	def ExportMaterials(self):
@@ -1927,13 +1932,13 @@ class ZBlendExporter(bpy.types.Operator, ExportHelper):
 			if (not object.parent):
 				self.ExportNode(object, scene)
 
-		self.output.geometry_objects = [];
-		self.output.light_objects = [];
-		self.output.camera_objects = [];
+		self.output.geometry_resources = [];
+		self.output.light_resources = [];
+		self.output.camera_resources = [];
 		self.ExportObjects(scene)
 
 		self.output.materials = []
-		self.ExportMaterials()
+		#self.ExportMaterials()
 
 
 		if (self.restoreFrame):
@@ -1948,15 +1953,15 @@ class ZBlendExporter(bpy.types.Operator, ExportHelper):
 
 
 def menu_func(self, context):
-	self.layout.operator(ZBlendExporter.bl_idname, text = "ZBlend (.json)")
+	self.layout.operator(LueExporter.bl_idname, text = "Lue (.json)")
 
 def register():
-	bpy.utils.register_class(ZBlendExporter)
+	bpy.utils.register_class(LueExporter)
 	bpy.types.INFO_MT_file_export.append(menu_func)
 
 def unregister():
 	bpy.types.INFO_MT_file_export.remove(menu_func)
-	bpy.utils.unregister_class(ZBlendExporter)
+	bpy.utils.unregister_class(LueExporter)
 
 if __name__ == "__main__":
 	register()

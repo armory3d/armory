@@ -1,0 +1,16 @@
+{
+  "name": "zblend",
+  "url" : "https://github.com/luboslenco/zblend/",
+  "license": "MIT",
+  "tags": ["kha", "3d"],
+  "description": "Blender game engine",
+  "version": "15.10.0",
+  "classPath": "",
+  "releasenote": "Initial release.",
+  "contributors": ["Lubos"],
+  "dependencies": {
+    "kha": "",
+    "lue": "",
+    "haxebullet": ""
+  }
+}
