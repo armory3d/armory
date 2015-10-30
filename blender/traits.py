@@ -2,7 +2,7 @@ import shutil
 import bpy
 import os
 import json
-from zblend_traits_animation import ListAnimationTraitItem
+from traits_animation import ListAnimationTraitItem
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
