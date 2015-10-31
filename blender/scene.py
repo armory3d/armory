@@ -25,7 +25,7 @@
 bl_info = {
 	"name": "Lue format (.json)",
 	"description": "Lue Exporter",
-	"author": "Eric Lengyel & Lubos Lenco",
+	"author": "Eric Lengyel, adapted by Lubos Lenco",
 	"version": (1, 0, 0, 0),
 	"location": "File > Import-Export",
 	"wiki_url": "http://lue3d.org/",
@@ -552,9 +552,9 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			o.type = structIdentifier[nodeRef["nodeType"]]
 			o.id = nodeRef["structName"]
 
-			name = bone.name
-			if (name != ""):
-				o.name = name
+			#name = bone.name
+			#if (name != ""):
+			#	o.name = name
 
 			self.ExportBoneTransform(armature, bone, scene, o)
 
@@ -1094,7 +1094,8 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 	def ProcessBone(self, bone):
 		if ((self.exportAllFlag) or (bone.select)):
-			self.nodeArray[bone] = {"nodeType" : kNodeTypeBone, "structName" : "node" + str(len(self.nodeArray) + 1)}
+			#self.nodeArray[bone] = {"nodeType" : kNodeTypeBone, "structName" : "node" + str(len(self.nodeArray) + 1)}
+			self.nodeArray[bone] = {"nodeType" : kNodeTypeBone, "structName" : bone.name}
 
 		for subnode in bone.children:
 			self.ProcessBone(subnode)
@@ -1103,7 +1104,8 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 	def ProcessNode(self, node):
 		if ((self.exportAllFlag) or (node.select)):
 			type = LueExporter.GetNodeType(node)
-			self.nodeArray[node] = {"nodeType" : type, "structName" : "node" + str(len(self.nodeArray) + 1)}
+			#self.nodeArray[node] = {"nodeType" : type, "structName" : "node" + str(len(self.nodeArray) + 1)}
+			self.nodeArray[node] = {"nodeType" : type, "structName" : node.name}
 
 			if (node.parent_type == "BONE"):
 				boneSubnodeArray = self.boneParentArray.get(node.parent_bone)
@@ -1170,7 +1172,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 	def ExportMaterialRef(self, material, index, o):
 		if (not material in self.materialArray):
-			self.materialArray[material] = {"structName" : "material" + str(len(self.materialArray) + 1)}
+			self.materialArray[material] = {"structName" : material.name}
 
 		o.material_refs.append(self.materialArray[material]["structName"])
 
@@ -1199,9 +1201,9 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 			# Export the node's name if it has one.
 
-			name = node.name
-			if (name != ""):
-				o.name = name
+			##name = node.name
+			##if (name != ""):
+			##	o.name = name
 
 			# Export the object reference and material references.
 
@@ -1210,7 +1212,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			if (type == kNodeTypeGeometry):
 				if (not object in self.geometryArray):
 					#self.geometryArray[object] = {"structName" : "geometry" + str(len(self.geometryArray) + 1), "nodeTable" : [node]}
-					self.geometryArray[object] = {"structName" : node.name, "nodeTable" : [node]}
+					self.geometryArray[object] = {"structName" : object.name, "nodeTable" : [node]}
 				else:
 					self.geometryArray[object]["nodeTable"].append(node)
 
@@ -1227,7 +1229,8 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 			elif (type == kNodeTypeLight):
 				if (not object in self.lightArray):
-					self.lightArray[object] = {"structName" : "light" + str(len(self.lightArray) + 1), "nodeTable" : [node]}
+					#self.lightArray[object] = {"structName" : "light" + str(len(self.lightArray) + 1), "nodeTable" : [node]}
+					self.lightArray[object] = {"structName" : object.name, "nodeTable" : [node]}
 				else:
 					self.lightArray[object]["nodeTable"].append(node)
 
@@ -1235,7 +1238,8 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 			elif (type == kNodeTypeCamera):
 				if (not object in self.cameraArray):
-					self.cameraArray[object] = {"structName" : "camera" + str(len(self.cameraArray) + 1), "nodeTable" : [node]}
+					#self.cameraArray[object] = {"structName" : "camera" + str(len(self.cameraArray) + 1), "nodeTable" : [node]}
+					self.cameraArray[object] = {"structName" : object.name, "nodeTable" : [node]}
 				else:
 					self.cameraArray[object]["nodeTable"].append(node)
 
@@ -1651,14 +1655,14 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		spotFlag = False
 
 		if (type == "SUN"):
-			o.type = "infinite"
+			o.type = "sun"
 		elif (type == "POINT"):
 			o.type = "point"
-			pointFlag = True
+			#pointFlag = True
 		else:
 			o.type = "spot"
-			pointFlag = True
-			spotFlag = True
+			#pointFlag = True
+			#spotFlag = True
 
 		#if (not object.use_shadow):
 		#	self.Write(B", shadow = false")
@@ -1667,11 +1671,12 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 		# Export the light's color, and include a separate intensity if necessary.
 
-		lc = Object()
-		lc.attrib = "light"
-		lc.size = 3
-		lc.values = self.WriteColor(object.color)
-		o.color = lc
+		# lc = Object()
+		# lc.attrib = "light"
+		# lc.size = 3
+		# lc.values = self.WriteColor(object.color)
+		# o.color = lc
+		o.color = self.WriteColor(object.color)
 
 		'''
 		intensity = object.energy
@@ -1787,22 +1792,12 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 		object = objectRef[0]
 
-		o.params = []
-
-		p1 = Object()
-		p1.attrib = "fov"
-		p1.value = self.WriteFloat(object.angle_x)
-		o.params.append(p1)
-
-		p2 = Object()
-		p2.attrib = "near"
-		p2.value = self.WriteFloat(object.clip_start)
-		o.params.append(p2)
-
-		p3 = Object()
-		p3.attrib = "far"
-		p3.value = self.WriteFloat(object.clip_end)
-		o.params.append(p3)
+		#o.fov = object.angle_x
+		o.near_plane = object.clip_start
+		o.far_plane = object.clip_end
+		o.frustum_culling = False
+		o.pipeline = "pipeline_resource/blender_pipeline"
+		o.clear_color = [0.0, 0.0, 0.0, 1.0]
 		
 		self.output.camera_resources.append(o)
 
@@ -1821,22 +1816,50 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 			o.id = materialRef[1]["structName"]
 
-			if (material.name != ""):
-				o.name = material.name
+			#if (material.name != ""):
+			#	o.name = material.name
 
 			intensity = material.diffuse_intensity
 			diffuse = [material.diffuse_color[0] * intensity, material.diffuse_color[1] * intensity, material.diffuse_color[2] * intensity]
 
-			o.colors = []
+			o.shader = "shader_resource/blender_shader"
+			o.cast_shadow = True
+			o.contexts = []
+			
+			c = Object()
+			c.id = "lighting"
+			c.bind_constants = []
+			const1 = Object()
+			const1.id = "diffuseColor"
+			const1.vec4 = [1, 1, 1, 1]
+			c.bind_constants.append(const1)
+			const2 = Object()
+			const2.id = "roughness"
+			const2.float = 0
+			c.bind_constants.append(const2)
+			const3 = Object()
+			const3.id = "lighting"
+			const3.bool = True
+			c.bind_constants.append(const3)
+			const4 = Object()
+			const4.id = "receiveShadow"
+			const4.bool = True
+			c.bind_constants.append(const4)
+			const5 = Object()
+			const5.id = "texturing"
+			const5.bool = False
+			c.bind_constants.append(const5)
 
-			dc = Object()
-			dc.attrib = "diffuse"
-			dc.size = 3
-			dc.values = self.WriteColor(diffuse)
-			o.colors.append(dc)
+			c.bind_textures = []
+			tex1 = Object()
+			tex1.id = "stex"
+			tex1.name = ""
+			c.bind_textures.append(tex1)
 
-			intensity = material.specular_intensity
-			specular = [material.specular_color[0] * intensity, material.specular_color[1] * intensity, material.specular_color[2] * intensity]
+			o.contexts.append(c)
+
+			#intensity = material.specular_intensity
+			#specular = [material.specular_color[0] * intensity, material.specular_color[1] * intensity, material.specular_color[2] * intensity]
 
 			'''
 			if ((specular[0] > 0.0) or (specular[1] > 0.0) or (specular[2] > 0.0)):
@@ -1884,7 +1907,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			if (normalTexture):
 				self.ExportTexture(normalTexture, B"normal")
 			'''
-			self.output.materials.append(o)
+			self.output.material_resources.append(o)
 
 
 	def ExportObjects(self, scene):
@@ -1937,8 +1960,8 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		self.output.camera_resources = [];
 		self.ExportObjects(scene)
 
-		self.output.materials = []
-		#self.ExportMaterials()
+		self.output.material_resources = []
+		self.ExportMaterials()
 
 
 		if (self.restoreFrame):
