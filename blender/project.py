@@ -422,7 +422,6 @@ def exportGameData():
     #     f.write(data.to_JSON())
         
     # Write Main.hx
-    # TODO: move to separate file
     #if not os.path.isfile('Sources/Main.hx'):
     with open('Sources/Main.hx', 'w') as f:
         f.write(
@@ -430,8 +429,8 @@ def exportGameData():
 package ;
 class Main {
     public static function main() {
-        CompileTime.importPackage('zblend.trait');
-        CompileTime.importPackage('""" + bpy.data.worlds[0]['TargetProjectPackage'] + """');
+        lue.sys.CompileTime.importPackage('zblend.trait');
+        lue.sys.CompileTime.importPackage('""" + bpy.data.worlds[0]['TargetProjectPackage'] + """');
         #if js
         untyped __js__("
             function loadScript(url, callback) {
@@ -451,12 +450,7 @@ class Main {
     }
     static function start() {
         var starter = new kha.Starter();
-        starter.start(new zblend.Root("ZBlend", "room1", Game));
-    }
-}
-class Game {
-    public function new() {
-        zblend.Root.setScene(zblend.Root.gameData.scene);
+        starter.start(new lue.App("room1", zblend.Root));
     }
 }
 """)

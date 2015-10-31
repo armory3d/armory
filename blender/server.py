@@ -1,5 +1,7 @@
 import http.server
 import socketserver
+import bpy
+import os
 
 # Can't use multiprocessing on Windows
 #p = Process(target=run_server)

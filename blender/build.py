@@ -6,6 +6,12 @@ import shutil
 import subprocess
 import platform
 
+def haxePath():
+    path = os.getenv('HAXEPATH')
+    if (path == None):
+        path = '/usr/lib/haxe'
+    return os.path.normpath(path)
+
 def runProject(fp, target, name):
     os.chdir(fp)
     # HTML5
@@ -36,7 +42,8 @@ def build():
     kha_path = output
     node_path = output + "/Tools/nodejs/node-osx"
 
-    print(subprocess.check_output([node_path + " " + kha_path + "/make -t html5"], shell=True))
+    os.system(node_path + " " + kha_path + "/make -t html5 --haxe " + haxePath())
+    #print(subprocess.check_output([node_path + " " + kha_path + "/make -t html5 --haxe " + haxePath()], shell=True))
 
     # Copy ammo.js if necessary
     if target == '3':
