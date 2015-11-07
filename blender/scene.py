@@ -1798,6 +1798,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		o.frustum_culling = False
 		o.pipeline = "blender_resource/blender_pipeline"
 		o.clear_color = [0.0, 0.0, 0.0, 1.0]
+		o.type = "perspective"
 		
 		self.output.camera_resources.append(o)
 
