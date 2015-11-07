@@ -1796,7 +1796,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		o.near_plane = object.clip_start
 		o.far_plane = object.clip_end
 		o.frustum_culling = False
-		o.pipeline = "pipeline_resource/blender_pipeline"
+		o.pipeline = "blender_resource/blender_pipeline"
 		o.clear_color = [0.0, 0.0, 0.0, 1.0]
 		
 		self.output.camera_resources.append(o)
@@ -1822,7 +1822,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			intensity = material.diffuse_intensity
 			diffuse = [material.diffuse_color[0] * intensity, material.diffuse_color[1] * intensity, material.diffuse_color[2] * intensity]
 
-			o.shader = "shader_resource/blender_shader"
+			o.shader = "blender_resource/blender_shader"
 			o.cast_shadow = True
 			o.contexts = []
 			
