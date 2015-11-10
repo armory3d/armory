@@ -1,10 +1,10 @@
 {
-  "name": "zblend",
-  "url" : "https://github.com/luboslenco/zblend/",
+  "name": "cyclesgame",
+  "url" : "https://github.com/luboslenco/cyclesgame/",
   "license": "MIT",
   "tags": ["kha", "3d"],
   "description": "Blender game engine",
-  "version": "15.10.0",
+  "version": "15.11.0",
   "classPath": "",
   "releasenote": "Initial release.",
   "contributors": ["Lubos"],

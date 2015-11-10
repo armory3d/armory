@@ -232,7 +232,7 @@ class LIST_OT_TraitMoveItem(bpy.types.Operator):
 
 # Menu in tools region
 class ToolsTraitsPanel(bpy.types.Panel):
-    bl_label = "zblend_traits"
+    bl_label = "cycles_traits"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "object"

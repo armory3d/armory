@@ -1,4 +1,4 @@
-package zblend;
+package cycles;
 
 import lue.App;
 import lue.Eg;

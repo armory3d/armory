@@ -6,11 +6,11 @@ from bpy.props import *
 # Derived from the NodeTree base type, similar to Menu, Operator, Panel, etc.
 class MyCustomTree(NodeTree):
 	# Description string
-	'''ZBlend logic nodes'''
+	'''Logic nodes'''
 	# Optional identifier string. If not explicitly defined, the python class name is used.
 	bl_idname = 'CustomTreeType'
 	# Label for nice name display
-	bl_label = 'ZBlend Node Tree'
+	bl_label = 'CG Node Tree'
 	# Icon identifier
 	# NOTE: If no icon is defined, the node tree will not show up in the editor header!
 	#	  This can be used to make additional tree types for groups and similar nodes (see below)

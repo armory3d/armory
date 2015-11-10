@@ -31,7 +31,7 @@ def defaultSettings():
 
 # Store properties in the world object
 def initWorldProperties():
-    bpy.types.World.TargetVersion = StringProperty(name = "ZBlendVersion")
+    bpy.types.World.TargetVersion = StringProperty(name = "CGVersion")
     bpy.types.World.TargetEnum = EnumProperty(
         items = [('OSX', 'OSX', 'OSX'), 
                  ('Windows', 'Windows', 'Windows'), 
@@ -79,11 +79,11 @@ initWorldProperties()
 # Info panel play
 def draw_play_item(self, context):
     layout = self.layout
-    layout.operator("zblend.play")
+    layout.operator("cg.play")
 
 # Menu in tools region
 class ToolsPanel(bpy.types.Panel):
-    bl_label = "ZBlend Project"
+    bl_label = "Cycles Game"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
@@ -100,11 +100,11 @@ class ToolsPanel(bpy.types.Panel):
         layout.prop(wrd, 'TargetProjectHeight')
         layout.prop_search(wrd, "TargetScene", bpy.data, "scenes", "Scene")
         layout.prop(wrd, 'TargetEnum')
-        layout.operator("zblend.build")
+        layout.operator("cg.build")
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
-        row.operator("zblend.folder")
-        row.operator("zblend.clean")
+        row.operator("cg.folder")
+        row.operator("cg.clean")
         layout.prop_search(wrd, "TargetGravity", bpy.data, "scenes", "Gravity")
         layout.prop_search(wrd, "TargetClear", bpy.data, "worlds", "Clear Color")
         layout.prop(wrd, 'TargetAA')
@@ -112,9 +112,9 @@ class ToolsPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(wrd, 'TargetAutoBuildNodes')
         if wrd['TargetAutoBuildNodes'] == False:
-            row.operator("zblend.buildnodes")
+            row.operator("cg.buildnodes")
         layout.prop(wrd, 'TargetMinimize')
-        layout.operator("zblend.defaultsettings")
+        layout.operator("cg.defaultsettings")
 
 # Used to output json
 class Object:
@@ -194,7 +194,7 @@ def exportGameData():
     # x.game.height = bpy.data.worlds[0]['TargetProjectHeight']
     # if bpy.data.worlds[0]['TargetAA'] == 1:
     #     x.game.antiAliasingSamples = 2
-    # x.libraries = ["zblend", "haxebullet"]
+    # x.libraries = ["cyclesgame", "haxebullet"]
     # # Defined libraries
     # for o in bpy.data.worlds[0].my_liblist:
     #     if o.enabled_prop:
@@ -429,7 +429,7 @@ def exportGameData():
 package ;
 class Main {
     public static function main() {
-        lue.sys.CompileTime.importPackage('zblend.trait');
+        lue.sys.CompileTime.importPackage('cycles.trait');
         lue.sys.CompileTime.importPackage('""" + bpy.data.worlds[0]['TargetProjectPackage'] + """');
         #if js
         untyped __js__("
@@ -450,7 +450,7 @@ class Main {
     }
     static function start() {
         var starter = new kha.Starter();
-        starter.start(new lue.App("room1", zblend.Root));
+        starter.start(new lue.App("room1", cycles.Root));
     }
 }
 """)
@@ -505,7 +505,7 @@ def buildProject(self, build_type=0):
 
     prefix = haxelib_path + " run kha "
 
-    output = subprocess.check_output([haxelib_path + " path zblend"], shell=True)
+    output = subprocess.check_output([haxelib_path + " path cyclesgame"], shell=True)
     output = str(output).split("\\n")[0].split("'")[1]
     scripts_path = output + "blender/"
 
@@ -540,7 +540,7 @@ def cleanProject(self):
 
 # Play
 class OBJECT_OT_PLAYButton(bpy.types.Operator):
-    bl_idname = "zblend.play"
+    bl_idname = "cg.play"
     bl_label = "Play"
  
     def execute(self, context):
@@ -549,7 +549,7 @@ class OBJECT_OT_PLAYButton(bpy.types.Operator):
 
 # Build
 class OBJECT_OT_BUILDButton(bpy.types.Operator):
-    bl_idname = "zblend.build"
+    bl_idname = "cg.build"
     bl_label = "Build"
  
     def execute(self, context):
@@ -558,7 +558,7 @@ class OBJECT_OT_BUILDButton(bpy.types.Operator):
 
 # Open project folder
 class OBJECT_OT_FOLDERButton(bpy.types.Operator):
-    bl_idname = "zblend.folder"
+    bl_idname = "cg.folder"
     bl_label = "Folder"
  
     def execute(self, context):
@@ -573,7 +573,7 @@ class OBJECT_OT_FOLDERButton(bpy.types.Operator):
     
 # Clean project
 class OBJECT_OT_CLEANButton(bpy.types.Operator):
-    bl_idname = "zblend.clean"
+    bl_idname = "cg.clean"
     bl_label = "Clean"
  
     def execute(self, context):
@@ -582,7 +582,7 @@ class OBJECT_OT_CLEANButton(bpy.types.Operator):
     
 # Build nodes
 class OBJECT_OT_BUILDNODESButton(bpy.types.Operator):
-    bl_idname = "zblend.buildnodes"
+    bl_idname = "cg.buildnodes"
     bl_label = "Build Nodes"
  
     def execute(self, context):
@@ -594,7 +594,7 @@ class OBJECT_OT_BUILDNODESButton(bpy.types.Operator):
     
 # Default settings
 class OBJECT_OT_DEFAULTSETTINGSButton(bpy.types.Operator):
-    bl_idname = "zblend.defaultsettings"
+    bl_idname = "cg.defaultsettings"
     bl_label = "Default Settings"
  
     def execute(self, context):
@@ -628,8 +628,8 @@ def buildNodeTree(node_group):
 
     with open(path + node_group_name + '.hx', 'w') as f:
         f.write('package ' + bpy.data.worlds[0].TargetProjectPackage + ';\n\n')
-        f.write('import zblend.node.*;\n\n')
-        f.write('class ' + node_group_name + ' extends zblend.trait.NodeExecutor {\n\n')
+        f.write('import cycles.node.*;\n\n')
+        f.write('class ' + node_group_name + ' extends cycles.trait.NodeExecutor {\n\n')
         f.write('\tpublic function new() { super(); }\n\n')
         f.write('\toverride function onItemAdd() {\n')
         # Make sure root node exists
