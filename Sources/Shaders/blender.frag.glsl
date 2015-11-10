@@ -116,7 +116,7 @@ void kore() {
 	}
 
 	if (texturing) {
-	 	outColor = vec4(texture2D(stex, texCoord) * outColor);
+		outColor = vec4(texture2D(stex, texCoord) * outColor);
 	}
 	else {
 		outColor = vec4(outColor.rgb, 1.0);
