@@ -1830,8 +1830,8 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			#if (material.name != ""):
 			#	o.name = material.name
 
-			intensity = material.diffuse_intensity
-			diffuse = [material.diffuse_color[0] * intensity, material.diffuse_color[1] * intensity, material.diffuse_color[2] * intensity]
+			#intensity = material.diffuse_intensity
+			#diffuse = [material.diffuse_color[0] * intensity, material.diffuse_color[1] * intensity, material.diffuse_color[2] * intensity]
 
 			o.shader = "blender_resource/blender_shader"
 			o.cast_shadow = True
@@ -1866,6 +1866,12 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			tex1.id = "stex"
 			tex1.name = ""
 			c.bind_textures.append(tex1)
+
+			# Look for texture
+			image_node = material.node_tree.nodes['Image Texture']
+			if image_node != None:
+				const5.bool = True
+				tex1.name = image_node.image.name
 
 			o.contexts.append(c)
 
