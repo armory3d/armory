@@ -10,7 +10,7 @@ import webbrowser
 
 def defaultSettings():
     wrd = bpy.data.worlds[0]
-    wrd['TargetVersion'] = "15.10.0"
+    wrd['TargetVersion'] = "15.11.0"
     wrd['TargetEnum'] = 3
     wrd['TargetRenderer'] = 0
     wrd['TargetProjectName'] = "myproject"

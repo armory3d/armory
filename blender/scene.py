@@ -1271,8 +1271,18 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			else:
 				parento.nodes.append(o)
 
+		# Export traits
+		# TODO: export only for geometry nodes and nodes
+		o.traits = []
+		
+		for t in node.my_traitlist:
+			if t.enabled_prop == False:
+				continue
+			x = Object()
+			x.type = t.type_prop
+			x.class_name = t.class_name_prop
+			o.traits.append(x)
 
-		o.traits = [] # TODO: export only for geometry nodes and nodes
 		if not hasattr(o, 'nodes'):
 			o.nodes = []
 		for subnode in node.children:
