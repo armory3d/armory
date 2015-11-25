@@ -7,7 +7,7 @@ varying vec4 position;
 void kore() {
 
     float normalizedDistance = position.z / position.w;
-    normalizedDistance += 0.0005;
+    normalizedDistance += 0.005;
  
-    gl_FragColor = vec4(normalizedDistance, 0.0, 0.0, 1.0);
+    gl_FragColor = vec4(normalizedDistance, normalizedDistance, normalizedDistance, 1.0);
 }
