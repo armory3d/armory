@@ -9,17 +9,26 @@ class Animation extends Trait {
 
     var model:ModelNode;
 
-    //public function new(startTrack:String, names:Array<String>, starts:Array<Int>, ends:Array<Int>) {
-    public function new() {
+    var startTrack:String;
+    var names:Array<String>;
+    var starts:Array<Int>;
+    var ends:Array<Int>;
+
+    public function new(startTrack:String, names:Array<String>, starts:Array<Int>, ends:Array<Int>) {
         super();
 
-        var modelRes = Resource.getModel("Scene", "lamp_body");
-        var materialRes = Resource.getMaterial("Scene", "bob_head");
+        this.startTrack = startTrack;
+        this.names = names;
+        this.starts = starts;
+        this.ends = ends;
 
-        model = Eg.addModelNode(modelRes, [materialRes]);
-        Eg.setupAnimation(model, "idle", ["idle"], [0], [140]);
-        trace("AAAAA");
+        requestAdd(add);
         requestUpdate(update);
+    }
+
+    function add() {
+        model = cast(node, ModelNode);
+        Eg.setupAnimation(model, startTrack, names, starts, ends);
     }
 
     function update() {
