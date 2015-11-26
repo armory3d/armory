@@ -631,8 +631,8 @@ def buildNodeTree(node_group):
         f.write('package ' + bpy.data.worlds[0].TargetProjectPackage + ';\n\n')
         f.write('import cycles.node.*;\n\n')
         f.write('class ' + node_group_name + ' extends cycles.trait.NodeExecutor {\n\n')
-        f.write('\tpublic function new() { super(); }\n\n')
-        f.write('\toverride function onItemAdd() {\n')
+        f.write('\tpublic function new() { super(); requestAdd(add); }\n\n')
+        f.write('\tfunction add() {\n')
         # Make sure root node exists
         if rn != None:
             name = '_' + rn.name.replace(".", "_").replace("@", "")
@@ -657,7 +657,7 @@ def buildNode(node_group, node, f, created_nodes):
     
     # Variables
     if type == "TransformNode":
-        f.write('\t\t' + name + '.transform = owner.transform;\n')
+        f.write('\t\t' + name + '.transform = node.transform;\n')
     
     # Create inputs
     for inp in node.inputs:

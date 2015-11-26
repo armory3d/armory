@@ -1279,9 +1279,15 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			if t.enabled_prop == False:
 				continue
 			x = Object()
-			x.type = t.type_prop
-			x.class_name = t.class_name_prop
+			if t.type_prop == 'Nodes':
+				x.type = 'Script'
+				x.class_name = t.nodes_name_prop.replace('.', '_')
+			else:
+				x.type = t.type_prop
+				x.class_name = t.class_name_prop
+			
 			o.traits.append(x)
+
 
 		if not hasattr(o, 'nodes'):
 			o.nodes = []
