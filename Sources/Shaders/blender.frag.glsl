@@ -117,8 +117,8 @@ void kore() {
 
 	if (texturing) {
 		vec4 texel = texture2D(stex, texCoord);
-		if(texel.a < 0.4)
-			discard;
+		//if(texel.a < 0.4)
+		//	discard;
 
 		outColor = vec4(texel * outColor);
 	}

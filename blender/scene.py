@@ -1271,10 +1271,15 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			else:
 				parento.nodes.append(o)
 
+		if not hasattr(o, 'nodes'):
+			o.nodes = []
+		for subnode in node.children:
+			if (subnode.parent_type != "BONE"):
+				self.ExportNode(subnode, scene, None, o)
+
 		# Export traits
 		# TODO: export only for geometry nodes and nodes
 		o.traits = []
-		
 		for t in node.my_traitlist:
 			if t.enabled_prop == False:
 				continue
@@ -1288,17 +1293,31 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			
 			o.traits.append(x)
 
-
-		if not hasattr(o, 'nodes'):
-			o.nodes = []
-		for subnode in node.children:
-			if (subnode.parent_type != "BONE"):
-				self.ExportNode(subnode, scene, None, o)
-
-
-
-
-
+		# Rigid body trait
+		if node.rigid_body != None:
+			rb = node.rigid_body
+			shape = '0' # BOX
+			if rb.collision_shape == 'SPHERE':
+				shape = '1'
+			elif rb.collision_shape == 'CONVEX_HULL':
+				shape = '2'
+			elif rb.collision_shape == 'MESH':
+				shape = '3'
+			elif rb.collision_shape == 'CONE':
+				shape = '4'
+			elif rb.collision_shape == 'CYLINDER':
+				shape = '5'
+			elif rb.collision_shape == 'CAPSULE':
+				shape = '6'
+			body_mass = 0
+			if rb.enabled:
+				body_mass = rb.mass
+			x = Object()
+			x.type = 'Script'
+			x.class_name = 'RigidBody:' + str(body_mass) + \
+								 ':' + shape + \
+								 ":" + str(rb.friction)
+			o.traits.append(x)
 
 
 
