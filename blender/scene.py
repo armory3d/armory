@@ -31,7 +31,7 @@ bl_info = {
 	"wiki_url": "http://lue3d.org/",
 	"category": "Import-Export"}
 
-
+import os
 import bpy
 import math
 from mathutils import *
@@ -1217,7 +1217,8 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 				else:
 					self.geometryArray[object]["nodeTable"].append(node)
 
-				o.object_ref = self.geometryArray[object]["structName"]
+				oid = self.geometryArray[object]["structName"].replace(".", "_")
+				o.object_ref = 'geom_' + oid + '/' + oid
 				o.material_refs = []
 
 				for i in range(len(node.material_slots)):
@@ -1421,25 +1422,25 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 
 
-
-
-
-
-
-
 	def ExportGeometry(self, objectRef, scene):
 
 		# This function exports a single geometry object.
 
-		o = Object()
-
-		o.id = objectRef[1]["structName"]
-		#self.WriteNodeTable(objectRef) #//
-		# TODO
-
 		node = objectRef[1]["nodeTable"][0]
-		mesh = objectRef[0]
+		oid = objectRef[1]["structName"].replace(".", "_")
 
+		index = self.filepath.rfind('/')
+		fp = self.filepath[:(index+1)] + 'geom_' + oid + '.json'
+		
+		# No export necessary
+		if node.geometry_cached == True and os.path.exists(fp):
+			return
+
+		o = Object()
+		o.id = oid
+		#self.WriteNodeTable(objectRef) #// # TODO
+
+		mesh = objectRef[0]
 		structFlag = False;
 
 		# Save the morph state if necessary.
@@ -1716,9 +1717,15 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		# Delete the new mesh that we made earlier.
 
 		bpy.data.meshes.remove(exportMesh)
-
 		o.mesh = om
-		self.output.geometry_resources.append(o)
+
+		# One geometry data per file
+		geom_obj = Object()
+		geom_obj.geometry_resources = [o]
+		with open(fp, 'w') as f:
+			f.write(geom_obj.to_JSON())
+		node.geometry_cached = True
+		#self.output.geometry_resources.append(o)
 
 
 	def ExportLight(self, objectRef):

@@ -141,10 +141,19 @@ class MY_UL_TraitList(bpy.types.UIList):
             layout.label("", icon = custom_icon)
 bpy.utils.register_class(MY_UL_TraitList)
 
-    
+def cb_scene_update(context): # For exporter cache TODO: move to separate file
+    edit_obj = bpy.context.edit_object
+    if edit_obj is not None and edit_obj.is_updated_data is True:
+        edit_obj.geometry_cached = False
+
 def initObjectProperties():
     bpy.types.Object.my_traitlist = bpy.props.CollectionProperty(type = ListTraitItem)
     bpy.types.Object.traitlist_index = bpy.props.IntProperty(name = "Index for my_list", default = 0)
+    
+    bpy.types.Object.geometry_cached = bpy.props.BoolProperty(name="Geometry cached", default=False)
+    bpy.app.handlers.scene_update_post.append(cb_scene_update)
+    #bpy.app.handlers.scene_update_post.remove(cb_scene_update)
+
 initObjectProperties()
 
 
