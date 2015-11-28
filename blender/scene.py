@@ -34,6 +34,7 @@ bl_info = {
 
 import bpy
 import math
+from mathutils import *
 import json
 from bpy_extras.io_utils import ExportHelper
 
@@ -1652,6 +1653,50 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 					ia.material = self.WriteInt(m)
 					om.index_arrays.append(ia)
 		
+		# Export tangents
+		# TODO: check for proper texture coords and if normal map is applied
+		if (len(exportMesh.uv_textures) > 0):
+		#	exportMesh.calc_tangents()	# TODO: use to export tangents
+			ia = om.index_arrays[0].values
+			posa = pa.values
+			uva = ta.values
+			tangents = []
+			bitangents = []
+			#print(node.name)
+			for i in range(0, int(len(ia) / 3)):
+				i0 = ia[i * 3 + 0]
+				i1 = ia[i * 3 + 1]
+				i2 = ia[i * 3 + 2]
+				v0 = Vector((posa[i0 * 3 + 0], posa[i0 * 3 + 1], posa[i0 * 3 + 2]))
+				v1 = Vector((posa[i1 * 3 + 0], posa[i1 * 3 + 1], posa[i1 * 3 + 2]))
+				v2 = Vector((posa[i2 * 3 + 0], posa[i2 * 3 + 1], posa[i2 * 3 + 2]))
+				uv0 = Vector((uva[i0 * 2 + 0], uva[i0 * 2 + 1]))
+				uv1 = Vector((uva[i1 * 2 + 0], uva[i1 * 2 + 1]))
+				uv2 = Vector((uva[i2 * 2 + 0], uva[i2 * 2 + 1]))
+				deltaPos1 = v1 - v0
+				deltaPos2 = v2 - v0
+				deltaUV1 = uv1 - uv0
+				deltaUV2 = uv2 - uv0
+				r = 1.0 / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+				tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
+				bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
+				tangents.append(tangent.x)
+				tangents.append(tangent.y)
+				tangents.append(tangent.z)
+				bitangents.append(bitangent.x)
+				bitangents.append(bitangent.y)
+				bitangents.append(bitangent.z)
+			tana = Object()
+			tana.attrib = "tangent"
+			tana.size = 3
+			tana.values = tangents
+			om.vertex_arrays.append(tana)
+			btana = Object()
+			btana.attrib = "bitangent"
+			btana.size = 3
+			btana.values = bitangents
+			om.vertex_arrays.append(btana)
+
 		# If the mesh is skinned, export the skinning data here.
 
 		if (armature):

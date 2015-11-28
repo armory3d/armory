@@ -4,18 +4,20 @@ precision mediump float;
 
 uniform sampler2D stex;
 uniform sampler2D shadowMap;
+uniform sampler2D normalMap;
 uniform bool texturing;
 uniform bool lighting;
 uniform bool receiveShadow;
-uniform vec3 light;
-uniform vec3 eye;
 uniform float roughness;
+uniform bool normalMapping;
 
 varying vec3 position;
 varying vec2 texCoord;
 varying vec3 normal;
 varying vec4 lPos;
 varying vec4 matColor;
+varying vec3 lightDir;
+varying vec3 eyeDir;
 
 float shadowSimple(vec4 lPos) {
 
@@ -99,12 +101,17 @@ void kore() {
 		float specular = 0.1;
 
 		vec3 n = normalize(normal);
-		vec3 l = light - position;
-		l = normalize(l);
-		vec3 v = eye - position;
-		v = normalize(v);
+		vec3 l = lightDir;
+		vec3 v = eyeDir;
 
-		float dotNL = clamp(dot(n, l), 0.0, 1.0);
+		float dotNL = 0.0;
+		if (normalMapping) {
+			vec3 tn = normalize(texture2D(normalMap, vec2(texCoord.x, 1.0 - texCoord.y)).rgb * 2.0 - 1.0);
+			dotNL = clamp(dot(tn, l), 0.0, 1.0); //-l ?
+		}
+		else {
+			dotNL = clamp(dot(n, l), 0.0, 1.0);
+		}
 
 		float spec = LightingFuncGGX_OPT3(n, v, l, roughness, specular);
 		vec3 rgb = spec + t * dotNL;
