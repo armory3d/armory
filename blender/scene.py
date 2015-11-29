@@ -1890,6 +1890,11 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		self.output.camera_resources.append(o)
 
 
+	def findNodeByLink(self, node_group, to_node, inp):
+	    for link in node_group.links:
+	        if link.to_node == to_node and link.to_socket == inp:
+	            return link.from_node
+
 	def ExportMaterials(self):
 
 		# This function exports all of the materials used in the scene.
@@ -1937,24 +1942,51 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			const5.id = "texturing"
 			const5.bool = False
 			c.bind_constants.append(const5)
+			const6 = Object()
+			const6.id = "normalMapping"
+			const6.bool = False
+			c.bind_constants.append(const6)
 
 			c.bind_textures = []
 			tex1 = Object()
 			tex1.id = "stex"
 			tex1.name = ""
 			c.bind_textures.append(tex1)
+			tex2 = Object()
+			tex2.id = "normalMap"
+			tex2.name = ""
+			c.bind_textures.append(tex2)
 
-			# Texture
-			if 'Image Texture' in material.node_tree.nodes:
-				image_node = material.node_tree.nodes['Image Texture']
-				const5.bool = True
-				tex1.name = image_node.image.name
+			# Parse nodes
+			out_node = None
+			for n in material.node_tree.nodes:
+				if n.type == 'OUTPUT_MATERIAL':
+					out_node = n
+					break
 
-			# Color
-			if 'Diffuse BSDF' in material.node_tree.nodes:
-				diffuse_node = material.node_tree.nodes['Diffuse BSDF']
-				col = diffuse_node.inputs[0].default_value
-				const1.vec4 = [col[0], col[1], col[2], col[3]]
+			if out_node != None and out_node.inputs[0].is_linked:
+				tree = material.node_tree
+				surface_node = self.findNodeByLink(tree, out_node, out_node.inputs[0])
+				if surface_node.type == 'BSDF_DIFFUSE':
+					# Color
+					if surface_node.inputs[0].is_linked:
+						color_node = self.findNodeByLink(tree, surface_node, surface_node.inputs[0])
+						if color_node.type == 'TEX_IMAGE':
+							const5.bool = True
+							tex1.name = color_node.image.name
+					else:
+						col = surface_node.inputs[0].default_value
+						const1.vec4 = [col[0], col[1], col[2], col[3]]
+					# Roughness
+					const2.float = surface_node.inputs[1].default_value
+					# Normal
+					if surface_node.inputs[2].is_linked:
+						normal_node = self.findNodeByLink(tree, surface_node, surface_node.inputs[2])
+						if normal_node.inputs[1].is_linked:
+							color_node = self.findNodeByLink(tree, normal_node, normal_node.inputs[1])
+							if color_node.type == 'TEX_IMAGE':
+								const6.bool = True
+								tex2.name = color_node.image.name
 
 			o.contexts.append(c)
 
