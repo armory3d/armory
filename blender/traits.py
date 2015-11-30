@@ -151,6 +151,7 @@ def initObjectProperties():
     bpy.types.Object.traitlist_index = bpy.props.IntProperty(name = "Index for my_list", default = 0)
     
     bpy.types.Object.geometry_cached = bpy.props.BoolProperty(name="Geometry cached", default=False)
+    bpy.types.Material.export_tangents = bpy.props.BoolProperty(name="Export tangents", default=False)
     bpy.app.handlers.scene_update_post.append(cb_scene_update)
     #bpy.app.handlers.scene_update_post.remove(cb_scene_update)
 

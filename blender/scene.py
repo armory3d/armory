@@ -1655,8 +1655,13 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 					om.index_arrays.append(ia)
 		
 		# Export tangents
-		# TODO: check for proper texture coords and if normal map is applied
-		if (len(exportMesh.uv_textures) > 0):
+		# TODO: check for texture coords
+		export_tangents = False
+		for m in exportMesh.materials:
+			if m.export_tangents == True:
+				export_tangents = True
+				break
+		if (export_tangents and len(exportMesh.uv_textures) > 0):
 		#	exportMesh.calc_tangents()	# TODO: use to export tangents
 			ia = om.index_arrays[0].values
 			posa = pa.values
@@ -1990,6 +1995,17 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 			o.contexts.append(c)
 
+			# Whether objects should export tangent data
+			if material.export_tangents != const6.bool:
+				material.export_tangents = const6.bool
+				# Delete geometry caches
+				for ob in bpy.data.objects:
+					if type(ob.data) == bpy.types.Mesh:
+						for m in ob.data.materials:
+							if m.name == material.name:
+								ob.geometry_cached = False
+								break
+
 			#intensity = material.specular_intensity
 			#specular = [material.specular_color[0] * intensity, material.specular_color[1] * intensity, material.specular_color[2] * intensity]
 
@@ -2087,13 +2103,13 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			if (not object.parent):
 				self.ExportNode(object, scene)
 
+		self.output.material_resources = []
+		self.ExportMaterials()
+
 		self.output.geometry_resources = [];
 		self.output.light_resources = [];
 		self.output.camera_resources = [];
 		self.ExportObjects(scene)
-
-		self.output.material_resources = []
-		self.ExportMaterials()
 
 
 		if (self.restoreFrame):
