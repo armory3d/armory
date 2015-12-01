@@ -1978,7 +1978,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 						color_node = self.findNodeByLink(tree, surface_node, surface_node.inputs[0])
 						if color_node.type == 'TEX_IMAGE':
 							const5.bool = True
-							tex1.name = color_node.image.name
+							tex1.name = color_node.image.name.split('.', 1)[0] # Remove extension
 					else:
 						col = surface_node.inputs[0].default_value
 						const1.vec4 = [col[0], col[1], col[2], col[3]]
@@ -1991,7 +1991,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 							color_node = self.findNodeByLink(tree, normal_node, normal_node.inputs[1])
 							if color_node.type == 'TEX_IMAGE':
 								const6.bool = True
-								tex2.name = color_node.image.name
+								tex2.name = color_node.image.name.split('.', 1)[0]
 
 			o.contexts.append(c)
 

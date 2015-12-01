@@ -450,8 +450,9 @@ class Main {
         #end
     }
     static function start() {
-        var starter = new kha.Starter();
-        starter.start(new lue.App("room1", cycles.Root));
+        kha.System.init("CyclesGame", 1136, 640, function() {
+            new lue.App(cycles.Root);
+        });
     }
 }
 """)
