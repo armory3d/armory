@@ -1122,8 +1122,9 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 						if (not bone.parent):
 							self.ProcessBone(bone)
 
-		for subnode in node.children:
-			self.ProcessNode(subnode)
+		if node.type != 'MESH' or node.instanced_children == False:
+			for subnode in node.children:
+				self.ProcessNode(subnode)
 
 
 	def ProcessSkinnedMeshes(self):
@@ -1273,12 +1274,6 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			else:
 				parento.nodes.append(o)
 
-		if not hasattr(o, 'nodes'):
-			o.nodes = []
-		for subnode in node.children:
-			if (subnode.parent_type != "BONE"):
-				self.ExportNode(subnode, scene, None, o)
-
 		# Export traits
 		# TODO: export only for geometry nodes and nodes
 		o.traits = []
@@ -1320,6 +1315,13 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 								 ':' + shape + \
 								 ":" + str(rb.friction)
 			o.traits.append(x)
+
+		if not hasattr(o, 'nodes'):
+			o.nodes = []
+		if node.type != 'MESH' or node.instanced_children == False:
+			for subnode in node.children:
+				if (subnode.parent_type != "BONE"):
+					self.ExportNode(subnode, scene, None, o)
 
 
 
@@ -1431,6 +1433,21 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 		index = self.filepath.rfind('/')
 		fp = self.filepath[:(index+1)] + 'geom_' + oid + '.json'
+
+		# Check if geometry is using instanced rendering
+		is_instanced = False
+		for n in objectRef[1]["nodeTable"]:
+			if n.instanced_children == True:
+				is_instanced = True
+				# TODO: cache instanced geometry
+				node.geometry_cached = False
+				# Save offset data
+				instance_offsets = []
+				for sn in n.children:
+					instance_offsets.append(sn.location.x - n.location.x)
+					instance_offsets.append(sn.location.y - n.location.y)
+					instance_offsets.append(sn.location.z - n.location.z)
+				break
 		
 		# No export necessary
 		if node.geometry_cached == True and os.path.exists(fp):
@@ -1719,10 +1736,17 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 			mesh.update()
 
+		# Save offset data for instanced rendering
+
+		if is_instanced == True:
+			om.instance_offsets = instance_offsets
+
 		# Delete the new mesh that we made earlier.
 
 		bpy.data.meshes.remove(exportMesh)
 		o.mesh = om
+
+
 
 		# One geometry data per file
 		geom_obj = Object()
