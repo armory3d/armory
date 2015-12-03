@@ -7,6 +7,8 @@ attribute vec3 pos;
 attribute vec2 tex;
 attribute vec3 nor;
 //attribute vec4 col;
+attribute vec3 tan;
+attribute vec3 bitan;
 
 uniform mat4 M;
 uniform mat4 V;
@@ -45,6 +47,12 @@ void kore() {
 	lightDir = normalize(light - position);
 	eyeDir = normalize(eye - position);
 
+	vec3 vTangent = tan; 
+	vec3 vBitangent = bitan; 
+   
+	mat3 TBN = transpose(mat3(vTangent, vBitangent, normal)); 
+	lightDir = normalize(TBN * lightDir); 
+	eyeDir = normalize(TBN * eyeDir); 
 }
 
 

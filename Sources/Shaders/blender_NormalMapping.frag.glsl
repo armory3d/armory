@@ -5,6 +5,7 @@ precision mediump float;
 
 uniform sampler2D stex;
 uniform sampler2D shadowMap;
+uniform sampler2D normalMap;
 uniform bool texturing;
 uniform bool lighting;
 uniform bool receiveShadow;
@@ -104,7 +105,8 @@ void kore() {
 		vec3 v = eyeDir;
 
 		float dotNL = 0.0;
-		dotNL = clamp(dot(n, l), 0.0, 1.0);
+		vec3 tn = normalize(texture2D(normalMap, vec2(texCoord.x, 1.0 - texCoord.y)).rgb * 2.0 - 1.0);
+		dotNL = clamp(dot(tn, l), 0.0, 1.0);
 
 		float spec = LightingFuncGGX_OPT3(n, v, l, roughness, specular);
 		vec3 rgb = spec + t * dotNL;

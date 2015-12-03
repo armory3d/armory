@@ -1,3 +1,13 @@
+@context env_map
+
+-set depth_write = false
+-set compare_mode = always
+-set cull_mode = none
+
+-link V = _viewMatrix
+-link P = _projectionMatrix
+
+-vert env_map.vert.glsl
 //--------------------------------------------------------
 #ifdef GL_ES
 precision highp float;
@@ -71,3 +81,27 @@ void kore() {
 	gl_Position = vec4(pos.xy, 0.0, 1.0);
 }
 
+-frag env_map.frag.glsl
+//--------------------------------------------------------
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+#define PI 3.1415926
+#define TwoPI (2.0 * PI)
+
+uniform sampler2D envmap;
+
+varying vec3 wcNormal;
+
+vec2 envMapEquirect(vec3 wcNormal, float flipEnvMap) {
+  float phi = acos(wcNormal.z);
+  float theta = atan(flipEnvMap * wcNormal.x, wcNormal.y) + PI;
+  return vec2(theta / TwoPI, phi / PI);
+}
+
+void kore() {
+
+  vec3 N = normalize(wcNormal);
+    gl_FragColor = texture2D(envmap, envMapEquirect(N, -1.0));
+}

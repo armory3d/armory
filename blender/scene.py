@@ -1912,7 +1912,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		o.near_plane = object.clip_start
 		o.far_plane = object.clip_end
 		o.frustum_culling = False
-		o.pipeline = "blender_resource/blender_pipeline"
+		o.pipeline = "pipeline_resource/blender_pipeline"
 		o.clear_color = [0.0, 0.0, 0.0, 1.0]
 		o.type = "perspective"
 		
@@ -1944,12 +1944,13 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			#intensity = material.diffuse_intensity
 			#diffuse = [material.diffuse_color[0] * intensity, material.diffuse_color[1] * intensity, material.diffuse_color[2] * intensity]
 
-			o.shader = "blender_resource/blender_shader"
+			defs = []
+			o.shader = "blender_resource/blender"
 			o.cast_shadow = True
 			o.contexts = []
 			
 			c = Object()
-			c.id = "lighting"
+			c.id = "blender"
 			c.bind_constants = []
 			const1 = Object()
 			const1.id = "diffuseColor"
@@ -1971,20 +1972,12 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			const5.id = "texturing"
 			const5.bool = False
 			c.bind_constants.append(const5)
-			const6 = Object()
-			const6.id = "normalMapping"
-			const6.bool = False
-			c.bind_constants.append(const6)
 
 			c.bind_textures = []
 			tex1 = Object()
 			tex1.id = "stex"
 			tex1.name = ""
 			c.bind_textures.append(tex1)
-			tex2 = Object()
-			tex2.id = "normalMap"
-			tex2.name = ""
-			c.bind_textures.append(tex2)
 
 			# Parse nodes
 			out_node = None
@@ -1992,6 +1985,8 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 				if n.type == 'OUTPUT_MATERIAL':
 					out_node = n
 					break
+
+			normalMapping = False
 
 			if out_node != None and out_node.inputs[0].is_linked:
 				tree = material.node_tree
@@ -2014,14 +2009,24 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 						if normal_node.inputs[1].is_linked:
 							color_node = self.findNodeByLink(tree, normal_node, normal_node.inputs[1])
 							if color_node.type == 'TEX_IMAGE':
-								const6.bool = True
-								tex2.name = color_node.image.name.split('.', 1)[0]
+								normalMapping = True
+								defs.append('_NormalMapping')
+								tex = Object()
+								tex.id = "normalMap"
+								tex.name = color_node.image.name.split('.', 1)[0]
+								c.bind_textures.append(tex)
 
 			o.contexts.append(c)
 
+			# Merge duplicates and sort
+			defs = sorted(list(set(defs)))
+			# Select correct shader variant
+			for d in defs:
+				o.shader += d
+
 			# Whether objects should export tangent data
-			if material.export_tangents != const6.bool:
-				material.export_tangents = const6.bool
+			if material.export_tangents != normalMapping:
+				material.export_tangents = normalMapping
 				# Delete geometry caches
 				for ob in bpy.data.objects:
 					if type(ob.data) == bpy.types.Mesh:

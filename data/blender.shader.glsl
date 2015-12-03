@@ -1,3 +1,80 @@
+@context blender
+
+-set depth_write = true
+-set compare_mode = less
+-set cull_mode = counter_clockwise
+
+-link M = _modelMatrix
+-link V = _viewMatrix
+-link P = _projectionMatrix
+-link lightMVP = _lightMVP
+-link light = _lightPosition
+-link eye = _cameraPosition
+
+-vert blender.vert.glsl
+//--------------------------------------------------------
+#ifdef GL_ES
+precision highp float;
+#endif
+
+attribute vec3 pos;
+attribute vec2 tex;
+attribute vec3 nor;
+//attribute vec4 col;
+#ifdef _NormalMapping
+attribute vec3 tan;
+attribute vec3 bitan;
+#endif
+
+uniform mat4 M;
+uniform mat4 V;
+uniform mat4 P;
+uniform mat4 lightMVP;
+uniform vec4 diffuseColor;
+uniform vec3 light;
+uniform vec3 eye;
+
+varying vec3 position;
+varying vec2 texCoord;
+varying vec3 normal;
+varying vec4 lPos;
+varying vec4 matColor;
+varying vec3 lightDir;
+varying vec3 eyeDir;
+
+mat3 transpose(mat3 m) {
+  return mat3(m[0][0], m[1][0], m[2][0],
+              m[0][1], m[1][1], m[2][1],
+              m[0][2], m[1][2], m[2][2]);
+}
+
+void kore() {
+
+	vec4 mPos = M * vec4(pos, 1.0);
+	gl_Position = P * V * mPos;
+	position = mPos.xyz / mPos.w;
+	texCoord = tex;
+	normal = normalize((M * vec4(nor, 0.0)).xyz);
+
+	lPos = lightMVP * vec4(pos, 1.0);
+
+	matColor = diffuseColor;// * col;
+
+	lightDir = normalize(light - position);
+	eyeDir = normalize(eye - position);
+
+#ifdef _NormalMapping
+	vec3 vTangent = tan; 
+	vec3 vBitangent = bitan; 
+   
+	mat3 TBN = transpose(mat3(vTangent, vBitangent, normal)); 
+	lightDir = normalize(TBN * lightDir); 
+	eyeDir = normalize(TBN * eyeDir); 
+#endif
+}
+
+
+-frag blender.frag.glsl
 //--------------------------------------------------------
 #ifdef GL_ES
 precision mediump float;
@@ -5,6 +82,9 @@ precision mediump float;
 
 uniform sampler2D stex;
 uniform sampler2D shadowMap;
+#ifdef _NormalMapping
+uniform sampler2D normalMap;
+#endif
 uniform bool texturing;
 uniform bool lighting;
 uniform bool receiveShadow;
@@ -104,7 +184,12 @@ void kore() {
 		vec3 v = eyeDir;
 
 		float dotNL = 0.0;
+#ifdef _NormalMapping
+		vec3 tn = normalize(texture2D(normalMap, vec2(texCoord.x, 1.0 - texCoord.y)).rgb * 2.0 - 1.0);
+		dotNL = clamp(dot(tn, l), 0.0, 1.0);
+#else
 		dotNL = clamp(dot(n, l), 0.0, 1.0);
+#endif
 
 		float spec = LightingFuncGGX_OPT3(n, v, l, roughness, specular);
 		vec3 rgb = spec + t * dotNL;
@@ -132,3 +217,52 @@ void kore() {
 
 //--------------------------------------------------------
 //--------------------------------------------------------
+@context shadow_map
+
+-set depth_write = true
+-set compare_mode = less
+-set cull_mode = clockwise
+
+-link lightMVP = _lightMVP
+
+-vert shadow_map.vert.glsl
+//--------------------------------------------------------
+#ifdef GL_ES
+precision highp float;
+#endif
+
+attribute vec3 pos;
+attribute vec2 tex;
+attribute vec3 nor;
+attribute vec4 col;
+#ifdef _NormalMapping
+attribute vec3 tan;
+attribute vec3 bitan;
+#endif
+
+uniform mat4 lightMVP;
+
+varying vec4 position;
+
+void kore() {
+
+	gl_Position = lightMVP * vec4(pos, 1.0);
+	position = gl_Position;
+}
+
+
+-frag shadow_map.frag.glsl
+//--------------------------------------------------------
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+varying vec4 position;
+
+void kore() {
+
+    float normalizedDistance = position.z / position.w;
+    normalizedDistance += 0.005;
+ 
+    gl_FragColor = vec4(normalizedDistance, normalizedDistance, normalizedDistance, 1.0);
+}

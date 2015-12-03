@@ -7,6 +7,8 @@ attribute vec3 pos;
 attribute vec2 tex;
 attribute vec3 nor;
 attribute vec4 col;
+attribute vec3 tan;
+attribute vec3 bitan;
 
 uniform mat4 lightMVP;
 
