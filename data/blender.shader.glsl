@@ -17,13 +17,24 @@
 precision highp float;
 #endif
 
+#ifdef _NormalMapping
+#define _Texturing
+#endif
+
 attribute vec3 pos;
+#ifdef _Texturing
 attribute vec2 tex;
+#endif
 attribute vec3 nor;
-//attribute vec4 col;
+#ifdef _VCols
+attribute vec4 col;
+#endif
 #ifdef _NormalMapping
 attribute vec3 tan;
 attribute vec3 bitan;
+#endif
+#ifdef _Instancing
+attribute vec3 off;
 #endif
 
 uniform mat4 M;
@@ -35,7 +46,9 @@ uniform vec3 light;
 uniform vec3 eye;
 
 varying vec3 position;
+#ifdef _Texturing
 varying vec2 texCoord;
+#endif
 varying vec3 normal;
 varying vec4 lPos;
 varying vec4 matColor;
@@ -50,15 +63,24 @@ mat3 transpose(mat3 m) {
 
 void kore() {
 
+#ifdef _Instancing
+	vec4 mPos = M * vec4(pos + off, 1.0);
+	lPos = lightMVP * vec4(pos + off, 1.0);
+#else
 	vec4 mPos = M * vec4(pos, 1.0);
+	lPos = lightMVP * vec4(pos, 1.0);
+#endif
 	gl_Position = P * V * mPos;
 	position = mPos.xyz / mPos.w;
+#ifdef _Texturing
 	texCoord = tex;
+#endif
 	normal = normalize((M * vec4(nor, 0.0)).xyz);
 
-	lPos = lightMVP * vec4(pos, 1.0);
-
-	matColor = diffuseColor;// * col;
+	matColor = diffuseColor;
+#ifdef _VCols
+	matColor *= col;
+#endif
 
 	lightDir = normalize(light - position);
 	eyeDir = normalize(eye - position);
@@ -80,18 +102,25 @@ void kore() {
 precision mediump float;
 #endif
 
+#ifdef _NormalMapping
+#define _Texturing
+#endif
+
+#ifdef _Texturing
 uniform sampler2D stex;
+#endif
 uniform sampler2D shadowMap;
 #ifdef _NormalMapping
 uniform sampler2D normalMap;
 #endif
-uniform bool texturing;
 uniform bool lighting;
 uniform bool receiveShadow;
 uniform float roughness;
 
 varying vec3 position;
+#ifdef _Texturing
 varying vec2 texCoord;
+#endif
 varying vec3 normal;
 varying vec4 lPos;
 varying vec4 matColor;
@@ -200,16 +229,15 @@ void kore() {
 		outColor = vec4(t, 1.0);
 	}
 
-	if (texturing) {
-		vec4 texel = texture2D(stex, texCoord);
-		//if(texel.a < 0.4)
-		//	discard;
+#ifdef _Texturing
+	vec4 texel = texture2D(stex, texCoord);
+	//if(texel.a < 0.4)
+	//	discard;
 
-		outColor = vec4(texel * outColor);
-	}
-	else {
-		outColor = vec4(outColor.rgb, 1.0);
-	}
+	outColor = vec4(texel * outColor);
+#else
+	outColor = vec4(outColor.rgb, 1.0);
+#endif
 
 	gl_FragColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
 }
@@ -231,13 +259,24 @@ void kore() {
 precision highp float;
 #endif
 
+#ifdef _NormalMapping
+#define _Texturing
+#endif
+
 attribute vec3 pos;
+#ifdef _Texturing
 attribute vec2 tex;
+#endif
 attribute vec3 nor;
+#ifdef _VCols
 attribute vec4 col;
+#endif
 #ifdef _NormalMapping
 attribute vec3 tan;
 attribute vec3 bitan;
+#endif
+#ifdef _Instancing
+attribute vec3 off;
 #endif
 
 uniform mat4 lightMVP;
@@ -245,8 +284,11 @@ uniform mat4 lightMVP;
 varying vec4 position;
 
 void kore() {
-
+#ifdef _Instancing
+	gl_Position = lightMVP * vec4(pos + off, 1.0);
+#else
 	gl_Position = lightMVP * vec4(pos, 1.0);
+#endif
 	position = gl_Position;
 }
 
@@ -255,6 +297,10 @@ void kore() {
 //--------------------------------------------------------
 #ifdef GL_ES
 precision mediump float;
+#endif
+
+#ifdef _NormalMapping
+#define _Texturing
 #endif
 
 varying vec4 position;

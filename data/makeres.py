@@ -53,6 +53,8 @@ def writeShader(defs):
 						break
 				if found == False:
 					skipTillEndIf = True
+				if s == '_Instancing': # TODO: Prevent instanced data to go into main verrtex structure
+					skipTillEndIf = True
 			continue
 
 		if line.startswith('#endif'):

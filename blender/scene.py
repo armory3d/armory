@@ -1442,11 +1442,11 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 				# TODO: cache instanced geometry
 				node.geometry_cached = False
 				# Save offset data
-				instance_offsets = []
+				instance_offsets = [0, 0, 0] # Include parent
 				for sn in n.children:
-					instance_offsets.append(sn.location.x - n.location.x)
-					instance_offsets.append(sn.location.y - n.location.y)
-					instance_offsets.append(sn.location.z - n.location.z)
+					instance_offsets.append(sn.location.x)
+					instance_offsets.append(sn.location.y)
+					instance_offsets.append(sn.location.z)
 				break
 		
 		# No export necessary
@@ -1945,7 +1945,6 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			#diffuse = [material.diffuse_color[0] * intensity, material.diffuse_color[1] * intensity, material.diffuse_color[2] * intensity]
 
 			defs = []
-			o.shader = "blender_resource/blender"
 			o.cast_shadow = True
 			o.contexts = []
 			
@@ -1962,22 +1961,14 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			c.bind_constants.append(const2)
 			const3 = Object()
 			const3.id = "lighting"
-			const3.bool = True
+			const3.bool = False
 			c.bind_constants.append(const3)
 			const4 = Object()
 			const4.id = "receiveShadow"
-			const4.bool = True
+			const4.bool = material.receive_shadow
 			c.bind_constants.append(const4)
-			const5 = Object()
-			const5.id = "texturing"
-			const5.bool = False
-			c.bind_constants.append(const5)
 
 			c.bind_textures = []
-			tex1 = Object()
-			tex1.id = "stex"
-			tex1.name = ""
-			c.bind_textures.append(tex1)
 
 			# Parse nodes
 			out_node = None
@@ -1992,12 +1983,15 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 				tree = material.node_tree
 				surface_node = self.findNodeByLink(tree, out_node, out_node.inputs[0])
 				if surface_node.type == 'BSDF_DIFFUSE':
+					const3.bool = False # Enable lighting
 					# Color
 					if surface_node.inputs[0].is_linked:
 						color_node = self.findNodeByLink(tree, surface_node, surface_node.inputs[0])
-						if color_node.type == 'TEX_IMAGE':
-							const5.bool = True
-							tex1.name = color_node.image.name.split('.', 1)[0] # Remove extension
+						if color_node.type == 'TEX_IMAGE': # Bind texture
+							tex = Object()
+							tex.id = "stex"
+							tex.name = color_node.image.name.split('.', 1)[0] # Remove extension
+							c.bind_textures.append(tex)
 					else:
 						col = surface_node.inputs[0].default_value
 						const1.vec4 = [col[0], col[1], col[2], col[3]]
@@ -2018,22 +2012,40 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 			o.contexts.append(c)
 
-			# Merge duplicates and sort
-			defs = sorted(list(set(defs)))
-			# Select correct shader variant
-			for d in defs:
-				o.shader += d
+			# Material users
+			mat_users = []
+			for ob in bpy.data.objects:
+				if type(ob.data) == bpy.types.Mesh:
+					for m in ob.data.materials:
+						if m.name == material.name:
+							mat_users.append(ob)
+							break;
+
+			for ob in mat_users:
+				# Instancing used by material user
+				if ob.instanced_children:
+					defs.append('_Instancing')
+				# VCols used by material user
+				if ob.data.vertex_colors:
+					defs.append('_VCols');
+				# Texcoords
+				if ob.data.uv_textures:
+					defs.append('_Texturing')
 
 			# Whether objects should export tangent data
 			if material.export_tangents != normalMapping:
 				material.export_tangents = normalMapping
 				# Delete geometry caches
-				for ob in bpy.data.objects:
-					if type(ob.data) == bpy.types.Mesh:
-						for m in ob.data.materials:
-							if m.name == material.name:
-								ob.geometry_cached = False
-								break
+				for ob in mat_users:
+					ob.geometry_cached = False
+					break
+
+			# Merge duplicates and sort
+			defs = sorted(list(set(defs)))
+			# Select correct shader variant
+			o.shader = "blender_resource/blender"
+			for d in defs:
+				o.shader += d
 
 			#intensity = material.specular_intensity
 			#specular = [material.specular_color[0] * intensity, material.specular_color[1] * intensity, material.specular_color[2] * intensity]

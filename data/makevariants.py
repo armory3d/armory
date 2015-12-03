@@ -33,6 +33,17 @@ if not os.path.exists('out'):
 # Open shader file
 file_lines = open(sys.argv[1]).read().splitlines()
 
+# Gather ifdefs
+defs = []
+for line in file_lines:
+	if line.startswith('#ifdef'):
+		d = line.split(' ')[1]
+		if d != 'GL_ES':
+			defs.append(d)
+
+# Merge duplicates and sort
+defs = sorted(list(set(defs)))
+
 # Begin export
 write_shader = False
 shader_name = ''
@@ -64,15 +75,22 @@ exportShader(shader_name, shader_lines)
 # Create variations of exported shaders
 # -------------------------------------------
 
-def parseDefs(defs, lines): # Find #ifdefs
-	for line in lines:
-		if line.startswith('#ifdef'):
-			name = line.split(' ')[1]
-			if name != 'GL_ES':
-				defs.append(name)
+# def parseDefs(defs, lines): # Find #ifdefs
+# 	for line in lines:
+# 		if line.startswith('#ifdef'):
+# 			name = line.split(' ')[1]
+# 			if name != 'GL_ES':
+# 				defs.append(name)
 
 def writeFile(name, defs, lines): # Export variations
 	with open('out/' + name, "w") as f:
+		# Prepend defines
+		for d in defs:
+			f.write('#define ' + d + '\n')
+		# Write rest
+		for line in lines:
+			f.write(line + '\n')
+		'''
 		# Rewrite based on specified defs
 		removedef = False
 		endifmatched = True
@@ -107,20 +125,20 @@ def writeFile(name, defs, lines): # Export variations
 
 			if keep == True:
 				f.write(line + '\n')
-
+		'''
 
 for i in range(0, len(vert_shaders)):
 
-	defs = []
+	#defs = []
 
 	# Look for #ifdef in .vert and .frag pairs
 	vert_lines = vert_shaders[i] # TODO: get defs in .shader file
 	frag_lines = frag_shaders[i]
-	parseDefs(defs, vert_lines)
-	parseDefs(defs, frag_lines)
+	#parseDefs(defs, vert_lines)
+	#parseDefs(defs, frag_lines)
 
 	# Merge duplicates and sort
-	defs = sorted(list(set(defs)))
+	#defs = sorted(list(set(defs)))
 
 	# Process #defines and output name + defines + (.vert/.frag).glsl
 	for L in range(0, len(defs)+1):
