@@ -42,7 +42,8 @@ def build():
     kha_path = output
     node_path = output + "/Tools/nodejs/node-osx"
 
-    os.system(bashCommand + " --nokrafix")
+    os.system('node Kha/make -t html5 ' + " --nokrafix")
+    #os.system(bashCommand + " --nokrafix")
     #os.system(node_path + " " + kha_path + "/make -t html5 --haxe " + haxePath())
     #print(subprocess.check_output([node_path + " " + kha_path + "/make -t html5 --haxe " + haxePath()], shell=True))
 

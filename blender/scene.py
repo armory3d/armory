@@ -1983,7 +1983,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 				tree = material.node_tree
 				surface_node = self.findNodeByLink(tree, out_node, out_node.inputs[0])
 				if surface_node.type == 'BSDF_DIFFUSE':
-					const3.bool = False # Enable lighting
+					const3.bool = True # Enable lighting
 					# Color
 					if surface_node.inputs[0].is_linked:
 						color_node = self.findNodeByLink(tree, surface_node, surface_node.inputs[0])
@@ -2011,6 +2011,9 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 								c.bind_textures.append(tex)
 
 			o.contexts.append(c)
+
+			if material.alpha_test == True:
+				defs.append('_AlphaTest')
 
 			# Material users
 			mat_users = []

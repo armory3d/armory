@@ -86,10 +86,12 @@ void kore() {
 	eyeDir = normalize(eye - position);
 
 #ifdef _NormalMapping
-	vec3 vTangent = tan; 
-	vec3 vBitangent = bitan; 
+	vec3 vTangent = (tan);
+	vec3 vBitangent = cross( normal, vTangent ) * 1.0;//tangent.w;
+	//vec3 vBitangent = (bitan);
    
 	mat3 TBN = transpose(mat3(vTangent, vBitangent, normal)); 
+	//mat3 TBN = (mat3(vTangent, vBitangent, normal)); 
 	lightDir = normalize(TBN * lightDir); 
 	eyeDir = normalize(TBN * eyeDir); 
 #endif
@@ -138,6 +140,7 @@ float shadowSimple(vec4 lPos) {
 
 	float distanceFromLight = packedZValue.z;
 
+	//float bias = clamp(0.005*tan(acos(dotNL)), 0, 0.01);
 	float bias = 0.0;//0.0005;
 
 	// 1.0 = not in shadow, 0.0 = in shadow
@@ -214,7 +217,7 @@ void kore() {
 
 		float dotNL = 0.0;
 #ifdef _NormalMapping
-		vec3 tn = normalize(texture2D(normalMap, vec2(texCoord.x, 1.0 - texCoord.y)).rgb * 2.0 - 1.0);
+		vec3 tn = normalize(texture2D(normalMap, texCoord).rgb * 2.0 - 1.0);
 		dotNL = clamp(dot(tn, l), 0.0, 1.0);
 #else
 		dotNL = clamp(dot(n, l), 0.0, 1.0);
@@ -226,13 +229,16 @@ void kore() {
 		outColor = vec4(vec3(rgb * visibility), 1.0);
 	}
 	else {
-		outColor = vec4(t, 1.0);
+		outColor = vec4(t * visibility, 1.0);
 	}
 
 #ifdef _Texturing
 	vec4 texel = texture2D(stex, texCoord);
-	//if(texel.a < 0.4)
-	//	discard;
+	
+#ifdef _AlphaTest
+	if(texel.a < 0.4)
+		discard;
+#endif
 
 	outColor = vec4(texel * outColor);
 #else
@@ -249,7 +255,7 @@ void kore() {
 
 -set depth_write = true
 -set compare_mode = less
--set cull_mode = clockwise
+-set cull_mode = counter_clockwise
 
 -link lightMVP = _lightMVP
 

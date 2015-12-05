@@ -1,7 +1,7 @@
 {
   "name": "cyclesgame",
   "url" : "https://github.com/luboslenco/cyclesgame/",
-  "license": "MIT",
+  "license": "LGPL",
   "tags": ["kha", "3d"],
   "description": "Blender game engine",
   "version": "15.11.0",

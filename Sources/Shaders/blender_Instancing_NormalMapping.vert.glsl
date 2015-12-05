@@ -74,10 +74,12 @@ void kore() {
 	eyeDir = normalize(eye - position);
 
 #ifdef _NormalMapping
-	vec3 vTangent = tan; 
-	vec3 vBitangent = bitan; 
+	vec3 vTangent = (tan);
+	vec3 vBitangent = cross( normal, vTangent ) * 1.0;//tangent.w;
+	//vec3 vBitangent = (bitan);
    
 	mat3 TBN = transpose(mat3(vTangent, vBitangent, normal)); 
+	//mat3 TBN = (mat3(vTangent, vBitangent, normal)); 
 	lightDir = normalize(TBN * lightDir); 
 	eyeDir = normalize(TBN * eyeDir); 
 #endif

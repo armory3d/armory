@@ -41,6 +41,7 @@ float shadowSimple(vec4 lPos) {
 
 	float distanceFromLight = packedZValue.z;
 
+	//float bias = clamp(0.005*tan(acos(dotNL)), 0, 0.01);
 	float bias = 0.0;//0.0005;
 
 	// 1.0 = not in shadow, 0.0 = in shadow
@@ -117,7 +118,7 @@ void kore() {
 
 		float dotNL = 0.0;
 #ifdef _NormalMapping
-		vec3 tn = normalize(texture2D(normalMap, vec2(texCoord.x, 1.0 - texCoord.y)).rgb * 2.0 - 1.0);
+		vec3 tn = normalize(texture2D(normalMap, texCoord).rgb * 2.0 - 1.0);
 		dotNL = clamp(dot(tn, l), 0.0, 1.0);
 #else
 		dotNL = clamp(dot(n, l), 0.0, 1.0);
@@ -129,13 +130,16 @@ void kore() {
 		outColor = vec4(vec3(rgb * visibility), 1.0);
 	}
 	else {
-		outColor = vec4(t, 1.0);
+		outColor = vec4(t * visibility, 1.0);
 	}
 
 #ifdef _Texturing
 	vec4 texel = texture2D(stex, texCoord);
-	//if(texel.a < 0.4)
-	//	discard;
+	
+#ifdef _AlphaTest
+	if(texel.a < 0.4)
+		discard;
+#endif
 
 	outColor = vec4(texel * outColor);
 #else

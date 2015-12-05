@@ -14,6 +14,7 @@ def initObjectProperties():
     bpy.types.Object.geometry_cached = bpy.props.BoolProperty(name="Geometry cached", default=False)
     bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced children", default=False)
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive shadow", default=True)
+    bpy.types.Material.alpha_test = bpy.props.BoolProperty(name="Alpha test", default=False)
     bpy.types.Material.export_tangents = bpy.props.BoolProperty(name="Export tangents", default=False)
     bpy.app.handlers.scene_update_post.append(cb_scene_update)
     #bpy.app.handlers.scene_update_post.remove(cb_scene_update)
@@ -47,6 +48,7 @@ class MatsPropsPanel(bpy.types.Panel):
         mat = bpy.context.material
 
         layout.prop(mat, 'receive_shadow')
+        layout.prop(mat, 'alpha_test')
 
 # Registration
 bpy.utils.register_module(__name__)
