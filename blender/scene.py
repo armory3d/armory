@@ -2043,12 +2043,15 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 					ob.geometry_cached = False
 					break
 
-			# Merge duplicates and sort
-			defs = sorted(list(set(defs)))
-			# Select correct shader variant
-			o.shader = "blender_resource/blender"
-			for d in defs:
-				o.shader += d
+			if material.custom_shader == False:
+				# Merge duplicates and sort
+				defs = sorted(list(set(defs)))
+				# Select correct shader variant
+				o.shader = "blender_resource/blender"
+				for d in defs:
+					o.shader += d
+			else:
+				o.shader = material.custom_shader_name
 
 			#intensity = material.specular_intensity
 			#specular = [material.specular_color[0] * intensity, material.specular_color[1] * intensity, material.specular_color[2] * intensity]

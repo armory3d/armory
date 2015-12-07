@@ -8,6 +8,7 @@ from bpy.props import *
 import subprocess
 import atexit
 import webbrowser
+import write_data
 
 def defaultSettings():
     wrd = bpy.data.worlds[0]
@@ -134,23 +135,10 @@ def exportGameData():
         a.armature.location.z = a.z
     
     # Write khafile.js
-    with open('khafile.js', 'w') as f:
-        f.write(
-"""// Auto-generated
-var project = new Project('""" + bpy.data.worlds[0]['CGProjectName'] + """');
-
-project.addSources('Sources');
-project.addShaders('Sources/Shaders/**');
-project.addAssets('Assets/**');
-project.addLibrary('lue');
-project.addLibrary('cyclesgame');
-project.addLibrary('haxebullet');
-
-return project;
-""")
+    write_data.write_khafilejs()
 
     # Write Main.hx
-    #write_main()
+    write_data.write_main()
 
 def buildProject(self, build_type=0):
     # Save scripts

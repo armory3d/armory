@@ -15,9 +15,9 @@ def initObjectProperties():
     bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced children", default=False)
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive shadow", default=True)
     bpy.types.Material.alpha_test = bpy.props.BoolProperty(name="Alpha test", default=False)
+    bpy.types.Material.custom_shader = bpy.props.BoolProperty(name="Custom shader", default=False)
+    bpy.types.Material.custom_shader_name = bpy.props.StringProperty(name="Name", default="")
     bpy.types.Material.export_tangents = bpy.props.BoolProperty(name="Export tangents", default=False)
-    bpy.app.handlers.scene_update_post.append(cb_scene_update)
-    #bpy.app.handlers.scene_update_post.remove(cb_scene_update)
 
 # Menu in object region
 class ToolsPropsPanel(bpy.types.Panel):
@@ -46,11 +46,16 @@ class MatsPropsPanel(bpy.types.Panel):
 
         layout.prop(mat, 'receive_shadow')
         layout.prop(mat, 'alpha_test')
+        layout.prop(mat, 'custom_shader')
+        if mat.custom_shader:
+            layout.prop(mat, 'custom_shader_name')
 
 # Registration
 def register():
     bpy.utils.register_module(__name__)
     initObjectProperties()
+    bpy.app.handlers.scene_update_post.append(cb_scene_update)
 
 def unregister():
+    bpy.app.handlers.scene_update_post.remove(cb_scene_update)
     bpy.utils.unregister_module(__name__)
