@@ -22,86 +22,14 @@ class ListTraitItem(bpy.types.PropertyGroup):
         items = [('Script', 'Script', 'Script'),
                  ('Nodes', 'Nodes', 'Nodes'),
                  ('Scene Instance', 'Scene Instance', 'Scene Instance'),
-                 ('Animation', 'Animation', 'Animation'),
-                 ('Camera', 'Camera', 'Camera'),
-                 ('Light', 'Light', 'Light'),
-                 ('Rigid Body', 'Rigid Body', 'Rigid Body'),
-                 
-                 ('Mesh Renderer', 'Mesh Renderer', 'Mesh Renderer'),
-                 ('Billboard Renderer', 'Billboard Renderer', 'Billboard Renderer'),
-                 ('Particles Renderer', 'Particles Renderer', 'Particles Renderer'),
-                 ('Skydome Renderer', 'Skydome Renderer', 'Skydome Renderer'),
-                 ('Custom Renderer', 'Custom Renderer', 'Custom Renderer')
+                 ('Animation', 'Animation', 'Animation')
                  ],
         name = "Type")
-        
-    default_material_prop = bpy.props.BoolProperty(
-           name="Default Material",
-           description="A name for this item",
-           default=True)
-
-    material_prop = bpy.props.StringProperty(
-           name="Material",
-           description="A name for this item",
-           default="")
-
-    lighting_prop = bpy.props.BoolProperty(
-            name="Lighting",
-            default=True)
-
-    cast_shadow_prop = bpy.props.BoolProperty(
-            name="Cast Shadow",
-            default=True)
-
-    receive_shadow_prop = bpy.props.BoolProperty(
-            name="Receive Shadow",
-            default=True)
-
-    shader_prop = bpy.props.StringProperty(
-           name="Shader",
-           description="A name for this item",
-           default="")
 
     data_prop = bpy.props.StringProperty(
            name="Data",
            description="A name for this item",
            default="")
-
-    camera_link_prop = bpy.props.StringProperty(
-           name="Camera",
-           description="A name for this item",
-           default="Camera")
-
-    light_link_prop = bpy.props.StringProperty(
-           name="Light",
-           description="A name for this item",
-           default="Lamp")
-
-    default_body_prop = bpy.props.BoolProperty(
-           name="Default Body",
-           description="A name for this item",
-           default=True)
-
-    body_link_prop = bpy.props.StringProperty(
-           name="Body",
-           description="A name for this item",
-           default="")
-
-    custom_shape_prop = bpy.props.BoolProperty(
-           name="Custom Shape",
-           description="A name for this item",
-           default=False)
-
-    custom_shape_type_prop = bpy.props.EnumProperty(
-        items = [('Terrain', 'Terrain', 'Terrain'),
-                 ('Static Mesh', 'Static Mesh', 'Static Mesh')
-                 ],
-        name = "Shape")
-
-    shape_size_scale_prop = bpy.props.FloatVectorProperty(
-           name = "Size Scale",
-           default=[1,1,1],
-           size=3, min=0, max=10)
 
     scene_prop = bpy.props.StringProperty(
            name="Scene",
@@ -123,9 +51,6 @@ class ListTraitItem(bpy.types.PropertyGroup):
            description="A name for this item",
            default="")
 
-bpy.utils.register_class(ListTraitItem)
-
-
 class MY_UL_TraitList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here...
@@ -139,13 +64,10 @@ class MY_UL_TraitList(bpy.types.UIList):
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
             layout.label("", icon = custom_icon)
-bpy.utils.register_class(MY_UL_TraitList)
 
 def initObjectProperties():
     bpy.types.Object.my_traitlist = bpy.props.CollectionProperty(type = ListTraitItem)
     bpy.types.Object.traitlist_index = bpy.props.IntProperty(name = "Index for my_list", default = 0)
-
-initObjectProperties()
 
 
 class LIST_OT_TraitNewItem(bpy.types.Operator):
@@ -269,36 +191,12 @@ class ToolsTraitsPanel(bpy.types.Panel):
                 item.name = item.class_name_prop
                 row = layout.row()
                 row.prop(item, "class_name_prop")
+            
             # Nodes
             elif item.type_prop =='Nodes':
                 item.name = item.nodes_name_prop
                 row = layout.row()
                 row.prop_search(item, "nodes_name_prop", bpy.data, "node_groups", "Tree")
-            # Camera
-            elif item.type_prop == 'Camera':
-                item.name = item.type_prop
-                row = layout.row()
-                row.prop_search(item, "camera_link_prop", bpy.data, "cameras", "Camera")
-
-            # Light
-            elif item.type_prop == 'Light':
-                item.name = item.type_prop
-                row = layout.row()
-                row.prop_search(item, "light_link_prop", bpy.data, "lamps", "Light")
-
-            # Rigid body
-            elif item.type_prop == 'Rigid Body':
-                item.name = item.type_prop
-                row = layout.row()
-                row.prop(item, "default_body_prop")
-                if item.default_body_prop == False:
-                    row.prop_search(item, "body_link_prop", bpy.context.scene.rigidbody_world.group, "objects", "")
-                row = layout.row()
-                row.prop(item, "custom_shape_prop")
-                if item.custom_shape_prop == True:
-                    row.prop(item, "custom_shape_type_prop")
-                row = layout.row()
-                row.prop(item, "shape_size_scale_prop")
 
             # Scene instance
             elif item.type_prop == 'Scene Instance':
@@ -336,61 +234,11 @@ class ToolsTraitsPanel(bpy.types.Panel):
                     row = layout.row()
                     row.prop(item, "start_prop")
                     row.prop(item, "end_prop")
-            # Animation end
-            # Mesh renderer
-            elif item.type_prop == 'Mesh Renderer':
-                item.name = item.type_prop
-                row = layout.row()
-                row.prop(item, "default_material_prop")
-                if item.default_material_prop == False:
-                    row.prop_search(item, "material_prop", bpy.data, "materials", "")
-                row = layout.row()
-                row.prop(item, "lighting_prop")
-                row = layout.row()
-                row.prop(item, "cast_shadow_prop")
-                row = layout.row()
-                row.prop(item, "receive_shadow_prop")
-
-            # Custom renderer
-            elif item.type_prop == 'Custom Renderer':
-                item.name = item.class_name_prop
-                row = layout.row()
-                row.prop(item, "class_name_prop")
-                
-                row = layout.row()
-                row.prop(item, "default_material_prop")
-                if item.default_material_prop == False:
-                    row.prop_search(item, "material_prop", bpy.data, "materials", "")
-                row = layout.row()
-                row.prop(item, "shader_prop")
-                row = layout.row()
-                row.prop(item, "data_prop")
-
-            # Billboard renderer
-            elif item.type_prop == 'Billboard Renderer':
-                item.name = item.type_prop
-                row = layout.row()
-                row.prop(item, "default_material_prop")
-                if item.default_material_prop == False:
-                    row.prop_search(item, "material_prop", bpy.data, "materials", "")
-
-            # Particles renderer
-            elif item.type_prop == 'Particles Renderer':
-                item.name = item.type_prop
-                row = layout.row()
-                row.prop(item, "default_material_prop")
-                if item.default_material_prop == False:
-                    row.prop_search(item, "material_prop", bpy.data, "materials", "")
-                row = layout.row()
-                row.prop(item, "data_prop")
-
-            # Skydome renderer
-            elif item.type_prop == 'Skydome Renderer':
-                item.name = item.type_prop
-                row = layout.row()
-                row.prop(item, "default_material_prop")
-                if item.default_material_prop == False:
-                    row.prop_search(item, "material_prop", bpy.data, "materials", "")
 
 # Registration
-bpy.utils.register_module(__name__)
+def register():
+    bpy.utils.register_module(__name__)
+    initObjectProperties()
+
+def unregister():
+    bpy.utils.unregister_module(__name__)

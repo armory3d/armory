@@ -205,22 +205,13 @@ node_categories = [
 		]),
 	]
 
-	
-classes = [MyCustomTree, TransformNode, TimeNode, VectorNode, ScaleValueNode, SineNode]
-
 def register():
-	for c in classes:
-		bpy.utils.register_class(c)
+	bpy.utils.register_module(__name__)
 	try:
-	#	nodeitems_utils.unregister_node_categories("CUSTOM_NODES")
 		nodeitems_utils.register_node_categories("CUSTOM_NODES", node_categories)
 	except:
 		pass
 
 def unregister():
-	for c in classes:
-		bpy.utils.unregister_class(c)
 	nodeitems_utils.unregister_node_categories("CUSTOM_NODES")
-
-if __name__ == "__main__":
-	register()
+	bpy.utils.unregister_module(__name__)

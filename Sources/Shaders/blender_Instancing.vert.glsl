@@ -31,6 +31,7 @@ uniform mat4 lightMVP;
 uniform vec4 diffuseColor;
 uniform vec3 light;
 uniform vec3 eye;
+uniform float time;
 
 varying vec3 position;
 #ifdef _Texturing
@@ -57,6 +58,9 @@ void kore() {
 	vec4 mPos = M * vec4(pos, 1.0);
 	lPos = lightMVP * vec4(pos, 1.0);
 #endif
+	mPos.x += (sin(time * 2.0 + cos(mPos.x))) * ((pos.z + 0.3) / 2.0);
+	mPos.y += (cos(time * 2.0 + sin(mPos.x))) * ((pos.z + 0.3) / 8.0);
+
 	gl_Position = P * V * mPos;
 	position = mPos.xyz / mPos.w;
 #ifdef _Texturing
@@ -65,12 +69,24 @@ void kore() {
 	normal = normalize((M * vec4(nor, 0.0)).xyz);
 
 	matColor = diffuseColor;
+	float r = (sin(off.x * off.y * off.z) + 1.0) / 2.0;
+	matColor.rgb += r / 5.0;
+
 #ifdef _VCols
 	matColor *= col;
 #endif
 
+	matColor *= 0.5;
+	matColor *= (pos.z + 0.2) * 1.8;
+
+	matColor.rgb -= vec3((mPos.z + 1.2) / 5.0); //-1.2 1.2
+	//matColor.rgb *= 1.0 - ((mPos.z + 1.0) / 3.0);
+
 	lightDir = normalize(light - position);
 	eyeDir = normalize(eye - position);
+
+	float dotNL = clamp(dot(normal, lightDir), 0.8, 1.0);
+	matColor.rgb *= dotNL;
 
 #ifdef _NormalMapping
 	vec3 vTangent = (tan);

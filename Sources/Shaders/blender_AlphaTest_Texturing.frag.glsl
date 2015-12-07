@@ -137,7 +137,7 @@ void kore() {
 	vec4 texel = texture2D(stex, texCoord);
 	
 #ifdef _AlphaTest
-	if(texel.a < 0.4)
+	if(texel.a < 0.1)
 		discard;
 #endif
 

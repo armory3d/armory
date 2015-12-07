@@ -27,7 +27,6 @@ class ListAnimationTraitItem(bpy.types.PropertyGroup):
            description="A name for this item",
            default=0)
 
-bpy.utils.register_class(ListAnimationTraitItem)
 
 
 class MY_UL_AnimationTraitList(bpy.types.UIList):
@@ -44,12 +43,10 @@ class MY_UL_AnimationTraitList(bpy.types.UIList):
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
             layout.label("", icon = custom_icon)
-bpy.utils.register_class(MY_UL_AnimationTraitList)
 
 def initObjectProperties():
     bpy.types.Object.my_animationtraitlist = bpy.props.CollectionProperty(type = ListAnimationTraitItem)
     bpy.types.Object.animationtraitlist_index = bpy.props.IntProperty(name = "Index for my_list", default = 0)
-initObjectProperties()
 
 class LIST_OT_AnimationTraitNewItem(bpy.types.Operator):
     # Add a new item to the list
@@ -132,5 +129,9 @@ class LIST_OT_AnimationTraitMoveItem(bpy.types.Operator):
             return{'CANCELLED'}
         return{'FINISHED'}
 
-# Registration
-bpy.utils.register_module(__name__)
+def register():
+    bpy.utils.register_module(__name__)
+    initObjectProperties()
+
+def unregister():
+    bpy.utils.unregister_module(__name__)

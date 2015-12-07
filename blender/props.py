@@ -19,9 +19,6 @@ def initObjectProperties():
     bpy.app.handlers.scene_update_post.append(cb_scene_update)
     #bpy.app.handlers.scene_update_post.remove(cb_scene_update)
 
-initObjectProperties()
-
-
 # Menu in object region
 class ToolsPropsPanel(bpy.types.Panel):
     bl_label = "Cycles Props"
@@ -51,4 +48,9 @@ class MatsPropsPanel(bpy.types.Panel):
         layout.prop(mat, 'alpha_test')
 
 # Registration
-bpy.utils.register_module(__name__)
+def register():
+    bpy.utils.register_module(__name__)
+    initObjectProperties()
+
+def unregister():
+    bpy.utils.unregister_module(__name__)

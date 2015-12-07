@@ -1,6 +1,7 @@
+import os
+import sys
 import shutil
 import bpy
-import os
 import platform
 import json
 from bpy.props import *
@@ -10,20 +11,16 @@ import webbrowser
 
 def defaultSettings():
     wrd = bpy.data.worlds[0]
-    wrd['TargetVersion'] = "15.11.0"
-    wrd['TargetEnum'] = 3
-    wrd['TargetRenderer'] = 0
-    wrd['TargetProjectName'] = "myproject"
-    wrd['TargetProjectPackage'] = "myproject"
-    wrd['TargetProjectWidth'] = 1136
-    wrd['TargetProjectHeight'] = 640
-    wrd['TargetScene'] = bpy.data.scenes[0].name
-    wrd['TargetGravity'] = bpy.data.scenes[0].name
-    wrd['TargetClear'] = bpy.data.worlds[0].name
-    wrd['TargetAA'] = 1
-    wrd['TargetPhysics'] = 1
-    wrd['TargetAutoBuildNodes'] = (True)
-    wrd['TargetMinimize'] = (True)
+    wrd['CGVersion'] = "15.12.0"
+    wrd['CGProjectTarget'] = 0
+    wrd['CGProjectName'] = "cycles_game"
+    wrd['CGProjectPackage'] = "game"
+    wrd['CGProjectWidth'] = 1136
+    wrd['CGProjectHeight'] = 640
+    wrd['CGTargetScene'] = bpy.data.scenes[0].name
+    wrd['CGAA'] = 1
+    wrd['CGPhysics'] = 1
+    wrd['CGMinimize'] = (True)
     # Make sure we are using cycles
     if bpy.data.scenes[0].render.engine == 'BLENDER_RENDER':
         for scene in bpy.data.scenes:
@@ -31,39 +28,34 @@ def defaultSettings():
 
 # Store properties in the world object
 def initWorldProperties():
-    bpy.types.World.TargetVersion = StringProperty(name = "CGVersion")
-    bpy.types.World.TargetEnum = EnumProperty(
-        items = [('OSX', 'OSX', 'OSX'), 
+    bpy.types.World.CGVersion = StringProperty(name = "CGVersion")
+    bpy.types.World.CGProjectTarget = EnumProperty(
+        items = [('HTML5', 'HTML5', 'HTML5'), 
                  ('Windows', 'Windows', 'Windows'), 
+                 ('OSX', 'OSX', 'OSX'),
                  ('Linux', 'Linux', 'Linux'), 
-                 ('HTML5', 'HTML5', 'HTML5'),
                  ('iOS', 'iOS', 'iOS'),
                  ('Android', 'Android', 'Android')],
         name = "Target")
-    bpy.types.World.TargetProjectName = StringProperty(name = "Name")
-    bpy.types.World.TargetProjectPackage = StringProperty(name = "Package")
-    bpy.types.World.TargetProjectWidth = IntProperty(name = "Width")
-    bpy.types.World.TargetProjectHeight = IntProperty(name = "Height")
-    bpy.types.World.TargetScene = StringProperty(name = "Scene")
-    bpy.types.World.TargetGravity = StringProperty(name = "Gravity")
-    bpy.types.World.TargetClear = StringProperty(name = "Clear")
-    bpy.types.World.TargetAA = EnumProperty(
+    bpy.types.World.CGProjectName = StringProperty(name = "Name")
+    bpy.types.World.CGProjectPackage = StringProperty(name = "Package")
+    bpy.types.World.CGProjectWidth = IntProperty(name = "Width")
+    bpy.types.World.CGProjectHeight = IntProperty(name = "Height")
+    bpy.types.World.CGTargetScene = StringProperty(name = "Scene")
+    bpy.types.World.CGAA = EnumProperty(
         items = [('Disabled', 'Disabled', 'Disabled'), 
-                 ('2X', '2X', '2X')],
+                 ('16X', '16X', '16X')],
         name = "Anti-aliasing")
-    bpy.types.World.TargetPhysics = EnumProperty(
+    bpy.types.World.CGPhysics = EnumProperty(
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('Bullet', 'Bullet', 'Bullet')],
         name = "Physics")
-    bpy.types.World.TargetAutoBuildNodes = BoolProperty(name = "Auto-build nodes")
-    bpy.types.World.TargetMinimize = BoolProperty(name = "Minimize")
+    bpy.types.World.CGMinimize = BoolProperty(name = "Minimize")
 
     # Default settings
-    # todo: check version
-    if not 'TargetVersion' in bpy.data.worlds[0]:
+    if not 'CGVersion' in bpy.data.worlds[0]:
         defaultSettings()
 
-    # Make sure we are using nodes for every material
     # Use material nodes
     for mat in bpy.data.materials:
         bpy.ops.cycles.use_shading_nodes({"material":mat})
@@ -72,9 +64,6 @@ def initWorldProperties():
         bpy.ops.cycles.use_shading_nodes({"world":wrd})
     
     return
-
-# Store properties in world
-initWorldProperties()
 
 # Info panel play
 def draw_play_item(self, context):
@@ -94,69 +83,28 @@ class ToolsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds[0]
-        layout.prop(wrd, 'TargetProjectName')
-        layout.prop(wrd, 'TargetProjectPackage')
-        layout.prop(wrd, 'TargetProjectWidth')
-        layout.prop(wrd, 'TargetProjectHeight')
-        layout.prop_search(wrd, "TargetScene", bpy.data, "scenes", "Scene")
-        layout.prop(wrd, 'TargetEnum')
+        layout.prop(wrd, 'CGProjectName')
+        layout.prop(wrd, 'CGProjectPackage')
+        row = layout.row()
+        row.prop(wrd, 'CGProjectWidth')
+        row.prop(wrd, 'CGProjectHeight')
+        layout.prop_search(wrd, "CGTargetScene", bpy.data, "scenes", "Scene")
+        layout.prop(wrd, 'CGProjectTarget')
         layout.operator("cg.build")
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
         row.operator("cg.folder")
         row.operator("cg.clean")
-        layout.prop_search(wrd, "TargetGravity", bpy.data, "scenes", "Gravity")
-        layout.prop_search(wrd, "TargetClear", bpy.data, "worlds", "Clear Color")
-        layout.prop(wrd, 'TargetAA')
-        layout.prop(wrd, 'TargetPhysics')
-        row = layout.row()
-        row.prop(wrd, 'TargetAutoBuildNodes')
-        if wrd['TargetAutoBuildNodes'] == False:
-            row.operator("cg.buildnodes")
-        layout.prop(wrd, 'TargetMinimize')
-        layout.operator("cg.defaultsettings")
+        layout.prop(wrd, 'CGAA')
+        layout.prop(wrd, 'CGPhysics')
+        layout.prop(wrd, 'CGMinimize')
 
-# Used to output json
 class Object:
     def to_JSON(self):
-        if bpy.data.worlds[0]['TargetMinimize'] == True:
+        if bpy.data.worlds[0]['CGMinimize'] == True:
             return json.dumps(self, default=lambda o: o.__dict__, separators=(',',':'))
         else:
             return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
-
-# Creates asset node in project.kha
-def createAsset(filename, type, splitExt=None):
-    if (splitExt == None):
-        splitExt = True
-        
-    str = filename.split(".")
-    l = len(str)
-    name = str[0]
-    for i in range(1, l - 1):
-        name += "." + str[i]
-    
-    if (splitExt == False):
-        name = filename
-    
-    x = Object()
-    x.type = type
-    x.file = filename
-    x.name = name
-    return x
-
-# Creates room node in project.kha
-def createRoom(name, assets):
-    x = Object()
-    x.name = name
-    x.parent = None
-    x.neighbours = []
-    x.assets = []
-    for a in assets:
-        if a.type == 'font':
-            x.assets.append(a.name + str(a.size) + '.kravur')
-        else:
-            x.assets.append(a.name)
-    return x
 
 # Convert Blender data into game data
 def exportGameData():
@@ -184,278 +132,25 @@ def exportGameData():
         a.armature.location.x = a.x
         a.armature.location.y = a.y
         a.armature.location.z = a.z
-
-    # Export project file
-    # x = Object()
-    # x.format = 3
-    # x.game = Object()
-    # x.game.name = bpy.data.worlds[0]['TargetProjectName']
-    # x.game.width = bpy.data.worlds[0]['TargetProjectWidth']
-    # x.game.height = bpy.data.worlds[0]['TargetProjectHeight']
-    # if bpy.data.worlds[0]['TargetAA'] == 1:
-    #     x.game.antiAliasingSamples = 2
-    # x.libraries = ["cyclesgame", "haxebullet"]
-    # # Defined libraries
-    # for o in bpy.data.worlds[0].my_liblist:
-    #     if o.enabled_prop:
-    #         x.libraries.append(o.name)
-    # # Assets
-    # x.assets = []
-    # x.rooms = []
-    # # - Data
-    # x.assets.append(createAsset("data.json", "blob"))
-    # # - Scenes
-    # for s in bpy.data.scenes:
-    #     x.assets.append(createAsset(s.name + ".json", "blob"))
-    # # - Defined assets
-    # for o in bpy.data.worlds[0].my_list:
-    #     if o.enabled_prop:
-    #         if (o.type_prop == 'Atlas'):
-    #             x.assets.append(createAsset(o.name + "_metadata.json", "blob"))
-    #             x.assets.append(createAsset(o.name + "_atlas.png", "image"))
-    #         elif (o.type_prop == 'Font'):
-    #             asset = createAsset(o.name, "font")
-    #             asset.size = o.size_prop
-    #             x.assets.append(asset)
-    #         else:
-    #             typeName = o.type_prop.lower()
-    #             x.assets.append(createAsset(o.name, typeName))
-    # # - Rooms
-    # x.rooms.append(createRoom("room1", x.assets))
-    # # Write project file
-    # with open('project.kha', 'w') as f:
-    #     f.write(x.to_JSON())
-        
-
-    # # Export scene properties
-    # data = Object()
     
-    # # Objects
-    # objs = [] 
-    # for o in bpy.data.objects:
-    #     x = Object()
-    #     x.name = o.name
-    #     x.traits = []
-    #     for t in o.my_traitlist:
-    #         # Disabled trait
-    #         if t.enabled_prop == False:
-    #             continue
-            
-    #         y = Object()
-    #         y.type = t.type_prop
-
-    #         # Script
-    #         if y.type == 'Script':
-    #             y.class_name = t.class_name_prop
-    #         # Custom traits
-    #         elif y.type == 'Mesh Renderer':
-    #             y.class_name = 'MeshRenderer'
-    #             if t.default_material_prop: # Use object material
-    #                 y.material = ""
-    #             else:
-    #                 y.material = t.material_prop
-    #             y.lighting = t.lighting_prop
-    #             y.cast_shadow = t.cast_shadow_prop
-    #             y.receive_shadow = t.receive_shadow_prop
-    #         elif y.type == 'Custom Renderer':
-    #             y.class_name = t.class_name_prop
-                
-    #             if t.default_material_prop: # Use object material
-    #                 y.material = ""
-    #             else:
-    #                 y.material = t.material_prop
-                
-    #             y.shader = t.shader_prop
-    #             y.data = t.data_prop
-    #         elif y.type == 'Billboard Renderer':
-    #             y.type = 'Custom Renderer'
-    #             y.class_name = 'BillboardRenderer'
-    #             if t.default_material_prop: # Use object material
-    #                 y.material = ""
-    #             else:
-    #                 y.material = t.material_prop
-    #             y.shader = 'billboardshader'
-    #         elif y.type == 'Particles Renderer':
-    #             y.type = 'Custom Renderer'
-    #             y.class_name = 'ParticlesRenderer'
-    #             if t.default_material_prop: # Use object material
-    #                 y.material = ""
-    #             else:
-    #                 y.material = t.material_prop
-    #             y.shader = 'particlesshader'
-    #             y.data = t.data_prop
-    #         # Convert to scripts
-    #         elif y.type == 'Nodes':
-    #             y.type = 'Script'
-    #             y.class_name = t.nodes_name_prop.replace('.', '_')
-    #         elif y.type == 'Scene Instance':
-    #             y.type = 'Script'
-    #             y.class_name = "SceneInstance:'" + t.scene_prop + "'"
-    #         elif y.type == 'Animation':
-    #             y.type = 'Script'
-    #             y.class_name = "Animation:'" + t.start_track_name_prop + "':"
-    #             # Names
-    #             anim_names = []
-    #             anim_starts = []
-    #             anim_ends = []
-    #             for animt in o.my_animationtraitlist:
-    #                 if animt.enabled_prop == False:
-    #                     continue
-    #                 anim_names.append(animt.name)
-    #                 anim_starts.append(animt.start_prop)
-    #                 anim_ends.append(animt.end_prop)
-    #             y.class_name += str(anim_names) + ":"
-    #             y.class_name += str(anim_starts) + ":"
-    #             y.class_name += str(anim_ends)
-    #             # Armature offset
-    #             for a in armatures:
-    #                 if o.parent == a.armature:
-    #                     y.class_name += ":" + str(a.x) + ":" + str(a.y) + ":" + str(a.z)
-    #                     break
-
-    #         elif y.type == 'Camera':
-    #             y.type = 'Script'
-    #             cam = bpy.data.cameras[t.camera_link_prop]
-    #             if cam.type == 'PERSP':
-    #                 y.class_name = 'PerspectiveCamera'
-    #             elif cam.type == 'ORTHO':
-    #                 y.class_name = 'OrthoCamera'
-    #         elif y.type == 'Light':
-    #             y.type = 'Script'
-    #             y.class_name = 'Light'
-    #         elif y.type == 'Rigid Body':
-    #             if bpy.data.worlds[0]['TargetPhysics'] == 0:
-    #                 continue
-    #             y.type = 'Script'
-    #             # Get rigid body
-    #             if t.default_body_prop == True:
-    #                 rb = o.rigid_body
-    #             else:
-    #                 rb = bpy.data.objects[t.body_link_prop].rigid_body
-    #             shape = '0' # BOX
-    #             if t.custom_shape_prop == True:
-    #                 if t.custom_shape_type_prop == 'Terrain':
-    #                     shape = '7'
-    #                 elif t.custom_shape_type_prop == 'Static Mesh':
-    #                     shape = '8'
-    #             elif rb.collision_shape == 'SPHERE':
-    #                 shape = '1'
-    #             elif rb.collision_shape == 'CONVEX_HULL':
-    #                 shape = '2'
-    #             elif rb.collision_shape == 'MESH':
-    #                 shape = '3'
-    #             elif rb.collision_shape == 'CONE':
-    #                 shape = '4'
-    #             elif rb.collision_shape == 'CYLINDER':
-    #                 shape = '5'
-    #             elif rb.collision_shape == 'CAPSULE':
-    #                 shape = '6'
-    #             body_mass = 0
-    #             if rb.enabled:
-    #                 body_mass = rb.mass
-    #             y.class_name = 'RigidBody:' + str(body_mass) + \
-    #                             ':' + shape + \
-    #                             ":" + str(rb.friction) + \
-    #                             ":" + str(t.shape_size_scale_prop[0]) + \
-    #                             ":" + str(t.shape_size_scale_prop[1]) + \
-    #                             ":" + str(t.shape_size_scale_prop[2])
-
-    #         # Append trait
-    #         x.traits.append(y)
-
-    #     # Material slots
-    #     x.materials = []
-    #     if o.material_slots:
-    #         for ms in o.material_slots:
-    #             x.materials.append(ms.name)
-    #     objs.append(x)
-
-    # # Materials
-    # mats = []
-    # for m in bpy.data.materials:
-    #     # Make sure material is using nodes
-    #     if m.node_tree == None:
-    #         continue
-    #     x = Object()
-    #     x.name = m.name
-    #     nodes = m.node_tree.nodes
-    #     # Diffuse
-    #     if 'Diffuse BSDF' in nodes:
-    #         x.diffuse = True
-    #         dnode = nodes['Diffuse BSDF']
-    #         dcol = dnode.inputs[0].default_value
-    #         x.diffuse_color = [dcol[0], dcol[1], dcol[2], dcol[3]]
-    #     else:
-    #         x.diffuse = False
-    #     # Glossy
-    #     if 'Glossy BSDF' in nodes:
-    #         x.glossy = True
-    #         gnode = nodes['Glossy BSDF']
-    #         gcol = gnode.inputs[0].default_value
-    #         x.glossy_color = [gcol[0], gcol[1], gcol[2], gcol[3]]
-    #         x.roughness = gnode.inputs[1].default_value
-    #     else:
-    #         x.glossy = False
-    #     # Texture
-    #     if 'Image Texture' in nodes:
-    #         x.texture = nodes['Image Texture'].image.name.split(".")[0]
-    #     else:
-    #         x.texture = ''
-    #     mats.append(x)
-
-    # # Output data json
-    # data.objects = objs
-    # data.materials = mats
-    # data.scene = bpy.data.worlds[0]['TargetScene']
-    # data.packageName = bpy.data.worlds[0]['TargetProjectPackage']
-    # gravityscn = bpy.data.scenes[bpy.data.worlds[0]['TargetGravity']]
-    # if gravityscn.use_gravity:
-    #     data.gravity = [gravityscn.gravity[0], gravityscn.gravity[1], gravityscn.gravity[2]]
-    # else:
-    #     data.gravity = [0.0, 0.0, 0.0]
-    # clearwrd = bpy.data.worlds[bpy.data.worlds[0]['TargetClear']]
-    # # Only 'Background' surface for now
-    # clearcol = clearwrd.node_tree.nodes['Background'].inputs[0].default_value
-    # data.clear = [clearcol[0], clearcol[1], clearcol[2], clearcol[3]]
-    # data.physics = bpy.data.worlds[0]['TargetPhysics']
-    # with open('Assets/data.json', 'w') as f:
-    #     f.write(data.to_JSON())
-        
-    # Write Main.hx
-    #if not os.path.isfile('Sources/Main.hx'):
-    with open('Sources/Main.hx', 'w') as f:
+    # Write khafile.js
+    with open('khafile.js', 'w') as f:
         f.write(
 """// Auto-generated
-package ;
-class Main {
-    public static function main() {
-        lue.sys.CompileTime.importPackage('lue.trait');
-        lue.sys.CompileTime.importPackage('cycles.trait');
-        lue.sys.CompileTime.importPackage('""" + bpy.data.worlds[0]['TargetProjectPackage'] + """');
-        #if js
-        untyped __js__("
-            function loadScript(url, callback) {
-                var head = document.getElementsByTagName('head')[0];
-                var script = document.createElement('script');
-                script.type = 'text/javascript';
-                script.src = url;
-                script.onreadystatechange = callback;
-                script.onload = callback;
-                head.appendChild(script);
-            }
-        ");
-        untyped loadScript('ammo.js', start);
-        #else
-        start();
-        #end
-    }
-    static function start() {
-        kha.System.init("CyclesGame", 1136, 640, function() {
-            new lue.App(cycles.Root);
-        });
-    }
-}
+var project = new Project('""" + bpy.data.worlds[0]['CGProjectName'] + """');
+
+project.addSources('Sources');
+project.addShaders('Sources/Shaders/**');
+project.addAssets('Assets/**');
+project.addLibrary('lue');
+project.addLibrary('cyclesgame');
+project.addLibrary('haxebullet');
+
+return project;
 """)
+
+    # Write Main.hx
+    #write_main()
 
 def buildProject(self, build_type=0):
     # Save scripts
@@ -468,9 +163,8 @@ def buildProject(self, build_type=0):
     ##bpy.ops.text.save()
     #area.type = old_type
 
-    # Auto-build nodes
-    if (bpy.data.worlds[0]['TargetAutoBuildNodes'] == True):
-        buildNodeTrees()
+    # Auto-build nodes # TODO: only if needed
+    buildNodeTrees()
     
     # Set dir
     s = bpy.data.filepath.split(os.path.sep)
@@ -487,17 +181,17 @@ def buildProject(self, build_type=0):
     exportGameData()
     
     # Set build command
-    if (bpy.data.worlds[0]['TargetEnum'] == 0):
+    if (bpy.data.worlds[0]['CGProjectTarget'] == 0):
         bashCommand = "-t osx"
-    elif (bpy.data.worlds[0]['TargetEnum'] == 1):
+    elif (bpy.data.worlds[0]['CGProjectTarget'] == 1):
         bashCommand = "-t windows"
-    elif (bpy.data.worlds[0]['TargetEnum'] == 2):
+    elif (bpy.data.worlds[0]['CGProjectTarget'] == 2):
         bashCommand = "-t linux"
-    elif (bpy.data.worlds[0]['TargetEnum'] == 3):
+    elif (bpy.data.worlds[0]['CGProjectTarget'] == 3):
         bashCommand = "-t html5"
-    elif (bpy.data.worlds[0]['TargetEnum'] == 4):
+    elif (bpy.data.worlds[0]['CGProjectTarget'] == 4):
         bashCommand = "-t ios"
-    elif (bpy.data.worlds[0]['TargetEnum'] == 5):
+    elif (bpy.data.worlds[0]['CGProjectTarget'] == 5):
         bashCommand = "-t android_native"
     
     # Build
@@ -513,7 +207,7 @@ def buildProject(self, build_type=0):
 
     blender_path = bpy.app.binary_path
     blend_path = bpy.data.filepath
-    p = subprocess.Popen([blender_path, blend_path, '-b', '-P', scripts_path + 'build.py', '--', prefix + bashCommand, str(build_type), str(bpy.data.worlds[0]['TargetEnum'])])
+    p = subprocess.Popen([blender_path, blend_path, '-b', '-P', scripts_path + 'lib/build.py', '--', prefix + bashCommand, str(build_type), str(bpy.data.worlds[0]['CGProjectTarget'])])
     atexit.register(p.terminate)
     
     self.report({'INFO'}, "Building, see console...")
@@ -532,11 +226,10 @@ def cleanProject(self):
         shutil.rmtree('build')
 
     # Remove compiled nodes
-    if (bpy.data.worlds[0]['TargetAutoBuildNodes'] == True):
-        path = 'Sources/' + bpy.data.worlds[0].TargetProjectPackage.replace(".", "/") + "/"
-        for node_group in bpy.data.node_groups:
-            node_group_name = node_group.name.replace('.', '_')
-            os.remove(path + node_group_name + '.hx')
+    path = 'Sources/' + bpy.data.worlds[0].CGProjectPackage.replace(".", "/") + "/"
+    for node_group in bpy.data.node_groups:
+        node_group_name = node_group.name.replace('.', '_')
+        os.remove(path + node_group_name + '.hx')
 
     self.report({'INFO'}, "Done")
 
@@ -581,29 +274,6 @@ class OBJECT_OT_CLEANButton(bpy.types.Operator):
     def execute(self, context):
         cleanProject(self)
         return{'FINISHED'}
-    
-# Build nodes
-class OBJECT_OT_BUILDNODESButton(bpy.types.Operator):
-    bl_idname = "cg.buildnodes"
-    bl_label = "Build Nodes"
- 
-    def execute(self, context):
-        
-        buildNodeTrees();
-            
-        self.report({'INFO'}, "Nodes built")
-        return{'FINISHED'}
-    
-# Default settings
-class OBJECT_OT_DEFAULTSETTINGSButton(bpy.types.Operator):
-    bl_idname = "cg.defaultsettings"
-    bl_label = "Default Settings"
- 
-    def execute(self, context):
-        defaultSettings()
-        self.report({'INFO'}, "Defaults set")
-        return{'FINISHED'}
-
 
 
 
@@ -614,8 +284,8 @@ def buildNodeTrees():
     os.chdir(fp)
 
     # Make sure package dir exists
-    if not os.path.exists('Sources/' + bpy.data.worlds[0].TargetProjectPackage.replace(".", "/")):
-        os.makedirs('Sources/' + bpy.data.worlds[0].TargetProjectPackage.replace(".", "/"))
+    if not os.path.exists('Sources/' + bpy.data.worlds[0].CGProjectPackage.replace(".", "/")):
+        os.makedirs('Sources/' + bpy.data.worlds[0].CGProjectPackage.replace(".", "/"))
     
     # Export node scripts
     for node_group in bpy.data.node_groups:
@@ -624,12 +294,12 @@ def buildNodeTrees():
 def buildNodeTree(node_group):
     rn = getRootNode(node_group)
 
-    path = 'Sources/' + bpy.data.worlds[0].TargetProjectPackage.replace(".", "/") + "/"
+    path = 'Sources/' + bpy.data.worlds[0].CGProjectPackage.replace(".", "/") + "/"
 
     node_group_name = node_group.name.replace('.', '_')
 
     with open(path + node_group_name + '.hx', 'w') as f:
-        f.write('package ' + bpy.data.worlds[0].TargetProjectPackage + ';\n\n')
+        f.write('package ' + bpy.data.worlds[0].CGProjectPackage + ';\n\n')
         f.write('import cycles.node.*;\n\n')
         f.write('class ' + node_group_name + ' extends cycles.trait.NodeExecutor {\n\n')
         f.write('\tpublic function new() { super(); requestAdd(add); }\n\n')
@@ -698,4 +368,10 @@ def buildDefaultNode(inp):
     return inpname
 
 # Registration
-bpy.utils.register_module(__name__)
+def register():
+    bpy.utils.register_module(__name__)
+    # Store properties in world
+    initWorldProperties()
+
+def unregister():
+    bpy.utils.unregister_module(__name__)
