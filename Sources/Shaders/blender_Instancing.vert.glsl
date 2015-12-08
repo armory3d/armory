@@ -79,7 +79,7 @@ void kore() {
 	matColor *= 0.5;
 	matColor *= (pos.z + 0.2) * 1.8;
 
-	matColor.rgb -= vec3((mPos.z + 1.2) / 5.0); //-1.2 1.2
+	matColor.rgb -= vec3(((mPos.z + 0.73062) + 1.2) / 5.0); //-1.2 1.2
 	//matColor.rgb *= 1.0 - ((mPos.z + 1.0) / 3.0);
 
 	lightDir = normalize(light - position);

@@ -16,7 +16,7 @@ class Animation extends Trait {
 
     public function new(startTrack:String, names:Array<String>, starts:Array<Int>, ends:Array<Int>) {
         super();
-
+        
         this.startTrack = startTrack;
         this.names = names;
         this.starts = starts;
@@ -33,5 +33,9 @@ class Animation extends Trait {
 
     function update() {
         Eg.setAnimationParams(model, lue.sys.Time.delta);
+    }
+
+    public function play(trackName:String, speed:Float = 1.0, onTrackComplete:Void->Void = null) {
+        model.animation.play(trackName, speed, onTrackComplete);
     }
 }

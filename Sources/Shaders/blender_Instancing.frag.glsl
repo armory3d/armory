@@ -108,29 +108,29 @@ void kore() {
 	vec4 outColor;
 	vec3 t = pow(matColor.rgb, vec3(2.2));
 
-	if (lighting) {
-		float specular = 0.1;
+// 	if (lighting) {
+// 		float specular = 0.1;
 
-		vec3 n = normalize(normal);
-		vec3 l = lightDir;
-		vec3 v = eyeDir;
+// 		vec3 n = normalize(normal);
+// 		vec3 l = lightDir;
+// 		vec3 v = eyeDir;
 
-		float dotNL = 0.0;
-#ifdef _NormalMapping
-		vec3 tn = normalize(texture2D(normalMap, texCoord).rgb * 2.0 - 1.0);
-		dotNL = clamp(dot(tn, l), 0.0, 1.0);
-#else
-		dotNL = clamp(dot(n, l), 0.0, 1.0);
-#endif
+// 		float dotNL = 0.0;
+// #ifdef _NormalMapping
+// 		vec3 tn = normalize(texture2D(normalMap, texCoord).rgb * 2.0 - 1.0);
+// 		dotNL = clamp(dot(tn, l), 0.0, 1.0);
+// #else
+// 		dotNL = clamp(dot(n, l), 0.0, 1.0);
+// #endif
 
-		float spec = LightingFuncGGX_OPT3(n, v, l, roughness, specular);
-		vec3 rgb = spec + t * dotNL;
+// 		float spec = LightingFuncGGX_OPT3(n, v, l, roughness, specular);
+// 		vec3 rgb = spec + t * dotNL;
 
-		outColor = vec4(vec3(rgb * visibility), 1.0);
-	}
-	else {
+// 		outColor = vec4(vec3(rgb * visibility), 1.0);
+// 	}
+// 	else {
 		outColor = vec4(t * visibility, 1.0);
-	}
+	//}
 
 #ifdef _Texturing
 	vec4 texel = texture2D(stex, texCoord);

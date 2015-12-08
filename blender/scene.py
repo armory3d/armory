@@ -2135,7 +2135,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		self.boneParentArray = {}
 
 		self.exportAllFlag = not self.option_export_selection
-		self.sampleAnimationFlag = self.option_sample_animation
+		self.sampleAnimationFlag = True#self.option_sample_animation
 
 
 		for object in scene.objects:

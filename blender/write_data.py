@@ -26,13 +26,13 @@ def write_main():
 """// Auto-generated
 package ;
 class Main {
-	static inline var projectName = '""" + bpy.data.worlds[0]['CGProjectPackage'] + """';
+	static inline var projectName = '""" + bpy.data.worlds[0]['CGProjectName'] + """';
 	static inline var projectWidth = """ + str(bpy.data.worlds[0]['CGProjectWidth']) + """;
 	static inline var projectHeight = """ + str(bpy.data.worlds[0]['CGProjectHeight']) + """;
 	public static function main() {
 		lue.sys.CompileTime.importPackage('lue.trait');
 		lue.sys.CompileTime.importPackage('cycles.trait');
-		lue.sys.CompileTime.importPackage('""" + bpy.data.worlds[0]['CGProjectName'] + """');
+		lue.sys.CompileTime.importPackage('""" + bpy.data.worlds[0]['CGProjectPackage'] + """');
 		#if js
 		untyped __js__("
 			function loadScript(url, callback) {
