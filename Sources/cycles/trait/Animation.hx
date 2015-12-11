@@ -35,7 +35,11 @@ class Animation extends Trait {
         Eg.setAnimationParams(model, lue.sys.Time.delta);
     }
 
-    public function play(trackName:String, speed:Float = 1.0, onTrackComplete:Void->Void = null) {
-        model.animation.play(trackName, speed, onTrackComplete);
+    public function play(trackName:String, loop = true, speed = 1.0, onTrackComplete:Void->Void = null) {
+        model.animation.play(trackName, loop, speed, onTrackComplete);
+    }
+
+    public function pause() {
+        model.animation.pause();
     }
 }
