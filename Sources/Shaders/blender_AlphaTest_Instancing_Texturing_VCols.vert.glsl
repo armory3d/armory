@@ -12,10 +12,10 @@ precision highp float;
 #endif
 
 attribute vec3 pos;
+attribute vec3 nor;
 #ifdef _Texturing
 attribute vec2 tex;
 #endif
-attribute vec3 nor;
 #ifdef _VCols
 attribute vec4 col;
 #endif
@@ -45,11 +45,13 @@ varying vec4 matColor;
 varying vec3 lightDir;
 varying vec3 eyeDir;
 
+#ifdef _NormalMapping
 mat3 transpose(mat3 m) {
   return mat3(m[0][0], m[1][0], m[2][0],
               m[0][1], m[1][1], m[2][1],
               m[0][2], m[1][2], m[2][2]);
 }
+#endif
 
 void kore() {
 

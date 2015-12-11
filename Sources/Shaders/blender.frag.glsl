@@ -128,7 +128,7 @@ void kore() {
 		outColor = vec4(vec3(rgb * visibility), 1.0);
 	}
 	else {
-		outColor = vec4(vec3(t * visibility), 1.0);
+		outColor = vec4(t * visibility, 1.0);
 	}
 
 #ifdef _Texturing

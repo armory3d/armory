@@ -1178,6 +1178,15 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 		o.material_refs.append(self.materialArray[material]["structName"])
 
+	def ExportParticleSystemRef(self, psys, index, o):
+		if (not psys.settings in self.particleSystemArray):
+			self.particleSystemArray[psys.settings] = {"structName" : psys.settings.name}
+
+		pref = Object()
+		pref.id = psys.name
+		pref.seed = psys.seed
+		pref.particle = self.particleSystemArray[psys.settings]["structName"]
+		o.particle_refs.append(pref)
 
 
 	def ExportNode(self, node, scene, poseBone = None, parento = None):
@@ -1220,10 +1229,14 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 				oid = self.geometryArray[object]["structName"].replace(".", "_")
 				o.object_ref = 'geom_' + oid + '/' + oid
+				
 				o.material_refs = []
-
 				for i in range(len(node.material_slots)):
 					self.ExportMaterialRef(node.material_slots[i].material, i, o)
+
+				o.particle_refs = []
+				for i in range(len(node.particle_systems)):
+					self.ExportParticleSystemRef(node.particle_systems[i], i, o)
 
 				shapeKeys = LueExporter.GetShapeKeys(object)
 				#if (shapeKeys):
@@ -1432,7 +1445,10 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		oid = objectRef[1]["structName"].replace(".", "_")
 
 		index = self.filepath.rfind('/')
-		fp = self.filepath[:(index+1)] + 'geom_' + oid + '.json'
+		geom_fp = self.filepath[:(index+1)] + 'geoms/'
+		if not os.path.exists(geom_fp):
+			os.makedirs(geom_fp)
+		fp = geom_fp + 'geom_' + oid + '.json'
 
 		# Check if geometry is using instanced rendering
 		is_instanced = False
@@ -1938,9 +1954,6 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 			o.id = materialRef[1]["structName"]
 
-			#if (material.name != ""):
-			#	o.name = material.name
-
 			#intensity = material.diffuse_intensity
 			#diffuse = [material.diffuse_color[0] * intensity, material.diffuse_color[1] * intensity, material.diffuse_color[2] * intensity]
 
@@ -2026,7 +2039,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 			for ob in mat_users:
 				# Instancing used by material user
-				if ob.instanced_children:
+				if ob.instanced_children or len(ob.particle_systems) > 0:
 					defs.append('_Instancing')
 				# VCols used by material user
 				if ob.data.vertex_colors:
@@ -2104,6 +2117,19 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			'''
 			self.output.material_resources.append(o)
 
+	def ExportParticleSystems(self):
+		for particleRef in self.particleSystemArray.items():
+			o = Object()
+			psettings = particleRef[0]
+
+			if psettings == None:
+				continue
+
+			o.id = particleRef[1]["structName"]
+			o.count = psettings.count
+			o.lifetime = psettings.lifetime
+
+			self.output.particle_resources.append(o)
 
 	def ExportObjects(self, scene):
 		for objectRef in self.geometryArray.items():
@@ -2132,6 +2158,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		self.lightArray = {}
 		self.cameraArray = {}
 		self.materialArray = {}
+		self.particleSystemArray = {}
 		self.boneParentArray = {}
 
 		self.exportAllFlag = not self.option_export_selection
@@ -2152,6 +2179,9 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 		self.output.material_resources = []
 		self.ExportMaterials()
+
+		self.output.particle_resources = []
+		self.ExportParticleSystems()
 
 		self.output.geometry_resources = [];
 		self.output.light_resources = [];

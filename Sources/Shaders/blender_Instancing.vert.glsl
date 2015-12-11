@@ -4,41 +4,86 @@
 precision highp float;
 #endif
 
+#ifdef _NormalMapping
+#define _Texturing
+#endif
+
 attribute vec3 pos;
 attribute vec3 nor;
+#ifdef _Texturing
+attribute vec2 tex;
+#endif
+#ifdef _VCols
+attribute vec4 col;
+#endif
+#ifdef _NormalMapping
+attribute vec3 tan;
+attribute vec3 bitan;
+#endif
+#ifdef _Instancing
 attribute vec3 off;
+#endif
 
 uniform mat4 M;
 uniform mat4 V;
 uniform mat4 P;
+uniform mat4 lightMVP;
 uniform vec4 diffuseColor;
 uniform vec3 light;
-uniform float time;
+uniform vec3 eye;
 
-varying vec3 matColor;
+varying vec3 position;
+#ifdef _Texturing
+varying vec2 texCoord;
+#endif
+varying vec3 normal;
+varying vec4 lPos;
+varying vec4 matColor;
+varying vec3 lightDir;
+varying vec3 eyeDir;
+
+#ifdef _NormalMapping
+mat3 transpose(mat3 m) {
+  return mat3(m[0][0], m[1][0], m[2][0],
+              m[0][1], m[1][1], m[2][1],
+              m[0][2], m[1][2], m[2][2]);
+}
+#endif
 
 void kore() {
 
+#ifdef _Instancing
 	vec4 mPos = M * vec4(pos + off, 1.0);
-	mPos.x += (sin(time * 2.0 + cos(mPos.x))) * ((pos.z + 0.3) / 2.0);
-	mPos.y += (cos(time * 2.0 + sin(mPos.x))) * ((pos.z + 0.3) / 8.0);
-
+	lPos = lightMVP * vec4(pos + off, 1.0);
+#else
+	vec4 mPos = M * vec4(pos, 1.0);
+	lPos = lightMVP * vec4(pos, 1.0);
+#endif
 	gl_Position = P * V * mPos;
-	vec3 position = mPos.xyz / mPos.w;
+	position = mPos.xyz / mPos.w;
+#ifdef _Texturing
+	texCoord = tex;
+#endif
+	normal = normalize((M * vec4(nor, 0.0)).xyz);
 
-	matColor = diffuseColor.rgb;
-	float r = (sin(off.x * off.y * off.z) + 1.0) / 2.0;
-	matColor += r / 5.0;
+	matColor = diffuseColor;
+#ifdef _VCols
+	matColor *= col;
+#endif
 
-	matColor *= 0.5;
-	matColor *= (pos.z + 0.2) * 1.8;
+	lightDir = normalize(light - position);
+	eyeDir = normalize(eye - position);
 
-	matColor -= vec3(((mPos.z + 0.73062) + 1.2) / 5.0);
-
-	vec3 normal = normalize((M * vec4(nor, 0.0)).xyz);
-	vec3 lightDir = normalize(light - position);
-	float dotNL = clamp(dot(normal, lightDir), 0.8, 1.0);
-	matColor *= dotNL;
+#ifdef _NormalMapping
+	vec3 vTangent = (tan);
+	vec3 vBitangent = cross( normal, vTangent ) * 1.0;//tangent.w;
+	//vec3 vBitangent = (bitan);
+   
+	mat3 TBN = transpose(mat3(vTangent, vBitangent, normal)); 
+	//mat3 TBN = (mat3(vTangent, vBitangent, normal)); 
+	lightDir = normalize(TBN * lightDir); 
+	eyeDir = normalize(TBN * eyeDir); 
+#endif
 }
 
 
