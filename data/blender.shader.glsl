@@ -12,6 +12,9 @@
 -link lightMVP = _lightMVP
 -link light = _lightPosition
 -link eye = _cameraPosition
+//-ifdef _Skinning
+//-link skinTex = _skinTexture
+//-endif
 
 -vert blender.vert.glsl
 //--------------------------------------------------------
@@ -21,6 +24,11 @@ precision highp float;
 
 #ifdef _NormalMapping
 #define _Texturing
+#endif
+
+#ifdef _Skinning
+#define SKIN_TEX_SIZE 2048.0 
+#define BINDS_OFFSET 1024.0
 #endif
 
 attribute vec3 pos;
@@ -35,6 +43,10 @@ attribute vec4 col;
 attribute vec3 tan;
 attribute vec3 bitan;
 #endif
+#ifdef _Skinning
+attribute vec4 bone;
+attribute vec4 weight;
+#endif
 #ifdef _Instancing
 attribute vec3 off;
 #endif
@@ -46,6 +58,9 @@ uniform mat4 lightMVP;
 uniform vec4 diffuseColor;
 uniform vec3 light;
 uniform vec3 eye;
+#ifdef _Skinning
+uniform sampler2D skinTex;
+#endif
 
 varying vec3 position;
 #ifdef _Texturing
@@ -65,23 +80,124 @@ mat3 transpose(mat3 m) {
 }
 #endif
 
+#ifdef _Skinning
+vec4 readSkin(float id) {
+	return texture2D(skinTex, vec2(0.0, (id / (SKIN_TEX_SIZE - 1.0))));
+}
+
+mat4 skinMatrix(vec4 bone) {
+	float o = BINDS_OFFSET;
+	vec4 v0,v1,v2;
+	
+	float b = (bone[0]) * 3.0; 			
+	v0 = readSkin(b);
+	v1 = readSkin(b + 1.0);
+	v2 = readSkin(b + 2.0);
+	mat4 j0 = mat4(v0.x, v0.y, v0.z, v0.w, 
+				   v1.x, v1.y, v1.z, v1.w,
+				   v2.x, v2.y, v2.z, v2.w,
+				   0, 0, 0, 1);
+	v0 = readSkin(b + o);
+	v1 = readSkin(b + 1.0 + o);
+	v2 = readSkin(b + 2.0 + o);
+	mat4 b0 = mat4(v0.x, v0.y, v0.z, v0.w,
+				   v1.x, v1.y, v1.z, v1.w,
+				   v2.x, v2.y, v2.z, v2.w,
+				   0, 0, 0, 1);
+	
+	b = (bone[1]) * 3.0; 
+	v0 = readSkin(b);
+	v1 = readSkin(b + 1.0);
+	v2 = readSkin(b + 2.0);
+	mat4 j1 = mat4(v0.x, v0.y, v0.z, v0.w,
+				   v1.x, v1.y, v1.z, v1.w,
+				   v2.x, v2.y, v2.z, v2.w,
+				   0, 0, 0, 1);
+	v0 = readSkin(b + o);
+	v1 = readSkin(b + 1.0 + o);
+	v2 = readSkin(b + 2.0 + o);
+	mat4 b1 = mat4(v0.x, v0.y, v0.z, v0.w,
+				   v1.x, v1.y, v1.z, v1.w,
+				   v2.x, v2.y, v2.z, v2.w,
+				   0, 0, 0, 1);
+	
+	b = (bone[2]) * 3.0; 
+	v0 = readSkin(b);
+	v1 = readSkin(b + 1.0);
+	v2 = readSkin(b + 2.0);
+	mat4 j2 = mat4(v0.x, v0.y, v0.z, v0.w,
+				   v1.x, v1.y, v1.z, v1.w,
+				   v2.x, v2.y, v2.z, v2.w,
+				   0, 0, 0, 1);
+	v0 = readSkin(b + o);
+	v1 = readSkin(b + 1.0 + o);
+	v2 = readSkin(b + 2.0 + o);
+	mat4 b2 = mat4(v0.x, v0.y, v0.z, v0.w,
+				   v1.x, v1.y, v1.z, v1.w,
+				   v2.x, v2.y, v2.z, v2.w,
+				   0, 0, 0, 1);
+	
+	b = (bone[3]) * 3.0; 
+	v0 = readSkin(b);
+	v1 = readSkin(b + 1.0);
+	v2 = readSkin(b + 2.0);
+	mat4 j3 = mat4(v0.x, v0.y, v0.z, v0.w,
+				   v1.x, v1.y, v1.z, v1.w,
+				   v2.x, v2.y, v2.z, v2.w,
+				   0, 0, 0, 1);			
+	v0 = readSkin(b + o);
+	v1 = readSkin(b + 1.0 + o);
+	v2 = readSkin(b + 2.0 + o);
+	mat4 b3 = mat4(v0.x, v0.y, v0.z, v0.w,
+				   v1.x, v1.y, v1.z, v1.w,
+				   v2.x, v2.y, v2.z, v2.w,
+				   0, 0, 0, 1);
+	
+	//return mat4(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);
+	return  ((b0 * j0) * weight[0]) +
+	        ((b1 * j1) * weight[1]) +
+	        ((b2 * j2) * weight[2]) +
+	        ((b3 * j3) * weight[3]);
+}
+#endif
+
 void kore() {
 
-#ifdef _Instancing
-	vec4 mPos = M * vec4(pos + off, 1.0);
-	lPos = lightMVP * vec4(pos + off, 1.0);
+#ifdef _Skinning
+mat4 SM = skinMatrix(bone);
+	#ifdef _Instancing
+		vec4 mPos = M * SM * vec4(pos + off, 1.0);
+		lPos = lightMVP * vec4(pos + off, 1.0);
+	#else
+		vec4 mPos = M * SM * vec4(pos, 1.0);
+		lPos = lightMVP * vec4(pos, 1.0);
+	#endif
 #else
-	vec4 mPos = M * vec4(pos, 1.0);
-	lPos = lightMVP * vec4(pos, 1.0);
+	#ifdef _Instancing
+		vec4 mPos = M * vec4(pos + off, 1.0);
+		lPos = lightMVP * vec4(pos + off, 1.0);
+	#else
+		vec4 mPos = M * vec4(pos, 1.0);
+		lPos = lightMVP * vec4(pos, 1.0);
+	#endif
 #endif
+
 	gl_Position = P * V * mPos;
 	position = mPos.xyz / mPos.w;
+
 #ifdef _Texturing
 	texCoord = tex;
 #endif
+
+#ifdef _Skinning
+	// TODO: * mat3(SM); // TODO: shadowmap
+	normal = normalize((M * SM * vec4(nor, 0.0)).xyz);
+#else
 	normal = normalize((M * vec4(nor, 0.0)).xyz);
+#endif
 
 	matColor = diffuseColor;
+
 #ifdef _VCols
 	matColor *= col;
 #endif
@@ -250,75 +366,4 @@ void kore() {
 #endif
 
 	gl_FragColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
-}
-
-
-//--------------------------------------------------------
-//--------------------------------------------------------
-@context shadow_map
-
--set depth_write = true
--set compare_mode = less
--set cull_mode = counter_clockwise
-
--link lightMVP = _lightMVP
-
--vert shadow_map.vert.glsl
-//--------------------------------------------------------
-#ifdef GL_ES
-precision highp float;
-#endif
-
-#ifdef _NormalMapping
-#define _Texturing
-#endif
-
-attribute vec3 pos;
-#ifdef _Texturing
-attribute vec2 tex;
-#endif
-attribute vec3 nor;
-#ifdef _VCols
-attribute vec4 col;
-#endif
-#ifdef _NormalMapping
-attribute vec3 tan;
-attribute vec3 bitan;
-#endif
-#ifdef _Instancing
-attribute vec3 off;
-#endif
-
-uniform mat4 lightMVP;
-
-varying vec4 position;
-
-void kore() {
-#ifdef _Instancing
-	gl_Position = lightMVP * vec4(pos + off, 1.0);
-#else
-	gl_Position = lightMVP * vec4(pos, 1.0);
-#endif
-	position = gl_Position;
-}
-
-
--frag shadow_map.frag.glsl
-//--------------------------------------------------------
-#ifdef GL_ES
-precision mediump float;
-#endif
-
-#ifdef _NormalMapping
-#define _Texturing
-#endif
-
-varying vec4 position;
-
-void kore() {
-
-    float normalizedDistance = position.z / position.w;
-    normalizedDistance += 0.005;
- 
-    gl_FragColor = vec4(normalizedDistance, normalizedDistance, normalizedDistance, 1.0);
 }

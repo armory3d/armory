@@ -2047,6 +2047,9 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 				# Texcoords
 				if ob.data.uv_textures:
 					defs.append('_Texturing')
+				# GPU Skinning
+				if ob.find_armature():
+					defs.append('_Skinning')
 
 			# Whether objects should export tangent data
 			if material.export_tangents != normalMapping:
