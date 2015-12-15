@@ -43,7 +43,7 @@ def writeShader(defs):
 	skipTillEndIf = False
 	for line in file_lines:
 
-		if line.startswith('#ifdef'):
+		if line.startswith('#ifdef') or line.startswith('-ifdef'):
 			s = line.split(' ')[1]
 			if s != 'GL_ES':
 				found = False
@@ -53,11 +53,11 @@ def writeShader(defs):
 						break
 				if found == False:
 					skipTillEndIf = True
-				if s == '_Instancing': # TODO: Prevent instanced data to go into main verrtex structure
+				if s == '_Instancing' and line.startswith('#ifdef'): # TODO: Prevent instanced data to go into main verrtex structure
 					skipTillEndIf = True
 			continue
 
-		if line.startswith('#endif'):
+		if line.startswith('#endif') or line.startswith('-endif'):
 			skipTillEndIf = False
 			continue
 
@@ -85,6 +85,12 @@ def writeShader(defs):
 
 		if line.startswith('-set cull_mode'):
 			con.cull_mode = line.split('=')[1].strip()
+			
+		if line.startswith('-set blend_source'):
+			con.blend_source = line.split('=')[1].strip()
+			
+		if line.startswith('-set blend_destination'):
+			con.blend_destination = line.split('=')[1].strip()
 
 		if line.startswith('-link '):
 			s = line[6:]

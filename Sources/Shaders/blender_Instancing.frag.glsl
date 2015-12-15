@@ -145,7 +145,7 @@ void kore() {
 	outColor = vec4(outColor.rgb, 1.0);
 #endif
 
-	gl_FragColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
+	gl_FragColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), matColor.a);
 }
 
 

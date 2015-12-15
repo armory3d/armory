@@ -3,6 +3,8 @@
 -set depth_write = true
 -set compare_mode = less
 -set cull_mode = counter_clockwise
+-set blend_source = blend_one
+-set blend_destination = blend_zero
 
 -link M = _modelMatrix
 -link V = _viewMatrix

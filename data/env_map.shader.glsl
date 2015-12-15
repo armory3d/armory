@@ -3,6 +3,8 @@
 -set depth_write = false
 -set compare_mode = always
 -set cull_mode = none
+-set blend_source = blend_one
+-set blend_destination = blend_zero
 
 -link V = _viewMatrix
 -link P = _projectionMatrix

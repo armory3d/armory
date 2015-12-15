@@ -2128,6 +2128,9 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			o.id = particleRef[1]["structName"]
 			o.count = psettings.count
 			o.lifetime = psettings.lifetime
+			o.normal_factor = psettings.normal_factor;
+			o.object_align_factor = [psettings.object_align_factor[0], psettings.object_align_factor[1], psettings.object_align_factor[2]]
+			o.factor_random = psettings.factor_random
 
 			self.output.particle_resources.append(o)
 
