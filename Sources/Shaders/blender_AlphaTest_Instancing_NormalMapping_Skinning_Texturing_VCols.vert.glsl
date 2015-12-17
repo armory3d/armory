@@ -13,11 +13,6 @@ precision highp float;
 #define _Texturing
 #endif
 
-#ifdef _Skinning
-#define SKIN_TEX_SIZE 2048.0 
-#define BINDS_OFFSET 1024.0
-#endif
-
 attribute vec3 pos;
 attribute vec3 nor;
 #ifdef _Texturing
@@ -28,7 +23,6 @@ attribute vec4 col;
 #endif
 #ifdef _NormalMapping
 attribute vec3 tan;
-attribute vec3 bitan;
 #endif
 #ifdef _Skinning
 attribute vec4 bone;
@@ -39,6 +33,7 @@ attribute vec3 off;
 #endif
 
 uniform mat4 M;
+uniform mat4 NM;
 uniform mat4 V;
 uniform mat4 P;
 uniform mat4 lightMVP;
@@ -46,7 +41,7 @@ uniform vec4 diffuseColor;
 uniform vec3 light;
 uniform vec3 eye;
 #ifdef _Skinning
-uniform sampler2D skinTex;
+uniform float skinBones[50 * 12];
 #endif
 
 varying vec3 position;
@@ -68,106 +63,51 @@ mat3 transpose(mat3 m) {
 #endif
 
 #ifdef _Skinning
-vec4 readSkin(float id) {
-	return texture2D(skinTex, vec2(0.0, (id / (SKIN_TEX_SIZE - 1.0))));
+mat4 getBoneMat(const int boneIndex) {
+	vec4 v0 = vec4(skinBones[boneIndex * 12 + 0],
+				   skinBones[boneIndex * 12 + 1],
+				   skinBones[boneIndex * 12 + 2],
+				   skinBones[boneIndex * 12 + 3]);
+	vec4 v1 = vec4(skinBones[boneIndex * 12 + 4],
+				   skinBones[boneIndex * 12 + 5],
+				   skinBones[boneIndex * 12 + 6],
+				   skinBones[boneIndex * 12 + 7]);
+	vec4 v2 = vec4(skinBones[boneIndex * 12 + 8],
+				   skinBones[boneIndex * 12 + 9],
+				   skinBones[boneIndex * 12 + 10],
+				   skinBones[boneIndex * 12 + 11]);
+	return mat4(v0.x, v0.y, v0.z, v0.w, 
+				v1.x, v1.y, v1.z, v1.w,
+				v2.x, v2.y, v2.z, v2.w,
+				0, 0, 0, 1);
 }
 
-mat4 skinMatrix(vec4 bone) {
-	float o = BINDS_OFFSET;
-	vec4 v0,v1,v2;
-	
-	float b = (bone[0]) * 3.0; 			
-	v0 = readSkin(b);
-	v1 = readSkin(b + 1.0);
-	v2 = readSkin(b + 2.0);
-	mat4 j0 = mat4(v0.x, v0.y, v0.z, v0.w, 
-				   v1.x, v1.y, v1.z, v1.w,
-				   v2.x, v2.y, v2.z, v2.w,
-				   0, 0, 0, 1);
-	v0 = readSkin(b + o);
-	v1 = readSkin(b + 1.0 + o);
-	v2 = readSkin(b + 2.0 + o);
-	mat4 b0 = mat4(v0.x, v0.y, v0.z, v0.w,
-				   v1.x, v1.y, v1.z, v1.w,
-				   v2.x, v2.y, v2.z, v2.w,
-				   0, 0, 0, 1);
-	
-	b = (bone[1]) * 3.0; 
-	v0 = readSkin(b);
-	v1 = readSkin(b + 1.0);
-	v2 = readSkin(b + 2.0);
-	mat4 j1 = mat4(v0.x, v0.y, v0.z, v0.w,
-				   v1.x, v1.y, v1.z, v1.w,
-				   v2.x, v2.y, v2.z, v2.w,
-				   0, 0, 0, 1);
-	v0 = readSkin(b + o);
-	v1 = readSkin(b + 1.0 + o);
-	v2 = readSkin(b + 2.0 + o);
-	mat4 b1 = mat4(v0.x, v0.y, v0.z, v0.w,
-				   v1.x, v1.y, v1.z, v1.w,
-				   v2.x, v2.y, v2.z, v2.w,
-				   0, 0, 0, 1);
-	
-	b = (bone[2]) * 3.0; 
-	v0 = readSkin(b);
-	v1 = readSkin(b + 1.0);
-	v2 = readSkin(b + 2.0);
-	mat4 j2 = mat4(v0.x, v0.y, v0.z, v0.w,
-				   v1.x, v1.y, v1.z, v1.w,
-				   v2.x, v2.y, v2.z, v2.w,
-				   0, 0, 0, 1);
-	v0 = readSkin(b + o);
-	v1 = readSkin(b + 1.0 + o);
-	v2 = readSkin(b + 2.0 + o);
-	mat4 b2 = mat4(v0.x, v0.y, v0.z, v0.w,
-				   v1.x, v1.y, v1.z, v1.w,
-				   v2.x, v2.y, v2.z, v2.w,
-				   0, 0, 0, 1);
-	
-	b = (bone[3]) * 3.0; 
-	v0 = readSkin(b);
-	v1 = readSkin(b + 1.0);
-	v2 = readSkin(b + 2.0);
-	mat4 j3 = mat4(v0.x, v0.y, v0.z, v0.w,
-				   v1.x, v1.y, v1.z, v1.w,
-				   v2.x, v2.y, v2.z, v2.w,
-				   0, 0, 0, 1);			
-	v0 = readSkin(b + o);
-	v1 = readSkin(b + 1.0 + o);
-	v2 = readSkin(b + 2.0 + o);
-	mat4 b3 = mat4(v0.x, v0.y, v0.z, v0.w,
-				   v1.x, v1.y, v1.z, v1.w,
-				   v2.x, v2.y, v2.z, v2.w,
-				   0, 0, 0, 1);
-	
-	//return mat4(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);
-	return  ((b0 * j0) * weight[0]) +
-	        ((b1 * j1) * weight[1]) +
-	        ((b2 * j2) * weight[2]) +
-	        ((b3 * j3) * weight[3]);
+mat4 getSkinningMat() {
+	return weight.x * getBoneMat(int(bone.x)) +
+		   weight.y * getBoneMat(int(bone.y)) +
+		   weight.z * getBoneMat(int(bone.z)) +
+		   weight.w * getBoneMat(int(bone.w));
+}
+
+mat3 getSkinningMatVec(const mat4 skinningMat) {
+	return mat3(skinningMat[0].xyz, skinningMat[1].xyz, skinningMat[2].xyz);
 }
 #endif
 
 void kore() {
 
-#ifdef _Skinning
-mat4 SM = skinMatrix(bone);
-	#ifdef _Instancing
-		vec4 mPos = M * SM * vec4(pos + off, 1.0);
-		lPos = lightMVP * vec4(pos + off, 1.0);
-	#else
-		vec4 mPos = M * SM * vec4(pos, 1.0);
-		lPos = lightMVP * vec4(pos, 1.0);
-	#endif
+#ifdef _Instancing
+	vec4 sPos = (vec4(pos + off, 1.0));
 #else
-	#ifdef _Instancing
-		vec4 mPos = M * vec4(pos + off, 1.0);
-		lPos = lightMVP * vec4(pos + off, 1.0);
-	#else
-		vec4 mPos = M * vec4(pos, 1.0);
-		lPos = lightMVP * vec4(pos, 1.0);
-	#endif
+	vec4 sPos = (vec4(pos, 1.0));
 #endif
+#ifdef _Skinning
+	mat4 skinningMat = getSkinningMat();
+	mat3 skinningMatVec = getSkinningMatVec(skinningMat);
+	sPos = sPos * skinningMat;
+#endif
+	vec4 mPos = M * sPos;
+	lPos = lightMVP * sPos;
 
 	gl_Position = P * V * mPos;
 	position = mPos.xyz / mPos.w;
@@ -177,10 +117,9 @@ mat4 SM = skinMatrix(bone);
 #endif
 
 #ifdef _Skinning
-	// TODO: * mat3(SM); // TODO: shadowmap
-	normal = normalize((M * SM * vec4(nor, 0.0)).xyz);
+	normal = normalize(mat3(NM) * (nor * skinningMatVec));
 #else
-	normal = normalize((M * vec4(nor, 0.0)).xyz);
+	normal = normalize(mat3(NM) * nor);
 #endif
 
 	matColor = diffuseColor;
@@ -189,18 +128,16 @@ mat4 SM = skinMatrix(bone);
 	matColor *= col;
 #endif
 
-	lightDir = normalize(light - position);
-	eyeDir = normalize(eye - position);
-
 #ifdef _NormalMapping
-	vec3 vTangent = (tan);
-	vec3 vBitangent = cross( normal, vTangent ) * 1.0;//tangent.w;
-	//vec3 vBitangent = (bitan);
+	vec3 vtan = (tan);
+	vec3 vbitan = cross(normal, vtan) * 1.0;//tangent.w;
    
-	mat3 TBN = transpose(mat3(vTangent, vBitangent, normal)); 
-	//mat3 TBN = (mat3(vTangent, vBitangent, normal)); 
+	mat3 TBN = transpose(mat3(vtan, vbitan, normal));
 	lightDir = normalize(TBN * lightDir); 
 	eyeDir = normalize(TBN * eyeDir); 
+#else
+	lightDir = normalize(light - position);
+	eyeDir = normalize(eye - position);
 #endif
 }
 

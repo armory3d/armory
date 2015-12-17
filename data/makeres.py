@@ -134,6 +134,9 @@ def writeShader(defs):
 					tu.id = cid
 					con.texture_units.append(tu)
 			else: # Constant
+				if cid.find('[') != -1: # Float arrays
+					cid = cid.split('[')[0]
+					ctype = 'floats'
 				for c in con.constants:
 					if c.id == cid:
 						found = True

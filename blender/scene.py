@@ -1700,7 +1700,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			posa = pa.values
 			uva = ta.values
 			tangents = []
-			bitangents = []
+			#bitangents = []
 			#print(node.name)
 			for i in range(0, int(len(ia) / 3)):
 				i0 = ia[i * 3 + 0]
@@ -1718,23 +1718,23 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 				deltaUV2 = uv2 - uv0
 				r = 1.0 / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
 				tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
-				bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
+				#bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
 				tangents.append(tangent.x)
 				tangents.append(tangent.y)
 				tangents.append(tangent.z)
-				bitangents.append(bitangent.x)
-				bitangents.append(bitangent.y)
-				bitangents.append(bitangent.z)
+				#bitangents.append(bitangent.x)
+				#bitangents.append(bitangent.y)
+				#bitangents.append(bitangent.z)
 			tana = Object()
 			tana.attrib = "tangent"
 			tana.size = 3
 			tana.values = tangents
 			om.vertex_arrays.append(tana)
-			btana = Object()
-			btana.attrib = "bitangent"
-			btana.size = 3
-			btana.values = bitangents
-			om.vertex_arrays.append(btana)
+			# btana = Object()
+			# btana.attrib = "bitangent"
+			# btana.size = 3
+			# btana.values = bitangents
+			# om.vertex_arrays.append(btana)
 
 		# If the mesh is skinned, export the skinning data here.
 
