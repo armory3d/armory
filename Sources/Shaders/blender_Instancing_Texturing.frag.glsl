@@ -1,6 +1,5 @@
 #define _Instancing
 #define _Texturing
-//--------------------------------------------------------
 #ifdef GL_ES
 precision mediump float;
 #endif

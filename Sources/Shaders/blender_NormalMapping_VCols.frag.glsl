@@ -1,6 +1,5 @@
 #define _NormalMapping
 #define _VCols
-//--------------------------------------------------------
 #ifdef GL_ES
 precision mediump float;
 #endif

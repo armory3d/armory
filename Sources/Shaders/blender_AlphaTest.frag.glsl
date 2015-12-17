@@ -1,5 +1,4 @@
 #define _AlphaTest
-//--------------------------------------------------------
 #ifdef GL_ES
 precision mediump float;
 #endif

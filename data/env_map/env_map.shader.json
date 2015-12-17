@@ -1,0 +1,41 @@
+{
+	"contexts": [
+		{
+			"id": "env_map",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "false"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				},
+				{
+					"id": "blend_source",
+					"value": "blend_one"
+				},
+				{
+					"id": "blend_destination",
+					"value": "blend_zero"
+				}
+			],
+			"links": [
+				{
+					"id": "V",
+					"link": "_viewMatrix"
+				},
+				{
+					"id": "P",
+					"link": "_projectionMatrix"
+				}
+			],
+			"vertex_shader": "env_map.vert.glsl",
+			"fragment_shader": "env_map.frag.glsl"
+		}
+	]
+}

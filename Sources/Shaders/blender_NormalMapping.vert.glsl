@@ -1,5 +1,4 @@
 #define _NormalMapping
-//--------------------------------------------------------
 #ifdef GL_ES
 precision highp float;
 #endif
@@ -135,5 +134,3 @@ void kore() {
 	eyeDir = normalize(eye - position);
 #endif
 }
-
-

@@ -1,7 +1,6 @@
 #define _NormalMapping
 #define _Skinning
 #define _Texturing
-//--------------------------------------------------------
 #ifdef GL_ES
 precision mediump float;
 #endif

@@ -1,7 +1,6 @@
 #define _AlphaTest
 #define _Instancing
 #define _Skinning
-//--------------------------------------------------------
 #ifdef GL_ES
 precision mediump float;
 #endif

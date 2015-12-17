@@ -1,7 +1,6 @@
 #define _Instancing
 #define _Skinning
 #define _Texturing
-//--------------------------------------------------------
 #ifdef GL_ES
 precision highp float;
 #endif
@@ -137,5 +136,3 @@ void kore() {
 	eyeDir = normalize(eye - position);
 #endif
 }
-
-

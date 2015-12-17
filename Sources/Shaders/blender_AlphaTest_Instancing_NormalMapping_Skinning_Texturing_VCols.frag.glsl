@@ -4,7 +4,6 @@
 #define _Skinning
 #define _Texturing
 #define _VCols
-//--------------------------------------------------------
 #ifdef GL_ES
 precision mediump float;
 #endif

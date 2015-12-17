@@ -2,7 +2,6 @@
 #define _Instancing
 #define _NormalMapping
 #define _VCols
-//--------------------------------------------------------
 #ifdef GL_ES
 precision highp float;
 #endif
@@ -138,5 +137,3 @@ void kore() {
 	eyeDir = normalize(eye - position);
 #endif
 }
-
-

@@ -1,5 +1,4 @@
 #define _Instancing
-//--------------------------------------------------------
 #ifdef GL_ES
 precision mediump float;
 #endif

@@ -1,7 +1,6 @@
 #define _Instancing
 #define _NormalMapping
 #define _Skinning
-//--------------------------------------------------------
 #ifdef GL_ES
 precision mediump float;
 #endif

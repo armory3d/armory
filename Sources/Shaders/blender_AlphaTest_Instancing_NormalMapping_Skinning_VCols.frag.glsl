@@ -3,7 +3,6 @@
 #define _NormalMapping
 #define _Skinning
 #define _VCols
-//--------------------------------------------------------
 #ifdef GL_ES
 precision mediump float;
 #endif
