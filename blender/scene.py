@@ -1095,7 +1095,6 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 	def ProcessBone(self, bone):
 		if ((self.exportAllFlag) or (bone.select)):
-			#self.nodeArray[bone] = {"nodeType" : kNodeTypeBone, "structName" : "node" + str(len(self.nodeArray) + 1)}
 			self.nodeArray[bone] = {"nodeType" : kNodeTypeBone, "structName" : bone.name}
 
 		for subnode in bone.children:
@@ -1105,7 +1104,6 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 	def ProcessNode(self, node):
 		if ((self.exportAllFlag) or (node.select)):
 			type = LueExporter.GetNodeType(node)
-			#self.nodeArray[node] = {"nodeType" : type, "structName" : "node" + str(len(self.nodeArray) + 1)}
 			self.nodeArray[node] = {"nodeType" : type, "structName" : node.name}
 
 			if (node.parent_type == "BONE"):
@@ -1206,7 +1204,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			o.type = structIdentifier[type]
 			o.id = nodeRef["structName"]
 
-			if (type == kNodeTypeGeometry):
+			if (type == kNodeTypeGeometry): # TODO: hide lights too
 				if (node.hide_render):
 					o.visible = False
 
@@ -1222,7 +1220,6 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 			if (type == kNodeTypeGeometry):
 				if (not object in self.geometryArray):
-					#self.geometryArray[object] = {"structName" : "geometry" + str(len(self.geometryArray) + 1), "nodeTable" : [node]}
 					self.geometryArray[object] = {"structName" : object.name, "nodeTable" : [node]}
 				else:
 					self.geometryArray[object]["nodeTable"].append(node)
@@ -1238,14 +1235,13 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 				for i in range(len(node.particle_systems)):
 					self.ExportParticleSystemRef(node.particle_systems[i], i, o)
 
-				shapeKeys = LueExporter.GetShapeKeys(object)
+				#shapeKeys = LueExporter.GetShapeKeys(object)
 				#if (shapeKeys):
 				#	self.ExportMorphWeights(node, shapeKeys, scene, o)
 				# TODO
 
 			elif (type == kNodeTypeLight):
 				if (not object in self.lightArray):
-					#self.lightArray[object] = {"structName" : "light" + str(len(self.lightArray) + 1), "nodeTable" : [node]}
 					self.lightArray[object] = {"structName" : object.name, "nodeTable" : [node]}
 				else:
 					self.lightArray[object]["nodeTable"].append(node)
@@ -1254,7 +1250,6 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 			elif (type == kNodeTypeCamera):
 				if (not object in self.cameraArray):
-					#self.cameraArray[object] = {"structName" : "camera" + str(len(self.cameraArray) + 1), "nodeTable" : [node]}
 					self.cameraArray[object] = {"structName" : object.name, "nodeTable" : [node]}
 				else:
 					self.cameraArray[object]["nodeTable"].append(node)
@@ -1262,25 +1257,37 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 				o.object_ref = self.cameraArray[object]["structName"]
 
 			if (poseBone):
-
 				# If the node is parented to a bone and is not relative, then undo the bone's transform.
-
 				o.transform = Object()
 				o.transform.values = self.WriteMatrix(poseBone.matrix.inverted())
 
 			# Export the transform. If the node is animated, then animation tracks are exported here.
-
 			self.ExportNodeTransform(node, scene, o)
 
 			if (node.type == "ARMATURE"):
 				skeleton = node.data
 				if (skeleton):
 					o.nodes = []
-					for bone in skeleton.bones:
-						if (not bone.parent):
-							co = Object() # TODO
-							self.ExportBone(node, bone, scene, co)
-							o.nodes.append(co)
+					o.bones_ref = 'bones_' + o.id
+					index = self.filepath.rfind('/') # TODO: duplicated in geoms
+					geom_fp = self.filepath[:(index+1)] + 'geoms/'
+					if not os.path.exists(geom_fp):
+						os.makedirs(geom_fp)
+					fp = geom_fp + o.bones_ref + '.json'
+					if node.geometry_cached == False or not os.path.exists(fp):
+						bones = []
+						for bone in skeleton.bones:
+							if (not bone.parent):
+								boneo = Object()
+								self.ExportBone(node, bone, scene, boneo)
+								#o.nodes.append(boneo)
+								bones.append(boneo)
+						# Save bones separately
+						bones_obj = Object()
+						bones_obj.nodes = bones
+						with open(fp, 'w') as f:
+							f.write(bones_obj.to_JSON())
+						node.geometry_cached = True
 
 			if (parento == None):
 				self.output.nodes.append(o)
@@ -1761,8 +1768,6 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 		bpy.data.meshes.remove(exportMesh)
 		o.mesh = om
-
-
 
 		# One geometry data per file
 		geom_obj = Object()
