@@ -1929,8 +1929,17 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		o.far_plane = object.clip_end
 		o.frustum_culling = False
 		o.pipeline = "pipeline_resource/blender_pipeline"
-		o.clear_color = [0.0, 0.0, 0.0, 1.0]
-		o.type = "perspective"
+		
+		if 'Background' in bpy.data.worlds[0].node_tree.nodes: # TODO: parse node tree
+			col = bpy.data.worlds[0].node_tree.nodes['Background'].inputs[0].default_value
+			o.clear_color = [col[0], col[1], col[2], col[3]]
+		else:
+			o.clear_color = [0.0, 0.0, 0.0, 1.0]
+		
+		if object.type == 'PERSP':
+			o.type = 'perspective'
+		else:
+			o.type = 'orthographic'
 		
 		self.output.camera_resources.append(o)
 
