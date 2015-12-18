@@ -1,5 +1,9 @@
 # =============================================================
-# 
+#  Lue Scene Exporter
+#  http://lue3d.org/
+#  by Lubos Lenco
+#
+#  Based on
 #  Open Game Engine Exchange
 #  http://opengex.org/
 # 
@@ -14,10 +18,6 @@
 #  Attribution-ShareAlike 3.0 Unported License:
 # 
 #  http://creativecommons.org/licenses/by-sa/3.0/deed.en_US
-# 
-#  Adapted to Lue Rendering Engine
-#  http://lue3d.org/
-#  by Lubos Lenco
 #
 # =============================================================
 
@@ -44,6 +44,7 @@ kNodeTypeBone = 1
 kNodeTypeGeometry = 2
 kNodeTypeLight = 3
 kNodeTypeCamera = 4
+kNodeTypeSpeaker = 5
 
 kAnimationSampled = 0
 kAnimationLinear = 1
@@ -52,7 +53,7 @@ kAnimationBezier = 2
 kExportEpsilon = 1.0e-6
 
 
-structIdentifier = ["node", "bone_node", "geometry_node", "light_node", "camera_node"]
+structIdentifier = ["node", "bone_node", "geometry_node", "light_node", "camera_node", "speaker_node"]
 
 
 subtranslationName = ["xpos", "ypos", "zpos"]
@@ -240,6 +241,8 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 				return (kNodeTypeLight)
 		elif (node.type == "CAMERA"):
 			return (kNodeTypeCamera)
+		elif (node.type == "SPEAKER"):
+			return (kNodeTypeSpeaker)
 
 		return (kNodeTypeNode)
 
@@ -1245,7 +1248,6 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 					self.lightArray[object] = {"structName" : object.name, "nodeTable" : [node]}
 				else:
 					self.lightArray[object]["nodeTable"].append(node)
-
 				o.object_ref = self.lightArray[object]["structName"]
 
 			elif (type == kNodeTypeCamera):
@@ -1253,8 +1255,14 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 					self.cameraArray[object] = {"structName" : object.name, "nodeTable" : [node]}
 				else:
 					self.cameraArray[object]["nodeTable"].append(node)
-
 				o.object_ref = self.cameraArray[object]["structName"]
+
+			elif (type == kNodeTypeSpeaker):
+				if (not object in self.speakerArray):
+					self.speakerArray[object] = {"structName" : object.name, "nodeTable" : [node]}
+				else:
+					self.speakerArray[object]["nodeTable"].append(node)
+				o.object_ref = self.speakerArray[object]["structName"]
 
 			if (poseBone):
 				# If the node is parented to a bone and is not relative, then undo the bone's transform.
@@ -1948,6 +1956,13 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		
 		self.output.camera_resources.append(o)
 
+	def ExportSpeaker(self, objectRef):
+		# This function exports a single speaker object
+		o = Object()
+		o.id = objectRef[1]["structName"]
+		object = objectRef[0]
+		o.sound = object.sound.name.split('.')[0]
+		self.output.speaker_resources.append(o)
 
 	def findNodeByLink(self, node_group, to_node, inp):
 	    for link in node_group.links:
@@ -2158,6 +2173,8 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			self.ExportLight(objectRef)
 		for objectRef in self.cameraArray.items():
 			self.ExportCamera(objectRef)
+		for objectRef in self.speakerArray.items():
+			self.ExportSpeaker(objectRef)
 
 
 	def execute(self, context):
@@ -2177,6 +2194,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		self.geometryArray = {}
 		self.lightArray = {}
 		self.cameraArray = {}
+		self.speakerArray = {}
 		self.materialArray = {}
 		self.particleSystemArray = {}
 		self.boneParentArray = {}
@@ -2206,6 +2224,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		self.output.geometry_resources = [];
 		self.output.light_resources = [];
 		self.output.camera_resources = [];
+		self.output.speaker_resources = [];
 		self.ExportObjects(scene)
 
 
