@@ -10,6 +10,7 @@ var project = new Project('""" + bpy.data.worlds[0]['CGProjectName'] + """');
 
 project.addSources('Sources');
 project.addShaders('Sources/Shaders/**');
+project.addAssets('Libraries/cyclesgame/Assets/**');
 project.addAssets('Assets/**');
 project.addLibrary('lue');
 project.addLibrary('cyclesgame');

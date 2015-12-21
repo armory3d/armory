@@ -1,0 +1,66 @@
+{
+	"contexts": [
+		{
+			"id": "attrib_pass",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "true"
+				},
+				{
+					"id": "compare_mode",
+					"value": "less"
+				},
+				{
+					"id": "cull_mode",
+					"value": "counter_clockwise"
+				},
+				{
+					"id": "blend_source",
+					"value": "blend_one"
+				},
+				{
+					"id": "blend_destination",
+					"value": "blend_zero"
+				}
+			],
+			"links": [
+				{
+					"id": "M",
+					"link": "_modelMatrix"
+				},
+				{
+					"id": "NM",
+					"link": "_normalMatrix"
+				},
+				{
+					"id": "V",
+					"link": "_viewMatrix"
+				},
+				{
+					"id": "P",
+					"link": "_projectionMatrix"
+				},
+				{
+					"id": "lightMVP",
+					"link": "_lightMVP"
+				},
+				{
+					"id": "light",
+					"link": "_lightPosition"
+				},
+				{
+					"id": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"id": "skinBones",
+					"link": "_skinBones",
+					"ifdef": "_Skinning"
+				}
+			],
+			"vertex_shader": "attrib_pass.vert.glsl",
+			"fragment_shader": "attrib_pass.frag.glsl"
+		}
+	]
+}

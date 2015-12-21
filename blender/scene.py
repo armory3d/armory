@@ -119,6 +119,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 	option_export_selection = bpy.props.BoolProperty(name = "Export Selection Only", description = "Export only selected objects", default = False)
 	option_sample_animation = bpy.props.BoolProperty(name = "Force Sampled Animation", description = "Always export animation as per-frame samples", default = False)
+	option_no_cycles = bpy.props.BoolProperty(name = "Export Pure Lue", description = "Export pure lue data", default = False)
 
 	def WriteColor(self, color):
 		return [color[0], color[1], color[2]]
@@ -1123,7 +1124,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 						if (not bone.parent):
 							self.ProcessBone(bone)
 
-		if node.type != 'MESH' or node.instanced_children == False:
+		if node.type != 'MESH' or (hasattr(node, 'instanced_children') and node.instanced_children == False):
 			for subnode in node.children:
 				self.ProcessNode(subnode)
 
@@ -1211,12 +1212,6 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 				if (node.hide_render):
 					o.visible = False
 
-			# Export the node's name if it has one.
-
-			##name = node.name
-			##if (name != ""):
-			##	o.name = name
-
 			# Export the object reference and material references.
 
 			object = node.data
@@ -1303,7 +1298,6 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 				parento.nodes.append(o)
 
 		# Export traits
-		# TODO: export only for geometry nodes and nodes
 		o.traits = []
 		for t in node.my_traitlist:
 			if t.enabled_prop == False:
@@ -2201,14 +2195,13 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 		self.exportAllFlag = not self.option_export_selection
 		self.sampleAnimationFlag = True#self.option_sample_animation
-
+		self.noCycles = self.option_no_cycles
 
 		for object in scene.objects:
 			if (not object.parent):
 				self.ProcessNode(object)
 
 		self.ProcessSkinnedMeshes()
-
 
 		self.output.nodes = []
 		for object in scene.objects:
