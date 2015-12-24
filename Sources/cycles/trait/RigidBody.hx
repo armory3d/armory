@@ -10,6 +10,10 @@ import cycles.Root;
 
 class RigidBody extends Trait {
 
+#if (!js && !cpp)
+	public function new() { super(); }
+#else
+
 	public static inline var SHAPE_BOX = 0;
 	public static inline var SHAPE_SPHERE = 1;
 	public static inline var SHAPE_CONVEX_HULL = 2;
@@ -418,4 +422,5 @@ class RigidBody extends Trait {
 			#end
 		}
 	}
+#end
 }

@@ -17,6 +17,10 @@ class ContactPair {
 
 class PhysicsWorld extends Trait {
 
+#if (!js && !cpp)
+	public function new() { super(); }
+#else
+
 	#if js
 	public var world:BtDiscreteDynamicsWorld;
 	var dispatcher:BtCollisionDispatcher;
@@ -245,4 +249,5 @@ class PhysicsWorld extends Trait {
     	return BtVector3.create(end.x, end.y, end.z);
     	#end
     }
+#end
 }
