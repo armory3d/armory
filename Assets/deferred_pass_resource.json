@@ -6,9 +6,20 @@
                     "blend_destination": "blend_zero", 
                     "blend_source": "blend_one", 
                     "compare_mode": "always", 
-                    "constants": [], 
+                    "constants": [
+                         {
+                            "id": "light", 
+                            "link": "_lightPosition", 
+                            "type": "vec3"
+                        }, 
+                        {
+                            "id": "eye", 
+                            "link": "_cameraPosition", 
+                            "type": "vec3"
+                        }
+                    ], 
                     "cull_mode": "none", 
-                    "depth_write": false, 
+                    "depth_write": true, 
                     "fragment_shader": "deferred_pass.frag", 
                     "id": "deferred_pass", 
                     "texture_units": [

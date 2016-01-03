@@ -36,7 +36,8 @@ def initWorldProperties():
                  ('OSX', 'OSX', 'OSX'),
                  ('Linux', 'Linux', 'Linux'), 
                  ('iOS', 'iOS', 'iOS'),
-                 ('Android', 'Android', 'Android')],
+                 ('Android', 'Android', 'Android'),
+                 ('Blender', 'Blender', 'Blender')],
         name = "Target")
     bpy.types.World.CGProjectName = StringProperty(name = "Name")
     bpy.types.World.CGProjectPackage = StringProperty(name = "Package")
@@ -181,13 +182,15 @@ def buildProject(self, build_type=0):
         bashCommand = "-t ios"
     elif (bpy.data.worlds[0]['CGProjectTarget'] == 5):
         bashCommand = "-t android_native"
+    elif (bpy.data.worlds[0]['CGProjectTarget'] == 6):
+        bashCommand = "-t blender"
     
     # Build
     haxelib_path = "haxelib"
     if platform.system() == 'Darwin':
         haxelib_path = "/usr/local/bin/haxelib"
 
-    prefix = haxelib_path + " run kha "
+    prefix =  haxelib_path + " run kha "
 
     output = subprocess.check_output([haxelib_path + " path cyclesgame"], shell=True)
     output = str(output).split("\\n")[0].split("'")[1]
@@ -195,7 +198,8 @@ def buildProject(self, build_type=0):
 
     blender_path = bpy.app.binary_path
     blend_path = bpy.data.filepath
-    p = subprocess.Popen([blender_path, blend_path, '-b', '-P', scripts_path + 'lib/build.py', '--', prefix + bashCommand, str(build_type), str(bpy.data.worlds[0]['CGProjectTarget'])])
+    p = subprocess.Popen([blender_path, blend_path, '-b', '-P', scripts_path + 'lib/build.py', '--', bashCommand, str(build_type), str(bpy.data.worlds[0]['CGProjectTarget'])])
+    #p = subprocess.Popen([blender_path, blend_path, '-b', '-P', scripts_path + 'lib/build.py', '--', prefix + bashCommand, str(build_type), str(bpy.data.worlds[0]['CGProjectTarget'])])
     atexit.register(p.terminate)
     
     self.report({'INFO'}, "Building, see console...")

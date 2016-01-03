@@ -19,11 +19,11 @@
         },
         {
             "id": "material_deferred",
-            "shader": "deferred_resource/deferred_pass",
+            "shader": "deferred_pass_resource/deferred_pass",
             "cast_shadow": true,
             "contexts": [
                 {
-                    "id": "deferred",
+                    "id": "deferred_pass",
                     "bind_constants": [],
                     "bind_textures": []
                 }

@@ -1,4 +1,4 @@
-#extension GL_EXT_draw_buffers : require
+//#extension GL_EXT_draw_buffers : require
 
 #ifdef GL_ES
 precision mediump float;
@@ -34,7 +34,8 @@ void kore() {
 
 	gl_FragData[0] = vec4(position.xyz, 0);
 	gl_FragData[1] = vec4(normal.xyz, 0);
-	#ifdef _Texturing
-	gl_FragData[2] = vec4(texture2D(stex, texCoord).rgb, 0);
-	#endif
+	gl_FragData[2] = vec4(normal.xyz, 0);
+	//#ifdef _Texturing
+	//gl_FragData[2] = vec4(texture2D(stex, texCoord).rgb, 0);
+	//#endif
 }

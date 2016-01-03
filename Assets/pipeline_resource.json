@@ -65,7 +65,7 @@
                 },
                 {
                     "command": "draw_quad",
-                    "params": ["material_resource", "material_deferred", "deferred"]
+                    "params": ["material_resource", "material_deferred", "deferred_pass"]
                 }
             ]
         }

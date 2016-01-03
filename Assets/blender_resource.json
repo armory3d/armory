@@ -50,10 +50,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -133,10 +130,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -216,10 +210,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -299,10 +290,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -394,10 +382,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -485,10 +470,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -575,10 +557,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -662,10 +641,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -745,10 +721,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -840,10 +813,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -931,10 +901,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -1021,10 +988,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -1108,10 +1072,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -1203,10 +1164,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -1294,10 +1252,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -1384,10 +1339,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -1476,10 +1428,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -1574,10 +1523,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -1671,10 +1617,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -1770,10 +1713,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -1873,10 +1813,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -1968,10 +1905,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -2062,10 +1996,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -2157,10 +2088,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -2248,10 +2176,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -2338,10 +2263,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -2430,10 +2352,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -2528,10 +2447,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -2625,10 +2541,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -2724,10 +2637,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -2827,10 +2737,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -2922,10 +2829,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -3021,10 +2925,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -3119,10 +3020,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -3216,10 +3114,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -3315,10 +3210,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -3418,10 +3310,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -3513,10 +3402,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -3612,10 +3498,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -3722,10 +3605,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -3824,10 +3704,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -3930,10 +3807,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -4037,10 +3911,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -4135,10 +4006,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -4232,10 +4100,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -4331,10 +4196,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -4434,10 +4296,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -4529,10 +4388,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -4628,10 +4484,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -4738,10 +4591,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -4840,10 +4690,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -4946,10 +4793,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -5053,10 +4897,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -5163,10 +5004,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -5265,10 +5103,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -5371,10 +5206,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -5478,10 +5310,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -5592,10 +5421,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -5702,10 +5528,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -5804,10 +5627,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -5910,10 +5730,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -6017,10 +5834,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -6131,10 +5945,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
@@ -6245,10 +6056,7 @@
                             "id": "lighting", 
                             "type": "bool"
                         }, 
-                        {
-                            "id": "receiveShadow", 
-                            "type": "bool"
-                        }, 
+                        
                         {
                             "id": "roughness", 
                             "type": "float"
