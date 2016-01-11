@@ -119,6 +119,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 	option_no_cycles = bpy.props.BoolProperty(name = "Export Pure Armory", description = "Export pure armory data", default = False)
 
 	shader_references = None
+	pipeline_pass = ''
 
 	def WriteColor(self, color):
 		return [color[0], color[1], color[2]]
@@ -1226,7 +1227,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				
 				o.material_refs = []
 				for i in range(len(node.material_slots)):
-					self.ExportMaterialRef(node.material_slots[i].material, i, o)
+					if node.custom_material: # Overwrite material slot
+						o.material_refs.append(node.custom_material_name)
+					else: # Export assigned material
+						self.ExportMaterialRef(node.material_slots[i].material, i, o)
 
 				o.particle_refs = []
 				for i in range(len(node.particle_systems)):
@@ -1933,8 +1937,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		#o.fov = object.angle_x
 		o.near_plane = object.clip_start
 		o.far_plane = object.clip_end
-		o.frustum_culling = False
-		o.pipeline = "pipeline_resource/forward_pipeline"
+		o.frustum_culling = object.frustum_culling
+		o.pipeline = object.pipeline_path
 		
 		if 'Background' in bpy.data.worlds[0].node_tree.nodes: # TODO: parse node tree
 			col = bpy.data.worlds[0].node_tree.nodes['Background'].inputs[0].default_value
@@ -1984,7 +1988,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o.contexts = []
 			
 			c = Object()
-			c.id = "forward"
+			c.id = ArmoryExporter.pipeline_pass
 			c.bind_constants = []
 			const1 = Object()
 			const1.id = "diffuseColor"
@@ -2085,12 +2089,12 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				# Merge duplicates and sort
 				defs = sorted(list(set(defs)))
 				# Select correct shader variant
-				o.shader = "forward_resource/forward"
+				o.shader = ArmoryExporter.pipeline_pass + '_resource/' + ArmoryExporter.pipeline_pass
 				ext = ''
 				for d in defs:
 					ext += d
 				o.shader += ext
-				ArmoryExporter.shader_references.append('forward' + ext)
+				ArmoryExporter.shader_references.append(ArmoryExporter.pipeline_pass + ext)
 			else:
 				o.shader = material.custom_shader_name
 
@@ -2163,14 +2167,14 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			self.output.particle_resources.append(o)
 
 	def ExportObjects(self, scene):
-		for objectRef in self.geometryArray.items():
-			self.ExportGeometry(objectRef, scene)
 		for objectRef in self.lightArray.items():
 			self.ExportLight(objectRef)
 		for objectRef in self.cameraArray.items():
 			self.ExportCamera(objectRef)
 		for objectRef in self.speakerArray.items():
 			self.ExportSpeaker(objectRef)
+		for objectRef in self.geometryArray.items():
+			self.ExportGeometry(objectRef, scene)
 
 
 	def execute(self, context):
@@ -2207,6 +2211,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				self.ProcessNode(object)
 
 		self.ProcessSkinnedMeshes()
+
+		# Only one pipeline for scene for now
+		# Used for material shader export
+		if (len(bpy.data.cameras) > 0):
+			ArmoryExporter.pipeline_pass = bpy.data.cameras[0].pipeline_pass
 
 		self.output.nodes = []
 		for object in scene.objects:

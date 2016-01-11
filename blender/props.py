@@ -11,8 +11,16 @@ def cb_scene_update(context):
         edit_obj.geometry_cached = False
 
 def initObjectProperties():
+    # For geometry
     bpy.types.Object.geometry_cached = bpy.props.BoolProperty(name="Geometry cached", default=False)
     bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced children", default=False)
+    bpy.types.Object.custom_material = bpy.props.BoolProperty(name="Custom material", default=False)
+    bpy.types.Object.custom_material_name = bpy.props.StringProperty(name="Name", default="")
+    # For camera
+    bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", default=False)
+    bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Pipeline Path", default="pipeline_resource/forward_pipeline")
+    bpy.types.Camera.pipeline_pass = bpy.props.StringProperty(name="Pipeline Pass", default="forward")
+    # For material
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive shadow", default=True)
     bpy.types.Material.alpha_test = bpy.props.BoolProperty(name="Alpha test", default=False)
     bpy.types.Material.custom_shader = bpy.props.BoolProperty(name="Custom shader", default=False)
@@ -20,7 +28,7 @@ def initObjectProperties():
     bpy.types.Material.export_tangents = bpy.props.BoolProperty(name="Export tangents", default=False)
 
 # Menu in object region
-class ToolsPropsPanel(bpy.types.Panel):
+class ObjectPropsPanel(bpy.types.Panel):
     bl_label = "Cycles Props"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -32,6 +40,25 @@ class ToolsPropsPanel(bpy.types.Panel):
 
         if obj.type == 'MESH':
             layout.prop(obj, 'instanced_children')
+            layout.prop(obj, 'custom_material')
+            if obj.custom_material:
+                layout.prop(obj, 'custom_material_name')
+
+# Menu in camera region
+class DataPropsPanel(bpy.types.Panel):
+    bl_label = "Cycles Props"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "data"
+ 
+    def draw(self, context):
+        layout = self.layout
+        obj = bpy.context.object
+
+        if obj.type == 'CAMERA':
+            layout.prop(obj.data, 'frustum_culling')
+            layout.prop(obj.data, 'pipeline_path')
+            layout.prop(obj.data, 'pipeline_pass')
 
 # Menu in materials region
 class MatsPropsPanel(bpy.types.Panel):
