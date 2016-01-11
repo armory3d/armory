@@ -59,6 +59,7 @@
 					"ifdef": "_Skinning"
 				}
 			],
+			"texture_params": [],
 			"vertex_shader": "forward.vert.glsl",
 			"fragment_shader": "forward.frag.glsl"
 		}

@@ -111,6 +111,28 @@ def writeResource(defs, json_data):
 					if found == False:
 						tu = Object()
 						tu.id = cid
+						# Check for texture params
+						for p in c['texture_params']:
+							if p['id'] == cid:
+								valid_link = True
+								if 'ifdef' in p:
+									valid_link = False
+									for d in defs:
+										if d == p['ifdef']:
+											valid_link = True
+											break
+								if valid_link:
+									if 'u_addressing' in p:
+										tu.u_addressing = l['u_addressing']
+									if 'v_addressing' in p:
+										tu.v_addressing = l['v_addressing']
+									if 'min_filter' in p:
+										tu.min_filter = l['min_filter']
+									if 'mag_filter' in p:
+										tu.mag_filter = l['mag_filter']
+									if 'mipmap' in p:
+										tu.mipmap = l['mipmap']
+								break
 						con.texture_units.append(tu)
 				else: # Constant
 					if cid.find('[') != -1: # Float arrays
@@ -136,6 +158,7 @@ def writeResource(defs, json_data):
 											break
 								if valid_link:
 									const.link = l['link']
+								break
 						con.constants.append(const)
 
 # Make out dir
