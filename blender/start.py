@@ -1,6 +1,6 @@
 import project
 import nodes
-import scene
+import armory
 import traits_animation
 import traits
 import props
@@ -8,7 +8,7 @@ import props
 def register():
     project.register()
     nodes.register()
-    scene.register()
+    armory.register()
     traits_animation.register()
     traits.register()
     props.register()
@@ -16,7 +16,7 @@ def register():
 def unregister():
     project.unregister()
     nodes.unregister()
-    scene.unregister()
+    armory.unregister()
     traits_animation.unregister()
     traits.unregister()
     props.unregister()

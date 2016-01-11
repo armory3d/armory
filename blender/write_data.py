@@ -2,7 +2,7 @@ import bpy
 import os
 
 # Write khafile.js
-def write_khafilejs():
+def write_khafilejs(shader_references):
 	with open('khafile.js', 'w') as f:
 			f.write(
 """// Auto-generated
@@ -10,14 +10,17 @@ var project = new Project('""" + bpy.data.worlds[0]['CGProjectName'] + """');
 
 project.addSources('Sources');
 project.addShaders('Sources/Shaders/**');
-project.addAssets('Libraries/cyclesgame/Assets/**');
 project.addAssets('Assets/**');
-project.addLibrary('lue');
-project.addLibrary('cyclesgame');
-project.addLibrary('haxebullet');
 
-return project;
+project.addLibrary('cyclesgame');
+project.addAssets('Libraries/cyclesgame/Assets/**');
 """)
+
+			for ref in shader_references:
+				f.write("project.addShaders('Libraries/cyclesgame/compiled/Shaders/" + ref + ".frag.glsl');\n")
+				f.write("project.addShaders('Libraries/cyclesgame/compiled/Shaders/" + ref + ".vert.glsl');\n")
+
+			f.write("\nreturn project;")
 
 # Write Main.hx
 def write_main():

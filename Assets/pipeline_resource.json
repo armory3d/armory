@@ -1,7 +1,7 @@
 {
     "pipeline_resources": [
         {
-            "id": "blender_pipeline",
+            "id": "forward_pipeline",
             "render_targets": [],
             "stages": [
                 
@@ -16,7 +16,7 @@
                 },
                 {
                     "command": "draw_geometry",
-                    "params": ["blender"]
+                    "params": ["forward"]
                 }
             ]
         },
@@ -25,8 +25,8 @@
             "render_targets": [
             	{
                     "id": "gbuffer",
-                    "width": 1136,
-                    "height": 640,
+                    "width": 0,
+                    "height": 0,
                     "color_buffers": 3,
                     "depth": true,
                     "format": "RGBA128"

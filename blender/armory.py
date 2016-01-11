@@ -1,5 +1,5 @@
 # =============================================================
-#  Lue Scene Exporter
+#  Armory Scene Exporter
 #  http://lue3d.org/
 #  by Lubos Lenco
 #
@@ -9,23 +9,20 @@
 # 
 #  Export plugin for Blender
 #  by Eric Lengyel
-#
 #  Version 1.1.2.2
-# 
 #  Copyright 2015, Terathon Software LLC
 # 
 #  This software is licensed under the Creative Commons
 #  Attribution-ShareAlike 3.0 Unported License:
-# 
 #  http://creativecommons.org/licenses/by-sa/3.0/deed.en_US
 #
 # =============================================================
 
 
 bl_info = {
-	"name": "Lue format (.json)",
-	"description": "Lue Exporter",
-	"author": "Eric Lengyel, adapted by Lubos Lenco",
+	"name": "Armory format (.json)",
+	"description": "Armory Exporter",
+	"author": "Eric Lengyel, Armory by Lubos Lenco",
 	"version": (1, 0, 0, 0),
 	"location": "File > Import-Export",
 	"wiki_url": "http://lue3d.org/",
@@ -111,15 +108,17 @@ class Object:
 		return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
 
-class LueExporter(bpy.types.Operator, ExportHelper):
-	"""Export to Lue format"""
-	bl_idname = "export_scene.lue"
-	bl_label = "Export Lue"
+class ArmoryExporter(bpy.types.Operator, ExportHelper):
+	"""Export to Armory format"""
+	bl_idname = "export_scene.armory"
+	bl_label = "Export Armory"
 	filename_ext = ".json"
 
 	option_export_selection = bpy.props.BoolProperty(name = "Export Selection Only", description = "Export only selected objects", default = False)
 	option_sample_animation = bpy.props.BoolProperty(name = "Force Sampled Animation", description = "Always export animation as per-frame samples", default = False)
-	option_no_cycles = bpy.props.BoolProperty(name = "Export Pure Lue", description = "Export pure lue data", default = False)
+	option_no_cycles = bpy.props.BoolProperty(name = "Export Pure Armory", description = "Export pure armory data", default = False)
+
+	shader_references = None
 
 	def WriteColor(self, color):
 		return [color[0], color[1], color[2]]
@@ -341,9 +340,9 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 	@staticmethod
 	def AnimationPresent(fcurve, kind):
 		if (kind != kAnimationBezier):
-			return (LueExporter.AnimationKeysDifferent(fcurve))
+			return (ArmoryExporter.AnimationKeysDifferent(fcurve))
 
-		return ((LueExporter.AnimationKeysDifferent(fcurve)) or (LueExporter.AnimationTangentsNonzero(fcurve)))
+		return ((ArmoryExporter.AnimationKeysDifferent(fcurve)) or (ArmoryExporter.AnimationTangentsNonzero(fcurve)))
 
 
 	@staticmethod
@@ -534,7 +533,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		for i in range(len(exportVertexArray)):
 			ev = exportVertexArray[i]
 			bucket = ev.hash & (bucketCount - 1)
-			index = LueExporter.FindExportVertex(hashTable[bucket], exportVertexArray, ev)
+			index = ArmoryExporter.FindExportVertex(hashTable[bucket], exportVertexArray, ev)
 			if (index < 0):
 				indexTable.append(len(unifiedVertexArray))
 				unifiedVertexArray.append(ev)
@@ -596,7 +595,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		for i in range(self.beginFrame, self.endFrame):
 			scene.frame_set(i)
 			m2 = node.matrix_local
-			if (LueExporter.MatricesDifferent(m1, m2)):
+			if (ArmoryExporter.MatricesDifferent(m1, m2)):
 				animationFlag = True
 				break
 
@@ -642,7 +641,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		for i in range(self.beginFrame, self.endFrame):
 			scene.frame_set(i)
 			m2 = poseBone.matrix
-			if (LueExporter.MatricesDifferent(m1, m2)):
+			if (ArmoryExporter.MatricesDifferent(m1, m2)):
 				animationFlag = True
 				break
 
@@ -718,49 +717,49 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			action = node.animation_data.action
 			if (action):
 				for fcurve in action.fcurves:
-					kind = LueExporter.ClassifyAnimationCurve(fcurve)
+					kind = ArmoryExporter.ClassifyAnimationCurve(fcurve)
 					if (kind != kAnimationSampled):
 						if (fcurve.data_path == "location"):
 							for i in range(3):
 								if ((fcurve.array_index == i) and (not posAnimCurve[i])):
 									posAnimCurve[i] = fcurve
 									posAnimKind[i] = kind
-									if (LueExporter.AnimationPresent(fcurve, kind)):
+									if (ArmoryExporter.AnimationPresent(fcurve, kind)):
 										posAnimated[i] = True
 						elif (fcurve.data_path == "delta_location"):
 							for i in range(3):
 								if ((fcurve.array_index == i) and (not deltaPosAnimCurve[i])):
 									deltaPosAnimCurve[i] = fcurve
 									deltaPosAnimKind[i] = kind
-									if (LueExporter.AnimationPresent(fcurve, kind)):
+									if (ArmoryExporter.AnimationPresent(fcurve, kind)):
 										deltaPosAnimated[i] = True
 						elif (fcurve.data_path == "rotation_euler"):
 							for i in range(3):
 								if ((fcurve.array_index == i) and (not rotAnimCurve[i])):
 									rotAnimCurve[i] = fcurve
 									rotAnimKind[i] = kind
-									if (LueExporter.AnimationPresent(fcurve, kind)):
+									if (ArmoryExporter.AnimationPresent(fcurve, kind)):
 										rotAnimated[i] = True
 						elif (fcurve.data_path == "delta_rotation_euler"):
 							for i in range(3):
 								if ((fcurve.array_index == i) and (not deltaRotAnimCurve[i])):
 									deltaRotAnimCurve[i] = fcurve
 									deltaRotAnimKind[i] = kind
-									if (LueExporter.AnimationPresent(fcurve, kind)):
+									if (ArmoryExporter.AnimationPresent(fcurve, kind)):
 										deltaRotAnimated[i] = True
 						elif (fcurve.data_path == "scale"):
 							for i in range(3):
 								if ((fcurve.array_index == i) and (not sclAnimCurve[i])):
 									sclAnimCurve[i] = fcurve
 									sclAnimKind[i] = kind
-									if (LueExporter.AnimationPresent(fcurve, kind)):
+									if (ArmoryExporter.AnimationPresent(fcurve, kind)):
 										sclAnimated[i] = True
 						elif (fcurve.data_path == "delta_scale"):
 							for i in range(3):
 								if ((fcurve.array_index == i) and (not deltaSclAnimCurve[i])):
 									deltaSclAnimCurve[i] = fcurve
 									deltaSclAnimKind[i] = kind
-									if (LueExporter.AnimationPresent(fcurve, kind)):
+									if (ArmoryExporter.AnimationPresent(fcurve, kind)):
 										deltaSclAnimated[i] = True
 						elif ((fcurve.data_path == "rotation_axis_angle") or (fcurve.data_path == "rotation_quaternion") or (fcurve.data_path == "delta_rotation_quaternion")):
 							sampledAnimation = True
@@ -1107,7 +1106,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 	def ProcessNode(self, node):
 		if ((self.exportAllFlag) or (node.select)):
-			type = LueExporter.GetNodeType(node)
+			type = ArmoryExporter.GetNodeType(node)
 			self.nodeArray[node] = {"nodeType" : type, "structName" : node.name}
 
 			if (node.parent_type == "BONE"):
@@ -1233,7 +1232,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 				for i in range(len(node.particle_systems)):
 					self.ExportParticleSystemRef(node.particle_systems[i], i, o)
 
-				#shapeKeys = LueExporter.GetShapeKeys(object)
+				#shapeKeys = ArmoryExporter.GetShapeKeys(object)
 				#if (shapeKeys):
 				#	self.ExportMorphWeights(node, shapeKeys, scene, o)
 				# TODO
@@ -1491,7 +1490,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		showOnlyShapeKey = node.show_only_shape_key
 		currentMorphValue = []
 
-		shapeKeys = LueExporter.GetShapeKeys(mesh)
+		shapeKeys = ArmoryExporter.GetShapeKeys(mesh)
 		if (shapeKeys):
 			node.active_shape_key_index = 0
 			node.show_only_shape_key = True
@@ -1552,11 +1551,11 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		# Triangulate mesh and remap vertices to eliminate duplicates.
 
 		materialTable = []
-		exportVertexArray = LueExporter.DeindexMesh(exportMesh, materialTable)
+		exportVertexArray = ArmoryExporter.DeindexMesh(exportMesh, materialTable)
 		triangleCount = len(materialTable)
 
 		indexTable = []
-		unifiedVertexArray = LueExporter.UnifyVertices(exportVertexArray, indexTable)
+		unifiedVertexArray = ArmoryExporter.UnifyVertices(exportVertexArray, indexTable)
 		vertexCount = len(unifiedVertexArray)
 
 		# Write the position array.
@@ -1935,7 +1934,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 		o.near_plane = object.clip_start
 		o.far_plane = object.clip_end
 		o.frustum_culling = False
-		o.pipeline = "pipeline_resource/blender_pipeline"
+		o.pipeline = "pipeline_resource/forward_pipeline"
 		
 		if 'Background' in bpy.data.worlds[0].node_tree.nodes: # TODO: parse node tree
 			col = bpy.data.worlds[0].node_tree.nodes['Background'].inputs[0].default_value
@@ -1985,7 +1984,7 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 			o.contexts = []
 			
 			c = Object()
-			c.id = "blender"
+			c.id = "forward"
 			c.bind_constants = []
 			const1 = Object()
 			const1.id = "diffuseColor"
@@ -2086,9 +2085,12 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 				# Merge duplicates and sort
 				defs = sorted(list(set(defs)))
 				# Select correct shader variant
-				o.shader = "blender_resource/blender"
+				o.shader = "forward_resource/forward"
+				ext = ''
 				for d in defs:
-					o.shader += d
+					ext += d
+				o.shader += ext
+				ArmoryExporter.shader_references.append('forward' + ext)
 			else:
 				o.shader = material.custom_shader_name
 
@@ -2174,6 +2176,9 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 	def execute(self, context):
 		self.output = Object()
 
+		# Store used shaders in this scene
+		ArmoryExporter.shader_references = []
+
 		scene = context.scene
 
 		originalFrame = scene.frame_current
@@ -2233,15 +2238,15 @@ class LueExporter(bpy.types.Operator, ExportHelper):
 
 
 def menu_func(self, context):
-	self.layout.operator(LueExporter.bl_idname, text = "Lue (.json)")
+	self.layout.operator(ArmoryExporter.bl_idname, text = "Armory (.json)")
 
 def register():
-	bpy.utils.register_class(LueExporter)
+	bpy.utils.register_class(ArmoryExporter)
 	bpy.types.INFO_MT_file_export.append(menu_func)
 
 def unregister():
 	bpy.types.INFO_MT_file_export.remove(menu_func)
-	bpy.utils.unregister_class(LueExporter)
+	bpy.utils.unregister_class(ArmoryExporter)
 
 if __name__ == "__main__":
 	register()

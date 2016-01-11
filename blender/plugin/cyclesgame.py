@@ -1,12 +1,11 @@
 # Cycles Game Engine
 # https://github.com/luboslenco/cyclesgame
-# cyclesgame.py 15.12.0
 bl_info = {
     "name": "Cycles Game",
     "category": "Game Engine",
     "description": "3D Game Engine built for Cycles",
     "author": "Lubos Lenco",
-    "version": (15, 12, 0, 0),
+    "version": (16, 1, 0, 0),
     "wiki_url": "http://cyclesgame.org/"
 }
 
@@ -87,7 +86,7 @@ def start_plugin():
 
     output = subprocess.check_output([haxelib_path + " path cyclesgame"], shell=True)
     output = str(output).split("\\n")[0].split("'")[1]
-    scripts_path = output + "blender/"
+    scripts_path = output[:-8] + "blender/" # Remove 'Sources/' from haxelib path
     
     sys.path.append(scripts_path)
     import start

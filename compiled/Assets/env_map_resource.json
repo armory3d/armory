@@ -1,0 +1,42 @@
+{
+    "shader_resources": [
+        {
+            "contexts": [
+                {
+                    "blend_destination": "blend_zero", 
+                    "blend_source": "blend_one", 
+                    "compare_mode": "always", 
+                    "constants": [
+                        {
+                            "id": "V", 
+                            "link": "_viewMatrix", 
+                            "type": "mat4"
+                        }, 
+                        {
+                            "id": "P", 
+                            "link": "_projectionMatrix", 
+                            "type": "mat4"
+                        }
+                    ], 
+                    "cull_mode": "none", 
+                    "depth_write": false, 
+                    "fragment_shader": "env_map.frag", 
+                    "id": "env_map", 
+                    "texture_units": [
+                        {
+                            "id": "envmap"
+                        }
+                    ], 
+                    "vertex_shader": "env_map.vert"
+                }
+            ], 
+            "id": "env_map", 
+            "vertex_structure": [
+                {
+                    "name": "pos", 
+                    "size": 2
+                }
+            ]
+        }
+    ]
+}

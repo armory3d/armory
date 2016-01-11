@@ -9,10 +9,11 @@ import subprocess
 import atexit
 import webbrowser
 import write_data
+from armory import ArmoryExporter
 
 def defaultSettings():
     wrd = bpy.data.worlds[0]
-    wrd['CGVersion'] = "15.12.0"
+    wrd['CGVersion'] = "16.1.0"
     wrd['CGProjectTarget'] = 0
     wrd['CGProjectName'] = "cycles_game"
     wrd['CGProjectPackage'] = "game"
@@ -125,9 +126,11 @@ def exportGameData():
             o.location.z = 0
 
     # Export scene data
+    shader_references = []
     for scene in bpy.data.scenes:
         if scene.name[0] != '.': # Skip hidden scenes
-            bpy.ops.export_scene.lue({"scene":scene}, filepath='Assets/' + scene.name + '.json')
+            bpy.ops.export_scene.armory({"scene":scene}, filepath='Assets/' + scene.name + '.json')
+            shader_references += ArmoryExporter.shader_references
 
     # Move armatures back
     for a in armatures:
@@ -136,7 +139,7 @@ def exportGameData():
         a.armature.location.z = a.z
     
     # Write khafile.js
-    write_data.write_khafilejs()
+    write_data.write_khafilejs(shader_references)
 
     # Write Main.hx
     write_data.write_main()
@@ -194,7 +197,7 @@ def buildProject(self, build_type=0):
 
     output = subprocess.check_output([haxelib_path + " path cyclesgame"], shell=True)
     output = str(output).split("\\n")[0].split("'")[1]
-    scripts_path = output + "blender/"
+    scripts_path = output[:-8] + "blender/"
 
     blender_path = bpy.app.binary_path
     blend_path = bpy.data.filepath

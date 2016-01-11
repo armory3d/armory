@@ -4,8 +4,8 @@
   "license": "LGPL",
   "tags": ["kha", "3d"],
   "description": "Blender game engine",
-  "version": "15.11.0",
-  "classPath": "",
+  "version": "16.1.0",
+  "classPath": "Sources",
   "releasenote": "Initial release.",
   "contributors": ["Lubos"],
   "dependencies": {
