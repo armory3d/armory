@@ -4,11 +4,11 @@ from bpy.props import *
 # Implementation of custom nodes from Python
 	
 # Derived from the NodeTree base type, similar to Menu, Operator, Panel, etc.
-class MyCustomTree(NodeTree):
+class CGTree(NodeTree):
 	# Description string
 	'''Logic nodes'''
 	# Optional identifier string. If not explicitly defined, the python class name is used.
-	bl_idname = 'CustomTreeType'
+	bl_idname = 'CGTreeType'
 	# Label for nice name display
 	bl_label = 'CG Node Tree'
 	# Icon identifier
@@ -22,14 +22,14 @@ class MyCustomTree(NodeTree):
 
 # Mix-in class for all custom nodes in this tree type.
 # Defines a poll function to enable instantiation.
-class MyCustomTreeNode:
+class CGTreeNode:
 	@classmethod
 	def poll(cls, ntree):
-		return ntree.bl_idname == 'CustomTreeType'
+		return ntree.bl_idname == 'CGTreeType'
 
 
 # Derived from the Node base type.
-class TransformNode(Node, MyCustomTreeNode):
+class TransformNode(Node, CGTreeNode):
 	# Description string
 	'''A custom node'''
 	# Optional identifier string. If not explicitly defined, the python class name is used.
@@ -70,7 +70,7 @@ class TransformNode(Node, MyCustomTreeNode):
 		#layout.prop_search(self, "objname", context.scene, "objects", text = "")
 
 # Derived from the Node base type.
-class TimeNode(Node, MyCustomTreeNode):
+class TimeNode(Node, CGTreeNode):
 	
 	# Description string
 	'''Time node'''
@@ -102,7 +102,7 @@ class TimeNode(Node, MyCustomTreeNode):
 	def free(self):
 		print("Removing node ", self, ", Goodbye!")
 		
-class VectorNode(Node, MyCustomTreeNode):
+class VectorNode(Node, CGTreeNode):
 	bl_idname = 'VectorNodeType'
 	# Label for nice name display
 	bl_label = 'Vector'
@@ -127,7 +127,7 @@ class VectorNode(Node, MyCustomTreeNode):
 		render()
 
 
-class ScaleValueNode(Node, MyCustomTreeNode):
+class ScaleValueNode(Node, CGTreeNode):
 	bl_idname = 'ScaleValueNodeType'
 	# Label for nice name display
 	bl_label = 'ScaleValue'
@@ -153,7 +153,7 @@ class ScaleValueNode(Node, MyCustomTreeNode):
 		render()
 
 
-class SineNode(Node, MyCustomTreeNode):
+class SineNode(Node, CGTreeNode):
 	bl_idname = 'SineNodeType'
 	# Label for nice name display
 	bl_label = 'Sine'
@@ -190,7 +190,7 @@ from nodeitems_utils import NodeCategory, NodeItem
 class MyNodeCategory(NodeCategory):
 	@classmethod
 	def poll(cls, context):
-		return context.space_data.tree_type == 'CustomTreeType'
+		return context.space_data.tree_type == 'CGTreeType'
 
 # all categories in a list
 node_categories = [
@@ -208,10 +208,10 @@ node_categories = [
 def register():
 	bpy.utils.register_module(__name__)
 	try:
-		nodeitems_utils.register_node_categories("CUSTOM_NODES", node_categories)
+		nodeitems_utils.register_node_categories("CG_NODES", node_categories)
 	except:
 		pass
 
 def unregister():
-	nodeitems_utils.unregister_node_categories("CUSTOM_NODES")
+	nodeitems_utils.unregister_node_categories("CG_NODES")
 	bpy.utils.unregister_module(__name__)

@@ -10,12 +10,14 @@ def cb_scene_update(context):
     if edit_obj is not None and edit_obj.is_updated_data is True:
         edit_obj.geometry_cached = False
 
-def initObjectProperties():
-    # For geometry
-    bpy.types.Object.geometry_cached = bpy.props.BoolProperty(name="Geometry cached", default=False)
+def initProperties():
+    # For object
+    bpy.types.Object.geometry_cached = bpy.props.BoolProperty(name="Geometry cached", default=False) # TODO: move to mesh type
     bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced children", default=False)
     bpy.types.Object.custom_material = bpy.props.BoolProperty(name="Custom material", default=False)
     bpy.types.Object.custom_material_name = bpy.props.StringProperty(name="Name", default="")
+    # For geometry
+    bpy.types.Mesh.static_usage = bpy.props.BoolProperty(name="Static usage", default=True)
     # For camera
     bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", default=False)
     bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Pipeline Path", default="pipeline_resource/forward_pipeline")
@@ -44,7 +46,7 @@ class ObjectPropsPanel(bpy.types.Panel):
             if obj.custom_material:
                 layout.prop(obj, 'custom_material_name')
 
-# Menu in camera region
+# Menu in data region
 class DataPropsPanel(bpy.types.Panel):
     bl_label = "Cycles Props"
     bl_space_type = "PROPERTIES"
@@ -59,6 +61,8 @@ class DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'frustum_culling')
             layout.prop(obj.data, 'pipeline_path')
             layout.prop(obj.data, 'pipeline_pass')
+        elif obj.type == 'MESH':
+            layout.prop(obj.data, 'static_usage')
 
 # Menu in materials region
 class MatsPropsPanel(bpy.types.Panel):
@@ -80,7 +84,7 @@ class MatsPropsPanel(bpy.types.Panel):
 # Registration
 def register():
     bpy.utils.register_module(__name__)
-    initObjectProperties()
+    initProperties()
     bpy.app.handlers.scene_update_post.append(cb_scene_update)
 
 def unregister():

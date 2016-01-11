@@ -1769,9 +1769,14 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		if is_instanced == True:
 			om.instance_offsets = instance_offsets
 
+		# Export usage
+		if node.static_usage == False:
+			om.static_usage = False
+
 		# Delete the new mesh that we made earlier.
 
 		bpy.data.meshes.remove(exportMesh)
+
 		o.mesh = om
 
 		# One geometry data per file

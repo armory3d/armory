@@ -34,7 +34,8 @@ def write_main():
 """// Auto-generated
 package ;
 class Main {
-	static inline var projectName = '""" + bpy.data.worlds[0]['CGProjectName'] + """';
+	public static inline var projectName = '""" + bpy.data.worlds[0]['CGProjectName'] + """';
+	public static inline var projectPackage = '""" + bpy.data.worlds[0]['CGProjectPackage'] + """';
 	static inline var projectWidth = """ + str(bpy.data.worlds[0]['CGProjectWidth']) + """;
 	static inline var projectHeight = """ + str(bpy.data.worlds[0]['CGProjectHeight']) + """;
 	public static function main() {

@@ -284,7 +284,8 @@ def buildNodeTrees():
     
     # Export node scripts
     for node_group in bpy.data.node_groups:
-        buildNodeTree(node_group)
+        if type(node_group) == 'nodes.CGTree': # Build only cycles game trees
+            buildNodeTree(node_group)
 
 def buildNodeTree(node_group):
     rn = getRootNode(node_group)
