@@ -10,7 +10,6 @@
   "contributors": ["Lubos"],
   "dependencies": {
     "kha": "",
-    "lue": "",
-    "haxebullet": ""
+    "lue": ""
   }
 }

@@ -21,7 +21,7 @@ def defaultSettings():
     wrd['CGProjectHeight'] = 640
     wrd['CGTargetScene'] = bpy.data.scenes[0].name
     wrd['CGAA'] = 1
-    wrd['CGPhysics'] = 1
+    wrd['CGPhysics'] = 0
     wrd['CGMinimize'] = (True)
     # Make sure we are using cycles
     if bpy.data.scenes[0].render.engine == 'BLENDER_RENDER':

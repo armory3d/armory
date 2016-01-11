@@ -1,6 +1,8 @@
 package cycles.trait;
 
+#if WITH_PHYSICS
 import haxebullet.Bullet;
+#end
 import lue.trait.Trait;
 import lue.sys.Time;
 import lue.math.Vec3;
@@ -10,7 +12,7 @@ import cycles.Root;
 
 class RigidBody extends Trait {
 
-#if (!js && !cpp)
+#if (!WITH_PHYSICS)
 	public function new() { super(); }
 #else
 

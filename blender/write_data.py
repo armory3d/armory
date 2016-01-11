@@ -20,7 +20,11 @@ project.addAssets('Libraries/cyclesgame/Assets/**');
 				f.write("project.addShaders('Libraries/cyclesgame/compiled/Shaders/" + ref + ".frag.glsl');\n")
 				f.write("project.addShaders('Libraries/cyclesgame/compiled/Shaders/" + ref + ".vert.glsl');\n")
 
-			f.write("\nreturn project;")
+			if bpy.data.worlds[0]['CGPhysics'] != 0:
+				f.write("\nproject.addDefine('WITH_PHYSICS')\n")
+				f.write("project.addLibrary('haxebullet')\n")
+
+			f.write("\nreturn project;\n")
 
 # Write Main.hx
 def write_main():
@@ -37,7 +41,7 @@ class Main {
 		lue.sys.CompileTime.importPackage('lue.trait');
 		lue.sys.CompileTime.importPackage('cycles.trait');
 		lue.sys.CompileTime.importPackage('""" + bpy.data.worlds[0]['CGProjectPackage'] + """');
-		#if js
+		#if (js && WITH_PHYSICS)
 		untyped __js__("
 			function loadScript(url, callback) {
 				var head = document.getElementsByTagName('head')[0];
