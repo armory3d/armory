@@ -3,6 +3,10 @@ import os
 
 # Write khafile.js
 def write_khafilejs(shader_references):
+	
+	# Merge duplicates and sort
+	shader_references = sorted(list(set(shader_references)))
+
 	with open('khafile.js', 'w') as f:
 			f.write(
 """// Auto-generated
