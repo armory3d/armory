@@ -6,16 +6,10 @@ import shutil
 import subprocess
 import platform
 
-def haxePath():
-    path = os.getenv('HAXEPATH')
-    if (path == None):
-        path = '/usr/lib/haxe'
-    return os.path.normpath(path)
-
 def runProject(fp, target, name):
     os.chdir(fp)
     # HTML5
-    if (target == '3'):
+    if (target == '0'):
         webbrowser.open("http://127.0.0.1:8080/build/html5",new=2)
 
 def build():

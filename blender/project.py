@@ -37,8 +37,7 @@ def initWorldProperties():
                  ('OSX', 'OSX', 'OSX'),
                  ('Linux', 'Linux', 'Linux'), 
                  ('iOS', 'iOS', 'iOS'),
-                 ('Android', 'Android', 'Android'),
-                 ('Blender', 'Blender', 'Blender')],
+                 ('Android', 'Android', 'Android')],
         name = "Target")
     bpy.types.World.CGProjectName = StringProperty(name = "Name")
     bpy.types.World.CGProjectPackage = StringProperty(name = "Package")
@@ -73,7 +72,7 @@ def draw_play_item(self, context):
     layout = self.layout
     layout.operator("cg.play")
 
-# Menu in tools region
+# Menu in render region
 class ToolsPanel(bpy.types.Panel):
     bl_label = "Cycles Game"
     bl_space_type = "PROPERTIES"
@@ -81,7 +80,8 @@ class ToolsPanel(bpy.types.Panel):
     bl_context = "render"
 
     # Info panel play
-    bpy.types.INFO_HT_header.prepend(draw_play_item)
+    #bpy.types.INFO_HT_header.prepend(draw_play_item)
+    bpy.types.VIEW3D_HT_header.append(draw_play_item)
  
     def draw(self, context):
         layout = self.layout
@@ -129,7 +129,7 @@ def exportGameData():
     shader_references = []
     for scene in bpy.data.scenes:
         if scene.name[0] != '.': # Skip hidden scenes
-            bpy.ops.export_scene.armory({"scene":scene}, filepath='Assets/' + scene.name + '.json')
+            bpy.ops.export_scene.armory({"scene":scene}, filepath='Assets/generated/' + scene.name + '.json')
             shader_references += ArmoryExporter.shader_references
 
     # Move armatures back
@@ -145,6 +145,9 @@ def exportGameData():
     write_data.write_main()
 
 def buildProject(self, build_type=0):
+    # Save blend
+    bpy.ops.wm.save_mainfile()
+
     # Save scripts
     #area = bpy.context.area
     #old_type = area.type
@@ -166,27 +169,22 @@ def buildProject(self, build_type=0):
     fp = os.path.sep.join(s)
     os.chdir(fp)
 
-    # Save blend
-    bpy.ops.wm.save_mainfile()
-
     # Export
     exportGameData()
     
     # Set build command
     if (bpy.data.worlds[0]['CGProjectTarget'] == 0):
-        bashCommand = "-t osx"
+        bashCommand = "-t html5"
     elif (bpy.data.worlds[0]['CGProjectTarget'] == 1):
         bashCommand = "-t windows"
     elif (bpy.data.worlds[0]['CGProjectTarget'] == 2):
-        bashCommand = "-t linux"
+        bashCommand = "-t osx"
     elif (bpy.data.worlds[0]['CGProjectTarget'] == 3):
-        bashCommand = "-t html5"
+        bashCommand = "-t linux"
     elif (bpy.data.worlds[0]['CGProjectTarget'] == 4):
         bashCommand = "-t ios"
     elif (bpy.data.worlds[0]['CGProjectTarget'] == 5):
-        bashCommand = "-t android_native"
-    elif (bpy.data.worlds[0]['CGProjectTarget'] == 6):
-        bashCommand = "-t blender"
+        bashCommand = "-t android-native"
     
     # Build
     haxelib_path = "haxelib"
@@ -216,9 +214,13 @@ def cleanProject(self):
     fp = os.path.sep.join(s)
     os.chdir(fp)
     
-    # Remove build dir
+    # Remove build data
     if os.path.isdir("build"):
         shutil.rmtree('build')
+
+    # Remove generated data
+    if os.path.isdir("Assets/generated"):
+        shutil.rmtree('Assets/generated')
 
     # Remove compiled nodes
     path = 'Sources/' + bpy.data.worlds[0].CGProjectPackage.replace(".", "/") + "/"
@@ -284,8 +286,8 @@ def buildNodeTrees():
     
     # Export node scripts
     for node_group in bpy.data.node_groups:
-        if type(node_group) == 'nodes.CGTree': # Build only cycles game trees
-            buildNodeTree(node_group)
+        #if type(node_group) == 'nodes.CGTree': # Build only cycles game trees
+        buildNodeTree(node_group)
 
 def buildNodeTree(node_group):
     rn = getRootNode(node_group)

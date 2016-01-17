@@ -14,10 +14,6 @@
                     "params": ["depth", "color"]
                 },
                 {
-                    "command": "draw_quad",
-                    "params": ["material_resource", "material1", "env_map"]
-                },
-                {
                     "command": "draw_geometry",
                     "params": ["forward"]
                 }

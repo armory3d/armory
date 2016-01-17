@@ -1770,7 +1770,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			om.instance_offsets = instance_offsets
 
 		# Export usage
-		if node.static_usage == False:
+		if node.data.static_usage == False:
 			om.static_usage = False
 
 		# Delete the new mesh that we made earlier.
