@@ -17,6 +17,8 @@ class TransformNode extends Node {
 	var rot:Quat;
 	var scale:Vec3;
 
+	static var temp = new Mat4();
+
 	public function new() {
 		super();
 
@@ -40,8 +42,11 @@ class TransformNode extends Node {
 				  inputs[_scale].inputs[VectorNode._y].f,
 				  inputs[_scale].inputs[VectorNode._z].f);
 
-		rot.saveToMatrix(matrix);
+		matrix.identity();
 		matrix.scale(scale);
+		rot.saveToMatrix(temp);
+		matrix.mult(temp);
+		//matrix.translate(pos.x, pos.y, pos.z);
 		matrix._41 = pos.x;
 		matrix._42 = pos.y;
 		matrix._43 = pos.z;
