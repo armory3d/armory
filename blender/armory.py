@@ -22,7 +22,7 @@ bl_info = {
 	"name": "Armory format (.json)",
 	"description": "Armory Exporter",
 	"author": "Eric Lengyel, Armory by Lubos Lenco",
-	"version": (1, 0, 0, 0),
+	"version": (16, 2, 0, 0),
 	"location": "File > Import-Export",
 	"wiki_url": "http://lue3d.org/",
 	"category": "Import-Export"}
@@ -119,16 +119,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		return [color[0], color[1], color[2]]
 
 	def WriteMatrix(self, matrix):
-		return [matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0],
-				matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1],
-				matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2],
-				matrix[0][3], matrix[1][3], matrix[2][3], matrix[3][3]]
-
-	def WriteMatrixFlat(self, matrix):
-		return [matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0],
-				matrix[0][1], matrix[1][1], matrix[2][1], matrix[3][1],
-				matrix[0][2], matrix[1][2], matrix[2][2], matrix[3][2],
-				matrix[0][3], matrix[1][3], matrix[2][3], matrix[3][3]]
+		return [matrix[0][0], matrix[0][1], matrix[0][2], matrix[0][3],
+				matrix[1][0], matrix[1][1], matrix[1][2], matrix[1][3],
+				matrix[2][0], matrix[2][1], matrix[2][2], matrix[2][3],
+				matrix[3][0], matrix[3][1], matrix[3][2], matrix[3][3]]
 
 	def WriteVector2D(self, vector):
 		return [vector[0], vector[1]]
@@ -587,10 +581,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 			for i in range(self.beginFrame, self.endFrame):
 				scene.frame_set(i)
-				o.animation.track.value.values.append(self.WriteMatrixFlat(node.matrix_local))
+				o.animation.track.value.values.append(self.WriteMatrix(node.matrix_local))
 
 			scene.frame_set(self.endFrame)
-			o.animation.track.value.values.append(self.WriteMatrixFlat(node.matrix_local))
+			o.animation.track.value.values.append(self.WriteMatrix(node.matrix_local))
 
 		scene.frame_set(currentFrame, currentSubframe)
 
@@ -628,17 +622,17 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if (parent):
 				for i in range(self.beginFrame, self.endFrame):
 					scene.frame_set(i)
-					o.animation.track.value.values.append(self.WriteMatrixFlat(parent.matrix.inverted() * poseBone.matrix))
+					o.animation.track.value.values.append(self.WriteMatrix(parent.matrix.inverted() * poseBone.matrix))
 
 				scene.frame_set(self.endFrame)
-				o.animation.track.value.values.append(self.WriteMatrixFlat(parent.matrix.inverted() * poseBone.matrix))
+				o.animation.track.value.values.append(self.WriteMatrix(parent.matrix.inverted() * poseBone.matrix))
 			else:
 				for i in range(self.beginFrame, self.endFrame):
 					scene.frame_set(i)
-					o.animation.track.value.values.append(self.WriteMatrixFlat(poseBone.matrix))
+					o.animation.track.value.values.append(self.WriteMatrix(poseBone.matrix))
 
 				scene.frame_set(self.endFrame)
-				o.animation.track.value.values.append(self.WriteMatrixFlat(poseBone.matrix))
+				o.animation.track.value.values.append(self.WriteMatrix(poseBone.matrix))
 
 		scene.frame_set(currentFrame, currentSubframe)
 
@@ -1261,7 +1255,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		#self.WriteInt(boneCount)
 
 		for i in range(boneCount):
-			om.skin.skeleton.transforms.append(self.WriteMatrixFlat(armature.matrix_world * boneArray[i].matrix_local))
+			om.skin.skeleton.transforms.append(self.WriteMatrix(armature.matrix_world * boneArray[i].matrix_local))
 
 		# Export the per-vertex bone influence data.
 		groupRemap = []
