@@ -17,12 +17,12 @@ class TransformNode extends Node {
 	var rot:Quat;
 	var scale:Vec3;
 
-	static var temp = new Mat4();
+	static var temp = Mat4.identity();
 
 	public function new() {
 		super();
 
-		matrix = new Mat4();
+		matrix = Mat4.identity();
 		pos = new Vec3();
 		rot = new Quat();
 		scale = new Vec3();
@@ -42,14 +42,14 @@ class TransformNode extends Node {
 				  inputs[_scale].inputs[VectorNode._y].f,
 				  inputs[_scale].inputs[VectorNode._z].f);
 
-		matrix.identity();
+		matrix.setIdentity();
 		matrix.scale(scale);
 		rot.saveToMatrix(temp);
 		matrix.mult(temp);
 		//matrix.translate(pos.x, pos.y, pos.z);
-		matrix._41 = pos.x;
-		matrix._42 = pos.y;
-		matrix._43 = pos.z;
+		matrix._30 = pos.x;
+		matrix._31 = pos.y;
+		matrix._32 = pos.z;
 
 		// Append to transform
 		transform.append = matrix;
