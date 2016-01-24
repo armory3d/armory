@@ -92,7 +92,7 @@ mat3 getSkinningMatVec(const mat4 skinningMat) {
 }
 #endif
 
-void kore() {
+void main() {
 
 #ifdef _Instancing
 	vec4 sPos = (vec4(pos + off, 1.0));

@@ -1,7 +1,7 @@
 package cycles.node;
 
 import lue.math.Mat4;
-import lue.math.Vec3;
+import lue.math.Vec4;
 import lue.math.Quat;
 
 class TransformNode extends Node {
@@ -13,9 +13,9 @@ class TransformNode extends Node {
 	public var transform:lue.node.Transform;
 	
 	var matrix:Mat4;
-	var pos:Vec3;
+	var pos:Vec4;
 	var rot:Quat;
-	var scale:Vec3;
+	var scale:Vec4;
 
 	static var temp = Mat4.identity();
 
@@ -23,9 +23,9 @@ class TransformNode extends Node {
 		super();
 
 		matrix = Mat4.identity();
-		pos = new Vec3();
+		pos = new Vec4();
 		rot = new Quat();
-		scale = new Vec3();
+		scale = new Vec4();
 	}
 
 	public override function inputChanged() {
@@ -42,14 +42,7 @@ class TransformNode extends Node {
 				  inputs[_scale].inputs[VectorNode._y].f,
 				  inputs[_scale].inputs[VectorNode._z].f);
 
-		matrix.setIdentity();
-		matrix.scale(scale);
-		rot.saveToMatrix(temp);
-		matrix.mult(temp);
-		//matrix.translate(pos.x, pos.y, pos.z);
-		matrix._30 = pos.x;
-		matrix._31 = pos.y;
-		matrix._32 = pos.z;
+		matrix.compose(pos, rot, scale);
 
 		// Append to transform
 		transform.append = matrix;

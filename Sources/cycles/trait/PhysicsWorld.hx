@@ -5,7 +5,7 @@ import haxebullet.Bullet;
 #end
 import lue.trait.Trait;
 import lue.sys.Time;
-import lue.math.Vec3;
+import lue.math.Vec4;
 import lue.math.RayCaster;
 
 class ContactPair {
@@ -161,8 +161,8 @@ class PhysicsWorld extends Trait {
 
     public function getRayTo(inputX:Float, inputY:Float):BtVector3Pointer {
     	var camera = lue.node.Node.cameras[0];
-    	var start = new Vec3();
-        var end = new Vec3();
+    	var start = new Vec4();
+        var end = new Vec4();
     	RayCaster.getDirection(start, end, inputX, inputY, camera);
     	return BtVector3.create(end.x, end.y, end.z);
     }

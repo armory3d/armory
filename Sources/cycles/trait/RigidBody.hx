@@ -5,7 +5,7 @@ import haxebullet.Bullet;
 #end
 import lue.trait.Trait;
 import lue.sys.Time;
-import lue.math.Vec3;
+import lue.math.Vec4;
 import lue.node.Transform;
 import lue.node.ModelNode;
 import cycles.Root;
@@ -175,7 +175,7 @@ class RigidBody extends Trait {
 		setAngularFactor(0, 0, 0);
 	}
 
-	/*public inline function setGravity(v:Vec3) {
+	/*public inline function setGravity(v:Vec4) {
 		body.value.setGravity(BtVector3.create(v.x, v.y, v.z).value);
 	}*/
 
@@ -183,7 +183,7 @@ class RigidBody extends Trait {
 		body.value.setActivationState(newState);
 	}*/
 
-	public inline function applyImpulse(impulse:Vec3, pos:Vec3 = null) {
+	public inline function applyImpulse(impulse:Vec4, pos:Vec4 = null) {
 		if (pos == null) {
 			body.value.applyCentralImpulse(BtVector3.create(impulse.x, impulse.y, impulse.z).value);
 		}

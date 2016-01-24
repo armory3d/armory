@@ -1767,7 +1767,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		o = Object()
 		o.id = objectRef[1]["structName"]
 		object = objectRef[0]
-		o.sound = object.sound.name.split('.')[0]
+		if object.sound:
+			o.sound = object.sound.name.split('.')[0]
+		else:
+			o.sound = ''
 		self.output.speaker_resources.append(o)
 
 	def findNodeByLink(self, node_group, to_node, inp):

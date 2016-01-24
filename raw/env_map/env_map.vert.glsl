@@ -50,13 +50,13 @@ mat4 inverse(mat4 m) {
       a20 * b03 - a21 * b01 + a22 * b00) / det;
 }
 
-mat3 transpose(mat3 m) {
-  return mat3(m[0][0], m[1][0], m[2][0],
-              m[0][1], m[1][1], m[2][1],
-              m[0][2], m[1][2], m[2][2]);
-}
+// mat3 transpose(mat3 m) {
+//   return mat3(m[0][0], m[1][0], m[2][0],
+//               m[0][1], m[1][1], m[2][1],
+//               m[0][2], m[1][2], m[2][2]);
+// }
 
-void kore() {
+void main() {
 
 	mat4 invP = inverse(P);
 	mat3 invMV = transpose(mat3(V));

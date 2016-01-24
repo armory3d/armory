@@ -8,7 +8,7 @@ uniform sampler2D gbuffer2; // Textures
 
 varying vec2 texCoord;
 
-void kore() {
+void main() {
 
 	gl_FragColor = vec4(texture2D(gbuffer2, texCoord).rgb, 1.0);
 }

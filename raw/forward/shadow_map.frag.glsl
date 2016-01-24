@@ -8,7 +8,7 @@ precision mediump float;
 
 varying vec4 position;
 
-void kore() {
+void main() {
 
     float normalizedDistance = position.z / position.w;
     normalizedDistance += 0.005;

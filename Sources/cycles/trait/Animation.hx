@@ -36,10 +36,10 @@ class Animation extends Trait {
     }
 
     public function play(trackName:String, loop = true, speed = 1.0, onTrackComplete:Void->Void = null) {
-        model.animation.play(trackName, loop, speed, onTrackComplete);
+        model.skinning.animation.play(trackName, loop, speed, onTrackComplete);
     }
 
     public function pause() {
-        model.animation.pause();
+        model.skinning.animation.pause();
     }
 }

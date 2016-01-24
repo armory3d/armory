@@ -30,7 +30,7 @@ uniform mat4 lightMVP;
 
 varying vec4 position;
 
-void kore() {
+void main() {
 #ifdef _Instancing
 	gl_Position = lightMVP * vec4(pos + off, 1.0);
 #else

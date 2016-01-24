@@ -30,7 +30,7 @@ varying vec4 matColor;
 varying vec3 lightDir;
 varying vec3 eyeDir;
 
-void kore() {
+void main() {
 
 	gl_FragData[0] = vec4(position.xyz, 0);
 	gl_FragData[1] = vec4(normal.xyz, 0);

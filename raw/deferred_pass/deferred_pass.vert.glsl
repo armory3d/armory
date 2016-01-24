@@ -8,7 +8,7 @@ varying vec2 texCoord;
 
 const vec2 madd = vec2(0.5, 0.5);
 
-void kore() {
+void main() {
   // Scale vertex attribute to [0-1] range
   texCoord = pos.xy * madd + madd;
 

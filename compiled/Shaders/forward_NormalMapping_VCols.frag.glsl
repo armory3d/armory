@@ -97,13 +97,13 @@ float LightingFuncGGX_OPT3(vec3 N, vec3 V, vec3 L, float roughness, float F0) {
 	return specular;
 }
 
-void kore() {
+void main() {
 
 	float visibility = 1.0;
-	if (receiveShadow && lPos.w > 0.0) {
-		visibility = shadowSimple(lPos);
-		visibility = (visibility * 0.8) + 0.2;
-	}
+	// if (receiveShadow && lPos.w > 0.0) {
+	// 	visibility = shadowSimple(lPos);
+	// 	visibility = (visibility * 0.8) + 0.2;
+	// }
 
 	vec4 outColor;
 	vec3 t = pow(matColor.rgb, vec3(2.2));
