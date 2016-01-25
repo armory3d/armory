@@ -12,22 +12,23 @@ def cb_scene_update(context):
 
 def initProperties():
     # For object
-    bpy.types.Object.geometry_cached = bpy.props.BoolProperty(name="Geometry cached", default=False) # TODO: move to mesh type
-    bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced children", default=False)
-    bpy.types.Object.custom_material = bpy.props.BoolProperty(name="Custom material", default=False)
+    bpy.types.Object.geometry_cached = bpy.props.BoolProperty(name="Geometry Cached", default=False) # TODO: move to mesh type
+    bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced Children", default=False)
+    bpy.types.Object.custom_material = bpy.props.BoolProperty(name="Custom Material", default=False)
     bpy.types.Object.custom_material_name = bpy.props.StringProperty(name="Name", default="")
     # For geometry
-    bpy.types.Mesh.static_usage = bpy.props.BoolProperty(name="Static usage", default=True)
+    bpy.types.Mesh.static_usage = bpy.props.BoolProperty(name="Static Usage", default=True)
     # For camera
     bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", default=False)
+    bpy.types.Camera.sort_front_to_back = bpy.props.BoolProperty(name="Sort Front to Back", default=False)
     bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Pipeline Path", default="pipeline_resource/forward_pipeline")
     bpy.types.Camera.pipeline_pass = bpy.props.StringProperty(name="Pipeline Pass", default="forward")
     # For material
-    bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive shadow", default=True)
-    bpy.types.Material.alpha_test = bpy.props.BoolProperty(name="Alpha test", default=False)
-    bpy.types.Material.custom_shader = bpy.props.BoolProperty(name="Custom shader", default=False)
+    bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
+    bpy.types.Material.alpha_test = bpy.props.BoolProperty(name="Alpha Test", default=False)
+    bpy.types.Material.custom_shader = bpy.props.BoolProperty(name="Custom Shader", default=False)
     bpy.types.Material.custom_shader_name = bpy.props.StringProperty(name="Name", default="")
-    bpy.types.Material.export_tangents = bpy.props.BoolProperty(name="Export tangents", default=False)
+    bpy.types.Material.export_tangents = bpy.props.BoolProperty(name="Export Tangents", default=False)
 
 # Menu in object region
 class ObjectPropsPanel(bpy.types.Panel):
@@ -59,6 +60,7 @@ class DataPropsPanel(bpy.types.Panel):
 
         if obj.type == 'CAMERA':
             layout.prop(obj.data, 'frustum_culling')
+            layout.prop(obj.data, 'sort_front_to_back')
             layout.prop(obj.data, 'pipeline_path')
             layout.prop(obj.data, 'pipeline_pass')
         elif obj.type == 'MESH':

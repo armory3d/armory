@@ -99,10 +99,23 @@ void main() {
 	mat3 skinningMatVec = getSkinningMatVec(skinningMat);
 	sPos = sPos * skinningMat;
 #endif
-	vec4 mPos = M * sPos;
 	lPos = lightMVP * sPos;
 
-	gl_Position = P * V * mPos;
+	mat4 VM = V * M;
+
+#ifdef _Billboard
+	// Spherical
+	VM[0][0] = 1.0; VM[0][1] = 0.0; VM[0][2] = 0.0;
+	VM[1][0] = 0.0; VM[1][1] = 1.0; VM[1][2] = 0.0;
+	VM[2][0] = 0.0; VM[2][1] = 0.0; VM[2][2] = 1.0;
+	// Cylindrical
+	//VM[0][0] = 1.0; VM[0][1] = 0.0; VM[0][2] = 0.0;
+	//VM[2][0] = 0.0; VM[2][1] = 0.0; VM[2][2] = 1.0;
+#endif
+
+	gl_Position = P * VM * sPos;
+	
+	vec4 mPos = M * sPos;
 	position = mPos.xyz / mPos.w;
 
 #ifdef _Texturing

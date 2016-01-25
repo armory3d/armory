@@ -2040,6 +2040,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 	def cb_export_camera(self, object, o):
 		#return
 		o.frustum_culling = object.frustum_culling
+		if object.sort_front_to_back:
+			o.draw_calls_sort = 'front_to_back'
+		else:
+			o.draw_calls_sort = 'none'
 		o.pipeline = object.pipeline_path
 		
 		if 'Background' in bpy.data.worlds[0].node_tree.nodes: # TODO: parse node tree
@@ -2143,6 +2147,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			# GPU Skinning
 			if ob.find_armature():
 				defs.append('_Skinning')
+			# Billboarding
+			if len(ob.constraints) > 0 and ob.constraints[0].target != None and \
+			   ob.constraints[0].target.type == 'CAMERA' and ob.constraints[0].mute == False:
+				defs.append('_Billboard')
 
 		# Whether objects should export tangent data
 		if material.export_tangents != normalMapping:
