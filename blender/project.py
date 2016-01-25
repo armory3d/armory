@@ -19,7 +19,7 @@ def defaultSettings():
     wrd['CGProjectPackage'] = "game"
     wrd['CGProjectWidth'] = 1136
     wrd['CGProjectHeight'] = 640
-    wrd['CGTargetScene'] = bpy.data.scenes[0].name
+    wrd['CGProjectScene'] = bpy.data.scenes[0].name
     wrd['CGAA'] = 1
     wrd['CGPhysics'] = 0
     wrd['CGMinimize'] = (True)
@@ -43,7 +43,7 @@ def initWorldProperties():
     bpy.types.World.CGProjectPackage = StringProperty(name = "Package")
     bpy.types.World.CGProjectWidth = IntProperty(name = "Width")
     bpy.types.World.CGProjectHeight = IntProperty(name = "Height")
-    bpy.types.World.CGTargetScene = StringProperty(name = "Scene")
+    bpy.types.World.CGProjectScene = StringProperty(name = "Scene")
     bpy.types.World.CGAA = EnumProperty(
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('16X', '16X', '16X')],
@@ -91,7 +91,7 @@ class ToolsPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(wrd, 'CGProjectWidth')
         row.prop(wrd, 'CGProjectHeight')
-        layout.prop_search(wrd, "CGTargetScene", bpy.data, "scenes", "Scene")
+        layout.prop_search(wrd, "CGProjectScene", bpy.data, "scenes", "Scene")
         layout.prop(wrd, 'CGProjectTarget')
         layout.operator("cg.build")
         row = layout.row(align=True)

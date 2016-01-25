@@ -13,7 +13,7 @@ class Root {
 
 	public function new() {
 
-		var sceneNode = Eg.addScene("Scene");
+		var sceneNode = Eg.addScene(Main.projectScene);
 		cam = lue.node.Node.cameras[0];	
 
 		physics = new PhysicsWorld();

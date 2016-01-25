@@ -42,6 +42,7 @@ class Main {
 	public static inline var projectPackage = '""" + bpy.data.worlds[0]['CGProjectPackage'] + """';
 	static inline var projectWidth = """ + str(bpy.data.worlds[0]['CGProjectWidth']) + """;
 	static inline var projectHeight = """ + str(bpy.data.worlds[0]['CGProjectHeight']) + """;
+	public static inline var projectScene = '""" + str(bpy.data.worlds[0]['CGProjectScene']) + """';
 	public static function main() {
 		lue.sys.CompileTime.importPackage('lue.trait');
 		lue.sys.CompileTime.importPackage('cycles.trait');
