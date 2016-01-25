@@ -2005,7 +2005,21 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if t.type_prop == 'Nodes':
 				x.type = 'Script'
 				x.class_name = t.nodes_name_prop.replace('.', '_')
-			else:
+			elif t.type_prop == 'Scene Instance':
+				x.type = 'Script'
+				x.class_name = "SceneInstance:'" + t.scene_prop.replace('.', '_') + "'"
+			elif t.type_prop == 'Animation':
+				x.type = 'Script'
+				names = []
+				starts = []
+				ends = []
+				for at in node.my_animationtraitlist:
+					if at.enabled_prop:
+						names.append(at.name)
+						starts.append(at.start_prop)
+						ends.append(at.end_prop)
+				x.class_name = "Animation:'" + t.start_track_name_prop + "':" + str(names) + ":" + str(starts) + ":" + str(ends)
+			else: # Script
 				x.type = t.type_prop
 				x.class_name = t.class_name_prop
 			
