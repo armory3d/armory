@@ -9,6 +9,8 @@ import subprocess
 import atexit
 import webbrowser
 import write_data
+import nodes
+import pipeline_nodes
 from armory import ArmoryExporter
 
 def defaultSettings():
@@ -159,7 +161,8 @@ def buildProject(self, build_type=0):
     #area.type = old_type
 
     # Auto-build nodes # TODO: only if needed
-    buildNodeTrees()
+    nodes.buildNodeTrees()
+    pipeline_nodes.buildNodeTrees()
     
     # Set dir
     s = bpy.data.filepath.split(os.path.sep)
@@ -271,99 +274,6 @@ class OBJECT_OT_CLEANButton(bpy.types.Operator):
     def execute(self, context):
         cleanProject(self)
         return{'FINISHED'}
-
-
-
-def buildNodeTrees():
-    s = bpy.data.filepath.split(os.path.sep)
-    s.pop()
-    fp = os.path.sep.join(s)
-    os.chdir(fp)
-
-    # Make sure package dir exists
-    if not os.path.exists('Sources/' + bpy.data.worlds[0].CGProjectPackage.replace(".", "/")):
-        os.makedirs('Sources/' + bpy.data.worlds[0].CGProjectPackage.replace(".", "/"))
-    
-    # Export node scripts
-    for node_group in bpy.data.node_groups:
-        if node_group.bl_idname == 'CGTreeType': # Build only cycles game trees
-            buildNodeTree(node_group)
-
-def buildNodeTree(node_group):
-    rn = getRootNode(node_group)
-
-    path = 'Sources/' + bpy.data.worlds[0].CGProjectPackage.replace(".", "/") + "/"
-
-    node_group_name = node_group.name.replace('.', '_')
-
-    with open(path + node_group_name + '.hx', 'w') as f:
-        f.write('package ' + bpy.data.worlds[0].CGProjectPackage + ';\n\n')
-        f.write('import cycles.node.*;\n\n')
-        f.write('class ' + node_group_name + ' extends cycles.trait.NodeExecutor {\n\n')
-        f.write('\tpublic function new() { super(); requestAdd(add); }\n\n')
-        f.write('\tfunction add() {\n')
-        # Make sure root node exists
-        if rn != None:
-            name = '_' + rn.name.replace(".", "_").replace("@", "")
-            buildNode(node_group, rn, f, [])
-            f.write('\n\t\tstart(' + name + ');\n')
-        f.write('\t}\n')
-        f.write('}\n')
-
-def buildNode(node_group, node, f, created_nodes):
-    # Get node name
-    name = '_' + node.name.replace(".", "_").replace("@", "")
-
-    # Check if node already exists
-    for n in created_nodes:
-        if n == name:
-            return name
-
-    # Create node
-    type = node.name.split(".")[0].replace("@", "") + "Node"
-    f.write('\t\tvar ' + name + ' = new ' + type + '();\n')
-    created_nodes.append(name)
-    
-    # Variables
-    if type == "TransformNode":
-        f.write('\t\t' + name + '.transform = node.transform;\n')
-    
-    # Create inputs
-    for inp in node.inputs:
-        # Is linked - find node
-        inpname = ''
-        if inp.is_linked:
-            n = findNodeByLink(node_group, node, inp)
-            inpname = buildNode(node_group, n, f, created_nodes)
-        # Not linked - create node with default values
-        else:
-            inpname = buildDefaultNode(inp)
-        
-        # Add input
-        f.write('\t\t' + name + '.inputs.push(' + inpname + ');\n')
-        
-    return name
-            
-def findNodeByLink(node_group, to_node, inp):
-    for link in node_group.links:
-        if link.to_node == to_node and link.to_socket == inp:
-            return link.from_node
-    
-def getRootNode(node_group):
-    for n in node_group.nodes:
-        if n.outputs[0].is_linked == False:
-            return n
-
-def buildDefaultNode(inp):
-    inpname = ''
-    if inp.type == "VECTOR":
-        inpname = 'VectorNode.create(' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ", " + str(inp.default_value[2]) + ')'
-    elif inp.type == "VALUE":
-        inpname = 'FloatNode.create(' + str(inp.default_value) + ')'
-    elif inp.type == 'BOOLEAN':
-        inpname = 'BoolNode.create(' + str(inp.default_value).lower() + ')'
-        
-    return inpname
 
 # Registration
 def register():

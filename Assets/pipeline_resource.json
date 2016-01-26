@@ -56,7 +56,7 @@
                 },
                 {
                     "command": "draw_quad",
-                    "params": ["material_resource", "material1", "env_map"]
+                    "params": ["material_resource/material1/env_map"]
                 },
                 {
                     "command": "bind_target",
@@ -64,7 +64,7 @@
                 },
                 {
                     "command": "draw_quad",
-                    "params": ["material_resource", "material_deferred", "deferred_pass"]
+                    "params": ["material_resource/material_deferred/deferred_pass"]
                 }
             ]
         }

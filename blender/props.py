@@ -61,7 +61,7 @@ class DataPropsPanel(bpy.types.Panel):
         if obj.type == 'CAMERA':
             layout.prop(obj.data, 'frustum_culling')
             layout.prop(obj.data, 'sort_front_to_back')
-            layout.prop(obj.data, 'pipeline_path')
+            layout.prop_search(obj.data, "pipeline_path", bpy.data, "node_groups")
             layout.prop(obj.data, 'pipeline_pass')
         elif obj.type == 'MESH':
             layout.prop(obj.data, 'static_usage')

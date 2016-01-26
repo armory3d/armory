@@ -2058,7 +2058,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o.draw_calls_sort = 'front_to_back'
 		else:
 			o.draw_calls_sort = 'none'
-		o.pipeline = object.pipeline_path
+		o.pipeline = object.pipeline_path + '/' + object.pipeline_path # Same file name and id
 		
 		if 'Background' in bpy.data.worlds[0].node_tree.nodes: # TODO: parse node tree
 			col = bpy.data.worlds[0].node_tree.nodes['Background'].inputs[0].default_value
