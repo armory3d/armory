@@ -170,15 +170,44 @@ node_categories = [
 		]),
 	]
 
+def reset_pipelines():
+	if bpy.data.node_groups.get('forward_pipeline') == None:
+		make_forward_pipeline()
+
+def make_forward_pipeline():
+	step = 170
+	pipe = bpy.data.node_groups.new(name='forward_pipeline', type='CGPipelineTreeType')
+	nodes = pipe.nodes
+	links = pipe.links
+
+	framebuffer_node = nodes.new('FramebufferNodeType')      
+	framebuffer_node.location = 0, 0
+	
+	settarget_node = nodes.new('SetTargetNodeType')      
+	settarget_node.location = step * 1, 0
+	links.new(framebuffer_node.outputs[0], settarget_node.inputs[1])
+	
+	cleartarget_node = nodes.new('ClearTargetNodeType')      
+	cleartarget_node.location = step * 2, 0
+	cleartarget_node.inputs[1].default_value = True # Color
+	cleartarget_node.inputs[2].default_value = True # Depth
+	links.new(settarget_node.outputs[0], cleartarget_node.inputs[0])
+	
+	drawgeometry_node = nodes.new('DrawGeometryNodeType')      
+	drawgeometry_node.location = step * 3, 0
+	drawgeometry_node.inputs[1].default_value = 'forward' # Context
+	links.new(cleartarget_node.outputs[0], drawgeometry_node.inputs[0])
+
 def register():
 	bpy.utils.register_module(__name__)
 	try:
-		nodeitems_utils.register_node_categories("CG_PIELINE_PNODES", node_categories)
+		nodeitems_utils.register_node_categories("CG_PIPELINE_NODES", node_categories)
+		reset_pipelines()
 	except:
 		pass
 
 def unregister():
-	nodeitems_utils.unregister_node_categories("CG_PIELINE_PNODES")
+	nodeitems_utils.unregister_node_categories("CG_PIPELINE_NODES")
 	bpy.utils.unregister_module(__name__)
 
 

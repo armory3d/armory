@@ -2,6 +2,7 @@ import shutil
 import bpy
 import os
 import json
+import pipeline_nodes
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
@@ -21,7 +22,7 @@ def initProperties():
     # For camera
     bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", default=False)
     bpy.types.Camera.sort_front_to_back = bpy.props.BoolProperty(name="Sort Front to Back", default=False)
-    bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Pipeline Path", default="pipeline_resource/forward_pipeline")
+    bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Pipeline Path", default="forward_pipeline")
     bpy.types.Camera.pipeline_pass = bpy.props.StringProperty(name="Pipeline Pass", default="forward")
     # For material
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
@@ -63,8 +64,18 @@ class DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'sort_front_to_back')
             layout.prop_search(obj.data, "pipeline_path", bpy.data, "node_groups")
             layout.prop(obj.data, 'pipeline_pass')
+            layout.operator("cg.reset_pipelines")
         elif obj.type == 'MESH':
             layout.prop(obj.data, 'static_usage')
+
+# Reset pipelines
+class OBJECT_OT_RESETPIPELINESButton(bpy.types.Operator):
+    bl_idname = "cg.reset_pipelines"
+    bl_label = "Reset Pipelines"
+ 
+    def execute(self, context):
+        pipeline_nodes.reset_pipelines()
+        return{'FINISHED'}
 
 # Menu in materials region
 class MatsPropsPanel(bpy.types.Panel):
@@ -82,6 +93,7 @@ class MatsPropsPanel(bpy.types.Panel):
         layout.prop(mat, 'custom_shader')
         if mat.custom_shader:
             layout.prop(mat, 'custom_shader_name')
+
 
 # Registration
 def register():

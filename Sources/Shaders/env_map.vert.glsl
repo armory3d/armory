@@ -56,7 +56,7 @@ mat3 transpose(mat3 m) {
               m[0][2], m[1][2], m[2][2]);
 }
 
-void kore() {
+void main() {
 
 	mat4 invP = inverse(P);
 	mat3 invMV = transpose(mat3(V));

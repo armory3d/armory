@@ -15,7 +15,7 @@ vec2 envMapEquirect(vec3 wcNormal, float flipEnvMap) {
   return vec2(theta / TwoPI, phi / PI);
 }
 
-void kore() {
+void main() {
 
   vec3 N = normalize(wcNormal);
     gl_FragColor = texture2D(envmap, envMapEquirect(N, -1.0));
