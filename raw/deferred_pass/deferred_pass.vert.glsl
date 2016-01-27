@@ -1,10 +1,12 @@
+#version 450
+
 #ifdef GL_ES
 precision highp float;
 #endif
 
-attribute vec2 pos;
+in vec2 pos;
 
-varying vec2 texCoord;
+out vec2 texCoord;
 
 const vec2 madd = vec2(0.5, 0.5);
 

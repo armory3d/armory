@@ -1,3 +1,5 @@
+#version 450
+
 #ifdef GL_ES
 precision mediump float;
 #endif
@@ -6,7 +8,7 @@ precision mediump float;
 #define _Texturing
 #endif
 
-varying vec4 position;
+in vec4 position;
 
 void main() {
 

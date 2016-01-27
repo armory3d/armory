@@ -1,3 +1,5 @@
+#version 450
+
 #ifdef GL_ES
 precision highp float;
 #endif
@@ -6,29 +8,29 @@ precision highp float;
 #define _Texturing
 #endif
 
-attribute vec3 pos;
+in vec3 pos;
 #ifdef _Texturing
-attribute vec2 tex;
+in vec2 tex;
 #endif
-attribute vec3 nor;
+in vec3 nor;
 #ifdef _VCols
-attribute vec4 col;
+in vec4 col;
 #endif
 #ifdef _NormalMapping
-attribute vec3 tan;
-attribute vec3 bitan;
+in vec3 tan;
+in vec3 bitan;
 #endif
 #ifdef _Skinning
-attribute vec4 bone;
-attribute vec4 weight;
+in vec4 bone;
+in vec4 weight;
 #endif
 #ifdef _Instancing
-attribute vec3 off;
+in vec3 off;
 #endif
 
 uniform mat4 lightMVP;
 
-varying vec4 position;
+out vec4 position;
 
 void main() {
 #ifdef _Instancing

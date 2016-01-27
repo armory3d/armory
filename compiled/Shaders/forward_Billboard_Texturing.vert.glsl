@@ -1,5 +1,7 @@
 #define _Billboard
 #define _Texturing
+#version 450
+
 #ifdef GL_ES
 precision highp float;
 #endif
@@ -8,23 +10,23 @@ precision highp float;
 #define _Texturing
 #endif
 
-attribute vec3 pos;
-attribute vec3 nor;
+in vec3 pos;
+in vec3 nor;
 #ifdef _Texturing
-attribute vec2 tex;
+in vec2 tex;
 #endif
 #ifdef _VCols
-attribute vec4 col;
+in vec4 col;
 #endif
 #ifdef _NormalMapping
-attribute vec3 tan;
+in vec3 tan;
 #endif
 #ifdef _Skinning
-attribute vec4 bone;
-attribute vec4 weight;
+in vec4 bone;
+in vec4 weight;
 #endif
 #ifdef _Instancing
-attribute vec3 off;
+in vec3 off;
 #endif
 
 uniform mat4 M;
@@ -39,15 +41,15 @@ uniform vec3 eye;
 uniform float skinBones[50 * 12];
 #endif
 
-varying vec3 position;
+out vec3 position;
 #ifdef _Texturing
-varying vec2 texCoord;
+out vec2 texCoord;
 #endif
-varying vec3 normal;
-varying vec4 lPos;
-varying vec4 matColor;
-varying vec3 lightDir;
-varying vec3 eyeDir;
+out vec3 normal;
+out vec4 lPos;
+out vec4 matColor;
+out vec3 lightDir;
+out vec3 eyeDir;
 
 #ifdef _NormalMapping
 mat3 transpose(mat3 m) {

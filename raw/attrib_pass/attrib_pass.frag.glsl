@@ -1,3 +1,5 @@
+#version 450
+
 #extension GL_EXT_draw_buffers : require
 
 #ifdef GL_ES
@@ -20,21 +22,21 @@ uniform bool lighting;
 uniform bool receiveShadow;
 uniform float roughness;
 
-varying vec3 position;
+in vec3 position;
 #ifdef _Texturing
-varying vec2 texCoord;
+in vec2 texCoord;
 #endif
-varying vec3 normal;
-varying vec4 lPos;
-varying vec4 matColor;
-varying vec3 lightDir;
-varying vec3 eyeDir;
+in vec3 normal;
+in vec4 lPos;
+in vec4 matColor;
+in vec3 lightDir;
+in vec3 eyeDir;
 
 void main() {
 
 	gl_FragData[0] = vec4(position.xyz, 0);
 	gl_FragData[1] = vec4(normal.xyz, 0);
 	#ifdef _Texturing
-	gl_FragData[2] = vec4(texture2D(stex, texCoord).rgb, 0);
+	gl_FragData[2] = vec4(texture(stex, texCoord).rgb, 0);
 	#endif
 }

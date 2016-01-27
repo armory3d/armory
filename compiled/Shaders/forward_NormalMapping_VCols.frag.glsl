@@ -1,5 +1,7 @@
 #define _NormalMapping
 #define _VCols
+#version 450
+
 #ifdef GL_ES
 precision mediump float;
 #endif
@@ -19,15 +21,15 @@ uniform bool lighting;
 uniform bool receiveShadow;
 uniform float roughness;
 
-varying vec3 position;
+in vec3 position;
 #ifdef _Texturing
-varying vec2 texCoord;
+in vec2 texCoord;
 #endif
-varying vec3 normal;
-varying vec4 lPos;
-varying vec4 matColor;
-varying vec3 lightDir;
-varying vec3 eyeDir;
+in vec3 normal;
+in vec4 lPos;
+in vec4 matColor;
+in vec3 lightDir;
+in vec3 eyeDir;
 
 float shadowSimple(vec4 lPos) {
 
@@ -36,7 +38,7 @@ float shadowSimple(vec4 lPos) {
 	lPosH.x = (lPosH.x + 1.0) / 2.0;
     lPosH.y = 1.0 - ((-lPosH.y + 1.0) / (2.0));
 	
-	vec4 packedZValue = texture2D(shadowMap, lPosH.st);
+	vec4 packedZValue = texture(shadowMap, lPosH.st);
 
 	float distanceFromLight = packedZValue.z;
 
@@ -117,7 +119,7 @@ void main() {
 
 		float dotNL = 0.0;
 #ifdef _NormalMapping
-		vec3 tn = normalize(texture2D(normalMap, texCoord).rgb * 2.0 - 1.0);
+		vec3 tn = normalize(texture(normalMap, texCoord).rgb * 2.0 - 1.0);
 		dotNL = clamp(dot(tn, l), 0.0, 1.0);
 #else
 		dotNL = clamp(dot(n, l), 0.0, 1.0);
@@ -133,7 +135,7 @@ void main() {
 	}
 
 #ifdef _Texturing
-	vec4 texel = texture2D(stex, texCoord);
+	vec4 texel = texture(stex, texCoord);
 	
 #ifdef _AlphaTest
 	if(texel.a < 0.4)

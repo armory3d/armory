@@ -1,3 +1,5 @@
+#version 450
+
 #ifdef GL_ES
 precision highp float;
 #endif
@@ -5,9 +7,9 @@ precision highp float;
 uniform mat4 V;
 uniform mat4 P;
 
-attribute vec2 pos;
+in vec2 pos;
 
-varying vec3 wcNormal;
+out vec3 wcNormal;
 
 mat4 inverse(mat4 m) {
   float
