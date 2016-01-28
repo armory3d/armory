@@ -1,7 +1,7 @@
+#version 450
 #define _NormalMapping
 #define _Skinning
 #define _Texturing
-#version 450
 
 #ifdef GL_ES
 precision highp float;

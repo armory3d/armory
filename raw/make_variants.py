@@ -12,12 +12,15 @@ import json
 def writeFile(base_name, name, defs, lines):
 	# with open('out/' + name, "w") as f:
 	with open('../../compiled/Shaders/' + base_name + '/' + name, "w") as f:
-		# Prepend defines
-		for d in defs:
-			f.write('#define ' + d + '\n')
-		# Write rest
+		# Write variation
+		defs_written = False
 		for line in lines:
 			f.write(line + '\n')
+			# Append defs after #version
+			if defs_written == False and line.startswith('#version '):
+				for d in defs:
+					f.write('#define ' + d + '\n')
+				defs_written = True
 
 def make(json_name):
 	vert_shaders = []

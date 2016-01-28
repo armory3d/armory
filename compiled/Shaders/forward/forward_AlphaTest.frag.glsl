@@ -1,5 +1,5 @@
-#define _AlphaTest
 #version 450
+#define _AlphaTest
 
 #ifdef GL_ES
 precision mediump float;

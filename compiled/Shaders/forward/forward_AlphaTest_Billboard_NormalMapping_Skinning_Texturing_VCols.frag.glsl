@@ -1,10 +1,10 @@
+#version 450
 #define _AlphaTest
 #define _Billboard
 #define _NormalMapping
 #define _Skinning
 #define _Texturing
 #define _VCols
-#version 450
 
 #ifdef GL_ES
 precision mediump float;

@@ -1,6 +1,6 @@
+#version 450
 #define _Skinning
 #define _Texturing
-#version 450
 
 #ifdef GL_ES
 precision mediump float;

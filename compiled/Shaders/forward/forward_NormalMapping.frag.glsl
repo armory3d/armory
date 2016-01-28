@@ -1,5 +1,5 @@
-#define _NormalMapping
 #version 450
+#define _NormalMapping
 
 #ifdef GL_ES
 precision mediump float;

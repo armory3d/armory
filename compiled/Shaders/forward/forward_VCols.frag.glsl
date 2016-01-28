@@ -1,5 +1,5 @@
-#define _VCols
 #version 450
+#define _VCols
 
 #ifdef GL_ES
 precision mediump float;

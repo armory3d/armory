@@ -1,5 +1,5 @@
-#define _Billboard
 #version 450
+#define _Billboard
 
 #ifdef GL_ES
 precision highp float;

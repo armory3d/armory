@@ -1,7 +1,7 @@
+#version 450
 #define _Billboard
 #define _Instancing
 #define _NormalMapping
-#version 450
 
 #ifdef GL_ES
 precision highp float;

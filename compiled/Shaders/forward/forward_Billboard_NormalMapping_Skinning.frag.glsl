@@ -1,7 +1,7 @@
+#version 450
 #define _Billboard
 #define _NormalMapping
 #define _Skinning
-#version 450
 
 #ifdef GL_ES
 precision mediump float;

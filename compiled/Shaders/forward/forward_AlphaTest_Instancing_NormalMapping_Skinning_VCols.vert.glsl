@@ -1,9 +1,9 @@
+#version 450
 #define _AlphaTest
 #define _Instancing
 #define _NormalMapping
 #define _Skinning
 #define _VCols
-#version 450
 
 #ifdef GL_ES
 precision highp float;

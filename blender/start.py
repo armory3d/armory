@@ -1,5 +1,5 @@
 import project
-import nodes
+import nodes_logic
 import nodes_pipeline
 import armory
 import traits_animation
@@ -9,7 +9,7 @@ import props
 
 def register():
     project.register()
-    nodes.register()
+    nodes_logic.register()
     nodes_pipeline.register()
     armory.register()
     traits_animation.register()
@@ -19,7 +19,7 @@ def register():
 
 def unregister():
     project.unregister()
-    nodes.unregister()
+    nodes_logic.unregister()
     nodes_pipeline.unregister()
     armory.unregister()
     traits_animation.unregister()

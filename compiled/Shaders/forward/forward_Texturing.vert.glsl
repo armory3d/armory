@@ -1,5 +1,5 @@
-#define _Texturing
 #version 450
+#define _Texturing
 
 #ifdef GL_ES
 precision highp float;

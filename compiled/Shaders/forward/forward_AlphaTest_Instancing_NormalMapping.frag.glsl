@@ -1,7 +1,7 @@
+#version 450
 #define _AlphaTest
 #define _Instancing
 #define _NormalMapping
-#version 450
 
 #ifdef GL_ES
 precision mediump float;

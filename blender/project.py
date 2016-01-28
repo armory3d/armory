@@ -9,7 +9,7 @@ import subprocess
 import atexit
 import webbrowser
 import write_data
-import nodes
+import nodes_logic
 import nodes_pipeline
 from armory import ArmoryExporter
 
@@ -161,7 +161,7 @@ def buildProject(self, build_type=0):
     #area.type = old_type
 
     # Auto-build nodes # TODO: only if needed
-    nodes.buildNodeTrees()
+    nodes_logic.buildNodeTrees()
     nodes_pipeline.buildNodeTrees()
     
     # Set dir

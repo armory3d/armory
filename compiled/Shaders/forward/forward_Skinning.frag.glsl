@@ -1,5 +1,5 @@
-#define _Skinning
 #version 450
+#define _Skinning
 
 #ifdef GL_ES
 precision mediump float;

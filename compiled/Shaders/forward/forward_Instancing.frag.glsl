@@ -1,5 +1,5 @@
-#define _Instancing
 #version 450
+#define _Instancing
 
 #ifdef GL_ES
 precision mediump float;

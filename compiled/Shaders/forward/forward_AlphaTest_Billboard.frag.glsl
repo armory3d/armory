@@ -1,6 +1,6 @@
+#version 450
 #define _AlphaTest
 #define _Billboard
-#version 450
 
 #ifdef GL_ES
 precision mediump float;

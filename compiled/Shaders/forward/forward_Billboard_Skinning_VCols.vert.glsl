@@ -1,7 +1,7 @@
+#version 450
 #define _Billboard
 #define _Skinning
 #define _VCols
-#version 450
 
 #ifdef GL_ES
 precision highp float;
