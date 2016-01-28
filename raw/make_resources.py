@@ -12,7 +12,7 @@ class Object:
 	def to_JSON(self):
 		return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
-def writeResource(defs, json_data):
+def writeResource(res, defs, json_data, base_name):
 	# Define
 	sres = Object()
 	res.shader_resources.append(sres)
@@ -61,10 +61,10 @@ def writeResource(defs, json_data):
 		# Parse shaders
 		vs = open(c['vertex_shader']).read().splitlines()
 		fs = open(c['fragment_shader']).read().splitlines()
-		parse_shader(sres, con, defs, vs, len(sres.contexts) == 1) # Parse attribs for the first vertex shader
-		parse_shader(sres, con, defs, fs, False)
+		parse_shader(sres, c, con, defs, vs, len(sres.contexts) == 1) # Parse attribs for the first vertex shader
+		parse_shader(sres, c, con, defs, fs, False)
 
-def parse_shader(sres, con, defs, lines, parse_attributes):
+def parse_shader(sres, c, con, defs, lines, parse_attributes):
 	skipTillEndIf = False
 	vertex_structure_parsed = False
 	vertex_structure_parsing = False
@@ -167,46 +167,53 @@ def parse_shader(sres, con, defs, lines, parse_attributes):
 							break
 					con.constants.append(const)
 
-# Make out dir
-if not os.path.exists('out'):
-    os.makedirs('out')
+def make(json_name):
+	#base_name = sys.argv[1].split('.', 1)[0]
+	base_name = json_name.split('.', 1)[0]
 
-base_name = sys.argv[1].split('.', 1)[0]
+	# Make out dir
+	#if not os.path.exists('out'):
+	#	os.makedirs('out')
+	path = '../../compiled/ShaderResources/' + base_name
+	if not os.path.exists(path):
+		os.makedirs(path)
 
-# Open json file
-json_file = open(sys.argv[1]).read()
-json_data = json.loads(json_file)
+	# Open json file
+	# json_file = open(sys.argv[1]).read()
+	json_file = open(json_name).read()
+	json_data = json.loads(json_file)
 
-# Go through every context shaders and gather ifdefs
-defs = []
-for c in json_data['contexts']:
-	vs = open(c['vertex_shader']).read().splitlines()
-	fs = open(c['fragment_shader']).read().splitlines()
-	lines = vs + fs
-	for line in lines:
-		if line.startswith('#ifdef'):
-			d = line.split(' ')[1]
-			if d != 'GL_ES':
-				defs.append(d)
+	# Go through every context shaders and gather ifdefs
+	defs = []
+	for c in json_data['contexts']:
+		vs = open(c['vertex_shader']).read().splitlines()
+		fs = open(c['fragment_shader']).read().splitlines()
+		lines = vs + fs
+		for line in lines:
+			if line.startswith('#ifdef'):
+				d = line.split(' ')[1]
+				if d != 'GL_ES':
+					defs.append(d)
 
-# Merge duplicates and sort
-defs = sorted(list(set(defs)))
+	# Merge duplicates and sort
+	defs = sorted(list(set(defs)))
 
-# Process #defines
-res = Object()
-res.shader_resources = []
-for L in range(0, len(defs)+1):
-	for subset in itertools.combinations(defs, L):
-		writeResource(subset, json_data)
-		# Save separately
-		res_name = base_name
-		for s in subset:
-			res_name += s
-		with open('out/' + res_name + '.json', 'w') as f:
-			r = Object()
-			r.shader_resources = [res.shader_resources[-1]]
-			f.write(r.to_JSON())
+	# Process #defines
+	res = Object()
+	res.shader_resources = []
+	for L in range(0, len(defs)+1):
+		for subset in itertools.combinations(defs, L):
+			writeResource(res, subset, json_data, base_name)
+			# Save separately
+			res_name = base_name
+			for s in subset:
+				res_name += s
+			#with open('out/' + res_name + '.json', 'w') as f:
+			with open('../../compiled/ShaderResources/' + base_name + '/' + res_name + '.json', 'w') as f:
+				r = Object()
+				r.shader_resources = [res.shader_resources[-1]]
+				f.write(r.to_JSON())
 
-# Save combined
-#with open('out/' + base_name + '_resource.json', 'w') as f:
-#	f.write(res.to_JSON())
+	# Save combined
+	#with open('out/' + base_name + '_resource.json', 'w') as f:
+	#	f.write(res.to_JSON())

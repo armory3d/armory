@@ -2,7 +2,7 @@ import shutil
 import bpy
 import os
 import json
-import pipeline_nodes
+import nodes_pipeline
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
@@ -74,7 +74,7 @@ class OBJECT_OT_RESETPIPELINESButton(bpy.types.Operator):
     bl_label = "Reset Pipelines"
  
     def execute(self, context):
-        pipeline_nodes.reset_pipelines()
+        nodes_pipeline.reset_pipelines()
         return{'FINISHED'}
 
 # Menu in materials region

@@ -10,7 +10,7 @@ import atexit
 import webbrowser
 import write_data
 import nodes
-import pipeline_nodes
+import nodes_pipeline
 from armory import ArmoryExporter
 
 def defaultSettings():
@@ -162,7 +162,7 @@ def buildProject(self, build_type=0):
 
     # Auto-build nodes # TODO: only if needed
     nodes.buildNodeTrees()
-    pipeline_nodes.buildNodeTrees()
+    nodes_pipeline.buildNodeTrees()
     
     # Set dir
     s = bpy.data.filepath.split(os.path.sep)

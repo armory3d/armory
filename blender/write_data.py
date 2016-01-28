@@ -22,9 +22,10 @@ project.addAssets('Libraries/cyclesgame/Assets/**');
 
 			for ref in shader_references:
 				# ArmoryExporter.pipeline_pass instead of split
-				f.write("project.addAssets('Libraries/cyclesgame/compiled/ShaderResources/" + ref.split('_', 1)[0] + "/" + ref + ".json');\n")
-				f.write("project.addShaders('Libraries/cyclesgame/compiled/Shaders/" + ref + ".frag.glsl');\n")
-				f.write("project.addShaders('Libraries/cyclesgame/compiled/Shaders/" + ref + ".vert.glsl');\n")
+				base_name = ref.split('_', 1)[0] + "/"
+				f.write("project.addAssets('Libraries/cyclesgame/compiled/ShaderResources/" + base_name + "" + ref + ".json');\n")
+				f.write("project.addShaders('Libraries/cyclesgame/compiled/Shaders/" + base_name + "" + ref + ".frag.glsl');\n")
+				f.write("project.addShaders('Libraries/cyclesgame/compiled/Shaders/" + base_name + "" + ref + ".vert.glsl');\n")
 
 			if bpy.data.worlds[0]['CGPhysics'] != 0:
 				f.write("\nproject.addDefine('WITH_PHYSICS')\n")

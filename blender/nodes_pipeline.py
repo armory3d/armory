@@ -208,10 +208,10 @@ def make_deferred_pipeline():
 	
 	gbuffer_node = nodes.new('TargetNodeType')
 	gbuffer_node.location = 0, -step * 1
-	drawgbuffer_node.inputs[0].default_value = 'gbuffer' # Id
-	drawgbuffer_node.inputs[3].default_value = 3 # Color buffers
-	drawgbuffer_node.inputs[4].default_value = True # Depth
-	drawgbuffer_node.inputs[5].default_value = 'RGBA128' # Format
+	gbuffer_node.inputs[0].default_value = 'gbuffer' # Id
+	gbuffer_node.inputs[3].default_value = 3 # Color buffers
+	gbuffer_node.inputs[4].default_value = True # Depth
+	gbuffer_node.inputs[5].default_value = 'RGBA128' # Format
 	
 	setgbuffer_node = nodes.new('SetTargetNodeType')
 	setgbuffer_node.location = step * 1, 0
@@ -294,6 +294,8 @@ def buildNodeTree(node_group):
 	res.stages = []
 	
 	rn = getRootNode(node_group)
+	if rn == None:
+		return
 	buildNode(res, rn, node_group)
 
 	with open(path + node_group_name + '.json', 'w') as f:
