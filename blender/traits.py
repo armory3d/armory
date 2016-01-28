@@ -3,6 +3,7 @@ import bpy
 import os
 import json
 from traits_animation import ListAnimationTraitItem
+from traits_params import ListParamsTraitItem
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
@@ -191,6 +192,27 @@ class ToolsTraitsPanel(bpy.types.Panel):
                 item.name = item.class_name_prop
                 row = layout.row()
                 row.prop(item, "class_name_prop")
+                # Params
+                layout.label("Parameters")
+                paramsrow = layout.row()
+                paramsrows = 2
+                if len(obj.my_animationtraitlist) > 1:
+                    paramsrows = 4
+                
+                row = layout.row()
+                row.template_list("MY_UL_ParamsTraitList", "The_List", obj, "my_paramstraitlist", obj, "paramstraitlist_index", rows=paramsrows)
+
+                col = row.column(align=True)
+                col.operator("my_paramstraitlist.new_item", icon='ZOOMIN', text="")
+                col.operator("my_paramstraitlist.delete_item", icon='ZOOMOUT', text="")
+
+                if len(obj.my_paramstraitlist) > 1:
+                    col.separator()
+                    col.operator("my_paramstraitlist.move_item", icon='TRIA_UP', text="").direction = 'UP'
+                    col.operator("my_paramstraitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
+
+                if obj.paramstraitlist_index >= 0 and len(obj.my_paramstraitlist) > 0:
+                    item = obj.my_paramstraitlist[obj.paramstraitlist_index]         
             
             # Nodes
             elif item.type_prop =='Nodes':
@@ -210,7 +232,8 @@ class ToolsTraitsPanel(bpy.types.Panel):
                 item.name = item.type_prop
                 row = layout.row()
                 row.prop_search(item, "start_track_name_prop", obj, "my_animationtraitlist", "Start Track")
-                # List
+                # Tracks list
+                layout.label("Tracks")
                 animrow = layout.row()
                 animrows = 2
                 if len(obj.my_animationtraitlist) > 1:

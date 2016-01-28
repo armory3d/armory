@@ -32,6 +32,7 @@ import bpy
 import math
 from mathutils import *
 import json
+import ast
 from bpy_extras.io_utils import ExportHelper
 
 kNodeTypeNode = 0
@@ -2007,9 +2008,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				x.class_name = t.nodes_name_prop.replace('.', '_')
 			elif t.type_prop == 'Scene Instance':
 				x.type = 'Script'
-				x.class_name = "SceneInstance:'" + t.scene_prop.replace('.', '_') + "'"
+				x.class_name = 'SceneInstance'
+				x.parameters = [t.scene_prop.replace('.', '_')]
 			elif t.type_prop == 'Animation':
 				x.type = 'Script'
+				x.class_name = 'Animation'
 				names = []
 				starts = []
 				ends = []
@@ -2018,10 +2021,14 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						names.append(at.name)
 						starts.append(at.start_prop)
 						ends.append(at.end_prop)
-				x.class_name = "Animation:'" + t.start_track_name_prop + "':" + str(names) + ":" + str(starts) + ":" + str(ends)
+				x.parameters = [t.start_track_name_prop, names, starts, ends]
 			else: # Script
 				x.type = t.type_prop
 				x.class_name = t.class_name_prop
+				if len(node.my_paramstraitlist) > 0:
+					x.parameters = []
+					for pt in node.my_paramstraitlist: # Append parameters
+						x.parameters.append(ast.literal_eval(pt.name))
 			
 			o.traits.append(x)
 
@@ -2046,9 +2053,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				body_mass = rb.mass
 			x = Object()
 			x.type = 'Script'
-			x.class_name = 'RigidBody:' + str(body_mass) + \
-								 ':' + shape + \
-								 ":" + str(rb.friction)
+			x.class_name = 'RigidBody;' + str(body_mass) + \
+								 ';' + shape + \
+								 ";" + str(rb.friction)
 			o.traits.append(x)
 
 	def cb_export_camera(self, object, o):
