@@ -2178,12 +2178,12 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			# Merge duplicates and sort
 			defs = sorted(list(set(defs)))
 			# Select correct shader variant
-			o.shader = ArmoryExporter.pipeline_pass + '_resource/' + ArmoryExporter.pipeline_pass
 			ext = ''
 			for d in defs:
 				ext += d
-			o.shader += ext
-			ArmoryExporter.shader_references.append(ArmoryExporter.pipeline_pass + ext)
+			shader_name = ArmoryExporter.pipeline_pass + ext
+			o.shader = shader_name + '/' + shader_name
+			ArmoryExporter.shader_references.append(shader_name)
 		else:
 			o.shader = material.custom_shader_name
 

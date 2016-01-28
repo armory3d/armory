@@ -18,10 +18,11 @@ project.addAssets('Assets/**');
 
 project.addLibrary('cyclesgame');
 project.addAssets('Libraries/cyclesgame/Assets/**');
-project.addAssets('Libraries/cyclesgame/compiled/Assets/**');
 """)
 
 			for ref in shader_references:
+				# ArmoryExporter.pipeline_pass instead of split
+				f.write("project.addAssets('Libraries/cyclesgame/compiled/ShaderResources/" + ref.split('_', 1)[0] + "/" + ref + ".json');\n")
 				f.write("project.addShaders('Libraries/cyclesgame/compiled/Shaders/" + ref + ".frag.glsl');\n")
 				f.write("project.addShaders('Libraries/cyclesgame/compiled/Shaders/" + ref + ".vert.glsl');\n")
 

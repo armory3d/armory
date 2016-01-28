@@ -1,0 +1,105 @@
+{
+    "shader_resources": [
+        {
+            "contexts": [
+                {
+                    "blend_destination": "blend_zero", 
+                    "blend_source": "blend_one", 
+                    "compare_mode": "less", 
+                    "constants": [
+                        {
+                            "id": "M", 
+                            "link": "_modelMatrix", 
+                            "type": "mat4"
+                        }, 
+                        {
+                            "id": "NM", 
+                            "link": "_normalMatrix", 
+                            "type": "mat4"
+                        }, 
+                        {
+                            "id": "V", 
+                            "link": "_viewMatrix", 
+                            "type": "mat4"
+                        }, 
+                        {
+                            "id": "P", 
+                            "link": "_projectionMatrix", 
+                            "type": "mat4"
+                        }, 
+                        {
+                            "id": "lightMVP", 
+                            "link": "_lightMVP", 
+                            "type": "mat4"
+                        }, 
+                        {
+                            "id": "diffuseColor", 
+                            "type": "vec4"
+                        }, 
+                        {
+                            "id": "light", 
+                            "link": "_lightPosition", 
+                            "type": "vec3"
+                        }, 
+                        {
+                            "id": "eye", 
+                            "link": "_cameraPosition", 
+                            "type": "vec3"
+                        }, 
+                        {
+                            "id": "lighting", 
+                            "type": "bool"
+                        }, 
+                        {
+                            "id": "receiveShadow", 
+                            "type": "bool"
+                        }, 
+                        {
+                            "id": "roughness", 
+                            "type": "float"
+                        }
+                    ], 
+                    "cull_mode": "counter_clockwise", 
+                    "depth_write": true, 
+                    "fragment_shader": "forward_Billboard_Instancing_NormalMapping_Texturing_VCols.frag", 
+                    "id": "forward", 
+                    "texture_units": [
+                        {
+                            "id": "stex"
+                        }, 
+                        {
+                            "id": "shadowMap"
+                        }, 
+                        {
+                            "id": "normalMap"
+                        }
+                    ], 
+                    "vertex_shader": "forward_Billboard_Instancing_NormalMapping_Texturing_VCols.vert"
+                }
+            ], 
+            "id": "forward_Billboard_Instancing_NormalMapping_Texturing_VCols", 
+            "vertex_structure": [
+                {
+                    "name": "pos", 
+                    "size": 3
+                }, 
+                {
+                    "name": "nor", 
+                    "size": 3
+                }, 
+                {
+                    "name": "tex", 
+                    "size": 2
+                }, 
+                {
+                    "name": "col", 
+                    "size": 4
+                }, 
+                {
+                    "name": "tan", 
+                    "size": 3
+                }
+            ]
+        }
+    ]
+}
