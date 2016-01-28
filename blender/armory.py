@@ -2113,8 +2113,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		ops.normal_mapping = False
 		# Output node is linked
 		if out_node != None and out_node.inputs[0].is_linked:
+			# Traverse material tree
 			surface_node = self.findNodeByLink(tree, out_node, out_node.inputs[0])
-			self.parse_material_surface(c, defs, ops, tree, surface_node)
+			self.parse_material_surface(material, c, defs, ops, tree, surface_node)
 
 		o.contexts.append(c)
 
@@ -2166,9 +2167,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		else:
 			o.shader = material.custom_shader_name
 
-	def parse_material_surface(self, c, defs, ops, tree, node):
+	def parse_material_surface(self, material, c, defs, ops, tree, node):
 		if node.type == 'BSDF_DIFFUSE': # Diffuse shader
-			c.bind_constants[2].bool = True # Enable lighting
+			if material.lighting_bool == True:
+				c.bind_constants[2].bool = True # Enable lighting
 			# Color
 			if node.inputs[0].is_linked:
 				color_node = self.findNodeByLink(tree, node, node.inputs[0])
@@ -2188,10 +2190,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		elif node.type == 'MIX_SHADER':
 			if node.inputs[1].is_linked:
 				surface1_node = self.findNodeByLink(tree, node, node.inputs[1])
-				self.parse_material_surface(c, defs, ops, tree, surface1_node)
+				self.parse_material_surface(material, c, defs, ops, tree, surface1_node)
 			if node.inputs[2].is_linked:
 				surface2_node = self.findNodeByLink(tree, node, node.inputs[2])
-				self.parse_material_surface(c, defs, ops, tree, surface2_node)
+				self.parse_material_surface(material, c, defs, ops, tree, surface2_node)
 
 	def parse_material_color(self, c, color_node, textureId):
 		# Bind texture

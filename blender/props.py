@@ -25,6 +25,7 @@ def initProperties():
     bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Pipeline Path", default="forward_pipeline")
     bpy.types.Camera.pipeline_pass = bpy.props.StringProperty(name="Pipeline Pass", default="forward")
     # For material
+    bpy.types.Material.lighting_bool = bpy.props.BoolProperty(name="Lighting", default=True)
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.custom_shader = bpy.props.BoolProperty(name="Custom Shader", default=False)
     bpy.types.Material.custom_shader_name = bpy.props.StringProperty(name="Name", default="")
@@ -87,6 +88,7 @@ class MatsPropsPanel(bpy.types.Panel):
         layout = self.layout
         mat = bpy.context.material
 
+        layout.prop(mat, 'lighting_bool')
         layout.prop(mat, 'receive_shadow')
         layout.prop(mat, 'custom_shader')
         if mat.custom_shader:
