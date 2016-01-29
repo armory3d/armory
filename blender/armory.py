@@ -2082,23 +2082,22 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		c = Object()
 		c.id = ArmoryExporter.pipeline_pass
 		c.bind_constants = []
-		const1 = Object()
-		const1.id = "diffuseColor"
-		const1.vec4 = [1, 1, 1, 1]
-		c.bind_constants.append(const1)
-		const2 = Object()
-		const2.id = "roughness"
-		const2.float = 0
-		c.bind_constants.append(const2)
-		const3 = Object()
-		const3.id = "lighting"
-		const3.bool = False
-		c.bind_constants.append(const3)
-		const4 = Object()
-		const4.id = "receiveShadow"
-		const4.bool = material.receive_shadow
-		c.bind_constants.append(const4)
-
+		const = Object()
+		const.id = "diffuseColor"
+		const.vec4 = [1, 1, 1, 1]
+		c.bind_constants.append(const)
+		const = Object()
+		const.id = "roughness"
+		const.float = 0
+		c.bind_constants.append(const)
+		const = Object()
+		const.id = "lighting"
+		const.bool = False
+		c.bind_constants.append(const)
+		const = Object()
+		const.id = "receiveShadow"
+		const.bool = material.receive_shadow
+		c.bind_constants.append(const)
 		c.bind_textures = []
 
 		# Parse nodes
@@ -2109,13 +2108,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				out_node = n
 				break
 
-		ops = Object()
-		ops.normal_mapping = False
 		# Output node is linked
 		if out_node != None and out_node.inputs[0].is_linked:
 			# Traverse material tree
 			surface_node = self.findNodeByLink(tree, out_node, out_node.inputs[0])
-			self.parse_material_surface(material, c, defs, ops, tree, surface_node)
+			self.parse_material_surface(material, c, defs, tree, surface_node)
 
 		o.contexts.append(c)
 
@@ -2132,12 +2129,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			# Instancing used by material user
 			if ob.instanced_children or len(ob.particle_systems) > 0:
 				defs.append('_Instancing')
-			# VCols used by material user
-			if ob.data.vertex_colors:
-				defs.append('_VCols');
-			# Texcoords
-			if ob.data.uv_textures:
-				defs.append('_Texturing')
 			# GPU Skinning
 			if ob.find_armature():
 				defs.append('_Skinning')
@@ -2147,8 +2138,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				defs.append('_Billboard')
 
 		# Whether objects should export tangent data
-		if material.export_tangents != ops.normal_mapping:
-			material.export_tangents = ops.normal_mapping
+		normal_mapping = '_NormalMapping' in defs
+		if material.export_tangents != normal_mapping:
+			material.export_tangents = normal_mapping
 			# Delete geometry caches
 			for ob in mat_users:
 				ob.geometry_cached = False
@@ -2165,15 +2157,20 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o.shader = shader_name + '/' + shader_name
 			ArmoryExporter.shader_references.append(shader_name)
 		else:
+			# TODO: gather defs from vertex data when custom shader is used
 			o.shader = material.custom_shader_name
 
-	def parse_material_surface(self, material, c, defs, ops, tree, node):
+	def parse_material_surface(self, material, c, defs, tree, node):
 		if node.type == 'BSDF_DIFFUSE': # Diffuse shader
 			if material.lighting_bool == True:
 				c.bind_constants[2].bool = True # Enable lighting
 			# Color
 			if node.inputs[0].is_linked:
 				color_node = self.findNodeByLink(tree, node, node.inputs[0])
+				if color_node.type == 'TEX_IMAGE':
+					defs.append('_Texturing')
+				elif color_node.type == 'ATTRIBUTE': # Assume vcols for now
+					defs.append('_VCols')
 				self.parse_material_color(c, color_node, 'stex')
 			# Take node color
 			else:
@@ -2184,16 +2181,16 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			# Normal
 			if node.inputs[2].is_linked:
 				normal_node = self.findNodeByLink(tree, node, node.inputs[2])
-				self.parse_material_normal(c, defs, ops, tree, normal_node)
+				self.parse_material_normal(c, defs, tree, normal_node)
 		elif node.type == 'BSDF_TRANSPARENT':
 			defs.append('_AlphaTest')
 		elif node.type == 'MIX_SHADER':
 			if node.inputs[1].is_linked:
 				surface1_node = self.findNodeByLink(tree, node, node.inputs[1])
-				self.parse_material_surface(material, c, defs, ops, tree, surface1_node)
+				self.parse_material_surface(material, c, defs, tree, surface1_node)
 			if node.inputs[2].is_linked:
 				surface2_node = self.findNodeByLink(tree, node, node.inputs[2])
-				self.parse_material_surface(material, c, defs, ops, tree, surface2_node)
+				self.parse_material_surface(material, c, defs, tree, surface2_node)
 
 	def parse_material_color(self, c, color_node, textureId):
 		# Bind texture
@@ -2202,10 +2199,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			tex.id = textureId
 			tex.name = color_node.image.name.split('.', 1)[0] # Remove extension
 			c.bind_textures.append(tex)
+		elif color_node.type == 'ATTRIBUTE':
+			pass
 
-	def parse_material_normal(self, c, defs, ops, tree, normal_node):
+	def parse_material_normal(self, c, defs, tree, normal_node):
 		if normal_node.inputs[1].is_linked:
-			ops.normal_mapping = True
 			defs.append('_NormalMapping')
 			color_node = self.findNodeByLink(tree, normal_node, normal_node.inputs[1])
 			self.parse_material_color(c, color_node, 'normalMap')
