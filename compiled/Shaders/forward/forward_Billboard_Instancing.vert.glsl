@@ -33,8 +33,8 @@ uniform mat4 M;
 uniform mat4 NM;
 uniform mat4 V;
 uniform mat4 P;
-uniform mat4 lightMVP;
-uniform vec4 diffuseColor;
+uniform mat4 LMVP;
+uniform vec4 albedo_color;
 uniform vec3 light;
 uniform vec3 eye;
 #ifdef _Skinning
@@ -103,7 +103,7 @@ void main() {
 	mat3 skinningMatVec = getSkinningMatVec(skinningMat);
 	sPos = sPos * skinningMat;
 #endif
-	lPos = lightMVP * sPos;
+	lPos = LMVP * sPos;
 
 	mat4 VM = V * M;
 
@@ -132,7 +132,7 @@ void main() {
 	normal = normalize(mat3(NM) * nor);
 #endif
 
-	matColor = diffuseColor;
+	matColor = albedo_color;
 
 #ifdef _VCols
 	matColor *= col;

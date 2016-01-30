@@ -28,12 +28,12 @@
                             "type": "mat4"
                         }, 
                         {
-                            "id": "lightMVP", 
-                            "link": "_lightMVP", 
+                            "id": "LMVP", 
+                            "link": "_lightModelViewProjectionMatrix", 
                             "type": "mat4"
                         }, 
                         {
-                            "id": "diffuseColor", 
+                            "id": "albedo_color", 
                             "type": "vec4"
                         }, 
                         {
@@ -56,6 +56,10 @@
                         }, 
                         {
                             "id": "roughness", 
+                            "type": "float"
+                        }, 
+                        {
+                            "id": "metalness", 
                             "type": "float"
                         }
                     ], 

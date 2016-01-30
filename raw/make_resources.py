@@ -83,7 +83,8 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
 						break
 				if found == False:
 					skipTillEndIf = True
-				if s == '_Instancing': # TODO: Prevent instanced data to go into main verrtex structure
+				# TODO: Prevent instanced data to go into main verrtex structure
+				if s == '_Instancing':
 					skipTillEndIf = True
 			continue
 

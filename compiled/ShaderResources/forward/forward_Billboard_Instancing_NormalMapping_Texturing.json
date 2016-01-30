@@ -28,12 +28,12 @@
                             "type": "mat4"
                         }, 
                         {
-                            "id": "lightMVP", 
-                            "link": "_lightMVP", 
+                            "id": "LMVP", 
+                            "link": "_lightModelViewProjectionMatrix", 
                             "type": "mat4"
                         }, 
                         {
-                            "id": "diffuseColor", 
+                            "id": "albedo_color", 
                             "type": "vec4"
                         }, 
                         {
@@ -57,6 +57,10 @@
                         {
                             "id": "roughness", 
                             "type": "float"
+                        }, 
+                        {
+                            "id": "metalness", 
+                            "type": "float"
                         }
                     ], 
                     "cull_mode": "counter_clockwise", 
@@ -65,13 +69,13 @@
                     "id": "forward", 
                     "texture_units": [
                         {
-                            "id": "stex"
+                            "id": "salbedo"
                         }, 
                         {
                             "id": "shadowMap"
                         }, 
                         {
-                            "id": "normalMap"
+                            "id": "snormal"
                         }
                     ], 
                     "vertex_shader": "forward_Billboard_Instancing_NormalMapping_Texturing.vert"

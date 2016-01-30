@@ -2082,22 +2082,32 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		c = Object()
 		c.id = ArmoryExporter.pipeline_pass
 		c.bind_constants = []
+		
 		const = Object()
-		const.id = "diffuseColor"
+		const.id = "albedo_color"
 		const.vec4 = [1, 1, 1, 1]
 		c.bind_constants.append(const)
+		
 		const = Object()
 		const.id = "roughness"
 		const.float = 0
 		c.bind_constants.append(const)
+		
+		const = Object()
+		const.id = "metalness"
+		const.float = 0
+		c.bind_constants.append(const)
+		
 		const = Object()
 		const.id = "lighting"
-		const.bool = False
+		const.bool = material.lighting_bool
 		c.bind_constants.append(const)
+		
 		const = Object()
 		const.id = "receiveShadow"
 		const.bool = material.receive_shadow
 		c.bind_constants.append(const)
+		
 		c.bind_textures = []
 
 		# Parse nodes
@@ -2161,29 +2171,43 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o.shader = material.custom_shader_name
 
 	def parse_material_surface(self, material, c, defs, tree, node):
-		if node.type == 'BSDF_DIFFUSE': # Diffuse shader
-			if material.lighting_bool == True:
-				c.bind_constants[2].bool = True # Enable lighting
-			# Color
-			if node.inputs[0].is_linked:
-				color_node = self.findNodeByLink(tree, node, node.inputs[0])
-				if color_node.type == 'TEX_IMAGE':
+		if node.type == 'GROUP' and node.node_tree.name == 'CG PBR':
+			# Albedo Map
+			albedo_input = node.inputs[1]
+			if albedo_input.is_linked:
+				albedo_node = self.findNodeByLink(tree, node, albedo_input)
+				if albedo_node.type == 'TEX_IMAGE':
 					defs.append('_Texturing')
-				elif color_node.type == 'ATTRIBUTE': # Assume vcols for now
+					tex = Object()
+					tex.id = 'salbedo'
+					tex.name = albedo_node.image.name.split('.', 1)[0] # Remove extension
+					c.bind_textures.append(tex)
+				elif albedo_node.type == 'ATTRIBUTE': # Assume vcols for now
 					defs.append('_VCols')
-				self.parse_material_color(c, color_node, 'stex')
-			# Take node color
-			else:
-				col = node.inputs[0].default_value
+			else: # Take node color
+				col = albedo_input.default_value
 				c.bind_constants[0].vec4 = [col[0], col[1], col[2], col[3]]
-			# Roughness
-			c.bind_constants[1].float = node.inputs[1].default_value
+			# Metalness Map
+			metalness_input = node.inputs[3]
+			col = metalness_input.default_value
+			c.bind_constants[2].float = col[0]
+			# Roughness Map
+			roughness_input = node.inputs[5]
+			col = roughness_input.default_value
+			c.bind_constants[1].float = col[0]
 			# Normal
-			if node.inputs[2].is_linked:
-				normal_node = self.findNodeByLink(tree, node, node.inputs[2])
-				self.parse_material_normal(c, defs, tree, normal_node)
+			normal_input = node.inputs[2]
+			if normal_input.is_linked:
+				defs.append('_NormalMapping')
+				normal_node = self.findNodeByLink(tree, node, normal_input)
+				tex = Object()
+				tex.id = 'snormal'
+				tex.name = normal_node.image.name.split('.', 1)[0] # Remove extension
+				c.bind_textures.append(tex)
+				
 		elif node.type == 'BSDF_TRANSPARENT':
 			defs.append('_AlphaTest')
+			
 		elif node.type == 'MIX_SHADER':
 			if node.inputs[1].is_linked:
 				surface1_node = self.findNodeByLink(tree, node, node.inputs[1])
@@ -2191,22 +2215,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if node.inputs[2].is_linked:
 				surface2_node = self.findNodeByLink(tree, node, node.inputs[2])
 				self.parse_material_surface(material, c, defs, tree, surface2_node)
-
-	def parse_material_color(self, c, color_node, textureId):
-		# Bind texture
-		if color_node.type == 'TEX_IMAGE':
-			tex = Object()
-			tex.id = textureId
-			tex.name = color_node.image.name.split('.', 1)[0] # Remove extension
-			c.bind_textures.append(tex)
-		elif color_node.type == 'ATTRIBUTE':
-			pass
-
-	def parse_material_normal(self, c, defs, tree, normal_node):
-		if normal_node.inputs[1].is_linked:
-			defs.append('_NormalMapping')
-			color_node = self.findNodeByLink(tree, normal_node, normal_node.inputs[1])
-			self.parse_material_color(c, color_node, 'normalMap')
 
 def menu_func(self, context):
 	self.layout.operator(ArmoryExporter.bl_idname, text = "Armory (.json)")

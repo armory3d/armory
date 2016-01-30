@@ -10,15 +10,16 @@ precision mediump float;
 #endif
 
 #ifdef _Texturing
-uniform sampler2D stex;
+uniform sampler2D salbedo;
 #endif
 uniform sampler2D shadowMap;
 #ifdef _NormalMapping
-uniform sampler2D normalMap;
+uniform sampler2D snormal;
 #endif
 uniform bool lighting;
 uniform bool receiveShadow;
 uniform float roughness;
+uniform float metalness;
 
 in vec3 position;
 #ifdef _Texturing
@@ -31,7 +32,6 @@ in vec3 lightDir;
 in vec3 eyeDir;
 
 float shadowSimple(vec4 lPos) {
-
 	vec4 lPosH = lPos / lPos.w;
 	
 	lPosH.x = (lPosH.x + 1.0) / 2.0;
@@ -49,7 +49,6 @@ float shadowSimple(vec4 lPos) {
 }
 
 vec2 LightingFuncGGX_FV(float dotLH, float roughness) {
-
 	float alpha = roughness*roughness;
 
 	// F
@@ -70,7 +69,6 @@ vec2 LightingFuncGGX_FV(float dotLH, float roughness) {
 }
 
 float LightingFuncGGX_D(float dotNH, float roughness) {
-
 	float alpha = roughness * roughness;
 	float alphaSqr = alpha * alpha;
 	float pi = 3.14159;
@@ -83,7 +81,6 @@ float LightingFuncGGX_D(float dotNH, float roughness) {
 // John Hable - Optimizing GGX Shaders
 // http://www.filmicworlds.com/2014/04/21/optimizing-ggx-shaders-with-dotlh/
 float LightingFuncGGX_OPT3(vec3 N, vec3 V, vec3 L, float roughness, float F0) {
-
 	vec3 H = normalize(V + L);
 
 	float dotNL = clamp(dot(N, L), 0.0, 1.0);
@@ -99,7 +96,6 @@ float LightingFuncGGX_OPT3(vec3 N, vec3 V, vec3 L, float roughness, float F0) {
 }
 
 void main() {
-
 	float visibility = 1.0;
 	// if (receiveShadow && lPos.w > 0.0) {
 	// 	visibility = shadowSimple(lPos);
@@ -118,7 +114,7 @@ void main() {
 
 		float dotNL = 0.0;
 #ifdef _NormalMapping
-		vec3 tn = normalize(texture(normalMap, texCoord).rgb * 2.0 - 1.0);
+		vec3 tn = normalize(texture(snormal, texCoord).rgb * 2.0 - 1.0);
 		dotNL = clamp(dot(tn, l), 0.0, 1.0);
 #else
 		dotNL = clamp(dot(n, l), 0.0, 1.0);
@@ -134,7 +130,7 @@ void main() {
 	}
 
 #ifdef _Texturing
-	vec4 texel = texture(stex, texCoord);
+	vec4 texel = texture(salbedo, texCoord);
 	
 #ifdef _AlphaTest
 	if(texel.a < 0.4)

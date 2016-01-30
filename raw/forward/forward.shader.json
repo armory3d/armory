@@ -42,8 +42,8 @@
 					"link": "_projectionMatrix"
 				},
 				{
-					"id": "lightMVP",
-					"link": "_lightMVP"
+					"id": "LMVP",
+					"link": "_lightModelViewProjectionMatrix"
 				},
 				{
 					"id": "light",
