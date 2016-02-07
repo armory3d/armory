@@ -9,9 +9,9 @@ import os
 import json
 
 # Create variations
-def writeFile(base_name, name, defs, lines):
+def writeFile(path, name, defs, lines):
 	# with open('out/' + name, "w") as f:
-	with open('../../compiled/Shaders/' + base_name + '/' + name, "w") as f:
+	with open(path + '/' + name, "w") as f:
 		# Write variation
 		defs_written = False
 		for line in lines:
@@ -33,7 +33,7 @@ def make(json_name):
 	# Make out dir
 	#if not os.path.exists('out'):
 	#	os.makedirs('out')
-	path = '../../compiled/Shaders/' + base_name
+	path = '../../../../compiled/Shaders/' + base_name
 	if not os.path.exists(path):
 		os.makedirs(path)
 
@@ -70,5 +70,5 @@ def make(json_name):
 				shader_name = shader_names[i]
 				for s in subset:
 					shader_name += s
-				writeFile(base_name, shader_name + '.vert.glsl', subset, vert_lines)
-				writeFile(base_name, shader_name + '.frag.glsl', subset, frag_lines)
+				writeFile(path, shader_name + '.vert.glsl', subset, vert_lines)
+				writeFile(path, shader_name + '.frag.glsl', subset, frag_lines)

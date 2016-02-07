@@ -226,10 +226,9 @@ def cleanProject(self):
         shutil.rmtree('Assets/generated')
 
     # Remove compiled nodes
-    path = 'Sources/' + bpy.data.worlds[0].CGProjectPackage.replace(".", "/") + "/"
-    for node_group in bpy.data.node_groups:
-        node_group_name = node_group.name.replace('.', '_')
-        os.remove(path + node_group_name + '.hx')
+    nodes_path = "Sources/" + bpy.data.worlds[0].CGProjectPackage.replace(".", "/") + "/node/"
+    if os.path.isdir(nodes_path):
+        shutil.rmtree(nodes_path)
 
     self.report({'INFO'}, "Done")
 

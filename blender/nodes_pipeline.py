@@ -331,6 +331,7 @@ def buildNode(res, node, node_group):
 		if targetNode.bl_idname == 'TargetNodeType':
 			targetId = targetNode.inputs[0].default_value
 		stage.params.append(targetId)
+		stage.params.append(node.inputs[2].default_value)
 		
 	elif node.bl_idname == 'DrawQuadNodeType':
 		stage.command = 'draw_quad'

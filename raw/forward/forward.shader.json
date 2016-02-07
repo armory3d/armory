@@ -62,6 +62,39 @@
 			"texture_params": [],
 			"vertex_shader": "forward.vert.glsl",
 			"fragment_shader": "forward.frag.glsl"
+		},
+		{
+			"id": "shadowmap",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "true"
+				},
+				{
+					"id": "compare_mode",
+					"value": "less"
+				},
+				{
+					"id": "cull_mode",
+					"value": "clockwise"
+				},
+				{
+					"id": "blend_source",
+					"value": "blend_one"
+				},
+				{
+					"id": "blend_destination",
+					"value": "blend_zero"
+				}
+			],
+			"links": [
+				{
+					"id": "LMVP",
+					"link": "_lightModelViewProjectionMatrix"
+				}
+			],
+			"vertex_shader": "shadowmap.vert.glsl",
+			"fragment_shader": "shadowmap.frag.glsl"
 		}
 	]
 }

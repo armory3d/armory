@@ -175,7 +175,7 @@ def make(json_name):
 	# Make out dir
 	#if not os.path.exists('out'):
 	#	os.makedirs('out')
-	path = '../../compiled/ShaderResources/' + base_name
+	path = '../../../../compiled/ShaderResources/' + base_name
 	if not os.path.exists(path):
 		os.makedirs(path)
 
@@ -210,7 +210,7 @@ def make(json_name):
 			for s in subset:
 				res_name += s
 			#with open('out/' + res_name + '.json', 'w') as f:
-			with open('../../compiled/ShaderResources/' + base_name + '/' + res_name + '.json', 'w') as f:
+			with open(path + '/' + res_name + '.json', 'w') as f:
 				r = Object()
 				r.shader_resources = [res.shader_resources[-1]]
 				f.write(r.to_JSON())

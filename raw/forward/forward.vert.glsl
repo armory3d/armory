@@ -118,7 +118,8 @@ void main() {
 	gl_Position = P * VM * sPos;
 	
 	vec4 mPos = M * sPos;
-	position = mPos.xyz / mPos.w;
+	//position = mPos.xyz / mPos.w;
+	position = pos;
 
 #ifdef _Texturing
 	texCoord = tex;
@@ -144,7 +145,7 @@ void main() {
 	lightDir = normalize(TBN * lightDir); 
 	eyeDir = normalize(TBN * eyeDir); 
 #else
-	lightDir = normalize(light - position);
-	eyeDir = normalize(eye - position);
+	lightDir = (light - position);
+	eyeDir = (eye - position);
 #endif
 }

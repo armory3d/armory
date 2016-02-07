@@ -226,8 +226,9 @@ def buildNodeTrees():
 	os.chdir(fp)
 
 	# Make sure package dir exists
-	if not os.path.exists('Sources/' + bpy.data.worlds[0].CGProjectPackage.replace(".", "/")):
-		os.makedirs('Sources/' + bpy.data.worlds[0].CGProjectPackage.replace(".", "/"))
+	nodes_path = 'Sources/' + bpy.data.worlds[0].CGProjectPackage.replace(".", "/") + "/node"
+	if not os.path.exists(nodes_path):
+		os.makedirs(nodes_path)
 	
 	# Export node scripts
 	for node_group in bpy.data.node_groups:
@@ -237,12 +238,12 @@ def buildNodeTrees():
 def buildNodeTree(node_group):
 	rn = getRootNode(node_group)
 
-	path = 'Sources/' + bpy.data.worlds[0].CGProjectPackage.replace(".", "/") + "/"
+	path = 'Sources/' + bpy.data.worlds[0].CGProjectPackage.replace(".", "/") + "/node/"
 
 	node_group_name = node_group.name.replace('.', '_')
 
 	with open(path + node_group_name + '.hx', 'w') as f:
-		f.write('package ' + bpy.data.worlds[0].CGProjectPackage + ';\n\n')
+		f.write('package ' + bpy.data.worlds[0].CGProjectPackage + '.node;\n\n')
 		f.write('import cycles.node.*;\n\n')
 		f.write('class ' + node_group_name + ' extends cycles.trait.NodeExecutor {\n\n')
 		f.write('\tpublic function new() { super(); requestAdd(add); }\n\n')

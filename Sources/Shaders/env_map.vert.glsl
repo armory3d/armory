@@ -1,3 +1,5 @@
+#version 450
+
 #ifdef GL_ES
 precision highp float;
 #endif
@@ -5,11 +7,17 @@ precision highp float;
 uniform mat4 V;
 uniform mat4 P;
 
-attribute vec2 pos;
+in vec2 pos;
 
-varying vec3 wcNormal;
+out vec3 normal;
 
-mat4 inverse(mat4 m) {
+mat3 transpose_(mat3 m) {
+  return mat3(m[0][0], m[1][0], m[2][0],
+              m[0][1], m[1][1], m[2][1],
+              m[0][2], m[1][2], m[2][2]);
+}
+
+mat4 inverse_(mat4 m) {
   float
       a00 = m[0][0], a01 = m[0][1], a02 = m[0][2], a03 = m[0][3],
       a10 = m[1][0], a11 = m[1][1], a12 = m[1][2], a13 = m[1][3],
@@ -50,22 +58,15 @@ mat4 inverse(mat4 m) {
       a20 * b03 - a21 * b01 + a22 * b00) / det;
 }
 
-mat3 transpose(mat3 m) {
-  return mat3(m[0][0], m[1][0], m[2][0],
-              m[0][1], m[1][1], m[2][1],
-              m[0][2], m[1][2], m[2][2]);
-}
-
 void main() {
 
-	mat4 invP = inverse(P);
-	mat3 invMV = transpose(mat3(V));
+	mat4 invP = inverse_(P);
+	mat3 invMV = transpose_(mat3(V));
 
 	vec4 p = vec4(pos.xy, 0.0, 1.0);
-
 	vec3 unprojected = (invP * p).xyz;
 
-	wcNormal = invMV * unprojected;
+	normal = invMV * unprojected;
 
 	gl_Position = vec4(pos.xy, 0.0, 1.0);
 }

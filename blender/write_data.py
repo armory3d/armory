@@ -23,9 +23,16 @@ project.addAssets('Libraries/cyclesgame/Assets/**');
 			for ref in shader_references:
 				# ArmoryExporter.pipeline_pass instead of split
 				base_name = ref.split('_', 1)[0] + "/"
-				f.write("project.addAssets('Libraries/cyclesgame/compiled/ShaderResources/" + base_name + "" + ref + ".json');\n")
-				f.write("project.addShaders('Libraries/cyclesgame/compiled/Shaders/" + base_name + "" + ref + ".frag.glsl');\n")
-				f.write("project.addShaders('Libraries/cyclesgame/compiled/Shaders/" + base_name + "" + ref + ".vert.glsl');\n")
+				f.write("project.addAssets('compiled/ShaderResources/" + base_name + "" + ref + ".json');\n")
+				f.write("project.addShaders('compiled/Shaders/" + base_name + "" + ref + ".frag.glsl');\n")
+				f.write("project.addShaders('compiled/Shaders/" + base_name + "" + ref + ".vert.glsl');\n")
+				# TODO: properly include all shader contexts
+				defsarr = ref.split('_', 1) # Get shader defs and append to shadowmap shader name
+				defs = ''
+				if len(defsarr) > 1:
+					defs = '_' + defsarr[1]
+				f.write("project.addShaders('compiled/Shaders/" + base_name + "" + 'shadowmap' + defs + ".frag.glsl');\n")
+				f.write("project.addShaders('compiled/Shaders/" + base_name + "" + 'shadowmap' + defs + ".vert.glsl');\n")
 
 			if bpy.data.worlds[0]['CGPhysics'] != 0:
 				f.write("\nproject.addDefine('WITH_PHYSICS')\n")

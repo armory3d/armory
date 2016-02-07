@@ -28,15 +28,15 @@ in vec4 weight;
 in vec3 off;
 #endif
 
-uniform mat4 lightMVP;
+uniform mat4 LMVP;
 
 out vec4 position;
 
 void main() {
 #ifdef _Instancing
-	gl_Position = lightMVP * vec4(pos + off, 1.0);
+	gl_Position = LMVP * vec4(pos + off, 1.0);
 #else
-	gl_Position = lightMVP * vec4(pos, 1.0);
+	gl_Position = LMVP * vec4(pos, 1.0);
 #endif
 	position = gl_Position;
 }

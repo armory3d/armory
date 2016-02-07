@@ -2003,7 +2003,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if t.enabled_prop == False:
 				continue
 			x = Object()
-			if t.type_prop == 'Nodes':
+			if t.type_prop == 'Nodes' and t.nodes_name_prop != '':
 				x.type = 'Script'
 				x.class_name = t.nodes_name_prop.replace('.', '_')
 			elif t.type_prop == 'Scene Instance':
@@ -2109,6 +2109,16 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		c.bind_constants.append(const)
 		
 		c.bind_textures = []
+		
+		tex = Object() # TODO: parse from world nodes
+		tex.id = 'senvmap'
+		tex.name = 'envmap_irradiance'
+		c.bind_textures.append(tex)
+		
+		tex = Object() # TODO: parse from world nodes
+		tex.id = 'senvmaplod'
+		tex.name = 'envmap_lod1'
+		c.bind_textures.append(tex)
 
 		# Parse nodes
 		out_node = None
