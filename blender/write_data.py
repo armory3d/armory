@@ -2,10 +2,11 @@ import bpy
 import os
 
 # Write khafile.js
-def write_khafilejs(shader_references):
+def write_khafilejs(shader_references, asset_references):
 	
 	# Merge duplicates and sort
 	shader_references = sorted(list(set(shader_references)))
+	asset_references = sorted(list(set(asset_references)))
 
 	with open('khafile.js', 'w') as f:
 			f.write(
@@ -19,24 +20,12 @@ project.addAssets('Assets/**');
 project.addLibrary('cyclesgame');
 """)
 
-			for ref in shader_references:
-				# ArmoryExporter.pipeline_pass instead of split
-				base_name = ref.split('_', 1)[0] + "/"
-				f.write("project.addAssets('compiled/ShaderResources/" + base_name + "" + ref + ".json');\n")
-				f.write("project.addShaders('compiled/Shaders/" + base_name + "" + ref + ".frag.glsl');\n")
-				f.write("project.addShaders('compiled/Shaders/" + base_name + "" + ref + ".vert.glsl');\n")
-				# TODO: properly include all shader contexts
-				defsarr = ref.split('_', 1) # Get shader defs and append to shadowmap shader name
-				defs = ''
-				if len(defsarr) > 1:
-					defs = '_' + defsarr[1]
-				f.write("project.addShaders('compiled/Shaders/" + base_name + "" + 'shadowmap' + defs + ".frag.glsl');\n")
-				f.write("project.addShaders('compiled/Shaders/" + base_name + "" + 'shadowmap' + defs + ".vert.glsl');\n")
-				
-			# TODO: include env map only when used by world nodes
-			f.write("project.addAssets('compiled/ShaderResources/env_map/env_map.json');\n")
-			f.write("project.addShaders('compiled/Shaders/env_map/env_map.frag.glsl');\n")
-			f.write("project.addShaders('compiled/Shaders/env_map/env_map.vert.glsl');\n")
+			for ref in shader_references: # Shaders
+				f.write("project.addShaders('" + ref + ".frag.glsl');\n")
+				f.write("project.addShaders('" + ref + ".vert.glsl');\n")
+			
+			for ref in asset_references: # Assets
+				f.write("project.addAssets('" + ref + "');\n")
 
 			if bpy.data.worlds[0]['CGPhysics'] != 0:
 				f.write("\nproject.addDefine('WITH_PHYSICS')\n")

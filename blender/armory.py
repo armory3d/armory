@@ -1899,8 +1899,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		self.particleSystemArray = {}
 		self.boneParentArray = {}
 
-		# Store used shaders in this scene
+		# Store used shaders and assets in this scene
 		ArmoryExporter.shader_references = []
+		ArmoryExporter.asset_references = []
 		ArmoryExporter.exportAllFlag = not self.option_export_selection
 		ArmoryExporter.sampleAnimationFlag = self.option_sample_animation
 		ArmoryExporter.option_geometry_only = self.option_geometry_only
@@ -1991,9 +1992,17 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		ArmoryExporter.option_minimize = False
 
 		# Only one pipeline for scene for now
-		# Used for material shader export
+		# Used for material shader export and khafile
 		if (len(bpy.data.cameras) > 0):
-			ArmoryExporter.pipeline_pass = bpy.data.cameras[0].pipeline_pass
+			ArmoryExporter.pipeline_id = bpy.data.cameras[0].pipeline_id
+			# Gather passes, not very elegant
+			ArmoryExporter.pipeline_passes = []
+			for node_group in bpy.data.node_groups:
+				if node_group.name == bpy.data.cameras[0].pipeline_path:
+					for node in node_group.nodes:
+						if node.bl_idname == 'DrawGeometryNodeType':
+							ArmoryExporter.pipeline_passes.append(node.inputs[1].default_value) # Context
+					break
 
 	def cb_export_node(self, node, o):
 		#return
@@ -2080,7 +2089,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		o.contexts = []
 		
 		c = Object()
-		c.id = ArmoryExporter.pipeline_pass
+		c.id = ArmoryExporter.pipeline_id
 		c.bind_constants = []
 		
 		const = Object()
@@ -2173,9 +2182,12 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			ext = ''
 			for d in defs:
 				ext += d
-			shader_name = ArmoryExporter.pipeline_pass + ext
-			o.shader = shader_name + '/' + shader_name
-			ArmoryExporter.shader_references.append(shader_name)
+			ArmoryExporter.asset_references.append('compiled/ShaderResources/' + ArmoryExporter.pipeline_id + '/' + ArmoryExporter.pipeline_id + ext + '.json')
+			# Process all passes from pipeline
+			for pipe_pass in ArmoryExporter.pipeline_passes:
+				shader_name = pipe_pass + ext
+				o.shader = shader_name + '/' + shader_name
+				ArmoryExporter.shader_references.append('compiled/Shaders/' + ArmoryExporter.pipeline_id + '/' + shader_name)
 		else:
 			# TODO: gather defs from vertex data when custom shader is used
 			o.shader = material.custom_shader_name

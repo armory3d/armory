@@ -302,7 +302,8 @@ def buildNode(res, node, node_group):
 		
 	elif node.bl_idname == 'DrawQuadNodeType':
 		stage.command = 'draw_quad'
-		stage.params.append(node.inputs[1].default_value) # Material context
+		material_context = node.inputs[1].default_value
+		stage.params.append(material_context)
 	
 	elif node.bl_idname == 'DrawWorldNodeType':
 		stage.command = 'draw_quad'

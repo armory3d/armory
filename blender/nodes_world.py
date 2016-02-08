@@ -19,7 +19,7 @@ class Object:
 		# return json.dumps(self, default=lambda o: o.__dict__, separators=(',',':'))
 		return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
-def buildNodeTrees():
+def buildNodeTrees(shader_references, asset_references):
 	s = bpy.data.filepath.split(os.path.sep)
 	s.pop()
 	fp = os.path.sep.join(s)
@@ -31,9 +31,9 @@ def buildNodeTrees():
 	
 	# Export world nodes
 	for world in bpy.data.worlds:
-		buildNodeTree(world.name, world.node_tree)
+		buildNodeTree(world.name, world.node_tree, shader_references, asset_references)
 
-def buildNodeTree(world_name, node_group):
+def buildNodeTree(world_name, node_group, shader_references, asset_references):
 	output = Object()
 	res = Object()
 	output.material_resources = [res]
@@ -54,8 +54,12 @@ def buildNodeTree(world_name, node_group):
 	texture.id = 'envmap'
 	texture.name = ''
 	for node in node_group.nodes:
+		# Env map included
 		if node.bl_idname == 'ShaderNodeTexEnvironment': # Just look for env texture for now
 			texture.name = node.image.name.rsplit('.', 1)[0] # Remove extension
+			# Add resources to khafie
+			asset_references.append('compiled/ShaderResources/env_map/env_map.json')
+			shader_references.append('compiled/Shaders/env_map/env_map')
 
 	with open(path + material_name + '.json', 'w') as f:
 		f.write(output.to_JSON())
