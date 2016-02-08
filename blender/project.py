@@ -11,6 +11,7 @@ import webbrowser
 import write_data
 import nodes_logic
 import nodes_pipeline
+import nodes_world
 from armory import ArmoryExporter
 
 def defaultSettings():
@@ -163,6 +164,7 @@ def buildProject(self, build_type=0):
     # Auto-build nodes # TODO: only if needed
     nodes_logic.buildNodeTrees()
     nodes_pipeline.buildNodeTrees()
+    nodes_world.buildNodeTrees()
     
     # Set dir
     s = bpy.data.filepath.split(os.path.sep)

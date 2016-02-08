@@ -146,6 +146,23 @@ class DrawQuadNode(Node, CGPipelineTreeNode):
 
 	def free(self):
 		print("Removing node ", self, ", Goodbye!")
+		
+class DrawWorldNode(Node, CGPipelineTreeNode):
+	'''A custom node'''
+	bl_idname = 'DrawWorldNodeType'
+	bl_label = 'Draw World'
+	bl_icon = 'SOUND'
+	
+	def init(self, context):
+		self.inputs.new('NodeSocketShader', "Stage")
+
+		self.outputs.new('NodeSocketShader', "Stage")
+
+	def copy(self, node):
+		print("Copying from node ", node)
+
+	def free(self):
+		print("Removing node ", self, ", Goodbye!")
 
 ### Node Categories ###
 # Node categories are a python system for automatically
@@ -167,6 +184,7 @@ node_categories = [
 		NodeItem("SetTargetNodeType"),
 		NodeItem("BindTargetNodeType"),
 		NodeItem("DrawQuadNodeType"),
+		NodeItem("DrawWorldNodeType"),
 		NodeItem("TargetNodeType"),
 		NodeItem("FramebufferNodeType"),
 		]),
@@ -285,6 +303,11 @@ def buildNode(res, node, node_group):
 	elif node.bl_idname == 'DrawQuadNodeType':
 		stage.command = 'draw_quad'
 		stage.params.append(node.inputs[1].default_value) # Material context
+	
+	elif node.bl_idname == 'DrawWorldNodeType':
+		stage.command = 'draw_quad'
+		wname = bpy.data.worlds[0].name
+		stage.params.append(wname + '_material/' + wname + '_material/env_map') # Only one world for now
 	
 	res.stages.append(stage)
 	

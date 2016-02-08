@@ -17,7 +17,6 @@ project.addShaders('Sources/Shaders/**');
 project.addAssets('Assets/**');
 
 project.addLibrary('cyclesgame');
-project.addAssets('Libraries/cyclesgame/Assets/**');
 """)
 
 			for ref in shader_references:
@@ -33,6 +32,11 @@ project.addAssets('Libraries/cyclesgame/Assets/**');
 					defs = '_' + defsarr[1]
 				f.write("project.addShaders('compiled/Shaders/" + base_name + "" + 'shadowmap' + defs + ".frag.glsl');\n")
 				f.write("project.addShaders('compiled/Shaders/" + base_name + "" + 'shadowmap' + defs + ".vert.glsl');\n")
+				
+			# TODO: include env map only when used by world nodes
+			f.write("project.addAssets('compiled/ShaderResources/env_map/env_map.json');\n")
+			f.write("project.addShaders('compiled/Shaders/env_map/env_map.frag.glsl');\n")
+			f.write("project.addShaders('compiled/Shaders/env_map/env_map.vert.glsl');\n")
 
 			if bpy.data.worlds[0]['CGPhysics'] != 0:
 				f.write("\nproject.addDefine('WITH_PHYSICS')\n")

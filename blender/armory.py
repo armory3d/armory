@@ -2190,7 +2190,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 					defs.append('_Texturing')
 					tex = Object()
 					tex.id = 'salbedo'
-					tex.name = albedo_node.image.name.split('.', 1)[0] # Remove extension
+					tex.name = albedo_node.image.name.rsplit('.', 1)[0] # Remove extension
 					c.bind_textures.append(tex)
 				elif albedo_node.type == 'ATTRIBUTE': # Assume vcols for now
 					defs.append('_VCols')
