@@ -1,7 +1,7 @@
 {
     "material_resources": [
         {
-            "id": "material1",
+            "id": "env_material",
             "shader": "env_map/env_map",
             "cast_shadow": true,
             "contexts": [
@@ -14,18 +14,6 @@
                             "name": "envmap"
                         }
                     ]
-                }
-            ]
-        },
-        {
-            "id": "material_deferred",
-            "shader": "deferred_pass_resource/deferred_pass",
-            "cast_shadow": true,
-            "contexts": [
-                {
-                    "id": "deferred_pass",
-                    "bind_constants": [],
-                    "bind_textures": []
                 }
             ]
         }

@@ -233,6 +233,7 @@ def buildNodeTrees():
 	# Export node scripts
 	for node_group in bpy.data.node_groups:
 		if node_group.bl_idname == 'CGTreeType': # Build only cycles game trees
+			node_group.use_fake_user = True # Keep fake references for now
 			buildNodeTree(node_group)
 
 def buildNodeTree(node_group):

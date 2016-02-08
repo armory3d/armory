@@ -4,6 +4,8 @@ from bpy.props import *
 import os
 import sys
 import json
+import platform
+import subprocess
 	
 class CGPipelineTree(NodeTree):
 	'''Pipeline nodes'''
@@ -170,88 +172,35 @@ node_categories = [
 		]),
 	]
 
-def reset_pipelines():
+def reload_blend_data():
 	if bpy.data.node_groups.get('forward_pipeline') == None:
-		make_forward_pipeline()
-	if bpy.data.node_groups.get('deferred_pipeline') == None:
-		make_deferred_pipeline()
+		load_library()
+		pass
 
-def make_forward_pipeline():
-	step = 170
-	pipe = bpy.data.node_groups.new(name='forward_pipeline', type='CGPipelineTreeType')
-	nodes = pipe.nodes
-	links = pipe.links
+def load_library():
+	haxelib_path = "haxelib"
+	if platform.system() == 'Darwin':
+		haxelib_path = "/usr/local/bin/haxelib"
 
-	framebuffer_node = nodes.new('FramebufferNodeType')
-	framebuffer_node.location = 0, 0
-	
-	settarget_node = nodes.new('SetTargetNodeType')
-	settarget_node.location = step * 1, 0
-	links.new(framebuffer_node.outputs[0], settarget_node.inputs[1])
-	
-	cleartarget_node = nodes.new('ClearTargetNodeType')
-	cleartarget_node.location = step * 2, 0
-	cleartarget_node.inputs[1].default_value = True # Color
-	cleartarget_node.inputs[2].default_value = True # Depth
-	links.new(settarget_node.outputs[0], cleartarget_node.inputs[0])
-	
-	drawgeometry_node = nodes.new('DrawGeometryNodeType')
-	drawgeometry_node.location = step * 3, 0
-	drawgeometry_node.inputs[1].default_value = 'forward' # Context
-	links.new(cleartarget_node.outputs[0], drawgeometry_node.inputs[0])
+	output = subprocess.check_output([haxelib_path + " path cyclesgame"], shell=True)
+	output = str(output).split("\\n")[0].split("'")[1]
+	data_path = output[:-8] + "blender/data/data.blend" # Remove 'Sources/' from haxelib path
 
-def make_deferred_pipeline():
-	step = 170
-	pipe = bpy.data.node_groups.new(name='deferred_pipeline', type='CGPipelineTreeType')
-	nodes = pipe.nodes
-	links = pipe.links
+	with bpy.data.libraries.load(data_path, link=False) as (data_from, data_to):
+		data_to.node_groups = ['forward_pipeline', 'forward_pipeline_noshadow', 'deferred_pipeline', 'CG PBR']
 	
-	gbuffer_node = nodes.new('TargetNodeType')
-	gbuffer_node.location = 0, -step * 1
-	gbuffer_node.inputs[0].default_value = 'gbuffer' # Id
-	gbuffer_node.inputs[3].default_value = 3 # Color buffers
-	gbuffer_node.inputs[4].default_value = True # Depth
-	gbuffer_node.inputs[5].default_value = 'RGBA128' # Format
-	
-	setgbuffer_node = nodes.new('SetTargetNodeType')
-	setgbuffer_node.location = step * 1, 0
-	links.new(gbuffer_node.outputs[0], setgbuffer_node.inputs[1])
-	
-	cleargbuffer_node = nodes.new('ClearTargetNodeType')
-	cleargbuffer_node.location = step * 2, 0
-	cleargbuffer_node.inputs[1].default_value = True # Color
-	cleargbuffer_node.inputs[2].default_value = True # Depth
-	links.new(setgbuffer_node.outputs[0], cleargbuffer_node.inputs[0])
-	
-	drawgbuffer_node = nodes.new('DrawGeometryNodeType')
-	drawgbuffer_node.location = step * 3, 0
-	drawgbuffer_node.inputs[1].default_value = 'deferred' # Context
-	links.new(cleargbuffer_node.outputs[0], drawgbuffer_node.inputs[0])
-	
-	framebuffer_node = nodes.new('FramebufferNodeType')
-	framebuffer_node.location = step * 3, -step * 1
-	
-	setframebuffer_node = nodes.new('SetTargetNodeType')
-	setframebuffer_node.location = step * 4, 0
-	links.new(drawgbuffer_node.outputs[0], setframebuffer_node.inputs[0])
-	links.new(framebuffer_node.outputs[0], setframebuffer_node.inputs[1])
-	
-	bindgbuffer_node = nodes.new('BindTargetNodeType')
-	bindgbuffer_node.location = step * 5, -step * 1
-	drawgbuffer_node.inputs[2].default_value = 'gbuffer' # Constant
-	links.new(setframebuffer_node.outputs[0], bindgbuffer_node.inputs[0])
-	links.new(gbuffer_node.outputs[0], bindgbuffer_node.inputs[1])
-	
-	drawquad_node = nodes.new('DrawQuadNodeType')
-	drawquad_node.location = step * 6, -step * 1
-	drawquad_node.inputs[1].default_value = 'final_pass' # Material context
-	links.new(bindgbuffer_node.outputs[0], drawquad_node.inputs[0])
+	# TODO: cannot use for loop
+	# TODO: import pbr group separately, no need for fake user
+	bpy.data.node_groups['forward_pipeline'].use_fake_user = True
+	bpy.data.node_groups['forward_pipeline_noshadow'].use_fake_user = True
+	bpy.data.node_groups['deferred_pipeline'].use_fake_user = True
+	bpy.data.node_groups['CG PBR'].use_fake_user = True
 
 def register():
 	bpy.utils.register_module(__name__)
 	try:
 		nodeitems_utils.register_node_categories("CG_PIPELINE_NODES", node_categories)
-		reset_pipelines()
+		reload_blend_data()
 	except:
 		pass
 
@@ -373,4 +322,3 @@ def get_render_targets(node_group):
 			target.format = n.inputs[5].default_value
 			render_targets.append(target)
 	return render_targets
-			
