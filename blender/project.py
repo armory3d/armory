@@ -6,6 +6,7 @@ import platform
 import json
 from bpy.props import *
 import subprocess
+from subprocess import call
 import atexit
 import webbrowser
 import write_data
@@ -169,6 +170,18 @@ def buildProject(self, build_type=0):
 	##bpy.ops.text.save()
 	#area.type = old_type
 	
+	# Get paths
+	haxelib_path = "haxelib"
+	if platform.system() == 'Darwin':
+		haxelib_path = "/usr/local/bin/haxelib"
+
+	prefix =  haxelib_path + " run kha "
+
+	output = subprocess.check_output([haxelib_path + " path cyclesgame"], shell=True)
+	output = str(output).split("\\n")[0].split("'")[1]
+	scripts_path = output[:-8] + "blender/"
+	raw_path = output[:-8] + "raw/"
+	
 	# Set dir
 	s = bpy.data.filepath.split(os.path.sep)
 	name = s.pop()
@@ -176,6 +189,12 @@ def buildProject(self, build_type=0):
 	name = name[0]
 	fp = os.path.sep.join(s)
 	os.chdir(fp)
+	
+	# Compile shaders if needed
+	if os.path.isdir("compiled") == False:
+		os.chdir(raw_path)
+		call(["python", "compile.py"])
+		os.chdir(fp)
 
 	# Export
 	exportGameData()
@@ -195,16 +214,6 @@ def buildProject(self, build_type=0):
 		bashCommand = "-t android-native"
 	
 	# Build
-	haxelib_path = "haxelib"
-	if platform.system() == 'Darwin':
-		haxelib_path = "/usr/local/bin/haxelib"
-
-	prefix =  haxelib_path + " run kha "
-
-	output = subprocess.check_output([haxelib_path + " path cyclesgame"], shell=True)
-	output = str(output).split("\\n")[0].split("'")[1]
-	scripts_path = output[:-8] + "blender/"
-
 	blender_path = bpy.app.binary_path
 	blend_path = bpy.data.filepath
 	p = subprocess.Popen([blender_path, blend_path, '-b', '-P', scripts_path + 'lib/build.py', '--', bashCommand, str(build_type), str(bpy.data.worlds[0]['CGProjectTarget'])])
