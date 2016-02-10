@@ -19,5 +19,6 @@ vec2 envMapEquirect(vec3 normal) {
 
 void main() {
 	vec3 n = normalize(normal);
-    gl_FragColor = texture(envmap, envMapEquirect(n));
+	gl_FragColor = texture(envmap, envMapEquirect(n));
+	// gl_FragData[0] = texture(envmap, envMapEquirect(n));
 }

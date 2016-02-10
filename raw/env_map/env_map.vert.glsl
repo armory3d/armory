@@ -60,7 +60,8 @@ mat4 inverse_(mat4 m) {
 
 void main() {
 
-	mat4 invP = inverse_(P);
+  mat4 invP = inverse_(P);
+	// mat4 invP = inverse(P);
 	mat3 invMV = transpose_(mat3(V));
 
 	vec4 p = vec4(pos.xy, 0.0, 1.0);
