@@ -175,7 +175,7 @@ def buildProject(self, build_type=0):
 	if platform.system() == 'Darwin':
 		haxelib_path = "/usr/local/bin/haxelib"
 
-	prefix =  haxelib_path + " run kha "
+	#prefix =  haxelib_path + " run kha "
 
 	output = subprocess.check_output([haxelib_path + " path cyclesgame"], shell=True)
 	output = str(output).split("\\n")[0].split("'")[1]

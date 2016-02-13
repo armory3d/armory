@@ -2120,17 +2120,17 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		c.bind_textures = []
 		
 		tex = Object() # TODO: parse from world nodes
-		tex.id = 'senvmap'
+		tex.id = 'senvmapIrradiance'
 		tex.name = 'envmap_irradiance'
 		c.bind_textures.append(tex)
 		
 		tex = Object() # TODO: parse from world nodes
-		tex.id = 'senvmaplod'
-		tex.name = 'envmap_lod1'
+		tex.id = 'senvmapRadiance'
+		tex.name = 'envmap_radiance'
 		c.bind_textures.append(tex)
 		
 		tex = Object() # TODO: parse from world nodes
-		tex.id = 'senvmapbrdf'
+		tex.id = 'senvmapBrdf'
 		tex.name = 'envmap_brdf'
 		c.bind_textures.append(tex)
 

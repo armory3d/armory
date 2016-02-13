@@ -15,9 +15,9 @@ precision mediump float;
 uniform sampler2D salbedo;
 #endif
 uniform sampler2D shadowMap;
-uniform sampler2D senvmap;
-uniform sampler2D senvmaplod;
-uniform sampler2D senvmapbrdf;
+uniform sampler2D senvmapRadiance;
+uniform sampler2D senvmapIrradiance;
+uniform sampler2D senvmapBrdf;
 #ifdef _NormalMapping
 uniform sampler2D snormal;
 #endif
@@ -54,9 +54,9 @@ float shadowTest(vec4 lPos, float dotNL) {
 }
 
 
-vec2 envMapEquirect(vec3 n) {
-	float phi = acos(n.z);
-	float theta = atan(n.x, n.y) + PI;
+vec2 envMapEquirect(vec3 normal) {
+	float phi = acos(normal.z);
+	float theta = atan(-normal.y, normal.x) + PI;
 	return vec2(theta / TwoPI, phi / PI);
 }
 
@@ -168,8 +168,9 @@ vec3 surfaceF0(vec3 baseColor, float metalness) {
 }
 
 float getMipLevelFromRoughness(float roughness) {
-	return 0.0;
 	// First mipmap level = roughness 0, last = roughness = 1
+	// 6 mipmaps + base
+	return roughness * 7.0;
 }
 
 void main() {
@@ -182,6 +183,7 @@ void main() {
 		if (lPos.w > 0.0) {
 			visibility = shadowTest(lPos, dotNL);
 			visibility = (visibility * 0.8) + 0.2;
+			visibility = 1.0;
 		}
 	}
 
@@ -222,23 +224,21 @@ void main() {
 		vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);	
 		
 		// Indirect
-		vec3 indirectDiffuse = texture(senvmap, envMapEquirect(n)).rgb;
+		vec3 indirectDiffuse = texture(senvmapIrradiance, envMapEquirect(n)).rgb;
 		indirectDiffuse = pow(indirectDiffuse, vec3(2.2)) * albedo;
 		
 		vec3 reflectionWorld = reflect(-v, n); 
 		float lod = getMipLevelFromRoughness(roughness);
-		//prefilteredColor = textureCube(PrefilteredEnvMap, refVec, lod)
-		// vec3 prefilteredColor = textureLod(senvmaplod, envMapEquirect(reflectionWorld)).rgb;
-		vec3 prefilteredColor = texture(senvmaplod, envMapEquirect(reflectionWorld)).rgb;
+		vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
 		prefilteredColor = pow(prefilteredColor, vec3(2.2));
-		//envBRDF = texture2D(BRDFIntegrationMap,vec2(roughness, ndotv)).xy
-		//indirectSpecular = prefilteredColor * (specularColor * envBRDF.x + envBRDF.y)
-		vec2 envBRDF = texture(senvmapbrdf, vec2(roughness, dotNV)).xy;
-		vec3 indirectSpecular = prefilteredColor * (vec3(1.0) * envBRDF.x + envBRDF.y); // vec3(1.0)=specularColor
+		
+		vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;
+		vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y); // f0=specularColor?
 		
 		vec3 indirect = indirectDiffuse + indirectSpecular;
 
 		outColor = vec4(vec3((direct + indirect) * visibility), 1.0);
+		// outColor = vec4(vec3((indirect) * visibility), 1.0);
 	}
 	else {
 		outColor = vec4(baseColor * visibility, 1.0);

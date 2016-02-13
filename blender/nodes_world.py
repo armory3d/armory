@@ -60,6 +60,32 @@ def buildNodeTree(world_name, node_group, shader_references, asset_references):
 			# Add resources to khafie
 			asset_references.append('compiled/ShaderResources/env_map/env_map.json')
 			shader_references.append('compiled/Shaders/env_map/env_map')
+			# Generate prefiltered envmaps
+			#generate_envmaps()
 
 	with open(path + material_name + '.json', 'w') as f:
 		f.write(output.to_JSON())
+
+def generate_envmaps():
+	if not os.path.exists('Assets/generated/envmaps'):
+		os.makedirs('Assets/generated/envmaps')
+	
+		# Get paths
+		haxelib_path = "haxelib"
+		if platform.system() == 'Darwin':
+			haxelib_path = "/usr/local/bin/haxelib"
+
+		output = subprocess.check_output([haxelib_path + " path cyclesgame"], shell=True)
+		output = str(output).split("\\n")[0].split("'")[1]
+		cmft_path = output[:-8] + "tools/cmft/"
+		
+		# Set dir
+		s = bpy.data.filepath.split(os.path.sep)
+		name = s.pop()
+		name = name.split(".")
+		name = name[0]
+		fp = os.path.sep.join(s)
+		os.chdir(fp)
+		
+		# Generate maps
+		call([cmft_path + "cmft-osx", "--input", "filename"])

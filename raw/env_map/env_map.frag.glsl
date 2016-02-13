@@ -13,7 +13,7 @@ in vec3 normal;
 
 vec2 envMapEquirect(vec3 normal) {
 	float phi = acos(normal.z);
-	float theta = atan(normal.x, normal.y) + PI;
+	float theta = atan(-normal.y, normal.x) + PI;
 	return vec2(theta / TwoPI, phi / PI);
 }
 
