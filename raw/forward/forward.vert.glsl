@@ -133,6 +133,10 @@ void main() {
 	matColor *= col;
 #endif
 
+	vec3 mPos = vec4(M * sPos).xyz;
+	lightDir = (light - mPos);
+	eyeDir = (eye - mPos);
+
 #ifdef _NormalMapping
 	vec3 vtan = (tan);
 	vec3 vbitan = cross(normal, vtan) * 1.0;//tangent.w;
@@ -140,9 +144,5 @@ void main() {
 	mat3 TBN = transpose(mat3(vtan, vbitan, normal));
 	lightDir = normalize(TBN * lightDir); 
 	eyeDir = normalize(TBN * eyeDir); 
-#else
-	vec3 mPos = vec4(M * sPos).xyz;
-	lightDir = (light - mPos);
-	eyeDir = (eye - mPos);
 #endif
 }

@@ -2098,16 +2098,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		c.bind_constants.append(const)
 		
 		const = Object()
-		const.id = "roughness"
-		const.float = 0
-		c.bind_constants.append(const)
-		
-		const = Object()
-		const.id = "metalness"
-		const.float = 0
-		c.bind_constants.append(const)
-		
-		const = Object()
 		const.id = "lighting"
 		const.bool = material.lighting_bool
 		c.bind_constants.append(const)
@@ -2214,15 +2204,38 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			else: # Take node color
 				col = albedo_input.default_value
 				c.bind_constants[0].vec4 = [col[0], col[1], col[2], col[3]]
-			# Metalness Map
+			# Metalness Map			
 			metalness_input = node.inputs[3]
-			col = metalness_input.default_value
-			c.bind_constants[2].float = col[0]
+			if metalness_input.is_linked:
+				defs.append('_MMTex')
+				metalness_node = self.findNodeByLink(tree, node, metalness_input)
+				tex = Object()
+				tex.id = 'smm'
+				tex.name = metalness_node.image.name.split('.', 1)[0] # Remove extension
+				c.bind_textures.append(tex)
+			else:
+				col = metalness_input.default_value
+				const = Object()
+				const.id = "metalness"
+				const.float = col[0]
+				c.bind_constants.append(const)
 			# Roughness Map
 			roughness_input = node.inputs[5]
-			col = roughness_input.default_value
-			c.bind_constants[1].float = col[0]
-			# Normal
+			if roughness_input.is_linked:
+				defs.append('_RMTex')
+				roughness_node = self.findNodeByLink(tree, node, roughness_input)
+				tex = Object()
+				tex.id = 'srm'
+				tex.name = roughness_node.image.name.split('.', 1)[0] # Remove extension
+				c.bind_textures.append(tex)
+			else:
+				col = roughness_input.default_value
+				const = Object()
+				const.id = "roughness"
+				const.float = col[0]
+				c.bind_constants.append(const)
+			
+			# Normal Map
 			normal_input = node.inputs[2]
 			if normal_input.is_linked:
 				defs.append('_NormalMapping')
@@ -2230,6 +2243,15 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				tex = Object()
 				tex.id = 'snormal'
 				tex.name = normal_node.image.name.split('.', 1)[0] # Remove extension
+				c.bind_textures.append(tex)
+			# Occlusion Map
+			occlusion_input = node.inputs[0]
+			if occlusion_input.is_linked:
+				defs.append('_OMTex')
+				occlusion_node = self.findNodeByLink(tree, node, occlusion_input)
+				tex = Object()
+				tex.id = 'som'
+				tex.name = occlusion_node.image.name.split('.', 1)[0] # Remove extension
 				c.bind_textures.append(tex)
 				
 		elif node.type == 'BSDF_TRANSPARENT':

@@ -21,10 +21,22 @@ uniform sampler2D senvmapBrdf;
 #ifdef _NormalMapping
 uniform sampler2D snormal;
 #endif
+#ifdef _OMTex
+uniform sampler2D som;
+#endif
+#ifdef _RMTex
+uniform sampler2D srm;
+#else
+uniform float roughness;
+#endif
+#ifdef _MMTex
+uniform sampler2D smm;
+#else
+uniform float metalness;
+#endif
+
 uniform bool lighting;
 uniform bool receiveShadow;
-uniform float roughness;
-uniform float metalness;
 
 in vec3 position;
 #ifdef _Texturing
@@ -176,7 +188,13 @@ float getMipLevelFromRoughness(float roughness) {
 void main() {
 	vec3 n = normalize(normal);
 	vec3 l = normalize(lightDir);
+	
+#ifdef _NormalMapping
+	vec3 tn = normalize(texture(snormal, texCoord).rgb * 2.0 - 1.0);
+	float dotNL = clamp(dot(tn, l), 0.0, 1.0);
+#else
 	float dotNL = max(dot(n, l), 0.0);
+#endif
 	
 	float visibility = 1.0;
 	if (receiveShadow) {
@@ -205,20 +223,21 @@ void main() {
 		vec3 v = normalize(eyeDir);
 		vec3 h = normalize(v + l);
 
-#ifdef _NormalMapping
-		vec3 tn = normalize(texture(snormal, texCoord).rgb * 2.0 - 1.0);
-		//float dotNL = clamp(dot(tn, l), 0.0, 1.0);
-#else
-		//float dotNL = clamp(dot(n, l), 0.0, 1.0);
-#endif	
 		float dotNV = max(dot(n, v), 0.0);
 		float dotNH = max(dot(n, h), 0.0);
 		float dotVH = max(dot(v, h), 0.0);
 		float dotLV = max(dot(l, v), 0.0);
 		float dotLH = max(dot(l, h), 0.0);
 
+#ifdef _MMTex
+		float metalness = texture(smm, texCoord).r;
+#endif
 		vec3 albedo = surfaceAlbedo(baseColor, metalness);
 		vec3 f0 = surfaceF0(baseColor, metalness);
+
+#ifdef _RMTex
+		float roughness = texture(srm, texCoord).r;
+#endif
 
 		// Direct
 		vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);	
@@ -233,12 +252,16 @@ void main() {
 		prefilteredColor = pow(prefilteredColor, vec3(2.2));
 		
 		vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;
-		vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y); // f0=specularColor?
+		vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 		
 		vec3 indirect = indirectDiffuse + indirectSpecular;
 
 		outColor = vec4(vec3((direct + indirect) * visibility), 1.0);
-		// outColor = vec4(vec3((indirect) * visibility), 1.0);
+		
+#ifdef _OMTex
+		vec3 occlusion = texture(som, texCoord).rgb;
+		outColor.rgb *= occlusion; 
+#endif
 	}
 	else {
 		outColor = vec4(baseColor * visibility, 1.0);
