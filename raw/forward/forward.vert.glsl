@@ -43,18 +43,14 @@ out vec3 position;
 #ifdef _Texturing
 out vec2 texCoord;
 #endif
-out vec3 normal;
 out vec4 lPos;
 out vec4 matColor;
 out vec3 lightDir;
 out vec3 eyeDir;
-
 #ifdef _NormalMapping
-mat3 transpose(mat3 m) {
-  return mat3(m[0][0], m[1][0], m[2][0],
-              m[0][1], m[1][1], m[2][1],
-              m[0][2], m[1][2], m[2][2]);
-}
+out mat3 TBN;
+#else
+out vec3 normal;
 #endif
 
 #ifdef _Skinning
@@ -122,9 +118,9 @@ void main() {
 #endif
 
 #ifdef _Skinning
-	normal = normalize(mat3(NM) * (nor * skinningMatVec));
+	vec3 _normal = normalize(mat3(NM) * (nor * skinningMatVec));
 #else
-	normal = normalize(mat3(NM) * nor);
+	vec3 _normal = normalize(mat3(NM) * nor);
 #endif
 
 	matColor = albedo_color;
@@ -134,15 +130,14 @@ void main() {
 #endif
 
 	vec3 mPos = vec4(M * sPos).xyz;
-	lightDir = (light - mPos);
-	eyeDir = (eye - mPos);
+	lightDir = light - mPos;
+	eyeDir = eye - mPos;
 
 #ifdef _NormalMapping
-	vec3 vtan = (tan);
-	vec3 vbitan = cross(normal, vtan) * 1.0;//tangent.w;
-   
-	mat3 TBN = transpose(mat3(vtan, vbitan, normal));
-	lightDir = normalize(TBN * lightDir); 
-	eyeDir = normalize(TBN * eyeDir); 
+	vec3 tangent = (mat3(NM) * (tan));
+	vec3 bitangent = normalize(cross(_normal, tangent));
+	TBN = mat3(tangent, bitangent, _normal);
+#else
+	normal = _normal;
 #endif
 }

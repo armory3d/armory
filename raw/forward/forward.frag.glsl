@@ -42,11 +42,15 @@ in vec3 position;
 #ifdef _Texturing
 in vec2 texCoord;
 #endif
-in vec3 normal;
 in vec4 lPos;
 in vec4 matColor;
 in vec3 lightDir;
 in vec3 eyeDir;
+#ifdef _NormalMapping
+in mat3 TBN;
+#else
+in vec3 normal;
+#endif
 
 
 float shadowTest(vec4 lPos, float dotNL) {
@@ -186,15 +190,16 @@ float getMipLevelFromRoughness(float roughness) {
 }
 
 void main() {
-	vec3 n = normalize(normal);
-	vec3 l = normalize(lightDir);
 	
 #ifdef _NormalMapping
-	vec3 tn = normalize(texture(snormal, texCoord).rgb * 2.0 - 1.0);
-	float dotNL = clamp(dot(tn, l), 0.0, 1.0);
+	vec3 n = (texture(snormal, texCoord).rgb * 2.0 - 1.0);
+	n = normalize(TBN * normalize(n));
 #else
-	float dotNL = max(dot(n, l), 0.0);
+	vec3 n = normalize(normal);
 #endif
+
+	vec3 l = normalize(lightDir);
+	float dotNL = max(dot(n, l), 0.0);
 	
 	float visibility = 1.0;
 	if (receiveShadow) {
@@ -247,7 +252,7 @@ void main() {
 		indirectDiffuse = pow(indirectDiffuse, vec3(2.2)) * albedo;
 		
 		vec3 reflectionWorld = reflect(-v, n); 
-		float lod = getMipLevelFromRoughness(roughness);
+		float lod = getMipLevelFromRoughness(roughness) + 1.0;
 		vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
 		prefilteredColor = pow(prefilteredColor, vec3(2.2));
 		
@@ -260,6 +265,7 @@ void main() {
 		
 #ifdef _OMTex
 		vec3 occlusion = texture(som, texCoord).rgb;
+		outColor.rgb *= 1.8;
 		outColor.rgb *= occlusion; 
 #endif
 	}
