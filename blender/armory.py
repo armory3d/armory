@@ -2054,9 +2054,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				body_mass = rb.mass
 			x = Object()
 			x.type = 'Script'
-			x.class_name = 'RigidBody;' + str(body_mass) + \
-								 ';' + shape + \
-								 ";" + str(rb.friction)
+			x.class_name = 'RigidBody'
+			x.parameters = [body_mass, shape, rb.friction]
 			o.traits.append(x)
 
 	def cb_export_camera(self, object, o):
