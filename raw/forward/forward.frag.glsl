@@ -7,18 +7,18 @@ precision mediump float;
 #define PI 3.1415926535
 #define TwoPI (2.0 * PI)
 
-#ifdef _NormalMapping
-#define _Texturing
+#ifdef _NMTex
+#define _AMTex
 #endif
 
-#ifdef _Texturing
+#ifdef _AMTex
 uniform sampler2D salbedo;
 #endif
 uniform sampler2D shadowMap;
 uniform sampler2D senvmapRadiance;
 uniform sampler2D senvmapIrradiance;
 uniform sampler2D senvmapBrdf;
-#ifdef _NormalMapping
+#ifdef _NMTex
 uniform sampler2D snormal;
 #endif
 #ifdef _OMTex
@@ -39,14 +39,14 @@ uniform bool lighting;
 uniform bool receiveShadow;
 
 in vec3 position;
-#ifdef _Texturing
+#ifdef _AMTex
 in vec2 texCoord;
 #endif
 in vec4 lPos;
 in vec4 matColor;
 in vec3 lightDir;
 in vec3 eyeDir;
-#ifdef _NormalMapping
+#ifdef _NMTex
 in mat3 TBN;
 #else
 in vec3 normal;
@@ -191,7 +191,7 @@ float getMipLevelFromRoughness(float roughness) {
 
 void main() {
 	
-#ifdef _NormalMapping
+#ifdef _NMTex
 	vec3 n = (texture(snormal, texCoord).rgb * 2.0 - 1.0);
 	n = normalize(TBN * normalize(n));
 #else
@@ -210,7 +210,7 @@ void main() {
 		}
 	}
 
-#ifdef _Texturing
+#ifdef _AMTex
 	vec4 texel = texture(salbedo, texCoord);
 #ifdef _AlphaTest
 	if(texel.a < 0.4)

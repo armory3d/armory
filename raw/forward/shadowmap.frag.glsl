@@ -4,8 +4,8 @@
 precision mediump float;
 #endif
 
-#ifdef _NormalMapping
-#define _Texturing
+#ifdef _NMTex
+#define _AMTex
 #endif
 
 in vec4 position;

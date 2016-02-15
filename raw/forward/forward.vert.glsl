@@ -4,19 +4,19 @@
 precision highp float;
 #endif
 
-#ifdef _NormalMapping
-#define _Texturing
+#ifdef _NMTex
+#define _AMTex
 #endif
 
 in vec3 pos;
 in vec3 nor;
-#ifdef _Texturing
+#ifdef _AMTex
 in vec2 tex;
 #endif
 #ifdef _VCols
 in vec4 col;
 #endif
-#ifdef _NormalMapping
+#ifdef _NMTex
 in vec3 tan;
 #endif
 #ifdef _Skinning
@@ -40,14 +40,14 @@ uniform float skinBones[50 * 12];
 #endif
 
 out vec3 position;
-#ifdef _Texturing
+#ifdef _AMTex
 out vec2 texCoord;
 #endif
 out vec4 lPos;
 out vec4 matColor;
 out vec3 lightDir;
 out vec3 eyeDir;
-#ifdef _NormalMapping
+#ifdef _NMTex
 out mat3 TBN;
 #else
 out vec3 normal;
@@ -113,7 +113,7 @@ void main() {
 
 	gl_Position = P * VM * sPos;
 
-#ifdef _Texturing
+#ifdef _AMTex
 	texCoord = tex;
 #endif
 
@@ -133,7 +133,7 @@ void main() {
 	lightDir = light - mPos;
 	eyeDir = eye - mPos;
 
-#ifdef _NormalMapping
+#ifdef _NMTex
 	vec3 tangent = (mat3(NM) * (tan));
 	vec3 bitangent = normalize(cross(_normal, tangent));
 	TBN = mat3(tangent, bitangent, _normal);

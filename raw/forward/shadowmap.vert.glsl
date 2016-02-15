@@ -4,19 +4,19 @@
 precision highp float;
 #endif
 
-#ifdef _NormalMapping
-#define _Texturing
+#ifdef _NMTex
+#define _AMTex
 #endif
 
 in vec3 pos;
-#ifdef _Texturing
+#ifdef _AMTex
 in vec2 tex;
 #endif
 in vec3 nor;
 #ifdef _VCols
 in vec4 col;
 #endif
-#ifdef _NormalMapping
+#ifdef _NMTex
 in vec3 tan;
 in vec3 bitan;
 #endif

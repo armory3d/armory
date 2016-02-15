@@ -2154,7 +2154,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				defs.append('_Billboard')
 
 		# Whether objects should export tangent data
-		normal_mapping = '_NormalMapping' in defs
+		normal_mapping = '_NMTex' in defs
 		if material.export_tangents != normal_mapping:
 			material.export_tangents = normal_mapping
 			# Delete geometry caches
@@ -2186,7 +2186,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if albedo_input.is_linked:
 				albedo_node = self.findNodeByLink(tree, node, albedo_input)
 				if albedo_node.type == 'TEX_IMAGE':
-					defs.append('_Texturing')
+					defs.append('_AMTex')
 					tex = Object()
 					tex.id = 'salbedo'
 					tex.name = albedo_node.image.name.rsplit('.', 1)[0] # Remove extension
@@ -2230,7 +2230,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			# Normal Map
 			normal_input = node.inputs[2]
 			if normal_input.is_linked:
-				defs.append('_NormalMapping')
+				defs.append('_NMTex')
 				normal_node = self.findNodeByLink(tree, node, normal_input)
 				tex = Object()
 				tex.id = 'snormal'
