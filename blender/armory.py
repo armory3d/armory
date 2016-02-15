@@ -2042,7 +2042,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			elif rb.collision_shape == 'CONVEX_HULL':
 				shape = '2'
 			elif rb.collision_shape == 'MESH':
-				shape = '3'
+				if rb.enabled:
+					shape = '3' # Mesh
+				else:
+					shape = '8' # Static Mesh
 			elif rb.collision_shape == 'CONE':
 				shape = '4'
 			elif rb.collision_shape == 'CYLINDER':
