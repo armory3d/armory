@@ -24,7 +24,7 @@ def defaultSettings():
 	wrd['CGProjectWidth'] = 1136
 	wrd['CGProjectHeight'] = 640
 	wrd['CGProjectScene'] = bpy.data.scenes[0].name
-	wrd['CGAA'] = 1
+	wrd['CGProjectSamplesPerPixel'] = 1
 	wrd['CGPhysics'] = 0
 	wrd['CGMinimize'] = (True)
 	# Make sure we are using cycles
@@ -48,10 +48,7 @@ def initWorldProperties():
 	bpy.types.World.CGProjectWidth = IntProperty(name = "Width")
 	bpy.types.World.CGProjectHeight = IntProperty(name = "Height")
 	bpy.types.World.CGProjectScene = StringProperty(name = "Scene")
-	bpy.types.World.CGAA = EnumProperty(
-		items = [('Disabled', 'Disabled', 'Disabled'), 
-				 ('16X', '16X', '16X')],
-		name = "Anti-aliasing")
+	bpy.types.World.CGProjectSamplesPerPixel = IntProperty(name = "Samples per pixel")
 	bpy.types.World.CGPhysics = EnumProperty(
 		items = [('Disabled', 'Disabled', 'Disabled'), 
 				 ('Bullet', 'Bullet', 'Bullet')],
@@ -102,7 +99,7 @@ class ToolsPanel(bpy.types.Panel):
 		row.alignment = 'EXPAND'
 		row.operator("cg.folder")
 		row.operator("cg.clean")
-		layout.prop(wrd, 'CGAA')
+		layout.prop(wrd, 'CGProjectSamplesPerPixel')
 		layout.prop(wrd, 'CGPhysics')
 		layout.prop(wrd, 'CGMinimize')
 

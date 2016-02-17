@@ -252,7 +252,7 @@ void main() {
 		indirectDiffuse = pow(indirectDiffuse, vec3(2.2)) * albedo;
 		
 		vec3 reflectionWorld = reflect(-v, n); 
-		float lod = getMipLevelFromRoughness(roughness) + 1.0;
+		float lod = getMipLevelFromRoughness(roughness);// + 1.0;
 		vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
 		prefilteredColor = pow(prefilteredColor, vec3(2.2));
 		
@@ -265,7 +265,6 @@ void main() {
 		
 #ifdef _OMTex
 		vec3 occlusion = texture(som, texCoord).rgb;
-		outColor.rgb *= 1.8;
 		outColor.rgb *= occlusion; 
 #endif
 	}

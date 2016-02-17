@@ -65,7 +65,7 @@ def writeResource(res, defs, json_data, base_name):
 		parse_shader(sres, c, con, defs, fs, False)
 
 def parse_shader(sres, c, con, defs, lines, parse_attributes):
-	skipTillEndIf = False
+	skipTillEndIf = 0
 	vertex_structure_parsed = False
 	vertex_structure_parsing = False
 	
@@ -81,18 +81,17 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
 					if d == s:
 						found = True
 						break
-				if found == False:
-					skipTillEndIf = True
-				# TODO: Prevent instanced data to go into main verrtex structure
-				if s == '_Instancing':
-					skipTillEndIf = True
+				if found == False or s == '_Instancing': # TODO: Prevent instanced data to go into main verrtex structure
+					skipTillEndIf += 1
 			continue
 
-		if line.startswith('#endif'):
-			skipTillEndIf = False
+		if line.startswith('#endif') or line.startswith('#else'):
+			skipTillEndIf -= 1
+			if skipTillEndIf < 0: # #else + #endif will go below 0
+				skipTillEndIf = 0
 			continue
 
-		if skipTillEndIf == True:
+		if skipTillEndIf > 0:
 			continue
 
 		if vertex_structure_parsed == False and line.startswith('in '):

@@ -45,6 +45,7 @@ class Main {
 	public static inline var projectPackage = '""" + bpy.data.worlds[0]['CGProjectPackage'] + """';
 	static inline var projectWidth = """ + str(bpy.data.worlds[0]['CGProjectWidth']) + """;
 	static inline var projectHeight = """ + str(bpy.data.worlds[0]['CGProjectHeight']) + """;
+	static inline var projectSamplesPerPixel = """ + str(bpy.data.worlds[0]['CGProjectSamplesPerPixel']) + """;
 	public static inline var projectScene = '""" + str(bpy.data.worlds[0]['CGProjectScene']) + """';
 	public static function main() {
 		lue.sys.CompileTime.importPackage('lue.trait');
@@ -68,7 +69,7 @@ class Main {
 		#end
 	}
 	static function start() {
-		kha.System.init(projectName, projectWidth, projectHeight, function() {
+		kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel}, function() {
 			new lue.App(cycles.Root);
 		});
 	}
