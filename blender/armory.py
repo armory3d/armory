@@ -2111,6 +2111,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		tex = Object() # TODO: parse from world nodes
 		tex.id = 'senvmapRadiance'
 		tex.name = 'envmap_radiance'
+		tex.mipmap_filter = 'linear'
+		tex.mipmaps = ['envmap_radiance_0', 'envmap_radiance_1', 'envmap_radiance_2', 'envmap_radiance_3', 'envmap_radiance_4', 'envmap_radiance_5', 'envmap_radiance_6', 'envmap_radiance_7', 'envmap_radiance_8', 'envmap_radiance_9', 'envmap_radiance_10']
 		c.bind_textures.append(tex)
 		
 		tex = Object() # TODO: parse from world nodes
@@ -2181,6 +2183,20 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			# TODO: gather defs from vertex data when custom shader is used
 			o.shader = material.custom_shader_name
 
+	def make_texture(self, id, image_node):
+		tex = Object()
+		tex.id = id
+		tex.name = image_node.image.name.rsplit('.', 1)[0] # Remove extension
+		if image_node.interpolation == 'Cubic': # Mipmap linear
+			tex.mipmap_filter = 'linear'
+			tex.generate_mipmaps = True
+		elif image_node.interpolation == 'Smart': # Mipmap anisotropic
+			tex.min_filter = 'anisotropic'
+			tex.mipmap_filter = 'linear'
+			tex.generate_mipmaps = True
+		#image_node.extension = 'Repeat'
+		return tex
+
 	def parse_material_surface(self, material, c, defs, tree, node):
 		if node.type == 'GROUP' and node.node_tree.name == 'CG PBR':
 			# Albedo Map
@@ -2189,23 +2205,19 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				albedo_node = self.findNodeByLink(tree, node, albedo_input)
 				if albedo_node.type == 'TEX_IMAGE':
 					defs.append('_AMTex')
-					tex = Object()
-					tex.id = 'salbedo'
-					tex.name = albedo_node.image.name.rsplit('.', 1)[0] # Remove extension
+					tex = self.make_texture('salbedo', albedo_node)
 					c.bind_textures.append(tex)
 				elif albedo_node.type == 'ATTRIBUTE': # Assume vcols for now
 					defs.append('_VCols')
 			else: # Take node color
 				col = albedo_input.default_value
 				c.bind_constants[0].vec4 = [col[0], col[1], col[2], col[3]]
-			# Metalness Map			
+			# Metalness Map
 			metalness_input = node.inputs[3]
 			if metalness_input.is_linked:
 				defs.append('_MMTex')
 				metalness_node = self.findNodeByLink(tree, node, metalness_input)
-				tex = Object()
-				tex.id = 'smm'
-				tex.name = metalness_node.image.name.split('.', 1)[0] # Remove extension
+				tex = self.make_texture('smm', metalness_node)
 				c.bind_textures.append(tex)
 			else:
 				col = metalness_input.default_value
@@ -2218,9 +2230,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if roughness_input.is_linked:
 				defs.append('_RMTex')
 				roughness_node = self.findNodeByLink(tree, node, roughness_input)
-				tex = Object()
-				tex.id = 'srm'
-				tex.name = roughness_node.image.name.split('.', 1)[0] # Remove extension
+				tex = self.make_texture('srm', roughness_node)
 				c.bind_textures.append(tex)
 			else:
 				col = roughness_input.default_value
@@ -2234,18 +2244,14 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if normal_input.is_linked:
 				defs.append('_NMTex')
 				normal_node = self.findNodeByLink(tree, node, normal_input)
-				tex = Object()
-				tex.id = 'snormal'
-				tex.name = normal_node.image.name.split('.', 1)[0] # Remove extension
+				tex = self.make_texture('snormal', normal_node)
 				c.bind_textures.append(tex)
 			# Occlusion Map
 			occlusion_input = node.inputs[0]
 			if occlusion_input.is_linked:
 				defs.append('_OMTex')
 				occlusion_node = self.findNodeByLink(tree, node, occlusion_input)
-				tex = Object()
-				tex.id = 'som'
-				tex.name = occlusion_node.image.name.split('.', 1)[0] # Remove extension
+				tex = self.make_texture('som', occlusion_node)
 				c.bind_textures.append(tex)
 				
 		elif node.type == 'BSDF_TRANSPARENT':
