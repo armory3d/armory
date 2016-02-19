@@ -143,6 +143,7 @@ class PhysicsWorld extends Trait {
         if (rayCallback.value.hasHit()) {
         	#if js
         	var co = rayCallback.value.get_m_collisionObject();
+			var body = untyped Ammo.btRigidBody.prototype.upcast(co);
         	return rbMap.get(untyped body.userIndex);
         	#elseif cpp
         	var co = rayCallback.value.m_collisionObject;
