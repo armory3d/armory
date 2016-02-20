@@ -1548,8 +1548,12 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				deltaPos2 = v2 - v0
 				deltaUV1 = uv1 - uv0
 				deltaUV2 = uv2 - uv0
-				r = 1.0 / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
-				tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
+				d = (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x)
+				if d != 0:
+					r = 1.0 / d
+				else:
+					r = 1.0
+				tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r
 				
 				tangents.append(tangent.x)
 				tangents.append(tangent.y)
