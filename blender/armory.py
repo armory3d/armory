@@ -2091,11 +2091,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		c.bind_constants = []
 		
 		const = Object()
-		const.id = "albedo_color"
-		const.vec4 = [1, 1, 1, 1]
-		c.bind_constants.append(const)
-		
-		const = Object()
 		const.id = "lighting"
 		const.bool = material.lighting_bool
 		c.bind_constants.append(const)
@@ -2191,6 +2186,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		tex = Object()
 		tex.id = id
 		tex.name = image_node.image.name.rsplit('.', 1)[0] # Remove extension
+		tex.name = tex.name.replace('.', '_')
 		if image_node.interpolation == 'Cubic': # Mipmap linear
 			tex.mipmap_filter = 'linear'
 			tex.generate_mipmaps = True
@@ -2214,8 +2210,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				elif albedo_node.type == 'ATTRIBUTE': # Assume vcols for now
 					defs.append('_VCols')
 			else: # Take node color
+				const = Object()
+				const.id = "albedo_color"
 				col = albedo_input.default_value
-				c.bind_constants[0].vec4 = [col[0], col[1], col[2], col[3]]
+				const.vec4 = [col[0], col[1], col[2], col[3]]
+				c.bind_constants.append(const)
 			# Metalness Map
 			metalness_input = node.inputs[3]
 			if metalness_input.is_linked:

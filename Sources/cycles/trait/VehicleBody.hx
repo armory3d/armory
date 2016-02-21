@@ -37,8 +37,7 @@ class VehicleBody extends Trait {
 	public function new(wheelName1:String, wheelName2:String, wheelName3:String, wheelName4:String) {
 		super();
 
-		//wheelNames = [wheelName1, wheelName2, wheelName3, wheelName4];
-		wheelNames = ["Wheel0", "Wheel1", "Wheel2", "Wheel3"];
+		wheelNames = [wheelName1, wheelName2, wheelName3, wheelName4];
 
 		requestInit(init);
 		requestUpdate(update);
@@ -171,10 +170,10 @@ class VehicleBody extends Trait {
 		}
 
 		if (left) {
-			gVehicleSteering = 0.2;
+			gVehicleSteering = 0.3;
 		}
 		else if (right) {
-			gVehicleSteering = -0.2;
+			gVehicleSteering = -0.3;
 		}
 		else {
 			gVehicleSteering = 0;

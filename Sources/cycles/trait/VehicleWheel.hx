@@ -13,8 +13,8 @@ class VehicleWheel extends Trait {
 
 	public var connectionPointCS0:BtVector3Pointer;
 	public var isFrontWheel:Bool;
-	public var wheelRadius = 0.715;
-	public var wheelWidth = 0.35;
+	public var wheelRadius = 0.75;
+	public var wheelWidth = 0.53;
 	var id:Int;
 
 	public function new(id:Int) {
@@ -22,43 +22,47 @@ class VehicleWheel extends Trait {
 
 		this.id = id;
 
-		var CUBE_HALF_EXTENTS = 1;
-		var connectionHeight = 0.9; //1.2;
+		var VEHICLE_FRONT_X = 3.5 / 2; // Distance to wheel from vehicle center
+		var VEHICLE_BACK_X = 4.1 / 2;
+		var VEHICLE_FRONT_Y = 3.6;
+		var VEHICLE_BACK_Y = 3.5;
+		var CONNECTION_HEIGHT_FRONT = 0.3;
+		var CONNECTION_HEIGHT_BACK = 0.4;
 
 		if (id == 0) {
 			isFrontWheel = true;
 
 			connectionPointCS0 = BtVector3.create(
-				CUBE_HALF_EXTENTS - (0.3 * wheelWidth),
-				2 * CUBE_HALF_EXTENTS - wheelRadius,
-				connectionHeight
+				VEHICLE_FRONT_X - (0.3 * wheelWidth),
+				VEHICLE_FRONT_Y - wheelRadius,
+				CONNECTION_HEIGHT_FRONT
 			);
 		}
 		else if (id == 1) {
 			isFrontWheel = true;
 
 			connectionPointCS0 = BtVector3.create(
-				-CUBE_HALF_EXTENTS + (0.3 * wheelWidth),
-				2 * CUBE_HALF_EXTENTS - wheelRadius,
-				connectionHeight
+				-VEHICLE_FRONT_X + (0.3 * wheelWidth),
+				VEHICLE_FRONT_Y - wheelRadius,
+				CONNECTION_HEIGHT_FRONT
 			);
 		}
 		else if (id == 2) {
 			isFrontWheel = false;
 
 			connectionPointCS0 = BtVector3.create(
-				-CUBE_HALF_EXTENTS + (0.3 * wheelWidth),
-				-2 * CUBE_HALF_EXTENTS + wheelRadius,
-				connectionHeight
+				-VEHICLE_BACK_X + (0.3 * wheelWidth),
+				-VEHICLE_BACK_Y + wheelRadius,
+				CONNECTION_HEIGHT_BACK
 			);
 		}
 		else if (id == 3) {
 			isFrontWheel = false;
 
 			connectionPointCS0 = BtVector3.create(
-				CUBE_HALF_EXTENTS - (0.3 * wheelWidth),
-				-2 * CUBE_HALF_EXTENTS + wheelRadius,
-				connectionHeight
+				VEHICLE_BACK_X - (0.3 * wheelWidth),
+				-VEHICLE_BACK_Y + wheelRadius,
+				CONNECTION_HEIGHT_BACK
 			);
 		}
 	}
