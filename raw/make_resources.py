@@ -119,7 +119,7 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
 			ctype = s[1]
 			cid = s[2][:-1]
 			found = False # Unique check
-			if ctype == 'sampler2D': # Texture unit
+			if ctype == 'sampler2D' or ctype == 'sampler2DShadow': # Texture unit
 				for tu in con.texture_units:
 					if tu.id == cid:
 						found = True

@@ -60,13 +60,12 @@ float shadowTest(vec4 lPos, float dotNL) {
     lPosH.y = 1.0 - ((-lPosH.y + 1.0) / (2.0));
 	
 	vec4 packedZValue = texture(shadowMap, lPosH.st);
-
 	float distanceFromLight = packedZValue.z;
-
 	float bias = clamp(0.005 * tan(acos(dotNL)), 0.0, 0.01);
-
 	// 1.0 = not in shadow, 0.0 = in shadow
 	return float(distanceFromLight > lPosH.z - bias);
+	
+	// return texture(shadowMap, vec3(lPosH.st, lPosH.z / lPosH.w));
 }
 
 
@@ -194,6 +193,7 @@ void main() {
 #ifdef _NMTex
 	vec3 n = (texture(snormal, texCoord).rgb * 2.0 - 1.0);
 	n = normalize(TBN * normalize(n));
+	n = vec3(0.0, 0.0, 1.0);
 #else
 	vec3 n = normalize(normal);
 #endif
@@ -205,7 +205,6 @@ void main() {
 	if (receiveShadow) {
 		if (lPos.w > 0.0) {
 			visibility = shadowTest(lPos, dotNL);
-			visibility = (visibility * 0.8) + 0.2;
 			visibility = 1.0;
 		}
 	}
