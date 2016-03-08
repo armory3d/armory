@@ -17,7 +17,7 @@ from armory import ArmoryExporter
 
 def defaultSettings():
 	wrd = bpy.data.worlds[0]
-	wrd['CGVersion'] = "16.1.0"
+	wrd['CGVersion'] = "16.3.0"
 	wrd['CGProjectTarget'] = 0
 	wrd['CGProjectName'] = "cycles_game"
 	wrd['CGProjectPackage'] = "game"

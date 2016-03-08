@@ -5,7 +5,7 @@ bl_info = {
     "category": "Game Engine",
     "description": "3D Game Engine built for Cycles",
     "author": "Lubos Lenco",
-    "version": (16, 3, 0, 0),
+    "version": (1, 0, 0),
     "wiki_url": "http://cyclesgame.org/"
 }
 

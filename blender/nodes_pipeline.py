@@ -205,14 +205,14 @@ def load_library():
 	data_path = output[:-8] + "blender/data/data.blend" # Remove 'Sources/' from haxelib path
 
 	with bpy.data.libraries.load(data_path, link=False) as (data_from, data_to):
-		data_to.node_groups = ['forward_pipeline', 'forward_pipeline_noshadow', 'deferred_pipeline', 'CG PBR']
+		data_to.node_groups = ['forward_pipeline', 'forward_pipeline_noshadow', 'deferred_pipeline', 'PBR']
 	
 	# TODO: cannot use for loop
 	# TODO: import pbr group separately, no need for fake user
 	bpy.data.node_groups['forward_pipeline'].use_fake_user = True
 	bpy.data.node_groups['forward_pipeline_noshadow'].use_fake_user = True
 	bpy.data.node_groups['deferred_pipeline'].use_fake_user = True
-	bpy.data.node_groups['CG PBR'].use_fake_user = True
+	bpy.data.node_groups['PBR'].use_fake_user = True
 
 def register():
 	bpy.utils.register_module(__name__)

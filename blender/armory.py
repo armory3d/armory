@@ -22,7 +22,7 @@ bl_info = {
 	"name": "Armory format (.json)",
 	"description": "Armory Exporter",
 	"author": "Eric Lengyel, Armory by Lubos Lenco",
-	"version": (16, 2, 0, 0),
+	"version": (1, 0, 0),
 	"location": "File > Import-Export",
 	"wiki_url": "http://lue3d.org/",
 	"category": "Import-Export"}
@@ -2198,9 +2198,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		return tex
 
 	def parse_material_surface(self, material, c, defs, tree, node):
-		if node.type == 'GROUP' and node.node_tree.name == 'CG PBR':
+		if node.type == 'GROUP' and node.node_tree.name == 'PBR':
 			# Albedo Map
-			albedo_input = node.inputs[1]
+			albedo_input = node.inputs[0]
 			if albedo_input.is_linked:
 				albedo_node = self.findNodeByLink(tree, node, albedo_input)
 				if albedo_node.type == 'TEX_IMAGE':
@@ -2226,10 +2226,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				col = metalness_input.default_value
 				const = Object()
 				const.id = "metalness"
-				const.float = col[0]
+				const.float = col
 				c.bind_constants.append(const)
 			# Roughness Map
-			roughness_input = node.inputs[5]
+			roughness_input = node.inputs[2]
 			if roughness_input.is_linked:
 				defs.append('_RMTex')
 				roughness_node = self.findNodeByLink(tree, node, roughness_input)
@@ -2239,18 +2239,18 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				col = roughness_input.default_value
 				const = Object()
 				const.id = "roughness"
-				const.float = col[0]
+				const.float = col
 				c.bind_constants.append(const)
 			
 			# Normal Map
-			normal_input = node.inputs[2]
+			normal_input = node.inputs[4]
 			if normal_input.is_linked:
 				defs.append('_NMTex')
 				normal_node = self.findNodeByLink(tree, node, normal_input)
 				tex = self.make_texture('snormal', normal_node)
 				c.bind_textures.append(tex)
 			# Occlusion Map
-			occlusion_input = node.inputs[0]
+			occlusion_input = node.inputs[1]
 			if occlusion_input.is_linked:
 				defs.append('_OMTex')
 				occlusion_node = self.findNodeByLink(tree, node, occlusion_input)

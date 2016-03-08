@@ -193,7 +193,6 @@ void main() {
 #ifdef _NMTex
 	vec3 n = (texture(snormal, texCoord).rgb * 2.0 - 1.0);
 	n = normalize(TBN * normalize(n));
-	n = vec3(0.0, 0.0, 1.0);
 #else
 	vec3 n = normalize(normal);
 #endif
