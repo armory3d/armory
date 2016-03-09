@@ -130,6 +130,7 @@ void main() {
 #endif
 
 	vec3 mPos = vec4(M * sPos).xyz;
+	position = mPos;
 	lightDir = light - mPos;
 	eyeDir = eye - mPos;
 

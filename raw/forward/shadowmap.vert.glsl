@@ -9,10 +9,10 @@ precision highp float;
 #endif
 
 in vec3 pos;
+in vec3 nor;
 #ifdef _AMTex
 in vec2 tex;
 #endif
-in vec3 nor;
 #ifdef _VCols
 in vec4 col;
 #endif

@@ -75,7 +75,7 @@
 				},
 				{
 					"id": "cull_mode",
-					"value": "clockwise"
+					"value": "counter_clockwise"
 				},
 				{
 					"id": "blend_source",

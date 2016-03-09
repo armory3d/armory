@@ -61,7 +61,7 @@ float shadowTest(vec4 lPos, float dotNL) {
 	
 	vec4 packedZValue = texture(shadowMap, lPosH.st);
 	float distanceFromLight = packedZValue.z;
-	float bias = clamp(0.005 * tan(acos(dotNL)), 0.0, 0.01);
+	float bias = 0.028;//clamp(0.005 * tan(acos(dotNL)), 0.0, 0.01);
 	// 1.0 = not in shadow, 0.0 = in shadow
 	return float(distanceFromLight > lPosH.z - bias);
 	
@@ -193,6 +193,19 @@ void main() {
 #ifdef _NMTex
 	vec3 n = (texture(snormal, texCoord).rgb * 2.0 - 1.0);
 	n = normalize(TBN * normalize(n));
+	
+	// vec3 nn = normalize(normal);
+    // vec3 dp1 = dFdx( position );
+    // vec3 dp2 = dFdy( position );
+    // vec2 duv1 = dFdx( texCoord );
+    // vec2 duv2 = dFdy( texCoord );
+    // vec3 dp2perp = cross( dp2, nn );
+    // vec3 dp1perp = cross( nn, dp1 );
+    // vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
+    // vec3 B = dp2perp * duv1.y + dp1perp * duv2.y; 
+    // float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
+    // mat3 TBN = mat3(T * invmax, B * invmax, nn);
+	// vec3 n = normalize(TBN * nn);
 #else
 	vec3 n = normalize(normal);
 #endif
@@ -204,7 +217,7 @@ void main() {
 	if (receiveShadow) {
 		if (lPos.w > 0.0) {
 			visibility = shadowTest(lPos, dotNL);
-			visibility = 1.0;
+			// visibility = 1.0;
 		}
 	}
 
@@ -259,7 +272,7 @@ void main() {
 		
 		vec3 indirect = indirectDiffuse + indirectSpecular;
 
-		outColor = vec4(vec3((direct + indirect) * visibility), 1.0);
+		outColor = vec4(vec3(direct * visibility + indirect), 1.0);
 		
 #ifdef _OMTex
 		vec3 occlusion = texture(som, texCoord).rgb;
