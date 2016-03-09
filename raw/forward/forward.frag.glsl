@@ -52,20 +52,69 @@ in mat3 TBN;
 in vec3 normal;
 #endif
 
+// float linstep(float low, float high, float v) {
+//     return clamp((v - low) / (high - low), 0.0, 1.0);
+// }
+
+// float VSM(vec2 uv, float compare) {
+//     vec2 moments = texture(shadowMap, uv).xy;
+//     float p = smoothstep(compare - 0.02, compare, moments.x);
+//     float variance = max(moments.y - moments.x * moments.x, -0.001);
+//     float d = compare - moments.x;
+//     float p_max = linstep(0.2, 1.0, variance / (variance + d * d));
+//     return clamp(max(p, p_max), 0.0, 1.0);
+// }
+
+float texture2DCompare(vec2 uv, float compare){
+    float depth = texture(shadowMap, uv).r;
+    return step(compare, depth);
+}
+
+float texture2DShadowLerp(vec2 size, vec2 uv, float compare){
+    vec2 texelSize = vec2(1.0) / size;
+    vec2 f = fract(uv * size + 0.5);
+    vec2 centroidUV = floor(uv * size + 0.5) / size;
+
+    float lb = texture2DCompare(centroidUV + texelSize * vec2(0.0, 0.0), compare);
+    float lt = texture2DCompare(centroidUV + texelSize * vec2(0.0, 1.0), compare);
+    float rb = texture2DCompare(centroidUV + texelSize * vec2(1.0, 0.0), compare);
+    float rt = texture2DCompare(centroidUV + texelSize * vec2(1.0, 1.0), compare);
+    float a = mix(lb, lt, f.y);
+    float b = mix(rb, rt, f.y);
+    float c = mix(a, b, f.x);
+    return c;
+}
+
+float PCF(vec2 size, vec2 uv, float compare){
+    float result = 0.0;
+    for (int x = -1; x <= 1; x++){
+        for(int y = -1; y <= 1; y++){
+            vec2 off = vec2(x, y) / size;
+            result += texture2DShadowLerp(size, uv + off, compare);
+        }
+    }
+    return result / 9.0;
+}
 
 float shadowTest(vec4 lPos, float dotNL) {
 	vec4 lPosH = lPos / lPos.w;
-	
 	lPosH.x = (lPosH.x + 1.0) / 2.0;
     lPosH.y = 1.0 - ((-lPosH.y + 1.0) / (2.0));
 	
-	vec4 packedZValue = texture(shadowMap, lPosH.st);
-	float distanceFromLight = packedZValue.z;
-	float bias = 0.028;//clamp(0.005 * tan(acos(dotNL)), 0.0, 0.01);
-	// 1.0 = not in shadow, 0.0 = in shadow
-	return float(distanceFromLight > lPosH.z - bias);
+	return PCF(vec2(2048, 2048), lPosH.st, lPosH.z - 0.005);
 	
-	// return texture(shadowMap, vec3(lPosH.st, lPosH.z / lPosH.w));
+	// return VSM(lPosH.st, lPosH.z);
+	
+	// shadow2DSampler
+	// return texture(shadowMap, vec3(lPosH.st, (lPosH.z - 0.005) / lPosH.w));
+	
+	// Basic
+	// vec4 packedZValue = texture(shadowMap, lPosH.st);
+	// float distanceFromLight = packedZValue.r;
+	
+	// float bias = 0.005;//clamp(0.005 * tan(acos(dotNL)), 0.0, 0.01);
+	// 1.0 = not in shadow, 0.0 = in shadow
+	// return float(distanceFromLight > lPosH.z - bias);
 }
 
 
