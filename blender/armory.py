@@ -59,13 +59,12 @@ deltaSubscaleName = ["dxscl", "dyscl", "dzscl"]
 axisName = ["x", "y", "z"]
 
 class ExportVertex:
-	__slots__ = ("hash", "vertexIndex", "faceIndex", "position", "normal", "color", "texcoord0", "texcoord1", "tangent")
+	__slots__ = ("hash", "vertexIndex", "faceIndex", "position", "normal", "color", "texcoord0", "texcoord1")
 
 	def __init__(self):
 		self.color = [1.0, 1.0, 1.0]
 		self.texcoord0 = [0.0, 0.0]
 		self.texcoord1 = [0.0, 0.0]
-		self.tangent = [0.0, 0.0, 0.0]
 
 	def __eq__(self, v):
 		if (self.hash != v.hash):
@@ -79,8 +78,6 @@ class ExportVertex:
 		if (self.texcoord0 != v.texcoord0):
 			return (False)
 		if (self.texcoord1 != v.texcoord1):
-			return (False)
-		if (self.tangent != v.tangent):
 			return (False)
 		return (True)
 
@@ -98,9 +95,6 @@ class ExportVertex:
 		h = h * 21737 + hash(self.texcoord0[1])
 		h = h * 21737 + hash(self.texcoord1[0])
 		h = h * 21737 + hash(self.texcoord1[1])
-		h = h * 21737 + hash(self.tangent[0])  # Appended
-		h = h * 21737 + hash(self.tangent[1])
-		h = h * 21737 + hash(self.tangent[2])
 		self.hash = h
 
 class Object:
@@ -350,7 +344,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		return tangent
 
 	@staticmethod
-	def DeindexMesh(mesh, materialTable, export_tangents):
+	def DeindexMesh(mesh, materialTable):
 		# This function deindexes all vertex positions, colors, and texcoords.
 		# Three separate ExportVertex structures are created for each triangle.
 		vertexArray = mesh.vertices
@@ -493,63 +487,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						exportVertexArray[vertexIndex].texcoord1 = tf.uv3
 						vertexIndex += 1
 						exportVertexArray[vertexIndex].texcoord1 = tf.uv4
-						vertexIndex += 1
-
-					faceIndex += 1
-			
-			if (export_tangents):
-				vertexIndex = 0
-				faceIndex = 0
-
-				for face in mesh.tessfaces:
-					# TODO: Speed up
-					pos = exportVertexArray[vertexIndex].position
-					tc = exportVertexArray[vertexIndex].texcoord0
-					v0 = Vector((pos[0], pos[1], pos[2]))
-					uv0 = Vector((tc[0], tc[1]))
-
-					pos = exportVertexArray[vertexIndex + 1].position
-					tc = exportVertexArray[vertexIndex + 1].texcoord0					
-					v1 = Vector((pos[0], pos[1], pos[2]))
-					uv1 = Vector((tc[0], tc[1]))
-					
-					pos = exportVertexArray[vertexIndex + 2].position
-					tc = exportVertexArray[vertexIndex + 2].texcoord0		
-					v2 = Vector((pos[0], pos[1], pos[2]))
-					uv2 = Vector((tc[0], tc[1]))
-					
-					tangent = ArmoryExporter.calc_tangent(v0, v1, v2, uv0, uv1, uv2)
-					
-					exportVertexArray[vertexIndex].tangent = tangent
-					vertexIndex += 1
-					exportVertexArray[vertexIndex].tangent = tangent
-					vertexIndex += 1
-					exportVertexArray[vertexIndex].tangent = tangent
-					vertexIndex += 1
-
-					if (len(face.vertices) == 4):
-						pos = exportVertexArray[vertexIndex].position
-						tc = exportVertexArray[vertexIndex].texcoord0
-						v0 = Vector((pos[0], pos[1], pos[2]))
-						uv0 = Vector((tc[0], tc[1]))
-
-						pos = exportVertexArray[vertexIndex + 1].position
-						tc = exportVertexArray[vertexIndex + 1].texcoord0					
-						v1 = Vector((pos[0], pos[1], pos[2]))
-						uv1 = Vector((tc[0], tc[1]))
-						
-						pos = exportVertexArray[vertexIndex + 2].position
-						tc = exportVertexArray[vertexIndex + 2].texcoord0		
-						v2 = Vector((pos[0], pos[1], pos[2]))
-						uv2 = Vector((tc[0], tc[1]))
-						
-						tangent = ArmoryExporter.calc_tangent(v0, v1, v2, uv0, uv1, uv2)
-						
-						exportVertexArray[vertexIndex].tangent = tangent
-						vertexIndex += 1
-						exportVertexArray[vertexIndex].tangent = tangent
-						vertexIndex += 1
-						exportVertexArray[vertexIndex].tangent = tangent
 						vertexIndex += 1
 
 					faceIndex += 1
@@ -1469,8 +1406,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 		# Triangulate mesh and remap vertices to eliminate duplicates.
 		materialTable = []
-		export_tangents = self.get_export_tangents(exportMesh)
-		exportVertexArray = ArmoryExporter.DeindexMesh(exportMesh, materialTable, export_tangents)
+		exportVertexArray = ArmoryExporter.DeindexMesh(exportMesh, materialTable)
 		triangleCount = len(materialTable)
 
 		indexTable = []
@@ -1518,14 +1454,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				ta2.size = 2
 				ta2.values = self.WriteVertexArray2D(unifiedVertexArray, "texcoord1")
 				om.vertex_arrays.append(ta2)
-			
-			# Tangents
-			if (export_tangents):
-				tana = Object()
-				tana.attrib = "tangent"
-				tana.size = 3
-				tana.values = self.WriteVertexArray3D(unifiedVertexArray, "tangent")
-				om.vertex_arrays.append(tana)
 
 		# If there are multiple morph targets, export them here.
 		# if (shapeKeys):
@@ -1611,6 +1539,58 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 					ia.values = self.WriteTriangleArray(materialTriangleCount[m], materialIndexTable)
 					ia.material = self.WriteInt(m)
 					om.index_arrays.append(ia)	
+
+		# Export tangents
+		if (self.get_export_tangents(exportMesh) == True and len(exportMesh.uv_textures) > 0):
+			ia = om.index_arrays[0].values
+			posa = pa.values
+			uva = ta.values
+			triangle_count = int(len(ia) / 3)
+			vertex_count = int(len(posa) / 3)
+			tangents = [0] * vertex_count * 3
+			for i in range(0, triangle_count):
+				i0 = ia[i * 3 + 0]
+				i1 = ia[i * 3 + 1]
+				i2 = ia[i * 3 + 2]
+				# TODO: Slow
+				v0 = Vector((posa[i0 * 3 + 0], posa[i0 * 3 + 1], posa[i0 * 3 + 2]))
+				v1 = Vector((posa[i1 * 3 + 0], posa[i1 * 3 + 1], posa[i1 * 3 + 2]))
+				v2 = Vector((posa[i2 * 3 + 0], posa[i2 * 3 + 1], posa[i2 * 3 + 2]))
+				uv0 = Vector((uva[i0 * 2 + 0], uva[i0 * 2 + 1]))
+				uv1 = Vector((uva[i1 * 2 + 0], uva[i1 * 2 + 1]))
+				uv2 = Vector((uva[i2 * 2 + 0], uva[i2 * 2 + 1]))
+				
+				tangent = ArmoryExporter.calc_tangent(v0, v1, v2, uv0, uv1, uv2)
+				
+				tangents[i0 * 3 + 0] += tangent.x
+				tangents[i0 * 3 + 1] += tangent.y
+				tangents[i0 * 3 + 2] += tangent.z
+				tangents[i1 * 3 + 0] += tangent.x
+				tangents[i1 * 3 + 1] += tangent.y
+				tangents[i1 * 3 + 2] += tangent.z
+				tangents[i2 * 3 + 0] += tangent.x
+				tangents[i2 * 3 + 1] += tangent.y
+				tangents[i2 * 3 + 2] += tangent.z
+			
+			# Orthogonalize
+			nora = na.values
+			for i in range(0, vertex_count):
+				# TODO: Slow
+				t = Vector((tangents[i * 3], tangents[i * 3 + 1], tangents[i * 3 + 2]))
+				n = Vector((nora[i * 3], nora[i * 3 + 1], nora[i * 3 + 2]))
+				v = t - n * n.dot(t)
+				v.normalize()
+				# Calculate handedness
+        		# tangent[a].w = (Dot(Cross(n, t), tan2[a]) < 0.0F) ? -1.0F : 1.0F;
+				tangents[i * 3] = v.x
+				tangents[i * 3 + 1] = v.y
+				tangents[i * 3 + 2] = v.z
+				
+			tana = Object()
+			tana.attrib = "tangent"
+			tana.size = 3
+			tana.values = tangents
+			om.vertex_arrays.append(tana)
 
 		# If the mesh is skinned, export the skinning data here.
 		if (armature):
