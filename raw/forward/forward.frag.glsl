@@ -66,7 +66,7 @@ in vec3 normal;
 // }
 
 float texture2DCompare(vec2 uv, float compare){
-    float depth = texture(shadowMap, uv).r;
+    float depth = (texture(shadowMap, uv).r - 0.5) * 2.0;
     return step(compare, depth);
 }
 
@@ -102,18 +102,14 @@ float shadowTest(vec4 lPos, float dotNL) {
     lPosH.y = 1.0 - ((-lPosH.y + 1.0) / (2.0));
 	
 	return PCF(vec2(2048, 2048), lPosH.st, lPosH.z - 0.005);
-	
 	// return VSM(lPosH.st, lPosH.z);
 	
 	// shadow2DSampler
 	// return texture(shadowMap, vec3(lPosH.st, (lPosH.z - 0.005) / lPosH.w));
 	
 	// Basic
-	// vec4 packedZValue = texture(shadowMap, lPosH.st);
-	// float distanceFromLight = packedZValue.r;
-	
-	// float bias = 0.005;//clamp(0.005 * tan(acos(dotNL)), 0.0, 0.01);
-	// 1.0 = not in shadow, 0.0 = in shadow
+	// float distanceFromLight = texture(shadowMap, lPosH.st).r;
+	// float bias = 0.0;
 	// return float(distanceFromLight > lPosH.z - bias);
 }
 

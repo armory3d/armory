@@ -84,7 +84,7 @@ class TargetNode(Node, CGPipelineTreeNode):
 		self.inputs.new('NodeSocketInt', "Width")
 		self.inputs.new('NodeSocketInt', "Height")
 		self.inputs.new('NodeSocketInt', "Color Buffers")
-		self.inputs.new('NodeSocketBool', "Depth")
+		self.inputs.new('NodeSocketBool', "Depth Buffer")
 		self.inputs.new('NodeSocketString', "Format")
 
 		self.outputs.new('NodeSocketShader', "Target")
@@ -342,7 +342,7 @@ def get_render_targets(node_group):
 			target.width = n.inputs[1].default_value
 			target.height = n.inputs[2].default_value
 			target.color_buffers = n.inputs[3].default_value
-			target.depth = n.inputs[4].default_value
+			target.depth_buffer = n.inputs[4].default_value
 			target.format = n.inputs[5].default_value
 			render_targets.append(target)
 	return render_targets

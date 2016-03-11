@@ -111,7 +111,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 	filename_ext = ".json"
 
 	option_export_selection = bpy.props.BoolProperty(name = "Export Selection Only", description = "Export only selected objects", default = False)
-	option_sample_animation = bpy.props.BoolProperty(name = "Force Sampled Animation", description = "Always export animation as per-frame samples", default = True)
+	option_sample_animation = bpy.props.BoolProperty(name = "Force Sampled Animation", description = "Always export animation as per-frame samples", default = False)
 	option_geometry_only = bpy.props.BoolProperty(name = "Export Geometry Only", description = "Export only geometry data", default = True)
 	option_geometry_per_file = bpy.props.BoolProperty(name = "Export Geometry Per File", description = "Export each geometry to individual JSON files", default = False)
 	option_minimize = bpy.props.BoolProperty(name = "Export Minimized", description = "Export minimized JSON data", default = True)
@@ -341,6 +341,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		else:
 			r = 1.0
 		tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r
+		# bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r
 		return tangent
 
 	@staticmethod
@@ -1548,6 +1549,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			triangle_count = int(len(ia) / 3)
 			vertex_count = int(len(posa) / 3)
 			tangents = [0] * vertex_count * 3
+			bitangents = [0] * vertex_count * 3
 			for i in range(0, triangle_count):
 				i0 = ia[i * 3 + 0]
 				i1 = ia[i * 3 + 1]
@@ -1571,17 +1573,29 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				tangents[i2 * 3 + 0] += tangent.x
 				tangents[i2 * 3 + 1] += tangent.y
 				tangents[i2 * 3 + 2] += tangent.z
+				# bitangents[i0 * 3 + 0] += bitangent.x
+				# bitangents[i0 * 3 + 1] += bitangent.y
+				# bitangents[i0 * 3 + 2] += bitangent.z
+				# bitangents[i1 * 3 + 0] += bitangent.x
+				# bitangents[i1 * 3 + 1] += bitangent.y
+				# bitangents[i1 * 3 + 2] += bitangent.z
+				# bitangents[i2 * 3 + 0] += bitangent.x
+				# bitangents[i2 * 3 + 1] += bitangent.y
+				# bitangents[i2 * 3 + 2] += bitangent.z
 			
 			# Orthogonalize
 			nora = na.values
 			for i in range(0, vertex_count):
 				# TODO: Slow
 				t = Vector((tangents[i * 3], tangents[i * 3 + 1], tangents[i * 3 + 2]))
+				# b = Vector((bitangents[i * 3], bitangents[i * 3 + 1], bitangents[i * 3 + 2]))
 				n = Vector((nora[i * 3], nora[i * 3 + 1], nora[i * 3 + 2]))
 				v = t - n * n.dot(t)
 				v.normalize()
 				# Calculate handedness
-        		# tangent[a].w = (Dot(Cross(n, t), tan2[a]) < 0.0F) ? -1.0F : 1.0F;
+				# cnv = n.cross(v)
+				# if cnv.dot(b) < 0.0:
+					# v = v * -1.0
 				tangents[i * 3] = v.x
 				tangents[i * 3 + 1] = v.y
 				tangents[i * 3 + 2] = v.z
