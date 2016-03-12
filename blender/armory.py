@@ -1549,7 +1549,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			triangle_count = int(len(ia) / 3)
 			vertex_count = int(len(posa) / 3)
 			tangents = [0] * vertex_count * 3
-			bitangents = [0] * vertex_count * 3
+			# bitangents = [0] * vertex_count * 3
 			for i in range(0, triangle_count):
 				i0 = ia[i * 3 + 0]
 				i1 = ia[i * 3 + 1]

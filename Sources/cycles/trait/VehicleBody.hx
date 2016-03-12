@@ -2,7 +2,7 @@ package cycles.trait;
 
 import lue.Eg;
 import lue.trait.Trait;
-import lue.node.Node;
+import lue.node.RootNode;
 import lue.node.CameraNode;
 import lue.node.Transform;
 #if WITH_PHYSICS
@@ -66,7 +66,7 @@ class VehicleBody extends Trait {
     function init() {
     	physics = Root.physics;
     	transform = node.transform;
-    	camera = Node.cameras[0];
+    	camera = RootNode.cameras[0];
 
     	for (n in wheelNames) {
 			wheels.push(Eg.root.getChild(n).getTrait(VehicleWheel));

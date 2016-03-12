@@ -156,12 +156,12 @@ class PhysicsWorld extends Trait {
     }
 
     public function getRayFrom():BtVector3Pointer {
-    	var camera = lue.node.Node.cameras[0];
+    	var camera = lue.node.RootNode.cameras[0];
     	return BtVector3.create(camera.transform.pos.x, camera.transform.pos.y, camera.transform.pos.z);
     }
 
     public function getRayTo(inputX:Float, inputY:Float):BtVector3Pointer {
-    	var camera = lue.node.Node.cameras[0];
+    	var camera = lue.node.RootNode.cameras[0];
     	var start = new Vec4();
         var end = new Vec4();
     	RayCaster.getDirection(start, end, inputX, inputY, camera);

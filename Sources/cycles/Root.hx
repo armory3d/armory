@@ -2,6 +2,7 @@ package cycles;
 
 import lue.App;
 import lue.Eg;
+import lue.node.RootNode;
 import lue.node.CameraNode;
 import cycles.trait.PhysicsWorld;
 
@@ -14,7 +15,7 @@ class Root {
 	public function new() {
 
 		var sceneNode = Eg.addScene(Main.projectScene);
-		cam = lue.node.Node.cameras[0];	
+		cam = RootNode.cameras[0];
 
 		physics = new PhysicsWorld();
 		Eg.addNodeTrait(sceneNode, physics);
