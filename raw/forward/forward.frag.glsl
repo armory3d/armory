@@ -101,7 +101,7 @@ float shadowTest(vec4 lPos, float dotNL) {
 	lPosH.x = (lPosH.x + 1.0) / 2.0;
     lPosH.y = 1.0 - ((-lPosH.y + 1.0) / (2.0));
 	
-	return PCF(vec2(2048, 2048), lPosH.st, lPosH.z - 0.005);
+	return PCF(vec2(2048.0, 2048.0), lPosH.st, lPosH.z - 0.005);
 	// return VSM(lPosH.st, lPosH.z);
 	
 	// shadow2DSampler
