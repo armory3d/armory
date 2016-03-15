@@ -1,0 +1,15 @@
+{
+    "material_resources": [
+        {
+            "contexts": [
+                {
+                    "bind_constants": [],
+                    "bind_textures": [],
+                    "id": "ssao_pass"
+                }
+            ],
+            "id": "ssao_material",
+            "shader": "ssao_pass/ssao_pass"
+        }
+    ]
+}

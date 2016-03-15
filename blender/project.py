@@ -115,9 +115,10 @@ def exportGameData():
 	shader_references = []
 	asset_references = []
 	
-	# Build nodes # TODO: only if needed
+	# Build nodes
+	# TODO: cache
 	nodes_logic.buildNodeTrees()
-	nodes_pipeline.buildNodeTrees()
+	nodes_pipeline.buildNodeTrees(shader_references, asset_references)
 	nodes_world.buildNodeTrees(shader_references, asset_references) # TODO: Have to build nodes everytime to collect env map resources, should be cached 
 
 	# TODO: Set armatures to center of world so skin transform is zero
@@ -213,9 +214,8 @@ def buildProject(self, build_type=0):
 	# Build
 	blender_path = bpy.app.binary_path
 	blend_path = bpy.data.filepath
-	p = subprocess.Popen([blender_path, blend_path, '-b', '-P', scripts_path + 'lib/build.py', '--', bashCommand, str(build_type), str(bpy.data.worlds[0]['CGProjectTarget'])])
-	#p = subprocess.Popen([blender_path, blend_path, '-b', '-P', scripts_path + 'lib/build.py', '--', prefix + bashCommand, str(build_type), str(bpy.data.worlds[0]['CGProjectTarget'])])
-	atexit.register(p.terminate)
+	# p = subprocess.Popen([blender_path, blend_path, '-b', '-P', scripts_path + 'lib/build.py', '--', bashCommand, str(build_type), str(bpy.data.worlds[0]['CGProjectTarget'])])
+	# atexit.register(p.terminate)
 	
 	self.report({'INFO'}, "Building, see console...")
 

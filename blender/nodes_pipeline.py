@@ -233,7 +233,7 @@ class Object:
 		# return json.dumps(self, default=lambda o: o.__dict__, separators=(',',':'))
 		return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
-def buildNodeTrees():
+def buildNodeTrees(shader_references, asset_references):
 	s = bpy.data.filepath.split(os.path.sep)
 	s.pop()
 	fp = os.path.sep.join(s)
@@ -243,12 +243,12 @@ def buildNodeTrees():
 	if not os.path.exists('Assets/generated/pipelines'):
 		os.makedirs('Assets/generated/pipelines')
 	
-	# Export pipelines
-	for node_group in bpy.data.node_groups:
-		if node_group.bl_idname == 'CGPipelineTreeType': # Build only render pipeline trees
-			buildNodeTree(node_group)
+	# Export selected pipeline
+	# node_group.bl_idname == 'CGPipelineTreeType'
+	node_group = bpy.data.node_groups[bpy.data.cameras[0].pipeline_path]
+	buildNodeTree(node_group, shader_references, asset_references)
 
-def buildNodeTree(node_group):
+def buildNodeTree(node_group, shader_references, asset_references):
 	output = Object()
 	res = Object()
 	output.pipeline_resources = [res]
@@ -263,16 +263,23 @@ def buildNodeTree(node_group):
 	rn = getRootNode(node_group)
 	if rn == None:
 		return
-	buildNode(res, rn, node_group)
+	
+	# Used to merge bind target nodes into one stage	
+	last_bind_target = None
+	
+	buildNode(res, rn, node_group, last_bind_target, shader_references, asset_references)
 
 	with open(path + node_group_name + '.json', 'w') as f:
 			f.write(output.to_JSON())
 
-def buildNode(res, node, node_group):
+def buildNode(res, node, node_group, last_bind_target, shader_references, asset_references):
 	stage = Object()
 	stage.params = []
 	
+	append_stage = True
+	
 	if node.bl_idname == 'SetTargetNodeType':
+		last_bind_target = None
 		stage.command = 'set_target'
 		targetNode = findNodeByLink(node_group, node, node.inputs[1])
 		if targetNode.bl_idname == 'TargetNodeType':
@@ -293,6 +300,11 @@ def buildNode(res, node, node_group):
 		stage.params.append(node.inputs[1].default_value) # Context
 		
 	elif node.bl_idname == 'BindTargetNodeType':
+		if last_bind_target is not None:
+			stage = last_bind_target
+			append_stage = False
+		last_bind_target = stage
+		
 		stage.command = 'bind_target'
 		targetNode = findNodeByLink(node_group, node, node.inputs[1])
 		if targetNode.bl_idname == 'TargetNodeType':
@@ -304,18 +316,23 @@ def buildNode(res, node, node_group):
 		stage.command = 'draw_quad'
 		material_context = node.inputs[1].default_value
 		stage.params.append(material_context)
+		# Include resource and shaders
+		res_name = material_context.rsplit('/', 1)[1]
+		asset_references.append('compiled/ShaderResources/' + res_name + '/' + res_name + '.json')
+		shader_references.append('compiled/Shaders/' + res_name + '/' + res_name)
 	
 	elif node.bl_idname == 'DrawWorldNodeType':
 		stage.command = 'draw_quad'
 		wname = bpy.data.worlds[0].name
 		stage.params.append(wname + '_material/' + wname + '_material/env_map') # Only one world for now
 	
-	res.stages.append(stage)
+	if append_stage:
+		res.stages.append(stage)
 	
 	# Build next stage
 	if node.outputs[0].is_linked:
 		stageNode = findNodeByFromLink(node_group, node, node.outputs[0])
-		buildNode(res, stageNode, node_group)
+		buildNode(res, stageNode, node_group, last_bind_target, shader_references, asset_references)
 			
 def findNodeByLink(node_group, to_node, inp):
 	for link in node_group.links:

@@ -18,6 +18,7 @@ uniform sampler2D shadowMap;
 uniform sampler2D senvmapRadiance;
 uniform sampler2D senvmapIrradiance;
 uniform sampler2D senvmapBrdf;
+uniform sampler2D gimap;
 #ifdef _NMTex
 uniform sampler2D snormal;
 #endif
@@ -64,6 +65,11 @@ in vec3 normal;
 //     float p_max = linstep(0.2, 1.0, variance / (variance + d * d));
 //     return clamp(max(p, p_max), 0.0, 1.0);
 // }
+
+// Just for testing, unrealiable on low precisions
+float rand(vec2 co) {
+    return fract(sin(dot(co.xy ,vec2(12.9898, 78.233))) * 43758.5453);
+}
 
 float texture2DCompare(vec2 uv, float compare){
     float depth = (texture(shadowMap, uv).r - 0.5) * 2.0;
@@ -262,7 +268,7 @@ void main() {
 	if (receiveShadow) {
 		if (lPos.w > 0.0) {
 			visibility = shadowTest(lPos, dotNL);
-			// visibility = 1.0;
+			visibility = 1.0;
 		}
 	}
 

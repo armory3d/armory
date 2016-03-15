@@ -2214,10 +2214,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			for d in defs:
 				ext += d
 			ArmoryExporter.asset_references.append('compiled/ShaderResources/' + ArmoryExporter.pipeline_id + '/' + ArmoryExporter.pipeline_id + ext + '.json')
+			shader_res_name =  ArmoryExporter.pipeline_id + ext
+			o.shader = shader_res_name + '/' + shader_res_name
 			# Process all passes from pipeline
 			for pipe_pass in ArmoryExporter.pipeline_passes:
 				shader_name = pipe_pass + ext
-				o.shader = shader_name + '/' + shader_name
 				ArmoryExporter.shader_references.append('compiled/Shaders/' + ArmoryExporter.pipeline_id + '/' + shader_name)
 		else:
 			# TODO: gather defs from vertex data when custom shader is used

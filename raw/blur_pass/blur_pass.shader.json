@@ -1,11 +1,11 @@
 {
 	"contexts": [
 		{
-			"id": "deferred_pass",
+			"id": "blur_pass",
 			"params": [
 				{
 					"id": "depth_write",
-					"value": "false"
+					"value": "true"
 				},
 				{
 					"id": "compare_mode",
@@ -24,14 +24,10 @@
 					"value": "blend_zero"
 				}
 			],
-			"links": [
-				{
-					"id": "cameraPosition",
-					"link": "_cameraPosition"
-				}
-			],
-			"vertex_shader": "deferred_pass.vert.glsl",
-			"fragment_shader": "deferred_pass.frag.glsl"
+			"links": [],
+			"texture_params": [],
+			"vertex_shader": "blur_pass.vert.glsl",
+			"fragment_shader": "blur_pass.frag.glsl"
 		}
 	]
 }

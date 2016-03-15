@@ -1,7 +1,7 @@
 {
 	"contexts": [
 		{
-			"id": "attrib_pass",
+			"id": "deferred_attrib",
 			"params": [
 				{
 					"id": "depth_write",
@@ -59,8 +59,8 @@
 					"ifdef": "_Skinning"
 				}
 			],
-			"vertex_shader": "attrib_pass.vert.glsl",
-			"fragment_shader": "attrib_pass.frag.glsl"
+			"vertex_shader": "deferred_attrib.vert.glsl",
+			"fragment_shader": "deferred_attrib.frag.glsl"
 		}
 	]
 }
