@@ -72,7 +72,7 @@ float rand(vec2 co) {
 }
 
 float texture2DCompare(vec2 uv, float compare){
-    float depth = (texture(shadowMap, uv).r - 0.5) * 2.0;
+    float depth = texture(shadowMap, uv).r * 2.0 - 1.0;
     return step(compare, depth);
 }
 
