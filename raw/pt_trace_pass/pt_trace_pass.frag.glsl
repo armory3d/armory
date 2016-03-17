@@ -383,7 +383,7 @@ vec3 calculateColor(float time, vec3 origin, vec3 ray, vec3 light) {
 
       // do light bounce
       colorMask *= surfaceColor;
-      accumulatedColor += colorMask * (0.8 * diffuse * shadowIntensity);
+      accumulatedColor += colorMask * (0.5 * diffuse * shadowIntensity);
       accumulatedColor += colorMask * specularHighlight * shadowIntensity;
 
       // calculate next origin
