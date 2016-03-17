@@ -13,6 +13,7 @@ import write_data
 import nodes_logic
 import nodes_pipeline
 import nodes_world
+import path_tracer
 from armory import ArmoryExporter
 
 def defaultSettings():
@@ -119,7 +120,8 @@ def exportGameData():
 	# TODO: cache
 	nodes_logic.buildNodeTrees()
 	nodes_pipeline.buildNodeTrees(shader_references, asset_references)
-	nodes_world.buildNodeTrees(shader_references, asset_references) # TODO: Have to build nodes everytime to collect env map resources, should be cached 
+	# TODO: Have to build nodes everytime to collect env map resources, should be cached
+	nodes_world.buildNodeTrees(shader_references, asset_references) 
 
 	# TODO: Set armatures to center of world so skin transform is zero
 	armatures = []
@@ -187,6 +189,10 @@ def buildProject(self, build_type=0):
 	name = name[0]
 	fp = os.path.sep.join(s)
 	os.chdir(fp)
+	
+	# Compile path tracer shaders
+	if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].pipeline_path == 'pathtrace_pipeline':
+		path_tracer.compile(raw_path + 'pt_trace_pass/pt_trace_pass.frag.glsl')
 	
 	# Compile shaders if needed
 	if os.path.isdir("compiled") == False:
