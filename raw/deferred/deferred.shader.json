@@ -1,7 +1,7 @@
 {
 	"contexts": [
 		{
-			"id": "deferred_attrib",
+			"id": "deferred",
 			"params": [
 				{
 					"id": "depth_write",
@@ -42,8 +42,8 @@
 					"link": "_projectionMatrix"
 				},
 				{
-					"id": "lightMVP",
-					"link": "_lightMVP"
+					"id": "LMVP",
+					"link": "_lightModelViewProjectionMatrix"
 				},
 				{
 					"id": "light",
@@ -59,8 +59,8 @@
 					"ifdef": "_Skinning"
 				}
 			],
-			"vertex_shader": "deferred_attrib.vert.glsl",
-			"fragment_shader": "deferred_attrib.frag.glsl"
+			"vertex_shader": "deferred.vert.glsl",
+			"fragment_shader": "deferred.frag.glsl"
 		}
 	]
 }

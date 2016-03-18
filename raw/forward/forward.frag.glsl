@@ -18,7 +18,6 @@ uniform sampler2D shadowMap;
 uniform sampler2D senvmapRadiance;
 uniform sampler2D senvmapIrradiance;
 uniform sampler2D senvmapBrdf;
-uniform sampler2D gimap;
 #ifdef _NMTex
 uniform sampler2D snormal;
 #endif

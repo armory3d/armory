@@ -4,19 +4,19 @@
 precision highp float;
 #endif
 
-#ifdef _NormalMapping
-#define _Texturing
+#ifdef _NMTex
+#define _AMTex
 #endif
 
 in vec3 pos;
 in vec3 nor;
-#ifdef _Texturing
+#ifdef _AMTex
 in vec2 tex;
 #endif
 #ifdef _VCols
 in vec4 col;
 #endif
-#ifdef _NormalMapping
+#ifdef _NMTex
 in vec3 tan;
 #endif
 #ifdef _Skinning
@@ -31,8 +31,8 @@ uniform mat4 M;
 uniform mat4 NM;
 uniform mat4 V;
 uniform mat4 P;
-uniform mat4 lightMVP;
-uniform vec4 diffuseColor;
+uniform mat4 LMVP;
+uniform vec4 albedo_color;
 uniform vec3 light;
 uniform vec3 eye;
 #ifdef _Skinning
@@ -40,21 +40,17 @@ uniform float skinBones[50 * 12];
 #endif
 
 out vec3 position;
-#ifdef _Texturing
+#ifdef _AMTex
 out vec2 texCoord;
 #endif
-out vec3 normal;
 out vec4 lPos;
 out vec4 matColor;
 out vec3 lightDir;
 out vec3 eyeDir;
-
-#ifdef _NormalMapping
-mat3 transpose(mat3 m) {
-  return mat3(m[0][0], m[1][0], m[2][0],
-              m[0][1], m[1][1], m[2][1],
-              m[0][2], m[1][2], m[2][2]);
-}
+#ifdef _NMTex
+out mat3 TBN;
+#else
+out vec3 normal;
 #endif
 
 #ifdef _Skinning
@@ -101,37 +97,48 @@ void main() {
 	mat3 skinningMatVec = getSkinningMatVec(skinningMat);
 	sPos = sPos * skinningMat;
 #endif
-	vec4 mPos = M * sPos;
-	lPos = lightMVP * sPos;
+	lPos = LMVP * sPos;
 
-	gl_Position = P * V * mPos;
-	position = mPos.xyz / mPos.w;
+	mat4 VM = V * M;
 
-#ifdef _Texturing
+#ifdef _Billboard
+	// Spherical
+	VM[0][0] = 1.0; VM[0][1] = 0.0; VM[0][2] = 0.0;
+	VM[1][0] = 0.0; VM[1][1] = 1.0; VM[1][2] = 0.0;
+	VM[2][0] = 0.0; VM[2][1] = 0.0; VM[2][2] = 1.0;
+	// Cylindrical
+	//VM[0][0] = 1.0; VM[0][1] = 0.0; VM[0][2] = 0.0;
+	//VM[2][0] = 0.0; VM[2][1] = 0.0; VM[2][2] = 1.0;
+#endif
+
+	gl_Position = P * VM * sPos;
+
+#ifdef _AMTex
 	texCoord = tex;
 #endif
 
 #ifdef _Skinning
-	normal = normalize(mat3(NM) * (nor * skinningMatVec));
+	vec3 _normal = normalize(mat3(NM) * (nor * skinningMatVec));
 #else
-	normal = normalize(mat3(NM) * nor);
+	vec3 _normal = normalize(mat3(NM) * nor);
 #endif
 
-	matColor = diffuseColor;
+	matColor = albedo_color;
 
 #ifdef _VCols
 	matColor *= col;
 #endif
 
-#ifdef _NormalMapping
-	vec3 vtan = (tan);
-	vec3 vbitan = cross(normal, vtan) * 1.0;//tangent.w;
-   
-	mat3 TBN = transpose(mat3(vtan, vbitan, normal));
-	lightDir = normalize(TBN * lightDir); 
-	eyeDir = normalize(TBN * eyeDir); 
+	vec3 mPos = vec4(M * sPos).xyz;
+	position = mPos;
+	lightDir = light - mPos;
+	eyeDir = eye - mPos;
+
+#ifdef _NMTex
+	vec3 tangent = (mat3(NM) * (tan));
+	vec3 bitangent = normalize(cross(_normal, tangent));
+	TBN = mat3(tangent, bitangent, _normal);
 #else
-	lightDir = normalize(light - position);
-	eyeDir = normalize(eye - position);
+	normal = _normal;
 #endif
 }

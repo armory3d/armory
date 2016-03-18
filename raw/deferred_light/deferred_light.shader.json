@@ -5,7 +5,7 @@
 			"params": [
 				{
 					"id": "depth_write",
-					"value": "false"
+					"value": "true"
 				},
 				{
 					"id": "compare_mode",
@@ -25,10 +25,6 @@
 				}
 			],
 			"links": [
-				{
-					"id": "cameraPosition",
-					"link": "_cameraPosition"
-				}
 			],
 			"vertex_shader": "deferred_light.vert.glsl",
 			"fragment_shader": "deferred_light.frag.glsl"

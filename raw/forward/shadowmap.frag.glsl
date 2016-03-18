@@ -15,8 +15,8 @@ void main() {
     float depth = position.z / position.w;
     // depth += 0.005;
 	
-	// gl_FragDepth = depth;
-	gl_FragColor = vec4(depth, 0.0, 0.0, 1.0);
+	gl_FragDepth = depth;
+	// gl_FragColor = vec4(depth, 0.0, 0.0, 1.0);
 
 	// VSM
 	// float dx = dFdx(depth);
