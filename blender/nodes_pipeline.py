@@ -27,6 +27,7 @@ class DrawGeometryNode(Node, CGPipelineTreeNode):
 	def init(self, context):
 		self.inputs.new('NodeSocketShader', "Stage")
 		self.inputs.new('NodeSocketString', "Context")
+		self.inputs.new('NodeSocketBool', "Bind World")
 
 		self.outputs.new('NodeSocketShader', "Stage")
 
@@ -299,6 +300,7 @@ def buildNode(res, node, node_group, last_bind_target, shader_references, asset_
 	elif node.bl_idname == 'DrawGeometryNodeType':
 		stage.command = 'draw_geometry'
 		stage.params.append(node.inputs[1].default_value) # Context
+		bpy.data.cameras[0].pipeline_bind_world_to_materials = node.inputs[2].default_value
 		
 	elif node.bl_idname == 'BindTargetNodeType':
 		if last_bind_target is not None:

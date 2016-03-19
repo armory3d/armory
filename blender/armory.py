@@ -2143,22 +2143,24 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		
 		c.bind_textures = []
 		
-		tex = Object() # TODO: parse from world nodes
-		tex.id = 'senvmapIrradiance'
-		tex.name = 'envmap_irradiance'
-		c.bind_textures.append(tex)
-		
-		tex = Object() # TODO: parse from world nodes
-		tex.id = 'senvmapRadiance'
-		tex.name = 'envmap_radiance'
-		tex.mipmap_filter = 'linear'
-		tex.mipmaps = ['envmap_radiance_0', 'envmap_radiance_1', 'envmap_radiance_2', 'envmap_radiance_3', 'envmap_radiance_4', 'envmap_radiance_5', 'envmap_radiance_6', 'envmap_radiance_7', 'envmap_radiance_8', 'envmap_radiance_9', 'envmap_radiance_10']
-		c.bind_textures.append(tex)
-		
-		tex = Object() # TODO: parse from world nodes
-		tex.id = 'senvmapBrdf'
-		tex.name = 'envmap_brdf'
-		c.bind_textures.append(tex)
+		# TODO: parse and generate from world nodes
+		if bpy.data.cameras[0].pipeline_bind_world_to_materials:
+			tex = Object()
+			tex.id = 'senvmapIrradiance'
+			tex.name = 'envmap_irradiance'
+			c.bind_textures.append(tex)
+			
+			tex = Object()
+			tex.id = 'senvmapRadiance'
+			tex.name = 'envmap_radiance'
+			tex.mipmap_filter = 'linear'
+			tex.mipmaps = ['envmap_radiance_0', 'envmap_radiance_1', 'envmap_radiance_2', 'envmap_radiance_3', 'envmap_radiance_4', 'envmap_radiance_5', 'envmap_radiance_6', 'envmap_radiance_7', 'envmap_radiance_8', 'envmap_radiance_9', 'envmap_radiance_10']
+			c.bind_textures.append(tex)
+			
+			tex = Object()
+			tex.id = 'senvmapBrdf'
+			tex.name = 'envmap_brdf'
+			c.bind_textures.append(tex)
 
 		# Parse nodes
 		out_node = None

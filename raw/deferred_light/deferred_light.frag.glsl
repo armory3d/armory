@@ -8,6 +8,11 @@ uniform sampler2D gbuffer0; // Positions, metalness
 uniform sampler2D gbuffer1; // Normals, roughness
 uniform sampler2D gbuffer2; // Base color, occlusion
 
+uniform sampler2D shadowMap;
+uniform sampler2D senvmapRadiance;
+uniform sampler2D senvmapIrradiance;
+uniform sampler2D senvmapBrdf;
+
 in vec2 texCoord;
 
 void main() {
