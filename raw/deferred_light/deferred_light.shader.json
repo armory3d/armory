@@ -25,6 +25,14 @@
 				}
 			],
 			"links": [
+				{
+					"id": "light",
+					"link": "_lightPosition"
+				},
+				{
+					"id": "eye",
+					"link": "_cameraPosition"
+				}
 			],
 			"vertex_shader": "deferred_light.vert.glsl",
 			"fragment_shader": "deferred_light.frag.glsl"

@@ -40,6 +40,7 @@ uniform float skinBones[50 * 12];
 #endif
 
 out vec3 position;
+out vec4 mvpposition;
 #ifdef _AMTex
 out vec2 texCoord;
 #endif
@@ -131,6 +132,7 @@ void main() {
 
 	vec3 mPos = vec4(M * sPos).xyz;
 	position = mPos;
+	mvpposition = gl_Position;
 	lightDir = light - mPos;
 	eyeDir = eye - mPos;
 

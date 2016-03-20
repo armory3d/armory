@@ -29,6 +29,7 @@ uniform float metalness;
 #endif
 
 in vec3 position;
+in vec4 mvpposition;
 #ifdef _AMTex
 in vec2 texCoord;
 #endif
@@ -73,10 +74,14 @@ void main() {
 #ifdef _OMTex
 	float occlusion = texture(som, texCoord).r;
 #else
-	float occlusion = 0.0; 
+	float occlusion = 1.0; 
 #endif
 	
-	gl_FragData[0] = vec4(position.xyz, metalness);
+	float depth = mvpposition.z / mvpposition.w;
+	
+	// occlusion
+	
+	gl_FragData[0] = vec4(position.xyz, depth);
 	gl_FragData[1] = vec4(normal.xyz, roughness);
-	gl_FragData[2] = vec4(baseColor.rgb, occlusion);
+	gl_FragData[2] = vec4(baseColor.rgb, metalness);
 }
