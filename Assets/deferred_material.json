@@ -1,0 +1,42 @@
+{
+    "material_resources": [
+        {
+            "contexts": [
+                {
+                    "bind_constants": [],
+                    "bind_textures": [
+						{
+                            "id": "senvmapIrradiance",
+                            "name": "envmap_irradiance"
+                        },
+                        {
+                            "id": "senvmapRadiance",
+                            "mipmap_filter": "linear",
+                            "mipmaps": [
+                                "envmap_radiance_0",
+                                "envmap_radiance_1",
+                                "envmap_radiance_2",
+                                "envmap_radiance_3",
+                                "envmap_radiance_4",
+                                "envmap_radiance_5",
+                                "envmap_radiance_6",
+                                "envmap_radiance_7",
+                                "envmap_radiance_8",
+                                "envmap_radiance_9",
+                                "envmap_radiance_10"
+                            ],
+                            "name": "envmap_radiance"
+                        },
+                        {
+                            "id": "senvmapBrdf",
+                            "name": "envmap_brdf"
+                        }
+					],
+                    "id": "deferred_light"
+                }
+            ],
+            "id": "deferred_material",
+            "shader": "deferred_light/deferred_light"
+        }
+    ]
+}

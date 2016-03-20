@@ -1,0 +1,16 @@
+{
+    "material_resources": [
+        {
+            "contexts": [
+                {
+                    "bind_constants": [],
+                    "bind_textures": [
+					],
+                    "id": "fxaa_pass"
+                }
+            ],
+            "id": "fxaa_material",
+            "shader": "fxaa_pass/fxaa_pass"
+        }
+    ]
+}

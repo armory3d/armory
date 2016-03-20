@@ -23,6 +23,10 @@ os.chdir('../env_map')
 make_resources.make('env_map.shader.json')
 make_variants.make('env_map.shader.json')
 
+os.chdir('../fxaa_pass')
+make_resources.make('fxaa_pass.shader.json')
+make_variants.make('fxaa_pass.shader.json')
+
 # os.chdir('../ssao_pass')
 # make_resources.make('ssao_pass.shader.json')
 # make_variants.make('ssao_pass.shader.json')
