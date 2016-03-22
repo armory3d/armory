@@ -141,7 +141,7 @@ void main() {
 	float ao = texture(ssaotex, texCoord).r; // Normals, depth
 
 	vec3 n = g0.rgb * 2.0 - 1.0;
-	vec3 p = g1.rgb;
+	vec3 p = g1.rgb * 2.0 - 1.0;
 	//n = normalize(n);
 	vec3 baseColor = g2.rgb;
 	

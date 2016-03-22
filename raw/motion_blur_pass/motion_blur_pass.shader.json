@@ -1,0 +1,38 @@
+{
+	"contexts": [
+		{
+			"id": "motion_blur_pass",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "true"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				},
+				{
+					"id": "blend_source",
+					"value": "blend_one"
+				},
+				{
+					"id": "blend_destination",
+					"value": "blend_zero"
+				}
+			],
+			"links": [
+				{
+					"id": "prevVP",
+					"link": "_prevViewProjectionMatrix"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "motion_blur_pass.vert.glsl",
+			"fragment_shader": "motion_blur_pass.frag.glsl"
+		}
+	]
+}

@@ -1,0 +1,16 @@
+{
+    "material_resources": [
+        {
+            "contexts": [
+                {
+                    "bind_constants": [],
+                    "bind_textures": [
+					],
+                    "id": "motion_blur_pass"
+                }
+            ],
+            "id": "motion_blur_material",
+            "shader": "motion_blur_pass/motion_blur_pass"
+        }
+    ]
+}
