@@ -26,28 +26,8 @@
 			],
 			"links": [
 				{
-					"id": "u1",
-					"link": "_u1"
-				},
-				{
-					"id": "u2",
-					"link": "_u2"
-				},
-				{
-					"id": "u3",
-					"link": "_u3"
-				},
-				{
-					"id": "u4",
-					"link": "_u4"
-				},
-				{
-					"id": "u5",
-					"link": "_u5"
-				},
-				{
-					"id": "u6",
-					"link": "_u6"
+					"id": "invP",
+					"link": "_inverseProjectionMatrix"
 				}
 			],
 			"texture_params": [],

@@ -11,6 +11,8 @@ uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1; 
 uniform sampler2D gbuffer2;
 
+uniform sampler2D ssaotex;
+
 uniform sampler2D shadowMap;
 uniform sampler2D senvmapRadiance;
 uniform sampler2D senvmapIrradiance;
@@ -71,15 +73,16 @@ vec3 diffuseBRDF(vec3 albedo, float roughness, float nv, float nl, float vh, flo
 
 void main() {
 	
-	vec4 g0 = texture(gbuffer0, texCoord); // Positions, depth
+	vec4 g0 = texture(gbuffer0, texCoord); // Normals, depth
 	float depth = g0.a;
 	if (depth >= 1.0) discard;
 	
-	vec4 g1 = texture(gbuffer1, texCoord); // Normals, roughness
+	vec4 g1 = texture(gbuffer1, texCoord); // Positions, roughness
 	vec4 g2 = texture(gbuffer2, texCoord); // Base color, metalness
+	float ao = texture(ssaotex, texCoord).r; // Normals, depth
 
-	vec3 p = g0.rgb;
-	vec3 n = g1.rgb;// * 2.0 - 1.0;
+	vec3 n = g0.rgb * 2.0 - 1.0;
+	vec3 p = g1.rgb;
 	//n = normalize(n);
 	vec3 baseColor = g2.rgb;
 	
@@ -124,6 +127,7 @@ void main() {
 	vec4 outColor = vec4(vec3(direct * visibility + indirect), 1.0);
 	
 	// outColor.rgb *= occlusion;
+	outColor.rgb *= ao;
 
 	gl_FragColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
 }

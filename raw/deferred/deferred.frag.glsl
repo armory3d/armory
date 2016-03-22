@@ -81,7 +81,7 @@ void main() {
 	
 	// occlusion
 	
-	gl_FragData[0] = vec4(position.xyz, depth);
-	gl_FragData[1] = vec4(normal.xyz, roughness);
+	gl_FragData[0] = vec4(normal.x * 0.5 + 0.5, normal.y * 0.5 + 0.5, normal.z * 0.5 + 0.5, depth);
+	gl_FragData[1] = vec4(position.xyz, roughness);
 	gl_FragData[2] = vec4(baseColor.rgb, metalness);
 }
