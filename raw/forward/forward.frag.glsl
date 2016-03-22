@@ -92,16 +92,35 @@ float texture2DShadowLerp(vec2 size, vec2 uv, float compare){
 
 float PCF(vec2 size, vec2 uv, float compare){
     float result = 0.0;
-    for (int x = -1; x <= 1; x++){
-        for(int y = -1; y <= 1; y++){
-            vec2 off = vec2(x, y) / size;
-            result += texture2DShadowLerp(size, uv + off, compare);
-        }
-    }
+    // for (int x = -1; x <= 1; x++){
+    //     for(int y = -1; y <= 1; y++){
+    //         vec2 off = vec2(x, y) / size;
+    //         result += texture2DShadowLerp(size, uv + off, compare);
+				
+				vec2 off = vec2(-1, -1) / size;
+				result += texture2DShadowLerp(size, uv + off, compare);
+				off = vec2(-1, 0) / size;
+				result += texture2DShadowLerp(size, uv + off, compare);
+				off = vec2(-1, 1) / size;
+				result += texture2DShadowLerp(size, uv + off, compare);
+				off = vec2(0, -1) / size;
+				result += texture2DShadowLerp(size, uv + off, compare);
+				off = vec2(0, 0) / size;
+				result += texture2DShadowLerp(size, uv + off, compare);
+				off = vec2(0, 1) / size;
+				result += texture2DShadowLerp(size, uv + off, compare);
+				off = vec2(1, -1) / size;
+				result += texture2DShadowLerp(size, uv + off, compare);
+				off = vec2(1, 0) / size;
+				result += texture2DShadowLerp(size, uv + off, compare);
+				off = vec2(1, 1) / size;
+				result += texture2DShadowLerp(size, uv + off, compare);
+    //     }
+    // }
     return result / 9.0;
 }
 
-float shadowTest(vec4 lPos, float dotNL) {
+float shadowTest(vec4 lPos) {
 	vec4 lPosH = lPos / lPos.w;
 	lPosH.x = (lPosH.x + 1.0) / 2.0;
     lPosH.y = 1.0 - ((-lPosH.y + 1.0) / (2.0));
@@ -266,8 +285,8 @@ void main() {
 	float visibility = 1.0;
 	if (receiveShadow) {
 		if (lPos.w > 0.0) {
-			visibility = shadowTest(lPos, dotNL);
-			visibility = 1.0;
+			visibility = shadowTest(lPos);
+			// visibility = 1.0;
 		}
 	}
 

@@ -18,6 +18,7 @@ uniform sampler2D senvmapRadiance;
 uniform sampler2D senvmapIrradiance;
 uniform sampler2D senvmapBrdf;
 
+uniform mat4 LMVP;
 uniform vec3 light;
 uniform vec3 eye;
 
@@ -71,6 +72,64 @@ vec3 diffuseBRDF(vec3 albedo, float roughness, float nv, float nl, float vh, flo
 	return lambert(albedo, nl);
 }
 
+float texture2DCompare(vec2 uv, float compare){
+    float depth = texture(shadowMap, uv).r * 2.0 - 1.0;
+    return step(compare, depth);
+}
+
+float texture2DShadowLerp(vec2 size, vec2 uv, float compare){
+    vec2 texelSize = vec2(1.0) / size;
+    vec2 f = fract(uv * size + 0.5);
+    vec2 centroidUV = floor(uv * size + 0.5) / size;
+
+    float lb = texture2DCompare(centroidUV + texelSize * vec2(0.0, 0.0), compare);
+    float lt = texture2DCompare(centroidUV + texelSize * vec2(0.0, 1.0), compare);
+    float rb = texture2DCompare(centroidUV + texelSize * vec2(1.0, 0.0), compare);
+    float rt = texture2DCompare(centroidUV + texelSize * vec2(1.0, 1.0), compare);
+    float a = mix(lb, lt, f.y);
+    float b = mix(rb, rt, f.y);
+    float c = mix(a, b, f.x);
+    return c;
+}
+
+float PCF(vec2 size, vec2 uv, float compare){
+    float result = 0.0;
+    // for (int x = -1; x <= 1; x++){
+        // for(int y = -1; y <= 1; y++){
+            // vec2 off = vec2(x, y) / size;
+            // result += texture2DShadowLerp(size, uv + off, compare);
+			
+			vec2 off = vec2(-1, -1) / size;
+            result += texture2DShadowLerp(size, uv + off, compare);
+			off = vec2(-1, 0) / size;
+            result += texture2DShadowLerp(size, uv + off, compare);
+			off = vec2(-1, 1) / size;
+            result += texture2DShadowLerp(size, uv + off, compare);
+			off = vec2(0, -1) / size;
+            result += texture2DShadowLerp(size, uv + off, compare);
+			off = vec2(0, 0) / size;
+            result += texture2DShadowLerp(size, uv + off, compare);
+			off = vec2(0, 1) / size;
+            result += texture2DShadowLerp(size, uv + off, compare);
+			off = vec2(1, -1) / size;
+            result += texture2DShadowLerp(size, uv + off, compare);
+			off = vec2(1, 0) / size;
+            result += texture2DShadowLerp(size, uv + off, compare);
+			off = vec2(1, 1) / size;
+            result += texture2DShadowLerp(size, uv + off, compare);
+        // }
+    // }
+    return result / 9.0;
+}
+
+float shadowTest(vec4 lPos) {
+	vec4 lPosH = lPos / lPos.w;
+	lPosH.x = (lPosH.x + 1.0) / 2.0;
+    lPosH.y = 1.0 - ((-lPosH.y + 1.0) / (2.0));
+	
+	return PCF(vec2(2048, 2048), lPosH.st, lPosH.z - 0.005);
+}
+
 void main() {
 	
 	vec4 g0 = texture(gbuffer0, texCoord); // Normals, depth
@@ -106,7 +165,12 @@ void main() {
 	vec3 albedo = surfaceAlbedo(baseColor, metalness);
 	vec3 f0 = surfaceF0(baseColor, metalness);
 	
+	vec4 lPos = LMVP * vec4(vec3(p), 1.0);
 	float visibility = 1.0;
+	if (lPos.w > 0.0) {
+		visibility = shadowTest(lPos);
+		// visibility = 1.0;
+	}
 	
 	// Direct
 	vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);

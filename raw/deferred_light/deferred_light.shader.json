@@ -32,6 +32,10 @@
 				{
 					"id": "eye",
 					"link": "_cameraPosition"
+				},
+				{
+					"id": "LMVP",
+					"link": "_lightModelViewProjectionMatrix"
 				}
 			],
 			"vertex_shader": "deferred_light.vert.glsl",
