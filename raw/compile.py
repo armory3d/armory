@@ -39,6 +39,10 @@ os.chdir('../motion_blur_pass')
 make_resources.make('motion_blur_pass.shader.json')
 make_variants.make('motion_blur_pass.shader.json')
 
+os.chdir('../dof_pass')
+make_resources.make('dof_pass.shader.json')
+make_variants.make('dof_pass.shader.json')
+
 # os.chdir('../combine_pass')
 # make_resources.make('combine_pass.shader.json')
 # make_variants.make('combine_pass.shader.json')
