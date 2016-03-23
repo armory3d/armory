@@ -28,6 +28,10 @@
 				{
 					"id": "prevVP",
 					"link": "_prevViewProjectionMatrix"
+				},
+				{
+					"id": "invVP",
+					"link": "_inverseViewProjectionMatrix"
 				}
 			],
 			"texture_params": [],
