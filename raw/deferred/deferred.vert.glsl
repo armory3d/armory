@@ -141,6 +141,8 @@ void main() {
 	vec3 bitangent = normalize(cross(_normal, tangent));
 	TBN = mat3(tangent, bitangent, _normal);
 #else
+	// vec4 n = V * vec4(_normal, 1.0);
+	// normal = n.xyz;
 	normal = _normal;
 #endif
 }

@@ -140,8 +140,8 @@ void main() {
 	vec4 g2 = texture(gbuffer2, texCoord); // Base color, metalness
 	float ao = texture(ssaotex, texCoord).r; // Normals, depth
 
-	vec3 n = g0.rgb * 2.0 - 1.0;
-	vec3 p = g1.rgb * 2.0 - 1.0;
+	vec3 n = g0.rgb;
+	vec3 p = g1.rgb;
 	//n = normalize(n);
 	vec3 baseColor = g2.rgb;
 	
@@ -188,10 +188,12 @@ void main() {
 	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 	vec3 indirect = indirectDiffuse + indirectSpecular;
 
-	vec4 outColor = vec4(vec3(direct * visibility + indirect), 1.0);
+	vec4 outColor = vec4(vec3(direct * visibility + indirect * ao), 1.0);
 	
 	// outColor.rgb *= occlusion;
-	outColor.rgb *= ao;
+	// outColor.rgb *= ao;
 
 	gl_FragColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
+	// vec4 aocol = texture(ssaotex, texCoord);
+	// gl_FragColor = aocol;
 }

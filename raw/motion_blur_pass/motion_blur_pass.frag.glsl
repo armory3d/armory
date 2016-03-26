@@ -18,7 +18,7 @@ in vec2 texCoord;
 
 vec2 getVelocity(vec2 texCoord, float depth) {
 	// Get the depth buffer value at this pixel  
-	float zOverW = depth;
+	float zOverW = depth; // * 2.0 - 1.0
 	// H is the viewport position at this pixel in the range -1 to 1
 	vec4 H = vec4(texCoord.x * 2.0 - 1.0, (texCoord.y) * 2.0 - 1.0, zOverW, 1.0);  
 	// Transform by the view-projection inverse

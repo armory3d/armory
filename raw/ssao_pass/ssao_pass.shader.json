@@ -28,6 +28,38 @@
 				{
 					"id": "invP",
 					"link": "_inverseProjectionMatrix"
+				},
+				{
+					"id": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				},
+				{
+					"id": "invV",
+					"link": "_inverseViewMatrix"
+				},
+				{
+					"id": "_u1",
+					"link": "_u1"
+				},
+				{
+					"id": "_u2",
+					"link": "_u2"
+				},
+				{
+					"id": "_u3",
+					"link": "_u3"
+				},
+				{
+					"id": "_u4",
+					"link": "_u4"
+				},
+				{
+					"id": "_u5",
+					"link": "_u5"
+				},
+				{
+					"id": "_u6",
+					"link": "_u6"
 				}
 			],
 			"texture_params": [],
