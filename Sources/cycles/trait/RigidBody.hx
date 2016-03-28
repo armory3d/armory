@@ -48,7 +48,7 @@ class RigidBody extends Trait {
 		this.friction = friction;
 
 		requestInit(init);
-		requestUpdate(update);
+		requestLateUpdate(lateUpdate);
 		requestRemove(removeFromWorld);
 	}
 
@@ -150,7 +150,7 @@ class RigidBody extends Trait {
 		if (onCreated != null) onCreated();
 	}
 
-	function update() {
+	function lateUpdate() {
 		var trans = body.value.getWorldTransform();
 		var p = trans.getOrigin();
 		var q = trans.getRotation();

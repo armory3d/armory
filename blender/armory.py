@@ -1161,7 +1161,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				o.particle_refs = []
 				for i in range(len(node.particle_systems)):
 					self.ExportParticleSystemRef(node.particle_systems[i], i, o)
-
+					
+				o.dimensions = [node.dimensions[0], node.dimensions[1], node.dimensions[2]]	
+				
 				#shapeKeys = ArmoryExporter.GetShapeKeys(object)
 				#if (shapeKeys):
 				#	self.ExportMorphWeights(node, shapeKeys, scene, o)

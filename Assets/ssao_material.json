@@ -4,7 +4,12 @@
             "contexts": [
                 {
                     "bind_constants": [],
-                    "bind_textures": [],
+                    "bind_textures": [
+                        {
+                            "id": "snoise",
+                            "name": "noise8"
+                        }
+                    ],
                     "id": "ssao_pass"
                 }
             ],
