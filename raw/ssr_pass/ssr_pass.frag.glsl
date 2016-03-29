@@ -11,7 +11,6 @@ uniform sampler2D gbuffer2;
 uniform mat4 P;
 uniform mat4 V;
 
-// const vec2 gTexSizeInv = vec2(1.0 / 1136.0, 1.0 / 640.0);
 const float rayStep = 0.25;
 const float minRayStep = 0.1;
 const float maxSteps = 20;
@@ -27,7 +26,7 @@ in vec2 texCoord;
 vec3 hitCoord;
 float dDepth;
 
-vec3 BinarySearch(vec3 dir) {
+vec3 binarySearch(vec3 dir) {
     float depth;
 	vec4 projectedCoord;
 	
@@ -94,7 +93,7 @@ vec3 BinarySearch(vec3 dir) {
     return vec3(projectedCoord.xy, depth);
 }
 
-vec4 RayCast(vec3 dir) {
+vec4 rayCast(vec3 dir) {
     dir *= rayStep;
     float depth;
 	
@@ -106,7 +105,7 @@ vec4 RayCast(vec3 dir) {
         depth = texture(gbuffer0, projectedCoord.xy).a;
         dDepth = hitCoord.z - depth;
         if (dDepth < 0.0) {
-            return vec4(BinarySearch(dir), 1.0);
+            return vec4(binarySearch(dir), 1.0);
 		}
 		
 		hitCoord += dir;
@@ -116,7 +115,7 @@ vec4 RayCast(vec3 dir) {
         depth = texture(gbuffer0, projectedCoord.xy).a;
         dDepth = hitCoord.z - depth;
         if (dDepth < 0.0) {
-            return vec4(BinarySearch(dir), 1.0);
+            return vec4(binarySearch(dir), 1.0);
 		}
 		
 		hitCoord += dir;
@@ -126,7 +125,7 @@ vec4 RayCast(vec3 dir) {
         depth = texture(gbuffer0, projectedCoord.xy).a;
         dDepth = hitCoord.z - depth;
         if (dDepth < 0.0) {
-            return vec4(BinarySearch(dir), 1.0);
+            return vec4(binarySearch(dir), 1.0);
 		}
 		
 		hitCoord += dir;
@@ -136,7 +135,7 @@ vec4 RayCast(vec3 dir) {
         depth = texture(gbuffer0, projectedCoord.xy).a;
         dDepth = hitCoord.z - depth;
         if (dDepth < 0.0) {
-            return vec4(BinarySearch(dir), 1.0);
+            return vec4(binarySearch(dir), 1.0);
 		}
 		
 		hitCoord += dir;
@@ -146,7 +145,7 @@ vec4 RayCast(vec3 dir) {
         depth = texture(gbuffer0, projectedCoord.xy).a;
         dDepth = hitCoord.z - depth;
         if (dDepth < 0.0) {
-            return vec4(BinarySearch(dir), 1.0);
+            return vec4(binarySearch(dir), 1.0);
 		}
 		
 		hitCoord += dir;
@@ -156,7 +155,7 @@ vec4 RayCast(vec3 dir) {
         depth = texture(gbuffer0, projectedCoord.xy).a;
         dDepth = hitCoord.z - depth;
         if (dDepth < 0.0) {
-            return vec4(BinarySearch(dir), 1.0);
+            return vec4(binarySearch(dir), 1.0);
 		}
 		
 		hitCoord += dir;
@@ -166,7 +165,7 @@ vec4 RayCast(vec3 dir) {
         depth = texture(gbuffer0, projectedCoord.xy).a;
         dDepth = hitCoord.z - depth;
         if (dDepth < 0.0) {
-            return vec4(BinarySearch(dir), 1.0);
+            return vec4(binarySearch(dir), 1.0);
 		}
 		
 		hitCoord += dir;
@@ -176,7 +175,7 @@ vec4 RayCast(vec3 dir) {
         depth = texture(gbuffer0, projectedCoord.xy).a;
         dDepth = hitCoord.z - depth;
         if (dDepth < 0.0) {
-            return vec4(BinarySearch(dir), 1.0);
+            return vec4(binarySearch(dir), 1.0);
 		}
 		
 		hitCoord += dir;
@@ -186,7 +185,7 @@ vec4 RayCast(vec3 dir) {
         depth = texture(gbuffer0, projectedCoord.xy).a;
         dDepth = hitCoord.z - depth;
         if (dDepth < 0.0) {
-            return vec4(BinarySearch(dir), 1.0);
+            return vec4(binarySearch(dir), 1.0);
 		}
 		
 		hitCoord += dir;
@@ -196,7 +195,7 @@ vec4 RayCast(vec3 dir) {
         depth = texture(gbuffer0, projectedCoord.xy).a;
         dDepth = hitCoord.z - depth;
         if (dDepth < 0.0) {
-            return vec4(BinarySearch(dir), 1.0);
+            return vec4(binarySearch(dir), 1.0);
 		}
     // }
 	
@@ -209,7 +208,9 @@ void main() {
     float roughness = texture(gbuffer1, texCoord).a;
 	float specular = 1.0 - roughness;
     if (specular == 0.0) {
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+		vec4 texColor = texture(tex, texCoord);
+        gl_FragColor = texColor;
+        // gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
         return;
     }
 
@@ -228,13 +229,13 @@ void main() {
     hitCoord = viewPos.xyz;
     dDepth = 0.0;
 	
-    vec4 coords = RayCast(reflected * max(minRayStep, -viewPos.z));
+    vec4 coords = rayCast(reflected * max(minRayStep, -viewPos.z));
     vec2 dCoords = abs(vec2(0.5, 0.5) - coords.xy);
 
-    float screenEdgefactor = clamp(1.0 - (dCoords.x + dCoords.y), 0.0, 1.0);
+    float screenEdgeFactor = clamp(1.0 - (dCoords.x + dCoords.y), 0.0, 1.0);
 
 	float intensity = pow(specular, reflectionSpecularFalloffExponent) *
-        screenEdgefactor * clamp(-reflected.z, 0.0, 1.0) *
+        screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) *
         clamp((searchDist - length(viewPos.xyz - hitCoord)) * searchDistInv, 0.0, 1.0) * coords.w;
 
     vec4 reflCol = vec4(texture(tex, coords.xy).rgb, 1.0);

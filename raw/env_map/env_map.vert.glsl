@@ -10,6 +10,7 @@ uniform mat4 P;
 in vec2 pos;
 
 out vec3 normal;
+// out vec2 texCoord;
 
 mat3 transpose_(mat3 m) {
   return mat3(m[0][0], m[1][0], m[2][0],
@@ -58,9 +59,11 @@ mat4 inverse_(mat4 m) {
       a20 * b03 - a21 * b01 + a22 * b00) / det;
 }
 
+// const vec2 madd = vec2(0.5, 0.5);
+
 void main() {
 
-  mat4 invP = inverse_(P);
+	mat4 invP = inverse_(P);
 	// mat4 invP = inverse(P);
 	mat3 invMV = transpose_(mat3(V));
 
@@ -68,6 +71,9 @@ void main() {
 	vec3 unprojected = (invP * p).xyz;
 
 	normal = invMV * unprojected;
+	
+	// Scale vertex attribute to [0-1] range
+	// texCoord = pos.xy * madd + madd;
 
 	gl_Position = vec4(pos.xy, 0.0, 1.0);
 }

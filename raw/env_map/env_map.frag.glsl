@@ -8,8 +8,10 @@ precision mediump float;
 #define TwoPI (2.0 * PI)
 
 uniform sampler2D envmap;
+// uniform sampler2D tex;
 
 in vec3 normal;
+// in vec2 texCoord;
 
 vec2 envMapEquirect(vec3 normal) {
 	float phi = acos(normal.z);
@@ -18,7 +20,10 @@ vec2 envMapEquirect(vec3 normal) {
 }
 
 void main() {
+	// if (texture(tex, texCoord).a == 0.0) {
+		// discard;
+	// }
+	
 	vec3 n = normalize(normal);
 	gl_FragColor = texture(envmap, envMapEquirect(n));
-	// gl_FragData[0] = texture(envmap, envMapEquirect(n));
 }
