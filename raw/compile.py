@@ -43,6 +43,10 @@ os.chdir('../dof_pass')
 make_resources.make('dof_pass.shader.json')
 make_variants.make('dof_pass.shader.json')
 
+os.chdir('../ssr_pass')
+make_resources.make('ssr_pass.shader.json')
+make_variants.make('ssr_pass.shader.json')
+
 # os.chdir('../combine_pass')
 # make_resources.make('combine_pass.shader.json')
 # make_variants.make('combine_pass.shader.json')
