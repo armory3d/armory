@@ -29,6 +29,7 @@ in vec3 off;
 
 uniform mat4 M;
 uniform mat4 NM;
+// uniform mat4 VNM;
 uniform mat4 V;
 uniform mat4 P;
 uniform mat4 LMVP;
@@ -52,6 +53,7 @@ out vec3 eyeDir;
 out mat3 TBN;
 #else
 out vec3 normal;
+out vec3 vnormal;
 #endif
 
 #ifdef _Skinning
@@ -122,6 +124,7 @@ void main() {
 	vec3 _normal = normalize(mat3(NM) * (nor * skinningMatVec));
 #else
 	vec3 _normal = normalize(mat3(NM) * nor);
+	// vec3 _vnormal = normalize(mat3(VNM) * nor);
 #endif
 
 	matColor = albedo_color;
@@ -141,8 +144,7 @@ void main() {
 	vec3 bitangent = normalize(cross(_normal, tangent));
 	TBN = mat3(tangent, bitangent, _normal);
 #else
-	// vec4 n = V * vec4(_normal, 1.0);
-	// normal = n.xyz;
 	normal = _normal;
+	// vnormal = _vnormal;
 #endif
 }

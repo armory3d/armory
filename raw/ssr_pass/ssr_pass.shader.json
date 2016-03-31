@@ -32,6 +32,10 @@
 				{
 					"id": "V",
 					"link": "_viewMatrix"
+				},
+				{
+					"id": "tiV",
+					"link": "_transposeInverseViewMatrix"
 				}
 			],
 			"texture_params": [],

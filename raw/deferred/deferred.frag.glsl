@@ -41,6 +41,7 @@ in vec3 eyeDir;
 in mat3 TBN;
 #else
 in vec3 normal;
+// in vec3 vnormal;
 #endif
 
 void main() {
@@ -50,6 +51,7 @@ void main() {
 	n = normalize(TBN * normalize(n));
 #else
 	vec3 n = normalize(normal);
+	// vec3 vn = normalize(vnormal);
 #endif
 
 #ifdef _AMTex
@@ -84,4 +86,5 @@ void main() {
 	gl_FragData[0] = vec4(n.xyz, depth);
 	gl_FragData[1] = vec4(position.xyz, roughness);
 	gl_FragData[2] = vec4(baseColor.rgb, metalness);
+	// gl_FragData[3] = vec4(vn.rgb, 1.0);
 }
