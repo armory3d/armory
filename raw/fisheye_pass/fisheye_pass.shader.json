@@ -1,0 +1,33 @@
+{
+	"contexts": [
+		{
+			"id": "fisheye_pass",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "true"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				},
+				{
+					"id": "blend_source",
+					"value": "blend_one"
+				},
+				{
+					"id": "blend_destination",
+					"value": "blend_zero"
+				}
+			],
+			"links": [],
+			"texture_params": [],
+			"vertex_shader": "fisheye_pass.vert.glsl",
+			"fragment_shader": "fisheye_pass.frag.glsl"
+		}
+	]
+}

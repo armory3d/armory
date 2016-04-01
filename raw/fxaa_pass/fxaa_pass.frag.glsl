@@ -13,7 +13,7 @@ uniform sampler2D tex;
 in vec2 texCoord;
 
 void main() {
-	vec2 resolution = vec2(640.0, 480.0);
+	vec2 resolution = vec2(800.0, 600.0);
     vec2 texStep = 1.0 / resolution.xy;
 	
 	vec2 tcrgbNW = (texCoord + vec2(-1.0, -1.0) * texStep);
