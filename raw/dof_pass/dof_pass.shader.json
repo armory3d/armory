@@ -25,6 +25,10 @@
 				}
 			],
 			"links": [
+				{
+					"id": "eye",
+					"link": "_cameraPosition"
+				}
 			],
 			"texture_params": [],
 			"vertex_shader": "dof_pass.vert.glsl",
