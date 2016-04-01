@@ -51,6 +51,12 @@ def writeResource(res, defs, json_data, base_name):
 					con.depth_write = False
 			elif p['id'] == 'compare_mode':
 				con.compare_mode = p['value']
+			elif p['id'] == 'stencil_pass':
+				con.stencil_pass = p['value']
+			elif p['id'] == 'stencil_fail':
+				con.stencil_fail = p['value']
+			elif p['id'] == 'stencil_reference_value':
+				con.stencil_reference_value = p['value']
 			elif p['id'] == 'cull_mode':
 				con.cull_mode = p['value']
 			elif p['id'] == 'blend_source':

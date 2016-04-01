@@ -22,6 +22,18 @@
 				{
 					"id": "blend_destination",
 					"value": "blend_zero"
+				},
+				{
+					"id": "stencil_pass",
+					"value": "keep"
+				},
+				{
+					"id": "stencil_fail",
+					"value": "keep"
+				},
+				{
+					"id": "stencil_reference_value",
+					"value": 0
 				}
 			],
 			"links": [
@@ -84,6 +96,18 @@
 				{
 					"id": "blend_destination",
 					"value": "blend_zero"
+				},
+				{
+					"id": "stencil_pass",
+					"value": "keep"
+				},
+				{
+					"id": "stencil_fail",
+					"value": "keep"
+				},
+				{
+					"id": "stencil_reference_value",
+					"value": 0
 				}
 			],
 			"links": [

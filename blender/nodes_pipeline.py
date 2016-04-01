@@ -47,6 +47,7 @@ class ClearTargetNode(Node, CGPipelineTreeNode):
 		self.inputs.new('NodeSocketShader', "Stage")
 		self.inputs.new('NodeSocketBool', "Color")
 		self.inputs.new('NodeSocketBool', "Depth")
+		self.inputs.new('NodeSocketBool', "Stencil")
 
 		self.outputs.new('NodeSocketShader', "Stage")
 
@@ -86,6 +87,7 @@ class TargetNode(Node, CGPipelineTreeNode):
 		self.inputs.new('NodeSocketInt', "Height")
 		self.inputs.new('NodeSocketInt', "Color Buffers")
 		self.inputs.new('NodeSocketBool', "Depth Buffer")
+		self.inputs.new('NodeSocketBool', "Stencil Buffer")
 		self.inputs.new('NodeSocketString', "Format")
 
 		self.outputs.new('NodeSocketShader', "Target")
@@ -296,6 +298,8 @@ def buildNode(res, node, node_group, last_bind_target, shader_references, asset_
 			stage.params.append('color')
 		if node.inputs[2].default_value == True:
 			stage.params.append('depth')
+		if node.inputs[3].default_value == True:
+			stage.params.append('stencil')
 			
 	elif node.bl_idname == 'DrawGeometryNodeType':
 		stage.command = 'draw_geometry'
@@ -363,6 +367,7 @@ def get_render_targets(node_group):
 			target.height = n.inputs[2].default_value
 			target.color_buffers = n.inputs[3].default_value
 			target.depth_buffer = n.inputs[4].default_value
-			target.format = n.inputs[5].default_value
+			target.stencil_buffer = n.inputs[5].default_value
+			target.format = n.inputs[6].default_value
 			render_targets.append(target)
 	return render_targets
