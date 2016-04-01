@@ -29,9 +29,9 @@ uniform sampler2D snoise;
 
 const float PI = 3.1415926535;
 const vec2 screenSize = vec2(800.0, 600.0);
-const float aoSize = 0.43;
+const float aoSize = 0.6;//0.43;
 const int kernelSize = 8;
-const float strength = 0.55;
+const float strength = 0.8;//0.55;
 
 in vec2 texCoord;
 
