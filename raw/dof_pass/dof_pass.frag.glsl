@@ -14,7 +14,7 @@ in vec2 texCoord;
 
 const float focus_depth = 0.5;
 
-const float vignout = 1.3; // vignetting outer border
+const float vignout = 1.6; // vignetting outer border
 const float vignin = 0.0; // vignetting inner border
 const float vignfade = 90.0; // f-stops till vignete fades
 const float fstop = 20; // f-stop value

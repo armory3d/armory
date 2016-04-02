@@ -2134,13 +2134,18 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		c.bind_constants = []
 		
 		const = Object()
-		const.id = "lighting"
+		const.id = 'lighting'
 		const.bool = material.lighting_bool
 		c.bind_constants.append(const)
 		
 		const = Object()
-		const.id = "receiveShadow"
+		const.id = 'receiveShadow'
 		const.bool = material.receive_shadow
+		c.bind_constants.append(const)
+		
+		const = Object()
+		const.id = 'mask'
+		const.float = material.stencil_mask
 		c.bind_constants.append(const)
 		
 		c.bind_textures = []
@@ -2217,8 +2222,30 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			ext = ''
 			for d in defs:
 				ext += d
-			ArmoryExporter.asset_references.append('compiled/ShaderResources/' + ArmoryExporter.pipeline_id + '/' + ArmoryExporter.pipeline_id + ext + '.json')
-			shader_res_name =  ArmoryExporter.pipeline_id + ext
+			# Shader res
+			shader_res_name = ArmoryExporter.pipeline_id + ext
+			shader_res_path = 'compiled/ShaderResources/' + ArmoryExporter.pipeline_id + '/' + shader_res_name + '.json'
+			# Stencil mask
+			# if material.stencil_mask > 0:
+			# 	mask_ext = "_mask" + str(material.stencil_mask)
+			# 	shader_res_name_with_mask = shader_res_name + mask_ext
+			# 	shader_res_path_with_mask = 'compiled/ShaderResources/' + ArmoryExporter.pipeline_id + '/' + shader_res_name_with_mask + '.json'
+			# 	# Copy resource if it does not exist and set stencil mask
+			# 	if not os.path.isfile(shader_res_path_with_mask):
+			# 		json_file = open(shader_res_path).read()
+			# 		json_data = json.loads(json_file)
+			# 		res = json_data['shader_resources'][0]
+			# 		res['id'] += mask_ext
+			# 		for c in res['contexts']:
+			# 			c['stencil_pass'] = 'replace'
+			# 			c['stencil_reference_value'] = material.stencil_mask
+			# 		with open(shader_res_path_with_mask, 'w') as f:
+			# 			json.dump(json_data, f)
+			# 	ArmoryExporter.asset_references.append(shader_res_path_with_mask)
+			# 	o.shader = shader_res_name_with_mask + '/' + shader_res_name_with_mask
+			# # No stencil mask
+			# else:
+			ArmoryExporter.asset_references.append(shader_res_path)
 			o.shader = shader_res_name + '/' + shader_res_name
 			# Process all passes from pipeline
 			for pipe_pass in ArmoryExporter.pipeline_passes:
