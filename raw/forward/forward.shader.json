@@ -24,6 +24,10 @@
 					"value": "blend_zero"
 				},
 				{
+					"id": "stencil_mode",
+					"value": "always"
+				},
+				{
 					"id": "stencil_pass",
 					"value": "keep"
 				},
@@ -34,6 +38,14 @@
 				{
 					"id": "stencil_reference_value",
 					"value": 0
+				},
+				{
+					"id": "stencil_read_mask",
+					"value": 255
+				},
+				{
+					"id": "stencil_write_mask",
+					"value": 255
 				}
 			],
 			"links": [
@@ -98,6 +110,10 @@
 					"value": "blend_zero"
 				},
 				{
+					"id": "stencil_mode",
+					"value": "always"
+				},
+				{
 					"id": "stencil_pass",
 					"value": "keep"
 				},
@@ -108,6 +124,14 @@
 				{
 					"id": "stencil_reference_value",
 					"value": 0
+				},
+				{
+					"id": "stencil_read_mask",
+					"value": 255
+				},
+				{
+					"id": "stencil_write_mask",
+					"value": 255
 				}
 			],
 			"links": [
