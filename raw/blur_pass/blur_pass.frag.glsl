@@ -12,7 +12,8 @@ in vec2 texCoord;
 // const float weight[5] = float[] (0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
 
 void main() {
-	vec2 step = dir / vec2(400, 300);
+	// vec2 step = dir / vec2(400, 300);
+	vec2 step = dir / vec2(960, 540);
 	// vec2 step = dir / vec2(800, 600);
 	
 	// vec3 result = texture(tex, texCoord).rgb * weight[0];

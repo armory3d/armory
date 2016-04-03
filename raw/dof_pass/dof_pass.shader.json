@@ -52,6 +52,18 @@
 				{
 					"id": "eye",
 					"link": "_cameraPosition"
+				},
+				{
+					"id": "light",
+					"link": "_lightPosition"
+				},
+				{
+					"id": "V",
+					"link": "_viewMatrix"
+				},
+				{
+					"id": "P",
+					"link": "_projectionMatrix"
 				}
 			],
 			"texture_params": [],
