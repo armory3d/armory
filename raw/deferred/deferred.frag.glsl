@@ -62,6 +62,7 @@ void main() {
 		discard;
 #endif
 	vec3 baseColor = texel.rgb;
+	baseColor = pow(baseColor, vec3(2.2));
 #else
 	vec3 baseColor = matColor.rgb;
 #endif
