@@ -18,10 +18,6 @@
 precision mediump float;
 #endif
 
-uniform mat4 invP;
-uniform mat4 invVP;
-uniform mat4 invV;
-
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1; 
 uniform sampler2D gbuffer2;

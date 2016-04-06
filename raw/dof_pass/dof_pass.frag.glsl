@@ -11,8 +11,7 @@ uniform sampler2D gbuffer2;
 uniform vec3 eye;
 
 uniform vec3 light;
-uniform mat4 V;
-uniform mat4 P;
+uniform mat4 VP;
 
 in vec2 texCoord;
 
@@ -121,19 +120,19 @@ void main() {
 	// col.rgb = applyFog(col.rgb, dist);
 	
 	// Lens flare	
-	// vec4 lndc = P * V * vec4(light, 1.0);
-	// lndc.xy /= lndc.w;
+	vec4 lndc = VP * vec4(light, 1.0);
+	lndc.xy /= lndc.w;
 	
-	// float lightDistance = distance(eye, light);
-	// vec2 lss = lndc.xy * 0.5 + 0.5;
-	// float lssdepth = linearize(texture(gbuffer0, lss).a, 0.1, 1000.0);
+	float lightDistance = distance(eye, light);
+	vec2 lss = lndc.xy * 0.5 + 0.5;
+	float lssdepth = linearize(texture(gbuffer0, lss).a, 0.1, 1000.0);
 	
-	// if (lssdepth >= lightDistance) {
-	// 	vec2 lensuv = (texCoord - 0.5) * 2.0;
-	// 	lensuv.x *= aspectRatio;
-	// 	vec3 lensflarecol = vec3(1.4, 1.2, 1.0) * lensflare(lensuv, lndc.xy);
-	// 	col.rgb += lensflarecol;
-	// }
+	if (lssdepth >= lightDistance) {
+		vec2 lensuv = (texCoord - 0.5) * 2.0;
+		lensuv.x *= aspectRatio;
+		vec3 lensflarecol = vec3(1.4, 1.2, 1.0) * lensflare(lensuv, lndc.xy);
+		col.rgb += lensflarecol;
+	}
 	
 	// Vignetting
 	col *= vignette();

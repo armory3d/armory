@@ -69,6 +69,14 @@ def writeResource(res, defs, json_data, base_name):
 				con.blend_source = p['value']
 			elif p['id'] == 'blend_destination':
 				con.blend_destination = p['value']
+			elif p['id'] == 'blend_operation':
+				con.blend_operation = p['value']
+			elif p['id'] == 'alpha_blend_source':
+				con.alpha_blend_source = p['value']
+			elif p['id'] == 'alpha_blend_destination':
+				con.alpha_blend_destination = p['value']
+			elif p['id'] == 'alpha_blend_operation':
+				con.alpha_blend_operation = p['value']
 
 		# Parse shaders
 		vs = open(c['vertex_shader']).read().splitlines()

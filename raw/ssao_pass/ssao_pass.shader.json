@@ -14,77 +14,9 @@
 				{
 					"id": "cull_mode",
 					"value": "none"
-				},
-				{
-					"id": "blend_source",
-					"value": "blend_one"
-				},
-				{
-					"id": "blend_destination",
-					"value": "blend_zero"
-				},
-				{
-					"id": "stencil_mode",
-					"value": "always"
-				},
-				{
-					"id": "stencil_pass",
-					"value": "keep"
-				},
-				{
-					"id": "stencil_fail",
-					"value": "keep"
-				},
-				{
-					"id": "stencil_reference_value",
-					"value": 0
-				},
-				{
-					"id": "stencil_read_mask",
-					"value": 255
-				},
-				{
-					"id": "stencil_write_mask",
-					"value": 255
 				}
 			],
 			"links": [
-				{
-					"id": "invP",
-					"link": "_inverseProjectionMatrix"
-				},
-				{
-					"id": "invVP",
-					"link": "_inverseViewProjectionMatrix"
-				},
-				{
-					"id": "invV",
-					"link": "_inverseViewMatrix"
-				},
-				{
-					"id": "_u1",
-					"link": "_u1"
-				},
-				{
-					"id": "_u2",
-					"link": "_u2"
-				},
-				{
-					"id": "_u3",
-					"link": "_u3"
-				},
-				{
-					"id": "_u4",
-					"link": "_u4"
-				},
-				{
-					"id": "_u5",
-					"link": "_u5"
-				},
-				{
-					"id": "_u6",
-					"link": "_u6"
-				}
 			],
 			"texture_params": [],
 			"vertex_shader": "ssao_pass.vert.glsl",

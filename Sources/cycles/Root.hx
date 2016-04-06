@@ -21,11 +21,6 @@ class Root {
 		Eg.addNodeTrait(sceneNode, physics);
 
 		App.requestRender(render);
-		
-		// untyped loadScript('hdrload.js', null);
-		// var hdrbin = kha.Assets.blobs.test_hdr.bytes.getData();
-		// var hdrimage:Dynamic = null;
-		// untyped __js__("hdrimage = parseHdr(hdrbin);");
 	}
 
 	function render(g:kha.graphics4.Graphics) {

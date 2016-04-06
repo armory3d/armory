@@ -14,48 +14,16 @@
 				{
 					"id": "cull_mode",
 					"value": "none"
-				},
-				{
-					"id": "blend_source",
-					"value": "blend_one"
-				},
-				{
-					"id": "blend_destination",
-					"value": "blend_zero"
-				},
-				{
-					"id": "stencil_mode",
-					"value": "always"
-				},
-				{
-					"id": "stencil_pass",
-					"value": "keep"
-				},
-				{
-					"id": "stencil_fail",
-					"value": "keep"
-				},
-				{
-					"id": "stencil_reference_value",
-					"value": 0
-				},
-				{
-					"id": "stencil_read_mask",
-					"value": 255
-				},
-				{
-					"id": "stencil_write_mask",
-					"value": 255
 				}
 			],
 			"links": [
 				{
-					"id": "V",
-					"link": "_viewMatrix"
+					"id": "transpV",
+					"link": "_transposeViewMatrix"
 				},
 				{
-					"id": "P",
-					"link": "_projectionMatrix"
+					"id": "invP",
+					"link": "_inverseProjectionMatrix"
 				}
 			],
 			"texture_params": [],
