@@ -93,15 +93,15 @@ def start_plugin():
     start.register()
     
     # Start server
-    s = bpy.data.filepath.split(os.path.sep)
-    s.pop()
-    fp = os.path.sep.join(s)
-    os.chdir(fp)
+    # s = bpy.data.filepath.split(os.path.sep)
+    # s.pop()
+    # fp = os.path.sep.join(s)
+    # os.chdir(fp)
     
-    blender_path = bpy.app.binary_path
-    blend_path = bpy.data.filepath
-    p = subprocess.Popen([blender_path, blend_path, '-b', '-P', scripts_path + 'lib/server.py', '&'])
-    atexit.register(p.terminate)
+    # blender_path = bpy.app.binary_path
+    # blend_path = bpy.data.filepath
+    # p = subprocess.Popen([blender_path, blend_path, '-b', '-P', scripts_path + 'lib/server.py', '&'])
+    # atexit.register(p.terminate)
 
 def update(self):
     haxelib_path = "haxelib"

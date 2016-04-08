@@ -61,11 +61,12 @@ def initWorldProperties():
 		defaultSettings()
 
 	# Use material nodes
-	for mat in bpy.data.materials:
-		bpy.ops.cycles.use_shading_nodes({"material":mat})
+	# TODO: Set a proper override context to prevent error output
+	#for mat in bpy.data.materials:
+	#	bpy.ops.cycles.use_shading_nodes({"material":mat})
 	# Use world nodes
-	for wrd in bpy.data.worlds:
-		bpy.ops.cycles.use_shading_nodes({"world":wrd})
+	#for wrd in bpy.data.worlds:
+	#	bpy.ops.cycles.use_shading_nodes({"world":wrd})
 	
 	return
 
@@ -111,6 +112,22 @@ class Object:
 		else:
 			return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
+def get_export_scene_override(scene):
+    for window in bpy.context.window_manager.windows:
+        screen = window.screen
+        for area in screen.areas:
+            if area.type == 'VIEW_3D':
+                for region in area.regions:
+                    if region.type == 'WINDOW':
+                        override = {
+                            'window': window,
+                            'screen': screen,
+                            'area': area,
+                            'region': region,
+							'edit_object': bpy.context.edit_object,
+							'scene': scene}
+                        return override
+
 # Transform Blender data into game data
 def exportGameData():
 	shader_references = []
@@ -140,7 +157,9 @@ def exportGameData():
 	# Export scene data
 	for scene in bpy.data.scenes:
 		if scene.name[0] != '.': # Skip hidden scenes
-			bpy.ops.export_scene.armory({"scene":scene}, filepath='Assets/generated/' + scene.name + '.json')
+			bpy.ops.export_scene.armory(
+				get_export_scene_override(scene),
+				filepath='Assets/generated/' + scene.name + '.json')
 			shader_references += ArmoryExporter.shader_references
 			asset_references += ArmoryExporter.asset_references
 
