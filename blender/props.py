@@ -25,7 +25,10 @@ def initProperties():
     bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Pipeline Path", default="forward_pipeline")
     bpy.types.Camera.pipeline_id = bpy.props.StringProperty(name="Pipeline ID", default="forward")
 	# Indicates if envmap textures are to be linked to object materials
-    bpy.types.Camera.pipeline_bind_world_to_materials = bpy.props.BoolProperty(name="Bind World", default=False)
+    # bpy.types.Camera.pipeline_bind_world_to_materials = bpy.props.BoolProperty(name="Bind World", default=False)
+	# TODO: move to world
+    bpy.types.Camera.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
+    bpy.types.Camera.world_envtex_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
     # For material
     bpy.types.Material.lighting_bool = bpy.props.BoolProperty(name="Lighting", default=True)
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)

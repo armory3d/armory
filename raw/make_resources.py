@@ -147,6 +147,19 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
 				if found == False:
 					tu = Object()
 					tu.id = cid
+					# Check for link
+					for l in c['links']:
+						if l['id'] == cid:
+							valid_link = True
+							if 'ifdef' in l:
+								valid_link = False
+								for d in defs:
+									if d == l['ifdef']:
+										valid_link = True
+										break
+							if valid_link:
+								tu.link = l['link']
+							break
 					con.texture_units.append(tu)
 			else: # Constant
 				if cid.find('[') != -1: # Float arrays

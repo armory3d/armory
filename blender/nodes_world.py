@@ -63,6 +63,7 @@ def buildNodeTree(world_name, node_group, shader_references, asset_references):
 			asset_references.append('compiled/ShaderResources/env_map/env_map.json')
 			shader_references.append('compiled/Shaders/env_map/env_map')
 			# Generate prefiltered envmaps
+			bpy.data.cameras[0].world_envtex_name = texture.name
 			generate_envmaps(image_name, image_name.endswith('.jpg'))
 
 	with open(path + material_name + '.json', 'w') as f:
@@ -116,16 +117,21 @@ def generate_envmaps(image_name, disable_hdr):
 		dst_face_size = str(face_size)
 		
 		# Generate irradiance
+		gama_options = ''
+		if disable_hdr:
+			gama_options = \
+			' --inputGammaNumerator 2.2' + \
+			' --inputGammaDenominator 1.0' + \
+			' --outputGammaNumerator 1.0' + \
+			' --outputGammaDenominator ' + output_gama_numerator
+		
 		output_file = 'Assets/generated/envmaps/' + base_name + '_irradiance'
 		subprocess.call([ \
 			cmft_path + 'cmft-osx' + \
 			' --input ' + input_file + \
 			' --filter irradiance' + \
 			' --dstFaceSize ' + dst_face_size + \
-			' --inputGammaNumerator 2.2' + \
-			' --inputGammaDenominator 1.0' + \
-			' --outputGammaNumerator ' + output_gama_numerator + \
-			' --outputGammaDenominator 1.0' + \
+			gama_options + \
 			' --outputNum 1' + \
 			' --output0 ' + output_file + \
 			' --output0params hdr,rgbe,latlong'], shell=True)
@@ -138,6 +144,7 @@ def generate_envmaps(image_name, disable_hdr):
 			kraffiti_path + 'kraffiti-osx' + \
 			' from=' + input_file + \
 			' to=' + output_file + '.' + outformat + \
+			' format=' + outformat + \
 			' scale=0.5'], shell=True)
 		subprocess.call([ \
 			cmft_path + 'cmft-osx' + \
@@ -159,8 +166,8 @@ def generate_envmaps(image_name, disable_hdr):
 			' --generateMipChain false' + \
 			' --inputGammaNumerator 2.2' + \
 			' --inputGammaDenominator 1.0' + \
-			' --outputGammaNumerator ' + output_gama_numerator + \
-			' --outputGammaDenominator 1.0' + \
+			' --outputGammaNumerator 1.0' + \
+			' --outputGammaDenominator ' + output_gama_numerator + \
 			' --outputNum 1' + \
 			' --output0 ' + output_file + \
 			' --output0params hdr,rgbe,latlong'], shell=True)
@@ -205,3 +212,5 @@ def generate_envmaps(image_name, disable_hdr):
 					' format=' + outformat], shell=True)
 			generated_files.append(out)
 		
+		mip_count += 5
+		bpy.data.cameras[0].world_envtex_num_mips = mip_count

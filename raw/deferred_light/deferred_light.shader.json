@@ -28,6 +28,18 @@
 				{
 					"id": "LMVP",
 					"link": "_lightModelViewProjectionMatrix"
+				},
+				{
+					"id": "senvmapIrradiance",
+					"link": "_envmapIrradiance"
+				},
+				{
+					"id": "senvmapRadiance",
+					"link": "_envmapRadiance"
+				},
+				{
+					"id": "senvmapBrdf",
+					"link": "_envmapBrdf"
 				}
 			],
 			"vertex_shader": "deferred_light.vert.glsl",

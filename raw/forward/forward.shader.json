@@ -49,6 +49,18 @@
 					"id": "skinBones",
 					"link": "_skinBones",
 					"ifdef": "_Skinning"
+				},
+				{
+					"id": "senvmapIrradiance",
+					"link": "_envmapIrradiance"
+				},
+				{
+					"id": "senvmapRadiance",
+					"link": "_envmapRadiance"
+				},
+				{
+					"id": "senvmapBrdf",
+					"link": "_envmapBrdf"
 				}
 			],
 			"vertex_shader": "forward.vert.glsl",

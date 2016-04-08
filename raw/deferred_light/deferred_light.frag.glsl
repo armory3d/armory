@@ -92,7 +92,7 @@ float texture2DShadowLerp(vec2 size, vec2 uv, float compare){
     return c;
 }
 
-float PCF(vec2 size, vec2 uv, float compare){
+float PCF(vec2 size, vec2 uv, float compare) {
     float result = 0.0;
     // for (int x = -1; x <= 1; x++){
         // for(int y = -1; y <= 1; y++){
