@@ -29,7 +29,7 @@ CMFT=./cmft-osx
 #              --output0 "okretnica"
 
 # Typical parameters for radiance filter.
-# eval $CMFT $@ --input "okretnica.tga"           \
+# eval $CMFT $@ --input "envmap.jpg"           \
 #               ::Filter options                  \
 #               --filter radiance                 \
 #               --srcFaceSize 256                 \
@@ -51,13 +51,13 @@ CMFT=./cmft-osx
 #               --inputGammaDenominator 1.0       \
 #               --outputGammaNumerator 1.0        \
 #               --outputGammaDenominator 2.2      \
-#               --generateMipChain false          \
+#               --generateMipChain true          \
 #               ::Output                          \
-#               --outputNum 2                     \
-#               --output0 "okretnica_pmrem"       \
-#               --output0params dds,bgra8,cubemap \
-#               --output1 "okretnica_pmrem"       \
-#               --output1params ktx,rgba8,cubemap
+#               --outputNum 1                     \
+#               --output0 "envmap_rad"       \
+#               --output0params hdr,rgbe,latlong \
+              # --output1 "okretnica_pmrem"       \
+              # --output1params ktx,rgba8,cubemap
 
 # Cmft can also be run without any processing filter. This can be used for performing image manipulations or exporting different image format.
 #eval $CMFT $@ --input "okretnica.tga"           \
@@ -167,9 +167,10 @@ CMFT=./cmft-osx
 #              --output3 "cmft_facelist"   --output3params tga,bgra8,facelist \
 #              --output4 "cmft_latlong"    --output4params hdr,rgbe,latlong
 
-eval $CMFT $@ --input "memorial.hdr"          \
+eval $CMFT $@ --input "shrine.hdr"          \
              --filter none                     \
              ::Output                          \
              --outputNum 1                     \
-             --output0 "memorial_hdr"         \
-             --output0params hdr,rgbe,latlong  \
+             --dstFaceSize 0 \
+             --output0 "test"         \
+             --output0params hdr,rgbe,latlong
