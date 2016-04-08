@@ -193,7 +193,8 @@ void main() {
 	// outColor.rgb *= occlusion;
 	// outColor.rgb *= ao;
 
-	gl_FragColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
+	gl_FragColor = vec4(outColor.rgb, outColor.a);
+	
 	// vec4 aocol = texture(ssaotex, texCoord);
 	// gl_FragColor = aocol;
 }

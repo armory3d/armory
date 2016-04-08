@@ -97,6 +97,42 @@ vec3 lensflare(vec2 uv, vec2 pos) {
 	return c;
 }
 
+const float MIDDLE_GREY = 0.18;
+float getExposure(float aperture,
+                                     float shutterSpeed,
+                                     float iso) {
+    float q = 0.65;
+    //float l_avg = (1000.0f / 65.0f) * sqrt(aperture) / (iso * shutterSpeed);
+    float l_avg = (1.0 / q) * sqrt(aperture) / (iso * shutterSpeed);
+    //float l_avg = sqrt(aperture) / (iso * shutterSpeed);
+    return MIDDLE_GREY / l_avg;
+}
+
+//Based on Filmic Tonemapping Operators http://filmicgames.com/archives/75
+vec3 tonemapFilmic(vec3 color) {
+    vec3 x = max(vec3(0.0), color - 0.004);
+    return (x * (6.2 * x + 0.5)) / (x * (6.2 * x + 1.7) + 0.06);
+}
+vec3 tonemapReinhard(vec3 color) {
+  return color / (color + vec3(1.0));
+}
+const float A = 0.15;
+const float B = 0.50;
+const float C = 0.10;
+const float D = 0.20;
+const float E = 0.02;
+const float F = 0.30;
+const float W = 11.2;
+vec3 uncharted2Tonemap(vec3 x) {
+   return ((x * (A * x + C * B) + D * E) / (x * (A * x + B) + D * F)) - E / F;
+}
+vec3 tonemapUncharted2(vec3 color) {
+    float exposureBias = 2.0;
+    vec3 curr = uncharted2Tonemap(exposureBias * color);
+    vec3 whiteScale = 1.0 / uncharted2Tonemap(vec3(W));
+    return curr * whiteScale;
+}
+
 void main() {
 	// Blur
 	float depth = texture(gbuffer0, texCoord).a;
@@ -136,6 +172,19 @@ void main() {
 	
 	// Vignetting
 	col *= vignette();
+	
+	// Exposure
+	const float aperture = 16;
+	const float shutterSpeed = 0.5;
+	const float iso = 100;
+	// col.rgb *= getExposure(aperture, shutterSpeed, iso);
+	
+	// Tonemapping
+	// col.rgb = tonemapUncharted2(col.rgb);
+	// col.rgb = tonemapFilmic(col.rgb); // With gamma
+	
+	// To gamma
+	col = vec4(pow(col.rgb, vec3(1.0 / 2.2)), col.a);
 	
 	gl_FragColor = col; 
 }
