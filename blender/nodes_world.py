@@ -97,9 +97,10 @@ def generate_envmaps(image_name, disable_hdr):
 		image_w = image_w[1:]
 		image_w = image_w.split('x')[0]
 		image_w = int(image_w)
+		image_h = image_w / 2
 		
-		# 4096 = 256 face - 6 mips
-		# 2048 = 128 face - 5 mips
+		# 4096 = 256 face - 6 mips - 1024 latlong
+		# 2048 = 128 face - 5 mips - 512 latlong
 		# 1024 = 64 face - 4 mips
 		# 512 = 32 face - 3 mips
 		# 256 = 16 face - 2 mips
@@ -164,6 +165,21 @@ def generate_envmaps(image_name, disable_hdr):
 			' --output0 ' + output_file + \
 			' --output0params hdr,rgbe,latlong'], shell=True)
 		
+		# Remove size extensions in file name
+		mip_w = int(face_size * 4)
+		mip_h = int(face_size * 2)
+		mip_base = output_file + '_'
+		mip_num = 0
+		while mip_w >= 32:
+			mip_name = mip_base + str(mip_num)
+			os.rename(
+				mip_name + '_' + str(mip_w) + 'x' + str(mip_h) + '.hdr',
+				mip_name + '.hdr')
+			mip_w = int(mip_w / 2)
+			mip_h = int(mip_h / 2)
+			mip_num += 1
+
+		# Append mips		
 		for i in range(0, mip_count):
 			generated_files.append(output_file + '_' + str(i))
 		
