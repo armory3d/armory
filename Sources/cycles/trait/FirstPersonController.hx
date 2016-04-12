@@ -6,8 +6,8 @@ import lue.trait.Trait;
 import lue.sys.Input;
 import lue.sys.Time;
 import lue.node.Transform;
-import cycles.trait.RigidBody;
 import lue.node.CameraNode;
+import cycles.trait.RigidBody;
 
 class FirstPersonController extends Trait {
 
@@ -58,6 +58,8 @@ class FirstPersonController extends Trait {
     var locked = true;
 
     public function update() {
+		if (Input.occupied) return;
+		
         // Unlock
         // if (locked &&
         //     Input.x > lue.App.w / 2 - 20 && Input.x < lue.App.w / 2 + 20 &&

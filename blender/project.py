@@ -27,6 +27,7 @@ def defaultSettings():
 	wrd['CGProjectScene'] = bpy.data.scenes[0].name
 	wrd['CGProjectSamplesPerPixel'] = 1
 	wrd['CGPhysics'] = 0
+	wrd['CGKhafileConfig'] = ''
 	wrd['CGMinimize'] = (True)
 	# Make sure we are using cycles
 	if bpy.data.scenes[0].render.engine == 'BLENDER_RENDER':
@@ -54,6 +55,7 @@ def initWorldProperties():
 		items = [('Disabled', 'Disabled', 'Disabled'), 
 				 ('Bullet', 'Bullet', 'Bullet')],
 		name = "Physics")
+	bpy.types.World.CGKhafileConfig = StringProperty(name = "Config")
 	bpy.types.World.CGMinimize = BoolProperty(name = "Minimize")
 
 	# Default settings
@@ -103,6 +105,7 @@ class ToolsPanel(bpy.types.Panel):
 		row.operator("cg.clean")
 		layout.prop(wrd, 'CGProjectSamplesPerPixel')
 		layout.prop(wrd, 'CGPhysics')
+		layout.prop_search(wrd, "CGKhafileConfig", bpy.data, "texts", "Config")
 		layout.prop(wrd, 'CGMinimize')
 
 class Object:

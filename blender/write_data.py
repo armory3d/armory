@@ -30,8 +30,12 @@ project.addLibrary('cyclesgame');
 			if bpy.data.worlds[0]['CGPhysics'] != 0:
 				f.write("\nproject.addDefine('WITH_PHYSICS')\n")
 				f.write("project.addLibrary('haxebullet')\n")
+				
+			config_text = bpy.data.worlds[0]['CGKhafileConfig']
+			if config_text != '':
+				f.write(bpy.data.texts[config_text].as_string())
 
-			f.write("\nreturn project;\n")
+			f.write("\n\nreturn project;\n")
 
 # Write Main.hx
 def write_main():
