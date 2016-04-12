@@ -51,9 +51,9 @@ os.chdir('../fisheye_pass')
 make_resources.make('fisheye_pass.shader.json')
 make_variants.make('fisheye_pass.shader.json')
 
-# os.chdir('../ssr_pass')
-# make_resources.make('ssr_pass.shader.json')
-# make_variants.make('ssr_pass.shader.json')
+os.chdir('../ssr_pass')
+make_resources.make('ssr_pass.shader.json')
+make_variants.make('ssr_pass.shader.json')
 
 os.chdir('../combine_pass')
 make_resources.make('combine_pass.shader.json')

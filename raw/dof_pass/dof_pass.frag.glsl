@@ -184,7 +184,7 @@ void main() {
 	// col.rgb = tonemapFilmic(col.rgb); // With gamma
 	
 	// To gamma
-	col = vec4(pow(col.rgb, vec3(1.0 / 2.2)), col.a);
+	// col = vec4(pow(col.rgb, vec3(1.0 / 2.2)), col.a);
 	
 	gl_FragColor = col; 
 }

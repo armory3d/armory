@@ -42,7 +42,7 @@ class PhysicsDrag extends Trait {
 
 			if (b != null && b.mass > 0 && !b.body.value.isKinematicObject()) {
 
-				updateRays();
+				setRays();
 				pickedBody = b;
 
 				#if js
@@ -107,7 +107,7 @@ class PhysicsDrag extends Trait {
 
 		    if (pickConstraint != null) {
 				
-		    	updateRays();
+		    	setRays();
 
 		        // Keep it at the same picking distance
 		        var btRayTo = BtVector3.create(rayTo.value.x(), rayTo.value.y(), rayTo.value.z());
@@ -135,7 +135,7 @@ class PhysicsDrag extends Trait {
 		}
 	}
 
-	inline function updateRays() {
+	inline function setRays() {
 		rayFrom = physics.getRayFrom();
 		rayTo = physics.getRayTo(Input.x, Input.y);
 	}

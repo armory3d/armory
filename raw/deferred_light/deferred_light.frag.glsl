@@ -138,7 +138,7 @@ void main() {
 	
 	vec4 g1 = texture(gbuffer1, texCoord); // Positions, roughness
 	vec4 g2 = texture(gbuffer2, texCoord); // Base color, metalness
-	float ao = texture(ssaotex, texCoord).r; // Normals, depth
+	float ao = texture(ssaotex, texCoord).r;
 
 	vec3 n = g0.rgb;
 	vec3 p = g1.rgb;
@@ -192,6 +192,8 @@ void main() {
 	
 	// outColor.rgb *= occlusion;
 	// outColor.rgb *= ao;
+
+	outColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
 
 	gl_FragColor = vec4(outColor.rgb, outColor.a);
 	

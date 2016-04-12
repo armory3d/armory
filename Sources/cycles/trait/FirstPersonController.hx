@@ -11,6 +11,10 @@ import lue.node.CameraNode;
 
 class FirstPersonController extends Trait {
 
+#if (!WITH_PHYSICS)
+	public function new() { super(); }
+#else
+
     var transform:Transform;
     var body:RigidBody;
     var camera:CameraNode;
@@ -64,8 +68,8 @@ class FirstPersonController extends Trait {
         // Look
         // if (!locked) {
         if (Input.touch) {
-			camera.rotate(new Vec4(1, 0, 0), Input.deltaY / 100);
-			transform.rotate(new Vec4(0, 0, 1), -Input.deltaX / 100);
+			camera.rotate(new Vec4(1, 0, 0), Input.deltaY / 200);
+			transform.rotate(new Vec4(0, 0, 1), -Input.deltaX / 200);
         	body.syncTransform();
         }
 
@@ -153,4 +157,5 @@ class FirstPersonController extends Trait {
 
         camera.updateMatrix();
     }
+#end
 }

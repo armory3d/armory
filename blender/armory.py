@@ -2263,16 +2263,19 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 	def make_texture(self, id, image_node):
 		tex = Object()
 		tex.id = id
-		tex.name = image_node.image.name.rsplit('.', 1)[0] # Remove extension
-		tex.name = tex.name.replace('.', '_')
-		if image_node.interpolation == 'Cubic': # Mipmap linear
-			tex.mipmap_filter = 'linear'
-			tex.generate_mipmaps = True
-		elif image_node.interpolation == 'Smart': # Mipmap anisotropic
-			tex.min_filter = 'anisotropic'
-			tex.mipmap_filter = 'linear'
-			tex.generate_mipmaps = True
-		#image_node.extension = 'Repeat'
+		if image_node.image is not None:
+			tex.name = image_node.image.name.rsplit('.', 1)[0] # Remove extension
+			tex.name = tex.name.replace('.', '_')
+			if image_node.interpolation == 'Cubic': # Mipmap linear
+				tex.mipmap_filter = 'linear'
+				tex.generate_mipmaps = True
+			elif image_node.interpolation == 'Smart': # Mipmap anisotropic
+				tex.min_filter = 'anisotropic'
+				tex.mipmap_filter = 'linear'
+				tex.generate_mipmaps = True
+			#image_node.extension = 'Repeat'
+		else:
+			tex.name = ''
 		return tex
 
 	def parse_material_surface(self, material, c, defs, tree, node):
