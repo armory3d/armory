@@ -17,6 +17,10 @@
 				}
 			],
 			"links": [
+				{
+					"id": "snoise",
+					"link": "_noise8"
+				}
 			],
 			"texture_params": [],
 			"vertex_shader": "ssao_pass.vert.glsl",

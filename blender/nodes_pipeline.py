@@ -132,6 +132,24 @@ class BindTargetNode(Node, CGPipelineTreeNode):
 	def free(self):
 		print("Removing node ", self, ", Goodbye!")
 
+class DrawMaterialQuadNode(Node, CGPipelineTreeNode):
+	'''A custom node'''
+	bl_idname = 'DrawMaterialQuadNodeType'
+	bl_label = 'Draw Material Quad'
+	bl_icon = 'SOUND'
+	
+	def init(self, context):
+		self.inputs.new('NodeSocketShader', "Stage")
+		self.inputs.new('NodeSocketString', "Material Context")
+
+		self.outputs.new('NodeSocketShader', "Stage")
+
+	def copy(self, node):
+		print("Copying from node ", node)
+
+	def free(self):
+		print("Removing node ", self, ", Goodbye!")
+		
 class DrawQuadNode(Node, CGPipelineTreeNode):
 	'''A custom node'''
 	bl_idname = 'DrawQuadNodeType'
@@ -140,7 +158,7 @@ class DrawQuadNode(Node, CGPipelineTreeNode):
 	
 	def init(self, context):
 		self.inputs.new('NodeSocketShader', "Stage")
-		self.inputs.new('NodeSocketString', "Material Context")
+		self.inputs.new('NodeSocketString', "Shader Context")
 
 		self.outputs.new('NodeSocketShader', "Stage")
 
@@ -186,6 +204,7 @@ node_categories = [
 		NodeItem("ClearTargetNodeType"),
 		NodeItem("SetTargetNodeType"),
 		NodeItem("BindTargetNodeType"),
+		NodeItem("DrawMaterialQuadNodeType"),
 		NodeItem("DrawQuadNodeType"),
 		NodeItem("DrawWorldNodeType"),
 		NodeItem("TargetNodeType"),
@@ -319,17 +338,26 @@ def buildNode(res, node, node_group, last_bind_target, shader_references, asset_
 		stage.params.append(targetId)
 		stage.params.append(node.inputs[2].default_value)
 		
-	elif node.bl_idname == 'DrawQuadNodeType':
-		stage.command = 'draw_quad'
+	elif node.bl_idname == 'DrawMaterialQuadNodeType':
+		stage.command = 'draw_material_quad'
 		material_context = node.inputs[1].default_value
 		stage.params.append(material_context)
 		# Include resource and shaders
 		res_name = material_context.rsplit('/', 1)[1]
 		asset_references.append('compiled/ShaderResources/' + res_name + '/' + res_name + '.json')
 		shader_references.append('compiled/Shaders/' + res_name + '/' + res_name)
+		
+	elif node.bl_idname == 'DrawQuadNodeType':
+		stage.command = 'draw_shader_quad'
+		shader_context = node.inputs[1].default_value
+		stage.params.append(shader_context)
+		# Include resource and shaders
+		res_name = shader_context.split('/', 1)[0]
+		asset_references.append('compiled/ShaderResources/' + res_name + '/' + res_name + '.json')
+		shader_references.append('compiled/Shaders/' + res_name + '/' + res_name)
 	
 	elif node.bl_idname == 'DrawWorldNodeType':
-		stage.command = 'draw_quad'
+		stage.command = 'draw_material_quad'
 		wname = bpy.data.worlds[0].name
 		stage.params.append(wname + '_material/' + wname + '_material/env_map') # Only one world for now
 	

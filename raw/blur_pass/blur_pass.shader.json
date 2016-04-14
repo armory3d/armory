@@ -1,7 +1,7 @@
 {
 	"contexts": [
 		{
-			"id": "blur_pass",
+			"id": "blur_pass_x",
 			"params": [
 				{
 					"id": "depth_write",
@@ -16,7 +16,42 @@
 					"value": "none"
 				}
 			],
-			"links": [],
+			"links": [
+				{
+					"id": "dir",
+					"link": "_vec2x"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "blur_pass.vert.glsl",
+			"fragment_shader": "blur_pass.frag.glsl"
+		},
+		{
+			"id": "blur_pass_y",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "true"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				},
+				{
+					"id": "dir",
+					"link": "_vec2y"
+				}
+			],
+			"links": [
+				{
+					"id": "dir",
+					"link": "_vec2y"
+				}
+			],
 			"texture_params": [],
 			"vertex_shader": "blur_pass.vert.glsl",
 			"fragment_shader": "blur_pass.frag.glsl"
