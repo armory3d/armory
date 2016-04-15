@@ -185,6 +185,32 @@ class DrawWorldNode(Node, CGPipelineTreeNode):
 	def free(self):
 		print("Removing node ", self, ", Goodbye!")
 
+# Helper nodes
+class QuadPassNode(Node, CGPipelineTreeNode):
+	'''A custom node'''
+	bl_idname = 'QuadPassNodeType'
+	bl_label = 'Quad Pass'
+	bl_icon = 'SOUND'
+	
+	def init(self, context):
+		self.inputs.new('NodeSocketShader', "Stage")
+		self.inputs.new('NodeSocketShader', "Target")
+		self.inputs.new('NodeSocketString', "Shader Context")
+		self.inputs.new('NodeSocketShader', "Bind 1")
+		self.inputs.new('NodeSocketString', "Constant")
+		self.inputs.new('NodeSocketShader', "Bind 2")
+		self.inputs.new('NodeSocketString', "Constant")
+		self.inputs.new('NodeSocketShader', "Bind 3")
+		self.inputs.new('NodeSocketString', "Constant")
+
+		self.outputs.new('NodeSocketShader', "Stage")
+
+	def copy(self, node):
+		print("Copying from node ", node)
+
+	def free(self):
+		print("Removing node ", self, ", Goodbye!")
+
 ### Node Categories ###
 # Node categories are a python system for automatically
 # extending the Add menu, toolbar panels and search operator.
@@ -198,8 +224,13 @@ class MyPipelineNodeCategory(NodeCategory):
 	def poll(cls, context):
 		return context.space_data.tree_type == 'CGPipelineTreeType'
 
+class MyPassNodeCategory(NodeCategory):
+	@classmethod
+	def poll(cls, context):
+		return context.space_data.tree_type == 'CGPipelineTreeType'
+
 node_categories = [
-	MyPipelineNodeCategory("PIPELINENODES", "Pipeline Nodes", items=[
+	MyPipelineNodeCategory("PIPELINENODES", "Pipeline", items=[
 		NodeItem("DrawGeometryNodeType"),
 		NodeItem("ClearTargetNodeType"),
 		NodeItem("SetTargetNodeType"),
@@ -210,7 +241,11 @@ node_categories = [
 		NodeItem("TargetNodeType"),
 		NodeItem("FramebufferNodeType"),
 		]),
-	]
+	MyPassNodeCategory("PASSNODES", "Pass", items=[
+		NodeItem("QuadPassNodeType"),
+		]),
+]
+	
 
 def reload_blend_data():
 	if bpy.data.node_groups.get('forward_pipeline') == None:
@@ -295,6 +330,59 @@ def buildNodeTree(node_group, shader_references, asset_references):
 	with open(path + node_group_name + '.json', 'w') as f:
 			f.write(output.to_JSON())
 
+def make_set_target(stage, node_group, node, target_index=1):
+	stage.command = 'set_target'
+	targetNode = findNodeByLink(node_group, node, node.inputs[target_index])
+	if targetNode.bl_idname == 'TargetNodeType':
+		targetId = targetNode.inputs[0].default_value
+	else: # Framebuffer
+		targetId = ''
+	stage.params.append(targetId)
+
+def make_clear_target(stage, node_group, node):
+	stage.command = 'clear_target'
+	if node.inputs[1].default_value == True:
+		stage.params.append('color')
+	if node.inputs[2].default_value == True:
+		stage.params.append('depth')
+	if node.inputs[3].default_value == True:
+		stage.params.append('stencil')
+
+def make_draw_geometry(stage, node_group, node):
+	stage.command = 'draw_geometry'
+	stage.params.append(node.inputs[1].default_value) # Context
+
+def make_bind_target(stage, node_group, node, target_index=1, constant_index=2):
+	stage.command = 'bind_target'
+	targetNode = findNodeByLink(node_group, node, node.inputs[target_index])
+	if targetNode.bl_idname == 'TargetNodeType':
+		targetId = targetNode.inputs[0].default_value
+	stage.params.append(targetId)
+	stage.params.append(node.inputs[constant_index].default_value)
+
+def make_draw_material_quad(stage, node_group, node, shader_references, asset_references, context_index=1):
+	stage.command = 'draw_material_quad'
+	material_context = node.inputs[context_index].default_value
+	stage.params.append(material_context)
+	# Include resource and shaders
+	res_name = material_context.rsplit('/', 1)[1]
+	asset_references.append('compiled/ShaderResources/' + res_name + '/' + res_name + '.json')
+	shader_references.append('compiled/Shaders/' + res_name + '/' + res_name)
+
+def make_draw_quad(stage, node_group, node, shader_references, asset_references, context_index=1):
+	stage.command = 'draw_shader_quad'
+	shader_context = node.inputs[context_index].default_value
+	stage.params.append(shader_context)
+	# Include resource and shaders
+	res_name = shader_context.split('/', 1)[0]
+	asset_references.append('compiled/ShaderResources/' + res_name + '/' + res_name + '.json')
+	shader_references.append('compiled/Shaders/' + res_name + '/' + res_name)
+
+def make_draw_world(stage, node_group, node):
+	stage.command = 'draw_material_quad'
+	wname = bpy.data.worlds[0].name
+	stage.params.append(wname + '_material/' + wname + '_material/env_map') # Only one world for now
+
 def buildNode(res, node, node_group, last_bind_target, shader_references, asset_references):
 	stage = Object()
 	stage.params = []
@@ -303,70 +391,65 @@ def buildNode(res, node, node_group, last_bind_target, shader_references, asset_
 	
 	if node.bl_idname == 'SetTargetNodeType':
 		last_bind_target = None
-		stage.command = 'set_target'
-		targetNode = findNodeByLink(node_group, node, node.inputs[1])
-		if targetNode.bl_idname == 'TargetNodeType':
-			targetId = targetNode.inputs[0].default_value
-		else: # Framebuffer
-			targetId = ''
-		stage.params.append(targetId)
-		
+		make_set_target(stage, node_group, node)
+
 	elif node.bl_idname == 'ClearTargetNodeType':
-		stage.command = 'clear_target'
-		if node.inputs[1].default_value == True:
-			stage.params.append('color')
-		if node.inputs[2].default_value == True:
-			stage.params.append('depth')
-		if node.inputs[3].default_value == True:
-			stage.params.append('stencil')
+		make_clear_target(stage, node_group, node)
 			
 	elif node.bl_idname == 'DrawGeometryNodeType':
-		stage.command = 'draw_geometry'
-		stage.params.append(node.inputs[1].default_value) # Context
-		# bpy.data.cameras[0].pipeline_bind_world_to_materials = node.inputs[2].default_value
+		make_draw_geometry(stage, node_group, node)
 		
 	elif node.bl_idname == 'BindTargetNodeType':
 		if last_bind_target is not None:
 			stage = last_bind_target
 			append_stage = False
 		last_bind_target = stage
-		
-		stage.command = 'bind_target'
-		targetNode = findNodeByLink(node_group, node, node.inputs[1])
-		if targetNode.bl_idname == 'TargetNodeType':
-			targetId = targetNode.inputs[0].default_value
-		stage.params.append(targetId)
-		stage.params.append(node.inputs[2].default_value)
+		make_bind_target(stage, node_group, node)
 		
 	elif node.bl_idname == 'DrawMaterialQuadNodeType':
-		stage.command = 'draw_material_quad'
-		material_context = node.inputs[1].default_value
-		stage.params.append(material_context)
-		# Include resource and shaders
-		res_name = material_context.rsplit('/', 1)[1]
-		asset_references.append('compiled/ShaderResources/' + res_name + '/' + res_name + '.json')
-		shader_references.append('compiled/Shaders/' + res_name + '/' + res_name)
+		make_draw_material_quad(stage, node_group, node, shader_references, asset_references)
 		
 	elif node.bl_idname == 'DrawQuadNodeType':
-		stage.command = 'draw_shader_quad'
-		shader_context = node.inputs[1].default_value
-		stage.params.append(shader_context)
-		# Include resource and shaders
-		res_name = shader_context.split('/', 1)[0]
-		asset_references.append('compiled/ShaderResources/' + res_name + '/' + res_name + '.json')
-		shader_references.append('compiled/Shaders/' + res_name + '/' + res_name)
+		make_draw_quad(stage, node_group, node, shader_references, asset_references)
 	
 	elif node.bl_idname == 'DrawWorldNodeType':
-		stage.command = 'draw_material_quad'
-		wname = bpy.data.worlds[0].name
-		stage.params.append(wname + '_material/' + wname + '_material/env_map') # Only one world for now
+		make_draw_world(stage, node_group, node)
+	
+	elif node.bl_idname == 'QuadPassNodeType':
+		append_stage = False
+		# Set target
+		last_bind_target = None
+		make_set_target(stage, node_group, node)
+		res.stages.append(stage)
+		# Bind targets
+		stage = Object()
+		stage.params = []
+		last_bind_target = stage
+		
+		bind_target_used = False		
+		if node.inputs[3].is_linked:
+			bind_target_used = True
+			make_bind_target(stage, node_group, node, target_index=3, constant_index=4)
+		if node.inputs[5].is_linked:
+			bind_target_used = True
+			make_bind_target(stage, node_group, node, target_index=5, constant_index=6)
+		if node.inputs[7].is_linked:
+			bind_target_used = True
+			make_bind_target(stage, node_group, node, target_index=7, constant_index=8)
+		if bind_target_used:
+			res.stages.append(stage)
+			stage = Object()
+			stage.params = []
+		# Draw quad
+		make_draw_quad(stage, node_group, node, shader_references, asset_references, context_index=2)
+		res.stages.append(stage)
 	
 	if append_stage:
 		res.stages.append(stage)
 	
 	# Build next stage
 	if node.outputs[0].is_linked:
-		stageNode = findNodeByFromLink(node_group, node, node.outputs[0])
+		stageNode = findNodeByLinkFrom(node_group, node, node.outputs[0])
 		buildNode(res, stageNode, node_group, last_bind_target, shader_references, asset_references)
 			
 def findNodeByLink(node_group, to_node, inp):
@@ -374,7 +457,7 @@ def findNodeByLink(node_group, to_node, inp):
 		if link.to_node == to_node and link.to_socket == inp:
 			return link.from_node
 			
-def findNodeByFromLink(node_group, from_node, outp):
+def findNodeByLinkFrom(node_group, from_node, outp):
 	for link in node_group.links:
 		if link.from_node == from_node and link.from_socket == outp:
 			return link.to_node
