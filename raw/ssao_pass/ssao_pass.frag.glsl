@@ -40,6 +40,10 @@ float linearize(float depth, float znear, float zfar) {
 //   return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 // }
 
+vec2 octahedronWrap(vec2 v) {
+    return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
+}
+
 void main() {	
 	vec2 kernel[kernelSize];		
  	kernel[0] = vec2(1.0, 0.0);		
@@ -65,6 +69,13 @@ void main() {
 	
 	vec4 g0 = texture(gbuffer0, texCoord);      
 	vec4 g1 = texture(gbuffer1, texCoord);
+	
+	// vec2 enc = g0.rg;
+    // vec3 N;
+    // N.z = 1.0 - abs(enc.x) - abs(enc.y);
+    // N.xy = N.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
+    // N = normalize(N);
+	
 	vec3 N = g0.rgb; 
 	vec3 P = g1.rgb;
 	

@@ -130,6 +130,10 @@ float shadowTest(vec4 lPos) {
 	return PCF(vec2(2048, 2048), lPosH.st, lPosH.z - 0.005);
 }
 
+vec2 octahedronWrap(vec2 v) {
+    return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
+}
+
 void main() {
 	
 	vec4 g0 = texture(gbuffer0, texCoord); // Normals, depth
@@ -139,6 +143,12 @@ void main() {
 	vec4 g1 = texture(gbuffer1, texCoord); // Positions, roughness
 	vec4 g2 = texture(gbuffer2, texCoord); // Base color, metalness
 	float ao = texture(ssaotex, texCoord).r;
+
+	// vec2 enc = g0.rg;
+    // vec3 n;
+    // n.z = 1.0 - abs(enc.x) - abs(enc.y);
+    // n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
+    // n = normalize(n);
 
 	vec3 n = g0.rgb;
 	vec3 p = g1.rgb;
