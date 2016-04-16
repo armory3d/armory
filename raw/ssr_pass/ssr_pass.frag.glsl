@@ -161,6 +161,10 @@ vec4 rayCast(vec3 dir) {
     return vec4(0.0, 0.0, 0.0, 0.0);
 }
 
+vec2 octahedronWrap(vec2 v) {
+    return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
+}
+
 void main() {
     float roughness = texture(gbuffer1, texCoord).a;
 	float reflectivity = 1.0 - roughness;
@@ -168,7 +172,14 @@ void main() {
 		discard;
     }
 	
-	vec4 viewNormal = vec4(texture(gbuffer0, texCoord).rgb, 1.0);
+	vec4 g0 = vec4(texture(gbuffer0, texCoord).rgb, 1.0);
+	vec2 enc = g0.rg;
+    vec3 n;
+    n.z = 1.0 - abs(enc.x) - abs(enc.y);
+    n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
+    n = normalize(n);
+	
+	vec4 viewNormal = vec4(n, 1.0);//vec4(texture(gbuffer0, texCoord).rgb, 1.0);
 	if (viewNormal.z <= 0.9) discard; // Only up facing surfaces for now
 	viewNormal = tiV * normalize(viewNormal);
 	

@@ -70,13 +70,13 @@ void main() {
 	vec4 g0 = texture(gbuffer0, texCoord);      
 	vec4 g1 = texture(gbuffer1, texCoord);
 	
-	// vec2 enc = g0.rg;
-    // vec3 N;
-    // N.z = 1.0 - abs(enc.x) - abs(enc.y);
-    // N.xy = N.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
-    // N = normalize(N);
+	vec2 enc = g0.rg;
+    vec3 N;
+    N.z = 1.0 - abs(enc.x) - abs(enc.y);
+    N.xy = N.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
+    N = normalize(N);
 	
-	vec3 N = g0.rgb; 
+	// vec3 N = g0.rgb; 
 	vec3 P = g1.rgb;
 	
 	// Get the current pixel's positiom

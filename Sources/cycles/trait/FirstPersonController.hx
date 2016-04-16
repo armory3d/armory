@@ -70,8 +70,8 @@ class FirstPersonController extends Trait {
         // Look
         // if (!locked) {
         if (Input.touch) {
-			camera.rotate(new Vec4(1, 0, 0), Input.deltaY / 300);
-			transform.rotate(new Vec4(0, 0, 1), -Input.deltaX / 300);
+			camera.rotate(new Vec4(1, 0, 0), Input.deltaY / 200);
+			transform.rotate(new Vec4(0, 0, 1), -Input.deltaX / 200);
         	body.syncTransform();
         }
 

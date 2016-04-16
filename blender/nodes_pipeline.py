@@ -336,24 +336,41 @@ def make_set_target(stage, node_group, node, target_index=1):
 	targetNode = findNodeByLink(node_group, node, node.inputs[target_index])
 	if targetNode.bl_idname == 'TargetNodeType':
 		postfix = ''
+		
 		if targetNode.inputs[7].default_value == True:
-			if make_set_target.pong_target_stage != None:
+			
+			if make_set_target.is_last_target_pong == True:
+				make_set_target.is_last_two_targets_pong = True
 				make_set_target.pong = not make_set_target.pong
+			else:
+				make_set_target.is_last_two_targets_pong = False
+			
+			make_set_target.last_pong_target_pong = make_set_target.pong
 			if make_set_target.pong == True:
 				postfix = '_pong'
-			make_set_target.pong_target_stage = stage
-			make_set_target.pong_target_param_index = len(stage.params)		
+				
+			make_set_target.is_last_target_pong = True		
 		else:
-			make_set_target.pong_target_stage = None
+			if make_set_target.is_last_two_targets_pong == True:
+				make_set_target.pong = not make_set_target.pong
+		
+			make_set_target.is_last_target_pong = False
+			if make_set_target.is_last_two_targets_pong == True:
+				make_set_target.is_last_two_chain_broken = True
+			make_set_target.is_last_two_targets_pong = False
+		
 		targetId = targetNode.inputs[0].default_value + postfix
 	else: # Framebuffer
-		if make_set_target.pong_target_stage != None:
+		if make_set_target.is_last_two_targets_pong == True:
 			make_set_target.pong = not make_set_target.pong
+			make_set_target.is_last_two_targets_pong = False
 		targetId = ''
 	stage.params.append(targetId)
-make_set_target.pong_target_stage = None
-make_set_target.pong_target_param_index = 0
 make_set_target.pong = False
+make_set_target.is_last_target_pong = False
+make_set_target.is_last_two_targets_pong = False
+make_set_target.is_last_two_chain_broken = False
+make_set_target.last_pong_target_pong = False
 
 def make_clear_target(stage, node_group, node):
 	stage.command = 'clear_target'
@@ -373,10 +390,14 @@ def make_bind_target(stage, node_group, node, target_index=1, constant_index=2):
 	targetNode = findNodeByLink(node_group, node, node.inputs[target_index])
 	if targetNode.bl_idname == 'TargetNodeType':			
 		postfix = ''
-		if targetNode.inputs[7].default_value == True:
-			if make_set_target.pong_target_stage != None:
-				if make_set_target.pong == False:
+		
+		if targetNode.inputs[7].default_value == True:			
+			if make_set_target.is_last_target_pong == False:
+				if make_set_target.last_pong_target_pong == True:
 					postfix = '_pong'
+			elif make_set_target.pong == False:
+				postfix = '_pong'
+				
 		targetId = targetNode.inputs[0].default_value + postfix
 	stage.params.append(targetId)
 	stage.params.append(node.inputs[constant_index].default_value)

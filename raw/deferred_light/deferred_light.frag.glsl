@@ -144,13 +144,13 @@ void main() {
 	vec4 g2 = texture(gbuffer2, texCoord); // Base color, metalness
 	float ao = texture(ssaotex, texCoord).r;
 
-	// vec2 enc = g0.rg;
-    // vec3 n;
-    // n.z = 1.0 - abs(enc.x) - abs(enc.y);
-    // n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
-    // n = normalize(n);
+	vec2 enc = g0.rg;
+    vec3 n;
+    n.z = 1.0 - abs(enc.x) - abs(enc.y);
+    n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
+    n = normalize(n);
 
-	vec3 n = g0.rgb;
+	// vec3 n = g0.rgb;
 	vec3 p = g1.rgb;
 	//n = normalize(n);
 	vec3 baseColor = g2.rgb;

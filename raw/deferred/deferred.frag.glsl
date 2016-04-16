@@ -87,15 +87,12 @@ void main() {
 	
 	float depth = mvpposition.z / mvpposition.w;
 	
-	// occlusion
+	// occlusion - pack with mask
 	
-	// n /= (abs(n.x) + abs(n.y) + abs(n.z));
-    // n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
-    // n.xy = n.xy * 0.5 + 0.5;
+	n /= (abs(n.x) + abs(n.y) + abs(n.z));
+    n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
 	
-	// gl_FragData[0] = vec4(n.xy, 1.0, depth);
-	gl_FragData[0] = vec4(n.xyz, depth);
+	gl_FragData[0] = vec4(n.xy, mask, depth);
 	gl_FragData[1] = vec4(position.xyz, roughness);
 	gl_FragData[2] = vec4(baseColor.rgb, metalness);
-	gl_FragData[3] = vec4(mask, 0.0, 0.0, 0.0);
 }
