@@ -89,6 +89,7 @@ class TargetNode(Node, CGPipelineTreeNode):
 		self.inputs.new('NodeSocketBool', "Depth Buffer")
 		self.inputs.new('NodeSocketBool', "Stencil Buffer")
 		self.inputs.new('NodeSocketString', "Format")
+		self.inputs.new('NodeSocketBool', "Ping Pong")
 
 		self.outputs.new('NodeSocketShader', "Target")
 
@@ -334,10 +335,25 @@ def make_set_target(stage, node_group, node, target_index=1):
 	stage.command = 'set_target'
 	targetNode = findNodeByLink(node_group, node, node.inputs[target_index])
 	if targetNode.bl_idname == 'TargetNodeType':
-		targetId = targetNode.inputs[0].default_value
+		postfix = ''
+		if targetNode.inputs[7].default_value == True:
+			if make_set_target.pong_target_stage != None:
+				make_set_target.pong = not make_set_target.pong
+			if make_set_target.pong == True:
+				postfix = '_pong'
+			make_set_target.pong_target_stage = stage
+			make_set_target.pong_target_param_index = len(stage.params)		
+		else:
+			make_set_target.pong_target_stage = None
+		targetId = targetNode.inputs[0].default_value + postfix
 	else: # Framebuffer
+		if make_set_target.pong_target_stage != None:
+			make_set_target.pong = not make_set_target.pong
 		targetId = ''
 	stage.params.append(targetId)
+make_set_target.pong_target_stage = None
+make_set_target.pong_target_param_index = 0
+make_set_target.pong = False
 
 def make_clear_target(stage, node_group, node):
 	stage.command = 'clear_target'
@@ -355,8 +371,13 @@ def make_draw_geometry(stage, node_group, node):
 def make_bind_target(stage, node_group, node, target_index=1, constant_index=2):
 	stage.command = 'bind_target'
 	targetNode = findNodeByLink(node_group, node, node.inputs[target_index])
-	if targetNode.bl_idname == 'TargetNodeType':
-		targetId = targetNode.inputs[0].default_value
+	if targetNode.bl_idname == 'TargetNodeType':			
+		postfix = ''
+		if targetNode.inputs[7].default_value == True:
+			if make_set_target.pong_target_stage != None:
+				if make_set_target.pong == False:
+					postfix = '_pong'
+		targetId = targetNode.inputs[0].default_value + postfix
 	stage.params.append(targetId)
 	stage.params.append(node.inputs[constant_index].default_value)
 
@@ -418,9 +439,10 @@ def buildNode(res, node, node_group, last_bind_target, shader_references, asset_
 	elif node.bl_idname == 'QuadPassNodeType':
 		append_stage = False
 		# Set target
-		last_bind_target = None
-		make_set_target(stage, node_group, node)
-		res.stages.append(stage)
+		if node.inputs[1].is_linked:
+			last_bind_target = None
+			make_set_target(stage, node_group, node)
+			res.stages.append(stage)
 		# Bind targets
 		stage = Object()
 		stage.params = []
@@ -468,17 +490,24 @@ def getRootNode(node_group):
 		if len(n.inputs) > 0 and n.inputs[0].is_linked == False and n.inputs[0].name == 'Stage':
 			return n
 
+def make_render_target(n, postfix=''):
+	target = Object()
+	target.id = n.inputs[0].default_value + postfix
+	target.width = n.inputs[1].default_value
+	target.height = n.inputs[2].default_value
+	target.color_buffers = n.inputs[3].default_value
+	target.depth_buffer = n.inputs[4].default_value
+	target.stencil_buffer = n.inputs[5].default_value
+	target.format = n.inputs[6].default_value
+	return target
+
 def get_render_targets(node_group):
 	render_targets = []
 	for n in node_group.nodes:
 		if n.bl_idname == 'TargetNodeType':
-			target = Object()
-			target.id = n.inputs[0].default_value
-			target.width = n.inputs[1].default_value
-			target.height = n.inputs[2].default_value
-			target.color_buffers = n.inputs[3].default_value
-			target.depth_buffer = n.inputs[4].default_value
-			target.stencil_buffer = n.inputs[5].default_value
-			target.format = n.inputs[6].default_value
+			target = make_render_target(n)
 			render_targets.append(target)
+			if n.inputs[7].default_value == True: # Ping-pong
+				target = make_render_target(n, '_pong')
+				render_targets.append(target)
 	return render_targets
