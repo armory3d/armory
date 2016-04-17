@@ -30,6 +30,10 @@
 					"link": "_viewMatrix"
 				},
 				{
+					"id": "MV",
+					"link": "_modelViewMatrix"
+				},
+				{
 					"id": "P",
 					"link": "_projectionMatrix"
 				},

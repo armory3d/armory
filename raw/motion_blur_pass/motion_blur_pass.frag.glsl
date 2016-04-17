@@ -9,25 +9,35 @@ precision mediump float;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1; 
 uniform sampler2D gbuffer2;
-// uniform sampler2D gbuffer3;
 
 uniform sampler2D tex;
 uniform mat4 prevVP;
 uniform mat4 invVP;
+uniform mat4 invV;
 
+in vec3 vViewRay;
 in vec2 texCoord;
 
 const int samples = 8;
 
 vec2 getVelocity(vec2 texCoord, float depth) {
+	
+	const float zNear = 0.1;
+	const float zFar = 1000.0;
+	float delinDepth = (-(depth*(zFar-zNear)+zNear));
 	// Get the depth buffer value at this pixel  
-	float zOverW = depth; // * 2.0 - 1.0
+	// float zOverW = depth; // * 2.0 - 1.0
 	// H is the viewport position at this pixel in the range -1 to 1
-	vec4 H = vec4(texCoord.x * 2.0 - 1.0, (texCoord.y) * 2.0 - 1.0, zOverW, 1.0);
+	// vec4 H = vec4(texCoord.x * 2.0 - 1.0, (texCoord.y) * 2.0 - 1.0, zOverW, 1.0);
+	vec4 H = vec4(texCoord.x * 2.0 - 1.0, (texCoord.y) * 2.0 - 1.0, delinDepth, 1.0);
 	// Transform by the view-projection inverse
-	vec4 D = invVP * H;
+	// vec4 D = invVP * H;
 	// Divide by w to get the world position
-	vec4 worldPos = D / D.w;
+	// vec4 worldPos = D / D.w;
+	
+	vec3 reconViewPos = vViewRay * delinDepth;
+	vec3 p = vec4(invV * vec4(reconViewPos, 1.0)).xyz;
+	vec4 worldPos = vec4(p, 1.0);
 	
 	// Current viewport position
 	vec4 currentPos = H;

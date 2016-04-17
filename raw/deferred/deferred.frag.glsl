@@ -30,6 +30,7 @@ uniform float metalness;
 uniform float mask;
 
 in vec3 position;
+in float depth;
 in vec4 mvpposition;
 #ifdef _AMTex
 in vec2 texCoord;
@@ -85,7 +86,7 @@ void main() {
 	float occlusion = 1.0; 
 #endif
 	
-	float depth = mvpposition.z / mvpposition.w;
+	// float depth = mvpposition.z / mvpposition.w;
 	
 	// occlusion - pack with mask
 	

@@ -26,6 +26,18 @@
 					"link": "_cameraPosition"
 				},
 				{
+					"id": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				},
+				{
+					"id": "invV",
+					"link": "_inverseViewMatrix"
+				},
+				{
+					"id": "invP",
+					"link": "_inverseProjectionMatrix"
+				},
+				{
 					"id": "LMVP",
 					"link": "_lightModelViewProjectionMatrix"
 				},

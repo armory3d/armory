@@ -24,6 +24,7 @@ const float falloffExp = 3.0;
 // uniform float searchDist;
 // uniform float falloffExp;
 
+in vec3 vViewRay;
 in vec2 texCoord;
 
 vec3 hitCoord;
@@ -41,10 +42,22 @@ vec4 getProjectedCoord(vec3 hitCoord) {
 }
 
 float getDeltaDepth(vec3 hitCoord) {
-	vec4 viewPos = vec4(texture(gbuffer1, getProjectedCoord(hitCoord).xy).rgb, 1.0);
-	viewPos = V * viewPos;
-	float depth = viewPos.z;
-	return depth - hitCoord.z;
+	float d = texture(gbuffer0, getProjectedCoord(hitCoord).xy).a;
+	const float zNear = 0.1;
+	const float zFar = 1000.0;
+	float delinDepth = (-(d*(zFar-zNear)+zNear));
+	
+	// vec3 reconViewPos = vViewRay * delinDepth;
+	// vec3 p = vec4(invV * vec4(reconViewPos, 1.0)).xyz;
+	// vec4 worldPos = vec4(p, 1.0);
+	
+	// vec4 viewPos = vec4(texture(gbuffer1, getProjectedCoord(hitCoord).xy).rgb, 1.0);
+	// viewPos = V * viewPos;
+	
+	// float depth = viewPos.z;
+	// return depth - hitCoord.z;
+
+	return delinDepth - hitCoord.z;
 }
 
 vec3 binarySearch(vec3 dir) {	
@@ -183,8 +196,18 @@ void main() {
 	if (viewNormal.z <= 0.9) discard; // Only up facing surfaces for now
 	viewNormal = tiV * normalize(viewNormal);
 	
-	vec4 viewPos = vec4(texture(gbuffer1, texCoord).rgb, 1.0);
-	viewPos = V * viewPos;
+	// vec4 viewPos = vec4(texture(gbuffer1, texCoord).rgb, 1.0);
+	// viewPos = V * viewPos;
+	float d = texture(gbuffer0, texCoord).a;
+	const float zNear = 0.1;
+	const float zFar = 1000.0;
+	float delinDepth = (-(d*(zFar-zNear)+zNear));
+	vec3 viewPos = vViewRay * delinDepth;
+	
+	
+	
+	
+	
 	
 	vec3 reflected = normalize(reflect((viewPos.xyz), normalize(viewNormal.xyz)));
 	hitCoord = viewPos.xyz;

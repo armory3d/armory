@@ -22,14 +22,18 @@ uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1; 
 uniform sampler2D gbuffer2;
 uniform sampler2D snoise;
+uniform mat4 invV;
+uniform mat4 invP;
+uniform vec3 eye;
 
 const float PI = 3.1415926535;
-// const vec2 screenSize = vec2(800.0, 600.0);
-const vec2 screenSize = vec2(1920.0, 1080.0);
-const float aoSize = 0.6;//0.43;
+const vec2 screenSize = vec2(800.0, 600.0);
+// const vec2 screenSize = vec2(1920.0, 1080.0);
+const float aoSize = 0.2;//0.43;
 const int kernelSize = 8;
-const float strength = 0.8;//0.55;
+const float strength = 0.1;//0.55;
 
+in vec3 vViewRay;
 in vec2 texCoord;
 
 float linearize(float depth, float znear, float zfar) {
@@ -43,6 +47,24 @@ float linearize(float depth, float znear, float zfar) {
 vec2 octahedronWrap(vec2 v) {
     return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
 }
+
+vec3 getWorldPos(vec2 coord) {
+	const float zNear = 0.1;
+	const float zFar = 1000.0;
+	float depth = texture(gbuffer0, coord).a;
+	vec3 reconViewPos = vViewRay * (-(depth*(zFar-zNear)+zNear));
+	vec4 wp = invV * vec4(reconViewPos, 1.0);
+	return wp.xyz;
+}
+
+// vec3 getViewPos(vec2 coord) {
+// 	float x = coord.s * 2.0 - 1.0;
+// 	float y = coord.t * 2.0 - 1.0;
+// 	float z = texture(gbuffer0, coord).b;
+// 	z = z * 2.0 - 1.0;
+// 	vec4 posProj = vec4(x, y, z, 1.0);
+// 	vec4 posView = invP * posProj;
+// }
 
 void main() {	
 	vec2 kernel[kernelSize];		
@@ -74,15 +96,15 @@ void main() {
     vec3 N;
     N.z = 1.0 - abs(enc.x) - abs(enc.y);
     N.xy = N.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
-    N = normalize(N);
+	N = normalize(N);
 	
-	// vec3 N = g0.rgb; 
-	vec3 P = g1.rgb;
+	vec3 P = getWorldPos(texCoord);
+	// vec3 P = g1.rgb;
 	
 	// Get the current pixel's positiom
 	vec3 currentPos = P;
-	// float currentDistance = length(currentPos);
-	float currentDistance = linearize(g0.a, 0.1, 1000.0);
+	float currentDistance = distance(currentPos, eye);
+	// float currentDistance = linearize(g0.b, 0.1, 1000.0);
 	vec3 currentNormal = N;
 	
 	vec2 aspectRatio = vec2(min(1.0, screenSize.y / screenSize.x), min(1.0, screenSize.x / screenSize.y));

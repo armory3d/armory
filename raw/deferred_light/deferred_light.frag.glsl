@@ -18,11 +18,15 @@ uniform sampler2D senvmapRadiance;
 uniform sampler2D senvmapIrradiance;
 uniform sampler2D senvmapBrdf;
 
+uniform mat4 invP;
+uniform mat4 invV;
+uniform mat4 invVP;
 uniform mat4 LMVP;
 uniform vec3 light;
 uniform vec3 eye;
 
 in vec2 texCoord;
+in vec3 vViewRay;
 
 vec2 envMapEquirect(vec3 normal) {
 	float phi = acos(normal.z);
@@ -134,6 +138,24 @@ vec2 octahedronWrap(vec2 v) {
     return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
 }
 
+vec3 worldPosFromDepth(float zOverW) {
+	// Get the depth buffer value at this pixel  
+	// float zOverW = depth; // * 2.0 - 1.0
+	// H is the viewport position at this pixel in the range -1 to 1
+	// vec4 H = vec4(texCoord.x * 2.0 - 1.0, (texCoord.y) * 2.0 - 1.0, zOverW, 1.0);
+	// Transform by the view-projection inverse
+	// vec4 D = invVP * H;
+	// Divide by w to get the world position
+	// vec4 worldPos = D / D.w;
+	// return vec3(D.xyz / D.w);
+	
+    vec3 ndc = vec3(texCoord*2.0-1.0, zOverW*2.0-1.0);
+    vec4 v0 = invP*vec4(ndc, 1.0);
+    vec3 reconViewPos = v0.xyz/v0.w;
+    vec4 reconWorldPos = invV * v0;
+	return reconWorldPos.xyz / reconWorldPos.w;
+}
+
 void main() {
 	
 	vec4 g0 = texture(gbuffer0, texCoord); // Normals, depth
@@ -151,7 +173,14 @@ void main() {
     n = normalize(n);
 
 	// vec3 n = g0.rgb;
-	vec3 p = g1.rgb;
+	// vec3 p = worldPosFromDepth(depth);
+	
+	const float zNear = 0.1;
+	const float zFar = 1000.0;
+	vec3 reconViewPos = vViewRay * (-(depth*(zFar-zNear)+zNear));
+	vec3 p = vec4(invV * vec4(reconViewPos, 1.0)).xyz;
+	
+	// vec3 p = g1.rgb;
 	//n = normalize(n);
 	vec3 baseColor = g2.rgb;
 	

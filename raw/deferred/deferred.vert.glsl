@@ -31,6 +31,7 @@ uniform mat4 M;
 uniform mat4 NM;
 // uniform mat4 VNM;
 uniform mat4 V;
+uniform mat4 MV;
 uniform mat4 P;
 uniform mat4 LMVP;
 uniform vec4 albedo_color;
@@ -41,6 +42,7 @@ uniform float skinBones[50 * 12];
 #endif
 
 out vec3 position;
+out float depth;
 out vec4 mvpposition;
 #ifdef _AMTex
 out vec2 texCoord;
@@ -102,19 +104,19 @@ void main() {
 #endif
 	lPos = LMVP * sPos;
 
-	mat4 VM = V * M;
+	// mat4 MV = V * M;
 
 #ifdef _Billboard
 	// Spherical
-	VM[0][0] = 1.0; VM[0][1] = 0.0; VM[0][2] = 0.0;
-	VM[1][0] = 0.0; VM[1][1] = 1.0; VM[1][2] = 0.0;
-	VM[2][0] = 0.0; VM[2][1] = 0.0; VM[2][2] = 1.0;
+	MV[0][0] = 1.0; MV[0][1] = 0.0; MV[0][2] = 0.0;
+	MV[1][0] = 0.0; MV[1][1] = 1.0; MV[1][2] = 0.0;
+	MV[2][0] = 0.0; MV[2][1] = 0.0; MV[2][2] = 1.0;
 	// Cylindrical
-	//VM[0][0] = 1.0; VM[0][1] = 0.0; VM[0][2] = 0.0;
-	//VM[2][0] = 0.0; VM[2][1] = 0.0; VM[2][2] = 1.0;
+	//MV[0][0] = 1.0; MV[0][1] = 0.0; MV[0][2] = 0.0;
+	//MV[2][0] = 0.0; MV[2][1] = 0.0; MV[2][2] = 1.0;
 #endif
 
-	gl_Position = P * VM * sPos;
+	gl_Position = P * MV * sPos;
 
 #ifdef _AMTex
 	texCoord = tex;
@@ -135,6 +137,13 @@ void main() {
 
 	vec3 mPos = vec4(M * sPos).xyz;
 	position = mPos;
+	
+	vec4 vp = V * vec4(mPos, 1.0);
+	vec3 vposition = vp.xyz / vp.w;
+	float zNear = 0.1;
+	float zFar = 1000.0;
+	depth = (-vposition.z-zNear)/(zFar-zNear);
+	
 	mvpposition = gl_Position;
 	lightDir = light - mPos;
 	eyeDir = eye - mPos;

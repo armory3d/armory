@@ -22,6 +22,10 @@
 					"link": "_projectionMatrix"
 				},
 				{
+					"id": "invP",
+					"link": "_inverseProjectionMatrix"
+				},
+				{
 					"id": "V",
 					"link": "_viewMatrix"
 				},

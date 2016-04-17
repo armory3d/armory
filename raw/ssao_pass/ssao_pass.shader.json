@@ -20,6 +20,26 @@
 				{
 					"id": "snoise",
 					"link": "_noise8"
+				},
+				{
+					"id": "invP",
+					"link": "_inverseProjectionMatrix"
+				},
+				{
+					"id": "invV",
+					"link": "_inverseViewMatrix"
+				},
+				{
+					"id": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"id": "tiV",
+					"link": "_transposeInverseViewMatrix"
+				},
+				{
+					"id": "P",
+					"link": "_projectionMatrix"
 				}
 			],
 			"texture_params": [],
