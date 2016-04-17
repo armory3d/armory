@@ -56,7 +56,22 @@ class ClearTargetNode(Node, CGPipelineTreeNode):
 
 	def free(self):
 		print("Removing node ", self, ", Goodbye!")
-		
+
+class BeginNode(Node, CGPipelineTreeNode):
+	'''A custom node'''
+	bl_idname = 'BeginNodeType'
+	bl_label = 'Begin'
+	bl_icon = 'SOUND'
+	
+	def init(self, context):
+		self.outputs.new('NodeSocketShader', "Stage")
+
+	def copy(self, node):
+		print("Copying from node ", node)
+
+	def free(self):
+		print("Removing node ", self, ", Goodbye!")
+	
 class SetTargetNode(Node, CGPipelineTreeNode):
 	'''A custom node'''
 	bl_idname = 'SetTargetNodeType'
@@ -98,7 +113,25 @@ class TargetNode(Node, CGPipelineTreeNode):
 
 	def free(self):
 		print("Removing node ", self, ", Goodbye!")
-		
+
+class ColorBufferNode(Node, CGPipelineTreeNode):
+	'''A custom node'''
+	bl_idname = 'ColorBufferNodeType'
+	bl_label = 'Color Buffer'
+	bl_icon = 'SOUND'
+	
+	def init(self, context):
+		self.inputs.new('NodeSocketShader', "Target")
+		self.inputs.new('NodeSocketInt', "Index")
+
+		self.outputs.new('NodeSocketShader', "Target")
+
+	def copy(self, node):
+		print("Copying from node ", node)
+
+	def free(self):
+		print("Removing node ", self, ", Goodbye!")
+	
 class FramebufferNode(Node, CGPipelineTreeNode):
 	'''A custom node'''
 	bl_idname = 'FramebufferNodeType'
@@ -232,6 +265,7 @@ class MyPassNodeCategory(NodeCategory):
 
 node_categories = [
 	MyPipelineNodeCategory("PIPELINENODES", "Pipeline", items=[
+		NodeItem("BeginNodeType"),
 		NodeItem("DrawGeometryNodeType"),
 		NodeItem("ClearTargetNodeType"),
 		NodeItem("SetTargetNodeType"),
@@ -240,6 +274,7 @@ node_categories = [
 		NodeItem("DrawQuadNodeType"),
 		NodeItem("DrawWorldNodeType"),
 		NodeItem("TargetNodeType"),
+		NodeItem("ColorBufferNodeType"),
 		NodeItem("FramebufferNodeType"),
 		]),
 	MyPassNodeCategory("PASSNODES", "Pass", items=[
@@ -331,10 +366,17 @@ def buildNodeTree(node_group, shader_references, asset_references):
 	with open(path + node_group_name + '.json', 'w') as f:
 			f.write(output.to_JSON())
 
-def make_set_target(stage, node_group, node, target_index=1):
+def make_set_target(stage, node_group, node, target_index=1, color_buffer_index=-1):
 	stage.command = 'set_target'
 	targetNode = findNodeByLink(node_group, node, node.inputs[target_index])
+	
 	if targetNode.bl_idname == 'TargetNodeType':
+		
+		cb_postfix = ''
+		
+		if color_buffer_index >= 0 and targetNode.inputs[3].default_value > 1: # MRT target, bind only specified target
+			cb_postfix = str(color_buffer_index)
+		
 		postfix = ''
 		
 		if targetNode.inputs[7].default_value == True:
@@ -359,12 +401,19 @@ def make_set_target(stage, node_group, node, target_index=1):
 				make_set_target.is_last_two_chain_broken = True
 			make_set_target.is_last_two_targets_pong = False
 		
-		targetId = targetNode.inputs[0].default_value + postfix
+		targetId = targetNode.inputs[0].default_value + cb_postfix + postfix
+	
+	elif targetNode.bl_idname == 'ColorBufferNodeType':
+		cb_index = targetNode.inputs[1].default_value
+		make_set_target(stage, node_group, targetNode, target_index=0, color_buffer_index=cb_index)
+		return
+	
 	else: # Framebuffer
 		if make_set_target.is_last_two_targets_pong == True:
 			make_set_target.pong = not make_set_target.pong
 			make_set_target.is_last_two_targets_pong = False
 		targetId = ''
+		
 	stage.params.append(targetId)
 make_set_target.pong = False
 make_set_target.is_last_target_pong = False
@@ -385,10 +434,20 @@ def make_draw_geometry(stage, node_group, node):
 	stage.command = 'draw_geometry'
 	stage.params.append(node.inputs[1].default_value) # Context
 
-def make_bind_target(stage, node_group, node, target_index=1, constant_index=2):
+def make_bind_target(stage, node_group, node, target_index=1, constant_index=2, color_buffer_index=-1):
 	stage.command = 'bind_target'
 	targetNode = findNodeByLink(node_group, node, node.inputs[target_index])
-	if targetNode.bl_idname == 'TargetNodeType':			
+	
+	if targetNode.bl_idname == 'ColorBufferNodeType': # Make recursive
+		color_buffer_index = targetNode.inputs[1].default_value
+		targetNode = findNodeByLink(node_group, targetNode, targetNode.inputs[0])
+	
+	if targetNode.bl_idname == 'TargetNodeType':		
+		cb_postfix = ''
+		
+		if color_buffer_index >= 0 and targetNode.inputs[3].default_value > 1: # MRT target, bind only specified target
+			cb_postfix = str(color_buffer_index)
+		
 		postfix = ''
 		
 		if targetNode.inputs[7].default_value == True:			
@@ -398,7 +457,8 @@ def make_bind_target(stage, node_group, node, target_index=1, constant_index=2):
 			elif make_set_target.pong == False:
 				postfix = '_pong'
 				
-		targetId = targetNode.inputs[0].default_value + postfix
+		targetId = targetNode.inputs[0].default_value + cb_postfix + postfix
+	
 	stage.params.append(targetId)
 	stage.params.append(node.inputs[constant_index].default_value)
 
@@ -506,10 +566,10 @@ def findNodeByLinkFrom(node_group, from_node, outp):
 			return link.to_node
 	
 def getRootNode(node_group):
-	# First node with empty stage input
+	# Find first node linked to begin node
 	for n in node_group.nodes:
-		if len(n.inputs) > 0 and n.inputs[0].is_linked == False and n.inputs[0].name == 'Stage':
-			return n
+		if n.bl_idname == 'BeginNodeType':
+			return findNodeByLinkFrom(node_group, n, n.outputs[0])
 
 def make_render_target(n, postfix=''):
 	target = Object()
