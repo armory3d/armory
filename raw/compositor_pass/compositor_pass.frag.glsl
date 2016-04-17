@@ -15,6 +15,10 @@ uniform mat4 VP;
 
 in vec2 texCoord;
 
+const float PI = 3.1415926535;
+const float fishEyeStrength = -0.01;
+const vec2 m = vec2(0.5, 0.5);
+
 const float focus_depth = 0.5;
 
 const float vignout = 1.8; // vignetting outer border
@@ -134,6 +138,22 @@ vec3 tonemapUncharted2(vec3 color) {
 }
 
 void main() {
+	// Fish eye
+	vec2 d = texCoord - m;
+	float r = sqrt(dot(d, d));
+	float power = (2.0 * PI / (2.0 * sqrt(dot(m, m)))) * fishEyeStrength;
+	float bind;
+	if (power > 0.0) { bind = sqrt(dot(m, m)); }
+    else { bind = m.x; }
+	vec2 uv;
+	if (power > 0.0) {
+		uv = m + normalize(d) * tan(r * power) * bind / tan(bind * power);
+	}
+	else {
+		uv = m + normalize(d) * atan(r * -power * 10.0) * bind / atan(-power * bind * 10.0);
+	}
+	vec4 col = texture(tex, uv);
+	
 	// Blur
 	float depth = texture(gbuffer0, texCoord).a;
 	float blur_amount = abs(depth - focus_depth);
@@ -141,11 +161,11 @@ void main() {
 		blur_amount *= 10.0;
 	}
 	blur_amount = clamp(blur_amount, 0.0, 1.0);
-	vec4 baseColor = texture(tex, texCoord);
+	vec4 baseColor = col;//texture(tex, texCoord);
 	vec4 blurredColor = vec4(0.0, 0.0, 0.0, 0.0);
 	float blurSize = 0.005 * blur_amount;
 	blurredColor = 0.75 * sampleBox(blurSize * 0.5) + 0.25 * sampleBox(blurSize * 1.0);
-	vec4 col = baseColor * (1.0 - blur_amount) + blurredColor * blur_amount;
+	col = baseColor * (1.0 - blur_amount) + blurredColor * blur_amount;
 	
 	// Fog
 	// vec3 pos = texture(gbuffer1, texCoord).rgb;

@@ -39,17 +39,13 @@ os.chdir('../motion_blur_pass')
 make_resources.make('motion_blur_pass.shader.json')
 make_variants.make('motion_blur_pass.shader.json')
 
-os.chdir('../dof_pass')
-make_resources.make('dof_pass.shader.json')
-make_variants.make('dof_pass.shader.json')
+os.chdir('../compositor_pass')
+make_resources.make('compositor_pass.shader.json')
+make_variants.make('compositor_pass.shader.json')
 
 os.chdir('../bloom_pass')
 make_resources.make('bloom_pass.shader.json')
 make_variants.make('bloom_pass.shader.json')
-
-os.chdir('../fisheye_pass')
-make_resources.make('fisheye_pass.shader.json')
-make_variants.make('fisheye_pass.shader.json')
 
 os.chdir('../ssr_pass')
 make_resources.make('ssr_pass.shader.json')
