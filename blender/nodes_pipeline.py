@@ -408,6 +408,10 @@ def make_set_target(stage, node_group, node, target_index=1, color_buffer_index=
 		make_set_target(stage, node_group, targetNode, target_index=0, color_buffer_index=cb_index)
 		return
 	
+	elif targetNode.bl_idname == 'NodeReroute':
+		make_set_target(stage, node_group, targetNode, target_index=0, color_buffer_index=color_buffer_index)
+		return
+	
 	else: # Framebuffer
 		if make_set_target.is_last_two_targets_pong == True:
 			make_set_target.pong = not make_set_target.pong
@@ -438,6 +442,9 @@ def make_bind_target(stage, node_group, node, target_index=1, constant_index=2, 
 	stage.command = 'bind_target'
 	targetNode = findNodeByLink(node_group, node, node.inputs[target_index])
 	
+	if targetNode.bl_idname == 'NodeReroute': # Make recursive
+		targetNode = findNodeByLink(node_group, targetNode, targetNode.inputs[0])
+	
 	if targetNode.bl_idname == 'ColorBufferNodeType': # Make recursive
 		color_buffer_index = targetNode.inputs[1].default_value
 		targetNode = findNodeByLink(node_group, targetNode, targetNode.inputs[0])
@@ -458,6 +465,8 @@ def make_bind_target(stage, node_group, node, target_index=1, constant_index=2, 
 				postfix = '_pong'
 				
 		targetId = targetNode.inputs[0].default_value + cb_postfix + postfix
+	
+	print(targetNode.bl_idname)
 	
 	stage.params.append(targetId)
 	stage.params.append(node.inputs[constant_index].default_value)
