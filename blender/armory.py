@@ -2028,7 +2028,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		#return
 		ArmoryExporter.option_geometry_only = False
 		ArmoryExporter.option_geometry_per_file = True
-		ArmoryExporter.option_minimize = False
+		ArmoryExporter.option_minimize = bpy.data.worlds[0].CGMinimize
 
 		# Only one pipeline for scene for now
 		# Used for material shader export and khafile

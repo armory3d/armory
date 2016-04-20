@@ -29,22 +29,24 @@ uniform float metalness;
 #endif
 uniform float mask;
 
-in vec3 position;
-in float depth;
 in vec4 mvpposition;
 #ifdef _AMTex
 in vec2 texCoord;
 #endif
 in vec4 lPos;
 in vec4 matColor;
-in vec3 lightDir;
-in vec3 eyeDir;
 #ifdef _NMTex
 in mat3 TBN;
 #else
 in vec3 normal;
-// in vec3 vnormal;
 #endif
+
+float packFloat(float f1, float f2) {
+	int index = int(f1 * 1000);
+	float alpha = f2 == 0.0 ? f2 : (f2 - 0.0001);
+	float result = index + alpha;
+	return result;
+}
 
 vec2 octahedronWrap(vec2 v) {
     return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
@@ -57,7 +59,6 @@ void main() {
 	n = normalize(TBN * normalize(n));
 #else
 	vec3 n = normalize(normal);
-	// vec3 vn = normalize(vnormal);
 #endif
 
 #ifdef _AMTex
@@ -86,14 +87,11 @@ void main() {
 	float occlusion = 1.0; 
 #endif
 	
-	// float depth = mvpposition.z / mvpposition.w;
-	
 	// occlusion - pack with mask
 	
 	n /= (abs(n.x) + abs(n.y) + abs(n.z));
     n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
 	
-	gl_FragData[0] = vec4(n.xy, mask, depth);
-	gl_FragData[1] = vec4(position.xyz, roughness);
-	gl_FragData[2] = vec4(baseColor.rgb, metalness);
+	gl_FragData[0] = vec4(n.xy, mask, 1.0 - (mvpposition.z / mvpposition.w));
+	gl_FragData[1] = vec4(baseColor.rgb, packFloat(roughness, metalness));
 }

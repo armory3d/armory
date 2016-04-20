@@ -10,7 +10,6 @@ precision mediump float;
 uniform sampler2D tex;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
-uniform sampler2D gbuffer2;
 
 const float znear = 0.1;
 const float zfar = 100.0;

@@ -27,7 +27,6 @@ class DrawGeometryNode(Node, CGPipelineTreeNode):
 	def init(self, context):
 		self.inputs.new('NodeSocketShader', "Stage")
 		self.inputs.new('NodeSocketString', "Context")
-		# self.inputs.new('NodeSocketBool', "Bind World")
 
 		self.outputs.new('NodeSocketShader', "Stage")
 
@@ -324,8 +323,10 @@ def unregister():
 # Generating pipeline resources
 class Object:
 	def to_JSON(self):
-		# return json.dumps(self, default=lambda o: o.__dict__, separators=(',',':'))
-		return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+		if bpy.data.worlds[0].CGMinimize == True:
+			return json.dumps(self, default=lambda o: o.__dict__, separators=(',',':'))
+		else:
+			return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
 def buildNodeTrees(shader_references, asset_references):
 	s = bpy.data.filepath.split(os.path.sep)

@@ -8,8 +8,7 @@ precision mediump float;
 
 uniform sampler2D tex;
 uniform sampler2D gbuffer0; // Normal, depth
-uniform sampler2D gbuffer1; // Position, roughness
-uniform sampler2D gbuffer2;
+uniform sampler2D gbuffer1; // Color, roughness
 uniform mat4 P;
 uniform mat4 invP;
 uniform mat4 V;

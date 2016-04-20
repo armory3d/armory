@@ -27,6 +27,8 @@ project.addLibrary('cyclesgame');
 			for ref in asset_references: # Assets
 				f.write("project.addAssets('" + ref + "');\n")
 
+			f.write("\nproject.addDefine('WITH_PROFILE')\n")
+
 			if bpy.data.worlds[0]['CGPhysics'] != 0:
 				f.write("\nproject.addDefine('WITH_PHYSICS')\n")
 				f.write("project.addLibrary('haxebullet')\n")

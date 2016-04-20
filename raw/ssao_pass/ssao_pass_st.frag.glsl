@@ -19,8 +19,7 @@ precision mediump float;
 uniform mat4 invP;
 
 uniform sampler2D gbuffer0;
-uniform sampler2D gbuffer1; 
-uniform sampler2D gbuffer2;
+uniform sampler2D gbuffer1;
 
 in vec2 texCoord;
 

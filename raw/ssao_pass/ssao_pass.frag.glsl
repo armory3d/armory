@@ -11,7 +11,6 @@
 // 		y1 = Std.int(y1 * 10000000) / 10000000;
 // 		trace(x1, y1);
 // }
-
 #version 450
 
 #ifdef GL_ES
@@ -19,54 +18,58 @@ precision mediump float;
 #endif
 
 uniform sampler2D gbuffer0;
-uniform sampler2D gbuffer1; 
-uniform sampler2D gbuffer2;
+uniform sampler2D gbuffer1;
 uniform sampler2D snoise;
-uniform mat4 invV;
-uniform mat4 invP;
+uniform mat4 invVP;
 uniform vec3 eye;
 
 const float PI = 3.1415926535;
 const vec2 screenSize = vec2(800.0, 600.0);
-// const vec2 screenSize = vec2(1920.0, 1080.0);
-const float aoSize = 0.2;//0.43;
-const int kernelSize = 8;
-const float strength = 0.1;//0.55;
+const vec2 aspectRatio = vec2(min(1.0, screenSize.y / screenSize.x), min(1.0, screenSize.x / screenSize.y));
 
-in vec3 vViewRay;
+const int kernelSize = 8;
+const float aoSize = 0.04;
+const float strength = 0.3;
+
 in vec2 texCoord;
 
-float linearize(float depth, float znear, float zfar) {
-	return -zfar * znear / (depth * (zfar - znear) - zfar);
-}
-
 // float rand(vec2 co) { // Unreliable
-//   return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+//   return fract(sin(dot(co.xy ,vec2(12.9898, 78.233))) * 43758.5453);
 // }
-
 vec2 octahedronWrap(vec2 v) {
     return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
 }
-
-vec3 getWorldPos(vec2 coord) {
-	const float zNear = 0.1;
-	const float zFar = 1000.0;
-	float depth = texture(gbuffer0, coord).a;
-	vec3 reconViewPos = vViewRay * (-(depth*(zFar-zNear)+zNear));
-	vec4 wp = invV * vec4(reconViewPos, 1.0);
-	return wp.xyz;
+vec3 getPos(float depth, vec2 coord) {	
+    // vec4 pos = vec4(coord * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+    vec4 pos = vec4(coord * 2.0 - 1.0, depth, 1.0);
+    pos = invVP * pos;
+    pos.xyz /= pos.w;
+    return pos.xyz - eye;
 }
 
-// vec3 getViewPos(vec2 coord) {
-// 	float x = coord.s * 2.0 - 1.0;
-// 	float y = coord.t * 2.0 - 1.0;
-// 	float z = texture(gbuffer0, coord).b;
-// 	z = z * 2.0 - 1.0;
-// 	vec4 posProj = vec4(x, y, z, 1.0);
-// 	vec4 posView = invP * posProj;
-// }
+float doAO(vec2 kernelVec, vec2 randomVec, mat2 rotMat, vec3 currentPos, vec3 currentNormal, float currentDistance) {
+	kernelVec.xy *= aspectRatio;
+	float radius = aoSize * randomVec.y;
+	kernelVec.xy = ((rotMat * kernelVec.xy) / currentDistance) * radius;
+	vec2 coord = texCoord + kernelVec.xy;
+	float depth = 1.0 - texture(gbuffer0, coord).a;
+	vec3 pos = getPos(depth, coord) - currentPos;
+	
+	float angle = dot(pos, currentNormal);
+	angle *= step(0.3, angle / length(pos)); // Fix intersect
+	angle -= currentDistance * 0.001;
+	angle = max(0.0, angle);
+	angle /= dot(pos, pos) / min(currentDistance * 0.25, 1.0) + 0.00001; // Fix darkening
+	return angle;
+}
 
-void main() {	
+void main() {
+	float depth = 1.0 - texture(gbuffer0, texCoord).a;
+	if (depth == 0.0) {
+		gl_FragColor = vec4(1.0);
+		return;
+	}
+	
 	vec2 kernel[kernelSize];		
  	kernel[0] = vec2(1.0, 0.0);		
  	kernel[1] = vec2(0.7071067, 0.7071067);		
@@ -89,239 +92,30 @@ void main() {
 	// kernel[10] = vec2(0.4999999, -0.8660254);
 	// kernel[11] = vec2(0.8660254, -0.5);
 	
-	vec4 g0 = texture(gbuffer0, texCoord);      
-	vec4 g1 = texture(gbuffer1, texCoord);
+	vec2 enc = texture(gbuffer0, texCoord).rg;      
+    vec3 currentNormal;
+    currentNormal.z = 1.0 - abs(enc.x) - abs(enc.y);
+    currentNormal.xy = currentNormal.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
+	currentNormal = normalize(currentNormal);
 	
-	vec2 enc = g0.rg;
-    vec3 N;
-    N.z = 1.0 - abs(enc.x) - abs(enc.y);
-    N.xy = N.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
-	N = normalize(N);
+	vec3 currentPos = getPos(depth, texCoord);
+	float currentDistance = length(currentPos);
 	
-	vec3 P = getWorldPos(texCoord);
-	// vec3 P = g1.rgb;
-	
-	// Get the current pixel's positiom
-	vec3 currentPos = P;
-	float currentDistance = distance(currentPos, eye);
-	// float currentDistance = linearize(g0.b, 0.1, 1000.0);
-	vec3 currentNormal = N;
-	
-	vec2 aspectRatio = vec2(min(1.0, screenSize.y / screenSize.x), min(1.0, screenSize.x / screenSize.y));
-	
-	// Grab a random vector from a 8x8 tiled random texture
-	// vec2 randomVec = vec2(rand(texCoord), rand(texCoord * 2.0));
-	vec2 randomVec = texture(snoise, (0.5 * texCoord * screenSize) / 8.0).xy;
-	randomVec *= 2.0;
-	randomVec -= 1.0;
-	mat2 rotMat = mat2( vec2( cos( randomVec.x * PI ), -sin( randomVec.x * PI ) ),
-						vec2( sin( randomVec.x * PI ), cos( randomVec.x * PI ) ) );
+	vec2 randomVec = texture(snoise, (texCoord * screenSize) / 8.0).xy;
+	randomVec = randomVec * 2.0 - 1.0;
+	mat2 rotMat = mat2(vec2(cos(randomVec.x * PI), -sin(randomVec.x * PI)),
+					   vec2(sin(randomVec.x * PI), cos(randomVec.x * PI)));
 	
 	float amount = 0.0;
-	
 	// for (int i = 0; i < kernelSize; i++) {
-		vec2 kernelVec = kernel[0];
-		kernelVec.xy *= aspectRatio;
-		float radius = aoSize * randomVec.y;
-		kernelVec.xy = (rotMat * kernelVec.xy);
-		kernelVec.xy = (kernelVec.xy / currentDistance) * radius;
-		vec3 pos = texture(gbuffer1, texCoord + kernelVec.xy).rgb;
-		pos = pos - currentPos;
-		
-		float angle = dot(pos, currentNormal);
-		angle *= step(0.3, angle / length(pos)); // Fix intersect
-		angle -= currentDistance * 0.001;
-		angle = max(0.0, angle);
-		angle /= dot(pos, pos) + 0.00001; // Fix darkening
-		// angle /= dot( pos, pos ) / min( currentDistance * 0.25, 1.0 ) + 0.00001;
-		amount += angle;
-		
-		
-		kernelVec = kernel[1];
-		kernelVec.xy *= aspectRatio;
-		radius = aoSize * randomVec.y;
-		kernelVec.xy = (rotMat * kernelVec.xy);
-		kernelVec.xy = (kernelVec.xy / currentDistance) * radius;
-		pos = texture(gbuffer1, texCoord + kernelVec.xy).rgb;
-		pos = pos - currentPos;
-		
-		angle = dot(pos, currentNormal);
-		angle *= step(0.3, angle / length(pos)); // Fix intersect
-		angle -= currentDistance * 0.001;
-		angle = max(0.0, angle);
-		angle /= dot(pos, pos) + 0.00001; // Fix darkening
-		// angle /= dot( pos, pos ) / min( currentDistance * 0.25, 1.0 ) + 0.00001;
-		amount += angle;
-		
-		
-		kernelVec = kernel[2];
-		kernelVec.xy *= aspectRatio;
-		radius = aoSize * randomVec.y;
-		kernelVec.xy = (rotMat * kernelVec.xy);
-		kernelVec.xy = (kernelVec.xy / currentDistance) * radius;
-		pos = texture(gbuffer1, texCoord + kernelVec.xy).rgb;
-		pos = pos - currentPos;
-		
-		angle = dot(pos, currentNormal);
-		angle *= step(0.3, angle / length(pos)); // Fix intersect
-		angle -= currentDistance * 0.001;
-		angle = max(0.0, angle);
-		angle /= dot(pos, pos) + 0.00001; // Fix darkening
-		// angle /= dot( pos, pos ) / min( currentDistance * 0.25, 1.0 ) + 0.00001;
-		amount += angle;
-		
-		
-		kernelVec = kernel[3];
-		kernelVec.xy *= aspectRatio;
-		radius = aoSize * randomVec.y;
-		kernelVec.xy = (rotMat * kernelVec.xy);
-		kernelVec.xy = (kernelVec.xy / currentDistance) * radius;
-		pos = texture(gbuffer1, texCoord + kernelVec.xy).rgb;
-		pos = pos - currentPos;
-		
-		angle = dot(pos, currentNormal);
-		angle *= step(0.3, angle / length(pos)); // Fix intersect
-		angle -= currentDistance * 0.001;
-		angle = max(0.0, angle);
-		angle /= dot(pos, pos) + 0.00001; // Fix darkening
-		// angle /= dot( pos, pos ) / min( currentDistance * 0.25, 1.0 ) + 0.00001;
-		amount += angle;
-		
-		
-		kernelVec = kernel[4];
-		kernelVec.xy *= aspectRatio;
-		radius = aoSize * randomVec.y;
-		kernelVec.xy = (rotMat * kernelVec.xy);
-		kernelVec.xy = (kernelVec.xy / currentDistance) * radius;
-		pos = texture(gbuffer1, texCoord + kernelVec.xy).rgb;
-		pos = pos - currentPos;
-		
-		angle = dot(pos, currentNormal);
-		angle *= step(0.3, angle / length(pos)); // Fix intersect
-		angle -= currentDistance * 0.001;
-		angle = max(0.0, angle);
-		angle /= dot(pos, pos) + 0.00001; // Fix darkening
-		// angle /= dot( pos, pos ) / min( currentDistance * 0.25, 1.0 ) + 0.00001;
-		amount += angle;
-		
-		
-		kernelVec = kernel[5];
-		kernelVec.xy *= aspectRatio;
-		radius = aoSize * randomVec.y;
-		kernelVec.xy = (rotMat * kernelVec.xy);
-		kernelVec.xy = (kernelVec.xy / currentDistance) * radius;
-		pos = texture(gbuffer1, texCoord + kernelVec.xy).rgb;
-		pos = pos - currentPos;
-		
-		angle = dot(pos, currentNormal);
-		angle *= step(0.3, angle / length(pos)); // Fix intersect
-		angle -= currentDistance * 0.001;
-		angle = max(0.0, angle);
-		angle /= dot(pos, pos) + 0.00001; // Fix darkening
-		// angle /= dot( pos, pos ) / min( currentDistance * 0.25, 1.0 ) + 0.00001;
-		amount += angle;
-		
-		
-		kernelVec = kernel[6];
-		kernelVec.xy *= aspectRatio;
-		radius = aoSize * randomVec.y;
-		kernelVec.xy = (rotMat * kernelVec.xy);
-		kernelVec.xy = (kernelVec.xy / currentDistance) * radius;
-		pos = texture(gbuffer1, texCoord + kernelVec.xy).rgb;
-		pos = pos - currentPos;
-		
-		angle = dot(pos, currentNormal);
-		angle *= step(0.3, angle / length(pos)); // Fix intersect
-		angle -= currentDistance * 0.001;
-		angle = max(0.0, angle);
-		angle /= dot(pos, pos) + 0.00001; // Fix darkening
-		// angle /= dot( pos, pos ) / min( currentDistance * 0.25, 1.0 ) + 0.00001;
-		amount += angle;
-		
-		
-		kernelVec = kernel[7];
-		kernelVec.xy *= aspectRatio;
-		radius = aoSize * randomVec.y;
-		kernelVec.xy = (rotMat * kernelVec.xy);
-		kernelVec.xy = (kernelVec.xy / currentDistance) * radius;
-		pos = texture(gbuffer1, texCoord + kernelVec.xy).rgb;
-		pos = pos - currentPos;
-		
-		angle = dot(pos, currentNormal);
-		angle *= step(0.3, angle / length(pos)); // Fix intersect
-		angle -= currentDistance * 0.001;
-		angle = max(0.0, angle);
-		angle /= dot(pos, pos) + 0.00001; // Fix darkening
-		// angle /= dot( pos, pos ) / min( currentDistance * 0.25, 1.0 ) + 0.00001;
-		amount += angle;
-		
-		/*
-		kernelVec = kernel[8];
-		kernelVec.xy *= aspectRatio;
-		radius = aoSize * randomVec.y;
-		kernelVec.xy = (rotMat * kernelVec.xy);
-		kernelVec.xy = (kernelVec.xy / currentDistance) * radius;
-		pos = texture(gbuffer1, texCoord + kernelVec.xy).rgb;
-		pos = pos - currentPos;
-		
-		angle = dot(pos, currentNormal);
-		angle *= step(0.3, angle / length(pos)); // Fix intersect
-		angle -= currentDistance * 0.001;
-		angle = max(0.0, angle);
-		angle /= dot(pos, pos) + 0.00001; // Fix darkening
-		// angle /= dot( pos, pos ) / min( currentDistance * 0.25, 1.0 ) + 0.00001;
-		amount += angle;
-		
-		
-		kernelVec = kernel[9];
-		kernelVec.xy *= aspectRatio;
-		radius = aoSize * randomVec.y;
-		kernelVec.xy = (rotMat * kernelVec.xy);
-		kernelVec.xy = (kernelVec.xy / currentDistance) * radius;
-		pos = texture(gbuffer1, texCoord + kernelVec.xy).rgb;
-		pos = pos - currentPos;
-		
-		angle = dot(pos, currentNormal);
-		angle *= step(0.3, angle / length(pos)); // Fix intersect
-		angle -= currentDistance * 0.001;
-		angle = max(0.0, angle);
-		angle /= dot(pos, pos) + 0.00001; // Fix darkening
-		// angle /= dot( pos, pos ) / min( currentDistance * 0.25, 1.0 ) + 0.00001;
-		amount += angle;
-		
-		
-		kernelVec = kernel[10];
-		kernelVec.xy *= aspectRatio;
-		radius = aoSize * randomVec.y;
-		kernelVec.xy = (rotMat * kernelVec.xy);
-		kernelVec.xy = (kernelVec.xy / currentDistance) * radius;
-		pos = texture(gbuffer1, texCoord + kernelVec.xy).rgb;
-		pos = pos - currentPos;
-		
-		angle = dot(pos, currentNormal);
-		angle *= step(0.3, angle / length(pos)); // Fix intersect
-		angle -= currentDistance * 0.001;
-		angle = max(0.0, angle);
-		angle /= dot(pos, pos) + 0.00001; // Fix darkening
-		// angle /= dot( pos, pos ) / min( currentDistance * 0.25, 1.0 ) + 0.00001;
-		amount += angle;
-		
-		
-		kernelVec = kernel[11];
-		kernelVec.xy *= aspectRatio;
-		radius = aoSize * randomVec.y;
-		kernelVec.xy = (rotMat * kernelVec.xy);
-		kernelVec.xy = (kernelVec.xy / currentDistance) * radius;
-		pos = texture(gbuffer1, texCoord + kernelVec.xy).rgb;
-		pos = pos - currentPos;
-		
-		angle = dot(pos, currentNormal);
-		angle *= step(0.3, angle / length(pos)); // Fix intersect
-		angle -= currentDistance * 0.001;
-		angle = max(0.0, angle);
-		angle /= dot(pos, pos) + 0.00001; // Fix darkening
-		// angle /= dot( pos, pos ) / min( currentDistance * 0.25, 1.0 ) + 0.00001;
-		amount += angle;*/
+		amount += doAO(kernel[0], randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		amount += doAO(kernel[1], randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		amount += doAO(kernel[2], randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		amount += doAO(kernel[3], randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		amount += doAO(kernel[4], randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		amount += doAO(kernel[5], randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		amount += doAO(kernel[6], randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		amount += doAO(kernel[7], randomVec, rotMat, currentPos, currentNormal, currentDistance);
 	// }
 	
 	amount *= strength / kernelSize;

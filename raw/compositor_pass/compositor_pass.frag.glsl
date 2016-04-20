@@ -7,7 +7,6 @@ precision highp float;
 uniform sampler2D tex;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
-uniform sampler2D gbuffer2;
 uniform vec3 eye;
 
 uniform vec3 light;

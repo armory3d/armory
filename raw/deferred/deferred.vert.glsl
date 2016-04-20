@@ -29,7 +29,6 @@ in vec3 off;
 
 uniform mat4 M;
 uniform mat4 NM;
-// uniform mat4 VNM;
 uniform mat4 V;
 uniform mat4 MV;
 uniform mat4 P;
@@ -41,8 +40,6 @@ uniform vec3 eye;
 uniform float skinBones[50 * 12];
 #endif
 
-out vec3 position;
-out float depth;
 out vec4 mvpposition;
 #ifdef _AMTex
 out vec2 texCoord;
@@ -55,7 +52,6 @@ out vec3 eyeDir;
 out mat3 TBN;
 #else
 out vec3 normal;
-out vec3 vnormal;
 #endif
 
 #ifdef _Skinning
@@ -104,8 +100,6 @@ void main() {
 #endif
 	lPos = LMVP * sPos;
 
-	// mat4 MV = V * M;
-
 #ifdef _Billboard
 	// Spherical
 	MV[0][0] = 1.0; MV[0][1] = 0.0; MV[0][2] = 0.0;
@@ -126,7 +120,6 @@ void main() {
 	vec3 _normal = normalize(mat3(NM) * (nor * skinningMatVec));
 #else
 	vec3 _normal = normalize(mat3(NM) * nor);
-	// vec3 _vnormal = normalize(mat3(VNM) * nor);
 #endif
 
 	matColor = albedo_color;
@@ -135,18 +128,7 @@ void main() {
 	matColor *= col;
 #endif
 
-	vec3 mPos = vec4(M * sPos).xyz;
-	position = mPos;
-	
-	vec4 vp = V * vec4(mPos, 1.0);
-	vec3 vposition = vp.xyz / vp.w;
-	float zNear = 0.1;
-	float zFar = 1000.0;
-	depth = (-vposition.z-zNear)/(zFar-zNear);
-	
 	mvpposition = gl_Position;
-	lightDir = light - mPos;
-	eyeDir = eye - mPos;
 
 #ifdef _NMTex
 	vec3 tangent = (mat3(NM) * (tan));
@@ -154,6 +136,5 @@ void main() {
 	TBN = mat3(tangent, bitangent, _normal);
 #else
 	normal = _normal;
-	// vnormal = _vnormal;
 #endif
 }

@@ -26,12 +26,12 @@
 					"link": "_inverseViewProjectionMatrix"
 				},
 				{
-					"id": "invV",
-					"link": "_inverseViewMatrix"
+					"id": "eye",
+					"link": "_cameraPosition"
 				},
 				{
-					"id": "invP",
-					"link": "_inverseProjectionMatrix"
+					"id": "eyeLook",
+					"link": "_cameraLook"
 				}
 			],
 			"texture_params": [],
