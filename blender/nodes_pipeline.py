@@ -218,7 +218,7 @@ class DrawWorldNode(Node, CGPipelineTreeNode):
 	def free(self):
 		print("Removing node ", self, ", Goodbye!")
 
-# Helper nodes
+# Pass nodes
 class QuadPassNode(Node, CGPipelineTreeNode):
 	'''A custom node'''
 	bl_idname = 'QuadPassNodeType'
@@ -244,6 +244,23 @@ class QuadPassNode(Node, CGPipelineTreeNode):
 	def free(self):
 		print("Removing node ", self, ", Goodbye!")
 
+# Constant nodes
+class ScreeNode(Node, CGPipelineTreeNode):
+	'''A custom node'''
+	bl_idname = 'ScreenNodeType'
+	bl_label = 'Screen'
+	bl_icon = 'SOUND'
+	
+	def init(self, context):
+		self.outputs.new('NodeSocketInt', "Width")
+		self.outputs.new('NodeSocketInt', "Height")
+
+	def copy(self, node):
+		print("Copying from node ", node)
+
+	def free(self):
+		print("Removing node ", self, ", Goodbye!")
+
 ### Node Categories ###
 # Node categories are a python system for automatically
 # extending the Add menu, toolbar panels and search operator.
@@ -261,6 +278,11 @@ class MyPassNodeCategory(NodeCategory):
 	@classmethod
 	def poll(cls, context):
 		return context.space_data.tree_type == 'CGPipelineTreeType'
+		
+class MyConstantNodeCategory(NodeCategory):
+	@classmethod
+	def poll(cls, context):
+		return context.space_data.tree_type == 'CGPipelineTreeType'
 
 node_categories = [
 	MyPipelineNodeCategory("PIPELINENODES", "Pipeline", items=[
@@ -275,10 +297,13 @@ node_categories = [
 		NodeItem("TargetNodeType"),
 		NodeItem("ColorBufferNodeType"),
 		NodeItem("FramebufferNodeType"),
-		]),
+	]),
 	MyPassNodeCategory("PASSNODES", "Pass", items=[
 		NodeItem("QuadPassNodeType"),
-		]),
+	]),
+	MyConstantNodeCategory("CONSTANTNODES", "Constant", items=[
+		NodeItem("ScreenNodeType"),
+	]),
 ]
 	
 

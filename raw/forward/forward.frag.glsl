@@ -65,10 +65,9 @@ in vec3 normal;
 //     return clamp(max(p, p_max), 0.0, 1.0);
 // }
 
-// Just for testing, unrealiable on low precisions
-float rand(vec2 co) {
-    return fract(sin(dot(co.xy ,vec2(12.9898, 78.233))) * 43758.5453);
-}
+// float rand(vec2 co) {
+    // return fract(sin(dot(co.xy ,vec2(12.9898, 78.233))) * 43758.5453);
+// }
 
 float texture2DCompare(vec2 uv, float compare){
     float depth = texture(shadowMap, uv).r * 2.0 - 1.0;
@@ -286,7 +285,7 @@ void main() {
 	if (receiveShadow) {
 		if (lPos.w > 0.0) {
 			visibility = shadowTest(lPos);
-			// visibility = 1.0;
+			visibility = 1.0;
 		}
 	}
 
@@ -297,11 +296,11 @@ void main() {
 		discard;
 #endif
 	vec3 baseColor = texel.rgb;
+	baseColor = pow(baseColor.rgb, vec3(2.2));
 #else
 	vec3 baseColor = matColor.rgb;
 #endif
 
-	baseColor = pow(baseColor.rgb, vec3(2.2));
 	vec4 outColor;
 
 	if (lighting) {
