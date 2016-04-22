@@ -16,15 +16,15 @@ void main() {
 	vec3 col = texture(tex, texCoord).rgb;
 	vec3 col2 = texture(tex2, texCoord).rgb;
 	
-	// // Additive blending
+	// Additive blending
     col += col2;
 	
-    // // Tone mapping
+    // Tone mapping
     // vec3 result = vec3(1.0) - exp(-col * exposure);
     
-	// // Gamma correction
+	// Gamma correction
     // result = pow(result, vec3(1.0 / gamma));
-    // gl_FragColor = vec4(result, 1.0f);
+    // gl_FragColor.rgb = result;
 	
 	gl_FragColor.rgb = col;
 }

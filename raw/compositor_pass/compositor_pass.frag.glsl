@@ -175,19 +175,19 @@ void main() {
 	// col.rgb = applyFog(col.rgb, dist);
 	
 	// Lens flare	
-	vec4 lndc = VP * vec4(light, 1.0);
-	lndc.xy /= lndc.w;
+	// vec4 lndc = VP * vec4(light, 1.0);
+	// lndc.xy /= lndc.w;
 	
-	float lightDistance = distance(eye, light);
-	vec2 lss = lndc.xy * 0.5 + 0.5;
-	float lssdepth = linearize(texture(gbuffer0, lss).a, 0.1, 1000.0);
+	// float lightDistance = distance(eye, light);
+	// vec2 lss = lndc.xy * 0.5 + 0.5;
+	// float lssdepth = linearize(texture(gbuffer0, lss).a, 0.1, 1000.0);
 	
-	if (lssdepth >= lightDistance) {
-		vec2 lensuv = (texCoord - 0.5) * 2.0;
-		lensuv.x *= aspectRatio;
-		vec3 lensflarecol = vec3(1.4, 1.2, 1.0) * lensflare(lensuv, lndc.xy);
-		col.rgb += lensflarecol;
-	}
+	// if (lssdepth >= lightDistance) {
+	// 	vec2 lensuv = (texCoord - 0.5) * 2.0;
+	// 	lensuv.x *= aspectRatio;
+	// 	vec3 lensflarecol = vec3(1.4, 1.2, 1.0) * lensflare(lensuv, lndc.xy);
+	// 	col.rgb += lensflarecol;
+	// }
 	
 	// Vignetting
 	col *= vignette();
@@ -199,11 +199,11 @@ void main() {
 	// col.rgb *= getExposure(aperture, shutterSpeed, iso);
 	
 	// Tonemapping
-	// col.rgb = tonemapUncharted2(col.rgb);
+	col.rgb = tonemapUncharted2(col.rgb);
 	// col.rgb = tonemapFilmic(col.rgb); // With gamma
 	
 	// To gamma
-	// col = vec4(pow(col.rgb, vec3(1.0 / 2.2)), col.a);
+	col.rgb = pow(col.rgb, vec3(1.0 / 2.2));
 	
 	gl_FragColor = col; 
 }
