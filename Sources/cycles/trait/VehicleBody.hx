@@ -124,14 +124,14 @@ class VehicleBody extends Trait {
 		m_vehicle = BtRaycastVehicle.create(m_tuning.value, m_carChassis, m_vehicleRayCaster);
 
 		// Never deactivate the vehicle
-		m_carChassis.value.setActivationState(BtCollisionObject.DISABLE_DEACTIVATION);
+		m_carChassis.ptr.setActivationState(BtCollisionObject.DISABLE_DEACTIVATION);
 
 		// Choose coordinate system
-		m_vehicle.value.setCoordinateSystem(rightIndex, upIndex, forwardIndex);
+		m_vehicle.ptr.setCoordinateSystem(rightIndex, upIndex, forwardIndex);
 
 		// Add wheels
 		for (w in wheels) {
-			m_vehicle.value.addWheel(
+			m_vehicle.ptr.addWheel(
 					w.connectionPointCS0.value,
 					wheelDirectionCS0.value,
 					wheelAxleCS.value,
@@ -142,8 +142,8 @@ class VehicleBody extends Trait {
 		}
 
 		// Setup wheels
-		for (i in 0...m_vehicle.value.getNumWheels()){
-			var wheel = m_vehicle.value.getWheelInfo(i);
+		for (i in 0...m_vehicle.ptr.getNumWheels()){
+			var wheel = m_vehicle.ptr.getWheelInfo(i);
 			wheel.m_suspensionStiffness = suspensionStiffness;
 			wheel.m_wheelsDampingRelaxation = suspensionDamping;
 			wheel.m_wheelsDampingCompression = suspensionCompression;
@@ -151,7 +151,7 @@ class VehicleBody extends Trait {
 			wheel.m_rollInfluence = rollInfluence;
 		}
 
-		physics.world.value.addAction(m_vehicle);
+		physics.world.ptr.addAction(m_vehicle);
     }
 
 	function update() {
@@ -179,19 +179,19 @@ class VehicleBody extends Trait {
 			gVehicleSteering = 0;
 		}
 
-		m_vehicle.value.applyEngineForce(gEngineForce, 2);
-		m_vehicle.value.setBrake(gBreakingForce, 2);
-		m_vehicle.value.applyEngineForce(gEngineForce, 3);
-		m_vehicle.value.setBrake(gBreakingForce, 3);
-		m_vehicle.value.setSteeringValue(gVehicleSteering, 0);
-		m_vehicle.value.setSteeringValue(gVehicleSteering, 1);
+		m_vehicle.ptr.applyEngineForce(gEngineForce, 2);
+		m_vehicle.ptr.setBrake(gBreakingForce, 2);
+		m_vehicle.ptr.applyEngineForce(gEngineForce, 3);
+		m_vehicle.ptr.setBrake(gBreakingForce, 3);
+		m_vehicle.ptr.setSteeringValue(gVehicleSteering, 0);
+		m_vehicle.ptr.setSteeringValue(gVehicleSteering, 1);
 
-		for (i in 0...m_vehicle.value.getNumWheels()) {
+		for (i in 0...m_vehicle.ptr.getNumWheels()) {
 			// Synchronize the wheels with the chassis worldtransform
-			m_vehicle.value.updateWheelTransform(i, true);
+			m_vehicle.ptr.updateWheelTransform(i, true);
 			
 			// Update wheels transforms
-			var trans = m_vehicle.value.getWheelTransformWS(i);
+			var trans = m_vehicle.ptr.getWheelTransformWS(i);
 			//wheels[i].trans = trans;
 			//wheels[i].syncTransform();
 			var p = trans.getOrigin();
@@ -201,7 +201,7 @@ class VehicleBody extends Trait {
 			wheels[i].node.transform.dirty = true;
 		}
 
-		var trans = m_carChassis.value.getWorldTransform();
+		var trans = m_carChassis.ptr.getWorldTransform();
 		var p = trans.getOrigin();
 		var q = trans.getRotation();
 		transform.pos.set(p.x(), p.y(), p.z());
@@ -225,9 +225,9 @@ class VehicleBody extends Trait {
 		var cInfo = BtRigidBodyConstructionInfo.create(mass, myMotionState, shape, localInertia.value).value;
 			
 		var body = BtRigidBody.create(cInfo);
-		body.value.setLinearVelocity(BtVector3.create(0, 0, 0).value);
-		body.value.setAngularVelocity(BtVector3.create(0, 0, 0).value);
-		physics.world.value.addRigidBody(body);
+		body.ptr.setLinearVelocity(BtVector3.create(0, 0, 0).value);
+		body.ptr.setAngularVelocity(BtVector3.create(0, 0, 0).value);
+		physics.world.ptr.addRigidBody(body);
 
 		return body;
 	}

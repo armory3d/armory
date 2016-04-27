@@ -46,18 +46,18 @@ class PhysicsWorld extends Trait {
 		var solver = BtSequentialImpulseConstraintSolver.create();
 
 		world = BtDiscreteDynamicsWorld.create(dispatcher, broadphase, solver, collisionConfiguration);
-		world.value.setGravity(BtVector3.create(0, 0, -9.81).value);
+		world.ptr.setGravity(BtVector3.create(0, 0, -9.81).value);
 
 		requestUpdate(update);
 	}
 
 	public function addRigidBody(body:RigidBody) {
-		world.value.addRigidBody(body.body);
+		world.ptr.addRigidBody(body.body);
 		rbMap.set(body.id, body);
 	}
 
 	public function removeRigidBody(body:RigidBody) {
-		world.value.removeRigidBody(body.body);
+		world.ptr.removeRigidBody(body.body);
 		#if js
 		Ammo.destroy(body.body);
 		#elseif cpp
@@ -83,10 +83,10 @@ class PhysicsWorld extends Trait {
 				res.push(rbMap.get(c.a));
 			}
 			#elseif cpp
-			if (c.a == body.body.value.getUserIndex()) {
+			if (c.a == body.body.ptr.getUserIndex()) {
 				res.push(rbMap.get(c.b));
 			}
-			else if (c.b == body.body.value.getUserIndex()) {
+			else if (c.b == body.body.ptr.getUserIndex()) {
 				res.push(rbMap.get(c.a));
 			}
 			#end
@@ -95,7 +95,7 @@ class PhysicsWorld extends Trait {
 	}
 
 	public function update() {
-		world.value.stepSimulation(1 / 60);
+		world.ptr.stepSimulation(1 / 60);
 		updateContacts();
 	}
 
@@ -138,7 +138,7 @@ class PhysicsWorld extends Trait {
         var rayTo = getRayTo(inputX, inputY);
 
         rayCallback = ClosestRayResultCallback.create(rayFrom.value, rayTo.value);
-        world.value.rayTest(rayFrom.value, rayTo.value, rayCallback.value);
+        world.ptr.rayTest(rayFrom.value, rayTo.value, rayCallback.value);
         
         if (rayCallback.value.hasHit()) {
         	#if js

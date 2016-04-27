@@ -227,12 +227,6 @@ void main() {
 	vec4 outColor = vec4(vec3(direct * visibility + indirect * ao), 1.0);
 	
 	// outColor.rgb *= occlusion;
-	// outColor.rgb *= ao;
-
 	// outColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
-
 	gl_FragColor = vec4(outColor.rgb, outColor.a);
-	
-	// vec4 aocol = texture(ssaotex, texCoord);
-	// gl_FragColor = aocol;
 }

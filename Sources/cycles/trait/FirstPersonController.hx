@@ -56,9 +56,8 @@ class FirstPersonController extends Trait {
     }
 
     var locked = true;
-
     public function update() {
-		if (Input.occupied) return;
+		if (Input.occupied || !body.bodyCreated) return;
 		
         // Unlock
         // if (locked &&

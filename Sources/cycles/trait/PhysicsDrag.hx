@@ -40,7 +40,7 @@ class PhysicsDrag extends Trait {
 		if (Input.started) {
 			var b = physics.pickClosest(Input.x, Input.y);
 
-			if (b != null && b.mass > 0 && !b.body.value.isKinematicObject()) {
+			if (b != null && b.mass > 0 && !b.body.ptr.isKinematicObject()) {
 
 				setRays();
 				pickedBody = b;
@@ -51,13 +51,13 @@ class PhysicsDrag extends Trait {
 				var pickPos:BtVector3 = physics.rayCallback.value.m_hitPointWorld;
 				#end
 				
-                var ct = b.body.value.getCenterOfMassTransform();
+                var ct = b.body.ptr.getCenterOfMassTransform();
                 var inv = ct.inverse();
 				
 				#if js
                 var localPivot:BtVector3 = inv.mulVec(pickPos);
 				#elseif cpp
-                var localPivot:BtVector3 = untyped inv * pickPos; // Operator overload
+                var localPivot:BtVector3 = untyped __cpp__("inv.value * pickPos.value"); // Operator overload
                 #end
 
                 var tr = BtTransform.create();
@@ -65,12 +65,13 @@ class PhysicsDrag extends Trait {
                 tr.value.setOrigin(localPivot);
 
                 pickConstraint = BtGeneric6DofConstraint.create(b.body.value, tr.value, false);
-                pickConstraint.value.setLinearLowerLimit(BtVector3.create(0, 0, 0).value);
+                
+				pickConstraint.value.setLinearLowerLimit(BtVector3.create(0, 0, 0).value);
                 pickConstraint.value.setLinearUpperLimit(BtVector3.create(0, 0, 0).value);
                 pickConstraint.value.setAngularLowerLimit(BtVector3.create(-10, -10, -10).value);
                 pickConstraint.value.setAngularUpperLimit(BtVector3.create(10, 10, 10).value);
 
-                physics.world.value.addConstraint(pickConstraint, false);
+                physics.world.ptr.addConstraint(pickConstraint, false);
 
                 /*pickConstraint.value.setParam(4, 0.8, 0);
                 pickConstraint.value.setParam(4, 0.8, 1);
@@ -97,7 +98,7 @@ class PhysicsDrag extends Trait {
 		else if (Input.released) {
 
 			if (pickConstraint != null) {
-				physics.world.value.removeConstraint(pickConstraint);
+				physics.world.ptr.removeConstraint(pickConstraint);
 				pickConstraint = null;
 				pickedBody = null;
 		    }

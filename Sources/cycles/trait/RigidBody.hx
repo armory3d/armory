@@ -34,6 +34,8 @@ class RigidBody extends Trait {
 	public var friction:Float;
 
 	public var body:BtRigidBodyPointer = null;
+	public var bodyCreated = false;
+	public var shapeConvexCreated: Bool;
 
 	static var nextId = 0;
 	public var id = 0;
@@ -53,13 +55,17 @@ class RigidBody extends Trait {
 	}
 
 	public function init() {
+		
 		transform = node.transform;
 		physics = Root.physics;
 
-		if (body != null) return;
+		if (bodyCreated) return;
+		bodyCreated = true;
 
 		var _shape:BtCollisionShapePointer = null;
 		var _shapeConvex:BtConvexHullShapePointer = null;
+		shapeConvexCreated = false;
+		var _inertia = BtVector3.create(0, 0, 0);
 
 		if (shape == SHAPE_BOX) {
 			_shape = BtBoxShape.create(BtVector3.create(
@@ -72,6 +78,7 @@ class RigidBody extends Trait {
 		}
 		else if (shape == SHAPE_CONVEX_HULL || shape == SHAPE_MESH) { // Use convex hull for mesh for now
 			_shapeConvex = BtConvexHullShape.create();
+			shapeConvexCreated = true;
 			addPointsToConvexHull(_shapeConvex);
 		}
 		else if (shape == SHAPE_CONE) {
@@ -118,16 +125,15 @@ class RigidBody extends Trait {
 		var _centerOfMassOffset = BtTransform.create();
 		_centerOfMassOffset.value.setIdentity();
 		var _motionState = BtDefaultMotionState.create(_transform.value, _centerOfMassOffset.value);
-		var _inertia = BtVector3.create(0, 0, 0);
 
-		if (_shapeConvex == null) {
+		if (!shapeConvexCreated) {
 			if (shape != SHAPE_STATIC_MESH && shape != SHAPE_TERRAIN) {
-				_shape.value.calculateLocalInertia(mass, _inertia.value);
+				_shape.ptr.calculateLocalInertia(mass, _inertia.value);
 			}
 			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shape, _inertia.value);
 			body = BtRigidBody.create(_bodyCI.value);
-			body.value.setFriction(friction);
-			body.value.setRollingFriction(friction);
+			body.ptr.setFriction(friction);
+			body.ptr.setRollingFriction(friction);
 		}
 		else {
 			_shapeConvex.value.calculateLocalInertia(mass, _inertia.value);
@@ -142,7 +148,7 @@ class RigidBody extends Trait {
 		//body.setUserIndex(nextId);
 		untyped body.userIndex = id;
 		#elseif cpp
-		body.value.setUserIndex(id);
+		body.ptr.setUserIndex(id);
 		#end
 
 		physics.addRigidBody(this);
@@ -151,77 +157,76 @@ class RigidBody extends Trait {
 	}
 
 	function lateUpdate() {
-		var trans = body.value.getWorldTransform();
+		var trans = body.ptr.getWorldTransform();
 		var p = trans.getOrigin();
 		var q = trans.getRotation();
 		transform.pos.set(p.x(), p.y(), p.z());
 		transform.rot.set(q.x(), q.y(), q.z(), q.w());
-
 		transform.dirty = true;
 		transform.update();
 	}
 
-	public inline function removeFromWorld() {
+	public function removeFromWorld() {
 		physics.removeRigidBody(this);
 	}
 
-	public inline function activate() {
-		body.value.activate(false);
+	public function activate() {
+		body.ptr.activate(false);
 	}
 
-	public inline function disableGravity() {
+	public function disableGravity() {
 		// TODO: use setGravity instead
 		setLinearFactor(0, 0, 0);
 		setAngularFactor(0, 0, 0);
 	}
 
-	/*public inline function setGravity(v:Vec4) {
-		body.value.setGravity(BtVector3.create(v.x, v.y, v.z).value);
+	/*public function setGravity(v:Vec4) {
+		body.ptr.setGravity(BtVector3.create(v.x, v.y, v.z).value);
 	}*/
 
-	/*public inline function setActivationState(newState:Int) {
-		body.value.setActivationState(newState);
+	/*public function setActivationState(newState:Int) {
+		body.ptr.setActivationState(newState);
 	}*/
 
-	public inline function applyImpulse(impulse:Vec4, pos:Vec4 = null) {
+	public function applyImpulse(impulse:Vec4, pos:Vec4 = null) {
 		if (pos == null) {
-			body.value.applyCentralImpulse(BtVector3.create(impulse.x, impulse.y, impulse.z).value);
+			body.ptr.applyCentralImpulse(BtVector3.create(impulse.x, impulse.y, impulse.z).value);
 		}
 		else {
-			body.value.applyImpulse(BtVector3.create(impulse.x, impulse.y, impulse.z).value,
+			body.ptr.applyImpulse(BtVector3.create(impulse.x, impulse.y, impulse.z).value,
 									BtVector3.create(pos.x, pos.y, pos.z).value);
 		}
 	}
 
-	public inline function setLinearFactor(x:Float, y:Float, z:Float) {
-		body.value.setLinearFactor(BtVector3.create(x, y, z).value);
+	public function setLinearFactor(x:Float, y:Float, z:Float) {
+		body.ptr.setLinearFactor(BtVector3.create(x, y, z).value);
 	}
 
-	public inline function setAngularFactor(x:Float, y:Float, z:Float) {
-		body.value.setAngularFactor(BtVector3.create(x, y, z).value);
+	public function setAngularFactor(x:Float, y:Float, z:Float) {
+		body.ptr.setAngularFactor(BtVector3.create(x, y, z).value);
 	}
 
-	// public inline function getLinearVelocity():BtVector3 {
-	// 	return body.value.getLinearVelocity(); // Unable to compile in cpp
+	// public function getLinearVelocity():BtVector3 {
+	// 	return body.ptr.getLinearVelocity(); // Unable to compile in cpp
 	// }
 
-	public inline function setLinearVelocity(x:Float, y:Float, z:Float) {
-		body.value.setLinearVelocity(BtVector3.create(x, y, z).value);
+	public function setLinearVelocity(x:Float, y:Float, z:Float) {
+		body.ptr.setLinearVelocity(BtVector3.create(x, y, z).value);
 	}
 
-	// public inline function getAngularVelocity():BtVector3 {
-	// 	return body.value.getAngularVelocity();
+	// public function getAngularVelocity():BtVector3 {
+	// 	return body.ptr.getAngularVelocity();
 	// }
 
-	public inline function setAngularVelocity(x:Float, y:Float, z:Float) {
-		body.value.setAngularVelocity(BtVector3.create(x, y, z).value);
+	public function setAngularVelocity(x:Float, y:Float, z:Float) {
+		body.ptr.setAngularVelocity(BtVector3.create(x, y, z).value);
 	}
 
 	public function syncTransform() {
 		var trans = BtTransform.create();
 		trans.value.setOrigin(BtVector3.create(transform.pos.x, transform.pos.y, transform.pos.z).value);
 		trans.value.setRotation(BtQuaternion.create(transform.rot.x, transform.rot.y, transform.rot.z, transform.rot.w).value);
-		body.value.setCenterOfMassTransform(trans.value);
+		body.ptr.setCenterOfMassTransform(trans.value);
 	}
 
 	function addPointsToConvexHull(shape:BtConvexHullShapePointer) {

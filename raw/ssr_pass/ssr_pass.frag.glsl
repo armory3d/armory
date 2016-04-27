@@ -196,7 +196,7 @@ void main() {
 	hitCoord = viewPos.xyz;
 	
 	vec3 dir = reflected * max(minRayStep, -viewPos.z);// * (1.0 - rand(texCoord) * 0.5);
-	vec4 coords = rayCast(dir); 
+	vec4 coords = rayCast(dir);
 
 	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
