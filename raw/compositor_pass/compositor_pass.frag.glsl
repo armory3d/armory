@@ -7,10 +7,16 @@ precision highp float;
 uniform sampler2D tex;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
-uniform vec3 eye;
 
+//#ifdef (_LensFlare || _Fog)
+#ifdef _Fog
+uniform vec3 eye;
+#endif
+
+#ifdef _LensFlare
 uniform vec3 light;
 uniform mat4 VP;
+#endif
 
 in vec2 texCoord;
 

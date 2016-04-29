@@ -27,15 +27,11 @@ in vec4 weight;
 in vec3 off;
 #endif
 
-uniform mat4 M;
 uniform mat4 NM;
-uniform mat4 V;
 uniform mat4 MV;
 uniform mat4 P;
 uniform mat4 LMVP;
 uniform vec4 albedo_color;
-uniform vec3 light;
-uniform vec3 eye;
 #ifdef _Skinning
 uniform float skinBones[50 * 12];
 #endif
@@ -46,8 +42,6 @@ out vec2 texCoord;
 #endif
 out vec4 lPos;
 out vec4 matColor;
-out vec3 lightDir;
-out vec3 eyeDir;
 #ifdef _NMTex
 out mat3 TBN;
 #else

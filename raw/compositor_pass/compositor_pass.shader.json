@@ -19,15 +19,18 @@
 			"links": [
 				{
 					"id": "eye",
-					"link": "_cameraPosition"
+					"link": "_cameraPosition",
+					"ifdef": ["_LensFlare"]
 				},
 				{
 					"id": "light",
-					"link": "_lightPosition"
+					"link": "_lightPosition",
+					"ifdef": ["_LensFlare"]
 				},
 				{
 					"id": "VP",
-					"link": "_viewProjectionMatrix"
+					"link": "_viewProjectionMatrix",
+					"ifdef": ["_LensFlare"]
 				}
 			],
 			"texture_params": [],

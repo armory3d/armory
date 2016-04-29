@@ -154,8 +154,11 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
 							if 'ifdef' in l:
 								valid_link = False
 								for d in defs:
-									if d == l['ifdef']:
-										valid_link = True
+									for link_def in l['ifdef']:
+										if d == link_def:
+											valid_link = True
+											break
+									if valid_link:
 										break
 							if valid_link:
 								tu.link = l['link']

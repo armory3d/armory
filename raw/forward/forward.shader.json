@@ -48,7 +48,7 @@
 				{
 					"id": "skinBones",
 					"link": "_skinBones",
-					"ifdef": "_Skinning"
+					"ifdef": ["_Skinning"]
 				},
 				{
 					"id": "senvmapIrradiance",
@@ -90,7 +90,7 @@
 				{
 					"id": "skinBones",
 					"link": "_skinBones",
-					"ifdef": "_Skinning"
+					"ifdef": ["_Skinning"]
 				}
 			],
 			"vertex_shader": "shadowmap.vert.glsl",

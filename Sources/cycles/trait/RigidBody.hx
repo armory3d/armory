@@ -194,7 +194,7 @@ class RigidBody extends Trait {
 		}
 		else {
 			body.ptr.applyImpulse(BtVector3.create(impulse.x, impulse.y, impulse.z).value,
-									BtVector3.create(pos.x, pos.y, pos.z).value);
+								  BtVector3.create(pos.x, pos.y, pos.z).value);
 		}
 	}
 

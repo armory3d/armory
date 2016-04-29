@@ -492,8 +492,6 @@ def make_bind_target(stage, node_group, node, target_index=1, constant_index=2, 
 				
 		targetId = targetNode.inputs[0].default_value + cb_postfix + postfix
 	
-	print(targetNode.bl_idname)
-	
 	stage.params.append(targetId)
 	stage.params.append(node.inputs[constant_index].default_value)
 
