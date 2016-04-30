@@ -1,0 +1,25 @@
+{
+	"contexts": [
+		{
+			"id": "sss_pass",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "true"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [],
+			"texture_params": [],
+			"vertex_shader": "sss_pass.vert.glsl",
+			"fragment_shader": "sss_pass.frag.glsl"
+		}
+	]
+}

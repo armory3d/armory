@@ -14,48 +14,48 @@ CMFT=./cmft-osx
 #eval $CMFT --printCLDevices
 
 # Typical parameters for irradiance filter.
-#eval $CMFT $@ --input "okretnica.tga"           \
+# eval $CMFT $@ --input "test.jpg"           \
 #              --filter irradiance               \
 #              --srcFaceSize 0                   \
 #              --dstFaceSize 0                   \
 #              --outputNum 1                     \
-#              --output0 "okretnica_irr"         \
-#              --output0params dds,bgra8,cubemap
+#              --output0 "test_irr"         \
+#              --output0params hdr,rgbe,latlong
 
 # Typical parameters for generating spherical harmonics coefficients.
-#eval $CMFT $@ --input "okretnica.tga"           \
-#              --filter shcoeffs                 \
-#              --outputNum 1                     \
-#              --output0 "okretnica"
+# eval $CMFT $@ --input "test.jpg"           \
+             # --filter shcoeffs                 \
+             # --outputNum 1                     \
+             # --output0 "test"
 
 # Typical parameters for radiance filter.
-# eval $CMFT $@ --input "envmap.jpg"           \
-#               ::Filter options                  \
-#               --filter radiance                 \
-#               --srcFaceSize 256                 \
-#               --excludeBase false               \
-#               --mipCount 7                      \
-#               --glossScale 10                   \
-#               --glossBias 3                     \
-#               --lightingModel blinnbrdf         \
-#               --edgeFixup none                  \
-#               --dstFaceSize 256                 \
-#               ::Processing devices              \
-#               --numCpuProcessingThreads 4       \
-#               --useOpenCL true                  \
-#               --clVendor anyGpuVendor           \
-#               --deviceType gpu                  \
-#               --deviceIndex 0                   \
-#               ::Aditional operations            \
-#               --inputGammaNumerator 2.2         \
-#               --inputGammaDenominator 1.0       \
-#               --outputGammaNumerator 1.0        \
-#               --outputGammaDenominator 2.2      \
-#               --generateMipChain true          \
-#               ::Output                          \
-#               --outputNum 1                     \
-#               --output0 "envmap_rad"       \
-#               --output0params hdr,rgbe,latlong \
+eval $CMFT $@ --input "test.jpg"           \
+              ::Filter options                  \
+              --filter radiance                 \
+              --srcFaceSize 64                 \
+              --excludeBase false               \
+              --mipCount 7                      \
+              --glossScale 10                   \
+              --glossBias 3                     \
+              --lightingModel blinnbrdf         \
+              --edgeFixup none                  \
+              --dstFaceSize 64                 \
+              ::Processing devices              \
+              --numCpuProcessingThreads 4       \
+              --useOpenCL true                  \
+              --clVendor anyGpuVendor           \
+              --deviceType gpu                  \
+              --deviceIndex 0                   \
+              ::Aditional operations            \
+              --inputGammaNumerator 2.2         \
+              --inputGammaDenominator 1.0       \
+              --outputGammaNumerator 1.0        \
+              --outputGammaDenominator 2.2      \
+              --generateMipChain true          \
+              ::Output                          \
+              --outputNum 1                     \
+              --output0 "envmap_rad"       \
+              --output0params hdr,rgbe,latlong \
               # --output1 "okretnica_pmrem"       \
               # --output1params ktx,rgba8,cubemap
 
@@ -167,10 +167,10 @@ CMFT=./cmft-osx
 #              --output3 "cmft_facelist"   --output3params tga,bgra8,facelist \
 #              --output4 "cmft_latlong"    --output4params hdr,rgbe,latlong
 
-eval $CMFT $@ --input "shrine.hdr"          \
-             --filter none                     \
-             ::Output                          \
-             --outputNum 1                     \
-             --dstFaceSize 0 \
-             --output0 "test"         \
-             --output0params hdr,rgbe,latlong
+# eval $CMFT $@ --input "shrine.hdr"          \
+#              --filter none                     \
+#              ::Output                          \
+#              --outputNum 1                     \
+#              --dstFaceSize 0 \
+#              --output0 "test"         \
+#              --output0params hdr,rgbe,latlong
