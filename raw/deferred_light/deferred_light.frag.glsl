@@ -27,6 +27,27 @@ uniform vec3 eyeLook;
 in vec2 texCoord;
 in vec3 viewRay;
 
+// Separable SSS Transmittance Function, ref to sss_pass
+vec3 SSSSTransmittance(float translucency, float sssWidth, vec3 worldPosition, vec3 worldNormal, vec3 lightDir) {
+	float scale = 8.25 * (1.0 - translucency) / sssWidth;
+    vec4 shrinkedPos = vec4(worldPosition - 0.005 * worldNormal, 1.0);
+    vec4 shadowPosition = LMVP * shrinkedPos;
+    float d1 = texture(shadowMap, shadowPosition.xy / shadowPosition.w).r; // 'd1' has a range of 0..1
+    float d2 = shadowPosition.z; // 'd2' has a range of 0..'lightFarPlane'
+    const float lightFarPlane = 120 / 3.5;
+	d1 *= lightFarPlane; // So we scale 'd1' accordingly:
+    float d = scale * abs(d1 - d2);
+
+    float dd = -d * d;
+    vec3 profile = vec3(0.233, 0.455, 0.649) * exp(dd / 0.0064) +
+                     vec3(0.1,   0.336, 0.344) * exp(dd / 0.0484) +
+                     vec3(0.118, 0.198, 0.0)   * exp(dd / 0.187)  +
+                     vec3(0.113, 0.007, 0.007) * exp(dd / 0.567)  +
+                     vec3(0.358, 0.004, 0.0)   * exp(dd / 1.99)   +
+                     vec3(0.078, 0.0,   0.0)   * exp(dd / 7.41);
+    return profile * clamp(0.3 + dot(lightDir, -worldNormal), 0.0, 1.0);
+}
+
 vec2 envMapEquirect(vec3 normal) {
 	float phi = acos(normal.z);
 	float theta = atan(-normal.y, normal.x) + PI;
@@ -210,6 +231,11 @@ void main() {
 	
 	// Direct
 	vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);
+	
+	// SSS only masked objects
+	if (texture(gbuffer0, texCoord).b == 2.0) {
+		direct.rgb = direct.rgb * SSSSTransmittance(1.0, 0.005, p, n, lightDir);
+	}
 
 	// Indirect
 	vec3 indirectDiffuse = texture(senvmapIrradiance, envMapEquirect(n)).rgb;
