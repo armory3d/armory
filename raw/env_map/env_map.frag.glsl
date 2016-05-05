@@ -25,6 +25,6 @@ void main() {
 	// }
 	
 	vec3 n = normalize(normal);
-	// gl_FragColor = texture(envmap, envMapEquirect(n));
-	gl_FragColor = vec4(pow(texture(envmap, envMapEquirect(n)).rgb, vec3(2.2)), 1.0);
+	gl_FragColor = texture(envmap, envMapEquirect(n));
+	// gl_FragColor = vec4(pow(texture(envmap, envMapEquirect(n)).rgb, vec3(2.2)), 1.0);
 }

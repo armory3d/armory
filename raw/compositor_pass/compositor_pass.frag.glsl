@@ -162,17 +162,17 @@ void main() {
 	vec4 col = texture(tex, uv);
 	
 	// Blur
-	// float depth = texture(gbuffer0, texCoord).a;
-	// float blur_amount = abs(depth - focus_depth);
-	// if (depth < depth - focus_depth) {
-	// 	blur_amount *= 10.0;
-	// }
-	// blur_amount = clamp(blur_amount, 0.0, 1.0);
-	// vec4 baseColor = col;//texture(tex, texCoord);
-	// vec4 blurredColor = vec4(0.0, 0.0, 0.0, 0.0);
-	// float blurSize = 0.005 * blur_amount;
-	// blurredColor = 0.75 * sampleBox(blurSize * 0.5) + 0.25 * sampleBox(blurSize * 1.0);
-	// col = baseColor * (1.0 - blur_amount) + blurredColor * blur_amount;
+	float depth = texture(gbuffer0, texCoord).a;
+	float blur_amount = abs(depth - focus_depth);
+	if (depth < depth - focus_depth) {
+		blur_amount *= 10.0;
+	}
+	blur_amount = clamp(blur_amount, 0.0, 1.0);
+	vec4 baseColor = col;//texture(tex, texCoord);
+	vec4 blurredColor = vec4(0.0, 0.0, 0.0, 0.0);
+	float blurSize = 0.005 * blur_amount;
+	blurredColor = 0.75 * sampleBox(blurSize * 0.5) + 0.25 * sampleBox(blurSize * 1.0);
+	col = baseColor * (1.0 - blur_amount) + blurredColor * blur_amount;
 	
 	// Fog
 	// vec3 pos = texture(gbuffer1, texCoord).rgb;

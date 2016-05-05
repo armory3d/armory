@@ -127,8 +127,10 @@ class FirstPersonController extends Trait {
             var force = new Vec4(0, 0, -1);
             force.applyProjection(mat);
             force = force.mult(Time.delta * 3000 / 2);
-
-            body.applyImpulse(force);
+            // body.applyImpulse(force);
+			
+			var btvec = body.getLinearVelocity();
+			body.setLinearVelocity(0.0, 0.0, btvec.z() - 1.0);
         }
 		else {
 			body.activate();

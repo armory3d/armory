@@ -58,6 +58,7 @@ class Main {
 	public static function main() {
 		lue.sys.CompileTime.importPackage('lue.trait');
 		lue.sys.CompileTime.importPackage('cycles.trait');
+		lue.sys.CompileTime.importPackage('cycles.renderpipeline');
 		lue.sys.CompileTime.importPackage('""" + bpy.data.worlds[0]['CGProjectPackage'] + """');
 		#if (js && WITH_PHYSICS)
 		untyped __js__("

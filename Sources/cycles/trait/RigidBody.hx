@@ -206,9 +206,9 @@ class RigidBody extends Trait {
 		body.ptr.setAngularFactor(BtVector3.create(x, y, z).value);
 	}
 
-	// public function getLinearVelocity():BtVector3 {
-	// 	return body.ptr.getLinearVelocity(); // Unable to compile in cpp
-	// }
+	public function getLinearVelocity():BtVector3 {
+		return body.ptr.getLinearVelocity(); // Unable to compile in cpp
+	}
 
 	public function setLinearVelocity(x:Float, y:Float, z:Float) {
 		body.ptr.setLinearVelocity(BtVector3.create(x, y, z).value);

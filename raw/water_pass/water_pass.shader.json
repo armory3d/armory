@@ -1,0 +1,50 @@
+{
+	"contexts": [
+		{
+			"id": "water_pass",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "true"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				{
+					"id": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"id": "eyeLook",
+					"link": "_cameraLook"
+				},
+				{
+					"id": "light",
+					"link": "_lightPosition"
+				},
+				{
+					"id": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				},
+				{
+					"id": "time",
+					"link": "_time"
+				},
+				{
+					"id": "senvmapRadiance",
+					"link": "_envmapRadiance"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "water_pass.vert.glsl",
+			"fragment_shader": "water_pass.frag.glsl"
+		}
+	]
+}

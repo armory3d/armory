@@ -200,6 +200,61 @@ class DrawQuadNode(Node, CGPipelineTreeNode):
 
 	def free(self):
 		print("Removing node ", self, ", Goodbye!")
+
+class CallFunctionNode(Node, CGPipelineTreeNode):
+	'''A custom node'''
+	bl_idname = 'CallFunctionNodeType'
+	bl_label = 'Call Function'
+	bl_icon = 'SOUND'
+	
+	def init(self, context):
+		self.inputs.new('NodeSocketShader', "Stage")
+		self.inputs.new('NodeSocketString', "Function")
+
+		self.outputs.new('NodeSocketShader', "Stage")
+
+	def copy(self, node):
+		print("Copying from node ", node)
+
+	def free(self):
+		print("Removing node ", self, ", Goodbye!")
+	
+class BranchFunctionNode(Node, CGPipelineTreeNode):
+	'''A custom node'''
+	bl_idname = 'BranchFunctionNodeType'
+	bl_label = 'Branch Function'
+	bl_icon = 'SOUND'
+	
+	def init(self, context):
+		self.inputs.new('NodeSocketShader', "Stage")
+		self.inputs.new('NodeSocketString', "Function")
+
+		self.outputs.new('NodeSocketShader', "True")
+		self.outputs.new('NodeSocketShader', "False")
+
+	def copy(self, node):
+		print("Copying from node ", node)
+
+	def free(self):
+		print("Removing node ", self, ", Goodbye!")
+		
+class MergeStagesNode(Node, CGPipelineTreeNode):
+	'''A custom node'''
+	bl_idname = 'MergeStagesNodeType'
+	bl_label = 'Merge Stages'
+	bl_icon = 'SOUND'
+	
+	def init(self, context):
+		self.inputs.new('NodeSocketShader', "Stage")
+		self.inputs.new('NodeSocketShader', "Stage")
+
+		self.outputs.new('NodeSocketShader', "Stage")
+
+	def copy(self, node):
+		print("Copying from node ", node)
+
+	def free(self):
+		print("Removing node ", self, ", Goodbye!")
 		
 class DrawWorldNode(Node, CGPipelineTreeNode):
 	'''A custom node'''
@@ -284,6 +339,11 @@ class MyConstantNodeCategory(NodeCategory):
 	def poll(cls, context):
 		return context.space_data.tree_type == 'CGPipelineTreeType'
 
+class MyLogicNodeCategory(NodeCategory):
+	@classmethod
+	def poll(cls, context):
+		return context.space_data.tree_type == 'CGPipelineTreeType'
+
 node_categories = [
 	MyPipelineNodeCategory("PIPELINENODES", "Pipeline", items=[
 		NodeItem("BeginNodeType"),
@@ -303,6 +363,11 @@ node_categories = [
 	]),
 	MyConstantNodeCategory("CONSTANTNODES", "Constant", items=[
 		NodeItem("ScreenNodeType"),
+	]),
+	MyLogicNodeCategory("LOGICNODES", "Logic", items=[
+		NodeItem("CallFunctionNodeType"),
+		NodeItem("BranchFunctionNodeType"),
+		NodeItem("MergeStagesNodeType"),
 	]),
 ]
 	
@@ -387,7 +452,7 @@ def buildNodeTree(node_group, shader_references, asset_references):
 	# Used to merge bind target nodes into one stage	
 	last_bind_target = None
 	
-	buildNode(res, rn, node_group, last_bind_target, shader_references, asset_references)
+	buildNode(res.stages, rn, node_group, last_bind_target, shader_references, asset_references)
 
 	with open(path + node_group_name + '.json', 'w') as f:
 			f.write(output.to_JSON())
@@ -397,37 +462,11 @@ def make_set_target(stage, node_group, node, target_index=1, color_buffer_index=
 	targetNode = findNodeByLink(node_group, node, node.inputs[target_index])
 	
 	if targetNode.bl_idname == 'TargetNodeType':
-		
 		cb_postfix = ''
-		
 		if color_buffer_index >= 0 and targetNode.inputs[3].default_value > 1: # MRT target, bind only specified target
 			cb_postfix = str(color_buffer_index)
 		
-		postfix = ''
-		
-		if targetNode.inputs[7].default_value == True:
-			
-			if make_set_target.is_last_target_pong == True:
-				make_set_target.is_last_two_targets_pong = True
-				make_set_target.pong = not make_set_target.pong
-			else:
-				make_set_target.is_last_two_targets_pong = False
-			
-			make_set_target.last_pong_target_pong = make_set_target.pong
-			if make_set_target.pong == True:
-				postfix = '_pong'
-				
-			make_set_target.is_last_target_pong = True		
-		else:
-			if make_set_target.is_last_two_targets_pong == True:
-				make_set_target.pong = not make_set_target.pong
-		
-			make_set_target.is_last_target_pong = False
-			if make_set_target.is_last_two_targets_pong == True:
-				make_set_target.is_last_two_chain_broken = True
-			make_set_target.is_last_two_targets_pong = False
-		
-		targetId = targetNode.inputs[0].default_value + cb_postfix + postfix
+		targetId = targetNode.inputs[0].default_value + cb_postfix
 	
 	elif targetNode.bl_idname == 'ColorBufferNodeType':
 		cb_index = targetNode.inputs[1].default_value
@@ -439,17 +478,9 @@ def make_set_target(stage, node_group, node, target_index=1, color_buffer_index=
 		return
 	
 	else: # Framebuffer
-		if make_set_target.is_last_two_targets_pong == True:
-			make_set_target.pong = not make_set_target.pong
-			make_set_target.is_last_two_targets_pong = False
 		targetId = ''
 		
 	stage.params.append(targetId)
-make_set_target.pong = False
-make_set_target.is_last_target_pong = False
-make_set_target.is_last_two_targets_pong = False
-make_set_target.is_last_two_chain_broken = False
-make_set_target.last_pong_target_pong = False
 
 def make_clear_target(stage, node_group, node):
 	stage.command = 'clear_target'
@@ -477,20 +508,10 @@ def make_bind_target(stage, node_group, node, target_index=1, constant_index=2, 
 	
 	if targetNode.bl_idname == 'TargetNodeType':		
 		cb_postfix = ''
-		
 		if color_buffer_index >= 0 and targetNode.inputs[3].default_value > 1: # MRT target, bind only specified target
 			cb_postfix = str(color_buffer_index)
-		
-		postfix = ''
-		
-		if targetNode.inputs[7].default_value == True:			
-			if make_set_target.is_last_target_pong == False:
-				if make_set_target.last_pong_target_pong == True:
-					postfix = '_pong'
-			elif make_set_target.pong == False:
-				postfix = '_pong'
 				
-		targetId = targetNode.inputs[0].default_value + cb_postfix + postfix
+		targetId = targetNode.inputs[0].default_value + cb_postfix
 	
 	stage.params.append(targetId)
 	stage.params.append(node.inputs[constant_index].default_value)
@@ -518,13 +539,40 @@ def make_draw_world(stage, node_group, node):
 	wname = bpy.data.worlds[0].name
 	stage.params.append(wname + '_material/' + wname + '_material/env_map') # Only one world for now
 
-def buildNode(res, node, node_group, last_bind_target, shader_references, asset_references):
+def make_call_function(stage, node_group, node):
+	stage.command = 'call_function'
+	stage.params.append(node.inputs[1].default_value)
+
+def make_branch_function(stage, node_group, node):
+	make_call_function(stage, node_group, node)
+	
+def process_call_function(stage, stages, node, node_group, last_bind_target, shader_references, asset_references):
+	# Step till merge node
+	stage.returns_true = []
+	if node.outputs[0].is_linked:
+		stageNode = findNodeByLinkFrom(node_group, node, node.outputs[0])
+		buildNode(stage.returns_true, stageNode, node_group, last_bind_target, shader_references, asset_references)
+	
+	stage.returns_false = [] 
+	if node.outputs[1].is_linked:
+		stageNode = findNodeByLinkFrom(node_group, node, node.outputs[1])
+		margeNode = buildNode(stage.returns_false, stageNode, node_group, last_bind_target, shader_references, asset_references)
+	
+	# Continue using top level stages after merge node
+	afterMergeNode = findNodeByLinkFrom(node_group, margeNode, margeNode.outputs[0])
+	buildNode(stages, afterMergeNode, node_group, last_bind_target, shader_references, asset_references)
+
+# Returns merge node
+def buildNode(stages, node, node_group, last_bind_target, shader_references, asset_references):
 	stage = Object()
 	stage.params = []
 	
 	append_stage = True
 	
-	if node.bl_idname == 'SetTargetNodeType':
+	if node.bl_idname == 'MergeStagesNodeType':
+		return node
+	
+	elif node.bl_idname == 'SetTargetNodeType':
 		last_bind_target = None
 		make_set_target(stage, node_group, node)
 
@@ -549,6 +597,15 @@ def buildNode(res, node, node_group, last_bind_target, shader_references, asset_
 	
 	elif node.bl_idname == 'DrawWorldNodeType':
 		make_draw_world(stage, node_group, node)
+		
+	elif node.bl_idname == 'BranchFunctionNodeType':
+		make_branch_function(stage, node_group, node)
+		stages.append(stage)
+		process_call_function(stage, stages, node, node_group, last_bind_target, shader_references, asset_references)
+		return
+		
+	elif node.bl_idname == 'CallFunctionNodeType':
+		make_call_function(stage, node_group, node)
 	
 	elif node.bl_idname == 'QuadPassNodeType':
 		append_stage = False
@@ -556,7 +613,7 @@ def buildNode(res, node, node_group, last_bind_target, shader_references, asset_
 		if node.inputs[1].is_linked:
 			last_bind_target = None
 			make_set_target(stage, node_group, node)
-			res.stages.append(stage)
+			stages.append(stage)
 		# Bind targets
 		stage = Object()
 		stage.params = []
@@ -573,20 +630,20 @@ def buildNode(res, node, node_group, last_bind_target, shader_references, asset_
 			bind_target_used = True
 			make_bind_target(stage, node_group, node, target_index=7, constant_index=8)
 		if bind_target_used:
-			res.stages.append(stage)
+			stages.append(stage)
 			stage = Object()
 			stage.params = []
 		# Draw quad
 		make_draw_quad(stage, node_group, node, shader_references, asset_references, context_index=2)
-		res.stages.append(stage)
+		stages.append(stage)
 	
 	if append_stage:
-		res.stages.append(stage)
+		stages.append(stage)
 	
 	# Build next stage
 	if node.outputs[0].is_linked:
 		stageNode = findNodeByLinkFrom(node_group, node, node.outputs[0])
-		buildNode(res, stageNode, node_group, last_bind_target, shader_references, asset_references)
+		buildNode(stages, stageNode, node_group, last_bind_target, shader_references, asset_references)
 			
 def findNodeByLink(node_group, to_node, inp):
 	for link in node_group.links:
@@ -613,6 +670,7 @@ def make_render_target(n, postfix=''):
 	target.depth_buffer = n.inputs[4].default_value
 	target.stencil_buffer = n.inputs[5].default_value
 	target.format = n.inputs[6].default_value
+	target.ping_pong = n.inputs[7].default_value
 	return target
 
 def get_render_targets(node_group):
@@ -621,7 +679,4 @@ def get_render_targets(node_group):
 		if n.bl_idname == 'TargetNodeType':
 			target = make_render_target(n)
 			render_targets.append(target)
-			if n.inputs[7].default_value == True: # Ping-pong
-				target = make_render_target(n, '_pong')
-				render_targets.append(target)
 	return render_targets

@@ -185,12 +185,11 @@ vec2 unpackFloat(float f) {
 }
 
 void main() {
-	vec4 g0 = texture(gbuffer0, texCoord); // Normals, depth
+	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, mask, depth
 	float depth = 1.0 - g0.a;
 	if (depth == 0.0) discard;
 	
-	vec4 g1 = texture(gbuffer1, texCoord); // Base color, roughness
-	vec4 g2 = texture(gbuffer2, texCoord); // 0,0,0, metalness
+	vec4 g1 = texture(gbuffer1, texCoord); // Base color.rgb, roughn/met
 	float ao = texture(ssaotex, texCoord).r;
 
 	vec2 enc = g0.rg;
@@ -204,7 +203,6 @@ void main() {
 	vec2 roughmet = unpackFloat(g1.a);
 	float roughness = roughmet.x;
 	float metalness = roughmet.y;
-	// float occlusion = g2.a;
 	
     vec3 lightDir = light - p.xyz;
     vec3 eyeDir = eye - p.xyz;
@@ -239,12 +237,13 @@ void main() {
 
 	// Indirect
 	vec3 indirectDiffuse = texture(senvmapIrradiance, envMapEquirect(n)).rgb;
-	indirectDiffuse = pow(indirectDiffuse, vec3(2.2)) * albedo;
+	// indirectDiffuse = pow(indirectDiffuse, vec3(2.2));
+	indirectDiffuse *= albedo;
 	
 	vec3 reflectionWorld = reflect(-v, n); 
 	float lod = getMipLevelFromRoughness(roughness);// + 1.0;
 	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
-	prefilteredColor = pow(prefilteredColor, vec3(2.2));
+	// prefilteredColor = pow(prefilteredColor, vec3(2.2));
 	
 	vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;
 	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);

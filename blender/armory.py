@@ -2083,22 +2083,22 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# Rigid body trait
 		if node.rigid_body != None:
 			rb = node.rigid_body
-			shape = '0' # BOX
+			shape = 0 # BOX
 			if rb.collision_shape == 'SPHERE':
-				shape = '1'
+				shape = 1
 			elif rb.collision_shape == 'CONVEX_HULL':
-				shape = '2'
+				shape = 2
 			elif rb.collision_shape == 'MESH':
 				if rb.enabled:
-					shape = '3' # Mesh
+					shape = 3 # Mesh
 				else:
-					shape = '8' # Static Mesh
+					shape = 8 # Static Mesh
 			elif rb.collision_shape == 'CONE':
-				shape = '4'
+				shape = 4
 			elif rb.collision_shape == 'CYLINDER':
-				shape = '5'
+				shape = 5
 			elif rb.collision_shape == 'CAPSULE':
-				shape = '6'
+				shape = 6
 			body_mass = 0
 			if rb.enabled:
 				body_mass = rb.mass
