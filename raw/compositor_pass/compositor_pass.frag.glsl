@@ -168,6 +168,8 @@ float vignette() {
 	float dist = distance(texCoord, vec2(0.5,0.5));
 	dist = smoothstep(vignout + (fstop / vignfade), vignin + (fstop / vignfade), dist);
 	return clamp(dist, 0.0, 1.0);
+	// vignetting from iq
+    // col *= 0.4 + 0.6 * pow(16.0 * texCoord.x * texCoord.y * (1.0-texCoord.x)*(1.0-texCoord.y), 0.2);
 }
 
 vec4 sampleBox(float size) {

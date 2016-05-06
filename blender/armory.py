@@ -2042,6 +2042,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						if node.bl_idname == 'DrawGeometryNodeType':
 							ArmoryExporter.pipeline_passes.append(node.inputs[1].default_value) # Context
 					break
+			ArmoryExporter.material_ids = bpy.data.cameras[0].material_ids
 
 	def cb_export_node(self, node, o):
 		#return
@@ -2130,7 +2131,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		o.contexts = []
 		
 		c = Object()
-		c.id = ArmoryExporter.pipeline_id
+		c.id = ArmoryExporter.material_ids #ArmoryExporter.pipeline_id
 		c.bind_constants = []
 		
 		const = Object()

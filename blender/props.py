@@ -22,8 +22,10 @@ def initProperties():
     # For camera
     bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", default=False)
     bpy.types.Camera.sort_front_to_back = bpy.props.BoolProperty(name="Sort Front to Back", default=False)
-    bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Pipeline Path", default="forward_pipeline")
-    bpy.types.Camera.pipeline_id = bpy.props.StringProperty(name="Pipeline ID", default="forward")
+    bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Pipeline Path", default="deferred_pipeline")
+    bpy.types.Camera.pipeline_id = bpy.props.StringProperty(name="Pipeline ID", default="deferred")
+	# TODO: Specify multiple material ids, merge ids from multiple cameras 
+    bpy.types.Camera.material_ids = bpy.props.StringProperty(name="Matarial IDs", default="deferred")
 	# Indicates if envmap textures are to be linked to object materials
     # bpy.types.Camera.pipeline_bind_world_to_materials = bpy.props.BoolProperty(name="Bind World", default=False)
 	# TODO: move to world
@@ -70,6 +72,7 @@ class DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'sort_front_to_back')
             layout.prop_search(obj.data, "pipeline_path", bpy.data, "node_groups")
             layout.prop(obj.data, 'pipeline_id')
+            layout.prop(obj.data, 'material_ids')
             layout.operator("cg.reset_pipelines")
         elif obj.type == 'MESH':
             layout.prop(obj.data, 'static_usage')
