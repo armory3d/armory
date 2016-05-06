@@ -104,11 +104,8 @@ class RigidBody extends Trait {
 				withMargin(transform.size.z));// * scaleZ); // Height
 		}
 		//else if (shape == SHAPE_TERRAIN) {
-		//	throw "Terrain not yet supported, use static mesh instead.";
-			/*
-			var data:Array<Dynamic> = [];
-			_shape = BtHeightfieldTerrainShape.create(3, 3, data, 1, -10, 10, 2, 0, true);
-			*/
+			// var data:Array<Dynamic> = [];
+			// _shape = BtHeightfieldTerrainShape.create(3, 3, data, 1, -10, 10, 2, 0, true);
 		//}
 		else if (shape == SHAPE_STATIC_MESH || shape == SHAPE_TERRAIN) {
 			var meshInterface = BtTriangleMesh.create(true, true);
@@ -252,7 +249,7 @@ class RigidBody extends Trait {
 		var indices = cast(node, ModelNode).resource.geometry.indices;
 
 		for (i in 0...Std.int(indices[0].length / 3)) {
-			triangleMesh.value.addTriangle(
+			triangleMesh.ptr.addTriangle(
 				BtVector3.create(positions[indices[0][i * 3 + 0] * 3 + 0],
 							  	 positions[indices[0][i * 3 + 0] * 3 + 1],
 							  	 positions[indices[0][i * 3 + 0] * 3 + 2]).value,
