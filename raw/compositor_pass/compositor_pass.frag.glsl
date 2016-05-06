@@ -7,18 +7,20 @@ precision highp float;
 uniform sampler2D tex;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
+uniform sampler2D noise256;
 
 //#ifdef (_LensFlare || _Fog)
-#ifdef _Fog
+// #ifdef _Fog
 uniform vec3 eye;
-#endif
+uniform vec3 eyeLook;
+// #endif
 
 #ifdef _LensFlare
 uniform vec3 light;
 uniform mat4 VP;
 #endif
 
-// uniform float time;
+uniform float time;
 
 in vec2 texCoord;
 
@@ -53,6 +55,114 @@ vec3 applyFog(vec3 rgb, // original color of the pixel
 //     float fogAmount = 1.0 - exp(-distance * b);
 //     return mix(rgb, fogColor, fogAmount);
 // }
+
+// https://www.shadertoy.com/view/ltfGzn
+float unitSin(float t) {
+    return 0.5 + 0.5 * sin(t);
+}
+float processFlake(vec3 rayOrigin, vec3 rayDirection, float b, float a2, float a4, float bbSubAC4, float fallSpeed, float r) {
+	float sum = 0.0;
+	float R = r + sin(PI * r * time * 0.05) / (r * 0.25);
+	float delta = bbSubAC4 + a4 * R*R;
+	float depth = 100.0;
+	if (delta >= 0.0) {
+		float t1 = (-b - sqrt(delta))/a2;
+		float t2 = (-b + sqrt(delta))/a2;
+		vec3 p1 = rayOrigin + t1 * rayDirection;
+		vec3 p2 = rayOrigin + t2 * rayDirection;
+		if (t1 < depth && t1 > 2.0) {
+			float teta = atan(p1.z, p1.x) / (2.0 * PI);
+			float fall = (0.5 + 0.5 * unitSin(r)) * fallSpeed * time  +  cos(r);
+			float s = 6.0;
+			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(0.4 * teta * r, 0.1 * p1.y + fall)).r);
+			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(0.11 * p1.y + fall, -0.4 * teta * r)).r);
+			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(-(0.11 * p1.y + fall), 0.4 * teta * r)).r);
+			sum += s;
+		}
+		if (t2 < depth && t2 > 0.0) {
+			float teta = atan(p2.z, p2.x) / (2.0 * PI);
+			float fall = (0.5 + 0.5 * unitSin(r)) * fallSpeed * time  +  cos(r);
+			float s = 6.0;
+			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(0.4 * teta * r, 0.1 * p2.y + fall)).r);
+			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(-(0.11 * p2.y + fall), 0.4 * teta * r)).r);
+			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(0.11 * p2.y + fall, -0.4 * teta * r)).r);
+			sum += s;
+		}
+	}
+	return sum;
+}
+float flakeVolume() {
+	vec3 rayOrigin = eye;
+	vec2 p = texCoord.xy * 2.0 - 1.0;
+	vec3 rayDirection = normalize(p.x * vec3(1.0,0.0,0.0) + p.y * vec3(0.0,0.0,1.0) + 1.0 * eyeLook);
+    float sum = 0.0;
+    float fallSpeed = 0.2;
+    float a = pow(rayDirection.x, 2.0) + pow(rayDirection.z, 2.0);
+    float b = 2.0 * (rayDirection.x * rayOrigin.x + rayDirection.z * rayOrigin.z);
+    float c = pow(rayOrigin.x, 2.0) + pow(rayOrigin.z, 2.0);
+    float ac4 = 4.0 * a*c;
+    float a4 = 4.0 * a;
+    float a2 = 2.0 * a;
+    float bb = b*b;
+    float bbSubAC4 = bb - ac4;
+    // for (float r = 1.0; r <= 16.0; r+=0.5) {
+        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 1.0);
+        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 2.0);
+        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 3.0);
+        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 4.0);
+        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 5.0);
+        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 6.0);
+        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 7.0);
+        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 8.0);
+        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 9.0);
+        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 10.0);
+    // }
+    return sum / 2.0;
+}
+vec4 screenSpaceSnow() {
+    float flake = flakeVolume();
+    return vec4(1.0, 1.0, 1.0, clamp(flake, 0.0, 1.0));
+}
+vec4 screenSpaceIce(vec3 c) {
+	vec2 p = texCoord.xy * 2.0 - 1.0;
+    vec2 P = vec2(p.x, 2.0 * p.y);
+    float r = length(P);
+    return vec4(c.rgb, 0.3 * (pow((abs(p.x) + abs(p.y)) * 0.5, 1.0) + pow(r / 1.6, 2.0)));
+}
+
+// https://www.shadertoy.com/view/XdSGDc
+// float processRain(float dis) {
+// 	vec2 q = texCoord;
+// 	float f = pow(dis, 0.45)+0.25;
+// 	vec2 st = f * (q * vec2(1.5, .05)+vec2(-time*.1+q.y*.5, time*.12));
+// 	f = (texture(noise256, st * .5, -99.0).x + texture(noise256, st*.284, -99.0).y);
+// 	f = clamp(pow(abs(f)*.5, 29.0) * 140.0, 0.00, q.y*.4+.05);
+// 	return f*0.5;
+// }
+// vec3 screenSpaceRain() {
+// 	float dis = 1.0;
+//     vec3 col = vec3(0.0);
+// 	// for (int i = 0; i < 12; i++) {
+// 		col += processRain(dis); dis += 3.5;
+// 		col += processRain(dis); dis += 3.5;
+// 		col += processRain(dis); dis += 3.5;
+// 		col += processRain(dis); dis += 3.5;
+// 		col += processRain(dis); dis += 3.5;
+// 		col += processRain(dis); dis += 3.5;
+// 		col += processRain(dis); dis += 3.5;
+// 		col += processRain(dis); dis += 3.5;
+// 		col += processRain(dis); dis += 3.5;
+// 		col += processRain(dis); dis += 3.5;
+// 	// }
+// 	return col;
+// }
+
+// https://www.shadertoy.com/view/4dXSzB
+vec3 screenSpaceCameraRain() {
+	vec3 raintex = texture(noise256,vec2(texCoord.x*2.0,texCoord.y*0.4+time*0.1)).rgb/30.0;
+	vec2 where = (texCoord.xy-raintex.xy);
+	return texture(tex,vec2(where.x,where.y)).rgb;
+}
 
 float vignette() {
 	float dist = distance(texCoord, vec2(0.5,0.5));
@@ -109,9 +219,7 @@ vec3 lensflare(vec2 uv, vec2 pos) {
 }
 
 const float MIDDLE_GREY = 0.18;
-float getExposure(float aperture,
-                                     float shutterSpeed,
-                                     float iso) {
+float getExposure(float aperture, float shutterSpeed, float iso) {
     float q = 0.65;
     //float l_avg = (1000.0f / 65.0f) * sqrt(aperture) / (iso * shutterSpeed);
     float l_avg = (1.0 / q) * sqrt(aperture) / (iso * shutterSpeed);
@@ -162,17 +270,17 @@ void main() {
 	vec4 col = texture(tex, uv);
 	
 	// Blur
-	float depth = texture(gbuffer0, texCoord).a;
-	float blur_amount = abs(depth - focus_depth);
-	if (depth < depth - focus_depth) {
-		blur_amount *= 10.0;
-	}
-	blur_amount = clamp(blur_amount, 0.0, 1.0);
-	vec4 baseColor = col;//texture(tex, texCoord);
-	vec4 blurredColor = vec4(0.0, 0.0, 0.0, 0.0);
-	float blurSize = 0.005 * blur_amount;
-	blurredColor = 0.75 * sampleBox(blurSize * 0.5) + 0.25 * sampleBox(blurSize * 1.0);
-	col = baseColor * (1.0 - blur_amount) + blurredColor * blur_amount;
+	// float depth = texture(gbuffer0, texCoord).a;
+	// float blur_amount = abs(depth - focus_depth);
+	// if (depth < depth - focus_depth) {
+	// 	blur_amount *= 10.0;
+	// }
+	// blur_amount = clamp(blur_amount, 0.0, 1.0);
+	// vec4 baseColor = col;//texture(tex, texCoord);
+	// vec4 blurredColor = vec4(0.0, 0.0, 0.0, 0.0);
+	// float blurSize = 0.005 * blur_amount;
+	// blurredColor = 0.75 * sampleBox(blurSize * 0.5) + 0.25 * sampleBox(blurSize * 1.0);
+	// col = baseColor * (1.0 - blur_amount) + blurredColor * blur_amount;
 	
 	// Fog
 	// vec3 pos = texture(gbuffer1, texCoord).rgb;
@@ -203,8 +311,22 @@ void main() {
 	// vec4 grain = vec4(mod((mod(x, 13.0) + 1.0) * (mod(x, 123.0) + 1.0), 0.01)-0.005) * grainStrength;
 	// col += grain;
 	
+	// Ice
+	// vec4 ice = screenSpaceIce(vec3(0.8, 0.9, 1.0));
+	// col.rgb = ice.a * ice.rgb + (1.0 - ice.a) * col.rgb;
+	
+	// Snow
+	// vec4 flake = screenSpaceSnow();
+    // col.rgb = flake.a * flake.rgb + (1.0 - flake.a) * col.rgb;
+	
+	// Rain
+	// col.rgb += screenSpaceRain();
+	
+	// Camera rain
+	col.rgb = screenSpaceCameraRain();
+	
 	// Vignetting
-	col *= vignette();
+	col.rgb *= vignette();
 	
 	// Exposure
 	const float aperture = 16;
@@ -219,5 +341,9 @@ void main() {
 	// To gamma
 	col.rgb = pow(col.rgb, vec3(1.0 / 2.2));
 	
+	// B&W   
+    // col.rgb = vec3(clamp(dot(col.rgb, col.rgb), 0.0, 1.0));
+	// col.rgb = vec3((col.r * 0.3 + col.g * 0.59 + col.b * 0.11) / 3.0) * 2.5;
+    
 	gl_FragColor = col; 
 }

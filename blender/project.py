@@ -212,10 +212,11 @@ def buildProject(self, build_type=0):
 		path_tracer.compile(raw_path + 'pt_trace_pass/pt_trace_pass.frag.glsl')
 	
 	# Compile shaders if needed
-	if os.path.isdir("compiled") == False:
-		os.chdir(raw_path)
-		call(["python", "compile.py"])
-		os.chdir(fp)
+	# TODO: create only referenced variants
+	# if os.path.isdir("compiled") == False:
+	os.chdir(raw_path)
+	call(["python", "compile.py"])
+	os.chdir(fp)
 
 	# Export
 	exportGameData()

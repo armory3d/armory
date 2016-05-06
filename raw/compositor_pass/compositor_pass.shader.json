@@ -19,8 +19,11 @@
 			"links": [
 				{
 					"id": "eye",
-					"link": "_cameraPosition",
-					"ifdef": ["_LensFlare"]
+					"link": "_cameraPosition"
+				},
+				{
+					"id": "eyeLook",
+					"link": "_cameraLook"
 				},
 				{
 					"id": "light",
@@ -31,6 +34,14 @@
 					"id": "VP",
 					"link": "_viewProjectionMatrix",
 					"ifdef": ["_LensFlare"]
+				},
+				{
+					"id": "noise256",
+					"link": "_noise256"
+				},
+				{
+					"id": "time",
+					"link": "_time"
 				}
 			],
 			"texture_params": [],
