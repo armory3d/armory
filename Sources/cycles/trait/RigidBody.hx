@@ -32,6 +32,7 @@ class RigidBody extends Trait {
 
 	public var mass:Float;
 	public var friction:Float;
+	public var collisionMargin:Float;
 
 	public var body:BtRigidBodyPointer = null;
 	public var bodyCreated = false;
@@ -42,16 +43,21 @@ class RigidBody extends Trait {
 
 	public var onCreated:Void->Void = null;
 
-	public function new(mass:Float = 1, shape:Int = SHAPE_BOX, friction:Float = 0.5) {
+	public function new(mass = 1.0, shape = SHAPE_BOX, friction = 0.5, collisionMargin = 0.0) {
 		super();
 
 		this.mass = mass;
 		this.shape = shape;
 		this.friction = friction;
+		this.collisionMargin = collisionMargin;
 
 		requestInit(init);
 		requestLateUpdate(lateUpdate);
 		requestRemove(removeFromWorld);
+	}
+	
+	inline function withMargin(f:Float) {
+		return f - f * collisionMargin;
 	}
 
 	public function init() {
@@ -69,12 +75,12 @@ class RigidBody extends Trait {
 
 		if (shape == SHAPE_BOX) {
 			_shape = BtBoxShape.create(BtVector3.create(
-				transform.size.x / 2,
-				transform.size.y / 2,
-				transform.size.z / 2).value);
+				withMargin(transform.size.x / 2),
+				withMargin(transform.size.y / 2),
+				withMargin(transform.size.z / 2)).value);
 		}
 		else if (shape == SHAPE_SPHERE) {
-			_shape = BtSphereShape.create(transform.size.x / 2);
+			_shape = BtSphereShape.create(withMargin(transform.size.x / 2));
 		}
 		else if (shape == SHAPE_CONVEX_HULL || shape == SHAPE_MESH) { // Use convex hull for mesh for now
 			_shapeConvex = BtConvexHullShape.create();
@@ -83,19 +89,19 @@ class RigidBody extends Trait {
 		}
 		else if (shape == SHAPE_CONE) {
 			_shape = BtConeShapeZ.create(
-				transform.size.x / 2, // Radius
-				transform.size.z);	  // Height
+				withMargin(transform.size.x / 2), // Radius
+				withMargin(transform.size.z));	  // Height
 		}
 		else if (shape == SHAPE_CYLINDER) {
 			_shape = BtCylinderShapeZ.create(BtVector3.create(
-				transform.size.x / 2,
-				transform.size.y / 2,
-				transform.size.z / 2).value);
+				withMargin(transform.size.x / 2),
+				withMargin(transform.size.y / 2),
+				withMargin(transform.size.z / 2)).value);
 		}
 		else if (shape == SHAPE_CAPSULE) {
 			_shape = BtCapsuleShapeZ.create(
-				(transform.size.x / 2),// * scaleX, // Radius
-				transform.size.z);// * scaleZ); // Height
+				withMargin(transform.size.x / 2),// * scaleX, // Radius
+				withMargin(transform.size.z));// * scaleZ); // Height
 		}
 		//else if (shape == SHAPE_TERRAIN) {
 		//	throw "Terrain not yet supported, use static mesh instead.";
