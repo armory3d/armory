@@ -1,7 +1,7 @@
 package cycles.trait;
 
 import lue.Eg;
-import lue.trait.Trait;
+import lue.Trait;
 import lue.node.RootNode;
 import lue.node.CameraNode;
 import lue.node.Transform;

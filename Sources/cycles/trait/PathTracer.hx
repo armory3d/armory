@@ -3,7 +3,7 @@ package cycles.trait;
 import lue.Eg;
 import lue.math.Mat4;
 import lue.math.Vec4;
-import lue.trait.Trait;
+import lue.Trait;
 import lue.node.Transform;
 import lue.node.RootNode;
 import lue.resource.MaterialResource.MaterialContext;

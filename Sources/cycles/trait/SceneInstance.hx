@@ -1,6 +1,6 @@
 package cycles.trait;
 
-import lue.trait.Trait;
+import lue.Trait;
 import lue.Eg;
 
 class SceneInstance extends Trait {

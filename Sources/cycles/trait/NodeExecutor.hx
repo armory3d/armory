@@ -1,6 +1,6 @@
 package cycles.trait;
 
-import lue.trait.Trait;
+import lue.Trait;
 
 class NodeExecutor extends Trait {
 

@@ -1,6 +1,6 @@
 package cycles.trait;
 
-import lue.trait.Trait;
+import lue.Trait;
 import lue.sys.Input;
 #if WITH_PHYSICS
 import haxebullet.Bullet;

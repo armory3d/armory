@@ -2,7 +2,7 @@ package cycles.trait;
 
 import lue.math.Mat4;
 import lue.math.Vec4;
-import lue.trait.Trait;
+import lue.Trait;
 import lue.sys.Input;
 import lue.sys.Time;
 import lue.node.Transform;

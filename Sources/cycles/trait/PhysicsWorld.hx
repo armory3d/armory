@@ -3,7 +3,7 @@ package cycles.trait;
 #if WITH_PHYSICS
 import haxebullet.Bullet;
 #end
-import lue.trait.Trait;
+import lue.Trait;
 import lue.sys.Time;
 import lue.math.Vec4;
 import lue.math.RayCaster;
