@@ -325,7 +325,7 @@ void main() {
 	// col.rgb += screenSpaceRain();
 	
 	// Camera rain
-	col.rgb = screenSpaceCameraRain();
+	// col.rgb = screenSpaceCameraRain();
 	
 	// Vignetting
 	col.rgb *= vignette();

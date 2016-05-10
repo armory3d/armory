@@ -48,6 +48,14 @@
 				{
 					"id": "senvmapBrdf",
 					"link": "_envmapBrdf"
+				},
+				{
+					"id": "sltcMat",
+					"link": "_ltcMat"
+				},
+				{
+					"id": "sltcMag",
+					"link": "_ltcMag"
 				}
 			],
 			"vertex_shader": "deferred_light.vert.glsl",

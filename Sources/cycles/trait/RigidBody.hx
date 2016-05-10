@@ -43,7 +43,7 @@ class RigidBody extends Trait {
 
 	public var onCreated:Void->Void = null;
 
-	public function new(mass = 1.0, shape = SHAPE_BOX, friction = 0.5, collisionMargin = 0.0) {
+	public function new(mass = 1.0, shape = SHAPE_BOX, friction = 0.5, collisionMargin = 0.06) {
 		super();
 
 		this.mass = mass;

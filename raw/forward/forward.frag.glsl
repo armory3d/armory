@@ -18,6 +18,8 @@ uniform sampler2D shadowMap;
 uniform sampler2D senvmapRadiance;
 uniform sampler2D senvmapIrradiance;
 uniform sampler2D senvmapBrdf;
+uniform sampler2D sltcMat;
+uniform sampler2D sltcMag;
 #ifdef _NMTex
 uniform sampler2D snormal;
 #endif
@@ -37,6 +39,28 @@ uniform float metalness;
 
 uniform bool lighting;
 uniform bool receiveShadow;
+
+// LTC
+uniform vec3 light;
+// const float roughness = 0.25;
+const vec3  dcolor = vec3(1.0, 1.0, 1.0);
+const vec3  scolor = vec3(1.0, 1.0, 1.0);
+const float intensity = 4.0; // 0-10
+const float width = 4.0;
+const float height = 4.0;
+const vec2  resolution = vec2(800.0, 600.0);
+const int   sampleCount = 0;
+const int   NUM_SAMPLES = 8;
+const float LUT_SIZE  = 64.0;
+const float LUT_SCALE = (LUT_SIZE - 1.0)/LUT_SIZE;
+const float LUT_BIAS  = 0.5/LUT_SIZE;
+// vec2 mys[NUM_SAMPLES];		
+vec3 L0 = vec3(0.0);
+vec3 L1 = vec3(0.0);
+vec3 L2 = vec3(0.0);
+vec3 L3 = vec3(0.0);
+vec3 L4 = vec3(0.0);
+
 
 in vec3 position;
 #ifdef _AMTex
@@ -257,6 +281,173 @@ float getMipLevelFromRoughness(float roughness) {
 	return roughness * 7.0;
 }
 
+
+// Linearly Transformed Cosines
+vec3 mul(mat3 m, vec3 v) {
+    return m * v;
+}
+mat3 mul(mat3 m1, mat3 m2) {
+    return m1 * m2;
+}
+mat3 transpose2(mat3 v) {
+    mat3 tmp;
+    tmp[0] = vec3(v[0].x, v[1].x, v[2].x);
+    tmp[1] = vec3(v[0].y, v[1].y, v[2].y);
+    tmp[2] = vec3(v[0].z, v[1].z, v[2].z);
+
+    return tmp;
+}
+float IntegrateEdge(vec3 v1, vec3 v2) {
+    float cosTheta = dot(v1, v2);
+    cosTheta = clamp(cosTheta, -0.9999, 0.9999);
+    float theta = acos(cosTheta);    
+    float res = cross(v1, v2).z * theta / sin(theta);
+    return res;
+}
+int ClipQuadToHorizon(/*inout vec3 L[5], out int n*/) {
+    // detect clipping config
+    int config = 0;
+    if (L0.z > 0.0) config += 1;
+    if (L1.z > 0.0) config += 2;
+    if (L2.z > 0.0) config += 4;
+    if (L3.z > 0.0) config += 8;
+
+    // clip
+    int n = 0;
+    if (config == 0) {
+        // clip all
+    }
+    else if (config == 1) { // V1 clip V2 V3 V4
+        n = 3;
+        L1 = -L1.z * L0 + L0.z * L1;
+        L2 = -L3.z * L0 + L0.z * L3;
+    }
+    else if (config == 2) { // V2 clip V1 V3 V4
+        n = 3;
+        L0 = -L0.z * L1 + L1.z * L0;
+        L2 = -L2.z * L1 + L1.z * L2;
+    }
+    else if (config == 3) { // V1 V2 clip V3 V4
+        n = 4;
+        L2 = -L2.z * L1 + L1.z * L2;
+        L3 = -L3.z * L0 + L0.z * L3;
+    }
+    else if (config == 4) { // V3 clip V1 V2 V4
+        n = 3;
+        L0 = -L3.z * L2 + L2.z * L3;
+        L1 = -L1.z * L2 + L2.z * L1;
+    }
+    else if (config == 5) { // V1 V3 clip V2 V4) impossible
+        n = 0;
+    }
+    else if (config == 6) { // V2 V3 clip V1 V4
+        n = 4;
+        L0 = -L0.z * L1 + L1.z * L0;
+        L3 = -L3.z * L2 + L2.z * L3;
+    }
+    else if (config == 7) { // V1 V2 V3 clip V4
+        n = 5;
+        L4 = -L3.z * L0 + L0.z * L3;
+        L3 = -L3.z * L2 + L2.z * L3;
+    }
+    else if (config == 8) { // V4 clip V1 V2 V3
+        n = 3;
+        L0 = -L0.z * L3 + L3.z * L0;
+        L1 = -L2.z * L3 + L3.z * L2;
+        L2 =  L3;
+    }
+    else if (config == 9) { // V1 V4 clip V2 V3
+        n = 4;
+        L1 = -L1.z * L0 + L0.z * L1;
+        L2 = -L2.z * L3 + L3.z * L2;
+    }
+    else if (config == 10) { // V2 V4 clip V1 V3) impossible
+        n = 0;
+    }
+    else if (config == 11) { // V1 V2 V4 clip V3
+        n = 5;
+        L4 = L3;
+        L3 = -L2.z * L3 + L3.z * L2;
+        L2 = -L2.z * L1 + L1.z * L2;
+    }
+    else if (config == 12) { // V3 V4 clip V1 V2
+        n = 4;
+        L1 = -L1.z * L2 + L2.z * L1;
+        L0 = -L0.z * L3 + L3.z * L0;
+    }
+    else if (config == 13) { // V1 V3 V4 clip V2
+        n = 5;
+        L4 = L3;
+        L3 = L2;
+        L2 = -L1.z * L2 + L2.z * L1;
+        L1 = -L1.z * L0 + L0.z * L1;
+    }
+    else if (config == 14) { // V2 V3 V4 clip V1
+        n = 5;
+        L4 = -L0.z * L3 + L3.z * L0;
+        L0 = -L0.z * L1 + L1.z * L0;
+    }
+    else if (config == 15) { // V1 V2 V3 V4
+        n = 4;
+    }
+    
+    if (n == 3)
+        L3 = L0;
+    if (n == 4)
+        L4 = L0;
+	return n;
+}
+vec3 LTC_Evaluate(vec3 N, vec3 V, vec3 P, mat3 Minv, vec3 points0, vec3 points1, vec3 points2, vec3 points3, bool twoSided) {
+    // construct orthonormal basis around N
+    vec3 T1, T2;
+    T1 = normalize(V - N*dot(V, N));
+    T2 = cross(N, T1);
+
+    // rotate area light in (T1, T2, R) basis
+    Minv = mul(Minv, transpose2(mat3(T1, T2, N)));
+
+    // polygon (allocate 5 vertices for clipping)
+    // vec3 L[5];
+    L0 = mul(Minv, points0 - P);
+    L1 = mul(Minv, points1 - P);
+    L2 = mul(Minv, points2 - P);
+    L3 = mul(Minv, points3 - P);
+
+    int n = ClipQuadToHorizon(/*L, n*/);
+    
+    if (n == 0) {
+        return vec3(0, 0, 0);
+	}
+
+    // project onto sphere
+    L0 = normalize(L0);
+    L1 = normalize(L1);
+    L2 = normalize(L2);
+    L3 = normalize(L3);
+    L4 = normalize(L4);
+
+    // integrate
+    float sum = 0.0;
+
+    sum += IntegrateEdge(L0, L1);
+    sum += IntegrateEdge(L1, L2);
+    sum += IntegrateEdge(L2, L3);
+	
+	if (n >= 4) {
+        sum += IntegrateEdge(L3, L4);
+	}
+    if (n == 5) {
+        sum += IntegrateEdge(L4, L0);
+	}
+
+    sum = twoSided ? abs(sum) : max(0.0, -sum);
+
+    vec3 Lo_i = vec3(sum, sum, sum);
+
+    return Lo_i;
+}
+
+
 void main() {
 	
 #ifdef _NMTex
@@ -324,6 +515,34 @@ void main() {
 		float roughness = texture(srm, texCoord).r;
 #endif
 
+		// LTC
+		const float rectSizeX = 2.5;
+		const float rectSizeY = 1.2;
+		vec3 ex = vec3(1, 0, 0)*rectSizeX;
+        vec3 ey = vec3(0, 0, 1)*rectSizeY;
+		vec3 p1 = light - ex + ey;
+        vec3 p2 = light + ex + ey;
+        vec3 p3 = light + ex - ey;
+        vec3 p4 = light - ex - ey;
+		float theta = acos(dotNV);
+        vec2 tuv = vec2(roughness, theta/(0.5*PI));
+        tuv = tuv*LUT_SCALE + LUT_BIAS;
+
+		vec4 t = texture(sltcMat, tuv);		
+		mat3 Minv = mat3(
+			vec3(  1, t.y, 0),
+			vec3(  0, 0,   t.z),
+			vec3(t.w, 0,   t.x)
+		);
+		
+		vec3 ltcspec = LTC_Evaluate(n, v, position, Minv, p1, p2, p3, p4, true);
+		ltcspec *= texture(sltcMag, tuv).a;
+		vec3 ltcdiff = LTC_Evaluate(n, v, position, mat3(1), p1, p2, p3, p4, true); 
+		vec3 ltccol = ltcspec + ltcdiff * albedo;
+		ltccol /= 2.0*PI;
+
+
+
 		// Direct
 		vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);	
 		
@@ -347,6 +566,8 @@ void main() {
 		vec3 occlusion = texture(som, texCoord).rgb;
 		outColor.rgb *= occlusion; 
 #endif
+		// LTC
+		outColor.rgb = ltccol * 10.0 * visibility + indirect / 14.0;
 	}
 	else {
 		outColor = vec4(baseColor * visibility, 1.0);
