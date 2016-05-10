@@ -478,7 +478,8 @@ void main() {
 	vec3 ltcdiff = LTC_Evaluate(n, v, p, mat3(1), p1, p2, p3, p4, true); 
 	vec3 ltccol = ltcspec + ltcdiff * albedo;
 	ltccol /= 2.0*PI;
-	outColor.rgb = ltccol * 12.0 * visibility + (indirect / 14.0 * ao);
+	// outColor.rgb = ltccol * 12.0 * visibility + (indirect / 14.0 * ao);
+	outColor.rgb = ltccol * visibility + (indirect / 2.0 * ao);
 	
 	
 	

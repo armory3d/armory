@@ -31,6 +31,10 @@ os.chdir('../ssao_pass')
 make_resources.make('ssao_pass.shader.json')
 make_variants.make('ssao_pass.shader.json')
 
+os.chdir('../ssdo_pass')
+make_resources.make('ssdo_pass.shader.json')
+make_variants.make('ssdo_pass.shader.json')
+
 os.chdir('../blur_pass')
 make_resources.make('blur_pass.shader.json')
 make_variants.make('blur_pass.shader.json')
