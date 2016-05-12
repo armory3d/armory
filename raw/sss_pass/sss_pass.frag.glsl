@@ -41,6 +41,7 @@
 precision mediump float;
 #endif
 
+uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D tex;
 
@@ -74,8 +75,9 @@ vec4 SSSSBlur(float sssWidth) {
         // if (SSSS_STREGTH_SOURCE == 0.0) discard;
 
     // Fetch linear depth of current pixel
-	vec4 g0 = texture(gbuffer0, texCoord);
-	float depth = 1.0 - g0.a;
+	// vec4 g0 = texture(gbuffer0, texCoord);
+	// float depth = 1.0 - g0.a;
+	float depth = texture(gbufferD, texCoord) * 2.0 - 1.0;
 	const float znear = 0.1;
 	const float zfar = 1000.0;
 	const float projectionA = zfar / (zfar - znear);

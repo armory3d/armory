@@ -17,6 +17,7 @@
 precision mediump float;
 #endif
 
+uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 uniform sampler2D snoise;
@@ -52,7 +53,8 @@ float doAO(vec2 kernelVec, vec2 randomVec, mat2 rotMat, vec3 currentPos, vec3 cu
 	float radius = aoSize * randomVec.y;
 	kernelVec.xy = ((rotMat * kernelVec.xy) / currentDistance) * radius;
 	vec2 coord = texCoord + kernelVec.xy;
-	float depth = 1.0 - texture(gbuffer0, coord).a;
+	// float depth = 1.0 - texture(gbuffer0, coord).a;
+	float depth = texture(gbufferD, coord).r * 2.0 - 1.0;
 	vec3 pos = getPos(depth, coord) - currentPos;
 	
 	float angle = dot(pos, currentNormal);
@@ -64,8 +66,10 @@ float doAO(vec2 kernelVec, vec2 randomVec, mat2 rotMat, vec3 currentPos, vec3 cu
 }
 
 void main() {
-	float depth = 1.0 - texture(gbuffer0, texCoord).a;
-	if (depth == 0.0) {
+	// float depth = 1.0 - texture(gbuffer0, texCoord).a;
+	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+	// if (depth == 0.0) {
+	if (depth == 1.0) {
 		gl_FragColor = vec4(1.0);
 		return;
 	}

@@ -6,6 +6,7 @@
 precision mediump float;
 #endif
 
+uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 uniform sampler2D snoise;
@@ -42,7 +43,8 @@ vec4 doDO(vec3 point, vec3 noise, float radius, vec3 center_pos, float max_dista
 	vec2 textureOffset = reflect( point.xy, noise.xy ).xy * radius;
 	vec2 sample_tex = texCoord + textureOffset;
 	
-	float depth = 1.0 - texture(gbuffer0, sample_tex).a;
+	// float depth = 1.0 - texture(gbuffer0, sample_tex).a;
+	float depth = texture(gbufferD, sample_tex).r * 2.0 - 1.0;
 	vec3 sample_pos = getPos(depth, sample_tex);
 
 	vec3 center_to_sample = sample_pos - center_pos;
@@ -58,8 +60,10 @@ vec4 doDO(vec3 point, vec3 noise, float radius, vec3 center_pos, float max_dista
 }
 
 void main() {
-	float depth = 1.0 - texture(gbuffer0, texCoord).a;
-	if (depth == 0.0) {
+	// float depth = 1.0 - texture(gbuffer0, texCoord).a;
+	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+	// if (depth == 0.0) {
+	if (depth == 1.0) {
 		gl_FragColor = vec4(1.0);
 		return;
 	}

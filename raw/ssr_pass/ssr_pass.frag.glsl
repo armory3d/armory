@@ -5,7 +5,8 @@ precision mediump float;
 #endif
 
 uniform sampler2D tex;
-uniform sampler2D gbuffer0; // Normal, depth
+uniform sampler2D gbufferD;
+uniform sampler2D gbuffer0; // Normal
 uniform sampler2D gbuffer1; // Color, roughness
 uniform mat4 P;
 uniform mat4 tiV;
@@ -45,7 +46,8 @@ vec3 getPos(float depth) {
 }
 
 float getDeltaDepth(vec3 hitCoord) {	
-	depth = 1.0 - texture(gbuffer0, getProjectedCoord(hitCoord).xy).a;
+	// depth = 1.0 - texture(gbuffer0, getProjectedCoord(hitCoord).xy).a;
+	depth = texture(gbufferD, getProjectedCoord(hitCoord).xy).r * 2.0 - 1.0;
 	vec3 viewPos = getPos(depth);
 	return viewPos.z - hitCoord.z;
 }
@@ -189,7 +191,8 @@ void main() {
 	if (viewNormal.z <= 0.9) discard; // Only up facing surfaces for now
 	viewNormal = tiV * normalize(viewNormal);
 	
-	float d = 1.0 - g0.a;
+	// float d = 1.0 - g0.a;
+	float d = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	vec3 viewPos = getPos(d);
 	
 	vec3 reflected = normalize(reflect((viewPos.xyz), normalize(viewNormal.xyz)));

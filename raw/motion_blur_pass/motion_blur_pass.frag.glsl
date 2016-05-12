@@ -6,6 +6,7 @@
 precision mediump float;
 #endif
 
+uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
@@ -50,8 +51,10 @@ void main() {
 		return;
 	}
 	
-	float depth = 1.0 - texture(gbuffer0, texCoord).a;
-	if (depth == 0.0) {
+	// float depth = 1.0 - texture(gbuffer0, texCoord).a;
+	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+	// if (depth == 0.0) {
+	if (depth == 1.0) {
 		gl_FragColor = color;
 		return;
 	}

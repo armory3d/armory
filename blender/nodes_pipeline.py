@@ -130,6 +130,23 @@ class ColorBufferNode(Node, CGPipelineTreeNode):
 
 	def free(self):
 		print("Removing node ", self, ", Goodbye!")
+		
+class DepthBufferNode(Node, CGPipelineTreeNode):
+	'''A custom node'''
+	bl_idname = 'DepthBufferNodeType'
+	bl_label = 'Depth Buffer'
+	bl_icon = 'SOUND'
+	
+	def init(self, context):
+		self.inputs.new('NodeSocketShader', "Target")
+
+		self.outputs.new('NodeSocketShader', "Target")
+
+	def copy(self, node):
+		print("Copying from node ", node)
+
+	def free(self):
+		print("Removing node ", self, ", Goodbye!")
 	
 class FramebufferNode(Node, CGPipelineTreeNode):
 	'''A custom node'''
@@ -356,6 +373,7 @@ node_categories = [
 		NodeItem("DrawWorldNodeType"),
 		NodeItem("TargetNodeType"),
 		NodeItem("ColorBufferNodeType"),
+		NodeItem("DepthBufferNodeType"),
 		NodeItem("FramebufferNodeType"),
 	]),
 	MyPassNodeCategory("PASSNODES", "Pass", items=[
@@ -457,7 +475,7 @@ def buildNodeTree(node_group, shader_references, asset_references):
 	with open(path + node_group_name + '.json', 'w') as f:
 			f.write(output.to_JSON())
 
-def make_set_target(stage, node_group, node, target_index=1, color_buffer_index=-1):
+def make_set_target(stage, node_group, node, target_index=1, color_buffer_index=-1, is_depth_attachment=False):
 	stage.command = 'set_target'
 	targetNode = findNodeByLink(node_group, node, node.inputs[target_index])
 	
@@ -466,11 +484,18 @@ def make_set_target(stage, node_group, node, target_index=1, color_buffer_index=
 		if color_buffer_index >= 0 and targetNode.inputs[3].default_value > 1: # MRT target, bind only specified target
 			cb_postfix = str(color_buffer_index)
 		
+		elif is_depth_attachment == True: # Bind texture depth
+			cb_postfix = 'D'
+		
 		targetId = targetNode.inputs[0].default_value + cb_postfix
 	
 	elif targetNode.bl_idname == 'ColorBufferNodeType':
 		cb_index = targetNode.inputs[1].default_value
 		make_set_target(stage, node_group, targetNode, target_index=0, color_buffer_index=cb_index)
+		return
+		
+	elif targetNode.bl_idname == 'DepthBufferNodeType':
+		make_set_target(stage, node_group, targetNode, target_index=0, is_depth_attachment=True)
 		return
 	
 	elif targetNode.bl_idname == 'NodeReroute':
@@ -495,7 +520,7 @@ def make_draw_geometry(stage, node_group, node):
 	stage.command = 'draw_geometry'
 	stage.params.append(node.inputs[1].default_value) # Context
 
-def make_bind_target(stage, node_group, node, target_index=1, constant_index=2, color_buffer_index=-1):
+def make_bind_target(stage, node_group, node, target_index=1, constant_index=2, color_buffer_index=-1, is_depth_attachment=False):
 	stage.command = 'bind_target'
 	targetNode = findNodeByLink(node_group, node, node.inputs[target_index])
 	
@@ -505,12 +530,19 @@ def make_bind_target(stage, node_group, node, target_index=1, constant_index=2, 
 	if targetNode.bl_idname == 'ColorBufferNodeType': # Make recursive
 		color_buffer_index = targetNode.inputs[1].default_value
 		targetNode = findNodeByLink(node_group, targetNode, targetNode.inputs[0])
+		
+	if targetNode.bl_idname == 'DepthBufferNodeType': # Make recursive
+		is_depth_attachment = True
+		targetNode = findNodeByLink(node_group, targetNode, targetNode.inputs[0])
 	
 	if targetNode.bl_idname == 'TargetNodeType':		
 		cb_postfix = ''
 		if color_buffer_index >= 0 and targetNode.inputs[3].default_value > 1: # MRT target, bind only specified target
 			cb_postfix = str(color_buffer_index)
-				
+		
+		elif is_depth_attachment == True: # Bind texture depth
+			cb_postfix = 'D'
+		
 		targetId = targetNode.inputs[0].default_value + cb_postfix
 	
 	stage.params.append(targetId)

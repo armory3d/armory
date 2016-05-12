@@ -12,6 +12,7 @@ precision mediump float;
 const float PI = 3.1415926535;
 const float TwoPI = (2.0 * PI);
 
+uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D tex;
 uniform sampler2D senvmapRadiance;
@@ -354,11 +355,13 @@ float godRays(vec2 uv) {
     return light;
 }
 
-void main() {	
-	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, mask, depth
-	float gdepth = 1.0 - g0.a;
+void main() {
+	// vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, mask
+	// float gdepth = 1.0 - g0.a;
+	float gdepth = texture(gbufferD, texCoord) * 2.0 - 1.0;
 	vec4 colorOriginal = texture(tex, texCoord);
-	if (gdepth == 0.0) {
+	// if (gdepth == 0.0) {
+	if (gdepth == 1.0) {
 		gl_FragColor = colorOriginal;
 		return;
 	}

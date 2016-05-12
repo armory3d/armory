@@ -7,6 +7,7 @@ precision mediump float;
 #define PI 3.1415926535
 #define TwoPI (2.0 * PI)
 
+uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1; 
 uniform sampler2D gbuffer2; 
@@ -385,9 +386,12 @@ vec3 LTC_Evaluate(vec3 N, vec3 V, vec3 P, mat3 Minv, vec3 points0, vec3 points1,
 
 
 void main() {
+	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+	// float depth = 1.0 - g0.a;
+	// if (depth == 0.0) discard;
+	if (depth == 1.0) discard;
+	
 	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, mask, depth
-	float depth = 1.0 - g0.a;
-	if (depth == 0.0) discard;
 	
 	vec4 g1 = texture(gbuffer1, texCoord); // Base color.rgb, roughn/met
 	float ao = texture(ssaotex, texCoord).r;

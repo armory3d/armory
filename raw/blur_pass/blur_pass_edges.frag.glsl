@@ -5,6 +5,7 @@ precision mediump float;
 #endif
 
 uniform sampler2D tex;
+// uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform vec2 dir;
 
