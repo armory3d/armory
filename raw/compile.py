@@ -67,6 +67,10 @@ os.chdir('../water_pass')
 make_resources.make('water_pass.shader.json')
 make_variants.make('water_pass.shader.json')
 
+os.chdir('../godrays_pass')
+make_resources.make('godrays_pass.shader.json')
+make_variants.make('godrays_pass.shader.json')
+
 # os.chdir('../pt_trace_pass')
 # make_resources.make('pt_trace_pass.shader.json')
 # make_variants.make('pt_trace_pass.shader.json')

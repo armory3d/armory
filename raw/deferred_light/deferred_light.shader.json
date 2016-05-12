@@ -51,11 +51,13 @@
 				},
 				{
 					"id": "sltcMat",
-					"link": "_ltcMat"
+					"link": "_ltcMat",
+					"ifdef": ["_PolyLight"]
 				},
 				{
 					"id": "sltcMag",
-					"link": "_ltcMag"
+					"link": "_ltcMag",
+					"ifdef": ["_PolyLight"]
 				}
 			],
 			"vertex_shader": "deferred_light.vert.glsl",

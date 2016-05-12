@@ -1,0 +1,25 @@
+{
+	"contexts": [
+		{
+			"id": "godrays_pass",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "true"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [],
+			"texture_params": [],
+			"vertex_shader": "godrays_pass.vert.glsl",
+			"fragment_shader": "godrays_pass.frag.glsl"
+		}
+	]
+}

@@ -139,7 +139,7 @@ class RigidBody extends Trait {
 			body.ptr.setRollingFriction(friction);
 		}
 		else {
-			_shapeConvex.value.calculateLocalInertia(mass, _inertia.value);
+			_shapeConvex.ptr.calculateLocalInertia(mass, _inertia.value);
 			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shapeConvex, _inertia.value);
 			body = BtRigidBody.create(_bodyCI.value);
 		}
@@ -239,7 +239,7 @@ class RigidBody extends Trait {
 			#if js
 			shape.addPoint(BtVector3.create(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]).value, true);
 			#elseif cpp
-			shape.value.addPoint(BtVector3.create(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]).value, true);
+			shape.ptr.addPoint(BtVector3.create(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]).value, true);
 			#end
 		}
 	}

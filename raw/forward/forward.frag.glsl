@@ -18,8 +18,8 @@ uniform sampler2D shadowMap;
 uniform sampler2D senvmapRadiance;
 uniform sampler2D senvmapIrradiance;
 uniform sampler2D senvmapBrdf;
-uniform sampler2D sltcMat;
-uniform sampler2D sltcMag;
+// uniform sampler2D sltcMat;
+// uniform sampler2D sltcMag;
 #ifdef _NMTex
 uniform sampler2D snormal;
 #endif
@@ -516,30 +516,30 @@ void main() {
 #endif
 
 		// LTC
-		const float rectSizeX = 2.5;
-		const float rectSizeY = 1.2;
-		vec3 ex = vec3(1, 0, 0)*rectSizeX;
-        vec3 ey = vec3(0, 0, 1)*rectSizeY;
-		vec3 p1 = light - ex + ey;
-        vec3 p2 = light + ex + ey;
-        vec3 p3 = light + ex - ey;
-        vec3 p4 = light - ex - ey;
-		float theta = acos(dotNV);
-        vec2 tuv = vec2(roughness, theta/(0.5*PI));
-        tuv = tuv*LUT_SCALE + LUT_BIAS;
+		// const float rectSizeX = 2.5;
+		// const float rectSizeY = 1.2;
+		// vec3 ex = vec3(1, 0, 0)*rectSizeX;
+        // vec3 ey = vec3(0, 0, 1)*rectSizeY;
+		// vec3 p1 = light - ex + ey;
+        // vec3 p2 = light + ex + ey;
+        // vec3 p3 = light + ex - ey;
+        // vec3 p4 = light - ex - ey;
+		// float theta = acos(dotNV);
+        // vec2 tuv = vec2(roughness, theta/(0.5*PI));
+        // tuv = tuv*LUT_SCALE + LUT_BIAS;
 
-		vec4 t = texture(sltcMat, tuv);		
-		mat3 Minv = mat3(
-			vec3(  1, t.y, 0),
-			vec3(  0, 0,   t.z),
-			vec3(t.w, 0,   t.x)
-		);
+		// vec4 t = texture(sltcMat, tuv);		
+		// mat3 Minv = mat3(
+		// 	vec3(  1, t.y, 0),
+		// 	vec3(  0, 0,   t.z),
+		// 	vec3(t.w, 0,   t.x)
+		// );
 		
-		vec3 ltcspec = LTC_Evaluate(n, v, position, Minv, p1, p2, p3, p4, true);
-		ltcspec *= texture(sltcMag, tuv).a;
-		vec3 ltcdiff = LTC_Evaluate(n, v, position, mat3(1), p1, p2, p3, p4, true); 
-		vec3 ltccol = ltcspec + ltcdiff * albedo;
-		ltccol /= 2.0*PI;
+		// vec3 ltcspec = LTC_Evaluate(n, v, position, Minv, p1, p2, p3, p4, true);
+		// ltcspec *= texture(sltcMag, tuv).a;
+		// vec3 ltcdiff = LTC_Evaluate(n, v, position, mat3(1), p1, p2, p3, p4, true); 
+		// vec3 ltccol = ltcspec + ltcdiff * albedo;
+		// ltccol /= 2.0*PI;
 
 
 
@@ -567,7 +567,7 @@ void main() {
 		outColor.rgb *= occlusion; 
 #endif
 		// LTC
-		outColor.rgb = ltccol * 10.0 * visibility + indirect / 14.0;
+		// outColor.rgb = ltccol * 10.0 * visibility + indirect / 14.0;
 	}
 	else {
 		outColor = vec4(baseColor * visibility, 1.0);

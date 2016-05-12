@@ -216,7 +216,7 @@ class VehicleBody extends Trait {
 	function createRigidBody(mass:Float, shape:BtCompoundShapePointer):BtRigidBodyPointer {
 		
 		var localInertia = BtVector3.create(0, 0, 0);
-		shape.value.calculateLocalInertia(mass, localInertia.value);
+		shape.ptr.calculateLocalInertia(mass, localInertia.value);
 
 		var centerOfMassOffset = BtTransform.create();
 		centerOfMassOffset.value.setIdentity();
