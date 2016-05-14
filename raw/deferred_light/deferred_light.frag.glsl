@@ -26,6 +26,7 @@ uniform mat4 LMVP;
 uniform vec3 light;
 uniform vec3 eye;
 uniform vec3 eyeLook;
+uniform float time;
 
 
 
@@ -182,7 +183,9 @@ float shadowTest(vec4 lPos) {
 	lPosH.x = (lPosH.x + 1.0) / 2.0;
     lPosH.y = 1.0 - ((-lPosH.y + 1.0) / (2.0));
 	
-	return PCF(vec2(2048, 2048), lPosH.st, lPosH.z - 0.005);
+	const float bias = 0.005;
+	// const float bias = 0.01;
+	return PCF(vec2(2048, 2048), lPosH.st, lPosH.z - bias);
 }
 
 vec2 octahedronWrap(vec2 v) {
@@ -458,8 +461,10 @@ void main() {
 	
 	
 	// LTC
-	// const float rectSizeX = 2.5;
-	// const float rectSizeY = 1.2;
+	// float sinval = (sin(time) * 0.5 + 0.5);
+	// vec4 outColor = vec4(1.0);
+	// float rectSizeX = 4.000 + sin(time) * 4.0;
+	// float rectSizeY = 1.2;// + sin(time * 2.0);
 	// vec3 ex = vec3(1, 0, 0)*rectSizeX;
 	// vec3 ey = vec3(0, 0, 1)*rectSizeY;
 	// vec3 p1 = light - ex + ey;
@@ -477,13 +482,19 @@ void main() {
 	// 	vec3(t.w, 0,   t.x)
 	// );
 	
-	// vec3 ltcspec = LTC_Evaluate(n, v, p, Minv, p1, p2, p3, p4, true);
+	// vec3 ltcspec = LTC_Evaluate(n, v, p, Minv, p1, p2, p3, p4, true); 
+	
+	// ltcspec *= vec3(1.0, 1.0 - sinval, 1.0 - sinval);
+	
 	// ltcspec *= texture(sltcMag, tuv).a;
-	// vec3 ltcdiff = LTC_Evaluate(n, v, p, mat3(1), p1, p2, p3, p4, true); 
+	// vec3 ltcdiff = LTC_Evaluate(n, v, p, mat3(1), p1, p2, p3, p4, true);
+	
+	// ltcdiff *= vec3(1.0, 1.0 - sinval, 1.0 - sinval);
+	
 	// vec3 ltccol = ltcspec + ltcdiff * albedo;
 	// ltccol /= 2.0*PI;
-	// // outColor.rgb = ltccol * 12.0 * visibility + (indirect / 14.0 * ao);
-	// outColor.rgb = ltccol * visibility + (indirect / 2.0 * ao);
+	// outColor.rgb = ltccol * 5.0 * visibility + (indirect / 14.0 * ao * (rectSizeX / 6.0) );
+	// // outColor.rgb = ltccol * visibility + (indirect / 2.0 * ao);
 	
 	
 	

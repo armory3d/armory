@@ -52,12 +52,17 @@
 				{
 					"id": "sltcMat",
 					"link": "_ltcMat",
-					"ifdef": ["_PolyLight"]
+					"ifdef": ["PolyLight"]
 				},
 				{
 					"id": "sltcMag",
 					"link": "_ltcMag",
-					"ifdef": ["_PolyLight"]
+					"ifdef": ["PolyLight"]
+				},
+				{
+					"id": "time",
+					"link": "_time",
+					"ifdef": ["PolyLight"]
 				}
 			],
 			"vertex_shader": "deferred_light.vert.glsl",

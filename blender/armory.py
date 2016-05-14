@@ -1122,7 +1122,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# object reference, material references (for geometries), and transform.
 		# Subnodes are then exported recursively.
 		if (node.name[0] == "."):
-			return; # Do not export nodes prefixed with '.'
+			return # Do not export nodes prefixed with '.'
+
+		if self.cb_preprocess_node(node) == False:
+			return
 
 		nodeRef = self.nodeArray.get(node)
 		if (nodeRef):
@@ -2043,6 +2046,17 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 							ArmoryExporter.pipeline_passes.append(node.inputs[1].default_value) # Context
 					break
 			ArmoryExporter.material_ids = bpy.data.cameras[0].material_ids
+
+	def cb_preprocess_node(self, node): # Returns false if node should not be exported
+		#return True
+		
+		for m in node.modifiers:
+			if m.type == 'OCEAN':
+				# Process ocean modifier
+				# Do not export this node
+				return False
+				
+		return True
 
 	def cb_export_node(self, node, o):
 		#return

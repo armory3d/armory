@@ -358,10 +358,10 @@ float godRays(vec2 uv) {
 void main() {
 	// vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, mask
 	// float gdepth = 1.0 - g0.a;
-	float gdepth = texture(gbufferD, texCoord) * 2.0 - 1.0;
+	float gdepth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	vec4 colorOriginal = texture(tex, texCoord);
-	// if (gdepth == 0.0) {
-	if (gdepth == 1.0) {
+	if (gdepth == 0.0) {
+	// if (gdepth == 1.0) {
 		gl_FragColor = colorOriginal;
 		return;
 	}
@@ -395,8 +395,8 @@ void main() {
 		// float epsx = clamp(dot(dist/2.0,dist/2.0) * 0.001, 0.01, 0.1);
 		
 		float dist = max(0.1, length(surfacePoint - eye) * 1.2);
-		// float epsx = dot(dist,dist) * 0.001;
-		float epsx = dot(dist,dist) * 0.0008;
+		float epsx = dot(dist,dist) * 0.0001;
+		// float epsx = dot(dist,dist) * 0.0008;
 		vec3 normal = getNormal(surfacePoint, epsx);
 		
 		// vec3 normal = getNormal(surfacePoint, 0.1);

@@ -69,8 +69,8 @@ class FirstPersonController extends Trait {
         // Look
         // if (!locked) {
         if (Input.touch) {
-			camera.rotate(new Vec4(1, 0, 0), Input.deltaY / 200);
-			transform.rotate(new Vec4(0, 0, 1), -Input.deltaX / 200);
+			camera.rotate(new Vec4(1, 0, 0), Input.deltaY / 350);
+			transform.rotate(new Vec4(0, 0, 1), -Input.deltaX / 350);
         	body.syncTransform();
         }
 
@@ -85,7 +85,7 @@ class FirstPersonController extends Trait {
             dir.add(force);
         }
         if (moveBackward) {
-             var mat = Mat4.identity();
+            var mat = Mat4.identity();
             transform.rot.saveToMatrix(mat);
 
             var force = new Vec4(0, -1, 0);
@@ -93,7 +93,7 @@ class FirstPersonController extends Trait {
             dir.add(force);
         }
         if (moveLeft) {
-             var mat = Mat4.identity();
+            var mat = Mat4.identity();
             transform.rot.saveToMatrix(mat);
 
             var force = new Vec4(-1, 0, 0);
@@ -101,7 +101,7 @@ class FirstPersonController extends Trait {
             dir.add(force);
         }
         if (moveRight) {
-             var mat = Mat4.identity();
+            var mat = Mat4.identity();
             transform.rot.saveToMatrix(mat);
 
             var force = new Vec4(1, 0, 0);
