@@ -32,7 +32,6 @@ def initProperties():
     bpy.types.Camera.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
     bpy.types.Camera.world_envtex_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
     # For material
-    bpy.types.Material.lighting_bool = bpy.props.BoolProperty(name="Lighting", default=True)
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.custom_shader = bpy.props.BoolProperty(name="Custom Shader", default=False)
     bpy.types.Material.custom_shader_name = bpy.props.StringProperty(name="Name", default="")
@@ -97,7 +96,6 @@ class MatsPropsPanel(bpy.types.Panel):
         layout = self.layout
         mat = bpy.context.material
 
-        layout.prop(mat, 'lighting_bool')
         layout.prop(mat, 'receive_shadow')
         layout.prop(mat, 'custom_shader')
         if mat.custom_shader:

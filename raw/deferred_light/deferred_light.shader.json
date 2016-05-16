@@ -22,6 +22,14 @@
 					"link": "_lightPosition"
 				},
 				{
+					"id": "lightColor",
+					"link": "_lightColor"
+				},
+				{
+					"id": "lightStrength",
+					"link": "_lightStrength"
+				},
+				{
 					"id": "eye",
 					"link": "_cameraPosition"
 				},

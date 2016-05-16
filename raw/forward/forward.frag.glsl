@@ -37,8 +37,9 @@ uniform sampler2D smm;
 uniform float metalness;
 #endif
 
-uniform bool lighting;
 uniform bool receiveShadow;
+uniform vec3 lightColor;
+uniform float lightStrength;
 
 // LTC
 uniform vec3 light;
@@ -495,83 +496,80 @@ void main() {
 
 	vec4 outColor;
 
-	if (lighting) {
-		vec3 v = normalize(eyeDir);
-		vec3 h = normalize(v + l);
+	vec3 v = normalize(eyeDir);
+	vec3 h = normalize(v + l);
 
-		float dotNV = max(dot(n, v), 0.0);
-		float dotNH = max(dot(n, h), 0.0);
-		float dotVH = max(dot(v, h), 0.0);
-		float dotLV = max(dot(l, v), 0.0);
-		float dotLH = max(dot(l, h), 0.0);
+	float dotNV = max(dot(n, v), 0.0);
+	float dotNH = max(dot(n, h), 0.0);
+	float dotVH = max(dot(v, h), 0.0);
+	float dotLV = max(dot(l, v), 0.0);
+	float dotLH = max(dot(l, h), 0.0);
 
 #ifdef _MMTex
-		float metalness = texture(smm, texCoord).r;
+	float metalness = texture(smm, texCoord).r;
 #endif
-		vec3 albedo = surfaceAlbedo(baseColor, metalness);
-		vec3 f0 = surfaceF0(baseColor, metalness);
+	vec3 albedo = surfaceAlbedo(baseColor, metalness);
+	vec3 f0 = surfaceF0(baseColor, metalness);
 
 #ifdef _RMTex
-		float roughness = texture(srm, texCoord).r;
+	float roughness = texture(srm, texCoord).r;
 #endif
 
-		// LTC
-		// const float rectSizeX = 2.5;
-		// const float rectSizeY = 1.2;
-		// vec3 ex = vec3(1, 0, 0)*rectSizeX;
-        // vec3 ey = vec3(0, 0, 1)*rectSizeY;
-		// vec3 p1 = light - ex + ey;
-        // vec3 p2 = light + ex + ey;
-        // vec3 p3 = light + ex - ey;
-        // vec3 p4 = light - ex - ey;
-		// float theta = acos(dotNV);
-        // vec2 tuv = vec2(roughness, theta/(0.5*PI));
-        // tuv = tuv*LUT_SCALE + LUT_BIAS;
+	// LTC
+	// const float rectSizeX = 2.5;
+	// const float rectSizeY = 1.2;
+	// vec3 ex = vec3(1, 0, 0)*rectSizeX;
+	// vec3 ey = vec3(0, 0, 1)*rectSizeY;
+	// vec3 p1 = light - ex + ey;
+	// vec3 p2 = light + ex + ey;
+	// vec3 p3 = light + ex - ey;
+	// vec3 p4 = light - ex - ey;
+	// float theta = acos(dotNV);
+	// vec2 tuv = vec2(roughness, theta/(0.5*PI));
+	// tuv = tuv*LUT_SCALE + LUT_BIAS;
 
-		// vec4 t = texture(sltcMat, tuv);		
-		// mat3 Minv = mat3(
-		// 	vec3(  1, t.y, 0),
-		// 	vec3(  0, 0,   t.z),
-		// 	vec3(t.w, 0,   t.x)
-		// );
-		
-		// vec3 ltcspec = LTC_Evaluate(n, v, position, Minv, p1, p2, p3, p4, true);
-		// ltcspec *= texture(sltcMag, tuv).a;
-		// vec3 ltcdiff = LTC_Evaluate(n, v, position, mat3(1), p1, p2, p3, p4, true); 
-		// vec3 ltccol = ltcspec + ltcdiff * albedo;
-		// ltccol /= 2.0*PI;
+	// vec4 t = texture(sltcMat, tuv);		
+	// mat3 Minv = mat3(
+	// 	vec3(  1, t.y, 0),
+	// 	vec3(  0, 0,   t.z),
+	// 	vec3(t.w, 0,   t.x)
+	// );
+	
+	// vec3 ltcspec = LTC_Evaluate(n, v, position, Minv, p1, p2, p3, p4, true);
+	// ltcspec *= texture(sltcMag, tuv).a;
+	// vec3 ltcdiff = LTC_Evaluate(n, v, position, mat3(1), p1, p2, p3, p4, true); 
+	// vec3 ltccol = ltcspec + ltcdiff * albedo;
+	// ltccol /= 2.0*PI;
 
 
 
-		// Direct
-		vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);	
-		
-		// Indirect
-		vec3 indirectDiffuse = texture(senvmapIrradiance, envMapEquirect(n)).rgb;
-		indirectDiffuse = pow(indirectDiffuse, vec3(2.2)) * albedo;
-		
-		vec3 reflectionWorld = reflect(-v, n); 
-		float lod = getMipLevelFromRoughness(roughness);// + 1.0;
-		vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
-		prefilteredColor = pow(prefilteredColor, vec3(2.2));
-		
-		vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;
-		vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
-		
-		vec3 indirect = indirectDiffuse + indirectSpecular;
+	// Direct
+	vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);	
+	direct = direct * lightColor * lightStrength;
+	
+	// Indirect
+	vec3 indirectDiffuse = texture(senvmapIrradiance, envMapEquirect(n)).rgb;
+	indirectDiffuse = pow(indirectDiffuse, vec3(2.2)) * albedo;
+	
+	vec3 reflectionWorld = reflect(-v, n); 
+	float lod = getMipLevelFromRoughness(roughness);// + 1.0;
+	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
+	prefilteredColor = pow(prefilteredColor, vec3(2.2));
+	
+	vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;
+	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
+	
+	vec3 indirect = indirectDiffuse + indirectSpecular;
+	indirect = indirect * lightColor * lightStrength;
 
-		outColor = vec4(vec3(direct * visibility + indirect), 1.0);
-		
+	outColor = vec4(vec3(direct * visibility + indirect), 1.0);
+	
 #ifdef _OMTex
-		vec3 occlusion = texture(som, texCoord).rgb;
-		outColor.rgb *= occlusion; 
+	vec3 occlusion = texture(som, texCoord).rgb;
+	outColor.rgb *= occlusion; 
 #endif
-		// LTC
-		// outColor.rgb = ltccol * 10.0 * visibility + indirect / 14.0;
-	}
-	else {
-		outColor = vec4(baseColor * visibility, 1.0);
-	}
+	// LTC
+	// outColor.rgb = ltccol * 10.0 * visibility + indirect / 14.0;
 
 	gl_FragColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
 }

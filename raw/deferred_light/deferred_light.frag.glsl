@@ -24,6 +24,8 @@ uniform sampler2D senvmapBrdf;
 // uniform mat4 invVP;
 uniform mat4 LMVP;
 uniform vec3 light;
+uniform vec3 lightColor;
+uniform float lightStrength;
 uniform vec3 eye;
 uniform vec3 eyeLook;
 uniform float time;
@@ -436,6 +438,7 @@ void main() {
 	
 	// Direct
 	vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);
+	direct = direct * lightColor * lightStrength;
 	
 	// SSS only masked objects
 	if (texture(gbuffer0, texCoord).b == 2.0) {
@@ -455,6 +458,7 @@ void main() {
 	vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;
 	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 	vec3 indirect = indirectDiffuse + indirectSpecular;
+	indirect = indirect * lightColor * lightStrength;
 
 	vec4 outColor = vec4(vec3(direct * visibility + indirect * ao), 1.0);
 	

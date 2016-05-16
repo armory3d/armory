@@ -1104,7 +1104,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 	def ExportMaterialRef(self, material, index, o):
 		if (not material in self.materialArray):
 			self.materialArray[material] = {"structName" : material.name}
-
 		o.material_refs.append(self.materialArray[material]["structName"])
 
 	def ExportParticleSystemRef(self, psys, index, o):
@@ -1667,119 +1666,15 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o.type = "spot"
 			#pointFlag = True
 			#spotFlag = True
+			
+		# o.cycles.cast_shadow
 
-		#if (not object.use_shadow):
-		#	self.Write(B", shadow = false")
-
-		#self.WriteNodeTable(objectRef)
-
-		# Export the light's color, and include a separate intensity if necessary.
-
-		# lc = Object()
-		# lc.attrib = "light"
-		# lc.size = 3
-		# lc.values = self.WriteColor(object.color)
-		# o.color = lc
-		o.color = self.WriteColor(object.color)
-
-		# intensity = object.energy
-		# if (intensity != 1.0):
-		# 	self.IndentWrite(B"Param (attrib = \"intensity\") {float {")
-		# 	self.WriteFloat(intensity)
-		# 	self.Write(B"}}\n")
-
-		# if (pointFlag):
-
-		# 	# Export a separate attenuation function for each type that's in use.
-
-		# 	falloff = object.falloff_type
-
-		# 	if (falloff == "INVERSE_LINEAR"):
-		# 		self.IndentWrite(B"Atten (curve = \"inverse\")\n", 0, True)
-		# 		self.IndentWrite(B"{\n")
-
-		# 		self.IndentWrite(B"Param (attrib = \"scale\") {float {", 1)
-		# 		self.WriteFloat(object.distance)
-		# 		self.Write(B"}}\n")
-
-		# 		self.IndentWrite(B"}\n")
-
-		# 	elif (falloff == "INVERSE_SQUARE"):
-		# 		self.IndentWrite(B"Atten (curve = \"inverse_square\")\n", 0, True)
-		# 		self.IndentWrite(B"{\n")
-
-		# 		self.IndentWrite(B"Param (attrib = \"scale\") {float {", 1)
-		# 		self.WriteFloat(math.sqrt(object.distance))
-		# 		self.Write(B"}}\n")
-
-		# 		self.IndentWrite(B"}\n")
-
-		# 	elif (falloff == "LINEAR_QUADRATIC_WEIGHTED"):
-		# 		if (object.linear_attenuation != 0.0):
-		# 			self.IndentWrite(B"Atten (curve = \"inverse\")\n", 0, True)
-		# 			self.IndentWrite(B"{\n")
-
-		# 			self.IndentWrite(B"Param (attrib = \"scale\") {float {", 1)
-		# 			self.WriteFloat(object.distance)
-		# 			self.Write(B"}}\n")
-
-		# 			self.IndentWrite(B"Param (attrib = \"constant\") {float {", 1)
-		# 			self.WriteFloat(1.0)
-		# 			self.Write(B"}}\n")
-
-		# 			self.IndentWrite(B"Param (attrib = \"linear\") {float {", 1)
-		# 			self.WriteFloat(object.linear_attenuation)
-		# 			self.Write(B"}}\n")
-
-		# 			self.IndentWrite(B"}\n\n")
-
-		# 		if (object.quadratic_attenuation != 0.0):
-		# 			self.IndentWrite(B"Atten (curve = \"inverse_square\")\n")
-		# 			self.IndentWrite(B"{\n")
-
-		# 			self.IndentWrite(B"Param (attrib = \"scale\") {float {", 1)
-		# 			self.WriteFloat(object.distance)
-		# 			self.Write(B"}}\n")
-
-		# 			self.IndentWrite(B"Param (attrib = \"constant\") {float {", 1)
-		# 			self.WriteFloat(1.0)
-		# 			self.Write(B"}}\n")
-
-		# 			self.IndentWrite(B"Param (attrib = \"quadratic\") {float {", 1)
-		# 			self.WriteFloat(object.quadratic_attenuation)
-		# 			self.Write(B"}}\n")
-
-		# 			self.IndentWrite(B"}\n")
-
-		# 	if (object.use_sphere):
-		# 		self.IndentWrite(B"Atten (curve = \"linear\")\n", 0, True)
-		# 		self.IndentWrite(B"{\n")
-
-		# 		self.IndentWrite(B"Param (attrib = \"end\") {float {", 1)
-		# 		self.WriteFloat(object.distance)
-		# 		self.Write(B"}}\n")
-
-		# 		self.IndentWrite(B"}\n")
-
-		# 	if (spotFlag):
-
-		# 		# Export additional angular attenuation for spot lights.
-
-		# 		self.IndentWrite(B"Atten (kind = \"angle\", curve = \"linear\")\n", 0, True)
-		# 		self.IndentWrite(B"{\n")
-
-		# 		endAngle = object.spot_size * 0.5
-		# 		beginAngle = endAngle * (1.0 - object.spot_blend)
-
-		# 		self.IndentWrite(B"Param (attrib = \"begin\") {float {", 1)
-		# 		self.WriteFloat(beginAngle)
-		# 		self.Write(B"}}\n")
-
-		# 		self.IndentWrite(B"Param (attrib = \"end\") {float {", 1)
-		# 		self.WriteFloat(endAngle)
-		# 		self.Write(B"}}\n")
-
-		# 		self.IndentWrite(B"}\n")
+		# Parse nodes, only emission for now
+		for n in object.node_tree.nodes:
+			if n.type == 'EMISSION':
+				o.color = self.WriteColor(n.inputs[0].default_value)
+				o.strength = n.inputs[1].default_value / 1000.0
+				break
 
 		self.output.light_resources.append(o)
 
@@ -1940,6 +1835,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		self.materialArray = {}
 		self.particleSystemArray = {}
 		self.boneParentArray = {}
+		self.materialToObjectDict = dict()
 
 		# Store used shaders and assets in this scene
 		ArmoryExporter.shader_references = []
@@ -2124,6 +2020,14 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if rb.use_margin:
 				x.parameters.append(rb.collision_margin)
 			o.traits.append(x)
+			
+		# Map objects to materials, can be used in later stages
+		for i in range(len(node.material_slots)):
+			mat = node.material_slots[i].material
+			if mat in self.materialToObjectDict:
+				self.materialToObjectDict[mat].append(o)
+			else:
+				self.materialToObjectDict[mat] = [o]
 
 	def cb_export_camera(self, object, o):
 		#return
@@ -2149,11 +2053,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		c = Object()
 		c.id = ArmoryExporter.material_ids #ArmoryExporter.pipeline_id
 		c.bind_constants = []
-		
-		const = Object()
-		const.id = 'lighting'
-		const.bool = material.lighting_bool
-		c.bind_constants.append(const)
 		
 		const = Object()
 		const.id = 'receiveShadow'
@@ -2277,7 +2176,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			# TODO: gather defs from vertex data when custom shader is used
 			o.shader = material.custom_shader_name
 
-	def make_texture(self, id, image_node):
+	def make_texture(self, id, image_node, material):
 		tex = Object()
 		tex.id = id
 		if image_node.image is not None:
@@ -2291,6 +2190,17 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				tex.mipmap_filter = 'linear'
 				tex.generate_mipmaps = True
 			#image_node.extension = 'Repeat'
+			
+			if image_node.image.source == 'MOVIE': # Just append movie texture trait for now
+				movie_trait = Object()
+				movie_trait.type = 'Script'
+				movie_trait.class_name = 'MovieTexture'
+				movie_trait.parameters = [tex.name]
+				for o in self.materialToObjectDict[material]:
+					o.traits.append(movie_trait)
+				tex.source = 'movie'
+				tex.name = ''
+			
 		else:
 			tex.name = ''
 		return tex
@@ -2303,7 +2213,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				albedo_node = self.findNodeByLink(tree, node, albedo_input)
 				if albedo_node.type == 'TEX_IMAGE':
 					defs.append('_AMTex')
-					tex = self.make_texture('salbedo', albedo_node)
+					tex = self.make_texture('salbedo', albedo_node, material)
 					c.bind_textures.append(tex)
 				elif albedo_node.type == 'ATTRIBUTE': # Assume vcols for now
 					defs.append('_VCols')
@@ -2318,7 +2228,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if metalness_input.is_linked:
 				defs.append('_MMTex')
 				metalness_node = self.findNodeByLink(tree, node, metalness_input)
-				tex = self.make_texture('smm', metalness_node)
+				tex = self.make_texture('smm', metalness_node, material)
 				c.bind_textures.append(tex)
 			else:
 				col = metalness_input.default_value
@@ -2331,7 +2241,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if roughness_input.is_linked:
 				defs.append('_RMTex')
 				roughness_node = self.findNodeByLink(tree, node, roughness_input)
-				tex = self.make_texture('srm', roughness_node)
+				tex = self.make_texture('srm', roughness_node, material)
 				c.bind_textures.append(tex)
 			else:
 				col = roughness_input.default_value
@@ -2345,14 +2255,14 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if normal_input.is_linked:
 				defs.append('_NMTex')
 				normal_node = self.findNodeByLink(tree, node, normal_input)
-				tex = self.make_texture('snormal', normal_node)
+				tex = self.make_texture('snormal', normal_node, material)
 				c.bind_textures.append(tex)
 			# Occlusion Map
 			occlusion_input = node.inputs[1]
 			if occlusion_input.is_linked:
 				defs.append('_OMTex')
 				occlusion_node = self.findNodeByLink(tree, node, occlusion_input)
-				tex = self.make_texture('som', occlusion_node)
+				tex = self.make_texture('som', occlusion_node, material)
 				c.bind_textures.append(tex)
 				
 		elif node.type == 'BSDF_TRANSPARENT':
