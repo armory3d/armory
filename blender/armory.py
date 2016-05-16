@@ -2047,7 +2047,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 	def cb_export_material(self, material, o):
 		#return
 		defs = []
-		o.cast_shadow = True
+		if material.skip_context != '':
+			o.skip_context = material.skip_context
 		o.contexts = []
 		
 		c = Object()

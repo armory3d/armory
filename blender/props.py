@@ -34,9 +34,10 @@ def initProperties():
     # For material
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.custom_shader = bpy.props.BoolProperty(name="Custom Shader", default=False)
-    bpy.types.Material.custom_shader_name = bpy.props.StringProperty(name="Name", default="")
+    bpy.types.Material.custom_shader_name = bpy.props.StringProperty(name="Name", default='')
     bpy.types.Material.stencil_mask = bpy.props.IntProperty(name="Stencil Mask", default=0)
     bpy.types.Material.export_tangents = bpy.props.BoolProperty(name="Export Tangents", default=False)
+    bpy.types.Material.skip_context = bpy.props.StringProperty(name="Skip Context", default='')
 
 # Menu in object region
 class ObjectPropsPanel(bpy.types.Panel):
@@ -101,6 +102,7 @@ class MatsPropsPanel(bpy.types.Panel):
         if mat.custom_shader:
             layout.prop(mat, 'custom_shader_name')
         layout.prop(mat, 'stencil_mask')
+        layout.prop(mat, 'skip_context')
 
 
 # Registration
