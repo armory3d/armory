@@ -1120,9 +1120,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# This function exports a single node in the scene and includes its name,
 		# object reference, material references (for geometries), and transform.
 		# Subnodes are then exported recursively.
-		if (node.name[0] == "."):
-			return # Do not export nodes prefixed with '.'
-
 		if self.cb_preprocess_node(node) == False:
 			return
 
@@ -1711,76 +1708,17 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o.sound = ''
 		self.output.speaker_resources.append(o)
 
-	def findNodeByLink(self, node_group, to_node, inp):
-		for link in node_group.links:
-			if link.to_node == to_node and link.to_socket == inp:
-				return link.from_node
-
 	def ExportMaterials(self):
-		# This function exports all of the materials used in the scene.
+		# This function exports all of the materials used in the scene
 		for materialRef in self.materialArray.items():
-			o = Object()
 			material = materialRef[0]
-
-			# If the material is unlinked, material becomes None.
+			# If the material is unlinked, material becomes None
 			if material == None:
 				continue
-
+				
+			o = Object()
 			o.id = materialRef[1]["structName"]
-
-			#intensity = material.diffuse_intensity
-			#diffuse = [material.diffuse_color[0] * intensity, material.diffuse_color[1] * intensity, material.diffuse_color[2] * intensity]
-
 			self.cb_export_material(material, o)
-
-			#intensity = material.specular_intensity
-			#specular = [material.specular_color[0] * intensity, material.specular_color[1] * intensity, material.specular_color[2] * intensity]
-
-			# if ((specular[0] > 0.0) or (specular[1] > 0.0) or (specular[2] > 0.0)):
-			# 	self.IndentWrite(B"Color (attrib = \"specular\") {float[3] {")
-			# 	self.WriteColor(specular)
-			# 	self.Write(B"}}\n")
-
-			# 	self.IndentWrite(B"Param (attrib = \"specular_power\") {float {")
-			# 	self.WriteFloat(material.specular_hardness)
-			# 	self.Write(B"}}\n")
-
-			# emission = material.emit
-			# if (emission > 0.0):
-			# 	self.IndentWrite(B"Color (attrib = \"emission\") {float[3] {")
-			# 	self.WriteColor([emission, emission, emission])
-			# 	self.Write(B"}}\n")
-
-			# diffuseTexture = None
-			# specularTexture = None
-			# emissionTexture = None
-			# transparencyTexture = None
-			# normalTexture = None
-
-			# for textureSlot in material.texture_slots:
-			# 	if ((textureSlot) and (textureSlot.use) and (textureSlot.texture.type == "IMAGE")):
-			# 		if (((textureSlot.use_map_color_diffuse) or (textureSlot.use_map_diffuse)) and (not diffuseTexture)):
-			# 			diffuseTexture = textureSlot
-			# 		elif (((textureSlot.use_map_color_spec) or (textureSlot.use_map_specular)) and (not specularTexture)):
-			# 			specularTexture = textureSlot
-			# 		elif ((textureSlot.use_map_emit) and (not emissionTexture)):
-			# 			emissionTexture = textureSlot
-			# 		elif ((textureSlot.use_map_translucency) and (not transparencyTexture)):
-			# 			transparencyTexture = textureSlot
-			# 		elif ((textureSlot.use_map_normal) and (not normalTexture)):
-			# 			normalTexture = textureSlot
-
-			# if (diffuseTexture):
-			# 	self.ExportTexture(diffuseTexture, B"diffuse")
-			# if (specularTexture):
-			# 	self.ExportTexture(specularTexture, B"specular")
-			# if (emissionTexture):
-			# 	self.ExportTexture(emissionTexture, B"emission")
-			# if (transparencyTexture):
-			# 	self.ExportTexture(transparencyTexture, B"transparency")
-			# if (normalTexture):
-			# 	self.ExportTexture(normalTexture, B"normal")
-
 			self.output.material_resources.append(o)
 
 	def ExportParticleSystems(self):
@@ -1836,6 +1774,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		self.particleSystemArray = {}
 		self.boneParentArray = {}
 		self.materialToObjectDict = dict()
+		self.materialToGameObjectDict = dict()
+		self.objectToGameObjectDict = dict()
+		self.uvprojectUsersArray = [] # For processing decals
 
 		# Store used shaders and assets in this scene
 		ArmoryExporter.shader_references = []
@@ -1867,6 +1808,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			self.ExportParticleSystems()
 
 		self.ExportObjects(scene)
+		
+		self.cb_postprocess()
 
 		if (self.restoreFrame):
 			scene.frame_set(originalFrame, originalSubframe)
@@ -1945,14 +1888,32 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 	def cb_preprocess_node(self, node): # Returns false if node should not be exported
 		#return True
+		export_node = True
+
+		# Disabled object	
+		if node.game_export == False:
+			return False
 		
 		for m in node.modifiers:
 			if m.type == 'OCEAN':
-				# Process ocean modifier
-				# Do not export this node
-				return False
+				export_node = False
+			elif m.type == 'UV_PROJECT':
+				self.uvprojectUsersArray.append(node)
 				
-		return True
+		return export_node
+
+	def cb_postprocess(self):
+		# Check uv project users
+		for node in self.uvprojectUsersArray:
+			for m in node.modifiers:
+				if m.type == 'UV_PROJECT':
+					# Mark all projectors as decals
+					for pnode in m.projectors:
+						o = self.objectToGameObjectDict[node]
+						po = self.objectToGameObjectDict[pnode.object]
+						po.type = 'decal_node'
+						po.material_refs = [o.material_refs[0] + '_decal'] # Will fetch a proper context used in render path
+					break
 
 	def cb_export_node(self, node, o):
 		#return
@@ -2020,14 +1981,19 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if rb.use_margin:
 				x.parameters.append(rb.collision_margin)
 			o.traits.append(x)
-			
+		
+		# Map objects to game objects
+		self.objectToGameObjectDict[node] = o
+		
 		# Map objects to materials, can be used in later stages
 		for i in range(len(node.material_slots)):
 			mat = node.material_slots[i].material
 			if mat in self.materialToObjectDict:
-				self.materialToObjectDict[mat].append(o)
+				self.materialToObjectDict[mat].append(node)
+				self.materialToGameObjectDict[mat].append(o)
 			else:
-				self.materialToObjectDict[mat] = [o]
+				self.materialToObjectDict[mat] = [node]
+				self.materialToGameObjectDict[mat] = [o]
 
 	def cb_export_camera(self, object, o):
 		#return
@@ -2067,55 +2033,48 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		
 		c.bind_textures = []
 		
-		# if bpy.data.cameras[0].pipeline_bind_world_to_materials:
-		# 	envmap_name = bpy.data.cameras[0].world_envtex_name
-		# 	num_mips = bpy.data.cameras[0].world_envtex_num_mips
-			
-		# 	tex = Object()
-		# 	tex.id = 'senvmapIrradiance'
-		# 	tex.name = envmap_name + '_irradiance'
-		# 	c.bind_textures.append(tex)
-			
-		# 	tex = Object()
-		# 	tex.id = 'senvmapRadiance'
-		# 	tex.name = envmap_name + '_radiance'
-		# 	tex.mipmap_filter = 'linear'
-
-		# 	tex.mipmaps = []
-		# 	for i in range(0, num_mips):
-		# 		tex.mipmaps.append(envmap_name + '_radiance_' + str(i))
-		# 	c.bind_textures.append(tex)
-			
-		# 	tex = Object()
-		# 	tex.id = 'senvmapBrdf'
-		# 	tex.name = 'envmap_brdf'
-		# 	c.bind_textures.append(tex)
-
+		# If material user has decal modifier, parse decal material context
+		mat_users = self.materialToObjectDict[material]
+		# Get decal uv map name
+		decal_uv_layer = None
+		for ob in mat_users:
+			for m in ob.modifiers:
+				if m.type == 'UV_PROJECT':
+					decal_uv_layer = m.uv_layer
+					break
+		# Get decal context from pipes
+		decal_context = bpy.data.cameras[0].last_decal_context
+		
 		# Parse nodes
-		out_node = None
-		tree = material.node_tree
-		for n in tree.nodes:
-			if n.type == 'OUTPUT_MATERIAL':
-				out_node = n
-				break
-
-		# Output node is linked
-		if out_node != None and out_node.inputs[0].is_linked:
-			# Traverse material tree
-			surface_node = self.findNodeByLink(tree, out_node, out_node.inputs[0])
-			self.parse_material_surface(material, c, defs, tree, surface_node)
-
-		o.contexts.append(c)
-
-		# Material users
-		mat_users = []
-		for ob in bpy.data.objects:
-			if type(ob.data) == bpy.types.Mesh:
-				for m in ob.data.materials:
-					if m.name == material.name:
-						mat_users.append(ob)
-						break;
-
+		import nodes_material
+		# Parse from material output
+		if decal_uv_layer == None:
+			nodes_material.parse(self, material, c, defs)
+			o.contexts.append(c)
+		# Decal attached, split material into two separate ones
+		# Mandatory starting point from mix node for now
+		else:
+			o2 = Object()
+			o2.id = o.id + '_decal'
+			o2.contexts = []
+			c2 = Object()
+			c2.id = decal_context
+			c2.bind_constants = []
+			c2.bind_textures = []
+			defs2 = []
+			tree = material.node_tree
+			output_node = nodes_material.get_output_node(tree)
+			mix_node = nodes_material.find_node_by_link(tree, output_node, output_node.inputs[0])
+			surface_node1 = nodes_material.find_node_by_link(tree, mix_node, mix_node.inputs[1])
+			surface_node2 = nodes_material.find_node_by_link(tree, mix_node, mix_node.inputs[2])
+			nodes_material.parse_from(self, material, c, defs, surface_node1)
+			nodes_material.parse_from(self, material, c2, defs2, surface_node2)
+			o.contexts.append(c)
+			o2.contexts.append(c2)
+			self.finalize_shader(o2, defs2, [decal_context])
+			self.output.material_resources.append(o2)
+		
+		# Material users		
 		for ob in mat_users:
 			# Instancing used by material user
 			if ob.instanced_children or len(ob.particle_systems) > 0:
@@ -2137,146 +2096,50 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				ob.geometry_cached = False
 				break
 
+		# Process defs and append resources
 		if material.custom_shader == False:
-			# Merge duplicates and sort
-			defs = sorted(list(set(defs)))
-			# Select correct shader variant
-			ext = ''
-			for d in defs:
-				ext += d
-			# Shader res
-			shader_res_name = ArmoryExporter.pipeline_id + ext
-			shader_res_path = 'compiled/ShaderResources/' + ArmoryExporter.pipeline_id + '/' + shader_res_name + '.json'
-			# Stencil mask
-			# if material.stencil_mask > 0:
-			# 	mask_ext = "_mask" + str(material.stencil_mask)
-			# 	shader_res_name_with_mask = shader_res_name + mask_ext
-			# 	shader_res_path_with_mask = 'compiled/ShaderResources/' + ArmoryExporter.pipeline_id + '/' + shader_res_name_with_mask + '.json'
-			# 	# Copy resource if it does not exist and set stencil mask
-			# 	if not os.path.isfile(shader_res_path_with_mask):
-			# 		json_file = open(shader_res_path).read()
-			# 		json_data = json.loads(json_file)
-			# 		res = json_data['shader_resources'][0]
-			# 		res['id'] += mask_ext
-			# 		for c in res['contexts']:
-			# 			c['stencil_pass'] = 'replace'
-			# 			c['stencil_reference_value'] = material.stencil_mask
-			# 		with open(shader_res_path_with_mask, 'w') as f:
-			# 			json.dump(json_data, f)
-			# 	ArmoryExporter.asset_references.append(shader_res_path_with_mask)
-			# 	o.shader = shader_res_name_with_mask + '/' + shader_res_name_with_mask
-			# # No stencil mask
-			# else:
-			ArmoryExporter.asset_references.append(shader_res_path)
-			o.shader = shader_res_name + '/' + shader_res_name
-			# Process all passes from pipeline
-			for pipe_pass in ArmoryExporter.pipeline_passes:
-				shader_name = pipe_pass + ext
-				ArmoryExporter.shader_references.append('compiled/Shaders/' + ArmoryExporter.pipeline_id + '/' + shader_name)
+			self.finalize_shader(o, defs, ArmoryExporter.pipeline_passes)
 		else:
 			# TODO: gather defs from vertex data when custom shader is used
 			o.shader = material.custom_shader_name
-
-	def make_texture(self, id, image_node, material):
-		tex = Object()
-		tex.id = id
-		if image_node.image is not None:
-			tex.name = image_node.image.name.rsplit('.', 1)[0] # Remove extension
-			tex.name = tex.name.replace('.', '_')
-			if image_node.interpolation == 'Cubic': # Mipmap linear
-				tex.mipmap_filter = 'linear'
-				tex.generate_mipmaps = True
-			elif image_node.interpolation == 'Smart': # Mipmap anisotropic
-				tex.min_filter = 'anisotropic'
-				tex.mipmap_filter = 'linear'
-				tex.generate_mipmaps = True
-			#image_node.extension = 'Repeat'
 			
-			if image_node.image.source == 'MOVIE': # Just append movie texture trait for now
-				movie_trait = Object()
-				movie_trait.type = 'Script'
-				movie_trait.class_name = 'MovieTexture'
-				movie_trait.parameters = [tex.name]
-				for o in self.materialToObjectDict[material]:
-					o.traits.append(movie_trait)
-				tex.source = 'movie'
-				tex.name = ''
-			
-		else:
-			tex.name = ''
-		return tex
-
-	def parse_material_surface(self, material, c, defs, tree, node):
-		if node.type == 'GROUP' and node.node_tree.name == 'PBR':
-			# Albedo Map
-			albedo_input = node.inputs[0]
-			if albedo_input.is_linked:
-				albedo_node = self.findNodeByLink(tree, node, albedo_input)
-				if albedo_node.type == 'TEX_IMAGE':
-					defs.append('_AMTex')
-					tex = self.make_texture('salbedo', albedo_node, material)
-					c.bind_textures.append(tex)
-				elif albedo_node.type == 'ATTRIBUTE': # Assume vcols for now
-					defs.append('_VCols')
-			else: # Take node color
-				const = Object()
-				const.id = "albedo_color"
-				col = albedo_input.default_value
-				const.vec4 = [col[0], col[1], col[2], col[3]]
-				c.bind_constants.append(const)
-			# Metalness Map
-			metalness_input = node.inputs[3]
-			if metalness_input.is_linked:
-				defs.append('_MMTex')
-				metalness_node = self.findNodeByLink(tree, node, metalness_input)
-				tex = self.make_texture('smm', metalness_node, material)
-				c.bind_textures.append(tex)
-			else:
-				col = metalness_input.default_value
-				const = Object()
-				const.id = "metalness"
-				const.float = col
-				c.bind_constants.append(const)
-			# Roughness Map
-			roughness_input = node.inputs[2]
-			if roughness_input.is_linked:
-				defs.append('_RMTex')
-				roughness_node = self.findNodeByLink(tree, node, roughness_input)
-				tex = self.make_texture('srm', roughness_node, material)
-				c.bind_textures.append(tex)
-			else:
-				col = roughness_input.default_value
-				const = Object()
-				const.id = "roughness"
-				const.float = col
-				c.bind_constants.append(const)
-			
-			# Normal Map
-			normal_input = node.inputs[4]
-			if normal_input.is_linked:
-				defs.append('_NMTex')
-				normal_node = self.findNodeByLink(tree, node, normal_input)
-				tex = self.make_texture('snormal', normal_node, material)
-				c.bind_textures.append(tex)
-			# Occlusion Map
-			occlusion_input = node.inputs[1]
-			if occlusion_input.is_linked:
-				defs.append('_OMTex')
-				occlusion_node = self.findNodeByLink(tree, node, occlusion_input)
-				tex = self.make_texture('som', occlusion_node, material)
-				c.bind_textures.append(tex)
-				
-		elif node.type == 'BSDF_TRANSPARENT':
-			defs.append('_AlphaTest')
-			
-		elif node.type == 'MIX_SHADER':
-			if node.inputs[1].is_linked:
-				surface1_node = self.findNodeByLink(tree, node, node.inputs[1])
-				self.parse_material_surface(material, c, defs, tree, surface1_node)
-			if node.inputs[2].is_linked:
-				surface2_node = self.findNodeByLink(tree, node, node.inputs[2])
-				self.parse_material_surface(material, c, defs, tree, surface2_node)
-
+	def finalize_shader(self, o, defs, pipeline_passes):
+		# Merge duplicates and sort
+		defs = sorted(list(set(defs)))
+		# Select correct shader variant
+		ext = ''
+		for d in defs:
+			ext += d
+		# Shader res
+		shader_res_name = ArmoryExporter.pipeline_id + ext
+		shader_res_path = 'compiled/ShaderResources/' + ArmoryExporter.pipeline_id + '/' + shader_res_name + '.json'
+		# Stencil mask
+		# if material.stencil_mask > 0:
+		# 	mask_ext = "_mask" + str(material.stencil_mask)
+		# 	shader_res_name_with_mask = shader_res_name + mask_ext
+		# 	shader_res_path_with_mask = 'compiled/ShaderResources/' + ArmoryExporter.pipeline_id + '/' + shader_res_name_with_mask + '.json'
+		# 	# Copy resource if it does not exist and set stencil mask
+		# 	if not os.path.isfile(shader_res_path_with_mask):
+		# 		json_file = open(shader_res_path).read()
+		# 		json_data = json.loads(json_file)
+		# 		res = json_data['shader_resources'][0]
+		# 		res['id'] += mask_ext
+		# 		for c in res['contexts']:
+		# 			c['stencil_pass'] = 'replace'
+		# 			c['stencil_reference_value'] = material.stencil_mask
+		# 		with open(shader_res_path_with_mask, 'w') as f:
+		# 			json.dump(json_data, f)
+		# 	ArmoryExporter.asset_references.append(shader_res_path_with_mask)
+		# 	o.shader = shader_res_name_with_mask + '/' + shader_res_name_with_mask
+		# # No stencil mask
+		# else:
+		ArmoryExporter.asset_references.append(shader_res_path)
+		o.shader = shader_res_name + '/' + shader_res_name
+		# Process all passes from pipeline
+		for pipe_pass in pipeline_passes:
+			shader_name = pipe_pass + ext
+			ArmoryExporter.shader_references.append('compiled/Shaders/' + ArmoryExporter.pipeline_id + '/' + shader_name)
+	
 def menu_func(self, context):
 	self.layout.operator(ArmoryExporter.bl_idname, text = "Armory (.json)")
 

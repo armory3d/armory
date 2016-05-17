@@ -71,6 +71,40 @@
 			],
 			"vertex_shader": "shadowmap.vert.glsl",
 			"fragment_shader": "shadowmap.frag.glsl"
+		},
+		{
+			"id": "decals",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "false"
+				},
+				{
+					"id": "compare_mode",
+					"value": "less"
+				},
+				{
+					"id": "cull_mode",
+					"value": "counter_clockwise"
+				}
+			],
+			"links": [
+				{
+					"id": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"id": "eyeLook",
+					"link": "_cameraLook"
+				},
+				{
+					"id": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "decals.vert.glsl",
+			"fragment_shader": "decals.frag.glsl"
 		}
 	]
 }

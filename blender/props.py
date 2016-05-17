@@ -17,6 +17,7 @@ def initProperties():
     bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced Children", default=False)
     bpy.types.Object.custom_material = bpy.props.BoolProperty(name="Custom Material", default=False)
     bpy.types.Object.custom_material_name = bpy.props.StringProperty(name="Name", default="")
+    bpy.types.Object.game_export = bpy.props.BoolProperty(name="Game Export", default=True)
     # For geometry
     bpy.types.Mesh.static_usage = bpy.props.BoolProperty(name="Static Usage", default=True)
     # For camera
@@ -31,6 +32,7 @@ def initProperties():
 	# TODO: move to world
     bpy.types.Camera.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
     bpy.types.Camera.world_envtex_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
+    bpy.types.Camera.last_decal_context = bpy.props.StringProperty(name="Decal Context", default='')
     # For material
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.custom_shader = bpy.props.BoolProperty(name="Custom Shader", default=False)
@@ -49,6 +51,8 @@ class ObjectPropsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         obj = bpy.context.object
+
+        layout.prop(obj, 'game_export')
 
         if obj.type == 'MESH':
             layout.prop(obj, 'instanced_children')

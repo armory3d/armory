@@ -6,7 +6,7 @@ import sys
 import json
 import platform
 import subprocess
-	
+
 class CGPipelineTree(NodeTree):
 	'''Pipeline nodes'''
 	bl_idname = 'CGPipelineTreeType'
@@ -22,6 +22,24 @@ class DrawGeometryNode(Node, CGPipelineTreeNode):
 	'''A custom node'''
 	bl_idname = 'DrawGeometryNodeType'
 	bl_label = 'Draw Geometry'
+	bl_icon = 'SOUND'
+	
+	def init(self, context):
+		self.inputs.new('NodeSocketShader', "Stage")
+		self.inputs.new('NodeSocketString', "Context")
+
+		self.outputs.new('NodeSocketShader', "Stage")
+
+	def copy(self, node):
+		print("Copying from node ", node)
+
+	def free(self):
+		print("Removing node ", self, ", Goodbye!")
+		
+class DrawDecalsNode(Node, CGPipelineTreeNode):
+	'''A custom node'''
+	bl_idname = 'DrawDecalsNodeType'
+	bl_label = 'Draw Decals'
 	bl_icon = 'SOUND'
 	
 	def init(self, context):
@@ -317,7 +335,7 @@ class QuadPassNode(Node, CGPipelineTreeNode):
 		print("Removing node ", self, ", Goodbye!")
 
 # Constant nodes
-class ScreeNode(Node, CGPipelineTreeNode):
+class ScreenNode(Node, CGPipelineTreeNode):
 	'''A custom node'''
 	bl_idname = 'ScreenNodeType'
 	bl_label = 'Screen'
@@ -365,6 +383,7 @@ node_categories = [
 	MyPipelineNodeCategory("PIPELINENODES", "Pipeline", items=[
 		NodeItem("BeginNodeType"),
 		NodeItem("DrawGeometryNodeType"),
+		NodeItem("DrawDecalsNodeType"),
 		NodeItem("ClearTargetNodeType"),
 		NodeItem("SetTargetNodeType"),
 		NodeItem("BindTargetNodeType"),
@@ -519,6 +538,12 @@ def make_clear_target(stage, node_group, node):
 def make_draw_geometry(stage, node_group, node):
 	stage.command = 'draw_geometry'
 	stage.params.append(node.inputs[1].default_value) # Context
+	
+def make_draw_decals(stage, node_group, node, shader_references, asset_references):
+	stage.command = 'draw_decals'
+	context = node.inputs[1].default_value
+	stage.params.append(context) # Context
+	bpy.data.cameras[0].last_decal_context = context
 
 def make_bind_target(stage, node_group, node, target_index=1, constant_index=2, color_buffer_index=-1, is_depth_attachment=False):
 	stage.command = 'bind_target'
@@ -613,6 +638,9 @@ def buildNode(stages, node, node_group, last_bind_target, shader_references, ass
 			
 	elif node.bl_idname == 'DrawGeometryNodeType':
 		make_draw_geometry(stage, node_group, node)
+		
+	elif node.bl_idname == 'DrawDecalsNodeType':
+		make_draw_decals(stage, node_group, node, shader_references, asset_references)
 		
 	elif node.bl_idname == 'BindTargetNodeType':
 		if last_bind_target is not None:
