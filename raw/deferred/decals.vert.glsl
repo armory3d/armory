@@ -4,25 +4,51 @@
 precision highp float;
 #endif
 
-uniform mat4 invVP;
-uniform vec3 eye;
+#ifdef _NMTex
+#define _AMTex
+#endif
 
 in vec3 pos;
+// in vec3 nor;
+// #ifdef _AMTex
+// in vec2 tex;
+// #endif
+// #ifdef _VCols
+// in vec4 col;
+// #endif
+// #ifdef _NMTex
+// in vec3 tan;
+// #endif
+// #ifdef _Skinning
+// in vec4 bone;
+// in vec4 weight;
+// #endif
+// #ifdef _Instancing
+// in vec3 off;
+// #endif
 
-out vec2 texCoord;
-out vec3 viewRay;
+uniform mat4 VP;
+uniform mat4 M;
+uniform vec4 albedo_color;
 
-const vec2 madd = vec2(0.5, 0.5);
+out vec4 mvpposition;
+out vec4 mposition;
+out vec4 matColor;
+// #ifdef _AMTex
+// out vec2 texCoord;
+// #endif
+// out vec4 lPos;
+// out vec4 matColor;
+// #ifdef _NMTex
+// out mat3 TBN;
+// #else
+// out vec3 normal;
+// #endif
 
 void main() {
-	// Scale vertex attribute to [0-1] range
-	texCoord = pos.xy * madd + madd;
-
-	gl_Position = vec4(pos.xy, 0.0, 1.0);
-  
-	// NDC (at the back of cube)
-	// vec4 v = vec4(pos.x, pos.y, 1.0, 1.0);	
-	// v = vec4(invVP * v);
-	// v.xyz /= v.w;
-	// viewRay = v.xyz - eye;
+	vec4 sPos = (vec4(pos, 1.0));
+	mposition = M * sPos;
+	mvpposition = VP * mposition;
+	matColor = albedo_color;
+	gl_Position = mvpposition;
 }

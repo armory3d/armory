@@ -77,6 +77,26 @@ def writeResource(res, defs, json_data, base_name):
 				con.alpha_blend_destination = p['value']
 			elif p['id'] == 'alpha_blend_operation':
 				con.alpha_blend_operation = p['value']
+			elif p['id'] == 'color_write_red':
+				if p['value'] == 'true':
+					con.color_write_red = True
+				else:
+					con.color_write_red = False
+			elif p['id'] == 'color_write_green':
+				if p['value'] == 'true':
+					con.color_write_green = True
+				else:
+					con.color_write_green = False
+			elif p['id'] == 'color_write_blue':
+				if p['value'] == 'true':
+					con.color_write_blue = True
+				else:
+					con.color_write_blue = False
+			elif p['id'] == 'color_write_alpha':
+				if p['value'] == 'true':
+					con.color_write_alpha = True
+				else:
+					con.color_write_alpha = False
 
 		# Parse shaders
 		vs = open(c['vertex_shader']).read().splitlines()

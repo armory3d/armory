@@ -86,20 +86,44 @@
 				{
 					"id": "cull_mode",
 					"value": "counter_clockwise"
+				},
+				{
+					"id": "color_write_alpha",
+					"value": "false"
+				},
+				{
+					"id": "blend_source",
+					"value": "source_alpha"
+				},
+				{
+					"id": "blend_destination",
+					"value": "inverse_source_alpha"
+				},
+				{
+					"id": "blend_operation",
+					"value": "add"
 				}
 			],
 			"links": [
 				{
-					"id": "eye",
-					"link": "_cameraPosition"
+					"id": "M",
+					"link": "_modelMatrix"
 				},
 				{
-					"id": "eyeLook",
-					"link": "_cameraLook"
+					"id": "VP",
+					"link": "_viewProjectionMatrix"
 				},
 				{
 					"id": "invVP",
 					"link": "_inverseViewProjectionMatrix"
+				},
+				{
+					"id": "invM",
+					"link": "_inverseModelMatrix"
+				},
+				{
+					"id": "V",
+					"link": "_viewMatrix"
 				}
 			],
 			"texture_params": [],

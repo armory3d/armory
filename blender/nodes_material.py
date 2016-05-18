@@ -36,6 +36,7 @@ def make_texture(self, id, image_node, material):
 	if image_node.image is not None:
 		tex.name = image_node.image.name.rsplit('.', 1)[0] # Remove extension
 		tex.name = tex.name.replace('.', '_')
+		tex.name = tex.name.replace('-', '_')
 		if image_node.interpolation == 'Cubic': # Mipmap linear
 			tex.mipmap_filter = 'linear'
 			tex.generate_mipmaps = True

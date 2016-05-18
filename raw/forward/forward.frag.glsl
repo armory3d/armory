@@ -482,16 +482,16 @@ void main() {
 		}
 	}
 
+
+	vec3 baseColor = matColor.rgb;
 #ifdef _AMTex
 	vec4 texel = texture(salbedo, texCoord);
 #ifdef _AlphaTest
 	if(texel.a < 0.4)
 		discard;
 #endif
-	vec3 baseColor = texel.rgb;
-	baseColor = pow(baseColor.rgb, vec3(2.2));
-#else
-	vec3 baseColor = matColor.rgb;
+	texel.rgb = pow(texel.rgb, vec3(2.2));
+	baseColor *= texel.rgb;
 #endif
 
 	vec4 outColor;
