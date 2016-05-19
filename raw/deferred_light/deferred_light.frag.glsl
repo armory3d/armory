@@ -441,7 +441,7 @@ void main() {
 	direct = direct * lightColor * lightStrength;
 	
 	// SSS only masked objects
-	if (texture(gbuffer0, texCoord).b == 2.0) {
+	if (texture(gbuffer0, texCoord).a == 2.0) {
 		direct.rgb = direct.rgb * SSSSTransmittance(1.0, 0.005, p, n, lightDir);
 	}
 

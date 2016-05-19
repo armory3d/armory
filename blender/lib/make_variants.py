@@ -22,34 +22,38 @@ def writeFile(path, name, defs, lines):
 					f.write('#define ' + d + '\n')
 				defs_written = True
 
-def make(json_name):
+def make(json_name, defs=None):
 	vert_shaders = []
 	frag_shaders = []
 	shader_names = []
-	defs = []
+	
+	if defs != None:
+		parse_defs = False
+	else:
+		parse_defs = True		
+		defs = []
 	
 	base_name = json_name.split('.', 1)[0]
 
 	# Make out dir
-	#if not os.path.exists('out'):
-	#	os.makedirs('out')
 	path = '../../../../compiled/Shaders/' + base_name
 	if not os.path.exists(path):
 		os.makedirs(path)
 
-		# Open json file
-		#json_file = open(sys.argv[1]).read()
-		json_file = open(json_name).read()
-		json_data = json.loads(json_file)
+	# Open json file
+	#json_file = open(sys.argv[1]).read()
+	json_file = open(json_name).read()
+	json_data = json.loads(json_file)
 
-		# Go through every context shaders and gather ifdefs
-		for c in json_data['contexts']:
-			vs = open(c['vertex_shader']).read().splitlines()
-			fs = open(c['fragment_shader']).read().splitlines()
-			shader_names.append(c['vertex_shader'].split('.', 1)[0])
-			vert_shaders.append(vs)
-			frag_shaders.append(fs)
+	# Go through every context shaders and gather ifdefs
+	for c in json_data['contexts']:
+		vs = open(c['vertex_shader']).read().splitlines()
+		fs = open(c['fragment_shader']).read().splitlines()
+		shader_names.append(c['vertex_shader'].split('.', 1)[0])
+		vert_shaders.append(vs)
+		frag_shaders.append(fs)
 
+		if parse_defs == True:
 			lines = vs + fs
 			for line in lines:
 				if line.startswith('#ifdef'):
@@ -57,6 +61,8 @@ def make(json_name):
 					if d != 'GL_ES':
 						defs.append(d)
 
+	
+	if parse_defs == True:
 		# Merge duplicates and sort
 		defs = sorted(list(set(defs)))
 
@@ -72,3 +78,14 @@ def make(json_name):
 						shader_name += s
 					writeFile(path, shader_name + '.vert.glsl', subset, vert_lines)
 					writeFile(path, shader_name + '.frag.glsl', subset, frag_lines)
+	
+	# Defs specified
+	else:
+		for i in range(0, len(vert_shaders)):
+			vert_lines = vert_shaders[i]
+			frag_lines = frag_shaders[i]
+			shader_name = shader_names[i]
+			for s in defs:
+				shader_name += s
+			writeFile(path, shader_name + '.vert.glsl', defs, vert_lines)
+			writeFile(path, shader_name + '.frag.glsl', defs, frag_lines)

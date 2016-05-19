@@ -203,30 +203,43 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
 							if 'ifdef' in l:
 								valid_link = False
 								for d in defs:
-									if d == l['ifdef']:
-										valid_link = True
+									for lifdef in l['ifdef']:
+										if d == lifdef:
+											valid_link = True
+											break
+									if valid_link:
 										break
 							if valid_link:
 								const.link = l['link']
 							break
 					con.constants.append(const)
 
-def make(json_name):
-	#base_name = sys.argv[1].split('.', 1)[0]
+def saveResource(path, base_name, subset, res):
+	res_name = base_name
+	for s in subset:
+		res_name += s
+	with open(path + '/' + res_name + '.json', 'w') as f:
+		r = Object()
+		r.shader_resources = [res.shader_resources[-1]]
+		f.write(r.to_JSON())
+
+def make(json_name, defs=None):
 	base_name = json_name.split('.', 1)[0]
 
 	# Make out dir
-	#if not os.path.exists('out'):
-	#	os.makedirs('out')
 	path = '../../../../compiled/ShaderResources/' + base_name
 	if not os.path.exists(path):
 		os.makedirs(path)
 
-		# Open json file
-		# json_file = open(sys.argv[1]).read()
-		json_file = open(json_name).read()
-		json_data = json.loads(json_file)
+	# Open json file
+	# json_file = open(sys.argv[1]).read()
+	json_file = open(json_name).read()
+	json_data = json.loads(json_file)
 
+	res = Object()
+	res.shader_resources = []
+
+	if defs == None:
 		# Go through every context shaders and gather ifdefs
 		defs = []
 		for c in json_data['contexts']:
@@ -243,21 +256,17 @@ def make(json_name):
 		defs = sorted(list(set(defs)))
 
 		# Process #defines
-		res = Object()
-		res.shader_resources = []
 		for L in range(0, len(defs)+1):
 			for subset in itertools.combinations(defs, L):
 				writeResource(res, subset, json_data, base_name)
 				# Save separately
-				res_name = base_name
-				for s in subset:
-					res_name += s
-				#with open('out/' + res_name + '.json', 'w') as f:
-				with open(path + '/' + res_name + '.json', 'w') as f:
-					r = Object()
-					r.shader_resources = [res.shader_resources[-1]]
-					f.write(r.to_JSON())
+				saveResource(path, base_name, subset, res)
 
 		# Save combined
 		#with open('out/' + base_name + '_resource.json', 'w') as f:
 		#	f.write(res.to_JSON())
+	
+	# Specified defs
+	else:
+		writeResource(res, defs, json_data, base_name)
+		saveResource(path, base_name, defs, res)

@@ -11,6 +11,16 @@ uniform sampler2D salbedo;
 #ifdef _NMTex
 uniform sampler2D snormal;
 #endif
+#ifdef _RMTex
+uniform sampler2D srm;
+#else
+uniform float roughness;
+#endif
+#ifdef _MMTex
+uniform sampler2D smm;
+#else
+uniform float metalness;
+#endif
 
 uniform mat4 invVP;
 uniform mat4 invM;
@@ -19,6 +29,7 @@ uniform mat4 V;
 in vec4 mvpposition;
 in vec4 mposition;
 in vec4 matColor;
+// in vec3 orientation;
 
 mat3 cotangentFrame(vec3 nor, vec3 pos, vec2 uv) {
     // Get edge vectors of the pixel triangle
@@ -58,57 +69,86 @@ vec4 reconstructPos(float z, vec2 uv_f) {
     return vec4((sPos.xyz / sPos.w), sPos.w);
 }
 
+float packFloat(float f1, float f2) {
+	int index = int(f1 * 1000);
+	float alpha = f2 == 0.0 ? f2 : (f2 - 0.0001);
+	float result = index + alpha;
+	return result;
+}
+
 void main() {
 	vec2 screenPosition = mvpposition.xy / mvpposition.w;
 	vec2 depthUV = screenPosition * 0.5 + 0.5;
-	const vec2 resoluion = vec2(800.0, 600.0);
+	const vec2 resoluion = vec2(1920.0, 1080.0);
     depthUV += vec2(0.5 / resoluion); // Half pixel offset
     float depth = texture(gbufferD, depthUV).r * 2.0 - 1.0;
 
 	vec4 worldPos = reconstructPos(depth, depthUV);
 	worldPos.w = 1.0;
-    vec4 localPos = invM * worldPos;
+    
+	// Angle reject
+	// Reconstruct normal
+	// vec3 dnor = normalize(cross(dFdx(worldPos.xyz), dFdy(worldPos.xyz)));
+	// Get decal box orientation
+	// vec3 orientation = vec3(1.0, 0.0, 0.0);
+	// if (dot(dnor, orientation) < cos(3.1415)) discard;
+	
+	vec4 localPos = invM * worldPos;
 	localPos.y *= -1.0;
 
 	if (abs(localPos.x) > 1.0) discard;
 	if (abs(localPos.y) > 1.0) discard;
 	if (abs(localPos.z) > 1.0) discard;
 
-	vec2 uv = (localPos.xy / 2.0) - 0.5; // / 2.0 - adjust decal box size 
-	vec4 baseColor = texture(salbedo, uv) * matColor;
+	vec2 texCoord = (localPos.xy / 2.0) - 0.5; // / 2.0 - adjust decal box size 
+	
+#ifdef _AMTex
+	vec4 baseColor = texture(salbedo, texCoord) * matColor;
+#else
+	vec4 baseColor = matColor;
+#endif
+	
 	// Alpha write is disabled in shader res, we acces all channels for blending
-	gl_FragData[1] = baseColor;
+	// Use separate texture for base color in the future
+	gl_FragData[1].rgb = baseColor.rgb;
+	gl_FragData[1].a = baseColor.a;
+	// gl_FragData[1].a = packFloat(roughness, metalness) * baseColor.a;
 	
-	
-	
-	
-	// n /= (abs(n.x) + abs(n.y) + abs(n.z));
-    // n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
-	
-	
-	/*
-	vec3 ddxWp = dFdx(worldPos);
-	vec3 ddyWp = dFdy(worldPos);
-	vec3 normal = normalize(cross(ddyWp, ddxWp));
-	
-	// Get values across and along the surface
-	vec3 ddxWp = dFdx(worldPos);
-	vec3 ddyWp = dFdy(worldPos);
+#ifdef _MMTex
+	float metalness = texture(smm, texCoord).r;
+#endif
 
-	// Determine the normal
-	vec3 normal = normalize(cross(ddyWp, ddxWp));
+#ifdef _RMTex
+	float roughness = texture(srm, texCoord).r;
+#endif	
+	
+#ifdef _NMTex
+	vec3 normal = texture(snormal, texCoord).rgb * 2.0 - 1.0;
+	vec3 nn = normalize(normal);
+    vec3 dp1 = dFdx(worldPos.xyz);
+    vec3 dp2 = dFdy(worldPos.xyz);
+    vec2 duv1 = dFdx(texCoord);
+    vec2 duv2 = dFdy(texCoord);
+    vec3 dp2perp = cross(dp2, nn);
+    vec3 dp1perp = cross(nn, dp1);
+    vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
+    vec3 B = dp2perp * duv1.y + dp1perp * duv2.y; 
+    float invmax = inversesqrt(max(dot(T,T), dot(B,B)));
+    mat3 TBN = mat3(T * invmax, B * invmax, nn);
+	vec3 n = normalize(TBN * nn);
+	
+	n /= (abs(n.x) + abs(n.y) + abs(n.z));
+    n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
+	
+	gl_FragData[0].rg = n.xy;
+#else
+	gl_FragData[0].rg = vec2(1.0);
+#endif
 
-	// Normalizing things is cool
-	binormal = normalize(ddxWp);
-	tangent = normalize(ddyWp);
-
-	// Create a matrix transforming from tangent space to view space
-	mat3 tangentToView;
-	tangentToView[0] = V * pixelTangent;
-	tangentToView[1] = V * pixelBinormal;
-	tangentToView[2] = V * pixelNormal;
-
-	// Transform normal from tangent space into view space
-	normal = tangentToView * normal;
-	*/
+	// gl_FragData[0].b unused for now so we can rewrite it
+	gl_FragData[0].b = 0.0;
+	// use separete RG texture for normal storage in the future
+	// Color mask does not disable write for all buffers so mask is overwritten
+	// Half of color alpha to soft normals blend
+	gl_FragData[0].a = baseColor.a / 2.0;
 }

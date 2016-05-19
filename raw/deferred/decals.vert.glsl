@@ -29,11 +29,18 @@ in vec3 pos;
 
 uniform mat4 VP;
 uniform mat4 M;
+// uniform mat4 MV;
 uniform vec4 albedo_color;
+
+#ifdef _RampID
+uniform vec4 albedo_color2;
+uniform int uid;
+#endif
 
 out vec4 mvpposition;
 out vec4 mposition;
 out vec4 matColor;
+// out vec3 orientation;
 // #ifdef _AMTex
 // out vec2 texCoord;
 // #endif
@@ -45,10 +52,27 @@ out vec4 matColor;
 // out vec3 normal;
 // #endif
 
+#ifdef _RampID
+float hash(vec2 p) {
+	float h = dot(p, vec2(127.1, 311.7));	
+    return fract(sin(h) * 43758.5453123);
+}
+#endif
+
 void main() {
 	vec4 sPos = (vec4(pos, 1.0));
 	mposition = M * sPos;
 	mvpposition = VP * mposition;
+
+	// orientation = normalize(MV[1].xyz);
+
+#ifdef _RampID
+	vec2 p = vec2(float(uid), float(uid));
+	float factor = hash(p);
+	matColor = mix(albedo_color, albedo_color2, factor);
+#else
 	matColor = albedo_color;
+#endif
+
 	gl_Position = mvpposition;
 }

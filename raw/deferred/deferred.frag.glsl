@@ -91,6 +91,6 @@ void main() {
 	n /= (abs(n.x) + abs(n.y) + abs(n.z));
     n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
 	
-	gl_FragData[0] = vec4(n.xy, mask, 1.0 - (mvpposition.z / mvpposition.w));
+	gl_FragData[0] = vec4(n.xy, 0.0, mask);
 	gl_FragData[1] = vec4(baseColor.rgb, packFloat(roughness, metalness));
 }

@@ -46,7 +46,7 @@ void main() {
 	vec4 color = texture(tex, texCoord);
 	
 	// Do not blur masked objects
-	if (texture(gbuffer0, texCoord).b == 1.0) {
+	if (texture(gbuffer0, texCoord).a == 1.0) {
 		gl_FragColor = color;
 		return;
 	}
@@ -66,49 +66,49 @@ void main() {
 	int processed = 1;
 	// for(int i = 1; i < samples; ++i) {
 		offset += velocity;
-		if (texture(gbuffer0, offset).b != 1.0) {
+		if (texture(gbuffer0, offset).a != 1.0) {
    			color += texture(tex, offset);
 			processed++;
 		}
 
 		offset += velocity;
-		if (texture(gbuffer0, offset).b != 1.0) {
+		if (texture(gbuffer0, offset).a != 1.0) {
    			color += texture(tex, offset);
 			processed++;
 		}
 		
 		offset += velocity;
-		if (texture(gbuffer0, offset).b != 1.0) {
+		if (texture(gbuffer0, offset).a != 1.0) {
    			color += texture(tex, offset);
 			processed++;
 		}
 		
 		offset += velocity;
-		if (texture(gbuffer0, offset).b != 1.0) {
+		if (texture(gbuffer0, offset).a != 1.0) {
    			color += texture(tex, offset);
 			processed++;
 		}
 		
 		offset += velocity;
-		if (texture(gbuffer0, offset).b != 1.0) {
+		if (texture(gbuffer0, offset).a != 1.0) {
    			color += texture(tex, offset);
 			processed++;
 		}
 		
 		offset += velocity;
-		if (texture(gbuffer0, offset).b != 1.0) {
+		if (texture(gbuffer0, offset).a != 1.0) {
    			color += texture(tex, offset);
 			processed++;
 		}
 		
 		offset += velocity;
-		if (texture(gbuffer0, offset).b != 1.0) {
+		if (texture(gbuffer0, offset).a != 1.0) {
    			color += texture(tex, offset);
 			processed++;
 		}
 		
 		offset += velocity;
-		if (texture(gbuffer0, offset).b != 1.0) {
+		if (texture(gbuffer0, offset).a != 1.0) {
    			color += texture(tex, offset);
 			processed++;
 		}

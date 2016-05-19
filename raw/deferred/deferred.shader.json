@@ -124,6 +124,11 @@
 				{
 					"id": "V",
 					"link": "_viewMatrix"
+				},
+				{
+					"id": "uid",
+					"link": "_uid",
+					"ifdef": ["_RampID"]
 				}
 			],
 			"texture_params": [],

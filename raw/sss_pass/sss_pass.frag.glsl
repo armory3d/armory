@@ -155,7 +155,7 @@ vec4 SSSSBlur(float sssWidth) {
 
 void main() {
 	// SSS only masked objects
-	if (texture(gbuffer0, texCoord).b == 2.0) {
+	if (texture(gbuffer0, texCoord).a == 2.0) {
 		gl_FragColor = SSSSBlur(0.005);
 	}
 	else {

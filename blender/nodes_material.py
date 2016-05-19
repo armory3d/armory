@@ -26,6 +26,8 @@ def parse(self, material, c, defs):
 # Manualy set starting material point
 def parse_from(self, material, c, defs, surface_node):
 	parse.const_color = None
+	parse.const_roughness = None
+	parse.const_metalness = None
 	
 	tree = material.node_tree
 	parse_material_surface(self, material, c, defs, tree, surface_node)
@@ -125,6 +127,10 @@ def parse_bsdf_glossy(self, material, c, defs, tree, node):
 	parse_metalness_socket(self, metalness_input, material, c, defs, tree, node, reverse_float_value=True)
 
 def mix_float(f1, f2):
+	if f1 == None:
+		return f2
+	if f2 == None:
+		return f1
 	return (f1 + f2) / 2.0
 
 def mix_color_vec4(col1, col2):
@@ -134,6 +140,31 @@ def mix_color_vec4(col1, col2):
 		return col1
 	return [mix_float(col1[0], col2[0]), mix_float(col1[1], col2[1]), mix_float(col1[2], col2[2]), mix_float(col1[3], col2[3])]
 
+def parse_val_to_rgb(node, c, defs):
+	factor = node.inputs[0].default_value
+	if not node.inputs[0].is_linked: # Take ramp color
+		return node.color_ramp.evaluate(factor)
+	else: # Assume 2 colors interpolated by id for now
+		defs.append('_RampID')
+		# Link albedo_color2 as color 2
+		const = Object()
+		c.bind_constants.append(const)
+		const.id = 'albedo_color2'
+		res = node.color_ramp.elements[1].color
+		const.vec4 = [res[0], res[1], res[2], res[3]]
+		# Return color 1
+		return node.color_ramp.elements[0].color
+
+def add_albedo_color(c, col):
+	const = parse.const_color
+	if const == None:
+		const = Object()
+		parse.const_color = const
+		c.bind_constants.append(const)
+	const.id = 'albedo_color'
+	res = mix_color_vec4(col, const.vec4 if hasattr(const, 'vec4') else None)
+	const.vec4 = [res[0], res[1], res[2], res[3]]
+
 def parse_base_color_socket(self, base_color_input, material, c, defs, tree, node):
 	if base_color_input.is_linked:
 		color_node = find_node_by_link(tree, node, base_color_input)
@@ -141,19 +172,15 @@ def parse_base_color_socket(self, base_color_input, material, c, defs, tree, nod
 			defs.append('_AMTex')
 			tex = make_texture(self, 'salbedo', color_node, material)
 			c.bind_textures.append(tex)
-		# elif color_node.type == 'TEX_CHECKER':
+		elif color_node.type == 'TEX_CHECKER':
+			pass
 		elif color_node.type == 'ATTRIBUTE': # Assume vcols for now
 			defs.append('_VCols')
+		elif color_node.type == 'VALTORGB':
+			col = parse_val_to_rgb(color_node, c, defs)
+			add_albedo_color(c, col)
 	else: # Take node color
-		const = parse.const_color
-		if const == None:
-			const = Object()
-			parse.const_color = const
-		const.id = "albedo_color"
-		col = base_color_input.default_value
-		res = mix_color_vec4(col, const.vec4 if hasattr(const, 'vec4') else None)
-		const.vec4 = [res[0], res[1], res[2], res[3]]
-		c.bind_constants.append(const)
+		add_albedo_color(c, base_color_input.default_value)
 
 def parse_metalness_socket(self, metalness_input, material, c, defs, tree, node, reverse_float_value=False):
 	if metalness_input.is_linked:
@@ -161,12 +188,18 @@ def parse_metalness_socket(self, metalness_input, material, c, defs, tree, node,
 		metalness_node = find_node_by_link(tree, node, metalness_input)
 		tex = make_texture(self, 'smm', metalness_node, material)
 		c.bind_textures.append(tex)
-	else:
-		col = metalness_input.default_value
-		const = Object()
+		if parse.const_metalness != None: # If texture is used, remove constant
+			c.bind_constants.remove(parse.const_metalness)
+	elif '_MMTex' not in defs:
+		const = parse.const_metalness
+		if const == None:
+			const = Object()
+			parse.const_metalness = const
+			c.bind_constants.append(const)
 		const.id = "metalness"
-		const.float = 1.0 - col if reverse_float_value else col
-		c.bind_constants.append(const)
+		col = metalness_input.default_value
+		res = 1.0 - col if reverse_float_value else col
+		const.float = mix_float(res, const.float if hasattr(const, 'float') else None) 
 		
 def parse_roughness_socket(self, roughness_input, material, c, defs, tree, node):
 	if roughness_input.is_linked:
@@ -174,12 +207,17 @@ def parse_roughness_socket(self, roughness_input, material, c, defs, tree, node)
 		roughness_node = find_node_by_link(tree, node, roughness_input)
 		tex = make_texture(self, 'srm', roughness_node, material)
 		c.bind_textures.append(tex)
-	else:
-		col = roughness_input.default_value
-		const = Object()
+		if parse.const_roughness != None:
+			c.bind_constants.remove(parse.const_roughness)
+	elif '_RMTex' not in defs:
+		const = parse.const_roughness
+		if const == None:
+			const = Object()
+			parse.const_roughness = const
+			c.bind_constants.append(const)
 		const.id = "roughness"
-		const.float = col
-		c.bind_constants.append(const)
+		col = roughness_input.default_value
+		const.float = mix_float(col, const.float if hasattr(const, 'float') else None)
 
 def parse_normal_map_socket(self, normal_input, material, c, defs, tree, node):
 	if normal_input.is_linked:

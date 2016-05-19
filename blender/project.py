@@ -15,6 +15,8 @@ import nodes_pipeline
 import nodes_world
 import path_tracer
 from armory import ArmoryExporter
+import lib.make_resources
+import lib.make_variants
 
 def defaultSettings():
 	wrd = bpy.data.worlds[0]
@@ -126,8 +128,13 @@ def get_export_scene_override(scene):
 		'scene': scene}
 	return override
 
+def compile_shader(raw_path, shader_name, defs):
+	os.chdir(raw_path + './' + shader_name)
+	lib.make_resources.make(shader_name + '.shader.json', defs)
+	lib.make_variants.make(shader_name + '.shader.json', defs)
+
 # Transform Blender data into game data
-def exportGameData():
+def exportGameData(fp, raw_path):
 	shader_references = []
 	asset_references = []
 	
@@ -172,6 +179,23 @@ def exportGameData():
 
 	# Write Main.hx
 	write_data.write_main()
+	
+	# Write referenced shader variants
+	for ref in asset_references:
+		# Resource does not exist yet
+		os.chdir(fp)
+		if not os.path.exists(ref):
+			shader_name = ref.split('/')[2]
+			defs = ref[:-5] # Remove .json extnsion
+			defs = defs.split(shader_name) # 'name/name_def_def'
+			if len(defs) > 2:
+				defs = defs[2] # Apended defs
+				defs = defs.split('_')
+				defs = defs[1:]
+				defs = ['_' + d for d in defs] # Restore _
+			else:
+				defs = []
+			compile_shader(raw_path, shader_name, defs)
 
 def buildProject(self, build_type=0):
 	# Save blend
@@ -210,16 +234,9 @@ def buildProject(self, build_type=0):
 	# Compile path tracer shaders
 	if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].pipeline_path == 'pathtrace_pipeline':
 		path_tracer.compile(raw_path + 'pt_trace_pass/pt_trace_pass.frag.glsl')
-	
-	# Compile shaders if needed
-	# TODO: create only referenced variants
-	# if os.path.isdir("compiled") == False:
-	os.chdir(raw_path)
-	call(["python", "compile.py"])
-	os.chdir(fp)
 
 	# Export
-	exportGameData()
+	exportGameData(fp, raw_path)
 	
 	# Set build command
 	if (bpy.data.worlds[0]['CGProjectTarget'] == 0):
