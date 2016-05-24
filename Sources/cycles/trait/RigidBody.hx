@@ -85,7 +85,7 @@ class RigidBody extends Trait {
 		else if (shape == SHAPE_CONVEX_HULL || shape == SHAPE_MESH) { // Use convex hull for mesh for now
 			_shapeConvex = BtConvexHullShape.create();
 			shapeConvexCreated = true;
-			addPointsToConvexHull(_shapeConvex);
+			addPointsToConvexHull(_shapeConvex, transform.scale, collisionMargin);
 		}
 		else if (shape == SHAPE_CONE) {
 			_shape = BtConeShapeZ.create(
@@ -109,7 +109,7 @@ class RigidBody extends Trait {
 		//}
 		else if (shape == SHAPE_STATIC_MESH || shape == SHAPE_TERRAIN) {
 			var meshInterface = BtTriangleMesh.create(true, true);
-			fillTriangleMesh(meshInterface);
+			fillTriangleMesh(meshInterface, transform.scale);
 			_shape = BtBvhTriangleMeshShape.create(meshInterface, true, true);
 		}
 
@@ -232,33 +232,38 @@ class RigidBody extends Trait {
 		body.ptr.setCenterOfMassTransform(trans.value);
 	}
 
-	function addPointsToConvexHull(shape:BtConvexHullShapePointer) {
+	function addPointsToConvexHull(shape:BtConvexHullShapePointer, scale:Vec4, margin:Float) {
 		var positions = cast(node, ModelNode).resource.geometry.positions;
+
+		var sx = scale.x * (1.0 - margin);
+		var sy = scale.y * (1.0 - margin);
+		var sz = scale.z * (1.0 - margin);
 
 		for (i in 0...Std.int(positions.length / 3)) {
 			#if js
-			shape.addPoint(BtVector3.create(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]).value, true);
+			shape.addPoint(
 			#elseif cpp
-			shape.ptr.addPoint(BtVector3.create(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]).value, true);
+			shape.ptr.addPoint(
 			#end
+				BtVector3.create(positions[i * 3] * sx, positions[i * 3 + 1] * sy, positions[i * 3 + 2] * sz).value, true);
 		}
 	}
 
-	function fillTriangleMesh(triangleMesh:BtTriangleMeshPointer) {
+	function fillTriangleMesh(triangleMesh:BtTriangleMeshPointer, scale:Vec4) {
 		var positions = cast(node, ModelNode).resource.geometry.positions;
 		var indices = cast(node, ModelNode).resource.geometry.indices;
 
 		for (i in 0...Std.int(indices[0].length / 3)) {
 			triangleMesh.ptr.addTriangle(
-				BtVector3.create(positions[indices[0][i * 3 + 0] * 3 + 0],
-							  	 positions[indices[0][i * 3 + 0] * 3 + 1],
-							  	 positions[indices[0][i * 3 + 0] * 3 + 2]).value,
-				BtVector3.create(positions[indices[0][i * 3 + 1] * 3 + 0],
-							  	 positions[indices[0][i * 3 + 1] * 3 + 1],
-							  	 positions[indices[0][i * 3 + 1] * 3 + 2]).value,
-				BtVector3.create(positions[indices[0][i * 3 + 2] * 3 + 0],
-							  	 positions[indices[0][i * 3 + 2] * 3 + 1],
-							  	 positions[indices[0][i * 3 + 2] * 3 + 2]).value
+				BtVector3.create(positions[indices[0][i * 3 + 0] * 3 + 0] * scale.x,
+							  	 positions[indices[0][i * 3 + 0] * 3 + 1] * scale.y,
+							  	 positions[indices[0][i * 3 + 0] * 3 + 2] * scale.z).value,
+				BtVector3.create(positions[indices[0][i * 3 + 1] * 3 + 0] * scale.x,
+							  	 positions[indices[0][i * 3 + 1] * 3 + 1] * scale.y,
+							  	 positions[indices[0][i * 3 + 1] * 3 + 2] * scale.z).value,
+				BtVector3.create(positions[indices[0][i * 3 + 2] * 3 + 0] * scale.x,
+							  	 positions[indices[0][i * 3 + 2] * 3 + 1] * scale.y,
+							  	 positions[indices[0][i * 3 + 2] * 3 + 2] * scale.z).value
 			);
 		}
 	}

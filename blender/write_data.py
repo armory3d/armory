@@ -53,8 +53,6 @@ class Main {
 	static inline var projectHeight = """ + str(bpy.data.worlds[0]['CGProjectHeight']) + """;
 	static inline var projectSamplesPerPixel = """ + str(bpy.data.worlds[0]['CGProjectSamplesPerPixel']) + """;
 	public static inline var projectScene = '""" + str(bpy.data.worlds[0]['CGProjectScene']) + """';
-	public static inline var texEnvironment = '""" + bpy.data.cameras[0].world_envtex_name.rsplit('.', 1)[0] + """';
-	public static inline var texEnvironmentMipmaps = """ + str(bpy.data.cameras[0].world_envtex_num_mips) + """;
 	public static function main() {
 		lue.sys.CompileTime.importPackage('lue.trait');
 		lue.sys.CompileTime.importPackage('cycles.trait');

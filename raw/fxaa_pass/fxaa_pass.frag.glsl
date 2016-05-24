@@ -4,16 +4,16 @@
 precision mediump float;
 #endif
 
-#define FXAA_REDUCE_MIN (1.0 / 128.0)
-#define FXAA_REDUCE_MUL (1.0 / 8.0)
-#define FXAA_SPAN_MAX 8.0
+const float FXAA_REDUCE_MIN = 1.0 / 128.0;
+const float FXAA_REDUCE_MUL = 1.0 / 8.0;
+const float FXAA_SPAN_MAX = 8.0;
 
 uniform sampler2D tex;
 
 in vec2 texCoord;
 
 void main() {
-	vec2 resolution = vec2(800.0, 600.0);
+	const vec2 resolution = vec2(800.0, 600.0);
     vec2 texStep = 1.0 / resolution.xy;
 	
 	vec2 tcrgbNW = (texCoord + vec2(-1.0, -1.0) * texStep);
@@ -61,6 +61,4 @@ void main() {
         gl_FragColor = vec4(rgbA, texColor.a);
     else
         gl_FragColor = vec4(rgbB, texColor.a);
-		
-	// gl_FragColor = texColor;
 }

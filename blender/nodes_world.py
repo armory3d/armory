@@ -58,7 +58,7 @@ def buildNodeTree(world_name, node_group, shader_references, asset_references):
 	texture.name = ''
 	for node in node_group.nodes:
 		# Env map included
-		if node.bl_idname == 'ShaderNodeTexEnvironment': # Just look for env texture for now
+		if node.type == 'TEX_ENVIRONMENT': # Just look for env texture for now
 			image_name =  node.image.name
 			texture.name = image_name.rsplit('.', 1)[0] # Remove extension
 			# Add resources to khafie
@@ -67,6 +67,9 @@ def buildNodeTree(world_name, node_group, shader_references, asset_references):
 			# Generate prefiltered envmaps
 			bpy.data.cameras[0].world_envtex_name = texture.name
 			generate_envmaps(image_name, image_name.endswith('.jpg'))
+		# Extract environment strength
+		if node.type == 'BACKGROUND':
+			bpy.data.cameras[0].world_envtex_strength = node.inputs[1].default_value
 
 	with open(path + material_name + '.json', 'w') as f:
 		f.write(output.to_JSON())

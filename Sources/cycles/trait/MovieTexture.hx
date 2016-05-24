@@ -42,7 +42,7 @@ class MovieTexture extends Trait {
     }
 
     function init() {		
-		video = Reflect.field(kha.Assets.videos,videoName);
+		video = Reflect.field(kha.Assets.videos, videoName);
 		video.play(true);
 		
 		image = Image.createRenderTarget(getPower2(video.width()), getPower2(video.height()));

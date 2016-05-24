@@ -5,7 +5,7 @@ precision highp float;
 #endif
 
 uniform sampler2D tex;
-// uniform sampler2D gbufferD;
+uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 uniform sampler2D noise256;
@@ -273,10 +273,10 @@ void main() {
 	vec4 col = texture(tex, uv);
 	
 	// Blur
-	// float depth = texture(gbuffer0, texCoord).a;
+	// float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	// float blur_amount = abs(depth - focus_depth);
 	// if (depth < depth - focus_depth) {
-	// 	blur_amount *= 10.0;
+	// 	blur_amount *= 2.0;
 	// }
 	// blur_amount = clamp(blur_amount, 0.0, 1.0);
 	// vec4 baseColor = col;//texture(tex, texCoord);

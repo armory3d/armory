@@ -28,9 +28,9 @@ const float PI = 3.1415926535;
 const vec2 screenSize = vec2(800.0, 600.0);
 const vec2 aspectRatio = vec2(min(1.0, screenSize.y / screenSize.x), min(1.0, screenSize.x / screenSize.y));
 
-const int kernelSize = 8;
-const float aoSize = 0.04;
-const float strength = 0.3;
+const int kernelSize = 12;
+const float aoSize = 0.2;
+const float strength = 0.6;//0.7;
 
 in vec2 texCoord;
 
@@ -75,26 +75,26 @@ void main() {
 	}
 	
 	vec2 kernel[kernelSize];		
- 	kernel[0] = vec2(1.0, 0.0);		
- 	kernel[1] = vec2(0.7071067, 0.7071067);		
- 	kernel[2] = vec2(0.0, 1.0);		
- 	kernel[3] = vec2(-0.7071067, 0.7071067);		
- 	kernel[4] = vec2(-1.0, 0.0);		
- 	kernel[5] = vec2(-0.7071067, -0.7071067);		
- 	kernel[6] = vec2(0.0, -1.0);		
- 	kernel[7] = vec2(0.7071067, -0.7071067);
-	// kernel[0] = vec2(1.0, 0.0);
-	// kernel[1] = vec2(0.8660254, 0.4999999);
-	// kernel[2] = vec2(0.5, 0.8660254);
-	// kernel[3] = vec2(0.0, 1.0);
-	// kernel[4] = vec2(-0.4999999, 0.8660254);
-	// kernel[5] = vec2(-0.8660254, 0.5);
-	// kernel[6] = vec2(-1.0, 0.0);
-	// kernel[7] = vec2(-0.8660254, -0.4999999);
-	// kernel[8] = vec2(-0.5, -0.8660254);
-	// kernel[9] = vec2(0.0, -1.0);
-	// kernel[10] = vec2(0.4999999, -0.8660254);
-	// kernel[11] = vec2(0.8660254, -0.5);
+ 	// kernel[0] = vec2(1.0, 0.0);		
+ 	// kernel[1] = vec2(0.7071067, 0.7071067);		
+ 	// kernel[2] = vec2(0.0, 1.0);		
+ 	// kernel[3] = vec2(-0.7071067, 0.7071067);		
+ 	// kernel[4] = vec2(-1.0, 0.0);		
+ 	// kernel[5] = vec2(-0.7071067, -0.7071067);		
+ 	// kernel[6] = vec2(0.0, -1.0);		
+ 	// kernel[7] = vec2(0.7071067, -0.7071067);
+	kernel[0] = vec2(1.0, 0.0);
+	kernel[1] = vec2(0.8660254, 0.4999999);
+	kernel[2] = vec2(0.5, 0.8660254);
+	kernel[3] = vec2(0.0, 1.0);
+	kernel[4] = vec2(-0.4999999, 0.8660254);
+	kernel[5] = vec2(-0.8660254, 0.5);
+	kernel[6] = vec2(-1.0, 0.0);
+	kernel[7] = vec2(-0.8660254, -0.4999999);
+	kernel[8] = vec2(-0.5, -0.8660254);
+	kernel[9] = vec2(0.0, -1.0);
+	kernel[10] = vec2(0.4999999, -0.8660254);
+	kernel[11] = vec2(0.8660254, -0.5);
 	
 	vec2 enc = texture(gbuffer0, texCoord).rg;      
     vec3 currentNormal;

@@ -1737,6 +1737,24 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o.factor_random = psettings.factor_random
 
 			self.output.particle_resources.append(o)
+			
+	def ExportWorlds(self):
+		# for worldRef in self.worldArray.items():
+		for worldRef in bpy.data.worlds:
+			o = Object()
+			# w = worldRef[0]
+			w = worldRef
+
+			# o.id = worldRef[1]["structName"]
+			o.id = w.name
+			envtex = bpy.data.cameras[0].world_envtex_name.rsplit('.', 1)[0]
+			o.radiance = envtex + '_radiance'
+			o.radiance_mipmaps = bpy.data.cameras[0].world_envtex_num_mips
+			o.irradiance = envtex + '_irradiance'
+			o.brdf = 'envmap_brdf'
+			o.strength = bpy.data.cameras[0].world_envtex_strength
+
+			self.output.world_resources.append(o)
 
 	def ExportObjects(self, scene):
 		if not ArmoryExporter.option_geometry_only:
@@ -1772,6 +1790,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		self.speakerArray = {}
 		self.materialArray = {}
 		self.particleSystemArray = {}
+		self.worldArray = {} # Export all worlds f
 		self.boneParentArray = {}
 		self.materialToObjectDict = dict()
 		self.materialToGameObjectDict = dict()
@@ -1806,6 +1825,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 			self.output.particle_resources = []
 			self.ExportParticleSystems()
+			
+			self.output.world_resources = []
+			self.ExportWorlds()
+			self.output.world_ref = scene.world.name
 
 		self.ExportObjects(scene)
 		

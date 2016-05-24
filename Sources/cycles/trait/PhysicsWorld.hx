@@ -29,6 +29,9 @@ class PhysicsWorld extends Trait {
 	var contacts:Array<ContactPair> = [];
 	var rbMap:Map<Int, RigidBody>;
 
+	static inline var timeStep = 1 / 60;
+	static inline var fixedStep = 1 / 60;
+
 	public function new() {
 		super();
 
@@ -95,7 +98,8 @@ class PhysicsWorld extends Trait {
 	}
 
 	public function update() {
-		world.ptr.stepSimulation(1 / 60);
+		// world.ptr.stepSimulation(step);
+		world.ptr.stepSimulation(timeStep, 1, fixedStep);
 		updateContacts();
 	}
 

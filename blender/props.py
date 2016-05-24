@@ -32,6 +32,7 @@ def initProperties():
 	# TODO: move to world
     bpy.types.Camera.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
     bpy.types.Camera.world_envtex_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
+    bpy.types.Camera.world_envtex_strength = bpy.props.FloatProperty(name="Environment Strength", default=1.0)
     bpy.types.Camera.last_decal_context = bpy.props.StringProperty(name="Decal Context", default='')
     # For material
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)

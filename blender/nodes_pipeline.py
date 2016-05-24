@@ -117,13 +117,13 @@ class TargetNode(Node, CGPipelineTreeNode):
 		self.inputs.new('NodeSocketString', "ID")
 		self.inputs.new('NodeSocketInt', "Width")
 		self.inputs.new('NodeSocketInt', "Height")
-		self.inputs.new('NodeSocketInt', "Color Buffers")
 		self.inputs.new('NodeSocketBool', "Depth Buffer")
 		self.inputs.new('NodeSocketBool', "Stencil Buffer")
 		self.inputs.new('NodeSocketString', "Format")
 		self.inputs.new('NodeSocketBool', "Ping Pong")
 
 		self.outputs.new('NodeSocketShader', "Target")
+		self.outputs.new('NodeSocketShader', "Depth")
 
 	def copy(self, node):
 		print("Copying from node ", node)
@@ -131,34 +131,20 @@ class TargetNode(Node, CGPipelineTreeNode):
 	def free(self):
 		print("Removing node ", self, ", Goodbye!")
 
-class ColorBufferNode(Node, CGPipelineTreeNode):
+class GBufferNode(Node, CGPipelineTreeNode):
 	'''A custom node'''
-	bl_idname = 'ColorBufferNodeType'
-	bl_label = 'Color Buffer'
+	bl_idname = 'GBufferNodeType'
+	bl_label = 'GBuffer'
 	bl_icon = 'SOUND'
 	
 	def init(self, context):
-		self.inputs.new('NodeSocketShader', "Target")
-		self.inputs.new('NodeSocketInt', "Index")
+		self.inputs.new('NodeSocketShader', "Target 0")
+		self.inputs.new('NodeSocketShader', "Target 1")
+		self.inputs.new('NodeSocketShader', "Target 2")
+		self.inputs.new('NodeSocketShader', "Target 3")
+		self.inputs.new('NodeSocketShader', "Target 4")
 
-		self.outputs.new('NodeSocketShader', "Target")
-
-	def copy(self, node):
-		print("Copying from node ", node)
-
-	def free(self):
-		print("Removing node ", self, ", Goodbye!")
-		
-class DepthBufferNode(Node, CGPipelineTreeNode):
-	'''A custom node'''
-	bl_idname = 'DepthBufferNodeType'
-	bl_label = 'Depth Buffer'
-	bl_icon = 'SOUND'
-	
-	def init(self, context):
-		self.inputs.new('NodeSocketShader', "Target")
-
-		self.outputs.new('NodeSocketShader', "Target")
+		self.outputs.new('NodeSocketShader', "Targets")
 
 	def copy(self, node):
 		print("Copying from node ", node)
@@ -364,6 +350,11 @@ class MyPipelineNodeCategory(NodeCategory):
 	def poll(cls, context):
 		return context.space_data.tree_type == 'CGPipelineTreeType'
 
+class MyTargetNodeCategory(NodeCategory):
+	@classmethod
+	def poll(cls, context):
+		return context.space_data.tree_type == 'CGPipelineTreeType'
+
 class MyPassNodeCategory(NodeCategory):
 	@classmethod
 	def poll(cls, context):
@@ -390,13 +381,15 @@ node_categories = [
 		NodeItem("DrawMaterialQuadNodeType"),
 		NodeItem("DrawQuadNodeType"),
 		NodeItem("DrawWorldNodeType"),
+	]),
+	MyTargetNodeCategory("TARGETNODES", "Target", items=[
 		NodeItem("TargetNodeType"),
-		NodeItem("ColorBufferNodeType"),
-		NodeItem("DepthBufferNodeType"),
+		NodeItem("GBufferNodeType"),
 		NodeItem("FramebufferNodeType"),
 	]),
 	MyPassNodeCategory("PASSNODES", "Pass", items=[
 		NodeItem("QuadPassNodeType"),
+		# Prebuilt passes here
 	]),
 	MyConstantNodeCategory("CONSTANTNODES", "Constant", items=[
 		NodeItem("ScreenNodeType"),
@@ -407,7 +400,10 @@ node_categories = [
 		NodeItem("MergeStagesNodeType"),
 	]),
 ]
-	
+
+
+
+
 
 def reload_blend_data():
 	if bpy.data.node_groups.get('forward_pipeline') == None:
@@ -494,37 +490,29 @@ def buildNodeTree(node_group, shader_references, asset_references):
 	with open(path + node_group_name + '.json', 'w') as f:
 			f.write(output.to_JSON())
 
-def make_set_target(stage, node_group, node, target_index=1, color_buffer_index=-1, is_depth_attachment=False):
+def make_set_target(stage, node_group, node, currentNode=None, target_index=1):
+	if currentNode == None:
+		currentNode = node
+	
 	stage.command = 'set_target'
-	targetNode = findNodeByLink(node_group, node, node.inputs[target_index])
+	currentNode = findNodeByLink(node_group, currentNode, currentNode.inputs[target_index])
 	
-	if targetNode.bl_idname == 'TargetNodeType':
-		cb_postfix = ''
-		if color_buffer_index >= 0 and targetNode.inputs[3].default_value > 1: # MRT target, bind only specified target
-			cb_postfix = str(color_buffer_index)
-		
-		elif is_depth_attachment == True: # Bind texture depth
-			cb_postfix = 'D'
-		
-		targetId = targetNode.inputs[0].default_value + cb_postfix
+	if currentNode.bl_idname == 'TargetNodeType':
+		targetId = currentNode.inputs[0].default_value
+		stage.params.append(targetId)
 	
-	elif targetNode.bl_idname == 'ColorBufferNodeType':
-		cb_index = targetNode.inputs[1].default_value
-		make_set_target(stage, node_group, targetNode, target_index=0, color_buffer_index=cb_index)
-		return
-		
-	elif targetNode.bl_idname == 'DepthBufferNodeType':
-		make_set_target(stage, node_group, targetNode, target_index=0, is_depth_attachment=True)
-		return
+	elif currentNode.bl_idname == 'GBufferNodeType':
+		# Set all linked targets
+		for i in range(0, 5):
+			if currentNode.inputs[i].is_linked:
+				make_set_target(stage, node_group, node, currentNode, target_index=i)
 	
-	elif targetNode.bl_idname == 'NodeReroute':
-		make_set_target(stage, node_group, targetNode, target_index=0, color_buffer_index=color_buffer_index)
-		return
+	elif currentNode.bl_idname == 'NodeReroute':
+		make_set_target(stage, node_group, node, currentNode, target_index=0)
 	
 	else: # Framebuffer
 		targetId = ''
-		
-	stage.params.append(targetId)
+		stage.params.append(targetId)
 
 def make_clear_target(stage, node_group, node):
 	stage.command = 'clear_target'
@@ -545,33 +533,35 @@ def make_draw_decals(stage, node_group, node, shader_references, asset_reference
 	stage.params.append(context) # Context
 	bpy.data.cameras[0].last_decal_context = context
 
-def make_bind_target(stage, node_group, node, target_index=1, constant_index=2, color_buffer_index=-1, is_depth_attachment=False):
+def make_bind_target(stage, node_group, node, currentNode=None, target_index=1, constant_index=2):
+	if currentNode == None:
+		currentNode = node
+		
 	stage.command = 'bind_target'
-	targetNode = findNodeByLink(node_group, node, node.inputs[target_index])
 	
-	if targetNode.bl_idname == 'NodeReroute': # Make recursive
-		targetNode = findNodeByLink(node_group, targetNode, targetNode.inputs[0])
+	link = findLink(node_group, currentNode, currentNode.inputs[target_index])
+	currentNode = link.from_node
 	
-	if targetNode.bl_idname == 'ColorBufferNodeType': # Make recursive
-		color_buffer_index = targetNode.inputs[1].default_value
-		targetNode = findNodeByLink(node_group, targetNode, targetNode.inputs[0])
-		
-	if targetNode.bl_idname == 'DepthBufferNodeType': # Make recursive
-		is_depth_attachment = True
-		targetNode = findNodeByLink(node_group, targetNode, targetNode.inputs[0])
+	if currentNode.bl_idname == 'NodeReroute':
+		make_bind_target(stage, node_group, node, currentNode, target_index=0, constant_index=constant_index)
 	
-	if targetNode.bl_idname == 'TargetNodeType':		
-		cb_postfix = ''
-		if color_buffer_index >= 0 and targetNode.inputs[3].default_value > 1: # MRT target, bind only specified target
-			cb_postfix = str(color_buffer_index)
-		
-		elif is_depth_attachment == True: # Bind texture depth
-			cb_postfix = 'D'
-		
-		targetId = targetNode.inputs[0].default_value + cb_postfix
+	elif currentNode.bl_idname == 'GBufferNodeType':
+		for i in range(0, 5):
+			if currentNode.inputs[i].is_linked:
+				targetNode = findNodeByLink(node_group, currentNode, currentNode.inputs[i])
+				targetId = targetNode.inputs[0].default_value
+				if i == 0: # Depth
+					stage.params.append(targetId + 'D')
+					stage.params.append(node.inputs[constant_index].default_value + 'D')
+				stage.params.append(targetId) # Color buffer
+				stage.params.append(node.inputs[constant_index].default_value + str(i))
 	
-	stage.params.append(targetId)
-	stage.params.append(node.inputs[constant_index].default_value)
+	elif currentNode.bl_idname == 'TargetNodeType':		
+		targetId = currentNode.inputs[0].default_value		
+		if link.from_socket == currentNode.outputs[1]: # Bind texture depth
+			targetId += 'D'
+		stage.params.append(targetId)
+		stage.params.append(node.inputs[constant_index].default_value)
 
 def make_draw_material_quad(stage, node_group, node, shader_references, asset_references, context_index=1):
 	stage.command = 'draw_material_quad'
@@ -709,6 +699,11 @@ def findNodeByLink(node_group, to_node, inp):
 	for link in node_group.links:
 		if link.to_node == to_node and link.to_socket == inp:
 			return link.from_node
+
+def findLink(node_group, to_node, inp):
+	for link in node_group.links:
+		if link.to_node == to_node and link.to_socket == inp:
+			return link
 			
 def findNodeByLinkFrom(node_group, from_node, outp):
 	for link in node_group.links:
@@ -726,11 +721,10 @@ def make_render_target(n, postfix=''):
 	target.id = n.inputs[0].default_value + postfix
 	target.width = n.inputs[1].default_value
 	target.height = n.inputs[2].default_value
-	target.color_buffers = n.inputs[3].default_value
-	target.depth_buffer = n.inputs[4].default_value
-	target.stencil_buffer = n.inputs[5].default_value
-	target.format = n.inputs[6].default_value
-	target.ping_pong = n.inputs[7].default_value
+	target.depth_buffer = n.inputs[3].default_value
+	target.stencil_buffer = n.inputs[4].default_value
+	target.format = n.inputs[5].default_value
+	target.ping_pong = n.inputs[6].default_value
 	return target
 
 def get_render_targets(node_group):

@@ -16,8 +16,8 @@ const int numBinarySearchSteps = 5;
 
 const float rayStep = 0.04;
 const float minRayStep = 0.05;
-const float searchDist = 4.4;
-const float falloffExp = 3.0;
+const float searchDist = 2.0;//4.4;
+const float falloffExp = 6.0;//3.0;
 
 in vec3 viewRay;
 in vec2 texCoord;
@@ -73,6 +73,15 @@ vec3 binarySearch(vec3 dir) {
         dir *= 0.5;
         hitCoord -= dir;
         if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
+		
+		////
+		// dir *= 0.5;
+        // hitCoord -= dir;
+        // if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
+		
+		// dir *= 0.5;
+        // hitCoord -= dir;
+        // if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
     // }
     return vec3(getProjectedCoord(hitCoord).xy, 0.0);
 }
@@ -141,6 +150,8 @@ vec4 rayCast(vec3 dir) {
 		hitCoord += dir;
         if (getDeltaDepth(hitCoord) > 0.0) return vec4(binarySearch(dir), 1.0);
 		
+		
+		////
 		// hitCoord += dir;
         // if (getDeltaDepth(hitCoord) > 0.0) return vec4(binarySearch(dir), 1.0);
 		// hitCoord += dir;
@@ -176,9 +187,14 @@ vec2 unpackFloat(float f) {
 }
 
 void main() {
+	
     float roughness = unpackFloat(texture(gbuffer1, texCoord).a).x;
 	float reflectivity = 1.0 - roughness;
-    if (reflectivity == 0.0) discard;
+    if (reflectivity == 0.0) {
+		gl_FragColor = texture(tex, texCoord);
+		return;
+		// discard;
+	}
 	
 	vec4 g0 = texture(gbuffer0, texCoord);
 	vec2 enc = g0.rg;
@@ -188,7 +204,11 @@ void main() {
     n = normalize(n);
 	
 	vec4 viewNormal = vec4(n, 1.0);
-	if (viewNormal.z <= 0.9) discard; // Only up facing surfaces for now
+	if (viewNormal.z <= 0.9) {
+		gl_FragColor = texture(tex, texCoord);
+		return;
+		// discard; // Only up facing surfaces for now
+	}
 	viewNormal = tiV * normalize(viewNormal);
 	
 	// float d = 1.0 - g0.a;
@@ -198,7 +218,8 @@ void main() {
 	vec3 reflected = normalize(reflect((viewPos.xyz), normalize(viewNormal.xyz)));
 	hitCoord = viewPos.xyz;
 	
-	vec3 dir = reflected * max(minRayStep, -viewPos.z);// * (1.0 - rand(texCoord) * 0.5);
+	vec3 dir = reflected * max(minRayStep, -viewPos.z);
+	// vec3 dir = reflected * max(minRayStep, -viewPos.z) * (1.0 - rand(texCoord) * 0.3);
 	vec4 coords = rayCast(dir);
 
 	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);

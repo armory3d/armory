@@ -58,6 +58,10 @@
 					"link": "_envmapBrdf"
 				},
 				{
+					"id": "envmapStrength",
+					"link": "_envmapStrength"
+				},
+				{
 					"id": "sltcMat",
 					"link": "_ltcMat",
 					"ifdef": ["_PolyLight"]

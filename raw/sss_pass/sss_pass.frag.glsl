@@ -77,7 +77,7 @@ vec4 SSSSBlur(float sssWidth) {
     // Fetch linear depth of current pixel
 	// vec4 g0 = texture(gbuffer0, texCoord);
 	// float depth = 1.0 - g0.a;
-	float depth = texture(gbufferD, texCoord) * 2.0 - 1.0;
+	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	const float znear = 0.1;
 	const float zfar = 1000.0;
 	const float projectionA = zfar / (zfar - znear);

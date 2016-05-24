@@ -10,7 +10,6 @@ precision mediump float;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1; 
-uniform sampler2D gbuffer2; 
 
 uniform sampler2D ssaotex;
 
@@ -20,6 +19,8 @@ uniform sampler2D senvmapIrradiance;
 uniform sampler2D senvmapBrdf;
 // uniform sampler2D sltcMat;
 // uniform sampler2D sltcMag;
+
+uniform float envmapStrength;
 
 // uniform mat4 invVP;
 uniform mat4 LMVP;
@@ -34,14 +35,14 @@ uniform float time;
 
 // LTC
 // const float roughness = 0.25;
-const vec3  dcolor = vec3(1.0, 1.0, 1.0);
-const vec3  scolor = vec3(1.0, 1.0, 1.0);
+const vec3 dcolor = vec3(1.0, 1.0, 1.0);
+const vec3 scolor = vec3(1.0, 1.0, 1.0);
 const float intensity = 4.0; // 0-10
 const float width = 4.0;
 const float height = 4.0;
-const vec2  resolution = vec2(800.0, 600.0);
-const int   sampleCount = 0;
-const int   NUM_SAMPLES = 8;
+const vec2 resolution = vec2(800.0, 600.0);
+const int sampleCount = 0;
+const int NUM_SAMPLES = 8;
 const float LUT_SIZE  = 64.0;
 const float LUT_SCALE = (LUT_SIZE - 1.0)/LUT_SIZE;
 const float LUT_BIAS  = 0.5/LUT_SIZE;
@@ -58,7 +59,6 @@ vec3 L4 = vec3(0.0);
 
 in vec2 texCoord;
 in vec3 viewRay;
-
 
 // Separable SSS Transmittance Function, ref to sss_pass
 vec3 SSSSTransmittance(float translucency, float sssWidth, vec3 worldPosition, vec3 worldNormal, vec3 lightDir) {
@@ -185,7 +185,7 @@ float shadowTest(vec4 lPos) {
 	lPosH.x = (lPosH.x + 1.0) / 2.0;
     lPosH.y = 1.0 - ((-lPosH.y + 1.0) / (2.0));
 	
-	const float bias = 0.005;
+	const float bias = 0.0029;
 	// const float bias = 0.01;
 	return PCF(vec2(2048, 2048), lPosH.st, lPosH.z - bias);
 }
@@ -396,7 +396,7 @@ void main() {
 	// if (depth == 0.0) discard;
 	if (depth == 1.0) discard;
 	
-	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, mask, depth
+	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, occlusion, mask
 	
 	vec4 g1 = texture(gbuffer1, texCoord); // Base color.rgb, roughn/met
 	float ao = texture(ssaotex, texCoord).r;
@@ -458,9 +458,10 @@ void main() {
 	vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;
 	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 	vec3 indirect = indirectDiffuse + indirectSpecular;
-	indirect = indirect * lightColor * lightStrength;
+	indirect = indirect * lightColor * lightStrength * envmapStrength;
+	float occlusion = g0.b;
 
-	vec4 outColor = vec4(vec3(direct * visibility + indirect * ao), 1.0);
+	vec4 outColor = vec4(vec3(direct * visibility + indirect * ao * occlusion), 1.0);
 	
 	
 	
@@ -502,8 +503,6 @@ void main() {
 	
 	
 	
-	
-	// outColor.rgb *= occlusion;
 	// outColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
 	gl_FragColor = vec4(outColor.rgb, outColor.a);
 }
