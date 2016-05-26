@@ -1,0 +1,49 @@
+{
+	"contexts": [
+		{
+			"id": "translucent_resolve",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "true"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				},
+				{
+					"id": "blend_source",
+					"value": "source_alpha"
+				},
+				{
+					"id": "blend_destination",
+					"value": "inverse_source_alpha"
+				},
+				{
+					"id": "blend_operation",
+					"value": "add"
+				},
+				{
+					"id": "alpha_blend_source",
+					"value": "source_alpha"
+				},
+				{
+					"id": "alpha_blend_destination",
+					"value": "inverse_source_alpha"
+				},
+				{
+					"id": "alpha_blend_operation",
+					"value": "add"
+				}
+			],
+			"links": [
+			],
+			"vertex_shader": "translucent_resolve.vert.glsl",
+			"fragment_shader": "translucent_resolve.frag.glsl"
+		}
+	]
+}

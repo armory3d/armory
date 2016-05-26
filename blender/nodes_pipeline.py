@@ -63,8 +63,12 @@ class ClearTargetNode(Node, CGPipelineTreeNode):
 	def init(self, context):
 		self.inputs.new('NodeSocketShader', "Stage")
 		self.inputs.new('NodeSocketBool', "Color")
+		self.inputs.new('NodeSocketColor', "Value")
 		self.inputs.new('NodeSocketBool', "Depth")
+		self.inputs.new('NodeSocketFloat', "Value")
+		self.inputs[4].default_value = 1.0
 		self.inputs.new('NodeSocketBool', "Stencil")
+		self.inputs.new('NodeSocketInt', "Value")
 
 		self.outputs.new('NodeSocketShader', "Stage")
 
@@ -518,10 +522,17 @@ def make_clear_target(stage, node_group, node):
 	stage.command = 'clear_target'
 	if node.inputs[1].default_value == True:
 		stage.params.append('color')
-	if node.inputs[2].default_value == True:
-		stage.params.append('depth')
+		val = node.inputs[2].default_value
+		hex = '#%02x%02x%02x%02x' % (int(val[3] * 255), int(val[0] * 255), int(val[1] * 255), int(val[2] * 255))
+		stage.params.append(str(hex))
 	if node.inputs[3].default_value == True:
+		stage.params.append('depth')
+		val = node.inputs[4].default_value
+		stage.params.append(str(val))
+	if node.inputs[5].default_value == True:
 		stage.params.append('stencil')
+		val = node.inputs[6].default_value
+		stage.params.append(str(val))
 
 def make_draw_geometry(stage, node_group, node):
 	stage.command = 'draw_geometry'
@@ -550,7 +561,8 @@ def make_bind_target(stage, node_group, node, currentNode=None, target_index=1, 
 			if currentNode.inputs[i].is_linked:
 				targetNode = findNodeByLink(node_group, currentNode, currentNode.inputs[i])
 				targetId = targetNode.inputs[0].default_value
-				if i == 0: # Depth
+				# if i == 0 and targetNode.inputs[3].default_value == True: # Depth
+				if targetNode.inputs[3].default_value == True: # Depth
 					stage.params.append(targetId + 'D')
 					stage.params.append(node.inputs[constant_index].default_value + 'D')
 				stage.params.append(targetId) # Color buffer

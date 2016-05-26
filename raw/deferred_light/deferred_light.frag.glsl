@@ -397,7 +397,6 @@ void main() {
 	if (depth == 1.0) discard;
 	
 	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, occlusion, mask
-	
 	vec4 g1 = texture(gbuffer1, texCoord); // Base color.rgb, roughn/met
 	float ao = texture(ssaotex, texCoord).r;
 

@@ -126,6 +126,12 @@ def parse_material_surface(self, material, c, defs, tree, node, factor):
 	
 	elif node.type == 'BSDF_GLOSSY':
 		parse_bsdf_glossy(self, material, c, defs, tree, node, factor)
+		
+	# elif node.type == 'BSDF_TRANSLUCENT':
+		# parse_bsdf_translucent(self, material, c, defs, tree, node, factor)
+		
+	elif node.type == 'BSDF_GLASS':
+		parse_bsdf_glass(self, material, c, defs, tree, node, factor)
 	
 	elif node.type == 'SUBSURFACE_SCATTERING':
 		parse_sss(self, material, c, defs, tree, node, factor)
@@ -183,6 +189,17 @@ def parse_bsdf_glossy(self, material, c, defs, tree, node, factor):
 	add_metalness_const(1.0, c, factor)
 	roughness_input = node.inputs[1]
 	parse_roughness_socket(self, roughness_input, material, c, defs, tree, node, factor, sqrt_val=True)
+
+def parse_bsdf_glass(self, material, c, defs, tree, node, factor):
+	# Mix with current color
+	base_color_input = node.inputs[0]
+	parse_base_color_socket(self, base_color_input, material, c, defs, tree, node, factor)
+	# Parse sqrt roughness and set 0.0 metalness
+	add_metalness_const(0.0, c, factor)
+	roughness_input = node.inputs[1]
+	parse_roughness_socket(self, roughness_input, material, c, defs, tree, node, factor, sqrt_val=True)
+	# Append translucent
+	defs.append('_Translucent')
 
 def mix_float(f1, f2, factor=0.5):
 	return (f1 + f2) * factor

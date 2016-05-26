@@ -134,6 +134,106 @@
 			"texture_params": [],
 			"vertex_shader": "decals.vert.glsl",
 			"fragment_shader": "decals.frag.glsl"
+		},
+		
+		{
+			"id": "translucent",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "false"
+				},
+				{
+					"id": "compare_mode",
+					"value": "less"
+				},
+				{
+					"id": "cull_mode",
+					"value": "counter_clockwise"
+				},
+				{
+					"id": "blend_source",
+					"value": "blend_one"
+				},
+				{
+					"id": "blend_destination",
+					"value": "blend_one"
+				},
+				{
+					"id": "blend_operation",
+					"value": "add"
+				},
+				{
+					"id": "alpha_blend_source",
+					"value": "blend_zero"
+				},
+				{
+					"id": "alpha_blend_destination",
+					"value": "inverse_source_alpha"
+				},
+				{
+					"id": "alpha_blend_operation",
+					"value": "add"
+				}
+			],
+			"links": [
+				{
+					"id": "M",
+					"link": "_modelMatrix"
+				},
+				{
+					"id": "NM",
+					"link": "_normalMatrix"
+				},
+				{
+					"id": "MV",
+					"link": "_modelViewMatrix"
+				},
+				{
+					"id": "P",
+					"link": "_projectionMatrix"
+				},
+				{
+					"id": "skinBones",
+					"link": "_skinBones",
+					"ifdef": ["_Skinning"]
+				},
+				{
+					"id": "light",
+					"link": "_lightPosition"
+				},
+				{
+					"id": "lightColor",
+					"link": "_lightColor"
+				},
+				{
+					"id": "lightStrength",
+					"link": "_lightStrength"
+				},
+				{
+					"id": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"id": "senvmapIrradiance",
+					"link": "_envmapIrradiance"
+				},
+				{
+					"id": "senvmapRadiance",
+					"link": "_envmapRadiance"
+				},
+				{
+					"id": "senvmapBrdf",
+					"link": "_envmapBrdf"
+				},
+				{
+					"id": "envmapStrength",
+					"link": "_envmapStrength"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "translucent.vert.glsl",
+			"fragment_shader": "translucent.frag.glsl"
 		}
 	]
 }

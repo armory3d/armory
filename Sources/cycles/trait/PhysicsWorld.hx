@@ -98,7 +98,6 @@ class PhysicsWorld extends Trait {
 	}
 
 	public function update() {
-		// world.ptr.stepSimulation(step);
 		world.ptr.stepSimulation(timeStep, 1, fixedStep);
 		updateContacts();
 	}

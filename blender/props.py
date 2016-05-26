@@ -26,9 +26,9 @@ def initProperties():
     bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Pipeline Path", default="deferred_pipeline")
     bpy.types.Camera.pipeline_id = bpy.props.StringProperty(name="Pipeline ID", default="deferred")
 	# TODO: Specify multiple material ids, merge ids from multiple cameras 
-    bpy.types.Camera.material_ids = bpy.props.StringProperty(name="Matarial IDs", default="deferred")
-	# Indicates if envmap textures are to be linked to object materials
-    # bpy.types.Camera.pipeline_bind_world_to_materials = bpy.props.BoolProperty(name="Bind World", default=False)
+    bpy.types.Camera.geometry_context = bpy.props.StringProperty(name="Geometry", default="deferred")
+    bpy.types.Camera.shadows_context = bpy.props.StringProperty(name="Shadows", default="shadowmap")
+    bpy.types.Camera.translucent_context = bpy.props.StringProperty(name="Translucent", default="translucent")
 	# TODO: move to world
     bpy.types.Camera.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
     bpy.types.Camera.world_envtex_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
@@ -77,7 +77,9 @@ class DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'sort_front_to_back')
             layout.prop_search(obj.data, "pipeline_path", bpy.data, "node_groups")
             layout.prop(obj.data, 'pipeline_id')
-            layout.prop(obj.data, 'material_ids')
+            layout.prop(obj.data, 'geometry_context')
+            layout.prop(obj.data, 'shadows_context')
+            layout.prop(obj.data, 'translucent_context')
             layout.operator("cg.reset_pipelines")
         elif obj.type == 'MESH':
             layout.prop(obj.data, 'static_usage')

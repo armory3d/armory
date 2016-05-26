@@ -1907,7 +1907,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						if node.bl_idname == 'DrawGeometryNodeType':
 							ArmoryExporter.pipeline_passes.append(node.inputs[1].default_value) # Context
 					break
-			ArmoryExporter.material_ids = bpy.data.cameras[0].material_ids
+			ArmoryExporter.geometry_context = bpy.data.cameras[0].geometry_context
+			ArmoryExporter.shadows_context = bpy.data.cameras[0].shadows_context
+			ArmoryExporter.translucent_context = bpy.data.cameras[0].translucent_context
 
 	def cb_preprocess_node(self, node): # Returns false if node should not be exported
 		#return True
@@ -2039,9 +2041,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		if material.skip_context != '':
 			o.skip_context = material.skip_context
 		o.contexts = []
-		
+				
+		# Geometry context
 		c = Object()
-		c.id = ArmoryExporter.material_ids #ArmoryExporter.pipeline_id
+		c.id = ArmoryExporter.geometry_context
 		c.bind_constants = []
 		
 		const = Object()
@@ -2096,6 +2099,16 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o2.contexts.append(c2)
 			self.finalize_shader(o2, defs2, [decal_context])
 			self.output.material_resources.append(o2)
+		
+		# If material has transparency change to translucent context
+		if '_Translucent' in defs:
+			defs.remove('_Translucent')
+			c.id = ArmoryExporter.translucent_context
+		# Otherwise add shadows context
+		else:
+			c = Object()
+			c.id = ArmoryExporter.shadows_context
+			o.contexts.append(c)
 		
 		# Material users		
 		for ob in mat_users:
