@@ -87,7 +87,6 @@ void main() {
 #endif
 	
 	// occlusion - pack with mask
-	
 	n /= (abs(n.x) + abs(n.y) + abs(n.z));
     n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
 	

@@ -21,6 +21,7 @@ uniform sampler2D senvmapBrdf;
 // uniform sampler2D sltcMag;
 
 uniform float envmapStrength;
+uniform int envmapNumMipmaps;
 
 // uniform mat4 invVP;
 uniform mat4 LMVP;
@@ -89,9 +90,8 @@ vec2 envMapEquirect(vec3 normal) {
 
 float getMipLevelFromRoughness(float roughness) {
 	// First mipmap level = roughness 0, last = roughness = 1
-	// 6 mipmaps + baseColor
-	// TODO: set number of mipmaps
-	return roughness * 7.0;
+	// baseColor texture already counted
+	return roughness * envmapNumMipmaps;
 }
 
 vec3 surfaceAlbedo(vec3 baseColor, float metalness) {
@@ -389,6 +389,24 @@ vec3 LTC_Evaluate(vec3 N, vec3 V, vec3 P, mat3 Minv, vec3 points0, vec3 points1,
     return Lo_i;
 }
 
+#ifdef _Aniso
+float wardSpecular(vec3 N, vec3 H, float dotNL, float dotNV, float dotNH, vec3 fiberDirection, float shinyParallel, float shinyPerpendicular) {
+	if(dotNL < 0.0 || dotNV < 0.0) {
+		return 0.0;
+	}
+	// fiberDirection - parse from rotation
+	// shinyParallel - roughness
+	// shinyPerpendicular - anisotropy
+	
+	vec3 fiberParallel = normalize(fiberDirection);
+  	vec3 fiberPerpendicular = normalize(cross(N, fiberDirection));
+	float dotXH = dot(fiberParallel, H);
+	float dotYH = dot(fiberPerpendicular, H);
+	float coeff = sqrt(dotNL/dotNV) / (4.0 * PI * shinyParallel * shinyPerpendicular); 
+	float theta = (pow(dotXH/shinyParallel, 2.0) + pow(dotYH/shinyPerpendicular, 2.0)) / (1.0 + dotNH);
+	return clamp(coeff * exp(-2.0 * theta), 0.0, 1.0);
+}
+#endif
 
 void main() {
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
@@ -437,6 +455,11 @@ void main() {
 	
 	// Direct
 	vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);
+    // Aniso spec
+    // float shinyParallel = roughness;
+    // float shinyPerpendicular = 0.08;
+    // vec3 fiberDirection = vec3(0.0, 1.0, 8.0);
+	// vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + wardSpecular(n, h, dotNL, dotNV, dotNH, fiberDirection, shinyParallel, shinyPerpendicular);
 	direct = direct * lightColor * lightStrength;
 	
 	// SSS only masked objects
@@ -446,13 +469,17 @@ void main() {
 
 	// Indirect
 	vec3 indirectDiffuse = texture(senvmapIrradiance, envMapEquirect(n)).rgb;
-	// indirectDiffuse = pow(indirectDiffuse, vec3(2.2));
+#ifdef _LDR
+	indirectDiffuse = pow(indirectDiffuse, vec3(2.2));
+#endif
 	indirectDiffuse *= albedo;
 	
 	vec3 reflectionWorld = reflect(-v, n); 
-	float lod = getMipLevelFromRoughness(roughness);// + 1.0;
+	float lod = getMipLevelFromRoughness(roughness);
 	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
-	// prefilteredColor = pow(prefilteredColor, vec3(2.2));
+#ifdef _LDR
+	prefilteredColor = pow(prefilteredColor, vec3(2.2));
+#endif
 	
 	vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;
 	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);

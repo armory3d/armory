@@ -133,6 +133,12 @@ def compile_shader(raw_path, shader_name, defs):
 	lib.make_resources.make(shader_name + '.shader.json', defs)
 	lib.make_variants.make(shader_name + '.shader.json', defs)
 
+def string_defs_to_array(strdefs):
+	defs = strdefs.split('_')
+	defs = defs[1:]
+	defs = ['_' + d for d in defs] # Restore _
+	return defs
+
 # Transform Blender data into game data
 def exportGameData(fp, raw_path):
 	shader_references = []
@@ -141,9 +147,9 @@ def exportGameData(fp, raw_path):
 	# Build nodes
 	# TODO: cache
 	nodes_logic.buildNodeTrees()
-	nodes_pipeline.buildNodeTrees(shader_references, asset_references)
-	# TODO: Have to build nodes everytime to collect env map resources, should be cached
-	nodes_world.buildNodeTrees(shader_references, asset_references) 
+	# TODO: Have to build nodes everytime to collect env map resources, cache
+	nodes_world.buildNodeTrees(shader_references, asset_references)
+	nodes_pipeline.buildNodeTrees(shader_references, asset_references) 
 
 	# TODO: Set armatures to center of world so skin transform is zero
 	armatures = []
@@ -181,18 +187,17 @@ def exportGameData(fp, raw_path):
 	write_data.write_main()
 	
 	# Write referenced shader variants
+	# Assume asset_references contains shader resources only for now
 	for ref in asset_references:
 		# Resource does not exist yet
 		os.chdir(fp)
 		if not os.path.exists(ref):
 			shader_name = ref.split('/')[2]
-			defs = ref[:-5] # Remove .json extnsion
-			defs = defs.split(shader_name) # 'name/name_def_def'
+			strdefs = ref[:-5] # Remove .json extnsion
+			defs = strdefs.split(shader_name) # 'name/name_def_def'
 			if len(defs) > 2:
-				defs = defs[2] # Apended defs
-				defs = defs.split('_')
-				defs = defs[1:]
-				defs = ['_' + d for d in defs] # Restore _
+				strdefs = defs[2] # Apended defs
+				defs = string_defs_to_array(strdefs)
 			else:
 				defs = []
 			compile_shader(raw_path, shader_name, defs)

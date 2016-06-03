@@ -229,6 +229,10 @@
 				{
 					"id": "envmapStrength",
 					"link": "_envmapStrength"
+				},
+				{
+					"id": "envmapNumMipmaps",
+					"link": "_envmapNumMipmaps"
 				}
 			],
 			"texture_params": [],

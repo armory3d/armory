@@ -24,6 +24,61 @@
 				{
 					"id": "invP",
 					"link": "_inverseProjectionMatrix"
+				},
+				{
+					"id": "A",
+					"link": "_hosekA",
+					"ifdef": ["_Hosek"]
+				},
+				{
+					"id": "B",
+					"link": "_hosekB",
+					"ifdef": ["_Hosek"]
+				},
+				{
+					"id": "C",
+					"link": "_hosekC",
+					"ifdef": ["_Hosek"]
+				},
+				{
+					"id": "D",
+					"link": "_hosekD",
+					"ifdef": ["_Hosek"]
+				},
+				{
+					"id": "E",
+					"link": "_hosekE",
+					"ifdef": ["_Hosek"]
+				},
+				{
+					"id": "F",
+					"link": "_hosekF",
+					"ifdef": ["_Hosek"]
+				},
+				{
+					"id": "G",
+					"link": "_hosekG",
+					"ifdef": ["_Hosek"]
+				},
+				{
+					"id": "H",
+					"link": "_hosekH",
+					"ifdef": ["_Hosek"]
+				},
+				{
+					"id": "I",
+					"link": "_hosekI",
+					"ifdef": ["_Hosek"]
+				},
+				{
+					"id": "Z",
+					"link": "_hosekZ",
+					"ifdef": ["_Hosek"]
+				},
+				{
+					"id": "sunDirection",
+					"link": "_hosekSunDirection",
+					"ifdef": ["_Hosek"]
 				}
 			],
 			"texture_params": [],

@@ -123,6 +123,9 @@ def parse_material_surface(self, material, c, defs, tree, node, factor):
 	
 	elif node.type == 'BSDF_DIFFUSE':
 		parse_bsdf_diffuse(self, material, c, defs, tree, node, factor)
+		
+	elif node.type == 'EMISSION':
+		parse_emission(self, material, c, defs, tree, node, factor)
 	
 	elif node.type == 'BSDF_GLOSSY':
 		parse_bsdf_glossy(self, material, c, defs, tree, node, factor)
@@ -181,6 +184,19 @@ def parse_bsdf_diffuse(self, material, c, defs, tree, node, factor):
 			normal_map_input = normal_map_node.inputs[1]
 			parse_normal_map_socket(self, normal_map_input, material, c, defs, tree, node, factor)
 
+def parse_emission(self, material, c, defs, tree, node, factor):
+	# Color
+	base_color_input = node.inputs[0]
+	parse_base_color_socket(self, base_color_input, material, c, defs, tree, node, factor)
+	# Multiply color by strength
+	strength_input = node.inputs[1]
+	strength = strength_input.default_value * 50.0 + 1.0
+	col = parse.const_color.vec4
+	col[0] *= strength
+	col[1] *= strength
+	col[2] *= strength
+	parse.const_color.vec4 = [col[0], col[1], col[2], col[3]]
+
 def parse_bsdf_glossy(self, material, c, defs, tree, node, factor):
 	# Mix with current color
 	base_color_input = node.inputs[0]
@@ -194,6 +210,12 @@ def parse_bsdf_glass(self, material, c, defs, tree, node, factor):
 	# Mix with current color
 	base_color_input = node.inputs[0]
 	parse_base_color_socket(self, base_color_input, material, c, defs, tree, node, factor)
+	# Calculate alpha, TODO: take only glass color into account, separate getSocketColor method
+	col = parse.const_color.vec4
+	sum = (col[0] + col[1] + col[2]) / 3
+	# Roughly guess color to match cycles
+	mincol = min(col[:3])
+	parse.const_color.vec4 = [col[0] - mincol, col[1] - mincol, col[2] - mincol, 1.0 - (sum * 0.7)]
 	# Parse sqrt roughness and set 0.0 metalness
 	add_metalness_const(0.0, c, factor)
 	roughness_input = node.inputs[1]

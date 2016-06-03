@@ -1102,6 +1102,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			self.ExportBoneSampledAnimation(poseBone, scene, o)
 
 	def ExportMaterialRef(self, material, index, o):
+		if material == None:
+			return
 		if (not material in self.materialArray):
 			self.materialArray[material] = {"structName" : material.name}
 		o.material_refs.append(self.materialArray[material]["structName"])
@@ -1922,7 +1924,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		for m in node.modifiers:
 			if m.type == 'OCEAN':
 				export_node = False
-			elif m.type == 'UV_PROJECT':
+			elif m.type == 'UV_PROJECT' and m.show_render:
 				self.uvprojectUsersArray.append(node)
 				
 		return export_node
@@ -2146,6 +2148,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		ext = ''
 		for d in defs:
 			ext += d
+		# Append world defs
+		ext += bpy.data.worlds[0].world_defs
+		
 		# Shader res
 		shader_res_name = ArmoryExporter.pipeline_id + ext
 		shader_res_path = 'compiled/ShaderResources/' + ArmoryExporter.pipeline_id + '/' + shader_res_name + '.json'

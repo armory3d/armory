@@ -38,6 +38,7 @@ uniform float metalness;
 #endif
 
 uniform float envmapStrength;
+uniform int envmapNumMipmaps;
 
 uniform bool receiveShadow;
 uniform vec3 lightColor;
@@ -280,8 +281,7 @@ vec3 surfaceF0(vec3 baseColor, float metalness) {
 
 float getMipLevelFromRoughness(float roughness) {
 	// First mipmap level = roughness 0, last = roughness = 1
-	// 6 mipmaps + base
-	return roughness * 7.0;
+	return roughness * envmapNumMipmaps;
 }
 
 
@@ -456,7 +456,6 @@ float stepmix(float edge0, float edge1, float E, float x) {
     return mix(edge0, edge1, T);
 }
 #endif
-
 
 void main() {
 	
@@ -636,13 +635,18 @@ void main() {
 	direct = direct * lightColor * lightStrength;
 	
 	// Indirect
-	vec3 indirectDiffuse = texture(senvmapIrradiance, envMapEquirect(n)).rgb;
-	indirectDiffuse = pow(indirectDiffuse, vec3(2.2)) * albedo;
+	vec3 indirectDiffuse = texture(senvmapIrradiance, envMapEquirect(n)).rgb;	
+#ifdef _LDR
+	indirectDiffuse = pow(indirectDiffuse, vec3(2.2));
+#endif
+	indirectDiffuse *= albedo;
 	
 	vec3 reflectionWorld = reflect(-v, n); 
 	float lod = getMipLevelFromRoughness(roughness);// + 1.0;
 	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
+#ifdef _LDR
 	prefilteredColor = pow(prefilteredColor, vec3(2.2));
+#endif
 	
 	vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;
 	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);

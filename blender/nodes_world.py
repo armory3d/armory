@@ -56,6 +56,9 @@ def buildNodeTree(world_name, node_group, shader_references, asset_references):
 	
 	texture.id = 'envmap'
 	texture.name = ''
+	
+	bpy.data.worlds[0].world_defs = ''
+	
 	for node in node_group.nodes:
 		# Env map included
 		if node.type == 'TEX_ENVIRONMENT': # Just look for env texture for now
@@ -66,10 +69,20 @@ def buildNodeTree(world_name, node_group, shader_references, asset_references):
 			shader_references.append('compiled/Shaders/env_map/env_map')
 			# Generate prefiltered envmaps
 			bpy.data.cameras[0].world_envtex_name = texture.name
-			generate_envmaps(image_name, image_name.endswith('.jpg'))
+			disable_hdr = image_name.endswith('.jpg')
+			generate_envmaps(image_name, disable_hdr)
+			
+			# Append envtex define
+			bpy.data.worlds[0].world_defs += '_EnvTex'
+			# Append LDR define
+			if disable_hdr:
+				bpy.data.worlds[0].world_defs += '_LDR'
+			
 		# Extract environment strength
 		if node.type == 'BACKGROUND':
 			bpy.data.cameras[0].world_envtex_strength = node.inputs[1].default_value
+		if node.type == 'TEX_SKY':
+			bpy.data.worlds[0].world_defs += '_EnvSky'
 
 	with open(path + material_name + '.json', 'w') as f:
 		f.write(output.to_JSON())

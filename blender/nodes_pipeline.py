@@ -121,13 +121,29 @@ class TargetNode(Node, CGPipelineTreeNode):
 		self.inputs.new('NodeSocketString', "ID")
 		self.inputs.new('NodeSocketInt', "Width")
 		self.inputs.new('NodeSocketInt', "Height")
-		self.inputs.new('NodeSocketBool', "Depth Buffer")
-		self.inputs.new('NodeSocketBool', "Stencil Buffer")
+		self.inputs.new('NodeSocketShader', "Depth Buffer")
 		self.inputs.new('NodeSocketString', "Format")
 		self.inputs.new('NodeSocketBool', "Ping Pong")
 
 		self.outputs.new('NodeSocketShader', "Target")
-		self.outputs.new('NodeSocketShader', "Depth")
+
+	def copy(self, node):
+		print("Copying from node ", node)
+
+	def free(self):
+		print("Removing node ", self, ", Goodbye!")
+
+class DebthBufferNode(Node, CGPipelineTreeNode):
+	'''A custom node'''
+	bl_idname = 'DepthBufferNodeType'
+	bl_label = 'Depth Buffer'
+	bl_icon = 'SOUND'
+	
+	def init(self, context):
+		self.inputs.new('NodeSocketString', "ID")
+		self.inputs.new('NodeSocketBool', "Stencil")
+		
+		self.outputs.new('NodeSocketShader', "Target")
 
 	def copy(self, node):
 		print("Copying from node ", node)
@@ -388,6 +404,7 @@ node_categories = [
 	]),
 	MyTargetNodeCategory("TARGETNODES", "Target", items=[
 		NodeItem("TargetNodeType"),
+		NodeItem("DepthBufferNodeType"),
 		NodeItem("GBufferNodeType"),
 		NodeItem("FramebufferNodeType"),
 	]),
@@ -479,7 +496,7 @@ def buildNodeTree(node_group, shader_references, asset_references):
 	node_group_name = node_group.name.replace('.', '_')
 	
 	res.id = node_group_name
-	res.render_targets = get_render_targets(node_group)
+	res.render_targets, res.depth_buffers = get_render_targets(node_group)
 	res.stages = []
 	
 	rn = getRootNode(node_group)
@@ -562,16 +579,21 @@ def make_bind_target(stage, node_group, node, currentNode=None, target_index=1, 
 				targetNode = findNodeByLink(node_group, currentNode, currentNode.inputs[i])
 				targetId = targetNode.inputs[0].default_value
 				# if i == 0 and targetNode.inputs[3].default_value == True: # Depth
-				if targetNode.inputs[3].default_value == True: # Depth
-					stage.params.append(targetId + 'D')
+				if targetNode.inputs[3].is_linked: # Depth
+					db_node = findNodeByLink(node_group, targetNode, targetNode.inputs[3])
+					db_id = db_node.inputs[0].default_value
+					stage.params.append('_' + db_id)
 					stage.params.append(node.inputs[constant_index].default_value + 'D')
 				stage.params.append(targetId) # Color buffer
 				stage.params.append(node.inputs[constant_index].default_value + str(i))
 	
 	elif currentNode.bl_idname == 'TargetNodeType':		
-		targetId = currentNode.inputs[0].default_value		
-		if link.from_socket == currentNode.outputs[1]: # Bind texture depth
-			targetId += 'D'
+		targetId = currentNode.inputs[0].default_value
+		stage.params.append(targetId)
+		stage.params.append(node.inputs[constant_index].default_value)
+		
+	elif currentNode.bl_idname == 'DepthBufferNodeType':
+		targetId = '_' + currentNode.inputs[0].default_value
 		stage.params.append(targetId)
 		stage.params.append(node.inputs[constant_index].default_value)
 
@@ -580,18 +602,26 @@ def make_draw_material_quad(stage, node_group, node, shader_references, asset_re
 	material_context = node.inputs[context_index].default_value
 	stage.params.append(material_context)
 	# Include resource and shaders
-	res_name = material_context.rsplit('/', 1)[1]
-	asset_references.append('compiled/ShaderResources/' + res_name + '/' + res_name + '.json')
-	shader_references.append('compiled/Shaders/' + res_name + '/' + res_name)
+	scon = shader_context.split('/')
+	dir_name = scon[0]
+	# Append world defs
+	res_name = scon[1]
+	asset_references.append('compiled/ShaderResources/' + dir_name + '/' + res_name + '.json')
+	shader_references.append('compiled/Shaders/' + dir_name + '/' + res_name)
 
 def make_draw_quad(stage, node_group, node, shader_references, asset_references, context_index=1):
 	stage.command = 'draw_shader_quad'
+	# Append world defs to get proper context
+	world_defs = bpy.data.worlds[0].world_defs
 	shader_context = node.inputs[context_index].default_value
-	stage.params.append(shader_context)
+	scon = shader_context.split('/')
+	stage.params.append(scon[0] + world_defs + '/' + scon[1] + world_defs + '/' + scon[2])
 	# Include resource and shaders
-	res_name = shader_context.split('/', 1)[0]
-	asset_references.append('compiled/ShaderResources/' + res_name + '/' + res_name + '.json')
-	shader_references.append('compiled/Shaders/' + res_name + '/' + res_name)
+	dir_name = scon[0]
+	# Append world defs
+	res_name = scon[1] + world_defs
+	asset_references.append('compiled/ShaderResources/' + dir_name + '/' + res_name + '.json')
+	shader_references.append('compiled/Shaders/' + dir_name + '/' + res_name)
 
 def make_draw_world(stage, node_group, node):
 	stage.command = 'draw_material_quad'
@@ -728,21 +758,38 @@ def getRootNode(node_group):
 		if n.bl_idname == 'BeginNodeType':
 			return findNodeByLinkFrom(node_group, n, n.outputs[0])
 
-def make_render_target(n, postfix=''):
+def make_render_target(n, depth_buffer_id=None):
 	target = Object()
-	target.id = n.inputs[0].default_value + postfix
+	target.id = n.inputs[0].default_value
 	target.width = n.inputs[1].default_value
 	target.height = n.inputs[2].default_value
-	target.depth_buffer = n.inputs[3].default_value
-	target.stencil_buffer = n.inputs[4].default_value
-	target.format = n.inputs[5].default_value
-	target.ping_pong = n.inputs[6].default_value
+	target.format = n.inputs[4].default_value
+	target.ping_pong = n.inputs[5].default_value	
+	if depth_buffer_id != None:
+		target.depth_buffer = depth_buffer_id
 	return target
 
 def get_render_targets(node_group):
 	render_targets = []
+	depth_buffers = []
 	for n in node_group.nodes:
 		if n.bl_idname == 'TargetNodeType':
-			target = make_render_target(n)
+			depth_buffer_id = None
+			if n.inputs[3].is_linked:
+				depth_node = findNodeByLink(node_group, n, n.inputs[3])
+				depth_buffer_id = depth_node.inputs[0].default_value
+				# Append depth buffer
+				found = False
+				for db in depth_buffers:
+					if db.id == depth_buffer_id:
+						found = True
+						break 
+				if found == False:
+					db = Object()
+					db.id = depth_buffer_id
+					db.stencil_buffer = depth_node.inputs[1].default_value
+					depth_buffers.append(db)	
+			# Append target	
+			target = make_render_target(n, depth_buffer_id=depth_buffer_id)
 			render_targets.append(target)
-	return render_targets
+	return render_targets, depth_buffers

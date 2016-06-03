@@ -75,6 +75,10 @@
 					"link": "_envmapStrength"
 				},
 				{
+					"id": "envmapNumMipmaps",
+					"link": "_envmapNumMipmaps"
+				},
+				{
 					"id": "sltcMat",
 					"link": "_ltcMat",
 					"ifdef": ["_PolyLight"]

@@ -36,6 +36,7 @@ uniform sampler2D senvmapRadiance;
 uniform sampler2D senvmapIrradiance;
 uniform sampler2D senvmapBrdf;
 uniform float envmapStrength;
+uniform int envmapNumMipmaps;
 uniform vec3 light;
 uniform vec3 lightColor;
 uniform float lightStrength;
@@ -63,9 +64,7 @@ vec2 envMapEquirect(vec3 normal) {
 
 float getMipLevelFromRoughness(float roughness) {
 	// First mipmap level = roughness 0, last = roughness = 1
-	// 6 mipmaps + baseColor
-	// TODO: set number of mipmaps
-	return roughness * 7.0;
+	return roughness * envmapNumMipmaps;
 }
 
 vec3 surfaceAlbedo(vec3 baseColor, float metalness) {
@@ -175,13 +174,13 @@ void main() {
 	vec3 indirect = indirectDiffuse + indirectSpecular;
 	indirect = indirect * lightColor * lightStrength * envmapStrength;
 
-	vec4 outColor = vec4(vec3(direct + indirect * occlusion), 1.0);
+	vec4 outColor = vec4(vec3(direct + indirect * occlusion), baseColor.a);
 
 
 
 	// vec4 premultipliedReflect = vec4(1.0, 0.0, 0.0, 0.01);
-	vec4 premultipliedReflect = baseColor;//outColor;
-	premultipliedReflect.a = 0.01;
+	// vec4 premultipliedReflect = baseColor;
+	vec4 premultipliedReflect = outColor;
 	float fragZ = mvpposition.z / mvpposition.w;
 	float a = min(1.0, premultipliedReflect.a) * 8.0 + 0.01;
     float b = -fragZ * 0.95 + 1.0;
