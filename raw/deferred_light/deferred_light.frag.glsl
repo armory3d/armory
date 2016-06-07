@@ -4,9 +4,6 @@
 precision mediump float;
 #endif
 
-#define PI 3.1415926535
-#define TwoPI (2.0 * PI)
-
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
@@ -41,6 +38,10 @@ uniform sampler2D senvmapIrradiance_4;
 uniform sampler2D ssaotex;
 uniform sampler2D shadowMap;
 
+const float PI = 3.1415926535;
+const float TwoPI = (2.0 * PI);
+const vec2 shadowMapSize = vec2(2048, 2048);
+
 // #ifdef _LTC
 // uniform sampler2D sltcMat;
 // uniform sampler2D sltcMag;
@@ -60,13 +61,13 @@ uniform float time;
 // LTC
 // const float roughness = 0.25;
 const vec3 dcolor = vec3(1.0, 1.0, 1.0);
-const vec3 scolor = vec3(1.0, 1.0, 1.0);
-const float intensity = 4.0; // 0-10
-const float width = 4.0;
-const float height = 4.0;
+// const vec3 scolor = vec3(1.0, 1.0, 1.0);
+// const float intensity = 4.0; // 0-10
+// const float width = 4.0;
+// const float height = 4.0;
 const vec2 resolution = vec2(800.0, 600.0);
-const int sampleCount = 0;
-const int NUM_SAMPLES = 8;
+// const int sampleCount = 0;
+// const int NUM_SAMPLES = 8;
 const float LUT_SIZE  = 64.0;
 const float LUT_SCALE = (LUT_SIZE - 1.0)/LUT_SIZE;
 const float LUT_BIAS  = 0.5/LUT_SIZE;
@@ -76,8 +77,6 @@ vec3 L1 = vec3(0.0);
 vec3 L2 = vec3(0.0);
 vec3 L3 = vec3(0.0);
 vec3 L4 = vec3(0.0);
-
-
 
 
 
@@ -173,44 +172,276 @@ float texture2DShadowLerp(vec2 size, vec2 uv, float compare){
     return c;
 }
 
-float PCF(vec2 size, vec2 uv, float compare) {
+float PCF(vec2 uv, float compare) {
     float result = 0.0;
     // for (int x = -1; x <= 1; x++){
         // for(int y = -1; y <= 1; y++){
-            // vec2 off = vec2(x, y) / size;
-            // result += texture2DShadowLerp(size, uv + off, compare);
+            // vec2 off = vec2(x, y) / shadowMapSize;
+            // result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
 			
-			vec2 off = vec2(-1, -1) / size;
-            result += texture2DShadowLerp(size, uv + off, compare);
-			off = vec2(-1, 0) / size;
-            result += texture2DShadowLerp(size, uv + off, compare);
-			off = vec2(-1, 1) / size;
-            result += texture2DShadowLerp(size, uv + off, compare);
-			off = vec2(0, -1) / size;
-            result += texture2DShadowLerp(size, uv + off, compare);
-			off = vec2(0, 0) / size;
-            result += texture2DShadowLerp(size, uv + off, compare);
-			off = vec2(0, 1) / size;
-            result += texture2DShadowLerp(size, uv + off, compare);
-			off = vec2(1, -1) / size;
-            result += texture2DShadowLerp(size, uv + off, compare);
-			off = vec2(1, 0) / size;
-            result += texture2DShadowLerp(size, uv + off, compare);
-			off = vec2(1, 1) / size;
-            result += texture2DShadowLerp(size, uv + off, compare);
+			vec2 off = vec2(-1, -1) / shadowMapSize;
+            result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
+			off = vec2(-1, 0) / shadowMapSize;
+            result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
+			off = vec2(-1, 1) / shadowMapSize;
+            result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
+			off = vec2(0, -1) / shadowMapSize;
+            result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
+			off = vec2(0, 0) / shadowMapSize;
+            result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
+			off = vec2(0, 1) / shadowMapSize;
+            result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
+			off = vec2(1, -1) / shadowMapSize;
+            result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
+			off = vec2(1, 0) / shadowMapSize;
+            result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
+			off = vec2(1, 1) / shadowMapSize;
+            result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
         // }
     // }
     return result / 9.0;
 }
 
+
+#define _PCSS
+#ifdef _PCSS
+    // Based on ThreeJS PCSS example
+    const float LIGHT_WORLD_SIZE = 0.45;
+    const float LIGHT_FRUSTUM_WIDTH = 7.75;
+    const float LIGHT_SIZE_UV = (LIGHT_WORLD_SIZE / LIGHT_FRUSTUM_WIDTH);
+    const float NEAR_PLANE = 3.5;
+    const int NUM_SAMPLES = 17;
+    const int NUM_RINGS = 11;
+    // vec2 poissonDisk[NUM_SAMPLES];
+    vec2 poissonDisk0;
+    vec2 poissonDisk1;
+    vec2 poissonDisk2;
+    vec2 poissonDisk3;
+    vec2 poissonDisk4;
+    vec2 poissonDisk5;
+    vec2 poissonDisk6;
+    vec2 poissonDisk7;
+    vec2 poissonDisk8;
+    vec2 poissonDisk9;
+    vec2 poissonDisk10;
+    vec2 poissonDisk11;
+    vec2 poissonDisk12;
+    vec2 poissonDisk13;
+    vec2 poissonDisk14;
+    vec2 poissonDisk15;
+    vec2 poissonDisk16;
+
+    float rand(vec2 co) {
+        return fract(sin(dot(co.xy ,vec2(12.9898, 78.233))) * 43758.5453);
+    }
+
+    void initPoissonSamples(const in vec2 randomSeed) {
+        const float ANGLE_STEP = TwoPI * float(NUM_RINGS) / float(NUM_SAMPLES);
+        const float INV_NUM_SAMPLES = 1.0 / float(NUM_SAMPLES);
+
+        float angle = rand(randomSeed) * TwoPI;
+        float radius = INV_NUM_SAMPLES;
+        float radiusStep = radius;
+
+        // for (int i = 0; i < NUM_SAMPLES; i++) {
+            poissonDisk0 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += ANGLE_STEP;
+            poissonDisk1 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += ANGLE_STEP;
+            poissonDisk2 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += ANGLE_STEP;
+            poissonDisk3 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += ANGLE_STEP;
+            poissonDisk4 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += ANGLE_STEP;
+            poissonDisk5 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += ANGLE_STEP;
+            poissonDisk6 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += ANGLE_STEP;
+            poissonDisk7 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += ANGLE_STEP;
+            poissonDisk8 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += ANGLE_STEP;
+            poissonDisk9 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += ANGLE_STEP;
+            poissonDisk10 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += ANGLE_STEP;
+            poissonDisk11 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += ANGLE_STEP;
+            poissonDisk12 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += ANGLE_STEP;
+            poissonDisk13 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += ANGLE_STEP;
+            poissonDisk14 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += ANGLE_STEP;
+            poissonDisk15 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += ANGLE_STEP;
+            poissonDisk16 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += ANGLE_STEP;
+        // }
+    }
+
+    float penumbraSize(const in float zReceiver, const in float zBlocker) { // Parallel plane estimation
+        return (zReceiver - zBlocker) / zBlocker;
+    }
+
+    float findBlocker(const in vec2 uv, const in float zReceiver) {
+        // This uses similar triangles to compute what area of the shadow map we should search
+        float searchRadius = LIGHT_SIZE_UV * (zReceiver - NEAR_PLANE) / zReceiver;
+        float blockerDepthSum = 0.0;
+        int numBlockers = 0;
+
+        // for (int i = 0; i < NUM_SAMPLES; i++) {
+            float shadowMapDepth = texture(shadowMap, uv + poissonDisk0 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk1 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk2 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk3 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk4 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk5 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk6 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk7 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk8 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk9 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk10 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk11 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk12 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk13 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk14 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk15 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk16 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+        // }
+
+        if (numBlockers == 0) return -1.0;
+        return blockerDepthSum / float(numBlockers);
+    }
+
+    float PCF_Filter(vec2 uv, float zReceiver, float filterRadius) {
+        float sum = 0.0;
+        // for (int i = 0; i < NUM_SAMPLES; i++) {
+            float depth = texture(shadowMap, uv + poissonDisk0 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk1 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk2 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk3 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk4 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk5 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk6 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk7 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk8 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk9 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk10 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk11 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk12 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk13 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk14 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk15 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk16 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+        // }
+        // for (int i = 0; i < NUM_SAMPLES; i++) {
+            depth = texture(shadowMap, uv + -poissonDisk0.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk1.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk2.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk3.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk4.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk5.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk6.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk7.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk8.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk9.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk10.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk11.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk12.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk13.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk14.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk15.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk16.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+        // }
+        return sum / (2.0 * float(NUM_SAMPLES));
+    }
+
+    float PCSS(vec2 uv, float zReceiver) {
+        initPoissonSamples(uv);
+        
+        // Blocker search
+        float avgBlockerDepth = findBlocker(uv, zReceiver);
+
+        // There are no occluders so early out (this saves filtering)
+        if (avgBlockerDepth == -1.0) return 1.0;
+
+        // Penumbra size
+        float penumbraRatio = penumbraSize(zReceiver, avgBlockerDepth);
+        float filterRadius = penumbraRatio * LIGHT_SIZE_UV * NEAR_PLANE / zReceiver;
+
+        // Filtering
+        return PCF_Filter(uv, zReceiver, filterRadius);
+    }
+#endif
+
+
+
 float shadowTest(vec4 lPos) {
 	vec4 lPosH = lPos / lPos.w;
 	lPosH.x = (lPosH.x + 1.0) / 2.0;
-    lPosH.y = 1.0 - ((-lPosH.y + 1.0) / (2.0));
+    lPosH.y = (lPosH.y + 1.0) / 2.0;
 	
-	const float bias = 0.012;
-	// const float bias = 0.01;
-	return PCF(vec2(2048, 2048), lPosH.st, lPosH.z - bias);
+	const float bias = 0.001; // Persp
+	// const float bias = 0.01; // Ortho
+    
+#ifdef _PCSS
+    return PCSS(lPosH.xy, lPosH.z - bias);
+#else
+	// return PCF(lPosH.xy, lPosH.z - bias);
+#endif
 }
 
 vec2 octahedronWrap(vec2 v) {
@@ -431,10 +662,6 @@ float wardSpecular(vec3 N, vec3 H, float dotNL, float dotNV, float dotNH, vec3 f
 }
 #endif
 
-vec4 gaussian(vec4 x, vec4 m, float s) {
-    return exp(-(x-m)*(x-m)/(s*s));
-}
-
 void main() {
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	// float depth = 1.0 - g0.a;
@@ -481,7 +708,6 @@ void main() {
 	}
 	
     
-    
 	// Direct
 	vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);
     // Aniso spec
@@ -492,10 +718,12 @@ void main() {
 	direct = direct * lightColor * lightStrength;
 	
 	// SSS only masked objects
+// #ifdef _SSS
     float mask = g0.a;
 	if (mask == 2.0) {
 		direct.rgb = direct.rgb * SSSSTransmittance(1.0, 0.005, p, n, lightDir);
 	}
+// #endif
 
 
 	// Indirect
@@ -570,7 +798,7 @@ void main() {
     prefilteredColor = pow(prefilteredColor, vec3(2.2));
 #endif
     indirectDiffuse = pow(indirectDiffuse, vec3(1.0/2.2));////
-    prefilteredColor = pow(prefilteredColor, vec3(1.02.2));////
+    prefilteredColor = pow(prefilteredColor, vec3(1.0/2.2));////
 	indirectDiffuse *= albedo;
 	
 	

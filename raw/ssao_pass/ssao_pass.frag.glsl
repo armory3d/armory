@@ -25,7 +25,7 @@ uniform mat4 invVP;
 uniform vec3 eye;
 
 const float PI = 3.1415926535;
-const vec2 screenSize = vec2(1920.0, 1080.0);
+const vec2 screenSize = vec2(800.0, 600.0);
 const vec2 aspectRatio = vec2(min(1.0, screenSize.y / screenSize.x), min(1.0, screenSize.x / screenSize.y));
 
 const int kernelSize = 12;
