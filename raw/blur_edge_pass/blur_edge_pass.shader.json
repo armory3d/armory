@@ -1,0 +1,60 @@
+{
+	"contexts": [
+		{
+			"id": "blur_edge_pass_x",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "true"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				{
+					"id": "dir",
+					"link": "_vec2x"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "blur_edge_pass.vert.glsl",
+			"fragment_shader": "blur_edge_pass.frag.glsl"
+		},
+		{
+			"id": "blur_edge_pass_y",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "true"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				},
+				{
+					"id": "dir",
+					"link": "_vec2y"
+				}
+			],
+			"links": [
+				{
+					"id": "dir",
+					"link": "_vec2y"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "blur_edge_pass.vert.glsl",
+			"fragment_shader": "blur_edge_pass.frag.glsl"
+		}
+	]
+}

@@ -29,6 +29,12 @@ def initProperties():
     bpy.types.Camera.geometry_context = bpy.props.StringProperty(name="Geometry", default="deferred")
     bpy.types.Camera.shadows_context = bpy.props.StringProperty(name="Shadows", default="shadowmap")
     bpy.types.Camera.translucent_context = bpy.props.StringProperty(name="Translucent", default="translucent")
+    bpy.types.Camera.is_probe = bpy.props.BoolProperty(name="Probe", default=False)
+    bpy.types.Camera.probe_texture = bpy.props.StringProperty(name="Texture", default="")
+    bpy.types.Camera.probe_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
+    bpy.types.Camera.probe_volume = bpy.props.StringProperty(name="Volume", default="")
+    bpy.types.Camera.probe_strength = bpy.props.FloatProperty(name="Strength", default=1.0)
+    bpy.types.Camera.probe_blending = bpy.props.FloatProperty(name="Blending", default=0.0)
 	# TODO: move to world
     bpy.types.Camera.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
     bpy.types.Camera.world_envtex_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
@@ -74,6 +80,13 @@ class DataPropsPanel(bpy.types.Panel):
         obj = bpy.context.object
 
         if obj.type == 'CAMERA':
+            layout.prop(obj.data, 'is_probe')
+            if obj.data.is_probe == True:
+                layout.prop(obj.data, 'probe_texture')
+                layout.prop_search(obj.data, "probe_volume", bpy.data, "objects")
+                layout.prop(obj.data, 'probe_strength')
+                layout.prop(obj.data, 'probe_blending')
+            
             layout.prop(obj.data, 'frustum_culling')
             layout.prop(obj.data, 'sort_front_to_back')
             layout.prop_search(obj.data, "pipeline_path", bpy.data, "node_groups")

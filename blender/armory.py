@@ -33,6 +33,7 @@ import math
 from mathutils import *
 import json
 import ast
+import write_probes
 from bpy_extras.io_utils import ExportHelper
 
 kNodeTypeNode = 0
@@ -1746,16 +1747,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o = Object()
 			# w = worldRef[0]
 			w = worldRef
-
 			# o.id = worldRef[1]["structName"]
 			o.id = w.name
-			envtex = bpy.data.cameras[0].world_envtex_name.rsplit('.', 1)[0]
-			o.radiance = envtex + '_radiance'
-			o.radiance_mipmaps = bpy.data.cameras[0].world_envtex_num_mips
-			o.irradiance = envtex + '_irradiance'
-			o.brdf = 'envmap_brdf'
-			o.strength = bpy.data.cameras[0].world_envtex_strength
-
+			self.cb_export_world(w, o)
 			self.output.world_resources.append(o)
 
 	def ExportObjects(self, scene):
@@ -2140,6 +2134,42 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		else:
 			# TODO: gather defs from vertex data when custom shader is used
 			o.shader = material.custom_shader_name
+	
+	def cb_export_world(self, world, o):
+		o.brdf = 'envmap_brdf'
+		o.probes = []
+		# Main probe
+		envtex = bpy.data.cameras[0].world_envtex_name.rsplit('.', 1)[0]
+		num_mips = bpy.data.cameras[0].world_envtex_num_mips
+		strength = bpy.data.cameras[0].world_envtex_strength
+		po = self.make_probe('world', envtex, num_mips, strength, 1.0, [0, 0, 0], [0, 0, 0])
+		o.probes.append(po)
+		
+		# Probe cameras attached in scene
+		for cam in bpy.data.cameras:
+			if cam.is_probe:
+				# Generate probe straight here for now
+				volume_object = bpy.data.objects[cam.probe_volume]
+				volume = [volume_object.scale[0], volume_object.scale[1], volume_object.scale[2]] 
+				volume_center = [volume_object.location[0], volume_object.location[1], volume_object.location[2]]
+				
+				disable_hdr = cam.probe_texture.endswith('.jpg')
+				cam.probe_num_mips = write_probes.write_probes(cam.probe_texture, disable_hdr, cam.probe_num_mips)
+				base_name = cam.probe_texture.rsplit('.', 1)[0]
+				po = self.make_probe(cam.name, base_name, cam.probe_num_mips, cam.probe_strength, cam.probe_blending, volume, volume_center)
+				o.probes.append(po)
+	
+	def make_probe(self, id, envtex, mipmaps, strength, blending, volume, volume_center):
+		po = Object()
+		po.id = id
+		po.radiance = envtex + '_radiance'
+		po.radiance_mipmaps = mipmaps
+		po.irradiance = envtex + '_irradiance'
+		po.strength = strength
+		po.blending = blending
+		po.volume = volume
+		po.volume_center = volume_center
+		return po
 			
 	def finalize_shader(self, o, defs, pipeline_passes):
 		# Merge duplicates and sort

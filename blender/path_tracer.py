@@ -4,8 +4,7 @@
 import bpy
 import os
 
-
-bounces = '5'
+bounces = '2'
 epsilon = '0.0001'
 infinity = '10000.0'
 lightSize = 0.1
@@ -17,19 +16,17 @@ sampleCount = 0
 MATERIAL_DIFFUSE = 0
 MATERIAL_MIRROR = 1
 MATERIAL_GLOSSY = 2
-material = MATERIAL_MIRROR
+material = MATERIAL_DIFFUSE
 
-YELLOW_BLUE_CORNELL_BOX = 0
-RED_GREEN_CORNELL_BOX = 1
-environment = YELLOW_BLUE_CORNELL_BOX
-
+# YELLOW_BLUE_CORNELL_BOX = 0
+# RED_GREEN_CORNELL_BOX = 1
+# environment = YELLOW_BLUE_CORNELL_BOX
 
 def concat(objects, func):
     text = ''
     for i in range(0, len(objects)):
         text += func(objects[i])
     return text
-
 
 tracerFragmentSourceHeader = """
 #version 450
@@ -43,15 +40,22 @@ uniform vec3 eye;
 uniform float timeSinceStart;
 //uniform sampler2D stexture;
 uniform float glossiness;
-vec3 roomCubeMin = vec3(-1.0, -1.0, -1.0);
-vec3 roomCubeMax = vec3(1.0, 1.0, 1.0);
+//vec3 roomCubeMin = vec3(0.0, 0.0, 0.0);
+//vec3 roomCubeMax = vec3(1.0, 1.0, 1.0);
+
+vec3 origin;
+vec3 ray;
+vec3 colorMask = vec3(1.0);
+vec3 accumulatedColor = vec3(0.0);
 """
 
 
 # compute the near and far intersections of the cube (stored in the x and y components) using the slab method
 # no intersection means vec.x > vec.y (really tNear > tFar)
 intersectCubeSource = """
-vec2 intersectCube(vec3 origin, vec3 ray, vec3 cubeMin, vec3 cubeMax) {
+vec2 intersectCube(vec3 origin, vec3 ray, vec3 cubeCenter, vec3 cubeSize) {
+    vec3 cubeMin = cubeCenter - cubeSize;
+    vec3 cubeMax = cubeCenter + cubeSize;
     vec3 tMin = (cubeMin - origin) / ray;
     vec3 tMax = (cubeMax - origin) / ray;
     vec3 t1 = min(tMin, tMax);
@@ -66,14 +70,16 @@ vec2 intersectCube(vec3 origin, vec3 ray, vec3 cubeMin, vec3 cubeMax) {
 # given that hit is a point on the cube, what is the surface normal?
 # TODO: do this with fewer branches
 normalForCubeSource = """
-vec3 normalForCube(vec3 hit, vec3 cubeMin, vec3 cubeMax) {
+vec3 normalForCube(vec3 hit, vec3 cubeCenter, vec3 cubeSize) {
+    vec3 cubeMin = cubeCenter - cubeSize;
+    vec3 cubeMax = cubeCenter + cubeSize;
     if (hit.x < cubeMin.x + """ + epsilon + """) return vec3(-1.0, 0.0, 0.0);
     else if (hit.x > cubeMax.x - """ + epsilon + """) return vec3(1.0, 0.0, 0.0);
     else if (hit.y < cubeMin.y + """ + epsilon + """) return vec3(0.0, -1.0, 0.0);
     else if (hit.y > cubeMax.y - """ + epsilon + """) return vec3(0.0, 1.0, 0.0);
     else if (hit.z < cubeMin.z + """ + epsilon + """) return vec3(0.0, 0.0, -1.0);
     //else return vec3(0.0, 0.0, 1.0);
-	return vec3(0.0, 0.0, 1.0);
+    return vec3(0.0, 0.0, 1.0);
 }
 """
 
@@ -117,7 +123,7 @@ vec3 cosineWeightedDirection(float seed, vec3 normal) {
     if (abs(normal.x) < 0.5) {
         sdir = cross(normal, vec3(1.0, 0.0, 0.0));
     }
-	else {
+    else {
         sdir = cross(normal, vec3(0.0, 1.0, 0.0));
     }
     tdir = cross(normal, sdir);
@@ -129,8 +135,11 @@ vec3 cosineWeightedDirection(float seed, vec3 normal) {
 # use the fragment position for randomness
 randomSource = """
 float random(vec3 scale, float seed) {
-    return fract(sin(dot(texCoord.xyx + seed, scale)) * 43758.5453 + seed);
-    // return fract(sin(dot(gl_FragCoord.xyz + seed, scale)) * 43758.5453 + seed);
+    // return fract(sin(dot(texCoord.xyx + seed, scale)) * 43758.5453 + seed);
+    float d = 43758.5453;
+    float dt = dot(texCoord.xyx + seed,scale);
+    float sn = mod(dt,3.1415926);
+    return fract(sin(sn) * d);
 }
 """
 
@@ -182,14 +191,14 @@ newGlossyRay = """
  specularHighlight = pow(specularHighlight, 3.0);"""
 
 
-yellowBlueCornellBox = """
- if (hit.x < -0.9999) surfaceColor = vec3(0.1, 0.5, 1.0); // blue 
- else if (hit.x > 0.9999) surfaceColor = vec3(1.0, 0.9, 0.1); // yellow"""
+# yellowBlueCornellBox = """
+#  if (hit.x < -0.9999) surfaceColor = vec3(0.1, 0.1, 0.7); // blue 
+#  else if (hit.x > 0.9999) surfaceColor = vec3(0.7, 0.1, 0.1); // yellow"""
 
 
-redGreenCornellBox = """
- if (hit.x < -0.9999) surfaceColor = vec3(1.0, 0.3, 0.1); // red
- else if (hit.x > 0.9999) surfaceColor = vec3(0.3, 1.0, 0.1); // green"""
+# redGreenCornellBox = """
+#  if (hit.x < -0.9999) surfaceColor = vec3(1.0, 0.3, 0.1); // red
+#  else if (hit.x > 0.9999) surfaceColor = vec3(0.3, 1.0, 0.1); // green"""
 
 
 def _getShadowTestCode(o):
@@ -215,22 +224,14 @@ def _getMinimumIntersectCode(o):
 def _getNormalCalculationCode(o):
     return o.getNormalCalculationCode()
 
-
-def makeCalculateColor(objects):
-  return """
-vec3 calculateColor(float time, vec3 origin, vec3 ray, vec3 light) {
-    vec3 colorMask = vec3(1.0);
-    vec3 accumulatedColor = vec3(0.0);
-  
-    // main raytracing loop
-    for (int bounce = 0; bounce < """ + bounces + """; bounce++) {
-      // compute the intersection with everything
-      vec2 tRoom = intersectCube(origin, ray, roomCubeMin, roomCubeMax);
+def makeDoBounce(objects):
+    return """
+int doBounce(float time, vec3 light, int bounce) {
+    // compute the intersection with everything
       """ + concat(objects, _getIntersectCode) + """
 
       // find the closest intersection
       float t = """ + infinity + """;
-      if (tRoom.x < tRoom.y) t = tRoom.y;
       """ + concat(objects, _getMinimumIntersectCode) + """
 
       // info about hit
@@ -239,17 +240,12 @@ vec3 calculateColor(float time, vec3 origin, vec3 ray, vec3 light) {
       float specularHighlight = 0.0;
       vec3 normal;
 
-      // calculate the normal (and change wall color)
-      if (t == tRoom.y) {
-        normal = -normalForCube(hit, roomCubeMin, roomCubeMax);
-        """ + [yellowBlueCornellBox, redGreenCornellBox][environment] + """
-        """ + newDiffuseRay + """
-      }
-      else if (t == """ + infinity + """) {
-        break;
+      if (t == """ + infinity + """) {
+        //break;
+        return 0;
       }
       else {
-		int aa = 0;
+        int aa = 0;
         if (aa == 1) {aa = 0;} // hack to discard the first 'else' in 'else if'
         """ + concat(objects, _getNormalCalculationCode) + """
         """ + [newDiffuseRay, newReflectiveRay, newGlossyRay][material] + """
@@ -257,39 +253,75 @@ vec3 calculateColor(float time, vec3 origin, vec3 ray, vec3 light) {
 
       // compute diffuse lighting contribution
       vec3 toLight = light - hit;
-      float diffuse = max(0.0, dot(normalize(toLight), normal));
-
-      // trace a shadow ray to the light
-      float shadowIntensity = shadow(hit + normal * """ + epsilon + """, toLight);
+      //float diffuse = max(0.0, dot(normalize(toLight), normal));
+      float diffuse = max(0.0, dot(normalize(toLight), normal)) / dot(toLight,toLight);
 
       // do light bounce
       colorMask *= surfaceColor;
-      accumulatedColor += colorMask * (""" + str(lightVal) + """ * diffuse * shadowIntensity);
-      accumulatedColor += colorMask * specularHighlight * shadowIntensity;
+      //if (bounce > 0) {
+        // trace a shadow ray to the light
+        float shadowIntensity = shadow(hit + normal * """ + epsilon + """, toLight);
+          
+        accumulatedColor += colorMask * (""" + str(lightVal) + """ * diffuse * shadowIntensity);
+        accumulatedColor += colorMask * specularHighlight * shadowIntensity;
+      //}
 
       // calculate next origin
       origin = hit;
-    }
+      
+    return 0;
+}
+"""
+
+def makeCalculateColor(objects):
+  return """
+vec3 calculateColor(float time, vec3 _origin, vec3 _ray, vec3 light) {
+    //vec3 colorMask = vec3(1.0);
+    //vec3 accumulatedColor = vec3(0.0);
+  
+    origin = _origin;
+    ray = _ray;
+  
+    // main raytracing loop
+    //for (int bounce = 0; bounce < """ + bounces + """; bounce++) {
+        int a;
+        a = doBounce(time, light, 0);
+        a = doBounce(time, light, 1);
+        a = doBounce(time, light, 2);
+    //}
 
     return accumulatedColor;
   }
 """
 
+def makeDoSamples(num_samples):
+    s = ''
+    for i in range(0, num_samples):
+        s += """newLight = light + uniformlyRandomVector(time - 53.0) * """ + str(lightSize) + """;
+"""
+        s += """col += calculateColor(time, eye, initialRay, newLight);
+"""
+        s += """time += 0.35;
+"""
+    return s
 
 def makeMain():
   return """
 void main() {
-  float time = timeSinceStart;
+  float time = 0.0;//timeSinceStart;
+  //timeSinceStart % 46735.275 ) / 1000;
   vec3 col = vec3(0.0);
   const int samples = 1;
+  vec3 newLight;
   
-  for (int i = 0; i < samples; i++) {
-	vec3 newLight = light + uniformlyRandomVector(time - 53.0) * """ + str(lightSize) + """;  
-	col += calculateColor(time, eye, initialRay, newLight);
-	time += 0.35;
-  }
+  //for (int i = 0; i < samples; i++) {  
+    """ + \
+    makeDoSamples(1) + \
+    """
+  //}
   
   gl_FragColor = vec4(vec3(col / samples), 1.0);
+  gl_FragColor.rgb = pow(gl_FragColor.rgb * 0.7, vec3(1.0 / 2.2));
 }
 """
 
@@ -310,22 +342,26 @@ def makeTracerFragmentSource(objects):
     uniformlyRandomDirectionSource + \
     uniformlyRandomVectorSource + \
     makeShadow(objects) + \
+    makeDoBounce(objects) + \
     makeCalculateColor(objects) + \
     makeMain()
 
 
 class Sphere:
-    def __init__(self, center, radius, id):
+    def __init__(self, center, radius, color, id):
         self.center = center;
         self.radius = radius;
+        self.color = color;
         self.centerStr = 'sphereCenter' + str(id);
         self.radiusStr = 'sphereRadius' + str(id);
+        self.colorStr = 'sphereColor' + str(id);
         self.intersectStr = 'tSphere' + str(id);
         
     def getGlobalCode(self):
         return """
 uniform vec3 """ + self.centerStr + """;
-uniform float """ + self.radiusStr + """;"""
+uniform float """ + self.radiusStr + """;
+uniform vec3 """ + self.colorStr + """;"""
  
     def getIntersectCode(self):
         return """
@@ -342,25 +378,28 @@ uniform float """ + self.radiusStr + """;"""
 
     def getNormalCalculationCode(self):
         return """
- else if (t == """ + self.intersectStr + """) normal = normalForSphere(hit, """ + self.centerStr + """, """ + self.radiusStr + """);"""     
+ else if (t == """ + self.intersectStr + """) { normal = normalForSphere(hit, """ + self.centerStr + """, """ + self.radiusStr + """); surfaceColor = """ + self.colorStr  + """; }"""     
 
 
 class Cube:
-    def __init__(self, minCorner, maxCorner, id):
-        self.minCorner = minCorner;
-        self.maxCorner = maxCorner;
-        self.minStr = 'cubeMin' + str(id);
-        self.maxStr = 'cubeMax' + str(id);
+    def __init__(self, center, size, color, id):
+        self.center = center;
+        self.size = size;
+        self.color = color;
+        self.centerStr = 'cubeCenter' + str(id);
+        self.sizeStr = 'cubeSize' + str(id);
+        self.colorStr = 'cubeColor' + str(id);
         self.intersectStr = 'tCube' + str(id);
         
     def getGlobalCode(self):
         return """
-uniform vec3 """ + self.minStr + """;
-uniform vec3 """ + self.maxStr + """;"""
+uniform vec3 """ + self.centerStr + """;
+uniform vec3 """ + self.sizeStr + """;
+uniform vec3 """ + self.colorStr + """;"""
  
     def getIntersectCode(self):
         return """
- vec2 """ + self.intersectStr + """ = intersectCube(origin, ray, """ + self.minStr + """, """ + self.maxStr + """);"""
+ vec2 """ + self.intersectStr + """ = intersectCube(origin, ray, """ + self.centerStr + """, """ + self.sizeStr + """);"""
  
     def getShadowTestCode(self):
         return """
@@ -375,7 +414,8 @@ uniform vec3 """ + self.maxStr + """;"""
         return """
  // have to compare intersectStr.x < intersectStr.y otherwise two coplanar
  // cubes will look wrong (one cube will "steal" the hit from the other)
- else if (t == """ + self.intersectStr + """.x && """ + self.intersectStr + """.x < """ + self.intersectStr + """.y) normal = normalForCube(hit, """ + self.minStr + """, """ + self.maxStr + """);"""
+ else if (t == """ + self.intersectStr + """.x) { if (""" + self.intersectStr + """.x < """ + self.intersectStr + """.y) normal = normalForCube(hit, """ + self.centerStr + """, """ + self.sizeStr + """); surfaceColor = """ + self.colorStr + """; }"""
+ #else if (t == """ + self.intersectStr + """.x && """ + self.intersectStr + """.x < """ + self.intersectStr + """.y) normal = normalForCube(hit, """ + self.centerStr + """, """ + self.sizeStr + """);"""
 
 
 class Light:
@@ -399,16 +439,20 @@ class Light:
 
 
 def initObjects():
-	nextObjectId = 0
-	objects = []
-	objects.append(Light())
-	
-	for o in bpy.context.scene.objects:
-		if o.name.split('.', 1)[0] == 'Sphere':
-			objects.append(Sphere([0, 0, 0], 0, nextObjectId))
-			nextObjectId += 1
-	
-	return objects
+    nextSphereId = 0
+    nextCubeId = 0
+    objects = []
+    objects.append(Light())
+    
+    for o in bpy.context.scene.objects:
+        if o.name.split('.', 1)[0] == 'Sphere':
+            objects.append(Sphere([0, 0, 0], 0, [0.8, 0.8, 0.8], nextSphereId))
+            nextSphereId += 1
+        elif o.name.split('.', 1)[0] == 'Cube':
+            objects.append(Cube([0, 0, 0], [0, 0, 0], [0.8, 0.8, 0.8], nextCubeId))
+            nextCubeId += 1
+    
+    return objects
 
 objects = initObjects()
 

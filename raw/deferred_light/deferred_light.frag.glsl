@@ -9,19 +9,42 @@ precision mediump float;
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
-uniform sampler2D gbuffer1; 
+uniform sampler2D gbuffer1;
 
-uniform sampler2D ssaotex;
-
-uniform sampler2D shadowMap;
 uniform sampler2D senvmapRadiance;
 uniform sampler2D senvmapIrradiance;
+uniform int envmapNumMipmaps;
+uniform float envmapStrength;
 uniform sampler2D senvmapBrdf;
+
+#ifdef _Probe1
+uniform sampler2D senvmapRadiance_1;
+uniform sampler2D senvmapIrradiance_1;
+// uniform int envmapNumMipmaps_1;
+// uniform float envmapStrength_1;
+#endif
+#ifdef _Probe2
+uniform sampler2D senvmapRadiance_2;
+uniform sampler2D senvmapIrradiance_2;
+#endif
+#ifdef _Probe3
+uniform sampler2D senvmapRadiance_3;
+uniform sampler2D senvmapIrradiance_3;
+#endif
+#ifdef _Probe4
+uniform sampler2D senvmapRadiance_4;
+uniform sampler2D senvmapIrradiance_4;
+#endif
+
+// uniform sampler2D giblur; // Path-traced
+
+uniform sampler2D ssaotex;
+uniform sampler2D shadowMap;
+
+// #ifdef _LTC
 // uniform sampler2D sltcMat;
 // uniform sampler2D sltcMag;
-
-uniform float envmapStrength;
-uniform int envmapNumMipmaps;
+// #endif
 
 // uniform mat4 invVP;
 uniform mat4 LMVP;
@@ -185,7 +208,7 @@ float shadowTest(vec4 lPos) {
 	lPosH.x = (lPosH.x + 1.0) / 2.0;
     lPosH.y = 1.0 - ((-lPosH.y + 1.0) / (2.0));
 	
-	const float bias = 0.0029;
+	const float bias = 0.012;
 	// const float bias = 0.01;
 	return PCF(vec2(2048, 2048), lPosH.st, lPosH.z - bias);
 }
@@ -408,6 +431,10 @@ float wardSpecular(vec3 N, vec3 H, float dotNL, float dotNV, float dotNH, vec3 f
 }
 #endif
 
+vec4 gaussian(vec4 x, vec4 m, float s) {
+    return exp(-(x-m)*(x-m)/(s*s));
+}
+
 void main() {
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	// float depth = 1.0 - g0.a;
@@ -453,6 +480,8 @@ void main() {
 		// visibility = 1.0;
 	}
 	
+    
+    
 	// Direct
 	vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);
     // Aniso spec
@@ -463,32 +492,103 @@ void main() {
 	direct = direct * lightColor * lightStrength;
 	
 	// SSS only masked objects
-	if (texture(gbuffer0, texCoord).a == 2.0) {
+    float mask = g0.a;
+	if (mask == 2.0) {
 		direct.rgb = direct.rgb * SSSSTransmittance(1.0, 0.005, p, n, lightDir);
 	}
 
+
 	// Indirect
-	vec3 indirectDiffuse = texture(senvmapIrradiance, envMapEquirect(n)).rgb;
-#ifdef _LDR
-	indirectDiffuse = pow(indirectDiffuse, vec3(2.2));
+#ifdef _Probe1
+    float probeFactor = mask;
+    float probeID = floor(probeFactor);
+    float probeFract = fract(probeFactor);
+    
+    vec3 indirectDiffuse;
+    vec3 prefilteredColor;
+    vec2 envCoord = envMapEquirect(n);
+    
+    float lod = getMipLevelFromRoughness(roughness);
+    vec3 reflectionWorld = reflect(-v, n); 
+    vec2 envCoordRefl = envMapEquirect(reflectionWorld);
+    
+    // Global probe only
+    if (probeID == 0.0) {
+        indirectDiffuse = texture(senvmapIrradiance, envCoord).rgb;
+        prefilteredColor = textureLod(senvmapRadiance, envCoordRefl, lod).rgb;
+    }
+    // fract 0 = local probe, 1 = global probe 
+    else if (probeID == 1.0) {
+        indirectDiffuse = texture(senvmapIrradiance_1, envCoord).rgb * (1.0 - probeFract);
+        prefilteredColor = textureLod(senvmapRadiance_1, envCoordRefl, lod).rgb * (1.0 - probeFract);
+        if (probeFract > 0.0) {
+            indirectDiffuse += texture(senvmapIrradiance, envCoord).rgb * (probeFract);
+            prefilteredColor += textureLod(senvmapRadiance, envCoordRefl, lod).rgb * (probeFract);
+        }
+    }
+#ifdef _Probe2
+    else if (probeID == 2.0) {
+        indirectDiffuse = texture(senvmapIrradiance_2, envCoord).rgb * (1.0 - probeFract);
+        prefilteredColor = textureLod(senvmapRadiance_2, envCoordRefl, lod).rgb * (1.0 - probeFract);
+        if (probeFract > 0.0) {
+            indirectDiffuse += texture(senvmapIrradiance, envCoord).rgb * (probeFract);
+            prefilteredColor += textureLod(senvmapRadiance, envCoordRefl, lod).rgb * (probeFract);
+        }
+    }
 #endif
-	indirectDiffuse *= albedo;
-	
-	vec3 reflectionWorld = reflect(-v, n); 
+#ifdef _Probe3
+    else if (probeID == 3.0) {
+        indirectDiffuse = texture(senvmapIrradiance_3, envCoord).rgb * (1.0 - probeFract);
+        prefilteredColor = textureLod(senvmapRadiance_3, envCoordRefl, lod).rgb * (1.0 - probeFract);
+        if (probeFract > 0.0) {
+            indirectDiffuse += texture(senvmapIrradiance, envCoord).rgb * (probeFract);
+            prefilteredColor += textureLod(senvmapRadiance, envCoordRefl, lod).rgb * (probeFract);
+        }
+    }
+#endif
+#ifdef _Probe4
+    else if (probeID == 4.0) {
+        indirectDiffuse = texture(senvmapIrradiance_4, envCoord).rgb * (1.0 - probeFract);
+        prefilteredColor = textureLod(senvmapRadiance_4, envCoordRefl, lod).rgb * (1.0 - probeFract);
+        if (probeFract > 0.0) {
+            indirectDiffuse += texture(senvmapIrradiance, envCoord).rgb * (probeFract);
+            prefilteredColor += textureLod(senvmapRadiance, envCoordRefl, lod).rgb * (probeFract);
+        }
+    }
+#endif
+#else // No probes   
+	vec3 indirectDiffuse = texture(senvmapIrradiance, envMapEquirect(n)).rgb;
+    
+    vec3 reflectionWorld = reflect(-v, n); 
 	float lod = getMipLevelFromRoughness(roughness);
 	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
-#ifdef _LDR
-	prefilteredColor = pow(prefilteredColor, vec3(2.2));
 #endif
+
+
+#ifdef _LDR
+	indirectDiffuse = pow(indirectDiffuse, vec3(2.2));
+    prefilteredColor = pow(prefilteredColor, vec3(2.2));
+#endif
+    indirectDiffuse = pow(indirectDiffuse, vec3(1.0/2.2));////
+    prefilteredColor = pow(prefilteredColor, vec3(1.02.2));////
+	indirectDiffuse *= albedo;
+	
 	
 	vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;
 	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 	vec3 indirect = indirectDiffuse + indirectSpecular;
 	indirect = indirect * lightColor * lightStrength * envmapStrength;
 	float occlusion = g0.b;
+    
+    vec4 outColor = vec4(vec3(direct * visibility + indirect * ao * occlusion), 1.0);
 
-	vec4 outColor = vec4(vec3(direct * visibility + indirect * ao * occlusion), 1.0);
-	
+
+
+    // Path-traced
+    // vec4 nois = texture(giblur, texCoord);
+    // nois.rgb = pow(nois.rgb, vec3(1.0 / 2.2));
+    // indirect = nois.rgb;
+    // vec4 outColor = vec4(vec3(direct * visibility + indirect * 3.0 * ao * occlusion), 1.0);
 	
 	
 	// LTC

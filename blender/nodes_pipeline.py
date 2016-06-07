@@ -495,13 +495,13 @@ def buildNodeTree(node_group, shader_references, asset_references):
 	path = 'Assets/generated/pipelines/'
 	node_group_name = node_group.name.replace('.', '_')
 	
-	res.id = node_group_name
-	res.render_targets, res.depth_buffers = get_render_targets(node_group)
-	res.stages = []
-	
 	rn = getRootNode(node_group)
 	if rn == None:
 		return
+	
+	res.id = node_group_name
+	res.render_targets, res.depth_buffers = get_render_targets(rn, node_group)
+	res.stages = []
 	
 	# Used to merge bind target nodes into one stage	
 	last_bind_target = None
@@ -602,10 +602,11 @@ def make_draw_material_quad(stage, node_group, node, shader_references, asset_re
 	material_context = node.inputs[context_index].default_value
 	stage.params.append(material_context)
 	# Include resource and shaders
+	shader_context = node.inputs[context_index].default_value
 	scon = shader_context.split('/')
-	dir_name = scon[0]
-	# Append world defs
-	res_name = scon[1]
+	dir_name = scon[2]
+	# No world defs for material passes
+	res_name = scon[2]
 	asset_references.append('compiled/ShaderResources/' + dir_name + '/' + res_name + '.json')
 	shader_references.append('compiled/Shaders/' + dir_name + '/' + res_name)
 
@@ -758,6 +759,57 @@ def getRootNode(node_group):
 		if n.bl_idname == 'BeginNodeType':
 			return findNodeByLinkFrom(node_group, n, n.outputs[0])
 
+def get_render_targets(root_node, node_group):
+	render_targets = []
+	depth_buffers = []
+	traverse_for_rt(root_node, node_group, render_targets, depth_buffers)
+	return render_targets, depth_buffers
+	
+def traverse_for_rt(node, node_group, render_targets, depth_buffers):
+	# Collect render targets
+	if node.bl_idname == 'SetTargetNodeType':
+		if node.inputs[1].is_linked:
+			tnode = findNodeByLink(node_group, node, node.inputs[1])
+			parse_render_target(tnode, node_group, render_targets, depth_buffers)
+	
+	# Next stage
+	if node.outputs[0].is_linked:
+		stagenode = findNodeByLinkFrom(node_group, node, node.outputs[0])
+		traverse_for_rt(stagenode, node_group, render_targets, depth_buffers)
+		
+def parse_render_target(node, node_group, render_targets, depth_buffers):
+	if node.bl_idname == 'TargetNodeType':
+		# Target already exists
+		id = node.inputs[0].default_value
+		for t in render_targets:
+			if t.id == id:
+				return
+		
+		depth_buffer_id = None
+		if node.inputs[3].is_linked:
+			# Find depth buffer
+			depth_node = findNodeByLink(node_group, node, node.inputs[3])
+			depth_buffer_id = depth_node.inputs[0].default_value
+			# Append depth buffer
+			found = False
+			for db in depth_buffers:
+				if db.id == depth_buffer_id:
+					found = True
+					break 
+			if found == False:
+				db = Object()
+				db.id = depth_buffer_id
+				db.stencil_buffer = depth_node.inputs[1].default_value
+				depth_buffers.append(db)	
+		# Append target	
+		target = make_render_target(node, depth_buffer_id=depth_buffer_id)
+		render_targets.append(target)
+	elif node.bl_idname == 'GBufferNodeType':
+		for i in range(0, 5):
+			if node.inputs[i].is_linked:
+				n = findNodeByLink(node_group, node, node.inputs[i])
+				parse_render_target(n, node_group, render_targets, depth_buffers)
+
 def make_render_target(n, depth_buffer_id=None):
 	target = Object()
 	target.id = n.inputs[0].default_value
@@ -768,28 +820,4 @@ def make_render_target(n, depth_buffer_id=None):
 	if depth_buffer_id != None:
 		target.depth_buffer = depth_buffer_id
 	return target
-
-def get_render_targets(node_group):
-	render_targets = []
-	depth_buffers = []
-	for n in node_group.nodes:
-		if n.bl_idname == 'TargetNodeType':
-			depth_buffer_id = None
-			if n.inputs[3].is_linked:
-				depth_node = findNodeByLink(node_group, n, n.inputs[3])
-				depth_buffer_id = depth_node.inputs[0].default_value
-				# Append depth buffer
-				found = False
-				for db in depth_buffers:
-					if db.id == depth_buffer_id:
-						found = True
-						break 
-				if found == False:
-					db = Object()
-					db.id = depth_buffer_id
-					db.stencil_buffer = depth_node.inputs[1].default_value
-					depth_buffers.append(db)	
-			# Append target	
-			target = make_render_target(n, depth_buffer_id=depth_buffer_id)
-			render_targets.append(target)
-	return render_targets, depth_buffers
+	

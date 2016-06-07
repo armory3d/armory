@@ -348,5 +348,9 @@ void main() {
     // col.rgb = vec3(clamp(dot(col.rgb, col.rgb), 0.0, 1.0));
 	// col.rgb = vec3((col.r * 0.3 + col.g * 0.59 + col.b * 0.11) / 3.0) * 2.5;
     
+	// Letter box
+	// const float letterBoxSize = 0.1;
+	// col.rgb *= 1.0 - step(0.5 - letterBoxSize, abs(0.5 - texCoord.y));
+	
 	gl_FragColor = col; 
 }

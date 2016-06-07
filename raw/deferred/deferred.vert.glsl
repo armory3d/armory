@@ -36,6 +36,11 @@ uniform vec4 albedo_color;
 uniform float skinBones[50 * 12];
 #endif
 
+#ifdef _Probe1
+uniform mat4 M;
+#endif
+
+
 out vec4 mvpposition;
 #ifdef _AMTex
 out vec2 texCoord;
@@ -46,6 +51,10 @@ out vec4 matColor;
 out mat3 TBN;
 #else
 out vec3 normal;
+#endif
+
+#ifdef _Probe1
+out vec4 mpos;
 #endif
 
 #ifdef _Skinning
@@ -102,6 +111,10 @@ void main() {
 	// Cylindrical
 	//MV[0][0] = 1.0; MV[0][1] = 0.0; MV[0][2] = 0.0;
 	//MV[2][0] = 0.0; MV[2][1] = 0.0; MV[2][2] = 1.0;
+#endif
+
+#ifdef _Probe1
+	mpos = M * sPos;
 #endif
 
 	gl_Position = P * MV * sPos;

@@ -20,6 +20,14 @@
 				{
 					"id": "timeSinceStart",
 					"link": "_time"
+				},
+				{
+					"id": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"id": "light",
+					"link": "_lightPosition"
 				}
 			],
 			"texture_params": [],

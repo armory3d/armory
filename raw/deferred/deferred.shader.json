@@ -37,6 +37,26 @@
 					"id": "skinBones",
 					"link": "_skinBones",
 					"ifdef": ["_Skinning"]
+				},
+				{
+					"id": "probeID",
+					"link": "_probeID",
+					"ifdef": ["_Probe1"]
+				},
+				{
+					"id": "M",
+					"link": "_modelMatrix",
+					"ifdef": ["_Probe1"]
+				},
+				{
+					"id": "probeVolumeCenter",
+					"link": "_probeVolumeCenter",
+					"ifdef": ["_Probe1"]
+				},
+				{
+					"id": "probeVolumeSize",
+					"link": "_probeVolumeSize",
+					"ifdef": ["_Probe1"]
 				}
 			],
 			"vertex_shader": "deferred.vert.glsl",

@@ -6,13 +6,12 @@ import lue.math.Vec4;
 import lue.Trait;
 import lue.node.Transform;
 import lue.node.RootNode;
+import lue.node.ModelNode;
 import lue.resource.MaterialResource.MaterialContext;
 
 class PathTracer extends Trait {
 
 	var context:MaterialContext;
-	var eyeLocation:Int;
-	var lightLocation:Int;
 	var ray00Location:Int;
 	var ray01Location:Int;
 	var ray10Location:Int;
@@ -28,24 +27,18 @@ class PathTracer extends Trait {
         requestUpdate(update);
     }
 	
+	function getColorFromNode(node:ModelNode):Array<Float> {
+		// Hard code for now
+		for (c in node.materials[0].contexts[0].resource.bind_constants) {
+			if (c.id == "albedo_color") {
+				return c.vec4;
+			}
+		}
+		return null;
+	}
+	
 	function init() {
 		context = Eg.getMaterialResource('pt_material').getContext('pt_trace_pass');
-		
-		context.resource.bind_constants.push(
-			{
-				id: "eye",
-				vec3: [0.0, 0.0, 0.0]
-			}
-		);
-		eyeLocation = context.resource.bind_constants.length - 1;
-		
-		context.resource.bind_constants.push(
-			{
-				id: "light",
-				vec3: [0.9, 0.6, 1.1]
-			}
-		);
-		lightLocation = context.resource.bind_constants.length - 1;
 		
 		context.resource.bind_constants.push(
 			{
@@ -89,16 +82,15 @@ class PathTracer extends Trait {
 		objectLocations = [];
 		transformMap = new Map();
 		var sphereNum = 0;
+		var cubeNum = 0;
 		for (n in RootNode.models) {
 			if (n.id.split(".")[0] == "Sphere") {
-				
 				context.resource.bind_constants.push(
 					{
 						id: "sphereCenter" + sphereNum,
 						vec3: [0.0, 0.0, 0.0]
 					}
 				);
-				
 				var loc = context.resource.bind_constants.length - 1;
 				objectLocations.push(loc);
 				transformMap.set(loc, n.transform);
@@ -106,11 +98,47 @@ class PathTracer extends Trait {
 				context.resource.bind_constants.push(
 					{
 						id: "sphereRadius" + sphereNum,
-						float: 0.288
+						float: n.transform.size.x / 2 - 0.02
+					}
+				);
+				
+				var col = getColorFromNode(n);
+				context.resource.bind_constants.push(
+					{
+						id: "sphereColor" + sphereNum,
+						vec3: [col[0], col[1], col[2]]
 					}
 				);
 				
 				sphereNum++;
+			}
+			else if (n.id.split(".")[0] == "Cube") {
+				context.resource.bind_constants.push(
+					{
+						id: "cubeCenter" + cubeNum,
+						vec3: [0.0, 0.0, 0.0]
+					}
+				);
+				var loc = context.resource.bind_constants.length - 1;
+				objectLocations.push(loc);
+				transformMap.set(loc, n.transform);
+				
+				context.resource.bind_constants.push(
+					{
+						id: "cubeSize" + cubeNum,
+						vec3: [n.transform.size.x / 2, n.transform.size.y / 2, n.transform.size.z / 2]
+					}
+				);
+				
+				var col = getColorFromNode(n);
+				context.resource.bind_constants.push(
+					{
+						id: "cubeColor" + cubeNum,
+						vec3: [col[0], col[1], col[2]]
+					}
+				);
+				
+				cubeNum++;
 			}
 		}
 	}
@@ -119,9 +147,10 @@ class PathTracer extends Trait {
 		var camera = RootNode.cameras[0];
 		var eye = camera.transform.pos;
 		
-		//var jitter = Mat4.identity();
-		//jitter.initTranslate(Math.random() * 2 - 1, Math.random() * 2 - 1, 0);
-		//jitter.multiplyScalar(1 / lue.App.w);
+		// var jitter = Mat4.identity();
+		// jitter.initTranslate(Math.random() * 2 - 1, Math.random() * 2 - 1, 0);
+		// jitter.multiplyScalar(1 / lue.App.w);
+		// jitter.multiplyScalar(1 / 400);
 		var mvp = Mat4.identity();
 		mvp.mult2(camera.V);
 		mvp.mult2(camera.P);
@@ -131,7 +160,6 @@ class PathTracer extends Trait {
 		var matrix = inverse;
 		
 		// Set uniforms	
-		context.resource.bind_constants[eyeLocation].vec3 = [eye.x, eye.y, eye.z];
 		
 		var v = getEyeRay(matrix, -1, -1, eye);
 		context.resource.bind_constants[ray00Location].vec3 = [v.x, v.y, v.z];
@@ -147,9 +175,11 @@ class PathTracer extends Trait {
 		
 		for (loc in objectLocations) {
 			var t:Transform = transformMap.get(loc);
-			context.resource.bind_constants[loc].vec3[0] = t.absx();
-			context.resource.bind_constants[loc].vec3[1] = t.absy();
-			context.resource.bind_constants[loc].vec3[2] = t.absz();
+			t.buildMatrix();
+			var c = context.resource.bind_constants[loc];
+			c.vec3[0] = t.absx();
+			c.vec3[1] = t.absy();
+			c.vec3[2] = t.absz();
 		}
     }
 	
