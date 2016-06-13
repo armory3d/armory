@@ -46,7 +46,7 @@
 					"link": "_lightModelViewProjectionMatrix"
 				},
 				{
-					"id": "senvmapIrradiance",
+					"id": "shirr",
 					"link": "_envmapIrradiance"
 				},
 				{
@@ -64,46 +64,6 @@
 				{
 					"id": "envmapNumMipmaps",
 					"link": "_envmapNumMipmaps"
-				},
-				{
-					"id": "senvmapIrradiance_1",
-					"link": "_envmapIrradiance_1",
-					"ifdef": ["_Probe1"]
-				},
-				{
-					"id": "senvmapRadiance_1",
-					"link": "_envmapRadiance_1",
-					"ifdef": ["_Probe1"]
-				},
-				{
-					"id": "senvmapIrradiance_2",
-					"link": "_envmapIrradiance_2",
-					"ifdef": ["_Probe2"]
-				},
-				{
-					"id": "senvmapRadiance_2",
-					"link": "_envmapRadiance_2",
-					"ifdef": ["_Probe2"]
-				},
-				{
-					"id": "senvmapIrradiance_3",
-					"link": "_envmapIrradiance_3",
-					"ifdef": ["_Probe3"]
-				},
-				{
-					"id": "senvmapRadiance_3",
-					"link": "_envmapRadiance_3",
-					"ifdef": ["_Probe3"]
-				},
-				{
-					"id": "senvmapIrradiance_4",
-					"link": "_envmapIrradiance_4",
-					"ifdef": ["_Probe4"]
-				},
-				{
-					"id": "senvmapRadiance_4",
-					"link": "_envmapRadiance_4",
-					"ifdef": ["_Probe4"]
 				},
 				{
 					"id": "sltcMat",

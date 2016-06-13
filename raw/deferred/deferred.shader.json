@@ -13,7 +13,7 @@
 				},
 				{
 					"id": "cull_mode",
-					"value": "counter_clockwise"
+					"value": "none"
 				}
 			],
 			"links": [
@@ -34,29 +34,29 @@
 					"link": "_lightModelViewProjectionMatrix"
 				},
 				{
-					"id": "skinBones",
-					"link": "_skinBones",
-					"ifdef": ["_Skinning"]
-				},
-				{
-					"id": "probeID",
-					"link": "_probeID",
-					"ifdef": ["_Probe1"]
-				},
-				{
 					"id": "M",
 					"link": "_modelMatrix",
-					"ifdef": ["_Probe1"]
+					"ifdef": ["_Probes"]
 				},
 				{
 					"id": "probeVolumeCenter",
 					"link": "_probeVolumeCenter",
-					"ifdef": ["_Probe1"]
+					"ifdef": ["_Probes"]
 				},
-				{
+				{	
 					"id": "probeVolumeSize",
 					"link": "_probeVolumeSize",
-					"ifdef": ["_Probe1"]
+					"ifdef": ["_Probes"]
+				},
+				{	
+					"id": "probeID",
+					"link": "_probeID",
+					"ifdef": ["_Probes"]
+				},
+				{
+					"id": "skinBones",
+					"link": "_skinBones",
+					"ifdef": ["_Skinning"]
 				}
 			],
 			"vertex_shader": "deferred.vert.glsl",
@@ -71,7 +71,7 @@
 				},
 				{
 					"id": "compare_mode",
-					"value": "less"
+					"value": "less_equal"
 				},
 				{
 					"id": "cull_mode",

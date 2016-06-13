@@ -2,19 +2,24 @@ import bpy
 import os
 import sys
 import subprocess
+import json
+import re
+
+class Object:
+	def to_JSON(self):
+		return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
 # Generate probes from environment map
-def write_probes(image_name, disable_hdr, cached_num_mips):
+def write_probes(image_name, disable_hdr, cached_num_mips, generate_radiance=True):
 	if not os.path.exists('Assets/generated/envmaps'):
 		os.makedirs('Assets/generated/envmaps')
 	
 	name_split = image_name.rsplit('.', 1)
 	base_name = name_split[0]
-	ext_name = name_split[1]
 	# Assume irradiance has to exist for now
-	if os.path.exists('Assets/generated/envmaps/' + base_name + '_irradiance.' + ext_name):
+	if os.path.exists('Assets/generated/envmaps/' + base_name + '_irradiance.json'):
 		return cached_num_mips
-		
+	
 	# Get paths
 	# haxelib_path = "haxelib"
 	# if platform.system() == 'Darwin':
@@ -66,19 +71,36 @@ def write_probes(image_name, disable_hdr, cached_num_mips):
 		' --outputGammaNumerator 1.0' + \
 		' --outputGammaDenominator ' + output_gama_numerator
 	
+	# Irradiance image
+	# output_file = 'Assets/generated/envmaps/' + base_name + '_irradiance'
+	# subprocess.call([ \
+	# 	cmft_path + 'cmft-osx' + \
+	# 	' --input ' + input_file + \
+	# 	' --filter irradiance' + \
+	# 	' --dstFaceSize ' + dst_face_size + \
+	# 	gama_options + \
+	# 	' --outputNum 1' + \
+	# 	' --output0 ' + output_file + \
+	# 	' --output0params hdr,rgbe,latlong'], shell=True)
+	# generated_files.append(output_file)
+	
+	# Irradiance spherical harmonics
 	output_file = 'Assets/generated/envmaps/' + base_name + '_irradiance'
 	subprocess.call([ \
 		cmft_path + 'cmft-osx' + \
 		' --input ' + input_file + \
-		' --filter irradiance' + \
-		' --dstFaceSize ' + dst_face_size + \
-		gama_options + \
+		' --filter shcoeffs' + \
+		#gama_options + \
 		' --outputNum 1' + \
-		' --output0 ' + output_file + \
-		' --output0params hdr,rgbe,latlong'], shell=True)
+		' --output0 ' + output_file], shell=True)
 	generated_files.append(output_file)
 	
-	# Generate radiance
+	sh_to_json(output_file)
+	
+	# Mip-mapped radiance image
+	if generate_radiance == False:
+		return cached_num_mips
+		
 	output_file = 'Assets/generated/envmaps/' + base_name + '_radiance'
 	outformat = 'jpg' if disable_hdr else 'hdr'
 	output = subprocess.check_output([ \
@@ -155,4 +177,29 @@ def write_probes(image_name, disable_hdr, cached_num_mips):
 	
 	mip_count += 5
 	return mip_count
+
+# Parse sh coefs into json array
+def sh_to_json(sh_file):
+	sh_lines = open(sh_file + '.c').read().splitlines()
+	band0_line = sh_lines[5]
+	band1_line = sh_lines[6]
+	band2_line = sh_lines[7]
 	
+	irradiance_floats = []
+	parse_band_floats(irradiance_floats, band0_line)
+	parse_band_floats(irradiance_floats, band1_line)
+	parse_band_floats(irradiance_floats, band2_line)
+	
+	with open(sh_file + '.json', 'w') as f:
+		sh_json = Object()
+		sh_json.irradiance = irradiance_floats
+		f.write(sh_json.to_JSON())
+	
+	# Clean up .c
+	os.remove(sh_file + '.c')
+
+def parse_band_floats(irradiance_floats, band_line):
+	string_floats = re.findall(r'[-+]?\d*\.\d+|\d+', band_line)
+	string_floats = string_floats[1:] # Remove 'Band 0/1/2' number
+	for s in string_floats:
+		irradiance_floats.append(float(s))

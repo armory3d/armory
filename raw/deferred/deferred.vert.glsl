@@ -36,7 +36,7 @@ uniform vec4 albedo_color;
 uniform float skinBones[50 * 12];
 #endif
 
-#ifdef _Probe1
+#ifdef _Probes
 uniform mat4 M;
 #endif
 
@@ -53,7 +53,7 @@ out mat3 TBN;
 out vec3 normal;
 #endif
 
-#ifdef _Probe1
+#ifdef _Probes
 out vec4 mpos;
 #endif
 
@@ -113,7 +113,7 @@ void main() {
 	//MV[2][0] = 0.0; MV[2][1] = 0.0; MV[2][2] = 1.0;
 #endif
 
-#ifdef _Probe1
+#ifdef _Probes
 	mpos = M * sPos;
 #endif
 

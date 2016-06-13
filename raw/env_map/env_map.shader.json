@@ -26,6 +26,10 @@
 					"link": "_inverseProjectionMatrix"
 				},
 				{
+					"id": "envmapStrength",
+					"link": "_envmapStrength"
+				},
+				{
 					"id": "A",
 					"link": "_hosekA",
 					"ifdef": ["_Hosek"]

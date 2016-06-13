@@ -2154,7 +2154,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				volume_center = [volume_object.location[0], volume_object.location[1], volume_object.location[2]]
 				
 				disable_hdr = cam.probe_texture.endswith('.jpg')
-				cam.probe_num_mips = write_probes.write_probes(cam.probe_texture, disable_hdr, cam.probe_num_mips)
+				cam.probe_num_mips = write_probes.write_probes(cam.probe_texture, disable_hdr, cam.probe_num_mips, generate_radiance=False)
 				base_name = cam.probe_texture.rsplit('.', 1)[0]
 				po = self.make_probe(cam.name, base_name, cam.probe_num_mips, cam.probe_strength, cam.probe_blending, volume, volume_center)
 				o.probes.append(po)

@@ -270,7 +270,8 @@ void main() {
 	else {
 		uv = m + normalize(d) * atan(r * -power * 10.0) * bind / atan(-power * bind * 10.0);
 	}
-	vec4 col = texture(tex, uv);
+	// vec4 col = texture(tex, uv);
+	vec4 col = texture(tex, texCoord);
 	
 	// Blur
 	// float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
@@ -312,7 +313,7 @@ void main() {
 	// const float grainStrength = 4.0;
     // float x = (texCoord.x + 4.0) * (texCoord.y + 4.0 ) * (time * 10.0);
 	// vec4 grain = vec4(mod((mod(x, 13.0) + 1.0) * (mod(x, 123.0) + 1.0), 0.01)-0.005) * grainStrength;
-	// col += grain;
+	//col += grain;
 	
 	// Ice
 	// vec4 ice = screenSpaceIce(vec3(0.8, 0.9, 1.0));
@@ -329,7 +330,7 @@ void main() {
 	// col.rgb = screenSpaceCameraRain();
 	
 	// Vignetting
-	col.rgb *= vignette();
+	//col.rgb *= vignette();
 	
 	// Exposure
 	const float aperture = 16;

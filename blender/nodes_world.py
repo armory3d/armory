@@ -87,11 +87,9 @@ def buildNodeTree(world_name, node_group, shader_references, asset_references):
 			bpy.data.worlds[0].world_defs += '_EnvSky'
 	
 	# Enable probes
-	num_probes = 0
 	for cam in bpy.data.cameras:
 		if cam.is_probe:
-			num_probes += 1
-			bpy.data.worlds[0].world_defs += '_Probe' + str(num_probes)
+			bpy.data.worlds[0].world_defs += '_Probes'
 
 	with open(path + material_name + '.json', 'w') as f:
 		f.write(output.to_JSON())

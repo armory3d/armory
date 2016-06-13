@@ -23,6 +23,7 @@ uniform vec3 sunDirection;
 
 uniform sampler2D envmap;
 // uniform sampler2D tex;
+uniform float envmapStrength;
 
 in vec3 normal;
 // in vec2 texCoord;
@@ -46,7 +47,7 @@ void main() {
 	// }
 	
 	vec3 n = normalize(normal);
-	gl_FragColor = texture(envmap, envMapEquirect(n));
+	gl_FragColor = texture(envmap, envMapEquirect(n)) * envmapStrength;
 
 #ifdef _Hosek
     vec3 sunDir = vec3(sunDirection.x, -sunDirection.y, sunDirection.z);	

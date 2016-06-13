@@ -9,29 +9,14 @@ uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
 uniform sampler2D senvmapRadiance;
-uniform sampler2D senvmapIrradiance;
+#ifdef _Probes
+uniform float shirr[27 * 20]; // Maximum of 20 SH sets
+#else
+uniform float shirr[27];
+#endif
 uniform int envmapNumMipmaps;
 uniform float envmapStrength;
 uniform sampler2D senvmapBrdf;
-
-#ifdef _Probe1
-uniform sampler2D senvmapRadiance_1;
-uniform sampler2D senvmapIrradiance_1;
-// uniform int envmapNumMipmaps_1;
-// uniform float envmapStrength_1;
-#endif
-#ifdef _Probe2
-uniform sampler2D senvmapRadiance_2;
-uniform sampler2D senvmapIrradiance_2;
-#endif
-#ifdef _Probe3
-uniform sampler2D senvmapRadiance_3;
-uniform sampler2D senvmapIrradiance_3;
-#endif
-#ifdef _Probe4
-uniform sampler2D senvmapRadiance_4;
-uniform sampler2D senvmapIrradiance_4;
-#endif
 
 // uniform sampler2D giblur; // Path-traced
 
@@ -203,14 +188,14 @@ float PCF(vec2 uv, float compare) {
 }
 
 
-#define _PCSS
+// #define _PCSS
 #ifdef _PCSS
     // Based on ThreeJS PCSS example
-    const float LIGHT_WORLD_SIZE = 0.45;
-    const float LIGHT_FRUSTUM_WIDTH = 7.75;
+    const float LIGHT_WORLD_SIZE = 0.55;
+    const float LIGHT_FRUSTUM_WIDTH = 12.75;//5.75; //12.75
     const float LIGHT_SIZE_UV = (LIGHT_WORLD_SIZE / LIGHT_FRUSTUM_WIDTH);
-    const float NEAR_PLANE = 3.5;
-    const int NUM_SAMPLES = 17;
+    const float NEAR_PLANE = 2.5;
+    const int NUM_SAMPLES = 17;//17
     const int NUM_RINGS = 11;
     // vec2 poissonDisk[NUM_SAMPLES];
     vec2 poissonDisk0;
@@ -434,13 +419,13 @@ float shadowTest(vec4 lPos) {
 	lPosH.x = (lPosH.x + 1.0) / 2.0;
     lPosH.y = (lPosH.y + 1.0) / 2.0;
 	
-	const float bias = 0.001; // Persp
+	const float bias = 0.00015; // Persp
 	// const float bias = 0.01; // Ortho
     
 #ifdef _PCSS
     return PCSS(lPosH.xy, lPosH.z - bias);
 #else
-	// return PCF(lPosH.xy, lPosH.z - bias);
+	return PCF(lPosH.xy, lPosH.z - bias);
 #endif
 }
 
@@ -662,6 +647,51 @@ float wardSpecular(vec3 N, vec3 H, float dotNL, float dotNV, float dotNH, vec3 f
 }
 #endif
 
+vec3 shIrradiance(vec3 nor, float scale, int probe) {
+    const float c1 = 0.429043;
+    const float c2 = 0.511664;
+    const float c3 = 0.743125;
+    const float c4 = 0.886227;
+    const float c5 = 0.247708;
+    vec3 cl00, cl1m1, cl10, cl11, cl2m2, cl2m1, cl20, cl21, cl22;
+    if (probe == 0) {
+        cl00 = vec3(shirr[0], shirr[1], shirr[2]);
+        cl1m1 = vec3(shirr[3], shirr[4], shirr[5]);
+        cl10 = vec3(shirr[6], shirr[7], shirr[8]);
+        cl11 = vec3(shirr[9], shirr[10], shirr[11]);
+        cl2m2 = vec3(shirr[12], shirr[13], shirr[14]);
+        cl2m1 = vec3(shirr[15], shirr[16], shirr[17]);
+        cl20 = vec3(shirr[18], shirr[19], shirr[20]);
+        cl21 = vec3(shirr[21], shirr[22], shirr[23]);
+        cl22 = vec3(shirr[24], shirr[25], shirr[26]);
+    }
+    else if (probe == 1) {
+        cl00 = vec3(shirr[27 + 0], shirr[27 + 1], shirr[27 + 2]);
+        cl1m1 = vec3(shirr[27 + 3], shirr[27 + 4], shirr[27 + 5]);
+        cl10 = vec3(shirr[27 + 6], shirr[27 + 7], shirr[27 + 8]);
+        cl11 = vec3(shirr[27 + 9], shirr[27 + 10], shirr[27 + 11]);
+        cl2m2 = vec3(shirr[27 + 12], shirr[27 + 13], shirr[27 + 14]);
+        cl2m1 = vec3(shirr[27 + 15], shirr[27 + 16], shirr[27 + 17]);
+        cl20 = vec3(shirr[27 + 18], shirr[27 + 19], shirr[27 + 20]);
+        cl21 = vec3(shirr[27 + 21], shirr[27 + 22], shirr[27 + 23]);
+        cl22 = vec3(shirr[27 + 24], shirr[27 + 25], shirr[27 + 26]);
+    }
+    
+    return (
+        c1 * cl22 * (nor.x * nor.x - (-nor.z) * (-nor.z)) +
+        c3 * cl20 * nor.y * nor.y +
+        c4 * cl00 -
+        c5 * cl20 +
+        2.0 * c1 * cl2m2 * nor.x * (-nor.z) +
+        2.0 * c1 * cl21  * nor.x * nor.y +
+        2.0 * c1 * cl2m1 * (-nor.z) * nor.y +
+        2.0 * c2 * cl11  * nor.x +
+        2.0 * c2 * cl1m1 * (-nor.z) +
+        2.0 * c2 * cl10  * nor.y
+    ) * scale;
+}
+
+
 void main() {
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	// float depth = 1.0 - g0.a;
@@ -727,7 +757,7 @@ void main() {
 
 
 	// Indirect
-#ifdef _Probe1
+#ifdef _Probes
     float probeFactor = mask;
     float probeID = floor(probeFactor);
     float probeFract = fract(probeFactor);
@@ -740,54 +770,25 @@ void main() {
     vec3 reflectionWorld = reflect(-v, n); 
     vec2 envCoordRefl = envMapEquirect(reflectionWorld);
     
+    prefilteredColor = textureLod(senvmapRadiance, envCoordRefl, lod).rgb;
+    
     // Global probe only
     if (probeID == 0.0) {
-        indirectDiffuse = texture(senvmapIrradiance, envCoord).rgb;
-        prefilteredColor = textureLod(senvmapRadiance, envCoordRefl, lod).rgb;
+        indirectDiffuse = shIrradiance(n, 2.2, 0) / PI;
     }
     // fract 0 = local probe, 1 = global probe 
     else if (probeID == 1.0) {
-        indirectDiffuse = texture(senvmapIrradiance_1, envCoord).rgb * (1.0 - probeFract);
-        prefilteredColor = textureLod(senvmapRadiance_1, envCoordRefl, lod).rgb * (1.0 - probeFract);
+        indirectDiffuse = (shIrradiance(n, 2.2, 1) / PI) * (1.0 - probeFract);
+        prefilteredColor /= 4.0;
         if (probeFract > 0.0) {
-            indirectDiffuse += texture(senvmapIrradiance, envCoord).rgb * (probeFract);
-            prefilteredColor += textureLod(senvmapRadiance, envCoordRefl, lod).rgb * (probeFract);
+            indirectDiffuse += (shIrradiance(n, 2.2, 0) / PI) * (probeFract);
         }
     }
-#ifdef _Probe2
-    else if (probeID == 2.0) {
-        indirectDiffuse = texture(senvmapIrradiance_2, envCoord).rgb * (1.0 - probeFract);
-        prefilteredColor = textureLod(senvmapRadiance_2, envCoordRefl, lod).rgb * (1.0 - probeFract);
-        if (probeFract > 0.0) {
-            indirectDiffuse += texture(senvmapIrradiance, envCoord).rgb * (probeFract);
-            prefilteredColor += textureLod(senvmapRadiance, envCoordRefl, lod).rgb * (probeFract);
-        }
-    }
-#endif
-#ifdef _Probe3
-    else if (probeID == 3.0) {
-        indirectDiffuse = texture(senvmapIrradiance_3, envCoord).rgb * (1.0 - probeFract);
-        prefilteredColor = textureLod(senvmapRadiance_3, envCoordRefl, lod).rgb * (1.0 - probeFract);
-        if (probeFract > 0.0) {
-            indirectDiffuse += texture(senvmapIrradiance, envCoord).rgb * (probeFract);
-            prefilteredColor += textureLod(senvmapRadiance, envCoordRefl, lod).rgb * (probeFract);
-        }
-    }
-#endif
-#ifdef _Probe4
-    else if (probeID == 4.0) {
-        indirectDiffuse = texture(senvmapIrradiance_4, envCoord).rgb * (1.0 - probeFract);
-        prefilteredColor = textureLod(senvmapRadiance_4, envCoordRefl, lod).rgb * (1.0 - probeFract);
-        if (probeFract > 0.0) {
-            indirectDiffuse += texture(senvmapIrradiance, envCoord).rgb * (probeFract);
-            prefilteredColor += textureLod(senvmapRadiance, envCoordRefl, lod).rgb * (probeFract);
-        }
-    }
-#endif
 #else // No probes   
-	vec3 indirectDiffuse = texture(senvmapIrradiance, envMapEquirect(n)).rgb;
+	// vec3 indirectDiffuse = texture(shirr, envMapEquirect(n)).rgb;
+	vec3 indirectDiffuse = shIrradiance(n, 2.2, 0) / PI;
     
-    vec3 reflectionWorld = reflect(-v, n); 
+    vec3 reflectionWorld = reflect(-v, n);
 	float lod = getMipLevelFromRoughness(roughness);
 	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
 #endif
@@ -797,8 +798,6 @@ void main() {
 	indirectDiffuse = pow(indirectDiffuse, vec3(2.2));
     prefilteredColor = pow(prefilteredColor, vec3(2.2));
 #endif
-    indirectDiffuse = pow(indirectDiffuse, vec3(1.0/2.2));////
-    prefilteredColor = pow(prefilteredColor, vec3(1.0/2.2));////
 	indirectDiffuse *= albedo;
 	
 	
@@ -809,7 +808,6 @@ void main() {
 	float occlusion = g0.b;
     
     vec4 outColor = vec4(vec3(direct * visibility + indirect * ao * occlusion), 1.0);
-
 
 
     // Path-traced
@@ -854,7 +852,6 @@ void main() {
 	// ltccol /= 2.0*PI;
 	// outColor.rgb = ltccol * 5.0 * visibility + (indirect / 14.0 * ao * (rectSizeX / 6.0) );
 	// // outColor.rgb = ltccol * visibility + (indirect / 2.0 * ao);
-	
 	
 	
 	// outColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);

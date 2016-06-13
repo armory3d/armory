@@ -187,14 +187,13 @@ vec2 unpackFloat(float f) {
 }
 
 void main() {
-	
     float roughness = unpackFloat(texture(gbuffer1, texCoord).a).x;
-	float reflectivity = 1.0 - roughness;
-    if (reflectivity == 0.0) {
+    if (roughness == 1.0) {
 		gl_FragColor = texture(tex, texCoord);
 		return;
 		// discard;
 	}
+	float reflectivity = 1.0 - roughness;
 	
 	vec4 g0 = texture(gbuffer0, texCoord);
 	vec2 enc = g0.rg;
@@ -229,7 +228,12 @@ void main() {
 		screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) *
 		clamp((searchDist - length(viewPos.xyz - hitCoord)) * (1.0 / searchDist), 0.0, 1.0) * coords.w;
 
+
 	vec4 texColor = texture(tex, texCoord);
+	
+	float brightness = dot(texColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+	intensity *= min(brightness, 1.0);
+	
 	vec4 reflCol = vec4(texture(tex, coords.xy).rgb, 1.0);
 	gl_FragColor = texColor * (1.0 - intensity) + reflCol * intensity;
 }

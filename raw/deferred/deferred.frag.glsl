@@ -28,8 +28,7 @@ uniform sampler2D smm;
 uniform float metalness;
 #endif
 uniform float mask;
-
-#ifdef _Probe1
+#ifdef _Probes
 uniform int probeID;
 uniform vec3 probeVolumeCenter;
 uniform vec3 probeVolumeSize;
@@ -46,8 +45,7 @@ in mat3 TBN;
 #else
 in vec3 normal;
 #endif
-
-#ifdef _Probe1
+#ifdef _Probes
 in vec4 mpos;
 #endif
 
@@ -62,9 +60,9 @@ vec2 octahedronWrap(vec2 v) {
     return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
 }
 
-#ifdef _Probe1
+#ifdef _Probes
 float distanceBox(vec3 point, vec3 center, vec3 halfExtents) {  	
-	vec3 d = abs(point - center) - halfExtents;
+	vec3 d = abs(point - center) - halfExtents * 0.75;
 	return min(max(d.x, max(d.y, d.z)), 0.0) + length(max(d, 0.0));
 }
 #endif
@@ -85,9 +83,10 @@ void main() {
 	if(texel.a < 0.4)
 		discard;
 #endif
-	texel.rgb = pow(texel.rgb, vec3(2.2));
+	// texel.rgb = pow(texel.rgb, vec3(2.2));
 	baseColor *= texel.rgb;
 #endif
+	baseColor = pow(baseColor, vec3(2.2));
 
 #ifdef _MMTex
 	float metalness = texture(smm, texCoord).r;
@@ -107,12 +106,17 @@ void main() {
 	n /= (abs(n.x) + abs(n.y) + abs(n.z));
     n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
 	
-#ifdef _Probe1
-	float dist = distanceBox(mpos.xyz, probeVolumeCenter, probeVolumeSize);
+#ifdef _Probes
 	float mask_probe = probeID;
-	if (probeID > 0) {
+	if (probeID > 0) { // Non-global probe attached
 		const float eps = 0.00001;
-		mask_probe += clamp(0.5 + dist * 3.0, 0, 1.0 - eps);
+		// Distance of vertex located inside probe to probe bounds
+		float dist = distanceBox(mpos.xyz, probeVolumeCenter, probeVolumeSize);
+		// Blend local probe with global probe		
+		if (dist > -0.1) {
+			mask_probe += clamp((0.1 + dist) * (1.0 / 0.1), 0, 1.0 - eps);
+		}
+		if (dist > 0) mask_probe = 0;
 	}
 	gl_FragData[0] = vec4(n.xy, occlusion, mask_probe);
 #else
