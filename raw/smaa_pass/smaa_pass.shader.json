@@ -1,0 +1,25 @@
+{
+	"contexts": [
+		{
+			"id": "smaa_pass",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "true"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [],
+			"texture_params": [],
+			"vertex_shader": "smaa_pass.vert.glsl",
+			"fragment_shader": "smaa_pass.frag.glsl"
+		}
+	]
+}
