@@ -1,0 +1,34 @@
+{
+	"contexts": [
+		{
+			"id": "smaa_blend_weight",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "true"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				{
+					"id": "areaTex",
+					"link": "_smaaArea"
+				},
+				{
+					"id": "searchTex",
+					"link": "_smaaSearch"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "smaa_blend_weight.vert.glsl",
+			"fragment_shader": "smaa_blend_weight.frag.glsl"
+		}
+	]
+}

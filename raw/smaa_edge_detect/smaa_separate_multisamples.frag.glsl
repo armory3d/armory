@@ -12,12 +12,12 @@ in vec2 texCoord;
 // Separate Multisamples Pixel Shader (Optional Pass)
 
 #ifdef SMAALoad
-void SMAASeparatePS(float4 position,
-                    float2 texcoord,
-                    out float4 target0,
-                    out float4 target1,
+void SMAASeparatePS(vec4 position,
+                    vec2 texcoord,
+                    out vec4 target0,
+                    out vec4 target1,
                     SMAATexture2DMS2(colorTexMS)) {
-    int2 pos = int2(position.xy);
+    ivec2 pos = ivec2(position.xy);
     target0 = SMAALoad(colorTexMS, pos, 0);
     target1 = SMAALoad(colorTexMS, pos, 1);
 }

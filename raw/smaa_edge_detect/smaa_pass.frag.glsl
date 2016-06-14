@@ -26,7 +26,6 @@
  * SOFTWARE.
  */
 
-
 /**
  *                  _______  ___  ___       ___           ___
  *                 /       ||   \/   |     /   \         /   \
@@ -115,48 +114,23 @@ uniform sampler2D tex;
 in vec2 texCoord;
 
 
-
 //-----------------------------------------------------------------------------
 // Misc functions
 // Gathers current pixel, and the top-left neighbors.
-float3 SMAAGatherNeighbours(float2 texcoord,
-                            float4 offset[3],
-                            SMAATexture2D(tex)) {
-    #ifdef SMAAGather
-    return SMAAGather(tex, texcoord + SMAA_RT_METRICS.xy * float2(-0.5, -0.5)).grb;
-    #else
-    float P = SMAASamplePoint(tex, texcoord).r;
-    float Pleft = SMAASamplePoint(tex, offset[0].xy).r;
-    float Ptop  = SMAASamplePoint(tex, offset[0].zw).r;
-    return float3(P, Pleft, Ptop);
-    #endif
+vec3 SMAAGatherNeighbours(vec2 texcoord, vec4 offset[3], sampler2D tex) {
+    float P = texture(tex, texcoord).r;
+    float Pleft = texture(tex, offset[0].xy).r;
+    float Ptop  = texture(tex, offset[0].zw).r;
+    return vec3(P, Pleft, Ptop);
 }
 
 // Adjusts the threshold by means of predication.
-float2 SMAACalculatePredicatedThreshold(float2 texcoord,
-                                        float4 offset[3],
-                                        SMAATexture2D(predicationTex)) {
-    float3 neighbours = SMAAGatherNeighbours(texcoord, offset, SMAATexturePass2D(predicationTex));
-    float2 delta = abs(neighbours.xx - neighbours.yz);
-    float2 edges = step(SMAA_PREDICATION_THRESHOLD, delta);
+vec2 SMAACalculatePredicatedThreshold(vec2 texcoord, vec4 offset[3], sampler2D predicationTex) {
+    vec3 neighbours = SMAAGatherNeighbours(texcoord, offset, predicationTex);
+    vec2 delta = abs(neighbours.xx - neighbours.yz);
+    vec2 edges = step(SMAA_PREDICATION_THRESHOLD, delta);
     return SMAA_PREDICATION_SCALE * SMAA_THRESHOLD * (1.0 - SMAA_PREDICATION_STRENGTH * edges);
 }
-
-// Conditional move:
-void SMAAMovc(bool2 cond, inout float2 variable, float2 value) {
-    SMAA_FLATTEN if (cond.x) variable.x = value.x;
-    SMAA_FLATTEN if (cond.y) variable.y = value.y;
-}
-void SMAAMovc(bool4 cond, inout float4 variable, float4 value) {
-    SMAAMovc(cond.xy, variable.xy, value.xy);
-    SMAAMovc(cond.zw, variable.zw, value.zw);
-}
-
-
-
-
-
-
 
 
 void main() {

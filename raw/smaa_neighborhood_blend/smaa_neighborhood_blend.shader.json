@@ -1,7 +1,7 @@
 {
 	"contexts": [
 		{
-			"id": "smaa_pass",
+			"id": "smaa_neighborhood_blend",
 			"params": [
 				{
 					"id": "depth_write",
@@ -18,8 +18,8 @@
 			],
 			"links": [],
 			"texture_params": [],
-			"vertex_shader": "smaa_pass.vert.glsl",
-			"fragment_shader": "smaa_pass.frag.glsl"
+			"vertex_shader": "smaa_neighborhood_blend.vert.glsl",
+			"fragment_shader": "smaa_neighborhood_blend.frag.glsl"
 		}
 	]
 }
