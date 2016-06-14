@@ -5,7 +5,6 @@ precision highp float;
 #endif
 
 #define SMAA_RT_METRICS vec4(1.0 / 800.0, 1.0 / 600.0, 800.0, 600.0)
-#define mad(a, b, c) (a * b + c)
 
 in vec2 pos;
 
@@ -20,7 +19,7 @@ void main() {
 
 	// Neighborhood Blending Vertex Shader
 	//void SMAANeighborhoodBlendingVS(vec2 texcoord, out vec4 offset) {
-		offset = mad(SMAA_RT_METRICS.xyxy, vec4( 1.0, 0.0, 0.0,  1.0), texCoord.xyxy);
+		offset = SMAA_RT_METRICS.xyxy * vec4( 1.0, 0.0, 0.0,  1.0) + texCoord.xyxy;
 	//}
 
 	gl_Position = vec4(pos.xy, 0.0, 1.0);

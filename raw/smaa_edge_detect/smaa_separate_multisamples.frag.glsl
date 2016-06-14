@@ -4,10 +4,9 @@
 precision mediump float;
 #endif
 
-uniform sampler2D tex;
+uniform sampler2D colorTex;
 
 in vec2 texCoord;
-
 
 // Separate Multisamples Pixel Shader (Optional Pass)
 
@@ -23,7 +22,6 @@ void SMAASeparatePS(vec4 position,
 }
 #endif
 
-
 void main() {
-    // gl_FragColor = vec4(col);
+    
 }

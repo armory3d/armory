@@ -6,25 +6,26 @@ precision mediump float;
 
 #define SMAA_RT_METRICS vec4(1.0 / 800.0, 1.0 / 600.0, 800.0, 600.0)
 
-uniform sampler2D tex;
+uniform sampler2D colorTex;
+uniform sampler2D blendTex;
 
 in vec2 texCoord;
-in vec2 offset;
+in vec4 offset;
 
 //-----------------------------------------------------------------------------
 // Neighborhood Blending Pixel Shader (Third Pass)
 
 // Conditional move:
-void SMAAMovc(bvec2 cond, inout vec2 variable, vec2 value) {
-    /*SMAA_FLATTEN*/ if (cond.x) variable.x = value.x;
-    /*SMAA_FLATTEN*/ if (cond.y) variable.y = value.y;
-}
-void SMAAMovc(bvec4 cond, inout vec4 variable, vec4 value) {
-    SMAAMovc(cond.xy, variable.xy, value.xy);
-    SMAAMovc(cond.zw, variable.zw, value.zw);
-}
+// void SMAAMovc(bvec2 cond, inout vec2 variable, vec2 value) {
+//    /*SMAA_FLATTEN*/ if (cond.x) variable.x = value.x;
+//    /*SMAA_FLATTEN*/ if (cond.y) variable.y = value.y;
+//}
+//void SMAAMovc(bvec4 cond, inout vec4 variable, vec4 value) {
+//    SMAAMovc(cond.xy, variable.xy, value.xy);
+//    SMAAMovc(cond.zw, variable.zw, value.zw);
+//}
 
-vec4 SMAANeighborhoodBlendingPS(vec2 texcoord, vec4 offset, sampler2D colorTex, sampler2D blendTex
+vec4 SMAANeighborhoodBlendingPS(vec2 texcoord, vec4 offset/*, sampler2D colorTex, sampler2D blendTex*/
                                   //#if SMAA_REPROJECTION
                                   //, sampler2D velocityTex
                                   //#endif
@@ -54,12 +55,21 @@ vec4 SMAANeighborhoodBlendingPS(vec2 texcoord, vec4 offset, sampler2D colorTex, 
         // Calculate the blending offsets:
         vec4 blendingOffset = vec4(0.0, a.y, 0.0, a.w);
         vec2 blendingWeight = a.yw;
-        SMAAMovc(bvec4(h, h, h, h), blendingOffset, vec4(a.x, 0.0, a.z, 0.0));
-        SMAAMovc(bvec2(h, h), blendingWeight, a.xz);
+        
+        //SMAAMovc(bvec4(h, h, h, h), blendingOffset, vec4(a.x, 0.0, a.z, 0.0));
+        if (h) blendingOffset.x = a.x;
+        if (h) blendingOffset.y = 0.0;
+        if (h) blendingOffset.z = a.z;
+        if (h) blendingOffset.w = 0.0;
+        
+        // SMAAMovc(bvec2(h, h), blendingWeight, a.xz);
+        if (h) blendingWeight.x = a.x;
+        if (h) blendingWeight.y = a.z;
+        
         blendingWeight /= dot(blendingWeight, vec2(1.0, 1.0));
 
         // Calculate the texture coordinates:
-        vec4 blendingCoord = mad(blendingOffset, vec4(SMAA_RT_METRICS.xy, -SMAA_RT_METRICS.xy), texcoord.xyxy);
+        vec4 blendingCoord = blendingOffset * vec4(SMAA_RT_METRICS.xy, -SMAA_RT_METRICS.xy) + texcoord.xyxy;
 
         // We exploit bilinear filtering to mix current pixel with the chosen
         // neighbor:
@@ -77,9 +87,9 @@ vec4 SMAANeighborhoodBlendingPS(vec2 texcoord, vec4 offset, sampler2D colorTex, 
 
         return color;
     }
+    return vec4(0.0);
 }
 
 void main() {
-    vec4 col = SMAANeighborhoodBlendingPS(texCoord, offset, colorTex, blendTex);
-    gl_FragColor = col;
+    gl_FragColor = SMAANeighborhoodBlendingPS(texCoord, offset/*, colorTex, blendTex*/);
 }

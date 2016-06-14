@@ -4,13 +4,11 @@
 precision mediump float;
 #endif
 
-uniform sampler2D tex;
+uniform sampler2D colorTex;
 
 in vec2 texCoord;
 
-
 // Temporal Resolve Pixel Shader (Optional Pass)
-
 vec4 SMAAResolvePS(vec2 texcoord, sampler2D currentColorTex, sampler2D previousColorTex
                      //#if SMAA_REPROJECTION
                      //, sampler2D velocityTex
@@ -41,7 +39,6 @@ vec4 SMAAResolvePS(vec2 texcoord, sampler2D currentColorTex, sampler2D previousC
     // #endif
 }
 
-
 void main() {
-    // gl_FragColor = vec4(col);
+    
 }
