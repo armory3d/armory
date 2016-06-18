@@ -4,49 +4,60 @@
 precision mediump float;
 #endif
 
+#ifdef _HMTex
+#define _NMTex
+#endif
 #ifdef _NMTex
 #define _AMTex
 #endif
 
 #ifdef _AMTex
-uniform sampler2D salbedo;
+	uniform sampler2D salbedo;
 #endif
 #ifdef _NMTex
-uniform sampler2D snormal;
+	uniform sampler2D snormal;
 #endif
 #ifdef _OMTex
-uniform sampler2D som;
+	uniform sampler2D som;
 #endif
 #ifdef _RMTex
-uniform sampler2D srm;
+	uniform sampler2D srm;
 #else
-uniform float roughness;
+	uniform float roughness;
 #endif
 #ifdef _MMTex
-uniform sampler2D smm;
+	uniform sampler2D smm;
 #else
-uniform float metalness;
+	uniform float metalness;
 #endif
-uniform float mask;
+#ifdef _HMTex
+	uniform sampler2D shm;
+	uniform float heightStrength;
+#endif
+	uniform float mask;
 #ifdef _Probes
-uniform int probeID;
-uniform vec3 probeVolumeCenter;
-uniform vec3 probeVolumeSize;
+	uniform int probeID;
+	uniform vec3 probeVolumeCenter;
+	uniform vec3 probeVolumeSize;
 #endif
 
 in vec4 mvpposition;
 #ifdef _AMTex
-in vec2 texCoord;
+	in vec2 texCoord;
 #endif
 in vec4 lPos;
 in vec4 matColor;
 #ifdef _NMTex
-in mat3 TBN;
+	in mat3 TBN;
 #else
-in vec3 normal;
+	in vec3 normal;
+#endif
+#ifdef _HMTex
+	in vec3 tanLightDir;
+	in vec3 tanEyeDir;
 #endif
 #ifdef _Probes
-in vec4 mpos;
+	in vec4 mpos;
 #endif
 
 float packFloat(float f1, float f2) {
@@ -67,10 +78,113 @@ float distanceBox(vec3 point, vec3 center, vec3 halfExtents) {
 }
 #endif
 
+#ifdef _HMTex
+float parallaxHeight;
+const float minLayers = 20;
+const float maxLayers = 30;
+vec2 parallaxMapping(vec3 V, vec2 T) {
+	float parallaxScale = -0.06 * heightStrength;
+	// PM
+	// float initialHeight = texture(shm, texCoord).r;
+	// vec2 texCoordOffset = 0.03 * V.xy / V.z * initialHeight;
+	// vec2 texCoordOffset = 0.03 * V.xy * initialHeight;
+	// return texCoord + texCoordOffset;
+	// POM
+	float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0, 0, 1), V)));
+	float layerHeight = 1.0 / numLayers;
+	float curLayerHeight = 0;
+	vec2 dtex = parallaxScale * V.xy / V.z / numLayers;
+	
+	vec2 currentTextureCoords = T;
+	float heightFromTexture = texture(shm, currentTextureCoords).r;
+	
+	// while (heightFromTexture > curLayerHeight) {
+		// curLayerHeight += layerHeight; 
+		// currentTextureCoords -= dtex;
+		// heightFromTexture = texture(shm, currentTextureCoords).r;
+	// Waiting for loops
+	if (heightFromTexture > curLayerHeight) { curLayerHeight += layerHeight; currentTextureCoords -= dtex; heightFromTexture = texture(shm, currentTextureCoords).r; }
+	if (heightFromTexture > curLayerHeight) { curLayerHeight += layerHeight; currentTextureCoords -= dtex; heightFromTexture = texture(shm, currentTextureCoords).r; }
+	if (heightFromTexture > curLayerHeight) { curLayerHeight += layerHeight; currentTextureCoords -= dtex; heightFromTexture = texture(shm, currentTextureCoords).r; }
+	if (heightFromTexture > curLayerHeight) { curLayerHeight += layerHeight; currentTextureCoords -= dtex; heightFromTexture = texture(shm, currentTextureCoords).r; }
+	if (heightFromTexture > curLayerHeight) { curLayerHeight += layerHeight; currentTextureCoords -= dtex; heightFromTexture = texture(shm, currentTextureCoords).r; }
+	if (heightFromTexture > curLayerHeight) { curLayerHeight += layerHeight; currentTextureCoords -= dtex; heightFromTexture = texture(shm, currentTextureCoords).r; }
+	if (heightFromTexture > curLayerHeight) { curLayerHeight += layerHeight; currentTextureCoords -= dtex; heightFromTexture = texture(shm, currentTextureCoords).r; }
+	if (heightFromTexture > curLayerHeight) { curLayerHeight += layerHeight; currentTextureCoords -= dtex; heightFromTexture = texture(shm, currentTextureCoords).r; }
+	if (heightFromTexture > curLayerHeight) { curLayerHeight += layerHeight; currentTextureCoords -= dtex; heightFromTexture = texture(shm, currentTextureCoords).r; }
+	if (heightFromTexture > curLayerHeight) { curLayerHeight += layerHeight; currentTextureCoords -= dtex; heightFromTexture = texture(shm, currentTextureCoords).r; }
+	if (heightFromTexture > curLayerHeight) { curLayerHeight += layerHeight; currentTextureCoords -= dtex; heightFromTexture = texture(shm, currentTextureCoords).r; }
+	if (heightFromTexture > curLayerHeight) { curLayerHeight += layerHeight; currentTextureCoords -= dtex; heightFromTexture = texture(shm, currentTextureCoords).r; }
+	if (heightFromTexture > curLayerHeight) { curLayerHeight += layerHeight; currentTextureCoords -= dtex; heightFromTexture = texture(shm, currentTextureCoords).r; }
+	if (heightFromTexture > curLayerHeight) { curLayerHeight += layerHeight; currentTextureCoords -= dtex; heightFromTexture = texture(shm, currentTextureCoords).r; }
+	if (heightFromTexture > curLayerHeight) { curLayerHeight += layerHeight; currentTextureCoords -= dtex; heightFromTexture = texture(shm, currentTextureCoords).r; }
+	if (heightFromTexture > curLayerHeight) { curLayerHeight += layerHeight; currentTextureCoords -= dtex; heightFromTexture = texture(shm, currentTextureCoords).r; }
+	// }
+	
+	vec2 texStep = dtex;
+	vec2 prevTCoords = currentTextureCoords + texStep;
+	// Heights for linear interpolation
+	float nextH	= heightFromTexture - curLayerHeight;
+	float prevH	= texture(shm, prevTCoords).r - curLayerHeight + layerHeight;
+	float weight = nextH / (nextH - prevH);
+	// Interpolation of texture coordinates
+	vec2 finalTexCoords = prevTCoords * weight + currentTextureCoords * (1.0 - weight);
+	// Interpolation of depth values
+	parallaxHeight = curLayerHeight + prevH * weight + nextH * (1.0 - weight);
+	return finalTexCoords;
+}
+float parallaxShadow(vec3 L, vec2 initialTexCoord, float initialHeight) {
+	float parallaxScale = -0.06 * heightStrength;
+	float shadowMultiplier = 1.0;
+	// Calculate lighting only for surface oriented to the light source
+	if (dot(vec3(0, 0, 1), L) > 0) {
+		shadowMultiplier = 0;
+		float numSamplesUnderSurface = 0;
+		float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0, 0, 1), L)));
+		float layerHeight = initialHeight / numLayers;
+		vec2 texStep = parallaxScale * L.xy / L.z / numLayers;
+
+		float currentLayerHeight = initialHeight - layerHeight;
+		vec2 currentTextureCoords = initialTexCoord + texStep;
+		float heightFromTexture	= texture(shm, currentTextureCoords).r;
+		int stepIndex = 1;
+
+		// while(currentLayerHeight > 0) {
+		if (currentLayerHeight > 0) {
+			if(heightFromTexture < currentLayerHeight) {
+				numSamplesUnderSurface += 1;
+				float newShadowMultiplier = (currentLayerHeight - heightFromTexture) * (1.0 - stepIndex / numLayers);
+				shadowMultiplier = max(shadowMultiplier, newShadowMultiplier);
+			}
+			stepIndex += 1;
+			currentLayerHeight -= layerHeight;
+			currentTextureCoords += texStep;
+			heightFromTexture = texture(shm, currentTextureCoords).r;
+		}
+		// ...
+		
+		// Shadowing factor should be 1 if there were no points under the surface
+		if(numSamplesUnderSurface < 1) shadowMultiplier = 1;
+		else shadowMultiplier = 1.0 - shadowMultiplier;
+	}
+	return shadowMultiplier;
+}
+#endif
+
 void main() {
+#ifdef _AMTex
+	vec2 newCoord = texCoord;
+#endif	
+	
+#ifdef _HMTex
+	vec3 tanv = normalize(tanEyeDir);
+	vec3 tanl = normalize(tanLightDir);
+	newCoord = parallaxMapping(tanv, texCoord);
+	float shadowMultiplier = 1.0;//parallaxShadow(tanl, newCoord, parallaxHeight - 0.001);
+#endif
 	
 #ifdef _NMTex
-	vec3 n = (texture(snormal, texCoord).rgb * 2.0 - 1.0);
+	vec3 n = (texture(snormal, newCoord).rgb * 2.0 - 1.0);
 	n = normalize(TBN * normalize(n));
 #else
 	vec3 n = normalize(normal);
@@ -78,34 +192,38 @@ void main() {
 
 	vec3 baseColor = matColor.rgb;
 #ifdef _AMTex
-	vec4 texel = texture(salbedo, texCoord);
+	vec4 texel = texture(salbedo, newCoord);
 #ifdef _AlphaTest
 	if(texel.a < 0.4)
 		discard;
 #endif
-	// texel.rgb = pow(texel.rgb, vec3(2.2));
+	texel.rgb = pow(texel.rgb, vec3(2.2)); // Variant 1
 	baseColor *= texel.rgb;
 #endif
-	baseColor = pow(baseColor, vec3(2.2));
+	// baseColor = pow(baseColor, vec3(2.2)); // Variant 2
 
 #ifdef _MMTex
-	float metalness = texture(smm, texCoord).r;
+	float metalness = texture(smm, newCoord).r;
 #endif
 
 #ifdef _RMTex
-	float roughness = texture(srm, texCoord).r;
+	float roughness = texture(srm, newCoord).r;
 #endif
 		
 #ifdef _OMTex
-	float occlusion = texture(som, texCoord).r;
+	float occlusion = texture(som, newCoord).r;
 #else
 	float occlusion = 1.0; 
+#endif
+
+#ifdef _HMTex
+	occlusion *= shadowMultiplier;
 #endif
 	
 	// occlusion - pack with mask
 	n /= (abs(n.x) + abs(n.y) + abs(n.z));
     n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
-	
+
 #ifdef _Probes
 	float mask_probe = probeID;
 	if (probeID > 0) { // Non-global probe attached

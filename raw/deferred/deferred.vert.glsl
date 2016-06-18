@@ -4,6 +4,9 @@
 precision highp float;
 #endif
 
+#ifdef _HMTex
+#define _NMTex
+#endif
 #ifdef _NMTex
 #define _AMTex
 #endif
@@ -11,20 +14,20 @@ precision highp float;
 in vec3 pos;
 in vec3 nor;
 #ifdef _AMTex
-in vec2 tex;
+	in vec2 tex;
 #endif
 #ifdef _VCols
-in vec4 col;
+	in vec4 col;
 #endif
 #ifdef _NMTex
-in vec3 tan;
+	in vec3 tan;
 #endif
 #ifdef _Skinning
-in vec4 bone;
-in vec4 weight;
+	in vec4 bone;
+	in vec4 weight;
 #endif
 #ifdef _Instancing
-in vec3 off;
+	in vec3 off;
 #endif
 
 uniform mat4 NM;
@@ -32,30 +35,39 @@ uniform mat4 MV;
 uniform mat4 P;
 uniform mat4 LMVP;
 uniform vec4 albedo_color;
-#ifdef _Skinning
-uniform float skinBones[50 * 12];
+#ifdef _HMTex
+	uniform vec3 eye;
+	uniform vec3 light;
+	uniform mat4 M;
 #endif
-
+#ifdef _Skinning
+	uniform float skinBones[50 * 12];
+#endif
 #ifdef _Probes
-uniform mat4 M;
+	uniform mat4 M;
 #endif
 
 
 out vec4 mvpposition;
 #ifdef _AMTex
-out vec2 texCoord;
+	out vec2 texCoord;
 #endif
-out vec4 lPos;
-out vec4 matColor;
+	out vec4 lPos;
+	out vec4 matColor;
 #ifdef _NMTex
-out mat3 TBN;
+	out mat3 TBN;
 #else
-out vec3 normal;
+	out vec3 normal;
+#endif
+#ifdef _HMTex
+	out vec3 tanLightDir;
+	out vec3 tanEyeDir;
 #endif
 
 #ifdef _Probes
-out vec4 mpos;
+	out vec4 mpos;
 #endif
+
 
 #ifdef _Skinning
 mat4 getBoneMat(const int boneIndex) {
@@ -138,10 +150,19 @@ void main() {
 	mvpposition = gl_Position;
 
 #ifdef _NMTex
-	vec3 tangent = (mat3(NM) * (tan));
-	vec3 bitangent = normalize(cross(_normal, tangent));
+	vec3 tangent = normalize(mat3(NM) * (tan));
+	vec3 bitangent = normalize(cross(_normal, tangent)); // Use cross() * tangent.w for handedness 
 	TBN = mat3(tangent, bitangent, _normal);
 #else
 	normal = _normal;
+#endif
+
+#ifdef _HMTex
+	vec4 wpos = M * sPos; // Prevent calculating world pos twice when probes are enabled
+	vec3 lightDir = light - wpos.xyz;
+	vec3 eyeDir = /*normalize*/eye - wpos.xyz;
+	// Wrong bitangent handedness?
+	tanLightDir = vec3(dot(lightDir, tangent), dot(lightDir, -bitangent), dot(lightDir, _normal));
+	tanEyeDir = vec3(dot(eyeDir, tangent), dot(eyeDir, -bitangent), dot(eyeDir, _normal));
 #endif
 }

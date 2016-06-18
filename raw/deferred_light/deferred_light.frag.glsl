@@ -647,14 +647,20 @@ float wardSpecular(vec3 N, vec3 H, float dotNL, float dotNV, float dotNH, vec3 f
 }
 #endif
 
+#ifdef _Probes
 vec3 shIrradiance(vec3 nor, float scale, int probe) {
+#else
+vec3 shIrradiance(vec3 nor, float scale) {
+#endif
     const float c1 = 0.429043;
     const float c2 = 0.511664;
     const float c3 = 0.743125;
     const float c4 = 0.886227;
     const float c5 = 0.247708;
     vec3 cl00, cl1m1, cl10, cl11, cl2m2, cl2m1, cl20, cl21, cl22;
+#ifdef _Probes
     if (probe == 0) {
+#endif
         cl00 = vec3(shirr[0], shirr[1], shirr[2]);
         cl1m1 = vec3(shirr[3], shirr[4], shirr[5]);
         cl10 = vec3(shirr[6], shirr[7], shirr[8]);
@@ -664,6 +670,7 @@ vec3 shIrradiance(vec3 nor, float scale, int probe) {
         cl20 = vec3(shirr[18], shirr[19], shirr[20]);
         cl21 = vec3(shirr[21], shirr[22], shirr[23]);
         cl22 = vec3(shirr[24], shirr[25], shirr[26]);
+#ifdef _Probes
     }
     else if (probe == 1) {
         cl00 = vec3(shirr[27 + 0], shirr[27 + 1], shirr[27 + 2]);
@@ -676,7 +683,7 @@ vec3 shIrradiance(vec3 nor, float scale, int probe) {
         cl21 = vec3(shirr[27 + 21], shirr[27 + 22], shirr[27 + 23]);
         cl22 = vec3(shirr[27 + 24], shirr[27 + 25], shirr[27 + 26]);
     }
-    
+#endif
     return (
         c1 * cl22 * (nor.x * nor.x - (-nor.z) * (-nor.z)) +
         c3 * cl20 * nor.y * nor.y +
@@ -786,7 +793,7 @@ void main() {
     }
 #else // No probes   
 	// vec3 indirectDiffuse = texture(shirr, envMapEquirect(n)).rgb;
-	vec3 indirectDiffuse = shIrradiance(n, 2.2, 0) / PI;
+	vec3 indirectDiffuse = shIrradiance(n, 2.2) / PI;
     
     vec3 reflectionWorld = reflect(-v, n);
 	float lod = getMipLevelFromRoughness(roughness);

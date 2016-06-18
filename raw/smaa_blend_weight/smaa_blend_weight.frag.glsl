@@ -16,7 +16,7 @@ precision mediump float;
 #define SMAA_AREATEX_SELECT(sample) sample.rg
 #define SMAA_SEARCHTEX_SELECT(sample) sample.r
 
-#define SMAA_RT_METRICS vec4(1.0 / 800.0, 1.0 / 600.0, 800.0, 600.0)
+#define SMAA_RT_METRICS vec4(1.0 / 1920.0, 1.0 / 1080.0, 1920.0, 1080.0)
 #define SMAASampleLevelZeroOffset(tex, coord, offset) textureLod(tex, coord + offset * SMAA_RT_METRICS.xy, 0.0)
 #define mad(a, b, c) (a * b + c)
 #define saturate(a) clamp(a, 0.0, 1.0)

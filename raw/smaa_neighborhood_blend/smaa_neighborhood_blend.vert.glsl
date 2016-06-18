@@ -4,7 +4,7 @@
 precision highp float;
 #endif
 
-#define SMAA_RT_METRICS vec4(1.0 / 800.0, 1.0 / 600.0, 800.0, 600.0)
+#define SMAA_RT_METRICS vec4(1.0 / 1920.0, 1.0 / 1080.0, 1920.0, 1080.0)
 
 in vec2 pos;
 

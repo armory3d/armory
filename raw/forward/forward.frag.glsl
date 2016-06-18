@@ -495,7 +495,7 @@ void main() {
 #ifdef _AMTex
 	vec4 texel = texture(salbedo, texCoord);
 #ifdef _AlphaTest
-	if(texel.a < 0.4)
+	if (texel.a < 0.4)
 		discard;
 #endif
 	texel.rgb = pow(texel.rgb, vec3(2.2));

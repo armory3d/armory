@@ -778,7 +778,11 @@ def traverse_for_rt(node, node_group, render_targets, depth_buffers):
 		traverse_for_rt(stagenode, node_group, render_targets, depth_buffers)
 		
 def parse_render_target(node, node_group, render_targets, depth_buffers):
-	if node.bl_idname == 'TargetNodeType':
+	if node.bl_idname == 'NodeReroute':
+		tnode = findNodeByLink(node_group, node, node.inputs[0])
+		parse_render_target(tnode, node_group, render_targets, depth_buffers)
+		
+	elif node.bl_idname == 'TargetNodeType':
 		# Target already exists
 		id = node.inputs[0].default_value
 		for t in render_targets:
@@ -804,6 +808,7 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
 		# Append target	
 		target = make_render_target(node, depth_buffer_id=depth_buffer_id)
 		render_targets.append(target)
+		
 	elif node.bl_idname == 'GBufferNodeType':
 		for i in range(0, 5):
 			if node.inputs[i].is_linked:

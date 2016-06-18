@@ -34,9 +34,19 @@
 					"link": "_lightModelViewProjectionMatrix"
 				},
 				{
+					"id": "light",
+					"link": "_lightPosition",
+					"if": ["_HMTex"]
+				},
+				{
+					"id": "eye",
+					"link": "_cameraPosition",
+					"if": ["_HMTex"]
+				},
+				{
 					"id": "M",
 					"link": "_modelMatrix",
-					"ifdef": ["_Probes"]
+					"ifdef": ["_Probes", "_HMTex"]
 				},
 				{
 					"id": "probeVolumeCenter",

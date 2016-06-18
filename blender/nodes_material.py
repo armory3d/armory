@@ -288,6 +288,18 @@ def add_occlusion_tex(self, node, material, c, defs):
 		tex = make_texture(self, 'som', node, material)
 		c.bind_textures.append(tex)
 
+def add_height_tex(self, node, material, c, defs):
+	if '_HMTex' not in defs:
+		defs.append('_HMTex')
+		tex = make_texture(self, 'shm', node, material)
+		c.bind_textures.append(tex)
+
+def add_height_strength(self, c, f):
+	const = Object()
+	c.bind_constants.append(const)
+	const.id = 'heightStrength'
+	const.float = f
+
 def add_normal_tex(self, node, material, c, defs):
 	if '_NMTex' not in defs:
 		defs.append('_NMTex')
@@ -359,6 +371,11 @@ def parse_occlusion_socket(self, occlusion_input, material, c, defs, tree, node,
 		occlusion_node = find_node_by_link(tree, node, occlusion_input)
 		add_occlusion_tex(self, occlusion_node, material, c, defs)
 
+def parse_height_socket(self, height_input, material, c, defs, tree, node, factor):
+	if height_input.is_linked:
+		height_node = find_node_by_link(tree, node, height_input)
+		add_height_tex(self, height_node, material, c, defs)
+
 def parse_pbr_group(self, material, c, defs, tree, node, factor):
 	# Albedo Map
 	base_color_input = node.inputs[0]
@@ -375,3 +392,9 @@ def parse_pbr_group(self, material, c, defs, tree, node, factor):
 	# Occlusion Map
 	occlusion_input = node.inputs[1]
 	parse_occlusion_socket(self, occlusion_input, material, c, defs, tree, node, factor)
+	# Height Map
+	height_input = node.inputs[7]
+	parse_height_socket(self, height_input, material, c, defs, tree, node, factor)
+	# Height Strength
+	height_strength_input = node.inputs[8]
+	add_height_strength(self, c, height_strength_input.default_value)

@@ -28,8 +28,8 @@ vec3 getNor(vec2 enc) {
 }
 
 float doBlur(float blurWeight, int pos, vec3 nor) {
-    vec2 texstep = dir / vec2(800.0, 600.0);
-	vec2 texstep2 = dir / vec2(800.0, 600.0);
+    vec2 texstep = dir / vec2(1920.0, 1080.0);
+	vec2 texstep2 = dir / vec2(1920.0, 1080.0);
     
     vec3 nor2 = getNor(texture(gbuffer0, texCoord + pos * texstep2).rg);
     float influenceFactor = step(discardThreshold, dot(nor2, nor));

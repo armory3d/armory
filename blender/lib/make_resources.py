@@ -114,6 +114,7 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
 		vertex_structure_parsed = True
 		
 	for line in lines:
+		line = line.lstrip()
 		if line.startswith('#ifdef'):
 			s = line.split(' ')[1]
 			if s != 'GL_ES':
@@ -154,7 +155,7 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
 		if vertex_structure_parsing == True and len(line) > 0 and line.startswith('//') == False and line.startswith('in ') == False:
 			vertex_structure_parsed = True
 
-		if line.startswith('uniform'):
+		if line.startswith('uniform '):
 			s = line.split(' ')
 			ctype = s[1]
 			cid = s[2][:-1]
