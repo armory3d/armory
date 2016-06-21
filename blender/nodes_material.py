@@ -28,6 +28,22 @@ def parse(self, material, c, defs):
 		if output_node.inputs[2].is_linked:
 			displace_node = find_node_by_link(tree, output_node, output_node.inputs[2])
 			parse_material_displacement(self, material, c, defs, tree, displace_node, 1.0)
+			
+		# No albedo color parsed, append white
+		if parse.const_color == None:
+			make_albedo_const([1.0, 1.0, 1.0, 1.0], c)
+		if parse.const_occlusion == None and '_OMTex' not in defs:
+			make_occlusion_const(1.0, c)
+		if parse.const_roughness == None and '_RMTex' not in defs:
+			make_roughness_const(0.0, c)
+		if parse.const_metalness == None and '_MMTex' not in defs:
+			make_metalness_const(0.0, c)
+		# Enable texcoords
+		if '_Tex' not in defs:
+			for d in defs:
+				if d == '_AMTex' or d == '_NMTex' or d == '_OMTex' or d == '_RMTex' or d == '_MMTex' or d == '_HMTex':
+					defs.append('_Tex')
+					break 
 
 def make_albedo_const(col, c):
 	const = Object()
@@ -42,7 +58,14 @@ def make_roughness_const(f, c):
 	c.bind_constants.append(const)
 	const.id = 'roughness'
 	const.float = f
-	
+
+def make_occlusion_const(f, c):
+	const = Object()
+	parse.const_occlusion = const
+	c.bind_constants.append(const)
+	const.id = 'occlusion'
+	const.float = f
+
 def make_metalness_const(f, c):
 	const = Object()
 	parse.const_metalness = const
@@ -53,19 +76,12 @@ def make_metalness_const(f, c):
 # Manualy set starting material point
 def parse_from(self, material, c, defs, surface_node):
 	parse.const_color = None
+	parse.const_occlusion = None
 	parse.const_roughness = None
 	parse.const_metalness = None
 	
 	tree = material.node_tree
 	parse_material_surface(self, material, c, defs, tree, surface_node, 1.0)
-	
-	# No albedo color parsed, append white
-	if parse.const_color == None:
-		make_albedo_const([1.0, 1.0, 1.0, 1.0], c)
-	if parse.const_roughness == None and '_RMTex' not in defs:
-		make_roughness_const(0.0, c)
-	if parse.const_metalness == None and '_MMTex' not in defs:
-		make_metalness_const(0.0, c)
 
 def make_texture(self, id, image_node, material):
 	tex = Object()
@@ -366,10 +382,20 @@ def parse_normal_map_socket(self, normal_input, material, c, defs, tree, node, f
 		normal_node = find_node_by_link(tree, node, normal_input)
 		add_normal_tex(self, normal_node, material, c, defs)
 
+def add_occlusion_const(res, c, factor):
+	if parse.const_occlusion == None:
+		make_occlusion_const(res * factor, c)
+	else:
+		const = parse.const_occlusion		
+		const.float = mix_float(res, const.float, factor=factor) 
+
 def parse_occlusion_socket(self, occlusion_input, material, c, defs, tree, node, factor):
 	if occlusion_input.is_linked:
 		occlusion_node = find_node_by_link(tree, node, occlusion_input)
 		add_occlusion_tex(self, occlusion_node, material, c, defs)
+	elif '_OMTex' not in defs:
+		res = occlusion_input.default_value[0] # Take only one channel
+		add_occlusion_const(res, c, factor)
 
 def parse_height_socket(self, height_input, material, c, defs, tree, node, factor):
 	if height_input.is_linked:
@@ -396,5 +422,6 @@ def parse_pbr_group(self, material, c, defs, tree, node, factor):
 	height_input = node.inputs[7]
 	parse_height_socket(self, height_input, material, c, defs, tree, node, factor)
 	# Height Strength
-	height_strength_input = node.inputs[8]
-	add_height_strength(self, c, height_strength_input.default_value)
+	if height_input.is_linked:
+		height_strength_input = node.inputs[8]
+		add_height_strength(self, c, height_strength_input.default_value)

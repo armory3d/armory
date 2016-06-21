@@ -47,7 +47,7 @@ void main() {
 	// }
 	
 	vec3 n = normalize(normal);
-	gl_FragColor = texture(envmap, envMapEquirect(n)) * envmapStrength;
+	gl_FragColor = texture(envmap, envMapEquirect(n)) * 3.0;// envmapStrength;
 
 #ifdef _Hosek
     vec3 sunDir = vec3(sunDirection.x, -sunDirection.y, sunDirection.z);	

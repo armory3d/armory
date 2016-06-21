@@ -767,7 +767,7 @@ def get_render_targets(root_node, node_group):
 	
 def traverse_for_rt(node, node_group, render_targets, depth_buffers):
 	# Collect render targets
-	if node.bl_idname == 'SetTargetNodeType':
+	if node.bl_idname == 'SetTargetNodeType' or node.bl_idname == 'QuadPassNodeType':
 		if node.inputs[1].is_linked:
 			tnode = findNodeByLink(node_group, node, node.inputs[1])
 			parse_render_target(tnode, node_group, render_targets, depth_buffers)

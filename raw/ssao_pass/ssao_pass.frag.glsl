@@ -21,13 +21,13 @@ uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 uniform sampler2D snoise;
+
 uniform mat4 invVP;
 uniform vec3 eye;
+uniform vec2 screenSize;
+uniform vec2 aspectRatio;
 
 const float PI = 3.1415926535;
-const vec2 screenSize = vec2(1920.0, 1080.0);
-const vec2 aspectRatio = vec2(min(1.0, screenSize.y / screenSize.x), min(1.0, screenSize.x / screenSize.y));
-
 const int kernelSize = 20;//12;
 const float aoSize = 0.12;
 const float strength = 0.55;//0.7;

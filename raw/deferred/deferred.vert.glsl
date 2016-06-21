@@ -7,13 +7,13 @@ precision highp float;
 #ifdef _HMTex
 #define _NMTex
 #endif
-#ifdef _NMTex
-#define _AMTex
-#endif
+// #ifdef _NMTex
+// #define _Tex
+// #endif
 
 in vec3 pos;
 in vec3 nor;
-#ifdef _AMTex
+#ifdef _Tex
 	in vec2 tex;
 #endif
 #ifdef _VCols
@@ -49,7 +49,7 @@ uniform vec4 albedo_color;
 
 
 out vec4 mvpposition;
-#ifdef _AMTex
+#ifdef _Tex
 	out vec2 texCoord;
 #endif
 	out vec4 lPos;
@@ -131,7 +131,7 @@ void main() {
 
 	gl_Position = P * MV * sPos;
 
-#ifdef _AMTex
+#ifdef _Tex
 	texCoord = tex;
 #endif
 

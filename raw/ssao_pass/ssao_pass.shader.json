@@ -28,6 +28,14 @@
 				{
 					"id": "eye",
 					"link": "_cameraPosition"
+				},
+				{
+					"id": "screenSize",
+					"link": "_screenSize"
+				},
+				{
+					"id": "aspectRatio",
+					"link": "_aspectRatio"
 				}
 			],
 			"texture_params": [],

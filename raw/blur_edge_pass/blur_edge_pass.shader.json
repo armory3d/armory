@@ -20,6 +20,10 @@
 				{
 					"id": "dir",
 					"link": "_vec2x"
+				},
+				{
+					"id": "screenSize",
+					"link": "_screenSize"
 				}
 			],
 			"texture_params": [],
@@ -40,16 +44,16 @@
 				{
 					"id": "cull_mode",
 					"value": "none"
-				},
-				{
-					"id": "dir",
-					"link": "_vec2y"
 				}
 			],
 			"links": [
 				{
 					"id": "dir",
 					"link": "_vec2y"
+				},
+				{
+					"id": "screenSize",
+					"link": "_screenSize"
 				}
 			],
 			"texture_params": [],

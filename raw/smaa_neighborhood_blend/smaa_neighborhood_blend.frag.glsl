@@ -4,10 +4,10 @@
 precision mediump float;
 #endif
 
-#define SMAA_RT_METRICS vec4(1.0 / 1920.0, 1.0 / 1080.0, 1920.0, 1080.0)
-
 uniform sampler2D colorTex;
 uniform sampler2D blendTex;
+
+uniform vec2 screenSizeInv;
 
 in vec2 texCoord;
 in vec4 offset;
@@ -69,7 +69,7 @@ vec4 SMAANeighborhoodBlendingPS(vec2 texcoord, vec4 offset/*, sampler2D colorTex
         blendingWeight /= dot(blendingWeight, vec2(1.0, 1.0));
 
         // Calculate the texture coordinates:
-        vec4 blendingCoord = blendingOffset * vec4(SMAA_RT_METRICS.xy, -SMAA_RT_METRICS.xy) + texcoord.xyxy;
+        vec4 blendingCoord = blendingOffset * vec4(screenSizeInv.xy, -screenSizeInv.xy) + texcoord.xyxy;
 
         // We exploit bilinear filtering to mix current pixel with the chosen
         // neighbor:

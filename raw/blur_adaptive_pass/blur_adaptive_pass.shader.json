@@ -1,7 +1,7 @@
 {
 	"contexts": [
 		{
-			"id": "blur_pass_x",
+			"id": "blur_adaptive_pass_x",
 			"params": [
 				{
 					"id": "depth_write",
@@ -27,11 +27,11 @@
 				}
 			],
 			"texture_params": [],
-			"vertex_shader": "blur_pass.vert.glsl",
-			"fragment_shader": "blur_pass.frag.glsl"
+			"vertex_shader": "blur_adaptive_pass.vert.glsl",
+			"fragment_shader": "blur_adaptive_pass.frag.glsl"
 		},
 		{
-			"id": "blur_pass_y",
+			"id": "blur_adaptive_pass_y",
 			"params": [
 				{
 					"id": "depth_write",
@@ -57,13 +57,13 @@
 				}
 			],
 			"texture_params": [],
-			"vertex_shader": "blur_pass.vert.glsl",
-			"fragment_shader": "blur_pass.frag.glsl"
+			"vertex_shader": "blur_adaptive_pass.vert.glsl",
+			"fragment_shader": "blur_adaptive_pass.frag.glsl"
 		},
 		
 		
 		{
-			"id": "blur_pass_x2",
+			"id": "blur_adaptive_pass_x2",
 			"params": [
 				{
 					"id": "depth_write",
@@ -89,11 +89,11 @@
 				}
 			],
 			"texture_params": [],
-			"vertex_shader": "blur_pass.vert.glsl",
-			"fragment_shader": "blur_pass.frag.glsl"
+			"vertex_shader": "blur_adaptive_pass.vert.glsl",
+			"fragment_shader": "blur_adaptive_pass.frag.glsl"
 		},
 		{
-			"id": "blur_pass_y2",
+			"id": "blur_adaptive_pass_y2",
 			"params": [
 				{
 					"id": "depth_write",
@@ -119,8 +119,8 @@
 				}
 			],
 			"texture_params": [],
-			"vertex_shader": "blur_pass.vert.glsl",
-			"fragment_shader": "blur_pass.frag.glsl"
+			"vertex_shader": "blur_adaptive_pass.vert.glsl",
+			"fragment_shader": "blur_adaptive_pass.frag.glsl"
 		}
 	]
 }

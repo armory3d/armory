@@ -6,7 +6,9 @@ precision mediump float;
 
 uniform sampler2D tex;
 uniform sampler2D gbuffer0;
+
 uniform vec2 dir;
+uniform vec2 screenSize;
 
 in vec2 texCoord;
 
@@ -28,16 +30,15 @@ vec3 getNor(vec2 enc) {
 }
 
 float doBlur(float blurWeight, int pos, vec3 nor) {
-    vec2 texstep = dir / vec2(1920.0, 1080.0);
-	vec2 texstep2 = dir / vec2(1920.0, 1080.0);
+    vec2 texstep = dir / screenSize;
     
-    vec3 nor2 = getNor(texture(gbuffer0, texCoord + pos * texstep2).rg);
+    vec3 nor2 = getNor(texture(gbuffer0, texCoord + pos * texstep).rg);
     float influenceFactor = step(discardThreshold, dot(nor2, nor));
     vec3 col = texture(tex, texCoord + pos * texstep).rgb;
     result += col * blurWeight * influenceFactor;
     float weight = blurWeight * influenceFactor;
     
-    nor2 = getNor(texture(gbuffer0, texCoord - pos * texstep2).rg);
+    nor2 = getNor(texture(gbuffer0, texCoord - pos * texstep).rg);
     influenceFactor = step(discardThreshold, dot(nor2, nor));
     col = texture(tex, texCoord - pos * texstep).rgb;
     result += col * blurWeight * influenceFactor;
@@ -47,12 +48,7 @@ float doBlur(float blurWeight, int pos, vec3 nor) {
 }
 
 void main() {
-	
-	vec2 texstep = dir / vec2(800, 600);
-	vec2 texstep2 = dir / vec2(800, 600);
-	
 	vec3 nor = getNor(texture(gbuffer0, texCoord).rg);
-    
     float weight = 0.0;
 	
 	// for (int i = 0; i < 9; i++) {

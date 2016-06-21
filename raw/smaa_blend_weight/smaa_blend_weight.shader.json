@@ -24,6 +24,14 @@
 				{
 					"id": "searchTex",
 					"link": "_smaaSearch"
+				},
+				{
+					"id": "screenSize",
+					"link": "_screenSize"
+				},
+				{
+					"id": "screenSizeInv",
+					"link": "_screenSizeInv"
 				}
 			],
 			"texture_params": [],

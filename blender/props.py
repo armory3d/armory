@@ -97,14 +97,22 @@ class DataPropsPanel(bpy.types.Panel):
             layout.operator("cg.reset_pipelines")
         elif obj.type == 'MESH':
             layout.prop(obj.data, 'static_usage')
+            layout.operator("cg.invalidate_cache")
 
-# Reset pipelines
 class OBJECT_OT_RESETPIPELINESButton(bpy.types.Operator):
     bl_idname = "cg.reset_pipelines"
     bl_label = "Reset Pipelines"
  
     def execute(self, context):
         nodes_pipeline.reset_pipelines()
+        return{'FINISHED'}
+
+class OBJECT_OT_INVALIDATECACHEButton(bpy.types.Operator):
+    bl_idname = "cg.invalidate_cache"
+    bl_label = "Invalidate Cache"
+ 
+    def execute(self, context):
+        context.object.geometry_cached = False
         return{'FINISHED'}
 
 # Menu in materials region

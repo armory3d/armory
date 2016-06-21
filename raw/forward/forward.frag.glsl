@@ -7,12 +7,12 @@ precision mediump float;
 #define PI 3.1415926535
 #define TwoPI (2.0 * PI)
 
-#ifdef _NMTex
-#define _AMTex
-#endif
+// #ifdef _NMTex
+// #define _Tex
+// #endif
 
 #ifdef _AMTex
-uniform sampler2D salbedo;
+	uniform sampler2D salbedo;
 #endif
 uniform sampler2D shadowMap;
 uniform sampler2D senvmapRadiance;
@@ -21,20 +21,26 @@ uniform sampler2D senvmapBrdf;
 // uniform sampler2D sltcMat;
 // uniform sampler2D sltcMag;
 #ifdef _NMTex
-uniform sampler2D snormal;
+	uniform sampler2D snormal;
 #endif
 #ifdef _OMTex
-uniform sampler2D som;
+	uniform sampler2D som;
+#else
+	uniform float occlusion;
 #endif
 #ifdef _RMTex
 uniform sampler2D srm;
 #else
-uniform float roughness;
+	uniform float roughness;
 #endif
 #ifdef _MMTex
-uniform sampler2D smm;
+	uniform sampler2D smm;
 #else
-uniform float metalness;
+	uniform float metalness;
+#endif
+#ifdef _HMTex
+	uniform sampler2D shm;
+	uniform float heightStrength;
 #endif
 
 uniform float envmapStrength;
@@ -67,17 +73,17 @@ vec3 L4 = vec3(0.0);
 
 
 in vec3 position;
-#ifdef _AMTex
-in vec2 texCoord;
+#ifdef _Tex
+	in vec2 texCoord;
 #endif
 in vec4 lPos;
 in vec4 matColor;
 in vec3 lightDir;
 in vec3 eyeDir;
 #ifdef _NMTex
-in mat3 TBN;
+	in mat3 TBN;
 #else
-in vec3 normal;
+	in vec3 normal;
 #endif
 
 // float linstep(float low, float high, float v) {
@@ -657,7 +663,9 @@ void main() {
 	outColor = vec4(vec3(direct * visibility + indirect), 1.0);
 	
 #ifdef _OMTex
-	vec3 occlusion = texture(som, texCoord).rgb;
+	vec3 occ = texture(som, texCoord).rgb;
+	outColor.rgb *= occ;
+#else
 	outColor.rgb *= occlusion; 
 #endif
 	// LTC

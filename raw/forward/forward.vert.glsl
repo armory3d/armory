@@ -5,7 +5,7 @@ precision highp float;
 #endif
 
 #ifdef _NMTex
-#define _AMTex
+#define _Tex
 #endif
 
 in vec3 pos;
@@ -40,7 +40,7 @@ uniform float skinBones[50 * 12];
 #endif
 
 out vec3 position;
-#ifdef _AMTex
+#ifdef _Tex
 out vec2 texCoord;
 #endif
 out vec4 lPos;
@@ -113,7 +113,7 @@ void main() {
 
 	gl_Position = P * VM * sPos;
 
-#ifdef _AMTex
+#ifdef _Tex
 	texCoord = tex;
 #endif
 

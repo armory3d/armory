@@ -7,9 +7,9 @@ precision mediump float;
 #ifdef _HMTex
 #define _NMTex
 #endif
-#ifdef _NMTex
-#define _AMTex
-#endif
+// #ifdef _NMTex
+// #define _Tex
+// #endif
 
 #ifdef _AMTex
 	uniform sampler2D salbedo;
@@ -19,6 +19,8 @@ precision mediump float;
 #endif
 #ifdef _OMTex
 	uniform sampler2D som;
+#else
+	uniform float occlusion;
 #endif
 #ifdef _RMTex
 	uniform sampler2D srm;
@@ -42,7 +44,7 @@ precision mediump float;
 #endif
 
 in vec4 mvpposition;
-#ifdef _AMTex
+#ifdef _Tex
 	in vec2 texCoord;
 #endif
 in vec4 lPos;
@@ -172,7 +174,7 @@ float parallaxShadow(vec3 L, vec2 initialTexCoord, float initialHeight) {
 #endif
 
 void main() {
-#ifdef _AMTex
+#ifdef _Tex
 	vec2 newCoord = texCoord;
 #endif	
 	
@@ -211,16 +213,16 @@ void main() {
 #endif
 		
 #ifdef _OMTex
-	float occlusion = texture(som, newCoord).r;
+	float occ = texture(som, newCoord).r;
 #else
-	float occlusion = 1.0; 
+	float occ = occlusion; 
 #endif
 
 #ifdef _HMTex
-	occlusion *= shadowMultiplier;
+	occ *= shadowMultiplier;
 #endif
 	
-	// occlusion - pack with mask
+	// occ - pack with mask
 	n /= (abs(n.x) + abs(n.y) + abs(n.z));
     n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
 
@@ -236,9 +238,9 @@ void main() {
 		}
 		if (dist > 0) mask_probe = 0;
 	}
-	gl_FragData[0] = vec4(n.xy, occlusion, mask_probe);
+	gl_FragData[0] = vec4(n.xy, occ, mask_probe);
 #else
-	gl_FragData[0] = vec4(n.xy, occlusion, mask);
+	gl_FragData[0] = vec4(n.xy, occ, mask);
 #endif
 	gl_FragData[1] = vec4(baseColor.rgb, packFloat(roughness, metalness));
 }

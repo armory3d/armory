@@ -10,12 +10,11 @@ const float FXAA_SPAN_MAX = 8.0;
 
 uniform sampler2D tex;
 
+uniform vec2 texStep; // screenSizeInv
+
 in vec2 texCoord;
 
-void main() {
-	const vec2 resolution = vec2(1920.0, 1080.0);
-    vec2 texStep = 1.0 / resolution.xy;
-	
+void main() {	
 	vec2 tcrgbNW = (texCoord + vec2(-1.0, -1.0) * texStep);
 	vec2 tcrgbNE = (texCoord + vec2(1.0, -1.0) * texStep);
 	vec2 tcrgbSW = (texCoord + vec2(-1.0, 1.0) * texStep);

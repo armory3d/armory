@@ -1,7 +1,7 @@
 {
 	"contexts": [
 		{
-			"id": "smaa_neighborhood_blend",
+			"id": "copy_pass",
 			"params": [
 				{
 					"id": "depth_write",
@@ -16,15 +16,10 @@
 					"value": "none"
 				}
 			],
-			"links": [
-				{
-					"id": "screenSizeInv",
-					"link": "_screenSizeInv"
-				}
-			],
+			"links": [],
 			"texture_params": [],
-			"vertex_shader": "smaa_neighborhood_blend.vert.glsl",
-			"fragment_shader": "smaa_neighborhood_blend.frag.glsl"
+			"vertex_shader": "copy_pass.vert.glsl",
+			"fragment_shader": "copy_pass.frag.glsl"
 		}
 	]
 }

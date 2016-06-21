@@ -16,7 +16,12 @@
 					"value": "none"
 				}
 			],
-			"links": [],
+			"links": [
+				{
+					"id": "texStep",
+					"link": "_screenSizeInv"
+				}
+			],
 			"texture_params": [],
 			"vertex_shader": "fxaa_pass.vert.glsl",
 			"fragment_shader": "fxaa_pass.frag.glsl"

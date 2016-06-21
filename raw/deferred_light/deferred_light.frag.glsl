@@ -419,7 +419,8 @@ float shadowTest(vec4 lPos) {
 	lPosH.x = (lPosH.x + 1.0) / 2.0;
     lPosH.y = (lPosH.y + 1.0) / 2.0;
 	
-	const float bias = 0.00015; // Persp
+	// const float bias = 0.00015; // Persp
+	const float bias = 0.00005; // Persp
 	// const float bias = 0.01; // Ortho
     
 #ifdef _PCSS

@@ -16,7 +16,12 @@
 					"value": "none"
 				}
 			],
-			"links": [],
+			"links": [
+				{
+					"id": "screenSizeInv",
+					"link": "_screenSizeInv"
+				}
+			],
 			"texture_params": [],
 			"vertex_shader": "smaa_edge_detect.vert.glsl",
 			"fragment_shader": "smaa_edge_detect.frag.glsl"
