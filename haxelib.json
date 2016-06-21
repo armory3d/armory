@@ -1,6 +1,6 @@
 {
-  "name": "cyclesgame",
-  "url" : "https://github.com/luboslenco/cyclesgame/",
+  "name": "armory",
+  "url" : "https://github.com/luboslenco/armory/",
   "license": "LGPL",
   "tags": ["kha", "3d"],
   "description": "Blender game engine",

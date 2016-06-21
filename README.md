@@ -1,4 +1,4 @@
-cyclesgame
+armory
 ==============
 
 Note: The engine is still in development and will not work yet.

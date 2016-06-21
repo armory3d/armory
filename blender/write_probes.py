@@ -25,10 +25,10 @@ def write_probes(image_name, disable_hdr, cached_num_mips, generate_radiance=Tru
 	# if platform.system() == 'Darwin':
 		# haxelib_path = "/usr/local/bin/haxelib"
 
-	# output = subprocess.check_output([haxelib_path + " path cyclesgame"], shell=True)
+	# output = subprocess.check_output([haxelib_path + " path armory"], shell=True)
 	# output = str(output).split("\\n")[0].split("'")[1]
 	# cmft_path = output[:-8] + "tools/cmft/"
-	cmft_path = 'Libraries/cyclesgame/tools/cmft/'
+	cmft_path = 'Libraries/armory/tools/cmft/'
 	kraffiti_path = 'Kha/Kore/Tools/kraffiti/'
 	generated_files = []
 	output_gama_numerator = '1.0' if disable_hdr else '2.2'

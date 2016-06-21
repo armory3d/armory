@@ -2,6 +2,9 @@ import bpy
 import math
 from armory import Object
 
+def is_pow(num):
+	return ((num & (num - 1)) == 0) and num != 0
+
 def find_node_by_link(node_group, to_node, target_socket):
 	for link in node_group.links:
 		if link.to_node == to_node and link.to_socket == target_socket:
@@ -86,8 +89,9 @@ def parse_from(self, material, c, defs, surface_node):
 def make_texture(self, id, image_node, material):
 	tex = Object()
 	tex.id = id
-	if image_node.image is not None:
-		tex.name = image_node.image.name.rsplit('.', 1)[0] # Remove extension
+	image = image_node.image
+	if image is not None:
+		tex.name = image.filepath.rsplit('/', 1)[1].rsplit('.', 1)[0] # Extract file name without extension
 		tex.name = tex.name.replace('.', '_')
 		tex.name = tex.name.replace('-', '_')
 		tex.name = tex.name.replace(' ', '_')
@@ -98,9 +102,16 @@ def make_texture(self, id, image_node, material):
 			tex.min_filter = 'anisotropic'
 			tex.mipmap_filter = 'linear'
 			tex.generate_mipmaps = True
-		#image_node.extension = 'Repeat' # TODO
+		if image_node.extension != 'REPEAT': # Extend or clip
+			tex.u_addressing = 'clamp'
+			tex.v_addressing = 'clamp'
+		else:
+			if is_pow(image.size[0]) == False or is_pow(image.size[1]) == False:
+				print('Armory Warning: ' + material.name + '/' + image.name + ' - non power of 2 texture can not use repeat mode')
+				tex.u_addressing = 'clamp'
+				tex.v_addressing = 'clamp'
 		
-		if image_node.image.source == 'MOVIE': # Just append movie texture trait for now
+		if image.source == 'MOVIE': # Just append movie texture trait for now
 			movie_trait = Object()
 			movie_trait.type = 'Script'
 			movie_trait.class_name = 'MovieTexture'

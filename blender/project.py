@@ -223,7 +223,7 @@ def buildProject(self, build_type=0):
 
 	#prefix =  haxelib_path + " run kha "
 
-	output = subprocess.check_output([haxelib_path + " path cyclesgame"], shell=True)
+	output = subprocess.check_output([haxelib_path + " path armory"], shell=True)
 	output = str(output).split("\\n")[0].split("'")[1]
 	scripts_path = output[:-8] + "blender/"
 	raw_path = output[:-8] + "raw/"

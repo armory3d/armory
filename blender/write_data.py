@@ -17,7 +17,7 @@ project.addSources('Sources');
 project.addShaders('Sources/Shaders/**');
 project.addAssets('Assets/**');
 
-project.addLibrary('cyclesgame');
+project.addLibrary('armory');
 """)
 
 			for ref in shader_references: # Shaders
