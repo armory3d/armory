@@ -1,37 +1,31 @@
-# =============================================================
-#  Armory Scene Exporter
-#  http://lue3d.org/
-#  by Lubos Lenco
+#  Armory Scene Exporter by Lubos Lenco
+#  http://armory3d.org/
 #
-#  Based on
-#  Open Game Engine Exchange
+#  Based on Open Game Engine Exchange
 #  http://opengex.org/
-# 
-#  Export plugin for Blender
-#  by Eric Lengyel
-#  Version 1.1.2.2
+#  Export plugin for Blender by Eric Lengyel
 #  Copyright 2015, Terathon Software LLC
 # 
 #  This software is licensed under the Creative Commons
 #  Attribution-ShareAlike 3.0 Unported License:
 #  http://creativecommons.org/licenses/by-sa/3.0/deed.en_US
-#
-# =============================================================
 
 bl_info = {
 	"name": "Armory format (.json)",
 	"description": "Armory Exporter",
-	"author": "Eric Lengyel, Armory by Lubos Lenco",
+	"author": "Eric Lengyel, Lubos Lenco",
 	"version": (1, 0, 0),
 	"location": "File > Import-Export",
-	"wiki_url": "http://lue3d.org/",
+	"wiki_url": "http://armory3d.org/",
 	"category": "Import-Export"}
 
 import os
 import bpy
 import math
 from mathutils import *
+import time
 import json
+import numpy
 import ast
 import write_probes
 from bpy_extras.io_utils import ExportHelper
@@ -59,6 +53,57 @@ deltaSubrotationName = ["dxrot", "dyrot", "dzrot"]
 deltaSubscaleName = ["dxscl", "dyscl", "dzscl"]
 axisName = ["x", "y", "z"]
 
+class Object:
+	def to_JSON(self):
+		if ArmoryExporter.option_minimize:
+			return json.dumps(self, default=lambda o: o.__dict__, separators=(',',':'))
+		else:
+			return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
+class Vertex:
+	__slots__ = ("co", "normal", "uvs", "col", "loop_indices", "index", "weights", "joint_indexes")
+	def __init__(self, mesh, loop):
+		vi = loop.vertex_index
+		i = loop.index
+		self.co = mesh.vertices[vi].co.freeze()
+		self.normal = loop.normal.freeze()
+		self.uvs = tuple(layer.data[i].uv.freeze() for layer in mesh.uv_layers)
+		self.col = [0, 0, 0]
+		if len(mesh.vertex_colors) > 0:
+			self.col = mesh.vertex_colors[0].data[i].color.freeze()
+		self.loop_indices = [i]
+
+		# Take the four most influential groups
+		groups = sorted(mesh.vertices[vi].groups, key=lambda group: group.weight, reverse=True)
+		if len(groups) > 4:
+			groups = groups[:4]
+
+		self.weights = [group.weight for group in groups]
+		self.joint_indexes = [group.group for group in groups]
+
+		if len(self.weights) < 4:
+			for i in range(len(self.weights), 4):
+				self.weights.append(0.0)
+				self.joint_indexes.append(0)
+
+		self.index = 0
+
+	def __hash__(self):
+		return hash((self.co, self.normal, self.uvs))
+
+	def __eq__(self, other):
+		eq = (
+			(self.co == other.co) and
+			(self.normal == other.normal) and
+			(self.uvs == other.uvs)
+			)
+
+		if eq:
+			indices = self.loop_indices + other.loop_indices
+			self.loop_indices = indices
+			other.loop_indices = indices
+		return eq
+
 class ExportVertex:
 	__slots__ = ("hash", "vertexIndex", "faceIndex", "position", "normal", "color", "texcoord0", "texcoord1")
 
@@ -74,12 +119,12 @@ class ExportVertex:
 			return (False)
 		if (self.normal != v.normal):
 			return (False)
-		if (self.color != v.color):
-			return (False)
 		if (self.texcoord0 != v.texcoord0):
 			return (False)
-		if (self.texcoord1 != v.texcoord1):
+		if (self.color != v.color):
 			return (False)
+		if (self.texcoord1 != v.texcoord1):
+			return (False)	
 		return (True)
 
 	def Hash(self):
@@ -98,13 +143,6 @@ class ExportVertex:
 		h = h * 21737 + hash(self.texcoord1[1])
 		self.hash = h
 
-class Object:
-	def to_JSON(self):
-		if ArmoryExporter.option_minimize:
-			return json.dumps(self, default=lambda o: o.__dict__, separators=(',',':'))
-		else:
-			return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
-
 class ArmoryExporter(bpy.types.Operator, ExportHelper):
 	"""Export to Armory format"""
 	bl_idname = "export_scene.armory"
@@ -116,9 +154,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 	option_geometry_only = bpy.props.BoolProperty(name = "Export Geometry Only", description = "Export only geometry data", default = True)
 	option_geometry_per_file = bpy.props.BoolProperty(name = "Export Geometry Per File", description = "Export each geometry to individual JSON files", default = False)
 	option_minimize = bpy.props.BoolProperty(name = "Export Minimized", description = "Export minimized JSON data", default = True)
-
-	def WriteColor(self, color):
-		return [color[0], color[1], color[2]]
 
 	def WriteMatrix(self, matrix):
 		return [matrix[0][0], matrix[0][1], matrix[0][2], matrix[0][3],
@@ -180,12 +215,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			va += self.WriteVector3D(getattr(vertexArray[k], attrib))
 
 		return va
-
-	def WriteInt(self, i):
-		return i
-
-	def WriteFloat(self, f):
-		return f
 
 	def WriteTriangle(self, triangleIndex, indexTable):
 		i = triangleIndex * 3
@@ -507,6 +536,12 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 	@staticmethod
 	def UnifyVertices(exportVertexArray, indexTable):
+	
+		# Non-indexed
+		# for i in range(len(exportVertexArray)):
+			# indexTable.append(i)
+		# return exportVertexArray
+	
 		# This function looks for identical vertices having exactly the same position, normal,
 		# color, and texcoords. Duplicate vertices are unified, and a new index table is returned.
 		bucketCount = len(exportVertexArray) >> 3
@@ -526,15 +561,21 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		for i in range(len(exportVertexArray)):
 			ev = exportVertexArray[i]
 			bucket = ev.hash & (bucketCount - 1)
-			index = ArmoryExporter.FindExportVertex(hashTable[bucket], exportVertexArray, ev)
-			if (index < 0):
+			
+			index = -1
+			for b in hashTable[bucket]:
+				if exportVertexArray[b] == ev:
+					index = b
+					break
+			
+			if index < 0:
 				indexTable.append(len(unifiedVertexArray))
 				unifiedVertexArray.append(ev)
 				hashTable[bucket].append(i)
 			else:
 				indexTable.append(indexTable[index])
 
-		return (unifiedVertexArray)
+		return unifiedVertexArray
 
 	def ExportBone(self, armature, bone, scene, o):
 		nodeRef = self.nodeArray.get(bone)
@@ -590,9 +631,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o.animation.track.time.values = []
 
 			for i in range(self.beginFrame, self.endFrame):
-				o.animation.track.time.values.append(self.WriteFloat((i - self.beginFrame) * self.frameTime))
+				o.animation.track.time.values.append(((i - self.beginFrame) * self.frameTime))
 
-			o.animation.track.time.values.append(self.WriteFloat(self.endFrame * self.frameTime))
+			o.animation.track.time.values.append((self.endFrame * self.frameTime))
 
 			o.animation.track.value = Object()
 			o.animation.track.value.values = []
@@ -629,9 +670,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o.animation.track.time.values = []
 
 			for i in range(self.beginFrame, self.endFrame):
-				o.animation.track.time.values.append(self.WriteFloat((i - self.beginFrame) * self.frameTime))
+				o.animation.track.time.values.append(((i - self.beginFrame) * self.frameTime))
 
-			o.animation.track.time.values.append(self.WriteFloat(self.endFrame * self.frameTime))
+			o.animation.track.time.values.append((self.endFrame * self.frameTime))
 
 			o.animation.track.value = Object()
 			o.animation.track.value.values = []
@@ -1326,6 +1367,182 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# Write the bone weight array. The number of entries is the sum of the bone counts for all vertices.
 		om.skin.bone_weight_array = boneWeightArray
 
+	def calc_tangents(self, posa, nora, uva, ia):
+		triangle_count = int(len(ia) / 3)
+		vertex_count = int(len(posa) / 3)
+		tangents = [0] * vertex_count * 3
+		# bitangents = [0] * vertex_count * 3
+		for i in range(0, triangle_count):
+			i0 = ia[i * 3 + 0]
+			i1 = ia[i * 3 + 1]
+			i2 = ia[i * 3 + 2]
+			# TODO: Slow
+			v0 = Vector((posa[i0 * 3 + 0], posa[i0 * 3 + 1], posa[i0 * 3 + 2]))
+			v1 = Vector((posa[i1 * 3 + 0], posa[i1 * 3 + 1], posa[i1 * 3 + 2]))
+			v2 = Vector((posa[i2 * 3 + 0], posa[i2 * 3 + 1], posa[i2 * 3 + 2]))
+			uv0 = Vector((uva[i0 * 2 + 0], uva[i0 * 2 + 1]))
+			uv1 = Vector((uva[i1 * 2 + 0], uva[i1 * 2 + 1]))
+			uv2 = Vector((uva[i2 * 2 + 0], uva[i2 * 2 + 1]))
+			
+			tangent = ArmoryExporter.calc_tangent(v0, v1, v2, uv0, uv1, uv2)
+			
+			tangents[i0 * 3 + 0] += tangent.x
+			tangents[i0 * 3 + 1] += tangent.y
+			tangents[i0 * 3 + 2] += tangent.z
+			tangents[i1 * 3 + 0] += tangent.x
+			tangents[i1 * 3 + 1] += tangent.y
+			tangents[i1 * 3 + 2] += tangent.z
+			tangents[i2 * 3 + 0] += tangent.x
+			tangents[i2 * 3 + 1] += tangent.y
+			tangents[i2 * 3 + 2] += tangent.z
+			# bitangents[i0 * 3 + 0] += bitangent.x
+			# bitangents[i0 * 3 + 1] += bitangent.y
+			# bitangents[i0 * 3 + 2] += bitangent.z
+			# bitangents[i1 * 3 + 0] += bitangent.x
+			# bitangents[i1 * 3 + 1] += bitangent.y
+			# bitangents[i1 * 3 + 2] += bitangent.z
+			# bitangents[i2 * 3 + 0] += bitangent.x
+			# bitangents[i2 * 3 + 1] += bitangent.y
+			# bitangents[i2 * 3 + 2] += bitangent.z
+		
+		# Orthogonalize
+		for i in range(0, vertex_count):
+			# Slow
+			t = Vector((tangents[i * 3], tangents[i * 3 + 1], tangents[i * 3 + 2]))
+			# b = Vector((bitangents[i * 3], bitangents[i * 3 + 1], bitangents[i * 3 + 2]))
+			n = Vector((nora[i * 3], nora[i * 3 + 1], nora[i * 3 + 2]))
+			v = t - n * n.dot(t)
+			v.normalize()
+			# Calculate handedness
+			# cnv = n.cross(v)
+			# if cnv.dot(b) < 0.0:
+				# v = v * -1.0
+			tangents[i * 3] = v.x
+			tangents[i * 3 + 1] = v.y
+			tangents[i * 3 + 2] = v.z
+		return tangents
+
+	def write_geometry(self, node, fp, o):
+		# One geometry data per file
+		if ArmoryExporter.option_geometry_per_file:
+			geom_obj = Object()
+			geom_obj.geometry_resources = [o]
+			with open(fp, 'w') as f:
+				f.write(geom_obj.to_JSON())
+			self.node_set_geometry_cached(node, True)
+		else:
+			self.output.geometry_resources.append(o)
+
+	def export_geometry_fast(self, exportMesh, node, fp, o, om):
+		# Much faster export but produces slightly less efficient data
+		exportMesh.calc_normals_split()
+		exportMesh.calc_tessface()
+		vert_list = { Vertex(exportMesh, loop) : 0 for loop in exportMesh.loops}.keys()
+		num_verts = len(vert_list)
+		num_uv_layers = len(exportMesh.uv_layers)
+		num_colors = len(exportMesh.vertex_colors)
+		vdata = [0] * num_verts * 3
+		ndata = [0] * num_verts * 3
+		if num_uv_layers > 0:
+			t0data = [0] * num_verts * 2
+			if num_uv_layers > 1:
+				t1data = [0] * num_verts * 2
+		if num_colors > 0:
+			cdata = [0] * num_verts * 3
+		# Make arrays
+		for i, vtx in enumerate(vert_list):
+			vtx.index = i
+			co = vtx.co
+			normal = vtx.normal
+			for j in range(3):
+				vdata[(i * 3) + j] = co[j]
+				ndata[(i * 3) + j] = normal[j]
+			if num_uv_layers > 0:
+				t0data[i * 2] = vtx.uvs[0].x
+				t0data[i * 2 + 1] = vtx.uvs[0].y
+				if num_uv_layers > 1:
+					t1data[i * 2] = vtx.uvs[1].x
+					t1data[i * 2 + 1] = vtx.uvs[1].y
+			if num_colors > 0:
+				cdata[i * 3] = vtx.cols[0]
+				cdata[i * 3 + 1] = vtx.cols[1]
+				cdata[i * 3 + 2] = vtx.cols[2]
+		# Output
+		om.vertex_arrays = []
+		pa = Object()
+		pa.attrib = "position"
+		pa.size = 3
+		pa.values = vdata
+		om.vertex_arrays.append(pa)
+		na = Object()
+		na.attrib = "normal"
+		na.size = 3
+		na.values = ndata
+		om.vertex_arrays.append(na)
+		if num_uv_layers > 0:
+			ta = Object()
+			ta.attrib = "texcoord"
+			ta.size = 2
+			ta.values = t0data
+			om.vertex_arrays.append(ta)
+			if num_uv_layers > 1:
+				ta2 = Object()
+				ta2.attrib = "texcoord1"
+				ta2.size = 2
+				ta2.values = t1data
+				om.vertex_arrays.append(ta2)
+		if num_colors > 0:
+			ca = Object()
+			ca.attrib = "color"
+			ca.size = 3
+			ca.values = cdata
+			om.vertex_arrays.append(ca)
+		
+		# Indices
+		prims = {ma.name if ma else '': [] for ma in exportMesh.materials}
+		if not prims:
+			prims = {'': []}
+		
+		vert_dict = {i : v for v in vert_list for i in v.loop_indices}
+		for poly in exportMesh.polygons:
+			first = poly.loop_start
+			if len(exportMesh.materials) == 0:
+				prim = prims['']
+			else:
+				mat = exportMesh.materials[poly.material_index]
+				prim = prims[mat.name if mat else '']
+			indices = [vert_dict[i].index for i in range(first, first+poly.loop_total)]
+
+			if poly.loop_total == 3:
+				prim += indices
+			elif poly.loop_total > 3:
+				for i in range(poly.loop_total-1):
+					prim += (indices[-1], indices[i], indices[i + 1])
+		
+		# Write indices
+		om.index_arrays = []
+		for mat, prim in prims.items():
+			idata = [0] * len(prim)
+			for i, v in enumerate(prim):
+				idata[i] = v
+			ia = Object()
+			ia.size = 3
+			ia.values = idata
+			ia.material = len(om.index_arrays)
+			om.index_arrays.append(ia)
+		
+		# Make tangents
+		if (self.get_export_tangents(exportMesh) == True and num_uv_layers > 0):	
+			tana = Object()
+			tana.attrib = "tangent"
+			tana.size = 3
+			tana.values = self.calc_tangents(pa.values, na.values, ta.values, om.index_arrays[0].values)	
+			om.vertex_arrays.append(tana)
+		
+		# Write
+		o.mesh = om
+		self.write_geometry(node, fp, o)
+
 	def ExportGeometry(self, objectRef, scene):
 		# This function exports a single geometry object.
 		node = objectRef[1]["nodeTable"][0]
@@ -1342,8 +1559,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 		o = Object()
 		o.id = oid
-		#self.WriteNodeTable(objectRef) #// # TODO
-
 		mesh = objectRef[0]
 		structFlag = False;
 
@@ -1409,6 +1624,12 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# arbitrary stage in the modifier stack.
 		exportMesh = node.to_mesh(scene, applyModifiers, "RENDER", True, False)
 
+
+		# Default to fast for now
+		self.export_geometry_fast(exportMesh, node, fp, o, om)
+		# self.export_geometry_quality(exportMesh, node, fp, o, om)
+
+	def export_geometry_quality(self, exportMesh, node, fp, o, om):
 		# Triangulate mesh and remap vertices to eliminate duplicates.
 		materialTable = []
 		exportVertexArray = ArmoryExporter.DeindexMesh(exportMesh, materialTable)
@@ -1455,7 +1676,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 			if (texcoordCount > 1):
 				ta2 = Object()
-				ta2.attrib = "texcoord[1]"
+				ta2.attrib = "texcoord1"
 				ta2.size = 2
 				ta2.values = self.WriteVertexArray2D(unifiedVertexArray, "texcoord1")
 				om.vertex_arrays.append(ta2)
@@ -1520,9 +1741,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			ia = Object()
 			ia.size = 3
 			ia.values = self.WriteTriangleArray(triangleCount, indexTable)
-			ia.material = self.WriteInt(0)
+			ia.material = 0
 			om.index_arrays.append(ia)
-		
 		else:
 			# If there are multiple material indexes, then write a separate index array for each one.
 			materialTriangleCount = [0 for i in range(maxMaterialIndex + 1)]
@@ -1542,72 +1762,15 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 					ia = Object()
 					ia.size = 3
 					ia.values = self.WriteTriangleArray(materialTriangleCount[m], materialIndexTable)
-					ia.material = self.WriteInt(m)
+					ia.material = m
 					om.index_arrays.append(ia)	
 
 		# Export tangents
-		if (self.get_export_tangents(exportMesh) == True and len(exportMesh.uv_textures) > 0):
-			ia = om.index_arrays[0].values
-			posa = pa.values
-			uva = ta.values
-			triangle_count = int(len(ia) / 3)
-			vertex_count = int(len(posa) / 3)
-			tangents = [0] * vertex_count * 3
-			# bitangents = [0] * vertex_count * 3
-			for i in range(0, triangle_count):
-				i0 = ia[i * 3 + 0]
-				i1 = ia[i * 3 + 1]
-				i2 = ia[i * 3 + 2]
-				# TODO: Slow
-				v0 = Vector((posa[i0 * 3 + 0], posa[i0 * 3 + 1], posa[i0 * 3 + 2]))
-				v1 = Vector((posa[i1 * 3 + 0], posa[i1 * 3 + 1], posa[i1 * 3 + 2]))
-				v2 = Vector((posa[i2 * 3 + 0], posa[i2 * 3 + 1], posa[i2 * 3 + 2]))
-				uv0 = Vector((uva[i0 * 2 + 0], uva[i0 * 2 + 1]))
-				uv1 = Vector((uva[i1 * 2 + 0], uva[i1 * 2 + 1]))
-				uv2 = Vector((uva[i2 * 2 + 0], uva[i2 * 2 + 1]))
-				
-				tangent = ArmoryExporter.calc_tangent(v0, v1, v2, uv0, uv1, uv2)
-				
-				tangents[i0 * 3 + 0] += tangent.x
-				tangents[i0 * 3 + 1] += tangent.y
-				tangents[i0 * 3 + 2] += tangent.z
-				tangents[i1 * 3 + 0] += tangent.x
-				tangents[i1 * 3 + 1] += tangent.y
-				tangents[i1 * 3 + 2] += tangent.z
-				tangents[i2 * 3 + 0] += tangent.x
-				tangents[i2 * 3 + 1] += tangent.y
-				tangents[i2 * 3 + 2] += tangent.z
-				# bitangents[i0 * 3 + 0] += bitangent.x
-				# bitangents[i0 * 3 + 1] += bitangent.y
-				# bitangents[i0 * 3 + 2] += bitangent.z
-				# bitangents[i1 * 3 + 0] += bitangent.x
-				# bitangents[i1 * 3 + 1] += bitangent.y
-				# bitangents[i1 * 3 + 2] += bitangent.z
-				# bitangents[i2 * 3 + 0] += bitangent.x
-				# bitangents[i2 * 3 + 1] += bitangent.y
-				# bitangents[i2 * 3 + 2] += bitangent.z
-			
-			# Orthogonalize
-			nora = na.values
-			for i in range(0, vertex_count):
-				# TODO: Slow
-				t = Vector((tangents[i * 3], tangents[i * 3 + 1], tangents[i * 3 + 2]))
-				# b = Vector((bitangents[i * 3], bitangents[i * 3 + 1], bitangents[i * 3 + 2]))
-				n = Vector((nora[i * 3], nora[i * 3 + 1], nora[i * 3 + 2]))
-				v = t - n * n.dot(t)
-				v.normalize()
-				# Calculate handedness
-				# cnv = n.cross(v)
-				# if cnv.dot(b) < 0.0:
-					# v = v * -1.0
-				tangents[i * 3] = v.x
-				tangents[i * 3 + 1] = v.y
-				tangents[i * 3 + 2] = v.z
-				
+		if (self.get_export_tangents(exportMesh) == True and len(exportMesh.uv_textures) > 0):	
 			tana = Object()
 			tana.attrib = "tangent"
 			tana.size = 3
-			tana.values = tangents
+			tana.values = self.calc_tangents(pa.values, na.values, ta.values, om.index_arrays[0].values)	
 			om.vertex_arrays.append(tana)
 
 		# If the mesh is skinned, export the skinning data here.
@@ -1635,16 +1798,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		bpy.data.meshes.remove(exportMesh)
 
 		o.mesh = om
-
-		# One geometry data per file
-		if ArmoryExporter.option_geometry_per_file:
-			geom_obj = Object()
-			geom_obj.geometry_resources = [o]
-			with open(fp, 'w') as f:
-				f.write(geom_obj.to_JSON())
-			self.node_set_geometry_cached(node, True)
-		else:
-			self.output.geometry_resources.append(o)
+		self.write_geometry(node, fp, o)
 
 	def ExportLight(self, objectRef):
 		# This function exports a single light object.
@@ -1672,7 +1826,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# Parse nodes, only emission for now
 		for n in object.node_tree.nodes:
 			if n.type == 'EMISSION':
-				o.color = self.WriteColor(n.inputs[0].default_value)
+				col = n.inputs[0].default_value
+				o.color = [col[0], col[1], col[2]]
 				o.strength = n.inputs[1].default_value / 1000.0
 				break
 
@@ -1768,6 +1923,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			self.ExportGeometry(objectRef, scene)
 
 	def execute(self, context):
+		profile_time = time.time()
+		
 		self.output = Object()
 
 		scene = context.scene
@@ -1837,6 +1994,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		with open(self.filepath, 'w') as f:
 			f.write(self.output.to_JSON())
 
+		print('Scene built in ' + str(time.time() - profile_time))
+		
 		return {'FINISHED'}
 
 	# Callbacks
