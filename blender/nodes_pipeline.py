@@ -6,6 +6,7 @@ import sys
 import json
 import platform
 import subprocess
+import nodes_compositor
 
 class CGPipelineTree(NodeTree):
 	'''Pipeline nodes'''
@@ -314,6 +315,26 @@ class DrawWorldNode(Node, CGPipelineTreeNode):
 	def free(self):
 		print("Removing node ", self, ", Goodbye!")
 
+class DrawCompositorNode(Node, CGPipelineTreeNode):
+	'''A custom node'''
+	bl_idname = 'DrawCompositorNodeType'
+	bl_label = 'Draw Compositor'
+	bl_icon = 'SOUND'
+	
+	def init(self, context):
+		self.inputs.new('NodeSocketShader', "Stage")
+		self.inputs.new('NodeSocketShader', "Target")
+		self.inputs.new('NodeSocketShader', "Color")
+		self.inputs.new('NodeSocketShader', "GBuffer")
+
+		self.outputs.new('NodeSocketShader', "Stage")
+
+	def copy(self, node):
+		print("Copying from node ", node)
+
+	def free(self):
+		print("Removing node ", self, ", Goodbye!")
+
 # Pass nodes
 class QuadPassNode(Node, CGPipelineTreeNode):
 	'''A custom node'''
@@ -401,6 +422,7 @@ node_categories = [
 		NodeItem("DrawMaterialQuadNodeType"),
 		NodeItem("DrawQuadNodeType"),
 		NodeItem("DrawWorldNodeType"),
+		NodeItem("DrawCompositorNodeType"),
 	]),
 	MyTargetNodeCategory("TARGETNODES", "Target", items=[
 		NodeItem("TargetNodeType"),
@@ -561,7 +583,7 @@ def make_draw_decals(stage, node_group, node, shader_references, asset_reference
 	stage.params.append(context) # Context
 	bpy.data.cameras[0].last_decal_context = context
 
-def make_bind_target(stage, node_group, node, currentNode=None, target_index=1, constant_index=2):
+def make_bind_target(stage, node_group, node, currentNode=None, target_index=1, constant_index=2, constant_name=None):
 	if currentNode == None:
 		currentNode = node
 		
@@ -570,8 +592,11 @@ def make_bind_target(stage, node_group, node, currentNode=None, target_index=1, 
 	link = findLink(node_group, currentNode, currentNode.inputs[target_index])
 	currentNode = link.from_node
 	
+	if constant_name == None:
+		constant_name = node.inputs[constant_index].default_value
+	
 	if currentNode.bl_idname == 'NodeReroute':
-		make_bind_target(stage, node_group, node, currentNode, target_index=0, constant_index=constant_index)
+		make_bind_target(stage, node_group, node, currentNode, target_index=0, constant_index=constant_index, constant_name=constant_name)
 	
 	elif currentNode.bl_idname == 'GBufferNodeType':
 		for i in range(0, 5):
@@ -583,19 +608,19 @@ def make_bind_target(stage, node_group, node, currentNode=None, target_index=1, 
 					db_node = findNodeByLink(node_group, targetNode, targetNode.inputs[3])
 					db_id = db_node.inputs[0].default_value
 					stage.params.append('_' + db_id)
-					stage.params.append(node.inputs[constant_index].default_value + 'D')
+					stage.params.append(constant_name + 'D')
 				stage.params.append(targetId) # Color buffer
-				stage.params.append(node.inputs[constant_index].default_value + str(i))
+				stage.params.append(constant_name + str(i))
 	
 	elif currentNode.bl_idname == 'TargetNodeType':		
 		targetId = currentNode.inputs[0].default_value
 		stage.params.append(targetId)
-		stage.params.append(node.inputs[constant_index].default_value)
+		stage.params.append(constant_name)
 		
 	elif currentNode.bl_idname == 'DepthBufferNodeType':
 		targetId = '_' + currentNode.inputs[0].default_value
 		stage.params.append(targetId)
-		stage.params.append(node.inputs[constant_index].default_value)
+		stage.params.append(constant_name)
 
 def make_draw_material_quad(stage, node_group, node, shader_references, asset_references, context_index=1):
 	stage.command = 'draw_material_quad'
@@ -628,6 +653,19 @@ def make_draw_world(stage, node_group, node):
 	stage.command = 'draw_material_quad'
 	wname = bpy.data.worlds[0].name
 	stage.params.append(wname + '_material/' + wname + '_material/env_map') # Only one world for now
+
+def make_draw_compositor(stage, node_group, node, shader_references, asset_references):
+	scon = 'compositor_pass'
+	world_defs = bpy.data.worlds[0].world_defs
+	compositor_defs = nodes_compositor.parse_defs(bpy.data.scenes[0].node_tree) # Thrown in scene 0 for now
+	defs = world_defs + compositor_defs
+	res_name = scon + defs
+	
+	stage.command = 'draw_shader_quad'
+	stage.params.append(res_name + '/' + res_name + '/' + scon)
+	# Include resource and shaders
+	asset_references.append('compiled/ShaderResources/' + scon + '/' + res_name + '.json')
+	shader_references.append('compiled/Shaders/' + scon + '/' + res_name)
 
 def make_call_function(stage, node_group, node):
 	stage.command = 'call_function'
@@ -690,7 +728,26 @@ def buildNode(stages, node, node_group, last_bind_target, shader_references, ass
 	
 	elif node.bl_idname == 'DrawWorldNodeType':
 		make_draw_world(stage, node_group, node)
-		
+	
+	elif node.bl_idname == 'DrawCompositorNodeType':
+		# Set target
+		if node.inputs[1].is_linked:
+			make_set_target(stage, node_group, node)
+			stages.append(stage)
+		# Bind targets
+		stage = Object()
+		stage.params = []
+		last_bind_target = stage
+		if node.inputs[2].is_linked:
+			make_bind_target(stage, node_group, node, target_index=2, constant_name='tex')
+		if node.inputs[3].is_linked:
+			make_bind_target(stage, node_group, node, target_index=3, constant_name='gbuffer')
+		stages.append(stage)
+		# Draw quad
+		stage = Object()
+		stage.params = []
+		make_draw_compositor(stage, node_group, node, shader_references, asset_references)
+	
 	elif node.bl_idname == 'BranchFunctionNodeType':
 		make_branch_function(stage, node_group, node)
 		stages.append(stage)
@@ -701,34 +758,25 @@ def buildNode(stages, node, node_group, last_bind_target, shader_references, ass
 		make_call_function(stage, node_group, node)
 	
 	elif node.bl_idname == 'QuadPassNodeType':
-		append_stage = False
 		# Set target
 		if node.inputs[1].is_linked:
-			last_bind_target = None
 			make_set_target(stage, node_group, node)
 			stages.append(stage)
 		# Bind targets
 		stage = Object()
 		stage.params = []
 		last_bind_target = stage
-		
-		bind_target_used = False		
-		if node.inputs[3].is_linked:
-			bind_target_used = True
-			make_bind_target(stage, node_group, node, target_index=3, constant_index=4)
-		if node.inputs[5].is_linked:
-			bind_target_used = True
-			make_bind_target(stage, node_group, node, target_index=5, constant_index=6)
-		if node.inputs[7].is_linked:
-			bind_target_used = True
-			make_bind_target(stage, node_group, node, target_index=7, constant_index=8)
+		bind_target_used = False
+		for i in [3, 5, 7]:
+			if node.inputs[i].is_linked:
+				bind_target_used = True
+				make_bind_target(stage, node_group, node, target_index=i, constant_index=(i + 1))	
 		if bind_target_used:
 			stages.append(stage)
 			stage = Object()
 			stage.params = []
 		# Draw quad
 		make_draw_quad(stage, node_group, node, shader_references, asset_references, context_index=2)
-		stages.append(stage)
 	
 	if append_stage:
 		stages.append(stage)
