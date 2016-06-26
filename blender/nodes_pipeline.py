@@ -134,6 +134,24 @@ class TargetNode(Node, CGPipelineTreeNode):
 	def free(self):
 		print("Removing node ", self, ", Goodbye!")
 
+class TargetArrayNode(Node, CGPipelineTreeNode):
+	'''A custom node'''
+	bl_idname = 'TargetArrayNodeType'
+	bl_label = 'Target Array'
+	bl_icon = 'SOUND'
+	
+	def init(self, context):
+		self.inputs.new('NodeSocketShader', "Target")
+		self.inputs.new('NodeSocketInt', "Instances")
+
+		self.outputs.new('NodeSocketShader', "Targets")
+
+	def copy(self, node):
+		print("Copying from node ", node)
+
+	def free(self):
+		print("Removing node ", self, ", Goodbye!")
+
 class DebthBufferNode(Node, CGPipelineTreeNode):
 	'''A custom node'''
 	bl_idname = 'DepthBufferNodeType'
@@ -297,7 +315,45 @@ class MergeStagesNode(Node, CGPipelineTreeNode):
 
 	def free(self):
 		print("Removing node ", self, ", Goodbye!")
+
+class LoopStagesNode(Node, CGPipelineTreeNode):
+	'''A custom node'''
+	bl_idname = 'LoopStagesNodeType'
+	bl_label = 'Loop Stages'
+	bl_icon = 'SOUND'
+	
+	def init(self, context):
+		self.inputs.new('NodeSocketShader', "Stage")
+		self.inputs.new('NodeSocketInt', "From")
+		self.inputs.new('NodeSocketInt', "To")
+
+		self.outputs.new('NodeSocketShader', "Complete")
+		self.outputs.new('NodeSocketShader', "Loop")
+
+	def copy(self, node):
+		print("Copying from node ", node)
+
+	def free(self):
+		print("Removing node ", self, ", Goodbye!")
 		
+class LoopLightsNode(Node, CGPipelineTreeNode):
+	'''A custom node'''
+	bl_idname = 'LoopLightsNodeType'
+	bl_label = 'Loop Lights'
+	bl_icon = 'SOUND'
+	
+	def init(self, context):
+		self.inputs.new('NodeSocketShader', "Stage")
+
+		self.outputs.new('NodeSocketShader', "Complete")
+		self.outputs.new('NodeSocketShader', "Loop")
+
+	def copy(self, node):
+		print("Copying from node ", node)
+
+	def free(self):
+		print("Removing node ", self, ", Goodbye!")
+
 class DrawWorldNode(Node, CGPipelineTreeNode):
 	'''A custom node'''
 	bl_idname = 'DrawWorldNodeType'
@@ -306,6 +362,7 @@ class DrawWorldNode(Node, CGPipelineTreeNode):
 	
 	def init(self, context):
 		self.inputs.new('NodeSocketShader', "Stage")
+		self.inputs.new('NodeSocketShader', "Depth")
 
 		self.outputs.new('NodeSocketShader', "Stage")
 
@@ -377,6 +434,21 @@ class ScreenNode(Node, CGPipelineTreeNode):
 
 	def free(self):
 		print("Removing node ", self, ", Goodbye!")
+		
+class LightCount(Node, CGPipelineTreeNode):
+	'''A custom node'''
+	bl_idname = 'LightCountNodeType'
+	bl_label = 'Light Count'
+	bl_icon = 'SOUND'
+	
+	def init(self, context):
+		self.outputs.new('NodeSocketInt', "Count")
+
+	def copy(self, node):
+		print("Copying from node ", node)
+
+	def free(self):
+		print("Removing node ", self, ", Goodbye!")
 
 ### Node Categories ###
 # Node categories are a python system for automatically
@@ -426,6 +498,7 @@ node_categories = [
 	]),
 	MyTargetNodeCategory("TARGETNODES", "Target", items=[
 		NodeItem("TargetNodeType"),
+		NodeItem("TargetArrayNodeType"),
 		NodeItem("DepthBufferNodeType"),
 		NodeItem("GBufferNodeType"),
 		NodeItem("FramebufferNodeType"),
@@ -436,11 +509,14 @@ node_categories = [
 	]),
 	MyConstantNodeCategory("CONSTANTNODES", "Constant", items=[
 		NodeItem("ScreenNodeType"),
+		NodeItem("LightCountNodeType"),
 	]),
 	MyLogicNodeCategory("LOGICNODES", "Logic", items=[
 		NodeItem("CallFunctionNodeType"),
 		NodeItem("BranchFunctionNodeType"),
 		NodeItem("MergeStagesNodeType"),
+		NodeItem("LoopStagesNodeType"),
+		NodeItem("LoopLightsNodeType"),
 	]),
 ]
 
@@ -649,7 +725,7 @@ def make_draw_quad(stage, node_group, node, shader_references, asset_references,
 	asset_references.append('compiled/ShaderResources/' + dir_name + '/' + res_name + '.json')
 	shader_references.append('compiled/Shaders/' + dir_name + '/' + res_name)
 
-def make_draw_world(stage, node_group, node):
+def make_draw_world(stage, node_group, node, shader_references, asset_references):
 	stage.command = 'draw_material_quad'
 	wname = bpy.data.worlds[0].name
 	stage.params.append(wname + '_material/' + wname + '_material/env_map') # Only one world for now
@@ -681,7 +757,7 @@ def process_call_function(stage, stages, node, node_group, last_bind_target, sha
 		stageNode = findNodeByLinkFrom(node_group, node, node.outputs[0])
 		buildNode(stage.returns_true, stageNode, node_group, last_bind_target, shader_references, asset_references)
 	
-	stage.returns_false = [] 
+	stage.returns_false = []
 	if node.outputs[1].is_linked:
 		stageNode = findNodeByLinkFrom(node_group, node, node.outputs[1])
 		margeNode = buildNode(stage.returns_false, stageNode, node_group, last_bind_target, shader_references, asset_references)
@@ -727,7 +803,18 @@ def buildNode(stages, node, node_group, last_bind_target, shader_references, ass
 		make_draw_quad(stage, node_group, node, shader_references, asset_references)
 	
 	elif node.bl_idname == 'DrawWorldNodeType':
-		make_draw_world(stage, node_group, node)
+		# Bind depth
+		if node.inputs[1].is_linked:
+			stage = Object()
+			stage.params = []
+			last_bind_target = stage
+			if node.inputs[1].is_linked:
+				make_bind_target(stage, node_group, node, target_index=1, constant_name='gbufferD')
+			stages.append(stage)
+		# Draw quad
+		stage = Object()
+		stage.params = []
+		make_draw_world(stage, node_group, node, shader_references, asset_references)
 	
 	elif node.bl_idname == 'DrawCompositorNodeType':
 		# Set target
@@ -735,14 +822,15 @@ def buildNode(stages, node, node_group, last_bind_target, shader_references, ass
 			make_set_target(stage, node_group, node)
 			stages.append(stage)
 		# Bind targets
-		stage = Object()
-		stage.params = []
-		last_bind_target = stage
-		if node.inputs[2].is_linked:
-			make_bind_target(stage, node_group, node, target_index=2, constant_name='tex')
-		if node.inputs[3].is_linked:
-			make_bind_target(stage, node_group, node, target_index=3, constant_name='gbuffer')
-		stages.append(stage)
+		if node.inputs[2].is_linked or node.inputs[3].is_linked:
+			stage = Object()
+			stage.params = []
+			last_bind_target = stage
+			if node.inputs[2].is_linked:
+				make_bind_target(stage, node_group, node, target_index=2, constant_name='tex')
+			if node.inputs[3].is_linked:
+				make_bind_target(stage, node_group, node, target_index=3, constant_name='gbuffer')
+			stages.append(stage)
 		# Draw quad
 		stage = Object()
 		stage.params = []
@@ -754,6 +842,24 @@ def buildNode(stages, node, node_group, last_bind_target, shader_references, ass
 		process_call_function(stage, stages, node, node_group, last_bind_target, shader_references, asset_references)
 		return
 		
+	elif node.bl_idname == 'LoopStagesNodeType':
+		# Just repeats the commands
+		append_stage = False
+		if node.outputs[1].is_linked:
+			count = node.inputs[2].default_value
+			for i in range(0, count):
+				loopNode = findNodeByLinkFrom(node_group, node, node.outputs[1])
+				buildNode(stages, loopNode, node_group, last_bind_target, shader_references, asset_references)
+	
+	elif node.bl_idname == 'LoopLightsNodeType':
+		append_stage = False
+		stage.command = 'loop_lights'
+		stages.append(stage)
+		stage.returns_true = []
+		if node.outputs[1].is_linked:
+			loopNode = findNodeByLinkFrom(node_group, node, node.outputs[1])
+			buildNode(stage.returns_true, loopNode, node_group, last_bind_target, shader_references, asset_references)
+	
 	elif node.bl_idname == 'CallFunctionNodeType':
 		make_call_function(stage, node_group, node)
 	
@@ -819,6 +925,12 @@ def traverse_for_rt(node, node_group, render_targets, depth_buffers):
 		if node.inputs[1].is_linked:
 			tnode = findNodeByLink(node_group, node, node.inputs[1])
 			parse_render_target(tnode, node_group, render_targets, depth_buffers)
+	
+	# Traverse loops
+	if node.bl_idname == 'LoopStagesNodeType' or node.bl_idname == 'LoopLightsNodeType':
+		if node.outputs[1].is_linked:
+			loop_node = findNodeByLinkFrom(node_group, node, node.outputs[1])
+			traverse_for_rt(loop_node, node_group, render_targets, depth_buffers)
 	
 	# Next stage
 	if node.outputs[0].is_linked:

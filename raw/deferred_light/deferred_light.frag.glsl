@@ -34,9 +34,14 @@ const vec2 shadowMapSize = vec2(2048, 2048);
 
 // uniform mat4 invVP;
 uniform mat4 LMVP;
-uniform vec3 light;
+uniform vec3 lightPos;
+uniform vec3 lightDir;
+uniform int lightType;
+uniform int lightIndex;
 uniform vec3 lightColor;
 uniform float lightStrength;
+uniform float spotlightCutoff;
+uniform float spotlightExponent;
 uniform vec3 eye;
 uniform vec3 eyeLook;
 uniform float time;
@@ -64,9 +69,10 @@ vec3 L3 = vec3(0.0);
 vec3 L4 = vec3(0.0);
 
 
-
 in vec2 texCoord;
 in vec3 viewRay;
+
+// out vec4 outputColor;
 
 // Separable SSS Transmittance Function, ref to sss_pass
 vec3 SSSSTransmittance(float translucency, float sssWidth, vec3 worldPosition, vec3 worldNormal, vec3 lightDir) {
@@ -191,10 +197,10 @@ float PCF(vec2 uv, float compare) {
 // #define _PCSS
 #ifdef _PCSS
     // Based on ThreeJS PCSS example
-    const float LIGHT_WORLD_SIZE = 0.55;
-    const float LIGHT_FRUSTUM_WIDTH = 12.75;//5.75; //12.75
+    const float LIGHT_WORLD_SIZE = 3.55;
+    const float LIGHT_FRUSTUM_WIDTH = 4.75;//5.75; //12.75
     const float LIGHT_SIZE_UV = (LIGHT_WORLD_SIZE / LIGHT_FRUSTUM_WIDTH);
-    const float NEAR_PLANE = 2.5;
+    const float NEAR_PLANE = 0.5;
     const int NUM_SAMPLES = 17;//17
     const int NUM_RINGS = 11;
     // vec2 poissonDisk[NUM_SAMPLES];
@@ -419,8 +425,8 @@ float shadowTest(vec4 lPos) {
 	lPosH.x = (lPosH.x + 1.0) / 2.0;
     lPosH.y = (lPosH.y + 1.0) / 2.0;
 	
-	// const float bias = 0.00015; // Persp
-	const float bias = 0.00005; // Persp
+	const float bias = 0.00015; // Persp
+	// const float bias = 0.00005; // Persp
 	// const float bias = 0.01; // Ortho
     
 #ifdef _PCSS
@@ -708,7 +714,6 @@ void main() {
 	
 	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, occlusion, mask
 	vec4 g1 = texture(gbuffer1, texCoord); // Base color.rgb, roughn/met
-	float ao = texture(ssaotex, texCoord).r;
 
 	vec2 enc = g0.rg;
     vec3 n;
@@ -722,32 +727,47 @@ void main() {
 	float roughness = roughmet.x;
 	float metalness = roughmet.y;
 	
-    vec3 lightDir = light - p.xyz;
     vec3 eyeDir = eye - p.xyz;
-	vec3 l = normalize(lightDir);
 	vec3 v = normalize(eyeDir);
-	vec3 h = normalize(v + l);
-
-	float dotNL = max(dot(n, l), 0.0);
 	float dotNV = max(dot(n, v), 0.0);
+    
+    vec3 albedo = surfaceAlbedo(baseColor, metalness);
+	vec3 f0 = surfaceF0(baseColor, metalness);
+    
+    // Per-light
+    vec3 l;
+    if (lightType == 0) { // Sun
+        l = lightDir;
+    }
+    else { // Point, spot
+        l = normalize(lightPos - p.xyz);
+    }
+    
+    vec3 h = normalize(v + l);
 	float dotNH = max(dot(n, h), 0.0);
 	float dotVH = max(dot(v, h), 0.0);
+    float dotNL = max(dot(n, l), 0.0);
 	float dotLV = max(dot(l, v), 0.0);
 	float dotLH = max(dot(l, h), 0.0);
-	
-	vec3 albedo = surfaceAlbedo(baseColor, metalness);
-	vec3 f0 = surfaceF0(baseColor, metalness);
-	
+    
 	vec4 lPos = LMVP * vec4(vec3(p), 1.0);
 	float visibility = 1.0;
 	if (lPos.w > 0.0) {
 		visibility = shadowTest(lPos);
 		// visibility = 1.0;
 	}
-	
     
 	// Direct
 	vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);
+    
+    if (lightType == 2) { // Spot
+        float spotEffect = dot(lightDir, l);
+        if (spotEffect < spotlightCutoff) {
+            spotEffect = smoothstep(spotlightCutoff - spotlightExponent, spotlightCutoff, spotEffect);
+            direct *= spotEffect;
+        }
+    }
+    
     // Aniso spec
     // float shinyParallel = roughness;
     // float shinyPerpendicular = 0.08;
@@ -755,68 +775,76 @@ void main() {
 	// vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + wardSpecular(n, h, dotNL, dotNV, dotNH, fiberDirection, shinyParallel, shinyPerpendicular);
 	direct = direct * lightColor * lightStrength;
 	
-	// SSS only masked objects
-// #ifdef _SSS
+    
+#ifdef _SSS
     float mask = g0.a;
 	if (mask == 2.0) {
-		direct.rgb = direct.rgb * SSSSTransmittance(1.0, 0.005, p, n, lightDir);
+		direct.rgb = direct.rgb * SSSSTransmittance(1.0, 0.005, p, n, l);
 	}
-// #endif
+#endif
 
 
 	// Indirect
+    if (lightIndex == 0) {
 #ifdef _Probes
-    float probeFactor = mask;
-    float probeID = floor(probeFactor);
-    float probeFract = fract(probeFactor);
-    
-    vec3 indirectDiffuse;
-    vec3 prefilteredColor;
-    vec2 envCoord = envMapEquirect(n);
-    
-    float lod = getMipLevelFromRoughness(roughness);
-    vec3 reflectionWorld = reflect(-v, n); 
-    vec2 envCoordRefl = envMapEquirect(reflectionWorld);
-    
-    prefilteredColor = textureLod(senvmapRadiance, envCoordRefl, lod).rgb;
-    
-    // Global probe only
-    if (probeID == 0.0) {
-        indirectDiffuse = shIrradiance(n, 2.2, 0) / PI;
-    }
-    // fract 0 = local probe, 1 = global probe 
-    else if (probeID == 1.0) {
-        indirectDiffuse = (shIrradiance(n, 2.2, 1) / PI) * (1.0 - probeFract);
-        prefilteredColor /= 4.0;
-        if (probeFract > 0.0) {
-            indirectDiffuse += (shIrradiance(n, 2.2, 0) / PI) * (probeFract);
+        float probeFactor = mask;
+        float probeID = floor(probeFactor);
+        float probeFract = fract(probeFactor);
+        
+        vec3 indirectDiffuse;
+        vec3 prefilteredColor;
+        vec2 envCoord = envMapEquirect(n);
+        
+        float lod = getMipLevelFromRoughness(roughness);
+        vec3 reflectionWorld = reflect(-v, n); 
+        vec2 envCoordRefl = envMapEquirect(reflectionWorld);
+        
+        prefilteredColor = textureLod(senvmapRadiance, envCoordRefl, lod).rgb;
+        
+        // Global probe only
+        if (probeID == 0.0) {
+            indirectDiffuse = shIrradiance(n, 2.2, 0) / PI;
         }
-    }
+        // fract 0 = local probe, 1 = global probe 
+        else if (probeID == 1.0) {
+            indirectDiffuse = (shIrradiance(n, 2.2, 1) / PI) * (1.0 - probeFract);
+            prefilteredColor /= 4.0;
+            if (probeFract > 0.0) {
+                indirectDiffuse += (shIrradiance(n, 2.2, 0) / PI) * (probeFract);
+            }
+        }
 #else // No probes   
-	// vec3 indirectDiffuse = texture(shirr, envMapEquirect(n)).rgb;
-	vec3 indirectDiffuse = shIrradiance(n, 2.2) / PI;
-    
-    vec3 reflectionWorld = reflect(-v, n);
-	float lod = getMipLevelFromRoughness(roughness);
-	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
+        // vec3 indirectDiffuse = texture(shirr, envMapEquirect(n)).rgb;
+        vec3 indirectDiffuse = shIrradiance(n, 2.2) / PI;
+        
+        vec3 reflectionWorld = reflect(-v, n);
+        float lod = getMipLevelFromRoughness(roughness);
+        vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
 #endif
-
 
 #ifdef _LDR
-	indirectDiffuse = pow(indirectDiffuse, vec3(2.2));
-    prefilteredColor = pow(prefilteredColor, vec3(2.2));
+        indirectDiffuse = pow(indirectDiffuse, vec3(2.2));
+        prefilteredColor = pow(prefilteredColor, vec3(2.2));
 #endif
-	indirectDiffuse *= albedo;
-	
-	
-	vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;
-	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
-	vec3 indirect = indirectDiffuse + indirectSpecular;
-	indirect = indirect * lightColor * lightStrength * envmapStrength;
-	float occlusion = g0.b;
+        indirectDiffuse *= albedo;
+        
+        vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;
+        vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
+        vec3 indirect = indirectDiffuse + indirectSpecular;
+        indirect = indirect * envmapStrength;// * lightColor * lightStrength;
+        float occlusion = g0.b;
+        float ao = texture(ssaotex, texCoord).r;
+        indirect = indirect * ao * occlusion;
+        gl_FragColor = vec4(vec3(direct * visibility + indirect), 1.0);
+        return;
+    }
+    else {
+        gl_FragColor = vec4(vec3(direct * visibility), 1.0);
+        return;
+    }
     
-    vec4 outColor = vec4(vec3(direct * visibility + indirect * ao * occlusion), 1.0);
-
+    
+    // vec4 outColor = vec4(vec3(direct * visibility + indirect), 1.0);
 
     // Path-traced
     // vec4 nois = texture(giblur, texCoord);
@@ -832,10 +860,10 @@ void main() {
 	// float rectSizeY = 1.2;// + sin(time * 2.0);
 	// vec3 ex = vec3(1, 0, 0)*rectSizeX;
 	// vec3 ey = vec3(0, 0, 1)*rectSizeY;
-	// vec3 p1 = light - ex + ey;
-	// vec3 p2 = light + ex + ey;
-	// vec3 p3 = light + ex - ey;
-	// vec3 p4 = light - ex - ey;
+	// vec3 p1 = lightPos - ex + ey;
+	// vec3 p2 = lightPos + ex + ey;
+	// vec3 p3 = lightPos + ex - ey;
+	// vec3 p4 = lightPos - ex - ey;
 	// float theta = acos(dotNV);
 	// vec2 tuv = vec2(roughness, theta/(0.5*PI));
 	// tuv = tuv*LUT_SCALE + LUT_BIAS;
@@ -863,5 +891,6 @@ void main() {
 	
 	
 	// outColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
-	gl_FragColor = vec4(outColor.rgb, outColor.a);
+    // outputColor = vec4(outColor.rgb, outColor.a);
+	//gl_FragColor = vec4(outColor.rgb, outColor.a);    
 }

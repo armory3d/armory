@@ -14,12 +14,48 @@
 				{
 					"id": "cull_mode",
 					"value": "none"
+				},
+				{
+					"id": "blend_source",
+					"value": "blend_one"
+				},
+				{
+					"id": "blend_destination",
+					"value": "blend_one"
+				},
+				{
+					"id": "blend_operation",
+					"value": "add"
+				},
+				{
+					"id": "alpha_blend_source",
+					"value": "blend_one"
+				},
+				{
+					"id": "alpha_blend_destination",
+					"value": "blend_one"
+				},
+				{
+					"id": "alpha_blend_operation",
+					"value": "add"
 				}
 			],
 			"links": [
 				{
-					"id": "light",
+					"id": "lightPos",
 					"link": "_lightPosition"
+				},
+				{
+					"id": "lightDir",
+					"link": "_lightDirection"
+				},
+				{
+					"id": "lightType",
+					"link": "_lightType"
+				},
+				{
+					"id": "lightIndex",
+					"link": "_lightIndex"
 				},
 				{
 					"id": "lightColor",
@@ -28,6 +64,14 @@
 				{
 					"id": "lightStrength",
 					"link": "_lightStrength"
+				},
+				{
+					"id": "spotlightCutoff",
+					"link": "_spotlightCutoff"
+				},
+				{
+					"id": "spotlightExponent",
+					"link": "_spotlightExponent"
 				},
 				{
 					"id": "eye",

@@ -1804,26 +1804,24 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# This function exports a single light object.
 		o = Object()
 		o.id = objectRef[1]["structName"]
-
 		object = objectRef[0]
 		type = object.type
 
-		pointFlag = False
-		spotFlag = False
+		if type == 'SUN':
+			o.type = 'sun'
+		elif type == 'POINT':
+			o.type = 'point'
+		elif type == 'SPOT':
+			o.type = 'spot'
+			o.spot_size = math.cos(object.spot_size / 2)
+			o.spot_blend = object.spot_blend
+		else: # Hemi, area
+			o.type = 'sun'
 
-		if (type == "SUN"):
-			o.type = "sun"
-		elif (type == "POINT"):
-			o.type = "point"
-			#pointFlag = True
-		else:
-			o.type = "spot"
-			#pointFlag = True
-			#spotFlag = True
-			
-		# o.cycles.cast_shadow
+		o.cast_shadow = object.cycles.cast_shadow
 
 		# Parse nodes, only emission for now
+		# Merge with nodes_material
 		for n in object.node_tree.nodes:
 			if n.type == 'EMISSION':
 				col = n.inputs[0].default_value

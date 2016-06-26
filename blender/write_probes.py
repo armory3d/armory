@@ -93,7 +93,6 @@ def write_probes(image_name, disable_hdr, cached_num_mips, generate_radiance=Tru
 		#gama_options + \
 		' --outputNum 1' + \
 		' --output0 ' + output_file], shell=True)
-	generated_files.append(output_file)
 	
 	sh_to_json(output_file)
 	

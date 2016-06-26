@@ -38,8 +38,8 @@
 					"link": "_lightModelViewProjectionMatrix"
 				},
 				{
-					"id": "light",
-					"link": "_lightPosition"
+					"id": "lightDir",
+					"link": "_lightDirection"
 				},
 				{
 					"id": "lightColor",
@@ -59,7 +59,7 @@
 					"ifdef": ["_Skinning"]
 				},
 				{
-					"id": "senvmapIrradiance",
+					"id": "shirr",
 					"link": "_envmapIrradiance"
 				},
 				{

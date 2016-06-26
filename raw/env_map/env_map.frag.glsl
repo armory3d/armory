@@ -4,8 +4,8 @@
 precision mediump float;
 #endif
 
-#define PI 3.1415926
-#define TwoPI (2.0 * PI)
+const float PI = 3.1415926;
+const float TwoPI = (2.0 * PI);
 
 #ifdef _Hosek
 uniform vec3 A;
@@ -21,12 +21,12 @@ uniform vec3 Z;
 uniform vec3 sunDirection;
 #endif
 
+uniform sampler2D gbufferD;
 uniform sampler2D envmap;
-// uniform sampler2D tex;
 uniform float envmapStrength;
 
+in vec2 texCoord;
 in vec3 normal;
-// in vec2 texCoord;
 
 #ifdef _Hosek
 vec3 hosekWilkie(float cos_theta, float gamma, float cos_gamma) {
@@ -42,12 +42,12 @@ vec2 envMapEquirect(vec3 normal) {
 }
 
 void main() {
-	// if (texture(tex, texCoord).a == 0.0) {
-		// discard;
-	// }
+	if (texture(gbufferD, texCoord).r/* * 2.0 - 1.0*/ != 1.0) {
+		discard;
+	}
 	
 	vec3 n = normalize(normal);
-	gl_FragColor = texture(envmap, envMapEquirect(n)) * 3.0;// envmapStrength;
+	gl_FragColor = texture(envmap, envMapEquirect(n)) * envmapStrength;// * 3.0;
 
 #ifdef _Hosek
     vec3 sunDir = vec3(sunDirection.x, -sunDirection.y, sunDirection.z);	
@@ -60,6 +60,6 @@ void main() {
 
 	vec3 R = Z * hosekWilkie(cos_theta, gamma_val, cos_gamma);
 	// R = pow(R, vec3(1.0 / 2.2));
-    gl_FragColor = vec4(R, 1.0);
+    gl_FragColor = vec4(R * 2.0, 1.0);
 #endif
 }
