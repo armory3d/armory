@@ -1,6 +1,6 @@
 import bpy
 import math
-from armory import Object
+from exporter import Object
 
 def is_pow(num):
 	return ((num & (num - 1)) == 0) and num != 0

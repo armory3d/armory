@@ -10,14 +10,14 @@
 #  Attribution-ShareAlike 3.0 Unported License:
 #  http://creativecommons.org/licenses/by-sa/3.0/deed.en_US
 
-bl_info = {
-	"name": "Armory format (.json)",
-	"description": "Armory Exporter",
-	"author": "Eric Lengyel, Lubos Lenco",
-	"version": (1, 0, 0),
-	"location": "File > Import-Export",
-	"wiki_url": "http://armory3d.org/",
-	"category": "Import-Export"}
+# bl_info = {
+# 	"name": "Armory format (.json)",
+# 	"description": "Armory Exporter",
+# 	"author": "Eric Lengyel, Lubos Lenco",
+# 	"version": (1, 0, 0),
+# 	"location": "File > Import-Export",
+# 	"wiki_url": "http://armory3d.org/",
+# 	"category": "Import-Export"}
 
 import os
 import bpy
@@ -1175,9 +1175,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o.type = structIdentifier[type]
 			o.id = nodeRef["structName"]
 
-			if (type == kNodeTypeGeometry): # TODO: hide lights too
-				if (node.hide_render):
-					o.visible = False
+			if (node.hide_render):
+				o.visible = False
 
 			# Export the object reference and material references.
 			object = node.data
@@ -2296,11 +2295,18 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		o.brdf = 'envmap_brdf'
 		o.probes = []
 		# Main probe
+		world_generate_radiance = bpy.data.worlds[0].generate_radiance
 		envtex = bpy.data.cameras[0].world_envtex_name.rsplit('.', 1)[0]
 		num_mips = bpy.data.cameras[0].world_envtex_num_mips
 		strength = bpy.data.cameras[0].world_envtex_strength
-		po = self.make_probe('world', envtex, num_mips, strength, 1.0, [0, 0, 0], [0, 0, 0])
+		po = self.make_probe('world', envtex, num_mips, strength, 1.0, [0, 0, 0], [0, 0, 0], world_generate_radiance)
 		o.probes.append(po)
+		
+		if '_EnvSky' in bpy.data.worlds[0].world_defs:
+			# Sky data for probe
+			po.sun_direction =  list(bpy.data.cameras[0].world_envtex_sun_direction)
+			po.turbidity = bpy.data.cameras[0].world_envtex_turbidity
+			po.ground_albedo = bpy.data.cameras[0].world_envtex_ground_albedo
 		
 		# Probe cameras attached in scene
 		for cam in bpy.data.cameras:
@@ -2311,16 +2317,21 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				volume_center = [volume_object.location[0], volume_object.location[1], volume_object.location[2]]
 				
 				disable_hdr = cam.probe_texture.endswith('.jpg')
-				cam.probe_num_mips = write_probes.write_probes(cam.probe_texture, disable_hdr, cam.probe_num_mips, generate_radiance=False)
+				generate_radiance = cam.probe_generate_radiance
+				if world_generate_radiance == False:
+					generate_radiance = False
+				
+				cam.probe_num_mips = write_probes.write_probes(cam.probe_texture, disable_hdr, cam.probe_num_mips, generate_radiance=generate_radiance)
 				base_name = cam.probe_texture.rsplit('.', 1)[0]
-				po = self.make_probe(cam.name, base_name, cam.probe_num_mips, cam.probe_strength, cam.probe_blending, volume, volume_center)
+				po = self.make_probe(cam.name, base_name, cam.probe_num_mips, cam.probe_strength, cam.probe_blending, volume, volume_center, generate_radiance)
 				o.probes.append(po)
 	
-	def make_probe(self, id, envtex, mipmaps, strength, blending, volume, volume_center):
+	def make_probe(self, id, envtex, mipmaps, strength, blending, volume, volume_center, generate_radiance):
 		po = Object()
 		po.id = id
-		po.radiance = envtex + '_radiance'
-		po.radiance_mipmaps = mipmaps
+		if generate_radiance:
+			po.radiance = envtex + '_radiance'
+			po.radiance_mipmaps = mipmaps	
 		po.irradiance = envtex + '_irradiance'
 		po.strength = strength
 		po.blending = blending
@@ -2368,15 +2379,15 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			shader_name = pipe_pass + ext
 			ArmoryExporter.shader_references.append('compiled/Shaders/' + ArmoryExporter.pipeline_id + '/' + shader_name)
 	
-def menu_func(self, context):
-	self.layout.operator(ArmoryExporter.bl_idname, text = "Armory (.json)")
+# def menu_func(self, context):
+	# self.layout.operator(ArmoryExporter.bl_idname, text = "Armory (.json)")
 
 def register():
 	bpy.utils.register_class(ArmoryExporter)
-	bpy.types.INFO_MT_file_export.append(menu_func)
+	# bpy.types.INFO_MT_file_export.append(menu_func)
 
 def unregister():
-	bpy.types.INFO_MT_file_export.remove(menu_func)
+	# bpy.types.INFO_MT_file_export.remove(menu_func)
 	bpy.utils.unregister_class(ArmoryExporter)
 
 if __name__ == "__main__":

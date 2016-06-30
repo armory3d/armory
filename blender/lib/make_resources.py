@@ -9,8 +9,11 @@ import json
 import itertools
 
 class Object:
-	def to_JSON(self):
-		return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+	def to_JSON(self, minimize):
+		if minimize == True:
+			return json.dumps(self, default=lambda o: o.__dict__, separators=(',',':'))
+		else:
+			return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
 def writeResource(res, defs, json_data, base_name):
 	# Define
@@ -215,16 +218,16 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
 							break
 					con.constants.append(const)
 
-def saveResource(path, base_name, subset, res):
+def saveResource(path, base_name, subset, res, minimize):
 	res_name = base_name
 	for s in subset:
 		res_name += s
 	with open(path + '/' + res_name + '.json', 'w') as f:
 		r = Object()
 		r.shader_resources = [res.shader_resources[-1]]
-		f.write(r.to_JSON())
+		f.write(r.to_JSON(minimize))
 
-def make(json_name, defs=None):
+def make(json_name, minimize=False, defs=None):
 	base_name = json_name.split('.', 1)[0]
 
 	# Make out dir
@@ -261,13 +264,13 @@ def make(json_name, defs=None):
 			for subset in itertools.combinations(defs, L):
 				writeResource(res, subset, json_data, base_name)
 				# Save separately
-				saveResource(path, base_name, subset, res)
+				saveResource(path, base_name, subset, res, minimize)
 
 		# Save combined
 		#with open('out/' + base_name + '_resource.json', 'w') as f:
-		#	f.write(res.to_JSON())
+		#	f.write(res.to_JSON(minimize))
 	
 	# Specified defs
 	else:
 		writeResource(res, defs, json_data, base_name)
-		saveResource(path, base_name, defs, res)
+		saveResource(path, base_name, defs, res, minimize)

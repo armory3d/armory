@@ -12,8 +12,8 @@ uniform sampler2D noise256;
 
 //#ifdef (_LensFlare || _Fog)
 // #ifdef _Fog
-uniform vec3 eye;
-uniform vec3 eyeLook;
+// uniform vec3 eye;
+// uniform vec3 eyeLook;
 // #endif
 
 #ifdef _LensFlare
@@ -21,7 +21,9 @@ uniform vec3 light;
 uniform mat4 VP;
 #endif
 
-uniform float time;
+// #ifdef _Grain
+// uniform float time;
+// #endif
 
 in vec2 texCoord;
 
@@ -58,78 +60,78 @@ vec3 applyFog(vec3 rgb, // original color of the pixel
 // }
 
 // https://www.shadertoy.com/view/ltfGzn
-float unitSin(float t) {
-    return 0.5 + 0.5 * sin(t);
-}
-float processFlake(vec3 rayOrigin, vec3 rayDirection, float b, float a2, float a4, float bbSubAC4, float fallSpeed, float r) {
-	float sum = 0.0;
-	float R = r + sin(PI * r * time * 0.05) / (r * 0.25);
-	float delta = bbSubAC4 + a4 * R*R;
-	float depth = 100.0;
-	if (delta >= 0.0) {
-		float t1 = (-b - sqrt(delta))/a2;
-		float t2 = (-b + sqrt(delta))/a2;
-		vec3 p1 = rayOrigin + t1 * rayDirection;
-		vec3 p2 = rayOrigin + t2 * rayDirection;
-		if (t1 < depth && t1 > 2.0) {
-			float teta = atan(p1.z, p1.x) / (2.0 * PI);
-			float fall = (0.5 + 0.5 * unitSin(r)) * fallSpeed * time  +  cos(r);
-			float s = 6.0;
-			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(0.4 * teta * r, 0.1 * p1.y + fall)).r);
-			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(0.11 * p1.y + fall, -0.4 * teta * r)).r);
-			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(-(0.11 * p1.y + fall), 0.4 * teta * r)).r);
-			sum += s;
-		}
-		if (t2 < depth && t2 > 0.0) {
-			float teta = atan(p2.z, p2.x) / (2.0 * PI);
-			float fall = (0.5 + 0.5 * unitSin(r)) * fallSpeed * time  +  cos(r);
-			float s = 6.0;
-			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(0.4 * teta * r, 0.1 * p2.y + fall)).r);
-			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(-(0.11 * p2.y + fall), 0.4 * teta * r)).r);
-			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(0.11 * p2.y + fall, -0.4 * teta * r)).r);
-			sum += s;
-		}
-	}
-	return sum;
-}
-float flakeVolume() {
-	vec3 rayOrigin = eye;
-	vec2 p = texCoord.xy * 2.0 - 1.0;
-	vec3 rayDirection = normalize(p.x * vec3(1.0,0.0,0.0) + p.y * vec3(0.0,0.0,1.0) + 1.0 * eyeLook);
-    float sum = 0.0;
-    float fallSpeed = 0.2;
-    float a = pow(rayDirection.x, 2.0) + pow(rayDirection.z, 2.0);
-    float b = 2.0 * (rayDirection.x * rayOrigin.x + rayDirection.z * rayOrigin.z);
-    float c = pow(rayOrigin.x, 2.0) + pow(rayOrigin.z, 2.0);
-    float ac4 = 4.0 * a*c;
-    float a4 = 4.0 * a;
-    float a2 = 2.0 * a;
-    float bb = b*b;
-    float bbSubAC4 = bb - ac4;
-    // for (float r = 1.0; r <= 16.0; r+=0.5) {
-        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 1.0);
-        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 2.0);
-        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 3.0);
-        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 4.0);
-        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 5.0);
-        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 6.0);
-        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 7.0);
-        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 8.0);
-        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 9.0);
-        processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 10.0);
-    // }
-    return sum / 2.0;
-}
-vec4 screenSpaceSnow() {
-    float flake = flakeVolume();
-    return vec4(1.0, 1.0, 1.0, clamp(flake, 0.0, 1.0));
-}
-vec4 screenSpaceIce(vec3 c) {
-	vec2 p = texCoord.xy * 2.0 - 1.0;
-    vec2 P = vec2(p.x, 2.0 * p.y);
-    float r = length(P);
-    return vec4(c.rgb, 0.3 * (pow((abs(p.x) + abs(p.y)) * 0.5, 1.0) + pow(r / 1.6, 2.0)));
-}
+// float unitSin(float t) {
+//     return 0.5 + 0.5 * sin(t);
+// }
+// float processFlake(vec3 rayOrigin, vec3 rayDirection, float b, float a2, float a4, float bbSubAC4, float fallSpeed, float r) {
+// 	float sum = 0.0;
+// 	float R = r + sin(PI * r * time * 0.05) / (r * 0.25);
+// 	float delta = bbSubAC4 + a4 * R*R;
+// 	float depth = 100.0;
+// 	if (delta >= 0.0) {
+// 		float t1 = (-b - sqrt(delta))/a2;
+// 		float t2 = (-b + sqrt(delta))/a2;
+// 		vec3 p1 = rayOrigin + t1 * rayDirection;
+// 		vec3 p2 = rayOrigin + t2 * rayDirection;
+// 		if (t1 < depth && t1 > 2.0) {
+// 			float teta = atan(p1.z, p1.x) / (2.0 * PI);
+// 			float fall = (0.5 + 0.5 * unitSin(r)) * fallSpeed * time  +  cos(r);
+// 			float s = 6.0;
+// 			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(0.4 * teta * r, 0.1 * p1.y + fall)).r);
+// 			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(0.11 * p1.y + fall, -0.4 * teta * r)).r);
+// 			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(-(0.11 * p1.y + fall), 0.4 * teta * r)).r);
+// 			sum += s;
+// 		}
+// 		if (t2 < depth && t2 > 0.0) {
+// 			float teta = atan(p2.z, p2.x) / (2.0 * PI);
+// 			float fall = (0.5 + 0.5 * unitSin(r)) * fallSpeed * time  +  cos(r);
+// 			float s = 6.0;
+// 			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(0.4 * teta * r, 0.1 * p2.y + fall)).r);
+// 			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(-(0.11 * p2.y + fall), 0.4 * teta * r)).r);
+// 			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(0.11 * p2.y + fall, -0.4 * teta * r)).r);
+// 			sum += s;
+// 		}
+// 	}
+// 	return sum;
+// }
+// float flakeVolume() {
+// 	vec3 rayOrigin = eye;
+// 	vec2 p = texCoord.xy * 2.0 - 1.0;
+// 	vec3 rayDirection = normalize(p.x * vec3(1.0,0.0,0.0) + p.y * vec3(0.0,0.0,1.0) + 1.0 * eyeLook);
+//     float sum = 0.0;
+//     float fallSpeed = 0.2;
+//     float a = pow(rayDirection.x, 2.0) + pow(rayDirection.z, 2.0);
+//     float b = 2.0 * (rayDirection.x * rayOrigin.x + rayDirection.z * rayOrigin.z);
+//     float c = pow(rayOrigin.x, 2.0) + pow(rayOrigin.z, 2.0);
+//     float ac4 = 4.0 * a*c;
+//     float a4 = 4.0 * a;
+//     float a2 = 2.0 * a;
+//     float bb = b*b;
+//     float bbSubAC4 = bb - ac4;
+//     // for (float r = 1.0; r <= 16.0; r+=0.5) {
+//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 1.0);
+//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 2.0);
+//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 3.0);
+//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 4.0);
+//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 5.0);
+//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 6.0);
+//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 7.0);
+//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 8.0);
+//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 9.0);
+//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 10.0);
+//     // }
+//     return sum / 2.0;
+// }
+// vec4 screenSpaceSnow() {
+//     float flake = flakeVolume();
+//     return vec4(1.0, 1.0, 1.0, clamp(flake, 0.0, 1.0));
+// }
+// vec4 screenSpaceIce(vec3 c) {
+// 	vec2 p = texCoord.xy * 2.0 - 1.0;
+//     vec2 P = vec2(p.x, 2.0 * p.y);
+//     float r = length(P);
+//     return vec4(c.rgb, 0.3 * (pow((abs(p.x) + abs(p.y)) * 0.5, 1.0) + pow(r / 1.6, 2.0)));
+// }
 
 // https://www.shadertoy.com/view/XdSGDc
 // float processRain(float dis) {
@@ -159,11 +161,11 @@ vec4 screenSpaceIce(vec3 c) {
 // }
 
 // https://www.shadertoy.com/view/4dXSzB
-vec3 screenSpaceCameraRain() {
-	vec3 raintex = texture(noise256,vec2(texCoord.x*2.0,texCoord.y*0.4+time*0.1)).rgb/30.0;
-	vec2 where = (texCoord.xy-raintex.xy);
-	return texture(tex,vec2(where.x,where.y)).rgb;
-}
+// vec3 screenSpaceCameraRain() {
+	// vec3 raintex = texture(noise256,vec2(texCoord.x*2.0,texCoord.y*0.4+time*0.1)).rgb/30.0;
+	// vec2 where = (texCoord.xy-raintex.xy);
+	// return texture(tex,vec2(where.x,where.y)).rgb;
+// }
 
 float vignette() {
 	float dist = distance(texCoord, vec2(0.5,0.5));

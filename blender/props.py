@@ -12,6 +12,30 @@ def cb_scene_update(context):
         edit_obj.geometry_cached = False
 
 def initProperties():
+    # For project
+    bpy.types.World.CGVersion = StringProperty(name = "CGVersion", default="16.7")
+    bpy.types.World.CGProjectTarget = EnumProperty(
+        items = [('HTML5', 'HTML5', 'HTML5'), 
+                 ('Windows', 'Windows', 'Windows'), 
+                 ('OSX', 'OSX', 'OSX'),
+                 ('Linux', 'Linux', 'Linux'), 
+                 ('iOS', 'iOS', 'iOS'),
+                 ('Android', 'Android', 'Android')],
+        name = "Target", default='HTML5')
+    bpy.types.World.CGProjectName = StringProperty(name = "Name", default="ArmoryGame")
+    bpy.types.World.CGProjectPackage = StringProperty(name = "Package", default="game")
+    bpy.types.World.CGProjectWidth = IntProperty(name = "Width", default=800)
+    bpy.types.World.CGProjectHeight = IntProperty(name = "Height", default=600)
+    bpy.types.World.CGProjectScene = StringProperty(name = "Scene")
+    bpy.types.World.CGProjectSamplesPerPixel = IntProperty(name = "Samples per pixel", default=1)
+    bpy.types.World.CGPhysics = EnumProperty(
+        items = [('Disabled', 'Disabled', 'Disabled'), 
+                 ('Bullet', 'Bullet', 'Bullet')],
+        name = "Physics", default='Bullet')
+    bpy.types.World.CGKhafileConfig = StringProperty(name = "Config")
+    bpy.types.World.CGMinimize = BoolProperty(name="Minimize", default=True)
+    bpy.types.World.CGCacheShaders = BoolProperty(name="Cache Shaders", default=True)
+
     # For object
     bpy.types.Object.geometry_cached = bpy.props.BoolProperty(name="Geometry Cached", default=False) # TODO: move to mesh type
     bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced Children", default=False)
@@ -30,6 +54,7 @@ def initProperties():
     bpy.types.Camera.shadows_context = bpy.props.StringProperty(name="Shadows", default="shadowmap")
     bpy.types.Camera.translucent_context = bpy.props.StringProperty(name="Translucent", default="translucent")
     bpy.types.Camera.is_probe = bpy.props.BoolProperty(name="Probe", default=False)
+    bpy.types.Camera.probe_generate_radiance = bpy.props.BoolProperty(name="Generate Radiance", default=False)
     bpy.types.Camera.probe_texture = bpy.props.StringProperty(name="Texture", default="")
     bpy.types.Camera.probe_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
     bpy.types.Camera.probe_volume = bpy.props.StringProperty(name="Volume", default="")
@@ -39,8 +64,12 @@ def initProperties():
     bpy.types.Camera.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
     bpy.types.Camera.world_envtex_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
     bpy.types.Camera.world_envtex_strength = bpy.props.FloatProperty(name="Environment Strength", default=1.0)
+    bpy.types.Camera.world_envtex_sun_direction = bpy.props.FloatVectorProperty(name="Sun Direction", size=3, default=[0,0,0])
+    bpy.types.Camera.world_envtex_turbidity = bpy.props.FloatProperty(name="Turbidity", default=1.0)
+    bpy.types.Camera.world_envtex_ground_albedo = bpy.props.FloatProperty(name="Ground Albedo", default=0.0)
     bpy.types.Camera.last_decal_context = bpy.props.StringProperty(name="Decal Context", default='')
     bpy.types.World.world_defs = bpy.props.StringProperty(name="World Shader Defs", default='')
+    bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Generate Radiance", default=True)
     # For material
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.custom_shader = bpy.props.BoolProperty(name="Custom Shader", default=False)
@@ -48,6 +77,8 @@ def initProperties():
     bpy.types.Material.stencil_mask = bpy.props.IntProperty(name="Stencil Mask", default=0)
     bpy.types.Material.export_tangents = bpy.props.BoolProperty(name="Export Tangents", default=False)
     bpy.types.Material.skip_context = bpy.props.StringProperty(name="Skip Context", default='')
+    # For scene
+    bpy.types.Scene.game_export = bpy.props.BoolProperty(name="Game Export", default=True)
 
 # Menu in object region
 class ObjectPropsPanel(bpy.types.Panel):
@@ -99,6 +130,17 @@ class DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'static_usage')
             layout.operator("cg.invalidate_cache")
 
+class ScenePropsPanel(bpy.types.Panel):
+    bl_label = "Armory Props"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "scene"
+ 
+    def draw(self, context):
+        layout = self.layout
+        obj = bpy.context.scene
+        layout.prop(obj, 'game_export')
+
 class OBJECT_OT_RESETPIPELINESButton(bpy.types.Operator):
     bl_idname = "cg.reset_pipelines"
     bl_label = "Reset Pipelines"
@@ -133,6 +175,17 @@ class MatsPropsPanel(bpy.types.Panel):
         layout.prop(mat, 'stencil_mask')
         layout.prop(mat, 'skip_context')
 
+# Menu in world region
+class WorldPropsPanel(bpy.types.Panel):
+    bl_label = "Cycles Props"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "world"
+ 
+    def draw(self, context):
+        layout = self.layout
+        wrd = bpy.context.world
+        layout.prop(wrd, 'generate_radiance')
 
 # Registration
 def register():

@@ -64,19 +64,22 @@
 				},
 				{
 					"id": "senvmapRadiance",
-					"link": "_envmapRadiance"
+					"link": "_envmapRadiance",
+					"ifdef": ["_Rad"]
+				},
+				{
+					"id": "envmapNumMipmaps",
+					"link": "_envmapNumMipmaps",
+					"ifdef": ["_Rad"]
 				},
 				{
 					"id": "senvmapBrdf",
-					"link": "_envmapBrdf"
+					"link": "_envmapBrdf",
+					"ifdef": ["_Rad"]
 				},
 				{
 					"id": "envmapStrength",
 					"link": "_envmapStrength"
-				},
-				{
-					"id": "envmapNumMipmaps",
-					"link": "_envmapNumMipmaps"
 				},
 				{
 					"id": "sltcMat",

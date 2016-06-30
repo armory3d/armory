@@ -59,10 +59,10 @@ class FlyCamera extends Trait {
             camera.move(camera.look(), -d);
         }
         if (strafeRight) {
-            camera.move(camera.right(), -d);
+            camera.move(camera.right(), d);
         }
         else if (strafeLeft) {
-            camera.move(camera.right(), d);
+            camera.move(camera.right(), -d);
         }
 		if (strafeForward) {
             var dir = new Vec4(0, 1, 0);
@@ -74,8 +74,8 @@ class FlyCamera extends Trait {
         }
 
         if (Input.touch) {
-            camera.rotate(camera.up(), Input.deltaX / 200);
-            camera.rotate(camera.right(), Input.deltaY / 200);
+            camera.rotate(Vec4.zAxis(), -Input.deltaX / 200);
+            camera.rotate(camera.right(), -Input.deltaY / 200);
         }
     }
 

@@ -5,6 +5,7 @@ package cycles.renderpipeline;
 
 import kha.math.FastVector3;
 import lue.node.RenderPipeline;
+import lue.resource.WorldResource;
 
 class HosekWilkieRadianceData {
 	
@@ -116,14 +117,14 @@ class HosekWilkie {
         data = new HosekWilkieRadianceData(sunPositionX, turbidity, albedo, normalizedSunY);
     }
 
-	public static function init() {
-        sunDirection = new FastVector3();
-        sunDirection.x = 0.0;
-        sunDirection.y = -0.892307698726654;
-        sunDirection.z = 0.45142772793769836;
-        sunDirection.y *= -1;
+	public static function init(world:WorldResource) {
+        var probe = world.getGlobalProbe();
+        var dir = probe.resource.sun_direction;
+        sunDirection = new FastVector3(dir[0], dir[1], dir[2]);
         var sunPositionX = Math.acos(sunDirection.z);
-		HosekWilkie.recompute(sunPositionX, 2.8, 0.2, 1.15);
+        var turbidity = probe.resource.turbidity;
+        var albedo = probe.resource.ground_albedo;
+		HosekWilkie.recompute(sunPositionX, turbidity, albedo, 1.15);
 	}
 
 	public static function run(pipe:RenderPipeline) {

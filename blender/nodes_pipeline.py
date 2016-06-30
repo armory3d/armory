@@ -428,6 +428,8 @@ class ScreenNode(Node, CGPipelineTreeNode):
 	def init(self, context):
 		self.outputs.new('NodeSocketInt', "Width")
 		self.outputs.new('NodeSocketInt', "Height")
+		self.inputs.new('NodeSocketFloat', "Scale")
+		self.inputs[0].default_value = 1.0
 
 	def copy(self, node):
 		print("Copying from node ", node)
@@ -965,8 +967,14 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
 				db.id = depth_buffer_id
 				db.stencil_buffer = depth_node.inputs[1].default_value
 				depth_buffers.append(db)	
-		# Append target	
-		target = make_render_target(node, depth_buffer_id=depth_buffer_id)
+		# Get scale
+		scale = 1.0
+		if node.inputs[1].is_linked:
+			size_node = findNodeByLink(node_group, node, node.inputs[1])
+			scale = size_node.inputs[0].default_value
+			
+		# Append target
+		target = make_render_target(node, scale, depth_buffer_id=depth_buffer_id)
 		render_targets.append(target)
 		
 	elif node.bl_idname == 'GBufferNodeType':
@@ -975,13 +983,15 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
 				n = findNodeByLink(node_group, node, node.inputs[i])
 				parse_render_target(n, node_group, render_targets, depth_buffers)
 
-def make_render_target(n, depth_buffer_id=None):
+def make_render_target(n, scale, depth_buffer_id=None):
 	target = Object()
 	target.id = n.inputs[0].default_value
 	target.width = n.inputs[1].default_value
 	target.height = n.inputs[2].default_value
 	target.format = n.inputs[4].default_value
-	target.ping_pong = n.inputs[5].default_value	
+	target.ping_pong = n.inputs[5].default_value
+	if scale != 1.0:
+		target.scale = scale	
 	if depth_buffer_id != None:
 		target.depth_buffer = depth_buffer_id
 	return target

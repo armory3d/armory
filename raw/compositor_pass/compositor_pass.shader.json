@@ -19,11 +19,13 @@
 			"links": [
 				{
 					"id": "eye",
-					"link": "_cameraPosition"
+					"link": "_cameraPosition",
+					"ifdef": ["_LensFlare", "_Fog"]
 				},
 				{
 					"id": "eyeLook",
-					"link": "_cameraLook"
+					"link": "_cameraLook",
+					"ifdef": ["_LensFlare", "_Fog"]
 				},
 				{
 					"id": "light",
@@ -41,7 +43,8 @@
 				},
 				{
 					"id": "time",
-					"link": "_time"
+					"link": "_time",
+					"ifdef": ["_Grain"]
 				}
 			],
 			"texture_params": [],

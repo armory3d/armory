@@ -26,63 +26,54 @@
 					"link": "_inverseProjectionMatrix"
 				},
 				{
-					"id": "envmapStrength",
-					"link": "_envmapStrength"
-				},
-				{
 					"id": "A",
 					"link": "_hosekA",
-					"ifdef": ["_Hosek"]
+					"ifdef": ["_EnvSky"]
 				},
 				{
 					"id": "B",
 					"link": "_hosekB",
-					"ifdef": ["_Hosek"]
+					"ifdef": ["_EnvSky"]
 				},
 				{
 					"id": "C",
 					"link": "_hosekC",
-					"ifdef": ["_Hosek"]
+					"ifdef": ["_EnvSky"]
 				},
 				{
 					"id": "D",
 					"link": "_hosekD",
-					"ifdef": ["_Hosek"]
+					"ifdef": ["_EnvSky"]
 				},
 				{
 					"id": "E",
 					"link": "_hosekE",
-					"ifdef": ["_Hosek"]
+					"ifdef": ["_EnvSky"]
 				},
 				{
 					"id": "F",
 					"link": "_hosekF",
-					"ifdef": ["_Hosek"]
+					"ifdef": ["_EnvSky"]
 				},
 				{
 					"id": "G",
 					"link": "_hosekG",
-					"ifdef": ["_Hosek"]
+					"ifdef": ["_EnvSky"]
 				},
 				{
 					"id": "H",
 					"link": "_hosekH",
-					"ifdef": ["_Hosek"]
+					"ifdef": ["_EnvSky"]
 				},
 				{
 					"id": "I",
 					"link": "_hosekI",
-					"ifdef": ["_Hosek"]
+					"ifdef": ["_EnvSky"]
 				},
 				{
 					"id": "Z",
 					"link": "_hosekZ",
-					"ifdef": ["_Hosek"]
-				},
-				{
-					"id": "sunDirection",
-					"link": "_hosekSunDirection",
-					"ifdef": ["_Hosek"]
+					"ifdef": ["_EnvSky"]
 				}
 			],
 			"texture_params": [],

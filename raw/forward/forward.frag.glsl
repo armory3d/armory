@@ -16,9 +16,12 @@ const vec2 shadowMapSize = vec2(2048, 2048);
 	uniform sampler2D salbedo;
 #endif
 uniform sampler2D shadowMap;
-uniform sampler2D senvmapRadiance;
 uniform float shirr[27];
-uniform sampler2D senvmapBrdf;
+#ifdef _Rad
+	uniform sampler2D senvmapRadiance;
+	uniform sampler2D senvmapBrdf;
+	uniform int envmapNumMipmaps;
+#endif
 // uniform sampler2D sltcMat;
 // uniform sampler2D sltcMag;
 #ifdef _NMTex
@@ -45,7 +48,6 @@ uniform sampler2D srm;
 #endif
 
 uniform float envmapStrength;
-uniform int envmapNumMipmaps;
 uniform bool receiveShadow;
 uniform vec3 lightDir;
 uniform vec3 lightColor;
@@ -158,20 +160,19 @@ float shadowTest(vec4 lPos) {
 	const float bias = 0.0023; // Persp
 	// const float bias = 0.01; // Ortho
     
-#ifdef _PCSS
-    return PCSS(lPosH.xy, lPosH.z - bias);
-#else
-	return PCF(lPosH.xy, lPosH.z - bias);
+// #ifdef _PCSS
+    // return PCSS(lPosH.xy, lPosH.z - bias);
+// #else
+	// return PCF(lPosH.xy, lPosH.z - bias);
+// #endif
 	// return VSM(lPosH.xy, lPosH.z);
 	
 	// shadow2DSampler
 	// return texture(shadowMap, vec3(lPosH.xy, (lPosH.z - 0.005) / lPosH.w));
 	
 	// Basic
-	// float distanceFromLight = texture(shadowMap, lPosH.xy).r;
-	// float bias = 0.0;
-	// return float(distanceFromLight > lPosH.z - bias);
-#endif
+	float distanceFromLight = texture(shadowMap, lPosH.xy).r * 2.0 - 1.0;
+	return float(distanceFromLight > lPosH.z - bias);
 }
 
 vec3 shIrradiance(vec3 nor, float scale) {
@@ -317,10 +318,12 @@ vec3 surfaceF0(vec3 baseColor, float metalness) {
 	return mix(vec3(0.04), baseColor, metalness);
 }
 
+#ifdef _Rad
 float getMipLevelFromRoughness(float roughness) {
 	// First mipmap level = roughness 0, last = roughness = 1
 	return roughness * envmapNumMipmaps;
 }
+#endif
 
 
 // Linearly Transformed Cosines
@@ -673,24 +676,25 @@ void main() {
 	direct = direct * lightColor * lightStrength;
 	
 	// Indirect
-	// vec3 indirectDiffuse = texture(senvmapIrradiance, envMapEquirect(n)).rgb;
 	vec3 indirectDiffuse = shIrradiance(n, 2.2) / PI;	
 #ifdef _LDR
 	indirectDiffuse = pow(indirectDiffuse, vec3(2.2));
 #endif
 	indirectDiffuse *= albedo;
+	vec3 indirect = indirectDiffuse;
 	
+#ifdef _Rad
 	vec3 reflectionWorld = reflect(-v, n); 
 	float lod = getMipLevelFromRoughness(roughness);// + 1.0;
 	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
-#ifdef _LDR
-	prefilteredColor = pow(prefilteredColor, vec3(2.2));
-#endif
-	
+	#ifdef _LDR
+		prefilteredColor = pow(prefilteredColor, vec3(2.2));
+	#endif
 	vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;
 	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
+	vec3 indirect += indirectSpecular;
+#endif
 	
-	vec3 indirect = indirectDiffuse + indirectSpecular;
 	indirect = indirect * lightColor * lightStrength * envmapStrength;
 
 	outColor = vec4(vec3(direct * visibility + indirect), 1.0);
