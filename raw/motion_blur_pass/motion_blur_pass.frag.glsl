@@ -6,9 +6,10 @@
 precision mediump float;
 #endif
 
+#include "../compiled.glsl"
+
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
-uniform sampler2D gbuffer1;
 
 uniform sampler2D tex;
 uniform mat4 prevVP;
@@ -23,10 +24,8 @@ const int samples = 8;
 
 vec3 getPos(float depth, vec2 coord) {	
 	vec3 vray = normalize(viewRay);
-	const float znear = 0.1;
-	const float zfar = 1000.0;
-	const float projectionA = zfar / (zfar - znear);
-	const float projectionB = (-zfar * znear) / (zfar - znear);
+	const float projectionA = cameraPlane.y / (cameraPlane.y - cameraPlane.x);
+	const float projectionB = (-cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
 	float linearDepth = projectionB / (depth * 0.5 + 0.5 - projectionA);
 	float viewZDist = dot(eyeLook, vray);
 	vec3 wposition = eye + vray * (linearDepth / viewZDist);

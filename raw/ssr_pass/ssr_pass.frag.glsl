@@ -4,6 +4,8 @@
 precision mediump float;
 #endif
 
+#include "../compiled.glsl"
+
 uniform sampler2D tex;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0; // Normal
@@ -37,10 +39,8 @@ vec4 getProjectedCoord(vec3 hitCoord) {
 }
 
 vec3 getPos(float depth) {	
-	const float znear = 0.1;
-	const float zfar = 1000.0;
-	const float projectionA = zfar / (zfar - znear);
-	const float projectionB = (-zfar * znear) / (zfar - znear);
+	const float projectionA = cameraPlane.y / (cameraPlane.y - cameraPlane.x);
+	const float projectionB = (-cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
 	float linearDepth = projectionB / (projectionA - depth);
 	return viewRay * linearDepth;
 }

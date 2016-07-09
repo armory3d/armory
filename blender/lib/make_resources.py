@@ -227,11 +227,11 @@ def saveResource(path, base_name, subset, res, minimize):
 		r.shader_resources = [res.shader_resources[-1]]
 		f.write(r.to_JSON(minimize))
 
-def make(json_name, minimize=False, defs=None):
+def make(json_name, fp, minimize=False, defs=None):
 	base_name = json_name.split('.', 1)[0]
 
 	# Make out dir
-	path = '../../../../compiled/ShaderResources/' + base_name
+	path = fp + '/compiled/ShaderResources/' + base_name
 	if not os.path.exists(path):
 		os.makedirs(path)
 

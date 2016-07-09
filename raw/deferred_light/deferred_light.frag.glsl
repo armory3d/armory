@@ -4,6 +4,8 @@
 precision mediump float;
 #endif
 
+#include "../compiled.glsl"
+
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
@@ -24,12 +26,6 @@ uniform float envmapStrength;
 
 uniform sampler2D ssaotex;
 uniform sampler2D shadowMap;
-
-const float znear = 0.1;
-const float zfar = 1000.0;
-const vec2 shadowMapSize = vec2(2048, 2048);
-const float PI = 3.1415926535;
-const float TwoPI = (2.0 * PI);
 
 // #ifdef _LTC
 	// uniform sampler2D sltcMat;
@@ -101,7 +97,7 @@ vec3 SSSSTransmittance(float translucency, float sssWidth, vec3 worldPosition, v
 vec2 envMapEquirect(vec3 normal) {
 	float phi = acos(normal.z);
 	float theta = atan(-normal.y, normal.x) + PI;
-	return vec2(theta / TwoPI, phi / PI);
+	return vec2(theta / PI2, phi / PI);
 }
 
 #ifdef _Rad
@@ -172,27 +168,27 @@ float PCF(vec2 uv, float compare) {
 	float result = 0.0;
 	// for (int x = -1; x <= 1; x++){
 		// for(int y = -1; y <= 1; y++){
-			// vec2 off = vec2(x, y) / shadowMapSize;
-			// result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
+			// vec2 off = vec2(x, y) / shadowmapSize;
+			// result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			
-			vec2 off = vec2(-1, -1) / shadowMapSize;
-			result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
-			off = vec2(-1, 0) / shadowMapSize;
-			result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
-			off = vec2(-1, 1) / shadowMapSize;
-			result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
-			off = vec2(0, -1) / shadowMapSize;
-			result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
-			off = vec2(0, 0) / shadowMapSize;
-			result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
-			off = vec2(0, 1) / shadowMapSize;
-			result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
-			off = vec2(1, -1) / shadowMapSize;
-			result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
-			off = vec2(1, 0) / shadowMapSize;
-			result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
-			off = vec2(1, 1) / shadowMapSize;
-			result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
+			vec2 off = vec2(-1, -1) / shadowmapSize;
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			off = vec2(-1, 0) / shadowmapSize;
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			off = vec2(-1, 1) / shadowmapSize;
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			off = vec2(0, -1) / shadowmapSize;
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			off = vec2(0, 0) / shadowmapSize;
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			off = vec2(0, 1) / shadowmapSize;
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			off = vec2(1, -1) / shadowmapSize;
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			off = vec2(1, 0) / shadowmapSize;
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			off = vec2(1, 1) / shadowmapSize;
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 		// }
 	// }
 	return result / 9.0;
@@ -232,10 +228,10 @@ float PCF(vec2 uv, float compare) {
 	}
 
 	void initPoissonSamples(const in vec2 randomSeed) {
-		const float ANGLE_STEP = TwoPI * float(NUM_RINGS) / float(NUM_SAMPLES);
+		const float ANGLE_STEP = PI2 * float(NUM_RINGS) / float(NUM_SAMPLES);
 		const float INV_NUM_SAMPLES = 1.0 / float(NUM_SAMPLES);
 
-		float angle = rand(randomSeed) * TwoPI;
+		float angle = rand(randomSeed) * PI2;
 		float radius = INV_NUM_SAMPLES;
 		float radiusStep = radius;
 
@@ -453,8 +449,8 @@ vec3 getPos(float depth) {
 	// return pos.xyz;
 	
 	vec3 vray = normalize(viewRay);
-	const float projectionA = zfar / (zfar - znear);
-	const float projectionB = (-zfar * znear) / (zfar - znear);
+	const float projectionA = cameraPlane.y / (cameraPlane.y - cameraPlane.x);
+	const float projectionB = (-cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
 	// float linearDepth = projectionB / (depth - projectionA);
 	float linearDepth = projectionB / (depth * 0.5 + 0.5 - projectionA);
 	float viewZDist = dot(eyeLook, vray);

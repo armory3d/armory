@@ -7,6 +7,9 @@ precision mediump float;
 const float PI = 3.1415926;
 const float TwoPI = (2.0 * PI);
 
+#ifdef _EnvCol
+	uniform vec3 backgroundCol;
+#endif
 #ifdef _EnvSky
 	uniform vec3 A;
 	uniform vec3 B;
@@ -48,11 +51,17 @@ void main() {
 	if (texture(gbufferD, texCoord).r/* * 2.0 - 1.0*/ != 1.0) {
 		discard;
 	}
-	
+
+#ifdef _EnvCol
+	gl_FragColor = vec4(backgroundCol, 1.0);
+	return;
+#else
 	vec3 n = normalize(normal);
-	
+#endif
+
 #ifdef _EnvTex
 	gl_FragColor = texture(envmap, envMapEquirect(n)) * envmapStrength;
+	return;
 #endif
 
 #ifdef _EnvSky
@@ -65,7 +74,8 @@ void main() {
 	float gamma_val = acos(cos_gamma);
 
 	vec3 R = Z * hosekWilkie(cos_theta, gamma_val, cos_gamma) * envmapStrength;
-	// R = pow(R, vec3(2.2));
+	R = pow(R, vec3(2.2));
     gl_FragColor = vec4(R, 1.0);
+    return;
 #endif
 }

@@ -22,7 +22,7 @@ def writeFile(path, name, defs, lines):
 					f.write('#define ' + d + '\n')
 				defs_written = True
 
-def make(json_name, defs=None):
+def make(json_name, fp, defs=None):
 	vert_shaders = []
 	frag_shaders = []
 	shader_names = []
@@ -36,7 +36,7 @@ def make(json_name, defs=None):
 	base_name = json_name.split('.', 1)[0]
 
 	# Make out dir
-	path = '../../../../compiled/Shaders/' + base_name
+	path = fp + '/compiled/Shaders/' + base_name
 	if not os.path.exists(path):
 		os.makedirs(path)
 

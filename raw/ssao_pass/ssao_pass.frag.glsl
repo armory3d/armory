@@ -19,7 +19,6 @@ precision mediump float;
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
-uniform sampler2D gbuffer1;
 uniform sampler2D snoise;
 
 uniform mat4 invVP;

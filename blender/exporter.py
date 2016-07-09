@@ -1463,9 +1463,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 					t1data[i * 2] = vtx.uvs[1].x
 					t1data[i * 2 + 1] = vtx.uvs[1].y
 			if num_colors > 0:
-				cdata[i * 3] = vtx.cols[0]
-				cdata[i * 3 + 1] = vtx.cols[1]
-				cdata[i * 3 + 2] = vtx.cols[2]
+				cdata[i * 3] = vtx.col[0]
+				cdata[i * 3 + 1] = vtx.col[1]
+				cdata[i * 3 + 2] = vtx.col[2]
 		# Output
 		om.vertex_arrays = []
 		pa = Object()
@@ -2102,29 +2102,33 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			x = Object()
 			if t.type_prop == 'Nodes' and t.nodes_name_prop != '':
 				x.type = 'Script'
-				x.class_name = t.nodes_name_prop.replace('.', '_')
+				x.class_name = bpy.data.worlds[0].CGProjectPackage + '.node.' + t.nodes_name_prop.replace('.', '_')
 			elif t.type_prop == 'Scene Instance':
 				x.type = 'Script'
-				x.class_name = 'SceneInstance'
+				x.class_name = 'armory.trait.internal.SceneInstance'
 				x.parameters = [t.scene_prop.replace('.', '_')]
 			elif t.type_prop == 'Animation':
 				x.type = 'Script'
-				x.class_name = 'Animation'
+				x.class_name = 'armory.trait.internal.Animation'
 				names = []
 				starts = []
 				ends = []
-				for at in node.my_animationtraitlist:
+				for at in t.my_animationtraitlist:
 					if at.enabled_prop:
 						names.append(at.name)
 						starts.append(at.start_prop)
 						ends.append(at.end_prop)
 				x.parameters = [t.start_track_name_prop, names, starts, ends]
 			else: # Script
-				x.type = t.type_prop
-				x.class_name = t.class_name_prop
-				if len(node.my_paramstraitlist) > 0:
+				x.type = 'Script'
+				if t.type_prop == 'Bundled Script':
+					trait_prefix = 'armory.trait.'
+				else:
+					trait_prefix = bpy.data.worlds[0].CGProjectPackage + '.'
+				x.class_name = trait_prefix + t.class_name_prop
+				if len(t.my_paramstraitlist) > 0:
 					x.parameters = []
-					for pt in node.my_paramstraitlist: # Append parameters
+					for pt in t.my_paramstraitlist: # Append parameters
 						x.parameters.append(ast.literal_eval(pt.name))
 			
 			o.traits.append(x)
@@ -2153,7 +2157,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				body_mass = rb.mass
 			x = Object()
 			x.type = 'Script'
-			x.class_name = 'RigidBody'
+			x.class_name = 'armory.trait.internal.RigidBody'
 			x.parameters = [body_mass, shape, rb.friction]
 			if rb.use_margin:
 				x.parameters.append(rb.collision_margin)
@@ -2292,17 +2296,21 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o.shader = material.custom_shader_name
 	
 	def cb_export_world(self, world, o):
-		o.brdf = 'envmap_brdf'
+		o.brdf = 'brdf'
 		o.probes = []
 		# Main probe
-		world_generate_radiance = bpy.data.worlds[0].generate_radiance
+		world_generate_radiance = False
+		defs = bpy.data.worlds[0].world_defs
+		if '_EnvTex' in defs: # Radiance only for texture
+			world_generate_radiance = bpy.data.worlds[0].generate_radiance
+		generate_irradiance = '_EnvTex' in defs or '_EnvSky' in defs
 		envtex = bpy.data.cameras[0].world_envtex_name.rsplit('.', 1)[0]
 		num_mips = bpy.data.cameras[0].world_envtex_num_mips
 		strength = bpy.data.cameras[0].world_envtex_strength
-		po = self.make_probe('world', envtex, num_mips, strength, 1.0, [0, 0, 0], [0, 0, 0], world_generate_radiance)
+		po = self.make_probe('world', envtex, num_mips, strength, 1.0, [0, 0, 0], [0, 0, 0], world_generate_radiance, generate_irradiance)
 		o.probes.append(po)
 		
-		if '_EnvSky' in bpy.data.worlds[0].world_defs:
+		if '_EnvSky' in defs:
 			# Sky data for probe
 			po.sun_direction =  list(bpy.data.cameras[0].world_envtex_sun_direction)
 			po.turbidity = bpy.data.cameras[0].world_envtex_turbidity
@@ -2323,16 +2331,19 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				
 				cam.probe_num_mips = write_probes.write_probes(cam.probe_texture, disable_hdr, cam.probe_num_mips, generate_radiance=generate_radiance)
 				base_name = cam.probe_texture.rsplit('.', 1)[0]
-				po = self.make_probe(cam.name, base_name, cam.probe_num_mips, cam.probe_strength, cam.probe_blending, volume, volume_center, generate_radiance)
+				po = self.make_probe(cam.name, base_name, cam.probe_num_mips, cam.probe_strength, cam.probe_blending, volume, volume_center, generate_radiance, generate_irradiance)
 				o.probes.append(po)
 	
-	def make_probe(self, id, envtex, mipmaps, strength, blending, volume, volume_center, generate_radiance):
+	def make_probe(self, id, envtex, mipmaps, strength, blending, volume, volume_center, generate_radiance, generate_irradiance):
 		po = Object()
 		po.id = id
 		if generate_radiance:
 			po.radiance = envtex + '_radiance'
-			po.radiance_mipmaps = mipmaps	
-		po.irradiance = envtex + '_irradiance'
+			po.radiance_mipmaps = mipmaps
+		if generate_irradiance:
+			po.irradiance = envtex + '_irradiance'
+		else:
+			po.irradiance = '' # No irradiance data, fallback to default at runtime
 		po.strength = strength
 		po.blending = blending
 		po.volume = volume

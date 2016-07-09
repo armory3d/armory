@@ -47,18 +47,6 @@ mat3 cotangentFrame(vec3 nor, vec3 pos, vec2 uv) {
     return mat3(T * invmax, B * invmax, nor);
 }
 
-// vec3 getPos(float depth) {	
-//     vec3 vray = normalize(viewRay);
-// 	const float znear = 0.1;
-// 	const float zfar = 1000.0;
-// 	const float projectionA = zfar / (zfar - znear);
-// 	const float projectionB = (-zfar * znear) / (zfar - znear);
-// 	float linearDepth = projectionB / (depth * 0.5 + 0.5 - projectionA);
-// 	float viewZDist = dot(eyeLook, vray);
-// 	vec3 wposition = eye + vray * (linearDepth / viewZDist);
-// 	return wposition;
-// }
-
 vec2 octahedronWrap(vec2 v) {
     return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
 }

@@ -44,18 +44,15 @@ class MY_UL_AnimationTraitList(bpy.types.UIList):
             layout.alignment = 'CENTER'
             layout.label("", icon = custom_icon)
 
-def initObjectProperties():
-    bpy.types.Object.my_animationtraitlist = bpy.props.CollectionProperty(type = ListAnimationTraitItem)
-    bpy.types.Object.animationtraitlist_index = bpy.props.IntProperty(name = "Index for my_list", default = 0)
-
 class LIST_OT_AnimationTraitNewItem(bpy.types.Operator):
     # Add a new item to the list
     bl_idname = "my_animationtraitlist.new_item"
     bl_label = "Add a new item"
 
     def execute(self, context):
-        bpy.context.object.my_animationtraitlist.add()
-        bpy.context.object.animationtraitlist_index += 1
+        trait = context.object.my_traitlist[context.object.traitlist_index]
+        trait.my_animationtraitlist.add()
+        trait.animationtraitlist_index += 1
         return{'FINISHED'}
 
 
@@ -67,18 +64,20 @@ class LIST_OT_AnimationTraitDeleteItem(bpy.types.Operator):
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list """
-        return len(bpy.context.object.my_animationtraitlist) > 0
+        trait = context.object.my_traitlist[context.object.traitlist_index]
+        return len(trait.my_animationtraitlist) > 0
 
     def execute(self, context):
-        list = bpy.context.object.my_animationtraitlist
-        index = bpy.context.object.animationtraitlist_index
+        trait = context.object.my_traitlist[context.object.traitlist_index]
+        list = trait.my_animationtraitlist
+        index = trait.animationtraitlist_index
 
         list.remove(index)
 
         if index > 0:
             index = index - 1
 
-        bpy.context.object.animationtraitlist_index = index
+        trait.animationtraitlist_index = index
         return{'FINISHED'}
 
 
@@ -94,13 +93,15 @@ class LIST_OT_AnimationTraitMoveItem(bpy.types.Operator):
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list. """
-        return len(bpy.context.object.my_animationtraitlist) > 0
+        trait = context.object.my_traitlist[context.object.traitlist_index]
+        return len(trait.my_animationtraitlist) > 0
 
 
     def move_index(self):
         # Move index of an item render queue while clamping it
-        index = bpy.context.object.animationtraitlist_index
-        list_length = len(bpy.context.object.my_animationtraitlist) - 1
+        trait = context.object.my_traitlist[context.object.traitlist_index]
+        index = trait.animationtraitlist_index
+        list_length = len(trait.my_animationtraitlist) - 1
         new_index = 0
 
         if self.direction == 'UP':
@@ -113,8 +114,9 @@ class LIST_OT_AnimationTraitMoveItem(bpy.types.Operator):
 
 
     def execute(self, context):
-        list = bpy.context.object.my_animationtraitlist
-        index = bpy.context.object.animationtraitlist_index
+        trait = context.object.my_traitlist[context.object.traitlist_index]
+        list = trait.my_animationtraitlist
+        index = trait.animationtraitlist_index
 
         if self.direction == 'DOWN':
             neighbor = index + 1
@@ -131,7 +133,6 @@ class LIST_OT_AnimationTraitMoveItem(bpy.types.Operator):
 
 def register():
     bpy.utils.register_module(__name__)
-    initObjectProperties()
 
 def unregister():
     bpy.utils.unregister_module(__name__)

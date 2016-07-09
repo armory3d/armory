@@ -67,6 +67,11 @@ def buildNodeTree(world_name, node_group, shader_references, asset_references):
 	if output_node != None:
 		parse_world_output(node_group, output_node, context)
 	
+	# Clear to color if no texture or sky is provided
+	world_defs = bpy.data.worlds[0].world_defs
+	if '_EnvSky' not in world_defs and '_EnvTex' not in world_defs:
+		world_defs += '_EnvCol'
+
 	# Enable probes
 	for cam in bpy.data.cameras:
 		if cam.is_probe:
@@ -75,7 +80,6 @@ def buildNodeTree(world_name, node_group, shader_references, asset_references):
 	# Add resources to khafie
 	dir_name = 'env_map'
 	# Append world defs
-	world_defs = bpy.data.worlds[0].world_defs
 	res_name = 'env_map' + world_defs
 	# Reference correct shader context
 	res.shader = res_name + '/' + res_name
@@ -94,6 +98,7 @@ def parse_world_output(node_group, node, context):
 def parse_surface(node_group, node, context):
 	# Extract environment strength
 	if node.type == 'BACKGROUND':
+		bpy.data.cameras[0].world_envtex_color = node.inputs[0].default_value
 		bpy.data.cameras[0].world_envtex_strength = node.inputs[1].default_value
 		
 		# Strength

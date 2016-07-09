@@ -11,13 +11,6 @@ class ListParamsTraitItem(bpy.types.PropertyGroup):
 		   name="Name",
 		   description="A name for this item",
 		   default="Untitled")
-		   
-	# enabled_prop = bpy.props.BoolProperty(
-	#        name="",
-	#        description="A name for this item",
-	#        default=True)
-
-
 
 class MY_UL_ParamsTraitList(bpy.types.UIList):
 	def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -34,18 +27,15 @@ class MY_UL_ParamsTraitList(bpy.types.UIList):
 			layout.alignment = 'CENTER'
 			layout.label("", icon = custom_icon)
 
-def initObjectProperties():
-	bpy.types.Object.my_paramstraitlist = bpy.props.CollectionProperty(type = ListParamsTraitItem)
-	bpy.types.Object.paramstraitlist_index = bpy.props.IntProperty(name = "Index for my_list", default = 0)
-
 class LIST_OT_ParamsTraitNewItem(bpy.types.Operator):
 	# Add a new item to the list
 	bl_idname = "my_paramstraitlist.new_item"
 	bl_label = "Add a new item"
 
 	def execute(self, context):
-		bpy.context.object.my_paramstraitlist.add()
-		bpy.context.object.paramstraitlist_index += 1
+		trait = context.object.my_traitlist[context.object.traitlist_index]
+		trait.my_paramstraitlist.add()
+		trait.paramstraitlist_index += 1
 		return{'FINISHED'}
 
 
@@ -57,18 +47,20 @@ class LIST_OT_ParamsTraitDeleteItem(bpy.types.Operator):
 	@classmethod
 	def poll(self, context):
 		""" Enable if there's something in the list """
-		return len(bpy.context.object.my_paramstraitlist) > 0
+		trait = context.object.my_traitlist[context.object.traitlist_index]
+		return len(trait.my_paramstraitlist) > 0
 
 	def execute(self, context):
-		list = bpy.context.object.my_paramstraitlist
-		index = bpy.context.object.paramstraitlist_index
+		trait = context.object.my_traitlist[context.object.traitlist_index]
+		list = trait.my_paramstraitlist
+		index = trait.paramstraitlist_index
 
 		list.remove(index)
 
 		if index > 0:
 			index = index - 1
 
-		bpy.context.object.paramstraitlist_index = index
+		trait.paramstraitlist_index = index
 		return{'FINISHED'}
 
 
@@ -84,13 +76,15 @@ class LIST_OT_ParamsTraitMoveItem(bpy.types.Operator):
 	@classmethod
 	def poll(self, context):
 		""" Enable if there's something in the list. """
-		return len(bpy.context.object.my_paramstraitlist) > 0
+		trait = context.object.my_traitlist[context.object.traitlist_index]
+		return len(trait.my_paramstraitlist) > 0
 
 
 	def move_index(self):
 		# Move index of an item render queue while clamping it
-		index = bpy.context.object.paramstraitlist_index
-		list_length = len(bpy.context.object.my_paramstraitlist) - 1
+		trait = context.object.my_traitlist[context.object.traitlist_index]
+		index = trait.paramstraitlist_index
+		list_length = len(trait.my_paramstraitlist) - 1
 		new_index = 0
 
 		if self.direction == 'UP':
@@ -103,8 +97,9 @@ class LIST_OT_ParamsTraitMoveItem(bpy.types.Operator):
 
 
 	def execute(self, context):
-		list = bpy.context.object.my_paramstraitlist
-		index = bpy.context.object.paramstraitlist_index
+		trait = context.object.my_traitlist[context.object.traitlist_index]
+		list = trait.my_paramstraitlist
+		index = trait.paramstraitlist_index
 
 		if self.direction == 'DOWN':
 			neighbor = index + 1
@@ -121,7 +116,6 @@ class LIST_OT_ParamsTraitMoveItem(bpy.types.Operator):
 
 def register():
 	bpy.utils.register_module(__name__)
-	initObjectProperties()
 
 def unregister():
 	bpy.utils.unregister_module(__name__)

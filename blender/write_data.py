@@ -23,7 +23,7 @@ project.addAssets('Assets/**');
 """)
         
         f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/armory')[2:] + '");\n')
-        f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/lue')[2:] + '");\n')
+        f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/iron')[2:] + '");\n')
         f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/zui')[2:] + '");\n')
         
         if bpy.data.worlds[0]['CGPhysics'] != 0:
@@ -47,23 +47,23 @@ project.addAssets('Assets/**');
 
 # Write Main.hx
 def write_main():
+    wrd = bpy.data.worlds[0]
     #if not os.path.isfile('Sources/Main.hx'):
     with open('Sources/Main.hx', 'w') as f:
         f.write(
 """// Auto-generated
 package ;
 class Main {
-    public static inline var projectName = '""" + bpy.data.worlds[0]['CGProjectName'] + """';
-    public static inline var projectPackage = '""" + bpy.data.worlds[0]['CGProjectPackage'] + """';
-    static inline var projectWidth = """ + str(bpy.data.worlds[0]['CGProjectWidth']) + """;
-    static inline var projectHeight = """ + str(bpy.data.worlds[0]['CGProjectHeight']) + """;
-    static inline var projectSamplesPerPixel = """ + str(bpy.data.worlds[0]['CGProjectSamplesPerPixel']) + """;
-    public static inline var projectScene = '""" + str(bpy.data.worlds[0]['CGProjectScene']) + """';
+    public static inline var projectName = '""" + wrd['CGProjectName'] + """';
+    public static inline var projectPackage = '""" + wrd['CGProjectPackage'] + """';
+    static inline var projectWidth = """ + str(wrd['CGProjectWidth']) + """;
+    static inline var projectHeight = """ + str(wrd['CGProjectHeight']) + """;
+    static inline var projectSamplesPerPixel = """ + str(wrd['CGProjectSamplesPerPixel']) + """;
+    public static inline var projectScene = '""" + str(wrd['CGProjectScene']) + """';
     public static function main() {
-        lue.sys.CompileTime.importPackage('lue.trait');
-        lue.sys.CompileTime.importPackage('cycles.trait');
-        lue.sys.CompileTime.importPackage('cycles.renderpipeline');
-        lue.sys.CompileTime.importPackage('""" + bpy.data.worlds[0]['CGProjectPackage'] + """');
+        iron.sys.CompileTime.importPackage('armory.trait');
+        iron.sys.CompileTime.importPackage('armory.renderpipeline');
+        iron.sys.CompileTime.importPackage('""" + wrd['CGProjectPackage'] + """');
         #if (js && WITH_PHYSICS)
         untyped __js__("
             function loadScript(url, callback) {
@@ -83,8 +83,114 @@ class Main {
     }
     static function start() {
         kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel}, function() {
-            new lue.App(cycles.Root);
+            new iron.App(armory.Root);
         });
+    }
+}
+""")
+
+# Write electron.js
+def write_electronjs(x, y, w, h, winoff, in_frame):
+    wrd = bpy.data.worlds[0]
+    dev_tools = wrd.CGPlayDeveloperTools
+    with open('build/electron.js', 'w') as f:
+        f.write(
+"""// Auto-generated
+'use strict';
+const electron = require('electron');
+const app = electron.app;
+const BrowserWindow = electron.BrowserWindow;
+let mainWindow;
+
+function createWindow () { """)
+    
+        if in_frame:
+            f.write(
+"""
+    var point = electron.screen.getCursorScreenPoint();
+    var targetDisplay = electron.screen.getDisplayNearestPoint(point);
+    var offY = targetDisplay.workAreaSize.height - """ + str(int(winoff)) + """;
+    var targetX = targetDisplay.bounds.x + """ + str(int(x)) + """;
+    var targetY = targetDisplay.bounds.y + """ + str(int(y)) + """ + offY;
+    mainWindow = new BrowserWindow({x: targetX, y: targetY, width: """ + str(int(w)) + """, height: """ + str(int(h)) + """, frame: false, autoHideMenuBar: true, useContentSize: true, movable: false, resizable: false, transparent: true, enableLargerThanScreen: true});
+    mainWindow.setSkipTaskbar(true);
+    mainWindow.setAlwaysOnTop(true);
+    app.dock.setBadge('');
+""")
+        else:
+            f.write(
+"""
+    mainWindow = new BrowserWindow({width: """ + str(int(w)) + """, height: """ + str(int(h)) + """, autoHideMenuBar: true, useContentSize: true});
+""")
+        f.write(
+"""
+    //mainWindow.loadURL('file://' + __dirname + '/build/html5/index.html');
+    mainWindow.loadURL('http://localhost:8040/build/html5/index.html');
+    mainWindow.on('closed', function() { mainWindow = null; });""")
+
+        if dev_tools:
+            f.write("""
+    mainWindow.toggleDevTools();""")
+
+        f.write("""
+}
+app.on('ready', createWindow);
+app.on('window-all-closed', function () { app.quit(); });
+app.on('activate', function () { if (mainWindow === null) { createWindow(); } });
+""")
+
+# Write index.html
+def write_indexhtml(w, h, in_frame):
+    with open('build/html5/index.html', 'w') as f:
+        f.write(
+"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>ArmoryGame</title>
+    <style>
+        html, body, canvas, div {
+            margin:0; padding: 0; width:100%; height:100%;
+        }
+        #khanvas {
+            display:block; border:none; outline:none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """'></canvas>
+    <script src='kha.js'></script>
+</body>
+</html>
+""")
+
+def write_compiledglsl(clip_start, clip_end, shadowmap_size):
+    with open('compiled/Shaders/compiled.glsl', 'w') as f:
+        f.write(
+"""const float PI = 3.1415926535;
+const float PI2 = PI * 2.0;
+const vec2 cameraPlane = vec2(""" + str(int(clip_start * 100) / 100) + """, """ + str(int(clip_end * 100) / 100) + """);
+const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shadowmap_size) + """);
+""")
+
+def write_traithx(class_name):
+    wrd = bpy.data.worlds[0]
+    with open('Sources/' + wrd.CGProjectPackage + '/' + class_name + '.hx', 'w') as f:
+        f.write(
+"""package """ + wrd.CGProjectPackage + """;
+
+class """ + class_name + """ extends iron.Trait {
+    public function new() {
+        super();
+
+        // notifyOnInit(function() {
+        // });
+        
+        // notifyOnUpdate(function() {
+        // });
+
+        // notifyOnRemove(function() {
+        // });
     }
 }
 """)

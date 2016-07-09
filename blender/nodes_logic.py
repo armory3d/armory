@@ -232,7 +232,7 @@ def buildNodeTrees():
 	
 	# Export node scripts
 	for node_group in bpy.data.node_groups:
-		if node_group.bl_idname == 'CGTreeType': # Build only cycles game trees
+		if node_group.bl_idname == 'CGTreeType': # Build only game trees
 			node_group.use_fake_user = True # Keep fake references for now
 			buildNodeTree(node_group)
 
@@ -245,8 +245,8 @@ def buildNodeTree(node_group):
 
 	with open(path + node_group_name + '.hx', 'w') as f:
 		f.write('package ' + bpy.data.worlds[0].CGProjectPackage + '.node;\n\n')
-		f.write('import cycles.node.*;\n\n')
-		f.write('class ' + node_group_name + ' extends cycles.trait.NodeExecutor {\n\n')
+		f.write('import armory.node.*;\n\n')
+		f.write('class ' + node_group_name + ' extends armory.trait.internal.NodeExecutor {\n\n')
 		f.write('\tpublic function new() { super(); requestAdd(add); }\n\n')
 		f.write('\tfunction add() {\n')
 		# Make sure root node exists

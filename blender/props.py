@@ -13,7 +13,7 @@ def cb_scene_update(context):
 
 def initProperties():
     # For project
-    bpy.types.World.CGVersion = StringProperty(name = "CGVersion", default="16.7")
+    bpy.types.World.CGVersion = StringProperty(name = "CGVersion", default="")
     bpy.types.World.CGProjectTarget = EnumProperty(
         items = [('HTML5', 'HTML5', 'HTML5'), 
                  ('Windows', 'Windows', 'Windows'), 
@@ -33,8 +33,11 @@ def initProperties():
                  ('Bullet', 'Bullet', 'Bullet')],
         name = "Physics", default='Bullet')
     bpy.types.World.CGKhafileConfig = StringProperty(name = "Config")
-    bpy.types.World.CGMinimize = BoolProperty(name="Minimize", default=True)
+    bpy.types.World.CGMinimize = BoolProperty(name="Minimize Data", default=True)
     bpy.types.World.CGCacheShaders = BoolProperty(name="Cache Shaders", default=True)
+    bpy.types.World.CGPlayViewportCamera = BoolProperty(name="Viewport Camera", default=False)
+    bpy.types.World.CGPlayConsole = BoolProperty(name="Console", default=False)
+    bpy.types.World.CGPlayDeveloperTools = BoolProperty(name="Developer Tools", default=False)
 
     # For object
     bpy.types.Object.geometry_cached = bpy.props.BoolProperty(name="Geometry Cached", default=False) # TODO: move to mesh type
@@ -63,6 +66,7 @@ def initProperties():
 	# TODO: move to world
     bpy.types.Camera.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
     bpy.types.Camera.world_envtex_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
+    bpy.types.Camera.world_envtex_color = bpy.props.FloatVectorProperty(name="Environment Color", size=4, default=[0,0,0,1])
     bpy.types.Camera.world_envtex_strength = bpy.props.FloatProperty(name="Environment Strength", default=1.0)
     bpy.types.Camera.world_envtex_sun_direction = bpy.props.FloatVectorProperty(name="Sun Direction", size=3, default=[0,0,0])
     bpy.types.Camera.world_envtex_turbidity = bpy.props.FloatProperty(name="Turbidity", default=1.0)
@@ -70,6 +74,9 @@ def initProperties():
     bpy.types.Camera.last_decal_context = bpy.props.StringProperty(name="Decal Context", default='')
     bpy.types.World.world_defs = bpy.props.StringProperty(name="World Shader Defs", default='')
     bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Generate Radiance", default=True)
+    bpy.types.World.shadowmap_size = bpy.props.IntProperty(name="Shadowmap Size", default=0)
+    bpy.types.World.scripts_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
+    bpy.types.World.bundled_scripts_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
     # For material
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.custom_shader = bpy.props.BoolProperty(name="Custom Shader", default=False)
@@ -82,7 +89,7 @@ def initProperties():
 
 # Menu in object region
 class ObjectPropsPanel(bpy.types.Panel):
-    bl_label = "Cycles Props"
+    bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "object"
@@ -101,7 +108,7 @@ class ObjectPropsPanel(bpy.types.Panel):
 
 # Menu in data region
 class DataPropsPanel(bpy.types.Panel):
-    bl_label = "Cycles Props"
+    bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "data"
@@ -117,14 +124,9 @@ class DataPropsPanel(bpy.types.Panel):
                 layout.prop_search(obj.data, "probe_volume", bpy.data, "objects")
                 layout.prop(obj.data, 'probe_strength')
                 layout.prop(obj.data, 'probe_blending')
-            
             layout.prop(obj.data, 'frustum_culling')
             layout.prop(obj.data, 'sort_front_to_back')
             layout.prop_search(obj.data, "pipeline_path", bpy.data, "node_groups")
-            layout.prop(obj.data, 'pipeline_id')
-            layout.prop(obj.data, 'geometry_context')
-            layout.prop(obj.data, 'shadows_context')
-            layout.prop(obj.data, 'translucent_context')
             layout.operator("cg.reset_pipelines")
         elif obj.type == 'MESH':
             layout.prop(obj.data, 'static_usage')
@@ -159,7 +161,7 @@ class OBJECT_OT_INVALIDATECACHEButton(bpy.types.Operator):
 
 # Menu in materials region
 class MatsPropsPanel(bpy.types.Panel):
-    bl_label = "Cycles Props"
+    bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "material"
@@ -177,7 +179,7 @@ class MatsPropsPanel(bpy.types.Panel):
 
 # Menu in world region
 class WorldPropsPanel(bpy.types.Panel):
-    bl_label = "Cycles Props"
+    bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "world"

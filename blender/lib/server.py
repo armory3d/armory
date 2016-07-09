@@ -10,7 +10,7 @@ import os
 
 def run_server():
     Handler = http.server.SimpleHTTPRequestHandler
-    httpd = socketserver.TCPServer(("", 8080), Handler)
+    httpd = socketserver.TCPServer(("", 8040), Handler)
     httpd.serve_forever()
 
 run_server()

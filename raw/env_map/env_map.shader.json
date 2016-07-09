@@ -26,6 +26,11 @@
 					"link": "_inverseProjectionMatrix"
 				},
 				{
+					"id": "backgroundCol",
+					"link": "_backgroundCol",
+					"ifdef": ["_EnvCol"]
+				},
+				{
 					"id": "A",
 					"link": "_hosekA",
 					"ifdef": ["_EnvSky"]

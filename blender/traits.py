@@ -2,17 +2,20 @@ import shutil
 import bpy
 import os
 import json
-from traits_animation import ListAnimationTraitItem
-from traits_params import ListParamsTraitItem
+from traits_animation import *
+from traits_params import *
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
+import utils
+import write_data
+import subprocess
 
 class ListTraitItem(bpy.types.PropertyGroup):
     # Group of properties representing an item in the list
     name = bpy.props.StringProperty(
            name="Name",
            description="A name for this item",
-           default="Untitled")
+           default="")
            
     enabled_prop = bpy.props.BoolProperty(
            name="",
@@ -21,6 +24,7 @@ class ListTraitItem(bpy.types.PropertyGroup):
 
     type_prop = bpy.props.EnumProperty(
         items = [('Script', 'Script', 'Script'),
+                 ('Bundled Script', 'Bundled Script', 'Bundled Script'),
                  ('Nodes', 'Nodes', 'Nodes'),
                  ('Scene Instance', 'Scene Instance', 'Scene Instance'),
                  ('Animation', 'Animation', 'Animation')
@@ -40,7 +44,7 @@ class ListTraitItem(bpy.types.PropertyGroup):
     class_name_prop = bpy.props.StringProperty(
            name="Class",
            description="A name for this item",
-           default="Untitled")
+           default="")
 
     nodes_name_prop = bpy.props.StringProperty(
            name="Nodes",
@@ -51,6 +55,12 @@ class ListTraitItem(bpy.types.PropertyGroup):
            name="Start Track",
            description="A name for this item",
            default="")
+
+    my_paramstraitlist = bpy.props.CollectionProperty(type = ListParamsTraitItem)
+    paramstraitlist_index = bpy.props.IntProperty(name = "Index for my_list", default = 0)
+
+    my_animationtraitlist = bpy.props.CollectionProperty(type = ListAnimationTraitItem)
+    animationtraitlist_index = bpy.props.IntProperty(name = "Index for my_list", default = 0)
 
 class MY_UL_TraitList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -152,10 +162,51 @@ class LIST_OT_TraitMoveItem(bpy.types.Operator):
             return{'CANCELLED'}
         return{'FINISHED'}
 
+class ArmoryEditScriptButton(bpy.types.Operator):
+    bl_idname = 'arm.edit_script'
+    bl_label = 'Edit Script'
+ 
+    def execute(self, context):
+        user_preferences = bpy.context.user_preferences
+        addon_prefs = user_preferences.addons['armory'].preferences
+        sdk_path = addon_prefs.sdk_path
+        kode_path = sdk_path + '/KodeStudio/KodeStudio.app/Contents/MacOS/Electron'
+        project_path = utils.get_fp()
+        item = context.object.my_traitlist[context.object.traitlist_index] 
+        hx_path = project_path + '/Sources/' + bpy.data.worlds[0].CGProjectPackage + '/' + item.class_name_prop + '.hx'
+        subprocess.call([kode_path + ' -cmd ' + utils.get_fp() + ' ' + hx_path + ' &'], shell=True)
+        return{'FINISHED'}
+
+class ArmoryNewScriptDialog(bpy.types.Operator):
+    bl_idname = "arm.new_script"
+    bl_label = "New Script"
+ 
+    class_name = StringProperty(name="Name")
+ 
+    def execute(self, context):
+        self.class_name = self.class_name.replace(' ', '')
+        write_data.write_traithx(self.class_name)
+        utils.fetch_script_names()
+        obj = context.object
+        item = obj.my_traitlist[obj.traitlist_index] 
+        item.class_name_prop = self.class_name 
+        return {'FINISHED'}
+ 
+    def invoke(self, context, event):
+        self.class_name = 'MyTrait'
+        return context.window_manager.invoke_props_dialog(self)
+
+class ArmoryRefreshScriptsListButton(bpy.types.Operator):
+    bl_idname = 'arm.refresh_scripts_list'
+    bl_label = 'Refresh Scripts List'
+ 
+    def execute(self, context):
+        utils.fetch_script_names()
+        return{'FINISHED'}
 
 # Menu in tools region
 class ToolsTraitsPanel(bpy.types.Panel):
-    bl_label = "Cycles Traits"
+    bl_label = "Armory Traits"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "object"
@@ -188,31 +239,43 @@ class ToolsTraitsPanel(bpy.types.Panel):
             row.prop(item, "type_prop")
 
             # Script
-            if item.type_prop =='Script':
+            if item.type_prop == 'Script' or item.type_prop == 'Bundled Script':
                 item.name = item.class_name_prop
                 row = layout.row()
-                row.prop(item, "class_name_prop")
+                # row.prop(item, "class_name_prop")
+                if item.type_prop == 'Script':
+                    row.prop_search(item, "class_name_prop", bpy.data.worlds[0], "scripts_list", "Class")
+                else:
+                    row.prop_search(item, "class_name_prop", bpy.data.worlds[0], "bundled_scripts_list", "Class")
                 # Params
                 layout.label("Parameters")
                 paramsrow = layout.row()
                 paramsrows = 2
-                if len(obj.my_animationtraitlist) > 1:
+                if len(item.my_paramstraitlist) > 1:
                     paramsrows = 4
                 
                 row = layout.row()
-                row.template_list("MY_UL_ParamsTraitList", "The_List", obj, "my_paramstraitlist", obj, "paramstraitlist_index", rows=paramsrows)
+                row.template_list("MY_UL_ParamsTraitList", "The_List", item, "my_paramstraitlist", item, "paramstraitlist_index", rows=paramsrows)
 
                 col = row.column(align=True)
                 col.operator("my_paramstraitlist.new_item", icon='ZOOMIN', text="")
                 col.operator("my_paramstraitlist.delete_item", icon='ZOOMOUT', text="")
 
-                if len(obj.my_paramstraitlist) > 1:
+                if len(item.my_paramstraitlist) > 1:
                     col.separator()
                     col.operator("my_paramstraitlist.move_item", icon='TRIA_UP', text="").direction = 'UP'
                     col.operator("my_paramstraitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
 
-                if obj.paramstraitlist_index >= 0 and len(obj.my_paramstraitlist) > 0:
-                    item = obj.my_paramstraitlist[obj.paramstraitlist_index]         
+                if item.paramstraitlist_index >= 0 and len(item.my_paramstraitlist) > 0:
+                    item = item.my_paramstraitlist[item.paramstraitlist_index]         
+
+                if item.type_prop == 'Script':
+                    row = layout.row()
+                    if item.class_name_prop == '':
+                        row.enabled = False
+                    row.operator("arm.edit_script")
+                    layout.operator("arm.new_script")
+                    layout.operator("arm.refresh_scripts_list")
             
             # Nodes
             elif item.type_prop =='Nodes':
@@ -231,28 +294,28 @@ class ToolsTraitsPanel(bpy.types.Panel):
             elif item.type_prop == 'Animation':
                 item.name = item.type_prop
                 row = layout.row()
-                row.prop_search(item, "start_track_name_prop", obj, "my_animationtraitlist", "Start Track")
+                row.prop_search(item, "start_track_name_prop", item, "my_animationtraitlist", "Start Track")
                 # Tracks list
                 layout.label("Tracks")
                 animrow = layout.row()
                 animrows = 2
-                if len(obj.my_animationtraitlist) > 1:
+                if len(item.my_animationtraitlist) > 1:
                     animrows = 4
                 
                 row = layout.row()
-                row.template_list("MY_UL_AnimationTraitList", "The_List", obj, "my_animationtraitlist", obj, "animationtraitlist_index", rows=animrows)
+                row.template_list("MY_UL_AnimationTraitList", "The_List", item, "my_animationtraitlist", item, "animationtraitlist_index", rows=animrows)
 
                 col = row.column(align=True)
                 col.operator("my_animationtraitlist.new_item", icon='ZOOMIN', text="")
                 col.operator("my_animationtraitlist.delete_item", icon='ZOOMOUT', text="")
 
-                if len(obj.my_animationtraitlist) > 1:
+                if len(item.my_animationtraitlist) > 1:
                     col.separator()
                     col.operator("my_animationtraitlist.move_item", icon='TRIA_UP', text="").direction = 'UP'
                     col.operator("my_animationtraitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
 
-                if obj.animationtraitlist_index >= 0 and len(obj.my_animationtraitlist) > 0:
-                    item = obj.my_animationtraitlist[obj.animationtraitlist_index]         
+                if item.animationtraitlist_index >= 0 and len(item.my_animationtraitlist) > 0:
+                    item = item.my_animationtraitlist[item.animationtraitlist_index]         
                     
                     row = layout.row()
                     row.prop(item, "start_prop")

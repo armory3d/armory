@@ -114,7 +114,7 @@ def make_texture(self, id, image_node, material):
 		if image.source == 'MOVIE': # Just append movie texture trait for now
 			movie_trait = Object()
 			movie_trait.type = 'Script'
-			movie_trait.class_name = 'MovieTexture'
+			movie_trait.class_name = 'armory.trait.internal.MovieTexture'
 			movie_trait.parameters = [tex.name]
 			for o in self.materialToGameObjectDict[material]:
 				o.traits.append(movie_trait)

@@ -9,8 +9,7 @@
 precision mediump float;
 #endif
 
-const float PI = 3.1415926535;
-const float TwoPI = (2.0 * PI);
+#include "../compiled.glsl"
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
@@ -57,7 +56,7 @@ const mat2 octave_m = mat2(1.6,1.2,-1.2,1.6);
 vec2 envMapEquirect(vec3 normal) {
 	float phi = acos(normal.z);
 	float theta = atan(-normal.y, normal.x) + PI;
-	return vec2(theta / TwoPI, phi / PI);
+	return vec2(theta / PI2, phi / PI);
 }
 
 float hash( vec2 p ) {
@@ -264,10 +263,8 @@ vec3 getSeaColor(vec3 p, vec3 n, vec3 l, vec3 eye, vec3 dist) {
 
 vec3 getPos(float depth) {	
     vec3 vray = normalize(viewRay);
-	const float znear = 0.1;
-	const float zfar = 1000.0;
-	const float projectionA = zfar / (zfar - znear);
-	const float projectionB = (-zfar * znear) / (zfar - znear);
+	const float projectionA = cameraPlane.y / (cameraPlane.y - cameraPlane.x);
+	const float projectionB = (-cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
 	float linearDepth = projectionB / (depth * 0.5 + 0.5 - projectionA);
 	float viewZDist = dot(eyeLook, vray);
 	vec3 wposition = eye + vray * (linearDepth / viewZDist);
@@ -288,7 +285,7 @@ vec2 octahedronWrap(vec2 v) {
 // }
 
 vec3 caustic(vec2 uv) {
-    vec2 p = mod(uv*TwoPI, TwoPI)-250.0;
+    vec2 p = mod(uv*PI2, PI2)-250.0;
     float loctime = time * .5+23.0;
 
 	vec2 i = vec2(p);
@@ -323,7 +320,7 @@ vec3 caustic(vec2 uv) {
 }
 float causticX(float x, float power, float gtime)
 {
-    float p = mod(x*TwoPI, TwoPI)-250.0;
+    float p = mod(x*PI2, PI2)-250.0;
     float time = gtime * .5+23.0;
 
 	float i = p;

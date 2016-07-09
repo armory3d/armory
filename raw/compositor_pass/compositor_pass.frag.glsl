@@ -21,6 +21,8 @@ uniform vec3 light;
 uniform mat4 VP;
 #endif
 
+// uniform vec2 cameraPlane;
+
 // #ifdef _Grain
 // uniform float time;
 // #endif
@@ -189,9 +191,9 @@ vec4 sampleBox(float size) {
 	return color;
 }
 
-float linearize(float depth, float znear, float zfar) {
-	return -zfar * znear / (depth * (zfar - znear) - zfar);
-}
+// float linearize(float depth) {
+	// return -cameraPlane.y * cameraPlane.x / (depth * (cameraPlane.y - cameraPlane.x) - cameraPlane.y);
+// }
 
 // Based on lense flare implementation by musk
 // https://www.shadertoy.com/view/4sX3Rs 
@@ -302,7 +304,7 @@ void main() {
 	
 	// float lightDistance = distance(eye, light);
 	// vec2 lss = lndc.xy * 0.5 + 0.5;
-	// float lssdepth = linearize(texture(gbuffer0, lss).a, 0.1, 1000.0);
+	// float lssdepth = linearize(texture(gbuffer0, lss).a);
 	
 	// if (lssdepth >= lightDistance) {
 	// 	vec2 lensuv = (texCoord - 0.5) * 2.0;

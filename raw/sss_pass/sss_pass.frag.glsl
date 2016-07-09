@@ -41,6 +41,8 @@
 precision mediump float;
 #endif
 
+#include "../compiled.glsl"
+
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D tex;
@@ -78,10 +80,8 @@ vec4 SSSSBlur(float sssWidth) {
 	// vec4 g0 = texture(gbuffer0, texCoord);
 	// float depth = 1.0 - g0.a;
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	const float znear = 0.1;
-	const float zfar = 1000.0;
-	const float projectionA = zfar / (zfar - znear);
-	const float projectionB = (-zfar * znear) / (zfar - znear);
+	const float projectionA = cameraPlane.y / (cameraPlane.y - cameraPlane.x);
+	const float projectionB = (-cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
 	float depthM = projectionB / (depth * 0.5 + 0.5 - projectionA);
 
     // Calculate the sssWidth scale (1.0 for a unit plane sitting on the projection window)
