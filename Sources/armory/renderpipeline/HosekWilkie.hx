@@ -20,6 +20,7 @@ class HosekWilkieRadianceData {
 	public var H = new FastVector3();
 	public var I = new FastVector3();
 	public var Z = new FastVector3();
+    // public var floats:haxe.ds.Vector<Float>;
 
     function evaluateSpline(spline:Array<Float>, index:Int, stride:Int, value:Float):Float {
         return
@@ -104,6 +105,9 @@ class HosekWilkieRadianceData {
             Z.z /= dotS;
             Z.mult(normalizedSunY);
 	    }
+
+        // Store in a single float array for shader access
+        // floats = new haxe.ds.Vector([]);
     }
 }
 
@@ -126,6 +130,11 @@ class HosekWilkie {
         var albedo = probe.resource.ground_albedo;
 		HosekWilkie.recompute(sunPositionX, turbidity, albedo, 1.15);
 	}
+
+    // public static function getData(world:WorldResource):haxe.ds.Vector<Float> {
+        // if (HosekWilkie.data == null) HosekWilkie.init(world);
+        // return HosekWilkie.data.floats;
+    // }
 
 	public static function run(path:RenderPath) {
 		// Set uniforms

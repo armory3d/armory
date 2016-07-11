@@ -977,6 +977,9 @@ def make_draw_world(stage, node_group, node, shader_references, asset_references
     stage.command = 'draw_material_quad'
     wname = bpy.data.worlds[0].name
     stage.params.append(wname + '_material/' + wname + '_material/env_map') # Only one world for now
+    # Link assets
+    if '_EnvClouds' in bpy.data.worlds[0].world_defs:
+        buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise256.png')
 
 def make_draw_compositor(stage, node_group, node, shader_references, asset_references):
     scon = 'compositor_pass'

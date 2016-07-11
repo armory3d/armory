@@ -79,6 +79,21 @@
 					"id": "Z",
 					"link": "_hosekZ",
 					"ifdef": ["_EnvSky"]
+				},
+				{
+					"id": "time",
+					"link": "_time",
+					"ifdef": ["_EnvClouds"]
+				},
+				{
+					"id": "snoise",
+					"link": "_noise256",
+					"ifdef": ["_EnvClouds"]
+				},
+				{
+					"id": "eye",
+					"link": "_cameraPosition",
+					"ifdef": ["_EnvClouds"]
 				}
 			],
 			"texture_params": [],

@@ -35,6 +35,7 @@ def init_armory_props():
         wrd.CGPhysics = 'Bullet'
         wrd.CGKhafileConfig = ''
         wrd.CGMinimize = True
+        wrd.CGOptimizeGeometry = False
         wrd.CGCacheShaders = True
         wrd.CGPlayViewportCamera = False
         wrd.CGPlayConsole = False
@@ -100,6 +101,7 @@ class ArmoryBuildPanel(bpy.types.Panel):
         row.operator("arm.clean")
         layout.prop_search(wrd, "CGKhafileConfig", bpy.data, "texts", "Config")
         layout.prop(wrd, 'CGMinimize')
+        layout.prop(wrd, 'CGOptimizeGeometry')
         layout.prop(wrd, 'CGCacheShaders')
         layout.label('Armory v' + wrd.CGVersion)
 
@@ -334,7 +336,7 @@ def on_compiled():
     electron_path = sdk_path + 'KodeStudio/KodeStudio.app/Contents/MacOS/Electron'
     electron_app_path = './build/electron.js'
 
-    play_project.playproc = subprocess.Popen([electron_path, electron_app_path])
+    play_project.playproc = subprocess.Popen([electron_path, '-chromedebug', electron_app_path])
     watch_play()
 play_project.playproc = None
 play_project.compileproc = None
@@ -371,9 +373,15 @@ class ArmoryPlayButton(bpy.types.Operator):
 
 class ArmoryPlayInFrameButton(bpy.types.Operator):
     bl_idname = 'arm.play_in_frame'
-    bl_label = 'Play'
+    bl_label = 'Play in Frame'
  
     def execute(self, context):
+        # Cancel viewport render
+        for space in context.area.spaces:
+            if space.type == 'VIEW_3D':
+                if space.viewport_shade == 'RENDERED':
+                    space.viewport_shade = 'SOLID'
+                break
         play_project(self, True)
         return{'FINISHED'}
 
@@ -411,9 +419,21 @@ class ArmoryCleanButton(bpy.types.Operator):
         return{'FINISHED'}
 
 # Registration
+addon_kmaps = []
 def register():
     bpy.utils.register_module(__name__)
     init_armory_props()
 
+    wm = bpy.context.window_manager
+    km = wm.keyconfigs.addon.keymaps.new(name='Object Mode', space_type='VIEW_3D')
+    km.keymap_items.new(ArmoryPlayInFrameButton.bl_idname, 'P', 'PRESS', ctrl=True, shift=False)
+    km.keymap_items.new(ArmoryPlayButton.bl_idname, 'P', 'PRESS', ctrl=True, shift=True)
+    addon_kmaps.append(km)
+
 def unregister():
     bpy.utils.unregister_module(__name__)
+
+    wm = bpy.context.window_manager
+    for km in addon_kmaps:
+        wm.keyconfigs.addon.kmaps.remove(km)
+    del addon_kmaps[:]

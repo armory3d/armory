@@ -34,9 +34,10 @@ def initProperties():
         name = "Physics", default='Bullet')
     bpy.types.World.CGKhafileConfig = StringProperty(name = "Config")
     bpy.types.World.CGMinimize = BoolProperty(name="Minimize Data", default=True)
+    bpy.types.World.CGOptimizeGeometry = BoolProperty(name="Optimize Geometry", default=False)
     bpy.types.World.CGCacheShaders = BoolProperty(name="Cache Shaders", default=True)
     bpy.types.World.CGPlayViewportCamera = BoolProperty(name="Viewport Camera", default=False)
-    bpy.types.World.CGPlayConsole = BoolProperty(name="Console", default=False)
+    bpy.types.World.CGPlayConsole = BoolProperty(name="Debug Console", default=False)
     bpy.types.World.CGPlayDeveloperTools = BoolProperty(name="Developer Tools", default=False)
 
     # For object
@@ -74,6 +75,15 @@ def initProperties():
     bpy.types.Camera.last_decal_context = bpy.props.StringProperty(name="Decal Context", default='')
     bpy.types.World.world_defs = bpy.props.StringProperty(name="World Shader Defs", default='')
     bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Generate Radiance", default=True)
+    bpy.types.World.generate_clouds = bpy.props.BoolProperty(name="Generate Clouds", default=False)
+    bpy.types.World.generate_clouds_density = bpy.props.FloatProperty(name="Density", default=0.2, min=0.0, max=10.0)
+    bpy.types.World.generate_clouds_size = bpy.props.FloatProperty(name="Size", default=1.0, min=0.0, max=10.0)
+    bpy.types.World.generate_clouds_lower = bpy.props.FloatProperty(name="Lower", default=2.0, min=1.0, max=10.0)
+    bpy.types.World.generate_clouds_upper = bpy.props.FloatProperty(name="Upper", default=3.5, min=1.0, max=10.0)
+    bpy.types.World.generate_clouds_wind = bpy.props.FloatVectorProperty(name="Wind", default=[0.2, 0.06], size=2)
+    bpy.types.World.generate_clouds_secondary = bpy.props.FloatProperty(name="Secondary", default=0.0, min=0.0, max=10.0)
+    bpy.types.World.generate_clouds_precipitation = bpy.props.FloatProperty(name="Precipitation", default=1.0, min=0.0, max=2.0)
+    bpy.types.World.generate_clouds_eccentricity = bpy.props.FloatProperty(name="Eccentricity", default=0.6, min=0.0, max=1.0)
     bpy.types.World.shadowmap_size = bpy.props.IntProperty(name="Shadowmap Size", default=0)
     bpy.types.World.scripts_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.bundled_scripts_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
@@ -188,6 +198,16 @@ class WorldPropsPanel(bpy.types.Panel):
         layout = self.layout
         wrd = bpy.context.world
         layout.prop(wrd, 'generate_radiance')
+        layout.prop(wrd, 'generate_clouds')
+        if wrd.generate_clouds:
+            layout.prop(wrd, 'generate_clouds_density')
+            layout.prop(wrd, 'generate_clouds_size')
+            layout.prop(wrd, 'generate_clouds_lower')
+            layout.prop(wrd, 'generate_clouds_upper')
+            layout.prop(wrd, 'generate_clouds_wind')
+            layout.prop(wrd, 'generate_clouds_secondary')
+            layout.prop(wrd, 'generate_clouds_precipitation')
+            layout.prop(wrd, 'generate_clouds_eccentricity')
 
 # Registration
 def register():

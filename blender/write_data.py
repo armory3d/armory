@@ -165,12 +165,24 @@ def write_indexhtml(w, h, in_frame):
 """)
 
 def write_compiledglsl(clip_start, clip_end, shadowmap_size):
+    wrd = bpy.data.worlds[0]
     with open('compiled/Shaders/compiled.glsl', 'w') as f:
         f.write(
 """const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;
 const vec2 cameraPlane = vec2(""" + str(int(clip_start * 100) / 100) + """, """ + str(int(clip_end * 100) / 100) + """);
 const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shadowmap_size) + """);
+""")
+        if wrd.generate_clouds:
+            f.write(
+"""const float cloudsDensity = """ + str(int(wrd.generate_clouds_density * 100) / 100) + """;
+const float cloudsSize = """ + str(int(wrd.generate_clouds_size * 100) / 100) + """;
+const float cloudsLower = """ + str(int(wrd.generate_clouds_lower * 1000)) + """;
+const float cloudsUpper = """ + str(int(wrd.generate_clouds_upper * 1000)) + """;
+const vec2 cloudsWind = vec2(""" + str(int(wrd.generate_clouds_wind[0] * 1000) / 1000) + """, """ + str(int(wrd.generate_clouds_wind[1] * 1000) / 1000) + """);
+const float cloudsSecondary = """ + str(int(wrd.generate_clouds_secondary * 100) / 100) + """;
+const float cloudsPrecipitation = """ + str(int(wrd.generate_clouds_precipitation * 100) / 100) + """;
+const float cloudsEccentricity = """ + str(int(wrd.generate_clouds_eccentricity * 100) / 100) + """;
 """)
 
 def write_traithx(class_name):

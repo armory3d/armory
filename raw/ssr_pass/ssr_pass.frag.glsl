@@ -194,6 +194,12 @@ void main() {
 	}
 	float reflectivity = 1.0 - roughness;
 	
+	float d = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+	if (d == 1.0) {
+		gl_FragColor = vec4(0.0);
+		return;
+	}
+	
 	vec4 g0 = texture(gbuffer0, texCoord);
 	vec2 enc = g0.rg;
     vec3 n;
@@ -209,9 +215,6 @@ void main() {
 		// discard; // Only up facing surfaces for now
 	// }
 	viewNormal = tiV * normalize(viewNormal);
-	
-	// float d = 1.0 - g0.a;
-	float d = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	vec3 viewPos = getPos(d);
 	
 	vec3 reflected = normalize(reflect((viewPos.xyz), normalize(viewNormal.xyz)));

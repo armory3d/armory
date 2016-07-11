@@ -180,7 +180,7 @@ def write_probes(image_name, disable_hdr, cached_num_mips, generate_radiance=Tru
 	mip_count += 5
 	return mip_count
 
-# Parse sh coefs into json array
+# Parse sh coefs produced by cmft into json array
 def sh_to_json(sh_file):
 	sh_lines = open(sh_file + '.c').read().splitlines()
 	band0_line = sh_lines[5]
@@ -209,6 +209,22 @@ def parse_band_floats(irradiance_floats, band_line):
 def write_sky_irradiance(base_name):
 	# Predefined fake spherical harmonics for now
 	irradiance_floats = [1.0281457342829743,1.1617608778901902,1.3886220898440544,-0.13044863139637752,-0.2794659158733846,-0.5736106907295643,0.04065421813873111,0.0434367391348577,0.03567450494792305,0.10964557605577738,0.1129839085793664,0.11261660812141877,-0.08271974283263238,-0.08068091195339556,-0.06432614970480094,-0.12517787967665814,-0.11638582546310804,-0.09743696224655113,0.20068697715947176,0.2158788783296805,0.2109374396869599,0.19636637427150455,0.19445523113118082,0.17825330699680575,0.31440860839538637,0.33041120060402407,0.30867788630062676]
+	
+	if not os.path.exists('Assets/generated/envmaps'):
+		os.makedirs('Assets/generated/envmaps')
+	
+	output_file = 'Assets/generated/envmaps/' + base_name + '_irradiance'
+	
+	with open(output_file + '.json', 'w') as f:
+		sh_json = Object()
+		sh_json.irradiance = irradiance_floats
+		f.write(sh_json.to_JSON())
+
+def write_color_irradiance(base_name, col):
+	# Constant color
+	irradiance_floats = [col[0], col[1], col[2]]
+	for i in range(0, 24):
+		irradiance_floats.append(0.0)
 	
 	if not os.path.exists('Assets/generated/envmaps'):
 		os.makedirs('Assets/generated/envmaps')

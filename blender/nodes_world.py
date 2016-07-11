@@ -71,6 +71,10 @@ def buildNodeTree(world_name, node_group, shader_references, asset_references):
 	world_defs = bpy.data.worlds[0].world_defs
 	if '_EnvSky' not in world_defs and '_EnvTex' not in world_defs:
 		world_defs += '_EnvCol'
+		# Irradiance json file name
+		base_name = bpy.data.worlds[0].name
+		bpy.data.cameras[0].world_envtex_name = base_name
+		write_probes.write_color_irradiance(base_name, bpy.data.cameras[0].world_envtex_color)
 
 	# Enable probes
 	for cam in bpy.data.cameras:
@@ -117,7 +121,7 @@ def parse_color(node_group, node, context):
 		texture = Object()
 		context.bind_textures.append(texture)
 		texture.id = 'envmap'
-		image_name =  node.image.name # With extension
+		image_name = node.image.name # With extension
 		texture.name = image_name.rsplit('.', 1)[0] # Remove extension	
 		# Generate prefiltered envmaps
 		generate_radiance = bpy.data.worlds[0].generate_radiance
@@ -140,10 +144,13 @@ def parse_color(node_group, node, context):
 	# Append sky define
 	elif node.type == 'TEX_SKY':
 		bpy.data.worlds[0].world_defs += '_EnvSky'
+		# Clouds enabled
+		if bpy.data.worlds[0].generate_clouds:
+			bpy.data.worlds[0].world_defs += '_EnvClouds'
 		# Append sky properties to material
 		const = Object()
 		const.id = 'sunDirection'
-		sun_direction = node.sun_direction
+		sun_direction = [node.sun_direction[0], node.sun_direction[1], node.sun_direction[2]]
 		sun_direction[1] *= -1 # Fix Y orientation
 		const.vec3 = list(sun_direction)
 		context.bind_constants.append(const)

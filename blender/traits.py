@@ -174,7 +174,7 @@ class ArmoryEditScriptButton(bpy.types.Operator):
         project_path = utils.get_fp()
         item = context.object.my_traitlist[context.object.traitlist_index] 
         hx_path = project_path + '/Sources/' + bpy.data.worlds[0].CGProjectPackage + '/' + item.class_name_prop + '.hx'
-        subprocess.call([kode_path + ' -cmd ' + utils.get_fp() + ' ' + hx_path + ' &'], shell=True)
+        subprocess.call([kode_path + ' ' + utils.get_fp() + ' ' + hx_path + ' &'], shell=True)
         return{'FINISHED'}
 
 class ArmoryNewScriptDialog(bpy.types.Operator):
@@ -267,7 +267,7 @@ class ToolsTraitsPanel(bpy.types.Panel):
                     col.operator("my_paramstraitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
 
                 if item.paramstraitlist_index >= 0 and len(item.my_paramstraitlist) > 0:
-                    item = item.my_paramstraitlist[item.paramstraitlist_index]         
+                    paramitem = item.my_paramstraitlist[item.paramstraitlist_index]         
 
                 if item.type_prop == 'Script':
                     row = layout.row()
@@ -315,11 +315,11 @@ class ToolsTraitsPanel(bpy.types.Panel):
                     col.operator("my_animationtraitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
 
                 if item.animationtraitlist_index >= 0 and len(item.my_animationtraitlist) > 0:
-                    item = item.my_animationtraitlist[item.animationtraitlist_index]         
+                    animitem = item.my_animationtraitlist[item.animationtraitlist_index]         
                     
                     row = layout.row()
-                    row.prop(item, "start_prop")
-                    row.prop(item, "end_prop")
+                    row.prop(animitem, "start_prop")
+                    row.prop(animitem, "end_prop")
 
 # Registration
 def register():

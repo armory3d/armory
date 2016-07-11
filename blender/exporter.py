@@ -1160,6 +1160,15 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		pref.particle = self.particleSystemArray[psys.settings]["structName"]
 		o.particle_refs.append(pref)
 
+	def get_viewport_matrix(self):
+		screen = bpy.context.window.screen
+		for area in screen.areas:
+			if area.type == 'VIEW_3D':
+				for space in area.spaces:
+					if space.type == 'VIEW_3D':
+						return space.region_3d.view_matrix
+		return None
+
 	def ExportNode(self, node, scene, poseBone = None, parento = None):
 		# This function exports a single node in the scene and includes its name,
 		# object reference, material references (for geometries), and transform.
@@ -1239,6 +1248,12 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 			# Export the transform. If the node is animated, then animation tracks are exported here.
 			self.ExportNodeTransform(node, scene, o)
+
+			# Viewport Camera - overwrite active camera matrix with viewport matrix
+			if type == kNodeTypeCamera and bpy.data.worlds[0].CGPlayViewportCamera:
+				viewport_matrix = self.get_viewport_matrix()
+				if viewport_matrix != None:
+					o.transform.values = self.WriteMatrix(viewport_matrix.inverted())
 
 			if (node.type == "ARMATURE"):
 				skeleton = node.data
@@ -2303,7 +2318,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		defs = bpy.data.worlds[0].world_defs
 		if '_EnvTex' in defs: # Radiance only for texture
 			world_generate_radiance = bpy.data.worlds[0].generate_radiance
-		generate_irradiance = '_EnvTex' in defs or '_EnvSky' in defs
+		generate_irradiance = True #'_EnvTex' in defs or '_EnvSky' in defs or '_EnvCon' in defs
 		envtex = bpy.data.cameras[0].world_envtex_name.rsplit('.', 1)[0]
 		num_mips = bpy.data.cameras[0].world_envtex_num_mips
 		strength = bpy.data.cameras[0].world_envtex_strength
