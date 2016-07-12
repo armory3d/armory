@@ -58,7 +58,7 @@ def init_armory_props():
 # Play button in 3D View panel
 def draw_play_item(self, context):
     layout = self.layout
-    if play_project.playproc == None:
+    if play_project.playproc == None and play_project.compileproc == None:
         layout.operator("arm.play_in_frame")
     else:
         layout.operator("arm.stop")
@@ -152,8 +152,10 @@ def export_game_data(fp, sdk_path):
     # Build node trees
     # TODO: cache
     nodes_logic.buildNodeTrees()
-    nodes_world.buildNodeTrees(shader_references, asset_references) # TODO: Have to build nodes everytime to collect env map resources
+    world_outputs = nodes_world.buildNodeTrees()
     linked_assets = nodes_pipeline.buildNodeTrees(shader_references, asset_references, assets_path)
+    for wout in world_outputs:
+        nodes_world.write_output(wout, asset_references, shader_references)
 
     # TODO: Set armatures to center of world so skin transform is zero
     armatures = []
@@ -419,21 +421,20 @@ class ArmoryCleanButton(bpy.types.Operator):
         return{'FINISHED'}
 
 # Registration
-addon_kmaps = []
+arm_keymaps = []
 def register():
     bpy.utils.register_module(__name__)
     init_armory_props()
-
+    # Key shortcuts
     wm = bpy.context.window_manager
-    km = wm.keyconfigs.addon.keymaps.new(name='Object Mode', space_type='VIEW_3D')
-    km.keymap_items.new(ArmoryPlayInFrameButton.bl_idname, 'P', 'PRESS', ctrl=True, shift=False)
-    km.keymap_items.new(ArmoryPlayButton.bl_idname, 'P', 'PRESS', ctrl=True, shift=True)
-    addon_kmaps.append(km)
+    km = wm.keyconfigs.addon.keymaps.new(name='Window', space_type='EMPTY', region_type="WINDOW")
+    km.keymap_items.new(ArmoryPlayInFrameButton.bl_idname, type='B', value='PRESS', ctrl=True, shift=True)
+    km.keymap_items.new(ArmoryPlayButton.bl_idname, type='F5', value='PRESS')
+    arm_keymaps.append(km)
 
 def unregister():
     bpy.utils.unregister_module(__name__)
-
     wm = bpy.context.window_manager
-    for km in addon_kmaps:
+    for km in arm_keymaps:
         wm.keyconfigs.addon.kmaps.remove(km)
-    del addon_kmaps[:]
+    del arm_keymaps[:]

@@ -326,6 +326,8 @@ class BeginNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketString', "Geometry")
         self.inputs.new('NodeSocketString', "Shadows")
         self.inputs.new('NodeSocketString', "Translucent")
+        self.inputs.new('NodeSocketBool', "HDR Space")
+        self.inputs[4].default_value = True
         self.outputs.new('NodeSocketShader', "Stage")
 
     def copy(self, node):
@@ -632,6 +634,25 @@ class DrawCompositorNode(Node, CGPipelineTreeNode):
     def free(self):
         print("Removing node ", self, ", Goodbye!")
 
+class DrawCompositorWithFXAANode(Node, CGPipelineTreeNode):
+    '''A custom node'''
+    bl_idname = 'DrawCompositorWithFXAANodeType'
+    bl_label = 'Draw Compositor + FXAA'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "Color")
+        self.inputs.new('NodeSocketShader', "GBuffer")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
+    def copy(self, node):
+        print("Copying from node ", node)
+
+    def free(self):
+        print("Removing node ", self, ", Goodbye!")
 
 # Constant nodes
 class ScreenNode(Node, CGPipelineTreeNode):
@@ -727,6 +748,7 @@ node_categories = [
         NodeItem("DrawQuadNodeType"),
         NodeItem("DrawWorldNodeType"),
         NodeItem("DrawCompositorNodeType"),
+        NodeItem("DrawCompositorWithFXAANodeType"),
     ]),
     MyTargetNodeCategory("TARGETNODES", "Target", items=[
         NodeItem("TargetNodeType"),
@@ -981,10 +1003,12 @@ def make_draw_world(stage, node_group, node, shader_references, asset_references
     if '_EnvClouds' in bpy.data.worlds[0].world_defs:
         buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise256.png')
 
-def make_draw_compositor(stage, node_group, node, shader_references, asset_references):
+def make_draw_compositor(stage, node_group, node, shader_references, asset_references, with_fxaa=False):
     scon = 'compositor_pass'
     world_defs = bpy.data.worlds[0].world_defs
     compositor_defs = nodes_compositor.parse_defs(bpy.data.scenes[0].node_tree) # Thrown in scene 0 for now
+    if with_fxaa: # FXAA directly in compositor, useful for forward path
+        compositor_defs += '_CompFXAA'
     defs = world_defs + compositor_defs
     res_name = scon + defs
     
@@ -1176,7 +1200,7 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
         stage.params = []
         make_draw_world(stage, node_group, node, shader_references, asset_references)
     
-    elif node.bl_idname == 'DrawCompositorNodeType':
+    elif node.bl_idname == 'DrawCompositorNodeType' or node.bl_idname == 'DrawCompositorWithFXAANodeType':
         # Set target
         if node.inputs[1].is_linked:
             make_set_target(stage, node_group, node)
@@ -1194,7 +1218,8 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
         # Draw quad
         stage = Object()
         stage.params = []
-        make_draw_compositor(stage, node_group, node, shader_references, asset_references)
+        with_fxaa = node.bl_idname == 'DrawCompositorWithFXAANodeType'
+        make_draw_compositor(stage, node_group, node, shader_references, asset_references, with_fxaa=with_fxaa)
     
     elif node.bl_idname == 'BranchFunctionNodeType':
         make_branch_function(stage, node_group, node)
@@ -1296,6 +1321,8 @@ def getRootNode(node_group):
             bpy.data.cameras[0].geometry_context = n.inputs[1].default_value
             bpy.data.cameras[0].shadows_context = n.inputs[2].default_value
             bpy.data.cameras[0].translucent_context = n.inputs[3].default_value
+            if n.inputs[4].default_value == False: # No HDR space lighting, append def
+                bpy.data.worlds[0].world_defs += '_LDR'
             return findNodeByLinkFrom(node_group, n, n.outputs[0])
 
 def get_render_targets(root_node, node_group):
@@ -1306,7 +1333,7 @@ def get_render_targets(root_node, node_group):
     
 def traverse_for_rt(node, node_group, render_targets, depth_buffers):
     # Collect render targets
-    if node.bl_idname == 'SetTargetNodeType' or node.bl_idname == 'QuadPassNodeType':
+    if node.bl_idname == 'SetTargetNodeType' or node.bl_idname == 'QuadPassNodeType' or node.bl_idname == 'DrawCompositorNodeType' or node.bl_idname == 'DrawCompositorWithFXAANodeType':
         if node.inputs[1].is_linked:
             tnode = findNodeByLink(node_group, node, node.inputs[1])
             parse_render_target(tnode, node_group, render_targets, depth_buffers)

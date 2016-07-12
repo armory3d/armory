@@ -819,7 +819,7 @@ void main() {
 	#endif
 #endif
 
-#ifdef _LDR
+#ifdef _EnvLDR
 		indirectDiffuse = pow(indirectDiffuse, vec3(2.2));
 	#ifdef _Rad
 		prefilteredColor = pow(prefilteredColor, vec3(2.2));

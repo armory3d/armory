@@ -31,7 +31,7 @@ def get_output_node(tree):
 		if n.type == 'OUTPUT_WORLD':
 			return n
 
-def buildNodeTrees(shader_references, asset_references):
+def buildNodeTrees():
 	s = bpy.data.filepath.split(os.path.sep)
 	s.pop()
 	fp = os.path.sep.join(s)
@@ -42,18 +42,17 @@ def buildNodeTrees(shader_references, asset_references):
 		os.makedirs('Assets/generated/materials')
 	
 	# Export world nodes
+	world_outputs = []
 	for world in bpy.data.worlds:
-		buildNodeTree(world.name, world.node_tree, shader_references, asset_references)
+		output = buildNodeTree(world.name, world.node_tree)
+		world_outputs.append(output)
+	return world_outputs
 
-def buildNodeTree(world_name, node_group, shader_references, asset_references):
+def buildNodeTree(world_name, node_group):
 	output = Object()
 	res = Object()
 	output.material_resources = [res]
-	
-	path = 'Assets/generated/materials/'
-	material_name = world_name.replace('.', '_') + '_material'
-	
-	res.id = material_name
+	res.id = world_name.replace('.', '_') + '_material'
 	context = Object()
 	res.contexts = [context]
 	context.id = 'env_map'
@@ -70,7 +69,7 @@ def buildNodeTree(world_name, node_group, shader_references, asset_references):
 	# Clear to color if no texture or sky is provided
 	world_defs = bpy.data.worlds[0].world_defs
 	if '_EnvSky' not in world_defs and '_EnvTex' not in world_defs:
-		world_defs += '_EnvCol'
+		bpy.data.worlds[0].world_defs += '_EnvCol'
 		# Irradiance json file name
 		base_name = bpy.data.worlds[0].name
 		bpy.data.cameras[0].world_envtex_name = base_name
@@ -81,17 +80,23 @@ def buildNodeTree(world_name, node_group, shader_references, asset_references):
 		if cam.is_probe:
 			bpy.data.worlds[0].world_defs += '_Probes'
 
+	# Data will be written after pipeline has been processed to gather all defines
+	return output
+
+def write_output(output, asset_references, shader_references):
 	# Add resources to khafie
 	dir_name = 'env_map'
 	# Append world defs
-	res_name = 'env_map' + world_defs
+	res_name = 'env_map' + bpy.data.worlds[0].world_defs
 	# Reference correct shader context
+	res = output.material_resources[0]
 	res.shader = res_name + '/' + res_name
 	asset_references.append('compiled/ShaderResources/' + dir_name + '/' + res_name + '.json')
 	shader_references.append('compiled/Shaders/' + dir_name + '/' + res_name)
 
 	# Write material json
-	with open(path + material_name + '.json', 'w') as f:
+	path = 'Assets/generated/materials/'
+	with open(path + res.id + '.json', 'w') as f:
 		f.write(output.to_JSON())
 
 def parse_world_output(node_group, node, context):
@@ -136,7 +141,7 @@ def parse_color(node_group, node, context):
 		bpy.data.worlds[0].world_defs += '_EnvTex'
 		# Append LDR define
 		if disable_hdr:
-			bpy.data.worlds[0].world_defs += '_LDR'
+			bpy.data.worlds[0].world_defs += '_EnvLDR'
 		# Append radiance degine
 		if generate_radiance:
 			bpy.data.worlds[0].world_defs += '_Rad'

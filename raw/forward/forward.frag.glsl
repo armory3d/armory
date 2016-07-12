@@ -677,7 +677,7 @@ void main() {
 	
 	// Indirect
 	vec3 indirectDiffuse = shIrradiance(n, 2.2) / PI;	
-#ifdef _LDR
+#ifdef _EnvLDR
 	indirectDiffuse = pow(indirectDiffuse, vec3(2.2));
 #endif
 	indirectDiffuse *= albedo;
@@ -687,7 +687,7 @@ void main() {
 	vec3 reflectionWorld = reflect(-v, n); 
 	float lod = getMipLevelFromRoughness(roughness);// + 1.0;
 	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
-	#ifdef _LDR
+	#ifdef _EnvLDR
 		prefilteredColor = pow(prefilteredColor, vec3(2.2));
 	#endif
 	vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;
@@ -708,5 +708,9 @@ void main() {
 	// LTC
 	// outColor.rgb = ltccol * 10.0 * visibility + indirect / 14.0;
 
-	gl_FragColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
+#ifdef _LDR
+    gl_FragColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
+#else
+    gl_FragColor = vec4(outColor.rgb, outColor.a);
+#endif
 }

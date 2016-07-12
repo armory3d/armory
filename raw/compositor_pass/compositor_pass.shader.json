@@ -38,13 +38,14 @@
 					"ifdef": ["_LensFlare"]
 				},
 				{
-					"id": "noise256",
-					"link": "_noise256"
-				},
-				{
 					"id": "time",
 					"link": "_time",
 					"ifdef": ["_Grain"]
+				},
+				{
+					"id": "texStep",
+					"link": "_screenSizeInv",
+					"ifdef": ["_CompFXAA"]
 				}
 			],
 			"texture_params": [],

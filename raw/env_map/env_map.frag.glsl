@@ -198,7 +198,9 @@ void main() {
 	float gamma_val = acos(cos_gamma);
 
 	vec3 R = Z * hosekWilkie(cos_theta, gamma_val, cos_gamma) * envmapStrength;
+#ifndef LDR
 	R = pow(R, vec3(2.2));
+#endif
 
 #ifdef _EnvClouds
 	if (n.z > 0.0) R = mix(R, cloudsColor(R, eye, n), n.z * 5.0);

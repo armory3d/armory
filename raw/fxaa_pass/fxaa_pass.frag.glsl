@@ -4,17 +4,16 @@
 precision mediump float;
 #endif
 
-const float FXAA_REDUCE_MIN = 1.0 / 128.0;
-const float FXAA_REDUCE_MUL = 1.0 / 8.0;
-const float FXAA_SPAN_MAX = 8.0;
-
 uniform sampler2D tex;
-
 uniform vec2 texStep; // screenSizeInv
 
 in vec2 texCoord;
 
-void main() {	
+void main() {
+    const float FXAA_REDUCE_MIN = 1.0 / 128.0;
+    const float FXAA_REDUCE_MUL = 1.0 / 8.0;
+    const float FXAA_SPAN_MAX = 8.0;
+    
 	vec2 tcrgbNW = (texCoord + vec2(-1.0, -1.0) * texStep);
 	vec2 tcrgbNE = (texCoord + vec2(1.0, -1.0) * texStep);
 	vec2 tcrgbSW = (texCoord + vec2(-1.0, 1.0) * texStep);
@@ -56,8 +55,6 @@ void main() {
         texture(tex, texCoord + dir * 0.5).rgb);
 		
 	float lumaB = dot(rgbB, luma);
-    if ((lumaB < lumaMin) || (lumaB > lumaMax))
-        gl_FragColor = vec4(rgbA, texColor.a);
-    else
-        gl_FragColor = vec4(rgbB, texColor.a);
+    if ((lumaB < lumaMin) || (lumaB > lumaMax)) gl_FragColor = vec4(rgbA, texColor.a);
+    else gl_FragColor = vec4(rgbB, texColor.a);
 }
