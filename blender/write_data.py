@@ -124,7 +124,7 @@ function createWindow () { """)
 """)
         f.write(
 """
-    //mainWindow.loadURL('file://' + __dirname + '/build/html5/index.html');
+    //mainWindow.loadURL('file://' + __dirname + '/html5/index.html');
     mainWindow.loadURL('http://localhost:8040/build/html5/index.html');
     mainWindow.on('closed', function() { mainWindow = null; });""")
 
@@ -170,19 +170,39 @@ def write_compiledglsl(clip_start, clip_end, shadowmap_size):
         f.write(
 """const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;
-const vec2 cameraPlane = vec2(""" + str(int(clip_start * 100) / 100) + """, """ + str(int(clip_end * 100) / 100) + """);
+const vec2 cameraPlane = vec2(""" + str(round(clip_start * 100) / 100) + """, """ + str(round(clip_end * 100) / 100) + """);
 const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shadowmap_size) + """);
 """)
         if wrd.generate_clouds:
             f.write(
-"""const float cloudsDensity = """ + str(int(wrd.generate_clouds_density * 100) / 100) + """;
-const float cloudsSize = """ + str(int(wrd.generate_clouds_size * 100) / 100) + """;
-const float cloudsLower = """ + str(int(wrd.generate_clouds_lower * 1000)) + """;
-const float cloudsUpper = """ + str(int(wrd.generate_clouds_upper * 1000)) + """;
-const vec2 cloudsWind = vec2(""" + str(int(wrd.generate_clouds_wind[0] * 1000) / 1000) + """, """ + str(int(wrd.generate_clouds_wind[1] * 1000) / 1000) + """);
-const float cloudsSecondary = """ + str(int(wrd.generate_clouds_secondary * 100) / 100) + """;
-const float cloudsPrecipitation = """ + str(int(wrd.generate_clouds_precipitation * 100) / 100) + """;
-const float cloudsEccentricity = """ + str(int(wrd.generate_clouds_eccentricity * 100) / 100) + """;
+"""const float cloudsDensity = """ + str(round(wrd.generate_clouds_density * 100) / 100) + """;
+const float cloudsSize = """ + str(round(wrd.generate_clouds_size * 100) / 100) + """;
+const float cloudsLower = """ + str(round(wrd.generate_clouds_lower * 1000)) + """;
+const float cloudsUpper = """ + str(round(wrd.generate_clouds_upper * 1000)) + """;
+const vec2 cloudsWind = vec2(""" + str(round(wrd.generate_clouds_wind[0] * 1000) / 1000) + """, """ + str(round(wrd.generate_clouds_wind[1] * 1000) / 1000) + """);
+const float cloudsSecondary = """ + str(round(wrd.generate_clouds_secondary * 100) / 100) + """;
+const float cloudsPrecipitation = """ + str(round(wrd.generate_clouds_precipitation * 100) / 100) + """;
+const float cloudsEccentricity = """ + str(round(wrd.generate_clouds_eccentricity * 100) / 100) + """;
+""")
+        if wrd.generate_ocean:
+            f.write(
+"""const float seaLevel = """ + str(round(wrd.generate_ocean_level * 100) / 100) + """;
+const float seaMaxAmplitude = """ + str(round(wrd.generate_ocean_amplitude * 100) / 100) + """;
+const float seaHeight = """ + str(round(wrd.generate_ocean_height * 100) / 100) + """;
+const float seaChoppy = """ + str(round(wrd.generate_ocean_choppy * 100) / 100) + """;
+const float seaSpeed = """ + str(round(wrd.generate_ocean_speed * 100) / 100) + """;
+const float seaFreq = """ + str(round(wrd.generate_ocean_freq * 100) / 100) + """;
+const vec3 seaBaseColor = vec3(""" + str(round(wrd.generate_ocean_base_color[0] * 100) / 100) + """, """ + str(round(wrd.generate_ocean_base_color[1] * 100) / 100) + """, """ + str(round(wrd.generate_ocean_base_color[2] * 100) / 100) + """);
+const vec3 seaWaterColor = vec3(""" + str(round(wrd.generate_ocean_water_color[0] * 100) / 100) + """, """ + str(round(wrd.generate_ocean_water_color[1] * 100) / 100) + """, """ + str(round(wrd.generate_ocean_water_color[2] * 100) / 100) + """);
+""")
+        if wrd.generate_ssao:
+            f.write(
+"""const float ssaoSize = """ + str(round(wrd.generate_ssao_size * 100) / 100) + """;
+const float ssaoStrength = """ + str(round(wrd.generate_ssao_strength * 100) / 100) + """;
+""")
+        if wrd.generate_shadows:
+            f.write(
+"""const float shadowsBias = """ + str(wrd.generate_shadows_bias) + """;
 """)
 
 def write_traithx(class_name):

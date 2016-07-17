@@ -39,6 +39,10 @@ def initProperties():
     bpy.types.World.CGPlayViewportCamera = BoolProperty(name="Viewport Camera", default=False)
     bpy.types.World.CGPlayConsole = BoolProperty(name="Debug Console", default=False)
     bpy.types.World.CGPlayDeveloperTools = BoolProperty(name="Developer Tools", default=False)
+    bpy.types.World.CGPlayRuntime = EnumProperty(
+        items = [('Electron', 'Electron', 'Electron'), 
+                 ('Krom', 'Krom', 'Krom')],
+        name = "Runtime", default='Electron')
 
     # For object
     bpy.types.Object.geometry_cached = bpy.props.BoolProperty(name="Geometry Cached", default=False) # TODO: move to mesh type
@@ -87,6 +91,20 @@ def initProperties():
     bpy.types.World.shadowmap_size = bpy.props.IntProperty(name="Shadowmap Size", default=0)
     bpy.types.World.scripts_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.bundled_scripts_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
+    bpy.types.World.generate_ocean = bpy.props.BoolProperty(name="Generate Ocean", default=False)
+    bpy.types.World.generate_ocean_base_color = bpy.props.FloatVectorProperty(name="Base Color", size=3, default=[0.1, 0.19, 0.37], subtype='COLOR')
+    bpy.types.World.generate_ocean_water_color = bpy.props.FloatVectorProperty(name="Water Color", size=3, default=[0.6, 0.7, 0.9], subtype='COLOR')
+    bpy.types.World.generate_ocean_level = bpy.props.FloatProperty(name="Level", default=0.0)
+    bpy.types.World.generate_ocean_amplitude = bpy.props.FloatProperty(name="Amplitude", default=2.5)
+    bpy.types.World.generate_ocean_height = bpy.props.FloatProperty(name="Height", default=0.6)
+    bpy.types.World.generate_ocean_choppy = bpy.props.FloatProperty(name="Choppy", default=4.0)
+    bpy.types.World.generate_ocean_speed = bpy.props.FloatProperty(name="Speed", default=1.0)
+    bpy.types.World.generate_ocean_freq = bpy.props.FloatProperty(name="Freq", default=0.16)
+    bpy.types.World.generate_ssao = bpy.props.BoolProperty(name="Generate SSAO", default=True)
+    bpy.types.World.generate_ssao_size = bpy.props.FloatProperty(name="Size", default=0.12)
+    bpy.types.World.generate_ssao_strength = bpy.props.FloatProperty(name="Strength", default=0.55)
+    bpy.types.World.generate_shadows = bpy.props.BoolProperty(name="Generate Shadows", default=True)
+    bpy.types.World.generate_shadows_bias = bpy.props.FloatProperty(name="Bias", default=0.00005)
     # For material
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.custom_shader = bpy.props.BoolProperty(name="Custom Shader", default=False)
@@ -96,6 +114,9 @@ def initProperties():
     bpy.types.Material.skip_context = bpy.props.StringProperty(name="Skip Context", default='')
     # For scene
     bpy.types.Scene.game_export = bpy.props.BoolProperty(name="Game Export", default=True)
+    # For light
+    bpy.types.Lamp.light_clip_start = bpy.props.FloatProperty(name="Clip Start", default=0.1)
+    bpy.types.Lamp.light_clip_end = bpy.props.FloatProperty(name="Clip End", default=100.0)
 
 # Menu in object region
 class ObjectPropsPanel(bpy.types.Panel):
@@ -115,6 +136,22 @@ class ObjectPropsPanel(bpy.types.Panel):
             layout.prop(obj, 'custom_material')
             if obj.custom_material:
                 layout.prop(obj, 'custom_material_name')
+
+# Menu in modifiers region
+class ModifiersPropsPanel(bpy.types.Panel):
+    bl_label = "Armory Props"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "modifier"
+ 
+    def draw(self, context):
+        layout = self.layout
+        obj = bpy.context.object
+
+        # Assume as first modifier
+        if len(obj.modifiers) > 0 and obj.modifiers[0].type == 'OCEAN':
+            layout.prop(bpy.data.worlds[0], 'generate_ocean_base_color')
+            layout.prop(bpy.data.worlds[0], 'generate_ocean_water_color')
 
 # Menu in data region
 class DataPropsPanel(bpy.types.Panel):
@@ -141,6 +178,9 @@ class DataPropsPanel(bpy.types.Panel):
         elif obj.type == 'MESH':
             layout.prop(obj.data, 'static_usage')
             layout.operator("cg.invalidate_cache")
+        elif obj.type == 'LAMP':
+            layout.prop(obj.data, 'light_clip_start')
+            layout.prop(obj.data, 'light_clip_end')
 
 class ScenePropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -208,6 +248,13 @@ class WorldPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'generate_clouds_secondary')
             layout.prop(wrd, 'generate_clouds_precipitation')
             layout.prop(wrd, 'generate_clouds_eccentricity')
+        layout.prop(wrd, 'generate_ssao')
+        if wrd.generate_ssao:
+            layout.prop(wrd, 'generate_ssao_size')
+            layout.prop(wrd, 'generate_ssao_strength')
+        layout.prop(wrd, 'generate_shadows')
+        if wrd.generate_shadows:
+            layout.prop(wrd, 'generate_shadows_bias')
 
 # Registration
 def register():

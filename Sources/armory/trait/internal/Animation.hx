@@ -32,14 +32,14 @@ class Animation extends Trait {
     }
 
     function update() {
-        Eg.setAnimationParams(model, iron.sys.Time.delta);
+        Eg.setAnimationParams(model, iron.sys.Time.delta / 10);
     }
 
     public function play(trackName:String, loop = true, speed = 1.0, onTrackComplete:Void->Void = null) {
-        model.skinning.animation.play(trackName, loop, speed, onTrackComplete);
+        model.animation.player.play(trackName, loop, speed, onTrackComplete);
     }
 
     public function pause() {
-        model.skinning.animation.pause();
+        model.animation.player.pause();
     }
 }

@@ -40,6 +40,7 @@ def init_armory_props():
         wrd.CGPlayViewportCamera = False
         wrd.CGPlayConsole = False
         wrd.CGPlayDeveloperTools = False
+        wrd.CGPlayRuntime = 'Electron'
         # Switch to Cycles
         if bpy.data.scenes[0].render.engine == 'BLENDER_RENDER':
             for scene in bpy.data.scenes:
@@ -63,14 +64,18 @@ def draw_play_item(self, context):
     else:
         layout.operator("arm.stop")
 
+# Info panel in header
+def draw_info_item(self, context):
+    layout = self.layout
+    layout.label(ArmoryProjectPanel.info_text)
+
 # Menu in render region
 class ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
-
-    bpy.types.VIEW3D_HT_header.append(draw_play_item)
+    info_text = 'Ready'
  
     def draw(self, context):
         layout = self.layout
@@ -103,7 +108,6 @@ class ArmoryBuildPanel(bpy.types.Panel):
         layout.prop(wrd, 'CGMinimize')
         layout.prop(wrd, 'CGOptimizeGeometry')
         layout.prop(wrd, 'CGCacheShaders')
-        layout.label('Armory v' + wrd.CGVersion)
 
 class ArmoryPlayPanel(bpy.types.Panel):
     bl_label = "Armory Play"
@@ -115,6 +119,7 @@ class ArmoryPlayPanel(bpy.types.Panel):
         layout = self.layout
         wrd = bpy.data.worlds[0]
         layout.operator("arm.play")
+        layout.prop(wrd, 'CGPlayRuntime')
         layout.prop(wrd, 'CGPlayViewportCamera')
         layout.prop(wrd, 'CGPlayConsole')
         layout.prop(wrd, 'CGPlayDeveloperTools')
@@ -223,10 +228,28 @@ def export_game_data(fp, sdk_path):
     # Write Main.hx
     write_data.write_main()
 
+def print_info(text):
+    ArmoryProjectPanel.info_text = text
+    # for area in bpy.context.screen.areas:
+        # if area.type == 'INFO':
+            # area.tag_redraw()
+
 def compile_project(self, target_index=None):
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
     sdk_path = addon_prefs.sdk_path
+
+    #self.report({'OPERATOR'}, 'Printing report to Info window.')
+    # run(..., check=True, stdout=PIPE).stdout
+
+    # success = require(path.join(args.kha, 'Tools/khamake/main.js'))
+    #                 .run(options, {
+    #                 info: function (message) {
+    #                     _this.fireEvent(new vscode_debugadapter_1.OutputEvent(message + '\n', 'stdout'));
+    #                 }, error: function (message) {
+    #                     _this.fireEvent(new vscode_debugadapter_1.OutputEvent(message + '\n', 'stderr'));
+    #                 }
+    #             }, function (name) { });
 
     # Set build command
     if target_index == None:
@@ -244,7 +267,7 @@ def compile_project(self, target_index=None):
     node_path = sdk_path + '/nodejs/node-osx'
     khamake_path = sdk_path + '/KodeStudio/KodeStudio.app/Contents/Resources/app/extensions/kha/Kha/make'
     cmd = [node_path, khamake_path, targets[target_index]]
-    self.report({'INFO'}, "Building, see console...")
+    # print_info("Building, see console...")
     return subprocess.Popen(cmd)
 
 def build_project(self):
@@ -296,9 +319,11 @@ def watch_play():
         play_project.playproc = None
 
 def watch_compile():
-    if play_project.compileproc.poll() == None:
+    return_code = play_project.compileproc.poll()
+    if return_code == None:
         threading.Timer(0.1, watch_compile).start()
     else:
+        print('RETURN CODE:', return_code)
         play_project.compileproc = None
         on_compiled()
 
@@ -332,13 +357,15 @@ def play_project(self, in_frame):
     watch_compile()
 
 def on_compiled():
+    print_info("Ready")
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
     sdk_path = addon_prefs.sdk_path
-    electron_path = sdk_path + 'KodeStudio/KodeStudio.app/Contents/MacOS/Electron'
+    # electron_path = sdk_path + 'KodeStudio/KodeStudio.app/Contents/MacOS/Electron'
+    electron_path = sdk_path + 'KodeStudio/KodeStudioOld.app/Contents/MacOS/Electron'
     electron_app_path = './build/electron.js'
 
-    play_project.playproc = subprocess.Popen([electron_path, '-chromedebug', electron_app_path])
+    play_project.playproc = subprocess.Popen([electron_path, '--chromedebug', '--remote-debugging-port=9222', electron_app_path])
     watch_play()
 play_project.playproc = None
 play_project.compileproc = None
@@ -431,10 +458,14 @@ def register():
     km.keymap_items.new(ArmoryPlayInFrameButton.bl_idname, type='B', value='PRESS', ctrl=True, shift=True)
     km.keymap_items.new(ArmoryPlayButton.bl_idname, type='F5', value='PRESS')
     arm_keymaps.append(km)
+    bpy.types.VIEW3D_HT_header.append(draw_play_item)
+    bpy.types.INFO_HT_header.prepend(draw_info_item)
 
 def unregister():
+    bpy.types.VIEW3D_HT_header.remove(draw_play_item)
+    bpy.types.INFO_HT_header.remove(draw_info_item)
     bpy.utils.unregister_module(__name__)
     wm = bpy.context.window_manager
     for km in arm_keymaps:
-        wm.keyconfigs.addon.kmaps.remove(km)
+        wm.keyconfigs.addon.keymaps.remove(km)
     del arm_keymaps[:]

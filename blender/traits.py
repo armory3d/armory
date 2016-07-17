@@ -56,11 +56,11 @@ class ListTraitItem(bpy.types.PropertyGroup):
            description="A name for this item",
            default="")
 
-    my_paramstraitlist = bpy.props.CollectionProperty(type = ListParamsTraitItem)
-    paramstraitlist_index = bpy.props.IntProperty(name = "Index for my_list", default = 0)
+    my_paramstraitlist = bpy.props.CollectionProperty(type=ListParamsTraitItem)
+    paramstraitlist_index = bpy.props.IntProperty(name="Index for my_list", default=-1)
 
-    my_animationtraitlist = bpy.props.CollectionProperty(type = ListAnimationTraitItem)
-    animationtraitlist_index = bpy.props.IntProperty(name = "Index for my_list", default = 0)
+    my_animationtraitlist = bpy.props.CollectionProperty(type=ListAnimationTraitItem)
+    animationtraitlist_index = bpy.props.IntProperty(name="Index for my_list", default=-1)
 
 class MY_UL_TraitList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -78,7 +78,7 @@ class MY_UL_TraitList(bpy.types.UIList):
 
 def initObjectProperties():
     bpy.types.Object.my_traitlist = bpy.props.CollectionProperty(type = ListTraitItem)
-    bpy.types.Object.traitlist_index = bpy.props.IntProperty(name = "Index for my_list", default = 0)
+    bpy.types.Object.traitlist_index = bpy.props.IntProperty(name = "Index for my_list", default=-1)
 
 
 class LIST_OT_TraitNewItem(bpy.types.Operator):

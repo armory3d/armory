@@ -24,8 +24,12 @@ uniform float envmapStrength;
 
 // uniform sampler2D giblur; // Path-traced
 
-uniform sampler2D ssaotex;
-uniform sampler2D shadowMap;
+#ifdef _SSAO
+	uniform sampler2D ssaotex;
+#endif
+#ifndef _NoShadows
+	uniform sampler2D shadowMap;
+#endif
 
 // #ifdef _LTC
 	// uniform sampler2D sltcMat;
@@ -74,6 +78,7 @@ in vec3 viewRay;
 // out vec4 outputColor;
 
 // Separable SSS Transmittance Function, ref to sss_pass
+#ifdef _SSS
 vec3 SSSSTransmittance(float translucency, float sssWidth, vec3 worldPosition, vec3 worldNormal, vec3 lightDir) {
 	float scale = 8.25 * (1.0 - translucency) / sssWidth;
 	vec4 shrinkedPos = vec4(worldPosition - 0.005 * worldNormal, 1.0);
@@ -93,6 +98,7 @@ vec3 SSSSTransmittance(float translucency, float sssWidth, vec3 worldPosition, v
 					 vec3(0.078, 0.0,   0.0)   * exp(dd / 7.41);
 	return profile * clamp(0.3 + dot(lightDir, -worldNormal), 0.0, 1.0);
 }
+#endif
 
 vec2 envMapEquirect(vec3 normal) {
 	float phi = acos(normal.z);
@@ -144,11 +150,12 @@ vec3 diffuseBRDF(vec3 albedo, float roughness, float nv, float nl, float vh, flo
 	return lambert(albedo, nl);
 }
 
+#ifndef _NoShadows
+#ifndef _PCSS
 float texture2DCompare(vec2 uv, float compare){
 	float depth = texture(shadowMap, uv).r * 2.0 - 1.0;
 	return step(compare, depth);
 }
-
 float texture2DShadowLerp(vec2 size, vec2 uv, float compare){
 	vec2 texelSize = vec2(1.0) / size;
 	vec2 f = fract(uv * size + 0.5);
@@ -163,7 +170,6 @@ float texture2DShadowLerp(vec2 size, vec2 uv, float compare){
 	float c = mix(a, b, f.x);
 	return c;
 }
-
 float PCF(vec2 uv, float compare) {
 	float result = 0.0;
 	// for (int x = -1; x <= 1; x++){
@@ -193,10 +199,7 @@ float PCF(vec2 uv, float compare) {
 	// }
 	return result / 9.0;
 }
-
-
-// #define _PCSS
-#ifdef _PCSS
+#else
 	// Based on ThreeJS PCSS example
 	const float LIGHT_WORLD_SIZE = 3.55;
 	const float LIGHT_FRUSTUM_WIDTH = 4.75;//5.75; //12.75
@@ -400,7 +403,6 @@ float PCF(vec2 uv, float compare) {
 		// }
 		return sum / (2.0 * float(NUM_SAMPLES));
 	}
-
 	float PCSS(vec2 uv, float zReceiver) {
 		initPoissonSamples(uv);
 		
@@ -418,24 +420,22 @@ float PCF(vec2 uv, float compare) {
 		return PCF_Filter(uv, zReceiver, filterRadius);
 	}
 #endif
+#endif
 
-
-
+#ifndef _NoShadows
 float shadowTest(vec4 lPos) {
 	vec4 lPosH = lPos / lPos.w;
 	lPosH.x = (lPosH.x + 1.0) / 2.0;
 	lPosH.y = (lPosH.y + 1.0) / 2.0;
 	
-	// const float bias = 0.00005; // Persp
-	const float bias = 0.00125; // Persp
-	// const float bias = 0.01; // Ortho
-	
 #ifdef _PCSS
-	return PCSS(lPosH.xy, lPosH.z - bias);
+	return PCSS(lPosH.xy, lPosH.z - shadowsBias);
 #else
-	return PCF(lPosH.xy, lPosH.z - bias);
+	return PCF(lPosH.xy, lPosH.z - shadowsBias);
 #endif
 }
+#endif
+
 
 vec2 octahedronWrap(vec2 v) {
 	return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
@@ -749,12 +749,13 @@ void main() {
 	float dotLV = max(dot(l, v), 0.0);
 	float dotLH = max(dot(l, h), 0.0);
 	
-	vec4 lPos = LMVP * vec4(vec3(p), 1.0);
 	float visibility = 1.0;
+#ifndef _NoShadows
+	vec4 lPos = LMVP * vec4(vec3(p), 1.0);
 	if (lPos.w > 0.0) {
 		visibility = shadowTest(lPos);
-		//visibility = 1.0;
 	}
+#endif
 	
 	// Direct
 	vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);
@@ -835,8 +836,11 @@ void main() {
 #endif
 		indirect = indirect * envmapStrength;// * lightColor * lightStrength;
 		float occlusion = g0.b;
+		indirect = indirect * occlusion;
+#ifdef _SSAO
 		float ao = texture(ssaotex, texCoord).r;
-		indirect = indirect * ao * occlusion;
+		indirect *= ao;
+#endif
 		gl_FragColor = vec4(vec3(direct * visibility + indirect), 1.0);
 		return;
 	}

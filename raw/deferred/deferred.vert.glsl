@@ -145,6 +145,7 @@ void main() {
 
 #ifdef _VCols
 	matColor *= col;
+	// matColor *= pow(col, vec3(2.2));
 #endif
 
 	mvpposition = gl_Position;

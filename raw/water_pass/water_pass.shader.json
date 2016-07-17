@@ -18,6 +18,14 @@
 			],
 			"links": [
 				{
+					"id": "transpV",
+					"link": "_transposeViewMatrix"
+				},
+				{
+					"id": "invP",
+					"link": "_inverseProjectionMatrix"
+				},
+				{
 					"id": "eye",
 					"link": "_cameraPosition"
 				},
@@ -36,10 +44,6 @@
 				{
 					"id": "time",
 					"link": "_time"
-				},
-				{
-					"id": "senvmapRadiance",
-					"link": "_envmapRadiance"
 				}
 			],
 			"texture_params": [],

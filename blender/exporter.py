@@ -149,11 +149,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 	bl_label = "Export Armory"
 	filename_ext = ".json"
 
-	option_export_selection = bpy.props.BoolProperty(name = "Export Selection Only", description = "Export only selected objects", default = False)
-	option_sample_animation = bpy.props.BoolProperty(name = "Force Sampled Animation", description = "Always export animation as per-frame samples", default = False)
-	option_geometry_only = bpy.props.BoolProperty(name = "Export Geometry Only", description = "Export only geometry data", default = True)
-	option_geometry_per_file = bpy.props.BoolProperty(name = "Export Geometry Per File", description = "Export each geometry to individual JSON files", default = False)
-	option_minimize = bpy.props.BoolProperty(name = "Export Minimized", description = "Export minimized JSON data", default = True)
+	option_export_selection = bpy.props.BoolProperty(name = "Export Selection Only", description = "Export only selected objects", default=False)
+	option_sample_animation = bpy.props.BoolProperty(name = "Force Sampled Animation", description = "Always export animation as per-frame samples", default=True)
+	option_geometry_only = bpy.props.BoolProperty(name = "Export Geometry Only", description = "Export only geometry data", default=True)
+	option_geometry_per_file = bpy.props.BoolProperty(name = "Export Geometry Per File", description = "Export each geometry to individual JSON files", default=False)
+	option_minimize = bpy.props.BoolProperty(name = "Export Minimized", description = "Export minimized JSON data", default=True)
 
 	def WriteMatrix(self, matrix):
 		return [matrix[0][0], matrix[0][1], matrix[0][2], matrix[0][3],
@@ -622,28 +622,29 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				break
 
 		if (animationFlag):
-			o.animation = Object() # TODO: multiple tracks?
+			o.animation = Object()
 
-			o.animation.track = Object()
-			o.animation.track.target = "transform"
+			tracko = Object()
+			tracko.target = "transform"
 
-			o.animation.track.time = Object()
-			o.animation.track.time.values = []
+			tracko.time = Object()
+			tracko.time.values = []
 
 			for i in range(self.beginFrame, self.endFrame):
-				o.animation.track.time.values.append(((i - self.beginFrame) * self.frameTime))
+				tracko.time.values.append(((i - self.beginFrame) * self.frameTime))
 
-			o.animation.track.time.values.append((self.endFrame * self.frameTime))
+			tracko.time.values.append((self.endFrame * self.frameTime))
 
-			o.animation.track.value = Object()
-			o.animation.track.value.values = []
+			tracko.value = Object()
+			tracko.value.values = []
 
 			for i in range(self.beginFrame, self.endFrame):
 				scene.frame_set(i)
-				o.animation.track.value.values.append(self.WriteMatrix(node.matrix_local))
+				tracko.value.values.append(self.WriteMatrix(node.matrix_local))
 
 			scene.frame_set(self.endFrame)
-			o.animation.track.value.values.append(self.WriteMatrix(node.matrix_local))
+			tracko.value.values.append(self.WriteMatrix(node.matrix_local))
+			o.animation.tracks = [tracko]
 
 		scene.frame_set(currentFrame, currentSubframe)
 
@@ -664,36 +665,180 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 		if (animationFlag):
 			o.animation = Object()
-			o.animation.track = Object()
-			o.animation.track.target = "transform"
-			o.animation.track.time = Object()
-			o.animation.track.time.values = []
+			tracko = Object()
+			tracko.target = "transform"
+			tracko.time = Object()
+			tracko.time.values = []
 
 			for i in range(self.beginFrame, self.endFrame):
-				o.animation.track.time.values.append(((i - self.beginFrame) * self.frameTime))
+				tracko.time.values.append(((i - self.beginFrame) * self.frameTime))
 
-			o.animation.track.time.values.append((self.endFrame * self.frameTime))
+			tracko.time.values.append((self.endFrame * self.frameTime))
 
-			o.animation.track.value = Object()
-			o.animation.track.value.values = []
+			tracko.value = Object()
+			tracko.value.values = []
 
 			parent = poseBone.parent
 			if (parent):
 				for i in range(self.beginFrame, self.endFrame):
 					scene.frame_set(i)
-					o.animation.track.value.values.append(self.WriteMatrix(parent.matrix.inverted() * poseBone.matrix))
+					tracko.value.values.append(self.WriteMatrix(parent.matrix.inverted() * poseBone.matrix))
 
 				scene.frame_set(self.endFrame)
-				o.animation.track.value.values.append(self.WriteMatrix(parent.matrix.inverted() * poseBone.matrix))
+				tracko.value.values.append(self.WriteMatrix(parent.matrix.inverted() * poseBone.matrix))
 			else:
 				for i in range(self.beginFrame, self.endFrame):
 					scene.frame_set(i)
-					o.animation.track.value.values.append(self.WriteMatrix(poseBone.matrix))
+					tracko.value.values.append(self.WriteMatrix(poseBone.matrix))
 
 				scene.frame_set(self.endFrame)
-				o.animation.track.value.values.append(self.WriteMatrix(poseBone.matrix))
+				tracko.value.values.append(self.WriteMatrix(poseBone.matrix))
+			o.animation.tracks = [tracko]
 
 		scene.frame_set(currentFrame, currentSubframe)
+
+
+
+	def ExportKeyTimes(self, fcurve):
+		keyo = Object()
+		# self.IndentWrite(B"Key {float {")
+
+		keyo.values = []
+		keyCount = len(fcurve.keyframe_points)
+		for i in range(keyCount):
+			# if (i > 0):
+				# self.Write(B", ")
+
+			time = fcurve.keyframe_points[i].co[0] - self.beginFrame
+			keyo.values.append(time * self.frameTime)
+			# self.WriteFloat(time * self.frameTime)
+		# self.Write(B"}}\n")
+		return keyo
+
+	def ExportKeyTimeControlPoints(self, fcurve):
+		keyminuso = Object()
+		# self.IndentWrite(B"Key (kind = \"-control\") {float {")
+
+		keyminuso.values = []
+		keyCount = len(fcurve.keyframe_points)
+		for i in range(keyCount):
+			# if (i > 0):
+				# self.Write(B", ")
+
+			ctrl = fcurve.keyframe_points[i].handle_left[0] - self.beginFrame
+			keyminuso.values.append(ctrl * self.frameTime)
+			# self.WriteFloat(ctrl * self.frameTime)
+
+		# self.Write(B"}}\n")
+		keypluso = Object()
+		keypluso.values = []
+		# self.IndentWrite(B"Key (kind = \"+control\") {float {")
+
+		for i in range(keyCount):
+			# if (i > 0):
+				# self.Write(B", ")
+
+			ctrl = fcurve.keyframe_points[i].handle_right[0] - self.beginFrame
+			keypluso.values.append(ctrl * self.frameTime)
+			# self.WriteFloat(ctrl * self.frameTime)
+
+		# self.Write(B"}}\n")
+		return keyminuso, keypluso
+
+	def ExportKeyValues(self, fcurve):
+		keyo = Object()
+		keyo.values = []
+		# self.IndentWrite(B"Key {float {")
+
+		keyCount = len(fcurve.keyframe_points)
+		for i in range(keyCount):
+			# if (i > 0):
+				# self.Write(B", ")
+
+			value = fcurve.keyframe_points[i].co[1]
+			keyo.values.append(value)
+			# self.WriteFloat(value)
+
+		# self.Write(B"}}\n")
+		return keyo
+
+	def ExportKeyValueControlPoints(self, fcurve):
+		keyminuso = Object()
+		keyminuso.values = []
+		# self.IndentWrite(B"Key (kind = \"-control\") {float {")
+
+		keyCount = len(fcurve.keyframe_points)
+		for i in range(keyCount):
+			# if (i > 0):
+				# self.Write(B", ")
+
+			ctrl = fcurve.keyframe_points[i].handle_left[1]
+			keyminuso.values.append(ctrl)
+			# self.WriteFloat(ctrl)
+
+		# self.Write(B"}}\n")
+		keypluso = Object()
+		keypluso.values = []
+		# self.IndentWrite(B"Key (kind = \"+control\") {float {")
+
+		for i in range(keyCount):
+			# if (i > 0):
+				# self.Write(B", ")
+
+			ctrl = fcurve.keyframe_points[i].handle_right[1]
+			keypluso.values.append(ctrl)
+			# self.WriteFloat(ctrl)
+
+		# self.Write(B"}}\n")
+		return keypluso, keypluso
+
+	def ExportAnimationTrack(self, fcurve, kind, target, newline):
+
+		# This function exports a single animation track. The curve types for the
+		# Time and Value structures are given by the kind parameter.
+
+		tracko = Object()
+		tracko.target = target
+		# self.IndentWrite(B"Track (target = %", 0, newline)
+		# self.Write(target)
+		# self.Write(B")\n")
+		# self.IndentWrite(B"{\n")
+		# self.indentLevel += 1
+
+		if (kind != kAnimationBezier):
+			# self.IndentWrite(B"Time\n")
+			# self.IndentWrite(B"{\n")
+			# self.indentLevel += 1
+			tracko.time = self.ExportKeyTimes(fcurve)
+
+			# self.IndentWrite(B"}\n\n", -1)
+			# self.IndentWrite(B"Value\n", -1)
+			# self.IndentWrite(B"{\n", -1)
+			tracko.value = self.ExportKeyValues(fcurve)
+
+			# self.indentLevel -= 1
+			# self.IndentWrite(B"}\n")
+
+		else:
+			tracko.curve = 'bezier'
+			# self.IndentWrite(B"Time (curve = \"bezier\")\n")
+			# self.IndentWrite(B"{\n")
+			# self.indentLevel += 1
+			tracko.time = self.ExportKeyTimes(fcurve)
+			tracko.time_control_plus, tracko.time_control_minus = self.ExportKeyTimeControlPoints(fcurve)
+
+			# self.IndentWrite(B"}\n\n", -1)
+			# self.IndentWrite(B"Value (curve = \"bezier\")\n", -1)
+			# self.IndentWrite(B"{\n", -1)
+			tracko.value = self.ExportKeyValues(fcurve)
+			tracko.value_control_plus, tracko.value_control_minus = self.ExportKeyValueControlPoints(fcurve)
+
+			# self.indentLevel -= 1
+			# self.IndentWrite(B"}\n")
+
+		# self.indentLevel -= 1
+		# self.IndentWrite(B"}\n")
+		return tracko
 
 	def ExportNodeTransform(self, node, scene, o):
 		posAnimCurve = [None, None, None]
@@ -805,6 +950,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		else:
 			structFlag = False
 
+			o.transform = Object()
+			o.transform.values = self.WriteMatrix(node.matrix_local)
+
+			o.animation_transforms = []
+
 			deltaTranslation = node.delta_location
 			if (deltaPositionAnimated):
 				# When the delta location is animated, write the x, y, and z components separately
@@ -812,6 +962,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				for i in range(3):
 					pos = deltaTranslation[i]
 					if ((deltaPosAnimated[i]) or (math.fabs(pos) > kExportEpsilon)):
+						animo = Object()
+						o.animation_transforms.append(animo)
+						animo.type = 'translation_' + axisName[i]
+						animo.name = deltaSubtranslationName[i]
+						animo.value = pos
 						# self.IndentWrite(B"Translation %", 0, structFlag)
 						# self.Write(deltaSubtranslationName[i])
 						# self.Write(B" (kind = \"")
@@ -825,6 +980,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						structFlag = True
 
 			elif ((math.fabs(deltaTranslation[0]) > kExportEpsilon) or (math.fabs(deltaTranslation[1]) > kExportEpsilon) or (math.fabs(deltaTranslation[2]) > kExportEpsilon)):
+				animo = Object()
+				o.animation_transforms.append(animo)
+				animo.type = 'translation'
+				animo.values = self.WriteVector3D(deltaTranslation)
 				# self.IndentWrite(B"Translation\n")
 				# self.IndentWrite(B"{\n")
 				# self.IndentWrite(B"float[3] {", 1)
@@ -840,6 +999,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				for i in range(3):
 					pos = translation[i]
 					if ((posAnimated[i]) or (math.fabs(pos) > kExportEpsilon)):
+						animo = Object()
+						o.animation_transforms.append(animo)
+						animo.type = 'translation_' + axisName[i]
+						animo.name = subtranslationName[i]
+						animo.value = pos
 						# self.IndentWrite(B"Translation %", 0, structFlag)
 						# self.Write(subtranslationName[i])
 						# self.Write(B" (kind = \"")
@@ -853,6 +1017,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						structFlag = True
 
 			elif ((math.fabs(translation[0]) > kExportEpsilon) or (math.fabs(translation[1]) > kExportEpsilon) or (math.fabs(translation[2]) > kExportEpsilon)):
+				animo = Object()
+				o.animation_transforms.append(animo)
+				animo.type = 'translation'
+				animo.values = self.WriteVector3D(translation)
 				# self.IndentWrite(B"Translation\n")
 				# self.IndentWrite(B"{\n")
 				# self.IndentWrite(B"float[3] {", 1)
@@ -868,6 +1036,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 					axis = ord(mode[2 - i]) - 0x58
 					angle = node.delta_rotation_euler[axis]
 					if ((deltaRotAnimated[axis]) or (math.fabs(angle) > kExportEpsilon)):
+						animo = Object()
+						o.animation_transforms.append(animo)
+						animo.type = 'rotation_' + axisName[axis]
+						animo.name = deltaSubrotationName[axis]
+						animo.value = angle
 						# self.IndentWrite(B"Rotation %", 0, structFlag)
 						# self.Write(deltaSubrotationName[axis])
 						# self.Write(B" (kind = \"")
@@ -886,6 +1059,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				if (mode == "QUATERNION"):
 					quaternion = node.delta_rotation_quaternion
 					if ((math.fabs(quaternion[0] - 1.0) > kExportEpsilon) or (math.fabs(quaternion[1]) > kExportEpsilon) or (math.fabs(quaternion[2]) > kExportEpsilon) or (math.fabs(quaternion[3]) > kExportEpsilon)):
+						animo = Object()
+						o.animation_transforms.append(animo)
+						animo.type = 'rotation_quaternion'
+						animo.values = self.WriteQuaternion(quaternion)
 						# self.IndentWrite(B"Rotation (kind = \"quaternion\")\n", 0, structFlag)
 						# self.IndentWrite(B"{\n")
 						# self.IndentWrite(B"float[4] {", 1)
@@ -899,6 +1076,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						axis = ord(mode[2 - i]) - 0x58
 						angle = node.delta_rotation_euler[axis]
 						if (math.fabs(angle) > kExportEpsilon):
+							animo = Object()
+							o.animation_transforms.append(animo)
+							animo.type = 'rotation_' + axisName[axis]
+							animo.value = angle
 							# self.IndentWrite(B"Rotation (kind = \"", 0, structFlag)
 							# self.Write(axisName[axis])
 							# self.Write(B"\")\n")
@@ -916,6 +1097,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 					axis = ord(mode[2 - i]) - 0x58
 					angle = node.rotation_euler[axis]
 					if ((rotAnimated[axis]) or (math.fabs(angle) > kExportEpsilon)):
+						animo = Object()
+						o.animation_transforms.append(animo)
+						animo.type = 'rotation_' + axisName[axis]
+						animo.name = subrotationName[axis]
+						animo.value = angle
 						# self.IndentWrite(B"Rotation %", 0, structFlag)
 						# self.Write(subrotationName[axis])
 						# self.Write(B" (kind = \"")
@@ -934,6 +1120,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				if (mode == "QUATERNION"):
 					quaternion = node.rotation_quaternion
 					if ((math.fabs(quaternion[0] - 1.0) > kExportEpsilon) or (math.fabs(quaternion[1]) > kExportEpsilon) or (math.fabs(quaternion[2]) > kExportEpsilon) or (math.fabs(quaternion[3]) > kExportEpsilon)):
+						animo = Object()
+						o.animation_transforms.append(animo)
+						animo.type = 'rotation_quaternion'
+						animo.values = self.WriteQuaternion(quaternion)
 						# self.IndentWrite(B"Rotation (kind = \"quaternion\")\n", 0, structFlag)
 						# self.IndentWrite(B"{\n")
 						# self.IndentWrite(B"float[4] {", 1)
@@ -944,6 +1134,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 				elif (mode == "AXIS_ANGLE"):
 					if (math.fabs(node.rotation_axis_angle[0]) > kExportEpsilon):
+						animo = Object()
+						o.animation_transforms.append(animo)
+						animo.type = 'rotation_axis'
+						animo.values = self.WriteVector4D(node.rotation_axis_angle)
 						# self.IndentWrite(B"Rotation (kind = \"axis\")\n", 0, structFlag)
 						# self.IndentWrite(B"{\n")
 						# self.IndentWrite(B"float[4] {", 1)
@@ -957,6 +1151,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						axis = ord(mode[2 - i]) - 0x58
 						angle = node.rotation_euler[axis]
 						if (math.fabs(angle) > kExportEpsilon):
+							animo = Object()
+							o.animation_transforms.append(animo)
+							animo.type = 'rotation_' + axisName[axis]
+							animo.value = angle
 							# self.IndentWrite(B"Rotation (kind = \"", 0, structFlag)
 							# self.Write(axisName[axis])
 							# self.Write(B"\")\n")
@@ -974,6 +1172,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				for i in range(3):
 					scl = deltaScale[i]
 					if ((deltaSclAnimated[i]) or (math.fabs(scl) > kExportEpsilon)):
+						animo = Object()
+						o.animation_transforms.append(animo)
+						animo.type = 'scale_' + axisName[i]
+						animo.name = deltaSubscaleName[i]
+						animo.value = scl
 						# self.IndentWrite(B"Scale %", 0, structFlag)
 						# self.Write(deltaSubscaleName[i])
 						# self.Write(B" (kind = \"")
@@ -987,6 +1190,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						structFlag = True
 
 			elif ((math.fabs(deltaScale[0] - 1.0) > kExportEpsilon) or (math.fabs(deltaScale[1] - 1.0) > kExportEpsilon) or (math.fabs(deltaScale[2] - 1.0) > kExportEpsilon)):
+				animo = Object()
+				o.animation_transforms.append(animo)
+				animo.type = 'scale'
+				animo.values = self.WriteVector3D(deltaScale)
 				# self.IndentWrite(B"Scale\n", 0, structFlag)
 				# self.IndentWrite(B"{\n")
 				# self.IndentWrite(B"float[3] {", 1)
@@ -1002,6 +1209,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				for i in range(3):
 					scl = scale[i]
 					if ((sclAnimated[i]) or (math.fabs(scl) > kExportEpsilon)):
+						animo = Object()
+						o.animation_transforms.append(animo)
+						animo.type = 'scale_' + axisName[i]
+						animo.name = subscaleName[i]
+						animo.value = scl
 						# self.IndentWrite(B"Scale %", 0, structFlag)
 						# self.Write(subscaleName[i])
 						# self.Write(B" (kind = \"")
@@ -1015,6 +1227,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						structFlag = True
 
 			elif ((math.fabs(scale[0] - 1.0) > kExportEpsilon) or (math.fabs(scale[1] - 1.0) > kExportEpsilon) or (math.fabs(scale[2] - 1.0) > kExportEpsilon)):
+				animo = Object()
+				o.animation_transforms.append(animo)
+				animo.type = 'scale'
+				animo.values = self.WriteVector3D(scale)
 				# self.IndentWrite(B"Scale\n", 0, structFlag)
 				# self.IndentWrite(B"{\n")
 				# self.IndentWrite(B"float[3] {", 1)
@@ -1024,8 +1240,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				structFlag = True
 
 			# Export the animation tracks.		
-			#o.animation = Object()
-			
+			o.animation = Object()
+			o.animation.begin = (action.frame_range[0] - self.beginFrame) * self.frameTime
+			o.animation.end = (action.frame_range[1] - self.beginFrame) * self.frameTime
+			o.animation.tracks = []
 			# self.IndentWrite(B"Animation (begin = ", 0, True)
 			# self.WriteFloat((action.frame_range[0] - self.beginFrame) * self.frameTime)
 			# self.Write(B", end = ")
@@ -1035,41 +1253,47 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			# self.indentLevel += 1
 			# structFlag = False
 
-			# if (positionAnimated):
-			# 	for i in range(3):
-			# 		if (posAnimated[i]):
-			# 			self.ExportAnimationTrack(posAnimCurve[i], posAnimKind[i], subtranslationName[i], structFlag)
-			# 			structFlag = True
+			if (positionAnimated):
+				for i in range(3):
+					if (posAnimated[i]):
+						tracko = self.ExportAnimationTrack(posAnimCurve[i], posAnimKind[i], subtranslationName[i], structFlag)
+						o.animation.tracks.append(tracko)
+						structFlag = True
 
-			# if (rotationAnimated):
-			# 	for i in range(3):
-			# 		if (rotAnimated[i]):
-			# 			self.ExportAnimationTrack(rotAnimCurve[i], rotAnimKind[i], subrotationName[i], structFlag)
-			# 			structFlag = True
+			if (rotationAnimated):
+				for i in range(3):
+					if (rotAnimated[i]):
+						tracko = self.ExportAnimationTrack(rotAnimCurve[i], rotAnimKind[i], subrotationName[i], structFlag)
+						o.animation.tracks.append(tracko)
+						structFlag = True
 
-			# if (scaleAnimated):
-			# 	for i in range(3):
-			# 		if (sclAnimated[i]):
-			# 			self.ExportAnimationTrack(sclAnimCurve[i], sclAnimKind[i], subscaleName[i], structFlag)
-			# 			structFlag = True
+			if (scaleAnimated):
+				for i in range(3):
+					if (sclAnimated[i]):
+						tracko = self.ExportAnimationTrack(sclAnimCurve[i], sclAnimKind[i], subscaleName[i], structFlag)
+						o.animation.tracks.append(tracko)
+						structFlag = True
 
-			# if (deltaPositionAnimated):
-			# 	for i in range(3):
-			# 		if (deltaPosAnimated[i]):
-			# 			self.ExportAnimationTrack(deltaPosAnimCurve[i], deltaPosAnimKind[i], deltaSubtranslationName[i], structFlag)
-			# 			structFlag = True
+			if (deltaPositionAnimated):
+				for i in range(3):
+					if (deltaPosAnimated[i]):
+						tracko = self.ExportAnimationTrack(deltaPosAnimCurve[i], deltaPosAnimKind[i], deltaSubtranslationName[i], structFlag)
+						o.animation.tracks.append(tracko)
+						structFlag = True
 
-			# if (deltaRotationAnimated):
-			# 	for i in range(3):
-			# 		if (deltaRotAnimated[i]):
-			# 			self.ExportAnimationTrack(deltaRotAnimCurve[i], deltaRotAnimKind[i], deltaSubrotationName[i], structFlag)
-			# 			structFlag = True
+			if (deltaRotationAnimated):
+				for i in range(3):
+					if (deltaRotAnimated[i]):
+						tracko = self.ExportAnimationTrack(deltaRotAnimCurve[i], deltaRotAnimKind[i], deltaSubrotationName[i], structFlag)
+						o.animation.tracks.append(tracko)
+						structFlag = True
 
-			# if (deltaScaleAnimated):
-			# 	for i in range(3):
-			# 		if (deltaSclAnimated[i]):
-			# 			self.ExportAnimationTrack(deltaSclAnimCurve[i], deltaSclAnimKind[i], deltaSubscaleName[i], structFlag)
-			# 			structFlag = True
+			if (deltaScaleAnimated):
+				for i in range(3):
+					if (deltaSclAnimated[i]):
+						tracko = self.ExportAnimationTrack(deltaSclAnimCurve[i], deltaSclAnimKind[i], deltaSubscaleName[i], structFlag)
+						o.animation.tracks.append(tracko)
+						structFlag = True
 			
 	def ProcessBone(self, bone):
 		if ((ArmoryExporter.exportAllFlag) or (bone.select)):
@@ -1833,6 +2057,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o.type = 'sun'
 
 		o.cast_shadow = object.cycles.cast_shadow
+		o.near_plane = object.light_clip_start
+		o.far_plane = object.light_clip_end
 
 		# Parse nodes, only emission for now
 		# Merge with nodes_material
@@ -2088,7 +2314,12 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		
 		for m in node.modifiers:
 			if m.type == 'OCEAN':
+				# Do not export ocean geometry, just take specified constants
 				export_node = False
+				wrd = bpy.data.worlds[0]
+				wrd.generate_ocean = True
+				# Take position and bounds
+				wrd.generate_ocean_level = node.location.z
 			elif m.type == 'UV_PROJECT' and m.show_render:
 				self.uvprojectUsersArray.append(node)
 				
@@ -2344,7 +2575,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				if world_generate_radiance == False:
 					generate_radiance = False
 				
-				cam.probe_num_mips = write_probes.write_probes(cam.probe_texture, disable_hdr, cam.probe_num_mips, generate_radiance=generate_radiance)
+				cam.probe_num_mips = write_probes.write_probes('Assets/' + cam.probe_texture, disable_hdr, cam.probe_num_mips, generate_radiance=generate_radiance)
 				base_name = cam.probe_texture.rsplit('.', 1)[0]
 				po = self.make_probe(cam.name, base_name, cam.probe_num_mips, cam.probe_strength, cam.probe_blending, volume, volume_center, generate_radiance, generate_irradiance)
 				o.probes.append(po)

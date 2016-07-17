@@ -4,9 +4,7 @@
 precision mediump float;
 #endif
 
-const float PI = 3.1415926535;
-const float TwoPI = (2.0 * PI);
-const vec2 shadowMapSize = vec2(2048, 2048);
+#include "../compiled.glsl"
 
 // #ifdef _NMTex
 // #define _Tex
@@ -15,7 +13,9 @@ const vec2 shadowMapSize = vec2(2048, 2048);
 #ifdef _AMTex
 	uniform sampler2D salbedo;
 #endif
-uniform sampler2D shadowMap;
+#ifndef _NoShadows
+    uniform sampler2D shadowMap;
+#endif
 uniform float shirr[27];
 #ifdef _Rad
 	uniform sampler2D senvmapRadiance;
@@ -88,10 +88,10 @@ in vec3 eyeDir;
 	in vec3 normal;
 #endif
 
+#ifndef _NoShadows
 // float linstep(float low, float high, float v) {
 //     return clamp((v - low) / (high - low), 0.0, 1.0);
 // }
-
 // float VSM(vec2 uv, float compare) {
 //     vec2 moments = texture(shadowMap, uv).xy;
 //     float p = smoothstep(compare - 0.02, compare, moments.x);
@@ -100,12 +100,10 @@ in vec3 eyeDir;
 //     float p_max = linstep(0.2, 1.0, variance / (variance + d * d));
 //     return clamp(max(p, p_max), 0.0, 1.0);
 // }
-
 float texture2DCompare(vec2 uv, float compare){
     float depth = texture(shadowMap, uv).r * 2.0 - 1.0;
     return step(compare, depth);
 }
-
 float texture2DShadowLerp(vec2 size, vec2 uv, float compare){
     vec2 texelSize = vec2(1.0) / size;
     vec2 f = fract(uv * size + 0.5);
@@ -120,60 +118,47 @@ float texture2DShadowLerp(vec2 size, vec2 uv, float compare){
     float c = mix(a, b, f.x);
     return c;
 }
-
 float PCF(vec2 uv, float compare) {
     float result = 0.0;
     // for (int x = -1; x <= 1; x++){
         // for(int y = -1; y <= 1; y++){
-            // vec2 off = vec2(x, y) / shadowMapSize;
-            // result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
+            // vec2 off = vec2(x, y) / shadowmapSize;
+            // result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			
-			vec2 off = vec2(-1, -1) / shadowMapSize;
-            result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
-			off = vec2(-1, 0) / shadowMapSize;
-            result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
-			off = vec2(-1, 1) / shadowMapSize;
-            result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
-			off = vec2(0, -1) / shadowMapSize;
-            result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
-			off = vec2(0, 0) / shadowMapSize;
-            result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
-			off = vec2(0, 1) / shadowMapSize;
-            result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
-			off = vec2(1, -1) / shadowMapSize;
-            result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
-			off = vec2(1, 0) / shadowMapSize;
-            result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
-			off = vec2(1, 1) / shadowMapSize;
-            result += texture2DShadowLerp(shadowMapSize, uv + off, compare);
+			vec2 off = vec2(-1, -1) / shadowmapSize;
+            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			off = vec2(-1, 0) / shadowmapSize;
+            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			off = vec2(-1, 1) / shadowmapSize;
+            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			off = vec2(0, -1) / shadowmapSize;
+            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			off = vec2(0, 0) / shadowmapSize;
+            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			off = vec2(0, 1) / shadowmapSize;
+            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			off = vec2(1, -1) / shadowmapSize;
+            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			off = vec2(1, 0) / shadowmapSize;
+            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			off = vec2(1, 1) / shadowmapSize;
+            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
         // }
     // }
     return result / 9.0;
 }
-
 float shadowTest(vec4 lPos) {
 	vec4 lPosH = lPos / lPos.w;
 	lPosH.x = (lPosH.x + 1.0) / 2.0;
     lPosH.y = (lPosH.y + 1.0) / 2.0;
-	
-	// const float bias = 0.00015; // Persp
-	const float bias = 0.0023; // Persp
-	// const float bias = 0.01; // Ortho
     
-// #ifdef _PCSS
-    // return PCSS(lPosH.xy, lPosH.z - bias);
-// #else
-	// return PCF(lPosH.xy, lPosH.z - bias);
-// #endif
+	return PCF(lPosH.xy, lPosH.z - shadowsBias);
 	// return VSM(lPosH.xy, lPosH.z);
-	
-	// shadow2DSampler
-	// return texture(shadowMap, vec3(lPosH.xy, (lPosH.z - 0.005) / lPosH.w));
-	
 	// Basic
-	float distanceFromLight = texture(shadowMap, lPosH.xy).r * 2.0 - 1.0;
-	return float(distanceFromLight > lPosH.z - bias);
+	// float distanceFromLight = texture(shadowMap, lPosH.xy).r * 2.0 - 1.0;
+	// return float(distanceFromLight > lPosH.z - bias);
 }
+#endif
 
 vec3 shIrradiance(vec3 nor, float scale) {
     const float c1 = 0.429043;
@@ -208,7 +193,7 @@ vec3 shIrradiance(vec3 nor, float scale) {
 vec2 envMapEquirect(vec3 normal) {
 	float phi = acos(normal.z);
 	float theta = atan(-normal.y, normal.x) + PI;
-	return vec2(theta / TwoPI, phi / PI);
+	return vec2(theta / PI2, phi / PI);
 }
 
 
@@ -525,13 +510,13 @@ void main() {
 	float dotNL = max(dot(n, l), 0.0);
 	
 	float visibility = 1.0;
+#ifdef _NoShadows
 	if (receiveShadow) {
 		if (lPos.w > 0.0) {
 			visibility = shadowTest(lPos);
-			// visibility = 1.0;
 		}
 	}
-
+#endif
 
 	vec3 baseColor = matColor.rgb;
 #ifdef _AMTex

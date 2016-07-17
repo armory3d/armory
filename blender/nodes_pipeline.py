@@ -204,7 +204,6 @@ class WaterPassNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Target")
         self.inputs.new('NodeSocketShader', "Color")
         self.inputs.new('NodeSocketShader', "GBufferD")
-        self.inputs.new('NodeSocketShader', "GBuffer0")
 
         self.outputs.new('NodeSocketShader', "Stage")
 
@@ -1129,7 +1128,7 @@ def make_sss_pass(stages, node_group, node, shader_references, asset_references)
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[3, 4, 5], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='sss_pass/sss_pass/sss_pass_y')
 
 def make_water_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='water_pass/water_pass/water_pass')
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['tex', 'gbufferD'], shader_context='water_pass/water_pass/water_pass')
 
 def make_deferred_light_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['gbuffer', 'ssaotex', 'shadowMap'], shader_context='deferred_light/deferred_light/deferred_light')

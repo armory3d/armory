@@ -75,6 +75,18 @@ def buildNodeTree(world_name, node_group):
 		bpy.data.cameras[0].world_envtex_name = base_name
 		write_probes.write_color_irradiance(base_name, bpy.data.cameras[0].world_envtex_color)
 
+	# Clouds enabled
+	if bpy.data.worlds[0].generate_clouds:
+		bpy.data.worlds[0].world_defs += '_EnvClouds'
+
+	# SSAO enabled
+	if bpy.data.worlds[0].generate_ssao:
+		bpy.data.worlds[0].world_defs += '_SSAO'
+
+	# Shadows disabled
+	if bpy.data.worlds[0].generate_shadows == False:
+		bpy.data.worlds[0].world_defs += '_NoShadows'
+
 	# Enable probes
 	for cam in bpy.data.cameras:
 		if cam.is_probe:
@@ -134,7 +146,7 @@ def parse_color(node_group, node, context):
 		disable_hdr = image_name.endswith('.jpg')
 		mip_count = bpy.data.cameras[0].world_envtex_num_mips
 		
-		mip_count = write_probes.write_probes(image_name, disable_hdr, mip_count, generate_radiance=generate_radiance)
+		mip_count = write_probes.write_probes(node.image.filepath, disable_hdr, mip_count, generate_radiance=generate_radiance)
 		
 		bpy.data.cameras[0].world_envtex_num_mips = mip_count
 		# Append envtex define
@@ -149,9 +161,6 @@ def parse_color(node_group, node, context):
 	# Append sky define
 	elif node.type == 'TEX_SKY':
 		bpy.data.worlds[0].world_defs += '_EnvSky'
-		# Clouds enabled
-		if bpy.data.worlds[0].generate_clouds:
-			bpy.data.worlds[0].world_defs += '_EnvClouds'
 		# Append sky properties to material
 		const = Object()
 		const.id = 'sunDirection'

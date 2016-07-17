@@ -17,6 +17,8 @@
 precision mediump float;
 #endif
 
+#include "../compiled.glsl"
+
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D snoise;
@@ -26,10 +28,9 @@ uniform vec3 eye;
 uniform vec2 screenSize;
 uniform vec2 aspectRatio;
 
-const float PI = 3.1415926535;
 const int kernelSize = 20;//12;
-const float aoSize = 0.12;
-const float strength = 0.55;//0.7;
+// const float ssaoSize = 0.12;
+// const float ssaoStrength = 0.55;
 
 in vec2 texCoord;
 
@@ -49,7 +50,7 @@ vec3 getPos(float depth, vec2 coord) {
 
 float doAO(vec2 kernelVec, vec2 randomVec, mat2 rotMat, vec3 currentPos, vec3 currentNormal, float currentDistance) {
 	kernelVec.xy *= aspectRatio;
-	float radius = aoSize * randomVec.y;
+	float radius = ssaoSize * randomVec.y;
 	kernelVec.xy = ((rotMat * kernelVec.xy) / currentDistance) * radius;
 	vec2 coord = texCoord + kernelVec.xy;
 	// float depth = 1.0 - texture(gbuffer0, coord).a;
@@ -147,7 +148,7 @@ void main() {
 		amount += doAO(kernel[19], randomVec, rotMat, currentPos, currentNormal, currentDistance);
 	// }
 	
-	amount *= strength / kernelSize;
+	amount *= ssaoStrength / kernelSize;
 	amount = 1.0 - amount;
 	amount = max(0.0, amount);
     gl_FragColor = vec4(vec3(amount), 1.0);
