@@ -13,8 +13,6 @@ class FlyCamera extends Trait {
 
     var camera:CameraNode;
 
-    var pitchRad:Float;
-
     var moveForward = false;
     var moveBackward = false;
     var strafeLeft = false;
@@ -38,13 +36,6 @@ class FlyCamera extends Trait {
 
     function init() {
         camera = RootNode.cameras[0];
-
-        var r = camera.transform.rot;
-        var q = new Quat(r.x, r.y, r.z, r.w);
-        q.inverse(q);
-
-        var e = q.getEuler();
-        pitchRad = iron.math.Math.degToRad(90) - e.x;
     }
 
     function update() {

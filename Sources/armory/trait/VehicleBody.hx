@@ -24,13 +24,13 @@ class VehicleBody extends Trait {
 	var wheels:Array<VehicleWheel> = [];
 	var wheelNames:Array<String>;
 
-    var m_vehicle:BtRaycastVehiclePointer = null;
-    var m_carChassis:BtRigidBodyPointer;
+    var vehicle:BtRaycastVehiclePointer = null;
+    var carChassis:BtRigidBodyPointer;
     var startTransform:BtTransformPointer;
 	
-	var gEngineForce = 0.0;
-	var gBreakingForce = 0.0;
-	var gVehicleSteering = 0.0;
+	var engineForce = 0.0;
+	var breakingForce = 0.0;
+	var vehicleSteering = 0.0;
 
 	var maxEngineForce = 3000.0;
 	var maxBreakingForce = 100.0;
@@ -77,8 +77,8 @@ class VehicleBody extends Trait {
 		var upIndex = 2; 
 		var forwardIndex = 1;
 
-		var wheelDirectionCS0 = BtVector3.create(0, 0, -1);
-		var wheelAxleCS = BtVector3.create(1, 0, 0);
+		var wheelDirectionCS0 = BtVector3.create(0, 0, -1).value;
+		var wheelAxleCS = BtVector3.create(1, 0, 0).value;
 
 		var wheelFriction = 1000;
 		var suspensionStiffness = 20.0;
@@ -117,34 +117,34 @@ class VehicleBody extends Trait {
 			transform.rot.w).value);
 
 		startTransform = tr; // Cpp workaround
-		m_carChassis = createRigidBody(500, compound);
+		carChassis = createRigidBody(500, compound);
 
 		// Create vehicle
-		var m_tuning = BtVehicleTuning.create();
-		var m_vehicleRayCaster = BtDefaultVehicleRaycaster.create(physics.world);
-		m_vehicle = BtRaycastVehicle.create(m_tuning.value, m_carChassis, m_vehicleRayCaster);
+		var tuning = BtVehicleTuning.create();
+		var vehicleRayCaster = BtDefaultVehicleRaycaster.create(physics.world);
+		vehicle = BtRaycastVehicle.create(tuning.value, carChassis, vehicleRayCaster);
 
 		// Never deactivate the vehicle
-		m_carChassis.ptr.setActivationState(BtCollisionObject.DISABLE_DEACTIVATION);
+		carChassis.ptr.setActivationState(BtCollisionObject.DISABLE_DEACTIVATION);
 
 		// Choose coordinate system
-		m_vehicle.ptr.setCoordinateSystem(rightIndex, upIndex, forwardIndex);
+		vehicle.ptr.setCoordinateSystem(rightIndex, upIndex, forwardIndex);
 
 		// Add wheels
 		for (w in wheels) {
-			m_vehicle.ptr.addWheel(
-					w.connectionPointCS0.value,
-					wheelDirectionCS0.value,
-					wheelAxleCS.value,
+			vehicle.ptr.addWheel(
+					w.getConnectionPoint(),
+					wheelDirectionCS0,
+					wheelAxleCS,
 					suspensionRestLength,
 					w.wheelRadius,
-					m_tuning.value,
+					tuning.value,
 					w.isFrontWheel);
 		}
 
 		// Setup wheels
-		for (i in 0...m_vehicle.ptr.getNumWheels()){
-			var wheel = m_vehicle.ptr.getWheelInfo(i);
+		for (i in 0...vehicle.ptr.getNumWheels()){
+			var wheel = vehicle.ptr.getWheelInfo(i);
 			wheel.m_suspensionStiffness = suspensionStiffness;
 			wheel.m_wheelsDampingRelaxation = suspensionDamping;
 			wheel.m_wheelsDampingCompression = suspensionCompression;
@@ -152,47 +152,47 @@ class VehicleBody extends Trait {
 			wheel.m_rollInfluence = rollInfluence;
 		}
 
-		physics.world.ptr.addAction(m_vehicle);
+		physics.world.ptr.addAction(vehicle);
     }
 
 	function update() {
 
-		if (m_vehicle == null) return;
+		if (vehicle == null) return;
 
 		if (up) {
-			gEngineForce = maxEngineForce;
+			engineForce = maxEngineForce;
 		}
 		else if (down) {
-			gEngineForce = -maxEngineForce;
+			engineForce = -maxEngineForce;
 		}
 		else {
-			gEngineForce = 0;
-			gBreakingForce = 20;
+			engineForce = 0;
+			breakingForce = 20;
 		}
 
 		if (left) {
-			gVehicleSteering = 0.3;
+			vehicleSteering = 0.3;
 		}
 		else if (right) {
-			gVehicleSteering = -0.3;
+			vehicleSteering = -0.3;
 		}
 		else {
-			gVehicleSteering = 0;
+			vehicleSteering = 0;
 		}
 
-		m_vehicle.ptr.applyEngineForce(gEngineForce, 2);
-		m_vehicle.ptr.setBrake(gBreakingForce, 2);
-		m_vehicle.ptr.applyEngineForce(gEngineForce, 3);
-		m_vehicle.ptr.setBrake(gBreakingForce, 3);
-		m_vehicle.ptr.setSteeringValue(gVehicleSteering, 0);
-		m_vehicle.ptr.setSteeringValue(gVehicleSteering, 1);
+		vehicle.ptr.applyEngineForce(engineForce, 2);
+		vehicle.ptr.setBrake(breakingForce, 2);
+		vehicle.ptr.applyEngineForce(engineForce, 3);
+		vehicle.ptr.setBrake(breakingForce, 3);
+		vehicle.ptr.setSteeringValue(vehicleSteering, 0);
+		vehicle.ptr.setSteeringValue(vehicleSteering, 1);
 
-		for (i in 0...m_vehicle.ptr.getNumWheels()) {
+		for (i in 0...vehicle.ptr.getNumWheels()) {
 			// Synchronize the wheels with the chassis worldtransform
-			m_vehicle.ptr.updateWheelTransform(i, true);
+			vehicle.ptr.updateWheelTransform(i, true);
 			
 			// Update wheels transforms
-			var trans = m_vehicle.ptr.getWheelTransformWS(i);
+			var trans = vehicle.ptr.getWheelTransformWS(i);
 			//wheels[i].trans = trans;
 			//wheels[i].syncTransform();
 			var p = trans.getOrigin();
@@ -202,7 +202,7 @@ class VehicleBody extends Trait {
 			wheels[i].node.transform.dirty = true;
 		}
 
-		var trans = m_carChassis.ptr.getWorldTransform();
+		var trans = carChassis.ptr.getWorldTransform();
 		var p = trans.getOrigin();
 		var q = trans.getRotation();
 		transform.pos.set(p.x(), p.y(), p.z());

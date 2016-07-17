@@ -52,7 +52,7 @@ class LIST_OT_AnimationTraitNewItem(bpy.types.Operator):
     def execute(self, context):
         trait = context.object.my_traitlist[context.object.traitlist_index]
         trait.my_animationtraitlist.add()
-        trait.animationtraitlist_index += 1
+        trait.animationtraitlist_index = len(trait.my_animationtraitlist) - 1
         return{'FINISHED'}
 
 

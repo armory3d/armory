@@ -7,6 +7,7 @@ import json
 import platform
 import subprocess
 import nodes_compositor
+from utils import to_hex
 
 class CGPipelineTree(NodeTree):
     '''Pipeline nodes'''
@@ -900,9 +901,6 @@ def make_set_target(stage, node_group, node, currentNode=None, target_index=1):
     else: # Framebuffer
         targetId = ''
         stage.params.append(targetId)
-
-def to_hex(val):
-    return '#%02x%02x%02x%02x' % (int(val[3] * 255), int(val[0] * 255), int(val[1] * 255), int(val[2] * 255))
 
 def make_clear_target(stage, color_val=None, depth_val=None, stencil_val=None):
     stage.command = 'clear_target'

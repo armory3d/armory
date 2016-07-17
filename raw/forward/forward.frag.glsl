@@ -677,11 +677,9 @@ void main() {
 	#endif
 	vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;
 	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
-	vec3 indirect += indirectSpecular;
+	indirect += indirectSpecular;
 #endif
-	
 	indirect = indirect * lightColor * lightStrength * envmapStrength;
-
 	outColor = vec4(vec3(direct * visibility + indirect), 1.0);
 	
 #ifdef _OMTex

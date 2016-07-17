@@ -57,10 +57,10 @@ class ListTraitItem(bpy.types.PropertyGroup):
            default="")
 
     my_paramstraitlist = bpy.props.CollectionProperty(type=ListParamsTraitItem)
-    paramstraitlist_index = bpy.props.IntProperty(name="Index for my_list", default=-1)
+    paramstraitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
 
     my_animationtraitlist = bpy.props.CollectionProperty(type=ListAnimationTraitItem)
-    animationtraitlist_index = bpy.props.IntProperty(name="Index for my_list", default=-1)
+    animationtraitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
 
 class MY_UL_TraitList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -78,7 +78,7 @@ class MY_UL_TraitList(bpy.types.UIList):
 
 def initObjectProperties():
     bpy.types.Object.my_traitlist = bpy.props.CollectionProperty(type = ListTraitItem)
-    bpy.types.Object.traitlist_index = bpy.props.IntProperty(name = "Index for my_list", default=-1)
+    bpy.types.Object.traitlist_index = bpy.props.IntProperty(name = "Index for my_list", default=0)
 
 
 class LIST_OT_TraitNewItem(bpy.types.Operator):
@@ -88,7 +88,7 @@ class LIST_OT_TraitNewItem(bpy.types.Operator):
 
     def execute(self, context):
         bpy.context.object.my_traitlist.add()
-        bpy.context.object.traitlist_index += 1
+        bpy.context.object.traitlist_index = len(bpy.context.object.my_traitlist) - 1
         return{'FINISHED'}
 
 
@@ -267,7 +267,11 @@ class ToolsTraitsPanel(bpy.types.Panel):
                     col.operator("my_paramstraitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
 
                 if item.paramstraitlist_index >= 0 and len(item.my_paramstraitlist) > 0:
-                    paramitem = item.my_paramstraitlist[item.paramstraitlist_index]         
+                    paramitem = item.my_paramstraitlist[item.paramstraitlist_index]   
+                    # Picker
+                    layout.label('Pickers')
+                    layout.prop_search(paramitem, 'object_picker', bpy.context.scene, "objects", "Object")
+                    layout.prop(paramitem, 'color_picker')
 
                 if item.type_prop == 'Script':
                     row = layout.row()

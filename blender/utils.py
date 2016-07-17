@@ -31,3 +31,6 @@ def fetch_script_names():
         for file in glob.glob('*.hx'):
             wrd.scripts_list.add().name = file.rsplit('.')[0]
     os.chdir(get_fp())
+
+def to_hex(val):
+    return '#%02x%02x%02x%02x' % (int(val[3] * 255), int(val[0] * 255), int(val[1] * 255), int(val[2] * 255))
