@@ -2221,6 +2221,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			self.ExportWorlds()
 			self.output.world_ref = scene.world.name
 
+			self.output.gravity = [scene.gravity[0], scene.gravity[1], scene.gravity[2]]
+
 		self.ExportObjects(scene)
 		
 		self.cb_postprocess()

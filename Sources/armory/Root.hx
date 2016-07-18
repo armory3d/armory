@@ -25,7 +25,7 @@ class Root {
 		cam.world = Resource.getWorld(Main.projectScene, resource.world_ref);
 
 		// Physics
-		physics = new PhysicsWorld();
+		physics = new PhysicsWorld(resource.gravity);
 		Eg.addNodeTrait(sceneNode, physics);
 
 		App.notifyOnRender(render);

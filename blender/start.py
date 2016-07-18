@@ -7,6 +7,7 @@ import traits_animation
 import traits_params
 import traits
 import props
+import lib.drop_to_ground
 
 import bpy
 import utils
@@ -24,6 +25,7 @@ def register():
     traits_animation.register()
     traits_params.register()
     traits.register()
+    lib.drop_to_ground.register()
 
     # Start server
     user_preferences = bpy.context.user_preferences
@@ -45,6 +47,7 @@ def unregister():
     traits_params.unregister()
     traits.unregister()
     props.unregister()
+    lib.drop_to_ground.unregister()
 
     # Stop server
     register.p.terminate()

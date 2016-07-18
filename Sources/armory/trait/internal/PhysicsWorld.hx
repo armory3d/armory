@@ -32,7 +32,7 @@ class PhysicsWorld extends Trait {
 	static inline var timeStep = 1 / 60;
 	static inline var fixedStep = 1 / 60;
 
-	public function new() {
+	public function new(gravity:Array<Float> = null) {
 		super();
 
 		rbMap = new Map();
@@ -49,7 +49,8 @@ class PhysicsWorld extends Trait {
 		var solver = BtSequentialImpulseConstraintSolver.create();
 
 		world = BtDiscreteDynamicsWorld.create(dispatcher, broadphase, solver, collisionConfiguration);
-		world.ptr.setGravity(BtVector3.create(0, 0, -9.81).value);
+		if (gravity == null) gravity = [0, 0, -9.81];
+		world.ptr.setGravity(BtVector3.create(gravity[0], gravity[1], gravity[2]).value);
 
 		notifyOnUpdate(update);
 	}
