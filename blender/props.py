@@ -53,8 +53,7 @@ def initProperties():
     # For geometry
     bpy.types.Mesh.static_usage = bpy.props.BoolProperty(name="Static Usage", default=True)
     # For camera
-    bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", default=False)
-    bpy.types.Camera.sort_front_to_back = bpy.props.BoolProperty(name="Sort Front to Back", default=False)
+    bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", default=True)
     bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Pipeline Path", default="deferred_pipeline")
     bpy.types.Camera.pipeline_id = bpy.props.StringProperty(name="Pipeline ID", default="deferred")
 	# TODO: Specify multiple material ids, merge ids from multiple cameras 
@@ -105,6 +104,16 @@ def initProperties():
     bpy.types.World.generate_ssao_strength = bpy.props.FloatProperty(name="Strength", default=0.55)
     bpy.types.World.generate_shadows = bpy.props.BoolProperty(name="Generate Shadows", default=True)
     bpy.types.World.generate_shadows_bias = bpy.props.FloatProperty(name="Bias", default=0.00005)
+    bpy.types.World.generate_bloom = bpy.props.BoolProperty(name="Generate Bloom", default=True)
+    bpy.types.World.generate_bloom_treshold = bpy.props.FloatProperty(name="Treshold", default=3.0)
+    bpy.types.World.generate_motion_blur = bpy.props.BoolProperty(name="Generate Motion Blur", default=True)
+    bpy.types.World.generate_motion_blur_intensity = bpy.props.FloatProperty(name="Intensity", default=1.0)
+    bpy.types.World.generate_ssr = bpy.props.BoolProperty(name="Generate SSR", default=True)
+    bpy.types.World.generate_ssr_ray_step = bpy.props.FloatProperty(name="Ray Step", default=0.04)
+    bpy.types.World.generate_ssr_min_ray_step = bpy.props.FloatProperty(name="Ray Step Min", default=0.05)
+    bpy.types.World.generate_ssr_search_dist = bpy.props.FloatProperty(name="Search Dist", default=5.0)
+    bpy.types.World.generate_ssr_falloff_exp = bpy.props.FloatProperty(name="Falloff Exp", default=5.0)
+    bpy.types.World.generate_ssr_jitter = bpy.props.FloatProperty(name="Jitter", default=0.6)
     # For material
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.custom_shader = bpy.props.BoolProperty(name="Custom Shader", default=False)
@@ -172,7 +181,6 @@ class DataPropsPanel(bpy.types.Panel):
                 layout.prop(obj.data, 'probe_strength')
                 layout.prop(obj.data, 'probe_blending')
             layout.prop(obj.data, 'frustum_culling')
-            layout.prop(obj.data, 'sort_front_to_back')
             layout.prop_search(obj.data, "pipeline_path", bpy.data, "node_groups")
             layout.operator("cg.reset_pipelines")
         elif obj.type == 'MESH':
@@ -255,6 +263,19 @@ class WorldPropsPanel(bpy.types.Panel):
         layout.prop(wrd, 'generate_shadows')
         if wrd.generate_shadows:
             layout.prop(wrd, 'generate_shadows_bias')
+        layout.prop(wrd, 'generate_bloom')
+        if wrd.generate_bloom:
+            layout.prop(wrd, 'generate_bloom_treshold')
+        layout.prop(wrd, 'generate_motion_blur')
+        if wrd.generate_motion_blur:
+            layout.prop(wrd, 'generate_motion_blur_intensity')
+        layout.prop(wrd, 'generate_ssr')
+        if wrd.generate_ssr:
+            layout.prop(wrd, 'generate_ssr_ray_step')
+            layout.prop(wrd, 'generate_ssr_min_ray_step')
+            layout.prop(wrd, 'generate_ssr_search_dist')
+            layout.prop(wrd, 'generate_ssr_falloff_exp')
+            layout.prop(wrd, 'generate_ssr_jitter')
 
 # Registration
 def register():

@@ -1478,6 +1478,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				viewport_matrix = self.get_viewport_matrix()
 				if viewport_matrix != None:
 					o.transform.values = self.WriteMatrix(viewport_matrix.inverted())
+					# Do not apply parent matrix
+					o.local_transform_only = True
 
 			if (node.type == "ARMATURE"):
 				skeleton = node.data
@@ -2427,10 +2429,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 	def cb_export_camera(self, object, o):
 		#return
 		o.frustum_culling = object.frustum_culling
-		if object.sort_front_to_back:
-			o.draw_calls_sort = 'front_to_back'
-		else:
-			o.draw_calls_sort = 'none'
 		o.pipeline = object.pipeline_path + '/' + object.pipeline_path # Same file name and id
 		
 		if 'Background' in bpy.data.worlds[0].node_tree.nodes: # TODO: parse node tree

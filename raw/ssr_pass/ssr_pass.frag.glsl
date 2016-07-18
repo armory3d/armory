@@ -13,13 +13,13 @@ uniform sampler2D gbuffer1; // Color, roughness
 uniform mat4 P;
 uniform mat4 tiV;
 
-const int maxSteps = 20;
-const int numBinarySearchSteps = 5;
-
-const float rayStep = 0.04;
-const float minRayStep = 0.05;
-const float searchDist = 5.0;
-const float falloffExp = 5.0;
+// const int maxSteps = 20;
+// const int numBinarySearchSteps = 5;
+// const float ssrRayStep = 0.04;
+// const float ssrMinRayStep = 0.05;
+// const float ssrSearchDist = 5.0;
+// const float ssrFalloffExp = 5.0;
+// const float ssrJitter = 0.6;
 
 in vec3 viewRay;
 in vec2 texCoord;
@@ -105,7 +105,7 @@ vec4 binarySearch(vec3 dir) {
 }
 
 vec4 rayCast(vec3 dir) {
-	dir *= rayStep;
+	dir *= ssrRayStep;
 	
     // for (int i = 0; i < maxSteps; i++) {
         hitCoord += dir;
@@ -220,16 +220,15 @@ void main() {
 	vec3 reflected = normalize(reflect((viewPos.xyz), normalize(viewNormal.xyz)));
 	hitCoord = viewPos.xyz;
 	
-	// vec3 dir = reflected * max(minRayStep, -viewPos.z);
-	vec3 dir = reflected * max(minRayStep, -viewPos.z) * (1.0 - rand(texCoord) * 0.4);
+	vec3 dir = reflected * max(ssrMinRayStep, -viewPos.z) * (1.0 - rand(texCoord) * ssrJitter * roughness);
 	vec4 coords = rayCast(dir);
 
 	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
 
-	float intensity = pow(reflectivity, falloffExp) *
+	float intensity = pow(reflectivity, ssrFalloffExp) *
 		screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) *
-		clamp((searchDist - length(viewPos.xyz - hitCoord)) * (1.0 / searchDist), 0.0, 1.0) * coords.w;
+		clamp((ssrSearchDist - length(viewPos.xyz - hitCoord)) * (1.0 / ssrSearchDist), 0.0, 1.0) * coords.w;
 
 	vec4 texColor = texture(tex, texCoord);
 	

@@ -20,6 +20,7 @@ uniform vec3 eyeLook;
 in vec3 viewRay;
 in vec2 texCoord;
 
+//const float motionBlurIntensity = 1.0;
 const int samples = 8;
 
 vec3 getPos(float depth, vec2 coord) {	
@@ -58,7 +59,7 @@ void main() {
 		return;
 	}
 
-	float blurScale = 1.0; //currentFps / targeFps;
+	float blurScale = 1.0 * motionBlurIntensity; //currentFps / targeFps;
 	vec2 velocity = getVelocity(texCoord, depth) * blurScale * (-1.0);
 	
 	vec2 offset = texCoord;

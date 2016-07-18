@@ -264,6 +264,8 @@ class DrawGeometryNode(Node, CGPipelineTreeNode):
     def init(self, context):
         self.inputs.new('NodeSocketShader', "Stage")
         self.inputs.new('NodeSocketString', "Context")
+        self.inputs.new('NodeSocketString', "Order")
+        self.inputs[2].default_value = 'front_to_back'
 
         self.outputs.new('NodeSocketShader', "Stage")
 
@@ -916,11 +918,15 @@ def make_clear_target(stage, color_val=None, depth_val=None, stencil_val=None):
 
 def make_draw_geometry(stage, node_group, node):
     stage.command = 'draw_geometry'
+    # Context
     context = node.inputs[1].default_value
     # Store shadowmap size
     if context == bpy.data.cameras[0].shadows_context:
         bpy.data.worlds[0].shadowmap_size = 1024
     stage.params.append(context)
+    # Order
+    order = node.inputs[2].default_value
+    stage.params.append(order)
     
 def make_draw_decals(stage, node_group, node, shader_references, asset_references):
     stage.command = 'draw_decals'

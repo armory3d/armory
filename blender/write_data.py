@@ -204,6 +204,22 @@ const float ssaoStrength = """ + str(round(wrd.generate_ssao_strength * 100) / 1
             f.write(
 """const float shadowsBias = """ + str(wrd.generate_shadows_bias) + """;
 """)
+        if wrd.generate_bloom:
+            f.write(
+"""const float bloomTreshold = """ + str(round(wrd.generate_bloom_treshold * 100) / 100) + """;
+""")
+        if wrd.generate_motion_blur:
+            f.write(
+"""const float motionBlurIntensity = """ + str(round(wrd.generate_motion_blur_intensity * 100) / 100) + """;
+""")
+        if wrd.generate_ssr:
+            f.write(
+"""const float ssrRayStep = """ + str(round(wrd.generate_ssr_ray_step * 100) / 100) + """;
+const float ssrMinRayStep = """ + str(round(wrd.generate_ssr_min_ray_step * 100) / 100) + """;
+const float ssrSearchDist = """ + str(round(wrd.generate_ssr_search_dist * 100) / 100) + """;
+const float ssrFalloffExp = """ + str(round(wrd.generate_ssr_falloff_exp * 100) / 100) + """;
+const float ssrJitter = """ + str(round(wrd.generate_ssr_jitter * 100) / 100) + """;
+""")
 
 def write_traithx(class_name):
     wrd = bpy.data.worlds[0]

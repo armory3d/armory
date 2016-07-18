@@ -2,6 +2,7 @@ package armory.trait;
 
 import iron.Eg;
 import iron.Trait;
+import iron.node.Node;
 import iron.node.RootNode;
 import iron.node.CameraNode;
 import iron.node.Transform;
@@ -21,7 +22,7 @@ class VehicleBody extends Trait {
 	var camera:CameraNode;
 
 	// Wheels
-	var wheels:Array<VehicleWheel> = [];
+	var wheels:Array<Node> = [];
 	var wheelNames:Array<String>;
 
     var vehicle:BtRaycastVehiclePointer = null;
@@ -70,7 +71,7 @@ class VehicleBody extends Trait {
     	camera = RootNode.cameras[0];
 
     	for (n in wheelNames) {
-			wheels.push(Eg.root.getChild(n).getTrait(VehicleWheel));
+			wheels.push(Eg.root.getChild(n));
 		}
 
     	var rightIndex = 0; 
@@ -131,15 +132,16 @@ class VehicleBody extends Trait {
 		vehicle.ptr.setCoordinateSystem(rightIndex, upIndex, forwardIndex);
 
 		// Add wheels
-		for (w in wheels) {
+		for (i in 0...wheels.length) {
+			var vehicleWheel = new VehicleWheel(i, wheels[i].transform, node.transform);
 			vehicle.ptr.addWheel(
-					w.getConnectionPoint(),
+					vehicleWheel.connectionPoint,
 					wheelDirectionCS0,
 					wheelAxleCS,
 					suspensionRestLength,
-					w.wheelRadius,
+					vehicleWheel.wheelRadius,
 					tuning.value,
-					w.isFrontWheel);
+					vehicleWheel.isFrontWheel);
 		}
 
 		// Setup wheels
@@ -193,13 +195,12 @@ class VehicleBody extends Trait {
 			
 			// Update wheels transforms
 			var trans = vehicle.ptr.getWheelTransformWS(i);
-			//wheels[i].trans = trans;
-			//wheels[i].syncTransform();
 			var p = trans.getOrigin();
 			var q = trans.getRotation();
-			wheels[i].node.transform.pos.set(p.x(), p.y(), p.z());
-			wheels[i].node.transform.rot.set(q.x(), q.y(), q.z(), q.w());
-			wheels[i].node.transform.dirty = true;
+			wheels[i].transform.localOnly = true;
+			wheels[i].transform.pos.set(p.x(), p.y(), p.z());
+			wheels[i].transform.rot.set(q.x(), q.y(), q.z(), q.w());
+			wheels[i].transform.dirty = true;
 		}
 
 		var trans = carChassis.ptr.getWorldTransform();
@@ -231,6 +232,31 @@ class VehicleBody extends Trait {
 		physics.world.ptr.addRigidBody(body);
 
 		return body;
+	}
+#end
+}
+
+class VehicleWheel extends Trait {
+
+#if (!WITH_PHYSICS)
+	public function new() { super(); }
+#else
+
+	public var isFrontWheel:Bool;
+	public var wheelRadius:Float;
+	public var wheelWidth:Float;
+	public var connectionPoint:BtVector3;
+
+	public function new(id:Int, transform:Transform, vehicleTransform:Transform) {
+		super();
+
+		wheelRadius = transform.size.z / 2;
+		wheelWidth = transform.size.x > transform.size.y ? transform.size.y : transform.size.x;
+
+		var posX = transform.pos.x;
+		var posY = transform.pos.y;
+		var posZ = vehicleTransform.size.z / 2 + transform.pos.z;
+		connectionPoint = BtVector3.create(posX, posY, posZ).value;
 	}
 #end
 }
