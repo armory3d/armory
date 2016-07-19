@@ -27,7 +27,6 @@ class VehicleBody extends Trait {
 
     var vehicle:BtRaycastVehiclePointer = null;
     var carChassis:BtRigidBodyPointer;
-    var startTransform:BtTransformPointer;
 	
 	var engineForce = 0.0;
 	var breakingForce = 0.0;
@@ -104,20 +103,7 @@ class VehicleBody extends Trait {
 		#elseif cpp
 		compound.value.addChildShape(localTrans.value, chassisShape);
 		#end
-		
-		var tr = BtTransform.create();
-		tr.value.setIdentity();
-		tr.value.setOrigin(BtVector3.create(
-			transform.pos.x,
-			transform.pos.y,
-			transform.pos.z).value);
-		tr.value.setRotation(BtQuaternion.create(
-			transform.rot.x,
-			transform.rot.y,
-			transform.rot.z,
-			transform.rot.w).value);
 
-		startTransform = tr; // Cpp workaround
 		carChassis = createRigidBody(500, compound);
 
 		// Create vehicle
@@ -135,7 +121,7 @@ class VehicleBody extends Trait {
 		for (i in 0...wheels.length) {
 			var vehicleWheel = new VehicleWheel(i, wheels[i].transform, node.transform);
 			vehicle.ptr.addWheel(
-					vehicleWheel.connectionPoint,
+					vehicleWheel.getConnectionPoint(),
 					wheelDirectionCS0,
 					wheelAxleCS,
 					suspensionRestLength,
@@ -223,6 +209,18 @@ class VehicleBody extends Trait {
 		var centerOfMassOffset = BtTransform.create();
 		centerOfMassOffset.value.setIdentity();
 		
+		var startTransform = BtTransform.create();
+		startTransform.value.setIdentity();
+		startTransform.value.setOrigin(BtVector3.create(
+			transform.pos.x,
+			transform.pos.y,
+			transform.pos.z).value);
+		startTransform.value.setRotation(BtQuaternion.create(
+			transform.rot.x,
+			transform.rot.y,
+			transform.rot.z,
+			transform.rot.w).value);
+
 		var myMotionState = BtDefaultMotionState.create(startTransform.value, centerOfMassOffset.value);
 		var cInfo = BtRigidBodyConstructionInfo.create(mass, myMotionState, shape, localInertia.value).value;
 			
@@ -236,7 +234,7 @@ class VehicleBody extends Trait {
 #end
 }
 
-class VehicleWheel extends Trait {
+class VehicleWheel {
 
 #if (!WITH_PHYSICS)
 	public function new() { super(); }
@@ -245,18 +243,22 @@ class VehicleWheel extends Trait {
 	public var isFrontWheel:Bool;
 	public var wheelRadius:Float;
 	public var wheelWidth:Float;
-	public var connectionPoint:BtVector3;
+
+	var posX:Float;
+	var posY:Float;
+	var posZ:Float;
 
 	public function new(id:Int, transform:Transform, vehicleTransform:Transform) {
-		super();
-
 		wheelRadius = transform.size.z / 2;
 		wheelWidth = transform.size.x > transform.size.y ? transform.size.y : transform.size.x;
 
-		var posX = transform.pos.x;
-		var posY = transform.pos.y;
-		var posZ = vehicleTransform.size.z / 2 + transform.pos.z;
-		connectionPoint = BtVector3.create(posX, posY, posZ).value;
+		posX = transform.pos.x;
+		posY = transform.pos.y;
+		posZ = vehicleTransform.size.z / 2 + transform.pos.z;
+	}
+
+	public function getConnectionPoint():BtVector3 {
+		return BtVector3.create(posX, posY, posZ).value;
 	}
 #end
 }
