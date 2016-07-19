@@ -1001,8 +1001,11 @@ def make_draw_quad(stage, node_group, node, shader_references, asset_references,
     asset_references.append('compiled/ShaderResources/' + dir_name + '/' + res_name + '.json')
     shader_references.append('compiled/Shaders/' + dir_name + '/' + res_name)
 
-def make_draw_world(stage, node_group, node, shader_references, asset_references):
-    stage.command = 'draw_material_quad'
+def make_draw_world(stage, node_group, node, shader_references, asset_references, dome=True):
+    if dome:
+        stage.command = 'draw_skydome'
+    else:
+        stage.command = 'draw_material_quad'
     wname = bpy.data.worlds[0].name
     stage.params.append(wname + '_material/' + wname + '_material/env_map') # Only one world for now
     # Link assets
@@ -1193,18 +1196,20 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
         make_draw_quad(stage, node_group, node, shader_references, asset_references)
     
     elif node.bl_idname == 'DrawWorldNodeType':
-        # Bind depth
-        if node.inputs[1].is_linked:
-            stage = Object()
-            stage.params = []
-            buildNode.last_bind_target = stage
-            if node.inputs[1].is_linked:
-                make_bind_target(stage, node_group, node, target_index=1, constant_name='gbufferD')
-            stages.append(stage)
-        # Draw quad
+        # Bind depth for quad
+        # if node.inputs[1].is_linked:
+        #     stage = Object()
+        #     stage.params = []
+        #     buildNode.last_bind_target = stage
+        #     if node.inputs[1].is_linked:
+        #         make_bind_target(stage, node_group, node, target_index=1, constant_name='gbufferD')
+        #     stages.append(stage)
         stage = Object()
         stage.params = []
-        make_draw_world(stage, node_group, node, shader_references, asset_references)
+        # Draw quad
+        # make_draw_world(stage, node_group, node, shader_references, asset_references, dome=False)
+        # Draw dome
+        make_draw_world(stage, node_group, node, shader_references, asset_references, dome=True)
     
     elif node.bl_idname == 'DrawCompositorNodeType' or node.bl_idname == 'DrawCompositorWithFXAANodeType':
         # Set target

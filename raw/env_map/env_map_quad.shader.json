@@ -9,17 +9,21 @@
 				},
 				{
 					"id": "compare_mode",
-					"value": "less"
+					"value": "always"
 				},
 				{
 					"id": "cull_mode",
-					"value": "counter_clockwise"
+					"value": "none"
 				}
 			],
 			"links": [
 				{
-					"id": "SMVP",
-					"link": "_skydomeMatrix"
+					"id": "transpV",
+					"link": "_transposeViewMatrix"
+				},
+				{
+					"id": "invP",
+					"link": "_inverseProjectionMatrix"
 				},
 				{
 					"id": "backgroundCol",

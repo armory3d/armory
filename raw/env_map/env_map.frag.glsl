@@ -33,10 +33,10 @@ precision mediump float;
 	uniform sampler2D envmap;
 #endif
 
-uniform sampler2D gbufferD;
+// uniform sampler2D gbufferD;
 uniform float envmapStrength;
 
-in vec2 texCoord;
+// in vec2 texCoord;
 in vec3 normal;
 
 #ifdef _EnvSky
@@ -176,9 +176,9 @@ vec2 envMapEquirect(vec3 normal) {
 #endif
 
 void main() {
-	if (texture(gbufferD, texCoord).r/* * 2.0 - 1.0*/ != 1.0) {
-		discard;
-	}
+	// if (texture(gbufferD, texCoord).r/* * 2.0 - 1.0*/ != 1.0) {
+		// discard;
+	// }
 
 #ifdef _EnvCol
 	vec3 R = backgroundCol;

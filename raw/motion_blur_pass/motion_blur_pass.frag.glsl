@@ -51,9 +51,7 @@ void main() {
 		return;
 	}
 	
-	// float depth = 1.0 - texture(gbuffer0, texCoord).a;
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	// if (depth == 0.0) {
 	if (depth == 1.0) {
 		gl_FragColor = color;
 		return;
