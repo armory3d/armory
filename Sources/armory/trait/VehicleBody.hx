@@ -237,7 +237,7 @@ class VehicleBody extends Trait {
 class VehicleWheel {
 
 #if (!WITH_PHYSICS)
-	public function new() { super(); }
+	public function new() { }
 #else
 
 	public var isFrontWheel:Bool;

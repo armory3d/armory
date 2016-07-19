@@ -20,7 +20,7 @@ class ContactPair {
 class PhysicsWorld extends Trait {
 
 #if (!WITH_PHYSICS)
-	public function new() { super(); }
+	public function new(gravity:Array<Float> = null) { super(); }
 #else
 
 	public var world:BtDiscreteDynamicsWorldPointer;

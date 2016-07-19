@@ -4,6 +4,7 @@ from bpy.props import *
 import os
 import json
 import write_probes
+import assets
 
 def register():
 	pass
@@ -38,8 +39,8 @@ def buildNodeTrees():
 	os.chdir(fp)
 
 	# Make sure Assets dir exists
-	if not os.path.exists('Assets/generated/materials'):
-		os.makedirs('Assets/generated/materials')
+	if not os.path.exists('compiled/Assets/materials'):
+		os.makedirs('compiled/Assets/materials')
 	
 	# Export world nodes
 	world_outputs = []
@@ -107,9 +108,11 @@ def write_output(output, asset_references, shader_references):
 	shader_references.append('compiled/Shaders/' + dir_name + '/' + res_name)
 
 	# Write material json
-	path = 'Assets/generated/materials/'
-	with open(path + res.id + '.json', 'w') as f:
+	path = 'compiled/Assets/materials/'
+	asset_path = path + res.id + '.json'
+	with open(asset_path, 'w') as f:
 		f.write(output.to_JSON())
+	assets.add(asset_path)
 
 def parse_world_output(node_group, node, context):
 	if node.inputs[0].is_linked:

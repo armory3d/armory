@@ -16,16 +16,7 @@ class RigidBody extends Trait {
 	public function new() { super(); }
 #else
 
-	public static inline var SHAPE_BOX = 0;
-	public static inline var SHAPE_SPHERE = 1;
-	public static inline var SHAPE_CONVEX_HULL = 2;
-	public static inline var SHAPE_MESH = 3;
-	public static inline var SHAPE_CONE = 4;
-	public static inline var SHAPE_CYLINDER = 5;
-	public static inline var SHAPE_CAPSULE = 6;
-	public static inline var SHAPE_TERRAIN = 7;
-	public static inline var SHAPE_STATIC_MESH = 8;
-	var shape:Int;
+	var shape:Shape;
 
 	public var physics:PhysicsWorld;
 	public var transform:Transform;
@@ -36,21 +27,21 @@ class RigidBody extends Trait {
 
 	public var body:BtRigidBodyPointer = null;
 	public var bodyCreated = false;
-	public var shapeConvexCreated: Bool;
+	public var shapeConvexCreated:Bool;
 
 	static var nextId = 0;
 	public var id = 0;
 
 	public var onCreated:Void->Void = null;
 
-	public function new(mass = 1.0, shape = SHAPE_BOX, friction = 0.5, collisionMargin = 0.0) {
+	public function new(mass = 1.0, shape = Shape.Box, friction = 0.5, collisionMargin = 0.0) {
 		super();
 
 		this.mass = mass;
 		this.shape = shape;
 		this.friction = friction;
 		this.collisionMargin = collisionMargin;
-
+		
 		notifyOnInit(init);
 		notifyOnLateUpdate(lateUpdate);
 		notifyOnRemove(removeFromWorld);
@@ -61,7 +52,6 @@ class RigidBody extends Trait {
 	}
 
 	public function init() {
-		
 		transform = node.transform;
 		physics = Root.physics;
 
@@ -73,32 +63,32 @@ class RigidBody extends Trait {
 		shapeConvexCreated = false;
 		var _inertia = BtVector3.create(0, 0, 0);
 
-		if (shape == SHAPE_BOX) {
+		if (shape == Shape.Box) {
 			_shape = BtBoxShape.create(BtVector3.create(
 				withMargin(transform.size.x / 2),
 				withMargin(transform.size.y / 2),
 				withMargin(transform.size.z / 2)).value);
 		}
-		else if (shape == SHAPE_SPHERE) {
+		else if (shape == Shape.Sphere) {
 			_shape = BtSphereShape.create(withMargin(transform.size.x / 2));
 		}
-		else if (shape == SHAPE_CONVEX_HULL || shape == SHAPE_MESH) { // Use convex hull for mesh for now
+		else if (shape == Shape.ConvexHull || shape == Shape.Mesh) { // Use convex hull for mesh for now
 			_shapeConvex = BtConvexHullShape.create();
 			shapeConvexCreated = true;
 			addPointsToConvexHull(_shapeConvex, transform.scale, collisionMargin);
 		}
-		else if (shape == SHAPE_CONE) {
+		else if (shape == Shape.Cone) {
 			_shape = BtConeShapeZ.create(
 				withMargin(transform.size.x / 2), // Radius
 				withMargin(transform.size.z));	  // Height
 		}
-		else if (shape == SHAPE_CYLINDER) {
+		else if (shape == Shape.Cylinder) {
 			_shape = BtCylinderShapeZ.create(BtVector3.create(
 				withMargin(transform.size.x / 2),
 				withMargin(transform.size.y / 2),
 				withMargin(transform.size.z / 2)).value);
 		}
-		else if (shape == SHAPE_CAPSULE) {
+		else if (shape == Shape.Capsule) {
 			_shape = BtCapsuleShapeZ.create(
 				withMargin(transform.size.x / 2),// * scaleX, // Radius
 				withMargin(transform.size.z));// * scaleZ); // Height
@@ -107,7 +97,7 @@ class RigidBody extends Trait {
 			// var data:Array<Dynamic> = [];
 			// _shape = BtHeightfieldTerrainShape.create(3, 3, data, 1, -10, 10, 2, 0, true);
 		//}
-		else if (shape == SHAPE_STATIC_MESH || shape == SHAPE_TERRAIN) {
+		else if (shape == Shape.StaticMesh || shape == Shape.Terrain) {
 			var meshInterface = BtTriangleMesh.create(true, true);
 			fillTriangleMesh(meshInterface, transform.scale);
 			_shape = BtBvhTriangleMeshShape.create(meshInterface, true, true);
@@ -130,7 +120,7 @@ class RigidBody extends Trait {
 		var _motionState = BtDefaultMotionState.create(_transform.value, _centerOfMassOffset.value);
 
 		if (!shapeConvexCreated) {
-			if (shape != SHAPE_STATIC_MESH && shape != SHAPE_TERRAIN) {
+			if (shape != Shape.StaticMesh && shape != Shape.Terrain) {
 				_shape.ptr.calculateLocalInertia(mass, _inertia.value);
 			}
 			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shape, _inertia.value);
@@ -268,4 +258,16 @@ class RigidBody extends Trait {
 		}
 	}
 #end
+}
+
+@:enum abstract Shape(Int) from Int {
+	var Box = 0;
+	var Sphere = 1;
+	var ConvexHull = 2;
+	var Mesh = 3;
+	var Cone = 4;
+	var Cylinder = 5;
+	var Capsule = 6;
+	var Terrain = 7;
+	var StaticMesh = 8;
 }

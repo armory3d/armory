@@ -29,6 +29,7 @@ import numpy
 import ast
 import write_probes
 from bpy_extras.io_utils import ExportHelper
+import assets
 
 kNodeTypeNode = 0
 kNodeTypeBone = 1
@@ -153,6 +154,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 	option_sample_animation = bpy.props.BoolProperty(name = "Force Sampled Animation", description = "Always export animation as per-frame samples", default=True)
 	option_geometry_only = bpy.props.BoolProperty(name = "Export Geometry Only", description = "Export only geometry data", default=True)
 	option_geometry_per_file = bpy.props.BoolProperty(name = "Export Geometry Per File", description = "Export each geometry to individual JSON files", default=False)
+	option_optimize_geometry = bpy.props.BoolProperty(name = "Optimized Geometry Exported", description = "Slower but exports slightly smaller data", default=False)
 	option_minimize = bpy.props.BoolProperty(name = "Export Minimized", description = "Export minimized JSON data", default=True)
 
 	def WriteMatrix(self, matrix):
@@ -481,19 +483,19 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 			for face in mesh.tessfaces:
 				tf = texcoordFace[faceIndex]
-				exportVertexArray[vertexIndex].texcoord0 = tf.uv1
+				exportVertexArray[vertexIndex].texcoord0 = [tf.uv1[0], 1.0 - tf.uv1[1]] # Reverse TCY
 				vertexIndex += 1
-				exportVertexArray[vertexIndex].texcoord0 = tf.uv2
+				exportVertexArray[vertexIndex].texcoord0 = [tf.uv2[0], 1.0 - tf.uv2[1]]
 				vertexIndex += 1
-				exportVertexArray[vertexIndex].texcoord0 = tf.uv3
+				exportVertexArray[vertexIndex].texcoord0 = [tf.uv3[0], 1.0 - tf.uv3[1]]
 				vertexIndex += 1
 
 				if (len(face.vertices) == 4):
-					exportVertexArray[vertexIndex].texcoord0 = tf.uv1
+					exportVertexArray[vertexIndex].texcoord0 = [tf.uv1[0], 1.0 - tf.uv1[1]]
 					vertexIndex += 1
-					exportVertexArray[vertexIndex].texcoord0 = tf.uv3
+					exportVertexArray[vertexIndex].texcoord0 = [tf.uv3[0], 1.0 - tf.uv3[1]]
 					vertexIndex += 1
-					exportVertexArray[vertexIndex].texcoord0 = tf.uv4
+					exportVertexArray[vertexIndex].texcoord0 = [tf.uv4[0], 1.0 - tf.uv4[1]]
 					vertexIndex += 1
 
 				faceIndex += 1
@@ -1489,6 +1491,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 					# TODO: use option_geometry_per_file
 					fp = self.get_geoms_file_path(o.bones_ref)
+					assets.add(fp)
 
 					if self.node_is_geometry_cached(node) == False or not os.path.exists(fp):
 						bones = []
@@ -1699,7 +1702,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				ndata[(i * 3) + j] = normal[j]
 			if num_uv_layers > 0:
 				t0data[i * 2] = vtx.uvs[0].x
-				t0data[i * 2 + 1] = vtx.uvs[0].y
+				t0data[i * 2 + 1] = 1.0 - vtx.uvs[0].y # Reverse TCY
 				if num_uv_layers > 1:
 					t1data[i * 2] = vtx.uvs[1].x
 					t1data[i * 2 + 1] = vtx.uvs[1].y
@@ -1778,10 +1781,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			tana.size = 3
 			tana.values = self.calc_tangents(pa.values, na.values, ta.values, om.index_arrays[0].values)	
 			om.vertex_arrays.append(tana)
-		
-		# Write
-		o.mesh = om
-		self.write_geometry(node, fp, o)
 
 	def ExportGeometry(self, objectRef, scene):
 		# This function exports a single geometry object.
@@ -1794,6 +1793,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# No export necessary
 		if ArmoryExporter.option_geometry_per_file:
 			fp = self.get_geoms_file_path('geom_' + oid)
+			assets.add(fp)
 			if self.node_is_geometry_cached(node) == True and os.path.exists(fp):
 				return
 
@@ -1864,10 +1864,35 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# arbitrary stage in the modifier stack.
 		exportMesh = node.to_mesh(scene, applyModifiers, "RENDER", True, False)
 
+		# Process geometry
+		if ArmoryExporter.option_optimize_geometry:
+			self.export_geometry_quality(exportMesh, node, fp, o, om)
+		else:
+			self.export_geometry_fast(exportMesh, node, fp, o, om)
 
-		# Default to fast for now
-		self.export_geometry_fast(exportMesh, node, fp, o, om)
-		# self.export_geometry_quality(exportMesh, node, fp, o, om)
+		# If the mesh is skinned, export the skinning data here.
+		if (armature):
+			self.ExportSkin(node, armature, unifiedVertexArray, om)
+
+		# Restore the morph state.
+		if (shapeKeys):
+			node.active_shape_key_index = activeShapeKeyIndex
+			node.show_only_shape_key = showOnlyShapeKey
+
+			for m in range(len(currentMorphValue)):
+				shapeKeys.key_blocks[m].value = currentMorphValue[m]
+
+			mesh.update()
+
+		# Save offset data for instanced rendering
+		if is_instanced == True:
+			om.instance_offsets = instance_offsets
+
+		# Export usage
+		om.static_usage = self.get_geometry_static_usage(node.data)
+
+		o.mesh = om
+		self.write_geometry(node, fp, o)
 
 	def export_geometry_quality(self, exportMesh, node, fp, o, om):
 		# Triangulate mesh and remap vertices to eliminate duplicates.
@@ -2013,32 +2038,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			tana.values = self.calc_tangents(pa.values, na.values, ta.values, om.index_arrays[0].values)	
 			om.vertex_arrays.append(tana)
 
-		# If the mesh is skinned, export the skinning data here.
-		if (armature):
-			self.ExportSkin(node, armature, unifiedVertexArray, om)
-
-		# Restore the morph state.
-		if (shapeKeys):
-			node.active_shape_key_index = activeShapeKeyIndex
-			node.show_only_shape_key = showOnlyShapeKey
-
-			for m in range(len(currentMorphValue)):
-				shapeKeys.key_blocks[m].value = currentMorphValue[m]
-
-			mesh.update()
-
-		# Save offset data for instanced rendering
-		if is_instanced == True:
-			om.instance_offsets = instance_offsets
-
-		# Export usage
-		om.static_usage = self.get_geometry_static_usage(node.data)
-
 		# Delete the new mesh that we made earlier.
 		bpy.data.meshes.remove(exportMesh)
-
-		o.mesh = om
-		self.write_geometry(node, fp, o)
 
 	def ExportLight(self, objectRef):
 		# This function exports a single light object.
@@ -2197,6 +2198,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		ArmoryExporter.sampleAnimationFlag = self.option_sample_animation
 		ArmoryExporter.option_geometry_only = self.option_geometry_only
 		ArmoryExporter.option_geometry_per_file = self.option_geometry_per_file
+		ArmoryExporter.option_optimize_geometry = self.option_optimize_geometry
 		ArmoryExporter.option_minimize = self.option_minimize
 
 		self.cb_preprocess()
@@ -2290,6 +2292,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		#return
 		ArmoryExporter.option_geometry_only = False
 		ArmoryExporter.option_geometry_per_file = True
+		ArmoryExporter.option_optimize_geometry = bpy.data.worlds[0].CGOptimizeGeometry
 		ArmoryExporter.option_minimize = bpy.data.worlds[0].CGMinimize
 
 		# Only one pipeline for scene for now

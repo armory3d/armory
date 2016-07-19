@@ -11,20 +11,20 @@ precision highp float;
 in vec3 pos;
 in vec3 nor;
 #ifdef _AMTex
-in vec2 tex;
+	in vec2 tex;
 #endif
 #ifdef _VCols
-in vec4 col;
+	in vec3 col;
 #endif
 #ifdef _NMTex
-in vec3 tan;
+	in vec3 tan;
 #endif
 #ifdef _Skinning
-in vec4 bone;
-in vec4 weight;
+	in vec4 bone;
+	in vec4 weight;
 #endif
 #ifdef _Instancing
-in vec3 off;
+	in vec3 off;
 #endif
 
 uniform mat4 M;
@@ -34,20 +34,20 @@ uniform mat4 P;
 uniform mat4 LMVP;
 uniform vec4 albedo_color;
 #ifdef _Skinning
-uniform float skinBones[50 * 12];
+	uniform float skinBones[50 * 12];
 #endif
 
 out vec4 mvpposition;
 out vec3 position;
-#ifdef _AMTex
-out vec2 texCoord;
+#ifdef _Tex
+	out vec2 texCoord;
 #endif
 out vec4 lPos;
 out vec4 matColor;
 #ifdef _NMTex
-out mat3 TBN;
+	out mat3 TBN;
 #else
-out vec3 normal;
+	out vec3 normal;
 #endif
 
 #ifdef _Skinning
@@ -122,7 +122,7 @@ void main() {
 	matColor = albedo_color;
 
 #ifdef _VCols
-	matColor *= col;
+	matColor.rgb *= col;
 #endif
 
 	mvpposition = gl_Position;

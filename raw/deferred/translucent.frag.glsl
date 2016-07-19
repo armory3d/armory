@@ -12,23 +12,23 @@ precision mediump float;
 #endif
 
 #ifdef _AMTex
-uniform sampler2D salbedo;
+	uniform sampler2D salbedo;
 #endif
 #ifdef _NMTex
-uniform sampler2D snormal;
+	uniform sampler2D snormal;
 #endif
 #ifdef _OMTex
-uniform sampler2D som;
+	uniform sampler2D som;
 #endif
 #ifdef _RMTex
-uniform sampler2D srm;
+	uniform sampler2D srm;
 #else
-uniform float roughness;
+	uniform float roughness;
 #endif
 #ifdef _MMTex
-uniform sampler2D smm;
+	uniform sampler2D smm;
 #else
-uniform float metalness;
+	uniform float metalness;
 #endif
 uniform float mask;
 
@@ -44,15 +44,15 @@ uniform vec3 eye;
 
 in vec4 mvpposition;
 in vec3 position;
-#ifdef _AMTex
-in vec2 texCoord;
+#ifdef _Tex
+	in vec2 texCoord;
 #endif
 in vec4 lPos;
 in vec4 matColor;
 #ifdef _NMTex
-in mat3 TBN;
+	in mat3 TBN;
 #else
-in vec3 normal;
+	in vec3 normal;
 #endif
 
 

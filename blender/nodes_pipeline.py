@@ -8,6 +8,7 @@ import platform
 import subprocess
 import nodes_compositor
 from utils import to_hex
+import assets
 
 class CGPipelineTree(NodeTree):
     '''Pipeline nodes'''
@@ -841,8 +842,8 @@ def buildNodeTrees(shader_references, asset_references, assets_path):
     os.chdir(fp)
 
     # Make sure Assets dir exists
-    if not os.path.exists('Assets/generated/pipelines'):
-        os.makedirs('Assets/generated/pipelines')
+    if not os.path.exists('compiled/Assets/pipelines'):
+        os.makedirs('compiled/Assets/pipelines')
     
     buildNodeTrees.assets_path = assets_path
     buildNodeTrees.linked_assets = []
@@ -861,7 +862,7 @@ def buildNodeTree(node_group, shader_references, asset_references):
     res = Object()
     output.pipeline_resources = [res]
     
-    path = 'Assets/generated/pipelines/'
+    path = 'compiled/Assets/pipelines/'
     node_group_name = node_group.name.replace('.', '_')
     
     rn = getRootNode(node_group)
@@ -874,8 +875,10 @@ def buildNodeTree(node_group, shader_references, asset_references):
     
     buildNode(res.stages, rn, node_group, shader_references, asset_references)
 
-    with open(path + node_group_name + '.json', 'w') as f:
-            f.write(output.to_JSON())
+    asset_path = path + node_group_name + '.json'
+    with open(asset_path, 'w') as f:
+        f.write(output.to_JSON())
+    assets.add(asset_path)
 
 def make_set_target(stage, node_group, node, currentNode=None, target_index=1):
     if currentNode == None:
@@ -922,7 +925,7 @@ def make_draw_geometry(stage, node_group, node):
     context = node.inputs[1].default_value
     # Store shadowmap size
     if context == bpy.data.cameras[0].shadows_context:
-        bpy.data.worlds[0].shadowmap_size = 1024
+        bpy.data.worlds[0].shadowmap_size = buildNode.last_set_target_w
     stage.params.append(context)
     # Order
     order = node.inputs[2].default_value

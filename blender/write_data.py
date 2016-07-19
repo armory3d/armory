@@ -1,5 +1,6 @@
 import bpy
 import os
+import assets
 
 # Write khafile.js
 def write_khafilejs(shader_references, asset_references):
@@ -21,6 +22,9 @@ project.addSources('Sources');
 project.addShaders('Sources/Shaders/**');
 project.addAssets('Assets/**');
 """)
+        # project.addAssets('compiled/Assets/**');
+        for file in assets.assets:
+            f.write("project.addAssets('" + file + "');\n")
         
         f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/armory')[2:] + '");\n')
         f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/iron')[2:] + '");\n')

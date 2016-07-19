@@ -11,26 +11,26 @@ precision highp float;
 in vec3 pos;
 in vec3 nor;
 #ifdef _AMTex
-in vec2 tex;
+	in vec2 tex;
 #endif
 #ifdef _VCols
-in vec4 col;
+	in vec3 col;
 #endif
 #ifdef _NMTex
-in vec3 tan;
-in vec3 bitan;
+	in vec3 tan;
+	in vec3 bitan;
 #endif
 #ifdef _Skinning
-in vec4 bone;
-in vec4 weight;
+	in vec4 bone;
+	in vec4 weight;
 #endif
 #ifdef _Instancing
-in vec3 off;
+	in vec3 off;
 #endif
 
 uniform mat4 LMVP;
 #ifdef _Skinning
-uniform float skinBones[50 * 12];
+	uniform float skinBones[50 * 12];
 #endif
 
 out vec4 position;

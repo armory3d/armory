@@ -5,22 +5,36 @@ import subprocess
 import json
 import re
 import utils
+from utils import Object
+import assets
 
-class Object:
-    def to_JSON(self):
-        if bpy.data.worlds[0].CGMinimize == True:
-            return json.dumps(self, default=lambda o: o.__dict__, separators=(',',':'))
-        else:
-            return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+def add_irr_assets(output_file_irr):
+    assets.add(output_file_irr + '.json')
+
+def add_rad_assets(output_file_rad, rad_format, num_mips):
+    assets.add(output_file_rad + '.' + rad_format)
+    for i in range(0, num_mips):
+        assets.add(output_file_rad + '_' + str(i) + '.' + rad_format)
 
 # Generate probes from environment map
 def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance=True):
-    if not os.path.exists('Assets/generated/envmaps'):
-        os.makedirs('Assets/generated/envmaps')
+    if not os.path.exists('compiled/Assets/envmaps'):
+        os.makedirs('compiled/Assets/envmaps')
     
     base_name = image_filepath.rsplit('/', 1)[1].rsplit('.', 1)[0] # Extract file name without extension
-    # Assume irradiance has to exist for now
-    if os.path.exists('Assets/generated/envmaps/' + base_name + '_irradiance.json'):
+    
+    # Assets to be generated
+    output_file_irr = 'compiled/Assets/envmaps/' + base_name + '_irradiance'
+    if generate_radiance:
+        output_file_rad = 'compiled/Assets/envmaps/' + base_name + '_radiance'
+        rad_format = 'jpg' if disable_hdr else 'hdr'
+
+    # Assume irradiance has to exist
+    if os.path.exists('compiled/Assets/envmaps/' + base_name + '_irradiance.json'):
+        # Cached assets
+        add_irr_assets(output_file_irr)
+        if generate_radiance:
+            add_rad_assets(output_file_rad, rad_format, cached_num_mips)
         return cached_num_mips
     
     # Get paths
@@ -57,7 +71,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     while num < image_w:
         num *= 2
         mip_count += 1
-    
+
     face_size = image_w / 16
     src_face_size = str(face_size)
     dst_face_size = str(face_size)
@@ -72,7 +86,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
         ' --outputGammaDenominator ' + output_gama_numerator
     
     # Irradiance image
-    # output_file = 'Assets/generated/envmaps/' + base_name + '_irradiance'
+    # output_file_irr = 'compiled/Assets/envmaps/' + base_name + '_irradiance'
     # subprocess.call([ \
     #   cmft_path + 'cmft-osx' + \
     #   ' --input ' + input_file + \
@@ -80,34 +94,34 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     #   ' --dstFaceSize ' + dst_face_size + \
     #   gama_options + \
     #   ' --outputNum 1' + \
-    #   ' --output0 ' + output_file + \
+    #   ' --output0 ' + output_file_irr + \
     #   ' --output0params hdr,rgbe,latlong'], shell=True)
-    # generated_files.append(output_file)
+    # generated_files.append(output_file_irr)
     
     # Irradiance spherical harmonics
-    output_file = 'Assets/generated/envmaps/' + base_name + '_irradiance'
     subprocess.call([ \
         cmft_path + 'cmft-osx' + \
         ' --input ' + input_file + \
         ' --filter shcoeffs' + \
         #gama_options + \
         ' --outputNum 1' + \
-        ' --output0 ' + output_file], shell=True)
+        ' --output0 ' + output_file_irr], shell=True)
     
-    sh_to_json(output_file)
+    sh_to_json(output_file_irr)
+    # Non cached assets
+    add_irr_assets(output_file_irr)
     
     # Mip-mapped radiance image
     if generate_radiance == False:
         return cached_num_mips
-        
-    output_file = 'Assets/generated/envmaps/' + base_name + '_radiance'
-    outformat = 'jpg' if disable_hdr else 'hdr'
+
     output = subprocess.check_output([ \
         kraffiti_path + 'kraffiti-osx' + \
         ' from=' + input_file + \
-        ' to=' + output_file + '.' + outformat + \
-        ' format=' + outformat + \
+        ' to=' + output_file_rad + '.' + rad_format + \
+        ' format=' + rad_format + \
         ' scale=0.5'], shell=True)
+
     subprocess.call([ \
         cmft_path + 'cmft-osx' + \
         ' --input ' + input_file + \
@@ -131,13 +145,13 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
         ' --outputGammaNumerator 1.0' + \
         ' --outputGammaDenominator ' + output_gama_numerator + \
         ' --outputNum 1' + \
-        ' --output0 ' + output_file + \
+        ' --output0 ' + output_file_rad + \
         ' --output0params hdr,rgbe,latlong'], shell=True)
     
     # Remove size extensions in file name
     mip_w = int(face_size * 4)
     mip_h = int(face_size * 2)
-    mip_base = output_file + '_'
+    mip_base = output_file_rad + '_'
     mip_num = 0
     while mip_w >= 32:
         mip_name = mip_base + str(mip_num)
@@ -150,7 +164,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
 
     # Append mips       
     for i in range(0, mip_count):
-        generated_files.append(output_file + '_' + str(i))
+        generated_files.append(output_file_rad + '_' + str(i))
     
     # Convert to jpgs
     if disable_hdr is True:
@@ -165,16 +179,20 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     # Scale from (32x16 to 1x1>
     for i in range (0, 5):
         last = generated_files[-1]
-        out = output_file + '_' + str(mip_count + i)
+        out = output_file_rad + '_' + str(mip_count + i)
         subprocess.call([ \
                 kraffiti_path + 'kraffiti-osx' + \
-                ' from=' + last + '.' + outformat + \
-                ' to=' + out + '.' + outformat + \
+                ' from=' + last + '.' + rad_format + \
+                ' to=' + out + '.' + rad_format + \
                 ' scale=0.5' + \
-                ' format=' + outformat], shell=True)
+                ' format=' + rad_format], shell=True)
         generated_files.append(out)
     
     mip_count += 5
+
+    # Non cached assets
+    add_rad_assets(output_file_rad, rad_format, mip_count)
+
     return mip_count
 
 # Parse sh coefs produced by cmft into json array
@@ -207,15 +225,17 @@ def write_sky_irradiance(base_name):
     # Predefined fake spherical harmonics for now
     irradiance_floats = [1.0281457342829743,1.1617608778901902,1.3886220898440544,-0.13044863139637752,-0.2794659158733846,-0.5736106907295643,0.04065421813873111,0.0434367391348577,0.03567450494792305,0.10964557605577738,0.1129839085793664,0.11261660812141877,-0.08271974283263238,-0.08068091195339556,-0.06432614970480094,-0.12517787967665814,-0.11638582546310804,-0.09743696224655113,0.20068697715947176,0.2158788783296805,0.2109374396869599,0.19636637427150455,0.19445523113118082,0.17825330699680575,0.31440860839538637,0.33041120060402407,0.30867788630062676]
     
-    if not os.path.exists('Assets/generated/envmaps'):
-        os.makedirs('Assets/generated/envmaps')
+    if not os.path.exists('compiled/Assets/envmaps'):
+        os.makedirs('compiled/Assets/envmaps')
     
-    output_file = 'Assets/generated/envmaps/' + base_name + '_irradiance'
+    output_file = 'compiled/Assets/envmaps/' + base_name + '_irradiance'
     
     with open(output_file + '.json', 'w') as f:
         sh_json = Object()
         sh_json.irradiance = irradiance_floats
         f.write(sh_json.to_JSON())
+
+    assets.add(output_file + '.json')
 
 def write_color_irradiance(base_name, col):
     # Constant color
@@ -223,12 +243,14 @@ def write_color_irradiance(base_name, col):
     for i in range(0, 24):
         irradiance_floats.append(0.0)
     
-    if not os.path.exists('Assets/generated/envmaps'):
-        os.makedirs('Assets/generated/envmaps')
+    if not os.path.exists('compiled/Assets/envmaps'):
+        os.makedirs('compiled/Assets/envmaps')
     
-    output_file = 'Assets/generated/envmaps/' + base_name + '_irradiance'
+    output_file = 'compiled/Assets/envmaps/' + base_name + '_irradiance'
     
     with open(output_file + '.json', 'w') as f:
         sh_json = Object()
         sh_json.irradiance = irradiance_floats
         f.write(sh_json.to_JSON())
+
+    assets.add(output_file + '.json')

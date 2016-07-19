@@ -17,6 +17,7 @@ from exporter import ArmoryExporter
 import lib.make_resources
 import lib.make_variants
 import utils
+import assets
 
 def init_armory_props():
     # First run
@@ -153,7 +154,8 @@ def export_game_data(fp, sdk_path):
 
     shader_references = []
     asset_references = []
-    
+    assets.reset()
+
     # Build node trees
     # TODO: cache
     nodes_logic.buildNodeTrees()
@@ -179,11 +181,13 @@ def export_game_data(fp, sdk_path):
     # Export scene data
     for scene in bpy.data.scenes:
         if scene.game_export:
+            asset_path = 'compiled/Assets/' + scene.name + '.json'
             bpy.ops.export_scene.armory(
                 get_export_scene_override(scene),
-                filepath='Assets/generated/' + scene.name + '.json')
+                filepath=asset_path)
             shader_references += ArmoryExporter.shader_references
             asset_references += ArmoryExporter.asset_references
+            assets.add(asset_path)
 
     # Move armatures back
     for a in armatures:
@@ -193,8 +197,10 @@ def export_game_data(fp, sdk_path):
     
     # Clean compiled variants if cache is disabled
     if bpy.data.worlds[0].CGCacheShaders == False:
-        if os.path.isdir("compiled"):
-            shutil.rmtree('compiled')
+        if os.path.isdir("compiled/Shaders"):
+            shutil.rmtree('compiled/Shaders')
+        if os.path.isdir("compiled/ShaderResources"):
+            shutil.rmtree('compiled/ShaderResources')
     
     # Write referenced shader variants
     # Assume asset_references contains shader resources only for now
@@ -377,11 +383,7 @@ def clean_project(self):
     if os.path.isdir('build'):
         shutil.rmtree('build')
 
-    # Remove generated data
-    if os.path.isdir('Assets/generated'):
-        shutil.rmtree('Assets/generated')
-
-    # Remove generated shader variants
+    # Remove generated assets and shader variants
     if os.path.isdir('compiled'):
         shutil.rmtree('compiled')
 

@@ -14,7 +14,7 @@ in vec3 nor;
 	in vec2 tex;
 #endif
 #ifdef _VCols
-	in vec4 col;
+	in vec3 col;
 #endif
 #ifdef _NMTex
 	in vec3 tan;

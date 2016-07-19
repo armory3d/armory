@@ -17,7 +17,7 @@ in vec3 nor;
 	in vec2 tex;
 #endif
 #ifdef _VCols
-	in vec4 col;
+	in vec3 col;
 #endif
 #ifdef _NMTex
 	in vec3 tan;
@@ -144,8 +144,8 @@ void main() {
 	matColor = albedo_color;
 
 #ifdef _VCols
-	matColor *= col;
-	// matColor *= pow(col, vec3(2.2));
+	matColor.rgb *= col;
+	// matColor.rgb *= pow(col, vec3(2.2));
 #endif
 
 	mvpposition = gl_Position;

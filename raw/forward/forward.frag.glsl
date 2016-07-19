@@ -510,7 +510,7 @@ void main() {
 	float dotNL = max(dot(n, l), 0.0);
 	
 	float visibility = 1.0;
-#ifdef _NoShadows
+#ifndef _NoShadows
 	if (receiveShadow) {
 		if (lPos.w > 0.0) {
 			visibility = shadowTest(lPos);
