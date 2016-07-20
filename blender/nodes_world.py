@@ -5,6 +5,7 @@ import os
 import json
 import write_probes
 import assets
+import utils
 
 def register():
 	pass
@@ -13,14 +14,6 @@ def register():
 def unregister():
 	pass
 	#bpy.utils.unregister_module(__name__)
-
-# Generating world resources
-class Object:
-	def to_JSON(self):
-		if bpy.data.worlds[0].CGMinimize == True:
-			return json.dumps(self, default=lambda o: o.__dict__, separators=(',',':'))
-		else:
-			return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
 def find_node(node_group, to_node, target_socket):
 	for link in node_group.links:
@@ -50,15 +43,15 @@ def buildNodeTrees():
 	return world_outputs
 
 def buildNodeTree(world_name, node_group):
-	output = Object()
-	res = Object()
-	output.material_resources = [res]
-	res.id = world_name.replace('.', '_') + '_material'
-	context = Object()
-	res.contexts = [context]
-	context.id = 'env_map'
-	context.bind_constants = []
-	context.bind_textures = []
+	output = {}
+	res = {}
+	output['material_resources'] = [res]
+	res['id'] = world_name.replace('.', '_') + '_material'
+	context = {}
+	res['contexts'] = [context]
+	context['id'] = 'env_map'
+	context['bind_constants'] = []
+	context['bind_textures'] = []
 	
 	bpy.data.worlds[0].world_defs = ''
 	
@@ -102,16 +95,15 @@ def write_output(output, asset_references, shader_references):
 	# Append world defs
 	res_name = 'env_map' + bpy.data.worlds[0].world_defs
 	# Reference correct shader context
-	res = output.material_resources[0]
-	res.shader = res_name + '/' + res_name
-	asset_references.append('compiled/ShaderResources/' + dir_name + '/' + res_name + '.json')
+	res = output['material_resources'][0]
+	res['shader'] = res_name + '/' + res_name
+	asset_references.append('compiled/ShaderResources/' + dir_name + '/' + res_name + '.arm')
 	shader_references.append('compiled/Shaders/' + dir_name + '/' + res_name)
 
 	# Write material json
 	path = 'compiled/Assets/materials/'
-	asset_path = path + res.id + '.json'
-	with open(asset_path, 'w') as f:
-		f.write(output.to_JSON())
+	asset_path = path + res['id'] + '.arm'
+	utils.write_arm(asset_path, output)
 	assets.add(asset_path)
 
 def parse_world_output(node_group, node, context):
@@ -126,10 +118,10 @@ def parse_surface(node_group, node, context):
 		bpy.data.cameras[0].world_envtex_strength = node.inputs[1].default_value
 		
 		# Strength
-		const = Object()
-		const.id = 'envmapStrength'
-		const.float = node.inputs[1].default_value
-		context.bind_constants.append(const)
+		const = {}
+		const['id'] = 'envmapStrength'
+		const['float'] = node.inputs[1].default_value
+		context['bind_constants'].append(const)
 		
 		if node.inputs[0].is_linked:
 			color_node = find_node(node_group, node, node.inputs[0])
@@ -138,14 +130,14 @@ def parse_surface(node_group, node, context):
 def parse_color(node_group, node, context):		
 	# Env map included
 	if node.type == 'TEX_ENVIRONMENT':
-		texture = Object()
-		context.bind_textures.append(texture)
-		texture.id = 'envmap'
+		texture = {}
+		context['bind_textures'].append(texture)
+		texture['id'] = 'envmap'
 		image_name = node.image.name # With extension
-		texture.name = image_name.rsplit('.', 1)[0] # Remove extension	
+		texture['name'] = image_name.rsplit('.', 1)[0] # Remove extension	
 		# Generate prefiltered envmaps
 		generate_radiance = bpy.data.worlds[0].generate_radiance
-		bpy.data.cameras[0].world_envtex_name = texture.name
+		bpy.data.cameras[0].world_envtex_name = texture['name']
 		disable_hdr = image_name.endswith('.jpg')
 		mip_count = bpy.data.cameras[0].world_envtex_num_mips
 		
@@ -165,12 +157,12 @@ def parse_color(node_group, node, context):
 	elif node.type == 'TEX_SKY':
 		bpy.data.worlds[0].world_defs += '_EnvSky'
 		# Append sky properties to material
-		const = Object()
-		const.id = 'sunDirection'
+		const = {}
+		const['id'] = 'sunDirection'
 		sun_direction = [node.sun_direction[0], node.sun_direction[1], node.sun_direction[2]]
 		sun_direction[1] *= -1 # Fix Y orientation
-		const.vec3 = list(sun_direction)
-		context.bind_constants.append(const)
+		const['vec3'] = list(sun_direction)
+		context['bind_constants'].append(const)
 		
 		bpy.data.cameras[0].world_envtex_sun_direction = sun_direction
 		bpy.data.cameras[0].world_envtex_turbidity = node.turbidity

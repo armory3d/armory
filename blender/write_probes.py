@@ -5,11 +5,10 @@ import subprocess
 import json
 import re
 import utils
-from utils import Object
 import assets
 
 def add_irr_assets(output_file_irr):
-    assets.add(output_file_irr + '.json')
+    assets.add(output_file_irr + '.arm')
 
 def add_rad_assets(output_file_rad, rad_format, num_mips):
     assets.add(output_file_rad + '.' + rad_format)
@@ -30,7 +29,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
         rad_format = 'jpg' if disable_hdr else 'hdr'
 
     # Assume irradiance has to exist
-    if os.path.exists('compiled/Assets/envmaps/' + base_name + '_irradiance.json'):
+    if os.path.exists('compiled/Assets/envmaps/' + base_name + '_irradiance.arm'):
         # Cached assets
         add_irr_assets(output_file_irr)
         if generate_radiance:
@@ -207,10 +206,9 @@ def sh_to_json(sh_file):
     parse_band_floats(irradiance_floats, band1_line)
     parse_band_floats(irradiance_floats, band2_line)
     
-    with open(sh_file + '.json', 'w') as f:
-        sh_json = Object()
-        sh_json.irradiance = irradiance_floats
-        f.write(sh_json.to_JSON())
+    sh_json = {}
+    sh_json['irradiance'] = irradiance_floats
+    utils.write_arm(sh_file + '.arm', sh_json)
     
     # Clean up .c
     os.remove(sh_file + '.c')
@@ -230,12 +228,12 @@ def write_sky_irradiance(base_name):
     
     output_file = 'compiled/Assets/envmaps/' + base_name + '_irradiance'
     
-    with open(output_file + '.json', 'w') as f:
+    with open(output_file + '.arm', 'w') as f:
         sh_json = Object()
         sh_json.irradiance = irradiance_floats
         f.write(sh_json.to_JSON())
 
-    assets.add(output_file + '.json')
+    assets.add(output_file + '.arm')
 
 def write_color_irradiance(base_name, col):
     # Constant color
@@ -248,9 +246,9 @@ def write_color_irradiance(base_name, col):
     
     output_file = 'compiled/Assets/envmaps/' + base_name + '_irradiance'
     
-    with open(output_file + '.json', 'w') as f:
+    with open(output_file + '.arm', 'w') as f:
         sh_json = Object()
         sh_json.irradiance = irradiance_floats
         f.write(sh_json.to_JSON())
 
-    assets.add(output_file + '.json')
+    assets.add(output_file + '.arm')

@@ -2,13 +2,16 @@ import bpy
 import json
 import os
 import glob
+import lib.umsgpack
 
-class Object:
-    def to_JSON(self):
-        if bpy.data.worlds[0]['CGMinimize'] == True:
-            return json.dumps(self, default=lambda o: o.__dict__, separators=(',',':'))
-        else:
-            return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+def write_arm(filepath, output):
+    if bpy.data.worlds[0]['CGMinimize']:
+        with open(filepath, 'wb') as f:
+            f.write(lib.umsgpack.dumps(output))
+    else:
+        with open(filepath, 'w') as f:
+            # f.write(json.dumps(output, separators=(',',':')))
+            f.write(json.dumps(output, sort_keys=True, indent=4))
 
 def get_fp():
     s = bpy.data.filepath.split(os.path.sep)

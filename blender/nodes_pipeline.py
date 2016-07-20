@@ -9,6 +9,7 @@ import subprocess
 import nodes_compositor
 from utils import to_hex
 import assets
+import utils
 
 class CGPipelineTree(NodeTree):
     '''Pipeline nodes'''
@@ -826,15 +827,6 @@ def unregister():
     nodeitems_utils.unregister_node_categories("CG_PIPELINE_NODES")
     bpy.utils.unregister_module(__name__)
 
-
-# Generating pipeline resources
-class Object:
-    def to_JSON(self):
-        if bpy.data.worlds[0].CGMinimize == True:
-            return json.dumps(self, default=lambda o: o.__dict__, separators=(',',':'))
-        else:
-            return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
-
 def buildNodeTrees(shader_references, asset_references, assets_path):
     s = bpy.data.filepath.split(os.path.sep)
     s.pop()
@@ -858,9 +850,9 @@ def buildNodeTrees(shader_references, asset_references, assets_path):
     return buildNodeTrees.linked_assets
 
 def buildNodeTree(node_group, shader_references, asset_references):
-    output = Object()
-    res = Object()
-    output.pipeline_resources = [res]
+    output = {}
+    res = {}
+    output['pipeline_resources'] = [res]
     
     path = 'compiled/Assets/pipelines/'
     node_group_name = node_group.name.replace('.', '_')
@@ -869,27 +861,26 @@ def buildNodeTree(node_group, shader_references, asset_references):
     if rn == None:
         return
     
-    res.id = node_group_name
-    res.render_targets, res.depth_buffers = get_render_targets(rn, node_group)
-    res.stages = []
+    res['id'] = node_group_name
+    res['render_targets'], res['depth_buffers'] = get_render_targets(rn, node_group)
+    res['stages'] = []
     
-    buildNode(res.stages, rn, node_group, shader_references, asset_references)
+    buildNode(res['stages'], rn, node_group, shader_references, asset_references)
 
-    asset_path = path + node_group_name + '.json'
-    with open(asset_path, 'w') as f:
-        f.write(output.to_JSON())
+    asset_path = path + node_group_name + '.arm'
+    utils.write_arm(asset_path, output)
     assets.add(asset_path)
 
 def make_set_target(stage, node_group, node, currentNode=None, target_index=1):
     if currentNode == None:
         currentNode = node
     
-    stage.command = 'set_target'
+    stage['command'] = 'set_target'
     currentNode = findNodeByLink(node_group, currentNode, currentNode.inputs[target_index])
     
     if currentNode.bl_idname == 'TargetNodeType':
         targetId = currentNode.inputs[0].default_value
-        stage.params.append(targetId)
+        stage['params'].append(targetId)
         # Store current target size
         buildNode.last_set_target_w = currentNode.inputs[1].default_value
         buildNode.last_set_target_h = currentNode.inputs[2].default_value
@@ -905,43 +896,43 @@ def make_set_target(stage, node_group, node, currentNode=None, target_index=1):
     
     else: # Framebuffer
         targetId = ''
-        stage.params.append(targetId)
+        stage['params'].append(targetId)
 
 def make_clear_target(stage, color_val=None, depth_val=None, stencil_val=None):
-    stage.command = 'clear_target'
+    stage['command'] = 'clear_target'
     if color_val != None:
-        stage.params.append('color')
-        stage.params.append(str(to_hex(color_val)))
+        stage['params'].append('color')
+        stage['params'].append(str(to_hex(color_val)))
     if depth_val != None:
-        stage.params.append('depth')
-        stage.params.append(str(depth_val))
+        stage['params'].append('depth')
+        stage['params'].append(str(depth_val))
     if stencil_val != None:
-        stage.params.append('stencil')
-        stage.params.append(str(stencil_val))
+        stage['params'].append('stencil')
+        stage['params'].append(str(stencil_val))
 
 def make_draw_geometry(stage, node_group, node):
-    stage.command = 'draw_geometry'
+    stage['command'] = 'draw_geometry'
     # Context
     context = node.inputs[1].default_value
     # Store shadowmap size
     if context == bpy.data.cameras[0].shadows_context:
         bpy.data.worlds[0].shadowmap_size = buildNode.last_set_target_w
-    stage.params.append(context)
+    stage['params'].append(context)
     # Order
     order = node.inputs[2].default_value
-    stage.params.append(order)
+    stage['params'].append(order)
     
 def make_draw_decals(stage, node_group, node, shader_references, asset_references):
-    stage.command = 'draw_decals'
+    stage['command'] = 'draw_decals'
     context = node.inputs[1].default_value
-    stage.params.append(context) # Context
+    stage['params'].append(context) # Context
     bpy.data.cameras[0].last_decal_context = context
 
 def make_bind_target(stage, node_group, node, constant_name, currentNode=None, target_index=1):
     if currentNode == None:
         currentNode = node
         
-    stage.command = 'bind_target'
+    stage['command'] = 'bind_target'
     
     link = findLink(node_group, currentNode, currentNode.inputs[target_index])
     currentNode = link.from_node
@@ -958,56 +949,56 @@ def make_bind_target(stage, node_group, node, constant_name, currentNode=None, t
                 if targetNode.inputs[3].is_linked: # Depth
                     db_node = findNodeByLink(node_group, targetNode, targetNode.inputs[3])
                     db_id = db_node.inputs[0].default_value
-                    stage.params.append('_' + db_id)
-                    stage.params.append(constant_name + 'D')
-                stage.params.append(targetId) # Color buffer
-                stage.params.append(constant_name + str(i))
+                    stage['params'].append('_' + db_id)
+                    stage['params'].append(constant_name + 'D')
+                stage['params'].append(targetId) # Color buffer
+                stage['params'].append(constant_name + str(i))
     
     elif currentNode.bl_idname == 'TargetNodeType':     
         targetId = currentNode.inputs[0].default_value
-        stage.params.append(targetId)
-        stage.params.append(constant_name)
+        stage['params'].append(targetId)
+        stage['params'].append(constant_name)
         
     elif currentNode.bl_idname == 'DepthBufferNodeType':
         targetId = '_' + currentNode.inputs[0].default_value
-        stage.params.append(targetId)
-        stage.params.append(constant_name)
+        stage['params'].append(targetId)
+        stage['params'].append(constant_name)
 
 def make_draw_material_quad(stage, node_group, node, shader_references, asset_references, context_index=1):
-    stage.command = 'draw_material_quad'
+    stage['command'] = 'draw_material_quad'
     material_context = node.inputs[context_index].default_value
-    stage.params.append(material_context)
+    stage['params'].append(material_context)
     # Include resource and shaders
     shader_context = node.inputs[context_index].default_value
     scon = shader_context.split('/')
     dir_name = scon[2]
     # No world defs for material passes
     res_name = scon[2]
-    asset_references.append('compiled/ShaderResources/' + dir_name + '/' + res_name + '.json')
+    asset_references.append('compiled/ShaderResources/' + dir_name + '/' + res_name + '.arm')
     shader_references.append('compiled/Shaders/' + dir_name + '/' + res_name)
 
 def make_draw_quad(stage, node_group, node, shader_references, asset_references, context_index=1, shader_context=None):
-    stage.command = 'draw_shader_quad'
+    stage['command'] = 'draw_shader_quad'
     # Append world defs to get proper context
     world_defs = bpy.data.worlds[0].world_defs
     if shader_context == None:
         shader_context = node.inputs[context_index].default_value
     scon = shader_context.split('/')
-    stage.params.append(scon[0] + world_defs + '/' + scon[1] + world_defs + '/' + scon[2])
+    stage['params'].append(scon[0] + world_defs + '/' + scon[1] + world_defs + '/' + scon[2])
     # Include resource and shaders
     dir_name = scon[0]
     # Append world defs
     res_name = scon[1] + world_defs
-    asset_references.append('compiled/ShaderResources/' + dir_name + '/' + res_name + '.json')
+    asset_references.append('compiled/ShaderResources/' + dir_name + '/' + res_name + '.arm')
     shader_references.append('compiled/Shaders/' + dir_name + '/' + res_name)
 
 def make_draw_world(stage, node_group, node, shader_references, asset_references, dome=True):
     if dome:
-        stage.command = 'draw_skydome'
+        stage['command'] = 'draw_skydome'
     else:
-        stage.command = 'draw_material_quad'
+        stage['command'] = 'draw_material_quad'
     wname = bpy.data.worlds[0].name
-    stage.params.append(wname + '_material/' + wname + '_material/env_map') # Only one world for now
+    stage['params'].append(wname + '_material/' + wname + '_material/env_map') # Only one world for now
     # Link assets
     if '_EnvClouds' in bpy.data.worlds[0].world_defs:
         buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise256.png')
@@ -1021,32 +1012,32 @@ def make_draw_compositor(stage, node_group, node, shader_references, asset_refer
     defs = world_defs + compositor_defs
     res_name = scon + defs
     
-    stage.command = 'draw_shader_quad'
-    stage.params.append(res_name + '/' + res_name + '/' + scon)
+    stage['command'] = 'draw_shader_quad'
+    stage['params'].append(res_name + '/' + res_name + '/' + scon)
     # Include resource and shaders
-    asset_references.append('compiled/ShaderResources/' + scon + '/' + res_name + '.json')
+    asset_references.append('compiled/ShaderResources/' + scon + '/' + res_name + '.arm')
     shader_references.append('compiled/Shaders/' + scon + '/' + res_name)
     # Link assets
     buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise256.png')
 
 def make_call_function(stage, node_group, node):
-    stage.command = 'call_function'
-    stage.params.append(node.inputs[1].default_value)
+    stage['command'] = 'call_function'
+    stage['params'].append(node.inputs[1].default_value)
 
 def make_branch_function(stage, node_group, node):
     make_call_function(stage, node_group, node)
     
 def process_call_function(stage, stages, node, node_group, shader_references, asset_references):
     # Step till merge node
-    stage.returns_true = []
+    stage['returns_true'] = []
     if node.outputs[0].is_linked:
         stageNode = findNodeByLinkFrom(node_group, node, node.outputs[0])
-        buildNode(stage.returns_true, stageNode, node_group, shader_references, asset_references)
+        buildNode(stage['returns_true'], stageNode, node_group, shader_references, asset_references)
     
-    stage.returns_false = []
+    stage['returns_false'] = []
     if node.outputs[1].is_linked:
         stageNode = findNodeByLinkFrom(node_group, node, node.outputs[1])
-        margeNode = buildNode(stage.returns_false, stageNode, node_group, shader_references, asset_references)
+        margeNode = buildNode(stage['returns_false'], stageNode, node_group, shader_references, asset_references)
     
     # Continue using top level stages after merge node
     afterMergeNode = findNodeByLinkFrom(node_group, margeNode, margeNode.outputs[0])
@@ -1055,13 +1046,13 @@ def process_call_function(stage, stages, node, node_group, shader_references, as
 def make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 5, 7], bind_target_constants=None, shader_context=None):
     # Set target
     if target_index != None and node.inputs[target_index].is_linked:
-        stage = Object()
-        stage.params = []
+        stage = {}
+        stage['params'] = []
         make_set_target(stage, node_group, node, target_index=target_index)
         stages.append(stage)
     # Bind targets
-    stage = Object()
-    stage.params = []
+    stage = {}
+    stage['params'] = []
     buildNode.last_bind_target = stage
     bind_target_used = False
     for i in range(0, len(bind_target_indices)):
@@ -1075,8 +1066,8 @@ def make_quad_pass(stages, node_group, node, shader_references, asset_references
             make_bind_target(stage, node_group, node, constant_name, target_index=index)   
     if bind_target_used:
         stages.append(stage)
-        stage = Object()
-        stage.params = []
+        stage = {}
+        stage['params'] = []
     # Draw quad
     make_draw_quad(stage, node_group, node, shader_references, asset_references, context_index=2, shader_context=shader_context)
     stages.append(stage)
@@ -1106,25 +1097,25 @@ def make_fxaa_pass(stages, node_group, node, shader_references, asset_references
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='fxaa_pass/fxaa_pass/fxaa_pass')
 
 def make_smaa_pass(stages, node_group, node, shader_references, asset_references):
-    stage = Object()
-    stage.params = []
+    stage = {}
+    stage['params'] = []
     make_set_target(stage, node_group, node, target_index=2)
     stages.append(stage)
     
-    stage = Object()
-    stage.params = []
+    stage = {}
+    stage['params'] = []
     make_clear_target(stage, color_val=[0.0, 0.0, 0.0, 0.0])
     stages.append(stage)
     
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=None, bind_target_indices=[4], bind_target_constants=['colorTex'], shader_context='smaa_edge_detect/smaa_edge_detect/smaa_edge_detect')
     
-    stage = Object()
-    stage.params = []
+    stage = {}
+    stage['params'] = []
     make_set_target(stage, node_group, node, target_index=3)
     stages.append(stage)
 
-    stage = Object()
-    stage.params = []
+    stage = {}
+    stage['params'] = []
     make_clear_target(stage, color_val=[0.0, 0.0, 0.0, 0.0])
     stages.append(stage)
     
@@ -1148,8 +1139,8 @@ def make_translucent_resolve_pass(stages, node_group, node, shader_references, a
 
 # Returns merge node
 def buildNode(stages, node, node_group, shader_references, asset_references):
-    stage = Object()
-    stage.params = []
+    stage = {}
+    stage['params'] = []
     
     append_stage = True
     
@@ -1198,14 +1189,14 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
     elif node.bl_idname == 'DrawWorldNodeType':
         # Bind depth for quad
         # if node.inputs[1].is_linked:
-        #     stage = Object()
-        #     stage.params = []
+        #     stage = {}
+        #     stage['params'] = []
         #     buildNode.last_bind_target = stage
         #     if node.inputs[1].is_linked:
         #         make_bind_target(stage, node_group, node, target_index=1, constant_name='gbufferD')
         #     stages.append(stage)
-        stage = Object()
-        stage.params = []
+        stage = {}
+        stage['params'] = []
         # Draw quad
         # make_draw_world(stage, node_group, node, shader_references, asset_references, dome=False)
         # Draw dome
@@ -1218,8 +1209,8 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
             stages.append(stage)
         # Bind targets
         if node.inputs[2].is_linked or node.inputs[3].is_linked:
-            stage = Object()
-            stage.params = []
+            stage = {}
+            stage['params'] = []
             buildNode.last_bind_target = stage
             if node.inputs[2].is_linked:
                 make_bind_target(stage, node_group, node, target_index=2, constant_name='tex')
@@ -1227,8 +1218,8 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
                 make_bind_target(stage, node_group, node, target_index=3, constant_name='gbuffer')
             stages.append(stage)
         # Draw quad
-        stage = Object()
-        stage.params = []
+        stage = {}
+        stage['params'] = []
         with_fxaa = node.bl_idname == 'DrawCompositorWithFXAANodeType'
         make_draw_compositor(stage, node_group, node, shader_references, asset_references, with_fxaa=with_fxaa)
     
@@ -1249,12 +1240,12 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
     
     elif node.bl_idname == 'LoopLightsNodeType':
         append_stage = False
-        stage.command = 'loop_lights'
+        stage['command'] = 'loop_lights'
         stages.append(stage)
-        stage.returns_true = []
+        stage['returns_true'] = []
         if node.outputs[1].is_linked:
             loopNode = findNodeByLinkFrom(node_group, node, node.outputs[1])
-            buildNode(stage.returns_true, loopNode, node_group, shader_references, asset_references)
+            buildNode(stage['returns_true'], loopNode, node_group, shader_references, asset_references)
     
     elif node.bl_idname == 'CallFunctionNodeType':
         make_call_function(stage, node_group, node)
@@ -1385,7 +1376,7 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
         # Target already exists
         id = node.inputs[0].default_value
         for t in render_targets:
-            if t.id == id:
+            if t['id'] == id:
                 return
         
         depth_buffer_id = None
@@ -1396,13 +1387,13 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
             # Append depth buffer
             found = False
             for db in depth_buffers:
-                if db.id == depth_buffer_id:
+                if db['id'] == depth_buffer_id:
                     found = True
                     break 
             if found == False:
-                db = Object()
-                db.id = depth_buffer_id
-                db.stencil_buffer = depth_node.inputs[1].default_value
+                db = {}
+                db['id'] = depth_buffer_id
+                db['stencil_buffer'] = depth_node.inputs[1].default_value
                 depth_buffers.append(db)    
         # Get scale
         scale = 1.0
@@ -1421,15 +1412,15 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
                 parse_render_target(n, node_group, render_targets, depth_buffers)
 
 def make_render_target(n, scale, depth_buffer_id=None):
-    target = Object()
-    target.id = n.inputs[0].default_value
-    target.width = n.inputs[1].default_value
-    target.height = n.inputs[2].default_value
-    target.format = n.inputs[4].default_value
-    target.ping_pong = n.inputs[5].default_value
+    target = {}
+    target['id'] = n.inputs[0].default_value
+    target['width'] = n.inputs[1].default_value
+    target['height'] = n.inputs[2].default_value
+    target['format'] = n.inputs[4].default_value
+    target['ping_pong'] = n.inputs[5].default_value
     if scale != 1.0:
-        target.scale = scale    
+        target['scale'] = scale    
     if depth_buffer_id != None:
-        target.depth_buffer = depth_buffer_id
+        target['depth_buffer'] = depth_buffer_id
     return target
     

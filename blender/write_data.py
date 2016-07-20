@@ -16,7 +16,7 @@ def write_khafilejs(shader_references, asset_references):
     with open('khafile.js', 'w') as f:
         f.write(
 """// Auto-generated
-var project = new Project('""" + bpy.data.worlds[0]['CGProjectName'] + """');
+var project = new Project('""" + bpy.data.worlds[0].CGProjectName + """');
 
 project.addSources('Sources');
 project.addShaders('Sources/Shaders/**');
@@ -30,7 +30,7 @@ project.addAssets('Assets/**');
         f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/iron')[2:] + '");\n')
         f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/zui')[2:] + '");\n')
         
-        if bpy.data.worlds[0]['CGPhysics'] != 0:
+        if bpy.data.worlds[0].CGPhysics != 0:
             f.write("\nproject.addDefine('WITH_PHYSICS')\n")
             f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/haxebullet')[2:] + '");\n')
         
@@ -41,7 +41,11 @@ project.addAssets('Assets/**');
         for ref in asset_references: # Assets
             f.write("project.addAssets('" + ref + "');\n")
 
-        f.write("\nproject.addDefine('WITH_PROFILE')\n")
+        if bpy.data.worlds[0].CGPlayConsole:
+            f.write("\nproject.addDefine('WITH_PROFILE')\n")
+
+        if bpy.data.worlds[0].CGMinimize == False:
+            f.write("\nproject.addDefine('WITH_JSON')\n")
             
         config_text = bpy.data.worlds[0]['CGKhafileConfig']
         if config_text != '':

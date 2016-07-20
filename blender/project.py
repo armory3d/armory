@@ -106,9 +106,9 @@ class ArmoryBuildPanel(bpy.types.Panel):
         row.operator("arm.folder")
         row.operator("arm.clean")
         layout.prop_search(wrd, "CGKhafileConfig", bpy.data, "texts", "Config")
+        layout.prop(wrd, 'CGCacheShaders')
         layout.prop(wrd, 'CGMinimize')
         layout.prop(wrd, 'CGOptimizeGeometry')
-        layout.prop(wrd, 'CGCacheShaders')
 
 class ArmoryPlayPanel(bpy.types.Panel):
     bl_label = "Armory Play"
@@ -181,7 +181,7 @@ def export_game_data(fp, sdk_path):
     # Export scene data
     for scene in bpy.data.scenes:
         if scene.game_export:
-            asset_path = 'compiled/Assets/' + scene.name + '.json'
+            asset_path = 'compiled/Assets/' + scene.name + '.arm'
             bpy.ops.export_scene.armory(
                 get_export_scene_override(scene),
                 filepath=asset_path)
@@ -209,7 +209,7 @@ def export_game_data(fp, sdk_path):
         os.chdir(fp)
         if not os.path.exists(ref):
             shader_name = ref.split('/')[2]
-            strdefs = ref[:-5] # Remove .json extnsion
+            strdefs = ref[:-4] # Remove .arm extension
             defs = strdefs.split(shader_name) # 'name/name_def_def'
             if len(defs) > 2:
                 strdefs = defs[2] # Apended defs
@@ -391,6 +391,12 @@ def clean_project(self):
     nodes_path = 'Sources/' + bpy.data.worlds[0].CGProjectPackage.replace('.', '/') + '/node/'
     if os.path.isdir(nodes_path):
         shutil.rmtree(nodes_path)
+
+    # Remove khafile/korefile
+    if os.path.isfile('khafile.js'):
+        os.remove('khafile.js')
+    if os.path.isfile('korefile.js'):
+        os.remove('korefile.js')
 
     self.report({'INFO'}, 'Done')
 

@@ -50,6 +50,7 @@ def initProperties():
     bpy.types.Object.custom_material = bpy.props.BoolProperty(name="Custom Material", default=False)
     bpy.types.Object.custom_material_name = bpy.props.StringProperty(name="Name", default="")
     bpy.types.Object.game_export = bpy.props.BoolProperty(name="Game Export", default=True)
+    bpy.types.Object.model_overlay = bpy.props.BoolProperty(name="X-Ray", default=False)
     # For geometry
     bpy.types.Mesh.static_usage = bpy.props.BoolProperty(name="Static Usage", default=True)
     # For camera
@@ -137,10 +138,9 @@ class ObjectPropsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         obj = bpy.context.object
-
         layout.prop(obj, 'game_export')
-
         if obj.type == 'MESH':
+            layout.prop(obj, 'model_overlay')
             layout.prop(obj, 'instanced_children')
             layout.prop(obj, 'custom_material')
             if obj.custom_material:

@@ -1,6 +1,5 @@
 import bpy
 import math
-from exporter import Object
 
 def is_pow(num):
 	return ((num & (num - 1)) == 0) and num != 0
@@ -49,32 +48,32 @@ def parse(self, material, c, defs):
 					break 
 
 def make_albedo_const(col, c):
-	const = Object()
+	const = {}
 	parse.const_color = const
-	c.bind_constants.append(const)
-	const.id = 'albedo_color'
-	const.vec4 = [col[0], col[1], col[2], col[3]]
+	c['bind_constants'].append(const)
+	const['id'] = 'albedo_color'
+	const['vec4'] = [col[0], col[1], col[2], col[3]]
 
 def make_roughness_const(f, c):
-	const = Object()
+	const = {}
 	parse.const_roughness = const
-	c.bind_constants.append(const)
-	const.id = 'roughness'
-	const.float = f
+	c['bind_constants'].append(const)
+	const['id'] = 'roughness'
+	const['float'] = f
 
 def make_occlusion_const(f, c):
-	const = Object()
+	const = {}
 	parse.const_occlusion = const
-	c.bind_constants.append(const)
-	const.id = 'occlusion'
-	const.float = f
+	c['bind_constants'].append(const)
+	const['id'] = 'occlusion'
+	const['float'] = f
 
 def make_metalness_const(f, c):
-	const = Object()
+	const = {}
 	parse.const_metalness = const
-	c.bind_constants.append(const)
-	const.id = 'metalness'
-	const.float = f
+	c['bind_constants'].append(const)
+	const['id'] = 'metalness'
+	const['float'] = f
 
 # Manualy set starting material point
 def parse_from(self, material, c, defs, surface_node):
@@ -87,41 +86,41 @@ def parse_from(self, material, c, defs, surface_node):
 	parse_material_surface(self, material, c, defs, tree, surface_node, 1.0)
 
 def make_texture(self, id, image_node, material):
-	tex = Object()
-	tex.id = id
+	tex = {}
+	tex['id'] = id
 	image = image_node.image
 	if image is not None:
-		tex.name = image.filepath.rsplit('/', 1)[1].rsplit('.', 1)[0] # Extract file name without extension
-		tex.name = tex.name.replace('.', '_')
-		tex.name = tex.name.replace('-', '_')
-		tex.name = tex.name.replace(' ', '_')
+		tex['name'] = image.filepath.rsplit('/', 1)[1].rsplit('.', 1)[0] # Extract file name without extension
+		tex['name'] = tex['name'].replace('.', '_')
+		tex['name'] = tex['name'].replace('-', '_')
+		tex['name'] = tex['name'].replace(' ', '_')
 		if image_node.interpolation == 'Cubic': # Mipmap linear
-			tex.mipmap_filter = 'linear'
-			tex.generate_mipmaps = True
+			tex['mipmap_filter'] = 'linear'
+			tex['generate_mipmaps'] = True
 		elif image_node.interpolation == 'Smart': # Mipmap anisotropic
-			tex.min_filter = 'anisotropic'
-			tex.mipmap_filter = 'linear'
-			tex.generate_mipmaps = True
+			tex['min_filter'] = 'anisotropic'
+			tex['mipmap_filter'] = 'linear'
+			tex['generate_mipmaps'] = True
 		if image_node.extension != 'REPEAT': # Extend or clip
-			tex.u_addressing = 'clamp'
-			tex.v_addressing = 'clamp'
+			tex['u_addressing'] = 'clamp'
+			tex['v_addressing'] = 'clamp'
 		else:
 			if is_pow(image.size[0]) == False or is_pow(image.size[1]) == False:
 				print('Armory Warning: ' + material.name + '/' + image.name + ' - non power of 2 texture can not use repeat mode')
-				tex.u_addressing = 'clamp'
-				tex.v_addressing = 'clamp'
+				tex['u_addressing'] = 'clamp'
+				tex['v_addressing'] = 'clamp'
 		
 		if image.source == 'MOVIE': # Just append movie texture trait for now
-			movie_trait = Object()
-			movie_trait.type = 'Script'
-			movie_trait.class_name = 'armory.trait.internal.MovieTexture'
-			movie_trait.parameters = [tex.name]
+			movie_trait = {}
+			movie_trait['type'] = 'Script'
+			movie_trait['class_name'] = 'armory.trait.internal.MovieTexture'
+			movie_trait['parameters'] = [tex['name']]
 			for o in self.materialToGameObjectDict[material]:
-				o.traits.append(movie_trait)
-			tex.source = 'movie'
-			tex.name = '' # MovieTexture will load the video
+				o['traits'].append(movie_trait)
+			tex['source'] = 'movie'
+			tex['name'] = '' # MovieTexture will load the video
 	else:
-		tex.name = ''
+		tex['name'] = ''
 	return tex
 
 def parse_value_node(node):
@@ -263,11 +262,11 @@ def parse_val_to_rgb(node, c, defs):
 	else: # Assume 2 colors interpolated by id for now
 		defs.append('_RampID')
 		# Link albedo_color2 as color 2
-		const = Object()
-		c.bind_constants.append(const)
-		const.id = 'albedo_color2'
+		const = {}
+		c['bind_constants'].append(const)
+		const['id'] = 'albedo_color2'
 		res = node.color_ramp.elements[1].color
-		const.vec4 = [res[0], res[1], res[2], res[3]]
+		const['vec4'] = [res[0], res[1], res[2], res[3]]
 		# Return color 1
 		return node.color_ramp.elements[0].color
 
@@ -291,47 +290,47 @@ def add_albedo_tex(self, node, material, c, defs):
 	if '_AMTex' not in defs:
 		defs.append('_AMTex')
 		tex = make_texture(self, 'salbedo', node, material)
-		c.bind_textures.append(tex)
+		c['bind_textures'].append(tex)
 
 def add_metalness_tex(self, node, material, c, defs):
 	if '_MMTex' not in defs:
 		defs.append('_MMTex')
 		tex = make_texture(self, 'smm', node, material)
-		c.bind_textures.append(tex)
+		c['bind_textures'].append(tex)
 		if parse.const_metalness != None: # If texture is used, remove constant
-			c.bind_constants.remove(parse.const_metalness)
+			c['bind_constants'].remove(parse.const_metalness)
 
 def add_roughness_tex(self, node, material, c, defs):
 	if '_RMTex' not in defs:
 		defs.append('_RMTex')
 		tex = make_texture(self, 'srm', node, material)
-		c.bind_textures.append(tex)
+		c['bind_textures'].append(tex)
 		if parse.const_roughness != None:
-			c.bind_constants.remove(parse.const_roughness)
+			c['bind_constants'].remove(parse.const_roughness)
 
 def add_occlusion_tex(self, node, material, c, defs):
 	if '_OMTex' not in defs:
 		defs.append('_OMTex')
 		tex = make_texture(self, 'som', node, material)
-		c.bind_textures.append(tex)
+		c['bind_textures'].append(tex)
 
 def add_height_tex(self, node, material, c, defs):
 	if '_HMTex' not in defs:
 		defs.append('_HMTex')
 		tex = make_texture(self, 'shm', node, material)
-		c.bind_textures.append(tex)
+		c['bind_textures'].append(tex)
 
 def add_height_strength(self, c, f):
-	const = Object()
-	c.bind_constants.append(const)
-	const.id = 'heightStrength'
-	const.float = f
+	const = {}
+	c['bind_constants'].append(const)
+	const['id'] = 'heightStrength'
+	const['float'] = f
 
 def add_normal_tex(self, node, material, c, defs):
 	if '_NMTex' not in defs:
 		defs.append('_NMTex')
 		tex = make_texture(self, 'snormal', node, material)
-		c.bind_textures.append(tex)
+		c['bind_textures'].append(tex)
 
 def parse_base_color_socket(self, base_color_input, material, c, defs, tree, node, factor):
 	if base_color_input.is_linked:
