@@ -28,10 +28,9 @@ project.addAssets('Assets/**');
         
         f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/armory')[2:] + '");\n')
         f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/iron')[2:] + '");\n')
-        f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/zui')[2:] + '");\n')
         
         if bpy.data.worlds[0].CGPhysics != 'Disabled':
-            f.write("\nproject.addDefine('WITH_PHYSICS')\n")
+            f.write("project.addDefine('WITH_PHYSICS')\n")
             f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/haxebullet')[2:] + '");\n')
         
         for ref in shader_references: # Shaders
@@ -42,10 +41,12 @@ project.addAssets('Assets/**');
             f.write("project.addAssets('" + ref + "');\n")
 
         if bpy.data.worlds[0].CGPlayConsole:
-            f.write("\nproject.addDefine('WITH_PROFILE')\n")
+            f.write("project.addDefine('WITH_PROFILE')\n")
+            f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/zui')[2:] + '");\n')
+            f.write('project.addAssets("' + sdk_path + '/armory/Assets/droid_sans.ttf");\n')
 
         if bpy.data.worlds[0].CGMinimize == False:
-            f.write("\nproject.addDefine('WITH_JSON')\n")
+            f.write("project.addDefine('WITH_JSON')\n")
             
         config_text = bpy.data.worlds[0]['CGKhafileConfig']
         if config_text != '':

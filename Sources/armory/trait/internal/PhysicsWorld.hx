@@ -23,6 +23,12 @@ class PhysicsWorld extends Trait {
 	public function new(gravity:Array<Float> = null) { super(); }
 #else
 
+#if WITH_PROFILE
+	var frames = 0;
+	var physTime = 0.0;
+	public static var physTimeAvg = 0.0;
+#end
+
 	public var world:BtDiscreteDynamicsWorldPointer;
 	var dispatcher:BtCollisionDispatcherPointer;
 
@@ -99,8 +105,22 @@ class PhysicsWorld extends Trait {
 	}
 
 	public function update() {
+#if WITH_PROFILE
+		var time = kha.Scheduler.realTime();
+#end
+
 		world.ptr.stepSimulation(timeStep, 1, fixedStep);
 		updateContacts();
+
+#if WITH_PROFILE
+		frames++;
+		physTime += kha.Scheduler.realTime() - time;
+		if (frames >= 60) {
+			physTimeAvg = physTime / 60;
+			frames = 0;
+			physTime = 0;
+		}
+#end
 	}
 
 	function updateContacts() {

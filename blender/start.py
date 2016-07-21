@@ -9,11 +9,19 @@ import traits
 import props
 import lib.drop_to_ground
 
-import bpy
 import utils
-import subprocess
-import atexit
+import threading
 import os
+import http.server
+import socketserver
+
+def run_server():
+    Handler = http.server.SimpleHTTPRequestHandler
+    try:
+        httpd = socketserver.TCPServer(("", 8040), Handler)
+        httpd.serve_forever()
+    except:
+        print('Server already running')
 
 def register():
     props.register()
@@ -28,14 +36,10 @@ def register():
     lib.drop_to_ground.register()
 
     # Start server
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
-    scripts_path = addon_prefs.sdk_path + '/armory/blender/'
     os.chdir(utils.get_fp())
-    blender_path = bpy.app.binary_path
-    blend_path = bpy.data.filepath
-    register.p = subprocess.Popen([blender_path, blend_path, '-b', '-P', scripts_path + 'lib/server.py', '&'])
-    atexit.register(register.p.terminate)
+    t = threading.Thread(name='localserver', target=run_server)
+    t.daemon = True
+    t.start()
 
 def unregister():
     project.unregister()
@@ -48,6 +52,3 @@ def unregister():
     traits.unregister()
     props.unregister()
     lib.drop_to_ground.unregister()
-
-    # Stop server
-    register.p.terminate()

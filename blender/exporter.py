@@ -1508,7 +1508,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			else:
 				parento['nodes'].append(o)
 
-			self.cb_export_node(node, o)
+			self.cb_export_node(node, o, type)
 
 			if not hasattr(o, 'nodes'):
 				o['nodes'] = []
@@ -2340,7 +2340,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						po['material_refs'] = [o['material_refs'][0] + '_decal'] # Will fetch a proper context used in render path
 					break
 
-	def cb_export_node(self, node, o):
+	def cb_export_node(self, node, o, type):
 		#return
 		# Export traits
 		o['traits'] = []
@@ -2411,6 +2411,14 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				x['parameters'].append(rb.collision_margin)
 			o['traits'].append(x)
 		
+		# Debug console enabled, attach console overlay to each camera
+		if type == kNodeTypeCamera:
+			console_trait = {}
+			console_trait['type'] = 'Script'
+			console_trait['class_name'] = 'armory.trait.internal.Console'
+			console_trait['parameters'] = []
+			o['traits'].append(console_trait)
+
 		# Map objects to game objects
 		self.objectToGameObjectDict[node] = o
 		

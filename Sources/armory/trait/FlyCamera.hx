@@ -20,6 +20,8 @@ class FlyCamera extends Trait {
     var strafeForward = false;
     var strafeBackward = false;
 
+    static inline var speed = 2.5;
+
     public function new() {
         super();
 
@@ -41,7 +43,7 @@ class FlyCamera extends Trait {
     function update() {
 		if (Input.occupied) return;
 
-        var d = Time.delta * 5 / 2;
+        var d = Time.delta * speed;
 
         if (moveForward) {
             camera.move(camera.look(), d);

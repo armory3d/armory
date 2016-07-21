@@ -4,7 +4,7 @@
 package armory.renderpipeline;
 
 import kha.math.FastVector3;
-import iron.node.RenderPath;
+import iron.resource.RenderPath;
 import iron.resource.WorldResource;
 
 class HosekWilkieRadianceData {
