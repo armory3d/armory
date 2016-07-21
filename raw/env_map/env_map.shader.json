@@ -89,7 +89,7 @@
 				{
 					"id": "eye",
 					"link": "_cameraPosition",
-					"ifdef": ["_EnvClouds"]
+					"ifdef": ["_XEnvClouds"]
 				}
 			],
 			"texture_params": [],

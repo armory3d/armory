@@ -4,6 +4,8 @@
 precision mediump float;
 #endif
 
+#define _NoShadows
+
 #include "../compiled.glsl"
 
 // #ifdef _NMTex

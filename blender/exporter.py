@@ -1421,8 +1421,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				
 				o['material_refs'] = []
 				for i in range(len(node.material_slots)):
-					if self.node_has_custom_material(node): # Overwrite material slot
-						o['material_refs'].append(node.custom_material_name)
+					if self.node_has_override_material(node): # Overwrite material slot
+						o['material_refs'].append(node.override_material_name)
 					else: # Export assigned material
 						self.ExportMaterialRef(node.material_slots[i].material, i, o)
 
@@ -2243,9 +2243,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		#return
 		node.geometry_cached = b
 
-	def node_has_custom_material(self, node):
+	def node_has_override_material(self, node):
 		#return False
-		return node.custom_material
+		return node.override_material
 
 	def get_geometry_static_usage(self, data):
 		#return True
@@ -2493,16 +2493,18 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o2['contexts'].append(c2)
 			self.finalize_shader(o2, defs2, [decal_context])
 			self.output['material_resources'].append(o2)
-		
-		# X-Ray enabled
-		if material.overlay:
-			# Change to overlay context
-			c['id'] = ArmoryExporter.overlay_context
 
+		# Override context
+		if material.override_shader_context:
+			c['id'] = material.override_shader_context_name
 		# If material has transparency change to translucent context
-		if '_Translucent' in defs:
+		elif '_Translucent' in defs:
 			defs.remove('_Translucent')
 			c['id'] = ArmoryExporter.translucent_context
+		# X-Ray enabled
+		elif material.overlay:
+			# Change to overlay context
+			c['id'] = ArmoryExporter.overlay_context
 		# Otherwise add shadows context
 		else:
 			c = {}
@@ -2532,11 +2534,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				break
 
 		# Process defs and append resources
-		if material.custom_shader == False:
+		if material.override_shader == False:
 			self.finalize_shader(o, defs, ArmoryExporter.pipeline_passes)
 		else:
 			# TODO: gather defs from vertex data when custom shader is used
-			o['shader'] = material.custom_shader_name
+			o['shader'] = material.override_shader_name
 	
 	def cb_export_world(self, world, o):
 		o['brdf'] = 'brdf'

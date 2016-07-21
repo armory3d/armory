@@ -47,8 +47,8 @@ def initProperties():
     # For object
     bpy.types.Object.geometry_cached = bpy.props.BoolProperty(name="Geometry Cached", default=False) # TODO: move to mesh type
     bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced Children", default=False)
-    bpy.types.Object.custom_material = bpy.props.BoolProperty(name="Custom Material", default=False)
-    bpy.types.Object.custom_material_name = bpy.props.StringProperty(name="Name", default="")
+    bpy.types.Object.override_material = bpy.props.BoolProperty(name="Override Material", default=False)
+    bpy.types.Object.override_material_name = bpy.props.StringProperty(name="Name", default="")
     bpy.types.Object.game_export = bpy.props.BoolProperty(name="Game Export", default=True)
     # For geometry
     bpy.types.Mesh.static_usage = bpy.props.BoolProperty(name="Static Usage", default=True)
@@ -117,8 +117,10 @@ def initProperties():
     bpy.types.World.generate_ssr_jitter = bpy.props.FloatProperty(name="Jitter", default=0.6)
     # For material
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
-    bpy.types.Material.custom_shader = bpy.props.BoolProperty(name="Custom Shader", default=False)
-    bpy.types.Material.custom_shader_name = bpy.props.StringProperty(name="Name", default='')
+    bpy.types.Material.override_shader = bpy.props.BoolProperty(name="Override Shader", default=False)
+    bpy.types.Material.override_shader_name = bpy.props.StringProperty(name="Name", default='')
+    bpy.types.Material.override_shader_context = bpy.props.BoolProperty(name="Override Context", default=False)
+    bpy.types.Material.override_shader_context_name = bpy.props.StringProperty(name="Name", default='')
     bpy.types.Material.stencil_mask = bpy.props.IntProperty(name="Stencil Mask", default=0)
     bpy.types.Material.export_tangents = bpy.props.BoolProperty(name="Export Tangents", default=False)
     bpy.types.Material.skip_context = bpy.props.StringProperty(name="Skip Context", default='')
@@ -142,9 +144,9 @@ class ObjectPropsPanel(bpy.types.Panel):
         layout.prop(obj, 'game_export')
         if obj.type == 'MESH':
             layout.prop(obj, 'instanced_children')
-            layout.prop(obj, 'custom_material')
-            if obj.custom_material:
-                layout.prop(obj, 'custom_material_name')
+            layout.prop(obj, 'override_material')
+            if obj.override_material:
+                layout.prop(obj, 'override_material_name')
 
 # Menu in modifiers region
 class ModifiersPropsPanel(bpy.types.Panel):
@@ -229,9 +231,12 @@ class MatsPropsPanel(bpy.types.Panel):
         mat = bpy.context.material
 
         layout.prop(mat, 'receive_shadow')
-        layout.prop(mat, 'custom_shader')
-        if mat.custom_shader:
-            layout.prop(mat, 'custom_shader_name')
+        layout.prop(mat, 'override_shader')
+        if mat.override_shader:
+            layout.prop(mat, 'override_shader_name')
+        layout.prop(mat, 'override_shader_context')
+        if mat.override_shader_context:
+            layout.prop(mat, 'override_shader_context_name')
         layout.prop(mat, 'stencil_mask')
         layout.prop(mat, 'skip_context')
         layout.prop(mat, 'overlay')

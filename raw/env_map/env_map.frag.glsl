@@ -25,7 +25,7 @@ precision mediump float;
 #ifdef _EnvClouds
 	uniform sampler2D snoise;
 	uniform float time;
-	uniform vec3 eye;
+	// uniform vec3 eye;
 	const float difference = cloudsUpper - cloudsLower;
 	const float steps = 45.0;
 #endif
@@ -209,7 +209,8 @@ void main() {
 #endif
 
 #ifdef _EnvClouds
-	if (n.z > 0.0) R = mix(R, cloudsColor(R, eye, n), n.z * 5.0);
+	// if (n.z > 0.0) R = mix(R, cloudsColor(R, eye, n), n.z * 5.0);
+	if (n.z > 0.0) R = mix(R, cloudsColor(R, vec3(0.0), n), n.z * 5.0);
 #endif
 	gl_FragColor = vec4(R, 1.0);
 }
