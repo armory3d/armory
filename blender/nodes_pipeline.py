@@ -330,8 +330,9 @@ class BeginNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketString', "Geometry")
         self.inputs.new('NodeSocketString', "Shadows")
         self.inputs.new('NodeSocketString', "Translucent")
+        self.inputs.new('NodeSocketString', "Overlay")
         self.inputs.new('NodeSocketBool', "HDR Space")
-        self.inputs[4].default_value = True
+        self.inputs[5].default_value = True
         self.outputs.new('NodeSocketShader', "Stage")
 
     def copy(self, node):
@@ -608,7 +609,7 @@ class DrawWorldNode(Node, CGPipelineTreeNode):
     
     def init(self, context):
         self.inputs.new('NodeSocketShader', "Stage")
-        self.inputs.new('NodeSocketShader', "Depth")
+        # self.inputs.new('NodeSocketShader', "Depth")
 
         self.outputs.new('NodeSocketShader', "Stage")
 
@@ -1323,7 +1324,8 @@ def getRootNode(node_group):
             bpy.data.cameras[0].geometry_context = n.inputs[1].default_value
             bpy.data.cameras[0].shadows_context = n.inputs[2].default_value
             bpy.data.cameras[0].translucent_context = n.inputs[3].default_value
-            if n.inputs[4].default_value == False: # No HDR space lighting, append def
+            bpy.data.cameras[0].overlay_context = n.inputs[4].default_value
+            if n.inputs[5].default_value == False: # No HDR space lighting, append def
                 bpy.data.worlds[0].world_defs += '_LDR'
             return findNodeByLinkFrom(node_group, n, n.outputs[0])
 

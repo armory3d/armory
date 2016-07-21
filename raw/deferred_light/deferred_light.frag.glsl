@@ -707,9 +707,7 @@ vec3 shIrradiance(vec3 nor, float scale) {
 
 void main() {
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	// float depth = 1.0 - g0.a;
-	// if (depth == 0.0) discard;
-	if (depth == 1.0) discard;
+	// if (depth == 1.0) discard;
 	
 	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, occlusion, mask
 	vec4 g1 = texture(gbuffer1, texCoord); // Base color.rgb, roughn/met

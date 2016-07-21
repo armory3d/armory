@@ -30,7 +30,7 @@ project.addAssets('Assets/**');
         f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/iron')[2:] + '");\n')
         f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/zui')[2:] + '");\n')
         
-        if bpy.data.worlds[0].CGPhysics != 0:
+        if bpy.data.worlds[0].CGPhysics != 'Disabled':
             f.write("\nproject.addDefine('WITH_PHYSICS')\n")
             f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/haxebullet')[2:] + '");\n')
         

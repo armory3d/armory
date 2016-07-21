@@ -50,7 +50,6 @@ def initProperties():
     bpy.types.Object.custom_material = bpy.props.BoolProperty(name="Custom Material", default=False)
     bpy.types.Object.custom_material_name = bpy.props.StringProperty(name="Name", default="")
     bpy.types.Object.game_export = bpy.props.BoolProperty(name="Game Export", default=True)
-    bpy.types.Object.model_overlay = bpy.props.BoolProperty(name="X-Ray", default=False)
     # For geometry
     bpy.types.Mesh.static_usage = bpy.props.BoolProperty(name="Static Usage", default=True)
     # For camera
@@ -61,6 +60,7 @@ def initProperties():
     bpy.types.Camera.geometry_context = bpy.props.StringProperty(name="Geometry", default="deferred")
     bpy.types.Camera.shadows_context = bpy.props.StringProperty(name="Shadows", default="shadowmap")
     bpy.types.Camera.translucent_context = bpy.props.StringProperty(name="Translucent", default="translucent")
+    bpy.types.Camera.overlay_context = bpy.props.StringProperty(name="Overlay", default="overlay")
     bpy.types.Camera.is_probe = bpy.props.BoolProperty(name="Probe", default=False)
     bpy.types.Camera.probe_generate_radiance = bpy.props.BoolProperty(name="Generate Radiance", default=False)
     bpy.types.Camera.probe_texture = bpy.props.StringProperty(name="Texture", default="")
@@ -122,6 +122,7 @@ def initProperties():
     bpy.types.Material.stencil_mask = bpy.props.IntProperty(name="Stencil Mask", default=0)
     bpy.types.Material.export_tangents = bpy.props.BoolProperty(name="Export Tangents", default=False)
     bpy.types.Material.skip_context = bpy.props.StringProperty(name="Skip Context", default='')
+    bpy.types.Material.overlay = bpy.props.BoolProperty(name="X-Ray", default=False)
     # For scene
     bpy.types.Scene.game_export = bpy.props.BoolProperty(name="Game Export", default=True)
     # For light
@@ -140,7 +141,6 @@ class ObjectPropsPanel(bpy.types.Panel):
         obj = bpy.context.object
         layout.prop(obj, 'game_export')
         if obj.type == 'MESH':
-            layout.prop(obj, 'model_overlay')
             layout.prop(obj, 'instanced_children')
             layout.prop(obj, 'custom_material')
             if obj.custom_material:
@@ -234,6 +234,7 @@ class MatsPropsPanel(bpy.types.Panel):
             layout.prop(mat, 'custom_shader_name')
         layout.prop(mat, 'stencil_mask')
         layout.prop(mat, 'skip_context')
+        layout.prop(mat, 'overlay')
 
 # Menu in world region
 class WorldPropsPanel(bpy.types.Panel):

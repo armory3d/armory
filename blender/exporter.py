@@ -1431,9 +1431,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 					self.ExportParticleSystemRef(node.particle_systems[i], i, o)
 					
 				o['dimensions'] = [node.dimensions[0], node.dimensions[1], node.dimensions[2]]	
-				
-				if node.model_overlay: # X-Ray enabled
-					o['type'] = 'overlay_node'
 
 				#shapeKeys = ArmoryExporter.GetShapeKeys(object)
 				#if (shapeKeys):
@@ -2301,6 +2298,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			ArmoryExporter.geometry_context = bpy.data.cameras[0].geometry_context
 			ArmoryExporter.shadows_context = bpy.data.cameras[0].shadows_context
 			ArmoryExporter.translucent_context = bpy.data.cameras[0].translucent_context
+			ArmoryExporter.overlay_context = bpy.data.cameras[0].overlay_context
 
 	def cb_preprocess_node(self, node): # Returns false if node should not be exported
 		#return True
@@ -2496,6 +2494,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			self.finalize_shader(o2, defs2, [decal_context])
 			self.output['material_resources'].append(o2)
 		
+		# X-Ray enabled
+		if material.overlay:
+			# Change to overlay context
+			c['id'] = ArmoryExporter.overlay_context
+
 		# If material has transparency change to translucent context
 		if '_Translucent' in defs:
 			defs.remove('_Translucent')
