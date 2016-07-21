@@ -248,18 +248,20 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 	@staticmethod
 	def GetNodeType(node):
-		if (node.type == "MESH"):
-			if (len(node.data.polygons) != 0):
-				return (kNodeTypeGeometry)
-		elif (node.type == "LAMP"):
+		if node.type == "MESH":
+			if len(node.data.polygons) != 0:
+				return kNodeTypeGeometry
+		elif node.type == "FONT":
+			return kNodeTypeGeometry
+		elif node.type == "LAMP":
 			type = node.data.type
-			if ((type == "SUN") or (type == "POINT") or (type == "SPOT")):
-				return (kNodeTypeLight)
-		elif (node.type == "CAMERA"):
-			return (kNodeTypeCamera)
-		elif (node.type == "SPEAKER"):
-			return (kNodeTypeSpeaker)
-		return (kNodeTypeNode)
+			if type == "SUN" or type == "POINT" or type == "SPOT":
+				return kNodeTypeLight
+		elif node.type == "CAMERA":
+			return kNodeTypeCamera
+		elif node.type == "SPEAKER":
+			return kNodeTypeSpeaker
+		return kNodeTypeNode
 
 	@staticmethod
 	def GetShapeKeys(mesh):
@@ -608,12 +610,14 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		animationFlag = False
 		m1 = node.matrix_local.copy()
 
+		# Font in
 		for i in range(self.beginFrame, self.endFrame):
 			scene.frame_set(i)
 			m2 = node.matrix_local
 			if (ArmoryExporter.MatricesDifferent(m1, m2)):
 				animationFlag = True
 				break
+		# Font out
 
 		if (animationFlag):
 			o['animation'] = {}
@@ -1406,7 +1410,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 			# Export the object reference and material references.
 			object = node.data
-
+			
 			if (type == kNodeTypeGeometry):
 				if (not object in self.geometryArray):
 					self.geometryArray[object] = {"structName" : object.name, "nodeTable" : [node]}
@@ -2282,6 +2286,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		ArmoryExporter.option_geometry_per_file = True
 		ArmoryExporter.option_optimize_geometry = bpy.data.worlds[0].CGOptimizeGeometry
 		ArmoryExporter.option_minimize = bpy.data.worlds[0].CGMinimize
+		ArmoryExporter.option_sample_animation = bpy.data.worlds[0].CGSampledAnimation
+		ArmoryExporter.sampleAnimationFlag = ArmoryExporter.option_sample_animation
 
 		# Only one pipeline for scene for now
 		# Used for material shader export and khafile

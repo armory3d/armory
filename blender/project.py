@@ -37,6 +37,7 @@ def init_armory_props():
         wrd.CGKhafileConfig = ''
         wrd.CGMinimize = True
         wrd.CGOptimizeGeometry = False
+        wrd.CGSampledAnimation = False
         wrd.CGCacheShaders = True
         wrd.CGPlayViewportCamera = False
         wrd.CGPlayConsole = False
@@ -109,6 +110,7 @@ class ArmoryBuildPanel(bpy.types.Panel):
         layout.prop(wrd, 'CGCacheShaders')
         layout.prop(wrd, 'CGMinimize')
         layout.prop(wrd, 'CGOptimizeGeometry')
+        layout.prop(wrd, 'CGSampledAnimation')
 
 class ArmoryPlayPanel(bpy.types.Panel):
     bl_label = "Armory Play"

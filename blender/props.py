@@ -35,6 +35,7 @@ def initProperties():
     bpy.types.World.CGKhafileConfig = StringProperty(name = "Config")
     bpy.types.World.CGMinimize = BoolProperty(name="Minimize Data", default=True)
     bpy.types.World.CGOptimizeGeometry = BoolProperty(name="Optimize Geometry", default=False)
+    bpy.types.World.CGSampledAnimation = BoolProperty(name="Sampled Animation", default=False)
     bpy.types.World.CGCacheShaders = BoolProperty(name="Cache Shaders", default=True)
     bpy.types.World.CGPlayViewportCamera = BoolProperty(name="Viewport Camera", default=False)
     bpy.types.World.CGPlayConsole = BoolProperty(name="Debug Console", default=False)
@@ -52,6 +53,7 @@ def initProperties():
     bpy.types.Object.game_export = bpy.props.BoolProperty(name="Game Export", default=True)
     # For geometry
     bpy.types.Mesh.static_usage = bpy.props.BoolProperty(name="Static Usage", default=True)
+    bpy.types.Curve.static_usage = bpy.props.BoolProperty(name="Static Usage", default=True)
     # For camera
     bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", default=True)
     bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Pipeline Path", default="deferred_pipeline")
@@ -185,7 +187,7 @@ class DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'frustum_culling')
             layout.prop_search(obj.data, "pipeline_path", bpy.data, "node_groups")
             layout.operator("cg.reset_pipelines")
-        elif obj.type == 'MESH':
+        elif obj.type == 'MESH' or obj.type == 'FONT':
             layout.prop(obj.data, 'static_usage')
             layout.operator("cg.invalidate_cache")
         elif obj.type == 'LAMP':
