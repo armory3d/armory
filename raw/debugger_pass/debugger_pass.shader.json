@@ -1,0 +1,38 @@
+{
+	"contexts": [
+		{
+			"id": "debugger_pass",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "true"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				{
+					"id": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"id": "eyeLook",
+					"link": "_cameraLook"
+				},
+				{
+					"id": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "debugger_pass.vert.glsl",
+			"fragment_shader": "debugger_pass.frag.glsl"
+		}
+	]
+}

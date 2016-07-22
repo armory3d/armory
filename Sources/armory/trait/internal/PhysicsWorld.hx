@@ -24,9 +24,7 @@ class PhysicsWorld extends Trait {
 #else
 
 #if WITH_PROFILE
-	var frames = 0;
-	var physTime = 0.0;
-	public static var physTimeAvg = 0.0;
+	public static var physTime = 0.0;
 #end
 
 	public var world:BtDiscreteDynamicsWorldPointer;
@@ -106,20 +104,14 @@ class PhysicsWorld extends Trait {
 
 	public function update() {
 #if WITH_PROFILE
-		var time = kha.Scheduler.realTime();
+		var startTime = kha.Scheduler.realTime();
 #end
 
 		world.ptr.stepSimulation(timeStep, 1, fixedStep);
 		updateContacts();
 
 #if WITH_PROFILE
-		frames++;
-		physTime += kha.Scheduler.realTime() - time;
-		if (frames >= 60) {
-			physTimeAvg = physTime / 60;
-			frames = 0;
-			physTime = 0;
-		}
+		physTime = kha.Scheduler.realTime() - startTime;
 #end
 	}
 

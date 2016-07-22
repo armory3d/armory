@@ -369,8 +369,8 @@ def on_compiled():
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
     sdk_path = addon_prefs.sdk_path
-    # electron_path = sdk_path + 'KodeStudio/KodeStudio.app/Contents/MacOS/Electron'
-    electron_path = sdk_path + 'KodeStudio/KodeStudioOld.app/Contents/MacOS/Electron'
+    electron_path = sdk_path + 'KodeStudio/KodeStudio.app/Contents/MacOS/Electron'
+    # electron_path = sdk_path + 'KodeStudio/KodeStudioOld.app/Contents/MacOS/Electron'
     electron_app_path = './build/electron.js'
 
     play_project.playproc = subprocess.Popen([electron_path, '--chromedebug', '--remote-debugging-port=9222', electron_app_path])
