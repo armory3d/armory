@@ -351,7 +351,7 @@ def play_project(self, in_frame):
         # Player dimensions
         psize = bpy.context.user_preferences.system.pixel_size
         x = bpy.context.window.x + (bpy.context.area.x - 5) / psize
-        y = bpy.context.window.height + 45 - (bpy.context.area.y + bpy.context.area.height) / psize
+        y = bpy.context.window.height + int(22.5 * 2) - (bpy.context.area.y + bpy.context.area.height) / psize
         w = (bpy.context.area.width + 5) / psize
         h = (bpy.context.area.height) / psize - 25
         winoff = bpy.context.window.y + bpy.context.window.height

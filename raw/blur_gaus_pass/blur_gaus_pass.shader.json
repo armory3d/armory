@@ -5,7 +5,7 @@
 			"params": [
 				{
 					"id": "depth_write",
-					"value": "true"
+					"value": "false"
 				},
 				{
 					"id": "compare_mode",
@@ -20,6 +20,10 @@
 				{
 					"id": "dir",
 					"link": "_vec2x"
+				},
+				{
+					"id": "screenSize",
+					"link": "_screenSize"
 				}
 			],
 			"texture_params": [],
@@ -31,7 +35,7 @@
 			"params": [
 				{
 					"id": "depth_write",
-					"value": "true"
+					"value": "false"
 				},
 				{
 					"id": "compare_mode",
@@ -46,6 +50,10 @@
 				{
 					"id": "dir",
 					"link": "_vec2y"
+				},
+				{
+					"id": "screenSize",
+					"link": "_screenSize"
 				}
 			],
 			"texture_params": [],

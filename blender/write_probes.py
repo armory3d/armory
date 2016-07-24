@@ -228,10 +228,9 @@ def write_sky_irradiance(base_name):
     
     output_file = 'compiled/Assets/envmaps/' + base_name + '_irradiance'
     
-    with open(output_file + '.arm', 'w') as f:
-        sh_json = Object()
-        sh_json.irradiance = irradiance_floats
-        f.write(sh_json.to_JSON())
+    sh_json = {}
+    sh_json['irradiance'] = irradiance_floats
+    utils.write_arm(output_file + '.arm', sh_json)
 
     assets.add(output_file + '.arm')
 
@@ -246,9 +245,8 @@ def write_color_irradiance(base_name, col):
     
     output_file = 'compiled/Assets/envmaps/' + base_name + '_irradiance'
     
-    with open(output_file + '.arm', 'w') as f:
-        sh_json = Object()
-        sh_json.irradiance = irradiance_floats
-        f.write(sh_json.to_JSON())
+    sh_json = {}
+    sh_json['irradiance'] = irradiance_floats
+    utils.write_arm(output_file + '.arm', sh_json)
 
     assets.add(output_file + '.arm')

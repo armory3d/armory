@@ -5,7 +5,7 @@
 			"params": [
 				{
 					"id": "depth_write",
-					"value": "true"
+					"value": "false"
 				},
 				{
 					"id": "compare_mode",

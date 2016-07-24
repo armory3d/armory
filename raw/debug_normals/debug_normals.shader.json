@@ -1,11 +1,11 @@
 {
 	"contexts": [
 		{
-			"id": "debugger_pass",
+			"id": "debug_normals",
 			"params": [
 				{
 					"id": "depth_write",
-					"value": "true"
+					"value": "false"
 				},
 				{
 					"id": "compare_mode",
@@ -31,8 +31,8 @@
 				}
 			],
 			"texture_params": [],
-			"vertex_shader": "debugger_pass.vert.glsl",
-			"fragment_shader": "debugger_pass.frag.glsl"
+			"vertex_shader": "debug_normals.vert.glsl",
+			"fragment_shader": "debug_normals.frag.glsl"
 		}
 	]
 }

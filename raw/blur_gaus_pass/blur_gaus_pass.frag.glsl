@@ -6,10 +6,10 @@ precision mediump float;
 
 uniform sampler2D tex;
 uniform vec2 dir;
+uniform vec2 screenSize;
 
 in vec2 texCoord;
 
-const vec2 screenSize = vec2(1920, 1080);
 // const float weight[5] = float[] (0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
 // const float weight[8] = float[] (0.197448, 0.174697, 0.120999, 0.065602, 0.02784, 0.009246, 0.002403, 0.000489);
 

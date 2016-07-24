@@ -45,6 +45,10 @@ project.addAssets('Assets/**');
             f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/zui')[2:] + '");\n')
             f.write('project.addAssets("' + sdk_path + '/armory/Assets/droid_sans.ttf");\n')
 
+        f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/haxeui/haxeui-core')[2:] + '");\n')
+        f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/haxeui/haxeui-kha')[2:] + '");\n')
+        f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/haxeui/hscript')[2:] + '");\n')
+
         if bpy.data.worlds[0].CGMinimize == False:
             f.write("project.addDefine('WITH_JSON');\n")
             

@@ -134,6 +134,63 @@ class MotionBlurPassNode(Node, CGPipelineTreeNode):
     def free(self):
         print("Removing node ", self, ", Goodbye!")
 
+class CopyPassNode(Node, CGPipelineTreeNode):
+    '''A custom node'''
+    bl_idname = 'CopyPassNodeType'
+    bl_label = 'Copy'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "Color")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
+    def copy(self, node):
+        print("Copying from node ", node)
+
+    def free(self):
+        print("Removing node ", self, ", Goodbye!")
+
+class BlurBasicPassNode(Node, CGPipelineTreeNode):
+    '''A custom node'''
+    bl_idname = 'BlurBasicPassNodeType'
+    bl_label = 'Blur Basic'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketShader', "In/Out")
+        self.inputs.new('NodeSocketShader', "Temp")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
+    def copy(self, node):
+        print("Copying from node ", node)
+
+    def free(self):
+        print("Removing node ", self, ", Goodbye!")
+
+class DebugNormalsPassNode(Node, CGPipelineTreeNode):
+    '''A custom node'''
+    bl_idname = 'DebugNormalsPassNodeType'
+    bl_label = 'Debug Normals'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "Color")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
+    def copy(self, node):
+        print("Copying from node ", node)
+
+    def free(self):
+        print("Removing node ", self, ", Goodbye!")
+
 class FXAAPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'FXAAPassNodeType'
@@ -768,6 +825,9 @@ node_categories = [
         NodeItem("SSRPassNodeType"),
         NodeItem("BloomPassNodeType"),
         NodeItem("MotionBlurPassNodeType"),
+        NodeItem("CopyPassNodeType"),
+        NodeItem("BlurBasicPassNodeType"),
+        NodeItem("DebugNormalsPassNodeType"),
         NodeItem("FXAAPassNodeType"),
         NodeItem("SMAAPassNodeType"),
         NodeItem("SSSPassNodeType"),
@@ -1094,6 +1154,16 @@ def make_bloom_pass(stages, node_group, node, shader_references, asset_reference
 def make_motion_blur_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='motion_blur_pass/motion_blur_pass/motion_blur_pass')
 
+def make_copy_pass(stages, node_group, node, shader_references, asset_references):
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='copy_pass/copy_pass/copy_pass')
+
+def make_blur_basic_pass(stages, node_group, node, shader_references, asset_references):
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[1], bind_target_constants=['tex'], shader_context='blur_pass/blur_pass/blur_pass_x')
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='blur_pass/blur_pass/blur_pass_y')
+
+def make_debug_normals_pass(stages, node_group, node, shader_references, asset_references):
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='debug_normals_pass/debug_normals_pass/debug_normals_pass')
+
 def make_fxaa_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='fxaa_pass/fxaa_pass/fxaa_pass')
 
@@ -1267,6 +1337,15 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
     elif node.bl_idname == 'MotionBlurPassNodeType':
         make_motion_blur_pass(stages, node_group, node, shader_references, asset_references)
         append_stage = False
+    elif node.bl_idname == 'CopyPassNodeType':
+        make_copy_pass(stages, node_group, node, shader_references, asset_references)
+        append_stage = False
+    elif node.bl_idname == 'BlurBasicPassNodeType':
+        make_blur_basic_pass(stages, node_group, node, shader_references, asset_references)
+        append_stage = False
+    elif node.bl_idname == 'DebugNormalsPassNodeType':
+        make_debug_normals_pass(stages, node_group, node, shader_references, asset_references)
+        append_stage = False
     elif node.bl_idname == 'FXAAPassNodeType':
         make_fxaa_pass(stages, node_group, node, shader_references, asset_references)
         append_stage = False
@@ -1349,7 +1428,7 @@ def traverse_for_rt(node, node_group, render_targets, depth_buffers):
             traverse_for_rt(loop_node, node_group, render_targets, depth_buffers)
     
     # Prebuilt
-    elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
+    elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
         if node.inputs[1].is_linked:
             tnode = findNodeByLink(node_group, node, node.inputs[1])
             parse_render_target(tnode, node_group, render_targets, depth_buffers)
@@ -1358,7 +1437,7 @@ def traverse_for_rt(node, node_group, render_targets, depth_buffers):
             if node.inputs[i].is_linked:
                 tnode = findNodeByLink(node_group, node, node.inputs[i])
                 parse_render_target(tnode, node_group, render_targets, depth_buffers)
-    elif node.bl_idname == 'SSAOPassNodeType' or node.bl_idname == 'SSSPassNodeType':
+    elif node.bl_idname == 'SSAOPassNodeType' or node.bl_idname == 'SSSPassNodeType' or node.bl_idname == 'BlurBasicPassNodeType':
         for i in range(1, 3):
             if node.inputs[i].is_linked:
                 tnode = findNodeByLink(node_group, node, node.inputs[i])
