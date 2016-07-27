@@ -9,7 +9,7 @@ import iron.node.RootNode;
 import iron.math.Vec4;
 import iron.math.Quat;
 
-class FlyCamera extends Trait {
+class WalkNavigation extends Trait {
 
     var camera:CameraNode;
 

@@ -207,6 +207,7 @@ const float seaSpeed = """ + str(round(wrd.generate_ocean_speed * 100) / 100) + 
 const float seaFreq = """ + str(round(wrd.generate_ocean_freq * 100) / 100) + """;
 const vec3 seaBaseColor = vec3(""" + str(round(wrd.generate_ocean_base_color[0] * 100) / 100) + """, """ + str(round(wrd.generate_ocean_base_color[1] * 100) / 100) + """, """ + str(round(wrd.generate_ocean_base_color[2] * 100) / 100) + """);
 const vec3 seaWaterColor = vec3(""" + str(round(wrd.generate_ocean_water_color[0] * 100) / 100) + """, """ + str(round(wrd.generate_ocean_water_color[1] * 100) / 100) + """, """ + str(round(wrd.generate_ocean_water_color[2] * 100) / 100) + """);
+const float seaFade = """ + str(round(wrd.generate_ocean_fade * 100) / 100) + """;
 """)
         if wrd.generate_ssao:
             f.write(

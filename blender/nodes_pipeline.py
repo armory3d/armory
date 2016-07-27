@@ -865,7 +865,7 @@ def load_library():
     data_path = sdk_path + '/armory/blender/data/data.blend'
 
     with bpy.data.libraries.load(data_path, link=False) as (data_from, data_to):
-        data_to.node_groups = ['forward_pipeline', 'forward_pipeline_low', 'deferred_pipeline', 'deferred_pipeline_low', 'pathtrace_pipeline', 'PBR']
+        data_to.node_groups = ['forward_pipeline', 'forward_pipeline_low', 'deferred_pipeline', 'deferred_pipeline_low', 'pathtrace_pipeline', 'Armory PBR']
     
     # TODO: cannot use for loop
     # TODO: import pbr group separately, no need for fake user
@@ -874,7 +874,7 @@ def load_library():
     bpy.data.node_groups['deferred_pipeline'].use_fake_user = True
     bpy.data.node_groups['deferred_pipeline_low'].use_fake_user = True
     bpy.data.node_groups['pathtrace_pipeline'].use_fake_user = True
-    bpy.data.node_groups['PBR'].use_fake_user = True
+    bpy.data.node_groups['Armory PBR'].use_fake_user = True
 
 def register():
     bpy.utils.register_module(__name__)

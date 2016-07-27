@@ -101,7 +101,7 @@ def update_texture_index(context, input_index):
 
     mat = bpy.data.materials[scene.material_prop]
     for n in mat.node_tree.nodes:
-        if n.type == 'GROUP' and n.node_tree.name.split('.', 1)[0] == 'PBR':
+        if n.type == 'GROUP' and n.node_tree.name.split('.', 1)[0] == 'Armory PBR':
             node = n
             break
     image_name = get_image_name(mat.node_tree, node, input_index)
@@ -120,7 +120,7 @@ def update_texture_index(context, input_index):
     obj = context.image_paint_object
     mat = obj.active_material
     for n in mat.node_tree.nodes:
-        if n.type == 'GROUP' and n.node_tree.name == 'PBR':
+        if n.type == 'GROUP' and n.node_tree.name == 'Armory PBR':
             node = n
             break
     image_name = get_image_name(mat.node_tree, node, input_index)
@@ -462,7 +462,7 @@ class PPSetupButton(bpy.types.Operator):
 
         group_node = nodes.new("ShaderNodeGroup")
         group_node.location = -250, 0
-        group_node.node_tree = bpy.data.node_groups['PBR']
+        group_node.node_tree = bpy.data.node_groups['Armory PBR']
         links.new(group_node.outputs[0], out_node.inputs[0])
         links.new(group_node.outputs[1], out_node.inputs[2])
 
@@ -503,13 +503,13 @@ class PPSetupButton(bpy.types.Operator):
 
 
 def import_node_groups():
-    if bpy.data.node_groups.get('PBR') is None:
+    if bpy.data.node_groups.get('Armory PBR') is None:
             data_path = \
             os.path.dirname(os.path.abspath(__file__)) + '/data.blend'
 
             with bpy.data.libraries.load(data_path, link=False) as \
             (data_from, data_to):
-                data_to.node_groups = ['PBR']
+                data_to.node_groups = ['Armory PBR']
 
 
 class PPImportNodeGroupsButton(bpy.types.Operator):

@@ -13,7 +13,7 @@
 				},
 				{
 					"id": "cull_mode",
-					"value": "counter_clockwise"
+					"value": "clockwise"
 				}
 			],
 			"links": [
@@ -108,7 +108,7 @@
 				},
 				{
 					"id": "cull_mode",
-					"value": "counter_clockwise"
+					"value": "clockwise"
 				}
 			],
 			"links": [
@@ -203,7 +203,7 @@
 				},
 				{
 					"id": "cull_mode",
-					"value": "counter_clockwise"
+					"value": "clockwise"
 				}
 			],
 			"links": [

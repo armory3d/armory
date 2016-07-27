@@ -141,7 +141,7 @@ def parse_material_displacement(self, material, c, defs, tree, node, factor):
 		parse_normal_map_socket(self, normal_map_input, material, c, defs, tree, node, factor)
 
 def parse_material_surface(self, material, c, defs, tree, node, factor):
-	if node.type == 'GROUP' and node.node_tree.name.split('.', 1)[0] == 'PBR':
+	if node.type == 'GROUP' and node.node_tree.name.split('.', 1)[0] == 'Armory PBR':
 		parse_pbr_group(self, material, c, defs, tree, node, factor)
 	
 	elif node.type == 'BSDF_TRANSPARENT':
@@ -275,8 +275,8 @@ def add_albedo_color(c, col):
 		make_albedo_const(col, c)
 	else:
 		const = parse.const_color
-		res = mix_color_vec4(col, const.vec4)
-		const.vec4 = [res[0], res[1], res[2], res[3]]
+		res = mix_color_vec4(col, const['vec4'])
+		const['vec4'] = [res[0], res[1], res[2], res[3]]
 
 def parse_mix_rgb(self, material, c, defs, tree, node, factor):
 	# blend_type = MULTIPLY
@@ -358,7 +358,7 @@ def add_metalness_const(res, c, factor, minimum_val=0.0, sqrt_val=False):
 		make_metalness_const(res * factor, c)
 	else:
 		const = parse.const_metalness		
-		const.float = mix_float(res, const.float, factor=factor) 
+		const['float'] = mix_float(res, const['float'], factor=factor) 
 
 def parse_metalness_socket(self, metalness_input, material, c, defs, tree, node, factor, minimum_val=0.0, sqrt_val=False):
 	if metalness_input.is_linked:
@@ -377,7 +377,7 @@ def add_roughness_const(res, c, factor, minimum_val=0.0, sqrt_val=False):
 		make_roughness_const(res * factor, c)
 	else:
 		const = parse.const_roughness
-		const.float = mix_float(res, const.float, factor=factor)
+		const['float'] = mix_float(res, const['float'], factor=factor)
 		
 def parse_roughness_socket(self, roughness_input, material, c, defs, tree, node, factor, minimum_val=0.0, sqrt_val=False):
 	if roughness_input.is_linked:
@@ -397,7 +397,7 @@ def add_occlusion_const(res, c, factor):
 		make_occlusion_const(res * factor, c)
 	else:
 		const = parse.const_occlusion		
-		const.float = mix_float(res, const.float, factor=factor) 
+		const['float'] = mix_float(res, const['float'], factor=factor) 
 
 def parse_occlusion_socket(self, occlusion_input, material, c, defs, tree, node, factor):
 	if occlusion_input.is_linked:
@@ -416,22 +416,22 @@ def parse_pbr_group(self, material, c, defs, tree, node, factor):
 	# Albedo Map
 	base_color_input = node.inputs[0]
 	parse_base_color_socket(self, base_color_input, material, c, defs, tree, node, factor)
-	# Metalness Map
-	metalness_input = node.inputs[3]
-	parse_metalness_socket(self, metalness_input, material, c, defs, tree, node, factor)
-	# Roughness Map
-	roughness_input = node.inputs[2]
-	parse_roughness_socket(self, roughness_input, material, c, defs, tree, node, factor)
-	# Normal Map
-	normal_map_input = node.inputs[4]
-	parse_normal_map_socket(self, normal_map_input, material, c, defs, tree, node, factor)
 	# Occlusion Map
 	occlusion_input = node.inputs[1]
 	parse_occlusion_socket(self, occlusion_input, material, c, defs, tree, node, factor)
+	# Roughness Map
+	roughness_input = node.inputs[2]
+	parse_roughness_socket(self, roughness_input, material, c, defs, tree, node, factor)
+	# Metalness Map
+	metalness_input = node.inputs[4]
+	parse_metalness_socket(self, metalness_input, material, c, defs, tree, node, factor)
+	# Normal Map
+	normal_map_input = node.inputs[5]
+	parse_normal_map_socket(self, normal_map_input, material, c, defs, tree, node, factor)
 	# Height Map
-	height_input = node.inputs[7]
+	height_input = node.inputs[9]
 	parse_height_socket(self, height_input, material, c, defs, tree, node, factor)
 	# Height Strength
 	if height_input.is_linked:
-		height_strength_input = node.inputs[8]
+		height_strength_input = node.inputs[10]
 		add_height_strength(self, c, height_strength_input.default_value)

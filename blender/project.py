@@ -40,6 +40,7 @@ def init_armory_props():
         wrd.CGSampledAnimation = False
         wrd.CGCacheShaders = True
         wrd.CGPlayViewportCamera = False
+        wrd.CGPlayViewportNavigation = 'Walk'
         wrd.CGPlayConsole = False
         wrd.CGPlayDeveloperTools = False
         wrd.CGPlayRuntime = 'Electron'
@@ -90,6 +91,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
         row.prop(wrd, 'CGProjectHeight')
         layout.prop(wrd, 'CGProjectSamplesPerPixel')
         layout.prop(wrd, 'CGPhysics')
+        layout.operator("arm.kode")
 
 class ArmoryBuildPanel(bpy.types.Panel):
     bl_label = "Armory Build"
@@ -124,6 +126,9 @@ class ArmoryPlayPanel(bpy.types.Panel):
         layout.operator("arm.play")
         layout.prop(wrd, 'CGPlayRuntime')
         layout.prop(wrd, 'CGPlayViewportCamera')
+        if wrd.CGPlayViewportCamera:
+            layout.prop(wrd, 'CGPlayViewportNavigation')
+
         layout.prop(wrd, 'CGPlayConsole')
         layout.prop(wrd, 'CGPlayDeveloperTools')
 
@@ -448,7 +453,20 @@ class ArmoryFolderButton(bpy.types.Operator):
     def execute(self, context):
         webbrowser.open('file://' + utils.get_fp())
         return{'FINISHED'}
-    
+
+class ArmoryKodeButton(bpy.types.Operator):
+    bl_idname = 'arm.kode'
+    bl_label = 'Open in KodeStudio'
+ 
+    def execute(self, context):
+        user_preferences = bpy.context.user_preferences
+        addon_prefs = user_preferences.addons['armory'].preferences
+        sdk_path = addon_prefs.sdk_path
+        kode_path = sdk_path + '/KodeStudio/KodeStudio.app/Contents/MacOS/Electron'
+        project_path = utils.get_fp()
+        subprocess.call([kode_path + ' ' + utils.get_fp() + ' &'], shell=True)
+        return{'FINISHED'}
+
 class ArmoryCleanButton(bpy.types.Operator):
     bl_idname = 'arm.clean'
     bl_label = 'Clean Project'

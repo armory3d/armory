@@ -1417,7 +1417,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				else:
 					self.geometryArray[object]["nodeTable"].append(node)
 
-				oid = self.geometryArray[object]["structName"].replace(".", "_")
+				oid = utils.safe_filename(self.geometryArray[object]["structName"])
 				if ArmoryExporter.option_geometry_per_file:
 					o['object_ref'] = 'geom_' + oid + '/' + oid
 				else:
@@ -1767,7 +1767,13 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			ia = {}
 			ia['size'] = 3
 			ia['values'] = idata
-			ia['material'] = len(om['index_arrays'])
+			ia['material'] = 0
+			# Find material index for multi-mat mesh
+			if len(exportMesh.materials) > 1:
+				for i in range(0, len(exportMesh.materials)):
+					if mat == exportMesh.materials[i].name:
+						ia['material'] = i
+						break
 			om['index_arrays'].append(ia)
 		
 		# Make tangents
@@ -1781,7 +1787,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 	def ExportGeometry(self, objectRef, scene):
 		# This function exports a single geometry object.
 		node = objectRef[1]["nodeTable"][0]
-		oid = objectRef[1]["structName"].replace(".", "_")
+		oid = utils.safe_filename(objectRef[1]["structName"])
 
 		# Check if geometry is using instanced rendering
 		is_instanced, instance_offsets = self.object_process_instancing(node, objectRef[1]["nodeTable"])
@@ -2274,9 +2280,14 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				# Save offset data
 				instance_offsets = [0, 0, 0] # Include parent
 				for sn in n.children:
-					instance_offsets.append(sn.location.x)
-					instance_offsets.append(sn.location.y)
-					instance_offsets.append(sn.location.z)
+					# instance_offsets.append(sn.location.x)
+					# instance_offsets.append(sn.location.y)
+					# instance_offsets.append(sn.location.z)
+					# Do not take parent matrix into account
+					loc = sn.matrix_local.to_translation()
+					instance_offsets.append(loc.x)
+					instance_offsets.append(loc.y)
+					instance_offsets.append(loc.z)
 				break
 		return is_instanced, instance_offsets
 
@@ -2350,11 +2361,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			x = {}
 			if t.type_prop == 'Nodes' and t.nodes_name_prop != '':
 				x['type'] = 'Script'
-				x['class_name'] = bpy.data.worlds[0].CGProjectPackage + '.node.' + t.nodes_name_prop.replace('.', '_')
+				x['class_name'] = bpy.data.worlds[0].CGProjectPackage + '.node.' + utils.safe_filename(t.nodes_name_prop)
 			elif t.type_prop == 'Scene Instance':
 				x['type'] = 'Script'
 				x['class_name'] = 'armory.trait.internal.SceneInstance'
-				x['parameters'] = [t.scene_prop.replace('.', '_')]
+				x['parameters'] = [utils.safe_filename(t.scene_prop)]
 			elif t.type_prop == 'Animation':
 				x['type'] = 'Script'
 				x['class_name'] = 'armory.trait.internal.Animation'
@@ -2411,13 +2422,21 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				x['parameters'].append(rb.collision_margin)
 			o['traits'].append(x)
 		
-		# Debug console enabled, attach console overlay to each camera
 		if type == kNodeTypeCamera:
-			console_trait = {}
-			console_trait['type'] = 'Script'
-			console_trait['class_name'] = 'armory.trait.internal.Console'
-			console_trait['parameters'] = []
-			o['traits'].append(console_trait)
+			# Debug console enabled, attach console overlay to each camera
+			if bpy.data.worlds[0].CGPlayConsole:
+				console_trait = {}
+				console_trait['type'] = 'Script'
+				console_trait['class_name'] = 'armory.trait.internal.Console'
+				console_trait['parameters'] = []
+				o['traits'].append(console_trait)
+			# Viewport camera enabled, attach navigation if enabled
+			if bpy.data.worlds[0].CGPlayViewportCamera and bpy.data.worlds[0].CGPlayViewportNavigation == 'Walk':
+				navigation_trait = {}
+				navigation_trait['type'] = 'Script'
+				navigation_trait['class_name'] = 'armory.trait.WalkNavigation'
+				navigation_trait['parameters'] = []
+				o['traits'].append(navigation_trait)
 
 		# Map objects to game objects
 		self.objectToGameObjectDict[node] = o

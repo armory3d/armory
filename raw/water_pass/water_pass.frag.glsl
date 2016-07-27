@@ -27,6 +27,7 @@ in vec3 viewRay;
 in vec3 vecnormal;
 
 // const float seaLevel = 0.0;
+// const float seaFade = 1.8;
 // const float seaMaxAmplitude = 2.5;
 // const float seaHeight = 0.6;
 // const float seaChoppy = 4.0;
@@ -437,7 +438,7 @@ void main() {
 		
 		color = getSeaColor(surfacePoint, normal, ld, -v, surfacePoint - eye);
 		// color = pow(color, vec3(2.2));
-		color = mix(colorOriginal.rgb, color, clamp(depthZ * 1.8, 0.0, 1.0));
+		color = mix(colorOriginal.rgb, color, clamp(depthZ * seaFade, 0.0, 1.0));
 
         // Fade on horizon
         vec3 vecn = normalize(vecnormal);

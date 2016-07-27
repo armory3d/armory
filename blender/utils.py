@@ -37,3 +37,6 @@ def fetch_script_names():
 
 def to_hex(val):
     return '#%02x%02x%02x%02x' % (int(val[3] * 255), int(val[0] * 255), int(val[1] * 255), int(val[2] * 255))
+
+def safe_filename(s):
+    return s.replace('.', '_').replace('-', '_').replace(' ', '_')

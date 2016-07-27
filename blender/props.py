@@ -38,6 +38,10 @@ def initProperties():
     bpy.types.World.CGSampledAnimation = BoolProperty(name="Sampled Animation", default=False)
     bpy.types.World.CGCacheShaders = BoolProperty(name="Cache Shaders", default=True)
     bpy.types.World.CGPlayViewportCamera = BoolProperty(name="Viewport Camera", default=False)
+    bpy.types.World.CGPlayViewportNavigation = EnumProperty(
+        items = [('None', 'None', 'None'), 
+                 ('Walk', 'Walk', 'Walk')],
+        name = "Navigation", default='Walk')
     bpy.types.World.CGPlayConsole = BoolProperty(name="Debug Console", default=False)
     bpy.types.World.CGPlayDeveloperTools = BoolProperty(name="Developer Tools", default=False)
     bpy.types.World.CGPlayRuntime = EnumProperty(
@@ -82,7 +86,7 @@ def initProperties():
     bpy.types.World.world_defs = bpy.props.StringProperty(name="World Shader Defs", default='')
     bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Generate Radiance", default=True)
     bpy.types.World.generate_clouds = bpy.props.BoolProperty(name="Generate Clouds", default=False)
-    bpy.types.World.generate_clouds_density = bpy.props.FloatProperty(name="Density", default=0.2, min=0.0, max=10.0)
+    bpy.types.World.generate_clouds_density = bpy.props.FloatProperty(name="Density", default=0.6, min=0.0, max=10.0)
     bpy.types.World.generate_clouds_size = bpy.props.FloatProperty(name="Size", default=1.0, min=0.0, max=10.0)
     bpy.types.World.generate_clouds_lower = bpy.props.FloatProperty(name="Lower", default=2.0, min=1.0, max=10.0)
     bpy.types.World.generate_clouds_upper = bpy.props.FloatProperty(name="Upper", default=3.5, min=1.0, max=10.0)
@@ -102,6 +106,7 @@ def initProperties():
     bpy.types.World.generate_ocean_choppy = bpy.props.FloatProperty(name="Choppy", default=4.0)
     bpy.types.World.generate_ocean_speed = bpy.props.FloatProperty(name="Speed", default=1.0)
     bpy.types.World.generate_ocean_freq = bpy.props.FloatProperty(name="Freq", default=0.16)
+    bpy.types.World.generate_ocean_fade = bpy.props.FloatProperty(name="Fade", default=1.8)
     bpy.types.World.generate_ssao = bpy.props.BoolProperty(name="Generate SSAO", default=True)
     bpy.types.World.generate_ssao_size = bpy.props.FloatProperty(name="Size", default=0.12)
     bpy.types.World.generate_ssao_strength = bpy.props.FloatProperty(name="Strength", default=0.55)
@@ -165,6 +170,7 @@ class ModifiersPropsPanel(bpy.types.Panel):
         if len(obj.modifiers) > 0 and obj.modifiers[0].type == 'OCEAN':
             layout.prop(bpy.data.worlds[0], 'generate_ocean_base_color')
             layout.prop(bpy.data.worlds[0], 'generate_ocean_water_color')
+            layout.prop(bpy.data.worlds[0], 'generate_ocean_fade')
 
 # Menu in data region
 class DataPropsPanel(bpy.types.Panel):
