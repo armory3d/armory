@@ -1,6 +1,6 @@
 package armory.node;
 
-import armory.trait.NodeExecutor;
+import armory.trait.internal.NodeExecutor;
 
 class TimeNode extends FloatNode {
 

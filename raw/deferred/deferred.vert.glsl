@@ -48,7 +48,6 @@ uniform vec4 albedo_color;
 #endif
 
 
-out vec4 mvpposition;
 #ifdef _Tex
 	out vec2 texCoord;
 #endif
@@ -147,8 +146,6 @@ void main() {
 	matColor.rgb *= col;
 	// matColor.rgb *= pow(col, vec3(2.2));
 #endif
-
-	mvpposition = gl_Position;
 
 #ifdef _NMTex
 	vec3 tangent = normalize(mat3(NM) * (tan));

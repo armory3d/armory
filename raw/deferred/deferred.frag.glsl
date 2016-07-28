@@ -43,7 +43,6 @@ precision mediump float;
 	uniform vec3 probeVolumeSize;
 #endif
 
-in vec4 mvpposition;
 #ifdef _Tex
 	in vec2 texCoord;
 #endif

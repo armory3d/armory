@@ -9,7 +9,7 @@ from bpy.props import *
 def cb_scene_update(context):
     edit_obj = bpy.context.edit_object
     if edit_obj is not None and edit_obj.is_updated_data is True:
-        edit_obj.geometry_cached = False
+        edit_obj.data.geometry_cached = False
 
 def initProperties():
     # For project
@@ -32,7 +32,7 @@ def initProperties():
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('Bullet', 'Bullet', 'Bullet')],
         name = "Physics", default='Bullet')
-    bpy.types.World.CGKhafileConfig = StringProperty(name = "Config")
+    bpy.types.World.CGKhafile = StringProperty(name = "Khafile")
     bpy.types.World.CGMinimize = BoolProperty(name="Minimize Data", default=True)
     bpy.types.World.CGOptimizeGeometry = BoolProperty(name="Optimize Geometry", default=False)
     bpy.types.World.CGSampledAnimation = BoolProperty(name="Sampled Animation", default=False)
@@ -50,12 +50,14 @@ def initProperties():
         name = "Runtime", default='Electron')
 
     # For object
-    bpy.types.Object.geometry_cached = bpy.props.BoolProperty(name="Geometry Cached", default=False) # TODO: move to mesh type
     bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced Children", default=False)
     bpy.types.Object.override_material = bpy.props.BoolProperty(name="Override Material", default=False)
     bpy.types.Object.override_material_name = bpy.props.StringProperty(name="Name", default="")
     bpy.types.Object.game_export = bpy.props.BoolProperty(name="Game Export", default=True)
     # For geometry
+    bpy.types.Mesh.geometry_cached = bpy.props.BoolProperty(name="Geometry Cached", default=False)
+    bpy.types.Mesh.geometry_cached_verts = bpy.props.IntProperty(name="Last Verts", default=0)
+    bpy.types.Mesh.geometry_cached_edges = bpy.props.IntProperty(name="Last Edges", default=0)
     bpy.types.Mesh.static_usage = bpy.props.BoolProperty(name="Static Usage", default=True)
     bpy.types.Curve.static_usage = bpy.props.BoolProperty(name="Static Usage", default=True)
     # For camera

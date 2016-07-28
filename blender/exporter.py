@@ -1501,7 +1501,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						bones_obj = {}
 						bones_obj['nodes'] = bones
 						utils.write_arm(fp, bones_obj)
-						node.geometry_cached = True
+						node.data.geometry_cached = True
 
 			if (parento == None):
 				self.output['nodes'].append(o)
@@ -2247,11 +2247,18 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 	def node_is_geometry_cached(self, node):
 		#return False
-		return node.geometry_cached
+		if node.data.geometry_cached_verts != len(node.data.vertices):
+			return False
+		if node.data.geometry_cached_edges != len(node.data.edges):
+			return False
+		return node.data.geometry_cached
 
 	def node_set_geometry_cached(self, node, b):
 		#return
-		node.geometry_cached = b
+		node.data.geometry_cached = b
+		if b:
+			node.data.geometry_cached_verts = len(node.data.vertices)
+			node.data.geometry_cached_edges = len(node.data.edges)
 
 	def node_has_override_material(self, node):
 		#return False
@@ -2276,7 +2283,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if n.instanced_children == True:
 				is_instanced = True
 				# TODO: cache instanced geometry
-				node.geometry_cached = False
+				node.data.geometry_cached = False
 				# Save offset data
 				instance_offsets = [0, 0, 0] # Include parent
 				for sn in n.children:
@@ -2563,7 +2570,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			material.export_tangents = normal_mapping
 			# Delete geometry caches
 			for ob in mat_users:
-				ob.geometry_cached = False
+				ob.data.geometry_cached = False
 				break
 
 		# Process defs and append resources

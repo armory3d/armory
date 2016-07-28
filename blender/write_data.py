@@ -52,6 +52,9 @@ project.addAssets('Assets/**');
         if bpy.data.worlds[0].CGMinimize == False:
             f.write("project.addDefine('WITH_JSON');\n")
             
+        for d in assets.khafile_defs:
+            f.write("project.addDefine('" + d + "');\n")
+
         config_text = bpy.data.worlds[0]['CGKhafileConfig']
         if config_text != '':
             f.write(bpy.data.texts[config_text].as_string())
@@ -137,8 +140,8 @@ function createWindow () { """)
 """)
         f.write(
 """
-    //mainWindow.loadURL('file://' + __dirname + '/html5/index.html');
-    mainWindow.loadURL('http://localhost:8040/build/html5/index.html');
+    mainWindow.loadURL('file://' + __dirname + '/html5/index.html');
+    //mainWindow.loadURL('http://localhost:8040/build/html5/index.html');
     mainWindow.on('closed', function() { mainWindow = null; });""")
 
         if dev_tools:

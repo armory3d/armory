@@ -1,5 +1,7 @@
 package armory.trait;
 
+import iron.Trait;
+
 class NavMesh extends Trait {
 
     public function new() {

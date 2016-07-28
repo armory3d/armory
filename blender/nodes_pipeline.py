@@ -231,6 +231,27 @@ class SMAAPassNode(Node, CGPipelineTreeNode):
     def free(self):
         print("Removing node ", self, ", Goodbye!")
 
+class TAAPassNode(Node, CGPipelineTreeNode):
+    '''A custom node'''
+    bl_idname = 'TAAPassNodeType'
+    bl_label = 'TAA'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "Color")
+        self.inputs.new('NodeSocketShader', "Last Color")
+        self.inputs.new('NodeSocketShader', "Velocity")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
+    def copy(self, node):
+        print("Copying from node ", node)
+
+    def free(self):
+        print("Removing node ", self, ", Goodbye!")
+
 class SSSPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'SSSPassNodeType'
@@ -830,6 +851,7 @@ node_categories = [
         NodeItem("DebugNormalsPassNodeType"),
         NodeItem("FXAAPassNodeType"),
         NodeItem("SMAAPassNodeType"),
+        NodeItem("TAAPassNodeType"),
         NodeItem("SSSPassNodeType"),
         NodeItem("WaterPassNodeType"),
         NodeItem("DeferredLightPassNodeType"),
@@ -921,7 +943,7 @@ def buildNodeTree(node_group, shader_references, asset_references):
     rn = getRootNode(node_group)
     if rn == None:
         return
-    
+
     res['id'] = node_group_name
     res['render_targets'], res['depth_buffers'] = get_render_targets(rn, node_group)
     res['stages'] = []
@@ -1195,6 +1217,9 @@ def make_smaa_pass(stages, node_group, node, shader_references, asset_references
     buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'smaa_area.png')
     buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'smaa_search.png')
 
+def make_taa_pass(stages, node_group, node, shader_references, asset_references):
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['tex', 'tex2'], shader_context='taa_pass/taa_pass/taa_pass')
+
 def make_sss_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 4, 5], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='sss_pass/sss_pass/sss_pass_x')
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[3, 4, 5], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='sss_pass/sss_pass/sss_pass_y')
@@ -1352,6 +1377,9 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
     elif node.bl_idname == 'SMAAPassNodeType':
         make_smaa_pass(stages, node_group, node, shader_references, asset_references)
         append_stage = False
+    elif node.bl_idname == 'TAAPassNodeType':
+        make_taa_pass(stages, node_group, node, shader_references, asset_references)
+        append_stage = False
     elif node.bl_idname == 'SSSPassNodeType':
         make_sss_pass(stages, node_group, node, shader_references, asset_references)
         append_stage = False
@@ -1393,9 +1421,10 @@ def findNodeByLinkFrom(node_group, from_node, outp):
     for link in node_group.links:
         if link.from_node == from_node and link.from_socket == outp:
             return link.to_node
-    
+   
 def getRootNode(node_group):
-    # Find first node linked to begin node
+    # Find first node linked to begin node and gather defs
+    rn = None
     for n in node_group.nodes:
         if n.bl_idname == 'BeginNodeType':
             # Store contexts
@@ -1406,7 +1435,11 @@ def getRootNode(node_group):
             bpy.data.cameras[0].overlay_context = n.inputs[4].default_value
             if n.inputs[5].default_value == False: # No HDR space lighting, append def
                 bpy.data.worlds[0].world_defs += '_LDR'
-            return findNodeByLinkFrom(node_group, n, n.outputs[0])
+            rn = findNodeByLinkFrom(node_group, n, n.outputs[0])
+        elif n.bl_idname == 'TAAPassNodeType':
+            # bpy.data.worlds[0].world_defs += '_TAA'
+            assets.add_khafile_def('WITH_TAA')
+    return rn
 
 def get_render_targets(root_node, node_group):
     render_targets = []
@@ -1428,7 +1461,7 @@ def traverse_for_rt(node, node_group, render_targets, depth_buffers):
             traverse_for_rt(loop_node, node_group, render_targets, depth_buffers)
     
     # Prebuilt
-    elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
+    elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
         if node.inputs[1].is_linked:
             tnode = findNodeByLink(node_group, node, node.inputs[1])
             parse_render_target(tnode, node_group, render_targets, depth_buffers)

@@ -1,5 +1,7 @@
 package armory.trait;
 
+import iron.Trait;
+
 class NavAgent extends Trait {
 
     // nav mesh

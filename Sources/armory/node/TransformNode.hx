@@ -44,8 +44,8 @@ class TransformNode extends Node {
 
 		matrix.compose(pos, rot, scale);
 
-		// Append to transform
-		transform.append = matrix;
+		// Prepend to transform
+		transform.prepend = matrix;
 		transform.dirty = true;
 
 		super.inputChanged();

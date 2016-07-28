@@ -1,0 +1,25 @@
+{
+	"contexts": [
+		{
+			"id": "taa_pass",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "false"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [],
+			"texture_params": [],
+			"vertex_shader": "taa_pass.vert.glsl",
+			"fragment_shader": "taa_pass.frag.glsl"
+		}
+	]
+}

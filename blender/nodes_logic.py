@@ -247,7 +247,7 @@ def buildNodeTree(node_group):
 		f.write('package ' + bpy.data.worlds[0].CGProjectPackage + '.node;\n\n')
 		f.write('import armory.node.*;\n\n')
 		f.write('class ' + node_group_name + ' extends armory.trait.internal.NodeExecutor {\n\n')
-		f.write('\tpublic function new() { super(); requestAdd(add); }\n\n')
+		f.write('\tpublic function new() { super(); notifyOnAdd(add); }\n\n')
 		f.write('\tfunction add() {\n')
 		# Make sure root node exists
 		if rn != None:

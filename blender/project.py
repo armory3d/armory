@@ -34,7 +34,7 @@ def init_armory_props():
         wrd.CGProjectScene = bpy.data.scenes[0].name
         wrd.CGProjectSamplesPerPixel = 1
         wrd.CGPhysics = 'Bullet'
-        wrd.CGKhafileConfig = ''
+        wrd.CGKhafile = ''
         wrd.CGMinimize = True
         wrd.CGOptimizeGeometry = False
         wrd.CGSampledAnimation = False
@@ -108,7 +108,7 @@ class ArmoryBuildPanel(bpy.types.Panel):
         row.alignment = 'EXPAND'
         row.operator("arm.folder")
         row.operator("arm.clean")
-        layout.prop_search(wrd, "CGKhafileConfig", bpy.data, "texts", "Config")
+        layout.prop_search(wrd, "CGKhafile", bpy.data, "texts", "Khafile")
         layout.prop(wrd, 'CGCacheShaders')
         layout.prop(wrd, 'CGMinimize')
         layout.prop(wrd, 'CGOptimizeGeometry')
@@ -374,8 +374,8 @@ def on_compiled():
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
     sdk_path = addon_prefs.sdk_path
-    electron_path = sdk_path + 'KodeStudio/KodeStudio.app/Contents/MacOS/Electron'
-    # electron_path = sdk_path + 'KodeStudio/KodeStudioOld.app/Contents/MacOS/Electron'
+    # electron_path = sdk_path + 'KodeStudio/KodeStudio.app/Contents/MacOS/Electron'
+    electron_path = sdk_path + 'KodeStudio/Electron.app/Contents/MacOS/Electron'
     electron_app_path = './build/electron.js'
 
     play_project.playproc = subprocess.Popen([electron_path, '--chromedebug', '--remote-debugging-port=9222', electron_app_path])
@@ -456,7 +456,7 @@ class ArmoryFolderButton(bpy.types.Operator):
 
 class ArmoryKodeButton(bpy.types.Operator):
     bl_idname = 'arm.kode'
-    bl_label = 'Open in KodeStudio'
+    bl_label = 'Open in Kode Studio'
  
     def execute(self, context):
         user_preferences = bpy.context.user_preferences
