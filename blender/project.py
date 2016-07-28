@@ -175,11 +175,11 @@ def export_game_data(fp, sdk_path):
     armatures = []
     for o in bpy.data.objects:
         if o.type == 'ARMATURE':
-            a = Object()
-            a.armature = o
-            a.x = o.location.x
-            a.y = o.location.y
-            a.z = o.location.z
+            a = {}
+            a['armature'] = o
+            a['x'] = o.location.x
+            a['y'] = o.location.y
+            a['z'] = o.location.z
             armatures.append(a)
             o.location.x = 0
             o.location.y = 0
@@ -198,9 +198,9 @@ def export_game_data(fp, sdk_path):
 
     # Move armatures back
     for a in armatures:
-        a.armature.location.x = a.x
-        a.armature.location.y = a.y
-        a.armature.location.z = a.z
+        a['armature'].location.x = a['x']
+        a['armature'].location.y = a['y']
+        a['armature'].location.z = a['z']
     
     # Clean compiled variants if cache is disabled
     if bpy.data.worlds[0].CGCacheShaders == False:

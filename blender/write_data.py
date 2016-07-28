@@ -55,7 +55,7 @@ project.addAssets('Assets/**');
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
 
-        config_text = bpy.data.worlds[0]['CGKhafileConfig']
+        config_text = bpy.data.worlds[0]['CGKhafile']
         if config_text != '':
             f.write(bpy.data.texts[config_text].as_string())
 

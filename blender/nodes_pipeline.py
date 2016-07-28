@@ -1423,7 +1423,7 @@ def findNodeByLinkFrom(node_group, from_node, outp):
             return link.to_node
    
 def getRootNode(node_group):
-    # Find first node linked to begin node and gather defs
+    # Find first node linked to begin node
     rn = None
     for n in node_group.nodes:
         if n.bl_idname == 'BeginNodeType':
@@ -1436,9 +1436,7 @@ def getRootNode(node_group):
             if n.inputs[5].default_value == False: # No HDR space lighting, append def
                 bpy.data.worlds[0].world_defs += '_LDR'
             rn = findNodeByLinkFrom(node_group, n, n.outputs[0])
-        elif n.bl_idname == 'TAAPassNodeType':
-            # bpy.data.worlds[0].world_defs += '_TAA'
-            assets.add_khafile_def('WITH_TAA')
+            break
     return rn
 
 def get_render_targets(root_node, node_group):
@@ -1448,6 +1446,11 @@ def get_render_targets(root_node, node_group):
     return render_targets, depth_buffers
     
 def traverse_for_rt(node, node_group, render_targets, depth_buffers):
+    # Gather defs from linked nodes
+    # if node.bl_idname == 'TAAPassNodeType':
+        # bpy.data.worlds[0].world_defs += '_TAA'
+        # assets.add_khafile_def('WITH_TAA')
+
     # Collect render targets
     if node.bl_idname == 'SetTargetNodeType' or node.bl_idname == 'QuadPassNodeType' or node.bl_idname == 'DrawCompositorNodeType' or node.bl_idname == 'DrawCompositorWithFXAANodeType':
         if node.inputs[1].is_linked:

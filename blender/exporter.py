@@ -54,11 +54,11 @@ deltaSubscaleName = ["dxscl", "dyscl", "dzscl"]
 axisName = ["x", "y", "z"]
 
 class Vertex:
-	__slots__ = ("co", "normal", "uvs", "col", "loop_indices", "index", "weights", "joint_indexes")
+	__slots__ = ("co", "normal", "uvs", "col", "loop_indices", "index", "bone_weights", "bone_indices", "bone_count", "vertexIndex")
 	def __init__(self, mesh, loop):
-		vi = loop.vertex_index
+		self.vertexIndex = loop.vertex_index
 		i = loop.index
-		self.co = mesh.vertices[vi].co.freeze()
+		self.co = mesh.vertices[self.vertexIndex].co.freeze()
 		self.normal = loop.normal.freeze()
 		self.uvs = tuple(layer.data[i].uv.freeze() for layer in mesh.uv_layers)
 		self.col = [0, 0, 0]
@@ -67,17 +67,13 @@ class Vertex:
 		self.loop_indices = [i]
 
 		# Take the four most influential groups
-		groups = sorted(mesh.vertices[vi].groups, key=lambda group: group.weight, reverse=True)
-		if len(groups) > 4:
-			groups = groups[:4]
+		# groups = sorted(mesh.vertices[self.vertexIndex].groups, key=lambda group: group.weight, reverse=True)
+		# if len(groups) > 4:
+			# groups = groups[:4]
 
-		self.weights = [group.weight for group in groups]
-		self.joint_indexes = [group.group for group in groups]
-
-		if len(self.weights) < 4:
-			for i in range(len(self.weights), 4):
-				self.weights.append(0.0)
-				self.joint_indexes.append(0)
+		# self.bone_weights = [group.weight for group in groups]
+		# self.bone_indices = [group.group for group in groups]
+		# self.bone_count = len(self.bone_weights)
 
 		self.index = 0
 
@@ -1482,13 +1478,13 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				skeleton = node.data
 				if (skeleton):
 					o['nodes'] = []
-					o['bones_ref'] = 'bones_' + o.id
+					o['bones_ref'] = 'bones_' + o['id']
 
 					# TODO: use option_geometry_per_file
-					fp = self.get_geoms_file_path(o.bones_ref)
+					fp = self.get_geoms_file_path(o['bones_ref'])
 					assets.add(fp)
 
-					if self.node_is_geometry_cached(node) == False or not os.path.exists(fp):
+					if node.data.armature_cached == False or not os.path.exists(fp):
 						bones = []
 						for bone in skeleton.bones:
 							if (not bone.parent):
@@ -1501,7 +1497,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						bones_obj = {}
 						bones_obj['nodes'] = bones
 						utils.write_arm(fp, bones_obj)
-						node.data.geometry_cached = True
+						node.data.armature_cached = True
 
 			if (parento == None):
 				self.output['nodes'].append(o)
@@ -1518,7 +1514,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				if (subnode.parent_type != "BONE"):
 					self.ExportNode(subnode, scene, None, o)
 
-	def ExportSkin(self, node, armature, exportVertexArray, om):
+	def ExportSkinQuality(self, node, armature, exportVertexArray, om):
 		# This function exports all skinning data, which includes the skeleton
 		# and per-vertex bone influence data.
 		oskin = {}
@@ -1597,14 +1593,46 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# Write the bone count array. There is one entry per vertex.
 		oskin['bone_count_array'] = boneCountArray
 
-		#self.IndentWrite(B"unsigned_int16\t\t// ")
-		#self.WriteInt(len(boneCountArray))
-		#self.WriteIntArray(boneCountArray)
-
 		# Write the bone index array. The number of entries is the sum of the bone counts for all vertices.
 		oskin['bone_index_array'] = boneIndexArray
 
 		# Write the bone weight array. The number of entries is the sum of the bone counts for all vertices.
+		oskin['bone_weight_array'] = boneWeightArray
+
+	def ExportSkinFast(self, node, armature, vert_list, om):
+		oskin = {}
+		om['skin'] = oskin
+
+		otrans = {}
+		oskin['transform'] = otrans
+		otrans['values'] = self.WriteMatrix(node.matrix_world)
+
+		oskel = {}
+		oskin['skeleton'] = oskel
+		oskel['bone_ref_array'] = []
+
+		boneArray = armature.data.bones
+		boneCount = len(boneArray)
+		for i in range(boneCount):
+			boneRef = self.FindNode(boneArray[i].name)
+			if (boneRef):
+				oskel['bone_ref_array'].append(boneRef[1]["structName"])
+			else:
+				oskel['bone_ref_array'].append("null")
+
+		oskel['transforms'] = []
+		for i in range(boneCount):
+			oskel['transforms'].append(self.WriteMatrix(armature.matrix_world * boneArray[i].matrix_local))
+
+		boneCountArray = []
+		boneIndexArray = []
+		boneWeightArray = []
+		for vtx in vert_list:
+			boneCountArray.append(vtx.bone_count)
+			boneIndexArray += vtx.bone_indices
+			boneWeightArray += vtx.bone_weights
+		oskin['bone_count_array'] = boneCountArray
+		oskin['bone_index_array'] = boneIndexArray
 		oskin['bone_weight_array'] = boneWeightArray
 
 	def calc_tangents(self, posa, nora, uva, ia):
@@ -1691,6 +1719,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# Make arrays
 		for i, vtx in enumerate(vert_list):
 			vtx.index = i
+
 			co = vtx.co
 			normal = vtx.normal
 			for j in range(3):
@@ -1755,7 +1784,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if poly.loop_total == 3:
 				prim += indices
 			elif poly.loop_total > 3:
-				for i in range(poly.loop_total-1):
+				for i in range(poly.loop_total-2):
 					prim += (indices[-1], indices[i], indices[i + 1])
 		
 		# Write indices
@@ -1783,6 +1812,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			tana['size'] = 3
 			tana['values'] = self.calc_tangents(pa['values'], na['values'], ta['values'], om['index_arrays'][0]['values'])	
 			om['vertex_arrays'].append(tana)
+
+		return vert_list
 
 	def ExportGeometry(self, objectRef, scene):
 		# This function exports a single geometry object.
@@ -1867,14 +1898,16 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		exportMesh = node.to_mesh(scene, applyModifiers, "RENDER", True, False)
 
 		# Process geometry
-		if ArmoryExporter.option_optimize_geometry:
-			self.export_geometry_quality(exportMesh, node, fp, o, om)
+		geom_opt = ArmoryExporter.option_optimize_geometry
+		if geom_opt:
+			unifiedVertexArray = self.export_geometry_quality(exportMesh, node, fp, o, om)
+			if (armature):
+				self.ExportSkinQuality(node, armature, unifiedVertexArray, om)
 		else:
-			self.export_geometry_fast(exportMesh, node, fp, o, om)
-
-		# If the mesh is skinned, export the skinning data here.
-		if (armature):
-			self.ExportSkin(node, armature, unifiedVertexArray, om)
+			vert_list = self.export_geometry_fast(exportMesh, node, fp, o, om)
+			if (armature):
+				self.ExportSkinQuality(node, armature, vert_list, om)
+				# self.ExportSkinFast(node, armature, vert_list, om)
 
 		# Restore the morph state.
 		if (shapeKeys):
@@ -2042,6 +2075,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 		# Delete the new mesh that we made earlier.
 		bpy.data.meshes.remove(exportMesh)
+		return unifiedVertexArray
 
 	def ExportLight(self, objectRef):
 		# This function exports a single light object.
@@ -2282,19 +2316,18 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		for n in refs:
 			if n.instanced_children == True:
 				is_instanced = True
-				# TODO: cache instanced geometry
-				node.data.geometry_cached = False
 				# Save offset data
 				instance_offsets = [0, 0, 0] # Include parent
 				for sn in n.children:
-					# instance_offsets.append(sn.location.x)
-					# instance_offsets.append(sn.location.y)
-					# instance_offsets.append(sn.location.z)
 					# Do not take parent matrix into account
 					loc = sn.matrix_local.to_translation()
 					instance_offsets.append(loc.x)
 					instance_offsets.append(loc.y)
 					instance_offsets.append(loc.z)
+					# m = sn.matrix_local
+					# instance_offsets.append(m[0][3]) #* m[0][0]) # Scale
+					# instance_offsets.append(m[1][3]) #* m[1][1])
+					# instance_offsets.append(m[2][3]) #* m[2][2])
 				break
 		return is_instanced, instance_offsets
 

@@ -9,7 +9,10 @@ from bpy.props import *
 def cb_scene_update(context):
     edit_obj = bpy.context.edit_object
     if edit_obj is not None and edit_obj.is_updated_data is True:
-        edit_obj.data.geometry_cached = False
+        if edit_obj.type == 'MESH':
+            edit_obj.data.geometry_cached = False
+        elif edit_obj.type == 'ARMATURE':
+            edit_obj.data.armature_cached = False
 
 def initProperties():
     # For project
@@ -51,6 +54,15 @@ def initProperties():
 
     # For object
     bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced Children", default=False)
+    bpy.types.Object.instanced_children_loc_x = bpy.props.BoolProperty(name="X", default=True)
+    bpy.types.Object.instanced_children_loc_y = bpy.props.BoolProperty(name="Y", default=True)
+    bpy.types.Object.instanced_children_loc_z = bpy.props.BoolProperty(name="Z", default=True)
+    bpy.types.Object.instanced_children_rot_x = bpy.props.BoolProperty(name="X", default=False)
+    bpy.types.Object.instanced_children_rot_y = bpy.props.BoolProperty(name="Y", default=False)
+    bpy.types.Object.instanced_children_rot_z = bpy.props.BoolProperty(name="Z", default=False)
+    bpy.types.Object.instanced_children_scale_x = bpy.props.BoolProperty(name="X", default=False)
+    bpy.types.Object.instanced_children_scale_y = bpy.props.BoolProperty(name="Y", default=False)
+    bpy.types.Object.instanced_children_scale_z = bpy.props.BoolProperty(name="Z", default=False)
     bpy.types.Object.override_material = bpy.props.BoolProperty(name="Override Material", default=False)
     bpy.types.Object.override_material_name = bpy.props.StringProperty(name="Name", default="")
     bpy.types.Object.game_export = bpy.props.BoolProperty(name="Game Export", default=True)
@@ -60,6 +72,8 @@ def initProperties():
     bpy.types.Mesh.geometry_cached_edges = bpy.props.IntProperty(name="Last Edges", default=0)
     bpy.types.Mesh.static_usage = bpy.props.BoolProperty(name="Static Usage", default=True)
     bpy.types.Curve.static_usage = bpy.props.BoolProperty(name="Static Usage", default=True)
+    # For armature
+    bpy.types.Armature.armature_cached = bpy.props.BoolProperty(name="Armature Cached", default=False)
     # For camera
     bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", default=True)
     bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Pipeline Path", default="deferred_pipeline")
@@ -153,6 +167,22 @@ class ObjectPropsPanel(bpy.types.Panel):
         layout.prop(obj, 'game_export')
         if obj.type == 'MESH':
             layout.prop(obj, 'instanced_children')
+            if obj.instanced_children:
+                layout.label('Location')
+                row = layout.row()
+                row.prop(obj, 'instanced_children_loc_x')
+                row.prop(obj, 'instanced_children_loc_y')
+                row.prop(obj, 'instanced_children_loc_z')
+                layout.label('Rotation')
+                row = layout.row()
+                row.prop(obj, 'instanced_children_rot_x')
+                row.prop(obj, 'instanced_children_rot_y')
+                row.prop(obj, 'instanced_children_rot_z')
+                layout.label('Scale')
+                row = layout.row()
+                row.prop(obj, 'instanced_children_scale_x')
+                row.prop(obj, 'instanced_children_scale_y')
+                row.prop(obj, 'instanced_children_scale_z')
             layout.prop(obj, 'override_material')
             if obj.override_material:
                 layout.prop(obj, 'override_material_name')
