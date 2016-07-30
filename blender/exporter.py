@@ -2505,8 +2505,13 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 	def cb_export_material(self, material, o):
 		#return
 		defs = []
+		
 		if material.skip_context != '':
 			o['skip_context'] = material.skip_context
+		if material.override_cull:
+			o['override_context'] = {}
+			o['override_context']['cull_mode'] = material.override_cull_mode
+
 		o['contexts'] = []
 		
 		# Geometry context

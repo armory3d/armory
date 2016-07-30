@@ -148,6 +148,22 @@ def initProperties():
     bpy.types.Material.export_tangents = bpy.props.BoolProperty(name="Export Tangents", default=False)
     bpy.types.Material.skip_context = bpy.props.StringProperty(name="Skip Context", default='')
     bpy.types.Material.overlay = bpy.props.BoolProperty(name="X-Ray", default=False)
+    bpy.types.Material.override_cull = bpy.props.BoolProperty(name="Override Cull-Mode", default=False)
+    bpy.types.Material.override_cull_mode = EnumProperty(
+        items = [('none', 'None', 'None'),
+                 ('clockwise', 'Clockwise', 'Clockwise'),
+                 ('counter_clockwise', 'Counter-Clockwise', 'Counter-Clockwise')],
+        name = "Cull-Mode", default='clockwise')
+    bpy.types.Material.override_compare = bpy.props.BoolProperty(name="Override Compare-Mode", default=False)
+    bpy.types.Material.override_compare_mode = EnumProperty(
+        items = [('Always', 'Always', 'Always'),
+                 ('Less', 'Less', 'Less')],
+        name = "Compare-Mode", default='Less')
+    bpy.types.Material.override_depthwrite = bpy.props.BoolProperty(name="Override Depth-Write", default=False)
+    bpy.types.Material.override_depthwrite_mode = EnumProperty(
+        items = [('True', 'True', 'True'),
+                 ('False', 'False', 'False')],
+        name = "Depth-Write", default='True')
     # For scene
     bpy.types.Scene.game_export = bpy.props.BoolProperty(name="Game Export", default=True)
     # For light
@@ -280,6 +296,15 @@ class MatsPropsPanel(bpy.types.Panel):
         layout.prop(mat, 'stencil_mask')
         layout.prop(mat, 'skip_context')
         layout.prop(mat, 'overlay')
+        layout.prop(mat, 'override_cull')
+        if mat.override_cull:
+            layout.prop(mat, 'override_cull_mode')
+        # layout.prop(mat, 'override_compare')
+        # if mat.override_compare:
+            # layout.prop(mat, 'override_compare_mode')
+        # layout.prop(mat, 'override_depthwrite')
+        # if mat.override_depthwrite:
+            # layout.prop(mat, 'override_depthwrite_mode')
 
 # Menu in world region
 class WorldPropsPanel(bpy.types.Panel):

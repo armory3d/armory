@@ -336,9 +336,12 @@ def watch_compile():
     if return_code == None:
         threading.Timer(0.1, watch_compile).start()
     else:
-        print('RETURN CODE:', return_code)
         play_project.compileproc = None
-        on_compiled()
+        if return_code == 0:
+            on_compiled()
+        else:
+            # self.report({'ERROR'}, 'Build failed, check console')
+            print('Build failed, check console')
 
 def play_project(self, in_frame):
     # Build data
