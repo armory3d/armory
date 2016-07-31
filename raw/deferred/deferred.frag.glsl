@@ -60,6 +60,10 @@ in vec4 matColor;
 #ifdef _Probes
 	in vec4 mpos;
 #endif
+#ifdef _Veloc
+	in vec4 mvppos;
+	in vec4 prevmvppos;
+#endif
 
 float packFloat(float f1, float f2) {
 	int index = int(f1 * 1000);
@@ -242,4 +246,10 @@ void main() {
 	gl_FragData[0] = vec4(n.xy, occ, mask);
 #endif
 	gl_FragData[1] = vec4(baseColor.rgb, packFloat(roughness, metalness));
+
+#ifdef _Veloc
+	vec2 posa = (mvppos.xy / mvppos.w) * 0.5 + 0.5;
+	vec2 posb = (prevmvppos.xy / prevmvppos.w) * 0.5 + 0.5;
+	gl_FragData[2].rg = vec2(posa - posb);
+#endif
 }

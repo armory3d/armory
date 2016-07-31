@@ -1,0 +1,25 @@
+{
+	"contexts": [
+		{
+			"id": "debug_velocity",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "false"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [],
+			"texture_params": [],
+			"vertex_shader": "debug_velocity.vert.glsl",
+			"fragment_shader": "debug_velocity.frag.glsl"
+		}
+	]
+}

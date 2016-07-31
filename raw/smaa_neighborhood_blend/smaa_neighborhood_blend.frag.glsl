@@ -6,6 +6,9 @@ precision mediump float;
 
 uniform sampler2D colorTex;
 uniform sampler2D blendTex;
+#ifdef _Veloc
+uniform sampler2D sveloc;
+#endif
 
 uniform vec2 screenSizeInv;
 
@@ -41,11 +44,12 @@ vec4 SMAANeighborhoodBlendingPS(vec2 texcoord, vec4 offset/*, sampler2D colorTex
     if (dot(a, vec4(1.0, 1.0, 1.0, 1.0)) < 1e-5) {
         vec4 color = textureLod(colorTex, texcoord, 0.0);
 
-        //#if SMAA_REPROJECTION
-        //vec2 velocity = SMAA_DECODE_VELOCITY(SMAASampleLevelZero(velocityTex, texcoord));
-        //// Pack velocity into the alpha channel:
-        //color.a = sqrt(5.0 * length(velocity));
-        //#endif
+//#if SMAA_REPROJECTION
+#ifdef _Veloc
+        vec2 velocity = textureLod(sveloc, texCoord, 0.0).rg;
+        // Pack velocity into the alpha channel:
+        color.a = sqrt(5.0 * length(velocity));
+#endif
 
         return color;
     }
@@ -76,14 +80,15 @@ vec4 SMAANeighborhoodBlendingPS(vec2 texcoord, vec4 offset/*, sampler2D colorTex
         vec4 color = blendingWeight.x * textureLod(colorTex, blendingCoord.xy, 0.0);
         color += blendingWeight.y * textureLod(colorTex, blendingCoord.zw, 0.0);
 
-        //#if SMAA_REPROJECTION
-        //// Antialias velocity for proper reprojection in a later stage:
-        //vec2 velocity = blendingWeight.x * SMAA_DECODE_VELOCITY(textureLod(velocityTex, blendingCoord.xy, 0.0));
-        //velocity += blendingWeight.y * SMAA_DECODE_VELOCITY(textureLod(velocityTex, blendingCoord.zw, 0.0));
+//#if SMAA_REPROJECTION
+#ifdef _Veloc
+        // Antialias velocity for proper reprojection in a later stage:
+        vec2 velocity = blendingWeight.x * textureLod(sveloc, blendingCoord.xy, 0.0).rg;
+        velocity += blendingWeight.y * textureLod(sveloc, blendingCoord.zw, 0.0).rg;
 
         // Pack velocity into the alpha channel:
-        //color.a = sqrt(5.0 * length(velocity));
-        //#endif
+        color.a = sqrt(5.0 * length(velocity));
+#endif
 
         return color;
     }

@@ -46,6 +46,9 @@ uniform vec4 albedo_color;
 #ifdef _Probes
 	uniform mat4 M;
 #endif
+#ifdef _Veloc
+	uniform mat4 prevMVP;
+#endif
 
 
 #ifdef _Tex
@@ -62,9 +65,12 @@ uniform vec4 albedo_color;
 	out vec3 tanLightDir;
 	out vec3 tanEyeDir;
 #endif
-
 #ifdef _Probes
 	out vec4 mpos;
+#endif
+#ifdef _Veloc
+	out vec4 mvppos;
+	out vec4 prevmvppos;
 #endif
 
 
@@ -129,6 +135,11 @@ void main() {
 #endif
 
 	gl_Position = P * MV * sPos;
+
+#ifdef _Veloc
+	mvppos = gl_Position;
+	prevmvppos = prevMVP * sPos;
+#endif
 
 #ifdef _Tex
 	texCoord = tex;

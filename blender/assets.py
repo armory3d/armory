@@ -3,6 +3,7 @@ khafile_defs = []
 
 def reset():
     global assets
+    global khafile_defs
     assets = []
     khafile_defs = []
 

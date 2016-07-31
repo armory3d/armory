@@ -34,6 +34,11 @@
 					"link": "_lightModelViewProjectionMatrix"
 				},
 				{
+					"id": "prevMVP",
+					"link": "_prevModelViewProjectionMatrix",
+					"if": ["_Veloc"]
+				},
+				{
 					"id": "light",
 					"link": "_lightPosition",
 					"if": ["_HMTex"]

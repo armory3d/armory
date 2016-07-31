@@ -1,0 +1,42 @@
+{
+	"contexts": [
+		{
+			"id": "motion_blur_veloc_pass",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "false"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				{
+					"id": "prevVP",
+					"link": "_prevViewProjectionMatrix"
+				},
+				{
+					"id": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				},
+				{
+					"id": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"id": "eyeLook",
+					"link": "_cameraLook"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "motion_blur_veloc_pass.vert.glsl",
+			"fragment_shader": "motion_blur_veloc_pass.frag.glsl"
+		}
+	]
+}
