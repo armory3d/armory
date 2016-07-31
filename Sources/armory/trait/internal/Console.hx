@@ -63,11 +63,17 @@ class Console extends Trait {
                 ui.unindent();
             }
             ui.separator();
-            if (ui.node(Id.node(), "Render Path", 0, true)) {
+            if (ui.node(Id.node(), "Render Path", 0, false)) {
                 ui.text("draw calls: " + RenderPath.drawCalls);
                 ui.text("render targets: " + path.resource.pipeline.resource.render_targets.length);
                 for (i in 0...path.passNames.length) {
                     path.passEnabled[i] = ui.check(Id.nest(Id.check(), i), path.passNames[i], path.passEnabled[i]);
+                }
+            }
+            ui.separator();
+            if (ui.node(Id.node(), "Inspector", 0, false)) {
+                for (o in iron.node.RootNode.models) {
+                    ui.text(o.id + " (" + Std.int(o.transform.absx() * 100) / 100 + ", " + Std.int(o.transform.absy() * 100) / 100 + ", " + Std.int(o.transform.absz() * 100) / 100 + ")");
                 }
             }
         }
