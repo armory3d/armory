@@ -4,7 +4,7 @@ khafile_defs = []
 def reset():
     global assets
     assets = []
-    defs = []
+    khafile_defs = []
 
 def add(file):
     global assets

@@ -27,6 +27,20 @@ class ListAnimationTraitItem(bpy.types.PropertyGroup):
            description="A name for this item",
            default=0)
 
+    speed_prop = bpy.props.FloatProperty(
+           name="Speed",
+           description="A name for this item",
+           default=1.0)
+
+    loop_prop = bpy.props.BoolProperty(
+           name="Loop",
+           description="A name for this item",
+           default=True)
+
+    reflect_prop = bpy.props.BoolProperty(
+           name="Reflect",
+           description="A name for this item",
+           default=False)
 
 
 class MY_UL_AnimationTraitList(bpy.types.UIList):

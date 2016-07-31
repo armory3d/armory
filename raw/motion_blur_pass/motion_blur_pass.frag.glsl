@@ -58,7 +58,8 @@ void main() {
 	}
 
 	float blurScale = 1.0 * motionBlurIntensity; //currentFps / targeFps;
-	vec2 velocity = getVelocity(texCoord, depth) * blurScale * (-1.0);
+	// blurScale *= -1.0;
+	vec2 velocity = getVelocity(texCoord, depth) * blurScale;
 	
 	vec2 offset = texCoord;
 	int processed = 1;

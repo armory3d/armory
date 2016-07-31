@@ -2412,12 +2412,18 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				names = []
 				starts = []
 				ends = []
+				speeds = []
+				loops = []
+				reflects = []
 				for at in t.my_animationtraitlist:
 					if at.enabled_prop:
 						names.append(at.name)
 						starts.append(at.start_prop)
 						ends.append(at.end_prop)
-				x['parameters'] = [t.start_track_name_prop, names, starts, ends]
+						speeds.append(at.speed_prop)
+						loops.append(at.loop_prop)
+						reflects.append(at.reflect_prop)
+				x['parameters'] = [t.start_track_name_prop, names, starts, ends, speeds, loops, reflects]
 			else: # Script
 				x['type'] = 'Script'
 				if t.type_prop == 'Bundled Script':

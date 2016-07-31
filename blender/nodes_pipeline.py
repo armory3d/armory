@@ -926,7 +926,6 @@ def buildNodeTrees(shader_references, asset_references, assets_path):
     buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'brdf.png')
 
     # Export selected pipeline
-    # node_group.bl_idname == 'CGPipelineTreeType'
     node_group = bpy.data.node_groups[bpy.data.cameras[0].pipeline_path]
     buildNodeTree(node_group, shader_references, asset_references)
 
@@ -1447,9 +1446,9 @@ def get_render_targets(root_node, node_group):
     
 def traverse_for_rt(node, node_group, render_targets, depth_buffers):
     # Gather defs from linked nodes
-    # if node.bl_idname == 'TAAPassNodeType':
+    if node.bl_idname == 'TAAPassNodeType':
         # bpy.data.worlds[0].world_defs += '_TAA'
-        # assets.add_khafile_def('WITH_TAA')
+        assets.add_khafile_def('WITH_TAA')
 
     # Collect render targets
     if node.bl_idname == 'SetTargetNodeType' or node.bl_idname == 'QuadPassNodeType' or node.bl_idname == 'DrawCompositorNodeType' or node.bl_idname == 'DrawCompositorWithFXAANodeType':

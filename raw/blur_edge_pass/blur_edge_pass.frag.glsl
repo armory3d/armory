@@ -52,42 +52,23 @@ void main() {
     float weight = 0.0;
 	
 	// for (int i = 0; i < 9; i++) {
-        // float blurWeight = blurWeights[0];
-        const float radius = 20.0;
-        const float blurWeight = 1.0 / radius;
+        float blurWeight = blurWeights[0];
         
         vec3 col = texture(tex, texCoord).rgb;
         result += col * blurWeights[0];
         weight += blurWeight;
         
-        // weight += doBlur(blurWeights[1], 1, nor);
-        // weight += doBlur(blurWeights[2], 2, nor);
-        // weight += doBlur(blurWeights[3], 3, nor);
-        // weight += doBlur(blurWeights[4], 4, nor);
-        // weight += doBlur(blurWeights[5], 5, nor);
-        // weight += doBlur(blurWeights[6], 6, nor);
-        // weight += doBlur(blurWeights[7], 7, nor);
-        // weight += doBlur(blurWeights[8], 8, nor);
-        // weight += doBlur(blurWeights[9], 9, nor);
-        weight += doBlur(blurWeight, 1, nor);
-        weight += doBlur(blurWeight, 2, nor);
-        weight += doBlur(blurWeight, 3, nor);
-        weight += doBlur(blurWeight, 4, nor);
-        weight += doBlur(blurWeight, 5, nor);
-        weight += doBlur(blurWeight, 6, nor);
-        weight += doBlur(blurWeight, 7, nor);
-        weight += doBlur(blurWeight, 8, nor);
-        weight += doBlur(blurWeight, 9, nor);
-        weight += doBlur(blurWeight, 10, nor);
-        weight += doBlur(blurWeight, 11, nor);
-        weight += doBlur(blurWeight, 12, nor);
-        weight += doBlur(blurWeight, 13, nor);
-        weight += doBlur(blurWeight, 14, nor);
-        weight += doBlur(blurWeight, 15, nor);
-        weight += doBlur(blurWeight, 16, nor);
-        weight += doBlur(blurWeight, 17, nor);
-        weight += doBlur(blurWeight, 18, nor);
-        weight += doBlur(blurWeight, 19, nor);
+        weight += doBlur(blurWeights[1], 1, nor);
+        weight += doBlur(blurWeights[1], 2, nor);
+        weight += doBlur(blurWeights[2], 3, nor);
+        weight += doBlur(blurWeights[2], 4, nor);
+        weight += doBlur(blurWeights[3], 5, nor);
+        weight += doBlur(blurWeights[4], 6, nor);
+        weight += doBlur(blurWeights[5], 7, nor);
+        weight += doBlur(blurWeights[6], 8, nor);
+        weight += doBlur(blurWeights[7], 9, nor);
+        weight += doBlur(blurWeights[8], 10, nor);
+        weight += doBlur(blurWeights[9], 11, nor);
     // }
 
     result /= weight;

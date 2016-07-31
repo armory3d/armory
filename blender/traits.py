@@ -324,6 +324,9 @@ class ToolsTraitsPanel(bpy.types.Panel):
                     row = layout.row()
                     row.prop(animitem, "start_prop")
                     row.prop(animitem, "end_prop")
+                    layout.prop(animitem, "speed_prop")
+                    layout.prop(animitem, "loop_prop")
+                    layout.prop(animitem, "reflect_prop")
 
 # Registration
 def register():
