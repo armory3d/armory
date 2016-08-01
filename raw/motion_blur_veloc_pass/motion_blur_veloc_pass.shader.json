@@ -18,20 +18,8 @@
 			],
 			"links": [
 				{
-					"id": "prevVP",
-					"link": "_prevViewProjectionMatrix"
-				},
-				{
-					"id": "invVP",
-					"link": "_inverseViewProjectionMatrix"
-				},
-				{
-					"id": "eye",
-					"link": "_cameraPosition"
-				},
-				{
-					"id": "eyeLook",
-					"link": "_cameraLook"
+					"id": "texStep",
+					"link": "_screenSizeInv"
 				}
 			],
 			"texture_params": [],

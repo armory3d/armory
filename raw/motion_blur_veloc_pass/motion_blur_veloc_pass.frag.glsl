@@ -8,111 +8,52 @@ precision mediump float;
 
 #include "../compiled.glsl"
 
-uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
-
+uniform sampler2D sveloc;
 uniform sampler2D tex;
-uniform mat4 prevVP;
-uniform mat4 invVP;
-uniform vec3 eye;
-uniform vec3 eyeLook;
 
-in vec3 viewRay;
+uniform vec2 texStep;
+
 in vec2 texCoord;
 
-//const float motionBlurIntensity = 1.0;
-const int samples = 8;
-
-vec3 getPos(float depth, vec2 coord) {	
-	vec3 vray = normalize(viewRay);
-	const float projectionA = cameraPlane.y / (cameraPlane.y - cameraPlane.x);
-	const float projectionB = (-cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
-	float linearDepth = projectionB / (depth * 0.5 + 0.5 - projectionA);
-	float viewZDist = dot(eyeLook, vray);
-	vec3 wposition = eye + vray * (linearDepth / viewZDist);
-	return wposition;
-}
-
-vec2 getVelocity(vec2 coord, float depth) {
-	vec4 currentPos = vec4(coord.xy * 2.0 - 1.0, depth, 1.0);
-	vec4 worldPos = vec4(getPos(depth, coord), 1.0);
-	vec4 previousPos = prevVP * worldPos;
-	previousPos /= previousPos.w;
-	vec2 velocity = (currentPos - previousPos).xy / 40.0;
-	return velocity;
-}
-
 void main() {
-	vec4 color = texture(tex, texCoord);
+	vec2 velocity = texture(sveloc, texCoord).rg;
+	// velocityScale = currentFps / targetFps;
+	// velocity *= velocityScale;
 	
+	vec4 col = texture(tex, texCoord);
+
 	// Do not blur masked objects
 	if (texture(gbuffer0, texCoord).a == 1.0) {
-		gl_FragColor = color;
-		return;
-	}
-	
-	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	if (depth == 1.0) {
-		gl_FragColor = color;
+		gl_FragColor = col;
 		return;
 	}
 
-	float blurScale = 1.0 * motionBlurIntensity; //currentFps / targeFps;
-	// blurScale *= -1.0;
-	vec2 velocity = getVelocity(texCoord, depth) * blurScale;
+	// float speed = length(velocity / texStep);
+	// const int MAX_SAMPLES = 8;
+	// int samples = clamp(int(speed), 1, MAX_SAMPLES);
+	const int samples = 8;
 	
-	vec2 offset = texCoord;
-	int processed = 1;
-	// for(int i = 1; i < samples; ++i) {
-		offset += velocity;
-		if (texture(gbuffer0, offset).a != 1.0) {
-   			color += texture(tex, offset);
-			processed++;
-		}
-
-		offset += velocity;
-		if (texture(gbuffer0, offset).a != 1.0) {
-   			color += texture(tex, offset);
-			processed++;
-		}
-		
-		offset += velocity;
-		if (texture(gbuffer0, offset).a != 1.0) {
-   			color += texture(tex, offset);
-			processed++;
-		}
-		
-		offset += velocity;
-		if (texture(gbuffer0, offset).a != 1.0) {
-   			color += texture(tex, offset);
-			processed++;
-		}
-		
-		offset += velocity;
-		if (texture(gbuffer0, offset).a != 1.0) {
-   			color += texture(tex, offset);
-			processed++;
-		}
-		
-		offset += velocity;
-		if (texture(gbuffer0, offset).a != 1.0) {
-   			color += texture(tex, offset);
-			processed++;
-		}
-		
-		offset += velocity;
-		if (texture(gbuffer0, offset).a != 1.0) {
-   			color += texture(tex, offset);
-			processed++;
-		}
-		
-		offset += velocity;
-		if (texture(gbuffer0, offset).a != 1.0) {
-   			color += texture(tex, offset);
-			processed++;
-		}
+	// for (int i = 1; i < samples; ++i) {
+		vec2 offset = velocity * (float(0) / float(samples - 1) - 0.5);
+		col += texture(tex, texCoord + offset);
+		//
+		offset = velocity * (float(1) / float(samples - 1) - 0.5);
+		col += texture(tex, texCoord + offset);
+		offset = velocity * (float(2) / float(samples - 1) - 0.5);
+		col += texture(tex, texCoord + offset);
+		offset = velocity * (float(3) / float(samples - 1) - 0.5);
+		col += texture(tex, texCoord + offset);
+		offset = velocity * (float(4) / float(samples - 1) - 0.5);
+		col += texture(tex, texCoord + offset);
+		offset = velocity * (float(5) / float(samples - 1) - 0.5);
+		col += texture(tex, texCoord + offset);
+		offset = velocity * (float(6) / float(samples - 1) - 0.5);
+		col += texture(tex, texCoord + offset);
+		offset = velocity * (float(7) / float(samples - 1) - 0.5);
+		col += texture(tex, texCoord + offset);
 	// }
-	 
-	vec4 finalColor = color / processed; 
-	gl_FragColor = finalColor;
+	col /= float(samples);
+
+	gl_FragColor = col;
 }

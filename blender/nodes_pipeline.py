@@ -1199,7 +1199,7 @@ def make_motion_blur_pass(stages, node_group, node, shader_references, asset_ref
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='motion_blur_pass/motion_blur_pass/motion_blur_pass')
 
 def make_motion_blur_velocity_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['tex', 'gbuffer0', 'sveloc'], shader_context='motion_blur_velocity_pass/motion_blur_velocity_pass/motion_blur_velocity_pass')
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['tex', 'gbuffer0', 'sveloc'], shader_context='motion_blur_veloc_pass/motion_blur_veloc_pass/motion_blur_veloc_pass')
 
 def make_copy_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='copy_pass/copy_pass/copy_pass')
@@ -1470,18 +1470,26 @@ def getRootNode(node_group):
 def get_render_targets(root_node, node_group):
     render_targets = []
     depth_buffers = []
+    get_render_targets.velocity_def_added = False
     traverse_for_rt(root_node, node_group, render_targets, depth_buffers)
     return render_targets, depth_buffers
     
 def traverse_for_rt(node, node_group, render_targets, depth_buffers):
     # Gather defs from linked nodes
     if node.bl_idname == 'TAAPassNodeType':
-        assets.add_khafile_def('WITH_VELOC')
         assets.add_khafile_def('WITH_TAA')
-        bpy.data.worlds[0].world_defs += '_Veloc'
         # bpy.data.worlds[0].world_defs += '_TAA'
+        if get_render_targets.velocity_def_added == False:
+            assets.add_khafile_def('WITH_VELOC')
+            bpy.data.worlds[0].world_defs += '_Veloc'
+            get_render_targets.velocity_def_added = True
     elif node.bl_idname == 'SMAAPassNodeType':
         bpy.data.worlds[0].world_defs += '_SMAA'
+    elif node.bl_idname == 'MotionBlurVelocityPassNodeType':
+        if get_render_targets.velocity_def_added == False:
+            assets.add_khafile_def('WITH_VELOC')
+            bpy.data.worlds[0].world_defs += '_Veloc'
+            get_render_targets.velocity_def_added = True
 
     # Collect render targets
     if node.bl_idname == 'SetTargetNodeType' or node.bl_idname == 'QuadPassNodeType' or node.bl_idname == 'DrawCompositorNodeType' or node.bl_idname == 'DrawCompositorWithFXAANodeType':
