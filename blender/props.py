@@ -5,14 +5,33 @@ import json
 import nodes_pipeline
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
+import utils
 
-def cb_scene_update(context):
+def on_scene_update(context):
     edit_obj = bpy.context.edit_object
     if edit_obj is not None and edit_obj.is_updated_data is True:
         if edit_obj.type == 'MESH':
             edit_obj.data.geometry_cached = False
         elif edit_obj.type == 'ARMATURE':
             edit_obj.data.armature_cached = False
+
+def invalidate_shader_cache(self, context):
+    # compiled.glsl changed, recompile all shaders next time
+    fp = utils.get_fp()
+    if os.path.isdir(fp + '/compiled/ShaderResources'):
+        shutil.rmtree(fp + '/compiled/ShaderResources')
+
+def invalidate_compiled_data(self, context):
+    fp = utils.get_fp()
+    if os.path.isdir(fp + '/compiled/Assets'):
+        shutil.rmtree(fp + '/compiled/Assets')
+    if os.path.isdir(fp + '/compiled/ShaderResources'):
+        shutil.rmtree(fp + '/compiled/ShaderResources')
+
+def invalidate_geometry_data(self, context):
+    fp = utils.get_fp()
+    if os.path.isdir(fp + '/compiled/Assets/geoms'):
+        shutil.rmtree(fp + '/compiled/Assets/geoms')
 
 def initProperties():
     # For project
@@ -36,9 +55,9 @@ def initProperties():
                  ('Bullet', 'Bullet', 'Bullet')],
         name = "Physics", default='Bullet')
     bpy.types.World.CGKhafile = StringProperty(name = "Khafile")
-    bpy.types.World.CGMinimize = BoolProperty(name="Minimize Data", default=True)
-    bpy.types.World.CGOptimizeGeometry = BoolProperty(name="Optimize Geometry", default=False)
-    bpy.types.World.CGSampledAnimation = BoolProperty(name="Sampled Animation", default=False)
+    bpy.types.World.CGMinimize = BoolProperty(name="Minimize Data", default=True, update=invalidate_compiled_data)
+    bpy.types.World.CGOptimizeGeometry = BoolProperty(name="Optimize Geometry", default=False, update=invalidate_geometry_data)
+    bpy.types.World.CGSampledAnimation = BoolProperty(name="Sampled Animation", default=False, update=invalidate_compiled_data)
     bpy.types.World.CGCacheShaders = BoolProperty(name="Cache Shaders", default=True)
     bpy.types.World.CGPlayViewportCamera = BoolProperty(name="Viewport Camera", default=False)
     bpy.types.World.CGPlayViewportNavigation = EnumProperty(
@@ -79,6 +98,7 @@ def initProperties():
     bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Pipeline Path", default="deferred_pipeline")
     bpy.types.Camera.pipeline_id = bpy.props.StringProperty(name="Pipeline ID", default="deferred")
 	# TODO: Specify multiple material ids, merge ids from multiple cameras 
+    bpy.types.Camera.pipeline_passes = bpy.props.StringProperty(name="Pipeline passes", default="")
     bpy.types.Camera.geometry_context = bpy.props.StringProperty(name="Geometry", default="deferred")
     bpy.types.Camera.shadows_context = bpy.props.StringProperty(name="Shadows", default="shadowmap")
     bpy.types.Camera.translucent_context = bpy.props.StringProperty(name="Translucent", default="translucent")
@@ -100,44 +120,44 @@ def initProperties():
     bpy.types.Camera.world_envtex_ground_albedo = bpy.props.FloatProperty(name="Ground Albedo", default=0.0)
     bpy.types.Camera.last_decal_context = bpy.props.StringProperty(name="Decal Context", default='')
     bpy.types.World.world_defs = bpy.props.StringProperty(name="World Shader Defs", default='')
-    bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Generate Radiance", default=True)
-    bpy.types.World.generate_clouds = bpy.props.BoolProperty(name="Generate Clouds", default=False)
-    bpy.types.World.generate_clouds_density = bpy.props.FloatProperty(name="Density", default=0.6, min=0.0, max=10.0)
-    bpy.types.World.generate_clouds_size = bpy.props.FloatProperty(name="Size", default=1.0, min=0.0, max=10.0)
-    bpy.types.World.generate_clouds_lower = bpy.props.FloatProperty(name="Lower", default=2.0, min=1.0, max=10.0)
-    bpy.types.World.generate_clouds_upper = bpy.props.FloatProperty(name="Upper", default=3.5, min=1.0, max=10.0)
-    bpy.types.World.generate_clouds_wind = bpy.props.FloatVectorProperty(name="Wind", default=[0.2, 0.06], size=2)
-    bpy.types.World.generate_clouds_secondary = bpy.props.FloatProperty(name="Secondary", default=0.0, min=0.0, max=10.0)
-    bpy.types.World.generate_clouds_precipitation = bpy.props.FloatProperty(name="Precipitation", default=1.0, min=0.0, max=2.0)
-    bpy.types.World.generate_clouds_eccentricity = bpy.props.FloatProperty(name="Eccentricity", default=0.6, min=0.0, max=1.0)
-    bpy.types.World.shadowmap_size = bpy.props.IntProperty(name="Shadowmap Size", default=0)
+    bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Generate Radiance", default=True, update=invalidate_shader_cache)
+    bpy.types.World.generate_clouds = bpy.props.BoolProperty(name="Generate Clouds", default=False, update=invalidate_shader_cache)
+    bpy.types.World.generate_clouds_density = bpy.props.FloatProperty(name="Density", default=0.6, min=0.0, max=10.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_clouds_size = bpy.props.FloatProperty(name="Size", default=1.0, min=0.0, max=10.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_clouds_lower = bpy.props.FloatProperty(name="Lower", default=2.0, min=1.0, max=10.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_clouds_upper = bpy.props.FloatProperty(name="Upper", default=3.5, min=1.0, max=10.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_clouds_wind = bpy.props.FloatVectorProperty(name="Wind", default=[0.2, 0.06], size=2, update=invalidate_shader_cache)
+    bpy.types.World.generate_clouds_secondary = bpy.props.FloatProperty(name="Secondary", default=0.0, min=0.0, max=10.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_clouds_precipitation = bpy.props.FloatProperty(name="Precipitation", default=1.0, min=0.0, max=2.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_clouds_eccentricity = bpy.props.FloatProperty(name="Eccentricity", default=0.6, min=0.0, max=1.0, update=invalidate_shader_cache)
+    bpy.types.World.shadowmap_size = bpy.props.IntProperty(name="Shadowmap Size", default=0, update=invalidate_shader_cache)
     bpy.types.World.scripts_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.bundled_scripts_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
-    bpy.types.World.generate_ocean = bpy.props.BoolProperty(name="Generate Ocean", default=False)
-    bpy.types.World.generate_ocean_base_color = bpy.props.FloatVectorProperty(name="Base Color", size=3, default=[0.1, 0.19, 0.37], subtype='COLOR')
-    bpy.types.World.generate_ocean_water_color = bpy.props.FloatVectorProperty(name="Water Color", size=3, default=[0.6, 0.7, 0.9], subtype='COLOR')
-    bpy.types.World.generate_ocean_level = bpy.props.FloatProperty(name="Level", default=0.0)
-    bpy.types.World.generate_ocean_amplitude = bpy.props.FloatProperty(name="Amplitude", default=2.5)
-    bpy.types.World.generate_ocean_height = bpy.props.FloatProperty(name="Height", default=0.6)
-    bpy.types.World.generate_ocean_choppy = bpy.props.FloatProperty(name="Choppy", default=4.0)
-    bpy.types.World.generate_ocean_speed = bpy.props.FloatProperty(name="Speed", default=1.0)
-    bpy.types.World.generate_ocean_freq = bpy.props.FloatProperty(name="Freq", default=0.16)
-    bpy.types.World.generate_ocean_fade = bpy.props.FloatProperty(name="Fade", default=1.8)
-    bpy.types.World.generate_ssao = bpy.props.BoolProperty(name="Generate SSAO", default=True)
-    bpy.types.World.generate_ssao_size = bpy.props.FloatProperty(name="Size", default=0.12)
-    bpy.types.World.generate_ssao_strength = bpy.props.FloatProperty(name="Strength", default=0.55)
-    bpy.types.World.generate_shadows = bpy.props.BoolProperty(name="Generate Shadows", default=True)
-    bpy.types.World.generate_shadows_bias = bpy.props.FloatProperty(name="Bias", default=0.00005)
-    bpy.types.World.generate_bloom = bpy.props.BoolProperty(name="Generate Bloom", default=True)
-    bpy.types.World.generate_bloom_treshold = bpy.props.FloatProperty(name="Treshold", default=3.0)
-    bpy.types.World.generate_motion_blur = bpy.props.BoolProperty(name="Generate Motion Blur", default=True)
-    bpy.types.World.generate_motion_blur_intensity = bpy.props.FloatProperty(name="Intensity", default=1.0)
-    bpy.types.World.generate_ssr = bpy.props.BoolProperty(name="Generate SSR", default=True)
-    bpy.types.World.generate_ssr_ray_step = bpy.props.FloatProperty(name="Ray Step", default=0.04)
-    bpy.types.World.generate_ssr_min_ray_step = bpy.props.FloatProperty(name="Ray Step Min", default=0.05)
-    bpy.types.World.generate_ssr_search_dist = bpy.props.FloatProperty(name="Search Dist", default=5.0)
-    bpy.types.World.generate_ssr_falloff_exp = bpy.props.FloatProperty(name="Falloff Exp", default=5.0)
-    bpy.types.World.generate_ssr_jitter = bpy.props.FloatProperty(name="Jitter", default=0.6)
+    bpy.types.World.generate_ocean = bpy.props.BoolProperty(name="Generate Ocean", default=False, update=invalidate_shader_cache)
+    bpy.types.World.generate_ocean_base_color = bpy.props.FloatVectorProperty(name="Base Color", size=3, default=[0.1, 0.19, 0.37], subtype='COLOR', update=invalidate_shader_cache)
+    bpy.types.World.generate_ocean_water_color = bpy.props.FloatVectorProperty(name="Water Color", size=3, default=[0.6, 0.7, 0.9], subtype='COLOR', update=invalidate_shader_cache)
+    bpy.types.World.generate_ocean_level = bpy.props.FloatProperty(name="Level", default=0.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_ocean_amplitude = bpy.props.FloatProperty(name="Amplitude", default=2.5, update=invalidate_shader_cache)
+    bpy.types.World.generate_ocean_height = bpy.props.FloatProperty(name="Height", default=0.6, update=invalidate_shader_cache)
+    bpy.types.World.generate_ocean_choppy = bpy.props.FloatProperty(name="Choppy", default=4.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_ocean_speed = bpy.props.FloatProperty(name="Speed", default=1.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_ocean_freq = bpy.props.FloatProperty(name="Freq", default=0.16, update=invalidate_shader_cache)
+    bpy.types.World.generate_ocean_fade = bpy.props.FloatProperty(name="Fade", default=1.8, update=invalidate_shader_cache)
+    bpy.types.World.generate_ssao = bpy.props.BoolProperty(name="Generate SSAO", default=True, update=invalidate_shader_cache)
+    bpy.types.World.generate_ssao_size = bpy.props.FloatProperty(name="Size", default=0.08, update=invalidate_shader_cache)
+    bpy.types.World.generate_ssao_strength = bpy.props.FloatProperty(name="Strength", default=0.30, update=invalidate_shader_cache)
+    bpy.types.World.generate_shadows = bpy.props.BoolProperty(name="Generate Shadows", default=True, update=invalidate_shader_cache)
+    bpy.types.World.generate_shadows_bias = bpy.props.FloatProperty(name="Bias", default=0.00005, update=invalidate_shader_cache)
+    bpy.types.World.generate_bloom = bpy.props.BoolProperty(name="Generate Bloom", default=True, update=invalidate_shader_cache)
+    bpy.types.World.generate_bloom_treshold = bpy.props.FloatProperty(name="Treshold", default=3.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_motion_blur = bpy.props.BoolProperty(name="Generate Motion Blur", default=True, update=invalidate_shader_cache)
+    bpy.types.World.generate_motion_blur_intensity = bpy.props.FloatProperty(name="Intensity", default=1.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_ssr = bpy.props.BoolProperty(name="Generate SSR", default=True, update=invalidate_shader_cache)
+    bpy.types.World.generate_ssr_ray_step = bpy.props.FloatProperty(name="Ray Step", default=0.04, update=invalidate_shader_cache)
+    bpy.types.World.generate_ssr_min_ray_step = bpy.props.FloatProperty(name="Ray Step Min", default=0.05, update=invalidate_shader_cache)
+    bpy.types.World.generate_ssr_search_dist = bpy.props.FloatProperty(name="Search Dist", default=5.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_ssr_falloff_exp = bpy.props.FloatProperty(name="Falloff Exp", default=5.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_ssr_jitter = bpy.props.FloatProperty(name="Jitter", default=0.6, update=invalidate_shader_cache)
     # For material
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.override_shader = bpy.props.BoolProperty(name="Override Shader", default=False)
@@ -169,6 +189,7 @@ def initProperties():
     # For light
     bpy.types.Lamp.light_clip_start = bpy.props.FloatProperty(name="Clip Start", default=0.1)
     bpy.types.Lamp.light_clip_end = bpy.props.FloatProperty(name="Clip End", default=100.0)
+    bpy.types.Lamp.light_fov = bpy.props.FloatProperty(name="FoV", default=0.785)
 
 # Menu in object region
 class ObjectPropsPanel(bpy.types.Panel):
@@ -247,6 +268,7 @@ class DataPropsPanel(bpy.types.Panel):
         elif obj.type == 'LAMP':
             layout.prop(obj.data, 'light_clip_start')
             layout.prop(obj.data, 'light_clip_end')
+            layout.prop(obj.data, 'light_fov')
 
 class ScenePropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -352,8 +374,8 @@ class WorldPropsPanel(bpy.types.Panel):
 def register():
     bpy.utils.register_module(__name__)
     initProperties()
-    bpy.app.handlers.scene_update_post.append(cb_scene_update)
+    bpy.app.handlers.scene_update_post.append(on_scene_update)
 
 def unregister():
-    bpy.app.handlers.scene_update_post.remove(cb_scene_update)
+    bpy.app.handlers.scene_update_post.remove(on_scene_update)
     bpy.utils.unregister_module(__name__)

@@ -209,8 +209,9 @@ void main() {
 #endif
 
 #ifdef _EnvClouds
-	// if (n.z > 0.0) R = mix(R, cloudsColor(R, eye, n), n.z * 5.0);
-	if (n.z > 0.0) R = mix(R, cloudsColor(R, vec3(0.0), n), n.z * 5.0);
+	// cloudsColor(R, eye, n)
+	vec3 clouds = cloudsColor(R, vec3(0.0), n);
+	if (n.z > 0.0) R = mix(R, clouds, n.z * 5.0 * envmapStrength);
 #endif
 	gl_FragColor = vec4(R, 1.0);
 }

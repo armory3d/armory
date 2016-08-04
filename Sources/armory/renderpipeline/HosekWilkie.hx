@@ -8,18 +8,18 @@ import iron.resource.RenderPath;
 import iron.resource.WorldResource;
 
 class HosekWilkieRadianceData {
-	
+    
     static inline var PI = 3.1415926535;
-	public var A = new FastVector3();
-	public var B = new FastVector3();
-	public var C = new FastVector3();
-	public var D = new FastVector3();
-	public var E = new FastVector3();
-	public var F = new FastVector3();
-	public var G = new FastVector3();
-	public var H = new FastVector3();
-	public var I = new FastVector3();
-	public var Z = new FastVector3();
+    public var A = new FastVector3();
+    public var B = new FastVector3();
+    public var C = new FastVector3();
+    public var D = new FastVector3();
+    public var E = new FastVector3();
+    public var F = new FastVector3();
+    public var G = new FastVector3();
+    public var H = new FastVector3();
+    public var I = new FastVector3();
+    public var Z = new FastVector3();
     // public var floats:haxe.ds.Vector<Float>;
 
     function evaluateSpline(spline:Array<Float>, index:Int, stride:Int, value:Float):Float {
@@ -78,33 +78,33 @@ class HosekWilkieRadianceData {
     }
     
     public function new(sunTheta:Float, turbidity:Float, albedo:Float, normalizedSunY:Float) {
-    	for (i in 0...3) {
-	        setVector(A, i, evaluate(HosekWilkieData.datasetsRGB[i], 0, 9, turbidity, albedo, sunTheta));
-	        setVector(B, i, evaluate(HosekWilkieData.datasetsRGB[i], 1, 9, turbidity, albedo, sunTheta));
-	        setVector(C, i, evaluate(HosekWilkieData.datasetsRGB[i], 2, 9, turbidity, albedo, sunTheta));
-	        setVector(D, i, evaluate(HosekWilkieData.datasetsRGB[i], 3, 9, turbidity, albedo, sunTheta));
-	        setVector(E, i, evaluate(HosekWilkieData.datasetsRGB[i], 4, 9, turbidity, albedo, sunTheta));
-	        setVector(F, i, evaluate(HosekWilkieData.datasetsRGB[i], 5, 9, turbidity, albedo, sunTheta));
-	        setVector(G, i, evaluate(HosekWilkieData.datasetsRGB[i], 6, 9, turbidity, albedo, sunTheta));
-	        
-	        // Swapped in the dataset
-	        setVector(H, i, evaluate(HosekWilkieData.datasetsRGB[i], 8, 9, turbidity, albedo, sunTheta));
-	        setVector(I, i, evaluate(HosekWilkieData.datasetsRGB[i], 7, 9, turbidity, albedo, sunTheta));
-	        
-	        setVector(Z, i, evaluate(HosekWilkieData.datasetsRGBRad[i], 0, 1, turbidity, albedo, sunTheta));
-	    }
-	    
-	    if (normalizedSunY != 0.0) {
-	        var S:FastVector3 = hosek_wilkie(Math.cos(sunTheta), 0, 1.0, A, B, C, D, E, F, G, H, I);
+        for (i in 0...3) {
+            setVector(A, i, evaluate(HosekWilkieData.datasetsRGB[i], 0, 9, turbidity, albedo, sunTheta));
+            setVector(B, i, evaluate(HosekWilkieData.datasetsRGB[i], 1, 9, turbidity, albedo, sunTheta));
+            setVector(C, i, evaluate(HosekWilkieData.datasetsRGB[i], 2, 9, turbidity, albedo, sunTheta));
+            setVector(D, i, evaluate(HosekWilkieData.datasetsRGB[i], 3, 9, turbidity, albedo, sunTheta));
+            setVector(E, i, evaluate(HosekWilkieData.datasetsRGB[i], 4, 9, turbidity, albedo, sunTheta));
+            setVector(F, i, evaluate(HosekWilkieData.datasetsRGB[i], 5, 9, turbidity, albedo, sunTheta));
+            setVector(G, i, evaluate(HosekWilkieData.datasetsRGB[i], 6, 9, turbidity, albedo, sunTheta));
+            
+            // Swapped in the dataset
+            setVector(H, i, evaluate(HosekWilkieData.datasetsRGB[i], 8, 9, turbidity, albedo, sunTheta));
+            setVector(I, i, evaluate(HosekWilkieData.datasetsRGB[i], 7, 9, turbidity, albedo, sunTheta));
+            
+            setVector(Z, i, evaluate(HosekWilkieData.datasetsRGBRad[i], 0, 1, turbidity, albedo, sunTheta));
+        }
+        
+        if (normalizedSunY != 0.0) {
+            var S:FastVector3 = hosek_wilkie(Math.cos(sunTheta), 0, 1.0, A, B, C, D, E, F, G, H, I);
             S.x *= Z.x;
             S.y *= Z.y;
             S.z *= Z.z;
-	        var dotS = S.dot(new FastVector3(0.2126, 0.7152, 0.0722));
+            var dotS = S.dot(new FastVector3(0.2126, 0.7152, 0.0722));
             Z.x /= dotS;
             Z.y /= dotS;
             Z.z /= dotS;
             Z.mult(normalizedSunY);
-	    }
+        }
 
         // Store in a single float array for shader access
         // floats = new haxe.ds.Vector([]);
@@ -113,30 +113,45 @@ class HosekWilkieRadianceData {
 
 class HosekWilkie {
 
-	static var firstFrame = true;
-	public static var data:HosekWilkieRadianceData = null;
+    static var firstFrame = true;
+    public static var data:HosekWilkieRadianceData = null;
     public static var sunDirection:FastVector3;
 
-	public static function recompute(sunPositionX:Float, turbidity:Float, albedo:Float, normalizedSunY:Float) {
+    public static function recompute(sunPositionX:Float, turbidity:Float, albedo:Float, normalizedSunY:Float) {
         data = new HosekWilkieRadianceData(sunPositionX, turbidity, albedo, normalizedSunY);
     }
 
-	public static function init(world:WorldResource) {
+    public static function init(world:WorldResource) {
         var probe = world.getGlobalProbe();
         var dir = probe.resource.sun_direction;
         sunDirection = new FastVector3(dir[0], dir[1], dir[2]);
+
+        // Extract direction from light
+        // var mat = iron.resource.Resource.getMaterial("World_material", "World_material").resource;
+        // var light = iron.node.RootNode.lights[0];
+        // var ltr = light.transform;
+        // var lf = ltr.matrix.look2();
+        // light.resource.resource.strength = 3.3 - Math.abs(ltr.absy()) / 45;
+        // probe.strength = 1.2 - Math.abs(ltr.absy()) / 45;
+        // mat.contexts[0].bind_constants[0].float = probe.strength + 0.5;
+        // mat.contexts[0].bind_constants[1].vec3[0] = lf.x;
+        // mat.contexts[0].bind_constants[1].vec3[1] = lf.y;
+        // mat.contexts[0].bind_constants[1].vec3[2] = lf.z;
+        // sunDirection = new FastVector3(lf.x, lf.y, lf.z);
+        //
+
         var sunPositionX = Math.acos(sunDirection.z);
         var turbidity = probe.resource.turbidity;
         var albedo = probe.resource.ground_albedo;
-		HosekWilkie.recompute(sunPositionX, turbidity, albedo, 1.15);
-	}
+        HosekWilkie.recompute(sunPositionX, turbidity, albedo, 1.15);
+    }
 
     // public static function getData(world:WorldResource):haxe.ds.Vector<Float> {
         // if (HosekWilkie.data == null) HosekWilkie.init(world);
         // return HosekWilkie.data.floats;
     // }
 
-	public static function run(path:RenderPath) {
-		// Set uniforms
-	}
+    public static function run(path:RenderPath) {
+        // Set uniforms
+    }
 }

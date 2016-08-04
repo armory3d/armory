@@ -80,15 +80,10 @@ class Console extends Trait {
         ui.end();
 
         g.begin(false);
-    }
 
-    function update() {
-        // Timing
 #if WITH_PROFILE
         totalTime += frameTime;
         renderTime += iron.App.renderTime;
-        updateTime += iron.App.updateTime;
-        physTime += PhysicsWorld.physTime;
         frames++;
         if (totalTime > 1.0) {
             frameTimeAvg = totalTime / frames;
@@ -103,6 +98,13 @@ class Console extends Trait {
         }
         frameTime = Scheduler.realTime() - lastTime;
         lastTime = Scheduler.realTime();
+#end
+    }
+
+    function update() {
+#if WITH_PROFILE
+        updateTime += iron.App.updateTime;
+        physTime += PhysicsWorld.physTime;
 #end
     }
 #end

@@ -221,7 +221,7 @@ def saveResource(path, base_name, subset, res, minimize):
 	r['shader_resources'] = [res['shader_resources'][-1]]
 	utils.write_arm(path + '/' + res_name + '.arm', r)
 
-def make(json_name, fp, minimize=False, defs=None):
+def make(json_name, fp, minimize, defs):
 	base_name = json_name.split('.', 1)[0]
 
 	# Make out dir

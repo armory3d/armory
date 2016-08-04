@@ -44,6 +44,10 @@
 				{
 					"id": "time",
 					"link": "_time"
+				},
+				{
+					"id": "envmapStrength",
+					"link": "_envmapStrength"
 				}
 			],
 			"texture_params": [],

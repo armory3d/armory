@@ -217,11 +217,11 @@ def parse_emission(self, material, c, defs, tree, node, factor):
 	# Multiply color by strength
 	strength_input = node.inputs[1]
 	strength = strength_input.default_value * 50.0 + 1.0
-	col = parse.const_color.vec4
+	col = parse.const_color['vec4']
 	col[0] *= strength
 	col[1] *= strength
 	col[2] *= strength
-	parse.const_color.vec4 = [col[0], col[1], col[2], col[3]]
+	parse.const_color['vec4'] = [col[0], col[1], col[2], col[3]]
 
 def parse_bsdf_glossy(self, material, c, defs, tree, node, factor):
 	# Mix with current color
@@ -237,11 +237,11 @@ def parse_bsdf_glass(self, material, c, defs, tree, node, factor):
 	base_color_input = node.inputs[0]
 	parse_base_color_socket(self, base_color_input, material, c, defs, tree, node, factor)
 	# Calculate alpha, TODO: take only glass color into account, separate getSocketColor method
-	col = parse.const_color.vec4
+	col = parse.const_color['vec4']
 	sum = (col[0] + col[1] + col[2]) / 3
 	# Roughly guess color to match cycles
 	mincol = min(col[:3])
-	parse.const_color.vec4 = [col[0] - mincol, col[1] - mincol, col[2] - mincol, 1.0 - (sum * 0.7)]
+	parse.const_color['vec4'] = [col[0] - mincol, col[1] - mincol, col[2] - mincol, 1.0 - (sum * 0.7)]
 	# Parse sqrt roughness and set 0.0 metalness
 	add_metalness_const(0.0, c, factor)
 	roughness_input = node.inputs[1]
@@ -308,6 +308,14 @@ def add_roughness_tex(self, node, material, c, defs):
 		if parse.const_roughness != None:
 			c['bind_constants'].remove(parse.const_roughness)
 
+def add_roughness_strength(self, c, f):
+	if '_RMStr' not in defs:
+		defs.append('_RMStr')
+		const = {}
+		c['bind_constants'].append(const)
+		const['id'] = 'roughnessStrength'
+		const['float'] = f
+
 def add_occlusion_tex(self, node, material, c, defs):
 	if '_OMTex' not in defs:
 		defs.append('_OMTex')
@@ -331,6 +339,14 @@ def add_normal_tex(self, node, material, c, defs):
 		defs.append('_NMTex')
 		tex = make_texture(self, 'snormal', node, material)
 		c['bind_textures'].append(tex)
+
+def add_normal_strength(self, c, f):
+	if '_NMStr' not in defs:
+		defs.append('_NMStr')
+		const = {}
+		c['bind_constants'].append(const)
+		const['id'] = 'normalStrength'
+		const['float'] = f
 
 def parse_base_color_socket(self, base_color_input, material, c, defs, tree, node, factor):
 	if base_color_input.is_linked:
@@ -422,12 +438,32 @@ def parse_pbr_group(self, material, c, defs, tree, node, factor):
 	# Roughness Map
 	roughness_input = node.inputs[2]
 	parse_roughness_socket(self, roughness_input, material, c, defs, tree, node, factor)
+	roughness_strength_input = node.inputs[3]
+	roughness_strength = roughness_strength_input.default_value
+	if roughness_strength != 1.0:
+		add_roughness_strength(self, c, roughness_strength)
 	# Metalness Map
 	metalness_input = node.inputs[4]
 	parse_metalness_socket(self, metalness_input, material, c, defs, tree, node, factor)
 	# Normal Map
 	normal_map_input = node.inputs[5]
 	parse_normal_map_socket(self, normal_map_input, material, c, defs, tree, node, factor)
+	normal_strength_input = node.inputs[6]
+	normal_strength = normal_strength_input.default_value
+	if normal_strength != 1.0:
+		add_normal_strength(self, c, normal_strength)
+	# Emission
+	emission_input = node.inputs[7]
+	emission_strength_input = node.inputs[8]
+	emission_strength = emission_strength_input.default_value
+	if emission_strength != 1.0: # Just multiply base color for now
+		if parse.const_color == None:
+			make_albedo_const([1.0, 1.0, 1.0, 1.0], c)
+		col = parse.const_color['vec4']
+		col[0] *= emission_strength
+		col[1] *= emission_strength
+		col[2] *= emission_strength
+		parse.const_color['vec4'] = [col[0], col[1], col[2], col[3]]
 	# Height Map
 	height_input = node.inputs[9]
 	parse_height_socket(self, height_input, material, c, defs, tree, node, factor)
@@ -435,3 +471,17 @@ def parse_pbr_group(self, material, c, defs, tree, node, factor):
 	if height_input.is_linked:
 		height_strength_input = node.inputs[10]
 		add_height_strength(self, c, height_strength_input.default_value)
+	# Opacity
+	opacity_input = node.inputs[11]
+	opacity_strength_input = node.inputs[12]
+	opacity_strength = opacity_strength_input.default_value
+	if opacity_strength != 1.0:
+		if parse.const_color == None:
+			make_albedo_const([1.0, 1.0, 1.0, 1.0], c)
+		col = parse.const_color['vec4']
+		sum = (col[0] + col[1] + col[2]) / 3
+		mincol = min(col[:3])
+		parse.const_color['vec4'] = [col[0] - mincol, col[1] - mincol, col[2] - mincol, 1.0 - (sum * 0.7)]
+		# Append translucent
+		defs.append('_Translucent')
+	ior_input = node.inputs[13]

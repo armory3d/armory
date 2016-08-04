@@ -59,7 +59,7 @@ project.addAssets('Assets/**');
         if config_text != '':
             f.write(bpy.data.texts[config_text].as_string())
 
-        f.write("\n\nreturn project;\n")
+        f.write("\n\nresolve(project);\n")
 
 # Write Main.hx
 def write_main():
@@ -163,7 +163,7 @@ def write_indexhtml(w, h, in_frame):
 <html>
 <head>
     <meta charset="utf-8"/>
-    <title>ArmoryGame</title>
+    <title>Armory</title>
     <style>
         html, body, canvas, div {
             margin:0; padding: 0; width:100%; height:100%;
@@ -176,6 +176,7 @@ def write_indexhtml(w, h, in_frame):
 <body>
     <canvas id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """'></canvas>
     <script src='kha.js'></script>
+    <script>document.addEventListener('keypress', e => { if (e.key == "Z") close(); });</script>
 </body>
 </html>
 """)

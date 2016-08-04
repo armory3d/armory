@@ -1,4 +1,4 @@
-#  Armory Scene Exporter by Lubos Lenco
+#  Armory Scene Exporter
 #  http://armory3d.org/
 #
 #  Based on Open Game Engine Exchange
@@ -1425,6 +1425,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						o['material_refs'].append(node.override_material_name)
 					else: # Export assigned material
 						self.ExportMaterialRef(node.material_slots[i].material, i, o)
+				# No material, mimick cycles and assign default
+				if len(o['material_refs']) == 0:
+					o['material_refs'].append('__default')
+					self.export_default_material = True
 
 				o['particle_refs'] = []
 				for i in range(len(node.particle_systems)):
@@ -2098,6 +2102,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		o['cast_shadow'] = object.cycles.cast_shadow
 		o['near_plane'] = object.light_clip_start
 		o['far_plane'] = object.light_clip_end
+		o['fov'] = object.light_fov
 
 		# Parse nodes, only emission for now
 		# Merge with nodes_material
@@ -2119,9 +2124,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 		object = objectRef[0]
 
-		#o.fov = object.angle_x
 		o['near_plane'] = object.clip_start
 		o['far_plane'] = object.clip_end
+		o['fov'] = object.angle_x
 		
 		if object.type == 'PERSP':
 			o['type'] = 'perspective'
@@ -2149,10 +2154,52 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			# If the material is unlinked, material becomes None
 			if material == None:
 				continue
-				
+			
 			o = {}
 			o['id'] = materialRef[1]["structName"]
 			self.cb_export_material(material, o)
+			self.output['material_resources'].append(o)
+
+		# Object with no material assigned is in the scene
+		if self.export_default_material:
+			o = {}
+			o['id'] = '__default'
+			o['contexts'] = []
+			c = {}
+			c['id'] = ArmoryExporter.geometry_context
+			c['bind_constants'] = []
+			const = {}
+			const['id'] = 'receiveShadow'
+			const['bool'] = True
+			c['bind_constants'].append(const)
+			const = {}
+			const['id'] = 'mask'
+			const['float'] = 0
+			c['bind_constants'].append(const)
+			const = {}
+			const['id'] = 'albedo_color'
+			const['vec4'] = [0.8, 0.8, 0.8, 1.0]
+			c['bind_constants'].append(const)
+			const = {}
+			const['id'] = 'metalness'
+			const['float'] = 0
+			c['bind_constants'].append(const)
+			const = {}
+			const['id'] = 'roughness'
+			const['float'] = 0.4
+			c['bind_constants'].append(const)
+			const = {}
+			const['id'] = 'occlusion'
+			const['float'] = 1.0
+			c['bind_constants'].append(const)
+			c['bind_textures'] = []
+			cont = {}
+			o['contexts'].append(c)
+			c = {}
+			c['id'] = ArmoryExporter.shadows_context
+			o['contexts'].append(c)
+			defs = []
+			self.finalize_shader(o, defs, ArmoryExporter.pipeline_passes)
 			self.output['material_resources'].append(o)
 
 	def ExportParticleSystems(self):
@@ -2224,6 +2271,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		self.materialToGameObjectDict = dict()
 		self.objectToGameObjectDict = dict()
 		self.uvprojectUsersArray = [] # For processing decals
+		self.export_default_material = False # If no material is assigned, provide default to mimick cycles
 
 		# Store used shaders and assets in this scene
 		ArmoryExporter.shader_references = []
@@ -2344,14 +2392,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# Used for material shader export and khafile
 		if (len(bpy.data.cameras) > 0):
 			ArmoryExporter.pipeline_id = bpy.data.cameras[0].pipeline_id
-			# Gather passes, not very elegant
-			ArmoryExporter.pipeline_passes = []
-			for node_group in bpy.data.node_groups:
-				if node_group.name == bpy.data.cameras[0].pipeline_path:
-					for node in node_group.nodes:
-						if node.bl_idname == 'DrawGeometryNodeType':
-							ArmoryExporter.pipeline_passes.append(node.inputs[1].default_value) # Context
-					break
+			ArmoryExporter.pipeline_passes = bpy.data.cameras[0].pipeline_passes.split('_')
 			ArmoryExporter.geometry_context = bpy.data.cameras[0].geometry_context
 			ArmoryExporter.shadows_context = bpy.data.cameras[0].shadows_context
 			ArmoryExporter.translucent_context = bpy.data.cameras[0].translucent_context
@@ -2503,8 +2544,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		o['pipeline'] = object.pipeline_path + '/' + object.pipeline_path # Same file name and id
 		
 		if 'Background' in bpy.data.worlds[0].node_tree.nodes: # TODO: parse node tree
-			col = bpy.data.worlds[0].node_tree.nodes['Background'].inputs[0].default_value
-			o['clear_color'] = [col[0], col[1], col[2], col[3]]
+			background_node = bpy.data.worlds[0].node_tree.nodes['Background']
+			col = background_node.inputs[0].default_value
+			strength = background_node.inputs[1].default_value
+			o['clear_color'] = [col[0] * strength, col[1] * strength, col[2] * strength, col[3]]
 		else:
 			o['clear_color'] = [0.0, 0.0, 0.0, 1.0]
 

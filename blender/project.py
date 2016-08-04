@@ -146,7 +146,7 @@ def get_export_scene_override(scene):
 def compile_shader(raw_path, shader_name, defs):
     os.chdir(raw_path + './' + shader_name)
     fp = os.path.relpath(utils.get_fp())
-    lib.make_resources.make(shader_name + '.shader.json', fp, minimize=bpy.data.worlds[0].CGMinimize, defs=defs)
+    lib.make_resources.make(shader_name + '.shader.json', fp, bpy.data.worlds[0].CGMinimize, defs)
     lib.make_variants.make(shader_name + '.shader.json', fp, defs)
 
 def def_strings_to_array(strdefs):
@@ -204,10 +204,13 @@ def export_game_data(fp, sdk_path):
     
     # Clean compiled variants if cache is disabled
     if bpy.data.worlds[0].CGCacheShaders == False:
-        if os.path.isdir("compiled/Shaders"):
+        if os.path.isdir('compiled/Shaders'):
             shutil.rmtree('compiled/Shaders')
-        if os.path.isdir("compiled/ShaderResources"):
+        if os.path.isdir('compiled/ShaderResources'):
             shutil.rmtree('compiled/ShaderResources')
+    # Remove shader resources if shaders were deleted
+    elif os.path.isdir('compiled/Shaders') == False and os.path.isdir('compiled/ShaderResources') == True:
+        shutil.rmtree('compiled/ShaderResources')
     
     # Write referenced shader variants
     # Assume asset_references contains shader resources only for now

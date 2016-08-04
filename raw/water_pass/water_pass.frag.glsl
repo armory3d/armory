@@ -21,6 +21,7 @@ uniform float time;
 uniform vec3 eye;
 uniform vec3 eyeLook;
 uniform vec3 light;
+uniform float envmapStrength;
 
 in vec2 texCoord;
 in vec3 viewRay;
@@ -436,7 +437,7 @@ void main() {
         // color = clamp(color + max(specular, foam * sunColor), 0.0, 1.0);
         // color = mix(refraction, color, clamp(depth * shoreHardness, 0.0, 1.0));
 		
-		color = getSeaColor(surfacePoint, normal, ld, -v, surfacePoint - eye);
+		color = getSeaColor(surfacePoint, normal, ld, -v, surfacePoint - eye) * max(0.5, (envmapStrength + 0.2) * 1.4);
 		// color = pow(color, vec3(2.2));
 		color = mix(colorOriginal.rgb, color, clamp(depthZ * seaFade, 0.0, 1.0));
 

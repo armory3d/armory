@@ -27,6 +27,9 @@ uniform float shirr[27];
 #ifdef _NMTex
 	uniform sampler2D snormal;
 #endif
+#ifdef _NMStr
+    uniform float normalStrength;
+#endif
 #ifdef _OMTex
 	uniform sampler2D som;
 #else
@@ -36,6 +39,9 @@ uniform float shirr[27];
 uniform sampler2D srm;
 #else
 	uniform float roughness;
+#endif
+#ifdef _RMStr
+    uniform float roughnessStrength;
 #endif
 #ifdef _MMTex
 	uniform sampler2D smm;
@@ -505,6 +511,9 @@ void main() {
 #else
 	vec3 n = normalize(normal);
 #endif
+#ifdef _NMStr
+    n *= normalStrength;
+#endif
 
 	vec3 l = normalize(lightDir);
 	float dotNL = max(dot(n, l), 0.0);
@@ -548,6 +557,9 @@ void main() {
 
 #ifdef _RMTex
 	float roughness = texture(srm, texCoord).r;
+#endif
+#ifdef _RMStr
+    roughness *= roughnessStrength;
 #endif
 
 

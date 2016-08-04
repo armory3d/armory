@@ -967,7 +967,7 @@ def buildNodeTree(node_group, shader_references, asset_references):
         return
 
     res['id'] = node_group_name
-    res['render_targets'], res['depth_buffers'] = get_render_targets(rn, node_group)
+    res['render_targets'], res['depth_buffers'] = preprocess_pipeline(rn, node_group)
     res['stages'] = []
     
     buildNode(res['stages'], rn, node_group, shader_references, asset_references)
@@ -1467,29 +1467,36 @@ def getRootNode(node_group):
             break
     return rn
 
-def get_render_targets(root_node, node_group):
+def preprocess_pipeline(root_node, node_group):
     render_targets = []
     depth_buffers = []
-    get_render_targets.velocity_def_added = False
-    traverse_for_rt(root_node, node_group, render_targets, depth_buffers)
+    preprocess_pipeline.velocity_def_added = False
+    bpy.data.cameras[0].pipeline_passes = ''
+    traverse_pipeline(root_node, node_group, render_targets, depth_buffers)
     return render_targets, depth_buffers
     
-def traverse_for_rt(node, node_group, render_targets, depth_buffers):
+def traverse_pipeline(node, node_group, render_targets, depth_buffers):
+    # Gather linked draw geometry contexts
+    if node.bl_idname == 'DrawGeometryNodeType':
+        if bpy.data.cameras[0].pipeline_passes != '':
+            bpy.data.cameras[0].pipeline_passes += '_' # Separator
+        bpy.data.cameras[0].pipeline_passes += node.inputs[1].default_value
+
     # Gather defs from linked nodes
     if node.bl_idname == 'TAAPassNodeType':
         assets.add_khafile_def('WITH_TAA')
         # bpy.data.worlds[0].world_defs += '_TAA'
-        if get_render_targets.velocity_def_added == False:
+        if preprocess_pipeline.velocity_def_added == False:
             assets.add_khafile_def('WITH_VELOC')
             bpy.data.worlds[0].world_defs += '_Veloc'
-            get_render_targets.velocity_def_added = True
+            preprocess_pipeline.velocity_def_added = True
     elif node.bl_idname == 'SMAAPassNodeType':
         bpy.data.worlds[0].world_defs += '_SMAA'
     elif node.bl_idname == 'MotionBlurVelocityPassNodeType':
-        if get_render_targets.velocity_def_added == False:
+        if preprocess_pipeline.velocity_def_added == False:
             assets.add_khafile_def('WITH_VELOC')
             bpy.data.worlds[0].world_defs += '_Veloc'
-            get_render_targets.velocity_def_added = True
+            preprocess_pipeline.velocity_def_added = True
 
     # Collect render targets
     if node.bl_idname == 'SetTargetNodeType' or node.bl_idname == 'QuadPassNodeType' or node.bl_idname == 'DrawCompositorNodeType' or node.bl_idname == 'DrawCompositorWithFXAANodeType':
@@ -1501,7 +1508,7 @@ def traverse_for_rt(node, node_group, render_targets, depth_buffers):
     elif node.bl_idname == 'LoopStagesNodeType' or node.bl_idname == 'LoopLightsNodeType':
         if node.outputs[1].is_linked:
             loop_node = findNodeByLinkFrom(node_group, node, node.outputs[1])
-            traverse_for_rt(loop_node, node_group, render_targets, depth_buffers)
+            traverse_pipeline(loop_node, node_group, render_targets, depth_buffers)
     
     # Prebuilt
     elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
@@ -1522,7 +1529,7 @@ def traverse_for_rt(node, node_group, render_targets, depth_buffers):
     # Next stage
     if node.outputs[0].is_linked:
         stagenode = findNodeByLinkFrom(node_group, node, node.outputs[0])
-        traverse_for_rt(stagenode, node_group, render_targets, depth_buffers)
+        traverse_pipeline(stagenode, node_group, render_targets, depth_buffers)
         
 def parse_render_target(node, node_group, render_targets, depth_buffers):
     if node.bl_idname == 'NodeReroute':
