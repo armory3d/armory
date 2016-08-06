@@ -33,14 +33,14 @@ float doBlur(float blurWeight, int pos, vec3 nor) {
     vec2 texstep = dir / screenSize;
     
     vec3 nor2 = getNor(texture(gbuffer0, texCoord + pos * texstep).rg);
-    float influenceFactor = step(discardThreshold, dot(nor2, nor));
-    vec3 col = texture(tex, texCoord + pos * texstep).rgb;
+    float influenceFactor = 1.0;//step(discardThreshold, dot(nor2, nor));
+    vec3 col = texture(tex, texCoord + (pos + 0.5) * texstep).rgb;
     result += col * blurWeight * influenceFactor;
     float weight = blurWeight * influenceFactor;
     
     nor2 = getNor(texture(gbuffer0, texCoord - pos * texstep).rg);
-    influenceFactor = step(discardThreshold, dot(nor2, nor));
-    col = texture(tex, texCoord - pos * texstep).rgb;
+    influenceFactor = 1.0;//step(discardThreshold, dot(nor2, nor));
+    col = texture(tex, texCoord - (pos + 0.5) * texstep).rgb;
     result += col * blurWeight * influenceFactor;
     weight += blurWeight * influenceFactor;
     
@@ -48,29 +48,46 @@ float doBlur(float blurWeight, int pos, vec3 nor) {
 }
 
 void main() {
-	vec3 nor = getNor(texture(gbuffer0, texCoord).rg);
-    float weight = 0.0;
-	
-	// for (int i = 0; i < 9; i++) {
-        float blurWeight = blurWeights[0];
-        
-        vec3 col = texture(tex, texCoord).rgb;
-        result += col * blurWeights[0];
-        weight += blurWeight;
-        
-        weight += doBlur(blurWeights[1], 1, nor);
-        weight += doBlur(blurWeights[1], 2, nor);
-        weight += doBlur(blurWeights[2], 3, nor);
-        weight += doBlur(blurWeights[2], 4, nor);
-        weight += doBlur(blurWeights[3], 5, nor);
-        weight += doBlur(blurWeights[4], 6, nor);
-        weight += doBlur(blurWeights[5], 7, nor);
-        weight += doBlur(blurWeights[6], 8, nor);
-        weight += doBlur(blurWeights[7], 9, nor);
-        weight += doBlur(blurWeights[8], 10, nor);
-        weight += doBlur(blurWeights[9], 11, nor);
-    // }
+    vec2 step = dir / screenSize;
 
-    result /= weight;
-    gl_FragColor = vec4(result.rgb, 1.0);
+    vec3 result = texture(tex, texCoord + (step * 4.5)).rgb;
+    result += texture(tex, texCoord + (step * 3.5)).rgb;
+    result += texture(tex, texCoord + (step * 2.5)).rgb;
+    result += texture(tex, texCoord + step * 1.5).rgb;
+    result += texture(tex, texCoord).rgb;
+    result += texture(tex, texCoord - step * 1.5).rgb;
+    result += texture(tex, texCoord - (step * 2.5)).rgb;
+    result += texture(tex, texCoord - (step * 3.5)).rgb;
+    result += texture(tex, texCoord - (step * 4.5)).rgb;
+    result /= vec3(9.0);
+
+    gl_FragColor.rgb = vec3(result);
+
+
+    
+	// vec3 nor = getNor(texture(gbuffer0, texCoord).rg);
+ //    float weight = 0.0;
+	
+	// // for (int i = 0; i < 9; i++) {
+ //        float blurWeight = blurWeights[0];
+        
+ //        vec3 col = texture(tex, texCoord).rgb;
+ //        result += col * blurWeights[0];
+ //        weight += blurWeight;
+        
+ //        weight += doBlur(blurWeights[1], 1, nor);
+ //        weight += doBlur(blurWeights[1], 2, nor);
+ //        weight += doBlur(blurWeights[2], 3, nor);
+ //        weight += doBlur(blurWeights[2], 4, nor);
+ //        weight += doBlur(blurWeights[3], 5, nor);
+ //        weight += doBlur(blurWeights[4], 6, nor);
+ //        weight += doBlur(blurWeights[5], 7, nor);
+ //        weight += doBlur(blurWeights[6], 8, nor);
+ //        weight += doBlur(blurWeights[7], 9, nor);
+ //        weight += doBlur(blurWeights[8], 10, nor);
+ //    // }
+
+ //    result /= weight;
+ //    gl_FragColor = vec4(result.rgb, 1.0);
+    
 }

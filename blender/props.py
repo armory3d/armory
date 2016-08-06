@@ -99,7 +99,8 @@ def initProperties():
     bpy.types.Camera.pipeline_id = bpy.props.StringProperty(name="Pipeline ID", default="deferred")
 	# TODO: Specify multiple material ids, merge ids from multiple cameras 
     bpy.types.Camera.pipeline_passes = bpy.props.StringProperty(name="Pipeline passes", default="")
-    bpy.types.Camera.geometry_context = bpy.props.StringProperty(name="Geometry", default="deferred")
+    bpy.types.Camera.geometry_context = bpy.props.StringProperty(name="Geometry", default="geom")
+    bpy.types.Camera.geometry_context_empty = bpy.props.StringProperty(name="Geometry Empty", default="depthwrite")
     bpy.types.Camera.shadows_context = bpy.props.StringProperty(name="Shadows", default="shadowmap")
     bpy.types.Camera.translucent_context = bpy.props.StringProperty(name="Translucent", default="translucent")
     bpy.types.Camera.overlay_context = bpy.props.StringProperty(name="Overlay", default="overlay")
@@ -147,9 +148,9 @@ def initProperties():
     bpy.types.World.generate_ssao_size = bpy.props.FloatProperty(name="Size", default=0.08, update=invalidate_shader_cache)
     bpy.types.World.generate_ssao_strength = bpy.props.FloatProperty(name="Strength", default=0.30, update=invalidate_shader_cache)
     bpy.types.World.generate_shadows = bpy.props.BoolProperty(name="Generate Shadows", default=True, update=invalidate_shader_cache)
-    bpy.types.World.generate_shadows_bias = bpy.props.FloatProperty(name="Bias", default=0.00005, update=invalidate_shader_cache)
     bpy.types.World.generate_bloom = bpy.props.BoolProperty(name="Generate Bloom", default=True, update=invalidate_shader_cache)
     bpy.types.World.generate_bloom_treshold = bpy.props.FloatProperty(name="Treshold", default=3.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_bloom_strength = bpy.props.FloatProperty(name="Strength", default=0.4, update=invalidate_shader_cache)
     bpy.types.World.generate_motion_blur = bpy.props.BoolProperty(name="Generate Motion Blur", default=True, update=invalidate_shader_cache)
     bpy.types.World.generate_motion_blur_intensity = bpy.props.FloatProperty(name="Intensity", default=1.0, update=invalidate_shader_cache)
     bpy.types.World.generate_ssr = bpy.props.BoolProperty(name="Generate SSR", default=True, update=invalidate_shader_cache)
@@ -190,6 +191,7 @@ def initProperties():
     bpy.types.Lamp.light_clip_start = bpy.props.FloatProperty(name="Clip Start", default=0.1)
     bpy.types.Lamp.light_clip_end = bpy.props.FloatProperty(name="Clip End", default=100.0)
     bpy.types.Lamp.light_fov = bpy.props.FloatProperty(name="FoV", default=0.785)
+    bpy.types.Lamp.light_bias = bpy.props.FloatProperty(name="Bias", default=0.0001)
 
 # Menu in object region
 class ObjectPropsPanel(bpy.types.Panel):
@@ -269,6 +271,7 @@ class DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'light_clip_start')
             layout.prop(obj.data, 'light_clip_end')
             layout.prop(obj.data, 'light_fov')
+            layout.prop(obj.data, 'light_bias')
 
 class ScenePropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -286,7 +289,7 @@ class OBJECT_OT_RESETPIPELINESButton(bpy.types.Operator):
     bl_label = "Reset Pipelines"
  
     def execute(self, context):
-        nodes_pipeline.reset_pipelines()
+        nodes_pipeline.load_library()
         return{'FINISHED'}
 
 class OBJECT_OT_INVALIDATECACHEButton(bpy.types.Operator):
@@ -354,11 +357,10 @@ class WorldPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'generate_ssao_size')
             layout.prop(wrd, 'generate_ssao_strength')
         layout.prop(wrd, 'generate_shadows')
-        if wrd.generate_shadows:
-            layout.prop(wrd, 'generate_shadows_bias')
         layout.prop(wrd, 'generate_bloom')
         if wrd.generate_bloom:
             layout.prop(wrd, 'generate_bloom_treshold')
+            layout.prop(wrd, 'generate_bloom_strength')
         layout.prop(wrd, 'generate_motion_blur')
         if wrd.generate_motion_blur:
             layout.prop(wrd, 'generate_motion_blur_intensity')

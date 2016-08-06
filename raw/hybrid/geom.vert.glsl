@@ -4,10 +4,6 @@
 precision highp float;
 #endif
 
-#ifdef _NMTex
-#define _AMTex
-#endif
-
 in vec3 pos;
 in vec3 nor;
 #ifdef _AMTex
@@ -18,7 +14,6 @@ in vec3 nor;
 #endif
 #ifdef _NMTex
 	in vec3 tan;
-	in vec3 bitan;
 #endif
 #ifdef _Skinning
 	in vec4 bone;
@@ -28,12 +23,30 @@ in vec3 nor;
 	in vec3 off;
 #endif
 
+uniform mat4 M;
+uniform mat4 NM;
+uniform mat4 V;
+uniform mat4 P;
+uniform mat4 MVP;
 uniform mat4 LMVP;
+uniform vec4 albedo_color;
+uniform vec3 eye;
 #ifdef _Skinning
 	uniform float skinBones[50 * 12];
 #endif
 
-// out vec4 position;
+out vec3 position;
+#ifdef _Tex
+	out vec2 texCoord;
+#endif
+out vec4 lPos;
+out vec4 matColor;
+out vec3 eyeDir;
+#ifdef _NMTex
+	out mat3 TBN;
+#else
+	out vec3 normal;
+#endif
 
 #ifdef _Skinning
 mat4 getBoneMat(const int boneIndex) {
@@ -68,18 +81,59 @@ mat3 getSkinningMatVec(const mat4 skinningMat) {
 #endif
 
 void main() {
+
 #ifdef _Instancing
 	vec4 sPos = (vec4(pos + off, 1.0));
 #else
 	vec4 sPos = (vec4(pos, 1.0));
 #endif
-
 #ifdef _Skinning
 	mat4 skinningMat = getSkinningMat();
 	mat3 skinningMatVec = getSkinningMatVec(skinningMat);
 	sPos = sPos * skinningMat;
 #endif
+	lPos = LMVP * sPos;
 
-	gl_Position = LMVP * sPos;
-	// position = gl_Position;
+	mat4 VM = V * M;
+
+#ifdef _Billboard
+	// Spherical
+	VM[0][0] = 1.0; VM[0][1] = 0.0; VM[0][2] = 0.0;
+	VM[1][0] = 0.0; VM[1][1] = 1.0; VM[1][2] = 0.0;
+	VM[2][0] = 0.0; VM[2][1] = 0.0; VM[2][2] = 1.0;
+	// Cylindrical
+	//VM[0][0] = 1.0; VM[0][1] = 0.0; VM[0][2] = 0.0;
+	//VM[2][0] = 0.0; VM[2][1] = 0.0; VM[2][2] = 1.0;
+#endif
+
+	// gl_Position = P * VM * sPos;
+	gl_Position = MVP * sPos;
+
+#ifdef _Tex
+	texCoord = tex;
+#endif
+
+#ifdef _Skinning
+	vec3 _normal = normalize(mat3(NM) * (nor * skinningMatVec));
+#else
+	vec3 _normal = normalize(mat3(NM) * nor);
+#endif
+
+	matColor = albedo_color;
+
+#ifdef _VCols
+	matColor.rgb *= col;
+#endif
+
+	vec3 mPos = vec4(M * sPos).xyz;
+	position = mPos;
+	eyeDir = eye - mPos;
+
+#ifdef _NMTex
+	vec3 tangent = (mat3(NM) * (tan));
+	vec3 bitangent = normalize(cross(_normal, tangent));
+	TBN = mat3(tangent, bitangent, _normal);
+#else
+	normal = _normal;
+#endif
 }

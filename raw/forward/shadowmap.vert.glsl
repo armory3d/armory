@@ -33,7 +33,7 @@ uniform mat4 LMVP;
 	uniform float skinBones[50 * 12];
 #endif
 
-out vec4 position;
+// out vec4 position;
 
 #ifdef _Skinning
 mat4 getBoneMat(const int boneIndex) {
@@ -68,7 +68,7 @@ mat3 getSkinningMatVec(const mat4 skinningMat) {
 #endif
 
 void main() {
-	#ifdef _Instancing
+#ifdef _Instancing
 	vec4 sPos = (vec4(pos + off, 1.0));
 #else
 	vec4 sPos = (vec4(pos, 1.0));
@@ -81,5 +81,5 @@ void main() {
 #endif
 
 	gl_Position = LMVP * sPos;
-	position = gl_Position;
+	// position = gl_Position;
 }

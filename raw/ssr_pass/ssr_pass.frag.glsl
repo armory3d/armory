@@ -8,8 +8,7 @@ precision mediump float;
 
 uniform sampler2D tex;
 uniform sampler2D gbufferD;
-uniform sampler2D gbuffer0; // Normal
-uniform sampler2D gbuffer1; // Color, roughness
+uniform sampler2D gbuffer0; // Normal, roughness
 uniform mat4 P;
 uniform mat4 tiV;
 
@@ -185,7 +184,10 @@ vec2 unpackFloat(float f) {
 }
 
 void main() {
-    float roughness = unpackFloat(texture(gbuffer1, texCoord).a).x;
+
+	vec4 g0 = texture(gbuffer0, texCoord);
+    float roughness = unpackFloat(g0.b).x;
+
     if (roughness == 1.0) {
 		// gl_FragColor = texture(tex, texCoord);
 		gl_FragColor = vec4(0.0);
@@ -199,8 +201,7 @@ void main() {
 		gl_FragColor = vec4(0.0);
 		return;
 	}
-	
-	vec4 g0 = texture(gbuffer0, texCoord);
+
 	vec2 enc = g0.rg;
     vec3 n;
     n.z = 1.0 - abs(enc.x) - abs(enc.y);
@@ -230,7 +231,7 @@ void main() {
 		screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) *
 		clamp((ssrSearchDist - length(viewPos.xyz - hitCoord)) * (1.0 / ssrSearchDist), 0.0, 1.0) * coords.w;
 
-	vec4 texColor = texture(tex, texCoord);
+	// vec4 texColor = texture(tex, texCoord);
 	
 	// float brightness = dot(texColor.rgb, vec3(0.2126, 0.7152, 0.0722));
 	// intensity *= min(brightness, 1.0);

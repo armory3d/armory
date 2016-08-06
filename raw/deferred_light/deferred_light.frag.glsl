@@ -44,6 +44,7 @@ uniform int lightType;
 uniform int lightIndex;
 uniform vec3 lightColor;
 uniform float lightStrength;
+uniform float lightBias;
 uniform float spotlightCutoff;
 uniform float spotlightExponent;
 uniform vec3 eye;
@@ -429,9 +430,9 @@ float shadowTest(vec4 lPos) {
 	lPosH.y = (lPosH.y + 1.0) / 2.0;
 	
 #ifdef _PCSS
-	return PCSS(lPosH.xy, lPosH.z - shadowsBias);
+	return PCSS(lPosH.xy, lPosH.z - lightBias);
 #else
-	return PCF(lPosH.xy, lPosH.z - shadowsBias);
+	return PCF(lPosH.xy, lPosH.z - lightBias);
 #endif
 }
 #endif
@@ -709,8 +710,8 @@ void main() {
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	// if (depth == 1.0) discard;
 	
-	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, occlusion, mask
-	vec4 g1 = texture(gbuffer1, texCoord); // Base color.rgb, roughn/met
+	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, roughn/met, mask
+	vec4 g1 = texture(gbuffer1, texCoord); // Base color.rgb, occlusion
 
 	vec2 enc = g0.rg;
 	vec3 n;
@@ -720,7 +721,7 @@ void main() {
 
 	vec3 p = getPos(depth);
 	vec3 baseColor = g1.rgb;
-	vec2 roughmet = unpackFloat(g1.a);
+	vec2 roughmet = unpackFloat(g0.b);
 	float roughness = roughmet.x;
 	float metalness = roughmet.y;
 	
@@ -781,7 +782,6 @@ void main() {
 	}
 #endif
 
-
 	// Indirect
 	if (lightIndex == 0) {
 #ifdef _Probes
@@ -833,7 +833,7 @@ void main() {
 		indirect += indirectSpecular;
 #endif
 		indirect = indirect * envmapStrength;// * lightColor * lightStrength;
-		float occlusion = g0.b;
+		float occlusion = g1.a;
 		indirect = indirect * occlusion;
 #ifdef _SSAO
 		float ao = texture(ssaotex, texCoord).r;

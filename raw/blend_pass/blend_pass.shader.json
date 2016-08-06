@@ -1,0 +1,41 @@
+{
+	"contexts": [
+		{
+			"id": "blend_pass",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "false"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				},
+				{
+					"id": "blend_source",
+					"value": "blend_one"
+				},
+				{
+					"id": "blend_destination",
+					"value": "blend_one"
+				},
+				{
+					"id": "blend_operation",
+					"value": "add"
+				},
+				{
+					"id": "color_write_alpha",
+					"value": "false"
+				}
+			],
+			"links": [],
+			"texture_params": [],
+			"vertex_shader": "blend_pass.vert.glsl",
+			"fragment_shader": "blend_pass.frag.glsl"
+		}
+	]
+}

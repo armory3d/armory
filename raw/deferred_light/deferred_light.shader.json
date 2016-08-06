@@ -66,6 +66,10 @@
 					"link": "_lightStrength"
 				},
 				{
+					"id": "lightBias",
+					"link": "_lightBias"
+				},
+				{
 					"id": "spotlightCutoff",
 					"link": "_spotlightCutoff"
 				},

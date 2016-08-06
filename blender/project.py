@@ -160,6 +160,7 @@ def export_game_data(fp, sdk_path):
     assets_path = sdk_path + 'armory/Assets/'
 
     shader_references = []
+    # shader_references_defs = [] # Defs to go with referenced shaders
     asset_references = []
     assets.reset()
 
@@ -204,6 +205,8 @@ def export_game_data(fp, sdk_path):
     
     # Clean compiled variants if cache is disabled
     if bpy.data.worlds[0].CGCacheShaders == False:
+        if os.path.isdir('build/html5-resources'):
+            shutil.rmtree('build/html5-resources')
         if os.path.isdir('compiled/Shaders'):
             shutil.rmtree('compiled/Shaders')
         if os.path.isdir('compiled/ShaderResources'):
@@ -219,15 +222,19 @@ def export_game_data(fp, sdk_path):
         os.chdir(fp)
         if not os.path.exists(ref):
             shader_name = ref.split('/')[2]
-            strdefs = ref[:-4] # Remove .arm extension
+            strdefs = ref[:-4] # Remove '.arm' extension
             defs = strdefs.split(shader_name) # 'name/name_def_def'
             if len(defs) > 2:
-                strdefs = defs[2] # Apended defs
+                strdefs = defs[2] # Appended defs
                 defs = def_strings_to_array(strdefs)
             else:
                 defs = []
             compile_shader(raw_path, shader_name, defs)
-    # Add linked assets from shader resources
+            # for i in range(0, len(defs)):
+                # defs[i] += '=1'
+            # shader_references_defs.append(defs)
+    
+    # After defs has been parsed, add linked assets from shader resources
     asset_references += linked_assets
     # Reset path
     os.chdir(fp)

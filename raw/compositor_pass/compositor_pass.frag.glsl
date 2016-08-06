@@ -246,15 +246,15 @@ vec3 tonemapFilmic(vec3 color) {
 vec3 tonemapReinhard(vec3 color) {
   return color / (color + vec3(1.0));
 }
-const float A = 0.15;
-const float B = 0.50;
-const float C = 0.10;
-const float D = 0.20;
-const float E = 0.02;
-const float F = 0.30;
 const float W = 11.2;
 vec3 uncharted2Tonemap(vec3 x) {
-   return ((x * (A * x + C * B) + D * E) / (x * (A * x + B) + D * F)) - E / F;
+	const float A = 0.15;
+	const float B = 0.50;
+	const float C = 0.10;
+	const float D = 0.20;
+	const float E = 0.02;
+	const float F = 0.30;
+	return ((x * (A * x + C * B) + D * E) / (x * (A * x + B) + D * F)) - E / F;
 }
 vec3 tonemapUncharted2(vec3 color) {
     float exposureBias = 2.0;

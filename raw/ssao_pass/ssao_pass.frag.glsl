@@ -28,7 +28,8 @@ uniform vec3 eye;
 uniform vec2 screenSize;
 uniform vec2 aspectRatio;
 
-const int kernelSize = 20;//12;
+// const int kernelSize = 20;
+const int kernelSize = 12;
 // const float ssaoSize = 0.12;
 // const float ssaoStrength = 0.55;
 
@@ -75,39 +76,39 @@ void main() {
 	}
 	
 	vec2 kernel[kernelSize];
-	// kernel[0] = vec2(1.0, 0.0);
-	// kernel[1] = vec2(0.8660254, 0.4999999);
-	// kernel[2] = vec2(0.5, 0.8660254);
-	// kernel[3] = vec2(0.0, 1.0);
-	// kernel[4] = vec2(-0.4999999, 0.8660254);
-	// kernel[5] = vec2(-0.8660254, 0.5);
-	// kernel[6] = vec2(-1.0, 0.0);
-	// kernel[7] = vec2(-0.8660254, -0.4999999);
-	// kernel[8] = vec2(-0.5, -0.8660254);
-	// kernel[9] = vec2(0.0, -1.0);
-	// kernel[10] = vec2(0.4999999, -0.8660254);
-	// kernel[11] = vec2(0.8660254, -0.5);
+	kernel[0] = vec2(1.0, 0.0);
+	kernel[1] = vec2(0.8660254, 0.4999999);
+	kernel[2] = vec2(0.5, 0.8660254);
+	kernel[3] = vec2(0.0, 1.0);
+	kernel[4] = vec2(-0.4999999, 0.8660254);
+	kernel[5] = vec2(-0.8660254, 0.5);
+	kernel[6] = vec2(-1.0, 0.0);
+	kernel[7] = vec2(-0.8660254, -0.4999999);
+	kernel[8] = vec2(-0.5, -0.8660254);
+	kernel[9] = vec2(0.0, -1.0);
+	kernel[10] = vec2(0.4999999, -0.8660254);
+	kernel[11] = vec2(0.8660254, -0.5);
 	
-	kernel[0] = vec2(1.0,0.0);
-	kernel[1] = vec2(0.9510565,0.3090169);
-	kernel[2] = vec2(0.8090169,0.5877852);
-	kernel[3] = vec2(0.5877852,0.8090169);
-	kernel[4] = vec2(0.3090169,0.9510565);
-	kernel[5] = vec2(0.0,1.0);
-	kernel[6] = vec2(-0.3090169,0.9510565);
-	kernel[7] = vec2(-0.5877852,0.8090169);
-	kernel[8] = vec2(-0.8090169,0.5877852);
-	kernel[9] = vec2(-0.9510565,0.3090169);
-	kernel[10] = vec2(-1,0);
-	kernel[11] = vec2(-0.9510565,-0.3090169);
-	kernel[12] = vec2(-0.8090169,-0.5877852);
-	kernel[13] = vec2(-0.5877852,-0.8090169);
-	kernel[14] = vec2(-0.3090169,-0.9510565);
-	kernel[15] = vec2(0.0,-1.0);
-	kernel[16] = vec2(0.3090169,-0.9510565);
-	kernel[17] = vec2(0.5877852,-0.8090169);
-	kernel[18] = vec2(0.8090169,-0.5877852);
-	kernel[19] = vec2(0.9510565,-0.3090169);
+	// kernel[0] = vec2(1.0,0.0);
+	// kernel[1] = vec2(0.9510565,0.3090169);
+	// kernel[2] = vec2(0.8090169,0.5877852);
+	// kernel[3] = vec2(0.5877852,0.8090169);
+	// kernel[4] = vec2(0.3090169,0.9510565);
+	// kernel[5] = vec2(0.0,1.0);
+	// kernel[6] = vec2(-0.3090169,0.9510565);
+	// kernel[7] = vec2(-0.5877852,0.8090169);
+	// kernel[8] = vec2(-0.8090169,0.5877852);
+	// kernel[9] = vec2(-0.9510565,0.3090169);
+	// kernel[10] = vec2(-1,0);
+	// kernel[11] = vec2(-0.9510565,-0.3090169);
+	// kernel[12] = vec2(-0.8090169,-0.5877852);
+	// kernel[13] = vec2(-0.5877852,-0.8090169);
+	// kernel[14] = vec2(-0.3090169,-0.9510565);
+	// kernel[15] = vec2(0.0,-1.0);
+	// kernel[16] = vec2(0.3090169,-0.9510565);
+	// kernel[17] = vec2(0.5877852,-0.8090169);
+	// kernel[18] = vec2(0.8090169,-0.5877852);
+	// kernel[19] = vec2(0.9510565,-0.3090169);
 	
 	
 	vec2 enc = texture(gbuffer0, texCoord).rg;      
@@ -138,14 +139,14 @@ void main() {
 		amount += doAO(kernel[9], randomVec, rotMat, currentPos, currentNormal, currentDistance);
 		amount += doAO(kernel[10], randomVec, rotMat, currentPos, currentNormal, currentDistance);
 		amount += doAO(kernel[11], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[12], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[13], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[14], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[15], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[16], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[17], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[18], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[19], randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		// amount += doAO(kernel[12], randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		// amount += doAO(kernel[13], randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		// amount += doAO(kernel[14], randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		// amount += doAO(kernel[15], randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		// amount += doAO(kernel[16], randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		// amount += doAO(kernel[17], randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		// amount += doAO(kernel[18], randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		// amount += doAO(kernel[19], randomVec, rotMat, currentPos, currentNormal, currentDistance);
 	// }
 	
 	amount *= ssaoStrength / kernelSize;

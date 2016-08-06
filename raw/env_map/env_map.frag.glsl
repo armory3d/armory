@@ -135,6 +135,7 @@ vec2 traceCloud(vec3 pos, vec3 dir) {
 	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
 	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
 	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
+	
 	// shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
 	// shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
 	// shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
@@ -153,6 +154,7 @@ vec2 traceCloud(vec3 pos, vec3 dir) {
 	return shadeSum;
 }
 // GPU PRO 7 - Real-time Volumetric Cloudscapes
+// https://www.guerrilla-games.com/read/the-real-time-volumetric-cloudscapes-of-horizon-zero-dawn
 vec3 cloudsColor(vec3 R, vec3 pos, vec3 dir) {
 	vec2 traced = traceCloud(pos, dir);
 	float d = traced.x / 200.0 * traced.y + traced.x / 1500.0 * cloudsSecondary;
@@ -203,7 +205,7 @@ void main() {
 	float gamma_val = acos(cos_gamma);
 
 	vec3 R = Z * hosekWilkie(cos_theta, gamma_val, cos_gamma) * envmapStrength;
-#ifndef LDR
+#ifndef _LDR
 	R = pow(R, vec3(2.2));
 #endif
 #endif
@@ -213,5 +215,10 @@ void main() {
 	vec3 clouds = cloudsColor(R, vec3(0.0), n);
 	if (n.z > 0.0) R = mix(R, clouds, n.z * 5.0 * envmapStrength);
 #endif
+
+#ifdef _LDR
+	R = pow(R, vec3(1.0 / 2.2));
+#endif
+
 	gl_FragColor = vec4(R, 1.0);
 }

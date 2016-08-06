@@ -57,7 +57,29 @@ class SSAOPassNode(Node, CGPipelineTreeNode):
     def init(self, context):
         self.inputs.new('NodeSocketShader', "Stage")
         self.inputs.new('NodeSocketShader', "Target")
-        self.inputs.new('NodeSocketShader', "Target Temp")
+        self.inputs.new('NodeSocketShader', "A")
+        self.inputs.new('NodeSocketShader', "GBufferD")
+        self.inputs.new('NodeSocketShader', "GBuffer0")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
+    def copy(self, node):
+        print("Copying from node ", node)
+
+    def free(self):
+        print("Removing node ", self, ", Goodbye!")
+
+class ApplySSAOPassNode(Node, CGPipelineTreeNode):
+    '''A custom node'''
+    bl_idname = 'ApplySSAOPassNodeType'
+    bl_label = 'Apply SSAO'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "A")
+        self.inputs.new('NodeSocketShader', "B")
         self.inputs.new('NodeSocketShader', "GBufferD")
         self.inputs.new('NodeSocketShader', "GBuffer0")
 
@@ -81,8 +103,8 @@ class SSRPassNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "A")
         self.inputs.new('NodeSocketShader', "B")
         self.inputs.new('NodeSocketShader', "Color")
-        self.inputs.new('NodeSocketShader', "GBuffer")
-        self.inputs.new('NodeSocketShader', "GBuffer1")
+        self.inputs.new('NodeSocketShader', "GBufferD")
+        self.inputs.new('NodeSocketShader', "GBuffer0")
 
         self.outputs.new('NodeSocketShader', "Stage")
 
@@ -165,6 +187,45 @@ class CopyPassNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Stage")
         self.inputs.new('NodeSocketShader', "Target")
         self.inputs.new('NodeSocketShader', "Color")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
+    def copy(self, node):
+        print("Copying from node ", node)
+
+    def free(self):
+        print("Removing node ", self, ", Goodbye!")
+
+class BlendPassNode(Node, CGPipelineTreeNode):
+    '''A custom node'''
+    bl_idname = 'BlendPassNodeType'
+    bl_label = 'Blend'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "Color")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
+    def copy(self, node):
+        print("Copying from node ", node)
+
+    def free(self):
+        print("Removing node ", self, ", Goodbye!")
+
+class CombinePassNode(Node, CGPipelineTreeNode):
+    '''A custom node'''
+    bl_idname = 'CombinePassNodeType'
+    bl_label = 'Combine'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "A")
+        self.inputs.new('NodeSocketShader', "B")
 
         self.outputs.new('NodeSocketShader', "Stage")
 
@@ -865,11 +926,14 @@ node_categories = [
     MyPassNodeCategory("PREBUILTNODES", "Prebuilt", items=[
         NodeItem("QuadPassNodeType"),
         NodeItem("SSAOPassNodeType"),
+        NodeItem("ApplySSAOPassNodeType"),
         NodeItem("SSRPassNodeType"),
         NodeItem("BloomPassNodeType"),
         NodeItem("MotionBlurPassNodeType"),
         NodeItem("MotionBlurVelocityPassNodeType"),
         NodeItem("CopyPassNodeType"),
+        NodeItem("BlendPassNodeType"),
+        NodeItem("CombinePassNodeType"),
         NodeItem("BlurBasicPassNodeType"),
         NodeItem("DebugNormalsPassNodeType"),
         NodeItem("FXAAPassNodeType"),
@@ -910,7 +974,7 @@ def load_library():
     data_path = sdk_path + '/armory/blender/data/data.blend'
 
     with bpy.data.libraries.load(data_path, link=False) as (data_from, data_to):
-        data_to.node_groups = ['forward_pipeline', 'forward_pipeline_low', 'deferred_pipeline', 'deferred_pipeline_low', 'pathtrace_pipeline', 'Armory PBR']
+        data_to.node_groups = ['forward_pipeline', 'forward_pipeline_low', 'deferred_pipeline', 'deferred_pipeline_low', 'hybrid_pipeline', 'pathtrace_pipeline', 'Armory PBR']
     
     # TODO: cannot use for loop
     # TODO: import pbr group separately, no need for fake user
@@ -918,6 +982,7 @@ def load_library():
     bpy.data.node_groups['forward_pipeline_low'].use_fake_user = True
     bpy.data.node_groups['deferred_pipeline'].use_fake_user = True
     bpy.data.node_groups['deferred_pipeline_low'].use_fake_user = True
+    bpy.data.node_groups['hybrid_pipeline'].use_fake_user = True
     bpy.data.node_groups['pathtrace_pipeline'].use_fake_user = True
     bpy.data.node_groups['Armory PBR'].use_fake_user = True
 
@@ -1179,21 +1244,25 @@ def make_quad_pass(stages, node_group, node, shader_references, asset_references
 
 def make_ssao_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 4], bind_target_constants=['gbufferD', 'gbuffer0'], shader_context='ssao_pass/ssao_pass/ssao_pass')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x')
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[1, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x')
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y')
     buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise8.png')
 
+def make_apply_ssao_pass(stages, node_group, node, shader_references, asset_references):
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[4, 5], bind_target_constants=['gbufferD', 'gbuffer0'], shader_context='ssao_pass/ssao_pass/ssao_pass')
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=3, bind_target_indices=[2, 5], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x')
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 5], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y_blend')
+    buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise8.png')
+
 def make_ssr_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[4, 5], bind_target_constants=['tex', 'gbuffer'], shader_context='ssr_pass/ssr_pass/ssr_pass')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=3, bind_target_indices=[2, 6], bind_target_constants=['tex', 'gbuffer1'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_x')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[3, 6], bind_target_constants=['tex', 'gbuffer1'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_y2')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[4, 2], bind_target_constants=['tex', 'tex2'], shader_context='combine_pass/combine_pass/combine_pass')
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[4, 5, 6], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='ssr_pass/ssr_pass/ssr_pass')
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=3, bind_target_indices=[2, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_x')
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_y2_blend')
 
 def make_bloom_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[4], bind_target_constants=['tex'], shader_context='bloom_pass/bloom_pass/bloom_pass')
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=3, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_x')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[3], bind_target_constants=['tex'], shader_context='blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_y')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[4, 2], bind_target_constants=['tex', 'tex2'], shader_context='combine_pass/combine_pass/combine_pass')
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3], bind_target_constants=['tex'], shader_context='blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_y_blend')
 
 def make_motion_blur_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='motion_blur_pass/motion_blur_pass/motion_blur_pass')
@@ -1203,6 +1272,12 @@ def make_motion_blur_velocity_pass(stages, node_group, node, shader_references, 
 
 def make_copy_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='copy_pass/copy_pass/copy_pass')
+
+def make_blend_pass(stages, node_group, node, shader_references, asset_references):
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='blend_pass/blend_pass/blend_pass')
+
+def make_combine_pass(stages, node_group, node, shader_references, asset_references):
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['tex', 'tex2'], shader_context='combine_pass/combine_pass/combine_pass')
 
 def make_blur_basic_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[1], bind_target_constants=['tex'], shader_context='blur_pass/blur_pass/blur_pass_x')
@@ -1378,6 +1453,9 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
     elif node.bl_idname == 'SSAOPassNodeType':
         make_ssao_pass(stages, node_group, node, shader_references, asset_references)
         append_stage = False
+    elif node.bl_idname == 'ApplySSAOPassNodeType':
+        make_apply_ssao_pass(stages, node_group, node, shader_references, asset_references)
+        append_stage = False
     elif node.bl_idname == 'SSRPassNodeType':
         make_ssr_pass(stages, node_group, node, shader_references, asset_references)
         append_stage = False
@@ -1392,6 +1470,12 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
         append_stage = False
     elif node.bl_idname == 'CopyPassNodeType':
         make_copy_pass(stages, node_group, node, shader_references, asset_references)
+        append_stage = False
+    elif node.bl_idname == 'BlendPassNodeType':
+        make_blend_pass(stages, node_group, node, shader_references, asset_references)
+        append_stage = False
+    elif node.bl_idname == 'CombinePassNodeType':
+        make_combine_pass(stages, node_group, node, shader_references, asset_references)
         append_stage = False
     elif node.bl_idname == 'BlurBasicPassNodeType':
         make_blur_basic_pass(stages, node_group, node, shader_references, asset_references)
@@ -1457,7 +1541,10 @@ def getRootNode(node_group):
         if n.bl_idname == 'BeginNodeType':
             # Store contexts
             bpy.data.cameras[0].pipeline_id = n.inputs[0].default_value
-            bpy.data.cameras[0].geometry_context = n.inputs[1].default_value
+            geometry_contexts = n.inputs[1].default_value.split(',')
+            bpy.data.cameras[0].geometry_context = geometry_contexts[0]
+            if len(geometry_contexts) > 1:
+                bpy.data.cameras[0].geometry_context_empty = geometry_contexts[1]
             bpy.data.cameras[0].shadows_context = n.inputs[2].default_value
             bpy.data.cameras[0].translucent_context = n.inputs[3].default_value
             bpy.data.cameras[0].overlay_context = n.inputs[4].default_value
@@ -1511,11 +1598,11 @@ def traverse_pipeline(node, node_group, render_targets, depth_buffers):
             traverse_pipeline(loop_node, node_group, render_targets, depth_buffers)
     
     # Prebuilt
-    elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
+    elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'BlendPassNodeType' or node.bl_idname == 'CombinePassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
         if node.inputs[1].is_linked:
             tnode = findNodeByLink(node_group, node, node.inputs[1])
             parse_render_target(tnode, node_group, render_targets, depth_buffers)
-    elif node.bl_idname == 'SSRPassNodeType' or node.bl_idname == 'BloomPassNodeType' or node.bl_idname == 'SMAAPassNodeType':
+    elif node.bl_idname == 'SSRPassNodeType' or node.bl_idname == 'ApplySSAOPassNodeType' or node.bl_idname == 'BloomPassNodeType' or node.bl_idname == 'SMAAPassNodeType':
         for i in range(1, 4):
             if node.inputs[i].is_linked:
                 tnode = findNodeByLink(node_group, node, node.inputs[i])
@@ -1587,4 +1674,3 @@ def make_render_target(n, scale, depth_buffer_id=None):
     if depth_buffer_id != None:
         target['depth_buffer'] = depth_buffer_id
     return target
-    

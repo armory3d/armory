@@ -1,15 +1,15 @@
 {
 	"contexts": [
 		{
-			"id": "forward",
+			"id": "geom",
 			"params": [
 				{
 					"id": "depth_write",
-					"value": "true"
+					"value": "false"
 				},
 				{
 					"id": "compare_mode",
-					"value": "less"
+					"value": "less_equal"
 				},
 				{
 					"id": "cull_mode",
@@ -34,8 +34,16 @@
 					"link": "_projectionMatrix"
 				},
 				{
+					"id": "MVP",
+					"link": "_modelViewProjectionMatrix"
+				},
+				{
 					"id": "LMVP",
 					"link": "_lightModelViewProjectionMatrix"
+				},
+				{
+					"id": "lightPos",
+					"link": "_lightPosition"
 				},
 				{
 					"id": "lightDir",
@@ -52,6 +60,18 @@
 				{
 					"id": "lightBias",
 					"link": "_lightBias"
+				},
+				{
+					"id": "spotlightCutoff",
+					"link": "_spotlightCutoff"
+				},
+				{
+					"id": "spotlightExponent",
+					"link": "_spotlightExponent"
+				},
+				{
+					"id": "lightType",
+					"link": "_lightType"
 				},
 				{
 					"id": "eye",
@@ -84,20 +104,10 @@
 				{
 					"id": "envmapStrength",
 					"link": "_envmapStrength"
-				},
-				{
-					"id": "sltcMat",
-					"link": "_ltcMat",
-					"ifdef": ["_PolyLight"]
-				},
-				{
-					"id": "sltcMag",
-					"link": "_ltcMag",
-					"ifdef": ["_PolyLight"]
 				}
 			],
-			"vertex_shader": "forward.vert.glsl",
-			"fragment_shader": "forward.frag.glsl"
+			"vertex_shader": "geom.vert.glsl",
+			"fragment_shader": "geom.frag.glsl"
 		},
 		{
 			"id": "overlay",
@@ -179,16 +189,6 @@
 				{
 					"id": "envmapStrength",
 					"link": "_envmapStrength"
-				},
-				{
-					"id": "sltcMat",
-					"link": "_ltcMat",
-					"ifdef": ["_PolyLight"]
-				},
-				{
-					"id": "sltcMag",
-					"link": "_ltcMag",
-					"ifdef": ["_PolyLight"]
 				}
 			],
 			"vertex_shader": "overlay.vert.glsl",
@@ -223,6 +223,52 @@
 			],
 			"vertex_shader": "shadowmap.vert.glsl",
 			"fragment_shader": "shadowmap.frag.glsl"
+		},
+		{
+			"id": "depthwrite",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "true"
+				},
+				{
+					"id": "compare_mode",
+					"value": "less"
+				},
+				{
+					"id": "cull_mode",
+					"value": "clockwise"
+				},
+				{
+					"id": "color_write_red",
+					"value": "false"
+				},
+				{
+					"id": "color_write_green",
+					"value": "false"
+				},
+				{
+					"id": "color_write_blue",
+					"value": "false"
+				},
+				{
+					"id": "color_write_alpha",
+					"value": "false"
+				}
+			],
+			"links": [
+				{
+					"id": "MVP",
+					"link": "_modelViewProjectionMatrix"
+				},
+				{
+					"id": "skinBones",
+					"link": "_skinBones",
+					"ifdef": ["_Skinning"]
+				}
+			],
+			"vertex_shader": "depthwrite.vert.glsl",
+			"fragment_shader": "depthwrite.frag.glsl"
 		}
 	]
 }

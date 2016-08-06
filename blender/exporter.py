@@ -2103,6 +2103,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		o['near_plane'] = object.light_clip_start
 		o['far_plane'] = object.light_clip_end
 		o['fov'] = object.light_fov
+		o['bias'] = object.light_bias
 
 		# Parse nodes, only emission for now
 		# Merge with nodes_material
@@ -2110,7 +2111,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if n.type == 'EMISSION':
 				col = n.inputs[0].default_value
 				o['color'] = [col[0], col[1], col[2]]
-				o['strength'] = n.inputs[1].default_value / 1000.0
+				o['strength'] = n.inputs[1].default_value
+				# Normalize point/spot strength
+				if o['type'] != 'sun':
+					o['strength'] /= 1000.0
 				break
 
 		self.output['light_resources'].append(o)
@@ -2198,6 +2202,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			c = {}
 			c['id'] = ArmoryExporter.shadows_context
 			o['contexts'].append(c)
+			if ArmoryExporter.geometry_context_empty != '':
+				c = {}
+				c['id'] = ArmoryExporter.geometry_context_empty
+				o['contexts'].append(c)
 			defs = []
 			self.finalize_shader(o, defs, ArmoryExporter.pipeline_passes)
 			self.output['material_resources'].append(o)
@@ -2394,6 +2402,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			ArmoryExporter.pipeline_id = bpy.data.cameras[0].pipeline_id
 			ArmoryExporter.pipeline_passes = bpy.data.cameras[0].pipeline_passes.split('_')
 			ArmoryExporter.geometry_context = bpy.data.cameras[0].geometry_context
+			ArmoryExporter.geometry_context_empty = bpy.data.cameras[0].geometry_context_empty
 			ArmoryExporter.shadows_context = bpy.data.cameras[0].shadows_context
 			ArmoryExporter.translucent_context = bpy.data.cameras[0].translucent_context
 			ArmoryExporter.overlay_context = bpy.data.cameras[0].overlay_context
@@ -2638,6 +2647,12 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			c['id'] = ArmoryExporter.shadows_context
 			o['contexts'].append(c)
 		
+		# Additional geometry contexts, useful for depth-prepass
+		if ArmoryExporter.geometry_context_empty != '':
+			c = {}
+			c['id'] = ArmoryExporter.geometry_context_empty
+			o['contexts'].append(c)
+
 		# Material users		
 		for ob in mat_users:
 			# Instancing used by material user

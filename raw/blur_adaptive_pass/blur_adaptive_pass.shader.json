@@ -121,6 +121,48 @@
 			"texture_params": [],
 			"vertex_shader": "blur_adaptive_pass.vert.glsl",
 			"fragment_shader": "blur_adaptive_pass.frag.glsl"
+		},
+		{
+			"id": "blur_adaptive_pass_y2_blend",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "false"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				},
+				{
+					"id": "blend_source",
+					"value": "blend_one"
+				},
+				{
+					"id": "blend_destination",
+					"value": "blend_one"
+				},
+				{
+					"id": "blend_operation",
+					"value": "add"
+				}
+			],
+			"links": [
+				{
+					"id": "dir",
+					"link": "_vec2y2"
+				},
+				{
+					"id": "screenSize",
+					"link": "_screenSize"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "blur_adaptive_pass.vert.glsl",
+			"fragment_shader": "blur_adaptive_pass.frag.glsl"
 		}
 	]
 }

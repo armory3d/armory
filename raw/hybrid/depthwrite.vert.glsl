@@ -4,13 +4,9 @@
 precision highp float;
 #endif
 
-#ifdef _NMTex
-#define _AMTex
-#endif
-
 in vec3 pos;
 in vec3 nor;
-#ifdef _AMTex
+#ifdef _Tex
 	in vec2 tex;
 #endif
 #ifdef _VCols
@@ -18,7 +14,6 @@ in vec3 nor;
 #endif
 #ifdef _NMTex
 	in vec3 tan;
-	in vec3 bitan;
 #endif
 #ifdef _Skinning
 	in vec4 bone;
@@ -28,12 +23,10 @@ in vec3 nor;
 	in vec3 off;
 #endif
 
-uniform mat4 LMVP;
+uniform mat4 MVP;
 #ifdef _Skinning
 	uniform float skinBones[50 * 12];
 #endif
-
-// out vec4 position;
 
 #ifdef _Skinning
 mat4 getBoneMat(const int boneIndex) {
@@ -80,6 +73,5 @@ void main() {
 	sPos = sPos * skinningMat;
 #endif
 
-	gl_Position = LMVP * sPos;
-	// position = gl_Position;
+	gl_Position = MVP * sPos;
 }

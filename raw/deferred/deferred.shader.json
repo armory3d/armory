@@ -211,7 +211,7 @@
 				},
 				{
 					"id": "compare_mode",
-					"value": "less_equal"
+					"value": "less"
 				},
 				{
 					"id": "cull_mode",

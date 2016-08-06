@@ -237,7 +237,7 @@ void main() {
 	occ *= shadowMultiplier;
 #endif
 	
-	// occ - pack with mask
+	// Pack normal
 	n /= (abs(n.x) + abs(n.y) + abs(n.z));
     n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
 
@@ -253,11 +253,11 @@ void main() {
 		}
 		if (dist > 0) mask_probe = 0;
 	}
-	gl_FragData[0] = vec4(n.xy, occ, mask_probe);
+	gl_FragData[0] = vec4(n.xy, packFloat(roughness, metalness), mask_probe);
 #else
-	gl_FragData[0] = vec4(n.xy, occ, mask);
+	gl_FragData[0] = vec4(n.xy, packFloat(roughness, metalness), mask);
 #endif
-	gl_FragData[1] = vec4(baseColor.rgb, packFloat(roughness, metalness));
+	gl_FragData[1] = vec4(baseColor.rgb, occ);
 
 #ifdef _Veloc
 	vec2 posa = (mvppos.xy / mvppos.w) * 0.5 + 0.5;

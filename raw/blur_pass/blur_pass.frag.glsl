@@ -14,39 +14,18 @@ in vec2 texCoord;
 void main() {
 	vec2 step = dir / screenSize;
 	
-	vec3 result = texture(tex, texCoord + (step * 6.0)).rgb;
-	result += texture(tex, texCoord + (step * 5.0)).rgb;
-	result += texture(tex, texCoord + (step * 4.0)).rgb;
-	result += texture(tex, texCoord + (step * 3.0)).rgb;
-	result += texture(tex, texCoord + (step * 2.0)).rgb;
-	result += texture(tex, texCoord + step).rgb;
+	vec3 result = texture(tex, texCoord + (step * 5.5)).rgb;
+	result += texture(tex, texCoord + (step * 4.5)).rgb;
+	result += texture(tex, texCoord + (step * 3.5)).rgb;
+	result += texture(tex, texCoord + (step * 2.5)).rgb;
+	result += texture(tex, texCoord + step * 1.5).rgb;
 	result += texture(tex, texCoord).rgb;
-	result += texture(tex, texCoord - step).rgb;
-	result += texture(tex, texCoord - (step * 2.0)).rgb;
-	result += texture(tex, texCoord - (step * 3.0)).rgb;
-	result += texture(tex, texCoord - (step * 4.0)).rgb;
-	result += texture(tex, texCoord - (step * 5.0)).rgb;
-	result += texture(tex, texCoord - (step * 6.0)).rgb;
-	result /= vec3(13.0);
-	
-	// vec3 result = texture(tex, texCoord + (step * 8.0)).rgb;
-	// result += texture(tex, texCoord + (step * 7.0)).rgb;
-	// result += texture(tex, texCoord + (step * 6.0)).rgb;
-	// result += texture(tex, texCoord + (step * 5.0)).rgb;
-	// result += texture(tex, texCoord + (step * 4.0)).rgb;
-	// result += texture(tex, texCoord + (step * 3.0)).rgb;
-	// result += texture(tex, texCoord + (step * 2.0)).rgb;
-	// result += texture(tex, texCoord + step).rgb;
-	// result += texture(tex, texCoord).rgb;
-	// result += texture(tex, texCoord - step).rgb;
-	// result += texture(tex, texCoord - (step * 2.0)).rgb;
-	// result += texture(tex, texCoord - (step * 3.0)).rgb;
-	// result += texture(tex, texCoord - (step * 4.0)).rgb;
-	// result += texture(tex, texCoord - (step * 5.0)).rgb;
-	// result += texture(tex, texCoord - (step * 6.0)).rgb;
-	// result += texture(tex, texCoord - (step * 7.0)).rgb;
-	// result += texture(tex, texCoord - (step * 8.0)).rgb;
-	// result /= vec3(17.0);
+	result += texture(tex, texCoord - step * 1.5).rgb;
+	result += texture(tex, texCoord - (step * 2.5)).rgb;
+	result += texture(tex, texCoord - (step * 3.5)).rgb;
+	result += texture(tex, texCoord - (step * 4.5)).rgb;
+	result += texture(tex, texCoord - (step * 5.5)).rgb;
+	result /= vec3(11.0);
 	
 	gl_FragColor.rgb = vec3(result);
 }

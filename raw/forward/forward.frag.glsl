@@ -58,6 +58,7 @@ uniform bool receiveShadow;
 uniform vec3 lightDir;
 uniform vec3 lightColor;
 uniform float lightStrength;
+uniform float lightBias;
 
 // LTC
 /*uniform vec3 light;
@@ -158,7 +159,7 @@ float shadowTest(vec4 lPos) {
 	lPosH.x = (lPosH.x + 1.0) / 2.0;
     lPosH.y = (lPosH.y + 1.0) / 2.0;
     
-	return PCF(lPosH.xy, lPosH.z - shadowsBias);
+	return PCF(lPosH.xy, lPosH.z - lightBias);
 	// return VSM(lPosH.xy, lPosH.z);
 	// Basic
 	// float distanceFromLight = texture(shadowMap, lPosH.xy).r * 2.0 - 1.0;

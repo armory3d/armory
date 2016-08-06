@@ -16,7 +16,7 @@ def write_khafilejs(shader_references, asset_references):
     with open('khafile.js', 'w') as f:
         f.write(
 """// Auto-generated
-var project = new Project('""" + bpy.data.worlds[0].CGProjectName + """');
+let project = new Project('""" + bpy.data.worlds[0].CGProjectName + """');
 
 project.addSources('Sources');
 project.addShaders('Sources/Shaders/**');
@@ -33,7 +33,9 @@ project.addAssets('Assets/**');
             f.write("project.addDefine('WITH_PHYSICS');\n")
             f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/haxebullet')[2:] + '");\n')
         
-        for ref in shader_references: # Shaders
+        for i in range(0, len(shader_references)): # Shaders
+            ref = shader_references[i]
+            # defs = shader_references_defs[i]
             f.write("project.addShaders('" + ref + ".frag.glsl');\n")
             f.write("project.addShaders('" + ref + ".vert.glsl');\n")
         
@@ -45,9 +47,9 @@ project.addAssets('Assets/**');
             f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/zui')[2:] + '");\n')
             f.write('project.addAssets("' + sdk_path + '/armory/Assets/droid_sans.ttf");\n')
 
-        f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/haxeui/haxeui-core')[2:] + '");\n')
-        f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/haxeui/haxeui-kha')[2:] + '");\n')
-        f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/haxeui/hscript')[2:] + '");\n')
+        # f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/haxeui/haxeui-core')[2:] + '");\n')
+        # f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/haxeui/haxeui-kha')[2:] + '");\n')
+        # f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/haxeui/hscript')[2:] + '");\n')
 
         if bpy.data.worlds[0].CGMinimize == False:
             f.write("project.addDefine('WITH_JSON');\n")
@@ -218,13 +220,14 @@ const float seaFade = """ + str(round(wrd.generate_ocean_fade * 100) / 100) + ""
 """const float ssaoSize = """ + str(round(wrd.generate_ssao_size * 100) / 100) + """;
 const float ssaoStrength = """ + str(round(wrd.generate_ssao_strength * 100) / 100) + """;
 """)
-        if wrd.generate_shadows:
-            f.write(
-"""const float shadowsBias = """ + str(wrd.generate_shadows_bias) + """;
-""")
+        # if wrd.generate_shadows:
+            # f.write(
+# """const float shadowsBias = """ + str(wrd.generate_shadows_bias) + """;
+# """)
         if wrd.generate_bloom:
             f.write(
 """const float bloomTreshold = """ + str(round(wrd.generate_bloom_treshold * 100) / 100) + """;
+const float bloomStrength = """ + str(round(wrd.generate_bloom_strength * 100) / 100) + """;
 """)
         if wrd.generate_motion_blur:
             f.write(
