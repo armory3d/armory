@@ -91,7 +91,7 @@
 				},
 				{
 					"id": "LMVP",
-					"link": "_lightModelViewProjectionMatrix"
+					"link": "_biasLightModelViewProjectionMatrix"
 				},
 				{
 					"id": "shirr",

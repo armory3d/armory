@@ -2104,6 +2104,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		o['far_plane'] = object.light_clip_end
 		o['fov'] = object.light_fov
 		o['bias'] = object.light_bias
+		if o['type'] == 'sun': # Scale bias for ortho light matrix
+			o['bias'] *= 10.0
 
 		# Parse nodes, only emission for now
 		# Merge with nodes_material
@@ -2199,9 +2201,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			c['bind_textures'] = []
 			cont = {}
 			o['contexts'].append(c)
-			c = {}
-			c['id'] = ArmoryExporter.shadows_context
-			o['contexts'].append(c)
+			if bpy.data.worlds[0].generate_shadows == True:
+				c = {}
+				c['id'] = ArmoryExporter.shadows_context
+				o['contexts'].append(c)
 			if ArmoryExporter.geometry_context_empty != '':
 				c = {}
 				c['id'] = ArmoryExporter.geometry_context_empty
@@ -2643,9 +2646,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			c['id'] = ArmoryExporter.overlay_context
 		# Otherwise add shadows context
 		else:
-			c = {}
-			c['id'] = ArmoryExporter.shadows_context
-			o['contexts'].append(c)
+			if bpy.data.worlds[0].generate_shadows == True:
+				c = {}
+				c['id'] = ArmoryExporter.shadows_context
+				o['contexts'].append(c)
 		
 		# Additional geometry contexts, useful for depth-prepass
 		if ArmoryExporter.geometry_context_empty != '':

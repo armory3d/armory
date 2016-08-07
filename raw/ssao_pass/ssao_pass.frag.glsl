@@ -25,15 +25,17 @@ uniform sampler2D snoise;
 
 uniform mat4 invVP;
 uniform vec3 eye;
+// uniform vec3 eyeLook;
 uniform vec2 screenSize;
 uniform vec2 aspectRatio;
 
-// const int kernelSize = 20;
-const int kernelSize = 12;
-// const float ssaoSize = 0.12;
-// const float ssaoStrength = 0.55;
+#ifndef _SSAO // SSAO disabled, remove it from pipeline nodes to completely prevent generation
+	const float ssaoSize = 0.03;
+	const float ssaoStrength = 0.20;
+#endif
 
 in vec2 texCoord;
+// in vec3 viewRay;
 
 // float rand(vec2 co) { // Unreliable
 //   return fract(sin(dot(co.xy ,vec2(12.9898, 78.233))) * 43758.5453);
@@ -42,19 +44,26 @@ vec2 octahedronWrap(vec2 v) {
     return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
 }
 vec3 getPos(float depth, vec2 coord) {	
-    // vec4 pos = vec4(coord * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
     vec4 pos = vec4(coord * 2.0 - 1.0, depth, 1.0);
     pos = invVP * pos;
     pos.xyz /= pos.w;
     return pos.xyz - eye;
 }
+// vec3 getPos(float depth, vec2 coord) {	
+// 	vec3 vray = normalize(viewRay);
+// 	const float projectionA = cameraPlane.y / (cameraPlane.y - cameraPlane.x);
+// 	const float projectionB = (-cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
+// 	float linearDepth = projectionB / (depth * 0.5 + 0.5 - projectionA);
+// 	float viewZDist = dot(eyeLook, vray);
+// 	vec3 wposition = eye + vray * (linearDepth / viewZDist);
+// 	return wposition;
+// }
 
 float doAO(vec2 kernelVec, vec2 randomVec, mat2 rotMat, vec3 currentPos, vec3 currentNormal, float currentDistance) {
 	kernelVec.xy *= aspectRatio;
 	float radius = ssaoSize * randomVec.y;
 	kernelVec.xy = ((rotMat * kernelVec.xy) / currentDistance) * radius;
 	vec2 coord = texCoord + kernelVec.xy;
-	// float depth = 1.0 - texture(gbuffer0, coord).a;
 	float depth = texture(gbufferD, coord).r * 2.0 - 1.0;
 	vec3 pos = getPos(depth, coord) - currentPos;
 	
@@ -67,50 +76,46 @@ float doAO(vec2 kernelVec, vec2 randomVec, mat2 rotMat, vec3 currentPos, vec3 cu
 }
 
 void main() {
-	// float depth = 1.0 - texture(gbuffer0, texCoord).a;
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	// if (depth == 0.0) {
 	if (depth == 1.0) {
 		gl_FragColor = vec4(1.0);
 		return;
 	}
 	
-	vec2 kernel[kernelSize];
-	kernel[0] = vec2(1.0, 0.0);
-	kernel[1] = vec2(0.8660254, 0.4999999);
-	kernel[2] = vec2(0.5, 0.8660254);
-	kernel[3] = vec2(0.0, 1.0);
-	kernel[4] = vec2(-0.4999999, 0.8660254);
-	kernel[5] = vec2(-0.8660254, 0.5);
-	kernel[6] = vec2(-1.0, 0.0);
-	kernel[7] = vec2(-0.8660254, -0.4999999);
-	kernel[8] = vec2(-0.5, -0.8660254);
-	kernel[9] = vec2(0.0, -1.0);
-	kernel[10] = vec2(0.4999999, -0.8660254);
-	kernel[11] = vec2(0.8660254, -0.5);
-	
-	// kernel[0] = vec2(1.0,0.0);
-	// kernel[1] = vec2(0.9510565,0.3090169);
-	// kernel[2] = vec2(0.8090169,0.5877852);
-	// kernel[3] = vec2(0.5877852,0.8090169);
-	// kernel[4] = vec2(0.3090169,0.9510565);
-	// kernel[5] = vec2(0.0,1.0);
-	// kernel[6] = vec2(-0.3090169,0.9510565);
-	// kernel[7] = vec2(-0.5877852,0.8090169);
-	// kernel[8] = vec2(-0.8090169,0.5877852);
-	// kernel[9] = vec2(-0.9510565,0.3090169);
-	// kernel[10] = vec2(-1,0);
-	// kernel[11] = vec2(-0.9510565,-0.3090169);
-	// kernel[12] = vec2(-0.8090169,-0.5877852);
-	// kernel[13] = vec2(-0.5877852,-0.8090169);
-	// kernel[14] = vec2(-0.3090169,-0.9510565);
-	// kernel[15] = vec2(0.0,-1.0);
-	// kernel[16] = vec2(0.3090169,-0.9510565);
-	// kernel[17] = vec2(0.5877852,-0.8090169);
-	// kernel[18] = vec2(0.8090169,-0.5877852);
-	// kernel[19] = vec2(0.9510565,-0.3090169);
-	
-	
+	const int kernelSize = 12;
+	const vec2 kernel0 = vec2(1.0, 0.0);
+	const vec2 kernel1 = vec2(0.8660254, 0.4999999);
+	const vec2 kernel2 = vec2(0.5, 0.8660254);
+	const vec2 kernel3 = vec2(0.0, 1.0);
+	const vec2 kernel4 = vec2(-0.4999999, 0.8660254);
+	const vec2 kernel5 = vec2(-0.8660254, 0.5);
+	const vec2 kernel6 = vec2(-1.0, 0.0);
+	const vec2 kernel7 = vec2(-0.8660254, -0.4999999);
+	const vec2 kernel8 = vec2(-0.5, -0.8660254);
+	const vec2 kernel9 = vec2(0.0, -1.0);
+	const vec2 kernel10 = vec2(0.4999999, -0.8660254);
+	const vec2 kernel11 = vec2(0.8660254, -0.5);
+	// const vec2 kernel0 = vec2(1.0,0.0);
+	// const vec2 kernel1 = vec2(0.9510565,0.3090169);
+	// const vec2 kernel2 = vec2(0.8090169,0.5877852);
+	// const vec2 kernel3 = vec2(0.5877852,0.8090169);
+	// const vec2 kernel4 = vec2(0.3090169,0.9510565);
+	// const vec2 kernel5 = vec2(0.0,1.0);
+	// const vec2 kernel6 = vec2(-0.3090169,0.9510565);
+	// const vec2 kernel7 = vec2(-0.5877852,0.8090169);
+	// const vec2 kernel8 = vec2(-0.8090169,0.5877852);
+	// const vec2 kernel9 = vec2(-0.9510565,0.3090169);
+	// const vec2 kernel10 = vec2(-1,0);
+	// const vec2 kernel11 = vec2(-0.9510565,-0.3090169);
+	// const vec2 kernel12 = vec2(-0.8090169,-0.5877852);
+	// const vec2 kernel13 = vec2(-0.5877852,-0.8090169);
+	// const vec2 kernel14 = vec2(-0.3090169,-0.9510565);
+	// const vec2 kernel15 = vec2(0.0,-1.0);
+	// const vec2 kernel16 = vec2(0.3090169,-0.9510565);
+	// const vec2 kernel17 = vec2(0.5877852,-0.8090169);
+	// const vec2 kernel18 = vec2(0.8090169,-0.5877852);
+	// const vec2 kernel19 = vec2(0.9510565,-0.3090169);
+
 	vec2 enc = texture(gbuffer0, texCoord).rg;      
     vec3 currentNormal;
     currentNormal.z = 1.0 - abs(enc.x) - abs(enc.y);
@@ -125,32 +130,31 @@ void main() {
 	mat2 rotMat = mat2(vec2(cos(randomVec.x * PI), -sin(randomVec.x * PI)),
 					   vec2(sin(randomVec.x * PI), cos(randomVec.x * PI)));
 	
-	float amount = 0.0;
 	// for (int i = 0; i < kernelSize; i++) {
-		amount += doAO(kernel[0], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[1], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[2], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[3], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[4], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[5], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[6], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[7], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[8], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[9], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[10], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		amount += doAO(kernel[11], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		// amount += doAO(kernel[12], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		// amount += doAO(kernel[13], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		// amount += doAO(kernel[14], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		// amount += doAO(kernel[15], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		// amount += doAO(kernel[16], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		// amount += doAO(kernel[17], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		// amount += doAO(kernel[18], randomVec, rotMat, currentPos, currentNormal, currentDistance);
-		// amount += doAO(kernel[19], randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		float amount = doAO(kernel0, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		amount += doAO(kernel1, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		amount += doAO(kernel2, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		amount += doAO(kernel3, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		amount += doAO(kernel4, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		amount += doAO(kernel5, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		amount += doAO(kernel6, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		amount += doAO(kernel7, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		amount += doAO(kernel8, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		amount += doAO(kernel9, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		amount += doAO(kernel10, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		amount += doAO(kernel11, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		// amount += doAO(kernel12, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		// amount += doAO(kernel13, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		// amount += doAO(kernel14, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		// amount += doAO(kernel15, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		// amount += doAO(kernel16, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		// amount += doAO(kernel17, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		// amount += doAO(kernel18, randomVec, rotMat, currentPos, currentNormal, currentDistance);
+		// amount += doAO(kernel19, randomVec, rotMat, currentPos, currentNormal, currentDistance);
 	// }
 	
 	amount *= ssaoStrength / kernelSize;
 	amount = 1.0 - amount;
 	amount = max(0.0, amount);
-    gl_FragColor = vec4(vec3(amount), 1.0);
+    gl_FragColor = vec4(amount, 0.0, 0.0, 1.0);
 }

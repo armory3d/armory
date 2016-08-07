@@ -93,7 +93,7 @@
 			"fragment_shader": "blur_adaptive_pass.frag.glsl"
 		},
 		{
-			"id": "blur_adaptive_pass_y2",
+			"id": "blur_adaptive_pass_y3",
 			"params": [
 				{
 					"id": "depth_write",
@@ -111,7 +111,7 @@
 			"links": [
 				{
 					"id": "dir",
-					"link": "_vec2y2"
+					"link": "_vec2y3"
 				},
 				{
 					"id": "screenSize",
@@ -123,7 +123,7 @@
 			"fragment_shader": "blur_adaptive_pass.frag.glsl"
 		},
 		{
-			"id": "blur_adaptive_pass_y2_blend",
+			"id": "blur_adaptive_pass_y3_blend",
 			"params": [
 				{
 					"id": "depth_write",
@@ -153,7 +153,7 @@
 			"links": [
 				{
 					"id": "dir",
-					"link": "_vec2y2"
+					"link": "_vec2y3"
 				},
 				{
 					"id": "screenSize",

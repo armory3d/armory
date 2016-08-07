@@ -53,7 +53,10 @@ project.addAssets('Assets/**');
 
         if bpy.data.worlds[0].CGMinimize == False:
             f.write("project.addDefine('WITH_JSON');\n")
-            
+        
+        if bpy.data.worlds[0].CGDeinterleavedBuffers == False:
+            f.write("project.addDefine('WITH_DEINTERLEAVED');\n")
+
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
 

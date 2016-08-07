@@ -13,9 +13,7 @@ uniform vec2 screenSize;
 in vec2 texCoord;
 
 vec2 unpackFloat(float f) {
-	float index = floor(f) / 1000.0;
-	float alpha = fract(f);
-	return vec2(index, alpha);
+	return vec2(floor(f) / 1000.0, fract(f));
 }
 
 void main() {
@@ -24,23 +22,24 @@ void main() {
 		gl_FragColor = texture(tex, texCoord);
 		// gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
 		return;
-		// discard;
 	}
 	
 	vec2 step = dir / screenSize;
 	
-	vec3 result = texture(tex, texCoord + step * 5.5).rgb;
-	result += texture(tex, texCoord + step * 4.5).rgb;
-	result += texture(tex, texCoord + step * 3.5).rgb;
-	result += texture(tex, texCoord + step * 2.5).rgb;
+	vec3 result = texture(tex, texCoord + step * 2.5).rgb;
+	// vec3 result = texture(tex, texCoord + step * 5.5).rgb;
+	// result += texture(tex, texCoord + step * 4.5).rgb;
+	// result += texture(tex, texCoord + step * 3.5).rgb;
+	// result += texture(tex, texCoord + step * 2.5).rgb;
 	result += texture(tex, texCoord + step * 1.5).rgb;
 	result += texture(tex, texCoord).rgb;
 	result += texture(tex, texCoord - step * 1.5).rgb;
 	result += texture(tex, texCoord - step * 2.5).rgb;
-	result += texture(tex, texCoord - step * 3.5).rgb;
-	result += texture(tex, texCoord - step * 4.5).rgb;
-	result += texture(tex, texCoord - step * 5.5).rgb;
-	result /= vec3(11.0);
+	// result += texture(tex, texCoord - step * 3.5).rgb;
+	// result += texture(tex, texCoord - step * 4.5).rgb;
+	// result += texture(tex, texCoord - step * 5.5).rgb;
+	// result /= vec3(11.0);
+	result /= vec3(5.0);
 	
 	gl_FragColor.rgb = vec3(result);
 }

@@ -30,6 +30,11 @@
 					"link": "_cameraPosition"
 				},
 				{
+					"id": "eyeLook",
+					"link": "_cameraLook",
+					"ifdef": ["_Disabled"]
+				},
+				{
 					"id": "screenSize",
 					"link": "_screenSize"
 				},

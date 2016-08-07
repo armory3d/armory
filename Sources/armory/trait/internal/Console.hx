@@ -24,6 +24,8 @@ class Console extends Trait {
     var frames = 0;
 
     var frameTimeAvg = 0.0;
+    var frameTimeAvgMin = 0.0;
+    var frameTimeAvgMax = 0.0;
     var renderTime = 0.0;
     var renderTimeAvg = 0.0;
     var updateTime = 0.0;
@@ -51,7 +53,10 @@ class Console extends Trait {
         ui.begin(g);
         if (ui.window(Id.window(), 0, 0, 185, iron.App.h)) {
             if (ui.node(Id.node(), "Profile (ms)", 0, true)) {
-                ui.text("frame: " + Math.round(frameTimeAvg * 10000) / 10);
+                var avg = Math.round(frameTimeAvg * 10000) / 10;
+                var avgMin = Math.round(frameTimeAvgMin * 10000) / 10;
+                var avgMax = Math.round(frameTimeAvgMax * 10000) / 10;
+                ui.text('frame: $avg ($avgMin/$avgMax)');
                 var gpuTime = frameTimeAvg - renderTimeAvg - updateTimeAvg;
                 if (gpuTime < renderTimeAvg) gpuTime = renderTimeAvg;
                 ui.text("gpu: " + Math.round(gpuTime * 10000) / 10);
@@ -86,10 +91,18 @@ class Console extends Trait {
         renderTime += iron.App.renderTime;
         frames++;
         if (totalTime > 1.0) {
-            frameTimeAvg = totalTime / frames;
+            var t = totalTime / frames;
+            // Second frame
+            if (frameTimeAvg > 0) {
+                if (t < frameTimeAvgMin || frameTimeAvgMin == 0) frameTimeAvgMin = t;
+                if (t > frameTimeAvgMax || frameTimeAvgMax == 0) frameTimeAvgMax = t;
+            }
+
+            frameTimeAvg = t;
             renderTimeAvg = renderTime / frames;
             updateTimeAvg = updateTime / frames;
             physTimeAvg = physTime / frames;
+            
             totalTime = 0;
             renderTime = 0;
             updateTime = 0;

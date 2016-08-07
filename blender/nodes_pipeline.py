@@ -1257,7 +1257,7 @@ def make_apply_ssao_pass(stages, node_group, node, shader_references, asset_refe
 def make_ssr_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[4, 5, 6], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='ssr_pass/ssr_pass/ssr_pass')
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=3, bind_target_indices=[2, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_x')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_y2_blend')
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_y3_blend')
 
 def make_bloom_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[4], bind_target_constants=['tex'], shader_context='bloom_pass/bloom_pass/bloom_pass')

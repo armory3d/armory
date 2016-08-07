@@ -30,11 +30,13 @@ in vec3 nor;
 	in vec3 off;
 #endif
 
+uniform mat4 MVP;
 uniform mat4 NM;
-uniform mat4 MV;
 uniform mat4 P;
-uniform mat4 LMVP;
 uniform vec4 albedo_color;
+#ifdef _Billboard
+	uniform mat4 MV;
+#endif
 #ifdef _HMTex
 	uniform vec3 eye;
 	uniform vec3 light;
@@ -50,12 +52,10 @@ uniform vec4 albedo_color;
 	uniform mat4 prevMVP;
 #endif
 
-
+out vec4 matColor;
 #ifdef _Tex
 	out vec2 texCoord;
 #endif
-	out vec4 lPos;
-	out vec4 matColor;
 #ifdef _NMTex
 	out mat3 TBN;
 #else
@@ -72,7 +72,6 @@ uniform vec4 albedo_color;
 	out vec4 mvppos;
 	out vec4 prevmvppos;
 #endif
-
 
 #ifdef _Skinning
 mat4 getBoneMat(const int boneIndex) {
@@ -118,7 +117,10 @@ void main() {
 	mat3 skinningMatVec = getSkinningMatVec(skinningMat);
 	sPos = sPos * skinningMat;
 #endif
-	lPos = LMVP * sPos;
+
+#ifdef _Probes
+	mpos = M * sPos;
+#endif
 
 #ifdef _Billboard
 	// Spherical
@@ -128,13 +130,10 @@ void main() {
 	// Cylindrical
 	//MV[0][0] = 1.0; MV[0][1] = 0.0; MV[0][2] = 0.0;
 	//MV[2][0] = 0.0; MV[2][1] = 0.0; MV[2][2] = 1.0;
-#endif
-
-#ifdef _Probes
-	mpos = M * sPos;
-#endif
-
 	gl_Position = P * MV * sPos;
+#else
+	gl_Position = MVP * sPos;
+#endif
 
 #ifdef _Veloc
 	mvppos = gl_Position;
@@ -167,9 +166,11 @@ void main() {
 #endif
 
 #ifdef _HMTex
-	vec4 wpos = M * sPos; // Prevent calculating world pos twice when probes are enabled
-	vec3 lightDir = light - wpos.xyz;
-	vec3 eyeDir = /*normalize*/eye - wpos.xyz;
+	#ifndef _Probes
+		vec4 mpos = M * sPos;
+	#endif
+	vec3 lightDir = light - mpos.xyz;
+	vec3 eyeDir = /*normalize*/eye - mpos.xyz;
 	// Wrong bitangent handedness?
 	tanLightDir = vec3(dot(lightDir, tangent), dot(lightDir, -bitangent), dot(lightDir, _normal));
 	tanEyeDir = vec3(dot(eyeDir, tangent), dot(eyeDir, -bitangent), dot(eyeDir, _normal));

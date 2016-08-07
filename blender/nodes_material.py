@@ -308,7 +308,7 @@ def add_roughness_tex(self, node, material, c, defs):
 		if parse.const_roughness != None:
 			c['bind_constants'].remove(parse.const_roughness)
 
-def add_roughness_strength(self, c, f):
+def add_roughness_strength(self, c, defs, f):
 	if '_RMStr' not in defs:
 		defs.append('_RMStr')
 		const = {}
@@ -340,7 +340,7 @@ def add_normal_tex(self, node, material, c, defs):
 		tex = make_texture(self, 'snormal', node, material)
 		c['bind_textures'].append(tex)
 
-def add_normal_strength(self, c, f):
+def add_normal_strength(self, c, defs, f):
 	if '_NMStr' not in defs:
 		defs.append('_NMStr')
 		const = {}
@@ -441,7 +441,7 @@ def parse_pbr_group(self, material, c, defs, tree, node, factor):
 	roughness_strength_input = node.inputs[3]
 	roughness_strength = roughness_strength_input.default_value
 	if roughness_strength != 1.0:
-		add_roughness_strength(self, c, roughness_strength)
+		add_roughness_strength(self, c, defs, roughness_strength)
 	# Metalness Map
 	metalness_input = node.inputs[4]
 	parse_metalness_socket(self, metalness_input, material, c, defs, tree, node, factor)
@@ -451,7 +451,7 @@ def parse_pbr_group(self, material, c, defs, tree, node, factor):
 	normal_strength_input = node.inputs[6]
 	normal_strength = normal_strength_input.default_value
 	if normal_strength != 1.0:
-		add_normal_strength(self, c, normal_strength)
+		add_normal_strength(self, c, defs, normal_strength)
 	# Emission
 	emission_input = node.inputs[7]
 	emission_strength_input = node.inputs[8]

@@ -58,6 +58,7 @@ def initProperties():
     bpy.types.World.CGMinimize = BoolProperty(name="Minimize Data", default=True, update=invalidate_compiled_data)
     bpy.types.World.CGOptimizeGeometry = BoolProperty(name="Optimize Geometry", default=False, update=invalidate_geometry_data)
     bpy.types.World.CGSampledAnimation = BoolProperty(name="Sampled Animation", default=False, update=invalidate_compiled_data)
+    bpy.types.World.CGDeinterleavedBuffers = BoolProperty(name="Deinterleaved Buffers", default=False)
     bpy.types.World.CGCacheShaders = BoolProperty(name="Cache Shaders", default=True)
     bpy.types.World.CGPlayViewportCamera = BoolProperty(name="Viewport Camera", default=False)
     bpy.types.World.CGPlayViewportNavigation = EnumProperty(
@@ -297,7 +298,7 @@ class OBJECT_OT_INVALIDATECACHEButton(bpy.types.Operator):
     bl_label = "Invalidate Cache"
  
     def execute(self, context):
-        context.object.geometry_cached = False
+        context.object.data.geometry_cached = False
         return{'FINISHED'}
 
 # Menu in materials region

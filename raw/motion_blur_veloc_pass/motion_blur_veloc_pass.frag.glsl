@@ -53,7 +53,7 @@ void main() {
 		offset = velocity * (float(7) / float(samples - 1) - 0.5);
 		col += texture(tex, texCoord + offset);
 	// }
-	col /= float(samples);
+	col /= float(samples + 1);
 
 	gl_FragColor = col;
 }

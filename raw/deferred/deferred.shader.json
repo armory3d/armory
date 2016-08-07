@@ -18,35 +18,36 @@
 			],
 			"links": [
 				{
-					"id": "NM",
-					"link": "_normalMatrix"
+					"id": "MVP",
+					"link": "_modelViewProjectionMatrix"
 				},
 				{
-					"id": "MV",
-					"link": "_modelViewMatrix"
+					"id": "NM",
+					"link": "_normalMatrix"
 				},
 				{
 					"id": "P",
 					"link": "_projectionMatrix"
 				},
 				{
-					"id": "LMVP",
-					"link": "_lightModelViewProjectionMatrix"
+					"id": "MV",
+					"link": "_modelViewMatrix",
+					"ifdef": ["_Billboard"]
 				},
 				{
 					"id": "prevMVP",
 					"link": "_prevModelViewProjectionMatrix",
-					"if": ["_Veloc"]
+					"ifdef": ["_Veloc"]
 				},
 				{
 					"id": "light",
 					"link": "_lightPosition",
-					"if": ["_HMTex"]
+					"ifdef": ["_HMTex"]
 				},
 				{
 					"id": "eye",
 					"link": "_cameraPosition",
-					"if": ["_HMTex"]
+					"ifdef": ["_HMTex"]
 				},
 				{
 					"id": "M",

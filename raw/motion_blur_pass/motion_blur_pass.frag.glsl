@@ -13,15 +13,14 @@ uniform sampler2D gbuffer0;
 
 uniform sampler2D tex;
 uniform mat4 prevVP;
-uniform mat4 invVP;
 uniform vec3 eye;
 uniform vec3 eyeLook;
 
-in vec3 viewRay;
 in vec2 texCoord;
+in vec3 viewRay;
 
-//const float motionBlurIntensity = 1.0;
-const int samples = 8;
+// const float motionBlurIntensity = 1.0;
+// const int samples = 8;
 
 vec3 getPos(float depth, vec2 coord) {	
 	vec3 vray = normalize(viewRay);

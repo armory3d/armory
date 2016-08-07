@@ -11,6 +11,7 @@ precision mediump float;
 // #define _Tex
 // #endif
 
+uniform float mask;
 #ifdef _AMTex
 	uniform sampler2D salbedo;
 #endif
@@ -42,18 +43,16 @@ precision mediump float;
 	uniform sampler2D shm;
 	uniform float heightStrength;
 #endif
-	uniform float mask;
 #ifdef _Probes
 	uniform int probeID;
 	uniform vec3 probeVolumeCenter;
 	uniform vec3 probeVolumeSize;
 #endif
 
+in vec4 matColor;
 #ifdef _Tex
 	in vec2 texCoord;
 #endif
-in vec4 lPos;
-in vec4 matColor;
 #ifdef _NMTex
 	in mat3 TBN;
 #else
@@ -74,8 +73,7 @@ in vec4 matColor;
 float packFloat(float f1, float f2) {
 	int index = int(f1 * 1000);
 	float alpha = f2 == 0.0 ? f2 : (f2 - 0.0001);
-	float result = index + alpha;
-	return result;
+	return index + alpha;
 }
 
 vec2 octahedronWrap(vec2 v) {
