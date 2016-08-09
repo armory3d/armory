@@ -9,11 +9,11 @@
 				},
 				{
 					"id": "compare_mode",
-					"value": "greater"
+					"value": "always"
 				},
 				{
 					"id": "cull_mode",
-					"value": "counter_clockwise"
+					"value": "none"
 				},
 				{
 					"id": "blend_source",
@@ -41,10 +41,6 @@
 				}
 			],
 			"links": [
-				{
-					"id": "LVMVP",
-					"link": "_lightVolumeModelViewProjectionMatrix"
-				},
 				{
 					"id": "lightPos",
 					"link": "_lightPosition"
@@ -88,8 +84,7 @@
 				},
 				{
 					"id": "eyeLook",
-					"link": "_cameraLook",
-					"ifdef": ["_Disabled"]
+					"link": "_cameraLook"
 				},
 				{
 					"id": "invVP",
@@ -98,10 +93,6 @@
 				{
 					"id": "LMVP",
 					"link": "_biasLightModelViewProjectionMatrix"
-				},
-				{
-					"id": "screenSize",
-					"link": "_screenSize"
 				},
 				{
 					"id": "shirr",

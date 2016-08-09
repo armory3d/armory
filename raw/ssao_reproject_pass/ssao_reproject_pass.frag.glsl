@@ -21,11 +21,13 @@ precision mediump float;
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
+uniform sampler2D sveloc;
+uniform sampler2D slast;
 uniform sampler2D snoise;
 
 uniform mat4 invVP;
 uniform vec3 eye;
-// uniform vec3 eyeLook;
+uniform vec3 eyeLook;
 uniform vec2 screenSize;
 uniform vec2 aspectRatio;
 
@@ -35,7 +37,7 @@ uniform vec2 aspectRatio;
 #endif
 
 in vec2 texCoord;
-// in vec3 viewRay;
+in vec3 viewRay;
 
 // float rand(vec2 co) { // Unreliable
 //   return fract(sin(dot(co.xy ,vec2(12.9898, 78.233))) * 43758.5453);
@@ -43,22 +45,22 @@ in vec2 texCoord;
 vec2 octahedronWrap(vec2 v) {
     return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
 }
-vec3 getPos(float depth, vec2 coord) {
-    vec4 pos = vec4(coord * 2.0 - 1.0, depth, 1.0);
-    pos = invVP * pos;
-    pos.xyz /= pos.w;
-    return pos.xyz - eye;
-}
-// vec3 getPos(float depth) {	
-// 	vec3 vray = normalize(viewRay);
-// 	const float projectionA = cameraPlane.y / (cameraPlane.y - cameraPlane.x);
-// 	const float projectionB = -(cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
-// 	float linearDepth = projectionB / (depth * 0.5 + 0.5 - projectionA);
-// 	float viewZDist = dot(eyeLook, vray);
-// 	// vec3 wposition = eye + vray * (linearDepth / viewZDist);
-// 	vec3 wposition = vray * (linearDepth / viewZDist);
-// 	return wposition;
+// vec3 getPos(float depth, vec2 coord) {	
+//     vec4 pos = vec4(coord * 2.0 - 1.0, depth, 1.0);
+//     pos = invVP * pos;
+//     pos.xyz /= pos.w;
+//     return pos.xyz - eye;
 // }
+vec3 getPos(float depth) {	
+	vec3 vray = normalize(viewRay);
+	const float projectionA = cameraPlane.y / (cameraPlane.y - cameraPlane.x);
+	const float projectionB = -(cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
+	float linearDepth = projectionB / (depth * 0.5 + 0.5 - projectionA);
+	float viewZDist = dot(eyeLook, vray);
+	// vec3 wposition = eye + vray * (linearDepth / viewZDist);
+	vec3 wposition = vray * (linearDepth / viewZDist);
+	return wposition;
+}
 
 float doAO(vec2 kernelVec, vec2 randomVec, mat2 rotMat, vec3 currentPos, vec3 currentNormal, float currentDistance) {
 	kernelVec.xy *= aspectRatio;
@@ -66,7 +68,7 @@ float doAO(vec2 kernelVec, vec2 randomVec, mat2 rotMat, vec3 currentPos, vec3 cu
 	kernelVec.xy = ((rotMat * kernelVec.xy) / currentDistance) * radius;
 	vec2 coord = texCoord + kernelVec.xy;
 	float depth = texture(gbufferD, coord).r * 2.0 - 1.0;
-	vec3 pos = getPos(depth, coord) - currentPos;
+	vec3 pos = getPos(depth) - currentPos;
 	
 	float angle = dot(pos, currentNormal);
 	// angle *= step(0.3, angle / length(pos)); // Fix intersect
@@ -125,7 +127,7 @@ void main() {
     currentNormal.xy = currentNormal.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
 	currentNormal = normalize(currentNormal);
 	
-	vec3 currentPos = getPos(depth, texCoord);
+	vec3 currentPos = getPos(depth);
 	float currentDistance = length(currentPos);
 	
 	vec2 randomVec = texture(snoise, (texCoord * screenSize) / 8.0).xy;
@@ -159,5 +161,10 @@ void main() {
 	amount *= ssaoStrength / kernelSize;
 	amount = 1.0 - amount;
 	amount = max(0.0, amount);
-    gl_FragColor = vec4(amount, 0.0, 0.0, 1.0);
+	// gl_FragColor = vec4(amount, 0.0, 0.0, 1.0);
+
+	// Velocity is assumed to be calculated for motion blur, so we need to inverse it for reprojection
+    vec2 velocity = -textureLod(sveloc, texCoord, 0.0).rg;
+	float last = texture(slast, texCoord + velocity).r;
+    gl_FragColor = vec4((amount + last) * 0.5, 0.0, 0.0, 1.0);
 }

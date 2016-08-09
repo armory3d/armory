@@ -1,0 +1,50 @@
+{
+	"contexts": [
+		{
+			"id": "ssao_reproject_pass",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "false"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				{
+					"id": "snoise",
+					"link": "_noise8"
+				},
+				{
+					"id": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				},
+				{
+					"id": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"id": "eyeLook",
+					"link": "_cameraLook"
+				},
+				{
+					"id": "screenSize",
+					"link": "_screenSize"
+				},
+				{
+					"id": "aspectRatio",
+					"link": "_aspectRatio"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "ssao_reproject_pass.vert.glsl",
+			"fragment_shader": "ssao_reproject_pass.frag.glsl"
+		}
+	]
+}

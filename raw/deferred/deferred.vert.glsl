@@ -32,10 +32,10 @@ in vec3 nor;
 
 uniform mat4 MVP;
 uniform mat4 NM;
-uniform mat4 P;
 uniform vec4 albedo_color;
 #ifdef _Billboard
 	uniform mat4 MV;
+	uniform mat4 P;
 #endif
 #ifdef _HMTex
 	uniform vec3 eye;

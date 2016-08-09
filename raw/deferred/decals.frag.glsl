@@ -22,6 +22,7 @@ uniform sampler2D smm;
 uniform float metalness;
 #endif
 
+uniform vec2 screenSize;
 uniform mat4 invVP;
 uniform mat4 invM;
 uniform mat4 V;
@@ -67,8 +68,7 @@ float packFloat(float f1, float f2) {
 void main() {
 	vec2 screenPosition = mvpposition.xy / mvpposition.w;
 	vec2 depthUV = screenPosition * 0.5 + 0.5;
-	const vec2 resoluion = vec2(1920.0, 1080.0);
-    depthUV += vec2(0.5 / resoluion); // Half pixel offset
+    depthUV += vec2(0.5 / screenSize); // Half pixel offset
     float depth = texture(gbufferD, depthUV).r * 2.0 - 1.0;
 
 	vec4 worldPos = reconstructPos(depth, depthUV);

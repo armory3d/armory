@@ -1,3 +1,4 @@
+// Exclusive to bloom for now
 #version 450
 
 #ifdef GL_ES

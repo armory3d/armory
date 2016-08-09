@@ -189,10 +189,8 @@ void main() {
     float roughness = unpackFloat(g0.b).x;
 
     if (roughness == 1.0) {
-		// gl_FragColor = texture(tex, texCoord);
 		gl_FragColor = vec4(0.0);
 		return;
-		// discard;
 	}
 	float reflectivity = 1.0 - roughness;
 	
@@ -232,15 +230,13 @@ void main() {
 		clamp((ssrSearchDist - length(viewPos.xyz - hitCoord)) * (1.0 / ssrSearchDist), 0.0, 1.0) * coords.w;
 
 	// vec4 texColor = texture(tex, texCoord);
-	
 	// float brightness = dot(texColor.rgb, vec3(0.2126, 0.7152, 0.0722));
 	// intensity *= min(brightness, 1.0);
 	intensity = clamp(intensity, 0.0, 1.0);
 	
-	if (intensity == 0.0) { //
+	if (intensity == 0.0) {
 		gl_FragColor = vec4(0.0);
 		return;
-		// discard;
 	}
 	
 	vec4 reflCol = vec4(texture(tex, coords.xy).rgb, 1.0);

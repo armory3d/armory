@@ -148,10 +148,11 @@ def initProperties():
     bpy.types.World.generate_ssao = bpy.props.BoolProperty(name="Generate SSAO", default=True, update=invalidate_shader_cache)
     bpy.types.World.generate_ssao_size = bpy.props.FloatProperty(name="Size", default=0.08, update=invalidate_shader_cache)
     bpy.types.World.generate_ssao_strength = bpy.props.FloatProperty(name="Strength", default=0.30, update=invalidate_shader_cache)
+    bpy.types.World.generate_ssao_texture_scale = bpy.props.FloatProperty(name="Texture Scale", default=1.0, min=0.0, max=1.0, update=invalidate_shader_cache)
     bpy.types.World.generate_shadows = bpy.props.BoolProperty(name="Generate Shadows", default=True, update=invalidate_shader_cache)
     bpy.types.World.generate_bloom = bpy.props.BoolProperty(name="Generate Bloom", default=True, update=invalidate_shader_cache)
     bpy.types.World.generate_bloom_treshold = bpy.props.FloatProperty(name="Treshold", default=3.0, update=invalidate_shader_cache)
-    bpy.types.World.generate_bloom_strength = bpy.props.FloatProperty(name="Strength", default=0.4, update=invalidate_shader_cache)
+    bpy.types.World.generate_bloom_strength = bpy.props.FloatProperty(name="Strength", default=0.15, update=invalidate_shader_cache)
     bpy.types.World.generate_motion_blur = bpy.props.BoolProperty(name="Generate Motion Blur", default=True, update=invalidate_shader_cache)
     bpy.types.World.generate_motion_blur_intensity = bpy.props.FloatProperty(name="Intensity", default=1.0, update=invalidate_shader_cache)
     bpy.types.World.generate_ssr = bpy.props.BoolProperty(name="Generate SSR", default=True, update=invalidate_shader_cache)
@@ -160,6 +161,7 @@ def initProperties():
     bpy.types.World.generate_ssr_search_dist = bpy.props.FloatProperty(name="Search Dist", default=5.0, update=invalidate_shader_cache)
     bpy.types.World.generate_ssr_falloff_exp = bpy.props.FloatProperty(name="Falloff Exp", default=5.0, update=invalidate_shader_cache)
     bpy.types.World.generate_ssr_jitter = bpy.props.FloatProperty(name="Jitter", default=0.6, update=invalidate_shader_cache)
+    bpy.types.World.generate_ssr_texture_scale = bpy.props.FloatProperty(name="Texture Scale", default=0.5, min=0.0, max=1.0, update=invalidate_shader_cache)
     # For material
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.override_shader = bpy.props.BoolProperty(name="Override Shader", default=False)
@@ -357,6 +359,7 @@ class WorldPropsPanel(bpy.types.Panel):
         if wrd.generate_ssao:
             layout.prop(wrd, 'generate_ssao_size')
             layout.prop(wrd, 'generate_ssao_strength')
+            layout.prop(wrd, 'generate_ssao_texture_scale')
         layout.prop(wrd, 'generate_shadows')
         layout.prop(wrd, 'generate_bloom')
         if wrd.generate_bloom:
@@ -372,6 +375,7 @@ class WorldPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'generate_ssr_search_dist')
             layout.prop(wrd, 'generate_ssr_falloff_exp')
             layout.prop(wrd, 'generate_ssr_jitter')
+            layout.prop(wrd, 'generate_ssr_texture_scale')
 
 # Registration
 def register():

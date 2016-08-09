@@ -473,15 +473,18 @@ def parse_pbr_group(self, material, c, defs, tree, node, factor):
 		add_height_strength(self, c, height_strength_input.default_value)
 	# Opacity
 	opacity_input = node.inputs[11]
+	opacity = opacity_input.default_value
 	opacity_strength_input = node.inputs[12]
 	opacity_strength = opacity_strength_input.default_value
-	if opacity_strength != 1.0:
+	opacity_val = opacity * opacity_strength
+	if opacity_val != 1.0:
 		if parse.const_color == None:
 			make_albedo_const([1.0, 1.0, 1.0, 1.0], c)
 		col = parse.const_color['vec4']
-		sum = (col[0] + col[1] + col[2]) / 3
-		mincol = min(col[:3])
-		parse.const_color['vec4'] = [col[0] - mincol, col[1] - mincol, col[2] - mincol, 1.0 - (sum * 0.7)]
+		# sum = (col[0] + col[1] + col[2]) / 3
+		# mincol = min(col[:3])
+		# parse.const_color['vec4'] = [col[0] - mincol, col[1] - mincol, col[2] - mincol, 1.0 - (sum * 0.7)]
+		parse.const_color['vec4'] = [col[0], col[1], col[2], opacity_val]
 		# Append translucent
 		defs.append('_Translucent')
 	ior_input = node.inputs[13]

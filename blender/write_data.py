@@ -222,6 +222,7 @@ const float seaFade = """ + str(round(wrd.generate_ocean_fade * 100) / 100) + ""
             f.write(
 """const float ssaoSize = """ + str(round(wrd.generate_ssao_size * 100) / 100) + """;
 const float ssaoStrength = """ + str(round(wrd.generate_ssao_strength * 100) / 100) + """;
+const float ssaoTextureScale = """ + str(round(wrd.generate_ssao_texture_scale * 10) / 10) + """;
 """)
         # if wrd.generate_shadows:
             # f.write(
@@ -243,6 +244,7 @@ const float ssrMinRayStep = """ + str(round(wrd.generate_ssr_min_ray_step * 100)
 const float ssrSearchDist = """ + str(round(wrd.generate_ssr_search_dist * 100) / 100) + """;
 const float ssrFalloffExp = """ + str(round(wrd.generate_ssr_falloff_exp * 100) / 100) + """;
 const float ssrJitter = """ + str(round(wrd.generate_ssr_jitter * 100) / 100) + """;
+const float ssrTextureScale = """ + str(round(wrd.generate_ssr_texture_scale * 10) / 10) + """;
 """)
 
 def write_traithx(class_name):

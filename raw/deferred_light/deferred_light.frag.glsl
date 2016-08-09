@@ -10,23 +10,23 @@ uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
-#ifdef _Probes
-	uniform float shirr[27 * 20]; // Maximum of 20 SH sets
-#else
-	uniform float shirr[27];
-#endif
-uniform float envmapStrength;
-#ifdef _Rad
-	uniform sampler2D senvmapRadiance;
-	uniform sampler2D senvmapBrdf;
-	uniform int envmapNumMipmaps;
-#endif
+// #ifdef _Probes
+	// uniform float shirr[27 * 20]; // Maximum of 20 SH sets
+// #else
+	// uniform float shirr[27];
+// #endif
+// uniform float envmapStrength;
+// #ifdef _Rad
+	// uniform sampler2D senvmapRadiance;
+	// uniform sampler2D senvmapBrdf;
+	// uniform int envmapNumMipmaps;
+// #endif
 
 // uniform sampler2D giblur; // Path-traced
 
-#ifdef _SSAO
-	uniform sampler2D ssaotex;
-#endif
+// #ifdef _SSAO
+	// uniform sampler2D ssaotex;
+// #endif
 #ifndef _NoShadows
 	uniform sampler2D shadowMap;
 #endif
@@ -54,21 +54,24 @@ uniform float envmapStrength;
 	// vec3 L4 = vec3(0.0);
 // #endif
 
+uniform mat4 invVP;
 uniform mat4 LMVP;
 uniform vec3 lightPos;
 uniform vec3 lightDir;
 uniform int lightType;
-uniform int lightIndex;
+// uniform int lightIndex;
 uniform vec3 lightColor;
 uniform float lightStrength;
 uniform float lightBias;
 uniform float spotlightCutoff;
 uniform float spotlightExponent;
 uniform vec3 eye;
-uniform vec3 eyeLook;
+// uniform vec3 eyeLook;
+uniform vec2 screenSize;
 
-in vec2 texCoord;
-in vec3 viewRay;
+// in vec2 texCoord;
+in vec4 mvpposition;
+// in vec3 viewRay;
 
 // out vec4 outputColor;
 
@@ -95,13 +98,13 @@ vec3 SSSSTransmittance(float translucency, float sssWidth, vec3 worldPosition, v
 }
 #endif
 
-#ifdef _Rad
-float getMipLevelFromRoughness(float roughness) {
-	// First mipmap level = roughness 0, last = roughness = 1
-	// baseColor texture already counted
-	return roughness * envmapNumMipmaps;
-}
-#endif
+// #ifdef _Rad
+// float getMipLevelFromRoughness(float roughness) {
+// 	// First mipmap level = roughness 0, last = roughness = 1
+// 	// baseColor texture already counted
+// 	return roughness * envmapNumMipmaps;
+// }
+// #endif
 
 vec3 surfaceAlbedo(vec3 baseColor, float metalness) {
 	return mix(baseColor, vec3(0.0), metalness);
@@ -410,24 +413,30 @@ float shadowTest(vec4 lPos) {
 }
 #endif
 
-vec2 envMapEquirect(vec3 normal) {
-	float phi = acos(normal.z);
-	float theta = atan(-normal.y, normal.x) + PI;
-	return vec2(theta / PI2, phi / PI);
-}
+// vec2 envMapEquirect(vec3 normal) {
+// 	float phi = acos(normal.z);
+// 	float theta = atan(-normal.y, normal.x) + PI;
+// 	return vec2(theta / PI2, phi / PI);
+// }
 
 vec2 octahedronWrap(vec2 v) {
 	return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
 }
 
-vec3 getPos(float depth) {	
-	vec3 vray = normalize(viewRay);
-	const float projectionA = cameraPlane.y / (cameraPlane.y - cameraPlane.x);
-	const float projectionB = (-cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
-	float linearDepth = projectionB / (depth * 0.5 + 0.5 - projectionA);
-	float viewZDist = dot(eyeLook, vray);
-	vec3 wposition = eye + vray * (linearDepth / viewZDist);
-	return wposition;
+// vec3 getPos(float depth) {
+// 	vec3 vray = normalize(viewRay);
+// 	const float projectionA = cameraPlane.y / (cameraPlane.y - cameraPlane.x);
+// 	const float projectionB = (-cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
+// 	float linearDepth = projectionB / (depth * 0.5 + 0.5 - projectionA);
+// 	float viewZDist = dot(eyeLook, vray);
+// 	vec3 wposition = eye + vray * (linearDepth / viewZDist);
+// 	return wposition;
+// }
+vec3 getPos(float depth, vec2 coord) {
+    vec4 pos = vec4(coord * 2.0 - 1.0, depth, 1.0);
+    pos = invVP * pos;
+    pos.xyz /= pos.w;
+    return pos.xyz;// - eye;
 }
 
 vec2 unpackFloat(float f) {
@@ -610,7 +619,7 @@ float wardSpecular(vec3 N, vec3 H, float dotNL, float dotNV, float dotNH, vec3 f
 	// shinyPerpendicular - anisotropy
 	
 	vec3 fiberParallel = normalize(fiberDirection);
-  	vec3 fiberPerpendicular = normalize(cross(N, fiberDirection));
+	vec3 fiberPerpendicular = normalize(cross(N, fiberDirection));
 	float dotXH = dot(fiberParallel, H);
 	float dotYH = dot(fiberPerpendicular, H);
 	float coeff = sqrt(dotNL/dotNV) / (4.0 * PI * shinyParallel * shinyPerpendicular); 
@@ -619,58 +628,62 @@ float wardSpecular(vec3 N, vec3 H, float dotNL, float dotNV, float dotNH, vec3 f
 }
 #endif
 
-#ifdef _Probes
-vec3 shIrradiance(vec3 nor, float scale, int probe) {
-#else
-vec3 shIrradiance(vec3 nor, float scale) {
-#endif
-	const float c1 = 0.429043;
-	const float c2 = 0.511664;
-	const float c3 = 0.743125;
-	const float c4 = 0.886227;
-	const float c5 = 0.247708;
-	vec3 cl00, cl1m1, cl10, cl11, cl2m2, cl2m1, cl20, cl21, cl22;
-#ifdef _Probes
-	if (probe == 0) {
-#endif
-		cl00 = vec3(shirr[0], shirr[1], shirr[2]);
-		cl1m1 = vec3(shirr[3], shirr[4], shirr[5]);
-		cl10 = vec3(shirr[6], shirr[7], shirr[8]);
-		cl11 = vec3(shirr[9], shirr[10], shirr[11]);
-		cl2m2 = vec3(shirr[12], shirr[13], shirr[14]);
-		cl2m1 = vec3(shirr[15], shirr[16], shirr[17]);
-		cl20 = vec3(shirr[18], shirr[19], shirr[20]);
-		cl21 = vec3(shirr[21], shirr[22], shirr[23]);
-		cl22 = vec3(shirr[24], shirr[25], shirr[26]);
-#ifdef _Probes
-	}
-	else if (probe == 1) {
-		cl00 = vec3(shirr[27 + 0], shirr[27 + 1], shirr[27 + 2]);
-		cl1m1 = vec3(shirr[27 + 3], shirr[27 + 4], shirr[27 + 5]);
-		cl10 = vec3(shirr[27 + 6], shirr[27 + 7], shirr[27 + 8]);
-		cl11 = vec3(shirr[27 + 9], shirr[27 + 10], shirr[27 + 11]);
-		cl2m2 = vec3(shirr[27 + 12], shirr[27 + 13], shirr[27 + 14]);
-		cl2m1 = vec3(shirr[27 + 15], shirr[27 + 16], shirr[27 + 17]);
-		cl20 = vec3(shirr[27 + 18], shirr[27 + 19], shirr[27 + 20]);
-		cl21 = vec3(shirr[27 + 21], shirr[27 + 22], shirr[27 + 23]);
-		cl22 = vec3(shirr[27 + 24], shirr[27 + 25], shirr[27 + 26]);
-	}
-#endif
-	return (
-		c1 * cl22 * (nor.x * nor.x - (-nor.z) * (-nor.z)) +
-		c3 * cl20 * nor.y * nor.y +
-		c4 * cl00 -
-		c5 * cl20 +
-		2.0 * c1 * cl2m2 * nor.x * (-nor.z) +
-		2.0 * c1 * cl21  * nor.x * nor.y +
-		2.0 * c1 * cl2m1 * (-nor.z) * nor.y +
-		2.0 * c2 * cl11  * nor.x +
-		2.0 * c2 * cl1m1 * (-nor.z) +
-		2.0 * c2 * cl10  * nor.y
-	) * scale;
-}
+// #ifdef _Probes
+// vec3 shIrradiance(vec3 nor, float scale, int probe) {
+// #else
+// vec3 shIrradiance(vec3 nor, float scale) {
+// #endif
+// 	const float c1 = 0.429043;
+// 	const float c2 = 0.511664;
+// 	const float c3 = 0.743125;
+// 	const float c4 = 0.886227;
+// 	const float c5 = 0.247708;
+// 	vec3 cl00, cl1m1, cl10, cl11, cl2m2, cl2m1, cl20, cl21, cl22;
+// #ifdef _Probes
+// 	if (probe == 0) {
+// #endif
+// 		cl00 = vec3(shirr[0], shirr[1], shirr[2]);
+// 		cl1m1 = vec3(shirr[3], shirr[4], shirr[5]);
+// 		cl10 = vec3(shirr[6], shirr[7], shirr[8]);
+// 		cl11 = vec3(shirr[9], shirr[10], shirr[11]);
+// 		cl2m2 = vec3(shirr[12], shirr[13], shirr[14]);
+// 		cl2m1 = vec3(shirr[15], shirr[16], shirr[17]);
+// 		cl20 = vec3(shirr[18], shirr[19], shirr[20]);
+// 		cl21 = vec3(shirr[21], shirr[22], shirr[23]);
+// 		cl22 = vec3(shirr[24], shirr[25], shirr[26]);
+// #ifdef _Probes
+// 	}
+// 	else if (probe == 1) {
+// 		cl00 = vec3(shirr[27 + 0], shirr[27 + 1], shirr[27 + 2]);
+// 		cl1m1 = vec3(shirr[27 + 3], shirr[27 + 4], shirr[27 + 5]);
+// 		cl10 = vec3(shirr[27 + 6], shirr[27 + 7], shirr[27 + 8]);
+// 		cl11 = vec3(shirr[27 + 9], shirr[27 + 10], shirr[27 + 11]);
+// 		cl2m2 = vec3(shirr[27 + 12], shirr[27 + 13], shirr[27 + 14]);
+// 		cl2m1 = vec3(shirr[27 + 15], shirr[27 + 16], shirr[27 + 17]);
+// 		cl20 = vec3(shirr[27 + 18], shirr[27 + 19], shirr[27 + 20]);
+// 		cl21 = vec3(shirr[27 + 21], shirr[27 + 22], shirr[27 + 23]);
+// 		cl22 = vec3(shirr[27 + 24], shirr[27 + 25], shirr[27 + 26]);
+// 	}
+// #endif
+// 	return (
+// 		c1 * cl22 * (nor.x * nor.x - (-nor.z) * (-nor.z)) +
+// 		c3 * cl20 * nor.y * nor.y +
+// 		c4 * cl00 -
+// 		c5 * cl20 +
+// 		2.0 * c1 * cl2m2 * nor.x * (-nor.z) +
+// 		2.0 * c1 * cl21  * nor.x * nor.y +
+// 		2.0 * c1 * cl2m1 * (-nor.z) * nor.y +
+// 		2.0 * c2 * cl11  * nor.x +
+// 		2.0 * c2 * cl1m1 * (-nor.z) +
+// 		2.0 * c2 * cl10  * nor.y
+// 	) * scale;
+// }
 
 void main() {
+	vec2 screenPosition = mvpposition.xy / mvpposition.w;
+	vec2 texCoord = screenPosition * 0.5 + 0.5;
+	texCoord += vec2(0.5 / screenSize); // Half pixel offset
+
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, roughness/metallic, mask
 	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, occlusion
@@ -680,7 +693,8 @@ void main() {
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
 	n = normalize(n);
 
-	vec3 p = getPos(depth);
+	vec3 p = getPos(depth, texCoord);
+	// vec3 p = getPos(depth);
 	vec2 roughmet = unpackFloat(g0.b);
 	
 	vec3 v = normalize(eye - p.xyz);
@@ -707,7 +721,7 @@ void main() {
 	
 	float visibility = 1.0;
 #ifndef _NoShadows
-	vec4 lPos = LMVP * vec4(vec3(p), 1.0);
+	vec4 lPos = LMVP * vec4(p, 1.0);
 	if (lPos.w > 0.0) {
 		visibility = shadowTest(lPos);
 	}
@@ -735,7 +749,7 @@ void main() {
 #ifdef _SSS
 	float mask = g0.a;
 	if (mask == 2.0) {
-		direct.rgb = direct.rgb * SSSSTransmittance(1.0, 0.005, p, n, l);
+		direct *= SSSSTransmittance(1.0, 0.005, p, n, l);
 	}
 #endif
 
@@ -743,61 +757,61 @@ void main() {
 	gl_FragColor = vec4(vec3(direct * visibility), 1.0);
 
 	// Indirect
-	if (lightIndex == 0) {
-#ifdef _Probes
-		float probeFactor = mask;
-		float probeID = floor(probeFactor);
-		float probeFract = fract(probeFactor);
-		vec3 indirect;
-	#ifdef _Rad
-		float lod = getMipLevelFromRoughness(roughmet.x);
-		vec3 reflectionWorld = reflect(-v, n); 
-		vec2 envCoordRefl = envMapEquirect(reflectionWorld);
-		vec3 prefilteredColor = textureLod(senvmapRadiance, envCoordRefl, lod).rgb;
-	#endif
+// 	if (lightIndex == 0) {
+// #ifdef _Probes
+// 		float probeFactor = mask;
+// 		float probeID = floor(probeFactor);
+// 		float probeFract = fract(probeFactor);
+// 		vec3 indirect;
+// 	#ifdef _Rad
+// 		float lod = getMipLevelFromRoughness(roughmet.x);
+// 		vec3 reflectionWorld = reflect(-v, n); 
+// 		vec2 envCoordRefl = envMapEquirect(reflectionWorld);
+// 		vec3 prefilteredColor = textureLod(senvmapRadiance, envCoordRefl, lod).rgb;
+// 	#endif
 		
-		// Global probe only
-		if (probeID == 0.0) {
-			indirect = shIrradiance(n, 2.2, 0) / PI;
-		}
-		// fract 0 = local probe, 1 = global probe 
-		else if (probeID == 1.0) {
-			indirect = (shIrradiance(n, 2.2, 1) / PI) * (1.0 - probeFract);
-			//prefilteredColor /= 4.0;
-			if (probeFract > 0.0) {
-				indirect += (shIrradiance(n, 2.2, 0) / PI) * (probeFract);
-			}
-		}
-#else // No probes   
-		// vec3 indirect = texture(shirr, envMapEquirect(n)).rgb;
-		vec3 indirect = shIrradiance(n, 2.2) / PI;
-	#ifdef _Rad
-		vec3 reflectionWorld = reflect(-v, n);
-		float lod = getMipLevelFromRoughness(roughmet.x);
-		vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
-	#endif
-#endif
+// 		// Global probe only
+// 		if (probeID == 0.0) {
+// 			indirect = shIrradiance(n, 2.2, 0) / PI;
+// 		}
+// 		// fract 0 = local probe, 1 = global probe 
+// 		else if (probeID == 1.0) {
+// 			indirect = (shIrradiance(n, 2.2, 1) / PI) * (1.0 - probeFract);
+// 			//prefilteredColor /= 4.0;
+// 			if (probeFract > 0.0) {
+// 				indirect += (shIrradiance(n, 2.2, 0) / PI) * (probeFract);
+// 			}
+// 		}
+// #else // No probes   
+// 		// vec3 indirect = texture(shirr, envMapEquirect(n)).rgb;
+// 		vec3 indirect = shIrradiance(n, 2.2) / PI;
+// 	#ifdef _Rad
+// 		vec3 reflectionWorld = reflect(-v, n);
+// 		float lod = getMipLevelFromRoughness(roughmet.x);
+// 		vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
+// 	#endif
+// #endif
 
-#ifdef _EnvLDR
-		indirect = pow(indirect, vec3(2.2));
-	#ifdef _Rad
-		prefilteredColor = pow(prefilteredColor, vec3(2.2));
-	#endif
-#endif
-		indirect *= albedo;
+// #ifdef _EnvLDR
+// 		indirect = pow(indirect, vec3(2.2));
+// 	#ifdef _Rad
+// 		prefilteredColor = pow(prefilteredColor, vec3(2.2));
+// 	#endif
+// #endif
+// 		indirect *= albedo;
 		
-#ifdef _Rad
-		// Indirect specular
-		vec2 envBRDF = texture(senvmapBrdf, vec2(roughmet.x, 1.0 - dotNV)).xy;
-		indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);;
-#endif
-		indirect = indirect * envmapStrength;// * lightColor * lightStrength;
-		indirect = indirect * g1.a; // Occlusion
-#ifdef _SSAO
-		indirect *= texture(ssaotex, texCoord).r; // SSAO
-#endif
-		gl_FragColor.rgb += indirect;
-	}
+// #ifdef _Rad
+// 		// Indirect specular
+// 		vec2 envBRDF = texture(senvmapBrdf, vec2(roughmet.x, 1.0 - dotNV)).xy;
+// 		indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);;
+// #endif
+// 		indirect = indirect * envmapStrength;// * lightColor * lightStrength;
+// 		indirect = indirect * g1.a; // Occlusion
+// #ifdef _SSAO
+// 		indirect *= texture(ssaotex, texCoord).r; // SSAO
+// #endif
+// 		gl_FragColor.rgb += indirect;
+// 	}
 	
 	// vec4 outColor = vec4(vec3(direct * visibility + indirect), 1.0);
 

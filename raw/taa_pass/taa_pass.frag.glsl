@@ -25,11 +25,11 @@ void main() {
     vec4 previous = texture(tex2, texCoord + velocity);
 
     // Attenuate the previous pixel if the velocity is different
-#ifdef _SMAA
-    float delta = abs(current.a * current.a - previous.a * previous.a) / 5.0;
-#else
-    const float delta = 0.0;
-#endif
+    #ifdef _SMAA
+        float delta = abs(current.a * current.a - previous.a * previous.a) / 5.0;
+    #else
+        const float delta = 0.0;
+    #endif
     float weight = 0.5 * clamp(1.0 - sqrt(delta) * SMAA_REPROJECTION_WEIGHT_SCALE, 0.0, 1.0);
 
     // Blend the pixels according to the calculated weight:

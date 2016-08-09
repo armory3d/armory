@@ -1,0 +1,62 @@
+{
+	"contexts": [
+		{
+			"id": "deferred_indirect",
+			"params": [
+				{
+					"id": "depth_write",
+					"value": "false"
+				},
+				{
+					"id": "compare_mode",
+					"value": "always"
+				},
+				{
+					"id": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				
+				{
+					"id": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"id": "eyeLook",
+					"link": "_cameraLook",
+					"ifdef": ["_Rad"]
+				},
+				{
+					"id": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				},
+				{
+					"id": "shirr",
+					"link": "_envmapIrradiance"
+				},
+				{
+					"id": "senvmapRadiance",
+					"link": "_envmapRadiance",
+					"ifdef": ["_Rad"]
+				},
+				{
+					"id": "envmapNumMipmaps",
+					"link": "_envmapNumMipmaps",
+					"ifdef": ["_Rad"]
+				},
+				{
+					"id": "senvmapBrdf",
+					"link": "_envmapBrdf",
+					"ifdef": ["_Rad"]
+				},
+				{
+					"id": "envmapStrength",
+					"link": "_envmapStrength"
+				}
+			],
+			"vertex_shader": "deferred_indirect.vert.glsl",
+			"fragment_shader": "deferred_indirect.frag.glsl"
+		}
+	]
+}

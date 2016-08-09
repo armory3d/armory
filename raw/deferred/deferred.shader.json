@@ -27,7 +27,8 @@
 				},
 				{
 					"id": "P",
-					"link": "_projectionMatrix"
+					"link": "_projectionMatrix",
+					"ifdef": ["_Billboard"]
 				},
 				{
 					"id": "MV",
@@ -288,6 +289,10 @@
 				{
 					"id": "V",
 					"link": "_viewMatrix"
+				},
+				{
+					"id": "screenSize",
+					"link": "_screenSize"
 				},
 				{
 					"id": "uid",

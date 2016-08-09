@@ -69,6 +69,28 @@ class SSAOPassNode(Node, CGPipelineTreeNode):
     def free(self):
         print("Removing node ", self, ", Goodbye!")
 
+class SSAOReprojectPassNode(Node, CGPipelineTreeNode):
+    '''A custom node'''
+    bl_idname = 'SSAOReprojectPassNodeType'
+    bl_label = 'SSAO Reproject'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "Last")
+        self.inputs.new('NodeSocketShader', "Depth")
+        self.inputs.new('NodeSocketShader', "Normals")
+        self.inputs.new('NodeSocketShader', "Velocity")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
+    def copy(self, node):
+        print("Copying from node ", node)
+
+    def free(self):
+        print("Removing node ", self, ", Goodbye!")
+
 class ApplySSAOPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'ApplySSAOPassNodeType'
@@ -387,8 +409,27 @@ class DeferredLightPassNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Stage")
         self.inputs.new('NodeSocketShader', "Target")
         self.inputs.new('NodeSocketShader', "GBuffer")
-        self.inputs.new('NodeSocketShader', "SSAO Map")
         self.inputs.new('NodeSocketShader', "Shadow Map")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
+    def copy(self, node):
+        print("Copying from node ", node)
+
+    def free(self):
+        print("Removing node ", self, ", Goodbye!")
+
+class DeferredIndirectPassNode(Node, CGPipelineTreeNode):
+    '''A custom node'''
+    bl_idname = 'DeferredIndirectPassNodeType'
+    bl_label = 'Deferred Indirect'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "GBuffer")
+        self.inputs.new('NodeSocketShader', "SSAO")
 
         self.outputs.new('NodeSocketShader', "Stage")
 
@@ -790,7 +831,7 @@ class DrawCompositorNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Stage")
         self.inputs.new('NodeSocketShader', "Target")
         self.inputs.new('NodeSocketShader', "Color")
-        self.inputs.new('NodeSocketShader', "GBuffer")
+        self.inputs.new('NodeSocketShader', "Normals")
 
         self.outputs.new('NodeSocketShader', "Stage")
 
@@ -810,7 +851,7 @@ class DrawCompositorWithFXAANode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Stage")
         self.inputs.new('NodeSocketShader', "Target")
         self.inputs.new('NodeSocketShader', "Color")
-        self.inputs.new('NodeSocketShader', "GBuffer")
+        self.inputs.new('NodeSocketShader', "Normals")
 
         self.outputs.new('NodeSocketShader', "Stage")
 
@@ -926,6 +967,7 @@ node_categories = [
     MyPassNodeCategory("PREBUILTNODES", "Prebuilt", items=[
         NodeItem("QuadPassNodeType"),
         NodeItem("SSAOPassNodeType"),
+        NodeItem("SSAOReprojectPassNodeType"),
         NodeItem("ApplySSAOPassNodeType"),
         NodeItem("SSRPassNodeType"),
         NodeItem("BloomPassNodeType"),
@@ -942,6 +984,7 @@ node_categories = [
         NodeItem("SSSPassNodeType"),
         NodeItem("WaterPassNodeType"),
         NodeItem("DeferredLightPassNodeType"),
+        NodeItem("DeferredIndirectPassNodeType"),
         NodeItem("TranslucentResolvePassNodeType"),
     ]),
     MyConstantNodeCategory("CONSTANTNODES", "Constant", items=[
@@ -974,7 +1017,7 @@ def load_library():
     data_path = sdk_path + '/armory/blender/data/data.blend'
 
     with bpy.data.libraries.load(data_path, link=False) as (data_from, data_to):
-        data_to.node_groups = ['forward_pipeline', 'forward_pipeline_low', 'deferred_pipeline', 'deferred_pipeline_low', 'hybrid_pipeline', 'pathtrace_pipeline', 'Armory PBR']
+        data_to.node_groups = ['forward_pipeline', 'forward_pipeline_low', 'deferred_pipeline', 'deferred_pipeline_low', 'deferred_pipeline_high', 'hybrid_pipeline', 'vr_pipeline', 'pathtrace_pipeline', 'Armory PBR']
     
     # TODO: cannot use for loop
     # TODO: import pbr group separately, no need for fake user
@@ -982,7 +1025,9 @@ def load_library():
     bpy.data.node_groups['forward_pipeline_low'].use_fake_user = True
     bpy.data.node_groups['deferred_pipeline'].use_fake_user = True
     bpy.data.node_groups['deferred_pipeline_low'].use_fake_user = True
+    bpy.data.node_groups['deferred_pipeline_high'].use_fake_user = True
     bpy.data.node_groups['hybrid_pipeline'].use_fake_user = True
+    bpy.data.node_groups['vr_pipeline'].use_fake_user = True
     bpy.data.node_groups['pathtrace_pipeline'].use_fake_user = True
     bpy.data.node_groups['Armory PBR'].use_fake_user = True
 
@@ -1032,6 +1077,11 @@ def buildNodeTree(node_group, shader_references, asset_references):
         return
 
     res['id'] = node_group_name
+
+    # Store main context names
+    res['geometry_context'] = bpy.data.cameras[0].geometry_context
+    res['shadows_context'] = bpy.data.cameras[0].shadows_context
+    
     res['render_targets'], res['depth_buffers'] = preprocess_pipeline(rn, node_group)
     res['stages'] = []
     
@@ -1041,11 +1091,16 @@ def buildNodeTree(node_group, shader_references, asset_references):
     utils.write_arm(asset_path, output)
     assets.add(asset_path)
 
-def make_set_target(stage, node_group, node, currentNode=None, target_index=1):
+def make_set_target(stage, node_group, node, currentNode=None, target_index=1, viewport_scale=1.0):
     if currentNode == None:
         currentNode = node
     
     stage['command'] = 'set_target'
+
+    # First param is viewport scale
+    if len(stage['params']) == 0:
+        stage['params'].append(viewport_scale)
+
     currentNode = findNodeByLink(node_group, currentNode, currentNode.inputs[target_index])
     
     if currentNode.bl_idname == 'TargetNodeType':
@@ -1213,12 +1268,18 @@ def process_call_function(stage, stages, node, node_group, shader_references, as
     afterMergeNode = findNodeByLinkFrom(node_group, margeNode, margeNode.outputs[0])
     buildNode(stages, afterMergeNode, node_group, shader_references, asset_references)
 
-def make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 5, 7], bind_target_constants=None, shader_context=None):
+def make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 5, 7], bind_target_constants=None, shader_context=None, viewport_scale=1.0, with_clear=False):
     # Set target
     if target_index != None and node.inputs[target_index].is_linked:
         stage = {}
         stage['params'] = []
-        make_set_target(stage, node_group, node, target_index=target_index)
+        make_set_target(stage, node_group, node, target_index=target_index, viewport_scale=viewport_scale)
+        stages.append(stage)
+    # Optinal clear
+    if with_clear:
+        stage = {}
+        stage['params'] = []
+        make_clear_target(stage, color_val=[0.0, 0.0, 0.0, 1.0])
         stages.append(stage)
     # Bind targets
     stage = {}
@@ -1243,7 +1304,13 @@ def make_quad_pass(stages, node_group, node, shader_references, asset_references
     stages.append(stage)
 
 def make_ssao_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 4], bind_target_constants=['gbufferD', 'gbuffer0'], shader_context='ssao_pass/ssao_pass/ssao_pass')
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 4], bind_target_constants=['gbufferD', 'gbuffer0'], shader_context='ssao_pass/ssao_pass/ssao_pass', viewport_scale=bpy.data.worlds[0].generate_ssao_texture_scale)
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[1, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x', viewport_scale=bpy.data.worlds[0].generate_ssao_texture_scale)
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y')
+    buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise8.png')
+
+def make_ssao_reproject_pass(stages, node_group, node, shader_references, asset_references):
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 4, 2, 5], bind_target_constants=['gbufferD', 'gbuffer0', 'slast', 'sveloc'], shader_context='ssao_reproject_pass/ssao_reproject_pass/ssao_reproject_pass')
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[1, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x')
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y')
     buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise8.png')
@@ -1255,8 +1322,8 @@ def make_apply_ssao_pass(stages, node_group, node, shader_references, asset_refe
     buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise8.png')
 
 def make_ssr_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[4, 5, 6], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='ssr_pass/ssr_pass/ssr_pass')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=3, bind_target_indices=[2, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_x')
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[4, 5, 6], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='ssr_pass/ssr_pass/ssr_pass', viewport_scale=bpy.data.worlds[0].generate_ssr_texture_scale)
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=3, bind_target_indices=[2, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_x', viewport_scale=bpy.data.worlds[0].generate_ssr_texture_scale, with_clear=True) # Have to clear to prevent artefacts, potentially because of viewport scale
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_y3_blend')
 
 def make_bloom_pass(stages, node_group, node, shader_references, asset_references):
@@ -1328,7 +1395,13 @@ def make_water_pass(stages, node_group, node, shader_references, asset_reference
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['tex', 'gbufferD'], shader_context='water_pass/water_pass/water_pass')
 
 def make_deferred_light_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['gbuffer', 'ssaotex', 'shadowMap'], shader_context='deferred_light/deferred_light/deferred_light')
+    # make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'shadowMap'], shader_context='deferred_light/deferred_light/deferred_light')
+    # Draw light volume - TODO: properly generate stage
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'shadowMap'], shader_context='deferred_light/deferred_light/deferred_light')
+    stages[-1]['command'] = 'draw_light_volume'
+
+def make_deferred_indirect_pass(stages, node_group, node, shader_references, asset_references):
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'ssaotex'], shader_context='deferred_indirect/deferred_indirect/deferred_indirect')
 
 def make_translucent_resolve_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2], bind_target_constants=['gbuffer'], shader_context='translucent_resolve/translucent_resolve/translucent_resolve')
@@ -1411,7 +1484,7 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
             if node.inputs[2].is_linked:
                 make_bind_target(stage, node_group, node, target_index=2, constant_name='tex')
             if node.inputs[3].is_linked:
-                make_bind_target(stage, node_group, node, target_index=3, constant_name='gbuffer')
+                make_bind_target(stage, node_group, node, target_index=3, constant_name='gbuffer0')
             stages.append(stage)
         # Draw quad
         stage = {}
@@ -1452,6 +1525,9 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
 
     elif node.bl_idname == 'SSAOPassNodeType':
         make_ssao_pass(stages, node_group, node, shader_references, asset_references)
+        append_stage = False
+    elif node.bl_idname == 'SSAOReprojectPassNodeType':
+        make_ssao_reproject_pass(stages, node_group, node, shader_references, asset_references)
         append_stage = False
     elif node.bl_idname == 'ApplySSAOPassNodeType':
         make_apply_ssao_pass(stages, node_group, node, shader_references, asset_references)
@@ -1500,6 +1576,9 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
         append_stage = False
     elif node.bl_idname == 'DeferredLightPassNodeType':
         make_deferred_light_pass(stages, node_group, node, shader_references, asset_references)
+        append_stage = False
+    elif node.bl_idname == 'DeferredIndirectPassNodeType':
+        make_deferred_indirect_pass(stages, node_group, node, shader_references, asset_references)
         append_stage = False
     elif node.bl_idname == 'TranslucentResolvePassNodeType':
         make_translucent_resolve_pass(stages, node_group, node, shader_references, asset_references)
@@ -1570,20 +1649,16 @@ def traverse_pipeline(node, node_group, render_targets, depth_buffers):
         bpy.data.cameras[0].pipeline_passes += node.inputs[1].default_value
 
     # Gather defs from linked nodes
-    if node.bl_idname == 'TAAPassNodeType':
-        assets.add_khafile_def('WITH_TAA')
-        # bpy.data.worlds[0].world_defs += '_TAA'
+    if node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':
         if preprocess_pipeline.velocity_def_added == False:
             assets.add_khafile_def('WITH_VELOC')
             bpy.data.worlds[0].world_defs += '_Veloc'
             preprocess_pipeline.velocity_def_added = True
+        if node.bl_idname == 'TAAPassNodeType':
+            assets.add_khafile_def('WITH_TAA')
+            # bpy.data.worlds[0].world_defs += '_TAA'
     elif node.bl_idname == 'SMAAPassNodeType':
         bpy.data.worlds[0].world_defs += '_SMAA'
-    elif node.bl_idname == 'MotionBlurVelocityPassNodeType':
-        if preprocess_pipeline.velocity_def_added == False:
-            assets.add_khafile_def('WITH_VELOC')
-            bpy.data.worlds[0].world_defs += '_Veloc'
-            preprocess_pipeline.velocity_def_added = True
 
     # Collect render targets
     if node.bl_idname == 'SetTargetNodeType' or node.bl_idname == 'QuadPassNodeType' or node.bl_idname == 'DrawCompositorNodeType' or node.bl_idname == 'DrawCompositorWithFXAANodeType':
@@ -1598,7 +1673,7 @@ def traverse_pipeline(node, node_group, render_targets, depth_buffers):
             traverse_pipeline(loop_node, node_group, render_targets, depth_buffers)
     
     # Prebuilt
-    elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'BlendPassNodeType' or node.bl_idname == 'CombinePassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
+    elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'BlendPassNodeType' or node.bl_idname == 'CombinePassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'DeferredIndirectPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
         if node.inputs[1].is_linked:
             tnode = findNodeByLink(node_group, node, node.inputs[1])
             parse_render_target(tnode, node_group, render_targets, depth_buffers)
@@ -1607,7 +1682,7 @@ def traverse_pipeline(node, node_group, render_targets, depth_buffers):
             if node.inputs[i].is_linked:
                 tnode = findNodeByLink(node_group, node, node.inputs[i])
                 parse_render_target(tnode, node_group, render_targets, depth_buffers)
-    elif node.bl_idname == 'SSAOPassNodeType' or node.bl_idname == 'SSSPassNodeType' or node.bl_idname == 'BlurBasicPassNodeType':
+    elif node.bl_idname == 'SSAOPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType' or node.bl_idname == 'SSSPassNodeType' or node.bl_idname == 'BlurBasicPassNodeType':
         for i in range(1, 3):
             if node.inputs[i].is_linked:
                 tnode = findNodeByLink(node_group, node, node.inputs[i])
@@ -1650,6 +1725,8 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
         scale = 1.0
         if node.inputs[1].is_linked:
             size_node = findNodeByLink(node_group, node, node.inputs[1])
+            while size_node.bl_idname == 'NodeReroute': # Step through reroutes
+                size_node = findNodeByLink(node_group, size_node, size_node.inputs[0])
             scale = size_node.inputs[0].default_value
             
         # Append target
