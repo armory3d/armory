@@ -37,6 +37,10 @@ uniform vec3 eye;
 #ifdef _Skinning
 	uniform float skinBones[50 * 12];
 #endif
+#ifdef _VR
+uniform mat4 U; // Undistortion
+uniform float maxRadSq;
+#endif
 
 out vec3 position;
 #ifdef _Tex
@@ -83,6 +87,32 @@ mat3 getSkinningMatVec(const mat4 skinningMat) {
 }
 #endif
 
+#ifdef _VR
+// GoogleVR Distortion using Vertex Displacement
+float distortionFactor(float rSquared) {
+  float ret = 0.0;
+  ret = rSquared * (ret + U[1][1]);
+  ret = rSquared * (ret + U[0][1]);
+  ret = rSquared * (ret + U[3][0]);
+  ret = rSquared * (ret + U[2][0]);
+  ret = rSquared * (ret + U[1][0]);
+  ret = rSquared * (ret + U[0][0]);
+  return ret + 1.0;
+}
+// Convert point from world space to undistorted camera space
+vec4 undistort(mat4 VM, vec4 pos) {
+  // Go to camera space
+  pos = VM * pos;
+  const float nearClip = 0.1;
+  if (pos.z <= -nearClip) {  // Reminder: Forward is -Z
+    // Undistort the point's coordinates in XY
+    float r2 = clamp(dot(pos.xy, pos.xy) / (pos.z * pos.z), 0, maxRadSq);
+    pos.xy *= distortionFactor(r2);
+  }
+  return pos;
+}
+#endif
+
 void main() {
 
 #ifdef _Instancing
@@ -109,7 +139,11 @@ void main() {
 	//VM[2][0] = 0.0; VM[2][1] = 0.0; VM[2][2] = 1.0;
 #endif
 
+#ifdef _VR
+	gl_Position = P * undistort(VM, sPos);
+#else
 	gl_Position = P * VM * sPos;
+#endif
 
 #ifdef _Tex
 	texCoord = tex;

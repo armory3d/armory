@@ -94,6 +94,16 @@
 					"id": "sltcMag",
 					"link": "_ltcMag",
 					"ifdef": ["_PolyLight"]
+				},
+				{
+					"id": "U",
+					"link": "_undistortionMatrix",
+					"ifdef": ["_VR"]
+				},
+				{
+					"id": "maxRadSq",
+					"link": "_maxRadiusSq",
+					"ifdef": ["_VR"]
 				}
 			],
 			"vertex_shader": "forward.vert.glsl",

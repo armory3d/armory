@@ -803,6 +803,24 @@ class LoopLightsNode(Node, CGPipelineTreeNode):
     def free(self):
         print("Removing node ", self, ", Goodbye!")
 
+class DrawStereoNode(Node, CGPipelineTreeNode):
+    '''A custom node'''
+    bl_idname = 'DrawStereoNodeType'
+    bl_label = 'Draw Stereo'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+
+        self.outputs.new('NodeSocketShader', "Complete")
+        self.outputs.new('NodeSocketShader', "Per Eye")
+
+    def copy(self, node):
+        print("Copying from node ", node)
+
+    def free(self):
+        print("Removing node ", self, ", Goodbye!")
+
 class DrawWorldNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'DrawWorldNodeType'
@@ -998,6 +1016,7 @@ node_categories = [
         NodeItem("MergeStagesNodeType"),
         NodeItem("LoopStagesNodeType"),
         NodeItem("LoopLightsNodeType"),
+        NodeItem("DrawStereoNodeType"),
     ]),
 ]
 
@@ -1516,6 +1535,15 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
             loopNode = findNodeByLinkFrom(node_group, node, node.outputs[1])
             buildNode(stage['returns_true'], loopNode, node_group, shader_references, asset_references)
     
+    elif node.bl_idname == 'DrawStereoNodeType':
+        append_stage = False
+        stage['command'] = 'draw_stereo'
+        stages.append(stage)
+        stage['returns_true'] = []
+        if node.outputs[1].is_linked:
+            loopNode = findNodeByLinkFrom(node_group, node, node.outputs[1])
+            buildNode(stage['returns_true'], loopNode, node_group, shader_references, asset_references)
+
     elif node.bl_idname == 'CallFunctionNodeType':
         make_call_function(stage, node_group, node)
     
@@ -1660,6 +1688,10 @@ def traverse_pipeline(node, node_group, render_targets, depth_buffers):
     elif node.bl_idname == 'SMAAPassNodeType':
         bpy.data.worlds[0].world_defs += '_SMAA'
 
+    elif node.bl_idname == 'DrawStereoNodeType':
+        assets.add_khafile_def('WITH_VR')
+        bpy.data.worlds[0].world_defs += '_VR'
+
     # Collect render targets
     if node.bl_idname == 'SetTargetNodeType' or node.bl_idname == 'QuadPassNodeType' or node.bl_idname == 'DrawCompositorNodeType' or node.bl_idname == 'DrawCompositorWithFXAANodeType':
         if node.inputs[1].is_linked:
@@ -1667,7 +1699,7 @@ def traverse_pipeline(node, node_group, render_targets, depth_buffers):
             parse_render_target(tnode, node_group, render_targets, depth_buffers)
     
     # Traverse loops
-    elif node.bl_idname == 'LoopStagesNodeType' or node.bl_idname == 'LoopLightsNodeType':
+    elif node.bl_idname == 'LoopStagesNodeType' or node.bl_idname == 'LoopLightsNodeType' or node.bl_idname == 'DrawStereoNodeType':
         if node.outputs[1].is_linked:
             loop_node = findNodeByLinkFrom(node_group, node, node.outputs[1])
             traverse_pipeline(loop_node, node_group, render_targets, depth_buffers)
