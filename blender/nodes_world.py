@@ -73,10 +73,6 @@ def buildNodeTree(world_name, node_group):
 	if bpy.data.worlds[0].generate_clouds:
 		bpy.data.worlds[0].world_defs += '_EnvClouds'
 
-	# SSAO enabled
-	if bpy.data.worlds[0].generate_ssao:
-		bpy.data.worlds[0].world_defs += '_SSAO'
-
 	# Shadows disabled
 	if bpy.data.worlds[0].generate_shadows == False:
 		bpy.data.worlds[0].world_defs += '_NoShadows'
@@ -114,20 +110,21 @@ def parse_world_output(node_group, node, context):
 def parse_surface(node_group, node, context):
 	# Extract environment strength
 	if node.type == 'BACKGROUND':
-		bpy.data.cameras[0].world_envtex_color = node.inputs[0].default_value
-		bpy.data.cameras[0].world_envtex_strength = node.inputs[1].default_value
-		
 		# Strength
-		const = {}
-		const['id'] = 'envmapStrength'
-		const['float'] = node.inputs[1].default_value
-		context['bind_constants'].append(const)
+		envmap_strength_const = {}
+		envmap_strength_const['id'] = 'envmapStrength'
+		envmap_strength_const['float'] = node.inputs[1].default_value
+		context['bind_constants'].append(envmap_strength_const)
 		
 		if node.inputs[0].is_linked:
 			color_node = find_node(node_group, node, node.inputs[0])
-			parse_color(node_group, color_node, context)
+			parse_color(node_group, color_node, context, envmap_strength_const)
 
-def parse_color(node_group, node, context):		
+		# Cache results
+		bpy.data.cameras[0].world_envtex_color = node.inputs[0].default_value
+		bpy.data.cameras[0].world_envtex_strength = envmap_strength_const['float']
+
+def parse_color(node_group, node, context, envmap_strength_const):		
 	# Env map included
 	if node.type == 'TEX_ENVIRONMENT':
 		texture = {}
@@ -173,3 +170,6 @@ def parse_color(node_group, node, context):
 		bpy.data.cameras[0].world_envtex_name = base_name
 		
 		write_probes.write_sky_irradiance(base_name)
+
+		# Adjust strength to match Cycles
+		envmap_strength_const['float'] *= 0.25

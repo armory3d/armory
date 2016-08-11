@@ -565,80 +565,80 @@ void main() {
 
 
 
-#ifdef _Toon
-	vec3 v = normalize(eyeDir);
-	vec3 h = normalize(v + l);
+// #ifdef _Toon
+// 	vec3 v = normalize(eyeDir);
+// 	vec3 h = normalize(v + l);
     
-	const vec3 ambientMaterial = baseColor * vec3(0.35, 0.35, 0.35) + vec3(0.15);
-	const vec3 diffuseMaterial = baseColor;
-	const vec3 specularMaterial = vec3(0.45, 0.35, 0.35);
-	const float shininess = 0.5;
+// 	const vec3 ambientMaterial = baseColor * vec3(0.35, 0.35, 0.35) + vec3(0.15);
+// 	const vec3 diffuseMaterial = baseColor;
+// 	const vec3 specularMaterial = vec3(0.45, 0.35, 0.35);
+// 	const float shininess = 0.5;
 	
-	float df = max(0.0, dotNL);
-	float sf = max(0.0, dot(n, h));
-    sf = pow(sf, shininess);
+// 	float df = max(0.0, dotNL);
+// 	float sf = max(0.0, dot(n, h));
+//     sf = pow(sf, shininess);
 	
-	const float A = 0.1;
-    const float B = 0.3;
-    const float C = 0.6;
-    const float D = 1.0;
-    float E = fwidth(df);
-	bool f = false;
-	if (df > A - E) if (df < A + E) {
-		f = true;
-		df = stepmix(A, B, E, df);
-	}
+// 	const float A = 0.1;
+//     const float B = 0.3;
+//     const float C = 0.6;
+//     const float D = 1.0;
+//     float E = fwidth(df);
+// 	bool f = false;
+// 	if (df > A - E) if (df < A + E) {
+// 		f = true;
+// 		df = stepmix(A, B, E, df);
+// 	}
 	
-	/*else*/if (!f) if (df > B - E) if(df < B + E) {
-		f = true;
-		df = stepmix(B, C, E, df);
-	}
+// 	/*else*/if (!f) if (df > B - E) if(df < B + E) {
+// 		f = true;
+// 		df = stepmix(B, C, E, df);
+// 	}
 	
-	/*else*/if (!f) if (df > C - E) if (df < C + E) {
-		f = true;
-		df = stepmix(C, D, E, df);
-	}
-	/*else*/if (!f) if (df < A) {
-		df = 0.0;
-	}
-	else if (df < B) {
-		df = B;
-	}
-	else if (df < C) {
-		df = C;
-	}
-	else df = D;
+// 	/*else*/if (!f) if (df > C - E) if (df < C + E) {
+// 		f = true;
+// 		df = stepmix(C, D, E, df);
+// 	}
+// 	/*else*/if (!f) if (df < A) {
+// 		df = 0.0;
+// 	}
+// 	else if (df < B) {
+// 		df = B;
+// 	}
+// 	else if (df < C) {
+// 		df = C;
+// 	}
+// 	else df = D;
 	
-	E = fwidth(sf);
-    if (sf > 0.5 - E && sf < 0.5 + E) {
-        sf = smoothstep(0.5 - E, 0.5 + E, sf);
-    }
-    else {
-        sf = step(0.5, sf);
-    }
+// 	E = fwidth(sf);
+//     if (sf > 0.5 - E && sf < 0.5 + E) {
+//         sf = smoothstep(0.5 - E, 0.5 + E, sf);
+//     }
+//     else {
+//         sf = step(0.5, sf);
+//     }
 	
-	outColor.rgb = ambientMaterial + (df * diffuseMaterial + sf * specularMaterial) * visibility;
-    float edgeDetection = (dot(v, n) < 0.1) ? 0.0 : 1.0;
-	outColor.rgb *= edgeDetection;
+// 	outColor.rgb = ambientMaterial + (df * diffuseMaterial + sf * specularMaterial) * visibility;
+//     float edgeDetection = (dot(v, n) < 0.1) ? 0.0 : 1.0;
+// 	outColor.rgb *= edgeDetection;
 	
-	// const int levels = 4;
-	// const float scaleFactor = 1.0 / levels;
+// 	// const int levels = 4;
+// 	// const float scaleFactor = 1.0 / levels;
 	
-	// float diffuse = max(0, dotNL);
-	// const float material_kd = 0.8;
-	// const float material_ks = 0.3;
-	// vec3 diffuseColor = vec3(0.40, 0.60, 0.70);
-	// diffuseColor = diffuseColor * material_kd * floor(diffuse * levels) * scaleFactor;
-	// float specular = 0.0;
-	// if(dotNL > 0.0) {
-	// 	specular = material_ks * pow( max(0, dot( h, n)), shininess);
-	// }
-	// // Limit specular
-	// float specMask = (pow(dot(h, n), shininess) > 0.4) ? 1.0 : 0.0;
+// 	// float diffuse = max(0, dotNL);
+// 	// const float material_kd = 0.8;
+// 	// const float material_ks = 0.3;
+// 	// vec3 diffuseColor = vec3(0.40, 0.60, 0.70);
+// 	// diffuseColor = diffuseColor * material_kd * floor(diffuse * levels) * scaleFactor;
+// 	// float specular = 0.0;
+// 	// if(dotNL > 0.0) {
+// 	// 	specular = material_ks * pow( max(0, dot( h, n)), shininess);
+// 	// }
+// 	// // Limit specular
+// 	// float specMask = (pow(dot(h, n), shininess) > 0.4) ? 1.0 : 0.0;
 	
-	// float edgeDetection = (dot(v, n) > 0.3) ? 1.0 : 0.0;
-	// outColor.rgb = edgeDetection * ((diffuseColor + specular * specMask) * visibility + ambientMaterial);
-#endif
+// 	// float edgeDetection = (dot(v, n) > 0.3) ? 1.0 : 0.0;
+// 	// outColor.rgb = edgeDetection * ((diffuseColor + specular * specMask) * visibility + ambientMaterial);
+// #endif
 
 
 	// LTC

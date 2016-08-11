@@ -200,7 +200,7 @@ void main() {
 	float phi = acos(n.z);
 	float theta = atan(-n.y, n.x) + PI;
 	
-	float cos_theta = clamp(n.z, 0, 1);
+	float cos_theta = clamp(n.z, 0.0, 1.0);
 	float cos_gamma = dot(n, sunDir);
 	float gamma_val = acos(cos_gamma);
 

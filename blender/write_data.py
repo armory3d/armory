@@ -54,7 +54,7 @@ project.addAssets('Assets/**');
         if bpy.data.worlds[0].CGMinimize == False:
             f.write("project.addDefine('WITH_JSON');\n")
         
-        if bpy.data.worlds[0].CGDeinterleavedBuffers == False:
+        if bpy.data.worlds[0].CGDeinterleavedBuffers == True:
             f.write("project.addDefine('WITH_DEINTERLEAVED');\n")
 
         for d in assets.khafile_defs:
@@ -111,7 +111,7 @@ class Main {
 """)
 
 # Write electron.js
-def write_electronjs(x, y, w, h, winoff, in_frame):
+def write_electronjs(x, y, w, h, winoff, in_viewport):
     wrd = bpy.data.worlds[0]
     dev_tools = wrd.CGPlayDeveloperTools
     with open('build/electron.js', 'w') as f:
@@ -125,7 +125,7 @@ let mainWindow;
 
 function createWindow () { """)
     
-        if in_frame:
+        if in_viewport:
             f.write(
 """
     var point = electron.screen.getCursorScreenPoint();
@@ -161,7 +161,7 @@ app.on('activate', function () { if (mainWindow === null) { createWindow(); } })
 """)
 
 # Write index.html
-def write_indexhtml(w, h, in_frame):
+def write_indexhtml(w, h, in_viewport):
     with open('build/html5/index.html', 'w') as f:
         f.write(
 """<!DOCTYPE html>

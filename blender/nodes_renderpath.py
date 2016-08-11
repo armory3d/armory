@@ -12,9 +12,9 @@ import assets
 import utils
 
 class CGPipelineTree(NodeTree):
-    '''Pipeline nodes'''
+    '''Render Path nodes'''
     bl_idname = 'CGPipelineTreeType'
-    bl_label = 'CG Pipeline Node Tree'
+    bl_label = 'Render Path Node Tree'
     bl_icon = 'GAME'
 
 class CGPipelineTreeNode:
@@ -936,7 +936,7 @@ class LightCount(Node, CGPipelineTreeNode):
 import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem
 
-class MyPipelineNodeCategory(NodeCategory):
+class MyCommandNodeCategory(NodeCategory):
     @classmethod
     def poll(cls, context):
         return context.space_data.tree_type == 'CGPipelineTreeType'
@@ -962,7 +962,7 @@ class MyLogicNodeCategory(NodeCategory):
         return context.space_data.tree_type == 'CGPipelineTreeType'
 
 node_categories = [
-    MyPipelineNodeCategory("PIPELINENODES", "Pipeline", items=[
+    MyCommandNodeCategory("COMMANDNODES", "Command", items=[
         NodeItem("BeginNodeType"),
         NodeItem("DrawGeometryNodeType"),
         NodeItem("DrawDecalsNodeType"),
@@ -1025,7 +1025,7 @@ node_categories = [
 
 
 def reload_blend_data():
-    if bpy.data.node_groups.get('forward_pipeline') == None:
+    if bpy.data.node_groups.get('forward_path') == None:
         load_library()
         pass
 
@@ -1036,18 +1036,18 @@ def load_library():
     data_path = sdk_path + '/armory/blender/data/data.blend'
 
     with bpy.data.libraries.load(data_path, link=False) as (data_from, data_to):
-        data_to.node_groups = ['forward_pipeline', 'forward_pipeline_low', 'deferred_pipeline', 'deferred_pipeline_low', 'deferred_pipeline_high', 'hybrid_pipeline', 'vr_pipeline', 'pathtrace_pipeline', 'Armory PBR']
+        data_to.node_groups = ['forward_path', 'forward_path_low', 'deferred_path', 'deferred_path_low', 'deferred_path_high', 'hybrid_path', 'vr_path', 'pathtrace_path', 'Armory PBR']
     
     # TODO: cannot use for loop
     # TODO: import pbr group separately, no need for fake user
-    bpy.data.node_groups['forward_pipeline'].use_fake_user = True
-    bpy.data.node_groups['forward_pipeline_low'].use_fake_user = True
-    bpy.data.node_groups['deferred_pipeline'].use_fake_user = True
-    bpy.data.node_groups['deferred_pipeline_low'].use_fake_user = True
-    bpy.data.node_groups['deferred_pipeline_high'].use_fake_user = True
-    bpy.data.node_groups['hybrid_pipeline'].use_fake_user = True
-    bpy.data.node_groups['vr_pipeline'].use_fake_user = True
-    bpy.data.node_groups['pathtrace_pipeline'].use_fake_user = True
+    bpy.data.node_groups['forward_path'].use_fake_user = True
+    bpy.data.node_groups['forward_path_low'].use_fake_user = True
+    bpy.data.node_groups['deferred_path'].use_fake_user = True
+    bpy.data.node_groups['deferred_path_low'].use_fake_user = True
+    bpy.data.node_groups['deferred_path_high'].use_fake_user = True
+    bpy.data.node_groups['hybrid_path'].use_fake_user = True
+    bpy.data.node_groups['vr_path'].use_fake_user = True
+    bpy.data.node_groups['pathtrace_path'].use_fake_user = True
     bpy.data.node_groups['Armory PBR'].use_fake_user = True
 
 def register():
@@ -1687,6 +1687,10 @@ def traverse_pipeline(node, node_group, render_targets, depth_buffers):
             # bpy.data.worlds[0].world_defs += '_TAA'
     elif node.bl_idname == 'SMAAPassNodeType':
         bpy.data.worlds[0].world_defs += '_SMAA'
+
+    elif node.bl_idname == 'SSAOPassNodeType':
+        if bpy.data.worlds[0].generate_ssao: # SSAO enabled
+            bpy.data.worlds[0].world_defs += '_SSAO'
 
     elif node.bl_idname == 'DrawStereoNodeType':
         assets.add_khafile_def('WITH_VR')

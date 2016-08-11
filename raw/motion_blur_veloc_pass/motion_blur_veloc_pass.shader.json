@@ -19,7 +19,8 @@
 			"links": [
 				{
 					"id": "texStep",
-					"link": "_screenSizeInv"
+					"link": "_screenSizeInv",
+					"ifdef": ["_Disabled"]
 				}
 			],
 			"texture_params": [],

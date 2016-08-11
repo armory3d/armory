@@ -106,7 +106,7 @@ vec4 undistort(mat4 VM, vec4 pos) {
   const float nearClip = 0.1;
   if (pos.z <= -nearClip) {  // Reminder: Forward is -Z
     // Undistort the point's coordinates in XY
-    float r2 = clamp(dot(pos.xy, pos.xy) / (pos.z * pos.z), 0, maxRadSq);
+    float r2 = clamp(dot(pos.xy, pos.xy) / (pos.z * pos.z), 0.0, maxRadSq);
     pos.xy *= distortionFactor(r2);
   }
   return pos;

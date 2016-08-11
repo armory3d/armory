@@ -117,7 +117,9 @@ class Console extends Trait {
     function update() {
 #if WITH_PROFILE
         updateTime += iron.App.updateTime;
+    #if WITH_PHYSICS
         physTime += PhysicsWorld.physTime;
+    #end
 #end
     }
 #end

@@ -1,6 +1,6 @@
 import project
 import nodes_logic
-import nodes_pipeline
+import nodes_renderpath
 import nodes_world
 import exporter
 import traits_animation
@@ -27,7 +27,7 @@ def register():
     props.register()
     project.register()
     nodes_logic.register()
-    nodes_pipeline.register()
+    nodes_renderpath.register()
     nodes_world.register()
     exporter.register()
     traits_animation.register()
@@ -44,7 +44,7 @@ def register():
 def unregister():
     project.unregister()
     nodes_logic.unregister()
-    nodes_pipeline.unregister()
+    nodes_renderpath.unregister()
     nodes_world.unregister()
     exporter.unregister()
     traits_animation.unregister()

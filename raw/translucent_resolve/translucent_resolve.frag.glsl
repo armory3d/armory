@@ -25,5 +25,5 @@ void main() {
 	// gl_FragColor = vec4(accum.rgb / clamp(accum.a, 1e-4, 5e4), revealage);
 
 	const float epsilon = 0.00001;
-	gl_FragColor = vec4(accum.rgb / max(accum.a, epsilon), 1 - revealage);
+	gl_FragColor = vec4(accum.rgb / max(accum.a, epsilon), 1.0 - revealage);
 }

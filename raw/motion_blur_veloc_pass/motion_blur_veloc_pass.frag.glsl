@@ -12,7 +12,7 @@ uniform sampler2D gbuffer0;
 uniform sampler2D sveloc;
 uniform sampler2D tex;
 
-uniform vec2 texStep;
+// uniform vec2 texStep;
 
 in vec2 texCoord;
 

@@ -10,7 +10,7 @@ import threading
 import webbrowser
 import write_data
 import nodes_logic
-import nodes_pipeline
+import nodes_renderpath
 import nodes_world
 import path_tracer
 from exporter import ArmoryExporter
@@ -64,7 +64,7 @@ def init_armory_props():
 def draw_play_item(self, context):
     layout = self.layout
     if play_project.playproc == None and play_project.compileproc == None:
-        layout.operator("arm.play_in_frame")
+        layout.operator("arm.play_in_viewport")
     else:
         layout.operator("arm.stop")
 
@@ -170,7 +170,7 @@ def export_game_data(fp, sdk_path):
     # TODO: cache
     nodes_logic.buildNodeTrees()
     world_outputs = nodes_world.buildNodeTrees()
-    linked_assets = nodes_pipeline.buildNodeTrees(shader_references, asset_references, assets_path)
+    linked_assets = nodes_renderpath.buildNodeTrees(shader_references, asset_references, assets_path)
     for wout in world_outputs:
         nodes_world.write_output(wout, asset_references, shader_references)
 
@@ -355,11 +355,11 @@ def watch_compile():
             # self.report({'ERROR'}, 'Build failed, check console')
             print('Build failed, check console')
 
-def play_project(self, in_frame):
+def play_project(self, in_viewport):
     # Build data
     build_project(self)
 
-    if in_frame == False:
+    if in_viewport == False:
         # Windowed player
         wrd = bpy.data.worlds[0]
         x = 0
@@ -377,8 +377,8 @@ def play_project(self, in_frame):
         winoff = bpy.context.window.y + bpy.context.window.height
         winoff += 22 # Header
 
-    write_data.write_electronjs(x, y, w, h, winoff, in_frame)
-    write_data.write_indexhtml(w, h, in_frame)
+    write_data.write_electronjs(x, y, w, h, winoff, in_viewport)
+    write_data.write_indexhtml(w, h, in_viewport)
 
     # Compile
     play_project.compileproc = compile_project(self, target_index=0)
@@ -430,9 +430,9 @@ class ArmoryPlayButton(bpy.types.Operator):
         play_project(self, False)
         return{'FINISHED'}
 
-class ArmoryPlayInFrameButton(bpy.types.Operator):
-    bl_idname = 'arm.play_in_frame'
-    bl_label = 'Play in Frame'
+class ArmoryPlayInViewportButton(bpy.types.Operator):
+    bl_idname = 'arm.play_in_viewport'
+    bl_label = 'Play in Viewport'
  
     def execute(self, context):
         # Cancel viewport render
@@ -498,7 +498,7 @@ def register():
     # Key shortcuts
     wm = bpy.context.window_manager
     km = wm.keyconfigs.addon.keymaps.new(name='Window', space_type='EMPTY', region_type="WINDOW")
-    km.keymap_items.new(ArmoryPlayInFrameButton.bl_idname, type='B', value='PRESS', ctrl=True, shift=True)
+    km.keymap_items.new(ArmoryPlayInViewportButton.bl_idname, type='B', value='PRESS', ctrl=True, shift=True)
     km.keymap_items.new(ArmoryPlayButton.bl_idname, type='F5', value='PRESS')
     arm_keymaps.append(km)
     bpy.types.VIEW3D_HT_header.append(draw_play_item)

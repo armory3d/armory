@@ -2,7 +2,7 @@ import shutil
 import bpy
 import os
 import json
-import nodes_pipeline
+import nodes_renderpath
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 import utils
@@ -96,7 +96,7 @@ def initProperties():
     bpy.types.Armature.armature_cached = bpy.props.BoolProperty(name="Armature Cached", default=False)
     # For camera
     bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", default=True)
-    bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Pipeline Path", default="deferred_pipeline")
+    bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Pipeline Path", default="deferred_path")
     bpy.types.Camera.pipeline_id = bpy.props.StringProperty(name="Pipeline ID", default="deferred")
 	# TODO: Specify multiple material ids, merge ids from multiple cameras 
     bpy.types.Camera.pipeline_passes = bpy.props.StringProperty(name="Pipeline passes", default="")
@@ -292,7 +292,7 @@ class OBJECT_OT_RESETPIPELINESButton(bpy.types.Operator):
     bl_label = "Reset Pipelines"
  
     def execute(self, context):
-        nodes_pipeline.load_library()
+        nodes_renderpath.load_library()
         return{'FINISHED'}
 
 class OBJECT_OT_INVALIDATECACHEButton(bpy.types.Operator):
