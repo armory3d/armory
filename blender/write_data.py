@@ -2,6 +2,9 @@ import bpy
 import os
 import assets
 
+def add_armory_library(sdk_path, name):
+    return ('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/' + name)[2:] + '");\n').replace('\\', '/')
+
 # Write khafile.js
 def write_khafilejs(shader_references, asset_references):
     
@@ -26,12 +29,13 @@ project.addAssets('Assets/**');
         for file in assets.assets:
             f.write("project.addAssets('" + file + "');\n")
         
-        f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/armory')[2:] + '");\n')
-        f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/iron')[2:] + '");\n')
+        
+        f.write(add_armory_library(sdk_path, 'armory'))
+        f.write(add_armory_library(sdk_path, 'iron'))
         
         if bpy.data.worlds[0].CGPhysics != 'Disabled':
             f.write("project.addDefine('WITH_PHYSICS');\n")
-            f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/haxebullet')[2:] + '");\n')
+            f.write(add_armory_library(sdk_path, 'haxebullet'))
         
         for i in range(0, len(shader_references)): # Shaders
             ref = shader_references[i]
@@ -44,12 +48,12 @@ project.addAssets('Assets/**');
 
         if bpy.data.worlds[0].CGPlayConsole:
             f.write("project.addDefine('WITH_PROFILE');\n")
-            f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/zui')[2:] + '");\n')
+            f.write(add_armory_library(sdk_path, 'zui'))
             f.write('project.addAssets("' + sdk_path + '/armory/Assets/droid_sans.ttf");\n')
 
-        # f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/haxeui/haxeui-core')[2:] + '");\n')
-        # f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/haxeui/haxeui-kha')[2:] + '");\n')
-        # f.write('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/haxeui/hscript')[2:] + '");\n')
+        # f.write(add_armory_library(sdk_path, 'haxeui/haxeui-core'))
+        # f.write(add_armory_library(sdk_path, 'haxeui/haxeui-kha'))
+        # f.write(add_armory_library(sdk_path, 'haxeui/hscript'))
 
         if bpy.data.worlds[0].CGMinimize == False:
             f.write("project.addDefine('WITH_JSON');\n")
@@ -136,7 +140,7 @@ function createWindow () { """)
     mainWindow = new BrowserWindow({x: targetX, y: targetY, width: """ + str(int(w)) + """, height: """ + str(int(h)) + """, frame: false, autoHideMenuBar: true, useContentSize: true, movable: false, resizable: false, transparent: true, enableLargerThanScreen: true});
     mainWindow.setSkipTaskbar(true);
     mainWindow.setAlwaysOnTop(true);
-    app.dock.setBadge('');
+    //app.dock.setBadge('');
 """)
         else:
             f.write(

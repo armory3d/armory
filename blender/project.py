@@ -289,8 +289,16 @@ def compile_project(self, target_index=None):
         if not os.path.isfile('build/debug-html5/ammo.js'):
             shutil.copy(ammojs_path, 'build/debug-html5')
 
-    node_path = sdk_path + '/nodejs/node-osx'
-    khamake_path = sdk_path + '/KodeStudio/KodeStudio.app/Contents/Resources/app/extensions/kha/Kha/make'
+    if utils.get_os() == 'win':
+        node_path = sdk_path + '/nodejs/node.exe'
+        khamake_path = sdk_path + '/kode_studio/KodeStudio-win32/resources/app/extensions/kha/Kha/make'
+    elif utils.get_os() == 'mac':
+        node_path = sdk_path + '/nodejs/node-osx'
+        khamake_path = sdk_path + '/kode_studio/KodeStudio.app/Contents/Resources/app/extensions/kha/Kha/make'
+    else:
+        node_path = sdk_path + '/nodejs/node-linux64'
+        # khamake_path = sdk_path + '/kode_studio/KodeStudio-linux64/'
+    
     cmd = [node_path, khamake_path, targets[target_index]]
     # print_info("Building, see console...")
     return subprocess.Popen(cmd)
@@ -324,7 +332,7 @@ def build_project(self):
         os.makedirs('build/debug-html5')
 
     # Compile path tracer shaders
-    if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].pipeline_path == 'pathtrace_pipeline':
+    if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].pipeline_path == 'pathtrace_path':
         path_tracer.compile(raw_path + 'pt_trace_pass/pt_trace_pass.frag.glsl')
 
     # Export data
@@ -389,9 +397,15 @@ def on_compiled():
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
     sdk_path = addon_prefs.sdk_path
-    # electron_path = sdk_path + 'KodeStudio/KodeStudio.app/Contents/MacOS/Electron'
-    electron_path = sdk_path + 'KodeStudio/Electron.app/Contents/MacOS/Electron'
     electron_app_path = './build/electron.js'
+
+    if utils.get_os() == 'win':
+        electron_path = sdk_path + 'kode_studio/KodeStudio-win32/Kode Studio.exe'
+    elif utils.get_os() == 'mac':
+        # electron_path = sdk_path + 'kode_studio/KodeStudio.app/Contents/MacOS/Electron'
+        electron_path = sdk_path + 'kode_studio/Electron.app/Contents/MacOS/Electron'
+    else:
+        pass
 
     play_project.playproc = subprocess.Popen([electron_path, '--chromedebug', '--remote-debugging-port=9222', electron_app_path])
     watch_play()
@@ -477,9 +491,16 @@ class ArmoryKodeButton(bpy.types.Operator):
         user_preferences = bpy.context.user_preferences
         addon_prefs = user_preferences.addons['armory'].preferences
         sdk_path = addon_prefs.sdk_path
-        kode_path = sdk_path + '/KodeStudio/KodeStudio.app/Contents/MacOS/Electron'
+
+        if utils.get_os() == 'win':
+            kode_path = sdk_path + '/kode_studio/KodeStudio-win32/Kode Studio.exe'
+        elif utils.get_os() == 'mac':
+            kode_path = sdk_path + '/kode_studio/KodeStudio.app/Contents/MacOS/Electron'
+        else:
+            pass
+
         project_path = utils.get_fp()
-        subprocess.call([kode_path + ' ' + utils.get_fp() + ' &'], shell=True)
+        subprocess.call([kode_path, utils.get_fp(), '&'], shell=True)
         return{'FINISHED'}
 
 class ArmoryCleanButton(bpy.types.Operator):

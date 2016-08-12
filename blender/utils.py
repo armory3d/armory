@@ -3,6 +3,7 @@ import json
 import os
 import glob
 import lib.umsgpack
+import platform
 
 def write_arm(filepath, output):
     if bpy.data.worlds[0]['CGMinimize']:
@@ -17,6 +18,15 @@ def get_fp():
     s = bpy.data.filepath.split(os.path.sep)
     s.pop()
     return os.path.sep.join(s)
+
+def get_os():
+    s = platform.system()
+    if s == 'Windows':
+        return 'win'
+    elif s == 'Darwin':
+        return 'mac'
+    else:
+        return 'linux'
 
 def fetch_script_names():
     user_preferences = bpy.context.user_preferences
