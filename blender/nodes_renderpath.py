@@ -1688,7 +1688,7 @@ def traverse_pipeline(node, node_group, render_targets, depth_buffers):
     elif node.bl_idname == 'SMAAPassNodeType':
         bpy.data.worlds[0].world_defs += '_SMAA'
 
-    elif node.bl_idname == 'SSAOPassNodeType':
+    elif node.bl_idname == 'SSAOPassNodeType' or node.bl_idname == 'ApplySSAOPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':
         if bpy.data.worlds[0].generate_ssao: # SSAO enabled
             bpy.data.worlds[0].world_defs += '_SSAO'
 
