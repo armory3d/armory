@@ -192,9 +192,9 @@ def initProperties():
     bpy.types.Scene.game_export = bpy.props.BoolProperty(name="Game Export", default=True)
     # For light
     bpy.types.Lamp.light_clip_start = bpy.props.FloatProperty(name="Clip Start", default=0.1)
-    bpy.types.Lamp.light_clip_end = bpy.props.FloatProperty(name="Clip End", default=100.0)
+    bpy.types.Lamp.light_clip_end = bpy.props.FloatProperty(name="Clip End", default=50.0)
     bpy.types.Lamp.light_fov = bpy.props.FloatProperty(name="FoV", default=0.785)
-    bpy.types.Lamp.light_bias = bpy.props.FloatProperty(name="Bias", default=0.0001)
+    bpy.types.Lamp.light_shadows_bias = bpy.props.FloatProperty(name="Shadows Bias", default=0.0001)
 
 # Menu in object region
 class ObjectPropsPanel(bpy.types.Panel):
@@ -274,7 +274,7 @@ class DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'light_clip_start')
             layout.prop(obj.data, 'light_clip_end')
             layout.prop(obj.data, 'light_fov')
-            layout.prop(obj.data, 'light_bias')
+            layout.prop(obj.data, 'light_shadows_bias')
 
 class ScenePropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"

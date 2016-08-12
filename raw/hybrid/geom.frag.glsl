@@ -56,7 +56,7 @@ uniform vec3 lightDir;
 uniform int lightType;
 uniform vec3 lightColor;
 uniform float lightStrength;
-uniform float lightBias;
+uniform float shadowsBias;
 uniform float spotlightCutoff;
 uniform float spotlightExponent;
 uniform vec3 eye;
@@ -99,23 +99,23 @@ float PCF(vec2 uv, float compare) {
         // for(int y = -1; y <= 1; y++){
             // vec2 off = vec2(x, y) / shadowmapSize;
             // result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
-			vec2 off = vec2(-1, -1) / shadowmapSize;
+			vec2 off = vec2(-1.0, -1.0) / shadowmapSize;
             result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
-			off = vec2(-1, 0) / shadowmapSize;
+			off = vec2(-1.0, 0.0) / shadowmapSize;
             result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
-			off = vec2(-1, 1) / shadowmapSize;
+			off = vec2(-1.0, 1.0) / shadowmapSize;
             result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
-			off = vec2(0, -1) / shadowmapSize;
+			off = vec2(0.0, -1.0) / shadowmapSize;
             result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
-			off = vec2(0, 0) / shadowmapSize;
+			off = vec2(0.0, 0.0) / shadowmapSize;
             result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
-			off = vec2(0, 1) / shadowmapSize;
+			off = vec2(0.0, 1.0) / shadowmapSize;
             result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
-			off = vec2(1, -1) / shadowmapSize;
+			off = vec2(1.0, -1.0) / shadowmapSize;
             result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
-			off = vec2(1, 0) / shadowmapSize;
+			off = vec2(1.0, 0.0) / shadowmapSize;
             result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
-			off = vec2(1, 1) / shadowmapSize;
+			off = vec2(1.0, 1.0) / shadowmapSize;
             result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
         // }
     // }
@@ -125,7 +125,7 @@ float shadowTest(vec4 lPos) {
 	vec4 lPosH = lPos / lPos.w;
 	lPosH.x = (lPosH.x + 1.0) / 2.0;
     lPosH.y = (lPosH.y + 1.0) / 2.0;
-	return PCF(lPosH.xy, lPosH.z - lightBias);
+	return PCF(lPosH.xy, lPosH.z - shadowsBias);
 }
 #endif
 
@@ -265,7 +265,6 @@ float packFloat(float f1, float f2) {
 	return result;
 }
 
-const float W = 11.2;
 vec3 uncharted2Tonemap(vec3 x) {
 	const float A = 0.15;
 	const float B = 0.50;
@@ -276,7 +275,8 @@ vec3 uncharted2Tonemap(vec3 x) {
 	return ((x * (A * x + C * B) + D * E) / (x * (A * x + B) + D * F)) - E / F;
 }
 vec3 tonemapUncharted2(vec3 color) {
-    float exposureBias = 2.0;
+	const float W = 11.2;
+    const float exposureBias = 2.0;
     vec3 curr = uncharted2Tonemap(exposureBias * color);
     vec3 whiteScale = 1.0 / uncharted2Tonemap(vec3(W));
     return curr * whiteScale;

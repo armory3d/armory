@@ -62,7 +62,7 @@ uniform int lightType;
 // uniform int lightIndex;
 uniform vec3 lightColor;
 uniform float lightStrength;
-uniform float lightBias;
+uniform float shadowsBias;
 uniform float spotlightCutoff;
 uniform float spotlightExponent;
 uniform vec3 eye;
@@ -406,9 +406,9 @@ float shadowTest(vec4 lPos) {
 	lPosH.y = (lPosH.y + 1.0) / 2.0;
 	
 #ifdef _PCSS
-	return PCSS(lPosH.xy, lPosH.z - lightBias);
+	return PCSS(lPosH.xy, lPosH.z - shadowsBias);
 #else
-	return PCF(lPosH.xy, lPosH.z - lightBias);
+	return PCF(lPosH.xy, lPosH.z - shadowsBias);
 #endif
 }
 #endif

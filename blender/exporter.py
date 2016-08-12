@@ -2103,7 +2103,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		o['near_plane'] = object.light_clip_start
 		o['far_plane'] = object.light_clip_end
 		o['fov'] = object.light_fov
-		o['bias'] = object.light_bias
+		o['shadows_bias'] = object.light_shadows_bias
 		if o['type'] == 'sun': # Scale bias for ortho light matrix
 			o['bias'] *= 10.0
 

@@ -86,5 +86,6 @@ void main() {
 	// }
 
 	result /= weight;
-	gl_FragColor = vec4(result.rgb, 1.0);
+	// gl_FragColor = vec4(result.rgb, 1.0);
+	gl_FragColor = vec4(result.rrr, 1.0); // SSAO only
 }

@@ -294,7 +294,7 @@ def compile_project(self, target_index=None):
         khamake_path = sdk_path + '/kode_studio/KodeStudio-win32/resources/app/extensions/kha/Kha/make'
     elif utils.get_os() == 'mac':
         node_path = sdk_path + '/nodejs/node-osx'
-        khamake_path = sdk_path + '/kode_studio/KodeStudio.app/Contents/Resources/app/extensions/kha/Kha/make'
+        khamake_path = sdk_path + '/kode_studio/Kode Studio.app/Contents/Resources/app/extensions/kha/Kha/make'
     else:
         node_path = sdk_path + '/nodejs/node-linux64'
         # khamake_path = sdk_path + '/kode_studio/KodeStudio-linux64/'
@@ -402,7 +402,7 @@ def on_compiled():
     if utils.get_os() == 'win':
         electron_path = sdk_path + 'kode_studio/KodeStudio-win32/Kode Studio.exe'
     elif utils.get_os() == 'mac':
-        # electron_path = sdk_path + 'kode_studio/KodeStudio.app/Contents/MacOS/Electron'
+        # electron_path = sdk_path + 'kode_studio/Kode Studio.app/Contents/MacOS/Electron'
         electron_path = sdk_path + 'kode_studio/Electron.app/Contents/MacOS/Electron'
     else:
         pass
@@ -495,7 +495,7 @@ class ArmoryKodeButton(bpy.types.Operator):
         if utils.get_os() == 'win':
             kode_path = sdk_path + '/kode_studio/KodeStudio-win32/Kode Studio.exe'
         elif utils.get_os() == 'mac':
-            kode_path = sdk_path + '/kode_studio/KodeStudio.app/Contents/MacOS/Electron'
+            kode_path = sdk_path + '/kode_studio/Kode Studio.app/Contents/MacOS/Electron'
         else:
             pass
 
