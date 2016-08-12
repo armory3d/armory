@@ -185,7 +185,7 @@ def write_indexhtml(w, h, in_viewport):
 <body>
     <canvas id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """'></canvas>
     <script src='kha.js'></script>
-    <script>document.addEventListener('keypress', e => { if (e.key == "Z") close(); });</script>
+    <script>document.addEventListener('keypress', e => { if (e.code == "KeyZ" && e.shiftKey) close(); });</script>
 </body>
 </html>
 """)

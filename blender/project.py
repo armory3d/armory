@@ -377,13 +377,21 @@ def play_project(self, in_viewport):
         winoff = 0
     else:
         # Player dimensions
+         # Header
+        if utils.get_os() == 'win':
+            xoff = 0
+            yoff = 6
+        elif utils.get_os() == 'mac':
+            xoff = 5
+            yoff = 22
+        else:
+            pass
         psize = bpy.context.user_preferences.system.pixel_size
-        x = bpy.context.window.x + (bpy.context.area.x - 5) / psize
+        x = bpy.context.window.x + (bpy.context.area.x - xoff) / psize
         y = bpy.context.window.height + int(22.5 * 2) - (bpy.context.area.y + bpy.context.area.height) / psize
-        w = (bpy.context.area.width + 5) / psize
+        w = (bpy.context.area.width + xoff) / psize
         h = (bpy.context.area.height) / psize - 25
-        winoff = bpy.context.window.y + bpy.context.window.height
-        winoff += 22 # Header
+        winoff = bpy.context.window.y + bpy.context.window.height + yoff
 
     write_data.write_electronjs(x, y, w, h, winoff, in_viewport)
     write_data.write_indexhtml(w, h, in_viewport)
@@ -494,13 +502,13 @@ class ArmoryKodeButton(bpy.types.Operator):
         project_path = utils.get_fp()
 
         if utils.get_os() == 'win':
-            kode_path = '"' + sdk_path + '/kode_studio/KodeStudio-win32/Kode Studio.exe"'
+            kode_path = sdk_path + '/kode_studio/KodeStudio-win32/Kode Studio.exe'
         elif utils.get_os() == 'mac':
             kode_path = '"' + sdk_path + '/kode_studio/Kode Studio.app/Contents/MacOS/Electron"'
         else:
             pass
 
-        subprocess.call([kode_path, utils.get_fp(), '&'], shell=True)
+        subprocess.Popen([kode_path, utils.get_fp()], shell=True)
 
         return{'FINISHED'}
 
