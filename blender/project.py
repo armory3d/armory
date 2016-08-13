@@ -377,7 +377,7 @@ def play_project(self, in_viewport):
         winoff = 0
     else:
         # Player dimensions
-         # Header
+        # Header
         if utils.get_os() == 'win':
             xoff = 0
             yoff = 6
@@ -385,8 +385,10 @@ def play_project(self, in_viewport):
             xoff = 5
             yoff = 22
         else:
-            pass
-        psize = bpy.context.user_preferences.system.pixel_size
+            xoff = 0
+            yoff = 6
+
+        psize = 1 #bpy.context.user_preferences.system.pixel_size 
         x = bpy.context.window.x + (bpy.context.area.x - xoff) / psize
         y = bpy.context.window.height + int(22.5 * 2) - (bpy.context.area.y + bpy.context.area.height) / psize
         w = (bpy.context.area.width + xoff) / psize

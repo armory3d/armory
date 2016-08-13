@@ -44,12 +44,15 @@ project.addAssets('Assets/**');
             f.write("project.addShaders('" + ref + ".vert.glsl');\n")
         
         for ref in asset_references: # Assets
+            ref = ref.replace('\\', '/')
             f.write("project.addAssets('" + ref + "');\n")
 
         if bpy.data.worlds[0].CGPlayConsole:
             f.write("project.addDefine('WITH_PROFILE');\n")
             f.write(add_armory_library(sdk_path, 'zui'))
-            f.write('project.addAssets("' + sdk_path + '/armory/Assets/droid_sans.ttf");\n')
+            font_path =  sdk_path + '/armory/Assets/droid_sans.ttf'
+            font_path = font_path.replace('\\', '/')
+            f.write('project.addAssets("' + font_path + '");\n')
 
         # f.write(add_armory_library(sdk_path, 'haxeui/haxeui-core'))
         # f.write(add_armory_library(sdk_path, 'haxeui/haxeui-kha'))
@@ -132,12 +135,19 @@ function createWindow () { """)
         if in_viewport:
             f.write(
 """
-    var point = electron.screen.getCursorScreenPoint();
-    var targetDisplay = electron.screen.getDisplayNearestPoint(point);
-    var offY = targetDisplay.workAreaSize.height - """ + str(int(winoff)) + """;
-    var targetX = targetDisplay.bounds.x + """ + str(int(x)) + """;
-    var targetY = targetDisplay.bounds.y + """ + str(int(y)) + """ + offY;
-    mainWindow = new BrowserWindow({x: targetX, y: targetY, width: """ + str(int(w)) + """, height: """ + str(int(h)) + """, frame: false, autoHideMenuBar: true, useContentSize: true, movable: false, resizable: false, transparent: true, enableLargerThanScreen: true});
+    let point = electron.screen.getCursorScreenPoint();
+    let targetDisplay = electron.screen.getDisplayNearestPoint(point);
+    let scale = targetDisplay.scaleFactor;
+    let _x = Math.floor(""" + str(int(x)) + """ / scale);
+    let _y = Math.floor(""" + str(int(y)) + """ / scale);
+    let _w = Math.floor(""" + str(int(w)) + """ / scale);
+    let _h = Math.floor(""" + str(int(h)) + """ / scale);
+    let _winoff = Math.floor(""" + str(int(winoff)) + """ / scale);
+
+    let offY = targetDisplay.workAreaSize.height - _winoff;
+    _x = targetDisplay.bounds.x + _x;
+    _y = targetDisplay.bounds.y + _y + offY;
+    mainWindow = new BrowserWindow({x: _x, y: _y, width: _w, height: _h, frame: false, autoHideMenuBar: true, useContentSize: true, movable: false, resizable: false, transparent: true, enableLargerThanScreen: true});
     mainWindow.setSkipTaskbar(true);
     mainWindow.setAlwaysOnTop(true);
     //app.dock.setBadge('');
