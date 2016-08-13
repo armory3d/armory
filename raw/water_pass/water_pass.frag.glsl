@@ -26,6 +26,7 @@ uniform float envmapStrength;
 in vec2 texCoord;
 in vec3 viewRay;
 in vec3 vecnormal;
+out vec4 outColor;
 
 // const float seaLevel = 0.0;
 // const float seaFade = 1.8;
@@ -320,7 +321,7 @@ void main() {
 	float gdepth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	vec4 colorOriginal = texture(tex, texCoord);
 	// if (gdepth == 1.0) {
-		// gl_FragColor = colorOriginal;
+		// outColor = colorOriginal;
 		// return;
 	// }
 	
@@ -334,7 +335,7 @@ void main() {
 	// 	color = mix(colorOriginal.rgb, vec3(0.0, 0.05, 0.2), 1.0 - exp(-0.3 * pow(t, 1.0)));
 	// 	const float skyColor = 0.8;
 	// 	color += godRays(texCoord) * mix(skyColor, 1.0, texCoord.y * texCoord.y) * vec3(0.7, 1.0, 1.0);
-	// 	gl_FragColor = vec4(color, 1.0);
+	// 	outColor = vec4(color, 1.0);
 	// 	// gl_FragData[0] = vec4(color, 1.0);
 	// 	return;
 	// }
@@ -406,6 +407,6 @@ void main() {
 		color = mix(color, colorOriginal.rgb, clamp((vecn.z + 0.03) * 10.0, 0.0, 1.0));
 	}
 
-	gl_FragColor.rgb = color;
+	outColor.rgb = color;
 	// gl_FragData[0].rgb = color;
 }

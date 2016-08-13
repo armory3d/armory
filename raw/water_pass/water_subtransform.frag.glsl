@@ -9,6 +9,7 @@ precision mediump float;
 uniform sampler2D texInput;
 
 in vec2 texCoord;
+out vec4 outColor;
 
 const float PI = 3.14159265359;
 const float transformSize = 512.0;
@@ -44,5 +45,5 @@ void main() {
 	vec2 outputA = even.xy + multiplyComplex(twiddle, odd.xy);
 	vec2 outputB = even.zw + multiplyComplex(twiddle, odd.zw);
 
-	gl_FragColor = vec4(outputA, outputB);
+	outColor = vec4(outputA, outputB);
 }

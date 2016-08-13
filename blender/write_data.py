@@ -1,6 +1,7 @@
 import bpy
 import os
 import assets
+import utils
 
 def add_armory_library(sdk_path, name):
     return ('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/' + name)[2:] + '");\n').replace('\\', '/')
@@ -131,26 +132,31 @@ const BrowserWindow = electron.BrowserWindow;
 let mainWindow;
 
 function createWindow () { """)
-    
+
         if in_viewport:
             f.write(
 """
     let point = electron.screen.getCursorScreenPoint();
     let targetDisplay = electron.screen.getDisplayNearestPoint(point);
-    let scale = targetDisplay.scaleFactor;
+""")
+            if utils.get_os() == 'mac': # Perform scale in python
+                f.write("""let scale = 1;""")
+            else:
+                f.write("""let scale = targetDisplay.scaleFactor;""")
+
+            f.write(
+"""
     let _x = Math.floor(""" + str(int(x)) + """ / scale);
     let _y = Math.floor(""" + str(int(y)) + """ / scale);
     let _w = Math.floor(""" + str(int(w)) + """ / scale);
     let _h = Math.floor(""" + str(int(h)) + """ / scale);
     let _winoff = Math.floor(""" + str(int(winoff)) + """ / scale);
-
     let offY = targetDisplay.workAreaSize.height - _winoff;
     _x = targetDisplay.bounds.x + _x;
     _y = targetDisplay.bounds.y + _y + offY;
     mainWindow = new BrowserWindow({x: _x, y: _y, width: _w, height: _h, frame: false, autoHideMenuBar: true, useContentSize: true, movable: false, resizable: false, transparent: true, enableLargerThanScreen: true});
     mainWindow.setSkipTaskbar(true);
     mainWindow.setAlwaysOnTop(true);
-    //app.dock.setBadge('');
 """)
         else:
             f.write(

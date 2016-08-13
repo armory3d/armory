@@ -37,6 +37,7 @@ in vec2 pixcoord;
 in vec4 offset0;
 in vec4 offset1;
 in vec4 offset2;
+out vec4 outColor;
 
 // Blending Weight Calculation Pixel Shader (Second Pass)
 vec2 cdw_end;
@@ -207,7 +208,8 @@ vec2 SMAACalculateDiagWeights(/*sampler2D edgesTex, sampler2D areaTex,*/ vec2 te
     vec4 d;
     if (e.r > 0.0) {
         d.xz = SMAASearchDiag1(/*edgesTex,*/ texcoord, vec2(-1.0,  1.0)/*, cdw_end*/);
-        d.x += float(cdw_end.y > 0.9);
+        float dadd = cdw_end.y > 0.9 ? 1.0 : 0.0;
+        d.x += dadd;
     }
     else {
         d.xz = vec2(0.0, 0.0);
@@ -250,7 +252,8 @@ vec2 SMAACalculateDiagWeights(/*sampler2D edgesTex, sampler2D areaTex,*/ vec2 te
     d.xz = SMAASearchDiag2(/*edgesTex,*/ texcoord, vec2(-1.0, -1.0)/*, cdw_end*/);
     if (SMAASampleLevelZeroOffset(edgesTex, texcoord, ivec2(1, 0)).r > 0.0) {
         d.yw = SMAASearchDiag2(/*edgesTex,*/ texcoord, vec2(1.0, 1.0)/*, cdw_end*/);
-        d.y += float(cdw_end.y > 0.9);
+        float dadd = cdw_end.y > 0.9 ? 1.0 : 0.0;
+        d.y += dadd;
     } 
     else {
         d.yw = vec2(0.0, 0.0);
@@ -724,6 +727,6 @@ vec4 SMAABlendingWeightCalculationPS(vec2 texcoord, vec2 pixcoord, /*vec4 offset
 }
 
 void main() {
-    gl_FragColor = SMAABlendingWeightCalculationPS(texCoord, pixcoord, /*offset,*/
+    outColor = SMAABlendingWeightCalculationPS(texCoord, pixcoord, /*offset,*/
                                      /*edgesTex, areaTex, searchTex,*/ vec4(0.0));
 }

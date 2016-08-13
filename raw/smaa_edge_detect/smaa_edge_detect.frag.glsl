@@ -56,6 +56,7 @@ in vec2 texCoord;
 in vec4 offset0;
 in vec4 offset1;
 in vec4 offset2;
+out vec4 outColor;
 
 // Misc functions
 // Gathers current pixel, and the top-left neighbors.
@@ -207,6 +208,6 @@ vec2 SMAAColorEdgeDetectionPS(vec2 texcoord/*, vec4 offset[3], sampler2D colorTe
 // }
 
 void main() {
-    // gl_FragColor.rg = SMAALumaEdgeDetectionPS(texCoord/*, offset, colorTex*/);
-    gl_FragColor.rg = SMAAColorEdgeDetectionPS(texCoord/*, offset, colorTex*/);
+    // outColor.rg = SMAALumaEdgeDetectionPS(texCoord/*, offset, colorTex*/);
+    outColor.rg = SMAAColorEdgeDetectionPS(texCoord/*, offset, colorTex*/);
 }

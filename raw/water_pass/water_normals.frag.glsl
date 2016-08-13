@@ -6,6 +6,7 @@ precision mediump float;
 #endif
 
 in vec2 texCoord;
+out vec4 outColor;
 
 uniform sampler2D texDisplacement;
 const float resolution = 512.0;
@@ -26,5 +27,5 @@ void main() {
 	vec3 bottomLeft = cross(left, bottom);
 	vec3 bottomRight = cross(bottom, right);
 
-	gl_FragColor = vec4(normalize(topRight + topLeft + bottomLeft + bottomRight), 1.0);
+	outColor = vec4(normalize(topRight + topLeft + bottomLeft + bottomRight), 1.0);
 }

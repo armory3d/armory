@@ -299,7 +299,7 @@ def compile_project(self, target_index=None):
         node_path = sdk_path + '/nodejs/node-linux64'
         # khamake_path = sdk_path + '/kode_studio/KodeStudio-linux64/'
     
-    cmd = [node_path, khamake_path, targets[target_index]]
+    cmd = [node_path, khamake_path, targets[target_index], '--glsl2']
     # print_info("Building, see console...")
     return subprocess.Popen(cmd)
 
@@ -377,20 +377,21 @@ def play_project(self, in_viewport):
         winoff = 0
     else:
         # Player dimensions
-        # Header
         if utils.get_os() == 'win':
+            psize = 1 # Scale in electron
             xoff = 0
             yoff = 6
         elif utils.get_os() == 'mac':
+            psize = bpy.context.user_preferences.system.pixel_size
             xoff = 5
             yoff = 22
         else:
+            psize = 1
             xoff = 0
             yoff = 6
 
-        psize = 1 #bpy.context.user_preferences.system.pixel_size 
         x = bpy.context.window.x + (bpy.context.area.x - xoff) / psize
-        y = bpy.context.window.height + int(22.5 * 2) - (bpy.context.area.y + bpy.context.area.height) / psize
+        y = bpy.context.window.height + 45 - (bpy.context.area.y + bpy.context.area.height) / psize
         w = (bpy.context.area.width + xoff) / psize
         h = (bpy.context.area.height) / psize - 25
         winoff = bpy.context.window.y + bpy.context.window.height + yoff

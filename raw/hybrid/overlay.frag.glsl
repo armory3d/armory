@@ -61,6 +61,7 @@ in vec3 eyeDir;
 #else
 	in vec3 normal;
 #endif
+out vec4 outColor;
 
 #ifndef _NoShadows
 float texture2DCompare(vec2 uv, float compare) {
@@ -276,8 +277,6 @@ void main() {
 	baseColor *= texel.rgb;
 #endif
 
-	vec4 outColor;
-
 	vec3 v = normalize(eyeDir);
 	vec3 h = normalize(v + l);
 
@@ -331,8 +330,8 @@ void main() {
 #endif
 
 #ifdef _LDR
-    gl_FragColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
+    outColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
 #else
-    gl_FragColor = vec4(outColor.rgb, outColor.a);
+    outColor = vec4(outColor.rgb, outColor.a);
 #endif
 }

@@ -73,6 +73,7 @@ in vec3 eyeDir;
 #else
 	in vec3 normal;
 #endif
+out vec4[2] outColor;
 
 #ifndef _NoShadows
 float texture2DCompare(vec2 uv, float compare) {
@@ -325,7 +326,7 @@ void main() {
 	baseColor *= texel.rgb;
 #endif
 
-	vec4 outColor;
+	vec4 outputColor;
 
 	vec3 v = normalize(eyeDir);
 	vec3 h = normalize(v + l);
@@ -382,23 +383,23 @@ void main() {
 	indirect += indirectSpecular;
 #endif
 	indirect = indirect * lightColor * lightStrength * envmapStrength;
-	outColor = vec4(vec3(direct * visibility + indirect), 1.0);
+	outputColor = vec4(vec3(direct * visibility + indirect), 1.0);
 	
 #ifdef _OMTex
 	vec3 occ = texture(som, texCoord).rgb;
-	outColor.rgb *= occ;
+	outputColor.rgb *= occ;
 #else
-	outColor.rgb *= occlusion; 
+	outputColor.rgb *= occlusion; 
 #endif
 
 #ifdef _LDR
-	outColor.rgb = tonemapUncharted2(outColor.rgb);
-    gl_FragData[0] = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), visibility);
+	outputColor.rgb = tonemapUncharted2(outputColor.rgb);
+    outColor[0] = vec4(pow(outputColor.rgb, vec3(1.0 / 2.2)), visibility);
 #else
-    gl_FragData[0] = vec4(outColor.rgb, visibility);
+    outColor[0] = vec4(outputColor.rgb, visibility);
 #endif
 
 	n /= (abs(n.x) + abs(n.y) + abs(n.z));
     n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
-	gl_FragData[1] = vec4(n.xy, packFloat(roughness, metalness), 0.0);
+	outColor[1] = vec4(n.xy, packFloat(roughness, metalness), 0.0);
 }

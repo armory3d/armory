@@ -14,6 +14,7 @@ uniform vec2 dir;
 uniform vec2 screenSize;
 
 in vec2 texCoord;
+out vec4 outColor;
 
 vec2 unpackFloat(float f) {
 	return vec2(floor(f) / 1000.0, fract(f));
@@ -23,8 +24,8 @@ void main() {
 	vec2 tc = texCoord * ssrTextureScale;
 	float roughness = unpackFloat(texture(gbuffer0, texCoord).b).x;
 	if (roughness == 0.0) {
-		gl_FragColor = texture(tex, tc);
-		// gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+		outColor = texture(tex, tc);
+		// outColor = vec4(0.0, 0.0, 0.0, 1.0);
 		return;
 	}
 	
@@ -45,5 +46,5 @@ void main() {
 	// result /= vec3(11.0);
 	result /= vec3(5.0);
 	
-	gl_FragColor.rgb = vec3(result);
+	outColor.rgb = vec3(result);
 }

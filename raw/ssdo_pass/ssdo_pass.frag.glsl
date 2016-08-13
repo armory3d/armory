@@ -27,6 +27,7 @@ const vec3 sh2_weight_l1 = vec3(fudge_factor_l1 * 0.48860); //0.5*sqrt(3.0/pi);
 const vec4 sh2_weight = vec4(sh2_weight_l1, sh2_weight_l0) / num_samples;
 
 in vec2 texCoord;
+out vec4 outColor;
 
 vec2 octahedronWrap(vec2 v) {
     return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
@@ -64,7 +65,7 @@ void main() {
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	// if (depth == 0.0) {
 	if (depth == 1.0) {
-		gl_FragColor = vec4(1.0);
+		outColor = vec4(1.0);
 		return;
 	}
 	
@@ -160,5 +161,5 @@ void main() {
 		occlusion_sh2 += doDO(points[31], noise, radius, center_pos, max_distance_inv, center_normal);
 	// }
 	
-    gl_FragColor = vec4(vec3(1.0 - occlusion_sh2.rgb), 1.0);
+    outColor = vec4(vec3(1.0 - occlusion_sh2.rgb), 1.0);
 }

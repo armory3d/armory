@@ -5,6 +5,7 @@ precision mediump float;
 #endif
 in vec3 initialRay;
 in vec2 texCoord;
+out vec4 outColor;
 uniform vec3 eye;
 //uniform float textureWeight;
 uniform float timeSinceStart;
@@ -191,6 +192,6 @@ time += 0.35;
 
   //}
   
-  gl_FragColor = vec4(vec3(col / samples), 1.0);
-  gl_FragColor.rgb = pow(gl_FragColor.rgb * 0.7, vec3(1.0 / 2.2));
+  outColor = vec4(vec3(col / samples), 1.0);
+  outColor.rgb = pow(outColor.rgb * 0.7, vec3(1.0 / 2.2));
 }

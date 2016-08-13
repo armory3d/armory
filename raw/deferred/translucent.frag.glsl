@@ -4,8 +4,7 @@
 precision mediump float;
 #endif
 
-#define PI 3.1415926535
-#define TwoPI (2.0 * PI)
+#include "../compiled.glsl"
 
 #ifdef _NMTex
 #define _AMTex
@@ -54,12 +53,12 @@ in vec4 matColor;
 #else
 	in vec3 normal;
 #endif
-
+out vec4[2] outColor;
 
 vec2 envMapEquirect(vec3 normal) {
 	float phi = acos(normal.z);
 	float theta = atan(-normal.y, normal.x) + PI;
-	return vec2(theta / TwoPI, phi / PI);
+	return vec2(theta / PI2, phi / PI);
 }
 
 float getMipLevelFromRoughness(float roughness) {
@@ -174,13 +173,10 @@ void main() {
 	vec3 indirect = indirectDiffuse + indirectSpecular;
 	indirect = indirect * lightColor * lightStrength * envmapStrength;
 
-	vec4 outColor = vec4(vec3(direct + indirect * occlusion), baseColor.a);
-
-
+	vec4 premultipliedReflect = vec4(vec3(direct + indirect * occlusion), baseColor.a);
 
 	// vec4 premultipliedReflect = vec4(1.0, 0.0, 0.0, 0.01);
 	// vec4 premultipliedReflect = baseColor;
-	vec4 premultipliedReflect = outColor;
 	float fragZ = mvpposition.z / mvpposition.w;
 	float a = min(1.0, premultipliedReflect.a) * 8.0 + 0.01;
     float b = -fragZ * 0.95 + 1.0;
@@ -189,6 +185,6 @@ void main() {
     // revealage = premultipliedReflect.a;
 	// RT0 = vec4(C*w, a)
 	// RT1 = vec4(vec3(a*w), 1)
-	gl_FragData[0] = vec4(premultipliedReflect.rgb * w, premultipliedReflect.a);
-	gl_FragData[1] = vec4(vec3(premultipliedReflect.a * w), 1.0);
+	outColor[0] = vec4(premultipliedReflect.rgb * w, premultipliedReflect.a);
+	outColor[1] = vec4(vec3(premultipliedReflect.a * w), 1.0);
 }

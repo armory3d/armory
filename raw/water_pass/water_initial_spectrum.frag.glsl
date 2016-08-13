@@ -6,6 +6,7 @@ precision mediump float;
 #endif
 
 in vec2 texCoord;
+out vec4 outColor;
 
 const float PI = 3.14159265359;
 const float G = 9.81;
@@ -74,6 +75,6 @@ void main() {
 	if (K.x == 0.0 && K.y == 0.0) {
 		h = 0.0; //no DC term
 	}
-	gl_FragColor = vec4(h, 0.0, 0.0, 0.0);
+	outColor = vec4(h, 0.0, 0.0, 0.0);
 }
 		

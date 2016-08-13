@@ -8,6 +8,7 @@ precision mediump float;
 uniform sampler2D tex;
 
 in vec2 texCoord;
+out vec4 outColor;
 
 void main() {
 	const float decay = 0.96815;
@@ -83,5 +84,5 @@ void main() {
 		illuminationDecay *= decay;
 	// }
 	
-	gl_FragColor = color;
+	outColor = color;
 }

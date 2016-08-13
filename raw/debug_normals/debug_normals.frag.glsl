@@ -12,6 +12,7 @@ uniform vec3 eyeLook;
 
 in vec2 texCoord;
 in vec3 viewRay;
+out vec4 outColor;
 
 vec2 octahedronWrap(vec2 v) {
 	return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
@@ -43,7 +44,7 @@ void main() {
 	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
 	n = normalize(n);
 
-	gl_FragColor = vec4(n * 0.5 + 0.5, 1.0);
+	outColor = vec4(n * 0.5 + 0.5, 1.0);
 
 	// vec3 p = getPos(depth);
 	// vec3 baseColor = g1.rgb;

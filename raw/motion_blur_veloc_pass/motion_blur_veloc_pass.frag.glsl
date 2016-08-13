@@ -15,6 +15,7 @@ uniform sampler2D tex;
 // uniform vec2 texStep;
 
 in vec2 texCoord;
+out vec4 outColor;
 
 void main() {
 	vec2 velocity = texture(sveloc, texCoord).rg;
@@ -25,7 +26,7 @@ void main() {
 
 	// Do not blur masked objects
 	if (texture(gbuffer0, texCoord).a == 1.0) {
-		gl_FragColor = col;
+		outColor = col;
 		return;
 	}
 
@@ -55,5 +56,5 @@ void main() {
 	// }
 	col /= float(samples + 1);
 
-	gl_FragColor = col;
+	outColor = col;
 }

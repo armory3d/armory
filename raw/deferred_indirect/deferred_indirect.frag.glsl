@@ -34,10 +34,10 @@ uniform float envmapStrength;
 #endif
 
 in vec2 texCoord;
-
 #ifdef _Rad
 	in vec3 viewRay;
 #endif
+out vec4 outColor;
 
 #ifdef _Rad
 float getMipLevelFromRoughness(float roughness) {
@@ -211,5 +211,5 @@ void main() {
 	indirect *= texture(ssaotex, texCoord).r; // SSAO
 #endif
 	
-	gl_FragColor.rgb = indirect;
+	outColor.rgb = indirect;
 }

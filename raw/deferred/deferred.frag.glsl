@@ -70,6 +70,12 @@ in vec4 matColor;
 	in vec4 prevmvppos;
 #endif
 
+#ifdef _Veloc
+	out vec4[3] outColor;
+#else
+	out vec4[2] outColor;
+#endif
+
 float packFloat(float f1, float f2) {
 	int index = int(f1 * 1000);
 	float alpha = f2 == 0.0 ? f2 : (f2 - 0.0001);
@@ -251,15 +257,15 @@ void main() {
 		}
 		if (dist > 0) mask_probe = 0;
 	}
-	gl_FragData[0] = vec4(n.xy, packFloat(roughness, metalness), mask_probe);
+	outColor[0] = vec4(n.xy, packFloat(roughness, metalness), mask_probe);
 #else
-	gl_FragData[0] = vec4(n.xy, packFloat(roughness, metalness), mask);
+	outColor[0] = vec4(n.xy, packFloat(roughness, metalness), mask);
 #endif
-	gl_FragData[1] = vec4(baseColor.rgb, occ);
+	outColor[1] = vec4(baseColor.rgb, occ);
 
 #ifdef _Veloc
 	vec2 posa = (mvppos.xy / mvppos.w) * 0.5 + 0.5;
 	vec2 posb = (prevmvppos.xy / prevmvppos.w) * 0.5 + 0.5;
-	gl_FragData[2].rg = vec2(posa - posb);
+	outColor[2].rg = vec2(posa - posb);
 #endif
 }

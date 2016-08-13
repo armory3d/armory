@@ -32,6 +32,7 @@ uniform vec2 texStep;
 // #endif
 
 in vec2 texCoord;
+out vec4 outColor;
 
 const float PI = 3.1415926535;
 const float fishEyeStrength = -0.01;
@@ -417,5 +418,5 @@ void main() {
 	// const float letterBoxSize = 0.1;
 	// col.rgb *= 1.0 - step(0.5 - letterBoxSize, abs(0.5 - texCoord.y));
 
-	gl_FragColor = col; 
+	outColor = col; 
 }

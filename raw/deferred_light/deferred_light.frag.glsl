@@ -72,8 +72,7 @@ uniform vec2 screenSize;
 // in vec2 texCoord;
 in vec4 mvpposition;
 // in vec3 viewRay;
-
-// out vec4 outputColor;
+out vec4 outColor;
 
 // Separable SSS Transmittance Function, ref to sss_pass
 #ifdef _SSS
@@ -754,7 +753,7 @@ void main() {
 #endif
 
 	// Direct
-	gl_FragColor = vec4(vec3(direct * visibility), 1.0);
+	outColor = vec4(vec3(direct * visibility), 1.0);
 
 	// Indirect
 // 	if (lightIndex == 0) {

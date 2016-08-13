@@ -18,6 +18,7 @@ uniform vec3 eyeLook;
 
 in vec2 texCoord;
 in vec3 viewRay;
+out vec4 outColor;
 
 // const float motionBlurIntensity = 1.0;
 // const int samples = 8;
@@ -46,13 +47,13 @@ void main() {
 	
 	// Do not blur masked objects
 	if (texture(gbuffer0, texCoord).a == 1.0) {
-		gl_FragColor = color;
+		outColor = color;
 		return;
 	}
 	
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	if (depth == 1.0) {
-		gl_FragColor = color;
+		outColor = color;
 		return;
 	}
 
@@ -113,5 +114,5 @@ void main() {
 	// }
 	 
 	vec4 finalColor = color / processed; 
-	gl_FragColor = finalColor;
+	outColor = finalColor;
 }

@@ -89,6 +89,7 @@ in vec3 eyeDir;
 #else
 	in vec3 normal;
 #endif
+out vec4 outColor;
 
 #ifndef _NoShadows
 // float linstep(float low, float high, float v) {
@@ -531,8 +532,6 @@ void main() {
 	baseColor *= texel.rgb;
 #endif
 
-	vec4 outColor;
-
 	vec3 v = normalize(eyeDir);
 	vec3 h = normalize(v + l);
 
@@ -694,8 +693,8 @@ void main() {
 	// outColor.rgb = ltccol * 10.0 * visibility + indirect / 14.0;
 
 #ifdef _LDR
-    gl_FragColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
+    outColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
 #else
-    gl_FragColor = vec4(outColor.rgb, outColor.a);
+    outColor = vec4(outColor.rgb, outColor.a);
 #endif
 }

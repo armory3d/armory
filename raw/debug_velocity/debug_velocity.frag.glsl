@@ -9,8 +9,9 @@ precision mediump float;
 uniform sampler2D tex;
 
 in vec2 texCoord;
+out vec4 outColor;
 
 void main() {
 	vec4 col = texture(tex, texCoord);
-	gl_FragColor = vec4(col.r * 10.0, col.g * 10.0, 0.0, 1.0);
+	outColor = vec4(col.r * 10.0, col.g * 10.0, 0.0, 1.0);
 }
