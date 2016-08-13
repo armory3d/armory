@@ -41,15 +41,23 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     addon_prefs = user_preferences.addons['armory'].preferences
     sdk_path = addon_prefs.sdk_path
 
-    cmft_path = sdk_path + '/armory/tools/cmft/'
-    kraffiti_path = sdk_path + '/KodeStudio/KodeStudio.app/Contents/Resources/app/extensions/kha/Kha/Kore/Tools/kraffiti/'
+    if utils.get_os() == 'win':
+        cmft_path = sdk_path + '/armory/tools/cmft/cmft.exe'
+        kraffiti_path = sdk_path + '/kode_studio/KodeStudio-win32/resources/app/extensions/kha/Kha/Kore/Tools/kraffiti/kraffiti.exe'
+    elif utils.get_os() == 'mac':
+        cmft_path = sdk_path + '/armory/tools/cmft/cmft-osx'
+        kraffiti_path = sdk_path + '/kode_studio/"Kode Studio.app"/Contents/Resources/app/extensions/kha/Kha/Kore/Tools/kraffiti/kraffiti-osx'
+    else:
+        cmft_path = sdk_path + '/armory/tools/cmft/cmft-linux64'
+        kraffiti_path = sdk_path + '/kode_studio/KodeStudio-linux64/resources/app/extensions/kha/Kha/Kore/Tools/kraffiti/kraffiti-linux64'
+    
     generated_files = []
     output_gama_numerator = '1.0' if disable_hdr else '2.2'
     input_file = utils.get_fp() + image_filepath #'Assets/' + image_name
     
     # Get input size
     output = subprocess.check_output([ \
-        kraffiti_path + 'kraffiti-osx' + \
+        kraffiti_path + \
         ' from=' + input_file + \
         ' donothing'], shell=True)
     # #%ix%i
@@ -87,7 +95,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     # Irradiance image
     # output_file_irr = 'compiled/Assets/envmaps/' + base_name + '_irradiance'
     # subprocess.call([ \
-    #   cmft_path + 'cmft-osx' + \
+    #   cmft_path + \
     #   ' --input ' + input_file + \
     #   ' --filter irradiance' + \
     #   ' --dstFaceSize ' + dst_face_size + \
@@ -99,7 +107,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     
     # Irradiance spherical harmonics
     subprocess.call([ \
-        cmft_path + 'cmft-osx' + \
+        cmft_path + \
         ' --input ' + input_file + \
         ' --filter shcoeffs' + \
         #gama_options + \
@@ -115,14 +123,14 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
         return cached_num_mips
 
     output = subprocess.check_output([ \
-        kraffiti_path + 'kraffiti-osx' + \
+        kraffiti_path + \
         ' from=' + input_file + \
         ' to=' + output_file_rad + '.' + rad_format + \
         ' format=' + rad_format + \
         ' scale=0.5'], shell=True)
 
     subprocess.call([ \
-        cmft_path + 'cmft-osx' + \
+        cmft_path + \
         ' --input ' + input_file + \
         ' --filter radiance' + \
         ' --dstFaceSize ' + dst_face_size + \
@@ -169,7 +177,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     if disable_hdr is True:
         for f in generated_files:
             subprocess.call([ \
-                kraffiti_path + 'kraffiti-osx' + \
+                kraffiti_path + \
                 ' from=' + f + '.hdr' + \
                 ' to=' + f + '.jpg' + \
                 ' format=jpg'], shell=True)
@@ -180,7 +188,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
         last = generated_files[-1]
         out = output_file_rad + '_' + str(mip_count + i)
         subprocess.call([ \
-                kraffiti_path + 'kraffiti-osx' + \
+                kraffiti_path + \
                 ' from=' + last + '.' + rad_format + \
                 ' to=' + out + '.' + rad_format + \
                 ' scale=0.5' + \

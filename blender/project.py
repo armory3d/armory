@@ -297,7 +297,7 @@ def compile_project(self, target_index=None):
         khamake_path = sdk_path + '/kode_studio/Kode Studio.app/Contents/Resources/app/extensions/kha/Kha/make'
     else:
         node_path = sdk_path + '/nodejs/node-linux64'
-        # khamake_path = sdk_path + '/kode_studio/KodeStudio-linux64/'
+        khamake_path = sdk_path + '/kode_studio/KodeStudio-linux64/resources/app/extensions/kha/Kha/make'
     
     cmd = [node_path, khamake_path, targets[target_index], '--glsl2']
     # print_info("Building, see console...")
@@ -416,7 +416,7 @@ def on_compiled():
         # electron_path = sdk_path + 'kode_studio/Kode Studio.app/Contents/MacOS/Electron'
         electron_path = sdk_path + 'kode_studio/Electron.app/Contents/MacOS/Electron'
     else:
-        pass
+        electron_path = sdk_path + 'kode_studio/KodeStudio-linux64/kodestudio'
 
     play_project.playproc = subprocess.Popen([electron_path, '--chromedebug', '--remote-debugging-port=9222', electron_app_path])
     watch_play()
@@ -509,7 +509,7 @@ class ArmoryKodeButton(bpy.types.Operator):
         elif utils.get_os() == 'mac':
             kode_path = '"' + sdk_path + '/kode_studio/Kode Studio.app/Contents/MacOS/Electron"'
         else:
-            pass
+            kode_path = sdk_path + '/kode_studio/KodeStudio-linux64/kodestudio'
 
         subprocess.Popen([kode_path, utils.get_fp()], shell=True)
 
