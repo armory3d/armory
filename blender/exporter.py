@@ -2105,7 +2105,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		o['fov'] = object.light_fov
 		o['shadows_bias'] = object.light_shadows_bias
 		if o['type'] == 'sun': # Scale bias for ortho light matrix
-			o['bias'] *= 10.0
+			o['shadows_bias'] *= 10.0
 
 		# Parse nodes, only emission for now
 		# Merge with nodes_material

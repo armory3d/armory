@@ -3,21 +3,19 @@ package armory.node;
 import iron.math.Mat4;
 import iron.math.Vec4;
 import iron.math.Quat;
+import iron.node.Transform;
 
 class TransformNode extends Node {
 
 	public static inline var _position = 0; // Vector
 	public static inline var _rotation = 1; // Vector
 	public static inline var _scale = 2; // Vector
-
-	public var transform:iron.node.Transform;
 	
-	var matrix:Mat4;
+	public var matrix:Mat4;
+	
 	var pos:Vec4;
 	var rot:Quat;
 	var scale:Vec4;
-
-	static var temp = Mat4.identity();
 
 	public function new() {
 		super();
@@ -43,10 +41,6 @@ class TransformNode extends Node {
 				  inputs[_scale].inputs[VectorNode._z].f);
 
 		matrix.compose(pos, rot, scale);
-
-		// Prepend to transform
-		transform.prepend = matrix;
-		transform.dirty = true;
 
 		super.inputChanged();
 	}

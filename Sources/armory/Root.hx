@@ -2,6 +2,7 @@ package armory;
 
 import iron.App;
 import iron.Eg;
+import iron.node.Node;
 import iron.node.RootNode;
 import iron.node.CameraNode;
 import iron.resource.SceneFormat;
@@ -17,7 +18,7 @@ class Root {
 	public function new() {
 
 		// Startup scene
-		var sceneNode = Eg.addScene(Main.projectScene);
+		var scene = Eg.addScene(Main.projectScene);
 		cam = RootNode.cameras[0];
 		
 		// Attach world to camera for now
@@ -26,7 +27,7 @@ class Root {
 
 		// Physics
 		physics = new PhysicsWorld(resource.gravity);
-		Eg.addNodeTrait(sceneNode, physics);
+		Eg.addNodeTrait(scene, physics);
 
 		App.notifyOnRender(render);
 	}

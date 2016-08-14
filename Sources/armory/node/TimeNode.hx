@@ -6,10 +6,11 @@ class TimeNode extends FloatNode {
 
 	public static inline var _startTime = 0; // Float
 	public static inline var _stopTime = 1; // Float
-	public static inline var _scale = 2; // Float
-	public static inline var _enabled = 3; // Bool
-	public static inline var _loop = 4; // Bool
-	public static inline var _reflect = 5; // Bool
+	public static inline var _enabled = 2; // Bool
+	public static inline var _loop = 3; // Bool
+	public static inline var _reflect = 4; // Bool
+
+	var scale = 1.0;
 
 	public function new() {
 		super();
@@ -20,32 +21,32 @@ class TimeNode extends FloatNode {
 
 		f = inputs[_startTime].f;
 
-		executor.registerUpdate(update);
+		executor.notifyOnNodeUpdate(update);
 	}
 
 	function update() {
 		
 		if (inputs[_enabled].b) {
-			f += iron.sys.Time.delta * inputs[_scale].f;
+			f += iron.sys.Time.delta * scale;
 
 			// Time out
 			if (inputs[_stopTime].f > 0) {
-				if (inputs[_scale].f > 0 && f >= inputs[_stopTime].f ||
-					inputs[_scale].f < 0 && f <= inputs[_startTime].f) {
+				if (scale > 0 && f >= inputs[_stopTime].f ||
+					scale < 0 && f <= inputs[_startTime].f) {
 					
 					// Loop
 					if (inputs[_loop].b) {
 
 						// Reflect
 						if (inputs[_reflect].b) {
-							if (inputs[_scale].f > 0) {
+							if (scale > 0) {
 								f = inputs[_stopTime].f;
 							}
 							else {
 								f = inputs[_startTime].f;
 							}
 
-							inputs[_scale].f *= -1;
+							scale *= -1;
 						}
 						// Reset
 						else {

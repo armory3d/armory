@@ -5,6 +5,7 @@ import iron.Trait;
 class NodeExecutor extends Trait {
 
     var baseNode:armory.node.Node;
+    var nodeInits:Array<Void->Void> = [];
     var nodeUpdates:Array<Void->Void> = [];
 
     public function new() {
@@ -19,12 +20,18 @@ class NodeExecutor extends Trait {
     }
 
     function update() {
-        for (f in nodeUpdates) {
-            f();
+        if (nodeInits.length > 0) {
+            for (f in nodeInits) { if (nodeInits.length == 0) break; f(); f = null; }
+            nodeInits.splice(0, nodeInits.length);     
         }
+        for (f in nodeUpdates) f();
     }
 
-    public function registerUpdate(f:Void->Void) {
+    public function notifyOnNodeInit(f:Void->Void) {
+        nodeInits.push(f);
+    }
+
+    public function notifyOnNodeUpdate(f:Void->Void) {
         nodeUpdates.push(f);
     }
 }
