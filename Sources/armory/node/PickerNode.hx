@@ -17,7 +17,7 @@ class PickerNode extends Node {
 	}
 
 	function init() {
-		target = iron.Eg.root.getChild(property0);
+		target = iron.Root.root.getChild(property0);
 	}
 
 	public static function create(_property0:String):PickerNode {

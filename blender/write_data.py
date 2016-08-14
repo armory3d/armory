@@ -20,7 +20,7 @@ def write_khafilejs(shader_references, asset_references):
     with open('khafile.js', 'w') as f:
         f.write(
 """// Auto-generated
-let project = new Project('""" + bpy.data.worlds[0].CGProjectName + """');
+let project = new Project('""" + bpy.data.worlds[0].ArmProjectName + """');
 
 project.addSources('Sources');
 project.addShaders('Sources/Shaders/**');
@@ -34,7 +34,7 @@ project.addAssets('Assets/**');
         f.write(add_armory_library(sdk_path, 'armory'))
         f.write(add_armory_library(sdk_path, 'iron'))
         
-        if bpy.data.worlds[0].CGPhysics != 'Disabled':
+        if bpy.data.worlds[0].ArmPhysics != 'Disabled':
             f.write("project.addDefine('WITH_PHYSICS');\n")
             f.write(add_armory_library(sdk_path, 'haxebullet'))
         
@@ -48,7 +48,7 @@ project.addAssets('Assets/**');
             ref = ref.replace('\\', '/')
             f.write("project.addAssets('" + ref + "');\n")
 
-        if bpy.data.worlds[0].CGPlayConsole:
+        if bpy.data.worlds[0].ArmPlayConsole:
             f.write("project.addDefine('WITH_PROFILE');\n")
             f.write(add_armory_library(sdk_path, 'zui'))
             font_path =  sdk_path + '/armory/Assets/droid_sans.ttf'
@@ -59,16 +59,16 @@ project.addAssets('Assets/**');
         # f.write(add_armory_library(sdk_path, 'haxeui/haxeui-kha'))
         # f.write(add_armory_library(sdk_path, 'haxeui/hscript'))
 
-        if bpy.data.worlds[0].CGMinimize == False:
+        if bpy.data.worlds[0].ArmMinimize == False:
             f.write("project.addDefine('WITH_JSON');\n")
         
-        if bpy.data.worlds[0].CGDeinterleavedBuffers == True:
+        if bpy.data.worlds[0].ArmDeinterleavedBuffers == True:
             f.write("project.addDefine('WITH_DEINTERLEAVED');\n")
 
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
 
-        config_text = bpy.data.worlds[0]['CGKhafile']
+        config_text = bpy.data.worlds[0].ArmKhafile
         if config_text != '':
             f.write(bpy.data.texts[config_text].as_string())
 
@@ -83,16 +83,16 @@ def write_main():
 """// Auto-generated
 package ;
 class Main {
-    public static inline var projectName = '""" + wrd['CGProjectName'] + """';
-    public static inline var projectPackage = '""" + wrd['CGProjectPackage'] + """';
-    static inline var projectWidth = """ + str(wrd['CGProjectWidth']) + """;
-    static inline var projectHeight = """ + str(wrd['CGProjectHeight']) + """;
-    static inline var projectSamplesPerPixel = """ + str(wrd['CGProjectSamplesPerPixel']) + """;
-    public static inline var projectScene = '""" + str(wrd['CGProjectScene']) + """';
+    public static inline var projectName = '""" + wrd.ArmProjectName + """';
+    public static inline var projectPackage = '""" + wrd.ArmProjectPackage + """';
+    static inline var projectWidth = """ + str(wrd.ArmProjectWidth) + """;
+    static inline var projectHeight = """ + str(wrd.ArmProjectHeight) + """;
+    static inline var projectSamplesPerPixel = """ + str(wrd.ArmProjectSamplesPerPixel) + """;
+    public static inline var projectScene = '""" + str(wrd.ArmProjectScene) + """';
     public static function main() {
         iron.sys.CompileTime.importPackage('armory.trait');
         iron.sys.CompileTime.importPackage('armory.renderpipeline');
-        iron.sys.CompileTime.importPackage('""" + wrd['CGProjectPackage'] + """');
+        iron.sys.CompileTime.importPackage('""" + wrd.ArmProjectPackage + """');
         #if (js && WITH_PHYSICS)
         untyped __js__("
             function loadScript(url, callback) {
@@ -121,7 +121,7 @@ class Main {
 # Write electron.js
 def write_electronjs(x, y, w, h, winoff, in_viewport):
     wrd = bpy.data.worlds[0]
-    dev_tools = wrd.CGPlayDeveloperTools
+    dev_tools = wrd.ArmPlayDeveloperTools
     with open('build/electron.js', 'w') as f:
         f.write(
 """// Auto-generated
@@ -269,9 +269,9 @@ const float ssrTextureScale = """ + str(round(wrd.generate_ssr_texture_scale * 1
 
 def write_traithx(class_name):
     wrd = bpy.data.worlds[0]
-    with open('Sources/' + wrd.CGProjectPackage + '/' + class_name + '.hx', 'w') as f:
+    with open('Sources/' + wrd.ArmProjectPackage + '/' + class_name + '.hx', 'w') as f:
         f.write(
-"""package """ + wrd.CGProjectPackage + """;
+"""package """ + wrd.ArmProjectPackage + """;
 
 class """ + class_name + """ extends iron.Trait {
     public function new() {

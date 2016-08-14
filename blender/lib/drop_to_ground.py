@@ -61,16 +61,6 @@ def drop_objects(self, context, ground, obs, use_origin, offset, drop_random):
         if not lowest_world_co:
             continue
 
-        # if spherical is True:
-        #     e = Euler(
-        #         (uniform(0, math.pi * 2),
-        #          uniform(0, math.pi * 2),
-        #          uniform(0, math.pi * 2)),
-        #         'XYZ')
-        #     mat_rot = e.to_matrix().to_4x4()
-        #     ground.matrix_world = mat_rot * mat_original
-
-        
         was_hit, hit_location, hit_normal, hit_index = \
             tmp_ground.ray_cast(lowest_world_co, lowest_world_co + down)
 
@@ -80,9 +70,6 @@ def drop_objects(self, context, ground, obs, use_origin, offset, drop_random):
         to_ground_vec = hit_location - lowest_world_co
         ob.matrix_world *= Matrix.Translation(to_ground_vec)
         ob.location.z += offset
-
-        # if spherical is True:
-            # ob.matrix_world = mat_rot * ob.matrix_world
 
     ground.matrix_world = mat_original
 

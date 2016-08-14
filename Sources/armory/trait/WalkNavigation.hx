@@ -2,10 +2,10 @@ package armory.trait;
 
 import kha.Key;
 import iron.Trait;
+import iron.Root;
 import iron.sys.Input;
 import iron.sys.Time;
 import iron.node.CameraNode;
-import iron.node.RootNode;
 import iron.math.Vec4;
 import iron.math.Quat;
 
@@ -37,7 +37,7 @@ class WalkNavigation extends Trait {
 	}
 
     function init() {
-        camera = RootNode.cameras[0];
+        camera = Root.cameras[0];
     }
 
     function update() {
@@ -79,19 +79,6 @@ class WalkNavigation extends Trait {
         else if (char == 'd') strafeRight = true;
         else if (char == 'q') strafeForward = true;
         else if (char == 'e') strafeBackward = true;
-
-		// if (char == 'r') {iron.node.ModelNode._u1 += 0.01;trace("u1:", iron.node.ModelNode._u1);}
-		// else if (char == 'f') {iron.node.ModelNode._u1 -= 0.01;trace("u1:", iron.node.ModelNode._u1);}
-		// else if (char == 't') {iron.node.ModelNode._u2 += 0.01;trace("u2:", iron.node.ModelNode._u2);}
-		// else if (char == 'g') {iron.node.ModelNode._u2 -= 0.01;trace("u2:", iron.node.ModelNode._u2);}
-		// else if (char == 'y') {iron.node.ModelNode._u3 += 0.1;trace("u3:", iron.node.ModelNode._u3);}
-		// else if (char == 'h') {iron.node.ModelNode._u3 -= 0.1;trace("u3:", iron.node.ModelNode._u3);}
-		// else if (char == 'u') {iron.node.ModelNode._u4 += 0.1;trace("u4:", iron.node.ModelNode._u4);}
-		// else if (char == 'j') {iron.node.ModelNode._u4 -= 0.1;trace("u4:", iron.node.ModelNode._u4);}
-		// else if (char == 'i') {iron.node.ModelNode._u5 += 0.1;trace("u5:", iron.node.ModelNode._u5);}
-		// else if (char == 'k') {iron.node.ModelNode._u5 -= 0.1;trace("u5:", iron.node.ModelNode._u5);}
-		// else if (char == 'o') {iron.node.ModelNode._u6 += 0.005;trace("u6:", iron.node.ModelNode._u6);}
-		// else if (char == 'l') {iron.node.ModelNode._u6 -= 0.005;trace("u6:", iron.node.ModelNode._u6);}
     }
 
     function onKeyUp(key:kha.Key, char:String) {

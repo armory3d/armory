@@ -35,39 +35,39 @@ def invalidate_geometry_data(self, context):
 
 def initProperties():
     # For project
-    bpy.types.World.CGVersion = StringProperty(name = "CGVersion", default="")
-    bpy.types.World.CGProjectTarget = EnumProperty(
-        items = [('HTML5', 'HTML5', 'HTML5'), 
-                 ('Windows', 'Windows', 'Windows'), 
-                 ('OSX', 'OSX', 'OSX'),
-                 ('Linux', 'Linux', 'Linux'), 
-                 ('iOS', 'iOS', 'iOS'),
-                 ('Android', 'Android', 'Android')],
-        name = "Target", default='HTML5')
-    bpy.types.World.CGProjectName = StringProperty(name = "Name", default="ArmoryGame")
-    bpy.types.World.CGProjectPackage = StringProperty(name = "Package", default="game")
-    bpy.types.World.CGProjectWidth = IntProperty(name = "Width", default=800)
-    bpy.types.World.CGProjectHeight = IntProperty(name = "Height", default=600)
-    bpy.types.World.CGProjectScene = StringProperty(name = "Scene")
-    bpy.types.World.CGProjectSamplesPerPixel = IntProperty(name = "Samples per pixel", default=1)
-    bpy.types.World.CGPhysics = EnumProperty(
+    bpy.types.World.ArmVersion = StringProperty(name = "ArmVersion", default="")
+    bpy.types.World.ArmProjectTarget = EnumProperty(
+        items = [('html5', 'HTML5', 'html5'), 
+                 ('windows', 'Windows', 'windows'), 
+                 ('osx', 'OSX', 'osx'),
+                 ('linux', 'Linux', 'linux'), 
+                 ('ios', 'iOS', 'ios'),
+                 ('android-native', 'Android', 'android-native')],
+        name = "Target", default='html5')
+    bpy.types.World.ArmProjectName = StringProperty(name = "Name", default="ArmoryGame")
+    bpy.types.World.ArmProjectPackage = StringProperty(name = "Package", default="game")
+    bpy.types.World.ArmProjectWidth = IntProperty(name = "Width", default=800)
+    bpy.types.World.ArmProjectHeight = IntProperty(name = "Height", default=600)
+    bpy.types.World.ArmProjectScene = StringProperty(name = "Scene")
+    bpy.types.World.ArmProjectSamplesPerPixel = IntProperty(name = "Samples per pixel", default=1)
+    bpy.types.World.ArmPhysics = EnumProperty(
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('Bullet', 'Bullet', 'Bullet')],
         name = "Physics", default='Bullet')
-    bpy.types.World.CGKhafile = StringProperty(name = "Khafile")
-    bpy.types.World.CGMinimize = BoolProperty(name="Minimize Data", default=True, update=invalidate_compiled_data)
-    bpy.types.World.CGOptimizeGeometry = BoolProperty(name="Optimize Geometry", default=False, update=invalidate_geometry_data)
-    bpy.types.World.CGSampledAnimation = BoolProperty(name="Sampled Animation", default=False, update=invalidate_compiled_data)
-    bpy.types.World.CGDeinterleavedBuffers = BoolProperty(name="Deinterleaved Buffers", default=False)
-    bpy.types.World.CGCacheShaders = BoolProperty(name="Cache Shaders", default=True)
-    bpy.types.World.CGPlayViewportCamera = BoolProperty(name="Viewport Camera", default=False)
-    bpy.types.World.CGPlayViewportNavigation = EnumProperty(
+    bpy.types.World.ArmKhafile = StringProperty(name = "Khafile")
+    bpy.types.World.ArmMinimize = BoolProperty(name="Minimize Data", default=True, update=invalidate_compiled_data)
+    bpy.types.World.ArmOptimizeGeometry = BoolProperty(name="Optimize Geometry", default=False, update=invalidate_geometry_data)
+    bpy.types.World.ArmSampledAnimation = BoolProperty(name="Sampled Animation", default=False, update=invalidate_compiled_data)
+    bpy.types.World.ArmDeinterleavedBuffers = BoolProperty(name="Deinterleaved Buffers", default=False)
+    bpy.types.World.ArmCacheShaders = BoolProperty(name="Cache Shaders", default=True)
+    bpy.types.World.ArmPlayViewportCamera = BoolProperty(name="Viewport Camera", default=False)
+    bpy.types.World.ArmPlayViewportNavigation = EnumProperty(
         items = [('None', 'None', 'None'), 
                  ('Walk', 'Walk', 'Walk')],
         name = "Navigation", default='Walk')
-    bpy.types.World.CGPlayConsole = BoolProperty(name="Debug Console", default=False)
-    bpy.types.World.CGPlayDeveloperTools = BoolProperty(name="Developer Tools", default=False)
-    bpy.types.World.CGPlayRuntime = EnumProperty(
+    bpy.types.World.ArmPlayConsole = BoolProperty(name="Debug Console", default=False)
+    bpy.types.World.ArmPlayDeveloperTools = BoolProperty(name="Developer Tools", default=False)
+    bpy.types.World.ArmPlayRuntime = EnumProperty(
         items = [('Electron', 'Electron', 'Electron'), 
                  ('Krom', 'Krom', 'Krom')],
         name = "Runtime", default='Electron')

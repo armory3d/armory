@@ -1,41 +1,7 @@
-# ##### BEGIN GPL LICENSE BLOCK #####
-#
-#  This program is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU General Public License
-#  as published by the Free Software Foundation; either version 2
-#  of the License, or (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software Foundation,
-#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-#
-# ##### END GPL LICENSE BLOCK #####
-
-bl_info = {
-    "name": "PBR Painter",
-    "author": "Lubos Lenco",
-    "version": (1, 0, 2),
-    "blender": (2, 77, 0),
-    "location": "View3D > Tools > PBR",
-    "description": "Multi-texture painting",
-    "category": "Paint",
-}
-
 import math
 import os
 import bpy
 from bpy.props import *
-
-# Set occlusion to white
-# Set strength to 1, set texture size to 0.2
-# Set environmnent texture
-# Paint to separate slots with pbr brush disabled
-# Do not forget to save all texture slots at exit
 
 def material_update(self, context):
     scene = context.scene
@@ -593,8 +559,6 @@ class VIEW3D_PT_tools_imagepaint_pbr(bpy.types.Panel):
 
         #layout.label('Export')
         #layout.operator("pp.export_textures")
-        #layout.operator("pp.export_webgl")
-
 
 def register():
     bpy.utils.register_module(__name__)

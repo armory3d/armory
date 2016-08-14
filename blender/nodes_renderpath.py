@@ -42,12 +42,6 @@ class QuadPassNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class SSAOPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'SSAOPassNodeType'
@@ -62,12 +56,6 @@ class SSAOPassNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "GBuffer0")
 
         self.outputs.new('NodeSocketShader', "Stage")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
 
 class SSAOReprojectPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -85,12 +73,6 @@ class SSAOReprojectPassNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class ApplySSAOPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'ApplySSAOPassNodeType'
@@ -106,12 +88,6 @@ class ApplySSAOPassNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "GBuffer0")
 
         self.outputs.new('NodeSocketShader', "Stage")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
 
 class SSRPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -130,12 +106,6 @@ class SSRPassNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class BloomPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'BloomPassNodeType'
@@ -150,12 +120,6 @@ class BloomPassNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Color")
 
         self.outputs.new('NodeSocketShader', "Stage")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
 
 class MotionBlurPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -172,12 +136,6 @@ class MotionBlurPassNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class MotionBlurVelocityPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'MotionBlurVelocityPassNodeType'
@@ -193,12 +151,6 @@ class MotionBlurVelocityPassNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class CopyPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'CopyPassNodeType'
@@ -212,12 +164,6 @@ class CopyPassNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class BlendPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'BlendPassNodeType'
@@ -230,12 +176,6 @@ class BlendPassNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Color")
 
         self.outputs.new('NodeSocketShader', "Stage")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
 
 class CombinePassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -251,12 +191,6 @@ class CombinePassNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class BlurBasicPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'BlurBasicPassNodeType'
@@ -269,12 +203,6 @@ class BlurBasicPassNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Temp")
 
         self.outputs.new('NodeSocketShader', "Stage")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
 
 class DebugNormalsPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -289,12 +217,6 @@ class DebugNormalsPassNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class FXAAPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'FXAAPassNodeType'
@@ -307,12 +229,6 @@ class FXAAPassNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Color")
 
         self.outputs.new('NodeSocketShader', "Stage")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
 
 class SMAAPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -330,12 +246,6 @@ class SMAAPassNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class TAAPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'TAAPassNodeType'
@@ -350,12 +260,6 @@ class TAAPassNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Velocity")
 
         self.outputs.new('NodeSocketShader', "Stage")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
 
 class SSSPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -373,12 +277,6 @@ class SSSPassNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class WaterPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'WaterPassNodeType'
@@ -392,12 +290,6 @@ class WaterPassNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "GBufferD")
 
         self.outputs.new('NodeSocketShader', "Stage")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
 
 class DeferredLightPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -413,12 +305,6 @@ class DeferredLightPassNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class DeferredIndirectPassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'DeferredIndirectPassNodeType'
@@ -433,12 +319,6 @@ class DeferredIndirectPassNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class TranslucentResolvePassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'TranslucentResolvePassNodeType'
@@ -451,12 +331,6 @@ class TranslucentResolvePassNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Translucent GBuffer")
 
         self.outputs.new('NodeSocketShader', "Stage")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
 
 # Pipeline
 class DrawGeometryNode(Node, CGPipelineTreeNode):
@@ -472,12 +346,6 @@ class DrawGeometryNode(Node, CGPipelineTreeNode):
         self.inputs[2].default_value = 'front_to_back'
 
         self.outputs.new('NodeSocketShader', "Stage")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
         
 class DrawDecalsNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -490,12 +358,6 @@ class DrawDecalsNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketString', "Context")
 
         self.outputs.new('NodeSocketShader', "Stage")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
         
 class ClearTargetNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -515,12 +377,6 @@ class ClearTargetNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class BeginNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'BeginNodeType'
@@ -536,12 +392,6 @@ class BeginNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketBool', "HDR Space")
         self.inputs[5].default_value = True
         self.outputs.new('NodeSocketShader', "Stage")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
     
 class SetTargetNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -554,12 +404,6 @@ class SetTargetNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Target")
 
         self.outputs.new('NodeSocketShader', "Stage")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
         
 class TargetNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -577,12 +421,6 @@ class TargetNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Target")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class TargetArrayNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'TargetArrayNodeType'
@@ -595,12 +433,6 @@ class TargetArrayNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Targets")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class DepthBufferNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'DepthBufferNodeType'
@@ -612,12 +444,6 @@ class DepthBufferNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketBool', "Stencil")
         
         self.outputs.new('NodeSocketShader', "Target")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
 
 class GBufferNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -633,12 +459,6 @@ class GBufferNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Target 4")
 
         self.outputs.new('NodeSocketShader', "Targets")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
     
 class FramebufferNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -648,12 +468,6 @@ class FramebufferNode(Node, CGPipelineTreeNode):
     
     def init(self, context):
         self.outputs.new('NodeSocketShader', "Target")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
 
 class BindTargetNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -668,12 +482,6 @@ class BindTargetNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class DrawMaterialQuadNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'DrawMaterialQuadNodeType'
@@ -685,12 +493,6 @@ class DrawMaterialQuadNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketString', "Material Context")
 
         self.outputs.new('NodeSocketShader', "Stage")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
         
 class DrawQuadNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -704,12 +506,6 @@ class DrawQuadNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class CallFunctionNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'CallFunctionNodeType'
@@ -721,12 +517,6 @@ class CallFunctionNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketString', "Function")
 
         self.outputs.new('NodeSocketShader', "Stage")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
     
 class BranchFunctionNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -740,12 +530,6 @@ class BranchFunctionNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "True")
         self.outputs.new('NodeSocketShader', "False")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
         
 class MergeStagesNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -758,12 +542,6 @@ class MergeStagesNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Stage")
 
         self.outputs.new('NodeSocketShader', "Stage")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
 
 class LoopStagesNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -778,12 +556,6 @@ class LoopStagesNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Complete")
         self.outputs.new('NodeSocketShader', "Loop")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
         
 class LoopLightsNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -797,12 +569,6 @@ class LoopLightsNode(Node, CGPipelineTreeNode):
         self.outputs.new('NodeSocketShader', "Complete")
         self.outputs.new('NodeSocketShader', "Loop")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class DrawStereoNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'DrawStereoNodeType'
@@ -815,12 +581,6 @@ class DrawStereoNode(Node, CGPipelineTreeNode):
         self.outputs.new('NodeSocketShader', "Complete")
         self.outputs.new('NodeSocketShader', "Per Eye")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class DrawWorldNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'DrawWorldNodeType'
@@ -832,12 +592,6 @@ class DrawWorldNode(Node, CGPipelineTreeNode):
         # self.inputs.new('NodeSocketShader', "Depth")
 
         self.outputs.new('NodeSocketShader', "Stage")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
 
 class DrawCompositorNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -853,12 +607,6 @@ class DrawCompositorNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class DrawCompositorWithFXAANode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'DrawCompositorWithFXAANodeType'
@@ -873,12 +621,6 @@ class DrawCompositorWithFXAANode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 # Constant nodes
 class ScreenNode(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -892,12 +634,6 @@ class ScreenNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketFloat', "Scale")
         self.inputs[0].default_value = 1.0
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 class BackgroundColorNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'BackgroundColorNodeType'
@@ -906,12 +642,6 @@ class BackgroundColorNode(Node, CGPipelineTreeNode):
     
     def init(self, context):
         self.outputs.new('NodeSocketInt', "Color")
-
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
    
 class LightCount(Node, CGPipelineTreeNode):
     '''A custom node'''
@@ -922,17 +652,7 @@ class LightCount(Node, CGPipelineTreeNode):
     def init(self, context):
         self.outputs.new('NodeSocketInt', "Count")
 
-    def copy(self, node):
-        print("Copying from node ", node)
-
-    def free(self):
-        print("Removing node ", self, ", Goodbye!")
-
 ### Node Categories ###
-# Node categories are a python system for automatically
-# extending the Add menu, toolbar panels and search operator.
-# For more examples see release/scripts/startup/nodeitems_builtins.py
-
 import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem
 
@@ -1020,10 +740,7 @@ node_categories = [
     ]),
 ]
 
-
-
-
-
+# Handling node data
 def reload_blend_data():
     if bpy.data.node_groups.get('forward_path') == None:
         load_library()

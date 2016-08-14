@@ -173,7 +173,7 @@ class ArmoryEditScriptButton(bpy.types.Operator):
         kode_path = sdk_path + '/KodeStudio/KodeStudio.app/Contents/MacOS/Electron'
         project_path = utils.get_fp()
         item = context.object.my_traitlist[context.object.traitlist_index] 
-        hx_path = project_path + '/Sources/' + bpy.data.worlds[0].CGProjectPackage + '/' + item.class_name_prop + '.hx'
+        hx_path = project_path + '/Sources/' + bpy.data.worlds[0].ArmProjectPackage + '/' + item.class_name_prop + '.hx'
         subprocess.call([kode_path + ' ' + utils.get_fp() + ' ' + hx_path + ' &'], shell=True)
         return{'FINISHED'}
 

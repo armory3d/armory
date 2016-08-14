@@ -1,12 +1,12 @@
 package armory.trait.internal;
 
-import iron.Eg;
 import iron.math.Mat4;
 import iron.math.Vec4;
 import iron.Trait;
+import iron.Root;
 import iron.node.Transform;
-import iron.node.RootNode;
 import iron.node.ModelNode;
+import iron.resource.Resource;
 import iron.resource.MaterialResource.MaterialContext;
 
 class PathTracer extends Trait {
@@ -38,7 +38,7 @@ class PathTracer extends Trait {
 	}
 	
 	function init() {
-		context = Eg.getMaterialResource('pt_material').getContext('pt_trace_pass');
+		context = Resource.getMaterial('pt_material', '').getContext('pt_trace_pass');
 		
 		context.resource.bind_constants.push(
 			{
@@ -83,7 +83,7 @@ class PathTracer extends Trait {
 		transformMap = new Map();
 		var sphereNum = 0;
 		var cubeNum = 0;
-		for (n in RootNode.models) {
+		for (n in Root.models) {
 			if (n.id.split(".")[0] == "Sphere") {
 				context.resource.bind_constants.push(
 					{
@@ -144,7 +144,7 @@ class PathTracer extends Trait {
 	}
 
     function update() {
-		var camera = RootNode.cameras[0];
+		var camera = Root.cameras[0];
 		var eye = camera.transform.pos;
 		
 		// var jitter = Mat4.identity();

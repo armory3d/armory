@@ -36,7 +36,7 @@ class FirstPersonController extends Trait {
 	function init() {
 		transform = node.transform;
 		body = node.getTrait(RigidBody);
-		camera = iron.node.RootNode.cameras[0];
+		camera = iron.Root.cameras[0];
 	}
 
     function onDown(key: kha.Key, char: String) {
@@ -137,24 +137,6 @@ class FirstPersonController extends Trait {
 			dir = dir.mult(Time.delta * 250);
 			body.setLinearVelocity(dir.x, dir.y, dir.z);
 		}
-
-
-        // if (Input.touch) {
-        //     // Look			
-		// 	camera.rotate(camera.right(), Input.deltaY / 100);
-		// 	transform.rotate(new Vec4(0, 0, 1), -Input.deltaX / 100);
-        //     body.syncTransform();
-
-        //     // Move
-        //     var mat = Mat4.identity();
-        //     transform.rot.saveToMatrix(mat);
-
-        //     var force = new Vec4(0, 1, 0);
-        //     force.applyProjection(mat);
-        //     force = force.mult(Time.delta * 200);
-
-        //     body.applyImpulse(force);
-        // }
 
 		body.setAngularFactor(0, 0, 0);
 

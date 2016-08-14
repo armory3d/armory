@@ -92,19 +92,6 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
         ' --outputGammaNumerator 1.0' + \
         ' --outputGammaDenominator ' + output_gama_numerator
     
-    # Irradiance image
-    # output_file_irr = 'compiled/Assets/envmaps/' + base_name + '_irradiance'
-    # subprocess.call([ \
-    #   cmft_path + \
-    #   ' --input ' + input_file + \
-    #   ' --filter irradiance' + \
-    #   ' --dstFaceSize ' + dst_face_size + \
-    #   gama_options + \
-    #   ' --outputNum 1' + \
-    #   ' --output0 ' + output_file_irr + \
-    #   ' --output0params hdr,rgbe,latlong'], shell=True)
-    # generated_files.append(output_file_irr)
-    
     # Irradiance spherical harmonics
     subprocess.call([ \
         cmft_path + \

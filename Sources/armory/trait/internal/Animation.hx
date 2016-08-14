@@ -1,7 +1,6 @@
 package armory.trait.internal;
 
 import iron.Trait;
-import iron.Eg;
 import iron.resource.Resource;
 
 class Animation extends Trait {
@@ -30,11 +29,11 @@ class Animation extends Trait {
     }
 
     function add() {
-        Eg.setupAnimation(node, startTrack, names, starts, ends, speeds, loops, reflects);
+        node.setupAnimation(startTrack, names, starts, ends, speeds, loops, reflects);
     }
 
     function update() {
-        Eg.setAnimationParams(node, iron.sys.Time.delta);
+        node.setAnimationParams(iron.sys.Time.delta);
     }
 
     public function play(trackName:String, onTrackComplete:Void->Void = null) {

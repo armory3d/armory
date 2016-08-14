@@ -10,9 +10,6 @@ class CGTree(NodeTree):
 	bl_label = 'Logic Node Tree'
 	bl_icon = 'GAME'
 
-	#def update(self):
-		#print("runing tree")
-
 class ArmLogicTreeNode:
 	@classmethod
 	def poll(cls, ntree):
@@ -32,14 +29,6 @@ class TransformNode(Node, ArmLogicTreeNode):
 		self.inputs[-1].default_value = [1.0, 1.0, 1.0]
 
 		self.outputs.new('NodeSocketString', "Transform")
-
-	# Copy function to initialize a copied node from an existing one.
-	# def copy(self, node):
-		# print("Copying from node ", node)
-
-	# Free function to clean up on removal.
-	# def free(self):
-		# print("Removing node ", self, ", Goodbye!")
 
 class TimeNode(Node, ArmLogicTreeNode):
 	'''Time node'''
@@ -142,7 +131,6 @@ class GreaterThanNode(Node, ArmLogicTreeNode):
 		self.inputs.new('NodeSocketFloat', "Value 2")
 		self.outputs.new('NodeSocketBool', "Bool")
 
-
 ### Node Categories ###
 import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem
@@ -207,7 +195,7 @@ def buildNodeTrees():
 	os.chdir(fp)
 
 	# Make sure package dir exists
-	nodes_path = 'Sources/' + bpy.data.worlds[0].CGProjectPackage.replace(".", "/") + "/node"
+	nodes_path = 'Sources/' + bpy.data.worlds[0].ArmProjectPackage.replace(".", "/") + "/node"
 	if not os.path.exists(nodes_path):
 		os.makedirs(nodes_path)
 	
@@ -218,11 +206,11 @@ def buildNodeTrees():
 			buildNodeTree(node_group)
 
 def buildNodeTree(node_group):
-	path = 'Sources/' + bpy.data.worlds[0].CGProjectPackage.replace('.', '/') + '/node/'
+	path = 'Sources/' + bpy.data.worlds[0].ArmProjectPackage.replace('.', '/') + '/node/'
 	node_group_name = node_group.name.replace('.', '_').replace(' ', '')
 
 	with open(path + node_group_name + '.hx', 'w') as f:
-		f.write('package ' + bpy.data.worlds[0].CGProjectPackage + '.node;\n\n')
+		f.write('package ' + bpy.data.worlds[0].ArmProjectPackage + '.node;\n\n')
 		f.write('import armory.node.*;\n\n')
 		f.write('class ' + node_group_name + ' extends armory.trait.internal.NodeExecutor {\n\n')
 		f.write('\tpublic function new() { super(); notifyOnAdd(add); }\n\n')

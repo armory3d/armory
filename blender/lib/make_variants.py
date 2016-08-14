@@ -1,8 +1,3 @@
-#!/usr/bin/python
-
-# Usage: 'python makevariants.py blender.shader.arm'
-# Output: blender.vert/frag.glsl, blender_NormalMapping.vert/frag.glsl,...
-
 import sys
 import itertools
 import os

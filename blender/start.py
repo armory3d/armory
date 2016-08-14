@@ -9,20 +9,6 @@ import traits
 import props
 import lib.drop_to_ground
 
-# import utils
-# import threading
-# import os
-# import http.server
-# import socketserver
-
-# def run_server():
-#     Handler = http.server.SimpleHTTPRequestHandler
-#     try:
-#         httpd = socketserver.TCPServer(("", 8040), Handler)
-#         httpd.serve_forever()
-#     except:
-#         print('Server already running')
-
 def register():
     props.register()
     project.register()
@@ -34,12 +20,6 @@ def register():
     traits_params.register()
     traits.register()
     lib.drop_to_ground.register()
-
-    # Start server
-    # os.chdir(utils.get_fp())
-    # t = threading.Thread(name='localserver', target=run_server)
-    # t.daemon = True
-    # t.start()
 
 def unregister():
     project.unregister()

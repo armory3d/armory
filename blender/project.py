@@ -22,29 +22,12 @@ import assets
 def init_armory_props():
     # First run
     wrd = bpy.data.worlds[0]
-    if wrd.CGVersion == '':
+    if wrd.ArmVersion == '':
         wrd.use_fake_user = True # Store data in worlds[0], add fake user to keep it alive
-        wrd.CGVersion = '16.7'
-        wrd.CGProjectTarget = 'HTML5'
+        wrd.ArmVersion = '16.8'
         # Take blend file name
-        wrd.CGProjectName = bpy.path.basename(bpy.context.blend_data.filepath).rsplit('.')[0]
-        wrd.CGProjectPackage = 'game'
-        wrd.CGProjectWidth = 800
-        wrd.CGProjectHeight = 600
-        wrd.CGProjectScene = bpy.data.scenes[0].name
-        wrd.CGProjectSamplesPerPixel = 1
-        wrd.CGPhysics = 'Bullet'
-        wrd.CGKhafile = ''
-        wrd.CGMinimize = True
-        wrd.CGOptimizeGeometry = False
-        wrd.CGSampledAnimation = False
-        wrd.CGDeinterleavedBuffers = False
-        wrd.CGCacheShaders = True
-        wrd.CGPlayViewportCamera = False
-        wrd.CGPlayViewportNavigation = 'Walk'
-        wrd.CGPlayConsole = False
-        wrd.CGPlayDeveloperTools = False
-        wrd.CGPlayRuntime = 'Electron'
+        wrd.ArmProjectName = bpy.path.basename(bpy.context.blend_data.filepath).rsplit('.')[0]
+        wrd.ArmProjectScene = bpy.data.scenes[0].name
         # Switch to Cycles
         if bpy.data.scenes[0].render.engine == 'BLENDER_RENDER':
             for scene in bpy.data.scenes:
@@ -84,14 +67,14 @@ class ArmoryProjectPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds[0]
-        layout.prop_search(wrd, "CGProjectScene", bpy.data, "scenes", "Start Scene")
-        layout.prop(wrd, 'CGProjectName')
-        layout.prop(wrd, 'CGProjectPackage')
+        layout.prop_search(wrd, "ArmProjectScene", bpy.data, "scenes", "Start Scene")
+        layout.prop(wrd, 'ArmProjectName')
+        layout.prop(wrd, 'ArmProjectPackage')
         row = layout.row()
-        row.prop(wrd, 'CGProjectWidth')
-        row.prop(wrd, 'CGProjectHeight')
-        layout.prop(wrd, 'CGProjectSamplesPerPixel')
-        layout.prop(wrd, 'CGPhysics')
+        row.prop(wrd, 'ArmProjectWidth')
+        row.prop(wrd, 'ArmProjectHeight')
+        layout.prop(wrd, 'ArmProjectSamplesPerPixel')
+        layout.prop(wrd, 'ArmPhysics')
         layout.operator("arm.kode")
 
 class ArmoryBuildPanel(bpy.types.Panel):
@@ -103,18 +86,18 @@ class ArmoryBuildPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds[0]
-        layout.prop(wrd, 'CGProjectTarget')
+        layout.prop(wrd, 'ArmProjectTarget')
         layout.operator("arm.build")
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
         row.operator("arm.folder")
         row.operator("arm.clean")
-        layout.prop_search(wrd, "CGKhafile", bpy.data, "texts", "Khafile")
-        layout.prop(wrd, 'CGCacheShaders')
-        layout.prop(wrd, 'CGMinimize')
-        layout.prop(wrd, 'CGOptimizeGeometry')
-        layout.prop(wrd, 'CGSampledAnimation')
-        layout.prop(wrd, 'CGDeinterleavedBuffers')
+        layout.prop_search(wrd, "ArmKhafile", bpy.data, "texts", "Khafile")
+        layout.prop(wrd, 'ArmCacheShaders')
+        layout.prop(wrd, 'ArmMinimize')
+        layout.prop(wrd, 'ArmOptimizeGeometry')
+        layout.prop(wrd, 'ArmSampledAnimation')
+        layout.prop(wrd, 'ArmDeinterleavedBuffers')
 
 class ArmoryPlayPanel(bpy.types.Panel):
     bl_label = "Armory Play"
@@ -126,13 +109,13 @@ class ArmoryPlayPanel(bpy.types.Panel):
         layout = self.layout
         wrd = bpy.data.worlds[0]
         layout.operator("arm.play")
-        layout.prop(wrd, 'CGPlayRuntime')
-        layout.prop(wrd, 'CGPlayViewportCamera')
-        if wrd.CGPlayViewportCamera:
-            layout.prop(wrd, 'CGPlayViewportNavigation')
+        layout.prop(wrd, 'ArmPlayRuntime')
+        layout.prop(wrd, 'ArmPlayViewportCamera')
+        if wrd.ArmPlayViewportCamera:
+            layout.prop(wrd, 'ArmPlayViewportNavigation')
 
-        layout.prop(wrd, 'CGPlayConsole')
-        layout.prop(wrd, 'CGPlayDeveloperTools')
+        layout.prop(wrd, 'ArmPlayConsole')
+        layout.prop(wrd, 'ArmPlayDeveloperTools')
 
 def get_export_scene_override(scene):
     # None for now
@@ -148,7 +131,7 @@ def get_export_scene_override(scene):
 def compile_shader(raw_path, shader_name, defs):
     os.chdir(raw_path + './' + shader_name)
     fp = os.path.relpath(utils.get_fp())
-    lib.make_resources.make(shader_name + '.shader.json', fp, bpy.data.worlds[0].CGMinimize, defs)
+    lib.make_resources.make(shader_name + '.shader.json', fp, bpy.data.worlds[0].ArmMinimize, defs)
     lib.make_variants.make(shader_name + '.shader.json', fp, defs)
 
 def def_strings_to_array(strdefs):
@@ -206,7 +189,7 @@ def export_game_data(fp, sdk_path):
         a['armature'].location.z = a['z']
     
     # Clean compiled variants if cache is disabled
-    if bpy.data.worlds[0].CGCacheShaders == False:
+    if bpy.data.worlds[0].ArmCacheShaders == False:
         if os.path.isdir('build/html5-resources'):
             shutil.rmtree('build/html5-resources')
         if os.path.isdir('compiled/Shaders'):
@@ -259,30 +242,17 @@ def print_info(text):
         # if area.type == 'INFO':
             # area.tag_redraw()
 
-def compile_project(self, target_index=None):
+def compile_project(self, target_name=None):
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
     sdk_path = addon_prefs.sdk_path
 
-    #self.report({'OPERATOR'}, 'Printing report to Info window.')
-    # run(..., check=True, stdout=PIPE).stdout
-
-    # success = require(path.join(args.kha, 'Tools/khamake/main.js'))
-    #                 .run(options, {
-    #                 info: function (message) {
-    #                     _this.fireEvent(new vscode_debugadapter_1.OutputEvent(message + '\n', 'stdout'));
-    #                 }, error: function (message) {
-    #                     _this.fireEvent(new vscode_debugadapter_1.OutputEvent(message + '\n', 'stderr'));
-    #                 }
-    #             }, function (name) { });
-
     # Set build command
-    if target_index == None:
-        target_index = bpy.data.worlds[0]['CGProjectTarget']
-    targets = ['html5', 'windows', 'osx', 'linux', 'ios', 'android-native']
+    if target_name == None:
+        target_name = bpy.data.worlds[0].ArmProjectTarget
 
     # Copy ammo.js if necessary
-    if target_index == 0 and bpy.data.worlds[0].CGPhysics == 'Bullet':
+    if target_name == 'html5' and bpy.data.worlds[0].ArmPhysics == 'Bullet':
         ammojs_path = sdk_path + '/haxebullet/js/ammo/ammo.js'
         if not os.path.isfile('build/html5/ammo.js'):
             shutil.copy(ammojs_path, 'build/html5')
@@ -299,7 +269,7 @@ def compile_project(self, target_index=None):
         node_path = sdk_path + '/nodejs/node-linux64'
         khamake_path = sdk_path + '/kode_studio/KodeStudio-linux64/resources/app/extensions/kha/Kha/make'
     
-    cmd = [node_path, khamake_path, targets[target_index], '--glsl2']
+    cmd = [node_path, khamake_path, target_name, '--glsl2']
     # print_info("Building, see console...")
     return subprocess.Popen(cmd)
 
@@ -372,8 +342,8 @@ def play_project(self, in_viewport):
         wrd = bpy.data.worlds[0]
         x = 0
         y = 0
-        w = wrd.CGProjectWidth
-        h = wrd.CGProjectHeight
+        w = wrd.ArmProjectWidth
+        h = wrd.ArmProjectHeight
         winoff = 0
     else:
         # Player dimensions
@@ -400,7 +370,7 @@ def play_project(self, in_viewport):
     write_data.write_indexhtml(w, h, in_viewport)
 
     # Compile
-    play_project.compileproc = compile_project(self, target_index=0)
+    play_project.compileproc = compile_project(self, target_name='html5')
     watch_compile()
 
 def on_compiled():
@@ -435,7 +405,7 @@ def clean_project(self):
         shutil.rmtree('compiled')
 
     # Remove compiled nodes
-    nodes_path = 'Sources/' + bpy.data.worlds[0].CGProjectPackage.replace('.', '/') + '/node/'
+    nodes_path = 'Sources/' + bpy.data.worlds[0].ArmProjectPackage.replace('.', '/') + '/node/'
     if os.path.isdir(nodes_path):
         shutil.rmtree(nodes_path)
 

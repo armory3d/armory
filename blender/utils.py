@@ -6,7 +6,7 @@ import lib.umsgpack
 import platform
 
 def write_arm(filepath, output):
-    if bpy.data.worlds[0]['CGMinimize']:
+    if bpy.data.worlds[0].ArmMinimize:
         with open(filepath, 'wb') as f:
             f.write(lib.umsgpack.dumps(output))
     else:
@@ -38,7 +38,7 @@ def fetch_script_names():
     for file in glob.glob('*.hx'):
         wrd.bundled_scripts_list.add().name = file.rsplit('.')[0]
     wrd.scripts_list.clear()
-    sources_path = get_fp() + '/Sources/' + wrd.CGProjectPackage
+    sources_path = get_fp() + '/Sources/' + wrd.ArmProjectPackage
     if os.path.isdir(sources_path):
         os.chdir(sources_path)
         for file in glob.glob('*.hx'):

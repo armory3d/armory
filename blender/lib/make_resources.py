@@ -1,8 +1,3 @@
-#!/usr/bin/python
-
-# Usage: 'python makeres.py blender.shader.arm'
-# Output: blender_resource.arm
-
 import os
 import sys
 import json

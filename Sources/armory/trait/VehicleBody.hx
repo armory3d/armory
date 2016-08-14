@@ -1,9 +1,7 @@
 package armory.trait;
 
-import iron.Eg;
 import iron.Trait;
 import iron.node.Node;
-import iron.node.RootNode;
 import iron.node.CameraNode;
 import iron.node.Transform;
 import armory.trait.internal.PhysicsWorld;
@@ -65,12 +63,12 @@ class VehicleBody extends Trait {
 	}
 
     function init() {
-    	physics = Root.physics;
+    	physics = armory.Root.physics;
     	transform = node.transform;
-    	camera = RootNode.cameras[0];
+    	camera = iron.Root.cameras[0];
 
     	for (n in wheelNames) {
-			wheels.push(Eg.root.getChild(n));
+			wheels.push(iron.Root.root.getChild(n));
 		}
 
     	var rightIndex = 0; 

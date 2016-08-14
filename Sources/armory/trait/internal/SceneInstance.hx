@@ -1,7 +1,7 @@
 package armory.trait.internal;
 
 import iron.Trait;
-import iron.Eg;
+import iron.Root;
 
 class SceneInstance extends Trait {
 
@@ -9,7 +9,7 @@ class SceneInstance extends Trait {
         super();
 
         notifyOnInit(function() {
-			Eg.addScene(sceneId, node);
+			Root.addScene(sceneId, node);
 		});
     }
 }

@@ -10,15 +10,6 @@
 #  Attribution-ShareAlike 3.0 Unported License:
 #  http://creativecommons.org/licenses/by-sa/3.0/deed.en_US
 
-# bl_info = {
-# 	"name": "Armory format (.arm)",
-# 	"description": "Armory Exporter",
-# 	"author": "Eric Lengyel, Lubos Lenco",
-# 	"version": (1, 0, 0),
-# 	"location": "File > Import-Export",
-# 	"wiki_url": "http://armory3d.org/",
-# 	"category": "Import-Export"}
-
 import os
 import bpy
 import math
@@ -1471,7 +1462,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			self.ExportNodeTransform(node, scene, o)
 
 			# Viewport Camera - overwrite active camera matrix with viewport matrix
-			if type == kNodeTypeCamera and bpy.data.worlds[0].CGPlayViewportCamera:
+			if type == kNodeTypeCamera and bpy.data.worlds[0].ArmPlayViewportCamera:
 				viewport_matrix = self.get_viewport_matrix()
 				if viewport_matrix != None:
 					o['transform']['values'] = self.WriteMatrix(viewport_matrix.inverted())
@@ -2132,7 +2123,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 		o['near_plane'] = object.clip_start
 		o['far_plane'] = object.clip_end
-		o['fov'] = object.angle_x
+		o['fov'] = object.angle
 		
 		if object.type == 'PERSP':
 			o['type'] = 'perspective'
@@ -2394,9 +2385,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		#return
 		ArmoryExporter.option_geometry_only = False
 		ArmoryExporter.option_geometry_per_file = True
-		ArmoryExporter.option_optimize_geometry = bpy.data.worlds[0].CGOptimizeGeometry
-		ArmoryExporter.option_minimize = bpy.data.worlds[0].CGMinimize
-		ArmoryExporter.option_sample_animation = bpy.data.worlds[0].CGSampledAnimation
+		ArmoryExporter.option_optimize_geometry = bpy.data.worlds[0].ArmOptimizeGeometry
+		ArmoryExporter.option_minimize = bpy.data.worlds[0].ArmMinimize
+		ArmoryExporter.option_sample_animation = bpy.data.worlds[0].ArmSampledAnimation
 		ArmoryExporter.sampleAnimationFlag = ArmoryExporter.option_sample_animation
 
 		# Only one pipeline for scene for now
@@ -2454,7 +2445,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			x = {}
 			if t.type_prop == 'Nodes' and t.nodes_name_prop != '':
 				x['type'] = 'Script'
-				x['class_name'] = bpy.data.worlds[0].CGProjectPackage + '.node.' + utils.safe_filename(t.nodes_name_prop)
+				x['class_name'] = bpy.data.worlds[0].ArmProjectPackage + '.node.' + utils.safe_filename(t.nodes_name_prop)
 			elif t.type_prop == 'Scene Instance':
 				x['type'] = 'Script'
 				x['class_name'] = 'armory.trait.internal.SceneInstance'
@@ -2482,7 +2473,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				if t.type_prop == 'Bundled Script':
 					trait_prefix = 'armory.trait.'
 				else:
-					trait_prefix = bpy.data.worlds[0].CGProjectPackage + '.'
+					trait_prefix = bpy.data.worlds[0].ArmProjectPackage + '.'
 				x['class_name'] = trait_prefix + t.class_name_prop
 				if len(t.my_paramstraitlist) > 0:
 					x['parameters'] = []
@@ -2523,14 +2514,14 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		
 		if type == kNodeTypeCamera:
 			# Debug console enabled, attach console overlay to each camera
-			if bpy.data.worlds[0].CGPlayConsole:
+			if bpy.data.worlds[0].ArmPlayConsole:
 				console_trait = {}
 				console_trait['type'] = 'Script'
 				console_trait['class_name'] = 'armory.trait.internal.Console'
 				console_trait['parameters'] = []
 				o['traits'].append(console_trait)
 			# Viewport camera enabled, attach navigation if enabled
-			if bpy.data.worlds[0].CGPlayViewportCamera and bpy.data.worlds[0].CGPlayViewportNavigation == 'Walk':
+			if bpy.data.worlds[0].ArmPlayViewportCamera and bpy.data.worlds[0].ArmPlayViewportNavigation == 'Walk':
 				navigation_trait = {}
 				navigation_trait['type'] = 'Script'
 				navigation_trait['class_name'] = 'armory.trait.WalkNavigation'
