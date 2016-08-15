@@ -77,6 +77,7 @@ project.addAssets('Assets/**');
 # Write Main.hx
 def write_main():
     wrd = bpy.data.worlds[0]
+    resx, resy = utils.get_render_resolution()
     #if not os.path.isfile('Sources/Main.hx'):
     with open('Sources/Main.hx', 'w') as f:
         f.write(
@@ -85,8 +86,8 @@ package ;
 class Main {
     public static inline var projectName = '""" + wrd.ArmProjectName + """';
     public static inline var projectPackage = '""" + wrd.ArmProjectPackage + """';
-    static inline var projectWidth = """ + str(wrd.ArmProjectWidth) + """;
-    static inline var projectHeight = """ + str(wrd.ArmProjectHeight) + """;
+    static inline var projectWidth = """ + str(resx) + """;
+    static inline var projectHeight = """ + str(resy) + """;
     static inline var projectSamplesPerPixel = """ + str(wrd.ArmProjectSamplesPerPixel) + """;
     public static inline var projectScene = '""" + str(wrd.ArmProjectScene) + """';
     public static function main() {
@@ -265,6 +266,34 @@ const float ssrSearchDist = """ + str(round(wrd.generate_ssr_search_dist * 100) 
 const float ssrFalloffExp = """ + str(round(wrd.generate_ssr_falloff_exp * 100) / 100) + """;
 const float ssrJitter = """ + str(round(wrd.generate_ssr_jitter * 100) / 100) + """;
 const float ssrTextureScale = """ + str(round(wrd.generate_ssr_texture_scale * 10) / 10) + """;
+""")
+
+        if wrd.generate_letterbox:
+            f.write(
+"""const float compoLetterboxSize = """ + str(round(wrd.generate_letterbox_size * 100) / 100) + """;
+""")
+
+        if wrd.generate_grain:
+            f.write(
+"""const float compoGrainStrength = """ + str(round(wrd.generate_grain_strength * 100) / 100) + """;
+""")
+
+        if bpy.data.scenes[0].cycles.film_exposure != 1.0:
+            f.write(
+"""const float compoExposureStrength = """ + str(round(bpy.data.scenes[0].cycles.film_exposure * 100) / 100) + """;
+""")
+
+        if wrd.generate_fog:
+            f.write(
+"""const float compoFogAmountA = """ + str(round(wrd.generate_fog_amounta * 100) / 100) + """;
+const float compoFogAmountB = """ + str(round(wrd.generate_fog_amountb * 100) / 100) + """;
+const vec3 compoFogColor = vec3(""" + str(round(wrd.generate_fog_color[0] * 100) / 100) + """, """ + str(round(wrd.generate_fog_color[1] * 100) / 100) + """, """ + str(round(wrd.generate_fog_color[2] * 100) / 100) + """);
+""")
+
+        if bpy.data.cameras[0].cycles.aperture_size > 0.0:
+            f.write(
+"""const float compoDOFDistance = """ + str(round(bpy.data.cameras[0].dof_distance * 100) / 100) + """;
+const float compoDOFSize = """ + str(round(bpy.data.cameras[0].cycles.aperture_size * 100) / 100) + """;
 """)
 
 def write_traithx(class_name):

@@ -20,32 +20,37 @@
 				{
 					"id": "eye",
 					"link": "_cameraPosition",
-					"ifdef": ["_LensFlare", "_Fog"]
+					"ifdef": ["_CompoPos"]
 				},
 				{
 					"id": "eyeLook",
 					"link": "_cameraLook",
-					"ifdef": ["_LensFlare", "_Fog"]
+					"ifdef": ["_CompoPos"]
+				},
+				{
+					"id": "invVP",
+					"link": "_inverseViewProjectionMatrix",
+					"ifdef": ["_CompoPos"]
 				},
 				{
 					"id": "light",
 					"link": "_lightPosition",
-					"ifdef": ["_LensFlare"]
+					"ifdef": ["_CompoGlare"]
 				},
 				{
 					"id": "VP",
 					"link": "_viewProjectionMatrix",
-					"ifdef": ["_LensFlare"]
+					"ifdef": ["_CompoGlare"]
 				},
 				{
 					"id": "time",
 					"link": "_time",
-					"ifdef": ["_Grain"]
+					"ifdef": ["_CompoGrain"]
 				},
 				{
 					"id": "texStep",
 					"link": "_screenSizeInv",
-					"ifdef": ["_CompFXAA"]
+					"ifdef": ["_CompoFXAA"]
 				}
 			],
 			"texture_params": [],

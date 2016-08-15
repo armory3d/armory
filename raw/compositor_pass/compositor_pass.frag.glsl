@@ -4,39 +4,36 @@
 precision highp float;
 #endif
 
+#include "../compiled.glsl"
+
 uniform sampler2D tex;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
-// uniform sampler2D noise256;
 
-//#ifdef (_LensFlare || _Fog)
-// #ifdef _Fog
-// uniform vec3 eye;
-// uniform vec3 eyeLook;
-// #endif
+#ifdef _CompoPos
+uniform vec3 eye;
+uniform vec3 eyeLook;
+#endif
 
-#ifdef _LensFlare
+#ifdef _CompoGlare
 uniform vec3 light;
 uniform mat4 VP;
 #endif
 
-#ifdef _CompFXAA
+#ifdef _CompoFXAA
 uniform vec2 texStep;
 #endif
 
-// uniform vec2 cameraPlane;
-
-// #ifdef _Grain
-// uniform float time;
-// #endif
+#ifdef _CompoGrain
+uniform float time;
+#endif
 
 in vec2 texCoord;
+#ifdef _CompoPos
+	in vec3 viewRay;
+#endif
 out vec4 outColor;
-
-const float PI = 3.1415926535;
-const float fishEyeStrength = -0.01;
-const vec2 m = vec2(0.5, 0.5);
 
 const float focus_depth = 0.5;
 
@@ -47,158 +44,61 @@ const float fstop = 20; // f-stop value
 
 const float aspectRatio = 800.0 / 600.0;
 
-const vec3 fogColor = vec3(0.5, 0.6, 0.7);
-// const float b = 0.01;
-// const float c = 0.1;
-const float b = 1.0;
-const float c = 1.0;
+#ifdef _CompoPos
+vec3 getPos(float depth) {
+	vec3 vray = normalize(viewRay);
+	const float projectionA = cameraPlane.y / (cameraPlane.y - cameraPlane.x);
+	const float projectionB = (-cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
+	float linearDepth = projectionB / (depth * 0.5 + 0.5 - projectionA);
+	float viewZDist = dot(eyeLook, vray);
+	vec3 wposition = eye + vray * (linearDepth / viewZDist);
+	return wposition;
+}
+#endif
 
+#ifdef _CompoFog
+// const vec3 compoFogColor = vec3(0.5, 0.6, 0.7);
+// const float compoFogAmountA = 1.0; // b = 0.01
+// const float compoFogAmountB = 1.0; // c = 0.1
 vec3 applyFog(vec3 rgb, // original color of the pixel
          float distance, // camera to point distance
          vec3 rayOri, // camera position
          vec3 rayDir) { // camera to point vector
-    float fogAmount = c * exp(-rayOri.y * b) * (1.0 - exp(-distance * rayDir.y * b)) / rayDir.y;
-    return mix(rgb, fogColor, fogAmount);
+    float fogAmount = compoFogAmountB * exp(-rayOri.y * compoFogAmountA) * (1.0 - exp(-distance * rayDir.y * compoFogAmountA)) / rayDir.y;
+    return mix(rgb, compoFogColor, fogAmount);
 }
-// vec3 applyFog(vec3 rgb, // original color of the pixel
-//               float distance) { // camera to point distance
-//     float fogAmount = 1.0 - exp(-distance * b);
-//     return mix(rgb, fogColor, fogAmount);
+// vec3 applyFog(vec3 rgb, float distance) {
+//     float fogAmount = 1.0 - exp(-distance * compoFogAmountA);
+//     return mix(rgb, compoFogColor, fogAmount);
 // }
-
-// https://www.shadertoy.com/view/ltfGzn
-// float unitSin(float t) {
-//     return 0.5 + 0.5 * sin(t);
-// }
-// float processFlake(vec3 rayOrigin, vec3 rayDirection, float b, float a2, float a4, float bbSubAC4, float fallSpeed, float r) {
-// 	float sum = 0.0;
-// 	float R = r + sin(PI * r * time * 0.05) / (r * 0.25);
-// 	float delta = bbSubAC4 + a4 * R*R;
-// 	float depth = 100.0;
-// 	if (delta >= 0.0) {
-// 		float t1 = (-b - sqrt(delta))/a2;
-// 		float t2 = (-b + sqrt(delta))/a2;
-// 		vec3 p1 = rayOrigin + t1 * rayDirection;
-// 		vec3 p2 = rayOrigin + t2 * rayDirection;
-// 		if (t1 < depth && t1 > 2.0) {
-// 			float teta = atan(p1.z, p1.x) / (2.0 * PI);
-// 			float fall = (0.5 + 0.5 * unitSin(r)) * fallSpeed * time  +  cos(r);
-// 			float s = 6.0;
-// 			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(0.4 * teta * r, 0.1 * p1.y + fall)).r);
-// 			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(0.11 * p1.y + fall, -0.4 * teta * r)).r);
-// 			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(-(0.11 * p1.y + fall), 0.4 * teta * r)).r);
-// 			sum += s;
-// 		}
-// 		if (t2 < depth && t2 > 0.0) {
-// 			float teta = atan(p2.z, p2.x) / (2.0 * PI);
-// 			float fall = (0.5 + 0.5 * unitSin(r)) * fallSpeed * time  +  cos(r);
-// 			float s = 6.0;
-// 			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(0.4 * teta * r, 0.1 * p2.y + fall)).r);
-// 			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(-(0.11 * p2.y + fall), 0.4 * teta * r)).r);
-// 			s *= smoothstep(0.65, 1.0, texture(noise256, vec2(0.11 * p2.y + fall, -0.4 * teta * r)).r);
-// 			sum += s;
-// 		}
-// 	}
-// 	return sum;
-// }
-// float flakeVolume() {
-// 	vec3 rayOrigin = eye;
-// 	vec2 p = texCoord.xy * 2.0 - 1.0;
-// 	vec3 rayDirection = normalize(p.x * vec3(1.0,0.0,0.0) + p.y * vec3(0.0,0.0,1.0) + 1.0 * eyeLook);
-//     float sum = 0.0;
-//     float fallSpeed = 0.2;
-//     float a = pow(rayDirection.x, 2.0) + pow(rayDirection.z, 2.0);
-//     float b = 2.0 * (rayDirection.x * rayOrigin.x + rayDirection.z * rayOrigin.z);
-//     float c = pow(rayOrigin.x, 2.0) + pow(rayOrigin.z, 2.0);
-//     float ac4 = 4.0 * a*c;
-//     float a4 = 4.0 * a;
-//     float a2 = 2.0 * a;
-//     float bb = b*b;
-//     float bbSubAC4 = bb - ac4;
-//     // for (float r = 1.0; r <= 16.0; r+=0.5) {
-//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 1.0);
-//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 2.0);
-//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 3.0);
-//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 4.0);
-//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 5.0);
-//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 6.0);
-//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 7.0);
-//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 8.0);
-//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 9.0);
-//         processFlake(rayOrigin, rayDirection, b, a2, a4, bbSubAC4, fallSpeed, 10.0);
-//     // }
-//     return sum / 2.0;
-// }
-// vec4 screenSpaceSnow() {
-//     float flake = flakeVolume();
-//     return vec4(1.0, 1.0, 1.0, clamp(flake, 0.0, 1.0));
-// }
-// vec4 screenSpaceIce(vec3 c) {
-// 	vec2 p = texCoord.xy * 2.0 - 1.0;
-//     vec2 P = vec2(p.x, 2.0 * p.y);
-//     float r = length(P);
-//     return vec4(c.rgb, 0.3 * (pow((abs(p.x) + abs(p.y)) * 0.5, 1.0) + pow(r / 1.6, 2.0)));
-// }
-
-// https://www.shadertoy.com/view/XdSGDc
-// float processRain(float dis) {
-// 	vec2 q = texCoord;
-// 	float f = pow(dis, 0.45)+0.25;
-// 	vec2 st = f * (q * vec2(1.5, .05)+vec2(-time*.1+q.y*.5, time*.12));
-// 	f = (texture(noise256, st * .5, -99.0).x + texture(noise256, st*.284, -99.0).y);
-// 	f = clamp(pow(abs(f)*.5, 29.0) * 140.0, 0.00, q.y*.4+.05);
-// 	return f*0.5;
-// }
-// vec3 screenSpaceRain() {
-// 	float dis = 1.0;
-//     vec3 col = vec3(0.0);
-// 	// for (int i = 0; i < 12; i++) {
-// 		col += processRain(dis); dis += 3.5;
-// 		col += processRain(dis); dis += 3.5;
-// 		col += processRain(dis); dis += 3.5;
-// 		col += processRain(dis); dis += 3.5;
-// 		col += processRain(dis); dis += 3.5;
-// 		col += processRain(dis); dis += 3.5;
-// 		col += processRain(dis); dis += 3.5;
-// 		col += processRain(dis); dis += 3.5;
-// 		col += processRain(dis); dis += 3.5;
-// 		col += processRain(dis); dis += 3.5;
-// 	// }
-// 	return col;
-// }
-
-// https://www.shadertoy.com/view/4dXSzB
-// vec3 screenSpaceCameraRain() {
-	// vec3 raintex = texture(noise256,vec2(texCoord.x*2.0,texCoord.y*0.4+time*0.1)).rgb/30.0;
-	// vec2 where = (texCoord.xy-raintex.xy);
-	// return texture(tex,vec2(where.x,where.y)).rgb;
-// }
+#endif
 
 float vignette() {
-	float dist = distance(texCoord, vec2(0.5,0.5));
-	dist = smoothstep(vignout + (fstop / vignfade), vignin + (fstop / vignfade), dist);
-	return clamp(dist, 0.0, 1.0);
+	// float dist = distance(texCoord, vec2(0.5,0.5));
+	// dist = smoothstep(vignout + (fstop / vignfade), vignin + (fstop / vignfade), dist);
+	// return clamp(dist, 0.0, 1.0);
 	// vignetting from iq
-    // col *= 0.4 + 0.6 * pow(16.0 * texCoord.x * texCoord.y * (1.0-texCoord.x)*(1.0-texCoord.y), 0.2);
+    return 0.4 + 0.6 * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
 }
 
-vec4 sampleBox(float size) {
-	vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
-	color += texture(tex, vec2(texCoord.x - size, texCoord.y - size)) * 0.075;
-	color += texture(tex, vec2(texCoord.x, texCoord.y - size)) * 0.1;
-	color += texture(tex, vec2(texCoord.x + size, texCoord.y - size)) * 0.075;
-	color += texture(tex, vec2(texCoord.x - size, texCoord.y)) * 0.1;
-	color += texture(tex, vec2(texCoord.x, texCoord.y)) * 0.30;
-	color += texture(tex, vec2(texCoord.x + size, texCoord.y)) * 0.1;
-	color += texture(tex, vec2(texCoord.x - size, texCoord.y + size)) * 0.075;
-	color += texture(tex, vec2(texCoord.x, texCoord.y + size)) * 0.1;
-	color += texture(tex, vec2(texCoord.x + size, texCoord.y + size)) * 0.075;
+#ifdef _CompoDOF
+vec3 sampleBox(float size) {
+	vec3 color = vec3(texture(tex, vec2(texCoord.x - size, texCoord.y - size)).rgb) * 0.075;
+	color += texture(tex, vec2(texCoord.x, texCoord.y - size)).rgb * 0.1;
+	color += texture(tex, vec2(texCoord.x + size, texCoord.y - size)).rgb * 0.075;
+	color += texture(tex, vec2(texCoord.x - size, texCoord.y)).rgb * 0.1;
+	color += texture(tex, vec2(texCoord.x, texCoord.y)).rgb * 0.30;
+	color += texture(tex, vec2(texCoord.x + size, texCoord.y)).rgb * 0.1;
+	color += texture(tex, vec2(texCoord.x - size, texCoord.y + size)).rgb * 0.075;
+	color += texture(tex, vec2(texCoord.x, texCoord.y + size)).rgb * 0.1;
+	color += texture(tex, vec2(texCoord.x + size, texCoord.y + size)).rgb * 0.075;
 	return color;
 }
+#endif
 
-// float linearize(float depth) {
-	// return -cameraPlane.y * cameraPlane.x / (depth * (cameraPlane.y - cameraPlane.x) - cameraPlane.y);
-// }
+float linearize(float depth) {
+	return -cameraPlane.y * cameraPlane.x / (depth * (cameraPlane.y - cameraPlane.x) - cameraPlane.y);
+}
 
 // Based on lense flare implementation by musk
 // https://www.shadertoy.com/view/4sX3Rs 
@@ -230,15 +130,6 @@ vec3 lensflare(vec2 uv, vec2 pos) {
 	return c;
 }
 
-const float MIDDLE_GREY = 0.18;
-float getExposure(float aperture, float shutterSpeed, float iso) {
-    float q = 0.65;
-    //float l_avg = (1000.0f / 65.0f) * sqrt(aperture) / (iso * shutterSpeed);
-    float l_avg = (1.0 / q) * sqrt(aperture) / (iso * shutterSpeed);
-    //float l_avg = sqrt(aperture) / (iso * shutterSpeed);
-    return MIDDLE_GREY / l_avg;
-}
-
 //Based on Filmic Tonemapping Operators http://filmicgames.com/archives/75
 vec3 tonemapFilmic(vec3 color) {
     vec3 x = max(vec3(0.0), color - 0.004);
@@ -265,34 +156,34 @@ vec3 tonemapUncharted2(vec3 color) {
 }
 
 void main() {
-#ifdef _CompFishEye
-	// Fish eye
+	vec2 texCo = texCoord;
+#ifdef _CompoFishEye
+	const float fishEyeStrength = -0.01;
+	const vec2 m = vec2(0.5, 0.5);
 	vec2 d = texCoord - m;
 	float r = sqrt(dot(d, d));
 	float power = (2.0 * PI / (2.0 * sqrt(dot(m, m)))) * fishEyeStrength;
 	float bind;
 	if (power > 0.0) { bind = sqrt(dot(m, m)); }
     else { bind = m.x; }
-	vec2 uv;
 	if (power > 0.0) {
-		uv = m + normalize(d) * tan(r * power) * bind / tan(bind * power);
+		texCo = m + normalize(d) * tan(r * power) * bind / tan(bind * power);
 	}
 	else {
-		uv = m + normalize(d) * atan(r * -power * 10.0) * bind / atan(-power * bind * 10.0);
+		texCo = m + normalize(d) * atan(r * -power * 10.0) * bind / atan(-power * bind * 10.0);
 	}
-	// vec4 col = texture(tex, uv);
 #endif
 
-#ifdef _CompFXAA
+#ifdef _CompoFXAA
 	const float FXAA_REDUCE_MIN = 1.0 / 128.0;
     const float FXAA_REDUCE_MUL = 1.0 / 8.0;
     const float FXAA_SPAN_MAX = 8.0;
     
-	vec2 tcrgbNW = (texCoord + vec2(-1.0, -1.0) * texStep);
-	vec2 tcrgbNE = (texCoord + vec2(1.0, -1.0) * texStep);
-	vec2 tcrgbSW = (texCoord + vec2(-1.0, 1.0) * texStep);
-	vec2 tcrgbSE = (texCoord + vec2(1.0, 1.0) * texStep);
-	vec2 tcrgbM = vec2(texCoord);
+	vec2 tcrgbNW = (texCo + vec2(-1.0, -1.0) * texStep);
+	vec2 tcrgbNE = (texCo + vec2(1.0, -1.0) * texStep);
+	vec2 tcrgbSW = (texCo + vec2(-1.0, 1.0) * texStep);
+	vec2 tcrgbSE = (texCo + vec2(1.0, 1.0) * texStep);
+	vec2 tcrgbM = vec2(texCo);
 	
 	vec3 rgbNW = texture(tex, tcrgbNW).rgb;
     vec3 rgbNE = texture(tex, tcrgbNE).rgb;
@@ -322,101 +213,85 @@ void main() {
               dir * rcpDirMin)) * texStep;
 			  
 	vec3 rgbA = 0.5 * (
-        texture(tex, texCoord + dir * (1.0 / 3.0 - 0.5)).rgb +
-        texture(tex, texCoord + dir * (2.0 / 3.0 - 0.5)).rgb);
+        texture(tex, texCo + dir * (1.0 / 3.0 - 0.5)).rgb +
+        texture(tex, texCo + dir * (2.0 / 3.0 - 0.5)).rgb);
     vec3 rgbB = rgbA * 0.5 + 0.25 * (
-        texture(tex, texCoord + dir * -0.5).rgb +
-        texture(tex, texCoord + dir * 0.5).rgb);
+        texture(tex, texCo + dir * -0.5).rgb +
+        texture(tex, texCo + dir * 0.5).rgb);
 	
 	vec4 col;
 	float lumaB = dot(rgbB, luma);
     if ((lumaB < lumaMin) || (lumaB > lumaMax)) col = vec4(rgbA, texColor.a);
     else col = vec4(rgbB, texColor.a);
 #else
-	vec4 col = texture(tex, texCoord);
+	vec4 col = texture(tex, texCo);
+#endif
+
+#ifdef _CompoDepth
+	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+#endif
+
+#ifdef _CompoDOF
+	float linDepth = linearize(depth);
+	float blur_amount = abs(linDepth - compoDOFDistance) / cameraPlane.y;
+	blur_amount = clamp(blur_amount, 0.0, 1.0);
+	float blurSize = compoDOFSize * 10000.0 * blur_amount;
+	vec3 blurredColor = 0.75 * sampleBox(blurSize * 0.5) + 0.25 * sampleBox(blurSize * 1.0);
+	col.rgb *= (1.0 - blur_amount) + blurredColor * blur_amount;
+#endif
+
+#ifdef _CompoFog
+	vec3 pos = getPos(depth);
+	float dist = distance(pos, eye);
+	vec3 eyedir = normalize(eye + pos);
+	col.rgb = applyFog(col.rgb, dist, eye, eyedir);
+#endif
+
+#ifdef _CompoGlare
+	vec4 lndc = VP * vec4(light, 1.0);
+	lndc.xy /= lndc.w;
+	float lightDistance = distance(eye, light);
+	vec2 lss = lndc.xy * 0.5 + 0.5;
+	float lssdepth = linearize(texture(gbufferD, lss).r * 2.0 - 1.0);
+	if (lssdepth >= lightDistance) {
+		vec2 lensuv = (texCoord - 0.5) * 2.0;
+		lensuv.x *= aspectRatio;
+		vec3 lensflarecol = vec3(1.4, 1.2, 1.0) * lensflare(lensuv, lndc.xy);
+		col.rgb += lensflarecol;
+	}
+#endif
+
+#ifdef _CompoGrain
+	// const float compoGrainStrength = 4.0;
+    float x = (texCoord.x + 4.0) * (texCoord.y + 4.0) * (time * 10.0);
+	col.rgb += vec3(mod((mod(x, 13.0) + 1.0) * (mod(x, 123.0) + 1.0), 0.01) - 0.005) * compoGrainStrength;
 #endif
 	
-	// Blur
-	// float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	// float blur_amount = abs(depth - focus_depth);
-	// if (depth < depth - focus_depth) {
-	// 	blur_amount *= 2.0;
-	// }
-	// blur_amount = clamp(blur_amount, 0.0, 1.0);
-	// vec4 baseColor = col;//texture(tex, texCoord);
-	// vec4 blurredColor = vec4(0.0, 0.0, 0.0, 0.0);
-	// float blurSize = 0.005 * blur_amount;
-	// blurredColor = 0.75 * sampleBox(blurSize * 0.5) + 0.25 * sampleBox(blurSize * 1.0);
-	// col = baseColor * (1.0 - blur_amount) + blurredColor * blur_amount;
-	
-	// Fog
-	// vec3 pos = texture(gbuffer1, texCoord).rgb;
-	// float dist = distance(pos, eye);
-	// vec3 dir = eye + pos;
-	// dir = normalize(dir);
-	// col.rgb = applyFog(col.rgb, dist, eye, dir);
-	// col.rgb = applyFog(col.rgb, dist);
-	
-	// Lens flare	
-	// vec4 lndc = VP * vec4(light, 1.0);
-	// lndc.xy /= lndc.w;
-	
-	// float lightDistance = distance(eye, light);
-	// vec2 lss = lndc.xy * 0.5 + 0.5;
-	// float lssdepth = linearize(texture(gbuffer0, lss).a);
-	
-	// if (lssdepth >= lightDistance) {
-	// 	vec2 lensuv = (texCoord - 0.5) * 2.0;
-	// 	lensuv.x *= aspectRatio;
-	// 	vec3 lensflarecol = vec3(1.4, 1.2, 1.0) * lensflare(lensuv, lndc.xy);
-	// 	col.rgb += lensflarecol;
-	// }
-	
-	// Film grain
-	// const float grainStrength = 4.0;
-    // float x = (texCoord.x + 4.0) * (texCoord.y + 4.0 ) * (time * 10.0);
-	// vec4 grain = vec4(mod((mod(x, 13.0) + 1.0) * (mod(x, 123.0) + 1.0), 0.01)-0.005) * grainStrength;
-	//col += grain;
-	
-	// Ice
-	// vec4 ice = screenSpaceIce(vec3(0.8, 0.9, 1.0));
-	// col.rgb = ice.a * ice.rgb + (1.0 - ice.a) * col.rgb;
-	
-	// Snow
-	// vec4 flake = screenSpaceSnow();
-    // col.rgb = flake.a * flake.rgb + (1.0 - flake.a) * col.rgb;
-	
-	// Rain
-	// col.rgb += screenSpaceRain();
-	
-	// Camera rain
-	// col.rgb = screenSpaceCameraRain();
-	
-	// Vignetting
-	//col.rgb *= vignette();
-	
-	// Exposure
-	const float aperture = 16;
-	const float shutterSpeed = 0.5;
-	const float iso = 100;
-	// col.rgb *= getExposure(aperture, shutterSpeed, iso);
-	
-	// Tonemapping
+#ifdef _CompoVignette
+	col.rgb *= vignette();
+#endif
+
+#ifdef _CompoExposure
+	col.rgb *= compoExposureStrength;
+#endif
+
+#ifdef _CompoTonemap
 	col.rgb = tonemapUncharted2(col.rgb);
 	// col.rgb = tonemapFilmic(col.rgb); // With gamma
-	
+#endif
+
 	// To gamma
 	col.rgb = pow(col.rgb, vec3(1.0 / 2.2));
 	
-	// Black and white
-#ifdef _BW
+#ifdef _CompoBW
     // col.rgb = vec3(clamp(dot(col.rgb, col.rgb), 0.0, 1.0));
 	col.rgb = vec3((col.r * 0.3 + col.g * 0.59 + col.b * 0.11) / 3.0) * 2.5;
 #endif
     
-	// Letter box
-	// const float letterBoxSize = 0.1;
-	// col.rgb *= 1.0 - step(0.5 - letterBoxSize, abs(0.5 - texCoord.y));
+#ifdef _CompoLetterbox
+	// const float compoLetterboxSize = 0.1;
+	col.rgb *= 1.0 - step(0.5 - compoLetterboxSize, abs(0.5 - texCoord.y));
+#endif
 
 	outColor = col; 
 }

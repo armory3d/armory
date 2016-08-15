@@ -603,6 +603,7 @@ class DrawCompositorNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Stage")
         self.inputs.new('NodeSocketShader', "Target")
         self.inputs.new('NodeSocketShader', "Color")
+        self.inputs.new('NodeSocketShader', "Depth")
         self.inputs.new('NodeSocketShader', "Normals")
 
         self.outputs.new('NodeSocketShader', "Stage")
@@ -617,6 +618,7 @@ class DrawCompositorWithFXAANode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Stage")
         self.inputs.new('NodeSocketShader', "Target")
         self.inputs.new('NodeSocketShader', "Color")
+        self.inputs.new('NodeSocketShader', "Depth")
         self.inputs.new('NodeSocketShader', "Normals")
 
         self.outputs.new('NodeSocketShader', "Stage")
@@ -808,7 +810,7 @@ def buildNodeTree(node_group, shader_references, asset_references):
     path = 'compiled/Assets/pipelines/'
     node_group_name = node_group.name.replace('.', '_')
     
-    rn = getRootNode(node_group)
+    rn = get_root_node(node_group)
     if rn == None:
         return
 
@@ -966,10 +968,32 @@ def make_draw_world(stage, node_group, node, shader_references, asset_references
 
 def make_draw_compositor(stage, node_group, node, shader_references, asset_references, with_fxaa=False):
     scon = 'compositor_pass'
-    world_defs = bpy.data.worlds[0].world_defs
+    wrd = bpy.data.worlds[0]
+    world_defs = wrd.world_defs
     compositor_defs = nodes_compositor.parse_defs(bpy.data.scenes[0].node_tree) # Thrown in scene 0 for now
+    # Additional compositor flags
+    compo_depth = False # Read depth
+    compo_pos = False # Construct position from depth
     if with_fxaa: # FXAA directly in compositor, useful for forward path
-        compositor_defs += '_CompFXAA'
+        compositor_defs += '_CompoFXAA'
+    if wrd.generate_letterbox:
+        compositor_defs += '_CompoLetterbox'
+    if wrd.generate_grain:
+        compositor_defs += '_CompoGrain'
+    if bpy.data.scenes[0].cycles.film_exposure != 1.0:
+        compositor_defs += '_CompoExposure'
+    if wrd.generate_fog:
+        compositor_defs += '_CompoFog'
+        compo_pos = True
+    if bpy.data.cameras[0].cycles.aperture_size > 0.0:
+        compositor_defs += '_CompoDOF'
+        compo_depth = True
+    if compo_pos:
+        compositor_defs += '_CompoPos'
+        compo_depth = True
+    if compo_depth:
+        compositor_defs += '_CompoDepth'
+
     defs = world_defs + compositor_defs
     res_name = scon + defs
     
@@ -1220,7 +1244,9 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
             if node.inputs[2].is_linked:
                 make_bind_target(stage, node_group, node, target_index=2, constant_name='tex')
             if node.inputs[3].is_linked:
-                make_bind_target(stage, node_group, node, target_index=3, constant_name='gbuffer0')
+                make_bind_target(stage, node_group, node, target_index=3, constant_name='gbufferD')
+            if node.inputs[4].is_linked:
+                make_bind_target(stage, node_group, node, target_index=4, constant_name='gbuffer0')
             stages.append(stage)
         # Draw quad
         stage = {}
@@ -1358,7 +1384,7 @@ def findNodeByLinkFrom(node_group, from_node, outp):
         if link.from_node == from_node and link.from_socket == outp:
             return link.to_node
    
-def getRootNode(node_group):
+def get_root_node(node_group):
     # Find first node linked to begin node
     rn = None
     for n in node_group.nodes:

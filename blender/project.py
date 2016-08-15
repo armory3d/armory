@@ -67,14 +67,10 @@ class ArmoryProjectPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds[0]
-        layout.prop_search(wrd, "ArmProjectScene", bpy.data, "scenes", "Scene")
         layout.prop(wrd, 'ArmProjectName')
         layout.prop(wrd, 'ArmProjectPackage')
         layout.prop_search(wrd, "ArmKhafile", bpy.data, "texts", "Khafile")
-        # row = layout.row()
-        layout.prop(wrd, 'ArmProjectWidth')
-        layout.prop(wrd, 'ArmProjectHeight')
-        layout.prop(wrd, 'ArmProjectSamplesPerPixel')
+        layout.prop_search(wrd, "ArmProjectScene", bpy.data, "scenes", "Scene")
 
 class ArmoryBuildPanel(bpy.types.Panel):
     bl_label = "Armory Build"
@@ -87,9 +83,6 @@ class ArmoryBuildPanel(bpy.types.Panel):
         wrd = bpy.data.worlds[0]
         layout.operator("arm.build")
         layout.operator("arm.kode_studio")
-        # row = layout.row(align=True)
-        # row.alignment = 'EXPAND'
-        # row.operator("arm.folder")
         layout.operator("arm.clean")
         layout.prop(wrd, 'ArmProjectTarget')
         layout.prop(wrd, 'ArmPhysics')
@@ -98,6 +91,7 @@ class ArmoryBuildPanel(bpy.types.Panel):
         layout.prop(wrd, 'ArmOptimizeGeometry')
         layout.prop(wrd, 'ArmSampledAnimation')
         layout.prop(wrd, 'ArmDeinterleavedBuffers')
+        layout.prop(wrd, 'ArmProjectSamplesPerPixel')
 
 class ArmoryPlayPanel(bpy.types.Panel):
     bl_label = "Armory Play"
@@ -345,8 +339,7 @@ def play_project(self, in_viewport):
         wrd = bpy.data.worlds[0]
         x = 0
         y = 0
-        w = wrd.ArmProjectWidth
-        h = wrd.ArmProjectHeight
+        w, h = utils.get_render_resolution()
         winoff = 0
     else:
         # Player dimensions
@@ -470,6 +463,7 @@ class ArmoryFolderButton(bpy.types.Operator):
 class ArmoryKodeStudioButton(bpy.types.Operator):
     bl_idname = 'arm.kode_studio'
     bl_label = 'Kode Studio'
+    bl_description = 'Open Project in Kode Studio'
  
     def execute(self, context):
         user_preferences = bpy.context.user_preferences

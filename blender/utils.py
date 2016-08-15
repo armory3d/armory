@@ -50,3 +50,8 @@ def to_hex(val):
 
 def safe_filename(s):
     return s.replace('.', '_').replace('-', '_').replace(' ', '_')
+
+def get_render_resolution(scene_index=0):
+    render = bpy.data.scenes[scene_index].render
+    scale = render.resolution_percentage / 100
+    return int(render.resolution_x * scale), int(render.resolution_y * scale)

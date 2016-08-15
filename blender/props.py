@@ -46,10 +46,8 @@ def initProperties():
         name = "Target", default='html5')
     bpy.types.World.ArmProjectName = StringProperty(name = "Name", default="ArmoryGame")
     bpy.types.World.ArmProjectPackage = StringProperty(name = "Package", default="game")
-    bpy.types.World.ArmProjectWidth = IntProperty(name = "Width", default=800)
-    bpy.types.World.ArmProjectHeight = IntProperty(name = "Height", default=600)
     bpy.types.World.ArmProjectScene = StringProperty(name = "Scene")
-    bpy.types.World.ArmProjectSamplesPerPixel = IntProperty(name = "Samples per pixel", default=1)
+    bpy.types.World.ArmProjectSamplesPerPixel = IntProperty(name = "Samples per Pixel", default=1)
     bpy.types.World.ArmPhysics = EnumProperty(
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('Bullet', 'Bullet', 'Bullet')],
@@ -122,8 +120,8 @@ def initProperties():
     bpy.types.Camera.world_envtex_ground_albedo = bpy.props.FloatProperty(name="Ground Albedo", default=0.0)
     bpy.types.Camera.last_decal_context = bpy.props.StringProperty(name="Decal Context", default='')
     bpy.types.World.world_defs = bpy.props.StringProperty(name="World Shader Defs", default='')
-    bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Generate Radiance", default=True, update=invalidate_shader_cache)
-    bpy.types.World.generate_clouds = bpy.props.BoolProperty(name="Generate Clouds", default=False, update=invalidate_shader_cache)
+    bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Radiance Probes", default=True, update=invalidate_shader_cache)
+    bpy.types.World.generate_clouds = bpy.props.BoolProperty(name="Clouds", default=False, update=invalidate_shader_cache)
     bpy.types.World.generate_clouds_density = bpy.props.FloatProperty(name="Density", default=0.6, min=0.0, max=10.0, update=invalidate_shader_cache)
     bpy.types.World.generate_clouds_size = bpy.props.FloatProperty(name="Size", default=1.0, min=0.0, max=10.0, update=invalidate_shader_cache)
     bpy.types.World.generate_clouds_lower = bpy.props.FloatProperty(name="Lower", default=2.0, min=1.0, max=10.0, update=invalidate_shader_cache)
@@ -135,7 +133,7 @@ def initProperties():
     bpy.types.World.shadowmap_size = bpy.props.IntProperty(name="Shadowmap Size", default=0, update=invalidate_shader_cache)
     bpy.types.World.scripts_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.bundled_scripts_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
-    bpy.types.World.generate_ocean = bpy.props.BoolProperty(name="Generate Ocean", default=False, update=invalidate_shader_cache)
+    bpy.types.World.generate_ocean = bpy.props.BoolProperty(name="Ocean", default=False, update=invalidate_shader_cache)
     bpy.types.World.generate_ocean_base_color = bpy.props.FloatVectorProperty(name="Base Color", size=3, default=[0.1, 0.19, 0.37], subtype='COLOR', update=invalidate_shader_cache)
     bpy.types.World.generate_ocean_water_color = bpy.props.FloatVectorProperty(name="Water Color", size=3, default=[0.6, 0.7, 0.9], subtype='COLOR', update=invalidate_shader_cache)
     bpy.types.World.generate_ocean_level = bpy.props.FloatProperty(name="Level", default=0.0, update=invalidate_shader_cache)
@@ -145,23 +143,31 @@ def initProperties():
     bpy.types.World.generate_ocean_speed = bpy.props.FloatProperty(name="Speed", default=1.0, update=invalidate_shader_cache)
     bpy.types.World.generate_ocean_freq = bpy.props.FloatProperty(name="Freq", default=0.16, update=invalidate_shader_cache)
     bpy.types.World.generate_ocean_fade = bpy.props.FloatProperty(name="Fade", default=1.8, update=invalidate_shader_cache)
-    bpy.types.World.generate_ssao = bpy.props.BoolProperty(name="Generate SSAO", default=True, update=invalidate_shader_cache)
+    bpy.types.World.generate_ssao = bpy.props.BoolProperty(name="SSAO", description="Screen-Space Ambient Occlusion", default=True, update=invalidate_shader_cache)
     bpy.types.World.generate_ssao_size = bpy.props.FloatProperty(name="Size", default=0.08, update=invalidate_shader_cache)
     bpy.types.World.generate_ssao_strength = bpy.props.FloatProperty(name="Strength", default=0.30, update=invalidate_shader_cache)
     bpy.types.World.generate_ssao_texture_scale = bpy.props.FloatProperty(name="Texture Scale", default=1.0, min=0.0, max=1.0, update=invalidate_shader_cache)
-    bpy.types.World.generate_shadows = bpy.props.BoolProperty(name="Generate Shadows", default=True, update=invalidate_shader_cache)
-    bpy.types.World.generate_bloom = bpy.props.BoolProperty(name="Generate Bloom", default=True, update=invalidate_shader_cache)
+    bpy.types.World.generate_shadows = bpy.props.BoolProperty(name="Shadows", default=True, update=invalidate_shader_cache)
+    bpy.types.World.generate_bloom = bpy.props.BoolProperty(name="Bloom", default=True, update=invalidate_shader_cache)
     bpy.types.World.generate_bloom_treshold = bpy.props.FloatProperty(name="Treshold", default=3.0, update=invalidate_shader_cache)
     bpy.types.World.generate_bloom_strength = bpy.props.FloatProperty(name="Strength", default=0.15, update=invalidate_shader_cache)
-    bpy.types.World.generate_motion_blur = bpy.props.BoolProperty(name="Generate Motion Blur", default=True, update=invalidate_shader_cache)
+    bpy.types.World.generate_motion_blur = bpy.props.BoolProperty(name="Motion Blur", default=True, update=invalidate_shader_cache)
     bpy.types.World.generate_motion_blur_intensity = bpy.props.FloatProperty(name="Intensity", default=1.0, update=invalidate_shader_cache)
-    bpy.types.World.generate_ssr = bpy.props.BoolProperty(name="Generate SSR", default=True, update=invalidate_shader_cache)
+    bpy.types.World.generate_ssr = bpy.props.BoolProperty(name="SSR", description="Screen-Space Reflections", default=True, update=invalidate_shader_cache)
     bpy.types.World.generate_ssr_ray_step = bpy.props.FloatProperty(name="Ray Step", default=0.04, update=invalidate_shader_cache)
     bpy.types.World.generate_ssr_min_ray_step = bpy.props.FloatProperty(name="Ray Step Min", default=0.05, update=invalidate_shader_cache)
     bpy.types.World.generate_ssr_search_dist = bpy.props.FloatProperty(name="Search Dist", default=5.0, update=invalidate_shader_cache)
     bpy.types.World.generate_ssr_falloff_exp = bpy.props.FloatProperty(name="Falloff Exp", default=5.0, update=invalidate_shader_cache)
     bpy.types.World.generate_ssr_jitter = bpy.props.FloatProperty(name="Jitter", default=0.6, update=invalidate_shader_cache)
     bpy.types.World.generate_ssr_texture_scale = bpy.props.FloatProperty(name="Texture Scale", default=0.5, min=0.0, max=1.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_letterbox = bpy.props.BoolProperty(name="Letterbox", default=False, update=invalidate_shader_cache)
+    bpy.types.World.generate_letterbox_size = bpy.props.FloatProperty(name="Size", default=0.1, update=invalidate_shader_cache)
+    bpy.types.World.generate_grain = bpy.props.BoolProperty(name="Film Grain", default=False, update=invalidate_shader_cache)
+    bpy.types.World.generate_grain_strength = bpy.props.FloatProperty(name="Strength", default=2.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_fog = bpy.props.BoolProperty(name="Volumetric Fog", default=False, update=invalidate_shader_cache)
+    bpy.types.World.generate_fog_color = bpy.props.FloatVectorProperty(name="Color", size=3, subtype='COLOR', default=[0.5, 0.6, 0.7], update=invalidate_shader_cache)
+    bpy.types.World.generate_fog_amounta = bpy.props.FloatProperty(name="Amount A", default=0.5, update=invalidate_shader_cache)
+    bpy.types.World.generate_fog_amountb = bpy.props.FloatProperty(name="Amount B", default=1.0, update=invalidate_shader_cache)
     # For material
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.override_shader = bpy.props.BoolProperty(name="Override Shader", default=False)
@@ -360,6 +366,7 @@ class WorldPropsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         wrd = bpy.context.world
+        layout.prop(wrd, 'generate_shadows')
         layout.prop(wrd, 'generate_radiance')
         layout.prop(wrd, 'generate_clouds')
         if wrd.generate_clouds:
@@ -376,7 +383,6 @@ class WorldPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'generate_ssao_size')
             layout.prop(wrd, 'generate_ssao_strength')
             layout.prop(wrd, 'generate_ssao_texture_scale')
-        layout.prop(wrd, 'generate_shadows')
         layout.prop(wrd, 'generate_bloom')
         if wrd.generate_bloom:
             layout.prop(wrd, 'generate_bloom_treshold')
@@ -392,6 +398,19 @@ class WorldPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'generate_ssr_falloff_exp')
             layout.prop(wrd, 'generate_ssr_jitter')
             layout.prop(wrd, 'generate_ssr_texture_scale')
+        
+        layout.label('Compositor')
+        layout.prop(wrd, 'generate_letterbox')
+        if wrd.generate_letterbox:
+            layout.prop(wrd, 'generate_letterbox_size')
+        layout.prop(wrd, 'generate_grain')
+        if wrd.generate_grain:
+            layout.prop(wrd, 'generate_grain_strength')
+        layout.prop(wrd, 'generate_fog')
+        if wrd.generate_fog:
+            layout.prop(wrd, 'generate_fog_color')
+            layout.prop(wrd, 'generate_fog_amounta')
+            layout.prop(wrd, 'generate_fog_amountb')
 
 # Registration
 def register():

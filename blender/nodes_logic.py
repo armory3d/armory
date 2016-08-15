@@ -216,7 +216,7 @@ def buildNodeTree(node_group):
 		f.write('\tpublic function new() { super(); notifyOnAdd(add); }\n\n')
 		f.write('\tfunction add() {\n')
 		# Make sure root node exists
-		roots = getRootNodes(node_group)
+		roots = get_root_nodes(node_group)
 		created_nodes = []
 		for rn in roots:
 			name = '_' + rn.name.replace('.', '_').replace(' ', '')
@@ -260,7 +260,7 @@ def buildNode(node_group, node, f, created_nodes):
 			inpname = buildNode(node_group, n, f, created_nodes)
 		# Not linked - create node with default values
 		else:
-			inpname = buildDefaultNode(inp)
+			inpname = build_default_node(inp)
 		
 		# Add input
 		f.write('\t\t' + name + '.inputs.push(' + inpname + ');\n')
@@ -274,14 +274,14 @@ def findNodeByLink(node_group, to_node, inp):
 				return findNodeByLink(node_group, link.from_node, link.from_node.inputs[0])
 			return link.from_node
 	
-def getRootNodes(node_group):
+def get_root_nodes(node_group):
 	roots = []
 	for n in node_group.nodes:
 		if len(n.outputs) == 0: # Assume node with no outputs as roots
 			roots.append(n)
 	return roots
 
-def buildDefaultNode(inp):
+def build_default_node(inp):
 	inpname = ''
 	if inp.type == "VECTOR":
 		inpname = 'VectorNode.create(' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ", " + str(inp.default_value[2]) + ')'

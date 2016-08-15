@@ -1368,13 +1368,22 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		pref['particle'] = self.particleSystemArray[psys.settings]["structName"]
 		o['particle_refs'].append(pref)
 
-	def get_viewport_matrix(self):
+	def get_viewport_view_matrix(self):
 		screen = bpy.context.window.screen
 		for area in screen.areas:
 			if area.type == 'VIEW_3D':
 				for space in area.spaces:
 					if space.type == 'VIEW_3D':
 						return space.region_3d.view_matrix
+		return None
+
+	def get_viewport_projection_matrix(self):
+		screen = bpy.context.window.screen
+		for area in screen.areas:
+			if area.type == 'VIEW_3D':
+				for space in area.spaces:
+					if space.type == 'VIEW_3D':
+						return space.region_3d.perspective_matrix
 		return None
 
 	def ExportNode(self, node, scene, poseBone = None, parento = None):
@@ -1463,7 +1472,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 			# Viewport Camera - overwrite active camera matrix with viewport matrix
 			if type == kNodeTypeCamera and bpy.data.worlds[0].ArmPlayViewportCamera:
-				viewport_matrix = self.get_viewport_matrix()
+				viewport_matrix = self.get_viewport_view_matrix()
 				if viewport_matrix != None:
 					o['transform']['values'] = self.WriteMatrix(viewport_matrix.inverted())
 					# Do not apply parent matrix
@@ -2124,6 +2133,14 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		o['near_plane'] = object.clip_start
 		o['far_plane'] = object.clip_end
 		o['fov'] = object.angle
+
+		# Viewport Camera - override fov for every camera for now
+		if bpy.data.worlds[0].ArmPlayViewportCamera:
+			# Extract fov from projection
+			# yscale = self.get_viewport_projection_matrix()[1][1]
+			# fov = math.atan(1.0 / yscale) * 0.9
+			# o['fov'] = fov
+			o['fov'] = math.pi / 3.0
 		
 		if object.type == 'PERSP':
 			o['type'] = 'perspective'

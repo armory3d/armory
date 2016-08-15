@@ -16,7 +16,7 @@ class Root {
 	public function new() {
 
 		// Startup scene
-		var scene = iron.Root.addScene(Main.projectScene);
+		var sceneNode = iron.Root.addScene(Main.projectScene);
 		cam = iron.Root.cameras[0];
 		
 		// Attach world to camera for now
@@ -25,9 +25,20 @@ class Root {
 
 		// Physics
 		physics = new PhysicsWorld(resource.gravity);
-		scene.addTrait(physics);
+		sceneNode.addTrait(physics);
 
 		App.notifyOnRender(render);
+
+		// Experimental scene reloading
+		// App.notifyOnUpdate(function() {
+		// 	if (iron.sys.Input.released) {
+		// 		// kha.Assets.loadBlob(Main.projectScene + '_arm', function(b:kha.Blob) {
+		// 			iron.App.reset();
+		// 			iron.resource.Resource.clearSceneData();
+		// 			new iron.App(armory.Root);
+		// 		// });
+		// 	}
+		// });
 	}
 
 	function render(g:kha.graphics4.Graphics) {
