@@ -96,7 +96,7 @@ def initProperties():
     bpy.types.Armature.armature_cached = bpy.props.BoolProperty(name="Armature Cached", default=False)
     # For camera
     bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", default=True)
-    bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Pipeline Path", default="deferred_path")
+    bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Render Path", default="deferred_path")
     bpy.types.Camera.pipeline_id = bpy.props.StringProperty(name="Pipeline ID", default="deferred")
 	# TODO: Specify multiple material ids, merge ids from multiple cameras 
     bpy.types.Camera.pipeline_passes = bpy.props.StringProperty(name="Pipeline passes", default="")
@@ -266,10 +266,10 @@ class DataPropsPanel(bpy.types.Panel):
                 layout.prop(obj.data, 'probe_blending')
             layout.prop(obj.data, 'frustum_culling')
             layout.prop_search(obj.data, "pipeline_path", bpy.data, "node_groups")
-            layout.operator("cg.reset_pipelines")
+            layout.operator("arm.reimport_paths_menu")
         elif obj.type == 'MESH' or obj.type == 'FONT':
             layout.prop(obj.data, 'static_usage')
-            layout.operator("cg.invalidate_cache")
+            layout.operator("arm.invalidate_cache")
         elif obj.type == 'LAMP':
             layout.prop(obj.data, 'light_clip_start')
             layout.prop(obj.data, 'light_clip_end')
@@ -287,16 +287,32 @@ class ScenePropsPanel(bpy.types.Panel):
         obj = bpy.context.scene
         layout.prop(obj, 'game_export')
 
-class OBJECT_OT_RESETPIPELINESButton(bpy.types.Operator):
-    bl_idname = "cg.reset_pipelines"
-    bl_label = "Reset Pipelines"
+class ReimportPathsMenu(bpy.types.Menu):
+    bl_label = "Confirm"
+    bl_idname = "OBJECT_MT_reimport_paths_menu"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator("arm.reimport_paths")
+
+class ReimportPathsButton(bpy.types.Operator):
+    bl_label = "Reimport Paths"
+    bl_idname = "arm.reimport_paths_menu"
+ 
+    def execute(self, context):
+        bpy.ops.wm.call_menu(name=ReimportPathsMenu.bl_idname)
+        return {"FINISHED"}
+
+class OBJECT_OT_REIMPORTPATHSButton(bpy.types.Operator):
+    bl_idname = "arm.reimport_paths"
+    bl_label = "Reimport Paths"
  
     def execute(self, context):
         nodes_renderpath.load_library()
         return{'FINISHED'}
 
 class OBJECT_OT_INVALIDATECACHEButton(bpy.types.Operator):
-    bl_idname = "cg.invalidate_cache"
+    bl_idname = "arm.invalidate_cache"
     bl_label = "Invalidate Cache"
  
     def execute(self, context):
@@ -321,9 +337,6 @@ class MatsPropsPanel(bpy.types.Panel):
         layout.prop(mat, 'override_shader_context')
         if mat.override_shader_context:
             layout.prop(mat, 'override_shader_context_name')
-        layout.prop(mat, 'stencil_mask')
-        layout.prop(mat, 'skip_context')
-        layout.prop(mat, 'overlay')
         layout.prop(mat, 'override_cull')
         if mat.override_cull:
             layout.prop(mat, 'override_cull_mode')
@@ -333,6 +346,9 @@ class MatsPropsPanel(bpy.types.Panel):
         # layout.prop(mat, 'override_depthwrite')
         # if mat.override_depthwrite:
             # layout.prop(mat, 'override_depthwrite_mode')
+        layout.prop(mat, 'overlay')
+        layout.prop(mat, 'stencil_mask')
+        layout.prop(mat, 'skip_context')
 
 # Menu in world region
 class WorldPropsPanel(bpy.types.Panel):

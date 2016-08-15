@@ -170,11 +170,16 @@ class ArmoryEditScriptButton(bpy.types.Operator):
         user_preferences = bpy.context.user_preferences
         addon_prefs = user_preferences.addons['armory'].preferences
         sdk_path = addon_prefs.sdk_path
-        kode_path = sdk_path + '/KodeStudio/KodeStudio.app/Contents/MacOS/Electron'
+        if utils.get_os() == 'win':
+            kode_path = sdk_path + '/kode_studio/KodeStudio-win32/Kode Studio.exe'
+        elif utils.get_os() == 'mac':
+            kode_path = '"' + sdk_path + '/kode_studio/Kode Studio.app/Contents/MacOS/Electron"'
+        else:
+            kode_path = sdk_path + '/kode_studio/KodeStudio-linux64/kodestudio'
         project_path = utils.get_fp()
         item = context.object.my_traitlist[context.object.traitlist_index] 
         hx_path = project_path + '/Sources/' + bpy.data.worlds[0].ArmProjectPackage + '/' + item.class_name_prop + '.hx'
-        subprocess.call([kode_path + ' ' + utils.get_fp() + ' ' + hx_path + ' &'], shell=True)
+        subprocess.Popen([kode_path + ' ' + utils.get_fp() + ' ' + hx_path], shell=True)
         return{'FINISHED'}
 
 class ArmoryNewScriptDialog(bpy.types.Operator):

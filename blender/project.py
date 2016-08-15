@@ -67,15 +67,14 @@ class ArmoryProjectPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds[0]
-        layout.prop_search(wrd, "ArmProjectScene", bpy.data, "scenes", "Start Scene")
+        layout.prop_search(wrd, "ArmProjectScene", bpy.data, "scenes", "Scene")
         layout.prop(wrd, 'ArmProjectName')
         layout.prop(wrd, 'ArmProjectPackage')
-        row = layout.row()
-        row.prop(wrd, 'ArmProjectWidth')
-        row.prop(wrd, 'ArmProjectHeight')
+        layout.prop_search(wrd, "ArmKhafile", bpy.data, "texts", "Khafile")
+        # row = layout.row()
+        layout.prop(wrd, 'ArmProjectWidth')
+        layout.prop(wrd, 'ArmProjectHeight')
         layout.prop(wrd, 'ArmProjectSamplesPerPixel')
-        layout.prop(wrd, 'ArmPhysics')
-        layout.operator("arm.kode")
 
 class ArmoryBuildPanel(bpy.types.Panel):
     bl_label = "Armory Build"
@@ -86,13 +85,14 @@ class ArmoryBuildPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds[0]
-        layout.prop(wrd, 'ArmProjectTarget')
         layout.operator("arm.build")
-        row = layout.row(align=True)
-        row.alignment = 'EXPAND'
-        row.operator("arm.folder")
-        row.operator("arm.clean")
-        layout.prop_search(wrd, "ArmKhafile", bpy.data, "texts", "Khafile")
+        layout.operator("arm.kode_studio")
+        # row = layout.row(align=True)
+        # row.alignment = 'EXPAND'
+        # row.operator("arm.folder")
+        layout.operator("arm.clean")
+        layout.prop(wrd, 'ArmProjectTarget')
+        layout.prop(wrd, 'ArmPhysics')
         layout.prop(wrd, 'ArmCacheShaders')
         layout.prop(wrd, 'ArmMinimize')
         layout.prop(wrd, 'ArmOptimizeGeometry')
@@ -108,7 +108,10 @@ class ArmoryPlayPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds[0]
-        layout.operator("arm.play")
+        if play_project.playproc == None and play_project.compileproc == None:
+            layout.operator("arm.play")
+        else:
+            layout.operator("arm.stop")
         layout.prop(wrd, 'ArmPlayRuntime')
         layout.prop(wrd, 'ArmPlayViewportCamera')
         if wrd.ArmPlayViewportCamera:
@@ -464,9 +467,9 @@ class ArmoryFolderButton(bpy.types.Operator):
         webbrowser.open('file://' + utils.get_fp())
         return{'FINISHED'}
 
-class ArmoryKodeButton(bpy.types.Operator):
-    bl_idname = 'arm.kode'
-    bl_label = 'Open in Kode Studio'
+class ArmoryKodeStudioButton(bpy.types.Operator):
+    bl_idname = 'arm.kode_studio'
+    bl_label = 'Kode Studio'
  
     def execute(self, context):
         user_preferences = bpy.context.user_preferences
@@ -481,13 +484,13 @@ class ArmoryKodeButton(bpy.types.Operator):
         else:
             kode_path = sdk_path + '/kode_studio/KodeStudio-linux64/kodestudio'
 
-        subprocess.Popen([kode_path, utils.get_fp()], shell=True)
+        subprocess.Popen([kode_path + ' ' + utils.get_fp()], shell=True)
 
         return{'FINISHED'}
 
 class ArmoryCleanButton(bpy.types.Operator):
     bl_idname = 'arm.clean'
-    bl_label = 'Clean Project'
+    bl_label = 'Clean'
  
     def execute(self, context):
         clean_project(self)

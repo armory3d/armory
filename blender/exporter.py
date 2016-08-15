@@ -2469,6 +2469,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						reflects.append(at.reflect_prop)
 				x['parameters'] = [t.start_track_name_prop, names, starts, ends, speeds, loops, reflects]
 			else: # Script
+				if t.class_name_prop == '': # Empty class name, skip
+					continue
 				x['type'] = 'Script'
 				if t.type_prop == 'Bundled Script':
 					trait_prefix = 'armory.trait.'
