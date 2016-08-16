@@ -1401,8 +1401,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o['type'] = structIdentifier[type]
 			o['id'] = nodeRef["structName"]
 
-			if (node.hide_render):
+			if node.hide_render:
 				o['visible'] = False
+
+			if node.spawn == False:
+				o['spawn'] = False
 
 			# Export the object reference and material references.
 			object = node.data

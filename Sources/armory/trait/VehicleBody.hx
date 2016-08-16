@@ -4,6 +4,7 @@ import iron.Trait;
 import iron.node.Node;
 import iron.node.CameraNode;
 import iron.node.Transform;
+import iron.sys.Time;
 import armory.trait.internal.PhysicsWorld;
 #if WITH_PHYSICS
 import haxebullet.Bullet;
@@ -48,11 +49,13 @@ class VehicleBody extends Trait {
 	var down = false;
 	var left = false;
 	var right = false;
+	var space = false;
 	function onKeyDown(key:kha.Key, char:String) {
 		if (key == kha.Key.UP) up = true;
 		else if (key == kha.Key.DOWN) down = true;
 		else if (key == kha.Key.LEFT) left = true;
 		else if (key == kha.Key.RIGHT) right = true;
+		else if (char == ' ') space = true;
 	}
 
 	function onKeyUp(key:kha.Key, char:String) {
@@ -60,6 +63,7 @@ class VehicleBody extends Trait {
 		else if (key == kha.Key.DOWN) down = false;
 		else if (key == kha.Key.LEFT) left = false;
 		else if (key == kha.Key.RIGHT) right = false;
+		else if (char == ' ') space = false;
 	}
 
     function init() {
@@ -151,19 +155,24 @@ class VehicleBody extends Trait {
 		else if (down) {
 			engineForce = -maxEngineForce;
 		}
+		else if (space) {
+			breakingForce = 100;
+		}
 		else {
 			engineForce = 0;
 			breakingForce = 20;
 		}
 
 		if (left) {
-			vehicleSteering = 0.3;
+			if (vehicleSteering < 0.3) vehicleSteering += Time.step;
 		}
 		else if (right) {
-			vehicleSteering = -0.3;
+			if (vehicleSteering > -0.3) vehicleSteering -= Time.step;
 		}
-		else {
-			vehicleSteering = 0;
+		else if (vehicleSteering != 0) {
+			var step = Math.abs(vehicleSteering) < Time.step ? Math.abs(vehicleSteering) : Time.step;
+			if (vehicleSteering > 0) vehicleSteering -= step;
+			else vehicleSteering += step;
 		}
 
 		vehicle.ptr.applyEngineForce(engineForce, 2);

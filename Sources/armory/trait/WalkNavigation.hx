@@ -11,16 +11,18 @@ import iron.math.Quat;
 
 class WalkNavigation extends Trait {
 
+    static inline var speed = 5.0;
+
     var camera:CameraNode;
 
     var moveForward = false;
     var moveBackward = false;
     var strafeLeft = false;
     var strafeRight = false;
-    var strafeForward = false;
-    var strafeBackward = false;
-
-    static inline var speed = 2.5;
+    var strafeUp = false;
+    var strafeDown = false;
+    var shift = 1.0;
+    var alt = 1.0;
 
     public function new() {
         super();
@@ -43,7 +45,7 @@ class WalkNavigation extends Trait {
     function update() {
 		if (Input.occupied) return;
 
-        var d = Time.delta * speed;
+        var d = Time.delta * speed * shift * alt;
 
         if (moveForward) {
             camera.move(camera.look(), d);
@@ -57,12 +59,12 @@ class WalkNavigation extends Trait {
         else if (strafeLeft) {
             camera.move(camera.right(), -d);
         }
-		if (strafeForward) {
-            var dir = new Vec4(0, 1, 0);
+		if (strafeUp) {
+            var dir = new Vec4(0, 0, 1);
             camera.move(dir, -d);
         }
-        else if (strafeBackward) {
-            var dir = new Vec4(0, 1, 0);
+        else if (strafeDown) {
+            var dir = new Vec4(0, 0, 1);
             camera.move(dir, d);
         }
 
@@ -77,8 +79,10 @@ class WalkNavigation extends Trait {
         else if (char == 's') moveBackward = true;
         else if (char == 'a') strafeLeft = true;
         else if (char == 'd') strafeRight = true;
-        else if (char == 'q') strafeForward = true;
-        else if (char == 'e') strafeBackward = true;
+        else if (char == 'q') strafeUp = true;
+        else if (char == 'e') strafeDown = true;
+        else if (key == Key.SHIFT) shift = 2.0;
+        else if (key == Key.ALT) alt = 0.5;
     }
 
     function onKeyUp(key:kha.Key, char:String) {
@@ -86,7 +90,9 @@ class WalkNavigation extends Trait {
         else if (/*key == Key.DOWN ||*/ char == 's') moveBackward = false;
         else if (/*key == Key.LEFT ||*/ char == 'a') strafeLeft = false;
         else if (/*key == Key.RIGHT ||*/ char == 'd') strafeRight = false;
-        else if (char == 'q') strafeForward = false;
-        else if (char == 'e') strafeBackward = false;
+        else if (char == 'q') strafeUp = false;
+        else if (char == 'e') strafeDown = false;
+        else if (key == Key.SHIFT) shift = 1.0;
+        else if (key == Key.ALT) alt = 1.0;
     }
 }

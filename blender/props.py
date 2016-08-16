@@ -83,7 +83,8 @@ def initProperties():
     bpy.types.Object.instanced_children_scale_z = bpy.props.BoolProperty(name="Z", default=False)
     bpy.types.Object.override_material = bpy.props.BoolProperty(name="Override Material", default=False)
     bpy.types.Object.override_material_name = bpy.props.StringProperty(name="Name", default="")
-    bpy.types.Object.game_export = bpy.props.BoolProperty(name="Game Export", default=True)
+    bpy.types.Object.game_export = bpy.props.BoolProperty(name="Export", default=True)
+    bpy.types.Object.spawn = bpy.props.BoolProperty(name="Spawn", description="Auto-add this node when creating scene", default=True)
     # For geometry
     bpy.types.Mesh.geometry_cached = bpy.props.BoolProperty(name="Geometry Cached", default=False)
     bpy.types.Mesh.geometry_cached_verts = bpy.props.IntProperty(name="Last Verts", default=0)
@@ -195,7 +196,7 @@ def initProperties():
                  ('False', 'False', 'False')],
         name = "Depth-Write", default='True')
     # For scene
-    bpy.types.Scene.game_export = bpy.props.BoolProperty(name="Game Export", default=True)
+    bpy.types.Scene.game_export = bpy.props.BoolProperty(name="Export", default=True)
     # For light
     bpy.types.Lamp.light_clip_start = bpy.props.FloatProperty(name="Clip Start", default=0.1)
     bpy.types.Lamp.light_clip_end = bpy.props.FloatProperty(name="Clip End", default=50.0)
@@ -212,6 +213,7 @@ class ObjectPropsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         obj = bpy.context.object
+        layout.prop(obj, 'spawn')
         layout.prop(obj, 'game_export')
         if obj.type == 'MESH':
             layout.prop(obj, 'instanced_children')
@@ -294,7 +296,7 @@ class ScenePropsPanel(bpy.types.Panel):
         layout.prop(obj, 'game_export')
 
 class ReimportPathsMenu(bpy.types.Menu):
-    bl_label = "Confirm"
+    bl_label = "OK?"
     bl_idname = "OBJECT_MT_reimport_paths_menu"
 
     def draw(self, context):
