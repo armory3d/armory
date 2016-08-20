@@ -706,8 +706,8 @@ void main() {
 #ifdef _LDR
     // gl_FragColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
     outColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
-#else
+// #else
     // gl_FragColor = vec4(outColor.rgb, outColor.a);
-    outColor = vec4(outColor.rgb, outColor.a);
+    //outColor = vec4(outColor.rgb, outColor.a);
 #endif
 }

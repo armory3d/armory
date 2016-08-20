@@ -330,8 +330,8 @@ void main() {
 #endif
 
 #ifdef _LDR
-    outColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
-#else
-    outColor = vec4(outColor.rgb, outColor.a);
+    outColor.rgb = vec3(pow(outColor.rgb, vec3(1.0 / 2.2)));
+// #else
+    // outColor = vec4(outColor.rgb, outColor.a);
 #endif
 }

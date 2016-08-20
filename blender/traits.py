@@ -25,6 +25,8 @@ class ListTraitItem(bpy.types.PropertyGroup):
     type_prop = bpy.props.EnumProperty(
         items = [('Script', 'Script', 'Script'),
                  ('Bundled Script', 'Bundled Script', 'Bundled Script'),
+                 ('Python Script', 'Python Script', 'Python Script'),
+                 ('JS Script', 'JS Script', 'JS Script'),
                  ('Nodes', 'Nodes', 'Nodes'),
                  ('Scene Instance', 'Scene Instance', 'Scene Instance'),
                  ('Animation', 'Animation', 'Animation')
@@ -43,6 +45,11 @@ class ListTraitItem(bpy.types.PropertyGroup):
 
     class_name_prop = bpy.props.StringProperty(
            name="Class",
+           description="A name for this item",
+           default="")
+
+    jsscript_prop = bpy.props.StringProperty(
+           name="Text",
            description="A name for this item",
            default="")
 
@@ -286,6 +293,12 @@ class ToolsTraitsPanel(bpy.types.Panel):
                     layout.operator("arm.new_script")
                     layout.operator("arm.refresh_scripts_list")
             
+            # JS/Python Script
+            elif item.type_prop == 'JS Script' or item.type_prop == 'Python Script':
+                item.name = item.jsscript_prop
+                row = layout.row()
+                row.prop_search(item, "jsscript_prop", bpy.data, "texts", "Text")
+
             # Nodes
             elif item.type_prop =='Nodes':
                 item.name = item.nodes_name_prop

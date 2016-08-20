@@ -67,6 +67,8 @@ def initProperties():
     bpy.types.World.ArmPlayDeveloperTools = BoolProperty(name="Developer Tools", default=False)
     bpy.types.World.ArmPlayRuntime = EnumProperty(
         items = [('Electron', 'Electron', 'Electron'), 
+                 ('Browser', 'Browser', 'Browser'),
+                 ('Native', 'Native', 'Native'),
                  ('Krom', 'Krom', 'Krom')],
         name = "Runtime", default='Electron')
 
@@ -167,8 +169,8 @@ def initProperties():
     bpy.types.World.generate_grain_strength = bpy.props.FloatProperty(name="Strength", default=2.0, update=invalidate_shader_cache)
     bpy.types.World.generate_fog = bpy.props.BoolProperty(name="Volumetric Fog", default=False, update=invalidate_shader_cache)
     bpy.types.World.generate_fog_color = bpy.props.FloatVectorProperty(name="Color", size=3, subtype='COLOR', default=[0.5, 0.6, 0.7], update=invalidate_shader_cache)
-    bpy.types.World.generate_fog_amounta = bpy.props.FloatProperty(name="Amount A", default=0.5, update=invalidate_shader_cache)
-    bpy.types.World.generate_fog_amountb = bpy.props.FloatProperty(name="Amount B", default=1.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_fog_amounta = bpy.props.FloatProperty(name="Amount A", default=0.25, update=invalidate_shader_cache)
+    bpy.types.World.generate_fog_amountb = bpy.props.FloatProperty(name="Amount B", default=0.5, update=invalidate_shader_cache)
     # For material
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.override_shader = bpy.props.BoolProperty(name="Override Shader", default=False)

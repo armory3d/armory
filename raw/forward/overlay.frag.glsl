@@ -693,8 +693,8 @@ void main() {
 	// outColor.rgb = ltccol * 10.0 * visibility + indirect / 14.0;
 
 #ifdef _LDR
-    outColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
-#else
-    outColor = vec4(outColor.rgb, outColor.a);
+    outColor.rgb = vec3(pow(outColor.rgb, vec3(1.0 / 2.2)));
+// #else
+    // outColor = vec4(outColor.rgb, outColor.a);
 #endif
 }

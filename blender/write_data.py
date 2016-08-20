@@ -30,7 +30,6 @@ project.addAssets('Assets/**');
         for file in assets.assets:
             f.write("project.addAssets('" + file + "');\n")
         
-        
         f.write(add_armory_library(sdk_path, 'armory'))
         f.write(add_armory_library(sdk_path, 'iron'))
         
@@ -50,14 +49,14 @@ project.addAssets('Assets/**');
 
         if bpy.data.worlds[0].ArmPlayConsole:
             f.write("project.addDefine('WITH_PROFILE');\n")
-            f.write(add_armory_library(sdk_path, 'zui'))
+            f.write(add_armory_library(sdk_path, 'ui/zui'))
             font_path =  sdk_path + '/armory/Assets/droid_sans.ttf'
             font_path = font_path.replace('\\', '/')
             f.write('project.addAssets("' + font_path + '");\n')
 
-        # f.write(add_armory_library(sdk_path, 'haxeui/haxeui-core'))
-        # f.write(add_armory_library(sdk_path, 'haxeui/haxeui-kha'))
-        # f.write(add_armory_library(sdk_path, 'haxeui/hscript'))
+        # f.write(add_armory_library(sdk_path, 'ui/haxeui/haxeui-core'))
+        # f.write(add_armory_library(sdk_path, 'ui/haxeui/haxeui-kha'))
+        # f.write(add_armory_library(sdk_path, 'ui/haxeui/hscript'))
 
         if bpy.data.worlds[0].ArmMinimize == False:
             f.write("project.addDefine('WITH_JSON');\n")
@@ -106,12 +105,17 @@ class Main {
                 head.appendChild(script);
             }
         ");
+""")
+
+        f.write("""
         untyped loadScript('ammo.js', start);
         #else
         start();
         #end
     }
-    static function start() {
+    static function start() {""")
+
+        f.write("""
         kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel}, function() {
             new iron.App(armory.Root);
         });

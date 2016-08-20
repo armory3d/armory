@@ -20,6 +20,7 @@ import write_probes
 from bpy_extras.io_utils import ExportHelper
 import assets
 import utils
+import subprocess
 
 kNodeTypeNode = 0
 kNodeTypeBone = 1
@@ -2488,6 +2489,36 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						loops.append(at.loop_prop)
 						reflects.append(at.reflect_prop)
 				x['parameters'] = [t.start_track_name_prop, names, starts, ends, speeds, loops, reflects]
+			elif t.type_prop == 'JS Script' or t.type_prop == 'Python Script':
+				x['type'] = 'Script'
+				x['class_name'] = 'armory.trait.internal.JSScript'
+				x['parameters'] = [utils.safe_filename(t.jsscript_prop)]
+				# Compile to JS
+				if t.type_prop == 'Python Script':
+					# Write py to file
+					pyname = t.jsscript_prop + '.py'
+					scriptspath = utils.get_fp() + '/' + 'compiled/scripts/'
+					targetpath = scriptspath + pyname
+					with open(targetpath, 'w') as f:
+						f.write(bpy.data.texts[t.jsscript_prop].as_string())
+					user_preferences = bpy.context.user_preferences
+					addon_prefs = user_preferences.addons['armory'].preferences
+					sdk_path = addon_prefs.sdk_path
+					python_path = '/Applications/Blender/blender.app/Contents/Resources/2.77/python/bin/python3.5m'
+					cwd = os.getcwd()
+					os.chdir(scriptspath)
+					# Disable minification for now, too slow
+					subprocess.Popen([python_path + ' ' + sdk_path + '/transcrypt/__main__.py' + ' ' + pyname + ' --nomin'], shell=True)
+					os.chdir(cwd)
+					# Compiled file
+					assets.add('compiled/scripts/__javascript__/' + t.jsscript_prop + '.js')
+				else:
+					# Write js to file
+					assetpath = 'compiled/scripts/' + t.jsscript_prop + '.js'
+					targetpath = utils.get_fp() + '/' + assetpath
+					with open(targetpath, 'w') as f:
+						f.write(bpy.data.texts[t.jsscript_prop].as_string())
+					assets.add(assetpath)
 			else: # Script
 				if t.class_name_prop == '': # Empty class name, skip
 					continue

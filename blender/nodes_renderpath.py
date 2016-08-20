@@ -15,7 +15,7 @@ class CGPipelineTree(NodeTree):
     '''Render Path nodes'''
     bl_idname = 'CGPipelineTreeType'
     bl_label = 'Render Path Node Tree'
-    bl_icon = 'GAME'
+    bl_icon = 'SCENE'
 
 class CGPipelineTreeNode:
     @classmethod

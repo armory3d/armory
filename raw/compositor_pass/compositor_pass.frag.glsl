@@ -243,7 +243,7 @@ void main() {
 #ifdef _CompoFog
 	vec3 pos = getPos(depth);
 	float dist = distance(pos, eye);
-	vec3 eyedir = normalize(eye + pos);
+	vec3 eyedir = eyeLook;// normalize(eye + pos);
 	col.rgb = applyFog(col.rgb, dist, eye, eyedir);
 #endif
 
