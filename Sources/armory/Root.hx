@@ -7,9 +7,6 @@ import iron.resource.SceneFormat;
 import iron.resource.Resource;
 import armory.trait.internal.PhysicsWorld;
 
-// #if WITH_EXPOSE
-@:expose
-// #end
 class Root {
 
 	var cam:CameraNode;

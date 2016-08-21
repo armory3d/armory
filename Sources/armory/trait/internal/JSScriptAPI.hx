@@ -36,4 +36,26 @@ class JSScriptAPI {
     }
 }
 
+#else
+
+@:expose("arm")
+class JSScriptAPI {
+
+	public static var App = iron.App;
+	public static var Root = iron.Root;
+	public static var Time = iron.sys.Time;
+	public static var Node = iron.node.Node;
+	public static var Resource = iron.resource.Resource;
+
+	public function new() { }
+}
+
+@:expose("arm.math")
+class JSScriptAPIMath {
+
+	public static var Vec4 = iron.math.Vec4;
+	public static var Mat4 = iron.math.Mat4;
+	public static var Quat = iron.math.Quat;
+}
+
 #end
