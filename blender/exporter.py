@@ -2493,11 +2493,13 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				x['type'] = 'Script'
 				x['class_name'] = 'armory.trait.internal.JSScript'
 				x['parameters'] = [utils.safe_filename(t.jsscript_prop)]
+				scriptspath = utils.get_fp() + '/' + 'compiled/scripts/'
+				if not os.path.exists(scriptspath):
+					os.makedirs(scriptspath)
 				# Compile to JS
 				if t.type_prop == 'Python Script':
 					# Write py to file
 					pyname = t.jsscript_prop + '.py'
-					scriptspath = utils.get_fp() + '/' + 'compiled/scripts/'
 					targetpath = scriptspath + pyname
 					with open(targetpath, 'w') as f:
 						f.write(bpy.data.texts[t.jsscript_prop].as_string())
@@ -2508,7 +2510,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 					cwd = os.getcwd()
 					os.chdir(scriptspath)
 					# Disable minification for now, too slow
-					subprocess.Popen([python_path + ' ' + sdk_path + '/transcrypt/__main__.py' + ' ' + pyname + ' --nomin'], shell=True)
+					subprocess.Popen([python_path + ' ' + sdk_path + '/lib/transcrypt/__main__.py' + ' ' + pyname + ' --nomin'], shell=True)
 					os.chdir(cwd)
 					# Compiled file
 					assets.add('compiled/scripts/__javascript__/' + t.jsscript_prop + '.js')

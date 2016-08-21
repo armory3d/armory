@@ -35,8 +35,12 @@ project.addAssets('Assets/**');
         
         if bpy.data.worlds[0].ArmPhysics != 'Disabled':
             f.write("project.addDefine('WITH_PHYSICS');\n")
-            f.write(add_armory_library(sdk_path, 'haxebullet'))
-        
+            f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
+
+        ###
+        f.write(add_armory_library(sdk_path + '/lib/', 'haxeduktape'))
+        ###
+
         for i in range(0, len(shader_references)): # Shaders
             ref = shader_references[i]
             # defs = shader_references_defs[i]
@@ -49,14 +53,14 @@ project.addAssets('Assets/**');
 
         if bpy.data.worlds[0].ArmPlayConsole:
             f.write("project.addDefine('WITH_PROFILE');\n")
-            f.write(add_armory_library(sdk_path, 'ui/zui'))
+            f.write(add_armory_library(sdk_path, 'lib/zui'))
             font_path =  sdk_path + '/armory/Assets/droid_sans.ttf'
             font_path = font_path.replace('\\', '/')
             f.write('project.addAssets("' + font_path + '");\n')
 
-        # f.write(add_armory_library(sdk_path, 'ui/haxeui/haxeui-core'))
-        # f.write(add_armory_library(sdk_path, 'ui/haxeui/haxeui-kha'))
-        # f.write(add_armory_library(sdk_path, 'ui/haxeui/hscript'))
+        # f.write(add_armory_library(sdk_path, 'lib/haxeui/haxeui-core'))
+        # f.write(add_armory_library(sdk_path, 'lib/haxeui/haxeui-kha'))
+        # f.write(add_armory_library(sdk_path, 'lib/haxeui/hscript'))
 
         if bpy.data.worlds[0].ArmMinimize == False:
             f.write("project.addDefine('WITH_JSON');\n")

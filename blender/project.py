@@ -255,7 +255,7 @@ def compile_project(self, target_name=None):
 	if target_name == 'html5':
 		# Copy ammo.js if necessary
 		if bpy.data.worlds[0].ArmPhysics == 'Bullet':
-			ammojs_path = sdk_path + '/haxebullet/js/ammo/ammo.js'
+			ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
 			if not os.path.isfile('build/html5/ammo.js'):
 				shutil.copy(ammojs_path, 'build/html5')
 			if not os.path.isfile('build/debug-html5/ammo.js'):
