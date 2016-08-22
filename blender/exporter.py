@@ -2479,7 +2479,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if t.enabled_prop == False:
 				continue
 			x = {}
-			if t.type_prop == 'Nodes' and t.nodes_name_prop != '':
+			if t.type_prop == 'Logic Nodes' and t.nodes_name_prop != '':
 				x['type'] = 'Script'
 				x['class_name'] = bpy.data.worlds[0].ArmProjectPackage + '.node.' + utils.safe_filename(t.nodes_name_prop)
 			elif t.type_prop == 'Scene Instance':
@@ -2543,7 +2543,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 					with open(targetpath, 'w') as f:
 						f.write(bpy.data.texts[t.jsscript_prop].as_string())
 					assets.add(assetpath)
-			else: # Script
+			else: # Haxe/Bundled Script
 				if t.class_name_prop == '': # Empty class name, skip
 					continue
 				x['type'] = 'Script'
@@ -2630,6 +2630,13 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o['clear_color'] = [col[0] * strength, col[1] * strength, col[2] * strength, col[3]]
 		else:
 			o['clear_color'] = [0.0, 0.0, 0.0, 1.0]
+
+	def find_anim_trait(self, ob):
+		# Checks if animation trait is attached
+		for t in ob.my_traitlist:
+			if t.type_prop == 'Animation' and t.enabled_prop == True:
+				return True
+		return False
 
 	def cb_export_material(self, material, o):
 		#return
@@ -2731,7 +2738,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if ob.instanced_children or len(ob.particle_systems) > 0:
 				defs.append('_Instancing')
 			# GPU Skinning
-			if ob.find_armature():
+			if ob.find_armature() and self.find_anim_trait(ob):
 				defs.append('_Skinning')
 			# Billboarding
 			if len(ob.constraints) > 0 and ob.constraints[0].target != None and \

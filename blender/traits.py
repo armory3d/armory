@@ -23,11 +23,11 @@ class ListTraitItem(bpy.types.PropertyGroup):
            default=True)
 
     type_prop = bpy.props.EnumProperty(
-        items = [('Script', 'Script', 'Script'),
-                 ('Bundled Script', 'Bundled Script', 'Bundled Script'),
+        items = [('Haxe Script', 'Haxe Script', 'Haxe Script'),
                  ('Python Script', 'Python Script', 'Python Script'),
                  ('JS Script', 'JS Script', 'JS Script'),
-                 ('Nodes', 'Nodes', 'Nodes'),
+                 ('Bundled Script', 'Bundled Script', 'Bundled Script'),
+                 ('Logic Nodes', 'Logic Nodes', 'Logic Nodes'),
                  ('Scene Instance', 'Scene Instance', 'Scene Instance'),
                  ('Animation', 'Animation', 'Animation')
                  ],
@@ -251,11 +251,11 @@ class ToolsTraitsPanel(bpy.types.Panel):
             row.prop(item, "type_prop")
 
             # Script
-            if item.type_prop == 'Script' or item.type_prop == 'Bundled Script':
+            if item.type_prop == 'Haxe Script' or item.type_prop == 'Bundled Script':
                 item.name = item.class_name_prop
                 row = layout.row()
                 # row.prop(item, "class_name_prop")
-                if item.type_prop == 'Script':
+                if item.type_prop == 'Haxe Script':
                     row.prop_search(item, "class_name_prop", bpy.data.worlds[0], "scripts_list", "Class")
                 else:
                     row.prop_search(item, "class_name_prop", bpy.data.worlds[0], "bundled_scripts_list", "Class")
@@ -285,7 +285,7 @@ class ToolsTraitsPanel(bpy.types.Panel):
                     layout.prop_search(paramitem, 'object_picker', bpy.context.scene, "objects", "Object")
                     layout.prop(paramitem, 'color_picker')
 
-                if item.type_prop == 'Script':
+                if item.type_prop == 'Haxe Script':
                     row = layout.row()
                     if item.class_name_prop == '':
                         row.enabled = False
@@ -300,7 +300,7 @@ class ToolsTraitsPanel(bpy.types.Panel):
                 row.prop_search(item, "jsscript_prop", bpy.data, "texts", "Text")
 
             # Nodes
-            elif item.type_prop =='Nodes':
+            elif item.type_prop == 'Logic Nodes':
                 item.name = item.nodes_name_prop
                 row = layout.row()
                 row.prop_search(item, "nodes_name_prop", bpy.data, "node_groups", "Tree")
