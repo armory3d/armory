@@ -211,7 +211,7 @@ def buildNodeTree(node_group):
 
 	with open(path + node_group_name + '.hx', 'w') as f:
 		f.write('package ' + bpy.data.worlds[0].ArmProjectPackage + '.node;\n\n')
-		f.write('import armory.node.*;\n\n')
+		f.write('import armory.logicnode.*;\n\n')
 		f.write('class ' + node_group_name + ' extends armory.trait.internal.NodeExecutor {\n\n')
 		f.write('\tpublic function new() { super(); notifyOnAdd(add); }\n\n')
 		f.write('\tfunction add() {\n')

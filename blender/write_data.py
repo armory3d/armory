@@ -24,9 +24,8 @@ let project = new Project('""" + bpy.data.worlds[0].ArmProjectName + """');
 
 project.addSources('Sources');
 project.addShaders('Sources/Shaders/**');
-project.addAssets('Assets/**');
 """)
-        # project.addAssets('compiled/Assets/**');
+        # project.addAssets('build/compiled/Assets/**');
         for file in assets.assets:
             f.write("project.addAssets('" + file + "');\n")
         
@@ -37,9 +36,8 @@ project.addAssets('Assets/**');
             f.write("project.addDefine('WITH_PHYSICS');\n")
             f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
 
-        ###
-        f.write(add_armory_library(sdk_path + '/lib/', 'haxeduktape'))
-        ###
+        # Native scripting
+        # f.write(add_armory_library(sdk_path + '/lib/', 'haxeduktape'))
 
         for i in range(0, len(shader_references)): # Shaders
             ref = shader_references[i]
@@ -92,7 +90,7 @@ class Main {
     static inline var projectWidth = """ + str(resx) + """;
     static inline var projectHeight = """ + str(resy) + """;
     static inline var projectSamplesPerPixel = """ + str(wrd.ArmProjectSamplesPerPixel) + """;
-    public static inline var projectScene = '""" + str(wrd.ArmProjectScene) + """';
+    static inline var projectScene = '""" + str(wrd.ArmProjectScene) + """';
     public static function main() {
         iron.sys.CompileTime.importPackage('armory.trait');
         iron.sys.CompileTime.importPackage('armory.renderpipeline');
@@ -121,7 +119,9 @@ class Main {
 
         f.write("""
         kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel}, function() {
-            new iron.App(armory.Root);
+            iron.App.init(function() {
+                new armory.Scene(projectScene);
+            });
         });
     }
 }
@@ -217,7 +217,7 @@ def write_indexhtml(w, h, in_viewport):
 
 def write_compiledglsl(clip_start, clip_end, shadowmap_size):
     wrd = bpy.data.worlds[0]
-    with open('compiled/Shaders/compiled.glsl', 'w') as f:
+    with open('build/compiled/Shaders/compiled.glsl', 'w') as f:
         f.write(
 """const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;

@@ -15,23 +15,27 @@ def on_scene_update(context):
         elif edit_obj.type == 'ARMATURE':
             edit_obj.data.armature_cached = False
 
+    for text in bpy.data.texts:
+        if text.is_updated:
+            print('ASDASDASDASDASD')
+
 def invalidate_shader_cache(self, context):
     # compiled.glsl changed, recompile all shaders next time
     fp = utils.get_fp()
-    if os.path.isdir(fp + '/compiled/ShaderResources'):
-        shutil.rmtree(fp + '/compiled/ShaderResources')
+    if os.path.isdir(fp + '/build/compiled/ShaderResources'):
+        shutil.rmtree(fp + '/build/compiled/ShaderResources')
 
 def invalidate_compiled_data(self, context):
     fp = utils.get_fp()
-    if os.path.isdir(fp + '/compiled/Assets'):
-        shutil.rmtree(fp + '/compiled/Assets')
-    if os.path.isdir(fp + '/compiled/ShaderResources'):
-        shutil.rmtree(fp + '/compiled/ShaderResources')
+    if os.path.isdir(fp + '/build/compiled/Assets'):
+        shutil.rmtree(fp + '/build/compiled/Assets')
+    if os.path.isdir(fp + '/build/compiled/ShaderResources'):
+        shutil.rmtree(fp + '/build/compiled/ShaderResources')
 
 def invalidate_geometry_data(self, context):
     fp = utils.get_fp()
-    if os.path.isdir(fp + '/compiled/Assets/geoms'):
-        shutil.rmtree(fp + '/compiled/Assets/geoms')
+    if os.path.isdir(fp + '/build/compiled/Assets/geoms'):
+        shutil.rmtree(fp + '/build/compiled/Assets/geoms')
 
 def initProperties():
     # For project

@@ -788,8 +788,8 @@ def buildNodeTrees(shader_references, asset_references, assets_path):
     os.chdir(fp)
 
     # Make sure Assets dir exists
-    if not os.path.exists('compiled/Assets/pipelines'):
-        os.makedirs('compiled/Assets/pipelines')
+    if not os.path.exists('build/compiled/Assets/pipelines'):
+        os.makedirs('build/compiled/Assets/pipelines')
     
     buildNodeTrees.assets_path = assets_path
     buildNodeTrees.linked_assets = []
@@ -807,7 +807,7 @@ def buildNodeTree(node_group, shader_references, asset_references):
     res = {}
     output['pipeline_resources'] = [res]
     
-    path = 'compiled/Assets/pipelines/'
+    path = 'build/compiled/Assets/pipelines/'
     node_group_name = node_group.name.replace('.', '_')
     
     rn = get_root_node(node_group)
@@ -937,8 +937,8 @@ def make_draw_material_quad(stage, node_group, node, shader_references, asset_re
     dir_name = scon[2]
     # No world defs for material passes
     res_name = scon[2]
-    asset_references.append('compiled/ShaderResources/' + dir_name + '/' + res_name + '.arm')
-    shader_references.append('compiled/Shaders/' + dir_name + '/' + res_name)
+    asset_references.append('build/compiled/ShaderResources/' + dir_name + '/' + res_name + '.arm')
+    shader_references.append('build/compiled/Shaders/' + dir_name + '/' + res_name)
 
 def make_draw_quad(stage, node_group, node, shader_references, asset_references, context_index=1, shader_context=None):
     stage['command'] = 'draw_shader_quad'
@@ -952,8 +952,8 @@ def make_draw_quad(stage, node_group, node, shader_references, asset_references,
     dir_name = scon[0]
     # Append world defs
     res_name = scon[1] + world_defs
-    asset_references.append('compiled/ShaderResources/' + dir_name + '/' + res_name + '.arm')
-    shader_references.append('compiled/Shaders/' + dir_name + '/' + res_name)
+    asset_references.append('build/compiled/ShaderResources/' + dir_name + '/' + res_name + '.arm')
+    shader_references.append('build/compiled/Shaders/' + dir_name + '/' + res_name)
 
 def make_draw_world(stage, node_group, node, shader_references, asset_references, dome=True):
     if dome:
@@ -1000,8 +1000,8 @@ def make_draw_compositor(stage, node_group, node, shader_references, asset_refer
     stage['command'] = 'draw_shader_quad'
     stage['params'].append(res_name + '/' + res_name + '/' + scon)
     # Include resource and shaders
-    asset_references.append('compiled/ShaderResources/' + scon + '/' + res_name + '.arm')
-    shader_references.append('compiled/Shaders/' + scon + '/' + res_name)
+    asset_references.append('build/compiled/ShaderResources/' + scon + '/' + res_name + '.arm')
+    shader_references.append('build/compiled/Shaders/' + scon + '/' + res_name)
     # Link assets
     buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise256.png')
 

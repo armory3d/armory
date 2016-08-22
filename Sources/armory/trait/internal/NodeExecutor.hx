@@ -4,7 +4,7 @@ import iron.Trait;
 
 class NodeExecutor extends Trait {
 
-    var baseNode:armory.node.Node;
+    var baseNode:armory.logicnode.Node;
     var nodeInits:Array<Void->Void> = [];
     var nodeUpdates:Array<Void->Void> = [];
 
@@ -14,7 +14,7 @@ class NodeExecutor extends Trait {
         notifyOnUpdate(update);
     }
 
-    public function start(baseNode:armory.node.Node) {
+    public function start(baseNode:armory.logicnode.Node) {
         this.baseNode = baseNode;
         baseNode.start(this);
     }

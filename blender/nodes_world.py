@@ -32,8 +32,8 @@ def buildNodeTrees():
 	os.chdir(fp)
 
 	# Make sure Assets dir exists
-	if not os.path.exists('compiled/Assets/materials'):
-		os.makedirs('compiled/Assets/materials')
+	if not os.path.exists('build/compiled/Assets/materials'):
+		os.makedirs('build/compiled/Assets/materials')
 	
 	# Export world nodes
 	world_outputs = []
@@ -93,11 +93,11 @@ def write_output(output, asset_references, shader_references):
 	# Reference correct shader context
 	res = output['material_resources'][0]
 	res['shader'] = res_name + '/' + res_name
-	asset_references.append('compiled/ShaderResources/' + dir_name + '/' + res_name + '.arm')
-	shader_references.append('compiled/Shaders/' + dir_name + '/' + res_name)
+	asset_references.append('build/compiled/ShaderResources/' + dir_name + '/' + res_name + '.arm')
+	shader_references.append('build/compiled/Shaders/' + dir_name + '/' + res_name)
 
 	# Write material json
-	path = 'compiled/Assets/materials/'
+	path = 'build/compiled/Assets/materials/'
 	asset_path = path + res['id'] + '.arm'
 	utils.write_arm(asset_path, output)
 	assets.add(asset_path)

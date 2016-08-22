@@ -220,7 +220,7 @@ def make(json_name, fp, minimize, defs):
 	base_name = json_name.split('.', 1)[0]
 
 	# Make out dir
-	path = fp + '/compiled/ShaderResources/' + base_name
+	path = fp + '/build/compiled/ShaderResources/' + base_name
 	if not os.path.exists(path):
 		os.makedirs(path)
 

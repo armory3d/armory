@@ -2160,7 +2160,22 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		o['id'] = objectRef[1]["structName"]
 		object = objectRef[0]
 		if object.sound:
-			o['sound'] = object.sound.name.split('.')[0]
+			# Packed
+			if object.sound.packed_file != None:
+				unpack_path = utils.get_fp() + '/build/compiled/Assets/unpacked'
+				if not os.path.exists(unpack_path):
+					os.makedirs(unpack_path)
+				unpack_filepath = unpack_path + '/' + object.sound.name
+				if os.path.isfile(unpack_filepath) == False or os.path.getsize(unpack_filepath) != object.sound.packed_file.size:
+					with open(unpack_filepath, 'wb') as f:
+						f.write(object.sound.packed_file.data)
+				assets.add(unpack_filepath)
+			# External
+			else:
+				assets.add(utils.safe_assetpath(object.sound.filepath)) # Link sound to assets
+			
+			o['sound'] = utils.extract_filename_noext(object.sound.filepath)
+			o['sound'] = utils.safe_filename(o['sound'])
 		else:
 			o['sound'] = ''
 		self.output['speaker_resources'].append(o)
@@ -2493,7 +2508,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				x['type'] = 'Script'
 				x['class_name'] = 'armory.trait.internal.JSScript'
 				x['parameters'] = [utils.safe_filename(t.jsscript_prop)]
-				scriptspath = utils.get_fp() + '/' + 'compiled/scripts/'
+				scriptspath = utils.get_fp() + '/build/compiled/scripts/'
 				if not os.path.exists(scriptspath):
 					os.makedirs(scriptspath)
 				# Compile to JS
@@ -2506,17 +2521,24 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 					user_preferences = bpy.context.user_preferences
 					addon_prefs = user_preferences.addons['armory'].preferences
 					sdk_path = addon_prefs.sdk_path
-					python_path = '/Applications/Blender/blender.app/Contents/Resources/2.77/python/bin/python3.5m'
+					# Extract path to built-in python binary
+					if utils.get_os() == 'win':
+						# Remove 'os.py' from path
+						python_path = os.__file__[:-5] + '../bin/python.exe'
+					elif utils.get_os() == 'mac':
+						python_path = os.__file__[:-5] + '../../bin/python3.5m'
+					else:
+						python_path = os.__file__[:-5] + '../../bin/python3.5m'
 					cwd = os.getcwd()
 					os.chdir(scriptspath)
 					# Disable minification for now, too slow
 					subprocess.Popen([python_path + ' ' + sdk_path + '/lib/transcrypt/__main__.py' + ' ' + pyname + ' --nomin'], shell=True)
 					os.chdir(cwd)
 					# Compiled file
-					assets.add('compiled/scripts/__javascript__/' + t.jsscript_prop + '.js')
+					assets.add('build/compiled/scripts/__javascript__/' + t.jsscript_prop + '.js')
 				else:
 					# Write js to file
-					assetpath = 'compiled/scripts/' + t.jsscript_prop + '.js'
+					assetpath = 'build/compiled/scripts/' + t.jsscript_prop + '.js'
 					targetpath = utils.get_fp() + '/' + assetpath
 					with open(targetpath, 'w') as f:
 						f.write(bpy.data.texts[t.jsscript_prop].as_string())
@@ -2799,12 +2821,12 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		
 		# Shader res
 		shader_res_name = ArmoryExporter.pipeline_id + ext
-		shader_res_path = 'compiled/ShaderResources/' + ArmoryExporter.pipeline_id + '/' + shader_res_name + '.arm'
+		shader_res_path = 'build/compiled/ShaderResources/' + ArmoryExporter.pipeline_id + '/' + shader_res_name + '.arm'
 		# Stencil mask
 		# if material.stencil_mask > 0:
 		# 	mask_ext = "_mask" + str(material.stencil_mask)
 		# 	shader_res_name_with_mask = shader_res_name + mask_ext
-		# 	shader_res_path_with_mask = 'compiled/ShaderResources/' + ArmoryExporter.pipeline_id + '/' + shader_res_name_with_mask + '.arm'
+		# 	shader_res_path_with_mask = 'build/compiled/ShaderResources/' + ArmoryExporter.pipeline_id + '/' + shader_res_name_with_mask + '.arm'
 		# 	# Copy resource if it does not exist and set stencil mask
 		# 	if not os.path.isfile(shader_res_path_with_mask):
 		# 		json_file = open(shader_res_path).read()
@@ -2825,7 +2847,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# Process all passes from pipeline
 		for pipe_pass in pipeline_passes:
 			shader_name = pipe_pass + ext
-			ArmoryExporter.shader_references.append('compiled/Shaders/' + ArmoryExporter.pipeline_id + '/' + shader_name)
+			ArmoryExporter.shader_references.append('build/compiled/Shaders/' + ArmoryExporter.pipeline_id + '/' + shader_name)
 
 def register():
 	bpy.utils.register_class(ArmoryExporter)

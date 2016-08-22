@@ -49,7 +49,16 @@ def to_hex(val):
     return '#%02x%02x%02x%02x' % (int(val[3] * 255), int(val[0] * 255), int(val[1] * 255), int(val[2] * 255))
 
 def safe_filename(s):
-    return s.replace('.', '_').replace('-', '_').replace(' ', '_')
+    s = s.replace('.', '_').replace('-', '_').replace(' ', '_')
+    if s[0].isdigit(): # Prefix _ if first char is digit
+        s = '_' + s
+    return s
+
+def safe_assetpath(s):
+    return s[2:] # Remove leading '//'
+
+def extract_filename_noext(s):
+    return s.rsplit('/', 1)[1].rsplit('.', 1)[0] # Extract file name without extension
 
 def get_render_resolution(scene_index=0):
     render = bpy.data.scenes[scene_index].render

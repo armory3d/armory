@@ -1,4 +1,4 @@
-package armory.node;
+package armory.logicnode;
 
 class StringNode extends Node {
 

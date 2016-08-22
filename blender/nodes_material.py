@@ -1,5 +1,8 @@
 import bpy
 import math
+import assets
+import utils
+import os
 
 def is_pow(num):
 	return ((num & (num - 1)) == 0) and num != 0
@@ -89,11 +92,25 @@ def make_texture(self, id, image_node, material):
 	tex = {}
 	tex['id'] = id
 	image = image_node.image
-	if image is not None:
-		tex['name'] = image.filepath.rsplit('/', 1)[1].rsplit('.', 1)[0] # Extract file name without extension
-		tex['name'] = tex['name'].replace('.', '_')
-		tex['name'] = tex['name'].replace('-', '_')
-		tex['name'] = tex['name'].replace(' ', '_')
+	if image != None:
+		if image.packed_file != None:
+			# Extract packed data
+			unpack_path = utils.get_fp() + '/build/compiled/Assets/unpacked'
+			if not os.path.exists(unpack_path):
+				os.makedirs(unpack_path)
+			unpack_filepath = unpack_path + '/' + image.name
+			# Write bytes if size is different or file does not exist yet
+			if os.path.isfile(unpack_filepath) == False or os.path.getsize(unpack_filepath) != image.packed_file.size:
+				with open(unpack_filepath, 'wb') as f:
+					f.write(image.packed_file.data)
+			# Add asset
+			assets.add(unpack_filepath)
+		else:
+			# Link image path to assets
+			assets.add(utils.safe_assetpath(image.filepath))
+		# Reference image name
+		tex['name'] = utils.extract_filename_noext(image.filepath)
+		tex['name'] = utils.safe_filename(tex['name'])
 		if image_node.interpolation == 'Cubic': # Mipmap linear
 			tex['mipmap_filter'] = 'linear'
 			tex['generate_mipmaps'] = True

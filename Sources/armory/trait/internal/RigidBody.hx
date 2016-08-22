@@ -8,7 +8,6 @@ import iron.sys.Time;
 import iron.math.Vec4;
 import iron.node.Transform;
 import iron.node.ModelNode;
-import armory.Root;
 
 class RigidBody extends Trait {
 
@@ -53,7 +52,7 @@ class RigidBody extends Trait {
 
 	public function init() {
 		transform = node.transform;
-		physics = Root.physics;
+		physics = armory.Scene.physics;
 
 		if (bodyCreated) return;
 		bodyCreated = true;

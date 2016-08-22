@@ -1,4 +1,4 @@
-package armory.node;
+package armory.logicnode;
 
 import iron.math.Mat4;
 import iron.math.Vec4;

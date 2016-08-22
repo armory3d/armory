@@ -31,7 +31,7 @@ def make(json_name, fp, defs=None):
 	base_name = json_name.split('.', 1)[0]
 
 	# Make out dir
-	path = fp + '/compiled/Shaders/' + base_name
+	path = fp + '/build/compiled/Shaders/' + base_name
 	if not os.path.exists(path):
 		os.makedirs(path)
 

@@ -18,6 +18,9 @@ import lib.make_resources
 import lib.make_variants
 import utils
 import assets
+# Server
+import http.server
+import socketserver
 
 def init_armory_props():
 	# First run
@@ -175,7 +178,7 @@ def export_game_data(fp, sdk_path):
 	# Export scene data
 	for scene in bpy.data.scenes:
 		if scene.game_export:
-			asset_path = 'compiled/Assets/' + scene.name + '.arm'
+			asset_path = 'build/compiled/Assets/' + scene.name + '.arm'
 			bpy.ops.export_scene.armory(
 				get_export_scene_override(scene),
 				filepath=asset_path)
@@ -193,13 +196,13 @@ def export_game_data(fp, sdk_path):
 	if bpy.data.worlds[0].ArmCacheShaders == False:
 		if os.path.isdir('build/html5-resources'):
 			shutil.rmtree('build/html5-resources')
-		if os.path.isdir('compiled/Shaders'):
-			shutil.rmtree('compiled/Shaders')
-		if os.path.isdir('compiled/ShaderResources'):
-			shutil.rmtree('compiled/ShaderResources')
+		if os.path.isdir('build/compiled/Shaders'):
+			shutil.rmtree('build/compiled/Shaders')
+		if os.path.isdir('build/compiled/ShaderResources'):
+			shutil.rmtree('build/compiled/ShaderResources')
 	# Remove shader resources if shaders were deleted
-	elif os.path.isdir('compiled/Shaders') == False and os.path.isdir('compiled/ShaderResources') == True:
-		shutil.rmtree('compiled/ShaderResources')
+	elif os.path.isdir('build/compiled/Shaders') == False and os.path.isdir('build/compiled/ShaderResources') == True:
+		shutil.rmtree('build/compiled/ShaderResources')
 	
 	# Write referenced shader variants
 	# Assume asset_references contains shader resources only for now
@@ -207,7 +210,7 @@ def export_game_data(fp, sdk_path):
 		# Resource does not exist yet
 		os.chdir(fp)
 		if not os.path.exists(ref):
-			shader_name = ref.split('/')[2]
+			shader_name = ref.split('/')[3] # Extract from 'build/compiled/...'
 			strdefs = ref[:-4] # Remove '.arm' extension
 			defs = strdefs.split(shader_name) # 'name/name_def_def'
 			if len(defs) > 2:
@@ -278,7 +281,7 @@ def compile_project(self, target_name=None):
 def build_project(self):
 	# Save blend
 	bpy.ops.wm.save_mainfile()
-	
+
 	# Get paths
 	user_preferences = bpy.context.user_preferences
 	addon_prefs = user_preferences.addons['armory'].preferences
@@ -296,8 +299,6 @@ def build_project(self):
 	# Create directories
 	if not os.path.exists('Sources'):
 		os.makedirs('Sources')
-	if not os.path.exists('Assets'):
-		os.makedirs('Assets')
 	if not os.path.isdir('build/html5'):
 		os.makedirs('build/html5')
 	if not os.path.isdir('build/debug-html5'):
@@ -306,6 +307,30 @@ def build_project(self):
 	# Compile path tracer shaders
 	if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].pipeline_path == 'pathtrace_path':
 		path_tracer.compile(raw_path + 'pt_trace_pass/pt_trace_pass.frag.glsl')
+
+	# Save external scripts edited inside Blender
+	write_texts = False
+	for text in bpy.data.texts:
+		if text.filepath != '' and text.is_dirty:
+			write_texts = True
+			break
+	if write_texts:
+		area = bpy.context.area
+		old_type = area.type
+		area.type = 'TEXT_EDITOR'
+		for text in bpy.data.texts:
+			if text.filepath != '' and text.is_dirty:
+				area.spaces[0].text = text
+				bpy.ops.text.save()
+		area.type = old_type
+
+	# Save internal Haxe scripts
+	for text in bpy.data.texts:
+		if text.filepath == '' and text.name[-3:] == '.hx':
+			with open('Sources/' + bpy.data.worlds[0].ArmProjectPackage + '/' + text.name, 'w') as f:
+				f.write(text.as_string())
+
+	# Save internal assets
 
 	# Export data
 	export_game_data(fp, sdk_path)
@@ -339,82 +364,104 @@ def play_project(self, in_viewport):
 	# Build data
 	build_project(self)
 
-	if in_viewport == False:
-		# Windowed player
-		wrd = bpy.data.worlds[0]
-		x = 0
-		y = 0
-		w, h = utils.get_render_resolution()
-		winoff = 0
-	else:
-		# Player dimensions
-		if utils.get_os() == 'win':
-			psize = 1 # Scale in electron
-			xoff = 0
-			yoff = 6
-		elif utils.get_os() == 'mac':
-			psize = bpy.context.user_preferences.system.pixel_size
-			xoff = 5
-			yoff = 22
+	wrd = bpy.data.worlds[0]
+
+	if wrd.ArmPlayRuntime == 'Native':
+		compile_project(self, target_name='--run')
+	else: # Electron, Browser
+		if in_viewport == False:
+			# Windowed player
+			x = 0
+			y = 0
+			w, h = utils.get_render_resolution()
+			winoff = 0
 		else:
-			psize = 1
-			xoff = 0
-			yoff = 6
+			# Player dimensions
+			if utils.get_os() == 'win':
+				psize = 1 # Scale in electron
+				xoff = 0
+				yoff = 6
+			elif utils.get_os() == 'mac':
+				psize = bpy.context.user_preferences.system.pixel_size
+				xoff = 5
+				yoff = 22
+			else:
+				psize = 1
+				xoff = 0
+				yoff = 6
 
-		x = bpy.context.window.x + (bpy.context.area.x - xoff) / psize
-		y = bpy.context.window.height + 45 - (bpy.context.area.y + bpy.context.area.height) / psize
-		w = (bpy.context.area.width + xoff) / psize
-		h = (bpy.context.area.height) / psize - 25
-		winoff = bpy.context.window.y + bpy.context.window.height + yoff
+			x = bpy.context.window.x + (bpy.context.area.x - xoff) / psize
+			y = bpy.context.window.height + 45 - (bpy.context.area.y + bpy.context.area.height) / psize
+			w = (bpy.context.area.width + xoff) / psize
+			h = (bpy.context.area.height) / psize - 25
+			winoff = bpy.context.window.y + bpy.context.window.height + yoff
 
-	write_data.write_electronjs(x, y, w, h, winoff, in_viewport)
-	write_data.write_indexhtml(w, h, in_viewport)
+		write_data.write_electronjs(x, y, w, h, winoff, in_viewport)
+		write_data.write_indexhtml(w, h, in_viewport)
 
-	# Compile
-	play_project.compileproc = compile_project(self, target_name='html5')
-	watch_compile()
+		# Compile
+		play_project.compileproc = compile_project(self, target_name='html5')
+		watch_compile()
+
+def run_server():
+	Handler = http.server.SimpleHTTPRequestHandler
+	try:
+		httpd = socketserver.TCPServer(("", 8040), Handler)
+		httpd.serve_forever()
+	except:
+		print('Server already running')
 
 def on_compiled():
 	print_info("Ready")
 	user_preferences = bpy.context.user_preferences
 	addon_prefs = user_preferences.addons['armory'].preferences
 	sdk_path = addon_prefs.sdk_path
-	electron_app_path = './build/electron.js'
 
-	if utils.get_os() == 'win':
-		electron_path = sdk_path + 'kode_studio/KodeStudio-win32/Kode Studio.exe'
-	elif utils.get_os() == 'mac':
-		# electron_path = sdk_path + 'kode_studio/Kode Studio.app/Contents/MacOS/Electron'
-		electron_path = sdk_path + 'kode_studio/Electron.app/Contents/MacOS/Electron'
-	else:
-		electron_path = sdk_path + 'kode_studio/KodeStudio-linux64/kodestudio'
+	wrd = bpy.data.worlds[0]
+	if wrd.ArmPlayRuntime == 'Electron':
+		electron_app_path = './build/electron.js'
 
-	play_project.playproc = subprocess.Popen([electron_path, '--chromedebug', '--remote-debugging-port=9222', electron_app_path])
-	watch_play()
+		if utils.get_os() == 'win':
+			electron_path = sdk_path + 'kode_studio/KodeStudio-win32/Kode Studio.exe'
+		elif utils.get_os() == 'mac':
+			# electron_path = sdk_path + 'kode_studio/Kode Studio.app/Contents/MacOS/Electron'
+			electron_path = sdk_path + 'kode_studio/Electron.app/Contents/MacOS/Electron'
+		else:
+			electron_path = sdk_path + 'kode_studio/KodeStudio-linux64/kodestudio'
+
+		play_project.playproc = subprocess.Popen([electron_path, '--chromedebug', '--remote-debugging-port=9222', electron_app_path])
+		watch_play()
+	elif wrd.ArmPlayRuntime == 'Browser':
+		# Start server
+		os.chdir(utils.get_fp())
+		t = threading.Thread(name='localserver', target=run_server)
+		t.daemon = True
+		t.start()
+		html5_app_path = 'http://localhost:8040/build/html5'
+		webbrowser.open(html5_app_path)
+
 play_project.playproc = None
 play_project.compileproc = None
 
 def clean_project(self):
 	os.chdir(utils.get_fp())
 	
-	# Remove build data
+	# Remove build and compiled data
 	if os.path.isdir('build'):
 		shutil.rmtree('build')
-
-	# Remove generated assets and shader variants
-	if os.path.isdir('compiled'):
-		shutil.rmtree('compiled')
 
 	# Remove compiled nodes
 	nodes_path = 'Sources/' + bpy.data.worlds[0].ArmProjectPackage.replace('.', '/') + '/node/'
 	if os.path.isdir(nodes_path):
 		shutil.rmtree(nodes_path)
 
-	# Remove khafile/korefile
+	# Remove khafile/korefile/Main.hx
 	if os.path.isfile('khafile.js'):
 		os.remove('khafile.js')
 	if os.path.isfile('korefile.js'):
 		os.remove('korefile.js')
+	if os.path.isfile('Sources/Main.hx'):
+		os.remove('Sources/Main.hx')
 
 	self.report({'INFO'}, 'Done')
 

@@ -17,19 +17,19 @@ def add_rad_assets(output_file_rad, rad_format, num_mips):
 
 # Generate probes from environment map
 def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance=True):
-    if not os.path.exists('compiled/Assets/envmaps'):
-        os.makedirs('compiled/Assets/envmaps')
+    if not os.path.exists('build/compiled/Assets/envmaps'):
+        os.makedirs('build/compiled/Assets/envmaps')
     
     base_name = image_filepath.rsplit('/', 1)[1].rsplit('.', 1)[0] # Extract file name without extension
     
     # Assets to be generated
-    output_file_irr = 'compiled/Assets/envmaps/' + base_name + '_irradiance'
+    output_file_irr = 'build/compiled/Assets/envmaps/' + base_name + '_irradiance'
     if generate_radiance:
-        output_file_rad = 'compiled/Assets/envmaps/' + base_name + '_radiance'
+        output_file_rad = 'build/compiled/Assets/envmaps/' + base_name + '_radiance'
         rad_format = 'jpg' if disable_hdr else 'hdr'
 
     # Assume irradiance has to exist
-    if os.path.exists('compiled/Assets/envmaps/' + base_name + '_irradiance.arm'):
+    if os.path.exists('build/compiled/Assets/envmaps/' + base_name + '_irradiance.arm'):
         # Cached assets
         add_irr_assets(output_file_irr)
         if generate_radiance:
@@ -218,10 +218,10 @@ def write_sky_irradiance(base_name):
     # Predefined fake spherical harmonics for now
     irradiance_floats = [1.0281457342829743,1.1617608778901902,1.3886220898440544,-0.13044863139637752,-0.2794659158733846,-0.5736106907295643,0.04065421813873111,0.0434367391348577,0.03567450494792305,0.10964557605577738,0.1129839085793664,0.11261660812141877,-0.08271974283263238,-0.08068091195339556,-0.06432614970480094,-0.12517787967665814,-0.11638582546310804,-0.09743696224655113,0.20068697715947176,0.2158788783296805,0.2109374396869599,0.19636637427150455,0.19445523113118082,0.17825330699680575,0.31440860839538637,0.33041120060402407,0.30867788630062676]
     
-    if not os.path.exists('compiled/Assets/envmaps'):
-        os.makedirs('compiled/Assets/envmaps')
+    if not os.path.exists('build/compiled/Assets/envmaps'):
+        os.makedirs('build/compiled/Assets/envmaps')
     
-    output_file = 'compiled/Assets/envmaps/' + base_name + '_irradiance'
+    output_file = 'build/compiled/Assets/envmaps/' + base_name + '_irradiance'
     
     sh_json = {}
     sh_json['irradiance'] = irradiance_floats
@@ -235,10 +235,10 @@ def write_color_irradiance(base_name, col):
     for i in range(0, 24):
         irradiance_floats.append(0.0)
     
-    if not os.path.exists('compiled/Assets/envmaps'):
-        os.makedirs('compiled/Assets/envmaps')
+    if not os.path.exists('build/compiled/Assets/envmaps'):
+        os.makedirs('build/compiled/Assets/envmaps')
     
-    output_file = 'compiled/Assets/envmaps/' + base_name + '_irradiance'
+    output_file = 'build/compiled/Assets/envmaps/' + base_name + '_irradiance'
     
     sh_json = {}
     sh_json['irradiance'] = irradiance_floats

@@ -67,7 +67,7 @@ class VehicleBody extends Trait {
 	}
 
     function init() {
-    	physics = armory.Root.physics;
+    	physics = armory.Scene.physics;
     	transform = node.transform;
     	camera = iron.Root.cameras[0];
 
