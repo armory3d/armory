@@ -84,7 +84,7 @@ class PathTracer extends Trait {
 		var sphereNum = 0;
 		var cubeNum = 0;
 		for (n in Root.models) {
-			if (n.id.split(".")[0] == "Sphere") {
+			if (n.name.split(".")[0] == "Sphere") {
 				context.resource.bind_constants.push(
 					{
 						id: "sphereCenter" + sphereNum,
@@ -112,7 +112,7 @@ class PathTracer extends Trait {
 				
 				sphereNum++;
 			}
-			else if (n.id.split(".")[0] == "Cube") {
+			else if (n.name.split(".")[0] == "Cube") {
 				context.resource.bind_constants.push(
 					{
 						id: "cubeCenter" + cubeNum,
