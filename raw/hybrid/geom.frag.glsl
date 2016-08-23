@@ -303,7 +303,6 @@ void main() {
 	else { // Point, spot
 		l = normalize(lightPos - position.xyz);
 	}
-
 	float dotNL = max(dot(n, l), 0.0);
 	
 	float visibility = 1.0;
@@ -382,7 +381,7 @@ void main() {
 	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 	indirect += indirectSpecular;
 #endif
-	indirect = indirect * lightColor * lightStrength * envmapStrength;
+	indirect = indirect * envmapStrength; // * lightColor * lightStrength;
 	outputColor = vec4(vec3(direct * visibility + indirect), 1.0);
 	
 #ifdef _OMTex

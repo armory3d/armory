@@ -15,9 +15,14 @@ class Scene {
 	public static var physics:PhysicsWorld;
 
 	public function new(sceneId:String) {
-
+		
 		// Startup scene
 		var sceneNode = Root.addScene(sceneId);
+
+		if (Root.cameras.length == 0) {
+			trace('No camera found for scene "$sceneId"!');
+			return;
+		}
 		cam = Root.cameras[0];
 		
 		// Attach world to camera for now

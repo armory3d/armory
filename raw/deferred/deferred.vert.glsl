@@ -4,6 +4,8 @@
 precision highp float;
 #endif
 
+#include "../compiled.glsl"
+
 #ifdef _HMTex
 #define _NMTex
 #endif
@@ -43,7 +45,7 @@ uniform vec4 albedo_color;
 	uniform mat4 M;
 #endif
 #ifdef _Skinning
-	uniform float skinBones[50 * 12];
+	uniform float skinBones[skinMaxBones * 12]; // Default to 50
 #endif
 #ifdef _Probes
 	uniform mat4 M;
@@ -74,6 +76,35 @@ out vec4 matColor;
 #endif
 
 #ifdef _Skinning
+// Geometric Skinning with Approximate Dual Quaternion Blending, Kavan
+// Based on https://github.com/tcoppex/aer-engine/blob/master/demos/aura/data/shaders/Skinning.glsl
+// void getSkinningDualQuat(vec4 weights, inout vec3 v, inout vec3 n) {
+// 	// Retrieve the real and dual part of the dual-quaternions
+// 	mat4 matA, matB;
+// 	vec4 indices = vec4(2.0) * bone;
+// 	matA[0] = skinBones[int(indices.x) + 0];
+// 	matB[0] = skinBones[int(indices.x) + 1];
+// 	matA[1] = skinBones[int(indices.y) + 0];
+// 	matB[1] = skinBones[int(indices.y) + 1];
+// 	matA[2] = skinBones[int(indices.z) + 0];
+// 	matB[2] = skinBones[int(indices.z) + 1];
+// 	matA[3] = skinBones[int(indices.w) + 0];
+// 	matB[3] = skinBones[int(indices.w) + 1];
+// 	// Handles antipodality by sticking joints in the same neighbourhood
+// 	weights.xyz *= sign(matA[3] * mat3x4(matA));
+// 	// Apply weights
+// 	vec4 A = matA * weights; // Real part
+// 	vec4 B = matB * weights; // Dual part
+// 	// Normalize
+// 	float invNormA = 1.0 / length(A);
+// 	A *= invNormA;
+// 	B *= invNormA;
+// 	// Position
+// 	v += 2.0 * cross(A.xyz, cross(A.xyz, v) + A.w * v); // Rotate
+// 	v += 2.0 * (A.w * B.xyz - B.w * A.xyz + cross(A.xyz, B.xyz)); // Translate
+// 	// Normal
+// 	n += 2.0 * cross(A.xyz, cross(A.xyz, n) + A.w * n);
+// }
 mat4 getBoneMat(const int boneIndex) {
 	vec4 v0 = vec4(skinBones[boneIndex * 12 + 0],
 				   skinBones[boneIndex * 12 + 1],
@@ -92,14 +123,12 @@ mat4 getBoneMat(const int boneIndex) {
 				v2.x, v2.y, v2.z, v2.w,
 				0, 0, 0, 1);
 }
-
 mat4 getSkinningMat() {
 	return weight.x * getBoneMat(int(bone.x)) +
 		   weight.y * getBoneMat(int(bone.y)) +
 		   weight.z * getBoneMat(int(bone.z)) +
 		   weight.w * getBoneMat(int(bone.w));
 }
-
 mat3 getSkinningMatVec(const mat4 skinningMat) {
 	return mat3(skinningMat[0].xyz, skinningMat[1].xyz, skinningMat[2].xyz);
 }

@@ -4,6 +4,8 @@
 precision highp float;
 #endif
 
+#include "../compiled.glsl"
+
 in vec3 pos;
 in vec3 nor;
 #ifdef _AMTex
@@ -26,7 +28,7 @@ in vec3 nor;
 
 uniform mat4 LMVP;
 #ifdef _Skinning
-	uniform float skinBones[50 * 12];
+	uniform float skinBones[skinMaxBones * 12];
 #endif
 
 #ifdef _Skinning

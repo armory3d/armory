@@ -66,6 +66,9 @@ project.addShaders('Sources/Shaders/**');
         if bpy.data.worlds[0].ArmDeinterleavedBuffers == True:
             f.write("project.addDefine('WITH_DEINTERLEAVED');\n")
 
+        if bpy.data.worlds[0].generate_gpu_skin == False:
+            f.write("project.addDefine('WITH_CPU_SKIN');\n")
+
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
 
@@ -276,6 +279,7 @@ const float ssrJitter = """ + str(round(wrd.generate_ssr_jitter * 100) / 100) + 
 const float ssrTextureScale = """ + str(round(wrd.generate_ssr_texture_scale * 10) / 10) + """;
 """)
 
+        # Compositor
         if wrd.generate_letterbox:
             f.write(
 """const float compoLetterboxSize = """ + str(round(wrd.generate_letterbox_size * 100) / 100) + """;
@@ -302,6 +306,12 @@ const vec3 compoFogColor = vec3(""" + str(round(wrd.generate_fog_color[0] * 100)
             f.write(
 """const float compoDOFDistance = """ + str(round(bpy.data.cameras[0].dof_distance * 100) / 100) + """;
 const float compoDOFSize = """ + str(round(bpy.data.cameras[0].cycles.aperture_size * 100) / 100) + """;
+""")
+
+        # Skinning
+        if wrd.generate_gpu_skin:
+            f.write(
+"""const int skinMaxBones = """ + str(wrd.generate_gpu_skin_max_bones) + """;
 """)
 
 def write_traithx(class_name):

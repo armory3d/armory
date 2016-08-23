@@ -129,7 +129,7 @@ def initProperties():
     bpy.types.World.world_defs = bpy.props.StringProperty(name="World Shader Defs", default='')
     bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Radiance Probes", default=True, update=invalidate_shader_cache)
     bpy.types.World.generate_clouds = bpy.props.BoolProperty(name="Clouds", default=False, update=invalidate_shader_cache)
-    bpy.types.World.generate_clouds_density = bpy.props.FloatProperty(name="Density", default=0.6, min=0.0, max=10.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_clouds_density = bpy.props.FloatProperty(name="Density", default=0.5, min=0.0, max=10.0, update=invalidate_shader_cache)
     bpy.types.World.generate_clouds_size = bpy.props.FloatProperty(name="Size", default=1.0, min=0.0, max=10.0, update=invalidate_shader_cache)
     bpy.types.World.generate_clouds_lower = bpy.props.FloatProperty(name="Lower", default=2.0, min=1.0, max=10.0, update=invalidate_shader_cache)
     bpy.types.World.generate_clouds_upper = bpy.props.FloatProperty(name="Upper", default=3.5, min=1.0, max=10.0, update=invalidate_shader_cache)
@@ -175,6 +175,8 @@ def initProperties():
     bpy.types.World.generate_fog_color = bpy.props.FloatVectorProperty(name="Color", size=3, subtype='COLOR', default=[0.5, 0.6, 0.7], update=invalidate_shader_cache)
     bpy.types.World.generate_fog_amounta = bpy.props.FloatProperty(name="Amount A", default=0.25, update=invalidate_shader_cache)
     bpy.types.World.generate_fog_amountb = bpy.props.FloatProperty(name="Amount B", default=0.5, update=invalidate_shader_cache)
+    bpy.types.World.generate_gpu_skin = bpy.props.BoolProperty(name="GPU Skinning", default=True, update=invalidate_shader_cache)
+    bpy.types.World.generate_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=84, update=invalidate_shader_cache)
     # For material
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.override_shader = bpy.props.BoolProperty(name="Override Shader", default=False)
@@ -419,6 +421,11 @@ class WorldPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'generate_fog_color')
             layout.prop(wrd, 'generate_fog_amounta')
             layout.prop(wrd, 'generate_fog_amountb')
+
+        layout.label('Skinning')
+        layout.prop(wrd, 'generate_gpu_skin')
+        if wrd.generate_gpu_skin:
+            layout.prop(wrd, 'generate_gpu_skin_max_bones')
 
 # Registration
 def register():

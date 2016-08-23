@@ -161,20 +161,6 @@ def export_game_data(fp, sdk_path):
 	for wout in world_outputs:
 		nodes_world.write_output(wout, asset_references, shader_references)
 
-	# TODO: Set armatures to center of world so skin transform is zero
-	armatures = []
-	for o in bpy.data.objects:
-		if o.type == 'ARMATURE':
-			a = {}
-			a['armature'] = o
-			a['x'] = o.location.x
-			a['y'] = o.location.y
-			a['z'] = o.location.z
-			armatures.append(a)
-			o.location.x = 0
-			o.location.y = 0
-			o.location.z = 0
-
 	# Export scene data
 	for scene in bpy.data.scenes:
 		if scene.game_export:
@@ -185,12 +171,6 @@ def export_game_data(fp, sdk_path):
 			shader_references += ArmoryExporter.shader_references
 			asset_references += ArmoryExporter.asset_references
 			assets.add(asset_path)
-
-	# Move armatures back
-	for a in armatures:
-		a['armature'].location.x = a['x']
-		a['armature'].location.y = a['y']
-		a['armature'].location.z = a['z']
 	
 	# Clean compiled variants if cache is disabled
 	if bpy.data.worlds[0].ArmCacheShaders == False:

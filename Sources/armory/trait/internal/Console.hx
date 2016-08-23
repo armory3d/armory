@@ -78,7 +78,7 @@ class Console extends Trait {
             ui.separator();
             if (ui.node(Id.node(), "Inspector", 0, false)) {
                 for (o in iron.Root.models) {
-                    ui.text(o.id + " (" + Std.int(o.transform.absx() * 100) / 100 + ", " + Std.int(o.transform.absy() * 100) / 100 + ", " + Std.int(o.transform.absz() * 100) / 100 + ")");
+                    ui.text(o.name + " (" + Std.int(o.transform.absx() * 100) / 100 + ", " + Std.int(o.transform.absy() * 100) / 100 + ", " + Std.int(o.transform.absz() * 100) / 100 + ")");
                 }
             }
         }

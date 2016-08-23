@@ -253,7 +253,9 @@ void main() {
 		float dist = distanceBox(mpos.xyz, probeVolumeCenter, probeVolumeSize);
 		// Blend local probe with global probe		
 		if (dist > -0.1) {
-			mask_probe += clamp((0.1 + dist) * (1.0 / 0.1), 0, 1.0 - eps);
+			const float blending = 10.0;
+			float clampres = clamp((0.1 + dist) * blending, 0.0, 1.0 - eps);
+			mask_probe += clampres;
 		}
 		if (dist > 0) mask_probe = 0;
 	}

@@ -1483,10 +1483,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 					o['local_transform_only'] = True
 
 			if (node.type == "ARMATURE"):
-				skeleton = node.data
+				skeleton = node.data # Armature data
 				if (skeleton):
-					o['nodes'] = []
-					o['bones_ref'] = 'bones_' + o['id']
+					armatureid = utils.safe_filename(skeleton.name)
+					o['bones_ref'] = 'bones_' + armatureid
 
 					# TODO: use option_geometry_per_file
 					fp = self.get_geoms_file_path(o['bones_ref'])
@@ -2482,10 +2482,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if t.type_prop == 'Logic Nodes' and t.nodes_name_prop != '':
 				x['type'] = 'Script'
 				x['class_name'] = bpy.data.worlds[0].ArmProjectPackage + '.node.' + utils.safe_filename(t.nodes_name_prop)
-			elif t.type_prop == 'Scene Instance':
-				x['type'] = 'Script'
-				x['class_name'] = 'armory.trait.internal.SceneInstance'
-				x['parameters'] = [utils.safe_filename(t.scene_prop)]
 			elif t.type_prop == 'Animation':
 				x['type'] = 'Script'
 				x['class_name'] = 'armory.trait.internal.Animation'
@@ -2738,7 +2734,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if ob.instanced_children or len(ob.particle_systems) > 0:
 				defs.append('_Instancing')
 			# GPU Skinning
-			if ob.find_armature() and self.find_anim_trait(ob):
+			if ob.find_armature() and self.find_anim_trait(ob) and bpy.data.worlds[0].generate_gpu_skin == True:
 				defs.append('_Skinning')
 			# Billboarding
 			if len(ob.constraints) > 0 and ob.constraints[0].target != None and \
@@ -2795,7 +2791,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				if world_generate_radiance == False:
 					generate_radiance = False
 				
-				cam.probe_num_mips = write_probes.write_probes('Assets/' + cam.probe_texture, disable_hdr, cam.probe_num_mips, generate_radiance=generate_radiance)
+				texture_path = '//' + cam.probe_texture
+				cam.probe_num_mips = write_probes.write_probes(texture_path, disable_hdr, cam.probe_num_mips, generate_radiance=generate_radiance)
 				base_name = cam.probe_texture.rsplit('.', 1)[0]
 				po = self.make_probe(cam.name, base_name, cam.probe_num_mips, cam.probe_strength, cam.probe_blending, volume, volume_center, generate_radiance, generate_irradiance)
 				o['probes'].append(po)

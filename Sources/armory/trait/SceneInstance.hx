@@ -1,4 +1,4 @@
-package armory.trait.internal;
+package armory.trait;
 
 import iron.Trait;
 import iron.Root;

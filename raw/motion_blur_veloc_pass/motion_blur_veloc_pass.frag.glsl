@@ -19,8 +19,7 @@ out vec4 outColor;
 
 void main() {
 	vec2 velocity = texture(sveloc, texCoord).rg;
-	// velocityScale = currentFps / targetFps;
-	// velocity *= velocityScale;
+	velocity *= motionBlurIntensity; // * (currentFps / targetFps);
 	
 	vec4 col = texture(tex, texCoord);
 

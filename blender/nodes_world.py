@@ -61,26 +61,26 @@ def buildNodeTree(world_name, node_group):
 		parse_world_output(node_group, output_node, context)
 	
 	# Clear to color if no texture or sky is provided
-	world_defs = bpy.data.worlds[0].world_defs
-	if '_EnvSky' not in world_defs and '_EnvTex' not in world_defs:
-		bpy.data.worlds[0].world_defs += '_EnvCol'
+	wrd = bpy.data.worlds[0]
+	if '_EnvSky' not in wrd.world_defs and '_EnvTex' not in wrd.world_defs:
+		wrd.world_defs += '_EnvCol'
 		# Irradiance json file name
-		base_name = bpy.data.worlds[0].name
+		base_name = wrd.name
 		bpy.data.cameras[0].world_envtex_name = base_name
 		write_probes.write_color_irradiance(base_name, bpy.data.cameras[0].world_envtex_color)
 
 	# Clouds enabled
-	if bpy.data.worlds[0].generate_clouds:
-		bpy.data.worlds[0].world_defs += '_EnvClouds'
+	if wrd.generate_clouds:
+		wrd.world_defs += '_EnvClouds'
 
 	# Shadows disabled
-	if bpy.data.worlds[0].generate_shadows == False:
-		bpy.data.worlds[0].world_defs += '_NoShadows'
+	if wrd.generate_shadows == False:
+		wrd.world_defs += '_NoShadows'
 
 	# Enable probes
 	for cam in bpy.data.cameras:
 		if cam.is_probe:
-			bpy.data.worlds[0].world_defs += '_Probes'
+			wrd.world_defs += '_Probes'
 
 	# Data will be written after pipeline has been processed to gather all defines
 	return output
@@ -89,7 +89,9 @@ def write_output(output, asset_references, shader_references):
 	# Add resources to khafie
 	dir_name = 'env_map'
 	# Append world defs
-	res_name = 'env_map' + bpy.data.worlds[0].world_defs
+	wrd = bpy.data.worlds[0]
+	res_name = 'env_map' + wrd.world_defs
+	
 	# Reference correct shader context
 	res = output['material_resources'][0]
 	res['shader'] = res_name + '/' + res_name
@@ -130,12 +132,30 @@ def parse_color(node_group, node, context, envmap_strength_const):
 		texture = {}
 		context['bind_textures'].append(texture)
 		texture['id'] = 'envmap'
-		image_name = node.image.name # With extension
-		texture['name'] = image_name.rsplit('.', 1)[0] # Remove extension	
+		
+		image = node.image
+		if image.packed_file != None:
+			# Extract packed data
+			unpack_path = utils.get_fp() + '/build/compiled/Assets/unpacked'
+			if not os.path.exists(unpack_path):
+				os.makedirs(unpack_path)
+			unpack_filepath = unpack_path + '/' + image.name
+			if os.path.isfile(unpack_filepath) == False or os.path.getsize(unpack_filepath) != image.packed_file.size:
+				with open(unpack_filepath, 'wb') as f:
+					f.write(image.packed_file.data)
+			assets.add(unpack_filepath)
+		else:
+			# Link image path to assets
+			assets.add(utils.safe_assetpath(image.filepath))
+
+		# Reference image name
+		texture['name'] = utils.extract_filename_noext(image.filepath)
+		texture['name'] = utils.safe_filename(texture['name'])
+
 		# Generate prefiltered envmaps
 		generate_radiance = bpy.data.worlds[0].generate_radiance
 		bpy.data.cameras[0].world_envtex_name = texture['name']
-		disable_hdr = image_name.endswith('.jpg')
+		disable_hdr = image.filepath.endswith('.jpg')
 		mip_count = bpy.data.cameras[0].world_envtex_num_mips
 		
 		mip_count = write_probes.write_probes(node.image.filepath, disable_hdr, mip_count, generate_radiance=generate_radiance)

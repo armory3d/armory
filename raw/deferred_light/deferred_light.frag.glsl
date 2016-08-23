@@ -732,7 +732,7 @@ void main() {
 	if (lightType == 2) { // Spot
 		float spotEffect = dot(lightDir, l);
 		if (spotEffect < spotlightCutoff) {
-			spotEffect = smoothstep(spotlightCutoff - spotlightExponent, spotlightCutoff, spotEffect);
+			float spotEffect = smoothstep(spotlightCutoff - spotlightExponent, spotlightCutoff, spotEffect);
 			direct *= spotEffect;
 		}
 	}

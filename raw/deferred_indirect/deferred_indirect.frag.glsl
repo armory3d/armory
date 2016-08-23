@@ -150,7 +150,7 @@ void main() {
 	
 	// Indirect
 #ifdef _Probes
-	float probeFactor = mask;
+	float probeFactor = g0.a; // mask_probe
 	float probeID = floor(probeFactor);
 	float probeFract = fract(probeFactor);
 	vec3 indirect;

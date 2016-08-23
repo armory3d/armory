@@ -38,6 +38,10 @@
 					"link": "_lightModelViewProjectionMatrix"
 				},
 				{
+					"id": "lightPos",
+					"link": "_lightPosition"
+				},
+				{
 					"id": "lightDir",
 					"link": "_lightDirection"
 				},
@@ -52,6 +56,18 @@
 				{
 					"id": "shadowsBias",
 					"link": "_lightShadowsBias"
+				},
+				{
+					"id": "spotlightCutoff",
+					"link": "_spotlightCutoff"
+				},
+				{
+					"id": "spotlightExponent",
+					"link": "_spotlightExponent"
+				},
+				{
+					"id": "lightType",
+					"link": "_lightType"
 				},
 				{
 					"id": "eye",

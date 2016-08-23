@@ -28,18 +28,12 @@ class ListTraitItem(bpy.types.PropertyGroup):
                  ('JS Script', 'JS Script', 'JS Script'),
                  ('Bundled Script', 'Bundled Script', 'Bundled Script'),
                  ('Logic Nodes', 'Logic Nodes', 'Logic Nodes'),
-                 ('Scene Instance', 'Scene Instance', 'Scene Instance'),
                  ('Animation', 'Animation', 'Animation')
                  ],
         name = "Type")
 
     data_prop = bpy.props.StringProperty(
            name="Data",
-           description="A name for this item",
-           default="")
-
-    scene_prop = bpy.props.StringProperty(
-           name="Scene",
            description="A name for this item",
            default="")
 
@@ -304,13 +298,6 @@ class ToolsTraitsPanel(bpy.types.Panel):
                 item.name = item.nodes_name_prop
                 row = layout.row()
                 row.prop_search(item, "nodes_name_prop", bpy.data, "node_groups", "Tree")
-
-            # Scene instance
-            elif item.type_prop == 'Scene Instance':
-                item.name = item.type_prop
-                row = layout.row()
-                row.prop_search(item, "scene_prop", bpy.data, "scenes", "Scene")
-                #row.prop(item, "scene_prop")
 
             # Animation
             elif item.type_prop == 'Animation':

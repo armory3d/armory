@@ -55,10 +55,15 @@ uniform sampler2D srm;
 
 uniform float envmapStrength;
 uniform bool receiveShadow;
+uniform vec3 lightPos;
 uniform vec3 lightDir;
+uniform int lightType;
 uniform vec3 lightColor;
 uniform float lightStrength;
+uniform float spotlightCutoff;
+uniform float spotlightExponent;
 uniform float shadowsBias;
+uniform vec3 eye;
 
 // LTC
 /*uniform vec3 light;
@@ -517,8 +522,15 @@ void main() {
     n *= normalStrength;
 #endif
 
-	vec3 l = normalize(lightDir);
-	float dotNL = max(dot(n, l), 0.0);
+    // Move out
+    vec3 l;
+    if (lightType == 0) { // Sun
+        l = lightDir;
+    }
+    else { // Point, spot
+        l = normalize(lightPos - position.xyz);
+    }
+    float dotNL = max(dot(n, l), 0.0);
 	
 	float visibility = 1.0;
 #ifndef _NoShadows
@@ -670,6 +682,15 @@ void main() {
 
 	// Direct
 	vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);	
+
+    if (lightType == 2) { // Spot
+        float spotEffect = dot(lightDir, l);
+        if (spotEffect < spotlightCutoff) {
+            spotEffect = smoothstep(spotlightCutoff - spotlightExponent, spotlightCutoff, spotEffect);
+            direct *= spotEffect;
+        }
+    }
+    
 	direct = direct * lightColor * lightStrength;
 	
 	// Indirect
@@ -691,7 +712,7 @@ void main() {
 	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 	indirect += indirectSpecular;
 #endif
-	indirect = indirect * lightColor * lightStrength * envmapStrength;
+	indirect = indirect * envmapStrength;// * lightColor * lightStrength;
 	outColor = vec4(vec3(direct * visibility + indirect), 1.0);
 	
 #ifdef _OMTex

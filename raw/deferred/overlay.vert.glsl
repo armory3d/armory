@@ -4,6 +4,8 @@
 precision highp float;
 #endif
 
+#include "../compiled.glsl"
+
 #ifdef _NMTex
 #define _Tex
 #endif
@@ -35,7 +37,7 @@ uniform mat4 LMVP;
 uniform vec4 albedo_color;
 uniform vec3 eye;
 #ifdef _Skinning
-	uniform float skinBones[50 * 12];
+	uniform float skinBones[skinMaxBones * 12];
 #endif
 
 out vec3 position;
