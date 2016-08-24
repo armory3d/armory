@@ -3,7 +3,7 @@ package armory.logicnode;
 import iron.math.Mat4;
 import iron.math.Vec4;
 import iron.math.Quat;
-import iron.node.Transform;
+import iron.object.Transform;
 
 class TransformNode extends Node {
 

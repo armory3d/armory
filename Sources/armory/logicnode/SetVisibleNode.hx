@@ -18,7 +18,7 @@ class SetVisibleNode extends Node {
 		super.inputChanged();
 	}
 
-	public static function create(target:iron.node.Node, visible:Bool):SetVisibleNode {
+	public static function create(target:iron.object.Object, visible:Bool):SetVisibleNode {
 		var n = new SetVisibleNode();
 		n.inputs.push(target);
 		n.inputs.push(BoolNode.create(visible));

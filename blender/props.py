@@ -11,7 +11,7 @@ def on_scene_update(context):
     edit_obj = bpy.context.edit_object
     if edit_obj is not None and edit_obj.is_updated_data is True:
         if edit_obj.type == 'MESH':
-            edit_obj.data.geometry_cached = False
+            edit_obj.data.mesh_cached = False
         elif edit_obj.type == 'ARMATURE':
             edit_obj.data.armature_cached = False
 
@@ -22,20 +22,20 @@ def on_scene_update(context):
 def invalidate_shader_cache(self, context):
     # compiled.glsl changed, recompile all shaders next time
     fp = utils.get_fp()
-    if os.path.isdir(fp + '/build/compiled/ShaderResources'):
-        shutil.rmtree(fp + '/build/compiled/ShaderResources')
+    if os.path.isdir(fp + '/build/compiled/ShaderDatas'):
+        shutil.rmtree(fp + '/build/compiled/ShaderDatas')
 
 def invalidate_compiled_data(self, context):
     fp = utils.get_fp()
     if os.path.isdir(fp + '/build/compiled/Assets'):
         shutil.rmtree(fp + '/build/compiled/Assets')
-    if os.path.isdir(fp + '/build/compiled/ShaderResources'):
-        shutil.rmtree(fp + '/build/compiled/ShaderResources')
+    if os.path.isdir(fp + '/build/compiled/ShaderDatas'):
+        shutil.rmtree(fp + '/build/compiled/ShaderDatas')
 
-def invalidate_geometry_data(self, context):
+def invalidate_mesh_data(self, context):
     fp = utils.get_fp()
-    if os.path.isdir(fp + '/build/compiled/Assets/geoms'):
-        shutil.rmtree(fp + '/build/compiled/Assets/geoms')
+    if os.path.isdir(fp + '/build/compiled/Assets/meshes'):
+        shutil.rmtree(fp + '/build/compiled/Assets/meshes')
 
 def initProperties():
     # For project
@@ -58,7 +58,7 @@ def initProperties():
         name = "Physics", default='Bullet')
     bpy.types.World.ArmKhafile = StringProperty(name = "Khafile")
     bpy.types.World.ArmMinimize = BoolProperty(name="Minimize Data", default=True, update=invalidate_compiled_data)
-    bpy.types.World.ArmOptimizeGeometry = BoolProperty(name="Optimize Geometry", default=False, update=invalidate_geometry_data)
+    bpy.types.World.ArmOptimizeMesh = BoolProperty(name="Optimize Meshes", default=False, update=invalidate_mesh_data)
     bpy.types.World.ArmSampledAnimation = BoolProperty(name="Sampled Animation", default=False, update=invalidate_compiled_data)
     bpy.types.World.ArmDeinterleavedBuffers = BoolProperty(name="Deinterleaved Buffers", default=False)
     bpy.types.World.ArmCacheShaders = BoolProperty(name="Cache Shaders", default=True)
@@ -90,11 +90,11 @@ def initProperties():
     bpy.types.Object.override_material = bpy.props.BoolProperty(name="Override Material", default=False)
     bpy.types.Object.override_material_name = bpy.props.StringProperty(name="Name", default="")
     bpy.types.Object.game_export = bpy.props.BoolProperty(name="Export", default=True)
-    bpy.types.Object.spawn = bpy.props.BoolProperty(name="Spawn", description="Auto-add this node when creating scene", default=True)
-    # For geometry
-    bpy.types.Mesh.geometry_cached = bpy.props.BoolProperty(name="Geometry Cached", default=False)
-    bpy.types.Mesh.geometry_cached_verts = bpy.props.IntProperty(name="Last Verts", default=0)
-    bpy.types.Mesh.geometry_cached_edges = bpy.props.IntProperty(name="Last Edges", default=0)
+    bpy.types.Object.spawn = bpy.props.BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True)
+    # For mesh
+    bpy.types.Mesh.mesh_cached = bpy.props.BoolProperty(name="Mesh Cached", default=False)
+    bpy.types.Mesh.mesh_cached_verts = bpy.props.IntProperty(name="Last Verts", default=0)
+    bpy.types.Mesh.mesh_cached_edges = bpy.props.IntProperty(name="Last Edges", default=0)
     bpy.types.Mesh.static_usage = bpy.props.BoolProperty(name="Static Usage", default=True)
     bpy.types.Curve.static_usage = bpy.props.BoolProperty(name="Static Usage", default=True)
     # For armature
@@ -105,8 +105,8 @@ def initProperties():
     bpy.types.Camera.pipeline_id = bpy.props.StringProperty(name="Pipeline ID", default="deferred")
 	# TODO: Specify multiple material ids, merge ids from multiple cameras 
     bpy.types.Camera.pipeline_passes = bpy.props.StringProperty(name="Pipeline passes", default="")
-    bpy.types.Camera.geometry_context = bpy.props.StringProperty(name="Geometry", default="geom")
-    bpy.types.Camera.geometry_context_empty = bpy.props.StringProperty(name="Geometry Empty", default="depthwrite")
+    bpy.types.Camera.mesh_context = bpy.props.StringProperty(name="Mesh", default="mesh")
+    bpy.types.Camera.mesh_context_empty = bpy.props.StringProperty(name="Mesh Empty", default="depthwrite")
     bpy.types.Camera.shadows_context = bpy.props.StringProperty(name="Shadows", default="shadowmap")
     bpy.types.Camera.translucent_context = bpy.props.StringProperty(name="Translucent", default="translucent")
     bpy.types.Camera.overlay_context = bpy.props.StringProperty(name="Overlay", default="overlay")
@@ -205,11 +205,11 @@ def initProperties():
         name = "Depth-Write", default='True')
     # For scene
     bpy.types.Scene.game_export = bpy.props.BoolProperty(name="Export", default=True)
-    # For light
-    bpy.types.Lamp.light_clip_start = bpy.props.FloatProperty(name="Clip Start", default=0.1)
-    bpy.types.Lamp.light_clip_end = bpy.props.FloatProperty(name="Clip End", default=50.0)
-    bpy.types.Lamp.light_fov = bpy.props.FloatProperty(name="FoV", default=0.785)
-    bpy.types.Lamp.light_shadows_bias = bpy.props.FloatProperty(name="Shadows Bias", default=0.0001)
+    # For lamp
+    bpy.types.Lamp.lamp_clip_start = bpy.props.FloatProperty(name="Clip Start", default=0.1)
+    bpy.types.Lamp.lamp_clip_end = bpy.props.FloatProperty(name="Clip End", default=50.0)
+    bpy.types.Lamp.lamp_fov = bpy.props.FloatProperty(name="FoV", default=0.785)
+    bpy.types.Lamp.lamp_shadows_bias = bpy.props.FloatProperty(name="Shadows Bias", default=0.0001)
 
 # Menu in object region
 class ObjectPropsPanel(bpy.types.Panel):
@@ -221,8 +221,9 @@ class ObjectPropsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         obj = bpy.context.object
-        layout.prop(obj, 'spawn')
         layout.prop(obj, 'game_export')
+        if obj.game_export:
+            layout.prop(obj, 'spawn')
         if obj.type == 'MESH':
             layout.prop(obj, 'instanced_children')
             if obj.instanced_children:
@@ -287,10 +288,10 @@ class DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'static_usage')
             layout.operator("arm.invalidate_cache")
         elif obj.type == 'LAMP':
-            layout.prop(obj.data, 'light_clip_start')
-            layout.prop(obj.data, 'light_clip_end')
-            layout.prop(obj.data, 'light_fov')
-            layout.prop(obj.data, 'light_shadows_bias')
+            layout.prop(obj.data, 'lamp_clip_start')
+            layout.prop(obj.data, 'lamp_clip_end')
+            layout.prop(obj.data, 'lamp_fov')
+            layout.prop(obj.data, 'lamp_shadows_bias')
 
 class ScenePropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -332,7 +333,7 @@ class OBJECT_OT_INVALIDATECACHEButton(bpy.types.Operator):
     bl_label = "Invalidate Cache"
  
     def execute(self, context):
-        context.object.data.geometry_cached = False
+        context.object.data.mesh_cached = False
         return{'FINISHED'}
 
 # Menu in materials region

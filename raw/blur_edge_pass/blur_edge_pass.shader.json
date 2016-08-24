@@ -1,28 +1,28 @@
 {
 	"contexts": [
 		{
-			"id": "blur_edge_pass_x",
+			"name": "blur_edge_pass_x",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "always"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "none"
 				}
 			],
 			"links": [
 				{
-					"id": "dir",
+					"name": "dir",
 					"link": "_vec2x"
 				},
 				{
-					"id": "screenSize",
+					"name": "screenSize",
 					"link": "_screenSize"
 				}
 			],
@@ -31,28 +31,28 @@
 			"fragment_shader": "blur_edge_pass.frag.glsl"
 		},
 		{
-			"id": "blur_edge_pass_y",
+			"name": "blur_edge_pass_y",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "always"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "none"
 				}
 			],
 			"links": [
 				{
-					"id": "dir",
+					"name": "dir",
 					"link": "_vec2y"
 				},
 				{
-					"id": "screenSize",
+					"name": "screenSize",
 					"link": "_screenSize"
 				}
 			],
@@ -61,40 +61,40 @@
 			"fragment_shader": "blur_edge_pass.frag.glsl"
 		},
 		{
-			"id": "blur_edge_pass_y_blend",
+			"name": "blur_edge_pass_y_blend",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "always"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "none"
 				},
 				{
-					"id": "blend_source",
+					"name": "blend_source",
 					"value": "destination_color"
 				},
 				{
-					"id": "blend_destination",
+					"name": "blend_destination",
 					"value": "blend_zero"
 				},
 				{
-					"id": "blend_operation",
+					"name": "blend_operation",
 					"value": "add"
 				}
 			],
 			"links": [
 				{
-					"id": "dir",
+					"name": "dir",
 					"link": "_vec2y"
 				},
 				{
-					"id": "screenSize",
+					"name": "screenSize",
 					"link": "_screenSize"
 				}
 			],

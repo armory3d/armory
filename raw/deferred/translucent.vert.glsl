@@ -6,19 +6,19 @@ precision highp float;
 
 #include "../compiled.glsl"
 
-#ifdef _NMTex
-#define _AMTex
+#ifdef _NorTex
+#define _BaseTex
 #endif
 
 in vec3 pos;
 in vec3 nor;
-#ifdef _AMTex
+#ifdef _BaseTex
 	in vec2 tex;
 #endif
 #ifdef _VCols
 	in vec3 col;
 #endif
-#ifdef _NMTex
+#ifdef _NorTex
 	in vec3 tan;
 #endif
 #ifdef _Skinning
@@ -29,24 +29,24 @@ in vec3 nor;
 	in vec3 off;
 #endif
 
-uniform mat4 M;
-uniform mat4 NM;
-uniform mat4 MV;
+uniform mat4 W;
+uniform mat4 N;
+uniform mat4 WV;
 uniform mat4 P;
-uniform mat4 LMVP;
+uniform mat4 LWVP;
 uniform vec4 albedo_color;
 #ifdef _Skinning
 	uniform float skinBones[skinMaxBones * 12];
 #endif
 
-out vec4 mvpposition;
+out vec4 wvpposition;
 out vec3 position;
 #ifdef _Tex
 	out vec2 texCoord;
 #endif
 out vec4 lPos;
 out vec4 matColor;
-#ifdef _NMTex
+#ifdef _NorTex
 	out mat3 TBN;
 #else
 	out vec3 normal;
@@ -96,29 +96,29 @@ void main() {
 	mat3 skinningMatVec = getSkinningMatVec(skinningMat);
 	sPos = sPos * skinningMat;
 #endif
-	lPos = LMVP * sPos;
+	lPos = LWVP * sPos;
 
 #ifdef _Billboard
 	// Spherical
-	MV[0][0] = 1.0; MV[0][1] = 0.0; MV[0][2] = 0.0;
-	MV[1][0] = 0.0; MV[1][1] = 1.0; MV[1][2] = 0.0;
-	MV[2][0] = 0.0; MV[2][1] = 0.0; MV[2][2] = 1.0;
+	WV[0][0] = 1.0; WV[0][1] = 0.0; WV[0][2] = 0.0;
+	WV[1][0] = 0.0; WV[1][1] = 1.0; WV[1][2] = 0.0;
+	WV[2][0] = 0.0; WV[2][1] = 0.0; WV[2][2] = 1.0;
 	// Cylindrical
-	//MV[0][0] = 1.0; MV[0][1] = 0.0; MV[0][2] = 0.0;
-	//MV[2][0] = 0.0; MV[2][1] = 0.0; MV[2][2] = 1.0;
+	//WV[0][0] = 1.0; WV[0][1] = 0.0; WV[0][2] = 0.0;
+	//WV[2][0] = 0.0; WV[2][1] = 0.0; WV[2][2] = 1.0;
 #endif
 
-	position = vec4(M * sPos).xyz;
-	gl_Position = P * MV * sPos;
+	position = vec4(W * sPos).xyz;
+	gl_Position = P * WV * sPos;
 
-#ifdef _AMTex
+#ifdef _BaseTex
 	texCoord = tex;
 #endif
 
 #ifdef _Skinning
-	vec3 _normal = normalize(mat3(NM) * (nor * skinningMatVec));
+	vec3 _normal = normalize(mat3(N) * (nor * skinningMatVec));
 #else
-	vec3 _normal = normalize(mat3(NM) * nor);
+	vec3 _normal = normalize(mat3(N) * nor);
 #endif
 
 	matColor = albedo_color;
@@ -127,10 +127,10 @@ void main() {
 	matColor.rgb *= col;
 #endif
 
-	mvpposition = gl_Position;
+	wvpposition = gl_Position;
 
-#ifdef _NMTex
-	vec3 tangent = (mat3(NM) * (tan));
+#ifdef _NorTex
+	vec3 tangent = (mat3(N) * (tan));
 	vec3 bitangent = normalize(cross(_normal, tangent));
 	TBN = mat3(tangent, bitangent, _normal);
 #else

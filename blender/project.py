@@ -14,7 +14,7 @@ import nodes_renderpath
 import nodes_world
 import path_tracer
 from exporter import ArmoryExporter
-import lib.make_resources
+import lib.make_datas
 import lib.make_variants
 import utils
 import assets
@@ -98,7 +98,7 @@ class ArmoryBuildPanel(bpy.types.Panel):
 		layout.prop(wrd, 'ArmPhysics')
 		layout.prop(wrd, 'ArmCacheShaders')
 		layout.prop(wrd, 'ArmMinimize')
-		layout.prop(wrd, 'ArmOptimizeGeometry')
+		layout.prop(wrd, 'ArmOptimizeMesh')
 		layout.prop(wrd, 'ArmSampledAnimation')
 		layout.prop(wrd, 'ArmDeinterleavedBuffers')
 		layout.prop(wrd, 'ArmProjectSamplesPerPixel')
@@ -135,7 +135,7 @@ def get_export_scene_override(scene):
 def compile_shader(raw_path, shader_name, defs):
 	os.chdir(raw_path + './' + shader_name)
 	fp = os.path.relpath(utils.get_fp())
-	lib.make_resources.make(shader_name + '.shader.json', fp, bpy.data.worlds[0].ArmMinimize, defs)
+	lib.make_datas.make(shader_name + '.shader.json', fp, bpy.data.worlds[0].ArmMinimize, defs)
 	lib.make_variants.make(shader_name + '.shader.json', fp, defs)
 
 def def_strings_to_array(strdefs):
@@ -178,16 +178,16 @@ def export_game_data(fp, sdk_path):
 			shutil.rmtree('build/html5-resources')
 		if os.path.isdir('build/compiled/Shaders'):
 			shutil.rmtree('build/compiled/Shaders')
-		if os.path.isdir('build/compiled/ShaderResources'):
-			shutil.rmtree('build/compiled/ShaderResources')
-	# Remove shader resources if shaders were deleted
-	elif os.path.isdir('build/compiled/Shaders') == False and os.path.isdir('build/compiled/ShaderResources') == True:
-		shutil.rmtree('build/compiled/ShaderResources')
+		if os.path.isdir('build/compiled/ShaderDatas'):
+			shutil.rmtree('build/compiled/ShaderDatas')
+	# Remove shader datas if shaders were deleted
+	elif os.path.isdir('build/compiled/Shaders') == False and os.path.isdir('build/compiled/ShaderDatas') == True:
+		shutil.rmtree('build/compiled/ShaderDatas')
 	
 	# Write referenced shader variants
-	# Assume asset_references contains shader resources only for now
+	# Assume asset_references contains shader datas only for now
 	for ref in asset_references:
-		# Resource does not exist yet
+		# Data does not exist yet
 		os.chdir(fp)
 		if not os.path.exists(ref):
 			shader_name = ref.split('/')[3] # Extract from 'build/compiled/...'
@@ -203,7 +203,7 @@ def export_game_data(fp, sdk_path):
 				# defs[i] += '=1'
 			# shader_references_defs.append(defs)
 	
-	# After defs has been parsed, add linked assets from shader resources
+	# After defs has been parsed, add linked assets from shader datas
 	asset_references += linked_assets
 	# Reset path
 	os.chdir(fp)

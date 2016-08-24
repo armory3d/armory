@@ -4,19 +4,19 @@
 precision highp float;
 #endif
 
-#ifdef _NMTex
-#define _AMTex
+#ifdef _NorTex
+#define _BaseTex
 #endif
 
 in vec3 pos;
 // in vec3 nor;
-// #ifdef _AMTex
+// #ifdef _BaseTex
 // in vec2 tex;
 // #endif
 // #ifdef _VCols
 // in vec3 col;
 // #endif
-// #ifdef _NMTex
+// #ifdef _NorTex
 // in vec3 tan;
 // #endif
 // #ifdef _Skinning
@@ -28,8 +28,8 @@ in vec3 pos;
 // #endif
 
 uniform mat4 VP;
-uniform mat4 M;
-// uniform mat4 MV;
+uniform mat4 W;
+// uniform mat4 WV;
 uniform vec4 albedo_color;
 
 #ifdef _RampID
@@ -37,16 +37,15 @@ uniform vec4 albedo_color2;
 uniform int uid;
 #endif
 
-out vec4 mvpposition;
-out vec4 mposition;
+out vec4 wvpposition;
 out vec4 matColor;
 // out vec3 orientation;
-// #ifdef _AMTex
+// #ifdef _BaseTex
 // out vec2 texCoord;
 // #endif
 // out vec4 lPos;
 // out vec4 matColor;
-// #ifdef _NMTex
+// #ifdef _NorTex
 // out mat3 TBN;
 // #else
 // out vec3 normal;
@@ -61,10 +60,9 @@ float hash(vec2 p) {
 
 void main() {
 	vec4 sPos = (vec4(pos, 1.0));
-	mposition = M * sPos;
-	mvpposition = VP * mposition;
+	wvpposition = VP * W * sPos;
 
-	// orientation = normalize(MV[1].xyz);
+	// orientation = normalize(WV[1].xyz);
 
 #ifdef _RampID
 	vec2 p = vec2(float(uid), float(uid));
@@ -74,5 +72,5 @@ void main() {
 	matColor = albedo_color;
 #endif
 
-	gl_Position = mvpposition;
+	gl_Position = wvpposition;
 }

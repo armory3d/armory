@@ -6,8 +6,8 @@ import haxebullet.Bullet;
 import iron.Trait;
 import iron.sys.Time;
 import iron.math.Vec4;
-import iron.node.Transform;
-import iron.node.ModelNode;
+import iron.object.Transform;
+import iron.object.MeshObject;
 
 class RigidBody extends Trait {
 
@@ -51,7 +51,7 @@ class RigidBody extends Trait {
 	}
 
 	public function init() {
-		transform = node.transform;
+		transform = object.transform;
 		physics = armory.Scene.physics;
 
 		if (bodyCreated) return;
@@ -105,9 +105,9 @@ class RigidBody extends Trait {
 		var _transform = BtTransform.create();
 		_transform.value.setIdentity();
 		_transform.value.setOrigin(BtVector3.create(
-			transform.pos.x,
-			transform.pos.y,
-			transform.pos.z).value);
+			transform.loc.x,
+			transform.loc.y,
+			transform.loc.z).value);
 		_transform.value.setRotation(BtQuaternion.create(
 			transform.rot.x,
 			transform.rot.y,
@@ -152,7 +152,7 @@ class RigidBody extends Trait {
 		var trans = body.ptr.getWorldTransform();
 		var p = trans.getOrigin();
 		var q = trans.getRotation();
-		transform.pos.set(p.x(), p.y(), p.z());
+		transform.loc.set(p.x(), p.y(), p.z());
 		transform.rot.set(q.x(), q.y(), q.z(), q.w());
 		transform.dirty = true;
 		transform.update();
@@ -180,13 +180,13 @@ class RigidBody extends Trait {
 		body.ptr.setActivationState(newState);
 	}*/
 
-	public function applyImpulse(impulse:Vec4, pos:Vec4 = null) {
-		if (pos == null) {
+	public function applyImpulse(impulse:Vec4, loc:Vec4 = null) {
+		if (loc == null) {
 			body.ptr.applyCentralImpulse(BtVector3.create(impulse.x, impulse.y, impulse.z).value);
 		}
 		else {
 			body.ptr.applyImpulse(BtVector3.create(impulse.x, impulse.y, impulse.z).value,
-								  BtVector3.create(pos.x, pos.y, pos.z).value);
+								  BtVector3.create(loc.x, loc.y, loc.z).value);
 		}
 	}
 
@@ -216,13 +216,13 @@ class RigidBody extends Trait {
 
 	public function syncTransform() {
 		var trans = BtTransform.create();
-		trans.value.setOrigin(BtVector3.create(transform.pos.x, transform.pos.y, transform.pos.z).value);
+		trans.value.setOrigin(BtVector3.create(transform.loc.x, transform.loc.y, transform.loc.z).value);
 		trans.value.setRotation(BtQuaternion.create(transform.rot.x, transform.rot.y, transform.rot.z, transform.rot.w).value);
 		body.ptr.setCenterOfMassTransform(trans.value);
 	}
 
 	function addPointsToConvexHull(shape:BtConvexHullShapePointer, scale:Vec4, margin:Float) {
-		var positions = cast(node, ModelNode).resource.geometry.positions;
+		var positions = cast(object, MeshObject).data.mesh.positions;
 
 		var sx = scale.x * (1.0 - margin);
 		var sy = scale.y * (1.0 - margin);
@@ -239,8 +239,8 @@ class RigidBody extends Trait {
 	}
 
 	function fillTriangleMesh(triangleMesh:BtTriangleMeshPointer, scale:Vec4) {
-		var positions = cast(node, ModelNode).resource.geometry.positions;
-		var indices = cast(node, ModelNode).resource.geometry.indices;
+		var positions = cast(object, MeshObject).data.mesh.positions;
+		var indices = cast(object, MeshObject).data.mesh.indices;
 
 		for (i in 0...Std.int(indices[0].length / 3)) {
 			triangleMesh.ptr.addTriangle(

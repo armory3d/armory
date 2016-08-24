@@ -18,7 +18,7 @@ class SetTransformNode extends Node {
 	}
 
 	function init() {
-		var target:iron.node.Node = inputs[_target].target;
+		var target:iron.object.Object = inputs[_target].target;
 		if (target != null) {
 			var matrix:iron.math.Mat4 = inputs[_transform].matrix;
 			target.transform.prependMatrix(matrix);
@@ -36,7 +36,7 @@ class SetTransformNode extends Node {
 		super.inputChanged();
 	}
 
-	public static function create(target:iron.node.Node, transform:iron.node.Transform):SetTransformNode {
+	public static function create(target:iron.object.Object, transform:iron.object.Transform):SetTransformNode {
 		var n = new SetTransformNode();
 		n.inputs.push(target);
 		n.inputs.push(transform);

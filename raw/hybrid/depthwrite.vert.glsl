@@ -14,7 +14,7 @@ in vec3 nor;
 #ifdef _VCols
 	in vec3 col;
 #endif
-#ifdef _NMTex
+#ifdef _NorTex
 	in vec3 tan;
 #endif
 #ifdef _Skinning
@@ -25,7 +25,7 @@ in vec3 nor;
 	in vec3 off;
 #endif
 
-uniform mat4 MVP;
+uniform mat4 WVP;
 #ifdef _Skinning
 	uniform float skinBones[skinMaxBones * 12];
 #endif
@@ -75,5 +75,5 @@ void main() {
 	sPos = sPos * skinningMat;
 #endif
 
-	gl_Position = MVP * sPos;
+	gl_Position = WVP * sPos;
 }

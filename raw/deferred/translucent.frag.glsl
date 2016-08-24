@@ -6,26 +6,26 @@ precision mediump float;
 
 #include "../compiled.glsl"
 
-#ifdef _NMTex
-#define _AMTex
+#ifdef _NorTex
+#define _BaseTex
 #endif
 
-#ifdef _AMTex
-	uniform sampler2D salbedo;
+#ifdef _BaseTex
+	uniform sampler2D sbase;
 #endif
-#ifdef _NMTex
+#ifdef _NorTex
 	uniform sampler2D snormal;
 #endif
-#ifdef _OMTex
-	uniform sampler2D som;
+#ifdef _OccTex
+	uniform sampler2D socclusion;
 #endif
-#ifdef _RMTex
-	uniform sampler2D srm;
+#ifdef _RoughTex
+	uniform sampler2D srough;
 #else
 	uniform float roughness;
 #endif
-#ifdef _MMTex
-	uniform sampler2D smm;
+#ifdef _MetTex
+	uniform sampler2D smetal;
 #else
 	uniform float metalness;
 #endif
@@ -41,14 +41,14 @@ uniform vec3 lightColor;
 uniform float lightStrength;
 uniform vec3 eye;
 
-in vec4 mvpposition;
+in vec4 wvpposition;
 in vec3 position;
 #ifdef _Tex
 	in vec2 texCoord;
 #endif
 in vec4 lPos;
 in vec4 matColor;
-#ifdef _NMTex
+#ifdef _NorTex
 	in mat3 TBN;
 #else
 	in vec3 normal;
@@ -105,7 +105,7 @@ vec3 diffuseBRDF(vec3 albedo, float roughness, float nv, float nl, float vh, flo
 
 void main() {
 	
-#ifdef _NMTex
+#ifdef _NorTex
 	vec3 n = (texture(snormal, texCoord).rgb * 2.0 - 1.0);
 	n = normalize(TBN * normalize(n));
 #else
@@ -113,8 +113,8 @@ void main() {
 #endif
 
 	vec4 baseColor = matColor;
-#ifdef _AMTex
-	vec4 texel = texture(salbedo, texCoord);
+#ifdef _BaseTex
+	vec4 texel = texture(sbase, texCoord);
 #ifdef _AlphaTest
 	if(texel.a < 0.4)
 		discard;
@@ -123,16 +123,16 @@ void main() {
 	baseColor *= texel;
 #endif
 
-#ifdef _MMTex
-	float metalness = texture(smm, texCoord).r;
+#ifdef _MetTex
+	float metalness = texture(smetal, texCoord).r;
 #endif
 
-#ifdef _RMTex
-	float roughness = texture(srm, texCoord).r;
+#ifdef _RoughTex
+	float roughness = texture(srough, texCoord).r;
 #endif
 		
-#ifdef _OMTex
-	float occlusion = texture(som, texCoord).r;
+#ifdef _OccTex
+	float occlusion = texture(socclusion, texCoord).r;
 #else
 	float occlusion = 1.0; 
 #endif
@@ -177,7 +177,7 @@ void main() {
 
 	// vec4 premultipliedReflect = vec4(1.0, 0.0, 0.0, 0.01);
 	// vec4 premultipliedReflect = baseColor;
-	float fragZ = mvpposition.z / mvpposition.w;
+	float fragZ = wvpposition.z / wvpposition.w;
 	float a = min(1.0, premultipliedReflect.a) * 8.0 + 0.01;
     float b = -fragZ * 0.95 + 1.0;
 	float w = clamp(a * a * a * 1e8 * b * b * b, 1e-2, 3e2);

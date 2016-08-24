@@ -1,7 +1,6 @@
 package armory.trait.internal;
 
 import iron.Trait;
-import iron.resource.Resource;
 
 class Animation extends Trait {
 
@@ -29,18 +28,18 @@ class Animation extends Trait {
     }
 
     function add() {
-        node.setupAnimation(startTrack, names, starts, ends, speeds, loops, reflects);
+        object.setupAnimation(startTrack, names, starts, ends, speeds, loops, reflects);
     }
 
     function update() {
-        node.setAnimationParams(iron.sys.Time.delta);
+        object.setAnimationParams(iron.sys.Time.delta);
     }
 
     public function play(trackName:String, onTrackComplete:Void->Void = null) {
-        node.animation.player.play(trackName, onTrackComplete);
+        object.animation.player.play(trackName, onTrackComplete);
     }
 
     public function pause() {
-        node.animation.player.pause();
+        object.animation.player.pause();
     }
 }

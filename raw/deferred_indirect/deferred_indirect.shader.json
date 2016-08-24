@@ -1,57 +1,57 @@
 {
 	"contexts": [
 		{
-			"id": "deferred_indirect",
+			"name": "deferred_indirect",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "always"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "none"
 				}
 			],
 			"links": [
 				
 				{
-					"id": "eye",
+					"name": "eye",
 					"link": "_cameraPosition"
 				},
 				{
-					"id": "eyeLook",
+					"name": "eyeLook",
 					"link": "_cameraLook",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "invVP",
+					"name": "invVP",
 					"link": "_inverseViewProjectionMatrix"
 				},
 				{
-					"id": "shirr",
+					"name": "shirr",
 					"link": "_envmapIrradiance"
 				},
 				{
-					"id": "senvmapRadiance",
+					"name": "senvmapRadiance",
 					"link": "_envmapRadiance",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "envmapNumMipmaps",
+					"name": "envmapNumMipmaps",
 					"link": "_envmapNumMipmaps",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "senvmapBrdf",
+					"name": "senvmapBrdf",
 					"link": "_envmapBrdf",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "envmapStrength",
+					"name": "envmapStrength",
 					"link": "_envmapStrength"
 				}
 			],

@@ -1,9 +1,9 @@
 package armory.trait;
 
 import iron.Trait;
-import iron.node.Node;
-import iron.node.CameraNode;
-import iron.node.Transform;
+import iron.object.Object;
+import iron.object.CameraObject;
+import iron.object.Transform;
 import iron.sys.Time;
 import armory.trait.internal.PhysicsWorld;
 #if WITH_PHYSICS
@@ -18,10 +18,10 @@ class VehicleBody extends Trait {
 
 	var physics:PhysicsWorld;
     var transform:Transform;
-	var camera:CameraNode;
+	var camera:CameraObject;
 
 	// Wheels
-	var wheels:Array<Node> = [];
+	var wheels:Array<Object> = [];
 	var wheelNames:Array<String>;
 
     var vehicle:BtRaycastVehiclePointer = null;
@@ -68,7 +68,7 @@ class VehicleBody extends Trait {
 
     function init() {
     	physics = armory.Scene.physics;
-    	transform = node.transform;
+    	transform = object.transform;
     	camera = iron.Root.cameras[0];
 
     	for (n in wheelNames) {
@@ -121,7 +121,7 @@ class VehicleBody extends Trait {
 
 		// Add wheels
 		for (i in 0...wheels.length) {
-			var vehicleWheel = new VehicleWheel(i, wheels[i].transform, node.transform);
+			var vehicleWheel = new VehicleWheel(i, wheels[i].transform, object.transform);
 			vehicle.ptr.addWheel(
 					vehicleWheel.getConnectionPoint(),
 					wheelDirectionCS0,
@@ -191,7 +191,7 @@ class VehicleBody extends Trait {
 			var p = trans.getOrigin();
 			var q = trans.getRotation();
 			wheels[i].transform.localOnly = true;
-			wheels[i].transform.pos.set(p.x(), p.y(), p.z());
+			wheels[i].transform.loc.set(p.x(), p.y(), p.z());
 			wheels[i].transform.rot.set(q.x(), q.y(), q.z(), q.w());
 			wheels[i].transform.dirty = true;
 		}
@@ -199,10 +199,10 @@ class VehicleBody extends Trait {
 		var trans = carChassis.ptr.getWorldTransform();
 		var p = trans.getOrigin();
 		var q = trans.getRotation();
-		transform.pos.set(p.x(), p.y(), p.z());
+		transform.loc.set(p.x(), p.y(), p.z());
 		transform.rot.set(q.x(), q.y(), q.z(), q.w());
 		var up = transform.matrix.up();
-		transform.pos.add(up);
+		transform.loc.add(up);
 		transform.dirty = true;
 
 		camera.updateMatrix();
@@ -219,9 +219,9 @@ class VehicleBody extends Trait {
 		var startTransform = BtTransform.create();
 		startTransform.value.setIdentity();
 		startTransform.value.setOrigin(BtVector3.create(
-			transform.pos.x,
-			transform.pos.y,
-			transform.pos.z).value);
+			transform.loc.x,
+			transform.loc.y,
+			transform.loc.z).value);
 		startTransform.value.setRotation(BtQuaternion.create(
 			transform.rot.x,
 			transform.rot.y,
@@ -251,21 +251,21 @@ class VehicleWheel {
 	public var wheelRadius:Float;
 	public var wheelWidth:Float;
 
-	var posX:Float;
-	var posY:Float;
-	var posZ:Float;
+	var locX:Float;
+	var locY:Float;
+	var locZ:Float;
 
 	public function new(id:Int, transform:Transform, vehicleTransform:Transform) {
 		wheelRadius = transform.size.z / 2;
 		wheelWidth = transform.size.x > transform.size.y ? transform.size.y : transform.size.x;
 
-		posX = transform.pos.x;
-		posY = transform.pos.y;
-		posZ = vehicleTransform.size.z / 2 + transform.pos.z;
+		locX = transform.loc.x;
+		locY = transform.loc.y;
+		locZ = vehicleTransform.size.z / 2 + transform.loc.z;
 	}
 
 	public function getConnectionPoint():BtVector3 {
-		return BtVector3.create(posX, posY, posZ).value;
+		return BtVector3.create(locX, locY, locZ).value;
 	}
 #end
 }

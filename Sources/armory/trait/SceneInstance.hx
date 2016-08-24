@@ -5,11 +5,11 @@ import iron.Root;
 
 class SceneInstance extends Trait {
 
-    public function new(sceneId:String) {
+    public function new(sceneName:String) {
         super();
 
         notifyOnInit(function() {
-			Root.addScene(sceneId, node);
+			Root.addScene(sceneName, object);
 		});
     }
 }

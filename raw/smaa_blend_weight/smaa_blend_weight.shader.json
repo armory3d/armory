@@ -1,36 +1,36 @@
 {
 	"contexts": [
 		{
-			"id": "smaa_blend_weight",
+			"name": "smaa_blend_weight",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "always"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "none"
 				}
 			],
 			"links": [
 				{
-					"id": "areaTex",
+					"name": "areaTex",
 					"link": "_smaaArea"
 				},
 				{
-					"id": "searchTex",
+					"name": "searchTex",
 					"link": "_smaaSearch"
 				},
 				{
-					"id": "screenSize",
+					"name": "screenSize",
 					"link": "_screenSize"
 				},
 				{
-					"id": "screenSizeInv",
+					"name": "screenSizeInv",
 					"link": "_screenSizeInv"
 				}
 			],

@@ -55,7 +55,7 @@ uniform sampler2D gbuffer1;
 // #endif
 
 uniform mat4 invVP;
-uniform mat4 LMVP;
+uniform mat4 LWVP;
 uniform vec3 lightPos;
 uniform vec3 lightDir;
 uniform int lightType;
@@ -70,7 +70,7 @@ uniform vec3 eye;
 uniform vec2 screenSize;
 
 // in vec2 texCoord;
-in vec4 mvpposition;
+in vec4 wvpposition;
 // in vec3 viewRay;
 out vec4 outColor;
 
@@ -79,7 +79,7 @@ out vec4 outColor;
 vec3 SSSSTransmittance(float translucency, float sssWidth, vec3 worldPosition, vec3 worldNormal, vec3 lightDir) {
 	float scale = 8.25 * (1.0 - translucency) / sssWidth;
 	vec4 shrinkedPos = vec4(worldPosition - 0.005 * worldNormal, 1.0);
-	vec4 shadowPosition = LMVP * shrinkedPos;
+	vec4 shadowPosition = LWVP * shrinkedPos;
 	float d1 = texture(shadowMap, shadowPosition.xy / shadowPosition.w).r; // 'd1' has a range of 0..1
 	float d2 = shadowPosition.z; // 'd2' has a range of 0..'lightFarPlane'
 	const float lightFarPlane = 120 / 3.5;
@@ -679,7 +679,7 @@ float wardSpecular(vec3 N, vec3 H, float dotNL, float dotNV, float dotNH, vec3 f
 // }
 
 void main() {
-	vec2 screenPosition = mvpposition.xy / mvpposition.w;
+	vec2 screenPosition = wvpposition.xy / wvpposition.w;
 	vec2 texCoord = screenPosition * 0.5 + 0.5;
 	texCoord += vec2(0.5 / screenSize); // Half pixel offset
 
@@ -720,7 +720,7 @@ void main() {
 	
 	float visibility = 1.0;
 #ifndef _NoShadows
-	vec4 lPos = LMVP * vec4(p, 1.0);
+	vec4 lPos = LWVP * vec4(p, 1.0);
 	if (lPos.w > 0.0) {
 		visibility = shadowTest(lPos);
 	}

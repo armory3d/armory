@@ -1,45 +1,45 @@
 {
 	"contexts": [
 		{
-			"id": "ssao_pass",
+			"name": "ssao_pass",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "always"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "none"
 				}
 			],
 			"links": [
 				{
-					"id": "snoise",
+					"name": "snoise",
 					"link": "_noise8"
 				},
 				{
-					"id": "invVP",
+					"name": "invVP",
 					"link": "_inverseViewProjectionMatrix"
 				},
 				{
-					"id": "eye",
+					"name": "eye",
 					"link": "_cameraPosition"
 				},
 				{
-					"id": "eyeLook",
+					"name": "eyeLook",
 					"link": "_cameraLook",
 					"ifdef": ["_Disabled"]
 				},
 				{
-					"id": "screenSize",
+					"name": "screenSize",
 					"link": "_screenSize"
 				},
 				{
-					"id": "aspectRatio",
+					"name": "aspectRatio",
 					"link": "_aspectRatio"
 				}
 			],

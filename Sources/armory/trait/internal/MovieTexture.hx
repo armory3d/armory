@@ -4,7 +4,7 @@ import kha.Image;
 import kha.Video;
 import kha.Assets;
 import iron.Trait;
-import iron.node.ModelNode;
+import iron.object.MeshObject;
 
 class MovieTexture extends Trait {
 
@@ -47,8 +47,8 @@ class MovieTexture extends Trait {
 		
 		image = Image.createRenderTarget(getPower2(video.width()), getPower2(video.height()));
 		
-		var n = cast(node, iron.node.ModelNode);
-		n.materials[0].contexts[0].textures[0] = image; // Override diffuse texture
+		var o = cast(object, iron.object.MeshObject);
+		o.materials[0].contexts[0].textures[0] = image; // Override diffuse texture
     }
 	
 	function render(g:kha.graphics2.Graphics) {

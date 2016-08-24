@@ -29,7 +29,7 @@ uniform vec3 eye;
 uniform vec2 screenSize;
 uniform vec2 aspectRatio;
 
-#ifndef _SSAO // SSAO disabled, remove it from pipeline nodes to completely prevent generation
+#ifndef _SSAO // SSAO disabled, remove it from render path nodes to completely prevent generation
 	const float ssaoSize = 0.03;
 	const float ssaoStrength = 0.20;
 #endif

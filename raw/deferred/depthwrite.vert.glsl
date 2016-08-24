@@ -6,8 +6,8 @@ precision highp float;
 
 #include "../compiled.glsl"
 
-// #ifdef _NMTex
-// #define _AMTex
+// #ifdef _NorTex
+// #define _BaseTex
 // #endif
 
 in vec3 pos;
@@ -18,7 +18,7 @@ in vec3 nor;
 #ifdef _VCols
 	in vec3 col;
 #endif
-#ifdef _NMTex
+#ifdef _NorTex
 	in vec3 tan;
 #endif
 #ifdef _Skinning
@@ -29,7 +29,7 @@ in vec3 nor;
 	in vec3 off;
 #endif
 
-uniform mat4 LMVP;
+uniform mat4 LWVP;
 #ifdef _Skinning
 	uniform float skinBones[skinMaxBones * 12];
 #endif
@@ -81,6 +81,6 @@ void main() {
 	sPos = sPos * skinningMat;
 #endif
 
-	gl_Position = LMVP * sPos;
+	gl_Position = LWVP * sPos;
 	// position = gl_Position;
 }

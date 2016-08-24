@@ -1,24 +1,24 @@
 {
 	"contexts": [
 		{
-			"id": "smaa_edge_detect",
+			"name": "smaa_edge_detect",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "always"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "none"
 				}
 			],
 			"links": [
 				{
-					"id": "screenSizeInv",
+					"name": "screenSizeInv",
 					"link": "_screenSizeInv"
 				}
 			],

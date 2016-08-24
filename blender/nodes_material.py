@@ -37,16 +37,16 @@ def parse(self, material, c, defs):
 		# No albedo color parsed, append white
 		if parse.const_color == None:
 			make_albedo_const([1.0, 1.0, 1.0, 1.0], c)
-		if parse.const_occlusion == None and '_OMTex' not in defs:
+		if parse.const_occlusion == None and '_OccTex' not in defs:
 			make_occlusion_const(1.0, c)
-		if parse.const_roughness == None and '_RMTex' not in defs:
+		if parse.const_roughness == None and '_RoughTex' not in defs:
 			make_roughness_const(0.0, c)
-		if parse.const_metalness == None and '_MMTex' not in defs:
+		if parse.const_metalness == None and '_MetTex' not in defs:
 			make_metalness_const(0.0, c)
 		# Enable texcoords
 		if '_Tex' not in defs:
 			for d in defs:
-				if d == '_AMTex' or d == '_NMTex' or d == '_OMTex' or d == '_RMTex' or d == '_MMTex' or d == '_HMTex':
+				if d == '_BaseTex' or d == '_NorTex' or d == '_OccTex' or d == '_RoughTex' or d == '_MetTex' or d == '_HeightTex':
 					defs.append('_Tex')
 					break 
 
@@ -54,28 +54,28 @@ def make_albedo_const(col, c):
 	const = {}
 	parse.const_color = const
 	c['bind_constants'].append(const)
-	const['id'] = 'albedo_color'
+	const['name'] = 'albedo_color'
 	const['vec4'] = [col[0], col[1], col[2], col[3]]
 
 def make_roughness_const(f, c):
 	const = {}
 	parse.const_roughness = const
 	c['bind_constants'].append(const)
-	const['id'] = 'roughness'
+	const['name'] = 'roughness'
 	const['float'] = f
 
 def make_occlusion_const(f, c):
 	const = {}
 	parse.const_occlusion = const
 	c['bind_constants'].append(const)
-	const['id'] = 'occlusion'
+	const['name'] = 'occlusion'
 	const['float'] = f
 
 def make_metalness_const(f, c):
 	const = {}
 	parse.const_metalness = const
 	c['bind_constants'].append(const)
-	const['id'] = 'metalness'
+	const['name'] = 'metalness'
 	const['float'] = f
 
 # Manualy set starting material point
@@ -90,7 +90,7 @@ def parse_from(self, material, c, defs, surface_node):
 
 def make_texture(self, id, image_node, material):
 	tex = {}
-	tex['id'] = id
+	tex['name'] = id
 	image = image_node.image
 	if image != None:
 		if image.packed_file != None:
@@ -109,8 +109,8 @@ def make_texture(self, id, image_node, material):
 			# Link image path to assets
 			assets.add(utils.safe_assetpath(image.filepath))
 		# Reference image name
-		tex['name'] = utils.extract_filename_noext(image.filepath)
-		tex['name'] = utils.safe_filename(tex['name'])
+		tex['file'] = utils.extract_filename_noext(image.filepath)
+		tex['file'] = utils.safe_filename(tex['file'])
 		if image_node.interpolation == 'Cubic': # Mipmap linear
 			tex['mipmap_filter'] = 'linear'
 			tex['generate_mipmaps'] = True
@@ -131,13 +131,13 @@ def make_texture(self, id, image_node, material):
 			movie_trait = {}
 			movie_trait['type'] = 'Script'
 			movie_trait['class_name'] = 'armory.trait.internal.MovieTexture'
-			movie_trait['parameters'] = [tex['name']]
+			movie_trait['parameters'] = [tex['file']]
 			for o in self.materialToGameObjectDict[material]:
 				o['traits'].append(movie_trait)
 			tex['source'] = 'movie'
-			tex['name'] = '' # MovieTexture will load the video
+			tex['file'] = '' # MovieTexture will load the video
 	else:
-		tex['name'] = ''
+		tex['file'] = ''
 	return tex
 
 def parse_value_node(node):
@@ -281,7 +281,7 @@ def parse_val_to_rgb(node, c, defs):
 		# Link albedo_color2 as color 2
 		const = {}
 		c['bind_constants'].append(const)
-		const['id'] = 'albedo_color2'
+		const['name'] = 'albedo_color2'
 		res = node.color_ramp.elements[1].color
 		const['vec4'] = [res[0], res[1], res[2], res[3]]
 		# Return color 1
@@ -304,65 +304,65 @@ def parse_mix_rgb(self, material, c, defs, tree, node, factor):
 	parse_occlusion_socket(self, node.inputs[2], material, c, defs, tree, node, factor)
 
 def add_albedo_tex(self, node, material, c, defs):
-	if '_AMTex' not in defs:
-		defs.append('_AMTex')
-		tex = make_texture(self, 'salbedo', node, material)
+	if '_BaseTex' not in defs:
+		defs.append('_BaseTex')
+		tex = make_texture(self, 'sbase', node, material)
 		c['bind_textures'].append(tex)
 
 def add_metalness_tex(self, node, material, c, defs):
-	if '_MMTex' not in defs:
-		defs.append('_MMTex')
-		tex = make_texture(self, 'smm', node, material)
+	if '_MetTex' not in defs:
+		defs.append('_MetTex')
+		tex = make_texture(self, 'smetal', node, material)
 		c['bind_textures'].append(tex)
 		if parse.const_metalness != None: # If texture is used, remove constant
 			c['bind_constants'].remove(parse.const_metalness)
 
 def add_roughness_tex(self, node, material, c, defs):
-	if '_RMTex' not in defs:
-		defs.append('_RMTex')
-		tex = make_texture(self, 'srm', node, material)
+	if '_RoughTex' not in defs:
+		defs.append('_RoughTex')
+		tex = make_texture(self, 'srough', node, material)
 		c['bind_textures'].append(tex)
 		if parse.const_roughness != None:
 			c['bind_constants'].remove(parse.const_roughness)
 
 def add_roughness_strength(self, c, defs, f):
-	if '_RMStr' not in defs:
-		defs.append('_RMStr')
+	if '_RoughStr' not in defs:
+		defs.append('_RoughStr')
 		const = {}
 		c['bind_constants'].append(const)
-		const['id'] = 'roughnessStrength'
+		const['name'] = 'roughnessStrength'
 		const['float'] = f
 
 def add_occlusion_tex(self, node, material, c, defs):
-	if '_OMTex' not in defs:
-		defs.append('_OMTex')
-		tex = make_texture(self, 'som', node, material)
+	if '_OccTex' not in defs:
+		defs.append('_OccTex')
+		tex = make_texture(self, 'socclusion', node, material)
 		c['bind_textures'].append(tex)
 
 def add_height_tex(self, node, material, c, defs):
-	if '_HMTex' not in defs:
-		defs.append('_HMTex')
-		tex = make_texture(self, 'shm', node, material)
+	if '_HeightTex' not in defs:
+		defs.append('_HeightTex')
+		tex = make_texture(self, 'sheight', node, material)
 		c['bind_textures'].append(tex)
 
 def add_height_strength(self, c, f):
 	const = {}
 	c['bind_constants'].append(const)
-	const['id'] = 'heightStrength'
+	const['name'] = 'heightStrength'
 	const['float'] = f
 
 def add_normal_tex(self, node, material, c, defs):
-	if '_NMTex' not in defs:
-		defs.append('_NMTex')
+	if '_NorTex' not in defs:
+		defs.append('_NorTex')
 		tex = make_texture(self, 'snormal', node, material)
 		c['bind_textures'].append(tex)
 
 def add_normal_strength(self, c, defs, f):
-	if '_NMStr' not in defs:
-		defs.append('_NMStr')
+	if '_NorStr' not in defs:
+		defs.append('_NorStr')
 		const = {}
 		c['bind_constants'].append(const)
-		const['id'] = 'normalStrength'
+		const['name'] = 'normalStrength'
 		const['float'] = f
 
 def parse_base_color_socket(self, base_color_input, material, c, defs, tree, node, factor):
@@ -397,7 +397,7 @@ def parse_metalness_socket(self, metalness_input, material, c, defs, tree, node,
 	if metalness_input.is_linked:
 		metalness_node = find_node_by_link(tree, node, metalness_input)
 		add_metalness_tex(self, metalness_node, material, c, defs)
-	elif '_MMTex' not in defs:
+	elif '_MetTex' not in defs:
 		res = metalness_input.default_value
 		add_metalness_const(res, c, factor, minimum_val, sqrt_val)
 
@@ -416,7 +416,7 @@ def parse_roughness_socket(self, roughness_input, material, c, defs, tree, node,
 	if roughness_input.is_linked:
 		roughness_node = find_node_by_link(tree, node, roughness_input)
 		add_roughness_tex(self, roughness_node, material, c, defs)
-	elif '_RMTex' not in defs:
+	elif '_RoughTex' not in defs:
 		res = parse_float_input(tree, node, roughness_input)
 		add_roughness_const(res, c, factor, minimum_val, sqrt_val)
 
@@ -436,7 +436,7 @@ def parse_occlusion_socket(self, occlusion_input, material, c, defs, tree, node,
 	if occlusion_input.is_linked:
 		occlusion_node = find_node_by_link(tree, node, occlusion_input)
 		add_occlusion_tex(self, occlusion_node, material, c, defs)
-	elif '_OMTex' not in defs:
+	elif '_OccTex' not in defs:
 		res = occlusion_input.default_value[0] # Take only one channel
 		add_occlusion_const(res, c, factor)
 

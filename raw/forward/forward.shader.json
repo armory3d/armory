@@ -1,218 +1,218 @@
 {
 	"contexts": [
 		{
-			"id": "forward",
+			"name": "mesh",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "true"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "less"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "clockwise"
 				}
 			],
 			"links": [
 				{
-					"id": "M",
-					"link": "_modelMatrix"
+					"name": "W",
+					"link": "_worldMatrix"
 				},
 				{
-					"id": "NM",
+					"name": "N",
 					"link": "_normalMatrix"
 				},
 				{
-					"id": "V",
+					"name": "V",
 					"link": "_viewMatrix"
 				},
 				{
-					"id": "P",
+					"name": "P",
 					"link": "_projectionMatrix"
 				},
 				{
-					"id": "LMVP",
-					"link": "_lightModelViewProjectionMatrix"
+					"name": "LWVP",
+					"link": "_lampWorldViewProjectionMatrix"
 				},
 				{
-					"id": "lightPos",
-					"link": "_lightPosition"
+					"name": "lightPos",
+					"link": "_lampPosition"
 				},
 				{
-					"id": "lightDir",
-					"link": "_lightDirection"
+					"name": "lightDir",
+					"link": "_lampDirection"
 				},
 				{
-					"id": "lightColor",
-					"link": "_lightColor"
+					"name": "lightColor",
+					"link": "_lampColor"
 				},
 				{
-					"id": "lightStrength",
-					"link": "_lightStrength"
+					"name": "lightStrength",
+					"link": "_lampStrength"
 				},
 				{
-					"id": "shadowsBias",
-					"link": "_lightShadowsBias"
+					"name": "shadowsBias",
+					"link": "_lampShadowsBias"
 				},
 				{
-					"id": "spotlightCutoff",
-					"link": "_spotlightCutoff"
+					"name": "spotlightCutoff",
+					"link": "_spotlampCutoff"
 				},
 				{
-					"id": "spotlightExponent",
-					"link": "_spotlightExponent"
+					"name": "spotlightExponent",
+					"link": "_spotlampExponent"
 				},
 				{
-					"id": "lightType",
-					"link": "_lightType"
+					"name": "lightType",
+					"link": "_lampType"
 				},
 				{
-					"id": "eye",
+					"name": "eye",
 					"link": "_cameraPosition"
 				},
 				{
-					"id": "skinBones",
+					"name": "skinBones",
 					"link": "_skinBones",
 					"ifdef": ["_Skinning"]
 				},
 				{
-					"id": "shirr",
+					"name": "shirr",
 					"link": "_envmapIrradiance"
 				},
 				{
-					"id": "senvmapRadiance",
+					"name": "senvmapRadiance",
 					"link": "_envmapRadiance",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "envmapNumMipmaps",
+					"name": "envmapNumMipmaps",
 					"link": "_envmapNumMipmaps",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "senvmapBrdf",
+					"name": "senvmapBrdf",
 					"link": "_envmapBrdf",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "envmapStrength",
+					"name": "envmapStrength",
 					"link": "_envmapStrength"
 				},
 				{
-					"id": "sltcMat",
+					"name": "sltcMat",
 					"link": "_ltcMat",
 					"ifdef": ["_PolyLight"]
 				},
 				{
-					"id": "sltcMag",
+					"name": "sltcMag",
 					"link": "_ltcMag",
 					"ifdef": ["_PolyLight"]
 				},
 				{
-					"id": "U",
+					"name": "U",
 					"link": "_undistortionMatrix",
 					"ifdef": ["_VR"]
 				},
 				{
-					"id": "maxRadSq",
+					"name": "maxRadSq",
 					"link": "_maxRadiusSq",
 					"ifdef": ["_VR"]
 				}
 			],
-			"vertex_shader": "forward.vert.glsl",
-			"fragment_shader": "forward.frag.glsl"
+			"vertex_shader": "mesh.vert.glsl",
+			"fragment_shader": "mesh.frag.glsl"
 		},
 		{
-			"id": "overlay",
+			"name": "overlay",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "true"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "less"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "clockwise"
 				}
 			],
 			"links": [
 				{
-					"id": "M",
-					"link": "_modelMatrix"
+					"name": "W",
+					"link": "_worldMatrix"
 				},
 				{
-					"id": "NM",
+					"name": "N",
 					"link": "_normalMatrix"
 				},
 				{
-					"id": "V",
+					"name": "V",
 					"link": "_viewMatrix"
 				},
 				{
-					"id": "P",
+					"name": "P",
 					"link": "_projectionMatrix"
 				},
 				{
-					"id": "LMVP",
-					"link": "_lightModelViewProjectionMatrix"
+					"name": "LWVP",
+					"link": "_lampWorldViewProjectionMatrix"
 				},
 				{
-					"id": "lightDir",
-					"link": "_lightDirection"
+					"name": "lightDir",
+					"link": "_lampDirection"
 				},
 				{
-					"id": "lightColor",
-					"link": "_lightColor"
+					"name": "lightColor",
+					"link": "_lampColor"
 				},
 				{
-					"id": "lightStrength",
-					"link": "_lightStrength"
+					"name": "lightStrength",
+					"link": "_lampStrength"
 				},
 				{
-					"id": "eye",
+					"name": "eye",
 					"link": "_cameraPosition"
 				},
 				{
-					"id": "skinBones",
+					"name": "skinBones",
 					"link": "_skinBones",
 					"ifdef": ["_Skinning"]
 				},
 				{
-					"id": "shirr",
+					"name": "shirr",
 					"link": "_envmapIrradiance"
 				},
 				{
-					"id": "senvmapRadiance",
+					"name": "senvmapRadiance",
 					"link": "_envmapRadiance",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "envmapNumMipmaps",
+					"name": "envmapNumMipmaps",
 					"link": "_envmapNumMipmaps",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "senvmapBrdf",
+					"name": "senvmapBrdf",
 					"link": "_envmapBrdf",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "envmapStrength",
+					"name": "envmapStrength",
 					"link": "_envmapStrength"
 				},
 				{
-					"id": "sltcMat",
+					"name": "sltcMat",
 					"link": "_ltcMat",
 					"ifdef": ["_PolyLight"]
 				},
 				{
-					"id": "sltcMag",
+					"name": "sltcMag",
 					"link": "_ltcMag",
 					"ifdef": ["_PolyLight"]
 				}
@@ -221,28 +221,28 @@
 			"fragment_shader": "overlay.frag.glsl"
 		},
 		{
-			"id": "shadowmap",
+			"name": "shadowmap",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "true"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "less"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "clockwise"
 				}
 			],
 			"links": [
 				{
-					"id": "LMVP",
-					"link": "_lightModelViewProjectionMatrix"
+					"name": "LWVP",
+					"link": "_lampWorldViewProjectionMatrix"
 				},
 				{
-					"id": "skinBones",
+					"name": "skinBones",
 					"link": "_skinBones",
 					"ifdef": ["_Skinning"]
 				}

@@ -8,8 +8,8 @@ precision mediump float;
 
 #include "../compiled.glsl"
 
-#ifdef _AMTex
-	uniform sampler2D salbedo;
+#ifdef _BaseTex
+	uniform sampler2D sbase;
 #endif
 #ifndef _NoShadows
     uniform sampler2D shadowMap;
@@ -20,26 +20,26 @@ uniform float shirr[27];
 	uniform sampler2D senvmapBrdf;
 	uniform int envmapNumMipmaps;
 #endif
-#ifdef _NMTex
+#ifdef _NorTex
 	uniform sampler2D snormal;
 #endif
-#ifdef _OMTex
-	uniform sampler2D som;
+#ifdef _OccTex
+	uniform sampler2D socclusion;
 #else
 	uniform float occlusion;
 #endif
-#ifdef _RMTex
-uniform sampler2D srm;
+#ifdef _RoughTex
+uniform sampler2D srough;
 #else
 	uniform float roughness;
 #endif
-#ifdef _MMTex
-	uniform sampler2D smm;
+#ifdef _MetTex
+	uniform sampler2D smetal;
 #else
 	uniform float metalness;
 #endif
-#ifdef _HMTex
-	uniform sampler2D shm;
+#ifdef _HeightTex
+	uniform sampler2D sheight;
 	uniform float heightStrength;
 #endif
 
@@ -56,7 +56,7 @@ in vec3 position;
 in vec4 lPos;
 in vec4 matColor;
 in vec3 eyeDir;
-#ifdef _NMTex
+#ifdef _NorTex
 	in mat3 TBN;
 #else
 	in vec3 normal;
@@ -247,7 +247,7 @@ float getMipLevelFromRoughness(float roughness) {
 
 void main() {
 	
-#ifdef _NMTex
+#ifdef _NorTex
 	vec3 n = (texture(snormal, texCoord).rgb * 2.0 - 1.0);
 	n = normalize(TBN * normalize(n));
 #else
@@ -267,8 +267,8 @@ void main() {
 #endif
 
 	vec3 baseColor = matColor.rgb;
-#ifdef _AMTex
-	vec4 texel = texture(salbedo, texCoord);
+#ifdef _BaseTex
+	vec4 texel = texture(sbase, texCoord);
 #ifdef _AlphaTest
 	if (texel.a < 0.4)
 		discard;
@@ -286,14 +286,14 @@ void main() {
 	float dotLV = max(dot(l, v), 0.0);
 	float dotLH = max(dot(l, h), 0.0);
 
-#ifdef _MMTex
-	float metalness = texture(smm, texCoord).r;
+#ifdef _MetTex
+	float metalness = texture(smetal, texCoord).r;
 #endif
 	vec3 albedo = surfaceAlbedo(baseColor, metalness);
 	vec3 f0 = surfaceF0(baseColor, metalness);
 
-#ifdef _RMTex
-	float roughness = texture(srm, texCoord).r;
+#ifdef _RoughTex
+	float roughness = texture(srough, texCoord).r;
 #endif
 
 	// Direct
@@ -322,8 +322,8 @@ void main() {
 	indirect = indirect * lightColor * lightStrength * envmapStrength;
 	outColor = vec4(vec3(direct * visibility + indirect), 1.0);
 	
-#ifdef _OMTex
-	vec3 occ = texture(som, texCoord).rgb;
+#ifdef _OccTex
+	vec3 occ = texture(socclusion, texCoord).rgb;
 	outColor.rgb *= occ;
 #else
 	outColor.rgb *= occlusion; 

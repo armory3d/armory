@@ -5,7 +5,7 @@ import iron.Trait;
 import iron.Root;
 import iron.sys.Input;
 import iron.sys.Time;
-import iron.node.CameraNode;
+import iron.object.CameraObject;
 import iron.math.Vec4;
 import iron.math.Quat;
 
@@ -13,7 +13,7 @@ class WalkNavigation extends Trait {
 
     static inline var speed = 5.0;
 
-    var camera:CameraNode;
+    var camera:CameraObject;
 
     var moveForward = false;
     var moveBackward = false;

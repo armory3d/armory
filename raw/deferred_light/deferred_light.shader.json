@@ -1,145 +1,145 @@
 {
 	"contexts": [
 		{
-			"id": "deferred_light",
+			"name": "deferred_light",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "greater"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "counter_clockwise"
 				},
 				{
-					"id": "blend_source",
+					"name": "blend_source",
 					"value": "blend_one"
 				},
 				{
-					"id": "blend_destination",
+					"name": "blend_destination",
 					"value": "blend_one"
 				},
 				{
-					"id": "blend_operation",
+					"name": "blend_operation",
 					"value": "add"
 				},
 				{
-					"id": "alpha_blend_source",
+					"name": "alpha_blend_source",
 					"value": "blend_one"
 				},
 				{
-					"id": "alpha_blend_destination",
+					"name": "alpha_blend_destination",
 					"value": "blend_one"
 				},
 				{
-					"id": "alpha_blend_operation",
+					"name": "alpha_blend_operation",
 					"value": "add"
 				}
 			],
 			"links": [
 				{
-					"id": "LVMVP",
-					"link": "_lightVolumeModelViewProjectionMatrix"
+					"name": "LVWVP",
+					"link": "_lampVolumeWorldViewProjectionMatrix"
 				},
 				{
-					"id": "lightPos",
-					"link": "_lightPosition"
+					"name": "lightPos",
+					"link": "_lampPosition"
 				},
 				{
-					"id": "lightDir",
-					"link": "_lightDirection"
+					"name": "lightDir",
+					"link": "_lampDirection"
 				},
 				{
-					"id": "lightType",
-					"link": "_lightType"
+					"name": "lightType",
+					"link": "_lampType"
 				},
 				{
-					"id": "lightIndex",
-					"link": "_lightIndex",
+					"name": "lightIndex",
+					"link": "_lampIndex",
 					"ifdef": ["_Disabled"]
 				},
 				{
-					"id": "lightColor",
-					"link": "_lightColor"
+					"name": "lightColor",
+					"link": "_lampColor"
 				},
 				{
-					"id": "lightStrength",
-					"link": "_lightStrength"
+					"name": "lightStrength",
+					"link": "_lampStrength"
 				},
 				{
-					"id": "shadowsBias",
-					"link": "_lightShadowsBias"
+					"name": "shadowsBias",
+					"link": "_lampShadowsBias"
 				},
 				{
-					"id": "spotlightCutoff",
-					"link": "_spotlightCutoff"
+					"name": "spotlightCutoff",
+					"link": "_spotlampCutoff"
 				},
 				{
-					"id": "spotlightExponent",
-					"link": "_spotlightExponent"
+					"name": "spotlightExponent",
+					"link": "_spotlampExponent"
 				},
 				{
-					"id": "eye",
+					"name": "eye",
 					"link": "_cameraPosition"
 				},
 				{
-					"id": "eyeLook",
+					"name": "eyeLook",
 					"link": "_cameraLook",
 					"ifdef": ["_Disabled"]
 				},
 				{
-					"id": "invVP",
+					"name": "invVP",
 					"link": "_inverseViewProjectionMatrix"
 				},
 				{
-					"id": "LMVP",
-					"link": "_biasLightModelViewProjectionMatrix"
+					"name": "LWVP",
+					"link": "_biasLampWorldViewProjectionMatrix"
 				},
 				{
-					"id": "screenSize",
+					"name": "screenSize",
 					"link": "_screenSize"
 				},
 				{
-					"id": "shirr",
+					"name": "shirr",
 					"link": "_envmapIrradiance",
 					"ifdef": ["_Disabled"]
 				},
 				{
-					"id": "senvmapRadiance",
+					"name": "senvmapRadiance",
 					"link": "_envmapRadiance",
 					"ifdef": ["_Disabled"]
 				},
 				{
-					"id": "envmapNumMipmaps",
+					"name": "envmapNumMipmaps",
 					"link": "_envmapNumMipmaps",
 					"ifdef": ["_Disabled"]
 				},
 				{
-					"id": "senvmapBrdf",
+					"name": "senvmapBrdf",
 					"link": "_envmapBrdf",
 					"ifdef": ["_Disabled"]
 				},
 				{
-					"id": "envmapStrength",
+					"name": "envmapStrength",
 					"link": "_envmapStrength",
 					"ifdef": ["_Disabled"]
 				},
 				{
-					"id": "sltcMat",
+					"name": "sltcMat",
 					"link": "_ltcMat",
 					"ifdef": ["_PolyLight"]
 				},
 				{
-					"id": "sltcMag",
+					"name": "sltcMag",
 					"link": "_ltcMag",
 					"ifdef": ["_PolyLight"]
 				},
 				{
-					"id": "time",
+					"name": "time",
 					"link": "_time",
 					"ifdef": ["_PolyLight"]
 				}

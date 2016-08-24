@@ -1,52 +1,52 @@
 {
 	"contexts": [
 		{
-			"id": "water_pass",
+			"name": "water_pass",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "always"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "none"
 				}
 			],
 			"links": [
 				{
-					"id": "transpV",
+					"name": "transpV",
 					"link": "_transposeViewMatrix"
 				},
 				{
-					"id": "invP",
+					"name": "invP",
 					"link": "_inverseProjectionMatrix"
 				},
 				{
-					"id": "eye",
+					"name": "eye",
 					"link": "_cameraPosition"
 				},
 				{
-					"id": "eyeLook",
+					"name": "eyeLook",
 					"link": "_cameraLook"
 				},
 				{
-					"id": "light",
-					"link": "_lightPosition"
+					"name": "light",
+					"link": "_lampPosition"
 				},
 				{
-					"id": "invVP",
+					"name": "invVP",
 					"link": "_inverseViewProjectionMatrix"
 				},
 				{
-					"id": "time",
+					"name": "time",
 					"link": "_time"
 				},
 				{
-					"id": "envmapStrength",
+					"name": "envmapStrength",
 					"link": "_envmapStrength"
 				}
 			],

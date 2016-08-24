@@ -4,7 +4,7 @@ import armory.trait.internal.NodeExecutor;
 
 class ThisNode extends Node {
 
-	public var target:iron.node.Node;
+	public var target:iron.object.Object;
 
 	public function new() {
 		super();
@@ -13,7 +13,7 @@ class ThisNode extends Node {
 	public override function start(executor:NodeExecutor, parent:Node = null) {
 		super.start(executor, parent);
 
-		target = executor.node;
+		target = executor.object;
 	}
 
 	public static function create():ThisNode {

@@ -3,8 +3,8 @@ package armory.trait.internal;
 import iron.Trait;
 #if WITH_PROFILE
 import kha.Scheduler;
-import iron.resource.RenderPath;
-import iron.node.CameraNode;
+import iron.data.RenderPath;
+import iron.object.CameraObject;
 import zui.Zui;
 import zui.Id;
 #end
@@ -45,7 +45,7 @@ class Console extends Trait {
     }
 
     function add() {
-        path = cast(node, CameraNode).renderPath;
+        path = cast(object, CameraObject).renderPath;
     }
 
     function render2D(g:kha.graphics2.Graphics) {
@@ -70,14 +70,14 @@ class Console extends Trait {
             ui.separator();
             if (ui.node(Id.node(), "Render Path", 0, false)) {
                 ui.text("draw calls: " + RenderPath.drawCalls);
-                ui.text("render targets: " + path.resource.pipeline.resource.render_targets.length);
+                ui.text("render targets: " + path.data.pipeline.data.render_targets.length);
                 for (i in 0...path.passNames.length) {
                     path.passEnabled[i] = ui.check(Id.nest(Id.check(), i), path.passNames[i], path.passEnabled[i]);
                 }
             }
             ui.separator();
             if (ui.node(Id.node(), "Inspector", 0, false)) {
-                for (o in iron.Root.models) {
+                for (o in iron.Root.meshes) {
                     ui.text(o.name + " (" + Std.int(o.transform.absx() * 100) / 100 + ", " + Std.int(o.transform.absy() * 100) / 100 + ", " + Std.int(o.transform.absz() * 100) / 100 + ")");
                 }
             }

@@ -1,42 +1,42 @@
 {
 	"contexts": [
 		{
-			"id": "translucent_resolve",
+			"name": "translucent_resolve",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "always"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "none"
 				},
 				{
-					"id": "blend_source",
+					"name": "blend_source",
 					"value": "source_alpha"
 				},
 				{
-					"id": "blend_destination",
+					"name": "blend_destination",
 					"value": "inverse_source_alpha"
 				},
 				{
-					"id": "blend_operation",
+					"name": "blend_operation",
 					"value": "add"
 				},
 				{
-					"id": "alpha_blend_source",
+					"name": "alpha_blend_source",
 					"value": "source_alpha"
 				},
 				{
-					"id": "alpha_blend_destination",
+					"name": "alpha_blend_destination",
 					"value": "inverse_source_alpha"
 				},
 				{
-					"id": "alpha_blend_operation",
+					"name": "alpha_blend_operation",
 					"value": "add"
 				}
 			],

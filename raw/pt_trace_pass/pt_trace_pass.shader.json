@@ -1,32 +1,32 @@
 {
 	"contexts": [
 		{
-			"id": "pt_trace_pass",
+			"name": "pt_trace_pass",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "always"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "none"
 				}
 			],
 			"links": [			
 				{
-					"id": "timeSinceStart",
+					"name": "timeSinceStart",
 					"link": "_time"
 				},
 				{
-					"id": "eye",
+					"name": "eye",
 					"link": "_cameraPosition"
 				},
 				{
-					"id": "light",
+					"name": "light",
 					"link": "_lightPosition"
 				}
 			],

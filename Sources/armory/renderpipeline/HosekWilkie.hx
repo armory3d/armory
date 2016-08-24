@@ -4,8 +4,8 @@
 package armory.renderpipeline;
 
 import kha.math.FastVector3;
-import iron.resource.RenderPath;
-import iron.resource.WorldResource;
+import iron.data.RenderPath;
+import iron.data.WorldData;
 
 class HosekWilkieRadianceData {
     
@@ -121,17 +121,17 @@ class HosekWilkie {
         data = new HosekWilkieRadianceData(sunPositionX, turbidity, albedo, normalizedSunY);
     }
 
-    public static function init(world:WorldResource) {
+    public static function init(world:WorldData) {
         var probe = world.getGlobalProbe();
-        var dir = probe.resource.sun_direction;
+        var dir = probe.raw.sun_direction;
         sunDirection = new FastVector3(dir[0], dir[1], dir[2]);
 
-        // Extract direction from light
-        // var mat = iron.resource.Resource.getMaterial("World_material", "World_material").resource;
-        // var light = iron.node.RootNode.lights[0];
-        // var ltr = light.transform;
+        // Extract direction from lamp
+        // var mat = iron.data.Data.getMaterial("World_material", "World_material").data;
+        // var lamp = iron.Root.lamps[0];
+        // var ltr = lamp.transform;
         // var lf = ltr.matrix.look2();
-        // light.resource.resource.strength = 3.3 - Math.abs(ltr.absy()) / 45;
+        // lamp.data.data.strength = 3.3 - Math.abs(ltr.absy()) / 45;
         // probe.strength = 1.2 - Math.abs(ltr.absy()) / 45;
         // mat.contexts[0].bind_constants[0].float = probe.strength + 0.5;
         // mat.contexts[0].bind_constants[1].vec3[0] = lf.x;
@@ -141,12 +141,12 @@ class HosekWilkie {
         //
 
         var sunPositionX = Math.acos(sunDirection.z);
-        var turbidity = probe.resource.turbidity;
-        var albedo = probe.resource.ground_albedo;
+        var turbidity = probe.raw.turbidity;
+        var albedo = probe.raw.ground_albedo;
         HosekWilkie.recompute(sunPositionX, turbidity, albedo, 1.15);
     }
 
-    // public static function getData(world:WorldResource):haxe.ds.Vector<Float> {
+    // public static function getData(world:WorldData):haxe.ds.Vector<Float> {
         // if (HosekWilkie.data == null) HosekWilkie.init(world);
         // return HosekWilkie.data.floats;
     // }

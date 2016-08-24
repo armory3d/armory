@@ -44,12 +44,12 @@ def buildNodeTrees():
 
 def buildNodeTree(world_name, node_group):
 	output = {}
-	res = {}
-	output['material_resources'] = [res]
-	res['id'] = world_name.replace('.', '_') + '_material'
+	dat = {}
+	output['material_datas'] = [dat]
+	dat['name'] = world_name.replace('.', '_') + '_material'
 	context = {}
-	res['contexts'] = [context]
-	context['id'] = 'env_map'
+	dat['contexts'] = [context]
+	context['name'] = 'env'
 	context['bind_constants'] = []
 	context['bind_textures'] = []
 	
@@ -86,21 +86,21 @@ def buildNodeTree(world_name, node_group):
 	return output
 
 def write_output(output, asset_references, shader_references):
-	# Add resources to khafie
-	dir_name = 'env_map'
+	# Add datas to khafie
+	dir_name = 'env'
 	# Append world defs
 	wrd = bpy.data.worlds[0]
-	res_name = 'env_map' + wrd.world_defs
+	data_name = 'env' + wrd.world_defs
 	
 	# Reference correct shader context
-	res = output['material_resources'][0]
-	res['shader'] = res_name + '/' + res_name
-	asset_references.append('build/compiled/ShaderResources/' + dir_name + '/' + res_name + '.arm')
-	shader_references.append('build/compiled/Shaders/' + dir_name + '/' + res_name)
+	dat = output['material_datas'][0]
+	dat['shader'] = data_name + '/' + data_name
+	asset_references.append('build/compiled/ShaderDatas/' + dir_name + '/' + data_name + '.arm')
+	shader_references.append('build/compiled/Shaders/' + dir_name + '/' + data_name)
 
 	# Write material json
 	path = 'build/compiled/Assets/materials/'
-	asset_path = path + res['id'] + '.arm'
+	asset_path = path + dat['name'] + '.arm'
 	utils.write_arm(asset_path, output)
 	assets.add(asset_path)
 
@@ -114,7 +114,7 @@ def parse_surface(node_group, node, context):
 	if node.type == 'BACKGROUND':
 		# Strength
 		envmap_strength_const = {}
-		envmap_strength_const['id'] = 'envmapStrength'
+		envmap_strength_const['name'] = 'envmapStrength'
 		envmap_strength_const['float'] = node.inputs[1].default_value
 		context['bind_constants'].append(envmap_strength_const)
 		
@@ -131,7 +131,7 @@ def parse_color(node_group, node, context, envmap_strength_const):
 	if node.type == 'TEX_ENVIRONMENT':
 		texture = {}
 		context['bind_textures'].append(texture)
-		texture['id'] = 'envmap'
+		texture['name'] = 'envmap'
 		
 		image = node.image
 		if image.packed_file != None:
@@ -149,12 +149,12 @@ def parse_color(node_group, node, context, envmap_strength_const):
 			assets.add(utils.safe_assetpath(image.filepath))
 
 		# Reference image name
-		texture['name'] = utils.extract_filename_noext(image.filepath)
-		texture['name'] = utils.safe_filename(texture['name'])
+		texture['file'] = utils.extract_filename_noext(image.filepath)
+		texture['file'] = utils.safe_filename(texture['file'])
 
 		# Generate prefiltered envmaps
 		generate_radiance = bpy.data.worlds[0].generate_radiance
-		bpy.data.cameras[0].world_envtex_name = texture['name']
+		bpy.data.cameras[0].world_envtex_name = texture['file']
 		disable_hdr = image.filepath.endswith('.jpg')
 		mip_count = bpy.data.cameras[0].world_envtex_num_mips
 		
@@ -175,7 +175,7 @@ def parse_color(node_group, node, context, envmap_strength_const):
 		bpy.data.worlds[0].world_defs += '_EnvSky'
 		# Append sky properties to material
 		const = {}
-		const['id'] = 'sunDirection'
+		const['name'] = 'sunDirection'
 		sun_direction = [node.sun_direction[0], node.sun_direction[1], node.sun_direction[2]]
 		sun_direction[1] *= -1 # Fix Y orientation
 		const['vec3'] = list(sun_direction)

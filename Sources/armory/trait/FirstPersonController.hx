@@ -5,8 +5,8 @@ import iron.math.Vec4;
 import iron.Trait;
 import iron.sys.Input;
 import iron.sys.Time;
-import iron.node.Transform;
-import iron.node.CameraNode;
+import iron.object.Transform;
+import iron.object.CameraObject;
 import armory.trait.internal.RigidBody;
 
 class FirstPersonController extends Trait {
@@ -17,7 +17,7 @@ class FirstPersonController extends Trait {
 
     var transform:Transform;
     var body:RigidBody;
-    var camera:CameraNode;
+    var camera:CameraObject;
 
     var moveForward = false;
     var moveBackward = false;
@@ -34,8 +34,8 @@ class FirstPersonController extends Trait {
     }
 	
 	function init() {
-		transform = node.transform;
-		body = node.getTrait(RigidBody);
+		transform = object.transform;
+		body = object.getTrait(RigidBody);
 		camera = iron.Root.cameras[0];
 	}
 

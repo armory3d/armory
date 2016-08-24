@@ -1,24 +1,24 @@
 {
 	"contexts": [
 		{
-			"id": "sss_pass_x",
+			"name": "sss_pass_x",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "always"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "none"
 				}
 			],
 			"links": [
 				{
-					"id": "dir",
+					"name": "dir",
 					"link": "_vec2x"
 				}
 			],
@@ -27,24 +27,24 @@
 			"fragment_shader": "sss_pass.frag.glsl"
 		},
 		{
-			"id": "sss_pass_y",
+			"name": "sss_pass_y",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "true"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "always"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "none"
 				}
 			],
 			"links": [
 				{
-					"id": "dir",
+					"name": "dir",
 					"link": "_vec2y"
 				}
 			],

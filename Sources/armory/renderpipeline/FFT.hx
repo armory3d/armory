@@ -1,6 +1,6 @@
 package armory.renderpipeline;
 
-import iron.resource.RenderPath;
+import iron.data.RenderPath;
 
 class FFT {
 

@@ -1,54 +1,54 @@
 {
 	"contexts": [
 		{
-			"id": "compositor_pass",
+			"name": "compositor_pass",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "always"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "none"
 				}
 			],
 			"links": [
 				{
-					"id": "eye",
+					"name": "eye",
 					"link": "_cameraPosition",
 					"ifdef": ["_CompoPos"]
 				},
 				{
-					"id": "eyeLook",
+					"name": "eyeLook",
 					"link": "_cameraLook",
 					"ifdef": ["_CompoPos"]
 				},
 				{
-					"id": "invVP",
+					"name": "invVP",
 					"link": "_inverseViewProjectionMatrix",
 					"ifdef": ["_CompoPos"]
 				},
 				{
-					"id": "light",
-					"link": "_lightPosition",
+					"name": "light",
+					"link": "_lampPosition",
 					"ifdef": ["_CompoGlare"]
 				},
 				{
-					"id": "VP",
+					"name": "VP",
 					"link": "_viewProjectionMatrix",
 					"ifdef": ["_CompoGlare"]
 				},
 				{
-					"id": "time",
+					"name": "time",
 					"link": "_time",
 					"ifdef": ["_CompoGrain"]
 				},
 				{
-					"id": "texStep",
+					"name": "texStep",
 					"link": "_screenSizeInv",
 					"ifdef": ["_CompoFXAA"]
 				}

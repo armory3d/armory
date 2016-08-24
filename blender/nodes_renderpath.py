@@ -333,10 +333,10 @@ class TranslucentResolvePassNode(Node, CGPipelineTreeNode):
         self.outputs.new('NodeSocketShader', "Stage")
 
 # Pipeline
-class DrawGeometryNode(Node, CGPipelineTreeNode):
+class DrawMeshesNode(Node, CGPipelineTreeNode):
     '''A custom node'''
-    bl_idname = 'DrawGeometryNodeType'
-    bl_label = 'Draw Geometry'
+    bl_idname = 'DrawMeshesNodeType'
+    bl_label = 'Draw Meshes'
     bl_icon = 'SOUND'
     
     def init(self, context):
@@ -385,7 +385,7 @@ class BeginNode(Node, CGPipelineTreeNode):
     
     def init(self, context):
         self.inputs.new('NodeSocketString', "ID")
-        self.inputs.new('NodeSocketString', "Geometry")
+        self.inputs.new('NodeSocketString', "Mesh")
         self.inputs.new('NodeSocketString', "Shadows")
         self.inputs.new('NodeSocketString', "Translucent")
         self.inputs.new('NodeSocketString', "Overlay")
@@ -557,10 +557,10 @@ class LoopStagesNode(Node, CGPipelineTreeNode):
         self.outputs.new('NodeSocketShader', "Complete")
         self.outputs.new('NodeSocketShader', "Loop")
         
-class LoopLightsNode(Node, CGPipelineTreeNode):
+class LoopLampsNode(Node, CGPipelineTreeNode):
     '''A custom node'''
-    bl_idname = 'LoopLightsNodeType'
-    bl_label = 'Loop Lights'
+    bl_idname = 'LoopLampsNodeType'
+    bl_label = 'Loop Lamps'
     bl_icon = 'SOUND'
     
     def init(self, context):
@@ -645,10 +645,10 @@ class BackgroundColorNode(Node, CGPipelineTreeNode):
     def init(self, context):
         self.outputs.new('NodeSocketInt', "Color")
    
-class LightCount(Node, CGPipelineTreeNode):
+class LampCount(Node, CGPipelineTreeNode):
     '''A custom node'''
-    bl_idname = 'LightCountNodeType'
-    bl_label = 'Light Count'
+    bl_idname = 'LampCountNodeType'
+    bl_label = 'Lamp Count'
     bl_icon = 'SOUND'
     
     def init(self, context):
@@ -686,7 +686,7 @@ class MyLogicNodeCategory(NodeCategory):
 node_categories = [
     MyCommandNodeCategory("COMMANDNODES", "Command", items=[
         NodeItem("BeginNodeType"),
-        NodeItem("DrawGeometryNodeType"),
+        NodeItem("DrawMeshesNodeType"),
         NodeItem("DrawDecalsNodeType"),
         NodeItem("ClearTargetNodeType"),
         NodeItem("SetTargetNodeType"),
@@ -730,14 +730,14 @@ node_categories = [
     MyConstantNodeCategory("CONSTANTNODES", "Constant", items=[
         NodeItem("ScreenNodeType"),
         NodeItem("BackgroundColorNodeType"),
-        NodeItem("LightCountNodeType"),
+        NodeItem("LampCountNodeType"),
     ]),
     MyLogicNodeCategory("LOGICNODES", "Logic", items=[
         NodeItem("CallFunctionNodeType"),
         NodeItem("BranchFunctionNodeType"),
         NodeItem("MergeStagesNodeType"),
         NodeItem("LoopStagesNodeType"),
-        NodeItem("LoopLightsNodeType"),
+        NodeItem("LoopLampsNodeType"),
         NodeItem("DrawStereoNodeType"),
     ]),
 ]
@@ -804,8 +804,8 @@ def buildNodeTrees(shader_references, asset_references, assets_path):
 
 def buildNodeTree(node_group, shader_references, asset_references):
     output = {}
-    res = {}
-    output['pipeline_resources'] = [res]
+    dat = {}
+    output['pipeline_datas'] = [dat]
     
     path = 'build/compiled/Assets/pipelines/'
     node_group_name = node_group.name.replace('.', '_')
@@ -814,16 +814,16 @@ def buildNodeTree(node_group, shader_references, asset_references):
     if rn == None:
         return
 
-    res['id'] = node_group_name
+    dat['name'] = node_group_name
 
     # Store main context names
-    res['geometry_context'] = bpy.data.cameras[0].geometry_context
-    res['shadows_context'] = bpy.data.cameras[0].shadows_context
+    dat['mesh_context'] = bpy.data.cameras[0].mesh_context
+    dat['shadows_context'] = bpy.data.cameras[0].shadows_context
     
-    res['render_targets'], res['depth_buffers'] = preprocess_pipeline(rn, node_group)
-    res['stages'] = []
+    dat['render_targets'], dat['depth_buffers'] = preprocess_pipeline(rn, node_group)
+    dat['stages'] = []
     
-    buildNode(res['stages'], rn, node_group, shader_references, asset_references)
+    buildNode(dat['stages'], rn, node_group, shader_references, asset_references)
 
     asset_path = path + node_group_name + '.arm'
     utils.write_arm(asset_path, output)
@@ -873,8 +873,8 @@ def make_clear_target(stage, color_val=None, depth_val=None, stencil_val=None):
         stage['params'].append('stencil')
         stage['params'].append(str(stencil_val))
 
-def make_draw_geometry(stage, node_group, node):
-    stage['command'] = 'draw_geometry'
+def make_draw_meshes(stage, node_group, node):
+    stage['command'] = 'draw_meshes'
     # Context
     context = node.inputs[1].default_value
     # Store shadowmap size
@@ -931,14 +931,14 @@ def make_draw_material_quad(stage, node_group, node, shader_references, asset_re
     stage['command'] = 'draw_material_quad'
     material_context = node.inputs[context_index].default_value
     stage['params'].append(material_context)
-    # Include resource and shaders
+    # Include data and shaders
     shader_context = node.inputs[context_index].default_value
     scon = shader_context.split('/')
     dir_name = scon[2]
     # No world defs for material passes
-    res_name = scon[2]
-    asset_references.append('build/compiled/ShaderResources/' + dir_name + '/' + res_name + '.arm')
-    shader_references.append('build/compiled/Shaders/' + dir_name + '/' + res_name)
+    data_name = scon[2]
+    asset_references.append('build/compiled/ShaderDatas/' + dir_name + '/' + data_name + '.arm')
+    shader_references.append('build/compiled/Shaders/' + dir_name + '/' + data_name)
 
 def make_draw_quad(stage, node_group, node, shader_references, asset_references, context_index=1, shader_context=None):
     stage['command'] = 'draw_shader_quad'
@@ -948,12 +948,12 @@ def make_draw_quad(stage, node_group, node, shader_references, asset_references,
         shader_context = node.inputs[context_index].default_value
     scon = shader_context.split('/')
     stage['params'].append(scon[0] + world_defs + '/' + scon[1] + world_defs + '/' + scon[2])
-    # Include resource and shaders
+    # Include data and shaders
     dir_name = scon[0]
     # Append world defs
-    res_name = scon[1] + world_defs
-    asset_references.append('build/compiled/ShaderResources/' + dir_name + '/' + res_name + '.arm')
-    shader_references.append('build/compiled/Shaders/' + dir_name + '/' + res_name)
+    data_name = scon[1] + world_defs
+    asset_references.append('build/compiled/ShaderDatas/' + dir_name + '/' + data_name + '.arm')
+    shader_references.append('build/compiled/Shaders/' + dir_name + '/' + data_name)
 
 def make_draw_world(stage, node_group, node, shader_references, asset_references, dome=True):
     if dome:
@@ -961,7 +961,7 @@ def make_draw_world(stage, node_group, node, shader_references, asset_references
     else:
         stage['command'] = 'draw_material_quad'
     wname = bpy.data.worlds[0].name
-    stage['params'].append(wname + '_material/' + wname + '_material/env_map') # Only one world for now
+    stage['params'].append(wname + '_material/' + wname + '_material/env') # Only one world for now
     # Link assets
     if '_EnvClouds' in bpy.data.worlds[0].world_defs:
         buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise256.png')
@@ -995,13 +995,13 @@ def make_draw_compositor(stage, node_group, node, shader_references, asset_refer
         compositor_defs += '_CompoDepth'
 
     defs = world_defs + compositor_defs
-    res_name = scon + defs
+    data_name = scon + defs
     
     stage['command'] = 'draw_shader_quad'
-    stage['params'].append(res_name + '/' + res_name + '/' + scon)
-    # Include resource and shaders
-    asset_references.append('build/compiled/ShaderResources/' + scon + '/' + res_name + '.arm')
-    shader_references.append('build/compiled/Shaders/' + scon + '/' + res_name)
+    stage['params'].append(data_name + '/' + data_name + '/' + scon)
+    # Include data and shaders
+    asset_references.append('build/compiled/ShaderDatas/' + scon + '/' + data_name + '.arm')
+    shader_references.append('build/compiled/Shaders/' + scon + '/' + data_name)
     # Link assets
     buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise256.png')
 
@@ -1156,9 +1156,9 @@ def make_water_pass(stages, node_group, node, shader_references, asset_reference
 
 def make_deferred_light_pass(stages, node_group, node, shader_references, asset_references):
     # make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'shadowMap'], shader_context='deferred_light/deferred_light/deferred_light')
-    # Draw light volume - TODO: properly generate stage
+    # Draw lamp volume - TODO: properly generate stage
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'shadowMap'], shader_context='deferred_light/deferred_light/deferred_light')
-    stages[-1]['command'] = 'draw_light_volume'
+    stages[-1]['command'] = 'draw_lamp_volume'
 
 def make_deferred_indirect_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'ssaotex'], shader_context='deferred_indirect/deferred_indirect/deferred_indirect')
@@ -1195,8 +1195,8 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
             stencil_val = node.inputs[6].default_value
         make_clear_target(stage, color_val=color_val, depth_val=depth_val, stencil_val=stencil_val)
             
-    elif node.bl_idname == 'DrawGeometryNodeType':
-        make_draw_geometry(stage, node_group, node)
+    elif node.bl_idname == 'DrawMeshesNodeType':
+        make_draw_meshes(stage, node_group, node)
         
     elif node.bl_idname == 'DrawDecalsNodeType':
         make_draw_decals(stage, node_group, node, shader_references, asset_references)
@@ -1269,9 +1269,9 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
                 loopNode = findNodeByLinkFrom(node_group, node, node.outputs[1])
                 buildNode(stages, loopNode, node_group, shader_references, asset_references)
     
-    elif node.bl_idname == 'LoopLightsNodeType':
+    elif node.bl_idname == 'LoopLampsNodeType':
         append_stage = False
-        stage['command'] = 'loop_lights'
+        stage['command'] = 'loop_lamps'
         stages.append(stage)
         stage['returns_true'] = []
         if node.outputs[1].is_linked:
@@ -1391,10 +1391,10 @@ def get_root_node(node_group):
         if n.bl_idname == 'BeginNodeType':
             # Store contexts
             bpy.data.cameras[0].pipeline_id = n.inputs[0].default_value
-            geometry_contexts = n.inputs[1].default_value.split(',')
-            bpy.data.cameras[0].geometry_context = geometry_contexts[0]
-            if len(geometry_contexts) > 1:
-                bpy.data.cameras[0].geometry_context_empty = geometry_contexts[1]
+            mesh_contexts = n.inputs[1].default_value.split(',')
+            bpy.data.cameras[0].mesh_context = mesh_contexts[0]
+            if len(mesh_contexts) > 1:
+                bpy.data.cameras[0].mesh_context_empty = mesh_contexts[1]
             bpy.data.cameras[0].shadows_context = n.inputs[2].default_value
             bpy.data.cameras[0].translucent_context = n.inputs[3].default_value
             bpy.data.cameras[0].overlay_context = n.inputs[4].default_value
@@ -1414,7 +1414,7 @@ def preprocess_pipeline(root_node, node_group):
     
 def traverse_pipeline(node, node_group, render_targets, depth_buffers):
     # Gather linked draw geometry contexts
-    if node.bl_idname == 'DrawGeometryNodeType':
+    if node.bl_idname == 'DrawMeshesNodeType':
         if bpy.data.cameras[0].pipeline_passes != '':
             bpy.data.cameras[0].pipeline_passes += '_' # Separator
         bpy.data.cameras[0].pipeline_passes += node.inputs[1].default_value
@@ -1446,7 +1446,7 @@ def traverse_pipeline(node, node_group, render_targets, depth_buffers):
             parse_render_target(tnode, node_group, render_targets, depth_buffers)
     
     # Traverse loops
-    elif node.bl_idname == 'LoopStagesNodeType' or node.bl_idname == 'LoopLightsNodeType' or node.bl_idname == 'DrawStereoNodeType':
+    elif node.bl_idname == 'LoopStagesNodeType' or node.bl_idname == 'LoopLampsNodeType' or node.bl_idname == 'DrawStereoNodeType':
         if node.outputs[1].is_linked:
             loop_node = findNodeByLinkFrom(node_group, node, node.outputs[1])
             traverse_pipeline(loop_node, node_group, render_targets, depth_buffers)
@@ -1481,7 +1481,7 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
         # Target already exists
         id = node.inputs[0].default_value
         for t in render_targets:
-            if t['id'] == id:
+            if t['name'] == id:
                 return
         
         depth_buffer_id = None
@@ -1492,12 +1492,12 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
             # Append depth buffer
             found = False
             for db in depth_buffers:
-                if db['id'] == depth_buffer_id:
+                if db['name'] == depth_buffer_id:
                     found = True
                     break 
             if found == False:
                 db = {}
-                db['id'] = depth_buffer_id
+                db['name'] = depth_buffer_id
                 db['stencil_buffer'] = depth_node.inputs[1].default_value
                 depth_buffers.append(db)    
         # Get scale
@@ -1520,7 +1520,7 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
 
 def make_render_target(n, scale, depth_buffer_id=None):
     target = {}
-    target['id'] = n.inputs[0].default_value
+    target['name'] = n.inputs[0].default_value
     target['width'] = n.inputs[1].default_value
     target['height'] = n.inputs[2].default_value
     target['format'] = n.inputs[4].default_value

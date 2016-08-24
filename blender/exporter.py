@@ -24,8 +24,8 @@ import subprocess
 
 kNodeTypeNode = 0
 kNodeTypeBone = 1
-kNodeTypeGeometry = 2
-kNodeTypeLight = 3
+kNodeTypeMesh = 2
+kNodeTypeLamp = 3
 kNodeTypeCamera = 4
 kNodeTypeSpeaker = 5
 
@@ -35,12 +35,12 @@ kAnimationBezier = 2
 
 kExportEpsilon = 1.0e-6
 
-structIdentifier = ["node", "bone_node", "geometry_node", "light_node", "camera_node", "speaker_node"]
+structIdentifier = ["object", "bone_object", "mesh_object", "lamp_object", "camera_object", "speaker_object"]
 
-subtranslationName = ["xpos", "ypos", "zpos"]
+subtranslationName = ["xloc", "yloc", "zloc"]
 subrotationName = ["xrot", "yrot", "zrot"]
 subscaleName = ["xscl", "yscl", "zscl"]
-deltaSubtranslationName = ["dxpos", "dypos", "dzpos"]
+deltaSubtranslationName = ["dxloc", "dyloc", "dzloc"]
 deltaSubrotationName = ["dxrot", "dyrot", "dzrot"]
 deltaSubscaleName = ["dxscl", "dyscl", "dzscl"]
 axisName = ["x", "y", "z"]
@@ -132,9 +132,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 	option_export_selection = bpy.props.BoolProperty(name="Export Selection Only", description="Export only selected objects", default=False)
 	option_sample_animation = bpy.props.BoolProperty(name="Force Sampled Animation", description="Always export animation as per-frame samples", default=True)
-	option_geometry_only = bpy.props.BoolProperty(name="Export Geometry Only", description="Export only geometry data", default=True)
-	option_geometry_per_file = bpy.props.BoolProperty(name="Export Geometry Per File", description="Export each geometry to individual file", default=False)
-	option_optimize_geometry = bpy.props.BoolProperty(name="Optimized Geometry Exported", description="Slower but exports slightly smaller data", default=False)
+	option_mesh_only = bpy.props.BoolProperty(name="Export Mesh Only", description="Export only mesh data", default=True)
+	option_mesh_per_file = bpy.props.BoolProperty(name="Export Mesh Per File", description="Export each mesh to individual file", default=False)
+	option_optimize_mesh = bpy.props.BoolProperty(name="Optimized Mesh Exported", description="Slower but exports slightly smaller data", default=False)
 	option_minimize = bpy.props.BoolProperty(name="Export Minimized", description="Export binary data", default=True)
 
 	def WriteMatrix(self, matrix):
@@ -227,27 +227,27 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 		return va
 
-	def get_geoms_file_path(self, object_id):
+	def get_meshes_file_path(self, object_id):
 		index = self.filepath.rfind('/')
-		geom_fp = self.filepath[:(index+1)] + 'geoms/'
-		if not os.path.exists(geom_fp):
-			os.makedirs(geom_fp)
-		return geom_fp + object_id + '.arm'
+		mesh_fp = self.filepath[:(index+1)] + 'meshes/'
+		if not os.path.exists(mesh_fp):
+			os.makedirs(mesh_fp)
+		return mesh_fp + object_id + '.arm'
 
 	@staticmethod
-	def GetNodeType(node):
-		if node.type == "MESH":
-			if len(node.data.polygons) != 0:
-				return kNodeTypeGeometry
-		elif node.type == "FONT":
-			return kNodeTypeGeometry
-		elif node.type == "LAMP":
-			type = node.data.type
+	def GetBObjectType(bobject):
+		if bobject.type == "MESH":
+			if len(bobject.data.polygons) != 0:
+				return kNodeTypeMesh
+		elif bobject.type == "FONT":
+			return kNodeTypeMesh
+		elif bobject.type == "LAMP":
+			type = bobject.data.type
 			if type == "SUN" or type == "POINT" or type == "SPOT":
-				return kNodeTypeLight
-		elif node.type == "CAMERA":
+				return kNodeTypeLamp
+		elif bobject.type == "CAMERA":
 			return kNodeTypeCamera
-		elif node.type == "SPEAKER":
+		elif bobject.type == "SPEAKER":
 			return kNodeTypeSpeaker
 		return kNodeTypeNode
 
@@ -259,9 +259,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		return (None)
 
 	def FindNode(self, name):
-		for nodeRef in self.nodeArray.items():
-			if (nodeRef[0].name == name):
-				return (nodeRef)
+		for bobjectRef in self.bobjectArray.items():
+			if (bobjectRef[0].name == name):
+				return (bobjectRef)
 		return (None)
 
 	@staticmethod
@@ -562,11 +562,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		return unifiedVertexArray
 
 	def ExportBone(self, armature, bone, scene, o):
-		nodeRef = self.nodeArray.get(bone)
+		bobjectRef = self.bobjectArray.get(bone)
 		
-		if (nodeRef):
-			o['type'] = structIdentifier[nodeRef["nodeType"]]
-			o['id'] = nodeRef["structName"]
+		if (bobjectRef):
+			o['type'] = structIdentifier[bobjectRef["objectType"]]
+			o['name'] = bobjectRef["structName"]
 
 			#name = bone.name
 			#if (name != ""):
@@ -574,34 +574,34 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 			self.ExportBoneTransform(armature, bone, scene, o)
 
-		o['nodes'] = [] # TODO
-		for subnode in bone.children:
+		o['objects'] = [] # TODO
+		for subbobject in bone.children:
 			so = {}
-			self.ExportBone(armature, subnode, scene, so)
-			o['nodes'].append(so)
+			self.ExportBone(armature, subbobject, scene, so)
+			o['objects'].append(so)
 
-		# Export any ordinary nodes that are parented to this bone.
-		boneSubnodeArray = self.boneParentArray.get(bone.name)
-		if (boneSubnodeArray):
+		# Export any ordinary objects that are parented to this bone
+		boneSubbobjectArray = self.boneParentArray.get(bone.name)
+		if (boneSubbobjectArray):
 			poseBone = None
 			if (not bone.use_relative_parent):
 				poseBone = armature.pose.bones.get(bone.name)
 
-			for subnode in boneSubnodeArray:
-				self.ExportNode(subnode, scene, poseBone, o)
+			for subbobject in boneSubbobjectArray:
+				self.ExportObject(subbobject, scene, poseBone, o)
 		
-	def ExportNodeSampledAnimation(self, node, scene, o):
-		# This function exports animation as full 4x4 matrices for each frame.	
+	def ExportObjectSampledAnimation(self, bobject, scene, o):
+		# This function exports animation as full 4x4 matrices for each frame
 		currentFrame = scene.frame_current
 		currentSubframe = scene.frame_subframe
 
 		animationFlag = False
-		m1 = node.matrix_local.copy()
+		m1 = bobject.matrix_local.copy()
 
 		# Font in
 		for i in range(self.beginFrame, self.endFrame):
 			scene.frame_set(i)
-			m2 = node.matrix_local
+			m2 = bobject.matrix_local
 			if (ArmoryExporter.MatricesDifferent(m1, m2)):
 				animationFlag = True
 				break
@@ -626,10 +626,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 			for i in range(self.beginFrame, self.endFrame):
 				scene.frame_set(i)
-				tracko['value']['values'].append(self.WriteMatrix(node.matrix_local))
+				tracko['value']['values'].append(self.WriteMatrix(bobject.matrix_local))
 
 			scene.frame_set(self.endFrame)
-			tracko['value']['values'].append(self.WriteMatrix(node.matrix_local))
+			tracko['value']['values'].append(self.WriteMatrix(bobject.matrix_local))
 			o['animation']['tracks'] = [tracko]
 
 		scene.frame_set(currentFrame, currentSubframe)
@@ -825,11 +825,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# self.IndentWrite(B"}\n")
 		return tracko
 
-	def ExportNodeTransform(self, node, scene, o):
-		posAnimCurve = [None, None, None]
+	def ExportObjectTransform(self, bobject, scene, o):
+		locAnimCurve = [None, None, None]
 		rotAnimCurve = [None, None, None]
 		sclAnimCurve = [None, None, None]
-		posAnimKind = [0, 0, 0]
+		locAnimKind = [0, 0, 0]
 		rotAnimKind = [0, 0, 0]
 		sclAnimKind = [0, 0, 0]
 
@@ -840,10 +840,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		deltaRotAnimKind = [0, 0, 0]
 		deltaSclAnimKind = [0, 0, 0]
 
-		positionAnimated = False
+		locationAnimated = False
 		rotationAnimated = False
 		scaleAnimated = False
-		posAnimated = [False, False, False]
+		locAnimated = [False, False, False]
 		rotAnimated = [False, False, False]
 		sclAnimated = [False, False, False]
 
@@ -854,22 +854,22 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		deltaRotAnimated = [False, False, False]
 		deltaSclAnimated = [False, False, False]
 
-		mode = node.rotation_mode
+		mode = bobject.rotation_mode
 		sampledAnimation = ((ArmoryExporter.sampleAnimationFlag) or (mode == "QUATERNION") or (mode == "AXIS_ANGLE"))
 
-		if ((not sampledAnimation) and (node.animation_data)):
-			action = node.animation_data.action
+		if ((not sampledAnimation) and (bobject.animation_data)):
+			action = bobject.animation_data.action
 			if (action):
 				for fcurve in action.fcurves:
 					kind = ArmoryExporter.ClassifyAnimationCurve(fcurve)
 					if (kind != kAnimationSampled):
 						if (fcurve.data_path == "location"):
 							for i in range(3):
-								if ((fcurve.array_index == i) and (not posAnimCurve[i])):
-									posAnimCurve[i] = fcurve
-									posAnimKind[i] = kind
+								if ((fcurve.array_index == i) and (not locAnimCurve[i])):
+									locAnimCurve[i] = fcurve
+									locAnimKind[i] = kind
 									if (ArmoryExporter.AnimationPresent(fcurve, kind)):
-										posAnimated[i] = True
+										locAnimated[i] = True
 						elif (fcurve.data_path == "delta_location"):
 							for i in range(3):
 								if ((fcurve.array_index == i) and (not deltaPosAnimCurve[i])):
@@ -912,7 +912,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						sampledAnimation = True
 						break
 
-		positionAnimated = posAnimated[0] | posAnimated[1] | posAnimated[2]
+		locationAnimated = locAnimated[0] | locAnimated[1] | locAnimated[2]
 		rotationAnimated = rotAnimated[0] | rotAnimated[1] | rotAnimated[2]
 		scaleAnimated = sclAnimated[0] | sclAnimated[1] | sclAnimated[2]
 
@@ -920,27 +920,27 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		deltaRotationAnimated = deltaRotAnimated[0] | deltaRotAnimated[1] | deltaRotAnimated[2]
 		deltaScaleAnimated = deltaSclAnimated[0] | deltaSclAnimated[1] | deltaSclAnimated[2]
 
-		if ((sampledAnimation) or ((not positionAnimated) and (not rotationAnimated) and (not scaleAnimated) and (not deltaPositionAnimated) and (not deltaRotationAnimated) and (not deltaScaleAnimated))):
-			# If there's no keyframe animation at all, then write the node transform as a single 4x4 matrix.
+		if ((sampledAnimation) or ((not locationAnimated) and (not rotationAnimated) and (not scaleAnimated) and (not deltaPositionAnimated) and (not deltaRotationAnimated) and (not deltaScaleAnimated))):
+			# If there's no keyframe animation at all, then write the object transform as a single 4x4 matrix.
 			# We might still be exporting sampled animation below.
 			o['transform'] = {}
 
 			if (sampledAnimation):
 				o['transform']['target'] = "transform"
 
-			o['transform']['values'] = self.WriteMatrix(node.matrix_local)
+			o['transform']['values'] = self.WriteMatrix(bobject.matrix_local)
 
 			if (sampledAnimation):
-				self.ExportNodeSampledAnimation(node, scene, o)
+				self.ExportObjectSampledAnimation(bobject, scene, o)
 		else:
 			structFlag = False
 
 			o['transform'] = {}
-			o['transform']['values'] = self.WriteMatrix(node.matrix_local)
+			o['transform']['values'] = self.WriteMatrix(bobject.matrix_local)
 
 			o['animation_transforms'] = []
 
-			deltaTranslation = node.delta_location
+			deltaTranslation = bobject.delta_location
 			if (deltaPositionAnimated):
 				# When the delta location is animated, write the x, y, and z components separately
 				# so they can be targeted by different tracks having different sets of keys.
@@ -977,13 +977,13 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				# self.IndentWrite(B"}\n", 0, True)
 				structFlag = True
 
-			translation = node.location
-			if (positionAnimated):
+			translation = bobject.location
+			if (locationAnimated):
 				# When the location is animated, write the x, y, and z components separately
 				# so they can be targeted by different tracks having different sets of keys.
 				for i in range(3):
 					pos = translation[i]
-					if ((posAnimated[i]) or (math.fabs(pos) > kExportEpsilon)):
+					if ((locAnimated[i]) or (math.fabs(pos) > kExportEpsilon)):
 						animo = {}
 						o['animation_transforms'].append(animo)
 						animo['type'] = 'translation_' + axisName[i]
@@ -1019,7 +1019,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				# so they can be targeted by different tracks having different sets of keys.
 				for i in range(3):
 					axis = ord(mode[2 - i]) - 0x58
-					angle = node.delta_rotation_euler[axis]
+					angle = bobject.delta_rotation_euler[axis]
 					if ((deltaRotAnimated[axis]) or (math.fabs(angle) > kExportEpsilon)):
 						animo = {}
 						o['animation_transforms'].append(animo)
@@ -1040,9 +1040,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 			else:
 				# When the delta rotation is not animated, write it in the representation given by
-				# the node's current rotation mode. (There is no axis-angle delta rotation.)
+				# the object's current rotation mode. (There is no axis-angle delta rotation.)
 				if (mode == "QUATERNION"):
-					quaternion = node.delta_rotation_quaternion
+					quaternion = bobject.delta_rotation_quaternion
 					if ((math.fabs(quaternion[0] - 1.0) > kExportEpsilon) or (math.fabs(quaternion[1]) > kExportEpsilon) or (math.fabs(quaternion[2]) > kExportEpsilon) or (math.fabs(quaternion[3]) > kExportEpsilon)):
 						animo = {}
 						o['animation_transforms'].append(animo)
@@ -1059,7 +1059,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				else:
 					for i in range(3):
 						axis = ord(mode[2 - i]) - 0x58
-						angle = node.delta_rotation_euler[axis]
+						angle = bobject.delta_rotation_euler[axis]
 						if (math.fabs(angle) > kExportEpsilon):
 							animo = {}
 							o['animation_transforms'].append(animo)
@@ -1080,7 +1080,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				# so they can be targeted by different tracks having different sets of keys.
 				for i in range(3):
 					axis = ord(mode[2 - i]) - 0x58
-					angle = node.rotation_euler[axis]
+					angle = bobject.rotation_euler[axis]
 					if ((rotAnimated[axis]) or (math.fabs(angle) > kExportEpsilon)):
 						animo = {}
 						o['animation_transforms'].append(animo)
@@ -1101,9 +1101,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 			else:
 				# When the rotation is not animated, write it in the representation given by
-				# the node's current rotation mode.
+				# the object's current rotation mode.
 				if (mode == "QUATERNION"):
-					quaternion = node.rotation_quaternion
+					quaternion = bobject.rotation_quaternion
 					if ((math.fabs(quaternion[0] - 1.0) > kExportEpsilon) or (math.fabs(quaternion[1]) > kExportEpsilon) or (math.fabs(quaternion[2]) > kExportEpsilon) or (math.fabs(quaternion[3]) > kExportEpsilon)):
 						animo = {}
 						o['animation_transforms'].append(animo)
@@ -1118,15 +1118,15 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						structFlag = True
 
 				elif (mode == "AXIS_ANGLE"):
-					if (math.fabs(node.rotation_axis_angle[0]) > kExportEpsilon):
+					if (math.fabs(bobject.rotation_axis_angle[0]) > kExportEpsilon):
 						animo = {}
 						o['animation_transforms'].append(animo)
 						animo['type'] = 'rotation_axis'
-						animo['values'] = self.WriteVector4D(node.rotation_axis_angle)
+						animo['values'] = self.WriteVector4D(bobject.rotation_axis_angle)
 						# self.IndentWrite(B"Rotation (kind = \"axis\")\n", 0, structFlag)
 						# self.IndentWrite(B"{\n")
 						# self.IndentWrite(B"float[4] {", 1)
-						# self.WriteVector4D(node.rotation_axis_angle)
+						# self.WriteVector4D(bobject.rotation_axis_angle)
 						# self.Write(B"}")
 						# self.IndentWrite(B"}\n", 0, True)
 						structFlag = True
@@ -1134,7 +1134,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				else:
 					for i in range(3):
 						axis = ord(mode[2 - i]) - 0x58
-						angle = node.rotation_euler[axis]
+						angle = bobject.rotation_euler[axis]
 						if (math.fabs(angle) > kExportEpsilon):
 							animo = {}
 							o['animation_transforms'].append(animo)
@@ -1150,7 +1150,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 							# self.IndentWrite(B"}\n", 0, True)
 							structFlag = True
 
-			deltaScale = node.delta_scale
+			deltaScale = bobject.delta_scale
 			if (deltaScaleAnimated):
 				# When the delta scale is animated, write the x, y, and z components separately
 				# so they can be targeted by different tracks having different sets of keys.
@@ -1187,7 +1187,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				# self.IndentWrite(B"}\n", 0, True)
 				structFlag = True
 
-			scale = node.scale
+			scale = bobject.scale
 			if (scaleAnimated):
 				# When the scale is animated, write the x, y, and z components separately
 				# so they can be targeted by different tracks having different sets of keys.
@@ -1238,10 +1238,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			# self.indentLevel += 1
 			# structFlag = False
 
-			if (positionAnimated):
+			if (locationAnimated):
 				for i in range(3):
-					if (posAnimated[i]):
-						tracko = self.ExportAnimationTrack(posAnimCurve[i], posAnimKind[i], subtranslationName[i], structFlag)
+					if (locAnimated[i]):
+						tracko = self.ExportAnimationTrack(locAnimCurve[i], locAnimKind[i], subtranslationName[i], structFlag)
 						o['animation']['tracks'].append(tracko)
 						structFlag = True
 
@@ -1282,48 +1282,48 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			
 	def ProcessBone(self, bone):
 		if ((ArmoryExporter.exportAllFlag) or (bone.select)):
-			self.nodeArray[bone] = {"nodeType" : kNodeTypeBone, "structName" : bone.name}
+			self.bobjectArray[bone] = {"objectType" : kNodeTypeBone, "structName" : bone.name}
 
-		for subnode in bone.children:
-			self.ProcessBone(subnode)
+		for subbobject in bone.children:
+			self.ProcessBone(subbobject)
 
-	def ProcessNode(self, node):
-		if ((ArmoryExporter.exportAllFlag) or (node.select)):
-			type = ArmoryExporter.GetNodeType(node)
+	def ProcessBObject(self, bobject):
+		if ((ArmoryExporter.exportAllFlag) or (bobject.select)):
+			btype = ArmoryExporter.GetBObjectType(bobject)
 
-			if ArmoryExporter.option_geometry_only and type != kNodeTypeGeometry:
+			if ArmoryExporter.option_mesh_only and btype != kNodeTypeMesh:
 				return
 
-			self.nodeArray[node] = {"nodeType" : type, "structName" : node.name}
+			self.bobjectArray[bobject] = {"objectType" : btype, "structName" : bobject.name}
 
-			if (node.parent_type == "BONE"):
-				boneSubnodeArray = self.boneParentArray.get(node.parent_bone)
-				if (boneSubnodeArray):
-					boneSubnodeArray.append(node)
+			if (bobject.parent_type == "BONE"):
+				boneSubbobjectArray = self.boneParentArray.get(bobject.parent_bone)
+				if (boneSubbobjectArray):
+					boneSubbobjectArray.append(bobject)
 				else:
-					self.boneParentArray[node.parent_bone] = [node]
+					self.boneParentArray[bobject.parent_bone] = [bobject]
 
-			if (node.type == "ARMATURE"):
-				skeleton = node.data
+			if (bobject.type == "ARMATURE"):
+				skeleton = bobject.data
 				if (skeleton):
 					for bone in skeleton.bones:
 						if (not bone.parent):
 							self.ProcessBone(bone)
 
-		if node.type != 'MESH' or self.node_has_instanced_children(node) == False:
-			for subnode in node.children:
-				self.ProcessNode(subnode)
+		if bobject.type != 'MESH' or self.object_has_instanced_children(bobject) == False:
+			for subbobject in bobject.children:
+				self.ProcessBObject(subbobject)
 
 	def ProcessSkinnedMeshes(self):
-		for nodeRef in self.nodeArray.items():
-			if (nodeRef[1]["nodeType"] == kNodeTypeGeometry):
-				armature = nodeRef[0].find_armature()
+		for bobjectRef in self.bobjectArray.items():
+			if (bobjectRef[1]["objectType"] == kNodeTypeMesh):
+				armature = bobjectRef[0].find_armature()
 				if (armature):
 					for bone in armature.data.bones:
 						boneRef = self.FindNode(bone.name)
 						if (boneRef):
-							# If a node is used as a bone, then we force its type to be a bone.
-							boneRef[1]["nodeType"] = kNodeTypeBone
+							# If an object is used as a bone, then we force its type to be a bone.
+							boneRef[1]["objectType"] = kNodeTypeBone
 
 	def ExportBoneTransform(self, armature, bone, scene, o):
 		curveArray = self.CollectBoneAnimation(armature, bone.name)
@@ -1364,7 +1364,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			self.particleSystemArray[psys.settings] = {"structName" : psys.settings.name}
 
 		pref = {}
-		pref['id'] = psys.name
+		pref['name'] = psys.name
 		pref['seed'] = psys.seed
 		pref['particle'] = self.particleSystemArray[psys.settings]["structName"]
 		o['particle_refs'].append(pref)
@@ -1387,92 +1387,92 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 						return space.region_3d.perspective_matrix
 		return None
 
-	def ExportNode(self, node, scene, poseBone = None, parento = None):
-		# This function exports a single node in the scene and includes its name,
-		# object reference, material references (for geometries), and transform.
-		# Subnodes are then exported recursively.
-		if self.cb_preprocess_node(node) == False:
+	def ExportObject(self, bobject, scene, poseBone = None, parento = None):
+		# This function exports a single object in the scene and includes its name,
+		# object reference, material references (for meshes), and transform.
+		# Subobjects are then exported recursively.
+		if self.cb_preprocess_object(bobject) == False:
 			return
 
-		nodeRef = self.nodeArray.get(node)
-		if (nodeRef):
-			type = nodeRef["nodeType"]
+		bobjectRef = self.bobjectArray.get(bobject)
+		if (bobjectRef):
+			type = bobjectRef["objectType"]
 
 			o = {}
 			o['type'] = structIdentifier[type]
-			o['id'] = nodeRef["structName"]
+			o['name'] = bobjectRef["structName"]
 
-			if node.hide_render:
+			if bobject.hide_render:
 				o['visible'] = False
 
-			if node.spawn == False:
+			if bobject.spawn == False:
 				o['spawn'] = False
 
 			# Export the object reference and material references.
-			object = node.data
+			objref = bobject.data
 			
-			if (type == kNodeTypeGeometry):
-				if (not object in self.geometryArray):
-					self.geometryArray[object] = {"structName" : object.name, "nodeTable" : [node]}
+			if (type == kNodeTypeMesh):
+				if (not objref in self.meshArray):
+					self.meshArray[objref] = {"structName" : objref.name, "objectTable" : [bobject]}
 				else:
-					self.geometryArray[object]["nodeTable"].append(node)
+					self.meshArray[objref]["objectTable"].append(bobject)
 
-				oid = utils.safe_filename(self.geometryArray[object]["structName"])
-				if ArmoryExporter.option_geometry_per_file:
-					o['object_ref'] = 'geom_' + oid + '/' + oid
+				oid = utils.safe_filename(self.meshArray[objref]["structName"])
+				if ArmoryExporter.option_mesh_per_file:
+					o['data_ref'] = 'mesh_' + oid + '/' + oid
 				else:
-					o['object_ref'] = oid
+					o['data_ref'] = oid
 				
 				o['material_refs'] = []
-				for i in range(len(node.material_slots)):
-					if self.node_has_override_material(node): # Overwrite material slot
-						o['material_refs'].append(node.override_material_name)
+				for i in range(len(bobject.material_slots)):
+					if self.object_has_override_material(bobject): # Overwrite material slot
+						o['material_refs'].append(bobject.override_material_name)
 					else: # Export assigned material
-						self.ExportMaterialRef(node.material_slots[i].material, i, o)
+						self.ExportMaterialRef(bobject.material_slots[i].material, i, o)
 				# No material, mimick cycles and assign default
 				if len(o['material_refs']) == 0:
 					o['material_refs'].append('__default')
 					self.export_default_material = True
 
 				o['particle_refs'] = []
-				for i in range(len(node.particle_systems)):
-					self.ExportParticleSystemRef(node.particle_systems[i], i, o)
+				for i in range(len(bobject.particle_systems)):
+					self.ExportParticleSystemRef(bobject.particle_systems[i], i, o)
 					
-				o['dimensions'] = [node.dimensions[0], node.dimensions[1], node.dimensions[2]]	
+				o['dimensions'] = [bobject.dimensions[0], bobject.dimensions[1], bobject.dimensions[2]]	
 
-				#shapeKeys = ArmoryExporter.GetShapeKeys(object)
+				#shapeKeys = ArmoryExporter.GetShapeKeys(objref)
 				#if (shapeKeys):
-				#	self.ExportMorphWeights(node, shapeKeys, scene, o)
+				#	self.ExportMorphWeights(bobject, shapeKeys, scene, o)
 				# TODO
 
-			elif (type == kNodeTypeLight):
-				if (not object in self.lightArray):
-					self.lightArray[object] = {"structName" : object.name, "nodeTable" : [node]}
+			elif (type == kNodeTypeLamp):
+				if (not objref in self.lampArray):
+					self.lampArray[objref] = {"structName" : objref.name, "objectTable" : [bobject]}
 				else:
-					self.lightArray[object]["nodeTable"].append(node)
-				o['object_ref'] = self.lightArray[object]["structName"]
+					self.lampArray[objref]["objectTable"].append(bobject)
+				o['data_ref'] = self.lampArray[objref]["structName"]
 
 			elif (type == kNodeTypeCamera):
-				if (not object in self.cameraArray):
-					self.cameraArray[object] = {"structName" : object.name, "nodeTable" : [node]}
+				if (not objref in self.cameraArray):
+					self.cameraArray[objref] = {"structName" : objref.name, "objectTable" : [bobject]}
 				else:
-					self.cameraArray[object]["nodeTable"].append(node)
-				o['object_ref'] = self.cameraArray[object]["structName"]
+					self.cameraArray[objref]["objectTable"].append(bobject)
+				o['data_ref'] = self.cameraArray[objref]["structName"]
 
 			elif (type == kNodeTypeSpeaker):
-				if (not object in self.speakerArray):
-					self.speakerArray[object] = {"structName" : object.name, "nodeTable" : [node]}
+				if (not objref in self.speakerArray):
+					self.speakerArray[objref] = {"structName" : objref.name, "objectTable" : [bobject]}
 				else:
-					self.speakerArray[object]["nodeTable"].append(node)
-				o['object_ref'] = self.speakerArray[object]["structName"]
+					self.speakerArray[objref]["objectTable"].append(bobject)
+				o['data_ref'] = self.speakerArray[objref]["structName"]
 
 			if (poseBone):
-				# If the node is parented to a bone and is not relative, then undo the bone's transform.
+				# If the object is parented to a bone and is not relative, then undo the bone's transform.
 				o['transform'] = {}
 				o['transform']['values'] = self.WriteMatrix(poseBone.matrix.inverted())
 
-			# Export the transform. If the node is animated, then animation tracks are exported here.
-			self.ExportNodeTransform(node, scene, o)
+			# Export the transform. If the object is animated, then animation tracks are exported here.
+			self.ExportObjectTransform(bobject, scene, o)
 
 			# Viewport Camera - overwrite active camera matrix with viewport matrix
 			if type == kNodeTypeCamera and bpy.data.worlds[0].ArmPlayViewportCamera:
@@ -1482,63 +1482,63 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 					# Do not apply parent matrix
 					o['local_transform_only'] = True
 
-			if (node.type == "ARMATURE"):
-				skeleton = node.data # Armature data
+			if (bobject.type == "ARMATURE"):
+				skeleton = bobject.data # Armature data
 				if (skeleton):
 					armatureid = utils.safe_filename(skeleton.name)
 					o['bones_ref'] = 'bones_' + armatureid
 
-					# TODO: use option_geometry_per_file
-					fp = self.get_geoms_file_path(o['bones_ref'])
+					# TODO: use option_mesh_per_file
+					fp = self.get_meshes_file_path(o['bones_ref'])
 					assets.add(fp)
 
-					if node.data.armature_cached == False or not os.path.exists(fp):
+					if bobject.data.armature_cached == False or not os.path.exists(fp):
 						bones = []
 						for bone in skeleton.bones:
 							if (not bone.parent):
 								boneo = {}
-								self.ExportBone(node, bone, scene, boneo)
-								#o.nodes.append(boneo)
+								self.ExportBone(bobject, bone, scene, boneo)
+								#o.objects.append(boneo)
 								bones.append(boneo)
 						
 						# Save bones separately
 						bones_obj = {}
-						bones_obj['nodes'] = bones
+						bones_obj['objects'] = bones
 						utils.write_arm(fp, bones_obj)
-						node.data.armature_cached = True
+						bobject.data.armature_cached = True
 
 			if (parento == None):
-				self.output['nodes'].append(o)
+				self.output['objects'].append(o)
 			else:
-				parento['nodes'].append(o)
+				parento['objects'].append(o)
 
-			self.cb_export_node(node, o, type)
+			self.cb_export_object(bobject, o, type)
 
-			if not hasattr(o, 'nodes'):
-				o['nodes'] = []
+			if not hasattr(o, 'objects'):
+				o['objects'] = []
 
-		if node.type != 'MESH' or self.node_has_instanced_children(node) == False:
-			for subnode in node.children:
-				if (subnode.parent_type != "BONE"):
-					self.ExportNode(subnode, scene, None, o)
+		if bobject.type != 'MESH' or self.object_has_instanced_children(bobject) == False:
+			for subbobject in bobject.children:
+				if (subbobject.parent_type != "BONE"):
+					self.ExportObject(subbobject, scene, None, o)
 
-	def ExportSkinQuality(self, node, armature, exportVertexArray, om):
+	def ExportSkinQuality(self, bobject, armature, exportVertexArray, om):
 		# This function exports all skinning data, which includes the skeleton
-		# and per-vertex bone influence data.
+		# and per-vertex bone influence data
 		oskin = {}
 		om['skin'] = oskin
 
-		# Write the skin bind pose transform.
+		# Write the skin bind pose transform
 		otrans = {}
 		oskin['transform'] = otrans
-		otrans['values'] = self.WriteMatrix(node.matrix_world)
+		otrans['values'] = self.WriteMatrix(bobject.matrix_world)
 
-		# Export the skeleton, which includes an array of bone node references
-		# and and array of per-bone bind pose transforms.
+		# Export the skeleton, which includes an array of bone object references
+		# and and array of per-bone bind pose transforms
 		oskel = {}
 		oskin['skeleton'] = oskel
 
-		# Write the bone node reference array.
+		# Write the bone object reference array
 		oskel['bone_ref_array'] = []
 
 		boneArray = armature.data.bones
@@ -1566,7 +1566,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# Export the per-vertex bone influence data.
 		groupRemap = []
 
-		for group in node.vertex_groups:
+		for group in bobject.vertex_groups:
 			groupName = group.name
 			for i in range(boneCount):
 				if (boneArray[i].name == groupName):
@@ -1579,7 +1579,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		boneIndexArray = []
 		boneWeightArray = []
 
-		meshVertexArray = node.data.vertices
+		meshVertexArray = bobject.data.vertices
 		for ev in exportVertexArray:
 			boneCount = 0
 			totalWeight = 0.0
@@ -1607,13 +1607,13 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# Write the bone weight array. The number of entries is the sum of the bone counts for all vertices.
 		oskin['bone_weight_array'] = boneWeightArray
 
-	def ExportSkinFast(self, node, armature, vert_list, om):
+	def ExportSkinFast(self, bobject, armature, vert_list, om):
 		oskin = {}
 		om['skin'] = oskin
 
 		otrans = {}
 		oskin['transform'] = otrans
-		otrans['values'] = self.WriteMatrix(node.matrix_world)
+		otrans['values'] = self.WriteMatrix(bobject.matrix_world)
 
 		oskel = {}
 		oskin['skeleton'] = oskel
@@ -1698,17 +1698,17 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			tangents[i * 3 + 2] = v.z
 		return tangents
 
-	def write_geometry(self, node, fp, o):
-		# One geometry data per file
-		if ArmoryExporter.option_geometry_per_file:
-			geom_obj = {}
-			geom_obj['geometry_resources'] = [o]
-			utils.write_arm(fp, geom_obj)
-			self.node_set_geometry_cached(node, True)
+	def write_mesh(self, bobject, fp, o):
+		# One mesh data per file
+		if ArmoryExporter.option_mesh_per_file:
+			mesh_obj = {}
+			mesh_obj['mesh_datas'] = [o]
+			utils.write_arm(fp, mesh_obj)
+			self.object_set_mesh_cached(bobject, True)
 		else:
-			self.output['geometry_resources'].append(o)
+			self.output['mesh_datas'].append(o)
 
-	def export_geometry_fast(self, exportMesh, node, fp, o, om):
+	def export_mesh_fast(self, exportMesh, bobject, fp, o, om):
 		# Much faster export but produces slightly less efficient data
 		exportMesh.calc_normals_split()
 		exportMesh.calc_tessface()
@@ -1823,35 +1823,35 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 		return vert_list
 
-	def ExportGeometry(self, objectRef, scene):
-		# This function exports a single geometry object.
-		node = objectRef[1]["nodeTable"][0]
+	def ExportMesh(self, objectRef, scene):
+		# This function exports a single mesh object
+		bobject = objectRef[1]["objectTable"][0]
 		oid = utils.safe_filename(objectRef[1]["structName"])
 
-		# Check if geometry is using instanced rendering
-		is_instanced, instance_offsets = self.object_process_instancing(node, objectRef[1]["nodeTable"])
+		# Check if mesh is using instanced rendering
+		is_instanced, instance_offsets = self.object_process_instancing(bobject, objectRef[1]["objectTable"])
 		
 		# No export necessary
-		if ArmoryExporter.option_geometry_per_file:
-			fp = self.get_geoms_file_path('geom_' + oid)
+		if ArmoryExporter.option_mesh_per_file:
+			fp = self.get_meshes_file_path('mesh_' + oid)
 			assets.add(fp)
-			if self.node_is_geometry_cached(node) == True and os.path.exists(fp):
+			if self.object_is_mesh_cached(bobject) == True and os.path.exists(fp):
 				return
 
 		o = {}
-		o['id'] = oid
+		o['name'] = oid
 		mesh = objectRef[0]
 		structFlag = False;
 
 		# Save the morph state if necessary.
-		activeShapeKeyIndex = node.active_shape_key_index
-		showOnlyShapeKey = node.show_only_shape_key
+		activeShapeKeyIndex = bobject.active_shape_key_index
+		showOnlyShapeKey = bobject.show_only_shape_key
 		currentMorphValue = []
 
 		shapeKeys = ArmoryExporter.GetShapeKeys(mesh)
 		if (shapeKeys):
-			node.active_shape_key_index = 0
-			node.show_only_shape_key = True
+			bobject.active_shape_key_index = 0
+			bobject.show_only_shape_key = True
 
 			baseIndex = 0
 			relative = shapeKeys.use_relative
@@ -1893,7 +1893,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		om = {}
 		om['primitive'] = "triangles"
 
-		armature = node.find_armature()
+		armature = bobject.find_armature()
 		applyModifiers = (not armature)
 
 		# Apply all modifiers to create a new mesh with tessfaces.
@@ -1903,24 +1903,23 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# bind pose. This does mean that modifiers preceding the armature modifier are ignored,
 		# but the Blender API does not provide a reasonable way to retrieve the mesh at an
 		# arbitrary stage in the modifier stack.
-		exportMesh = node.to_mesh(scene, applyModifiers, "RENDER", True, False)
+		exportMesh = bobject.to_mesh(scene, applyModifiers, "RENDER", True, False)
 
-		# Process geometry
-		geom_opt = ArmoryExporter.option_optimize_geometry
-		if geom_opt:
-			unifiedVertexArray = self.export_geometry_quality(exportMesh, node, fp, o, om)
+		# Process meshes
+		if ArmoryExporter.option_optimize_mesh:
+			unifiedVertexArray = self.export_mesh_quality(exportMesh, bobject, fp, o, om)
 			if (armature):
-				self.ExportSkinQuality(node, armature, unifiedVertexArray, om)
+				self.ExportSkinQuality(bobject, armature, unifiedVertexArray, om)
 		else:
-			vert_list = self.export_geometry_fast(exportMesh, node, fp, o, om)
+			vert_list = self.export_mesh_fast(exportMesh, bobject, fp, o, om)
 			if (armature):
-				self.ExportSkinQuality(node, armature, vert_list, om)
-				# self.ExportSkinFast(node, armature, vert_list, om)
+				self.ExportSkinQuality(bobject, armature, vert_list, om)
+				# self.ExportSkinFast(bobject, armature, vert_list, om)
 
 		# Restore the morph state.
 		if (shapeKeys):
-			node.active_shape_key_index = activeShapeKeyIndex
-			node.show_only_shape_key = showOnlyShapeKey
+			bobject.active_shape_key_index = activeShapeKeyIndex
+			bobject.show_only_shape_key = showOnlyShapeKey
 
 			for m in range(len(currentMorphValue)):
 				shapeKeys.key_blocks[m].value = currentMorphValue[m]
@@ -1932,12 +1931,12 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			om['instance_offsets'] = instance_offsets
 
 		# Export usage
-		om['static_usage'] = self.get_geometry_static_usage(node.data)
+		om['static_usage'] = self.get_mesh_static_usage(bobject.data)
 
 		o['mesh'] = om
-		self.write_geometry(node, fp, o)
+		self.write_mesh(bobject, fp, o)
 
-	def export_geometry_quality(self, exportMesh, node, fp, o, om):
+	def export_mesh_quality(self, exportMesh, bobject, fp, o, om):
 		# Triangulate mesh and remap vertices to eliminate duplicates.
 		materialTable = []
 		exportVertexArray = ArmoryExporter.DeindexMesh(exportMesh, materialTable)
@@ -1996,8 +1995,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# 		shapeKeys.key_blocks[m].value = 1.0
 		# 		mesh.update()
 
-		# 		node.active_shape_key_index = m
-		# 		morphMesh = node.to_mesh(scene, applyModifiers, "RENDER", True, False)
+		# 		bobject.active_shape_key_index = m
+		# 		morphMesh = bobject.to_mesh(scene, applyModifiers, "RENDER", True, False)
 
 		# 		# Write the morph target position array.
 
@@ -2081,39 +2080,39 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			tana['values'] = self.calc_tangents(pa['values'], na['values'], ta['values'], om['index_arrays'][0]['values'])	
 			om['vertex_arrays'].append(tana)
 
-		# Delete the new mesh that we made earlier.
+		# Delete the new mesh that we made earlier
 		bpy.data.meshes.remove(exportMesh)
 		return unifiedVertexArray
 
-	def ExportLight(self, objectRef):
-		# This function exports a single light object.
+	def ExportLamp(self, objectRef):
+		# This function exports a single lamp object
 		o = {}
-		o['id'] = objectRef[1]["structName"]
-		object = objectRef[0]
-		type = object.type
+		o['name'] = objectRef[1]["structName"]
+		objref = objectRef[0]
+		objtype = objref.type
 
-		if type == 'SUN':
+		if objtype == 'SUN':
 			o['type'] = 'sun'
-		elif type == 'POINT':
+		elif objtype == 'POINT':
 			o['type'] = 'point'
-		elif type == 'SPOT':
+		elif objtype == 'SPOT':
 			o['type'] = 'spot'
-			o['spot_size'] = math.cos(object.spot_size / 2)
-			o['spot_blend'] = object.spot_blend
+			o['spot_size'] = math.cos(objref.spot_size / 2)
+			o['spot_blend'] = objref.spot_blend
 		else: # Hemi, area
 			o['type'] = 'sun'
 
-		o['cast_shadow'] = object.cycles.cast_shadow
-		o['near_plane'] = object.light_clip_start
-		o['far_plane'] = object.light_clip_end
-		o['fov'] = object.light_fov
-		o['shadows_bias'] = object.light_shadows_bias
+		o['cast_shadow'] = objref.cycles.cast_shadow
+		o['near_plane'] = objref.lamp_clip_start
+		o['far_plane'] = objref.lamp_clip_end
+		o['fov'] = objref.lamp_fov
+		o['shadows_bias'] = objref.lamp_shadows_bias
 		if o['type'] == 'sun': # Scale bias for ortho light matrix
 			o['shadows_bias'] *= 10.0
 
 		# Parse nodes, only emission for now
 		# Merge with nodes_material
-		for n in object.node_tree.nodes:
+		for n in objref.node_tree.nodes:
 			if n.type == 'EMISSION':
 				col = n.inputs[0].default_value
 				o['color'] = [col[0], col[1], col[2]]
@@ -2123,20 +2122,20 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 					o['strength'] /= 1000.0
 				break
 
-		self.output['light_resources'].append(o)
+		self.output['lamp_datas'].append(o)
 
 	def ExportCamera(self, objectRef):
-		# This function exports a single camera object.
+		# This function exports a single camera object
 		o = {}
-		o['id'] = objectRef[1]["structName"]
+		o['name'] = objectRef[1]["structName"]
 
 		#self.WriteNodeTable(objectRef)
 
-		object = objectRef[0]
+		objref = objectRef[0]
 
-		o['near_plane'] = object.clip_start
-		o['far_plane'] = object.clip_end
-		o['fov'] = object.angle
+		o['near_plane'] = objref.clip_start
+		o['far_plane'] = objref.clip_end
+		o['fov'] = objref.angle
 
 		# Viewport Camera - override fov for every camera for now
 		if bpy.data.worlds[0].ArmPlayViewportCamera:
@@ -2146,39 +2145,39 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			# o['fov'] = fov
 			o['fov'] = math.pi / 3.0
 		
-		if object.type == 'PERSP':
+		if objref.type == 'PERSP':
 			o['type'] = 'perspective'
 		else:
 			o['type'] = 'orthographic'
 		
-		self.cb_export_camera(object, o)
-		self.output['camera_resources'].append(o)
+		self.cb_export_camera(objref, o)
+		self.output['camera_datas'].append(o)
 
 	def ExportSpeaker(self, objectRef):
 		# This function exports a single speaker object
 		o = {}
-		o['id'] = objectRef[1]["structName"]
-		object = objectRef[0]
-		if object.sound:
+		o['name'] = objectRef[1]["structName"]
+		objref = objectRef[0]
+		if objref.sound:
 			# Packed
-			if object.sound.packed_file != None:
+			if objref.sound.packed_file != None:
 				unpack_path = utils.get_fp() + '/build/compiled/Assets/unpacked'
 				if not os.path.exists(unpack_path):
 					os.makedirs(unpack_path)
-				unpack_filepath = unpack_path + '/' + object.sound.name
-				if os.path.isfile(unpack_filepath) == False or os.path.getsize(unpack_filepath) != object.sound.packed_file.size:
+				unpack_filepath = unpack_path + '/' + objref.sound.name
+				if os.path.isfile(unpack_filepath) == False or os.path.getsize(unpack_filepath) != objref.sound.packed_file.size:
 					with open(unpack_filepath, 'wb') as f:
-						f.write(object.sound.packed_file.data)
+						f.write(objref.sound.packed_file.data)
 				assets.add(unpack_filepath)
 			# External
 			else:
-				assets.add(utils.safe_assetpath(object.sound.filepath)) # Link sound to assets
+				assets.add(utils.safe_assetpath(objref.sound.filepath)) # Link sound to assets
 			
-			o['sound'] = utils.extract_filename_noext(object.sound.filepath)
+			o['sound'] = utils.extract_filename_noext(objref.sound.filepath)
 			o['sound'] = utils.safe_filename(o['sound'])
 		else:
 			o['sound'] = ''
-		self.output['speaker_resources'].append(o)
+		self.output['speaker_datas'].append(o)
 
 	def ExportMaterials(self):
 		# This function exports all of the materials used in the scene
@@ -2189,40 +2188,40 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				continue
 			
 			o = {}
-			o['id'] = materialRef[1]["structName"]
+			o['name'] = materialRef[1]["structName"]
 			self.cb_export_material(material, o)
-			self.output['material_resources'].append(o)
+			self.output['material_datas'].append(o)
 
 		# Object with no material assigned is in the scene
 		if self.export_default_material:
 			o = {}
-			o['id'] = '__default'
+			o['name'] = '__default'
 			o['contexts'] = []
 			c = {}
-			c['id'] = ArmoryExporter.geometry_context
+			c['name'] = ArmoryExporter.mesh_context
 			c['bind_constants'] = []
 			const = {}
-			const['id'] = 'receiveShadow'
+			const['name'] = 'receiveShadow'
 			const['bool'] = True
 			c['bind_constants'].append(const)
 			const = {}
-			const['id'] = 'mask'
+			const['name'] = 'mask'
 			const['float'] = 0
 			c['bind_constants'].append(const)
 			const = {}
-			const['id'] = 'albedo_color'
+			const['name'] = 'albedo_color'
 			const['vec4'] = [0.8, 0.8, 0.8, 1.0]
 			c['bind_constants'].append(const)
 			const = {}
-			const['id'] = 'metalness'
+			const['name'] = 'metalness'
 			const['float'] = 0
 			c['bind_constants'].append(const)
 			const = {}
-			const['id'] = 'roughness'
+			const['name'] = 'roughness'
 			const['float'] = 0.4
 			c['bind_constants'].append(const)
 			const = {}
-			const['id'] = 'occlusion'
+			const['name'] = 'occlusion'
 			const['float'] = 1.0
 			c['bind_constants'].append(const)
 			c['bind_textures'] = []
@@ -2230,15 +2229,15 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o['contexts'].append(c)
 			if bpy.data.worlds[0].generate_shadows == True:
 				c = {}
-				c['id'] = ArmoryExporter.shadows_context
+				c['name'] = ArmoryExporter.shadows_context
 				o['contexts'].append(c)
-			if ArmoryExporter.geometry_context_empty != '':
+			if ArmoryExporter.mesh_context_empty != '':
 				c = {}
-				c['id'] = ArmoryExporter.geometry_context_empty
+				c['name'] = ArmoryExporter.mesh_context_empty
 				o['contexts'].append(c)
 			defs = []
 			self.finalize_shader(o, defs, ArmoryExporter.pipeline_passes)
-			self.output['material_resources'].append(o)
+			self.output['material_datas'].append(o)
 
 	def ExportParticleSystems(self):
 		for particleRef in self.particleSystemArray.items():
@@ -2248,13 +2247,13 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if psettings == None:
 				continue
 
-			o['id'] = particleRef[1]["structName"]
+			o['name'] = particleRef[1]["structName"]
 			o['count'] = psettings.count
 			o['lifetime'] = psettings.lifetime
 			o['normal_factor'] = psettings.normal_factor;
 			o['object_align_factor'] = [psettings.object_align_factor[0], psettings.object_align_factor[1], psettings.object_align_factor[2]]
 			o['factor_random'] = psettings.factor_random
-			self.output['particle_resources'].append(o)
+			self.output['particle_datas'].append(o)
 			
 	def ExportWorlds(self):
 		# for worldRef in self.worldArray.items():
@@ -2263,24 +2262,24 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			# w = worldRef[0]
 			w = worldRef
 			# o.id = worldRef[1]["structName"]
-			o['id'] = w.name
+			o['name'] = w.name
 			self.cb_export_world(w, o)
-			self.output['world_resources'].append(o)
+			self.output['world_datas'].append(o)
 
 	def ExportObjects(self, scene):
-		if not ArmoryExporter.option_geometry_only:
-			self.output['light_resources'] = []
-			self.output['camera_resources'] = []
-			self.output['speaker_resources'] = []
-			for objectRef in self.lightArray.items():
-				self.ExportLight(objectRef)
+		if not ArmoryExporter.option_mesh_only:
+			self.output['lamp_datas'] = []
+			self.output['camera_datas'] = []
+			self.output['speaker_datas'] = []
+			for objectRef in self.lampArray.items():
+				self.ExportLamp(objectRef)
 			for objectRef in self.cameraArray.items():
 				self.ExportCamera(objectRef)
 			for objectRef in self.speakerArray.items():
 				self.ExportSpeaker(objectRef)
-		for objectRef in self.geometryArray.items():
-			self.output['geometry_resources'] = [];
-			self.ExportGeometry(objectRef, scene)
+		for objectRef in self.meshArray.items():
+			self.output['mesh_datas'] = [];
+			self.ExportMesh(objectRef, scene)
 
 	def execute(self, context):
 		profile_time = time.time()
@@ -2296,9 +2295,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		self.endFrame = scene.frame_end
 		self.frameTime = 1.0 / (scene.render.fps_base * scene.render.fps)
 
-		self.nodeArray = {}
-		self.geometryArray = {}
-		self.lightArray = {}
+		self.bobjectArray = {}
+		self.meshArray = {}
+		self.lampArray = {}
 		self.cameraArray = {}
 		self.speakerArray = {}
 		self.materialArray = {}
@@ -2316,32 +2315,32 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		ArmoryExporter.asset_references = []
 		ArmoryExporter.exportAllFlag = not self.option_export_selection
 		ArmoryExporter.sampleAnimationFlag = self.option_sample_animation
-		ArmoryExporter.option_geometry_only = self.option_geometry_only
-		ArmoryExporter.option_geometry_per_file = self.option_geometry_per_file
-		ArmoryExporter.option_optimize_geometry = self.option_optimize_geometry
+		ArmoryExporter.option_mesh_only = self.option_mesh_only
+		ArmoryExporter.option_mesh_per_file = self.option_mesh_per_file
+		ArmoryExporter.option_optimize_mesh = self.option_optimize_mesh
 		ArmoryExporter.option_minimize = self.option_minimize
 
 		self.cb_preprocess()
 
-		for object in scene.objects:
-			if (not object.parent):
-				self.ProcessNode(object)
+		for bobject in scene.objects:
+			if (not bobject.parent):
+				self.ProcessBObject(bobject)
 
 		self.ProcessSkinnedMeshes()
 
-		self.output['nodes'] = []
+		self.output['objects'] = []
 		for object in scene.objects:
 			if (not object.parent):
-				self.ExportNode(object, scene)
+				self.ExportObject(object, scene)
 
-		if not ArmoryExporter.option_geometry_only:
-			self.output['material_resources'] = []
+		if not ArmoryExporter.option_mesh_only:
+			self.output['material_datas'] = []
 			self.ExportMaterials()
 
-			self.output['particle_resources'] = []
+			self.output['particle_datas'] = []
 			self.ExportParticleSystems()
 			
-			self.output['world_resources'] = []
+			self.output['world_datas'] = []
 			self.ExportWorlds()
 			self.output['world_ref'] = scene.world.name
 
@@ -2361,30 +2360,30 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		return {'FINISHED'}
 
 	# Callbacks
-	def node_has_instanced_children(self, node):
+	def object_has_instanced_children(self, bobject):
 		#return False
-		return node.instanced_children
+		return bobject.instanced_children
 
-	def node_is_geometry_cached(self, node):
+	def object_is_mesh_cached(self, bobject):
 		#return False
-		if node.data.geometry_cached_verts != len(node.data.vertices):
+		if bobject.data.mesh_cached_verts != len(bobject.data.vertices):
 			return False
-		if node.data.geometry_cached_edges != len(node.data.edges):
+		if bobject.data.mesh_cached_edges != len(bobject.data.edges):
 			return False
-		return node.data.geometry_cached
+		return bobject.data.mesh_cached
 
-	def node_set_geometry_cached(self, node, b):
+	def object_set_mesh_cached(self, bobject, b):
 		#return
-		node.data.geometry_cached = b
+		bobject.data.mesh_cached = b
 		if b:
-			node.data.geometry_cached_verts = len(node.data.vertices)
-			node.data.geometry_cached_edges = len(node.data.edges)
+			bobject.data.mesh_cached_verts = len(bobject.data.vertices)
+			bobject.data.mesh_cached_edges = len(bobject.data.edges)
 
-	def node_has_override_material(self, node):
+	def object_has_override_material(self, bobject):
 		#return False
-		return node.override_material
+		return bobject.override_material
 
-	def get_geometry_static_usage(self, data):
+	def get_mesh_static_usage(self, data):
 		#return True
 		return data.static_usage
 
@@ -2395,7 +2394,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				return True
 		return False
 
-	def object_process_instancing(self, node, refs):
+	def object_process_instancing(self, bobject, refs):
 		#return False, None
 		is_instanced = False
 		instance_offsets = None
@@ -2419,9 +2418,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 	def cb_preprocess(self):
 		#return
-		ArmoryExporter.option_geometry_only = False
-		ArmoryExporter.option_geometry_per_file = True
-		ArmoryExporter.option_optimize_geometry = bpy.data.worlds[0].ArmOptimizeGeometry
+		ArmoryExporter.option_mesh_only = False
+		ArmoryExporter.option_mesh_per_file = True
+		ArmoryExporter.option_optimize_mesh = bpy.data.worlds[0].ArmOptimizeMesh
 		ArmoryExporter.option_minimize = bpy.data.worlds[0].ArmMinimize
 		ArmoryExporter.option_sample_animation = bpy.data.worlds[0].ArmSampledAnimation
 		ArmoryExporter.sampleAnimationFlag = ArmoryExporter.option_sample_animation
@@ -2431,51 +2430,51 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		if (len(bpy.data.cameras) > 0):
 			ArmoryExporter.pipeline_id = bpy.data.cameras[0].pipeline_id
 			ArmoryExporter.pipeline_passes = bpy.data.cameras[0].pipeline_passes.split('_')
-			ArmoryExporter.geometry_context = bpy.data.cameras[0].geometry_context
-			ArmoryExporter.geometry_context_empty = bpy.data.cameras[0].geometry_context_empty
+			ArmoryExporter.mesh_context = bpy.data.cameras[0].mesh_context
+			ArmoryExporter.mesh_context_empty = bpy.data.cameras[0].mesh_context_empty
 			ArmoryExporter.shadows_context = bpy.data.cameras[0].shadows_context
 			ArmoryExporter.translucent_context = bpy.data.cameras[0].translucent_context
 			ArmoryExporter.overlay_context = bpy.data.cameras[0].overlay_context
 
-	def cb_preprocess_node(self, node): # Returns false if node should not be exported
+	def cb_preprocess_object(self, bobject): # Returns false if object should not be exported
 		#return True
-		export_node = True
+		export_object = True
 
 		# Disabled object	
-		if node.game_export == False:
+		if bobject.game_export == False:
 			return False
 		
-		for m in node.modifiers:
+		for m in bobject.modifiers:
 			if m.type == 'OCEAN':
-				# Do not export ocean geometry, just take specified constants
-				export_node = False
+				# Do not export ocean mesh, just take specified constants
+				export_object = False
 				wrd = bpy.data.worlds[0]
 				wrd.generate_ocean = True
 				# Take position and bounds
-				wrd.generate_ocean_level = node.location.z
+				wrd.generate_ocean_level = bobject.location.z
 			elif m.type == 'UV_PROJECT' and m.show_render:
-				self.uvprojectUsersArray.append(node)
+				self.uvprojectUsersArray.append(bobject)
 				
-		return export_node
+		return export_object
 
 	def cb_postprocess(self):
 		# Check uv project users
-		for node in self.uvprojectUsersArray:
-			for m in node.modifiers:
+		for bobject in self.uvprojectUsersArray:
+			for m in bobject.modifiers:
 				if m.type == 'UV_PROJECT':
 					# Mark all projectors as decals
 					for pnode in m.projectors:
-						o = self.objectToGameObjectDict[node]
+						o = self.objectToGameObjectDict[bobject]
 						po = self.objectToGameObjectDict[pnode.object]
-						po['type'] = 'decal_node'
+						po['type'] = 'decal_object'
 						po['material_refs'] = [o['material_refs'][0] + '_decal'] # Will fetch a proper context used in render path
 					break
 
-	def cb_export_node(self, node, o, type):
+	def cb_export_object(self, bobject, o, type):
 		#return
 		# Export traits
 		o['traits'] = []
-		for t in node.my_traitlist:
+		for t in bobject.my_traitlist:
 			if t.enabled_prop == False:
 				continue
 			x = {}
@@ -2556,8 +2555,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o['traits'].append(x)
 
 		# Rigid body trait
-		if node.rigid_body != None:
-			rb = node.rigid_body
+		if bobject.rigid_body != None:
+			rb = bobject.rigid_body
 			shape = 0 # BOX
 			if rb.collision_shape == 'SPHERE':
 				shape = 1
@@ -2602,16 +2601,16 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				o['traits'].append(navigation_trait)
 
 		# Map objects to game objects
-		self.objectToGameObjectDict[node] = o
+		self.objectToGameObjectDict[bobject] = o
 		
 		# Map objects to materials, can be used in later stages
-		for i in range(len(node.material_slots)):
-			mat = node.material_slots[i].material
+		for i in range(len(bobject.material_slots)):
+			mat = bobject.material_slots[i].material
 			if mat in self.materialToObjectDict:
-				self.materialToObjectDict[mat].append(node)
+				self.materialToObjectDict[mat].append(bobject)
 				self.materialToGameObjectDict[mat].append(o)
 			else:
-				self.materialToObjectDict[mat] = [node]
+				self.materialToObjectDict[mat] = [bobject]
 				self.materialToGameObjectDict[mat] = [o]
 
 	def cb_export_camera(self, object, o):
@@ -2648,16 +2647,16 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		
 		# Geometry context
 		c = {}
-		c['id'] = ArmoryExporter.geometry_context
+		c['name'] = ArmoryExporter.mesh_context
 		c['bind_constants'] = []
 		
 		const = {}
-		const['id'] = 'receiveShadow'
+		const['name'] = 'receiveShadow'
 		const['bool'] = material.receive_shadow
 		c['bind_constants'].append(const)
 		
 		const = {}
-		const['id'] = 'mask'
+		const['name'] = 'mask'
 		const['float'] = material.stencil_mask
 		c['bind_constants'].append(const)
 		
@@ -2685,10 +2684,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# Mandatory starting point from mix node for now
 		else:
 			o2 = {}
-			o2['id'] = o['id'] + '_decal'
+			o2['name'] = o['name'] + '_decal'
 			o2['contexts'] = []
 			c2 = {}
-			c2['id'] = decal_context
+			c2['name'] = decal_context
 			c2['bind_constants'] = []
 			c2['bind_textures'] = []
 			defs2 = []
@@ -2702,30 +2701,30 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o['contexts'].append(c)
 			o2['contexts'].append(c2)
 			self.finalize_shader(o2, defs2, [decal_context])
-			self.output['material_resources'].append(o2)
+			self.output['material_datas'].append(o2)
 
 		# Override context
 		if material.override_shader_context:
-			c['id'] = material.override_shader_context_name
+			c['name'] = material.override_shader_context_name
 		# If material has transparency change to translucent context
 		elif '_Translucent' in defs:
 			defs.remove('_Translucent')
-			c['id'] = ArmoryExporter.translucent_context
+			c['name'] = ArmoryExporter.translucent_context
 		# X-Ray enabled
 		elif material.overlay:
 			# Change to overlay context
-			c['id'] = ArmoryExporter.overlay_context
+			c['name'] = ArmoryExporter.overlay_context
 		# Otherwise add shadows context
 		else:
 			if bpy.data.worlds[0].generate_shadows == True:
 				c = {}
-				c['id'] = ArmoryExporter.shadows_context
+				c['name'] = ArmoryExporter.shadows_context
 				o['contexts'].append(c)
 		
 		# Additional geometry contexts, useful for depth-prepass
-		if ArmoryExporter.geometry_context_empty != '':
+		if ArmoryExporter.mesh_context_empty != '':
 			c = {}
-			c['id'] = ArmoryExporter.geometry_context_empty
+			c['name'] = ArmoryExporter.mesh_context_empty
 			o['contexts'].append(c)
 
 		# Material users		
@@ -2742,15 +2741,15 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				defs.append('_Billboard')
 
 		# Whether objects should export tangent data
-		normal_mapping = '_NMTex' in defs
+		normal_mapping = '_NorTex' in defs
 		if material.export_tangents != normal_mapping:
 			material.export_tangents = normal_mapping
-			# Delete geometry caches
+			# Delete mesh caches
 			for ob in mat_users:
-				ob.data.geometry_cached = False
+				ob.data.mesh_cached = False
 				break
 
-		# Process defs and append resources
+		# Process defs and append datas
 		if material.override_shader == False:
 			self.finalize_shader(o, defs, ArmoryExporter.pipeline_passes)
 		else:
@@ -2799,7 +2798,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 	
 	def make_probe(self, id, envtex, mipmaps, strength, blending, volume, volume_center, generate_radiance, generate_irradiance):
 		po = {}
-		po['id'] = id
+		po['name'] = id
 		if generate_radiance:
 			po['radiance'] = envtex + '_radiance'
 			po['radiance_mipmaps'] = mipmaps
@@ -2823,31 +2822,31 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# Append world defs
 		ext += bpy.data.worlds[0].world_defs
 		
-		# Shader res
-		shader_res_name = ArmoryExporter.pipeline_id + ext
-		shader_res_path = 'build/compiled/ShaderResources/' + ArmoryExporter.pipeline_id + '/' + shader_res_name + '.arm'
+		# Shader data
+		shader_data_name = ArmoryExporter.pipeline_id + ext
+		shader_data_path = 'build/compiled/ShaderDatas/' + ArmoryExporter.pipeline_id + '/' + shader_data_name + '.arm'
 		# Stencil mask
 		# if material.stencil_mask > 0:
 		# 	mask_ext = "_mask" + str(material.stencil_mask)
-		# 	shader_res_name_with_mask = shader_res_name + mask_ext
-		# 	shader_res_path_with_mask = 'build/compiled/ShaderResources/' + ArmoryExporter.pipeline_id + '/' + shader_res_name_with_mask + '.arm'
-		# 	# Copy resource if it does not exist and set stencil mask
-		# 	if not os.path.isfile(shader_res_path_with_mask):
-		# 		json_file = open(shader_res_path).read()
+		# 	shader_data_name_with_mask = shader_data_name + mask_ext
+		# 	shader_data_path_with_mask = 'build/compiled/ShaderDatas/' + ArmoryExporter.pipeline_id + '/' + shader_data_name_with_mask + '.arm'
+		# 	# Copy data if it does not exist and set stencil mask
+		# 	if not os.path.isfile(shader_data_path_with_mask):
+		# 		json_file = open(shader_data_path).read()
 		# 		json_data = json.loads(json_file)
-		# 		res = json_data['shader_resources'][0]
-		# 		res['id'] += mask_ext
-		# 		for c in res['contexts']:
+		# 		dat = json_data['shader_datas'][0]
+		# 		dat['name'] += mask_ext
+		# 		for c in dat['contexts']:
 		# 			c['stencil_pass'] = 'replace'
 		# 			c['stencil_reference_value'] = material.stencil_mask
-		# 		with open(shader_res_path_with_mask, 'w') as f:
+		# 		with open(shader_data_path_with_mask, 'w') as f:
 		# 			json.dump(json_data, f)
-		# 	ArmoryExporter.asset_references.append(shader_res_path_with_mask)
-		# 	o.shader = shader_res_name_with_mask + '/' + shader_res_name_with_mask
+		# 	ArmoryExporter.asset_references.append(shader_data_path_with_mask)
+		# 	o.shader = shader_data_name_with_mask + '/' + shader_data_name_with_mask
 		# # No stencil mask
 		# else:
-		ArmoryExporter.asset_references.append(shader_res_path)
-		o['shader'] = shader_res_name + '/' + shader_res_name
+		ArmoryExporter.asset_references.append(shader_data_path)
+		o['shader'] = shader_data_name + '/' + shader_data_name
 		# Process all passes from pipeline
 		for pipe_pass in pipeline_passes:
 			shader_name = pipe_pass + ext

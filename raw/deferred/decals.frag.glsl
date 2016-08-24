@@ -5,30 +5,29 @@ precision mediump float;
 #endif
 
 uniform sampler2D gbufferD;
-#ifdef _AMTex
-uniform sampler2D salbedo;
+#ifdef _BaseTex
+uniform sampler2D sbase;
 #endif
-#ifdef _NMTex
+#ifdef _NorTex
 uniform sampler2D snormal;
 #endif
-#ifdef _RMTex
-uniform sampler2D srm;
+#ifdef _RoughTex
+uniform sampler2D srough;
 #else
 uniform float roughness;
 #endif
-#ifdef _MMTex
-uniform sampler2D smm;
+#ifdef _MetTex
+uniform sampler2D smetal;
 #else
 uniform float metalness;
 #endif
 
 uniform vec2 screenSize;
 uniform mat4 invVP;
-uniform mat4 invM;
+uniform mat4 invW;
 uniform mat4 V;
 
-in vec4 mvpposition;
-in vec4 mposition;
+in vec4 wvpposition;
 in vec4 matColor;
 // in vec3 orientation;
 out vec4[2] outColor;
@@ -67,7 +66,7 @@ float packFloat(float f1, float f2) {
 }
 
 void main() {
-	vec2 screenPosition = mvpposition.xy / mvpposition.w;
+	vec2 screenPosition = wvpposition.xy / wvpposition.w;
 	vec2 depthUV = screenPosition * 0.5 + 0.5;
     depthUV += vec2(0.5 / screenSize); // Half pixel offset
     float depth = texture(gbufferD, depthUV).r * 2.0 - 1.0;
@@ -82,7 +81,7 @@ void main() {
 	// vec3 orientation = vec3(1.0, 0.0, 0.0);
 	// if (dot(dnor, orientation) < cos(3.1415)) discard;
 	
-	vec4 localPos = invM * worldPos;
+	vec4 localPos = invW * worldPos;
 	localPos.y *= -1.0;
 
 	if (abs(localPos.x) > 1.0) discard;
@@ -91,8 +90,8 @@ void main() {
 
 	vec2 texCoord = (localPos.xy / 2.0) - 0.5; // / 2.0 - adjust decal box size 
 	
-#ifdef _AMTex
-	vec4 baseColor = texture(salbedo, texCoord) * matColor;
+#ifdef _BaseTex
+	vec4 baseColor = texture(sbase, texCoord) * matColor;
 #else
 	vec4 baseColor = matColor;
 #endif
@@ -103,15 +102,15 @@ void main() {
 	outColor[1].a = baseColor.a;
 	// outColor[1].a = packFloat(roughness, metalness) * baseColor.a;
 	
-#ifdef _MMTex
-	float metalness = texture(smm, texCoord).r;
+#ifdef _MetTex
+	float metalness = texture(smetal, texCoord).r;
 #endif
 
-#ifdef _RMTex
-	float roughness = texture(srm, texCoord).r;
+#ifdef _RoughTex
+	float roughness = texture(srough, texCoord).r;
 #endif	
 	
-#ifdef _NMTex
+#ifdef _NorTex
 	vec3 normal = texture(snormal, texCoord).rgb * 2.0 - 1.0;
 	vec3 nn = normalize(normal);
     vec3 dp1 = dFdx(worldPos.xyz);

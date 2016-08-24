@@ -4,8 +4,8 @@
 precision mediump float;
 #endif
 
-// #ifdef _NMTex
-// #define _AMTex
+// #ifdef _NorTex
+// #define _BaseTex
 // #endif
 
 // in vec4 position;

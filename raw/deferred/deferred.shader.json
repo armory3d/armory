@@ -1,172 +1,172 @@
 {
 	"contexts": [
 		{
-			"id": "deferred",
+			"name": "mesh",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "true"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "less"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "clockwise"
 				}
 			],
 			"links": [
 				{
-					"id": "MVP",
-					"link": "_modelViewProjectionMatrix"
+					"name": "WVP",
+					"link": "_worldViewProjectionMatrix"
 				},
 				{
-					"id": "NM",
+					"name": "N",
 					"link": "_normalMatrix"
 				},
 				{
-					"id": "P",
+					"name": "P",
 					"link": "_projectionMatrix",
 					"ifdef": ["_Billboard"]
 				},
 				{
-					"id": "MV",
-					"link": "_modelViewMatrix",
+					"name": "WV",
+					"link": "_worldViewMatrix",
 					"ifdef": ["_Billboard"]
 				},
 				{
-					"id": "prevMVP",
-					"link": "_prevModelViewProjectionMatrix",
+					"name": "prevWVP",
+					"link": "_prevWorldViewProjectionMatrix",
 					"ifdef": ["_Veloc"]
 				},
 				{
-					"id": "light",
-					"link": "_lightPosition",
-					"ifdef": ["_HMTex"]
+					"name": "light",
+					"link": "_lampPosition",
+					"ifdef": ["_HeightTex"]
 				},
 				{
-					"id": "eye",
+					"name": "eye",
 					"link": "_cameraPosition",
-					"ifdef": ["_HMTex"]
+					"ifdef": ["_HeightTex"]
 				},
 				{
-					"id": "M",
-					"link": "_modelMatrix",
-					"ifdef": ["_Probes", "_HMTex"]
+					"name": "W",
+					"link": "_worldMatrix",
+					"ifdef": ["_Probes", "_HeightTex"]
 				},
 				{
-					"id": "probeVolumeCenter",
+					"name": "probeVolumeCenter",
 					"link": "_probeVolumeCenter",
 					"ifdef": ["_Probes"]
 				},
 				{	
-					"id": "probeVolumeSize",
+					"name": "probeVolumeSize",
 					"link": "_probeVolumeSize",
 					"ifdef": ["_Probes"]
 				},
 				{	
-					"id": "probeID",
+					"name": "probeID",
 					"link": "_probeID",
 					"ifdef": ["_Probes"]
 				},
 				{
-					"id": "skinBones",
+					"name": "skinBones",
 					"link": "_skinBones",
 					"ifdef": ["_Skinning"]
 				}
 			],
-			"vertex_shader": "deferred.vert.glsl",
-			"fragment_shader": "deferred.frag.glsl"
+			"vertex_shader": "mesh.vert.glsl",
+			"fragment_shader": "mesh.frag.glsl"
 		},
 		{
-			"id": "overlay",
+			"name": "overlay",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "true"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "less"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "clockwise"
 				}
 			],
 			"links": [
 				{
-					"id": "M",
-					"link": "_modelMatrix"
+					"name": "W",
+					"link": "_worldMatrix"
 				},
 				{
-					"id": "NM",
+					"name": "N",
 					"link": "_normalMatrix"
 				},
 				{
-					"id": "V",
+					"name": "V",
 					"link": "_viewMatrix"
 				},
 				{
-					"id": "P",
+					"name": "P",
 					"link": "_projectionMatrix"
 				},
 				{
-					"id": "LMVP",
-					"link": "_lightModelViewProjectionMatrix"
+					"name": "LWVP",
+					"link": "_lampWorldViewProjectionMatrix"
 				},
 				{
-					"id": "lightDir",
-					"link": "_lightDirection"
+					"name": "lightDir",
+					"link": "_lampDirection"
 				},
 				{
-					"id": "lightColor",
-					"link": "_lightColor"
+					"name": "lightColor",
+					"link": "_lampColor"
 				},
 				{
-					"id": "lightStrength",
-					"link": "_lightStrength"
+					"name": "lightStrength",
+					"link": "_lampStrength"
 				},
 				{
-					"id": "eye",
+					"name": "eye",
 					"link": "_cameraPosition"
 				},
 				{
-					"id": "skinBones",
+					"name": "skinBones",
 					"link": "_skinBones",
 					"ifdef": ["_Skinning"]
 				},
 				{
-					"id": "shirr",
+					"name": "shirr",
 					"link": "_envmapIrradiance"
 				},
 				{
-					"id": "senvmapRadiance",
+					"name": "senvmapRadiance",
 					"link": "_envmapRadiance",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "envmapNumMipmaps",
+					"name": "envmapNumMipmaps",
 					"link": "_envmapNumMipmaps",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "senvmapBrdf",
+					"name": "senvmapBrdf",
 					"link": "_envmapBrdf",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "envmapStrength",
+					"name": "envmapStrength",
 					"link": "_envmapStrength"
 				},
 				{
-					"id": "sltcMat",
+					"name": "sltcMat",
 					"link": "_ltcMat",
 					"ifdef": ["_PolyLight"]
 				},
 				{
-					"id": "sltcMag",
+					"name": "sltcMag",
 					"link": "_ltcMag",
 					"ifdef": ["_PolyLight"]
 				}
@@ -175,28 +175,28 @@
 			"fragment_shader": "overlay.frag.glsl"
 		},
 		{
-			"id": "shadowmap",
+			"name": "shadowmap",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "true"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "less_equal"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "clockwise"
 				}
 			],
 			"links": [
 				{
-					"id": "LMVP",
-					"link": "_lightModelViewProjectionMatrix"
+					"name": "LWVP",
+					"link": "_lampWorldViewProjectionMatrix"
 				},
 				{
-					"id": "skinBones",
+					"name": "skinBones",
 					"link": "_skinBones",
 					"ifdef": ["_Skinning"]
 				}
@@ -205,28 +205,28 @@
 			"fragment_shader": "shadowmap.frag.glsl"
 		},
 		{
-			"id": "depthwrite",
+			"name": "depthwrite",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "true"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "less"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "clockwise"
 				}
 			],
 			"links": [
 				{
-					"id": "LMVP",
-					"link": "_lightModelViewProjectionMatrix"
+					"name": "LWVP",
+					"link": "_lampWorldViewProjectionMatrix"
 				},
 				{
-					"id": "skinBones",
+					"name": "skinBones",
 					"link": "_skinBones",
 					"ifdef": ["_Skinning"]
 				}
@@ -238,64 +238,64 @@
 
 
 		{
-			"id": "decals",
+			"name": "decals",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "less"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "clockwise"
 				},
 				{
-					"id": "color_write_alpha",
+					"name": "color_write_alpha",
 					"value": "false"
 				},
 				{
-					"id": "blend_source",
+					"name": "blend_source",
 					"value": "source_alpha"
 				},
 				{
-					"id": "blend_destination",
+					"name": "blend_destination",
 					"value": "inverse_source_alpha"
 				},
 				{
-					"id": "blend_operation",
+					"name": "blend_operation",
 					"value": "add"
 				}
 			],
 			"links": [
 				{
-					"id": "M",
-					"link": "_modelMatrix"
+					"name": "W",
+					"link": "_worldMatrix"
 				},
 				{
-					"id": "VP",
+					"name": "VP",
 					"link": "_viewProjectionMatrix"
 				},
 				{
-					"id": "invVP",
+					"name": "invVP",
 					"link": "_inverseViewProjectionMatrix"
 				},
 				{
-					"id": "invM",
-					"link": "_inverseModelMatrix"
+					"name": "invW",
+					"link": "_inverseWorldMatrix"
 				},
 				{
-					"id": "V",
+					"name": "V",
 					"link": "_viewMatrix"
 				},
 				{
-					"id": "screenSize",
+					"name": "screenSize",
 					"link": "_screenSize"
 				},
 				{
-					"id": "uid",
+					"name": "uid",
 					"link": "_uid",
 					"ifdef": ["_RampID"]
 				}
@@ -306,101 +306,101 @@
 		},
 		
 		{
-			"id": "translucent",
+			"name": "translucent",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "less"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "clockwise"
 				},
 				{
-					"id": "blend_source",
+					"name": "blend_source",
 					"value": "blend_one"
 				},
 				{
-					"id": "blend_destination",
+					"name": "blend_destination",
 					"value": "blend_one"
 				},
 				{
-					"id": "blend_operation",
+					"name": "blend_operation",
 					"value": "add"
 				},
 				{
-					"id": "alpha_blend_source",
+					"name": "alpha_blend_source",
 					"value": "blend_zero"
 				},
 				{
-					"id": "alpha_blend_destination",
+					"name": "alpha_blend_destination",
 					"value": "inverse_source_alpha"
 				},
 				{
-					"id": "alpha_blend_operation",
+					"name": "alpha_blend_operation",
 					"value": "add"
 				}
 			],
 			"links": [
 				{
-					"id": "M",
-					"link": "_modelMatrix"
+					"name": "W",
+					"link": "_worldMatrix"
 				},
 				{
-					"id": "NM",
+					"name": "N",
 					"link": "_normalMatrix"
 				},
 				{
-					"id": "MV",
-					"link": "_modelViewMatrix"
+					"name": "WV",
+					"link": "_worldViewMatrix"
 				},
 				{
-					"id": "P",
+					"name": "P",
 					"link": "_projectionMatrix"
 				},
 				{
-					"id": "skinBones",
+					"name": "skinBones",
 					"link": "_skinBones",
 					"ifdef": ["_Skinning"]
 				},
 				{
-					"id": "light",
-					"link": "_lightPosition"
+					"name": "light",
+					"link": "_lampPosition"
 				},
 				{
-					"id": "lightColor",
-					"link": "_lightColor"
+					"name": "lightColor",
+					"link": "_lampColor"
 				},
 				{
-					"id": "lightStrength",
-					"link": "_lightStrength"
+					"name": "lightStrength",
+					"link": "_lampStrength"
 				},
 				{
-					"id": "eye",
+					"name": "eye",
 					"link": "_cameraPosition"
 				},
 				{
-					"id": "senvmapIrradiance",
+					"name": "senvmapIrradiance",
 					"link": "_envmapIrradiance"
 				},
 				{
-					"id": "senvmapRadiance",
+					"name": "senvmapRadiance",
 					"link": "_envmapRadiance"
 				},
 				{
-					"id": "senvmapBrdf",
+					"name": "senvmapBrdf",
 					"link": "_envmapBrdf"
 				},
 				{
-					"id": "envmapStrength",
+					"name": "envmapStrength",
 					"link": "_envmapStrength"
 				},
 				{
-					"id": "envmapNumMipmaps",
+					"name": "envmapNumMipmaps",
 					"link": "_envmapNumMipmaps"
 				}
 			],

@@ -1,28 +1,28 @@
 {
 	"contexts": [
 		{
-			"id": "blur_pass_x",
+			"name": "blur_pass_x",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "always"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "none"
 				}
 			],
 			"links": [
 				{
-					"id": "dir",
+					"name": "dir",
 					"link": "_vec2x"
 				},
 				{
-					"id": "screenSize",
+					"name": "screenSize",
 					"link": "_screenSize"
 				}
 			],
@@ -31,28 +31,28 @@
 			"fragment_shader": "blur_pass.frag.glsl"
 		},
 		{
-			"id": "blur_pass_y",
+			"name": "blur_pass_y",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "always"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "none"
 				}
 			],
 			"links": [
 				{
-					"id": "dir",
+					"name": "dir",
 					"link": "_vec2y"
 				},
 				{
-					"id": "screenSize",
+					"name": "screenSize",
 					"link": "_screenSize"
 				}
 			],
@@ -63,28 +63,28 @@
 		
 		
 		{
-			"id": "blur_pass_x2",
+			"name": "blur_pass_x2",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "always"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "none"
 				}
 			],
 			"links": [
 				{
-					"id": "dir",
+					"name": "dir",
 					"link": "_vec2x2"
 				},
 				{
-					"id": "screenSize",
+					"name": "screenSize",
 					"link": "_screenSize"
 				}
 			],
@@ -93,28 +93,28 @@
 			"fragment_shader": "blur_pass.frag.glsl"
 		},
 		{
-			"id": "blur_pass_y2",
+			"name": "blur_pass_y2",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "always"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "none"
 				}
 			],
 			"links": [
 				{
-					"id": "dir",
+					"name": "dir",
 					"link": "_vec2y2"
 				},
 				{
-					"id": "screenSize",
+					"name": "screenSize",
 					"link": "_screenSize"
 				}
 			],

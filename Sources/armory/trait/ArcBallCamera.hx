@@ -3,13 +3,13 @@ package armory.trait;
 import iron.Trait;
 import iron.Root;
 import iron.sys.Input;
-import iron.node.CameraNode;
+import iron.object.CameraObject;
 import iron.math.Vec4;
 import iron.math.Quat;
 
 class ArcBallCamera extends Trait {
 
-    var camera:CameraNode;
+    var camera:CameraObject;
     var origin:Vec4;
 
     var pitchRad:Float;
@@ -37,7 +37,7 @@ class ArcBallCamera extends Trait {
     function update() {
 
         if (Input.touch) {
-            var dist = Vec4.distance3d(camera.transform.pos, origin);
+            var dist = Vec4.distance3d(camera.transform.loc, origin);
 
             camera.move(camera.look(), dist);
             camera.rotate(camera.right(), pitchRad);

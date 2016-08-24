@@ -1,14 +1,14 @@
 {
-    "material_resources": [
+    "material_datas": [
         {
             "contexts": [
                 {
                     "bind_constants": [],
                     "bind_textures": [],
-                    "id": "pt_trace_pass"
+                    "name": "pt_trace_pass"
                 }
             ],
-            "id": "pt_material",
+            "name": "pt_material",
             "shader": "pt_trace_pass/pt_trace_pass"
         }
     ]

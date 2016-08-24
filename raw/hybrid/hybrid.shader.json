@@ -1,193 +1,193 @@
 {
 	"contexts": [
 		{
-			"id": "geom",
+			"name": "mesh",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "false"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "less_equal"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "clockwise"
 				}
 			],
 			"links": [
 				{
-					"id": "M",
-					"link": "_modelMatrix"
+					"name": "W",
+					"link": "_worldMatrix"
 				},
 				{
-					"id": "NM",
+					"name": "N",
 					"link": "_normalMatrix"
 				},
 				{
-					"id": "V",
+					"name": "V",
 					"link": "_viewMatrix"
 				},
 				{
-					"id": "P",
+					"name": "P",
 					"link": "_projectionMatrix"
 				},
 				{
-					"id": "MVP",
-					"link": "_modelViewProjectionMatrix"
+					"name": "WVP",
+					"link": "_worldViewProjectionMatrix"
 				},
 				{
-					"id": "LMVP",
-					"link": "_lightModelViewProjectionMatrix"
+					"name": "LWVP",
+					"link": "_lampWorldViewProjectionMatrix"
 				},
 				{
-					"id": "lightPos",
-					"link": "_lightPosition"
+					"name": "lightPos",
+					"link": "_lampPosition"
 				},
 				{
-					"id": "lightDir",
-					"link": "_lightDirection"
+					"name": "lightDir",
+					"link": "_lampDirection"
 				},
 				{
-					"id": "lightColor",
-					"link": "_lightColor"
+					"name": "lightColor",
+					"link": "_lampColor"
 				},
 				{
-					"id": "lightStrength",
-					"link": "_lightStrength"
+					"name": "lightStrength",
+					"link": "_lampStrength"
 				},
 				{
-					"id": "shadowsBias",
-					"link": "_lightShadowsBias"
+					"name": "shadowsBias",
+					"link": "_lampShadowsBias"
 				},
 				{
-					"id": "spotlightCutoff",
-					"link": "_spotlightCutoff"
+					"name": "spotlightCutoff",
+					"link": "_spotlampCutoff"
 				},
 				{
-					"id": "spotlightExponent",
-					"link": "_spotlightExponent"
+					"name": "spotlightExponent",
+					"link": "_spotlampExponent"
 				},
 				{
-					"id": "lightType",
-					"link": "_lightType"
+					"name": "lightType",
+					"link": "_lampType"
 				},
 				{
-					"id": "eye",
+					"name": "eye",
 					"link": "_cameraPosition"
 				},
 				{
-					"id": "skinBones",
+					"name": "skinBones",
 					"link": "_skinBones",
 					"ifdef": ["_Skinning"]
 				},
 				{
-					"id": "shirr",
+					"name": "shirr",
 					"link": "_envmapIrradiance"
 				},
 				{
-					"id": "senvmapRadiance",
+					"name": "senvmapRadiance",
 					"link": "_envmapRadiance",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "envmapNumMipmaps",
+					"name": "envmapNumMipmaps",
 					"link": "_envmapNumMipmaps",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "senvmapBrdf",
+					"name": "senvmapBrdf",
 					"link": "_envmapBrdf",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "envmapStrength",
+					"name": "envmapStrength",
 					"link": "_envmapStrength"
 				}
 			],
-			"vertex_shader": "geom.vert.glsl",
-			"fragment_shader": "geom.frag.glsl"
+			"vertex_shader": "mesh.vert.glsl",
+			"fragment_shader": "mesh.frag.glsl"
 		},
 		{
-			"id": "overlay",
+			"name": "overlay",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "true"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "less"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "clockwise"
 				}
 			],
 			"links": [
 				{
-					"id": "M",
-					"link": "_modelMatrix"
+					"name": "W",
+					"link": "_worldMatrix"
 				},
 				{
-					"id": "NM",
+					"name": "N",
 					"link": "_normalMatrix"
 				},
 				{
-					"id": "V",
+					"name": "V",
 					"link": "_viewMatrix"
 				},
 				{
-					"id": "P",
+					"name": "P",
 					"link": "_projectionMatrix"
 				},
 				{
-					"id": "LMVP",
-					"link": "_lightModelViewProjectionMatrix"
+					"name": "LWVP",
+					"link": "_lampWorldViewProjectionMatrix"
 				},
 				{
-					"id": "lightDir",
-					"link": "_lightDirection"
+					"name": "lightDir",
+					"link": "_lampDirection"
 				},
 				{
-					"id": "lightColor",
-					"link": "_lightColor"
+					"name": "lightColor",
+					"link": "_lampColor"
 				},
 				{
-					"id": "lightStrength",
-					"link": "_lightStrength"
+					"name": "lightStrength",
+					"link": "_lampStrength"
 				},
 				{
-					"id": "eye",
+					"name": "eye",
 					"link": "_cameraPosition"
 				},
 				{
-					"id": "skinBones",
+					"name": "skinBones",
 					"link": "_skinBones",
 					"ifdef": ["_Skinning"]
 				},
 				{
-					"id": "shirr",
+					"name": "shirr",
 					"link": "_envmapIrradiance"
 				},
 				{
-					"id": "senvmapRadiance",
+					"name": "senvmapRadiance",
 					"link": "_envmapRadiance",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "envmapNumMipmaps",
+					"name": "envmapNumMipmaps",
 					"link": "_envmapNumMipmaps",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "senvmapBrdf",
+					"name": "senvmapBrdf",
 					"link": "_envmapBrdf",
 					"ifdef": ["_Rad"]
 				},
 				{
-					"id": "envmapStrength",
+					"name": "envmapStrength",
 					"link": "_envmapStrength"
 				}
 			],
@@ -195,28 +195,28 @@
 			"fragment_shader": "overlay.frag.glsl"
 		},
 		{
-			"id": "shadowmap",
+			"name": "shadowmap",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "true"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "less"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "clockwise"
 				}
 			],
 			"links": [
 				{
-					"id": "LMVP",
-					"link": "_lightModelViewProjectionMatrix"
+					"name": "LWVP",
+					"link": "_lampWorldViewProjectionMatrix"
 				},
 				{
-					"id": "skinBones",
+					"name": "skinBones",
 					"link": "_skinBones",
 					"ifdef": ["_Skinning"]
 				}
@@ -225,44 +225,44 @@
 			"fragment_shader": "shadowmap.frag.glsl"
 		},
 		{
-			"id": "depthwrite",
+			"name": "depthwrite",
 			"params": [
 				{
-					"id": "depth_write",
+					"name": "depth_write",
 					"value": "true"
 				},
 				{
-					"id": "compare_mode",
+					"name": "compare_mode",
 					"value": "less"
 				},
 				{
-					"id": "cull_mode",
+					"name": "cull_mode",
 					"value": "clockwise"
 				},
 				{
-					"id": "color_write_red",
+					"name": "color_write_red",
 					"value": "false"
 				},
 				{
-					"id": "color_write_green",
+					"name": "color_write_green",
 					"value": "false"
 				},
 				{
-					"id": "color_write_blue",
+					"name": "color_write_blue",
 					"value": "false"
 				},
 				{
-					"id": "color_write_alpha",
+					"name": "color_write_alpha",
 					"value": "false"
 				}
 			],
 			"links": [
 				{
-					"id": "MVP",
-					"link": "_modelViewProjectionMatrix"
+					"name": "WVP",
+					"link": "_worldViewProjectionMatrix"
 				},
 				{
-					"id": "skinBones",
+					"name": "skinBones",
 					"link": "_skinBones",
 					"ifdef": ["_Skinning"]
 				}

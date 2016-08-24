@@ -4,10 +4,10 @@ import iron.math.Mat4;
 import iron.math.Vec4;
 import iron.Trait;
 import iron.Root;
-import iron.node.Transform;
-import iron.node.ModelNode;
-import iron.resource.Resource;
-import iron.resource.MaterialResource.MaterialContext;
+import iron.object.Transform;
+import iron.object.MeshObject;
+import iron.data.Data;
+import iron.data.MaterialData.MaterialContext;
 
 class PathTracer extends Trait {
 
@@ -27,10 +27,10 @@ class PathTracer extends Trait {
         notifyOnUpdate(update);
     }
 	
-	function getColorFromNode(node:ModelNode):Array<Float> {
+	function getColorFromNode(object:MeshObject):Array<Float> {
 		// Hard code for now
-		for (c in node.materials[0].contexts[0].resource.bind_constants) {
-			if (c.id == "albedo_color") {
+		for (c in object.materials[0].contexts[0].raw.bind_constants) {
+			if (c.name == "albedo_color") {
 				return c.vec4;
 			}
 		}
@@ -38,74 +38,74 @@ class PathTracer extends Trait {
 	}
 	
 	function init() {
-		context = Resource.getMaterial('pt_material', '').getContext('pt_trace_pass');
+		context = Data.getMaterial('pt_material', '').getContext('pt_trace_pass');
 		
-		context.resource.bind_constants.push(
+		context.raw.bind_constants.push(
 			{
-				id: "glossiness",
+				name: "glossiness",
 				float: 0.6
 			}
 		);
 		
-		context.resource.bind_constants.push(
+		context.raw.bind_constants.push(
 			{
-				id: "ray00",
+				name: "ray00",
 				vec3: [0.0, 0.0, 0.0]
 			}
 		);
-		ray00Location = context.resource.bind_constants.length - 1;
+		ray00Location = context.raw.bind_constants.length - 1;
 		
-		context.resource.bind_constants.push(
+		context.raw.bind_constants.push(
 			{
-				id: "ray01",
+				name: "ray01",
 				vec3: [0.0, 0.0, 0.0]
 			}
 		);
-		ray01Location = context.resource.bind_constants.length - 1;
+		ray01Location = context.raw.bind_constants.length - 1;
 		
-		context.resource.bind_constants.push(
+		context.raw.bind_constants.push(
 			{
-				id: "ray10",
+				name: "ray10",
 				vec3: [0.0, 0.0, 0.0]
 			}
 		);
-		ray10Location = context.resource.bind_constants.length - 1;
+		ray10Location = context.raw.bind_constants.length - 1;
 		
-		context.resource.bind_constants.push(
+		context.raw.bind_constants.push(
 			{
-				id: "ray11",
+				name: "ray11",
 				vec3: [0.0, 0.0, 0.0]
 			}
 		);
-		ray11Location = context.resource.bind_constants.length - 1;
+		ray11Location = context.raw.bind_constants.length - 1;
 		
 		objectLocations = [];
 		transformMap = new Map();
 		var sphereNum = 0;
 		var cubeNum = 0;
-		for (n in Root.models) {
+		for (n in Root.meshes) {
 			if (n.name.split(".")[0] == "Sphere") {
-				context.resource.bind_constants.push(
+				context.raw.bind_constants.push(
 					{
-						id: "sphereCenter" + sphereNum,
+						name: "sphereCenter" + sphereNum,
 						vec3: [0.0, 0.0, 0.0]
 					}
 				);
-				var loc = context.resource.bind_constants.length - 1;
+				var loc = context.raw.bind_constants.length - 1;
 				objectLocations.push(loc);
 				transformMap.set(loc, n.transform);
 				
-				context.resource.bind_constants.push(
+				context.raw.bind_constants.push(
 					{
-						id: "sphereRadius" + sphereNum,
+						name: "sphereRadius" + sphereNum,
 						float: n.transform.size.x / 2 - 0.02
 					}
 				);
 				
 				var col = getColorFromNode(n);
-				context.resource.bind_constants.push(
+				context.raw.bind_constants.push(
 					{
-						id: "sphereColor" + sphereNum,
+						name: "sphereColor" + sphereNum,
 						vec3: [col[0], col[1], col[2]]
 					}
 				);
@@ -113,27 +113,27 @@ class PathTracer extends Trait {
 				sphereNum++;
 			}
 			else if (n.name.split(".")[0] == "Cube") {
-				context.resource.bind_constants.push(
+				context.raw.bind_constants.push(
 					{
-						id: "cubeCenter" + cubeNum,
+						name: "cubeCenter" + cubeNum,
 						vec3: [0.0, 0.0, 0.0]
 					}
 				);
-				var loc = context.resource.bind_constants.length - 1;
+				var loc = context.raw.bind_constants.length - 1;
 				objectLocations.push(loc);
 				transformMap.set(loc, n.transform);
 				
-				context.resource.bind_constants.push(
+				context.raw.bind_constants.push(
 					{
-						id: "cubeSize" + cubeNum,
+						name: "cubeSize" + cubeNum,
 						vec3: [n.transform.size.x / 2, n.transform.size.y / 2, n.transform.size.z / 2]
 					}
 				);
 				
 				var col = getColorFromNode(n);
-				context.resource.bind_constants.push(
+				context.raw.bind_constants.push(
 					{
-						id: "cubeColor" + cubeNum,
+						name: "cubeColor" + cubeNum,
 						vec3: [col[0], col[1], col[2]]
 					}
 				);
@@ -145,7 +145,7 @@ class PathTracer extends Trait {
 
     function update() {
 		var camera = Root.cameras[0];
-		var eye = camera.transform.pos;
+		var eye = camera.transform.loc;
 		
 		// var jitter = Mat4.identity();
 		// jitter.initTranslate(Math.random() * 2 - 1, Math.random() * 2 - 1, 0);
@@ -162,21 +162,21 @@ class PathTracer extends Trait {
 		// Set uniforms	
 		
 		var v = getEyeRay(matrix, -1, -1, eye);
-		context.resource.bind_constants[ray00Location].vec3 = [v.x, v.y, v.z];
+		context.raw.bind_constants[ray00Location].vec3 = [v.x, v.y, v.z];
 		
 		var v = getEyeRay(matrix, -1,  1, eye);
-		context.resource.bind_constants[ray01Location].vec3 = [v.x, v.y, v.z];
+		context.raw.bind_constants[ray01Location].vec3 = [v.x, v.y, v.z];
 		
 		var v = getEyeRay(matrix,  1, -1, eye);
-		context.resource.bind_constants[ray10Location].vec3 = [v.x, v.y, v.z];
+		context.raw.bind_constants[ray10Location].vec3 = [v.x, v.y, v.z];
 		
 		var v = getEyeRay(matrix,  1,  1, eye);
-		context.resource.bind_constants[ray11Location].vec3 = [v.x, v.y, v.z];
+		context.raw.bind_constants[ray11Location].vec3 = [v.x, v.y, v.z];
 		
 		for (loc in objectLocations) {
 			var t:Transform = transformMap.get(loc);
 			t.buildMatrix();
-			var c = context.resource.bind_constants[loc];
+			var c = context.raw.bind_constants[loc];
 			c.vec3[0] = t.absx();
 			c.vec3[1] = t.absy();
 			c.vec3[2] = t.absz();
