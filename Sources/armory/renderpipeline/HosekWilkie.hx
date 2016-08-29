@@ -128,7 +128,7 @@ class HosekWilkie {
 
         // Extract direction from lamp
         // var mat = iron.data.Data.getMaterial("World_material", "World_material").data;
-        // var lamp = iron.Root.lamps[0];
+        // var lamp = iron.Scene.active.lamps[0];
         // var ltr = lamp.transform;
         // var lf = ltr.matrix.look2();
         // lamp.data.data.strength = 3.3 - Math.abs(ltr.absy()) / 45;

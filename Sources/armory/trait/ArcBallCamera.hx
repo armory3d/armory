@@ -1,7 +1,6 @@
 package armory.trait;
 
 import iron.Trait;
-import iron.Root;
 import iron.sys.Input;
 import iron.object.CameraObject;
 import iron.math.Vec4;
@@ -24,7 +23,7 @@ class ArcBallCamera extends Trait {
     }
 
     function init() {
-        camera = Root.cameras[0];
+        camera = cast(object, CameraObject);
 
         var r = camera.transform.rot;
         var q = new Quat(r.x, r.y, r.z, r.w);

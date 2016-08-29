@@ -2,7 +2,6 @@ import shutil
 import bpy
 import os
 import json
-from traits_animation import *
 from traits_params import *
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
@@ -27,15 +26,14 @@ class ListTraitItem(bpy.types.PropertyGroup):
                  ('Python Script', 'Python Script', 'Python Script'),
                  ('JS Script', 'JS Script', 'JS Script'),
                  ('Bundled Script', 'Bundled Script', 'Bundled Script'),
-                 ('Logic Nodes', 'Logic Nodes', 'Logic Nodes'),
-                 ('Animation', 'Animation', 'Animation')
+                 ('Logic Nodes', 'Logic Nodes', 'Logic Nodes')
                  ],
         name = "Type")
 
-    data_prop = bpy.props.StringProperty(
-           name="Data",
-           description="A name for this item",
-           default="")
+    # data_prop = bpy.props.StringProperty(
+    #        name="Data",
+    #        description="A name for this item",
+    #        default="")
 
     class_name_prop = bpy.props.StringProperty(
            name="Class",
@@ -52,16 +50,8 @@ class ListTraitItem(bpy.types.PropertyGroup):
            description="A name for this item",
            default="")
 
-    start_track_name_prop = bpy.props.StringProperty(
-           name="Start Track",
-           description="A name for this item",
-           default="")
-
     my_paramstraitlist = bpy.props.CollectionProperty(type=ListParamsTraitItem)
     paramstraitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
-
-    my_animationtraitlist = bpy.props.CollectionProperty(type=ListAnimationTraitItem)
-    animationtraitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
 
 class MY_UL_TraitList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -71,7 +61,7 @@ class MY_UL_TraitList(bpy.types.UIList):
         # Make sure your code supports all 3 layout types
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             layout.prop(item, "enabled_prop")
-            layout.label(item.name, icon = custom_icon)
+            layout.label(item.name, icon=custom_icon)
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
@@ -239,7 +229,7 @@ class ToolsTraitsPanel(bpy.types.Panel):
             col.operator("my_traitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
 
         if obj.traitlist_index >= 0 and len(obj.my_traitlist) > 0:
-            item = obj.my_traitlist[obj.traitlist_index]         
+            item = obj.my_traitlist[obj.traitlist_index]
             # Default props
             row = layout.row()
             row.prop(item, "type_prop")
@@ -298,40 +288,6 @@ class ToolsTraitsPanel(bpy.types.Panel):
                 item.name = item.nodes_name_prop
                 row = layout.row()
                 row.prop_search(item, "nodes_name_prop", bpy.data, "node_groups", "Tree")
-
-            # Animation
-            elif item.type_prop == 'Animation':
-                item.name = item.type_prop
-                row = layout.row()
-                row.prop_search(item, "start_track_name_prop", item, "my_animationtraitlist", "Start Track")
-                # Tracks list
-                layout.label("Tracks")
-                animrow = layout.row()
-                animrows = 2
-                if len(item.my_animationtraitlist) > 1:
-                    animrows = 4
-                
-                row = layout.row()
-                row.template_list("MY_UL_AnimationTraitList", "The_List", item, "my_animationtraitlist", item, "animationtraitlist_index", rows=animrows)
-
-                col = row.column(align=True)
-                col.operator("my_animationtraitlist.new_item", icon='ZOOMIN', text="")
-                col.operator("my_animationtraitlist.delete_item", icon='ZOOMOUT', text="")
-
-                if len(item.my_animationtraitlist) > 1:
-                    col.separator()
-                    col.operator("my_animationtraitlist.move_item", icon='TRIA_UP', text="").direction = 'UP'
-                    col.operator("my_animationtraitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
-
-                if item.animationtraitlist_index >= 0 and len(item.my_animationtraitlist) > 0:
-                    animitem = item.my_animationtraitlist[item.animationtraitlist_index]         
-                    
-                    row = layout.row()
-                    row.prop(animitem, "start_prop")
-                    row.prop(animitem, "end_prop")
-                    layout.prop(animitem, "speed_prop")
-                    layout.prop(animitem, "loop_prop")
-                    layout.prop(animitem, "reflect_prop")
 
 # Registration
 def register():

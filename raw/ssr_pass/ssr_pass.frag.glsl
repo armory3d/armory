@@ -187,7 +187,7 @@ vec2 unpackFloat(float f) {
 void main() {
 
 	vec4 g0 = texture(gbuffer0, texCoord);
-    float roughness = unpackFloat(g0.b).x;
+    float roughness = unpackFloat(g0.b).y;
 
     if (roughness == 1.0) {
 		outColor = vec4(0.0);

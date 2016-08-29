@@ -47,7 +47,7 @@ class JSScriptAPI {
 class JSScriptAPI {
 
 	public static var App = iron.App;
-	public static var Root = iron.Root;
+	public static var Scene = iron.Scene;
 	public static var Time = iron.sys.Time;
 	public static var Object = iron.object.Object;
 	public static var Data = iron.data.Data;

@@ -561,7 +561,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 		return unifiedVertexArray
 
-	def ExportBone(self, armature, bone, scene, o):
+	def ExportBone(self, armature, bone, scene, o, action):
 		bobjectRef = self.bobjectArray.get(bone)
 		
 		if (bobjectRef):
@@ -572,12 +572,12 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			#if (name != ""):
 			#	o.name = name
 
-			self.ExportBoneTransform(armature, bone, scene, o)
+			self.ExportBoneTransform(armature, bone, scene, o, action)
 
 		o['objects'] = [] # TODO
 		for subbobject in bone.children:
 			so = {}
-			self.ExportBone(armature, subbobject, scene, so)
+			self.ExportBone(armature, subbobject, scene, so, action)
 			o['objects'].append(so)
 
 		# Export any ordinary objects that are parented to this bone
@@ -634,15 +634,28 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 		scene.frame_set(currentFrame, currentSubframe)
 
-	def ExportBoneSampledAnimation(self, poseBone, scene, o):
+	def get_action_framerange(self, action):
+		# TODO: experimental
+		begin_frame = int(action.frame_range[0])
+		end_frame = int(action.frame_range[1])
+		if self.beginFrame > begin_frame: # Cap frames to timeline bounds
+			begin_frame = self.beginFrame
+		if self.endFrame > end_frame:
+			end_frame = self.endFrame
+		return begin_frame, end_frame
+
+	def ExportBoneSampledAnimation(self, poseBone, scene, o, action):
 		# This function exports bone animation as full 4x4 matrices for each frame.
 		currentFrame = scene.frame_current
 		currentSubframe = scene.frame_subframe
 
+		# Frame range
+		begin_frame, end_frame = self.get_action_framerange(action)
+
 		animationFlag = False
 		m1 = poseBone.matrix.copy()
 
-		for i in range(self.beginFrame, self.endFrame):
+		for i in range(begin_frame, end_frame):
 			scene.frame_set(i)
 			m2 = poseBone.matrix
 			if (ArmoryExporter.MatricesDifferent(m1, m2)):
@@ -656,28 +669,28 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			tracko['time'] = {}
 			tracko['time']['values'] = []
 
-			for i in range(self.beginFrame, self.endFrame):
-				tracko['time']['values'].append(((i - self.beginFrame) * self.frameTime))
+			for i in range(begin_frame, end_frame):
+				tracko['time']['values'].append(((i - begin_frame) * self.frameTime))
 
-			tracko['time']['values'].append((self.endFrame * self.frameTime))
+			tracko['time']['values'].append((end_frame * self.frameTime))
 
 			tracko['value'] = {}
 			tracko['value']['values'] = []
 
 			parent = poseBone.parent
 			if (parent):
-				for i in range(self.beginFrame, self.endFrame):
+				for i in range(begin_frame, end_frame):
 					scene.frame_set(i)
 					tracko['value']['values'].append(self.WriteMatrix(parent.matrix.inverted() * poseBone.matrix))
 
-				scene.frame_set(self.endFrame)
+				scene.frame_set(end_frame)
 				tracko['value']['values'].append(self.WriteMatrix(parent.matrix.inverted() * poseBone.matrix))
 			else:
-				for i in range(self.beginFrame, self.endFrame):
+				for i in range(begin_frame, end_frame):
 					scene.frame_set(i)
 					tracko['value']['values'].append(self.WriteMatrix(poseBone.matrix))
 
-				scene.frame_set(self.endFrame)
+				scene.frame_set(end_frame)
 				tracko['value']['values'].append(self.WriteMatrix(poseBone.matrix))
 			o['animation']['tracks'] = [tracko]
 
@@ -1325,7 +1338,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 							# If an object is used as a bone, then we force its type to be a bone.
 							boneRef[1]["objectType"] = kNodeTypeBone
 
-	def ExportBoneTransform(self, armature, bone, scene, o):
+	def ExportBoneTransform(self, armature, bone, scene, o, action):
 		curveArray = self.CollectBoneAnimation(armature, bone.name)
 		animation = ((len(curveArray) != 0) or (ArmoryExporter.sampleAnimationFlag))
 
@@ -1341,7 +1354,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if (parentPoseBone):
 				transform = parentPoseBone.matrix.inverted() * transform
 
-
 		o['transform'] = {}
 
 		#if (animation):
@@ -1350,7 +1362,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		o['transform']['values'] = self.WriteMatrix(transform)
 
 		if ((animation) and (poseBone)):
-			self.ExportBoneSampledAnimation(poseBone, scene, o)
+			self.ExportBoneSampledAnimation(poseBone, scene, o, action)
 
 	def ExportMaterialRef(self, material, index, o):
 		if material == None:
@@ -1475,7 +1487,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			self.ExportObjectTransform(bobject, scene, o)
 
 			# Viewport Camera - overwrite active camera matrix with viewport matrix
-			if type == kNodeTypeCamera and bpy.data.worlds[0].ArmPlayViewportCamera:
+			if type == kNodeTypeCamera and bpy.data.worlds[0].ArmPlayViewportCamera and bobject.name == self.scene.camera.name:
 				viewport_matrix = self.get_viewport_view_matrix()
 				if viewport_matrix != None:
 					o['transform']['values'] = self.WriteMatrix(viewport_matrix.inverted())
@@ -1483,29 +1495,41 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 					o['local_transform_only'] = True
 
 			if (bobject.type == "ARMATURE"):
-				skeleton = bobject.data # Armature data
-				if (skeleton):
-					armatureid = utils.safe_filename(skeleton.name)
-					o['bones_ref'] = 'bones_' + armatureid
+				armdata = bobject.data # Armature data
+				if (armdata):
+					# Reference start action
+					if bobject.edit_actions_prop:
+						action = bpy.data.actions[bobject.start_action_name_prop]
+					else: # Use default
+						action = bobject.animation_data.action
+					armatureid = utils.safe_filename(armdata.name)
+					o['bones_ref'] = 'bones_' + armatureid + '_' + action.name
 
-					# TODO: use option_mesh_per_file
-					fp = self.get_meshes_file_path(o['bones_ref'])
-					assets.add(fp)
+					# Write bones
+					if armdata.edit_actions:
+						export_actions = []
+						for t in my_actiontraitlist:
+							export_actions.append(t.name)
+					else: # Use default
+						export_actions = [action]
 
-					if bobject.data.armature_cached == False or not os.path.exists(fp):
-						bones = []
-						for bone in skeleton.bones:
-							if (not bone.parent):
-								boneo = {}
-								self.ExportBone(bobject, bone, scene, boneo)
-								#o.objects.append(boneo)
-								bones.append(boneo)
-						
-						# Save bones separately
-						bones_obj = {}
-						bones_obj['objects'] = bones
-						utils.write_arm(fp, bones_obj)
-						bobject.data.armature_cached = True
+					for action in export_actions:
+						armdata.animation_data.action = action
+						fp = self.get_meshes_file_path('bones_' + armatureid + '_' + action.name)
+						assets.add(fp)
+						if armdata.armature_cached == False or not os.path.exists(fp):
+							bones = []
+							for bone in armdata.bones:
+								if (not bone.parent):
+									boneo = {}
+									self.ExportBone(bobject, bone, scene, boneo, action)
+									#o.objects.append(boneo)
+									bones.append(boneo)
+							# Save bones separately
+							bones_obj = {}
+							bones_obj['objects'] = bones
+							utils.write_arm(fp, bones_obj)
+					armdata.armature_cached = True
 
 			if (parento == None):
 				self.output['objects'].append(o)
@@ -1544,9 +1568,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		boneArray = armature.data.bones
 		boneCount = len(boneArray)
 
-		#self.IndentWrite(B"ref\t\t\t// ")
-		#self.WriteInt(boneCount)
-
 		for i in range(boneCount):
 			boneRef = self.FindNode(boneArray[i].name)
 			if (boneRef):
@@ -1554,16 +1575,12 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			else:
 				oskel['bone_ref_array'].append("null")
 
-		# Write the bind pose transform array.
+		# Write the bind pose transform array
 		oskel['transforms'] = []
-
-		#self.IndentWrite(B"float[16]\t// ")
-		#self.WriteInt(boneCount)
-
 		for i in range(boneCount):
 			oskel['transforms'].append(self.WriteMatrix(armature.matrix_world * boneArray[i].matrix_local))
 
-		# Export the per-vertex bone influence data.
+		# Export the per-vertex bone influence data
 		groupRemap = []
 
 		for group in bobject.vertex_groups:
@@ -2149,8 +2166,23 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			o['type'] = 'perspective'
 		else:
 			o['type'] = 'orthographic'
+
+		if objref.is_mirror:
+			o['is_mirror'] = True
+			o['mirror_resolution_x'] = int(objref.mirror_resolution_x)
+			o['mirror_resolution_y'] = int(objref.mirror_resolution_y)
+
+		o['frustum_culling'] = objref.frustum_culling
+		o['pipeline'] = objref.pipeline_path + '/' + objref.pipeline_path # Same file name and id
 		
-		self.cb_export_camera(objref, o)
+		if 'Background' in bpy.data.worlds[0].node_tree.nodes: # TODO: parse node tree
+			background_node = bpy.data.worlds[0].node_tree.nodes['Background']
+			col = background_node.inputs[0].default_value
+			strength = background_node.inputs[1].default_value
+			o['clear_color'] = [col[0] * strength, col[1] * strength, col[2] * strength, col[3]]
+		else:
+			o['clear_color'] = [0.0, 0.0, 0.0, 1.0]
+
 		self.output['camera_datas'].append(o)
 
 	def ExportSpeaker(self, objectRef):
@@ -2286,14 +2318,14 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		
 		self.output = {}
 
-		scene = context.scene
-		originalFrame = scene.frame_current
-		originalSubframe = scene.frame_subframe
+		self.scene = context.scene
+		originalFrame = self.scene.frame_current
+		originalSubframe = self.scene.frame_subframe
 		self.restoreFrame = False
 
-		self.beginFrame = scene.frame_start
-		self.endFrame = scene.frame_end
-		self.frameTime = 1.0 / (scene.render.fps_base * scene.render.fps)
+		self.beginFrame = self.scene.frame_start
+		self.endFrame = self.scene.frame_end
+		self.frameTime = 1.0 / (self.scene.render.fps_base * self.scene.render.fps)
 
 		self.bobjectArray = {}
 		self.meshArray = {}
@@ -2322,18 +2354,21 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
 		self.cb_preprocess()
 
-		for bobject in scene.objects:
+		for bobject in self.scene.objects:
 			if (not bobject.parent):
 				self.ProcessBObject(bobject)
 
 		self.ProcessSkinnedMeshes()
 
+		self.output['name'] = self.scene.name
 		self.output['objects'] = []
-		for object in scene.objects:
+		for object in self.scene.objects:
 			if (not object.parent):
-				self.ExportObject(object, scene)
+				self.ExportObject(object, self.scene)
 
 		if not ArmoryExporter.option_mesh_only:
+			self.output['camera_ref'] = self.scene.camera.name
+
 			self.output['material_datas'] = []
 			self.ExportMaterials()
 
@@ -2342,16 +2377,16 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			
 			self.output['world_datas'] = []
 			self.ExportWorlds()
-			self.output['world_ref'] = scene.world.name
+			self.output['world_ref'] = self.scene.world.name
 
-			self.output['gravity'] = [scene.gravity[0], scene.gravity[1], scene.gravity[2]]
+			self.output['gravity'] = [self.scene.gravity[0], self.scene.gravity[1], self.scene.gravity[2]]
 
-		self.ExportObjects(scene)
+		self.ExportObjects(self.scene)
 		
 		self.cb_postprocess()
 
 		if (self.restoreFrame):
-			scene.frame_set(originalFrame, originalSubframe)
+			self.scene.frame_set(originalFrame, originalSubframe)
 
 		# Write .arm
 		utils.write_arm(self.filepath, self.output)
@@ -2471,7 +2506,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 					break
 
 	def cb_export_object(self, bobject, o, type):
-		#return
 		# Export traits
 		o['traits'] = []
 		for t in bobject.my_traitlist:
@@ -2481,24 +2515,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if t.type_prop == 'Logic Nodes' and t.nodes_name_prop != '':
 				x['type'] = 'Script'
 				x['class_name'] = bpy.data.worlds[0].ArmProjectPackage + '.node.' + utils.safe_filename(t.nodes_name_prop)
-			elif t.type_prop == 'Animation':
-				x['type'] = 'Script'
-				x['class_name'] = 'armory.trait.internal.Animation'
-				names = []
-				starts = []
-				ends = []
-				speeds = []
-				loops = []
-				reflects = []
-				for at in t.my_animationtraitlist:
-					if at.enabled_prop:
-						names.append(at.name)
-						starts.append(at.start_prop)
-						ends.append(at.end_prop)
-						speeds.append(at.speed_prop)
-						loops.append(at.loop_prop)
-						reflects.append(at.reflect_prop)
-				x['parameters'] = [t.start_track_name_prop, names, starts, ends, speeds, loops, reflects]
 			elif t.type_prop == 'JS Script' or t.type_prop == 'Python Script':
 				x['type'] = 'Script'
 				x['class_name'] = 'armory.trait.internal.JSScript'
@@ -2551,7 +2567,37 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 					x['parameters'] = []
 					for pt in t.my_paramstraitlist: # Append parameters
 						x['parameters'].append(ast.literal_eval(pt.name))
-			
+			o['traits'].append(x)
+
+		# Animation trait
+		if self.is_bone_animation_enabled(bobject) or self.is_object_animation_enabled(bobject):
+			x = {}
+			x['type'] = 'Script'
+			x['class_name'] = 'armory.trait.internal.Animation'
+			if len(bobject.my_cliptraitlist) > 0:
+				# Edit clips enabled
+				names = []
+				starts = []
+				ends = []
+				speeds = []
+				loops = []
+				reflects = []
+				for at in bobject.my_cliptraitlist:
+					if at.enabled_prop:
+						names.append(at.name)
+						starts.append(at.start_prop)
+						ends.append(at.end_prop)
+						speeds.append(at.speed_prop)
+						loops.append(at.loop_prop)
+						reflects.append(at.reflect_prop)
+				x['parameters'] = [bobject.start_track_name_prop, names, starts, ends, speeds, loops, reflects, bpy.data.worlds[0].generate_gpu_skin_max_bones]
+			else:
+				# Export default clip, taking full action
+				if self.is_bone_animation_enabled(bobject):
+					begin_frame, end_frame = self.get_action_framerange(bobject.parent.animation_data.action)
+				else:
+					begin_frame, end_frame = self.get_action_framerange(bobject.animation_data.action)
+				x['parameters'] = ['default', ['default'], [begin_frame], [end_frame], [1.0], [True], [False], bpy.data.worlds[0].generate_gpu_skin_max_bones]
 			o['traits'].append(x)
 
 		# Rigid body trait
@@ -2592,8 +2638,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				console_trait['class_name'] = 'armory.trait.internal.Console'
 				console_trait['parameters'] = []
 				o['traits'].append(console_trait)
-			# Viewport camera enabled, attach navigation if enabled
-			if bpy.data.worlds[0].ArmPlayViewportCamera and bpy.data.worlds[0].ArmPlayViewportNavigation == 'Walk':
+			# Viewport camera enabled, attach navigation to active camera if enabled
+			if bobject.name == self.scene.camera.name and bpy.data.worlds[0].ArmPlayViewportCamera and bpy.data.worlds[0].ArmPlayViewportNavigation == 'Walk':
 				navigation_trait = {}
 				navigation_trait['type'] = 'Script'
 				navigation_trait['class_name'] = 'armory.trait.WalkNavigation'
@@ -2613,23 +2659,20 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				self.materialToObjectDict[mat] = [bobject]
 				self.materialToGameObjectDict[mat] = [o]
 
-	def cb_export_camera(self, object, o):
-		#return
-		o['frustum_culling'] = object.frustum_culling
-		o['pipeline'] = object.pipeline_path + '/' + object.pipeline_path # Same file name and id
-		
-		if 'Background' in bpy.data.worlds[0].node_tree.nodes: # TODO: parse node tree
-			background_node = bpy.data.worlds[0].node_tree.nodes['Background']
-			col = background_node.inputs[0].default_value
-			strength = background_node.inputs[1].default_value
-			o['clear_color'] = [col[0] * strength, col[1] * strength, col[2] * strength, col[3]]
-		else:
-			o['clear_color'] = [0.0, 0.0, 0.0, 1.0]
+	def is_object_animation_enabled(self, bobject):
+		# Checks if animation is present and enabled
+		if bobject.object_animation_enabled == False or bobject.type == 'ARMATURE' or bobject.type == 'BONE':
+			return False
+		if bobject.animation_data and bobject.animation_data.action:
+			return True
+		return False
 
-	def find_anim_trait(self, ob):
-		# Checks if animation trait is attached
-		for t in ob.my_traitlist:
-			if t.type_prop == 'Animation' and t.enabled_prop == True:
+	def is_bone_animation_enabled(self, bobject):
+		# Checks if animation is present and enabled for parented armature
+		if bobject.parent and bobject.parent.type == 'ARMATURE':
+			if bobject.parent.bone_animation_enabled == False:
+				return False
+			if bobject.parent.animation_data and bobject.parent.animation_data.action:
 				return True
 		return False
 
@@ -2733,7 +2776,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 			if ob.instanced_children or len(ob.particle_systems) > 0:
 				defs.append('_Instancing')
 			# GPU Skinning
-			if ob.find_armature() and self.find_anim_trait(ob) and bpy.data.worlds[0].generate_gpu_skin == True:
+			if ob.find_armature() and self.is_bone_animation_enabled(ob) and bpy.data.worlds[0].generate_gpu_skin == True:
 				defs.append('_Skinning')
 			# Billboarding
 			if len(ob.constraints) > 0 and ob.constraints[0].target != None and \
@@ -2762,13 +2805,20 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 		# Main probe
 		world_generate_radiance = False
 		defs = bpy.data.worlds[0].world_defs
-		if '_EnvTex' in defs: # Radiance only for texture
-			world_generate_radiance = bpy.data.worlds[0].generate_radiance
 		generate_irradiance = True #'_EnvTex' in defs or '_EnvSky' in defs or '_EnvCon' in defs
-		envtex = bpy.data.cameras[0].world_envtex_name.rsplit('.', 1)[0]
+		irrtex = bpy.data.cameras[0].world_envtex_name.rsplit('.', 1)[0]
+		radtex = irrtex
+
+		# Radiance
+		if '_EnvTex' in defs:
+			world_generate_radiance = bpy.data.worlds[0].generate_radiance
+		elif '_EnvSky' in defs and bpy.data.worlds[0].generate_radiance_sky:
+			world_generate_radiance = bpy.data.worlds[0].generate_radiance
+			radtex = 'hosek'
+
 		num_mips = bpy.data.cameras[0].world_envtex_num_mips
 		strength = bpy.data.cameras[0].world_envtex_strength
-		po = self.make_probe('world', envtex, num_mips, strength, 1.0, [0, 0, 0], [0, 0, 0], world_generate_radiance, generate_irradiance)
+		po = self.make_probe('world', irrtex, radtex, num_mips, strength, 1.0, [0, 0, 0], [0, 0, 0], world_generate_radiance, generate_irradiance)
 		o['probes'].append(po)
 		
 		if '_EnvSky' in defs:
@@ -2793,17 +2843,17 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 				texture_path = '//' + cam.probe_texture
 				cam.probe_num_mips = write_probes.write_probes(texture_path, disable_hdr, cam.probe_num_mips, generate_radiance=generate_radiance)
 				base_name = cam.probe_texture.rsplit('.', 1)[0]
-				po = self.make_probe(cam.name, base_name, cam.probe_num_mips, cam.probe_strength, cam.probe_blending, volume, volume_center, generate_radiance, generate_irradiance)
+				po = self.make_probe(cam.name, base_name, base_name, cam.probe_num_mips, cam.probe_strength, cam.probe_blending, volume, volume_center, generate_radiance, generate_irradiance)
 				o['probes'].append(po)
 	
-	def make_probe(self, id, envtex, mipmaps, strength, blending, volume, volume_center, generate_radiance, generate_irradiance):
+	def make_probe(self, id, irrtex, radtex, mipmaps, strength, blending, volume, volume_center, generate_radiance, generate_irradiance):
 		po = {}
 		po['name'] = id
 		if generate_radiance:
-			po['radiance'] = envtex + '_radiance'
+			po['radiance'] = radtex + '_radiance'
 			po['radiance_mipmaps'] = mipmaps
 		if generate_irradiance:
-			po['irradiance'] = envtex + '_irradiance'
+			po['irradiance'] = irrtex + '_irradiance'
 		else:
 			po['irradiance'] = '' # No irradiance data, fallback to default at runtime
 		po['strength'] = strength

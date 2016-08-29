@@ -131,7 +131,24 @@ vec3 specularBRDF(vec3 f0, float roughness, float nl, float nh, float nv, float 
 	float a = roughness * roughness;
 	return d_ggx(nh, a) * clamp(v_smithschlick(nl, nv, a), 0.0, 1.0) * f_schlick(f0, vh) / 4.0;
 }
-
+// vec3 burleyDiffuseBRDF(vec3 albedo, float roughness, float nv, float nl, float vh) {
+// 	float FD90 = 0.5 + 2.0 * vh * vh * roughness;
+// 	float FdV = 1.0 + (FD90 - 1.0) * pow(1.0 - nv, 5.0);
+// 	float FdL = 1.0 + (FD90 - 1.0) * pow(1.0 - nl, 5.0);
+// 	return albedo * ((1.0 / 3.1415926535) * FdV * FdL);
+// }
+// vec3 orenNayarDiffuseBRDF(vec3 albedo, float roughness, float nv, float nl, float vh) {
+// 	float a = roughness * roughness;
+// 	float s = a;// / (1.29 + 0.5 * a);
+// 	float s2 = s * s;
+// 	float vl = 2.0 * vh * vh - 1.0;		// double angle identity
+// 	float Cosri = vl - nv * nl;
+// 	float C1 = 1.0 - 0.5 * s2 / (s2 + 0.33);
+// 	float test = 1.0;
+// 	if (Cosri >= 0.0) test = (1.0 / (max(nl, nv)));
+// 	float C2 = 0.45 * s2 / (s2 + 0.09) * Cosri * test;
+// 	return albedo / PI * (C1 + C2) * (1.0 + roughness * 0.5);
+// }
 vec3 diffuseBRDF(vec3 albedo, float nl) {
 	// lambert
 	return albedo * nl; // // albedo * max(0.0, nl);
@@ -684,7 +701,7 @@ void main() {
 	texCoord += vec2(0.5 / screenSize); // Half pixel offset
 
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, roughness/metallic, mask
+	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, mask
 	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, occlusion
 
 	vec3 n;
@@ -694,13 +711,13 @@ void main() {
 
 	vec3 p = getPos(depth, texCoord);
 	// vec3 p = getPos(depth);
-	vec2 roughmet = unpackFloat(g0.b);
+	vec2 metrough = unpackFloat(g0.b);
 	
 	vec3 v = normalize(eye - p.xyz);
 	float dotNV = max(dot(n, v), 0.0);
 	
-	vec3 albedo = surfaceAlbedo(g1.rgb, roughmet.y); // g1.rgb - basecolor
-	vec3 f0 = surfaceF0(g1.rgb, roughmet.y);
+	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
+	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
 	
 	// Per-light
 	vec3 l;
@@ -727,8 +744,10 @@ void main() {
 #endif
 	
 	// Direct
-	vec3 direct = diffuseBRDF(albedo, dotNL) + specularBRDF(f0, roughmet.x, dotNL, dotNH, dotNV, dotVH);
-	
+	vec3 direct = diffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
+	// vec3 direct = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
+	// vec3 direct = burleyDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
+
 	if (lightType == 2) { // Spot
 		float spotEffect = dot(lightDir, l);
 		if (spotEffect < spotlightCutoff) {
@@ -738,10 +757,10 @@ void main() {
 	}
 	
 	// Aniso spec
-	// float shinyParallel = roughmet.x;
+	// float shinyParallel = metrough.y;
 	// float shinyPerpendicular = 0.08;
 	// vec3 fiberDirection = vec3(0.0, 1.0, 8.0);
-	// vec3 direct = diffuseBRDF(albedo, roughmet.x, dotNV, dotNL, dotVH, dotLV) + wardSpecular(n, h, dotNL, dotNV, dotNH, fiberDirection, shinyParallel, shinyPerpendicular);
+	// vec3 direct = diffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH, dotLV) + wardSpecular(n, h, dotNL, dotNV, dotNH, fiberDirection, shinyParallel, shinyPerpendicular);
 	direct = direct * lightColor * lightStrength;
 	
 	
@@ -763,7 +782,7 @@ void main() {
 // 		float probeFract = fract(probeFactor);
 // 		vec3 indirect;
 // 	#ifdef _Rad
-// 		float lod = getMipLevelFromRoughness(roughmet.x);
+// 		float lod = getMipLevelFromRoughness(metrough.y);
 // 		vec3 reflectionWorld = reflect(-v, n); 
 // 		vec2 envCoordRefl = envMapEquirect(reflectionWorld);
 // 		vec3 prefilteredColor = textureLod(senvmapRadiance, envCoordRefl, lod).rgb;
@@ -786,7 +805,7 @@ void main() {
 // 		vec3 indirect = shIrradiance(n, 2.2) / PI;
 // 	#ifdef _Rad
 // 		vec3 reflectionWorld = reflect(-v, n);
-// 		float lod = getMipLevelFromRoughness(roughmet.x);
+// 		float lod = getMipLevelFromRoughness(metrough.y);
 // 		vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
 // 	#endif
 // #endif
@@ -801,7 +820,7 @@ void main() {
 		
 // #ifdef _Rad
 // 		// Indirect specular
-// 		vec2 envBRDF = texture(senvmapBrdf, vec2(roughmet.x, 1.0 - dotNV)).xy;
+// 		vec2 envBRDF = texture(senvmapBrdf, vec2(metrough.y, 1.0 - dotNV)).xy;
 // 		indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);;
 // #endif
 // 		indirect = indirect * envmapStrength;// * lightColor * lightStrength;
@@ -832,7 +851,7 @@ void main() {
 	// vec3 p3 = lightPos + ex - ey;
 	// vec3 p4 = lightPos - ex - ey;
 	// float theta = acos(dotNV);
-	// vec2 tuv = vec2(roughmet.x, theta/(0.5*PI));
+	// vec2 tuv = vec2(metrough.y, theta/(0.5*PI));
 	// tuv = tuv*LUT_SCALE + LUT_BIAS;
 
 	// vec4 t = texture(sltcMat, tuv);		

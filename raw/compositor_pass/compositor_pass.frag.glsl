@@ -60,17 +60,19 @@ vec3 getPos(float depth) {
 // const vec3 compoFogColor = vec3(0.5, 0.6, 0.7);
 // const float compoFogAmountA = 1.0; // b = 0.01
 // const float compoFogAmountB = 1.0; // c = 0.1
-vec3 applyFog(vec3 rgb, // original color of the pixel
-         float distance, // camera to point distance
-         vec3 rayOri, // camera position
-         vec3 rayDir) { // camera to point vector
-    float fogAmount = compoFogAmountB * exp(-rayOri.y * compoFogAmountA) * (1.0 - exp(-distance * rayDir.y * compoFogAmountA)) / rayDir.y;
-    return mix(rgb, compoFogColor, fogAmount);
-}
-// vec3 applyFog(vec3 rgb, float distance) {
-//     float fogAmount = 1.0 - exp(-distance * compoFogAmountA);
-//     return mix(rgb, compoFogColor, fogAmount);
+// vec3 applyFog(vec3 rgb, // original color of the pixel
+         // float distance, // camera to point distance
+         // vec3 rayOri, // camera position
+         // vec3 rayDir) { // camera to point vector
+    // float fogAmount = compoFogAmountB * exp(-rayOri.y * compoFogAmountA) * (1.0 - exp(-distance * rayDir.y * compoFogAmountA)) / rayDir.y;
+    // return mix(rgb, compoFogColor, fogAmount);
 // }
+vec3 applyFog(vec3 rgb, float distance) {
+    // float fogAmount = 1.0 - exp(-distance * compoFogAmountA);
+    float fogAmount = 1.0 - exp(-distance * 0.0055);
+    return mix(rgb, vec3(0.4, 0.7, 0.2), fogAmount);
+    // return mix(rgb, compoFogColor, fogAmount);
+}
 #endif
 
 float vignette() {
@@ -78,10 +80,11 @@ float vignette() {
 	// dist = smoothstep(vignout + (fstop / vignfade), vignin + (fstop / vignfade), dist);
 	// return clamp(dist, 0.0, 1.0);
 	// vignetting from iq
-    return 0.4 + 0.6 * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
+    // return 0.4 + 0.6 * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
+    return 0.3 + 0.7 * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
 }
 
-#ifdef _CompoDOF
+// #ifdef _CompoDOF
 vec3 sampleBox(float size) {
 	vec3 color = vec3(texture(tex, vec2(texCoord.x - size, texCoord.y - size)).rgb) * 0.075;
 	color += texture(tex, vec2(texCoord.x, texCoord.y - size)).rgb * 0.1;
@@ -94,7 +97,7 @@ vec3 sampleBox(float size) {
 	color += texture(tex, vec2(texCoord.x + size, texCoord.y + size)).rgb * 0.075;
 	return color;
 }
-#endif
+// #endif
 
 float linearize(float depth) {
 	return -cameraPlane.y * cameraPlane.x / (depth * (cameraPlane.y - cameraPlane.x) - cameraPlane.y);
@@ -232,19 +235,25 @@ void main() {
 #endif
 
 #ifdef _CompoDOF
-	float linDepth = linearize(depth);
-	float blur_amount = abs(linDepth - compoDOFDistance) / cameraPlane.y;
-	blur_amount = clamp(blur_amount, 0.0, 1.0);
-	float blurSize = compoDOFSize * 10000.0 * blur_amount;
-	vec3 blurredColor = 0.75 * sampleBox(blurSize * 0.5) + 0.25 * sampleBox(blurSize * 1.0);
-	col.rgb *= (1.0 - blur_amount) + blurredColor * blur_amount;
+	if (depth < 1.0) {
+		float linDepth = linearize(depth);
+		float blur_amount = abs(linDepth - compoDOFDistance) / cameraPlane.y;
+		// float blur_amount = abs(linDepth - 4.0);
+		float blurSize = compoDOFSize * blur_amount;
+		// float blurSize = 0.0005 * blur_amount;
+		col.rgb = 0.75 * sampleBox(blurSize * 0.5) + 0.25 * sampleBox(blurSize * 1.0);
+	}
 #endif
 
 #ifdef _CompoFog
-	vec3 pos = getPos(depth);
-	float dist = distance(pos, eye);
-	vec3 eyedir = eyeLook;// normalize(eye + pos);
-	col.rgb = applyFog(col.rgb, dist, eye, eyedir);
+	// if (depth < 1.0) {
+		// vec3 pos = getPos(depth);
+		// float dist = distance(pos, eye);
+		float dist = linearize(depth);
+		// vec3 eyedir = eyeLook;// normalize(eye + pos);
+		// col.rgb = applyFog(col.rgb, dist, eye, eyedir);
+		col.rgb = applyFog(col.rgb, dist);
+	// }
 #endif
 
 #ifdef _CompoGlare

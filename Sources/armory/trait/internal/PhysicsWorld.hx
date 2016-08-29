@@ -19,6 +19,8 @@ class ContactPair {
 
 class PhysicsWorld extends Trait {
 
+	public static var active:PhysicsWorld;
+
 #if (!WITH_PHYSICS)
 	public function new(gravity:Array<Float> = null) { super(); }
 #else
@@ -38,6 +40,8 @@ class PhysicsWorld extends Trait {
 
 	public function new(gravity:Array<Float> = null) {
 		super();
+
+		active = this;
 
 		rbMap = new Map();
 
@@ -172,12 +176,12 @@ class PhysicsWorld extends Trait {
     }
 
     public function getRayFrom():BtVector3Pointer {
-    	var camera = iron.Root.cameras[0];
+    	var camera = iron.Scene.active.camera;
     	return BtVector3.create(camera.transform.loc.x, camera.transform.loc.y, camera.transform.loc.z);
     }
 
     public function getRayTo(inputX:Float, inputY:Float):BtVector3Pointer {
-    	var camera = iron.Root.cameras[0];
+    	var camera = iron.Scene.active.camera;
     	var start = new Vec4();
         var end = new Vec4();
     	RayCaster.getDirection(start, end, inputX, inputY, camera);

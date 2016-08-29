@@ -133,14 +133,14 @@ vec3 shIrradiance(vec3 nor, float scale) {
 }
 
 void main() {
-	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, roughness/metallic, mask
+	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, mask
 	
 	vec3 n;
 	n.z = 1.0 - abs(g0.x) - abs(g0.y);
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
 	n = normalize(n);
 
-	vec2 roughmet = unpackFloat(g0.b);
+	vec2 metrough = unpackFloat(g0.b);
 
 #ifdef _Rad
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
@@ -155,7 +155,7 @@ void main() {
 	float probeFract = fract(probeFactor);
 	vec3 indirect;
 	#ifdef _Rad
-		float lod = getMipLevelFromRoughness(roughmet.x);
+		float lod = getMipLevelFromRoughness(metrough.y);
 		vec3 reflectionWorld = reflect(-v, n); 
 		vec2 envCoordRefl = envMapEquirect(reflectionWorld);
 		vec3 prefilteredColor = textureLod(senvmapRadiance, envCoordRefl, lod).rgb;
@@ -178,7 +178,7 @@ void main() {
 	vec3 indirect = shIrradiance(n, 2.2) / PI;
 	#ifdef _Rad
 		vec3 reflectionWorld = reflect(-v, n);
-		float lod = getMipLevelFromRoughness(roughmet.x);
+		float lod = getMipLevelFromRoughness(metrough.y);
 		vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
 	#endif
 #endif
@@ -191,16 +191,16 @@ void main() {
 #endif
 
 	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, occlusion
-	vec3 albedo = surfaceAlbedo(g1.rgb, roughmet.y); // g1.rgb - basecolor
+	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
 	indirect *= albedo;
 	
 #ifdef _Rad
 	// Indirect specular
 	float dotNV = max(dot(n, v), 0.0);
 	
-	vec3 f0 = surfaceF0(g1.rgb, roughmet.y);
+	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
 
-	vec2 envBRDF = texture(senvmapBrdf, vec2(roughmet.x, 1.0 - dotNV)).xy;
+	vec2 envBRDF = texture(senvmapBrdf, vec2(metrough.y, 1.0 - dotNV)).xy;
 	indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);;
 #endif
 

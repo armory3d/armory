@@ -48,7 +48,7 @@ void main() {
 
 	// vec3 p = getPos(depth);
 	// vec3 baseColor = g1.rgb;
-	// vec2 roughmet = unpackFloat(g1.a);
-	// float roughness = roughmet.x;
-	// float metalness = roughmet.y;
+	// vec2 metrough = unpackFloat(g1.a);
+	// float metalness = metrough.x;
+	// float roughness = metrough.y;
 }

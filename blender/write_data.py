@@ -123,7 +123,12 @@ class Main {
         f.write("""
         kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel}, function() {
             iron.App.init(function() {
-                new armory.Scene(projectScene);
+                var raw = iron.data.Data.getSceneRaw(projectScene);
+                var scene = iron.Scene.create(raw);
+                scene.addTrait(new armory.trait.internal.PhysicsWorld(raw.gravity));
+                iron.App.notifyOnRender(function(g:kha.graphics4.Graphics) {
+                    iron.Scene.active.renderFrame(g);
+                });
             });
         });
     }

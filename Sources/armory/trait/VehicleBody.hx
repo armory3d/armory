@@ -67,12 +67,12 @@ class VehicleBody extends Trait {
 	}
 
     function init() {
-    	physics = armory.Scene.physics;
+    	physics = armory.trait.internal.PhysicsWorld.active;
     	transform = object.transform;
-    	camera = iron.Root.cameras[0];
+    	camera = iron.Scene.active.camera;
 
     	for (n in wheelNames) {
-			wheels.push(iron.Root.root.getChild(n));
+			wheels.push(iron.Scene.active.root.getChild(n));
 		}
 
     	var rightIndex = 0; 

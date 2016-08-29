@@ -5,6 +5,8 @@ import json
 import nodes_renderpath
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
+from traits_clip import *
+from traits_action import *
 import utils
 
 def on_scene_update(context):
@@ -14,10 +16,6 @@ def on_scene_update(context):
             edit_obj.data.mesh_cached = False
         elif edit_obj.type == 'ARMATURE':
             edit_obj.data.armature_cached = False
-
-    for text in bpy.data.texts:
-        if text.is_updated:
-            print('ASDASDASDASDASD')
 
 def invalidate_shader_cache(self, context):
     # compiled.glsl changed, recompile all shaders next time
@@ -91,6 +89,16 @@ def initProperties():
     bpy.types.Object.override_material_name = bpy.props.StringProperty(name="Name", default="")
     bpy.types.Object.game_export = bpy.props.BoolProperty(name="Export", default=True)
     bpy.types.Object.spawn = bpy.props.BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True)
+    # - Clips
+    bpy.types.Object.bone_animation_enabled = bpy.props.BoolProperty(name="Bone Animation", default=True)
+    bpy.types.Object.object_animation_enabled = bpy.props.BoolProperty(name="Object Animation", default=True)
+    bpy.types.Object.edit_tracks_prop = bpy.props.BoolProperty(name="Edit Clips", description="A name for this item", default=False)
+    bpy.types.Object.start_track_name_prop = bpy.props.StringProperty(name="Start Track", description="A name for this item", default="")
+    bpy.types.Object.my_cliptraitlist = bpy.props.CollectionProperty(type=ListClipTraitItem)
+    bpy.types.Object.cliptraitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
+    # - Actions
+    bpy.types.Object.edit_actions_prop = bpy.props.BoolProperty(name="Edit Actions", description="A name for this item", default=False)
+    bpy.types.Object.start_action_name_prop = bpy.props.StringProperty(name="Start Action", description="A name for this item", default="")
     # For mesh
     bpy.types.Mesh.mesh_cached = bpy.props.BoolProperty(name="Mesh Cached", default=False)
     bpy.types.Mesh.mesh_cached_verts = bpy.props.IntProperty(name="Last Verts", default=0)
@@ -99,6 +107,10 @@ def initProperties():
     bpy.types.Curve.static_usage = bpy.props.BoolProperty(name="Static Usage", default=True)
     # For armature
     bpy.types.Armature.armature_cached = bpy.props.BoolProperty(name="Armature Cached", default=False)
+    # Actions
+    bpy.types.Armature.edit_actions = bpy.props.BoolProperty(name="Edit Actions", default=False)
+    bpy.types.Armature.my_actiontraitlist = bpy.props.CollectionProperty(type=ListActionTraitItem)
+    bpy.types.Armature.actiontraitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
     # For camera
     bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", default=True)
     bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Render Path", default="deferred_path")
@@ -117,6 +129,9 @@ def initProperties():
     bpy.types.Camera.probe_volume = bpy.props.StringProperty(name="Volume", default="")
     bpy.types.Camera.probe_strength = bpy.props.FloatProperty(name="Strength", default=1.0)
     bpy.types.Camera.probe_blending = bpy.props.FloatProperty(name="Blending", default=0.0)
+    bpy.types.Camera.is_mirror = bpy.props.BoolProperty(name="Mirror", default=False)
+    bpy.types.Camera.mirror_resolution_x = bpy.props.FloatProperty(name="X", default=512.0)
+    bpy.types.Camera.mirror_resolution_y = bpy.props.FloatProperty(name="Y", default=256.0)
 	# TODO: move to world
     bpy.types.Camera.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
     bpy.types.Camera.world_envtex_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
@@ -127,7 +142,8 @@ def initProperties():
     bpy.types.Camera.world_envtex_ground_albedo = bpy.props.FloatProperty(name="Ground Albedo", default=0.0)
     bpy.types.Camera.last_decal_context = bpy.props.StringProperty(name="Decal Context", default='')
     bpy.types.World.world_defs = bpy.props.StringProperty(name="World Shader Defs", default='')
-    bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Radiance Probes", default=True, update=invalidate_shader_cache)
+    bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Probe Radiance", default=True, update=invalidate_shader_cache)
+    bpy.types.World.generate_radiance_sky = bpy.props.BoolProperty(name="Sky Radiance", default=False, update=invalidate_shader_cache)
     bpy.types.World.generate_clouds = bpy.props.BoolProperty(name="Clouds", default=False, update=invalidate_shader_cache)
     bpy.types.World.generate_clouds_density = bpy.props.FloatProperty(name="Density", default=0.5, min=0.0, max=10.0, update=invalidate_shader_cache)
     bpy.types.World.generate_clouds_size = bpy.props.FloatProperty(name="Size", default=1.0, min=0.0, max=10.0, update=invalidate_shader_cache)
@@ -167,6 +183,8 @@ def initProperties():
     bpy.types.World.generate_ssr_falloff_exp = bpy.props.FloatProperty(name="Falloff Exp", default=5.0, update=invalidate_shader_cache)
     bpy.types.World.generate_ssr_jitter = bpy.props.FloatProperty(name="Jitter", default=0.6, update=invalidate_shader_cache)
     bpy.types.World.generate_ssr_texture_scale = bpy.props.FloatProperty(name="Texture Scale", default=0.5, min=0.0, max=1.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_pcss = bpy.props.BoolProperty(name="PCSS", description="Percentage Closer Soft Shadows", default=False, update=invalidate_shader_cache)
+    # Compositor
     bpy.types.World.generate_letterbox = bpy.props.BoolProperty(name="Letterbox", default=False, update=invalidate_shader_cache)
     bpy.types.World.generate_letterbox_size = bpy.props.FloatProperty(name="Size", default=0.1, update=invalidate_shader_cache)
     bpy.types.World.generate_grain = bpy.props.BoolProperty(name="Film Grain", default=False, update=invalidate_shader_cache)
@@ -175,6 +193,7 @@ def initProperties():
     bpy.types.World.generate_fog_color = bpy.props.FloatVectorProperty(name="Color", size=3, subtype='COLOR', default=[0.5, 0.6, 0.7], update=invalidate_shader_cache)
     bpy.types.World.generate_fog_amounta = bpy.props.FloatProperty(name="Amount A", default=0.25, update=invalidate_shader_cache)
     bpy.types.World.generate_fog_amountb = bpy.props.FloatProperty(name="Amount B", default=0.5, update=invalidate_shader_cache)
+    # Skin
     bpy.types.World.generate_gpu_skin = bpy.props.BoolProperty(name="GPU Skinning", default=True, update=invalidate_shader_cache)
     bpy.types.World.generate_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=84, update=invalidate_shader_cache)
     # For material
@@ -246,6 +265,47 @@ class ObjectPropsPanel(bpy.types.Panel):
             if obj.override_material:
                 layout.prop(obj, 'override_material_name')
 
+        if obj.type == 'ARMATURE':
+            layout.prop(obj, 'bone_animation_enabled')
+            if obj.bone_animation_enabled:
+                layout.prop(obj, 'edit_actions_prop')
+                if obj.edit_actions_prop:
+                    layout.prop_search(obj, "start_action_name_prop", obj.data, "my_actiontraitlist", "Start Action")
+        else:
+            layout.prop(obj, 'object_animation_enabled')
+        
+        if (obj.type == 'ARMATURE' and obj.bone_animation_enabled) or (obj.type != 'ARMATURE' and obj.object_animation_enabled):
+            layout.prop(obj, 'edit_tracks_prop')
+            if obj.edit_tracks_prop:
+                layout.prop_search(obj, "start_track_name_prop", obj, "my_cliptraitlist", "Start Clip")
+                # Tracks list
+                layout.label("Clips")
+                animrow = layout.row()
+                animrows = 2
+                if len(obj.my_cliptraitlist) > 1:
+                    animrows = 4
+                
+                row = layout.row()
+                row.template_list("MY_UL_ClipTraitList", "The_List", obj, "my_cliptraitlist", obj, "cliptraitlist_index", rows=animrows)
+
+                col = row.column(align=True)
+                col.operator("my_cliptraitlist.new_item", icon='ZOOMIN', text="")
+                col.operator("my_cliptraitlist.delete_item", icon='ZOOMOUT', text="")
+
+                if len(obj.my_cliptraitlist) > 1:
+                    col.separator()
+                    col.operator("my_cliptraitlist.move_item", icon='TRIA_UP', text="").direction = 'UP'
+                    col.operator("my_cliptraitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
+
+                if obj.cliptraitlist_index >= 0 and len(obj.my_cliptraitlist) > 0:
+                    animitem = obj.my_cliptraitlist[obj.cliptraitlist_index]         
+                    row = layout.row()
+                    row.prop(animitem, "start_prop")
+                    row.prop(animitem, "end_prop")
+                    layout.prop(animitem, "speed_prop")
+                    layout.prop(animitem, "loop_prop")
+                    layout.prop(animitem, "reflect_prop")
+
 # Menu in modifiers region
 class ModifiersPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -281,6 +341,11 @@ class DataPropsPanel(bpy.types.Panel):
                 layout.prop_search(obj.data, "probe_volume", bpy.data, "objects")
                 layout.prop(obj.data, 'probe_strength')
                 layout.prop(obj.data, 'probe_blending')
+            layout.prop(obj.data, 'is_mirror')
+            if obj.data.is_mirror == True:
+                layout.label('Resolution')
+                layout.prop(obj.data, 'mirror_resolution_x')
+                layout.prop(obj.data, 'mirror_resolution_y')
             layout.prop(obj.data, 'frustum_culling')
             layout.prop_search(obj.data, "pipeline_path", bpy.data, "node_groups")
             layout.operator("arm.reimport_paths_menu")
@@ -292,6 +357,33 @@ class DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'lamp_clip_end')
             layout.prop(obj.data, 'lamp_fov')
             layout.prop(obj.data, 'lamp_shadows_bias')
+        elif obj.type == 'ARMATURE':
+            layout.prop(obj.data, 'edit_actions')
+            if obj.data.edit_actions:
+                # Actions list
+                layout.label("Actions")
+                animrow = layout.row()
+                animrows = 2
+                if len(obj.data.my_actiontraitlist) > 1:
+                    animrows = 4
+                
+                row = layout.row()
+                row.template_list("MY_UL_ActionTraitList", "The_List", obj.data, "my_actiontraitlist", obj.data, "actiontraitlist_index", rows=animrows)
+
+                col = row.column(align=True)
+                col.operator("my_actiontraitlist.new_item", icon='ZOOMIN', text="")
+                col.operator("my_actiontraitlist.delete_item", icon='ZOOMOUT', text="")
+
+                if len(obj.data.my_actiontraitlist) > 1:
+                    col.separator()
+                    col.operator("my_actiontraitlist.move_item", icon='TRIA_UP', text="").direction = 'UP'
+                    col.operator("my_actiontraitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
+
+                if obj.data.actiontraitlist_index >= 0 and len(obj.data.my_actiontraitlist) > 0:
+                    item = obj.data.my_actiontraitlist[obj.data.actiontraitlist_index]
+                    item.name = item.action_name_prop
+                    row = layout.row()
+                    row.prop_search(item, "action_name_prop", bpy.data, "actions", "Action")
 
 class ScenePropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -379,6 +471,8 @@ class WorldPropsPanel(bpy.types.Panel):
         wrd = bpy.context.world
         layout.prop(wrd, 'generate_shadows')
         layout.prop(wrd, 'generate_radiance')
+        if wrd.generate_radiance:
+            layout.prop(wrd, 'generate_radiance_sky')
         layout.prop(wrd, 'generate_clouds')
         if wrd.generate_clouds:
             layout.prop(wrd, 'generate_clouds_density')
@@ -409,7 +503,8 @@ class WorldPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'generate_ssr_falloff_exp')
             layout.prop(wrd, 'generate_ssr_jitter')
             layout.prop(wrd, 'generate_ssr_texture_scale')
-        
+        layout.prop(wrd, 'generate_pcss')
+
         layout.label('Compositor')
         layout.prop(wrd, 'generate_letterbox')
         if wrd.generate_letterbox:

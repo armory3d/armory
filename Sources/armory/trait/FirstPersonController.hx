@@ -36,7 +36,7 @@ class FirstPersonController extends Trait {
 	function init() {
 		transform = object.transform;
 		body = object.getTrait(RigidBody);
-		camera = iron.Root.cameras[0];
+		camera = cast(object, CameraObject);
 	}
 
     function onDown(key: kha.Key, char: String) {

@@ -2,7 +2,6 @@ package armory.trait;
 
 import kha.Key;
 import iron.Trait;
-import iron.Root;
 import iron.sys.Input;
 import iron.sys.Time;
 import iron.object.CameraObject;
@@ -39,7 +38,7 @@ class WalkNavigation extends Trait {
 	}
 
     function init() {
-        camera = Root.cameras[0];
+        camera = cast(object, CameraObject);
     }
 
     function update() {

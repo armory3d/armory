@@ -52,7 +52,7 @@ class RigidBody extends Trait {
 
 	public function init() {
 		transform = object.transform;
-		physics = armory.Scene.physics;
+		physics = armory.trait.internal.PhysicsWorld.active;
 
 		if (bodyCreated) return;
 		bodyCreated = true;

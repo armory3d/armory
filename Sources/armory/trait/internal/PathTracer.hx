@@ -3,7 +3,6 @@ package armory.trait.internal;
 import iron.math.Mat4;
 import iron.math.Vec4;
 import iron.Trait;
-import iron.Root;
 import iron.object.Transform;
 import iron.object.MeshObject;
 import iron.data.Data;
@@ -83,7 +82,7 @@ class PathTracer extends Trait {
 		transformMap = new Map();
 		var sphereNum = 0;
 		var cubeNum = 0;
-		for (n in Root.meshes) {
+		for (n in iron.Scene.active.meshes) {
 			if (n.name.split(".")[0] == "Sphere") {
 				context.raw.bind_constants.push(
 					{
@@ -144,7 +143,7 @@ class PathTracer extends Trait {
 	}
 
     function update() {
-		var camera = Root.cameras[0];
+		var camera = iron.Scene.active.camera;
 		var eye = camera.transform.loc;
 		
 		// var jitter = Mat4.identity();

@@ -77,8 +77,8 @@ in vec4 matColor;
 #endif
 
 float packFloat(float f1, float f2) {
-	int index = int(f1 * 1000);
-	float alpha = f2 == 0.0 ? f2 : (f2 - 0.0001);
+	float index = floor(f1 * 1000.0); // Temporary
+	float alpha = clamp(f2, 0.0, 1.0 - 0.001);
 	return index + alpha;
 }
 
@@ -179,7 +179,7 @@ float parallaxShadow(vec3 L, vec2 initialTexCoord, float initialHeight) {
 		// ...
 		
 		// Shadowing factor should be 1 if there were no points under the surface
-		if(numSamplesUnderSurface < 1) shadowMultiplier = 1;
+		if (numSamplesUnderSurface < 1) shadowMultiplier = 1;
 		else shadowMultiplier = 1.0 - shadowMultiplier;
 	}
 	return shadowMultiplier;
@@ -259,9 +259,9 @@ void main() {
 		}
 		if (dist > 0) mask_probe = 0;
 	}
-	outColor[0] = vec4(n.xy, packFloat(roughness, metalness), mask_probe);
+	outColor[0] = vec4(n.xy, packFloat(metalness, roughness), mask_probe);
 #else
-	outColor[0] = vec4(n.xy, packFloat(roughness, metalness), mask);
+	outColor[0] = vec4(n.xy, packFloat(metalness, roughness), mask);
 #endif
 	outColor[1] = vec4(baseColor.rgb, occ);
 

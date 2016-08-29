@@ -31,7 +31,7 @@ class PhysicsDrag extends Trait {
 	}
 
 	function init() {
-		physics = armory.Scene.physics;
+		physics = armory.trait.internal.PhysicsWorld.active;
 	}
 
 	function update() {

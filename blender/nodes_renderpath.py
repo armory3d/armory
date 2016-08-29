@@ -796,13 +796,19 @@ def buildNodeTrees(shader_references, asset_references, assets_path):
     # Always include
     buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'brdf.png')
 
-    # Export selected pipeline
-    node_group = bpy.data.node_groups[bpy.data.cameras[0].pipeline_path]
-    buildNodeTree(node_group, shader_references, asset_references)
+    # Export pipeline for each camera
+    parsed_paths = []
+    for cam in bpy.data.cameras:
+        # if cam.game_export
+        if cam.pipeline_path not in parsed_paths:
+            node_group = bpy.data.node_groups[cam.pipeline_path]
+            buildNodeTree(cam, node_group, shader_references, asset_references)
+            parsed_paths.append(cam.pipeline_path)
 
     return buildNodeTrees.linked_assets
 
-def buildNodeTree(node_group, shader_references, asset_references):
+def buildNodeTree(cam, node_group, shader_references, asset_references):
+    buildNodeTree.cam = cam
     output = {}
     dat = {}
     output['pipeline_datas'] = [dat]
@@ -817,8 +823,8 @@ def buildNodeTree(node_group, shader_references, asset_references):
     dat['name'] = node_group_name
 
     # Store main context names
-    dat['mesh_context'] = bpy.data.cameras[0].mesh_context
-    dat['shadows_context'] = bpy.data.cameras[0].shadows_context
+    dat['mesh_context'] = buildNodeTree.cam.mesh_context
+    dat['shadows_context'] = buildNodeTree.cam.shadows_context
     
     dat['render_targets'], dat['depth_buffers'] = preprocess_pipeline(rn, node_group)
     dat['stages'] = []
@@ -878,7 +884,7 @@ def make_draw_meshes(stage, node_group, node):
     # Context
     context = node.inputs[1].default_value
     # Store shadowmap size
-    if context == bpy.data.cameras[0].shadows_context:
+    if context == buildNodeTree.cam.shadows_context:
         bpy.data.worlds[0].shadowmap_size = buildNode.last_set_target_w
     stage['params'].append(context)
     # Order
@@ -889,7 +895,7 @@ def make_draw_decals(stage, node_group, node, shader_references, asset_reference
     stage['command'] = 'draw_decals'
     context = node.inputs[1].default_value
     stage['params'].append(context) # Context
-    bpy.data.cameras[0].last_decal_context = context
+    buildNodeTree.cam.last_decal_context = context
 
 def make_bind_target(stage, node_group, node, constant_name, currentNode=None, target_index=1):
     if currentNode == None:
@@ -985,7 +991,7 @@ def make_draw_compositor(stage, node_group, node, shader_references, asset_refer
     if wrd.generate_fog:
         compositor_defs += '_CompoFog'
         compo_pos = True
-    if bpy.data.cameras[0].cycles.aperture_size > 0.0:
+    if buildNodeTree.cam.cycles.aperture_size > 0.0:
         compositor_defs += '_CompoDOF'
         compo_depth = True
     if compo_pos:
@@ -1186,7 +1192,7 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
         stencil_val = None
         if node.inputs[1].default_value == True:
             if node.inputs[2].is_linked: # Assume background color node is linked
-                color_val = bpy.data.cameras[0].world_envtex_color
+                color_val = buildNodeTree.cam.world_envtex_color
             else:
                 color_val = node.inputs[2].default_value
         if node.inputs[3].default_value == True:
@@ -1237,7 +1243,7 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
             make_set_target(stage, node_group, node)
             stages.append(stage)
         # Bind targets
-        if node.inputs[2].is_linked or node.inputs[3].is_linked:
+        if node.inputs[2].is_linked or node.inputs[3].is_linked or node.inputs[4].is_linked:
             stage = {}
             stage['params'] = []
             buildNode.last_bind_target = stage
@@ -1390,14 +1396,14 @@ def get_root_node(node_group):
     for n in node_group.nodes:
         if n.bl_idname == 'BeginNodeType':
             # Store contexts
-            bpy.data.cameras[0].pipeline_id = n.inputs[0].default_value
+            buildNodeTree.cam.pipeline_id = n.inputs[0].default_value
             mesh_contexts = n.inputs[1].default_value.split(',')
-            bpy.data.cameras[0].mesh_context = mesh_contexts[0]
+            buildNodeTree.cam.mesh_context = mesh_contexts[0]
             if len(mesh_contexts) > 1:
-                bpy.data.cameras[0].mesh_context_empty = mesh_contexts[1]
-            bpy.data.cameras[0].shadows_context = n.inputs[2].default_value
-            bpy.data.cameras[0].translucent_context = n.inputs[3].default_value
-            bpy.data.cameras[0].overlay_context = n.inputs[4].default_value
+                buildNodeTree.cam.mesh_context_empty = mesh_contexts[1]
+            buildNodeTree.cam.shadows_context = n.inputs[2].default_value
+            buildNodeTree.cam.translucent_context = n.inputs[3].default_value
+            buildNodeTree.cam.overlay_context = n.inputs[4].default_value
             if n.inputs[5].default_value == False: # No HDR space lighting, append def
                 bpy.data.worlds[0].world_defs += '_LDR'
             rn = findNodeByLinkFrom(node_group, n, n.outputs[0])
@@ -1408,16 +1414,16 @@ def preprocess_pipeline(root_node, node_group):
     render_targets = []
     depth_buffers = []
     preprocess_pipeline.velocity_def_added = False
-    bpy.data.cameras[0].pipeline_passes = ''
+    buildNodeTree.cam.pipeline_passes = ''
     traverse_pipeline(root_node, node_group, render_targets, depth_buffers)
     return render_targets, depth_buffers
     
 def traverse_pipeline(node, node_group, render_targets, depth_buffers):
     # Gather linked draw geometry contexts
     if node.bl_idname == 'DrawMeshesNodeType':
-        if bpy.data.cameras[0].pipeline_passes != '':
-            bpy.data.cameras[0].pipeline_passes += '_' # Separator
-        bpy.data.cameras[0].pipeline_passes += node.inputs[1].default_value
+        if buildNodeTree.cam.pipeline_passes != '':
+            buildNodeTree.cam.pipeline_passes += '_' # Separator
+        buildNodeTree.cam.pipeline_passes += node.inputs[1].default_value
 
     # Gather defs from linked nodes
     if node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':

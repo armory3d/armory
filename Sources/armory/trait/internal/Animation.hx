@@ -11,8 +11,9 @@ class Animation extends Trait {
     var speeds:Array<Float>;
     var loops:Array<Bool>;
     var reflects:Array<Bool>;
+    static var maxBones:Int;
 
-    public function new(startTrack:String, names:Array<String>, starts:Array<Int>, ends:Array<Int>, speeds:Array<Float>, loops:Array<Bool>, reflects:Array<Bool>) {
+    public function new(startTrack:String, names:Array<String>, starts:Array<Int>, ends:Array<Int>, speeds:Array<Float>, loops:Array<Bool>, reflects:Array<Bool>, _maxBones:Int) {
         super();
         
         this.startTrack = startTrack;
@@ -22,13 +23,14 @@ class Animation extends Trait {
         this.speeds = speeds;
         this.loops = loops;
         this.reflects = reflects;
+        maxBones = _maxBones;
 
         notifyOnAdd(add);
         notifyOnUpdate(update);
     }
 
     function add() {
-        object.setupAnimation(startTrack, names, starts, ends, speeds, loops, reflects);
+        object.setupAnimation(startTrack, names, starts, ends, speeds, loops, reflects, maxBones);
     }
 
     function update() {

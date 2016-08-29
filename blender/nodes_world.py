@@ -77,6 +77,10 @@ def buildNodeTree(world_name, node_group):
 	if wrd.generate_shadows == False:
 		wrd.world_defs += '_NoShadows'
 
+	# Percentage closer soft shadows
+	if wrd.generate_pcss:
+		wrd.world_defs += '_PCSS'
+
 	# Enable probes
 	for cam in bpy.data.cameras:
 		if cam.is_probe:
@@ -166,7 +170,7 @@ def parse_color(node_group, node, context, envmap_strength_const):
 		# Append LDR define
 		if disable_hdr:
 			bpy.data.worlds[0].world_defs += '_EnvLDR'
-		# Append radiance degine
+		# Append radiance define
 		if generate_radiance:
 			bpy.data.worlds[0].world_defs += '_Rad'
 	
@@ -190,6 +194,19 @@ def parse_color(node_group, node, context, envmap_strength_const):
 		bpy.data.cameras[0].world_envtex_name = base_name
 		
 		write_probes.write_sky_irradiance(base_name)
+
+		# Radiance
+		if bpy.data.worlds[0].generate_radiance_sky and bpy.data.worlds[0].generate_radiance:
+			bpy.data.worlds[0].world_defs += '_Rad'
+			
+			user_preferences = bpy.context.user_preferences
+			addon_prefs = user_preferences.addons['armory'].preferences
+			sdk_path = addon_prefs.sdk_path
+			assets.add(sdk_path + 'armory/Assets/hosek/hosek_radiance.hdr')
+			for i in range(0, 8):
+				assets.add(sdk_path + 'armory/Assets/hosek/hosek_radiance_' + str(i) + '.hdr')
+			
+			bpy.data.cameras[0].world_envtex_num_mips = 8
 
 		# Adjust strength to match Cycles
 		envmap_strength_const['float'] *= 0.25

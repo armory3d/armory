@@ -22,7 +22,7 @@ vec2 unpackFloat(float f) {
 
 void main() {
 	vec2 tc = texCoord * ssrTextureScale;
-	float roughness = unpackFloat(texture(gbuffer0, texCoord).b).x;
+	float roughness = unpackFloat(texture(gbuffer0, texCoord).b).y;
 	if (roughness == 0.0) {
 		outColor = texture(tex, tc);
 		// outColor = vec4(0.0, 0.0, 0.0, 1.0);

@@ -1,7 +1,6 @@
 package armory.trait;
 
 import iron.Trait;
-import iron.Root;
 
 class SceneInstance extends Trait {
 
@@ -9,7 +8,7 @@ class SceneInstance extends Trait {
         super();
 
         notifyOnInit(function() {
-			Root.addScene(sceneName, object);
+			iron.Scene.active.addScene(sceneName, object);
 		});
     }
 }

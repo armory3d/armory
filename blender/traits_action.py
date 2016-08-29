@@ -5,45 +5,24 @@ import json
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
-class ListAnimationTraitItem(bpy.types.PropertyGroup):
+class ListActionTraitItem(bpy.types.PropertyGroup):
     # Group of properties representing an item in the list
     name = bpy.props.StringProperty(
            name="Name",
            description="A name for this item",
-           default="Untitled")
+           default="")
            
     enabled_prop = bpy.props.BoolProperty(
            name="",
            description="A name for this item",
            default=True)
 
-    start_prop = bpy.props.IntProperty(
-           name="Start",
+    action_name_prop = bpy.props.StringProperty(
+           name="Action",
            description="A name for this item",
-           default=0)
+           default="")
 
-    end_prop = bpy.props.IntProperty(
-           name="End",
-           description="A name for this item",
-           default=0)
-
-    speed_prop = bpy.props.FloatProperty(
-           name="Speed",
-           description="A name for this item",
-           default=1.0)
-
-    loop_prop = bpy.props.BoolProperty(
-           name="Loop",
-           description="A name for this item",
-           default=True)
-
-    reflect_prop = bpy.props.BoolProperty(
-           name="Reflect",
-           description="A name for this item",
-           default=False)
-
-
-class MY_UL_AnimationTraitList(bpy.types.UIList):
+class MY_UL_ActionTraitList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here...
         custom_icon = 'OBJECT_DATAMODE'
@@ -51,53 +30,53 @@ class MY_UL_AnimationTraitList(bpy.types.UIList):
         # Make sure your code supports all 3 layout types
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             layout.prop(item, "enabled_prop")
-            #layout.label(item.name, icon = custom_icon)
-            layout.prop(item, "name", text="", emboss=False, icon=custom_icon)
+            layout.label(item.name, icon=custom_icon)
+            # layout.prop(item, "name", text="", emboss=False, icon=custom_icon)
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
             layout.label("", icon = custom_icon)
 
-class LIST_OT_AnimationTraitNewItem(bpy.types.Operator):
+class LIST_OT_ActionTraitNewItem(bpy.types.Operator):
     # Add a new item to the list
-    bl_idname = "my_animationtraitlist.new_item"
+    bl_idname = "my_actiontraitlist.new_item"
     bl_label = "Add a new item"
 
     def execute(self, context):
-        trait = context.object.my_traitlist[context.object.traitlist_index]
-        trait.my_animationtraitlist.add()
-        trait.animationtraitlist_index = len(trait.my_animationtraitlist) - 1
+        trait = context.object.data
+        trait.my_actiontraitlist.add()
+        trait.actiontraitlist_index = len(trait.my_actiontraitlist) - 1
         return{'FINISHED'}
 
 
-class LIST_OT_AnimationTraitDeleteItem(bpy.types.Operator):
+class LIST_OT_ActionTraitDeleteItem(bpy.types.Operator):
     # Delete the selected item from the list
-    bl_idname = "my_animationtraitlist.delete_item"
+    bl_idname = "my_actiontraitlist.delete_item"
     bl_label = "Deletes an item"
 
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list """
-        trait = context.object.my_traitlist[context.object.traitlist_index]
-        return len(trait.my_animationtraitlist) > 0
+        trait = context.object.data
+        return len(trait.my_actiontraitlist) > 0
 
     def execute(self, context):
-        trait = context.object.my_traitlist[context.object.traitlist_index]
-        list = trait.my_animationtraitlist
-        index = trait.animationtraitlist_index
+        trait = context.object.data
+        list = trait.my_actiontraitlist
+        index = trait.actiontraitlist_index
 
         list.remove(index)
 
         if index > 0:
             index = index - 1
 
-        trait.animationtraitlist_index = index
+        trait.actiontraitlist_index = index
         return{'FINISHED'}
 
 
-class LIST_OT_AnimationTraitMoveItem(bpy.types.Operator):
+class LIST_OT_ActionTraitMoveItem(bpy.types.Operator):
     # Move an item in the list
-    bl_idname = "my_animationtraitlist.move_item"
+    bl_idname = "my_actiontraitlist.move_item"
     bl_label = "Move an item in the list"
     direction = bpy.props.EnumProperty(
                 items=(
@@ -107,15 +86,15 @@ class LIST_OT_AnimationTraitMoveItem(bpy.types.Operator):
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list. """
-        trait = context.object.my_traitlist[context.object.traitlist_index]
-        return len(trait.my_animationtraitlist) > 0
+        trait = context.object.data
+        return len(trait.my_actiontraitlist) > 0
 
 
     def move_index(self):
         # Move index of an item render queue while clamping it
-        trait = context.object.my_traitlist[context.object.traitlist_index]
-        index = trait.animationtraitlist_index
-        list_length = len(trait.my_animationtraitlist) - 1
+        trait = context.object.data
+        index = trait.actiontraitlist_index
+        list_length = len(trait.my_actiontraitlist) - 1
         new_index = 0
 
         if self.direction == 'UP':
@@ -128,9 +107,9 @@ class LIST_OT_AnimationTraitMoveItem(bpy.types.Operator):
 
 
     def execute(self, context):
-        trait = context.object.my_traitlist[context.object.traitlist_index]
-        list = trait.my_animationtraitlist
-        index = trait.animationtraitlist_index
+        trait = context.object.data
+        list = trait.my_actiontraitlist
+        index = trait.actiontraitlist_index
 
         if self.direction == 'DOWN':
             neighbor = index + 1
