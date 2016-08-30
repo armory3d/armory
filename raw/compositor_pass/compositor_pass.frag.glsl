@@ -235,14 +235,14 @@ void main() {
 #endif
 
 #ifdef _CompoDOF
-	if (depth < 1.0) {
+	// if (depth < 1.0) {
 		float linDepth = linearize(depth);
 		float blur_amount = abs(linDepth - compoDOFDistance) / cameraPlane.y;
 		// float blur_amount = abs(linDepth - 4.0);
 		float blurSize = compoDOFSize * blur_amount;
 		// float blurSize = 0.0005 * blur_amount;
 		col.rgb = 0.75 * sampleBox(blurSize * 0.5) + 0.25 * sampleBox(blurSize * 1.0);
-	}
+	// }
 #endif
 
 #ifdef _CompoFog

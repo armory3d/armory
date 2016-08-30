@@ -1,7 +1,7 @@
 {
 	"contexts": [
 		{
-			"name": "godrays_pass",
+			"name": "lightshafts_pass",
 			"params": [
 				{
 					"name": "depth_write",
@@ -18,8 +18,8 @@
 			],
 			"links": [],
 			"texture_params": [],
-			"vertex_shader": "godrays_pass.vert.glsl",
-			"fragment_shader": "godrays_pass.frag.glsl"
+			"vertex_shader": "lightshafts_pass.vert.glsl",
+			"fragment_shader": "lightshafts_pass.frag.glsl"
 		}
 	]
 }

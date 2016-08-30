@@ -1,0 +1,70 @@
+{
+	"contexts": [
+		{
+			"name": "volumetric_light",
+			"params": [
+				{
+					"name": "depth_write",
+					"value": "false"
+				},
+				{
+					"name": "compare_mode",
+					"value": "greater"
+				},
+				{
+					"name": "cull_mode",
+					"value": "counter_clockwise"
+				}
+			],
+			"links": [
+				{
+					"name": "LVWVP",
+					"link": "_lampVolumeWorldViewProjectionMatrix"
+				},
+				{
+					"name": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				},
+				{
+					"name": "LWVP",
+					"link": "_biasLampWorldViewProjectionMatrix"
+				},
+				{
+					"name": "shadowsBias",
+					"link": "_lampShadowsBias"
+				},
+				{
+					"name": "screenSize",
+					"link": "_screenSize"
+				},
+				{
+					"name": "viewPos",
+					"link": "_cameraPosition"
+				},
+				{
+					"name": "lightPos",
+					"link": "_lampPosition"
+				},
+				{
+					"name": "lightRadius",
+					"link": "_lampRadius"
+				},
+				{
+					"name": "lightColor",
+					"link": "_lampColor"
+				},
+				{
+					"name": "lightStrength",
+					"link": "_lampStrength"
+				},
+				{
+					"name": "snoise",
+					"link": "_noise8"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "volumetric_light.vert.glsl",
+			"fragment_shader": "volumetric_light.frag.glsl"
+		}
+	]
+}

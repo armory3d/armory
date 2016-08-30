@@ -400,5 +400,5 @@ void main() {
 
 	n /= (abs(n.x) + abs(n.y) + abs(n.z));
     n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
-	outColor[1] = vec4(n.xy, packFloat(roughness, metalness), 0.0);
+	outColor[1] = vec4(n.xy, packFloat(metalness, roughness), 0.0);
 }

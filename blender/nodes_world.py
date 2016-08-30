@@ -138,9 +138,12 @@ def parse_color(node_group, node, context, envmap_strength_const):
 		texture['name'] = 'envmap'
 		
 		image = node.image
+		filepath = image.filepath
+
 		if image.packed_file != None:
 			# Extract packed data
-			unpack_path = utils.get_fp() + '/build/compiled/Assets/unpacked'
+			filepath = '/build/compiled/Assets/unpacked'
+			unpack_path = utils.get_fp() + filepath
 			if not os.path.exists(unpack_path):
 				os.makedirs(unpack_path)
 			unpack_filepath = unpack_path + '/' + image.name
@@ -162,7 +165,7 @@ def parse_color(node_group, node, context, envmap_strength_const):
 		disable_hdr = image.filepath.endswith('.jpg')
 		mip_count = bpy.data.cameras[0].world_envtex_num_mips
 		
-		mip_count = write_probes.write_probes(node.image.filepath, disable_hdr, mip_count, generate_radiance=generate_radiance)
+		mip_count = write_probes.write_probes(filepath, disable_hdr, mip_count, generate_radiance=generate_radiance)
 		
 		bpy.data.cameras[0].world_envtex_num_mips = mip_count
 		# Append envtex define

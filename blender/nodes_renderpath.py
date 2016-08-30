@@ -319,6 +319,23 @@ class DeferredIndirectPassNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
+class VolumetricLightPassNode(Node, CGPipelineTreeNode):
+    '''A custom node'''
+    bl_idname = 'VolumetricLightPassNodeType'
+    bl_label = 'Volumetric Light'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "A")
+        self.inputs.new('NodeSocketShader', "B")
+        self.inputs.new('NodeSocketShader', "Normals")
+        self.inputs.new('NodeSocketShader', "Depth")
+        self.inputs.new('NodeSocketShader', "Shadow Map")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
 class TranslucentResolvePassNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'TranslucentResolvePassNodeType'
@@ -725,6 +742,7 @@ node_categories = [
         NodeItem("WaterPassNodeType"),
         NodeItem("DeferredLightPassNodeType"),
         NodeItem("DeferredIndirectPassNodeType"),
+        NodeItem("VolumetricLightPassNodeType"),
         NodeItem("TranslucentResolvePassNodeType"),
     ]),
     MyConstantNodeCategory("CONSTANTNODES", "Constant", items=[
@@ -1166,6 +1184,14 @@ def make_deferred_light_pass(stages, node_group, node, shader_references, asset_
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'shadowMap'], shader_context='deferred_light/deferred_light/deferred_light')
     stages[-1]['command'] = 'draw_lamp_volume'
 
+def make_volumetric_light_pass(stages, node_group, node, shader_references, asset_references):
+    # Draw lamp volume - TODO: properly generate stage
+    # make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[5, 6], bind_target_constants=['gbufferD', 'shadowMap'], shader_context='volumetric_light/volumetric_light/volumetric_light_blend')
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[5, 6], bind_target_constants=['gbufferD', 'shadowMap'], shader_context='volumetric_light/volumetric_light/volumetric_light')
+    stages[-1]['command'] = 'draw_lamp_volume'
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=3, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x')
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y_blend_add')
+
 def make_deferred_indirect_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'ssaotex'], shader_context='deferred_indirect/deferred_indirect/deferred_indirect')
 
@@ -1357,6 +1383,9 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
     elif node.bl_idname == 'DeferredIndirectPassNodeType':
         make_deferred_indirect_pass(stages, node_group, node, shader_references, asset_references)
         append_stage = False
+    elif node.bl_idname == 'VolumetricLightPassNodeType':
+        make_volumetric_light_pass(stages, node_group, node, shader_references, asset_references)
+        append_stage = False
     elif node.bl_idname == 'TranslucentResolvePassNodeType':
         make_translucent_resolve_pass(stages, node_group, node, shader_references, asset_references)
         append_stage = False
@@ -1458,7 +1487,7 @@ def traverse_pipeline(node, node_group, render_targets, depth_buffers):
             traverse_pipeline(loop_node, node_group, render_targets, depth_buffers)
     
     # Prebuilt
-    elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'BlendPassNodeType' or node.bl_idname == 'CombinePassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'DeferredIndirectPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
+    elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'BlendPassNodeType' or node.bl_idname == 'CombinePassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'DeferredIndirectPassNodeType' or node.bl_idname == 'VolumetricLightPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
         if node.inputs[1].is_linked:
             tnode = findNodeByLink(node_group, node, node.inputs[1])
             parse_render_target(tnode, node_group, render_targets, depth_buffers)
