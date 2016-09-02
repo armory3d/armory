@@ -8,14 +8,26 @@ from bpy.props import *
 from traits_clip import *
 from traits_action import *
 import utils
+import make
 
 def on_scene_update(context):
     edit_obj = bpy.context.edit_object
-    if edit_obj is not None and edit_obj.is_updated_data is True:
+    if edit_obj != None and edit_obj.is_updated_data:
         if edit_obj.type == 'MESH':
             edit_obj.data.mesh_cached = False
         elif edit_obj.type == 'ARMATURE':
             edit_obj.data.armature_cached = False
+
+    # Auto patch on every operator change
+    if make.play_project.playproc != None and \
+       bpy.data.worlds['Arm'].ArmPlayLivePatch and \
+       bpy.data.worlds['Arm'].ArmPlayAutoBuild and \
+       len(bpy.context.window_manager.operators) > 0 and \
+       on_scene_update.last_operator != bpy.context.window_manager.operators[-1]:
+        on_scene_update.last_operator = bpy.context.window_manager.operators[-1]
+        make.patch_project()
+        make.compile_project()
+on_scene_update.last_operator = None
 
 def invalidate_shader_cache(self, context):
     # compiled.glsl changed, recompile all shaders next time
@@ -48,6 +60,7 @@ def initProperties():
         name = "Target", default='html5')
     bpy.types.World.ArmProjectName = StringProperty(name = "Name", default="ArmoryGame")
     bpy.types.World.ArmProjectPackage = StringProperty(name = "Package", default="game")
+    bpy.types.World.ArmPlayActiveScene = BoolProperty(name="Play Active Scene", default=True)
     bpy.types.World.ArmProjectScene = StringProperty(name = "Scene")
     bpy.types.World.ArmProjectSamplesPerPixel = IntProperty(name = "Samples per Pixel", default=1)
     bpy.types.World.ArmPhysics = EnumProperty(
@@ -59,7 +72,11 @@ def initProperties():
     bpy.types.World.ArmOptimizeMesh = BoolProperty(name="Optimize Meshes", default=False, update=invalidate_mesh_data)
     bpy.types.World.ArmSampledAnimation = BoolProperty(name="Sampled Animation", default=False, update=invalidate_compiled_data)
     bpy.types.World.ArmDeinterleavedBuffers = BoolProperty(name="Deinterleaved Buffers", default=False)
+    bpy.types.World.ArmExportHideRender = BoolProperty(name="Export Hidden Renders", default=False)
+    bpy.types.World.ArmSpawnAllLayers = BoolProperty(name="Spawn All Layers", default=False)
     bpy.types.World.ArmCacheShaders = BoolProperty(name="Cache Shaders", default=True)
+    bpy.types.World.ArmPlayLivePatch = BoolProperty(name="Live Patching", default=False)
+    bpy.types.World.ArmPlayAutoBuild = BoolProperty(name="Auto Build", default=True)
     bpy.types.World.ArmPlayViewportCamera = BoolProperty(name="Viewport Camera", default=False)
     bpy.types.World.ArmPlayViewportNavigation = EnumProperty(
         items = [('None', 'None', 'None'), 
@@ -89,6 +106,7 @@ def initProperties():
     bpy.types.Object.override_material_name = bpy.props.StringProperty(name="Name", default="")
     bpy.types.Object.game_export = bpy.props.BoolProperty(name="Export", default=True)
     bpy.types.Object.spawn = bpy.props.BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True)
+    bpy.types.Object.mobile = bpy.props.BoolProperty(name="Mobile", description="Object moves during gameplay", default=True)
     # - Clips
     bpy.types.Object.bone_animation_enabled = bpy.props.BoolProperty(name="Bone Animation", default=True)
     bpy.types.Object.object_animation_enabled = bpy.props.BoolProperty(name="Object Animation", default=True)
@@ -103,8 +121,8 @@ def initProperties():
     bpy.types.Mesh.mesh_cached = bpy.props.BoolProperty(name="Mesh Cached", default=False)
     bpy.types.Mesh.mesh_cached_verts = bpy.props.IntProperty(name="Last Verts", default=0)
     bpy.types.Mesh.mesh_cached_edges = bpy.props.IntProperty(name="Last Edges", default=0)
-    bpy.types.Mesh.static_usage = bpy.props.BoolProperty(name="Static Usage", default=True)
-    bpy.types.Curve.static_usage = bpy.props.BoolProperty(name="Static Usage", default=True)
+    bpy.types.Mesh.static_usage = bpy.props.BoolProperty(name="Static Data Usage", default=True)
+    bpy.types.Curve.static_usage = bpy.props.BoolProperty(name="Static Data Usage", default=True)
     # For armature
     bpy.types.Armature.armature_cached = bpy.props.BoolProperty(name="Armature Cached", default=False)
     # Actions
@@ -132,15 +150,15 @@ def initProperties():
     bpy.types.Camera.is_mirror = bpy.props.BoolProperty(name="Mirror", default=False)
     bpy.types.Camera.mirror_resolution_x = bpy.props.FloatProperty(name="X", default=512.0)
     bpy.types.Camera.mirror_resolution_y = bpy.props.FloatProperty(name="Y", default=256.0)
-	# TODO: move to world
-    bpy.types.Camera.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
-    bpy.types.Camera.world_envtex_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
-    bpy.types.Camera.world_envtex_color = bpy.props.FloatVectorProperty(name="Environment Color", size=4, default=[0,0,0,1])
-    bpy.types.Camera.world_envtex_strength = bpy.props.FloatProperty(name="Environment Strength", default=1.0)
-    bpy.types.Camera.world_envtex_sun_direction = bpy.props.FloatVectorProperty(name="Sun Direction", size=3, default=[0,0,0])
-    bpy.types.Camera.world_envtex_turbidity = bpy.props.FloatProperty(name="Turbidity", default=1.0)
-    bpy.types.Camera.world_envtex_ground_albedo = bpy.props.FloatProperty(name="Ground Albedo", default=0.0)
     bpy.types.Camera.last_decal_context = bpy.props.StringProperty(name="Decal Context", default='')
+    # For world
+    bpy.types.World.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
+    bpy.types.World.world_envtex_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
+    bpy.types.World.world_envtex_color = bpy.props.FloatVectorProperty(name="Environment Color", size=4, default=[0,0,0,1])
+    bpy.types.World.world_envtex_strength = bpy.props.FloatProperty(name="Environment Strength", default=1.0)
+    bpy.types.World.world_envtex_sun_direction = bpy.props.FloatVectorProperty(name="Sun Direction", size=3, default=[0,0,0])
+    bpy.types.World.world_envtex_turbidity = bpy.props.FloatProperty(name="Turbidity", default=1.0)
+    bpy.types.World.world_envtex_ground_albedo = bpy.props.FloatProperty(name="Ground Albedo", default=0.0)
     bpy.types.World.world_defs = bpy.props.StringProperty(name="World Shader Defs", default='')
     bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Probe Radiance", default=True, update=invalidate_shader_cache)
     bpy.types.World.generate_radiance_sky = bpy.props.BoolProperty(name="Sky Radiance", default=False, update=invalidate_shader_cache)
@@ -240,9 +258,18 @@ class ObjectPropsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         obj = bpy.context.object
-        layout.prop(obj, 'game_export')
-        if obj.game_export:
-            layout.prop(obj, 'spawn')
+        if bpy.data.worlds['Arm'].ArmExportHideRender == False:
+            layout.prop(obj, 'hide_render')
+            hide = obj.hide_render
+        else:
+            layout.prop(obj, 'game_export')
+            hide = not obj.game_export
+        
+        if hide:
+            return
+        
+        layout.prop(obj, 'spawn')
+        layout.prop(obj, 'mobile')
         if obj.type == 'MESH':
             layout.prop(obj, 'instanced_children')
             if obj.instanced_children:
@@ -319,9 +346,9 @@ class ModifiersPropsPanel(bpy.types.Panel):
 
         # Assume as first modifier
         if len(obj.modifiers) > 0 and obj.modifiers[0].type == 'OCEAN':
-            layout.prop(bpy.data.worlds[0], 'generate_ocean_base_color')
-            layout.prop(bpy.data.worlds[0], 'generate_ocean_water_color')
-            layout.prop(bpy.data.worlds[0], 'generate_ocean_fade')
+            layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_base_color')
+            layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_water_color')
+            layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_fade')
 
 # Menu in data region
 class DataPropsPanel(bpy.types.Panel):
@@ -468,7 +495,8 @@ class WorldPropsPanel(bpy.types.Panel):
  
     def draw(self, context):
         layout = self.layout
-        wrd = bpy.context.world
+        # wrd = bpy.context.world
+        wrd = bpy.data.worlds['Arm']
         layout.prop(wrd, 'generate_shadows')
         layout.prop(wrd, 'generate_radiance')
         if wrd.generate_radiance:
@@ -518,17 +546,193 @@ class WorldPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'generate_fog_amounta')
             layout.prop(wrd, 'generate_fog_amountb')
 
-        layout.label('Skinning')
+# Menu in render region
+class ArmoryPlayPanel(bpy.types.Panel):
+    bl_label = "Armory Play"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+ 
+    def draw(self, context):
+        layout = self.layout
+        wrd = bpy.data.worlds['Arm']
+        if make.play_project.playproc == None and make.play_project.compileproc == None:
+            layout.operator("arm.play", icon="PLAY")
+        else:
+            layout.operator("arm.stop", icon="MESH_PLANE")
+        layout.prop(wrd, 'ArmPlayRuntime')
+        layout.prop(wrd, 'ArmPlayViewportCamera')
+        if wrd.ArmPlayViewportCamera:
+            layout.prop(wrd, 'ArmPlayViewportNavigation')
+
+        layout.prop(wrd, 'ArmPlayConsole')
+        layout.prop(wrd, 'ArmPlayDeveloperTools')
+        layout.prop(wrd, 'ArmPlayLivePatch')
+        if wrd.ArmPlayLivePatch:
+            layout.prop(wrd, 'ArmPlayAutoBuild')
+
+class ArmoryBuildPanel(bpy.types.Panel):
+    bl_label = "Armory Build"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = {'DEFAULT_CLOSED'}
+ 
+    def draw(self, context):
+        layout = self.layout
+        wrd = bpy.data.worlds['Arm']
+        layout.operator("arm.build")
+        layout.operator("arm.kode_studio")
+        layout.operator("arm.clean")
+        layout.prop(wrd, 'ArmProjectTarget')
+        layout.prop(wrd, 'ArmPhysics')
+        layout.prop(wrd, 'ArmCacheShaders')
+        layout.prop(wrd, 'ArmMinimize')
+        layout.prop(wrd, 'ArmOptimizeMesh')
+        layout.prop(wrd, 'ArmSampledAnimation')
+        layout.prop(wrd, 'ArmDeinterleavedBuffers')
         layout.prop(wrd, 'generate_gpu_skin')
         if wrd.generate_gpu_skin:
             layout.prop(wrd, 'generate_gpu_skin_max_bones')
+        layout.prop(wrd, 'ArmProjectSamplesPerPixel')
+
+class ArmoryProjectPanel(bpy.types.Panel):
+    bl_label = "Armory Project"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = {'DEFAULT_CLOSED'}
+    info_text = 'Ready'
+ 
+    def draw(self, context):
+        layout = self.layout
+        wrd = bpy.data.worlds['Arm']
+        layout.prop(wrd, 'ArmProjectName')
+        layout.prop(wrd, 'ArmProjectPackage')
+        layout.prop_search(wrd, 'ArmKhafile', bpy.data, 'texts', 'Khafile')
+        layout.prop(wrd, 'ArmPlayActiveScene')
+        if wrd.ArmPlayActiveScene == False:
+            layout.prop_search(wrd, 'ArmProjectScene', bpy.data, 'scenes', 'Scene')
+        layout.prop(wrd, 'ArmExportHideRender')
+        layout.prop(wrd, 'ArmSpawnAllLayers')
+        layout.label('Armory version: ' + wrd.ArmVersion)
+        layout.operator('arm.check_updates')
+
+class ArmoryPlayButton(bpy.types.Operator):
+    bl_idname = 'arm.play'
+    bl_label = 'Play'
+ 
+    def execute(self, context):
+        make.play_project(False)
+        return{'FINISHED'}
+
+class ArmoryPlayInViewportButton(bpy.types.Operator):
+    bl_idname = 'arm.play_in_viewport'
+    bl_label = 'Play in Viewport'
+ 
+    def execute(self, context):
+        if make.play_project.playproc == None:
+            # Cancel viewport render
+            for space in context.area.spaces:
+                if space.type == 'VIEW_3D':
+                    if space.viewport_shade == 'RENDERED':
+                        space.viewport_shade = 'SOLID'
+                    break
+            make.play_project(True)
+        else:
+            make.patch_project()
+            make.compile_project()
+        return{'FINISHED'}
+
+class ArmoryStopButton(bpy.types.Operator):
+    bl_idname = 'arm.stop'
+    bl_label = 'Stop'
+ 
+    def execute(self, context):
+        make.stop_project()
+        return{'FINISHED'}
+
+class ArmoryBuildButton(bpy.types.Operator):
+    bl_idname = 'arm.build'
+    bl_label = 'Build'
+ 
+    def execute(self, context):
+        if make.play_project.playproc == None:
+            make.build_project()
+        else:
+            make.patch_project()
+        make.compile_project()
+        return{'FINISHED'}
+
+class ArmoryFolderButton(bpy.types.Operator):
+    bl_idname = 'arm.folder'
+    bl_label = 'Project Folder'
+ 
+    def execute(self, context):
+        webbrowser.open('file://' + utils.get_fp())
+        return{'FINISHED'}
+
+class ArmoryCheckUpdatesButton(bpy.types.Operator):
+    bl_idname = 'arm.check_updates'
+    bl_label = 'Check for Updates'
+ 
+    def execute(self, context):
+        webbrowser.open("http://armory3d.org/manual")
+        return{'FINISHED'}
+
+class ArmoryKodeStudioButton(bpy.types.Operator):
+    bl_idname = 'arm.kode_studio'
+    bl_label = 'Kode Studio'
+    bl_description = 'Open Project in Kode Studio'
+ 
+    def execute(self, context):
+        user_preferences = bpy.context.user_preferences
+        addon_prefs = user_preferences.addons['armory'].preferences
+        sdk_path = addon_prefs.sdk_path
+        project_path = utils.get_fp()
+
+        if utils.get_os() == 'win':
+            kode_path = sdk_path + '/kode_studio/KodeStudio-win32/Kode Studio.exe'
+        elif utils.get_os() == 'mac':
+            kode_path = '"' + sdk_path + '/kode_studio/Kode Studio.app/Contents/MacOS/Electron"'
+        else:
+            kode_path = sdk_path + '/kode_studio/KodeStudio-linux64/kodestudio'
+
+        subprocess.Popen([kode_path + ' ' + utils.get_fp()], shell=True)
+
+        return{'FINISHED'}
+
+class ArmoryCleanButton(bpy.types.Operator):
+    bl_idname = 'arm.clean'
+    bl_label = 'Clean'
+ 
+    def execute(self, context):
+        make.clean_project()
+        return{'FINISHED'}
+
+# Play button in 3D View panel
+def draw_play_item(self, context):
+    layout = self.layout
+    if make.play_project.playproc == None and make.play_project.compileproc == None:
+        layout.operator("arm.play_in_viewport", icon="PLAY")
+    else:
+        layout.operator("arm.stop", icon="MESH_PLANE")
+
+# Info panel in header
+def draw_info_item(self, context):
+    layout = self.layout
+    layout.label(ArmoryProjectPanel.info_text)
 
 # Registration
 def register():
     bpy.utils.register_module(__name__)
     initProperties()
     bpy.app.handlers.scene_update_post.append(on_scene_update)
+    bpy.types.VIEW3D_HT_header.append(draw_play_item)
+    bpy.types.INFO_HT_header.prepend(draw_info_item)
 
 def unregister():
+    bpy.types.VIEW3D_HT_header.remove(draw_play_item)
+    bpy.types.INFO_HT_header.remove(draw_info_item)
     bpy.app.handlers.scene_update_post.remove(on_scene_update)
     bpy.utils.unregister_module(__name__)

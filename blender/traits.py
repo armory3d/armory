@@ -169,7 +169,7 @@ class ArmoryEditScriptButton(bpy.types.Operator):
             kode_path = sdk_path + '/kode_studio/KodeStudio-linux64/kodestudio'
         project_path = utils.get_fp()
         item = context.object.my_traitlist[context.object.traitlist_index] 
-        hx_path = project_path + '/Sources/' + bpy.data.worlds[0].ArmProjectPackage + '/' + item.class_name_prop + '.hx'
+        hx_path = project_path + '/Sources/' + bpy.data.worlds['Arm'].ArmProjectPackage + '/' + item.class_name_prop + '.hx'
         subprocess.Popen([kode_path + ' ' + utils.get_fp() + ' ' + hx_path], shell=True)
         return{'FINISHED'}
 
@@ -240,9 +240,9 @@ class ToolsTraitsPanel(bpy.types.Panel):
                 row = layout.row()
                 # row.prop(item, "class_name_prop")
                 if item.type_prop == 'Haxe Script':
-                    row.prop_search(item, "class_name_prop", bpy.data.worlds[0], "scripts_list", "Class")
+                    row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "scripts_list", "Class")
                 else:
-                    row.prop_search(item, "class_name_prop", bpy.data.worlds[0], "bundled_scripts_list", "Class")
+                    row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "bundled_scripts_list", "Class")
                 # Params
                 layout.label("Parameters")
                 paramsrow = layout.row()

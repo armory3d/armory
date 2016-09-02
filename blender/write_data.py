@@ -20,7 +20,7 @@ def write_khafilejs(shader_references, asset_references):
     with open('khafile.js', 'w') as f:
         f.write(
 """// Auto-generated
-let project = new Project('""" + bpy.data.worlds[0].ArmProjectName + """');
+let project = new Project('""" + bpy.data.worlds['Arm'].ArmProjectName + """');
 
 project.addSources('Sources');
 project.addShaders('Sources/Shaders/**');
@@ -32,9 +32,12 @@ project.addShaders('Sources/Shaders/**');
         f.write(add_armory_library(sdk_path, 'armory'))
         f.write(add_armory_library(sdk_path, 'iron'))
         
-        if bpy.data.worlds[0].ArmPhysics != 'Disabled':
+        if bpy.data.worlds['Arm'].ArmPhysics != 'Disabled':
             f.write("project.addDefine('WITH_PHYSICS');\n")
             f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
+
+        if bpy.data.worlds['Arm'].ArmPlayLivePatch == True:
+            f.write("project.addDefine('WITH_LIVEPATCH');\n")
 
         # Native scripting
         # f.write(add_armory_library(sdk_path + '/lib/', 'haxeduktape'))
@@ -49,7 +52,7 @@ project.addShaders('Sources/Shaders/**');
             ref = ref.replace('\\', '/')
             f.write("project.addAssets('" + ref + "');\n")
 
-        if bpy.data.worlds[0].ArmPlayConsole:
+        if bpy.data.worlds['Arm'].ArmPlayConsole:
             f.write("project.addDefine('WITH_PROFILE');\n")
             f.write(add_armory_library(sdk_path, 'lib/zui'))
             font_path =  sdk_path + '/armory/Assets/droid_sans.ttf'
@@ -60,27 +63,34 @@ project.addShaders('Sources/Shaders/**');
         # f.write(add_armory_library(sdk_path, 'lib/haxeui/haxeui-kha'))
         # f.write(add_armory_library(sdk_path, 'lib/haxeui/hscript'))
 
-        if bpy.data.worlds[0].ArmMinimize == False:
+        if bpy.data.worlds['Arm'].ArmMinimize == False:
             f.write("project.addDefine('WITH_JSON');\n")
         
-        if bpy.data.worlds[0].ArmDeinterleavedBuffers == True:
+        if bpy.data.worlds['Arm'].ArmDeinterleavedBuffers == True:
             f.write("project.addDefine('WITH_DEINTERLEAVED');\n")
 
-        if bpy.data.worlds[0].generate_gpu_skin == False:
+        if bpy.data.worlds['Arm'].generate_gpu_skin == False:
             f.write("project.addDefine('WITH_CPU_SKIN');\n")
 
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
 
-        config_text = bpy.data.worlds[0].ArmKhafile
+        config_text = bpy.data.worlds['Arm'].ArmKhafile
         if config_text != '':
             f.write(bpy.data.texts[config_text].as_string())
 
         f.write("\n\nresolve(project);\n")
 
+def get_project_scene():
+    wrd = bpy.data.worlds['Arm']
+    if wrd.ArmPlayActiveScene:
+        return utils.safe_filename(bpy.context.screen.scene.name)
+    else:
+        return utils.safe_filename(wrd.ArmProjectScene)
+
 # Write Main.hx
 def write_main():
-    wrd = bpy.data.worlds[0]
+    wrd = bpy.data.worlds['Arm']
     resx, resy = utils.get_render_resolution()
     #if not os.path.isfile('Sources/Main.hx'):
     with open('Sources/Main.hx', 'w') as f:
@@ -93,7 +103,7 @@ class Main {
     static inline var projectWidth = """ + str(resx) + """;
     static inline var projectHeight = """ + str(resy) + """;
     static inline var projectSamplesPerPixel = """ + str(wrd.ArmProjectSamplesPerPixel) + """;
-    static inline var projectScene = '""" + str(wrd.ArmProjectScene) + """';
+    static inline var projectScene = '""" + get_project_scene() + """';
     public static function main() {
         iron.sys.CompileTime.importPackage('armory.trait');
         iron.sys.CompileTime.importPackage('armory.renderpipeline');
@@ -123,9 +133,8 @@ class Main {
         f.write("""
         kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel}, function() {
             iron.App.init(function() {
-                var raw = iron.data.Data.getSceneRaw(projectScene);
-                var scene = iron.Scene.create(raw);
-                scene.addTrait(new armory.trait.internal.PhysicsWorld(raw.gravity));
+                var scene = iron.Scene.setActive(projectScene);
+                scene.addTrait(new armory.trait.internal.PhysicsWorld());
                 iron.App.notifyOnRender(function(g:kha.graphics4.Graphics) {
                     iron.Scene.active.renderFrame(g);
                 });
@@ -137,7 +146,7 @@ class Main {
 
 # Write electron.js
 def write_electronjs(x, y, w, h, winoff, in_viewport):
-    wrd = bpy.data.worlds[0]
+    wrd = bpy.data.worlds['Arm']
     dev_tools = wrd.ArmPlayDeveloperTools
     with open('build/electron.js', 'w') as f:
         f.write(
@@ -223,8 +232,11 @@ def write_indexhtml(w, h, in_viewport):
 </html>
 """)
 
-def write_compiledglsl(clip_start, clip_end, shadowmap_size):
-    wrd = bpy.data.worlds[0]
+def write_compiledglsl():
+    clip_start = bpy.data.cameras[0].clip_start # Same clip values for all cameras for now
+    clip_end = bpy.data.cameras[0].clip_end
+    shadowmap_size = bpy.data.worlds['Arm'].shadowmap_size
+    wrd = bpy.data.worlds['Arm']
     with open('build/compiled/Shaders/compiled.glsl', 'w') as f:
         f.write(
 """const float PI = 3.1415926535;
@@ -320,12 +332,12 @@ const float compoDOFSize = """ + str(round(bpy.data.cameras[0].cycles.aperture_s
 """)
 
 def write_traithx(class_name):
-    wrd = bpy.data.worlds[0]
+    wrd = bpy.data.worlds['Arm']
     with open('Sources/' + wrd.ArmProjectPackage + '/' + class_name + '.hx', 'w') as f:
         f.write(
 """package """ + wrd.ArmProjectPackage + """;
 
-class """ + class_name + """ extends iron.Trait {
+class """ + class_name + """ extends armory.Trait {
     public function new() {
         super();
 

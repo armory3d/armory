@@ -25,7 +25,7 @@ def get_output_node(tree):
 		if n.type == 'OUTPUT_WORLD':
 			return n
 
-def buildNodeTrees():
+def buildNodeTrees(active_worlds):
 	s = bpy.data.filepath.split(os.path.sep)
 	s.pop()
 	fp = os.path.sep.join(s)
@@ -37,37 +37,37 @@ def buildNodeTrees():
 	
 	# Export world nodes
 	world_outputs = []
-	for world in bpy.data.worlds:
-		output = buildNodeTree(world.name, world.node_tree)
+	for world in active_worlds:
+		output = buildNodeTree(world)
 		world_outputs.append(output)
 	return world_outputs
 
-def buildNodeTree(world_name, node_group):
+def buildNodeTree(world):
 	output = {}
 	dat = {}
 	output['material_datas'] = [dat]
-	dat['name'] = world_name.replace('.', '_') + '_material'
+	dat['name'] = utils.safe_filename(world.name) + '_material'
 	context = {}
 	dat['contexts'] = [context]
 	context['name'] = 'env'
 	context['bind_constants'] = []
 	context['bind_textures'] = []
 	
-	bpy.data.worlds[0].world_defs = ''
+	bpy.data.worlds['Arm'].world_defs = ''
 	
 	# Traverse world node tree
-	output_node = get_output_node(node_group)
+	output_node = get_output_node(world.node_tree)
 	if output_node != None:
-		parse_world_output(node_group, output_node, context)
+		parse_world_output(world, output_node, context)
 	
 	# Clear to color if no texture or sky is provided
-	wrd = bpy.data.worlds[0]
+	wrd = bpy.data.worlds['Arm']
 	if '_EnvSky' not in wrd.world_defs and '_EnvTex' not in wrd.world_defs:
 		wrd.world_defs += '_EnvCol'
 		# Irradiance json file name
-		base_name = wrd.name
-		bpy.data.cameras[0].world_envtex_name = base_name
-		write_probes.write_color_irradiance(base_name, bpy.data.cameras[0].world_envtex_color)
+		base_name = utils.safe_filename(world.name)
+		world.world_envtex_name = base_name
+		write_probes.write_color_irradiance(base_name, world.world_envtex_color)
 
 	# Clouds enabled
 	if wrd.generate_clouds:
@@ -85,15 +85,16 @@ def buildNodeTree(world_name, node_group):
 	for cam in bpy.data.cameras:
 		if cam.is_probe:
 			wrd.world_defs += '_Probes'
+			break
 
 	# Data will be written after pipeline has been processed to gather all defines
 	return output
 
 def write_output(output, asset_references, shader_references):
-	# Add datas to khafie
+	# Add datas to khafile
 	dir_name = 'env'
 	# Append world defs
-	wrd = bpy.data.worlds[0]
+	wrd = bpy.data.worlds['Arm']
 	data_name = 'env' + wrd.world_defs
 	
 	# Reference correct shader context
@@ -108,12 +109,12 @@ def write_output(output, asset_references, shader_references):
 	utils.write_arm(asset_path, output)
 	assets.add(asset_path)
 
-def parse_world_output(node_group, node, context):
+def parse_world_output(world, node, context):
 	if node.inputs[0].is_linked:
-		surface_node = find_node(node_group, node, node.inputs[0])
-		parse_surface(node_group, surface_node, context)
+		surface_node = find_node(world.node_tree, node, node.inputs[0])
+		parse_surface(world, surface_node, context)
 	
-def parse_surface(node_group, node, context):
+def parse_surface(world, node, context):
 	# Extract environment strength
 	if node.type == 'BACKGROUND':
 		# Strength
@@ -123,14 +124,14 @@ def parse_surface(node_group, node, context):
 		context['bind_constants'].append(envmap_strength_const)
 		
 		if node.inputs[0].is_linked:
-			color_node = find_node(node_group, node, node.inputs[0])
-			parse_color(node_group, color_node, context, envmap_strength_const)
+			color_node = find_node(world.node_tree, node, node.inputs[0])
+			parse_color(world, color_node, context, envmap_strength_const)
 
 		# Cache results
-		bpy.data.cameras[0].world_envtex_color = node.inputs[0].default_value
-		bpy.data.cameras[0].world_envtex_strength = envmap_strength_const['float']
+		world.world_envtex_color = node.inputs[0].default_value
+		world.world_envtex_strength = envmap_strength_const['float']
 
-def parse_color(node_group, node, context, envmap_strength_const):		
+def parse_color(world, node, context, envmap_strength_const):		
 	# Env map included
 	if node.type == 'TEX_ENVIRONMENT':
 		texture = {}
@@ -160,26 +161,26 @@ def parse_color(node_group, node, context, envmap_strength_const):
 		texture['file'] = utils.safe_filename(texture['file'])
 
 		# Generate prefiltered envmaps
-		generate_radiance = bpy.data.worlds[0].generate_radiance
-		bpy.data.cameras[0].world_envtex_name = texture['file']
+		generate_radiance = bpy.data.worlds['Arm'].generate_radiance
+		world.world_envtex_name = texture['file']
 		disable_hdr = image.filepath.endswith('.jpg')
-		mip_count = bpy.data.cameras[0].world_envtex_num_mips
+		mip_count = world.world_envtex_num_mips
 		
 		mip_count = write_probes.write_probes(filepath, disable_hdr, mip_count, generate_radiance=generate_radiance)
 		
-		bpy.data.cameras[0].world_envtex_num_mips = mip_count
+		world.world_envtex_num_mips = mip_count
 		# Append envtex define
-		bpy.data.worlds[0].world_defs += '_EnvTex'
+		bpy.data.worlds['Arm'].world_defs += '_EnvTex'
 		# Append LDR define
 		if disable_hdr:
-			bpy.data.worlds[0].world_defs += '_EnvLDR'
+			bpy.data.worlds['Arm'].world_defs += '_EnvLDR'
 		# Append radiance define
 		if generate_radiance:
-			bpy.data.worlds[0].world_defs += '_Rad'
+			bpy.data.worlds['Arm'].world_defs += '_Rad'
 	
 	# Append sky define
 	elif node.type == 'TEX_SKY':
-		bpy.data.worlds[0].world_defs += '_EnvSky'
+		bpy.data.worlds['Arm'].world_defs += '_EnvSky'
 		# Append sky properties to material
 		const = {}
 		const['name'] = 'sunDirection'
@@ -188,19 +189,19 @@ def parse_color(node_group, node, context, envmap_strength_const):
 		const['vec3'] = list(sun_direction)
 		context['bind_constants'].append(const)
 		
-		bpy.data.cameras[0].world_envtex_sun_direction = sun_direction
-		bpy.data.cameras[0].world_envtex_turbidity = node.turbidity
-		bpy.data.cameras[0].world_envtex_ground_albedo = node.ground_albedo
+		world.world_envtex_sun_direction = sun_direction
+		world.world_envtex_turbidity = node.turbidity
+		world.world_envtex_ground_albedo = node.ground_albedo
 		
 		# Irradiance json file name
-		base_name = bpy.data.worlds[0].name
-		bpy.data.cameras[0].world_envtex_name = base_name
+		base_name = utils.safe_filename(world.name)
+		world.world_envtex_name = base_name
 		
 		write_probes.write_sky_irradiance(base_name)
 
 		# Radiance
-		if bpy.data.worlds[0].generate_radiance_sky and bpy.data.worlds[0].generate_radiance:
-			bpy.data.worlds[0].world_defs += '_Rad'
+		if bpy.data.worlds['Arm'].generate_radiance_sky and bpy.data.worlds['Arm'].generate_radiance:
+			bpy.data.worlds['Arm'].world_defs += '_Rad'
 			
 			user_preferences = bpy.context.user_preferences
 			addon_prefs = user_preferences.addons['armory'].preferences
@@ -209,7 +210,7 @@ def parse_color(node_group, node, context, envmap_strength_const):
 			for i in range(0, 8):
 				assets.add(sdk_path + 'armory/Assets/hosek/hosek_radiance_' + str(i) + '.hdr')
 			
-			bpy.data.cameras[0].world_envtex_num_mips = 8
+			world.world_envtex_num_mips = 8
 
 		# Adjust strength to match Cycles
 		envmap_strength_const['float'] *= 0.25

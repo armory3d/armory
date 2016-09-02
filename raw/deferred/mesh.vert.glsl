@@ -69,7 +69,7 @@ out vec4 matColor;
 	out vec3 tanEyeDir;
 #endif
 #ifdef _Probes
-	out vec4 mpos;
+	out vec4 wpos;
 #endif
 #ifdef _Veloc
 	out vec4 wvppos;
@@ -178,7 +178,7 @@ void main() {
 #endif
 
 #ifdef _Probes
-	mpos = W * sPos;
+	wpos = W * sPos;
 #endif
 
 #ifdef _Billboard
@@ -220,10 +220,10 @@ void main() {
 
 #ifdef _HeightTex
 	#ifndef _Probes
-		vec4 mpos = W * sPos;
+		vec4 wpos = W * sPos;
 	#endif
-	vec3 lightDir = light - mpos.xyz;
-	vec3 eyeDir = /*normalize*/eye - mpos.xyz;
+	vec3 lightDir = light - wpos.xyz;
+	vec3 eyeDir = /*normalize*/eye - wpos.xyz;
 	// Wrong bitangent handedness?
 	tanLightDir = vec3(dot(lightDir, tangent), dot(lightDir, -bitangent), dot(lightDir, _normal));
 	tanEyeDir = vec3(dot(eyeDir, tangent), dot(eyeDir, -bitangent), dot(eyeDir, _normal));

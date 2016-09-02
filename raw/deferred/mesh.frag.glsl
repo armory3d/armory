@@ -45,6 +45,8 @@ uniform float mask;
 #endif
 #ifdef _Probes
 	uniform int probeID;
+	uniform float probeBlending;
+	uniform float probeStrength;
 	uniform vec3 probeVolumeCenter;
 	uniform vec3 probeVolumeSize;
 #endif
@@ -88,7 +90,7 @@ vec2 octahedronWrap(vec2 v) {
 
 #ifdef _Probes
 float distanceBox(vec3 point, vec3 center, vec3 halfExtents) {  	
-	vec3 d = abs(point - center) - halfExtents * 0.75;
+	vec3 d = abs(point - center) - halfExtents;
 	return min(max(d.x, max(d.y, d.z)), 0.0) + length(max(d, 0.0));
 }
 #endif
@@ -246,18 +248,17 @@ void main() {
     n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
 
 #ifdef _Probes
-	float mask_probe = probeID;
+	float mask_probe;
 	if (probeID > 0) { // Non-global probe attached
-		const float eps = 0.00001;
 		// Distance of vertex located inside probe to probe bounds
 		float dist = distanceBox(wpos.xyz, probeVolumeCenter, probeVolumeSize);
-		// Blend local probe with global probe		
-		if (dist > -0.1) {
-			const float blending = 10.0;
-			float clampres = clamp((0.1 + dist) * blending, 0.0, 1.0 - eps);
-			mask_probe += clampres;
-		}
 		if (dist > 0) mask_probe = 0;
+		else {
+			// Blend local probe with global probe		
+			const float eps = 0.00001;
+			float clampres = clamp(probeBlending + dist, 0.0, 1.0 - eps);
+			mask_probe = probeID + clampres;
+		}
 	}
 	outColor[0] = vec4(n.xy, packFloat(metalness, roughness), mask_probe);
 #else

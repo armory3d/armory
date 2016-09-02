@@ -72,7 +72,7 @@ void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatter
 void main() {
 	vec2 screenPosition = wvpposition.xy / wvpposition.w;
 	vec2 texCoord = screenPosition * 0.5 + 0.5;
-	texCoord += vec2(0.5 / screenSize); // Half pixel offset
+	// texCoord += vec2(0.5 / screenSize); // Half pixel offset
 
     float pixelRayMarchNoise = texture(snoise, texCoord).r;
 

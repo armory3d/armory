@@ -195,7 +195,7 @@ def buildNodeTrees():
 	os.chdir(fp)
 
 	# Make sure package dir exists
-	nodes_path = 'Sources/' + bpy.data.worlds[0].ArmProjectPackage.replace(".", "/") + "/node"
+	nodes_path = 'Sources/' + bpy.data.worlds['Arm'].ArmProjectPackage.replace(".", "/") + "/node"
 	if not os.path.exists(nodes_path):
 		os.makedirs(nodes_path)
 	
@@ -206,11 +206,11 @@ def buildNodeTrees():
 			buildNodeTree(node_group)
 
 def buildNodeTree(node_group):
-	path = 'Sources/' + bpy.data.worlds[0].ArmProjectPackage.replace('.', '/') + '/node/'
+	path = 'Sources/' + bpy.data.worlds['Arm'].ArmProjectPackage.replace('.', '/') + '/node/'
 	node_group_name = node_group.name.replace('.', '_').replace(' ', '')
 
 	with open(path + node_group_name + '.hx', 'w') as f:
-		f.write('package ' + bpy.data.worlds[0].ArmProjectPackage + '.node;\n\n')
+		f.write('package ' + bpy.data.worlds['Arm'].ArmProjectPackage + '.node;\n\n')
 		f.write('import armory.logicnode.*;\n\n')
 		f.write('class ' + node_group_name + ' extends armory.trait.internal.NodeExecutor {\n\n')
 		f.write('\tpublic function new() { super(); notifyOnAdd(add); }\n\n')

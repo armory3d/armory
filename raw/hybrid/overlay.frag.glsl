@@ -137,16 +137,16 @@ vec3 shIrradiance(vec3 nor, float scale) {
 	cl21 = vec3(shirr[21], shirr[22], shirr[23]);
 	cl22 = vec3(shirr[24], shirr[25], shirr[26]);
     return (
-        c1 * cl22 * (nor.x * nor.x - (-nor.z) * (-nor.z)) +
-        c3 * cl20 * nor.y * nor.y +
-        c4 * cl00 -
-        c5 * cl20 +
-        2.0 * c1 * cl2m2 * nor.x * (-nor.z) +
-        2.0 * c1 * cl21  * nor.x * nor.y +
-        2.0 * c1 * cl2m1 * (-nor.z) * nor.y +
-        2.0 * c2 * cl11  * nor.x +
-        2.0 * c2 * cl1m1 * (-nor.z) +
-        2.0 * c2 * cl10  * nor.y
+        c1 * cl22 * (nor.y * nor.y - (-nor.z) * (-nor.z)) +
+		c3 * cl20 * nor.x * nor.x +
+		c4 * cl00 -
+		c5 * cl20 +
+		2.0 * c1 * cl2m2 * nor.y * (-nor.z) +
+		2.0 * c1 * cl21  * nor.y * nor.x +
+		2.0 * c1 * cl2m1 * (-nor.z) * nor.x +
+		2.0 * c2 * cl11  * nor.y +
+		2.0 * c2 * cl1m1 * (-nor.z) +
+		2.0 * c2 * cl10  * nor.x
     ) * scale;
 }
 

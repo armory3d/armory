@@ -68,7 +68,7 @@ float packFloat(float f1, float f2) {
 void main() {
 	vec2 screenPosition = wvpposition.xy / wvpposition.w;
 	vec2 depthUV = screenPosition * 0.5 + 0.5;
-    depthUV += vec2(0.5 / screenSize); // Half pixel offset
+    // depthUV += vec2(0.5 / screenSize); // Half pixel offset
     float depth = texture(gbufferD, depthUV).r * 2.0 - 1.0;
 
 	vec4 worldPos = reconstructPos(depth, depthUV);

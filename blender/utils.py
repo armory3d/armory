@@ -6,7 +6,7 @@ import lib.umsgpack
 import platform
 
 def write_arm(filepath, output):
-    if bpy.data.worlds[0].ArmMinimize:
+    if bpy.data.worlds['Arm'].ArmMinimize:
         with open(filepath, 'wb') as f:
             f.write(lib.umsgpack.dumps(output))
     else:
@@ -32,7 +32,7 @@ def fetch_script_names():
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
     sdk_path = addon_prefs.sdk_path
-    wrd = bpy.data.worlds[0]
+    wrd = bpy.data.worlds['Arm']
     wrd.bundled_scripts_list.clear()
     os.chdir(sdk_path + '/armory/Sources/armory/trait')
     for file in glob.glob('*.hx'):
@@ -47,6 +47,9 @@ def fetch_script_names():
 
 def to_hex(val):
     return '#%02x%02x%02x%02x' % (int(val[3] * 255), int(val[0] * 255), int(val[1] * 255), int(val[2] * 255))
+
+def color_to_int(val):
+    return (int(val[3] * 255) << 24) + (int(val[0] * 255) << 16) + (int(val[1] * 255) << 8) + int(val[2] * 255)
 
 def safe_filename(s):
     s = s.replace('.', '_').replace('-', '_').replace(' ', '_')

@@ -70,6 +70,16 @@
 					"link": "_probeID",
 					"ifdef": ["_Probes"]
 				},
+				{	
+					"name": "probeStrength",
+					"link": "_probeStrength",
+					"ifdef": ["_Probes"]
+				},
+				{	
+					"name": "probeBlending",
+					"link": "_probeBlending",
+					"ifdef": ["_Probes"]
+				},
 				{
 					"name": "skinBones",
 					"link": "_skinBones",

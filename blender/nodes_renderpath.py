@@ -889,7 +889,10 @@ def make_clear_target(stage, color_val=None, depth_val=None, stencil_val=None):
     stage['command'] = 'clear_target'
     if color_val != None:
         stage['params'].append('color')
-        stage['params'].append(str(to_hex(color_val)))
+        if color_val == -1: # Clear to world background color
+            stage['params'].append('-1')
+        else:
+            stage['params'].append(str(to_hex(color_val)))
     if depth_val != None:
         stage['params'].append('depth')
         stage['params'].append(str(depth_val))
@@ -903,7 +906,7 @@ def make_draw_meshes(stage, node_group, node):
     context = node.inputs[1].default_value
     # Store shadowmap size
     if context == buildNodeTree.cam.shadows_context:
-        bpy.data.worlds[0].shadowmap_size = buildNode.last_set_target_w
+        bpy.data.worlds['Arm'].shadowmap_size = buildNode.last_set_target_w
     stage['params'].append(context)
     # Order
     order = node.inputs[2].default_value
@@ -967,7 +970,7 @@ def make_draw_material_quad(stage, node_group, node, shader_references, asset_re
 def make_draw_quad(stage, node_group, node, shader_references, asset_references, context_index=1, shader_context=None):
     stage['command'] = 'draw_shader_quad'
     # Append world defs to get proper context
-    world_defs = bpy.data.worlds[0].world_defs
+    world_defs = bpy.data.worlds['Arm'].world_defs
     if shader_context == None:
         shader_context = node.inputs[context_index].default_value
     scon = shader_context.split('/')
@@ -984,15 +987,15 @@ def make_draw_world(stage, node_group, node, shader_references, asset_references
         stage['command'] = 'draw_skydome'
     else:
         stage['command'] = 'draw_material_quad'
-    wname = bpy.data.worlds[0].name
-    stage['params'].append(wname + '_material/' + wname + '_material/env') # Only one world for now
+    # stage['params'].append(wname + '_material/' + wname + '_material/env')
+    stage['params'].append('_worldMaterial') # Link to active world
     # Link assets
-    if '_EnvClouds' in bpy.data.worlds[0].world_defs:
+    if '_EnvClouds' in bpy.data.worlds['Arm'].world_defs:
         buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise256.png')
 
 def make_draw_compositor(stage, node_group, node, shader_references, asset_references, with_fxaa=False):
     scon = 'compositor_pass'
-    wrd = bpy.data.worlds[0]
+    wrd = bpy.data.worlds['Arm']
     world_defs = wrd.world_defs
     compositor_defs = nodes_compositor.parse_defs(bpy.data.scenes[0].node_tree) # Thrown in scene 0 for now
     # Additional compositor flags
@@ -1088,8 +1091,8 @@ def make_quad_pass(stages, node_group, node, shader_references, asset_references
     stages.append(stage)
 
 def make_ssao_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 4], bind_target_constants=['gbufferD', 'gbuffer0'], shader_context='ssao_pass/ssao_pass/ssao_pass', viewport_scale=bpy.data.worlds[0].generate_ssao_texture_scale)
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[1, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x', viewport_scale=bpy.data.worlds[0].generate_ssao_texture_scale)
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 4], bind_target_constants=['gbufferD', 'gbuffer0'], shader_context='ssao_pass/ssao_pass/ssao_pass', viewport_scale=bpy.data.worlds['Arm'].generate_ssao_texture_scale)
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[1, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x', viewport_scale=bpy.data.worlds['Arm'].generate_ssao_texture_scale)
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y')
     buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise8.png')
 
@@ -1106,8 +1109,8 @@ def make_apply_ssao_pass(stages, node_group, node, shader_references, asset_refe
     buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise8.png')
 
 def make_ssr_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[4, 5, 6], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='ssr_pass/ssr_pass/ssr_pass', viewport_scale=bpy.data.worlds[0].generate_ssr_texture_scale)
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=3, bind_target_indices=[2, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_x', viewport_scale=bpy.data.worlds[0].generate_ssr_texture_scale, with_clear=True) # Have to clear to prevent artefacts, potentially because of viewport scale
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[4, 5, 6], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='ssr_pass/ssr_pass/ssr_pass', viewport_scale=bpy.data.worlds['Arm'].generate_ssr_texture_scale)
+    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=3, bind_target_indices=[2, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_x', viewport_scale=bpy.data.worlds['Arm'].generate_ssr_texture_scale, with_clear=True) # Have to clear to prevent artefacts, potentially because of viewport scale
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_y3_blend')
 
 def make_bloom_pass(stages, node_group, node, shader_references, asset_references):
@@ -1218,7 +1221,7 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
         stencil_val = None
         if node.inputs[1].default_value == True:
             if node.inputs[2].is_linked: # Assume background color node is linked
-                color_val = buildNodeTree.cam.world_envtex_color
+                color_val = -1 # Clear to world.background_color
             else:
                 color_val = node.inputs[2].default_value
         if node.inputs[3].default_value == True:
@@ -1434,7 +1437,7 @@ def get_root_node(node_group):
             buildNodeTree.cam.translucent_context = n.inputs[3].default_value
             buildNodeTree.cam.overlay_context = n.inputs[4].default_value
             if n.inputs[5].default_value == False: # No HDR space lighting, append def
-                bpy.data.worlds[0].world_defs += '_LDR'
+                bpy.data.worlds['Arm'].world_defs += '_LDR'
             rn = findNodeByLinkFrom(node_group, n, n.outputs[0])
             break
     return rn
@@ -1458,21 +1461,21 @@ def traverse_pipeline(node, node_group, render_targets, depth_buffers):
     if node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':
         if preprocess_pipeline.velocity_def_added == False:
             assets.add_khafile_def('WITH_VELOC')
-            bpy.data.worlds[0].world_defs += '_Veloc'
+            bpy.data.worlds['Arm'].world_defs += '_Veloc'
             preprocess_pipeline.velocity_def_added = True
         if node.bl_idname == 'TAAPassNodeType':
             assets.add_khafile_def('WITH_TAA')
-            # bpy.data.worlds[0].world_defs += '_TAA'
+            # bpy.data.worlds['Arm'].world_defs += '_TAA'
     elif node.bl_idname == 'SMAAPassNodeType':
-        bpy.data.worlds[0].world_defs += '_SMAA'
+        bpy.data.worlds['Arm'].world_defs += '_SMAA'
 
     elif node.bl_idname == 'SSAOPassNodeType' or node.bl_idname == 'ApplySSAOPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':
-        if bpy.data.worlds[0].generate_ssao: # SSAO enabled
-            bpy.data.worlds[0].world_defs += '_SSAO'
+        if bpy.data.worlds['Arm'].generate_ssao: # SSAO enabled
+            bpy.data.worlds['Arm'].world_defs += '_SSAO'
 
     elif node.bl_idname == 'DrawStereoNodeType':
         assets.add_khafile_def('WITH_VR')
-        bpy.data.worlds[0].world_defs += '_VR'
+        bpy.data.worlds['Arm'].world_defs += '_VR'
 
     # Collect render targets
     if node.bl_idname == 'SetTargetNodeType' or node.bl_idname == 'QuadPassNodeType' or node.bl_idname == 'DrawCompositorNodeType' or node.bl_idname == 'DrawCompositorWithFXAANodeType':

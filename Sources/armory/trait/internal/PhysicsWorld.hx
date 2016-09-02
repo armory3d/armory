@@ -22,7 +22,7 @@ class PhysicsWorld extends Trait {
 	public static var active:PhysicsWorld;
 
 #if (!WITH_PHYSICS)
-	public function new(gravity:Array<Float> = null) { super(); }
+	public function new() { super(); }
 #else
 
 #if WITH_PROFILE
@@ -38,7 +38,7 @@ class PhysicsWorld extends Trait {
 	static inline var timeStep = 1 / 60;
 	static inline var fixedStep = 1 / 60;
 
-	public function new(gravity:Array<Float> = null) {
+	public function new() {
 		super();
 
 		active = this;
@@ -57,7 +57,7 @@ class PhysicsWorld extends Trait {
 		var solver = BtSequentialImpulseConstraintSolver.create();
 
 		world = BtDiscreteDynamicsWorld.create(dispatcher, broadphase, solver, collisionConfiguration);
-		if (gravity == null) gravity = [0, 0, -9.81];
+		var gravity = iron.Scene.active.raw.gravity == null ? [0, 0, -9.81] : iron.Scene.active.raw.gravity;
 		world.ptr.setGravity(BtVector3.create(gravity[0], gravity[1], gravity[2]).value);
 
 		notifyOnUpdate(update);

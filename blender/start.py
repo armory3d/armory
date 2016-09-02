@@ -1,4 +1,4 @@
-import project
+import make
 import nodes_logic
 import nodes_renderpath
 import nodes_world
@@ -14,7 +14,7 @@ def register():
     traits_action.register()
     traits_clip.register()
     props.register()
-    project.register()
+    make.register()
     nodes_logic.register()
     nodes_renderpath.register()
     nodes_world.register()
@@ -24,7 +24,7 @@ def register():
     lib.drop_to_ground.register()
 
 def unregister():
-    project.unregister()
+    make.unregister()
     nodes_logic.unregister()
     nodes_renderpath.unregister()
     nodes_world.unregister()

@@ -682,23 +682,23 @@ float wardSpecular(vec3 N, vec3 H, float dotNL, float dotNV, float dotNH, vec3 f
 // 	}
 // #endif
 // 	return (
-// 		c1 * cl22 * (nor.x * nor.x - (-nor.z) * (-nor.z)) +
-// 		c3 * cl20 * nor.y * nor.y +
-// 		c4 * cl00 -
-// 		c5 * cl20 +
-// 		2.0 * c1 * cl2m2 * nor.x * (-nor.z) +
-// 		2.0 * c1 * cl21  * nor.x * nor.y +
-// 		2.0 * c1 * cl2m1 * (-nor.z) * nor.y +
-// 		2.0 * c2 * cl11  * nor.x +
-// 		2.0 * c2 * cl1m1 * (-nor.z) +
-// 		2.0 * c2 * cl10  * nor.y
+// 		c1 * cl22 * (nor.y * nor.y - (-nor.z) * (-nor.z)) +
+//		c3 * cl20 * nor.x * nor.x +
+//		c4 * cl00 -
+//		c5 * cl20 +
+//		2.0 * c1 * cl2m2 * nor.y * (-nor.z) +
+//		2.0 * c1 * cl21  * nor.y * nor.x +
+//		2.0 * c1 * cl2m1 * (-nor.z) * nor.x +
+//		2.0 * c2 * cl11  * nor.y +
+//		2.0 * c2 * cl1m1 * (-nor.z) +
+//		2.0 * c2 * cl10  * nor.x
 // 	) * scale;
 // }
 
 void main() {
 	vec2 screenPosition = wvpposition.xy / wvpposition.w;
 	vec2 texCoord = screenPosition * 0.5 + 0.5;
-	texCoord += vec2(0.5 / screenSize); // Half pixel offset
+	// texCoord += vec2(0.5 / screenSize); // Half pixel offset
 
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, mask
