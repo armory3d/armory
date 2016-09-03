@@ -7,6 +7,7 @@ import json
 from bpy.props import *
 from props import *
 import subprocess
+from subprocess import PIPE
 import threading
 import webbrowser
 import write_data
@@ -55,6 +56,7 @@ def get_export_scene_override(scene):
         'area': None,
         'region': None,
         'edit_object': None,
+        'blend_data': None, # For live patching
         'scene': scene}
     return override
 
@@ -70,7 +72,7 @@ def def_strings_to_array(strdefs):
     defs = ['_' + d for d in defs] # Restore _
     return defs
 
-def export_data(fp, sdk_path):
+def export_data(fp, sdk_path, is_play=False):
     raw_path = sdk_path + 'armory/raw/'
     assets_path = sdk_path + 'armory/Assets/'
 
@@ -142,7 +144,7 @@ def export_data(fp, sdk_path):
     write_data.write_compiledglsl()
 
     # Write khafile.js
-    write_data.write_khafilejs(shader_references, asset_references)
+    write_data.write_khafilejs(shader_references, asset_references, is_play)
 
     # Write Main.hx
     write_data.write_main()
@@ -182,8 +184,21 @@ def compile_project(target_name=None):
         khamake_path = sdk_path + '/kode_studio/KodeStudio-linux64/resources/app/extensions/kha/Kha/make'
     
     cmd = [node_path, khamake_path, target_name, '--glsl2']
+
     # print_info("Building, see console...")
-    return subprocess.Popen(cmd)
+
+    if make.play_project.playproc == None:
+        return subprocess.Popen(cmd)
+    else:
+        # Patching running game, stay silent, disable krafix and haxe
+        cmd.append('--silent')
+        cmd.append('--noproject')
+        cmd.append('--haxe')
+        cmd.append('""')
+        cmd.append('--krafix')
+        cmd.append('""')
+        # Khamake throws error when krafix is not found, hide for now
+        return subprocess.Popen(cmd, stderr=PIPE)
 
 # For live patching
 def patch_project():
@@ -192,9 +207,9 @@ def patch_project():
     sdk_path = addon_prefs.sdk_path
     fp = utils.get_fp()
     os.chdir(fp)
-    export_data(fp, sdk_path)
+    export_data(fp, sdk_path, is_play=True)
 
-def build_project():
+def build_project(is_play=False):
     # Save blend
     bpy.ops.wm.save_mainfile()
 
@@ -245,7 +260,7 @@ def build_project():
     # Save internal assets
 
     # Export data
-    export_data(fp, sdk_path)
+    export_data(fp, sdk_path, is_play=is_play)
 
 def stop_project():
     if play_project.playproc != None:
@@ -274,7 +289,7 @@ def watch_compile():
 
 def play_project(in_viewport):
     # Build data
-    build_project()
+    build_project(is_play=True)
 
     wrd = bpy.data.worlds['Arm']
 

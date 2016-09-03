@@ -2404,6 +2404,14 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
             self.output['gravity'] = [self.scene.gravity[0], self.scene.gravity[1], self.scene.gravity[2]]
 
+            # Scene root traits
+            if bpy.data.worlds['Arm'].ArmPhysics != 'Disabled':
+                self.output['traits'] = []
+                x = {}
+                x['type'] = 'Script'
+                x['class_name'] = 'armory.trait.internal.PhysicsWorld'
+                self.output['traits'].append(x)
+
         self.ExportObjects(self.scene)
         
         self.cb_postprocess()
@@ -2419,11 +2427,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
     # Callbacks
     def object_has_instanced_children(self, bobject):
-        #return False
         return bobject.instanced_children
 
     def object_is_mesh_cached(self, bobject):
-        #return False
         if bobject.data.mesh_cached_verts != len(bobject.data.vertices):
             return False
         if bobject.data.mesh_cached_edges != len(bobject.data.edges):
@@ -2431,29 +2437,24 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         return bobject.data.mesh_cached
 
     def object_set_mesh_cached(self, bobject, b):
-        #return
         bobject.data.mesh_cached = b
         if b:
             bobject.data.mesh_cached_verts = len(bobject.data.vertices)
             bobject.data.mesh_cached_edges = len(bobject.data.edges)
 
     def object_has_override_material(self, bobject):
-        #return False
         return bobject.override_material
 
     def get_mesh_static_usage(self, data):
-        #return True
         return data.static_usage
 
     def get_export_tangents(self, mesh):
-        #return False
         for m in mesh.materials:
             if m.export_tangents == True:
                 return True
         return False
 
     def object_process_instancing(self, bobject, refs):
-        #return False, None
         is_instanced = False
         instance_offsets = None
         for n in refs:
@@ -2475,7 +2476,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         return is_instanced, instance_offsets
 
     def cb_preprocess(self):
-        #return
         ArmoryExporter.option_mesh_only = False
         ArmoryExporter.option_mesh_per_file = True
         ArmoryExporter.option_optimize_mesh = bpy.data.worlds['Arm'].ArmOptimizeMesh
@@ -2497,7 +2497,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             ArmoryExporter.overlay_context = bpy.data.cameras[0].overlay_context
 
     def cb_preprocess_object(self, bobject): # Returns false if object should not be exported
-        #return True
         export_object = True
 
         # Disabled object   
@@ -2702,7 +2701,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         return False
 
     def cb_export_material(self, material, o):
-        #return
         defs = []
         
         if material.skip_context != '':

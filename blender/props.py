@@ -75,7 +75,7 @@ def initProperties():
     bpy.types.World.ArmExportHideRender = BoolProperty(name="Export Hidden Renders", default=False)
     bpy.types.World.ArmSpawnAllLayers = BoolProperty(name="Spawn All Layers", default=False)
     bpy.types.World.ArmCacheShaders = BoolProperty(name="Cache Shaders", default=True)
-    bpy.types.World.ArmPlayLivePatch = BoolProperty(name="Live Patching", default=False)
+    bpy.types.World.ArmPlayLivePatch = BoolProperty(name="Live Patching", default=True)
     bpy.types.World.ArmPlayAutoBuild = BoolProperty(name="Auto Build", default=True)
     bpy.types.World.ArmPlayViewportCamera = BoolProperty(name="Viewport Camera", default=False)
     bpy.types.World.ArmPlayViewportNavigation = EnumProperty(

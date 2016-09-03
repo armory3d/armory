@@ -7,7 +7,7 @@ def add_armory_library(sdk_path, name):
     return ('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/' + name)[2:] + '");\n').replace('\\', '/')
 
 # Write khafile.js
-def write_khafilejs(shader_references, asset_references):
+def write_khafilejs(shader_references, asset_references, is_play):
     
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
@@ -36,7 +36,8 @@ project.addShaders('Sources/Shaders/**');
             f.write("project.addDefine('WITH_PHYSICS');\n")
             f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
 
-        if bpy.data.worlds['Arm'].ArmPlayLivePatch == True:
+        # Only when playing electron
+        if is_play and bpy.data.worlds['Arm'].ArmPlayLivePatch == True and bpy.data.worlds['Arm'].ArmPlayRuntime == 'Electron':
             f.write("project.addDefine('WITH_LIVEPATCH');\n")
 
         # Native scripting
@@ -133,8 +134,7 @@ class Main {
         f.write("""
         kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel}, function() {
             iron.App.init(function() {
-                var scene = iron.Scene.setActive(projectScene);
-                scene.addTrait(new armory.trait.internal.PhysicsWorld());
+                iron.Scene.setActive(projectScene);
                 iron.App.notifyOnRender(function(g:kha.graphics4.Graphics) {
                     iron.Scene.active.renderFrame(g);
                 });
