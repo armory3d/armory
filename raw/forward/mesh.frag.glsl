@@ -6,10 +6,6 @@ precision mediump float;
 
 #include "../compiled.glsl"
 
-// #ifdef _NorTex
-// #define _Tex
-// #endif
-
 #ifdef _BaseTex
 	uniform sampler2D sbase;
 #endif

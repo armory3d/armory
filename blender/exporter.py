@@ -576,11 +576,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
             self.ExportBoneTransform(armature, bone, scene, o, action)
 
-        o['objects'] = [] # TODO
+        o['children'] = [] # TODO
         for subbobject in bone.children:
             so = {}
             self.ExportBone(armature, subbobject, scene, so, action)
-            o['objects'].append(so)
+            o['children'].append(so)
 
         # Export any ordinary objects that are parented to this bone
         boneSubbobjectArray = self.boneParentArray.get(bone.name)
@@ -1416,7 +1416,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             o['type'] = structIdentifier[type]
             o['name'] = bobjectRef["structName"]
 
-            if bobject.hide_render:
+            if bobject.hide_render or bobject.game_visible == False:
                 o['visible'] = False
 
             if bobject.spawn == False:
@@ -1528,6 +1528,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                         export_actions = [action]
 
                     for action in export_actions:
+                        if armdata.animation_data == None:
+                            continue
                         armdata.animation_data.action = action
                         fp = self.get_meshes_file_path('bones_' + armatureid + '_' + action.name)
                         assets.add(fp)
@@ -1541,19 +1543,19 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                                     bones.append(boneo)
                             # Save bones separately
                             bones_obj = {}
-                            bones_obj['objects'] = bones
+                            bones_obj['children'] = bones
                             utils.write_arm(fp, bones_obj)
                     armdata.armature_cached = True
 
             if (parento == None):
                 self.output['objects'].append(o)
             else:
-                parento['objects'].append(o)
+                parento['children'].append(o)
 
             self.cb_export_object(bobject, o, type)
 
-            if not hasattr(o, 'objects'):
-                o['objects'] = []
+            if not hasattr(o, 'children'):
+                o['children'] = []
 
         if bobject.type != 'MESH' or self.object_has_instanced_children(bobject) == False:
             for subbobject in bobject.children:
@@ -2187,7 +2189,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             o['mirror_resolution_y'] = int(objref.mirror_resolution_y)
 
         o['frustum_culling'] = objref.frustum_culling
-        o['pipeline'] = objref.pipeline_path + '/' + objref.pipeline_path # Same file name and id
+        o['render_path'] = objref.renderpath_path + '/' + objref.renderpath_path # Same file name and id
         
         if self.scene.world != None and 'Background' in self.scene.world.node_tree.nodes: # TODO: parse node tree
             background_node = self.scene.world.node_tree.nodes['Background']
@@ -2255,7 +2257,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             const['float'] = 0
             c['bind_constants'].append(const)
             const = {}
-            const['name'] = 'albedo_color'
+            const['name'] = 'baseCol'
             const['vec4'] = [0.8, 0.8, 0.8, 1.0]
             c['bind_constants'].append(const)
             const = {}
@@ -2282,7 +2284,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                 c['name'] = ArmoryExporter.mesh_context_empty
                 o['contexts'].append(c)
             defs = []
-            self.finalize_shader(o, defs, ArmoryExporter.pipeline_passes)
+            self.finalize_shader(o, defs, ArmoryExporter.renderpath_passes)
             self.output['material_datas'].append(o)
 
     def ExportParticleSystems(self):
@@ -2430,6 +2432,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         return bobject.instanced_children
 
     def object_is_mesh_cached(self, bobject):
+        if bobject.type == 'FONT': # No verts for font
+            return bobject.data.mesh_cached
         if bobject.data.mesh_cached_verts != len(bobject.data.vertices):
             return False
         if bobject.data.mesh_cached_edges != len(bobject.data.edges):
@@ -2438,7 +2442,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
     def object_set_mesh_cached(self, bobject, b):
         bobject.data.mesh_cached = b
-        if b:
+        if b and bobject.type != 'FONT':
             bobject.data.mesh_cached_verts = len(bobject.data.vertices)
             bobject.data.mesh_cached_edges = len(bobject.data.edges)
 
@@ -2485,11 +2489,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         ArmoryExporter.option_sample_animation = bpy.data.worlds['Arm'].ArmSampledAnimation
         ArmoryExporter.sampleAnimationFlag = ArmoryExporter.option_sample_animation
 
-        # Only one pipeline for scene for now
+        # Only one render path for scene for now
         # Used for material shader export and khafile
         if (len(bpy.data.cameras) > 0):
-            ArmoryExporter.pipeline_id = bpy.data.cameras[0].pipeline_id
-            ArmoryExporter.pipeline_passes = bpy.data.cameras[0].pipeline_passes.split('_')
+            ArmoryExporter.renderpath_id = bpy.data.cameras[0].renderpath_id
+            ArmoryExporter.renderpath_passes = bpy.data.cameras[0].renderpath_passes.split('_')
             ArmoryExporter.mesh_context = bpy.data.cameras[0].mesh_context
             ArmoryExporter.mesh_context_empty = bpy.data.cameras[0].mesh_context_empty
             ArmoryExporter.shadows_context = bpy.data.cameras[0].shadows_context
@@ -2737,7 +2741,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                 if m.type == 'UV_PROJECT':
                     decal_uv_layer = m.uv_layer
                     break
-        # Get decal context from pipes
+        # Get decal context from render paths
         decal_context = bpy.data.cameras[0].last_decal_context
         
         # Parse nodes
@@ -2817,7 +2821,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
         # Process defs and append datas
         if material.override_shader == False:
-            self.finalize_shader(o, defs, ArmoryExporter.pipeline_passes)
+            self.finalize_shader(o, defs, ArmoryExporter.renderpath_passes)
         else:
             # TODO: gather defs from vertex data when custom shader is used
             o['shader'] = material.override_shader_name
@@ -2889,7 +2893,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         po['volume_center'] = volume_center
         return po
             
-    def finalize_shader(self, o, defs, pipeline_passes):
+    def finalize_shader(self, o, defs, renderpath_passes):
         # Merge duplicates and sort
         defs = sorted(list(set(defs)))
         # Select correct shader variant
@@ -2900,13 +2904,13 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         ext += bpy.data.worlds['Arm'].world_defs
         
         # Shader data
-        shader_data_name = ArmoryExporter.pipeline_id + ext
-        shader_data_path = 'build/compiled/ShaderDatas/' + ArmoryExporter.pipeline_id + '/' + shader_data_name + '.arm'
+        shader_data_name = ArmoryExporter.renderpath_id + ext
+        shader_data_path = 'build/compiled/ShaderDatas/' + ArmoryExporter.renderpath_id + '/' + shader_data_name + '.arm'
         # Stencil mask
         # if material.stencil_mask > 0:
         #   mask_ext = "_mask" + str(material.stencil_mask)
         #   shader_data_name_with_mask = shader_data_name + mask_ext
-        #   shader_data_path_with_mask = 'build/compiled/ShaderDatas/' + ArmoryExporter.pipeline_id + '/' + shader_data_name_with_mask + '.arm'
+        #   shader_data_path_with_mask = 'build/compiled/ShaderDatas/' + ArmoryExporter.renderpath_id + '/' + shader_data_name_with_mask + '.arm'
         #   # Copy data if it does not exist and set stencil mask
         #   if not os.path.isfile(shader_data_path_with_mask):
         #       json_file = open(shader_data_path).read()
@@ -2924,10 +2928,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         # else:
         ArmoryExporter.asset_references.append(shader_data_path)
         o['shader'] = shader_data_name + '/' + shader_data_name
-        # Process all passes from pipeline
-        for pipe_pass in pipeline_passes:
-            shader_name = pipe_pass + ext
-            ArmoryExporter.shader_references.append('build/compiled/Shaders/' + ArmoryExporter.pipeline_id + '/' + shader_name)
+        # Process all passes from render path
+        for ren_pass in renderpath_passes:
+            shader_name = ren_pass + ext
+            ArmoryExporter.shader_references.append('build/compiled/Shaders/' + ArmoryExporter.renderpath_id + '/' + shader_name)
 
 def register():
     bpy.utils.register_class(ArmoryExporter)

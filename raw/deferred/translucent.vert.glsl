@@ -6,10 +6,6 @@ precision highp float;
 
 #include "../compiled.glsl"
 
-#ifdef _NorTex
-#define _BaseTex
-#endif
-
 in vec3 pos;
 in vec3 nor;
 #ifdef _BaseTex
@@ -31,12 +27,12 @@ in vec3 nor;
 
 uniform mat4 W;
 uniform mat4 N;
-uniform mat4 WV;
+uniform mat4 V;
 uniform mat4 P;
-uniform mat4 LWVP;
-uniform vec4 albedo_color;
+uniform vec4 baseCol;
+uniform vec3 eye;
 #ifdef _Skinning
-	uniform float skinBones[skinMaxBones * 12];
+	uniform float skinBones[skinMaxBones * 8];
 #endif
 
 out vec4 wvpposition;
@@ -46,6 +42,7 @@ out vec3 position;
 #endif
 out vec4 lPos;
 out vec4 matColor;
+out vec3 eyeDir;
 #ifdef _NorTex
 	out mat3 TBN;
 #else
@@ -120,7 +117,7 @@ void main() {
 	vec3 _normal = normalize(mat3(N) * nor);
 #endif
 
-	lPos = LWVP * sPos;
+	mat4 WV = V * W;
 
 #ifdef _Billboard
 	// Spherical
@@ -132,20 +129,22 @@ void main() {
 	//WV[2][0] = 0.0; WV[2][1] = 0.0; WV[2][2] = 1.0;
 #endif
 
-	position = vec4(W * sPos).xyz;
 	gl_Position = P * WV * sPos;
+	wvpposition = gl_Position;
 
-#ifdef _BaseTex
+#ifdef _Tex
 	texCoord = tex;
 #endif
 
-	matColor = albedo_color;
+	matColor = baseCol;
 
 #ifdef _VCols
 	matColor.rgb *= col;
 #endif
 
-	wvpposition = gl_Position;
+	vec3 mPos = vec4(W * sPos).xyz;
+	position = mPos;
+	eyeDir = eye - mPos;
 
 #ifdef _NorTex
 	vec3 tangent = (mat3(N) * (tan));

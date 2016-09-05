@@ -349,7 +349,7 @@ class TranslucentResolvePassNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
-# Pipeline
+# Render path
 class DrawMeshesNode(Node, CGPipelineTreeNode):
     '''A custom node'''
     bl_idname = 'DrawMeshesNodeType'
@@ -806,22 +806,22 @@ def buildNodeTrees(shader_references, asset_references, assets_path):
     os.chdir(fp)
 
     # Make sure Assets dir exists
-    if not os.path.exists('build/compiled/Assets/pipelines'):
-        os.makedirs('build/compiled/Assets/pipelines')
+    if not os.path.exists('build/compiled/Assets/renderpaths'):
+        os.makedirs('build/compiled/Assets/renderpaths')
     
     buildNodeTrees.assets_path = assets_path
     buildNodeTrees.linked_assets = []
     # Always include
     buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'brdf.png')
 
-    # Export pipeline for each camera
+    # Export render path for each camera
     parsed_paths = []
     for cam in bpy.data.cameras:
         # if cam.game_export
-        if cam.pipeline_path not in parsed_paths:
-            node_group = bpy.data.node_groups[cam.pipeline_path]
+        if cam.renderpath_path not in parsed_paths:
+            node_group = bpy.data.node_groups[cam.renderpath_path]
             buildNodeTree(cam, node_group, shader_references, asset_references)
-            parsed_paths.append(cam.pipeline_path)
+            parsed_paths.append(cam.renderpath_path)
 
     return buildNodeTrees.linked_assets
 
@@ -829,9 +829,9 @@ def buildNodeTree(cam, node_group, shader_references, asset_references):
     buildNodeTree.cam = cam
     output = {}
     dat = {}
-    output['pipeline_datas'] = [dat]
+    output['renderpath_datas'] = [dat]
     
-    path = 'build/compiled/Assets/pipelines/'
+    path = 'build/compiled/Assets/renderpaths/'
     node_group_name = node_group.name.replace('.', '_')
     
     rn = get_root_node(node_group)
@@ -844,7 +844,7 @@ def buildNodeTree(cam, node_group, shader_references, asset_references):
     dat['mesh_context'] = buildNodeTree.cam.mesh_context
     dat['shadows_context'] = buildNodeTree.cam.shadows_context
     
-    dat['render_targets'], dat['depth_buffers'] = preprocess_pipeline(rn, node_group)
+    dat['render_targets'], dat['depth_buffers'] = preprocess_renderpath(rn, node_group)
     dat['stages'] = []
     
     buildNode(dat['stages'], rn, node_group, shader_references, asset_references)
@@ -1428,7 +1428,7 @@ def get_root_node(node_group):
     for n in node_group.nodes:
         if n.bl_idname == 'BeginNodeType':
             # Store contexts
-            buildNodeTree.cam.pipeline_id = n.inputs[0].default_value
+            buildNodeTree.cam.renderpath_id = n.inputs[0].default_value
             mesh_contexts = n.inputs[1].default_value.split(',')
             buildNodeTree.cam.mesh_context = mesh_contexts[0]
             if len(mesh_contexts) > 1:
@@ -1442,27 +1442,27 @@ def get_root_node(node_group):
             break
     return rn
 
-def preprocess_pipeline(root_node, node_group):
+def preprocess_renderpath(root_node, node_group):
     render_targets = []
     depth_buffers = []
-    preprocess_pipeline.velocity_def_added = False
-    buildNodeTree.cam.pipeline_passes = ''
-    traverse_pipeline(root_node, node_group, render_targets, depth_buffers)
+    preprocess_renderpath.velocity_def_added = False
+    buildNodeTree.cam.renderpath_passes = ''
+    traverse_renderpath(root_node, node_group, render_targets, depth_buffers)
     return render_targets, depth_buffers
     
-def traverse_pipeline(node, node_group, render_targets, depth_buffers):
+def traverse_renderpath(node, node_group, render_targets, depth_buffers):
     # Gather linked draw geometry contexts
     if node.bl_idname == 'DrawMeshesNodeType':
-        if buildNodeTree.cam.pipeline_passes != '':
-            buildNodeTree.cam.pipeline_passes += '_' # Separator
-        buildNodeTree.cam.pipeline_passes += node.inputs[1].default_value
+        if buildNodeTree.cam.renderpath_passes != '':
+            buildNodeTree.cam.renderpath_passes += '_' # Separator
+        buildNodeTree.cam.renderpath_passes += node.inputs[1].default_value
 
     # Gather defs from linked nodes
     if node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':
-        if preprocess_pipeline.velocity_def_added == False:
+        if preprocess_renderpath.velocity_def_added == False:
             assets.add_khafile_def('WITH_VELOC')
             bpy.data.worlds['Arm'].world_defs += '_Veloc'
-            preprocess_pipeline.velocity_def_added = True
+            preprocess_renderpath.velocity_def_added = True
         if node.bl_idname == 'TAAPassNodeType':
             assets.add_khafile_def('WITH_TAA')
             # bpy.data.worlds['Arm'].world_defs += '_TAA'
@@ -1487,7 +1487,7 @@ def traverse_pipeline(node, node_group, render_targets, depth_buffers):
     elif node.bl_idname == 'LoopStagesNodeType' or node.bl_idname == 'LoopLampsNodeType' or node.bl_idname == 'DrawStereoNodeType':
         if node.outputs[1].is_linked:
             loop_node = findNodeByLinkFrom(node_group, node, node.outputs[1])
-            traverse_pipeline(loop_node, node_group, render_targets, depth_buffers)
+            traverse_renderpath(loop_node, node_group, render_targets, depth_buffers)
     
     # Prebuilt
     elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'BlendPassNodeType' or node.bl_idname == 'CombinePassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'DeferredIndirectPassNodeType' or node.bl_idname == 'VolumetricLightPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
@@ -1508,7 +1508,7 @@ def traverse_pipeline(node, node_group, render_targets, depth_buffers):
     # Next stage
     if node.outputs[0].is_linked:
         stagenode = findNodeByLinkFrom(node_group, node, node.outputs[0])
-        traverse_pipeline(stagenode, node_group, render_targets, depth_buffers)
+        traverse_renderpath(stagenode, node_group, render_targets, depth_buffers)
         
 def parse_render_target(node, node_group, render_targets, depth_buffers):
     if node.bl_idname == 'NodeReroute':
@@ -1562,7 +1562,8 @@ def make_render_target(n, scale, depth_buffer_id=None):
     target['width'] = n.inputs[1].default_value
     target['height'] = n.inputs[2].default_value
     target['format'] = n.inputs[4].default_value
-    target['ping_pong'] = n.inputs[5].default_value
+    if n.inputs[5].default_value:
+        target['ping_pong'] = True
     if scale != 1.0:
         target['scale'] = scale    
     if depth_buffer_id != None:

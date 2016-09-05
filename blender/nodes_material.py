@@ -54,7 +54,7 @@ def make_albedo_const(col, c):
 	const = {}
 	parse.const_color = const
 	c['bind_constants'].append(const)
-	const['name'] = 'albedo_color'
+	const['name'] = 'baseCol'
 	const['vec4'] = [col[0], col[1], col[2], col[3]]
 
 def make_roughness_const(f, c):
@@ -278,16 +278,16 @@ def parse_val_to_rgb(node, c, defs):
 		return node.color_ramp.evaluate(factor)
 	else: # Assume 2 colors interpolated by id for now
 		defs.append('_RampID')
-		# Link albedo_color2 as color 2
+		# Link baseCol2 as color 2
 		const = {}
 		c['bind_constants'].append(const)
-		const['name'] = 'albedo_color2'
+		const['name'] = 'baseCol2'
 		res = node.color_ramp.elements[1].color
 		const['vec4'] = [res[0], res[1], res[2], res[3]]
 		# Return color 1
 		return node.color_ramp.elements[0].color
 
-def add_albedo_color(c, col):
+def add_base_color(c, col):
 	if parse.const_color == None:
 		make_albedo_const(col, c)
 	else:
@@ -376,11 +376,11 @@ def parse_base_color_socket(self, base_color_input, material, c, defs, tree, nod
 			defs.append('_VCols')
 		elif color_node.type == 'VALTORGB':
 			col = parse_val_to_rgb(color_node, c, defs)
-			add_albedo_color(c, col)
+			add_base_color(c, col)
 		elif color_node.type == 'MIX_RGB':
 			parse_mix_rgb(self, material, c, defs, tree, color_node, factor)
 	else: # Take node color
-		add_albedo_color(c, base_color_input.default_value)
+		add_base_color(c, base_color_input.default_value)
 
 def add_metalness_const(res, c, factor, minimum_val=0.0, sqrt_val=False):
 	if res < minimum_val:

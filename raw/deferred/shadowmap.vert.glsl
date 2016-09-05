@@ -32,7 +32,7 @@ in vec3 nor;
 
 uniform mat4 LWVP;
 #ifdef _Skinning
-	uniform float skinBones[skinMaxBones * 12];
+	uniform float skinBones[skinMaxBones * 8];
 #endif
 
 // out vec4 position;

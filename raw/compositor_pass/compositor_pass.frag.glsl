@@ -70,8 +70,7 @@ vec3 getPos(float depth) {
 vec3 applyFog(vec3 rgb, float distance) {
     // float fogAmount = 1.0 - exp(-distance * compoFogAmountA);
     float fogAmount = 1.0 - exp(-distance * 0.0055);
-    return mix(rgb, vec3(0.4, 0.7, 0.2), fogAmount);
-    // return mix(rgb, compoFogColor, fogAmount);
+    return mix(rgb, compoFogColor, fogAmount);
 }
 #endif
 

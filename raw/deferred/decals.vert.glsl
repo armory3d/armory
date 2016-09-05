@@ -30,10 +30,10 @@ in vec3 pos;
 uniform mat4 VP;
 uniform mat4 W;
 // uniform mat4 WV;
-uniform vec4 albedo_color;
+uniform vec4 baseCol;
 
 #ifdef _RampID
-uniform vec4 albedo_color2;
+uniform vec4 baseCol2;
 uniform int uid;
 #endif
 
@@ -67,9 +67,9 @@ void main() {
 #ifdef _RampID
 	vec2 p = vec2(float(uid), float(uid));
 	float factor = hash(p);
-	matColor = mix(albedo_color, albedo_color2, factor);
+	matColor = mix(baseCol, baseCol2, factor);
 #else
-	matColor = albedo_color;
+	matColor = baseCol;
 #endif
 
 	gl_Position = wvpposition;

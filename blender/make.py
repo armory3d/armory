@@ -7,7 +7,6 @@ import json
 from bpy.props import *
 from props import *
 import subprocess
-from subprocess import PIPE
 import threading
 import webbrowser
 import write_data
@@ -120,8 +119,7 @@ def export_data(fp, sdk_path, is_play=False):
     # Assume asset_references contains shader datas only for now
     for ref in asset_references:
         # Data does not exist yet
-        os.chdir(fp)
-        if not os.path.exists(ref):
+        if not os.path.isfile(fp + '/' + ref):
             shader_name = ref.split('/')[3] # Extract from 'build/compiled/...'
             strdefs = ref[:-4] # Remove '.arm' extension
             defs = strdefs.split(shader_name) # 'name/name_def_def'
@@ -149,11 +147,11 @@ def export_data(fp, sdk_path, is_play=False):
     # Write Main.hx
     write_data.write_main()
 
-def print_info(text):
+def armory_log(text):
+    print(text)
     ArmoryProjectPanel.info_text = text
-    # for area in bpy.context.screen.areas:
-        # if area.type == 'INFO':
-            # area.tag_redraw()
+    armory_log.tag_redraw = True    
+armory_log.tag_redraw = False
 
 def compile_project(target_name=None):
     user_preferences = bpy.context.user_preferences
@@ -185,7 +183,7 @@ def compile_project(target_name=None):
     
     cmd = [node_path, khamake_path, target_name, '--glsl2']
 
-    # print_info("Building, see console...")
+    # armory_log("Building, see console...")
 
     if make.play_project.playproc == None:
         return subprocess.Popen(cmd)
@@ -198,7 +196,7 @@ def compile_project(target_name=None):
         cmd.append('--krafix')
         cmd.append('""')
         # Khamake throws error when krafix is not found, hide for now
-        return subprocess.Popen(cmd, stderr=PIPE)
+        return subprocess.Popen(cmd, stderr=subprocess.PIPE)
 
 # For live patching
 def patch_project():
@@ -232,7 +230,7 @@ def build_project(is_play=False):
         os.makedirs('build/debug-html5')
 
     # Compile path tracer shaders
-    if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].pipeline_path == 'pathtrace_path':
+    if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].renderpath_path == 'pathtrace_path':
         path_tracer.compile(raw_path + 'pt_trace_pass/pt_trace_pass.frag.glsl')
 
     # Save external scripts edited inside Blender
@@ -270,24 +268,29 @@ def stop_project():
 def watch_play():
     if play_project.playproc == None:
         return
-    if play_project.playproc.poll() == None:
-        threading.Timer(0.5, watch_play).start()
-    else:
-        play_project.playproc = None
+    line = b''
+    while play_project.playproc != None and play_project.playproc.poll() == None:
+        char = play_project.playproc.stderr.read(1) # Read immediately one by one 
+        if char == b'\n':
+            trace = str(line).split('"') # Extract trace
+            if len(trace) > 2:
+                armory_log(trace[1])
+            line = b''
+        else:
+            line += char
+    play_project.playproc = None
+    armory_log('Ready')
 
 def watch_compile():
-    return_code = play_project.compileproc.poll()
-    if return_code == None:
-        threading.Timer(0.1, watch_compile).start()
+    play_project.compileproc.wait()
+    result = play_project.compileproc.poll()
+    play_project.compileproc = None
+    if result == 0:
+        on_compiled()
     else:
-        play_project.compileproc = None
-        if return_code == 0:
-            on_compiled()
-        else:
-            # self.report({'ERROR'}, 'Build failed, check console')
-            print('Build failed, check console')
+        armory_log('Build failed, check console')
 
-def play_project(in_viewport):
+def play_project(self, in_viewport):
     # Build data
     build_project(is_play=True)
 
@@ -328,7 +331,7 @@ def play_project(in_viewport):
 
         # Compile
         play_project.compileproc = compile_project(target_name='html5')
-        watch_compile()
+        threading.Timer(0.1, watch_compile).start()
 
 def run_server():
     Handler = http.server.SimpleHTTPRequestHandler
@@ -339,7 +342,7 @@ def run_server():
         print('Server already running')
 
 def on_compiled():
-    print_info("Ready")
+    armory_log("Ready")
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
     sdk_path = addon_prefs.sdk_path
@@ -356,7 +359,7 @@ def on_compiled():
         else:
             electron_path = sdk_path + 'kode_studio/KodeStudio-linux64/kodestudio'
 
-        play_project.playproc = subprocess.Popen([electron_path, '--chromedebug', '--remote-debugging-port=9222', electron_app_path])
+        play_project.playproc = subprocess.Popen([electron_path, '--chromedebug', '--remote-debugging-port=9222', '--enable-logging', electron_app_path], stderr=subprocess.PIPE)
         watch_play()
     elif wrd.ArmPlayRuntime == 'Browser':
         # Start server
@@ -390,7 +393,7 @@ def clean_project():
     if os.path.isfile('Sources/Main.hx'):
         os.remove('Sources/Main.hx')
 
-    # self.report({'INFO'}, 'Done')
+    print('Project cleaned')
 
 # Registration
 arm_keymaps = []

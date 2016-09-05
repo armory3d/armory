@@ -190,5 +190,7 @@ void main() {
     // }
 
    	// curOpticalDepth
-	outColor = vec4(scatteredLightAmount * lightColor.rgb * lightStrength, 0.0);
+    // outColor = vec4(scatteredLightAmount * lightColor.rgb * max(1.0, lightStrength / 2.0), 0.0);
+    outColor = vec4(scatteredLightAmount * lightColor.rgb, 0.0);
+	// outColor = vec4(scatteredLightAmount * lightColor.rgb * ((1.0 - depth) * 10.0), 0.0);
 }

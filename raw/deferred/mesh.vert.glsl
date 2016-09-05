@@ -34,7 +34,7 @@ in vec3 nor;
 
 uniform mat4 WVP;
 uniform mat4 N;
-uniform vec4 albedo_color;
+uniform vec4 baseCol;
 #ifdef _Billboard
 	uniform mat4 WV;
 	uniform mat4 P;
@@ -203,7 +203,7 @@ void main() {
 	texCoord = tex;
 #endif
 
-	matColor = albedo_color;
+	matColor = baseCol;
 
 #ifdef _VCols
 	matColor.rgb *= col;

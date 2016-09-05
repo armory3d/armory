@@ -190,9 +190,11 @@ void main() {
 #endif
 #endif
 
+#ifndef _EnvSky // Prevent case when sky radiance is enabled
 #ifdef _EnvTex
 	vec3 n = normalize(normal);
 	vec3 R = texture(envmap, envMapEquirect(n)).rgb * envmapStrength;
+#endif
 #endif
 
 #ifdef _EnvSky

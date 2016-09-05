@@ -29,7 +29,7 @@ class PathTracer extends Trait {
 	function getColorFromNode(object:MeshObject):Array<Float> {
 		// Hard code for now
 		for (c in object.materials[0].contexts[0].raw.bind_constants) {
-			if (c.name == "albedo_color") {
+			if (c.name == "baseCol") {
 				return c.vec4;
 			}
 		}

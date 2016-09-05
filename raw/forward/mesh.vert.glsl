@@ -30,7 +30,7 @@ uniform mat4 N;
 uniform mat4 V;
 uniform mat4 P;
 uniform mat4 LWVP;
-uniform vec4 albedo_color;
+uniform vec4 baseCol;
 uniform vec3 eye;
 #ifdef _Skinning
 	uniform float skinBones[skinMaxBones * 8];
@@ -171,7 +171,7 @@ void main() {
 	texCoord = tex;
 #endif
 
-	matColor = albedo_color;
+	matColor = baseCol;
 
 #ifdef _VCols
 	matColor.rgb *= col;

@@ -1,4 +1,4 @@
-package armory.renderpipeline;
+package armory.renderpath;
 
 import iron.data.RenderPath;
 

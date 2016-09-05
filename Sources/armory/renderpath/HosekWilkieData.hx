@@ -97,7 +97,7 @@ This file contains the coefficient data for the RGB colour space version of
 the model.
 */
 
-package armory.renderpipeline;
+package armory.renderpath;
 
 class HosekWilkieData {
 

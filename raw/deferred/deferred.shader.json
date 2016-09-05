@@ -365,12 +365,44 @@
 					"link": "_normalMatrix"
 				},
 				{
-					"name": "WV",
-					"link": "_worldViewMatrix"
+					"name": "V",
+					"link": "_viewMatrix"
 				},
 				{
 					"name": "P",
 					"link": "_projectionMatrix"
+				},
+				{
+					"name": "lightPos",
+					"link": "_lampPosition"
+				},
+				{
+					"name": "lightDir",
+					"link": "_lampDirection"
+				},
+				{
+					"name": "lightColor",
+					"link": "_lampColor"
+				},
+				{
+					"name": "lightStrength",
+					"link": "_lampStrength"
+				},
+				{
+					"name": "spotlightCutoff",
+					"link": "_spotlampCutoff"
+				},
+				{
+					"name": "spotlightExponent",
+					"link": "_spotlampExponent"
+				},
+				{
+					"name": "lightType",
+					"link": "_lampType"
+				},
+				{
+					"name": "eye",
+					"link": "_cameraPosition"
 				},
 				{
 					"name": "skinBones",
@@ -378,7 +410,7 @@
 					"ifdef": ["_Skinning"]
 				},
 				{
-					"name": "light",
+					"name": "lightPos",
 					"link": "_lampPosition"
 				},
 				{
@@ -390,28 +422,27 @@
 					"link": "_lampStrength"
 				},
 				{
-					"name": "eye",
-					"link": "_cameraPosition"
-				},
-				{
-					"name": "senvmapIrradiance",
+					"name": "shirr",
 					"link": "_envmapIrradiance"
 				},
 				{
 					"name": "senvmapRadiance",
-					"link": "_envmapRadiance"
+					"link": "_envmapRadiance",
+					"ifdef": ["_Rad"]
+				},
+				{
+					"name": "envmapNumMipmaps",
+					"link": "_envmapNumMipmaps",
+					"ifdef": ["_Rad"]
 				},
 				{
 					"name": "senvmapBrdf",
-					"link": "_envmapBrdf"
+					"link": "_envmapBrdf",
+					"ifdef": ["_Rad"]
 				},
 				{
 					"name": "envmapStrength",
 					"link": "_envmapStrength"
-				},
-				{
-					"name": "envmapNumMipmaps",
-					"link": "_envmapNumMipmaps"
 				}
 			],
 			"texture_params": [],

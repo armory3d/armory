@@ -2,6 +2,7 @@ import shutil
 import bpy
 import os
 import json
+import subprocess
 import nodes_renderpath
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
@@ -27,13 +28,21 @@ def on_scene_update(context):
         on_scene_update.last_operator = bpy.context.window_manager.operators[-1]
         make.patch_project()
         make.compile_project()
+
+    # New output ahs been logged
+    if make.armory_log.tag_redraw:
+        for area in bpy.context.screen.areas:
+            if area.type == 'INFO':
+                area.tag_redraw()
 on_scene_update.last_operator = None
 
 def invalidate_shader_cache(self, context):
     # compiled.glsl changed, recompile all shaders next time
-    fp = utils.get_fp()
-    if os.path.isdir(fp + '/build/compiled/ShaderDatas'):
-        shutil.rmtree(fp + '/build/compiled/ShaderDatas')
+    if invalidate_shader_cache.enabled:
+        fp = utils.get_fp()
+        if os.path.isdir(fp + '/build/compiled/ShaderDatas'):
+            shutil.rmtree(fp + '/build/compiled/ShaderDatas')
+invalidate_shader_cache.enabled = True # Disable invalidating during build process
 
 def invalidate_compiled_data(self, context):
     fp = utils.get_fp()
@@ -105,6 +114,7 @@ def initProperties():
     bpy.types.Object.override_material = bpy.props.BoolProperty(name="Override Material", default=False)
     bpy.types.Object.override_material_name = bpy.props.StringProperty(name="Name", default="")
     bpy.types.Object.game_export = bpy.props.BoolProperty(name="Export", default=True)
+    bpy.types.Object.game_visible = bpy.props.BoolProperty(name="Visible", default=True)
     bpy.types.Object.spawn = bpy.props.BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True)
     bpy.types.Object.mobile = bpy.props.BoolProperty(name="Mobile", description="Object moves during gameplay", default=True)
     # - Clips
@@ -122,6 +132,7 @@ def initProperties():
     bpy.types.Mesh.mesh_cached_verts = bpy.props.IntProperty(name="Last Verts", default=0)
     bpy.types.Mesh.mesh_cached_edges = bpy.props.IntProperty(name="Last Edges", default=0)
     bpy.types.Mesh.static_usage = bpy.props.BoolProperty(name="Static Data Usage", default=True)
+    bpy.types.Curve.mesh_cached = bpy.props.BoolProperty(name="Mesh Cached", default=False)
     bpy.types.Curve.static_usage = bpy.props.BoolProperty(name="Static Data Usage", default=True)
     # For armature
     bpy.types.Armature.armature_cached = bpy.props.BoolProperty(name="Armature Cached", default=False)
@@ -131,10 +142,10 @@ def initProperties():
     bpy.types.Armature.actiontraitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
     # For camera
     bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", default=True)
-    bpy.types.Camera.pipeline_path = bpy.props.StringProperty(name="Render Path", default="deferred_path")
-    bpy.types.Camera.pipeline_id = bpy.props.StringProperty(name="Pipeline ID", default="deferred")
+    bpy.types.Camera.renderpath_path = bpy.props.StringProperty(name="Render Path", default="deferred_path")
+    bpy.types.Camera.renderpath_id = bpy.props.StringProperty(name="Render Path ID", default="deferred")
 	# TODO: Specify multiple material ids, merge ids from multiple cameras 
-    bpy.types.Camera.pipeline_passes = bpy.props.StringProperty(name="Pipeline passes", default="")
+    bpy.types.Camera.renderpath_passes = bpy.props.StringProperty(name="Render Path Passes", default="")
     bpy.types.Camera.mesh_context = bpy.props.StringProperty(name="Mesh", default="mesh")
     bpy.types.Camera.mesh_context_empty = bpy.props.StringProperty(name="Mesh Empty", default="depthwrite")
     bpy.types.Camera.shadows_context = bpy.props.StringProperty(name="Shadows", default="shadowmap")
@@ -185,8 +196,8 @@ def initProperties():
     bpy.types.World.generate_ocean_freq = bpy.props.FloatProperty(name="Freq", default=0.16, update=invalidate_shader_cache)
     bpy.types.World.generate_ocean_fade = bpy.props.FloatProperty(name="Fade", default=1.8, update=invalidate_shader_cache)
     bpy.types.World.generate_ssao = bpy.props.BoolProperty(name="SSAO", description="Screen-Space Ambient Occlusion", default=True, update=invalidate_shader_cache)
-    bpy.types.World.generate_ssao_size = bpy.props.FloatProperty(name="Size", default=0.08, update=invalidate_shader_cache)
-    bpy.types.World.generate_ssao_strength = bpy.props.FloatProperty(name="Strength", default=0.30, update=invalidate_shader_cache)
+    bpy.types.World.generate_ssao_size = bpy.props.FloatProperty(name="Size", default=0.12, update=invalidate_shader_cache)
+    bpy.types.World.generate_ssao_strength = bpy.props.FloatProperty(name="Strength", default=0.25, update=invalidate_shader_cache)
     bpy.types.World.generate_ssao_texture_scale = bpy.props.FloatProperty(name="Texture Scale", default=1.0, min=0.0, max=1.0, update=invalidate_shader_cache)
     bpy.types.World.generate_shadows = bpy.props.BoolProperty(name="Shadows", default=True, update=invalidate_shader_cache)
     bpy.types.World.generate_bloom = bpy.props.BoolProperty(name="Bloom", default=True, update=invalidate_shader_cache)
@@ -200,7 +211,7 @@ def initProperties():
     bpy.types.World.generate_ssr_search_dist = bpy.props.FloatProperty(name="Search Dist", default=5.0, update=invalidate_shader_cache)
     bpy.types.World.generate_ssr_falloff_exp = bpy.props.FloatProperty(name="Falloff Exp", default=5.0, update=invalidate_shader_cache)
     bpy.types.World.generate_ssr_jitter = bpy.props.FloatProperty(name="Jitter", default=0.6, update=invalidate_shader_cache)
-    bpy.types.World.generate_ssr_texture_scale = bpy.props.FloatProperty(name="Texture Scale", default=0.5, min=0.0, max=1.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_ssr_texture_scale = bpy.props.FloatProperty(name="Texture Scale", default=1.0, min=0.0, max=1.0, update=invalidate_shader_cache)
     bpy.types.World.generate_pcss = bpy.props.BoolProperty(name="PCSS", description="Percentage Closer Soft Shadows", default=False, update=invalidate_shader_cache)
     # Compositor
     bpy.types.World.generate_letterbox = bpy.props.BoolProperty(name="Letterbox", default=False, update=invalidate_shader_cache)
@@ -269,6 +280,7 @@ class ObjectPropsPanel(bpy.types.Panel):
             return
         
         layout.prop(obj, 'spawn')
+        layout.prop(obj, 'game_visible')
         layout.prop(obj, 'mobile')
         if obj.type == 'MESH':
             layout.prop(obj, 'instanced_children')
@@ -374,7 +386,7 @@ class DataPropsPanel(bpy.types.Panel):
                 layout.prop(obj.data, 'mirror_resolution_x')
                 layout.prop(obj.data, 'mirror_resolution_y')
             layout.prop(obj.data, 'frustum_culling')
-            layout.prop_search(obj.data, "pipeline_path", bpy.data, "node_groups")
+            layout.prop_search(obj.data, "renderpath_path", bpy.data, "node_groups")
             layout.operator("arm.reimport_paths_menu")
         elif obj.type == 'MESH' or obj.type == 'FONT':
             layout.prop(obj.data, 'static_usage')
@@ -623,7 +635,9 @@ class ArmoryPlayButton(bpy.types.Operator):
     bl_label = 'Play'
  
     def execute(self, context):
-        make.play_project(False)
+        invalidate_shader_cache.enabled = False
+        make.play_project(self, False)
+        invalidate_shader_cache.enabled = True
         return{'FINISHED'}
 
 class ArmoryPlayInViewportButton(bpy.types.Operator):
@@ -631,6 +645,7 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
     bl_label = 'Play in Viewport'
  
     def execute(self, context):
+        invalidate_shader_cache.enabled = False
         if make.play_project.playproc == None:
             # Cancel viewport render
             for space in context.area.spaces:
@@ -638,10 +653,11 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
                     if space.viewport_shade == 'RENDERED':
                         space.viewport_shade = 'SOLID'
                     break
-            make.play_project(True)
+            make.play_project(self, True)
         else:
             make.patch_project()
             make.compile_project()
+        invalidate_shader_cache.enabled = True
         return{'FINISHED'}
 
 class ArmoryStopButton(bpy.types.Operator):
@@ -657,11 +673,13 @@ class ArmoryBuildButton(bpy.types.Operator):
     bl_label = 'Build'
  
     def execute(self, context):
+        invalidate_shader_cache.enabled = False
         if make.play_project.playproc == None:
             make.build_project()
         else:
             make.patch_project()
         make.compile_project()
+        invalidate_shader_cache.enabled = True
         return{'FINISHED'}
 
 class ArmoryFolderButton(bpy.types.Operator):

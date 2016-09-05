@@ -107,7 +107,7 @@ class Main {
     static inline var projectScene = '""" + get_project_scene() + """';
     public static function main() {
         iron.sys.CompileTime.importPackage('armory.trait');
-        iron.sys.CompileTime.importPackage('armory.renderpipeline');
+        iron.sys.CompileTime.importPackage('armory.renderpath');
         iron.sys.CompileTime.importPackage('""" + wrd.ArmProjectPackage + """');
         #if (js && WITH_PHYSICS)
         untyped __js__("

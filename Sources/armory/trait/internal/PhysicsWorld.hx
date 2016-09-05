@@ -19,8 +19,6 @@ class ContactPair {
 
 class PhysicsWorld extends Trait {
 
-	public static var active:PhysicsWorld;
-
 #if (!WITH_PHYSICS)
 	public function new() { super(); }
 #else
@@ -29,11 +27,13 @@ class PhysicsWorld extends Trait {
 	public static var physTime = 0.0;
 #end
 
+	public static var active:PhysicsWorld = null;
+
 	public var world:BtDiscreteDynamicsWorldPointer;
 	var dispatcher:BtCollisionDispatcherPointer;
 
 	var contacts:Array<ContactPair> = [];
-	var rbMap:Map<Int, RigidBody>;
+	public var rbMap:Map<Int, RigidBody>;
 
 	static inline var timeStep = 1 / 60;
 	static inline var fixedStep = 1 / 60;
@@ -41,8 +41,13 @@ class PhysicsWorld extends Trait {
 	public function new() {
 		super();
 
-		active = this;
+		if (active != null) {
+			for (rb in active.rbMap) removeRigidBody(rb);
+			active.rbMap = new Map();
+			return;
+		}
 
+		active = this;
 		rbMap = new Map();
 
 		//var min = BtVector3.create(-100, -100, -100);

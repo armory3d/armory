@@ -87,7 +87,7 @@ def buildNodeTree(world):
 			wrd.world_defs += '_Probes'
 			break
 
-	# Data will be written after pipeline has been processed to gather all defines
+	# Data will be written after render path has been processed to gather all defines
 	return output
 
 def write_output(output, asset_references, shader_references):
