@@ -104,6 +104,21 @@
 				{
 					"name": "envmapStrength",
 					"link": "_envmapStrength"
+				},
+				{
+					"name": "snoise",
+					"link": "_noise64",
+					"ifdef": ["_PCSS"]
+				},
+				{
+					"name": "lampNear",
+					"link": "_lampPlaneNear",
+					"ifdef": ["_PCSS"]
+				},
+				{
+					"name": "lampSizeUV",
+					"link": "_lampSizeUV",
+					"ifdef": ["_PCSS"]
 				}
 			],
 			"vertex_shader": "mesh.vert.glsl",

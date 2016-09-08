@@ -34,7 +34,7 @@ precision mediump float;
 #endif
 
 // uniform sampler2D gbufferD;
-uniform float envmapStrength;
+uniform float envmapStrength; // From world material
 
 // in vec2 texCoord;
 in vec3 normal;

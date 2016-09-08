@@ -5,6 +5,8 @@
 precision mediump float;
 #endif
 
+#include "../compiled.glsl"
+
 uniform sampler2D gbufferD;
 #ifndef _NoShadows
 	uniform sampler2D shadowMap;
@@ -28,7 +30,7 @@ const float tScat = 0.08;
 const float tAbs = 0.0;
 const float tExt = 0.0; //tScat + tAbs;
 // const float stepLen = 1.0 / 11.0;
-const float stepLen = 1.0 / 80;
+const float stepLen = 1.0 / 80; // Temporary..
 
 vec3 getPos(float depth, vec2 coord) {
     vec4 pos = vec4(coord * 2.0 - 1.0, depth, 1.0);
@@ -190,7 +192,6 @@ void main() {
     // }
 
    	// curOpticalDepth
-    // outColor = vec4(scatteredLightAmount * lightColor.rgb * max(1.0, lightStrength / 2.0), 0.0);
-    outColor = vec4(scatteredLightAmount * lightColor.rgb, 0.0);
+    outColor = vec4(scatteredLightAmount * lightColor.rgb * volumAirColor * volumAirTurbidity, 0.0);
 	// outColor = vec4(scatteredLightAmount * lightColor.rgb * ((1.0 - depth) * 10.0), 0.0);
 }

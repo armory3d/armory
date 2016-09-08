@@ -29,6 +29,11 @@ uniform sampler2D gbuffer1;
 // #endif
 #ifndef _NoShadows
 	uniform sampler2D shadowMap;
+	#ifdef _PCSS
+	uniform sampler2D snoise;
+	uniform float lampSizeUV; // 0.55
+	uniform float lampNear; // 0.5
+	#endif
 #endif
 
 // #ifdef _LTC
@@ -67,7 +72,7 @@ uniform float spotlightCutoff;
 uniform float spotlightExponent;
 uniform vec3 eye;
 // uniform vec3 eyeLook;
-uniform vec2 screenSize;
+// uniform vec2 screenSize;
 
 // in vec2 texCoord;
 in vec4 wvpposition;
@@ -131,27 +136,22 @@ vec3 specularBRDF(vec3 f0, float roughness, float nl, float nh, float nv, float 
 	float a = roughness * roughness;
 	return d_ggx(nh, a) * clamp(v_smithschlick(nl, nv, a), 0.0, 1.0) * f_schlick(f0, vh) / 4.0;
 }
-// vec3 burleyDiffuseBRDF(vec3 albedo, float roughness, float nv, float nl, float vh) {
-// 	float FD90 = 0.5 + 2.0 * vh * vh * roughness;
-// 	float FdV = 1.0 + (FD90 - 1.0) * pow(1.0 - nv, 5.0);
-// 	float FdL = 1.0 + (FD90 - 1.0) * pow(1.0 - nl, 5.0);
-// 	return albedo * ((1.0 / 3.1415926535) * FdV * FdL);
-// }
-// vec3 orenNayarDiffuseBRDF(vec3 albedo, float roughness, float nv, float nl, float vh) {
-// 	float a = roughness * roughness;
-// 	float s = a;// / (1.29 + 0.5 * a);
-// 	float s2 = s * s;
-// 	float vl = 2.0 * vh * vh - 1.0;		// double angle identity
-// 	float Cosri = vl - nv * nl;
-// 	float C1 = 1.0 - 0.5 * s2 / (s2 + 0.33);
-// 	float test = 1.0;
-// 	if (Cosri >= 0.0) test = (1.0 / (max(nl, nv)));
-// 	float C2 = 0.45 * s2 / (s2 + 0.09) * Cosri * test;
-// 	return albedo / PI * (C1 + C2) * (1.0 + roughness * 0.5);
-// }
-vec3 diffuseBRDF(vec3 albedo, float nl) {
-	// lambert
-	return albedo * nl; // // albedo * max(0.0, nl);
+// Gotanda 2012, Beyond a Simple Physically Based Blinn-Phong Model in Real-Time
+// http://research.tri-ace.com/Data/s2012_beyond_CourseNotes.pdf
+vec3 orenNayarDiffuseBRDF(vec3 albedo, float roughness, float nv, float nl, float vh) {
+	float a = roughness * roughness;
+	float s = a;
+	float s2 = s * s;
+	float vl = 2.0 * vh * vh - 1.0;	// Double angle identity
+	float Cosri = vl - nv * nl;
+	float C1 = 1.0 - 0.5 * s2 / (s2 + 0.33);
+	float test = 1.0;
+	if (Cosri >= 0.0) test = (1.0 / (max(nl, nv)));
+	float C2 = 0.45 * s2 / (s2 + 0.09) * Cosri * test;
+	return albedo * max(0.0, nl) * (C1 + C2) * (1.0 + roughness * 0.5);
+}
+vec3 lambertDiffuseBRDF(vec3 albedo, float nl) {
+	return albedo * max(0.0, nl);
 }
 
 #ifndef _NoShadows
@@ -164,7 +164,6 @@ float texture2DShadowLerp(vec2 uv, float compare){
 	const vec2 texelSize = vec2(1.0) / shadowmapSize;
 	vec2 f = fract(uv * shadowmapSize + 0.5);
 	vec2 centroidUV = floor(uv * shadowmapSize + 0.5) / shadowmapSize;
-
 	float lb = texture2DCompare(centroidUV, compare);
 	float lt = texture2DCompare(centroidUV + texelSize * vec2(0.0, 1.0), compare);
 	float rb = texture2DCompare(centroidUV + texelSize * vec2(1.0, 0.0), compare);
@@ -181,106 +180,76 @@ float PCF(vec2 uv, float compare) {
 			// vec2 off = vec2(x, y) / shadowmapSize;
 			// result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			compare = compare * 0.5 + 0.5;
-			float result = texture2DShadowLerp(uv + (vec2(-1, -1) / shadowmapSize), compare);
-			result += texture2DShadowLerp(uv + (vec2(-1, 0) / shadowmapSize), compare);
-			result += texture2DShadowLerp(uv + (vec2(-1, 1) / shadowmapSize), compare);
-			result += texture2DShadowLerp(uv + (vec2(0, -1) / shadowmapSize), compare);
+			float result = texture2DShadowLerp(uv + (vec2(-1.0, -1.0) / shadowmapSize), compare);
+			result += texture2DShadowLerp(uv + (vec2(-1.0, 0.0) / shadowmapSize), compare);
+			result += texture2DShadowLerp(uv + (vec2(-1.0, 1.0) / shadowmapSize), compare);
+			result += texture2DShadowLerp(uv + (vec2(0.0, -1.0) / shadowmapSize), compare);
 			result += texture2DShadowLerp(uv, compare);
-			result += texture2DShadowLerp(uv + (vec2(0, 1) / shadowmapSize), compare);
-			result += texture2DShadowLerp(uv + (vec2(1, -1) / shadowmapSize), compare);
-			result += texture2DShadowLerp(uv + (vec2(1, 0) / shadowmapSize), compare);
-			result += texture2DShadowLerp(uv + (vec2(1, 1) / shadowmapSize), compare);
+			result += texture2DShadowLerp(uv + (vec2(0.0, 1.0) / shadowmapSize), compare);
+			result += texture2DShadowLerp(uv + (vec2(1.0, -1.0) / shadowmapSize), compare);
+			result += texture2DShadowLerp(uv + (vec2(1.0, 0.0) / shadowmapSize), compare);
+			result += texture2DShadowLerp(uv + (vec2(1.0, 1.0) / shadowmapSize), compare);
 		// }
 	// }
 	return result / 9.0;
 }
-#else // PCSS
-	// Based on ThreeJS example
-	const float LIGHT_WORLD_SIZE = 3.55;
-	const float LIGHT_FRUSTUM_WIDTH = 4.75;
-	const float LIGHT_SIZE_UV = (LIGHT_WORLD_SIZE / LIGHT_FRUSTUM_WIDTH);
-	const float NEAR_PLANE = 0.5;
+#else // _PCSS
+	// Based on ThreeJS and nvidia pcss
+	// const int pcssRings = 11;
 	const int NUM_SAMPLES = 17;
-	const int NUM_RINGS = 11;
-	// vec2 poissonDisk[NUM_SAMPLES];
-	vec2 poissonDisk0;
-	vec2 poissonDisk1;
-	vec2 poissonDisk2;
-	vec2 poissonDisk3;
-	vec2 poissonDisk4;
-	vec2 poissonDisk5;
-	vec2 poissonDisk6;
-	vec2 poissonDisk7;
-	vec2 poissonDisk8;
-	vec2 poissonDisk9;
-	vec2 poissonDisk10;
-	vec2 poissonDisk11;
-	vec2 poissonDisk12;
-	vec2 poissonDisk13;
-	vec2 poissonDisk14;
-	vec2 poissonDisk15;
-	vec2 poissonDisk16;
-
-	float rand(vec2 co) {
-		return fract(sin(dot(co.xy ,vec2(12.9898, 78.233))) * 43758.5453);
-	}
-
+	const float radiusStep = 1.0 / float(NUM_SAMPLES);
+	const float angleStep = PI2 * float(pcssRings) / float(NUM_SAMPLES);
+	vec2 poissonDisk0; vec2 poissonDisk1; vec2 poissonDisk2;
+	vec2 poissonDisk3; vec2 poissonDisk4; vec2 poissonDisk5;
+	vec2 poissonDisk6; vec2 poissonDisk7; vec2 poissonDisk8;
+	vec2 poissonDisk9; vec2 poissonDisk10; vec2 poissonDisk11;
+	vec2 poissonDisk12; vec2 poissonDisk13; vec2 poissonDisk14;
+	vec2 poissonDisk15; vec2 poissonDisk16;
 	void initPoissonSamples(const in vec2 randomSeed) {
-		const float ANGLE_STEP = PI2 * float(NUM_RINGS) / float(NUM_SAMPLES);
-		const float INV_NUM_SAMPLES = 1.0 / float(NUM_SAMPLES);
-
-		float angle = rand(randomSeed) * PI2;
-		float radius = INV_NUM_SAMPLES;
-		float radiusStep = radius;
-
+		float angle = texture(snoise, randomSeed).r * PI2;
+		float radius = radiusStep;
 		// for (int i = 0; i < NUM_SAMPLES; i++) {
 			poissonDisk0 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
-			radius += radiusStep; angle += ANGLE_STEP;
+			radius += radiusStep; angle += angleStep;
 			poissonDisk1 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
-			radius += radiusStep; angle += ANGLE_STEP;
+			radius += radiusStep; angle += angleStep;
 			poissonDisk2 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
-			radius += radiusStep; angle += ANGLE_STEP;
+			radius += radiusStep; angle += angleStep;
 			poissonDisk3 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
-			radius += radiusStep; angle += ANGLE_STEP;
+			radius += radiusStep; angle += angleStep;
 			poissonDisk4 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
-			radius += radiusStep; angle += ANGLE_STEP;
+			radius += radiusStep; angle += angleStep;
 			poissonDisk5 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
-			radius += radiusStep; angle += ANGLE_STEP;
+			radius += radiusStep; angle += angleStep;
 			poissonDisk6 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
-			radius += radiusStep; angle += ANGLE_STEP;
+			radius += radiusStep; angle += angleStep;
 			poissonDisk7 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
-			radius += radiusStep; angle += ANGLE_STEP;
+			radius += radiusStep; angle += angleStep;
 			poissonDisk8 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
-			radius += radiusStep; angle += ANGLE_STEP;
+			radius += radiusStep; angle += angleStep;
 			poissonDisk9 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
-			radius += radiusStep; angle += ANGLE_STEP;
+			radius += radiusStep; angle += angleStep;
 			poissonDisk10 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
-			radius += radiusStep; angle += ANGLE_STEP;
+			radius += radiusStep; angle += angleStep;
 			poissonDisk11 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
-			radius += radiusStep; angle += ANGLE_STEP;
+			radius += radiusStep; angle += angleStep;
 			poissonDisk12 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
-			radius += radiusStep; angle += ANGLE_STEP;
+			radius += radiusStep; angle += angleStep;
 			poissonDisk13 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
-			radius += radiusStep; angle += ANGLE_STEP;
+			radius += radiusStep; angle += angleStep;
 			poissonDisk14 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
-			radius += radiusStep; angle += ANGLE_STEP;
+			radius += radiusStep; angle += angleStep;
 			poissonDisk15 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
-			radius += radiusStep; angle += ANGLE_STEP;
+			radius += radiusStep; angle += angleStep;
 			poissonDisk16 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
-			radius += radiusStep; angle += ANGLE_STEP;
+			radius += radiusStep; angle += angleStep;
 		// }
 	}
-
-	float penumbraSize(const in float zReceiver, const in float zBlocker) { // Parallel plane estimation
-		return (zReceiver - zBlocker) / zBlocker;
-	}
-
 	float findBlocker(const in vec2 uv, const in float zReceiver) {
 		// This uses similar triangles to compute what area of the shadow map we should search
-		float searchRadius = LIGHT_SIZE_UV * (zReceiver - NEAR_PLANE) / zReceiver;
+		float searchRadius = lampSizeUV * (zReceiver - lampNear) / zReceiver;
 		float blockerDepthSum = 0.0;
 		int numBlockers = 0;
-
 		// for (int i = 0; i < NUM_SAMPLES; i++) {
 			float shadowMapDepth = texture(shadowMap, uv + poissonDisk0 * searchRadius).r * 2.0 - 1.0;
 			if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
@@ -317,12 +286,10 @@ float PCF(vec2 uv, float compare) {
 			shadowMapDepth = texture(shadowMap, uv + poissonDisk16 * searchRadius).r * 2.0 - 1.0;
 			if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
 		// }
-
 		if (numBlockers == 0) return -1.0;
 		return blockerDepthSum / float(numBlockers);
 	}
-
-	float PCF_Filter(vec2 uv, float zReceiver, float filterRadius) {
+	float filterPCF(vec2 uv, float zReceiver, float filterRadius) {
 		float sum = 0.0;
 		// for (int i = 0; i < NUM_SAMPLES; i++) {
 			float depth = texture(shadowMap, uv + poissonDisk0 * filterRadius).r * 2.0 - 1.0;
@@ -400,32 +367,22 @@ float PCF(vec2 uv, float compare) {
 	}
 	float PCSS(vec2 uv, float zReceiver) {
 		initPoissonSamples(uv);
-		
-		// Blocker search
 		float avgBlockerDepth = findBlocker(uv, zReceiver);
-
-		// There are no occluders so early out (this saves filtering)
 		if (avgBlockerDepth == -1.0) return 1.0;
-
-		// Penumbra size
-		float penumbraRatio = penumbraSize(zReceiver, avgBlockerDepth);
-		float filterRadius = penumbraRatio * LIGHT_SIZE_UV * NEAR_PLANE / zReceiver;
-
-		// Filtering
-		return PCF_Filter(uv, zReceiver, filterRadius);
+		float penumbraRatio = (zReceiver - avgBlockerDepth) / avgBlockerDepth;
+		float filterRadius = penumbraRatio * lampSizeUV * lampNear / zReceiver;
+		return filterPCF(uv, zReceiver, filterRadius);
 	}
 #endif
-
 float shadowTest(vec4 lPos) {
 	vec4 lPosH = lPos / lPos.w;
-	lPosH.x = (lPosH.x + 1.0) / 2.0;
-	lPosH.y = (lPosH.y + 1.0) / 2.0;
-	
-#ifdef _PCSS
+	lPosH.x = lPosH.x * 0.5 + 0.5;
+	lPosH.y = lPosH.y * 0.5 + 0.5;
+	#ifdef _PCSS
 	return PCSS(lPosH.xy, lPosH.z - shadowsBias);
-#else
+	#else
 	return PCF(lPosH.xy, lPosH.z - shadowsBias);
-#endif
+	#endif
 }
 #endif
 
@@ -714,7 +671,7 @@ void main() {
 	vec2 metrough = unpackFloat(g0.b);
 	
 	vec3 v = normalize(eye - p.xyz);
-	float dotNV = max(dot(n, v), 0.0);
+	float dotNV = dot(n, v);
 	
 	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
 	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
@@ -729,11 +686,11 @@ void main() {
 	}
 	
 	vec3 h = normalize(v + l);
-	float dotNH = max(dot(n, h), 0.0);
-	float dotVH = max(dot(v, h), 0.0);
-	float dotNL = max(dot(n, l), 0.0);
-	// float dotLV = max(dot(l, v), 0.0);
-	// float dotLH = max(dot(l, h), 0.0);
+	float dotNH = dot(n, h);
+	float dotVH = dot(v, h);
+	float dotNL = dot(n, l);
+	// float dotLV = dot(l, v);
+	// float dotLH = dot(l, h);
 	
 	float visibility = 1.0;
 #ifndef _NoShadows
@@ -744,9 +701,11 @@ void main() {
 #endif
 	
 	// Direct
-	vec3 direct = diffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
-	// vec3 direct = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
-	// vec3 direct = burleyDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
+#ifdef _OrenNayar
+	vec3 direct = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
+#else
+	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
+#endif
 
 	if (lightType == 2) { // Spot
 		float spotEffect = dot(lightDir, l);

@@ -111,10 +111,13 @@ def make_texture(self, id, image_node, material):
 		# Reference image name
 		tex['file'] = utils.extract_filename_noext(image.filepath)
 		tex['file'] = utils.safe_filename(tex['file'])
-		if image_node.interpolation == 'Cubic': # Mipmap linear
+		interpolation = image_node.interpolation
+		if bpy.data.worlds['Arm'].force_anisotropic_filtering:
+			interpolation = 'Smart'
+		if interpolation == 'Cubic': # Mipmap linear
 			tex['mipmap_filter'] = 'linear'
 			tex['generate_mipmaps'] = True
-		elif image_node.interpolation == 'Smart': # Mipmap anisotropic
+		elif interpolation == 'Smart': # Mipmap anisotropic
 			tex['min_filter'] = 'anisotropic'
 			tex['mipmap_filter'] = 'linear'
 			tex['generate_mipmaps'] = True
@@ -187,6 +190,9 @@ def parse_material_surface(self, material, c, defs, tree, node, factor):
 
 	elif node.type == 'MIX_SHADER':
 		parse_mix_shader(self, material, c, defs, tree, node, factor)
+
+	else:
+		print('Armory Warning: Material node ' + node.type + ' in ' + material.name + ' is not yet supported! Please use "Armory PBR" node group for now.')
 
 def parse_mix_shader(self, material, c, defs, tree, node, factor):
 	mixfactor = node.inputs[0].default_value * factor

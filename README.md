@@ -5,6 +5,7 @@ Note: The engine is still in development and will not work yet.
 Once ready, a single download SDK will be provided, as well as steps to
 setup project using git.
 
-Please take a look at [engine introduction](http://luboslenco.com/notes/) for now.
+[Web](http://armory3d.org) - [Manual](http://armory3d.org/manual/)
 
-![](preview.jpg)
+![](http://armory3d.org/git/img1.jpg)
+![](http://armory3d.org/git/img2.jpg)

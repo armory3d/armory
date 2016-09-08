@@ -776,7 +776,6 @@ def load_library():
         data_to.node_groups = ['forward_path', 'forward_path_low', 'deferred_path', 'deferred_path_low', 'deferred_path_high', 'hybrid_path', 'vr_path', 'pathtrace_path', 'Armory PBR']
     
     # TODO: cannot use for loop
-    # TODO: import pbr group separately, no need for fake user
     bpy.data.node_groups['forward_path'].use_fake_user = True
     bpy.data.node_groups['forward_path_low'].use_fake_user = True
     bpy.data.node_groups['deferred_path'].use_fake_user = True
@@ -1030,7 +1029,7 @@ def make_draw_compositor(stage, node_group, node, shader_references, asset_refer
     asset_references.append('build/compiled/ShaderDatas/' + scon + '/' + data_name + '.arm')
     shader_references.append('build/compiled/Shaders/' + scon + '/' + data_name)
     # Link assets
-    buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise256.png')
+    # buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise256.png')
 
 def make_call_function(stage, node_group, node):
     stage['command'] = 'call_function'

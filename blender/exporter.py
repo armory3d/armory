@@ -1871,6 +1871,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             if self.object_is_mesh_cached(bobject) == True and os.path.exists(fp):
                 return
 
+        print ('Exporting mesh ' + bobject.data.name)
+        if len(bobject.data.vertices) > 40000:
+            print('Armory Warning: "' + bobject.name + '" contains over 40000 vertices, split mesh to smaller parts to fit into 16-bit indices')
+
         o = {}
         o['name'] = oid
         mesh = objectRef[0]
@@ -2142,6 +2146,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         o['shadows_bias'] = objref.lamp_shadows_bias
         if o['type'] == 'sun': # Scale bias for ortho light matrix
             o['shadows_bias'] *= 10.0
+        if objref.shadow_soft_size != 0.1:
+            o['lamp_size'] = objref.shadow_soft_size
 
         # Parse nodes, only emission for now
         # Merge with nodes_material
@@ -2283,6 +2289,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                 c = {}
                 c['name'] = ArmoryExporter.mesh_context_empty
                 o['contexts'].append(c)
+            if bpy.data.worlds['Arm'].force_no_culling:
+                o['override_context'] = {}
+                o['override_context']['cull_mode'] = 'none'
             defs = []
             self.finalize_shader(o, defs, ArmoryExporter.renderpath_passes)
             self.output['material_datas'].append(o)
@@ -2373,6 +2382,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         ArmoryExporter.option_mesh_per_file = self.option_mesh_per_file
         ArmoryExporter.option_optimize_mesh = self.option_optimize_mesh
         ArmoryExporter.option_minimize = self.option_minimize
+        ArmoryExporter.export_physics = False # Indicates whether rigid body is exported
 
         self.cb_preprocess()
 
@@ -2391,6 +2401,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         if not ArmoryExporter.option_mesh_only:
             if self.scene.camera != None:
                 self.output['camera_ref'] = self.scene.camera.name
+            else:
+                if utils.safe_filename(self.scene.name) == utils.get_project_scene_name():
+                    print('Armory Warning: No camera found in active scene')
 
             self.output['material_datas'] = []
             self.ExportMaterials()
@@ -2415,6 +2428,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                 self.output['traits'].append(x)
 
         self.ExportObjects(self.scene)
+
+        if len(self.output['lamp_datas']) == 0: # Asume light data stored in same file
+            print('Armory Warning: No light found in active scene')
         
         self.cb_postprocess()
 
@@ -2630,6 +2646,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
         # Rigid body trait
         if bobject.rigid_body != None:
+            ArmoryExporter.export_physics = True
             rb = bobject.rigid_body
             shape = 0 # BOX
             if rb.collision_shape == 'SPHERE':
@@ -2707,11 +2724,15 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
     def cb_export_material(self, material, o):
         defs = []
         
+        wrd = bpy.data.worlds['Arm']
         if material.skip_context != '':
             o['skip_context'] = material.skip_context
-        if material.override_cull:
+        if material.override_cull or wrd.force_no_culling:
             o['override_context'] = {}
-            o['override_context']['cull_mode'] = material.override_cull_mode
+            if wrd.force_no_culling:
+                o['override_context']['cull_mode'] = 'none'
+            else:
+                o['override_context']['cull_mode'] = material.override_cull_mode
 
         o['contexts'] = []
         

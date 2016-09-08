@@ -23,11 +23,10 @@ vec2 unpackFloat(float f) {
 void main() {
 	vec2 tc = texCoord * ssrTextureScale;
 	float roughness = unpackFloat(texture(gbuffer0, texCoord).b).y;
-	if (roughness == 0.0) {
-		outColor = texture(tex, tc);
-		// outColor = vec4(0.0, 0.0, 0.0, 1.0);
-		return;
-	}
+	// if (roughness == 0.0) { // Always blur for now, non blured output can produce noise
+		// outColor = texture(tex, tc);
+		// return;
+	// }
 	
 	vec2 step = dir / screenSize * ssrTextureScale;
 	

@@ -302,7 +302,8 @@
 				},
 				{
 					"name": "screenSize",
-					"link": "_screenSize"
+					"link": "_screenSize",
+					"ifdef": ["_Disabled"]
 				},
 				{
 					"name": "uid",

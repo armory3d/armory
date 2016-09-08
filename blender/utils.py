@@ -67,3 +67,10 @@ def get_render_resolution(scene_index=0):
     render = bpy.data.scenes[scene_index].render
     scale = render.resolution_percentage / 100
     return int(render.resolution_x * scale), int(render.resolution_y * scale)
+
+def get_project_scene_name():
+    wrd = bpy.data.worlds['Arm']
+    if wrd.ArmPlayActiveScene:
+        return safe_filename(bpy.context.screen.scene.name)
+    else:
+        return safe_filename(wrd.ArmProjectScene)

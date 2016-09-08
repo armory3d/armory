@@ -34,6 +34,14 @@ def on_scene_update(context):
         for area in bpy.context.screen.areas:
             if area.type == 'INFO':
                 area.tag_redraw()
+                break
+
+    # Player finished, redraw play buttons
+    if make.play_project.playproc_finished == True:
+        make.play_project.playproc_finished = False
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
+                area.tag_redraw()
 on_scene_update.last_operator = None
 
 def invalidate_shader_cache(self, context):
@@ -59,14 +67,16 @@ def invalidate_mesh_data(self, context):
 def initProperties():
     # For project
     bpy.types.World.ArmVersion = StringProperty(name = "ArmVersion", default="")
-    bpy.types.World.ArmProjectTarget = EnumProperty(
+    target_prop = EnumProperty(
         items = [('html5', 'HTML5', 'html5'), 
                  ('windows', 'Windows', 'windows'), 
-                 ('osx', 'OSX', 'osx'),
+                 ('macos', 'MacOS', 'macos'),
                  ('linux', 'Linux', 'linux'), 
                  ('ios', 'iOS', 'ios'),
                  ('android-native', 'Android', 'android-native')],
         name = "Target", default='html5')
+    bpy.types.World.ArmProjectTarget = target_prop
+    bpy.types.World.ArmPublishTarget = target_prop
     bpy.types.World.ArmProjectName = StringProperty(name = "Name", default="ArmoryGame")
     bpy.types.World.ArmProjectPackage = StringProperty(name = "Package", default="game")
     bpy.types.World.ArmPlayActiveScene = BoolProperty(name="Play Active Scene", default=True)
@@ -76,6 +86,10 @@ def initProperties():
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('Bullet', 'Bullet', 'Bullet')],
         name = "Physics", default='Bullet')
+    bpy.types.World.ArmNavigation = EnumProperty(
+        items = [('Disabled', 'Disabled', 'Disabled'), 
+                 ('Recast', 'Recast', 'Recast')],
+        name = "Navigation", default='Disabled')
     bpy.types.World.ArmKhafile = StringProperty(name = "Khafile")
     bpy.types.World.ArmMinimize = BoolProperty(name="Minimize Data", default=True, update=invalidate_compiled_data)
     bpy.types.World.ArmOptimizeMesh = BoolProperty(name="Optimize Meshes", default=False, update=invalidate_mesh_data)
@@ -95,9 +109,9 @@ def initProperties():
     bpy.types.World.ArmPlayDeveloperTools = BoolProperty(name="Developer Tools", default=False)
     bpy.types.World.ArmPlayRuntime = EnumProperty(
         items = [('Electron', 'Electron', 'Electron'), 
-                 ('Browser', 'Browser', 'Browser'),
-                 ('Native', 'Native', 'Native'),
-                 ('Krom', 'Krom', 'Krom')],
+                 ('Browser', 'Browser', 'Browser')],
+                 # ('Native', 'Native', 'Native')],
+                 #('Krom', 'Krom', 'Krom')],
         name = "Runtime", default='Electron')
 
     # For object
@@ -212,7 +226,11 @@ def initProperties():
     bpy.types.World.generate_ssr_falloff_exp = bpy.props.FloatProperty(name="Falloff Exp", default=5.0, update=invalidate_shader_cache)
     bpy.types.World.generate_ssr_jitter = bpy.props.FloatProperty(name="Jitter", default=0.6, update=invalidate_shader_cache)
     bpy.types.World.generate_ssr_texture_scale = bpy.props.FloatProperty(name="Texture Scale", default=1.0, min=0.0, max=1.0, update=invalidate_shader_cache)
-    bpy.types.World.generate_pcss = bpy.props.BoolProperty(name="PCSS", description="Percentage Closer Soft Shadows", default=False, update=invalidate_shader_cache)
+    bpy.types.World.generate_volumetric_light = bpy.props.BoolProperty(name="Volumetric Light", description="", default=True, update=invalidate_shader_cache)
+    bpy.types.World.generate_volumetric_light_air_turbidity = bpy.props.FloatProperty(name="Air Turbidity", default=1.0, update=invalidate_shader_cache)
+    bpy.types.World.generate_volumetric_light_air_color = bpy.props.FloatVectorProperty(name="Air Color", size=3, default=[1.0, 1.0, 1.0], subtype='COLOR', update=invalidate_shader_cache)
+    bpy.types.World.generate_pcss = bpy.props.BoolProperty(name="Percentage Closer Soft Shadows", description="", default=False, update=invalidate_shader_cache)
+    bpy.types.World.generate_pcss_rings = bpy.props.IntProperty(name="Rings", description="", default=20, update=invalidate_shader_cache)
     # Compositor
     bpy.types.World.generate_letterbox = bpy.props.BoolProperty(name="Letterbox", default=False, update=invalidate_shader_cache)
     bpy.types.World.generate_letterbox_size = bpy.props.FloatProperty(name="Size", default=0.1, update=invalidate_shader_cache)
@@ -225,6 +243,11 @@ def initProperties():
     # Skin
     bpy.types.World.generate_gpu_skin = bpy.props.BoolProperty(name="GPU Skinning", default=True, update=invalidate_shader_cache)
     bpy.types.World.generate_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=84, update=invalidate_shader_cache)
+    # Material override flags
+    bpy.types.World.force_no_culling = bpy.props.BoolProperty(name="Force No Culling", default=False)
+    bpy.types.World.force_anisotropic_filtering = bpy.props.BoolProperty(name="Force Anisotropic Filtering", default=False)
+    # Lighting flags
+    bpy.types.World.diffuse_oren_nayar = bpy.props.BoolProperty(name="Oren Nayar Diffuse", default=False, update=invalidate_shader_cache)
     # For material
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.override_shader = bpy.props.BoolProperty(name="Override Shader", default=False)
@@ -269,6 +292,9 @@ class ObjectPropsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         obj = bpy.context.object
+        if obj == None:
+            return
+            
         if bpy.data.worlds['Arm'].ArmExportHideRender == False:
             layout.prop(obj, 'hide_render')
             hide = obj.hide_render
@@ -355,6 +381,8 @@ class ModifiersPropsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         obj = bpy.context.object
+        if obj == None:
+            return
 
         # Assume as first modifier
         if len(obj.modifiers) > 0 and obj.modifiers[0].type == 'OCEAN':
@@ -372,6 +400,8 @@ class DataPropsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         obj = bpy.context.object
+        if obj == None:
+            return
 
         if obj.type == 'CAMERA':
             layout.prop(obj.data, 'is_probe')
@@ -432,8 +462,10 @@ class ScenePropsPanel(bpy.types.Panel):
  
     def draw(self, context):
         layout = self.layout
-        obj = bpy.context.scene
-        layout.prop(obj, 'game_export')
+        scn = bpy.context.scene
+        if scn == None:
+            return
+        layout.prop(scn, 'game_export')
 
 class ReimportPathsMenu(bpy.types.Menu):
     bl_label = "OK?"
@@ -477,6 +509,8 @@ class MatsPropsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         mat = bpy.context.material
+        if mat == None:
+            return
 
         layout.prop(mat, 'receive_shadow')
         layout.prop(mat, 'override_shader')
@@ -510,6 +544,10 @@ class WorldPropsPanel(bpy.types.Panel):
         # wrd = bpy.context.world
         wrd = bpy.data.worlds['Arm']
         layout.prop(wrd, 'generate_shadows')
+        if wrd.generate_shadows:
+            layout.prop(wrd, 'generate_pcss')
+            if wrd.generate_pcss:
+                layout.prop(wrd, 'generate_pcss_rings')
         layout.prop(wrd, 'generate_radiance')
         if wrd.generate_radiance:
             layout.prop(wrd, 'generate_radiance_sky')
@@ -523,27 +561,40 @@ class WorldPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'generate_clouds_secondary')
             layout.prop(wrd, 'generate_clouds_precipitation')
             layout.prop(wrd, 'generate_clouds_eccentricity')
-        layout.prop(wrd, 'generate_ssao')
-        if wrd.generate_ssao:
-            layout.prop(wrd, 'generate_ssao_size')
-            layout.prop(wrd, 'generate_ssao_strength')
-            layout.prop(wrd, 'generate_ssao_texture_scale')
-        layout.prop(wrd, 'generate_bloom')
-        if wrd.generate_bloom:
-            layout.prop(wrd, 'generate_bloom_treshold')
-            layout.prop(wrd, 'generate_bloom_strength')
-        layout.prop(wrd, 'generate_motion_blur')
-        if wrd.generate_motion_blur:
-            layout.prop(wrd, 'generate_motion_blur_intensity')
-        layout.prop(wrd, 'generate_ssr')
-        if wrd.generate_ssr:
-            layout.prop(wrd, 'generate_ssr_ray_step')
-            layout.prop(wrd, 'generate_ssr_min_ray_step')
-            layout.prop(wrd, 'generate_ssr_search_dist')
-            layout.prop(wrd, 'generate_ssr_falloff_exp')
-            layout.prop(wrd, 'generate_ssr_jitter')
-            layout.prop(wrd, 'generate_ssr_texture_scale')
-        layout.prop(wrd, 'generate_pcss')
+        
+        layout.label('Screen-Space Ambient Occlusion')
+        # layout.prop(wrd, 'generate_ssao')
+        # if wrd.generate_ssao:
+        layout.prop(wrd, 'generate_ssao_size')
+        layout.prop(wrd, 'generate_ssao_strength')
+        layout.prop(wrd, 'generate_ssao_texture_scale')
+        
+        layout.label('Bloom')
+        # layout.prop(wrd, 'generate_bloom')
+        # if wrd.generate_bloom:
+        layout.prop(wrd, 'generate_bloom_treshold')
+        layout.prop(wrd, 'generate_bloom_strength')
+        
+        layout.label('Motion Blur')
+        # layout.prop(wrd, 'generate_motion_blur')
+        # if wrd.generate_motion_blur:
+        layout.prop(wrd, 'generate_motion_blur_intensity')
+        
+        layout.label('Screen-Space Reflections')
+        # layout.prop(wrd, 'generate_ssr')
+        # if wrd.generate_ssr:
+        layout.prop(wrd, 'generate_ssr_ray_step')
+        layout.prop(wrd, 'generate_ssr_min_ray_step')
+        layout.prop(wrd, 'generate_ssr_search_dist')
+        layout.prop(wrd, 'generate_ssr_falloff_exp')
+        layout.prop(wrd, 'generate_ssr_jitter')
+        layout.prop(wrd, 'generate_ssr_texture_scale')
+
+        layout.label('Volumetric Light')
+        # layout.prop(wrd, 'generate_volumetric_light')
+        # if wrd.generate_volumetric_light:
+        layout.prop(wrd, 'generate_volumetric_light_air_turbidity')
+        layout.prop(wrd, 'generate_volumetric_light_air_color')
 
         layout.label('Compositor')
         layout.prop(wrd, 'generate_letterbox')
@@ -557,6 +608,11 @@ class WorldPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'generate_fog_color')
             layout.prop(wrd, 'generate_fog_amounta')
             layout.prop(wrd, 'generate_fog_amountb')
+
+        layout.label('Flags')
+        layout.prop(wrd, 'force_no_culling')
+        layout.prop(wrd, 'force_anisotropic_filtering')
+        layout.prop(wrd, 'diffuse_oren_nayar')
 
 # Menu in render region
 class ArmoryPlayPanel(bpy.types.Panel):
@@ -593,11 +649,13 @@ class ArmoryBuildPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds['Arm']
-        layout.operator("arm.build")
+        if make.play_project.playproc == None and make.play_project.compileproc == None:
+            layout.operator("arm.build")
+        else:
+            layout.operator("arm.patch")
         layout.operator("arm.kode_studio")
         layout.operator("arm.clean")
         layout.prop(wrd, 'ArmProjectTarget')
-        layout.prop(wrd, 'ArmPhysics')
         layout.prop(wrd, 'ArmCacheShaders')
         layout.prop(wrd, 'ArmMinimize')
         layout.prop(wrd, 'ArmOptimizeMesh')
@@ -607,6 +665,9 @@ class ArmoryBuildPanel(bpy.types.Panel):
         if wrd.generate_gpu_skin:
             layout.prop(wrd, 'generate_gpu_skin_max_bones')
         layout.prop(wrd, 'ArmProjectSamplesPerPixel')
+        layout.label('Libraries')
+        layout.prop(wrd, 'ArmPhysics')
+        layout.prop(wrd, 'ArmNavigation')
 
 class ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
@@ -627,8 +688,12 @@ class ArmoryProjectPanel(bpy.types.Panel):
             layout.prop_search(wrd, 'ArmProjectScene', bpy.data, 'scenes', 'Scene')
         layout.prop(wrd, 'ArmExportHideRender')
         layout.prop(wrd, 'ArmSpawnAllLayers')
-        layout.label('Armory version: ' + wrd.ArmVersion)
+        layout.label('Publish Project')
+        layout.operator('arm.publish')
+        layout.prop(wrd, 'ArmPublishTarget')
+        layout.label('Armory')
         layout.operator('arm.check_updates')
+        layout.label('v' + wrd.ArmVersion)
 
 class ArmoryPlayButton(bpy.types.Operator):
     bl_idname = 'arm.play'
@@ -674,10 +739,18 @@ class ArmoryBuildButton(bpy.types.Operator):
  
     def execute(self, context):
         invalidate_shader_cache.enabled = False
-        if make.play_project.playproc == None:
-            make.build_project()
-        else:
-            make.patch_project()
+        make.build_project()
+        make.compile_project()
+        invalidate_shader_cache.enabled = True
+        return{'FINISHED'}
+
+class ArmoryPatchButton(bpy.types.Operator):
+    bl_idname = 'arm.patch'
+    bl_label = 'Live Patch'
+ 
+    def execute(self, context):
+        invalidate_shader_cache.enabled = False
+        make.patch_project()
         make.compile_project()
         invalidate_shader_cache.enabled = True
         return{'FINISHED'}
@@ -726,6 +799,15 @@ class ArmoryCleanButton(bpy.types.Operator):
  
     def execute(self, context):
         make.clean_project()
+        return{'FINISHED'}
+
+class ArmoryPublishButton(bpy.types.Operator):
+    bl_idname = 'arm.publish'
+    bl_label = 'Publish'
+ 
+    def execute(self, context):
+        make.publish_project()
+        self.report({'INFO'}, 'Publishing project, check console for details.')
         return{'FINISHED'}
 
 # Play button in 3D View panel

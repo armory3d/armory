@@ -681,7 +681,7 @@ void main() {
 	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 	indirect += indirectSpecular;
 #endif
-	indirect = indirect * lightColor * lightStrength * envmapStrength;
+	indirect = indirect * envmapStrength; // * lightColor * lightStrength;
 	outColor = vec4(vec3(direct * visibility + indirect), 1.0);
 	
 #ifdef _OccTex

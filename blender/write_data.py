@@ -7,7 +7,7 @@ def add_armory_library(sdk_path, name):
     return ('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/' + name)[2:] + '");\n').replace('\\', '/')
 
 # Write khafile.js
-def write_khafilejs(shader_references, asset_references, is_play):
+def write_khafilejs(shader_references, asset_references, is_play, export_physics):
     
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
@@ -32,7 +32,7 @@ project.addShaders('Sources/Shaders/**');
         f.write(add_armory_library(sdk_path, 'armory'))
         f.write(add_armory_library(sdk_path, 'iron'))
         
-        if bpy.data.worlds['Arm'].ArmPhysics != 'Disabled':
+        if export_physics:
             f.write("project.addDefine('WITH_PHYSICS');\n")
             f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
 
@@ -82,13 +82,6 @@ project.addShaders('Sources/Shaders/**');
 
         f.write("\n\nresolve(project);\n")
 
-def get_project_scene():
-    wrd = bpy.data.worlds['Arm']
-    if wrd.ArmPlayActiveScene:
-        return utils.safe_filename(bpy.context.screen.scene.name)
-    else:
-        return utils.safe_filename(wrd.ArmProjectScene)
-
 # Write Main.hx
 def write_main():
     wrd = bpy.data.worlds['Arm']
@@ -104,7 +97,7 @@ class Main {
     static inline var projectWidth = """ + str(resx) + """;
     static inline var projectHeight = """ + str(resy) + """;
     static inline var projectSamplesPerPixel = """ + str(wrd.ArmProjectSamplesPerPixel) + """;
-    static inline var projectScene = '""" + get_project_scene() + """';
+    static inline var projectScene = '""" + utils.get_project_scene_name() + """';
     public static function main() {
         iron.sys.CompileTime.importPackage('armory.trait');
         iron.sys.CompileTime.importPackage('armory.renderpath');
@@ -294,6 +287,17 @@ const float ssrSearchDist = """ + str(round(wrd.generate_ssr_search_dist * 100) 
 const float ssrFalloffExp = """ + str(round(wrd.generate_ssr_falloff_exp * 100) / 100) + """;
 const float ssrJitter = """ + str(round(wrd.generate_ssr_jitter * 100) / 100) + """;
 const float ssrTextureScale = """ + str(round(wrd.generate_ssr_texture_scale * 10) / 10) + """;
+""")
+
+        if wrd.generate_volumetric_light:
+            f.write(
+"""const float volumAirTurbidity = """ + str(round(wrd.generate_volumetric_light_air_turbidity * 100) / 100) + """;
+const vec3 volumAirColor = vec3(""" + str(round(wrd.generate_volumetric_light_air_color[0] * 100) / 100) + """, """ + str(round(wrd.generate_volumetric_light_air_color[1] * 100) / 100) + """, """ + str(round(wrd.generate_volumetric_light_air_color[2] * 100) / 100) + """);
+""")
+
+        if wrd.generate_pcss:
+            f.write(
+"""const int pcssRings = """ + str(wrd.generate_pcss_rings) + """;
 """)
 
         # Compositor

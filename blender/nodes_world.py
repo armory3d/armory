@@ -80,6 +80,13 @@ def buildNodeTree(world):
 	# Percentage closer soft shadows
 	if wrd.generate_pcss:
 		wrd.world_defs += '_PCSS'
+		user_preferences = bpy.context.user_preferences
+		addon_prefs = user_preferences.addons['armory'].preferences
+		sdk_path = addon_prefs.sdk_path
+		assets.add(sdk_path + 'armory/Assets/noise64.png')
+
+	if wrd.diffuse_oren_nayar:
+		wrd.world_defs += '_OrenNayar'
 
 	# Enable probes
 	for cam in bpy.data.cameras:
@@ -121,6 +128,7 @@ def parse_surface(world, node, context):
 		envmap_strength_const = {}
 		envmap_strength_const['name'] = 'envmapStrength'
 		envmap_strength_const['float'] = node.inputs[1].default_value
+		# Always append for now, even though envmapStrength is not always needed
 		context['bind_constants'].append(envmap_strength_const)
 		
 		if node.inputs[0].is_linked:

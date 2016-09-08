@@ -11,6 +11,11 @@ precision mediump float;
 #endif
 #ifndef _NoShadows
     uniform sampler2D shadowMap;
+    #ifdef _PCSS
+    uniform sampler2D snoise;
+    uniform float lampSizeUV;
+    uniform float lampNear;
+    #endif
 #endif
 uniform float shirr[27];
 #ifdef _Rad
@@ -98,6 +103,7 @@ in vec3 eyeDir;
 out vec4 outColor;
 
 #ifndef _NoShadows
+#ifndef _PCSS
 // float linstep(float low, float high, float v) {
 //     return clamp((v - low) / (high - low), 0.0, 1.0);
 // }
@@ -156,14 +162,195 @@ float PCF(vec2 uv, float compare) {
     // }
     return result / 9.0;
 }
+#else // _PCSS
+    const int NUM_SAMPLES = 17;
+    const float radiusStep = 1.0 / float(NUM_SAMPLES);
+    const float angleStep = PI2 * float(pcssRings) / float(NUM_SAMPLES);
+    vec2 poissonDisk0; vec2 poissonDisk1; vec2 poissonDisk2;
+    vec2 poissonDisk3; vec2 poissonDisk4; vec2 poissonDisk5;
+    vec2 poissonDisk6; vec2 poissonDisk7; vec2 poissonDisk8;
+    vec2 poissonDisk9; vec2 poissonDisk10; vec2 poissonDisk11;
+    vec2 poissonDisk12; vec2 poissonDisk13; vec2 poissonDisk14;
+    vec2 poissonDisk15; vec2 poissonDisk16;
+    void initPoissonSamples(const in vec2 randomSeed) {
+        float angle = texture(snoise, randomSeed).r * PI2;
+        float radius = radiusStep;
+        // for (int i = 0; i < NUM_SAMPLES; i++) {
+            poissonDisk0 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += angleStep;
+            poissonDisk1 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += angleStep;
+            poissonDisk2 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += angleStep;
+            poissonDisk3 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += angleStep;
+            poissonDisk4 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += angleStep;
+            poissonDisk5 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += angleStep;
+            poissonDisk6 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += angleStep;
+            poissonDisk7 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += angleStep;
+            poissonDisk8 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += angleStep;
+            poissonDisk9 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += angleStep;
+            poissonDisk10 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += angleStep;
+            poissonDisk11 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += angleStep;
+            poissonDisk12 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += angleStep;
+            poissonDisk13 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += angleStep;
+            poissonDisk14 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += angleStep;
+            poissonDisk15 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += angleStep;
+            poissonDisk16 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);
+            radius += radiusStep; angle += angleStep;
+        // }
+    }
+    float findBlocker(const in vec2 uv, const in float zReceiver) {
+        // This uses similar triangles to compute what area of the shadow map we should search
+        float searchRadius = lampSizeUV * (zReceiver - lampNear) / zReceiver;
+        float blockerDepthSum = 0.0;
+        int numBlockers = 0;
+        // for (int i = 0; i < NUM_SAMPLES; i++) {
+            float shadowMapDepth = texture(shadowMap, uv + poissonDisk0 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk1 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk2 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk3 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk4 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk5 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk6 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk7 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk8 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk9 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk10 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk11 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk12 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk13 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk14 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk15 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+            shadowMapDepth = texture(shadowMap, uv + poissonDisk16 * searchRadius).r * 2.0 - 1.0;
+            if (shadowMapDepth < zReceiver) { blockerDepthSum += shadowMapDepth; numBlockers++; }
+        // }
+        if (numBlockers == 0) return -1.0;
+        return blockerDepthSum / float(numBlockers);
+    }
+    float filterPCF(vec2 uv, float zReceiver, float filterRadius) {
+        float sum = 0.0;
+        // for (int i = 0; i < NUM_SAMPLES; i++) {
+            float depth = texture(shadowMap, uv + poissonDisk0 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk1 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk2 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk3 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk4 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk5 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk6 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk7 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk8 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk9 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk10 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk11 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk12 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk13 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk14 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk15 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + poissonDisk16 * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+        // }
+        // for (int i = 0; i < NUM_SAMPLES; i++) {
+            depth = texture(shadowMap, uv + -poissonDisk0.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk1.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk2.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk3.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk4.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk5.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk6.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk7.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk8.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk9.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk10.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk11.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk12.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk13.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk14.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk15.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+            depth = texture(shadowMap, uv + -poissonDisk16.yx * filterRadius).r * 2.0 - 1.0;
+            if (zReceiver <= depth) sum += 1.0;
+        // }
+        return sum / (2.0 * float(NUM_SAMPLES));
+    }
+    float PCSS(vec2 uv, float zReceiver) {
+        initPoissonSamples(uv);
+        float avgBlockerDepth = findBlocker(uv, zReceiver);
+        if (avgBlockerDepth == -1.0) return 1.0;
+        float penumbraRatio = (zReceiver - avgBlockerDepth) / avgBlockerDepth;
+        float filterRadius = penumbraRatio * lampSizeUV * lampNear / zReceiver;
+        return filterPCF(uv, zReceiver, filterRadius);
+    }
+#endif
 float shadowTest(vec4 lPos) {
 	vec4 lPosH = lPos / lPos.w;
 	lPosH.x = (lPosH.x + 1.0) / 2.0;
     lPosH.y = (lPosH.y + 1.0) / 2.0;
-    
-	return PCF(lPosH.xy, lPosH.z - shadowsBias);
+    #ifdef _PCSS
+    return PCSS(lPosH.xy, lPosH.z - shadowsBias);
+    #else
+    return PCF(lPosH.xy, lPosH.z - shadowsBias);
+    #endif
 	// return VSM(lPosH.xy, lPosH.z);
-	// Basic
 	// float distanceFromLight = texture(shadowMap, lPosH.xy).r * 2.0 - 1.0;
 	// return float(distanceFromLight > lPosH.z - shadowsBias);
 }
@@ -266,43 +453,30 @@ float d_ggx(float nh, float a) {
 	return a2 * (1.0 / 3.1415926535) / denom;
 }
 
-vec3 specularBRDF(vec3 f0, float roughness, float nl, float nh, float nv, float vh, float lh) {
+vec3 specularBRDF(vec3 f0, float roughness, float nl, float nh, float nv, float vh) {
 	float a = roughness * roughness;
 	return d_ggx(nh, a) * clamp(v_smithschlick(nl, nv, a), 0.0, 1.0) * f_schlick(f0, vh) / 4.0;
 	//return vec3(LightingFuncGGX_OPT3(nl, lh, nh, roughness, f0[0]));
 }
 
-
-vec3 lambert(vec3 albedo, float nl) {
-	return albedo * max(0.0, nl);
+#ifdef _OrenNayar
+vec3 orenNayarDiffuseBRDF(vec3 albedo, float roughness, float nv, float nl, float vh) {
+    float a = roughness * roughness;
+    float s = a;
+    float s2 = s * s;
+    float vl = 2.0 * vh * vh - 1.0; // Double angle identity
+    float Cosri = vl - nv * nl;
+    float C1 = 1.0 - 0.5 * s2 / (s2 + 0.33);
+    float test = 1.0;
+    if (Cosri >= 0.0) test = (1.0 / (max(nl, nv)));
+    float C2 = 0.45 * s2 / (s2 + 0.09) * Cosri * test;
+    return albedo * max(0.0, nl) * (C1 + C2) * (1.0 + roughness * 0.5);
 }
-
-vec3 burley(vec3 albedo, float roughness, float NoV, float NoL, float VoH) {
-	float FD90 = 0.5 + 2 * VoH * VoH * roughness;
-	float FdV = 1 + (FD90 - 1) * pow( 1 - NoV, 5 );
-	float FdL = 1 + (FD90 - 1) * pow( 1 - NoL, 5 );
-	return albedo * ( (1.0 / 3.1415926535) * FdV * FdL );
+#else
+vec3 lambertDiffuseBRDF(vec3 albedo, float nl) {
+    return albedo * max(0.0, nl);
 }
-
-vec3 orenNayar(vec3 albedo, float roughness, float NoV, float NoL, float VoH ) {
-	float pi = 3.1415926535;
-	float a = roughness * roughness;
-	float s = a;// / ( 1.29 + 0.5 * a );
-	float s2 = s * s;
-	float VoL = 2.0 * VoH * VoH - 1.0;		// double angle identity
-	float Cosri = VoL - NoV * NoL;
-	float C1 = 1.0 - 0.5 * s2 / (s2 + 0.33);
-	float test = 1.0;
-	if (Cosri >= 0.0) test = (1.0 / ( max( NoL, NoV ) ));
-	float C2 = 0.45 * s2 / (s2 + 0.09) * Cosri * test;
-	return albedo / pi * ( C1 + C2 ) * ( 1.0 + roughness * 0.5 );
-}
-
-vec3 diffuseBRDF(vec3 albedo, float roughness, float nv, float nl, float vh, float lv) {
-	return lambert(albedo, nl);
-	//return burley(albedo, roughness, nv, nl, vh);
-	//return orenNayar(albedo, roughness, lv, nl, nv);
-}
+#endif
 
 vec3 surfaceAlbedo(vec3 baseColor, float metalness) {
 	return mix(baseColor, vec3(0.0), metalness);
@@ -526,7 +700,7 @@ void main() {
     else { // Point, spot
         l = normalize(lightPos - position.xyz);
     }
-    float dotNL = max(dot(n, l), 0.0);
+    float dotNL = dot(n, l);
 	
 	float visibility = 1.0;
 #ifndef _NoShadows
@@ -551,11 +725,11 @@ void main() {
 	vec3 v = normalize(eyeDir);
 	vec3 h = normalize(v + l);
 
-	float dotNV = max(dot(n, v), 0.0);
-	float dotNH = max(dot(n, h), 0.0);
-	float dotVH = max(dot(v, h), 0.0);
-	float dotLV = max(dot(l, v), 0.0);
-	float dotLH = max(dot(l, h), 0.0);
+	float dotNV = dot(n, v);
+	float dotNH = dot(n, h);
+	float dotVH = dot(v, h);
+	float dotLV = dot(l, v);
+	float dotLH = dot(l, h);
 
 #ifdef _MetTex
 	float metalness = texture(smetal, texCoord).r;
@@ -675,9 +849,12 @@ void main() {
 	// ltccol /= 2.0*PI;
 
 
-
 	// Direct
-	vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);	
+#ifdef _OrenNayar
+    vec3 direct = orenNayarDiffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);
+#else
+    vec3 direct = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);
+#endif
 
     if (lightType == 2) { // Spot
         float spotEffect = dot(lightDir, l);

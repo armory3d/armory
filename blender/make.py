@@ -36,6 +36,10 @@ def init_armory_props():
         for scene in bpy.data.scenes:
             if scene.render.engine != 'CYCLES':
                 scene.render.engine = 'CYCLES'
+        # Force camera far to at least 100 units for now, to prevent fighting with light far plane
+        for c in bpy.data.cameras:
+            if c.clip_end < 100:
+                c.clip_end = 100
         # Use nodes
         for w in bpy.data.worlds:
             w.use_nodes = True
@@ -79,6 +83,7 @@ def export_data(fp, sdk_path, is_play=False):
     # shader_references_defs = [] # Defs to go with referenced shaders
     asset_references = []
     assets.reset()
+    export_physics = bpy.data.worlds['Arm'].ArmPhysics != 'Disabled'
 
     # Build node trees
     # TODO: cache
@@ -101,6 +106,9 @@ def export_data(fp, sdk_path, is_play=False):
                 filepath=asset_path)
             shader_references += ArmoryExporter.shader_references
             asset_references += ArmoryExporter.asset_references
+            if export_physics: # Disable physics anyway if no rigid body exported
+                export_physics = ArmoryExporter.export_physics
+
             assets.add(asset_path)
     
     # Clean compiled variants if cache is disabled
@@ -142,18 +150,33 @@ def export_data(fp, sdk_path, is_play=False):
     write_data.write_compiledglsl()
 
     # Write khafile.js
-    write_data.write_khafilejs(shader_references, asset_references, is_play)
+    write_data.write_khafilejs(shader_references, asset_references, is_play, export_physics)
 
     # Write Main.hx
     write_data.write_main()
 
+    # Copy ammo.js if necessary
+    #if target_name == 'html5':
+    if export_physics and bpy.data.worlds['Arm'].ArmPhysics == 'Bullet':
+        ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
+        if not os.path.isfile('build/html5/ammo.js'):
+            shutil.copy(ammojs_path, 'build/html5')
+        if not os.path.isfile('build/debug-html5/ammo.js'):
+            shutil.copy(ammojs_path, 'build/debug-html5')
+
 def armory_log(text):
     print(text)
+    text = (text[:80] + '..') if len(text) > 80 else text # Limit str size
     ArmoryProjectPanel.info_text = text
     armory_log.tag_redraw = True    
 armory_log.tag_redraw = False
 
-def compile_project(target_name=None):
+def get_kha_target(target_name): # TODO: remove
+    if target_name == 'macos':
+        return 'osx'
+    return target_name
+
+def compile_project(target_name=None, is_publish=False):
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
     sdk_path = addon_prefs.sdk_path
@@ -161,15 +184,6 @@ def compile_project(target_name=None):
     # Set build command
     if target_name == None:
         target_name = bpy.data.worlds['Arm'].ArmProjectTarget
-
-    if target_name == 'html5':
-        # Copy ammo.js if necessary
-        if bpy.data.worlds['Arm'].ArmPhysics == 'Bullet':
-            ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
-            if not os.path.isfile('build/html5/ammo.js'):
-                shutil.copy(ammojs_path, 'build/html5')
-            if not os.path.isfile('build/debug-html5/ammo.js'):
-                shutil.copy(ammojs_path, 'build/debug-html5')
 
     if utils.get_os() == 'win':
         node_path = sdk_path + '/nodejs/node.exe'
@@ -181,14 +195,15 @@ def compile_project(target_name=None):
         node_path = sdk_path + '/nodejs/node-linux64'
         khamake_path = sdk_path + '/kode_studio/KodeStudio-linux64/resources/app/extensions/kha/Kha/make'
     
-    cmd = [node_path, khamake_path, target_name, '--glsl2']
+    kha_target_name = get_kha_target(target_name)
+    cmd = [node_path, khamake_path, kha_target_name, '--glsl2']
 
     # armory_log("Building, see console...")
 
-    if make.play_project.playproc == None:
+    if make.play_project.playproc == None or is_publish:
         return subprocess.Popen(cmd)
     else:
-        # Patching running game, stay silent, disable krafix and haxe
+        # Patch running game, stay silent, disable krafix and haxe
         cmd.append('--silent')
         cmd.append('--noproject')
         cmd.append('--haxe')
@@ -210,6 +225,15 @@ def patch_project():
 def build_project(is_play=False):
     # Save blend
     bpy.ops.wm.save_mainfile()
+
+    # Set camera in active scene
+    wrd = bpy.data.worlds['Arm']
+    active_scene = bpy.context.screen.scene if wrd.ArmPlayActiveScene else bpy.data.scenes[wrd.ArmProjectScene]
+    if active_scene.camera == None:
+        for o in active_scene.objects:
+            if o.type == 'CAMERA':
+                active_scene.camera = o
+                break
 
     # Get paths
     user_preferences = bpy.context.user_preferences
@@ -272,21 +296,23 @@ def watch_play():
     while play_project.playproc != None and play_project.playproc.poll() == None:
         char = play_project.playproc.stderr.read(1) # Read immediately one by one 
         if char == b'\n':
-            trace = str(line).split('"') # Extract trace
-            if len(trace) > 2:
-                armory_log(trace[1])
+            msg = str(line).split('"', 1) # Extract message
+            if len(msg) > 1:
+                trace = msg[1].rsplit('"', 1)[0]
+                armory_log(trace)
             line = b''
         else:
             line += char
     play_project.playproc = None
+    play_project.playproc_finished = True
     armory_log('Ready')
 
-def watch_compile():
+def watch_compile(is_publish=False):
     play_project.compileproc.wait()
     result = play_project.compileproc.poll()
     play_project.compileproc = None
     if result == 0:
-        on_compiled()
+        on_compiled(is_publish)
     else:
         armory_log('Build failed, check console')
 
@@ -341,12 +367,30 @@ def run_server():
     except:
         print('Server already running')
 
-def on_compiled():
+def on_compiled(is_publish=False):
     armory_log("Ready")
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
     sdk_path = addon_prefs.sdk_path
 
+    # Print info
+    if is_publish:
+        target_name = get_kha_target(bpy.data.worlds['Arm'].ArmPublishTarget)
+        print('Project published')
+        files_path = utils.get_fp() + '/build/' + target_name
+        if target_name == 'html5':
+            print('HTML5 files are located in ' + files_path)
+        elif target_name == 'ios' or target_name == 'osx': # TODO: to macos
+            print('XCode project files are located in ' + files_path + '-build')
+        elif target_name == 'windows':
+            print('VisualStudio 2015 project files are located in ' + files_path + '-build')
+        elif target_name == 'android-native':
+            print('Android Studio project files are located in ' + files_path + '-build')
+        else:
+            print('Makefiles are located in ' + files_path + '-build')
+        return
+
+    # Otherwise launch project
     wrd = bpy.data.worlds['Arm']
     if wrd.ArmPlayRuntime == 'Electron':
         electron_app_path = './build/electron.js'
@@ -372,6 +416,7 @@ def on_compiled():
 
 play_project.playproc = None
 play_project.compileproc = None
+play_project.playproc_finished = False
 
 def clean_project():
     os.chdir(utils.get_fp())
@@ -394,6 +439,12 @@ def clean_project():
         os.remove('Sources/Main.hx')
 
     print('Project cleaned')
+
+def publish_project():
+    clean_project()
+    build_project()
+    play_project.compileproc = compile_project(target_name=bpy.data.worlds['Arm'].ArmPublishTarget, is_publish=True)
+    threading.Timer(0.1, watch_compile, {"is_publish" : True}).start()
 
 # Registration
 arm_keymaps = []

@@ -101,7 +101,8 @@
 				},
 				{
 					"name": "screenSize",
-					"link": "_screenSize"
+					"link": "_screenSize",
+					"ifdef": ["_Disabled"]
 				},
 				{
 					"name": "shirr",
@@ -142,6 +143,21 @@
 					"name": "time",
 					"link": "_time",
 					"ifdef": ["_PolyLight"]
+				},
+				{
+					"name": "snoise",
+					"link": "_noise64",
+					"ifdef": ["_PCSS"]
+				},
+				{
+					"name": "lampNear",
+					"link": "_lampPlaneNear",
+					"ifdef": ["_PCSS"]
+				},
+				{
+					"name": "lampSizeUV",
+					"link": "_lampSizeUV",
+					"ifdef": ["_PCSS"]
 				}
 			],
 			"vertex_shader": "deferred_light.vert.glsl",

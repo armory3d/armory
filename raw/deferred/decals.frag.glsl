@@ -22,7 +22,7 @@ uniform sampler2D smetal;
 uniform float metalness;
 #endif
 
-uniform vec2 screenSize;
+// uniform vec2 screenSize;
 uniform mat4 invVP;
 uniform mat4 invW;
 uniform mat4 V;
