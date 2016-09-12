@@ -36,9 +36,9 @@ project.addShaders('Sources/Shaders/**');
             f.write("project.addDefine('WITH_PHYSICS');\n")
             f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
 
-        # Only when playing electron
+        # Electron live patching
         if is_play and bpy.data.worlds['Arm'].ArmPlayLivePatch == True and bpy.data.worlds['Arm'].ArmPlayRuntime == 'Electron':
-            f.write("project.addDefine('WITH_LIVEPATCH');\n")
+            f.write("project.addDefine('WITH_PATCH_ELECTRON');\n")
 
         # Native scripting
         # f.write(add_armory_library(sdk_path + '/lib/', 'haxeduktape'))

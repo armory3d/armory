@@ -22,6 +22,11 @@ import assets
 # Server
 import http.server
 import socketserver
+import space_armory
+try:
+    import bgame
+except ImportError:
+    pass
 
 def init_armory_props():
     # First run
@@ -53,7 +58,6 @@ def init_armory_props():
     utils.fetch_script_names()
     # Path for embedded player
     if utils.with_chromium():
-        import bgame
         bgame.set_url('file://' + utils.get_fp() + '/build/html5/index.html')
 
 def get_export_scene_override(scene):
@@ -172,12 +176,19 @@ def export_data(fp, sdk_path, is_play=False):
         if not os.path.isfile('build/debug-html5/ammo.js'):
             shutil.copy(ammojs_path, 'build/debug-html5')
 
-def armory_log(text):
+def armory_log(text=None):
+    if text == None:
+        text = 'Ready'
     print(text)
     text = (text[:80] + '..') if len(text) > 80 else text # Limit str size
     ArmoryProjectPanel.info_text = text
     armory_log.tag_redraw = True    
 armory_log.tag_redraw = False
+
+def armory_space_log(text):
+    print(text)
+    text = (text[:80] + '..') if len(text) > 80 else text # Limit str size
+    space_armory.SPACEARMORY_HT_header.info_text = text
 
 def get_kha_target(target_name): # TODO: remove
     if target_name == 'macos':
@@ -208,9 +219,7 @@ def compile_project(target_name=None, is_publish=False):
 
     # armory_log("Building, see console...")
 
-    if make.play_project.playproc == None or is_publish:
-        return subprocess.Popen(cmd)
-    else:
+    if make.play_project.playproc != None or make.play_project.chromium_running:
         # Patch running game, stay silent, disable krafix and haxe
         cmd.append('--silent')
         cmd.append('--noproject')
@@ -219,7 +228,11 @@ def compile_project(target_name=None, is_publish=False):
         cmd.append('--krafix')
         cmd.append('""')
         # Khamake throws error when krafix is not found, hide for now
-        return subprocess.Popen(cmd, stderr=subprocess.PIPE)
+        play_project.compileproc = subprocess.Popen(cmd, stderr=subprocess.PIPE)
+        threading.Timer(0.1, watch_patch).start()
+        return play_project.compileproc
+    else:
+        return subprocess.Popen(cmd)
 
 # For live patching
 def patch_project():
@@ -325,6 +338,12 @@ def watch_compile(is_publish=False):
     else:
         armory_log('Build failed, check console')
 
+def watch_patch():
+    play_project.compileproc.wait()
+    result = play_project.compileproc.poll()
+    play_project.compileproc = None
+    play_project.compileproc_finished = True
+
 def play_project(self, in_viewport):
     play_project.in_viewport = in_viewport
 
@@ -379,6 +398,7 @@ play_project.compileproc = None
 play_project.playproc_finished = False
 play_project.compileproc_finished = False
 play_project.play_area = None
+play_project.chromium_running = False
 
 def run_server():
     Handler = http.server.SimpleHTTPRequestHandler

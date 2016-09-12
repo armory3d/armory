@@ -10,9 +10,13 @@ from traits_clip import *
 from traits_action import *
 import utils
 import make
-
+import space_armory
 import time
 last_time = time.time()
+try:
+    import bgame
+except ImportError:
+    pass
 
 def on_scene_update_post(context):
     global last_time
@@ -20,14 +24,16 @@ def on_scene_update_post(context):
     if time.time() - last_time >= (1 / bpy.context.scene.render.fps): # Use frame rate for update frequency for now
         last_time = time.time()
 
-        # Tag redraw if playing in space_game
-        # if make.play_project.playproc != None:
-        for area in bpy.context.screen.areas:
-            if area.type == 'VIEW_GAME':
-                area.tag_redraw()
+        # Tag redraw if playing in space_armory
+        make.play_project.chromium_running = False
+        if space_armory.SPACEARMORY_HT_header.is_paused == False:
+            for area in bpy.context.screen.areas:
+                if area.type == 'VIEW_GAME':
+                    area.tag_redraw()
+                    make.play_project.chromium_running = True
 
         # Auto patch on every operator change
-        if make.play_project.playproc != None and \
+        if (make.play_project.playproc != None or make.play_project.chromium_running) and \
            bpy.data.worlds['Arm'].ArmPlayLivePatch and \
            bpy.data.worlds['Arm'].ArmPlayAutoBuild and \
            len(bpy.context.window_manager.operators) > 0 and \
@@ -35,6 +41,15 @@ def on_scene_update_post(context):
             on_scene_update_post.last_operator = bpy.context.window_manager.operators[-1]
             make.patch_project()
             make.compile_project()
+
+        # Check if chromium is running
+        if utils.with_chromium():
+            for area in bpy.context.screen.areas:
+                if area.type == 'VIEW_GAME':
+                    # Read chromium console
+                    if bgame.get_console_updated() == 1:
+                        make.armory_space_log(bgame.get_console())
+                    break
 
         # New output has been logged
         if make.armory_log.tag_redraw:
@@ -51,10 +66,14 @@ def on_scene_update_post(context):
                 if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
                     area.tag_redraw()
 
-        # Compilation finished, switch to armory space
+        # Compilation finished
         if make.play_project.compileproc_finished:
             make.play_project.compileproc_finished = False
-            if utils.with_chromium() and make.play_project.in_viewport:
+            # Notify embedded player
+            if make.play_project.chromium_running:
+                bgame.call_js('armory.Scene.patch();')
+            # Switch to armory space
+            elif utils.with_chromium() and make.play_project.in_viewport:
                 make.play_project.play_area.type = 'VIEW_GAME'
 
     edit_obj = bpy.context.edit_object
@@ -674,7 +693,7 @@ class ArmoryBuildPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds['Arm']
-        if make.play_project.playproc == None and make.play_project.compileproc == None:
+        if make.play_project.playproc == None and make.play_project.compileproc == None and make.play_project.chromium_running == False:
             layout.operator("arm.build")
         else:
             layout.operator("arm.patch")
