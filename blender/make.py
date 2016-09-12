@@ -36,6 +36,7 @@ def init_armory_props():
         for scene in bpy.data.scenes:
             if scene.render.engine != 'CYCLES':
                 scene.render.engine = 'CYCLES'
+            scene.render.fps = 60 # Default to 60fps for update loop
         # Force camera far to at least 100 units for now, to prevent fighting with light far plane
         for c in bpy.data.cameras:
             if c.clip_end < 100:
@@ -50,6 +51,10 @@ def init_armory_props():
         for m in bpy.data.materials:
             m.use_nodes = True
     utils.fetch_script_names()
+    # Path for embedded player
+    if utils.with_chromium():
+        import bgame
+        bgame.set_url('file://' + utils.get_fp() + '/build/html5/index.html')
 
 def get_export_scene_override(scene):
     # None for now
@@ -98,6 +103,7 @@ def export_data(fp, sdk_path, is_play=False):
         nodes_world.write_output(wout, asset_references, shader_references)
 
     # Export scene data
+    physics_found = False
     for scene in bpy.data.scenes:
         if scene.game_export:
             asset_path = 'build/compiled/Assets/' + utils.safe_filename(scene.name) + '.arm'
@@ -106,10 +112,12 @@ def export_data(fp, sdk_path, is_play=False):
                 filepath=asset_path)
             shader_references += ArmoryExporter.shader_references
             asset_references += ArmoryExporter.asset_references
-            if export_physics: # Disable physics anyway if no rigid body exported
-                export_physics = ArmoryExporter.export_physics
-
+            if physics_found == False and ArmoryExporter.export_physics:
+                physics_found = True
             assets.add(asset_path)
+    
+    if physics_found == False: # Disable physics anyway if no rigid body exported
+        export_physics = False
     
     # Clean compiled variants if cache is disabled
     if bpy.data.worlds['Arm'].ArmCacheShaders == False:
@@ -311,12 +319,18 @@ def watch_compile(is_publish=False):
     play_project.compileproc.wait()
     result = play_project.compileproc.poll()
     play_project.compileproc = None
+    play_project.compileproc_finished = True
     if result == 0:
         on_compiled(is_publish)
     else:
         armory_log('Build failed, check console')
 
 def play_project(self, in_viewport):
+    play_project.in_viewport = in_viewport
+
+    if utils.with_chromium() and in_viewport and bpy.context.area.type == 'VIEW_3D':
+        play_project.play_area = bpy.context.area
+
     # Build data
     build_project(is_play=True)
 
@@ -359,6 +373,13 @@ def play_project(self, in_viewport):
         play_project.compileproc = compile_project(target_name='html5')
         threading.Timer(0.1, watch_compile).start()
 
+play_project.in_viewport = False
+play_project.playproc = None
+play_project.compileproc = None
+play_project.playproc_finished = False
+play_project.compileproc_finished = False
+play_project.play_area = None
+
 def run_server():
     Handler = http.server.SimpleHTTPRequestHandler
     try:
@@ -391,32 +412,30 @@ def on_compiled(is_publish=False):
         return
 
     # Otherwise launch project
-    wrd = bpy.data.worlds['Arm']
-    if wrd.ArmPlayRuntime == 'Electron':
-        electron_app_path = './build/electron.js'
+    if utils.with_chromium() == False or play_project.in_viewport == False:
+        wrd = bpy.data.worlds['Arm']
+        if wrd.ArmPlayRuntime == 'Electron':
+            electron_app_path = './build/electron.js'
 
-        if utils.get_os() == 'win':
-            electron_path = sdk_path + 'kode_studio/KodeStudio-win32/Kode Studio.exe'
-        elif utils.get_os() == 'mac':
-            # electron_path = sdk_path + 'kode_studio/Kode Studio.app/Contents/MacOS/Electron'
-            electron_path = sdk_path + 'kode_studio/Electron.app/Contents/MacOS/Electron'
-        else:
-            electron_path = sdk_path + 'kode_studio/KodeStudio-linux64/kodestudio'
+            if utils.get_os() == 'win':
+                electron_path = sdk_path + 'kode_studio/KodeStudio-win32/Kode Studio.exe'
+            elif utils.get_os() == 'mac':
+                # electron_path = sdk_path + 'kode_studio/Kode Studio.app/Contents/MacOS/Electron'
+                electron_path = sdk_path + 'kode_studio/Electron.app/Contents/MacOS/Electron'
+            else:
+                electron_path = sdk_path + 'kode_studio/KodeStudio-linux64/kodestudio'
 
-        play_project.playproc = subprocess.Popen([electron_path, '--chromedebug', '--remote-debugging-port=9222', '--enable-logging', electron_app_path], stderr=subprocess.PIPE)
-        watch_play()
-    elif wrd.ArmPlayRuntime == 'Browser':
-        # Start server
-        os.chdir(utils.get_fp())
-        t = threading.Thread(name='localserver', target=run_server)
-        t.daemon = True
-        t.start()
-        html5_app_path = 'http://localhost:8040/build/html5'
-        webbrowser.open(html5_app_path)
+            play_project.playproc = subprocess.Popen([electron_path, '--chromedebug', '--remote-debugging-port=9222', '--enable-logging', electron_app_path], stderr=subprocess.PIPE)
+            watch_play()
+        elif wrd.ArmPlayRuntime == 'Browser':
+            # Start server
+            os.chdir(utils.get_fp())
+            t = threading.Thread(name='localserver', target=run_server)
+            t.daemon = True
+            t.start()
+            html5_app_path = 'http://localhost:8040/build/html5'
+            webbrowser.open(html5_app_path)
 
-play_project.playproc = None
-play_project.compileproc = None
-play_project.playproc_finished = False
 
 def clean_project():
     os.chdir(utils.get_fp())
@@ -447,18 +466,8 @@ def publish_project():
     threading.Timer(0.1, watch_compile, {"is_publish" : True}).start()
 
 # Registration
-arm_keymaps = []
 def register():
     init_armory_props()
-    # Key shortcuts
-    wm = bpy.context.window_manager
-    km = wm.keyconfigs.addon.keymaps.new(name='Window', space_type='EMPTY', region_type="WINDOW")
-    km.keymap_items.new(ArmoryPlayInViewportButton.bl_idname, type='P', value='PRESS')
-    km.keymap_items.new(ArmoryPlayButton.bl_idname, type='F5', value='PRESS')
-    arm_keymaps.append(km)
 
 def unregister():
-    wm = bpy.context.window_manager
-    for km in arm_keymaps:
-        wm.keyconfigs.addon.keymaps.remove(km)
-    del arm_keymaps[:]
+    pass

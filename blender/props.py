@@ -11,7 +11,52 @@ from traits_action import *
 import utils
 import make
 
-def on_scene_update(context):
+import time
+last_time = time.time()
+
+def on_scene_update_post(context):
+    global last_time
+
+    if time.time() - last_time >= (1 / bpy.context.scene.render.fps): # Use frame rate for update frequency for now
+        last_time = time.time()
+
+        # Tag redraw if playing in space_game
+        # if make.play_project.playproc != None:
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_GAME':
+                area.tag_redraw()
+
+        # Auto patch on every operator change
+        if make.play_project.playproc != None and \
+           bpy.data.worlds['Arm'].ArmPlayLivePatch and \
+           bpy.data.worlds['Arm'].ArmPlayAutoBuild and \
+           len(bpy.context.window_manager.operators) > 0 and \
+           on_scene_update_post.last_operator != bpy.context.window_manager.operators[-1]:
+            on_scene_update_post.last_operator = bpy.context.window_manager.operators[-1]
+            make.patch_project()
+            make.compile_project()
+
+        # New output has been logged
+        if make.armory_log.tag_redraw:
+            make.armory_log.tag_redraw = False
+            for area in bpy.context.screen.areas:
+                if area.type == 'INFO':
+                    area.tag_redraw()
+                    break
+
+        # Player finished, redraw play buttons
+        if make.play_project.playproc_finished:
+            make.play_project.playproc_finished = False
+            for area in bpy.context.screen.areas:
+                if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
+                    area.tag_redraw()
+
+        # Compilation finished, switch to armory space
+        if make.play_project.compileproc_finished:
+            make.play_project.compileproc_finished = False
+            if utils.with_chromium() and make.play_project.in_viewport:
+                make.play_project.play_area.type = 'VIEW_GAME'
+
     edit_obj = bpy.context.edit_object
     if edit_obj != None and edit_obj.is_updated_data:
         if edit_obj.type == 'MESH':
@@ -19,30 +64,10 @@ def on_scene_update(context):
         elif edit_obj.type == 'ARMATURE':
             edit_obj.data.armature_cached = False
 
-    # Auto patch on every operator change
-    if make.play_project.playproc != None and \
-       bpy.data.worlds['Arm'].ArmPlayLivePatch and \
-       bpy.data.worlds['Arm'].ArmPlayAutoBuild and \
-       len(bpy.context.window_manager.operators) > 0 and \
-       on_scene_update.last_operator != bpy.context.window_manager.operators[-1]:
-        on_scene_update.last_operator = bpy.context.window_manager.operators[-1]
-        make.patch_project()
-        make.compile_project()
+on_scene_update_post.last_operator = None
 
-    # New output ahs been logged
-    if make.armory_log.tag_redraw:
-        for area in bpy.context.screen.areas:
-            if area.type == 'INFO':
-                area.tag_redraw()
-                break
-
-    # Player finished, redraw play buttons
-    if make.play_project.playproc_finished == True:
-        make.play_project.playproc_finished = False
-        for area in bpy.context.screen.areas:
-            if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
-                area.tag_redraw()
-on_scene_update.last_operator = None
+def on_load_pre(context):
+    bpy.ops.arm_addon.stop('EXEC_DEFAULT')
 
 def invalidate_shader_cache(self, context):
     # compiled.glsl changed, recompile all shaders next time
@@ -505,7 +530,7 @@ class MatsPropsPanel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "material"
- 
+
     def draw(self, context):
         layout = self.layout
         mat = bpy.context.material
@@ -824,15 +849,31 @@ def draw_info_item(self, context):
     layout.label(ArmoryProjectPanel.info_text)
 
 # Registration
+arm_keymaps = []
 def register():
     bpy.utils.register_module(__name__)
     initProperties()
-    bpy.app.handlers.scene_update_post.append(on_scene_update)
+    bpy.app.handlers.scene_update_post.append(on_scene_update_post)
+    bpy.app.handlers.load_pre.append(on_load_pre)
     bpy.types.VIEW3D_HT_header.append(draw_play_item)
     bpy.types.INFO_HT_header.prepend(draw_info_item)
+
+    # Key shortcuts
+    wm = bpy.context.window_manager
+    km = wm.keyconfigs.addon.keymaps.new(name='Window', space_type='EMPTY', region_type="WINDOW")
+    km.keymap_items.new(ArmoryPlayButton.bl_idname, type='F5', value='PRESS')
+    km.keymap_items.new(ArmoryPlayInViewportButton.bl_idname, type='P', value='PRESS')
+    arm_keymaps.append(km)
 
 def unregister():
     bpy.types.VIEW3D_HT_header.remove(draw_play_item)
     bpy.types.INFO_HT_header.remove(draw_info_item)
-    bpy.app.handlers.scene_update_post.remove(on_scene_update)
+    bpy.app.handlers.scene_update_post.remove(on_scene_update_post)
+    bpy.app.handlers.load_pre.remove(on_load_pre)
     bpy.utils.unregister_module(__name__)
+    
+    # Key shortcuts
+    wm = bpy.context.window_manager
+    for km in arm_keymaps:
+        wm.keyconfigs.addon.keymaps.remove(km)
+    del arm_keymaps[:]

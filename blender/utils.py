@@ -74,3 +74,15 @@ def get_project_scene_name():
         return safe_filename(bpy.context.screen.scene.name)
     else:
         return safe_filename(wrd.ArmProjectScene)
+
+def with_chromium():
+    return with_chromium.module_found
+with_chromium.module_found = False
+
+def register():
+    import importlib.util
+    if importlib.util.find_spec('bgame') != None:
+        with_chromium.module_found = True
+
+def unregister():
+    pass
