@@ -159,7 +159,7 @@ class RigidBody extends Trait {
 	}
 
 	public function removeFromWorld() {
-		physics.removeRigidBody(this);
+		if (physics != null) physics.removeRigidBody(this);
 	}
 
 	public function activate() {

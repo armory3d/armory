@@ -16,7 +16,7 @@ class SceneInstance extends Trait {
         super();
 
         notifyOnInit(function() {
-			iron.Scene.active.addScene(safeFilename(sceneName), object);
+			iron.Scene.active.addScene(safeFilename(sceneName), object, function(o:iron.object.Object) {});
 		});
     }
 }

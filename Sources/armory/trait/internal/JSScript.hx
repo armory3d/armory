@@ -13,20 +13,18 @@ class JSScript extends Trait {
     public function new(scriptBlob:String) {
         super();
 
-        var src = Reflect.field(kha.Assets.blobs, scriptBlob + '_js').toString();
-
+        iron.data.Data.getBlob(scriptBlob + '.js', function(blob:kha.Blob) {
+        	var src = blob.toString();
 #if js
-		if (api == null) {
-			api = new JSScriptAPI();
-		}
-
-        untyped __js__("eval(src);");
+			if (api == null) api = new JSScriptAPI();
+        	untyped __js__("eval(src);");
 #else
-		// if (ctx == null) {
-			// ctx = new haxeduktape.DukContext();
-			// api = new JSScriptAPI(ctx);
-		// }
-		// ctx.evalString(src);
+			// if (ctx == null) {
+				// ctx = new haxeduktape.DukContext();
+				// api = new JSScriptAPI(ctx);
+			// }
+			// ctx.evalString(src);
 #end
+        });
     }
 }

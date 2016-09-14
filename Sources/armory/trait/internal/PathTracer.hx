@@ -6,6 +6,7 @@ import iron.Trait;
 import iron.object.Transform;
 import iron.object.MeshObject;
 import iron.data.Data;
+import iron.data.MaterialData;
 import iron.data.MaterialData.MaterialContext;
 
 class PathTracer extends Trait {
@@ -23,7 +24,6 @@ class PathTracer extends Trait {
         super();
 
 		notifyOnInit(init);
-        notifyOnUpdate(update);
     }
 	
 	function getColorFromNode(object:MeshObject):Array<Float> {
@@ -37,109 +37,115 @@ class PathTracer extends Trait {
 	}
 	
 	function init() {
-		context = Data.getMaterial('pt_material', '').getContext('pt_trace_pass');
+
+		Data.getMaterial('pt_material', '', function(b:MaterialData) {
 		
-		context.raw.bind_constants.push(
-			{
-				name: "glossiness",
-				float: 0.6
+			context = b.getContext('pt_trace_pass');
+
+			context.raw.bind_constants.push(
+				{
+					name: "glossiness",
+					float: 0.6
+				}
+			);
+			
+			context.raw.bind_constants.push(
+				{
+					name: "ray00",
+					vec3: [0.0, 0.0, 0.0]
+				}
+			);
+			ray00Location = context.raw.bind_constants.length - 1;
+			
+			context.raw.bind_constants.push(
+				{
+					name: "ray01",
+					vec3: [0.0, 0.0, 0.0]
+				}
+			);
+			ray01Location = context.raw.bind_constants.length - 1;
+			
+			context.raw.bind_constants.push(
+				{
+					name: "ray10",
+					vec3: [0.0, 0.0, 0.0]
+				}
+			);
+			ray10Location = context.raw.bind_constants.length - 1;
+			
+			context.raw.bind_constants.push(
+				{
+					name: "ray11",
+					vec3: [0.0, 0.0, 0.0]
+				}
+			);
+			ray11Location = context.raw.bind_constants.length - 1;
+			
+			objectLocations = [];
+			transformMap = new Map();
+			var sphereNum = 0;
+			var cubeNum = 0;
+			for (n in iron.Scene.active.meshes) {
+				if (n.name.split(".")[0] == "Sphere") {
+					context.raw.bind_constants.push(
+						{
+							name: "sphereCenter" + sphereNum,
+							vec3: [0.0, 0.0, 0.0]
+						}
+					);
+					var loc = context.raw.bind_constants.length - 1;
+					objectLocations.push(loc);
+					transformMap.set(loc, n.transform);
+					
+					context.raw.bind_constants.push(
+						{
+							name: "sphereRadius" + sphereNum,
+							float: n.transform.size.x / 2 - 0.02
+						}
+					);
+					
+					var col = getColorFromNode(n);
+					context.raw.bind_constants.push(
+						{
+							name: "sphereColor" + sphereNum,
+							vec3: [col[0], col[1], col[2]]
+						}
+					);
+					
+					sphereNum++;
+				}
+				else if (n.name.split(".")[0] == "Cube") {
+					context.raw.bind_constants.push(
+						{
+							name: "cubeCenter" + cubeNum,
+							vec3: [0.0, 0.0, 0.0]
+						}
+					);
+					var loc = context.raw.bind_constants.length - 1;
+					objectLocations.push(loc);
+					transformMap.set(loc, n.transform);
+					
+					context.raw.bind_constants.push(
+						{
+							name: "cubeSize" + cubeNum,
+							vec3: [n.transform.size.x / 2, n.transform.size.y / 2, n.transform.size.z / 2]
+						}
+					);
+					
+					var col = getColorFromNode(n);
+					context.raw.bind_constants.push(
+						{
+							name: "cubeColor" + cubeNum,
+							vec3: [col[0], col[1], col[2]]
+						}
+					);
+					
+					cubeNum++;
+				}
 			}
-		);
-		
-		context.raw.bind_constants.push(
-			{
-				name: "ray00",
-				vec3: [0.0, 0.0, 0.0]
-			}
-		);
-		ray00Location = context.raw.bind_constants.length - 1;
-		
-		context.raw.bind_constants.push(
-			{
-				name: "ray01",
-				vec3: [0.0, 0.0, 0.0]
-			}
-		);
-		ray01Location = context.raw.bind_constants.length - 1;
-		
-		context.raw.bind_constants.push(
-			{
-				name: "ray10",
-				vec3: [0.0, 0.0, 0.0]
-			}
-		);
-		ray10Location = context.raw.bind_constants.length - 1;
-		
-		context.raw.bind_constants.push(
-			{
-				name: "ray11",
-				vec3: [0.0, 0.0, 0.0]
-			}
-		);
-		ray11Location = context.raw.bind_constants.length - 1;
-		
-		objectLocations = [];
-		transformMap = new Map();
-		var sphereNum = 0;
-		var cubeNum = 0;
-		for (n in iron.Scene.active.meshes) {
-			if (n.name.split(".")[0] == "Sphere") {
-				context.raw.bind_constants.push(
-					{
-						name: "sphereCenter" + sphereNum,
-						vec3: [0.0, 0.0, 0.0]
-					}
-				);
-				var loc = context.raw.bind_constants.length - 1;
-				objectLocations.push(loc);
-				transformMap.set(loc, n.transform);
-				
-				context.raw.bind_constants.push(
-					{
-						name: "sphereRadius" + sphereNum,
-						float: n.transform.size.x / 2 - 0.02
-					}
-				);
-				
-				var col = getColorFromNode(n);
-				context.raw.bind_constants.push(
-					{
-						name: "sphereColor" + sphereNum,
-						vec3: [col[0], col[1], col[2]]
-					}
-				);
-				
-				sphereNum++;
-			}
-			else if (n.name.split(".")[0] == "Cube") {
-				context.raw.bind_constants.push(
-					{
-						name: "cubeCenter" + cubeNum,
-						vec3: [0.0, 0.0, 0.0]
-					}
-				);
-				var loc = context.raw.bind_constants.length - 1;
-				objectLocations.push(loc);
-				transformMap.set(loc, n.transform);
-				
-				context.raw.bind_constants.push(
-					{
-						name: "cubeSize" + cubeNum,
-						vec3: [n.transform.size.x / 2, n.transform.size.y / 2, n.transform.size.z / 2]
-					}
-				);
-				
-				var col = getColorFromNode(n);
-				context.raw.bind_constants.push(
-					{
-						name: "cubeColor" + cubeNum,
-						vec3: [col[0], col[1], col[2]]
-					}
-				);
-				
-				cubeNum++;
-			}
-		}
+
+			notifyOnUpdate(update);
+		});
 	}
 
     function update() {

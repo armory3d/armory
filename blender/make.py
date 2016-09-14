@@ -107,6 +107,7 @@ def export_data(fp, sdk_path, is_play=False):
         nodes_world.write_output(wout, asset_references, shader_references)
 
     # Export scene data
+    assets.embedded_data = sorted(list(set(assets.embedded_data)))
     physics_found = False
     for scene in bpy.data.scenes:
         if scene.game_export:
@@ -220,17 +221,20 @@ def compile_project(target_name=None, is_publish=False):
     # armory_log("Building, see console...")
 
     if make.play_project.playproc != None or make.play_project.chromium_running:
-        # Patch running game, stay silent, disable krafix and haxe
-        cmd.append('--silent')
-        cmd.append('--noproject')
-        cmd.append('--haxe')
-        cmd.append('""')
-        cmd.append('--krafix')
-        cmd.append('""')
-        # Khamake throws error when krafix is not found, hide for now
-        play_project.compileproc = subprocess.Popen(cmd, stderr=subprocess.PIPE)
-        threading.Timer(0.1, watch_patch).start()
-        return play_project.compileproc
+        if play_project.compileproc == None: # Already compiling
+            # Patch running game, stay silent, disable krafix and haxe
+            cmd.append('--silent')
+            cmd.append('--noproject')
+            cmd.append('--haxe')
+            cmd.append('""')
+            cmd.append('--krafix')
+            cmd.append('""')
+            # Khamake throws error when krafix is not found, hide for now
+            play_project.compileproc = subprocess.Popen(cmd, stderr=subprocess.PIPE)
+            threading.Timer(0.1, watch_patch).start()
+            return play_project.compileproc
+        else:
+            return None
     else:
         return subprocess.Popen(cmd)
 

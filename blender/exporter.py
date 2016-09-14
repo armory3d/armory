@@ -2227,7 +2227,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             else:
                 assets.add(utils.safe_assetpath(objref.sound.filepath)) # Link sound to assets
             
-            o['sound'] = utils.extract_filename_noext(objref.sound.filepath)
+            o['sound'] = utils.extract_filename(objref.sound.filepath)
             o['sound'] = utils.safe_filename(o['sound'])
         else:
             o['sound'] = ''
@@ -2436,6 +2436,12 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
         if (self.restoreFrame):
             self.scene.frame_set(originalFrame, originalSubframe)
+
+        # Write embedded data references
+        if len(assets.embedded_data) > 0:
+            self.output['embedded_datas'] = []
+            for file in assets.embedded_data:
+                self.output['embedded_datas'].append(file)
 
         # Write .arm
         utils.write_arm(self.filepath, self.output)
@@ -2851,12 +2857,13 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         o['background_color'] = utils.color_to_int(world.world_envtex_color)
         wmat_name = utils.safe_filename(world.name) + '_material'
         o['material_ref'] = wmat_name + '/' + wmat_name + '/env'
-        o['brdf'] = 'brdf'
+        o['brdf'] = 'brdf.png'
         o['probes'] = []
         # Main probe
         world_generate_radiance = False
         defs = bpy.data.worlds['Arm'].world_defs
         generate_irradiance = True #'_EnvTex' in defs or '_EnvSky' in defs or '_EnvCon' in defs
+        disable_hdr = world.world_envtex_name.endswith('.jpg')
         irrtex = world.world_envtex_name.rsplit('.', 1)[0]
         radtex = irrtex
 
@@ -2869,7 +2876,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
         num_mips = world.world_envtex_num_mips
         strength = world.world_envtex_strength
-        po = self.make_probe(world.name, irrtex, radtex, num_mips, strength, 1.0, [0, 0, 0], [0, 0, 0], world_generate_radiance, generate_irradiance)
+        po = self.make_probe(world.name, irrtex, radtex, num_mips, strength, 1.0, [0, 0, 0], [0, 0, 0], world_generate_radiance, generate_irradiance, disable_hdr)
         o['probes'].append(po)
         
         if '_EnvSky' in defs:
@@ -2895,14 +2902,18 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                 texture_path = '//' + cam.probe_texture
                 cam.probe_num_mips = write_probes.write_probes(texture_path, disable_hdr, cam.probe_num_mips, generate_radiance=generate_radiance)
                 base_name = cam.probe_texture.rsplit('.', 1)[0]
-                po = self.make_probe(cam.name, base_name, base_name, cam.probe_num_mips, cam.probe_strength, cam.probe_blending, volume, volume_center, generate_radiance, generate_irradiance)
+                po = self.make_probe(cam.name, base_name, base_name, cam.probe_num_mips, cam.probe_strength, cam.probe_blending, volume, volume_center, generate_radiance, generate_irradiance, disable_hdr)
                 o['probes'].append(po)
     
-    def make_probe(self, id, irrtex, radtex, mipmaps, strength, blending, volume, volume_center, generate_radiance, generate_irradiance):
+    def make_probe(self, id, irrtex, radtex, mipmaps, strength, blending, volume, volume_center, generate_radiance, generate_irradiance, disable_hdr):
         po = {}
         po['name'] = id
         if generate_radiance:
             po['radiance'] = radtex + '_radiance'
+            if disable_hdr:
+                po['radiance'] += '.jpg'
+            else:
+                po['radiance'] += '.hdr'
             po['radiance_mipmaps'] = mipmaps
         if generate_irradiance:
             po['irradiance'] = irrtex + '_irradiance'

@@ -109,7 +109,7 @@ def make_texture(self, id, image_node, material):
 			# Link image path to assets
 			assets.add(utils.safe_assetpath(image.filepath))
 		# Reference image name
-		tex['file'] = utils.extract_filename_noext(image.filepath)
+		tex['file'] = utils.extract_filename(image.filepath)
 		tex['file'] = utils.safe_filename(tex['file'])
 		interpolation = image_node.interpolation
 		if bpy.data.worlds['Arm'].force_anisotropic_filtering:

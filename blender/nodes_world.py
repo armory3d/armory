@@ -165,7 +165,7 @@ def parse_color(world, node, context, envmap_strength_const):
 			assets.add(utils.safe_assetpath(image.filepath))
 
 		# Reference image name
-		texture['file'] = utils.extract_filename_noext(image.filepath)
+		texture['file'] = utils.extract_filename(image.filepath)
 		texture['file'] = utils.safe_filename(texture['file'])
 
 		# Generate prefiltered envmaps

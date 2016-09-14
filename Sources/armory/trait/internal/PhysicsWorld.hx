@@ -74,7 +74,7 @@ class PhysicsWorld extends Trait {
 	}
 
 	public function removeRigidBody(body:RigidBody) {
-		world.ptr.removeRigidBody(body.body);
+		if (world.ptr != null) world.ptr.removeRigidBody(body.body);
 		#if js
 		Ammo.destroy(body.body);
 		#elseif cpp

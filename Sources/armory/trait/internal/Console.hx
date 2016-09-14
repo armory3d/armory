@@ -36,22 +36,22 @@ class Console extends Trait {
     public function new() {
         super();
 
-        var font = kha.Assets.fonts.droid_sans;
-        ui = new Zui(font, 17, 16, 0, 1.0, 2.0);
-
-        notifyOnAdd(add);
-        notifyOnRender2D(render2D);
-        notifyOnUpdate(update);
+        iron.data.Data.getFont('droid_sans.ttf', function(font:kha.Font) {
+            ui = new Zui(font, 17, 16, 0, 1.0, 2.0);
+            notifyOnInit(init);
+            notifyOnRender2D(render2D);
+            notifyOnUpdate(update);
+        });
     }
 
-    function add() {
+    function init() {
         path = cast(object, CameraObject).renderPath;
     }
 
     function render2D(g:kha.graphics2.Graphics) {
         g.end();
         ui.begin(g);
-        if (ui.window(Id.window(), 0, 0, 185, iron.App.h)) {
+        if (ui.window(Id.window(), 0, 0, 185, iron.App.h())) {
             if (ui.node(Id.node(), "Profile (ms)", 0, true)) {
                 var avg = Math.round(frameTimeAvg * 10000) / 10;
                 var avgMin = Math.round(frameTimeAvgMin * 10000) / 10;
@@ -70,16 +70,25 @@ class Console extends Trait {
             ui.separator();
             if (ui.node(Id.node(), "Render Path", 0, false)) {
                 ui.text("draw calls: " + RenderPath.drawCalls);
-                ui.text("render targets: " + path.data.pipeline.data.render_targets.length);
+                ui.text("render targets: " + path.data.pathdata.raw.render_targets.length);
                 for (i in 0...path.passNames.length) {
                     path.passEnabled[i] = ui.check(Id.nest(Id.check(), i), path.passNames[i], path.passEnabled[i]);
                 }
             }
             ui.separator();
             if (ui.node(Id.node(), "Inspector", 0, false)) {
-                for (o in iron.Scene.active.meshes) {
-                    ui.text(o.name + " (" + Std.int(o.transform.absx() * 100) / 100 + ", " + Std.int(o.transform.absy() * 100) / 100 + ", " + Std.int(o.transform.absz() * 100) / 100 + ")");
+                
+                function drawList(id:String, objs:Array<iron.object.Object>) {
+                    for (i in 0...objs.length) {
+                        var o = objs[i];
+                        o.visible = ui.check(Id.nest(id, i), o.name + " (" + Std.int(o.transform.absx() * 100) / 100 + ", " + Std.int(o.transform.absy() * 100) / 100 + ", " + Std.int(o.transform.absz() * 100) / 100 + ")", o.visible);
+                    }
                 }
+
+                drawList(Id.check(), cast iron.Scene.active.meshes);
+                drawList(Id.check(), cast iron.Scene.active.lamps);
+                drawList(Id.check(), cast iron.Scene.active.cameras);
+                drawList(Id.check(), cast iron.Scene.active.speakers);
             }
         }
         ui.end();

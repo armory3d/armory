@@ -52,16 +52,19 @@ def color_to_int(val):
     return (int(val[3] * 255) << 24) + (int(val[0] * 255) << 16) + (int(val[1] * 255) << 8) + int(val[2] * 255)
 
 def safe_filename(s):
-    s = s.replace('.', '_').replace('-', '_').replace(' ', '_')
-    if s[0].isdigit(): # Prefix _ if first char is digit
-        s = '_' + s
+    # s = s.replace('.', '_').replace('-', '_').replace(' ', '_')
+    # if s[0].isdigit(): # Prefix _ if first char is digit
+        # s = '_' + s
     return s
 
 def safe_assetpath(s):
     return s[2:] # Remove leading '//'
 
-def extract_filename_noext(s):
-    return s.rsplit('/', 1)[1].rsplit('.', 1)[0] # Extract file name without extension
+def extract_filename(s):
+    return s.rsplit('/', 1)[1]
+
+# def extract_filename_noext(s):
+    # return s.rsplit('/', 1)[1].rsplit('.', 1)[0] # Extract file name without extension
 
 def get_render_resolution(scene_index=0):
     render = bpy.data.scenes[scene_index].render

@@ -991,6 +991,7 @@ def make_draw_world(stage, node_group, node, shader_references, asset_references
     # Link assets
     if '_EnvClouds' in bpy.data.worlds['Arm'].world_defs:
         buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise256.png')
+        assets.add_embedded_data('noise256.png')
 
 def make_draw_compositor(stage, node_group, node, shader_references, asset_references, with_fxaa=False):
     scon = 'compositor_pass'
@@ -1030,6 +1031,7 @@ def make_draw_compositor(stage, node_group, node, shader_references, asset_refer
     shader_references.append('build/compiled/Shaders/' + scon + '/' + data_name)
     # Link assets
     # buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise256.png')
+    # assets.add_embedded_data('noise256.png')
 
 def make_call_function(stage, node_group, node):
     stage['command'] = 'call_function'
@@ -1094,18 +1096,21 @@ def make_ssao_pass(stages, node_group, node, shader_references, asset_references
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[1, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x', viewport_scale=bpy.data.worlds['Arm'].generate_ssao_texture_scale)
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y')
     buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise8.png')
+    assets.add_embedded_data('noise8.png')
 
 def make_ssao_reproject_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 4, 2, 5], bind_target_constants=['gbufferD', 'gbuffer0', 'slast', 'sveloc'], shader_context='ssao_reproject_pass/ssao_reproject_pass/ssao_reproject_pass')
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[1, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x')
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y')
     buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise8.png')
+    assets.add_embedded_data('noise8.png')
 
 def make_apply_ssao_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[4, 5], bind_target_constants=['gbufferD', 'gbuffer0'], shader_context='ssao_pass/ssao_pass/ssao_pass')
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=3, bind_target_indices=[2, 5], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x')
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 5], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y_blend')
     buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise8.png')
+    assets.add_embedded_data('noise8.png')
 
 def make_ssr_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[4, 5, 6], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='ssr_pass/ssr_pass/ssr_pass', viewport_scale=bpy.data.worlds['Arm'].generate_ssr_texture_scale)
@@ -1169,6 +1174,8 @@ def make_smaa_pass(stages, node_group, node, shader_references, asset_references
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[4, 3, 5], bind_target_constants=['colorTex', 'blendTex', 'sveloc'], shader_context='smaa_neighborhood_blend/smaa_neighborhood_blend/smaa_neighborhood_blend')
     buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'smaa_area.png')
     buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'smaa_search.png')
+    assets.add_embedded_data('smaa_area.png')
+    assets.add_embedded_data('smaa_search.png')
 
 def make_taa_pass(stages, node_group, node, shader_references, asset_references):
     make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['tex', 'tex2', 'sveloc'], shader_context='taa_pass/taa_pass/taa_pass')

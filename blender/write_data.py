@@ -127,9 +127,10 @@ class Main {
         f.write("""
         kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel}, function() {
             iron.App.init(function() {
-                iron.Scene.setActive(projectScene);
-                iron.App.notifyOnRender(function(g:kha.graphics4.Graphics) {
-                    iron.Scene.active.renderFrame(g);
+                iron.Scene.setActive(projectScene, function(object:iron.object.Object) {
+                    iron.App.notifyOnRender(function(g:kha.graphics4.Graphics) {
+                        iron.Scene.active.renderFrame(g);
+                    });
                 });
             });
         });

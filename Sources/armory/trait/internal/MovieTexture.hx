@@ -2,7 +2,6 @@ package armory.trait.internal;
 
 import kha.Image;
 import kha.Video;
-import kha.Assets;
 import iron.Trait;
 import iron.object.MeshObject;
 
@@ -41,17 +40,22 @@ class MovieTexture extends Trait {
 		}
     }
 
-    function init() {		
-		video = Reflect.field(kha.Assets.videos, videoName);
-		video.play(true);
-		
-		image = Image.createRenderTarget(getPower2(video.width()), getPower2(video.height()));
-		
-		var o = cast(object, iron.object.MeshObject);
-		o.materials[0].contexts[0].textures[0] = image; // Override diffuse texture
+    function init() {	
+
+    	iron.data.Data.getVideo(videoName, function(vid:kha.Video) {
+    		video = vid;
+			video.play(true);
+			
+			image = Image.createRenderTarget(getPower2(video.width()), getPower2(video.height()));
+			
+			var o = cast(object, iron.object.MeshObject);
+			o.materials[0].contexts[0].textures[0] = image; // Override diffuse texture
+    	});
     }
 	
 	function render(g:kha.graphics2.Graphics) {
+		if (video == null) return;
+
 		g.end();
 		
 		var g2 = image.g2;
