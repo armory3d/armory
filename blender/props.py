@@ -33,14 +33,37 @@ def on_scene_update_post(context):
                     make.play_project.chromium_running = True
 
         # Auto patch on every operator change
+        ops = bpy.context.window_manager.operators
         if (make.play_project.playproc != None or make.play_project.chromium_running) and \
            bpy.data.worlds['Arm'].ArmPlayLivePatch and \
            bpy.data.worlds['Arm'].ArmPlayAutoBuild and \
-           len(bpy.context.window_manager.operators) > 0 and \
-           on_scene_update_post.last_operator != bpy.context.window_manager.operators[-1]:
-            on_scene_update_post.last_operator = bpy.context.window_manager.operators[-1]
-            make.patch_project()
-            make.compile_project()
+           len(ops) > 0 and \
+           on_scene_update_post.last_operator != ops[-1]:
+            on_scene_update_post.last_operator = ops[-1]
+            mapped = False
+            # Try to translate operator directly to armory
+            if utils.with_chromium() and bpy.context.object != None:
+                objname = bpy.context.object.name
+                if ops[-1].name == 'Translate':
+                    vec = bpy.context.object.location
+                    js_source = 'var o = armory.Scene.active.getObject("' + objname + '"); o.transform.loc.set(' + str(vec[0]) + ', ' + str(vec[1]) + ', ' + str(vec[2]) + '); o.transform.dirty = true;'
+                    bgame.call_js(js_source)
+                    mapped = True
+                elif ops[-1].name == 'Resize':
+                    vec = bpy.context.object.scale
+                    js_source = 'var o = armory.Scene.active.getObject("' + objname + '"); o.transform.scale.set(' + str(vec[0]) + ', ' + str(vec[1]) + ', ' + str(vec[2]) + '); o.transform.dirty = true;'
+                    bgame.call_js(js_source)
+                    mapped = True
+                elif ops[-1].name == 'Rotate':
+                    vec = bpy.context.object.rotation_euler.to_quaternion()
+                    js_source = 'var o = armory.Scene.active.getObject("' + objname + '"); o.transform.rot.set(' + str(vec[1]) + ', ' + str(vec[2]) + ', ' + str(vec[3]) + ' ,' + str(vec[0]) + '); o.transform.dirty = true;'
+                    bgame.call_js(js_source)
+                    mapped = True
+
+            # Rebuild scene
+            if mapped == False:
+                make.patch_project()
+                make.compile_project()
 
         # Check if chromium is running
         if utils.with_chromium():
@@ -719,7 +742,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
     bl_region_type = "WINDOW"
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
-    info_text = 'Ready'
+    info_text = ''
  
     def draw(self, context):
         layout = self.layout
@@ -735,9 +758,8 @@ class ArmoryProjectPanel(bpy.types.Panel):
         layout.label('Publish Project')
         layout.operator('arm.publish')
         layout.prop(wrd, 'ArmPublishTarget')
-        layout.label('Armory')
+        layout.label('Armory v' + wrd.ArmVersion)
         layout.operator('arm.check_updates')
-        layout.label('v' + wrd.ArmVersion)
 
 class ArmoryPlayButton(bpy.types.Operator):
     bl_idname = 'arm.play'
@@ -865,7 +887,8 @@ def draw_play_item(self, context):
 # Info panel in header
 def draw_info_item(self, context):
     layout = self.layout
-    layout.label(ArmoryProjectPanel.info_text)
+    if ArmoryProjectPanel.info_text != '':
+        layout.label(ArmoryProjectPanel.info_text)
 
 # Registration
 arm_keymaps = []

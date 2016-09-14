@@ -177,19 +177,36 @@ def export_data(fp, sdk_path, is_play=False):
         if not os.path.isfile('build/debug-html5/ammo.js'):
             shutil.copy(ammojs_path, 'build/debug-html5')
 
-def armory_log(text=None):
+def process_text(text):
     if text == None:
-        text = 'Ready'
-    print(text)
-    text = (text[:80] + '..') if len(text) > 80 else text # Limit str size
-    ArmoryProjectPanel.info_text = text
-    armory_log.tag_redraw = True    
+        return True
+    # Proof of concept..
+    text = text.split(' ', 1)
+    if len(text) > 1:
+        text = text[1]
+        cmd = text.split('|')
+        # Reflect commands from Armory player in Blender
+        if cmd[0] == '__arm':
+            if cmd[1] == 'setx':
+                bpy.context.scene.objects[cmd[2]].location.x = float(cmd[3])
+            return False
+    return True
+
+def armory_log(text=None):
+    if process_text(text):
+        if text == None:
+            text = ''
+        print(text)
+        text = (text[:80] + '..') if len(text) > 80 else text # Limit str size
+        ArmoryProjectPanel.info_text = text
+        armory_log.tag_redraw = True    
 armory_log.tag_redraw = False
 
 def armory_space_log(text):
-    print(text)
-    text = (text[:80] + '..') if len(text) > 80 else text # Limit str size
-    space_armory.SPACEARMORY_HT_header.info_text = text
+    if process_text(text):
+        print(text)
+        text = (text[:80] + '..') if len(text) > 80 else text # Limit str size
+        space_armory.SPACEARMORY_HT_header.info_text = text
 
 def get_kha_target(target_name): # TODO: remove
     if target_name == 'macos':
@@ -330,7 +347,7 @@ def watch_play():
             line += char
     play_project.playproc = None
     play_project.playproc_finished = True
-    armory_log('Ready')
+    armory_log()
 
 def watch_compile(is_publish=False):
     play_project.compileproc.wait()
@@ -413,7 +430,7 @@ def run_server():
         print('Server already running')
 
 def on_compiled(is_publish=False):
-    armory_log("Ready")
+    armory_log()
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
     sdk_path = addon_prefs.sdk_path
