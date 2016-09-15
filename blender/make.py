@@ -189,6 +189,10 @@ def process_text(text):
         if cmd[0] == '__arm':
             if cmd[1] == 'setx':
                 bpy.context.scene.objects[cmd[2]].location.x = float(cmd[3])
+            elif cmd[1] == 'select':
+                bpy.context.object.select = False
+                bpy.context.scene.objects[cmd[2]].select = True
+                bpy.context.scene.objects.active = bpy.context.scene.objects[cmd[2]]
             return False
     return True
 

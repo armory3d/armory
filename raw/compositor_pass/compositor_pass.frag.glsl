@@ -295,7 +295,17 @@ void main() {
     // col.rgb = vec3(clamp(dot(col.rgb, col.rgb), 0.0, 1.0));
 	col.rgb = vec3((col.r * 0.3 + col.g * 0.59 + col.b * 0.11) / 3.0) * 2.5;
 #endif
-    
+
+#ifdef _CompoContrast
+	// -0.5 - 0.5
+	const float compoContrast = 0.2;
+	col.rgb = ((col.rgb - 0.5) * max(compoContrast + 1.0, 0.0)) + 0.5;
+#endif
+
+// #ifdef _CompoBrighness
+	// col.rgb += compoBrightness;
+// #endif
+
 #ifdef _CompoLetterbox
 	// const float compoLetterboxSize = 0.1;
 	col.rgb *= 1.0 - step(0.5 - compoLetterboxSize, abs(0.5 - texCoord.y));

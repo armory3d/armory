@@ -657,6 +657,7 @@ void main() {
 	vec2 texCoord = screenPosition * 0.5 + 0.5;
 	// texCoord += vec2(0.5 / screenSize); // Half pixel offset
 
+	// 0 - 1 => -1 - 1
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, mask
 	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, occlusion

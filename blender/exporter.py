@@ -637,12 +637,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         scene.frame_set(currentFrame, currentSubframe)
 
     def get_action_framerange(self, action):
-        # TODO: experimental
-        begin_frame = int(action.frame_range[0])
+        begin_frame = int(action.frame_range[0]) # Action frames
         end_frame = int(action.frame_range[1])
         if self.beginFrame > begin_frame: # Cap frames to timeline bounds
             begin_frame = self.beginFrame
-        if self.endFrame > end_frame:
+        if self.endFrame < end_frame:
             end_frame = self.endFrame
         return begin_frame, end_frame
 
@@ -1522,8 +1521,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                     # Write bones
                     if armdata.edit_actions:
                         export_actions = []
-                        for t in my_actiontraitlist:
-                            export_actions.append(t.name)
+                        for t in armdata.my_actiontraitlist:
+                            export_actions.append(bpy.data.actions[t.name])
                     else: # Use default
                         export_actions = [action]
 
@@ -1543,7 +1542,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                                     bones.append(boneo)
                             # Save bones separately
                             bones_obj = {}
-                            bones_obj['children'] = bones
+                            bones_obj['objects'] = bones
                             utils.write_arm(fp, bones_obj)
                     armdata.armature_cached = True
 

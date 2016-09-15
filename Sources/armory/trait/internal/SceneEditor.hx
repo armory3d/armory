@@ -44,6 +44,7 @@ class SceneEditor extends Trait {
                 gizmo.transform.loc.set(loc.x, loc.y, loc.z);
                 gizmo.transform.buildMatrix();
                 selected = hit;
+                trace('__arm|select|' + selected.object.name);
             }
         }
 
@@ -64,9 +65,9 @@ class SceneEditor extends Trait {
                 Input.occupied = true;
 
                 
-                if (moveX) selected.loc.x += Input.deltaX / 100.0;
-                if (moveY) selected.loc.y += Input.deltaX / 100.0;
-                if (moveZ) selected.loc.z += Input.deltaX / 100.0;
+                if (moveX) selected.loc.x += Input.deltaX / 110.0;
+                if (moveY) selected.loc.y += Input.deltaX / 110.0;
+                if (moveZ) selected.loc.z += Input.deltaX / 110.0;
                 
                 selected.buildMatrix();
 
