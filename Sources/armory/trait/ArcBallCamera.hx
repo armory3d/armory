@@ -1,7 +1,7 @@
 package armory.trait;
 
 import iron.Trait;
-import iron.sys.Input;
+import iron.system.Input;
 import iron.object.CameraObject;
 import iron.math.Vec4;
 import iron.math.Quat;

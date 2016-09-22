@@ -37,8 +37,8 @@ project.addShaders('Sources/Shaders/**');
             f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
 
         # Electron live patching
-        if is_play and bpy.data.worlds['Arm'].ArmPlayLivePatch == True and bpy.data.worlds['Arm'].ArmPlayRuntime == 'Electron':
-            f.write("project.addDefine('WITH_PATCH_ELECTRON');\n")
+        # if is_play and bpy.data.worlds['Arm'].ArmPlayLivePatch == True and bpy.data.worlds['Arm'].ArmPlayRuntime == 'Electron':
+            # f.write("project.addDefine('WITH_PATCH_ELECTRON');\n")
 
         # Native scripting
         # f.write(add_armory_library(sdk_path + '/lib/', 'haxeduktape'))
@@ -83,7 +83,7 @@ project.addShaders('Sources/Shaders/**');
         f.write("\n\nresolve(project);\n")
 
 # Write Main.hx
-def write_main():
+def write_main(is_play, in_viewport):
     wrd = bpy.data.worlds['Arm']
     resx, resy = utils.get_render_resolution()
     #if not os.path.isfile('Sources/Main.hx'):
@@ -99,9 +99,9 @@ class Main {
     static inline var projectSamplesPerPixel = """ + str(wrd.ArmProjectSamplesPerPixel) + """;
     static inline var projectScene = '""" + utils.get_project_scene_name() + """';
     public static function main() {
-        iron.sys.CompileTime.importPackage('armory.trait');
-        iron.sys.CompileTime.importPackage('armory.renderpath');
-        iron.sys.CompileTime.importPackage('""" + wrd.ArmProjectPackage + """');
+        iron.system.CompileTime.importPackage('armory.trait');
+        iron.system.CompileTime.importPackage('armory.renderpath');
+        iron.system.CompileTime.importPackage('""" + wrd.ArmProjectPackage + """');
         #if (js && WITH_PHYSICS)
         untyped __js__("
             function loadScript(url, callback) {
@@ -127,7 +127,11 @@ class Main {
         f.write("""
         kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel}, function() {
             iron.App.init(function() {
-                iron.Scene.setActive(projectScene, function(object:iron.object.Object) {
+                iron.Scene.setActive(projectScene, function(object:iron.object.Object) {""")
+        if utils.with_chromium() and in_viewport and is_play:
+            f.write("""
+                    object.addTrait(new armory.trait.internal.EditorSpace());""")
+        f.write("""
                 });
             });
         });

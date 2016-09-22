@@ -10,9 +10,9 @@ import subprocess
 import threading
 import webbrowser
 import write_data
-import nodes_logic
-import nodes_renderpath
-import nodes_world
+import make_logic
+import make_renderpath
+import make_world
 import path_tracer
 from exporter import ArmoryExporter
 import lib.make_datas
@@ -42,10 +42,10 @@ def init_armory_props():
             if scene.render.engine != 'CYCLES':
                 scene.render.engine = 'CYCLES'
             scene.render.fps = 60 # Default to 60fps for update loop
-        # Force camera far to at least 100 units for now, to prevent fighting with light far plane
+        # Force camera far to at least 200 units for now, to prevent fighting with light far plane
         for c in bpy.data.cameras:
-            if c.clip_end < 100:
-                c.clip_end = 100
+            if c.clip_end < 200:
+                c.clip_end = 200
         # Use nodes
         for w in bpy.data.worlds:
             w.use_nodes = True
@@ -96,15 +96,15 @@ def export_data(fp, sdk_path, is_play=False):
 
     # Build node trees
     # TODO: cache
-    nodes_logic.buildNodeTrees()
+    make_logic.buildNodeTrees()
     active_worlds = set()
     for scene in bpy.data.scenes:
         if scene.game_export and scene.world != None and scene.world.name != 'Arm':
             active_worlds.add(scene.world)
-    world_outputs = nodes_world.buildNodeTrees(active_worlds)
-    linked_assets = nodes_renderpath.buildNodeTrees(shader_references, asset_references, assets_path)
+    world_outputs = make_world.buildNodeTrees(active_worlds)
+    linked_assets = make_renderpath.buildNodeTrees(shader_references, asset_references, assets_path)
     for wout in world_outputs:
-        nodes_world.write_output(wout, asset_references, shader_references)
+        make_world.write_output(wout, asset_references, shader_references)
 
     # Export scene data
     assets.embedded_data = sorted(list(set(assets.embedded_data)))
@@ -166,7 +166,7 @@ def export_data(fp, sdk_path, is_play=False):
     write_data.write_khafilejs(shader_references, asset_references, is_play, export_physics)
 
     # Write Main.hx
-    write_data.write_main()
+    write_data.write_main(is_play, play_project.in_viewport)
 
     # Copy ammo.js if necessary
     #if target_name == 'html5':
@@ -177,50 +177,39 @@ def export_data(fp, sdk_path, is_play=False):
         if not os.path.isfile('build/debug-html5/ammo.js'):
             shutil.copy(ammojs_path, 'build/debug-html5')
 
-def process_text(text):
-    if text == None:
-        return True
-    # Proof of concept..
-    text = text.split(' ', 1)
-    if len(text) > 1:
-        text = text[1]
-        cmd = text.split('|')
-        # Reflect commands from Armory player in Blender
-        if cmd[0] == '__arm':
-            if cmd[1] == 'setx':
-                bpy.context.scene.objects[cmd[2]].location.x = float(cmd[3])
-            elif cmd[1] == 'select':
-                bpy.context.object.select = False
-                bpy.context.scene.objects[cmd[2]].select = True
-                bpy.context.scene.objects.active = bpy.context.scene.objects[cmd[2]]
-            return False
-    return True
-
 def armory_log(text=None):
-    if process_text(text):
-        if text == None:
-            text = ''
-        print(text)
-        text = (text[:80] + '..') if len(text) > 80 else text # Limit str size
-        ArmoryProjectPanel.info_text = text
-        armory_log.tag_redraw = True    
+    if text == None:
+        text = ''
+    print(text)
+    text = (text[:80] + '..') if len(text) > 80 else text # Limit str size
+    ArmoryProjectPanel.info_text = text
+    armory_log.tag_redraw = True    
 armory_log.tag_redraw = False
 
-def armory_space_log(text):
-    if process_text(text):
-        print(text)
-        text = (text[:80] + '..') if len(text) > 80 else text # Limit str size
-        space_armory.SPACEARMORY_HT_header.info_text = text
+def armory_progress(value):
+    ArmoryProjectPanel.progress = value
+    armory_log.tag_redraw = True 
+
+def armory_space_log(text=None):
+    if text == None:
+        text = ''
+    print(text)
+    text = (text[:80] + '..') if len(text) > 80 else text # Limit str size
+    space_armory.SPACEARMORY_HT_header.info_text = text
 
 def get_kha_target(target_name): # TODO: remove
     if target_name == 'macos':
         return 'osx'
     return target_name
 
-def compile_project(target_name=None, is_publish=False):
+def compile_project(target_name=None, is_publish=False, watch=False):
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
     sdk_path = addon_prefs.sdk_path
+    ffmpeg_path = addon_prefs.ffmpeg_path
+
+    # Prevent launching the player after compile process finishes
+    make.play_project.in_viewport = False
 
     # Set build command
     if target_name == None:
@@ -239,12 +228,16 @@ def compile_project(target_name=None, is_publish=False):
     kha_target_name = get_kha_target(target_name)
     cmd = [node_path, khamake_path, kha_target_name, '--glsl2']
 
+    if ffmpeg_path != '':
+        cmd.append('--ffmpeg')
+        cmd.append('"' + ffmpeg_path + '"')
+
     # armory_log("Building, see console...")
 
-    if make.play_project.playproc != None or make.play_project.chromium_running:
+    if make.play_project.chromium_running:
         if play_project.compileproc == None: # Already compiling
             # Patch running game, stay silent, disable krafix and haxe
-            cmd.append('--silent')
+            # cmd.append('--silent')
             cmd.append('--noproject')
             cmd.append('--haxe')
             cmd.append('""')
@@ -254,8 +247,10 @@ def compile_project(target_name=None, is_publish=False):
             play_project.compileproc = subprocess.Popen(cmd, stderr=subprocess.PIPE)
             threading.Timer(0.1, watch_patch).start()
             return play_project.compileproc
-        else:
-            return None
+    elif watch == True:
+        play_project.compileproc = subprocess.Popen(cmd)
+        threading.Timer(0.1, watch_compile, ['build']).start()
+        return play_project.compileproc
     else:
         return subprocess.Popen(cmd)
 
@@ -271,6 +266,11 @@ def patch_project():
 def build_project(is_play=False):
     # Save blend
     bpy.ops.wm.save_mainfile()
+
+    # Clean log
+    armory_log()
+    if utils.with_chromium():
+        armory_space_log()
 
     # Set camera in active scene
     wrd = bpy.data.worlds['Arm']
@@ -330,6 +330,9 @@ def build_project(is_play=False):
     # Export data
     export_data(fp, sdk_path, is_play=is_play)
 
+    if play_project.playproc == None:
+        armory_progress(50)
+
 def stop_project():
     if play_project.playproc != None:
         play_project.playproc.terminate()
@@ -353,15 +356,17 @@ def watch_play():
     play_project.playproc_finished = True
     armory_log()
 
-def watch_compile(is_publish=False):
+def watch_compile(mode):
+    print('WATCHHHH', mode)
     play_project.compileproc.wait()
     result = play_project.compileproc.poll()
     play_project.compileproc = None
     play_project.compileproc_finished = True
     if result == 0:
-        on_compiled(is_publish)
+        on_compiled(mode)
     else:
         armory_log('Build failed, check console')
+        armory_progress(100)
 
 def watch_patch():
     play_project.compileproc.wait()
@@ -415,7 +420,7 @@ def play_project(self, in_viewport):
 
         # Compile
         play_project.compileproc = compile_project(target_name='html5')
-        threading.Timer(0.1, watch_compile).start()
+        threading.Timer(0.1, watch_compile, ['play']).start()
 
 play_project.in_viewport = False
 play_project.playproc = None
@@ -424,6 +429,7 @@ play_project.playproc_finished = False
 play_project.compileproc_finished = False
 play_project.play_area = None
 play_project.chromium_running = False
+play_project.last_chromium_running = False
 
 def run_server():
     Handler = http.server.SimpleHTTPRequestHandler
@@ -433,14 +439,15 @@ def run_server():
     except:
         print('Server already running')
 
-def on_compiled(is_publish=False):
+def on_compiled(mode): # build, play, publish
+    armory_progress(100)
     armory_log()
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
     sdk_path = addon_prefs.sdk_path
 
     # Print info
-    if is_publish:
+    if mode == 'publish':
         target_name = get_kha_target(bpy.data.worlds['Arm'].ArmPublishTarget)
         print('Project published')
         files_path = utils.get_fp() + '/build/' + target_name
@@ -457,7 +464,7 @@ def on_compiled(is_publish=False):
         return
 
     # Otherwise launch project
-    if utils.with_chromium() == False or play_project.in_viewport == False:
+    elif mode =='play' and (utils.with_chromium() == False or play_project.in_viewport == False):
         wrd = bpy.data.worlds['Arm']
         if wrd.ArmPlayRuntime == 'Electron':
             electron_app_path = './build/electron.js'
@@ -485,12 +492,25 @@ def on_compiled(is_publish=False):
 def clean_project():
     os.chdir(utils.get_fp())
     
+    wrd = bpy.data.worlds['Arm']
+
+    # Preserve envmaps
+    if not wrd.ArmCleanEnvmaps:
+        envmaps_path = 'build/compiled/Assets/envmaps'
+        if os.path.isdir(envmaps_path):
+            shutil.move(envmaps_path, '.')
+
     # Remove build and compiled data
     if os.path.isdir('build'):
         shutil.rmtree('build')
 
+    # Move envmaps back
+    if not wrd.ArmCleanEnvmaps and os.path.isdir('envmaps'):
+        os.makedirs('build/compiled/Assets')
+        shutil.move('envmaps', 'build/compiled/Assets')
+
     # Remove compiled nodes
-    nodes_path = 'Sources/' + bpy.data.worlds['Arm'].ArmProjectPackage.replace('.', '/') + '/node/'
+    nodes_path = 'Sources/' + wrd.ArmProjectPackage.replace('.', '/') + '/node/'
     if os.path.isdir(nodes_path):
         shutil.rmtree(nodes_path)
 
@@ -505,10 +525,14 @@ def clean_project():
     print('Project cleaned')
 
 def publish_project():
+    # Force minimize data
+    minimize = bpy.data.worlds['Arm'].ArmMinimize
+    bpy.data.worlds['Arm'].ArmMinimize = True
     clean_project()
     build_project()
     play_project.compileproc = compile_project(target_name=bpy.data.worlds['Arm'].ArmPublishTarget, is_publish=True)
-    threading.Timer(0.1, watch_compile, {"is_publish" : True}).start()
+    threading.Timer(0.1, watch_compile, ['publish']).start()
+    bpy.data.worlds['Arm'].ArmMinimize = minimize
 
 # Registration
 def register():

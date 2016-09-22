@@ -26,6 +26,10 @@ in vec3 nor;
 #endif
 
 uniform mat4 WVP;
+#ifdef _Billboard
+uniform mat4 WV;
+uniform mat4 P;
+#endif
 #ifdef _Skinning
 	uniform float skinBones[skinMaxBones * 8];
 #endif
@@ -94,5 +98,17 @@ void main() {
 	sPos.xyz += 2.0 * (skinA.w * skinB.xyz - skinB.w * skinA.xyz + cross(skinA.xyz, skinB.xyz)); // Translate
 #endif
 
+#ifdef _Billboard
+	mat4 constrWV = WV;
+	// Spherical
+	constrWV[0][0] = 1.0; constrWV[0][1] = 0.0; constrWV[0][2] = 0.0;
+	constrWV[1][0] = 0.0; constrWV[1][1] = 1.0; constrWV[1][2] = 0.0;
+	constrWV[2][0] = 0.0; constrWV[2][1] = 0.0; constrWV[2][2] = 1.0;
+	// Cylindrical
+	//constrWV[0][0] = 1.0; constrWV[0][1] = 0.0; constrWV[0][2] = 0.0;
+	//constrWV[2][0] = 0.0; constrWV[2][1] = 0.0; constrWV[2][2] = 1.0;
+	gl_Position = P * constrWV * sPos;
+#else
 	gl_Position = WVP * sPos;
+#endif
 }

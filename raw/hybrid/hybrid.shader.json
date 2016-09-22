@@ -26,12 +26,14 @@
 					"link": "_normalMatrix"
 				},
 				{
-					"name": "V",
-					"link": "_viewMatrix"
+					"name": "WV",
+					"link": "_worldViewMatrix",
+					"ifdef": ["_Billboard"]
 				},
 				{
 					"name": "P",
-					"link": "_projectionMatrix"
+					"link": "_projectionMatrix",
+					"ifdef": ["_Billboard"]
 				},
 				{
 					"name": "WVP",
@@ -275,6 +277,16 @@
 				{
 					"name": "WVP",
 					"link": "_worldViewProjectionMatrix"
+				},
+				{
+					"name": "P",
+					"link": "_projectionMatrix",
+					"ifdef": ["_Billboard"]
+				},
+				{
+					"name": "WV",
+					"link": "_worldViewMatrix",
+					"ifdef": ["_Billboard"]
 				},
 				{
 					"name": "skinBones",

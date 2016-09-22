@@ -21,6 +21,7 @@ from bpy_extras.io_utils import ExportHelper
 import assets
 import utils
 import subprocess
+import make
 
 kNodeTypeNode = 0
 kNodeTypeBone = 1
@@ -1450,7 +1451,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                 
                 o['material_refs'] = []
                 for i in range(len(bobject.material_slots)):
-                    if self.object_has_override_material(bobject): # Overwrite material slot
+                    if bobject.override_material: # Overwrite material slot
                         o['material_refs'].append(bobject.override_material_name)
                     else: # Export assigned material
                         self.ExportMaterialRef(bobject.material_slots[i].material, i, o)
@@ -1967,7 +1968,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             om['instance_offsets'] = instance_offsets
 
         # Export usage
-        om['static_usage'] = self.get_mesh_static_usage(bobject.data)
+        om['dynamic_usage'] = bobject.data.dynamic_usage
 
         o['mesh'] = om
         self.write_mesh(bobject, fp, o)
@@ -2149,7 +2150,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             o['lamp_size'] = objref.shadow_soft_size
 
         # Parse nodes, only emission for now
-        # Merge with nodes_material
+        # Merge with make_material
         for n in objref.node_tree.nodes:
             if n.type == 'EMISSION':
                 col = n.inputs[0].default_value
@@ -2230,6 +2231,12 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             o['sound'] = utils.safe_filename(o['sound'])
         else:
             o['sound'] = ''
+        o['muted'] = objref.muted
+        o['loop'] = objref.loop
+        o['stream'] = objref.stream
+        o['volume'] = objref.volume
+        o['pitch'] = objref.pitch
+        o['attenuation'] = objref.attenuation
         self.output['speaker_datas'].append(o)
 
     def ExportMaterials(self):
@@ -2467,12 +2474,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             bobject.data.mesh_cached_verts = len(bobject.data.vertices)
             bobject.data.mesh_cached_edges = len(bobject.data.edges)
 
-    def object_has_override_material(self, bobject):
-        return bobject.override_material
-
-    def get_mesh_static_usage(self, data):
-        return data.static_usage
-
     def get_export_tangents(self, mesh):
         for m in mesh.materials:
             if m.export_tangents == True:
@@ -2592,7 +2593,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                     cwd = os.getcwd()
                     os.chdir(scriptspath)
                     # Disable minification for now, too slow
-                    subprocess.Popen([python_path + ' ' + sdk_path + '/lib/transcrypt/__main__.py' + ' ' + pyname + ' --nomin'], shell=True)
+                    transproc = subprocess.Popen([python_path + ' ' + sdk_path + '/lib/transcrypt/__main__.py' + ' ' + pyname + ' --nomin'], shell=True)
+                    transproc.wait()
+                    if transproc.poll() != 0:
+                        make.armory_log('Compiling ' + pyname + ' failed, check console')
                     os.chdir(cwd)
                     # Compiled file
                     assets.add('build/compiled/scripts/__javascript__/' + t.jsscript_prop + '.js')
@@ -2771,10 +2775,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         decal_context = bpy.data.cameras[0].last_decal_context
         
         # Parse nodes
-        import nodes_material
+        import make_material
         # Parse from material output
         if decal_uv_layer == None:
-            nodes_material.parse(self, material, c, defs)
+            make_material.parse(self, material, c, defs)
             o['contexts'].append(c)
         # Decal attached, split material into two separate ones
         # Mandatory starting point from mix node for now
@@ -2788,12 +2792,12 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             c2['bind_textures'] = []
             defs2 = []
             tree = material.node_tree
-            output_node = nodes_material.get_output_node(tree)
-            mix_node = nodes_material.find_node_by_link(tree, output_node, output_node.inputs[0])
-            surface_node1 = nodes_material.find_node_by_link(tree, mix_node, mix_node.inputs[1])
-            surface_node2 = nodes_material.find_node_by_link(tree, mix_node, mix_node.inputs[2])
-            nodes_material.parse_from(self, material, c, defs, surface_node1)
-            nodes_material.parse_from(self, material, c2, defs2, surface_node2)
+            output_node = make_material.get_output_node(tree)
+            mix_node = make_material.find_node_by_link(tree, output_node, output_node.inputs[0])
+            surface_node1 = make_material.find_node_by_link(tree, mix_node, mix_node.inputs[1])
+            surface_node2 = make_material.find_node_by_link(tree, mix_node, mix_node.inputs[2])
+            make_material.parse_from(self, material, c, defs, surface_node1)
+            make_material.parse_from(self, material, c2, defs2, surface_node2)
             o['contexts'].append(c)
             o2['contexts'].append(c2)
             self.finalize_shader(o2, defs2, [decal_context])
@@ -2832,7 +2836,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             if ob.find_armature() and self.is_bone_animation_enabled(ob) and bpy.data.worlds['Arm'].generate_gpu_skin == True:
                 defs.append('_Skinning')
             # Billboarding
-            if len(ob.constraints) > 0 and ob.constraints[0].target != None and \
+            if len(ob.constraints) > 0 and ob.constraints[0].type == 'TRACK_TO' and ob.constraints[0].target != None and \
                ob.constraints[0].target.type == 'CAMERA' and ob.constraints[0].mute == False:
                 defs.append('_Billboard')
 

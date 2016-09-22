@@ -34,7 +34,7 @@ class Animation extends Trait {
     }
 
     function update() {
-        object.setAnimationParams(iron.sys.Time.delta);
+        object.setAnimationParams(iron.system.Time.delta);
     }
 
     public function play(trackName:String, onTrackComplete:Void->Void = null) {

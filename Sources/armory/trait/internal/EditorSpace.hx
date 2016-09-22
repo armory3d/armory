@@ -3,10 +3,10 @@ package armory.trait.internal;
 import iron.Trait;
 import iron.object.Object;
 import iron.object.Transform;
-import iron.sys.Input;
+import iron.system.Input;
 import iron.math.RayCaster;
 
-class SceneEditor extends Trait {
+class EditorSpace extends Trait {
 
     var gizmo:Object;
     var arrowX:Object;
@@ -18,6 +18,8 @@ class SceneEditor extends Trait {
     var moveY = false;
     var moveZ = false;
 
+    static var first = true;
+
     public function new() {
         super();
         
@@ -25,12 +27,25 @@ class SceneEditor extends Trait {
     }
 
     function init() {
-        gizmo = iron.Scene.active.getObject('ArrowGizmo');
-        arrowX = iron.Scene.active.getObject('ArrowX');
-        arrowY = iron.Scene.active.getObject('ArrowY');
-        arrowZ = iron.Scene.active.getObject('ArrowZ');
+        // gizmo = iron.Scene.active.getObject('ArrowGizmo');
+        // arrowX = iron.Scene.active.getObject('ArrowX');
+        // arrowY = iron.Scene.active.getObject('ArrowY');
+        // arrowZ = iron.Scene.active.getObject('ArrowZ');
 
         notifyOnUpdate(update);
+
+        if (first) {
+            first = false;
+            kha.input.Keyboard.get().notify(onKeyDown, onKeyUp);
+        }
+    }
+
+    function onKeyDown(key: kha.Key, char: String) {
+        // if (char == 'Z') trace('__arm|quit');
+        if (key == kha.Key.ESC) trace('__arm|quit');
+    }
+
+    function onKeyUp(key: kha.Key, char: String) {
     }
 
     function update() {
@@ -41,8 +56,8 @@ class SceneEditor extends Trait {
             var hit = RayCaster.getClosestBoxIntersect(transforms, Input.x, Input.y, iron.Scene.active.camera);
             if (hit != null) {
                 var loc = hit.loc;
-                gizmo.transform.loc.set(loc.x, loc.y, loc.z);
-                gizmo.transform.buildMatrix();
+                // gizmo.transform.loc.set(loc.x, loc.y, loc.z);
+                // gizmo.transform.buildMatrix();
                 selected = hit;
                 trace('__arm|select|' + selected.object.name);
             }
@@ -71,8 +86,8 @@ class SceneEditor extends Trait {
                 
                 selected.buildMatrix();
 
-                gizmo.transform.loc.set(selected.loc.x, selected.loc.y, selected.loc.z);
-                gizmo.transform.buildMatrix();
+                // gizmo.transform.loc.set(selected.loc.x, selected.loc.y, selected.loc.z);
+                // gizmo.transform.buildMatrix();
             }
         }
 

@@ -7,7 +7,6 @@ import make
 
 class SPACEARMORY_HT_header(Header):
     bl_space_type = 'VIEW_GAME'
-
     info_text = ''
     is_paused = False
 
@@ -28,17 +27,21 @@ class SPACEARMORY_HT_header(Header):
         layout.label(SPACEARMORY_HT_header.info_text)
 
 class ArmorySpaceStopButton(bpy.types.Operator):
+    '''Switch back to 3D view'''
     bl_idname = 'arm.space_stop'
     bl_label = 'Stop'
  
     def execute(self, context):
         area = bpy.context.area
+        if area == None:
+            area = make.play_project.play_area
         area.type = 'VIEW_3D'
         SPACEARMORY_HT_header.is_paused = False
         SPACEARMORY_HT_header.info_text = ''
         return{'FINISHED'}
 
 class ArmorySpacePauseButton(bpy.types.Operator):
+    '''Pause rendering'''
     bl_idname = 'arm.space_pause'
     bl_label = 'Pause'
  
@@ -47,6 +50,7 @@ class ArmorySpacePauseButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmorySpaceResumeButton(bpy.types.Operator):
+    '''Resume rendering'''
     bl_idname = 'arm.space_resume'
     bl_label = 'Resume'
  

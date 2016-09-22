@@ -27,8 +27,10 @@ in vec3 nor;
 
 uniform mat4 W;
 uniform mat4 N;
-uniform mat4 V;
-uniform mat4 P;
+#ifdef _Billboard
+	uniform mat4 WV;
+	uniform mat4 P;
+#endif
 uniform mat4 WVP;
 uniform mat4 LWVP;
 uniform vec4 baseCol;
@@ -120,20 +122,19 @@ void main() {
 
 	lPos = LWVP * sPos;
 
-	mat4 WV = V * W;
-
 #ifdef _Billboard
+	mat4 constrWV = WV;
 	// Spherical
-	WV[0][0] = 1.0; WV[0][1] = 0.0; WV[0][2] = 0.0;
-	WV[1][0] = 0.0; WV[1][1] = 1.0; WV[1][2] = 0.0;
-	WV[2][0] = 0.0; WV[2][1] = 0.0; WV[2][2] = 1.0;
+	constrWV[0][0] = 1.0; constrWV[0][1] = 0.0; constrWV[0][2] = 0.0;
+	constrWV[1][0] = 0.0; constrWV[1][1] = 1.0; constrWV[1][2] = 0.0;
+	constrWV[2][0] = 0.0; constrWV[2][1] = 0.0; constrWV[2][2] = 1.0;
 	// Cylindrical
-	//WV[0][0] = 1.0; WV[0][1] = 0.0; WV[0][2] = 0.0;
-	//WV[2][0] = 0.0; WV[2][1] = 0.0; WV[2][2] = 1.0;
-#endif
-
-	// gl_Position = P * WV * sPos;
+	//constrWV[0][0] = 1.0; constrWV[0][1] = 0.0; constrWV[0][2] = 0.0;
+	//constrWV[2][0] = 0.0; constrWV[2][1] = 0.0; constrWV[2][2] = 1.0;
+	gl_Position = P * constrWV * sPos;
+#else
 	gl_Position = WVP * sPos;
+#endif
 
 #ifdef _Tex
 	texCoord = tex;

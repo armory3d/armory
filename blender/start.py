@@ -1,12 +1,11 @@
 import make
 import nodes_logic
 import nodes_renderpath
-import nodes_world
 import exporter
-import traits_action
-import traits_clip
-import traits_params
-import traits
+import props_traits_action
+import props_traits_clip
+import props_traits_params
+import props_traits
 import props
 import space_armory
 import utils
@@ -14,16 +13,15 @@ import lib.drop_to_ground
 
 def register():
     utils.register()
-    traits_action.register()
-    traits_clip.register()
+    props_traits_action.register()
+    props_traits_clip.register()
     props.register()
     make.register()
     nodes_logic.register()
     nodes_renderpath.register()
-    nodes_world.register()
     exporter.register()
-    traits_params.register()
-    traits.register()
+    props_traits_params.register()
+    props_traits.register()
     space_armory.register()
     lib.drop_to_ground.register()
 
@@ -32,12 +30,11 @@ def unregister():
     make.unregister()
     nodes_logic.unregister()
     nodes_renderpath.unregister()
-    nodes_world.unregister()
     exporter.unregister()
-    traits_params.unregister()
-    traits.unregister()
+    props_traits_params.unregister()
+    props_traits.unregister()
     props.unregister()
-    traits_action.unregister()
-    traits_clip.unregister()
+    props_traits_action.unregister()
+    props_traits_clip.unregister()
     space_armory.unregister()
     lib.drop_to_ground.unregister()

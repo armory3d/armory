@@ -4,7 +4,7 @@ import iron.Trait;
 import iron.object.Object;
 import iron.object.CameraObject;
 import iron.object.Transform;
-import iron.sys.Time;
+import iron.system.Time;
 import armory.trait.internal.PhysicsWorld;
 #if WITH_PHYSICS
 import haxebullet.Bullet;

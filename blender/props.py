@@ -3,11 +3,11 @@ import bpy
 import os
 import json
 import subprocess
-import nodes_renderpath
+import make_renderpath
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
-from traits_clip import *
-from traits_action import *
+from props_traits_clip import *
+from props_traits_action import *
 import utils
 import make
 import space_armory
@@ -18,6 +18,25 @@ try:
 except ImportError:
     pass
 
+def parse_operator(text):
+    if text == None:
+        return
+    # Proof of concept..
+    text = text.split(' ', 1)
+    if len(text) > 1:
+        text = text[1]
+        cmd = text.split('|')
+        # Reflect commands from Armory player in Blender
+        if cmd[0] == '__arm':
+            if cmd[1] == 'quit':
+                bpy.ops.arm.space_stop('EXEC_DEFAULT')
+            elif cmd[1] == 'setx':
+                bpy.context.scene.objects[cmd[2]].location.x = float(cmd[3])
+            elif cmd[1] == 'select':
+                bpy.context.object.select = False
+                bpy.context.scene.objects[cmd[2]].select = True
+                bpy.context.scene.objects.active = bpy.context.scene.objects[cmd[2]]
+
 def on_scene_update_post(context):
     global last_time
 
@@ -25,16 +44,21 @@ def on_scene_update_post(context):
         last_time = time.time()
 
         # Tag redraw if playing in space_armory
+        make.play_project.last_chromium_running = make.play_project.chromium_running
         make.play_project.chromium_running = False
-        if space_armory.SPACEARMORY_HT_header.is_paused == False:
-            for area in bpy.context.screen.areas:
-                if area.type == 'VIEW_GAME':
-                    area.tag_redraw()
-                    make.play_project.chromium_running = True
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_GAME':
+                make.play_project.chromium_running = True
+                bgame.draw()
+
+        # Have to update chromium one more time before exit, to prevent 'AudioSyncReader::Read timed out' warnings
+        if make.play_project.chromium_running == False:
+            if make.play_project.last_chromium_running:
+                bgame.draw()
 
         # Auto patch on every operator change
         ops = bpy.context.window_manager.operators
-        if (make.play_project.playproc != None or make.play_project.chromium_running) and \
+        if make.play_project.chromium_running and \
            bpy.data.worlds['Arm'].ArmPlayLivePatch and \
            bpy.data.worlds['Arm'].ArmPlayAutoBuild and \
            len(ops) > 0 and \
@@ -72,6 +96,9 @@ def on_scene_update_post(context):
                     # Read chromium console
                     if bgame.get_console_updated() == 1:
                         make.armory_space_log(bgame.get_console())
+                    # Read operator console
+                    if bgame.get_operator_updated() == 1:
+                        parse_operator(bgame.get_operator())
                     break
 
         # New output has been logged
@@ -83,7 +110,7 @@ def on_scene_update_post(context):
                     break
 
         # Player finished, redraw play buttons
-        if make.play_project.playproc_finished:
+        if make.play_project.playproc_finished or make.play_project.compileproc_finished:
             make.play_project.playproc_finished = False
             for area in bpy.context.screen.areas:
                 if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
@@ -92,6 +119,9 @@ def on_scene_update_post(context):
         # Compilation finished
         if make.play_project.compileproc_finished:
             make.play_project.compileproc_finished = False
+            for area in bpy.context.screen.areas:
+                if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
+                    area.tag_redraw()
             # Notify embedded player
             if make.play_project.chromium_running:
                 bgame.call_js('armory.Scene.patch();')
@@ -131,24 +161,29 @@ def invalidate_mesh_data(self, context):
     if os.path.isdir(fp + '/build/compiled/Assets/meshes'):
         shutil.rmtree(fp + '/build/compiled/Assets/meshes')
 
+def get_arm_progress(self):
+    return ArmoryProjectPanel.progress
+
 def initProperties():
     # For project
-    bpy.types.World.ArmVersion = StringProperty(name = "ArmVersion", default="")
+    bpy.types.World.ArmProgress = bpy.props.FloatProperty(name="Progress", description="Current build progress", default=100.0, min=0.0, max=100.0, soft_min=0.0, soft_max=100.0, subtype='PERCENTAGE', get=get_arm_progress)
+    bpy.types.World.ArmVersion = StringProperty(name="ArmVersion", description="Armory SDK version", default="")
     target_prop = EnumProperty(
-        items = [('html5', 'HTML5', 'html5'), 
-                 ('windows', 'Windows', 'windows'), 
+        items = [('html5', 'HTML5', 'html5'),
+                 ('windows', 'Windows', 'windows'),
                  ('macos', 'MacOS', 'macos'),
-                 ('linux', 'Linux', 'linux'), 
+                 ('linux', 'Linux', 'linux'),
                  ('ios', 'iOS', 'ios'),
                  ('android-native', 'Android', 'android-native')],
-        name = "Target", default='html5')
+        name="Target", default='html5',
+        description='Build paltform')
     bpy.types.World.ArmProjectTarget = target_prop
     bpy.types.World.ArmPublishTarget = target_prop
-    bpy.types.World.ArmProjectName = StringProperty(name = "Name", default="ArmoryGame")
-    bpy.types.World.ArmProjectPackage = StringProperty(name = "Package", default="game")
-    bpy.types.World.ArmPlayActiveScene = BoolProperty(name="Play Active Scene", default=True)
-    bpy.types.World.ArmProjectScene = StringProperty(name = "Scene")
-    bpy.types.World.ArmProjectSamplesPerPixel = IntProperty(name = "Samples per Pixel", default=1)
+    bpy.types.World.ArmProjectName = StringProperty(name="Name", description="Exported project name", default="ArmoryProject")
+    bpy.types.World.ArmProjectPackage = StringProperty(name="Package", description="Package name for scripts", default="arm")
+    bpy.types.World.ArmPlayActiveScene = BoolProperty(name="Play Active Scene", description="Load currently edited scene when launching player", default=True)
+    bpy.types.World.ArmProjectScene = StringProperty(name="Scene", description="Scene to load when launching player")
+    bpy.types.World.ArmProjectSamplesPerPixel = IntProperty(name="Samples per Pixel", description="MSAA samples usable for render paths drawing directly to framebuffer", default=1)
     bpy.types.World.ArmPhysics = EnumProperty(
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('Bullet', 'Bullet', 'Bullet')],
@@ -157,32 +192,35 @@ def initProperties():
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('Recast', 'Recast', 'Recast')],
         name = "Navigation", default='Disabled')
-    bpy.types.World.ArmKhafile = StringProperty(name = "Khafile")
-    bpy.types.World.ArmMinimize = BoolProperty(name="Minimize Data", default=True, update=invalidate_compiled_data)
-    bpy.types.World.ArmOptimizeMesh = BoolProperty(name="Optimize Meshes", default=False, update=invalidate_mesh_data)
-    bpy.types.World.ArmSampledAnimation = BoolProperty(name="Sampled Animation", default=False, update=invalidate_compiled_data)
-    bpy.types.World.ArmDeinterleavedBuffers = BoolProperty(name="Deinterleaved Buffers", default=False)
-    bpy.types.World.ArmExportHideRender = BoolProperty(name="Export Hidden Renders", default=False)
-    bpy.types.World.ArmSpawnAllLayers = BoolProperty(name="Spawn All Layers", default=False)
-    bpy.types.World.ArmCacheShaders = BoolProperty(name="Cache Shaders", default=True, update=invalidate_shader_cache)
-    bpy.types.World.ArmPlayLivePatch = BoolProperty(name="Live Patching", default=True)
-    bpy.types.World.ArmPlayAutoBuild = BoolProperty(name="Auto Build", default=True)
-    bpy.types.World.ArmPlayViewportCamera = BoolProperty(name="Viewport Camera", default=False)
+    bpy.types.World.ArmKhafile = StringProperty(name = "Khafile", description="Source appended to khafile.js")
+    bpy.types.World.ArmMinimize = BoolProperty(name="Minimize Data", description="Export scene data in binary", default=True, update=invalidate_compiled_data)
+    bpy.types.World.ArmOptimizeMesh = BoolProperty(name="Optimize Meshes", description="Export more efficient geometry indices, can prolong build times", default=False, update=invalidate_mesh_data)
+    bpy.types.World.ArmSampledAnimation = BoolProperty(name="Sampled Animation", description="Export object animation as raw matrices", default=False, update=invalidate_compiled_data)
+    bpy.types.World.ArmDeinterleavedBuffers = BoolProperty(name="Deinterleaved Buffers", description="Use deinterleaved vertex buffers", default=False)
+    bpy.types.World.ArmExportHideRender = BoolProperty(name="Export Hidden Renders", description="Export hidden objects", default=False)
+    bpy.types.World.ArmSpawnAllLayers = BoolProperty(name="Spawn All Layers", description="Spawn objects from all scene layers", default=False)
+    bpy.types.World.ArmPlayAdvanced = BoolProperty(name="Advanced", default=False)
+    bpy.types.World.ArmBuildAdvanced = BoolProperty(name="Advanced", default=False)
+    bpy.types.World.ArmProjectAdvanced = BoolProperty(name="Advanced", default=False)
+    bpy.types.World.ArmObjectAdvanced = BoolProperty(name="Advanced", default=False)
+    bpy.types.World.ArmCacheShaders = BoolProperty(name="Cache Shaders", description="Do not rebuild existing shaders", default=True, update=invalidate_shader_cache)
+    bpy.types.World.ArmCleanEnvmaps = BoolProperty(name="Clean Envmaps", description="Remove prefiltered maps when cleaning project", default=True)
+    bpy.types.World.ArmPlayLivePatch = BoolProperty(name="Live Patching", description="Sync running player data to Blender", default=True)
+    bpy.types.World.ArmPlayAutoBuild = BoolProperty(name="Auto Build", description="Rebuild scene on operator changes", default=True)
+    bpy.types.World.ArmPlayViewportCamera = BoolProperty(name="Viewport Camera", description="Start player at viewport camera position", default=False)
     bpy.types.World.ArmPlayViewportNavigation = EnumProperty(
-        items = [('None', 'None', 'None'), 
-                 ('Walk', 'Walk', 'Walk')],
-        name = "Navigation", default='Walk')
-    bpy.types.World.ArmPlayConsole = BoolProperty(name="Debug Console", default=False)
-    bpy.types.World.ArmPlayDeveloperTools = BoolProperty(name="Developer Tools", default=False)
+        items=[('None', 'None', 'None'), 
+               ('Walk', 'Walk', 'Walk')],
+        name="Navigation", description="Enable camera controls", default='Walk')
+    bpy.types.World.ArmPlayConsole = BoolProperty(name="Debug Console", description="Show inspector in player", default=False)
+    bpy.types.World.ArmPlayDeveloperTools = BoolProperty(name="Developer Tools", description="Show chromium developer tools in player", default=False)
     bpy.types.World.ArmPlayRuntime = EnumProperty(
-        items = [('Electron', 'Electron', 'Electron'), 
-                 ('Browser', 'Browser', 'Browser')],
-                 # ('Native', 'Native', 'Native')],
-                 #('Krom', 'Krom', 'Krom')],
-        name = "Runtime", default='Electron')
+        items=[('Electron', 'Electron', 'Electron'), 
+               ('Browser', 'Browser', 'Browser')],
+        name="Runtime", description="Player runtime used when launching in new window", default='Electron')
 
     # For object
-    bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced Children", default=False)
+    bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced Children", description="Use instaced rendering", default=False)
     bpy.types.Object.instanced_children_loc_x = bpy.props.BoolProperty(name="X", default=True)
     bpy.types.Object.instanced_children_loc_y = bpy.props.BoolProperty(name="Y", default=True)
     bpy.types.Object.instanced_children_loc_z = bpy.props.BoolProperty(name="Z", default=True)
@@ -194,52 +232,55 @@ def initProperties():
     bpy.types.Object.instanced_children_scale_z = bpy.props.BoolProperty(name="Z", default=False)
     bpy.types.Object.override_material = bpy.props.BoolProperty(name="Override Material", default=False)
     bpy.types.Object.override_material_name = bpy.props.StringProperty(name="Name", default="")
-    bpy.types.Object.game_export = bpy.props.BoolProperty(name="Export", default=True)
-    bpy.types.Object.game_visible = bpy.props.BoolProperty(name="Visible", default=True)
+    bpy.types.Object.game_export = bpy.props.BoolProperty(name="Export", description="Export object data", default=True)
+    bpy.types.Object.game_visible = bpy.props.BoolProperty(name="Visible", description="Render this object", default=True)
     bpy.types.Object.spawn = bpy.props.BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True)
     bpy.types.Object.mobile = bpy.props.BoolProperty(name="Mobile", description="Object moves during gameplay", default=True)
     # - Clips
-    bpy.types.Object.bone_animation_enabled = bpy.props.BoolProperty(name="Bone Animation", default=True)
-    bpy.types.Object.object_animation_enabled = bpy.props.BoolProperty(name="Object Animation", default=True)
-    bpy.types.Object.edit_tracks_prop = bpy.props.BoolProperty(name="Edit Clips", description="A name for this item", default=False)
-    bpy.types.Object.start_track_name_prop = bpy.props.StringProperty(name="Start Track", description="A name for this item", default="")
+    bpy.types.Object.bone_animation_enabled = bpy.props.BoolProperty(name="Bone Animation", description="Enable skinning", default=True)
+    bpy.types.Object.object_animation_enabled = bpy.props.BoolProperty(name="Object Animation", description="Enable timeline animation", default=True)
+    bpy.types.Object.edit_tracks_prop = bpy.props.BoolProperty(name="Edit Clips", description="Manually set animation frames", default=False)
+    bpy.types.Object.start_track_name_prop = bpy.props.StringProperty(name="Start Track", description="Play this track by default", default="")
     bpy.types.Object.my_cliptraitlist = bpy.props.CollectionProperty(type=ListClipTraitItem)
-    bpy.types.Object.cliptraitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
+    bpy.types.Object.cliptraitlist_index = bpy.props.IntProperty(name="Clip index", default=0)
     # - Actions
-    bpy.types.Object.edit_actions_prop = bpy.props.BoolProperty(name="Edit Actions", description="A name for this item", default=False)
-    bpy.types.Object.start_action_name_prop = bpy.props.StringProperty(name="Start Action", description="A name for this item", default="")
+    bpy.types.Object.edit_actions_prop = bpy.props.BoolProperty(name="Edit Actions", description="Manually set used actions", default=False)
+    bpy.types.Object.start_action_name_prop = bpy.props.StringProperty(name="Start Action", description="Play this action by default", default="")
+    # For speakers
+    bpy.types.Speaker.loop = bpy.props.BoolProperty(name="Loop", description="Loop this sound", default=False)
+    bpy.types.Speaker.stream = bpy.props.BoolProperty(name="Stream", description="Stream this sound", default=False)
     # For mesh
-    bpy.types.Mesh.mesh_cached = bpy.props.BoolProperty(name="Mesh Cached", default=False)
-    bpy.types.Mesh.mesh_cached_verts = bpy.props.IntProperty(name="Last Verts", default=0)
-    bpy.types.Mesh.mesh_cached_edges = bpy.props.IntProperty(name="Last Edges", default=0)
-    bpy.types.Mesh.static_usage = bpy.props.BoolProperty(name="Static Data Usage", default=True)
-    bpy.types.Curve.mesh_cached = bpy.props.BoolProperty(name="Mesh Cached", default=False)
-    bpy.types.Curve.static_usage = bpy.props.BoolProperty(name="Static Data Usage", default=True)
+    bpy.types.Mesh.mesh_cached = bpy.props.BoolProperty(name="Mesh Cached", description="No need to reexport mesh data", default=False)
+    bpy.types.Mesh.mesh_cached_verts = bpy.props.IntProperty(name="Last Verts", description="Number of vertices in last export", default=0)
+    bpy.types.Mesh.mesh_cached_edges = bpy.props.IntProperty(name="Last Edges", description="Number of edges in last export", default=0)
+    bpy.types.Mesh.dynamic_usage = bpy.props.BoolProperty(name="Dynamic Data Usage", description="Mesh data can change at runtime", default=False)
+    bpy.types.Curve.mesh_cached = bpy.props.BoolProperty(name="Mesh Cached", description="No need to reexport curve data", default=False)
+    bpy.types.Curve.dynamic_usage = bpy.props.BoolProperty(name="Dynamic Data Usage", description="Curve data can change at runtime", default=False)
     # For armature
-    bpy.types.Armature.armature_cached = bpy.props.BoolProperty(name="Armature Cached", default=False)
+    bpy.types.Armature.armature_cached = bpy.props.BoolProperty(name="Armature Cached", description="No need to reexport armature data", default=False)
     # Actions
-    bpy.types.Armature.edit_actions = bpy.props.BoolProperty(name="Edit Actions", default=False)
+    bpy.types.Armature.edit_actions = bpy.props.BoolProperty(name="Edit Actions", description="Manually set used actions", default=False)
     bpy.types.Armature.my_actiontraitlist = bpy.props.CollectionProperty(type=ListActionTraitItem)
-    bpy.types.Armature.actiontraitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
+    bpy.types.Armature.actiontraitlist_index = bpy.props.IntProperty(name="Action index", default=0)
     # For camera
-    bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", default=True)
-    bpy.types.Camera.renderpath_path = bpy.props.StringProperty(name="Render Path", default="deferred_path")
-    bpy.types.Camera.renderpath_id = bpy.props.StringProperty(name="Render Path ID", default="deferred")
+    bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", description="Perform frustum culling for this camera", default=True)
+    bpy.types.Camera.renderpath_path = bpy.props.StringProperty(name="Render Path", description="Render path nodes used for this camera", default="deferred_path")
+    bpy.types.Camera.renderpath_id = bpy.props.StringProperty(name="Render Path ID", description="Asset ID", default="deferred")
 	# TODO: Specify multiple material ids, merge ids from multiple cameras 
-    bpy.types.Camera.renderpath_passes = bpy.props.StringProperty(name="Render Path Passes", default="")
+    bpy.types.Camera.renderpath_passes = bpy.props.StringProperty(name="Render Path Passes", description="Referenced render passes", default="")
     bpy.types.Camera.mesh_context = bpy.props.StringProperty(name="Mesh", default="mesh")
     bpy.types.Camera.mesh_context_empty = bpy.props.StringProperty(name="Mesh Empty", default="depthwrite")
     bpy.types.Camera.shadows_context = bpy.props.StringProperty(name="Shadows", default="shadowmap")
     bpy.types.Camera.translucent_context = bpy.props.StringProperty(name="Translucent", default="translucent")
     bpy.types.Camera.overlay_context = bpy.props.StringProperty(name="Overlay", default="overlay")
-    bpy.types.Camera.is_probe = bpy.props.BoolProperty(name="Probe", default=False)
-    bpy.types.Camera.probe_generate_radiance = bpy.props.BoolProperty(name="Generate Radiance", default=False)
+    bpy.types.Camera.is_probe = bpy.props.BoolProperty(name="Probe", description="Render this camera as environment probe using Cycles", default=False)
+    bpy.types.Camera.probe_generate_radiance = bpy.props.BoolProperty(name="Generate Radiance", description="Generate radiance textures", default=False)
     bpy.types.Camera.probe_texture = bpy.props.StringProperty(name="Texture", default="")
     bpy.types.Camera.probe_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
     bpy.types.Camera.probe_volume = bpy.props.StringProperty(name="Volume", default="")
     bpy.types.Camera.probe_strength = bpy.props.FloatProperty(name="Strength", default=1.0)
     bpy.types.Camera.probe_blending = bpy.props.FloatProperty(name="Blending", default=0.0)
-    bpy.types.Camera.is_mirror = bpy.props.BoolProperty(name="Mirror", default=False)
+    bpy.types.Camera.is_mirror = bpy.props.BoolProperty(name="Mirror", description="Render this camera into texture", default=False)
     bpy.types.Camera.mirror_resolution_x = bpy.props.FloatProperty(name="X", default=512.0)
     bpy.types.Camera.mirror_resolution_y = bpy.props.FloatProperty(name="Y", default=256.0)
     bpy.types.Camera.last_decal_context = bpy.props.StringProperty(name="Decal Context", default='')
@@ -308,7 +349,7 @@ def initProperties():
     bpy.types.World.generate_fog_amounta = bpy.props.FloatProperty(name="Amount A", default=0.25, update=invalidate_shader_cache)
     bpy.types.World.generate_fog_amountb = bpy.props.FloatProperty(name="Amount B", default=0.5, update=invalidate_shader_cache)
     # Skin
-    bpy.types.World.generate_gpu_skin = bpy.props.BoolProperty(name="GPU Skinning", default=True, update=invalidate_shader_cache)
+    bpy.types.World.generate_gpu_skin = bpy.props.BoolProperty(name="GPU Skinning", description="Calculate skinning on GPU", default=True, update=invalidate_shader_cache)
     bpy.types.World.generate_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=84, update=invalidate_shader_cache)
     # Material override flags
     bpy.types.World.force_no_culling = bpy.props.BoolProperty(name="Force No Culling", default=False)
@@ -342,12 +383,12 @@ def initProperties():
                  ('False', 'False', 'False')],
         name = "Depth-Write", default='True')
     # For scene
-    bpy.types.Scene.game_export = bpy.props.BoolProperty(name="Export", default=True)
+    bpy.types.Scene.game_export = bpy.props.BoolProperty(name="Export", description="Export scene data", default=True)
     # For lamp
     bpy.types.Lamp.lamp_clip_start = bpy.props.FloatProperty(name="Clip Start", default=0.1)
     bpy.types.Lamp.lamp_clip_end = bpy.props.FloatProperty(name="Clip End", default=50.0)
-    bpy.types.Lamp.lamp_fov = bpy.props.FloatProperty(name="FoV", default=0.785)
-    bpy.types.Lamp.lamp_shadows_bias = bpy.props.FloatProperty(name="Shadows Bias", default=0.0001)
+    bpy.types.Lamp.lamp_fov = bpy.props.FloatProperty(name="Field of View", default=0.785)
+    bpy.types.Lamp.lamp_shadows_bias = bpy.props.FloatProperty(name="Shadows Bias", description="Depth offset for shadow acne", default=0.0001)
 
 # Menu in object region
 class ObjectPropsPanel(bpy.types.Panel):
@@ -362,7 +403,9 @@ class ObjectPropsPanel(bpy.types.Panel):
         if obj == None:
             return
             
-        if bpy.data.worlds['Arm'].ArmExportHideRender == False:
+        wrd = bpy.data.worlds['Arm']
+
+        if wrd.ArmExportHideRender == False:
             layout.prop(obj, 'hide_render')
             hide = obj.hide_render
         else:
@@ -372,71 +415,73 @@ class ObjectPropsPanel(bpy.types.Panel):
         if hide:
             return
         
-        layout.prop(obj, 'spawn')
-        layout.prop(obj, 'game_visible')
-        layout.prop(obj, 'mobile')
-        if obj.type == 'MESH':
-            layout.prop(obj, 'instanced_children')
-            if obj.instanced_children:
-                layout.label('Location')
-                row = layout.row()
-                row.prop(obj, 'instanced_children_loc_x')
-                row.prop(obj, 'instanced_children_loc_y')
-                row.prop(obj, 'instanced_children_loc_z')
-                layout.label('Rotation')
-                row = layout.row()
-                row.prop(obj, 'instanced_children_rot_x')
-                row.prop(obj, 'instanced_children_rot_y')
-                row.prop(obj, 'instanced_children_rot_z')
-                layout.label('Scale')
-                row = layout.row()
-                row.prop(obj, 'instanced_children_scale_x')
-                row.prop(obj, 'instanced_children_scale_y')
-                row.prop(obj, 'instanced_children_scale_z')
-            layout.prop(obj, 'override_material')
-            if obj.override_material:
-                layout.prop(obj, 'override_material_name')
-
-        if obj.type == 'ARMATURE':
-            layout.prop(obj, 'bone_animation_enabled')
-            if obj.bone_animation_enabled:
-                layout.prop(obj, 'edit_actions_prop')
-                if obj.edit_actions_prop:
-                    layout.prop_search(obj, "start_action_name_prop", obj.data, "my_actiontraitlist", "Start Action")
-        else:
-            layout.prop(obj, 'object_animation_enabled')
-        
-        if (obj.type == 'ARMATURE' and obj.bone_animation_enabled) or (obj.type != 'ARMATURE' and obj.object_animation_enabled):
-            layout.prop(obj, 'edit_tracks_prop')
-            if obj.edit_tracks_prop:
-                layout.prop_search(obj, "start_track_name_prop", obj, "my_cliptraitlist", "Start Clip")
-                # Tracks list
-                layout.label("Clips")
-                animrow = layout.row()
-                animrows = 2
-                if len(obj.my_cliptraitlist) > 1:
-                    animrows = 4
-                
-                row = layout.row()
-                row.template_list("MY_UL_ClipTraitList", "The_List", obj, "my_cliptraitlist", obj, "cliptraitlist_index", rows=animrows)
-
-                col = row.column(align=True)
-                col.operator("my_cliptraitlist.new_item", icon='ZOOMIN', text="")
-                col.operator("my_cliptraitlist.delete_item", icon='ZOOMOUT', text="")
-
-                if len(obj.my_cliptraitlist) > 1:
-                    col.separator()
-                    col.operator("my_cliptraitlist.move_item", icon='TRIA_UP', text="").direction = 'UP'
-                    col.operator("my_cliptraitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
-
-                if obj.cliptraitlist_index >= 0 and len(obj.my_cliptraitlist) > 0:
-                    animitem = obj.my_cliptraitlist[obj.cliptraitlist_index]         
+        layout.prop(wrd, 'ArmObjectAdvanced')
+        if wrd.ArmObjectAdvanced:
+            layout.prop(obj, 'spawn')
+            layout.prop(obj, 'game_visible')
+            layout.prop(obj, 'mobile')
+            if obj.type == 'MESH':
+                layout.prop(obj, 'instanced_children')
+                if obj.instanced_children:
+                    layout.label('Location')
                     row = layout.row()
-                    row.prop(animitem, "start_prop")
-                    row.prop(animitem, "end_prop")
-                    layout.prop(animitem, "speed_prop")
-                    layout.prop(animitem, "loop_prop")
-                    layout.prop(animitem, "reflect_prop")
+                    row.prop(obj, 'instanced_children_loc_x')
+                    row.prop(obj, 'instanced_children_loc_y')
+                    row.prop(obj, 'instanced_children_loc_z')
+                    layout.label('Rotation')
+                    row = layout.row()
+                    row.prop(obj, 'instanced_children_rot_x')
+                    row.prop(obj, 'instanced_children_rot_y')
+                    row.prop(obj, 'instanced_children_rot_z')
+                    layout.label('Scale')
+                    row = layout.row()
+                    row.prop(obj, 'instanced_children_scale_x')
+                    row.prop(obj, 'instanced_children_scale_y')
+                    row.prop(obj, 'instanced_children_scale_z')
+                layout.prop(obj, 'override_material')
+                if obj.override_material:
+                    layout.prop(obj, 'override_material_name')
+
+            if obj.type == 'ARMATURE':
+                layout.prop(obj, 'bone_animation_enabled')
+                if obj.bone_animation_enabled:
+                    layout.prop(obj, 'edit_actions_prop')
+                    if obj.edit_actions_prop:
+                        layout.prop_search(obj, "start_action_name_prop", obj.data, "my_actiontraitlist", "Start Action")
+            else:
+                layout.prop(obj, 'object_animation_enabled')
+            
+            if (obj.type == 'ARMATURE' and obj.bone_animation_enabled) or (obj.type != 'ARMATURE' and obj.object_animation_enabled):
+                layout.prop(obj, 'edit_tracks_prop')
+                if obj.edit_tracks_prop:
+                    layout.prop_search(obj, "start_track_name_prop", obj, "my_cliptraitlist", "Start Clip")
+                    # Tracks list
+                    layout.label("Clips")
+                    animrow = layout.row()
+                    animrows = 2
+                    if len(obj.my_cliptraitlist) > 1:
+                        animrows = 4
+                    
+                    row = layout.row()
+                    row.template_list("MY_UL_ClipTraitList", "The_List", obj, "my_cliptraitlist", obj, "cliptraitlist_index", rows=animrows)
+
+                    col = row.column(align=True)
+                    col.operator("my_cliptraitlist.new_item", icon='ZOOMIN', text="")
+                    col.operator("my_cliptraitlist.delete_item", icon='ZOOMOUT', text="")
+
+                    if len(obj.my_cliptraitlist) > 1:
+                        col.separator()
+                        col.operator("my_cliptraitlist.move_item", icon='TRIA_UP', text="").direction = 'UP'
+                        col.operator("my_cliptraitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
+
+                    if obj.cliptraitlist_index >= 0 and len(obj.my_cliptraitlist) > 0:
+                        animitem = obj.my_cliptraitlist[obj.cliptraitlist_index]         
+                        row = layout.row()
+                        row.prop(animitem, "start_prop")
+                        row.prop(animitem, "end_prop")
+                        layout.prop(animitem, "speed_prop")
+                        layout.prop(animitem, "loop_prop")
+                        layout.prop(animitem, "reflect_prop")
 
 # Menu in modifiers region
 class ModifiersPropsPanel(bpy.types.Panel):
@@ -486,13 +531,16 @@ class DataPropsPanel(bpy.types.Panel):
             layout.prop_search(obj.data, "renderpath_path", bpy.data, "node_groups")
             layout.operator("arm.reimport_paths_menu")
         elif obj.type == 'MESH' or obj.type == 'FONT':
-            layout.prop(obj.data, 'static_usage')
+            layout.prop(obj.data, 'dynamic_usage')
             layout.operator("arm.invalidate_cache")
         elif obj.type == 'LAMP':
             layout.prop(obj.data, 'lamp_clip_start')
             layout.prop(obj.data, 'lamp_clip_end')
             layout.prop(obj.data, 'lamp_fov')
             layout.prop(obj.data, 'lamp_shadows_bias')
+        elif obj.type == 'SPEAKER':
+            layout.prop(obj.data, 'loop')
+            layout.prop(obj.data, 'stream')
         elif obj.type == 'ARMATURE':
             layout.prop(obj.data, 'edit_actions')
             if obj.data.edit_actions:
@@ -543,6 +591,7 @@ class ReimportPathsMenu(bpy.types.Menu):
         layout.operator("arm.reimport_paths")
 
 class ReimportPathsButton(bpy.types.Operator):
+    '''Reimport default render paths'''
     bl_label = "Reimport Paths"
     bl_idname = "arm.reimport_paths_menu"
  
@@ -551,14 +600,16 @@ class ReimportPathsButton(bpy.types.Operator):
         return {"FINISHED"}
 
 class OBJECT_OT_REIMPORTPATHSButton(bpy.types.Operator):
+    '''Reimport default render paths'''
     bl_idname = "arm.reimport_paths"
     bl_label = "Reimport Paths"
  
     def execute(self, context):
-        nodes_renderpath.load_library()
+        make_renderpath.load_library()
         return{'FINISHED'}
 
 class OBJECT_OT_INVALIDATECACHEButton(bpy.types.Operator):
+    '''Delete cached mesh data'''
     bl_idname = "arm.invalidate_cache"
     bl_label = "Invalidate Cache"
  
@@ -700,11 +751,14 @@ class ArmoryPlayPanel(bpy.types.Panel):
         if wrd.ArmPlayViewportCamera:
             layout.prop(wrd, 'ArmPlayViewportNavigation')
 
-        layout.prop(wrd, 'ArmPlayConsole')
-        layout.prop(wrd, 'ArmPlayDeveloperTools')
-        layout.prop(wrd, 'ArmPlayLivePatch')
-        if wrd.ArmPlayLivePatch:
-            layout.prop(wrd, 'ArmPlayAutoBuild')
+        layout.prop(wrd, 'ArmPlayAdvanced')
+        if wrd.ArmPlayAdvanced:
+            layout.prop(wrd, 'ArmPlayConsole')
+            # layout.prop(wrd, 'ArmPlayDeveloperTools')
+            if utils.with_chromium():
+                layout.prop(wrd, 'ArmPlayLivePatch')
+                if wrd.ArmPlayLivePatch:
+                    layout.prop(wrd, 'ArmPlayAutoBuild')
 
 class ArmoryBuildPanel(bpy.types.Panel):
     bl_label = "Armory Build"
@@ -723,18 +777,21 @@ class ArmoryBuildPanel(bpy.types.Panel):
         layout.operator("arm.kode_studio")
         layout.operator("arm.clean")
         layout.prop(wrd, 'ArmProjectTarget')
-        layout.prop(wrd, 'ArmCacheShaders')
-        layout.prop(wrd, 'ArmMinimize')
-        layout.prop(wrd, 'ArmOptimizeMesh')
-        layout.prop(wrd, 'ArmSampledAnimation')
-        layout.prop(wrd, 'ArmDeinterleavedBuffers')
-        layout.prop(wrd, 'generate_gpu_skin')
-        if wrd.generate_gpu_skin:
-            layout.prop(wrd, 'generate_gpu_skin_max_bones')
-        layout.prop(wrd, 'ArmProjectSamplesPerPixel')
-        layout.label('Libraries')
-        layout.prop(wrd, 'ArmPhysics')
-        layout.prop(wrd, 'ArmNavigation')
+        layout.prop(wrd, 'ArmBuildAdvanced')
+        if wrd.ArmBuildAdvanced:
+            layout.prop(wrd, 'ArmCacheShaders')
+            layout.prop(wrd, 'ArmCleanEnvmaps')
+            layout.prop(wrd, 'ArmMinimize')
+            layout.prop(wrd, 'ArmOptimizeMesh')
+            layout.prop(wrd, 'ArmSampledAnimation')
+            layout.prop(wrd, 'ArmDeinterleavedBuffers')
+            layout.prop(wrd, 'generate_gpu_skin')
+            if wrd.generate_gpu_skin:
+                layout.prop(wrd, 'generate_gpu_skin_max_bones')
+            layout.prop(wrd, 'ArmProjectSamplesPerPixel')
+            layout.label('Libraries')
+            layout.prop(wrd, 'ArmPhysics')
+            layout.prop(wrd, 'ArmNavigation')
 
 class ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
@@ -743,6 +800,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
     info_text = ''
+    progress = 100.0
  
     def draw(self, context):
         layout = self.layout
@@ -750,18 +808,21 @@ class ArmoryProjectPanel(bpy.types.Panel):
         layout.prop(wrd, 'ArmProjectName')
         layout.prop(wrd, 'ArmProjectPackage')
         layout.prop_search(wrd, 'ArmKhafile', bpy.data, 'texts', 'Khafile')
-        layout.prop(wrd, 'ArmPlayActiveScene')
-        if wrd.ArmPlayActiveScene == False:
-            layout.prop_search(wrd, 'ArmProjectScene', bpy.data, 'scenes', 'Scene')
-        layout.prop(wrd, 'ArmExportHideRender')
-        layout.prop(wrd, 'ArmSpawnAllLayers')
-        layout.label('Publish Project')
         layout.operator('arm.publish')
         layout.prop(wrd, 'ArmPublishTarget')
-        layout.label('Armory v' + wrd.ArmVersion)
-        layout.operator('arm.check_updates')
+
+        layout.prop(wrd, 'ArmProjectAdvanced')
+        if wrd.ArmProjectAdvanced:
+            layout.prop(wrd, 'ArmPlayActiveScene')
+            if wrd.ArmPlayActiveScene == False:
+                layout.prop_search(wrd, 'ArmProjectScene', bpy.data, 'scenes', 'Scene')
+            layout.prop(wrd, 'ArmExportHideRender')
+            layout.prop(wrd, 'ArmSpawnAllLayers')
+            layout.label('Armory v' + wrd.ArmVersion)
+            layout.operator('arm.check_updates')
 
 class ArmoryPlayButton(bpy.types.Operator):
+    '''Launch player in new window'''
     bl_idname = 'arm.play'
     bl_label = 'Play'
  
@@ -772,6 +833,7 @@ class ArmoryPlayButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryPlayInViewportButton(bpy.types.Operator):
+    '''Launch player in 3D viewport'''
     bl_idname = 'arm.play_in_viewport'
     bl_label = 'Play in Viewport'
  
@@ -792,6 +854,7 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryStopButton(bpy.types.Operator):
+    '''Stop currently running player'''
     bl_idname = 'arm.stop'
     bl_label = 'Stop'
  
@@ -800,17 +863,19 @@ class ArmoryStopButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryBuildButton(bpy.types.Operator):
+    '''Build and compile project'''
     bl_idname = 'arm.build'
     bl_label = 'Build'
  
     def execute(self, context):
         invalidate_shader_cache.enabled = False
         make.build_project()
-        make.compile_project()
+        make.compile_project(watch=True)
         invalidate_shader_cache.enabled = True
         return{'FINISHED'}
 
 class ArmoryPatchButton(bpy.types.Operator):
+    '''Update currently running player instance'''
     bl_idname = 'arm.patch'
     bl_label = 'Live Patch'
  
@@ -822,6 +887,7 @@ class ArmoryPatchButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryFolderButton(bpy.types.Operator):
+    '''Open project folder'''
     bl_idname = 'arm.folder'
     bl_label = 'Project Folder'
  
@@ -830,6 +896,7 @@ class ArmoryFolderButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryCheckUpdatesButton(bpy.types.Operator):
+    '''Open a website in the web-browser'''
     bl_idname = 'arm.check_updates'
     bl_label = 'Check for Updates'
  
@@ -838,6 +905,7 @@ class ArmoryCheckUpdatesButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryKodeStudioButton(bpy.types.Operator):
+    '''Launch this project in Kode Studio'''
     bl_idname = 'arm.kode_studio'
     bl_label = 'Kode Studio'
     bl_description = 'Open Project in Kode Studio'
@@ -860,6 +928,7 @@ class ArmoryKodeStudioButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryCleanButton(bpy.types.Operator):
+    '''Delete all cached data'''
     bl_idname = 'arm.clean'
     bl_label = 'Clean'
  
@@ -868,8 +937,9 @@ class ArmoryCleanButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryPublishButton(bpy.types.Operator):
+    '''Build project ready for publishing'''
     bl_idname = 'arm.publish'
-    bl_label = 'Publish'
+    bl_label = 'Publish Project'
  
     def execute(self, context):
         make.publish_project()
@@ -887,6 +957,9 @@ def draw_play_item(self, context):
 # Info panel in header
 def draw_info_item(self, context):
     layout = self.layout
+    wrd = bpy.data.worlds['Arm']
+    if wrd.ArmProgress < 100:
+        layout.prop(wrd, 'ArmProgress')
     if ArmoryProjectPanel.info_text != '':
         layout.label(ArmoryProjectPanel.info_text)
 

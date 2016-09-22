@@ -4,7 +4,7 @@ package armory.trait.internal;
 import haxebullet.Bullet;
 #end
 import iron.Trait;
-import iron.sys.Time;
+import iron.system.Time;
 import iron.math.Vec4;
 import iron.object.Transform;
 import iron.object.MeshObject;
@@ -41,9 +41,11 @@ class RigidBody extends Trait {
 		this.friction = friction;
 		this.collisionMargin = collisionMargin;
 		
-		notifyOnInit(init);
-		notifyOnLateUpdate(lateUpdate);
-		notifyOnRemove(removeFromWorld);
+		Scene.active.notifyOnInit(function() {
+			notifyOnInit(init);
+			notifyOnLateUpdate(lateUpdate);
+			notifyOnRemove(removeFromWorld);
+		});
 	}
 	
 	inline function withMargin(f:Float) {

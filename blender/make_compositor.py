@@ -5,14 +5,6 @@ import os
 import json
 import write_probes
 
-def register():
-	pass
-	#bpy.utils.register_module(__name__)
-
-def unregister():
-	pass
-	#bpy.utils.unregister_module(__name__)
-
 def parse_defs(node_group):
 
 	rn = get_root_node(node_group)
@@ -87,3 +79,11 @@ def get_output_node(node_group, from_node, output_index):
 			if link.to_node.bl_idname == 'NodeReroute': # Step through reroutes
 				return findNodeByLinkFrom(node_group, link.to_node, link.to_node.inputs[0])
 			return link.to_node
+
+def register():
+	pass
+	#bpy.utils.register_module(__name__)
+
+def unregister():
+	pass
+	#bpy.utils.unregister_module(__name__)

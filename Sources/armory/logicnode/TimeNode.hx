@@ -27,7 +27,7 @@ class TimeNode extends FloatNode {
 	function update() {
 		
 		if (inputs[_enabled].b) {
-			f += iron.sys.Time.delta * scale;
+			f += iron.system.Time.delta * scale;
 
 			// Time out
 			if (inputs[_stopTime].f > 0) {

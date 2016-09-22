@@ -2,8 +2,8 @@ package armory.trait;
 
 import kha.Key;
 import iron.Trait;
-import iron.sys.Input;
-import iron.sys.Time;
+import iron.system.Input;
+import iron.system.Time;
 import iron.object.CameraObject;
 import iron.math.Vec4;
 import iron.math.Quat;

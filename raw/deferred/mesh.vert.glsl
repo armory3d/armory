@@ -49,7 +49,9 @@ uniform vec4 baseCol;
 	uniform float skinBones[skinMaxBones * 8]; // Dual quat
 #endif
 #ifdef _Probes
-	uniform mat4 W; // TODO: Conflicts with _HeightTex
+	#ifndef _HeightTex
+	uniform mat4 W;
+	#endif
 #endif
 #ifdef _Veloc
 	uniform mat4 prevWVP;
@@ -182,14 +184,15 @@ void main() {
 #endif
 
 #ifdef _Billboard
+	mat4 constrWV = WV;
 	// Spherical
-	WV[0][0] = 1.0; WV[0][1] = 0.0; WV[0][2] = 0.0;
-	WV[1][0] = 0.0; WV[1][1] = 1.0; WV[1][2] = 0.0;
-	WV[2][0] = 0.0; WV[2][1] = 0.0; WV[2][2] = 1.0;
+	constrWV[0][0] = 1.0; constrWV[0][1] = 0.0; constrWV[0][2] = 0.0;
+	constrWV[1][0] = 0.0; constrWV[1][1] = 1.0; constrWV[1][2] = 0.0;
+	constrWV[2][0] = 0.0; constrWV[2][1] = 0.0; constrWV[2][2] = 1.0;
 	// Cylindrical
-	//WV[0][0] = 1.0; WV[0][1] = 0.0; WV[0][2] = 0.0;
-	//WV[2][0] = 0.0; WV[2][1] = 0.0; WV[2][2] = 1.0;
-	gl_Position = P * WV * sPos;
+	//constrWV[0][0] = 1.0; constrWV[0][1] = 0.0; constrWV[0][2] = 0.0;
+	//constrWV[2][0] = 0.0; constrWV[2][1] = 0.0; constrWV[2][2] = 1.0;
+	gl_Position = P * constrWV * sPos;
 #else
 	gl_Position = WVP * sPos;
 #endif

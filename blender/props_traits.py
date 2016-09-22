@@ -2,7 +2,7 @@ import shutil
 import bpy
 import os
 import json
-from traits_params import *
+from props_traits_params import *
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 import utils
@@ -154,6 +154,7 @@ class LIST_OT_TraitMoveItem(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryEditScriptButton(bpy.types.Operator):
+    '''Edit script in Kode Studio'''
     bl_idname = 'arm.edit_script'
     bl_label = 'Edit Script'
  
@@ -174,6 +175,7 @@ class ArmoryEditScriptButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryNewScriptDialog(bpy.types.Operator):
+    '''Create blank script'''
     bl_idname = "arm.new_script"
     bl_label = "New Script"
  
@@ -193,6 +195,7 @@ class ArmoryNewScriptDialog(bpy.types.Operator):
         return context.window_manager.invoke_props_dialog(self)
 
 class ArmoryRefreshScriptsListButton(bpy.types.Operator):
+    '''Fetch all script names'''
     bl_idname = 'arm.refresh_scripts_list'
     bl_label = 'Refresh Scripts List'
  
@@ -289,7 +292,6 @@ class ToolsTraitsPanel(bpy.types.Panel):
                 row = layout.row()
                 row.prop_search(item, "nodes_name_prop", bpy.data, "node_groups", "Tree")
 
-# Registration
 def register():
     bpy.utils.register_module(__name__)
     initObjectProperties()

@@ -1,7 +1,7 @@
 package armory.trait;
 
 import iron.Trait;
-import iron.sys.Input;
+import iron.system.Input;
 import armory.trait.internal.RigidBody;
 import armory.trait.internal.PhysicsWorld;
 #if WITH_PHYSICS
@@ -42,7 +42,7 @@ class PhysicsDrag extends Trait {
 		if (Input.started) {
 			var b = physics.pickClosest(Input.x, Input.y);
 
-			if (b != null && b.mass > 0 && !b.body.ptr.isKinematicObject()) {
+			if (b != null && b.mass > 0 && !b.body.ptr.isKinematicObject() && b.object.getTrait(PhysicsDrag) != null) {
 
 				setRays();
 				pickedBody = b;
@@ -53,6 +53,13 @@ class PhysicsDrag extends Trait {
 				var pickPos:BtVector3 = physics.rayCallback.value.m_hitPointWorld;
 				#end
 				
+				// var ct = b.object.transform.matrix;
+				// var inv = iron.math.Mat4.identity();
+				// inv.getInverse(ct);
+				// var localPivotVec = new iron.math.Vec4(pickPos.x(), pickPos.y(), pickPos.z());
+				// localPivotVec.applyMat4(inv);
+				// var localPivot:BtVector3 = BtVector3.create(localPivotVec.x, localPivotVec.y, localPivotVec.z);
+
                 var ct = b.body.ptr.getCenterOfMassTransform();
                 var inv = ct.inverse();
 				
@@ -94,6 +101,8 @@ class PhysicsDrag extends Trait {
                 						 pickPos.z() - rayFrom.value.z());
 
                 pickDist = v.value.length();
+
+                Input.occupied = true;
 			}
 		}
 
@@ -104,6 +113,8 @@ class PhysicsDrag extends Trait {
 				pickConstraint = null;
 				pickedBody = null;
 		    }
+
+		    Input.occupied = false;
 		}
 
 		else if (Input.touch) {

@@ -7,14 +7,6 @@ import write_probes
 import assets
 import utils
 
-def register():
-	pass
-	#bpy.utils.register_module(__name__)
-
-def unregister():
-	pass
-	#bpy.utils.unregister_module(__name__)
-
 def find_node(node_group, to_node, target_socket):
 	for link in node_group.links:
 		if link.to_node == to_node and link.to_socket == target_socket:
@@ -203,7 +195,7 @@ def parse_color(world, node, context, envmap_strength_const):
 		
 		# Irradiance json file name
 		base_name = utils.safe_filename(world.name)
-		world.world_envtex_name = base_name
+		world.world_envtex_name = base_name + '.hdr' # Fake extension
 		
 		write_probes.write_sky_irradiance(base_name)
 

@@ -4,7 +4,7 @@ package armory.trait.internal;
 import haxebullet.Bullet;
 #end
 import iron.Trait;
-import iron.sys.Time;
+import iron.system.Time;
 import iron.math.Vec4;
 import iron.math.RayCaster;
 
@@ -65,7 +65,9 @@ class PhysicsWorld extends Trait {
 		var gravity = iron.Scene.active.raw.gravity == null ? [0, 0, -9.81] : iron.Scene.active.raw.gravity;
 		world.ptr.setGravity(BtVector3.create(gravity[0], gravity[1], gravity[2]).value);
 
-		notifyOnUpdate(update);
+		Scene.active.notifyOnInit(function() {
+			notifyOnUpdate(update);
+		});
 	}
 
 	public function addRigidBody(body:RigidBody) {
