@@ -767,9 +767,7 @@ def reload_blend_data():
         pass
 
 def load_library():
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
-    sdk_path = addon_prefs.sdk_path
+    sdk_path = utils.get_sdk_path()
     data_path = sdk_path + '/armory/blender/data/data.blend'
 
     with bpy.data.libraries.load(data_path, link=False) as (data_from, data_to):

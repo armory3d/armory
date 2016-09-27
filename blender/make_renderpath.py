@@ -18,9 +18,7 @@ def reload_blend_data():
         pass
 
 def load_library():
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
-    sdk_path = addon_prefs.sdk_path
+    sdk_path = utils.get_sdk_path()
     data_path = sdk_path + '/armory/blender/data/data.blend'
 
     with bpy.data.libraries.load(data_path, link=False) as (data_from, data_to):
@@ -37,7 +35,7 @@ def load_library():
     bpy.data.node_groups['pathtrace_path'].use_fake_user = True
     bpy.data.node_groups['Armory PBR'].use_fake_user = True
 
-def buildNodeTrees(shader_references, asset_references, assets_path):
+def buildNodeTrees(assets_path):
     s = bpy.data.filepath.split(os.path.sep)
     s.pop()
     fp = os.path.sep.join(s)
@@ -48,9 +46,8 @@ def buildNodeTrees(shader_references, asset_references, assets_path):
         os.makedirs('build/compiled/Assets/renderpaths')
     
     buildNodeTrees.assets_path = assets_path
-    buildNodeTrees.linked_assets = []
     # Always include
-    buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'brdf.png')
+    assets.add(assets_path + 'brdf.png')
 
     # Export render path for each camera
     parsed_paths = []
@@ -58,12 +55,10 @@ def buildNodeTrees(shader_references, asset_references, assets_path):
         # if cam.game_export
         if cam.renderpath_path not in parsed_paths:
             node_group = bpy.data.node_groups[cam.renderpath_path]
-            buildNodeTree(cam, node_group, shader_references, asset_references)
+            buildNodeTree(cam, node_group)
             parsed_paths.append(cam.renderpath_path)
 
-    return buildNodeTrees.linked_assets
-
-def buildNodeTree(cam, node_group, shader_references, asset_references):
+def buildNodeTree(cam, node_group):
     buildNodeTree.cam = cam
     output = {}
     dat = {}
@@ -85,7 +80,7 @@ def buildNodeTree(cam, node_group, shader_references, asset_references):
     dat['render_targets'], dat['depth_buffers'] = preprocess_renderpath(rn, node_group)
     dat['stages'] = []
     
-    buildNode(dat['stages'], rn, node_group, shader_references, asset_references)
+    buildNode(dat['stages'], rn, node_group)
 
     asset_path = path + node_group_name + '.arm'
     utils.write_arm(asset_path, output)
@@ -150,7 +145,7 @@ def make_draw_meshes(stage, node_group, node):
     order = node.inputs[2].default_value
     stage['params'].append(order)
     
-def make_draw_decals(stage, node_group, node, shader_references, asset_references):
+def make_draw_decals(stage, node_group, node):
     stage['command'] = 'draw_decals'
     context = node.inputs[1].default_value
     stage['params'].append(context) # Context
@@ -192,7 +187,7 @@ def make_bind_target(stage, node_group, node, constant_name, currentNode=None, t
         stage['params'].append(targetId)
         stage['params'].append(constant_name)
 
-def make_draw_material_quad(stage, node_group, node, shader_references, asset_references, context_index=1):
+def make_draw_material_quad(stage, node_group, node, context_index=1):
     stage['command'] = 'draw_material_quad'
     material_context = node.inputs[context_index].default_value
     stage['params'].append(material_context)
@@ -202,10 +197,12 @@ def make_draw_material_quad(stage, node_group, node, shader_references, asset_re
     dir_name = scon[2]
     # No world defs for material passes
     data_name = scon[2]
-    asset_references.append('build/compiled/ShaderDatas/' + dir_name + '/' + data_name + '.arm')
-    shader_references.append('build/compiled/Shaders/' + dir_name + '/' + data_name)
+    assets.add_shader_data('build/compiled/ShaderDatas/' + dir_name + '/' + data_name + '.arm')
+    full_name = 'build/compiled/Shaders/' + dir_name + '/' + data_name
+    assets.add_shader(full_name + '.vert.glsl')
+    assets.add_shader(full_name + '.frag.glsl')
 
-def make_draw_quad(stage, node_group, node, shader_references, asset_references, context_index=1, shader_context=None):
+def make_draw_quad(stage, node_group, node, context_index=1, shader_context=None):
     stage['command'] = 'draw_shader_quad'
     # Append world defs to get proper context
     world_defs = bpy.data.worlds['Arm'].world_defs
@@ -217,10 +214,12 @@ def make_draw_quad(stage, node_group, node, shader_references, asset_references,
     dir_name = scon[0]
     # Append world defs
     data_name = scon[1] + world_defs
-    asset_references.append('build/compiled/ShaderDatas/' + dir_name + '/' + data_name + '.arm')
-    shader_references.append('build/compiled/Shaders/' + dir_name + '/' + data_name)
+    assets.add_shader_data('build/compiled/ShaderDatas/' + dir_name + '/' + data_name + '.arm')
+    full_name = 'build/compiled/Shaders/' + dir_name + '/' + data_name
+    assets.add_shader(full_name + '.vert.glsl')
+    assets.add_shader(full_name + '.frag.glsl')
 
-def make_draw_world(stage, node_group, node, shader_references, asset_references, dome=True):
+def make_draw_world(stage, node_group, node, dome=True):
     if dome:
         stage['command'] = 'draw_skydome'
     else:
@@ -229,10 +228,10 @@ def make_draw_world(stage, node_group, node, shader_references, asset_references
     stage['params'].append('_worldMaterial') # Link to active world
     # Link assets
     if '_EnvClouds' in bpy.data.worlds['Arm'].world_defs:
-        buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise256.png')
+        assets.add(buildNodeTrees.assets_path + 'noise256.png')
         assets.add_embedded_data('noise256.png')
 
-def make_draw_compositor(stage, node_group, node, shader_references, asset_references, with_fxaa=False):
+def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     scon = 'compositor_pass'
     wrd = bpy.data.worlds['Arm']
     world_defs = wrd.world_defs
@@ -266,10 +265,12 @@ def make_draw_compositor(stage, node_group, node, shader_references, asset_refer
     stage['command'] = 'draw_shader_quad'
     stage['params'].append(data_name + '/' + data_name + '/' + scon)
     # Include data and shaders
-    asset_references.append('build/compiled/ShaderDatas/' + scon + '/' + data_name + '.arm')
-    shader_references.append('build/compiled/Shaders/' + scon + '/' + data_name)
+    assets.add_shader_data('build/compiled/ShaderDatas/' + scon + '/' + data_name + '.arm')
+    full_name = 'build/compiled/Shaders/' + scon + '/' + data_name
+    assets.add_shader(full_name + '.vert.glsl')
+    assets.add_shader(full_name + '.frag.glsl')
     # Link assets
-    # buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise256.png')
+    # assets.add(buildNodeTrees.assets_path + 'noise256.png')
     # assets.add_embedded_data('noise256.png')
 
 def make_call_function(stage, node_group, node):
@@ -279,23 +280,23 @@ def make_call_function(stage, node_group, node):
 def make_branch_function(stage, node_group, node):
     make_call_function(stage, node_group, node)
     
-def process_call_function(stage, stages, node, node_group, shader_references, asset_references):
+def process_call_function(stage, stages, node, node_group):
     # Step till merge node
     stage['returns_true'] = []
     if node.outputs[0].is_linked:
         stageNode = findNodeByLinkFrom(node_group, node, node.outputs[0])
-        buildNode(stage['returns_true'], stageNode, node_group, shader_references, asset_references)
+        buildNode(stage['returns_true'], stageNode, node_group)
     
     stage['returns_false'] = []
     if node.outputs[1].is_linked:
         stageNode = findNodeByLinkFrom(node_group, node, node.outputs[1])
-        margeNode = buildNode(stage['returns_false'], stageNode, node_group, shader_references, asset_references)
+        margeNode = buildNode(stage['returns_false'], stageNode, node_group)
     
     # Continue using top level stages after merge node
     afterMergeNode = findNodeByLinkFrom(node_group, margeNode, margeNode.outputs[0])
-    buildNode(stages, afterMergeNode, node_group, shader_references, asset_references)
+    buildNode(stages, afterMergeNode, node_group)
 
-def make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 5, 7], bind_target_constants=None, shader_context=None, viewport_scale=1.0, with_clear=False):
+def make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 5, 7], bind_target_constants=None, shader_context=None, viewport_scale=1.0, with_clear=False):
     # Set target
     if target_index != None and node.inputs[target_index].is_linked:
         stage = {}
@@ -327,66 +328,66 @@ def make_quad_pass(stages, node_group, node, shader_references, asset_references
         stage = {}
         stage['params'] = []
     # Draw quad
-    make_draw_quad(stage, node_group, node, shader_references, asset_references, context_index=2, shader_context=shader_context)
+    make_draw_quad(stage, node_group, node, context_index=2, shader_context=shader_context)
     stages.append(stage)
 
-def make_ssao_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 4], bind_target_constants=['gbufferD', 'gbuffer0'], shader_context='ssao_pass/ssao_pass/ssao_pass', viewport_scale=bpy.data.worlds['Arm'].generate_ssao_texture_scale)
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[1, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x', viewport_scale=bpy.data.worlds['Arm'].generate_ssao_texture_scale)
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y')
-    buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise8.png')
+def make_ssao_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 4], bind_target_constants=['gbufferD', 'gbuffer0'], shader_context='ssao_pass/ssao_pass/ssao_pass', viewport_scale=bpy.data.worlds['Arm'].generate_ssao_texture_scale)
+    make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[1, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x', viewport_scale=bpy.data.worlds['Arm'].generate_ssao_texture_scale)
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y')
+    assets.add(buildNodeTrees.assets_path + 'noise8.png')
     assets.add_embedded_data('noise8.png')
 
-def make_ssao_reproject_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 4, 2, 5], bind_target_constants=['gbufferD', 'gbuffer0', 'slast', 'sveloc'], shader_context='ssao_reproject_pass/ssao_reproject_pass/ssao_reproject_pass')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[1, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y')
-    buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise8.png')
+def make_ssao_reproject_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 4, 2, 5], bind_target_constants=['gbufferD', 'gbuffer0', 'slast', 'sveloc'], shader_context='ssao_reproject_pass/ssao_reproject_pass/ssao_reproject_pass')
+    make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[1, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x')
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y')
+    assets.add(buildNodeTrees.assets_path + 'noise8.png')
     assets.add_embedded_data('noise8.png')
 
-def make_apply_ssao_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[4, 5], bind_target_constants=['gbufferD', 'gbuffer0'], shader_context='ssao_pass/ssao_pass/ssao_pass')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=3, bind_target_indices=[2, 5], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 5], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y_blend')
-    buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'noise8.png')
+def make_apply_ssao_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[4, 5], bind_target_constants=['gbufferD', 'gbuffer0'], shader_context='ssao_pass/ssao_pass/ssao_pass')
+    make_quad_pass(stages, node_group, node, target_index=3, bind_target_indices=[2, 5], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x')
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 5], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y_blend')
+    assets.add(buildNodeTrees.assets_path + 'noise8.png')
     assets.add_embedded_data('noise8.png')
 
-def make_ssr_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[4, 5, 6], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='ssr_pass/ssr_pass/ssr_pass', viewport_scale=bpy.data.worlds['Arm'].generate_ssr_texture_scale)
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=3, bind_target_indices=[2, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_x', viewport_scale=bpy.data.worlds['Arm'].generate_ssr_texture_scale, with_clear=True) # Have to clear to prevent artefacts, potentially because of viewport scale
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_y3_blend')
+def make_ssr_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[4, 5, 6], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='ssr_pass/ssr_pass/ssr_pass', viewport_scale=bpy.data.worlds['Arm'].generate_ssr_texture_scale)
+    make_quad_pass(stages, node_group, node, target_index=3, bind_target_indices=[2, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_x', viewport_scale=bpy.data.worlds['Arm'].generate_ssr_texture_scale, with_clear=True) # Have to clear to prevent artefacts, potentially because of viewport scale
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_y3_blend')
 
-def make_bloom_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[4], bind_target_constants=['tex'], shader_context='bloom_pass/bloom_pass/bloom_pass')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=3, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_x')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3], bind_target_constants=['tex'], shader_context='blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_y_blend')
+def make_bloom_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[4], bind_target_constants=['tex'], shader_context='bloom_pass/bloom_pass/bloom_pass')
+    make_quad_pass(stages, node_group, node, target_index=3, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_x')
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3], bind_target_constants=['tex'], shader_context='blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_y_blend')
 
-def make_motion_blur_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='motion_blur_pass/motion_blur_pass/motion_blur_pass')
+def make_motion_blur_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='motion_blur_pass/motion_blur_pass/motion_blur_pass')
 
-def make_motion_blur_velocity_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['tex', 'gbuffer0', 'sveloc'], shader_context='motion_blur_veloc_pass/motion_blur_veloc_pass/motion_blur_veloc_pass')
+def make_motion_blur_velocity_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['tex', 'gbuffer0', 'sveloc'], shader_context='motion_blur_veloc_pass/motion_blur_veloc_pass/motion_blur_veloc_pass')
 
-def make_copy_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='copy_pass/copy_pass/copy_pass')
+def make_copy_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='copy_pass/copy_pass/copy_pass')
 
-def make_blend_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='blend_pass/blend_pass/blend_pass')
+def make_blend_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='blend_pass/blend_pass/blend_pass')
 
-def make_combine_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['tex', 'tex2'], shader_context='combine_pass/combine_pass/combine_pass')
+def make_combine_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['tex', 'tex2'], shader_context='combine_pass/combine_pass/combine_pass')
 
-def make_blur_basic_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[1], bind_target_constants=['tex'], shader_context='blur_pass/blur_pass/blur_pass_x')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='blur_pass/blur_pass/blur_pass_y')
+def make_blur_basic_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[1], bind_target_constants=['tex'], shader_context='blur_pass/blur_pass/blur_pass_x')
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='blur_pass/blur_pass/blur_pass_y')
 
-def make_debug_normals_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='debug_normals_pass/debug_normals_pass/debug_normals_pass')
+def make_debug_normals_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='debug_normals_pass/debug_normals_pass/debug_normals_pass')
 
-def make_fxaa_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='fxaa_pass/fxaa_pass/fxaa_pass')
+def make_fxaa_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='fxaa_pass/fxaa_pass/fxaa_pass')
 
-def make_smaa_pass(stages, node_group, node, shader_references, asset_references):
+def make_smaa_pass(stages, node_group, node):
     stage = {}
     stage['params'] = []
     make_set_target(stage, node_group, node, target_index=2)
@@ -397,7 +398,7 @@ def make_smaa_pass(stages, node_group, node, shader_references, asset_references
     make_clear_target(stage, color_val=[0.0, 0.0, 0.0, 0.0])
     stages.append(stage)
     
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=None, bind_target_indices=[4], bind_target_constants=['colorTex'], shader_context='smaa_edge_detect/smaa_edge_detect/smaa_edge_detect')
+    make_quad_pass(stages, node_group, node, target_index=None, bind_target_indices=[4], bind_target_constants=['colorTex'], shader_context='smaa_edge_detect/smaa_edge_detect/smaa_edge_detect')
     
     stage = {}
     stage['params'] = []
@@ -409,45 +410,45 @@ def make_smaa_pass(stages, node_group, node, shader_references, asset_references
     make_clear_target(stage, color_val=[0.0, 0.0, 0.0, 0.0])
     stages.append(stage)
     
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=None, bind_target_indices=[2], bind_target_constants=['edgesTex'], shader_context='smaa_blend_weight/smaa_blend_weight/smaa_blend_weight')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[4, 3, 5], bind_target_constants=['colorTex', 'blendTex', 'sveloc'], shader_context='smaa_neighborhood_blend/smaa_neighborhood_blend/smaa_neighborhood_blend')
-    buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'smaa_area.png')
-    buildNodeTrees.linked_assets.append(buildNodeTrees.assets_path + 'smaa_search.png')
+    make_quad_pass(stages, node_group, node, target_index=None, bind_target_indices=[2], bind_target_constants=['edgesTex'], shader_context='smaa_blend_weight/smaa_blend_weight/smaa_blend_weight')
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[4, 3, 5], bind_target_constants=['colorTex', 'blendTex', 'sveloc'], shader_context='smaa_neighborhood_blend/smaa_neighborhood_blend/smaa_neighborhood_blend')
+    assets.add(buildNodeTrees.assets_path + 'smaa_area.png')
+    assets.add(buildNodeTrees.assets_path + 'smaa_search.png')
     assets.add_embedded_data('smaa_area.png')
     assets.add_embedded_data('smaa_search.png')
 
-def make_taa_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['tex', 'tex2', 'sveloc'], shader_context='taa_pass/taa_pass/taa_pass')
+def make_taa_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['tex', 'tex2', 'sveloc'], shader_context='taa_pass/taa_pass/taa_pass')
 
-def make_sss_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 4, 5], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='sss_pass/sss_pass/sss_pass_x')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[3, 4, 5], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='sss_pass/sss_pass/sss_pass_y')
+def make_sss_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 4, 5], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='sss_pass/sss_pass/sss_pass_x')
+    make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[3, 4, 5], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='sss_pass/sss_pass/sss_pass_y')
 
-def make_water_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['tex', 'gbufferD'], shader_context='water_pass/water_pass/water_pass')
+def make_water_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['tex', 'gbufferD'], shader_context='water_pass/water_pass/water_pass')
 
-def make_deferred_light_pass(stages, node_group, node, shader_references, asset_references):
-    # make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'shadowMap'], shader_context='deferred_light/deferred_light/deferred_light')
+def make_deferred_light_pass(stages, node_group, node):
+    # make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'shadowMap'], shader_context='deferred_light/deferred_light/deferred_light')
     # Draw lamp volume - TODO: properly generate stage
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'shadowMap'], shader_context='deferred_light/deferred_light/deferred_light')
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'shadowMap'], shader_context='deferred_light/deferred_light/deferred_light')
     stages[-1]['command'] = 'draw_lamp_volume'
 
-def make_volumetric_light_pass(stages, node_group, node, shader_references, asset_references):
+def make_volumetric_light_pass(stages, node_group, node):
     # Draw lamp volume - TODO: properly generate stage
-    # make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[5, 6], bind_target_constants=['gbufferD', 'shadowMap'], shader_context='volumetric_light/volumetric_light/volumetric_light_blend')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=2, bind_target_indices=[5, 6], bind_target_constants=['gbufferD', 'shadowMap'], shader_context='volumetric_light/volumetric_light/volumetric_light')
+    # make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[5, 6], bind_target_constants=['gbufferD', 'shadowMap'], shader_context='volumetric_light/volumetric_light/volumetric_light_blend')
+    make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[5, 6], bind_target_constants=['gbufferD', 'shadowMap'], shader_context='volumetric_light/volumetric_light/volumetric_light')
     stages[-1]['command'] = 'draw_lamp_volume'
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=3, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x')
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[3, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y_blend_add')
+    make_quad_pass(stages, node_group, node, target_index=3, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x')
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y_blend_add')
 
-def make_deferred_indirect_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'ssaotex'], shader_context='deferred_indirect/deferred_indirect/deferred_indirect')
+def make_deferred_indirect_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'ssaotex'], shader_context='deferred_indirect/deferred_indirect/deferred_indirect')
 
-def make_translucent_resolve_pass(stages, node_group, node, shader_references, asset_references):
-    make_quad_pass(stages, node_group, node, shader_references, asset_references, target_index=1, bind_target_indices=[2], bind_target_constants=['gbuffer'], shader_context='translucent_resolve/translucent_resolve/translucent_resolve')
+def make_translucent_resolve_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2], bind_target_constants=['gbuffer'], shader_context='translucent_resolve/translucent_resolve/translucent_resolve')
 
 # Returns merge node
-def buildNode(stages, node, node_group, shader_references, asset_references):
+def buildNode(stages, node, node_group):
     stage = {}
     stage['params'] = []
     
@@ -479,7 +480,7 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
         make_draw_meshes(stage, node_group, node)
         
     elif node.bl_idname == 'DrawDecalsNodeType':
-        make_draw_decals(stage, node_group, node, shader_references, asset_references)
+        make_draw_decals(stage, node_group, node)
         
     elif node.bl_idname == 'BindTargetNodeType':
         if buildNode.last_bind_target is not None:
@@ -490,10 +491,10 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
         make_bind_target(stage, node_group, node, constant_name)
         
     elif node.bl_idname == 'DrawMaterialQuadNodeType':
-        make_draw_material_quad(stage, node_group, node, shader_references, asset_references)
+        make_draw_material_quad(stage, node_group, node)
         
     elif node.bl_idname == 'DrawQuadNodeType':
-        make_draw_quad(stage, node_group, node, shader_references, asset_references)
+        make_draw_quad(stage, node_group, node)
     
     elif node.bl_idname == 'DrawWorldNodeType':
         # Bind depth for quad
@@ -507,9 +508,9 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
         stage = {}
         stage['params'] = []
         # Draw quad
-        # make_draw_world(stage, node_group, node, shader_references, asset_references, dome=False)
+        # make_draw_world(stage, node_group, node, dome=False)
         # Draw dome
-        make_draw_world(stage, node_group, node, shader_references, asset_references, dome=True)
+        make_draw_world(stage, node_group, node, dome=True)
     
     elif node.bl_idname == 'DrawCompositorNodeType' or node.bl_idname == 'DrawCompositorWithFXAANodeType':
         # Set target
@@ -532,12 +533,12 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
         stage = {}
         stage['params'] = []
         with_fxaa = node.bl_idname == 'DrawCompositorWithFXAANodeType'
-        make_draw_compositor(stage, node_group, node, shader_references, asset_references, with_fxaa=with_fxaa)
+        make_draw_compositor(stage, node_group, node, with_fxaa=with_fxaa)
     
     elif node.bl_idname == 'BranchFunctionNodeType':
         make_branch_function(stage, node_group, node)
         stages.append(stage)
-        process_call_function(stage, stages, node, node_group, shader_references, asset_references)
+        process_call_function(stage, stages, node, node_group)
         return
         
     elif node.bl_idname == 'LoopStagesNodeType':
@@ -547,7 +548,7 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
             count = node.inputs[2].default_value
             for i in range(0, count):
                 loopNode = findNodeByLinkFrom(node_group, node, node.outputs[1])
-                buildNode(stages, loopNode, node_group, shader_references, asset_references)
+                buildNode(stages, loopNode, node_group)
     
     elif node.bl_idname == 'LoopLampsNodeType':
         append_stage = False
@@ -556,7 +557,7 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
         stage['returns_true'] = []
         if node.outputs[1].is_linked:
             loopNode = findNodeByLinkFrom(node_group, node, node.outputs[1])
-            buildNode(stage['returns_true'], loopNode, node_group, shader_references, asset_references)
+            buildNode(stage['returns_true'], loopNode, node_group)
     
     elif node.bl_idname == 'DrawStereoNodeType':
         append_stage = False
@@ -565,77 +566,77 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
         stage['returns_true'] = []
         if node.outputs[1].is_linked:
             loopNode = findNodeByLinkFrom(node_group, node, node.outputs[1])
-            buildNode(stage['returns_true'], loopNode, node_group, shader_references, asset_references)
+            buildNode(stage['returns_true'], loopNode, node_group)
 
     elif node.bl_idname == 'CallFunctionNodeType':
         make_call_function(stage, node_group, node)
     
     elif node.bl_idname == 'QuadPassNodeType':
-        make_quad_pass(stages, node_group, node, shader_references, asset_references)
+        make_quad_pass(stages, node_group, node)
         append_stage = False
 
     elif node.bl_idname == 'SSAOPassNodeType':
-        make_ssao_pass(stages, node_group, node, shader_references, asset_references)
+        make_ssao_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'SSAOReprojectPassNodeType':
-        make_ssao_reproject_pass(stages, node_group, node, shader_references, asset_references)
+        make_ssao_reproject_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'ApplySSAOPassNodeType':
-        make_apply_ssao_pass(stages, node_group, node, shader_references, asset_references)
+        make_apply_ssao_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'SSRPassNodeType':
-        make_ssr_pass(stages, node_group, node, shader_references, asset_references)
+        make_ssr_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'BloomPassNodeType':
-        make_bloom_pass(stages, node_group, node, shader_references, asset_references)
+        make_bloom_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'MotionBlurPassNodeType':
-        make_motion_blur_pass(stages, node_group, node, shader_references, asset_references)
+        make_motion_blur_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'MotionBlurVelocityPassNodeType':
-        make_motion_blur_velocity_pass(stages, node_group, node, shader_references, asset_references)
+        make_motion_blur_velocity_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'CopyPassNodeType':
-        make_copy_pass(stages, node_group, node, shader_references, asset_references)
+        make_copy_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'BlendPassNodeType':
-        make_blend_pass(stages, node_group, node, shader_references, asset_references)
+        make_blend_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'CombinePassNodeType':
-        make_combine_pass(stages, node_group, node, shader_references, asset_references)
+        make_combine_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'BlurBasicPassNodeType':
-        make_blur_basic_pass(stages, node_group, node, shader_references, asset_references)
+        make_blur_basic_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'DebugNormalsPassNodeType':
-        make_debug_normals_pass(stages, node_group, node, shader_references, asset_references)
+        make_debug_normals_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'FXAAPassNodeType':
-        make_fxaa_pass(stages, node_group, node, shader_references, asset_references)
+        make_fxaa_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'SMAAPassNodeType':
-        make_smaa_pass(stages, node_group, node, shader_references, asset_references)
+        make_smaa_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'TAAPassNodeType':
-        make_taa_pass(stages, node_group, node, shader_references, asset_references)
+        make_taa_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'SSSPassNodeType':
-        make_sss_pass(stages, node_group, node, shader_references, asset_references)
+        make_sss_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'WaterPassNodeType':
-        make_water_pass(stages, node_group, node, shader_references, asset_references)
+        make_water_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'DeferredLightPassNodeType':
-        make_deferred_light_pass(stages, node_group, node, shader_references, asset_references)
+        make_deferred_light_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'DeferredIndirectPassNodeType':
-        make_deferred_indirect_pass(stages, node_group, node, shader_references, asset_references)
+        make_deferred_indirect_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'VolumetricLightPassNodeType':
-        make_volumetric_light_pass(stages, node_group, node, shader_references, asset_references)
+        make_volumetric_light_pass(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'TranslucentResolvePassNodeType':
-        make_translucent_resolve_pass(stages, node_group, node, shader_references, asset_references)
+        make_translucent_resolve_pass(stages, node_group, node)
         append_stage = False
 
     if append_stage:
@@ -644,7 +645,7 @@ def buildNode(stages, node, node_group, shader_references, asset_references):
     # Build next stage
     if node.outputs[0].is_linked:
         stageNode = findNodeByLinkFrom(node_group, node, node.outputs[0])
-        buildNode(stages, stageNode, node_group, shader_references, asset_references)
+        buildNode(stages, stageNode, node_group)
 # Used to merge bind target nodes into one stage
 buildNode.last_bind_target = None
 # Used to determine shadowmap size

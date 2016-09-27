@@ -45,10 +45,10 @@ uniform sampler2D srough;
 #else
 	uniform float metalness;
 #endif
-#ifdef _HeightTex
-	uniform sampler2D sheight;
-	uniform float heightStrength;
-#endif
+// #ifdef _HeightTex
+	// uniform sampler2D sheight;
+	// uniform float heightStrength;
+// #endif
 
 uniform float envmapStrength;
 uniform bool receiveShadow;

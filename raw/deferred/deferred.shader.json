@@ -90,6 +90,87 @@
 			"fragment_shader": "mesh.frag.glsl"
 		},
 		{
+			"name": "meshheight",
+			"params": [
+				{
+					"name": "depth_write",
+					"value": "true"
+				},
+				{
+					"name": "compare_mode",
+					"value": "less"
+				},
+				{
+					"name": "cull_mode",
+					"value": "clockwise"
+				}
+			],
+			"links": [
+				{
+					"name": "WVP",
+					"link": "_worldViewProjectionMatrix"
+				},
+				{
+					"name": "N",
+					"link": "_normalMatrix"
+				},
+				{
+					"name": "P",
+					"link": "_projectionMatrix",
+					"ifdef": ["_Billboard"]
+				},
+				{
+					"name": "WV",
+					"link": "_worldViewMatrix",
+					"ifdef": ["_Billboard"]
+				},
+				{
+					"name": "prevWVP",
+					"link": "_prevWorldViewProjectionMatrix",
+					"ifdef": ["_Veloc"]
+				},
+				{
+					"name": "W",
+					"link": "_worldMatrix",
+					"ifdef": ["_Probes"]
+				},
+				{
+					"name": "probeVolumeCenter",
+					"link": "_probeVolumeCenter",
+					"ifdef": ["_Probes"]
+				},
+				{	
+					"name": "probeVolumeSize",
+					"link": "_probeVolumeSize",
+					"ifdef": ["_Probes"]
+				},
+				{	
+					"name": "probeID",
+					"link": "_probeID",
+					"ifdef": ["_Probes"]
+				},
+				{	
+					"name": "probeStrength",
+					"link": "_probeStrength",
+					"ifdef": ["_Probes"]
+				},
+				{	
+					"name": "probeBlending",
+					"link": "_probeBlending",
+					"ifdef": ["_Probes"]
+				},
+				{
+					"name": "skinBones",
+					"link": "_skinBones",
+					"ifdef": ["_Skinning"]
+				}
+			],
+			"vertex_shader": "meshheight.vert.glsl",
+			"fragment_shader": "meshheight.frag.glsl",
+			"tesscontrol_shader": "meshheight.tesc.glsl",
+			"tesseval_shader": "meshheight.tese.glsl"
+		},
+		{
 			"name": "overlay",
 			"params": [
 				{
@@ -213,6 +294,38 @@
 			],
 			"vertex_shader": "shadowmap.vert.glsl",
 			"fragment_shader": "shadowmap.frag.glsl"
+		},
+		{
+			"name": "shadowmapheight",
+			"params": [
+				{
+					"name": "depth_write",
+					"value": "true"
+				},
+				{
+					"name": "compare_mode",
+					"value": "less_equal"
+				},
+				{
+					"name": "cull_mode",
+					"value": "clockwise"
+				}
+			],
+			"links": [
+				{
+					"name": "LWVP",
+					"link": "_lampWorldViewProjectionMatrix"
+				},
+				{
+					"name": "skinBones",
+					"link": "_skinBones",
+					"ifdef": ["_Skinning"]
+				}
+			],
+			"vertex_shader": "shadowmapheight.vert.glsl",
+			"fragment_shader": "shadowmapheight.frag.glsl",
+			"tesscontrol_shader": "shadowmapheight.tesc.glsl",
+			"tesseval_shader": "shadowmapheight.tese.glsl"
 		},
 		{
 			"name": "depthwrite",

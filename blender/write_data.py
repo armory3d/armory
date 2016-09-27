@@ -7,15 +7,14 @@ def add_armory_library(sdk_path, name):
     return ('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/' + name)[2:] + '");\n').replace('\\', '/')
 
 # Write khafile.js
-def write_khafilejs(shader_references, asset_references, is_play, export_physics):
+def write_khafilejs(is_play, export_physics):
     
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
-    sdk_path = addon_prefs.sdk_path
+    sdk_path = utils.get_sdk_path()
     
     # Merge duplicates and sort
-    shader_references = sorted(list(set(shader_references)))
-    asset_references = sorted(list(set(asset_references)))
+    shader_references = sorted(list(set(assets.shaders)))
+    shader_data_references = sorted(list(set(assets.shader_datas)))
+    asset_references = sorted(list(set(assets.assets)))
 
     with open('khafile.js', 'w') as f:
         f.write(
@@ -43,13 +42,14 @@ project.addShaders('Sources/Shaders/**');
         # Native scripting
         # f.write(add_armory_library(sdk_path + '/lib/', 'haxeduktape'))
 
-        for i in range(0, len(shader_references)): # Shaders
-            ref = shader_references[i]
-            # defs = shader_references_defs[i]
-            f.write("project.addShaders('" + ref + ".frag.glsl');\n")
-            f.write("project.addShaders('" + ref + ".vert.glsl');\n")
+        for ref in shader_references:
+            f.write("project.addShaders('" + ref + "');\n")
         
-        for ref in asset_references: # Assets
+        for ref in shader_data_references:
+            ref = ref.replace('\\', '/')
+            f.write("project.addAssets('" + ref + "');\n")
+
+        for ref in asset_references:
             ref = ref.replace('\\', '/')
             f.write("project.addAssets('" + ref + "');\n")
 

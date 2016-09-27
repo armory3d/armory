@@ -110,7 +110,7 @@ def on_scene_update_post(context):
                     break
 
         # Player finished, redraw play buttons
-        if make.play_project.playproc_finished or make.play_project.compileproc_finished:
+        if make.play_project.playproc_finished:
             make.play_project.playproc_finished = False
             for area in bpy.context.screen.areas:
                 if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
@@ -203,6 +203,7 @@ def initProperties():
     bpy.types.World.ArmBuildAdvanced = BoolProperty(name="Advanced", default=False)
     bpy.types.World.ArmProjectAdvanced = BoolProperty(name="Advanced", default=False)
     bpy.types.World.ArmObjectAdvanced = BoolProperty(name="Advanced", default=False)
+    bpy.types.World.ArmMaterialAdvanced = BoolProperty(name="Advanced", default=False)
     bpy.types.World.ArmCacheShaders = BoolProperty(name="Cache Shaders", description="Do not rebuild existing shaders", default=True, update=invalidate_shader_cache)
     bpy.types.World.ArmCleanEnvmaps = BoolProperty(name="Clean Envmaps", description="Remove prefiltered maps when cleaning project", default=True)
     bpy.types.World.ArmPlayLivePatch = BoolProperty(name="Live Patching", description="Sync running player data to Blender", default=True)
@@ -269,7 +270,7 @@ def initProperties():
 	# TODO: Specify multiple material ids, merge ids from multiple cameras 
     bpy.types.Camera.renderpath_passes = bpy.props.StringProperty(name="Render Path Passes", description="Referenced render passes", default="")
     bpy.types.Camera.mesh_context = bpy.props.StringProperty(name="Mesh", default="mesh")
-    bpy.types.Camera.mesh_context_empty = bpy.props.StringProperty(name="Mesh Empty", default="depthwrite")
+    bpy.types.Camera.mesh_context_empty = bpy.props.StringProperty(name="Mesh Empty", default="") # depthwrite
     bpy.types.Camera.shadows_context = bpy.props.StringProperty(name="Shadows", default="shadowmap")
     bpy.types.Camera.translucent_context = bpy.props.StringProperty(name="Translucent", default="translucent")
     bpy.types.Camera.overlay_context = bpy.props.StringProperty(name="Overlay", default="overlay")
@@ -382,6 +383,12 @@ def initProperties():
         items = [('True', 'True', 'True'),
                  ('False', 'False', 'False')],
         name = "Depth-Write", default='True')
+    bpy.types.Material.height_tess = bpy.props.BoolProperty(name="Tessellated displacement", description="Use tessellation shaders to subdivide and displace surface", default=True)
+    bpy.types.Material.height_tess_inner = bpy.props.IntProperty(name="Inner level", description="Inner tessellation level for mesh", default=14)
+    bpy.types.Material.height_tess_outer = bpy.props.IntProperty(name="Outer level", description="Outer tessellation level for mesh", default=14)
+    bpy.types.Material.height_tess_shadows = bpy.props.BoolProperty(name="Tessellated shadows", description="Use tessellation shaders when rendering shadow maps", default=True)
+    bpy.types.Material.height_tess_shadows_inner = bpy.props.IntProperty(name="Inner level", description="Inner tessellation level for shadows", default=7)
+    bpy.types.Material.height_tess_shadows_outer = bpy.props.IntProperty(name="Outer level", description="Outer tessellation level for shadows", default=7)
     # For scene
     bpy.types.Scene.game_export = bpy.props.BoolProperty(name="Export", description="Export scene data", default=True)
     # For lamp
@@ -631,24 +638,36 @@ class MatsPropsPanel(bpy.types.Panel):
             return
 
         layout.prop(mat, 'receive_shadow')
-        layout.prop(mat, 'override_shader')
-        if mat.override_shader:
-            layout.prop(mat, 'override_shader_name')
-        layout.prop(mat, 'override_shader_context')
-        if mat.override_shader_context:
-            layout.prop(mat, 'override_shader_context_name')
-        layout.prop(mat, 'override_cull')
-        if mat.override_cull:
-            layout.prop(mat, 'override_cull_mode')
-        # layout.prop(mat, 'override_compare')
-        # if mat.override_compare:
-            # layout.prop(mat, 'override_compare_mode')
-        # layout.prop(mat, 'override_depthwrite')
-        # if mat.override_depthwrite:
-            # layout.prop(mat, 'override_depthwrite_mode')
         layout.prop(mat, 'overlay')
-        layout.prop(mat, 'stencil_mask')
-        layout.prop(mat, 'skip_context')
+        
+        layout.prop(bpy.data.worlds['Arm'], 'ArmMaterialAdvanced')
+        if bpy.data.worlds['Arm'].ArmMaterialAdvanced:
+            layout.prop(mat, 'override_cull')
+            if mat.override_cull:
+                layout.prop(mat, 'override_cull_mode')
+            layout.prop(mat, 'override_shader')
+            if mat.override_shader:
+                layout.prop(mat, 'override_shader_name')
+            layout.prop(mat, 'override_shader_context')
+            if mat.override_shader_context:
+                layout.prop(mat, 'override_shader_context_name')
+            # layout.prop(mat, 'override_compare')
+            # if mat.override_compare:
+                # layout.prop(mat, 'override_compare_mode')
+            # layout.prop(mat, 'override_depthwrite')
+            # if mat.override_depthwrite:
+                # layout.prop(mat, 'override_depthwrite_mode')
+            layout.prop(mat, 'stencil_mask')
+            layout.prop(mat, 'skip_context')
+            layout.label('Height map')
+            layout.prop(mat, 'height_tess')
+            if mat.height_tess:
+                layout.prop(mat, 'height_tess_inner')
+                layout.prop(mat, 'height_tess_outer')
+            layout.prop(mat, 'height_tess_shadows')
+            if mat.height_tess_shadows:
+                layout.prop(mat, 'height_tess_shadows_inner')
+                layout.prop(mat, 'height_tess_shadows_outer')
 
 # Menu in world region
 class WorldPropsPanel(bpy.types.Panel):
@@ -770,7 +789,7 @@ class ArmoryBuildPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds['Arm']
-        if make.play_project.playproc == None and make.play_project.compileproc == None and make.play_project.chromium_running == False:
+        if make.play_project.playproc == None and make.play_project.chromium_running == False:
             layout.operator("arm.build")
         else:
             layout.operator("arm.patch")
@@ -911,9 +930,7 @@ class ArmoryKodeStudioButton(bpy.types.Operator):
     bl_description = 'Open Project in Kode Studio'
  
     def execute(self, context):
-        user_preferences = bpy.context.user_preferences
-        addon_prefs = user_preferences.addons['armory'].preferences
-        sdk_path = addon_prefs.sdk_path
+        sdk_path = utils.get_sdk_path()
         project_path = utils.get_fp()
 
         if utils.get_os() == 'win':

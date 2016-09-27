@@ -75,7 +75,7 @@ def get_export_scene_override(scene):
 def compile_shader(raw_path, shader_name, defs):
     os.chdir(raw_path + './' + shader_name)
     fp = os.path.relpath(utils.get_fp())
-    lib.make_datas.make(shader_name + '.shader.json', fp, bpy.data.worlds['Arm'].ArmMinimize, defs)
+    lib.make_datas.make(shader_name + '.shader.json', fp, defs)
     lib.make_variants.make(shader_name + '.shader.json', fp, defs)
 
 def def_strings_to_array(strdefs):
@@ -87,12 +87,8 @@ def def_strings_to_array(strdefs):
 def export_data(fp, sdk_path, is_play=False):
     raw_path = sdk_path + 'armory/raw/'
     assets_path = sdk_path + 'armory/Assets/'
-
-    shader_references = []
-    # shader_references_defs = [] # Defs to go with referenced shaders
-    asset_references = []
-    assets.reset()
     export_physics = bpy.data.worlds['Arm'].ArmPhysics != 'Disabled'
+    assets.reset()
 
     # Build node trees
     # TODO: cache
@@ -102,9 +98,9 @@ def export_data(fp, sdk_path, is_play=False):
         if scene.game_export and scene.world != None and scene.world.name != 'Arm':
             active_worlds.add(scene.world)
     world_outputs = make_world.buildNodeTrees(active_worlds)
-    linked_assets = make_renderpath.buildNodeTrees(shader_references, asset_references, assets_path)
+    make_renderpath.buildNodeTrees(assets_path)
     for wout in world_outputs:
-        make_world.write_output(wout, asset_references, shader_references)
+        make_world.write_output(wout)
 
     # Export scene data
     assets.embedded_data = sorted(list(set(assets.embedded_data)))
@@ -115,8 +111,6 @@ def export_data(fp, sdk_path, is_play=False):
             bpy.ops.export_scene.armory(
                 get_export_scene_override(scene),
                 filepath=asset_path)
-            shader_references += ArmoryExporter.shader_references
-            asset_references += ArmoryExporter.asset_references
             if physics_found == False and ArmoryExporter.export_physics:
                 physics_found = True
             assets.add(asset_path)
@@ -137,8 +131,7 @@ def export_data(fp, sdk_path, is_play=False):
         shutil.rmtree('build/compiled/ShaderDatas')
     
     # Write referenced shader variants
-    # Assume asset_references contains shader datas only for now
-    for ref in asset_references:
+    for ref in assets.shader_datas:
         # Data does not exist yet
         if not os.path.isfile(fp + '/' + ref):
             shader_name = ref.split('/')[3] # Extract from 'build/compiled/...'
@@ -150,12 +143,7 @@ def export_data(fp, sdk_path, is_play=False):
             else:
                 defs = []
             compile_shader(raw_path, shader_name, defs)
-            # for i in range(0, len(defs)):
-                # defs[i] += '=1'
-            # shader_references_defs.append(defs)
     
-    # After defs has been parsed, add linked assets from shader datas
-    asset_references += linked_assets
     # Reset path
     os.chdir(fp)
 
@@ -163,7 +151,7 @@ def export_data(fp, sdk_path, is_play=False):
     write_data.write_compiledglsl()
 
     # Write khafile.js
-    write_data.write_khafilejs(shader_references, asset_references, is_play, export_physics)
+    write_data.write_khafilejs(is_play, export_physics)
 
     # Write Main.hx
     write_data.write_main(is_play, play_project.in_viewport)
@@ -203,13 +191,8 @@ def get_kha_target(target_name): # TODO: remove
     return target_name
 
 def compile_project(target_name=None, is_publish=False, watch=False):
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
-    sdk_path = addon_prefs.sdk_path
-    ffmpeg_path = addon_prefs.ffmpeg_path
-
-    # Prevent launching the player after compile process finishes
-    make.play_project.in_viewport = False
+    sdk_path =  utils.get_sdk_path()
+    ffmpeg_path = utils.get_ffmpeg_path()
 
     # Set build command
     if target_name == None:
@@ -226,7 +209,7 @@ def compile_project(target_name=None, is_publish=False, watch=False):
         khamake_path = sdk_path + '/kode_studio/KodeStudio-linux64/resources/app/extensions/kha/Kha/make'
     
     kha_target_name = get_kha_target(target_name)
-    cmd = [node_path, khamake_path, kha_target_name, '--glsl2']
+    cmd = [node_path, khamake_path, kha_target_name]
 
     if ffmpeg_path != '':
         cmd.append('--ffmpeg')
@@ -256,14 +239,15 @@ def compile_project(target_name=None, is_publish=False, watch=False):
 
 # For live patching
 def patch_project():
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
-    sdk_path = addon_prefs.sdk_path
+    sdk_path = utils.get_sdk_path()
     fp = utils.get_fp()
     os.chdir(fp)
     export_data(fp, sdk_path, is_play=True)
 
 def build_project(is_play=False):
+    # Clear flag
+    play_project.in_viewport = False
+
     # Save blend
     bpy.ops.wm.save_mainfile()
 
@@ -282,9 +266,7 @@ def build_project(is_play=False):
                 break
 
     # Get paths
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
-    sdk_path = addon_prefs.sdk_path
+    sdk_path = utils.get_sdk_path()
     raw_path = sdk_path + '/armory/raw/'
     
     # Set dir
@@ -357,7 +339,6 @@ def watch_play():
     armory_log()
 
 def watch_compile(mode):
-    print('WATCHHHH', mode)
     play_project.compileproc.wait()
     result = play_project.compileproc.poll()
     play_project.compileproc = None
@@ -375,13 +356,12 @@ def watch_patch():
     play_project.compileproc_finished = True
 
 def play_project(self, in_viewport):
-    play_project.in_viewport = in_viewport
-
     if utils.with_chromium() and in_viewport and bpy.context.area.type == 'VIEW_3D':
         play_project.play_area = bpy.context.area
 
     # Build data
     build_project(is_play=True)
+    play_project.in_viewport = in_viewport
 
     wrd = bpy.data.worlds['Arm']
 
@@ -420,7 +400,11 @@ def play_project(self, in_viewport):
 
         # Compile
         play_project.compileproc = compile_project(target_name='html5')
-        threading.Timer(0.1, watch_compile, ['play']).start()
+        if in_viewport:
+            mode = 'play_viewport'
+        else:
+            mode = 'play'
+        threading.Timer(0.1, watch_compile, [mode]).start()
 
 play_project.in_viewport = False
 play_project.playproc = None
@@ -439,12 +423,10 @@ def run_server():
     except:
         print('Server already running')
 
-def on_compiled(mode): # build, play, publish
+def on_compiled(mode): # build, play, play_viewport, publish
     armory_progress(100)
     armory_log()
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
-    sdk_path = addon_prefs.sdk_path
+    sdk_path = utils.get_sdk_path()
 
     # Print info
     if mode == 'publish':
@@ -463,8 +445,8 @@ def on_compiled(mode): # build, play, publish
             print('Makefiles are located in ' + files_path + '-build')
         return
 
-    # Otherwise launch project
-    elif mode =='play' and (utils.with_chromium() == False or play_project.in_viewport == False):
+    # Launch project in new window or frameless electron
+    elif (mode =='play') or (mode == 'play_viewport' and utils.with_chromium() == False):
         wrd = bpy.data.worlds['Arm']
         if wrd.ArmPlayRuntime == 'Electron':
             electron_app_path = './build/electron.js'

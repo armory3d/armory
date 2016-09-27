@@ -2379,9 +2379,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             if self.scene.layers[i] == True:
                 self.active_layers.append(i)
 
-        # Store used shaders and assets in this scene
-        ArmoryExporter.shader_references = []
-        ArmoryExporter.asset_references = []
         ArmoryExporter.exportAllFlag = not self.option_export_selection
         ArmoryExporter.sampleAnimationFlag = self.option_sample_animation
         ArmoryExporter.option_mesh_only = self.option_mesh_only
@@ -2579,9 +2576,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                     targetpath = scriptspath + pyname
                     with open(targetpath, 'w') as f:
                         f.write(bpy.data.texts[t.jsscript_prop].as_string())
-                    user_preferences = bpy.context.user_preferences
-                    addon_prefs = user_preferences.addons['armory'].preferences
-                    sdk_path = addon_prefs.sdk_path
+                    sdk_path = utils.get_sdk_path()
                     # Extract path to built-in python binary
                     if utils.get_os() == 'win':
                         # Remove 'os.py' from path
@@ -2806,10 +2801,50 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         # Override context
         if material.override_shader_context:
             c['name'] = material.override_shader_context_name
-        # If material has transparency change to translucent context
+        # If material has transparency switch to translucent context
         elif '_Translucent' in defs:
             defs.remove('_Translucent')
             c['name'] = ArmoryExporter.translucent_context
+        # If material has height map switch to tessellation displacement context
+        elif '_HeightTex' in defs:
+            c['name'] = ArmoryExporter.mesh_context + 'height'
+            const = {}
+            const['name'] = 'innerLevel'
+            const['float'] = material.height_tess_inner
+            c['bind_constants'].append(const)
+            const = {}
+            const['name'] = 'outerLevel'
+            const['float'] = material.height_tess_outer
+            c['bind_constants'].append(const)
+            # Append shadows height context
+            if bpy.data.worlds['Arm'].generate_shadows == True:
+                if material.height_tess_shadows:
+                    c2 = {}
+                    c2['name'] = ArmoryExporter.shadows_context + 'height'
+                    c2['bind_constants'] = []
+                    c2['bind_textures'] = []
+                    for bc in c['bind_constants']:
+                        if bc['name'] == 'heightStrength':
+                            c2['bind_constants'].append(bc)
+                            break
+                    for bt in c['bind_textures']:
+                        if bt['name'] == 'sheight':
+                            c2['bind_textures'].append(bt)
+                            break
+                    const = {}
+                    const['name'] = 'innerLevel'
+                    const['float'] = material.height_tess_shadows_inner
+                    c2['bind_constants'].append(const)
+                    const = {}
+                    const['name'] = 'outerLevel'
+                    const['float'] = material.height_tess_shadows_outer
+                    c2['bind_constants'].append(const)
+                    o['contexts'].append(c2)
+                else:
+                    # Non-tessellated shadow context
+                    c = {}
+                    c['name'] = ArmoryExporter.shadows_context
+                    o['contexts'].append(c)
         # X-Ray enabled
         elif material.overlay:
             # Change to overlay context
@@ -2851,7 +2886,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
         # Process defs and append datas
         if material.override_shader == False:
-            self.finalize_shader(o, defs, ArmoryExporter.renderpath_passes)
+            with_tess = False
+            # TODO: auto-detect tessellation shaders
+            if '_HeightTex' in defs:
+                with_tess = True
+            self.finalize_shader(o, defs, ArmoryExporter.renderpath_passes, with_tess=with_tess)
         else:
             # TODO: gather defs from vertex data when custom shader is used
             o['shader'] = material.override_shader_name
@@ -2928,7 +2967,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         po['volume_center'] = volume_center
         return po
             
-    def finalize_shader(self, o, defs, renderpath_passes):
+    def finalize_shader(self, o, defs, renderpath_passes, with_tess=False, with_geom=False):
         # Merge duplicates and sort
         defs = sorted(list(set(defs)))
         # Select correct shader variant
@@ -2957,16 +2996,29 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         #           c['stencil_reference_value'] = material.stencil_mask
         #       with open(shader_data_path_with_mask, 'w') as f:
         #           json.dump(json_data, f)
-        #   ArmoryExporter.asset_references.append(shader_data_path_with_mask)
+        #   assets.add_shader_data(shader_data_path_with_mask)
         #   o.shader = shader_data_name_with_mask + '/' + shader_data_name_with_mask
         # # No stencil mask
         # else:
-        ArmoryExporter.asset_references.append(shader_data_path)
+        assets.add_shader_data(shader_data_path)
         o['shader'] = shader_data_name + '/' + shader_data_name
         # Process all passes from render path
-        for ren_pass in renderpath_passes:
+        if with_tess: # TODO: properly handle adding height pass shaders to khafile
+            rpasses = [ArmoryExporter.mesh_context + 'height']
+            if bpy.data.worlds['Arm'].generate_shadows == True:
+                rpasses.append(ArmoryExporter.shadows_context + 'height')
+        else:
+            rpasses = renderpath_passes
+        for ren_pass in rpasses:
             shader_name = ren_pass + ext
-            ArmoryExporter.shader_references.append('build/compiled/Shaders/' + ArmoryExporter.renderpath_id + '/' + shader_name)
+            full_name = 'build/compiled/Shaders/' + ArmoryExporter.renderpath_id + '/' + shader_name
+            assets.add_shader(full_name + '.vert.glsl')
+            assets.add_shader(full_name + '.frag.glsl')
+            if with_geom:
+                assets.add_shader(full_name + '.geom.glsl')
+            if with_tess:
+                assets.add_shader(full_name + '.tesc.glsl')
+                assets.add_shader(full_name + '.tese.glsl')
 
 def register():
     bpy.utils.register_class(ArmoryExporter)

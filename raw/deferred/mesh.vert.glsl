@@ -6,9 +6,9 @@ precision highp float;
 
 #include "../compiled.glsl"
 
-#ifdef _HeightTex
-#define _NorTex
-#endif
+// #ifdef _HeightTex
+// #define _NorTex
+// #endif
 // #ifdef _NorTex
 // #define _Tex
 // #endif
@@ -39,19 +39,19 @@ uniform vec4 baseCol;
 	uniform mat4 WV;
 	uniform mat4 P;
 #endif
-#ifdef _HeightTex
-	uniform vec3 eye;
-	uniform vec3 light;
-	uniform mat4 W;
-#endif
+// #ifdef _HeightTex
+	// uniform vec3 eye;
+	// uniform vec3 light;
+	// uniform mat4 W;
+// #endif
 #ifdef _Skinning
 	// uniform float skinBones[skinMaxBones * 12]; // Defaults to 50
 	uniform float skinBones[skinMaxBones * 8]; // Dual quat
 #endif
 #ifdef _Probes
-	#ifndef _HeightTex
+	// #ifndef _HeightTex
 	uniform mat4 W;
-	#endif
+	// #endif
 #endif
 #ifdef _Veloc
 	uniform mat4 prevWVP;
@@ -66,10 +66,10 @@ out vec4 matColor;
 #else
 	out vec3 normal;
 #endif
-#ifdef _HeightTex
-	out vec3 tanLightDir;
-	out vec3 tanEyeDir;
-#endif
+// #ifdef _HeightTex
+	// out vec3 tanLightDir;
+	// out vec3 tanEyeDir;
+// #endif
 #ifdef _Probes
 	out vec4 wpos;
 #endif
@@ -221,14 +221,14 @@ void main() {
 	normal = _normal;
 #endif
 
-#ifdef _HeightTex
-	#ifndef _Probes
-		vec4 wpos = W * sPos;
-	#endif
-	vec3 lightDir = light - wpos.xyz;
-	vec3 eyeDir = /*normalize*/eye - wpos.xyz;
-	// Wrong bitangent handedness?
-	tanLightDir = vec3(dot(lightDir, tangent), dot(lightDir, -bitangent), dot(lightDir, _normal));
-	tanEyeDir = vec3(dot(eyeDir, tangent), dot(eyeDir, -bitangent), dot(eyeDir, _normal));
-#endif
+// #ifdef _HeightTex
+// 	#ifndef _Probes
+// 		vec4 wpos = W * sPos;
+// 	#endif
+// 	vec3 lightDir = light - wpos.xyz;
+// 	vec3 eyeDir = /*normalize*/eye - wpos.xyz;
+// 	// Wrong bitangent handedness?
+// 	tanLightDir = vec3(dot(lightDir, tangent), dot(lightDir, -bitangent), dot(lightDir, _normal));
+// 	tanEyeDir = vec3(dot(eyeDir, tangent), dot(eyeDir, -bitangent), dot(eyeDir, _normal));
+// #endif
 }

@@ -28,10 +28,24 @@ def get_os():
     else:
         return 'linux'
 
-def fetch_script_names():
+def get_sdk_path():
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
-    sdk_path = addon_prefs.sdk_path
+    if with_chromium() and addon_prefs.sdk_bundled:
+        if get_os() == 'mac':
+            return os.__file__[:-5] + '../../../scripts/addons/armory_sdk/'
+        else:
+            print('Bundled SDK path not implemented')
+    else:
+        return addon_prefs.sdk_path
+
+def get_ffmpeg_path():
+    user_preferences = bpy.context.user_preferences
+    addon_prefs = user_preferences.addons['armory'].preferences
+    return addon_prefs.ffmpeg_path
+
+def fetch_script_names():
+    sdk_path = get_sdk_path()
     wrd = bpy.data.worlds['Arm']
     wrd.bundled_scripts_list.clear()
     os.chdir(sdk_path + '/armory/Sources/armory/trait')

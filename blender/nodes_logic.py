@@ -3,194 +3,194 @@ from bpy.types import NodeTree, Node, NodeSocket
 from bpy.props import *
 import os
 import sys
-	
+    
 class CGTree(NodeTree):
-	'''Logic nodes'''
-	bl_idname = 'ArmLogicTreeType'
-	bl_label = 'Logic Node Tree'
-	bl_icon = 'GAME'
+    '''Logic nodes'''
+    bl_idname = 'ArmLogicTreeType'
+    bl_label = 'Logic Node Tree'
+    bl_icon = 'GAME'
 
 class ArmLogicTreeNode:
-	@classmethod
-	def poll(cls, ntree):
-		return ntree.bl_idname == 'ArmLogicTreeType'
+    @classmethod
+    def poll(cls, ntree):
+        return ntree.bl_idname == 'ArmLogicTreeType'
 
 
 class TransformNode(Node, ArmLogicTreeNode):
-	'''Transform node'''
-	bl_idname = 'TransformNodeType'
-	bl_label = 'Transform'
-	bl_icon = 'SOUND'
+    '''Transform node'''
+    bl_idname = 'TransformNodeType'
+    bl_label = 'Transform'
+    bl_icon = 'SOUND'
 
-	def init(self, context):
-		self.inputs.new('NodeSocketVector', "Position")
-		self.inputs.new('NodeSocketVector', "Rotation")
-		self.inputs.new('NodeSocketVector', "Scale")
-		self.inputs[-1].default_value = [1.0, 1.0, 1.0]
+    def init(self, context):
+        self.inputs.new('NodeSocketVector', "Position")
+        self.inputs.new('NodeSocketVector', "Rotation")
+        self.inputs.new('NodeSocketVector', "Scale")
+        self.inputs[-1].default_value = [1.0, 1.0, 1.0]
 
-		self.outputs.new('NodeSocketString', "Transform")
+        self.outputs.new('NodeSocketString', "Transform")
 
 class TimeNode(Node, ArmLogicTreeNode):
-	'''Time node'''
-	bl_idname = 'TimeNodeType'
-	bl_label = 'Time'
-	bl_icon = 'TIME'
-	
-	def init(self, context):
-		self.inputs.new('NodeSocketFloat', "Start")
-		self.inputs.new('NodeSocketFloat', "Stop")
-		self.inputs[-1].default_value = -1
-		self.inputs.new('NodeSocketBool', "Enabled")
-		self.inputs[-1].default_value = True
-		self.inputs.new('NodeSocketBool', "Loop")
-		self.inputs.new('NodeSocketBool', "Reflect")
-		
-		self.outputs.new('NodeSocketFloat', "Time")
-		
+    '''Time node'''
+    bl_idname = 'TimeNodeType'
+    bl_label = 'Time'
+    bl_icon = 'TIME'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketFloat', "Start")
+        self.inputs.new('NodeSocketFloat', "Stop")
+        self.inputs[-1].default_value = -1
+        self.inputs.new('NodeSocketBool', "Enabled")
+        self.inputs[-1].default_value = True
+        self.inputs.new('NodeSocketBool', "Loop")
+        self.inputs.new('NodeSocketBool', "Reflect")
+        
+        self.outputs.new('NodeSocketFloat', "Time")
+        
 class VectorNode(Node, ArmLogicTreeNode):
-	'''Vector node'''
-	bl_idname = 'VectorNodeType'
-	# Label for nice name display
-	bl_label = 'Vector'
-	# Icon identifier
-	bl_icon = 'CURVE_PATH'
-	
-	def init(self, context):
-		self.inputs.new('NodeSocketFloat', "X")
-		self.inputs.new('NodeSocketFloat', "Y")
-		self.inputs.new('NodeSocketFloat', "Z")
-		
-		self.outputs.new('NodeSocketVector', "Vector")
+    '''Vector node'''
+    bl_idname = 'VectorNodeType'
+    # Label for nice name display
+    bl_label = 'Vector'
+    # Icon identifier
+    bl_icon = 'CURVE_PATH'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketFloat', "X")
+        self.inputs.new('NodeSocketFloat', "Y")
+        self.inputs.new('NodeSocketFloat', "Z")
+        
+        self.outputs.new('NodeSocketVector', "Vector")
 
 class ScaleValueNode(Node, ArmLogicTreeNode):
-	'''Scale value node'''
-	bl_idname = 'ScaleValueNodeType'
-	bl_label = 'ScaleValue'
-	bl_icon = 'CURVE_PATH'
-	
-	def init(self, context):
-		self.inputs.new('NodeSocketFloat', "Factor")
-		self.inputs[-1].default_value = 1.0
-		self.inputs.new('NodeSocketFloat', "Value")
-		
-		self.outputs.new('NodeSocketFloat', "Value")
+    '''Scale value node'''
+    bl_idname = 'ScaleValueNodeType'
+    bl_label = 'ScaleValue'
+    bl_icon = 'CURVE_PATH'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketFloat', "Factor")
+        self.inputs[-1].default_value = 1.0
+        self.inputs.new('NodeSocketFloat', "Value")
+        
+        self.outputs.new('NodeSocketFloat', "Value")
 
 class SineNode(Node, ArmLogicTreeNode):
-	'''Sine node'''
-	bl_idname = 'SineNodeType'
-	bl_label = 'Sine'
-	bl_icon = 'CURVE_PATH'
-	
-	def init(self, context):
-		self.inputs.new('NodeSocketFloat', "Value")
-		
-		self.outputs.new('NodeSocketFloat', "Value")
+    '''Sine node'''
+    bl_idname = 'SineNodeType'
+    bl_label = 'Sine'
+    bl_icon = 'CURVE_PATH'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketFloat', "Value")
+        
+        self.outputs.new('NodeSocketFloat', "Value")
 
 class ThisNode(Node, ArmLogicTreeNode):
-	'''This node'''
-	bl_idname = 'ThisNodeType'
-	bl_label = 'This'
-	bl_icon = 'GAME'
-	
-	def init(self, context):
-		self.outputs.new('NodeSocketShader', "Target")
+    '''This node'''
+    bl_idname = 'ThisNodeType'
+    bl_label = 'This'
+    bl_icon = 'GAME'
+    
+    def init(self, context):
+        self.outputs.new('NodeSocketShader', "Target")
 
 class PickerNode(Node, ArmLogicTreeNode):
-	'''Picker node'''
-	bl_idname = 'PickerNodeType'
-	bl_label = 'Picker'
-	bl_icon = 'GAME'
-	property0 = StringProperty(name = "Object", default="")
+    '''Picker node'''
+    bl_idname = 'PickerNodeType'
+    bl_label = 'Picker'
+    bl_icon = 'GAME'
+    property0 = StringProperty(name = "Object", default="")
 
-	def init(self, context):
-		self.outputs.new('NodeSocketShader', "Target")
+    def init(self, context):
+        self.outputs.new('NodeSocketShader', "Target")
 
-	def draw_buttons(self, context, layout):
-		layout.prop_search(self, "property0", context.scene, "objects", text = "")
+    def draw_buttons(self, context, layout):
+        layout.prop_search(self, "property0", context.scene, "objects", text = "")
 
 class SetTransformNode(Node, ArmLogicTreeNode):
-	'''Set transform node'''
-	bl_idname = 'SetTransformNodeType'
-	bl_label = 'Set Transform'
-	bl_icon = 'GAME'
+    '''Set transform node'''
+    bl_idname = 'SetTransformNodeType'
+    bl_label = 'Set Transform'
+    bl_icon = 'GAME'
 
-	def init(self, context):
-		self.inputs.new('NodeSocketShader', "Target")
-		self.inputs.new('NodeSocketShader', "Transform")
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "Transform")
 
 class SetVisibleNode(Node, ArmLogicTreeNode):
-	'''Set visible node'''
-	bl_idname = 'SetVisibleNodeType'
-	bl_label = 'Set Visible'
-	bl_icon = 'GAME'
+    '''Set visible node'''
+    bl_idname = 'SetVisibleNodeType'
+    bl_label = 'Set Visible'
+    bl_icon = 'GAME'
 
-	def init(self, context):
-		self.inputs.new('NodeSocketShader', "Target")
-		self.inputs.new('NodeSocketShader', "Bool")
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "Bool")
 
 class GreaterThanNode(Node, ArmLogicTreeNode):
-	'''Greater than node'''
-	bl_idname = 'GreaterThanNodeType'
-	bl_label = 'Greater Than'
-	bl_icon = 'GAME'
+    '''Greater than node'''
+    bl_idname = 'GreaterThanNodeType'
+    bl_label = 'Greater Than'
+    bl_icon = 'GAME'
 
-	def init(self, context):
-		self.inputs.new('NodeSocketFloat', "Value 1")
-		self.inputs.new('NodeSocketFloat', "Value 2")
-		self.outputs.new('NodeSocketBool', "Bool")
+    def init(self, context):
+        self.inputs.new('NodeSocketFloat', "Value 1")
+        self.inputs.new('NodeSocketFloat', "Value 2")
+        self.outputs.new('NodeSocketBool', "Bool")
 
 ### Node Categories ###
 import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem
 
 class ObjectNodeCategory(NodeCategory):
-	@classmethod
-	def poll(cls, context):
-		return context.space_data.tree_type == 'ArmLogicTreeType'
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.tree_type == 'ArmLogicTreeType'
 
 class TypeNodeCategory(NodeCategory):
-	@classmethod
-	def poll(cls, context):
-		return context.space_data.tree_type == 'ArmLogicTreeType'
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.tree_type == 'ArmLogicTreeType'
 
 class MathNodeCategory(NodeCategory):
-	@classmethod
-	def poll(cls, context):
-		return context.space_data.tree_type == 'ArmLogicTreeType'
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.tree_type == 'ArmLogicTreeType'
 
 class LogicNodeCategory(NodeCategory):
-	@classmethod
-	def poll(cls, context):
-		return context.space_data.tree_type == 'ArmLogicTreeType'
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.tree_type == 'ArmLogicTreeType'
 
 node_categories = [
-	ObjectNodeCategory("LOGICTARGETNODES", "Target", items=[
-		NodeItem("ThisNodeType"),
-		NodeItem("PickerNodeType"),
-		NodeItem("SetTransformNodeType"),
-		NodeItem("SetVisibleNodeType"),
-	]),
-	TypeNodeCategory("LOGICTYPENODES", "Type", items=[
-		NodeItem("TransformNodeType"),
-		NodeItem("VectorNodeType"),
-	]),
-	MathNodeCategory("LOGICMATHNODES", "Math", items=[
-		NodeItem("TimeNodeType"),
-		NodeItem("ScaleValueNodeType"),
-		NodeItem("SineNodeType"),
-	]),
-	LogicNodeCategory("LOGICLOGICNODES", "Logic", items=[
-		NodeItem("GreaterThanNodeType"),
-	]),
+    ObjectNodeCategory("LOGICTARGETNODES", "Target", items=[
+        NodeItem("ThisNodeType"),
+        NodeItem("PickerNodeType"),
+        NodeItem("SetTransformNodeType"),
+        NodeItem("SetVisibleNodeType"),
+    ]),
+    TypeNodeCategory("LOGICTYPENODES", "Type", items=[
+        NodeItem("TransformNodeType"),
+        NodeItem("VectorNodeType"),
+    ]),
+    MathNodeCategory("LOGICMATHNODES", "Math", items=[
+        NodeItem("TimeNodeType"),
+        NodeItem("ScaleValueNodeType"),
+        NodeItem("SineNodeType"),
+    ]),
+    LogicNodeCategory("LOGICLOGICNODES", "Logic", items=[
+        NodeItem("GreaterThanNodeType"),
+    ]),
 ]
 
 def register():
-	bpy.utils.register_module(__name__)
-	try:
-		nodeitems_utils.register_node_categories("ARM_LOGIC_NODES", node_categories)
-	except:
-		pass
+    bpy.utils.register_module(__name__)
+    try:
+        nodeitems_utils.register_node_categories("ARM_LOGIC_NODES", node_categories)
+    except:
+        pass
 
 def unregister():
-	nodeitems_utils.unregister_node_categories("ARM_LOGIC_NODES")
-	bpy.utils.unregister_module(__name__)
+    nodeitems_utils.unregister_node_categories("ARM_LOGIC_NODES")
+    bpy.utils.unregister_module(__name__)

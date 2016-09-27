@@ -159,9 +159,7 @@ class ArmoryEditScriptButton(bpy.types.Operator):
     bl_label = 'Edit Script'
  
     def execute(self, context):
-        user_preferences = bpy.context.user_preferences
-        addon_prefs = user_preferences.addons['armory'].preferences
-        sdk_path = addon_prefs.sdk_path
+        sdk_path = utils.get_sdk_path()
         if utils.get_os() == 'win':
             kode_path = sdk_path + '/kode_studio/KodeStudio-win32/Kode Studio.exe'
         elif utils.get_os() == 'mac':
