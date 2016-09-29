@@ -41,7 +41,7 @@ def init_armory_props():
         for scene in bpy.data.scenes:
             if scene.render.engine != 'CYCLES':
                 scene.render.engine = 'CYCLES'
-            scene.render.fps = 60 # Default to 60fps for update loop
+            scene.render.fps = 60 # Default to 60fps for chromium update loop
         # Force camera far to at least 200 units for now, to prevent fighting with light far plane
         for c in bpy.data.cameras:
             if c.clip_end < 200:
@@ -340,14 +340,16 @@ def watch_play():
 
 def watch_compile(mode):
     play_project.compileproc.wait()
+    armory_progress(100)
     result = play_project.compileproc.poll()
     play_project.compileproc = None
     play_project.compileproc_finished = True
     if result == 0:
+        play_project.compileproc_success = True
         on_compiled(mode)
     else:
+        play_project.compileproc_success = False
         armory_log('Build failed, check console')
-        armory_progress(100)
 
 def watch_patch():
     play_project.compileproc.wait()
@@ -411,6 +413,7 @@ play_project.playproc = None
 play_project.compileproc = None
 play_project.playproc_finished = False
 play_project.compileproc_finished = False
+play_project.compileproc_success = False
 play_project.play_area = None
 play_project.chromium_running = False
 play_project.last_chromium_running = False
@@ -424,7 +427,6 @@ def run_server():
         print('Server already running')
 
 def on_compiled(mode): # build, play, play_viewport, publish
-    armory_progress(100)
     armory_log()
     sdk_path = utils.get_sdk_path()
 

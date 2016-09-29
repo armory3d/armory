@@ -35,6 +35,10 @@ out vec3 v_normal;
 
 void main() {
 	v_position = pos;
+#ifdef _Instancing
+	v_position += off;
+#endif
+
 	v_texCoord = tex;
 	v_normal = nor;
 #ifdef _NorTex

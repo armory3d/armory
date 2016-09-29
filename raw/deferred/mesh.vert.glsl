@@ -159,9 +159,9 @@ void getSkinningDualQuat(vec4 weights, out vec4 A, inout vec4 B) {
 void main() {
 
 #ifdef _Instancing
-	vec4 sPos = (vec4(pos + off, 1.0));
+	vec4 sPos = vec4(pos + off, 1.0);
 #else
-	vec4 sPos = (vec4(pos, 1.0));
+	vec4 sPos = vec4(pos, 1.0);
 #endif
 #ifdef _Skinning
 	// mat4 skinningMat = getSkinningMat();

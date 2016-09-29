@@ -125,7 +125,7 @@ def make_texture(self, id, image_node, material):
             tex['u_addressing'] = 'clamp'
             tex['v_addressing'] = 'clamp'
         else:
-            if is_pow(image.size[0]) == False or is_pow(image.size[1]) == False:
+            if bpy.data.worlds['Arm'].npot_texture_repeat == False and (is_pow(image.size[0]) == False or is_pow(image.size[1]) == False):
                 print('Armory Warning: ' + material.name + '/' + image.name + ' - non power of 2 texture can not use repeat mode')
                 tex['u_addressing'] = 'clamp'
                 tex['v_addressing'] = 'clamp'

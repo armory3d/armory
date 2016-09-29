@@ -26,23 +26,28 @@ class VehicleBody extends Trait {
 
     var vehicle:BtRaycastVehiclePointer = null;
     var carChassis:BtRigidBodyPointer;
-	
-	var engineForce = 0.0;
-	var breakingForce = 0.0;
-	var vehicleSteering = 0.0;
+
+	var chassis_mass = 500.0;
+	var wheelFriction = 1000;
+	var suspensionStiffness = 20.0;
+	var suspensionDamping = 2.3;
+	var suspensionCompression = 4.4;
+	var suspensionRestLength = 0.6;
+	var rollInfluence = 0.1;
 
 	var maxEngineForce = 3000.0;
 	var maxBreakingForce = 100.0;
+
+	var engineForce = 0.0;
+	var breakingForce = 0.0;
+	var vehicleSteering = 0.0;
 
 	public function new(wheelName1:String, wheelName2:String, wheelName3:String, wheelName4:String) {
 		super();
 
 		wheelNames = [wheelName1, wheelName2, wheelName3, wheelName4];
 
-		notifyOnInit(init);
-		notifyOnUpdate(update);
-		
-		kha.input.Keyboard.get().notify(onKeyDown, onKeyUp);
+		Scene.active.notifyOnInit(init);
 	}
 	
 	var up = false;
@@ -75,19 +80,8 @@ class VehicleBody extends Trait {
 			wheels.push(iron.Scene.active.root.getChild(n));
 		}
 
-    	var rightIndex = 0; 
-		var upIndex = 2; 
-		var forwardIndex = 1;
-
 		var wheelDirectionCS0 = BtVector3.create(0, 0, -1).value;
 		var wheelAxleCS = BtVector3.create(1, 0, 0).value;
-
-		var wheelFriction = 1000;
-		var suspensionStiffness = 20.0;
-		var suspensionDamping = 2.3;
-		var suspensionCompression = 4.4;
-		var suspensionRestLength = 0.6;
-		var rollInfluence = 0.1;
 
 		var chassisShape = BtBoxShape.create(BtVector3.create(
 				transform.size.x / 2,
@@ -106,7 +100,7 @@ class VehicleBody extends Trait {
 		compound.value.addChildShape(localTrans.value, chassisShape);
 		#end
 
-		carChassis = createRigidBody(500, compound);
+		carChassis = createRigidBody(chassis_mass, compound);
 
 		// Create vehicle
 		var tuning = BtVehicleTuning.create();
@@ -117,6 +111,9 @@ class VehicleBody extends Trait {
 		carChassis.ptr.setActivationState(BtCollisionObject.DISABLE_DEACTIVATION);
 
 		// Choose coordinate system
+		var rightIndex = 0; 
+		var upIndex = 2; 
+		var forwardIndex = 1;
 		vehicle.ptr.setCoordinateSystem(rightIndex, upIndex, forwardIndex);
 
 		// Add wheels
@@ -143,10 +140,12 @@ class VehicleBody extends Trait {
 		}
 
 		physics.world.ptr.addAction(vehicle);
+
+		kha.input.Keyboard.get().notify(onKeyDown, onKeyUp);
+		notifyOnUpdate(update);
     }
 
 	function update() {
-
 		if (vehicle == null) return;
 
 		if (up) {

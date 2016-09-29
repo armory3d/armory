@@ -1872,7 +1872,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                 return
 
         print ('Exporting mesh ' + bobject.data.name)
-        if len(bobject.data.vertices) > 40000:
+        if bobject.type != 'FONT' and len(bobject.data.vertices) > 40000:
             print('Armory Warning: "' + bobject.name + '" contains over 40000 vertices, split mesh to smaller parts to fit into 16-bit indices')
 
         o = {}

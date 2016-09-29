@@ -74,6 +74,7 @@ def buildNodeTree(world):
         wrd.world_defs += '_PCSS'
         sdk_path = utils.get_sdk_path()
         assets.add(sdk_path + 'armory/Assets/noise64.png')
+        assets.add_embedded_data('noise64.png')
 
     if wrd.diffuse_oren_nayar:
         wrd.world_defs += '_OrenNayar'

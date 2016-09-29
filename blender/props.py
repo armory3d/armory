@@ -83,8 +83,7 @@ def on_scene_update_post(context):
                     js_source = 'var o = armory.Scene.active.getObject("' + objname + '"); o.transform.rot.set(' + str(vec[1]) + ', ' + str(vec[2]) + ', ' + str(vec[3]) + ' ,' + str(vec[0]) + '); o.transform.dirty = true;'
                     bgame.call_js(js_source)
                     mapped = True
-
-            # Rebuild scene
+            # Othwerwise rebuild scene
             if mapped == False:
                 make.patch_project()
                 make.compile_project()
@@ -96,6 +95,7 @@ def on_scene_update_post(context):
                     # Read chromium console
                     if bgame.get_console_updated() == 1:
                         make.armory_space_log(bgame.get_console())
+                        area.tag_redraw()
                     # Read operator console
                     if bgame.get_operator_updated() == 1:
                         parse_operator(bgame.get_operator())
@@ -122,12 +122,14 @@ def on_scene_update_post(context):
             for area in bpy.context.screen.areas:
                 if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
                     area.tag_redraw()
-            # Notify embedded player
-            if make.play_project.chromium_running:
-                bgame.call_js('armory.Scene.patch();')
-            # Switch to armory space
-            elif utils.with_chromium() and make.play_project.in_viewport:
-                make.play_project.play_area.type = 'VIEW_GAME'
+            # Compilation succesfull
+            if make.play_project.compileproc_success:
+                # Notify embedded player
+                if make.play_project.chromium_running:
+                    bgame.call_js('armory.Scene.patch();')
+                # Or switch to armory space
+                elif utils.with_chromium() and make.play_project.in_viewport:
+                    make.play_project.play_area.type = 'VIEW_GAME'
 
     edit_obj = bpy.context.edit_object
     if edit_obj != None and edit_obj.is_updated_data:
@@ -286,6 +288,7 @@ def initProperties():
     bpy.types.Camera.mirror_resolution_y = bpy.props.FloatProperty(name="Y", default=256.0)
     bpy.types.Camera.last_decal_context = bpy.props.StringProperty(name="Decal Context", default='')
     # For world
+    
     bpy.types.World.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
     bpy.types.World.world_envtex_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
     bpy.types.World.world_envtex_color = bpy.props.FloatVectorProperty(name="Environment Color", size=4, default=[0,0,0,1])
@@ -355,6 +358,7 @@ def initProperties():
     # Material override flags
     bpy.types.World.force_no_culling = bpy.props.BoolProperty(name="Force No Culling", default=False)
     bpy.types.World.force_anisotropic_filtering = bpy.props.BoolProperty(name="Force Anisotropic Filtering", default=False)
+    bpy.types.World.npot_texture_repeat = bpy.props.BoolProperty(name="NPoT Texture Repeat", description="Enable texture repeat mode for non-power of two textures", default=False)
     # Lighting flags
     bpy.types.World.diffuse_oren_nayar = bpy.props.BoolProperty(name="Oren Nayar Diffuse", default=False, update=invalidate_shader_cache)
     # For material
@@ -749,6 +753,7 @@ class WorldPropsPanel(bpy.types.Panel):
         layout.label('Flags')
         layout.prop(wrd, 'force_no_culling')
         layout.prop(wrd, 'force_anisotropic_filtering')
+        layout.prop(wrd, 'npot_texture_repeat')
         layout.prop(wrd, 'diffuse_oren_nayar')
 
 # Menu in render region
