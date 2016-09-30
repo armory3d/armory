@@ -237,6 +237,13 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             os.makedirs(mesh_fp)
         return mesh_fp + object_id + '.arm'
 
+    def get_greasepencils_file_path(self, object_id):
+        index = self.filepath.rfind('/')
+        gp_fp = self.filepath[:(index+1)] + 'greasepencils/'
+        if not os.path.exists(gp_fp):
+            os.makedirs(gp_fp)
+        return gp_fp + object_id + '.arm'
+
     @staticmethod
     def GetBObjectType(bobject):
         if bobject.type == "MESH":
@@ -1325,7 +1332,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                         if (not bone.parent):
                             self.ProcessBone(bone)
 
-        if bobject.type != 'MESH' or self.object_has_instanced_children(bobject) == False:
+        if bobject.type != 'MESH' or bobject.instanced_children == False:
             for subbobject in bobject.children:
                 self.ProcessBObject(subbobject)
 
@@ -1557,7 +1564,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             if not hasattr(o, 'children'):
                 o['children'] = []
 
-        if bobject.type != 'MESH' or self.object_has_instanced_children(bobject) == False:
+        if bobject.type != 'MESH' or bobject.instanced_children == False:
             for subbobject in bobject.children:
                 if (subbobject.parent_type != "BONE"):
                     self.ExportObject(subbobject, scene, None, o)
@@ -1737,7 +1744,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             mesh_obj = {}
             mesh_obj['mesh_datas'] = [o]
             utils.write_arm(fp, mesh_obj)
-            self.object_set_mesh_cached(bobject, True)
+
+            bobject.data.mesh_cached = True
+            if bobject.type != 'FONT':
+                bobject.data.mesh_cached_verts = len(bobject.data.vertices)
+                bobject.data.mesh_cached_edges = len(bobject.data.edges)
         else:
             self.output['mesh_datas'].append(o)
 
@@ -2239,7 +2250,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         o['attenuation'] = objref.attenuation
         self.output['speaker_datas'].append(o)
 
-    def ExportMaterials(self):
+    def export_materials(self):
         # This function exports all of the materials used in the scene
         for materialRef in self.materialArray.items():
             material = materialRef[0]
@@ -2302,7 +2313,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             self.finalize_shader(o, defs, ArmoryExporter.renderpath_passes)
             self.output['material_datas'].append(o)
 
-    def ExportParticleSystems(self):
+    def export_particle_systems(self):
         for particleRef in self.particleSystemArray.items():
             o = {}
             psettings = particleRef[0]
@@ -2318,18 +2329,39 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             o['factor_random'] = psettings.factor_random
             self.output['particle_datas'].append(o)
             
-    def ExportWorlds(self):
+    def export_worlds(self):
         # for worldRef in self.worldArray.items():
         # for worldRef in bpy.data.worlds:
         worldRef = self.scene.world
         if worldRef != None:
             o = {}
-            # w = worldRef[0]
             w = worldRef
-            # o.id = worldRef[1]["structName"]
             o['name'] = w.name
             self.cb_export_world(w, o)
             self.output['world_datas'].append(o)
+
+    def export_grease_pencils(self):
+        gpRef = self.scene.grease_pencil
+        if gpRef == None:
+            return
+        
+        # ArmoryExporter.option_mesh_per_file # Currently always exports to separate file
+        fp = self.get_greasepencils_file_path('greasepencil_' + gpRef.name)
+        assets.add(fp)
+        self.output['grease_pencil_ref'] = 'greasepencil_' + gpRef.name + '/' + gpRef.name
+        
+        assets.add_shader_data('build/compiled/ShaderDatas/grease_pencil/grease_pencil.arm')
+        assets.add_shader('build/compiled/Shaders/grease_pencil/grease_pencil.frag.glsl')
+        assets.add_shader('build/compiled/Shaders/grease_pencil/grease_pencil.vert.glsl')
+
+        if gpRef.data_cached == True and os.path.exists(fp):
+            return
+
+        gpo = self.cb_export_grease_pencil(gpRef)
+        gp_obj = {}
+        gp_obj['grease_pencil_datas'] = [gpo]
+        utils.write_arm(fp, gp_obj)
+        gpRef.data_cached = True
 
     def ExportObjects(self, scene):
         if not ArmoryExporter.option_mesh_only:
@@ -2409,13 +2441,16 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                     print('Armory Warning: No camera found in active scene')
 
             self.output['material_datas'] = []
-            self.ExportMaterials()
+            self.export_materials()
 
             self.output['particle_datas'] = []
-            self.ExportParticleSystems()
+            self.export_particle_systems()
             
             self.output['world_datas'] = []
-            self.ExportWorlds()
+            self.export_worlds()
+
+            self.output['grease_pencil_datas'] = []
+            self.export_grease_pencils()
 
             if self.scene.world != None:
                 self.output['world_ref'] = self.scene.world.name
@@ -2453,9 +2488,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         return {'FINISHED'}
 
     # Callbacks
-    def object_has_instanced_children(self, bobject):
-        return bobject.instanced_children
-
     def object_is_mesh_cached(self, bobject):
         if bobject.type == 'FONT': # No verts for font
             return bobject.data.mesh_cached
@@ -2464,12 +2496,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         if bobject.data.mesh_cached_edges != len(bobject.data.edges):
             return False
         return bobject.data.mesh_cached
-
-    def object_set_mesh_cached(self, bobject, b):
-        bobject.data.mesh_cached = b
-        if b and bobject.type != 'FONT':
-            bobject.data.mesh_cached_verts = len(bobject.data.vertices)
-            bobject.data.mesh_cached_edges = len(bobject.data.edges)
 
     def get_export_tangents(self, mesh):
         for m in mesh.materials:
@@ -2906,8 +2932,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         defs = bpy.data.worlds['Arm'].world_defs
         generate_irradiance = True #'_EnvTex' in defs or '_EnvSky' in defs or '_EnvCon' in defs
         disable_hdr = world.world_envtex_name.endswith('.jpg')
-        irrtex = world.world_envtex_name.rsplit('.', 1)[0]
-        radtex = irrtex
+        radtex = world.world_envtex_name.rsplit('.', 1)[0]
+        irrsharmonics = world.name
 
         # Radiance
         if '_EnvTex' in defs:
@@ -2918,7 +2944,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
         num_mips = world.world_envtex_num_mips
         strength = world.world_envtex_strength
-        po = self.make_probe(world.name, irrtex, radtex, num_mips, strength, 1.0, [0, 0, 0], [0, 0, 0], world_generate_radiance, generate_irradiance, disable_hdr)
+        po = self.make_probe(world.name, irrsharmonics, radtex, num_mips, strength, 1.0, [0, 0, 0], [0, 0, 0], world_generate_radiance, generate_irradiance, disable_hdr)
         o['probes'].append(po)
         
         if '_EnvSky' in defs:
@@ -2947,7 +2973,108 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                 po = self.make_probe(cam.name, base_name, base_name, cam.probe_num_mips, cam.probe_strength, cam.probe_blending, volume, volume_center, generate_radiance, generate_irradiance, disable_hdr)
                 o['probes'].append(po)
     
-    def make_probe(self, id, irrtex, radtex, mipmaps, strength, blending, volume, volume_center, generate_radiance, generate_irradiance, disable_hdr):
+    def cb_export_grease_pencil(self, gp):
+        o = {}
+        o['name'] = gp.name
+        o['layers'] = []
+        # originalFrame = self.scene.frame_current
+        for layer in gp.layers:
+            o['layers'].append(self.export_grease_pencil_layer(layer))
+        # self.scene.frame_set(originalFrame)
+        # o['palettes'] = []
+        # for palette in gp.palettes:
+            # o['palettes'].append(self.export_grease_pencil_palette(palette))
+        o['shader'] = 'grease_pencil/grease_pencil'
+        return o
+
+    def export_grease_pencil_layer(self, layer):
+        lo = {}
+        lo['name'] = layer.info
+        lo['opacity'] = layer.opacity
+        lo['frames'] = []
+        for frame in layer.frames:
+            if frame.frame_number > self.scene.frame_end:
+                break
+            # TODO: load GP frame data
+            # self.scene.frame_set(frame.frame_number)
+            lo['frames'].append(self.export_grease_pencil_frame(frame))
+        return lo
+
+    def export_grease_pencil_frame(self, frame):
+        va = []
+        cola = []
+        colfilla = []
+        indices = []
+        index_offset = 0
+        for stroke in frame.strokes:
+            for point in stroke.points:
+                va.append(point.co[0])
+                va.append(point.co[1])
+                va.append(point.co[2])
+                # TODO: store index to color pallete only, this is extremely wasteful
+                if stroke.color != None:
+                    cola.append(stroke.color.color[0])
+                    cola.append(stroke.color.color[1])
+                    cola.append(stroke.color.color[2])
+                    cola.append(stroke.color.alpha)
+                    colfilla.append(stroke.color.fill_color[0])
+                    colfilla.append(stroke.color.fill_color[1])
+                    colfilla.append(stroke.color.fill_color[2])
+                    colfilla.append(stroke.color.fill_alpha)
+                else:
+                    cola.append(0.0)
+                    cola.append(0.0)
+                    cola.append(0.0)
+                    cola.append(0.0)
+                    colfilla.append(0.0)
+                    colfilla.append(0.0)
+                    colfilla.append(0.0)
+                    colfilla.append(0.0)
+                    
+            for triangle in stroke.triangles:
+                indices.append(triangle.v1 + index_offset)
+                indices.append(triangle.v2 + index_offset)
+                indices.append(triangle.v3 + index_offset)
+            index_offset += len(stroke.points)
+        fo = {}
+        # TODO: merge into array of vertex arrays
+        fo['vertex_array'] = {}
+        fo['vertex_array']['attrib'] = 'pos'
+        fo['vertex_array']['size'] = 3
+        fo['vertex_array']['values'] = va
+        fo['col_array'] = {}
+        fo['col_array']['attrib'] = 'col'
+        fo['col_array']['size'] = 4
+        fo['col_array']['values'] = cola
+        fo['colfill_array'] = {}
+        fo['colfill_array']['attrib'] = 'colfill'
+        fo['colfill_array']['size'] = 4
+        fo['colfill_array']['values'] = colfilla
+        fo['index_array'] = {}
+        fo['index_array']['material'] = 0
+        fo['index_array']['size'] = 3
+        fo['index_array']['values'] = indices
+        fo['frame_number'] = frame.frame_number
+        return fo
+
+    def export_grease_pencil_palette(self, palette):
+        po = {}
+        po['name'] = palette.info
+        po['colors'] = []
+        for color in palette.colors:
+            po['colors'].append(self.export_grease_pencil_palette_color(color))
+        return po
+
+    def export_grease_pencil_palette_color(self, color):
+        co = {}
+        co['name'] = color.name
+        co['color'] = [color.color[0], color.color[1], color.color[2]]
+        co['alpha'] = color.alpha
+        co['fill_color'] = [color.fill_color[0], color.fill_color[1], color.fill_color[2]]
+        co['fill_alpha'] = color.fill_alpha
+        return co
+
+    def make_probe(self, id, irrsharmonics, radtex, mipmaps, strength, blending, volume, volume_center, generate_radiance, generate_irradiance, disable_hdr):
         po = {}
         po['name'] = id
         if generate_radiance:
@@ -2958,7 +3085,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                 po['radiance'] += '.hdr'
             po['radiance_mipmaps'] = mipmaps
         if generate_irradiance:
-            po['irradiance'] = irrtex + '_irradiance'
+            po['irradiance'] = irrsharmonics + '_irradiance'
         else:
             po['irradiance'] = '' # No irradiance data, fallback to default at runtime
         po['strength'] = strength

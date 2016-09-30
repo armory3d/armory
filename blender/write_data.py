@@ -24,9 +24,6 @@ let project = new Project('""" + bpy.data.worlds['Arm'].ArmProjectName + """');
 project.addSources('Sources');
 project.addShaders('Sources/Shaders/**');
 """)
-        # project.addAssets('build/compiled/Assets/**');
-        for file in assets.assets:
-            f.write("project.addAssets('" + file + "');\n")
         
         f.write(add_armory_library(sdk_path, 'armory'))
         f.write(add_armory_library(sdk_path, 'iron'))

@@ -1,0 +1,54 @@
+{
+	"contexts": [
+		{
+			"name": "grease_pencil",
+			"params": [
+				{
+					"name": "depth_write",
+					"value": "true"
+				},
+				{
+					"name": "compare_mode",
+					"value": "less"
+				},
+				{
+					"name": "cull_mode",
+					"value": "none"
+				},
+				{
+					"name": "blend_source",
+					"value": "source_alpha"
+				},
+				{
+					"name": "blend_destination",
+					"value": "inverse_source_alpha"
+				},
+				{
+					"name": "blend_operation",
+					"value": "add"
+				},
+				{
+					"name": "alpha_blend_source",
+					"value": "source_alpha"
+				},
+				{
+					"name": "alpha_blend_destination",
+					"value": "inverse_source_alpha"
+				},
+				{
+					"name": "alpha_blend_operation",
+					"value": "add"
+				}
+			],
+			"links": [
+				{
+					"name": "VP",
+					"link": "_viewProjectionMatrix"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "grease_pencil.vert.glsl",
+			"fragment_shader": "grease_pencil.frag.glsl"
+		}
+	]
+}

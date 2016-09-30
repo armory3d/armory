@@ -259,6 +259,8 @@ def initProperties():
     bpy.types.Mesh.dynamic_usage = bpy.props.BoolProperty(name="Dynamic Data Usage", description="Mesh data can change at runtime", default=False)
     bpy.types.Curve.mesh_cached = bpy.props.BoolProperty(name="Mesh Cached", description="No need to reexport curve data", default=False)
     bpy.types.Curve.dynamic_usage = bpy.props.BoolProperty(name="Dynamic Data Usage", description="Curve data can change at runtime", default=False)
+    # For grease pencil
+    bpy.types.GreasePencil.data_cached = bpy.props.BoolProperty(name="GP Cached", description="No need to reexport grease pencil data", default=False)
     # For armature
     bpy.types.Armature.armature_cached = bpy.props.BoolProperty(name="Armature Cached", description="No need to reexport armature data", default=False)
     # Actions
@@ -588,10 +590,11 @@ class ScenePropsPanel(bpy.types.Panel):
  
     def draw(self, context):
         layout = self.layout
-        scn = bpy.context.scene
-        if scn == None:
+        scene = bpy.context.scene
+        if scene == None:
             return
-        layout.prop(scn, 'game_export')
+        layout.prop(scene, 'game_export')
+        layout.operator('arm.invalidate_gp_cache')
 
 class ReimportPathsMenu(bpy.types.Menu):
     bl_label = "OK?"
@@ -626,6 +629,16 @@ class OBJECT_OT_INVALIDATECACHEButton(bpy.types.Operator):
  
     def execute(self, context):
         context.object.data.mesh_cached = False
+        return{'FINISHED'}
+
+class InvalidateGPCacheButton(bpy.types.Operator):
+    '''Delete cached grease pencil data'''
+    bl_idname = "arm.invalidate_gp_cache"
+    bl_label = "Invalidate GP Cache"
+ 
+    def execute(self, context):
+        if context.scene.grease_pencil != None:
+            context.scene.grease_pencil.data_cached = False
         return{'FINISHED'}
 
 # Menu in materials region

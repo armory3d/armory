@@ -640,6 +640,17 @@ class DrawCompositorWithFXAANode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
+class DrawGreasePencilNode(Node, CGPipelineTreeNode):
+    '''Draw grease pencil node'''
+    bl_idname = 'DrawGreasePencilNodeType'
+    bl_label = 'Draw Grease Pencil'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
 # Constant nodes
 class ScreenNode(Node, CGPipelineTreeNode):
     '''Reference screen dimensions node'''
@@ -713,6 +724,7 @@ node_categories = [
         NodeItem("DrawWorldNodeType"),
         NodeItem("DrawCompositorNodeType"),
         NodeItem("DrawCompositorWithFXAANodeType"),
+        NodeItem("DrawGreasePencilNodeType"),
     ]),
     MyTargetNodeCategory("TARGETNODES", "Target", items=[
         NodeItem("TargetNodeType"),

@@ -273,6 +273,9 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     # assets.add(buildNodeTrees.assets_path + 'noise256.png')
     # assets.add_embedded_data('noise256.png')
 
+def make_draw_grease_pencil(stage, node_group, node):
+    stage['command'] = 'draw_grease_pencil'
+
 def make_call_function(stage, node_group, node):
     stage['command'] = 'call_function'
     stage['params'].append(node.inputs[1].default_value)
@@ -535,6 +538,11 @@ def buildNode(stages, node, node_group):
         with_fxaa = node.bl_idname == 'DrawCompositorWithFXAANodeType'
         make_draw_compositor(stage, node_group, node, with_fxaa=with_fxaa)
     
+    elif node.bl_idname == 'DrawGreasePencilNodeType':
+        stage = {}
+        stage['params'] = []
+        make_draw_grease_pencil(stage, node_group, node)
+
     elif node.bl_idname == 'BranchFunctionNodeType':
         make_branch_function(stage, node_group, node)
         stages.append(stage)
