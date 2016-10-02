@@ -25,13 +25,13 @@ class RigidBody extends Trait {
 	public var collisionMargin:Float;
 
 	public var body:BtRigidBodyPointer = null;
-	public var bodyCreated = false;
+	public var bodyReady = false;
 	public var shapeConvexCreated:Bool;
 
 	static var nextId = 0;
 	public var id = 0;
 
-	public var onCreated:Void->Void = null;
+	public var onReady:Void->Void = null;
 
 	public function new(mass = 1.0, shape = Shape.Box, friction = 0.5, collisionMargin = 0.0) {
 		super();
@@ -52,12 +52,16 @@ class RigidBody extends Trait {
 		return f - f * collisionMargin;
 	}
 
+	public function notifyOnReady(f:Void->Void) {
+		onReady = f;
+	}
+
 	public function init() {
 		transform = object.transform;
 		physics = armory.trait.internal.PhysicsWorld.active;
 
-		if (bodyCreated) return;
-		bodyCreated = true;
+		if (bodyReady) return;
+		bodyReady = true;
 
 		var _shape:BtCollisionShapePointer = null;
 		var _shapeConvex:BtConvexHullShapePointer = null;
@@ -147,7 +151,7 @@ class RigidBody extends Trait {
 
 		physics.addRigidBody(this);
 
-		if (onCreated != null) onCreated();
+		if (onReady != null) onReady();
 	}
 
 	function lateUpdate() {

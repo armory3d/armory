@@ -648,6 +648,7 @@ class DrawGreasePencilNode(Node, CGPipelineTreeNode):
     
     def init(self, context):
         self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketString', "Context")
 
         self.outputs.new('NodeSocketShader', "Stage")
 

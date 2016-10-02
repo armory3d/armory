@@ -57,9 +57,9 @@ def buildNodeTree(world):
     if '_EnvSky' not in wrd.world_defs and '_EnvTex' not in wrd.world_defs:
         wrd.world_defs += '_EnvCol'
         # Irradiance json file name
-        base_name = utils.safe_filename(world.name)
-        world.world_envtex_name = base_name
-        write_probes.write_color_irradiance(base_name, world.world_envtex_color)
+        world.world_envtex_name = world.name
+        world.world_envtex_irr_name = world.name
+        write_probes.write_color_irradiance(world.name, world.world_envtex_color)
 
     # Clouds enabled
     if wrd.generate_clouds:
@@ -164,6 +164,7 @@ def parse_color(world, node, context, envmap_strength_const):
         # Generate prefiltered envmaps
         generate_radiance = bpy.data.worlds['Arm'].generate_radiance
         world.world_envtex_name = texture['file']
+        world.world_envtex_irr_name = texture['file'].rsplit('.', 1)[0]
         disable_hdr = image.filepath.endswith('.jpg')
         mip_count = world.world_envtex_num_mips
         
@@ -195,10 +196,8 @@ def parse_color(world, node, context, envmap_strength_const):
         world.world_envtex_ground_albedo = node.ground_albedo
         
         # Irradiance json file name
-        base_name = utils.safe_filename(world.name)
-        world.world_envtex_name = base_name + '.hdr' # Fake extension
-        
-        write_probes.write_sky_irradiance(base_name)
+        world.world_envtex_irr_name = world.name
+        write_probes.write_sky_irradiance(world.name)
 
         # Radiance
         if bpy.data.worlds['Arm'].generate_radiance_sky and bpy.data.worlds['Arm'].generate_radiance:
@@ -209,6 +208,7 @@ def parse_color(world, node, context, envmap_strength_const):
             for i in range(0, 8):
                 assets.add(sdk_path + 'armory/Assets/hosek/hosek_radiance_' + str(i) + '.hdr')
             
+            world.world_envtex_name = 'hosek'
             world.world_envtex_num_mips = 8
 
         # Adjust strength to match Cycles

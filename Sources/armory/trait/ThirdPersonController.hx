@@ -2,17 +2,14 @@ package armory.trait;
 
 import iron.math.Vec4;
 import iron.system.Input;
-import iron.object.Object;
 import armory.trait.internal.PhysicsWorld;
 import armory.trait.internal.CameraController;
 
-class FirstPersonController extends CameraController {
+class ThirdPersonController extends CameraController {
 
 #if (!WITH_PHYSICS)
 	public function new() { super(); }
 #else
-
-	var head:Object;
 
 	static inline var rotationSpeed = 1.0; 
 
@@ -23,8 +20,6 @@ class FirstPersonController extends CameraController {
 	}
 	
 	function init() {
-		head = object.getChild("Head");
-
 		PhysicsWorld.active.notifyOnPreUpdate(preUpdate);
 		notifyOnUpdate(update);
 		notifyOnRemove(removed);
@@ -37,7 +32,7 @@ class FirstPersonController extends CameraController {
 		
 		if (Input.touch) {
 			// kha.SystemImpl.lockMouse();
-			head.transform.rotate(xVec, -Input.deltaY / 250 * rotationSpeed);
+			camera.transform.rotate(xVec, Input.deltaY / 250 * rotationSpeed);
 			transform.rotate(zVec, -Input.deltaX / 250 * rotationSpeed);
 			body.syncTransform();
 		}
@@ -52,7 +47,7 @@ class FirstPersonController extends CameraController {
 		if (!body.bodyReady) return;
 
 		if (jump) {
-			body.applyImpulse(new Vec4(0, 0, 15));
+			body.applyImpulse(new Vec4(0, 0, 20));
 			jump = false;
 		}
 
@@ -68,7 +63,7 @@ class FirstPersonController extends CameraController {
 		body.setLinearVelocity(0.0, 0.0, btvec.z() - 1.0);
 
 		if (moveForward || moveBackward || moveLeft || moveRight) {			
-			dir.mult(8);
+			dir.mult(-2);
 			body.activate();
 			body.setLinearVelocity(dir.x, dir.y, btvec.z() - 1.0);
 		}

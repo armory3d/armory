@@ -1467,9 +1467,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                     o['material_refs'].append('__default')
                     self.export_default_material = True
 
-                o['particle_refs'] = []
-                for i in range(len(bobject.particle_systems)):
-                    self.ExportParticleSystemRef(bobject.particle_systems[i], i, o)
+                num_psys = len(bobject.particle_systems)
+                if num_psys > 0:
+                    o['particle_refs'] = []
+                    for i in range(0, num_psys):
+                        self.ExportParticleSystemRef(bobject.particle_systems[i], i, o)
                     
                 o['dimensions'] = [bobject.dimensions[0], bobject.dimensions[1], bobject.dimensions[2]] 
 
@@ -1561,7 +1563,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
             self.cb_export_object(bobject, o, type)
 
-            if not hasattr(o, 'children'):
+            if not hasattr(o, 'children') and len(bobject.children) > 0:
                 o['children'] = []
 
         if bobject.type != 'MESH' or bobject.instanced_children == False:
@@ -2342,7 +2344,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
     def export_grease_pencils(self):
         gpRef = self.scene.grease_pencil
-        if gpRef == None:
+        if gpRef == None or self.scene.gp_export == False:
             return
         
         # ArmoryExporter.option_mesh_per_file # Currently always exports to separate file
@@ -2353,6 +2355,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         assets.add_shader_data('build/compiled/ShaderDatas/grease_pencil/grease_pencil.arm')
         assets.add_shader('build/compiled/Shaders/grease_pencil/grease_pencil.frag.glsl')
         assets.add_shader('build/compiled/Shaders/grease_pencil/grease_pencil.vert.glsl')
+        assets.add_shader('build/compiled/Shaders/grease_pencil/grease_pencil_shadows.frag.glsl')
+        assets.add_shader('build/compiled/Shaders/grease_pencil/grease_pencil_shadows.vert.glsl')
 
         if gpRef.data_cached == True and os.path.exists(fp):
             return
@@ -2734,6 +2738,25 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                 self.materialToObjectDict[mat] = [bobject]
                 self.materialToGameObjectDict[mat] = [o]
 
+        # Export constraints
+        if len(bobject.constraints) > 0:
+            o['constraints'] = []
+            for constr in bobject.constraints:
+                co = {}
+                co['name'] = constr.name
+                co['type'] = constr.type
+                co['target'] = constr.target.name
+                if constr.type == 'COPY_LOCATION':
+                    co['use_x'] = constr.use_x
+                    co['use_y'] = constr.use_y
+                    co['use_z'] = constr.use_z
+                    co['invert_x'] = constr.invert_x
+                    co['invert_y'] = constr.invert_y
+                    co['invert_z'] = constr.invert_z
+                    co['use_offset'] = constr.use_offset
+                    co['influence'] = constr.influence
+                o['constraints'].append(co)
+
     def is_object_animation_enabled(self, bobject):
         # Checks if animation is present and enabled
         if bobject.object_animation_enabled == False or bobject.type == 'ARMATURE' or bobject.type == 'BONE':
@@ -2896,7 +2919,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             # GPU Skinning
             if ob.find_armature() and self.is_bone_animation_enabled(ob) and bpy.data.worlds['Arm'].generate_gpu_skin == True:
                 defs.append('_Skinning')
-            # Billboarding
+            # Perform billboarding constraint in shader
             if len(ob.constraints) > 0 and ob.constraints[0].type == 'TRACK_TO' and ob.constraints[0].target != None and \
                ob.constraints[0].target.type == 'CAMERA' and ob.constraints[0].mute == False:
                 defs.append('_Billboard')
@@ -2922,18 +2945,23 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             o['shader'] = material.override_shader_name
     
     def cb_export_world(self, world, o):
-        o['background_color'] = utils.color_to_int(world.world_envtex_color)
+        defs = bpy.data.worlds['Arm'].world_defs
+        bgcol = world.world_envtex_color
+        if '_LDR' in defs:
+            for i in range(0, 3):
+                bgcol[i] = pow(bgcol[i], 1.0 / 2.2)
+        o['background_color'] = utils.color_to_int(bgcol)
+
         wmat_name = utils.safe_filename(world.name) + '_material'
         o['material_ref'] = wmat_name + '/' + wmat_name + '/env'
         o['brdf'] = 'brdf.png'
         o['probes'] = []
         # Main probe
         world_generate_radiance = False
-        defs = bpy.data.worlds['Arm'].world_defs
         generate_irradiance = True #'_EnvTex' in defs or '_EnvSky' in defs or '_EnvCon' in defs
         disable_hdr = world.world_envtex_name.endswith('.jpg')
         radtex = world.world_envtex_name.rsplit('.', 1)[0]
-        irrsharmonics = world.name
+        irrsharmonics = world.world_envtex_irr_name
 
         # Radiance
         if '_EnvTex' in defs:
@@ -3005,6 +3033,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         cola = []
         colfilla = []
         indices = []
+        num_stroke_points = []
         index_offset = 0
         for stroke in frame.strokes:
             for point in stroke.points:
@@ -3029,12 +3058,12 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                     colfilla.append(0.0)
                     colfilla.append(0.0)
                     colfilla.append(0.0)
-                    colfilla.append(0.0)
-                    
+                    colfilla.append(0.0)        
             for triangle in stroke.triangles:
                 indices.append(triangle.v1 + index_offset)
                 indices.append(triangle.v2 + index_offset)
                 indices.append(triangle.v3 + index_offset)
+            num_stroke_points.append(len(stroke.points))
             index_offset += len(stroke.points)
         fo = {}
         # TODO: merge into array of vertex arrays
@@ -3054,6 +3083,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         fo['index_array']['material'] = 0
         fo['index_array']['size'] = 3
         fo['index_array']['values'] = indices
+        fo['num_stroke_points'] = num_stroke_points
         fo['frame_number'] = frame.frame_number
         return fo
 

@@ -8,15 +8,15 @@ class SceneInstance extends Trait {
 		s = StringTools.replace(s, '.', '_');
 		s = StringTools.replace(s, '-', '_');
 		s = StringTools.replace(s, ' ', '_');
-    	if (Std.parseInt(s.charAt(0)) != null) s = '_' + s; // Prefix _ if first char is digit
-    	return s;
-    }
+		if (Std.parseInt(s.charAt(0)) != null) s = '_' + s; // Prefix _ if first char is digit
+		return s;
+	}
 
-    public function new(sceneName:String) {
-        super();
+	public function new(sceneName:String) {
+		super();
 
-        notifyOnInit(function() {
+		notifyOnInit(function() {
 			iron.Scene.active.addScene(safeFilename(sceneName), object, function(o:iron.object.Object) {});
 		});
-    }
+	}
 }

@@ -27,11 +27,11 @@ class PhysicsDrag extends Trait {
 		super();
 
 		notifyOnInit(init);
-		notifyOnUpdate(update);
 	}
 
 	function init() {
 		physics = armory.trait.internal.PhysicsWorld.active;
+		notifyOnUpdate(update);
 	}
 
 	function update() {

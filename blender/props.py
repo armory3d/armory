@@ -70,17 +70,17 @@ def on_scene_update_post(context):
                 objname = bpy.context.object.name
                 if ops[-1].name == 'Translate':
                     vec = bpy.context.object.location
-                    js_source = 'var o = armory.Scene.active.getObject("' + objname + '"); o.transform.loc.set(' + str(vec[0]) + ', ' + str(vec[1]) + ', ' + str(vec[2]) + '); o.transform.dirty = true;'
+                    js_source = 'var o = armory.Scene.active.getChild("' + objname + '"); o.transform.loc.set(' + str(vec[0]) + ', ' + str(vec[1]) + ', ' + str(vec[2]) + '); o.transform.dirty = true;'
                     bgame.call_js(js_source)
                     mapped = True
                 elif ops[-1].name == 'Resize':
                     vec = bpy.context.object.scale
-                    js_source = 'var o = armory.Scene.active.getObject("' + objname + '"); o.transform.scale.set(' + str(vec[0]) + ', ' + str(vec[1]) + ', ' + str(vec[2]) + '); o.transform.dirty = true;'
+                    js_source = 'var o = armory.Scene.active.getChild("' + objname + '"); o.transform.scale.set(' + str(vec[0]) + ', ' + str(vec[1]) + ', ' + str(vec[2]) + '); o.transform.dirty = true;'
                     bgame.call_js(js_source)
                     mapped = True
                 elif ops[-1].name == 'Rotate':
                     vec = bpy.context.object.rotation_euler.to_quaternion()
-                    js_source = 'var o = armory.Scene.active.getObject("' + objname + '"); o.transform.rot.set(' + str(vec[1]) + ', ' + str(vec[2]) + ', ' + str(vec[3]) + ' ,' + str(vec[0]) + '); o.transform.dirty = true;'
+                    js_source = 'var o = armory.Scene.active.getChild("' + objname + '"); o.transform.rot.set(' + str(vec[1]) + ', ' + str(vec[2]) + ', ' + str(vec[3]) + ' ,' + str(vec[0]) + '); o.transform.dirty = true;'
                     bgame.call_js(js_source)
                     mapped = True
             # Othwerwise rebuild scene
@@ -292,6 +292,7 @@ def initProperties():
     # For world
     
     bpy.types.World.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
+    bpy.types.World.world_envtex_irr_name = bpy.props.StringProperty(name="Environment Irradiance", default='')
     bpy.types.World.world_envtex_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
     bpy.types.World.world_envtex_color = bpy.props.FloatVectorProperty(name="Environment Color", size=4, default=[0,0,0,1])
     bpy.types.World.world_envtex_strength = bpy.props.FloatProperty(name="Environment Strength", default=1.0)
@@ -397,6 +398,7 @@ def initProperties():
     bpy.types.Material.height_tess_shadows_outer = bpy.props.IntProperty(name="Outer level", description="Outer tessellation level for shadows", default=7)
     # For scene
     bpy.types.Scene.game_export = bpy.props.BoolProperty(name="Export", description="Export scene data", default=True)
+    bpy.types.Scene.gp_export = bpy.props.BoolProperty(name="Export Grease Pencil", description="Export grease pencil data", default=True)
     # For lamp
     bpy.types.Lamp.lamp_clip_start = bpy.props.FloatProperty(name="Clip Start", default=0.1)
     bpy.types.Lamp.lamp_clip_end = bpy.props.FloatProperty(name="Clip End", default=50.0)
@@ -594,7 +596,9 @@ class ScenePropsPanel(bpy.types.Panel):
         if scene == None:
             return
         layout.prop(scene, 'game_export')
-        layout.operator('arm.invalidate_gp_cache')
+        layout.prop(scene, 'gp_export')
+        if scene.gp_export:
+            layout.operator('arm.invalidate_gp_cache')
 
 class ReimportPathsMenu(bpy.types.Menu):
     bl_label = "OK?"
@@ -634,7 +638,7 @@ class OBJECT_OT_INVALIDATECACHEButton(bpy.types.Operator):
 class InvalidateGPCacheButton(bpy.types.Operator):
     '''Delete cached grease pencil data'''
     bl_idname = "arm.invalidate_gp_cache"
-    bl_label = "Invalidate GP Cache"
+    bl_label = "Invalidate Grease Pencil Cache"
  
     def execute(self, context):
         if context.scene.grease_pencil != None:

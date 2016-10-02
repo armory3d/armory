@@ -6,6 +6,7 @@ import iron.object.CameraObject;
 import iron.object.Transform;
 import iron.system.Time;
 import armory.trait.internal.PhysicsWorld;
+import armory.system.Keymap;
 #if WITH_PHYSICS
 import haxebullet.Bullet;
 #end
@@ -17,17 +18,17 @@ class VehicleBody extends Trait {
 #else
 
 	var physics:PhysicsWorld;
-    var transform:Transform;
+	var transform:Transform;
 	var camera:CameraObject;
 
 	// Wheels
 	var wheels:Array<Object> = [];
 	var wheelNames:Array<String>;
 
-    var vehicle:BtRaycastVehiclePointer = null;
-    var carChassis:BtRigidBodyPointer;
+	var vehicle:BtRaycastVehiclePointer = null;
+	var carChassis:BtRigidBodyPointer;
 
-	var chassis_mass = 500.0;
+	var chassis_mass = 600.0;
 	var wheelFriction = 1000;
 	var suspensionStiffness = 20.0;
 	var suspensionDamping = 2.3;
@@ -36,7 +37,7 @@ class VehicleBody extends Trait {
 	var rollInfluence = 0.1;
 
 	var maxEngineForce = 3000.0;
-	var maxBreakingForce = 100.0;
+	var maxBreakingForce = 500.0;
 
 	var engineForce = 0.0;
 	var breakingForce = 0.0;
@@ -50,33 +51,33 @@ class VehicleBody extends Trait {
 		Scene.active.notifyOnInit(init);
 	}
 	
-	var up = false;
-	var down = false;
+	var forward = false;
+	var backward = false;
 	var left = false;
 	var right = false;
-	var space = false;
+	var brake = false;
 	function onKeyDown(key:kha.Key, char:String) {
-		if (key == kha.Key.UP) up = true;
-		else if (key == kha.Key.DOWN) down = true;
-		else if (key == kha.Key.LEFT) left = true;
-		else if (key == kha.Key.RIGHT) right = true;
-		else if (char == ' ') space = true;
+		if (char == Keymap.forward) forward = true;
+		else if (char == Keymap.backward) backward = true;
+		else if (char == Keymap.left) left = true;
+		else if (char == Keymap.right) right = true;
+		else if (char == Keymap.brake) brake = true;
 	}
 
 	function onKeyUp(key:kha.Key, char:String) {
-		if (key == kha.Key.UP) up = false;
-		else if (key == kha.Key.DOWN) down = false;
-		else if (key == kha.Key.LEFT) left = false;
-		else if (key == kha.Key.RIGHT) right = false;
-		else if (char == ' ') space = false;
+		if (char == Keymap.forward) forward = false;
+		else if (char == Keymap.backward) backward = false;
+		else if (char == Keymap.left) left = false;
+		else if (char == Keymap.right) right = false;
+		else if (char == Keymap.brake) brake = false;
 	}
 
-    function init() {
-    	physics = armory.trait.internal.PhysicsWorld.active;
-    	transform = object.transform;
-    	camera = iron.Scene.active.camera;
+	function init() {
+		physics = armory.trait.internal.PhysicsWorld.active;
+		transform = object.transform;
+		camera = iron.Scene.active.camera;
 
-    	for (n in wheelNames) {
+		for (n in wheelNames) {
 			wheels.push(iron.Scene.active.root.getChild(n));
 		}
 
@@ -143,18 +144,18 @@ class VehicleBody extends Trait {
 
 		kha.input.Keyboard.get().notify(onKeyDown, onKeyUp);
 		notifyOnUpdate(update);
-    }
+	}
 
 	function update() {
 		if (vehicle == null) return;
 
-		if (up) {
+		if (forward) {
 			engineForce = maxEngineForce;
 		}
-		else if (down) {
+		else if (backward) {
 			engineForce = -maxEngineForce;
 		}
-		else if (space) {
+		else if (brake) {
 			breakingForce = 100;
 		}
 		else {
@@ -204,6 +205,8 @@ class VehicleBody extends Trait {
 		transform.loc.add(up);
 		transform.dirty = true;
 
+		// TODO: fix parent matrix update
+		if (camera.parent != null) camera.parent.transform.buildMatrix();
 		camera.updateMatrix();
 	}
 

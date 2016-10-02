@@ -148,7 +148,7 @@ def make_draw_meshes(stage, node_group, node):
 def make_draw_decals(stage, node_group, node):
     stage['command'] = 'draw_decals'
     context = node.inputs[1].default_value
-    stage['params'].append(context) # Context
+    stage['params'].append(context)
     buildNodeTree.cam.last_decal_context = context
 
 def make_bind_target(stage, node_group, node, constant_name, currentNode=None, target_index=1):
@@ -275,6 +275,8 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
 
 def make_draw_grease_pencil(stage, node_group, node):
     stage['command'] = 'draw_grease_pencil'
+    context = node.inputs[1].default_value
+    stage['params'].append(context)
 
 def make_call_function(stage, node_group, node):
     stage['command'] = 'call_function'

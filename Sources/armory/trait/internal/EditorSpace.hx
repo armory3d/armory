@@ -27,10 +27,10 @@ class EditorSpace extends Trait {
     }
 
     function init() {
-        // gizmo = iron.Scene.active.getObject('ArrowGizmo');
-        // arrowX = iron.Scene.active.getObject('ArrowX');
-        // arrowY = iron.Scene.active.getObject('ArrowY');
-        // arrowZ = iron.Scene.active.getObject('ArrowZ');
+        // gizmo = iron.Scene.active.getChild('ArrowGizmo');
+        // arrowX = iron.Scene.active.getChild('ArrowX');
+        // arrowY = iron.Scene.active.getChild('ArrowY');
+        // arrowZ = iron.Scene.active.getChild('ArrowZ');
 
         notifyOnUpdate(update);
 

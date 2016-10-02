@@ -22,7 +22,6 @@ class PhysicsWorld extends Trait {
 #if (!WITH_PHYSICS)
 	public function new() { super(); }
 #else
-
 #if WITH_PROFILE
 	public static var physTime = 0.0;
 #end
@@ -31,8 +30,8 @@ class PhysicsWorld extends Trait {
 
 	public var world:BtDiscreteDynamicsWorldPointer;
 	var dispatcher:BtCollisionDispatcherPointer;
-
 	var contacts:Array<ContactPair> = [];
+	var preUpdates:Array<Void->Void> = null;
 	public var rbMap:Map<Int, RigidBody>;
 
 	static inline var timeStep = 1 / 60;
@@ -118,6 +117,8 @@ class PhysicsWorld extends Trait {
 		var startTime = kha.Scheduler.realTime();
 #end
 
+		if (preUpdates != null) for (f in preUpdates) f();
+
 		world.ptr.stepSimulation(timeStep, 1, fixedStep);
 		updateContacts();
 
@@ -184,7 +185,7 @@ class PhysicsWorld extends Trait {
 
     public function getRayFrom():BtVector3Pointer {
     	var camera = iron.Scene.active.camera;
-    	return BtVector3.create(camera.transform.loc.x, camera.transform.loc.y, camera.transform.loc.z);
+    	return BtVector3.create(camera.transform.absx(), camera.transform.absy(), camera.transform.absz());
     }
 
     public function getRayTo(inputX:Float, inputY:Float):BtVector3Pointer {
@@ -193,6 +194,15 @@ class PhysicsWorld extends Trait {
         var end = new Vec4();
     	RayCaster.getDirection(start, end, inputX, inputY, camera);
     	return BtVector3.create(end.x, end.y, end.z);
+    }
+
+    public function notifyOnPreUpdate(f:Void->Void) {
+    	if (preUpdates == null) preUpdates = [];
+    	preUpdates.push(f);
+    }
+
+    public function removePreUpdate(f:Void->Void) {
+    	preUpdates.remove(f);
     }
 #end
 }
