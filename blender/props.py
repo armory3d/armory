@@ -130,6 +130,9 @@ def on_scene_update_post(context):
                 # Or switch to armory space
                 elif utils.with_chromium() and make.play_project.in_viewport:
                     make.play_project.play_area.type = 'VIEW_GAME'
+                    # Prevent immediate operator patch
+                    if len(ops) > 0:
+                        on_scene_update_post.last_operator = ops[-1]
 
     edit_obj = bpy.context.edit_object
     if edit_obj != None and edit_obj.is_updated_data:
@@ -219,7 +222,8 @@ def initProperties():
     bpy.types.World.ArmPlayDeveloperTools = BoolProperty(name="Developer Tools", description="Show chromium developer tools in player", default=False)
     bpy.types.World.ArmPlayRuntime = EnumProperty(
         items=[('Electron', 'Electron', 'Electron'), 
-               ('Browser', 'Browser', 'Browser')],
+               ('Browser', 'Browser', 'Browser'),
+               ('Native', 'Native', 'Native')],
         name="Runtime", description="Player runtime used when launching in new window", default='Electron')
 
     # For object
@@ -364,6 +368,7 @@ def initProperties():
     bpy.types.World.npot_texture_repeat = bpy.props.BoolProperty(name="NPoT Texture Repeat", description="Enable texture repeat mode for non-power of two textures", default=False)
     # Lighting flags
     bpy.types.World.diffuse_oren_nayar = bpy.props.BoolProperty(name="Oren Nayar Diffuse", default=False, update=invalidate_shader_cache)
+    bpy.types.World.voxelgi = bpy.props.BoolProperty(name="VGI", description="Voxel-based Global Illumination", default=False, update=invalidate_shader_cache)
     # For material
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.override_shader = bpy.props.BoolProperty(name="Override Shader", default=False)
@@ -772,6 +777,7 @@ class WorldPropsPanel(bpy.types.Panel):
         layout.prop(wrd, 'force_anisotropic_filtering')
         layout.prop(wrd, 'npot_texture_repeat')
         layout.prop(wrd, 'diffuse_oren_nayar')
+        layout.prop(wrd, 'voxelgi')
 
 # Menu in render region
 class ArmoryPlayPanel(bpy.types.Panel):

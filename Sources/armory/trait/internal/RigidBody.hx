@@ -16,9 +16,10 @@ class RigidBody extends Trait {
 #else
 
 	var shape:Shape;
+	var _motionState:BtMotionState;
 
 	public var physics:PhysicsWorld;
-	public var transform:Transform;
+	public var transform:Transform = null;
 
 	public var mass:Float;
 	public var friction:Float;
@@ -122,7 +123,7 @@ class RigidBody extends Trait {
 
 		var _centerOfMassOffset = BtTransform.create();
 		_centerOfMassOffset.value.setIdentity();
-		var _motionState = BtDefaultMotionState.create(_transform.value, _centerOfMassOffset.value);
+		_motionState = BtDefaultMotionState.create(_transform.value, _centerOfMassOffset.value);
 
 		if (!shapeConvexCreated) {
 			if (shape != Shape.StaticMesh && shape != Shape.Terrain) {
@@ -155,13 +156,18 @@ class RigidBody extends Trait {
 	}
 
 	function lateUpdate() {
-		var trans = body.ptr.getWorldTransform();
-		var p = trans.getOrigin();
-		var q = trans.getRotation();
-		transform.loc.set(p.x(), p.y(), p.z());
-		transform.rot.set(q.x(), q.y(), q.z(), q.w());
-		transform.dirty = true;
-		transform.update();
+		if (object.animation != null) {
+			syncTransform();
+		}
+		else {
+			var trans = body.ptr.getWorldTransform();
+			var p = trans.getOrigin();
+			var q = trans.getRotation();
+			transform.loc.set(p.x(), p.y(), p.z());
+			transform.rot.set(q.x(), q.y(), q.z(), q.w());
+			transform.dirty = true;
+			transform.update();
+		}
 	}
 
 	public function removeFromWorld() {
@@ -225,6 +231,9 @@ class RigidBody extends Trait {
 		trans.value.setOrigin(BtVector3.create(transform.loc.x, transform.loc.y, transform.loc.z).value);
 		trans.value.setRotation(BtQuaternion.create(transform.rot.x, transform.rot.y, transform.rot.z, transform.rot.w).value);
 		body.ptr.setCenterOfMassTransform(trans.value);
+		// _motionState.getWorldTransform(trans);
+		// trans.setOrigin(BtVector3.create(transform.loc.x, transform.loc.y, transform.loc.z).value);
+		// _motionState.setWorldTransform(trans);
 	}
 
 	function addPointsToConvexHull(shape:BtConvexHullShapePointer, scale:Vec4, margin:Float) {

@@ -8,7 +8,7 @@ precision highp float;
 
 in vec3 pos;
 in vec3 nor;
-#ifdef _BaseTex
+#ifdef _Tex
 	in vec2 tex;
 #endif
 #ifdef _VCols
@@ -177,9 +177,8 @@ void main() {
 	matColor.rgb *= col;
 #endif
 
-	vec3 mPos = vec4(W * sPos).xyz;
-	position = mPos;
-	eyeDir = eye - mPos;
+	position = vec4(W * sPos).xyz;
+	eyeDir = eye - position;
 
 #ifdef _NorTex
 	vec3 tangent = (mat3(N) * (tan));

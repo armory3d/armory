@@ -22,8 +22,6 @@ uniform float envmapStrength;
 	uniform int envmapNumMipmaps;
 #endif
 
-// uniform sampler2D giblur; // Path-traced
-
 #ifdef _SSAO
 	uniform sampler2D ssaotex;
 #endif
@@ -171,7 +169,7 @@ void main() {
 	vec3 p = getPos(depth);
 	vec3 v = normalize(eye - p.xyz);
 #endif
-	
+
 	// Indirect
 #ifdef _Probes
 	float probeFactor = g0.a; // mask_probe
@@ -225,7 +223,7 @@ void main() {
 	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
 
 	vec2 envBRDF = texture(senvmapBrdf, vec2(metrough.y, 1.0 - dotNV)).xy;
-	indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);;
+	indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 #endif
 
 	indirect = indirect * envmapStrength;// * lightColor * lightStrength;

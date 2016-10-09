@@ -52,7 +52,7 @@ class FirstPersonController extends CameraController {
 		if (!body.bodyReady) return;
 
 		if (jump) {
-			body.applyImpulse(new Vec4(0, 0, 15));
+			body.applyImpulse(new Vec4(0, 0, 16));
 			jump = false;
 		}
 
@@ -68,14 +68,14 @@ class FirstPersonController extends CameraController {
 		body.setLinearVelocity(0.0, 0.0, btvec.z() - 1.0);
 
 		if (moveForward || moveBackward || moveLeft || moveRight) {			
-			dir.mult(8);
+			dir.mult(6);
 			body.activate();
 			body.setLinearVelocity(dir.x, dir.y, btvec.z() - 1.0);
 		}
 
 		// Keep vertical
 		body.setAngularFactor(0, 0, 0);
-		camera.updateMatrix();
+		camera.buildMatrix();
 	}
 #end
 }

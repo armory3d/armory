@@ -316,6 +316,8 @@ class DeferredIndirectPassNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Target")
         self.inputs.new('NodeSocketShader', "GBuffer")
         self.inputs.new('NodeSocketShader', "SSAO")
+        # Testing voxels
+        # self.inputs.new('NodeSocketShader', "Voxels")
 
         self.outputs.new('NodeSocketShader', "Stage")
 
@@ -394,6 +396,18 @@ class ClearTargetNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
+class GenerateMipmapsNode(Node, CGPipelineTreeNode):
+    '''Generate mipmaps node'''
+    bl_idname = 'GenerateMipmapsNodeType'
+    bl_label = 'Generate Mipmaps'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketShader', "Target")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
 class BeginNode(Node, CGPipelineTreeNode):
     '''Start render path node'''
     bl_idname = 'BeginNodeType'
@@ -421,7 +435,20 @@ class SetTargetNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Target")
 
         self.outputs.new('NodeSocketShader', "Stage")
-        
+
+class SetViewportNode(Node, CGPipelineTreeNode):
+    '''Set viewport size node'''
+    bl_idname = 'SetViewportNodeType'
+    bl_label = 'Set Viewport'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketInt', "Width")
+        self.inputs.new('NodeSocketInt', "Height")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
 class TargetNode(Node, CGPipelineTreeNode):
     '''Create new render target node'''
     bl_idname = 'TargetNodeType'
@@ -435,6 +462,35 @@ class TargetNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Depth Buffer")
         self.inputs.new('NodeSocketString', "Format")
         self.inputs.new('NodeSocketBool', "Ping Pong")
+
+        self.outputs.new('NodeSocketShader', "Target")
+
+class ImageNode(Node, CGPipelineTreeNode):
+    '''Create new image node'''
+    bl_idname = 'ImageNodeType'
+    bl_label = 'Image'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketString', "ID")
+        self.inputs.new('NodeSocketInt', "Width")
+        self.inputs.new('NodeSocketInt', "Height")
+        self.inputs.new('NodeSocketString', "Format")
+
+        self.outputs.new('NodeSocketShader', "Target")
+
+class Image3DNode(Node, CGPipelineTreeNode):
+    '''Create new 3D image node'''
+    bl_idname = 'Image3DNodeType'
+    bl_label = 'Image 3D'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketString', "ID")
+        self.inputs.new('NodeSocketInt', "Width")
+        self.inputs.new('NodeSocketInt', "Height")
+        self.inputs.new('NodeSocketInt', "Depth")
+        self.inputs.new('NodeSocketString', "Format")
 
         self.outputs.new('NodeSocketShader', "Target")
 
@@ -718,7 +774,9 @@ node_categories = [
         NodeItem("DrawMeshesNodeType"),
         NodeItem("DrawDecalsNodeType"),
         NodeItem("ClearTargetNodeType"),
+        NodeItem("GenerateMipmapsNodeType"),
         NodeItem("SetTargetNodeType"),
+        NodeItem("SetViewportNodeType"),
         NodeItem("BindTargetNodeType"),
         NodeItem("DrawMaterialQuadNodeType"),
         NodeItem("DrawQuadNodeType"),
@@ -729,6 +787,8 @@ node_categories = [
     ]),
     MyTargetNodeCategory("TARGETNODES", "Target", items=[
         NodeItem("TargetNodeType"),
+        NodeItem("ImageNodeType"),
+        NodeItem("Image3DNodeType"),
         NodeItem("TargetArrayNodeType"),
         NodeItem("DepthBufferNodeType"),
         NodeItem("GBufferNodeType"),

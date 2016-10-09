@@ -158,6 +158,11 @@
 					"name": "lampSizeUV",
 					"link": "_lampSizeUV",
 					"ifdef": ["_PCSS"]
+				},
+				{
+					"name": "senvmapBrdf",
+					"link": "_envmapBrdf",
+					"ifdef": ["_VoxelGI"]
 				}
 			],
 			"vertex_shader": "deferred_light.vert.glsl",

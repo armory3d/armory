@@ -36,6 +36,25 @@ uniform sampler2D gbuffer1;
 	#endif
 #endif
 
+#ifdef _VoxelGI
+	uniform sampler2D ssaotex;
+	uniform sampler2D senvmapBrdf;
+	uniform sampler3D voxels;
+	const float voxelGridWorldSize = 150.0;
+	const int voxelDimensions = 512;
+	const float maxDist = 30.0;
+	const float alphaTreshold = 0.95;
+	const int numCones = 6;
+	vec3 coneDirections[6] = vec3[](
+		vec3(0, 1, 0),
+		vec3(0, 0.5, 0.866025),
+		vec3(0.823639, 0.5, 0.267617),
+		vec3(0.509037, 0.5, -0.700629),
+		vec3(-0.509037, 0.5, -0.700629),
+		vec3(-0.823639, 0.5, 0.267617));
+	float coneWeights[6] = float[](0.25, 0.15, 0.15, 0.15, 0.15, 0.15);
+#endif
+
 // #ifdef _LTC
 	// uniform sampler2D sltcMat;
 	// uniform sampler2D sltcMag;
@@ -652,6 +671,50 @@ float wardSpecular(vec3 N, vec3 H, float dotNL, float dotNV, float dotNH, vec3 f
 // 	) * scale;
 // }
 
+#ifdef _VoxelGI
+vec4 sampleVoxels(vec3 worldPosition, float lod) {
+	vec3 offset = vec3(1.0 / voxelDimensions, 1.0 / voxelDimensions, 0);
+	vec3 texco = worldPosition / (voxelGridWorldSize * 0.5);
+	texco = texco * 0.5 + 0.5 + offset;
+	return textureLod(voxels, texco, lod);
+}
+vec4 coneTrace(vec3 posWorld, vec3 direction, vec3 norWorld, float tanHalfAngle, out float occlusion) {
+	const float voxelWorldSize = voxelGridWorldSize / voxelDimensions;
+	float dist = voxelWorldSize; // Start one voxel away to avoid self occlusion
+	vec3 startPos = posWorld + norWorld * voxelWorldSize;
+
+	vec3 color = vec3(0.0);
+	float alpha = 0.0;
+	occlusion = 0.0;
+	while (dist < maxDist && alpha < alphaTreshold) {
+		// Smallest sample diameter possible is the voxel size
+		float diameter = max(voxelWorldSize, 2.0 * tanHalfAngle * dist);
+		float lodLevel = log2(diameter / voxelWorldSize);
+		vec4 voxelColor = sampleVoxels(startPos + dist * direction, lodLevel);
+		// Front-to-back compositing
+		float a = (1.0 - alpha);
+		color += a * voxelColor.rgb;
+		alpha += a * voxelColor.a;
+		occlusion += (a * voxelColor.a) / (1.0 + 0.03 * diameter);
+		dist += diameter * 0.5; // * 2.0
+	}
+	return vec4(color, alpha);
+}
+vec4 indirectLight(vec3 posWorld, mat3 tanToWorld, vec3 norWorld, out float occlusion) {
+	vec4 color = vec4(0);
+	occlusion = 0.0;
+
+	for (int i = 0; i < numCones; i++) {
+		float coneOcclusion;
+		const float tanangle = tan(30):
+		color += coneWeights[i] * coneTrace(posWorld, tanToWorld * coneDirections[i], norWorld, tanangle, coneOcclusion);
+		occlusion += coneWeights[i] * coneOcclusion;
+	}
+	occlusion = 1.0 - occlusion;
+	return color;
+}
+#endif
+
 void main() {
 	vec2 screenPosition = wvpposition.xy / wvpposition.w;
 	vec2 texCoord = screenPosition * 0.5 + 0.5;
@@ -734,70 +797,40 @@ void main() {
 	// Direct
 	outColor = vec4(vec3(direct * visibility), 1.0);
 
-	// Indirect
-// 	if (lightIndex == 0) {
-// #ifdef _Probes
-// 		float probeFactor = mask;
-// 		float probeID = floor(probeFactor);
-// 		float probeFract = fract(probeFactor);
-// 		vec3 indirect;
-// 	#ifdef _Rad
-// 		float lod = getMipLevelFromRoughness(metrough.y);
-// 		vec3 reflectionWorld = reflect(-v, n); 
-// 		vec2 envCoordRefl = envMapEquirect(reflectionWorld);
-// 		vec3 prefilteredColor = textureLod(senvmapRadiance, envCoordRefl, lod).rgb;
-// 	#endif
-		
-// 		// Global probe only
-// 		if (probeID == 0.0) {
-// 			indirect = shIrradiance(n, 2.2, 0) / PI;
-// 		}
-// 		// fract 0 = local probe, 1 = global probe 
-// 		else if (probeID == 1.0) {
-// 			indirect = (shIrradiance(n, 2.2, 1) / PI) * (1.0 - probeFract);
-// 			//prefilteredColor /= 4.0;
-// 			if (probeFract > 0.0) {
-// 				indirect += (shIrradiance(n, 2.2, 0) / PI) * (probeFract);
-// 			}
-// 		}
-// #else // No probes   
-// 		// vec3 indirect = texture(shirr, envMapEquirect(n)).rgb;
-// 		vec3 indirect = shIrradiance(n, 2.2) / PI;
-// 	#ifdef _Rad
-// 		vec3 reflectionWorld = reflect(-v, n);
-// 		float lod = getMipLevelFromRoughness(metrough.y);
-// 		vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
-// 	#endif
-// #endif
+	// Voxels test..
+#ifdef _VoxelGI
+	vec4 g1a = texture(gbuffer1, texCoord); // Basecolor.rgb, occlusion
+	vec3 albedoa = surfaceAlbedo(g1a.rgb, metrough.x); // g1a.rgb - basecolor
 
-// #ifdef _EnvLDR
-// 		indirect = pow(indirect, vec3(2.2));
-// 	#ifdef _Rad
-// 		prefilteredColor = pow(prefilteredColor, vec3(2.2));
-// 	#endif
-// #endif
-// 		indirect *= albedo;
-		
-// #ifdef _Rad
-// 		// Indirect specular
-// 		vec2 envBRDF = texture(senvmapBrdf, vec2(metrough.y, 1.0 - dotNV)).xy;
-// 		indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);;
-// #endif
-// 		indirect = indirect * envmapStrength;// * lightColor * lightStrength;
-// 		indirect = indirect * g1.a; // Occlusion
-// #ifdef _SSAO
-// 		indirect *= texture(ssaotex, texCoord).r; // SSAO
-// #endif
-// 		gl_FragColor.rgb += indirect;
-// 	}
-	
-	// vec4 outColor = vec4(vec3(direct * visibility + indirect), 1.0);
+	vec3 tangent = normalize(cross(n, vec3(0.0, 1.0, 0.0)));
+	if (length(tangent) == 0.0) {
+		tangent = normalize(cross(n, vec3(0.0, 0.0, 1.0)));
+	}
+	vec3 bitangent = normalize(cross(n, tangent));
+	mat3 tanToWorld = inverse(transpose(mat3(tangent, bitangent, n)));
 
-	// Path-traced
-	// vec4 nois = texture(giblur, texCoord);
-	// nois.rgb = pow(nois.rgb, vec3(1.0 / 2.2));
-	// indirect = nois.rgb;
-	// vec4 outColor = vec4(vec3(direct * visibility + indirect * 3.0 * ao * occlusion), 1.0);
+	float diffOcclusion = 0.0;
+	vec3 indirectDiffusea = indirectLight(p, tanToWorld, n, diffOcclusion).rgb * 4.0;
+	indirectDiffusea *= albedoa;
+	diffOcclusion = min(1.0, 1.5 * diffOcclusion);
+
+	vec3 reflectWorld = reflect(-v, n);
+	float specularOcclusion;
+	float lodOffset = 0.0;//getMipLevelFromRoughness(roughness);
+	vec3 indirectSpecular = coneTrace(p, reflectWorld, n, 0.07 + lodOffset, specularOcclusion).rgb;
+
+	if (metrough.y > 0.0) { // Temp..
+		float dotNVa = max(dot(n, v), 0.0);
+		vec3 f0a = surfaceF0(g1a.rgb, metrough.x);
+		vec2 envBRDFa = texture(senvmapBrdf, vec2(metrough.y, 1.0 - dotNVa)).xy;
+		indirectSpecular *= (f0a * envBRDFa.x + envBRDFa.y);
+	}
+
+	vec3 indirect1 = indirectDiffusea * diffOcclusion + indirectSpecular;
+	indirect1 *= texture(ssaotex, texCoord).r;
+	outColor.rgb += indirect1;
+#endif
+
 	
 	// LTC
 	// float sinval = (sin(time) * 0.5 + 0.5);

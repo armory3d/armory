@@ -12,7 +12,7 @@ precision highp float;
 
 in vec3 pos;
 in vec3 nor;
-#ifdef _BaseTex
+#ifdef _Tex
 	in vec2 tex;
 #endif
 #ifdef _VCols

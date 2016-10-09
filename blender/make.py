@@ -84,7 +84,7 @@ def def_strings_to_array(strdefs):
     defs = ['_' + d for d in defs] # Restore _
     return defs
 
-def export_data(fp, sdk_path, is_play=False):
+def export_data(fp, sdk_path, is_play=False, is_publish=False):
     raw_path = sdk_path + 'armory/raw/'
     assets_path = sdk_path + 'armory/Assets/'
     export_physics = bpy.data.worlds['Arm'].ArmPhysics != 'Disabled'
@@ -151,7 +151,7 @@ def export_data(fp, sdk_path, is_play=False):
     write_data.write_compiledglsl()
 
     # Write khafile.js
-    write_data.write_khafilejs(is_play, export_physics)
+    write_data.write_khafilejs(is_play, export_physics, dce_full=is_publish)
 
     # Write Main.hx
     write_data.write_main(is_play, play_project.in_viewport)
@@ -215,6 +215,10 @@ def compile_project(target_name=None, is_publish=False, watch=False):
         cmd.append('--ffmpeg')
         cmd.append('"' + ffmpeg_path + '"')
 
+    if utils.get_os() == 'win': # OpenGL for now
+        cmd.append('-g')
+        cmd.append('opengl2')
+
     # armory_log("Building, see console...")
 
     if make.play_project.chromium_running:
@@ -244,7 +248,7 @@ def patch_project():
     os.chdir(fp)
     export_data(fp, sdk_path, is_play=True)
 
-def build_project(is_play=False):
+def build_project(is_play=False, is_publish=False):
     # Clear flag
     play_project.in_viewport = False
 
@@ -310,7 +314,7 @@ def build_project(is_play=False):
     # Save internal assets
 
     # Export data
-    export_data(fp, sdk_path, is_play=is_play)
+    export_data(fp, sdk_path, is_play=is_play, is_publish=is_publish)
 
     if play_project.playproc == None:
         armory_progress(50)
@@ -367,8 +371,10 @@ def play_project(self, in_viewport):
 
     wrd = bpy.data.worlds['Arm']
 
-    if wrd.ArmPlayRuntime == 'Native':
-        compile_project(target_name='--run')
+    if in_viewport == False and wrd.ArmPlayRuntime == 'Native':
+        play_project.compileproc = compile_project(target_name='--run')
+        mode = 'play'
+        threading.Timer(0.1, watch_compile, [mode]).start()
     else: # Electron, Browser
         if in_viewport == False:
             # Windowed player
@@ -513,7 +519,7 @@ def publish_project():
     minimize = bpy.data.worlds['Arm'].ArmMinimize
     bpy.data.worlds['Arm'].ArmMinimize = True
     clean_project()
-    build_project()
+    build_project(is_publish=True)
     play_project.compileproc = compile_project(target_name=bpy.data.worlds['Arm'].ArmPublishTarget, is_publish=True)
     threading.Timer(0.1, watch_compile, ['publish']).start()
     bpy.data.worlds['Arm'].ArmMinimize = minimize

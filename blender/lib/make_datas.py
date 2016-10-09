@@ -175,17 +175,27 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
 
         if line.startswith('uniform '):
             s = line.split(' ')
-            ctype = s[1]
-            cid = s[2][:-1]
+            # uniform sampler2D myname;
+            # uniform layout(RGBA8) image3D myname;
+            if s[1].startswith('layout'):
+                ctype = s[2]
+                cid = s[3][:-1]
+            else:
+                ctype = s[1]
+                cid = s[2][:-1]
+
             found = False # Unique check
-            if ctype == 'sampler2D' or ctype == 'sampler2DShadow': # Texture unit
-                for tu in con['texture_units']:
+            if ctype == 'sampler2D' or ctype == 'sampler2DShadow' or ctype == 'sampler3D' or ctype == 'image2D' or ctype == 'image3D': # Texture unit
+                for tu in con['texture_units']: # Texture already present
                     if tu['name'] == cid:
                         found = True
                         break
                 if found == False:
                     tu = {}
                     tu['name'] = cid
+                    # sampler2D / image2D
+                    if ctype == 'image2D' or ctype == 'image3D':
+                        tu['is_image'] = True
                     # Check for link
                     for l in c['links']:
                         if l['name'] == cid:

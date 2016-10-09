@@ -264,6 +264,49 @@
 			],
 			"vertex_shader": "shadowmap.vert.glsl",
 			"fragment_shader": "shadowmap.frag.glsl"
+		},
+		{
+			"name": "voxel",
+			"params": [
+				{
+					"name": "depth_write",
+					"value": "false"
+				},
+				{
+					"name": "compare_mode",
+					"value": "always"
+				},
+				{
+					"name": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				{
+					"name": "W",
+					"link": "_worldMatrix"
+				},
+				{
+					"name": "LWVP",
+					"link": "_lampWorldViewProjectionMatrix"
+				},
+				{
+					"name": "PX",
+					"link": "_projectionXMatrix"
+				},
+				{
+					"name": "PY",
+					"link": "_projectionYMatrix"
+				},
+				{
+					"name": "PZ",
+					"link": "_projectionZMatrix"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "voxel.vert.glsl",
+			"fragment_shader": "voxel.frag.glsl",
+			"geometry_shader": "voxel.geom.glsl"
 		}
 	]
 }

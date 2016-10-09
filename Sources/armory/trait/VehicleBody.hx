@@ -207,7 +207,7 @@ class VehicleBody extends Trait {
 
 		// TODO: fix parent matrix update
 		if (camera.parent != null) camera.parent.transform.buildMatrix();
-		camera.updateMatrix();
+		camera.buildMatrix();
 	}
 
 	function createRigidBody(mass:Float, shape:BtCompoundShapePointer):BtRigidBodyPointer {

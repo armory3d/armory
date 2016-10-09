@@ -133,6 +133,15 @@ def make_clear_target(stage, color_val=None, depth_val=None, stencil_val=None):
         stage['params'].append('stencil')
         stage['params'].append(str(stencil_val))
 
+def make_generate_mipmaps(stage, node_group, node):
+    stage['command'] = 'generate_mipmaps'
+
+    # TODO: support reroutes
+    link = findLink(node_group, node, node.inputs[1])
+    targetNode = link.from_node
+
+    stage['params'].append(targetNode.inputs[0].default_value)
+
 def make_draw_meshes(stage, node_group, node):
     stage['command'] = 'draw_meshes'
     # Context
@@ -177,10 +186,12 @@ def make_bind_target(stage, node_group, node, constant_name, currentNode=None, t
                 stage['params'].append(targetId) # Color buffer
                 stage['params'].append(constant_name + str(i))
     
-    elif currentNode.bl_idname == 'TargetNodeType':     
+    elif currentNode.bl_idname == 'TargetNodeType' or currentNode.bl_idname == 'ImageNodeType' or currentNode.bl_idname == 'Image3DNodeType':     
         targetId = currentNode.inputs[0].default_value
         stage['params'].append(targetId)
         stage['params'].append(constant_name)
+
+
         
     elif currentNode.bl_idname == 'DepthBufferNodeType':
         targetId = '_' + currentNode.inputs[0].default_value
@@ -448,6 +459,8 @@ def make_volumetric_light_pass(stages, node_group, node):
 
 def make_deferred_indirect_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'ssaotex'], shader_context='deferred_indirect/deferred_indirect/deferred_indirect')
+    # Testing voxels
+    # make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['gbuffer', 'ssaotex', 'voxels'], shader_context='deferred_indirect/deferred_indirect/deferred_indirect')
 
 def make_translucent_resolve_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2], bind_target_constants=['gbuffer'], shader_context='translucent_resolve/translucent_resolve/translucent_resolve')
@@ -480,7 +493,10 @@ def buildNode(stages, node, node_group):
         if node.inputs[5].default_value == True:
             stencil_val = node.inputs[6].default_value
         make_clear_target(stage, color_val=color_val, depth_val=depth_val, stencil_val=stencil_val)
-            
+    
+    elif node.bl_idname == 'GenerateMipmapsNodeType':
+        make_generate_mipmaps(stage, node_group, node)
+
     elif node.bl_idname == 'DrawMeshesNodeType':
         make_draw_meshes(stage, node_group, node)
         
@@ -700,6 +716,7 @@ def get_root_node(node_group):
 
 def preprocess_renderpath(root_node, node_group):
     render_targets = []
+    render_targets3D = []
     depth_buffers = []
     preprocess_renderpath.velocity_def_added = False
     buildNodeTree.cam.renderpath_passes = ''
@@ -734,11 +751,11 @@ def traverse_renderpath(node, node_group, render_targets, depth_buffers):
         bpy.data.worlds['Arm'].world_defs += '_VR'
 
     # Collect render targets
-    if node.bl_idname == 'SetTargetNodeType' or node.bl_idname == 'QuadPassNodeType' or node.bl_idname == 'DrawCompositorNodeType' or node.bl_idname == 'DrawCompositorWithFXAANodeType':
+    if node.bl_idname == 'SetTargetNodeType' or node.bl_idname == 'BindTargetNodeType' or node.bl_idname == 'QuadPassNodeType' or node.bl_idname == 'DrawCompositorNodeType' or node.bl_idname == 'DrawCompositorWithFXAANodeType':
         if node.inputs[1].is_linked:
             tnode = findNodeByLink(node_group, node, node.inputs[1])
             parse_render_target(tnode, node_group, render_targets, depth_buffers)
-    
+
     # Traverse loops
     elif node.bl_idname == 'LoopStagesNodeType' or node.bl_idname == 'LoopLampsNodeType' or node.bl_idname == 'DrawStereoNodeType':
         if node.outputs[1].is_linked:
@@ -805,7 +822,28 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
         # Append target
         target = make_render_target(node, scale, depth_buffer_id=depth_buffer_id)
         render_targets.append(target)
-        
+    
+    elif node.bl_idname == 'ImageNodeType' or node.bl_idname == 'Image3DNodeType':
+        # Target already exists
+        id = node.inputs[0].default_value
+        for t in render_targets:
+            if t['name'] == id:
+                return
+
+        # Get scale
+        scale = 1.0
+        if node.inputs[1].is_linked:
+            size_node = findNodeByLink(node_group, node, node.inputs[1])
+            while size_node.bl_idname == 'NodeReroute': # Step through reroutes
+                size_node = findNodeByLink(node_group, size_node, size_node.inputs[0])
+            scale = size_node.inputs[0].default_value
+
+        if node.bl_idname == 'ImageNodeType':
+            target = make_image_target(node, scale)
+        else:
+            target = make_image3d_target(node, scale)
+        render_targets.append(target)
+
     elif node.bl_idname == 'GBufferNodeType':
         for i in range(0, 5):
             if node.inputs[i].is_linked:
@@ -824,4 +862,27 @@ def make_render_target(n, scale, depth_buffer_id=None):
         target['scale'] = scale    
     if depth_buffer_id != None:
         target['depth_buffer'] = depth_buffer_id
+    return target
+
+def make_image_target(n, scale):
+    target = {}
+    target['is_image'] = True
+    target['name'] = n.inputs[0].default_value
+    target['width'] = n.inputs[1].default_value
+    target['height'] = n.inputs[2].default_value
+    target['format'] = n.inputs[3].default_value
+    if scale != 1.0:
+        target['scale'] = scale    
+    return target
+
+def make_image3d_target(n, scale):
+    target = {}
+    target['is_image'] = True
+    target['name'] = n.inputs[0].default_value
+    target['width'] = n.inputs[1].default_value
+    target['height'] = n.inputs[2].default_value
+    target['depth'] = n.inputs[3].default_value
+    target['format'] = n.inputs[4].default_value
+    if scale != 1.0:
+        target['scale'] = scale    
     return target

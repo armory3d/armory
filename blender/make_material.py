@@ -457,27 +457,29 @@ def parse_pbr_group(self, material, c, defs, tree, node, factor):
     parse_base_color_socket(self, base_color_input, material, c, defs, tree, node, factor)
     # Occlusion Map
     occlusion_input = node.inputs[1]
+    # occlusion_strength_input = node.inputs[2]
+    # occlusion_strength = occlusion_strength_input.default_value
     parse_occlusion_socket(self, occlusion_input, material, c, defs, tree, node, factor)
     # Roughness Map
-    roughness_input = node.inputs[2]
+    roughness_input = node.inputs[3]
     parse_roughness_socket(self, roughness_input, material, c, defs, tree, node, factor)
-    roughness_strength_input = node.inputs[3]
+    roughness_strength_input = node.inputs[4]
     roughness_strength = roughness_strength_input.default_value
     if roughness_strength != 1.0:
         add_roughness_strength(self, c, defs, roughness_strength)
     # Metalness Map
-    metalness_input = node.inputs[4]
+    metalness_input = node.inputs[5]
     parse_metalness_socket(self, metalness_input, material, c, defs, tree, node, factor)
     # Normal Map
-    normal_map_input = node.inputs[5]
+    normal_map_input = node.inputs[6]
     parse_normal_map_socket(self, normal_map_input, material, c, defs, tree, node, factor)
-    normal_strength_input = node.inputs[6]
+    normal_strength_input = node.inputs[7]
     normal_strength = normal_strength_input.default_value
     if normal_strength != 1.0:
         add_normal_strength(self, c, defs, normal_strength)
     # Emission
-    emission_input = node.inputs[7]
-    emission_strength_input = node.inputs[8]
+    emission_input = node.inputs[8]
+    emission_strength_input = node.inputs[9]
     emission_strength = emission_strength_input.default_value
     if emission_strength != 1.0: # Just multiply base color for now
         if parse.const_color == None:
@@ -488,16 +490,16 @@ def parse_pbr_group(self, material, c, defs, tree, node, factor):
         col[2] *= emission_strength
         parse.const_color['vec4'] = [col[0], col[1], col[2], col[3]]
     # Height Map
-    height_input = node.inputs[9]
+    height_input = node.inputs[10]
     parse_height_socket(self, height_input, material, c, defs, tree, node, factor)
     # Height Strength
     if height_input.is_linked:
-        height_strength_input = node.inputs[10]
+        height_strength_input = node.inputs[11]
         add_height_strength(self, c, height_strength_input.default_value)
     # Opacity
-    opacity_input = node.inputs[11]
+    opacity_input = node.inputs[12]
     opacity = opacity_input.default_value
-    opacity_strength_input = node.inputs[12]
+    opacity_strength_input = node.inputs[13]
     opacity_strength = opacity_strength_input.default_value
     opacity_val = opacity * opacity_strength
     if opacity_val != 1.0:
@@ -510,4 +512,3 @@ def parse_pbr_group(self, material, c, defs, tree, node, factor):
         parse.const_color['vec4'] = [col[0], col[1], col[2], opacity_val]
         # Append translucent
         defs.append('_Translucent')
-    ior_input = node.inputs[13]

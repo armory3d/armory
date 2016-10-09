@@ -157,10 +157,10 @@ class PathTracer extends Trait {
 		// jitter.multiplyScalar(1 / iron.App.w);
 		// jitter.multiplyScalar(1 / 400);
 		var mvp = Mat4.identity();
-		mvp.mult2(camera.V);
-		mvp.mult2(camera.P);
+		mvp.multmat2(camera.V);
+		mvp.multmat2(camera.P);
 		var inverse = Mat4.identity();
-		// jitter.mult2(mvp);
+		// jitter.multmat2(mvp);
 		inverse.inverse2(mvp);
 		var matrix = inverse;
 		

@@ -34,6 +34,7 @@ class ThirdPersonController extends CameraController {
 			// kha.SystemImpl.lockMouse();
 			camera.transform.rotate(xVec, Input.deltaY / 250 * rotationSpeed);
 			transform.rotate(zVec, -Input.deltaX / 250 * rotationSpeed);
+			camera.buildMatrix();
 			body.syncTransform();
 		}
 	}
@@ -62,15 +63,20 @@ class ThirdPersonController extends CameraController {
 		var btvec = body.getLinearVelocity();
 		body.setLinearVelocity(0.0, 0.0, btvec.z() - 1.0);
 
+		var arm = object.getChild("Ballie");
+		arm.animation.player.paused = true;
+
 		if (moveForward || moveBackward || moveLeft || moveRight) {			
-			dir.mult(-2);
+			arm.animation.player.paused = false;
+			arm.animation.player.dir = moveBackward ? -1 : 1;
+			dir.mult(-4 * 0.7);
 			body.activate();
 			body.setLinearVelocity(dir.x, dir.y, btvec.z() - 1.0);
 		}
 
 		// Keep vertical
 		body.setAngularFactor(0, 0, 0);
-		camera.updateMatrix();
+		camera.buildMatrix();
 	}
 #end
 }

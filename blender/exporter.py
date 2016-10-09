@@ -2300,19 +2300,32 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             c['bind_textures'] = []
             cont = {}
             o['contexts'].append(c)
-            if bpy.data.worlds['Arm'].generate_shadows == True:
-                c = {}
-                c['name'] = ArmoryExporter.shadows_context
-                o['contexts'].append(c)
+            wrd = bpy.data.worlds['Arm']
+            if wrd.generate_shadows == True:
+                c2 = {}
+                c2['name'] = ArmoryExporter.shadows_context
+                o['contexts'].append(c2)
             if ArmoryExporter.mesh_context_empty != '':
-                c = {}
-                c['name'] = ArmoryExporter.mesh_context_empty
-                o['contexts'].append(c)
-            if bpy.data.worlds['Arm'].force_no_culling:
+                c2 = {}
+                c2['name'] = ArmoryExporter.mesh_context_empty
+                o['contexts'].append(c2)
+            if wrd.force_no_culling:
                 o['override_context'] = {}
                 o['override_context']['cull_mode'] = 'none'
             defs = []
-            self.finalize_shader(o, defs, ArmoryExporter.renderpath_passes)
+            # TODO: duplicate
+            geom_context = None
+            if wrd.voxelgi:
+                #defs.append('_VoxelGI')
+                c2 = {}
+                c2['name'] = 'voxel'
+                for bc in c['bind_constants']:
+                    if bc['name'] == 'baseCol':
+                        c2['bind_constants'] = [bc]
+                        break
+                o['contexts'].append(c2)
+                geom_context = 'voxel'
+            self.finalize_shader(o, defs, ArmoryExporter.renderpath_passes, geom_context=geom_context)
             self.output['material_datas'].append(o)
 
     def export_particle_systems(self):
@@ -2742,6 +2755,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         if len(bobject.constraints) > 0:
             o['constraints'] = []
             for constr in bobject.constraints:
+                if constr.mute:
+                    continue
                 co = {}
                 co['name'] = constr.name
                 co['type'] = constr.type
@@ -2866,7 +2881,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             const['float'] = material.height_tess_outer
             c['bind_constants'].append(const)
             # Append shadows height context
-            if bpy.data.worlds['Arm'].generate_shadows == True:
+            if wrd.generate_shadows == True:
                 if material.height_tess_shadows:
                     c2 = {}
                     c2['name'] = ArmoryExporter.shadows_context + 'height'
@@ -2891,25 +2906,40 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                     o['contexts'].append(c2)
                 else:
                     # Non-tessellated shadow context
-                    c = {}
-                    c['name'] = ArmoryExporter.shadows_context
-                    o['contexts'].append(c)
+                    c2 = {}
+                    c2['name'] = ArmoryExporter.shadows_context
+                    o['contexts'].append(c2)
         # X-Ray enabled
         elif material.overlay:
             # Change to overlay context
             c['name'] = ArmoryExporter.overlay_context
         # Otherwise add shadows context
         else:
-            if bpy.data.worlds['Arm'].generate_shadows == True:
-                c = {}
-                c['name'] = ArmoryExporter.shadows_context
-                o['contexts'].append(c)
+            if wrd.generate_shadows == True:
+                c2 = {}
+                c2['name'] = ArmoryExporter.shadows_context
+                o['contexts'].append(c2)
+
+        # VGI Voxels enabled, append context
+        if wrd.voxelgi:
+            #defs.append('_VoxelGI')
+            c2 = {}
+            c2['name'] = 'voxel' # TODO: Hard-coded context name for now
+            for bc in c['bind_constants']:
+                if bc['name'] == 'baseCol':
+                    c2['bind_constants'] = [bc]
+                    break
+            for bt in c['bind_textures']:
+                if bt['name'] == 'sbase':
+                    c2['bind_textures'] = [bt]
+                    break
+            o['contexts'].append(c2)
         
         # Additional geometry contexts, useful for depth-prepass
         if ArmoryExporter.mesh_context_empty != '':
-            c = {}
-            c['name'] = ArmoryExporter.mesh_context_empty
-            o['contexts'].append(c)
+            c2 = {}
+            c2['name'] = ArmoryExporter.mesh_context_empty
+            o['contexts'].append(c2)
 
         # Material users        
         for ob in mat_users:
@@ -2936,10 +2966,13 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         # Process defs and append datas
         if material.override_shader == False:
             with_tess = False
+            geom_context = None
             # TODO: auto-detect tessellation shaders
             if '_HeightTex' in defs:
                 with_tess = True
-            self.finalize_shader(o, defs, ArmoryExporter.renderpath_passes, with_tess=with_tess)
+            if wrd.voxelgi:
+                geom_context = 'voxel'
+            self.finalize_shader(o, defs, ArmoryExporter.renderpath_passes, with_tess=with_tess, geom_context=geom_context)
         else:
             # TODO: gather defs from vertex data when custom shader is used
             o['shader'] = material.override_shader_name
@@ -3124,7 +3157,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         po['volume_center'] = volume_center
         return po
             
-    def finalize_shader(self, o, defs, renderpath_passes, with_tess=False, with_geom=False):
+    def finalize_shader(self, o, defs, renderpath_passes, with_tess=False, geom_context=None):
         # Merge duplicates and sort
         defs = sorted(list(set(defs)))
         # Select correct shader variant
@@ -3171,7 +3204,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             full_name = 'build/compiled/Shaders/' + ArmoryExporter.renderpath_id + '/' + shader_name
             assets.add_shader(full_name + '.vert.glsl')
             assets.add_shader(full_name + '.frag.glsl')
-            if with_geom:
+            if geom_context == ren_pass:
                 assets.add_shader(full_name + '.geom.glsl')
             if with_tess:
                 assets.add_shader(full_name + '.tesc.glsl')

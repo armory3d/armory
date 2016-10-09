@@ -7,7 +7,7 @@ def add_armory_library(sdk_path, name):
     return ('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/' + name)[2:] + '");\n').replace('\\', '/')
 
 # Write khafile.js
-def write_khafilejs(is_play, export_physics):
+def write_khafilejs(is_play, export_physics, dce_full=False):
     
     sdk_path = utils.get_sdk_path()
     
@@ -22,7 +22,6 @@ def write_khafilejs(is_play, export_physics):
 let project = new Project('""" + bpy.data.worlds['Arm'].ArmProjectName + """');
 
 project.addSources('Sources');
-project.addShaders('Sources/Shaders/**');
 """)
         
         f.write(add_armory_library(sdk_path, 'armory'))
@@ -31,6 +30,9 @@ project.addShaders('Sources/Shaders/**');
         if export_physics:
             f.write("project.addDefine('WITH_PHYSICS');\n")
             f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
+
+        if dce_full:
+            f.write("project.addParameter('-dce full');")
 
         # Electron live patching
         # if is_play and bpy.data.worlds['Arm'].ArmPlayLivePatch == True and bpy.data.worlds['Arm'].ArmPlayRuntime == 'Electron':

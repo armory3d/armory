@@ -76,8 +76,13 @@ def buildNodeTree(world):
         assets.add(sdk_path + 'armory/Assets/noise64.png')
         assets.add_embedded_data('noise64.png')
 
+    # Alternative models
     if wrd.diffuse_oren_nayar:
         wrd.world_defs += '_OrenNayar'
+
+    if wrd.voxelgi:
+        wrd.world_defs += '_VoxelGI'
+        wrd.world_defs += '_Rad' # Always do radiance for voxels
 
     # Enable probes
     for cam in bpy.data.cameras:
