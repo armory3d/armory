@@ -6,6 +6,7 @@ import iron.object.Transform;
 import iron.system.Input;
 import iron.math.RayCaster;
 
+@:keep
 class EditorSpace extends Trait {
 
     var gizmo:Object;

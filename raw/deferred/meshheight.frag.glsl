@@ -43,7 +43,7 @@ in vec2 te_texCoord;
 	in vec3 te_normal;
 #endif
 
-out vec4[2] outColor;
+out vec4[2] fragColor;
 
 float packFloat(float f1, float f2) {
 	float index = floor(f1 * 1000.0); // Temporary
@@ -100,6 +100,6 @@ void main() {
 	n /= (abs(n.x) + abs(n.y) + abs(n.z));
     n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
 
-	outColor[0] = vec4(n.xy, packFloat(metalness, roughness), mask);
-	outColor[1] = vec4(baseColor.rgb, occ);
+	fragColor[0] = vec4(n.xy, packFloat(metalness, roughness), mask);
+	fragColor[1] = vec4(baseColor.rgb, occ);
 }

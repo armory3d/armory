@@ -33,7 +33,7 @@ in vec2 texCoord;
 #ifdef _CompoPos
 	in vec3 viewRay;
 #endif
-out vec4 outColor;
+out vec4 fragColor;
 
 const float focus_depth = 0.5;
 
@@ -311,5 +311,5 @@ void main() {
 	col.rgb *= 1.0 - step(0.5 - compoLetterboxSize, abs(0.5 - texCoord.y));
 #endif
 
-	outColor = col; 
+	fragColor = col; 
 }

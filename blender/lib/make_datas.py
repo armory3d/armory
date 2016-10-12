@@ -200,15 +200,31 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
                     for l in c['links']:
                         if l['name'] == cid:
                             valid_link = True
+
                             if 'ifdef' in l:
-                                valid_link = False
+                                def_found = False
                                 for d in defs:
                                     for link_def in l['ifdef']:
                                         if d == link_def:
-                                            valid_link = True
+                                            def_found = True
                                             break
-                                    if valid_link:
+                                    if def_found:
                                         break
+                                if not def_found:
+                                    valid_link = False
+
+                            if 'ifndef' in l:
+                                def_found = False
+                                for d in defs:
+                                    for link_def in l['ifdef']:
+                                        if d == link_def:
+                                            def_found = True
+                                            break
+                                    if def_found:
+                                        break
+                                if def_found:
+                                    valid_link = False
+
                             if valid_link:
                                 tu['link'] = l['link']
                             break
@@ -229,15 +245,31 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
                     for l in c['links']:
                         if l['name'] == cid:
                             valid_link = True
+
                             if 'ifdef' in l:
-                                valid_link = False
+                                def_found = False
                                 for d in defs:
-                                    for lifdef in l['ifdef']:
-                                        if d == lifdef:
-                                            valid_link = True
+                                    for link_def in l['ifdef']:
+                                        if d == link_def:
+                                            def_found = True
                                             break
-                                    if valid_link:
+                                    if def_found:
                                         break
+                                if not def_found:
+                                    valid_link = False
+
+                            if 'ifndef' in l:
+                                def_found = False
+                                for d in defs:
+                                    for link_def in l['ifdef']:
+                                        if d == link_def:
+                                            def_found = True
+                                            break
+                                    if def_found:
+                                        break
+                                if def_found:
+                                    valid_link = False
+
                             if valid_link:
                                 const['link'] = l['link']
                             break

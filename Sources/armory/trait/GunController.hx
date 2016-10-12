@@ -11,6 +11,7 @@ import iron.object.CameraObject;
 import armory.trait.internal.RigidBody;
 import armory.system.Keymap;
 
+@:keep
 class GunController extends Trait {
 
 #if (!WITH_PHYSICS)

@@ -8,7 +8,7 @@ uniform sampler2D tex;
 uniform sampler2D tex2;
 
 in vec2 texCoord;
-out vec4 outColor;
+out vec4 fragColor;
 
 const float exposure = 1.0;
 const float gamma = 2.2;
@@ -25,7 +25,7 @@ void main() {
     
 	// Gamma correction
     // result = pow(result, vec3(1.0 / gamma));
-    // outColor.rgb = result;
+    // fragColor.rgb = result;
 	
-	outColor.rgb = col;
+	fragColor.rgb = col;
 }

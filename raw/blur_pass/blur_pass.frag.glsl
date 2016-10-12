@@ -10,7 +10,7 @@ uniform vec2 dir;
 uniform vec2 screenSize;
 
 in vec2 texCoord;
-out vec4 outColor;
+out vec4 fragColor;
 
 void main() {
 	vec2 step = dir / screenSize;
@@ -28,5 +28,5 @@ void main() {
 	result += texture(tex, texCoord - (step * 5.5)).rgb;
 	result /= vec3(11.0);
 	
-	outColor.rgb = vec3(result);
+	fragColor.rgb = vec3(result);
 }

@@ -14,7 +14,7 @@ uniform vec2 dir;
 uniform vec2 screenSize;
 
 in vec2 texCoord;
-out vec4 outColor;
+out vec4 fragColor;
 
 vec2 unpackFloat(float f) {
 	return vec2(floor(f) / 1000.0, fract(f));
@@ -24,7 +24,7 @@ void main() {
 	vec2 tc = texCoord * ssrTextureScale;
 	float roughness = unpackFloat(texture(gbuffer0, texCoord).b).y;
 	// if (roughness == 0.0) { // Always blur for now, non blured output can produce noise
-		// outColor = texture(tex, tc);
+		// fragColor = texture(tex, tc);
 		// return;
 	// }
 	
@@ -45,5 +45,5 @@ void main() {
 	// result /= vec3(11.0);
 	result /= vec3(5.0);
 	
-	outColor.rgb = vec3(result);
+	fragColor.rgb = vec3(result);
 }

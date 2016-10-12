@@ -6,6 +6,7 @@ import iron.object.Transform;
 import iron.object.CameraObject;
 import armory.system.Keymap;
 
+@:keep
 class CameraController extends Trait {
 
 #if (!WITH_PHYSICS)

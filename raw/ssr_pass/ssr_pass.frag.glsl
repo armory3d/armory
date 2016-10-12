@@ -22,7 +22,7 @@ uniform mat4 tiV;
 
 in vec3 viewRay;
 in vec2 texCoord;
-out vec4 outColor;
+out vec4 fragColor;
 
 vec3 hitCoord;
 float depth;
@@ -190,14 +190,14 @@ void main() {
     float roughness = unpackFloat(g0.b).y;
 
     if (roughness == 1.0) {
-		outColor = vec4(0.0);
+		fragColor = vec4(0.0);
 		return;
 	}
 	float reflectivity = 1.0 - roughness;
 	
 	float d = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	if (d == 1.0) {
-		outColor = vec4(0.0);
+		fragColor = vec4(0.0);
 		return;
 	}
 
@@ -209,8 +209,8 @@ void main() {
 	
 	vec4 viewNormal = vec4(n, 1.0);
 	// if (viewNormal.z <= 0.9) {
-		// outColor = texture(tex, texCoord);
-		// outColor = vec4(0.0);
+		// fragColor = texture(tex, texCoord);
+		// fragColor = vec4(0.0);
 		// return;
 		// discard; // Only up facing surfaces for now
 	// }
@@ -236,12 +236,12 @@ void main() {
 	intensity = clamp(intensity, 0.0, 1.0);
 	
 	if (intensity == 0.0) {
-		outColor = vec4(0.0);
+		fragColor = vec4(0.0);
 		return;
 	}
 	
 	vec4 reflCol = vec4(texture(tex, coords.xy).rgb, 1.0);
 	reflCol = clamp(reflCol, 0.0, 1.0);
-	// outColor = texColor * (1.0 - intensity) + reflCol * intensity;
-	outColor = reflCol * intensity; //
+	// fragColor = texColor * (1.0 - intensity) + reflCol * intensity;
+	fragColor = reflCol * intensity; //
 }

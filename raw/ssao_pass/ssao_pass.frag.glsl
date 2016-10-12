@@ -36,7 +36,7 @@ uniform vec2 aspectRatio;
 
 in vec2 texCoord;
 // in vec3 viewRay;
-out vec4 outColor;
+out vec4 fragColor;
 
 // float rand(vec2 co) { // Unreliable
 //   return fract(sin(dot(co.xy ,vec2(12.9898, 78.233))) * 43758.5453);
@@ -82,7 +82,7 @@ float doAO(vec2 kernelVec, vec2 randomVec, mat2 rotMat, vec3 currentPos, vec3 cu
 void main() {
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	if (depth == 1.0) {
-		outColor = vec4(1.0);
+		fragColor = vec4(1.0);
 		return;
 	}
 	
@@ -160,5 +160,5 @@ void main() {
 	amount *= ssaoStrength / kernelSize;
 	amount = 1.0 - amount;
 	amount = max(0.0, amount);
-    outColor = vec4(amount, 0.0, 0.0, 1.0);
+    fragColor = vec4(amount, 0.0, 0.0, 1.0);
 }

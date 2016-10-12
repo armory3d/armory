@@ -73,9 +73,9 @@ in vec4 matColor;
 #endif
 
 #ifdef _Veloc
-	out vec4[3] outColor;
+	out vec4[3] fragColor;
 #else
-	out vec4[2] outColor;
+	out vec4[2] fragColor;
 #endif
 
 float packFloat(float f1, float f2) {
@@ -260,15 +260,15 @@ void main() {
 			mask_probe = probeID + clampres;
 		}
 	}
-	outColor[0] = vec4(n.xy, packFloat(metalness, roughness), mask_probe);
+	fragColor[0] = vec4(n.xy, packFloat(metalness, roughness), mask_probe);
 #else
-	outColor[0] = vec4(n.xy, packFloat(metalness, roughness), mask);
+	fragColor[0] = vec4(n.xy, packFloat(metalness, roughness), mask);
 #endif
-	outColor[1] = vec4(baseColor.rgb, occ);
+	fragColor[1] = vec4(baseColor.rgb, occ);
 
 #ifdef _Veloc
 	vec2 posa = (wvppos.xy / wvppos.w) * 0.5 + 0.5;
 	vec2 posb = (prevwvppos.xy / prevwvppos.w) * 0.5 + 0.5;
-	outColor[2].rg = vec2(posa - posb);
+	fragColor[2].rg = vec2(posa - posb);
 #endif
 }

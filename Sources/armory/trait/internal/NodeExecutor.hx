@@ -2,6 +2,7 @@ package armory.trait.internal;
 
 import iron.Trait;
 
+@:keep
 class NodeExecutor extends Trait {
 
     var baseNode:armory.logicnode.Node;

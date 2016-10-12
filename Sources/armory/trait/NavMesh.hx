@@ -2,6 +2,7 @@ package armory.trait;
 
 import iron.Trait;
 
+@:keep
 class NavMesh extends Trait {
 
     public function new() {

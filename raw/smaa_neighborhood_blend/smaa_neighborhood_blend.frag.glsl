@@ -14,7 +14,7 @@ uniform vec2 screenSizeInv;
 
 in vec2 texCoord;
 in vec4 offset;
-out vec4 outColor;
+out vec4 fragColor;
 
 //-----------------------------------------------------------------------------
 // Neighborhood Blending Pixel Shader (Third Pass)
@@ -97,5 +97,5 @@ vec4 SMAANeighborhoodBlendingPS(vec2 texcoord, vec4 offset/*, sampler2D colorTex
 }
 
 void main() {
-    outColor = SMAANeighborhoodBlendingPS(texCoord, offset/*, colorTex, blendTex*/);
+    fragColor = SMAANeighborhoodBlendingPS(texCoord, offset/*, colorTex, blendTex*/);
 }

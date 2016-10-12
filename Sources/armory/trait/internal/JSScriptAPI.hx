@@ -8,6 +8,7 @@ package armory.trait.internal;
 // #include <duktape.h>
 // ')
 
+@:keep
 class JSScriptAPI {
 /*
 	static var ctx:haxeduktape.DukContext;

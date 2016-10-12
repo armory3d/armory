@@ -8,7 +8,7 @@ uniform sampler2D tex;
 uniform vec2 texStep; // screenSizeInv
 
 in vec2 texCoord;
-out vec4 outColor;
+out vec4 fragColor;
 
 void main() {
     const float FXAA_REDUCE_MIN = 1.0 / 128.0;
@@ -56,6 +56,6 @@ void main() {
         texture(tex, texCoord + dir * 0.5).rgb);
 		
 	float lumaB = dot(rgbB, luma);
-    if ((lumaB < lumaMin) || (lumaB > lumaMax)) outColor = vec4(rgbA, texColor.a);
-    else outColor = vec4(rgbB, texColor.a);
+    if ((lumaB < lumaMin) || (lumaB > lumaMax)) fragColor = vec4(rgbA, texColor.a);
+    else fragColor = vec4(rgbB, texColor.a);
 }

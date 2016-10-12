@@ -140,6 +140,8 @@ def parse_surface(world, node, context):
 def parse_color(world, node, context, envmap_strength_const):       
     # Env map included
     if node.type == 'TEX_ENVIRONMENT':
+        envmap_strength_const['float'] *= 2.0 # Match to cycles
+
         texture = {}
         context['bind_textures'].append(texture)
         texture['name'] = 'envmap'
@@ -187,6 +189,8 @@ def parse_color(world, node, context, envmap_strength_const):
     
     # Append sky define
     elif node.type == 'TEX_SKY':
+        envmap_strength_const['float'] *= 0.25 # Match to Cycles
+        
         bpy.data.worlds['Arm'].world_defs += '_EnvSky'
         # Append sky properties to material
         const = {}
@@ -209,12 +213,10 @@ def parse_color(world, node, context, envmap_strength_const):
             bpy.data.worlds['Arm'].world_defs += '_Rad'
             
             sdk_path = utils.get_sdk_path()
+            # Use fake maps for now
             assets.add(sdk_path + 'armory/Assets/hosek/hosek_radiance.hdr')
             for i in range(0, 8):
                 assets.add(sdk_path + 'armory/Assets/hosek/hosek_radiance_' + str(i) + '.hdr')
             
             world.world_envtex_name = 'hosek'
             world.world_envtex_num_mips = 8
-
-        # Adjust strength to match Cycles
-        envmap_strength_const['float'] *= 0.25

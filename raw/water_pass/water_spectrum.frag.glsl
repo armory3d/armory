@@ -17,7 +17,7 @@ uniform sampler2D texPhases;
 uniform sampler2D texInitialSpectrum;
 
 in vec2 texCoord;
-out vec4 outColor;
+out vec4 fragColor;
 
 vec2 multiplyComplex(vec2 a, vec2 b) {
 	return vec2(a[0] * b[0] - a[1] * b[1], a[1] * b[0] + a[0] * b[1]);
@@ -56,5 +56,5 @@ void main() {
 		hZ = vec2(0.0);
 	}
 
-	outColor = vec4(hX + multiplyByI(h), hZ);
+	fragColor = vec4(hX + multiplyByI(h), hZ);
 }

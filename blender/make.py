@@ -19,6 +19,7 @@ import lib.make_datas
 import lib.make_variants
 import utils
 import assets
+import props
 # Server
 import http.server
 import socketserver
@@ -84,7 +85,7 @@ def def_strings_to_array(strdefs):
     defs = ['_' + d for d in defs] # Restore _
     return defs
 
-def export_data(fp, sdk_path, is_play=False, is_publish=False):
+def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False):
     raw_path = sdk_path + 'armory/raw/'
     assets_path = sdk_path + 'armory/Assets/'
     export_physics = bpy.data.worlds['Arm'].ArmPhysics != 'Disabled'
@@ -154,7 +155,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False):
     write_data.write_khafilejs(is_play, export_physics, dce_full=is_publish)
 
     # Write Main.hx
-    write_data.write_main(is_play, play_project.in_viewport)
+    write_data.write_main(is_play, in_viewport)
 
     # Copy ammo.js if necessary
     #if target_name == 'html5':
@@ -193,10 +194,11 @@ def get_kha_target(target_name): # TODO: remove
 def compile_project(target_name=None, is_publish=False, watch=False):
     sdk_path =  utils.get_sdk_path()
     ffmpeg_path = utils.get_ffmpeg_path()
+    wrd = bpy.data.worlds['Arm']
 
     # Set build command
     if target_name == None:
-        target_name = bpy.data.worlds['Arm'].ArmProjectTarget
+        target_name = wrd.ArmProjectTarget
 
     if utils.get_os() == 'win':
         node_path = sdk_path + '/nodejs/node.exe'
@@ -218,6 +220,12 @@ def compile_project(target_name=None, is_publish=False, watch=False):
     if utils.get_os() == 'win': # OpenGL for now
         cmd.append('-g')
         cmd.append('opengl2')
+
+    # User defined commands
+    cmd_text = wrd.ArmCommandLine
+    if cmd_text != '':
+        for s in bpy.data.texts[cmd_text].as_string().split(' '):
+            cmd.append(s)
 
     # armory_log("Building, see console...")
 
@@ -248,7 +256,7 @@ def patch_project():
     os.chdir(fp)
     export_data(fp, sdk_path, is_play=True)
 
-def build_project(is_play=False, is_publish=False):
+def build_project(is_play=False, is_publish=False, in_viewport=False):
     # Clear flag
     play_project.in_viewport = False
 
@@ -314,7 +322,7 @@ def build_project(is_play=False, is_publish=False):
     # Save internal assets
 
     # Export data
-    export_data(fp, sdk_path, is_play=is_play, is_publish=is_publish)
+    export_data(fp, sdk_path, is_play=is_play, is_publish=is_publish, in_viewport=in_viewport)
 
     if play_project.playproc == None:
         armory_progress(50)
@@ -357,7 +365,7 @@ def watch_compile(mode):
 
 def watch_patch():
     play_project.compileproc.wait()
-    result = play_project.compileproc.poll()
+    # result = play_project.compileproc.poll()
     play_project.compileproc = None
     play_project.compileproc_finished = True
 
@@ -366,7 +374,7 @@ def play_project(self, in_viewport):
         play_project.play_area = bpy.context.area
 
     # Build data
-    build_project(is_play=True)
+    build_project(is_play=True, in_viewport=in_viewport)
     play_project.in_viewport = in_viewport
 
     wrd = bpy.data.worlds['Arm']
@@ -516,6 +524,7 @@ def clean_project():
 
 def publish_project():
     # Force minimize data
+    props.invalidate_compiled_data.enabled = False
     minimize = bpy.data.worlds['Arm'].ArmMinimize
     bpy.data.worlds['Arm'].ArmMinimize = True
     clean_project()
@@ -523,6 +532,7 @@ def publish_project():
     play_project.compileproc = compile_project(target_name=bpy.data.worlds['Arm'].ArmPublishTarget, is_publish=True)
     threading.Timer(0.1, watch_compile, ['publish']).start()
     bpy.data.worlds['Arm'].ArmMinimize = minimize
+    props.invalidate_compiled_data.enabled = True
 
 # Registration
 def register():

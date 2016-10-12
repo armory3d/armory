@@ -10,7 +10,7 @@ const float G = 9.81;
 const float KM = 370.0;
 
 in vec2 texCoord;
-out vec4 outColor;
+out vec4 fragColor;
 
 uniform sampler2D u_phases;
 uniform float u_deltaTime;
@@ -32,5 +32,5 @@ void main() {
 	float deltaPhase = omega(length(waveVector)) * u_deltaTime;
 	phase = mod(phase + deltaPhase, 2.0 * PI);
 
-	outColor = vec4(phase, 0.0, 0.0, 0.0);
+	fragColor = vec4(phase, 0.0, 0.0, 0.0);
 }

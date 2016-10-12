@@ -11,6 +11,7 @@ import armory.system.Keymap;
 import haxebullet.Bullet;
 #end
 
+@:keep
 class VehicleBody extends Trait {
 
 #if (!WITH_PHYSICS)

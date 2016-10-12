@@ -9,6 +9,7 @@ import zui.Zui;
 import zui.Id;
 #end
 
+@:keep
 class Console extends Trait {
 
 #if (!WITH_PROFILE)

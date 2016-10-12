@@ -64,7 +64,7 @@ in vec3 eyeDir;
 #else
 	in vec3 normal;
 #endif
-out vec4[2] outColor;
+out vec4[2] fragColor;
 
 vec3 shIrradiance(vec3 nor, float scale) {
     const float c1 = 0.429043;
@@ -200,6 +200,10 @@ void main() {
     roughness *= roughnessStrength;
 #endif
 
+#ifdef _OccTex
+	float occlusion = texture(socclusion, texCoord).r;
+#endif
+
 	// Direct
 	vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);	
 
@@ -248,6 +252,6 @@ void main() {
     // revealage = premultipliedReflect.a;
 	// RT0 = vec4(C * w, a)
 	// RT1 = vec4(vec3(a * w), 1)
-	outColor[0] = vec4(premultipliedReflect.rgb * w, premultipliedReflect.a);
-	outColor[1] = vec4(premultipliedReflect.a * w, 0.0, 0.0, 1.0);
+	fragColor[0] = vec4(premultipliedReflect.rgb * w, premultipliedReflect.a);
+	fragColor[1] = vec4(premultipliedReflect.a * w, 0.0, 0.0, 1.0);
 }

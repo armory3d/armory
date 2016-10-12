@@ -148,18 +148,22 @@ def on_load_pre(context):
 
 def invalidate_shader_cache(self, context):
     # compiled.glsl changed, recompile all shaders next time
-    if invalidate_shader_cache.enabled:
-        fp = utils.get_fp()
-        if os.path.isdir(fp + '/build/compiled/ShaderDatas'):
-            shutil.rmtree(fp + '/build/compiled/ShaderDatas')
+    if invalidate_shader_cache.enabled == False:
+        return
+    fp = utils.get_fp()
+    if os.path.isdir(fp + '/build/compiled/ShaderDatas'):
+        shutil.rmtree(fp + '/build/compiled/ShaderDatas')
 invalidate_shader_cache.enabled = True # Disable invalidating during build process
 
 def invalidate_compiled_data(self, context):
+    if invalidate_compiled_data.enabled == False:
+        return
     fp = utils.get_fp()
     if os.path.isdir(fp + '/build/compiled/Assets'):
         shutil.rmtree(fp + '/build/compiled/Assets')
     if os.path.isdir(fp + '/build/compiled/ShaderDatas'):
         shutil.rmtree(fp + '/build/compiled/ShaderDatas')
+invalidate_compiled_data.enabled = True
 
 def invalidate_mesh_data(self, context):
     fp = utils.get_fp()
@@ -198,6 +202,7 @@ def initProperties():
                  ('Recast', 'Recast', 'Recast')],
         name = "Navigation", default='Disabled')
     bpy.types.World.ArmKhafile = StringProperty(name = "Khafile", description="Source appended to khafile.js")
+    bpy.types.World.ArmCommandLine = StringProperty(name = "Command Line", description="Commands appended to khamake")
     bpy.types.World.ArmMinimize = BoolProperty(name="Minimize Data", description="Export scene data in binary", default=True, update=invalidate_compiled_data)
     bpy.types.World.ArmOptimizeMesh = BoolProperty(name="Optimize Meshes", description="Export more efficient geometry indices, can prolong build times", default=False, update=invalidate_mesh_data)
     bpy.types.World.ArmSampledAnimation = BoolProperty(name="Sampled Animation", description="Export object animation as raw matrices", default=False, update=invalidate_compiled_data)
@@ -855,6 +860,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
         layout.prop(wrd, 'ArmProjectName')
         layout.prop(wrd, 'ArmProjectPackage')
         layout.prop_search(wrd, 'ArmKhafile', bpy.data, 'texts', 'Khafile')
+        layout.prop_search(wrd, 'ArmCommandLine', bpy.data, 'texts', 'Command Line')
         layout.operator('arm.publish')
         layout.prop(wrd, 'ArmPublishTarget')
 

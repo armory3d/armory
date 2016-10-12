@@ -30,7 +30,7 @@ uniform mat4 V;
 in vec4 wvpposition;
 in vec4 matColor;
 // in vec3 orientation;
-out vec4[2] outColor;
+out vec4[2] fragColor;
 
 mat3 cotangentFrame(vec3 nor, vec3 pos, vec2 uv) {
     // Get edge vectors of the pixel triangle
@@ -98,9 +98,9 @@ void main() {
 	
 	// Alpha write is disabled in shader res, we acces all channels for blending
 	// Use separate texture for base color in the future
-	outColor[1].rgb = baseColor.rgb;
-	outColor[1].a = baseColor.a;
-	// outColor[1].a = packFloat(roughness, metalness) * baseColor.a;
+	fragColor[1].rgb = baseColor.rgb;
+	fragColor[1].a = baseColor.a;
+	// fragColor[1].a = packFloat(roughness, metalness) * baseColor.a;
 	
 #ifdef _MetTex
 	float metalness = texture(smetal, texCoord).r;
@@ -128,15 +128,15 @@ void main() {
 	n /= (abs(n.x) + abs(n.y) + abs(n.z));
     n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
 	
-	outColor[0].rg = n.xy;
+	fragColor[0].rg = n.xy;
 #else
-	outColor[0].rg = vec2(1.0);
+	fragColor[0].rg = vec2(1.0);
 #endif
 
-	// outColor[0].b unused for now so we can rewrite it
-	outColor[0].b = 0.0;
+	// fragColor[0].b unused for now so we can rewrite it
+	fragColor[0].b = 0.0;
 	// use separete RG texture for normal storage in the future
 	// Color mask does not disable write for all buffers so mask is overwritten
 	// Half of color alpha to soft normals blend
-	outColor[0].a = baseColor.a / 2.0;
+	fragColor[0].a = baseColor.a / 2.0;
 }

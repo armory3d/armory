@@ -50,7 +50,7 @@ uniform sampler2D tex;
 uniform vec2 dir;
 
 in vec2 texCoord;
-out vec4 outColor;
+out vec4 fragColor;
 
 const float SSSS_FOVY = 45.0;
 
@@ -157,9 +157,9 @@ vec4 SSSSBlur(float sssWidth) {
 void main() {
 	// SSS only masked objects
 	if (texture(gbuffer0, texCoord).a == 2.0) {
-		outColor = SSSSBlur(0.005);
+		fragColor = SSSSBlur(0.005);
 	}
 	else {
-		outColor = texture(tex, texCoord);
+		fragColor = texture(tex, texCoord);
 	}
 }

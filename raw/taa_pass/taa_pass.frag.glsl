@@ -11,7 +11,7 @@ uniform sampler2D sveloc;
 #endif
 
 in vec2 texCoord;
-out vec4 outColor;
+out vec4 fragColor;
 
 const float SMAA_REPROJECTION_WEIGHT_SCALE = 30.0;
 
@@ -34,9 +34,9 @@ void main() {
     float weight = 0.5 * clamp(1.0 - sqrt(delta) * SMAA_REPROJECTION_WEIGHT_SCALE, 0.0, 1.0);
 
     // Blend the pixels according to the calculated weight:
-    outColor.rgb = mix(current.rgb, previous.rgb, weight);
+    fragColor.rgb = mix(current.rgb, previous.rgb, weight);
 #else
 	vec4 previous = texture(tex2, texCoord);
-	outColor = mix(current.rgb, previous.rgb, 0.5);
+	fragColor = mix(current.rgb, previous.rgb, 0.5);
 #endif
 }

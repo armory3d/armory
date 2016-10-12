@@ -90,7 +90,7 @@ in vec3 eyeDir;
 #else
 	in vec3 normal;
 #endif
-out vec4 outColor;
+out vec4 fragColor;
 
 #ifndef _NoShadows
 // float linstep(float low, float high, float v) {
@@ -606,9 +606,9 @@ void main() {
         sf = step(0.5, sf);
     }
 	
-	outColor.rgb = ambientMaterial + (df * diffuseMaterial + sf * specularMaterial) * visibility;
+	fragColor.rgb = ambientMaterial + (df * diffuseMaterial + sf * specularMaterial) * visibility;
     float edgeDetection = (dot(v, n) < 0.1) ? 0.0 : 1.0;
-	outColor.rgb *= edgeDetection;
+	fragColor.rgb *= edgeDetection;
 	
 	// const int levels = 4;
 	// const float scaleFactor = 1.0 / levels;
@@ -626,7 +626,7 @@ void main() {
 	// float specMask = (pow(dot(h, n), shininess) > 0.4) ? 1.0 : 0.0;
 	
 	// float edgeDetection = (dot(v, n) > 0.3) ? 1.0 : 0.0;
-	// outColor.rgb = edgeDetection * ((diffuseColor + specular * specMask) * visibility + ambientMaterial);
+	// fragColor.rgb = edgeDetection * ((diffuseColor + specular * specMask) * visibility + ambientMaterial);
 #endif
 
 
@@ -682,20 +682,20 @@ void main() {
 	indirect += indirectSpecular;
 #endif
 	indirect = indirect * envmapStrength; // * lightColor * lightStrength;
-	outColor = vec4(vec3(direct * visibility + indirect), 1.0);
+	fragColor = vec4(vec3(direct * visibility + indirect), 1.0);
 	
 #ifdef _OccTex
 	vec3 occ = texture(socclusion, texCoord).rgb;
-	outColor.rgb *= occ;
+	fragColor.rgb *= occ;
 #else
-	outColor.rgb *= occlusion; 
+	fragColor.rgb *= occlusion; 
 #endif
 	// LTC
-	// outColor.rgb = ltccol * 10.0 * visibility + indirect / 14.0;
+	// fragColor.rgb = ltccol * 10.0 * visibility + indirect / 14.0;
 
 #ifdef _LDR
-    outColor.rgb = vec3(pow(outColor.rgb, vec3(1.0 / 2.2)));
+    fragColor.rgb = vec3(pow(fragColor.rgb, vec3(1.0 / 2.2)));
 // #else
-    // outColor = vec4(outColor.rgb, outColor.a);
+    // fragColor = vec4(fragColor.rgb, fragColor.a);
 #endif
 }

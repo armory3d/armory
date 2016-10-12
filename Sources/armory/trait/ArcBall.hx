@@ -6,6 +6,7 @@ import iron.system.Input;
 import iron.math.Vec4;
 import iron.math.Quat;
 
+@:keep
 class ArcBall extends Trait {
 
 	public function new() {

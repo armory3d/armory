@@ -17,6 +17,7 @@ class ContactPair {
 	}
 }
 
+@:keep
 class PhysicsWorld extends Trait {
 
 #if (!WITH_PHYSICS)

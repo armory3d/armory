@@ -103,7 +103,7 @@ class HosekWilkieRadianceData {
             Z.x /= dotS;
             Z.y /= dotS;
             Z.z /= dotS;
-            Z.mult(normalizedSunY);
+            Z = Z.mult(normalizedSunY);
         }
 
         // Store in a single float array for shader access

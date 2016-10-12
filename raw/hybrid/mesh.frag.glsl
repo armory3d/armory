@@ -78,7 +78,7 @@ in vec3 eyeDir;
 #else
 	in vec3 normal;
 #endif
-out vec4[2] outColor;
+out vec4[2] fragColor;
 
 #ifndef _NoShadows
 #ifndef _PCSS
@@ -597,12 +597,12 @@ void main() {
 
 #ifdef _LDR
 	outputColor.rgb = tonemapUncharted2(outputColor.rgb);
-    outColor[0] = vec4(pow(outputColor.rgb, vec3(1.0 / 2.2)), visibility);
+    fragColor[0] = vec4(pow(outputColor.rgb, vec3(1.0 / 2.2)), visibility);
 #else
-    outColor[0] = vec4(outputColor.rgb, visibility);
+    fragColor[0] = vec4(outputColor.rgb, visibility);
 #endif
 
 	n /= (abs(n.x) + abs(n.y) + abs(n.z));
     n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
-	outColor[1] = vec4(n.xy, packFloat(metalness, roughness), 0.0);
+	fragColor[1] = vec4(n.xy, packFloat(metalness, roughness), 0.0);
 }

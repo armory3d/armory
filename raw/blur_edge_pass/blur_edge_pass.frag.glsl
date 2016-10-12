@@ -14,7 +14,7 @@ uniform vec2 dir;
 uniform vec2 screenSize;
 
 in vec2 texCoord;
-out vec4 outColor;
+out vec4 fragColor;
 
 const float blurWeights[10] = float[] (0.132572, 0.125472, 0.106373, 0.08078, 0.05495, 0.033482, 0.018275, 0.008934, 0.003912, 0.001535);
 const float discardThreshold = 0.95;
@@ -66,7 +66,7 @@ void main() {
 	// result += texture(tex, tc - (step * 3.5)).rgb;
 	// result += texture(tex, tc - (step * 4.5)).rgb;
 	// result /= vec3(9.0);
-	// outColor.rgb = vec3(result);
+	// fragColor.rgb = vec3(result);
 
 	vec3 nor = getNor(texture(gbuffer0, texCoord).rg);
 	
@@ -87,6 +87,6 @@ void main() {
 	// }
 
 	result /= weight;
-	// outColor = vec4(result.rgb, 1.0);
-	outColor = vec4(result.rrr, 1.0); // SSAO only
+	// fragColor = vec4(result.rgb, 1.0);
+	fragColor = vec4(result.rrr, 1.0); // SSAO only
 }

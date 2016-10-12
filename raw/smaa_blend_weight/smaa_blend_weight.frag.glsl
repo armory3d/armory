@@ -37,7 +37,7 @@ in vec2 pixcoord;
 in vec4 offset0;
 in vec4 offset1;
 in vec4 offset2;
-out vec4 outColor;
+out vec4 fragColor;
 
 // Blending Weight Calculation Pixel Shader (Second Pass)
 vec2 cdw_end;
@@ -727,6 +727,6 @@ vec4 SMAABlendingWeightCalculationPS(vec2 texcoord, vec2 pixcoord, /*vec4 offset
 }
 
 void main() {
-    outColor = SMAABlendingWeightCalculationPS(texCoord, pixcoord, /*offset,*/
+    fragColor = SMAABlendingWeightCalculationPS(texCoord, pixcoord, /*offset,*/
                                      /*edgesTex, areaTex, searchTex,*/ vec4(0.0));
 }

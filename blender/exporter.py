@@ -2596,6 +2596,43 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                     break
 
     def cb_export_object(self, bobject, o, type):
+        # Animation setup
+        if self.is_bone_animation_enabled(bobject) or self.is_object_animation_enabled(bobject):
+            x = {}
+            if len(bobject.my_cliptraitlist) > 0:
+                # Edit clips enabled
+                x['names'] = []
+                x['starts'] = []
+                x['ends'] = []
+                x['speeds'] = []
+                x['loops'] = []
+                x['reflects'] = []
+                for at in bobject.my_cliptraitlist:
+                    if at.enabled_prop:
+                        x['names'].append(at.name)
+                        x['starts'].append(at.start_prop)
+                        x['ends'].append(at.end_prop)
+                        x['speeds'].append(at.speed_prop)
+                        x['loops'].append(at.loop_prop)
+                        x['reflects'].append(at.reflect_prop)
+                x['start_track'] = bobject.start_track_name_prop
+                x['max_bones'] = bpy.data.worlds['Arm'].generate_gpu_skin_max_bones
+            else:
+                # Export default clip, taking full action
+                if self.is_bone_animation_enabled(bobject):
+                    begin_frame, end_frame = self.get_action_framerange(bobject.parent.animation_data.action)
+                else:
+                    begin_frame, end_frame = self.get_action_framerange(bobject.animation_data.action)
+                x['start_track'] = 'default'
+                x['names'] = ['default']
+                x['starts'] = [begin_frame]
+                x['ends'] = [end_frame]
+                x['speeds'] = [1.0]
+                x['loops'] = [True]
+                x['reflects'] = [False]
+                x['max_bones'] = bpy.data.worlds['Arm'].generate_gpu_skin_max_bones
+            o['animation_setup'] = x
+
         # Export traits
         o['traits'] = []
         for t in bobject.my_traitlist:
@@ -2606,17 +2643,18 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                 x['type'] = 'Script'
                 x['class_name'] = bpy.data.worlds['Arm'].ArmProjectPackage + '.node.' + utils.safe_filename(t.nodes_name_prop)
             elif t.type_prop == 'JS Script' or t.type_prop == 'Python Script':
+                basename = t.jsscript_prop.split('.')[0]
                 x['type'] = 'Script'
                 x['class_name'] = 'armory.trait.internal.JSScript'
-                x['parameters'] = [utils.safe_filename(t.jsscript_prop)]
+                x['parameters'] = [utils.safe_filename(basename)]
                 scriptspath = utils.get_fp() + '/build/compiled/scripts/'
                 if not os.path.exists(scriptspath):
                     os.makedirs(scriptspath)
                 # Compile to JS
                 if t.type_prop == 'Python Script':
                     # Write py to file
-                    pyname = t.jsscript_prop + '.py'
-                    targetpath = scriptspath + pyname
+                    basename_ext = basename + '.py'
+                    targetpath = scriptspath + basename_ext
                     with open(targetpath, 'w') as f:
                         f.write(bpy.data.texts[t.jsscript_prop].as_string())
                     sdk_path = utils.get_sdk_path()
@@ -2631,10 +2669,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                     cwd = os.getcwd()
                     os.chdir(scriptspath)
                     # Disable minification for now, too slow
-                    transproc = subprocess.Popen([python_path + ' ' + sdk_path + '/lib/transcrypt/__main__.py' + ' ' + pyname + ' --nomin'], shell=True)
+                    transproc = subprocess.Popen([python_path + ' ' + sdk_path + '/lib/transcrypt/__main__.py' + ' ' + basename_ext + ' --nomin'], shell=True)
                     transproc.wait()
                     if transproc.poll() != 0:
-                        make.armory_log('Compiling ' + pyname + ' failed, check console')
+                        make.armory_log('Compiling ' + t.jsscript_prop + ' failed, check console')
                     os.chdir(cwd)
                     # Compiled file
                     assets.add('build/compiled/scripts/__javascript__/' + t.jsscript_prop + '.js')
@@ -2658,37 +2696,6 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                     x['parameters'] = []
                     for pt in t.my_paramstraitlist: # Append parameters
                         x['parameters'].append(ast.literal_eval(pt.name))
-            o['traits'].append(x)
-
-        # Animation trait
-        if self.is_bone_animation_enabled(bobject) or self.is_object_animation_enabled(bobject):
-            x = {}
-            x['type'] = 'Script'
-            x['class_name'] = 'armory.trait.internal.Animation'
-            if len(bobject.my_cliptraitlist) > 0:
-                # Edit clips enabled
-                names = []
-                starts = []
-                ends = []
-                speeds = []
-                loops = []
-                reflects = []
-                for at in bobject.my_cliptraitlist:
-                    if at.enabled_prop:
-                        names.append(at.name)
-                        starts.append(at.start_prop)
-                        ends.append(at.end_prop)
-                        speeds.append(at.speed_prop)
-                        loops.append(at.loop_prop)
-                        reflects.append(at.reflect_prop)
-                x['parameters'] = [bobject.start_track_name_prop, names, starts, ends, speeds, loops, reflects, bpy.data.worlds['Arm'].generate_gpu_skin_max_bones]
-            else:
-                # Export default clip, taking full action
-                if self.is_bone_animation_enabled(bobject):
-                    begin_frame, end_frame = self.get_action_framerange(bobject.parent.animation_data.action)
-                else:
-                    begin_frame, end_frame = self.get_action_framerange(bobject.animation_data.action)
-                x['parameters'] = ['default', ['default'], [begin_frame], [end_frame], [1.0], [True], [False], bpy.data.worlds['Arm'].generate_gpu_skin_max_bones]
             o['traits'].append(x)
 
         # Rigid body trait

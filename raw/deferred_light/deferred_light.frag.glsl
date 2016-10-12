@@ -96,7 +96,7 @@ uniform vec3 eye;
 // in vec2 texCoord;
 in vec4 wvpposition;
 // in vec3 viewRay;
-out vec4 outColor;
+out vec4 fragColor;
 
 // Separable SSS Transmittance Function, ref to sss_pass
 #ifdef _SSS
@@ -795,7 +795,7 @@ void main() {
 #endif
 
 	// Direct
-	outColor = vec4(vec3(direct * visibility), 1.0);
+	fragColor = vec4(vec3(direct * visibility), 1.0);
 
 	// Voxels test..
 #ifdef _VoxelGI
@@ -828,13 +828,13 @@ void main() {
 
 	vec3 indirect1 = indirectDiffusea * diffOcclusion + indirectSpecular;
 	indirect1 *= texture(ssaotex, texCoord).r;
-	outColor.rgb += indirect1;
+	fragColor.rgb += indirect1;
 #endif
 
 	
 	// LTC
 	// float sinval = (sin(time) * 0.5 + 0.5);
-	// vec4 outColor = vec4(1.0);
+	// vec4 fragColor = vec4(1.0);
 	// float rectSizeX = 4.000 + sin(time) * 4.0;
 	// float rectSizeY = 1.2;// + sin(time * 2.0);
 	// vec3 ex = vec3(1, 0, 0)*rectSizeX;
@@ -861,10 +861,10 @@ void main() {
 	// ltcdiff *= vec3(1.0, 1.0 - sinval, 1.0 - sinval);
 	// vec3 ltccol = ltcspec + ltcdiff * albedo;
 	// ltccol /= 2.0*PI;
-	// outColor.rgb = ltccol * 5.0 * visibility + (indirect / 14.0 * ao * (rectSizeX / 6.0) );
-	// // outColor.rgb = ltccol * visibility + (indirect / 2.0 * ao);
+	// fragColor.rgb = ltccol * 5.0 * visibility + (indirect / 14.0 * ao * (rectSizeX / 6.0) );
+	// // fragColor.rgb = ltccol * visibility + (indirect / 2.0 * ao);
 	
-	// outColor = vec4(pow(outColor.rgb, vec3(1.0 / 2.2)), outColor.a);
-	// outputColor = vec4(outColor.rgb, outColor.a);
-	//gl_FragColor = vec4(outColor.rgb, outColor.a);    
+	// fragColor = vec4(pow(fragColor.rgb, vec3(1.0 / 2.2)), fragColor.a);
+	// outputColor = vec4(fragColor.rgb, fragColor.a);
+	//gl_FragColor = vec4(fragColor.rgb, fragColor.a);    
 }

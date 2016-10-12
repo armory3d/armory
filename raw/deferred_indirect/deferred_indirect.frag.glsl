@@ -35,7 +35,7 @@ in vec2 texCoord;
 #ifdef _Rad
 	in vec3 viewRay;
 #endif
-out vec4 outColor;
+out vec4 fragColor;
 
 #ifdef _Rad
 float getMipLevelFromRoughness(float roughness) {
@@ -233,5 +233,5 @@ void main() {
 	indirect *= texture(ssaotex, texCoord).r; // SSAO
 #endif
 	
-	outColor.rgb = indirect;
+	fragColor.rgb = indirect;
 }

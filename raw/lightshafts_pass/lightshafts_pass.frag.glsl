@@ -10,7 +10,7 @@ uniform sampler2D tex;
 uniform sampler2D gbufferD;
 
 in vec2 texCoord;
-out vec4 outColor;
+out vec4 fragColor;
 
 void main() {
 	const float decay = 0.96815;
@@ -30,5 +30,5 @@ void main() {
 		color *= illuminationDecay * weight;
 		illuminationDecay *= decay;
 	}
-	outColor = color;
+	fragColor = color;
 }

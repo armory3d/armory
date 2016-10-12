@@ -9,6 +9,7 @@ import iron.math.Vec4;
 import iron.math.Quat;
 import armory.system.Keymap;
 
+@:keep
 class WalkNavigation extends Trait {
 
 	static inline var speed = 5.0;
@@ -52,11 +53,11 @@ class WalkNavigation extends Trait {
 		}
 		if (strafeUp) {
 			var dir = new Vec4(0, 0, 1);
-			camera.move(dir, -d);
+			camera.move(dir, d);
 		}
 		else if (strafeDown) {
 			var dir = new Vec4(0, 0, 1);
-			camera.move(dir, d);
+			camera.move(dir, -d);
 		}
 
 		if (Input.touch) {

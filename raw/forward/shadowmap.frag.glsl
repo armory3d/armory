@@ -9,7 +9,7 @@ precision mediump float;
 #endif
 
 // in vec4 position;
-out vec4 outColor;
+out vec4 fragColor;
 
 void main() {
 
@@ -18,7 +18,7 @@ void main() {
 	
 	// gl_FragDepth = depth;
 	// gl_FragColor = vec4(depth, 0.0, 0.0, 1.0);
-	outColor = vec4(0.0, 0.0, 0.0, 1.0);
+	fragColor = vec4(0.0, 0.0, 0.0, 1.0);
 
 	// VSM
 	// float dx = dFdx(depth);

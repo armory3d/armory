@@ -24,7 +24,7 @@ uniform float lightStrength;
 uniform float shadowsBias;
 
 in vec4 wvpposition;
-out vec4 outColor;
+out vec4 fragColor;
 
 const float tScat = 0.08;
 const float tAbs = 0.0;
@@ -192,6 +192,6 @@ void main() {
     // }
 
    	// curOpticalDepth
-    outColor = vec4(scatteredLightAmount * lightColor.rgb * volumAirColor * volumAirTurbidity, 0.0);
-	// outColor = vec4(scatteredLightAmount * lightColor.rgb * ((1.0 - depth) * 10.0), 0.0);
+    fragColor = vec4(scatteredLightAmount * lightColor.rgb * volumAirColor * volumAirTurbidity, 0.0);
+	// fragColor = vec4(scatteredLightAmount * lightColor.rgb * ((1.0 - depth) * 10.0), 0.0);
 }

@@ -1,7 +1,6 @@
 // Deferred water based on shader by Wojciech Toman
 // http://www.gamedev.net/page/resources/_/technical/graphics-programming-and-theory/rendering-water-as-a-post-process-effect-r2642
 // Seascape https://www.shadertoy.com/view/Ms2SD1 
-// Caustics https://www.shadertoy.com/view/4ljXWh
 // Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
 #version 450
 
@@ -26,35 +25,7 @@ uniform float envmapStrength;
 in vec2 texCoord;
 in vec3 viewRay;
 in vec3 vecnormal;
-out vec4 outColor;
-
-// const float seaLevel = 0.0;
-// const float seaFade = 1.8;
-// const float seaMaxAmplitude = 2.5;
-// const float seaHeight = 0.6;
-// const float seaChoppy = 4.0;
-// const float seaSpeed = 1.0;
-// const float seaFreq = 0.16;
-// const vec3 seaBaseColor = vec3(0.1, 0.19, 0.37);
-// const vec3 seaWaterColor = vec3(0.6, 0.7, 0.9);
-const mat2 octavem = mat2(1.6, 1.2, -1.2, 1.6);
-// const float fadeSpeed = 0.15;
-// const vec3 sunColor = vec3(1.0, 1.0, 1.0);
-// const float shoreHardness = 1.0;
-// const vec3 foamExistence = vec3(0.65, 1.35, 0.5);
-// const float shininess = 0.7;
-// const vec3 depthColour = vec3(0.0078, 0.5176, 0.9);
-// const vec3 bigDepthColour = vec3(0.0039, 0.00196, 0.345);
-// const vec3 extinction = vec3(7.0, 30.0, 40.0); // Horizontal
-// const float visibility = 2.0;
-// const float refractionScale = 0.005;
-// const vec2 wind = vec2(-0.3, 0.7);
-
-// vec2 envMapEquirect(vec3 normal) {
-	// float phi = acos(normal.z);
-	// float theta = atan(-normal.y, normal.x) + PI;
-	// return vec2(theta / PI2, phi / PI);
-// }
+out vec4 fragColor;
 
 float hash(vec2 p) {
 	float h = dot(p, vec2(127.1, 311.7));	
@@ -80,6 +51,7 @@ float sea_octave(vec2 uv, float choppy) {
 	wv = mix(wv, swv, wv);
 	return pow(1.0 - pow(wv.x * wv.y, 0.65), choppy);
 }
+const mat2 octavem = mat2(1.6, 1.2, -1.2, 1.6);
 float map(vec3 p) {
 	float freq = seaFreq;
 	float amp = seaHeight;
@@ -214,7 +186,7 @@ vec3 heightMapTracing(vec3 ori, vec3 dir) {
 			tm = tmid;
 			hm = hmid;
 		}
-	}
+	// }
 	return p;
 }
 vec3 getSkyColor(vec3 e) {
@@ -255,92 +227,18 @@ vec3 getPos(float depth) {
 	return wposition;
 }
 
-// vec3 caustic(vec2 uv) {
-// 	vec2 p = mod(uv * PI2, PI2) - 250.0;
-// 	float loctime = time * 0.5 + 23.0;
-// 	vec2 i = vec2(p);
-// 	float c = 1.0;
-// 	float inten = 0.005;
-// 	// for (int n = 0; n < MAX_ITER; n++) {
-// 		float t = loctime * (1.0 - (3.5 / float(0 + 1)));
-// 		i = p + vec2(cos(t - i.x) + sin(t + i.y), sin(t - i.y) + cos(t + i.x));
-// 		c += 1.0 / length(vec2(p.x / (sin(i.x + t) / inten), p.y / (cos(i.y + t) / inten)));
-		
-// 		t = loctime * (1.0 - (3.5 / float(1 + 1))); //0 + 1
-// 		i = p + vec2(cos(t - i.x) + sin(t + i.y), sin(t - i.y) + cos(t + i.x));
-// 		c += 1.0 / length(vec2(p.x / (sin(i.x + t) / inten), p.y / (cos(i.y + t) / inten)));
-		
-// 		t = loctime * (1.0 - (3.5 / float(2 + 1)));
-// 		i = p + vec2(cos(t - i.x) + sin(t + i.y), sin(t - i.y) + cos(t + i.x));
-// 		c += 1.0 / length(vec2(p.x / (sin(i.x + t) / inten), p.y / (cos(i.y + t) / inten)));
-		
-// 		t = loctime * (1.0 - (3.5 / float(3 + 1)));
-// 		i = p + vec2(cos(t - i.x) + sin(t + i.y), sin(t - i.y) + cos(t + i.x));
-// 		c += 1.0 / length(vec2(p.x / (sin(i.x + t) / inten), p.y / (cos(i.y + t) / inten)));
-// 	// }
-	
-// 	c /= 4.0;
-// 	c = 1.17 - pow(c, 1.4);
-// 	vec3 color = vec3(pow(abs(c), 8.0));
-// 	color = clamp(color + vec3(0.0, 0.35, 0.5), 0.0, 1.0);
-// 	color = mix(color, vec3(1.0), 0.3);
-	
-// 	return color;
-// }
-// float causticX(float x, float power, float gtime) {
-// 	float p = mod(x * PI2, PI2) - 250.0;
-// 	float time = gtime * 0.5 + 23.0;
-// 	float i = p;
-// 	float c = 1.0;
-// 	float inten = 0.005;
-// 	// for (int n = 0; n < MAX_ITER/2; n++) {
-// 		float t = time * (1.0 - (3.5 / float(0+1)));
-// 		i = p + cos(t - i) + sin(t + i);
-// 		c += 1.0 / length(p / (sin(i + t) / inten));
-		
-// 		t = time * (1.0 - (3.5 / float(1+1)));
-// 		i = p + cos(t - i) + sin(t + i);
-// 		c += 1.0 / length(p / (sin(i + t) / inten));
-// 	// }
-// 	c /= 4.0;
-// 	c = 1.17 - pow(c, power);
-// 	return c;
-// }
-// float godRays(vec2 uv) {
-// 	float light = 0.0;
-// 	light += pow(causticX((uv.x + 0.08 * uv.y) / 1.7 + 0.5, 1.8, time * 0.65), 10.0) * 0.05;
-// 	light -= pow((1.0 - uv.y) * 0.3, 2.0) * 0.2;
-// 	light += pow(causticX(sin(uv.x), 0.3, time * 0.7), 9.0) * 0.4; 
-// 	light += pow(causticX(cos(uv.x * 2.3), 0.3, time * 1.3), 4.0) * 0.1;  
-// 	light -= pow((1.0 - uv.y) * 0.3, 3.0);
-// 	light = clamp(light, 0.0, 1.0);
-// 	return light;
-// }
-
 void main() {
 	float gdepth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	vec4 colorOriginal = texture(tex, texCoord);
 	// if (gdepth == 1.0) {
-		// outColor = colorOriginal;
+		// fragColor = colorOriginal;
 		// return;
 	// }
 	
 	vec3 color = colorOriginal.rgb;
 	vec3 position = getPos(gdepth);
 	
-	// Underwater
-	// if (seaLevel >= eye.z) {
-	// 	float t = length(eye - position);
-	// 	// color *= caustic(vec2(mix(position.x,position.y,0.2),mix(position.z,position.y,0.2))*1.1);
-	// 	color = mix(colorOriginal.rgb, vec3(0.0, 0.05, 0.2), 1.0 - exp(-0.3 * pow(t, 1.0)));
-	// 	const float skyColor = 0.8;
-	// 	color += godRays(texCoord) * mix(skyColor, 1.0, texCoord.y * texCoord.y) * vec3(0.7, 1.0, 1.0);
-	// 	outColor = vec4(color, 1.0);
-	// 	// gl_FragData[0] = vec4(color, 1.0);
-	// 	return;
-	// }
 	if (position.z <= seaLevel + seaMaxAmplitude) {
-		// vec3 ld = normalize(vec3(0.0, 0.8, 1.0));
 		const vec3 ld = normalize(vec3(0.3, -0.3, 1.0));
 		vec3 lightDir = light - position.xyz;
 		vec3 eyeDir = eye - position.xyz;
@@ -407,6 +305,6 @@ void main() {
 		color = mix(color, colorOriginal.rgb, clamp((vecn.z + 0.03) * 10.0, 0.0, 1.0));
 	}
 
-	outColor.rgb = color;
+	fragColor.rgb = color;
 	// gl_FragData[0].rgb = color;
 }

@@ -15,11 +15,12 @@ def write_khafilejs(is_play, export_physics, dce_full=False):
     shader_references = sorted(list(set(assets.shaders)))
     shader_data_references = sorted(list(set(assets.shader_datas)))
     asset_references = sorted(list(set(assets.assets)))
+    wrd = bpy.data.worlds['Arm']
 
     with open('khafile.js', 'w') as f:
         f.write(
 """// Auto-generated
-let project = new Project('""" + bpy.data.worlds['Arm'].ArmProjectName + """');
+let project = new Project('""" + wrd.ArmProjectName + """');
 
 project.addSources('Sources');
 """)
@@ -35,7 +36,7 @@ project.addSources('Sources');
             f.write("project.addParameter('-dce full');")
 
         # Electron live patching
-        # if is_play and bpy.data.worlds['Arm'].ArmPlayLivePatch == True and bpy.data.worlds['Arm'].ArmPlayRuntime == 'Electron':
+        # if is_play and wrd.ArmPlayLivePatch == True and wrd.ArmPlayRuntime == 'Electron':
             # f.write("project.addDefine('WITH_PATCH_ELECTRON');\n")
 
         # Native scripting
@@ -52,7 +53,7 @@ project.addSources('Sources');
             ref = ref.replace('\\', '/')
             f.write("project.addAssets('" + ref + "');\n")
 
-        if bpy.data.worlds['Arm'].ArmPlayConsole:
+        if wrd.ArmPlayConsole:
             f.write("project.addDefine('WITH_PROFILE');\n")
             f.write(add_armory_library(sdk_path, 'lib/zui'))
             font_path =  sdk_path + '/armory/Assets/droid_sans.ttf'
@@ -63,19 +64,19 @@ project.addSources('Sources');
         # f.write(add_armory_library(sdk_path, 'lib/haxeui/haxeui-kha'))
         # f.write(add_armory_library(sdk_path, 'lib/haxeui/hscript'))
 
-        if bpy.data.worlds['Arm'].ArmMinimize == False:
+        if wrd.ArmMinimize == False:
             f.write("project.addDefine('WITH_JSON');\n")
         
-        if bpy.data.worlds['Arm'].ArmDeinterleavedBuffers == True:
+        if wrd.ArmDeinterleavedBuffers == True:
             f.write("project.addDefine('WITH_DEINTERLEAVED');\n")
 
-        if bpy.data.worlds['Arm'].generate_gpu_skin == False:
+        if wrd.generate_gpu_skin == False:
             f.write("project.addDefine('WITH_CPU_SKIN');\n")
 
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
 
-        config_text = bpy.data.worlds['Arm'].ArmKhafile
+        config_text = wrd.ArmKhafile
         if config_text != '':
             f.write(bpy.data.texts[config_text].as_string())
 

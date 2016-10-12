@@ -38,7 +38,7 @@ uniform float envmapStrength; // From world material
 
 // in vec2 texCoord;
 in vec3 normal;
-out vec4 outColor;
+out vec4 fragColor;
 
 #ifdef _EnvSky
 vec3 hosekWilkie(float cos_theta, float gamma, float cos_gamma) {
@@ -223,5 +223,5 @@ void main() {
 	R = pow(R, vec3(1.0 / 2.2));
 #endif
 
-	outColor = vec4(R, 1.0);
+	fragColor = vec4(R, 1.0);
 }

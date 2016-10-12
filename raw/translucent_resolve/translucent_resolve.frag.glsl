@@ -10,7 +10,7 @@ uniform sampler2D gbuffer0; // saccum
 uniform sampler2D gbuffer1; // srevealage
 
 in vec2 texCoord;
-out vec4 outColor;
+out vec4 fragColor;
 
 void main() {
 	vec4 accum = texture(gbuffer0, texCoord);
@@ -24,8 +24,8 @@ void main() {
 	float accumA = texture(gbuffer1, texCoord).r;
 	// accum.a = texture(gbuffer1, texCoord).r;
 	
-	// outColor = vec4(accum.rgb / clamp(accum.a, 1e-4, 5e4), revealage);
+	// fragColor = vec4(accum.rgb / clamp(accum.a, 1e-4, 5e4), revealage);
 
 	const float epsilon = 0.00001;
-	outColor = vec4(accum.rgb / max(accumA, epsilon), 1.0 - revealage);
+	fragColor = vec4(accum.rgb / max(accumA, epsilon), 1.0 - revealage);
 }

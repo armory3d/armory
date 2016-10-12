@@ -61,7 +61,7 @@ in vec3 eyeDir;
 #else
 	in vec3 normal;
 #endif
-out vec4 outColor;
+out vec4 fragColor;
 
 #ifndef _NoShadows
 float texture2DCompare(vec2 uv, float compare) {
@@ -320,18 +320,18 @@ void main() {
 	indirect += indirectSpecular;
 #endif
 	indirect = indirect * lightColor * lightStrength * envmapStrength;
-	outColor = vec4(vec3(direct * visibility + indirect), 1.0);
+	fragColor = vec4(vec3(direct * visibility + indirect), 1.0);
 	
 #ifdef _OccTex
 	vec3 occ = texture(socclusion, texCoord).rgb;
-	outColor.rgb *= occ;
+	fragColor.rgb *= occ;
 #else
-	outColor.rgb *= occlusion; 
+	fragColor.rgb *= occlusion; 
 #endif
 
 #ifdef _LDR
-    outColor.rgb = vec3(pow(outColor.rgb, vec3(1.0 / 2.2)));
+    fragColor.rgb = vec3(pow(fragColor.rgb, vec3(1.0 / 2.2)));
 // #else
-    // outColor = vec4(outColor.rgb, outColor.a);
+    // fragColor = vec4(fragColor.rgb, fragColor.a);
 #endif
 }
