@@ -29,7 +29,7 @@ project.addSources('Sources');
         f.write(add_armory_library(sdk_path, 'iron'))
         
         if export_physics:
-            f.write("project.addDefine('WITH_PHYSICS');\n")
+            f.write("project.addDefine('arm_physics');\n")
             f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
 
         if dce_full:
@@ -37,7 +37,7 @@ project.addSources('Sources');
 
         # Electron live patching
         # if is_play and wrd.ArmPlayLivePatch == True and wrd.ArmPlayRuntime == 'Electron':
-            # f.write("project.addDefine('WITH_PATCH_ELECTRON');\n")
+            # f.write("project.addDefine('arm_patch_electron');\n")
 
         # Native scripting
         # f.write(add_armory_library(sdk_path + '/lib/', 'haxeduktape'))
@@ -54,7 +54,7 @@ project.addSources('Sources');
             f.write("project.addAssets('" + ref + "');\n")
 
         if wrd.ArmPlayConsole:
-            f.write("project.addDefine('WITH_PROFILE');\n")
+            f.write("project.addDefine('arm_profile');\n")
             f.write(add_armory_library(sdk_path, 'lib/zui'))
             font_path =  sdk_path + '/armory/Assets/droid_sans.ttf'
             font_path = font_path.replace('\\', '/')
@@ -65,13 +65,13 @@ project.addSources('Sources');
         # f.write(add_armory_library(sdk_path, 'lib/haxeui/hscript'))
 
         if wrd.ArmMinimize == False:
-            f.write("project.addDefine('WITH_JSON');\n")
+            f.write("project.addDefine('arm_json');\n")
         
         if wrd.ArmDeinterleavedBuffers == True:
-            f.write("project.addDefine('WITH_DEINTERLEAVED');\n")
+            f.write("project.addDefine('arm_deinterleaved');\n")
 
         if wrd.generate_gpu_skin == False:
-            f.write("project.addDefine('WITH_CPU_SKIN');\n")
+            f.write("project.addDefine('arm_cpu_skin');\n")
 
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
@@ -102,7 +102,7 @@ class Main {
         iron.system.CompileTime.importPackage('armory.trait');
         iron.system.CompileTime.importPackage('armory.renderpath');
         iron.system.CompileTime.importPackage('""" + wrd.ArmProjectPackage + """');
-        #if (js && WITH_PHYSICS)
+        #if (js && arm_physics)
         untyped __js__("
             function loadScript(url, callback) {
                 var head = document.getElementsByTagName('head')[0];

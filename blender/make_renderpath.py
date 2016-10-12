@@ -734,11 +734,11 @@ def traverse_renderpath(node, node_group, render_targets, depth_buffers):
     # Gather defs from linked nodes
     if node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':
         if preprocess_renderpath.velocity_def_added == False:
-            assets.add_khafile_def('WITH_VELOC')
+            assets.add_khafile_def('arm_veloc')
             bpy.data.worlds['Arm'].world_defs += '_Veloc'
             preprocess_renderpath.velocity_def_added = True
         if node.bl_idname == 'TAAPassNodeType':
-            assets.add_khafile_def('WITH_TAA')
+            assets.add_khafile_def('arm_taa')
             # bpy.data.worlds['Arm'].world_defs += '_TAA'
     elif node.bl_idname == 'SMAAPassNodeType':
         bpy.data.worlds['Arm'].world_defs += '_SMAA'
@@ -748,7 +748,7 @@ def traverse_renderpath(node, node_group, render_targets, depth_buffers):
             bpy.data.worlds['Arm'].world_defs += '_SSAO'
 
     elif node.bl_idname == 'DrawStereoNodeType':
-        assets.add_khafile_def('WITH_VR')
+        assets.add_khafile_def('arm_vr')
         bpy.data.worlds['Arm'].world_defs += '_VR'
 
     # Collect render targets

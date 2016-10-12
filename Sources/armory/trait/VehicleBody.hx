@@ -7,14 +7,14 @@ import iron.object.Transform;
 import iron.system.Time;
 import armory.trait.internal.PhysicsWorld;
 import armory.system.Keymap;
-#if WITH_PHYSICS
+#if arm_physics
 import haxebullet.Bullet;
 #end
 
 @:keep
 class VehicleBody extends Trait {
 
-#if (!WITH_PHYSICS)
+#if (!arm_physics)
 	public function new() { super(); }
 #else
 
@@ -246,7 +246,7 @@ class VehicleBody extends Trait {
 
 class VehicleWheel {
 
-#if (!WITH_PHYSICS)
+#if (!arm_physics)
 	public function new() { }
 #else
 

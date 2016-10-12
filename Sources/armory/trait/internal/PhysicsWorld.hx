@@ -1,6 +1,6 @@
 package armory.trait.internal;
 
-#if WITH_PHYSICS
+#if arm_physics
 import haxebullet.Bullet;
 #end
 import iron.Trait;
@@ -20,10 +20,10 @@ class ContactPair {
 @:keep
 class PhysicsWorld extends Trait {
 
-#if (!WITH_PHYSICS)
+#if (!arm_physics)
 	public function new() { super(); }
 #else
-#if WITH_PROFILE
+#if arm_profile
 	public static var physTime = 0.0;
 #end
 
@@ -114,7 +114,7 @@ class PhysicsWorld extends Trait {
 	}
 
 	public function update() {
-#if WITH_PROFILE
+#if arm_profile
 		var startTime = kha.Scheduler.realTime();
 #end
 
@@ -123,7 +123,7 @@ class PhysicsWorld extends Trait {
 		world.ptr.stepSimulation(timeStep, 1, fixedStep);
 		updateContacts();
 
-#if WITH_PROFILE
+#if arm_profile
 		physTime = kha.Scheduler.realTime() - startTime;
 #end
 	}

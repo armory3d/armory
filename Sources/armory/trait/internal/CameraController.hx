@@ -9,7 +9,7 @@ import armory.system.Keymap;
 @:keep
 class CameraController extends Trait {
 
-#if (!WITH_PHYSICS)
+#if (!arm_physics)
 	public function new() { super(); }
 #else
 

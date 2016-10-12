@@ -14,7 +14,7 @@ import armory.system.Keymap;
 @:keep
 class GunController extends Trait {
 
-#if (!WITH_PHYSICS)
+#if (!arm_physics)
 	public function new() { super(); }
 #else
 

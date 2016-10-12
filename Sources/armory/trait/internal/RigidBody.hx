@@ -1,6 +1,6 @@
 package armory.trait.internal;
 
-#if WITH_PHYSICS
+#if arm_physics
 import haxebullet.Bullet;
 #end
 import iron.Trait;
@@ -12,7 +12,7 @@ import iron.object.MeshObject;
 @:keep
 class RigidBody extends Trait {
 
-#if (!WITH_PHYSICS)
+#if (!arm_physics)
 	public function new() { super(); }
 #else
 

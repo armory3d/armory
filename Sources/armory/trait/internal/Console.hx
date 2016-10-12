@@ -1,7 +1,7 @@
 package armory.trait.internal;
 
 import iron.Trait;
-#if WITH_PROFILE
+#if arm_profile
 import kha.Scheduler;
 import iron.data.RenderPath;
 import iron.object.CameraObject;
@@ -12,7 +12,7 @@ import zui.Id;
 @:keep
 class Console extends Trait {
 
-#if (!WITH_PROFILE)
+#if (!arm_profile)
     public function new() { super(); }
 #else
 
@@ -96,7 +96,7 @@ class Console extends Trait {
 
         g.begin(false);
 
-#if WITH_PROFILE
+#if arm_profile
         totalTime += frameTime;
         renderTime += iron.App.renderTime;
         frames++;
@@ -125,9 +125,9 @@ class Console extends Trait {
     }
 
     function update() {
-#if WITH_PROFILE
+#if arm_profile
         updateTime += iron.App.updateTime;
-    #if WITH_PHYSICS
+    #if arm_physics
         physTime += PhysicsWorld.physTime;
     #end
 #end

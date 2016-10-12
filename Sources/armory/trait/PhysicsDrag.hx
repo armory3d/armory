@@ -4,14 +4,14 @@ import iron.Trait;
 import iron.system.Input;
 import armory.trait.internal.RigidBody;
 import armory.trait.internal.PhysicsWorld;
-#if WITH_PHYSICS
+#if arm_physics
 import haxebullet.Bullet;
 #end
 
 @:keep
 class PhysicsDrag extends Trait {
 
-#if (!WITH_PHYSICS)
+#if (!arm_physics)
 	public function new() { super(); }
 #else
 
