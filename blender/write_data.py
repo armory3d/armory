@@ -35,13 +35,6 @@ project.addSources('Sources');
         if dce_full:
             f.write("project.addParameter('-dce full');")
 
-        # Electron live patching
-        # if is_play and wrd.ArmPlayLivePatch == True and wrd.ArmPlayRuntime == 'Electron':
-            # f.write("project.addDefine('arm_patch_electron');\n")
-
-        # Native scripting
-        # f.write(add_armory_library(sdk_path + '/lib/', 'haxeduktape'))
-
         for ref in shader_references:
             f.write("project.addShaders('" + ref + "');\n")
         

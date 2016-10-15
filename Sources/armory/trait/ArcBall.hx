@@ -21,7 +21,7 @@ class ArcBall extends Trait {
 		if (Input.touch) {
 			object.transform.rotate(new Vec4(0, 0, 1), -Input.deltaX / 100);
 			object.transform.buildMatrix();
-			object.transform.rotate(object.transform.matrix._right2(), -Input.deltaY / 100);
+			object.transform.rotate(object.transform.matrix._right(), -Input.deltaY / 100);
 			object.transform.buildMatrix();
 		}
 	}

@@ -162,7 +162,7 @@ class PathTracer extends Trait {
 		mvp.multmat2(camera.P);
 		var inverse = Mat4.identity();
 		// jitter.multmat2(mvp);
-		inverse.inverse2(mvp);
+		// inverse.getInverse(mvp);
 		var matrix = inverse;
 		
 		// Set uniforms	

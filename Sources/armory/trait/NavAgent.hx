@@ -5,27 +5,27 @@ import iron.Trait;
 @:keep
 class NavAgent extends Trait {
 
-    // nav mesh
-    // target object
-    // behaviour
+	// nav mesh
+	// target object
+	// behaviour
 
-    public function new() {
-        super();
+	public function new() {
+		super();
 
-        notifyOnInit(init);
-        notifyOnUpdate(update);
+		notifyOnInit(init);
+		notifyOnUpdate(update);
 		notifyOnRemove(removed);
-    }
+	}
 	
 	function removed() {
 
 	}
 
-    function init() {
+	function init() {
 
-    }
+	}
 
-    function update() {
+	function update() {
 		
-    }
+	}
 }

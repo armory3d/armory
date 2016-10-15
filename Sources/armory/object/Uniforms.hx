@@ -3,6 +3,7 @@ package armory.object;
 import iron.Scene;
 import iron.math.Vec4;
 
+// Structure for setting shader uniforms
 class Uniforms {
 
 	public static function register() {

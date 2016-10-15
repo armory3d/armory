@@ -29,30 +29,30 @@ class MovieTexture extends Trait {
 		}
 	}
 
-    public function new(videoName:String) {
-        super();
+	public function new(videoName:String) {
+		super();
 		
 		this.videoName = videoName;
 
 		if (!created) {
 			created = true;
-        	notifyOnInit(init);
-        	notifyOnRender2D(render);
+			notifyOnInit(init);
+			notifyOnRender2D(render);
 		}
-    }
+	}
 
-    function init() {	
+	function init() {	
 
-    	iron.data.Data.getVideo(videoName, function(vid:kha.Video) {
-    		video = vid;
+		iron.data.Data.getVideo(videoName, function(vid:kha.Video) {
+			video = vid;
 			video.play(true);
 			
 			image = Image.createRenderTarget(getPower2(video.width()), getPower2(video.height()));
 			
 			var o = cast(object, iron.object.MeshObject);
 			o.materials[0].contexts[0].textures[0] = image; // Override diffuse texture
-    	});
-    }
+		});
+	}
 	
 	function render(g:kha.graphics2.Graphics) {
 		if (video == null) return;

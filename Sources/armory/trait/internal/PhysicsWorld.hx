@@ -157,53 +157,53 @@ class PhysicsWorld extends Trait {
 					break; // TODO: only one contact point for now
 				}
 			}
-	    }
+		}
 	}
 
 	public var rayCallback:ClosestRayResultCallbackPointer;
 	public function pickClosest(inputX:Float, inputY:Float):RigidBody {
 
-        var rayFrom = getRayFrom();
-        var rayTo = getRayTo(inputX, inputY);
+		var rayFrom = getRayFrom();
+		var rayTo = getRayTo(inputX, inputY);
 
-        rayCallback = ClosestRayResultCallback.create(rayFrom.value, rayTo.value);
-        world.ptr.rayTest(rayFrom.value, rayTo.value, rayCallback.value);
-        
-        if (rayCallback.value.hasHit()) {
-        	#if js
-        	var co = rayCallback.value.get_m_collisionObject();
+		rayCallback = ClosestRayResultCallback.create(rayFrom.value, rayTo.value);
+		world.ptr.rayTest(rayFrom.value, rayTo.value, rayCallback.value);
+		
+		if (rayCallback.value.hasHit()) {
+			#if js
+			var co = rayCallback.value.get_m_collisionObject();
 			var body = untyped Ammo.btRigidBody.prototype.upcast(co);
-        	return rbMap.get(untyped body.userIndex);
-        	#elseif cpp
-        	var co = rayCallback.value.m_collisionObject;
-            return rbMap.get(co.value.getUserIndex());
-            #end
-        }
-        else {
-        	return null;
-        }
-    }
+			return rbMap.get(untyped body.userIndex);
+			#elseif cpp
+			var co = rayCallback.value.m_collisionObject;
+			return rbMap.get(co.value.getUserIndex());
+			#end
+		}
+		else {
+			return null;
+		}
+	}
 
-    public function getRayFrom():BtVector3Pointer {
-    	var camera = iron.Scene.active.camera;
-    	return BtVector3.create(camera.transform.absx(), camera.transform.absy(), camera.transform.absz());
-    }
+	public function getRayFrom():BtVector3Pointer {
+		var camera = iron.Scene.active.camera;
+		return BtVector3.create(camera.transform.absx(), camera.transform.absy(), camera.transform.absz());
+	}
 
-    public function getRayTo(inputX:Float, inputY:Float):BtVector3Pointer {
-    	var camera = iron.Scene.active.camera;
-    	var start = new Vec4();
-        var end = new Vec4();
-    	RayCaster.getDirection(start, end, inputX, inputY, camera);
-    	return BtVector3.create(end.x, end.y, end.z);
-    }
+	public function getRayTo(inputX:Float, inputY:Float):BtVector3Pointer {
+		var camera = iron.Scene.active.camera;
+		var start = new Vec4();
+		var end = new Vec4();
+		RayCaster.getDirection(start, end, inputX, inputY, camera);
+		return BtVector3.create(end.x, end.y, end.z);
+	}
 
-    public function notifyOnPreUpdate(f:Void->Void) {
-    	if (preUpdates == null) preUpdates = [];
-    	preUpdates.push(f);
-    }
+	public function notifyOnPreUpdate(f:Void->Void) {
+		if (preUpdates == null) preUpdates = [];
+		preUpdates.push(f);
+	}
 
-    public function removePreUpdate(f:Void->Void) {
-    	preUpdates.remove(f);
-    }
+	public function removePreUpdate(f:Void->Void) {
+		preUpdates.remove(f);
+	}
 #end
 }

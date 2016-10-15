@@ -2,6 +2,7 @@ package armory.renderpath;
 
 import iron.data.RenderPath;
 
+// Fast Fourier transform data
 class FFT {
 
 	static var firstFrame = true;

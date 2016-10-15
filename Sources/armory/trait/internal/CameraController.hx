@@ -17,6 +17,12 @@ class CameraController extends Trait {
 	var body:RigidBody;
 	var camera:CameraObject;
 
+	var moveForward = false;
+	var moveBackward = false;
+	var moveLeft = false;
+	var moveRight = false;
+	var jump = false;
+
 	public function new() {
 		super();
 
@@ -31,11 +37,6 @@ class CameraController extends Trait {
 		kha.input.Keyboard.get().notify(onDown, onUp);
 	}
 
-	var moveForward = false;
-	var moveBackward = false;
-	var moveLeft = false;
-	var moveRight = false;
-	var jump = false;
 	function onDown(key: kha.Key, char: String) {
 		if (char == Keymap.forward) moveForward = true;
 		else if (char == Keymap.right) moveRight = true;
