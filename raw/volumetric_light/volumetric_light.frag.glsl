@@ -59,13 +59,12 @@ void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatter
 	// vec3 lightDirNorm = -normalize(lightDir);
 
 	float visibility = 1.0;
-	vec4 lPos = LWVP * vec4(curPos, 1.0);
-	if (lPos.w > 0.0) {
-		vec4 lPosH = lPos / lPos.w;
-		lPosH.x = (lPosH.x + 1.0) / 2.0;
-		lPosH.y = (lPosH.y + 1.0) / 2.0;
-		float distanceFromLight = texture(shadowMap, lPosH.xy).r * 2.0 - 1.0;
-		visibility = float(distanceFromLight > lPosH.z - shadowsBias);
+	vec4 lampPos = LWVP * vec4(curPos, 1.0);
+	if (lampPos.w > 0.0) {
+		lampPos.xyz /= lampPos.w;
+        lampPos.xy = lampPos.xy * 0.5 + 0.5;
+		float distanceFromLight = texture(shadowMap, lampPos.xy).r * 2.0 - 1.0;
+		visibility = float(distanceFromLight > lampPos.z - shadowsBias);
 	}
 
 	scatteredLightAmount += curOpticalDepth * l1 * visibility;

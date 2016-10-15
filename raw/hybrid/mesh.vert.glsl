@@ -43,7 +43,7 @@ out vec3 position;
 #ifdef _Tex
 	out vec2 texCoord;
 #endif
-out vec4 lPos;
+out vec4 lampPos;
 out vec4 matColor;
 out vec3 eyeDir;
 #ifdef _NorTex
@@ -120,7 +120,7 @@ void main() {
 	vec3 _normal = normalize(mat3(N) * nor);
 #endif
 
-	lPos = LWVP * sPos;
+	lampPos = LWVP * sPos;
 
 #ifdef _Billboard
 	mat4 constrWV = WV;

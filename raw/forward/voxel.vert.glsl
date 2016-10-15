@@ -26,13 +26,13 @@ out vertData {
 #ifdef _BaseTex
     vec2 texuv;
 #endif
-    vec4 lPos;
+    vec4 lampPos;
 } vert;
 
 void main() {
 #ifdef _Tex
     vert.texuv = tex;
 #endif
-    vert.lPos = LWVP * vec4(pos, 1.0);
+    vert.lampPos = LWVP * vec4(pos, 1.0);
     gl_Position = W * vec4(pos, 1.0);
 }

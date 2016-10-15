@@ -75,10 +75,10 @@ class WalkNavigation extends Trait {
 	var fast = 1.0;
 	var slow = 1.0;
 	function onKeyDown(key:Key, char:String) {
-		if (char == Keymap.forward) moveForward = true;
-		else if (char == Keymap.backward) moveBackward = true;
-		else if (char == Keymap.left) strafeLeft = true;
-		else if (char == Keymap.right) strafeRight = true;
+		if (char == Keymap.forward || key == Key.UP) moveForward = true;
+		else if (char == Keymap.backward || key == Key.DOWN) moveBackward = true;
+		else if (char == Keymap.left || key == Key.LEFT) strafeLeft = true;
+		else if (char == Keymap.right || key == Key.RIGHT) strafeRight = true;
 		else if (char == Keymap.up) strafeUp = true;
 		else if (char == Keymap.down) strafeDown = true;
 		else if (key == Keymap.fast) fast = 2.0;
@@ -86,10 +86,10 @@ class WalkNavigation extends Trait {
 	}
 
 	function onKeyUp(key:kha.Key, char:String) {
-		if (char == Keymap.forward) moveForward = false;
-		else if (char == Keymap.backward) moveBackward = false;
-		else if (char == Keymap.left) strafeLeft = false;
-		else if (char == Keymap.right) strafeRight = false;
+		if (char == Keymap.forward || key == Key.UP) moveForward = false;
+		else if (char == Keymap.backward || key == Key.DOWN) moveBackward = false;
+		else if (char == Keymap.left || key == Key.LEFT) strafeLeft = false;
+		else if (char == Keymap.right || key == Key.RIGHT) strafeRight = false;
 		else if (char == Keymap.up) strafeUp = false;
 		else if (char == Keymap.down) strafeDown = false;
 		else if (key == Keymap.fast) fast = 1.0;

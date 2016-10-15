@@ -7,7 +7,7 @@ in vertData {
 #ifdef _Tex
     vec2 texuv;
 #endif
-    vec4 lPos;
+    vec4 lampPos;
 } vertices[];
 
 out fragData {
@@ -15,7 +15,7 @@ out fragData {
     vec2 texuv;
 #endif
     flat int axis;
-    vec4 lPos;
+    vec4 lampPos;
 } frag;
 
 uniform mat4 PX;
@@ -47,7 +47,7 @@ void main() {
 #ifdef _Tex
         frag.texuv = vertices[i].texuv;
 #endif
-        frag.lPos = vertices[i].lPos;
+        frag.lampPos = vertices[i].lampPos;
         gl_Position = P * gl_in[i].gl_Position;
         EmitVertex();
     }

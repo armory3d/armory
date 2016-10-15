@@ -11,31 +11,6 @@ from utils import to_hex
 import assets
 import utils
 
-# Handling node data
-def reload_blend_data():
-    if bpy.data.node_groups.get('forward_path') == None:
-        load_library()
-        pass
-
-def load_library():
-    sdk_path = utils.get_sdk_path()
-    data_path = sdk_path + '/armory/blender/data/data.blend'
-    data_names = ['forward_path', 'forward_path_low', 'deferred_path', 'deferred_path_low', 'deferred_path_high', 'hybrid_path', 'vr_path', 'pathtrace_path', 'Armory PBR']
-
-    # Remove old
-    for name in data_names:
-        if name in bpy.data.node_groups and name != 'Armory PBR':
-            bpy.data.node_groups.remove(bpy.data.node_groups[name], do_unlink=True)
-
-    # Import
-    data_refs = data_names.copy()
-    with bpy.data.libraries.load(data_path, link=False) as (data_from, data_to):
-        data_to.node_groups = data_refs
-
-    for ref in data_refs:
-        ref.use_fake_user = True
-        # bpy.data.node_groups[name].use_fake_user = True
-
 def buildNodeTrees(assets_path):
     s = bpy.data.filepath.split(os.path.sep)
     s.pop()

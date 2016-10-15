@@ -42,8 +42,7 @@ class EditorSpace extends Trait {
     }
 
     function onKeyDown(key: kha.Key, char: String) {
-        // if (char == 'Z') trace('__arm|quit');
-        if (key == kha.Key.ESC) trace('__arm|quit');
+        if (char == 'Z' || key == kha.Key.ESC) trace('__arm|quit');
     }
 
     function onKeyUp(key: kha.Key, char: String) {

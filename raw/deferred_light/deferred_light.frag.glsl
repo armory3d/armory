@@ -394,13 +394,12 @@ float PCF(vec2 uv, float compare) {
 	}
 #endif
 float shadowTest(vec4 lPos) {
-	vec4 lPosH = lPos / lPos.w;
-	lPosH.x = lPosH.x * 0.5 + 0.5;
-	lPosH.y = lPosH.y * 0.5 + 0.5;
+	lPos.xyz /= lPos.w;
+	lPos.xy = lPos.xy * 0.5 + 0.5;
 	#ifdef _PCSS
-	return PCSS(lPosH.xy, lPosH.z - shadowsBias);
+	return PCSS(lPos.xy, lPos.z - shadowsBias);
 	#else
-	return PCF(lPosH.xy, lPosH.z - shadowsBias);
+	return PCF(lPos.xy, lPos.z - shadowsBias);
 	#endif
 }
 #endif
@@ -758,9 +757,9 @@ void main() {
 	
 	float visibility = 1.0;
 #ifndef _NoShadows
-	vec4 lPos = LWVP * vec4(p, 1.0);
-	if (lPos.w > 0.0) {
-		visibility = shadowTest(lPos);
+	vec4 lampPos = LWVP * vec4(p, 1.0);
+	if (lampPos.w > 0.0) {
+		visibility = shadowTest(lampPos);
 	}
 #endif
 	

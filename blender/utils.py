@@ -4,15 +4,22 @@ import os
 import glob
 import lib.umsgpack
 import platform
+import zipfile
 
 def write_arm(filepath, output):
-    if bpy.data.worlds['Arm'].ArmMinimize:
-        with open(filepath, 'wb') as f:
-            f.write(lib.umsgpack.dumps(output))
+    if filepath.endswith('.zip'):
+        with zipfile.ZipFile(filepath, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            if bpy.data.worlds['Arm'].ArmMinimize:
+                zip_file.writestr('data.arm', lib.umsgpack.dumps(output))
+            else:
+                zip_file.writestr('data.arm', json.dumps(output, sort_keys=True, indent=4))
     else:
-        with open(filepath, 'w') as f:
-            # f.write(json.dumps(output, separators=(',',':')))
-            f.write(json.dumps(output, sort_keys=True, indent=4))
+        if bpy.data.worlds['Arm'].ArmMinimize:
+            with open(filepath, 'wb') as f:
+                f.write(lib.umsgpack.dumps(output))
+        else:
+            with open(filepath, 'w') as f:
+                f.write(json.dumps(output, sort_keys=True, indent=4))
 
 def get_fp():
     s = bpy.data.filepath.split(os.path.sep)

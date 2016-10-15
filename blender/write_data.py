@@ -222,7 +222,12 @@ def write_indexhtml(w, h, in_viewport):
 <body>
     <canvas id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """'></canvas>
     <script src='kha.js'></script>
-    <script>document.addEventListener('keypress', e => { if (e.code == "KeyZ" && e.shiftKey) close(); });</script>
+""")
+        if not (utils.with_chromium() and in_viewport):
+            f.write(
+"""    <script>document.addEventListener('keypress', e => { if (e.code == "KeyZ" && e.shiftKey) close(); });</script>
+""")
+        f.write("""
 </body>
 </html>
 """)

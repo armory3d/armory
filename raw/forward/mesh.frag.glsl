@@ -108,7 +108,7 @@ in vec3 position;
 #ifdef _Tex
 	in vec2 texCoord;
 #endif
-in vec4 lPos;
+in vec4 lampPos;
 in vec4 matColor;
 in vec3 eyeDir;
 #ifdef _NorTex
@@ -358,17 +358,16 @@ float PCF(vec2 uv, float compare) {
 	}
 #endif
 float shadowTest(vec4 lPos) {
-	vec4 lPosH = lPos / lPos.w;
-	lPosH.x = (lPosH.x + 1.0) / 2.0;
-	lPosH.y = (lPosH.y + 1.0) / 2.0;
+	lPos.xyz /= lPos.w;
+	lPos.xy = lPos.xy * 0.5 + 0.5;
 	#ifdef _PCSS
-	return PCSS(lPosH.xy, lPosH.z - shadowsBias);
+	return PCSS(lPos.xy, lPos.z - shadowsBias);
 	#else
-	return PCF(lPosH.xy, lPosH.z - shadowsBias);
+	return PCF(lPos.xy, lPos.z - shadowsBias);
 	#endif
-	// return VSM(lPosH.xy, lPosH.z);
-	// float distanceFromLight = texture(shadowMap, lPosH.xy).r * 2.0 - 1.0;
-	// return float(distanceFromLight > lPosH.z - shadowsBias);
+	// return VSM(lPos.xy, lPos.z);
+	// float distanceFromLight = texture(shadowMap, lPos.xy).r * 2.0 - 1.0;
+	// return float(distanceFromLight > lPos.z - shadowsBias);
 }
 #endif
 
@@ -766,8 +765,8 @@ void main() {
 	float visibility = 1.0;
 #ifndef _NoShadows
 	if (receiveShadow) {
-		if (lPos.w > 0.0) {
-			visibility = shadowTest(lPos);
+		if (lampPos.w > 0.0) {
+			visibility = shadowTest(lampPos);
 		}
 	}
 #endif

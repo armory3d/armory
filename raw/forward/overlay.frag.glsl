@@ -16,7 +16,7 @@ precision mediump float;
 	uniform sampler2D sbase;
 #endif
 #ifndef _NoShadows
-    uniform sampler2D shadowMap;
+	uniform sampler2D shadowMap;
 #endif
 uniform float shirr[27];
 #ifdef _Rad
@@ -81,7 +81,7 @@ in vec3 position;
 #ifdef _Tex
 	in vec2 texCoord;
 #endif
-in vec4 lPos;
+in vec4 lampPos;
 in vec4 matColor;
 in vec3 eyeDir;
 #ifdef _NorTex
@@ -104,72 +104,71 @@ out vec4 fragColor;
 //     return clamp(max(p, p_max), 0.0, 1.0);
 // }
 float texture2DCompare(vec2 uv, float compare){
-    float depth = texture(shadowMap, uv).r * 2.0 - 1.0;
-    return step(compare, depth);
+	float depth = texture(shadowMap, uv).r * 2.0 - 1.0;
+	return step(compare, depth);
 }
 float texture2DShadowLerp(vec2 size, vec2 uv, float compare){
-    vec2 texelSize = vec2(1.0) / size;
-    vec2 f = fract(uv * size + 0.5);
-    vec2 centroidUV = floor(uv * size + 0.5) / size;
+	vec2 texelSize = vec2(1.0) / size;
+	vec2 f = fract(uv * size + 0.5);
+	vec2 centroidUV = floor(uv * size + 0.5) / size;
 
-    float lb = texture2DCompare(centroidUV + texelSize * vec2(0.0, 0.0), compare);
-    float lt = texture2DCompare(centroidUV + texelSize * vec2(0.0, 1.0), compare);
-    float rb = texture2DCompare(centroidUV + texelSize * vec2(1.0, 0.0), compare);
-    float rt = texture2DCompare(centroidUV + texelSize * vec2(1.0, 1.0), compare);
-    float a = mix(lb, lt, f.y);
-    float b = mix(rb, rt, f.y);
-    float c = mix(a, b, f.x);
-    return c;
+	float lb = texture2DCompare(centroidUV + texelSize * vec2(0.0, 0.0), compare);
+	float lt = texture2DCompare(centroidUV + texelSize * vec2(0.0, 1.0), compare);
+	float rb = texture2DCompare(centroidUV + texelSize * vec2(1.0, 0.0), compare);
+	float rt = texture2DCompare(centroidUV + texelSize * vec2(1.0, 1.0), compare);
+	float a = mix(lb, lt, f.y);
+	float b = mix(rb, rt, f.y);
+	float c = mix(a, b, f.x);
+	return c;
 }
 float PCF(vec2 uv, float compare) {
-    float result = 0.0;
-    // for (int x = -1; x <= 1; x++){
-        // for(int y = -1; y <= 1; y++){
-            // vec2 off = vec2(x, y) / shadowmapSize;
-            // result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+	float result = 0.0;
+	// for (int x = -1; x <= 1; x++){
+		// for(int y = -1; y <= 1; y++){
+			// vec2 off = vec2(x, y) / shadowmapSize;
+			// result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			
 			vec2 off = vec2(-1, -1) / shadowmapSize;
-            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			off = vec2(-1, 0) / shadowmapSize;
-            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			off = vec2(-1, 1) / shadowmapSize;
-            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			off = vec2(0, -1) / shadowmapSize;
-            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			off = vec2(0, 0) / shadowmapSize;
-            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			off = vec2(0, 1) / shadowmapSize;
-            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			off = vec2(1, -1) / shadowmapSize;
-            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			off = vec2(1, 0) / shadowmapSize;
-            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			off = vec2(1, 1) / shadowmapSize;
-            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
-        // }
-    // }
-    return result / 9.0;
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+		// }
+	// }
+	return result / 9.0;
 }
 float shadowTest(vec4 lPos) {
-	vec4 lPosH = lPos / lPos.w;
-	lPosH.x = (lPosH.x + 1.0) / 2.0;
-    lPosH.y = (lPosH.y + 1.0) / 2.0;
-    
-	return PCF(lPosH.xy, lPosH.z - shadowsBias);
-	// return VSM(lPosH.xy, lPosH.z);
+	lPos.xyz /= lPos.w;
+	lPos.xy = lPos.xy * 0.5 + 0.5;
+	
+	return PCF(lPos.xy, lPos.z - shadowsBias);
+	// return VSM(lPos.xy, lPos.z);
 	// Basic
-	// float distanceFromLight = texture(shadowMap, lPosH.xy).r * 2.0 - 1.0;
-	// return float(distanceFromLight > lPosH.z - bias);
+	// float distanceFromLight = texture(shadowMap, lPos.xy).r * 2.0 - 1.0;
+	// return float(distanceFromLight > lPos.z - bias);
 }
 #endif
 
 vec3 shIrradiance(vec3 nor, float scale) {
-    const float c1 = 0.429043;
-    const float c2 = 0.511664;
-    const float c3 = 0.743125;
-    const float c4 = 0.886227;
-    const float c5 = 0.247708;
-    vec3 cl00, cl1m1, cl10, cl11, cl2m2, cl2m1, cl20, cl21, cl22;
+	const float c1 = 0.429043;
+	const float c2 = 0.511664;
+	const float c3 = 0.743125;
+	const float c4 = 0.886227;
+	const float c5 = 0.247708;
+	vec3 cl00, cl1m1, cl10, cl11, cl2m2, cl2m1, cl20, cl21, cl22;
 	cl00 = vec3(shirr[0], shirr[1], shirr[2]);
 	cl1m1 = vec3(shirr[3], shirr[4], shirr[5]);
 	cl10 = vec3(shirr[6], shirr[7], shirr[8]);
@@ -179,18 +178,18 @@ vec3 shIrradiance(vec3 nor, float scale) {
 	cl20 = vec3(shirr[18], shirr[19], shirr[20]);
 	cl21 = vec3(shirr[21], shirr[22], shirr[23]);
 	cl22 = vec3(shirr[24], shirr[25], shirr[26]);
-    return (
-        c1 * cl22 * (nor.y * nor.y - (-nor.z) * (-nor.z)) +
-        c3 * cl20 * nor.x * nor.x +
-        c4 * cl00 -
-        c5 * cl20 +
-        2.0 * c1 * cl2m2 * nor.y * (-nor.z) +
-        2.0 * c1 * cl21  * nor.y * nor.x +
-        2.0 * c1 * cl2m1 * (-nor.z) * nor.x +
-        2.0 * c2 * cl11  * nor.y +
-        2.0 * c2 * cl1m1 * (-nor.z) +
-        2.0 * c2 * cl10  * nor.x
-    ) * scale;
+	return (
+		c1 * cl22 * (nor.y * nor.y - (-nor.z) * (-nor.z)) +
+		c3 * cl20 * nor.x * nor.x +
+		c4 * cl00 -
+		c5 * cl20 +
+		2.0 * c1 * cl2m2 * nor.y * (-nor.z) +
+		2.0 * c1 * cl21  * nor.y * nor.x +
+		2.0 * c1 * cl2m1 * (-nor.z) * nor.x +
+		2.0 * c2 * cl11  * nor.y +
+		2.0 * c2 * cl1m1 * (-nor.z) +
+		2.0 * c2 * cl10  * nor.x
+	) * scale;
 }
 
 vec2 envMapEquirect(vec3 normal) {
@@ -317,173 +316,173 @@ float getMipLevelFromRoughness(float roughness) {
 // Linearly Transformed Cosines
 /*
 vec3 mul(mat3 m, vec3 v) {
-    return m * v;
+	return m * v;
 }
 mat3 mul(mat3 m1, mat3 m2) {
-    return m1 * m2;
+	return m1 * m2;
 }
 mat3 transpose2(mat3 v) {
-    mat3 tmp;
-    tmp[0] = vec3(v[0].x, v[1].x, v[2].x);
-    tmp[1] = vec3(v[0].y, v[1].y, v[2].y);
-    tmp[2] = vec3(v[0].z, v[1].z, v[2].z);
+	mat3 tmp;
+	tmp[0] = vec3(v[0].x, v[1].x, v[2].x);
+	tmp[1] = vec3(v[0].y, v[1].y, v[2].y);
+	tmp[2] = vec3(v[0].z, v[1].z, v[2].z);
 
-    return tmp;
+	return tmp;
 }
 float IntegrateEdge(vec3 v1, vec3 v2) {
-    float cosTheta = dot(v1, v2);
-    cosTheta = clamp(cosTheta, -0.9999, 0.9999);
-    float theta = acos(cosTheta);    
-    float res = cross(v1, v2).z * theta / sin(theta);
-    return res;
+	float cosTheta = dot(v1, v2);
+	cosTheta = clamp(cosTheta, -0.9999, 0.9999);
+	float theta = acos(cosTheta);    
+	float res = cross(v1, v2).z * theta / sin(theta);
+	return res;
 }
 int ClipQuadToHorizon() { //inout vec3 L[5], out int n) {
-    // detect clipping config
-    int config = 0;
-    if (L0.z > 0.0) config += 1;
-    if (L1.z > 0.0) config += 2;
-    if (L2.z > 0.0) config += 4;
-    if (L3.z > 0.0) config += 8;
+	// detect clipping config
+	int config = 0;
+	if (L0.z > 0.0) config += 1;
+	if (L1.z > 0.0) config += 2;
+	if (L2.z > 0.0) config += 4;
+	if (L3.z > 0.0) config += 8;
 
-    // clip
-    int n = 0;
-    if (config == 0) {
-        // clip all
-    }
-    else if (config == 1) { // V1 clip V2 V3 V4
-        n = 3;
-        L1 = -L1.z * L0 + L0.z * L1;
-        L2 = -L3.z * L0 + L0.z * L3;
-    }
-    else if (config == 2) { // V2 clip V1 V3 V4
-        n = 3;
-        L0 = -L0.z * L1 + L1.z * L0;
-        L2 = -L2.z * L1 + L1.z * L2;
-    }
-    else if (config == 3) { // V1 V2 clip V3 V4
-        n = 4;
-        L2 = -L2.z * L1 + L1.z * L2;
-        L3 = -L3.z * L0 + L0.z * L3;
-    }
-    else if (config == 4) { // V3 clip V1 V2 V4
-        n = 3;
-        L0 = -L3.z * L2 + L2.z * L3;
-        L1 = -L1.z * L2 + L2.z * L1;
-    }
-    else if (config == 5) { // V1 V3 clip V2 V4) impossible
-        n = 0;
-    }
-    else if (config == 6) { // V2 V3 clip V1 V4
-        n = 4;
-        L0 = -L0.z * L1 + L1.z * L0;
-        L3 = -L3.z * L2 + L2.z * L3;
-    }
-    else if (config == 7) { // V1 V2 V3 clip V4
-        n = 5;
-        L4 = -L3.z * L0 + L0.z * L3;
-        L3 = -L3.z * L2 + L2.z * L3;
-    }
-    else if (config == 8) { // V4 clip V1 V2 V3
-        n = 3;
-        L0 = -L0.z * L3 + L3.z * L0;
-        L1 = -L2.z * L3 + L3.z * L2;
-        L2 =  L3;
-    }
-    else if (config == 9) { // V1 V4 clip V2 V3
-        n = 4;
-        L1 = -L1.z * L0 + L0.z * L1;
-        L2 = -L2.z * L3 + L3.z * L2;
-    }
-    else if (config == 10) { // V2 V4 clip V1 V3) impossible
-        n = 0;
-    }
-    else if (config == 11) { // V1 V2 V4 clip V3
-        n = 5;
-        L4 = L3;
-        L3 = -L2.z * L3 + L3.z * L2;
-        L2 = -L2.z * L1 + L1.z * L2;
-    }
-    else if (config == 12) { // V3 V4 clip V1 V2
-        n = 4;
-        L1 = -L1.z * L2 + L2.z * L1;
-        L0 = -L0.z * L3 + L3.z * L0;
-    }
-    else if (config == 13) { // V1 V3 V4 clip V2
-        n = 5;
-        L4 = L3;
-        L3 = L2;
-        L2 = -L1.z * L2 + L2.z * L1;
-        L1 = -L1.z * L0 + L0.z * L1;
-    }
-    else if (config == 14) { // V2 V3 V4 clip V1
-        n = 5;
-        L4 = -L0.z * L3 + L3.z * L0;
-        L0 = -L0.z * L1 + L1.z * L0;
-    }
-    else if (config == 15) { // V1 V2 V3 V4
-        n = 4;
-    }
-    
-    if (n == 3)
-        L3 = L0;
-    if (n == 4)
-        L4 = L0;
+	// clip
+	int n = 0;
+	if (config == 0) {
+		// clip all
+	}
+	else if (config == 1) { // V1 clip V2 V3 V4
+		n = 3;
+		L1 = -L1.z * L0 + L0.z * L1;
+		L2 = -L3.z * L0 + L0.z * L3;
+	}
+	else if (config == 2) { // V2 clip V1 V3 V4
+		n = 3;
+		L0 = -L0.z * L1 + L1.z * L0;
+		L2 = -L2.z * L1 + L1.z * L2;
+	}
+	else if (config == 3) { // V1 V2 clip V3 V4
+		n = 4;
+		L2 = -L2.z * L1 + L1.z * L2;
+		L3 = -L3.z * L0 + L0.z * L3;
+	}
+	else if (config == 4) { // V3 clip V1 V2 V4
+		n = 3;
+		L0 = -L3.z * L2 + L2.z * L3;
+		L1 = -L1.z * L2 + L2.z * L1;
+	}
+	else if (config == 5) { // V1 V3 clip V2 V4) impossible
+		n = 0;
+	}
+	else if (config == 6) { // V2 V3 clip V1 V4
+		n = 4;
+		L0 = -L0.z * L1 + L1.z * L0;
+		L3 = -L3.z * L2 + L2.z * L3;
+	}
+	else if (config == 7) { // V1 V2 V3 clip V4
+		n = 5;
+		L4 = -L3.z * L0 + L0.z * L3;
+		L3 = -L3.z * L2 + L2.z * L3;
+	}
+	else if (config == 8) { // V4 clip V1 V2 V3
+		n = 3;
+		L0 = -L0.z * L3 + L3.z * L0;
+		L1 = -L2.z * L3 + L3.z * L2;
+		L2 =  L3;
+	}
+	else if (config == 9) { // V1 V4 clip V2 V3
+		n = 4;
+		L1 = -L1.z * L0 + L0.z * L1;
+		L2 = -L2.z * L3 + L3.z * L2;
+	}
+	else if (config == 10) { // V2 V4 clip V1 V3) impossible
+		n = 0;
+	}
+	else if (config == 11) { // V1 V2 V4 clip V3
+		n = 5;
+		L4 = L3;
+		L3 = -L2.z * L3 + L3.z * L2;
+		L2 = -L2.z * L1 + L1.z * L2;
+	}
+	else if (config == 12) { // V3 V4 clip V1 V2
+		n = 4;
+		L1 = -L1.z * L2 + L2.z * L1;
+		L0 = -L0.z * L3 + L3.z * L0;
+	}
+	else if (config == 13) { // V1 V3 V4 clip V2
+		n = 5;
+		L4 = L3;
+		L3 = L2;
+		L2 = -L1.z * L2 + L2.z * L1;
+		L1 = -L1.z * L0 + L0.z * L1;
+	}
+	else if (config == 14) { // V2 V3 V4 clip V1
+		n = 5;
+		L4 = -L0.z * L3 + L3.z * L0;
+		L0 = -L0.z * L1 + L1.z * L0;
+	}
+	else if (config == 15) { // V1 V2 V3 V4
+		n = 4;
+	}
+	
+	if (n == 3)
+		L3 = L0;
+	if (n == 4)
+		L4 = L0;
 	return n;
 }
 vec3 LTC_Evaluate(vec3 N, vec3 V, vec3 P, mat3 Minv, vec3 points0, vec3 points1, vec3 points2, vec3 points3, bool twoSided) {
-    // construct orthonormal basis around N
-    vec3 T1, T2;
-    T1 = normalize(V - N*dot(V, N));
-    T2 = cross(N, T1);
+	// construct orthonormal basis around N
+	vec3 T1, T2;
+	T1 = normalize(V - N*dot(V, N));
+	T2 = cross(N, T1);
 
-    // rotate area light in (T1, T2, R) basis
-    Minv = mul(Minv, transpose2(mat3(T1, T2, N)));
+	// rotate area light in (T1, T2, R) basis
+	Minv = mul(Minv, transpose2(mat3(T1, T2, N)));
 
-    // polygon (allocate 5 vertices for clipping)
-    // vec3 L[5];
-    L0 = mul(Minv, points0 - P);
-    L1 = mul(Minv, points1 - P);
-    L2 = mul(Minv, points2 - P);
-    L3 = mul(Minv, points3 - P);
+	// polygon (allocate 5 vertices for clipping)
+	// vec3 L[5];
+	L0 = mul(Minv, points0 - P);
+	L1 = mul(Minv, points1 - P);
+	L2 = mul(Minv, points2 - P);
+	L3 = mul(Minv, points3 - P);
 
-    int n = ClipQuadToHorizon(); //L, n);
-    
-    if (n == 0) {
-        return vec3(0, 0, 0);
+	int n = ClipQuadToHorizon(); //L, n);
+	
+	if (n == 0) {
+		return vec3(0, 0, 0);
 	}
 
-    // project onto sphere
-    L0 = normalize(L0);
-    L1 = normalize(L1);
-    L2 = normalize(L2);
-    L3 = normalize(L3);
-    L4 = normalize(L4);
+	// project onto sphere
+	L0 = normalize(L0);
+	L1 = normalize(L1);
+	L2 = normalize(L2);
+	L3 = normalize(L3);
+	L4 = normalize(L4);
 
-    // integrate
-    float sum = 0.0;
+	// integrate
+	float sum = 0.0;
 
-    sum += IntegrateEdge(L0, L1);
-    sum += IntegrateEdge(L1, L2);
-    sum += IntegrateEdge(L2, L3);
+	sum += IntegrateEdge(L0, L1);
+	sum += IntegrateEdge(L1, L2);
+	sum += IntegrateEdge(L2, L3);
 	
 	if (n >= 4) {
-        sum += IntegrateEdge(L3, L4);
+		sum += IntegrateEdge(L3, L4);
 	}
-    if (n == 5) {
-        sum += IntegrateEdge(L4, L0);
+	if (n == 5) {
+		sum += IntegrateEdge(L4, L0);
 	}
 
-    sum = twoSided ? abs(sum) : max(0.0, -sum);
+	sum = twoSided ? abs(sum) : max(0.0, -sum);
 
-    vec3 Lo_i = vec3(sum, sum, sum);
+	vec3 Lo_i = vec3(sum, sum, sum);
 
-    return Lo_i;
+	return Lo_i;
 }*/
 
 #ifdef _Toon
 float stepmix(float edge0, float edge1, float E, float x) {
-    float T = clamp(0.5 * (x - edge0 + E) / E, 0.0, 1.0);
-    return mix(edge0, edge1, T);
+	float T = clamp(0.5 * (x - edge0 + E) / E, 0.0, 1.0);
+	return mix(edge0, edge1, T);
 }
 #endif
 
@@ -494,16 +493,16 @@ void main() {
 	n = normalize(TBN * normalize(n));
 	
 	// vec3 nn = normalize(normal);
-    // vec3 dp1 = dFdx( position );
-    // vec3 dp2 = dFdy( position );
-    // vec2 duv1 = dFdx( texCoord );
-    // vec2 duv2 = dFdy( texCoord );
-    // vec3 dp2perp = cross( dp2, nn );
-    // vec3 dp1perp = cross( nn, dp1 );
-    // vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
-    // vec3 B = dp2perp * duv1.y + dp1perp * duv2.y; 
-    // float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
-    // mat3 TBN = mat3(T * invmax, B * invmax, nn);
+	// vec3 dp1 = dFdx( position );
+	// vec3 dp2 = dFdy( position );
+	// vec2 duv1 = dFdx( texCoord );
+	// vec2 duv2 = dFdy( texCoord );
+	// vec3 dp2perp = cross( dp2, nn );
+	// vec3 dp1perp = cross( nn, dp1 );
+	// vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
+	// vec3 B = dp2perp * duv1.y + dp1perp * duv2.y; 
+	// float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
+	// mat3 TBN = mat3(T * invmax, B * invmax, nn);
 	// vec3 n = normalize(TBN * nn);
 #else
 	vec3 n = normalize(normal);
@@ -515,8 +514,8 @@ void main() {
 	float visibility = 1.0;
 #ifndef _NoShadows
 	if (receiveShadow) {
-		if (lPos.w > 0.0) {
-			visibility = shadowTest(lPos);
+		if (lampPos.w > 0.0) {
+			visibility = shadowTest(lampPos);
 		}
 	}
 #endif
@@ -556,7 +555,7 @@ void main() {
 #ifdef _Toon
 	vec3 v = normalize(eyeDir);
 	vec3 h = normalize(v + l);
-    
+	
 	const vec3 ambientMaterial = baseColor * vec3(0.35, 0.35, 0.35) + vec3(0.15);
 	const vec3 diffuseMaterial = baseColor;
 	const vec3 specularMaterial = vec3(0.45, 0.35, 0.35);
@@ -564,13 +563,13 @@ void main() {
 	
 	float df = max(0.0, dotNL);
 	float sf = max(0.0, dot(n, h));
-    sf = pow(sf, shininess);
+	sf = pow(sf, shininess);
 	
 	const float A = 0.1;
-    const float B = 0.3;
-    const float C = 0.6;
-    const float D = 1.0;
-    float E = fwidth(df);
+	const float B = 0.3;
+	const float C = 0.6;
+	const float D = 1.0;
+	float E = fwidth(df);
 	bool f = false;
 	if (df > A - E) if (df < A + E) {
 		f = true;
@@ -598,15 +597,15 @@ void main() {
 	else df = D;
 	
 	E = fwidth(sf);
-    if (sf > 0.5 - E && sf < 0.5 + E) {
-        sf = smoothstep(0.5 - E, 0.5 + E, sf);
-    }
-    else {
-        sf = step(0.5, sf);
-    }
+	if (sf > 0.5 - E && sf < 0.5 + E) {
+		sf = smoothstep(0.5 - E, 0.5 + E, sf);
+	}
+	else {
+		sf = step(0.5, sf);
+	}
 	
 	fragColor.rgb = ambientMaterial + (df * diffuseMaterial + sf * specularMaterial) * visibility;
-    float edgeDetection = (dot(v, n) < 0.1) ? 0.0 : 1.0;
+	float edgeDetection = (dot(v, n) < 0.1) ? 0.0 : 1.0;
 	fragColor.rgb *= edgeDetection;
 	
 	// const int levels = 4;
@@ -693,8 +692,8 @@ void main() {
 	// fragColor.rgb = ltccol * 10.0 * visibility + indirect / 14.0;
 
 #ifdef _LDR
-    fragColor.rgb = vec3(pow(fragColor.rgb, vec3(1.0 / 2.2)));
+	fragColor.rgb = vec3(pow(fragColor.rgb, vec3(1.0 / 2.2)));
 // #else
-    // fragColor = vec4(fragColor.rgb, fragColor.a);
+	// fragColor = vec4(fragColor.rgb, fragColor.a);
 #endif
 }

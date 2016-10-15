@@ -40,7 +40,7 @@ out vec3 position;
 #ifdef _Tex
 	out vec2 texCoord;
 #endif
-out vec4 lPos;
+// out vec4 lampPos;
 out vec4 matColor;
 out vec3 eyeDir;
 #ifdef _NorTex

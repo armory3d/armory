@@ -53,7 +53,7 @@ in vec3 position;
 #ifdef _Tex
 	in vec2 texCoord;
 #endif
-in vec4 lPos;
+in vec4 lampPos;
 in vec4 matColor;
 in vec3 eyeDir;
 #ifdef _NorTex
@@ -112,11 +112,9 @@ float PCF(vec2 uv, float compare) {
     return result / 9.0;
 }
 float shadowTest(vec4 lPos) {
-	vec4 lPosH = lPos / lPos.w;
-	lPosH.x = (lPosH.x + 1.0) / 2.0;
-    lPosH.y = (lPosH.y + 1.0) / 2.0;
-    
-	return PCF(lPosH.xy, lPosH.z - shadowsBias);
+	lPos.xyz = lPos.xyz / lPos.w;
+	lPos.xy = lPos.xy * 0.5 + 0.5;
+	return PCF(lPos.xy, lPos.z - shadowsBias);
 }
 #endif
 
@@ -260,8 +258,8 @@ void main() {
 	float visibility = 1.0;
 #ifndef _NoShadows
 	if (receiveShadow) {
-		if (lPos.w > 0.0) {
-			visibility = shadowTest(lPos);
+		if (lampPos.w > 0.0) {
+			visibility = shadowTest(lampPos);
 		}
 	}
 #endif

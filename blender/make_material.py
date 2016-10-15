@@ -88,7 +88,7 @@ def parse_from(self, material, c, defs, surface_node):
     tree = material.node_tree
     parse_material_surface(self, material, c, defs, tree, surface_node, 1.0)
 
-def make_texture(self, id, image_node, material):
+def make_texture(self, id, image_node, material, image_format='RGBA32'):
     tex = {}
     tex['name'] = id
     image = image_node.image
@@ -111,6 +111,8 @@ def make_texture(self, id, image_node, material):
         # Reference image name
         tex['file'] = utils.extract_filename(image.filepath)
         tex['file'] = utils.safe_filename(tex['file'])
+        if image_format != 'RGBA32':
+            tex['format'] = image_format
         interpolation = image_node.interpolation
         if bpy.data.worlds['Arm'].force_anisotropic_filtering:
             interpolation = 'Smart'
@@ -318,7 +320,7 @@ def add_albedo_tex(self, node, material, c, defs):
 def add_metalness_tex(self, node, material, c, defs):
     if '_MetTex' not in defs:
         defs.append('_MetTex')
-        tex = make_texture(self, 'smetal', node, material)
+        tex = make_texture(self, 'smetal', node, material, image_format='R8')
         c['bind_textures'].append(tex)
         if parse.const_metalness != None: # If texture is used, remove constant
             c['bind_constants'].remove(parse.const_metalness)
@@ -326,7 +328,7 @@ def add_metalness_tex(self, node, material, c, defs):
 def add_roughness_tex(self, node, material, c, defs):
     if '_RoughTex' not in defs:
         defs.append('_RoughTex')
-        tex = make_texture(self, 'srough', node, material)
+        tex = make_texture(self, 'srough', node, material, image_format='R8')
         c['bind_textures'].append(tex)
         if parse.const_roughness != None:
             c['bind_constants'].remove(parse.const_roughness)
@@ -342,13 +344,13 @@ def add_roughness_strength(self, c, defs, f):
 def add_occlusion_tex(self, node, material, c, defs):
     if '_OccTex' not in defs:
         defs.append('_OccTex')
-        tex = make_texture(self, 'socclusion', node, material)
+        tex = make_texture(self, 'socclusion', node, material, image_format='R8')
         c['bind_textures'].append(tex)
 
 def add_height_tex(self, node, material, c, defs):
     if '_HeightTex' not in defs:
         defs.append('_HeightTex')
-        tex = make_texture(self, 'sheight', node, material)
+        tex = make_texture(self, 'sheight', node, material, image_format='R8')
         c['bind_textures'].append(tex)
 
 def add_height_strength(self, c, f):

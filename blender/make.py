@@ -106,6 +106,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     # Export scene data
     assets.embedded_data = sorted(list(set(assets.embedded_data)))
     physics_found = False
+    ArmoryExporter.compress_enabled = is_publish
     for scene in bpy.data.scenes:
         if scene.game_export:
             asset_path = 'build/compiled/Assets/' + utils.safe_filename(scene.name) + '.arm'
@@ -353,6 +354,8 @@ def watch_play():
 def watch_compile(mode):
     play_project.compileproc.wait()
     armory_progress(100)
+    if play_project.compileproc == None: ##
+        return
     result = play_project.compileproc.poll()
     play_project.compileproc = None
     play_project.compileproc_finished = True

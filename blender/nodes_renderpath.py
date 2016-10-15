@@ -842,20 +842,21 @@ def reload_blend_data():
 def load_library():
     sdk_path = utils.get_sdk_path()
     data_path = sdk_path + '/armory/blender/data/data.blend'
+    data_names = ['forward_path', 'forward_path_low', 'deferred_path', 'deferred_path_low', 'deferred_path_high', 'hybrid_path', 'vr_path', 'pathtrace_path', 'grease_pencil_path', 'Armory PBR']
 
+    # Remove old
+    for name in data_names:
+        if name in bpy.data.node_groups and name != 'Armory PBR':
+            bpy.data.node_groups.remove(bpy.data.node_groups[name], do_unlink=True)
+
+    # Import
+    data_refs = data_names.copy()
     with bpy.data.libraries.load(data_path, link=False) as (data_from, data_to):
-        data_to.node_groups = ['forward_path', 'forward_path_low', 'deferred_path', 'deferred_path_low', 'deferred_path_high', 'hybrid_path', 'vr_path', 'pathtrace_path', 'Armory PBR']
-    
-    # TODO: cannot use for loop
-    bpy.data.node_groups['forward_path'].use_fake_user = True
-    bpy.data.node_groups['forward_path_low'].use_fake_user = True
-    bpy.data.node_groups['deferred_path'].use_fake_user = True
-    bpy.data.node_groups['deferred_path_low'].use_fake_user = True
-    bpy.data.node_groups['deferred_path_high'].use_fake_user = True
-    bpy.data.node_groups['hybrid_path'].use_fake_user = True
-    bpy.data.node_groups['vr_path'].use_fake_user = True
-    bpy.data.node_groups['pathtrace_path'].use_fake_user = True
-    bpy.data.node_groups['Armory PBR'].use_fake_user = True
+        data_to.node_groups = data_refs
+
+    for ref in data_refs:
+        ref.use_fake_user = True
+        # bpy.data.node_groups[name].use_fake_user = True
 
 def register():
     bpy.utils.register_module(__name__)

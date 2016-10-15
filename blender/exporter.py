@@ -230,19 +230,21 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
         return va
 
-    def get_meshes_file_path(self, object_id):
+    def get_meshes_file_path(self, object_id, compressed=False):
         index = self.filepath.rfind('/')
         mesh_fp = self.filepath[:(index+1)] + 'meshes/'
         if not os.path.exists(mesh_fp):
             os.makedirs(mesh_fp)
-        return mesh_fp + object_id + '.arm'
+        ext = '.zip' if compressed else '.arm'
+        return mesh_fp + object_id + ext
 
-    def get_greasepencils_file_path(self, object_id):
+    def get_greasepencils_file_path(self, object_id, compressed=False):
         index = self.filepath.rfind('/')
         gp_fp = self.filepath[:(index+1)] + 'greasepencils/'
         if not os.path.exists(gp_fp):
             os.makedirs(gp_fp)
-        return gp_fp + object_id + '.arm'
+        ext = '.zip' if compressed else '.arm'
+        return gp_fp + object_id + ext
 
     @staticmethod
     def GetBObjectType(bobject):
@@ -1452,7 +1454,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
                 oid = utils.safe_filename(self.meshArray[objref]["structName"])
                 if ArmoryExporter.option_mesh_per_file:
-                    o['data_ref'] = 'mesh_' + oid + '/' + oid
+                    ext = ''
+                    if self.is_compress(objref):
+                        ext = '.zip'
+                    o['data_ref'] = 'mesh_' + oid + ext + '/' + oid
                 else:
                     o['data_ref'] = oid
                 
@@ -1526,7 +1531,10 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                     else: # Use default
                         action = bobject.animation_data.action
                     armatureid = utils.safe_filename(armdata.name)
-                    o['bones_ref'] = 'bones_' + armatureid + '_' + action.name
+                    ext = ''
+                    if self.is_compress(armdata):
+                       ext = '.zip'
+                    o['bones_ref'] = 'bones_' + armatureid + '_' + action.name + ext
 
                     # Write bones
                     if armdata.edit_actions:
@@ -1540,9 +1548,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                         if armdata.animation_data == None:
                             continue
                         armdata.animation_data.action = action
-                        fp = self.get_meshes_file_path('bones_' + armatureid + '_' + action.name)
+                        fp = self.get_meshes_file_path('bones_' + armatureid + '_' + action.name, compressed=self.is_compress(armdata))
                         assets.add(fp)
-                        if armdata.armature_cached == False or not os.path.exists(fp):
+                        if armdata.data_cached == False or not os.path.exists(fp):
                             bones = []
                             for bone in armdata.bones:
                                 if (not bone.parent):
@@ -1554,7 +1562,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                             bones_obj = {}
                             bones_obj['objects'] = bones
                             utils.write_arm(fp, bones_obj)
-                    armdata.armature_cached = True
+                    armdata.data_cached = True
 
             if (parento == None):
                 self.output['objects'].append(o)
@@ -1879,7 +1887,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         
         # No export necessary
         if ArmoryExporter.option_mesh_per_file:
-            fp = self.get_meshes_file_path('mesh_' + oid)
+            fp = self.get_meshes_file_path('mesh_' + oid, compressed=self.is_compress(bobject.data))
             assets.add(fp)
             if self.object_is_mesh_cached(bobject) == True and os.path.exists(fp):
                 return
@@ -2361,10 +2369,13 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             return
         
         # ArmoryExporter.option_mesh_per_file # Currently always exports to separate file
-        fp = self.get_greasepencils_file_path('greasepencil_' + gpRef.name)
+        fp = self.get_greasepencils_file_path('greasepencil_' + gpRef.name, compressed=self.is_compress(gpRef))
         assets.add(fp)
-        self.output['grease_pencil_ref'] = 'greasepencil_' + gpRef.name + '/' + gpRef.name
-        
+        ext = ''
+        if self.is_compress(gpRef):
+            ext = '.zip'
+        self.output['grease_pencil_ref'] = 'greasepencil_' + gpRef.name + ext + '/' + gpRef.name
+
         assets.add_shader_data('build/compiled/ShaderDatas/grease_pencil/grease_pencil.arm')
         assets.add_shader('build/compiled/Shaders/grease_pencil/grease_pencil.frag.glsl')
         assets.add_shader('build/compiled/Shaders/grease_pencil/grease_pencil.vert.glsl')
@@ -2379,6 +2390,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         gp_obj['grease_pencil_datas'] = [gpo]
         utils.write_arm(fp, gp_obj)
         gpRef.data_cached = True
+
+    def is_compress(self, obj):
+        return ArmoryExporter.compress_enabled and obj.data_compressed
 
     def ExportObjects(self, scene):
         if not ArmoryExporter.option_mesh_only:
@@ -2435,6 +2449,8 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         ArmoryExporter.option_optimize_mesh = self.option_optimize_mesh
         ArmoryExporter.option_minimize = self.option_minimize
         ArmoryExporter.export_physics = False # Indicates whether rigid body is exported
+        if not hasattr(ArmoryExporter, 'compress_enabled'):
+            ArmoryExporter.compress_enabled = False
 
         self.cb_preprocess()
 

@@ -3,7 +3,7 @@ import bpy
 import os
 import json
 import subprocess
-import make_renderpath
+import nodes_renderpath
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 from props_traits_clip import *
@@ -139,7 +139,7 @@ def on_scene_update_post(context):
         if edit_obj.type == 'MESH':
             edit_obj.data.mesh_cached = False
         elif edit_obj.type == 'ARMATURE':
-            edit_obj.data.armature_cached = False
+            edit_obj.data.data_cached = False
 
 on_scene_update_post.last_operator = None
 
@@ -266,12 +266,16 @@ def initProperties():
     bpy.types.Mesh.mesh_cached_verts = bpy.props.IntProperty(name="Last Verts", description="Number of vertices in last export", default=0)
     bpy.types.Mesh.mesh_cached_edges = bpy.props.IntProperty(name="Last Edges", description="Number of edges in last export", default=0)
     bpy.types.Mesh.dynamic_usage = bpy.props.BoolProperty(name="Dynamic Data Usage", description="Mesh data can change at runtime", default=False)
+    bpy.types.Mesh.data_compressed = bpy.props.BoolProperty(name="Compress Data", description="Pack data into zip file.", default=False)
     bpy.types.Curve.mesh_cached = bpy.props.BoolProperty(name="Mesh Cached", description="No need to reexport curve data", default=False)
+    bpy.types.Curve.data_compressed = bpy.props.BoolProperty(name="Compress Data", description="Pack data into zip file.", default=False)
     bpy.types.Curve.dynamic_usage = bpy.props.BoolProperty(name="Dynamic Data Usage", description="Curve data can change at runtime", default=False)
     # For grease pencil
     bpy.types.GreasePencil.data_cached = bpy.props.BoolProperty(name="GP Cached", description="No need to reexport grease pencil data", default=False)
+    bpy.types.GreasePencil.data_compressed = bpy.props.BoolProperty(name="Compress Data", description="Pack data into zip file.", default=True)
     # For armature
-    bpy.types.Armature.armature_cached = bpy.props.BoolProperty(name="Armature Cached", description="No need to reexport armature data", default=False)
+    bpy.types.Armature.data_cached = bpy.props.BoolProperty(name="Armature Cached", description="No need to reexport armature data", default=False)
+    bpy.types.Armature.data_compressed = bpy.props.BoolProperty(name="Compress Data", description="Pack data into zip file.", default=False)
     # Actions
     bpy.types.Armature.edit_actions = bpy.props.BoolProperty(name="Edit Actions", description="Manually set used actions", default=False)
     bpy.types.Armature.my_actiontraitlist = bpy.props.CollectionProperty(type=ListActionTraitItem)
@@ -557,6 +561,7 @@ class DataPropsPanel(bpy.types.Panel):
             layout.operator("arm.reimport_paths_menu")
         elif obj.type == 'MESH' or obj.type == 'FONT':
             layout.prop(obj.data, 'dynamic_usage')
+            layout.prop(obj.data, 'data_compressed')
             layout.operator("arm.invalidate_cache")
         elif obj.type == 'LAMP':
             layout.prop(obj.data, 'lamp_clip_start')
@@ -593,6 +598,8 @@ class DataPropsPanel(bpy.types.Panel):
                     item.name = item.action_name_prop
                     row = layout.row()
                     row.prop_search(item, "action_name_prop", bpy.data, "actions", "Action")
+
+            layout.prop(obj.data, 'data_compressed')
 
 class ScenePropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -633,7 +640,7 @@ class OBJECT_OT_REIMPORTPATHSButton(bpy.types.Operator):
     bl_label = "Reimport Paths"
  
     def execute(self, context):
-        make_renderpath.load_library()
+        nodes_renderpath.load_library()
         return{'FINISHED'}
 
 class OBJECT_OT_INVALIDATECACHEButton(bpy.types.Operator):
