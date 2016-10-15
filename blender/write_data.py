@@ -125,6 +125,7 @@ class Main {
     static function start() {""")
 
         f.write("""
+        armory.object.Uniforms.register();
         kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel}, function() {
             iron.App.init(function() {
                 iron.Scene.setActive(projectScene, function(object:iron.object.Object) {""")
