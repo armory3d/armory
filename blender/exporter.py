@@ -1515,7 +1515,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             self.ExportObjectTransform(bobject, scene, o)
 
             # Viewport Camera - overwrite active camera matrix with viewport matrix
-            if type == kNodeTypeCamera and bpy.data.worlds['Arm'].ArmPlayViewportCamera and self.scene.camera != None and bobject.name == self.scene.camera.name:
+            if type == kNodeTypeCamera and bpy.data.worlds['Arm'].arm_play_viewport_camera and self.scene.camera != None and bobject.name == self.scene.camera.name:
                 viewport_matrix = self.get_viewport_view_matrix()
                 if viewport_matrix != None:
                     o['transform']['values'] = self.WriteMatrix(viewport_matrix.inverted())
@@ -1884,7 +1884,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
 
         # Check if mesh is using instanced rendering
         is_instanced, instance_offsets = self.object_process_instancing(bobject, objectRef[1]["objectTable"])
-        
+
         # No export necessary
         if ArmoryExporter.option_mesh_per_file:
             fp = self.get_meshes_file_path('mesh_' + oid, compressed=self.is_compress(bobject.data))
@@ -1892,7 +1892,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             if self.object_is_mesh_cached(bobject) == True and os.path.exists(fp):
                 return
 
-        print ('Exporting mesh ' + bobject.data.name)
+        print('Exporting mesh ' + bobject.data.name)
         if bobject.type != 'FONT' and len(bobject.data.vertices) > 40000:
             print('Armory Warning: "' + bobject.name + '" contains over 40000 vertices, split mesh to smaller parts to fit into 16-bit indices')
 
@@ -2198,7 +2198,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         o['fov'] = objref.angle
 
         # Viewport Camera - override fov for every camera for now
-        if bpy.data.worlds['Arm'].ArmPlayViewportCamera:
+        if bpy.data.worlds['Arm'].arm_play_viewport_camera:
             # Extract fov from projection
             # yscale = self.get_viewport_projection_matrix()[1][1]
             # fov = math.atan(1.0 / yscale) * 0.9
@@ -2461,6 +2461,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         self.ProcessSkinnedMeshes()
 
         self.output['name'] = utils.safe_filename(self.scene.name)
+        if (self.filepath.endswith('.zip')):
+            self.output['name'] += '.zip'
+
         self.output['objects'] = []
         for object in self.scene.objects:
             if (not object.parent):
@@ -2491,7 +2494,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             self.output['gravity'] = [self.scene.gravity[0], self.scene.gravity[1], self.scene.gravity[2]]
 
             # Scene root traits
-            if bpy.data.worlds['Arm'].ArmPhysics != 'Disabled':
+            if bpy.data.worlds['Arm'].arm_physics != 'Disabled':
                 self.output['traits'] = []
                 x = {}
                 x['type'] = 'Script'
@@ -2514,7 +2517,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             for file in assets.embedded_data:
                 self.output['embedded_datas'].append(file)
 
-        # Write .arm
+        # Write scene file
         utils.write_arm(self.filepath, self.output)
 
         print('Scene built in ' + str(time.time() - profile_time))
@@ -2545,6 +2548,9 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                 # Save offset data
                 instance_offsets = [0, 0, 0] # Include parent
                 for sn in n.children:
+                    # Child hidden
+                    if sn.game_export == False or (sn.hide_render and ArmoryExporter.option_export_hide_render == False):
+                        continue
                     # Do not take parent matrix into account
                     loc = sn.matrix_local.to_translation()
                     instance_offsets.append(loc.x)
@@ -2560,11 +2566,11 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
     def cb_preprocess(self):
         ArmoryExporter.option_mesh_only = False
         ArmoryExporter.option_mesh_per_file = True
-        ArmoryExporter.option_optimize_mesh = bpy.data.worlds['Arm'].ArmOptimizeMesh
-        ArmoryExporter.option_export_hide_render = bpy.data.worlds['Arm'].ArmExportHideRender
-        ArmoryExporter.option_spawn_all_layers = bpy.data.worlds['Arm'].ArmSpawnAllLayers
-        ArmoryExporter.option_minimize = bpy.data.worlds['Arm'].ArmMinimize
-        ArmoryExporter.option_sample_animation = bpy.data.worlds['Arm'].ArmSampledAnimation
+        ArmoryExporter.option_optimize_mesh = bpy.data.worlds['Arm'].arm_optimize_mesh
+        ArmoryExporter.option_export_hide_render = bpy.data.worlds['Arm'].arm_export_hide_render
+        ArmoryExporter.option_spawn_all_layers = bpy.data.worlds['Arm'].arm_spawn_all_layers
+        ArmoryExporter.option_minimize = bpy.data.worlds['Arm'].arm_minimize
+        ArmoryExporter.option_sample_animation = bpy.data.worlds['Arm'].arm_sampled_animation
         ArmoryExporter.sampleAnimationFlag = ArmoryExporter.option_sample_animation
 
         # Only one render path for scene for now
@@ -2657,7 +2663,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
             x = {}
             if t.type_prop == 'Logic Nodes' and t.nodes_name_prop != '':
                 x['type'] = 'Script'
-                x['class_name'] = bpy.data.worlds['Arm'].ArmProjectPackage + '.node.' + utils.safe_filename(t.nodes_name_prop)
+                x['class_name'] = bpy.data.worlds['Arm'].arm_project_package + '.node.' + utils.safe_filename(t.nodes_name_prop)
             elif t.type_prop == 'JS Script' or t.type_prop == 'Python Script':
                 basename = t.jsscript_prop.split('.')[0]
                 x['type'] = 'Script'
@@ -2706,7 +2712,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
                 if t.type_prop == 'Bundled Script':
                     trait_prefix = 'armory.trait.'
                 else:
-                    trait_prefix = bpy.data.worlds['Arm'].ArmProjectPackage + '.'
+                    trait_prefix = bpy.data.worlds['Arm'].arm_project_package + '.'
                 x['class_name'] = trait_prefix + t.class_name_prop
                 if len(t.my_paramstraitlist) > 0:
                     x['parameters'] = []
@@ -2747,14 +2753,14 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         
         if type == kNodeTypeCamera:
             # Debug console enabled, attach console overlay to each camera
-            if bpy.data.worlds['Arm'].ArmPlayConsole:
+            if bpy.data.worlds['Arm'].arm_play_console:
                 console_trait = {}
                 console_trait['type'] = 'Script'
                 console_trait['class_name'] = 'armory.trait.internal.Console'
                 console_trait['parameters'] = []
                 o['traits'].append(console_trait)
             # Viewport camera enabled, attach navigation to active camera if enabled
-            if self.scene.camera != None and bobject.name == self.scene.camera.name and bpy.data.worlds['Arm'].ArmPlayViewportCamera and bpy.data.worlds['Arm'].ArmPlayViewportNavigation == 'Walk':
+            if self.scene.camera != None and bobject.name == self.scene.camera.name and bpy.data.worlds['Arm'].arm_play_viewport_camera and bpy.data.worlds['Arm'].arm_play_viewport_navigation == 'Walk':
                 navigation_trait = {}
                 navigation_trait['type'] = 'Script'
                 navigation_trait['class_name'] = 'armory.trait.WalkNavigation'
@@ -3009,7 +3015,7 @@ class ArmoryExporter(bpy.types.Operator, ExportHelper):
         o['background_color'] = utils.color_to_int(bgcol)
 
         wmat_name = utils.safe_filename(world.name) + '_material'
-        o['material_ref'] = wmat_name + '/' + wmat_name + '/env'
+        o['material_ref'] = wmat_name + '/' + wmat_name + '/world'
         o['brdf'] = 'brdf.png'
         o['probes'] = []
         # Main probe

@@ -1,0 +1,39 @@
+{
+	"contexts": [
+		{
+			"name": "ssdo_pass",
+			"params": [
+				{
+					"name": "depth_write",
+					"value": "false"
+				},
+				{
+					"name": "compare_mode",
+					"value": "always"
+				},
+				{
+					"name": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				{
+					"name": "snoise",
+					"link": "_noise8"
+				},
+				{
+					"name": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				},
+				{
+					"name": "eye",
+					"link": "_cameraPosition"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "ssdo_pass.vert.glsl",
+			"vertex_shader_path": "../pass.vert.glsl",
+			"fragment_shader": "ssdo_pass.frag.glsl"
+		}
+	]
+}

@@ -1,0 +1,26 @@
+{
+	"contexts": [
+		{
+			"name": "combine_pass",
+			"params": [
+				{
+					"name": "depth_write",
+					"value": "false"
+				},
+				{
+					"name": "compare_mode",
+					"value": "always"
+				},
+				{
+					"name": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [],
+			"texture_params": [],
+			"vertex_shader": "combine_pass.vert.glsl",
+			"vertex_shader_path": "../pass.vert.glsl",
+			"fragment_shader": "combine_pass.frag.glsl"
+		}
+	]
+}

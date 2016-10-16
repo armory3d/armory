@@ -184,10 +184,7 @@ def make_draw_material_quad(stage, node_group, node, context_index=1):
     dir_name = scon[2]
     # No world defs for material passes
     data_name = scon[2]
-    assets.add_shader_data('build/compiled/ShaderDatas/' + dir_name + '/' + data_name + '.arm')
-    full_name = 'build/compiled/Shaders/' + dir_name + '/' + data_name
-    assets.add_shader(full_name + '.vert.glsl')
-    assets.add_shader(full_name + '.frag.glsl')
+    assets.add_shader2(dir_name, data_name)
 
 def make_draw_quad(stage, node_group, node, context_index=1, shader_context=None):
     stage['command'] = 'draw_shader_quad'
@@ -201,17 +198,14 @@ def make_draw_quad(stage, node_group, node, context_index=1, shader_context=None
     dir_name = scon[0]
     # Append world defs
     data_name = scon[1] + world_defs
-    assets.add_shader_data('build/compiled/ShaderDatas/' + dir_name + '/' + data_name + '.arm')
-    full_name = 'build/compiled/Shaders/' + dir_name + '/' + data_name
-    assets.add_shader(full_name + '.vert.glsl')
-    assets.add_shader(full_name + '.frag.glsl')
+    assets.add_shader2(dir_name, data_name)
 
 def make_draw_world(stage, node_group, node, dome=True):
     if dome:
         stage['command'] = 'draw_skydome'
     else:
         stage['command'] = 'draw_material_quad'
-    # stage['params'].append(wname + '_material/' + wname + '_material/env')
+    # stage['params'].append(wname + '_material/' + wname + '_material/world')
     stage['params'].append('_worldMaterial') # Link to active world
     # Link assets
     if '_EnvClouds' in bpy.data.worlds['Arm'].world_defs:
@@ -252,10 +246,7 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     stage['command'] = 'draw_shader_quad'
     stage['params'].append(data_name + '/' + data_name + '/' + scon)
     # Include data and shaders
-    assets.add_shader_data('build/compiled/ShaderDatas/' + scon + '/' + data_name + '.arm')
-    full_name = 'build/compiled/Shaders/' + scon + '/' + data_name
-    assets.add_shader(full_name + '.vert.glsl')
-    assets.add_shader(full_name + '.frag.glsl')
+    assets.add_shader2(scon, data_name)
     # Link assets
     # assets.add(buildNodeTrees.assets_path + 'noise256.png')
     # assets.add_embedded_data('noise256.png')

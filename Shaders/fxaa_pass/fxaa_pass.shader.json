@@ -1,0 +1,31 @@
+{
+	"contexts": [
+		{
+			"name": "fxaa_pass",
+			"params": [
+				{
+					"name": "depth_write",
+					"value": "false"
+				},
+				{
+					"name": "compare_mode",
+					"value": "always"
+				},
+				{
+					"name": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				{
+					"name": "texStep",
+					"link": "_screenSizeInv"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "fxaa_pass.vert.glsl",
+			"vertex_shader_path": "../pass.vert.glsl",
+			"fragment_shader": "fxaa_pass.frag.glsl"
+		}
+	]
+}

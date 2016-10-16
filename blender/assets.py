@@ -40,3 +40,9 @@ def add_shader_data(file):
     global shader_datas
     if file not in shader_datas:
         shader_datas.append(file)
+
+def add_shader2(dir_name, data_name):
+    add_shader_data('build/compiled/ShaderDatas/' + dir_name + '/' + data_name + '.arm')
+    full_name = 'build/compiled/Shaders/' + dir_name + '/' + data_name
+    add_shader(full_name + '.vert.glsl')
+    add_shader(full_name + '.frag.glsl')

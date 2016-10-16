@@ -41,7 +41,7 @@ def buildNodeTree(world):
     dat['name'] = utils.safe_filename(world.name) + '_material'
     context = {}
     dat['contexts'] = [context]
-    context['name'] = 'env'
+    context['name'] = 'world'
     context['bind_constants'] = []
     context['bind_textures'] = []
     
@@ -95,18 +95,15 @@ def buildNodeTree(world):
 
 def write_output(output):
     # Add datas to khafile
-    dir_name = 'env'
+    dir_name = 'world'
     # Append world defs
     wrd = bpy.data.worlds['Arm']
-    data_name = 'env' + wrd.world_defs
+    data_name = 'world' + wrd.world_defs
     
     # Reference correct shader context
     dat = output['material_datas'][0]
     dat['shader'] = data_name + '/' + data_name
-    assets.add_shader_data('build/compiled/ShaderDatas/' + dir_name + '/' + data_name + '.arm')
-    full_name = 'build/compiled/Shaders/' + dir_name + '/' + data_name
-    assets.add_shader(full_name + '.vert.glsl')
-    assets.add_shader(full_name + '.frag.glsl')
+    assets.add_shader2(dir_name, data_name)
 
     # Write material json
     path = 'build/compiled/Assets/materials/'

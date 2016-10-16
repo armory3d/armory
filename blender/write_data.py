@@ -20,7 +20,7 @@ def write_khafilejs(is_play, export_physics, dce_full=False):
     with open('khafile.js', 'w') as f:
         f.write(
 """// Auto-generated
-let project = new Project('""" + wrd.ArmProjectName + """');
+let project = new Project('""" + wrd.arm_project_name + """');
 
 project.addSources('Sources');
 """)
@@ -46,7 +46,7 @@ project.addSources('Sources');
             ref = ref.replace('\\', '/')
             f.write("project.addAssets('" + ref + "');\n")
 
-        if wrd.ArmPlayConsole:
+        if wrd.arm_play_console:
             f.write("project.addDefine('arm_profile');\n")
             f.write(add_armory_library(sdk_path, 'lib/zui'))
             font_path =  sdk_path + '/armory/Assets/droid_sans.ttf'
@@ -57,10 +57,10 @@ project.addSources('Sources');
         # f.write(add_armory_library(sdk_path, 'lib/haxeui/haxeui-kha'))
         # f.write(add_armory_library(sdk_path, 'lib/haxeui/hscript'))
 
-        if wrd.ArmMinimize == False:
+        if wrd.arm_minimize == False:
             f.write("project.addDefine('arm_json');\n")
         
-        if wrd.ArmDeinterleavedBuffers == True:
+        if wrd.arm_deinterleaved_buffers == True:
             f.write("project.addDefine('arm_deinterleaved');\n")
 
         if wrd.generate_gpu_skin == False:
@@ -69,32 +69,34 @@ project.addSources('Sources');
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
 
-        config_text = wrd.ArmKhafile
+        config_text = wrd.arm_khafile
         if config_text != '':
             f.write(bpy.data.texts[config_text].as_string())
 
         f.write("\n\nresolve(project);\n")
 
 # Write Main.hx
-def write_main(is_play, in_viewport):
+def write_main(is_play, in_viewport, is_publish):
     wrd = bpy.data.worlds['Arm']
     resx, resy = utils.get_render_resolution()
+    scene_name = utils.get_project_scene_name()
+    scene_ext = '.zip' if (bpy.data.scenes[scene_name].data_compressed and is_publish) else ''
     #if not os.path.isfile('Sources/Main.hx'):
     with open('Sources/Main.hx', 'w') as f:
         f.write(
 """// Auto-generated
 package ;
 class Main {
-    public static inline var projectName = '""" + wrd.ArmProjectName + """';
-    public static inline var projectPackage = '""" + wrd.ArmProjectPackage + """';
+    public static inline var projectName = '""" + wrd.arm_project_name + """';
+    public static inline var projectPackage = '""" + wrd.arm_project_package + """';
     static inline var projectWidth = """ + str(resx) + """;
     static inline var projectHeight = """ + str(resy) + """;
-    static inline var projectSamplesPerPixel = """ + str(wrd.ArmProjectSamplesPerPixel) + """;
-    static inline var projectScene = '""" + utils.get_project_scene_name() + """';
+    static inline var projectSamplesPerPixel = """ + str(wrd.arm_project_samples_per_pixel) + """;
+    static inline var projectScene = '""" + scene_name + scene_ext + """';
     public static function main() {
         iron.system.CompileTime.importPackage('armory.trait');
         iron.system.CompileTime.importPackage('armory.renderpath');
-        iron.system.CompileTime.importPackage('""" + wrd.ArmProjectPackage + """');
+        iron.system.CompileTime.importPackage('""" + wrd.arm_project_package + """');
         #if (js && arm_physics)
         untyped __js__("
             function loadScript(url, callback) {
@@ -136,7 +138,6 @@ class Main {
 # Write electron.js
 def write_electronjs(x, y, w, h, winoff, in_viewport):
     wrd = bpy.data.worlds['Arm']
-    dev_tools = wrd.ArmPlayDeveloperTools
     with open('build/electron.js', 'w') as f:
         f.write(
 """// Auto-generated
@@ -183,10 +184,6 @@ function createWindow () { """)
     mainWindow.loadURL('file://' + __dirname + '/html5/index.html');
     //mainWindow.loadURL('http://localhost:8040/build/html5/index.html');
     mainWindow.on('closed', function() { mainWindow = null; });""")
-
-        if dev_tools:
-            f.write("""
-    mainWindow.toggleDevTools();""")
 
         f.write("""
 }
@@ -338,9 +335,9 @@ const float compoDOFSize = """ + str(round(bpy.data.cameras[0].cycles.aperture_s
 
 def write_traithx(class_name):
     wrd = bpy.data.worlds['Arm']
-    with open('Sources/' + wrd.ArmProjectPackage + '/' + class_name + '.hx', 'w') as f:
+    with open('Sources/' + wrd.arm_project_package + '/' + class_name + '.hx', 'w') as f:
         f.write(
-"""package """ + wrd.ArmProjectPackage + """;
+"""package """ + wrd.arm_project_package + """;
 
 class """ + class_name + """ extends armory.Trait {
     public function new() {

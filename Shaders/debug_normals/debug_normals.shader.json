@@ -1,0 +1,39 @@
+{
+	"contexts": [
+		{
+			"name": "debug_normals",
+			"params": [
+				{
+					"name": "depth_write",
+					"value": "false"
+				},
+				{
+					"name": "compare_mode",
+					"value": "always"
+				},
+				{
+					"name": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				{
+					"name": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"name": "eyeLook",
+					"link": "_cameraLook"
+				},
+				{
+					"name": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "debug_normals.vert.glsl",
+			"vertex_shader_path": "../pass_viewray.vert.glsl",
+			"fragment_shader": "debug_normals.frag.glsl"
+		}
+	]
+}

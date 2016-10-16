@@ -63,40 +63,40 @@ class EditorSpace extends Trait {
 			}
 		}
 
-		if (selected != null) {
-			if (Input.started) {
+		// if (selected != null) {
+		// 	if (Input.started) {
 
-				var transforms = [arrowX.transform, arrowY.transform, arrowZ.transform];
+		// 		var transforms = [arrowX.transform, arrowY.transform, arrowZ.transform];
 
-				var hit = RayCaster.getClosestBoxIntersect(transforms, Input.x, Input.y, iron.Scene.active.camera);
-				if (hit != null) {
-					if (hit.object.name == 'ArrowX') moveX = true;
-					else if (hit.object.name == 'ArrowY') moveY = true;
-					else if (hit.object.name == 'ArrowX') moveZ = true;
-				}
-			}
+		// 		var hit = RayCaster.getClosestBoxIntersect(transforms, Input.x, Input.y, iron.Scene.active.camera);
+		// 		if (hit != null) {
+		// 			if (hit.object.name == 'ArrowX') moveX = true;
+		// 			else if (hit.object.name == 'ArrowY') moveY = true;
+		// 			else if (hit.object.name == 'ArrowX') moveZ = true;
+		// 		}
+		// 	}
 
-			if (moveX || moveY || moveZ) {
-				Input.occupied = true;
+		// 	if (moveX || moveY || moveZ) {
+		// 		Input.occupied = true;
 
 				
-				if (moveX) selected.loc.x += Input.deltaX / 110.0;
-				if (moveY) selected.loc.y += Input.deltaX / 110.0;
-				if (moveZ) selected.loc.z += Input.deltaX / 110.0;
+		// 		if (moveX) selected.loc.x += Input.deltaX / 110.0;
+		// 		if (moveY) selected.loc.y += Input.deltaX / 110.0;
+		// 		if (moveZ) selected.loc.z += Input.deltaX / 110.0;
 				
-				selected.buildMatrix();
+		// 		selected.buildMatrix();
 
-				// gizmo.transform.loc.set(selected.loc.x, selected.loc.y, selected.loc.z);
-				// gizmo.transform.buildMatrix();
-			}
-		}
+		// 		// gizmo.transform.loc.set(selected.loc.x, selected.loc.y, selected.loc.z);
+		// 		// gizmo.transform.buildMatrix();
+		// 	}
+		// }
 
-		if (Input.released) {
-			Input.occupied = false;
-			// Move operator creator into separate class..
-			// Map directly to bl operators - setx to translate
-			if (moveX) trace('__arm|setx|' + selected.object.name + '|' + selected.loc.x);
-			moveX = moveY = moveZ = false;
-		}
+		// if (Input.released) {
+		// 	Input.occupied = false;
+		// 	// Move operator creator into separate class..
+		// 	// Map directly to bl operators - setx to translate
+		// 	if (moveX) trace('__arm|setx|' + selected.object.name + '|' + selected.loc.x);
+		// 	moveX = moveY = moveZ = false;
+		// }
 	}
 }

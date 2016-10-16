@@ -34,10 +34,10 @@ def init_armory_props():
     if not 'Arm' in bpy.data.worlds:
         wrd = bpy.data.worlds.new('Arm')
         wrd.use_fake_user = True # Store data world object, add fake user to keep it alive
-        wrd.ArmVersion = '16.9'
+        wrd.arm_version = '16.10'
         # Take blend file name
-        wrd.ArmProjectName = bpy.path.basename(bpy.context.blend_data.filepath).rsplit('.')[0]
-        wrd.ArmProjectScene = bpy.data.scenes[0].name
+        wrd.arm_project_name = bpy.path.basename(bpy.context.blend_data.filepath).rsplit('.')[0]
+        wrd.arm_project_scene = bpy.data.scenes[0].name
         # Switch to Cycles
         for scene in bpy.data.scenes:
             if scene.render.engine != 'CYCLES':
@@ -73,11 +73,18 @@ def get_export_scene_override(scene):
         'scene': scene}
     return override
 
-def compile_shader(raw_path, shader_name, defs):
-    os.chdir(raw_path + './' + shader_name)
+def compile_shader(raw_shaders_path, shader_name, defs):
+    os.chdir(raw_shaders_path + './' + shader_name)
     fp = os.path.relpath(utils.get_fp())
-    lib.make_datas.make(shader_name + '.shader.json', fp, defs)
-    lib.make_variants.make(shader_name + '.shader.json', fp, defs)
+
+    # Open json file
+    json_name = shader_name + '.shader.json'
+    base_name = json_name.split('.', 1)[0]
+    json_file = open(json_name).read()
+    json_data = json.loads(json_file)
+    
+    lib.make_datas.make(base_name, json_data, fp, defs)
+    lib.make_variants.make(base_name, json_data, fp, defs)
 
 def def_strings_to_array(strdefs):
     defs = strdefs.split('_')
@@ -86,9 +93,9 @@ def def_strings_to_array(strdefs):
     return defs
 
 def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False):
-    raw_path = sdk_path + 'armory/raw/'
+    raw_shaders_path = sdk_path + 'armory/Shaders/'
     assets_path = sdk_path + 'armory/Assets/'
-    export_physics = bpy.data.worlds['Arm'].ArmPhysics != 'Disabled'
+    export_physics = bpy.data.worlds['Arm'].arm_physics != 'Disabled'
     assets.reset()
 
     # Build node trees
@@ -109,7 +116,8 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     ArmoryExporter.compress_enabled = is_publish
     for scene in bpy.data.scenes:
         if scene.game_export:
-            asset_path = 'build/compiled/Assets/' + utils.safe_filename(scene.name) + '.arm'
+            ext = '.zip' if (scene.data_compressed and is_publish) else '.arm'
+            asset_path = 'build/compiled/Assets/' + utils.safe_filename(scene.name) + ext
             bpy.ops.export_scene.armory(
                 get_export_scene_override(scene),
                 filepath=asset_path)
@@ -121,7 +129,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
         export_physics = False
     
     # Clean compiled variants if cache is disabled
-    if bpy.data.worlds['Arm'].ArmCacheShaders == False:
+    if bpy.data.worlds['Arm'].arm_cache_shaders == False:
         if os.path.isdir('build/html5-resources'):
             shutil.rmtree('build/html5-resources')
         if os.path.isdir('build/compiled/Shaders'):
@@ -144,7 +152,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
                 defs = def_strings_to_array(strdefs)
             else:
                 defs = []
-            compile_shader(raw_path, shader_name, defs)
+            compile_shader(raw_shaders_path, shader_name, defs)
     
     # Reset path
     os.chdir(fp)
@@ -156,11 +164,11 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     write_data.write_khafilejs(is_play, export_physics, dce_full=is_publish)
 
     # Write Main.hx
-    write_data.write_main(is_play, in_viewport)
+    write_data.write_main(is_play, in_viewport, is_publish)
 
     # Copy ammo.js if necessary
     #if target_name == 'html5':
-    if export_physics and bpy.data.worlds['Arm'].ArmPhysics == 'Bullet':
+    if export_physics and bpy.data.worlds['Arm'].arm_physics == 'Bullet':
         ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
         if not os.path.isfile('build/html5/ammo.js'):
             shutil.copy(ammojs_path, 'build/html5')
@@ -199,7 +207,7 @@ def compile_project(target_name=None, is_publish=False, watch=False):
 
     # Set build command
     if target_name == None:
-        target_name = wrd.ArmProjectTarget
+        target_name = wrd.arm_project_target
 
     if utils.get_os() == 'win':
         node_path = sdk_path + '/nodejs/node.exe'
@@ -223,7 +231,7 @@ def compile_project(target_name=None, is_publish=False, watch=False):
         cmd.append('opengl2')
 
     # User defined commands
-    cmd_text = wrd.ArmCommandLine
+    cmd_text = wrd.arm_command_line
     if cmd_text != '':
         for s in bpy.data.texts[cmd_text].as_string().split(' '):
             cmd.append(s)
@@ -271,7 +279,7 @@ def build_project(is_play=False, is_publish=False, in_viewport=False):
 
     # Set camera in active scene
     wrd = bpy.data.worlds['Arm']
-    active_scene = bpy.context.screen.scene if wrd.ArmPlayActiveScene else bpy.data.scenes[wrd.ArmProjectScene]
+    active_scene = bpy.context.screen.scene if wrd.arm_play_active_scene else bpy.data.scenes[wrd.arm_project_scene]
     if active_scene.camera == None:
         for o in active_scene.objects:
             if o.type == 'CAMERA':
@@ -280,7 +288,7 @@ def build_project(is_play=False, is_publish=False, in_viewport=False):
 
     # Get paths
     sdk_path = utils.get_sdk_path()
-    raw_path = sdk_path + '/armory/raw/'
+    raw_shaders_path = sdk_path + '/armory/Shaders/'
     
     # Set dir
     fp = utils.get_fp()
@@ -296,7 +304,7 @@ def build_project(is_play=False, is_publish=False, in_viewport=False):
 
     # Compile path tracer shaders
     if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].renderpath_path == 'pathtrace_path':
-        path_tracer.compile(raw_path + 'pt_trace_pass/pt_trace_pass.frag.glsl')
+        path_tracer.compile(raw_shaders_path + 'pt_trace_pass/pt_trace_pass.frag.glsl')
 
     # Save external scripts edited inside Blender
     write_texts = False
@@ -317,7 +325,7 @@ def build_project(is_play=False, is_publish=False, in_viewport=False):
     # Save internal Haxe scripts
     for text in bpy.data.texts:
         if text.filepath == '' and text.name[-3:] == '.hx':
-            with open('Sources/' + bpy.data.worlds['Arm'].ArmProjectPackage + '/' + text.name, 'w') as f:
+            with open('Sources/' + bpy.data.worlds['Arm'].arm_project_package + '/' + text.name, 'w') as f:
                 f.write(text.as_string())
 
     # Save internal assets
@@ -382,7 +390,7 @@ def play_project(self, in_viewport):
 
     wrd = bpy.data.worlds['Arm']
 
-    if in_viewport == False and wrd.ArmPlayRuntime == 'Native':
+    if in_viewport == False and wrd.arm_play_runtime == 'Native':
         play_project.compileproc = compile_project(target_name='--run')
         mode = 'play'
         threading.Timer(0.1, watch_compile, [mode]).start()
@@ -449,7 +457,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
 
     # Print info
     if mode == 'publish':
-        target_name = get_kha_target(bpy.data.worlds['Arm'].ArmPublishTarget)
+        target_name = get_kha_target(bpy.data.worlds['Arm'].arm_publish_target)
         print('Project published')
         files_path = utils.get_fp() + '/build/' + target_name
         if target_name == 'html5':
@@ -467,7 +475,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
     # Launch project in new window or frameless electron
     elif (mode =='play') or (mode == 'play_viewport' and utils.with_chromium() == False):
         wrd = bpy.data.worlds['Arm']
-        if wrd.ArmPlayRuntime == 'Electron':
+        if wrd.arm_play_runtime == 'Electron':
             electron_app_path = './build/electron.js'
 
             if utils.get_os() == 'win':
@@ -480,7 +488,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
 
             play_project.playproc = subprocess.Popen([electron_path, '--chromedebug', '--remote-debugging-port=9222', '--enable-logging', electron_app_path], stderr=subprocess.PIPE)
             watch_play()
-        elif wrd.ArmPlayRuntime == 'Browser':
+        elif wrd.arm_play_runtime == 'Browser':
             # Start server
             os.chdir(utils.get_fp())
             t = threading.Thread(name='localserver', target=run_server)
@@ -496,7 +504,7 @@ def clean_project():
     wrd = bpy.data.worlds['Arm']
 
     # Preserve envmaps
-    if not wrd.ArmCleanEnvmaps:
+    if not wrd.arm_clean_envmaps:
         envmaps_path = 'build/compiled/Assets/envmaps'
         if os.path.isdir(envmaps_path):
             shutil.move(envmaps_path, '.')
@@ -506,12 +514,12 @@ def clean_project():
         shutil.rmtree('build')
 
     # Move envmaps back
-    if not wrd.ArmCleanEnvmaps and os.path.isdir('envmaps'):
+    if not wrd.arm_clean_envmaps and os.path.isdir('envmaps'):
         os.makedirs('build/compiled/Assets')
         shutil.move('envmaps', 'build/compiled/Assets')
 
     # Remove compiled nodes
-    nodes_path = 'Sources/' + wrd.ArmProjectPackage.replace('.', '/') + '/node/'
+    nodes_path = 'Sources/' + wrd.arm_project_package.replace('.', '/') + '/node/'
     if os.path.isdir(nodes_path):
         shutil.rmtree(nodes_path)
 
@@ -528,13 +536,13 @@ def clean_project():
 def publish_project():
     # Force minimize data
     props.invalidate_compiled_data.enabled = False
-    minimize = bpy.data.worlds['Arm'].ArmMinimize
-    bpy.data.worlds['Arm'].ArmMinimize = True
+    minimize = bpy.data.worlds['Arm'].arm_minimize
+    bpy.data.worlds['Arm'].arm_minimize = True
     clean_project()
     build_project(is_publish=True)
-    play_project.compileproc = compile_project(target_name=bpy.data.worlds['Arm'].ArmPublishTarget, is_publish=True)
+    play_project.compileproc = compile_project(target_name=bpy.data.worlds['Arm'].arm_publish_target, is_publish=True)
     threading.Timer(0.1, watch_compile, ['publish']).start()
-    bpy.data.worlds['Arm'].ArmMinimize = minimize
+    bpy.data.worlds['Arm'].arm_minimize = minimize
     props.invalidate_compiled_data.enabled = True
 
 # Registration

@@ -59,8 +59,8 @@ def on_scene_update_post(context):
         # Auto patch on every operator change
         ops = bpy.context.window_manager.operators
         if make.play_project.chromium_running and \
-           bpy.data.worlds['Arm'].ArmPlayLivePatch and \
-           bpy.data.worlds['Arm'].ArmPlayAutoBuild and \
+           bpy.data.worlds['Arm'].arm_play_live_patch and \
+           bpy.data.worlds['Arm'].arm_play_auto_build and \
            len(ops) > 0 and \
            on_scene_update_post.last_operator != ops[-1]:
             on_scene_update_post.last_operator = ops[-1]
@@ -175,8 +175,8 @@ def get_arm_progress(self):
 
 def initProperties():
     # For project
-    bpy.types.World.ArmProgress = bpy.props.FloatProperty(name="Progress", description="Current build progress", default=100.0, min=0.0, max=100.0, soft_min=0.0, soft_max=100.0, subtype='PERCENTAGE', get=get_arm_progress)
-    bpy.types.World.ArmVersion = StringProperty(name="ArmVersion", description="Armory SDK version", default="")
+    bpy.types.World.arm_progress = bpy.props.FloatProperty(name="Progress", description="Current build progress", default=100.0, min=0.0, max=100.0, soft_min=0.0, soft_max=100.0, subtype='PERCENTAGE', get=get_arm_progress)
+    bpy.types.World.arm_version = StringProperty(name="Version", description="Armory SDK version", default="")
     target_prop = EnumProperty(
         items = [('html5', 'HTML5', 'html5'),
                  ('windows', 'Windows', 'windows'),
@@ -186,46 +186,45 @@ def initProperties():
                  ('android-native', 'Android', 'android-native')],
         name="Target", default='html5',
         description='Build paltform')
-    bpy.types.World.ArmProjectTarget = target_prop
-    bpy.types.World.ArmPublishTarget = target_prop
-    bpy.types.World.ArmProjectName = StringProperty(name="Name", description="Exported project name", default="ArmoryProject")
-    bpy.types.World.ArmProjectPackage = StringProperty(name="Package", description="Package name for scripts", default="arm")
-    bpy.types.World.ArmPlayActiveScene = BoolProperty(name="Play Active Scene", description="Load currently edited scene when launching player", default=True)
-    bpy.types.World.ArmProjectScene = StringProperty(name="Scene", description="Scene to load when launching player")
-    bpy.types.World.ArmProjectSamplesPerPixel = IntProperty(name="Samples per Pixel", description="MSAA samples usable for render paths drawing directly to framebuffer", default=1)
-    bpy.types.World.ArmPhysics = EnumProperty(
+    bpy.types.World.arm_project_target = target_prop
+    bpy.types.World.arm_publish_target = target_prop
+    bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="ArmoryProject")
+    bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm")
+    bpy.types.World.arm_play_active_scene = BoolProperty(name="Play Active Scene", description="Load currently edited scene when launching player", default=True)
+    bpy.types.World.arm_project_scene = StringProperty(name="Scene", description="Scene to load when launching player")
+    bpy.types.World.arm_project_samples_per_pixel = IntProperty(name="Samples per Pixel", description="MSAA samples usable for render paths drawing directly to framebuffer", default=1)
+    bpy.types.World.arm_physics = EnumProperty(
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('Bullet', 'Bullet', 'Bullet')],
         name = "Physics", default='Bullet')
-    bpy.types.World.ArmNavigation = EnumProperty(
+    bpy.types.World.arm_navigation = EnumProperty(
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('Recast', 'Recast', 'Recast')],
         name = "Navigation", default='Disabled')
-    bpy.types.World.ArmKhafile = StringProperty(name = "Khafile", description="Source appended to khafile.js")
-    bpy.types.World.ArmCommandLine = StringProperty(name = "Command Line", description="Commands appended to khamake")
-    bpy.types.World.ArmMinimize = BoolProperty(name="Minimize Data", description="Export scene data in binary", default=True, update=invalidate_compiled_data)
-    bpy.types.World.ArmOptimizeMesh = BoolProperty(name="Optimize Meshes", description="Export more efficient geometry indices, can prolong build times", default=False, update=invalidate_mesh_data)
-    bpy.types.World.ArmSampledAnimation = BoolProperty(name="Sampled Animation", description="Export object animation as raw matrices", default=False, update=invalidate_compiled_data)
-    bpy.types.World.ArmDeinterleavedBuffers = BoolProperty(name="Deinterleaved Buffers", description="Use deinterleaved vertex buffers", default=False)
-    bpy.types.World.ArmExportHideRender = BoolProperty(name="Export Hidden Renders", description="Export hidden objects", default=False)
-    bpy.types.World.ArmSpawnAllLayers = BoolProperty(name="Spawn All Layers", description="Spawn objects from all scene layers", default=False)
-    bpy.types.World.ArmPlayAdvanced = BoolProperty(name="Advanced", default=False)
-    bpy.types.World.ArmBuildAdvanced = BoolProperty(name="Advanced", default=False)
-    bpy.types.World.ArmProjectAdvanced = BoolProperty(name="Advanced", default=False)
-    bpy.types.World.ArmObjectAdvanced = BoolProperty(name="Advanced", default=False)
-    bpy.types.World.ArmMaterialAdvanced = BoolProperty(name="Advanced", default=False)
-    bpy.types.World.ArmCacheShaders = BoolProperty(name="Cache Shaders", description="Do not rebuild existing shaders", default=True, update=invalidate_shader_cache)
-    bpy.types.World.ArmCleanEnvmaps = BoolProperty(name="Clean Envmaps", description="Remove prefiltered maps when cleaning project", default=True)
-    bpy.types.World.ArmPlayLivePatch = BoolProperty(name="Live Patching", description="Sync running player data to Blender", default=True)
-    bpy.types.World.ArmPlayAutoBuild = BoolProperty(name="Auto Build", description="Rebuild scene on operator changes", default=True)
-    bpy.types.World.ArmPlayViewportCamera = BoolProperty(name="Viewport Camera", description="Start player at viewport camera position", default=False)
-    bpy.types.World.ArmPlayViewportNavigation = EnumProperty(
+    bpy.types.World.arm_khafile = StringProperty(name = "Khafile", description="Source appended to khafile.js")
+    bpy.types.World.arm_command_line = StringProperty(name = "Command Line", description="Commands appended to khamake")
+    bpy.types.World.arm_minimize = BoolProperty(name="Minimize Data", description="Export scene data in binary", default=True, update=invalidate_compiled_data)
+    bpy.types.World.arm_optimize_mesh = BoolProperty(name="Optimize Meshes", description="Export more efficient geometry indices, can prolong build times", default=False, update=invalidate_mesh_data)
+    bpy.types.World.arm_sampled_animation = BoolProperty(name="Sampled Animation", description="Export object animation as raw matrices", default=False, update=invalidate_compiled_data)
+    bpy.types.World.arm_deinterleaved_buffers = BoolProperty(name="Deinterleaved Buffers", description="Use deinterleaved vertex buffers", default=False)
+    bpy.types.World.arm_export_hide_render = BoolProperty(name="Export Hidden Renders", description="Export hidden objects", default=False)
+    bpy.types.World.arm_spawn_all_layers = BoolProperty(name="Spawn All Layers", description="Spawn objects from all scene layers", default=False)
+    bpy.types.World.arm_play_advanced = BoolProperty(name="Advanced", default=False)
+    bpy.types.World.arm_build_advanced = BoolProperty(name="Advanced", default=False)
+    bpy.types.World.arm_project_advanced = BoolProperty(name="Advanced", default=False)
+    bpy.types.World.arm_object_advanced = BoolProperty(name="Advanced", default=False)
+    bpy.types.World.arm_material_advanced = BoolProperty(name="Advanced", default=False)
+    bpy.types.World.arm_cache_shaders = BoolProperty(name="Cache Shaders", description="Do not rebuild existing shaders", default=True, update=invalidate_shader_cache)
+    bpy.types.World.arm_clean_envmaps = BoolProperty(name="Clean Envmaps", description="Remove prefiltered maps when cleaning project", default=True)
+    bpy.types.World.arm_play_live_patch = BoolProperty(name="Live Patching", description="Sync running player data to Blender", default=True)
+    bpy.types.World.arm_play_auto_build = BoolProperty(name="Auto Build", description="Rebuild scene on operator changes", default=True)
+    bpy.types.World.arm_play_viewport_camera = BoolProperty(name="Viewport Camera", description="Start player at viewport camera position", default=False)
+    bpy.types.World.arm_play_viewport_navigation = EnumProperty(
         items=[('None', 'None', 'None'), 
                ('Walk', 'Walk', 'Walk')],
         name="Navigation", description="Enable camera controls", default='Walk')
-    bpy.types.World.ArmPlayConsole = BoolProperty(name="Debug Console", description="Show inspector in player", default=False)
-    bpy.types.World.ArmPlayDeveloperTools = BoolProperty(name="Developer Tools", description="Show chromium developer tools in player", default=False)
-    bpy.types.World.ArmPlayRuntime = EnumProperty(
+    bpy.types.World.arm_play_console = BoolProperty(name="Debug Console", description="Show inspector in player", default=False)
+    bpy.types.World.arm_play_runtime = EnumProperty(
         items=[('Electron', 'Electron', 'Electron'), 
                ('Browser', 'Browser', 'Browser'),
                ('Native', 'Native', 'Native')],
@@ -303,7 +302,6 @@ def initProperties():
     bpy.types.Camera.mirror_resolution_y = bpy.props.FloatProperty(name="Y", default=256.0)
     bpy.types.Camera.last_decal_context = bpy.props.StringProperty(name="Decal Context", default='')
     # For world
-    
     bpy.types.World.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
     bpy.types.World.world_envtex_irr_name = bpy.props.StringProperty(name="Environment Irradiance", default='')
     bpy.types.World.world_envtex_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
@@ -413,6 +411,7 @@ def initProperties():
     # For scene
     bpy.types.Scene.game_export = bpy.props.BoolProperty(name="Export", description="Export scene data", default=True)
     bpy.types.Scene.gp_export = bpy.props.BoolProperty(name="Export Grease Pencil", description="Export grease pencil data", default=True)
+    bpy.types.Scene.data_compressed = bpy.props.BoolProperty(name="Compress Data", description="Pack data into zip file.", default=False)
     # For lamp
     bpy.types.Lamp.lamp_clip_start = bpy.props.FloatProperty(name="Clip Start", default=0.1)
     bpy.types.Lamp.lamp_clip_end = bpy.props.FloatProperty(name="Clip End", default=50.0)
@@ -434,7 +433,7 @@ class ObjectPropsPanel(bpy.types.Panel):
             
         wrd = bpy.data.worlds['Arm']
 
-        if wrd.ArmExportHideRender == False:
+        if wrd.arm_export_hide_render == False:
             layout.prop(obj, 'hide_render')
             hide = obj.hide_render
         else:
@@ -444,8 +443,8 @@ class ObjectPropsPanel(bpy.types.Panel):
         if hide:
             return
         
-        layout.prop(wrd, 'ArmObjectAdvanced')
-        if wrd.ArmObjectAdvanced:
+        layout.prop(wrd, 'arm_object_advanced')
+        if wrd.arm_object_advanced:
             layout.prop(obj, 'spawn')
             layout.prop(obj, 'game_visible')
             layout.prop(obj, 'mobile')
@@ -616,6 +615,7 @@ class ScenePropsPanel(bpy.types.Panel):
         layout.prop(scene, 'gp_export')
         if scene.gp_export:
             layout.operator('arm.invalidate_gp_cache')
+        layout.prop(scene, 'data_compressed')
 
 class ReimportPathsMenu(bpy.types.Menu):
     bl_label = "OK?"
@@ -678,8 +678,8 @@ class MatsPropsPanel(bpy.types.Panel):
         layout.prop(mat, 'receive_shadow')
         layout.prop(mat, 'overlay')
         
-        layout.prop(bpy.data.worlds['Arm'], 'ArmMaterialAdvanced')
-        if bpy.data.worlds['Arm'].ArmMaterialAdvanced:
+        layout.prop(bpy.data.worlds['Arm'], 'arm_material_advanced')
+        if bpy.data.worlds['Arm'].arm_material_advanced:
             layout.prop(mat, 'override_cull')
             if mat.override_cull:
                 layout.prop(mat, 'override_cull_mode')
@@ -805,19 +805,18 @@ class ArmoryPlayPanel(bpy.types.Panel):
             layout.operator("arm.play", icon="PLAY")
         else:
             layout.operator("arm.stop", icon="MESH_PLANE")
-        layout.prop(wrd, 'ArmPlayRuntime')
-        layout.prop(wrd, 'ArmPlayViewportCamera')
-        if wrd.ArmPlayViewportCamera:
-            layout.prop(wrd, 'ArmPlayViewportNavigation')
+        layout.prop(wrd, 'arm_play_runtime')
+        layout.prop(wrd, 'arm_play_viewport_camera')
+        if wrd.arm_play_viewport_camera:
+            layout.prop(wrd, 'arm_play_viewport_navigation')
 
-        layout.prop(wrd, 'ArmPlayAdvanced')
-        if wrd.ArmPlayAdvanced:
-            layout.prop(wrd, 'ArmPlayConsole')
-            # layout.prop(wrd, 'ArmPlayDeveloperTools')
+        layout.prop(wrd, 'arm_play_advanced')
+        if wrd.arm_play_advanced:
+            layout.prop(wrd, 'arm_play_console')
             if utils.with_chromium():
-                layout.prop(wrd, 'ArmPlayLivePatch')
-                if wrd.ArmPlayLivePatch:
-                    layout.prop(wrd, 'ArmPlayAutoBuild')
+                layout.prop(wrd, 'arm_play_live_patch')
+                if wrd.arm_play_live_patch:
+                    layout.prop(wrd, 'arm_play_auto_build')
 
 class ArmoryBuildPanel(bpy.types.Panel):
     bl_label = "Armory Build"
@@ -835,22 +834,22 @@ class ArmoryBuildPanel(bpy.types.Panel):
             layout.operator("arm.patch")
         layout.operator("arm.kode_studio")
         layout.operator("arm.clean")
-        layout.prop(wrd, 'ArmProjectTarget')
-        layout.prop(wrd, 'ArmBuildAdvanced')
-        if wrd.ArmBuildAdvanced:
-            layout.prop(wrd, 'ArmCacheShaders')
-            layout.prop(wrd, 'ArmCleanEnvmaps')
-            layout.prop(wrd, 'ArmMinimize')
-            layout.prop(wrd, 'ArmOptimizeMesh')
-            layout.prop(wrd, 'ArmSampledAnimation')
-            layout.prop(wrd, 'ArmDeinterleavedBuffers')
+        layout.prop(wrd, 'arm_project_target')
+        layout.prop(wrd, 'arm_build_advanced')
+        if wrd.arm_build_advanced:
+            layout.prop(wrd, 'arm_cache_shaders')
+            layout.prop(wrd, 'arm_clean_envmaps')
+            layout.prop(wrd, 'arm_minimize')
+            layout.prop(wrd, 'arm_optimize_mesh')
+            layout.prop(wrd, 'arm_sampled_animation')
+            layout.prop(wrd, 'arm_deinterleaved_buffers')
             layout.prop(wrd, 'generate_gpu_skin')
             if wrd.generate_gpu_skin:
                 layout.prop(wrd, 'generate_gpu_skin_max_bones')
-            layout.prop(wrd, 'ArmProjectSamplesPerPixel')
+            layout.prop(wrd, 'arm_project_samples_per_pixel')
             layout.label('Libraries')
-            layout.prop(wrd, 'ArmPhysics')
-            layout.prop(wrd, 'ArmNavigation')
+            layout.prop(wrd, 'arm_physics')
+            layout.prop(wrd, 'arm_navigation')
 
 class ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
@@ -864,21 +863,21 @@ class ArmoryProjectPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds['Arm']
-        layout.prop(wrd, 'ArmProjectName')
-        layout.prop(wrd, 'ArmProjectPackage')
-        layout.prop_search(wrd, 'ArmKhafile', bpy.data, 'texts', 'Khafile')
-        layout.prop_search(wrd, 'ArmCommandLine', bpy.data, 'texts', 'Command Line')
+        layout.prop(wrd, 'arm_project_name')
+        layout.prop(wrd, 'arm_project_package')
+        layout.prop_search(wrd, 'arm_khafile', bpy.data, 'texts', 'Khafile')
+        layout.prop_search(wrd, 'arm_command_line', bpy.data, 'texts', 'Command Line')
         layout.operator('arm.publish')
-        layout.prop(wrd, 'ArmPublishTarget')
+        layout.prop(wrd, 'arm_publish_target')
 
-        layout.prop(wrd, 'ArmProjectAdvanced')
-        if wrd.ArmProjectAdvanced:
-            layout.prop(wrd, 'ArmPlayActiveScene')
-            if wrd.ArmPlayActiveScene == False:
-                layout.prop_search(wrd, 'ArmProjectScene', bpy.data, 'scenes', 'Scene')
-            layout.prop(wrd, 'ArmExportHideRender')
-            layout.prop(wrd, 'ArmSpawnAllLayers')
-            layout.label('Armory v' + wrd.ArmVersion)
+        layout.prop(wrd, 'arm_project_advanced')
+        if wrd.arm_project_advanced:
+            layout.prop(wrd, 'arm_play_active_scene')
+            if wrd.arm_play_active_scene == False:
+                layout.prop_search(wrd, 'arm_project_scene', bpy.data, 'scenes', 'Scene')
+            layout.prop(wrd, 'arm_export_hide_render')
+            layout.prop(wrd, 'arm_spawn_all_layers')
+            layout.label('Armory v' + wrd.arm_version)
             layout.operator('arm.check_updates')
 
 class ArmoryPlayButton(bpy.types.Operator):
@@ -1016,8 +1015,8 @@ def draw_play_item(self, context):
 def draw_info_item(self, context):
     layout = self.layout
     wrd = bpy.data.worlds['Arm']
-    if wrd.ArmProgress < 100:
-        layout.prop(wrd, 'ArmProgress')
+    if wrd.arm_progress < 100:
+        layout.prop(wrd, 'arm_progress')
     if ArmoryProjectPanel.info_text != '':
         layout.label(ArmoryProjectPanel.info_text)
 

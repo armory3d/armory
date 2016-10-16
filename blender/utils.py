@@ -9,12 +9,12 @@ import zipfile
 def write_arm(filepath, output):
     if filepath.endswith('.zip'):
         with zipfile.ZipFile(filepath, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-            if bpy.data.worlds['Arm'].ArmMinimize:
+            if bpy.data.worlds['Arm'].arm_minimize:
                 zip_file.writestr('data.arm', lib.umsgpack.dumps(output))
             else:
                 zip_file.writestr('data.arm', json.dumps(output, sort_keys=True, indent=4))
     else:
-        if bpy.data.worlds['Arm'].ArmMinimize:
+        if bpy.data.worlds['Arm'].arm_minimize:
             with open(filepath, 'wb') as f:
                 f.write(lib.umsgpack.dumps(output))
         else:
@@ -59,7 +59,7 @@ def fetch_script_names():
     for file in glob.glob('*.hx'):
         wrd.bundled_scripts_list.add().name = file.rsplit('.')[0]
     wrd.scripts_list.clear()
-    sources_path = get_fp() + '/Sources/' + wrd.ArmProjectPackage
+    sources_path = get_fp() + '/Sources/' + wrd.arm_project_package
     if os.path.isdir(sources_path):
         os.chdir(sources_path)
         for file in glob.glob('*.hx'):
@@ -94,10 +94,10 @@ def get_render_resolution(scene_index=0):
 
 def get_project_scene_name():
     wrd = bpy.data.worlds['Arm']
-    if wrd.ArmPlayActiveScene:
+    if wrd.arm_play_active_scene:
         return safe_filename(bpy.context.screen.scene.name)
     else:
-        return safe_filename(wrd.ArmProjectScene)
+        return safe_filename(wrd.arm_project_scene)
 
 def with_chromium():
     return with_chromium.module_found

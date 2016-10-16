@@ -1,0 +1,130 @@
+{
+	"contexts": [
+		{
+			"name": "blur_pass_x",
+			"params": [
+				{
+					"name": "depth_write",
+					"value": "false"
+				},
+				{
+					"name": "compare_mode",
+					"value": "always"
+				},
+				{
+					"name": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				{
+					"name": "dir",
+					"link": "_vec2x"
+				},
+				{
+					"name": "screenSize",
+					"link": "_screenSize"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "blur_pass.vert.glsl",
+			"vertex_shader_path": "../pass.vert.glsl",
+			"fragment_shader": "blur_pass.frag.glsl"
+		},
+		{
+			"name": "blur_pass_y",
+			"params": [
+				{
+					"name": "depth_write",
+					"value": "false"
+				},
+				{
+					"name": "compare_mode",
+					"value": "always"
+				},
+				{
+					"name": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				{
+					"name": "dir",
+					"link": "_vec2y"
+				},
+				{
+					"name": "screenSize",
+					"link": "_screenSize"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "blur_pass.vert.glsl",
+			"vertex_shader_path": "../pass.vert.glsl",
+			"fragment_shader": "blur_pass.frag.glsl"
+		},
+		
+		
+		{
+			"name": "blur_pass_x2",
+			"params": [
+				{
+					"name": "depth_write",
+					"value": "false"
+				},
+				{
+					"name": "compare_mode",
+					"value": "always"
+				},
+				{
+					"name": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				{
+					"name": "dir",
+					"link": "_vec2x2"
+				},
+				{
+					"name": "screenSize",
+					"link": "_screenSize"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "blur_pass.vert.glsl",
+			"vertex_shader_path": "../pass.vert.glsl",
+			"fragment_shader": "blur_pass.frag.glsl"
+		},
+		{
+			"name": "blur_pass_y2",
+			"params": [
+				{
+					"name": "depth_write",
+					"value": "false"
+				},
+				{
+					"name": "compare_mode",
+					"value": "always"
+				},
+				{
+					"name": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				{
+					"name": "dir",
+					"link": "_vec2y2"
+				},
+				{
+					"name": "screenSize",
+					"link": "_screenSize"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "blur_pass.vert.glsl",
+			"vertex_shader_path": "../pass.vert.glsl",
+			"fragment_shader": "blur_pass.frag.glsl"
+		}
+	]
+}

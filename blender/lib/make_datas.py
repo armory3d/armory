@@ -108,18 +108,36 @@ def writeData(res, defs, json_data, base_name):
                     con['color_write_alpha'] = False
 
         # Parse shaders
-        vert = open(c['vertex_shader']).read().splitlines()
-        frag = open(c['fragment_shader']).read().splitlines()
+        if 'vertex_shader_path' in c:
+            vert = open(c['vertex_shader_path']).read().splitlines()
+        else:
+            vert = open(c['vertex_shader']).read().splitlines()
+
+        if 'fragment_shader_path' in  c:
+            frag = open(c['fragment_shader_path']).read().splitlines()
+        else:
+            frag = open(c['fragment_shader']).read().splitlines()
+        
         parse_shader(sres, c, con, defs, vert, len(sres['contexts']) == 1) # Parse attribs for the first vertex shader
         parse_shader(sres, c, con, defs, frag, False)
+        
         if 'geometry_shader' in c:
-            geom = open(c['geometry_shader']).read().splitlines()
+            if 'geometry_shader_path' in c:
+                geom = open(c['geometry_shader_path']).read().splitlines()
+            else:
+                geom = open(c['geometry_shader']).read().splitlines()
             parse_shader(sres, c, con, defs, geom, False)
         if 'tesscontrol_shader' in c:
-            tesc = open(c['tesscontrol_shader']).read().splitlines()
+            if 'tesscontrol_shader_path' in c:
+                tesc = open(c['tesscontrol_shader_path']).read().splitlines()
+            else:
+                tesc = open(c['tesscontrol_shader']).read().splitlines()
             parse_shader(sres, c, con, defs, tesc, False)
         if 'tesseval_shader' in c:
-            tese = open(c['tesseval_shader']).read().splitlines()
+            if 'tesseval_shader_path':
+                tese = open(c['tesseval_shader_path']).read().splitlines()
+            else:
+                tese = open(c['tesseval_shader']).read().splitlines()
             parse_shader(sres, c, con, defs, tese, False)
 
 def parse_shader(sres, c, con, defs, lines, parse_attributes):
@@ -284,17 +302,11 @@ def saveData(path, base_name, subset, res):
     r['shader_datas'] = [res['shader_datas'][-1]]
     utils.write_arm(path + '/' + res_name + '.arm', r)
 
-def make(json_name, fp, defs):
-    base_name = json_name.split('.', 1)[0]
-
+def make(base_name, json_data, fp, defs):
     # Make out dir
     path = fp + '/build/compiled/ShaderDatas/' + base_name
     if not os.path.exists(path):
         os.makedirs(path)
-
-    # Open json file
-    json_file = open(json_name).read()
-    json_data = json.loads(json_file)
 
     res = {}
     res['shader_datas'] = []

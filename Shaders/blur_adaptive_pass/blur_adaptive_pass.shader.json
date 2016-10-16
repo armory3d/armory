@@ -1,0 +1,173 @@
+{
+	"contexts": [
+		{
+			"name": "blur_adaptive_pass_x",
+			"params": [
+				{
+					"name": "depth_write",
+					"value": "false"
+				},
+				{
+					"name": "compare_mode",
+					"value": "always"
+				},
+				{
+					"name": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				{
+					"name": "dir",
+					"link": "_vec2x"
+				},
+				{
+					"name": "screenSize",
+					"link": "_screenSize"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "blur_adaptive_pass.vert.glsl",
+			"vertex_shader_path": "../pass.vert.glsl",
+			"fragment_shader": "blur_adaptive_pass.frag.glsl"
+		},
+		{
+			"name": "blur_adaptive_pass_y",
+			"params": [
+				{
+					"name": "depth_write",
+					"value": "false"
+				},
+				{
+					"name": "compare_mode",
+					"value": "always"
+				},
+				{
+					"name": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				{
+					"name": "dir",
+					"link": "_vec2y"
+				},
+				{
+					"name": "screenSize",
+					"link": "_screenSize"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "blur_adaptive_pass.vert.glsl",
+			"vertex_shader_path": "../pass.vert.glsl",
+			"fragment_shader": "blur_adaptive_pass.frag.glsl"
+		},
+		
+		
+		{
+			"name": "blur_adaptive_pass_x2",
+			"params": [
+				{
+					"name": "depth_write",
+					"value": "false"
+				},
+				{
+					"name": "compare_mode",
+					"value": "always"
+				},
+				{
+					"name": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				{
+					"name": "dir",
+					"link": "_vec2x2"
+				},
+				{
+					"name": "screenSize",
+					"link": "_screenSize"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "blur_adaptive_pass.vert.glsl",
+			"vertex_shader_path": "../pass.vert.glsl",
+			"fragment_shader": "blur_adaptive_pass.frag.glsl"
+		},
+		{
+			"name": "blur_adaptive_pass_y3",
+			"params": [
+				{
+					"name": "depth_write",
+					"value": "false"
+				},
+				{
+					"name": "compare_mode",
+					"value": "always"
+				},
+				{
+					"name": "cull_mode",
+					"value": "none"
+				}
+			],
+			"links": [
+				{
+					"name": "dir",
+					"link": "_vec2y3"
+				},
+				{
+					"name": "screenSize",
+					"link": "_screenSize"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "blur_adaptive_pass.vert.glsl",
+			"vertex_shader_path": "../pass.vert.glsl",
+			"fragment_shader": "blur_adaptive_pass.frag.glsl"
+		},
+		{
+			"name": "blur_adaptive_pass_y3_blend",
+			"params": [
+				{
+					"name": "depth_write",
+					"value": "false"
+				},
+				{
+					"name": "compare_mode",
+					"value": "always"
+				},
+				{
+					"name": "cull_mode",
+					"value": "none"
+				},
+				{
+					"name": "blend_source",
+					"value": "blend_one"
+				},
+				{
+					"name": "blend_destination",
+					"value": "blend_one"
+				},
+				{
+					"name": "blend_operation",
+					"value": "add"
+				}
+			],
+			"links": [
+				{
+					"name": "dir",
+					"link": "_vec2y3"
+				},
+				{
+					"name": "screenSize",
+					"link": "_screenSize"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "blur_adaptive_pass.vert.glsl",
+			"vertex_shader_path": "../pass.vert.glsl",
+			"fragment_shader": "blur_adaptive_pass.frag.glsl"
+		}
+	]
+}
