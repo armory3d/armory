@@ -18,6 +18,8 @@ precision mediump float;
 #endif
 
 #include "../compiled.glsl"
+#include "../std/gbuffer.glsl"
+// octahedronWrap
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
@@ -29,37 +31,9 @@ uniform vec3 eye;
 uniform vec2 screenSize;
 uniform vec2 aspectRatio;
 
-#ifndef _SSAO // SSAO disabled, remove it from render path nodes to completely prevent generation
-	const float ssaoSize = 0.03;
-	const float ssaoStrength = 0.20;
-#endif
-
 in vec2 texCoord;
 // in vec3 viewRay;
 out vec4 fragColor;
-
-// float rand(vec2 co) { // Unreliable
-//   return fract(sin(dot(co.xy ,vec2(12.9898, 78.233))) * 43758.5453);
-// }
-vec2 octahedronWrap(vec2 v) {
-    return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
-}
-vec3 getPos(float depth, vec2 coord) {
-    vec4 pos = vec4(coord * 2.0 - 1.0, depth, 1.0);
-    pos = invVP * pos;
-    pos.xyz /= pos.w;
-    return pos.xyz - eye;
-}
-// vec3 getPos(float depth) {	
-// 	vec3 vray = normalize(viewRay);
-// 	const float projectionA = cameraPlane.y / (cameraPlane.y - cameraPlane.x);
-// 	const float projectionB = -(cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
-// 	float linearDepth = projectionB / (depth * 0.5 + 0.5 - projectionA);
-// 	float viewZDist = dot(eyeLook, vray);
-// 	// vec3 wposition = eye + vray * (linearDepth / viewZDist);
-// 	vec3 wposition = vray * (linearDepth / viewZDist);
-// 	return wposition;
-// }
 
 float doAO(vec2 kernelVec, vec2 randomVec, mat2 rotMat, vec3 currentPos, vec3 currentNormal, float currentDistance) {
 	kernelVec.xy *= aspectRatio;
@@ -67,7 +41,7 @@ float doAO(vec2 kernelVec, vec2 randomVec, mat2 rotMat, vec3 currentPos, vec3 cu
 	kernelVec.xy = ((rotMat * kernelVec.xy) / currentDistance) * radius;
 	vec2 coord = texCoord + kernelVec.xy;
 	float depth = texture(gbufferD, coord).r * 2.0 - 1.0;
-	vec3 pos = getPos(depth, coord) - currentPos;
+	vec3 pos = getPos2NoEye(eye, invVP, depth, coord) - currentPos;
 	
 	float angle = dot(pos, currentNormal);
 	// angle *= step(0.3, angle / length(pos)); // Fix intersect
@@ -121,12 +95,12 @@ void main() {
 	// const vec2 kernel19 = vec2(0.9510565,-0.3090169);
 
 	vec2 enc = texture(gbuffer0, texCoord).rg;      
-    vec3 currentNormal;
-    currentNormal.z = 1.0 - abs(enc.x) - abs(enc.y);
-    currentNormal.xy = currentNormal.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
+	vec3 currentNormal;
+	currentNormal.z = 1.0 - abs(enc.x) - abs(enc.y);
+	currentNormal.xy = currentNormal.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
 	currentNormal = normalize(currentNormal);
 	
-	vec3 currentPos = getPos(depth, texCoord);
+	vec3 currentPos = getPos2NoEye(eye, invVP, depth, texCoord);
 	float currentDistance = length(currentPos);
 	
 	vec2 randomVec = texture(snoise, (texCoord * screenSize) / 8.0).xy;
@@ -160,5 +134,5 @@ void main() {
 	amount *= ssaoStrength / kernelSize;
 	amount = 1.0 - amount;
 	amount = max(0.0, amount);
-    fragColor = vec4(amount, 0.0, 0.0, 1.0);
+	fragColor = vec4(amount, 0.0, 0.0, 1.0);
 }

@@ -17,9 +17,9 @@ void main() {
 	float revealage = accum.a;
 
 	if (revealage == 1.0) {
-        // Save the blending and color texture fetch cost
-        discard;
-    }
+		// Save the blending and color texture fetch cost
+		discard;
+	}
 	
 	float accumA = texture(gbuffer1, texCoord).r;
 	// accum.a = texture(gbuffer1, texCoord).r;

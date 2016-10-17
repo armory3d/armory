@@ -11,7 +11,6 @@ precision mediump float;
 uniform sampler2D gbuffer0;
 uniform sampler2D sveloc;
 uniform sampler2D tex;
-
 // uniform vec2 texStep;
 
 in vec2 texCoord;
@@ -33,7 +32,6 @@ void main() {
 	// const int MAX_SAMPLES = 8;
 	// int samples = clamp(int(speed), 1, MAX_SAMPLES);
 	const int samples = 8;
-	
 	// for (int i = 1; i < samples; ++i) {
 		vec2 offset = velocity * (float(0) / float(samples - 1) - 0.5);
 		col += texture(tex, texCoord + offset);

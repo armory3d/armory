@@ -13,7 +13,8 @@
 			"texture_params": [],
 			"vertex_shader": "blend_pass.vert.glsl",
 			"vertex_shader_path": "../include/pass.vert.glsl",
-			"fragment_shader": "blend_pass.frag.glsl"
+			"fragment_shader": "blend_pass.frag.glsl",
+			"fragment_shader_path": "../include/pass.frag.glsl"
 		}
 	]
 }

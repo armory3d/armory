@@ -7,7 +7,7 @@
 			"cull_mode": "none",
 			"links": [
 				{
-					"name": "texStep",
+					"name": "screenSizeInv",
 					"link": "_screenSizeInv"
 				}
 			],

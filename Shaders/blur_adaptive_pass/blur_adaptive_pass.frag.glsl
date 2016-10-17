@@ -6,6 +6,8 @@ precision mediump float;
 #endif
 
 #include "../compiled.glsl"
+#include "../std/gbuffer.glsl"
+// unpackFloat()
 
 uniform sampler2D tex;
 uniform sampler2D gbuffer0; // Roughness
@@ -15,10 +17,6 @@ uniform vec2 screenSize;
 
 in vec2 texCoord;
 out vec4 fragColor;
-
-vec2 unpackFloat(float f) {
-	return vec2(floor(f) / 1000.0, fract(f));
-}
 
 void main() {
 	vec2 tc = texCoord * ssrTextureScale;

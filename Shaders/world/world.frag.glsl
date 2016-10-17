@@ -5,6 +5,10 @@ precision mediump float;
 #endif
 
 #include "../compiled.glsl"
+#ifdef _EnvTex
+#include "../std/math.glsl"
+// envMapEquirect()
+#endif
 
 #ifdef _EnvCol
 	uniform vec3 backgroundCol;
@@ -43,15 +47,15 @@ out vec4 fragColor;
 #ifdef _EnvSky
 vec3 hosekWilkie(float cos_theta, float gamma, float cos_gamma) {
 	vec3 chi = (1 + cos_gamma * cos_gamma) / pow(1 + H * H - 2 * cos_gamma * H, vec3(1.5));
-    return (1 + A * exp(B / (cos_theta + 0.01))) * (C + D * exp(E * gamma) + F * (cos_gamma * cos_gamma) + G * chi + I * sqrt(cos_theta));
+	return (1 + A * exp(B / (cos_theta + 0.01))) * (C + D * exp(E * gamma) + F * (cos_gamma * cos_gamma) + G * chi + I * sqrt(cos_theta));
 }
 #endif
 
 #ifdef _EnvClouds
 // float hash(vec3 p) {
 	// p = fract(p * vec3(0.16532, 0.17369, 0.15787));
-    // p += dot(p.xyz, p.zyx + 19.19);
-    // return fract(p.x * p.y * p.z);
+	// p += dot(p.xyz, p.zyx + 19.19);
+	// return fract(p.x * p.y * p.z);
 // }
 float noise(vec3 x) {
 	vec3 p = floor(x);
@@ -69,7 +73,7 @@ float fbm(vec3 p) {
 	f += 0.0625 * noise(p); p = p * 3.0;
 	f += 0.03125 * noise(p); p = p * 3.0;
 	f += 0.015625 * noise(p);
-    return f;
+	return f;
 }
 float map(vec3 p) {
 	return fbm(p) - cloudsDensity * 0.6;
@@ -87,7 +91,7 @@ vec2 traceCloud(vec3 pos, vec3 dir) {
 	float beg = ((cloudsLower - pos.z) / dir.z);
 	float end = ((cloudsUpper - pos.z) / dir.z);
 	traceP = vec3(pos.x + dir.x * beg, pos.y + dir.y * beg, 0.0);
-    // beg += hash(traceP) * 150.0; // Noisy
+	// beg += hash(traceP) * 150.0; // Noisy
 	vec3 add = dir * ((end - beg) / steps);
 
 	vec2 shadeSum = vec2(0.0);
@@ -170,14 +174,6 @@ vec3 cloudsColor(vec3 R, vec3 pos, vec3 dir) {
 }
 #endif
 
-#ifdef _EnvTex
-vec2 envMapEquirect(vec3 normal) {
-	float phi = acos(normal.z);
-	float theta = atan(-normal.y, normal.x) + PI;
-	return vec2(theta / PI2, phi / PI);
-}
-#endif
-
 void main() {
 	// if (texture(gbufferD, texCoord).r/* * 2.0 - 1.0*/ != 1.0) {
 		// discard;
@@ -199,7 +195,7 @@ void main() {
 
 #ifdef _EnvSky
 	vec3 n = normalize(normal);
-    vec3 sunDir = vec3(sunDirection.x, -sunDirection.y, sunDirection.z);	
+	vec3 sunDir = vec3(sunDirection.x, -sunDirection.y, sunDirection.z);	
 	float phi = acos(n.z);
 	float theta = atan(-n.y, n.x) + PI;
 	

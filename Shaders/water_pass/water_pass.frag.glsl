@@ -9,6 +9,7 @@ precision mediump float;
 #endif
 
 #include "../compiled.glsl"
+#include "../std/gbuffer.glsl"
 
 uniform sampler2D tex;
 uniform sampler2D gbufferD;
@@ -44,7 +45,7 @@ float noise(vec2 p) {
 // float noise(vec2 xx) {
 	// return -1.0 + 2.0 * texture(snoise, xx / 20.0).r;
 // }
-float sea_octave(vec2 uv, float choppy) {
+float seaOctave(vec2 uv, float choppy) {
 	uv += noise(uv);        
 	vec2 wv = 1.0 - abs(sin(uv));
 	vec2 swv = abs(cos(uv));    
@@ -61,14 +62,14 @@ float map(vec3 p) {
 	
 	float d, h = 0.0;
 	// for(int i = 0; i < 2; i++) {        
-		d = sea_octave((uv + (time * seaSpeed)) * freq, choppy);
-		d += sea_octave((uv - (time * seaSpeed)) * freq, choppy);
+		d = seaOctave((uv + (time * seaSpeed)) * freq, choppy);
+		d += seaOctave((uv - (time * seaSpeed)) * freq, choppy);
 		h += d * amp;        
 		uv *= octavem; freq *= 1.9; amp *= 0.22;
 		choppy = mix(choppy, 1.0, 0.2);
 		//
-		d = sea_octave((uv + (time * seaSpeed)) * freq, choppy);
-		d += sea_octave((uv-(time * seaSpeed)) * freq, choppy);
+		d = seaOctave((uv + (time * seaSpeed)) * freq, choppy);
+		d += seaOctave((uv-(time * seaSpeed)) * freq, choppy);
 		h += d * amp;        
 		uv *= octavem; freq *= 1.9; amp *= 0.22;
 		choppy = mix(choppy, 1.0, 0.2);
@@ -76,7 +77,7 @@ float map(vec3 p) {
 	// }
 	return p.z - h;
 }
-float map_detailed(vec3 p) {
+float mapDetailed(vec3 p) {
 	float freq = seaFreq;
 	float amp = seaHeight;
 	float choppy = seaChoppy;
@@ -84,29 +85,29 @@ float map_detailed(vec3 p) {
 	
 	float d, h = 0.0;    
 	// for(int i = 0; i < 4; i++) {       
-		d = sea_octave((uv + (time * seaSpeed)) * freq,choppy);
-		d += sea_octave((uv - (time * seaSpeed)) * freq,choppy);
+		d = seaOctave((uv + (time * seaSpeed)) * freq,choppy);
+		d += seaOctave((uv - (time * seaSpeed)) * freq,choppy);
 		h += d * amp;        
 		uv *= octavem; freq *= 1.9; amp *= 0.22;
 		choppy = mix(choppy, 1.0, 0.2);
 		//
-		d = sea_octave((uv + (time * seaSpeed)) * freq,choppy);
-		d += sea_octave((uv - (time * seaSpeed)) * freq,choppy);
+		d = seaOctave((uv + (time * seaSpeed)) * freq,choppy);
+		d += seaOctave((uv - (time * seaSpeed)) * freq,choppy);
 		h += d * amp;        
 		uv *= octavem; freq *= 1.9; amp *= 0.22;
 		choppy = mix(choppy, 1.0, 0.2);
-		d = sea_octave((uv + (time * seaSpeed)) * freq,choppy);
-		d += sea_octave((uv - (time * seaSpeed)) * freq,choppy);
+		d = seaOctave((uv + (time * seaSpeed)) * freq,choppy);
+		d += seaOctave((uv - (time * seaSpeed)) * freq,choppy);
 		h += d * amp;        
 		uv *= octavem; freq *= 1.9; amp *= 0.22;
 		choppy = mix(choppy, 1.0, 0.2);
-		d = sea_octave((uv + (time * seaSpeed)) * freq,choppy);
-		d += sea_octave((uv - (time * seaSpeed)) * freq,choppy);
+		d = seaOctave((uv + (time * seaSpeed)) * freq,choppy);
+		d += seaOctave((uv - (time * seaSpeed)) * freq,choppy);
 		h += d * amp;        
 		uv *= octavem; freq *= 1.9; amp *= 0.22;
 		choppy = mix(choppy, 1.0, 0.2);
-		d = sea_octave((uv + (time * seaSpeed)) * freq,choppy);
-		d += sea_octave((uv - (time * seaSpeed)) * freq,choppy);
+		d = seaOctave((uv + (time * seaSpeed)) * freq,choppy);
+		d += seaOctave((uv - (time * seaSpeed)) * freq,choppy);
 		h += d * amp;        
 		uv *= octavem; freq *= 1.9; amp *= 0.22;
 		choppy = mix(choppy, 1.0, 0.2);
@@ -115,9 +116,9 @@ float map_detailed(vec3 p) {
 }
 vec3 getNormal(vec3 p, float eps) {
 	vec3 n;
-	n.z = map_detailed(p);    
-	n.x = map_detailed(vec3(p.x + eps, p.y, p.z)) - n.z;
-	n.y = map_detailed(vec3(p.x, p.y + eps, p.z)) - n.z;
+	n.z = mapDetailed(p);    
+	n.x = mapDetailed(vec3(p.x + eps, p.y, p.z)) - n.z;
+	n.y = mapDetailed(vec3(p.x, p.y + eps, p.z)) - n.z;
 	n.z = eps;
 	return normalize(n);
 }
@@ -125,14 +126,14 @@ vec3 heightMapTracing(vec3 ori, vec3 dir) {
 	vec3 p;
 	float tm = 0.0;
 	float tx = 1000.0;    
-	float hx = map_detailed(ori + dir * tx);
+	float hx = mapDetailed(ori + dir * tx);
 	if(hx > 0.0) return p;   
-	float hm = map_detailed(ori + dir * tm);    
+	float hm = mapDetailed(ori + dir * tm);    
 	float tmid = 0.0;
 	// for(int i = 0; i < 5; i++) {
 		tmid = mix(tm, tx, hm / (hm - hx));                
 		p = ori + dir * tmid;
-		float hmid = map_detailed(p);
+		float hmid = mapDetailed(p);
 		if (hmid < 0.0) {
 			tx = tmid;
 			hx = hmid;
@@ -144,7 +145,7 @@ vec3 heightMapTracing(vec3 ori, vec3 dir) {
 		//
 		tmid = mix(tm, tx, hm / (hm - hx));                   
 		p = ori + dir * tmid;                   
-		hmid = map_detailed(p);
+		hmid = mapDetailed(p);
 		if (hmid < 0.0) {
 			tx = tmid;
 			hx = hmid;
@@ -155,7 +156,7 @@ vec3 heightMapTracing(vec3 ori, vec3 dir) {
 		}
 		tmid = mix(tm, tx, hm / (hm - hx));                   
 		p = ori + dir * tmid;                   
-		hmid = map_detailed(p);
+		hmid = mapDetailed(p);
 		if (hmid < 0.0) {
 			tx = tmid;
 			hx = hmid;
@@ -166,7 +167,7 @@ vec3 heightMapTracing(vec3 ori, vec3 dir) {
 		}
 		tmid = mix(tm, tx, hm / (hm - hx));                   
 		p = ori + dir * tmid;                   
-		hmid = map_detailed(p);
+		hmid = mapDetailed(p);
 		if (hmid < 0.0) {
 			tx = tmid;
 			hx = hmid;
@@ -177,7 +178,7 @@ vec3 heightMapTracing(vec3 ori, vec3 dir) {
 		}
 		tmid = mix(tm, tx, hm / (hm - hx));                   
 		p = ori + dir * tmid;                   
-		hmid = map_detailed(p);
+		hmid = mapDetailed(p);
 		if (hmid < 0.0) {
 			tx = tmid;
 			hx = hmid;
@@ -217,16 +218,6 @@ vec3 getSeaColor(vec3 p, vec3 n, vec3 l, vec3 eye, vec3 dist) {
 	return color;
 }
 
-vec3 getPos(float depth) {	
-	vec3 vray = normalize(viewRay);
-	const float projectionA = cameraPlane.y / (cameraPlane.y - cameraPlane.x);
-	const float projectionB = (-cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
-	float linearDepth = projectionB / (depth * 0.5 + 0.5 - projectionA);
-	float viewZDist = dot(eyeLook, vray);
-	vec3 wposition = eye + vray * (linearDepth / viewZDist);
-	return wposition;
-}
-
 void main() {
 	float gdepth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	vec4 colorOriginal = texture(tex, texCoord);
@@ -236,7 +227,7 @@ void main() {
 	// }
 	
 	vec3 color = colorOriginal.rgb;
-	vec3 position = getPos(gdepth);
+	vec3 position = getPos(eye, eyeLook, viewRay, gdepth);
 	
 	if (position.z <= seaLevel + seaMaxAmplitude) {
 		const vec3 ld = normalize(vec3(0.3, -0.3, 1.0));
@@ -263,7 +254,7 @@ void main() {
 		// vec2 texco = texCoord.xy;
 		// texco.x += sin((time) * 0.002 + 3.0 * abs(position.z)) * (refractionScale * min(depthZ, 1.0));
 		// vec3 refraction = texture(tex, texco).rgb;
-		// vec3 _p = getPos(1.0 - texture(gbuffer0, texco).a);
+		// vec3 _p = getPos(eye, eyeLook, viewRay, 1.0 - texture(gbuffer0, texco).a);
 		// if (_p.z > seaLevel) {
 		//     refraction = colorOriginal.rgb;
 		// }
@@ -306,5 +297,4 @@ void main() {
 	}
 
 	fragColor.rgb = color;
-	// gl_FragData[0].rgb = color;
 }

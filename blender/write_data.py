@@ -230,7 +230,9 @@ def write_compiledglsl():
     wrd = bpy.data.worlds['Arm']
     with open('build/compiled/Shaders/compiled.glsl', 'w') as f:
         f.write(
-"""const float PI = 3.1415926535;
+"""#ifndef _COMPILED_GLSL_
+#define _COMPILED_GLSL_
+const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;
 const vec2 cameraPlane = vec2(""" + str(round(clip_start * 100) / 100) + """, """ + str(round(clip_end * 100) / 100) + """);
 const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shadowmap_size) + """);
@@ -332,6 +334,8 @@ const float compoDOFSize = """ + str(round(bpy.data.cameras[0].cycles.aperture_s
             f.write(
 """const int skinMaxBones = """ + str(wrd.generate_gpu_skin_max_bones) + """;
 """)
+
+        f.write("""#endif // _COMPILED_GLSL_""")
 
 def write_traithx(class_name):
     wrd = bpy.data.worlds['Arm']

@@ -9,7 +9,8 @@
 			"texture_params": [],
 			"vertex_shader": "copy_pass.vert.glsl",
 			"vertex_shader_path": "../include/pass.vert.glsl",
-			"fragment_shader": "copy_pass.frag.glsl"
+			"fragment_shader": "copy_pass.frag.glsl",
+			"fragment_shader_path": "../include/pass.frag.glsl"
 		}
 	]
 }

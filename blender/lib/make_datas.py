@@ -148,7 +148,7 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
         if vertex_structure_parsing == True and len(line) > 0 and line.startswith('//') == False and line.startswith('in ') == False:
             vertex_structure_parsed = True
 
-        if line.startswith('uniform '):
+        if line.startswith('uniform ') or line.startswith('//!uniform'): # Uniforms included from header files
             s = line.split(' ')
             # uniform sampler2D myname;
             # uniform layout(RGBA8) image3D myname;

@@ -11,10 +11,9 @@ uniform vec2 screenSizeInv;
 out vec2 texCoord;
 out vec4 offset;
 
-const vec2 madd = vec2(0.5, 0.5);
-
 void main() {
 	// Scale vertex attribute to [0-1] range
+	const vec2 madd = vec2(0.5, 0.5);
 	texCoord = pos.xy * madd + madd;
 
 	// Neighborhood Blending Vertex Shader

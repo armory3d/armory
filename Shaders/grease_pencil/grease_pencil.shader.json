@@ -34,7 +34,8 @@
 			],
 			"texture_params": [],
 			"vertex_shader": "grease_pencil_shadows.vert.glsl",
-			"fragment_shader": "grease_pencil_shadows.frag.glsl"
+			"fragment_shader": "grease_pencil_shadows.frag.glsl",
+			"fragment_shader_path": "../include/shadowmap.frag.glsl"
 		}
 	]
 }

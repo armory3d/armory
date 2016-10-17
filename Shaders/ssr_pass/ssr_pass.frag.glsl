@@ -5,6 +5,11 @@ precision mediump float;
 #endif
 
 #include "../compiled.glsl"
+#include "../std/math.glsl"
+// rand()
+#include "../std/gbuffer.glsl"
+// octahedronWrap()
+// unpackFloat()
 
 uniform sampler2D tex;
 uniform sampler2D gbufferD;
@@ -27,10 +32,6 @@ out vec4 fragColor;
 vec3 hitCoord;
 float depth;
 
-float rand(vec2 co) { // Unreliable
-  return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-}
-
 vec4 getProjectedCoord(vec3 hitCoord) {
 	vec4 projectedCoord = P * vec4(hitCoord, 1.0);
 	projectedCoord.xy /= projectedCoord.w;
@@ -38,158 +39,141 @@ vec4 getProjectedCoord(vec3 hitCoord) {
 	return projectedCoord;
 }
 
-vec3 getPos(float depth) {	
-	const float projectionA = cameraPlane.y / (cameraPlane.y - cameraPlane.x);
-	const float projectionB = (-cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
-	float linearDepth = projectionB / (projectionA - depth);
-	return viewRay * linearDepth;
-}
-
 float getDeltaDepth(vec3 hitCoord) {	
 	// depth = 1.0 - texture(gbuffer0, getProjectedCoord(hitCoord).xy).a;
 	depth = texture(gbufferD, getProjectedCoord(hitCoord).xy).r * 2.0 - 1.0;
-	vec3 viewPos = getPos(depth);
+	vec3 viewPos = getPosView(viewRay, depth);
 	return viewPos.z - hitCoord.z;
 }
 
 vec4 binarySearch(vec3 dir) {	
-    // for (int i = 0; i < numBinarySearchSteps; i++) {
+	// for (int i = 0; i < numBinarySearchSteps; i++) {
 		dir *= 0.5;
-        hitCoord -= dir;
-        if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
+		hitCoord -= dir;
+		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
 		
-        dir *= 0.5;
-        hitCoord -= dir;
-        if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-        dir *= 0.5;
-        hitCoord -= dir;
-        if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-        dir *= 0.5;
-        hitCoord -= dir;
-        if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-        dir *= 0.5;
-        hitCoord -= dir;
-        if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
 		dir *= 0.5;
-        hitCoord -= dir;
-        if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
+		hitCoord -= dir;
+		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
 		dir *= 0.5;
-        hitCoord -= dir;
-        if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
+		hitCoord -= dir;
+		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
+		dir *= 0.5;
+		hitCoord -= dir;
+		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
+		dir *= 0.5;
+		hitCoord -= dir;
+		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
+		dir *= 0.5;
+		hitCoord -= dir;
+		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
+		dir *= 0.5;
+		hitCoord -= dir;
+		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
 		////
 		// dir *= 0.5;
-        // hitCoord -= dir;
-        // if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
+		// hitCoord -= dir;
+		// if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
 		// dir *= 0.5;
-        // hitCoord -= dir;
-        // if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
+		// hitCoord -= dir;
+		// if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
 		// dir *= 0.5;
-        // hitCoord -= dir;
-        // if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
+		// hitCoord -= dir;
+		// if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
 		// dir *= 0.5;
-        // hitCoord -= dir;
-        // if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
+		// hitCoord -= dir;
+		// if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
 		// dir *= 0.5;
-        // hitCoord -= dir;
-        // if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
+		// hitCoord -= dir;
+		// if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
 		// dir *= 0.5;
-        // hitCoord -= dir;
-        // if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
+		// hitCoord -= dir;
+		// if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
 		
 		// Ugly discard of hits too far away
 		if (abs(getDeltaDepth(hitCoord)) > 0.01) {
 			return vec4(0.0);
 		}
-    // }
-    return vec4(getProjectedCoord(hitCoord).xy, 0.0, 1.0);
+	// }
+	return vec4(getProjectedCoord(hitCoord).xy, 0.0, 1.0);
 }
 
 vec4 rayCast(vec3 dir) {
 	dir *= ssrRayStep;
 	
-    // for (int i = 0; i < maxSteps; i++) {
-        hitCoord += dir;
-        if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+	// for (int i = 0; i < maxSteps; i++) {
+		hitCoord += dir;
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		
 		hitCoord += dir;
-        if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		hitCoord += dir;
-        if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		hitCoord += dir;
-        if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		hitCoord += dir;
-        if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		hitCoord += dir;
-        if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		hitCoord += dir;
-        if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		hitCoord += dir;
-        if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		hitCoord += dir;
-        if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		hitCoord += dir;
-        if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		hitCoord += dir;
-        if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		hitCoord += dir;
-        if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		hitCoord += dir;
-        if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		hitCoord += dir;
-        if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		hitCoord += dir;
-        if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		hitCoord += dir;
-        if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		hitCoord += dir;
-        if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		hitCoord += dir;
-        if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		////
 		// hitCoord += dir;
-        // if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		// hitCoord += dir;
-        // if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		// hitCoord += dir;
-        // if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		// hitCoord += dir;
-        // if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		// hitCoord += dir;
-        // if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		// hitCoord += dir;
-        // if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		// hitCoord += dir;
-        // if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		// hitCoord += dir;
-        // if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		// hitCoord += dir;
-        // if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		// hitCoord += dir;
-        // if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		// hitCoord += dir;
-        // if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		// hitCoord += dir;
-        // if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-    // }
-    return vec4(0.0, 0.0, 0.0, 0.0);
-}
-
-vec2 octahedronWrap(vec2 v) {
-    return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
-}
-
-vec2 unpackFloat(float f) {
-	float index = floor(f) / 1000.0;
-	float alpha = fract(f);
-	return vec2(index, alpha);
+		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+	// }
+	return vec4(0.0, 0.0, 0.0, 0.0);
 }
 
 void main() {
 
 	vec4 g0 = texture(gbuffer0, texCoord);
-    float roughness = unpackFloat(g0.b).y;
+	float roughness = unpackFloat(g0.b).y;
 
-    if (roughness == 1.0) {
+	if (roughness == 1.0) {
 		fragColor = vec4(0.0);
 		return;
 	}
@@ -202,10 +186,10 @@ void main() {
 	}
 
 	vec2 enc = g0.rg;
-    vec3 n;
-    n.z = 1.0 - abs(enc.x) - abs(enc.y);
-    n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
-    n = normalize(n);
+	vec3 n;
+	n.z = 1.0 - abs(enc.x) - abs(enc.y);
+	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
+	n = normalize(n);
 	
 	vec4 viewNormal = vec4(n, 1.0);
 	
@@ -215,7 +199,7 @@ void main() {
 	}
 
 	viewNormal = tiV * normalize(viewNormal);
-	vec3 viewPos = getPos(d);
+	vec3 viewPos = getPosView(viewRay, d);
 	
 	vec3 reflected = normalize(reflect((viewPos.xyz), normalize(viewNormal.xyz)));
 	hitCoord = viewPos.xyz;

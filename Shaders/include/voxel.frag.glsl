@@ -8,10 +8,10 @@
 
 in fragData {
 #ifdef _Tex
-    vec2 texuv;
+	vec2 texuv;
 #endif
-    flat int axis;
-    vec4 lampPos;
+	flat int axis;
+	vec4 lampPos;
 } frag;
 
 uniform layout(RGBA8) image3D voxels;
@@ -24,33 +24,33 @@ const int voxelDimensions = 512;
 
 void main() {
 #ifdef _BaseTex
-    vec4 matCol = texture(sbase, frag.texuv);
+	vec4 matCol = texture(sbase, frag.texuv);
 #else
 	vec4 matCol = baseCol;
 #endif
 
-    // vec3 lampPos = frag.lampPos.xyz / frag.lampPos.w;
-    // lampPos.xy = lampPos.xy * 0.5 + 0.5;
-    // float distanceFromLight = texture(shadowMap, lampPos.xy).r * 2.0 - 1.0;
-    // const float shadowsBias = 0.0001;
+	// vec3 lampPos = frag.lampPos.xyz / frag.lampPos.w;
+	// lampPos.xy = lampPos.xy * 0.5 + 0.5;
+	// float distanceFromLight = texture(shadowMap, lampPos.xy).r * 2.0 - 1.0;
+	// const float shadowsBias = 0.0001;
 	// float visibility = float(distanceFromLight > lampPos.z - shadowsBias);
 	float visibility = 1.0;
 
 	ivec3 camPos = ivec3(gl_FragCoord.x, gl_FragCoord.y, voxelDimensions * gl_FragCoord.z);
 	ivec3 texPos;
 	if (frag.axis == 1) {
-	    texPos.x = voxelDimensions - camPos.z;
+		texPos.x = voxelDimensions - camPos.z;
 		texPos.z = camPos.x;
 		texPos.y = camPos.y;
 	}
 	else if (frag.axis == 2) {
-	    texPos.z = camPos.y;
+		texPos.z = camPos.y;
 		texPos.y = voxelDimensions - camPos.z;
 		texPos.x = camPos.x;
 	}
 	else {
-	    texPos = camPos;
+		texPos = camPos;
 	}
 	texPos.z = voxelDimensions - texPos.z - 1;
-    imageStore(voxels, texPos, vec4(matCol.rgb * visibility, 1.0));
+	imageStore(voxels, texPos, vec4(matCol.rgb * visibility, 1.0));
 }

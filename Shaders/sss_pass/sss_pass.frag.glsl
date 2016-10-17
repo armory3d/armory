@@ -3,8 +3,6 @@
  * Copyright (C) 2012 Diego Gutierrez (diegog@unizar.es)
  * All rights reserved.
  *
- * Adapted to CGE by Lubos Lenco
- *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  * 
@@ -71,13 +69,13 @@ vec4 SSSSBlur(float sssWidth) {
 	kernel[9] = vec4(0.0192831, 0.00282018, 0.00084214, 1.28);
 	kernel[10] = vec4(0.00471691, 0.000184771, 5.07565e-005, 2);
 	
-    vec4 colorM = texture(tex, texCoord);
+	vec4 colorM = texture(tex, texCoord);
 
-    // Initialize the stencil buffer in case it was not already available:
-    // if (initStencil) // (Checked in compile time, it's optimized away)
-        // if (SSSS_STREGTH_SOURCE == 0.0) discard;
+	// Initialize the stencil buffer in case it was not already available:
+	// if (initStencil) // (Checked in compile time, it's optimized away)
+		// if (SSSS_STREGTH_SOURCE == 0.0) discard;
 
-    // Fetch linear depth of current pixel
+	// Fetch linear depth of current pixel
 	// vec4 g0 = texture(gbuffer0, texCoord);
 	// float depth = 1.0 - g0.a;
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
@@ -85,73 +83,73 @@ vec4 SSSSBlur(float sssWidth) {
 	const float projectionB = (-cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
 	float depthM = projectionB / (depth * 0.5 + 0.5 - projectionA);
 
-    // Calculate the sssWidth scale (1.0 for a unit plane sitting on the projection window)
-    float distanceToProjectionWindow = 1.0 / tan(0.5 * radians(SSSS_FOVY));
-    float scale = distanceToProjectionWindow / depthM;
+	// Calculate the sssWidth scale (1.0 for a unit plane sitting on the projection window)
+	float distanceToProjectionWindow = 1.0 / tan(0.5 * radians(SSSS_FOVY));
+	float scale = distanceToProjectionWindow / depthM;
 
-    // Calculate the final step to fetch the surrounding pixels
-    vec2 finalStep = sssWidth * scale * dir;
-    finalStep *= 1.0;//SSSS_STREGTH_SOURCE; // Modulate it using the alpha channel.
-    finalStep *= 1.0 / 3.0; // Divide by 3 as the kernels range from -3 to 3.
+	// Calculate the final step to fetch the surrounding pixels
+	vec2 finalStep = sssWidth * scale * dir;
+	finalStep *= 1.0;//SSSS_STREGTH_SOURCE; // Modulate it using the alpha channel.
+	finalStep *= 1.0 / 3.0; // Divide by 3 as the kernels range from -3 to 3.
 
-    // Accumulate the center sample:
-    vec4 colorBlurred = colorM;
-    colorBlurred.rgb *= kernel[0].rgb;
+	// Accumulate the center sample:
+	vec4 colorBlurred = colorM;
+	colorBlurred.rgb *= kernel[0].rgb;
 
-    // Accumulate the other samples
-    // for (int i = 1; i < SSSS_N_SAMPLES; i++) {
-        // Fetch color and depth for current sample
-        vec2 offset = texCoord + kernel[1].a * finalStep;
-        vec4 color = texture(tex, offset);
-        // #if SSSS_FOLLOW_SURFACE == 1
-        // If the difference in depth is huge, we lerp color back to "colorM":
-        // float depth = texture(depthTex, offset).r;
-        // float s = SSSSSaturate(300.0f * distanceToProjectionWindow *
-                            //    sssWidth * abs(depthM - depth));
-        // color.rgb = SSSSLerp(color.rgb, colorM.rgb, s);
-        // #endif
-        // Accumulate
-        colorBlurred.rgb += kernel[1].rgb * color.rgb;
+	// Accumulate the other samples
+	// for (int i = 1; i < SSSS_N_SAMPLES; i++) {
+		// Fetch color and depth for current sample
+		vec2 offset = texCoord + kernel[1].a * finalStep;
+		vec4 color = texture(tex, offset);
+		// #if SSSS_FOLLOW_SURFACE == 1
+		// If the difference in depth is huge, we lerp color back to "colorM":
+		// float depth = texture(depthTex, offset).r;
+		// float s = SSSSSaturate(300.0f * distanceToProjectionWindow *
+							//    sssWidth * abs(depthM - depth));
+		// color.rgb = SSSSLerp(color.rgb, colorM.rgb, s);
+		// #endif
+		// Accumulate
+		colorBlurred.rgb += kernel[1].rgb * color.rgb;
 		
 		
 		offset = texCoord + kernel[2].a * finalStep;
-        color = texture(tex, offset);
-        colorBlurred.rgb += kernel[2].rgb * color.rgb;
+		color = texture(tex, offset);
+		colorBlurred.rgb += kernel[2].rgb * color.rgb;
 		
 		offset = texCoord + kernel[3].a * finalStep;
-        color = texture(tex, offset);
-        colorBlurred.rgb += kernel[3].rgb * color.rgb;
+		color = texture(tex, offset);
+		colorBlurred.rgb += kernel[3].rgb * color.rgb;
 		
 		offset = texCoord + kernel[4].a * finalStep;
-        color = texture(tex, offset);
-        colorBlurred.rgb += kernel[4].rgb * color.rgb;
+		color = texture(tex, offset);
+		colorBlurred.rgb += kernel[4].rgb * color.rgb;
 		
 		offset = texCoord + kernel[5].a * finalStep;
-        color = texture(tex, offset);
-        colorBlurred.rgb += kernel[5].rgb * color.rgb;
+		color = texture(tex, offset);
+		colorBlurred.rgb += kernel[5].rgb * color.rgb;
 		
 		offset = texCoord + kernel[6].a * finalStep;
-        color = texture(tex, offset);
-        colorBlurred.rgb += kernel[6].rgb * color.rgb;
+		color = texture(tex, offset);
+		colorBlurred.rgb += kernel[6].rgb * color.rgb;
 		
 		offset = texCoord + kernel[7].a * finalStep;
-        color = texture(tex, offset);
-        colorBlurred.rgb += kernel[7].rgb * color.rgb;
+		color = texture(tex, offset);
+		colorBlurred.rgb += kernel[7].rgb * color.rgb;
 		
 		offset = texCoord + kernel[8].a * finalStep;
-        color = texture(tex, offset);
-        colorBlurred.rgb += kernel[8].rgb * color.rgb;
+		color = texture(tex, offset);
+		colorBlurred.rgb += kernel[8].rgb * color.rgb;
 		
 		offset = texCoord + kernel[9].a * finalStep;
-        color = texture(tex, offset);
-        colorBlurred.rgb += kernel[9].rgb * color.rgb;
+		color = texture(tex, offset);
+		colorBlurred.rgb += kernel[9].rgb * color.rgb;
 		
 		offset = texCoord + kernel[10].a * finalStep;
-        color = texture(tex, offset);
-        colorBlurred.rgb += kernel[10].rgb * color.rgb;
-    // }
+		color = texture(tex, offset);
+		colorBlurred.rgb += kernel[10].rgb * color.rgb;
+	// }
 
-    return colorBlurred;
+	return colorBlurred;
 }
 
 void main() {

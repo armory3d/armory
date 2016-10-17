@@ -5,6 +5,10 @@
 precision mediump float;
 #endif
 
+#include "../std/gbuffer.glsl"
+// octahedronWrap()
+// packFloat()
+
 uniform float mask;
 #ifdef _BaseTex
 	uniform sampler2D sbase;
@@ -44,16 +48,6 @@ in vec2 te_texCoord;
 #endif
 
 out vec4[2] fragColor;
-
-float packFloat(float f1, float f2) {
-	float index = floor(f1 * 1000.0); // Temporary
-	float alpha = clamp(f2, 0.0, 1.0 - 0.001);
-	return index + alpha;
-}
-
-vec2 octahedronWrap(vec2 v) {
-    return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
-}
 
 void main() {
 	vec2 newCoord = te_texCoord;

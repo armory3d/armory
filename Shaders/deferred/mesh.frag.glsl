@@ -4,6 +4,10 @@
 precision mediump float;
 #endif
 
+#include "../std/gbuffer.glsl"
+// octahedronWrap()
+// packFloat()
+
 uniform float mask;
 #ifdef _BaseTex
 	uniform sampler2D sbase;
@@ -62,16 +66,6 @@ in vec4 matColor;
 #else
 	out vec4[2] fragColor;
 #endif
-
-float packFloat(float f1, float f2) {
-	float index = floor(f1 * 1000.0); // Temporary
-	float alpha = clamp(f2, 0.0, 1.0 - 0.001);
-	return index + alpha;
-}
-
-vec2 octahedronWrap(vec2 v) {
-    return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
-}
 
 #ifdef _Probes
 float distanceBox(vec3 point, vec3 center, vec3 halfExtents) {  	

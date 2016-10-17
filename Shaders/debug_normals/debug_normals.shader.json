@@ -21,7 +21,7 @@
 			],
 			"texture_params": [],
 			"vertex_shader": "debug_normals.vert.glsl",
-			"vertex_shader_path": "../include/pass_viewray.vert.glsl",
+			"vertex_shader_path": "../include/pass.vert.glsl",
 			"fragment_shader": "debug_normals.frag.glsl"
 		}
 	]

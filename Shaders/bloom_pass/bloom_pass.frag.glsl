@@ -5,13 +5,12 @@ precision mediump float;
 #endif
 
 #include "../compiled.glsl"
+//const float bloomTreshold = 3.0;
 
 uniform sampler2D tex;
 
 in vec2 texCoord;
 out vec4 fragColor;
-
-//const float bloomTreshold = 3.0;
 
 void main() {
 	vec4 col = texture(tex, texCoord);
@@ -20,6 +19,5 @@ void main() {
 		fragColor.rgb = vec3(col.rgb);
 		return;
 	}
-	
 	fragColor.rgb = vec3(0.0);
 }

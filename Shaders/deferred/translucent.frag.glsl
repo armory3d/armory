@@ -5,12 +5,18 @@ precision mediump float;
 #endif
 
 #include "../compiled.glsl"
+#include "../std/brdf.glsl"
+// ...
+#include "../std/math.glsl"
+// envMapEquirect()
+#include "../std/shirr.glsl"
+// shIrradiance()
+//!uniform float shirr[27];
 
 #ifdef _BaseTex
 	uniform sampler2D sbase;
 #endif
 
-uniform float shirr[27];
 #ifdef _Rad
 	uniform sampler2D senvmapRadiance;
 	uniform sampler2D senvmapBrdf;
@@ -21,7 +27,7 @@ uniform float shirr[27];
 	uniform sampler2D snormal;
 #endif
 #ifdef _NorStr
-    uniform float normalStrength;
+	uniform float normalStrength;
 #endif
 #ifdef _OccTex
 	uniform sampler2D socclusion;
@@ -34,7 +40,7 @@ uniform float shirr[27];
 	uniform float roughness;
 #endif
 #ifdef _RoughStr
-    uniform float roughnessStrength;
+	uniform float roughnessStrength;
 #endif
 #ifdef _MetTex
 	uniform sampler2D smetal;
@@ -66,85 +72,6 @@ in vec3 eyeDir;
 #endif
 out vec4[2] fragColor;
 
-vec3 shIrradiance(vec3 nor, float scale) {
-    const float c1 = 0.429043;
-    const float c2 = 0.511664;
-    const float c3 = 0.743125;
-    const float c4 = 0.886227;
-    const float c5 = 0.247708;
-    vec3 cl00, cl1m1, cl10, cl11, cl2m2, cl2m1, cl20, cl21, cl22;
-	cl00 = vec3(shirr[0], shirr[1], shirr[2]);
-	cl1m1 = vec3(shirr[3], shirr[4], shirr[5]);
-	cl10 = vec3(shirr[6], shirr[7], shirr[8]);
-	cl11 = vec3(shirr[9], shirr[10], shirr[11]);
-	cl2m2 = vec3(shirr[12], shirr[13], shirr[14]);
-	cl2m1 = vec3(shirr[15], shirr[16], shirr[17]);
-	cl20 = vec3(shirr[18], shirr[19], shirr[20]);
-	cl21 = vec3(shirr[21], shirr[22], shirr[23]);
-	cl22 = vec3(shirr[24], shirr[25], shirr[26]);
-    return (
-        c1 * cl22 * (nor.y * nor.y - (-nor.z) * (-nor.z)) +
-        c3 * cl20 * nor.x * nor.x +
-        c4 * cl00 -
-        c5 * cl20 +
-        2.0 * c1 * cl2m2 * nor.y * (-nor.z) +
-        2.0 * c1 * cl21  * nor.y * nor.x +
-        2.0 * c1 * cl2m1 * (-nor.z) * nor.x +
-        2.0 * c2 * cl11  * nor.y +
-        2.0 * c2 * cl1m1 * (-nor.z) +
-        2.0 * c2 * cl10  * nor.x
-    ) * scale;
-}
-
-vec2 envMapEquirect(vec3 normal) {
-	float phi = acos(normal.z);
-	float theta = atan(-normal.y, normal.x) + PI;
-	return vec2(theta / PI2, phi / PI);
-}
-
-#ifdef _Rad
-float getMipLevelFromRoughness(float roughness) {
-	// First mipmap level = roughness 0, last = roughness = 1
-	return roughness * envmapNumMipmaps;
-}
-#endif
-
-vec3 surfaceAlbedo(vec3 baseColor, float metalness) {
-	return mix(baseColor, vec3(0.0), metalness);
-}
-
-vec3 surfaceF0(vec3 baseColor, float metalness) {
-	return mix(vec3(0.04), baseColor, metalness);
-}
-
-vec3 f_schlick(vec3 f0, float vh) {
-	return f0 + (1.0-f0)*exp2((-5.55473 * vh - 6.98316)*vh);
-}
-
-float v_smithschlick(float nl, float nv, float a) {
-	return 1.0 / ( (nl*(1.0-a)+a) * (nv*(1.0-a)+a) );
-}
-
-float d_ggx(float nh, float a) {
-	float a2 = a*a;
-	float denom = pow(nh*nh * (a2-1.0) + 1.0, 2.0);
-	return a2 * (1.0 / 3.1415926535) / denom;
-}
-
-vec3 specularBRDF(vec3 f0, float roughness, float nl, float nh, float nv, float vh, float lh) {
-	float a = roughness * roughness;
-	return d_ggx(nh, a) * clamp(v_smithschlick(nl, nv, a), 0.0, 1.0) * f_schlick(f0, vh) / 4.0;
-	//return vec3(LightingFuncGGX_OPT3(nl, lh, nh, roughness, f0[0]));
-}
-
-vec3 lambert(vec3 albedo, float nl) {
-	return albedo * max(0.0, nl);
-}
-
-vec3 diffuseBRDF(vec3 albedo, float roughness, float nv, float nl, float vh, float lv) {
-	return lambert(albedo, nl);
-}
-
 void main() {
 	
 #ifdef _NorTex
@@ -154,18 +81,18 @@ void main() {
 	vec3 n = normalize(normal);
 #endif
 #ifdef _NorStr
-    n *= normalStrength;
+	n *= normalStrength;
 #endif
 
 	// Move out
-    vec3 l;
-    if (lightType == 0) { // Sun
-        l = lightDir;
-    }
-    else { // Point, spot
-        l = normalize(lightPos - position.xyz);
-    }
-    float dotNL = max(dot(n, l), 0.0);
+	vec3 l;
+	if (lightType == 0) { // Sun
+		l = lightDir;
+	}
+	else { // Point, spot
+		l = normalize(lightPos - position.xyz);
+	}
+	float dotNL = max(dot(n, l), 0.0);
 
 	vec3 baseColor = matColor.rgb;
 #ifdef _BaseTex
@@ -197,7 +124,7 @@ void main() {
 	float roughness = texture(srough, texCoord).r;
 #endif
 #ifdef _RoughStr
-    roughness *= roughnessStrength;
+	roughness *= roughnessStrength;
 #endif
 
 #ifdef _OccTex
@@ -207,14 +134,14 @@ void main() {
 	// Direct
 	vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);	
 
-    if (lightType == 2) { // Spot
-        float spotEffect = dot(lightDir, l);
-        if (spotEffect < spotlightCutoff) {
-            spotEffect = smoothstep(spotlightCutoff - spotlightExponent, spotlightCutoff, spotEffect);
-            direct *= spotEffect;
-        }
-    }
-    
+	if (lightType == 2) { // Spot
+		float spotEffect = dot(lightDir, l);
+		if (spotEffect < spotlightCutoff) {
+			spotEffect = smoothstep(spotlightCutoff - spotlightExponent, spotlightCutoff, spotEffect);
+			direct *= spotEffect;
+		}
+	}
+	
 	direct = direct * lightColor * lightStrength;
 
 	// Indirect
@@ -227,7 +154,7 @@ void main() {
 	
 #ifdef _Rad
 	vec3 reflectionWorld = reflect(-v, n); 
-	float lod = getMipLevelFromRoughness(roughness);// + 1.0;
+	float lod = getMipFromRoughness(roughness, envmapNumMipmaps);// + 1.0;
 	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
 	#ifdef _EnvLDR
 		prefilteredColor = pow(prefilteredColor, vec3(2.2));
@@ -239,17 +166,16 @@ void main() {
 	indirect = indirect * envmapStrength;// * lightColor * lightStrength;
 
 
-
 	vec4 premultipliedReflect = vec4(vec3(direct + indirect * occlusion), matColor.a);
 	// vec4 premultipliedReflect = vec4(1.0, 0.0, 0.0, 0.01);
 	// vec4 premultipliedReflect = baseColor;
 	
 	float fragZ = wvpposition.z / wvpposition.w;
 	float a = min(1.0, premultipliedReflect.a) * 8.0 + 0.01;
-    float b = -fragZ * 0.95 + 1.0;
+	float b = -fragZ * 0.95 + 1.0;
 	float w = clamp(a * a * a * 1e8 * b * b * b, 1e-2, 3e2);
-    // accum = premultipliedReflect * w;
-    // revealage = premultipliedReflect.a;
+	// accum = premultipliedReflect * w;
+	// revealage = premultipliedReflect.a;
 	// RT0 = vec4(C * w, a)
 	// RT1 = vec4(vec3(a * w), 1)
 	fragColor[0] = vec4(premultipliedReflect.rgb * w, premultipliedReflect.a);

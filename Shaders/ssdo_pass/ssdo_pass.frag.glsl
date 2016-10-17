@@ -1,10 +1,13 @@
-// DSSDO
 // http://kayru.org/articles/dssdo/
 #version 450
 
 #ifdef GL_ES
 precision mediump float;
 #endif
+
+#include "../compiled.glsl"
+#include "../std/gbuffer.glsl"
+// octahedronWrap
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
@@ -13,7 +16,6 @@ uniform sampler2D snoise;
 uniform mat4 invVP;
 uniform vec3 eye;
 
-const float PI = 3.1415926535;
 const vec2 screenSize = vec2(800.0, 600.0);
 const vec2 aspectRatio = vec2(min(1.0, screenSize.y / screenSize.x), min(1.0, screenSize.x / screenSize.y));
 
@@ -29,24 +31,13 @@ const vec4 sh2_weight = vec4(sh2_weight_l1, sh2_weight_l0) / num_samples;
 in vec2 texCoord;
 out vec4 fragColor;
 
-vec2 octahedronWrap(vec2 v) {
-    return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
-}
-vec3 getPos(float depth, vec2 coord) {	
-    // vec4 pos = vec4(coord * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
-    vec4 pos = vec4(coord * 2.0 - 1.0, depth, 1.0);
-    pos = invVP * pos;
-    pos.xyz /= pos.w;
-    return pos.xyz - eye;
-}
-
 vec4 doDO(vec3 point, vec3 noise, float radius, vec3 center_pos, float max_distance_inv, vec3 center_normal) {
 	vec2 textureOffset = reflect( point.xy, noise.xy ).xy * radius;
 	vec2 sample_tex = texCoord + textureOffset;
 	
 	// float depth = 1.0 - texture(gbuffer0, sample_tex).a;
 	float depth = texture(gbufferD, sample_tex).r * 2.0 - 1.0;
-	vec3 sample_pos = getPos(depth, sample_tex);
+	vec3 sample_pos = getPos2(invVP, depth, sample_tex);
 
 	vec3 center_to_sample = sample_pos - center_pos;
 	float dist = length(center_to_sample);
@@ -61,16 +52,14 @@ vec4 doDO(vec3 point, vec3 noise, float radius, vec3 center_pos, float max_dista
 }
 
 void main() {
-	// float depth = 1.0 - texture(gbuffer0, texCoord).a;
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	// if (depth == 0.0) {
 	if (depth == 1.0) {
 		fragColor = vec4(1.0);
 		return;
 	}
 	
 	vec3 points[num_samples];	
- 	points[0] = vec3(-0.134, 0.044, -0.825);
+	points[0] = vec3(-0.134, 0.044, -0.825);
 	points[1] = vec3(0.045, -0.431, -0.529);
 	points[2] = vec3(-0.537, 0.195, -0.371);
 	points[3] = vec3(0.525, -0.397, 0.713);
@@ -104,14 +93,13 @@ void main() {
 	points[31] = vec3(0.534, 0.157, -0.250);
 	
 	vec2 enc = texture(gbuffer0, texCoord).rg;      
-    vec3 currentNormal;
-    currentNormal.z = 1.0 - abs(enc.x) - abs(enc.y);
-    currentNormal.xy = currentNormal.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
+	vec3 currentNormal;
+	currentNormal.z = 1.0 - abs(enc.x) - abs(enc.y);
+	currentNormal.xy = currentNormal.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
 	currentNormal = normalize(currentNormal);
 	
-	vec3 currentPos = getPos(depth, texCoord);
-	// float currentDistance = length(currentPos);
-	
+	vec3 currentPos = getPos2(invVP, depth, texCoord);
+	// float currentDistance = length(currentPos);	
 	
 	vec2 noise_texture_size = vec2(8.0,8.0);
 	vec3 center_pos = currentPos;
@@ -161,5 +149,5 @@ void main() {
 		occlusion_sh2 += doDO(points[31], noise, radius, center_pos, max_distance_inv, center_normal);
 	// }
 	
-    fragColor = vec4(vec3(1.0 - occlusion_sh2.rgb), 1.0);
+	fragColor = vec4(vec3(1.0 - occlusion_sh2.rgb), 1.0);
 }

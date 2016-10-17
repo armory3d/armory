@@ -5,6 +5,9 @@ precision highp float;
 #endif
 
 #include "../compiled.glsl"
+#include "../std/tonemap.glsl"
+// tonemapUncharted2()
+// tonemapFilmic()
 
 uniform sampler2D tex;
 uniform sampler2D gbufferD;
@@ -44,33 +47,21 @@ const float fstop = 20; // f-stop value
 
 const float aspectRatio = 800.0 / 600.0;
 
-#ifdef _CompoPos
-vec3 getPos(float depth) {
-	vec3 vray = normalize(viewRay);
-	const float projectionA = cameraPlane.y / (cameraPlane.y - cameraPlane.x);
-	const float projectionB = (-cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
-	float linearDepth = projectionB / (depth * 0.5 + 0.5 - projectionA);
-	float viewZDist = dot(eyeLook, vray);
-	vec3 wposition = eye + vray * (linearDepth / viewZDist);
-	return wposition;
-}
-#endif
-
 #ifdef _CompoFog
 // const vec3 compoFogColor = vec3(0.5, 0.6, 0.7);
 // const float compoFogAmountA = 1.0; // b = 0.01
 // const float compoFogAmountB = 1.0; // c = 0.1
 // vec3 applyFog(vec3 rgb, // original color of the pixel
-         // float distance, // camera to point distance
-         // vec3 rayOri, // camera position
-         // vec3 rayDir) { // camera to point vector
-    // float fogAmount = compoFogAmountB * exp(-rayOri.y * compoFogAmountA) * (1.0 - exp(-distance * rayDir.y * compoFogAmountA)) / rayDir.y;
-    // return mix(rgb, compoFogColor, fogAmount);
+		 // float distance, // camera to point distance
+		 // vec3 rayOri, // camera position
+		 // vec3 rayDir) { // camera to point vector
+	// float fogAmount = compoFogAmountB * exp(-rayOri.y * compoFogAmountA) * (1.0 - exp(-distance * rayDir.y * compoFogAmountA)) / rayDir.y;
+	// return mix(rgb, compoFogColor, fogAmount);
 // }
 vec3 applyFog(vec3 rgb, float distance) {
-    // float fogAmount = 1.0 - exp(-distance * compoFogAmountA);
-    float fogAmount = 1.0 - exp(-distance * 0.0055);
-    return mix(rgb, compoFogColor, fogAmount);
+	// float fogAmount = 1.0 - exp(-distance * compoFogAmountA);
+	float fogAmount = 1.0 - exp(-distance * 0.0055);
+	return mix(rgb, compoFogColor, fogAmount);
 }
 #endif
 
@@ -79,8 +70,8 @@ float vignette() {
 	// dist = smoothstep(vignout + (fstop / vignfade), vignin + (fstop / vignfade), dist);
 	// return clamp(dist, 0.0, 1.0);
 	// vignetting from iq
-    // return 0.4 + 0.6 * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
-    return 0.3 + 0.7 * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
+	// return 0.4 + 0.6 * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
+	return 0.3 + 0.7 * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
 }
 
 // #ifdef _CompoDOF
@@ -127,34 +118,9 @@ vec3 lensflare(vec2 uv, vec2 pos) {
 	
 	vec3 c = vec3(0.0);
 	c.r += f2 + f4 + f5 + f6;
-    c.g += f22 + f42 + f52 + f62;
-    c.b += f23 + f43 + f53 + f63;
+	c.g += f22 + f42 + f52 + f62;
+	c.b += f23 + f43 + f53 + f63;
 	return c;
-}
-
-//Based on Filmic Tonemapping Operators http://filmicgames.com/archives/75
-vec3 tonemapFilmic(vec3 color) {
-    vec3 x = max(vec3(0.0), color - 0.004);
-    return (x * (6.2 * x + 0.5)) / (x * (6.2 * x + 1.7) + 0.06);
-}
-vec3 tonemapReinhard(vec3 color) {
-  return color / (color + vec3(1.0));
-}
-vec3 uncharted2Tonemap(vec3 x) {
-	const float A = 0.15;
-	const float B = 0.50;
-	const float C = 0.10;
-	const float D = 0.20;
-	const float E = 0.02;
-	const float F = 0.30;
-	return ((x * (A * x + C * B) + D * E) / (x * (A * x + B) + D * F)) - E / F;
-}
-vec3 tonemapUncharted2(vec3 color) {
-	const float W = 11.2;
-    const float exposureBias = 2.0;
-    vec3 curr = uncharted2Tonemap(exposureBias * color);
-    vec3 whiteScale = 1.0 / uncharted2Tonemap(vec3(W));
-    return curr * whiteScale;
 }
 
 void main() {
@@ -167,7 +133,7 @@ void main() {
 	float power = (2.0 * PI / (2.0 * sqrt(dot(m, m)))) * fishEyeStrength;
 	float bind;
 	if (power > 0.0) { bind = sqrt(dot(m, m)); }
-    else { bind = m.x; }
+	else { bind = m.x; }
 	if (power > 0.0) {
 		texCo = m + normalize(d) * tan(r * power) * bind / tan(bind * power);
 	}
@@ -178,9 +144,9 @@ void main() {
 
 #ifdef _CompoFXAA
 	const float FXAA_REDUCE_MIN = 1.0 / 128.0;
-    const float FXAA_REDUCE_MUL = 1.0 / 8.0;
-    const float FXAA_SPAN_MAX = 8.0;
-    
+	const float FXAA_REDUCE_MUL = 1.0 / 8.0;
+	const float FXAA_SPAN_MAX = 8.0;
+	
 	vec2 tcrgbNW = (texCo + vec2(-1.0, -1.0) * texStep);
 	vec2 tcrgbNE = (texCo + vec2(1.0, -1.0) * texStep);
 	vec2 tcrgbSW = (texCo + vec2(-1.0, 1.0) * texStep);
@@ -188,43 +154,43 @@ void main() {
 	vec2 tcrgbM = vec2(texCo);
 	
 	vec3 rgbNW = texture(tex, tcrgbNW).rgb;
-    vec3 rgbNE = texture(tex, tcrgbNE).rgb;
-    vec3 rgbSW = texture(tex, tcrgbSW).rgb;
-    vec3 rgbSE = texture(tex, tcrgbSE).rgb;
-    vec4 texColor = texture(tex, tcrgbM);
+	vec3 rgbNE = texture(tex, tcrgbNE).rgb;
+	vec3 rgbSW = texture(tex, tcrgbSW).rgb;
+	vec3 rgbSE = texture(tex, tcrgbSE).rgb;
+	vec4 texColor = texture(tex, tcrgbM);
 	vec3 rgbM  = texColor.rgb;
-    vec3 luma = vec3(0.299, 0.587, 0.114);
+	vec3 luma = vec3(0.299, 0.587, 0.114);
 	float lumaNW = dot(rgbNW, luma);
-    float lumaNE = dot(rgbNE, luma);
-    float lumaSW = dot(rgbSW, luma);
-    float lumaSE = dot(rgbSE, luma);
-    float lumaM  = dot(rgbM,  luma);
+	float lumaNE = dot(rgbNE, luma);
+	float lumaSW = dot(rgbSW, luma);
+	float lumaSE = dot(rgbSE, luma);
+	float lumaM  = dot(rgbM,  luma);
 	float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));
-    float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));
+	float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));
 	
 	vec2 dir;
-    dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));
-    dir.y =  ((lumaNW + lumaSW) - (lumaNE + lumaSE));
+	dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));
+	dir.y =  ((lumaNW + lumaSW) - (lumaNE + lumaSE));
 	
 	float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) *
-                          (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);
-    
-    float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);
-    dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX),
-              max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX),
-              dir * rcpDirMin)) * texStep;
+						  (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);
+	
+	float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);
+	dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX),
+			  max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX),
+			  dir * rcpDirMin)) * texStep;
 			  
 	vec3 rgbA = 0.5 * (
-        texture(tex, texCo + dir * (1.0 / 3.0 - 0.5)).rgb +
-        texture(tex, texCo + dir * (2.0 / 3.0 - 0.5)).rgb);
-    vec3 rgbB = rgbA * 0.5 + 0.25 * (
-        texture(tex, texCo + dir * -0.5).rgb +
-        texture(tex, texCo + dir * 0.5).rgb);
+		texture(tex, texCo + dir * (1.0 / 3.0 - 0.5)).rgb +
+		texture(tex, texCo + dir * (2.0 / 3.0 - 0.5)).rgb);
+	vec3 rgbB = rgbA * 0.5 + 0.25 * (
+		texture(tex, texCo + dir * -0.5).rgb +
+		texture(tex, texCo + dir * 0.5).rgb);
 	
 	vec4 col;
 	float lumaB = dot(rgbB, luma);
-    if ((lumaB < lumaMin) || (lumaB > lumaMax)) col = vec4(rgbA, texColor.a);
-    else col = vec4(rgbB, texColor.a);
+	if ((lumaB < lumaMin) || (lumaB > lumaMax)) col = vec4(rgbA, texColor.a);
+	else col = vec4(rgbB, texColor.a);
 #else
 	vec4 col = texture(tex, texCo);
 #endif
@@ -271,7 +237,7 @@ void main() {
 
 #ifdef _CompoGrain
 	// const float compoGrainStrength = 4.0;
-    float x = (texCoord.x + 4.0) * (texCoord.y + 4.0) * (time * 10.0);
+	float x = (texCoord.x + 4.0) * (texCoord.y + 4.0) * (time * 10.0);
 	col.rgb += vec3(mod((mod(x, 13.0) + 1.0) * (mod(x, 123.0) + 1.0), 0.01) - 0.005) * compoGrainStrength;
 #endif
 	
@@ -292,7 +258,7 @@ void main() {
 	col.rgb = pow(col.rgb, vec3(1.0 / 2.2));
 	
 #ifdef _CompoBW
-    // col.rgb = vec3(clamp(dot(col.rgb, col.rgb), 0.0, 1.0));
+	// col.rgb = vec3(clamp(dot(col.rgb, col.rgb), 0.0, 1.0));
 	col.rgb = vec3((col.r * 0.3 + col.g * 0.59 + col.b * 0.11) / 3.0) * 2.5;
 #endif
 
