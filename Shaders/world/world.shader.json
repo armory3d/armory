@@ -2,20 +2,9 @@
 	"contexts": [
 		{
 			"name": "world",
-			"params": [
-				{
-					"name": "depth_write",
-					"value": "false"
-				},
-				{
-					"name": "compare_mode",
-					"value": "less"
-				},
-				{
-					"name": "cull_mode",
-					"value": "clockwise"
-				}
-			],
+			"depth_write": false,
+			"compare_mode": "less",
+			"cull_mode": "clockwise",
 			"links": [
 				{
 					"name": "SMVP",

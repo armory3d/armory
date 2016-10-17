@@ -2,20 +2,9 @@
 	"contexts": [
 		{
 			"name": "debug_normals",
-			"params": [
-				{
-					"name": "depth_write",
-					"value": "false"
-				},
-				{
-					"name": "compare_mode",
-					"value": "always"
-				},
-				{
-					"name": "cull_mode",
-					"value": "none"
-				}
-			],
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
 			"links": [
 				{
 					"name": "eye",

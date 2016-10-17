@@ -2,20 +2,9 @@
 	"contexts": [
 		{
 			"name": "volumetric_light",
-			"params": [
-				{
-					"name": "depth_write",
-					"value": "false"
-				},
-				{
-					"name": "compare_mode",
-					"value": "greater"
-				},
-				{
-					"name": "cull_mode",
-					"value": "counter_clockwise"
-				}
-			],
+			"depth_write": false,
+			"compare_mode": "greater",
+			"cull_mode": "counter_clockwise",
 			"links": [
 				{
 					"name": "LVWVP",

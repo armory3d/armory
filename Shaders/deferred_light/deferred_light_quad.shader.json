@@ -2,44 +2,15 @@
 	"contexts": [
 		{
 			"name": "deferred_light",
-			"params": [
-				{
-					"name": "depth_write",
-					"value": "false"
-				},
-				{
-					"name": "compare_mode",
-					"value": "always"
-				},
-				{
-					"name": "cull_mode",
-					"value": "none"
-				},
-				{
-					"name": "blend_source",
-					"value": "blend_one"
-				},
-				{
-					"name": "blend_destination",
-					"value": "blend_one"
-				},
-				{
-					"name": "blend_operation",
-					"value": "add"
-				},
-				{
-					"name": "alpha_blend_source",
-					"value": "blend_one"
-				},
-				{
-					"name": "alpha_blend_destination",
-					"value": "blend_one"
-				},
-				{
-					"name": "alpha_blend_operation",
-					"value": "add"
-				}
-			],
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"blend_source": "blend_one",
+			"blend_destination": "blend_one",
+			"blend_operation": "add",
+			"alpha_blend_source": "blend_one",
+			"alpha_blend_destination": "blend_one",
+			"alpha_blend_operation": "add",
 			"links": [
 				{
 					"name": "lightPos",

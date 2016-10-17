@@ -2,44 +2,15 @@
 	"contexts": [
 		{
 			"name": "translucent_resolve",
-			"params": [
-				{
-					"name": "depth_write",
-					"value": "false"
-				},
-				{
-					"name": "compare_mode",
-					"value": "always"
-				},
-				{
-					"name": "cull_mode",
-					"value": "none"
-				},
-				{
-					"name": "blend_source",
-					"value": "source_alpha"
-				},
-				{
-					"name": "blend_destination",
-					"value": "inverse_source_alpha"
-				},
-				{
-					"name": "blend_operation",
-					"value": "add"
-				},
-				{
-					"name": "alpha_blend_source",
-					"value": "source_alpha"
-				},
-				{
-					"name": "alpha_blend_destination",
-					"value": "inverse_source_alpha"
-				},
-				{
-					"name": "alpha_blend_operation",
-					"value": "add"
-				}
-			],
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"blend_source": "source_alpha",
+			"blend_destination": "inverse_source_alpha",
+			"blend_operation": "add",
+			"alpha_blend_source": "source_alpha",
+			"alpha_blend_destination": "inverse_source_alpha",
+			"alpha_blend_operation": "add",
 			"links": [],
 			"vertex_shader": "translucent_resolve.vert.glsl",
 			"vertex_shader_path": "../include/pass.vert.glsl",

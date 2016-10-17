@@ -52,60 +52,17 @@ def writeData(res, defs, json_data, base_name):
             con['tesseval_shader'] = tese_name + '.tese'
 
         # Params
-        for p in c['params']:
-            if p['name'] == 'depth_write':
-                if p['value'] == 'true':
-                    con['depth_write'] = True
-                else:
-                    con['depth_write'] = False
-            elif p['name'] == 'compare_mode':
-                con['compare_mode'] = p['value']
-            elif p['name'] == 'stencil_mode':
-                con['stencil_mode'] = p['value']
-            elif p['name'] == 'stencil_pass':
-                con['stencil_pass'] = p['value']
-            elif p['name'] == 'stencil_fail':
-                con['stencil_fail'] = p['value']
-            elif p['name'] == 'stencil_reference_value':
-                con['stencil_reference_value'] = p['value']
-            elif p['name'] == 'stencil_read_mask':
-                con['stencil_read_mask'] = p['value']
-            elif p['name'] == 'stencil_write_mask':
-                con['stencil_write_mask'] = p['value']
-            elif p['name'] == 'cull_mode':
-                con['cull_mode'] = p['value']
-            elif p['name'] == 'blend_source':
-                con['blend_source'] = p['value']
-            elif p['name'] == 'blend_destination':
-                con['blend_destination'] = p['value']
-            elif p['name'] == 'blend_operation':
-                con['blend_operation'] = p['value']
-            elif p['name'] == 'alpha_blend_source':
-                con['alpha_blend_source'] = p['value']
-            elif p['name'] == 'alpha_blend_destination':
-                con['alpha_blend_destination'] = p['value']
-            elif p['name'] == 'alpha_blend_operation':
-                con['alpha_blend_operation'] = p['value']
-            elif p['name'] == 'color_write_red':
-                if p['value'] == 'true':
-                    con['color_write_red'] = True
-                else:
-                    con['color_write_red'] = False
-            elif p['name'] == 'color_write_green':
-                if p['value'] == 'true':
-                    con['color_write_green'] = True
-                else:
-                    con['color_write_green'] = False
-            elif p['name'] == 'color_write_blue':
-                if p['value'] == 'true':
-                    con['color_write_blue'] = True
-                else:
-                    con['color_write_blue'] = False
-            elif p['name'] == 'color_write_alpha':
-                if p['value'] == 'true':
-                    con['color_write_alpha'] = True
-                else:
-                    con['color_write_alpha'] = False
+        params = ['depth_write', 'compare_mode', 'stencil_mode', \
+            'stencil_pass', 'stencil_fail', 'stencil_reference_value', \
+            'stencil_read_mask', 'stencil_write_mask', 'cull_mode', \
+            'blend_source', 'blend_destination', 'blend_operation', \
+            'alpha_blend_source', 'alpha_blend_destination', 'alpha_blend_operation' \
+            'color_write_red', 'color_write_green', 'color_write_blue', \
+            'color_write_alpha']
+
+        for p in params:
+            if p in c:
+                con[p] = c[p]
 
         # Parse shaders
         if 'vertex_shader_path' in c:
@@ -134,7 +91,7 @@ def writeData(res, defs, json_data, base_name):
                 tesc = open(c['tesscontrol_shader']).read().splitlines()
             parse_shader(sres, c, con, defs, tesc, False)
         if 'tesseval_shader' in c:
-            if 'tesseval_shader_path':
+            if 'tesseval_shader_path' in c:
                 tese = open(c['tesseval_shader_path']).read().splitlines()
             else:
                 tese = open(c['tesseval_shader']).read().splitlines()

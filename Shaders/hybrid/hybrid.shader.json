@@ -2,20 +2,9 @@
 	"contexts": [
 		{
 			"name": "mesh",
-			"params": [
-				{
-					"name": "depth_write",
-					"value": "false"
-				},
-				{
-					"name": "compare_mode",
-					"value": "less_equal"
-				},
-				{
-					"name": "cull_mode",
-					"value": "clockwise"
-				}
-			],
+			"depth_write": false,
+			"compare_mode": "less_equal",
+			"cull_mode": "clockwise",
 			"links": [
 				{
 					"name": "W",
@@ -128,20 +117,9 @@
 		},
 		{
 			"name": "overlay",
-			"params": [
-				{
-					"name": "depth_write",
-					"value": "true"
-				},
-				{
-					"name": "compare_mode",
-					"value": "less"
-				},
-				{
-					"name": "cull_mode",
-					"value": "clockwise"
-				}
-			],
+			"depth_write": true,
+			"compare_mode": "less",
+			"cull_mode": "clockwise",
 			"links": [
 				{
 					"name": "W",
@@ -215,20 +193,9 @@
 		},
 		{
 			"name": "shadowmap",
-			"params": [
-				{
-					"name": "depth_write",
-					"value": "true"
-				},
-				{
-					"name": "compare_mode",
-					"value": "less"
-				},
-				{
-					"name": "cull_mode",
-					"value": "clockwise"
-				}
-			],
+			"depth_write": true,
+			"compare_mode": "less",
+			"cull_mode": "clockwise",
 			"links": [
 				{
 					"name": "LWVP",
@@ -247,36 +214,13 @@
 		},
 		{
 			"name": "depthwrite",
-			"params": [
-				{
-					"name": "depth_write",
-					"value": "true"
-				},
-				{
-					"name": "compare_mode",
-					"value": "less"
-				},
-				{
-					"name": "cull_mode",
-					"value": "clockwise"
-				},
-				{
-					"name": "color_write_red",
-					"value": "false"
-				},
-				{
-					"name": "color_write_green",
-					"value": "false"
-				},
-				{
-					"name": "color_write_blue",
-					"value": "false"
-				},
-				{
-					"name": "color_write_alpha",
-					"value": "false"
-				}
-			],
+			"depth_write": true,
+			"compare_mode": "less",
+			"cull_mode": "clockwise",
+			"color_write_red": false,
+			"color_write_green": false,
+			"color_write_blue": false,
+			"color_write_alpha": false,
 			"links": [
 				{
 					"name": "LWVP",
