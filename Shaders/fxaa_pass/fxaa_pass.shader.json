@@ -24,7 +24,7 @@
 			],
 			"texture_params": [],
 			"vertex_shader": "fxaa_pass.vert.glsl",
-			"vertex_shader_path": "../pass.vert.glsl",
+			"vertex_shader_path": "../include/pass.vert.glsl",
 			"fragment_shader": "fxaa_pass.frag.glsl"
 		}
 	]

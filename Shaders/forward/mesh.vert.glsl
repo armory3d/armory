@@ -27,6 +27,10 @@ in vec3 nor;
 
 uniform mat4 W;
 uniform mat4 N;
+#ifdef _Billboard
+	uniform mat4 WV;
+	uniform mat4 P;
+#endif
 uniform mat4 V;
 uniform mat4 P;
 uniform mat4 LWVP;

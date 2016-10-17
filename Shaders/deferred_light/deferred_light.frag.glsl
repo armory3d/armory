@@ -10,23 +10,6 @@ uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
-// #ifdef _Probes
-	// uniform float shirr[27 * 20]; // Maximum of 20 SH sets
-// #else
-	// uniform float shirr[27];
-// #endif
-// uniform float envmapStrength;
-// #ifdef _Rad
-	// uniform sampler2D senvmapRadiance;
-	// uniform sampler2D senvmapBrdf;
-	// uniform int envmapNumMipmaps;
-// #endif
-
-// uniform sampler2D giblur; // Path-traced
-
-// #ifdef _SSAO
-	// uniform sampler2D ssaotex;
-// #endif
 #ifndef _NoShadows
 	uniform sampler2D shadowMap;
 	#ifdef _PCSS
@@ -120,14 +103,6 @@ vec3 SSSSTransmittance(float translucency, float sssWidth, vec3 worldPosition, v
 	return profile * clamp(0.3 + dot(lightDir, -worldNormal), 0.0, 1.0);
 }
 #endif
-
-// #ifdef _Rad
-// float getMipLevelFromRoughness(float roughness) {
-// 	// First mipmap level = roughness 0, last = roughness = 1
-// 	// baseColor texture already counted
-// 	return roughness * envmapNumMipmaps;
-// }
-// #endif
 
 vec3 surfaceAlbedo(vec3 baseColor, float metalness) {
 	return mix(baseColor, vec3(0.0), metalness);
@@ -404,12 +379,6 @@ float shadowTest(vec4 lPos) {
 }
 #endif
 
-// vec2 envMapEquirect(vec3 normal) {
-// 	float phi = acos(normal.z);
-// 	float theta = atan(-normal.y, normal.x) + PI;
-// 	return vec2(theta / PI2, phi / PI);
-// }
-
 vec2 octahedronWrap(vec2 v) {
 	return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
 }
@@ -618,57 +587,6 @@ float wardSpecular(vec3 N, vec3 H, float dotNL, float dotNV, float dotNH, vec3 f
 	return clamp(coeff * exp(-2.0 * theta), 0.0, 1.0);
 }
 #endif
-
-// #ifdef _Probes
-// vec3 shIrradiance(vec3 nor, float scale, int probe) {
-// #else
-// vec3 shIrradiance(vec3 nor, float scale) {
-// #endif
-// 	const float c1 = 0.429043;
-// 	const float c2 = 0.511664;
-// 	const float c3 = 0.743125;
-// 	const float c4 = 0.886227;
-// 	const float c5 = 0.247708;
-// 	vec3 cl00, cl1m1, cl10, cl11, cl2m2, cl2m1, cl20, cl21, cl22;
-// #ifdef _Probes
-// 	if (probe == 0) {
-// #endif
-// 		cl00 = vec3(shirr[0], shirr[1], shirr[2]);
-// 		cl1m1 = vec3(shirr[3], shirr[4], shirr[5]);
-// 		cl10 = vec3(shirr[6], shirr[7], shirr[8]);
-// 		cl11 = vec3(shirr[9], shirr[10], shirr[11]);
-// 		cl2m2 = vec3(shirr[12], shirr[13], shirr[14]);
-// 		cl2m1 = vec3(shirr[15], shirr[16], shirr[17]);
-// 		cl20 = vec3(shirr[18], shirr[19], shirr[20]);
-// 		cl21 = vec3(shirr[21], shirr[22], shirr[23]);
-// 		cl22 = vec3(shirr[24], shirr[25], shirr[26]);
-// #ifdef _Probes
-// 	}
-// 	else if (probe == 1) {
-// 		cl00 = vec3(shirr[27 + 0], shirr[27 + 1], shirr[27 + 2]);
-// 		cl1m1 = vec3(shirr[27 + 3], shirr[27 + 4], shirr[27 + 5]);
-// 		cl10 = vec3(shirr[27 + 6], shirr[27 + 7], shirr[27 + 8]);
-// 		cl11 = vec3(shirr[27 + 9], shirr[27 + 10], shirr[27 + 11]);
-// 		cl2m2 = vec3(shirr[27 + 12], shirr[27 + 13], shirr[27 + 14]);
-// 		cl2m1 = vec3(shirr[27 + 15], shirr[27 + 16], shirr[27 + 17]);
-// 		cl20 = vec3(shirr[27 + 18], shirr[27 + 19], shirr[27 + 20]);
-// 		cl21 = vec3(shirr[27 + 21], shirr[27 + 22], shirr[27 + 23]);
-// 		cl22 = vec3(shirr[27 + 24], shirr[27 + 25], shirr[27 + 26]);
-// 	}
-// #endif
-// 	return (
-// 		c1 * cl22 * (nor.y * nor.y - (-nor.z) * (-nor.z)) +
-//		c3 * cl20 * nor.x * nor.x +
-//		c4 * cl00 -
-//		c5 * cl20 +
-//		2.0 * c1 * cl2m2 * nor.y * (-nor.z) +
-//		2.0 * c1 * cl21  * nor.y * nor.x +
-//		2.0 * c1 * cl2m1 * (-nor.z) * nor.x +
-//		2.0 * c2 * cl11  * nor.y +
-//		2.0 * c2 * cl1m1 * (-nor.z) +
-//		2.0 * c2 * cl10  * nor.x
-// 	) * scale;
-// }
 
 #ifdef _VoxelGI
 vec4 sampleVoxels(vec3 worldPosition, float lod) {

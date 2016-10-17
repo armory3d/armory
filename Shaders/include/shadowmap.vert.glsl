@@ -6,10 +6,6 @@ precision highp float;
 
 #include "../compiled.glsl"
 
-#ifdef _NorTex
-#define _BaseTex
-#endif
-
 in vec3 pos;
 in vec3 nor;
 #ifdef _Tex
@@ -20,7 +16,6 @@ in vec3 nor;
 #endif
 #ifdef _NorTex
 	in vec3 tan;
-	in vec3 bitan;
 #endif
 #ifdef _Skinning
 	in vec4 bone;
@@ -31,11 +26,13 @@ in vec3 nor;
 #endif
 
 uniform mat4 LWVP;
+#ifdef _Billboard
+uniform mat4 WV;
+uniform mat4 P;
+#endif
 #ifdef _Skinning
 	uniform float skinBones[skinMaxBones * 8];
 #endif
-
-// out vec4 position;
 
 #ifdef _Skinning
 void getSkinningDualQuat(vec4 weights, out vec4 A, inout vec4 B) {
@@ -101,6 +98,17 @@ void main() {
 	sPos.xyz += off;
 #endif
 
+#ifdef _Billboard
+	mat4 constrWV = WV;
+	// Spherical
+	constrWV[0][0] = 1.0; constrWV[0][1] = 0.0; constrWV[0][2] = 0.0;
+	constrWV[1][0] = 0.0; constrWV[1][1] = 1.0; constrWV[1][2] = 0.0;
+	constrWV[2][0] = 0.0; constrWV[2][1] = 0.0; constrWV[2][2] = 1.0;
+	// Cylindrical
+	//constrWV[0][0] = 1.0; constrWV[0][1] = 0.0; constrWV[0][2] = 0.0;
+	//constrWV[2][0] = 0.0; constrWV[2][1] = 0.0; constrWV[2][2] = 1.0;
+	gl_Position = P * constrWV * sPos;
+#else
 	gl_Position = LWVP * sPos;
-	// position = gl_Position;
+#endif
 }

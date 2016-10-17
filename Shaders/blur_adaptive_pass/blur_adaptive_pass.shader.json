@@ -28,7 +28,7 @@
 			],
 			"texture_params": [],
 			"vertex_shader": "blur_adaptive_pass.vert.glsl",
-			"vertex_shader_path": "../pass.vert.glsl",
+			"vertex_shader_path": "../include/pass.vert.glsl",
 			"fragment_shader": "blur_adaptive_pass.frag.glsl"
 		},
 		{
@@ -59,7 +59,7 @@
 			],
 			"texture_params": [],
 			"vertex_shader": "blur_adaptive_pass.vert.glsl",
-			"vertex_shader_path": "../pass.vert.glsl",
+			"vertex_shader_path": "../include/pass.vert.glsl",
 			"fragment_shader": "blur_adaptive_pass.frag.glsl"
 		},
 		
@@ -92,7 +92,7 @@
 			],
 			"texture_params": [],
 			"vertex_shader": "blur_adaptive_pass.vert.glsl",
-			"vertex_shader_path": "../pass.vert.glsl",
+			"vertex_shader_path": "../include/pass.vert.glsl",
 			"fragment_shader": "blur_adaptive_pass.frag.glsl"
 		},
 		{
@@ -123,7 +123,7 @@
 			],
 			"texture_params": [],
 			"vertex_shader": "blur_adaptive_pass.vert.glsl",
-			"vertex_shader_path": "../pass.vert.glsl",
+			"vertex_shader_path": "../include/pass.vert.glsl",
 			"fragment_shader": "blur_adaptive_pass.frag.glsl"
 		},
 		{
@@ -166,7 +166,7 @@
 			],
 			"texture_params": [],
 			"vertex_shader": "blur_adaptive_pass.vert.glsl",
-			"vertex_shader_path": "../pass.vert.glsl",
+			"vertex_shader_path": "../include/pass.vert.glsl",
 			"fragment_shader": "blur_adaptive_pass.frag.glsl"
 		}
 	]

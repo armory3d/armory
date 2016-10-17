@@ -45,7 +45,7 @@
 			],
 			"texture_params": [],
 			"vertex_shader": "ssao_pass.vert.glsl",
-			"vertex_shader_path": "../pass.vert.glsl",
+			"vertex_shader_path": "../include/pass.vert.glsl",
 			"fragment_shader": "ssao_pass.frag.glsl"
 		}
 	]

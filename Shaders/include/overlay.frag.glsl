@@ -5,6 +5,7 @@ precision mediump float;
 #endif
 
 #define _NoShadows
+#define _LDR
 
 #include "../compiled.glsl"
 
@@ -12,7 +13,7 @@ precision mediump float;
 	uniform sampler2D sbase;
 #endif
 #ifndef _NoShadows
-    uniform sampler2D shadowMap;
+	uniform sampler2D shadowMap;
 #endif
 uniform float shirr[27];
 #ifdef _Rad
@@ -38,10 +39,6 @@ uniform sampler2D srough;
 #else
 	uniform float metalness;
 #endif
-#ifdef _HeightTex
-	uniform sampler2D sheight;
-	uniform float heightStrength;
-#endif
 
 uniform float envmapStrength;
 uniform bool receiveShadow;
@@ -65,51 +62,51 @@ out vec4 fragColor;
 
 #ifndef _NoShadows
 float texture2DCompare(vec2 uv, float compare) {
-    float depth = texture(shadowMap, uv).r * 2.0 - 1.0;
-    return step(compare, depth);
+	float depth = texture(shadowMap, uv).r * 2.0 - 1.0;
+	return step(compare, depth);
 }
 float texture2DShadowLerp(vec2 size, vec2 uv, float compare) {
-    vec2 texelSize = vec2(1.0) / size;
-    vec2 f = fract(uv * size + 0.5);
-    vec2 centroidUV = floor(uv * size + 0.5) / size;
+	vec2 texelSize = vec2(1.0) / size;
+	vec2 f = fract(uv * size + 0.5);
+	vec2 centroidUV = floor(uv * size + 0.5) / size;
 
-    float lb = texture2DCompare(centroidUV + texelSize * vec2(0.0, 0.0), compare);
-    float lt = texture2DCompare(centroidUV + texelSize * vec2(0.0, 1.0), compare);
-    float rb = texture2DCompare(centroidUV + texelSize * vec2(1.0, 0.0), compare);
-    float rt = texture2DCompare(centroidUV + texelSize * vec2(1.0, 1.0), compare);
-    float a = mix(lb, lt, f.y);
-    float b = mix(rb, rt, f.y);
-    float c = mix(a, b, f.x);
-    return c;
+	float lb = texture2DCompare(centroidUV + texelSize * vec2(0.0, 0.0), compare);
+	float lt = texture2DCompare(centroidUV + texelSize * vec2(0.0, 1.0), compare);
+	float rb = texture2DCompare(centroidUV + texelSize * vec2(1.0, 0.0), compare);
+	float rt = texture2DCompare(centroidUV + texelSize * vec2(1.0, 1.0), compare);
+	float a = mix(lb, lt, f.y);
+	float b = mix(rb, rt, f.y);
+	float c = mix(a, b, f.x);
+	return c;
 }
 float PCF(vec2 uv, float compare) {
-    float result = 0.0;
-    // for (int x = -1; x <= 1; x++){
-        // for(int y = -1; y <= 1; y++){
-            // vec2 off = vec2(x, y) / shadowmapSize;
-            // result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+	float result = 0.0;
+	// for (int x = -1; x <= 1; x++){
+		// for(int y = -1; y <= 1; y++){
+			// vec2 off = vec2(x, y) / shadowmapSize;
+			// result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			
 			vec2 off = vec2(-1, -1) / shadowmapSize;
-            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			off = vec2(-1, 0) / shadowmapSize;
-            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			off = vec2(-1, 1) / shadowmapSize;
-            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			off = vec2(0, -1) / shadowmapSize;
-            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			off = vec2(0, 0) / shadowmapSize;
-            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			off = vec2(0, 1) / shadowmapSize;
-            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			off = vec2(1, -1) / shadowmapSize;
-            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			off = vec2(1, 0) / shadowmapSize;
-            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
 			off = vec2(1, 1) / shadowmapSize;
-            result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
-        // }
-    // }
-    return result / 9.0;
+			result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
+		// }
+	// }
+	return result / 9.0;
 }
 float shadowTest(vec4 lPos) {
 	lPos.xyz = lPos.xyz / lPos.w;
@@ -119,12 +116,12 @@ float shadowTest(vec4 lPos) {
 #endif
 
 vec3 shIrradiance(vec3 nor, float scale) {
-    const float c1 = 0.429043;
-    const float c2 = 0.511664;
-    const float c3 = 0.743125;
-    const float c4 = 0.886227;
-    const float c5 = 0.247708;
-    vec3 cl00, cl1m1, cl10, cl11, cl2m2, cl2m1, cl20, cl21, cl22;
+	const float c1 = 0.429043;
+	const float c2 = 0.511664;
+	const float c3 = 0.743125;
+	const float c4 = 0.886227;
+	const float c5 = 0.247708;
+	vec3 cl00, cl1m1, cl10, cl11, cl2m2, cl2m1, cl20, cl21, cl22;
 	cl00 = vec3(shirr[0], shirr[1], shirr[2]);
 	cl1m1 = vec3(shirr[3], shirr[4], shirr[5]);
 	cl10 = vec3(shirr[6], shirr[7], shirr[8]);
@@ -134,8 +131,8 @@ vec3 shIrradiance(vec3 nor, float scale) {
 	cl20 = vec3(shirr[18], shirr[19], shirr[20]);
 	cl21 = vec3(shirr[21], shirr[22], shirr[23]);
 	cl22 = vec3(shirr[24], shirr[25], shirr[26]);
-    return (
-        c1 * cl22 * (nor.y * nor.y - (-nor.z) * (-nor.z)) +
+	return (
+		c1 * cl22 * (nor.y * nor.y - (-nor.z) * (-nor.z)) +
 		c3 * cl20 * nor.x * nor.x +
 		c4 * cl00 -
 		c5 * cl20 +
@@ -145,7 +142,7 @@ vec3 shIrradiance(vec3 nor, float scale) {
 		2.0 * c2 * cl11  * nor.y +
 		2.0 * c2 * cl1m1 * (-nor.z) +
 		2.0 * c2 * cl10  * nor.x
-    ) * scale;
+	) * scale;
 }
 
 vec2 envMapEquirect(vec3 normal) {
@@ -317,7 +314,7 @@ void main() {
 	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 	indirect += indirectSpecular;
 #endif
-	indirect = indirect * lightColor * lightStrength * envmapStrength;
+	indirect = indirect * envmapStrength // * lightColor * lightStrength;
 	fragColor = vec4(vec3(direct * visibility + indirect), 1.0);
 	
 #ifdef _OccTex
@@ -328,8 +325,6 @@ void main() {
 #endif
 
 #ifdef _LDR
-    fragColor.rgb = vec3(pow(fragColor.rgb, vec3(1.0 / 2.2)));
-// #else
-    // fragColor = vec4(fragColor.rgb, fragColor.a);
+	fragColor.rgb = vec3(pow(fragColor.rgb, vec3(1.0 / 2.2)));
 #endif
 }

@@ -209,7 +209,9 @@
 				}
 			],
 			"vertex_shader": "overlay.vert.glsl",
-			"fragment_shader": "overlay.frag.glsl"
+			"vertex_shader_path": "../include/overlay.vert.glsl",
+			"fragment_shader": "overlay.frag.glsl",
+			"fragment_shader_path": "../include/overlay.frag.glsl"
 		},
 		{
 			"name": "shadowmap",
@@ -239,7 +241,9 @@
 				}
 			],
 			"vertex_shader": "shadowmap.vert.glsl",
-			"fragment_shader": "shadowmap.frag.glsl"
+			"vertex_shader_path": "../include/shadowmap.vert.glsl",
+			"fragment_shader": "shadowmap.frag.glsl",
+			"fragment_shader_path": "../include/shadowmap.frag.glsl"
 		},
 		{
 			"name": "depthwrite",
@@ -275,7 +279,7 @@
 			],
 			"links": [
 				{
-					"name": "WVP",
+					"name": "LWVP",
 					"link": "_worldViewProjectionMatrix"
 				},
 				{
@@ -295,7 +299,9 @@
 				}
 			],
 			"vertex_shader": "depthwrite.vert.glsl",
-			"fragment_shader": "depthwrite.frag.glsl"
+			"vertex_shader_path": "../include/shadowmap.vert.glsl",
+			"fragment_shader": "depthwrite.frag.glsl",
+			"fragment_shader_path": "../include/shadowmap.frag.glsl"
 		}
 	]
 }

@@ -139,7 +139,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     # Remove shader datas if shaders were deleted
     elif os.path.isdir('build/compiled/Shaders') == False and os.path.isdir('build/compiled/ShaderDatas') == True:
         shutil.rmtree('build/compiled/ShaderDatas')
-    
+
     # Write referenced shader variants
     for ref in assets.shader_datas:
         # Data does not exist yet
@@ -153,9 +153,13 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
             else:
                 defs = []
             compile_shader(raw_shaders_path, shader_name, defs)
-    
+
     # Reset path
     os.chdir(fp)
+
+    # Copy std shaders
+    if not os.path.isdir('build/compiled/Shaders/std'):
+        shutil.copytree(raw_shaders_path + 'std', 'build/compiled/Shaders/std')
 
     # Write compiled.glsl
     write_data.write_compiledglsl()

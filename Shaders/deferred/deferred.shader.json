@@ -263,7 +263,9 @@
 				}
 			],
 			"vertex_shader": "overlay.vert.glsl",
-			"fragment_shader": "overlay.frag.glsl"
+			"vertex_shader_path": "../include/overlay.vert.glsl",
+			"fragment_shader": "overlay.frag.glsl",
+			"fragment_shader_path": "../include/overlay.frag.glsl"
 		},
 		{
 			"name": "shadowmap",
@@ -293,7 +295,9 @@
 				}
 			],
 			"vertex_shader": "shadowmap.vert.glsl",
-			"fragment_shader": "shadowmap.frag.glsl"
+			"vertex_shader_path": "../include/shadowmap.vert.glsl",
+			"fragment_shader": "shadowmap.frag.glsl",
+			"fragment_shader_path": "../include/shadowmap.frag.glsl"
 		},
 		{
 			"name": "shadowmapheight",
@@ -324,42 +328,10 @@
 			],
 			"vertex_shader": "shadowmapheight.vert.glsl",
 			"fragment_shader": "shadowmapheight.frag.glsl",
+			"fragment_shader_path": "../include/shadowmap.frag.glsl",
 			"tesscontrol_shader": "shadowmapheight.tesc.glsl",
 			"tesseval_shader": "shadowmapheight.tese.glsl"
 		},
-		{
-			"name": "depthwrite",
-			"params": [
-				{
-					"name": "depth_write",
-					"value": "true"
-				},
-				{
-					"name": "compare_mode",
-					"value": "less"
-				},
-				{
-					"name": "cull_mode",
-					"value": "clockwise"
-				}
-			],
-			"links": [
-				{
-					"name": "LWVP",
-					"link": "_lampWorldViewProjectionMatrix"
-				},
-				{
-					"name": "skinBones",
-					"link": "_skinBones",
-					"ifdef": ["_Skinning"]
-				}
-			],
-			"vertex_shader": "depthwrite.vert.glsl",
-			"fragment_shader": "depthwrite.frag.glsl"
-		},
-
-
-
 		{
 			"name": "decals",
 			"params": [
@@ -428,7 +400,6 @@
 			"vertex_shader": "decals.vert.glsl",
 			"fragment_shader": "decals.frag.glsl"
 		},
-		
 		{
 			"name": "translucent",
 			"params": [
@@ -603,8 +574,11 @@
 			],
 			"texture_params": [],
 			"vertex_shader": "voxel.vert.glsl",
+			"vertex_shader_path": "../include/voxel.vert.glsl",
 			"fragment_shader": "voxel.frag.glsl",
-			"geometry_shader": "voxel.geom.glsl"
+			"fragment_shader_path": "../include/voxel.frag.glsl",
+			"geometry_shader": "voxel.geom.glsl",
+			"geometry_shader_path": "../include/voxel.geom.glsl"
 		}
 	]
 }

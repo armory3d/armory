@@ -19,7 +19,7 @@
 			"links": [],
 			"texture_params": [],
 			"vertex_shader": "debug_velocity.vert.glsl",
-			"vertex_shader_path": "../pass.vert.glsl",
+			"vertex_shader_path": "../include/pass.vert.glsl",
 			"fragment_shader": "debug_velocity.frag.glsl"
 		}
 	]
