@@ -3,35 +3,26 @@ import math
 import assets
 import utils
 import os
+import nodes
 
 def is_pow(num):
     return ((num & (num - 1)) == 0) and num != 0
 
-def find_node_by_link(node_group, to_node, target_socket):
-    for link in node_group.links:
-        if link.to_node == to_node and link.to_socket == target_socket:
-            return link.from_node
-
-def get_output_node(tree):
-    for n in tree.nodes:
-        if n.type == 'OUTPUT_MATERIAL':
-            return n
-
 # Material output is used as starting point
 def parse(self, material, c, defs):
     tree = material.node_tree
-    output_node = get_output_node(tree)
+    output_node = nodes.get_node_by_type(tree, 'OUTPUT_MATERIAL')
 
     # Traverse material tree
     if output_node != None:
         # Surface socket is linked
         if output_node.inputs[0].is_linked:
-            surface_node = find_node_by_link(tree, output_node, output_node.inputs[0])
+            surface_node = nodes.find_node_by_link(tree, output_node, output_node.inputs[0])
             parse_from(self, material, c, defs, surface_node)
         
         # Displace socket is linked
         if output_node.inputs[2].is_linked:
-            displace_node = find_node_by_link(tree, output_node, output_node.inputs[2])
+            displace_node = nodes.find_node_by_link(tree, output_node, output_node.inputs[2])
             parse_material_displacement(self, material, c, defs, tree, displace_node, 1.0)
             
         # No albedo color parsed, append white
@@ -150,7 +141,7 @@ def parse_value_node(node):
 
 def parse_float_input(tree, node, inp):
     if inp.is_linked:
-        float_node = find_node_by_link(tree, node, inp)
+        float_node = nodes.find_node_by_link(tree, node, inp)
         if float_node.type == 'VALUE':
             return parse_value_node(float_node)
     else:
@@ -200,10 +191,10 @@ def parse_mix_shader(self, material, c, defs, tree, node, factor):
     mixfactor = node.inputs[0].default_value * factor
     if node.inputs[1].is_linked:
         mixfactor0 = 1.0 - mixfactor
-        surface1_node = find_node_by_link(tree, node, node.inputs[1])
+        surface1_node = nodes.find_node_by_link(tree, node, node.inputs[1])
         parse_material_surface(self, material, c, defs, tree, surface1_node, mixfactor0)
     if node.inputs[2].is_linked:
-        surface2_node = find_node_by_link(tree, node, node.inputs[2])
+        surface2_node = nodes.find_node_by_link(tree, node, node.inputs[2])
         parse_material_surface(self, material, c, defs, tree, surface2_node, mixfactor)
 
 def parse_bsdf_transparent(self, material, c, defs, tree, node, factor):
@@ -230,7 +221,7 @@ def parse_bsdf_diffuse(self, material, c, defs, tree, node, factor):
     # Normal
     normal_input = node.inputs[2]
     if normal_input.is_linked:
-        normal_map_node = find_node_by_link(tree, node, normal_input)
+        normal_map_node = nodes.find_node_by_link(tree, node, normal_input)
         if normal_map_node.type == 'NORMAL_MAP':
             normal_map_input = normal_map_node.inputs[1]
             parse_normal_map_socket(self, normal_map_input, material, c, defs, tree, node, factor)
@@ -375,7 +366,7 @@ def add_normal_strength(self, c, defs, f):
 
 def parse_base_color_socket(self, base_color_input, material, c, defs, tree, node, factor):
     if base_color_input.is_linked:
-        color_node = find_node_by_link(tree, node, base_color_input)
+        color_node = nodes.find_node_by_link(tree, node, base_color_input)
         if color_node.type == 'TEX_IMAGE':
             add_albedo_tex(self, color_node, material, c, defs)
         elif color_node.type == 'TEX_CHECKER':
@@ -403,7 +394,7 @@ def add_metalness_const(res, c, factor, minimum_val=0.0, sqrt_val=False):
 
 def parse_metalness_socket(self, metalness_input, material, c, defs, tree, node, factor, minimum_val=0.0, sqrt_val=False):
     if metalness_input.is_linked:
-        metalness_node = find_node_by_link(tree, node, metalness_input)
+        metalness_node = nodes.find_node_by_link(tree, node, metalness_input)
         add_metalness_tex(self, metalness_node, material, c, defs)
     elif '_MetTex' not in defs:
         res = metalness_input.default_value
@@ -422,7 +413,7 @@ def add_roughness_const(res, c, factor, minimum_val=0.0, sqrt_val=False):
         
 def parse_roughness_socket(self, roughness_input, material, c, defs, tree, node, factor, minimum_val=0.0, sqrt_val=False):
     if roughness_input.is_linked:
-        roughness_node = find_node_by_link(tree, node, roughness_input)
+        roughness_node = nodes.find_node_by_link(tree, node, roughness_input)
         add_roughness_tex(self, roughness_node, material, c, defs)
     elif '_RoughTex' not in defs:
         res = parse_float_input(tree, node, roughness_input)
@@ -430,7 +421,7 @@ def parse_roughness_socket(self, roughness_input, material, c, defs, tree, node,
 
 def parse_normal_map_socket(self, normal_input, material, c, defs, tree, node, factor):
     if normal_input.is_linked:
-        normal_node = find_node_by_link(tree, node, normal_input)
+        normal_node = nodes.find_node_by_link(tree, node, normal_input)
         add_normal_tex(self, normal_node, material, c, defs)
 
 def add_occlusion_const(res, c, factor):
@@ -442,7 +433,7 @@ def add_occlusion_const(res, c, factor):
 
 def parse_occlusion_socket(self, occlusion_input, material, c, defs, tree, node, factor):
     if occlusion_input.is_linked:
-        occlusion_node = find_node_by_link(tree, node, occlusion_input)
+        occlusion_node = nodes.find_node_by_link(tree, node, occlusion_input)
         add_occlusion_tex(self, occlusion_node, material, c, defs)
     elif '_OccTex' not in defs:
         res = occlusion_input.default_value[0] # Take only one channel
@@ -450,7 +441,7 @@ def parse_occlusion_socket(self, occlusion_input, material, c, defs, tree, node,
 
 def parse_height_socket(self, height_input, material, c, defs, tree, node, factor):
     if height_input.is_linked:
-        height_node = find_node_by_link(tree, node, height_input)
+        height_node = nodes.find_node_by_link(tree, node, height_input)
         add_height_tex(self, height_node, material, c, defs)
 
 def parse_pbr_group(self, material, c, defs, tree, node, factor):

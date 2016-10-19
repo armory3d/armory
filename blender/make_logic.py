@@ -4,9 +4,10 @@ from bpy.props import *
 import os
 import sys
 import nodes_logic
+import nodes
 
 # Generating node sources
-def buildNodeTrees():
+def build_node_trees():
     s = bpy.data.filepath.split(os.path.sep)
     s.pop()
     fp = os.path.sep.join(s)
@@ -21,9 +22,9 @@ def buildNodeTrees():
     for node_group in bpy.data.node_groups:
         if node_group.bl_idname == 'ArmLogicTreeType': # Build only game trees
             node_group.use_fake_user = True # Keep fake references for now
-            buildNodeTree(node_group)
+            build_node_tree(node_group)
 
-def buildNodeTree(node_group):
+def build_node_tree(node_group):
     path = 'Sources/' + bpy.data.worlds['Arm'].arm_project_package.replace('.', '/') + '/node/'
     node_group_name = node_group.name.replace('.', '_').replace(' ', '')
 
@@ -74,7 +75,7 @@ def buildNode(node_group, node, f, created_nodes):
         # Is linked - find node
         inpname = ''
         if inp.is_linked:
-            n = findNodeByLink(node_group, node, inp)
+            n = nodes.find_node_by_link(node_group, node, inp)
             inpname = buildNode(node_group, n, f, created_nodes)
         # Not linked - create node with default values
         else:
@@ -84,13 +85,6 @@ def buildNode(node_group, node, f, created_nodes):
         f.write('\t\t' + name + '.inputs.push(' + inpname + ');\n')
         
     return name
-            
-def findNodeByLink(node_group, to_node, inp):
-    for link in node_group.links:
-        if link.to_node == to_node and link.to_socket == inp:
-            if link.from_node.bl_idname == 'NodeReroute': # Step through reroutes
-                return findNodeByLink(node_group, link.from_node, link.from_node.inputs[0])
-            return link.from_node
     
 def get_root_nodes(node_group):
     roots = []
@@ -107,5 +101,4 @@ def build_default_node(inp):
         inpname = 'FloatNode.create(' + str(inp.default_value) + ')'
     elif inp.type == 'BOOLEAN':
         inpname = 'BoolNode.create(' + str(inp.default_value).lower() + ')'
-        
     return inpname

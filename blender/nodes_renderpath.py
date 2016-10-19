@@ -1,14 +1,6 @@
 import bpy
 from bpy.types import NodeTree, Node, NodeSocket
 from bpy.props import *
-import os
-import sys
-import json
-import platform
-import subprocess
-import make_compositor
-from utils import to_hex
-import assets
 import utils
 
 class CGPipelineTree(NodeTree):

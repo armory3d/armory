@@ -4,9 +4,10 @@ from bpy.types import Header
 from bpy.app.translations import contexts as i18n_contexts
 import utils
 import make
+import make_state as state
 
-class SPACEARMORY_HT_header(Header):
-    bl_space_type = 'VIEW_GAME'
+class ArmorySpaceHeader(Header):
+    bl_space_type = 'VIEW_ARMORY'
     info_text = ''
     is_paused = False
 
@@ -19,12 +20,12 @@ class SPACEARMORY_HT_header(Header):
         row = layout.row(align=True)
         # row.template_header()
         row.operator('arm.space_stop', icon='MESH_PLANE')
-        if SPACEARMORY_HT_header.is_paused:
+        if ArmorySpaceHeader.is_paused:
             row.operator('arm.space_resume', icon="PLAY")
         else:
             row.operator('arm.space_pause', icon="PAUSE")
 
-        layout.label(SPACEARMORY_HT_header.info_text)
+        layout.label(ArmorySpaceHeader.info_text)
 
 class ArmorySpaceStopButton(bpy.types.Operator):
     '''Switch back to 3D view'''
@@ -34,10 +35,10 @@ class ArmorySpaceStopButton(bpy.types.Operator):
     def execute(self, context):
         area = bpy.context.area
         if area == None:
-            area = make.play_project.play_area
+            area = state.play_area
         area.type = 'VIEW_3D'
-        SPACEARMORY_HT_header.is_paused = False
-        SPACEARMORY_HT_header.info_text = ''
+        ArmorySpaceHeader.is_paused = False
+        ArmorySpaceHeader.info_text = ''
         return{'FINISHED'}
 
 class ArmorySpacePauseButton(bpy.types.Operator):
@@ -46,7 +47,7 @@ class ArmorySpacePauseButton(bpy.types.Operator):
     bl_label = 'Pause'
  
     def execute(self, context):
-        SPACEARMORY_HT_header.is_paused = True
+        ArmorySpaceHeader.is_paused = True
         return{'FINISHED'}
 
 class ArmorySpaceResumeButton(bpy.types.Operator):
@@ -55,7 +56,7 @@ class ArmorySpaceResumeButton(bpy.types.Operator):
     bl_label = 'Resume'
  
     def execute(self, context):
-        SPACEARMORY_HT_header.is_paused = False
+        ArmorySpaceHeader.is_paused = False
         return{'FINISHED'}
 
 def register():

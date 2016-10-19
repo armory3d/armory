@@ -1,3 +1,7 @@
+import utils
+import shutil
+import os
+
 assets = []
 khafile_defs = []
 embedded_data = []
@@ -46,3 +50,29 @@ def add_shader2(dir_name, data_name):
     full_name = 'build/compiled/Shaders/' + dir_name + '/' + data_name
     add_shader(full_name + '.vert.glsl')
     add_shader(full_name + '.frag.glsl')
+
+invalidate_enabled = True # Disable invalidating during build process
+
+def invalidate_shader_cache(self, context):
+    # compiled.glsl changed, recompile all shaders next time
+    global invalidate_enabled
+    if invalidate_enabled == False:
+        return
+    fp = utils.get_fp()
+    if os.path.isdir(fp + '/build/compiled/ShaderDatas'):
+        shutil.rmtree(fp + '/build/compiled/ShaderDatas')
+
+def invalidate_compiled_data(self, context):
+    global invalidate_enabled
+    if invalidate_enabled == False:
+        return
+    fp = utils.get_fp()
+    if os.path.isdir(fp + '/build/compiled/Assets'):
+        shutil.rmtree(fp + '/build/compiled/Assets')
+    if os.path.isdir(fp + '/build/compiled/ShaderDatas'):
+        shutil.rmtree(fp + '/build/compiled/ShaderDatas')
+
+def invalidate_mesh_data(self, context):
+    fp = utils.get_fp()
+    if os.path.isdir(fp + '/build/compiled/Assets/meshes'):
+        shutil.rmtree(fp + '/build/compiled/Assets/meshes')

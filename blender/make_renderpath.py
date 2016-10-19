@@ -7,11 +7,11 @@ import json
 import platform
 import subprocess
 import make_compositor
-from utils import to_hex
 import assets
 import utils
+import nodes
 
-def buildNodeTrees(assets_path):
+def build_node_trees(assets_path):
     s = bpy.data.filepath.split(os.path.sep)
     s.pop()
     fp = os.path.sep.join(s)
@@ -21,7 +21,7 @@ def buildNodeTrees(assets_path):
     if not os.path.exists('build/compiled/Assets/renderpaths'):
         os.makedirs('build/compiled/Assets/renderpaths')
     
-    buildNodeTrees.assets_path = assets_path
+    build_node_trees.assets_path = assets_path
     # Always include
     assets.add(assets_path + 'brdf.png')
 
@@ -31,11 +31,11 @@ def buildNodeTrees(assets_path):
         # if cam.game_export
         if cam.renderpath_path not in parsed_paths:
             node_group = bpy.data.node_groups[cam.renderpath_path]
-            buildNodeTree(cam, node_group)
+            build_node_tree(cam, node_group)
             parsed_paths.append(cam.renderpath_path)
 
-def buildNodeTree(cam, node_group):
-    buildNodeTree.cam = cam
+def build_node_tree(cam, node_group):
+    build_node_tree.cam = cam
     output = {}
     dat = {}
     output['renderpath_datas'] = [dat]
@@ -50,8 +50,8 @@ def buildNodeTree(cam, node_group):
     dat['name'] = node_group_name
 
     # Store main context names
-    dat['mesh_context'] = buildNodeTree.cam.mesh_context
-    dat['shadows_context'] = buildNodeTree.cam.shadows_context
+    dat['mesh_context'] = build_node_tree.cam.mesh_context
+    dat['shadows_context'] = build_node_tree.cam.shadows_context
     
     dat['render_targets'], dat['depth_buffers'] = preprocess_renderpath(rn, node_group)
     dat['stages'] = []
@@ -72,7 +72,7 @@ def make_set_target(stage, node_group, node, currentNode=None, target_index=1, v
     if len(stage['params']) == 0:
         stage['params'].append(viewport_scale)
 
-    currentNode = findNodeByLink(node_group, currentNode, currentNode.inputs[target_index])
+    currentNode = nodes.find_node_by_link(node_group, currentNode, currentNode.inputs[target_index])
     
     if currentNode.bl_idname == 'TargetNodeType':
         targetId = currentNode.inputs[0].default_value
@@ -101,7 +101,7 @@ def make_clear_target(stage, color_val=None, depth_val=None, stencil_val=None):
         if color_val == -1: # Clear to world background color
             stage['params'].append('-1')
         else:
-            stage['params'].append(str(to_hex(color_val)))
+            stage['params'].append(str(utils.to_hex(color_val)))
     if depth_val != None:
         stage['params'].append('depth')
         stage['params'].append(str(depth_val))
@@ -113,7 +113,7 @@ def make_generate_mipmaps(stage, node_group, node):
     stage['command'] = 'generate_mipmaps'
 
     # TODO: support reroutes
-    link = findLink(node_group, node, node.inputs[1])
+    link = nodes.find_link(node_group, node, node.inputs[1])
     targetNode = link.from_node
 
     stage['params'].append(targetNode.inputs[0].default_value)
@@ -123,7 +123,7 @@ def make_draw_meshes(stage, node_group, node):
     # Context
     context = node.inputs[1].default_value
     # Store shadowmap size
-    if context == buildNodeTree.cam.shadows_context:
+    if context == build_node_tree.cam.shadows_context:
         bpy.data.worlds['Arm'].shadowmap_size = buildNode.last_set_target_w
     stage['params'].append(context)
     # Order
@@ -134,7 +134,7 @@ def make_draw_decals(stage, node_group, node):
     stage['command'] = 'draw_decals'
     context = node.inputs[1].default_value
     stage['params'].append(context)
-    buildNodeTree.cam.last_decal_context = context
+    build_node_tree.cam.last_decal_context = context
 
 def make_bind_target(stage, node_group, node, constant_name, currentNode=None, target_index=1):
     if currentNode == None:
@@ -142,7 +142,7 @@ def make_bind_target(stage, node_group, node, constant_name, currentNode=None, t
         
     stage['command'] = 'bind_target'
     
-    link = findLink(node_group, currentNode, currentNode.inputs[target_index])
+    link = nodes.find_link(node_group, currentNode, currentNode.inputs[target_index])
     currentNode = link.from_node
     
     if currentNode.bl_idname == 'NodeReroute':
@@ -151,11 +151,11 @@ def make_bind_target(stage, node_group, node, constant_name, currentNode=None, t
     elif currentNode.bl_idname == 'GBufferNodeType':
         for i in range(0, 5):
             if currentNode.inputs[i].is_linked:
-                targetNode = findNodeByLink(node_group, currentNode, currentNode.inputs[i])
+                targetNode = nodes.find_node_by_link(node_group, currentNode, currentNode.inputs[i])
                 targetId = targetNode.inputs[0].default_value
                 # if i == 0 and targetNode.inputs[3].default_value == True: # Depth
                 if targetNode.inputs[3].is_linked: # Depth
-                    db_node = findNodeByLink(node_group, targetNode, targetNode.inputs[3])
+                    db_node = nodes.find_node_by_link(node_group, targetNode, targetNode.inputs[3])
                     db_id = db_node.inputs[0].default_value
                     stage['params'].append('_' + db_id)
                     stage['params'].append(constant_name + 'D')
@@ -209,7 +209,7 @@ def make_draw_world(stage, node_group, node, dome=True):
     stage['params'].append('_worldMaterial') # Link to active world
     # Link assets
     if '_EnvClouds' in bpy.data.worlds['Arm'].world_defs:
-        assets.add(buildNodeTrees.assets_path + 'noise256.png')
+        assets.add(build_node_trees.assets_path + 'noise256.png')
         assets.add_embedded_data('noise256.png')
 
 def make_draw_compositor(stage, node_group, node, with_fxaa=False):
@@ -231,7 +231,7 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     if wrd.generate_fog:
         compositor_defs += '_CompoFog'
         compo_pos = True
-    if buildNodeTree.cam.cycles.aperture_size > 0.0:
+    if build_node_tree.cam.cycles.aperture_size > 0.0:
         compositor_defs += '_CompoDOF'
         compo_depth = True
     if compo_pos:
@@ -248,7 +248,7 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     # Include data and shaders
     assets.add_shader2(scon, data_name)
     # Link assets
-    # assets.add(buildNodeTrees.assets_path + 'noise256.png')
+    # assets.add(build_node_trees.assets_path + 'noise256.png')
     # assets.add_embedded_data('noise256.png')
 
 def make_draw_grease_pencil(stage, node_group, node):
@@ -267,16 +267,16 @@ def process_call_function(stage, stages, node, node_group):
     # Step till merge node
     stage['returns_true'] = []
     if node.outputs[0].is_linked:
-        stageNode = findNodeByLinkFrom(node_group, node, node.outputs[0])
+        stageNode = nodes.find_node_by_link_from(node_group, node, node.outputs[0])
         buildNode(stage['returns_true'], stageNode, node_group)
     
     stage['returns_false'] = []
     if node.outputs[1].is_linked:
-        stageNode = findNodeByLinkFrom(node_group, node, node.outputs[1])
+        stageNode = nodes.find_node_by_link_from(node_group, node, node.outputs[1])
         margeNode = buildNode(stage['returns_false'], stageNode, node_group)
     
     # Continue using top level stages after merge node
-    afterMergeNode = findNodeByLinkFrom(node_group, margeNode, margeNode.outputs[0])
+    afterMergeNode = nodes.find_node_by_link_from(node_group, margeNode, margeNode.outputs[0])
     buildNode(stages, afterMergeNode, node_group)
 
 def make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 5, 7], bind_target_constants=None, shader_context=None, viewport_scale=1.0, with_clear=False):
@@ -318,21 +318,21 @@ def make_ssao_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 4], bind_target_constants=['gbufferD', 'gbuffer0'], shader_context='ssao_pass/ssao_pass/ssao_pass', viewport_scale=bpy.data.worlds['Arm'].generate_ssao_texture_scale)
     make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[1, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x', viewport_scale=bpy.data.worlds['Arm'].generate_ssao_texture_scale)
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y')
-    assets.add(buildNodeTrees.assets_path + 'noise8.png')
+    assets.add(build_node_trees.assets_path + 'noise8.png')
     assets.add_embedded_data('noise8.png')
 
 def make_ssao_reproject_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 4, 2, 5], bind_target_constants=['gbufferD', 'gbuffer0', 'slast', 'sveloc'], shader_context='ssao_reproject_pass/ssao_reproject_pass/ssao_reproject_pass')
     make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[1, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x')
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y')
-    assets.add(buildNodeTrees.assets_path + 'noise8.png')
+    assets.add(build_node_trees.assets_path + 'noise8.png')
     assets.add_embedded_data('noise8.png')
 
 def make_apply_ssao_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[4, 5], bind_target_constants=['gbufferD', 'gbuffer0'], shader_context='ssao_pass/ssao_pass/ssao_pass')
     make_quad_pass(stages, node_group, node, target_index=3, bind_target_indices=[2, 5], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x')
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 5], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y_blend')
-    assets.add(buildNodeTrees.assets_path + 'noise8.png')
+    assets.add(build_node_trees.assets_path + 'noise8.png')
     assets.add_embedded_data('noise8.png')
 
 def make_ssr_pass(stages, node_group, node):
@@ -395,8 +395,8 @@ def make_smaa_pass(stages, node_group, node):
     
     make_quad_pass(stages, node_group, node, target_index=None, bind_target_indices=[2], bind_target_constants=['edgesTex'], shader_context='smaa_blend_weight/smaa_blend_weight/smaa_blend_weight')
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[4, 3, 5], bind_target_constants=['colorTex', 'blendTex', 'sveloc'], shader_context='smaa_neighborhood_blend/smaa_neighborhood_blend/smaa_neighborhood_blend')
-    assets.add(buildNodeTrees.assets_path + 'smaa_area.png')
-    assets.add(buildNodeTrees.assets_path + 'smaa_search.png')
+    assets.add(build_node_trees.assets_path + 'smaa_area.png')
+    assets.add(build_node_trees.assets_path + 'smaa_search.png')
     assets.add_embedded_data('smaa_area.png')
     assets.add_embedded_data('smaa_search.png')
 
@@ -540,7 +540,7 @@ def buildNode(stages, node, node_group):
         if node.outputs[1].is_linked:
             count = node.inputs[2].default_value
             for i in range(0, count):
-                loopNode = findNodeByLinkFrom(node_group, node, node.outputs[1])
+                loopNode = nodes.find_node_by_link_from(node_group, node, node.outputs[1])
                 buildNode(stages, loopNode, node_group)
     
     elif node.bl_idname == 'LoopLampsNodeType':
@@ -549,7 +549,7 @@ def buildNode(stages, node, node_group):
         stages.append(stage)
         stage['returns_true'] = []
         if node.outputs[1].is_linked:
-            loopNode = findNodeByLinkFrom(node_group, node, node.outputs[1])
+            loopNode = nodes.find_node_by_link_from(node_group, node, node.outputs[1])
             buildNode(stage['returns_true'], loopNode, node_group)
     
     elif node.bl_idname == 'DrawStereoNodeType':
@@ -558,7 +558,7 @@ def buildNode(stages, node, node_group):
         stages.append(stage)
         stage['returns_true'] = []
         if node.outputs[1].is_linked:
-            loopNode = findNodeByLinkFrom(node_group, node, node.outputs[1])
+            loopNode = nodes.find_node_by_link_from(node_group, node, node.outputs[1])
             buildNode(stage['returns_true'], loopNode, node_group)
 
     elif node.bl_idname == 'CallFunctionNodeType':
@@ -637,7 +637,7 @@ def buildNode(stages, node, node_group):
     
     # Build next stage
     if node.outputs[0].is_linked:
-        stageNode = findNodeByLinkFrom(node_group, node, node.outputs[0])
+        stageNode = nodes.find_node_by_link_from(node_group, node, node.outputs[0])
         buildNode(stages, stageNode, node_group)
 # Used to merge bind target nodes into one stage
 buildNode.last_bind_target = None
@@ -645,39 +645,23 @@ buildNode.last_bind_target = None
 buildNode.last_set_target_w = 0
 buildNode.last_set_target_h = 0
 
-
-def findNodeByLink(node_group, to_node, inp):
-    for link in node_group.links:
-        if link.to_node == to_node and link.to_socket == inp:
-            return link.from_node
-
-def findLink(node_group, to_node, inp):
-    for link in node_group.links:
-        if link.to_node == to_node and link.to_socket == inp:
-            return link
-            
-def findNodeByLinkFrom(node_group, from_node, outp):
-    for link in node_group.links:
-        if link.from_node == from_node and link.from_socket == outp:
-            return link.to_node
-   
 def get_root_node(node_group):
     # Find first node linked to begin node
     rn = None
     for n in node_group.nodes:
         if n.bl_idname == 'BeginNodeType':
             # Store contexts
-            buildNodeTree.cam.renderpath_id = n.inputs[0].default_value
+            build_node_tree.cam.renderpath_id = n.inputs[0].default_value
             mesh_contexts = n.inputs[1].default_value.split(',')
-            buildNodeTree.cam.mesh_context = mesh_contexts[0]
+            build_node_tree.cam.mesh_context = mesh_contexts[0]
             if len(mesh_contexts) > 1:
-                buildNodeTree.cam.mesh_context_empty = mesh_contexts[1]
-            buildNodeTree.cam.shadows_context = n.inputs[2].default_value
-            buildNodeTree.cam.translucent_context = n.inputs[3].default_value
-            buildNodeTree.cam.overlay_context = n.inputs[4].default_value
+                build_node_tree.cam.mesh_context_empty = mesh_contexts[1]
+            build_node_tree.cam.shadows_context = n.inputs[2].default_value
+            build_node_tree.cam.translucent_context = n.inputs[3].default_value
+            build_node_tree.cam.overlay_context = n.inputs[4].default_value
             if n.inputs[5].default_value == False: # No HDR space lighting, append def
                 bpy.data.worlds['Arm'].world_defs += '_LDR'
-            rn = findNodeByLinkFrom(node_group, n, n.outputs[0])
+            rn = nodes.find_node_by_link_from(node_group, n, n.outputs[0])
             break
     return rn
 
@@ -686,16 +670,16 @@ def preprocess_renderpath(root_node, node_group):
     render_targets3D = []
     depth_buffers = []
     preprocess_renderpath.velocity_def_added = False
-    buildNodeTree.cam.renderpath_passes = ''
+    build_node_tree.cam.renderpath_passes = ''
     traverse_renderpath(root_node, node_group, render_targets, depth_buffers)
     return render_targets, depth_buffers
     
 def traverse_renderpath(node, node_group, render_targets, depth_buffers):
     # Gather linked draw geometry contexts
     if node.bl_idname == 'DrawMeshesNodeType':
-        if buildNodeTree.cam.renderpath_passes != '':
-            buildNodeTree.cam.renderpath_passes += '_' # Separator
-        buildNodeTree.cam.renderpath_passes += node.inputs[1].default_value
+        if build_node_tree.cam.renderpath_passes != '':
+            build_node_tree.cam.renderpath_passes += '_' # Separator
+        build_node_tree.cam.renderpath_passes += node.inputs[1].default_value
 
     # Gather defs from linked nodes
     if node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':
@@ -720,39 +704,39 @@ def traverse_renderpath(node, node_group, render_targets, depth_buffers):
     # Collect render targets
     if node.bl_idname == 'SetTargetNodeType' or node.bl_idname == 'BindTargetNodeType' or node.bl_idname == 'QuadPassNodeType' or node.bl_idname == 'DrawCompositorNodeType' or node.bl_idname == 'DrawCompositorWithFXAANodeType':
         if node.inputs[1].is_linked:
-            tnode = findNodeByLink(node_group, node, node.inputs[1])
+            tnode = nodes.find_node_by_link(node_group, node, node.inputs[1])
             parse_render_target(tnode, node_group, render_targets, depth_buffers)
 
     # Traverse loops
     elif node.bl_idname == 'LoopStagesNodeType' or node.bl_idname == 'LoopLampsNodeType' or node.bl_idname == 'DrawStereoNodeType':
         if node.outputs[1].is_linked:
-            loop_node = findNodeByLinkFrom(node_group, node, node.outputs[1])
+            loop_node = nodes.find_node_by_link_from(node_group, node, node.outputs[1])
             traverse_renderpath(loop_node, node_group, render_targets, depth_buffers)
     
     # Prebuilt
     elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'BlendPassNodeType' or node.bl_idname == 'CombinePassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'DeferredIndirectPassNodeType' or node.bl_idname == 'VolumetricLightPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
         if node.inputs[1].is_linked:
-            tnode = findNodeByLink(node_group, node, node.inputs[1])
+            tnode = nodes.find_node_by_link(node_group, node, node.inputs[1])
             parse_render_target(tnode, node_group, render_targets, depth_buffers)
     elif node.bl_idname == 'SSRPassNodeType' or node.bl_idname == 'ApplySSAOPassNodeType' or node.bl_idname == 'BloomPassNodeType' or node.bl_idname == 'SMAAPassNodeType':
         for i in range(1, 4):
             if node.inputs[i].is_linked:
-                tnode = findNodeByLink(node_group, node, node.inputs[i])
+                tnode = nodes.find_node_by_link(node_group, node, node.inputs[i])
                 parse_render_target(tnode, node_group, render_targets, depth_buffers)
     elif node.bl_idname == 'SSAOPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType' or node.bl_idname == 'SSSPassNodeType' or node.bl_idname == 'BlurBasicPassNodeType':
         for i in range(1, 3):
             if node.inputs[i].is_linked:
-                tnode = findNodeByLink(node_group, node, node.inputs[i])
+                tnode = nodes.find_node_by_link(node_group, node, node.inputs[i])
                 parse_render_target(tnode, node_group, render_targets, depth_buffers)
 
     # Next stage
     if node.outputs[0].is_linked:
-        stagenode = findNodeByLinkFrom(node_group, node, node.outputs[0])
+        stagenode = nodes.find_node_by_link_from(node_group, node, node.outputs[0])
         traverse_renderpath(stagenode, node_group, render_targets, depth_buffers)
         
 def parse_render_target(node, node_group, render_targets, depth_buffers):
     if node.bl_idname == 'NodeReroute':
-        tnode = findNodeByLink(node_group, node, node.inputs[0])
+        tnode = nodes.find_node_by_link(node_group, node, node.inputs[0])
         parse_render_target(tnode, node_group, render_targets, depth_buffers)
         
     elif node.bl_idname == 'TargetNodeType':
@@ -765,7 +749,7 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
         depth_buffer_id = None
         if node.inputs[3].is_linked:
             # Find depth buffer
-            depth_node = findNodeByLink(node_group, node, node.inputs[3])
+            depth_node = nodes.find_node_by_link(node_group, node, node.inputs[3])
             depth_buffer_id = depth_node.inputs[0].default_value
             # Append depth buffer
             found = False
@@ -781,9 +765,9 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
         # Get scale
         scale = 1.0
         if node.inputs[1].is_linked:
-            size_node = findNodeByLink(node_group, node, node.inputs[1])
+            size_node = nodes.find_node_by_link(node_group, node, node.inputs[1])
             while size_node.bl_idname == 'NodeReroute': # Step through reroutes
-                size_node = findNodeByLink(node_group, size_node, size_node.inputs[0])
+                size_node = nodes.find_node_by_link(node_group, size_node, size_node.inputs[0])
             scale = size_node.inputs[0].default_value
             
         # Append target
@@ -800,9 +784,9 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
         # Get scale
         scale = 1.0
         if node.inputs[1].is_linked:
-            size_node = findNodeByLink(node_group, node, node.inputs[1])
+            size_node = nodes.find_node_by_link(node_group, node, node.inputs[1])
             while size_node.bl_idname == 'NodeReroute': # Step through reroutes
-                size_node = findNodeByLink(node_group, size_node, size_node.inputs[0])
+                size_node = nodes.find_node_by_link(node_group, size_node, size_node.inputs[0])
             scale = size_node.inputs[0].default_value
 
         if node.bl_idname == 'ImageNodeType':
@@ -814,7 +798,7 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
     elif node.bl_idname == 'GBufferNodeType':
         for i in range(0, 5):
             if node.inputs[i].is_linked:
-                n = findNodeByLink(node_group, node, node.inputs[i])
+                n = nodes.find_node_by_link(node_group, node, node.inputs[i])
                 parse_render_target(n, node_group, render_targets, depth_buffers)
 
 def make_render_target(n, scale, depth_buffer_id=None):

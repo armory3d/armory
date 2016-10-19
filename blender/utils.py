@@ -84,9 +84,6 @@ def safe_assetpath(s):
 def extract_filename(s):
     return s.rsplit('/', 1)[1]
 
-# def extract_filename_noext(s):
-    # return s.rsplit('/', 1)[1].rsplit('.', 1)[0] # Extract file name without extension
-
 def get_render_resolution(scene_index=0):
     render = bpy.data.scenes[scene_index].render
     scale = render.resolution_percentage / 100
@@ -99,14 +96,16 @@ def get_project_scene_name():
     else:
         return safe_filename(wrd.arm_project_scene)
 
+chromium_found = False
 def with_chromium():
-    return with_chromium.module_found
-with_chromium.module_found = False
+    global chromium_found
+    return chromium_found
 
 def register():
+    global chromium_found
     import importlib.util
-    if importlib.util.find_spec('bgame') != None:
-        with_chromium.module_found = True
+    if importlib.util.find_spec('barmory') != None:
+        chromium_found = True
 
 def unregister():
     pass

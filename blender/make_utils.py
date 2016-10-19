@@ -1,0 +1,26 @@
+import utils
+import subprocess
+
+def kode_studio():
+    sdk_path = utils.get_sdk_path()
+    project_path = utils.get_fp()
+
+    if utils.get_os() == 'win':
+        kode_path = sdk_path + '/kode_studio/KodeStudio-win32/Kode Studio.exe'
+    elif utils.get_os() == 'mac':
+        kode_path = '"' + sdk_path + '/kode_studio/Kode Studio.app/Contents/MacOS/Electron"'
+    else:
+        kode_path = sdk_path + '/kode_studio/KodeStudio-linux64/kodestudio'
+
+    subprocess.Popen([kode_path + ' ' + utils.get_fp()], shell=True)
+
+def def_strings_to_array(strdefs):
+    defs = strdefs.split('_')
+    defs = defs[1:]
+    defs = ['_' + d for d in defs] # Restore _
+    return defs
+
+def get_kha_target(target_name): # TODO: remove
+    if target_name == 'macos':
+        return 'osx'
+    return target_name

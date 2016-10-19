@@ -6,18 +6,9 @@ import json
 import write_probes
 import assets
 import utils
+import nodes
 
-def find_node(node_group, to_node, target_socket):
-    for link in node_group.links:
-        if link.to_node == to_node and link.to_socket == target_socket:
-            return link.from_node
-
-def get_output_node(tree):
-    for n in tree.nodes:
-        if n.type == 'OUTPUT_WORLD':
-            return n
-
-def buildNodeTrees(active_worlds):
+def build_node_trees(active_worlds):
     s = bpy.data.filepath.split(os.path.sep)
     s.pop()
     fp = os.path.sep.join(s)
@@ -30,11 +21,11 @@ def buildNodeTrees(active_worlds):
     # Export world nodes
     world_outputs = []
     for world in active_worlds:
-        output = buildNodeTree(world)
+        output = build_node_tree(world)
         world_outputs.append(output)
     return world_outputs
 
-def buildNodeTree(world):
+def build_node_tree(world):
     output = {}
     dat = {}
     output['material_datas'] = [dat]
@@ -48,7 +39,7 @@ def buildNodeTree(world):
     bpy.data.worlds['Arm'].world_defs = ''
     
     # Traverse world node tree
-    output_node = get_output_node(world.node_tree)
+    output_node = nodes.get_node_by_type(world.node_tree, 'OUTPUT_WORLD')
     if output_node != None:
         parse_world_output(world, output_node, context)
     
@@ -113,7 +104,7 @@ def write_output(output):
 
 def parse_world_output(world, node, context):
     if node.inputs[0].is_linked:
-        surface_node = find_node(world.node_tree, node, node.inputs[0])
+        surface_node = nodes.find_node_by_link(world.node_tree, node, node.inputs[0])
         parse_surface(world, surface_node, context)
     
 def parse_surface(world, node, context):
@@ -127,7 +118,7 @@ def parse_surface(world, node, context):
         context['bind_constants'].append(envmap_strength_const)
         
         if node.inputs[0].is_linked:
-            color_node = find_node(world.node_tree, node, node.inputs[0])
+            color_node = nodes.find_node_by_link(world.node_tree, node, node.inputs[0])
             parse_color(world, color_node, context, envmap_strength_const)
 
         # Cache results

@@ -1,8 +1,7 @@
 import os
-import json
 import utils
 
-def writeData(res, defs, json_data, base_name):
+def write_data(res, defs, json_data, base_name):
     # Define
     sres = {}
     res['shader_datas'].append(sres)
@@ -98,8 +97,8 @@ def writeData(res, defs, json_data, base_name):
             parse_shader(sres, c, con, defs, tese, False)
 
 def parse_shader(sres, c, con, defs, lines, parse_attributes):
-    skipTillEndIf = 0
-    skipElse = False
+    skip_till_endif = 0
+    skip_else = False
     vertex_structure_parsed = False
     vertex_structure_parsing = False
     
@@ -117,25 +116,25 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
                         found = True
                         break
                 if found == False or s == '_Instancing': # TODO: Prevent instanced data to go into main vertex structure
-                    skipTillEndIf += 1
+                    skip_till_endif += 1
                 else:
-                    skipElse = True # #ifdef passed, skip #else if present
+                    skip_else = True # #ifdef passed, skip #else if present
             continue
 
         # Previous ifdef passed, skip else
-        if skipElse == True and line.startswith('#else'):
-            skipElse = False
-            skipTillEndIf += 1
+        if skip_else == True and line.startswith('#else'):
+            skip_else = False
+            skip_till_endif += 1
             continue
 
         if line.startswith('#endif') or line.startswith('#else'): # Starts parsing again
-            skipTillEndIf -= 1
-            skipElse = False
-            if skipTillEndIf < 0: # #else + #endif will go below 0
-                skipTillEndIf = 0
+            skip_till_endif -= 1
+            skip_else = False
+            if skip_till_endif < 0: # #else + #endif will go below 0
+                skip_till_endif = 0
             continue
 
-        if skipTillEndIf > 0:
+        if skip_till_endif > 0:
             continue
 
         if vertex_structure_parsed == False and line.startswith('in '):
@@ -250,7 +249,7 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
                             break
                     con['constants'].append(const)
 
-def saveData(path, base_name, subset, res):
+def save_data(path, base_name, subset, res):
     res_name = base_name
     for s in subset:
         res_name += s
@@ -260,7 +259,7 @@ def saveData(path, base_name, subset, res):
     utils.write_arm(path + '/' + res_name + '.arm', r)
 
 def make(base_name, json_data, fp, defs):
-    # Make out dir
+    
     path = fp + '/build/compiled/ShaderDatas/' + base_name
     if not os.path.exists(path):
         os.makedirs(path)
@@ -268,5 +267,5 @@ def make(base_name, json_data, fp, defs):
     res = {}
     res['shader_datas'] = []
 
-    writeData(res, defs, json_data, base_name)
-    saveData(path, base_name, defs, res)
+    write_data(res, defs, json_data, base_name)
+    save_data(path, base_name, defs, res)

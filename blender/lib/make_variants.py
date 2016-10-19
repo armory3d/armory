@@ -1,11 +1,7 @@
 import os
-import json
 
-# Create variations
-def writeFile(path, name, defs, lines):
-    # with open('out/' + name, "w") as f:
+def write_variant(path, name, defs, lines):
     with open(path + '/' + name, "w") as f:
-        # Write variation
         defs_written = False
         for line in lines:
             f.write(line + '\n')
@@ -18,7 +14,6 @@ def writeFile(path, name, defs, lines):
 def make(base_name, json_data, fp, defs):
     shaders = []
     
-    # Make out dir
     path = fp + '/build/compiled/Shaders/' + base_name
     if not os.path.exists(path):
         os.makedirs(path)
@@ -65,11 +60,11 @@ def make(base_name, json_data, fp, defs):
         ext = ''
         for s in defs:
             ext += s
-        writeFile(path, shader['vert_name'] + ext + '.vert.glsl', defs, shader['vert'])
-        writeFile(path, shader['frag_name'] + ext + '.frag.glsl', defs, shader['frag'])
+        write_variant(path, shader['vert_name'] + ext + '.vert.glsl', defs, shader['vert'])
+        write_variant(path, shader['frag_name'] + ext + '.frag.glsl', defs, shader['frag'])
         if 'geom' in shader:
-            writeFile(path, shader['geom_name'] + ext + '.geom.glsl', defs, shader['geom'])
+            write_variant(path, shader['geom_name'] + ext + '.geom.glsl', defs, shader['geom'])
         if 'tesc' in shader:
-            writeFile(path, shader['tesc_name'] + ext + '.tesc.glsl', defs, shader['tesc'])
+            write_variant(path, shader['tesc_name'] + ext + '.tesc.glsl', defs, shader['tesc'])
         if 'tese' in shader:
-            writeFile(path, shader['tese_name'] + ext + '.tese.glsl', defs, shader['tese'])
+            write_variant(path, shader['tese_name'] + ext + '.tese.glsl', defs, shader['tese'])

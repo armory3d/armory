@@ -1,9 +1,7 @@
 import bpy
 from bpy.types import NodeTree, Node, NodeSocket
 from bpy.props import *
-import os
-import sys
-    
+
 class CGTree(NodeTree):
     '''Logic nodes'''
     bl_idname = 'ArmLogicTreeType'
@@ -14,7 +12,6 @@ class ArmLogicTreeNode:
     @classmethod
     def poll(cls, ntree):
         return ntree.bl_idname == 'ArmLogicTreeType'
-
 
 class TransformNode(Node, ArmLogicTreeNode):
     '''Transform node'''

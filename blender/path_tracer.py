@@ -1,8 +1,6 @@
 # Based on WebGL Path Tracing by Evan Wallace 
 # (http://madebyevan.com/webgl-path-tracing/)
-
 import bpy
-import os
 
 bounces = '2'
 epsilon = '0.0001'
@@ -17,10 +15,6 @@ MATERIAL_DIFFUSE = 0
 MATERIAL_MIRROR = 1
 MATERIAL_GLOSSY = 2
 material = MATERIAL_DIFFUSE
-
-# YELLOW_BLUE_CORNELL_BOX = 0
-# RED_GREEN_CORNELL_BOX = 1
-# environment = YELLOW_BLUE_CORNELL_BOX
 
 def concat(objects, func):
     text = ''
@@ -438,7 +432,6 @@ class Light:
     def getNormalCalculationCode(self):
         return """"""
 
-
 def initObjects():
     nextSphereId = 0
     nextCubeId = 0
@@ -456,8 +449,6 @@ def initObjects():
     return objects
 
 objects = initObjects()
-
-
 def compile(frag_path):
     with open(frag_path, 'w') as f:
         f.write(makeTracerFragmentSource(objects))

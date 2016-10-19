@@ -1,40 +1,41 @@
 import make
 import nodes_logic
 import nodes_renderpath
-import exporter
 import props_traits_action
 import props_traits_clip
 import props_traits_params
 import props_traits
 import props
+import props_ui
+import handlers
 import space_armory
 import utils
-import lib.drop_to_ground
+import keymap
 
 def register():
     utils.register()
     props_traits_action.register()
     props_traits_clip.register()
     props.register()
-    make.register()
+    props_ui.register()
+    handlers.register()
     nodes_logic.register()
     nodes_renderpath.register()
-    exporter.register()
     props_traits_params.register()
     props_traits.register()
     space_armory.register()
-    lib.drop_to_ground.register()
+    keymap.register()
 
 def unregister():
+    keymap.unregister()
     utils.unregister()
-    make.unregister()
     nodes_logic.unregister()
     nodes_renderpath.unregister()
-    exporter.unregister()
     props_traits_params.unregister()
     props_traits.unregister()
+    handlers.unregister()
+    props_ui.unregister()
     props.unregister()
     props_traits_action.unregister()
     props_traits_clip.unregister()
     space_armory.unregister()
-    lib.drop_to_ground.unregister()
