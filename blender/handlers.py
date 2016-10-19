@@ -24,10 +24,11 @@ def on_scene_update_post(context):
         # Tag redraw if playing in space_armory
         state.last_chromium_running = state.chromium_running
         state.chromium_running = False
-        for area in bpy.context.screen.areas:
-            if area.type == 'VIEW_ARMORY':
-                state.chromium_running = True
-                barmory.draw()
+        if not state.is_paused:
+            for area in bpy.context.screen.areas:
+                if area.type == 'VIEW_ARMORY':
+                    state.chromium_running = True
+                    barmory.draw()
 
         # Have to update chromium one more time before exit, to prevent 'AudioSyncReader::Read timed out' warnings
         if state.chromium_running == False:

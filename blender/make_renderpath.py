@@ -94,6 +94,11 @@ def make_set_target(stage, node_group, node, currentNode=None, target_index=1, v
         targetId = ''
         stage['params'].append(targetId)
 
+def make_set_viewport(stage, node_group, node):
+    stage['command'] = 'set_viewport'
+    stage['params'].append(node.inputs[1].default_value) # W
+    stage['params'].append(node.inputs[2].default_value) # H
+
 def make_clear_target(stage, color_val=None, depth_val=None, stencil_val=None):
     stage['command'] = 'clear_target'
     if color_val != None:
@@ -258,7 +263,8 @@ def make_draw_grease_pencil(stage, node_group, node):
 
 def make_call_function(stage, node_group, node):
     stage['command'] = 'call_function'
-    stage['params'].append(node.inputs[1].default_value)
+    fstr = node.inputs[1].default_value
+    stage['params'].append(fstr)
 
 def make_branch_function(stage, node_group, node):
     make_call_function(stage, node_group, node)
@@ -445,6 +451,9 @@ def buildNode(stages, node, node_group):
     elif node.bl_idname == 'SetTargetNodeType':
         buildNode.last_bind_target = None
         make_set_target(stage, node_group, node)
+
+    elif node.bl_idname == 'SetViewportNodeType':
+        make_set_viewport(stage, node_group, node)
 
     elif node.bl_idname == 'ClearTargetNodeType':
         color_val = None
@@ -665,7 +674,10 @@ def get_root_node(node_group):
             break
     return rn
 
+dynRes_added = False
 def preprocess_renderpath(root_node, node_group):
+    global dynRes_added
+    dynRes_added = False
     render_targets = []
     render_targets3D = []
     depth_buffers = []
@@ -700,6 +712,13 @@ def traverse_renderpath(node, node_group, render_targets, depth_buffers):
     elif node.bl_idname == 'DrawStereoNodeType':
         assets.add_khafile_def('arm_vr')
         bpy.data.worlds['Arm'].world_defs += '_VR'
+
+    elif node.bl_idname == 'CallFunctionNodeType':
+        global dynRes_added
+        fstr = node.inputs[1].default_value
+        if not dynRes_added and fstr.startswith('armory.renderpath.DynamicResolutionScale'):
+            bpy.data.worlds['Arm'].world_defs += '_DynRes'
+            dynRes_added = True
 
     # Collect render targets
     if node.bl_idname == 'SetTargetNodeType' or node.bl_idname == 'BindTargetNodeType' or node.bl_idname == 'QuadPassNodeType' or node.bl_idname == 'DrawCompositorNodeType' or node.bl_idname == 'DrawCompositorWithFXAANodeType':

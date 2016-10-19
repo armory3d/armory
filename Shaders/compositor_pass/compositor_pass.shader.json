@@ -40,6 +40,11 @@
 					"name": "texStep",
 					"link": "_screenSizeInv",
 					"ifdef": ["_CompoFXAA"]
+				},
+				{
+					"name": "dynamicScale",
+					"link": "_dynamicScale",
+					"ifdef": ["_DynRes"]
 				}
 			],
 			"texture_params": [],

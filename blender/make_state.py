@@ -8,3 +8,4 @@ compileproc_success = False
 play_area = None
 chromium_running = False
 last_chromium_running = False
+is_paused = False

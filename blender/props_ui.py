@@ -10,6 +10,7 @@ import make
 import make_utils
 import make_state as state
 import assets
+import log
 
 # Menu in object region
 class ObjectPropsPanel(bpy.types.Panel):
@@ -489,6 +490,7 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
     def execute(self, context):
         assets.invalidate_enabled = False
         if state.playproc == None:
+            log.clear()
             # Cancel viewport render
             for space in context.area.spaces:
                 if space.type == 'VIEW_3D':

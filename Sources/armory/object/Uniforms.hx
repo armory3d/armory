@@ -9,6 +9,7 @@ class Uniforms {
 	public static function register() {
 		iron.object.Uniforms.externalTextureLink = externalTextureLink;
 		iron.object.Uniforms.externalVec3Link = externalVec3Link;
+		iron.object.Uniforms.externalFloatLink = externalFloatLink;
 	}
 
 	public static function externalTextureLink(tulink:String):kha.Image {
@@ -122,5 +123,12 @@ class Uniforms {
 			v.z = armory.renderpath.HosekWilkie.data.Z.z;
 		}
 		return v;
+	}
+
+	public static function externalFloatLink(clink:String):Float {
+		if (clink == "_dynamicScale") {
+			return armory.renderpath.DynamicResolutionScale.dynamicScale;
+		}
+		return 0.0;
 	}
 }

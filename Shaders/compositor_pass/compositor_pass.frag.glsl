@@ -32,6 +32,10 @@ uniform vec2 texStep;
 uniform float time;
 #endif
 
+#ifdef _DynRes
+uniform float dynamicScale;
+#endif
+
 in vec2 texCoord;
 #ifdef _CompoPos
 	in vec3 viewRay;
@@ -125,10 +129,13 @@ vec3 lensflare(vec2 uv, vec2 pos) {
 
 void main() {
 	vec2 texCo = texCoord;
+#ifdef _DynRes
+	texCo *= dynamicScale;
+#endif
 #ifdef _CompoFishEye
 	const float fishEyeStrength = -0.01;
 	const vec2 m = vec2(0.5, 0.5);
-	vec2 d = texCoord - m;
+	vec2 d = texCo - m;
 	float r = sqrt(dot(d, d));
 	float power = (2.0 * PI / (2.0 * sqrt(dot(m, m)))) * fishEyeStrength;
 	float bind;
