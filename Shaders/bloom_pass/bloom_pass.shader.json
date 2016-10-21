@@ -5,7 +5,12 @@
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
-			"links": [],
+			"links": [
+				{
+					"name": "texStep",
+					"link": "_windowSizeInv"
+				}
+			],
 			"texture_params": [],
 			"vertex_shader": "bloom_pass.vert.glsl",
 			"vertex_shader_path": "../include/pass.vert.glsl",

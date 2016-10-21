@@ -236,7 +236,7 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     if wrd.generate_fog:
         compositor_defs += '_CompoFog'
         compo_pos = True
-    if build_node_tree.cam.cycles.aperture_size > 0.0:
+    if build_node_tree.cam.dof_distance > 0.0:
         compositor_defs += '_CompoDOF'
         compo_depth = True
     if compo_pos:

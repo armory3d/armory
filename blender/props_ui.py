@@ -341,6 +341,7 @@ class WorldPropsPanel(bpy.types.Panel):
         # if wrd.generate_bloom:
         layout.prop(wrd, 'generate_bloom_treshold')
         layout.prop(wrd, 'generate_bloom_strength')
+        layout.prop(wrd, 'generate_bloom_radius')
         
         layout.label('Motion Blur')
         # layout.prop(wrd, 'generate_motion_blur')
@@ -382,6 +383,8 @@ class WorldPropsPanel(bpy.types.Panel):
         layout.prop(wrd, 'npot_texture_repeat')
         layout.prop(wrd, 'diffuse_oren_nayar')
         layout.prop(wrd, 'voxelgi')
+        if wrd.voxelgi:
+            layout.prop(wrd, 'voxelgi_dimensions')
 
 # Menu in render region
 class ArmoryPlayPanel(bpy.types.Panel):

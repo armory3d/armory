@@ -274,6 +274,7 @@ const float ssaoTextureScale = """ + str(round(wrd.generate_ssao_texture_scale *
             f.write(
 """const float bloomTreshold = """ + str(round(wrd.generate_bloom_treshold * 100) / 100) + """;
 const float bloomStrength = """ + str(round(wrd.generate_bloom_strength * 100) / 100) + """;
+const float bloomRadius = """ + str(round(wrd.generate_bloom_radius * 100) / 100) + """;
 """)
         if wrd.generate_motion_blur:
             f.write(
@@ -323,10 +324,11 @@ const float compoFogAmountB = """ + str(round(wrd.generate_fog_amountb * 100) / 
 const vec3 compoFogColor = vec3(""" + str(round(wrd.generate_fog_color[0] * 100) / 100) + """, """ + str(round(wrd.generate_fog_color[1] * 100) / 100) + """, """ + str(round(wrd.generate_fog_color[2] * 100) / 100) + """);
 """)
 
-        if bpy.data.cameras[0].cycles.aperture_size > 0.0:
+        if bpy.data.cameras[0].dof_distance > 0.0:
             f.write(
 """const float compoDOFDistance = """ + str(round(bpy.data.cameras[0].dof_distance * 100) / 100) + """;
-const float compoDOFSize = """ + str(round(bpy.data.cameras[0].cycles.aperture_size * 100) / 100) + """;
+const float compoDOFFstop = """ + str(round(bpy.data.cameras[0].gpu_dof.fstop * 100) / 100) + """;
+const float compoDOFLength = """ + str(round(bpy.data.cameras[0].lens * 100) / 100) + """;
 """)
 
         # Skinning

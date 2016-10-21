@@ -8,6 +8,11 @@ precision highp float;
 #include "../std/tonemap.glsl"
 // tonemapUncharted2()
 // tonemapFilmic()
+#include "../std/math.glsl"
+// linearize()
+#ifdef _CompoDOF
+#include "../std/dof.glsl"
+#endif
 
 uniform sampler2D tex;
 uniform sampler2D gbufferD;
@@ -24,9 +29,9 @@ uniform vec3 light;
 uniform mat4 VP;
 #endif
 
-#ifdef _CompoFXAA
+// #ifdef _CompoFXAA
 uniform vec2 texStep;
-#endif
+// #endif
 
 #ifdef _CompoGrain
 uniform float time;
@@ -36,20 +41,13 @@ uniform float time;
 uniform float dynamicScale;
 #endif
 
+uniform float aspectRatio;
+
 in vec2 texCoord;
 #ifdef _CompoPos
 	in vec3 viewRay;
 #endif
 out vec4 fragColor;
-
-const float focus_depth = 0.5;
-
-const float vignout = 1.8; // vignetting outer border
-const float vignin = 0.0; // vignetting inner border
-const float vignfade = 90.0; // f-stops till vignete fades
-const float fstop = 20; // f-stop value
-
-const float aspectRatio = 800.0 / 600.0;
 
 #ifdef _CompoFog
 // const vec3 compoFogColor = vec3(0.5, 0.6, 0.7);
@@ -70,31 +68,9 @@ vec3 applyFog(vec3 rgb, float distance) {
 #endif
 
 float vignette() {
-	// float dist = distance(texCoord, vec2(0.5,0.5));
-	// dist = smoothstep(vignout + (fstop / vignfade), vignin + (fstop / vignfade), dist);
-	// return clamp(dist, 0.0, 1.0);
 	// vignetting from iq
 	// return 0.4 + 0.6 * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
 	return 0.3 + 0.7 * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
-}
-
-// #ifdef _CompoDOF
-vec3 sampleBox(float size) {
-	vec3 color = vec3(texture(tex, vec2(texCoord.x - size, texCoord.y - size)).rgb) * 0.075;
-	color += texture(tex, vec2(texCoord.x, texCoord.y - size)).rgb * 0.1;
-	color += texture(tex, vec2(texCoord.x + size, texCoord.y - size)).rgb * 0.075;
-	color += texture(tex, vec2(texCoord.x - size, texCoord.y)).rgb * 0.1;
-	color += texture(tex, vec2(texCoord.x, texCoord.y)).rgb * 0.30;
-	color += texture(tex, vec2(texCoord.x + size, texCoord.y)).rgb * 0.1;
-	color += texture(tex, vec2(texCoord.x - size, texCoord.y + size)).rgb * 0.075;
-	color += texture(tex, vec2(texCoord.x, texCoord.y + size)).rgb * 0.1;
-	color += texture(tex, vec2(texCoord.x + size, texCoord.y + size)).rgb * 0.075;
-	return color;
-}
-// #endif
-
-float linearize(float depth) {
-	return -cameraPlane.y * cameraPlane.x / (depth * (cameraPlane.y - cameraPlane.x) - cameraPlane.y);
 }
 
 // Based on lense flare implementation by musk
@@ -132,6 +108,7 @@ void main() {
 #ifdef _DynRes
 	texCo *= dynamicScale;
 #endif
+
 #ifdef _CompoFishEye
 	const float fishEyeStrength = -0.01;
 	const vec2 m = vec2(0.5, 0.5);
@@ -147,6 +124,10 @@ void main() {
 	else {
 		texCo = m + normalize(d) * atan(r * -power * 10.0) * bind / atan(-power * bind * 10.0);
 	}
+#endif
+
+#ifdef _CompoDepth
+	float depth = texture(gbufferD, texCo).r * 2.0 - 1.0;
 #endif
 
 #ifdef _CompoFXAA
@@ -198,23 +179,15 @@ void main() {
 	float lumaB = dot(rgbB, luma);
 	if ((lumaB < lumaMin) || (lumaB > lumaMax)) col = vec4(rgbA, texColor.a);
 	else col = vec4(rgbB, texColor.a);
+
 #else
-	vec4 col = texture(tex, texCo);
-#endif
+	
+	#ifdef _CompoDOF
+	vec3 col = dof(texCo, depth, tex, gbufferD, texStep);
+	#else
+	vec3 col = texture(tex, texCo).rgb;
+	#endif
 
-#ifdef _CompoDepth
-	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-#endif
-
-#ifdef _CompoDOF
-	// if (depth < 1.0) {
-		float linDepth = linearize(depth);
-		float blur_amount = abs(linDepth - compoDOFDistance) / cameraPlane.y;
-		// float blur_amount = abs(linDepth - 4.0);
-		float blurSize = compoDOFSize * blur_amount;
-		// float blurSize = 0.0005 * blur_amount;
-		col.rgb = 0.75 * sampleBox(blurSize * 0.5) + 0.25 * sampleBox(blurSize * 1.0);
-	// }
 #endif
 
 #ifdef _CompoFog
@@ -284,5 +257,5 @@ void main() {
 	col.rgb *= 1.0 - step(0.5 - compoLetterboxSize, abs(0.5 - texCoord.y));
 #endif
 
-	fragColor = col; 
+	fragColor = vec4(col, 1.0); 
 }
