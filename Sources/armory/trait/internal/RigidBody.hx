@@ -17,7 +17,7 @@ class RigidBody extends Trait {
 #else
 
 	var shape:Shape;
-	var _motionState:BtMotionState;
+	var _motionState:BtMotionStatePointer;
 
 	public var physics:PhysicsWorld;
 	public var transform:Transform = null;
@@ -128,7 +128,7 @@ class RigidBody extends Trait {
 
 		if (!shapeConvexCreated) {
 			if (shape != Shape.StaticMesh && shape != Shape.Terrain) {
-				_shape.ptr.calculateLocalInertia(mass, _inertia.value);
+				_shape.ptr.calculateLocalInertia(mass, _inertia);
 			}
 			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shape, _inertia.value);
 			body = BtRigidBody.create(_bodyCI.value);
@@ -136,7 +136,7 @@ class RigidBody extends Trait {
 			body.ptr.setRollingFriction(friction);
 		}
 		else {
-			_shapeConvex.ptr.calculateLocalInertia(mass, _inertia.value);
+			_shapeConvex.ptr.calculateLocalInertia(mass, _inertia);
 			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shapeConvex, _inertia.value);
 			body = BtRigidBody.create(_bodyCI.value);
 		}

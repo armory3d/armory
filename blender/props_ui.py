@@ -433,7 +433,7 @@ class ArmoryBuildPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_build_advanced')
         if wrd.arm_build_advanced:
             layout.prop(wrd, 'arm_cache_shaders')
-            layout.prop(wrd, 'arm_clean_envmaps')
+            layout.prop(wrd, 'arm_cache_envmaps')
             layout.prop(wrd, 'arm_minimize')
             layout.prop(wrd, 'arm_optimize_mesh')
             layout.prop(wrd, 'arm_sampled_animation')

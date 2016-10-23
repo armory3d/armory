@@ -34,7 +34,7 @@ vec3 color(vec2 coords, const float blur, const sampler2D tex, const vec2 texSte
 }
 
 vec3 dof(const vec2 texCoord, const float gdepth, const sampler2D tex, const sampler2D gbufferD, const vec2 texStep) {
-	float depth = linearize(gdepth * 0.5 + 0.5);
+	float depth = linearize(gdepth);
 	const float fDepth = compoDOFDistance;
 	// float fDepth = linearize(texture(gbufferD, focus).r * 2.0 - 1.0); // Autofocus
 	
@@ -218,7 +218,7 @@ vec3 dof(const vec2 texCoord, const float gdepth, const sampler2D tex, const sam
 		
 		col /= s;
 	}
-	
+
 	return col;
 }
 

@@ -6,6 +6,7 @@ precision mediump float;
 #endif
 
 #include "../compiled.glsl"
+#include "../std/gbuffer.glsl"
 
 uniform sampler2D gbufferD;
 #ifndef _NoShadows

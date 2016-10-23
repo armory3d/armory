@@ -132,7 +132,11 @@ void main() {
 #endif
 
 	// Direct
-	vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);	
+#ifdef _OrenNayar
+	vec3 direct = orenNayarDiffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);
+#else
+	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);
+#endif
 
 	if (lightType == 2) { // Spot
 		float spotEffect = dot(lightDir, l);

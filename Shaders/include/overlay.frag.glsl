@@ -146,7 +146,11 @@ void main() {
 #endif
 
 	// Direct
-	vec3 direct = diffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH, dotLV) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH, dotLH);	
+#ifdef _OrenNayar
+	vec3 direct = orenNayarDiffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);
+#else
+	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);
+#endif
 	direct = direct * lightColor * lightStrength;
 	
 	// Indirect
@@ -168,7 +172,7 @@ void main() {
 	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 	indirect += indirectSpecular;
 #endif
-	indirect = indirect * envmapStrength // * lightColor * lightStrength;
+	indirect = indirect * envmapStrength; // * lightColor * lightStrength;
 	fragColor = vec4(vec3(direct * visibility + indirect), 1.0);
 	
 #ifdef _OccTex

@@ -224,7 +224,7 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     compositor_defs = make_compositor.parse_defs(bpy.data.scenes[0].node_tree) # Thrown in scene 0 for now
     # Additional compositor flags
     compo_depth = False # Read depth
-    compo_pos = False # Construct position from depth
+    # compo_pos = False # Construct position from depth
     if with_fxaa: # FXAA directly in compositor, useful for forward path
         compositor_defs += '_CompoFXAA'
     if wrd.generate_letterbox:
@@ -235,13 +235,13 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
         compositor_defs += '_CompoExposure'
     if wrd.generate_fog:
         compositor_defs += '_CompoFog'
-        compo_pos = True
+        # compo_pos = True
     if build_node_tree.cam.dof_distance > 0.0:
         compositor_defs += '_CompoDOF'
         compo_depth = True
-    if compo_pos:
-        compositor_defs += '_CompoPos'
-        compo_depth = True
+    # if compo_pos:
+        # compositor_defs += '_CompoPos'
+        # compo_depth = True
     if compo_depth:
         compositor_defs += '_CompoDepth'
 

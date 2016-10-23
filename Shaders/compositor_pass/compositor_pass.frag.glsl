@@ -19,14 +19,17 @@ uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
-#ifdef _CompoPos
-uniform vec3 eye;
-uniform vec3 eyeLook;
-#endif
+// #ifdef _CompoPos
+// uniform vec3 eye;
+// uniform vec3 eyeLook;
+// #endif
 
 #ifdef _CompoGlare
 uniform vec3 light;
 uniform mat4 VP;
+uniform vec3 eye;
+uniform vec3 eyeLook;
+uniform float aspectRatio;
 #endif
 
 // #ifdef _CompoFXAA
@@ -41,12 +44,10 @@ uniform float time;
 uniform float dynamicScale;
 #endif
 
-uniform float aspectRatio;
-
 in vec2 texCoord;
-#ifdef _CompoPos
-	in vec3 viewRay;
-#endif
+// #ifdef _CompoPos
+	// in vec3 viewRay;
+// #endif
 out vec4 fragColor;
 
 #ifdef _CompoFog
@@ -73,6 +74,7 @@ float vignette() {
 	return 0.3 + 0.7 * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
 }
 
+#ifdef _CompoGlare
 // Based on lense flare implementation by musk
 // https://www.shadertoy.com/view/4sX3Rs 
 vec3 lensflare(vec2 uv, vec2 pos) {
@@ -102,6 +104,7 @@ vec3 lensflare(vec2 uv, vec2 pos) {
 	c.b += f23 + f43 + f53 + f63;
 	return c;
 }
+#endif
 
 void main() {
 	vec2 texCo = texCoord;
@@ -202,22 +205,24 @@ void main() {
 #endif
 
 #ifdef _CompoGlare
-	vec4 lndc = VP * vec4(light, 1.0);
-	lndc.xy /= lndc.w;
-	float lightDistance = distance(eye, light);
-	vec2 lss = lndc.xy * 0.5 + 0.5;
-	float lssdepth = linearize(texture(gbufferD, lss).r * 2.0 - 1.0);
-	if (lssdepth >= lightDistance) {
-		vec2 lensuv = (texCoord - 0.5) * 2.0;
-		lensuv.x *= aspectRatio;
-		vec3 lensflarecol = vec3(1.4, 1.2, 1.0) * lensflare(lensuv, lndc.xy);
-		col.rgb += lensflarecol;
+	if (dot(light, eyeLook) > 0.0) { // Facing light
+		vec4 lndc = VP * vec4(light, 1.0);
+		lndc.xy /= lndc.w;
+		vec2 lss = lndc.xy * 0.5 + 0.5;
+		float lssdepth = linearize(texture(gbufferD, lss).r * 2.0 - 1.0);
+		float lightDistance = distance(eye, light);
+		if (lightDistance <= lssdepth) {
+			vec2 lensuv = texCo * 2.0 - 1.0;
+			lensuv.x *= aspectRatio;
+			vec3 lensflarecol = vec3(1.4, 1.2, 1.0) * lensflare(lensuv, lndc.xy);
+			col.rgb += lensflarecol;
+		}
 	}
 #endif
 
 #ifdef _CompoGrain
 	// const float compoGrainStrength = 4.0;
-	float x = (texCoord.x + 4.0) * (texCoord.y + 4.0) * (time * 10.0);
+	float x = (texCo.x + 4.0) * (texCo.y + 4.0) * (time * 10.0);
 	col.rgb += vec3(mod((mod(x, 13.0) + 1.0) * (mod(x, 123.0) + 1.0), 0.01) - 0.005) * compoGrainStrength;
 #endif
 	
@@ -244,8 +249,8 @@ void main() {
 
 // #ifdef _CompoContrast
 	// -0.5 - 0.5
-	const float compoContrast = 0.2;
-	col.rgb = ((col.rgb - 0.5) * max(compoContrast + 1.0, 0.0)) + 0.5;
+	// const float compoContrast = 0.2;
+	// col.rgb = ((col.rgb - 0.5) * max(compoContrast + 1.0, 0.0)) + 0.5;
 // #endif
 
 // #ifdef _CompoBrighness
@@ -254,7 +259,7 @@ void main() {
 
 #ifdef _CompoLetterbox
 	// const float compoLetterboxSize = 0.1;
-	col.rgb *= 1.0 - step(0.5 - compoLetterboxSize, abs(0.5 - texCoord.y));
+	col.rgb *= 1.0 - step(0.5 - compoLetterboxSize, abs(0.5 - texCo.y));
 #endif
 
 	fragColor = vec4(col, 1.0); 

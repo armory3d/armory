@@ -403,7 +403,7 @@ def clean_project():
     wrd = bpy.data.worlds['Arm']
 
     # Preserve envmaps
-    if not wrd.arm_clean_envmaps:
+    if wrd.arm_cache_envmaps:
         envmaps_path = 'build/compiled/Assets/envmaps'
         if os.path.isdir(envmaps_path):
             shutil.move(envmaps_path, '.')
@@ -413,7 +413,7 @@ def clean_project():
         shutil.rmtree('build')
 
     # Move envmaps back
-    if not wrd.arm_clean_envmaps and os.path.isdir('envmaps'):
+    if wrd.arm_cache_envmaps and os.path.isdir('envmaps'):
         os.makedirs('build/compiled/Assets')
         shutil.move('envmaps', 'build/compiled/Assets')
 

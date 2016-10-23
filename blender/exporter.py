@@ -1666,8 +1666,6 @@ class ArmoryExporter:
                 return
 
         print('Exporting mesh ' + bobject.data.name)
-        if bobject.type != 'FONT' and len(bobject.data.vertices) > 40000:
-            print('Armory Warning: "' + bobject.name + '" contains over 40000 vertices, split mesh to smaller parts to fit into 16-bit indices')
 
         o = {}
         o['name'] = oid
@@ -1970,10 +1968,12 @@ class ArmoryExporter:
         # Viewport Camera - override fov for every camera for now
         if bpy.data.worlds['Arm'].arm_play_viewport_camera:
             # Extract fov from projection
-            # yscale = self.get_viewport_projection_matrix()[1][1]
-            # fov = math.atan(1.0 / yscale) * 0.9
-            # o['fov'] = fov
-            o['fov'] = math.pi / 3.0
+            yscale = self.get_viewport_projection_matrix()[1][1]
+            if yscale < 0:
+                yscale *= -1 # Reverse
+            fov = math.atan(1.0 / yscale) * 0.9
+            o['fov'] = fov
+            # o['fov'] = math.pi / 3.0
         
         if objref.type == 'PERSP':
             o['type'] = 'perspective'
