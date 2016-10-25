@@ -112,7 +112,7 @@ void main() {
 	vec3 p = getPos2(invVP, depth, texCoord);
 	vec2 metrough = unpackFloat(g0.b);
 	
-	vec3 v = normalize(eye - p.xyz);
+	vec3 v = normalize(eye - p);
 	float dotNV = dot(n, v);
 	
 	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
@@ -124,7 +124,7 @@ void main() {
 		l = lightDir;
 	}
 	else { // Point, spot
-		l = normalize(lightPos - p.xyz);
+		l = normalize(lightPos - p);
 	}
 	
 	vec3 h = normalize(v + l);

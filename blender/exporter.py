@@ -2966,7 +2966,8 @@ class ArmoryExporter:
         #   shader_data_path_with_mask = 'build/compiled/ShaderDatas/' + ArmoryExporter.renderpath_id + '/' + shader_data_name_with_mask + '.arm'
         #   # Copy data if it does not exist and set stencil mask
         #   if not os.path.isfile(shader_data_path_with_mask):
-        #       json_file = open(shader_data_path).read()
+        #       with open(shader_data_path) as f:
+        #          json_file = f.read()
         #       json_data = json.loads(json_file)
         #       dat = json_data['shader_datas'][0]
         #       dat['name'] += mask_ext

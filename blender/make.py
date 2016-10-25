@@ -25,15 +25,13 @@ exporter = ArmoryExporter()
 
 def compile_shader(raw_shaders_path, shader_name, defs):
     os.chdir(raw_shaders_path + './' + shader_name)
-    if utils.get_os() == 'mac':
-        fp = os.path.relpath(utils.get_fp())
-    else:
-        fp = utils.get_fp()
+    fp = utils.get_fp()
 
     # Open json file
     json_name = shader_name + '.shader.json'
     base_name = json_name.split('.', 1)[0]
-    json_file = open(json_name).read()
+    with open(json_name) as f:
+        json_file = f.read()
     json_data = json.loads(json_file)
     
     lib.make_datas.make(base_name, json_data, fp, defs)

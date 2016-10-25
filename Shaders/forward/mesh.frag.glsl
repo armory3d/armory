@@ -126,21 +126,22 @@ float shadowTest(vec4 lPos) {
 void main() {
 	
 #ifdef _NorTex
-	vec3 n = (texture(snormal, texCoord).rgb * 2.0 - 1.0);
+	vec3 n = texture(snormal, texCoord).rgb * 2.0 - 1.0;
 	n = normalize(TBN * normalize(n));
 	
+	// vec3 normal = texture(snormal, texCoord).rgb * 2.0 - 1.0;
 	// vec3 nn = normalize(normal);
-	// vec3 dp1 = dFdx( position );
-	// vec3 dp2 = dFdy( position );
-	// vec2 duv1 = dFdx( texCoord );
-	// vec2 duv2 = dFdy( texCoord );
-	// vec3 dp2perp = cross( dp2, nn );
-	// vec3 dp1perp = cross( nn, dp1 );
+	// vec3 dp1 = dFdx(position);
+	// vec3 dp2 = dFdy(position);
+	// vec2 duv1 = dFdx(texCoord);
+	// vec2 duv2 = dFdy(texCoord);
+	// vec3 dp2perp = cross(dp2, nn);
+	// vec3 dp1perp = cross(nn, dp1);
 	// vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
 	// vec3 B = dp2perp * duv1.y + dp1perp * duv2.y; 
-	// float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
+	// float invmax = inversesqrt(max(dot(T,T), dot(B,B)));
 	// mat3 TBN = mat3(T * invmax, B * invmax, nn);
-	// vec3 n = normalize(TBN * nn);
+	// vec3 n = (TBN * nn);
 #else
 	vec3 n = normalize(normal);
 #endif
@@ -156,7 +157,6 @@ void main() {
 	else { // Point, spot
 		l = normalize(lightPos - position.xyz);
 	}
-	float dotNL = dot(n, l);
 	
 	float visibility = 1.0;
 #ifndef _NoShadows
@@ -181,11 +181,10 @@ void main() {
 	vec3 v = normalize(eyeDir);
 	vec3 h = normalize(v + l);
 
+	float dotNL = dot(n, l);
 	float dotNV = dot(n, v);
 	float dotNH = dot(n, h);
 	float dotVH = dot(v, h);
-	float dotLV = dot(l, v);
-	float dotLH = dot(l, h);
 
 #ifdef _MetTex
 	float metalness = texture(smetal, texCoord).r;

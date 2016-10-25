@@ -130,7 +130,6 @@ void main() {
 	else { // Point, spot
 		l = normalize(lightPos - position.xyz);
 	}
-	float dotNL = max(dot(n, l), 0.0);
 	
 	float visibility = 1.0;
 #ifndef _NoShadows
@@ -157,11 +156,10 @@ void main() {
 	vec3 v = normalize(eyeDir);
 	vec3 h = normalize(v + l);
 
-	float dotNV = max(dot(n, v), 0.0);
-	float dotNH = max(dot(n, h), 0.0);
-	float dotVH = max(dot(v, h), 0.0);
-	float dotLV = max(dot(l, v), 0.0);
-	float dotLH = max(dot(l, h), 0.0);
+	float dotNL = dot(n, l);
+	float dotNV = dot(n, v);
+	float dotNH = dot(n, h);
+	float dotVH = dot(v, h);
 
 #ifdef _MetTex
 	float metalness = texture(smetal, texCoord).r;

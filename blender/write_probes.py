@@ -189,11 +189,12 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
 
 # Parse sh coefs produced by cmft into json array
 def sh_to_json(sh_file):
-    sh_lines = open(sh_file + '.c').read().splitlines()
+    with open(sh_file + '.c') as f:
+        sh_lines = f.read().splitlines()
     band0_line = sh_lines[5]
     band1_line = sh_lines[6]
     band2_line = sh_lines[7]
-    
+
     irradiance_floats = []
     parse_band_floats(irradiance_floats, band0_line)
     parse_band_floats(irradiance_floats, band1_line)

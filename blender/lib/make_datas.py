@@ -65,35 +65,47 @@ def write_data(res, defs, json_data, base_name):
 
         # Parse shaders
         if 'vertex_shader_path' in c:
-            vert = open(c['vertex_shader_path']).read().splitlines()
+            with open(c['vertex_shader_path']) as f:
+                vert = f.read().splitlines()
         else:
-            vert = open(c['vertex_shader']).read().splitlines()
+            with open(c['vertex_shader']) as f:
+                vert = f.read().splitlines()
 
         if 'fragment_shader_path' in  c:
-            frag = open(c['fragment_shader_path']).read().splitlines()
+            with open(c['fragment_shader_path']) as f:
+                frag = f.read().splitlines()
         else:
-            frag = open(c['fragment_shader']).read().splitlines()
+            with open(c['fragment_shader']) as f:
+                frag = f.read().splitlines()
         
         parse_shader(sres, c, con, defs, vert, len(sres['contexts']) == 1) # Parse attribs for the first vertex shader
         parse_shader(sres, c, con, defs, frag, False)
-        
+
         if 'geometry_shader' in c:
             if 'geometry_shader_path' in c:
-                geom = open(c['geometry_shader_path']).read().splitlines()
+                with open(c['geometry_shader_path']) as f:
+                    geom = f.read().splitlines()
             else:
-                geom = open(c['geometry_shader']).read().splitlines()
+                with open(c['geometry_shader']) as f:
+                    geom = f.read().splitlines()
             parse_shader(sres, c, con, defs, geom, False)
+
         if 'tesscontrol_shader' in c:
             if 'tesscontrol_shader_path' in c:
-                tesc = open(c['tesscontrol_shader_path']).read().splitlines()
+                with open(c['tesscontrol_shader_path']) as f:
+                    tesc = f.read().splitlines()
             else:
-                tesc = open(c['tesscontrol_shader']).read().splitlines()
+                with open(c['tesscontrol_shader']) as f:
+                    tesc = f.read().splitlines()
             parse_shader(sres, c, con, defs, tesc, False)
+        
         if 'tesseval_shader' in c:
             if 'tesseval_shader_path' in c:
-                tese = open(c['tesseval_shader_path']).read().splitlines()
+                with open(c['tesseval_shader_path']) as f:
+                    tese = f.read().splitlines()
             else:
-                tese = open(c['tesseval_shader']).read().splitlines()
+                with open(c['tesseval_shader']) as f:
+                    tese = f.read().splitlines()
             parse_shader(sres, c, con, defs, tese, False)
 
 def parse_shader(sres, c, con, defs, lines, parse_attributes):

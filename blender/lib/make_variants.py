@@ -25,36 +25,46 @@ def make(base_name, json_data, fp, defs):
 
         shader['vert_name'] = c['vertex_shader'].split('.', 1)[0]
         if 'vertex_shader_path' in c:
-            shader['vert'] = open(c['vertex_shader_path']).read().splitlines()
+            with open(c['vertex_shader_path']) as f:
+                shader['vert'] = f.read().splitlines()
         else:
-            shader['vert'] = open(c['vertex_shader']).read().splitlines()
+            with open(c['vertex_shader']) as f:
+                shader['vert'] = f.read().splitlines()
 
         shader['frag_name'] = c['fragment_shader'].split('.', 1)[0]
         if 'fragment_shader_path' in c:
-            shader['frag'] = open(c['fragment_shader_path']).read().splitlines()
+            with open(c['fragment_shader_path']) as f:
+                shader['frag'] = f.read().splitlines()
         else:
-            shader['frag'] = open(c['fragment_shader']).read().splitlines()
+            with open(c['fragment_shader']) as f:
+                shader['frag'] = f.read().splitlines()
 
         if 'geometry_shader' in c:
             shader['geom_name'] = c['geometry_shader'].split('.', 1)[0]
             if 'geometry_shader_path' in c:
-                shader['geom'] = open(c['geometry_shader_path']).read().splitlines()
+                with open(c['geometry_shader_path']) as f:
+                    shader['geom'] = f.read().splitlines()
             else:
-                shader['geom'] = open(c['geometry_shader']).read().splitlines()
+                with open(c['geometry_shader']) as f:
+                    shader['geom'] = f.read().splitlines()
 
         if 'tesscontrol_shader' in c:
             shader['tesc_name'] = c['tesscontrol_shader'].split('.', 1)[0]
             if 'tesscontrol_shader_path' in c:
-                shader['tesc'] = open(c['tesscontrol_shader_path']).read().splitlines()
+                with open(c['tesscontrol_shader_path']) as f:
+                    shader['tesc'] = f.read().splitlines()
             else:
-                shader['tesc'] = open(c['tesscontrol_shader']).read().splitlines()
+                with open(c['tesscontrol_shader']) as f:
+                    shader['tesc'] = f.read().splitlines()
 
         if 'tesseval_shader' in c:
             shader['tese_name'] = c['tesseval_shader'].split('.', 1)[0]
             if 'tesseval_shader_path' in c:
-                shader['tese'] = open(c['tesseval_shader_path']).read().splitlines()
+                with open(c['tesseval_shader_path']) as f:
+                    shader['tese'] = f.read().splitlines()
             else:
-                shader['tese'] = open(c['tesseval_shader']).read().splitlines()
+                with open(c['tesseval_shader']) as f:
+                    shader['tese'] = f.read().splitlines()
     
     for shader in shaders:
         ext = ''
