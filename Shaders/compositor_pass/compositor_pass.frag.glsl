@@ -148,8 +148,7 @@ void main() {
 	vec3 rgbNE = texture(tex, tcrgbNE).rgb;
 	vec3 rgbSW = texture(tex, tcrgbSW).rgb;
 	vec3 rgbSE = texture(tex, tcrgbSE).rgb;
-	vec4 texColor = texture(tex, tcrgbM);
-	vec3 rgbM  = texColor.rgb;
+	vec3 rgbM  = texture(tex, tcrgbM).rgb;
 	vec3 luma = vec3(0.299, 0.587, 0.114);
 	float lumaNW = dot(rgbNW, luma);
 	float lumaNE = dot(rgbNE, luma);
@@ -178,10 +177,10 @@ void main() {
 		texture(tex, texCo + dir * -0.5).rgb +
 		texture(tex, texCo + dir * 0.5).rgb);
 	
-	vec4 col;
+	vec3 col;
 	float lumaB = dot(rgbB, luma);
-	if ((lumaB < lumaMin) || (lumaB > lumaMax)) col = vec4(rgbA, texColor.a);
-	else col = vec4(rgbB, texColor.a);
+	if ((lumaB < lumaMin) || (lumaB > lumaMax)) col = rgbA;
+	else col = rgbB;
 
 #else
 	

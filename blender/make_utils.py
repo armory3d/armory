@@ -6,11 +6,11 @@ def kode_studio():
     project_path = utils.get_fp()
 
     if utils.get_os() == 'win':
-        kode_path = sdk_path + '/kode_studio/KodeStudio-win32/Kode Studio.exe'
+        kode_path = sdk_path + '/kode/win32/Kode Studio.exe'
     elif utils.get_os() == 'mac':
-        kode_path = '"' + sdk_path + '/kode_studio/Kode Studio.app/Contents/MacOS/Electron"'
+        kode_path = '"' + sdk_path + '/kode/Kode Studio.app/Contents/MacOS/Electron"'
     else:
-        kode_path = sdk_path + '/kode_studio/KodeStudio-linux64/kodestudio'
+        kode_path = sdk_path + '/kode/linux64/kodestudio'
 
     subprocess.Popen([kode_path + ' ' + utils.get_fp()], shell=True)
 

@@ -161,11 +161,11 @@ class ArmoryEditScriptButton(bpy.types.Operator):
     def execute(self, context):
         sdk_path = utils.get_sdk_path()
         if utils.get_os() == 'win':
-            kode_path = sdk_path + '/kode_studio/KodeStudio-win32/Kode Studio.exe'
+            kode_path = sdk_path + '/kode/win32/Kode Studio.exe'
         elif utils.get_os() == 'mac':
-            kode_path = '"' + sdk_path + '/kode_studio/Kode Studio.app/Contents/MacOS/Electron"'
+            kode_path = '"' + sdk_path + '/kode/Kode Studio.app/Contents/MacOS/Electron"'
         else:
-            kode_path = sdk_path + '/kode_studio/KodeStudio-linux64/kodestudio'
+            kode_path = sdk_path + '/kode/linux64/kodestudio'
         project_path = utils.get_fp()
         item = context.object.my_traitlist[context.object.traitlist_index] 
         hx_path = project_path + '/Sources/' + bpy.data.worlds['Arm'].arm_project_package + '/' + item.class_name_prop + '.hx'

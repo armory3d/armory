@@ -25,7 +25,10 @@ exporter = ArmoryExporter()
 
 def compile_shader(raw_shaders_path, shader_name, defs):
     os.chdir(raw_shaders_path + './' + shader_name)
-    fp = os.path.relpath(utils.get_fp())
+    if utils.get_os() == 'mac':
+        fp = os.path.relpath(utils.get_fp())
+    else:
+        fp = utils.get_fp()
 
     # Open json file
     json_name = shader_name + '.shader.json'
@@ -134,13 +137,13 @@ def compile_project(target_name=None, is_publish=False, watch=False):
 
     if utils.get_os() == 'win':
         node_path = sdk_path + '/nodejs/node.exe'
-        khamake_path = sdk_path + '/kode_studio/KodeStudio-win32/resources/app/extensions/kha/Kha/make'
+        khamake_path = sdk_path + '/kode/win32/resources/app/extensions/kha/Kha/make'
     elif utils.get_os() == 'mac':
         node_path = sdk_path + '/nodejs/node-osx'
-        khamake_path = sdk_path + '/kode_studio/Kode Studio.app/Contents/Resources/app/extensions/kha/Kha/make'
+        khamake_path = sdk_path + '/kode/Kode Studio.app/Contents/Resources/app/extensions/kha/Kha/make'
     else:
         node_path = sdk_path + '/nodejs/node-linux64'
-        khamake_path = sdk_path + '/kode_studio/KodeStudio-linux64/resources/app/extensions/kha/Kha/make'
+        khamake_path = sdk_path + '/kode/linux64/resources/app/extensions/kha/Kha/make'
     
     kha_target_name = make_utils.get_kha_target(target_name)
     cmd = [node_path, khamake_path, kha_target_name]
@@ -378,12 +381,12 @@ def on_compiled(mode): # build, play, play_viewport, publish
             electron_app_path = './build/electron.js'
 
             if utils.get_os() == 'win':
-                electron_path = sdk_path + 'kode_studio/KodeStudio-win32/Kode Studio.exe'
+                electron_path = sdk_path + 'kode/win32/Kode Studio.exe'
             elif utils.get_os() == 'mac':
-                # electron_path = sdk_path + 'kode_studio/Kode Studio.app/Contents/MacOS/Electron'
-                electron_path = sdk_path + 'kode_studio/Electron.app/Contents/MacOS/Electron'
+                # electron_path = sdk_path + 'kode/Kode Studio.app/Contents/MacOS/Electron'
+                electron_path = sdk_path + 'kode/Electron.app/Contents/MacOS/Electron'
             else:
-                electron_path = sdk_path + 'kode_studio/KodeStudio-linux64/kodestudio'
+                electron_path = sdk_path + 'kode/linux64/kodestudio'
 
             state.playproc = subprocess.Popen([electron_path, '--chromedebug', '--remote-debugging-port=9222', '--enable-logging', electron_app_path], stderr=subprocess.PIPE)
             watch_play()

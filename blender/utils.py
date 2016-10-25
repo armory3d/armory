@@ -40,9 +40,9 @@ def get_sdk_path():
     addon_prefs = user_preferences.addons['armory'].preferences
     if with_chromium() and addon_prefs.sdk_bundled:
         if get_os() == 'mac':
-            return os.__file__[:-5] + '../../../scripts/addons/armory_sdk/'
+            return bpy.path.abspath(os.__file__[:-5] + '../../../armory_sdk/')
         else:
-            print('Bundled SDK path not implemented')
+            return bpy.path.abspath(os.__file__[:-5] + '../../armory_sdk/')
     else:
         return addon_prefs.sdk_path
 
