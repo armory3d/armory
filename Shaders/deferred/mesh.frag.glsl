@@ -135,7 +135,7 @@ void main() {
 	fragColor[0] = vec4(n.xy, packFloat(metalness, roughness), mask_probe);
 #else
 	// fragColor[0] = vec4(n.xy, packFloat(metalness, roughness), mask);
-	// TODO: Can not read and write to depth buffer at once, fetch depth from g0
+	// TODO: Can not read and test depth buffer at once, fetch depth from g0
 	fragColor[0] = vec4(n.xy, packFloat(metalness, roughness), 1.0 - gl_FragCoord.z);
 #endif
 	fragColor[1] = vec4(baseColor.rgb, occ);

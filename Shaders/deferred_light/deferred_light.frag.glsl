@@ -103,7 +103,7 @@ void main() {
 	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, occlusion
 	// 0 - 1 => -1 - 1
 	// float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	// TODO: Can not read and write to depth buffer at once, fetch depth from g0
+	// TODO: Can not read and test depth buffer at once, fetch depth from g0
 	float depth = (1.0 - g0.a) * 2.0 - 1.0;
 
 	vec3 n;
