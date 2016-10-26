@@ -8,7 +8,7 @@ import platform
 import subprocess
 import make_compositor
 import assets
-import utils
+import armutils
 import nodes
 
 def build_node_trees(assets_path):
@@ -59,7 +59,7 @@ def build_node_tree(cam, node_group):
     buildNode(dat['stages'], rn, node_group)
 
     asset_path = path + node_group_name + '.arm'
-    utils.write_arm(asset_path, output)
+    armutils.write_arm(asset_path, output)
     assets.add(asset_path)
 
 def make_set_target(stage, node_group, node, currentNode=None, target_index=1, viewport_scale=1.0):
@@ -106,7 +106,7 @@ def make_clear_target(stage, color_val=None, depth_val=None, stencil_val=None):
         if color_val == -1: # Clear to world background color
             stage['params'].append('-1')
         else:
-            stage['params'].append(str(utils.to_hex(color_val)))
+            stage['params'].append(str(armutils.to_hex(color_val)))
     if depth_val != None:
         stage['params'].append('depth')
         stage['params'].append(str(depth_val))

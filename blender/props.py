@@ -5,7 +5,7 @@ from props_traits_action import *
 import props_ui
 import assets
 import log
-import utils
+import armutils
 try:
     import barmory
 except ImportError:
@@ -290,10 +290,10 @@ def init_properties():
             l.use_nodes = True
         for m in bpy.data.materials:
             m.use_nodes = True
-    utils.fetch_script_names()
+    armutils.fetch_script_names()
     # Path for embedded player
-    if utils.with_chromium():
-        barmory.set_url('file://' + utils.get_fp() + '/build/html5/index.html')
+    if armutils.with_chromium():
+        barmory.set_url('file://' + armutils.get_fp() + '/build/html5/index.html')
 
 def register():
     init_properties()

@@ -5,7 +5,7 @@ from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 from props_traits_clip import *
 from props_traits_action import *
-import utils
+import armutils
 import make
 import make_utils
 import make_state as state
@@ -408,7 +408,7 @@ class ArmoryPlayPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_play_advanced')
         if wrd.arm_play_advanced:
             layout.prop(wrd, 'arm_play_console')
-            if utils.with_chromium():
+            if armutils.with_chromium():
                 layout.prop(wrd, 'arm_play_live_patch')
                 if wrd.arm_play_live_patch:
                     layout.prop(wrd, 'arm_play_auto_build')
@@ -546,7 +546,7 @@ class ArmoryFolderButton(bpy.types.Operator):
     bl_label = 'Project Folder'
  
     def execute(self, context):
-        webbrowser.open('file://' + utils.get_fp())
+        webbrowser.open('file://' + armutils.get_fp())
         return{'FINISHED'}
 
 class ArmoryCheckUpdatesButton(bpy.types.Operator):

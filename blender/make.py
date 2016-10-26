@@ -14,7 +14,7 @@ import make_utils
 import make_state as state
 import path_tracer
 from exporter import ArmoryExporter
-import utils
+import armutils
 import assets
 import log
 import lib.make_datas
@@ -25,7 +25,7 @@ exporter = ArmoryExporter()
 
 def compile_shader(raw_shaders_path, shader_name, defs):
     os.chdir(raw_shaders_path + './' + shader_name)
-    fp = utils.get_fp()
+    fp = armutils.get_fp()
 
     # Open json file
     json_name = shader_name + '.shader.json'
@@ -64,7 +64,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     for scene in bpy.data.scenes:
         if scene.game_export:
             ext = '.zip' if (scene.data_compressed and is_publish) else '.arm'
-            asset_path = 'build/compiled/Assets/' + utils.safe_filename(scene.name) + ext
+            asset_path = 'build/compiled/Assets/' + armutils.safe_filename(scene.name) + ext
             exporter.execute(bpy.context, asset_path)
             if physics_found == False and ArmoryExporter.export_physics:
                 physics_found = True
@@ -125,18 +125,18 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
             shutil.copy(ammojs_path, 'build/debug-html5')
 
 def compile_project(target_name=None, is_publish=False, watch=False):
-    sdk_path =  utils.get_sdk_path()
-    ffmpeg_path = utils.get_ffmpeg_path()
+    sdk_path =  armutils.get_sdk_path()
+    ffmpeg_path = armutils.get_ffmpeg_path()
     wrd = bpy.data.worlds['Arm']
 
     # Set build command
     if target_name == None:
         target_name = wrd.arm_project_target
 
-    if utils.get_os() == 'win':
+    if armutils.get_os() == 'win':
         node_path = sdk_path + '/nodejs/node.exe'
         khamake_path = sdk_path + '/kode/win32/resources/app/extensions/kha/Kha/make'
-    elif utils.get_os() == 'mac':
+    elif armutils.get_os() == 'mac':
         node_path = sdk_path + '/nodejs/node-osx'
         khamake_path = sdk_path + '/kode/Kode Studio.app/Contents/Resources/app/extensions/kha/Kha/make'
     else:
@@ -150,7 +150,7 @@ def compile_project(target_name=None, is_publish=False, watch=False):
         cmd.append('--ffmpeg')
         cmd.append('"' + ffmpeg_path + '"')
 
-    if utils.get_os() == 'win': # OpenGL for now
+    if armutils.get_os() == 'win': # OpenGL for now
         cmd.append('-g')
         cmd.append('opengl2')
 
@@ -182,8 +182,8 @@ def compile_project(target_name=None, is_publish=False, watch=False):
 
 # For live patching
 def patch_project():
-    sdk_path = utils.get_sdk_path()
-    fp = utils.get_fp()
+    sdk_path = armutils.get_sdk_path()
+    fp = armutils.get_fp()
     os.chdir(fp)
     export_data(fp, sdk_path, is_play=True)
 
@@ -205,11 +205,11 @@ def build_project(is_play=False, is_publish=False, in_viewport=False):
                 break
 
     # Get paths
-    sdk_path = utils.get_sdk_path()
+    sdk_path = armutils.get_sdk_path()
     raw_shaders_path = sdk_path + '/armory/Shaders/'
     
     # Set dir
-    fp = utils.get_fp()
+    fp = armutils.get_fp()
     os.chdir(fp)
 
     # Create directories
@@ -299,7 +299,7 @@ def watch_patch():
     state.compileproc_finished = True
 
 def play_project(self, in_viewport):
-    if utils.with_chromium() and in_viewport and bpy.context.area.type == 'VIEW_3D':
+    if armutils.with_chromium() and in_viewport and bpy.context.area.type == 'VIEW_3D':
         state.play_area = bpy.context.area
 
     # Build data
@@ -317,15 +317,15 @@ def play_project(self, in_viewport):
             # Windowed player
             x = 0
             y = 0
-            w, h = utils.get_render_resolution()
+            w, h = armutils.get_render_resolution()
             winoff = 0
         else:
             # Player dimensions
-            if utils.get_os() == 'win':
+            if armutils.get_os() == 'win':
                 psize = 1 # Scale in electron
                 xoff = 0
                 yoff = 6
-            elif utils.get_os() == 'mac':
+            elif armutils.get_os() == 'mac':
                 psize = bpy.context.user_preferences.system.pixel_size
                 xoff = 5
                 yoff = 22
@@ -353,13 +353,13 @@ def play_project(self, in_viewport):
 
 def on_compiled(mode): # build, play, play_viewport, publish
     log.clear()
-    sdk_path = utils.get_sdk_path()
+    sdk_path = armutils.get_sdk_path()
 
     # Print info
     if mode == 'publish':
         target_name = make_utils.get_kha_target(bpy.data.worlds['Arm'].arm_publish_target)
         print('Project published')
-        files_path = utils.get_fp() + '/build/' + target_name
+        files_path = armutils.get_fp() + '/build/' + target_name
         if target_name == 'html5':
             print('HTML5 files are located in ' + files_path)
         elif target_name == 'ios' or target_name == 'osx': # TODO: to macos
@@ -373,14 +373,14 @@ def on_compiled(mode): # build, play, play_viewport, publish
         return
 
     # Launch project in new window or frameless electron
-    elif (mode =='play') or (mode == 'play_viewport' and utils.with_chromium() == False):
+    elif (mode =='play') or (mode == 'play_viewport' and armutils.with_chromium() == False):
         wrd = bpy.data.worlds['Arm']
         if wrd.arm_play_runtime == 'Electron':
             electron_app_path = './build/electron.js'
 
-            if utils.get_os() == 'win':
+            if armutils.get_os() == 'win':
                 electron_path = sdk_path + 'kode/win32/Kode Studio.exe'
-            elif utils.get_os() == 'mac':
+            elif armutils.get_os() == 'mac':
                 # electron_path = sdk_path + 'kode/Kode Studio.app/Contents/MacOS/Electron'
                 electron_path = sdk_path + 'kode/Electron.app/Contents/MacOS/Electron'
             else:
@@ -390,7 +390,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
             watch_play()
         elif wrd.arm_play_runtime == 'Browser':
             # Start server
-            os.chdir(utils.get_fp())
+            os.chdir(armutils.get_fp())
             t = threading.Thread(name='localserver', target=lib.server.run)
             t.daemon = True
             t.start()
@@ -399,7 +399,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
 
 
 def clean_project():
-    os.chdir(utils.get_fp())
+    os.chdir(armutils.get_fp())
     
     wrd = bpy.data.worlds['Arm']
 

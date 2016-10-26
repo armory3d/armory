@@ -2,7 +2,7 @@
 import bpy
 from bpy.types import Header
 from bpy.app.translations import contexts as i18n_contexts
-import utils
+import armutils
 import make
 import make_state as state
 import log
@@ -60,9 +60,9 @@ class ArmorySpaceResumeButton(bpy.types.Operator):
         return{'FINISHED'}
 
 def register():
-    if utils.with_chromium():
+    if armutils.with_chromium():
         bpy.utils.register_module(__name__)
 
 def unregister():
-    if utils.with_chromium():
+    if armutils.with_chromium():
         bpy.utils.unregister_module(__name__)

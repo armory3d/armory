@@ -1,5 +1,5 @@
 import bpy
-import utils
+import armutils
 import make
 import make_state as state
 import space_armory
@@ -49,7 +49,7 @@ def on_scene_update_post(context):
                 make.compile_project()
 
         # Check if chromium is running
-        if utils.with_chromium():
+        if armutils.with_chromium():
             for area in bpy.context.screen.areas:
                 if area.type == 'VIEW_ARMORY':
                     # Read chromium console
@@ -88,7 +88,7 @@ def on_scene_update_post(context):
                 if state.chromium_running:
                     barmory.call_js('armory.Scene.patch();')
                 # Or switch to armory space
-                elif utils.with_chromium() and state.in_viewport:
+                elif armutils.with_chromium() and state.in_viewport:
                     state.play_area.type = 'VIEW_ARMORY'
                     # Prevent immediate operator patch
                     if len(ops) > 0:

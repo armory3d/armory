@@ -1,7 +1,7 @@
 import bpy
 import math
 import assets
-import utils
+import armutils
 import os
 import nodes
 
@@ -86,7 +86,7 @@ def make_texture(self, id, image_node, material, image_format='RGBA32'):
     if image != None:
         if image.packed_file != None:
             # Extract packed data
-            unpack_path = utils.get_fp() + '/build/compiled/Assets/unpacked'
+            unpack_path = armutils.get_fp() + '/build/compiled/Assets/unpacked'
             if not os.path.exists(unpack_path):
                 os.makedirs(unpack_path)
             unpack_filepath = unpack_path + '/' + image.name
@@ -98,10 +98,10 @@ def make_texture(self, id, image_node, material, image_format='RGBA32'):
             assets.add(unpack_filepath)
         else:
             # Link image path to assets
-            assets.add(utils.safe_assetpath(image.filepath))
+            assets.add(armutils.safe_assetpath(image.filepath))
         # Reference image name
-        tex['file'] = utils.extract_filename(image.filepath)
-        tex['file'] = utils.safe_filename(tex['file'])
+        tex['file'] = armutils.extract_filename(image.filepath)
+        tex['file'] = armutils.safe_filename(tex['file'])
         if image_format != 'RGBA32':
             tex['format'] = image_format
         interpolation = image_node.interpolation

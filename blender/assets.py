@@ -1,4 +1,4 @@
-import utils
+import armutils
 import shutil
 import os
 
@@ -58,7 +58,7 @@ def invalidate_shader_cache(self, context):
     global invalidate_enabled
     if invalidate_enabled == False:
         return
-    fp = utils.get_fp()
+    fp = armutils.get_fp()
     if os.path.isdir(fp + '/build/compiled/ShaderDatas'):
         shutil.rmtree(fp + '/build/compiled/ShaderDatas')
 
@@ -66,13 +66,13 @@ def invalidate_compiled_data(self, context):
     global invalidate_enabled
     if invalidate_enabled == False:
         return
-    fp = utils.get_fp()
+    fp = armutils.get_fp()
     if os.path.isdir(fp + '/build/compiled/Assets'):
         shutil.rmtree(fp + '/build/compiled/Assets')
     if os.path.isdir(fp + '/build/compiled/ShaderDatas'):
         shutil.rmtree(fp + '/build/compiled/ShaderDatas')
 
 def invalidate_mesh_data(self, context):
-    fp = utils.get_fp()
+    fp = armutils.get_fp()
     if os.path.isdir(fp + '/build/compiled/Assets/meshes'):
         shutil.rmtree(fp + '/build/compiled/Assets/meshes')

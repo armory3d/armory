@@ -18,7 +18,7 @@ import time
 import ast
 import write_probes
 import assets
-import utils
+import armutils
 import subprocess
 import log
 import make_material
@@ -1225,7 +1225,7 @@ class ArmoryExporter:
                 else:
                     self.meshArray[objref]["objectTable"].append(bobject)
 
-                oid = utils.safe_filename(self.meshArray[objref]["structName"])
+                oid = armutils.safe_filename(self.meshArray[objref]["structName"])
                 if ArmoryExporter.option_mesh_per_file:
                     ext = ''
                     if self.is_compress(objref):
@@ -1303,7 +1303,7 @@ class ArmoryExporter:
                         action = bpy.data.actions[bobject.start_action_name_prop]
                     else: # Use default
                         action = bobject.animation_data.action
-                    armatureid = utils.safe_filename(armdata.name)
+                    armatureid = armutils.safe_filename(armdata.name)
                     ext = ''
                     if self.is_compress(armdata):
                        ext = '.zip'
@@ -1334,7 +1334,7 @@ class ArmoryExporter:
                             # Save bones separately
                             bones_obj = {}
                             bones_obj['objects'] = bones
-                            utils.write_arm(fp, bones_obj)
+                            armutils.write_arm(fp, bones_obj)
                     armdata.data_cached = True
 
             if (parento == None):
@@ -1526,7 +1526,7 @@ class ArmoryExporter:
         if ArmoryExporter.option_mesh_per_file:
             mesh_obj = {}
             mesh_obj['mesh_datas'] = [o]
-            utils.write_arm(fp, mesh_obj)
+            armutils.write_arm(fp, mesh_obj)
 
             bobject.data.mesh_cached = True
             if bobject.type != 'FONT':
@@ -1653,7 +1653,7 @@ class ArmoryExporter:
     def do_export_mesh(self, objectRef, scene):
         # This function exports a single mesh object
         bobject = objectRef[1]["objectTable"][0]
-        oid = utils.safe_filename(objectRef[1]["structName"])
+        oid = armutils.safe_filename(objectRef[1]["structName"])
 
         # Check if mesh is using instanced rendering
         is_instanced, instance_offsets = self.object_process_instancing(bobject, objectRef[1]["objectTable"])
@@ -2009,7 +2009,7 @@ class ArmoryExporter:
         if objref.sound:
             # Packed
             if objref.sound.packed_file != None:
-                unpack_path = utils.get_fp() + '/build/compiled/Assets/unpacked'
+                unpack_path = armutils.get_fp() + '/build/compiled/Assets/unpacked'
                 if not os.path.exists(unpack_path):
                     os.makedirs(unpack_path)
                 unpack_filepath = unpack_path + '/' + objref.sound.name
@@ -2019,10 +2019,10 @@ class ArmoryExporter:
                 assets.add(unpack_filepath)
             # External
             else:
-                assets.add(utils.safe_assetpath(objref.sound.filepath)) # Link sound to assets
+                assets.add(armutils.safe_assetpath(objref.sound.filepath)) # Link sound to assets
             
-            o['sound'] = utils.extract_filename(objref.sound.filepath)
-            o['sound'] = utils.safe_filename(o['sound'])
+            o['sound'] = armutils.extract_filename(objref.sound.filepath)
+            o['sound'] = armutils.safe_filename(o['sound'])
         else:
             o['sound'] = ''
         o['muted'] = objref.muted
@@ -2159,7 +2159,7 @@ class ArmoryExporter:
         gpo = self.post_export_grease_pencil(gpRef)
         gp_obj = {}
         gp_obj['grease_pencil_datas'] = [gpo]
-        utils.write_arm(fp, gp_obj)
+        armutils.write_arm(fp, gp_obj)
         gpRef.data_cached = True
 
     def is_compress(self, obj):
@@ -2222,7 +2222,7 @@ class ArmoryExporter:
 
         self.process_skinned_meshes()
 
-        self.output['name'] = utils.safe_filename(self.scene.name)
+        self.output['name'] = armutils.safe_filename(self.scene.name)
         if (self.filepath.endswith('.zip')):
             self.output['name'] += '.zip'
 
@@ -2235,7 +2235,7 @@ class ArmoryExporter:
             if self.scene.camera != None:
                 self.output['camera_ref'] = self.scene.camera.name
             else:
-                if utils.safe_filename(self.scene.name) == utils.get_project_scene_name():
+                if armutils.safe_filename(self.scene.name) == armutils.get_project_scene_name():
                     print('Armory Warning: No camera found in active scene')
 
             self.output['material_datas'] = []
@@ -2280,7 +2280,7 @@ class ArmoryExporter:
                 self.output['embedded_datas'].append(file)
 
         # Write scene file
-        utils.write_arm(self.filepath, self.output)
+        armutils.write_arm(self.filepath, self.output)
 
         print('Scene built in ' + str(time.time() - profile_time))
         return {'FINISHED'}
@@ -2429,13 +2429,13 @@ class ArmoryExporter:
             x = {}
             if t.type_prop == 'Logic Nodes' and t.nodes_name_prop != '':
                 x['type'] = 'Script'
-                x['class_name'] = bpy.data.worlds['Arm'].arm_project_package + '.node.' + utils.safe_filename(t.nodes_name_prop)
+                x['class_name'] = bpy.data.worlds['Arm'].arm_project_package + '.node.' + armutils.safe_filename(t.nodes_name_prop)
             elif t.type_prop == 'JS Script' or t.type_prop == 'Python Script':
                 basename = t.jsscript_prop.split('.')[0]
                 x['type'] = 'Script'
                 x['class_name'] = 'armory.trait.internal.JSScript'
-                x['parameters'] = [utils.safe_filename(basename)]
-                scriptspath = utils.get_fp() + '/build/compiled/scripts/'
+                x['parameters'] = [armutils.safe_filename(basename)]
+                scriptspath = armutils.get_fp() + '/build/compiled/scripts/'
                 if not os.path.exists(scriptspath):
                     os.makedirs(scriptspath)
                 # Compile to JS
@@ -2445,12 +2445,12 @@ class ArmoryExporter:
                     targetpath = scriptspath + basename_ext
                     with open(targetpath, 'w') as f:
                         f.write(bpy.data.texts[t.jsscript_prop].as_string())
-                    sdk_path = utils.get_sdk_path()
+                    sdk_path = armutils.get_sdk_path()
                     # Extract path to built-in python binary
-                    if utils.get_os() == 'win':
+                    if armutils.get_os() == 'win':
                         # Remove 'os.py' from path
                         python_path = os.__file__[:-5] + '../bin/python.exe'
-                    elif utils.get_os() == 'mac':
+                    elif armutils.get_os() == 'mac':
                         python_path = os.__file__[:-5] + '../../bin/python3.5m'
                     else:
                         python_path = os.__file__[:-5] + '../../bin/python3.5m'
@@ -2467,7 +2467,7 @@ class ArmoryExporter:
                 else:
                     # Write js to file
                     assetpath = 'build/compiled/scripts/' + t.jsscript_prop + '.js'
-                    targetpath = utils.get_fp() + '/' + assetpath
+                    targetpath = armutils.get_fp() + '/' + assetpath
                     with open(targetpath, 'w') as f:
                         f.write(bpy.data.texts[t.jsscript_prop].as_string())
                     assets.add(assetpath)
@@ -2775,9 +2775,9 @@ class ArmoryExporter:
         if '_LDR' in defs:
             for i in range(0, 3):
                 bgcol[i] = pow(bgcol[i], 1.0 / 2.2)
-        o['background_color'] = utils.color_to_int(bgcol)
+        o['background_color'] = armutils.color_to_int(bgcol)
 
-        wmat_name = utils.safe_filename(world.name) + '_material'
+        wmat_name = armutils.safe_filename(world.name) + '_material'
         o['material_ref'] = wmat_name + '/' + wmat_name + '/world'
         o['brdf'] = 'brdf.png'
         o['probes'] = []

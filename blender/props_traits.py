@@ -5,7 +5,7 @@ import json
 from props_traits_params import *
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
-import utils
+import armutils
 import write_data
 import subprocess
 
@@ -159,17 +159,17 @@ class ArmoryEditScriptButton(bpy.types.Operator):
     bl_label = 'Edit Script'
  
     def execute(self, context):
-        sdk_path = utils.get_sdk_path()
-        if utils.get_os() == 'win':
+        sdk_path = armutils.get_sdk_path()
+        if armutils.get_os() == 'win':
             kode_path = sdk_path + '/kode/win32/Kode Studio.exe'
-        elif utils.get_os() == 'mac':
+        elif armutils.get_os() == 'mac':
             kode_path = '"' + sdk_path + '/kode/Kode Studio.app/Contents/MacOS/Electron"'
         else:
             kode_path = sdk_path + '/kode/linux64/kodestudio'
-        project_path = utils.get_fp()
+        project_path = armutils.get_fp()
         item = context.object.my_traitlist[context.object.traitlist_index] 
         hx_path = project_path + '/Sources/' + bpy.data.worlds['Arm'].arm_project_package + '/' + item.class_name_prop + '.hx'
-        subprocess.Popen([kode_path + ' ' + utils.get_fp() + ' ' + hx_path], shell=True)
+        subprocess.Popen([kode_path + ' ' + armutils.get_fp() + ' ' + hx_path], shell=True)
         return{'FINISHED'}
 
 class ArmoryNewScriptDialog(bpy.types.Operator):
@@ -182,7 +182,7 @@ class ArmoryNewScriptDialog(bpy.types.Operator):
     def execute(self, context):
         self.class_name = self.class_name.replace(' ', '')
         write_data.write_traithx(self.class_name)
-        utils.fetch_script_names()
+        armutils.fetch_script_names()
         obj = context.object
         item = obj.my_traitlist[obj.traitlist_index] 
         item.class_name_prop = self.class_name 
@@ -198,7 +198,7 @@ class ArmoryRefreshScriptsListButton(bpy.types.Operator):
     bl_label = 'Refresh Scripts List'
  
     def execute(self, context):
-        utils.fetch_script_names()
+        armutils.fetch_script_names()
         return{'FINISHED'}
 
 # Menu in tools region

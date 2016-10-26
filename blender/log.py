@@ -1,13 +1,13 @@
 import props_ui
 import space_armory
-import utils
+import armutils
 
 progress = 100.0
 tag_redraw = False
 
 def clear():
     props_ui.ArmoryProjectPanel.info_text = ''
-    if utils.with_chromium():
+    if armutils.with_chromium():
         space_armory.ArmorySpaceHeader.info_text = ''
 
 def format_text(text):

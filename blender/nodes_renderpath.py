@@ -1,7 +1,7 @@
 import bpy
 from bpy.types import NodeTree, Node, NodeSocket
 from bpy.props import *
-import utils
+import armutils
 
 class CGPipelineTree(NodeTree):
     '''Render path nodes'''
@@ -832,7 +832,7 @@ def reload_blend_data():
         pass
 
 def load_library():
-    sdk_path = utils.get_sdk_path()
+    sdk_path = armutils.get_sdk_path()
     data_path = sdk_path + '/armory/blender/data/data.blend'
     data_names = ['forward_path', 'forward_path_low', 'deferred_path', 'deferred_path_low', 'deferred_path_high', 'hybrid_path', 'vr_path', 'pathtrace_path', 'grease_pencil_path', 'Armory PBR']
 

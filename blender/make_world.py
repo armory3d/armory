@@ -5,7 +5,7 @@ import os
 import json
 import write_probes
 import assets
-import utils
+import armutils
 import nodes
 
 def build_node_trees(active_worlds):
@@ -29,7 +29,7 @@ def build_node_tree(world):
     output = {}
     dat = {}
     output['material_datas'] = [dat]
-    dat['name'] = utils.safe_filename(world.name) + '_material'
+    dat['name'] = armutils.safe_filename(world.name) + '_material'
     context = {}
     dat['contexts'] = [context]
     context['name'] = 'world'
@@ -63,7 +63,7 @@ def build_node_tree(world):
     # Percentage closer soft shadows
     if wrd.generate_pcss:
         wrd.world_defs += '_PCSS'
-        sdk_path = utils.get_sdk_path()
+        sdk_path = armutils.get_sdk_path()
         assets.add(sdk_path + 'armory/Assets/noise64.png')
         assets.add_embedded_data('noise64.png')
 
@@ -99,7 +99,7 @@ def write_output(output):
     # Write material json
     path = 'build/compiled/Assets/materials/'
     asset_path = path + dat['name'] + '.arm'
-    utils.write_arm(asset_path, output)
+    armutils.write_arm(asset_path, output)
     assets.add(asset_path)
 
 def parse_world_output(world, node, context):
@@ -140,7 +140,7 @@ def parse_color(world, node, context, envmap_strength_const):
         if image.packed_file != None:
             # Extract packed data
             filepath = '/build/compiled/Assets/unpacked'
-            unpack_path = utils.get_fp() + filepath
+            unpack_path = armutils.get_fp() + filepath
             if not os.path.exists(unpack_path):
                 os.makedirs(unpack_path)
             unpack_filepath = unpack_path + '/' + image.name
@@ -150,11 +150,11 @@ def parse_color(world, node, context, envmap_strength_const):
             assets.add(unpack_filepath)
         else:
             # Link image path to assets
-            assets.add(utils.safe_assetpath(image.filepath))
+            assets.add(armutils.safe_assetpath(image.filepath))
 
         # Reference image name
-        texture['file'] = utils.extract_filename(image.filepath)
-        texture['file'] = utils.safe_filename(texture['file'])
+        texture['file'] = armutils.extract_filename(image.filepath)
+        texture['file'] = armutils.safe_filename(texture['file'])
 
         # Generate prefiltered envmaps
         generate_radiance = bpy.data.worlds['Arm'].generate_radiance
@@ -200,7 +200,7 @@ def parse_color(world, node, context, envmap_strength_const):
         if bpy.data.worlds['Arm'].generate_radiance_sky and bpy.data.worlds['Arm'].generate_radiance:
             bpy.data.worlds['Arm'].world_defs += '_Rad'
             
-            sdk_path = utils.get_sdk_path()
+            sdk_path = armutils.get_sdk_path()
             # Use fake maps for now
             assets.add(sdk_path + 'armory/Assets/hosek/hosek_radiance.hdr')
             for i in range(0, 8):

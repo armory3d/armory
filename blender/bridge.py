@@ -1,6 +1,6 @@
 # Translating operators from/to Armory player
 import bpy
-import utils
+import armutils
 try:
     import barmory
 except ImportError:
@@ -27,7 +27,7 @@ def parse_operator(text):
 
 def send_operator(op):
     # Try to translate operator directly to armory
-    if utils.with_chromium() and bpy.context.object != None:
+    if armutils.with_chromium() and bpy.context.object != None:
         objname = bpy.context.object.name
         if op.name == 'Translate':
             vec = bpy.context.object.location

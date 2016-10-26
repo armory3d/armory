@@ -9,11 +9,11 @@ import props
 import props_ui
 import handlers
 import space_armory
-import utils
+import armutils
 import keymap
 
 def register():
-    utils.register()
+    armutils.register()
     props_traits_action.register()
     props_traits_clip.register()
     props.register()
@@ -28,7 +28,7 @@ def register():
 
 def unregister():
     keymap.unregister()
-    utils.unregister()
+    armutils.unregister()
     nodes_logic.unregister()
     nodes_renderpath.unregister()
     props_traits_params.unregister()

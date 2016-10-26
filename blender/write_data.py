@@ -1,7 +1,7 @@
 import bpy
 import os
 import assets
-import utils
+import armutils
 
 def add_armory_library(sdk_path, name):
     return ('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/' + name)[2:] + '");\n').replace('\\', '/')
@@ -9,7 +9,7 @@ def add_armory_library(sdk_path, name):
 # Write khafile.js
 def write_khafilejs(is_play, export_physics, dce_full=False):
     
-    sdk_path = utils.get_sdk_path()
+    sdk_path = armutils.get_sdk_path()
     
     # Merge duplicates and sort
     shader_references = sorted(list(set(assets.shaders)))
@@ -78,8 +78,8 @@ project.addSources('Sources');
 # Write Main.hx
 def write_main(is_play, in_viewport, is_publish):
     wrd = bpy.data.worlds['Arm']
-    resx, resy = utils.get_render_resolution()
-    scene_name = utils.get_project_scene_name()
+    resx, resy = armutils.get_render_resolution()
+    scene_name = armutils.get_project_scene_name()
     scene_ext = '.zip' if (bpy.data.scenes[scene_name].data_compressed and is_publish) else ''
     #if not os.path.isfile('Sources/Main.hx'):
     with open('Sources/Main.hx', 'w') as f:
@@ -124,7 +124,7 @@ class Main {
         kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel}, function() {
             iron.App.init(function() {
                 iron.Scene.setActive(projectScene, function(object:iron.object.Object) {""")
-        if utils.with_chromium() and in_viewport and is_play:
+        if armutils.with_chromium() and in_viewport and is_play:
             f.write("""
                     object.addTrait(new armory.trait.internal.EditorSpace());""")
         f.write("""
@@ -155,7 +155,7 @@ function createWindow () { """)
     let point = electron.screen.getCursorScreenPoint();
     let targetDisplay = electron.screen.getDisplayNearestPoint(point);
 """)
-            if utils.get_os() == 'mac': # Perform scale in python
+            if armutils.get_os() == 'mac': # Perform scale in python
                 f.write("""let scale = 1;""")
             else:
                 f.write("""let scale = targetDisplay.scaleFactor;""")
@@ -214,7 +214,7 @@ def write_indexhtml(w, h, in_viewport):
     <canvas id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """'></canvas>
     <script src='kha.js'></script>
 """)
-        if not (utils.with_chromium() and in_viewport):
+        if not (armutils.with_chromium() and in_viewport):
             f.write(
 """    <script>document.addEventListener('keypress', e => { if (e.code == "KeyZ" && e.shiftKey) close(); });</script>
 """)

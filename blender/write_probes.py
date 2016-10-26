@@ -4,7 +4,7 @@ import sys
 import subprocess
 import json
 import re
-import utils
+import armutils
 import assets
 
 def add_irr_assets(output_file_irr):
@@ -37,12 +37,12 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
         return cached_num_mips
     
     # Get paths
-    sdk_path = utils.get_sdk_path()
+    sdk_path = armutils.get_sdk_path()
 
-    if utils.get_os() == 'win':
+    if armutils.get_os() == 'win':
         cmft_path = sdk_path + '/armory/tools/cmft/cmft.exe'
         kraffiti_path = sdk_path + '/kode/win32/resources/app/extensions/kha/Kha/Kore/Tools/kraffiti/kraffiti.exe'
-    elif utils.get_os() == 'mac':
+    elif armutils.get_os() == 'mac':
         cmft_path = sdk_path + '/armory/tools/cmft/cmft-osx'
         kraffiti_path = sdk_path + '/kode/"Kode Studio.app"/Contents/Resources/app/extensions/kha/Kha/Kore/Tools/kraffiti/kraffiti-osx'
     else:
@@ -51,7 +51,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     
     generated_files = []
     output_gama_numerator = '1.0' if disable_hdr else '2.2'
-    input_file = utils.get_fp() + image_filepath #'Assets/' + image_name
+    input_file = armutils.get_fp() + image_filepath #'Assets/' + image_name
     
     # Get input size
     output = subprocess.check_output([ \
@@ -202,7 +202,7 @@ def sh_to_json(sh_file):
     
     sh_json = {}
     sh_json['irradiance'] = irradiance_floats
-    utils.write_arm(sh_file + '.arm', sh_json)
+    armutils.write_arm(sh_file + '.arm', sh_json)
     
     # Clean up .c
     os.remove(sh_file + '.c')
@@ -229,7 +229,7 @@ def write_sky_irradiance(base_name):
     
     sh_json = {}
     sh_json['irradiance'] = irradiance_floats
-    utils.write_arm(output_file + '.arm', sh_json)
+    armutils.write_arm(output_file + '.arm', sh_json)
 
     assets.add(output_file + '.arm')
 
@@ -246,6 +246,6 @@ def write_color_irradiance(base_name, col):
     
     sh_json = {}
     sh_json['irradiance'] = irradiance_floats
-    utils.write_arm(output_file + '.arm', sh_json)
+    armutils.write_arm(output_file + '.arm', sh_json)
 
     assets.add(output_file + '.arm')

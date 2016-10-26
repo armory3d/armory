@@ -1,18 +1,18 @@
-import utils
+import armutils
 import subprocess
 
 def kode_studio():
-    sdk_path = utils.get_sdk_path()
-    project_path = utils.get_fp()
+    sdk_path = armutils.get_sdk_path()
+    project_path = armutils.get_fp()
 
-    if utils.get_os() == 'win':
+    if armutils.get_os() == 'win':
         kode_path = sdk_path + '/kode/win32/Kode Studio.exe'
-    elif utils.get_os() == 'mac':
+    elif armutils.get_os() == 'mac':
         kode_path = '"' + sdk_path + '/kode/Kode Studio.app/Contents/MacOS/Electron"'
     else:
         kode_path = sdk_path + '/kode/linux64/kodestudio'
 
-    subprocess.Popen([kode_path + ' ' + utils.get_fp()], shell=True)
+    subprocess.Popen([kode_path + ' ' + armutils.get_fp()], shell=True)
 
 def def_strings_to_array(strdefs):
     defs = strdefs.split('_')

@@ -1,5 +1,5 @@
 import os
-import utils
+import armutils
 
 def write_data(res, defs, json_data, base_name):
     # Define
@@ -268,7 +268,7 @@ def save_data(path, base_name, subset, res):
 
     r = {}
     r['shader_datas'] = [res['shader_datas'][-1]]
-    utils.write_arm(path + '/' + res_name + '.arm', r)
+    armutils.write_arm(path + '/' + res_name + '.arm', r)
 
 def make(base_name, json_data, fp, defs):
     

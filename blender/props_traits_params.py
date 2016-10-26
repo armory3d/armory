@@ -4,7 +4,7 @@ import os
 import json
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
-from utils import to_hex
+from armutils import to_hex
 
 def object_picker_update(self, context):
     o = context.object
