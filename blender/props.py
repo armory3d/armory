@@ -274,6 +274,13 @@ def init_properties():
         for c in bpy.data.cameras:
             if c.clip_end < 200:
                 c.clip_end = 200
+        # Move default lamp a little further to keep fov low for now
+        if 'Lamp' in bpy.data.objects:
+            loc = bpy.data.objects['Lamp'].location
+            if int(loc.x) == 4 and int(loc.y) == 1 and int(loc.z) == 5:
+                loc.x = 11.0
+                loc.y = 3.7
+                loc.z = 15.6
         # Use nodes
         for w in bpy.data.worlds:
             w.use_nodes = True
