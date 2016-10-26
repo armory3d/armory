@@ -1,7 +1,10 @@
 # Translating operators from/to Armory player
 import bpy
 import utils
-import barmory
+try:
+    import barmory
+except ImportError:
+    pass
 
 def parse_operator(text):
     if text == None:

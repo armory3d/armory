@@ -332,7 +332,7 @@ def play_project(self, in_viewport):
             else:
                 psize = 1
                 xoff = 0
-                yoff = 6
+                yoff = 22
 
             x = bpy.context.window.x + (bpy.context.area.x - xoff) / psize
             y = bpy.context.window.height + 45 - (bpy.context.area.y + bpy.context.area.height) / psize
