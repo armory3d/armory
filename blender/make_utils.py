@@ -12,7 +12,7 @@ def kode_studio():
     else:
         kode_path = sdk_path + '/kode/linux64/kodestudio'
 
-    subprocess.Popen([kode_path + ' ' + armutils.get_fp()], shell=True)
+    subprocess.Popen([kode_path, armutils.get_fp()], shell=True)
 
 def def_strings_to_array(strdefs):
     defs = strdefs.split('_')

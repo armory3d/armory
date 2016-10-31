@@ -169,7 +169,7 @@ class ArmoryEditScriptButton(bpy.types.Operator):
         project_path = armutils.get_fp()
         item = context.object.my_traitlist[context.object.traitlist_index] 
         hx_path = project_path + '/Sources/' + bpy.data.worlds['Arm'].arm_project_package + '/' + item.class_name_prop + '.hx'
-        subprocess.Popen([kode_path + ' ' + armutils.get_fp() + ' ' + hx_path], shell=True)
+        subprocess.Popen([kode_path, armutils.get_fp(), hx_path], shell=True)
         return{'FINISHED'}
 
 class ArmoryNewScriptDialog(bpy.types.Operator):

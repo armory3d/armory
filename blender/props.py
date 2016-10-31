@@ -255,7 +255,7 @@ def init_properties():
     bpy.types.Lamp.lamp_clip_start = bpy.props.FloatProperty(name="Clip Start", default=0.1)
     bpy.types.Lamp.lamp_clip_end = bpy.props.FloatProperty(name="Clip End", default=50.0)
     bpy.types.Lamp.lamp_fov = bpy.props.FloatProperty(name="Field of View", default=0.84)
-    bpy.types.Lamp.lamp_shadows_bias = bpy.props.FloatProperty(name="Shadows Bias", description="Depth offset for shadow acne", default=0.0001)
+    bpy.types.Lamp.lamp_shadows_bias = bpy.props.FloatProperty(name="Shadows Bias", description="Depth offset for shadow acne", default=0.00037)
 
     if not 'Arm' in bpy.data.worlds:
         wrd = bpy.data.worlds.new('Arm')

@@ -43,7 +43,8 @@ def get_sdk_path():
             # blender.app/Contents/MacOS/blender
             return bpy.app.binary_path[:-34] + '/armory_sdk/'
         else:
-            return bpy.app.binary_path + '/armory_sdk/'
+            # blender.exe
+            return bpy.app.binary_path[:-11] + '/armory_sdk/'
     else:
         return addon_prefs.sdk_path
 
