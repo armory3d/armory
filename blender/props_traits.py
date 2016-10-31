@@ -159,17 +159,21 @@ class ArmoryEditScriptButton(bpy.types.Operator):
     bl_label = 'Edit Script'
  
     def execute(self, context):
+        project_path = armutils.get_fp()
+        item = context.object.my_traitlist[context.object.traitlist_index]  
+        hx_path = project_path + '/Sources/' + bpy.data.worlds['Arm'].arm_project_package + '/' + item.class_name_prop + '.hx'
+
         sdk_path = armutils.get_sdk_path()
         if armutils.get_os() == 'win':
             kode_path = sdk_path + '/kode/win32/Kode Studio.exe'
+            subprocess.Popen([kode_path, armutils.get_fp(), hx_path], shell=True)
         elif armutils.get_os() == 'mac':
             kode_path = '"' + sdk_path + '/kode/Kode Studio.app/Contents/MacOS/Electron"'
+            subprocess.Popen([kode_path + ' ' + armutils.get_fp() + ' ' + hx_path], shell=True)
         else:
             kode_path = sdk_path + '/kode/linux64/kodestudio'
-        project_path = armutils.get_fp()
-        item = context.object.my_traitlist[context.object.traitlist_index] 
-        hx_path = project_path + '/Sources/' + bpy.data.worlds['Arm'].arm_project_package + '/' + item.class_name_prop + '.hx'
-        subprocess.Popen([kode_path, armutils.get_fp(), hx_path], shell=True)
+            subprocess.Popen([kode_path, armutils.get_fp(), hx_path], shell=True)
+        
         return{'FINISHED'}
 
 class ArmoryNewScriptDialog(bpy.types.Operator):
