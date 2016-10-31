@@ -6,6 +6,8 @@ import space_armory
 import time
 import bridge
 import log
+import props
+from bpy.app.handlers import persistent
 try:
     import barmory
 except ImportError:
@@ -14,6 +16,7 @@ except ImportError:
 last_time = time.time()
 last_operator = None
 
+@persistent
 def on_scene_update_post(context):
     global last_time
     global last_operator
@@ -101,13 +104,20 @@ def on_scene_update_post(context):
         elif edit_obj.type == 'ARMATURE':
             edit_obj.data.data_cached = False
 
-def on_load_pre(context):
-    bpy.ops.arm_addon.stop('EXEC_DEFAULT')
+@persistent
+def on_load_post(context):
+    props.init_properties_on_load()
+
+@persistent
+def on_save_pre(context):
+    props.init_properties_on_save()
 
 def register():
     bpy.app.handlers.scene_update_post.append(on_scene_update_post)
-    bpy.app.handlers.load_pre.append(on_load_pre)
+    bpy.app.handlers.save_pre.append(on_save_pre)
+    bpy.app.handlers.load_post.append(on_load_post)
 
 def unregister():
     bpy.app.handlers.scene_update_post.remove(on_scene_update_post)
-    bpy.app.handlers.load_pre.remove(on_load_pre)
+    bpy.app.handlers.save_pre.remove(on_save_pre)
+    bpy.app.handlers.load_post.remove(on_load_post)

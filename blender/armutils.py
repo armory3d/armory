@@ -40,9 +40,10 @@ def get_sdk_path():
     addon_prefs = user_preferences.addons['armory'].preferences
     if with_chromium() and addon_prefs.sdk_bundled:
         if get_os() == 'mac':
-            return bpy.path.abspath(os.__file__[:-5] + '../../../armory_sdk/')
+            # blender.app/Contents/MacOS/blender
+            return bpy.app.binary_path[:-34] + '/armory_sdk/'
         else:
-            return bpy.path.abspath(os.__file__[:-5] + '../../armory_sdk/')
+            return bpy.app.binary_path + '/armory_sdk/'
     else:
         return addon_prefs.sdk_path
 
@@ -52,6 +53,9 @@ def get_ffmpeg_path():
     return addon_prefs.ffmpeg_path
 
 def fetch_script_names():
+    if bpy.data.filepath == "":
+        return
+
     sdk_path = get_sdk_path()
     wrd = bpy.data.worlds['Arm']
     wrd.bundled_scripts_list.clear()

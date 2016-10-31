@@ -25,7 +25,7 @@ def init_properties():
         description='Build paltform')
     bpy.types.World.arm_project_target = target_prop
     bpy.types.World.arm_publish_target = target_prop
-    bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="ArmoryProject")
+    bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="")
     bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm")
     bpy.types.World.arm_play_active_scene = BoolProperty(name="Play Active Scene", description="Load currently edited scene when launching player", default=True)
     bpy.types.World.arm_project_scene = StringProperty(name="Scene", description="Scene to load when launching player")
@@ -254,21 +254,24 @@ def init_properties():
     # For lamp
     bpy.types.Lamp.lamp_clip_start = bpy.props.FloatProperty(name="Clip Start", default=0.1)
     bpy.types.Lamp.lamp_clip_end = bpy.props.FloatProperty(name="Clip End", default=50.0)
-    bpy.types.Lamp.lamp_fov = bpy.props.FloatProperty(name="Field of View", default=0.785)
+    bpy.types.Lamp.lamp_fov = bpy.props.FloatProperty(name="Field of View", default=0.84)
     bpy.types.Lamp.lamp_shadows_bias = bpy.props.FloatProperty(name="Shadows Bias", description="Depth offset for shadow acne", default=0.0001)
 
-    # First run
     if not 'Arm' in bpy.data.worlds:
         wrd = bpy.data.worlds.new('Arm')
         wrd.use_fake_user = True # Store data world object, add fake user to keep it alive
         wrd.arm_version = '16.10'
+
+def init_properties_on_save():
+    wrd = bpy.data.worlds['Arm']
+    if wrd.arm_project_name == '':
         # Take blend file name
         wrd.arm_project_name = bpy.path.basename(bpy.context.blend_data.filepath).rsplit('.')[0]
         wrd.arm_project_scene = bpy.data.scenes[0].name
         # Switch to Cycles
         for scene in bpy.data.scenes:
-            if scene.render.engine != 'CYCLES':
-                scene.render.engine = 'CYCLES'
+            # if scene.render.engine != 'CYCLES':
+                # scene.render.engine = 'CYCLES'
             scene.render.fps = 60 # Default to 60fps for chromium update loop
         # Force camera far to at least 200 units for now, to prevent fighting with light far plane
         for c in bpy.data.cameras:
@@ -279,8 +282,8 @@ def init_properties():
             loc = bpy.data.objects['Lamp'].location
             if int(loc.x) == 4 and int(loc.y) == 1 and int(loc.z) == 5:
                 loc.x = 11.0
-                loc.y = 3.7
-                loc.z = 15.6
+                loc.y = 4.0
+                loc.z = 16.0
         # Use nodes
         for w in bpy.data.worlds:
             w.use_nodes = True
@@ -290,7 +293,12 @@ def init_properties():
             l.use_nodes = True
         for m in bpy.data.materials:
             m.use_nodes = True
+
+        init_properties_on_load()
+
+def init_properties_on_load():    
     armutils.fetch_script_names()
+    
     # Path for embedded player
     if armutils.with_chromium():
         barmory.set_url('file://' + armutils.get_fp() + '/build/html5/index.html')

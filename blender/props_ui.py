@@ -386,6 +386,15 @@ class WorldPropsPanel(bpy.types.Panel):
         if wrd.voxelgi:
             layout.prop(wrd, 'voxelgi_dimensions')
 
+class ArmoryHelpButton(bpy.types.Operator):
+    '''Open a website in the web-browser'''
+    bl_idname = "arm.help"
+    bl_label = "Help"
+ 
+    def execute(self, context):
+        webbrowser.open("http://armory3d.org/manual")
+        return{"FINISHED"}
+
 # Menu in render region
 class ArmoryPlayPanel(bpy.types.Panel):
     bl_label = "Armory Play"
@@ -412,6 +421,7 @@ class ArmoryPlayPanel(bpy.types.Panel):
                 layout.prop(wrd, 'arm_play_live_patch')
                 if wrd.arm_play_live_patch:
                     layout.prop(wrd, 'arm_play_auto_build')
+        layout.operator("arm.help")
 
 class ArmoryBuildPanel(bpy.types.Panel):
     bl_label = "Armory Build"
@@ -480,6 +490,10 @@ class ArmoryPlayButton(bpy.types.Operator):
     bl_label = 'Play'
  
     def execute(self, context):
+        if bpy.data.filepath == "":
+            self.report({"ERROR"}, "Save blend file first")
+            return {"CANCELLED"}
+            
         assets.invalidate_enabled = False
         make.play_project(self, False)
         assets.invalidate_enabled = True
@@ -491,6 +505,10 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
     bl_label = 'Play in Viewport'
  
     def execute(self, context):
+        if bpy.data.filepath == "":
+            self.report({"ERROR"}, "Save blend file first")
+            return {"CANCELLED"}
+
         assets.invalidate_enabled = False
         if state.playproc == None:
             log.clear()
@@ -522,6 +540,10 @@ class ArmoryBuildButton(bpy.types.Operator):
     bl_label = 'Build'
  
     def execute(self, context):
+        if bpy.data.filepath == "":
+            self.report({"ERROR"}, "Save blend file first")
+            return {"CANCELLED"}
+
         assets.invalidate_enabled = False
         make.build_project()
         make.compile_project(watch=True)
@@ -546,6 +568,10 @@ class ArmoryFolderButton(bpy.types.Operator):
     bl_label = 'Project Folder'
  
     def execute(self, context):
+        if bpy.data.filepath == "":
+            self.report({"ERROR"}, "Save blend file first")
+            return {"CANCELLED"}
+
         webbrowser.open('file://' + armutils.get_fp())
         return{'FINISHED'}
 
@@ -565,6 +591,10 @@ class ArmoryKodeStudioButton(bpy.types.Operator):
     bl_description = 'Open Project in Kode Studio'
  
     def execute(self, context):
+        if bpy.data.filepath == "":
+            self.report({"ERROR"}, "Save blend file first")
+            return {"CANCELLED"}
+
         make_utils.kode_studio()
         return{'FINISHED'}
 
@@ -574,6 +604,10 @@ class ArmoryCleanButton(bpy.types.Operator):
     bl_label = 'Clean'
  
     def execute(self, context):
+        if bpy.data.filepath == "":
+            self.report({"ERROR"}, "Save blend file first")
+            return {"CANCELLED"}
+
         make.clean_project()
         return{'FINISHED'}
 
@@ -583,6 +617,10 @@ class ArmoryPublishButton(bpy.types.Operator):
     bl_label = 'Publish Project'
  
     def execute(self, context):
+        if bpy.data.filepath == "":
+            self.report({"ERROR"}, "Save blend file first")
+            return {"CANCELLED"}
+
         make.publish_project()
         self.report({'INFO'}, 'Publishing project, check console for details.')
         return{'FINISHED'}
