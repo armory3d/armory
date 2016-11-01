@@ -11,10 +11,17 @@ class JSScript extends Trait {
 		super();
 
 		iron.data.Data.getBlob(scriptBlob + '.js', function(blob:kha.Blob) {
-			var src = blob.toString();
+			
+			var header = "let App = armory.App;
+						  let Scene = armory.Scene;
+						  let Data = armory.Data;
+						  let Quat = armory.math.Quat;
+						  let Mat4 = armory.math.Mat4;
+						  let Vec4 = armory.math.Vec4;";
+			var src = header + blob.toString();
 #if js
 			if (api == null) api = new JSScriptAPI();
-			untyped __js__("eval(src);");
+			untyped __js__("let self = {0}; eval(src);", object);
 #end
 		});
 	}
