@@ -41,10 +41,10 @@ def get_sdk_path():
     if with_chromium() and addon_prefs.sdk_bundled:
         if get_os() == 'mac':
             # blender.app/Contents/MacOS/blender
-            return bpy.app.binary_path[:-34] + '/armory_sdk/'
+            return bpy.app.binary_path[:-34] + '/armsdk/'
         else:
             # blender.exe
-            return bpy.app.binary_path[:-11] + '/armory_sdk/'
+            return bpy.app.binary_path[:-11] + '/armsdk/'
     else:
         return addon_prefs.sdk_path
 

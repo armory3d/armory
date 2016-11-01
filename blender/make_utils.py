@@ -6,11 +6,11 @@ def kode_studio():
     project_path = armutils.get_fp()
 
     if armutils.get_os() == 'win':
-        kode_path = sdk_path + '/kode/win32/Kode Studio.exe'
+        kode_path = sdk_path + '/win32/Kode Studio.exe'
     elif armutils.get_os() == 'mac':
-        kode_path = '"' + sdk_path + '/kode/Kode Studio.app/Contents/MacOS/Electron"'
+        kode_path = '"' + sdk_path + '/Kode Studio.app/Contents/MacOS/Electron"'
     else:
-        kode_path = sdk_path + '/kode/linux64/kodestudio'
+        kode_path = sdk_path + '/linux64/kodestudio'
 
     subprocess.Popen([kode_path, armutils.get_fp()], shell=True)
 
