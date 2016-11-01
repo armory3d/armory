@@ -2463,7 +2463,7 @@ class ArmoryExporter:
                         log.print_info('Compiling ' + t.jsscript_prop + ' failed, check console')
                     os.chdir(cwd)
                     # Compiled file
-                    assets.add('build/compiled/scripts/__javascript__/' + t.jsscript_prop + '.js')
+                    assets.add('build/compiled/scripts/__javascript__/' + basename + '.js')
                 else:
                     # Write js to file
                     assetpath = 'build/compiled/scripts/' + t.jsscript_prop + '.js'
