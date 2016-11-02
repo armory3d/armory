@@ -32,6 +32,8 @@ def on_scene_update_post(context):
                 if area.type == 'VIEW_ARMORY':
                     state.chromium_running = True
                     barmory.draw()
+                    if armutils.get_os() == 'linux':
+                        area.tag_redraw()
 
         # Have to update chromium one more time before exit, to prevent 'AudioSyncReader::Read timed out' warnings
         if state.chromium_running == False:
