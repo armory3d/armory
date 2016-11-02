@@ -42,6 +42,9 @@ def get_sdk_path():
         if get_os() == 'mac':
             # blender.app/Contents/MacOS/blender
             return bpy.app.binary_path[:-34] + '/armsdk/'
+        elif get_os() == 'linux':
+            # blender
+            return bpy.app.binary_path[:-7] + '/armsdk/'
         else:
             # blender.exe
             return bpy.app.binary_path[:-11] + '/armsdk/'

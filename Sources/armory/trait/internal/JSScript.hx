@@ -21,7 +21,8 @@ class JSScript extends Trait {
 			var src = header + blob.toString();
 #if js
 			if (api == null) api = new JSScriptAPI();
-			untyped __js__("let self = {0}; eval(src);", object);
+			untyped __js__("var self = {0};", object);
+			untyped __js__("eval(src);");
 #end
 		});
 	}

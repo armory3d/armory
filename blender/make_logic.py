@@ -31,7 +31,7 @@ def build_node_tree(node_group):
     with open(path + node_group_name + '.hx', 'w') as f:
         f.write('package ' + bpy.data.worlds['Arm'].arm_project_package + '.node;\n\n')
         f.write('import armory.logicnode.*;\n\n')
-        f.write('class ' + node_group_name + ' extends armory.trait.internal.NodeExecutor {\n\n')
+        f.write('@:keep class ' + node_group_name + ' extends armory.trait.internal.NodeExecutor {\n\n')
         f.write('\tpublic function new() { super(); notifyOnAdd(add); }\n\n')
         f.write('\tfunction add() {\n')
         # Make sure root node exists
