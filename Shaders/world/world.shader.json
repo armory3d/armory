@@ -79,6 +79,11 @@
 					"name": "eye",
 					"link": "_cameraPosition",
 					"ifdef": ["_XEnvClouds"]
+				},
+				{
+					"name": "screenSize",
+					"link": "_screenSize",
+					"ifdef": ["_EnvImg"]
 				}
 			],
 			"texture_params": [],

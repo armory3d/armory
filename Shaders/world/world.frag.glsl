@@ -36,6 +36,10 @@ precision mediump float;
 #ifdef _EnvTex
 	uniform sampler2D envmap;
 #endif
+#ifdef _EnvImg // Static background
+	uniform vec2 screenSize;
+	uniform sampler2D envmap;
+#endif
 
 // uniform sampler2D gbufferD;
 uniform float envmapStrength; // From world material
@@ -191,6 +195,12 @@ void main() {
 	vec3 n = normalize(normal);
 	vec3 R = texture(envmap, envMapEquirect(n)).rgb * envmapStrength;
 #endif
+#endif
+
+#ifdef _EnvImg // Static background
+	// Will have to get rid of gl_FragCoord, pass tc from VS
+	vec2 texco = gl_FragCoord.xy / screenSize;
+	vec3 R = texture(envmap, vec2(texco.x, 1.0 - texco.y)).rgb * envmapStrength;
 #endif
 
 #ifdef _EnvSky

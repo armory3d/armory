@@ -100,6 +100,7 @@ def make_texture(self, id, image_node, material, image_format='RGBA32'):
             # Link image path to assets
             assets.add(armutils.safe_assetpath(image.filepath))
         # Reference image name
+        powimage = is_pow(image.size[0]) and is_pow(image.size[1])
         tex['file'] = armutils.extract_filename(image.filepath)
         tex['file'] = armutils.safe_filename(tex['file'])
         if image_format != 'RGBA32':
@@ -118,7 +119,7 @@ def make_texture(self, id, image_node, material, image_format='RGBA32'):
             tex['u_addressing'] = 'clamp'
             tex['v_addressing'] = 'clamp'
         else:
-            if bpy.data.worlds['Arm'].npot_texture_repeat == False and (is_pow(image.size[0]) == False or is_pow(image.size[1]) == False):
+            if bpy.data.worlds['Arm'].npot_texture_repeat == False and powimage == False:
                 print('Armory Warning: ' + material.name + '/' + image.name + ' - non power of 2 texture can not use repeat mode')
                 tex['u_addressing'] = 'clamp'
                 tex['v_addressing'] = 'clamp'

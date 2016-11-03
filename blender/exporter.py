@@ -1924,7 +1924,7 @@ class ArmoryExporter:
         elif objtype == 'SPOT':
             o['type'] = 'spot'
             o['spot_size'] = math.cos(objref.spot_size / 2)
-            o['spot_blend'] = objref.spot_blend
+            o['spot_blend'] = objref.spot_blend / 10 # Cycles defaults to 0.15
         else: # Hemi, area
             o['type'] = 'sun'
 

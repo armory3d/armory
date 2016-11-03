@@ -46,7 +46,10 @@ def build_node_tree(world):
     # Clear to color if no texture or sky is provided
     wrd = bpy.data.worlds['Arm']
     if '_EnvSky' not in wrd.world_defs and '_EnvTex' not in wrd.world_defs:
-        wrd.world_defs += '_EnvCol'
+        
+        if '_EnvImg' not in wrd.world_defs:
+            wrd.world_defs += '_EnvCol'
+        
         # Irradiance json file name
         world.world_envtex_name = world.name
         world.world_envtex_irr_name = world.name
@@ -175,6 +178,40 @@ def parse_color(world, node, context, envmap_strength_const):
         if generate_radiance:
             bpy.data.worlds['Arm'].world_defs += '_Rad'
     
+
+    # Static image background
+    elif node.type == 'TEX_IMAGE':
+        bpy.data.worlds['Arm'].world_defs += '_EnvImg'
+        texture = {}
+        context['bind_textures'].append(texture)
+        texture['name'] = 'envmap'
+        # No repeat for now
+        texture['u_addressing'] = 'clamp'
+        texture['v_addressing'] = 'clamp'
+        
+        image = node.image
+        filepath = image.filepath
+
+        if image.packed_file != None:
+            # Extract packed data
+            filepath = '/build/compiled/Assets/unpacked'
+            unpack_path = armutils.get_fp() + filepath
+            if not os.path.exists(unpack_path):
+                os.makedirs(unpack_path)
+            unpack_filepath = unpack_path + '/' + image.name
+            if os.path.isfile(unpack_filepath) == False or os.path.getsize(unpack_filepath) != image.packed_file.size:
+                with open(unpack_filepath, 'wb') as f:
+                    f.write(image.packed_file.data)
+            assets.add(unpack_filepath)
+        else:
+            # Link image path to assets
+            assets.add(armutils.safe_assetpath(image.filepath))
+
+        # Reference image name
+        texture['file'] = armutils.extract_filename(image.filepath)
+        texture['file'] = armutils.safe_filename(texture['file'])
+
+
     # Append sky define
     elif node.type == 'TEX_SKY':
         envmap_strength_const['float'] *= 0.25 # Match to Cycles
