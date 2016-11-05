@@ -129,6 +129,8 @@ def parse_surface(world, node, context):
         world.world_envtex_strength = envmap_strength_const['float']
 
 def parse_color(world, node, context, envmap_strength_const):       
+    wrd = bpy.data.worlds['Arm']
+
     # Env map included
     if node.type == 'TEX_ENVIRONMENT':
         envmap_strength_const['float'] *= 2.0 # Match to cycles
@@ -160,7 +162,7 @@ def parse_color(world, node, context, envmap_strength_const):
         texture['file'] = armutils.safe_filename(texture['file'])
 
         # Generate prefiltered envmaps
-        generate_radiance = bpy.data.worlds['Arm'].generate_radiance
+        generate_radiance = wrd.generate_radiance
         world.world_envtex_name = texture['file']
         world.world_envtex_irr_name = texture['file'].rsplit('.', 1)[0]
         disable_hdr = image.filepath.endswith('.jpg')
@@ -234,14 +236,19 @@ def parse_color(world, node, context, envmap_strength_const):
         write_probes.write_sky_irradiance(world.name)
 
         # Radiance
-        if bpy.data.worlds['Arm'].generate_radiance_sky and bpy.data.worlds['Arm'].generate_radiance:
+        if wrd.generate_radiance_sky and wrd.generate_radiance:
             bpy.data.worlds['Arm'].world_defs += '_Rad'
             
+            if wrd.generate_radiance_sky_type == 'Hosek':
+                hosek_path = 'armory/Assets/hosek/'
+            else:
+                hosek_path = 'armory/Assets/hosek_fake/'
+
             sdk_path = armutils.get_sdk_path()
             # Use fake maps for now
-            assets.add(sdk_path + 'armory/Assets/hosek/hosek_radiance.hdr')
+            assets.add(sdk_path + hosek_path + 'hosek_radiance.hdr')
             for i in range(0, 8):
-                assets.add(sdk_path + 'armory/Assets/hosek/hosek_radiance_' + str(i) + '.hdr')
+                assets.add(sdk_path + hosek_path + 'hosek_radiance_' + str(i) + '.hdr')
             
             world.world_envtex_name = 'hosek'
             world.world_envtex_num_mips = 8

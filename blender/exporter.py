@@ -1938,18 +1938,8 @@ class ArmoryExporter:
         if objref.shadow_soft_size != 0.1:
             o['lamp_size'] = objref.shadow_soft_size
 
-        # Parse nodes, only emission for now
-        # Merge with make_material
-        for n in objref.node_tree.nodes:
-            if n.type == 'EMISSION':
-                col = n.inputs[0].default_value
-                o['color'] = [col[0], col[1], col[2]]
-                o['strength'] = n.inputs[1].default_value
-                # Normalize point/spot strength
-                if o['type'] != 'sun':
-                    o['strength'] /= 1000.0
-                break
-
+        # Parse nodes
+        make_material.parse_lamp(objref.node_tree, o)
         self.output['lamp_datas'].append(o)
 
     def export_camera(self, objectRef):

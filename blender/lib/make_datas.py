@@ -247,7 +247,7 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
                             if 'ifndef' in l:
                                 def_found = False
                                 for d in defs:
-                                    for link_def in l['ifdef']:
+                                    for link_def in l['ifndef']:
                                         if d == link_def:
                                             def_found = True
                                             break

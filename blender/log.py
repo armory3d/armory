@@ -32,3 +32,6 @@ def print_progress(value):
 def get_progress(self):
     global progress
     return progress
+
+def warn(text):
+    print('Armory Warning: ' + text)

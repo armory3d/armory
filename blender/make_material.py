@@ -4,6 +4,7 @@ import assets
 import armutils
 import os
 import nodes
+import log
 
 def is_pow(num):
     return ((num & (num - 1)) == 0) and num != 0
@@ -40,6 +41,27 @@ def parse(self, material, c, defs):
                 if d == '_BaseTex' or d == '_NorTex' or d == '_OccTex' or d == '_RoughTex' or d == '_MetTex' or d == '_HeightTex':
                     defs.append('_Tex')
                     break 
+
+def parse_lamp(tree, o):
+    # Emission only for now
+    for n in tree.nodes:
+        if n.type == 'EMISSION':
+            col = n.inputs[0].default_value
+            o['color'] = [col[0], col[1], col[2]]
+            o['strength'] = n.inputs[1].default_value
+            # Normalize point/spot strength
+            if o['type'] != 'sun':
+                o['strength'] /= 1000.0
+            
+            # Texture test..
+            if n.inputs[0].is_linked:
+                color_node = nodes.find_node_by_link(tree, n, n.inputs[0])
+                if color_node.type == 'TEX_IMAGE':
+                    o['color_texture'] = color_node.image.name
+                    make_texture(None, '', color_node, None)
+                    # bpy.data.worlds['Arm'].world_defs += '_LampTex'
+            
+            break
 
 def make_albedo_const(col, c):
     const = {}
@@ -102,6 +124,9 @@ def make_texture(self, id, image_node, material, image_format='RGBA32'):
         # Reference image name
         powimage = is_pow(image.size[0]) and is_pow(image.size[1])
         tex['file'] = armutils.extract_filename(image.filepath)
+        ext = tex['file'][-3:].lower()
+        if ext != 'jpg' and ext != 'png' and ext != 'hdr':
+            log.warn(material.name + '/' + image.name + ' - image format is not supported yet. Use jpg, png, hdr.')
         tex['file'] = armutils.safe_filename(tex['file'])
         if image_format != 'RGBA32':
             tex['format'] = image_format
@@ -460,7 +485,12 @@ def parse_pbr_group(self, material, c, defs, tree, node, factor):
     roughness_strength_input = node.inputs[4]
     roughness_strength = roughness_strength_input.default_value
     if roughness_strength != 1.0:
-        add_roughness_strength(self, c, defs, roughness_strength)
+        if roughness_input.is_linked:
+            add_roughness_strength(self, c, defs, roughness_strength)
+        else:
+            # No texture, multiply roughness float instead
+            const = parse.const_roughness
+            const['float'] *= roughness_strength
     # Metalness Map
     metalness_input = node.inputs[5]
     parse_metalness_socket(self, metalness_input, material, c, defs, tree, node, factor)

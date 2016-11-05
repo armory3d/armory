@@ -150,6 +150,10 @@ def init_properties():
     bpy.types.World.world_defs = bpy.props.StringProperty(name="World Shader Defs", default='')
     bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Probe Radiance", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_radiance_sky = bpy.props.BoolProperty(name="Sky Radiance", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_radiance_sky_type = EnumProperty(
+        items=[('Fake', 'Fake', 'Fake'), 
+               ('Hosek', 'Hosek', 'Hosek')],
+        name="Type", description="Prefiltered maps to be used for radiance.", default='Fake')
     bpy.types.World.generate_clouds = bpy.props.BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_clouds_density = bpy.props.FloatProperty(name="Density", default=0.5, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_clouds_size = bpy.props.FloatProperty(name="Size", default=1.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
@@ -178,9 +182,9 @@ def init_properties():
     bpy.types.World.generate_ssao_texture_scale = bpy.props.FloatProperty(name="Texture Scale", default=1.0, min=0.0, max=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_shadows = bpy.props.BoolProperty(name="Shadows", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_bloom = bpy.props.BoolProperty(name="Bloom", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_bloom_treshold = bpy.props.FloatProperty(name="Treshold", default=6.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_bloom_strength = bpy.props.FloatProperty(name="Strength", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_bloom_radius = bpy.props.FloatProperty(name="Radius", default=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_bloom_treshold = bpy.props.FloatProperty(name="Treshold", default=20.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_bloom_strength = bpy.props.FloatProperty(name="Strength", default=0.5, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_bloom_radius = bpy.props.FloatProperty(name="Radius", default=0.5, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_motion_blur = bpy.props.BoolProperty(name="Motion Blur", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_motion_blur_intensity = bpy.props.FloatProperty(name="Intensity", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_ssr = bpy.props.BoolProperty(name="SSR", description="Screen-Space Reflections", default=True, update=assets.invalidate_shader_cache)
@@ -255,7 +259,7 @@ def init_properties():
     bpy.types.Lamp.lamp_clip_start = bpy.props.FloatProperty(name="Clip Start", default=0.1)
     bpy.types.Lamp.lamp_clip_end = bpy.props.FloatProperty(name="Clip End", default=50.0)
     bpy.types.Lamp.lamp_fov = bpy.props.FloatProperty(name="Field of View", default=0.84)
-    bpy.types.Lamp.lamp_shadows_bias = bpy.props.FloatProperty(name="Shadows Bias", description="Depth offset for shadow acne", default=0.00037)
+    bpy.types.Lamp.lamp_shadows_bias = bpy.props.FloatProperty(name="Shadows Bias", description="Depth offset for shadow acne", default=0.0002)
 
     if not 'Arm' in bpy.data.worlds:
         wrd = bpy.data.worlds.new('Arm')

@@ -318,6 +318,8 @@ class WorldPropsPanel(bpy.types.Panel):
         layout.prop(wrd, 'generate_radiance')
         if wrd.generate_radiance:
             layout.prop(wrd, 'generate_radiance_sky')
+            if wrd.generate_radiance_sky:
+                layout.prop(wrd, 'generate_radiance_sky_type')
         layout.prop(wrd, 'generate_clouds')
         if wrd.generate_clouds:
             layout.prop(wrd, 'generate_clouds_density')

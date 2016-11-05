@@ -6,6 +6,7 @@ precision mediump float;
 
 #include "../compiled.glsl"
 #include "../std/brdf.glsl"
+#include "../std/math.glsl"
 // ...
 #ifndef _NoShadows
 	#ifdef _PCSS
@@ -45,7 +46,6 @@ uniform vec3 lightPos;
 uniform vec3 lightDir;
 uniform int lightType;
 // uniform int lightIndex;
-uniform vec3 lightColor;
 uniform float lightStrength;
 uniform float shadowsBias;
 uniform float spotlightCutoff;
@@ -53,6 +53,12 @@ uniform float spotlightExponent;
 uniform vec3 eye;
 // uniform vec3 eyeLook;
 // uniform vec2 screenSize;
+
+#ifdef _LampTex
+uniform sampler2D texlampcolor;
+#else
+uniform vec3 lightColor;
+#endif
 
 // in vec2 texCoord;
 in vec4 wvpposition;
@@ -166,8 +172,14 @@ void main() {
 	// vec3 fiberDirection = vec3(0.0, 1.0, 8.0);
 	// vec3 direct = diffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH, dotLV) + wardSpecular(n, h, dotNL, dotNV, dotNH, fiberDirection, shinyParallel, shinyPerpendicular);
 	// #endif
-	direct = direct * lightColor * lightStrength;
-	
+
+	direct = direct * lightStrength;
+#ifdef _LampTex
+	direct *= texture(texlampcolor, envMapEquirect(l)).rgb;
+	// direct *= texture(texlampcolor, l.xy).rgb;
+#else
+	direct *= lightColor;
+#endif
 	
 #ifdef _SSS
 	float mask = g0.a;
