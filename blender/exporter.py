@@ -1966,17 +1966,15 @@ class ArmoryExporter:
         o['fov'] = objref.angle
 
         # Viewport Camera - override fov for every camera for now
-        if bpy.data.worlds['Arm'].arm_play_viewport_camera:
-            # Extract fov from projection
-            mat = self.get_viewport_projection_matrix()
-            if mat != None:
-                yscale = mat[1][1]
-                if yscale < 0:
-                    yscale *= -1 # Reverse
-                fov = math.atan(1.0 / yscale) * 0.9
-                o['fov'] = fov
-            else:
-                o['fov'] = math.pi / 3.0
+        # if bpy.data.worlds['Arm'].arm_play_viewport_camera and ArmoryExporter.in_viewport:
+        #     # Extract fov from projection
+        #     mat = self.get_viewport_projection_matrix()
+        #     if mat != None:
+        #         yscale = mat[1][1]
+        #         if yscale < 0:
+        #             yscale *= -1 # Reverse
+        #         fov = math.atan(1.0 / yscale) * 0.9
+        #         o['fov'] = fov
         
         if objref.type == 'PERSP':
             o['type'] = 'perspective'
@@ -2330,6 +2328,8 @@ class ArmoryExporter:
         ArmoryExporter.export_physics = False # Indicates whether rigid body is exported
         if not hasattr(ArmoryExporter, 'compress_enabled'):
             ArmoryExporter.compress_enabled = False
+        if not hasattr(ArmoryExporter, 'in_viewport'):
+            ArmoryExporter.in_viewport = False
         ArmoryExporter.option_mesh_only = False
         ArmoryExporter.option_mesh_per_file = True
         ArmoryExporter.option_optimize_mesh = bpy.data.worlds['Arm'].arm_optimize_mesh

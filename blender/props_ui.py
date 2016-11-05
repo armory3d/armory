@@ -438,12 +438,12 @@ class ArmoryBuildPanel(bpy.types.Panel):
         else:
             layout.operator("arm.patch")
         layout.operator("arm.kode_studio")
-        layout.operator("arm.clean")
+        layout.operator("arm.clean_cache")
         layout.prop(wrd, 'arm_project_target')
         layout.prop(wrd, 'arm_build_advanced')
         if wrd.arm_build_advanced:
             layout.prop(wrd, 'arm_cache_shaders')
-            layout.prop(wrd, 'arm_cache_envmaps')
+            # layout.prop(wrd, 'arm_cache_envmaps')
             layout.prop(wrd, 'arm_minimize')
             layout.prop(wrd, 'arm_optimize_mesh')
             layout.prop(wrd, 'arm_sampled_animation')
@@ -483,6 +483,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
             layout.prop(wrd, 'arm_spawn_all_layers')
             layout.label('Armory v' + wrd.arm_version)
             layout.operator('arm.check_updates')
+            layout.operator("arm.clean_project")
 
 class ArmoryPlayButton(bpy.types.Operator):
     '''Launch player in new window'''
@@ -598,10 +599,23 @@ class ArmoryKodeStudioButton(bpy.types.Operator):
         make_utils.kode_studio()
         return{'FINISHED'}
 
-class ArmoryCleanButton(bpy.types.Operator):
-    '''Delete all cached data'''
-    bl_idname = 'arm.clean'
+class ArmoryCleanCacheButton(bpy.types.Operator):
+    '''Delete all compiled data'''
+    bl_idname = 'arm.clean_cache'
     bl_label = 'Clean'
+ 
+    def execute(self, context):
+        if bpy.data.filepath == "":
+            self.report({"ERROR"}, "Save blend file first")
+            return {"CANCELLED"}
+
+        make.clean_cache()
+        return{'FINISHED'}
+
+class ArmoryCleanProjectButton(bpy.types.Operator):
+    '''Delete all cached project data'''
+    bl_idname = 'arm.clean_project'
+    bl_label = 'Clean Project'
  
     def execute(self, context):
         if bpy.data.filepath == "":

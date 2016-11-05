@@ -61,6 +61,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     assets.embedded_data = sorted(list(set(assets.embedded_data)))
     physics_found = False
     ArmoryExporter.compress_enabled = is_publish
+    ArmoryExporter.in_viewport = in_viewport
     for scene in bpy.data.scenes:
         if scene.game_export:
             ext = '.zip' if (scene.data_compressed and is_publish) else '.arm'
@@ -397,26 +398,42 @@ def on_compiled(mode): # build, play, play_viewport, publish
             html5_app_path = 'http://localhost:8040/build/html5'
             webbrowser.open(html5_app_path)
 
-
-def clean_project():
+def clean_cache():
     os.chdir(armutils.get_fp())
-    
     wrd = bpy.data.worlds['Arm']
 
     # Preserve envmaps
-    if wrd.arm_cache_envmaps:
-        envmaps_path = 'build/compiled/Assets/envmaps'
-        if os.path.isdir(envmaps_path):
-            shutil.move(envmaps_path, '.')
+    envmaps_path = 'build/compiled/Assets/envmaps'
+    if os.path.isdir(envmaps_path):
+        shutil.move(envmaps_path, '.')
+
+    # Remove compiled data
+    if os.path.isdir('build/compiled'):
+        shutil.rmtree('build/compiled')
+
+    # Move envmaps back
+    if os.path.isdir('envmaps'):
+        os.makedirs('build/compiled/Assets')
+        shutil.move('envmaps', 'build/compiled/Assets')
+
+def clean_project():
+    os.chdir(armutils.get_fp())
+    wrd = bpy.data.worlds['Arm']
+
+    # Preserve envmaps
+    # if wrd.arm_cache_envmaps:
+        # envmaps_path = 'build/compiled/Assets/envmaps'
+        # if os.path.isdir(envmaps_path):
+            # shutil.move(envmaps_path, '.')
 
     # Remove build and compiled data
     if os.path.isdir('build'):
         shutil.rmtree('build')
 
     # Move envmaps back
-    if wrd.arm_cache_envmaps and os.path.isdir('envmaps'):
-        os.makedirs('build/compiled/Assets')
-        shutil.move('envmaps', 'build/compiled/Assets')
+    # if wrd.arm_cache_envmaps and os.path.isdir('envmaps'):
+        # os.makedirs('build/compiled/Assets')
+        # shutil.move('envmaps', 'build/compiled/Assets')
 
     # Remove compiled nodes
     nodes_path = 'Sources/' + wrd.arm_project_package.replace('.', '/') + '/node/'

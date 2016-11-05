@@ -52,7 +52,7 @@ def init_properties():
     bpy.types.World.arm_object_advanced = BoolProperty(name="Advanced", default=False)
     bpy.types.World.arm_material_advanced = BoolProperty(name="Advanced", default=False)
     bpy.types.World.arm_cache_shaders = BoolProperty(name="Cache Shaders", description="Do not rebuild existing shaders", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_cache_envmaps = BoolProperty(name="Cache Envmaps", description="Do not remove prefiltered maps when cleaning project", default=True)
+    #bpy.types.World.arm_cache_envmaps = BoolProperty(name="Cache Envmaps", description="Do not remove prefiltered maps when cleaning project", default=True)
     bpy.types.World.arm_play_live_patch = BoolProperty(name="Live Patching", description="Sync running player data to Blender", default=True)
     bpy.types.World.arm_play_auto_build = BoolProperty(name="Auto Build", description="Rebuild scene on operator changes", default=True)
     bpy.types.World.arm_play_viewport_camera = BoolProperty(name="Viewport Camera", description="Start player at viewport camera position", default=False)
