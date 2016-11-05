@@ -171,6 +171,9 @@ void main() {
 
 
 	vec4 premultipliedReflect = vec4(vec3(direct + indirect * occlusion), matColor.a);
+#ifdef _BaseTex
+		premultipliedReflect.a *= texel.a; // Base color alpha
+#endif
 	// vec4 premultipliedReflect = vec4(1.0, 0.0, 0.0, 0.01);
 	// vec4 premultipliedReflect = baseColor;
 	
