@@ -118,6 +118,8 @@ class ModifiersPropsPanel(bpy.types.Panel):
         if obj == None:
             return
 
+        layout.operator("arm.invalidate_cache")
+
         # Assume as first modifier
         if len(obj.modifiers) > 0 and obj.modifiers[0].type == 'OCEAN':
             layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_base_color')

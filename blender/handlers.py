@@ -21,6 +21,12 @@ def on_scene_update_post(context):
     global last_time
     global last_operator
 
+    ops = bpy.context.window_manager.operators
+    operators_changed = False
+    if len(ops) > 0 and last_operator != ops[-1]:
+        last_operator = ops[-1]
+        operators_changed = True
+
     if time.time() - last_time >= (1 / bpy.context.scene.render.fps): # Use frame rate for update frequency for now
         last_time = time.time()
 
@@ -41,13 +47,10 @@ def on_scene_update_post(context):
                 barmory.draw()
 
         # Auto patch on every operator change
-        ops = bpy.context.window_manager.operators
         if state.chromium_running and \
            bpy.data.worlds['Arm'].arm_play_live_patch and \
            bpy.data.worlds['Arm'].arm_play_auto_build and \
-           len(ops) > 0 and \
-           last_operator != ops[-1]:
-            last_operator = ops[-1]
+           operators_changed:
             # Othwerwise rebuild scene
             if bridge.send_operator(last_operator) == False:
                 make.patch_project()
@@ -105,6 +108,12 @@ def on_scene_update_post(context):
             edit_obj.data.mesh_cached = False
         elif edit_obj.type == 'ARMATURE':
             edit_obj.data.data_cached = False
+
+    obj = bpy.context.object
+    if obj != None and operators_changed:
+        # Modifier was added, recache mesh
+        if ops[-1].bl_idname == 'OBJECT_OT_modifier_add':
+            obj.data.mesh_cached = False
 
 @persistent
 def on_load_post(context):
