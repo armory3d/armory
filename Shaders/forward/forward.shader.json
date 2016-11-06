@@ -91,16 +91,6 @@
 					"link": "_envmapStrength"
 				},
 				{
-					"name": "sltcMat",
-					"link": "_ltcMat",
-					"ifdef": ["_PolyLight"]
-				},
-				{
-					"name": "sltcMag",
-					"link": "_ltcMag",
-					"ifdef": ["_PolyLight"]
-				},
-				{
 					"name": "U",
 					"link": "_undistortionMatrix",
 					"ifdef": ["_VR"]
@@ -124,6 +114,36 @@
 					"name": "lampSizeUV",
 					"link": "_lampSizeUV",
 					"ifdef": ["_PCSS"]
+				},
+				{
+					"name": "lampArea0",
+					"link": "_lampArea0",
+					"ifdef": ["_PolyLight"]
+				},
+				{
+					"name": "lampArea1",
+					"link": "_lampArea1",
+					"ifdef": ["_PolyLight"]
+				},
+				{
+					"name": "lampArea2",
+					"link": "_lampArea2",
+					"ifdef": ["_PolyLight"]
+				},
+				{
+					"name": "lampArea3",
+					"link": "_lampArea3",
+					"ifdef": ["_PolyLight"]
+				},
+				{
+					"name": "sltcMat",
+					"link": "_ltcMat",
+					"ifdef": ["_PolyLight"]
+				},
+				{
+					"name": "sltcMag",
+					"link": "_ltcMag",
+					"ifdef": ["_PolyLight"]
 				}
 			],
 			"vertex_shader": "mesh.vert.glsl",

@@ -50,7 +50,9 @@ def parse_lamp(tree, o):
             o['color'] = [col[0], col[1], col[2]]
             o['strength'] = n.inputs[1].default_value
             # Normalize point/spot strength
-            if o['type'] != 'sun':
+            if o['type'] == 'point' or o['type'] == 'spot':
+                o['strength'] /= 1000.0
+            elif o['type'] == 'area':
                 o['strength'] /= 1000.0
             
             # Texture test..
@@ -59,7 +61,7 @@ def parse_lamp(tree, o):
                 if color_node.type == 'TEX_IMAGE':
                     o['color_texture'] = color_node.image.name
                     make_texture(None, '', color_node, None)
-                    # bpy.data.worlds['Arm'].world_defs += '_LampTex'
+                    # bpy.data.worlds['Arm'].world_defs += '_LampColTex'
             
             break
 

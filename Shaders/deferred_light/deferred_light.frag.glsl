@@ -7,6 +7,9 @@ precision mediump float;
 #include "../compiled.glsl"
 #include "../std/brdf.glsl"
 #include "../std/math.glsl"
+// #ifdef _PolyLight
+#include "../std/ltc.glsl"
+// #endif
 // ...
 #ifndef _NoShadows
 	#ifdef _PCSS
@@ -40,6 +43,11 @@ uniform sampler2D gbuffer1;
 	//!uniform sampler3D voxels;
 #endif
 
+// #ifdef _PolyLight
+	//! uniform sampler2D sltcMat;
+	//! uniform sampler2D sltcMag;
+// #endif
+
 uniform mat4 invVP;
 uniform mat4 LWVP;
 uniform vec3 lightPos;
@@ -50,11 +58,17 @@ uniform float lightStrength;
 uniform float shadowsBias;
 uniform float spotlightCutoff;
 uniform float spotlightExponent;
+// #ifdef _PolyLight
+uniform vec3 lampArea0;
+uniform vec3 lampArea1;
+uniform vec3 lampArea2;
+uniform vec3 lampArea3;
+// #endif
 uniform vec3 eye;
 // uniform vec3 eyeLook;
 // uniform vec2 screenSize;
 
-#ifdef _LampTex
+#ifdef _LampColTex
 uniform sampler2D texlampcolor;
 #else
 uniform vec3 lightColor;
@@ -151,18 +165,41 @@ void main() {
 #endif
 	
 	// Direct
+	vec3 direct;
+// #ifdef _PolyLight
+	if (lightType == 3) { // Area
+		float theta = acos(dotNV);
+		vec2 tuv = vec2(metrough.y, theta / (0.5 * PI));
+		tuv = tuv * LUT_SCALE + LUT_BIAS;
+		vec4 t = texture(sltcMat, tuv);	
+		mat3 Minv = mat3(
+			vec3(1.0, 0.0, t.y),
+			vec3(0.0, t.z, 0.0),
+			vec3(t.w, 0.0, t.x));
+
+		vec3 ltcspec = ltcEvaluate(n, v, dotNV, p, Minv, lampArea0, lampArea1, lampArea2, lampArea3, false); 
+		ltcspec *= texture(sltcMag, tuv).a;
+		
+		vec3 ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lampArea0, lampArea1, lampArea2, lampArea3, false);
+		direct = ltcdiff * albedo;// + ltcspec;
+	}
+	else {
+// #endif
+
 #ifdef _OrenNayar
-	vec3 direct = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
+	direct = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
 #else
-	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
+	direct = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
 #endif
 
-	if (lightType == 2) { // Spot
-		float spotEffect = dot(lightDir, l);
-		if (spotEffect < spotlightCutoff) {
-			float spotEffect = smoothstep(spotlightCutoff - spotlightExponent, spotlightCutoff, spotEffect);
-			direct *= spotEffect;
+		if (lightType == 2) { // Spot
+			float spotEffect = dot(lightDir, l);
+			if (spotEffect < spotlightCutoff) {
+				float spotEffect = smoothstep(spotlightCutoff - spotlightExponent, spotlightCutoff, spotEffect);
+				direct *= spotEffect;
+			}
 		}
+
 	}
 	
 	// Aniso spec
@@ -173,10 +210,11 @@ void main() {
 	// vec3 direct = diffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH, dotLV) + wardSpecular(n, h, dotNL, dotNV, dotNH, fiberDirection, shinyParallel, shinyPerpendicular);
 	// #endif
 
-	direct = direct * lightStrength;
-#ifdef _LampTex
-	direct *= texture(texlampcolor, envMapEquirect(l)).rgb;
-	// direct *= texture(texlampcolor, l.xy).rgb;
+	direct *= lightStrength;
+
+#ifdef _LampColTex
+	// direct *= texture(texlampcolor, envMapEquirect(l)).rgb;
+	direct *= pow(texture(texlampcolor, l.xy).rgb, vec3(2.2));
 #else
 	direct *= lightColor;
 #endif
@@ -224,41 +262,4 @@ void main() {
 	indirect1 *= texture(ssaotex, texCoord).r;
 	fragColor.rgb += indirect1;
 #endif
-
-	
-	// LTC
-	// float sinval = (sin(time) * 0.5 + 0.5);
-	// vec4 fragColor = vec4(1.0);
-	// float rectSizeX = 4.000 + sin(time) * 4.0;
-	// float rectSizeY = 1.2;// + sin(time * 2.0);
-	// vec3 ex = vec3(1, 0, 0)*rectSizeX;
-	// vec3 ey = vec3(0, 0, 1)*rectSizeY;
-	// vec3 p1 = lightPos - ex + ey;
-	// vec3 p2 = lightPos + ex + ey;
-	// vec3 p3 = lightPos + ex - ey;
-	// vec3 p4 = lightPos - ex - ey;
-	// float theta = acos(dotNV);
-	// vec2 tuv = vec2(metrough.y, theta/(0.5*PI));
-	// tuv = tuv*LUT_SCALE + LUT_BIAS;
-
-	// vec4 t = texture(sltcMat, tuv);		
-	// mat3 Minv = mat3(
-	// 	vec3(  1, t.y, 0),
-	// 	vec3(  0, 0,   t.z),
-	// 	vec3(t.w, 0,   t.x)
-	// );
-	
-	// vec3 ltcspec = LTC_Evaluate(n, v, p, Minv, p1, p2, p3, p4, true); 
-	// ltcspec *= vec3(1.0, 1.0 - sinval, 1.0 - sinval);
-	// ltcspec *= texture(sltcMag, tuv).a;
-	// vec3 ltcdiff = LTC_Evaluate(n, v, p, mat3(1), p1, p2, p3, p4, true);
-	// ltcdiff *= vec3(1.0, 1.0 - sinval, 1.0 - sinval);
-	// vec3 ltccol = ltcspec + ltcdiff * albedo;
-	// ltccol /= 2.0*PI;
-	// fragColor.rgb = ltccol * 5.0 * visibility + (indirect / 14.0 * ao * (rectSizeX / 6.0) );
-	// // fragColor.rgb = ltccol * visibility + (indirect / 2.0 * ao);
-	
-	// fragColor = vec4(pow(fragColor.rgb, vec3(1.0 / 2.2)), fragColor.a);
-	// outputColor = vec4(fragColor.rgb, fragColor.a);
-	//gl_FragColor = vec4(fragColor.rgb, fragColor.a);    
 }

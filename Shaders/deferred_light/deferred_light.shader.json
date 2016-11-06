@@ -60,6 +60,36 @@
 					"link": "_spotlampExponent"
 				},
 				{
+					"name": "lampArea0",
+					"link": "_lampArea0",
+					"ifndef": ["_ifndefPolyLight"]
+				},
+				{
+					"name": "lampArea1",
+					"link": "_lampArea1",
+					"ifndef": ["_ifndefPolyLight"]
+				},
+				{
+					"name": "lampArea2",
+					"link": "_lampArea2",
+					"ifndef": ["_ifndefPolyLight"]
+				},
+				{
+					"name": "lampArea3",
+					"link": "_lampArea3",
+					"ifndef": ["_ifndefPolyLight"]
+				},
+				{
+					"name": "sltcMat",
+					"link": "_ltcMat",
+					"ifndef": ["_ifndefPolyLight"]
+				},
+				{
+					"name": "sltcMag",
+					"link": "_ltcMag",
+					"ifndef": ["_ifndefPolyLight"]
+				},
+				{
 					"name": "eye",
 					"link": "_cameraPosition"
 				},
@@ -105,21 +135,6 @@
 					"name": "envmapStrength",
 					"link": "_envmapStrength",
 					"ifdef": ["_Disabled"]
-				},
-				{
-					"name": "sltcMat",
-					"link": "_ltcMat",
-					"ifdef": ["_PolyLight"]
-				},
-				{
-					"name": "sltcMag",
-					"link": "_ltcMag",
-					"ifdef": ["_PolyLight"]
-				},
-				{
-					"name": "time",
-					"link": "_time",
-					"ifdef": ["_PolyLight"]
 				},
 				{
 					"name": "snoise",

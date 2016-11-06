@@ -6,14 +6,11 @@ precision mediump float;
 
 #include "../compiled.glsl"
 #include "../std/brdf.glsl"
-// surfaceAlbedo()
-// surfaceF0()
-// orenNayarDiffuseBRDF()
-// lambertDiffuseBRDF()
-// specularBRDF()
+// #ifdef _PolyLight
+//#include "../std/ltc.glsl"
+// #endif
 #ifdef _Rad
 #include "../std/math.glsl"
-// envMapEquirect()
 #endif
 #ifndef _NoShadows
 	#ifdef _PCSS
@@ -27,6 +24,11 @@ precision mediump float;
 #include "../std/shirr.glsl"
 // shIrradiance()
 //!uniform float shirr[27];
+
+// #ifdef _PolyLight
+	//-! uniform sampler2D sltcMat;
+	//-! uniform sampler2D sltcMag;
+// #endif
 
 #ifdef _BaseTex
 	uniform sampler2D sbase;
@@ -80,6 +82,12 @@ uniform float spotlightCutoff;
 uniform float spotlightExponent;
 uniform float shadowsBias;
 uniform vec3 eye;
+// #ifdef _PolyLight
+// uniform vec3 lampArea0;
+// uniform vec3 lampArea1;
+// uniform vec3 lampArea2;
+// uniform vec3 lampArea3;
+// #endif
 
 #ifdef _VoxelGI
 	uniform sampler2D ssaotex;
@@ -276,37 +284,34 @@ void main() {
 // #endif
 
 
-	// LTC
-	// const float rectSizeX = 2.5;
-	// const float rectSizeY = 1.2;
-	// vec3 ex = vec3(1, 0, 0)*rectSizeX;
-	// vec3 ey = vec3(0, 0, 1)*rectSizeY;
-	// vec3 p1 = light - ex + ey;
-	// vec3 p2 = light + ex + ey;
-	// vec3 p3 = light + ex - ey;
-	// vec3 p4 = light - ex - ey;
-	// float theta = acos(dotNV);
-	// vec2 tuv = vec2(roughness, theta/(0.5*PI));
-	// tuv = tuv*LUT_SCALE + LUT_BIAS;
 
-	// vec4 t = texture(sltcMat, tuv);		
-	// mat3 Minv = mat3(
-	// 	vec3(  1, t.y, 0),
-	// 	vec3(  0, 0,   t.z),
-	// 	vec3(t.w, 0,   t.x)
-	// );
-	
-	// vec3 ltcspec = LTC_Evaluate(n, v, position, Minv, p1, p2, p3, p4, true);
-	// ltcspec *= texture(sltcMag, tuv).a;
-	// vec3 ltcdiff = LTC_Evaluate(n, v, position, mat3(1), p1, p2, p3, p4, true); 
-	// vec3 ltccol = ltcspec + ltcdiff * albedo;
-	// ltccol /= 2.0*PI;
+	// Direct
+	vec3 direct;
+
+	// #ifdef _PolyLight
+	// if (lightType == 3) { // Area
+	// 	float theta = acos(dotNV);
+	// 	vec2 tuv = vec2(roughness, theta / (0.5 * PI));
+	// 	tuv = tuv * LUT_SCALE + LUT_BIAS;
+	// 	vec4 t = texture(sltcMat, tuv);		
+	// 	mat3 Minv = mat3(
+	// 		vec3(1.0, 0.0, t.y),
+	// 		vec3(0.0, t.z, 0.0),
+	// 		vec3(t.w, 0.0, t.x));
+
+	// 	vec3 ltcspec = ltcEvaluate(n, v, dotNV, position, Minv, lampArea0, lampArea1, lampArea2, lampArea3, true); 
+	// 	ltcspec *= texture(sltcMag, tuv).a;
+		
+	// 	vec3 ltcdiff = ltcEvaluate(n, v, dotNV, position, mat3(1.0), lampArea0, lampArea1, lampArea2, lampArea3, true);
+	// 	direct = ltcspec + ltcdiff * albedo;
+	// }
+	// else {
 
 	// Direct
 #ifdef _OrenNayar
-	vec3 direct = orenNayarDiffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);
+	direct = orenNayarDiffuseBRDF(albedo, roughness, dotNV, dotNL, dotVH) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);
 #else
-	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);
+	direct = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);
 #endif
 
 	if (lightType == 2) { // Spot
@@ -316,6 +321,9 @@ void main() {
 			direct *= spotEffect;
 		}
 	}
+
+	//} ////
+
 	
 	direct = direct * lightColor * lightStrength;
 	
@@ -379,9 +387,6 @@ void main() {
 #else
 	fragColor.rgb *= occlusion; 
 #endif
-	
-	// LTC
-	// fragColor.rgb = ltccol * 10.0 * visibility + indirect / 14.0;
 
 #ifdef _LDR
 	fragColor = vec4(pow(fragColor.rgb, vec3(1.0 / 2.2)), fragColor.a);
