@@ -90,7 +90,7 @@ def safe_assetpath(s):
     return s[2:] # Remove leading '//'
 
 def extract_filename(s):
-    return s.rsplit('/', 1)[1]
+    return s.rsplit(os.path.sep, 1)[1]
 
 def get_render_resolution(scene_index=0):
     render = bpy.data.scenes[scene_index].render

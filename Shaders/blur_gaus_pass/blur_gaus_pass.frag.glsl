@@ -10,7 +10,7 @@ precision mediump float;
 
 uniform sampler2D tex;
 uniform vec2 dir;
-uniform vec2 screenSize;
+// uniform vec2 screenSize;
 
 in vec2 texCoord;
 out vec4 fragColor;

@@ -2049,10 +2049,10 @@ class ArmoryExporter:
             const['name'] = 'receiveShadow'
             const['bool'] = True
             c['bind_constants'].append(const)
-            const = {}
-            const['name'] = 'mask'
-            const['float'] = 0
-            c['bind_constants'].append(const)
+            # const = {}
+            # const['name'] = 'mask'
+            # const['float'] = 0
+            # c['bind_constants'].append(const)
             const = {}
             const['name'] = 'baseCol'
             const['vec4'] = [0.8, 0.8, 0.8, 1.0]
@@ -2601,10 +2601,10 @@ class ArmoryExporter:
         const['bool'] = material.receive_shadow
         c['bind_constants'].append(const)
         
-        const = {}
-        const['name'] = 'mask'
-        const['float'] = material.stencil_mask
-        c['bind_constants'].append(const)
+        # const = {}
+        # const['name'] = 'mask'
+        # const['float'] = material.stencil_mask
+        # c['bind_constants'].append(const)
         
         c['bind_textures'] = []
         

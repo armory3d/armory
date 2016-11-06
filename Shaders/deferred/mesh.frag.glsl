@@ -8,7 +8,7 @@ precision mediump float;
 // octahedronWrap()
 // packFloat()
 
-uniform float mask;
+// uniform float mask;
 #ifdef _BaseTex
 	uniform sampler2D sbase;
 #endif

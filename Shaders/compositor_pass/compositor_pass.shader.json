@@ -50,7 +50,8 @@
 				
 				{
 					"name": "texStep",
-					"link": "_screenSizeInv"
+					"link": "_screenSizeInv",
+					"ifdef": ["_CompoFXAA", "_CompoDOF"]
 				},
 				{
 					"name": "texStep",

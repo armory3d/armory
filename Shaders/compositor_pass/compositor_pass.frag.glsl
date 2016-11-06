@@ -32,9 +32,11 @@ uniform vec3 eyeLook;
 uniform float aspectRatio;
 #endif
 
-// #ifdef _CompoFXAA
+#ifdef _CompoFXAA
 uniform vec2 texStep;
-// #endif
+#elif _CompoDOF
+uniform vec2 texStep;
+#endif
 
 #ifdef _CompoGrain
 uniform float time;

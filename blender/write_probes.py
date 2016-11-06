@@ -20,7 +20,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     if not os.path.exists('build/compiled/Assets/envmaps'):
         os.makedirs('build/compiled/Assets/envmaps')
     
-    base_name = image_filepath.rsplit('/', 1)[1].rsplit('.', 1)[0] # Extract file name without extension
+    base_name = image_filepath.rsplit(os.path.sep, 1)[1].rsplit('.', 1)[0] # Extract file name without extension
     
     # Assets to be generated
     output_file_irr = 'build/compiled/Assets/envmaps/' + base_name + '_irradiance'
