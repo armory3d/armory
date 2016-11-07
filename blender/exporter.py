@@ -778,7 +778,7 @@ class ArmoryExporter:
             if (action):
                 for fcurve in action.fcurves:
                     kind = ArmoryExporter.classify_animation_curve(fcurve)
-                    if (kind != kAnimationSampled):
+                    if kind != kAnimationSampled:
                         if (fcurve.data_path == "location"):
                             for i in range(3):
                                 if ((fcurve.array_index == i) and (not locAnimCurve[i])):
@@ -786,35 +786,35 @@ class ArmoryExporter:
                                     locAnimKind[i] = kind
                                     if (ArmoryExporter.animation_present(fcurve, kind)):
                                         locAnimated[i] = True
-                        elif (fcurve.data_path == "delta_location"):
+                        elif fcurve.data_path == "delta_location":
                             for i in range(3):
                                 if ((fcurve.array_index == i) and (not deltaPosAnimCurve[i])):
                                     deltaPosAnimCurve[i] = fcurve
                                     deltaPosAnimKind[i] = kind
                                     if (ArmoryExporter.animation_present(fcurve, kind)):
                                         deltaPosAnimated[i] = True
-                        elif (fcurve.data_path == "rotation_euler"):
+                        elif fcurve.data_path == "rotation_euler":
                             for i in range(3):
                                 if ((fcurve.array_index == i) and (not rotAnimCurve[i])):
                                     rotAnimCurve[i] = fcurve
                                     rotAnimKind[i] = kind
                                     if (ArmoryExporter.animation_present(fcurve, kind)):
                                         rotAnimated[i] = True
-                        elif (fcurve.data_path == "delta_rotation_euler"):
+                        elif fcurve.data_path == "delta_rotation_euler":
                             for i in range(3):
                                 if ((fcurve.array_index == i) and (not deltaRotAnimCurve[i])):
                                     deltaRotAnimCurve[i] = fcurve
                                     deltaRotAnimKind[i] = kind
                                     if (ArmoryExporter.animation_present(fcurve, kind)):
                                         deltaRotAnimated[i] = True
-                        elif (fcurve.data_path == "scale"):
+                        elif fcurve.data_path == "scale":
                             for i in range(3):
                                 if ((fcurve.array_index == i) and (not sclAnimCurve[i])):
                                     sclAnimCurve[i] = fcurve
                                     sclAnimKind[i] = kind
                                     if (ArmoryExporter.animation_present(fcurve, kind)):
                                         sclAnimated[i] = True
-                        elif (fcurve.data_path == "delta_scale"):
+                        elif fcurve.data_path == "delta_scale":
                             for i in range(3):
                                 if ((fcurve.array_index == i) and (not deltaSclAnimCurve[i])):
                                     deltaSclAnimCurve[i] = fcurve
@@ -846,7 +846,7 @@ class ArmoryExporter:
 
             o['transform']['values'] = self.write_matrix(bobject.matrix_local)
 
-            if (sampledAnimation):
+            if sampledAnimation:
                 self.export_object_sampled_animation(bobject, scene, o)
         else:
             structFlag = False
@@ -857,7 +857,7 @@ class ArmoryExporter:
             o['animation_transforms'] = []
 
             deltaTranslation = bobject.delta_location
-            if (deltaPositionAnimated):
+            if deltaPositionAnimated:
                 # When the delta location is animated, write the x, y, and z components separately
                 # so they can be targeted by different tracks having different sets of keys.
                 for i in range(3):
@@ -888,7 +888,7 @@ class ArmoryExporter:
                 structFlag = True
 
             translation = bobject.location
-            if (locationAnimated):
+            if locationAnimated:
                 # When the location is animated, write the x, y, and z components separately
                 # so they can be targeted by different tracks having different sets of keys.
                 for i in range(3):
@@ -908,7 +908,7 @@ class ArmoryExporter:
                 animo['values'] = self.write_vector3d(translation)
                 structFlag = True
 
-            if (deltaRotationAnimated):
+            if deltaRotationAnimated:
                 # When the delta rotation is animated, write three separate Euler angle rotations
                 # so they can be targeted by different tracks having different sets of keys.
                 for i in range(3):
@@ -925,7 +925,7 @@ class ArmoryExporter:
             else:
                 # When the delta rotation is not animated, write it in the representation given by
                 # the object's current rotation mode. (There is no axis-angle delta rotation.)
-                if (mode == "QUATERNION"):
+                if mode == "QUATERNION":
                     quaternion = bobject.delta_rotation_quaternion
                     if ((math.fabs(quaternion[0] - 1.0) > kExportEpsilon) or (math.fabs(quaternion[1]) > kExportEpsilon) or (math.fabs(quaternion[2]) > kExportEpsilon) or (math.fabs(quaternion[3]) > kExportEpsilon)):
                         animo = {}
@@ -945,7 +945,7 @@ class ArmoryExporter:
                             animo['value'] = angle
                             structFlag = True
 
-            if (rotationAnimated):
+            if rotationAnimated:
                 # When the rotation is animated, write three separate Euler angle rotations
                 # so they can be targeted by different tracks having different sets of keys.
                 for i in range(3):
@@ -1182,6 +1182,31 @@ class ArmoryExporter:
                         return space.region_3d.perspective_matrix
         return None
 
+    def make_fake_omni_lamps(self, o, bobject):
+        # Look down
+        o['transform']['values'] = [1.0, 0.0, 0.0, bobject.location.x, 0.0, 1.0, 0.0, bobject.location.y, 0.0, 0.0, 1.0, bobject.location.z, 0.0, 0.0, 0.0, 1.0]
+        if not hasattr(o, 'children'):
+            o['children'] = []
+        # Make child lamps
+        for i in range(0, 5):
+            child_lamp = {}
+            child_lamp['name'] = o['name'] + '__' + str(i)
+            child_lamp['data_ref'] = o['data_ref']
+            child_lamp['type'] = 'lamp_object'
+            if i == 0:
+                mat = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+            elif i == 1:
+                mat = [0.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+            elif i == 2:
+                mat = [0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+            elif i == 3:
+                mat = [0.0, -1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+            elif i == 4:
+                mat = [-1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+            child_lamp['transform'] = {}
+            child_lamp['transform']['values'] = mat
+            o['children'].append(child_lamp)
+
     def export_object(self, bobject, scene, poseBone = None, parento = None):
         # This function exports a single object in the scene and includes its name,
         # object reference, material references (for meshes), and transform.
@@ -1190,7 +1215,7 @@ class ArmoryExporter:
             return
 
         bobjectRef = self.bobjectArray.get(bobject)
-        if (bobjectRef):
+        if bobjectRef:
             type = bobjectRef["objectType"]
 
             o = {}
@@ -1218,8 +1243,8 @@ class ArmoryExporter:
             # Export the object reference and material references.
             objref = bobject.data
             
-            if (type == kNodeTypeMesh):
-                if (not objref in self.meshArray):
+            if type == kNodeTypeMesh:
+                if not objref in self.meshArray:
                     self.meshArray[objref] = {"structName" : objref.name, "objectTable" : [bobject]}
                 else:
                     self.meshArray[objref]["objectTable"].append(bobject)
@@ -1257,34 +1282,38 @@ class ArmoryExporter:
                 #   self.ExportMorphWeights(bobject, shapeKeys, scene, o)
                 # TODO
 
-            elif (type == kNodeTypeLamp):
-                if (not objref in self.lampArray):
+            elif type == kNodeTypeLamp:
+                if not objref in self.lampArray:
                     self.lampArray[objref] = {"structName" : objref.name, "objectTable" : [bobject]}
                 else:
                     self.lampArray[objref]["objectTable"].append(bobject)
                 o['data_ref'] = self.lampArray[objref]["structName"]
 
-            elif (type == kNodeTypeCamera):
-                if (not objref in self.cameraArray):
+            elif type == kNodeTypeCamera:
+                if not objref in self.cameraArray:
                     self.cameraArray[objref] = {"structName" : objref.name, "objectTable" : [bobject]}
                 else:
                     self.cameraArray[objref]["objectTable"].append(bobject)
                 o['data_ref'] = self.cameraArray[objref]["structName"]
 
-            elif (type == kNodeTypeSpeaker):
-                if (not objref in self.speakerArray):
+            elif type == kNodeTypeSpeaker:
+                if not objref in self.speakerArray:
                     self.speakerArray[objref] = {"structName" : objref.name, "objectTable" : [bobject]}
                 else:
                     self.speakerArray[objref]["objectTable"].append(bobject)
                 o['data_ref'] = self.speakerArray[objref]["structName"]
 
-            if (poseBone):
+            if poseBone:
                 # If the object is parented to a bone and is not relative, then undo the bone's transform
                 o['transform'] = {}
                 o['transform']['values'] = self.write_matrix(poseBone.matrix.inverted())
 
             # Export the transform. If object is animated, then animation tracks are exported here
             self.export_object_transform(bobject, scene, o)
+
+            # 6 directional lamps
+            if type == kNodeTypeLamp and objref.lamp_omni_shadows:
+                self.make_fake_omni_lamps(o, bobject)
 
             # Viewport Camera - overwrite active camera matrix with viewport matrix
             if type == kNodeTypeCamera and bpy.data.worlds['Arm'].arm_play_viewport_camera and self.scene.camera != None and bobject.name == self.scene.camera.name:
@@ -1336,7 +1365,7 @@ class ArmoryExporter:
                             armutils.write_arm(fp, bones_obj)
                     armdata.data_cached = True
 
-            if (parento == None):
+            if parento == None:
                 self.output['objects'].append(o)
             else:
                 parento['children'].append(o)
@@ -1943,6 +1972,12 @@ class ArmoryExporter:
 
         # Parse nodes
         make_material.parse_lamp(objref.node_tree, o)
+
+        # Fake omni shadows
+        if objref.lamp_omni_shadows:
+            o['fov'] = 1.57
+            o['strength'] /= 6
+
         self.output['lamp_datas'].append(o)
 
     def export_camera(self, objectRef):

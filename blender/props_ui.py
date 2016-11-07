@@ -163,6 +163,10 @@ class DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'lamp_clip_end')
             layout.prop(obj.data, 'lamp_fov')
             layout.prop(obj.data, 'lamp_shadows_bias')
+            layout.prop(obj.data, 'lamp_omni_shadows')
+            if obj.data.lamp_omni_shadows:
+                layout.label('Warning: Will result in performance loss.')
+                layout.label('Temporary implementation.')
         elif obj.type == 'SPEAKER':
             layout.prop(obj.data, 'loop')
             layout.prop(obj.data, 'stream')

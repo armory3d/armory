@@ -74,7 +74,7 @@ def make_set_target(stage, node_group, node, currentNode=None, target_index=1, v
 
     currentNode = nodes.find_node_by_link(node_group, currentNode, currentNode.inputs[target_index])
     
-    if currentNode.bl_idname == 'TargetNodeType':
+    if currentNode.bl_idname == 'TargetNodeType' or currentNode.bl_idname == 'ShadowMapNodeType':
         targetId = currentNode.inputs[0].default_value
         stage['params'].append(targetId)
         # Store current target size
@@ -172,7 +172,10 @@ def make_bind_target(stage, node_group, node, constant_name, currentNode=None, t
         stage['params'].append(targetId)
         stage['params'].append(constant_name)
 
-
+    elif currentNode.bl_idname == 'ShadowMapNodeType':
+        targetId = currentNode.inputs[0].default_value
+        stage['params'].append(targetId)
+        stage['params'].append(constant_name)
         
     elif currentNode.bl_idname == 'DepthBufferNodeType':
         targetId = '_' + currentNode.inputs[0].default_value
@@ -758,7 +761,7 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
         tnode = nodes.find_node_by_link(node_group, node, node.inputs[0])
         parse_render_target(tnode, node_group, render_targets, depth_buffers)
         
-    elif node.bl_idname == 'TargetNodeType':
+    elif node.bl_idname == 'TargetNodeType' or node.bl_idname == 'ShadowMapNodeType':
         # Target already exists
         id = node.inputs[0].default_value
         for t in render_targets:
@@ -766,7 +769,7 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
                 return
         
         depth_buffer_id = None
-        if node.inputs[3].is_linked:
+        if node.bl_idname == 'TargetNodeType' and node.inputs[3].is_linked:
             # Find depth buffer
             depth_node = nodes.find_node_by_link(node_group, node, node.inputs[3])
             depth_buffer_id = depth_node.inputs[0].default_value
@@ -790,8 +793,23 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
             scale = size_node.inputs[0].default_value
             
         # Append target
-        target = make_render_target(node, scale, depth_buffer_id=depth_buffer_id)
-        render_targets.append(target)
+        if node.bl_idname == 'TargetNodeType':
+            target = make_render_target(node, scale, depth_buffer_id=depth_buffer_id)
+            render_targets.append(target)
+        else: # ShadowMapNodeType
+            target = make_shadowmap_target(node, scale)
+            render_targets.append(target)
+            
+            # Second shadowmap for point lamps
+            # TODO: check if lamp users are visible
+            for lamp in bpy.data.lamps:
+                if lamp.type == 'POINT':
+                    # target = make_shadowmap_target(node, scale, '2')
+                    # render_targets.append(target)
+                    # break
+                    # Clamp omni-shadows, remove
+                    if lamp.lamp_omni_shadows:
+                        bpy.data.worlds['Arm'].world_defs += '_Clampstc'
     
     elif node.bl_idname == 'ImageNodeType' or node.bl_idname == 'Image3DNodeType':
         # Target already exists
@@ -832,6 +850,17 @@ def make_render_target(n, scale, depth_buffer_id=None):
         target['scale'] = scale    
     if depth_buffer_id != None:
         target['depth_buffer'] = depth_buffer_id
+    return target
+
+def make_shadowmap_target(n, scale, postfix=''):
+    target = {}
+    # target['name'] = '_shadow_' + n.inputs[0].default_value + postfix
+    target['name'] = n.inputs[0].default_value + postfix
+    target['width'] = n.inputs[1].default_value
+    target['height'] = n.inputs[2].default_value
+    target['format'] = n.inputs[3].default_value
+    if scale != 1.0:
+        target['scale'] = scale    
     return target
 
 def make_image_target(n, scale):

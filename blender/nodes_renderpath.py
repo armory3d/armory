@@ -457,6 +457,20 @@ class TargetNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Target")
 
+class ShadowMapNode(Node, CGPipelineTreeNode):
+    '''Create new shadow map target node'''
+    bl_idname = 'ShadowMapNodeType'
+    bl_label = 'Shadow Map'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketString', "ID")
+        self.inputs.new('NodeSocketInt', "Width")
+        self.inputs.new('NodeSocketInt', "Height")
+        self.inputs.new('NodeSocketString', "Format")
+
+        self.outputs.new('NodeSocketShader', "Target")
+
 class ImageNode(Node, CGPipelineTreeNode):
     '''Create new image node'''
     bl_idname = 'ImageNodeType'
@@ -779,6 +793,7 @@ node_categories = [
     ]),
     MyTargetNodeCategory("TARGETNODES", "Target", items=[
         NodeItem("TargetNodeType"),
+        NodeItem("ShadowMapNodeType"),
         NodeItem("ImageNodeType"),
         NodeItem("Image3DNodeType"),
         NodeItem("TargetArrayNodeType"),
