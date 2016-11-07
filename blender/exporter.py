@@ -2290,9 +2290,6 @@ class ArmoryExporter:
                 self.output['traits'].append(x)
 
         self.export_objects(self.scene)
-
-        if len(self.output['lamp_datas']) == 0: # Asume light data stored in same file
-            print('Armory Warning: No light found in active scene')
         
         self.postprocess()
 

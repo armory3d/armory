@@ -135,42 +135,72 @@ def parse_color(world, node, context, envmap_strength_const):
     if node.type == 'TEX_ENVIRONMENT':
         envmap_strength_const['float'] *= 2.0 # Match to cycles
 
-        texture = {}
-        context['bind_textures'].append(texture)
-        texture['name'] = 'envmap'
+        tex = {}
+        context['bind_textures'].append(tex)
+        tex['name'] = 'envmap'
         
         image = node.image
         filepath = image.filepath
 
+        # Reference image name
+        tex['file'] = armutils.extract_filename(image.filepath)
+        tex['file'] = armutils.safe_filename(tex['file'])
+        base = tex['file'].rsplit('.', 1)
+        ext = base[1].lower()
+
+        if ext == 'hdr':
+            target_format = 'HDR'
+        else:
+            target_format = 'JPEG'
+        do_convert = ext != 'hdr' and ext != 'jpg'
+        if do_convert:
+            if ext == 'exr':
+                tex['file'] = base[0] + '.hdr'
+                target_format = 'HDR'
+            else:
+                tex['file'] = base[0] + '.jpg'
+                target_format = 'JPEG'
+
         if image.packed_file != None:
             # Extract packed data
-            filepath = '/build/compiled/Assets/unpacked'
-            unpack_path = armutils.get_fp() + filepath
+            unpack_path = armutils.get_fp() + '/build/compiled/Assets/unpacked'
             if not os.path.exists(unpack_path):
                 os.makedirs(unpack_path)
-            unpack_filepath = unpack_path + '/' + image.name
-            if os.path.isfile(unpack_filepath) == False or os.path.getsize(unpack_filepath) != image.packed_file.size:
+            unpack_filepath = unpack_path + '/' + tex['file']
+            filepath = unpack_filepath
+
+            if do_convert:
+                if not os.path.isfile(unpack_filepath):
+                    armutils.write_image(image, unpack_filepath, file_format=target_format)
+
+            elif os.path.isfile(unpack_filepath) == False or os.path.getsize(unpack_filepath) != image.packed_file.size:
                 with open(unpack_filepath, 'wb') as f:
                     f.write(image.packed_file.data)
+            
             assets.add(unpack_filepath)
         else:
-            # Link image path to assets
-            assets.add(armutils.safe_assetpath(image.filepath))
-
-        # Reference image name
-        texture['file'] = armutils.extract_filename(image.filepath)
-        texture['file'] = armutils.safe_filename(texture['file'])
+            if do_convert:
+                converted_path = armutils.get_fp() + '/build/compiled/Assets/unpacked/' + tex['file']
+                filepath = converted_path
+                # TODO: delete cache when file changes
+                if not os.path.isfile(converted_path):
+                    armutils.write_image(image, converted_path, file_format=target_format)
+                assets.add(converted_path)
+            else:
+                # Link image path to assets
+                assets.add(armutils.safe_assetpath(image.filepath))
 
         # Generate prefiltered envmaps
         generate_radiance = wrd.generate_radiance
-        world.world_envtex_name = texture['file']
-        world.world_envtex_irr_name = texture['file'].rsplit('.', 1)[0]
-        disable_hdr = image.filepath.endswith('.jpg')
-        mip_count = world.world_envtex_num_mips
+        world.world_envtex_name = tex['file']
+        world.world_envtex_irr_name = tex['file'].rsplit('.', 1)[0]
+        disable_hdr = target_format == 'JPEG'
         
+        mip_count = world.world_envtex_num_mips
         mip_count = write_probes.write_probes(filepath, disable_hdr, mip_count, generate_radiance=generate_radiance)
         
         world.world_envtex_num_mips = mip_count
+        
         # Append envtex define
         bpy.data.worlds['Arm'].world_defs += '_EnvTex'
         # Append LDR define
@@ -184,12 +214,12 @@ def parse_color(world, node, context, envmap_strength_const):
     # Static image background
     elif node.type == 'TEX_IMAGE':
         bpy.data.worlds['Arm'].world_defs += '_EnvImg'
-        texture = {}
-        context['bind_textures'].append(texture)
-        texture['name'] = 'envmap'
+        tex = {}
+        context['bind_textures'].append(tex)
+        tex['name'] = 'envmap'
         # No repeat for now
-        texture['u_addressing'] = 'clamp'
-        texture['v_addressing'] = 'clamp'
+        tex['u_addressing'] = 'clamp'
+        tex['v_addressing'] = 'clamp'
         
         image = node.image
         filepath = image.filepath
@@ -210,8 +240,8 @@ def parse_color(world, node, context, envmap_strength_const):
             assets.add(armutils.safe_assetpath(image.filepath))
 
         # Reference image name
-        texture['file'] = armutils.extract_filename(image.filepath)
-        texture['file'] = armutils.safe_filename(texture['file'])
+        tex['file'] = armutils.extract_filename(image.filepath)
+        tex['file'] = armutils.safe_filename(tex['file'])
 
 
     # Append sky define

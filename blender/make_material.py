@@ -104,36 +104,57 @@ def parse_from(self, material, c, defs, surface_node):
     parse_material_surface(self, material, c, defs, tree, surface_node, 1.0)
 
 def make_texture(self, id, image_node, material, image_format='RGBA32'):
+    wrd = bpy.data.worlds['Arm']
     tex = {}
     tex['name'] = id
     image = image_node.image
+    
     if image != None:
+
+        # Reference image name
+        tex['file'] = armutils.extract_filename(image.filepath)
+        ext = tex['file'].rsplit('.', 1)[1].lower()
+        tex['file'] = armutils.safe_filename(tex['file'])
+
+        do_convert = ext != 'jpg' and ext != 'png' and ext != 'hdr' # Convert image
+        if do_convert:
+            tex['file'] = tex['file'].rsplit('.', 1)[0] + '.jpg'
+            # log.warn(material.name + '/' + image.name + ' - image format is not supported yet, converting to jpg. Use jpg, png, hdr.')
+
         if image.packed_file != None:
             # Extract packed data
             unpack_path = armutils.get_fp() + '/build/compiled/Assets/unpacked'
             if not os.path.exists(unpack_path):
                 os.makedirs(unpack_path)
-            unpack_filepath = unpack_path + '/' + image.name
+            unpack_filepath = unpack_path + '/' + tex['file']
+            
+            if do_convert:
+                if not os.path.isfile(unpack_filepath):
+                    armutils.write_image(image, unpack_filepath)
+            
             # Write bytes if size is different or file does not exist yet
-            if os.path.isfile(unpack_filepath) == False or os.path.getsize(unpack_filepath) != image.packed_file.size:
+            elif os.path.isfile(unpack_filepath) == False or os.path.getsize(unpack_filepath) != image.packed_file.size:
                 with open(unpack_filepath, 'wb') as f:
                     f.write(image.packed_file.data)
-            # Add asset
+
             assets.add(unpack_filepath)
+
         else:
-            # Link image path to assets
-            assets.add(armutils.safe_assetpath(image.filepath))
-        # Reference image name
-        powimage = is_pow(image.size[0]) and is_pow(image.size[1])
-        tex['file'] = armutils.extract_filename(image.filepath)
-        ext = tex['file'][-3:].lower()
-        if ext != 'jpg' and ext != 'png' and ext != 'hdr':
-            log.warn(material.name + '/' + image.name + ' - image format is not supported yet. Use jpg, png, hdr.')
-        tex['file'] = armutils.safe_filename(tex['file'])
+            if do_convert:
+                converted_path = armutils.get_fp() + '/build/compiled/Assets/unpacked/' + tex['file']
+                # TODO: delete cache when file changes
+                if not os.path.isfile(converted_path):
+                    armutils.write_image(image, converted_path)
+                assets.add(converted_path)
+            else:
+                # Link image path to assets
+                assets.add(armutils.safe_assetpath(image.filepath))
+
+
         if image_format != 'RGBA32':
             tex['format'] = image_format
         interpolation = image_node.interpolation
-        if bpy.data.worlds['Arm'].force_anisotropic_filtering:
+        if wrd.force_anisotropic_filtering:
             interpolation = 'Smart'
         if interpolation == 'Cubic': # Mipmap linear
             tex['mipmap_filter'] = 'linear'
@@ -146,7 +167,8 @@ def make_texture(self, id, image_node, material, image_format='RGBA32'):
             tex['u_addressing'] = 'clamp'
             tex['v_addressing'] = 'clamp'
         else:
-            if bpy.data.worlds['Arm'].npot_texture_repeat == False and powimage == False:
+            powimage = is_pow(image.size[0]) and is_pow(image.size[1])
+            if wrd.npot_texture_repeat == False and powimage == False:
                 print('Armory Warning: ' + material.name + '/' + image.name + ' - non power of 2 texture can not use repeat mode')
                 tex['u_addressing'] = 'clamp'
                 tex['v_addressing'] = 'clamp'

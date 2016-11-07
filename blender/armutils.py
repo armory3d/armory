@@ -21,6 +21,21 @@ def write_arm(filepath, output):
             with open(filepath, 'w') as f:
                 f.write(json.dumps(output, sort_keys=True, indent=4))
 
+def write_image(image, path, file_format='JPEG'):
+    # Convert image to compatible format
+    print('Armory Info: Writing ' + path)
+    ren = bpy.context.scene.render
+    orig_quality = ren.image_settings.quality
+    orig_file_format = ren.image_settings.file_format
+    
+    ren.image_settings.quality = 90
+    ren.image_settings.file_format = file_format
+    
+    image.save_render(path, bpy.context.scene)
+    
+    ren.image_settings.quality = orig_quality
+    ren.image_settings.file_format = orig_file_format
+
 def get_fp():
     s = bpy.data.filepath.split(os.path.sep)
     s.pop()

@@ -51,7 +51,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     
     generated_files = []
     output_gama_numerator = '1.0' if disable_hdr else '2.2'
-    input_file = armutils.get_fp() + image_filepath #'Assets/' + image_name
+    input_file = image_filepath #'Assets/' + image_name
     
     # Get input size
     output = subprocess.check_output([ \
