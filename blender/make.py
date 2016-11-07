@@ -113,7 +113,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     # Write khafile.js
     write_data.write_khafilejs(is_play, export_physics, dce_full=is_publish)
 
-    # Write Main.hx
+    # Write Main.hx - depends on write_khafilejs for writing number of assets
     write_data.write_main(is_play, in_viewport, is_publish)
 
     # Copy ammo.js if necessary

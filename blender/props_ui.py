@@ -484,6 +484,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
 
         layout.prop(wrd, 'arm_project_advanced')
         if wrd.arm_project_advanced:
+            layout.prop(wrd, 'arm_loadbar')
             layout.prop(wrd, 'arm_play_active_scene')
             if wrd.arm_play_active_scene == False:
                 layout.prop_search(wrd, 'arm_project_scene', bpy.data, 'scenes', 'Scene')

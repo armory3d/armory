@@ -89,6 +89,7 @@ package ;
 class Main {
     public static inline var projectName = '""" + wrd.arm_project_name + """';
     public static inline var projectPackage = '""" + wrd.arm_project_package + """';
+    public static inline var projectAssets = """ + str(len(assets.assets)) + """;
     static inline var projectWidth = """ + str(resx) + """;
     static inline var projectHeight = """ + str(resy) + """;
     static inline var projectSamplesPerPixel = """ + str(wrd.arm_project_samples_per_pixel) + """;
@@ -123,6 +124,11 @@ class Main {
         armory.object.Uniforms.register();
         kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel}, function() {
             iron.App.init(function() {
+""")
+        if is_publish and wrd.arm_loadbar:
+            f.write("""iron.App.notifyOnRender2D(armory.trait.internal.LoadBar.render);""")
+
+        f.write("""
                 iron.Scene.setActive(projectScene, function(object:iron.object.Object) {""")
         if armutils.with_chromium() and in_viewport and is_play:
             f.write("""

@@ -66,6 +66,7 @@ def init_properties():
                ('Browser', 'Browser', 'Browser'),
                ('Native', 'Native', 'Native')],
         name="Runtime", description="Player runtime used when launching in new window", default='Electron')
+    bpy.types.World.arm_loadbar = BoolProperty(name="Load Bar", description="Show asset loading progress on published builds", default=True)
 
     # For object
     bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced Children", description="Use instaced rendering", default=False)
