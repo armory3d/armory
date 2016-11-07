@@ -107,13 +107,15 @@ float shadowTest(vec4 lPos) {
 	lPos.xyz /= lPos.w;
 	lPos.xy = lPos.xy * 0.5 + 0.5;
 	
-	#ifdef _Clampstc
+	// #ifdef _Clampstc
 	// Filtering out of bounds, remove
+	// const vec2 border = vec2(1.0 / shadowmapSize[0], 1.0 / shadowmapSize[1]) * 2.0;
+	// lPos.xy = clamp(lPos.xy, border[0], 1.0 - border[1]);
 	if (lPos.x < 0.0) return 1.0;
 	if (lPos.y < 0.0) return 1.0;
 	if (lPos.x > 1.0) return 1.0;
 	if (lPos.y > 1.0) return 1.0;
-	#endif
+	// #endif
 
 	#ifdef _PCSS
 	return PCSS(lPos.xy, lPos.z - shadowsBias);

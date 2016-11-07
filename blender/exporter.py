@@ -1975,7 +1975,7 @@ class ArmoryExporter:
 
         # Fake omni shadows
         if objref.lamp_omni_shadows:
-            o['fov'] = 1.57
+            o['fov'] = 1.5708 # 90 deg
             o['strength'] /= 6
 
         self.output['lamp_datas'].append(o)
