@@ -161,7 +161,7 @@ def init_properties():
     bpy.types.World.generate_radiance_sky_type = EnumProperty(
         items=[('Fake', 'Fake', 'Fake'), 
                ('Hosek', 'Hosek', 'Hosek')],
-        name="Type", description="Prefiltered maps to be used for radiance.", default='Fake')
+        name="Type", description="Prefiltered maps to be used for radiance.", default='Fake', update=assets.invalidate_envmap_data)
     bpy.types.World.arm_world_advanced = bpy.props.BoolProperty(name="Effects", default=False)
     bpy.types.World.generate_clouds = bpy.props.BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_clouds_density = bpy.props.FloatProperty(name="Density", default=0.5, min=0.0, max=10.0, update=assets.invalidate_shader_cache)

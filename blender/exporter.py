@@ -1312,7 +1312,7 @@ class ArmoryExporter:
             self.export_object_transform(bobject, scene, o)
 
             # 6 directional lamps
-            if type == kNodeTypeLamp and objref.lamp_omni_shadows:
+            if type == kNodeTypeLamp and objref.type == 'POINT' and objref.lamp_omni_shadows:
                 self.make_fake_omni_lamps(o, bobject)
 
             # Viewport Camera - overwrite active camera matrix with viewport matrix

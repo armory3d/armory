@@ -43,10 +43,10 @@ uniform sampler2D gbuffer1;
 	//!uniform sampler3D voxels;
 #endif
 
-// #ifdef _PolyLight
-	//! uniform sampler2D sltcMat;
-	//! uniform sampler2D sltcMag;
-// #endif
+#ifdef _PolyLight
+	//!uniform sampler2D sltcMat;
+	//!uniform sampler2D sltcMag;
+#endif
 
 uniform mat4 invVP;
 uniform mat4 LWVP;
@@ -58,12 +58,12 @@ uniform float lightStrength;
 uniform float shadowsBias;
 uniform float spotlightCutoff;
 uniform float spotlightExponent;
-// #ifdef _PolyLight
+#ifdef _PolyLight
 uniform vec3 lampArea0;
 uniform vec3 lampArea1;
 uniform vec3 lampArea2;
 uniform vec3 lampArea3;
-// #endif
+#endif
 uniform vec3 eye;
 // uniform vec3 eyeLook;
 // uniform vec2 screenSize;
@@ -177,25 +177,28 @@ void main() {
 	
 	// Direct
 	vec3 direct;
-// #ifdef _PolyLight
+
+#ifdef _PolyLight
 	if (lightType == 3) { // Area
 		float theta = acos(dotNV);
 		vec2 tuv = vec2(metrough.y, theta / (0.5 * PI));
 		tuv = tuv * LUT_SCALE + LUT_BIAS;
-		vec4 t = texture(sltcMat, tuv);	
-		mat3 Minv = mat3(
+		// vec4 t = texture(sltcMat, tuv);
+		vec4 t = clamp(texture(sltcMat, tuv), 0.0, 1.0);
+		mat3 invM = mat3(
 			vec3(1.0, 0.0, t.y),
 			vec3(0.0, t.z, 0.0),
 			vec3(t.w, 0.0, t.x));
 
-		vec3 ltcspec = ltcEvaluate(n, v, dotNV, p, Minv, lampArea0, lampArea1, lampArea2, lampArea3, false); 
+		vec3 ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lampArea0, lampArea1, lampArea2, lampArea3, true); 
 		ltcspec *= texture(sltcMag, tuv).a;
 		
-		vec3 ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lampArea0, lampArea1, lampArea2, lampArea3, false);
-		direct = ltcdiff * albedo;// + ltcspec;
+		vec3 ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lampArea0, lampArea1, lampArea2, lampArea3, true);
+		direct = ltcdiff * albedo + ltcspec;
+		direct = clamp(direct, 0.0, 10.0);
 	}
 	else {
-// #endif
+#endif
 
 #ifdef _OrenNayar
 	direct = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
@@ -211,7 +214,9 @@ void main() {
 			}
 		}
 
+#ifdef _PolyLight
 	}
+#endif
 	
 	// Aniso spec
 	// #ifdef _Aniso

@@ -84,6 +84,12 @@ def build_node_tree(world):
             wrd.world_defs += '_Probes'
             break
 
+    # Area lamps
+    for lamp in bpy.data.lamps:
+        if lamp.type == 'AREA':
+            wrd.world_defs += '_PolyLight'
+            break
+
     # Data will be written after render path has been processed to gather all defines
     return output
 

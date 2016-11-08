@@ -62,32 +62,32 @@
 				{
 					"name": "lampArea0",
 					"link": "_lampArea0",
-					"ifndef": ["_ifndefPolyLight"]
+					"ifdef": ["_PolyLight"]
 				},
 				{
 					"name": "lampArea1",
 					"link": "_lampArea1",
-					"ifndef": ["_ifndefPolyLight"]
+					"ifdef": ["_PolyLight"]
 				},
 				{
 					"name": "lampArea2",
 					"link": "_lampArea2",
-					"ifndef": ["_ifndefPolyLight"]
+					"ifdef": ["_PolyLight"]
 				},
 				{
 					"name": "lampArea3",
 					"link": "_lampArea3",
-					"ifndef": ["_ifndefPolyLight"]
+					"ifdef": ["_PolyLight"]
 				},
 				{
 					"name": "sltcMat",
 					"link": "_ltcMat",
-					"ifndef": ["_ifndefPolyLight"]
+					"ifdef": ["_PolyLight"]
 				},
 				{
 					"name": "sltcMag",
 					"link": "_ltcMag",
-					"ifndef": ["_ifndefPolyLight"]
+					"ifdef": ["_PolyLight"]
 				},
 				{
 					"name": "eye",
