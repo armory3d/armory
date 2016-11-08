@@ -19,7 +19,7 @@ def add_rad_assets(output_file_rad, rad_format, num_mips):
 def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance=True):
     if not os.path.exists('build/compiled/Assets/envmaps'):
         os.makedirs('build/compiled/Assets/envmaps')
-    
+
     base_name = image_filepath.rsplit(os.path.sep, 1)[1].rsplit('.', 1)[0] # Extract file name without extension
     
     # Assets to be generated
@@ -51,13 +51,19 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     
     generated_files = []
     output_gama_numerator = '1.0' if disable_hdr else '2.2'
-    input_file = image_filepath #'Assets/' + image_name
+    input_file = image_filepath[2:] # Remove leading //
     
     # Get input size
+    # output = subprocess.check_output([ \
+    #     kraffiti_path + \
+    #     ' from=' + input_file + \
+    #     ' donothing'], shell=True)
+
     output = subprocess.check_output([ \
-        kraffiti_path + \
-        ' from=' + input_file + \
-        ' donothing'], shell=True)
+        kraffiti_path,
+        'from=' + input_file,
+        'donothing'])
+
     # #%ix%i
     image_w = str(output).split("'")[1]
     image_w = image_w[1:]
@@ -82,22 +88,30 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     dst_face_size = str(face_size)
     
     # Generate irradiance
-    gama_options = ''
-    if disable_hdr:
-        gama_options = \
-        ' --inputGammaNumerator 2.2' + \
-        ' --inputGammaDenominator 1.0' + \
-        ' --outputGammaNumerator 1.0' + \
-        ' --outputGammaDenominator ' + output_gama_numerator
+    # gama_options = ''
+    # if disable_hdr:
+        # gama_options = \
+        # ' --inputGammaNumerator 2.2' + \
+        # ' --inputGammaDenominator 1.0' + \
+        # ' --outputGammaNumerator 1.0' + \
+        # ' --outputGammaDenominator ' + output_gama_numerator
     
     # Irradiance spherical harmonics
+    # subprocess.call([ \
+    #     cmft_path + \
+    #     ' --input ' + input_file + \
+    #     ' --filter shcoeffs' + \
+    #     #gama_options + \
+    #     ' --outputNum 1' + \
+    #     ' --output0 ' + output_file_irr], shell=True)
+
     subprocess.call([ \
-        cmft_path + \
-        ' --input ' + input_file + \
-        ' --filter shcoeffs' + \
+        cmft_path,
+        '--input', input_file,
+        '--filter', 'shcoeffs',
         #gama_options + \
-        ' --outputNum 1' + \
-        ' --output0 ' + output_file_irr], shell=True)
+        '--outputNum', '1',
+        '--output0', output_file_irr])
     
     sh_to_json(output_file_irr)
     # Non cached assets
@@ -107,39 +121,72 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     if generate_radiance == False:
         return cached_num_mips
 
-    output = subprocess.check_output([ \
-        kraffiti_path + \
-        ' from=' + input_file + \
-        ' to=' + output_file_rad + '.' + rad_format + \
-        ' format=' + rad_format + \
-        ' scale=0.5'], shell=True)
+    # output = subprocess.check_output([ \
+    #     kraffiti_path + \
+    #     ' from=' + input_file + \
+    #     ' to=' + output_file_rad + '.' + rad_format + \
+    #     ' format=' + rad_format + \
+    #     ' scale=0.5'], shell=True)
 
-    subprocess.call([ \
-        cmft_path + \
-        ' --input ' + input_file + \
-        ' --filter radiance' + \
-        ' --dstFaceSize ' + dst_face_size + \
-        ' --srcFaceSize ' + src_face_size + \
-        ' --excludeBase false' + \
-        ' --mipCount ' + str(mip_count) + \
-        ' --glossScale 7' + \
-        ' --glossBias 3' + \
-        ' --lightingModel blinnbrdf' + \
-        ' --edgeFixup none' + \
-        ' --numCpuProcessingThreads 4' + \
-        ' --useOpenCL true' + \
-        ' --clVendor anyGpuVendor' + \
-        ' --deviceType gpu' + \
-        ' --deviceIndex 0' + \
-        ' --generateMipChain false' + \
-        ' --inputGammaNumerator 2.2' + \
-        ' --inputGammaDenominator 1.0' + \
-        ' --outputGammaNumerator 1.0' + \
-        ' --outputGammaDenominator ' + output_gama_numerator + \
-        ' --outputNum 1' + \
-        ' --output0 ' + output_file_rad + \
-        ' --output0params hdr,rgbe,latlong'], shell=True)
+    output = subprocess.check_output([ \
+        kraffiti_path,
+        'from=' + input_file,
+        'to=' + output_file_rad + '.' + rad_format,
+        'format=' + rad_format,
+        'scale=0.5'])
+
+    # subprocess.call([ \
+    #     cmft_path + \
+    #     ' --input ' + input_file + \
+    #     ' --filter radiance' + \
+    #     ' --dstFaceSize ' + dst_face_size + \
+    #     ' --srcFaceSize ' + src_face_size + \
+    #     ' --excludeBase false' + \
+    #     ' --mipCount ' + str(mip_count) + \
+    #     ' --glossScale 7' + \
+    #     ' --glossBias 3' + \
+    #     ' --lightingModel blinnbrdf' + \
+    #     ' --edgeFixup none' + \
+    #     ' --numCpuProcessingThreads 4' + \
+    #     ' --useOpenCL true' + \
+    #     ' --clVendor anyGpuVendor' + \
+    #     ' --deviceType gpu' + \
+    #     ' --deviceIndex 0' + \
+    #     ' --generateMipChain true' + \
+    #     ' --inputGammaNumerator 2.2' + \
+    #     ' --inputGammaDenominator 1.0' + \
+    #     ' --outputGammaNumerator 1.0' + \
+    #     ' --outputGammaDenominator ' + output_gama_numerator + \
+    #     ' --outputNum 1' + \
+    #     ' --output0 ' + output_file_rad + \
+    #     ' --output0params hdr,rgbe,latlong'], shell=True)
     
+    subprocess.call([ \
+        cmft_path,
+        '--input', input_file,
+        '--filter radiance',
+        '--dstFaceSize', dst_face_size,
+        '--srcFaceSize', src_face_size,
+        '--excludeBase', 'false',
+        '--mipCount', str(mip_count),
+        '--glossScale', '7',
+        '--glossBias', '3',
+        '--lightingModel', 'blinnbrdf',
+        '--edgeFixup', 'none',
+        '--numCpuProcessingThreads', '4',
+        '--useOpenCL', 'true',
+        '--clVendor', 'anyGpuVendor',
+        '--deviceType', 'gpu',
+        '--deviceIndex', '0',
+        '--generateMipChain', 'true',
+        '--inputGammaNumerator', '2.2',
+        '--inputGammaDenominator', '1.0',
+        '--outputGammaNumerator', '1.0',
+        '--outputGammaDenominator', output_gama_numerator,
+        '--outputNum', '1',
+        '--output0', output_file_rad,
+        '--output0params', 'hdr,rgbe,latlong'])
+
     # Remove size extensions in file name
     mip_w = int(face_size * 4)
     mip_h = int(face_size * 2)
@@ -161,23 +208,34 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     # Convert to jpgs
     if disable_hdr is True:
         for f in generated_files:
+            # subprocess.call([ \
+            #     kraffiti_path + \
+            #     ' from=' + f + '.hdr' + \
+            #     ' to=' + f + '.jpg' + \
+            #     ' format=jpg'], shell=True)
             subprocess.call([ \
-                kraffiti_path + \
-                ' from=' + f + '.hdr' + \
-                ' to=' + f + '.jpg' + \
-                ' format=jpg'], shell=True)
+                kraffiti_path,
+                'from=' + f + '.hdr',
+                'to=' + f + '.jpg',
+                'format=jpg'])
             os.remove(f + '.hdr')
     
     # Scale from (32x16 to 1x1>
     for i in range (0, 5):
         last = generated_files[-1]
         out = output_file_rad + '_' + str(mip_count + i)
+        # subprocess.call([ \
+        #         kraffiti_path + \
+        #         ' from=' + last + '.' + rad_format + \
+        #         ' to=' + out + '.' + rad_format + \
+        #         ' scale=0.5' + \
+        #         ' format=' + rad_format], shell=True)
         subprocess.call([ \
-                kraffiti_path + \
-                ' from=' + last + '.' + rad_format + \
-                ' to=' + out + '.' + rad_format + \
-                ' scale=0.5' + \
-                ' format=' + rad_format], shell=True)
+                kraffiti_path,
+                'from=' + last + '.' + rad_format,
+                'to=' + out + '.' + rad_format,
+                'scale=0.5',
+                'format=' + rad_format], shell=True)
         generated_files.append(out)
     
     mip_count += 5
