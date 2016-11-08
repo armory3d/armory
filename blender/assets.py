@@ -76,3 +76,8 @@ def invalidate_mesh_data(self, context):
     fp = armutils.get_fp()
     if os.path.isdir(fp + '/build/compiled/Assets/meshes'):
         shutil.rmtree(fp + '/build/compiled/Assets/meshes')
+
+def invalidate_envmap_data(self, context):
+    fp = armutils.get_fp()
+    if os.path.isdir(fp + '/build/compiled/Assets/envmaps'):
+        shutil.rmtree(fp + '/build/compiled/Assets/envmaps')

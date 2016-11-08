@@ -11,6 +11,7 @@ import make_utils
 import make_state as state
 import assets
 import log
+import webbrowser
 
 # Menu in object region
 class ObjectPropsPanel(bpy.types.Panel):
@@ -316,6 +317,7 @@ class WorldPropsPanel(bpy.types.Panel):
         layout = self.layout
         # wrd = bpy.context.world
         wrd = bpy.data.worlds['Arm']
+        
         layout.prop(wrd, 'generate_shadows')
         if wrd.generate_shadows:
             layout.prop(wrd, 'generate_pcss')
@@ -323,54 +325,13 @@ class WorldPropsPanel(bpy.types.Panel):
                 layout.prop(wrd, 'generate_pcss_rings')
         layout.prop(wrd, 'generate_radiance')
         if wrd.generate_radiance:
+            layout.prop(wrd, 'generate_radiance_size')
+
             layout.prop(wrd, 'generate_radiance_sky')
             if wrd.generate_radiance_sky:
                 layout.prop(wrd, 'generate_radiance_sky_type')
-        layout.prop(wrd, 'generate_clouds')
-        if wrd.generate_clouds:
-            layout.prop(wrd, 'generate_clouds_density')
-            layout.prop(wrd, 'generate_clouds_size')
-            layout.prop(wrd, 'generate_clouds_lower')
-            layout.prop(wrd, 'generate_clouds_upper')
-            layout.prop(wrd, 'generate_clouds_wind')
-            layout.prop(wrd, 'generate_clouds_secondary')
-            layout.prop(wrd, 'generate_clouds_precipitation')
-            layout.prop(wrd, 'generate_clouds_eccentricity')
-        
-        layout.label('Screen-Space Ambient Occlusion')
-        # layout.prop(wrd, 'generate_ssao')
-        # if wrd.generate_ssao:
-        layout.prop(wrd, 'generate_ssao_size')
-        layout.prop(wrd, 'generate_ssao_strength')
-        layout.prop(wrd, 'generate_ssao_texture_scale')
-        
-        layout.label('Bloom')
-        # layout.prop(wrd, 'generate_bloom')
-        # if wrd.generate_bloom:
-        layout.prop(wrd, 'generate_bloom_treshold')
-        layout.prop(wrd, 'generate_bloom_strength')
-        layout.prop(wrd, 'generate_bloom_radius')
-        
-        layout.label('Motion Blur')
-        # layout.prop(wrd, 'generate_motion_blur')
-        # if wrd.generate_motion_blur:
-        layout.prop(wrd, 'generate_motion_blur_intensity')
-        
-        layout.label('Screen-Space Reflections')
-        # layout.prop(wrd, 'generate_ssr')
-        # if wrd.generate_ssr:
-        layout.prop(wrd, 'generate_ssr_ray_step')
-        layout.prop(wrd, 'generate_ssr_min_ray_step')
-        layout.prop(wrd, 'generate_ssr_search_dist')
-        layout.prop(wrd, 'generate_ssr_falloff_exp')
-        layout.prop(wrd, 'generate_ssr_jitter')
-        layout.prop(wrd, 'generate_ssr_texture_scale')
 
-        layout.label('Volumetric Light')
-        # layout.prop(wrd, 'generate_volumetric_light')
-        # if wrd.generate_volumetric_light:
-        layout.prop(wrd, 'generate_volumetric_light_air_turbidity')
-        layout.prop(wrd, 'generate_volumetric_light_air_color')
+        layout.separator()
 
         layout.label('Compositor')
         layout.prop(wrd, 'generate_letterbox')
@@ -393,6 +354,55 @@ class WorldPropsPanel(bpy.types.Panel):
         layout.prop(wrd, 'voxelgi')
         if wrd.voxelgi:
             layout.prop(wrd, 'voxelgi_dimensions')
+
+        layout.prop(wrd, 'arm_world_advanced')
+        if wrd.arm_world_advanced:
+            
+            layout.prop(wrd, 'generate_clouds')
+            if wrd.generate_clouds:
+                layout.prop(wrd, 'generate_clouds_density')
+                layout.prop(wrd, 'generate_clouds_size')
+                layout.prop(wrd, 'generate_clouds_lower')
+                layout.prop(wrd, 'generate_clouds_upper')
+                layout.prop(wrd, 'generate_clouds_wind')
+                layout.prop(wrd, 'generate_clouds_secondary')
+                layout.prop(wrd, 'generate_clouds_precipitation')
+                layout.prop(wrd, 'generate_clouds_eccentricity')
+            
+            layout.label('Screen-Space Ambient Occlusion')
+            # layout.prop(wrd, 'generate_ssao')
+            # if wrd.generate_ssao:
+            layout.prop(wrd, 'generate_ssao_size')
+            layout.prop(wrd, 'generate_ssao_strength')
+            layout.prop(wrd, 'generate_ssao_texture_scale')
+            
+            layout.label('Bloom')
+            # layout.prop(wrd, 'generate_bloom')
+            # if wrd.generate_bloom:
+            layout.prop(wrd, 'generate_bloom_treshold')
+            layout.prop(wrd, 'generate_bloom_strength')
+            layout.prop(wrd, 'generate_bloom_radius')
+            
+            layout.label('Motion Blur')
+            # layout.prop(wrd, 'generate_motion_blur')
+            # if wrd.generate_motion_blur:
+            layout.prop(wrd, 'generate_motion_blur_intensity')
+            
+            layout.label('Screen-Space Reflections')
+            # layout.prop(wrd, 'generate_ssr')
+            # if wrd.generate_ssr:
+            layout.prop(wrd, 'generate_ssr_ray_step')
+            layout.prop(wrd, 'generate_ssr_min_ray_step')
+            layout.prop(wrd, 'generate_ssr_search_dist')
+            layout.prop(wrd, 'generate_ssr_falloff_exp')
+            layout.prop(wrd, 'generate_ssr_jitter')
+            layout.prop(wrd, 'generate_ssr_texture_scale')
+
+            layout.label('Volumetric Light')
+            # layout.prop(wrd, 'generate_volumetric_light')
+            # if wrd.generate_volumetric_light:
+            layout.prop(wrd, 'generate_volumetric_light_air_turbidity')
+            layout.prop(wrd, 'generate_volumetric_light_air_color')
 
 class ArmoryHelpButton(bpy.types.Operator):
     '''Open a website in the web-browser'''

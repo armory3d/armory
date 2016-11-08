@@ -11,9 +11,11 @@ try:
 except ImportError:
     pass
 
+arm_ver = '16.11'
 def init_properties():
+    global arm_ver
     bpy.types.World.arm_progress = bpy.props.FloatProperty(name="Progress", description="Current build progress", default=100.0, min=0.0, max=100.0, soft_min=0.0, soft_max=100.0, subtype='PERCENTAGE', get=log.get_progress)
-    bpy.types.World.arm_version = StringProperty(name="Version", description="Armory SDK version", default="")
+    bpy.types.World.arm_version = StringProperty(name="Version", description="Armory SDK version", default=arm_ver)
     target_prop = EnumProperty(
         items = [('html5', 'HTML5', 'html5'),
                  ('windows', 'Windows', 'windows'),
@@ -121,7 +123,7 @@ def init_properties():
     bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", description="Perform frustum culling for this camera", default=True)
     bpy.types.Camera.renderpath_path = bpy.props.StringProperty(name="Render Path", description="Render path nodes used for this camera", default="deferred_path_low")
     bpy.types.Camera.renderpath_id = bpy.props.StringProperty(name="Render Path ID", description="Asset ID", default="deferred")
-	# TODO: Specify multiple material ids, merge ids from multiple cameras 
+    # TODO: Specify multiple material ids, merge ids from multiple cameras 
     bpy.types.Camera.renderpath_passes = bpy.props.StringProperty(name="Render Path Passes", description="Referenced render passes", default="")
     bpy.types.Camera.mesh_context = bpy.props.StringProperty(name="Mesh", default="mesh")
     bpy.types.Camera.mesh_context_empty = bpy.props.StringProperty(name="Mesh Empty", default="") # depthwrite
@@ -150,11 +152,17 @@ def init_properties():
     bpy.types.World.world_envtex_ground_albedo = bpy.props.FloatProperty(name="Ground Albedo", default=0.0)
     bpy.types.World.world_defs = bpy.props.StringProperty(name="World Shader Defs", default='')
     bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Probe Radiance", default=True, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_radiance_size = EnumProperty(
+        items=[('512', '512', '512'),
+               ('1024', '1024', '1024'), 
+               ('2048', '2048', '2048')],
+        name="Probe Size", description="Prefiltered map size", default='1024', update=assets.invalidate_envmap_data)
     bpy.types.World.generate_radiance_sky = bpy.props.BoolProperty(name="Sky Radiance", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_radiance_sky_type = EnumProperty(
         items=[('Fake', 'Fake', 'Fake'), 
                ('Hosek', 'Hosek', 'Hosek')],
         name="Type", description="Prefiltered maps to be used for radiance.", default='Fake')
+    bpy.types.World.arm_world_advanced = bpy.props.BoolProperty(name="Effects", default=False)
     bpy.types.World.generate_clouds = bpy.props.BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_clouds_density = bpy.props.FloatProperty(name="Density", default=0.5, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_clouds_size = bpy.props.FloatProperty(name="Size", default=1.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
@@ -214,7 +222,7 @@ def init_properties():
     bpy.types.World.generate_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=84, update=assets.invalidate_shader_cache)
     # Material override flags
     bpy.types.World.force_no_culling = bpy.props.BoolProperty(name="Force No Culling", default=False)
-    bpy.types.World.force_anisotropic_filtering = bpy.props.BoolProperty(name="Force Anisotropic Filtering", default=False)
+    bpy.types.World.force_anisotropic_filtering = bpy.props.BoolProperty(name="Force Anisotropic Filtering", default=True)
     bpy.types.World.npot_texture_repeat = bpy.props.BoolProperty(name="NPoT Texture Repeat", description="Enable texture repeat mode for non-power of two textures", default=False)
     # Lighting flags
     bpy.types.World.diffuse_oren_nayar = bpy.props.BoolProperty(name="Oren Nayar Diffuse", default=False, update=assets.invalidate_shader_cache)
@@ -266,7 +274,6 @@ def init_properties():
     if not 'Arm' in bpy.data.worlds:
         wrd = bpy.data.worlds.new('Arm')
         wrd.use_fake_user = True # Store data world object, add fake user to keep it alive
-        wrd.arm_version = '16.10'
 
 def init_properties_on_save():
     wrd = bpy.data.worlds['Arm']
@@ -302,9 +309,14 @@ def init_properties_on_save():
 
         init_properties_on_load()
 
-def init_properties_on_load():    
+def init_properties_on_load():
+    global arm_ver    
     armutils.fetch_script_names()
     
+    wrd = bpy.data.worlds['Arm']
+    if wrd.arm_version != arm_ver:
+        wrd.arm_version = arm_ver
+
     # Path for embedded player
     if armutils.with_chromium():
         barmory.set_url('file://' + armutils.get_fp() + '/build/html5/index.html')
