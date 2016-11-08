@@ -312,6 +312,10 @@ def init_properties_on_save():
 
 def init_properties_on_load():
     global arm_ver    
+    
+    if not 'Arm' in bpy.data.worlds:
+        init_properties()
+
     armutils.fetch_script_names()
     
     wrd = bpy.data.worlds['Arm']
