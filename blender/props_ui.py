@@ -276,6 +276,7 @@ class MaterialPropsPanel(bpy.types.Panel):
         if mat == None:
             return
 
+        layout.prop(mat, 'cast_shadow')
         layout.prop(mat, 'receive_shadow')
         layout.prop(mat, 'overlay')
         

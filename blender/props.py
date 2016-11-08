@@ -229,6 +229,7 @@ def init_properties():
     bpy.types.World.voxelgi = bpy.props.BoolProperty(name="VGI", description="Voxel-based Global Illumination", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi_dimensions = bpy.props.FloatVectorProperty(name="Dimensions", description="3D texture size", size=3, default=[128, 128, 128], update=assets.invalidate_shader_cache)
     # For material
+    bpy.types.Material.cast_shadow = bpy.props.BoolProperty(name="Cast Shadow", default=True)
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.override_shader = bpy.props.BoolProperty(name="Override Shader", default=False)
     bpy.types.Material.override_shader_name = bpy.props.StringProperty(name="Name", default='')

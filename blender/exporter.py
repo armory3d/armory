@@ -1222,8 +1222,14 @@ class ArmoryExporter:
             o['type'] = structIdentifier[type]
             o['name'] = bobjectRef["structName"]
 
-            if bobject.hide_render or bobject.game_visible == False:
+            if bobject.hide_render or not bobject.game_visible:
                 o['visible'] = False
+
+            if not bobject.cycles_visibility.camera:
+                o['visible_mesh'] = False
+
+            if not bobject.cycles_visibility.shadow:
+                o['visible_shadow'] = False
 
             if bobject.spawn == False:
                 o['spawn'] = False
@@ -2069,6 +2075,7 @@ class ArmoryExporter:
             
             o = {}
             o['name'] = materialRef[1]["structName"]
+
             self.post_export_material(material, o)
             self.output['material_datas'].append(o)
 
@@ -2614,6 +2621,9 @@ class ArmoryExporter:
         wrd = bpy.data.worlds['Arm']
         if material.skip_context != '':
             o['skip_context'] = material.skip_context
+        elif not material.cast_shadow:
+            o['skip_context'] = ArmoryExporter.shadows_context
+        
         if material.override_cull or wrd.force_no_culling:
             o['override_context'] = {}
             if wrd.force_no_culling:
