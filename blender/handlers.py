@@ -102,12 +102,14 @@ def on_scene_update_post(context):
                     if len(ops) > 0:
                         last_operator = ops[-1]
 
-    edit_obj = bpy.context.edit_object
-    if edit_obj != None and edit_obj.is_updated_data:
-        if edit_obj.type == 'MESH':
-            edit_obj.data.mesh_cached = False
-        elif edit_obj.type == 'ARMATURE':
-            edit_obj.data.data_cached = False
+    # No attribute when using multiple widnows?
+    if hasattr(bpy.context, 'edit_object'):
+        edit_obj = bpy.context.edit_object
+        if edit_obj != None and edit_obj.is_updated_data:
+            if edit_obj.type == 'MESH':
+                edit_obj.data.mesh_cached = False
+            elif edit_obj.type == 'ARMATURE':
+                edit_obj.data.data_cached = False
 
     obj = bpy.context.object
     if obj != None and operators_changed:
