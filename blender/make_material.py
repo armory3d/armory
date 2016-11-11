@@ -153,21 +153,30 @@ def make_texture(self, id, image_node, material, image_format='RGBA32'):
 
         if image_format != 'RGBA32':
             tex['format'] = image_format
+        
         interpolation = image_node.interpolation
         if wrd.force_anisotropic_filtering:
             interpolation = 'Smart'
-        if interpolation == 'Cubic': # Mipmap linear
-            tex['mipmap_filter'] = 'linear'
-            tex['generate_mipmaps'] = True
-        elif interpolation == 'Smart': # Mipmap anisotropic
-            tex['min_filter'] = 'anisotropic'
-            tex['mipmap_filter'] = 'linear'
-            tex['generate_mipmaps'] = True
+        
+        # TODO: Blender seems to load full images on size request, cache size instead
+        powimage = is_pow(image.size[0]) and is_pow(image.size[1])
+
+        # Pow2 required to generate mipmaps
+        if powimage == True:
+            if interpolation == 'Cubic': # Mipmap linear
+                tex['mipmap_filter'] = 'linear'
+                tex['generate_mipmaps'] = True
+            elif interpolation == 'Smart': # Mipmap anisotropic
+                tex['min_filter'] = 'anisotropic'
+                tex['mipmap_filter'] = 'linear'
+                tex['generate_mipmaps'] = True
+        elif (image_node.interpolation == 'Cubic' or image_node.interpolation == 'Smart'):
+            log.warn(material.name + '/' + image.name + ' - power of 2 texture required for ' + image_node.interpolation + ' interpolation')
+
         if image_node.extension != 'REPEAT': # Extend or clip
             tex['u_addressing'] = 'clamp'
             tex['v_addressing'] = 'clamp'
         else:
-            powimage = is_pow(image.size[0]) and is_pow(image.size[1])
             if wrd.npot_texture_repeat == False and powimage == False:
                 print('Armory Warning: ' + material.name + '/' + image.name + ' - non power of 2 texture can not use repeat mode')
                 tex['u_addressing'] = 'clamp'

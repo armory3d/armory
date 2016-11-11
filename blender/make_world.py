@@ -144,6 +144,8 @@ def parse_color(world, node, context, envmap_strength_const):
         tex = {}
         context['bind_textures'].append(tex)
         tex['name'] = 'envmap'
+        tex['u_addressing'] = 'clamp'
+        tex['v_addressing'] = 'clamp'
         
         image = node.image
         filepath = image.filepath
