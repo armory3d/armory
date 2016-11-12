@@ -130,7 +130,8 @@ class Main {
 
         f.write("""
                 iron.Scene.setActive(projectScene, function(object:iron.object.Object) {""")
-        if armutils.with_chromium() and in_viewport and is_play:
+        # if armutils.with_chromium() and in_viewport and is_play:
+        if is_play:
             f.write("""
                     object.addTrait(new armory.trait.internal.EditorSpace());""")
         f.write("""

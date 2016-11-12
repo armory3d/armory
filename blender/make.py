@@ -270,7 +270,7 @@ def watch_play():
             msg = str(line).split('"', 1) # Extract message
             if len(msg) > 1:
                 trace = msg[1].rsplit('"', 1)[0]
-                log.print_info(trace)
+                log.electron_trace(trace)
             line = b''
         else:
             line += char
@@ -461,3 +461,7 @@ def publish_project():
     threading.Timer(0.1, watch_compile, ['publish']).start()
     bpy.data.worlds['Arm'].arm_minimize = minimize
     assets.invalidate_enabled = True
+
+def get_render_result():
+    with open(armutils.get_fp() + '/build/html5/render.msg', 'w') as f:
+        pass

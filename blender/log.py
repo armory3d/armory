@@ -1,6 +1,7 @@
 import props_ui
 import space_armory
 import armutils
+import bridge
 
 progress = 100.0
 tag_redraw = False
@@ -12,6 +13,13 @@ def clear():
 
 def format_text(text):
     return (text[:80] + '..') if len(text) > 80 else text # Limit str size
+
+def electron_trace(text):
+    txt = text.split(' ', 1)
+    if len(txt) > 1 and txt[1].startswith('__arm'):
+        bridge.parse_operator(text)
+    else:
+        print_info(text)
 
 def print_info(text):
     global tag_redraw

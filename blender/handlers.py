@@ -102,7 +102,7 @@ def on_scene_update_post(context):
                     if len(ops) > 0:
                         last_operator = ops[-1]
 
-    # No attribute when using multiple widnows?
+    # No attribute when using multiple windows?
     if hasattr(bpy.context, 'edit_object'):
         edit_obj = bpy.context.edit_object
         if edit_obj != None and edit_obj.is_updated_data:

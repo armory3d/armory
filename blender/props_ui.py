@@ -453,6 +453,7 @@ class ArmoryPlayPanel(bpy.types.Panel):
                 layout.prop(wrd, 'arm_play_live_patch')
                 if wrd.arm_play_live_patch:
                     layout.prop(wrd, 'arm_play_auto_build')
+            layout.operator("arm.render", icon="RENDER_STILL")
         layout.operator("arm.help")
 
 class ArmoryBuildPanel(bpy.types.Panel):
@@ -668,6 +669,18 @@ class ArmoryPublishButton(bpy.types.Operator):
 
         make.publish_project()
         self.report({'INFO'}, 'Publishing project, check console for details.')
+        return{'FINISHED'}
+
+class ArmoryRenderButton(bpy.types.Operator):
+    '''Capture Armory output as render result'''
+    bl_idname = 'arm.render'
+    bl_label = 'Render'
+ 
+    def execute(self, context):
+        if state.playproc == None:
+            self.report({"ERROR"}, "Run Armory player in window first")
+            return {"CANCELLED"}
+        make.get_render_result()
         return{'FINISHED'}
 
 # Play button in 3D View panel
