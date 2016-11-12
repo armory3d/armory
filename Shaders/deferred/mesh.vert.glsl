@@ -15,6 +15,9 @@ in vec3 nor;
 #ifdef _Tex
 	in vec2 tex;
 #endif
+#ifdef _Tex1
+	in vec2 tex1;
+#endif
 #ifdef _VCols
 	in vec3 col;
 #endif
@@ -49,6 +52,9 @@ uniform vec4 baseCol;
 out vec4 matColor;
 #ifdef _Tex
 	out vec2 texCoord;
+#endif
+#ifdef _Tex1
+	out vec2 texCoord1;
 #endif
 #ifdef _NorTex
 	out mat3 TBN;
@@ -106,6 +112,9 @@ void main() {
 
 #ifdef _Tex
 	texCoord = tex;
+#endif
+#ifdef _Tex1
+	texCoord1 = tex1;
 #endif
 
 	matColor = baseCol;

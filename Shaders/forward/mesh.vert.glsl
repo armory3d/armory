@@ -19,6 +19,9 @@ in vec3 nor;
 #ifdef _Tex
 	in vec2 tex;
 #endif
+#ifdef _Tex1
+	in vec2 tex1;
+#endif
 #ifdef _VCols
 	in vec3 col;
 #endif
@@ -55,6 +58,9 @@ uniform vec3 eye;
 out vec3 position;
 #ifdef _Tex
 	out vec2 texCoord;
+#endif
+#ifdef _Tex1
+	out vec2 texCoord1;
 #endif
 out vec4 lampPos;
 out vec4 matColor;
@@ -105,6 +111,9 @@ void main() {
 
 #ifdef _Tex
 	texCoord = tex;
+#endif
+#ifdef _Tex1
+	texCoord1 = tex1;
 #endif
 
 	matColor = baseCol;

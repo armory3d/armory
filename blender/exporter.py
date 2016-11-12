@@ -1623,11 +1623,11 @@ class ArmoryExporter:
             ta['values'] = t0data
             om['vertex_arrays'].append(ta)
             if num_uv_layers > 1:
-                ta2 = {}
-                ta2['attrib'] = "texcoord1"
-                ta2['size'] = 2
-                ta2['values'] = t1data
-                om['vertex_arrays'].append(ta2)
+                ta1 = {}
+                ta1['attrib'] = "texcoord1"
+                ta1['size'] = 2
+                ta1['values'] = t1data
+                om['vertex_arrays'].append(ta1)
         if num_colors > 0:
             ca = {}
             ca['attrib'] = "color"
@@ -1768,6 +1768,9 @@ class ArmoryExporter:
         # but the Blender API does not provide a reasonable way to retrieve the mesh at an
         # arbitrary stage in the modifier stack.
         exportMesh = bobject.to_mesh(scene, applyModifiers, "RENDER", True, False)
+
+        if len(exportMesh.uv_layers) > 2:
+            print('Armory Warning: ' + oid + ' exceeds maximum of 2 UV Maps supported')
 
         # Process meshes
         if ArmoryExporter.option_optimize_mesh:
@@ -2662,6 +2665,13 @@ class ArmoryExporter:
         # Get decal context from render paths
         decal_context = bpy.data.cameras[0].last_decal_context
         
+        # Set uv layers to support multiple texcoords
+        if material in self.materialToObjectDict:
+            mat_user = self.materialToObjectDict[material][0]
+            make_material.uvlayers = []
+            for layer in mat_user.data.uv_layers:
+                make_material.uvlayers.append(layer.name)
+
         # Parse from material output
         if decal_uv_layer == None:
             make_material.parse(self, material, c, defs)

@@ -88,6 +88,9 @@ in vec3 position;
 #ifdef _Tex
 	in vec2 texCoord;
 #endif
+#ifdef _Tex1
+	in vec2 texCoord1;
+#endif
 in vec4 lampPos;
 in vec4 matColor;
 in vec3 eyeDir;
@@ -113,7 +116,12 @@ float shadowTest(vec4 lPos) {
 void main() {
 	
 #ifdef _NorTex
-	vec3 n = (texture(snormal, texCoord).rgb * 2.0 - 1.0);
+	#ifdef _NorTex1
+	vec3 n = texture(snormal, texCoord1).rgb * 2.0 - 1.0;
+	#else
+	vec3 n = texture(snormal, texCoord).rgb * 2.0 - 1.0;
+	#endif
+
 	n = normalize(TBN * normalize(n));
 #else
 	vec3 n = normalize(normal);
@@ -141,12 +149,19 @@ void main() {
 #endif
 
 	vec3 baseColor = matColor.rgb;
+
 #ifdef _BaseTex
+	#ifdef _BaseTex1
+	vec4 texel = texture(sbase, texCoord1);
+	#else
 	vec4 texel = texture(sbase, texCoord);
+	#endif
+
 #ifdef _AlphaTest
 	if (texel.a < 0.4)
 		discard;
 #endif
+
 	texel.rgb = pow(texel.rgb, vec3(2.2));
 	baseColor *= texel.rgb;
 #endif
@@ -162,13 +177,22 @@ void main() {
 	float dotVH = dot(v, h);
 
 #ifdef _MetTex
+	#ifdef _MetTex1
+	float metalness = texture(smetal, texCoord1).r;
+	#else
 	float metalness = texture(smetal, texCoord).r;
+	#endif
 #endif
+
 	vec3 albedo = surfaceAlbedo(baseColor, metalness);
 	vec3 f0 = surfaceF0(baseColor, metalness);
 
 #ifdef _RoughTex
+	#ifdef _RoughTex1
+	float roughness = texture(srough, texCoord1).r;
+	#else
 	float roughness = texture(srough, texCoord).r;
+	#endif
 #endif
 #ifdef _RoughStr
 	roughness *= roughnessStrength;
@@ -214,7 +238,11 @@ void main() {
 	outputColor = vec4(vec3(direct * visibility + indirect), 1.0);
 	
 #ifdef _OccTex
-	vec3 occ = texture(socclusion, texCoord).rgb;
+	#ifdef _OccTex1
+	float occ = texture(socclusion, texCoord1).r;
+	#else
+	float occ = texture(socclusion, texCoord).r;
+	#endif
 	outputColor.rgb *= occ;
 #else
 	outputColor.rgb *= occlusion; 

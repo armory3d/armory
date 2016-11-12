@@ -48,6 +48,9 @@ in vec4 matColor;
 #ifdef _Tex
 	in vec2 texCoord;
 #endif
+#ifdef _Tex1
+	in vec2 texCoord1;
+#endif
 #ifdef _NorTex
 	in mat3 TBN;
 #else
@@ -77,7 +80,12 @@ float distanceBox(vec3 point, vec3 center, vec3 halfExtents) {
 void main() {
 	
 #ifdef _NorTex
-	vec3 n = (texture(snormal, texCoord).rgb * 2.0 - 1.0);
+	#ifdef _NorTex1
+	vec3 n = texture(snormal, texCoord1).rgb * 2.0 - 1.0;
+	#else
+	vec3 n = texture(snormal, texCoord).rgb * 2.0 - 1.0;
+	#endif
+
 	n = normalize(TBN * normalize(n));
 #else
 	vec3 n = normalize(normal);
@@ -87,30 +95,49 @@ void main() {
 #endif
 
 	vec3 baseColor = matColor.rgb;
+
 #ifdef _BaseTex
+	#ifdef _BaseTex1
+	vec4 texel = texture(sbase, texCoord1);
+	#else
 	vec4 texel = texture(sbase, texCoord);
+	#endif
+
 #ifdef _AlphaTest
 	if(texel.a < 0.4)
 		discard;
 #endif
+
 	texel.rgb = pow(texel.rgb, vec3(2.2)); // Variant 1
 	baseColor *= texel.rgb;
 #endif
-	// baseColor = pow(baseColor, vec3(2.2)); // Variant 2
+
 
 #ifdef _MetTex
+	#ifdef _MetTex1
+	float metalness = texture(smetal, texCoord1).r;
+	#else
 	float metalness = texture(smetal, texCoord).r;
+	#endif
 #endif
 
 #ifdef _RoughTex
+	#ifdef _RoughTex1
+	float roughness = texture(srough, texCoord1).r;
+	#else
 	float roughness = texture(srough, texCoord).r;
+	#endif
 #endif
 #ifdef _RoughStr
 	roughness *= roughnessStrength;
 #endif
 		
 #ifdef _OccTex
+	#ifdef _OccTex1
+	float occ = texture(socclusion, texCoord1).r;
+	#else
 	float occ = texture(socclusion, texCoord).r;
+	#endif
 #else
 	float occ = occlusion; 
 #endif

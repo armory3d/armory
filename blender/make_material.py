@@ -6,6 +6,9 @@ import os
 import nodes
 import log
 
+# UV Map names of current material user
+uvlayers = ['']
+
 def is_pow(num):
     return ((num & (num - 1)) == 0) and num != 0
 
@@ -423,11 +426,27 @@ def add_normal_strength(self, c, defs, f):
         const['name'] = 'normalStrength'
         const['float'] = f
 
+def parse_image_vector(node, defs, tree, def_name):
+    # Check attribute linked to image vector to figure out referenced uvmap
+    vector_input = node.inputs[0]
+    if vector_input.is_linked:
+        vector_node = nodes.find_node_by_link(tree, node, vector_input)
+        if vector_node.type == 'ATTRIBUTE':
+            if vector_node.outputs[1].is_linked:
+                # References second uv map
+                if vector_node.attribute_name == uvlayers[1]:
+                    if def_name not in defs:
+                        defs.append(def_name)
+                    if '_Tex1' not in defs:
+                        defs.append('_Tex1')
+
 def parse_base_color_socket(self, base_color_input, material, c, defs, tree, node, factor):
     if base_color_input.is_linked:
         color_node = nodes.find_node_by_link(tree, node, base_color_input)
         if color_node.type == 'TEX_IMAGE':
             add_albedo_tex(self, color_node, material, c, defs)
+            parse_image_vector(color_node, defs, tree, '_BaseTex1')
+
         elif color_node.type == 'TEX_CHECKER':
             pass
         elif color_node.type == 'ATTRIBUTE': # Assume vcols for now
@@ -455,6 +474,8 @@ def parse_metalness_socket(self, metalness_input, material, c, defs, tree, node,
     if metalness_input.is_linked:
         metalness_node = nodes.find_node_by_link(tree, node, metalness_input)
         add_metalness_tex(self, metalness_node, material, c, defs)
+        parse_image_vector(metalness_node, defs, tree, '_MetTex1')
+
     elif '_MetTex' not in defs:
         res = metalness_input.default_value
         add_metalness_const(res, c, factor, minimum_val, sqrt_val)
@@ -474,6 +495,8 @@ def parse_roughness_socket(self, roughness_input, material, c, defs, tree, node,
     if roughness_input.is_linked:
         roughness_node = nodes.find_node_by_link(tree, node, roughness_input)
         add_roughness_tex(self, roughness_node, material, c, defs)
+        parse_image_vector(roughness_node, defs, tree, '_RoughTex1')
+
     elif '_RoughTex' not in defs:
         res = parse_float_input(tree, node, roughness_input)
         add_roughness_const(res, c, factor, minimum_val, sqrt_val)
@@ -482,6 +505,7 @@ def parse_normal_map_socket(self, normal_input, material, c, defs, tree, node, f
     if normal_input.is_linked:
         normal_node = nodes.find_node_by_link(tree, node, normal_input)
         add_normal_tex(self, normal_node, material, c, defs)
+        parse_image_vector(normal_node, defs, tree, '_NorTex1')
 
 def add_occlusion_const(res, c, factor):
     if parse.const_occlusion == None:
@@ -494,6 +518,8 @@ def parse_occlusion_socket(self, occlusion_input, material, c, defs, tree, node,
     if occlusion_input.is_linked:
         occlusion_node = nodes.find_node_by_link(tree, node, occlusion_input)
         add_occlusion_tex(self, occlusion_node, material, c, defs)
+        parse_image_vector(occlusion_node, defs, tree, '_OccTex1')
+
     elif '_OccTex' not in defs:
         res = occlusion_input.default_value[0] # Take only one channel
         add_occlusion_const(res, c, factor)
@@ -502,6 +528,7 @@ def parse_height_socket(self, height_input, material, c, defs, tree, node, facto
     if height_input.is_linked:
         height_node = nodes.find_node_by_link(tree, node, height_input)
         add_height_tex(self, height_node, material, c, defs)
+        parse_image_vector(height_node, defs, tree, '_HeightTex1')
 
 def parse_pbr_group(self, material, c, defs, tree, node, factor):
     # Albedo Map
