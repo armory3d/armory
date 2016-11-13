@@ -1329,14 +1329,15 @@ class ArmoryExporter:
                     # Do not apply parent matrix
                     o['local_transform_only'] = True
 
-            if (bobject.type == "ARMATURE"):
+            if bobject.type == "ARMATURE":
                 armdata = bobject.data # Armature data
-                if (armdata):
-                    # Reference start action
-                    if bobject.edit_actions_prop:
-                        action = bpy.data.actions[bobject.start_action_name_prop]
-                    else: # Use default
-                        action = bobject.animation_data.action
+                action = None # Reference start action
+                if bobject.edit_actions_prop:
+                    action = bpy.data.actions[bobject.start_action_name_prop]
+                elif bobject.animation_data != None: # Use default
+                    action = bobject.animation_data.action
+                    
+                if armdata and action != None:
                     armatureid = armutils.safe_filename(armdata.name)
                     ext = ''
                     if self.is_compress(armdata):
