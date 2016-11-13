@@ -33,7 +33,7 @@ def on_scene_update_post(context):
         # Tag redraw if playing in space_armory
         state.last_chromium_running = state.chromium_running
         state.chromium_running = False
-        if not state.is_paused:
+        if not state.is_paused and bpy.context.screen != None:
             for area in bpy.context.screen.areas:
                 if area.type == 'VIEW_ARMORY':
                     state.chromium_running = True
@@ -57,7 +57,7 @@ def on_scene_update_post(context):
                 make.compile_project()
 
         # Check if chromium is running
-        if armutils.with_chromium():
+        if armutils.with_chromium() and bpy.context.screen != None:
             for area in bpy.context.screen.areas:
                 if area.type == 'VIEW_ARMORY':
                     # Read chromium console
@@ -70,7 +70,7 @@ def on_scene_update_post(context):
                     break
 
         # New output has been logged
-        if log.tag_redraw:
+        if log.tag_redraw and bpy.context.screen != None:
             log.tag_redraw = False
             for area in bpy.context.screen.areas:
                 if area.type == 'INFO':
@@ -78,14 +78,14 @@ def on_scene_update_post(context):
                     break
 
         # Player finished, redraw play buttons
-        if state.playproc_finished:
+        if state.playproc_finished and bpy.context.screen != None:
             state.playproc_finished = False
             for area in bpy.context.screen.areas:
                 if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
                     area.tag_redraw()
 
         # Compilation finished
-        if state.compileproc_finished:
+        if state.compileproc_finished and bpy.context.screen != None:
             state.compileproc_finished = False
             for area in bpy.context.screen.areas:
                 if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':

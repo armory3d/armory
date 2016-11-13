@@ -382,8 +382,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
             if armutils.get_os() == 'win':
                 electron_path = sdk_path + 'win32/Kode Studio.exe'
             elif armutils.get_os() == 'mac':
-                # electron_path = sdk_path + 'Kode Studio.app/Contents/MacOS/Electron'
-                electron_path = sdk_path + 'Electron.app/Contents/MacOS/Electron'
+                electron_path = sdk_path + 'Kode Studio.app/Contents/MacOS/Electron'
             else:
                 electron_path = sdk_path + 'linux64/kodestudio'
 
