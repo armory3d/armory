@@ -2,15 +2,15 @@ package armory.logicnode;
 
 class BoolNode extends Node {
 
-	public var b:Bool;
+	public var val:Bool;
 
 	public function new() {
 		super();
 	}
 
-	public static function create(_b:Bool) {
+	public static function create(b:Bool) {
 		var n = new BoolNode();
-		n.b = _b;
+		n.val = b;
 		return n;
 	}
 }

@@ -2,15 +2,15 @@ package armory.logicnode;
 
 class StringNode extends Node {
 
-	public var s:String;
+	public var val:String;
 
 	public function new() {
 		super();
 	}
 
-	public static function create(_s:String) {
+	public static function create(s:String) {
 		var n = new StringNode();
-		n.s = _s;
+		n.val = s;
 		return n;
 	}
 }

@@ -2,15 +2,15 @@ package armory.logicnode;
 
 class IntNode extends Node {
 
-	public var i:Int;
+	public var val:Int;
 
 	public function new() {
 		super();
 	}
 
-	public static function create(_i:Int) {
+	public static function create(i:Int) {
 		var n = new IntNode();
-		n.i = _i;
+		n.val = i;
 		return n;
 	}
 }

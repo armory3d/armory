@@ -28,17 +28,17 @@ class TransformNode extends Node {
 
 	public override function inputChanged() {
 		// Build matrix
-		pos.set(inputs[_position].inputs[VectorNode._x].f,
-				inputs[_position].inputs[VectorNode._y].f,
-				inputs[_position].inputs[VectorNode._z].f);
+		pos.set(inputs[_position].inputs[VectorNode._x].val,
+				inputs[_position].inputs[VectorNode._y].val,
+				inputs[_position].inputs[VectorNode._z].val);
 
-		rot.fromEuler(inputs[_rotation].inputs[VectorNode._x].f,
-					  inputs[_rotation].inputs[VectorNode._y].f,
-					  inputs[_rotation].inputs[VectorNode._z].f);
+		rot.fromEuler(inputs[_rotation].inputs[VectorNode._x].val,
+					  inputs[_rotation].inputs[VectorNode._y].val,
+					  inputs[_rotation].inputs[VectorNode._z].val);
 
-		scale.set(inputs[_scale].inputs[VectorNode._x].f,
-				  inputs[_scale].inputs[VectorNode._y].f,
-				  inputs[_scale].inputs[VectorNode._z].f);
+		scale.set(inputs[_scale].inputs[VectorNode._x].val,
+				  inputs[_scale].inputs[VectorNode._y].val,
+				  inputs[_scale].inputs[VectorNode._z].val);
 
 		matrix.compose(pos, rot, scale);
 

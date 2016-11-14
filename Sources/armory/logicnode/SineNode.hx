@@ -9,7 +9,7 @@ class SineNode extends FloatNode {
 	}
 
 	public override function inputChanged() {
-		f = Math.sin(inputs[_value].f);
+		val = Math.sin(inputs[_value].val);
 
 		super.inputChanged();
 	}

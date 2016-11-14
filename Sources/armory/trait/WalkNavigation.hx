@@ -60,7 +60,7 @@ class WalkNavigation extends Trait {
 			camera.move(dir, -d);
 		}
 
-		if (Input.touch) {
+		if (Input.down) {
 			camera.rotate(Vec4.zAxis(), -Input.deltaX / 200);
 			camera.rotate(camera.right(), -Input.deltaY / 200);
 		}

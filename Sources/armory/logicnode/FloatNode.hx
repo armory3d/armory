@@ -2,15 +2,15 @@ package armory.logicnode;
 
 class FloatNode extends Node {
 
-	public var f:Float;
+	public var val:Float;
 
 	public function new() {
 		super();
 	}
 
-	public static function create(_f:Float) {
+	public static function create(f:Float) {
 		var n = new FloatNode();
-		n.f = _f;
+		n.val = f;
 		return n;
 	}
 }

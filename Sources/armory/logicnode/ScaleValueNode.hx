@@ -10,7 +10,7 @@ class ScaleValueNode extends FloatNode {
 	}
 
 	public override function inputChanged() {
-		f = inputs[_value].f * inputs[_factor].f;
+		val = inputs[_value].val * inputs[_factor].val;
 
 		super.inputChanged();
 	}

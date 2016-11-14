@@ -118,7 +118,7 @@ class PhysicsDrag extends Trait {
 			Input.occupied = false;
 		}
 
-		else if (Input.touch) {
+		else if (Input.down) {
 
 			if (pickConstraint != null) {
 				

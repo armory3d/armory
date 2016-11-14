@@ -19,44 +19,44 @@ class TimeNode extends FloatNode {
 	public override function start(executor:NodeExecutor, parent:Node = null) {
 		super.start(executor, parent);
 
-		f = inputs[_startTime].f;
+		val = inputs[_startTime].val;
 
 		executor.notifyOnNodeUpdate(update);
 	}
 
 	function update() {
 		
-		if (inputs[_enabled].b) {
-			f += iron.system.Time.delta * scale;
+		if (inputs[_enabled].val) {
+			val += iron.system.Time.delta * scale;
 
 			// Time out
 			if (inputs[_stopTime].f > 0) {
-				if (scale > 0 && f >= inputs[_stopTime].f ||
-					scale < 0 && f <= inputs[_startTime].f) {
+				if (scale > 0 && val >= inputs[_stopTime].val ||
+					scale < 0 && val <= inputs[_startTime].val) {
 					
 					// Loop
 					if (inputs[_loop].b) {
 
 						// Reflect
-						if (inputs[_reflect].b) {
+						if (inputs[_reflect].val) {
 							if (scale > 0) {
-								f = inputs[_stopTime].f;
+								f = inputs[_stopTime].val;
 							}
 							else {
-								f = inputs[_startTime].f;
+								f = inputs[_startTime].val;
 							}
 
 							scale *= -1;
 						}
 						// Reset
 						else {
-							f = inputs[_startTime].f;
+							val = inputs[_startTime].val;
 						}
 					}
 					// Stop
 					else {
-						f = inputs[_stopTime].f;
-						inputs[_enabled].b = false;
+						f = inputs[_stopTime].val;
+						inputs[_enabled].val = false;
 					}
 				}
 			}

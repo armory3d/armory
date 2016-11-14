@@ -125,6 +125,15 @@ class SetVisibleNode(Node, ArmLogicTreeNode):
         self.inputs.new('NodeSocketShader', "Target")
         self.inputs.new('NodeSocketShader', "Bool")
 
+class InputDownNode(Node, ArmLogicTreeNode):
+    '''Input state node'''
+    bl_idname = 'InputDownNodeType'
+    bl_label = 'Input Down'
+    bl_icon = 'GAME'
+
+    def init(self, context):
+        self.outputs.new('NodeSocketBool', "Bool")
+
 class GreaterThanNode(Node, ArmLogicTreeNode):
     '''Greater than node'''
     bl_idname = 'GreaterThanNodeType'
@@ -164,8 +173,6 @@ node_categories = [
     ObjectNodeCategory("LOGICTARGETNODES", "Target", items=[
         NodeItem("ThisNodeType"),
         NodeItem("PickerNodeType"),
-        NodeItem("SetTransformNodeType"),
-        NodeItem("SetVisibleNodeType"),
     ]),
     TypeNodeCategory("LOGICTYPENODES", "Type", items=[
         NodeItem("TransformNodeType"),
@@ -178,6 +185,13 @@ node_categories = [
     ]),
     LogicNodeCategory("LOGICLOGICNODES", "Logic", items=[
         NodeItem("GreaterThanNodeType"),
+    ]),
+    LogicNodeCategory("LOGICOPERATORNODES", "Operator", items=[
+        NodeItem("SetTransformNodeType"),
+        NodeItem("SetVisibleNodeType"),
+    ]),
+    LogicNodeCategory("LOGICINPUTNODES", "Input", items=[
+        NodeItem("InputDownNodeType"),
     ]),
 ]
 

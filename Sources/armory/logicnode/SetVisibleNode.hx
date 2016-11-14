@@ -13,7 +13,7 @@ class SetVisibleNode extends Node {
 
 	public override function inputChanged() {
 		if (inputs[_target].target != null) {
-			inputs[_target].target.visible = inputs[_visible].b;
+			inputs[_target].target.visible = inputs[_visible].val;
 		}
 		super.inputChanged();
 	}

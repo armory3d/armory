@@ -12,7 +12,7 @@ class GreaterThanNode extends BoolNode {
 	}
 
 	public override function inputChanged() {
-		b = inputs[_value1].f > inputs[_value2].f;
+		val = inputs[_value1].val > inputs[_value2].val;
 		super.inputChanged();
 	}
 
