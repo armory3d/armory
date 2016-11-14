@@ -7,6 +7,7 @@ import props_traits_params
 import props_traits
 import props
 import props_ui
+import gen_renderpath
 import handlers
 import space_armory
 import armutils
@@ -18,6 +19,7 @@ def register():
     props_traits_clip.register()
     props.register()
     props_ui.register()
+    gen_renderpath.register()
     handlers.register()
     nodes_logic.register()
     nodes_renderpath.register()
@@ -34,6 +36,7 @@ def unregister():
     props_traits_params.unregister()
     props_traits.unregister()
     handlers.unregister()
+    gen_renderpath.unregister()
     props_ui.unregister()
     props.unregister()
     props_traits_action.unregister()

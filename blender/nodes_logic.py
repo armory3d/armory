@@ -126,7 +126,7 @@ class SetVisibleNode(Node, ArmLogicTreeNode):
         self.inputs.new('NodeSocketShader', "Bool")
 
 class InputDownNode(Node, ArmLogicTreeNode):
-    '''Input state node'''
+    '''Input down node'''
     bl_idname = 'InputDownNodeType'
     bl_label = 'Input Down'
     bl_icon = 'GAME'

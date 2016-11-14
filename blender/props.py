@@ -141,6 +141,42 @@ def init_properties():
     bpy.types.Camera.mirror_resolution_x = bpy.props.FloatProperty(name="X", default=512.0)
     bpy.types.Camera.mirror_resolution_y = bpy.props.FloatProperty(name="Y", default=256.0)
     bpy.types.Camera.last_decal_context = bpy.props.StringProperty(name="Decal Context", default='')
+    # Render path generator
+    bpy.types.Camera.rp_renderer = EnumProperty(
+        items=[('Forward', 'Forward', 'Forward'), 
+               ('Deferred', 'Deferred', 'Deferred')],
+        name="Renderer", description="Renderer type", default='Deferred')
+    bpy.types.Camera.rp_depthprepass = bpy.props.BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=True)
+    bpy.types.Camera.rp_hdr = bpy.props.BoolProperty(name="HDR", description="Render in HDR Space", default=True)
+    bpy.types.Camera.rp_worldnodes = bpy.props.BoolProperty(name="World Nodes", description="Draw world nodes", default=True)
+    bpy.types.Camera.rp_compositornodes = bpy.props.BoolProperty(name="Compositor Nodes", description="Draw compositor nodes", default=True)
+    bpy.types.Camera.rp_shadowmap = EnumProperty(
+        items=[('None', 'None', 'None'),
+               ('512', '512', '512'),
+               ('1024', '1024', '1024'),
+               ('2048', '2048', '2048'),
+               ('4096', '4096', '4096')],
+        name="Shadow Map", description="Shadow map resolution", default='2048')
+    bpy.types.Camera.rp_supersampling = EnumProperty(
+        items=[('1X', '1X', '1X'),
+               ('2X', '2X', '2X'),
+               ('4X', '4X', '4X')],
+        name="Super Sampling", description="Screen resolution multiplier", default='1X')
+    bpy.types.Camera.rp_antialiasing = EnumProperty(
+        items=[('None', 'None', 'None'),
+               ('FXAA', 'FXAA', 'FXAA'),
+               ('SMAA', 'SMAA', 'SMAA'),
+               ('TAA', 'TAA', 'TAA')],
+        name="Anti Aliasing", description="Post-process anti aliasing technique", default='SMAA')
+    bpy.types.Camera.rp_volumetriclight = bpy.props.BoolProperty(name="Volumetric Light", description="Use volumetric lighting", default=False)
+    bpy.types.Camera.rp_ssao = bpy.props.BoolProperty(name="SSAO", description="Screen space ambient occlusion", default=True)
+    bpy.types.Camera.rp_ssr = bpy.props.BoolProperty(name="SSR", description="Screen space reflections", default=True)
+    bpy.types.Camera.rp_bloom = bpy.props.BoolProperty(name="Bloom", description="Bloom processing", default=True)
+    bpy.types.Camera.rp_motionblur = bpy.props.BoolProperty(name="Motion Blur", description="Motion blur processing", default=False)
+    bpy.types.Camera.rp_translucency = bpy.props.BoolProperty(name="Translucency", description="Order independent translucency", default=False)
+    bpy.types.Camera.rp_decals = bpy.props.BoolProperty(name="Decals", description="Render decals", default=False)
+    bpy.types.Camera.rp_overlays = bpy.props.BoolProperty(name="Overlays", description="Render overlays", default=False)
+
     # For world
     bpy.types.World.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
     bpy.types.World.world_envtex_irr_name = bpy.props.StringProperty(name="Environment Irradiance", default='')
@@ -162,7 +198,6 @@ def init_properties():
         items=[('Fake', 'Fake', 'Fake'), 
                ('Hosek', 'Hosek', 'Hosek')],
         name="Type", description="Prefiltered maps to be used for radiance.", default='Fake', update=assets.invalidate_envmap_data)
-    bpy.types.World.arm_world_advanced = bpy.props.BoolProperty(name="Effects", default=False)
     bpy.types.World.generate_clouds = bpy.props.BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_clouds_density = bpy.props.FloatProperty(name="Density", default=0.5, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_clouds_size = bpy.props.FloatProperty(name="Size", default=1.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
@@ -223,7 +258,7 @@ def init_properties():
     # Material override flags
     bpy.types.World.force_no_culling = bpy.props.BoolProperty(name="Force No Culling", default=False)
     bpy.types.World.force_anisotropic_filtering = bpy.props.BoolProperty(name="Force Anisotropic Filtering", default=True)
-    bpy.types.World.npot_texture_repeat = bpy.props.BoolProperty(name="NPoT Texture Repeat", description="Enable texture repeat mode for non-power of two textures", default=False)
+    bpy.types.World.npot_texture_repeat = bpy.props.BoolProperty(name="Non-Power of 2 Texture Repeat", description="Enable texture repeat mode for non-power of two textures", default=False)
     # Lighting flags
     bpy.types.World.diffuse_oren_nayar = bpy.props.BoolProperty(name="Oren Nayar Diffuse", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi = bpy.props.BoolProperty(name="VGI", description="Voxel-based Global Illumination", default=False, update=assets.invalidate_shader_cache)
