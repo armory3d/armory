@@ -114,7 +114,7 @@ class EditorSpace extends Trait {
 		// }
 	}
 
-#if (js) // && sys_webgl)
+#if (js && webgl)
 	public static function getRenderResult():js.html.Uint8Array {
 		var gl = kha.SystemImpl.gl;
 		var w = gl.drawingBufferWidth;
@@ -129,9 +129,7 @@ class EditorSpace extends Trait {
 		// writer.write(pngdata);
 		// return output.getBytes();
 	}
-#end
-
-#if js
+	
 	function electronRenderCapture() {
 		var electron = untyped __js__('window && window.process && window.process.versions["electron"]');
 		if (electron) {
