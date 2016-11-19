@@ -1,6 +1,5 @@
 # Translating operators from/to Armory player
 import bpy
-import numpy
 import armutils
 try:
     import barmory
@@ -32,6 +31,7 @@ def parse_operator(text):
                 bpy.context.scene.objects[cmd[2]].select = True
                 bpy.context.scene.objects.active = bpy.context.scene.objects[cmd[2]]
             elif cmd[1] == 'render':
+                import numpy
                 data = numpy.fromfile(armutils.get_fp() + '/build/html5/render.bin', dtype=numpy.uint8)
                 data = data.astype(float)
                 data = numpy.divide(data, 255)
