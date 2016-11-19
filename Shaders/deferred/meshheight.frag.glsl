@@ -94,6 +94,8 @@ void main() {
 	n /= (abs(n.x) + abs(n.y) + abs(n.z));
     n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);
 
-	fragColor[0] = vec4(n.xy, packFloat(metalness, roughness), mask);
+	// fragColor[0] = vec4(n.xy, packFloat(metalness, roughness), mask);
+	// TODO: Can not read and test depth buffer at once, fetch depth from g0
+	fragColor[0] = vec4(n.xy, packFloat(metalness, roughness), 1.0 - gl_FragCoord.z);
 	fragColor[1] = vec4(baseColor.rgb, occ);
 }

@@ -45,7 +45,7 @@ class EditorSpace extends Trait {
 			first = false;
 			kha.input.Keyboard.get().notify(onKeyDown, onKeyUp);
 
-#if js
+#if (js && webgl)
 			electronRenderCapture();
 #end
 		}

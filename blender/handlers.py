@@ -31,20 +31,20 @@ def on_scene_update_post(context):
         last_time = time.time()
 
         # Tag redraw if playing in space_armory
-        state.last_chromium_running = state.chromium_running
+        # state.last_chromium_running = state.chromium_running
         state.chromium_running = False
         if not state.is_paused and bpy.context.screen != None:
             for area in bpy.context.screen.areas:
                 if area.type == 'VIEW_ARMORY':
                     state.chromium_running = True
-                    barmory.draw()
-                    if armutils.get_os() == 'linux':
-                        area.tag_redraw()
+                    # barmory.draw()
+                    # if armutils.get_os() == 'linux':
+                    area.tag_redraw()
 
         # Have to update chromium one more time before exit, to prevent 'AudioSyncReader::Read timed out' warnings
-        if state.chromium_running == False:
-            if state.last_chromium_running:
-                barmory.draw()
+        # if state.chromium_running == False:
+            # if state.last_chromium_running:
+                # barmory.draw()
 
         # Auto patch on every operator change
         if state.chromium_running and \

@@ -410,7 +410,7 @@ def add_height_strength(self, c, f):
     const = {}
     c['bind_constants'].append(const)
     const['name'] = 'heightStrength'
-    const['float'] = f
+    const['float'] = f / 10 # 1.0 = 0.1 as default
 
 def add_normal_tex(self, node, material, c, defs):
     if '_NorTex' not in defs:

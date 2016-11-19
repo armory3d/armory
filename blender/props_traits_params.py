@@ -61,6 +61,8 @@ class LIST_OT_ParamsTraitNewItem(bpy.types.Operator):
     bl_label = "Add a new item"
 
     def execute(self, context):
+        if len(context.object.my_traitlist) == 0:
+            return
         trait = context.object.my_traitlist[context.object.traitlist_index]
         trait.my_paramstraitlist.add()
         trait.paramstraitlist_index = len(trait.my_paramstraitlist) - 1
@@ -75,10 +77,14 @@ class LIST_OT_ParamsTraitDeleteItem(bpy.types.Operator):
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list """
+        if len(context.object.my_traitlist) == 0:
+            return False
         trait = context.object.my_traitlist[context.object.traitlist_index]
         return len(trait.my_paramstraitlist) > 0
 
     def execute(self, context):
+        if len(context.object.my_traitlist) == 0:
+            return
         trait = context.object.my_traitlist[context.object.traitlist_index]
         list = trait.my_paramstraitlist
         index = trait.paramstraitlist_index
@@ -104,12 +110,16 @@ class LIST_OT_ParamsTraitMoveItem(bpy.types.Operator):
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list. """
+        if len(context.object.my_traitlist) == 0:
+            return False
         trait = context.object.my_traitlist[context.object.traitlist_index]
         return len(trait.my_paramstraitlist) > 0
 
 
     def move_index(self):
         # Move index of an item render queue while clamping it
+        if len(context.object.my_traitlist) == 0:
+            return
         trait = context.object.my_traitlist[context.object.traitlist_index]
         index = trait.paramstraitlist_index
         list_length = len(trait.my_paramstraitlist) - 1
@@ -125,6 +135,8 @@ class LIST_OT_ParamsTraitMoveItem(bpy.types.Operator):
 
 
     def execute(self, context):
+        if len(context.object.my_traitlist) == 0:
+            return
         trait = context.object.my_traitlist[context.object.traitlist_index]
         list = trait.my_paramstraitlist
         index = trait.paramstraitlist_index

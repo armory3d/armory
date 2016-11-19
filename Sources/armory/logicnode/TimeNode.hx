@@ -30,7 +30,7 @@ class TimeNode extends FloatNode {
 			val += iron.system.Time.delta * scale;
 
 			// Time out
-			if (inputs[_stopTime].f > 0) {
+			if (inputs[_stopTime].val > 0) {
 				if (scale > 0 && val >= inputs[_stopTime].val ||
 					scale < 0 && val <= inputs[_startTime].val) {
 					
@@ -40,10 +40,10 @@ class TimeNode extends FloatNode {
 						// Reflect
 						if (inputs[_reflect].val) {
 							if (scale > 0) {
-								f = inputs[_stopTime].val;
+								val = inputs[_stopTime].val;
 							}
 							else {
-								f = inputs[_startTime].val;
+								val = inputs[_startTime].val;
 							}
 
 							scale *= -1;
@@ -55,7 +55,7 @@ class TimeNode extends FloatNode {
 					}
 					// Stop
 					else {
-						f = inputs[_stopTime].val;
+						val = inputs[_stopTime].val;
 						inputs[_enabled].val = false;
 					}
 				}

@@ -22,7 +22,8 @@ def init_properties():
                  ('macos', 'MacOS', 'macos'),
                  ('linux', 'Linux', 'linux'),
                  ('ios', 'iOS', 'ios'),
-                 ('android-native', 'Android', 'android-native')],
+                 ('android-native', 'Android', 'android-native'),
+                 ('krom', 'Krom', 'krom')],
         name="Target", default='html5',
         description='Build paltform')
     bpy.types.World.arm_project_target = target_prop
@@ -59,14 +60,15 @@ def init_properties():
     bpy.types.World.arm_play_auto_build = BoolProperty(name="Auto Build", description="Rebuild scene on operator changes", default=True)
     bpy.types.World.arm_play_viewport_camera = BoolProperty(name="Viewport Camera", description="Start player at viewport camera position", default=False)
     bpy.types.World.arm_play_viewport_navigation = EnumProperty(
-        items=[('None', 'None', 'None'), 
+        items=[('None', 'None', 'None'),
                ('Walk', 'Walk', 'Walk')],
         name="Navigation", description="Enable camera controls", default='Walk')
     bpy.types.World.arm_play_console = BoolProperty(name="Debug Console", description="Show inspector in player", default=False)
     bpy.types.World.arm_play_runtime = EnumProperty(
         items=[('Electron', 'Electron', 'Electron'), 
                ('Browser', 'Browser', 'Browser'),
-               ('Native', 'Native', 'Native')],
+               ('Native', 'Native', 'Native'),
+               ('Krom', 'Krom', 'Krom')],
         name="Runtime", description="Player runtime used when launching in new window", default='Electron')
     bpy.types.World.arm_loadbar = BoolProperty(name="Load Bar", description="Show asset loading progress on published builds", default=True)
 
@@ -197,7 +199,7 @@ def init_properties():
     bpy.types.World.generate_radiance_sky_type = EnumProperty(
         items=[('Fake', 'Fake', 'Fake'), 
                ('Hosek', 'Hosek', 'Hosek')],
-        name="Type", description="Prefiltered maps to be used for radiance.", default='Fake', update=assets.invalidate_envmap_data)
+        name="Type", description="Prefiltered maps to be used for radiance", default='Fake', update=assets.invalidate_envmap_data)
     bpy.types.World.generate_clouds = bpy.props.BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_clouds_density = bpy.props.FloatProperty(name="Density", default=0.5, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_clouds_size = bpy.props.FloatProperty(name="Size", default=1.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
@@ -305,7 +307,7 @@ def init_properties():
     bpy.types.Lamp.lamp_clip_end = bpy.props.FloatProperty(name="Clip End", default=50.0)
     bpy.types.Lamp.lamp_fov = bpy.props.FloatProperty(name="Field of View", default=0.84)
     bpy.types.Lamp.lamp_shadows_bias = bpy.props.FloatProperty(name="Shadows Bias", description="Depth offset for shadow acne", default=0.0002)
-    bpy.types.Lamp.lamp_omni_shadows = bpy.props.BoolProperty(name="Omnidirectional Shadows", description="Fakes omnidirectional shadows by creating 6 directional lights. Will result in preformance loss. Usable for deferred renderers only.", default=False)
+    bpy.types.Lamp.lamp_omni_shadows = bpy.props.BoolProperty(name="Omnidirectional Shadows", description="Fakes omnidirectional shadows by creating 6 directional lights - will result in preformance loss - usable for deferred renderers only", default=False)
 
     if not 'Arm' in bpy.data.worlds:
         wrd = bpy.data.worlds.new('Arm')
