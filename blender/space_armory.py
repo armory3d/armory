@@ -18,7 +18,7 @@ class ArmorySpaceHeader(Header):
         toolsettings = context.tool_settings
 
         row = layout.row(align=True)
-        # row.template_header()
+        row.template_header()
         row.operator('arm.space_stop', icon='MESH_PLANE')
         if state.is_paused:
             row.operator('arm.space_resume', icon="PLAY")
