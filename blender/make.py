@@ -50,7 +50,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     make_logic.build_node_trees()
     active_worlds = set()
     for scene in bpy.data.scenes:
-        if scene.game_export and scene.world != None and scene.world.name != 'Arm':
+        if scene.game_export and scene.world != None:
             active_worlds.add(scene.world)
     world_outputs = make_world.build_node_trees(active_worlds)
     make_renderpath.build_node_trees(assets_path)
