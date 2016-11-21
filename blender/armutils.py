@@ -5,6 +5,7 @@ import glob
 import lib.umsgpack
 import platform
 import zipfile
+import re
 
 def write_arm(filepath, output):
     if filepath.endswith('.zip'):
@@ -98,11 +99,16 @@ def color_to_int(val):
 def safe_filename(s):
     return s
 
+def safefilename(s):
+    for c in r'[]/\;,><&*:%=+@!#^()|?^':
+        s = s.replace(c, '-')
+    return s
+
 def safe_assetpath(s):
     return s[2:] # Remove leading '//'
 
 def extract_filename(s):
-    return s.rsplit(os.path.sep, 1)[1]
+    return os.path.basename(s)
 
 def get_render_resolution(scene_index=0):
     render = bpy.data.scenes[scene_index].render

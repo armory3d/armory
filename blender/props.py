@@ -228,7 +228,7 @@ def init_properties():
     bpy.types.World.generate_ssao_texture_scale = bpy.props.FloatProperty(name="Texture Scale", default=1.0, min=0.0, max=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_shadows = bpy.props.BoolProperty(name="Shadows", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_bloom = bpy.props.BoolProperty(name="Bloom", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_bloom_treshold = bpy.props.FloatProperty(name="Treshold", default=20.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_bloom_threshold = bpy.props.FloatProperty(name="Threshold", default=20.0, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_bloom_strength = bpy.props.FloatProperty(name="Strength", default=0.5, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_bloom_radius = bpy.props.FloatProperty(name="Radius", default=0.5, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_motion_blur = bpy.props.BoolProperty(name="Motion Blur", default=True, update=assets.invalidate_shader_cache)

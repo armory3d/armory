@@ -5,7 +5,7 @@ precision mediump float;
 #endif
 
 #include "../compiled.glsl"
-//const float bloomTreshold = 3.0;
+//const float bloomThreshold = 3.0;
 
 uniform sampler2D tex;
 uniform vec2 texStep;
@@ -23,7 +23,7 @@ void main() {
 	col /= 4.0;
 
 	float brightness = dot(col.rgb, vec3(0.2126, 0.7152, 0.0722));
-	if (brightness > bloomTreshold) {
+	if (brightness > bloomThreshold) {
 		fragColor.rgb = vec3(col.rgb);
 		return;
 	}

@@ -112,7 +112,7 @@ class EffectsRPDataPropsPanel(bpy.types.Panel):
             layout.label('Bloom')
             # layout.prop(wrd, 'generate_bloom')
             # if wrd.generate_bloom:
-            layout.prop(wrd, 'generate_bloom_treshold')
+            layout.prop(wrd, 'generate_bloom_threshold')
             layout.prop(wrd, 'generate_bloom_strength')
             layout.prop(wrd, 'generate_bloom_radius')
             

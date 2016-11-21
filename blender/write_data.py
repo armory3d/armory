@@ -279,7 +279,7 @@ const float ssaoTextureScale = """ + str(round(wrd.generate_ssao_texture_scale *
 # """)
         if wrd.generate_bloom:
             f.write(
-"""const float bloomTreshold = """ + str(round(wrd.generate_bloom_treshold * 100) / 100) + """;
+"""const float bloomThreshold = """ + str(round(wrd.generate_bloom_threshold * 100) / 100) + """;
 const float bloomStrength = """ + str(round(wrd.generate_bloom_strength * 100) / 100) + """;
 const float bloomRadius = """ + str(round(wrd.generate_bloom_radius * 100) / 100) + """;
 """)

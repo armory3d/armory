@@ -2,7 +2,7 @@ uniform sampler3D voxels;
 const float voxelGridWorldSize = 150.0;
 const int voxelDimensions = 512;
 const float maxDist = 30.0;
-const float alphaTreshold = 0.95;
+const float alphaThreshold = 0.95;
 const int numCones = 6;
 vec3 coneDirections[6] = vec3[](
 	vec3(0, 1, 0),
@@ -29,7 +29,7 @@ vec4 coneTrace(vec3 posWorld, vec3 direction, vec3 norWorld, float tanHalfAngle,
 	vec3 color = vec3(0.0);
 	float alpha = 0.0;
 	occlusion = 0.0;
-	while (dist < maxDist && alpha < alphaTreshold) {
+	while (dist < maxDist && alpha < alphaThreshold) {
 		// Smallest sample diameter possible is the voxel size
 		float diameter = max(voxelWorldSize, 2.0 * tanHalfAngle * dist);
 		float lodLevel = log2(diameter / voxelWorldSize);

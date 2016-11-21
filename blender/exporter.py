@@ -181,7 +181,7 @@ class ArmoryExporter:
             k += 1
 
         count &= 7
-        if (count != 0):
+        if count != 0:
             for j in range(count - 1):
                 va += self.write_vector3d(getattr(vertex_array[k], attrib))
                 k += 1
@@ -260,8 +260,8 @@ class ArmoryExporter:
 
     def find_node(self, name):
         for bobject_ref in self.bobjectArray.items():
-            if (bobject_ref[0].name == name):
-                return (bobject_ref)
+            if bobject_ref[0].name == name:
+                return bobject_ref
         return None
 
     @staticmethod
@@ -271,34 +271,34 @@ class ArmoryExporter:
 
         for key in fcurve.keyframe_points:
             interp = key.interpolation
-            if (interp == "LINEAR"):
+            if interp == "LINEAR":
                 linear_count += 1
-            elif (interp == "BEZIER"):
+            elif interp == "BEZIER":
                 bezier_count += 1
             else:
-                return (kAnimationSampled)
+                return kAnimationSampled
 
-        if (bezier_count == 0):
-            return (kAnimationLinear)
-        elif (linear_count == 0):
-            return (kAnimationBezier)
-        return (kAnimationSampled)
+        if bezier_count == 0:
+            return kAnimationLinear
+        elif linear_count == 0:
+            return kAnimationBezier
+        return kAnimationSampled
 
     @staticmethod
     def animation_keys_different(fcurve):
         key_count = len(fcurve.keyframe_points)
-        if (key_count > 0):
+        if key_count > 0:
             key1 = fcurve.keyframe_points[0].co[1]
             for i in range(1, key_count):
                 key2 = fcurve.keyframe_points[i].co[1]
-                if (math.fabs(key2 - key1) > kExportEpsilon):
+                if math.fabs(key2 - key1) > kExportEpsilon:
                     return True
         return False
 
     @staticmethod
     def animation_tangents_nonzero(fcurve):
         key_count = len(fcurve.keyframe_points)
-        if (key_count > 0):
+        if key_count > 0:
             key = fcurve.keyframe_points[0].co[1]
             left = fcurve.keyframe_points[0].handle_left[1]
             right = fcurve.keyframe_points[0].handle_right[1]
@@ -316,7 +316,7 @@ class ArmoryExporter:
     def matrices_different(m1, m2):
         for i in range(4):
             for j in range(4):
-                if (math.fabs(m1[i][j] - m2[i][j]) > kExportEpsilon):
+                if math.fabs(m1[i][j] - m2[i][j]) > kExportEpsilon:
                     return True
         return False
 
@@ -325,7 +325,7 @@ class ArmoryExporter:
         path = "pose.bones[\"" + name + "\"]."
         curve_array = []
 
-        if (armature.animation_data):
+        if armature.animation_data:
             action = armature.animation_data.action
             if (action):
                 for fcurve in action.fcurves:
@@ -335,8 +335,8 @@ class ArmoryExporter:
 
     @staticmethod
     def animation_present(fcurve, kind):
-        if (kind != kAnimationBezier):
-            return (ArmoryExporter.animation_keys_different(fcurve))
+        if kind != kAnimationBezier:
+            return ArmoryExporter.animation_keys_different(fcurve)
         return ((ArmoryExporter.animation_keys_different(fcurve)) or (ArmoryExporter.animation_tangents_nonzero(fcurve)))
 
     @staticmethod
@@ -1094,7 +1094,7 @@ class ArmoryExporter:
             if ArmoryExporter.option_mesh_only and btype != kNodeTypeMesh:
                 return
 
-            self.bobjectArray[bobject] = {"objectType" : btype, "structName" : bobject.name}
+            self.bobjectArray[bobject] = {"objectType" : btype, "structName" : self.asset_name(bobject)}
 
             if (bobject.parent_type == "BONE"):
                 boneSubbobjectArray = self.boneParentArray.get(bobject.parent_bone)
@@ -1147,15 +1147,22 @@ class ArmoryExporter:
         if ((animation) and (poseBone)):
             self.export_bone_sampled_animation(poseBone, scene, o, action)
 
+    def asset_name(self, bdata):
+        s = bdata.name
+        # Append library name if linked
+        if bdata.library != None:
+            s += '_' + bdata.library.name
+        return s
+
     def export_material_ref(self, material, index, o):
         if material == None:
             return
-        if (not material in self.materialArray):
-            self.materialArray[material] = {"structName" : material.name}
+        if not material in self.materialArray:
+            self.materialArray[material] = {"structName" : self.asset_name(material)}
         o['material_refs'].append(self.materialArray[material]["structName"])
 
     def export_particle_system_ref(self, psys, index, o):
-        if (not psys.settings in self.particleSystemArray):
+        if not psys.settings in self.particleSystemArray:
             self.particleSystemArray[psys.settings] = {"structName" : psys.settings.name}
 
         pref = {}
@@ -1249,9 +1256,16 @@ class ArmoryExporter:
             # Export the object reference and material references.
             objref = bobject.data
             
+            # Remove unsafe chars from data names
+            safe = armutils.safefilename(objref.name)
+            if objref.name != safe:
+                objref.name = safe
+
+            objname = self.asset_name(objref)
+
             if type == kNodeTypeMesh:
                 if not objref in self.meshArray:
-                    self.meshArray[objref] = {"structName" : objref.name, "objectTable" : [bobject]}
+                    self.meshArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
                     self.meshArray[objref]["objectTable"].append(bobject)
 
@@ -1290,21 +1304,21 @@ class ArmoryExporter:
 
             elif type == kNodeTypeLamp:
                 if not objref in self.lampArray:
-                    self.lampArray[objref] = {"structName" : objref.name, "objectTable" : [bobject]}
+                    self.lampArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
                     self.lampArray[objref]["objectTable"].append(bobject)
                 o['data_ref'] = self.lampArray[objref]["structName"]
 
             elif type == kNodeTypeCamera:
                 if not objref in self.cameraArray:
-                    self.cameraArray[objref] = {"structName" : objref.name, "objectTable" : [bobject]}
+                    self.cameraArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
                     self.cameraArray[objref]["objectTable"].append(bobject)
                 o['data_ref'] = self.cameraArray[objref]["structName"]
 
             elif type == kNodeTypeSpeaker:
                 if not objref in self.speakerArray:
-                    self.speakerArray[objref] = {"structName" : objref.name, "objectTable" : [bobject]}
+                    self.speakerArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
                     self.speakerArray[objref]["objectTable"].append(bobject)
                 o['data_ref'] = self.speakerArray[objref]["structName"]
@@ -1338,7 +1352,8 @@ class ArmoryExporter:
                     action = bobject.animation_data.action
                     
                 if armdata and action != None:
-                    armatureid = armutils.safe_filename(armdata.name)
+                    armatureid = self.asset_name(armdata)
+                    armatureid = armutils.safe_filename(armatureid)
                     ext = ''
                     if self.is_compress(armdata):
                        ext = '.zip'
@@ -1700,7 +1715,7 @@ class ArmoryExporter:
             if self.object_is_mesh_cached(bobject) == True and os.path.exists(fp):
                 return
 
-        print('Exporting mesh ' + bobject.data.name)
+        print('Exporting mesh ' + self.asset_name(bobject.data))
 
         o = {}
         o['name'] = oid
