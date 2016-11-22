@@ -1257,11 +1257,12 @@ class ArmoryExporter:
             objref = bobject.data
             
             # Remove unsafe chars from data names
-            safe = armutils.safefilename(objref.name)
-            if objref.name != safe:
-                objref.name = safe
+            if objref != None:
+                safe = armutils.safefilename(objref.name)
+                if objref.name != safe:
+                    objref.name = safe
 
-            objname = self.asset_name(objref)
+                objname = self.asset_name(objref)
 
             if type == kNodeTypeMesh:
                 if not objref in self.meshArray:
