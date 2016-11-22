@@ -51,15 +51,12 @@ class EditorSpace extends Trait {
 		}
 	}
 
-	var shiftDown = false;
 	function onKeyDown(key: kha.Key, char: String) {
-		if (char == 'Z' || key == kha.Key.ESC) trace('__arm|quit');
-		else if (key == kha.Key.SHIFT) shiftDown = true;
-		else if (shiftDown && char == ' ') trace('__arm|screen_full_area'); // bpy.ops.screen.screen_full_area
+		if (key == kha.Key.ESC) trace('__arm|quit');
 	}
 
 	function onKeyUp(key: kha.Key, char: String) {
-		if (key == kha.Key.SHIFT) shiftDown = false;
+		
 	}
 
 	function update() {

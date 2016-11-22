@@ -127,11 +127,19 @@ def with_chromium():
     global chromium_found
     return chromium_found
 
+glslver = None
+def glsl_version():
+    global glslver
+    return glslver
+
 def register():
     global chromium_found
+    global glslver
     import importlib.util
     if importlib.util.find_spec('barmory') != None:
         chromium_found = True
+        import bgl
+        glslver = bgl.glGetString(bgl.GL_SHADING_LANGUAGE_VERSION).replace('.', '')
 
 def unregister():
     pass

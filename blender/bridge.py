@@ -18,12 +18,6 @@ def parse_operator(text):
         if cmd[0] == '__arm':
             if cmd[1] == 'quit':
                 bpy.ops.arm.space_stop('EXEC_DEFAULT')
-            if cmd[1] == 'screen_full_area':
-                for area in bpy.context.screen.areas:
-                    if area.type == 'VIEW_ARMORY':
-                        override = {'window': bpy.context.window, 'screen': bpy.context.screen, 'area': area, 'blend_data': bpy.context.blend_data, 'region': bpy.context.region}
-                        bpy.ops.screen.screen_full_area(override)
-                        break
             elif cmd[1] == 'setx':
                 bpy.context.scene.objects[cmd[2]].location.x = float(cmd[3])
             elif cmd[1] == 'select':

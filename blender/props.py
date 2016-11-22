@@ -359,9 +359,9 @@ def init_properties_on_load():
     if wrd.arm_version != arm_ver:
         wrd.arm_version = arm_ver
 
-    # Path for embedded player
+    # Set url for embedded player
     if armutils.with_chromium():
-        barmory.set_url('file://' + armutils.get_fp() + '/build/html5/index.html')
+        barmory.set_url(armutils.get_fp() + '/build/krom')
 
 def register():
     init_properties()
