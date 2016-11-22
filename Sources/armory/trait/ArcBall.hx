@@ -19,9 +19,9 @@ class ArcBall extends Trait {
 		if (Input.occupied) return;
 
 		if (Input.down) {
-			object.transform.rotate(new Vec4(0, 0, 1), -Input.deltaX / 100);
+			object.transform.rotate(new Vec4(0, 0, 1), -Input.movementX / 100);
 			object.transform.buildMatrix();
-			object.transform.rotate(object.transform.matrix.right(), -Input.deltaY / 100);
+			object.transform.rotate(object.transform.matrix.right(), -Input.movementY / 100);
 			object.transform.buildMatrix();
 		}
 	}

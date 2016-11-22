@@ -61,8 +61,8 @@ class WalkNavigation extends Trait {
 		}
 
 		if (Input.down) {
-			camera.rotate(Vec4.zAxis(), -Input.deltaX / 200);
-			camera.rotate(camera.right(), -Input.deltaY / 200);
+			camera.rotate(Vec4.zAxis(), -Input.movementX / 200);
+			camera.rotate(camera.right(), -Input.movementY / 200);
 		}
 	}
 

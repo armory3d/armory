@@ -33,8 +33,8 @@ class ThirdPersonController extends CameraController {
 		
 		if (Input.down) {
 			// kha.SystemImpl.lockMouse();
-			camera.transform.rotate(xVec, Input.deltaY / 250 * rotationSpeed);
-			transform.rotate(zVec, -Input.deltaX / 250 * rotationSpeed);
+			camera.transform.rotate(xVec, Input.movementY / 250 * rotationSpeed);
+			transform.rotate(zVec, -Input.movementX / 250 * rotationSpeed);
 			camera.buildMatrix();
 			body.syncTransform();
 		}
