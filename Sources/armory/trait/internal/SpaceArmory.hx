@@ -7,7 +7,7 @@ import iron.system.Input;
 import iron.math.RayCaster;
 
 @:keep
-class EditorSpace extends Trait {
+class SpaceArmory extends Trait {
 
 	var gizmo:Object;
 	var arrowX:Object;
@@ -60,7 +60,6 @@ class EditorSpace extends Trait {
 	}
 
 	function update() {
-
 		if (Input.started2) {
 			var transforms:Array<Transform> = [];
 			for (o in iron.Scene.active.meshes) transforms.push(o.transform);

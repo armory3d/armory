@@ -8,7 +8,7 @@ tag_redraw = False
 
 def clear():
     props_ui.ArmoryProjectPanel.info_text = ''
-    if armutils.with_chromium():
+    if armutils.with_krom():
         space_armory.ArmorySpaceHeader.info_text = ''
 
 def format_text(text):
@@ -28,7 +28,6 @@ def print_info(text):
     tag_redraw = True  
 
 def print_player(text):
-    print(text)
     space_armory.ArmorySpaceHeader.info_text = format_text(text)
 
 def print_progress(value):

@@ -161,7 +161,7 @@ def compile_project(target_name=None, is_publish=False, watch=False):
         for s in bpy.data.texts[cmd_text].as_string().split(' '):
             cmd.append(s)
 
-    if state.chromium_running:
+    if state.krom_running:
         if state.compileproc == None: # Already compiling
             # Patch running game, stay silent, disable krafix and haxe
             # cmd.append('--silent')
@@ -300,7 +300,7 @@ def watch_patch():
     state.compileproc_finished = True
 
 def play_project(self, in_viewport):
-    if armutils.with_chromium() and in_viewport and bpy.context.area.type == 'VIEW_3D':
+    if armutils.with_krom() and in_viewport and bpy.context.area.type == 'VIEW_3D':
         state.play_area = bpy.context.area
 
     # Build data
@@ -309,47 +309,26 @@ def play_project(self, in_viewport):
 
     wrd = bpy.data.worlds['Arm']
 
+    # Native
     if in_viewport == False and wrd.arm_play_runtime == 'Native':
         state.compileproc = compile_project(target_name='--run')
         mode = 'play'
         threading.Timer(0.1, watch_compile, [mode]).start()
-    else: # Electron, Browser
-        if in_viewport == False:
-            # Windowed player
-            x = 0
-            y = 0
-            w, h = armutils.get_render_resolution()
-            winoff = 0
-        else:
-            # Player dimensions
-            if armutils.get_os() == 'win':
-                psize = 1 # Scale in electron
-                xoff = 0
-                yoff = 6
-            elif armutils.get_os() == 'mac':
-                psize = bpy.context.user_preferences.system.pixel_size
-                xoff = 5
-                yoff = 22
-            else:
-                psize = 1
-                xoff = 0
-                yoff = 22
-
-            x = bpy.context.window.x + (bpy.context.area.x - xoff) / psize
-            y = bpy.context.window.height + 45 - (bpy.context.area.y + bpy.context.area.height) / psize
-            w = (bpy.context.area.width + xoff) / psize
-            h = (bpy.context.area.height) / psize - 25
-            winoff = bpy.context.window.y + bpy.context.window.height + yoff
-
+    # Viewport
+    elif armutils.with_krom() and in_viewport:
+        state.compileproc = compile_project(target_name='krom')
+        mode = 'play_viewport'
+        threading.Timer(0.1, watch_compile, [mode]).start()
+    # Electron, Browser
+    else:
+        x = 0
+        y = 0
+        w, h = armutils.get_render_resolution()
+        winoff = 0
         write_data.write_electronjs(x, y, w, h, winoff, in_viewport)
         write_data.write_indexhtml(w, h, in_viewport)
-
-        # Compile
         state.compileproc = compile_project(target_name='html5')
-        if in_viewport:
-            mode = 'play_viewport'
-        else:
-            mode = 'play'
+        mode = 'play'
         threading.Timer(0.1, watch_compile, [mode]).start()
 
 def on_compiled(mode): # build, play, play_viewport, publish
@@ -373,8 +352,8 @@ def on_compiled(mode): # build, play, play_viewport, publish
             print('Makefiles are located in ' + files_path + '-build')
         return
 
-    # Launch project in new window or frameless electron
-    elif (mode =='play') or (mode == 'play_viewport' and armutils.with_chromium() == False):
+    # Launch project in new window
+    elif mode =='play':
         wrd = bpy.data.worlds['Arm']
         if wrd.arm_play_runtime == 'Electron':
             electron_app_path = './build/electron.js'

@@ -60,9 +60,9 @@ class ArmorySpaceResumeButton(bpy.types.Operator):
         return{'FINISHED'}
 
 def register():
-    if armutils.with_chromium():
+    if armutils.with_krom():
         bpy.utils.register_module(__name__)
 
 def unregister():
-    if armutils.with_chromium():
+    if armutils.with_krom():
         bpy.utils.unregister_module(__name__)

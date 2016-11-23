@@ -368,7 +368,7 @@ class ArmoryPlayPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_play_advanced')
         if wrd.arm_play_advanced:
             layout.prop(wrd, 'arm_play_console')
-            if armutils.with_chromium():
+            if armutils.with_krom():
                 layout.prop(wrd, 'arm_play_live_patch')
                 if wrd.arm_play_live_patch:
                     layout.prop(wrd, 'arm_play_auto_build')
@@ -385,7 +385,7 @@ class ArmoryBuildPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds['Arm']
-        if state.playproc == None and state.chromium_running == False:
+        if state.playproc == None and state.krom_running == False:
             layout.operator("arm.build")
         else:
             layout.operator("arm.patch")

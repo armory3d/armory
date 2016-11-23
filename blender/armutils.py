@@ -54,7 +54,7 @@ def get_os():
 def get_sdk_path():
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
-    if with_chromium() and addon_prefs.sdk_bundled:
+    if with_krom() and addon_prefs.sdk_bundled:
         if get_os() == 'mac':
             # blender.app/Contents/MacOS/blender
             return bpy.app.binary_path[:-34] + '/armsdk/'
@@ -122,10 +122,10 @@ def get_project_scene_name():
     else:
         return safe_filename(wrd.arm_project_scene)
 
-chromium_found = False
-def with_chromium():
-    global chromium_found
-    return chromium_found
+krom_found = False
+def with_krom():
+    global krom_found
+    return krom_found
 
 glslver = None
 def glsl_version():
@@ -133,11 +133,11 @@ def glsl_version():
     return glslver
 
 def register():
-    global chromium_found
+    global krom_found
     global glslver
     import importlib.util
     if importlib.util.find_spec('barmory') != None:
-        chromium_found = True
+        krom_found = True
         import bgl
         glslver = bgl.glGetString(bgl.GL_SHADING_LANGUAGE_VERSION).replace('.', '')
 

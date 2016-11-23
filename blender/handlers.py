@@ -15,88 +15,92 @@ except ImportError:
 
 last_time = time.time()
 last_operator = None
+redraw_ui = False
+redraw_progress = False
 
 @persistent
 def on_scene_update_post(context):
     global last_time
     global last_operator
+    global redraw_ui
+    global redraw_progress
 
+    # Redraw at the start of 'next' frame
+    if redraw_ui and bpy.context.screen != None:
+        for area in bpy.context.screen.areas:
+                if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
+                    area.tag_redraw()
+        redraw_ui = False
+    if redraw_progress and bpy.context.screen != None:
+        for area in bpy.context.screen.areas:
+            if area.type == 'INFO':
+                area.tag_redraw()
+                break
+
+    # New operator
     ops = bpy.context.window_manager.operators
     operators_changed = False
     if len(ops) > 0 and last_operator != ops[-1]:
         last_operator = ops[-1]
         operators_changed = True
 
-    if time.time() - last_time >= (1 / bpy.context.scene.render.fps): # Use frame rate for update frequency for now
+    # Player running
+    state.krom_running = False
+    if not state.is_paused and bpy.context.screen != None:
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_ARMORY':
+                state.krom_running = True
+                break
+
+    # Auto patch on every operator change
+    if state.krom_running and \
+       bpy.data.worlds['Arm'].arm_play_live_patch and \
+       bpy.data.worlds['Arm'].arm_play_auto_build and \
+       operators_changed:
+        # Otherwise rebuild scene
+        if bridge.send_operator(last_operator) == False:
+            make.patch_project()
+            make.compile_project()
+
+    # Use frame rate for update frequency for now
+    if time.time() - last_time >= (1 / bpy.context.scene.render.fps):
         last_time = time.time()
 
-        # Tag redraw if playing in space_armory
-        # state.last_chromium_running = state.chromium_running
-        state.chromium_running = False
-        if not state.is_paused and bpy.context.screen != None:
-            for area in bpy.context.screen.areas:
-                if area.type == 'VIEW_ARMORY':
-                    state.chromium_running = True
-                    # barmory.draw()
-                    # if armutils.get_os() == 'linux':
-                    area.tag_redraw()
-
-        # Have to update chromium one more time before exit, to prevent 'AudioSyncReader::Read timed out' warnings
-        # if state.chromium_running == False:
-            # if state.last_chromium_running:
-                # barmory.draw()
-
-        # Auto patch on every operator change
-        if state.chromium_running and \
-           bpy.data.worlds['Arm'].arm_play_live_patch and \
-           bpy.data.worlds['Arm'].arm_play_auto_build and \
-           operators_changed:
-            # Othwerwise rebuild scene
-            if bridge.send_operator(last_operator) == False:
-                make.patch_project()
-                make.compile_project()
-
-        # Check if chromium is running
-        if armutils.with_chromium() and bpy.context.screen != None:
-            for area in bpy.context.screen.areas:
-                if area.type == 'VIEW_ARMORY':
-                    # Read chromium console
-                    if barmory.get_console_updated() == 1:
-                        log.print_player(barmory.get_console())
+        if state.krom_running:
+            # Read krom console
+            if barmory.get_console_updated() == 1:
+                log.print_player(barmory.get_console())
+            # Read operator console
+            if barmory.get_operator_updated() == 1:
+                bridge.parse_operator(barmory.get_operator())
+            # Tag redraw
+            if bpy.context.screen != None:
+                for area in bpy.context.screen.areas:
+                    if area.type == 'VIEW_ARMORY':
                         area.tag_redraw()
-                    # Read operator console
-                    if barmory.get_operator_updated() == 1:
-                        bridge.parse_operator(barmory.get_operator())
-                    break
+                        break
 
         # New output has been logged
         if log.tag_redraw and bpy.context.screen != None:
             log.tag_redraw = False
-            for area in bpy.context.screen.areas:
-                if area.type == 'INFO':
-                    area.tag_redraw()
-                    break
+            redraw_progress = True
 
         # Player finished, redraw play buttons
         if state.playproc_finished and bpy.context.screen != None:
             state.playproc_finished = False
-            for area in bpy.context.screen.areas:
-                if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
-                    area.tag_redraw()
+            redraw_ui = True
 
         # Compilation finished
         if state.compileproc_finished and bpy.context.screen != None:
             state.compileproc_finished = False
-            for area in bpy.context.screen.areas:
-                if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
-                    area.tag_redraw()
+            redraw_ui = True
             # Compilation succesfull
             if state.compileproc_success:
                 # Notify embedded player
-                if state.chromium_running:
+                if state.krom_running:
                     barmory.call_js('armory.Scene.patch();')
                 # Or switch to armory space
-                elif armutils.with_chromium() and state.in_viewport:
+                elif armutils.with_krom() and state.in_viewport:
                     state.play_area.type = 'VIEW_ARMORY'
                     # Prevent immediate operator patch
                     if len(ops) > 0:

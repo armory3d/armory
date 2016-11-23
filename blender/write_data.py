@@ -130,10 +130,10 @@ class Main {
 
         f.write("""
                 iron.Scene.setActive(projectScene, function(object:iron.object.Object) {""")
-        # if armutils.with_chromium() and in_viewport and is_play:
+        # if armutils.with_krom() and in_viewport and is_play:
         if is_play:
             f.write("""
-                    object.addTrait(new armory.trait.internal.EditorSpace());""")
+                    object.addTrait(new armory.trait.internal.SpaceArmory());""")
         f.write("""
                 });
             });
@@ -220,12 +220,6 @@ def write_indexhtml(w, h, in_viewport):
 <body>
     <canvas id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """'></canvas>
     <script src='kha.js'></script>
-""")
-        if not (armutils.with_chromium() and in_viewport):
-            f.write(
-"""    <script>document.addEventListener('keypress', e => { if (e.code == "KeyZ" && e.shiftKey) close(); });</script>
-""")
-        f.write("""
 </body>
 </html>
 """)
