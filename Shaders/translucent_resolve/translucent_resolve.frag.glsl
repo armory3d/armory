@@ -21,11 +21,12 @@ void main() {
 		discard;
 	}
 	
-	float accumA = texture(gbuffer1, texCoord).r;
-	// accum.a = texture(gbuffer1, texCoord).r;
+	accum.a = texture(gbuffer1, texCoord).r;
 	
 	// fragColor = vec4(accum.rgb / clamp(accum.a, 1e-4, 5e4), revealage);
 
-	const float epsilon = 0.00001;
-	fragColor = vec4(accum.rgb / max(accumA, epsilon), 1.0 - revealage);
+	// const float epsilon = 0.00001;
+	// fragColor = vec4(accum.rgb / max(accum.a, epsilon), 1.0 - revealage);
+	
+	fragColor = vec4(accum.rgb / clamp(accum.a, 1e-4, 5e4), 1.0 - revealage);
 }

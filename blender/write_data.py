@@ -31,6 +31,9 @@ project.addSources('Sources');
         if export_physics:
             f.write("project.addDefine('arm_physics');\n")
             f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
+            # TODO: include for js only
+            ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
+            f.write("project.addAssets('" + ammojs_path + "');\n")
 
         if dce_full:
             f.write("project.addParameter('-dce full');")
@@ -99,28 +102,15 @@ class Main {
         iron.system.CompileTime.importPackage('armory.renderpath');
         iron.system.CompileTime.importPackage('""" + wrd.arm_project_package + """');
         #if (js && arm_physics)
-        untyped __js__("
-            function loadScript(url, callback) {
-                var head = document.getElementsByTagName('head')[0];
-                var script = document.createElement('script');
-                script.type = 'text/javascript';
-                script.src = url;
-                script.onreadystatechange = callback;
-                script.onload = callback;
-                head.appendChild(script);
-            }
-        ");
-""")
-
-        f.write("""
-        untyped loadScript('ammo.js', start);
+        kha.LoaderImpl.loadBlobFromDescription({ files: ["ammo.js"] }, function(b:kha.Blob) {
+            untyped __js__("(1, eval)({0})", b.toString());
+            start();
+        });
         #else
         start();
         #end
     }
-    static function start() {""")
-
-        f.write("""
+    static function start() {
         armory.object.Uniforms.register();
         kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel}, function() {
             iron.App.init(function() {
@@ -143,7 +133,7 @@ class Main {
 """)
 
 # Write electron.js
-def write_electronjs(x, y, w, h, winoff, in_viewport):
+def write_electronjs(w, h):
     wrd = bpy.data.worlds['Arm']
     with open('build/electron.js', 'w') as f:
         f.write(
@@ -154,45 +144,11 @@ const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 let mainWindow;
 
-function createWindow () { """)
-
-        if in_viewport:
-            f.write(
-"""
-    let point = electron.screen.getCursorScreenPoint();
-    let targetDisplay = electron.screen.getDisplayNearestPoint(point);
-""")
-            if armutils.get_os() == 'mac': # Perform scale in python
-                f.write("""let scale = 1;""")
-            else:
-                f.write("""let scale = targetDisplay.scaleFactor;""")
-
-            f.write(
-"""
-    let _x = Math.floor(""" + str(int(x)) + """ / scale);
-    let _y = Math.floor(""" + str(int(y)) + """ / scale);
-    let _w = Math.floor(""" + str(int(w)) + """ / scale);
-    let _h = Math.floor(""" + str(int(h)) + """ / scale);
-    let _winoff = Math.floor(""" + str(int(winoff)) + """ / scale);
-    let offY = targetDisplay.workAreaSize.height - _winoff;
-    _x = targetDisplay.bounds.x + _x;
-    _y = targetDisplay.bounds.y + _y + offY;
-    mainWindow = new BrowserWindow({x: _x, y: _y, width: _w, height: _h, frame: false, autoHideMenuBar: true, useContentSize: true, movable: false, resizable: false, transparent: true, enableLargerThanScreen: true});
-    mainWindow.setSkipTaskbar(true);
-    mainWindow.setAlwaysOnTop(true);
-""")
-        else:
-            f.write(
-"""
+function createWindow () {
     mainWindow = new BrowserWindow({width: """ + str(int(w)) + """, height: """ + str(int(h)) + """, autoHideMenuBar: true, useContentSize: true});
-""")
-        f.write(
-"""
     mainWindow.loadURL('file://' + __dirname + '/html5/index.html');
     //mainWindow.loadURL('http://localhost:8040/build/html5/index.html');
-    mainWindow.on('closed', function() { mainWindow = null; });""")
-
-        f.write("""
+    mainWindow.on('closed', function() { mainWindow = null; });
 }
 app.on('ready', createWindow);
 app.on('window-all-closed', function () { app.quit(); });
@@ -200,7 +156,9 @@ app.on('activate', function () { if (mainWindow === null) { createWindow(); } })
 """)
 
 # Write index.html
-def write_indexhtml(w, h, in_viewport):
+def write_indexhtml(w, h):
+    if not os.path.exists('build/html5'):
+        os.makedirs('build/html5')
     with open('build/html5/index.html', 'w') as f:
         f.write(
 """<!DOCTYPE html>

@@ -606,7 +606,10 @@ class ArmoryRenderButton(bpy.types.Operator):
 def draw_view3d_header(self, context):
     layout = self.layout
     if state.playproc == None and state.compileproc == None:
-        layout.operator("arm.play_in_viewport", icon="PLAY")
+        if armutils.with_krom():
+            layout.operator("arm.play_in_viewport", icon="PLAY")
+        else:
+            layout.operator("arm.play", icon="PLAY")
     else:
         layout.operator("arm.stop", icon="MESH_PLANE")
 

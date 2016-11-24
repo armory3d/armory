@@ -78,6 +78,10 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     if bpy.data.worlds['Arm'].arm_cache_shaders == False:
         if os.path.isdir('build/html5-resources'):
             shutil.rmtree('build/html5-resources')
+        if os.path.isdir('build/krom-resources'):
+            shutil.rmtree('build/krom-resources')
+        if os.path.isdir('build/window/krom-resources'):
+            shutil.rmtree('build/window/krom-resources')
         if os.path.isdir('build/compiled/Shaders'):
             shutil.rmtree('build/compiled/Shaders')
         if os.path.isdir('build/compiled/ShaderDatas'):
@@ -116,15 +120,6 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     write_data.write_main(is_play, in_viewport, is_publish)
 
-    # Copy ammo.js if necessary
-    #if target_name == 'html5':
-    if export_physics and bpy.data.worlds['Arm'].arm_physics == 'Bullet':
-        ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
-        if not os.path.isfile('build/html5/ammo.js'):
-            shutil.copy(ammojs_path, 'build/html5')
-        if not os.path.isfile('build/debug-html5/ammo.js'):
-            shutil.copy(ammojs_path, 'build/debug-html5')
-
 def compile_project(target_name=None, is_publish=False, watch=False):
     sdk_path =  armutils.get_sdk_path()
     ffmpeg_path = armutils.get_ffmpeg_path()
@@ -154,6 +149,18 @@ def compile_project(target_name=None, is_publish=False, watch=False):
     if armutils.get_os() == 'win': # OpenGL for now
         cmd.append('-g')
         cmd.append('opengl2')
+
+    if kha_target_name == 'krom':
+        if state.in_viewport:
+            if armutils.glsl_version() >= 330:
+                cmd.append('--shaderversion')
+                cmd.append('330')
+            else:
+                cmd.append('--shaderversion')
+                cmd.append('110')
+        else:
+            cmd.append('--to')
+            cmd.append('build/window')
 
     # User defined commands
     cmd_text = wrd.arm_command_line
@@ -216,10 +223,6 @@ def build_project(is_play=False, is_publish=False, in_viewport=False):
     # Create directories
     if not os.path.exists('Sources'):
         os.makedirs('Sources')
-    if not os.path.isdir('build/html5'):
-        os.makedirs('build/html5')
-    if not os.path.isdir('build/debug-html5'):
-        os.makedirs('build/debug-html5')
 
     # Compile path tracer shaders
     if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].renderpath_path == 'pathtrace_path':
@@ -319,14 +322,17 @@ def play_project(self, in_viewport):
         state.compileproc = compile_project(target_name='krom')
         mode = 'play_viewport'
         threading.Timer(0.1, watch_compile, [mode]).start()
+    # Krom
+    elif in_viewport == False and wrd.arm_play_runtime == 'Krom':
+        w, h = armutils.get_render_resolution()
+        state.compileproc = compile_project(target_name='krom')
+        mode = 'play'
+        threading.Timer(0.1, watch_compile, [mode]).start()
     # Electron, Browser
     else:
-        x = 0
-        y = 0
         w, h = armutils.get_render_resolution()
-        winoff = 0
-        write_data.write_electronjs(x, y, w, h, winoff, in_viewport)
-        write_data.write_indexhtml(w, h, in_viewport)
+        write_data.write_electronjs(w, h)
+        write_data.write_indexhtml(w, h)
         state.compileproc = compile_project(target_name='html5')
         mode = 'play'
         threading.Timer(0.1, watch_compile, [mode]).start()
@@ -375,6 +381,15 @@ def on_compiled(mode): # build, play, play_viewport, publish
             t.start()
             html5_app_path = 'http://localhost:8040/build/html5'
             webbrowser.open(html5_app_path)
+        elif wrd.arm_play_runtime == 'Krom':
+            if armutils.get_os() == 'win':
+                krom_path = sdk_path + '/win32/resources/app/extensions/krom/Krom/win32/Krom.exe'
+            elif armutils.get_os() == 'mac':
+                krom_path = sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/krom/Krom/macos/Krom.app/Contents/MacOS/Krom'
+            else:
+                krom_path = sdk_path + '/linux64/resources/app/extensions/krom/Krom/linux/Krom'
+            state.playproc = subprocess.Popen([krom_path, armutils.get_fp() + '/build/window/krom', armutils.get_fp() + '/build/window/krom-resources'], stderr=subprocess.PIPE)
+            watch_play()
 
 def clean_cache():
     os.chdir(armutils.get_fp())
