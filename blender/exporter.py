@@ -2607,8 +2607,8 @@ class ArmoryExporter:
                 co = {}
                 co['name'] = constr.name
                 co['type'] = constr.type
-                co['target'] = constr.target.name
                 if constr.type == 'COPY_LOCATION':
+                    co['target'] = constr.target.name
                     co['use_x'] = constr.use_x
                     co['use_y'] = constr.use_y
                     co['use_z'] = constr.use_z
