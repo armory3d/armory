@@ -118,7 +118,7 @@ def on_scene_update_post(context):
     obj = bpy.context.object
     if obj != None and operators_changed:
         # Modifier was added, recache mesh
-        if ops[-1].bl_idname == 'OBJECT_OT_modifier_add':
+        if ops[-1].bl_idname == 'OBJECT_OT_modifier_add' or ops[-1].bl_idname == 'OBJECT_OT_modifier_remove':
             obj.data.mesh_cached = False
 
 @persistent
