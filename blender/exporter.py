@@ -1993,7 +1993,7 @@ class ArmoryExporter:
         o['shadows_bias'] = objref.lamp_shadows_bias
         if o['type'] == 'sun': # Scale bias for ortho light matrix
             o['shadows_bias'] *= 10.0
-        if objref.shadow_soft_size != 0.1:
+        if objtype != 'HEMI' and objref.shadow_soft_size != 0.1:
             o['lamp_size'] = objref.shadow_soft_size
 
         # Parse nodes
@@ -2347,7 +2347,7 @@ class ArmoryExporter:
 
     def get_export_tangents(self, mesh):
         for m in mesh.materials:
-            if m.export_tangents == True:
+            if m != None and m.export_tangents == True:
                 return True
         return False
 

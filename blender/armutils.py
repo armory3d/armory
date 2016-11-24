@@ -105,7 +105,7 @@ def safefilename(s):
     return s
 
 def safe_assetpath(s):
-    return s[2:] # Remove leading '//'
+    return s[2:] if s[:2] == '//' else s # Remove leading '//'
 
 def extract_filename(s):
     return os.path.basename(s)

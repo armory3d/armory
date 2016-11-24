@@ -3,6 +3,7 @@ import armutils
 import make
 import make_state as state
 import space_armory
+import nodes_renderpath
 import time
 import bridge
 import log
@@ -117,13 +118,14 @@ def on_scene_update_post(context):
 
     obj = bpy.context.object
     if obj != None and operators_changed:
-        # Modifier was added, recache mesh
+        # Modifier was added/removed, recache mesh
         if ops[-1].bl_idname == 'OBJECT_OT_modifier_add' or ops[-1].bl_idname == 'OBJECT_OT_modifier_remove':
             obj.data.mesh_cached = False
 
 @persistent
 def on_load_post(context):
     props.init_properties_on_load()
+    nodes_renderpath.reload_blend_data()
 
 @persistent
 def on_save_pre(context):

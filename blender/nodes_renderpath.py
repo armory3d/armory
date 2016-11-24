@@ -869,7 +869,6 @@ def register():
     bpy.utils.register_module(__name__)
     try:
         nodeitems_utils.register_node_categories("CG_PIPELINE_NODES", node_categories)
-        reload_blend_data()
     except:
         pass
 

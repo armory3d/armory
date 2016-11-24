@@ -138,7 +138,7 @@ def parse_color(world, node, context, envmap_strength_const):
     wrd = bpy.data.worlds['Arm']
 
     # Env map included
-    if node.type == 'TEX_ENVIRONMENT':
+    if node.type == 'TEX_ENVIRONMENT' and node.image != None:
         envmap_strength_const['float'] *= 2.0 # Match to cycles
 
         tex = {}
