@@ -22,6 +22,7 @@ class CameraController extends Trait {
 	var moveLeft = false;
 	var moveRight = false;
 	var jump = false;
+	var escape = false;
 
 	public function new() {
 		super();
@@ -43,6 +44,7 @@ class CameraController extends Trait {
 		else if (char == Keymap.backward) moveBackward = true;
 		else if (char == Keymap.left) moveLeft = true;
 		else if (char == Keymap.jump) jump = true;
+		else if (key == kha.Key.ESC) escape = true;
 	}
 
 	function onUp(key: kha.Key, char: String) {
@@ -50,6 +52,7 @@ class CameraController extends Trait {
 		else if (char == Keymap.right) moveRight = false;
 		else if (char == Keymap.backward) moveBackward = false;
 		else if (char == Keymap.left) moveLeft = false;
+		else if (key == kha.Key.ESC) escape = false;
 	}
 #end
 }
