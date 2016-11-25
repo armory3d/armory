@@ -11,7 +11,7 @@ try:
 except ImportError:
     pass
 
-arm_ver = '16.11'
+arm_ver = '16.11.1'
 def init_properties():
     global arm_ver
     bpy.types.World.arm_progress = bpy.props.FloatProperty(name="Progress", description="Current build progress", default=100.0, min=0.0, max=100.0, soft_min=0.0, soft_max=100.0, subtype='PERCENTAGE', get=log.get_progress)
@@ -356,7 +356,9 @@ def init_properties_on_load():
     armutils.fetch_script_names()
     
     wrd = bpy.data.worlds['Arm']
-    if wrd.arm_version != arm_ver:
+
+    # Outdated project
+    if int(wrd.arm_version.replace(".", "")) < int(arm_ver.replace(".", "")):
         wrd.arm_version = arm_ver
 
     # Set url for embedded player
