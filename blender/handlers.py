@@ -15,6 +15,7 @@ except ImportError:
     pass
 
 last_time = time.time()
+# last_update_time = time.time()
 last_operator = None
 redraw_ui = False
 redraw_progress = False
@@ -22,6 +23,7 @@ redraw_progress = False
 @persistent
 def on_scene_update_post(context):
     global last_time
+    # global last_update_time
     global last_operator
     global redraw_ui
     global redraw_progress
@@ -37,6 +39,7 @@ def on_scene_update_post(context):
             if area.type == 'INFO':
                 area.tag_redraw()
                 break
+        redraw_progress = False
 
     # New operator
     ops = bpy.context.window_manager.operators
