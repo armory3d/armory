@@ -387,7 +387,9 @@ def on_compiled(mode): # build, play, play_viewport, publish
             elif armutils.get_os() == 'mac':
                 krom_path = sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/krom/Krom/macos/Krom.app/Contents/MacOS/Krom'
             else:
-                krom_path = sdk_path + '/linux64/resources/app/extensions/krom/Krom/linux/Krom'
+                krom_location = sdk_path + '/linux64/resources/app/extensions/krom/Krom/linux'
+                krom_path = krom_location + '/Krom'
+                os.chdir(krom_location)
             state.playproc = subprocess.Popen([krom_path, armutils.get_fp() + '/build/window/krom', armutils.get_fp() + '/build/window/krom-resources'], stderr=subprocess.PIPE)
             watch_play()
 
