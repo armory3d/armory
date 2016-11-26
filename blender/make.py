@@ -120,7 +120,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     write_data.write_main(is_play, in_viewport, is_publish)
 
-def compile_project(target_name=None, is_publish=False, watch=False):
+def compile_project(target_name=None, is_publish=False, watch=False, patch=False):
     sdk_path =  armutils.get_sdk_path()
     ffmpeg_path = armutils.get_ffmpeg_path()
     wrd = bpy.data.worlds['Arm']
@@ -151,7 +151,7 @@ def compile_project(target_name=None, is_publish=False, watch=False):
         cmd.append('opengl2')
 
     if kha_target_name == 'krom':
-        if state.in_viewport:
+        if state.in_viewport or patch:
             if armutils.glsl_version() >= 330:
                 cmd.append('--shaderversion')
                 cmd.append('330')

@@ -64,7 +64,7 @@ def on_scene_update_post(context):
         # Otherwise rebuild scene
         if bridge.send_operator(last_operator) == False:
             make.patch_project()
-            make.compile_project()
+            make.compile_project(target_name="krom", patch=True)
 
     # Use frame rate for update frequency for now
     if time.time() - last_time >= (1 / bpy.context.scene.render.fps):
