@@ -597,7 +597,7 @@ class ArmoryRenderButton(bpy.types.Operator):
  
     def execute(self, context):
         if state.playproc == None:
-            self.report({"ERROR"}, "Run Armory player in window first")
+            self.report({"ERROR"}, "Run Armory player in electron window first")
             return {"CANCELLED"}
         make.get_render_result()
         return{'FINISHED'}

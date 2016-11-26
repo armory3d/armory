@@ -17,7 +17,7 @@ def format_text(text):
 def electron_trace(text):
     txt = text.split(' ', 1)
     if len(txt) > 1 and txt[1].startswith('__arm'):
-        bridge.parse_operator(text)
+        bridge.parse_operator(txt[1])
     else:
         print_info(text)
 
