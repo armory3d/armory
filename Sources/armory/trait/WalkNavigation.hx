@@ -75,6 +75,7 @@ class WalkNavigation extends Trait {
 	var fast = 1.0;
 	var slow = 1.0;
 	function onKeyDown(key:Key, char:String) {
+		char = char.toLowerCase();
 		if (char == Keymap.forward || key == Key.UP) moveForward = true;
 		else if (char == Keymap.backward || key == Key.DOWN) moveBackward = true;
 		else if (char == Keymap.left || key == Key.LEFT) strafeLeft = true;
@@ -86,6 +87,7 @@ class WalkNavigation extends Trait {
 	}
 
 	function onKeyUp(key:kha.Key, char:String) {
+		char = char.toLowerCase();
 		if (char == Keymap.forward || key == Key.UP) moveForward = false;
 		else if (char == Keymap.backward || key == Key.DOWN) moveBackward = false;
 		else if (char == Keymap.left || key == Key.LEFT) strafeLeft = false;

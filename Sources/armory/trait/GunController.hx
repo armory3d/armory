@@ -37,6 +37,7 @@ class GunController extends Trait {
 	}
 
 	function onDown(key: kha.Key, char: String) {
+		char = char.toLowerCase();
 		if (char == Keymap.fire) {
 			shoot();
 		}

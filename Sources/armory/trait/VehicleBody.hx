@@ -58,6 +58,7 @@ class VehicleBody extends Trait {
 	var right = false;
 	var brake = false;
 	function onKeyDown(key:kha.Key, char:String) {
+		char = char.toLowerCase();
 		if (char == Keymap.forward) forward = true;
 		else if (char == Keymap.backward) backward = true;
 		else if (char == Keymap.left) left = true;
@@ -66,6 +67,7 @@ class VehicleBody extends Trait {
 	}
 
 	function onKeyUp(key:kha.Key, char:String) {
+		char = char.toLowerCase();
 		if (char == Keymap.forward) forward = false;
 		else if (char == Keymap.backward) backward = false;
 		else if (char == Keymap.left) left = false;

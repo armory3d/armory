@@ -69,7 +69,7 @@ def init_properties():
                ('Browser', 'Browser', 'Browser'),
                ('Native', 'Native', 'Native'),
                ('Krom', 'Krom', 'Krom')],
-        name="Runtime", description="Player runtime used when launching in new window", default='Electron')
+        name="Runtime", description="Player runtime used when launching in new window", default='Krom')
     bpy.types.World.arm_loadbar = BoolProperty(name="Load Bar", description="Show asset loading progress on published builds", default=True)
 
     # For object

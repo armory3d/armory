@@ -39,6 +39,7 @@ class CameraController extends Trait {
 	}
 
 	function onDown(key: kha.Key, char: String) {
+		char = char.toLowerCase();
 		if (char == Keymap.forward) moveForward = true;
 		else if (char == Keymap.right) moveRight = true;
 		else if (char == Keymap.backward) moveBackward = true;
@@ -48,6 +49,7 @@ class CameraController extends Trait {
 	}
 
 	function onUp(key: kha.Key, char: String) {
+		char = char.toLowerCase();
 		if (char == Keymap.forward) moveForward = false;
 		else if (char == Keymap.right) moveRight = false;
 		else if (char == Keymap.backward) moveBackward = false;
