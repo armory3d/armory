@@ -139,7 +139,7 @@ def register():
     if importlib.util.find_spec('barmory') != None:
         krom_found = True
         import bgl
-        glslver = int(bgl.glGetString(bgl.GL_SHADING_LANGUAGE_VERSION).replace('.', ''))
+        glslver = int(bgl.glGetString(bgl.GL_SHADING_LANGUAGE_VERSION).split(' ', 1)[0].replace('.', ''))
 
 def unregister():
     pass
