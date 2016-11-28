@@ -169,7 +169,7 @@ class DataPropsPanel(bpy.types.Panel):
                 layout.prop(obj.data, 'mirror_resolution_y')
             layout.prop(obj.data, 'frustum_culling')
             layout.prop_search(obj.data, "renderpath_path", bpy.data, "node_groups")
-        elif obj.type == 'MESH' or obj.type == 'FONT':
+        elif obj.type == 'MESH' or obj.type == 'FONT' or obj.type == 'META':
             layout.prop(obj.data, 'dynamic_usage')
             layout.prop(obj.data, 'data_compressed')
             layout.operator("arm.invalidate_cache")

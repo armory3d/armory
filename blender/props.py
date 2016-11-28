@@ -111,6 +111,9 @@ def init_properties():
     bpy.types.Curve.mesh_cached = bpy.props.BoolProperty(name="Mesh Cached", description="No need to reexport curve data", default=False)
     bpy.types.Curve.data_compressed = bpy.props.BoolProperty(name="Compress Data", description="Pack data into zip file", default=False)
     bpy.types.Curve.dynamic_usage = bpy.props.BoolProperty(name="Dynamic Data Usage", description="Curve data can change at runtime", default=False)
+    bpy.types.MetaBall.mesh_cached = bpy.props.BoolProperty(name="Mesh Cached", description="No need to reexport metaball data", default=False)
+    bpy.types.MetaBall.data_compressed = bpy.props.BoolProperty(name="Compress Data", description="Pack data into zip file", default=False)
+    bpy.types.MetaBall.dynamic_usage = bpy.props.BoolProperty(name="Dynamic Data Usage", description="Metaball data can change at runtime", default=False)
     # For grease pencil
     bpy.types.GreasePencil.data_cached = bpy.props.BoolProperty(name="GP Cached", description="No need to reexport grease pencil data", default=False)
     bpy.types.GreasePencil.data_compressed = bpy.props.BoolProperty(name="Compress Data", description="Pack data into zip file", default=True)
