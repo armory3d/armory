@@ -52,8 +52,11 @@ class ObjectPropsPanel(bpy.types.Panel):
         
         layout.prop(wrd, 'arm_object_advanced')
         if wrd.arm_object_advanced:
+            if wrd.arm_export_hide_render == False:
+                layout.prop(obj, 'game_visible')
+            else:
+                layout.prop(obj, 'hide_render')
             layout.prop(obj, 'spawn')
-            layout.prop(obj, 'game_visible')
             layout.prop(obj, 'mobile')
             if obj.type == 'MESH':
                 layout.prop(obj, 'instanced_children')
