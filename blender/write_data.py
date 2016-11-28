@@ -33,6 +33,7 @@ project.addSources('Sources');
             f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
             # TODO: include for js only
             ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
+            ammojs_path = ammojs_path.replace('\\', '/')
             f.write("project.addAssets('" + ammojs_path + "');\n")
 
         if dce_full:
