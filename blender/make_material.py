@@ -434,7 +434,7 @@ def parse_image_vector(node, defs, tree, def_name):
         if vector_node.type == 'ATTRIBUTE':
             if vector_node.outputs[1].is_linked:
                 # References second uv map
-                if vector_node.attribute_name == uvlayers[1]:
+                if len(uvlayers) > 1 and vector_node.attribute_name == uvlayers[1]:
                     if def_name not in defs:
                         defs.append(def_name)
                     if '_Tex1' not in defs:
