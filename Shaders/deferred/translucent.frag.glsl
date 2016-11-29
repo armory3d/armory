@@ -12,9 +12,28 @@ precision mediump float;
 #include "../std/shirr.glsl"
 // shIrradiance()
 //!uniform float shirr[27];
+#ifndef _NoShadows
+	#ifdef _PCSS
+	#include "../std/shadows_pcss.glsl"
+	// PCSS()
+	#else
+	#include "../std/shadows.glsl"
+	// PCF()
+	#endif
+#endif
 
 #ifdef _BaseTex
 	uniform sampler2D sbase;
+#endif
+#ifndef _NoShadows
+	//!uniform sampler2D shadowMap;
+	#ifdef _PCSS
+	//!uniform sampler2D snoise;
+	//!uniform float lampSizeUV;
+	//!uniform float lampNear;
+	#endif
+	uniform float shadowsBias;
+	// uniform bool receiveShadow; // TODO: pass uniform from exporter
 #endif
 
 #ifdef _Rad
@@ -63,6 +82,9 @@ in vec3 position;
 #ifdef _Tex
 	in vec2 texCoord;
 #endif
+#ifndef _NoShadows
+	in vec4 lampPos;
+#endif
 in vec4 matColor;
 in vec3 eyeDir;
 #ifdef _NorTex
@@ -71,6 +93,21 @@ in vec3 eyeDir;
 	in vec3 normal;
 #endif
 out vec4[2] fragColor;
+
+#ifndef _NoShadows
+float shadowTest(vec4 lPos) {
+	lPos.xyz /= lPos.w;
+	lPos.xy = lPos.xy * 0.5 + 0.5;
+	#ifdef _PCSS
+	return PCSS(lPos.xy, lPos.z - shadowsBias);
+	#else
+	return PCF(lPos.xy, lPos.z - shadowsBias);
+	#endif
+	// return VSM(lPos.xy, lPos.z);
+	// float distanceFromLight = texture(shadowMap, lPos.xy).r * 2.0 - 1.0;
+	// return float(distanceFromLight > lPos.z - shadowsBias);
+}
+#endif
 
 void main() {
 	
@@ -93,6 +130,15 @@ void main() {
 		l = normalize(lightPos - position.xyz);
 	}
 	float dotNL = max(dot(n, l), 0.0);
+
+	float visibility = 1.0;
+#ifndef _NoShadows
+	// if (receiveShadow) {
+		if (lampPos.w > 0.0) {
+			visibility = shadowTest(lampPos);
+		}
+	// }
+#endif
 
 	vec3 baseColor = matColor.rgb;
 #ifdef _BaseTex
@@ -170,7 +216,7 @@ void main() {
 	indirect = indirect * envmapStrength;// * lightColor * lightStrength;
 
 
-	vec4 premultipliedReflect = vec4(vec3(direct + indirect * occlusion), matColor.a);
+	vec4 premultipliedReflect = vec4(vec3(direct * visibility + indirect * occlusion), matColor.a);
 #ifdef _BaseTex
 		premultipliedReflect.a *= texel.a; // Base color alpha
 #endif

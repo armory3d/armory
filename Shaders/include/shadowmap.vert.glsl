@@ -31,11 +31,14 @@ in vec3 nor;
 
 uniform mat4 LWVP;
 #ifdef _Billboard
-uniform mat4 WV;
-uniform mat4 P;
+	uniform mat4 WV;
+	uniform mat4 P;
 #endif
 #ifdef _Skinning
 	//!uniform float skinBones[skinMaxBones * 8];
+#endif
+#ifdef _Translucent
+	out vec2 texCoord;
 #endif
 
 void main() {
@@ -51,6 +54,10 @@ void main() {
 
 #ifdef _Instancing
 	sPos.xyz += off;
+#endif
+
+#ifdef _Translucent
+	texCoord = tex;
 #endif
 
 #ifdef _Billboard

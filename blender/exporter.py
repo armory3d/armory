@@ -2720,10 +2720,6 @@ class ArmoryExporter:
         # Override context
         if material.override_shader_context:
             c['name'] = material.override_shader_context_name
-        # If material has transparency switch to translucent context
-        elif '_Translucent' in defs:
-            defs.remove('_Translucent')
-            c['name'] = ArmoryExporter.translucent_context
         # If material has height map switch to tessellation displacement context
         elif '_HeightTex' in defs:
             c['name'] = ArmoryExporter.mesh_context + 'height'
@@ -2773,6 +2769,16 @@ class ArmoryExporter:
             if wrd.generate_shadows == True:
                 c2 = {}
                 c2['name'] = ArmoryExporter.shadows_context
+                
+                # Opacity for shadowmap in Translucent context
+                if '_Translucent' in defs:
+                    for bt in c['bind_textures']:
+                        if bt['name'] == 'sbase':
+                            c2['bind_textures'] = [bt]
+                            break
+                    # Switch main context to translucent
+                    c['name'] = ArmoryExporter.translucent_context
+
                 o['contexts'].append(c2)
 
         # VGI Voxels enabled, append context

@@ -44,7 +44,9 @@ uniform mat4 N;
 #endif
 uniform mat4 V;
 uniform mat4 P;
-uniform mat4 LWVP;
+#ifndef _NoShadows
+	uniform mat4 LWVP;
+#endif
 uniform vec4 baseCol;
 uniform vec3 eye;
 #ifdef _Skinning
@@ -62,7 +64,9 @@ out vec3 position;
 #ifdef _Tex1
 	out vec2 texCoord1;
 #endif
-out vec4 lampPos;
+#ifndef _NoShadows
+	out vec4 lampPos;
+#endif
 out vec4 matColor;
 out vec3 eyeDir;
 #ifdef _NorTex
@@ -89,7 +93,9 @@ void main() {
 	sPos.xyz += off;
 #endif
 
+#ifndef _NoShadows
 	lampPos = LWVP * sPos;
+#endif
 
 	mat4 WV = V * W;
 

@@ -351,6 +351,16 @@
 					"link": "_projectionMatrix"
 				},
 				{
+					"name": "LWVP",
+					"link": "_lampWorldViewProjectionMatrix",
+					"ifndef": "_NoShadows"
+				},
+				{
+					"name": "shadowsBias",
+					"link": "_lampShadowsBias",
+					"ifndef": "_NoShadows"
+				},
+				{
 					"name": "lightPos",
 					"link": "_lampPosition"
 				},

@@ -24,7 +24,8 @@
 				},
 				{
 					"name": "LWVP",
-					"link": "_lampWorldViewProjectionMatrix"
+					"link": "_lampWorldViewProjectionMatrix",
+					"ifndef": "_NoShadows"
 				},
 				{
 					"name": "lightPos",

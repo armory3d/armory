@@ -33,6 +33,9 @@ uniform mat4 W;
 uniform mat4 N;
 uniform mat4 V;
 uniform mat4 P;
+#ifndef _NoShadows
+	uniform mat4 LWVP;
+#endif
 uniform vec4 baseCol;
 uniform vec3 eye;
 #ifdef _Skinning
@@ -43,6 +46,9 @@ out vec4 wvpposition;
 out vec3 position;
 #ifdef _Tex
 	out vec2 texCoord;
+#endif
+#ifndef _NoShadows
+	out vec4 lampPos;
 #endif
 out vec4 matColor;
 out vec3 eyeDir;
@@ -68,6 +74,10 @@ void main() {
 
 #ifdef _Instancing
 	sPos.xyz += off;
+#endif
+
+#ifndef _NoShadows
+	lampPos = LWVP * sPos;
 #endif
 
 	mat4 WV = V * W;

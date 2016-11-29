@@ -102,7 +102,9 @@ in vec3 position;
 #ifdef _Tex1
 	in vec2 texCoord1;
 #endif
-in vec4 lampPos;
+#ifndef _NoShadows
+	in vec4 lampPos;
+#endif
 in vec4 matColor;
 in vec3 eyeDir;
 #ifdef _NorTex
