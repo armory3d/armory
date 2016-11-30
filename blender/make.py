@@ -195,7 +195,13 @@ def patch_project():
     os.chdir(fp)
     export_data(fp, sdk_path, is_play=True)
 
-def build_project(is_play=False, is_publish=False, in_viewport=False):
+def build_project(is_play=False, is_publish=False, in_viewport=False, target=None):
+    wrd = bpy.data.worlds['Arm']
+
+    # Set target
+    if target == None:
+        state.target = wrd.arm_project_target.lower()
+
     # Clear flag
     state.in_viewport = False
 
@@ -204,7 +210,6 @@ def build_project(is_play=False, is_publish=False, in_viewport=False):
     log.clear()
 
     # Set camera in active scene
-    wrd = bpy.data.worlds['Arm']
     active_scene = bpy.context.screen.scene if wrd.arm_play_active_scene else bpy.data.scenes[wrd.arm_project_scene]
     if active_scene.camera == None:
         for o in active_scene.objects:
@@ -249,8 +254,6 @@ def build_project(is_play=False, is_publish=False, in_viewport=False):
         if text.filepath == '' and text.name[-3:] == '.hx':
             with open('Sources/' + bpy.data.worlds['Arm'].arm_project_package + '/' + text.name, 'w') as f:
                 f.write(text.as_string())
-
-    # Save internal assets
 
     # Export data
     export_data(fp, sdk_path, is_play=is_play, is_publish=is_publish, in_viewport=in_viewport)
@@ -303,39 +306,39 @@ def watch_patch():
     state.compileproc_finished = True
 
 def play_project(self, in_viewport):
+    wrd = bpy.data.worlds['Arm']
+
+    # Store area
     if armutils.with_krom() and in_viewport and bpy.context.area.type == 'VIEW_3D':
         state.play_area = bpy.context.area
 
+    # Set target
+    if in_viewport or wrd.arm_play_runtime == 'Krom':
+        state.target = 'krom'
+    elif wrd.arm_play_runtime == 'Native':
+        state.target = 'native'
+    else:
+        state.target = 'html5'
+
     # Build data
-    build_project(is_play=True, in_viewport=in_viewport)
+    build_project(is_play=True, in_viewport=in_viewport, target=state.target)
     state.in_viewport = in_viewport
 
-    wrd = bpy.data.worlds['Arm']
-
-    # Native
-    if in_viewport == False and wrd.arm_play_runtime == 'Native':
+    # Compile
+    mode = 'play'
+    if state.target == 'native':
         state.compileproc = compile_project(target_name='--run')
-        mode = 'play'
-        threading.Timer(0.1, watch_compile, [mode]).start()
-    # Viewport
-    elif armutils.with_krom() and in_viewport:
+    elif state.target == 'krom':
+        if in_viewport:
+            mode = 'play_viewport'
         state.compileproc = compile_project(target_name='krom')
-        mode = 'play_viewport'
-        threading.Timer(0.1, watch_compile, [mode]).start()
-    # Krom
-    elif in_viewport == False and wrd.arm_play_runtime == 'Krom':
-        w, h = armutils.get_render_resolution()
-        state.compileproc = compile_project(target_name='krom')
-        mode = 'play'
-        threading.Timer(0.1, watch_compile, [mode]).start()
-    # Electron, Browser
-    else:
+    else: # Electron, Browser
         w, h = armutils.get_render_resolution()
         write_data.write_electronjs(w, h)
         write_data.write_indexhtml(w, h)
         state.compileproc = compile_project(target_name='html5')
-        mode = 'play'
-        threading.Timer(0.1, watch_compile, [mode]).start()
+
+    threading.Timer(0.1, watch_compile, [mode]).start()
 
 def on_compiled(mode): # build, play, play_viewport, publish
     log.clear()
@@ -343,7 +346,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
 
     # Print info
     if mode == 'publish':
-        target_name = make_utils.get_kha_target(bpy.data.worlds['Arm'].arm_publish_target)
+        target_name = make_utils.get_kha_target(bpy.data.worlds['Arm'].arm_project_target)
         print('Project published')
         files_path = armutils.get_fp() + '/build/' + target_name
         if target_name == 'html5':
@@ -454,7 +457,7 @@ def publish_project():
     bpy.data.worlds['Arm'].arm_minimize = True
     clean_project()
     build_project(is_publish=True)
-    state.compileproc = compile_project(target_name=bpy.data.worlds['Arm'].arm_publish_target, is_publish=True)
+    state.compileproc = compile_project(target_name=bpy.data.worlds['Arm'].arm_project_target, is_publish=True)
     threading.Timer(0.1, watch_compile, ['publish']).start()
     bpy.data.worlds['Arm'].arm_minimize = minimize
     assets.invalidate_enabled = True

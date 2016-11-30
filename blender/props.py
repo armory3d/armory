@@ -27,7 +27,6 @@ def init_properties():
         name="Target", default='html5',
         description='Build paltform')
     bpy.types.World.arm_project_target = target_prop
-    bpy.types.World.arm_publish_target = target_prop
     bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="")
     bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm")
     bpy.types.World.arm_play_active_scene = BoolProperty(name="Play Active Scene", description="Load currently edited scene when launching player", default=True)
@@ -264,6 +263,7 @@ def init_properties():
     bpy.types.World.force_no_culling = bpy.props.BoolProperty(name="Force No Culling", default=False)
     bpy.types.World.force_anisotropic_filtering = bpy.props.BoolProperty(name="Force Anisotropic Filtering", default=True)
     bpy.types.World.npot_texture_repeat = bpy.props.BoolProperty(name="Non-Power of 2 Texture Repeat", description="Enable texture repeat mode for non-power of two textures", default=False)
+    bpy.types.World.tessellation_enabled = bpy.props.BoolProperty(name="Tessellation", description="Enable tessellation for height maps on supported targets", default=True)
     # Lighting flags
     bpy.types.World.diffuse_oren_nayar = bpy.props.BoolProperty(name="Oren Nayar Diffuse", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi = bpy.props.BoolProperty(name="VGI", description="Voxel-based Global Illumination", default=False, update=assets.invalidate_shader_cache)

@@ -332,8 +332,9 @@ class WorldPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'generate_fog_amountb')
 
         layout.label('Flags')
-        layout.prop(wrd, 'force_no_culling')
+        layout.prop(wrd, 'tessellation_enabled')
         layout.prop(wrd, 'force_anisotropic_filtering')
+        layout.prop(wrd, 'force_no_culling')
         layout.prop(wrd, 'npot_texture_repeat')
         layout.prop(wrd, 'diffuse_oren_nayar')
         layout.prop(wrd, 'voxelgi')
@@ -427,7 +428,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
         layout.prop_search(wrd, 'arm_khafile', bpy.data, 'texts', 'Khafile')
         layout.prop_search(wrd, 'arm_command_line', bpy.data, 'texts', 'Command Line')
         layout.operator('arm.publish')
-        layout.prop(wrd, 'arm_publish_target')
+        layout.prop(wrd, 'arm_project_target')
 
         layout.prop(wrd, 'arm_project_advanced')
         if wrd.arm_project_advanced:

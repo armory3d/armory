@@ -2,6 +2,7 @@ import bpy
 import os
 import assets
 import armutils
+import make_state as state
 
 def add_armory_library(sdk_path, name):
     return ('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/' + name)[2:] + '");\n').replace('\\', '/')
@@ -31,10 +32,10 @@ project.addSources('Sources');
         if export_physics:
             f.write("project.addDefine('arm_physics');\n")
             f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
-            # TODO: include for js only
-            ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
-            ammojs_path = ammojs_path.replace('\\', '/')
-            f.write("project.addAssets('" + ammojs_path + "');\n")
+            if state.target == 'krom' or state.target == 'html5':
+                ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
+                ammojs_path = ammojs_path.replace('\\', '/')
+                f.write("project.addAssets('" + ammojs_path + "');\n")
 
         if dce_full:
             f.write("project.addParameter('-dce full');")

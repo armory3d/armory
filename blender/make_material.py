@@ -5,9 +5,9 @@ import armutils
 import os
 import nodes
 import log
+import make_state as state
 
-# UV Map names of current material user
-uvlayers = ['']
+uvlayers = [''] # UV Map names of current material user
 
 def is_pow(num):
     return ((num & (num - 1)) == 0) and num != 0
@@ -525,7 +525,11 @@ def parse_occlusion_socket(self, occlusion_input, material, c, defs, tree, node,
         add_occlusion_const(res, c, factor)
 
 def parse_height_socket(self, height_input, material, c, defs, tree, node, factor):
-    if height_input.is_linked:
+    # Not all targets can tessellate
+    if state.target != 'krom' and state.target != 'native':
+        return
+    wrd = bpy.data.worlds['Arm']
+    if height_input.is_linked and wrd.tessellation_enabled:
         height_node = nodes.find_node_by_link(tree, node, height_input)
         add_height_tex(self, height_node, material, c, defs)
         parse_image_vector(height_node, defs, tree, '_HeightTex1')
