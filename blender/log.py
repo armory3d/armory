@@ -2,6 +2,7 @@ import props_ui
 import space_armory
 import armutils
 import bridge
+import make_state as state
 
 progress = 100.0
 tag_redraw = False
@@ -28,7 +29,8 @@ def print_info(text):
     tag_redraw = True  
 
 def print_player(text):
-    space_armory.ArmorySpaceHeader.info_text = format_text(text)
+    if state.playproc != None:
+        space_armory.ArmorySpaceHeader.info_text = format_text(text)
 
 def print_progress(value):
     global progress

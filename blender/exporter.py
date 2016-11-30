@@ -780,47 +780,47 @@ class ArmoryExporter:
                 for fcurve in action.fcurves:
                     kind = ArmoryExporter.classify_animation_curve(fcurve)
                     if kind != AnimationTypeSampled:
-                        if (fcurve.data_path == "location"):
+                        if fcurve.data_path == "location":
                             for i in range(3):
                                 if ((fcurve.array_index == i) and (not locAnimCurve[i])):
                                     locAnimCurve[i] = fcurve
                                     locAnimKind[i] = kind
-                                    if (ArmoryExporter.animation_present(fcurve, kind)):
+                                    if ArmoryExporter.animation_present(fcurve, kind):
                                         locAnimated[i] = True
                         elif fcurve.data_path == "delta_location":
                             for i in range(3):
                                 if ((fcurve.array_index == i) and (not deltaPosAnimCurve[i])):
                                     deltaPosAnimCurve[i] = fcurve
                                     deltaPosAnimKind[i] = kind
-                                    if (ArmoryExporter.animation_present(fcurve, kind)):
+                                    if ArmoryExporter.animation_present(fcurve, kind):
                                         deltaPosAnimated[i] = True
                         elif fcurve.data_path == "rotation_euler":
                             for i in range(3):
                                 if ((fcurve.array_index == i) and (not rotAnimCurve[i])):
                                     rotAnimCurve[i] = fcurve
                                     rotAnimKind[i] = kind
-                                    if (ArmoryExporter.animation_present(fcurve, kind)):
+                                    if ArmoryExporter.animation_present(fcurve, kind):
                                         rotAnimated[i] = True
                         elif fcurve.data_path == "delta_rotation_euler":
                             for i in range(3):
                                 if ((fcurve.array_index == i) and (not deltaRotAnimCurve[i])):
                                     deltaRotAnimCurve[i] = fcurve
                                     deltaRotAnimKind[i] = kind
-                                    if (ArmoryExporter.animation_present(fcurve, kind)):
+                                    if ArmoryExporter.animation_present(fcurve, kind):
                                         deltaRotAnimated[i] = True
                         elif fcurve.data_path == "scale":
                             for i in range(3):
                                 if ((fcurve.array_index == i) and (not sclAnimCurve[i])):
                                     sclAnimCurve[i] = fcurve
                                     sclAnimKind[i] = kind
-                                    if (ArmoryExporter.animation_present(fcurve, kind)):
+                                    if ArmoryExporter.animation_present(fcurve, kind):
                                         sclAnimated[i] = True
                         elif fcurve.data_path == "delta_scale":
                             for i in range(3):
                                 if ((fcurve.array_index == i) and (not deltaSclAnimCurve[i])):
                                     deltaSclAnimCurve[i] = fcurve
                                     deltaSclAnimKind[i] = kind
-                                    if (ArmoryExporter.animation_present(fcurve, kind)):
+                                    if ArmoryExporter.animation_present(fcurve, kind):
                                         deltaSclAnimated[i] = True
                         elif ((fcurve.data_path == "rotation_axis_angle") or (fcurve.data_path == "rotation_quaternion") or (fcurve.data_path == "delta_rotation_quaternion")):
                             sampledAnimation = True
@@ -939,7 +939,7 @@ class ArmoryExporter:
                     for i in range(3):
                         axis = ord(mode[2 - i]) - 0x58
                         angle = bobject.delta_rotation_euler[axis]
-                        if (math.fabs(angle) > ExportEpsilon):
+                        if math.fabs(angle) > ExportEpsilon:
                             animo = {}
                             o['animation_transforms'].append(animo)
                             animo['type'] = 'rotation_' + axisName[axis]
@@ -2458,7 +2458,10 @@ class ArmoryExporter:
                         x['speeds'].append(at.speed_prop)
                         x['loops'].append(at.loop_prop)
                         x['reflects'].append(at.reflect_prop)
-                x['start_track'] = bobject.start_track_name_prop
+                start_track = bobject.start_track_name_prop
+                if start_track == '' and len(bobject.my_cliptraitlist) > 0: # Start track undefined
+                    start_track = bobject.my_cliptraitlist[0].name
+                x['start_track'] = start_track
                 x['max_bones'] = bpy.data.worlds['Arm'].generate_gpu_skin_max_bones
             else:
                 # Export default clip, taking full action
