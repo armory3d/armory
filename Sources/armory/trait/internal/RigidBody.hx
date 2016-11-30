@@ -4,7 +4,6 @@ package armory.trait.internal;
 import haxebullet.Bullet;
 #end
 import iron.Trait;
-import iron.system.Time;
 import iron.math.Vec4;
 import iron.object.Transform;
 import iron.object.MeshObject;
@@ -157,6 +156,7 @@ class RigidBody extends Trait {
 	}
 
 	function lateUpdate() {
+		if (!bodyReady) return;
 		if (object.animation != null) {
 			syncTransform();
 		}

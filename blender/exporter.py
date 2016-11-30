@@ -1773,7 +1773,8 @@ class ArmoryExporter:
             mesh.update()
 
         om = {}
-        om['primitive'] = "triangles"
+        # Triangles is default
+        # om['primitive'] = "triangles"
 
         armature = bobject.find_armature()
         applyModifiers = not armature
@@ -1816,7 +1817,8 @@ class ArmoryExporter:
             om['instance_offsets'] = instance_offsets
 
         # Export usage
-        om['dynamic_usage'] = bobject.data.dynamic_usage
+        if bobject.data.dynamic_usage:
+            om['dynamic_usage'] = bobject.data.dynamic_usage
 
         o['mesh'] = om
         self.write_mesh(bobject, fp, o)
