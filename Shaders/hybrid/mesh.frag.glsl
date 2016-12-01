@@ -39,7 +39,6 @@ precision mediump float;
 	#ifdef _PCSS
 	//!uniform sampler2D snoise;
 	//!uniform float lampSizeUV;
-	//!uniform float lampNear;
 	#endif
 #endif
 #ifdef _Rad

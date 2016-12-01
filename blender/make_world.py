@@ -64,7 +64,7 @@ def build_node_tree(world):
         wrd.world_defs += '_NoShadows'
 
     # Percentage closer soft shadows
-    if wrd.generate_pcss:
+    if wrd.generate_pcss_state == 'On':
         wrd.world_defs += '_PCSS'
         sdk_path = armutils.get_sdk_path()
         assets.add(sdk_path + 'armory/Assets/noise64.png')

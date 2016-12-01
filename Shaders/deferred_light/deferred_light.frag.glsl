@@ -33,7 +33,6 @@ uniform sampler2D gbuffer1;
 	#ifdef _PCSS
 	//!uniform sampler2D snoise;
 	//!uniform float lampSizeUV;
-	//!uniform float lampNear;
 	#endif
 #endif
 

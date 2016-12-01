@@ -142,11 +142,6 @@
 					"ifdef": ["_PCSS"]
 				},
 				{
-					"name": "lampNear",
-					"link": "_lampPlaneNear",
-					"ifdef": ["_PCSS"]
-				},
-				{
 					"name": "lampSizeUV",
 					"link": "_lampSizeUV",
 					"ifdef": ["_PCSS"]

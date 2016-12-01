@@ -29,7 +29,7 @@ def print_info(text):
     tag_redraw = True  
 
 def print_player(text):
-    if state.playproc != None:
+    if state.krom_running:
         space_armory.ArmorySpaceHeader.info_text = format_text(text)
 
 def print_progress(value):

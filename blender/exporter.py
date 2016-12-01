@@ -1996,8 +1996,15 @@ class ArmoryExporter:
         o['shadows_bias'] = objref.lamp_shadows_bias
         if o['type'] == 'sun': # Scale bias for ortho light matrix
             o['shadows_bias'] *= 10.0
-        if objtype != 'HEMI' and objref.shadow_soft_size != 0.1:
-            o['lamp_size'] = objref.shadow_soft_size
+        if objtype == 'POINT' and objref.shadow_soft_size > 0.1: # Point only for now
+            lamp_size = objref.shadow_soft_size
+            # Slightly higher bias for high sizes
+            if lamp_size > 1:
+                o['shadows_bias'] += 0.00001 * lamp_size
+            # Clamp size for now
+            # if lamp_size > 10:
+                # lamp_size = 10
+            o['lamp_size'] = lamp_size
 
         # Parse nodes
         make_material.parse_lamp(objref.node_tree, o)

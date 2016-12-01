@@ -53,6 +53,7 @@ def init_properties():
     bpy.types.World.arm_project_advanced = BoolProperty(name="Advanced", default=False)
     bpy.types.World.arm_object_advanced = BoolProperty(name="Advanced", default=False)
     bpy.types.World.arm_material_advanced = BoolProperty(name="Advanced", default=False)
+    bpy.types.World.arm_camera_effects_advanced = BoolProperty(name="Advanced", default=False)
     bpy.types.World.arm_cache_shaders = BoolProperty(name="Cache Shaders", description="Do not rebuild existing shaders", default=True, update=assets.invalidate_shader_cache)
     #bpy.types.World.arm_cache_envmaps = BoolProperty(name="Cache Envmaps", description="Do not remove prefiltered maps when cleaning project", default=True)
     bpy.types.World.arm_play_live_patch = BoolProperty(name="Live Patching", description="Sync running player data to Blender", default=True)
@@ -197,11 +198,11 @@ def init_properties():
                ('1024', '1024', '1024'), 
                ('2048', '2048', '2048')],
         name="Probe Size", description="Prefiltered map size", default='1024', update=assets.invalidate_envmap_data)
-    bpy.types.World.generate_radiance_sky = bpy.props.BoolProperty(name="Sky Radiance", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_radiance_sky = bpy.props.BoolProperty(name="Sky Radiance", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_radiance_sky_type = EnumProperty(
         items=[('Fake', 'Fake', 'Fake'), 
                ('Hosek', 'Hosek', 'Hosek')],
-        name="Type", description="Prefiltered maps to be used for radiance", default='Fake', update=assets.invalidate_envmap_data)
+        name="Type", description="Prefiltered maps to be used for radiance", default='Hosek', update=assets.invalidate_envmap_data)
     bpy.types.World.generate_clouds = bpy.props.BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_clouds_density = bpy.props.FloatProperty(name="Density", default=0.5, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_clouds_size = bpy.props.FloatProperty(name="Size", default=1.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
@@ -245,7 +246,11 @@ def init_properties():
     bpy.types.World.generate_volumetric_light = bpy.props.BoolProperty(name="Volumetric Light", description="", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_volumetric_light_air_turbidity = bpy.props.FloatProperty(name="Air Turbidity", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_volumetric_light_air_color = bpy.props.FloatVectorProperty(name="Air Color", size=3, default=[1.0, 1.0, 1.0], subtype='COLOR', update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_pcss = bpy.props.BoolProperty(name="Percentage Closer Soft Shadows", description="", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_pcss_state = EnumProperty(
+        items=[('On', 'On', 'On'),
+               ('Off', 'Off', 'Off'), 
+               ('Auto', 'Auto', 'Auto')],
+        name="Soft Shadows", description="Percentage Closer Soft Shadows", default='Off', update=assets.invalidate_shader_cache)
     bpy.types.World.generate_pcss_rings = bpy.props.IntProperty(name="Rings", description="", default=20, update=assets.invalidate_shader_cache)
     # Compositor
     bpy.types.World.generate_letterbox = bpy.props.BoolProperty(name="Letterbox", default=False, update=assets.invalidate_shader_cache)
@@ -262,7 +267,6 @@ def init_properties():
     # Material override flags
     bpy.types.World.force_no_culling = bpy.props.BoolProperty(name="Force No Culling", default=False)
     bpy.types.World.force_anisotropic_filtering = bpy.props.BoolProperty(name="Force Anisotropic Filtering", default=True)
-    bpy.types.World.npot_texture_repeat = bpy.props.BoolProperty(name="Non-Power of 2 Texture Repeat", description="Enable texture repeat mode for non-power of two textures", default=False)
     bpy.types.World.tessellation_enabled = bpy.props.BoolProperty(name="Tessellation", description="Enable tessellation for height maps on supported targets", default=True)
     # Lighting flags
     bpy.types.World.diffuse_oren_nayar = bpy.props.BoolProperty(name="Oren Nayar Diffuse", default=False, update=assets.invalidate_shader_cache)

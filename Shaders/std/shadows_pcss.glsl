@@ -1,15 +1,14 @@
 // Based on ThreeJS and nvidia pcss
-
 #include "../compiled.glsl"
 
 uniform sampler2D shadowMap;
 uniform sampler2D snoise;
 uniform float lampSizeUV;
-uniform float lampNear;
 
 const int NUM_SAMPLES = 17;
 const float radiusStep = 1.0 / float(NUM_SAMPLES);
 const float angleStep = PI2 * float(pcssRings) / float(NUM_SAMPLES);
+const float lampNear = 0.5;
 
 vec2 poissonDisk0; vec2 poissonDisk1; vec2 poissonDisk2;
 vec2 poissonDisk3; vec2 poissonDisk4; vec2 poissonDisk5;
@@ -19,7 +18,7 @@ vec2 poissonDisk12; vec2 poissonDisk13; vec2 poissonDisk14;
 vec2 poissonDisk15; vec2 poissonDisk16;
 
 void initPoissonSamples(const vec2 randomSeed) {
-	float angle = texture(snoise, randomSeed).r * PI2;
+	float angle = texture(snoise, randomSeed).r * 1000.0;
 	float radius = radiusStep;
 	// for (int i = 0; i < NUM_SAMPLES; i++) {
 		poissonDisk0 = vec2(cos(angle), sin(angle)) * pow(radius, 0.75);

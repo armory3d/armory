@@ -180,8 +180,8 @@ def make_texture(self, id, image_node, material, image_format='RGBA32'):
             tex['u_addressing'] = 'clamp'
             tex['v_addressing'] = 'clamp'
         else:
-            if wrd.npot_texture_repeat == False and powimage == False:
-                print('Armory Warning: ' + material.name + '/' + image.name + ' - non power of 2 texture can not use repeat mode')
+            if state.target == 'html5' and powimage == False:
+                log.warn(material.name + '/' + image.name + ' - non power of 2 texture can not use repeat mode on HTML5 target')
                 tex['u_addressing'] = 'clamp'
                 tex['v_addressing'] = 'clamp'
         

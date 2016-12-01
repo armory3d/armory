@@ -257,7 +257,7 @@ const float ssrTextureScale = """ + str(round(wrd.generate_ssr_texture_scale * 1
 const vec3 volumAirColor = vec3(""" + str(round(wrd.generate_volumetric_light_air_color[0] * 100) / 100) + """, """ + str(round(wrd.generate_volumetric_light_air_color[1] * 100) / 100) + """, """ + str(round(wrd.generate_volumetric_light_air_color[2] * 100) / 100) + """);
 """)
 
-        if wrd.generate_pcss:
+        if wrd.generate_pcss_state == 'On':
             f.write(
 """const int pcssRings = """ + str(wrd.generate_pcss_rings) + """;
 """)

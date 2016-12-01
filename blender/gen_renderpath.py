@@ -87,55 +87,71 @@ class EffectsRPDataPropsPanel(bpy.types.Panel):
         if obj.type == 'CAMERA':
             layout.prop(wrd, 'generate_shadows')
             if wrd.generate_shadows:
-                layout.prop(wrd, 'generate_pcss')
-                if wrd.generate_pcss:
+                layout.prop(wrd, 'generate_pcss_state')
+                if wrd.generate_pcss_state == 'On' or wrd.generate_pcss_state == 'Auto':
                     layout.prop(wrd, 'generate_pcss_rings')
             
-            layout.prop(wrd, 'generate_clouds')
-            if wrd.generate_clouds:
-                layout.prop(wrd, 'generate_clouds_density')
-                layout.prop(wrd, 'generate_clouds_size')
-                layout.prop(wrd, 'generate_clouds_lower')
-                layout.prop(wrd, 'generate_clouds_upper')
-                layout.prop(wrd, 'generate_clouds_wind')
-                layout.prop(wrd, 'generate_clouds_secondary')
-                layout.prop(wrd, 'generate_clouds_precipitation')
-                layout.prop(wrd, 'generate_clouds_eccentricity')
-            
-            layout.label('Screen-Space Ambient Occlusion')
-            # layout.prop(wrd, 'generate_ssao')
-            # if wrd.generate_ssao:
-            layout.prop(wrd, 'generate_ssao_size')
-            layout.prop(wrd, 'generate_ssao_strength')
-            layout.prop(wrd, 'generate_ssao_texture_scale')
-            
-            layout.label('Bloom')
-            # layout.prop(wrd, 'generate_bloom')
-            # if wrd.generate_bloom:
-            layout.prop(wrd, 'generate_bloom_threshold')
-            layout.prop(wrd, 'generate_bloom_strength')
-            layout.prop(wrd, 'generate_bloom_radius')
-            
-            layout.label('Motion Blur')
-            # layout.prop(wrd, 'generate_motion_blur')
-            # if wrd.generate_motion_blur:
-            layout.prop(wrd, 'generate_motion_blur_intensity')
-            
-            layout.label('Screen-Space Reflections')
-            # layout.prop(wrd, 'generate_ssr')
-            # if wrd.generate_ssr:
-            layout.prop(wrd, 'generate_ssr_ray_step')
-            layout.prop(wrd, 'generate_ssr_min_ray_step')
-            layout.prop(wrd, 'generate_ssr_search_dist')
-            layout.prop(wrd, 'generate_ssr_falloff_exp')
-            layout.prop(wrd, 'generate_ssr_jitter')
-            layout.prop(wrd, 'generate_ssr_texture_scale')
+            layout.prop(wrd, 'arm_project_samples_per_pixel')
+            layout.prop(wrd, 'generate_gpu_skin')
+            if wrd.generate_gpu_skin:
+                layout.prop(wrd, 'generate_gpu_skin_max_bones')
+            layout.prop(wrd, 'tessellation_enabled')
+            layout.prop(wrd, 'force_anisotropic_filtering')
+            layout.prop(wrd, 'force_no_culling')
+            layout.prop(wrd, 'diffuse_oren_nayar')
+            layout.prop(wrd, 'voxelgi')
+            if wrd.voxelgi:
+                layout.prop(wrd, 'voxelgi_dimensions')
 
-            layout.label('Volumetric Light')
-            # layout.prop(wrd, 'generate_volumetric_light')
-            # if wrd.generate_volumetric_light:
-            layout.prop(wrd, 'generate_volumetric_light_air_turbidity')
-            layout.prop(wrd, 'generate_volumetric_light_air_color')
+            
+            layout.prop(wrd, 'arm_camera_effects_advanced')
+            if wrd.arm_camera_effects_advanced:
+
+                layout.prop(wrd, 'generate_clouds')
+                if wrd.generate_clouds:
+                    layout.prop(wrd, 'generate_clouds_density')
+                    layout.prop(wrd, 'generate_clouds_size')
+                    layout.prop(wrd, 'generate_clouds_lower')
+                    layout.prop(wrd, 'generate_clouds_upper')
+                    layout.prop(wrd, 'generate_clouds_wind')
+                    layout.prop(wrd, 'generate_clouds_secondary')
+                    layout.prop(wrd, 'generate_clouds_precipitation')
+                    layout.prop(wrd, 'generate_clouds_eccentricity')
+                
+                layout.label('Screen-Space Ambient Occlusion')
+                # layout.prop(wrd, 'generate_ssao')
+                # if wrd.generate_ssao:
+                layout.prop(wrd, 'generate_ssao_size')
+                layout.prop(wrd, 'generate_ssao_strength')
+                layout.prop(wrd, 'generate_ssao_texture_scale')
+                
+                layout.label('Bloom')
+                # layout.prop(wrd, 'generate_bloom')
+                # if wrd.generate_bloom:
+                layout.prop(wrd, 'generate_bloom_threshold')
+                layout.prop(wrd, 'generate_bloom_strength')
+                layout.prop(wrd, 'generate_bloom_radius')
+                
+                layout.label('Motion Blur')
+                # layout.prop(wrd, 'generate_motion_blur')
+                # if wrd.generate_motion_blur:
+                layout.prop(wrd, 'generate_motion_blur_intensity')
+                
+                layout.label('Screen-Space Reflections')
+                # layout.prop(wrd, 'generate_ssr')
+                # if wrd.generate_ssr:
+                layout.prop(wrd, 'generate_ssr_ray_step')
+                layout.prop(wrd, 'generate_ssr_min_ray_step')
+                layout.prop(wrd, 'generate_ssr_search_dist')
+                layout.prop(wrd, 'generate_ssr_falloff_exp')
+                layout.prop(wrd, 'generate_ssr_jitter')
+                layout.prop(wrd, 'generate_ssr_texture_scale')
+
+                layout.label('Volumetric Light')
+                # layout.prop(wrd, 'generate_volumetric_light')
+                # if wrd.generate_volumetric_light:
+                layout.prop(wrd, 'generate_volumetric_light_air_turbidity')
+                layout.prop(wrd, 'generate_volumetric_light_air_color')
 
 class ArmoryGenRenderPathButton(bpy.types.Operator):
     '''Auto-generate render path based on settings'''

@@ -316,30 +316,20 @@ class WorldPropsPanel(bpy.types.Panel):
             if wrd.generate_radiance_sky:
                 layout.prop(wrd, 'generate_radiance_sky_type')
 
-        layout.separator()
-
-        layout.label('Compositor')
-        layout.prop(wrd, 'generate_letterbox')
-        if wrd.generate_letterbox:
-            layout.prop(wrd, 'generate_letterbox_size')
-        layout.prop(wrd, 'generate_grain')
-        if wrd.generate_grain:
-            layout.prop(wrd, 'generate_grain_strength')
-        layout.prop(wrd, 'generate_fog')
-        if wrd.generate_fog:
-            layout.prop(wrd, 'generate_fog_color')
-            layout.prop(wrd, 'generate_fog_amounta')
-            layout.prop(wrd, 'generate_fog_amountb')
-
-        layout.label('Flags')
-        layout.prop(wrd, 'tessellation_enabled')
-        layout.prop(wrd, 'force_anisotropic_filtering')
-        layout.prop(wrd, 'force_no_culling')
-        layout.prop(wrd, 'npot_texture_repeat')
-        layout.prop(wrd, 'diffuse_oren_nayar')
-        layout.prop(wrd, 'voxelgi')
-        if wrd.voxelgi:
-            layout.prop(wrd, 'voxelgi_dimensions')
+        # layout.separator()
+        # TODO: migrate to compositor
+        # layout.label('Compositor')
+        # layout.prop(wrd, 'generate_letterbox')
+        # if wrd.generate_letterbox:
+        #     layout.prop(wrd, 'generate_letterbox_size')
+        # layout.prop(wrd, 'generate_grain')
+        # if wrd.generate_grain:
+        #     layout.prop(wrd, 'generate_grain_strength')
+        # layout.prop(wrd, 'generate_fog')
+        # if wrd.generate_fog:
+        #     layout.prop(wrd, 'generate_fog_color')
+        #     layout.prop(wrd, 'generate_fog_amounta')
+        #     layout.prop(wrd, 'generate_fog_amountb')
 
 class ArmoryHelpButton(bpy.types.Operator):
     '''Open a website in the web-browser'''
@@ -404,10 +394,6 @@ class ArmoryBuildPanel(bpy.types.Panel):
             layout.prop(wrd, 'arm_optimize_mesh')
             layout.prop(wrd, 'arm_sampled_animation')
             layout.prop(wrd, 'arm_deinterleaved_buffers')
-            layout.prop(wrd, 'generate_gpu_skin')
-            if wrd.generate_gpu_skin:
-                layout.prop(wrd, 'generate_gpu_skin_max_bones')
-            layout.prop(wrd, 'arm_project_samples_per_pixel')
             layout.label('Libraries')
             layout.prop(wrd, 'arm_physics')
             layout.prop(wrd, 'arm_navigation')

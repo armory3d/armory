@@ -30,7 +30,6 @@ precision mediump float;
 	#ifdef _PCSS
 	//!uniform sampler2D snoise;
 	//!uniform float lampSizeUV;
-	//!uniform float lampNear;
 	#endif
 	uniform float shadowsBias;
 	// uniform bool receiveShadow; // TODO: pass uniform from exporter
