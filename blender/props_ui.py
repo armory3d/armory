@@ -296,6 +296,7 @@ class MaterialPropsPanel(bpy.types.Panel):
             if mat.height_tess_shadows:
                 layout.prop(mat, 'height_tess_shadows_inner')
                 layout.prop(mat, 'height_tess_shadows_outer')
+            layout.prop(mat, 'transluc_shadows')
 
 class WorldPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"

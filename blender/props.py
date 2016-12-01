@@ -265,11 +265,18 @@ def init_properties():
     bpy.types.World.generate_gpu_skin = bpy.props.BoolProperty(name="GPU Skinning", description="Calculate skinning on GPU", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=84, update=assets.invalidate_shader_cache)
     # Material override flags
+    bpy.types.World.anisotropic_filtering_state = EnumProperty(
+        items=[('On', 'On', 'On'),
+               ('Off', 'Off', 'Off'), 
+               ('Auto', 'Auto', 'Auto')],
+        name="Anisotropic Filtering", description="Texture filtering", default='On')
     bpy.types.World.force_no_culling = bpy.props.BoolProperty(name="Force No Culling", default=False)
-    bpy.types.World.force_anisotropic_filtering = bpy.props.BoolProperty(name="Force Anisotropic Filtering", default=True)
     bpy.types.World.tessellation_enabled = bpy.props.BoolProperty(name="Tessellation", description="Enable tessellation for height maps on supported targets", default=True)
     # Lighting flags
-    bpy.types.World.diffuse_oren_nayar = bpy.props.BoolProperty(name="Oren Nayar Diffuse", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.diffuse_model = EnumProperty(
+        items=[('Lambert', 'Lambert', 'Lambert'),
+               ('Oren Nayar', 'Oren Nayar', 'Oren Nayar')],
+        name="Diffuse", description="Diffuse model", default='Lambert', update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi = bpy.props.BoolProperty(name="VGI", description="Voxel-based Global Illumination", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi_dimensions = bpy.props.FloatVectorProperty(name="Dimensions", description="3D texture size", size=3, default=[128, 128, 128], update=assets.invalidate_shader_cache)
     # For material
@@ -299,12 +306,13 @@ def init_properties():
         items = [('True', 'True', 'True'),
                  ('False', 'False', 'False')],
         name = "Depth-Write", default='True')
-    bpy.types.Material.height_tess = bpy.props.BoolProperty(name="Tessellated displacement", description="Use tessellation shaders to subdivide and displace surface", default=True)
-    bpy.types.Material.height_tess_inner = bpy.props.IntProperty(name="Inner level", description="Inner tessellation level for mesh", default=14)
-    bpy.types.Material.height_tess_outer = bpy.props.IntProperty(name="Outer level", description="Outer tessellation level for mesh", default=14)
-    bpy.types.Material.height_tess_shadows = bpy.props.BoolProperty(name="Tessellated shadows", description="Use tessellation shaders when rendering shadow maps", default=True)
-    bpy.types.Material.height_tess_shadows_inner = bpy.props.IntProperty(name="Inner level", description="Inner tessellation level for shadows", default=7)
-    bpy.types.Material.height_tess_shadows_outer = bpy.props.IntProperty(name="Outer level", description="Outer tessellation level for shadows", default=7)
+    bpy.types.Material.height_tess = bpy.props.BoolProperty(name="Tessellated Displacement", description="Use tessellation shaders to subdivide and displace surface", default=True)
+    bpy.types.Material.height_tess_inner = bpy.props.IntProperty(name="Inner Level", description="Inner tessellation level for mesh", default=14)
+    bpy.types.Material.height_tess_outer = bpy.props.IntProperty(name="Outer Level", description="Outer tessellation level for mesh", default=14)
+    bpy.types.Material.height_tess_shadows = bpy.props.BoolProperty(name="Tessellated Shadows", description="Use tessellation shaders when rendering shadow maps", default=True)
+    bpy.types.Material.height_tess_shadows_inner = bpy.props.IntProperty(name="Inner Level", description="Inner tessellation level for shadows", default=7)
+    bpy.types.Material.height_tess_shadows_outer = bpy.props.IntProperty(name="Outer Level", description="Outer tessellation level for shadows", default=7)
+    bpy.types.Material.transluc_shadows = bpy.props.BoolProperty(name="Translucent Shadows", description="Cast shadows for translucent surfaces", default=True)
     # For scene
     bpy.types.Scene.game_export = bpy.props.BoolProperty(name="Export", description="Export scene data", default=True)
     bpy.types.Scene.gp_export = bpy.props.BoolProperty(name="Export Grease Pencil", description="Export grease pencil data", default=True)

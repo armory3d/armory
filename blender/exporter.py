@@ -2773,21 +2773,29 @@ class ArmoryExporter:
         elif material.overlay:
             # Change to overlay context
             c['name'] = ArmoryExporter.overlay_context
+        # Switch main context to translucent
+        elif '_Translucent' in defs:
+            c['name'] = ArmoryExporter.translucent_context
+            # Opacity for shadowmap in Translucent context
+            if wrd.generate_shadows == True and material.transluc_shadows == True:
+                texname = ''
+                if '_OpacTex' in defs:
+                    texname = 'sopacity'
+                elif '_BaseTex' in defs:
+                    texname = 'sbase'
+                if texname != '':
+                    c2 = {}
+                    c2['name'] = ArmoryExporter.shadows_context
+                    o['contexts'].append(c2)
+                    for bt in c['bind_textures']:
+                        if bt['name'] == texname:
+                            c2['bind_textures'] = [bt]
+                            break
         # Otherwise add shadows context
         else:
             if wrd.generate_shadows == True:
                 c2 = {}
                 c2['name'] = ArmoryExporter.shadows_context
-                
-                # Opacity for shadowmap in Translucent context
-                if '_Translucent' in defs:
-                    for bt in c['bind_textures']:
-                        if bt['name'] == 'sbase':
-                            c2['bind_textures'] = [bt]
-                            break
-                    # Switch main context to translucent
-                    c['name'] = ArmoryExporter.translucent_context
-
                 o['contexts'].append(c2)
 
         # VGI Voxels enabled, append context

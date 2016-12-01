@@ -95,10 +95,10 @@ class EffectsRPDataPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'generate_gpu_skin')
             if wrd.generate_gpu_skin:
                 layout.prop(wrd, 'generate_gpu_skin_max_bones')
+            layout.prop(wrd, 'anisotropic_filtering_state')
+            layout.prop(wrd, 'diffuse_model')
             layout.prop(wrd, 'tessellation_enabled')
-            layout.prop(wrd, 'force_anisotropic_filtering')
             layout.prop(wrd, 'force_no_culling')
-            layout.prop(wrd, 'diffuse_oren_nayar')
             layout.prop(wrd, 'voxelgi')
             if wrd.voxelgi:
                 layout.prop(wrd, 'voxelgi_dimensions')

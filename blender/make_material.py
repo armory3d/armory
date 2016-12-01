@@ -158,8 +158,11 @@ def make_texture(self, id, image_node, material, image_format='RGBA32'):
             tex['format'] = image_format
         
         interpolation = image_node.interpolation
-        if wrd.force_anisotropic_filtering:
+        aniso = wrd.anisotropic_filtering_state
+        if aniso == 'On':
             interpolation = 'Smart'
+        elif aniso == 'Off' and interpolation == 'Smart':
+            interpolation = 'Linear'
         
         # TODO: Blender seems to load full images on size request, cache size instead
         powimage = is_pow(image.size[0]) and is_pow(image.size[1])
@@ -260,7 +263,8 @@ def parse_mix_shader(self, material, c, defs, tree, node, factor):
         parse_material_surface(self, material, c, defs, tree, surface2_node, mixfactor)
 
 def parse_bsdf_transparent(self, material, c, defs, tree, node, factor):
-    defs.append('_AlphaTest')
+    # defs.append('_AlphaTest')
+    pass
     
 def parse_sss(self, material, c, defs, tree, node, factor):
     # Set stencil mask
@@ -406,6 +410,12 @@ def add_height_tex(self, node, material, c, defs):
         tex = make_texture(self, 'sheight', node, material, image_format='R8')
         c['bind_textures'].append(tex)
 
+def add_opacity_tex(self, node, material, c, defs):
+    if '_OpacTex' not in defs:
+        defs.append('_OpacTex')
+        tex = make_texture(self, 'sopacity', node, material, image_format='R8')
+        c['bind_textures'].append(tex)
+
 def add_height_strength(self, c, f):
     const = {}
     c['bind_constants'].append(const)
@@ -426,7 +436,7 @@ def add_normal_strength(self, c, defs, f):
         const['name'] = 'normalStrength'
         const['float'] = f
 
-def parse_image_vector(node, defs, tree, def_name):
+def parse_image_vector(node, defs, tree, def_name1):
     # Check attribute linked to image vector to figure out referenced uvmap
     vector_input = node.inputs[0]
     if vector_input.is_linked:
@@ -435,8 +445,8 @@ def parse_image_vector(node, defs, tree, def_name):
             if vector_node.outputs[1].is_linked:
                 # References second uv map
                 if len(uvlayers) > 1 and vector_node.attribute_name == uvlayers[1]:
-                    if def_name not in defs:
-                        defs.append(def_name)
+                    if def_name1 not in defs:
+                        defs.append(def_name1)
                     if '_Tex1' not in defs:
                         defs.append('_Tex1')
 
@@ -534,6 +544,27 @@ def parse_height_socket(self, height_input, material, c, defs, tree, node, facto
         add_height_tex(self, height_node, material, c, defs)
         parse_image_vector(height_node, defs, tree, '_HeightTex1')
 
+def parse_opacity_socket(self, opacity_input, opacity_strength_input, material, c, defs, tree, node, factor):
+    # Image has to linked
+    if opacity_input.is_linked:
+        opacity_node = nodes.find_node_by_link(tree, node, opacity_input)
+        # Image Color is linked to opacity, add opacity texture - otherwise base color alpha is used
+        if opacity_node.type == 'TEX_IMAGE' and opacity_node.outputs[0].is_linked:
+            add_opacity_tex(self, opacity_node, material, c, defs)
+            parse_image_vector(opacity_node, defs, tree, '_OpacTex1')
+            defs.append('_Translucent')
+    # Take default value
+    else:
+        opacity = opacity_input.default_value
+        opacity_strength = opacity_strength_input.default_value
+        opacity_val = opacity * opacity_strength
+        if opacity_val != 1.0:
+            if parse.const_color == None:
+                make_albedo_const([1.0, 1.0, 1.0, 1.0], c)
+                col = parse.const_color['vec4']
+                parse.const_color['vec4'] = [col[0], col[1], col[2], opacity_val]
+            defs.append('_Translucent')        
+
 def parse_pbr_group(self, material, c, defs, tree, node, factor):
     # Albedo Map
     base_color_input = node.inputs[0]
@@ -586,17 +617,5 @@ def parse_pbr_group(self, material, c, defs, tree, node, factor):
         add_height_strength(self, c, height_strength_input.default_value)
     # Opacity
     opacity_input = node.inputs[12]
-    opacity = opacity_input.default_value
     opacity_strength_input = node.inputs[13]
-    opacity_strength = opacity_strength_input.default_value
-    opacity_val = opacity * opacity_strength
-    if opacity_val != 1.0:
-        if parse.const_color == None:
-            make_albedo_const([1.0, 1.0, 1.0, 1.0], c)
-        col = parse.const_color['vec4']
-        # sum = (col[0] + col[1] + col[2]) / 3
-        # mincol = min(col[:3])
-        # parse.const_color['vec4'] = [col[0] - mincol, col[1] - mincol, col[2] - mincol, 1.0 - (sum * 0.7)]
-        parse.const_color['vec4'] = [col[0], col[1], col[2], opacity_val]
-        # Append translucent
-        defs.append('_Translucent')
+    parse_opacity_socket(self, opacity_input, opacity_strength_input, material, c, defs, tree, node, factor)

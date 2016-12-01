@@ -25,6 +25,9 @@ precision mediump float;
 #ifdef _BaseTex
 	uniform sampler2D sbase;
 #endif
+#ifdef _OpacTex
+	uniform sampler2D sopacity;
+#endif
 #ifndef _NoShadows
 	//!uniform sampler2D shadowMap;
 	#ifdef _PCSS
@@ -142,10 +145,10 @@ void main() {
 	vec3 baseColor = matColor.rgb;
 #ifdef _BaseTex
 	vec4 texel = texture(sbase, texCoord);
-#ifdef _AlphaTest
-	if(texel.a < 0.4)
+	#ifdef _AlphaTest
+	if (texel.a < 0.4)
 		discard;
-#endif
+	#endif
 	texel.rgb = pow(texel.rgb, vec3(2.2));
 	baseColor *= texel.rgb;
 #endif
@@ -216,11 +219,14 @@ void main() {
 
 
 	vec4 premultipliedReflect = vec4(vec3(direct * visibility + indirect * occlusion), matColor.a);
-#ifdef _BaseTex
-		premultipliedReflect.a *= texel.a; // Base color alpha
+
+#ifdef _OpacTex
+	premultipliedReflect.a *= texture(sopacity, texCoord).r;
+#else
+	#ifdef _BaseTex
+	premultipliedReflect.a *= texel.a; // Base color alpha
+	#endif
 #endif
-	// vec4 premultipliedReflect = vec4(1.0, 0.0, 0.0, 0.01);
-	// vec4 premultipliedReflect = baseColor;
 	
 	float fragZ = wvpposition.z / wvpposition.w;
 	float a = min(1.0, premultipliedReflect.a) * 8.0 + 0.01;

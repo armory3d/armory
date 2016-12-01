@@ -11,18 +11,25 @@ precision mediump float;
 out vec4 fragColor;
 
 #ifdef _Translucent
-// #ifdef _BaseTex
-	uniform sampler2D sbase;
-// #endif
+	#ifdef _OpacTex
+	uniform sampler2D sopacity;
+	#else
+		#ifdef _BaseTex
+		uniform sampler2D sbase;
+		#endif
+	#endif
 #endif
 
 void main() {
 
 #ifdef _Translucent
-	float a = texture(sbase, texCoord).a;
-	if (a < 0.5) {
-		discard;
-	}
+	#ifdef _OpacTex
+	if (texture(sopacity, texCoord).r < 0.5) discard;
+	#else
+		#ifdef _BaseTex
+		if (texture(sbase, texCoord).a < 0.5) discard;
+		#endif
+	#endif
 #endif
 
 	fragColor = vec4(0.0, 0.0, 0.0, 1.0);

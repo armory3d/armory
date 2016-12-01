@@ -108,46 +108,49 @@ def write_data(res, defs, json_data, base_name):
                     tese = f.read().splitlines()
             parse_shader(sres, c, con, defs, tese, False)
 
+def find_def(defs, s):
+    for d in defs:
+        if d == s:
+            return True
+    return False
+
 def parse_shader(sres, c, con, defs, lines, parse_attributes):
     skip_till_endif = 0
     skip_else = False
     vertex_structure_parsed = False
     vertex_structure_parsing = False
     
+    stack = []
+
     if parse_attributes == False:
         vertex_structure_parsed = True
         
     for line in lines:
         line = line.lstrip()
-        if line.startswith('#ifdef'):
+
+        # Preprocessor
+        if line.startswith('#ifdef') or line.startswith('#ifndef'):
             s = line.split(' ')[1]
-            if s != 'GL_ES':
-                found = False
-                for d in defs:
-                    if d == s:
-                        found = True
-                        break
-                if found == False or s == '_Instancing': # TODO: Prevent instanced data to go into main vertex structure
-                    skip_till_endif += 1
-                else:
-                    skip_else = True # #ifdef passed, skip #else if present
+            found = find_def(defs, s)
+            if line.startswith('#ifndef'):
+                found = not found
+            if found == False or s == '_Instancing': # TODO: Prevent instanced data to go into main vertex structure
+                stack.append(0)
+            else:
+                stack.append(1)
             continue
 
-        # Previous ifdef passed, skip else
-        if skip_else == True and line.startswith('#else'):
-            skip_else = False
-            skip_till_endif += 1
+        if line.startswith('#else'):
+            stack[-1] = 1 - stack[-1]
             continue
 
-        if line.startswith('#endif') or line.startswith('#else'): # Starts parsing again
-            skip_till_endif -= 1
-            skip_else = False
-            if skip_till_endif < 0: # #else + #endif will go below 0
-                skip_till_endif = 0
+        if line.startswith('#endif'):
+            stack.pop()
             continue
 
-        if skip_till_endif > 0:
+        if len(stack) > 0 and stack[-1] == 0:
             continue
+
 
         if vertex_structure_parsed == False and line.startswith('in '):
             vertex_structure_parsing = True

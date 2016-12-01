@@ -71,7 +71,7 @@ def build_node_tree(world):
         assets.add_embedded_data('noise64.png')
 
     # Alternative models
-    if wrd.diffuse_oren_nayar:
+    if wrd.diffuse_model == 'Oren Nayar':
         wrd.world_defs += '_OrenNayar'
 
     if wrd.voxelgi:
