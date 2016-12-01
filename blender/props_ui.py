@@ -384,7 +384,7 @@ class ArmoryBuildPanel(bpy.types.Panel):
         else:
             layout.operator("arm.patch")
         layout.operator("arm.kode_studio")
-        layout.operator("arm.clean_cache")
+        layout.operator("arm.clean_menu")
         layout.prop(wrd, 'arm_project_target')
         layout.prop(wrd, 'arm_build_advanced')
         if wrd.arm_build_advanced:
@@ -426,7 +426,6 @@ class ArmoryProjectPanel(bpy.types.Panel):
             layout.prop(wrd, 'arm_spawn_all_layers')
             layout.label('Armory v' + wrd.arm_version)
             layout.operator('arm.check_updates')
-            layout.operator("arm.clean_project")
 
 class ArmoryPlayButton(bpy.types.Operator):
     '''Launch player in new window'''
@@ -543,10 +542,28 @@ class ArmoryKodeStudioButton(bpy.types.Operator):
         make_utils.kode_studio()
         return{'FINISHED'}
 
+class CleanMenu(bpy.types.Menu):
+    bl_label = "Ok?"
+    bl_idname = "OBJECT_MT_clean_menu"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator("arm.clean_cache")
+        layout.operator("arm.clean_project")
+
+class CleanButtonMenu(bpy.types.Operator):
+    '''Clean cached data'''
+    bl_label = "Clean"
+    bl_idname = "arm.clean_menu"
+ 
+    def execute(self, context):
+        bpy.ops.wm.call_menu(name=CleanMenu.bl_idname)
+        return {"FINISHED"}
+
 class ArmoryCleanCacheButton(bpy.types.Operator):
     '''Delete all compiled data'''
     bl_idname = 'arm.clean_cache'
-    bl_label = 'Clean'
+    bl_label = 'Clean Cache'
  
     def execute(self, context):
         if not check_saved(self):

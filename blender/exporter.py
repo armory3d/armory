@@ -2001,10 +2001,7 @@ class ArmoryExporter:
             # Slightly higher bias for high sizes
             if lamp_size > 1:
                 o['shadows_bias'] += 0.00001 * lamp_size
-            # Clamp size for now
-            # if lamp_size > 10:
-                # lamp_size = 10
-            o['lamp_size'] = lamp_size
+            o['lamp_size'] = lamp_size * 10 # Match to Cycles
 
         # Parse nodes
         make_material.parse_lamp(objref.node_tree, o)
