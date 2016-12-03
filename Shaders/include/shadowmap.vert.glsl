@@ -57,7 +57,9 @@ void main() {
 #endif
 
 #ifdef _Translucent
+	#ifdef _Tex
 	texCoord = tex;
+	#endif
 #endif
 
 #ifdef _Billboard

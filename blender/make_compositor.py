@@ -28,6 +28,9 @@ def add_def(s):
     parse_defs.defs.append(s)
 
 def build_node(node_group, node):
+    if node == None:
+        return
+
     # Inputs to follow
     inps = []
 

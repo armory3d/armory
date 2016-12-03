@@ -41,7 +41,7 @@ def parse(self, material, c, defs):
         # Enable texcoords
         if '_Tex' not in defs:
             for d in defs:
-                if d == '_BaseTex' or d == '_NorTex' or d == '_OccTex' or d == '_RoughTex' or d == '_MetTex' or d == '_HeightTex':
+                if d == '_BaseTex' or d == '_NorTex' or d == '_OccTex' or d == '_RoughTex' or d == '_MetTex' or d == '_HeightTex' or d == '_OpacTex':
                     defs.append('_Tex')
                     break 
 
@@ -110,14 +110,25 @@ def make_texture(self, id, image_node, material, image_format='RGBA32'):
     wrd = bpy.data.worlds['Arm']
     tex = {}
     tex['name'] = id
+    tex['file'] = ''
     image = image_node.image
-    
+
     if image != None:
+
+        if image.filepath == '':
+            log.warn(material.name + '/' + image.name + ' - file path not found')
+            return tex
 
         # Reference image name
         tex['file'] = armutils.extract_filename(image.filepath)
-        ext = tex['file'].rsplit('.', 1)[1].lower()
-        tex['file'] = armutils.safe_filename(tex['file'])
+        tex['file'] = armutils.safefilename(tex['file'])
+        s = tex['file'].rsplit('.', 1)
+        
+        if len(s) == 1:
+            log.warn(material.name + '/' + image.name + ' - file extension required for image name')
+            return tex
+
+        ext = s[1].lower()
 
         do_convert = ext != 'jpg' and ext != 'png' and ext != 'hdr' # Convert image
         if do_convert:
@@ -143,6 +154,10 @@ def make_texture(self, id, image_node, material, image_format='RGBA32'):
             assets.add(unpack_filepath)
 
         else:
+            # if not os.path.isfile(image.filepath):
+                # log.warn(material.name + '/' + image.name + ' - file not found')
+                # return tex
+
             if do_convert:
                 converted_path = armutils.get_fp() + '/build/compiled/Assets/unpacked/' + tex['file']
                 # TODO: delete cache when file changes
@@ -197,8 +212,6 @@ def make_texture(self, id, image_node, material, image_format='RGBA32'):
                 o['traits'].append(movie_trait)
             tex['source'] = 'movie'
             tex['file'] = '' # MovieTexture will load the video
-    else:
-        tex['file'] = ''
     return tex
 
 def parse_value_node(node):
@@ -299,6 +312,8 @@ def parse_emission(self, material, c, defs, tree, node, factor):
     # Multiply color by strength
     strength_input = node.inputs[1]
     strength = strength_input.default_value * 50.0 + 1.0
+    if parse.const_color == None:
+        make_albedo_const([1.0, 1.0, 1.0, 1.0], c)
     col = parse.const_color['vec4']
     col[0] *= strength
     col[1] *= strength
@@ -319,6 +334,8 @@ def parse_bsdf_glass(self, material, c, defs, tree, node, factor):
     base_color_input = node.inputs[0]
     parse_base_color_socket(self, base_color_input, material, c, defs, tree, node, factor)
     # Calculate alpha, TODO: take only glass color into account, separate getSocketColor method
+    if parse.const_color == None:
+        make_albedo_const([1.0, 1.0, 1.0, 1.0], c)
     col = parse.const_color['vec4']
     sum = (col[0] + col[1] + col[2]) / 3
     # Roughly guess color to match cycles
@@ -483,8 +500,9 @@ def add_metalness_const(res, c, factor, minimum_val=0.0, sqrt_val=False):
 def parse_metalness_socket(self, metalness_input, material, c, defs, tree, node, factor, minimum_val=0.0, sqrt_val=False):
     if metalness_input.is_linked:
         metalness_node = nodes.find_node_by_link(tree, node, metalness_input)
-        add_metalness_tex(self, metalness_node, material, c, defs)
-        parse_image_vector(metalness_node, defs, tree, '_MetTex1')
+        if metalness_node.type == 'TEX_IMAGE':
+            add_metalness_tex(self, metalness_node, material, c, defs)
+            parse_image_vector(metalness_node, defs, tree, '_MetTex1')
 
     elif '_MetTex' not in defs:
         res = metalness_input.default_value
@@ -504,8 +522,9 @@ def add_roughness_const(res, c, factor, minimum_val=0.0, sqrt_val=False):
 def parse_roughness_socket(self, roughness_input, material, c, defs, tree, node, factor, minimum_val=0.0, sqrt_val=False):
     if roughness_input.is_linked:
         roughness_node = nodes.find_node_by_link(tree, node, roughness_input)
-        add_roughness_tex(self, roughness_node, material, c, defs)
-        parse_image_vector(roughness_node, defs, tree, '_RoughTex1')
+        if roughness_node.type == 'TEX_IMAGE':
+            add_roughness_tex(self, roughness_node, material, c, defs)
+            parse_image_vector(roughness_node, defs, tree, '_RoughTex1')
 
     elif '_RoughTex' not in defs:
         res = parse_float_input(tree, node, roughness_input)
@@ -514,8 +533,9 @@ def parse_roughness_socket(self, roughness_input, material, c, defs, tree, node,
 def parse_normal_map_socket(self, normal_input, material, c, defs, tree, node, factor):
     if normal_input.is_linked:
         normal_node = nodes.find_node_by_link(tree, node, normal_input)
-        add_normal_tex(self, normal_node, material, c, defs)
-        parse_image_vector(normal_node, defs, tree, '_NorTex1')
+        if normal_node.type == 'TEX_IMAGE':
+            add_normal_tex(self, normal_node, material, c, defs)
+            parse_image_vector(normal_node, defs, tree, '_NorTex1')
 
 def add_occlusion_const(res, c, factor):
     if parse.const_occlusion == None:
@@ -527,8 +547,9 @@ def add_occlusion_const(res, c, factor):
 def parse_occlusion_socket(self, occlusion_input, material, c, defs, tree, node, factor):
     if occlusion_input.is_linked:
         occlusion_node = nodes.find_node_by_link(tree, node, occlusion_input)
-        add_occlusion_tex(self, occlusion_node, material, c, defs)
-        parse_image_vector(occlusion_node, defs, tree, '_OccTex1')
+        if occlusion_node.type == 'TEX_IMAGE':
+            add_occlusion_tex(self, occlusion_node, material, c, defs)
+            parse_image_vector(occlusion_node, defs, tree, '_OccTex1')
 
     elif '_OccTex' not in defs:
         res = occlusion_input.default_value[0] # Take only one channel
@@ -541,8 +562,9 @@ def parse_height_socket(self, height_input, material, c, defs, tree, node, facto
     wrd = bpy.data.worlds['Arm']
     if height_input.is_linked and wrd.tessellation_enabled:
         height_node = nodes.find_node_by_link(tree, node, height_input)
-        add_height_tex(self, height_node, material, c, defs)
-        parse_image_vector(height_node, defs, tree, '_HeightTex1')
+        if height_node.type == 'TEX_IMAGE':
+            add_height_tex(self, height_node, material, c, defs)
+            parse_image_vector(height_node, defs, tree, '_HeightTex1')
 
 def parse_opacity_socket(self, opacity_input, opacity_strength_input, material, c, defs, tree, node, factor):
     # Image has to linked

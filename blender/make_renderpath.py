@@ -24,6 +24,7 @@ def build_node_trees(assets_path):
     build_node_trees.assets_path = assets_path
     # Always include
     assets.add(assets_path + 'brdf.png')
+    assets.add_embedded_data('brdf.png')
 
     # Export render path for each camera
     parsed_paths = []

@@ -1687,7 +1687,7 @@ class ArmoryExporter:
             # Find material index for multi-mat mesh
             if len(exportMesh.materials) > 1:
                 for i in range(0, len(exportMesh.materials)):
-                    if mat == exportMesh.materials[i].name:
+                    if exportMesh.materials[i] != None and mat == exportMesh.materials[i].name:
                         ia['material'] = i
                         break
             om['index_arrays'].append(ia)
@@ -2695,9 +2695,10 @@ class ArmoryExporter:
         # Set uv layers to support multiple texcoords
         if material in self.materialToObjectDict:
             mat_user = self.materialToObjectDict[material][0]
-            make_material.uvlayers = []
-            for layer in mat_user.data.uv_layers:
-                make_material.uvlayers.append(layer.name)
+            if hasattr(mat_user.data, 'uv_layers'): # No uvlayers for Curve
+                make_material.uvlayers = []
+                for layer in mat_user.data.uv_layers:
+                    make_material.uvlayers.append(layer.name)
 
         # Parse from material output
         if decal_uv_layer == None:
@@ -2865,7 +2866,6 @@ class ArmoryExporter:
 
         wmat_name = armutils.safe_filename(world.name) + '_material'
         o['material_ref'] = wmat_name + '/' + wmat_name + '/world'
-        o['brdf'] = 'brdf.png'
         o['probes'] = []
         # Main probe
         world_generate_radiance = False
