@@ -392,7 +392,7 @@ void main() {
 	
 #ifdef _Rad
 	vec3 reflectionWorld = reflect(-v, n); 
-	float lod = getMipFromRoughness(roughness, envmapNumMipmaps);// + 1.0;
+	float lod = getMipFromRoughness(roughness, envmapNumMipmaps);
 	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
 	#ifdef _EnvLDR
 		prefilteredColor = pow(prefilteredColor, vec3(2.2));

@@ -91,7 +91,6 @@ void main() {
 		}
 	}
 #else // No probes   
-		// vec3 indirect = texture(shirr, envMapEquirect(n)).rgb;
 	vec3 indirect = shIrradiance(n, 2.2) / PI;
 	#ifdef _Rad
 		vec3 reflectionWorld = reflect(-v, n);

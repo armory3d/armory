@@ -55,11 +55,11 @@ vec3 getPos2NoEye(const vec3 eye, const mat4 invVP, const float depth, const vec
 }
 
 float packFloat(const float f1, const float f2) {
-	float index = floor(f1 * 1000.0); // Temporary
+	float index = floor(f1 * 100.0); // Temporary
 	float alpha = clamp(f2, 0.0, 1.0 - 0.001);
 	return index + alpha;
 }
 
 vec2 unpackFloat(float f) {
-	return vec2(floor(f) / 1000.0, fract(f));
+	return vec2(floor(f) / 100.0, fract(f));
 }
