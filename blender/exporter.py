@@ -2828,7 +2828,8 @@ class ArmoryExporter:
             o['contexts'].append(c2)
         
         # Additional geometry contexts, useful for depth-prepass
-        if ArmoryExporter.mesh_context_empty != '':
+        # No pre-pass for translucent
+        if ArmoryExporter.mesh_context_empty != '' and '_Translucent' not in defs:
             c2 = {}
             c2['name'] = ArmoryExporter.mesh_context_empty
             o['contexts'].append(c2)

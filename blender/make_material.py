@@ -583,8 +583,8 @@ def parse_opacity_socket(self, opacity_input, opacity_strength_input, material, 
         if opacity_val != 1.0:
             if parse.const_color == None:
                 make_albedo_const([1.0, 1.0, 1.0, 1.0], c)
-                col = parse.const_color['vec4']
-                parse.const_color['vec4'] = [col[0], col[1], col[2], opacity_val]
+            col = parse.const_color['vec4']
+            parse.const_color['vec4'] = [col[0], col[1], col[2], opacity_val]
             defs.append('_Translucent')        
 
 def parse_pbr_group(self, material, c, defs, tree, node, factor):

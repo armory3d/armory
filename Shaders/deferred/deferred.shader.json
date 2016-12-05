@@ -435,7 +435,9 @@
 			],
 			"texture_params": [],
 			"vertex_shader": "translucent.vert.glsl",
-			"fragment_shader": "translucent.frag.glsl"
+			"vertex_shader_path": "../include/translucent.vert.glsl",
+			"fragment_shader": "translucent.frag.glsl",
+			"fragment_shader_path": "../include/translucent.frag.glsl"
 		},
 		{
 			"name": "voxel",

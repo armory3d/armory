@@ -849,7 +849,7 @@ def reload_blend_data():
 def load_library():
     sdk_path = armutils.get_sdk_path()
     data_path = sdk_path + '/armory/blender/data/data.blend'
-    data_names = ['forward_path', 'forward_path_low', 'deferred_path', 'deferred_path_low', 'deferred_path_high', 'hybrid_path', 'vr_path', 'pathtrace_path', 'grease_pencil_path', 'Armory PBR']
+    data_names = ['forward_path', 'forward_path_low', 'forward_path_high', 'deferred_path', 'deferred_path_low', 'deferred_path_high', 'hybrid_path', 'vr_path', 'pathtrace_path', 'grease_pencil_path', 'Armory PBR']
 
     # Remove old
     for name in data_names:
