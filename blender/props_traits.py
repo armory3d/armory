@@ -68,8 +68,8 @@ class MY_UL_TraitList(bpy.types.UIList):
             layout.label("", icon = custom_icon)
 
 def initObjectProperties():
-    bpy.types.Object.my_traitlist = bpy.props.CollectionProperty(type = ListTraitItem)
-    bpy.types.Object.traitlist_index = bpy.props.IntProperty(name = "Index for my_list", default=0)
+    bpy.types.Object.my_traitlist = bpy.props.CollectionProperty(type=ListTraitItem)
+    bpy.types.Object.traitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
 
 
 class LIST_OT_TraitNewItem(bpy.types.Operator):

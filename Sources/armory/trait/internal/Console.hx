@@ -5,6 +5,7 @@ import iron.Trait;
 import kha.Scheduler;
 import iron.data.RenderPath;
 import iron.object.CameraObject;
+import iron.object.MeshObject;
 import zui.Zui;
 import zui.Id;
 #end
@@ -52,7 +53,7 @@ class Console extends Trait {
 	function render2D(g:kha.graphics2.Graphics) {
 		g.end();
 		ui.begin(g);
-		if (ui.window(Id.window(), 0, 0, 185, iron.App.h())) {
+		if (ui.window(Id.window(), 0, 0, 250, iron.App.h())) {
 			if (ui.node(Id.node(), "Profile (ms)", 0, true)) {
 				var avg = Math.round(frameTimeAvg * 10000) / 10;
 				var avgMin = Math.round(frameTimeAvgMin * 10000) / 10;
@@ -82,7 +83,9 @@ class Console extends Trait {
 				function drawList(id:String, objs:Array<iron.object.Object>) {
 					for (i in 0...objs.length) {
 						var o = objs[i];
-						o.visible = ui.check(Id.nest(id, i), o.name + " (" + Std.int(o.transform.absx() * 100) / 100 + ", " + Std.int(o.transform.absy() * 100) / 100 + ", " + Std.int(o.transform.absz() * 100) / 100 + ")", o.visible);
+						var text = o.name + " (" + Std.int(o.transform.absx() * 100) / 100 + ", " + Std.int(o.transform.absy() * 100) / 100 + ", " + Std.int(o.transform.absz() * 100) / 100 + ")";
+						if (Std.is(o, MeshObject)) text += " - " + Std.int(cast(o, MeshObject).screenSize * 100) / 100;
+						o.visible = ui.check(Id.nest(id, i), text, o.visible);
 					}
 				}
 

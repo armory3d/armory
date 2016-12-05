@@ -1254,8 +1254,21 @@ class ArmoryExporter:
                 if layer_found == False:
                     o['spawn'] = False
 
-            # Export the object reference and material references.
+            # Export the object reference and material references
             objref = bobject.data
+
+            # Lods
+            if bobject.type == 'MESH' and len(objref.my_lodlist) > 0:
+                o['lods'] = []
+                for l in objref.my_lodlist:
+                    if l.enabled_prop == False:
+                        continue
+                    lod = {}
+                    lod['object_ref'] = l.name
+                    lod['screen_size'] = l.screen_size_prop
+                    o['lods'].append(lod)
+                if objref.lod_material:
+                    o['lod_material'] = True
             
             # Remove unsafe chars from data names
             if objref != None:
