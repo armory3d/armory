@@ -70,7 +70,7 @@ def init_properties():
     bpy.types.World.arm_play_runtime = EnumProperty(
         items=[('Electron', 'Electron', 'Electron'), 
                ('Browser', 'Browser', 'Browser'),
-               ('Native', 'Native', 'Native'),
+               ('Native', 'C++', 'Native'),
                ('Krom', 'Krom', 'Krom')],
         name="Runtime", description="Player runtime used when launching in new window", default='Krom')
     bpy.types.World.arm_loadbar = BoolProperty(name="Load Bar", description="Show asset loading progress on published builds", default=True)
