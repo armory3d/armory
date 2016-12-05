@@ -56,8 +56,9 @@ def get_sdk_path():
     addon_prefs = user_preferences.addons['armory'].preferences
     if with_krom() and addon_prefs.sdk_bundled:
         if get_os() == 'mac':
+            # SDK on MacOS is located in .app folder due to security
             # blender.app/Contents/MacOS/blender
-            return bpy.app.binary_path[:-34] + '/armsdk/'
+            return bpy.app.binary_path[:-22] + '/armsdk/'
         elif get_os() == 'linux':
             # blender
             return bpy.app.binary_path[:-7] + '/armsdk/'
