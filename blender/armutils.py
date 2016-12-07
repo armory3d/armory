@@ -105,6 +105,9 @@ def safefilename(s):
         s = s.replace(c, '-')
     return s
 
+def safe_source_name(s):
+    return safefilename(s).replace('.', '_').replace(' ', '')
+
 def safe_assetpath(s):
     return s[2:] if s[:2] == '//' else s # Remove leading '//'
 

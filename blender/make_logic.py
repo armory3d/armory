@@ -5,6 +5,7 @@ import os
 import sys
 import nodes_logic
 import nodes
+import armutils
 
 # Generating node sources
 def build_node_trees():
@@ -26,7 +27,7 @@ def build_node_trees():
 
 def build_node_tree(node_group):
     path = 'Sources/' + bpy.data.worlds['Arm'].arm_project_package.replace('.', '/') + '/node/'
-    node_group_name = node_group.name.replace('.', '_').replace(' ', '')
+    node_group_name = armutils.safe_source_name(node_group.name)
 
     with open(path + node_group_name + '.hx', 'w') as f:
         f.write('package ' + bpy.data.worlds['Arm'].arm_project_package + '.node;\n\n')

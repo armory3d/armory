@@ -2512,7 +2512,7 @@ class ArmoryExporter:
             x = {}
             if t.type_prop == 'Logic Nodes' and t.nodes_name_prop != '':
                 x['type'] = 'Script'
-                x['class_name'] = bpy.data.worlds['Arm'].arm_project_package + '.node.' + armutils.safe_filename(t.nodes_name_prop)
+                x['class_name'] = bpy.data.worlds['Arm'].arm_project_package + '.node.' + armutils.safe_source_name(t.nodes_name_prop)
             elif t.type_prop == 'JS Script' or t.type_prop == 'Python Script':
                 basename = t.jsscript_prop.split('.')[0]
                 x['type'] = 'Script'
