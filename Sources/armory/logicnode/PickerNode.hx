@@ -4,7 +4,7 @@ import armory.trait.internal.NodeExecutor;
 
 class PickerNode extends Node {
 
-	public var target:iron.node.Node;
+	public var target:iron.object.Object;
 	public var property0:String;
 
 	public function new() {
@@ -18,6 +18,7 @@ class PickerNode extends Node {
 
 	function init() {
 		target = armory.Scene.active.getChild(property0);
+		inputChanged();
 	}
 
 	public static function create(_property0:String):PickerNode {

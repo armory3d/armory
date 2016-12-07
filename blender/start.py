@@ -6,6 +6,7 @@ import props_traits_clip
 import props_traits_params
 import props_traits
 import props_lod
+import props_navigation
 import props
 import props_ui
 import gen_renderpath
@@ -27,6 +28,7 @@ def register():
     props_traits_params.register()
     props_traits.register()
     props_lod.register()
+    props_navigation.register()
     space_armory.register()
     keymap.register()
 
@@ -38,6 +40,7 @@ def unregister():
     props_traits_params.unregister()
     props_traits.unregister()
     props_lod.unregister()
+    props_navigation.unregister()
     handlers.unregister()
     gen_renderpath.unregister()
     props_ui.unregister()

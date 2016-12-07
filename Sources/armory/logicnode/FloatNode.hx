@@ -2,7 +2,7 @@ package armory.logicnode;
 
 class FloatNode extends Node {
 
-	public var val:Float;
+	public var val:Float = 0.0;
 
 	public function new() {
 		super();

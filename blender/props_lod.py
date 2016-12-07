@@ -105,7 +105,7 @@ class ArmoryGenerateLodButton(bpy.types.Operator):
     def execute(self, context):
         obj = context.object
         if obj == None:
-            return
+            return{'CANCELLED'}
 
         # Clear
         mdata = context.object.data

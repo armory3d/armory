@@ -2,7 +2,7 @@ package armory.logicnode;
 
 class IntNode extends Node {
 
-	public var val:Int;
+	public var val:Int = 0;
 
 	public function new() {
 		super();

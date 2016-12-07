@@ -2,7 +2,7 @@ package armory.logicnode;
 
 class BoolNode extends Node {
 
-	public var val:Bool;
+	public var val:Bool = false;
 
 	public function new() {
 		super();

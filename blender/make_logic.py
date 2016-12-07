@@ -101,4 +101,6 @@ def build_default_node(inp):
         inpname = 'FloatNode.create(' + str(inp.default_value) + ')'
     elif inp.type == 'BOOLEAN':
         inpname = 'BoolNode.create(' + str(inp.default_value).lower() + ')'
+    else:
+        inpname = 'BoolNode.create(true)' # Unlinked triggers
     return inpname

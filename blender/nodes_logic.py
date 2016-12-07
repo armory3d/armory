@@ -20,7 +20,7 @@ class TransformNode(Node, ArmLogicTreeNode):
     bl_icon = 'SOUND'
 
     def init(self, context):
-        self.inputs.new('NodeSocketVector', "Position")
+        self.inputs.new('NodeSocketVector', "Location")
         self.inputs.new('NodeSocketVector', "Rotation")
         self.inputs.new('NodeSocketVector', "Scale")
         self.inputs[-1].default_value = [1.0, 1.0, 1.0]
@@ -112,8 +112,30 @@ class SetTransformNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
+        self.inputs.new('NodeSocketShader', "Trigger")
         self.inputs.new('NodeSocketShader', "Target")
         self.inputs.new('NodeSocketShader', "Transform")
+
+class GoToNode(Node, ArmLogicTreeNode):
+    '''Navigate to location'''
+    bl_idname = 'GoToNodeType'
+    bl_label = 'Go To'
+    bl_icon = 'GAME'
+
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Trigger")
+        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "Transform")
+
+class GetTransformNode(Node, ArmLogicTreeNode):
+    '''Get transform node'''
+    bl_idname = 'GetTransformNodeType'
+    bl_label = 'Get Transform'
+    bl_icon = 'GAME'
+
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Target")
+        self.outputs.new('NodeSocketShader', "Transform")
 
 class SetVisibleNode(Node, ArmLogicTreeNode):
     '''Set visible node'''
@@ -129,6 +151,15 @@ class InputDownNode(Node, ArmLogicTreeNode):
     '''Input down node'''
     bl_idname = 'InputDownNodeType'
     bl_label = 'Input Down'
+    bl_icon = 'GAME'
+
+    def init(self, context):
+        self.outputs.new('NodeSocketBool', "Bool")
+
+class InputStartedNode(Node, ArmLogicTreeNode):
+    '''Input started node'''
+    bl_idname = 'InputStartedNodeType'
+    bl_label = 'Input Started'
     bl_icon = 'GAME'
 
     def init(self, context):
@@ -154,7 +185,7 @@ class ObjectNodeCategory(NodeCategory):
     def poll(cls, context):
         return context.space_data.tree_type == 'ArmLogicTreeType'
 
-class TypeNodeCategory(NodeCategory):
+class ValueNodeCategory(NodeCategory):
     @classmethod
     def poll(cls, context):
         return context.space_data.tree_type == 'ArmLogicTreeType'
@@ -174,12 +205,11 @@ node_categories = [
         NodeItem("ThisNodeType"),
         NodeItem("PickerNodeType"),
     ]),
-    TypeNodeCategory("LOGICTYPENODES", "Type", items=[
+    ValueNodeCategory("LOGICVALUENODES", "Value", items=[
         NodeItem("TransformNodeType"),
         NodeItem("VectorNodeType"),
     ]),
     MathNodeCategory("LOGICMATHNODES", "Math", items=[
-        NodeItem("TimeNodeType"),
         NodeItem("ScaleValueNodeType"),
         NodeItem("SineNodeType"),
     ]),
@@ -188,10 +218,14 @@ node_categories = [
     ]),
     LogicNodeCategory("LOGICOPERATORNODES", "Operator", items=[
         NodeItem("SetTransformNodeType"),
+        NodeItem("GetTransformNodeType"),
+        NodeItem("GoToNodeType"),
         NodeItem("SetVisibleNodeType"),
     ]),
     LogicNodeCategory("LOGICINPUTNODES", "Input", items=[
+        NodeItem("TimeNodeType"),
         NodeItem("InputDownNodeType"),
+        NodeItem("InputStartedNodeType"),
     ]),
 ]
 

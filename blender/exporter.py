@@ -2330,10 +2330,18 @@ class ArmoryExporter:
 
             # Scene root traits
             if bpy.data.worlds['Arm'].arm_physics != 'Disabled':
-                self.output['traits'] = []
+                if not 'traits' in self.output:
+                    self.output['traits'] = []
                 x = {}
                 x['type'] = 'Script'
                 x['class_name'] = 'armory.trait.internal.PhysicsWorld'
+                self.output['traits'].append(x)
+            if bpy.data.worlds['Arm'].arm_navigation != 'Disabled':
+                if not 'traits' in self.output:
+                    self.output['traits'] = []
+                x = {}
+                x['type'] = 'Script'
+                x['class_name'] = 'armory.trait.internal.Navigation'
                 self.output['traits'].append(x)
 
         self.export_objects(self.scene)
@@ -2552,6 +2560,26 @@ class ArmoryExporter:
                 x['type'] = 'Script'
                 if t.type_prop == 'Bundled Script':
                     trait_prefix = 'armory.trait.'
+                    # TODO: temporary, export single mesh navmesh as obj
+                    if t.class_name_prop == 'NavMesh' and bobject.type == 'MESH' and bpy.data.worlds['Arm'].arm_navigation != 'Disabled':
+                        nav_path = armutils.get_fp() + '/build/compiled/Assets/navigation'
+                        if not os.path.exists(nav_path):
+                            os.makedirs(nav_path)
+                        nav_filepath = nav_path + '/nav_' + bobject.data.name + '.arm'
+                        assets.add(nav_filepath)
+                        # TODO: Implement cache
+                        #if os.path.isfile(nav_filepath) == False:
+                        with open(nav_filepath, 'w') as f:
+                            for v in bobject.data.vertices:
+                                # f.write("v %.4f %.4f %.4f\n" % v.co[:])
+                                f.write("v %.4f " % (v.co[0] * bobject.scale.x))
+                                f.write("%.4f " % (v.co[2] * bobject.scale.z))
+                                f.write("%.4f\n" % (-v.co[1] * bobject.scale.y))
+                            for p in bobject.data.polygons:
+                                f.write("f")
+                                for i in p.vertices:
+                                    f.write(" %d" % (i + 1))
+                                f.write("\n")
                 else:
                     trait_prefix = bpy.data.worlds['Arm'].arm_project_package + '.'
                 x['class_name'] = trait_prefix + t.class_name_prop

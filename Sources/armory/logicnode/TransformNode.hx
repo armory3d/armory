@@ -7,40 +7,46 @@ import iron.object.Transform;
 
 class TransformNode extends Node {
 
-	public static inline var _position = 0; // Vector
+	public static inline var _location = 0; // Vector
 	public static inline var _rotation = 1; // Vector
 	public static inline var _scale = 2; // Vector
 	
-	public var matrix:Mat4;
+	public var matrix:Mat4 = null;
 	
-	var pos:Vec4;
-	var rot:Quat;
-	var scale:Vec4;
+	var loc:Vec4 = null;
+	var rot:Quat = null;
+	var scale:Vec4 = null;
 
-	public function new() {
+	var buildMatrix:Bool;
+
+	public function new(buildMatrix = true) {
 		super();
 
-		matrix = Mat4.identity();
-		pos = new Vec4();
-		rot = new Quat();
-		scale = new Vec4();
+		this.buildMatrix = buildMatrix;
+		if (buildMatrix) {
+			matrix = Mat4.identity();
+			loc = new Vec4();
+			rot = new Quat();
+			scale = new Vec4();
+		}
 	}
 
 	public override function inputChanged() {
-		// Build matrix
-		pos.set(inputs[_position].inputs[VectorNode._x].val,
-				inputs[_position].inputs[VectorNode._y].val,
-				inputs[_position].inputs[VectorNode._z].val);
+		if (buildMatrix) {
+			loc.set(inputs[_location].inputs[VectorNode._x].val,
+					inputs[_location].inputs[VectorNode._y].val,
+					inputs[_location].inputs[VectorNode._z].val);
 
-		rot.fromEuler(inputs[_rotation].inputs[VectorNode._x].val,
-					  inputs[_rotation].inputs[VectorNode._y].val,
-					  inputs[_rotation].inputs[VectorNode._z].val);
+			rot.fromEuler(inputs[_rotation].inputs[VectorNode._x].val,
+						  inputs[_rotation].inputs[VectorNode._y].val,
+						  inputs[_rotation].inputs[VectorNode._z].val);
 
-		scale.set(inputs[_scale].inputs[VectorNode._x].val,
-				  inputs[_scale].inputs[VectorNode._y].val,
-				  inputs[_scale].inputs[VectorNode._z].val);
+			scale.set(inputs[_scale].inputs[VectorNode._x].val,
+					  inputs[_scale].inputs[VectorNode._y].val,
+					  inputs[_scale].inputs[VectorNode._z].val);
 
-		matrix.compose(pos, rot, scale);
+			matrix.compose(loc, rot, scale);
+		}
 
 		super.inputChanged();
 	}

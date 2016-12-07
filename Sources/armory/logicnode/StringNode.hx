@@ -2,7 +2,7 @@ package armory.logicnode;
 
 class StringNode extends Node {
 
-	public var val:String;
+	public var val:String = '';
 
 	public function new() {
 		super();

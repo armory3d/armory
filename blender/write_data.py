@@ -37,6 +37,15 @@ project.addSources('Sources');
                 ammojs_path = ammojs_path.replace('\\', '/')
                 f.write("project.addAssets('" + ammojs_path + "');\n")
 
+        export_navigation = wrd.arm_navigation != 'Disabled'
+        if export_navigation:
+            f.write("project.addDefine('arm_navigation');\n")
+            f.write(add_armory_library(sdk_path + '/lib/', 'haxerecast'))
+            if state.target == 'krom' or state.target == 'html5':
+                recastjs_path = sdk_path + '/lib/haxerecast/js/recast/recast.js'
+                recastjs_path = recastjs_path.replace('\\', '/')
+                f.write("project.addAssets('" + recastjs_path + "');\n")
+
         if dce_full:
             f.write("project.addParameter('-dce full');")
 
@@ -99,20 +108,25 @@ class Main {
     static inline var projectHeight = """ + str(resy) + """;
     static inline var projectSamplesPerPixel = """ + str(wrd.arm_project_samples_per_pixel) + """;
     static inline var projectScene = '""" + scene_name + scene_ext + """';
+    static var state:Int;
+    static function loadLib(name:String) {
+        kha.LoaderImpl.loadBlobFromDescription({ files: [name] }, function(b:kha.Blob) {
+            untyped __js__("(1, eval)({0})", b.toString());
+            state--;
+            start();
+        });
+    }
     public static function main() {
         iron.system.CompileTime.importPackage('armory.trait');
         iron.system.CompileTime.importPackage('armory.renderpath');
         iron.system.CompileTime.importPackage('""" + wrd.arm_project_package + """');
-        #if (js && arm_physics)
-        kha.LoaderImpl.loadBlobFromDescription({ files: ["ammo.js"] }, function(b:kha.Blob) {
-            untyped __js__("(1, eval)({0})", b.toString());
-            start();
-        });
-        #else
-        start();
-        #end
+        state = 1;
+        #if (js && arm_physics) state++; loadLib("ammo.js"); #end
+        #if (js && arm_navigation) state++; loadLib("recast.js"); #end
+        state--; start();
     }
     static function start() {
+        if (state > 0) return;
         armory.object.Uniforms.register();
         kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel}, function() {
             iron.App.init(function() {

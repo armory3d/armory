@@ -29,7 +29,7 @@ class ThirdPersonController extends CameraController {
 	var xVec = Vec4.xAxis();
 	var zVec = Vec4.zAxis();
 	function preUpdate() {
-		if (Input.occupied || !body.bodyReady) return;
+		if (Input.occupied || !body.ready) return;
 		
 		if (Input.down) {
 			// kha.SystemImpl.lockMouse();
@@ -46,7 +46,7 @@ class ThirdPersonController extends CameraController {
 
 	var dir = new Vec4();
 	function update() {
-		if (!body.bodyReady) return;
+		if (!body.ready) return;
 
 		if (jump) {
 			body.applyImpulse(new Vec4(0, 0, 20));

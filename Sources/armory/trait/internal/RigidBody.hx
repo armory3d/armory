@@ -26,7 +26,7 @@ class RigidBody extends Trait {
 	public var collisionMargin:Float;
 
 	public var body:BtRigidBodyPointer = null;
-	public var bodyReady = false;
+	public var ready = false;
 	public var shapeConvexCreated:Bool;
 
 	static var nextId = 0;
@@ -61,8 +61,8 @@ class RigidBody extends Trait {
 		transform = object.transform;
 		physics = armory.trait.internal.PhysicsWorld.active;
 
-		if (bodyReady) return;
-		bodyReady = true;
+		if (ready) return;
+		ready = true;
 
 		var _shape:BtCollisionShapePointer = null;
 		var _shapeConvex:BtConvexHullShapePointer = null;
@@ -156,7 +156,7 @@ class RigidBody extends Trait {
 	}
 
 	function lateUpdate() {
-		if (!bodyReady) return;
+		if (!ready) return;
 		if (object.animation != null) {
 			syncTransform();
 		}

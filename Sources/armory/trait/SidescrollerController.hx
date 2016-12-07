@@ -22,7 +22,7 @@ class SidescrollerController extends CameraController {
 
 	var dir = new Vec4();
 	function update() {
-		if (!body.bodyReady) return;
+		if (!body.ready) return;
 
 		if (jump) {
 			body.applyImpulse(new Vec4(0, 0, 20));
