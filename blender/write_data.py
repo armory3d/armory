@@ -8,7 +8,7 @@ def add_armory_library(sdk_path, name):
     return ('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/' + name)[2:] + '");\n').replace('\\', '/')
 
 # Write khafile.js
-def write_khafilejs(is_play, export_physics, dce_full=False):
+def write_khafilejs(is_play, export_physics, export_navigation, dce_full=False):
     
     sdk_path = armutils.get_sdk_path()
     
@@ -37,7 +37,6 @@ project.addSources('Sources');
                 ammojs_path = ammojs_path.replace('\\', '/')
                 f.write("project.addAssets('" + ammojs_path + "');\n")
 
-        export_navigation = wrd.arm_navigation != 'Disabled'
         if export_navigation:
             f.write("project.addDefine('arm_navigation');\n")
             f.write(add_armory_library(sdk_path + '/lib/', 'haxerecast'))

@@ -2406,6 +2406,7 @@ class ArmoryExporter:
     def preprocess(self):
         ArmoryExporter.exportAllFlag = True
         ArmoryExporter.export_physics = False # Indicates whether rigid body is exported
+        ArmoryExporter.export_navigation = False
         if not hasattr(ArmoryExporter, 'compress_enabled'):
             ArmoryExporter.compress_enabled = False
         if not hasattr(ArmoryExporter, 'in_viewport'):
@@ -2562,6 +2563,7 @@ class ArmoryExporter:
                     trait_prefix = 'armory.trait.'
                     # TODO: temporary, export single mesh navmesh as obj
                     if t.class_name_prop == 'NavMesh' and bobject.type == 'MESH' and bpy.data.worlds['Arm'].arm_navigation != 'Disabled':
+                        ArmoryExporter.export_navigation = True
                         nav_path = armutils.get_fp() + '/build/compiled/Assets/navigation'
                         if not os.path.exists(nav_path):
                             os.makedirs(nav_path)

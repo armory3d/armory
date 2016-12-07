@@ -43,6 +43,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     raw_shaders_path = sdk_path + 'armory/Shaders/'
     assets_path = sdk_path + 'armory/Assets/'
     export_physics = bpy.data.worlds['Arm'].arm_physics != 'Disabled'
+    export_navigation = bpy.data.worlds['Arm'].arm_navigation != 'Disabled'
     assets.reset()
 
     # Build node trees
@@ -60,6 +61,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     # Export scene data
     assets.embedded_data = sorted(list(set(assets.embedded_data)))
     physics_found = False
+    navigation_found = False
     ArmoryExporter.compress_enabled = is_publish
     ArmoryExporter.in_viewport = in_viewport
     for scene in bpy.data.scenes:
@@ -69,10 +71,15 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
             exporter.execute(bpy.context, asset_path)
             if physics_found == False and ArmoryExporter.export_physics:
                 physics_found = True
+            if navigation_found == False and ArmoryExporter.export_navigation:
+                navigation_found = True
             assets.add(asset_path)
     
     if physics_found == False: # Disable physics anyway if no rigid body exported
         export_physics = False
+
+    if navigation_found == False:
+        export_navigation = False
     
     # Clean compiled variants if cache is disabled
     if bpy.data.worlds['Arm'].arm_cache_shaders == False:
@@ -115,7 +122,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     write_data.write_compiledglsl()
 
     # Write khafile.js
-    write_data.write_khafilejs(is_play, export_physics, dce_full=is_publish)
+    write_data.write_khafilejs(is_play, export_physics, export_navigation, dce_full=is_publish)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     write_data.write_main(is_play, in_viewport, is_publish)
