@@ -842,7 +842,7 @@ class ArmoryExporter:
             # We might still be exporting sampled animation below.
             o['transform'] = {}
 
-            if (sampledAnimation):
+            if sampledAnimation:
                 o['transform']['target'] = "transform"
 
             o['transform']['values'] = self.write_matrix(bobject.matrix_local)
@@ -2009,7 +2009,7 @@ class ArmoryExporter:
         o['shadows_bias'] = objref.lamp_shadows_bias
         if o['type'] == 'sun': # Scale bias for ortho light matrix
             o['shadows_bias'] *= 10.0
-        if objtype == 'POINT' and objref.shadow_soft_size > 0.1: # Point only for now
+        if (objtype == 'POINT' or objtype == 'SPOT') and objref.shadow_soft_size > 0.1: # No sun for now
             lamp_size = objref.shadow_soft_size
             # Slightly higher bias for high sizes
             if lamp_size > 1:

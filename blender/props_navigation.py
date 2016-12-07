@@ -12,18 +12,18 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         if obj == None or obj.type != 'MESH':
             return{'CANCELLED'}
 
-        # TODO: build tilecache instead
-        # export_obj()
-
-        # For visualization
-        # bpy.ops.mesh.navmesh_make('EXEC_DEFAULT')
-        # obj = context.active_object
-        # obj.hide_render = True
+        # TODO: build tilecache here
 
         # Navmesh trait
-        # obj.my_traitlist.add()
-        # obj.my_traitlist[-1].type_prop = 'Bundled Script'
-        # obj.my_traitlist[-1].class_name_prop = 'NavMesh'
+        obj.my_traitlist.add()
+        obj.my_traitlist[-1].type_prop = 'Bundled Script'
+        obj.my_traitlist[-1].class_name_prop = 'NavMesh'
+
+        # For visualization
+        bpy.ops.mesh.navmesh_make('EXEC_DEFAULT')
+        obj = context.active_object
+        obj.hide_render = True
+        obj.game_export = False
 
         return{'FINISHED'}
 
@@ -43,8 +43,7 @@ class ScenePropsPanel(bpy.types.Panel):
         
 
 def register():
-    pass
-    # bpy.utils.register_module(__name__)
+    bpy.utils.register_module(__name__)
 
 def unregister():
     bpy.utils.unregister_module(__name__)
