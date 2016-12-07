@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import armory.trait.internal.NodeExecutor;
 
-class ThisNode extends Node {
+class SelfNode extends Node {
 
 	public var target:iron.object.Object;
 
@@ -16,8 +16,8 @@ class ThisNode extends Node {
 		target = executor.object;
 	}
 
-	public static function create():ThisNode {
-		var n = new ThisNode();
+	public static function create():SelfNode {
+		var n = new SelfNode();
 		return n;
 	}
 }

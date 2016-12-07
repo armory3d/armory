@@ -25,4 +25,13 @@ class Node {
 			p.inputChanged();
 		}
 	}
+
+	// public function fetch(done:Void->Void) {
+	public function fetch() {
+		
+	}
+
+	public function consumed() {
+		
+	}
 }

@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import armory.trait.internal.NodeExecutor;
 
-class PickerNode extends Node {
+class ObjectNode extends Node {
 
 	public var target:iron.object.Object;
 	public var property0:String;
@@ -21,8 +21,8 @@ class PickerNode extends Node {
 		inputChanged();
 	}
 
-	public static function create(_property0:String):PickerNode {
-		var n = new PickerNode();
+	public static function create(_property0:String):ObjectNode {
+		var n = new ObjectNode();
 		n.property0 = _property0;
 		return n;
 	}

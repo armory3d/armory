@@ -83,24 +83,24 @@ class SineNode(Node, ArmLogicTreeNode):
         
         self.outputs.new('NodeSocketFloat', "Value")
 
-class ThisNode(Node, ArmLogicTreeNode):
-    '''This node'''
-    bl_idname = 'ThisNodeType'
-    bl_label = 'This'
+class SelfNode(Node, ArmLogicTreeNode):
+    '''Self node'''
+    bl_idname = 'SelfNodeType'
+    bl_label = 'Self'
     bl_icon = 'GAME'
     
     def init(self, context):
-        self.outputs.new('NodeSocketShader', "Target")
+        self.outputs.new('NodeSocketShader', "Object")
 
-class PickerNode(Node, ArmLogicTreeNode):
-    '''Picker node'''
-    bl_idname = 'PickerNodeType'
-    bl_label = 'Picker'
+class ObjectNode(Node, ArmLogicTreeNode):
+    '''Object node'''
+    bl_idname = 'ObjectNodeType'
+    bl_label = 'Object'
     bl_icon = 'GAME'
     property0 = StringProperty(name = "Object", default="")
 
     def init(self, context):
-        self.outputs.new('NodeSocketShader', "Target")
+        self.outputs.new('NodeSocketShader', "Object")
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, "property0", context.scene, "objects", text = "")
@@ -113,7 +113,7 @@ class SetTransformNode(Node, ArmLogicTreeNode):
 
     def init(self, context):
         self.inputs.new('NodeSocketShader', "Trigger")
-        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "Object")
         self.inputs.new('NodeSocketShader', "Transform")
 
 class GoToNode(Node, ArmLogicTreeNode):
@@ -124,8 +124,8 @@ class GoToNode(Node, ArmLogicTreeNode):
 
     def init(self, context):
         self.inputs.new('NodeSocketShader', "Trigger")
-        self.inputs.new('NodeSocketShader', "Target")
-        self.inputs.new('NodeSocketShader', "Transform")
+        self.inputs.new('NodeSocketShader', "Object")
+        self.inputs.new('NodeSocketShader', "Location")
 
 class GetTransformNode(Node, ArmLogicTreeNode):
     '''Get transform node'''
@@ -134,8 +134,38 @@ class GetTransformNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "Object")
         self.outputs.new('NodeSocketShader', "Transform")
+
+class GetLocationNode(Node, ArmLogicTreeNode):
+    '''Get location node'''
+    bl_idname = 'GetLocationNodeType'
+    bl_label = 'Get Location'
+    bl_icon = 'GAME'
+
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Object")
+        self.outputs.new('NodeSocketShader', "Location")
+
+class NavigableLocationNode(Node, ArmLogicTreeNode):
+    '''Get random navigable location node'''
+    bl_idname = 'NavigableLocationNode'
+    bl_label = 'Navigable Location'
+    bl_icon = 'GAME'
+
+    def init(self, context):
+        self.outputs.new('NodeSocketShader', "Location")
+
+class PickLocationNode(Node, ArmLogicTreeNode):
+    '''Pick location node'''
+    bl_idname = 'PickLocationNode'
+    bl_label = 'Pick Location'
+    bl_icon = 'GAME'
+
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Object")
+        self.inputs.new('NodeSocketShader', "Coords")
+        self.outputs.new('NodeSocketShader', "Location")
 
 class SetVisibleNode(Node, ArmLogicTreeNode):
     '''Set visible node'''
@@ -144,7 +174,7 @@ class SetVisibleNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "Object")
         self.inputs.new('NodeSocketShader', "Bool")
 
 class InputDownNode(Node, ArmLogicTreeNode):
@@ -164,6 +194,15 @@ class InputStartedNode(Node, ArmLogicTreeNode):
 
     def init(self, context):
         self.outputs.new('NodeSocketBool', "Bool")
+
+class InputCoordsNode(Node, ArmLogicTreeNode):
+    '''Input coords node'''
+    bl_idname = 'InputCoordsNodeType'
+    bl_label = 'Input Coords'
+    bl_icon = 'GAME'
+
+    def init(self, context):
+        self.outputs.new('NodeSocketShader', "Coords")
 
 class GreaterThanNode(Node, ArmLogicTreeNode):
     '''Greater than node'''
@@ -201,9 +240,9 @@ class LogicNodeCategory(NodeCategory):
         return context.space_data.tree_type == 'ArmLogicTreeType'
 
 node_categories = [
-    ObjectNodeCategory("LOGICTARGETNODES", "Target", items=[
-        NodeItem("ThisNodeType"),
-        NodeItem("PickerNodeType"),
+    ObjectNodeCategory("LOGICTARGETNODES", "Object", items=[
+        NodeItem("SelfNodeType"),
+        NodeItem("ObjectNodeType"),
     ]),
     ValueNodeCategory("LOGICVALUENODES", "Value", items=[
         NodeItem("TransformNodeType"),
@@ -219,6 +258,9 @@ node_categories = [
     LogicNodeCategory("LOGICOPERATORNODES", "Operator", items=[
         NodeItem("SetTransformNodeType"),
         NodeItem("GetTransformNodeType"),
+        NodeItem("GetLocationNodeType"),
+        NodeItem("NavigableLocationNode"),
+        NodeItem("PickLocationNode"),
         NodeItem("GoToNodeType"),
         NodeItem("SetVisibleNodeType"),
     ]),
@@ -226,6 +268,7 @@ node_categories = [
         NodeItem("TimeNodeType"),
         NodeItem("InputDownNodeType"),
         NodeItem("InputStartedNodeType"),
+        NodeItem("InputCoordsNodeType"),
     ]),
 ]
 
