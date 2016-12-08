@@ -193,6 +193,8 @@ class ArmoryNewScriptDialog(bpy.types.Operator):
         return {'FINISHED'}
  
     def invoke(self, context, event):
+        if not armutils.check_saved(self):
+            return {'CANCELLED'}
         self.class_name = 'MyTrait'
         return context.window_manager.invoke_props_dialog(self)
 

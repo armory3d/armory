@@ -13,18 +13,6 @@ import assets
 import log
 import webbrowser
 
-def check_saved(self):
-    if bpy.data.filepath == "":
-        self.report({"ERROR"}, "Save blend file first")
-        return False
-    return True
-
-def check_camera(self):
-    if len(bpy.data.cameras) == 0:
-        self.report({"ERROR"}, "No camera found in scene")
-        return False
-    return True
-
 # Menu in object region
 class ObjectPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -434,10 +422,10 @@ class ArmoryPlayButton(bpy.types.Operator):
     bl_label = 'Play'
  
     def execute(self, context):
-        if not check_saved(self):
+        if not armutils.check_saved(self):
             return {"CANCELLED"}
 
-        if not check_camera(self):
+        if not armutils.check_camera(self):
             return {"CANCELLED"}
             
         assets.invalidate_enabled = False
@@ -451,10 +439,10 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
     bl_label = 'Play in Viewport'
  
     def execute(self, context):
-        if not check_saved(self):
+        if not armutils.check_saved(self):
             return {"CANCELLED"}
 
-        if not check_camera(self):
+        if not armutils.check_camera(self):
             return {"CANCELLED"}
 
         assets.invalidate_enabled = False
@@ -488,7 +476,7 @@ class ArmoryBuildButton(bpy.types.Operator):
     bl_label = 'Build'
  
     def execute(self, context):
-        if not check_saved(self):
+        if not armutils.check_saved(self):
             return {"CANCELLED"}
 
         assets.invalidate_enabled = False
@@ -515,7 +503,7 @@ class ArmoryFolderButton(bpy.types.Operator):
     bl_label = 'Project Folder'
  
     def execute(self, context):
-        if not check_saved(self):
+        if not armutils.check_saved(self):
             return {"CANCELLED"}
 
         webbrowser.open('file://' + armutils.get_fp())
@@ -537,7 +525,7 @@ class ArmoryKodeStudioButton(bpy.types.Operator):
     bl_description = 'Open Project in Kode Studio'
  
     def execute(self, context):
-        if not check_saved(self):
+        if not armutils.check_saved(self):
             return {"CANCELLED"}
 
         make_utils.kode_studio()
@@ -567,7 +555,7 @@ class ArmoryCleanCacheButton(bpy.types.Operator):
     bl_label = 'Clean Cache'
  
     def execute(self, context):
-        if not check_saved(self):
+        if not armutils.check_saved(self):
             return {"CANCELLED"}
 
         make.clean_cache()
@@ -579,7 +567,7 @@ class ArmoryCleanProjectButton(bpy.types.Operator):
     bl_label = 'Clean Project'
  
     def execute(self, context):
-        if not check_saved(self):
+        if not armutils.check_saved(self):
             return {"CANCELLED"}
 
         make.clean_project()
@@ -591,7 +579,7 @@ class ArmoryPublishButton(bpy.types.Operator):
     bl_label = 'Publish Project'
  
     def execute(self, context):
-        if not check_saved(self):
+        if not armutils.check_saved(self):
             return {"CANCELLED"}
 
         make.publish_project()

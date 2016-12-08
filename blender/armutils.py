@@ -136,6 +136,18 @@ def glsl_version():
     global glslver
     return glslver
 
+def check_saved(self):
+    if bpy.data.filepath == "":
+        self.report({"ERROR"}, "Save blend file first")
+        return False
+    return True
+
+def check_camera(self):
+    if len(bpy.data.cameras) == 0:
+        self.report({"ERROR"}, "No camera found in scene")
+        return False
+    return True
+
 def register():
     global krom_found
     global glslver

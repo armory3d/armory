@@ -315,7 +315,10 @@ const float compoDOFLength = """ + str(round(bpy.data.cameras[0].lens * 100) / 1
 
 def write_traithx(class_name):
     wrd = bpy.data.worlds['Arm']
-    with open('Sources/' + wrd.arm_project_package + '/' + class_name + '.hx', 'w') as f:
+    package_path = armutils.get_fp() + '/Sources/' + wrd.arm_project_package
+    if not os.path.exists(package_path):
+        os.makedirs(package_path)
+    with open(package_path + '/' + class_name + '.hx', 'w') as f:
         f.write(
 """package """ + wrd.arm_project_package + """;
 
