@@ -2571,15 +2571,21 @@ class ArmoryExporter:
                         assets.add(nav_filepath)
                         # TODO: Implement cache
                         #if os.path.isfile(nav_filepath) == False:
+                        override = {'selected_objects': [bobject]}
+                        # bobject.scale.y *= -1
+                        # mesh = obj.data
+                        # for face in mesh.faces:
+                            # face.v.reverse()
+                        # bpy.ops.export_scene.obj(override, use_selection=True, filepath=nav_filepath, check_existing=False, use_normals=False, use_uvs=False, use_materials=False)
+                        # bobject.scale.y *= -1
                         with open(nav_filepath, 'w') as f:
                             for v in bobject.data.vertices:
-                                # f.write("v %.4f %.4f %.4f\n" % v.co[:])
                                 f.write("v %.4f " % (v.co[0] * bobject.scale.x))
                                 f.write("%.4f " % (v.co[2] * bobject.scale.z))
-                                f.write("%.4f\n" % (-v.co[1] * bobject.scale.y))
+                                f.write("%.4f\n" % (v.co[1] * bobject.scale.y)) # Flipped
                             for p in bobject.data.polygons:
                                 f.write("f")
-                                for i in p.vertices:
+                                for i in reversed(p.vertices): # Flipped normals
                                     f.write(" %d" % (i + 1))
                                 f.write("\n")
                 else:
@@ -2620,6 +2626,11 @@ class ArmoryExporter:
             x['parameters'] = [body_mass, shape, rb.friction]
             if rb.use_margin:
                 x['parameters'].append(rb.collision_margin)
+            else:
+                x['parameters'].append(0.0)
+            x['parameters'].append(rb.linear_damping)
+            x['parameters'].append(rb.angular_damping)
+            x['parameters'].append(rb.type == 'PASSIVE')
             o['traits'].append(x)
         
         if type == NodeTypeCamera:

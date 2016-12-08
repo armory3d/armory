@@ -24,6 +24,9 @@ class RigidBody extends Trait {
 	public var mass:Float;
 	public var friction:Float;
 	public var collisionMargin:Float;
+	public var linearDamping:Float;
+	public var angularDamping:Float;
+	public var passive:Bool;
 
 	public var body:BtRigidBodyPointer = null;
 	public var ready = false;
@@ -34,13 +37,17 @@ class RigidBody extends Trait {
 
 	public var onReady:Void->Void = null;
 
-	public function new(mass = 1.0, shape = Shape.Box, friction = 0.5, collisionMargin = 0.0) {
+	public function new(mass = 1.0, shape = Shape.Box, friction = 0.5, collisionMargin = 0.0,
+						linearDamping = 0.04, angularDamping = 0.1, passive = false) {
 		super();
 
 		this.mass = mass;
 		this.shape = shape;
 		this.friction = friction;
 		this.collisionMargin = collisionMargin;
+		this.linearDamping = linearDamping;
+		this.angularDamping = angularDamping;
+		this.passive = passive;
 		
 		Scene.active.notifyOnInit(function() {
 			notifyOnInit(init);
@@ -95,9 +102,10 @@ class RigidBody extends Trait {
 				withMargin(transform.size.z / 2)).value);
 		}
 		else if (shape == Shape.Capsule) {
+			var r = transform.size.x / 2;
 			_shape = BtCapsuleShapeZ.create(
-				withMargin(transform.size.x / 2),// * scaleX, // Radius
-				withMargin(transform.size.z));// * scaleZ); // Height
+				withMargin(r), // Radius
+				withMargin(transform.size.z - r * 2)); // Height between 2 sphere centers
 		}
 		//else if (shape == SHAPE_TERRAIN) {
 			// var data:Array<Dynamic> = [];
@@ -143,6 +151,10 @@ class RigidBody extends Trait {
 		id = nextId;
 		nextId++;
 
+		if (linearDamping != 0.04 || angularDamping != 0.1) {
+			body.setDamping(linearDamping, angularDamping);
+		}
+
 		#if js
 		//body.setUserIndex(nextId);
 		untyped body.userIndex = id;
@@ -157,7 +169,7 @@ class RigidBody extends Trait {
 
 	function lateUpdate() {
 		if (!ready) return;
-		if (object.animation != null) {
+		if (object.animation != null || passive) {
 			syncTransform();
 		}
 		else {
