@@ -11,7 +11,7 @@ try:
 except ImportError:
     pass
 
-arm_ver = '16.11.1'
+arm_ver = '16.12'
 def init_properties():
     global arm_ver
     bpy.types.World.arm_progress = bpy.props.FloatProperty(name="Progress", description="Current build progress", default=100.0, min=0.0, max=100.0, soft_min=0.0, soft_max=100.0, subtype='PERCENTAGE', get=log.get_progress)

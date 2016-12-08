@@ -27,7 +27,7 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
 
         return{'FINISHED'}
 
-class ScenePropsPanel(bpy.types.Panel):
+class SceneNavigationPropsPanel(bpy.types.Panel):
     bl_label = "Armory Navigation"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
