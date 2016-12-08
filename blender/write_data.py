@@ -105,7 +105,7 @@ class Main {
     public static inline var projectAssets = """ + str(len(assets.assets)) + """;
     static inline var projectWidth = """ + str(resx) + """;
     static inline var projectHeight = """ + str(resy) + """;
-    static inline var projectSamplesPerPixel = """ + str(wrd.arm_project_samples_per_pixel) + """;
+    static inline var projectSamplesPerPixel = """ + str(int(wrd.arm_samples_per_pixel)) + """;
     static inline var projectScene = '""" + scene_name + scene_ext + """';
     static var state:Int;
     static function loadLib(name:String) {

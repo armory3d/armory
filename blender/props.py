@@ -31,7 +31,13 @@ def init_properties():
     bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm")
     bpy.types.World.arm_play_active_scene = BoolProperty(name="Play Active Scene", description="Load currently edited scene when launching player", default=True)
     bpy.types.World.arm_project_scene = StringProperty(name="Scene", description="Scene to load when launching player")
-    bpy.types.World.arm_project_samples_per_pixel = IntProperty(name="Samples per Pixel", description="MSAA samples usable for render paths drawing directly to framebuffer", default=1)
+    bpy.types.World.arm_samples_per_pixel = EnumProperty(
+        items=[('1', '1X', '1X'),
+               ('2', '2X', '2X'),
+               ('4', '4X', '4X'),
+               ('8', '8X', '8X'),
+               ('16', '16X', '16X')],
+        name="MSAA", description="Samples per pixel usable for render paths drawing directly to framebuffer", default='1')    
     bpy.types.World.arm_physics = EnumProperty(
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('Bullet', 'Bullet', 'Bullet')],
@@ -166,10 +172,10 @@ def init_properties():
                ('4096', '4096', '4096')],
         name="Shadow Map", description="Shadow map resolution", default='2048')
     bpy.types.Camera.rp_supersampling = EnumProperty(
-        items=[('1X', '1X', '1X'),
-               ('2X', '2X', '2X'),
-               ('4X', '4X', '4X')],
-        name="Super Sampling", description="Screen resolution multiplier", default='1X')
+        items=[('1', '1X', '1X'),
+               ('2', '2X', '2X'),
+               ('4', '4X', '4X')],
+        name="Super Sampling", description="Screen resolution multiplier", default='1')
     bpy.types.Camera.rp_antialiasing = EnumProperty(
         items=[('None', 'None', 'None'),
                ('FXAA', 'FXAA', 'FXAA'),

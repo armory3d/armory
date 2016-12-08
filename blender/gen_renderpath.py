@@ -91,7 +91,7 @@ class EffectsRPDataPropsPanel(bpy.types.Panel):
                 if wrd.generate_pcss_state == 'On' or wrd.generate_pcss_state == 'Auto':
                     layout.prop(wrd, 'generate_pcss_rings')
             
-            layout.prop(wrd, 'arm_project_samples_per_pixel')
+            layout.prop(wrd, 'arm_samples_per_pixel')
             layout.prop(wrd, 'generate_gpu_skin')
             if wrd.generate_gpu_skin:
                 layout.prop(wrd, 'generate_gpu_skin_max_bones')
