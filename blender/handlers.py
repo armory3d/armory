@@ -128,6 +128,7 @@ def on_scene_update_post(context):
 @persistent
 def on_load_post(context):
     props.init_properties_on_load()
+    nodes_renderpath.reload_blend_data()
 
 @persistent
 def on_save_pre(context):
