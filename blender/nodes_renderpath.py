@@ -2,6 +2,7 @@ import bpy
 from bpy.types import NodeTree, Node, NodeSocket
 from bpy.props import *
 import armutils
+import make_renderer
 
 class CGPipelineTree(NodeTree):
     '''Render path nodes'''
@@ -842,18 +843,47 @@ node_categories = [
 
 # Handling node data
 def reload_blend_data():
-    if bpy.data.node_groups.get('forward_path') == None:
-        load_library()
-        pass
+    if bpy.data.node_groups.get('Armory PBR') == None:
+        load_library('Armory PBR')
+        # Temporary
+        reimport_paths()
+    check_default()
 
-def load_library():
+def check_default():
+    if bpy.data.node_groups.get('armory_default') == None and len(bpy.data.cameras) > 0:
+        make_renderer.make_renderer(bpy.data.cameras[0])
+
+def load_library(asset_name, rename=None):
     sdk_path = armutils.get_sdk_path()
     data_path = sdk_path + '/armory/blender/data/data.blend'
-    data_names = ['forward_path', 'forward_path_low', 'forward_path_high', 'deferred_path', 'deferred_path_low', 'deferred_path_high', 'hybrid_path', 'vr_path', 'pathtrace_path', 'grease_pencil_path', 'Armory PBR']
+    data_names = [asset_name]
+
+    # Remove old
+    # for name in data_names:
+        # if name in bpy.data.node_groups and name != 'Armory PBR':
+            # bpy.data.node_groups.remove(bpy.data.node_groups[name], do_unlink=True)
+    if rename != None and rename in bpy.data.node_groups and asset_name != 'Armory PBR':
+        bpy.data.node_groups.remove(bpy.data.node_groups[rename], do_unlink=True)
+
+    # Import
+    data_refs = data_names.copy()
+    with bpy.data.libraries.load(data_path, link=False) as (data_from, data_to):
+        data_to.node_groups = data_refs
+
+    for ref in data_refs:
+        ref.use_fake_user = True
+        if rename != None:
+            ref.name = rename
+
+# Temporary
+def reimport_paths():
+    sdk_path = armutils.get_sdk_path()
+    data_path = sdk_path + '/armory/blender/data/data.blend'
+    data_names = ['forward_path', 'forward_path_low', 'forward_path_high', 'deferred_path', 'deferred_path_low', 'deferred_path_high', 'hybrid_path', 'vr_path', 'grease_pencil_path']
 
     # Remove old
     for name in data_names:
-        if name in bpy.data.node_groups and name != 'Armory PBR':
+        if name in bpy.data.node_groups:
             bpy.data.node_groups.remove(bpy.data.node_groups[name], do_unlink=True)
 
     # Import
@@ -863,7 +893,7 @@ def load_library():
 
     for ref in data_refs:
         ref.use_fake_user = True
-        # bpy.data.node_groups[name].use_fake_user = True
+#
 
 def register():
     bpy.utils.register_module(__name__)

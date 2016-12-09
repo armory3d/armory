@@ -428,6 +428,8 @@ class ArmoryPlayButton(bpy.types.Operator):
         if not armutils.check_camera(self):
             return {"CANCELLED"}
             
+        nodes_renderpath.check_default()
+
         assets.invalidate_enabled = False
         make.play_project(self, False)
         assets.invalidate_enabled = True
@@ -444,6 +446,8 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
 
         if not armutils.check_camera(self):
             return {"CANCELLED"}
+
+        nodes_renderpath.check_default()
 
         assets.invalidate_enabled = False
         if state.playproc == None:
