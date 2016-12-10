@@ -570,11 +570,15 @@ def parse_opacity_socket(self, opacity_input, opacity_strength_input, material, 
     # Image has to linked
     if opacity_input.is_linked:
         opacity_node = nodes.find_node_by_link(tree, node, opacity_input)
-        # Image Color is linked to opacity, add opacity texture - otherwise base color alpha is used
-        if opacity_node.type == 'TEX_IMAGE' and opacity_node.outputs[0].is_linked:
-            add_opacity_tex(self, opacity_node, material, c, defs)
-            parse_image_vector(opacity_node, defs, tree, '_OpacTex1')
-            defs.append('_Translucent')
+        if opacity_node.type == 'TEX_IMAGE':
+            # Image Color is linked to opacity, add opacity texture
+            if opacity_input.links[0].from_socket.name == 'Color':
+                add_opacity_tex(self, opacity_node, material, c, defs)
+                parse_image_vector(opacity_node, defs, tree, '_OpacTex1')
+                defs.append('_Translucent')
+            # Otherwise use base color alpha
+            elif opacity_input.links[0].from_socket.name == 'Alpha':
+                defs.append('_Translucent')
     # Take default value
     else:
         opacity = opacity_input.default_value
@@ -616,7 +620,8 @@ def parse_pbr_group(self, material, c, defs, tree, node, factor):
     parse_normal_map_socket(self, normal_map_input, material, c, defs, tree, node, factor)
     normal_strength_input = node.inputs[7]
     normal_strength = normal_strength_input.default_value
-    if normal_strength != 1.0:
+    # Strenght only for normal maps
+    if normal_map_input.is_linked and normal_strength != 1.0:
         add_normal_strength(self, c, defs, normal_strength)
     # Emission
     emission_input = node.inputs[8]

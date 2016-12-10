@@ -145,10 +145,10 @@ void main() {
 	vec3 baseColor = matColor.rgb;
 #ifdef _BaseTex
 	vec4 texel = texture(sbase, texCoord);
-	#ifdef _AlphaTest
-	if (texel.a < 0.4)
-		discard;
-	#endif
+	// #ifdef _AlphaTest
+	// if (texel.a < 0.4)
+		// discard;
+	// #endif
 	texel.rgb = pow(texel.rgb, vec3(2.2));
 	baseColor *= texel.rgb;
 #endif
