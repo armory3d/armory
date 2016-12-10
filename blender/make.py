@@ -39,6 +39,9 @@ def compile_shader(raw_shaders_path, shader_name, defs):
 
 def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False):
     global exporter
+    wrd = bpy.data.worlds['Arm']
+
+    print('\nArmory v' + wrd.arm_version)
 
     raw_shaders_path = sdk_path + 'armory/Shaders/'
     assets_path = sdk_path + 'armory/Assets/'
@@ -82,7 +85,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
         export_navigation = False
     
     # Clean compiled variants if cache is disabled
-    if bpy.data.worlds['Arm'].arm_cache_shaders == False:
+    if wrd.arm_cache_shaders == False:
         if os.path.isdir('build/html5-resources'):
             shutil.rmtree('build/html5-resources')
         if os.path.isdir('build/krom-resources'):
