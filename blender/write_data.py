@@ -108,6 +108,7 @@ class Main {
     static inline var projectSamplesPerPixel = """ + str(int(wrd.arm_samples_per_pixel)) + """;
     static inline var projectScene = '""" + scene_name + scene_ext + """';
     static var state:Int;
+    #if js
     static function loadLib(name:String) {
         kha.LoaderImpl.loadBlobFromDescription({ files: [name] }, function(b:kha.Blob) {
             untyped __js__("(1, eval)({0})", b.toString());
@@ -115,6 +116,7 @@ class Main {
             start();
         });
     }
+    #end
     public static function main() {
         iron.system.CompileTime.importPackage('armory.trait');
         iron.system.CompileTime.importPackage('armory.renderpath');
