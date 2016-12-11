@@ -2873,6 +2873,28 @@ class ArmoryExporter:
         if ArmoryExporter.mesh_context_empty != '' and '_Translucent' not in defs:
             c2 = {}
             c2['name'] = ArmoryExporter.mesh_context_empty
+            # Depth pre-pass for height context
+            if '_HeightTex' in defs:
+                c2['name'] += 'height'
+                c2['bind_constants'] = []
+                c2['bind_textures'] = []
+                for bc in c['bind_constants']:
+                    if bc['name'] == 'heightStrength':
+                        c2['bind_constants'].append(bc)
+                        break
+                for bt in c['bind_textures']:
+                    if bt['name'] == 'sheight':
+                        c2['bind_textures'].append(bt)
+                        break
+                const = {}
+                const['name'] = 'innerLevel'
+                const['float'] = material.height_tess_inner
+                c2['bind_constants'].append(const)
+                const = {}
+                const['name'] = 'outerLevel'
+                const['float'] = material.height_tess_outer
+                c2['bind_constants'].append(const)
+            
             o['contexts'].append(c2)
 
         # Material users        
@@ -3129,6 +3151,8 @@ class ArmoryExporter:
         # Process all passes from render path
         if with_tess: # TODO: properly handle adding height pass shaders to khafile
             rpasses = [ArmoryExporter.mesh_context + 'height']
+            if ArmoryExporter.mesh_context_empty != '':
+                rpasses.append(ArmoryExporter.mesh_context_empty + 'height')
             if bpy.data.worlds['Arm'].generate_shadows == True:
                 rpasses.append(ArmoryExporter.shadows_context + 'height')
         else:

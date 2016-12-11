@@ -146,6 +146,158 @@
 			"fragment_shader": "mesh.frag.glsl"
 		},
 		{
+			"name": "meshheight",
+			"depth_write": true,
+			"compare_mode": "less",
+			"cull_mode": "clockwise",
+			"links": [
+				{
+					"name": "WVP",
+					"link": "_worldViewProjectionMatrix"
+				},
+				{
+					"name": "W",
+					"link": "_worldMatrix"
+				},
+				{
+					"name": "N",
+					"link": "_normalMatrix"
+				},
+				{
+					"name": "V",
+					"link": "_viewMatrix"
+				},
+				{
+					"name": "P",
+					"link": "_projectionMatrix"
+				},
+				{
+					"name": "LWVP",
+					"link": "_lampWorldViewProjectionMatrix",
+					"ifndef": "_NoShadows"
+				},
+				{
+					"name": "lightPos",
+					"link": "_lampPosition"
+				},
+				{
+					"name": "lightDir",
+					"link": "_lampDirection"
+				},
+				{
+					"name": "lightColor",
+					"link": "_lampColor"
+				},
+				{
+					"name": "lightStrength",
+					"link": "_lampStrength"
+				},
+				{
+					"name": "shadowsBias",
+					"link": "_lampShadowsBias"
+				},
+				{
+					"name": "spotlightCutoff",
+					"link": "_spotlampCutoff"
+				},
+				{
+					"name": "spotlightExponent",
+					"link": "_spotlampExponent"
+				},
+				{
+					"name": "lightType",
+					"link": "_lampType"
+				},
+				{
+					"name": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"name": "skinBones",
+					"link": "_skinBones",
+					"ifdef": ["_Skinning"]
+				},
+				{
+					"name": "shirr",
+					"link": "_envmapIrradiance"
+				},
+				{
+					"name": "senvmapRadiance",
+					"link": "_envmapRadiance",
+					"ifdef": ["_Rad"]
+				},
+				{
+					"name": "envmapNumMipmaps",
+					"link": "_envmapNumMipmaps",
+					"ifdef": ["_Rad"]
+				},
+				{
+					"name": "senvmapBrdf",
+					"link": "_envmapBrdf",
+					"ifdef": ["_Rad"]
+				},
+				{
+					"name": "envmapStrength",
+					"link": "_envmapStrength"
+				},
+				{
+					"name": "U",
+					"link": "_undistortionMatrix",
+					"ifdef": ["_VR"]
+				},
+				{
+					"name": "maxRadSq",
+					"link": "_maxRadiusSq",
+					"ifdef": ["_VR"]
+				},
+				{
+					"name": "snoise",
+					"link": "_noise64",
+					"ifdef": ["_PCSS"]
+				},
+				{
+					"name": "lampSizeUV",
+					"link": "_lampSizeUV",
+					"ifdef": ["_PCSS"]
+				},
+				{
+					"name": "lampArea0",
+					"link": "_lampArea0",
+					"ifdef": ["_PolyLight"]
+				},
+				{
+					"name": "lampArea1",
+					"link": "_lampArea1",
+					"ifdef": ["_PolyLight"]
+				},
+				{
+					"name": "lampArea2",
+					"link": "_lampArea2",
+					"ifdef": ["_PolyLight"]
+				},
+				{
+					"name": "lampArea3",
+					"link": "_lampArea3",
+					"ifdef": ["_PolyLight"]
+				},
+				{
+					"name": "sltcMat",
+					"link": "_ltcMat",
+					"ifdef": ["_PolyLight"]
+				},
+				{
+					"name": "sltcMag",
+					"link": "_ltcMag",
+					"ifdef": ["_PolyLight"]
+				}
+			],
+			"vertex_shader": "meshheight.vert.glsl",
+			"fragment_shader": "meshheight.frag.glsl",
+			"fragment_shader_path": "mesh.frag.glsl",
+			"tesscontrol_shader": "meshheight.tesc.glsl",
+			"tesseval_shader": "meshheight.tese.glsl"
+		},
+		{
 			"name": "overlay",
 			"depth_write": true,
 			"compare_mode": "less",
@@ -251,6 +403,31 @@
 			"vertex_shader_path": "../include/shadowmap.vert.glsl",
 			"fragment_shader": "shadowmap.frag.glsl",
 			"fragment_shader_path": "../include/shadowmap.frag.glsl"
+		},
+		{
+			"name": "shadowmapheight",
+			"depth_write": true,
+			"compare_mode": "less_equal",
+			"cull_mode": "clockwise",
+			"links": [
+				{
+					"name": "LWVP",
+					"link": "_lampWorldViewProjectionMatrix"
+				},
+				{
+					"name": "skinBones",
+					"link": "_skinBones",
+					"ifdef": ["_Skinning"]
+				}
+			],
+			"vertex_shader": "shadowmapheight.vert.glsl",
+			"vertex_shader_path": "../include/shadowmapheight.vert.glsl",
+			"fragment_shader": "shadowmapheight.frag.glsl",
+			"fragment_shader_path": "../include/shadowmap.frag.glsl",
+			"tesscontrol_shader": "shadowmapheight.tesc.glsl",
+			"tesscontrol_shader_path": "../include/shadowmapheight.tesc.glsl",
+			"tesseval_shader": "shadowmapheight.tese.glsl",
+			"tesseval_shader_path": "../include/shadowmapheight.tese.glsl"
 		},
 		{
 			"name": "translucent",

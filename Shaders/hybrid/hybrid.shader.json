@@ -111,6 +111,119 @@
 			"fragment_shader": "mesh.frag.glsl"
 		},
 		{
+			"name": "meshheight",
+			"depth_write": false,
+			"compare_mode": "less_equal",
+			"cull_mode": "clockwise",
+			"links": [
+				{
+					"name": "W",
+					"link": "_worldMatrix"
+				},
+				{
+					"name": "N",
+					"link": "_normalMatrix"
+				},
+				{
+					"name": "WV",
+					"link": "_worldViewMatrix",
+					"ifdef": ["_Billboard"]
+				},
+				{
+					"name": "P",
+					"link": "_projectionMatrix",
+					"ifdef": ["_Billboard"]
+				},
+				{
+					"name": "WVP",
+					"link": "_worldViewProjectionMatrix"
+				},
+				{
+					"name": "LWVP",
+					"link": "_lampWorldViewProjectionMatrix"
+				},
+				{
+					"name": "lightPos",
+					"link": "_lampPosition"
+				},
+				{
+					"name": "lightDir",
+					"link": "_lampDirection"
+				},
+				{
+					"name": "lightColor",
+					"link": "_lampColor"
+				},
+				{
+					"name": "lightStrength",
+					"link": "_lampStrength"
+				},
+				{
+					"name": "shadowsBias",
+					"link": "_lampShadowsBias"
+				},
+				{
+					"name": "spotlightCutoff",
+					"link": "_spotlampCutoff"
+				},
+				{
+					"name": "spotlightExponent",
+					"link": "_spotlampExponent"
+				},
+				{
+					"name": "lightType",
+					"link": "_lampType"
+				},
+				{
+					"name": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"name": "skinBones",
+					"link": "_skinBones",
+					"ifdef": ["_Skinning"]
+				},
+				{
+					"name": "shirr",
+					"link": "_envmapIrradiance"
+				},
+				{
+					"name": "senvmapRadiance",
+					"link": "_envmapRadiance",
+					"ifdef": ["_Rad"]
+				},
+				{
+					"name": "envmapNumMipmaps",
+					"link": "_envmapNumMipmaps",
+					"ifdef": ["_Rad"]
+				},
+				{
+					"name": "senvmapBrdf",
+					"link": "_envmapBrdf",
+					"ifdef": ["_Rad"]
+				},
+				{
+					"name": "envmapStrength",
+					"link": "_envmapStrength"
+				},
+				{
+					"name": "snoise",
+					"link": "_noise64",
+					"ifdef": ["_PCSS"]
+				},
+				{
+					"name": "lampSizeUV",
+					"link": "_lampSizeUV",
+					"ifdef": ["_PCSS"]
+				}
+			],
+			"vertex_shader": "meshheight.vert.glsl",
+			"fragment_shader": "meshheight.frag.glsl",
+			"fragment_shader_path": "mesh.frag.glsl",
+			"tesscontrol_shader": "meshheight.tesc.glsl",
+			"tesseval_shader": "meshheight.tese.glsl"
+		},
+		{
 			"name": "overlay",
 			"depth_write": true,
 			"compare_mode": "less",
@@ -208,6 +321,31 @@
 			"fragment_shader_path": "../include/shadowmap.frag.glsl"
 		},
 		{
+			"name": "shadowmapheight",
+			"depth_write": true,
+			"compare_mode": "less_equal",
+			"cull_mode": "clockwise",
+			"links": [
+				{
+					"name": "LWVP",
+					"link": "_lampWorldViewProjectionMatrix"
+				},
+				{
+					"name": "skinBones",
+					"link": "_skinBones",
+					"ifdef": ["_Skinning"]
+				}
+			],
+			"vertex_shader": "shadowmapheight.vert.glsl",
+			"vertex_shader_path": "../include/shadowmapheight.vert.glsl",
+			"fragment_shader": "shadowmapheight.frag.glsl",
+			"fragment_shader_path": "../include/shadowmap.frag.glsl",
+			"tesscontrol_shader": "shadowmapheight.tesc.glsl",
+			"tesscontrol_shader_path": "../include/shadowmapheight.tesc.glsl",
+			"tesseval_shader": "shadowmapheight.tese.glsl",
+			"tesseval_shader_path": "../include/shadowmapheight.tese.glsl"
+		},
+		{
 			"name": "depthwrite",
 			"depth_write": true,
 			"compare_mode": "less",
@@ -241,6 +379,45 @@
 			"vertex_shader_path": "../include/shadowmap.vert.glsl",
 			"fragment_shader": "depthwrite.frag.glsl",
 			"fragment_shader_path": "../include/shadowmap.frag.glsl"
+		},
+		{
+			"name": "depthwriteheight",
+			"depth_write": true,
+			"compare_mode": "less",
+			"cull_mode": "clockwise",
+			"color_write_red": false,
+			"color_write_green": false,
+			"color_write_blue": false,
+			"color_write_alpha": false,
+			"links": [
+				{
+					"name": "LWVP",
+					"link": "_worldViewProjectionMatrix"
+				},
+				{
+					"name": "P",
+					"link": "_projectionMatrix",
+					"ifdef": ["_Billboard"]
+				},
+				{
+					"name": "WV",
+					"link": "_worldViewMatrix",
+					"ifdef": ["_Billboard"]
+				},
+				{
+					"name": "skinBones",
+					"link": "_skinBones",
+					"ifdef": ["_Skinning"]
+				}
+			],
+			"vertex_shader": "depthwriteheight.vert.glsl",
+			"vertex_shader_path": "../include/shadowmapheight.vert.glsl",
+			"fragment_shader": "depthwriteheight.frag.glsl",
+			"fragment_shader_path": "../include/shadowmap.frag.glsl",
+			"tesscontrol_shader": "depthwriteheight.tesc.glsl",
+			"tesscontrol_shader_path": "../include/shadowmapheight.tesc.glsl",
+			"tesseval_shader": "depthwriteheight.tese.glsl",
+			"tesseval_shader_path": "../include/shadowmapheight.tese.glsl"
 		},
 		{
 			"name": "translucent",

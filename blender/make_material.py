@@ -303,7 +303,7 @@ def parse_bsdf_diffuse(self, material, c, defs, tree, node, factor):
         normal_map_node = nodes.find_node_by_link(tree, node, normal_input)
         if normal_map_node.type == 'NORMAL_MAP':
             normal_map_input = normal_map_node.inputs[1]
-            parse_normal_map_socket(self, normal_map_input, material, c, defs, tree, node, factor)
+            parse_normal_map_socket(self, normal_map_input, material, c, defs, tree, normal_map_node, factor)
 
 def parse_emission(self, material, c, defs, tree, node, factor):
     # Color

@@ -103,10 +103,10 @@ void main() {
 	vec4 texel = texture(sbase, texCoord);
 	#endif
 
-#ifdef _AlphaTest
-	if(texel.a < 0.4)
-		discard;
-#endif
+// #ifdef _AlphaTest
+	// if(texel.a < 0.4)
+		// discard;
+// #endif
 
 	texel.rgb = pow(texel.rgb, vec3(2.2)); // Variant 1
 	baseColor *= texel.rgb;

@@ -30,19 +30,9 @@
 					"ifdef": ["_Veloc"]
 				},
 				{
-					"name": "light",
-					"link": "_lampPosition",
-					"ifdef": ["_HeightTex"]
-				},
-				{
-					"name": "eye",
-					"link": "_cameraPosition",
-					"ifdef": ["_HeightTex"]
-				},
-				{
 					"name": "W",
 					"link": "_worldMatrix",
-					"ifdef": ["_Probes", "_HeightTex"]
+					"ifdef": ["_Probes"]
 				},
 				{
 					"name": "probeVolumeCenter",
@@ -145,6 +135,7 @@
 			],
 			"vertex_shader": "meshheight.vert.glsl",
 			"fragment_shader": "meshheight.frag.glsl",
+			"fragment_shader_path": "mesh.frag.glsl",
 			"tesscontrol_shader": "meshheight.tesc.glsl",
 			"tesseval_shader": "meshheight.tese.glsl"
 		},
@@ -272,10 +263,13 @@
 				}
 			],
 			"vertex_shader": "shadowmapheight.vert.glsl",
+			"vertex_shader_path": "../include/shadowmapheight.vert.glsl",
 			"fragment_shader": "shadowmapheight.frag.glsl",
 			"fragment_shader_path": "../include/shadowmap.frag.glsl",
 			"tesscontrol_shader": "shadowmapheight.tesc.glsl",
-			"tesseval_shader": "shadowmapheight.tese.glsl"
+			"tesscontrol_shader_path": "../include/shadowmapheight.tesc.glsl",
+			"tesseval_shader": "shadowmapheight.tese.glsl",
+			"tesseval_shader_path": "../include/shadowmapheight.tese.glsl"
 		},
 		{
 			"name": "decals",

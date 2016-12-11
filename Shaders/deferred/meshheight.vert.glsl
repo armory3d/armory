@@ -9,6 +9,9 @@ precision highp float;
 in vec3 pos;
 in vec3 nor;
 in vec2 tex;
+#ifdef _Tex1
+	in vec2 tex1;
+#endif
 #ifdef _VCols
 	in vec3 col;
 #endif
@@ -24,11 +27,21 @@ in vec2 tex;
 #endif
 
 out vec3 v_position;
-out vec2 v_texCoord;
 out vec3 v_normal;
+out vec2 v_texCoord;
+#ifdef _Tex1
+	out vec2 v_texCoord1;
+#endif
+// #ifdef _VCols
+	// out vec3 v_color;
+// #endif
 #ifdef _NorTex
 	out vec3 v_tangent;
 #endif
+// #ifdef _Skinning
+// 	out vec4 v_bone;
+// 	out vec4 v_weight;
+// #endif
 
 // uniform sampler2D sheight;
 // uniform float heightStrength;
@@ -40,9 +53,21 @@ void main() {
 #endif
 
 	v_texCoord = tex;
+#ifdef _Tex1
+	v_texCoord1 = tex1;
+#endif
 	v_normal = nor;
 #ifdef _NorTex
 	v_tangent = tan;
 #endif
 	// v_position += v_normal * texture(sheight, tex).r * heightStrength;
+
+// #ifdef _VCols
+	// v_color = col;
+// #endif
+
+// #ifdef _Skinning
+// 	v_bone = bone;
+// 	v_weight = weight;
+// #endif
 }

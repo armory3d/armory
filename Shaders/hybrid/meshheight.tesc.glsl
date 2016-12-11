@@ -25,6 +25,7 @@ out vec3 tc_normal[];
 	out vec3 tc_tangent[];
 #endif
 
+
 uniform float innerLevel;
 uniform float outerLevel;
 
@@ -36,6 +37,7 @@ void main() {
 #ifdef _Tex1
 	tc_texCoord1[ID] = v_texCoord1[ID];
 #endif
+
 	tc_normal[ID] = v_normal[ID];
 #ifdef _NorTex
 	tc_tangent[ID] = v_tangent[ID];
