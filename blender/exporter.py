@@ -22,6 +22,7 @@ import armutils
 import subprocess
 import log
 import make_material
+import material.make as make_material_full
 import nodes
 
 NodeTypeNode = 0
@@ -2756,7 +2757,10 @@ class ArmoryExporter:
 
         # Parse from material output
         if decal_uv_layer == None:
-            make_material.parse(self, material, c, defs)
+            if wrd.arm_material_level == 'Restricted':
+                make_material.parse(self, material, c, defs)
+            else:
+                make_material_full.parse(self, material, c, defs)
             o['contexts'].append(c)
         # Decal attached, split material into two separate ones
         # Mandatory starting point from mix node for now
@@ -2928,7 +2932,10 @@ class ArmoryExporter:
                 with_tess = True
             if wrd.voxelgi:
                 geom_context = 'voxel'
-            self.finalize_shader(o, defs, ArmoryExporter.renderpath_passes, with_tess=with_tess, geom_context=geom_context)
+            if wrd.arm_material_level == 'Restricted':
+                self.finalize_shader(o, defs, ArmoryExporter.renderpath_passes, with_tess=with_tess, geom_context=geom_context)
+            else:
+                self.finalize_shader_full(o, material, ArmoryExporter.renderpath_passes)
         else:
             # TODO: gather defs from vertex data when custom shader is used
             o['shader'] = material.override_shader_name
@@ -3111,7 +3118,17 @@ class ArmoryExporter:
         po['volume'] = volume
         po['volume_center'] = volume_center
         return po
-            
+    
+    def finalize_shader_full(self, o, material, rpasses):
+        shader_data_name = material.name + '_data'
+        shader_data_path = 'build/compiled/ShaderRaws/' + material.name + '/' + shader_data_name + '.arm'
+        assets.add_shader_data(shader_data_path)
+        o['shader'] = shader_data_name + '/' + shader_data_name
+        for ren_pass in rpasses:
+            full_name = 'build/compiled/ShaderRaws/' + material.name + '/' + material.name + '_' + ren_pass
+            assets.add_shader(full_name + '.vert.glsl')
+            assets.add_shader(full_name + '.frag.glsl')
+
     def finalize_shader(self, o, defs, renderpath_passes, with_tess=False, geom_context=None):
         # Merge duplicates and sort
         defs = sorted(list(set(defs)))

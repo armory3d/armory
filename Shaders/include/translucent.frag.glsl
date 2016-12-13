@@ -74,7 +74,6 @@ uniform vec3 lightPos;
 uniform vec3 lightDir;
 uniform int lightType;
 uniform vec3 lightColor;
-uniform float lightStrength;
 uniform float spotlightCutoff;
 uniform float spotlightExponent;
 uniform vec3 eye;
@@ -194,7 +193,7 @@ void main() {
 		}
 	}
 	
-	direct = direct * lightColor * lightStrength;
+	direct = direct * lightColor;
 
 	// Indirect
 	vec3 indirectDiffuse = shIrradiance(n, 2.2) / PI;	
@@ -215,7 +214,7 @@ void main() {
 	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 	indirect += indirectSpecular;
 #endif
-	indirect = indirect * envmapStrength;// * lightColor * lightStrength;
+	indirect = indirect * envmapStrength;// * lightColor;
 
 
 	vec4 premultipliedReflect = vec4(vec3(direct * visibility + indirect * occlusion), matColor.a);

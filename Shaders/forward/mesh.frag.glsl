@@ -76,7 +76,6 @@ uniform vec3 lightPos;
 uniform vec3 lightDir;
 uniform int lightType;
 uniform vec3 lightColor;
-uniform float lightStrength;
 uniform float spotlightCutoff;
 uniform float spotlightExponent;
 uniform float shadowsBias;
@@ -353,7 +352,7 @@ void main() {
 	}
 #endif
 	
-	direct = direct * lightColor * lightStrength;
+	direct = direct * lightColor;
 
 
 #ifdef _VoxelGI
@@ -401,7 +400,7 @@ void main() {
 	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 	indirect += indirectSpecular;
 #endif
-	indirect = indirect * envmapStrength;// * lightColor * lightStrength;
+	indirect = indirect * envmapStrength;// * lightColor;
 
 #endif	
 

@@ -120,7 +120,7 @@ void main() {
 	indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 #endif
 
-	indirect = indirect * envmapStrength;// * lightColor * lightStrength;
+	indirect = indirect * envmapStrength;// * lightColor;
 	indirect = indirect * g1.a; // Occlusion
 
 #ifdef _SSAO

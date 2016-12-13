@@ -53,7 +53,7 @@ uniform vec3 lightPos;
 uniform vec3 lightDir;
 uniform int lightType;
 // uniform int lightIndex;
-uniform float lightStrength;
+uniform vec3 lightColor;
 uniform float shadowsBias;
 uniform float spotlightCutoff;
 uniform float spotlightExponent;
@@ -69,8 +69,6 @@ uniform vec3 eye;
 
 #ifdef _LampColTex
 uniform sampler2D texlampcolor;
-#else
-uniform vec3 lightColor;
 #endif
 
 // in vec2 texCoord;
@@ -225,13 +223,11 @@ void main() {
 	// vec3 direct = diffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH, dotLV) + wardSpecular(n, h, dotNL, dotNV, dotNH, fiberDirection, shinyParallel, shinyPerpendicular);
 	// #endif
 
-	direct *= lightStrength;
+	direct *= lightColor;
 
 #ifdef _LampColTex
 	// direct *= texture(texlampcolor, envMapEquirect(l)).rgb;
-	direct *= pow(texture(texlampcolor, l.xy).rgb, vec3(2.2));
-#else
-	direct *= lightColor;
+	direct *= pow(texture(texlampcolor, l.xy).rgb, vec3(2.2));	
 #endif
 	
 #ifdef _SSS

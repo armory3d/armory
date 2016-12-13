@@ -40,10 +40,6 @@
 					"link": "_lampColor"
 				},
 				{
-					"name": "lightStrength",
-					"link": "_lampStrength"
-				},
-				{
 					"name": "shadowsBias",
 					"link": "_lampShadowsBias"
 				},
@@ -189,10 +185,6 @@
 					"link": "_lampColor"
 				},
 				{
-					"name": "lightStrength",
-					"link": "_lampStrength"
-				},
-				{
 					"name": "shadowsBias",
 					"link": "_lampShadowsBias"
 				},
@@ -330,10 +322,6 @@
 				{
 					"name": "lightColor",
 					"link": "_lampColor"
-				},
-				{
-					"name": "lightStrength",
-					"link": "_lampStrength"
 				},
 				{
 					"name": "eye",
@@ -480,10 +468,6 @@
 					"link": "_lampColor"
 				},
 				{
-					"name": "lightStrength",
-					"link": "_lampStrength"
-				},
-				{
 					"name": "spotlightCutoff",
 					"link": "_spotlampCutoff"
 				},
@@ -511,10 +495,6 @@
 				{
 					"name": "lightColor",
 					"link": "_lampColor"
-				},
-				{
-					"name": "lightStrength",
-					"link": "_lampStrength"
 				},
 				{
 					"name": "shirr",

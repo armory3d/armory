@@ -34,10 +34,6 @@
 					"link": "_lampColor"
 				},
 				{
-					"name": "lightStrength",
-					"link": "_lampStrength"
-				},
-				{
 					"name": "lightBias",
 					"link": "_lampBias"
 				},

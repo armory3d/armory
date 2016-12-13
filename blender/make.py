@@ -28,7 +28,7 @@ def compile_shader(raw_shaders_path, shader_name, defs):
     fp = armutils.get_fp()
 
     # Open json file
-    json_name = shader_name + '.shader.json'
+    json_name = shader_name + '.json'
     base_name = json_name.split('.', 1)[0]
     with open(json_name) as f:
         json_file = f.read()
@@ -42,6 +42,24 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     wrd = bpy.data.worlds['Arm']
 
     print('\nArmory v' + wrd.arm_version)
+
+    # Clean compiled variants if cache is disabled
+    if wrd.arm_cache_shaders == False:
+        if os.path.isdir('build/html5-resources'):
+            shutil.rmtree('build/html5-resources')
+        if os.path.isdir('build/krom-resources'):
+            shutil.rmtree('build/krom-resources')
+        if os.path.isdir('build/window/krom-resources'):
+            shutil.rmtree('build/window/krom-resources')
+        if os.path.isdir('build/compiled/Shaders'):
+            shutil.rmtree('build/compiled/Shaders')
+        if os.path.isdir('build/compiled/ShaderDatas'):
+            shutil.rmtree('build/compiled/ShaderDatas')
+        if os.path.isdir('build/compiled/ShaderRaws'):
+            shutil.rmtree('build/compiled/ShaderRaws')
+    # Remove shader datas if shaders were deleted
+    elif os.path.isdir('build/compiled/Shaders') == False and os.path.isdir('build/compiled/ShaderDatas') == True:
+        shutil.rmtree('build/compiled/ShaderDatas')
 
     raw_shaders_path = sdk_path + 'armory/Shaders/'
     assets_path = sdk_path + 'armory/Assets/'
@@ -83,22 +101,6 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
 
     if navigation_found == False:
         export_navigation = False
-    
-    # Clean compiled variants if cache is disabled
-    if wrd.arm_cache_shaders == False:
-        if os.path.isdir('build/html5-resources'):
-            shutil.rmtree('build/html5-resources')
-        if os.path.isdir('build/krom-resources'):
-            shutil.rmtree('build/krom-resources')
-        if os.path.isdir('build/window/krom-resources'):
-            shutil.rmtree('build/window/krom-resources')
-        if os.path.isdir('build/compiled/Shaders'):
-            shutil.rmtree('build/compiled/Shaders')
-        if os.path.isdir('build/compiled/ShaderDatas'):
-            shutil.rmtree('build/compiled/ShaderDatas')
-    # Remove shader datas if shaders were deleted
-    elif os.path.isdir('build/compiled/Shaders') == False and os.path.isdir('build/compiled/ShaderDatas') == True:
-        shutil.rmtree('build/compiled/ShaderDatas')
 
     # Write referenced shader variants
     for ref in assets.shader_datas:

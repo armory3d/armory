@@ -43,10 +43,6 @@
 					"link": "_lampColor"
 				},
 				{
-					"name": "lightStrength",
-					"link": "_lampStrength"
-				},
-				{
 					"name": "snoise",
 					"link": "_noise8"
 				}

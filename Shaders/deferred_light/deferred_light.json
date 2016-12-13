@@ -35,17 +35,12 @@
 				},
 				{
 					"name": "lightColor",
-					"link": "_lampColor",
-					"ifndef": ["_LampColTex"]
+					"link": "_lampColor"
 				},
 				{
 					"name": "texlampcolor",
 					"link": "_lampColorTexture",
 					"ifdef": ["_LampColTex"]
-				},
-				{
-					"name": "lightStrength",
-					"link": "_lampStrength"
 				},
 				{
 					"name": "shadowsBias",

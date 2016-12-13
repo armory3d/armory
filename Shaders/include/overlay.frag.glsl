@@ -65,7 +65,6 @@ uniform float envmapStrength;
 uniform bool receiveShadow;
 uniform vec3 lightDir;
 uniform vec3 lightColor;
-uniform float lightStrength;
 
 in vec3 position;
 #ifdef _Tex
@@ -150,7 +149,7 @@ void main() {
 #else
 	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);
 #endif
-	direct = direct * lightColor * lightStrength;
+	direct = direct * lightColor;
 	
 	// Indirect
 	vec3 indirectDiffuse = shIrradiance(n, 2.2) / PI;	
@@ -171,7 +170,7 @@ void main() {
 	vec3 indirectSpecular = prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 	indirect += indirectSpecular;
 #endif
-	indirect = indirect * envmapStrength; // * lightColor * lightStrength;
+	indirect = indirect * envmapStrength; // * lightColor;
 	fragColor = vec4(vec3(direct * visibility + indirect), 1.0);
 	
 #ifdef _OccTex

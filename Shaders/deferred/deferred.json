@@ -174,10 +174,6 @@
 					"link": "_lampColor"
 				},
 				{
-					"name": "lightStrength",
-					"link": "_lampStrength"
-				},
-				{
 					"name": "eye",
 					"link": "_cameraPosition"
 				},
@@ -367,10 +363,6 @@
 					"link": "_lampColor"
 				},
 				{
-					"name": "lightStrength",
-					"link": "_lampStrength"
-				},
-				{
 					"name": "spotlightCutoff",
 					"link": "_spotlampCutoff"
 				},
@@ -398,10 +390,6 @@
 				{
 					"name": "lightColor",
 					"link": "_lampColor"
-				},
-				{
-					"name": "lightStrength",
-					"link": "_lampStrength"
 				},
 				{
 					"name": "shirr",
