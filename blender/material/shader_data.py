@@ -33,6 +33,11 @@ class ShaderData:
 class ShaderContext:
 
     def __init__(self, material, shader_data, props):
+        self.vert = None
+        self.frag = None
+        self.geom = None
+        self.tesc = None
+        self.tese = None
         self.material = material
         self.shader_data = shader_data
         self.data = {}
@@ -69,7 +74,7 @@ class ShaderContext:
             c['link'] = link
         self.tunits.append(c)
 
-    def vert(self):
+    def make_vert(self):
         self.data['vertex_shader'] = self.material.name + '_' + self.data['name'] + '.vert'
         self.vert = Shader(self)
         
@@ -78,24 +83,24 @@ class ShaderContext:
             self.vert.add_in('vec' + str(e['size']) + ' ' + e['name'])
         return self.vert
 
-    def frag(self):
+    def make_frag(self):
         self.data['fragment_shader'] = self.material.name + '_' + self.data['name'] + '.frag'
         self.frag = Shader(self)
         self.frag.ins = self.vert.outs
         self.frag.add_out('vec4 fragColor')
         return self.frag
 
-    def geom(self):
+    def make_geom(self):
         self.data['geometry_shader'] = self.material.name + '_' + self.data['name'] + '.geom'
         self.geom = Shader(self)
         return self.geom
 
-    def tesc(self):
+    def make_tesc(self):
         self.data['tesscontrol_shader'] = self.material.name + '_' + self.data['name'] + '.tesc'
         self.tesc = Shader(self)
         return self.tesc
 
-    def tese(self):
+    def make_tese(self):
         self.data['tesseval_shader'] = self.material.name + '_' + self.data['name'] + '.tese'
         self.tese = Shader(self)
         return self.tese
