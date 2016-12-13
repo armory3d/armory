@@ -7,6 +7,7 @@ class Shader:
         self.ins = []
         self.outs = []
         self.uniforms = []
+        self.functions = {}
         self.main = ''
         self.tab = 1
 
@@ -31,6 +32,12 @@ class Shader:
         if included == False:
             self.uniforms.append(s)
 
+    def add_function(self, s):
+        fname = s.split('(', 1)[0]
+        if fname in self.functions:
+            return
+        self.functions[fname] = s
+
     def write(self, s):
         self.main += '\t' * self.tab + s + '\n'
 
@@ -44,7 +51,8 @@ class Shader:
             s += 'out ' + a + ';\n'
         for a in self.uniforms:
             s += 'uniform ' + a + ';\n'
-
+        for f in self.functions:
+            s += self.functions[f]
         s += 'void main() {\n'
         s += self.main
         s += '}\n'

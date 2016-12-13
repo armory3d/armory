@@ -19,6 +19,7 @@ def mesh(context_id):
     vert.write('wposition = vec4(W * spos).xyz;')
     vert.write('eyeDir = eye - wposition;')
     vert.write('gl_Position = WVP * spos;')
+    # vert.write('position = vec4(W * spos).xyz;') # TODO: non translated world position for procedural textures
 
     frag.add_include('../../Shaders/compiled.glsl')
     frag.add_include('../../Shaders/std/brdf.glsl')
@@ -75,7 +76,7 @@ def mesh(context_id):
     frag.write('vec3 basecol;')
     frag.write('float roughness;')
     frag.write('float metallic;')
-    # frag.write('float occlussion;')
+    frag.write('float occlusion;')
 
     make_cycles.parse(state.nodes, vert, frag)
 
@@ -91,7 +92,7 @@ def mesh(context_id):
     frag.write('vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;')
     frag.write('indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);')
 
-    frag.write('fragColor = vec4(direct * lightColor * visibility + indirect * envmapStrength, 1.0);')
+    frag.write('fragColor = vec4(direct * lightColor * visibility + indirect * occlusion * envmapStrength, 1.0);')
 
     return con_mesh
 
