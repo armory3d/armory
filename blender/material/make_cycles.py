@@ -16,6 +16,121 @@
 #
 import armutils
 
+str_tex_checker = """vec3 tex_checker(const vec3 co, const vec3 col1, const vec3 col2, const float scale) {
+    vec3 p = co * scale;
+    // Prevent precision issues on unit coordinates
+    //p.x = (p.x + 0.000001) * 0.999999;
+    //p.y = (p.y + 0.000001) * 0.999999;
+    //p.z = (p.z + 0.000001) * 0.999999;
+    float xi = abs(floor(p.x));
+    float yi = abs(floor(p.y));
+    float zi = abs(floor(p.z));
+    bool check = ((mod(xi, 2.0) == mod(yi, 2.0)) == bool(mod(zi, 2.0)));
+    return check ? col1 : col2;
+}
+"""
+
+# Created by inigo quilez - iq/2013
+# License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
+str_tex_voronoi = """//vec3 hash(vec3 x) {
+    //return texture(snoise, (x.xy + vec2(3.0, 1.0) * x.z + 0.5) / 64.0, -100.0).xyz;
+    //x = vec3(dot(x, vec3(127.1, 311.7, 74.7)),
+    //         dot(x, vec3(269.5, 183.3, 246.1)),
+    //         dot(x, vec3(113.5, 271.9, 124.6)));
+    //return fract(sin(x) * 43758.5453123);
+//}
+vec4 tex_voronoi(const vec3 x) {
+    vec3 xx = x / 3.0; // Match cycles
+    vec3 p = floor(xx);
+    vec3 f = fract(xx);
+    float id = 0.0;
+    float res = 100.0;
+    for (int k = -1; k <= 1; k++)
+    for (int j = -1; j <= 1; j++)
+    for (int i = -1; i <= 1; i++) {
+        vec3 b = vec3(float(i), float(j), float(k));
+        vec3 pb = p + b;
+        vec3 r = vec3(b) - f + texture(snoise, (pb.xy + vec2(3.0, 1.0) * pb.z + 0.5) / 64.0, -100.0).xyz;
+        //vec3 r = vec3(b) - f + hash(p + b);
+        float d = dot(r, r);
+        if (d < res) {
+            id = dot(p + b, vec3(1.0, 57.0, 113.0));
+            res = d;
+        }
+    }
+    vec3 col = 0.5 + 0.5 * cos(id * 0.35 + vec3(0.0, 1.0, 2.0));
+    return vec4(col, sqrt(res));
+}
+"""
+
+# str_tex_noise = """
+# float tex_noise_f(const vec3 x) {
+#     vec3 p = floor(x);
+#     vec3 f = fract(x);
+#     f = f * f * (3.0 - 2.0 * f);
+#     vec2 uv = (p.xy + vec2(37.0, 17.0) * p.z) + f.xy;
+#     vec2 rg = texture(snoisea, (uv + 0.5) / 64.0, -100.0).yx;
+#     return mix(rg.x, rg.y, f.z);
+# }
+# float tex_noise(vec3 q) {
+#     //return fract(sin(dot(q.xy, vec2(12.9898,78.233))) * 43758.5453);
+#     q *= 2.0; // Match to Cycles
+#     const mat3 m = mat3(0.00, 0.80, 0.60, -0.80, 0.36, -0.48, -0.60, -0.48, 0.64);
+#     float f = 0.5000 * tex_noise_f(q); q = m * q * 2.01;
+#     f += 0.2500 * tex_noise_f(q); q = m * q * 2.02;
+#     f += 0.1250 * tex_noise_f(q); q = m * q * 2.03;
+#     f += 0.0625 * tex_noise_f(q); q = m * q * 2.01;
+#     return pow(f, 3.0);
+# }
+# """
+# Created by Nikita Miropolskiy, nikat/2013
+# Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
+str_tex_noise = """
+vec3 random3(vec3 c) {
+    // Might not be precise on lowp floats
+    float j = 4096.0 * sin(dot(c, vec3(17.0, 59.4, 15.0)));
+    vec3 r;
+    r.z = fract(512.0 * j);
+    j *= 0.125;
+    r.x = fract(512.0 * j);
+    j *= 0.125;
+    r.y = fract(512.0 * j);
+    return r - 0.5;
+}
+float tex_noise_f(vec3 p) {
+    const float F3 = 0.3333333;
+    const float G3 = 0.1666667;
+    vec3 s = floor(p + dot(p, vec3(F3)));
+    vec3 x = p - s + dot(s, vec3(G3));
+    vec3 e = step(vec3(0.0), x - x.yzx);
+    vec3 i1 = e*(1.0 - e.zxy);
+    vec3 i2 = 1.0 - e.zxy*(1.0 - e);
+    vec3 x1 = x - i1 + G3;
+    vec3 x2 = x - i2 + 2.0*G3;
+    vec3 x3 = x - 1.0 + 3.0*G3;
+    vec4 w, d;
+    w.x = dot(x, x);
+    w.y = dot(x1, x1);
+    w.z = dot(x2, x2);
+    w.w = dot(x3, x3);
+    w = max(0.6 - w, 0.0);
+    d.x = dot(random3(s), x);
+    d.y = dot(random3(s + i1), x1);
+    d.z = dot(random3(s + i2), x2);
+    d.w = dot(random3(s + 1.0), x3);
+    w *= w;
+    w *= w;
+    d *= w;
+    return clamp(dot(d, vec4(52.0)), 0.0, 1.0);
+}
+float tex_noise(vec3 p) {
+    return 0.5333333 * tex_noise_f(p)
+        + 0.2666667 * tex_noise_f(2.0 * p)
+        + 0.1333333 * tex_noise_f(4.0 * p)
+        + 0.0666667 * tex_noise_f(8.0 * p);
+}
+"""
+
 def node_by_type(nodes, ntype):
     for n in nodes:
         if n.type == ntype:
@@ -26,17 +141,25 @@ def socket_index(node, socket):
         if node.outputs[i] == socket:
             return i
 
+def node_name(s):
+    s = armutils.safe_source_name(s)
+    if len(parents) > 0:
+        s = armutils.safe_source_name(parents[-1].name) + '_' + s
+    return s
+
 def parse(nodes, vert, frag):
-    # global parsed
-    # parsed = [] # Compute node only once
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
     if output_node != None:
         parse_output(output_node, vert, frag)
 
 def parse_output(node, _vert, _frag):
+    global parsed
     global parents
     global vert
     global frag
+    global str_tex_checker
+    global str_tex_voronoi
+    parsed = [] # Compute nodes only once
     parents = []
     vert = _vert
     frag = _frag
@@ -78,6 +201,10 @@ def parse_input(inp):
 def parse_shader_input(inp):
     if inp.is_linked:
         l = inp.links[0]
+
+        if l.from_node.type == 'REROUTE':
+            return parse_shader_input(l.from_node.inputs[0])
+
         return parse_shader(l.from_node, l.from_socket)
     else:
         out_basecol = 'vec3(0.8)'
@@ -92,11 +219,7 @@ def parse_shader(node, socket):
     out_metallic = '0.0'
     out_occlusion = '1.0'
 
-    if node.type == 'REROUTE':
-        l = node.inputs[0].links[0]
-        return parse_shader(l.from_node, l.from_socket)
-
-    elif node.type == 'GROUP':
+    if node.type == 'GROUP':
         if node.node_tree.name.startswith('Armory PBR'):
             pass
         else:
@@ -107,12 +230,16 @@ def parse_shader(node, socket):
 
     elif node.type == 'MIX_SHADER':
         fac = parse_value_input(node.inputs[0])
+        fac_var = node_name(node.name) + '_fac'
+        fac_inv_var = node_name(node.name) + '_fac_inv'
+        frag.write('float {0} = {1};'.format(fac_var, fac))
+        frag.write('float {0} = 1.0 - {1};'.format(fac_inv_var, fac_var))
         bc1, rough1, met1, occ1 = parse_shader_input(node.inputs[1])
         bc2, rough2, met2, occ2 = parse_shader_input(node.inputs[2])
-        out_basecol = '({0} * (1.0 - {2}) + {1} * {2})'.format(bc1, bc2, fac)
-        out_roughness = '({0} * (1.0 - {2}) + {1} * {2})'.format(rough1, rough2, fac)
-        out_metallic = '({0} * (1.0 - {2}) + {1} * {2})'.format(met1, met2, fac)
-        out_occlusion = '({0} * (1.0 - {2}) + {1} * {2})'.format(occ1, occ2, fac)
+        out_basecol = '({0} * {3} + {1} * {2})'.format(bc1, bc2, fac_var, fac_inv_var)
+        out_roughness = '({0} * {3} + {1} * {2})'.format(rough1, rough2, fac_var, fac_inv_var)
+        out_metallic = '({0} * {3} + {1} * {2})'.format(met1, met2, fac_var, fac_inv_var)
+        out_occlusion = '({0} * {3} + {1} * {2})'.format(occ1, occ2, fac_var, fac_inv_var)
 
     elif node.type == 'ADD_SHADER':
         bc1, rough1, met1, occ1 = parse_shader_input(node.inputs[0])
@@ -189,22 +316,30 @@ def parse_shader(node, socket):
 def parse_vector_input(inp):
     if inp.is_linked:
         l = inp.links[0]
-        if l.from_socket.type == 'RGB' or l.from_socket.type == 'RGBA':
-            return parse_rgb(l.from_node, l.from_socket)
-        elif l.from_socket.type == 'VECTOR':
-            return parse_vector(l.from_node, l.from_socket)
-        elif l.from_socket.type == 'VALUE':
-            return 'vec3({0})'.format(parse_value(l.from_node, l.from_socket))
+
+        if l.from_node.type == 'REROUTE':
+            return parse_vector_input(l.from_node.inputs[0])
+
+        res_var = node_name(l.from_node.name) + '_res'
+        if res_var not in parsed:
+            parsed.append(res_var)
+            if l.from_socket.type == 'RGB' or l.from_socket.type == 'RGBA':
+                res = parse_rgb(l.from_node, l.from_socket)
+            elif l.from_socket.type == 'VECTOR':
+                res = parse_vector(l.from_node, l.from_socket)
+            elif l.from_socket.type == 'VALUE':
+                res = 'vec3({0})'.format(parse_value(l.from_node, l.from_socket))
+            frag.write('vec3 {0} = {1};'.format(res_var, res))
+        return res_var
     else:
-        return vec3(inp.default_value)
+        if inp.type == 'VALUE': # Unlinked reroute
+            return tovec3([0.0, 0.0, 0.0])
+        else:
+            return tovec3(inp.default_value)
 
 def parse_rgb(node, socket):
 
-    if node.type == 'REROUTE':
-        l = node.inputs[0].links[0]
-        return parse_rgb(l.from_node, l.from_socket)
-
-    elif node.type == 'GROUP':
+    if node.type == 'GROUP':
         return parse_group(node, socket)
 
     elif node.type == 'GROUP_INPUT':
@@ -215,90 +350,104 @@ def parse_rgb(node, socket):
         pass
 
     elif node.type == 'RGB':
-        return vec3(socket.default_value)
+        return tovec3(socket.default_value)
 
     elif node.type == 'TEX_BRICK':
         # Pass through
-        return vec3([0.0, 0.0, 0.0])
+        return tovec3([0.0, 0.0, 0.0])
 
     elif node.type == 'TEX_CHECKER':
-        frag.add_function(\
-"""vec3 tex_checker(const vec3 co, const vec3 col1, const vec3 col2, const float scale) {
-    vec3 p = co * scale;
-    // Prevent precision issues on unit coordinates
-    //p.x = (p.x + 0.000001) * 0.999999;
-    //p.y = (p.y + 0.000001) * 0.999999;
-    //p.z = (p.z + 0.000001) * 0.999999;
-    float xi = abs(floor(p.x));
-    float yi = abs(floor(p.y));
-    float zi = abs(floor(p.z));
-    bool check = ((mod(xi, 2.0) == mod(yi, 2.0)) == bool(mod(zi, 2.0)));
-    return check ? col1 : col2;
-}
-""")
-        # co = parse_vector_input(node.inputs[0])
+        frag.add_function(str_tex_checker)
+        if node.inputs[0].is_linked:
+            co = parse_vector_input(node.inputs[0])
+        else:
+            co = 'wposition'
         col1 = parse_vector_input(node.inputs[1])
         col2 = parse_vector_input(node.inputs[2])
         scale = parse_value_input(node.inputs[3])
-        return 'tex_checker(wposition, {0}, {1}, {2})'.format(col1, col2, scale)
+        return 'tex_checker({0}, {1}, {2}, {3})'.format(co, col1, col2, scale)
 
     elif node.type == 'TEX_ENVIRONMENT':
         # Pass through
-        return vec3([0.0, 0.0, 0.0])
+        return tovec3([0.0, 0.0, 0.0])
 
     elif node.type == 'TEX_GRADIENT':
+        if node.inputs[0].is_linked:
+            co = parse_vector_input(node.inputs[0])
+        else:
+            co = 'wposition'
         grad = node.gradient_type
         if grad == 'LINEAR':
-            f = 'wposition.x'
+            f = '{0}.x'.format(co)
         elif grad == 'QUADRATIC':
             f = '0.0'
         elif grad == 'EASING':
             f = '0.0'
         elif grad == 'DIAGONAL':
-            f = '(wposition.x + wposition.y) * 0.5'
+            f = '({0}.x + {0}.y) * 0.5'.format(co)
         elif grad == 'RADIAL':
-            f = 'atan(wposition.y, wposition.x) / PI2 + 0.5'
+            f = 'atan({0}.y, {0}.x) / PI2 + 0.5'.format(co)
         elif grad == 'QUADRATIC_SPHERE':
             f = '0.0'
         elif grad == 'SPHERICAL':
-            f = 'max(1.0 - sqrt(wposition.x * wposition.x + wposition.y * wposition.y + wposition.z * wposition.z), 0.0)'
+            f = 'max(1.0 - sqrt({0}.x * {0}.x + {0}.y * {0}.y + {0}.z * {0}.z), 0.0)'.format(co)
         return 'vec3(clamp({0}, 0.0, 1.0))'.format(f)
 
     elif node.type == 'TEX_IMAGE':
         # Pass through
-        return vec3([0.0, 0.0, 0.0])
+        return tovec3([0.0, 0.0, 0.0])
 
     elif node.type == 'TEX_MAGIC':
         # Pass through
-        return vec3([0.0, 0.0, 0.0])
+        return tovec3([0.0, 0.0, 0.0])
 
     elif node.type == 'TEX_MUSGRAVE':
-        # Pass through
-        return vec3([0.0, 0.0, 0.0])
-
-    elif node.type == 'TEX_NOISE':
-        # co = parse_vector_input(node.inputs[0])
-        # scale = parse_value_input(node.inputs[1])
+        # Fall back to noise
+        frag.add_function(str_tex_noise)
+        if node.inputs[0].is_linked:
+            co = parse_vector_input(node.inputs[0])
+        else:
+            co = 'wposition'
+        scale = parse_value_input(node.inputs[1])
         # detail = parse_value_input(node.inputs[2])
         # distortion = parse_value_input(node.inputs[3])
-        # No proper noise yet
-        return 'vec3(fract(sin(dot(wposition.xy, vec2(12.9898,78.233))) * 43758.5453))'
+        return 'vec3(tex_noise_f({0} * {1}))'.format(co, scale)
+
+    elif node.type == 'TEX_NOISE':
+        frag.add_function(str_tex_noise)
+        if node.inputs[0].is_linked:
+            co = parse_vector_input(node.inputs[0])
+        else:
+            co = 'wposition'
+        scale = parse_value_input(node.inputs[1])
+        # detail = parse_value_input(node.inputs[2])
+        # distortion = parse_value_input(node.inputs[3])
+        # Slow..
+        return 'vec3(tex_noise({0} * {1}), tex_noise({0} * {1} + vec3(0.33)), tex_noise({0} * {1} + vec3(0.66)))'.format(co, scale)
 
     elif node.type == 'TEX_POINTDENSITY':
         # Pass through
-        return vec3([0.0, 0.0, 0.0])
+        return tovec3([0.0, 0.0, 0.0])
 
     elif node.type == 'TEX_SKY':
         # Pass through
-        return vec3([0.0, 0.0, 0.0])
+        return tovec3([0.0, 0.0, 0.0])
 
     elif node.type == 'TEX_VORONOI':
-        # Pass through
-        return vec3([0.0, 0.0, 0.0])
+        frag.add_function(str_tex_voronoi)
+        if node.inputs[0].is_linked:
+            co = parse_vector_input(node.inputs[0])
+        else:
+            co = 'wposition'
+        scale = parse_value_input(node.inputs[1])
+        if node.coloring == 'INTENSITY':
+            return 'vec3(tex_voronoi({0} / {1}).a)'.format(co, scale)
+        else: # CELLS
+            return 'tex_voronoi({0} / {1}).rgb'.format(co, scale)
 
     elif node.type == 'TEX_WAVE':
         # Pass through
-        return vec3([0.0, 0.0, 0.0])
+        return tovec3([0.0, 0.0, 0.0])
 
     elif node.type == 'BRIGHTCONTRAST':
         out_col = parse_vector_input(node.inputs[0])
@@ -337,46 +486,48 @@ def parse_rgb(node, socket):
 
     elif node.type == 'MIX_RGB':
         fac = parse_value_input(node.inputs[0])
+        fac_var = node_name(node.name) + '_fac'
+        frag.write('float {0} = {1};'.format(fac_var, fac))
         col1 = parse_vector_input(node.inputs[1])
         col2 = parse_vector_input(node.inputs[2])
         blend = node.blend_type
         if blend == 'MIX':
-            out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac)
+            out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var)
         elif blend == 'ADD':
-            out_col = 'mix({0}, {0} + {1}, {2})'.format(col1, col2, fac)
+            out_col = 'mix({0}, {0} + {1}, {2})'.format(col1, col2, fac_var)
         elif blend == 'MULTIPLY':
-            out_col = 'mix({0}, {0} * {1}, {2})'.format(col1, col2, fac)
+            out_col = 'mix({0}, {0} * {1}, {2})'.format(col1, col2, fac_var)
         elif blend == 'SUBTRACT':
-            out_col = 'mix({0}, {0} - {1}, {2})'.format(col1, col2, fac)
+            out_col = 'mix({0}, {0} - {1}, {2})'.format(col1, col2, fac_var)
         elif blend == 'SCREEN':
-            out_col = '(vec3(1.0) - (vec3(1.0 - {2}) + {2} * (vec3(1.0) - {1})) * (vec3(1.0) - {0}))'.format(col1, col2, fac)
+            out_col = '(vec3(1.0) - (vec3(1.0 - {2}) + {2} * (vec3(1.0) - {1})) * (vec3(1.0) - {0}))'.format(col1, col2, fac_var)
         elif blend == 'DIVIDE':
-            out_col = '(vec3((1.0 - {2}) * {0} + {2} * {0} / {1}))'.format(col1, col2, fac)
+            out_col = '(vec3((1.0 - {2}) * {0} + {2} * {0} / {1}))'.format(col1, col2, fac_var)
         elif blend == 'DIFFERENCE':
-            out_col = 'mix({0}, abs({0} - {1}), {2})'.format(col1, col2, fac)
+            out_col = 'mix({0}, abs({0} - {1}), {2})'.format(col1, col2, fac_var)
         elif blend == 'DARKEN':
-            out_col = 'min({0}, {1} * {2})'.format(col1, col2, fac)
+            out_col = 'min({0}, {1} * {2})'.format(col1, col2, fac_var)
         elif blend == 'LIGHTEN':
-            out_col = 'max({0}, {1} * {2})'.format(col1, col2, fac)
+            out_col = 'max({0}, {1} * {2})'.format(col1, col2, fac_var)
         elif blend == 'OVERLAY':
-            out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac) # Revert to mix
+            out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
         elif blend == 'DODGE':
-            out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac) # Revert to mix
+            out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
         elif blend == 'BURN':
-            out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac) # Revert to mix
+            out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
         elif blend == 'HUE':
-            out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac) # Revert to mix
+            out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
         elif blend == 'SATURATION':
-            out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac) # Revert to mix
+            out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
         elif blend == 'VALUE':
-            out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac) # Revert to mix
+            out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
         elif blend == 'COLOR':
-            out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac) # Revert to mix
+            out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
         elif blend == 'SOFT_LIGHT':
             out_col = '((1.0 - {2}) * {0} + {2} * ((vec3(1.0) - {0}) * {1} * {0} + {0} * (vec3(1.0) - (vec3(1.0) - {1}) * (vec3(1.0) - {0}))));'.format(col1, col2, fac)
         elif blend == 'LINEAR_LIGHT':
-            out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac) # Revert to mix
-            # out_col = '({0} + {2} * (2.0 * ({1} - vec3(0.5))))'.format(col1, col2, fac)
+            out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
+            # out_col = '({0} + {2} * (2.0 * ({1} - vec3(0.5))))'.format(col1, col2, fac_var)
         if node.use_clamp:
             return 'clamp({0}, vec3(0.0), vec3(1.0))'.format(out_col)
         else:
@@ -388,17 +539,30 @@ def parse_rgb(node, socket):
 
     elif node.type == 'BLACKBODY':
         # Pass constant
-        return vec3([0.84, 0.38, 0.0])
+        return tovec3([0.84, 0.38, 0.0])
 
     elif node.type == 'VALTORGB': # ColorRamp
-        # Max 2 elements, no position
         fac = parse_value_input(node.inputs[0])
+        interp = node.color_ramp.interpolation
         elems = node.color_ramp.elements
-        # elem[0].position - 0 to 1
         if len(elems) == 1:
-            return vec3(elems[0].color)
-        else:
-            return 'mix({0}, {1}, {2})'.format(vec3(elems[0].color), vec3(elems[1].color), fac)
+            return tovec3(elems[0].color)
+        if interp == 'CONSTANT':
+            fac_var = node_name(node.name) + '_fac'
+            frag.write('float {0} = 1.0 - {1};'.format(fac_var, fac))
+            # Get index
+            out_i = '0'
+            for i in  range(1, len(elems)):
+                out_i += ' + ({0} > {1} ? 0 : 1)'.format(fac_var, elems[i].position)
+            # Write cols array
+            cols_var = node_name(node.name) + '_cols'
+            frag.write('vec3 {0}[{1}];'.format(cols_var, len(elems)))
+            for i in range(0, len(elems)):
+                frag.write('{0}[{1}] = vec3({2}, {3}, {4});'.format(cols_var, i, elems[i].color[0], elems[i].color[1], elems[i].color[2]))
+            return '{0}[{1}]'.format(cols_var, out_i)
+        else: # Linear, .. - 2 elems only, end pos assumed to be 1
+            # float f = clamp((pos - start) * (1.0 / (1.0 - start)), 0.0, 1.0);
+            return 'mix({0}, {1}, clamp(({2} - {3}) * (1.0 / (1.0 - {3})), 0.0, 1.0))'.format(tovec3(elems[0].color), tovec3(elems[1].color), fac, elems[0].position)
 
     elif node.type == 'COMBHSV':
 # vec3 hsv2rgb(vec3 c) {
@@ -416,7 +580,7 @@ def parse_rgb(node, socket):
 #     return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
 # }
         # Pass constant
-        return vec3([0.0, 0.0, 0.0])
+        return tovec3([0.0, 0.0, 0.0])
 
     elif node.type == 'COMBRGB':
         r = parse_value_input(node.inputs[0])
@@ -426,14 +590,11 @@ def parse_rgb(node, socket):
 
     elif node.type == 'WAVELENGTH':
         # Pass constant
-        return vec3([0.0, 0.27, 0.19])
+        return tovec3([0.0, 0.27, 0.19])
 
 def parse_vector(node, socket):
-    if node.type == 'REROUTE':
-        l = node.inputs[0].links[0]
-        return parse_vector(l.from_node, l.from_socket)
 
-    elif node.type == 'GROUP':
+    if node.type == 'GROUP':
         return parse_group(node, socket)
 
     elif node.type == 'GROUP_INPUT':
@@ -516,10 +677,10 @@ def parse_vector(node, socket):
 
     elif node.type == 'NORMAL':
         if socket == node.outputs[0]:
-            return vec3(node.outputs[0].default_value)
+            return tovec3(node.outputs[0].default_value)
         elif socket == node.outputs[1]: # TODO: is parse_value path preferred?
             nor = parse_vector_input(node.inputs[0])
-            return 'vec3(dot({0}, {1}))'.format(vec3(node.outputs[0].default_value), nor)
+            return 'vec3(dot({0}, {1}))'.format(tovec3(node.outputs[0].default_value), nor)
 
     elif node.type == 'NORMAL_MAP':
         #space = node.space
@@ -566,19 +727,27 @@ def parse_vector(node, socket):
 def parse_value_input(inp):
     if inp.is_linked:
         l = inp.links[0]
-        if l.from_socket.type == 'VALUE':
-            return parse_value(l.from_node, l.from_socket)
-        else:
-            return '0.0'
+
+        if l.from_node.type == 'REROUTE':
+            return parse_value_input(l.from_node.inputs[0])
+
+        res_var = node_name(l.from_node.name) + '_res'
+        if res_var not in parsed:
+            parsed.append(res_var)
+            if l.from_socket.type == 'VALUE':
+                res = parse_value(l.from_node, l.from_socket)
+            elif l.from_socket.type == 'RGB' or l.from_socket.type == 'RGBA':
+                res = '{0}.x'.format(parse_rgb(l.from_node, l.from_socket))
+            elif l.from_socket.type == 'VECTOR':
+                res = '{0}.x'.format(parse_vector(l.from_node, l.from_socket))
+            frag.write('float {0} = {1};'.format(res_var, res))
+        return res_var
     else:
-        return vec1(inp.default_value)
+        return tovec1(inp.default_value)
 
 def parse_value(node, socket):
-    if node.type == 'REROUTE':
-        l = node.inputs[0].links[0]
-        return parse_value(l.from_node, l.from_socket)
 
-    elif node.type == 'GROUP':
+    if node.type == 'GROUP':
         return parse_group(node, socket)
 
     elif node.type == 'GROUP_INPUT':
@@ -617,7 +786,7 @@ def parse_value(node, socket):
         blend = parse_value_input(node.inputs[0])
         # nor = parse_vector_input(node.inputs[1])
         if socket == node.outputs[0]: # Fresnel
-            return 'pow(1.0 - dotNV, (1.0 - {0}) * 10.0)'.format(blend)
+            return 'clamp(pow(1.0 - dotNV, (1.0 - {0}) * 10.0), 0.0, 1.0)'.format(blend)
         elif socket == node.outputs[1]: # Facing
             return '((1.0 - dotNV) * {0})'.format(blend)
 
@@ -664,7 +833,7 @@ def parse_value(node, socket):
             return '0.0'
 
     elif node.type == 'VALUE':
-        return vec1(node.outputs[0].default_value)
+        return tovec1(node.outputs[0].default_value)
 
     elif node.type == 'WIREFRAME':
         #node.use_pixel_size
@@ -675,7 +844,16 @@ def parse_value(node, socket):
         return '0.0'
 
     elif node.type == 'TEX_CHECKER':
-        return '0.0'
+        # TODO: do not recompute when color socket is also connected
+        frag.add_function(str_tex_checker)
+        if node.inputs[0].is_linked:
+            co = parse_vector_input(node.inputs[0])
+        else:
+            co = 'wposition'
+        col1 = parse_vector_input(node.inputs[1])
+        col2 = parse_vector_input(node.inputs[2])
+        scale = parse_value_input(node.inputs[3])
+        return 'tex_checker({0}, {0}, {1}, {2}).r'.format(co, col1, col2, scale)
 
     elif node.type == 'TEX_GRADIENT':
         return '0.0'
@@ -687,16 +865,42 @@ def parse_value(node, socket):
         return '0.0'
 
     elif node.type == 'TEX_MUSGRAVE':
-        return '0.0'
+        # Fall back to noise
+        frag.add_function(str_tex_noise)
+        if node.inputs[0].is_linked:
+            co = parse_vector_input(node.inputs[0])
+        else:
+            co = 'wposition'
+        scale = parse_value_input(node.inputs[1])
+        # detail = parse_value_input(node.inputs[2])
+        # distortion = parse_value_input(node.inputs[3])
+        return 'tex_noise_f({0} * {1})'.format(co, scale)
 
     elif node.type == 'TEX_NOISE':
-        return '0.0'
+        frag.add_function(str_tex_noise)
+        if node.inputs[0].is_linked:
+            co = parse_vector_input(node.inputs[0])
+        else:
+            co = 'wposition'
+        scale = parse_value_input(node.inputs[1])
+        # detail = parse_value_input(node.inputs[2])
+        # distortion = parse_value_input(node.inputs[3])
+        return 'tex_noise({0} * {1})'.format(co, scale)
 
     elif node.type == 'TEX_POINTDENSITY':
         return '0.0'
 
     elif node.type == 'TEX_VORONOI':
-        return '0.0'
+        frag.add_function(str_tex_voronoi)
+        if node.inputs[0].is_linked:
+            co = parse_vector_input(node.inputs[0])
+        else:
+            co = 'wposition'
+        scale = parse_value_input(node.inputs[1])
+        if node.coloring == 'INTENSITY':
+            return 'tex_voronoi({0} * {1}).a'.format(co, scale)
+        else: # CELLS
+            return 'tex_voronoi({0} * {1}).r'.format(co, scale)
 
     elif node.type == 'TEX_WAVE':
         return '0.0'
@@ -706,7 +910,7 @@ def parse_value(node, socket):
 
     elif node.type == 'NORMAL':
         nor = parse_vector_input(node.inputs[0])
-        return 'dot({0}, {1})'.format(vec3(node.outputs[0].default_value), nor)
+        return 'dot({0}, {1})'.format(tovec3(node.outputs[0].default_value), nor)
 
     elif node.type == 'VALTORGB': # ColorRamp
         return '1.0'
@@ -724,17 +928,17 @@ def parse_value(node, socket):
         elif op == 'DIVIDE':
             out_val = '({0} / {1})'.format(val1, val2)
         elif op == 'SINE':
-            out_val = 'sin({0}, {1})'.format(val1, val2)
+            out_val = 'sin({0})'.format(val1)
         elif op == 'COSINE':
-            out_val = 'cos({0}, {1})'.format(val1, val2)
+            out_val = 'cos({0})'.format(val1)
         elif op == 'TANGENT':
-            out_val = 'tan({0}, {1})'.format(val1, val2)
+            out_val = 'tan({0})'.format(val1)
         elif op == 'ARCSINE':
-            out_val = 'asin({0}, {1})'.format(val1, val2)
+            out_val = 'asin({0})'.format(val1)
         elif op == 'ARCCOSINE':
-            out_val = 'acos({0}, {1})'.format(val1, val2)
+            out_val = 'acos({0})'.format(val1)
         elif op == 'ARCTANGENT':
-            out_val = 'atan({0}, {1})'.format(val1, val2)
+            out_val = 'atan({0})'.format(val1)
         elif op == 'POWER':
             out_val = 'pow({0}, {1})'.format(val1, val2)
         elif op == 'LOGARITHM':
@@ -744,13 +948,15 @@ def parse_value(node, socket):
         elif op == 'MAXIMUM':
             out_val = 'max({0}, {1})'.format(val1, val2)
         elif op == 'ROUND':
-            out_val = 'round({0})'.format(val1)
+            # out_val = 'round({0})'.format(val1)
+            out_val = 'floor({0} + 0.5)'.format(val1)
         elif op == 'LESS_THAN':
             out_val = 'float({0} < {1})'.format(val1, val2)
         elif op == 'GREATER_THAN':
             out_val = 'float({0} > {1})'.format(val1, val2)
         elif op == 'MODULO':
-            out_val = 'float({0} % {1})'.format(val1, val2)
+            # out_val = 'float({0} % {1})'.format(val1, val2)
+            out_val = 'mod({0}, {1})'.format(val1, val2)
         elif op == 'ABSOLUTE':
             out_val = 'abs({0})'.format(val1)
         if node.use_clamp:
@@ -792,14 +998,14 @@ def parse_value(node, socket):
         else:
             return '0.0'
 
-def vec1(v):
+def tovec1(v):
     return str(v)
 
-def vec2(v):
+def tovec2(v):
     return 'vec2({0}, {1})'.format(v[0], v[1])
 
-def vec3(v):
+def tovec3(v):
     return 'vec3({0}, {1}, {2})'.format(v[0], v[1], v[2])
 
-def vec4(v):
+def tovec4(v):
     return 'vec4({0}, {1}, {2}, {3})'.format(v[0], v[1], v[2], v[3])

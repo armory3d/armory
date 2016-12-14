@@ -29,7 +29,20 @@ def parse(self, material, mat_context, defs):
     armutils.write_arm(state.path + '/' + material.name + '_data.arm', state.data.get())
 
 def parse_deferred():
-    pass
+    # Merge with fwd..
+    rpasses = exporter.ArmoryExporter.renderpath_passes
+    mesh_context_id = exporter.ArmoryExporter.mesh_context
+    shadows_context_id = exporter.ArmoryExporter.shadows_context
+
+    for rp in rpasses:
+        if rp == mesh_context_id:
+            con = make_deferred.mesh(rp)
+        elif rp == shadows_context_id:
+            con = make_deferred.shadows(rp)
+        else:
+            continue
+
+        write_shaders(con, rp)
 
 def parse_forward():
     rpasses = exporter.ArmoryExporter.renderpath_passes

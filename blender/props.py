@@ -77,7 +77,7 @@ def init_properties():
     bpy.types.World.arm_material_level = EnumProperty(
         items=[('Restricted', 'Restricted', 'Restricted'),
                ('Full', 'Full', 'Full')],
-        name="Materials", description="Node parser to use when building materials", default="Restricted")
+        name="Materials", description="Node parser to use when building materials", default="Full")
     bpy.types.World.arm_cache_shaders = BoolProperty(name="Cache Shaders", description="Do not rebuild existing shaders", default=True, update=assets.invalidate_shader_cache)
     #bpy.types.World.arm_cache_envmaps = BoolProperty(name="Cache Envmaps", description="Do not remove prefiltered maps when cleaning project", default=True)
     bpy.types.World.arm_play_live_patch = BoolProperty(name="Live Patching", description="Sync running player data to Blender", default=True)

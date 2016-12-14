@@ -7,6 +7,19 @@ def mesh(context_id):
     vert = con_mesh.make_vert()
     frag = con_mesh.make_frag()
 
+    vert.add_out('vec3 wnormal')
+    vert.add_out('vec3 wposition')
+    vert.add_out('vec3 eyeDir')
+    vert.add_uniform('mat4 W', '_worldMatrix')
+    vert.add_uniform('mat4 N', '_normalMatrix')
+    vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
+    vert.add_uniform('vec3 eye', '_cameraPosition')
+    vert.write('vec4 spos = vec4(pos, 1.0);')
+    vert.write('wnormal = normalize(mat3(N) * nor);')
+    vert.write('wposition = vec4(W * spos).xyz;')
+    vert.write('eyeDir = eye - wposition;')
+    vert.write('gl_Position = WVP * spos;')
+
     # make_cycles.parse(state.nodes, vert, frag)
 
     return con_mesh

@@ -1,8 +1,13 @@
 import material.state as state
 import material.make_cycles as make_cycles
+import armutils
+import assets
 
 def mesh(context_id):
     con_mesh = state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
+
+    assets.add(armutils.get_sdk_path() + '/armory/Assets/' + 'noise64.png')
+    assets.add_embedded_data('noise64.png')
 
     vert = con_mesh.make_vert()
     frag = con_mesh.make_frag()
@@ -19,8 +24,8 @@ def mesh(context_id):
     vert.write('wposition = vec4(W * spos).xyz;')
     vert.write('eyeDir = eye - wposition;')
     vert.write('gl_Position = WVP * spos;')
-    # vert.write('position = vec4(W * spos).xyz;') # TODO: non translated world position for procedural textures
 
+    # frag.add_uniform('sampler2D snoise', link='_noise64') # If no PCSS enabled
     frag.add_include('../../Shaders/compiled.glsl')
     frag.add_include('../../Shaders/std/brdf.glsl')
     frag.add_include('../../Shaders/std/math.glsl')
@@ -39,15 +44,19 @@ def mesh(context_id):
     frag.write('vec3 v = normalize(eyeDir);')
     frag.write('vec3 h = normalize(v + l);')
     frag.write('float dotNL = dot(n, l);')
-    frag.write('float dotNV = dot(n, v);')
+    # frag.write('float dotNV = dot(n, v);')
+    frag.write('float dotNV = max(dot(n, v), 0.0);')
     frag.write('float dotNH = dot(n, h);')
     frag.write('float dotVH = dot(v, h);')
 
     vert.add_out('vec4 lampPos')
     vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrix')
     vert.write('lampPos = LWVP * spos;')
-    frag.add_include('../../Shaders/std/shadows.glsl')
+    # frag.add_include('../../Shaders/std/shadows.glsl')
+    frag.add_include('../../Shaders/std/shadows_pcss.glsl')
     frag.add_uniform('sampler2D shadowMap', included=True)
+    frag.add_uniform('sampler2D snoise', link='_noise64', included=True)
+    frag.add_uniform('float lampSizeUV', link='_lampSizeUV', included=True)
     frag.add_uniform('bool receiveShadow')
     frag.add_uniform('float shadowsBias', '_lampShadowsBias')
     frag.write('float visibility = 1.0;')
@@ -55,7 +64,8 @@ def mesh(context_id):
     frag.tab += 1
     frag.write('vec3 lpos = lampPos.xyz / lampPos.w;')
     frag.write('lpos.xy = lpos.xy * 0.5 + 0.5;')
-    frag.write('visibility = PCF(lpos.xy, lpos.z - shadowsBias);')
+    # frag.write('visibility = PCF(lpos.xy, lpos.z - shadowsBias);')
+    frag.write('visibility = PCSS(lpos.xy, lpos.z - shadowsBias);')
     frag.tab -= 1
     frag.write('}')
 
