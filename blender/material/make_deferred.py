@@ -5,7 +5,7 @@ def mesh(context_id):
     con_mesh = state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
 
     vert = con_mesh.make_vert()
-    frag = con_mesh.make_frag()
+    frag = con_mesh.make_frag(mrt=2)
 
     vert.add_out('vec3 wnormal')
     vert.add_out('vec3 wposition')
@@ -20,7 +20,27 @@ def mesh(context_id):
     vert.write('eyeDir = eye - wposition;')
     vert.write('gl_Position = WVP * spos;')
 
-    # make_cycles.parse(state.nodes, vert, frag)
+    frag.add_include('../../Shaders/compiled.glsl')
+    frag.add_include('../../Shaders/std/gbuffer.glsl')
+    frag.add_uniform('sampler2D snoise', link='_noise64')
+    frag.add_uniform('int lightType', '_lampType')
+    frag.write('vec3 n = normalize(wnormal);')
+    frag.write('vec3 v = normalize(eyeDir);')
+    # frag.write('float dotNV = dot(n, v);')
+    frag.write('float dotNV = max(dot(n, v), 0.0);')
+
+    frag.write('vec3 basecol;')
+    frag.write('float roughness;')
+    frag.write('float metallic;')
+    frag.write('float occlusion;')
+
+    make_cycles.parse(state.nodes, vert, frag)
+
+    # Pack normal
+    frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
+    frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
+    frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - gl_FragCoord.z);')
+    frag.write('fragColor[1] = vec4(basecol.rgb, occlusion);')
 
     return con_mesh
 

@@ -83,11 +83,14 @@ class ShaderContext:
             self.vert.add_in('vec' + str(e['size']) + ' ' + e['name'])
         return self.vert
 
-    def make_frag(self):
+    def make_frag(self, mrt=1):
         self.data['fragment_shader'] = self.material.name + '_' + self.data['name'] + '.frag'
         self.frag = Shader(self)
         self.frag.ins = self.vert.outs
-        self.frag.add_out('vec4 fragColor')
+        if mrt > 1:
+            self.frag.add_out('vec4[{0}] fragColor'.format(mrt))
+        else:
+            self.frag.add_out('vec4 fragColor')
         return self.frag
 
     def make_geom(self):

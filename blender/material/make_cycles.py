@@ -147,6 +147,9 @@ def node_name(s):
         s = armutils.safe_source_name(parents[-1].name) + '_' + s
     return s
 
+def socket_name(s):
+    return armutils.safe_source_name(s)
+
 def parse(nodes, vert, frag):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
     if output_node != None:
@@ -313,6 +316,22 @@ def parse_shader(node, socket):
 
     return out_basecol, out_roughness, out_metallic, out_occlusion
 
+def write_result(l):
+    res_var = node_name(l.from_node.name) + '_' + socket_name(l.from_socket.name) + '_res'
+    st = l.from_socket.type
+    if res_var not in parsed:
+        parsed.append(res_var)
+        if st == 'RGB' or st == 'RGBA':
+            res = parse_rgb(l.from_node, l.from_socket)
+            frag.write('vec3 {0} = {1};'.format(res_var, res))
+        elif st == 'VECTOR':
+            res = parse_vector(l.from_node, l.from_socket)
+            frag.write('vec3 {0} = {1};'.format(res_var, res))
+        elif st == 'VALUE':
+            res = parse_value(l.from_node, l.from_socket)
+            frag.write('float {0} = {1};'.format(res_var, res))
+    return res_var
+
 def parse_vector_input(inp):
     if inp.is_linked:
         l = inp.links[0]
@@ -320,17 +339,12 @@ def parse_vector_input(inp):
         if l.from_node.type == 'REROUTE':
             return parse_vector_input(l.from_node.inputs[0])
 
-        res_var = node_name(l.from_node.name) + '_res'
-        if res_var not in parsed:
-            parsed.append(res_var)
-            if l.from_socket.type == 'RGB' or l.from_socket.type == 'RGBA':
-                res = parse_rgb(l.from_node, l.from_socket)
-            elif l.from_socket.type == 'VECTOR':
-                res = parse_vector(l.from_node, l.from_socket)
-            elif l.from_socket.type == 'VALUE':
-                res = 'vec3({0})'.format(parse_value(l.from_node, l.from_socket))
-            frag.write('vec3 {0} = {1};'.format(res_var, res))
-        return res_var
+        res_var = write_result(l)
+        st = l.from_socket.type        
+        if st == 'RGB' or st == 'RGBA' or st == 'VECTOR':
+            return res_var
+        else: # VALUE
+            return 'vec3({0})'.format(res_var)
     else:
         if inp.type == 'VALUE': # Unlinked reroute
             return tovec3([0.0, 0.0, 0.0])
@@ -549,11 +563,11 @@ def parse_rgb(node, socket):
             return tovec3(elems[0].color)
         if interp == 'CONSTANT':
             fac_var = node_name(node.name) + '_fac'
-            frag.write('float {0} = 1.0 - {1};'.format(fac_var, fac))
+            frag.write('float {0} = {1};'.format(fac_var, fac))
             # Get index
             out_i = '0'
             for i in  range(1, len(elems)):
-                out_i += ' + ({0} > {1} ? 0 : 1)'.format(fac_var, elems[i].position)
+                out_i += ' + ({0} > {1} ? 1 : 0)'.format(fac_var, elems[i].position)
             # Write cols array
             cols_var = node_name(node.name) + '_cols'
             frag.write('vec3 {0}[{1}];'.format(cols_var, len(elems)))
@@ -618,7 +632,6 @@ def parse_vector(node, socket):
         elif socket == node.outputs[3]: # True Normal
             return 'n'
         elif socket == node.outputs[4]: # Incoming
-            trace('asdasdasd')
             return 'v'
         elif socket == node.outputs[5]: # Parametric
             return 'wposition'
@@ -731,17 +744,12 @@ def parse_value_input(inp):
         if l.from_node.type == 'REROUTE':
             return parse_value_input(l.from_node.inputs[0])
 
-        res_var = node_name(l.from_node.name) + '_res'
-        if res_var not in parsed:
-            parsed.append(res_var)
-            if l.from_socket.type == 'VALUE':
-                res = parse_value(l.from_node, l.from_socket)
-            elif l.from_socket.type == 'RGB' or l.from_socket.type == 'RGBA':
-                res = '{0}.x'.format(parse_rgb(l.from_node, l.from_socket))
-            elif l.from_socket.type == 'VECTOR':
-                res = '{0}.x'.format(parse_vector(l.from_node, l.from_socket))
-            frag.write('float {0} = {1};'.format(res_var, res))
-        return res_var
+        res_var = write_result(l)
+        st = l.from_socket.type        
+        if st == 'RGB' or st == 'RGBA' or st == 'VECTOR':
+            return '{0}.x'.format(res_var)
+        else: # VALUE
+            return res_var
     else:
         return tovec1(inp.default_value)
 
@@ -853,7 +861,7 @@ def parse_value(node, socket):
         col1 = parse_vector_input(node.inputs[1])
         col2 = parse_vector_input(node.inputs[2])
         scale = parse_value_input(node.inputs[3])
-        return 'tex_checker({0}, {0}, {1}, {2}).r'.format(co, col1, col2, scale)
+        return 'tex_checker({0}, {1}, {2}, {3}).r'.format(co, col1, col2, scale)
 
     elif node.type == 'TEX_GRADIENT':
         return '0.0'

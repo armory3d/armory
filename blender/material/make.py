@@ -3,6 +3,7 @@ import os
 import exporter
 from material.shader_data import ShaderData
 import material.make_forward as make_forward
+import material.make_deferred as make_deferred
 import material.state as state
 
 def parse(self, material, mat_context, defs):
@@ -23,7 +24,7 @@ def parse(self, material, mat_context, defs):
     if rid == 'forward':
         parse_forward()
     elif rid == 'deferred':
-        parse_deferred
+        parse_deferred()
 
     # TODO: Merge finalize shader here..
     armutils.write_arm(state.path + '/' + material.name + '_data.arm', state.data.get())
