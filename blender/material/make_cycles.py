@@ -158,12 +158,14 @@ def parse(nodes, vert, frag):
 def parse_output(node, _vert, _frag):
     global parsed
     global parents
+    global normal_written # Normal socket is linked on shader node - overwrite fs normal
     global vert
     global frag
     global str_tex_checker
     global str_tex_voronoi
     parsed = [] # Compute nodes only once
     parents = []
+    normal_written = False
     vert = _vert
     frag = _frag
     out_basecol, out_roughness, out_metallic, out_occlusion = parse_shader_input(node.inputs[0])
@@ -216,6 +218,11 @@ def parse_shader_input(inp):
         out_occlusion = '1.0'
         return out_basecol, out_roughness, out_metallic, out_occlusion
 
+def write_normal(inp):
+    if inp.is_linked:
+        frag.write('n = {0};'.format(parse_vector_input(inp)))
+        normal_written = True
+
 def parse_shader(node, socket):   
     out_basecol = 'vec3(0.8)'
     out_roughness = '0.0'
@@ -253,10 +260,12 @@ def parse_shader(node, socket):
         out_occlusion = '({0} + {1})'.format(occ1, occ2)
 
     elif node.type == 'BSDF_DIFFUSE':
+        write_normal(node.inputs[2])
         out_basecol = parse_vector_input(node.inputs[0])
         out_roughness = parse_value_input(node.inputs[1])
 
     elif node.type == 'BSDF_GLOSSY':
+        write_normal(node.inputs[2])
         out_basecol = parse_vector_input(node.inputs[0])
         out_roughness = parse_value_input(node.inputs[1])
         out_metallic = '1.0'
@@ -266,6 +275,7 @@ def parse_shader(node, socket):
         out_occlusion = parse_vector_input(node.inputs[0]) + '.r'
 
     elif node.type == 'BSDF_ANISOTROPIC':
+        write_normal(node.inputs[4])
         # Revert to glossy
         out_basecol = parse_vector_input(node.inputs[0])
         out_roughness = parse_value_input(node.inputs[1])
@@ -278,6 +288,7 @@ def parse_shader(node, socket):
         out_basecol = '({0} * {1} * 50.0)'.format(out_basecol, strength)
 
     elif node.type == 'BSDF_GLASS':
+        # write_normal(node.inputs[3])
         # Switch to translucent
         pass
 
@@ -289,21 +300,26 @@ def parse_shader(node, socket):
         out_occlusion = '0.0'
 
     elif node.type == 'BSDF_REFRACTION':
+        # write_normal(node.inputs[3])
         pass
 
     elif node.type == 'SUBSURFACE_SCATTERING':
+        # write_normal(node.inputs[4])
         pass
 
     elif node.type == 'BSDF_TOON':
+        # write_normal(node.inputs[3])
         pass
 
     elif node.type == 'BSDF_TRANSLUCENT':
+        # write_normal(node.inputs[1])
         pass
 
     elif node.type == 'BSDF_TRANSPARENT':
         pass
 
     elif node.type == 'BSDF_VELVET':
+        write_normal(node.inputs[2])
         out_basecol = parse_vector_input(node.inputs[0])
         out_roughness = '1.0'
         out_metallic = '1.0'
