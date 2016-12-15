@@ -1,4 +1,4 @@
-import material.state as state
+import material.mat_state as state
 import material.make_cycles as make_cycles
 
 def mesh(context_id):
@@ -35,6 +35,10 @@ def mesh(context_id):
     frag.write('float occlusion;')
 
     make_cycles.parse(state.nodes, vert, frag)
+
+    if state.data.is_elem('tex'):
+        vert.add_out('vec2 texCoord')
+        vert.write('texCoord = tex;')
 
     # Pack normal
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')

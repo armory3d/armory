@@ -4,7 +4,7 @@ import exporter
 from material.shader_data import ShaderData
 import material.make_forward as make_forward
 import material.make_deferred as make_deferred
-import material.state as state
+import material.mat_state as state
 
 def parse(self, material, mat_context, defs):
     state.material = material
@@ -19,6 +19,8 @@ def parse(self, material, mat_context, defs):
         os.makedirs(state.path)
 
     state.data = ShaderData(material)
+    state.data.add_elem('pos', 3)
+    state.data.add_elem('nor', 3)
 
     rid = exporter.ArmoryExporter.renderpath_id
     if rid == 'forward':

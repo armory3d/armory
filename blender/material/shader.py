@@ -1,14 +1,16 @@
 
 class Shader:
 
-    def __init__(self, context):
+    def __init__(self, context, shader_type):
         self.context = context
+        self.shader_type = shader_type
         self.includes = []
         self.ins = []
         self.outs = []
         self.uniforms = []
         self.functions = {}
         self.main = ''
+        self.main_pre = ''
         self.tab = 1
 
     def add_include(self, s):
@@ -29,7 +31,7 @@ class Shader:
                 ar[0] = 'floats'
                 ar[1] = ar[1].split('[', 1)[0]
             self.context.add_constant(ar[0], ar[1], link=link)
-        if included == False:
+        if included == False and s not in self.uniforms:
             self.uniforms.append(s)
 
     def add_function(self, s):
@@ -38,10 +40,19 @@ class Shader:
             return
         self.functions[fname] = s
 
+    def write_pre(self, s):
+        self.main_pre += '\t' * 1 + s + '\n'
+
     def write(self, s):
         self.main += '\t' * self.tab + s + '\n'
 
     def get(self):
+        # Vertex structure as vertex shader input
+        if self.shader_type == 'vert':
+            vs = self.context.shader_data['vertex_structure']
+            for e in vs:
+                self.add_in('vec' + str(e['size']) + ' ' + e['name'])
+
         s = '#version 450\n'
         for a in self.includes:
             s += '#include "' + a + '"\n'
@@ -54,6 +65,7 @@ class Shader:
         for f in self.functions:
             s += self.functions[f]
         s += 'void main() {\n'
+        s += self.main_pre
         s += self.main
         s += '}\n'
         return s

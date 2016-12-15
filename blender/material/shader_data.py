@@ -5,26 +5,28 @@ class ShaderData:
     def __init__(self, material):
         self.material = material
         self.contexts = []
-
         self.sd = {}
         self.data = {}
         self.data['shader_datas'] = [self.sd]
-        
         self.sd['name'] = material.name + '_data'
-        
         self.sd['vertex_structure'] = []
-        self.add_elem('pos', 3)
-        self.add_elem('nor', 3)
-        
         self.sd['contexts'] = []
 
     def add_elem(self, name, size):
         elem = { 'name': name, 'size': size }
-        self.sd['vertex_structure'].append(elem)
+        if elem not in self.sd['vertex_structure']:
+            self.sd['vertex_structure'].append(elem)
+
+    def is_elem(self, name):
+        for elem in self.sd['vertex_structure']:
+            if elem['name'] == name:
+                return True
+        return False
 
     def add_context(self, props):
         con = ShaderContext(self.material, self.sd, props)
-        self.sd['contexts'].append(con.get())
+        if con not in self.sd['contexts']:
+            self.sd['contexts'].append(con.get())
         return con
 
     def get(self):
@@ -76,16 +78,12 @@ class ShaderContext:
 
     def make_vert(self):
         self.data['vertex_shader'] = self.material.name + '_' + self.data['name'] + '.vert'
-        self.vert = Shader(self)
-        
-        vs = self.shader_data['vertex_structure']
-        for e in vs:
-            self.vert.add_in('vec' + str(e['size']) + ' ' + e['name'])
+        self.vert = Shader(self, 'vert')        
         return self.vert
 
     def make_frag(self, mrt=1):
         self.data['fragment_shader'] = self.material.name + '_' + self.data['name'] + '.frag'
-        self.frag = Shader(self)
+        self.frag = Shader(self, 'frag')
         self.frag.ins = self.vert.outs
         if mrt > 1:
             self.frag.add_out('vec4[{0}] fragColor'.format(mrt))
@@ -95,15 +93,15 @@ class ShaderContext:
 
     def make_geom(self):
         self.data['geometry_shader'] = self.material.name + '_' + self.data['name'] + '.geom'
-        self.geom = Shader(self)
+        self.geom = Shader(self, 'geom')
         return self.geom
 
     def make_tesc(self):
         self.data['tesscontrol_shader'] = self.material.name + '_' + self.data['name'] + '.tesc'
-        self.tesc = Shader(self)
+        self.tesc = Shader(self, 'tesc')
         return self.tesc
 
     def make_tese(self):
         self.data['tesseval_shader'] = self.material.name + '_' + self.data['name'] + '.tese'
-        self.tese = Shader(self)
+        self.tese = Shader(self, 'tese')
         return self.tese

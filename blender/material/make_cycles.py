@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 import armutils
+import material.make_texture as make_texture
+import material.mat_state as state
 
 str_tex_checker = """vec3 tex_checker(const vec3 co, const vec3 col1, const vec3 col2, const float scale) {
     vec3 p = co * scale;
@@ -130,25 +132,6 @@ float tex_noise(vec3 p) {
         + 0.0666667 * tex_noise_f(8.0 * p);
 }
 """
-
-def node_by_type(nodes, ntype):
-    for n in nodes:
-        if n.type == ntype:
-            return n
-
-def socket_index(node, socket):
-    for i in range(0, len(node.outputs)):
-        if node.outputs[i] == socket:
-            return i
-
-def node_name(s):
-    s = armutils.safe_source_name(s)
-    if len(parents) > 0:
-        s = armutils.safe_source_name(parents[-1].name) + '_' + s
-    return s
-
-def socket_name(s):
-    return armutils.safe_source_name(s)
 
 def parse(nodes, vert, frag):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
@@ -424,8 +407,15 @@ def parse_rgb(node, socket):
         return 'vec3(clamp({0}, 0.0, 1.0))'.format(f)
 
     elif node.type == 'TEX_IMAGE':
-        # Pass through
-        return tovec3([0.0, 0.0, 0.0])
+        tex_name = armutils.safe_source_name(node.name)
+        tex = make_texture.make_texture(node, tex_name)
+        if tex != None:
+            state.mat_context['bind_textures'].append(tex)
+            state.data.add_elem('tex', 2)
+            frag.add_uniform('sampler2D {0}'.format(tex_name))
+            return 'texture({0}, texCoord).rgb'.format(tex_name)
+        else:
+            return tovec3([0.0, 0.0, 0.0])
 
     elif node.type == 'TEX_MAGIC':
         # Pass through
@@ -1033,3 +1023,22 @@ def tovec3(v):
 
 def tovec4(v):
     return 'vec4({0}, {1}, {2}, {3})'.format(v[0], v[1], v[2], v[3])
+
+def node_by_type(nodes, ntype):
+    for n in nodes:
+        if n.type == ntype:
+            return n
+
+def socket_index(node, socket):
+    for i in range(0, len(node.outputs)):
+        if node.outputs[i] == socket:
+            return i
+
+def node_name(s):
+    s = armutils.safe_source_name(s)
+    if len(parents) > 0:
+        s = armutils.safe_source_name(parents[-1].name) + '_' + s
+    return s
+
+def socket_name(s):
+    return armutils.safe_source_name(s)

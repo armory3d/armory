@@ -95,19 +95,19 @@ class ExportVertex:
         self.texcoord1 = [0.0, 0.0]
 
     def __eq__(self, v):
-        if (self.hash != v.hash):
-            return (False)
-        if (self.position != v.position):
-            return (False)
-        if (self.normal != v.normal):
-            return (False)
-        if (self.texcoord0 != v.texcoord0):
-            return (False)
-        if (self.color != v.color):
-            return (False)
-        if (self.texcoord1 != v.texcoord1):
-            return (False)  
-        return (True)
+        if self.hash != v.hash:
+            return False
+        if self.position != v.position:
+            return False
+        if self.normal != v.normal:
+            return False
+        if self.texcoord0 != v.texcoord0:
+            return False
+        if self.color != v.color:
+            return False
+        if self.texcoord1 != v.texcoord1:
+            return False
+        return True
 
     def Hash(self):
         h = hash(self.position[0])
