@@ -10,20 +10,27 @@ class JSScript extends Trait {
 	public function new(scriptBlob:String) {
 		super();
 
-		iron.data.Data.getBlob(scriptBlob + '.js', function(blob:kha.Blob) {
+		notifyOnInit(function() {
+
+			iron.data.Data.getBlob(scriptBlob + '.js', function(blob:kha.Blob) {
 			
-			var header = "let App = armory.App;
-						  let Scene = armory.Scene;
-						  let Data = armory.Data;
-						  let Quat = armory.math.Quat;
-						  let Mat4 = armory.math.Mat4;
-						  let Vec4 = armory.math.Vec4;";
+			var header = "var App = armory.App;
+						  var Scene = armory.Scene;
+						  var Data = armory.Data;
+						  var Quat = armory.math.Quat;
+						  var Mat4 = armory.math.Mat4;
+						  var Vec4 = armory.math.Vec4;";
 			var src = header + blob.toString();
 #if js
 			if (api == null) api = new JSScriptAPI();
 			untyped __js__("var self = {0};", object);
+#if !webgl // Krom
+			untyped __js__("var window = this;");
+#end
 			untyped __js__("eval(src);");
 #end
+		});
+
 		});
 	}
 }

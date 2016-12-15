@@ -23,7 +23,6 @@ def mesh(context_id):
     frag.add_include('../../Shaders/compiled.glsl')
     frag.add_include('../../Shaders/std/gbuffer.glsl')
     frag.add_uniform('sampler2D snoise', link='_noise64')
-    frag.add_uniform('int lightType', '_lampType')
     frag.write('vec3 n = normalize(wnormal);')
     frag.write('vec3 v = normalize(eyeDir);')
     # frag.write('float dotNV = dot(n, v);')
