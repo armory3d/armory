@@ -61,6 +61,8 @@ def parse(material, mat_data):
     assets.add_shader_data(shader_data_path)
     mat_data['shader'] = shader_data_name + '/' + shader_data_name
 
+    return state.data.sd
+
 def make_mat_context(name):
     c = {}
     c['name'] = name

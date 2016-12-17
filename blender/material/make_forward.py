@@ -1,13 +1,25 @@
+import bpy
 import material.mat_state as state
 import material.make_cycles as make_cycles
 import armutils
 import assets
 
 def mesh(context_id):
+    wrd = bpy.data.worlds['Arm']
+    if '_PCSS' in wrd.world_defs:
+        is_pcss = True
+    else:
+        is_pcss = False
+
+
     con_mesh = state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
 
     vert = con_mesh.make_vert()
     frag = con_mesh.make_frag()
+    geom = None
+    tesc = None
+    tese = None
+
     frag.ins = vert.outs
 
     vert.add_out('vec3 wnormal')
@@ -49,10 +61,12 @@ def mesh(context_id):
     vert.add_out('vec4 lampPos')
     vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrix')
     vert.write('lampPos = LWVP * spos;')
-    frag.add_include('../../Shaders/std/shadows.glsl')
-    # frag.add_include('../../Shaders/std/shadows_pcss.glsl')
+    if is_pcss:
+        frag.add_include('../../Shaders/std/shadows_pcss.glsl')
+        frag.add_uniform('sampler2D snoise', link='_noise64', included=True)
+    else:
+        frag.add_include('../../Shaders/std/shadows.glsl')
     frag.add_uniform('sampler2D shadowMap', included=True)
-    # frag.add_uniform('sampler2D snoise', link='_noise64', included=True)
     frag.add_uniform('float lampSizeUV', link='_lampSizeUV', included=True)
     frag.add_uniform('bool receiveShadow')
     frag.add_uniform('float shadowsBias', '_lampShadowsBias')
@@ -61,8 +75,10 @@ def mesh(context_id):
     frag.tab += 1
     frag.write('vec3 lpos = lampPos.xyz / lampPos.w;')
     frag.write('lpos.xy = lpos.xy * 0.5 + 0.5;')
-    frag.write('visibility = PCF(lpos.xy, lpos.z - shadowsBias);')
-    # frag.write('visibility = PCSS(lpos.xy, lpos.z - shadowsBias);')
+    if is_pcss:
+        frag.write('visibility = PCSS(lpos.xy, lpos.z - shadowsBias);')
+    else:
+        frag.write('visibility = PCF(lpos.xy, lpos.z - shadowsBias);')
     frag.tab -= 1
     frag.write('}')
 
@@ -85,7 +101,7 @@ def mesh(context_id):
     frag.write('float metallic;')
     frag.write('float occlusion;')
 
-    make_cycles.parse(state.nodes, vert, frag)
+    make_cycles.parse(state.nodes, vert, frag, geom, tesc, tese)
 
     frag.write('vec3 albedo = surfaceAlbedo(basecol, metallic);')
     frag.write('vec3 f0 = surfaceF0(basecol, metallic);')
@@ -107,10 +123,14 @@ def shadows(context_id):
     con_shadowmap = state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
 
     vert = con_shadowmap.make_vert()
+    frag = con_shadowmap.make_frag()
+    geom = None
+    tesc = None
+    tese = None
+
     vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrix')
     vert.write('gl_Position = LWVP * vec4(pos, 1.0);')
 
-    frag = con_shadowmap.make_frag()
     frag.write('fragColor = vec4(0.0);')
 
     return con_shadowmap

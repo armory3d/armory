@@ -1648,7 +1648,8 @@ class ArmoryExporter:
         na['size'] = 3
         na['values'] = ndata
         om['vertex_arrays'].append(na)
-        if num_uv_layers > 0:
+        
+        if self.get_export_uvs(exportMesh) == True and num_uv_layers > 0:
             ta = {}
             ta['attrib'] = "texcoord"
             ta['size'] = 2
@@ -1660,7 +1661,8 @@ class ArmoryExporter:
                 ta1['size'] = 2
                 ta1['values'] = t1data
                 om['vertex_arrays'].append(ta1)
-        if num_colors > 0:
+        
+        if self.get_export_vcols(exportMesh) == True and num_colors > 0:
             ca = {}
             ca['attrib'] = "color"
             ca['size'] = 3
@@ -1707,7 +1709,7 @@ class ArmoryExporter:
             om['index_arrays'].append(ia)
         
         # Make tangents
-        if (self.get_export_tangents(exportMesh) == True and num_uv_layers > 0):    
+        if self.get_export_tangents(exportMesh) == True and num_uv_layers > 0:
             tana = {}
             tana['attrib'] = "tangent"
             tana['size'] = 3
@@ -1864,7 +1866,7 @@ class ArmoryExporter:
 
         # Write the color array if it exists.
         colorCount = len(exportMesh.tessface_vertex_colors)
-        if (colorCount > 0):
+        if self.get_export_vcols(exportMesh) == True and colorCount > 0:
             ca = {}
             ca['attrib'] = "color"
             ca['size'] = 3
@@ -1873,7 +1875,7 @@ class ArmoryExporter:
 
         # Write the texcoord arrays.
         texcoordCount = len(exportMesh.tessface_uv_textures)
-        if (texcoordCount > 0):
+        if self.get_export_uvs(exportMesh) == True and texcoordCount > 0:
             ta = {}
             ta['attrib'] = "texcoord"
             ta['size'] = 2
@@ -1931,16 +1933,16 @@ class ArmoryExporter:
 
         #       bpy.data.meshes.remove(morphMesh)
 
-        # Write the index arrays.
+        # Write the index arrays
         om['index_arrays'] = []
 
         maxMaterialIndex = 0
         for i in range(len(material_table)):
             index = material_table[i]
-            if (index > maxMaterialIndex):
+            if index > maxMaterialIndex:
                 maxMaterialIndex = index
 
-        if (maxMaterialIndex == 0):         
+        if maxMaterialIndex == 0:
             # There is only one material, so write a single index array.
             ia = {}
             ia['size'] = 3
@@ -1970,7 +1972,7 @@ class ArmoryExporter:
                     om['index_arrays'].append(ia)   
 
         # Export tangents
-        if (self.get_export_tangents(exportMesh) == True and len(exportMesh.uv_textures) > 0):  
+        if self.get_export_tangents(exportMesh) == True and len(exportMesh.uv_textures) > 0:
             tana = {}
             tana['attrib'] = "tangent"
             tana['size'] = 3
@@ -2135,7 +2137,29 @@ class ArmoryExporter:
             if wrd.arm_material_level == 'Restricted':
                 self.post_export_material(material, o)
             else:
-                make_material_full.parse(material, o)
+                sd = make_material_full.parse(material, o)
+
+                uv_export = False
+                tan_export = False
+                vcol_export = False
+                for elem in sd['vertex_structure']:
+                    if elem['name'] == 'tan':
+                        tan_export = True
+                    elif elem['name'] == 'tex':
+                        uv_export = True
+                    elif elem['name'] == 'col':
+                        vcol_export = True
+
+                if (material.export_tangents != tan_export) or \
+                   (material.export_uvs != uv_export) or \
+                   (material.export_vcols != vcol_export):
+
+                    material.export_uvs = uv_export
+                    material.export_vcols = vcol_export
+                    material.export_tangents = tan_export
+                    mat_users = self.materialToObjectDict[material]
+                    for ob in mat_users:
+                        ob.data.mesh_cached = False
 
             self.output['material_datas'].append(o)
 
@@ -2396,6 +2420,18 @@ class ArmoryExporter:
     def get_export_tangents(self, mesh):
         for m in mesh.materials:
             if m != None and m.export_tangents == True:
+                return True
+        return False
+
+    def get_export_vcols(self, mesh):
+        for m in mesh.materials:
+            if m != None and m.export_vcols == True:
+                return True
+        return False
+
+    def get_export_uvs(self, mesh):
+        for m in mesh.materials:
+            if m != None and m.export_uvs == True:
                 return True
         return False
 
@@ -2925,7 +2961,6 @@ class ArmoryExporter:
             # Delete mesh caches
             for ob in mat_users:
                 ob.data.mesh_cached = False
-                break
 
         # Process defs and append datas
         if material.override_shader == False:

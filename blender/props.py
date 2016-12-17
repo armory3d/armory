@@ -330,6 +330,8 @@ def init_properties():
     bpy.types.Material.override_shader_context = bpy.props.BoolProperty(name="Override Context", default=False)
     bpy.types.Material.override_shader_context_name = bpy.props.StringProperty(name="Name", default='')
     bpy.types.Material.stencil_mask = bpy.props.IntProperty(name="Stencil Mask", default=0)
+    bpy.types.Material.export_uvs = bpy.props.BoolProperty(name="Export UVs", default=False)
+    bpy.types.Material.export_vcols = bpy.props.BoolProperty(name="Export VCols", default=False)
     bpy.types.Material.export_tangents = bpy.props.BoolProperty(name="Export Tangents", default=False)
     bpy.types.Material.skip_context = bpy.props.StringProperty(name="Skip Context", default='')
     bpy.types.Material.overlay = bpy.props.BoolProperty(name="X-Ray", default=False)

@@ -11,6 +11,7 @@ class Shader:
         self.functions = {}
         self.main = ''
         self.main_pre = ''
+        self.write_pre = False
         self.tab = 1
 
     def add_include(self, s):
@@ -40,11 +41,11 @@ class Shader:
             return
         self.functions[fname] = s
 
-    def write_pre(self, s):
-        self.main_pre += '\t' * 1 + s + '\n'
-
     def write(self, s):
-        self.main += '\t' * self.tab + s + '\n'
+        if self.write_pre:
+            self.main_pre += '\t' * 1 + s + '\n'
+        else:
+            self.main += '\t' * self.tab + s + '\n'
 
     def write_tesc_levels(self):
         self.write('if (gl_InvocationID == 0) {')

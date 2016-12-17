@@ -23,6 +23,12 @@ class ShaderData:
                 return True
         return False
 
+    def get_elem(self, name):
+        for elem in self.sd['vertex_structure']:
+            if elem['name'] == name:
+                return elem
+        return None
+
     def add_context(self, props):
         con = ShaderContext(self.material, self.sd, props)
         if con not in self.sd['contexts']:
@@ -30,6 +36,15 @@ class ShaderData:
         return con
 
     def get(self):
+        # TODO: temporary, Sort vertex data
+        for sd in self.data['shader_datas']:
+            vs = []
+            ar = ['pos', 'nor', 'tex', 'col', 'tan', 'bone', 'weight', 'off']
+            for ename in ar:  
+                elem = self.get_elem(ename)
+                if elem != None:
+                    vs.append(elem)
+            sd['vertex_structure'] = vs
         return self.data
 
 class ShaderContext:
