@@ -84,7 +84,6 @@ class ShaderContext:
     def make_frag(self, mrt=1):
         self.data['fragment_shader'] = self.material.name + '_' + self.data['name'] + '.frag'
         self.frag = Shader(self, 'frag')
-        self.frag.ins = self.vert.outs
         if mrt > 1:
             self.frag.add_out('vec4[{0}] fragColor'.format(mrt))
         else:

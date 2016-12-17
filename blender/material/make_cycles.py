@@ -15,8 +15,10 @@
 # limitations under the License.
 #
 import armutils
+import assets
 import material.make_texture as make_texture
-import material.mat_state as state
+import material.mat_state as mat_state
+import make_state as state
 
 str_tex_checker = """vec3 tex_checker(const vec3 co, const vec3 col1, const vec3 col2, const float scale) {
     vec3 p = co * scale;
@@ -52,7 +54,8 @@ vec4 tex_voronoi(const vec3 x) {
     for (int i = -1; i <= 1; i++) {
         vec3 b = vec3(float(i), float(j), float(k));
         vec3 pb = p + b;
-        vec3 r = vec3(b) - f + texture(snoise, (pb.xy + vec2(3.0, 1.0) * pb.z + 0.5) / 64.0, -100.0).xyz;
+        //vec3 r = vec3(b) - f + texture(snoise, (pb.xy + vec2(3.0, 1.0) * pb.z + 0.5) / 64.0, -100.0).xyz; // No bias in tese
+        vec3 r = vec3(b) - f + texture(snoise, (pb.xy + vec2(3.0, 1.0) * pb.z + 0.5) / 64.0).xyz;
         //vec3 r = vec3(b) - f + hash(p + b);
         float d = dot(r, r);
         if (d < res) {
@@ -133,29 +136,54 @@ float tex_noise(vec3 p) {
 }
 """
 
-def parse(nodes, vert, frag):
+def parse(nodes, vert, frag, geom, tesc, tese, parse_surface=True):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
     if output_node != None:
-        parse_output(output_node, vert, frag)
+        parse_output(output_node, vert, frag, geom, tesc, tese, parse_surface)
 
-def parse_output(node, _vert, _frag):
-    global parsed
+def parse_output(node, _vert, _frag, _geom, _tesc, _tese, parse_surface):
+    global parsed # Compute nodes only once
     global parents
     global normal_written # Normal socket is linked on shader node - overwrite fs normal
+    global curshader # Active shader - frag for surface / tese for displacement
     global vert
     global frag
+    global geom
+    global tesc
+    global tese
     global str_tex_checker
     global str_tex_voronoi
-    parsed = [] # Compute nodes only once
-    parents = []
-    normal_written = False
     vert = _vert
     frag = _frag
-    out_basecol, out_roughness, out_metallic, out_occlusion = parse_shader_input(node.inputs[0])
-    frag.write('basecol = {0};'.format(out_basecol))
-    frag.write('roughness = {0};'.format(out_roughness))
-    frag.write('metallic = {0};'.format(out_metallic))
-    frag.write('occlusion = {0};'.format(out_occlusion))
+    geom = _geom
+    tesc = _tesc
+    tese = _tese
+
+    # Surface
+    if parse_surface:
+        parsed = []
+        parents = []
+        normal_written = False
+        curshader = frag
+
+        out_basecol, out_roughness, out_metallic, out_occlusion = parse_shader_input(node.inputs[0])
+        frag.write('basecol = {0};'.format(out_basecol))
+        frag.write('roughness = {0};'.format(out_roughness))
+        frag.write('metallic = {0};'.format(out_metallic))
+        frag.write('occlusion = {0};'.format(out_occlusion))
+
+    # Volume
+    # parse_volume_input(node.inputs[1])
+
+    # Displacement
+    if armutils.tess_enabled(state.target) and node.inputs[2].is_linked:
+        parsed = []
+        parents = []
+        normal_written = False
+        curshader = tese
+
+        out_disp = parse_displacement_input(node.inputs[2])
+        tese.write('float disp = {0};'.format(out_disp))
 
 def parse_group(node, socket): # Entering group
     index = socket_index(node, socket)
@@ -203,7 +231,7 @@ def parse_shader_input(inp):
 
 def write_normal(inp):
     if inp.is_linked:
-        frag.write('n = {0};'.format(parse_vector_input(inp)))
+        curshader.write('n = {0};'.format(parse_vector_input(inp)))
         normal_written = True
 
 def parse_shader(node, socket):   
@@ -225,8 +253,8 @@ def parse_shader(node, socket):
         fac = parse_value_input(node.inputs[0])
         fac_var = node_name(node.name) + '_fac'
         fac_inv_var = node_name(node.name) + '_fac_inv'
-        frag.write('float {0} = {1};'.format(fac_var, fac))
-        frag.write('float {0} = 1.0 - {1};'.format(fac_inv_var, fac_var))
+        curshader.write('float {0} = {1};'.format(fac_var, fac))
+        curshader.write('float {0} = 1.0 - {1};'.format(fac_inv_var, fac_var))
         bc1, rough1, met1, occ1 = parse_shader_input(node.inputs[1])
         bc2, rough2, met2, occ2 = parse_shader_input(node.inputs[2])
         out_basecol = '({0} * {3} + {1} * {2})'.format(bc1, bc2, fac_var, fac_inv_var)
@@ -238,9 +266,9 @@ def parse_shader(node, socket):
         bc1, rough1, met1, occ1 = parse_shader_input(node.inputs[0])
         bc2, rough2, met2, occ2 = parse_shader_input(node.inputs[1])
         out_basecol = '({0} + {1})'.format(bc1, bc2)
-        out_roughness = '({0} + {1})'.format(rough1, rough2)
-        out_metallic = '({0} + {1})'.format(met1, met2)
-        out_occlusion = '({0} + {1})'.format(occ1, occ2)
+        out_roughness = '({0} * 0.5 + {1} * 0.5)'.format(rough1, rough2)
+        out_metallic = '({0} * 0.5 + {1} * 0.5)'.format(met1, met2)
+        out_occlusion = '({0} * 0.5 + {1} * 0.5)'.format(occ1, occ2)
 
     elif node.type == 'BSDF_DIFFUSE':
         write_normal(node.inputs[2])
@@ -315,6 +343,17 @@ def parse_shader(node, socket):
 
     return out_basecol, out_roughness, out_metallic, out_occlusion
 
+def parse_displacement_input(inp):
+    if inp.is_linked:
+        l = inp.links[0]
+
+        if l.from_node.type == 'REROUTE':
+            return parse_displacement_input(l.from_node.inputs[0])
+
+        return parse_value_input(inp)
+    else:
+        return None
+
 def write_result(l):
     res_var = node_name(l.from_node.name) + '_' + socket_name(l.from_socket.name) + '_res'
     st = l.from_socket.type
@@ -322,13 +361,13 @@ def write_result(l):
         parsed.append(res_var)
         if st == 'RGB' or st == 'RGBA':
             res = parse_rgb(l.from_node, l.from_socket)
-            frag.write('vec3 {0} = {1};'.format(res_var, res))
+            curshader.write('vec3 {0} = {1};'.format(res_var, res))
         elif st == 'VECTOR':
             res = parse_vector(l.from_node, l.from_socket)
-            frag.write('vec3 {0} = {1};'.format(res_var, res))
+            curshader.write('vec3 {0} = {1};'.format(res_var, res))
         elif st == 'VALUE':
             res = parse_value(l.from_node, l.from_socket)
-            frag.write('float {0} = {1};'.format(res_var, res))
+            curshader.write('float {0} = {1};'.format(res_var, res))
     return res_var
 
 def parse_vector_input(inp):
@@ -370,7 +409,7 @@ def parse_rgb(node, socket):
         return tovec3([0.0, 0.0, 0.0])
 
     elif node.type == 'TEX_CHECKER':
-        frag.add_function(str_tex_checker)
+        curshader.add_function(str_tex_checker)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
@@ -410,9 +449,9 @@ def parse_rgb(node, socket):
         tex_name = armutils.safe_source_name(node.name)
         tex = make_texture.make_texture(node, tex_name)
         if tex != None:
-            state.mat_context['bind_textures'].append(tex)
-            state.data.add_elem('tex', 2)
-            frag.add_uniform('sampler2D {0}'.format(tex_name))
+            mat_state.mat_context['bind_textures'].append(tex)
+            mat_state.data.add_elem('tex', 2)
+            curshader.add_uniform('sampler2D {0}'.format(tex_name))
             return 'texture({0}, texCoord).rgb'.format(tex_name)
         else:
             return tovec3([0.0, 0.0, 0.0])
@@ -423,7 +462,7 @@ def parse_rgb(node, socket):
 
     elif node.type == 'TEX_MUSGRAVE':
         # Fall back to noise
-        frag.add_function(str_tex_noise)
+        curshader.add_function(str_tex_noise)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
@@ -434,7 +473,7 @@ def parse_rgb(node, socket):
         return 'vec3(tex_noise_f({0} * {1}))'.format(co, scale)
 
     elif node.type == 'TEX_NOISE':
-        frag.add_function(str_tex_noise)
+        curshader.add_function(str_tex_noise)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
@@ -454,7 +493,10 @@ def parse_rgb(node, socket):
         return tovec3([0.0, 0.0, 0.0])
 
     elif node.type == 'TEX_VORONOI':
-        frag.add_function(str_tex_voronoi)
+        curshader.add_function(str_tex_voronoi)
+        assets.add(armutils.get_sdk_path() + '/armory/Assets/' + 'noise64.png')
+        assets.add_embedded_data('noise64.png')
+        curshader.add_uniform('sampler2D snoise', link='_noise64')
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
@@ -473,7 +515,7 @@ def parse_rgb(node, socket):
         out_col = parse_vector_input(node.inputs[0])
         bright = parse_value_input(node.inputs[1])
         contr = parse_value_input(node.inputs[2])
-        frag.add_function(\
+        curshader.add_function(\
 """vec3 brightcontrast(const vec3 col, const float bright, const float contr) {
     float a = 1.0 + contr;
     float b = bright - contr * 0.5;
@@ -493,7 +535,7 @@ def parse_rgb(node, socket):
 #         val = parse_value_input(node.inputs[2])
 #         fac = parse_value_input(node.inputs[3])
         out_col = parse_vector_input(node.inputs[4])
-#         frag.add_function(\
+#         curshader.add_function(\
 # """vec3 hue_sat(const float hue, const float sat, const float val, const float fac, const vec3 col) {
 # }
 # """)
@@ -507,7 +549,7 @@ def parse_rgb(node, socket):
     elif node.type == 'MIX_RGB':
         fac = parse_value_input(node.inputs[0])
         fac_var = node_name(node.name) + '_fac'
-        frag.write('float {0} = {1};'.format(fac_var, fac))
+        curshader.write('float {0} = {1};'.format(fac_var, fac))
         col1 = parse_vector_input(node.inputs[1])
         col2 = parse_vector_input(node.inputs[2])
         blend = node.blend_type
@@ -569,16 +611,16 @@ def parse_rgb(node, socket):
             return tovec3(elems[0].color)
         if interp == 'CONSTANT':
             fac_var = node_name(node.name) + '_fac'
-            frag.write('float {0} = {1};'.format(fac_var, fac))
+            curshader.write('float {0} = {1};'.format(fac_var, fac))
             # Get index
             out_i = '0'
             for i in  range(1, len(elems)):
                 out_i += ' + ({0} > {1} ? 1 : 0)'.format(fac_var, elems[i].position)
             # Write cols array
             cols_var = node_name(node.name) + '_cols'
-            frag.write('vec3 {0}[{1}];'.format(cols_var, len(elems)))
+            curshader.write('vec3 {0}[{1}];'.format(cols_var, len(elems)))
             for i in range(0, len(elems)):
-                frag.write('{0}[{1}] = vec3({2}, {3}, {4});'.format(cols_var, i, elems[i].color[0], elems[i].color[1], elems[i].color[2]))
+                curshader.write('{0}[{1}] = vec3({2}, {3}, {4});'.format(cols_var, i, elems[i].color[0], elems[i].color[1], elems[i].color[2]))
             return '{0}[{1}]'.format(cols_var, out_i)
         else: # Linear, .. - 2 elems only, end pos assumed to be 1
             # float f = clamp((pos - start) * (1.0 / (1.0 - start)), 0.0, 1.0);
@@ -688,7 +730,8 @@ def parse_vector(node, socket):
         # distance = parse_value_input(node.inputs[1])
         # height = parse_value_input(node.inputs[2])
         # nor = parse_vector_input(node.inputs[3])
-        return 'vec3(0.0)'
+        # Sample height around the normal and compute normal
+        return 'wnormal'
 
     elif node.type == 'MAPPING':
         # vector = parse_vector_input(node.inputs[0])
@@ -769,7 +812,12 @@ def parse_value(node, socket):
 
     elif node.type == 'ATTRIBUTE':
         # Fac
-        return '1.0'
+        # Pass time till drivers are implemented
+        if node.attribute_name == 'time':
+            curshader.add_uniform('float time', link='_time')
+            return 'time'
+        else:
+            return '1.0'
 
     elif node.type == 'CAMERA':
         # View Z Depth
@@ -859,7 +907,7 @@ def parse_value(node, socket):
 
     elif node.type == 'TEX_CHECKER':
         # TODO: do not recompute when color socket is also connected
-        frag.add_function(str_tex_checker)
+        curshader.add_function(str_tex_checker)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
@@ -880,7 +928,7 @@ def parse_value(node, socket):
 
     elif node.type == 'TEX_MUSGRAVE':
         # Fall back to noise
-        frag.add_function(str_tex_noise)
+        curshader.add_function(str_tex_noise)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
@@ -891,7 +939,7 @@ def parse_value(node, socket):
         return 'tex_noise_f({0} * {1})'.format(co, scale)
 
     elif node.type == 'TEX_NOISE':
-        frag.add_function(str_tex_noise)
+        curshader.add_function(str_tex_noise)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
@@ -905,7 +953,10 @@ def parse_value(node, socket):
         return '0.0'
 
     elif node.type == 'TEX_VORONOI':
-        frag.add_function(str_tex_voronoi)
+        curshader.add_function(str_tex_voronoi)
+        assets.add(armutils.get_sdk_path() + '/armory/Assets/' + 'noise64.png')
+        assets.add_embedded_data('noise64.png')
+        curshader.add_uniform('sampler2D snoise', link='_noise64')
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:

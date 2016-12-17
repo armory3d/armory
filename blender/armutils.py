@@ -148,6 +148,9 @@ def check_camera(self):
         return False
     return True
 
+def tess_enabled(target):
+    return target == 'krom' or target == 'native'
+
 def register():
     global krom_found
     global glslver

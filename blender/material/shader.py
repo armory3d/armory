@@ -46,20 +46,49 @@ class Shader:
     def write(self, s):
         self.main += '\t' * self.tab + s + '\n'
 
+    def write_tesc_levels(self):
+        self.write('if (gl_InvocationID == 0) {')
+        self.write('    gl_TessLevelInner[0] = innerLevel;')
+        self.write('    gl_TessLevelInner[1] = innerLevel;')
+        self.write('    gl_TessLevelOuter[0] = outerLevel;')
+        self.write('    gl_TessLevelOuter[1] = outerLevel;')
+        self.write('    gl_TessLevelOuter[2] = outerLevel;')
+        self.write('    gl_TessLevelOuter[3] = outerLevel;')
+        self.write('}')
+
     def get(self):
-        # Vertex structure as vertex shader input
-        if self.shader_type == 'vert':
+        s = '#version 450\n'
+
+        in_ext = ''
+        out_ext =''
+
+        if self.shader_type == 'vert': # Vertex structure as vertex shader input
             vs = self.context.shader_data['vertex_structure']
             for e in vs:
                 self.add_in('vec' + str(e['size']) + ' ' + e['name'])
 
-        s = '#version 450\n'
+        elif self.shader_type == 'tesc':
+            in_ext = '[]'
+            out_ext = '[]'
+            s += 'layout(vertices = 3) out;\n'
+            # Gen outs
+            for sin in self.ins:
+                ar = sin.split(' ') # vec3 wnormal
+                tc_s = 'tc_' + ar[1]
+                self.add_out(ar[0] + ' ' + tc_s)
+                # Pass data
+                self.write('{0}[gl_InvocationID] = {1}[gl_InvocationID];'.format(tc_s, ar[1]))
+
+        elif self.shader_type == 'tese':
+            in_ext = '[]'
+            s += 'layout(triangles, equal_spacing, ccw) in;\n'
+
         for a in self.includes:
             s += '#include "' + a + '"\n'
         for a in self.ins:
-            s += 'in ' + a + ';\n'
+            s += 'in {0}{1};\n'.format(a, in_ext)
         for a in self.outs:
-            s += 'out ' + a + ';\n'
+            s += 'out {0}{1};\n'.format(a, out_ext)
         for a in self.uniforms:
             s += 'uniform ' + a + ';\n'
         for f in self.functions:

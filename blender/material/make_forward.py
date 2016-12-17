@@ -6,11 +6,9 @@ import assets
 def mesh(context_id):
     con_mesh = state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
 
-    assets.add(armutils.get_sdk_path() + '/armory/Assets/' + 'noise64.png')
-    assets.add_embedded_data('noise64.png')
-
     vert = con_mesh.make_vert()
     frag = con_mesh.make_frag()
+    frag.ins = vert.outs
 
     vert.add_out('vec3 wnormal')
     vert.add_out('vec3 wposition')
@@ -25,7 +23,6 @@ def mesh(context_id):
     vert.write('eyeDir = eye - wposition;')
     vert.write('gl_Position = WVP * spos;')
 
-    # frag.add_uniform('sampler2D snoise', link='_noise64') # If no PCSS enabled
     frag.add_include('../../Shaders/compiled.glsl')
     frag.add_include('../../Shaders/std/brdf.glsl')
     frag.add_include('../../Shaders/std/math.glsl')
@@ -52,10 +49,10 @@ def mesh(context_id):
     vert.add_out('vec4 lampPos')
     vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrix')
     vert.write('lampPos = LWVP * spos;')
-    # frag.add_include('../../Shaders/std/shadows.glsl')
-    frag.add_include('../../Shaders/std/shadows_pcss.glsl')
+    frag.add_include('../../Shaders/std/shadows.glsl')
+    # frag.add_include('../../Shaders/std/shadows_pcss.glsl')
     frag.add_uniform('sampler2D shadowMap', included=True)
-    frag.add_uniform('sampler2D snoise', link='_noise64', included=True)
+    # frag.add_uniform('sampler2D snoise', link='_noise64', included=True)
     frag.add_uniform('float lampSizeUV', link='_lampSizeUV', included=True)
     frag.add_uniform('bool receiveShadow')
     frag.add_uniform('float shadowsBias', '_lampShadowsBias')
@@ -64,8 +61,8 @@ def mesh(context_id):
     frag.tab += 1
     frag.write('vec3 lpos = lampPos.xyz / lampPos.w;')
     frag.write('lpos.xy = lpos.xy * 0.5 + 0.5;')
-    # frag.write('visibility = PCF(lpos.xy, lpos.z - shadowsBias);')
-    frag.write('visibility = PCSS(lpos.xy, lpos.z - shadowsBias);')
+    frag.write('visibility = PCF(lpos.xy, lpos.z - shadowsBias);')
+    # frag.write('visibility = PCSS(lpos.xy, lpos.z - shadowsBias);')
     frag.tab -= 1
     frag.write('}')
 

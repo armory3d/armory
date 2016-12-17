@@ -2117,7 +2117,26 @@ class ArmoryExporter:
             o = {}
             o['name'] = materialRef[1]["structName"]
 
-            self.post_export_material(material, o)
+            wrd = bpy.data.worlds['Arm']
+            if material.skip_context != '':
+                o['skip_context'] = material.skip_context
+            elif not material.cast_shadow:
+                o['skip_context'] = ArmoryExporter.shadows_context
+            
+            if material.override_cull or wrd.force_no_culling:
+                o['override_context'] = {}
+                if wrd.force_no_culling:
+                    o['override_context']['cull_mode'] = 'none'
+                else:
+                    o['override_context']['cull_mode'] = material.override_cull_mode
+
+            o['contexts'] = []
+
+            if wrd.arm_material_level == 'Restricted':
+                self.post_export_material(material, o)
+            else:
+                make_material_full.parse(material, o)
+
             self.output['material_datas'].append(o)
 
         # Object with no material assigned is in the scene
@@ -2703,20 +2722,6 @@ class ArmoryExporter:
 
     def post_export_material(self, material, o):
         defs = []
-        wrd = bpy.data.worlds['Arm']
-        if material.skip_context != '':
-            o['skip_context'] = material.skip_context
-        elif not material.cast_shadow:
-            o['skip_context'] = ArmoryExporter.shadows_context
-        
-        if material.override_cull or wrd.force_no_culling:
-            o['override_context'] = {}
-            if wrd.force_no_culling:
-                o['override_context']['cull_mode'] = 'none'
-            else:
-                o['override_context']['cull_mode'] = material.override_cull_mode
-
-        o['contexts'] = []
         
         # Geometry context
         c = {}
@@ -2757,33 +2762,31 @@ class ArmoryExporter:
 
         # Parse from material output
         if decal_uv_layer == None:
-            if wrd.arm_material_level == 'Restricted':
-                make_material.parse(self, material, c, defs)
-            else:
-                make_material_full.parse(self, material, c, defs)
+            make_material.parse(self, material, c, defs)
             o['contexts'].append(c)
+        
         # Decal attached, split material into two separate ones
         # Mandatory starting point from mix node for now
-        else:
-            o2 = {}
-            o2['name'] = o['name'] + '_decal'
-            o2['contexts'] = []
-            c2 = {}
-            c2['name'] = decal_context
-            c2['bind_constants'] = []
-            c2['bind_textures'] = []
-            defs2 = []
-            tree = material.node_tree
-            output_node = nodes.get_node_by_type(tree, 'OUTPUT_MATERIAL')
-            mix_node = nodes.find_node_by_link(tree, output_node, output_node.inputs[0])
-            surface_node1 = nodes.find_node_by_link(tree, mix_node, mix_node.inputs[1])
-            surface_node2 = nodes.find_node_by_link(tree, mix_node, mix_node.inputs[2])
-            make_material.parse_from(self, material, c, defs, surface_node1)
-            make_material.parse_from(self, material, c2, defs2, surface_node2)
-            o['contexts'].append(c)
-            o2['contexts'].append(c2)
-            self.finalize_shader(o2, defs2, [decal_context])
-            self.output['material_datas'].append(o2)
+        # else:
+        #     o2 = {}
+        #     o2['name'] = o['name'] + '_decal'
+        #     o2['contexts'] = []
+        #     c2 = {}
+        #     c2['name'] = decal_context
+        #     c2['bind_constants'] = []
+        #     c2['bind_textures'] = []
+        #     defs2 = []
+        #     tree = material.node_tree
+        #     output_node = nodes.get_node_by_type(tree, 'OUTPUT_MATERIAL')
+        #     mix_node = nodes.find_node_by_link(tree, output_node, output_node.inputs[0])
+        #     surface_node1 = nodes.find_node_by_link(tree, mix_node, mix_node.inputs[1])
+        #     surface_node2 = nodes.find_node_by_link(tree, mix_node, mix_node.inputs[2])
+        #     make_material.parse_from(self, material, c, defs, surface_node1)
+        #     make_material.parse_from(self, material, c2, defs2, surface_node2)
+        #     o['contexts'].append(c)
+        #     o2['contexts'].append(c2)
+        #     self.finalize_shader(o2, defs2, [decal_context])
+        #     self.output['material_datas'].append(o2)
 
         # Override context
         if material.override_shader_context:
@@ -2856,6 +2859,7 @@ class ArmoryExporter:
                 c2 = {}
                 c2['name'] = ArmoryExporter.shadows_context
                 o['contexts'].append(c2)
+
 
         # VGI Voxels enabled, append context
         if wrd.voxelgi:
@@ -2932,12 +2936,8 @@ class ArmoryExporter:
                 with_tess = True
             if wrd.voxelgi:
                 geom_context = 'voxel'
-            if wrd.arm_material_level == 'Restricted':
-                self.finalize_shader(o, defs, ArmoryExporter.renderpath_passes, with_tess=with_tess, geom_context=geom_context)
-            else:
-                self.finalize_shader_full(o, material, ArmoryExporter.renderpath_passes)
+            self.finalize_shader(o, defs, ArmoryExporter.renderpath_passes, with_tess=with_tess, geom_context=geom_context)
         else:
-            # TODO: gather defs from vertex data when custom shader is used
             o['shader'] = material.override_shader_name
     
     def post_export_world(self, world, o):
@@ -3118,16 +3118,6 @@ class ArmoryExporter:
         po['volume'] = volume
         po['volume_center'] = volume_center
         return po
-    
-    def finalize_shader_full(self, o, material, rpasses):
-        shader_data_name = material.name + '_data'
-        shader_data_path = 'build/compiled/ShaderRaws/' + material.name + '/' + shader_data_name + '.arm'
-        assets.add_shader_data(shader_data_path)
-        o['shader'] = shader_data_name + '/' + shader_data_name
-        for ren_pass in rpasses:
-            full_name = 'build/compiled/ShaderRaws/' + material.name + '/' + material.name + '_' + ren_pass
-            assets.add_shader(full_name + '.vert.glsl')
-            assets.add_shader(full_name + '.frag.glsl')
 
     def finalize_shader(self, o, defs, renderpath_passes, with_tess=False, geom_context=None):
         # Merge duplicates and sort
