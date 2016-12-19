@@ -7,28 +7,23 @@ def make(context_id):
 		'blend_source': 'blend_one', 'blend_destination': 'blend_one', 'blend_operation': 'add', \
 		'alpha_blend_source': 'blend_zero', 'alpha_blend_destination': 'inverse_source_alpha', 'alpha_blend_operation': 'add' })
 
-	make_mesh.forward(con_transluc, mrt=2)
+	make_mesh.make_forward(con_transluc, mrt=2, parse_opacity=True)
 
 	vert = con_transluc.vert
 	frag = con_transluc.frag
+	tese = con_transluc.tese
 
-	vert.add_out('vec4 wvpposition')
-	vert.write('wvpposition = gl_Position;')
+	if tese != None:
+		tese.add_out('vec4 wvpposition')
+		tese.write('wvpposition = gl_Position;')
+	else:
+		vert.add_out('vec4 wvpposition')
+		vert.write('wvpposition = gl_Position;')
 
 	# Remove fragColor = ...;
 	frag.main = frag.main[:frag.main.rfind('fragColor')]
 
-
-
-	frag.write('vec4 premultipliedReflect = vec4(vec3(direct * visibility + indirect * occlusion), 0.1);')
-
-#ifdef _OpacTex
-	# premultipliedReflect.a *= texture(sopacity, texCoord).r;
-#else
-	#ifdef _BaseTex
-	# premultipliedReflect.a *= texel.a; // Base color alpha
-	#endif
-#endif
+	frag.write('vec4 premultipliedReflect = vec4(vec3(direct * visibility + indirect * occlusion), opacity);')
 	
 	frag.write('float fragZ = wvpposition.z / wvpposition.w;')
 	frag.write('float a = min(1.0, premultipliedReflect.a) * 8.0 + 0.01;')

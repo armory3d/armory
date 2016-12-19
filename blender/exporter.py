@@ -1303,6 +1303,7 @@ class ArmoryExporter:
                 # No material, mimick cycles and assign default
                 if len(o['material_refs']) == 0:
                     o['material_refs'].append('__default')
+                    self.defaultMaterialObjects.append(bobject)
                     self.export_default_material = True
 
                 num_psys = len(bobject.particle_systems)
@@ -2161,68 +2162,19 @@ class ArmoryExporter:
 
             self.output['material_datas'].append(o)
 
-        # Object with no material assigned is in the scene
+        # Object with no material assigned in the scene
         if self.export_default_material:
-            o = {}
-            o['name'] = '__default'
-            o['contexts'] = []
-            c = {}
-            c['name'] = ArmoryExporter.mesh_context
-            c['bind_constants'] = []
-            const = {}
-            const['name'] = 'receiveShadow'
-            const['bool'] = True
-            c['bind_constants'].append(const)
-            # const = {}
-            # const['name'] = 'mask'
-            # const['float'] = 0
-            # c['bind_constants'].append(const)
-            const = {}
-            const['name'] = 'baseCol'
-            const['vec4'] = [0.8, 0.8, 0.8, 1.0]
-            c['bind_constants'].append(const)
-            const = {}
-            const['name'] = 'metalness'
-            const['float'] = 0
-            c['bind_constants'].append(const)
-            const = {}
-            const['name'] = 'roughness'
-            const['float'] = 0.4
-            c['bind_constants'].append(const)
-            const = {}
-            const['name'] = 'occlusion'
-            const['float'] = 1.0
-            c['bind_constants'].append(const)
-            c['bind_textures'] = []
-            cont = {}
-            o['contexts'].append(c)
-            wrd = bpy.data.worlds['Arm']
-            if wrd.generate_shadows == True:
-                c2 = {}
-                c2['name'] = ArmoryExporter.shadows_context
-                o['contexts'].append(c2)
-            if ArmoryExporter.mesh_context_empty != '':
-                c2 = {}
-                c2['name'] = ArmoryExporter.mesh_context_empty
-                o['contexts'].append(c2)
-            if wrd.force_no_culling:
-                o['override_context'] = {}
-                o['override_context']['cull_mode'] = 'none'
-            defs = []
-            # TODO: duplicate
-            geom_context = None
-            if wrd.voxelgi:
-                #defs.append('_VoxelGI')
-                c2 = {}
-                c2['name'] = 'voxel'
-                for bc in c['bind_constants']:
-                    if bc['name'] == 'baseCol':
-                        c2['bind_constants'] = [bc]
-                        break
-                o['contexts'].append(c2)
-                geom_context = 'voxel'
-            self.finalize_shader(o, defs, ArmoryExporter.renderpath_passes, geom_context=geom_context)
-            self.output['material_datas'].append(o)
+            if not '__default' in bpy.data.materials:
+                mat = bpy.data.materials.new(name="__default")
+                mat.use_nodes = True
+                o = {}
+                o['name'] = mat.name
+                o['contexts'] = []
+                mat_users = dict()
+                mat_users[mat] = self.defaultMaterialObjects
+                make_material_full.parse(mat, o, mat_users, ArmoryExporter.renderpath_id)
+                self.output['material_datas'].append(o)
+                bpy.data.materials.remove(mat)
 
     def export_particle_systems(self):
         for particleRef in self.particleSystemArray.items():
@@ -2320,6 +2272,7 @@ class ArmoryExporter:
         self.worldArray = {} # Export all worlds
         self.boneParentArray = {}
         self.materialToObjectDict = dict()
+        self.defaultMaterialObjects = []
         self.materialToGameObjectDict = dict()
         self.objectToGameObjectDict = dict()
         self.uvprojectUsersArray = [] # For processing decals

@@ -50,16 +50,6 @@ class Shader:
         else:
             self.main += '\t' * self.tab + s + '\n'
 
-    def write_tesc_levels(self):
-        self.write('if (gl_InvocationID == 0) {')
-        self.write('    gl_TessLevelInner[0] = innerLevel;')
-        self.write('    gl_TessLevelInner[1] = innerLevel;')
-        self.write('    gl_TessLevelOuter[0] = outerLevel;')
-        self.write('    gl_TessLevelOuter[1] = outerLevel;')
-        self.write('    gl_TessLevelOuter[2] = outerLevel;')
-        self.write('    gl_TessLevelOuter[3] = outerLevel;')
-        self.write('}')
-
     def get(self):
         s = '#version 450\n'
 

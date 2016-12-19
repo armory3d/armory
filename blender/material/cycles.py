@@ -21,12 +21,12 @@ import material.mat_state as mat_state
 import material.texture as texture
 import material.functions
 
-def parse(nodes, vert, frag, geom, tesc, tese, parse_surface=True):
+def parse(nodes, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
     if output_node != None:
-        parse_output(output_node, vert, frag, geom, tesc, tese, parse_surface)
+        parse_output(output_node, vert, frag, geom, tesc, tese, parse_surface, parse_opacity, parse_displacement)
 
-def parse_output(node, _vert, _frag, _geom, _tesc, _tese, parse_surface):
+def parse_output(node, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse_opacity, parse_displacement):
     global parsed # Compute nodes only once
     global parents
     global normal_written # Normal socket is linked on shader node - overwrite fs normal
@@ -36,30 +36,37 @@ def parse_output(node, _vert, _frag, _geom, _tesc, _tese, parse_surface):
     global geom
     global tesc
     global tese
+    global parse_surface
+    global parse_opacity
     vert = _vert
     frag = _frag
     geom = _geom
     tesc = _tesc
     tese = _tese
+    parse_surface = _parse_surface
+    parse_opacity = _parse_opacity
 
     # Surface
-    if parse_surface:
+    if parse_surface or parse_opacity:
         parsed = []
         parents = []
         normal_written = False
         curshader = frag
-
-        out_basecol, out_roughness, out_metallic, out_occlusion = parse_shader_input(node.inputs[0])
-        frag.write('basecol = {0};'.format(out_basecol))
-        frag.write('roughness = {0};'.format(out_roughness))
-        frag.write('metallic = {0};'.format(out_metallic))
-        frag.write('occlusion = {0};'.format(out_occlusion))
+        
+        out_basecol, out_roughness, out_metallic, out_occlusion, out_opacity = parse_shader_input(node.inputs[0])
+        if parse_surface:
+            frag.write('basecol = {0};'.format(out_basecol))
+            frag.write('roughness = {0};'.format(out_roughness))
+            frag.write('metallic = {0};'.format(out_metallic))
+            frag.write('occlusion = {0};'.format(out_occlusion))
+        if parse_opacity:
+            frag.write('opacity = {0};'.format(out_opacity))
 
     # Volume
     # parse_volume_input(node.inputs[1])
 
     # Displacement
-    if armutils.tess_enabled(make_state.target) and node.inputs[2].is_linked and tese != None:
+    if parse_displacement and armutils.tess_enabled(make_state.target) and node.inputs[2].is_linked and tese != None:
         parsed = []
         parents = []
         normal_written = False
@@ -110,7 +117,8 @@ def parse_shader_input(inp):
         out_roughness = '0.0'
         out_metallic = '0.0'
         out_occlusion = '1.0'
-        return out_basecol, out_roughness, out_metallic, out_occlusion
+        out_opacity = '1.0'
+        return out_basecol, out_roughness, out_metallic, out_occlusion, out_opacity
 
 def write_normal(inp):
     if inp.is_linked:
@@ -124,22 +132,30 @@ def parse_shader(node, socket):
     out_roughness = '0.0'
     out_metallic = '0.0'
     out_occlusion = '1.0'
+    out_opacity = '1.0'
 
     if node.type == 'GROUP':
         if node.node_tree.name.startswith('Armory PBR'):
-            out_basecol = parse_vector_input(node.inputs[0])
-            # TODO: deprecated, occlussion is value instead of vector now
-            if node.inputs[1].type == 'RGBA':
-                out_occlusion = '{0}.r'.format(parse_vector_input(node.inputs[1]))
-            else:
-                out_occlusion = parse_value_input(node.inputs[1])
-            if node.inputs[2].is_linked or node.inputs[2].default_value != 1.0:
-                out_occlusion = '({0} * {1})'.format(out_occlusion, parse_value_input(node.inputs[2]))
-            out_roughness = parse_value_input(node.inputs[3])
-            if node.inputs[4].is_linked or node.inputs[4].default_value != 1.0:
-                out_roughness = '({0} * {1})'.format(out_roughness, parse_value_input(node.inputs[4]))
-            out_metallic = parse_value_input(node.inputs[5])
-            parse_normal_map_color_input(node.inputs[6], node.inputs[7])
+            
+            if parse_surface:
+                out_basecol = parse_vector_input(node.inputs[0])
+                # TODO: deprecated, occlussion is value instead of vector now
+                if node.inputs[1].type == 'RGBA':
+                    out_occlusion = '{0}.r'.format(parse_vector_input(node.inputs[1]))
+                else:
+                    out_occlusion = parse_value_input(node.inputs[1])
+                if node.inputs[2].is_linked or node.inputs[2].default_value != 1.0:
+                    out_occlusion = '({0} * {1})'.format(out_occlusion, parse_value_input(node.inputs[2]))
+                out_roughness = parse_value_input(node.inputs[3])
+                if node.inputs[4].is_linked or node.inputs[4].default_value != 1.0:
+                    out_roughness = '({0} * {1})'.format(out_roughness, parse_value_input(node.inputs[4]))
+                out_metallic = parse_value_input(node.inputs[5])
+                parse_normal_map_color_input(node.inputs[6], node.inputs[7])
+            
+            if parse_opacity:
+                out_opacity = parse_value_input(node.inputs[12])
+                if node.inputs[13].is_linked or node.inputs[13].default_value != 1.0:
+                    out_opacity = '({0} * {1})'.format(out_opacity, parse_value_input(node.inputs[13]))
         else:
             return parse_group(node, socket)
 
@@ -152,60 +168,74 @@ def parse_shader(node, socket):
         fac_inv_var = node_name(node.name) + '_fac_inv'
         curshader.write('float {0} = {1};'.format(fac_var, fac))
         curshader.write('float {0} = 1.0 - {1};'.format(fac_inv_var, fac_var))
-        bc1, rough1, met1, occ1 = parse_shader_input(node.inputs[1])
-        bc2, rough2, met2, occ2 = parse_shader_input(node.inputs[2])
-        out_basecol = '({0} * {3} + {1} * {2})'.format(bc1, bc2, fac_var, fac_inv_var)
-        out_roughness = '({0} * {3} + {1} * {2})'.format(rough1, rough2, fac_var, fac_inv_var)
-        out_metallic = '({0} * {3} + {1} * {2})'.format(met1, met2, fac_var, fac_inv_var)
-        out_occlusion = '({0} * {3} + {1} * {2})'.format(occ1, occ2, fac_var, fac_inv_var)
+        bc1, rough1, met1, occ1, opac1 = parse_shader_input(node.inputs[1])
+        bc2, rough2, met2, occ2, opac2 = parse_shader_input(node.inputs[2])
+        if parse_surface:
+            out_basecol = '({0} * {3} + {1} * {2})'.format(bc1, bc2, fac_var, fac_inv_var)
+            out_roughness = '({0} * {3} + {1} * {2})'.format(rough1, rough2, fac_var, fac_inv_var)
+            out_metallic = '({0} * {3} + {1} * {2})'.format(met1, met2, fac_var, fac_inv_var)
+            out_occlusion = '({0} * {3} + {1} * {2})'.format(occ1, occ2, fac_var, fac_inv_var)
+        if parse_opacity:
+            out_opacity = '({0} * {3} + {1} * {2})'.format(opac1, opac2, fac_var, fac_inv_var)
 
     elif node.type == 'ADD_SHADER':
-        bc1, rough1, met1, occ1 = parse_shader_input(node.inputs[0])
-        bc2, rough2, met2, occ2 = parse_shader_input(node.inputs[1])
-        out_basecol = '({0} + {1})'.format(bc1, bc2)
-        out_roughness = '({0} * 0.5 + {1} * 0.5)'.format(rough1, rough2)
-        out_metallic = '({0} * 0.5 + {1} * 0.5)'.format(met1, met2)
-        out_occlusion = '({0} * 0.5 + {1} * 0.5)'.format(occ1, occ2)
+        bc1, rough1, met1, occ1, opac1 = parse_shader_input(node.inputs[0])
+        bc2, rough2, met2, occ2, opac2 = parse_shader_input(node.inputs[1])
+        if parse_surface:
+            out_basecol = '({0} + {1})'.format(bc1, bc2)
+            out_roughness = '({0} * 0.5 + {1} * 0.5)'.format(rough1, rough2)
+            out_metallic = '({0} * 0.5 + {1} * 0.5)'.format(met1, met2)
+            out_occlusion = '({0} * 0.5 + {1} * 0.5)'.format(occ1, occ2)
+        if parse_opacity:
+            out_opacity = '({0} * 0.5 + {1} * 0.5)'.format(opac1, opac2)
 
     elif node.type == 'BSDF_DIFFUSE':
-        write_normal(node.inputs[2])
-        out_basecol = parse_vector_input(node.inputs[0])
-        out_roughness = parse_value_input(node.inputs[1])
+        if parse_surface:
+            write_normal(node.inputs[2])
+            out_basecol = parse_vector_input(node.inputs[0])
+            out_roughness = parse_value_input(node.inputs[1])
 
     elif node.type == 'BSDF_GLOSSY':
-        write_normal(node.inputs[2])
-        out_basecol = parse_vector_input(node.inputs[0])
-        out_roughness = parse_value_input(node.inputs[1])
-        out_metallic = '1.0'
+        if parse_surface:
+            write_normal(node.inputs[2])
+            out_basecol = parse_vector_input(node.inputs[0])
+            out_roughness = parse_value_input(node.inputs[1])
+            out_metallic = '1.0'
 
     elif node.type == 'AMBIENT_OCCLUSION':
-        # Single channel
-        out_occlusion = parse_vector_input(node.inputs[0]) + '.r'
+        if parse_surface:    
+            # Single channel
+            out_occlusion = parse_vector_input(node.inputs[0]) + '.r'
 
     elif node.type == 'BSDF_ANISOTROPIC':
-        write_normal(node.inputs[4])
-        # Revert to glossy
-        out_basecol = parse_vector_input(node.inputs[0])
-        out_roughness = parse_value_input(node.inputs[1])
-        out_metallic = '1.0'
+        if parse_surface:
+            write_normal(node.inputs[4])
+            # Revert to glossy
+            out_basecol = parse_vector_input(node.inputs[0])
+            out_roughness = parse_value_input(node.inputs[1])
+            out_metallic = '1.0'
 
     elif node.type == 'EMISSION':
-        # Multiply basecol
-        out_basecol = parse_vector_input(node.inputs[0])
-        strength = parse_value_input(node.inputs[1])
-        out_basecol = '({0} * {1} * 50.0)'.format(out_basecol, strength)
+        if parse_surface:
+            # Multiply basecol
+            out_basecol = parse_vector_input(node.inputs[0])
+            strength = parse_value_input(node.inputs[1])
+            out_basecol = '({0} * {1} * 50.0)'.format(out_basecol, strength)
 
     elif node.type == 'BSDF_GLASS':
-        # write_normal(node.inputs[3])
-        # Switch to translucent
-        pass
+        if parse_surface:
+            write_normal(node.inputs[3])
+            out_roughness = parse_value_input(node.inputs[1])
+        if parse_opacity:
+            out_opacity = '(1.0 - {0}.r)'.format(parse_vector_input(node.inputs[0]))
 
     elif node.type == 'BSDF_HAIR':
         pass
 
     elif node.type == 'HOLDOUT':
-        # Occlude
-        out_occlusion = '0.0'
+        if parse_surface:
+            # Occlude
+            out_occlusion = '0.0'
 
     elif node.type == 'BSDF_REFRACTION':
         # write_normal(node.inputs[3])
@@ -220,17 +250,21 @@ def parse_shader(node, socket):
         pass
 
     elif node.type == 'BSDF_TRANSLUCENT':
-        # write_normal(node.inputs[1])
-        pass
+        if parse_surface:
+            write_normal(node.inputs[1])
+        if parse_opacity:
+            out_opacity = '(1.0 - {0}.r)'.format(parse_vector_input(node.inputs[0]))
 
     elif node.type == 'BSDF_TRANSPARENT':
-        pass
+        if parse_opacity:
+            out_opacity = '(1.0 - {0}.r)'.format(parse_vector_input(node.inputs[0]))
 
     elif node.type == 'BSDF_VELVET':
-        write_normal(node.inputs[2])
-        out_basecol = parse_vector_input(node.inputs[0])
-        out_roughness = '1.0'
-        out_metallic = '1.0'
+        if parse_surface:
+            write_normal(node.inputs[2])
+            out_basecol = parse_vector_input(node.inputs[0])
+            out_roughness = '1.0'
+            out_metallic = '1.0'
 
     elif node.type == 'VOLUME_ABSORPTION':
         pass
@@ -238,7 +272,7 @@ def parse_shader(node, socket):
     elif node.type == 'VOLUME_SCATTER':
         pass
 
-    return out_basecol, out_roughness, out_metallic, out_occlusion
+    return out_basecol, out_roughness, out_metallic, out_occlusion, out_opacity
 
 def parse_displacement_input(inp):
     if inp.is_linked:
@@ -251,8 +285,11 @@ def parse_displacement_input(inp):
     else:
         return None
 
+def res_var_name(node, socket):
+    return node_name(node.name) + '_' + socket_name(socket.name) + '_res'
+
 def write_result(l):
-    res_var = node_name(l.from_node.name) + '_' + socket_name(l.from_socket.name) + '_res'
+    res_var = res_var_name(l.from_node, l.from_socket)
     st = l.from_socket.type
     if res_var not in parsed:
         parsed.append(res_var)
@@ -355,17 +392,13 @@ def parse_rgb(node, socket):
         return 'vec3(clamp({0}, 0.0, 1.0))'.format(f)
 
     elif node.type == 'TEX_IMAGE':
+        # Already fetched
+        if res_var_name(node, node.outputs[1]) in parsed:
+            return '{0}.rgb'.format(store_var_name(node))
         tex_name = armutils.safe_source_name(node.name)
         tex = texture.make_texture(node, tex_name)
         if tex != None:
-            mat_state.mat_context['bind_textures'].append(tex)
-            mat_state.data.add_elem('tex', 2)
-            curshader.add_uniform('sampler2D {0}'.format(tex_name))
-            if node.inputs[0].is_linked:
-                uv_name = parse_vector_input(node.inputs[0])
-            else:
-                uv_name = 'texCoord'
-            return 'texture({0}, {1}.xy).rgb'.format(tex_name, uv_name)
+            return '{0}.rgb'.format(texture_store(node, tex, tex_name))
         else:
             return tovec3([0.0, 0.0, 0.0])
 
@@ -567,6 +600,21 @@ def parse_rgb(node, socket):
         # Pass constant
         return tovec3([0.0, 0.27, 0.19])
 
+def store_var_name(node):
+    return node_name(node.name) + '_store'
+
+def texture_store(node, tex, tex_name):
+    mat_state.mat_context['bind_textures'].append(tex)
+    mat_state.data.add_elem('tex', 2)
+    curshader.add_uniform('sampler2D {0}'.format(tex_name))
+    if node.inputs[0].is_linked:
+        uv_name = parse_vector_input(node.inputs[0])
+    else:
+        uv_name = 'texCoord'
+    tex_store = store_var_name(node)
+    curshader.write('vec4 {0} = texture({1}, {2}.xy);'.format(tex_store, tex_name, uv_name))
+    return tex_store
+
 def parse_vector(node, socket):
 
     if node.type == 'GROUP':
@@ -579,7 +627,7 @@ def parse_vector(node, socket):
         # UVMaps only for now
         mat = mat_state.material
         mat_users = mat_state.mat_users
-        if mat in mat_users:
+        if mat_users != None and mat in mat_users:
             mat_user = mat_users[mat][0]
             if hasattr(mat_user.data, 'uv_layers'): # No uvlayers for Curve
                 lays = mat_user.data.uv_layers
@@ -862,7 +910,15 @@ def parse_value(node, socket):
         return '0.0'
 
     elif node.type == 'TEX_IMAGE':
-        return '0.0'
+        # Already fetched
+        if res_var_name(node, node.outputs[0]) in parsed:
+            return '{0}.a'.format(store_var_name(node))
+        tex_name = armutils.safe_source_name(node.name)
+        tex = texture.make_texture(node, tex_name)
+        if tex != None:
+            return '{0}.a'.format(texture_store(node, tex, tex_name))
+        else:
+            return '0.0'
 
     elif node.type == 'TEX_MAGIC':
         return '0.0'

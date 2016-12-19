@@ -14,20 +14,20 @@ def get_rpasses(material):
 
     ar = []
 
-    if material.cast_shadow:
-        ar.append('shadows')
+    # if material.depthpass:
+        # ar.append('depth')
 
+    # if material.decal:
+        # ar.append('decal')
     if material.overlay:
         ar.append('overlay')
-    # elif material.decal:
-        # ar.append('decal')
     elif is_transluc(material):
         ar.append('translucent')
     else:
         ar.append('mesh')
 
-    # if material.depthpass:
-        # ar.append('depth')
+    if 'mesh' in ar or 'translucent' in ar:
+        ar.append('shadowmap')
 
     return ar
 

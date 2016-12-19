@@ -9,6 +9,7 @@ import material.mat_utils as mat_utils
 import material.make_mesh as make_mesh
 import material.make_shadows as make_shadows
 import material.make_transluc as make_transluc
+import material.make_overlay as make_overlay
 
 def parse(material, mat_data, mat_users, rid):
     wrd = bpy.data.worlds['Arm']
@@ -27,15 +28,16 @@ def parse(material, mat_data, mat_users, rid):
     mat_state.data.add_elem('pos', 3)
     mat_state.data.add_elem('nor', 3)
 
-    for bo in mat_users[material]:
-        # GPU Skinning
-        if bo.find_armature() and armutils.is_bone_animation_enabled(bo) and wrd.generate_gpu_skin == True:
-            mat_state.data.add_elem('bone', 4)
-            mat_state.data.add_elem('weight', 4)
-        
-        # Instancing
-        if bo.instanced_children or len(bo.particle_systems) > 0:
-            mat_state.data.add_elem('off', 3)
+    if mat_users != None:
+        for bo in mat_users[material]:
+            # GPU Skinning
+            if bo.find_armature() and armutils.is_bone_animation_enabled(bo) and wrd.generate_gpu_skin == True:
+                mat_state.data.add_elem('bone', 4)
+                mat_state.data.add_elem('weight', 4)
+            
+            # Instancing
+            if bo.instanced_children or len(bo.particle_systems) > 0:
+                mat_state.data.add_elem('off', 3)
 
     rpasses = mat_utils.get_rpasses(material)
 
@@ -54,8 +56,8 @@ def parse(material, mat_data, mat_users, rid):
             c['bind_constants'].append(const)
             con = make_mesh.make(rp, rid)
 
-        elif rp == 'shadows':
-            con = make_shadows.make(rp)
+        elif rp == 'shadowmap':
+            con = make_shadows.make(rp, rpasses)
 
         elif rp == 'translucent':
             const = {}
