@@ -217,6 +217,10 @@ void main() {
 	indirect = indirect * envmapStrength;// * lightColor;
 
 
+
+
+
+
 	vec4 premultipliedReflect = vec4(vec3(direct * visibility + indirect * occlusion), matColor.a);
 
 #ifdef _OpacTex
@@ -231,10 +235,6 @@ void main() {
 	float a = min(1.0, premultipliedReflect.a) * 8.0 + 0.01;
 	float b = -fragZ * 0.95 + 1.0;
 	float w = clamp(a * a * a * 1e8 * b * b * b, 1e-2, 3e2);
-	// accum = premultipliedReflect * w;
-	// revealage = premultipliedReflect.a;
-	// RT0 = vec4(C * w, a)
-	// RT1 = vec4(vec3(a * w), 1)
 	fragColor[0] = vec4(premultipliedReflect.rgb * w, premultipliedReflect.a);
 	fragColor[1] = vec4(premultipliedReflect.a * w, 0.0, 0.0, 1.0);
 }

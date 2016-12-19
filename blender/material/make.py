@@ -1,103 +1,116 @@
 import bpy
 import armutils
 import os
-import exporter
 import assets
 from material.shader_data import ShaderData
-import material.make_forward as make_forward
-import material.make_deferred as make_deferred
-import material.mat_state as state
+import material.cycles as cycles
+import material.mat_state as mat_state
+import material.mat_utils as mat_utils
+import material.make_mesh as make_mesh
+import material.make_shadows as make_shadows
+import material.make_transluc as make_transluc
 
-def parse(material, mat_data):
-    state.material = material
-    state.nodes = material.node_tree.nodes
-    state.mat_data = mat_data
+def parse(material, mat_data, mat_users, rid):
+    wrd = bpy.data.worlds['Arm']
+    mat_state.material = material
+    mat_state.nodes = material.node_tree.nodes
+    mat_state.mat_data = mat_data
+    mat_state.mat_users = mat_users
+    mat_state.output_node = cycles.node_by_type(mat_state.nodes, 'OUTPUT_MATERIAL')
+    if mat_state.output_node == None:
+        return None
+    mat_state.path = armutils.get_fp() + '/build/compiled/ShaderRaws/' + material.name
+    if not os.path.exists(mat_state.path):
+        os.makedirs(mat_state.path)
 
-    state.path = armutils.get_fp() + '/build/compiled/ShaderRaws/' + material.name
-    if not os.path.exists(state.path):
-        os.makedirs(state.path)
+    mat_state.data = ShaderData(material)
+    mat_state.data.add_elem('pos', 3)
+    mat_state.data.add_elem('nor', 3)
 
-    state.data = ShaderData(material)
-    state.data.add_elem('pos', 3)
-    state.data.add_elem('nor', 3)
+    for bo in mat_users[material]:
+        # GPU Skinning
+        if bo.find_armature() and armutils.is_bone_animation_enabled(bo) and wrd.generate_gpu_skin == True:
+            mat_state.data.add_elem('bone', 4)
+            mat_state.data.add_elem('weight', 4)
+        
+        # Instancing
+        if bo.instanced_children or len(bo.particle_systems) > 0:
+            mat_state.data.add_elem('off', 3)
 
-
-    rid = exporter.ArmoryExporter.renderpath_id
-    if rid == 'forward':
-        make_context = make_forward
-    elif rid == 'deferred':
-       make_context = make_deferred
-
-    rpasses = exporter.ArmoryExporter.renderpath_passes
-    mesh_context_id = exporter.ArmoryExporter.mesh_context
-    shadows_context_id = exporter.ArmoryExporter.shadows_context
+    rpasses = mat_utils.get_rpasses(material)
 
     for rp in rpasses:
-        
-        if rp == mesh_context_id:
-            c = make_mat_context(rp)
+        c = {}
+        c['name'] = rp
+        c['bind_constants'] = []
+        c['bind_textures'] = []
+        mat_state.mat_data['contexts'].append(c)
+        mat_state.mat_context = c
+
+        if rp == 'mesh':
             const = {}
             const['name'] = 'receiveShadow'
             const['bool'] = material.receive_shadow
             c['bind_constants'].append(const)
-            state.mat_context = c
-            con = make_context.mesh(rp)
+            con = make_mesh.make(rp, rid)
 
-        elif rp == shadows_context_id:
-            c = make_mat_context(rp)
-            state.mat_context = c
-            con = make_context.shadows(rp)
+        elif rp == 'shadows':
+            con = make_shadows.make(rp)
 
-        else:
-            continue
+        elif rp == 'translucent':
+            const = {}
+            const['name'] = 'receiveShadow'
+            const['bool'] = material.receive_shadow
+            c['bind_constants'].append(const)
+            con = make_transluc.make(rp)
+
+        elif rp == 'overlay':
+            con = make_overlay.make(rp)
+
+        elif rp == 'decal':
+            con = make_decal.make(rp)
+
+        elif rp == 'depth':
+            con = make_depth.make(rp)
         
         write_shaders(con, rp)
 
-
-    armutils.write_arm(state.path + '/' + material.name + '_data.arm', state.data.get())
+    armutils.write_arm(mat_state.path + '/' + material.name + '_data.arm', mat_state.data.get())
 
     shader_data_name = material.name + '_data'
     shader_data_path = 'build/compiled/ShaderRaws/' + material.name + '/' + shader_data_name + '.arm'
     assets.add_shader_data(shader_data_path)
     mat_data['shader'] = shader_data_name + '/' + shader_data_name
 
-    return state.data.sd
-
-def make_mat_context(name):
-    c = {}
-    c['name'] = name
-    state.mat_data['contexts'].append(c)
-    c['bind_constants'] = []
-    c['bind_textures'] = []
-    return c
+    return mat_state.data.sd
 
 def write_shaders(con, rpass):
     if con.vert != None:
-        shader_path = state.path + '/' + state.material.name + '_' + rpass + '.vert.glsl'
+        shader_path = mat_state.path + '/' + mat_state.material.name + '_' + rpass + '.vert.glsl'
         assets.add_shader(shader_path)
         with open(shader_path, 'w') as f:
             f.write(con.vert.get())
     
     if con.frag != None:
-        shader_path = state.path + '/' + state.material.name + '_' + rpass + '.frag.glsl'
+        shader_path = mat_state.path + '/' + mat_state.material.name + '_' + rpass + '.frag.glsl'
         assets.add_shader(shader_path)
         with open(shader_path, 'w') as f:
             f.write(con.frag.get())
     
     if con.geom != None:
-        shader_path = state.path + '/' + state.material.name + '_' + rpass + '.geom.glsl'
+        shader_path = mat_state.path + '/' + mat_state.material.name + '_' + rpass + '.geom.glsl'
         assets.add_shader(shader_path)
         with open(shader_path, 'w') as f:
             f.write(con.geom.get())
     
     if con.tesc != None:
-        shader_path = state.path + '/' + state.material.name + '_' + rpass + '.tesc.glsl'
+        shader_path = mat_state.path + '/' + mat_state.material.name + '_' + rpass + '.tesc.glsl'
         assets.add_shader(shader_path)
         with open(shader_path, 'w') as f:
             f.write(con.tesc.get())
     
     if con.tese != None:
-        shader_path = state.path + '/' + state.material.name + '_' + rpass + '.tese.glsl'
+        shader_path = mat_state.path + '/' + mat_state.material.name + '_' + rpass + '.tese.glsl'
         assets.add_shader(shader_path)
         with open(shader_path, 'w') as f:
             f.write(con.tese.get())

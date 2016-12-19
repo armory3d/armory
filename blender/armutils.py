@@ -151,6 +151,23 @@ def check_camera(self):
 def tess_enabled(target):
     return target == 'krom' or target == 'native'
 
+def is_object_animation_enabled(bobject):
+    # Checks if animation is present and enabled
+    if bobject.object_animation_enabled == False or bobject.type == 'ARMATURE' or bobject.type == 'BONE':
+        return False
+    if bobject.animation_data and bobject.animation_data.action:
+        return True
+    return False
+
+def is_bone_animation_enabled(bobject):
+    # Checks if animation is present and enabled for parented armature
+    if bobject.parent and bobject.parent.type == 'ARMATURE':
+        if bobject.parent.bone_animation_enabled == False:
+            return False
+        if bobject.parent.animation_data and bobject.parent.animation_data.action:
+            return True
+    return False
+
 def register():
     global krom_found
     global glslver

@@ -39,7 +39,8 @@ class ShaderData:
         # TODO: temporary, Sort vertex data
         for sd in self.data['shader_datas']:
             vs = []
-            ar = ['pos', 'nor', 'tex', 'col', 'tan', 'bone', 'weight', 'off']
+            ar = ['pos', 'nor', 'tex', 'tex1', 'col', 'tan', 'bone', 'weight']
+            # 'off' is discarded and recreated in instanced vertex structure
             for ename in ar:  
                 elem = self.get_elem(ename)
                 if elem != None:
@@ -62,6 +63,26 @@ class ShaderContext:
         self.data['depth_write'] = props['depth_write']
         self.data['compare_mode'] = props['compare_mode']
         self.data['cull_mode'] = props['cull_mode']
+        if 'blend_source' in props:
+            self.data['blend_source'] = props['blend_source']
+        if 'blend_destination' in props:
+            self.data['blend_destination'] = props['blend_destination']
+        if 'blend_operation' in props:
+            self.data['blend_operation'] = props['blend_operation']
+        if 'alpha_blend_source' in props:
+            self.data['alpha_blend_source'] = props['alpha_blend_source']
+        if 'alpha_blend_destination' in props:
+            self.data['alpha_blend_destination'] = props['alpha_blend_destination']
+        if 'alpha_blend_operation' in props:
+            self.data['alpha_blend_operation'] = props['alpha_blend_operation']
+        if 'color_write_red' in props:
+            self.data['color_write_red'] = props['color_write_red']
+        if 'color_write_green' in props:
+            self.data['color_write_green'] = props['color_write_green']
+        if 'color_write_blue' in props:
+            self.data['color_write_blue'] = props['color_write_blue']
+        if 'color_write_alpha' in props:
+            self.data['color_write_alpha'] = props['color_write_alpha']
 
         self.data['texture_units'] = []
         self.tunits = self.data['texture_units']

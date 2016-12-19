@@ -2122,8 +2122,6 @@ class ArmoryExporter:
             wrd = bpy.data.worlds['Arm']
             if material.skip_context != '':
                 o['skip_context'] = material.skip_context
-            elif not material.cast_shadow:
-                o['skip_context'] = ArmoryExporter.shadows_context
             
             if material.override_cull or wrd.force_no_culling:
                 o['override_context'] = {}
@@ -2137,7 +2135,7 @@ class ArmoryExporter:
             if wrd.arm_material_level == 'Restricted':
                 self.post_export_material(material, o)
             else:
-                sd = make_material_full.parse(material, o)
+                sd = make_material_full.parse(material, o, self.materialToObjectDict, ArmoryExporter.renderpath_id)
 
                 uv_export = False
                 tan_export = False
@@ -2522,7 +2520,7 @@ class ArmoryExporter:
 
     def post_export_object(self, bobject, o, type):
         # Animation setup
-        if self.is_bone_animation_enabled(bobject) or self.is_object_animation_enabled(bobject):
+        if armutils.is_bone_animation_enabled(bobject) or armutils.is_object_animation_enabled(bobject):
             x = {}
             if len(bobject.my_cliptraitlist) > 0:
                 # Edit clips enabled
@@ -2547,7 +2545,7 @@ class ArmoryExporter:
                 x['max_bones'] = bpy.data.worlds['Arm'].generate_gpu_skin_max_bones
             else:
                 # Export default clip, taking full action
-                if self.is_bone_animation_enabled(bobject):
+                if armutils.is_bone_animation_enabled(bobject):
                     begin_frame, end_frame = self.get_action_framerange(bobject.parent.animation_data.action)
                 else:
                     begin_frame, end_frame = self.get_action_framerange(bobject.animation_data.action)
@@ -2738,23 +2736,6 @@ class ArmoryExporter:
                     co['use_offset'] = constr.use_offset
                     co['influence'] = constr.influence
                 o['constraints'].append(co)
-
-    def is_object_animation_enabled(self, bobject):
-        # Checks if animation is present and enabled
-        if bobject.object_animation_enabled == False or bobject.type == 'ARMATURE' or bobject.type == 'BONE':
-            return False
-        if bobject.animation_data and bobject.animation_data.action:
-            return True
-        return False
-
-    def is_bone_animation_enabled(self, bobject):
-        # Checks if animation is present and enabled for parented armature
-        if bobject.parent and bobject.parent.type == 'ARMATURE':
-            if bobject.parent.bone_animation_enabled == False:
-                return False
-            if bobject.parent.animation_data and bobject.parent.animation_data.action:
-                return True
-        return False
 
     def post_export_material(self, material, o):
         defs = []
@@ -2947,7 +2928,7 @@ class ArmoryExporter:
             if ob.instanced_children or len(ob.particle_systems) > 0:
                 defs.append('_Instancing')
             # GPU Skinning
-            if ob.find_armature() and self.is_bone_animation_enabled(ob) and bpy.data.worlds['Arm'].generate_gpu_skin == True:
+            if ob.find_armature() and armutils.is_bone_animation_enabled(ob) and bpy.data.worlds['Arm'].generate_gpu_skin == True:
                 defs.append('_Skinning')
             # Perform billboarding constraint in shader
             if len(ob.constraints) > 0 and ob.constraints[0].type == 'TRACK_TO' and ob.constraints[0].target != None and \

@@ -16,10 +16,10 @@
 #
 import armutils
 import assets
-import material.make_texture as make_texture
+import make_state
 import material.mat_state as mat_state
+import material.texture as texture
 import material.functions
-import make_state as state
 
 def parse(nodes, vert, frag, geom, tesc, tese, parse_surface=True):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
@@ -59,7 +59,7 @@ def parse_output(node, _vert, _frag, _geom, _tesc, _tese, parse_surface):
     # parse_volume_input(node.inputs[1])
 
     # Displacement
-    if armutils.tess_enabled(state.target) and node.inputs[2].is_linked and tese != None:
+    if armutils.tess_enabled(make_state.target) and node.inputs[2].is_linked and tese != None:
         parsed = []
         parents = []
         normal_written = False
@@ -128,10 +128,18 @@ def parse_shader(node, socket):
     if node.type == 'GROUP':
         if node.node_tree.name.startswith('Armory PBR'):
             out_basecol = parse_vector_input(node.inputs[0])
+            # TODO: deprecated, occlussion is value instead of vector now
+            if node.inputs[1].type == 'RGBA':
+                out_occlusion = '{0}.r'.format(parse_vector_input(node.inputs[1]))
+            else:
+                out_occlusion = parse_value_input(node.inputs[1])
+            if node.inputs[2].is_linked or node.inputs[2].default_value != 1.0:
+                out_occlusion = '({0} * {1})'.format(out_occlusion, parse_value_input(node.inputs[2]))
             out_roughness = parse_value_input(node.inputs[3])
+            if node.inputs[4].is_linked or node.inputs[4].default_value != 1.0:
+                out_roughness = '({0} * {1})'.format(out_roughness, parse_value_input(node.inputs[4]))
             out_metallic = parse_value_input(node.inputs[5])
-            out_occlusion = parse_value_input(node.inputs[1])
-            parse_normal_map_color_input(node.inputs[6])
+            parse_normal_map_color_input(node.inputs[6], node.inputs[7])
         else:
             return parse_group(node, socket)
 
@@ -257,7 +265,11 @@ def write_result(l):
             res = parse_vector(l.from_node, l.from_socket)
             if res == None:
                 return None
-            curshader.write('vec3 {0} = {1};'.format(res_var, res))
+            size = 3
+            if isinstance(res, tuple):
+                size = res[1]
+                res = res[0]
+            curshader.write('vec{2} {0} = {1};'.format(res_var, res, size))
         elif st == 'VALUE':
             res = parse_value(l.from_node, l.from_socket)
             if res == None:
@@ -296,7 +308,7 @@ def parse_rgb(node, socket):
         # Vcols only for now
         # node.attribute_name
         mat_state.data.add_elem('col', 3)
-        return 'color'
+        return 'vcolor'
 
     elif node.type == 'RGB':
         return tovec3(socket.default_value)
@@ -344,12 +356,16 @@ def parse_rgb(node, socket):
 
     elif node.type == 'TEX_IMAGE':
         tex_name = armutils.safe_source_name(node.name)
-        tex = make_texture.make_texture(node, tex_name)
+        tex = texture.make_texture(node, tex_name)
         if tex != None:
             mat_state.mat_context['bind_textures'].append(tex)
             mat_state.data.add_elem('tex', 2)
             curshader.add_uniform('sampler2D {0}'.format(tex_name))
-            return 'texture({0}, texCoord).rgb'.format(tex_name)
+            if node.inputs[0].is_linked:
+                uv_name = parse_vector_input(node.inputs[0])
+            else:
+                uv_name = 'texCoord'
+            return 'texture({0}, {1}.xy).rgb'.format(tex_name, uv_name)
         else:
             return tovec3([0.0, 0.0, 0.0])
 
@@ -560,8 +576,18 @@ def parse_vector(node, socket):
         return parse_input_group(node, socket)
 
     elif node.type == 'ATTRIBUTE':
-        # Vector
-        pass
+        # UVMaps only for now
+        mat = mat_state.material
+        mat_users = mat_state.mat_users
+        if mat in mat_users:
+            mat_user = mat_users[mat][0]
+            if hasattr(mat_user.data, 'uv_layers'): # No uvlayers for Curve
+                lays = mat_user.data.uv_layers
+                # Second uvmap referenced
+                if len(lays) > 1 and node.attribute_name == lays[1].name:
+                    mat_state.data.add_elem('tex1', 2)
+                    return 'texCoord1', 2
+        return 'texCoord', 2
 
     elif node.type == 'CAMERA':
         # View Vector
@@ -683,7 +709,7 @@ def parse_vector(node, socket):
         elif op == 'NORMALIZE':
             return 'normalize({0})'.format(vec1)
 
-def parse_normal_map_color_input(inp):
+def parse_normal_map_color_input(inp, str_inp=None):
     if inp.is_linked == False:
         return
     frag.write_pre = True
@@ -714,7 +740,10 @@ def parse_value(node, socket):
         if node.node_tree.name.startswith('Armory PBR'):
             # Displacement
             if socket == node.outputs[1]:
-                return parse_value_input(node.inputs[10])
+                res = parse_value_input(node.inputs[10])
+                if node.inputs[11].is_linked or node.inputs[11].default_value != 1.0:
+                    res = "({0} * {1})".format(res, parse_value_input(node.inputs[11]))
+                return res
             else:
                 return None
         else:
@@ -724,13 +753,12 @@ def parse_value(node, socket):
         return parse_input_group(node, socket)
 
     elif node.type == 'ATTRIBUTE':
-        # Fac
         # Pass time till drivers are implemented
         if node.attribute_name == 'time':
             curshader.add_uniform('float time', link='_time')
             return 'time'
         else:
-            return '1.0'
+            return None
 
     elif node.type == 'CAMERA':
         # View Z Depth
