@@ -1,3 +1,5 @@
+import bpy
+import make_utils
 
 class Shader:
 
@@ -8,6 +10,7 @@ class Shader:
         self.ins = []
         self.outs = []
         self.uniforms = []
+        self.uniforms_ifdefs = []
         self.functions = {}
         self.main = ''
         self.main_pre = ''
@@ -23,7 +26,7 @@ class Shader:
     def add_out(self, s):
         self.outs.append(s)
 
-    def add_uniform(self, s, link=None, included=False):
+    def add_uniform(self, s, link=None, included=False, ifdef=None):
         ar = s.split(' ')
         if ar[0] == 'sampler2D':
             self.context.add_texture_unit(ar[0], ar[1], link=link)
@@ -33,6 +36,7 @@ class Shader:
                 ar[1] = ar[1].split('[', 1)[0]
             self.context.add_constant(ar[0], ar[1], link=link)
         if included == False and s not in self.uniforms:
+            self.uniforms_ifdefs.append(ifdef)
             self.uniforms.append(s)
 
     def add_function(self, s):
@@ -53,8 +57,12 @@ class Shader:
     def get(self):
         s = '#version 450\n'
 
+        defs = make_utils.def_strings_to_array(bpy.data.worlds['Arm'].world_defs)
+        for a in defs:
+            s += '#define {0}\n'.format(a)
+
         in_ext = ''
-        out_ext =''
+        out_ext = ''
 
         if self.shader_type == 'vert': # Vertex structure as vertex shader input
             vs = self.context.shader_data['vertex_structure']
@@ -83,8 +91,14 @@ class Shader:
             s += 'in {0}{1};\n'.format(a, in_ext)
         for a in self.outs:
             s += 'out {0}{1};\n'.format(a, out_ext)
-        for a in self.uniforms:
+        for i in range(len(self.uniforms)):
+            a = self.uniforms[i]
+            ifdef = self.uniforms_ifdefs[i]
+            if ifdef != None:
+                s += '#ifdef {0}\n'.format(ifdef)
             s += 'uniform ' + a + ';\n'
+            if ifdef != None:
+                s += '#endif\n'
         for f in self.functions:
             s += self.functions[f]
         s += 'void main() {\n'

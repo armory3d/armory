@@ -7,7 +7,7 @@ import material.cycles as cycles
 import material.mat_state as mat_state
 import material.mat_utils as mat_utils
 import material.make_mesh as make_mesh
-import material.make_shadows as make_shadows
+import material.make_shadowmap as make_shadowmap
 import material.make_transluc as make_transluc
 import material.make_overlay as make_overlay
 
@@ -57,7 +57,7 @@ def parse(material, mat_data, mat_users, rid):
             con = make_mesh.make(rp, rid)
 
         elif rp == 'shadowmap':
-            con = make_shadows.make(rp, rpasses)
+            con = make_shadowmap.make(rp, rpasses)
 
         elif rp == 'translucent':
             const = {}

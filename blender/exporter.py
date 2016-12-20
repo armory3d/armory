@@ -2447,11 +2447,11 @@ class ArmoryExporter:
         if (len(bpy.data.cameras) > 0):
             ArmoryExporter.renderpath_id = bpy.data.cameras[0].renderpath_id
             ArmoryExporter.renderpath_passes = bpy.data.cameras[0].renderpath_passes.split('_')
-            ArmoryExporter.mesh_context = bpy.data.cameras[0].mesh_context
-            ArmoryExporter.mesh_context_empty = bpy.data.cameras[0].mesh_context_empty
-            ArmoryExporter.shadows_context = bpy.data.cameras[0].shadows_context
-            ArmoryExporter.translucent_context = bpy.data.cameras[0].translucent_context
-            ArmoryExporter.overlay_context = bpy.data.cameras[0].overlay_context
+            ArmoryExporter.mesh_context = 'mesh'
+            ArmoryExporter.mesh_context_empty = ''
+            ArmoryExporter.shadows_context = 'shadowmap'
+            ArmoryExporter.translucent_context = 'translucent'
+            ArmoryExporter.overlay_context = 'overlay'
 
     def preprocess_object(self, bobject): # Returns false if object should not be exported
         export_object = True

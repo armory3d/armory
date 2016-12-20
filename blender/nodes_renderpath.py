@@ -409,12 +409,8 @@ class BeginNode(Node, CGPipelineTreeNode):
     
     def init(self, context):
         self.inputs.new('NodeSocketString', "ID")
-        self.inputs.new('NodeSocketString', "Mesh")
-        self.inputs.new('NodeSocketString', "Shadows")
-        self.inputs.new('NodeSocketString', "Translucent")
-        self.inputs.new('NodeSocketString', "Overlay")
         self.inputs.new('NodeSocketBool', "HDR Space")
-        self.inputs[5].default_value = True
+        self.inputs[1].default_value = True
         self.outputs.new('NodeSocketShader', "Stage")
     
 class SetTargetNode(Node, CGPipelineTreeNode):

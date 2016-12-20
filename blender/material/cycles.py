@@ -613,6 +613,8 @@ def texture_store(node, tex, tex_name):
         uv_name = 'texCoord'
     tex_store = store_var_name(node)
     curshader.write('vec4 {0} = texture({1}, {2}.xy);'.format(tex_store, tex_name, uv_name))
+    if not tex['file'].endswith('.hdr'):
+        curshader.write('{0}.rgb = pow({0}.rgb, vec3(2.2));'.format(tex_store))
     return tex_store
 
 def parse_vector(node, socket):

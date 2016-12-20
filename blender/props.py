@@ -150,11 +150,6 @@ def init_properties():
     bpy.types.Camera.renderpath_id = bpy.props.StringProperty(name="Render Path ID", description="Asset ID", default="deferred")
     # TODO: Specify multiple material ids, merge ids from multiple cameras 
     bpy.types.Camera.renderpath_passes = bpy.props.StringProperty(name="Render Path Passes", description="Referenced render passes", default="")
-    bpy.types.Camera.mesh_context = bpy.props.StringProperty(name="Mesh", default="mesh")
-    bpy.types.Camera.mesh_context_empty = bpy.props.StringProperty(name="Mesh Empty", default="") # depthwrite
-    bpy.types.Camera.shadows_context = bpy.props.StringProperty(name="Shadows", default="shadowmap")
-    bpy.types.Camera.translucent_context = bpy.props.StringProperty(name="Translucent", default="translucent")
-    bpy.types.Camera.overlay_context = bpy.props.StringProperty(name="Overlay", default="overlay")
     bpy.types.Camera.is_probe = bpy.props.BoolProperty(name="Probe", description="Render this camera as environment probe using Cycles", default=False)
     bpy.types.Camera.probe_generate_radiance = bpy.props.BoolProperty(name="Generate Radiance", description="Generate radiance textures", default=False)
     bpy.types.Camera.probe_texture = bpy.props.StringProperty(name="Texture", default="")
@@ -165,7 +160,6 @@ def init_properties():
     bpy.types.Camera.is_mirror = bpy.props.BoolProperty(name="Mirror", description="Render this camera into texture", default=False)
     bpy.types.Camera.mirror_resolution_x = bpy.props.FloatProperty(name="X", default=512.0)
     bpy.types.Camera.mirror_resolution_y = bpy.props.FloatProperty(name="Y", default=256.0)
-    bpy.types.Camera.last_decal_context = bpy.props.StringProperty(name="Decal Context", default='')
     # Render path generator
     bpy.types.Camera.rp_preset = EnumProperty(
         items=[('None', '', 'None'),

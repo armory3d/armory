@@ -51,8 +51,8 @@ def build_node_tree(cam, node_group):
     dat['name'] = node_group_name
 
     # Store main context names
-    dat['mesh_context'] = build_node_tree.cam.mesh_context
-    dat['shadows_context'] = build_node_tree.cam.shadows_context
+    dat['mesh_context'] = 'mesh'
+    dat['shadows_context'] = 'shadowmap'
     
     dat['render_targets'], dat['depth_buffers'] = preprocess_renderpath(rn, node_group)
     dat['stages'] = []
@@ -140,7 +140,6 @@ def make_draw_decals(stage, node_group, node):
     stage['command'] = 'draw_decals'
     context = node.inputs[1].default_value
     stage['params'].append(context)
-    build_node_tree.cam.last_decal_context = context
 
 def make_bind_target(stage, node_group, node, constant_name, currentNode=None, target_index=1):
     if currentNode == None:
@@ -666,16 +665,15 @@ def get_root_node(node_group):
     for n in node_group.nodes:
         if n.bl_idname == 'BeginNodeType':
             # Store contexts
-            build_node_tree.cam.renderpath_id = n.inputs[0].default_value
-            mesh_contexts = n.inputs[1].default_value.split(',')
-            build_node_tree.cam.mesh_context = mesh_contexts[0]
-            if len(mesh_contexts) > 1:
-                build_node_tree.cam.mesh_context_empty = mesh_contexts[1]
-            build_node_tree.cam.shadows_context = n.inputs[2].default_value
-            build_node_tree.cam.translucent_context = n.inputs[3].default_value
-            build_node_tree.cam.overlay_context = n.inputs[4].default_value
-            if n.inputs[5].default_value == False: # No HDR space lighting, append def
-                bpy.data.worlds['Arm'].world_defs += '_LDR'
+            build_node_tree.cam.renderpath_id = n.inputs[0].default_value            
+            # TODO: deprecated
+            if len(n.inputs) > 5:
+                if n.inputs[5].default_value == False:
+                    bpy.data.worlds['Arm'].world_defs += '_LDR'
+            else:
+                if n.inputs[1].default_value == False:
+                    bpy.data.worlds['Arm'].world_defs += '_LDR'
+            
             rn = nodes.find_node_by_link_from(node_group, n, n.outputs[0])
             break
     return rn

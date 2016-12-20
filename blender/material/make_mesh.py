@@ -3,7 +3,6 @@ import make_state as state
 import material.mat_state as mat_state
 import material.mat_utils as mat_utils
 import material.cycles as cycles
-import material.make_shadows as make_shadows
 import material.make_skin as make_skin
 import material.make_tess as make_tess
 import armutils
@@ -176,9 +175,9 @@ def make_forward(con_mesh, mrt=1, parse_opacity=False):
     frag.add_uniform('int lightType', '_lampType')
     frag.add_uniform('float shirr[27]', link='_envmapIrradiance', included=True)
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
-    frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance')
-    frag.add_uniform('sampler2D senvmapBrdf', link='_envmapBrdf')
-    frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps')
+    frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance', ifdef='_Rad')
+    frag.add_uniform('sampler2D senvmapBrdf', link='_envmapBrdf', ifdef='_Rad')
+    frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps', ifdef='_Rad')
 
     frag.write('vec3 l = lightType == 0 ? lightDir : normalize(lightPos - wposition);')
     frag.write('vec3 h = normalize(v + l);')
@@ -242,11 +241,19 @@ def make_forward(con_mesh, mrt=1, parse_opacity=False):
     frag.write('direct += specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);')
 
     frag.write('vec3 indirect = (shIrradiance(n, 2.2) / PI) * albedo;')
+    frag.write('#ifdef _Rad')
     frag.write('vec3 reflectionWorld = reflect(-v, n);')
     frag.write('float lod = getMipFromRoughness(roughness, envmapNumMipmaps);')
     frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')
+    frag.write('#ifdef _EnvLDR')
+    frag.write('prefilteredColor = pow(prefilteredColor, vec3(2.2);')
+    frag.write('#endif')
     frag.write('vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;')
     frag.write('indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);')
+    frag.write('#endif')
 
     if mrt == 1:
         frag.write('fragColor = vec4(direct * lightColor * visibility + indirect * occlusion * envmapStrength, 1.0);')
+        frag.write('#ifdef _LDR')
+        frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2);')
+        frag.write('#endif')
