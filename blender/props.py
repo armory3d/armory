@@ -74,10 +74,6 @@ def init_properties():
     bpy.types.World.arm_lod_advanced = BoolProperty(name="Advanced", default=False)
     bpy.types.World.arm_lod_gen_levels = IntProperty(name="Levels", description="Number of levels to generate", default=3, min=1)
     bpy.types.World.arm_lod_gen_ratio = FloatProperty(name="Decimate Ratio", description="Decimate ratio", default=0.8)
-    bpy.types.World.arm_material_level = EnumProperty(
-        items=[('Restricted', 'Restricted', 'Restricted'),
-               ('Full', 'Full', 'Full')],
-        name="Materials", description="Node parser to use when building materials", default="Full")
     bpy.types.World.arm_cache_shaders = BoolProperty(name="Cache Shaders", description="Do not rebuild existing shaders", default=True, update=assets.invalidate_shader_cache)
     #bpy.types.World.arm_cache_envmaps = BoolProperty(name="Cache Envmaps", description="Do not remove prefiltered maps when cleaning project", default=True)
     bpy.types.World.arm_play_live_patch = BoolProperty(name="Live Patching", description="Sync running player data to Blender", default=True)
@@ -235,6 +231,7 @@ def init_properties():
     bpy.types.World.world_envtex_turbidity = bpy.props.FloatProperty(name="Turbidity", default=1.0)
     bpy.types.World.world_envtex_ground_albedo = bpy.props.FloatProperty(name="Ground Albedo", default=0.0)
     bpy.types.World.world_defs = bpy.props.StringProperty(name="World Shader Defs", default='')
+    bpy.types.World.compo_defs = bpy.props.StringProperty(name="Compositor Shader Defs", default='')
     bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Probe Radiance", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_radiance_size = EnumProperty(
         items=[('512', '512', '512'),

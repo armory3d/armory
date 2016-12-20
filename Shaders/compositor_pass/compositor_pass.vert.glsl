@@ -4,7 +4,7 @@
 precision highp float;
 #endif
 
-// #ifdef _CompoPos
+// #ifdef _CPos
 	// uniform mat4 invVP;
 	// uniform vec3 eye;
 // #endif
@@ -12,7 +12,7 @@ precision highp float;
 in vec2 pos;
 
 out vec2 texCoord;
-// #ifdef _CompoPos
+// #ifdef _CPos
 	// out vec3 viewRay;
 // #endif
 
@@ -23,7 +23,7 @@ void main() {
 
 	gl_Position = vec4(pos.xy, 0.0, 1.0);
 
-// #ifdef _CompoPos
+// #ifdef _CPos
 	// NDC (at the back of cube)
 	// vec4 v = vec4(pos.xy, 1.0, 1.0);	
 	// v = vec4(invVP * v);

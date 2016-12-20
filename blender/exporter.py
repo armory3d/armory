@@ -21,8 +21,7 @@ import assets
 import armutils
 import subprocess
 import log
-import make_material
-import material.make as make_material_full
+import material.make as make_material
 import nodes
 
 NodeTypeNode = 0
@@ -2021,7 +2020,26 @@ class ArmoryExporter:
             o['lamp_size'] = lamp_size * 10 # Match to Cycles
 
         # Parse nodes
-        make_material.parse_lamp(objref.node_tree, o)
+        # Emission only for now
+        tree = objref.node_tree
+        for n in tree.nodes:
+            if n.type == 'EMISSION':
+                col = n.inputs[0].default_value
+                o['color'] = [col[0], col[1], col[2]]
+                o['strength'] = n.inputs[1].default_value
+                # Normalize point/spot strength
+                if o['type'] == 'point' or o['type'] == 'spot':
+                    o['strength'] /= 1000.0
+                elif o['type'] == 'area':
+                    o['strength'] /= 1000.0
+                # Texture test..
+                # if n.inputs[0].is_linked:
+                    # color_node = nodes.find_node_by_link(tree, n, n.inputs[0])
+                    # if color_node.type == 'TEX_IMAGE':
+                        # o['color_texture'] = color_node.image.name
+                        # make_texture(None, '', color_node, None)
+                        ## bpy.data.worlds['Arm'].world_defs += '_LampColTex'
+                break
 
         # Fake omni shadows
         if objref.lamp_omni_shadows:
@@ -2133,32 +2151,29 @@ class ArmoryExporter:
 
             o['contexts'] = []
 
-            if wrd.arm_material_level == 'Restricted':
-                self.post_export_material(material, o)
-            else:
-                sd = make_material_full.parse(material, o, self.materialToObjectDict, ArmoryExporter.renderpath_id)
+            sd = make_material.parse(material, o, self.materialToObjectDict, ArmoryExporter.renderpath_id)
 
-                uv_export = False
-                tan_export = False
-                vcol_export = False
-                for elem in sd['vertex_structure']:
-                    if elem['name'] == 'tan':
-                        tan_export = True
-                    elif elem['name'] == 'tex':
-                        uv_export = True
-                    elif elem['name'] == 'col':
-                        vcol_export = True
+            uv_export = False
+            tan_export = False
+            vcol_export = False
+            for elem in sd['vertex_structure']:
+                if elem['name'] == 'tan':
+                    tan_export = True
+                elif elem['name'] == 'tex':
+                    uv_export = True
+                elif elem['name'] == 'col':
+                    vcol_export = True
 
-                if (material.export_tangents != tan_export) or \
-                   (material.export_uvs != uv_export) or \
-                   (material.export_vcols != vcol_export):
+            if (material.export_tangents != tan_export) or \
+               (material.export_uvs != uv_export) or \
+               (material.export_vcols != vcol_export):
 
-                    material.export_uvs = uv_export
-                    material.export_vcols = vcol_export
-                    material.export_tangents = tan_export
-                    mat_users = self.materialToObjectDict[material]
-                    for ob in mat_users:
-                        ob.data.mesh_cached = False
+                material.export_uvs = uv_export
+                material.export_vcols = vcol_export
+                material.export_tangents = tan_export
+                mat_users = self.materialToObjectDict[material]
+                for ob in mat_users:
+                    ob.data.mesh_cached = False
 
             self.output['material_datas'].append(o)
 
@@ -2172,7 +2187,7 @@ class ArmoryExporter:
                 o['contexts'] = []
                 mat_users = dict()
                 mat_users[mat] = self.defaultMaterialObjects
-                make_material_full.parse(mat, o, mat_users, ArmoryExporter.renderpath_id)
+                make_material.parse(mat, o, mat_users, ArmoryExporter.renderpath_id)
                 self.output['material_datas'].append(o)
                 bpy.data.materials.remove(mat)
 
@@ -2689,225 +2704,6 @@ class ArmoryExporter:
                     co['use_offset'] = constr.use_offset
                     co['influence'] = constr.influence
                 o['constraints'].append(co)
-
-    def post_export_material(self, material, o):
-        defs = []
-        
-        # Geometry context
-        c = {}
-        c['name'] = ArmoryExporter.mesh_context
-        c['bind_constants'] = []
-        
-        const = {}
-        const['name'] = 'receiveShadow'
-        const['bool'] = material.receive_shadow
-        c['bind_constants'].append(const)
-        
-        # const = {}
-        # const['name'] = 'mask'
-        # const['float'] = material.stencil_mask
-        # c['bind_constants'].append(const)
-        
-        c['bind_textures'] = []
-        
-        # If material user has decal modifier, parse decal material context
-        mat_users = self.materialToObjectDict[material]
-        # Get decal uv map name
-        decal_uv_layer = None
-        for ob in mat_users:
-            for m in ob.modifiers:
-                if m.type == 'UV_PROJECT':
-                    decal_uv_layer = m.uv_layer
-                    break
-        # Get decal context from render paths
-        decal_context = bpy.data.cameras[0].last_decal_context
-        
-        # Set uv layers to support multiple texcoords
-        if material in self.materialToObjectDict:
-            mat_user = self.materialToObjectDict[material][0]
-            if hasattr(mat_user.data, 'uv_layers'): # No uvlayers for Curve
-                make_material.uvlayers = []
-                for layer in mat_user.data.uv_layers:
-                    make_material.uvlayers.append(layer.name)
-
-        # Parse from material output
-        if decal_uv_layer == None:
-            make_material.parse(self, material, c, defs)
-            o['contexts'].append(c)
-        
-        # Decal attached, split material into two separate ones
-        # Mandatory starting point from mix node for now
-        # else:
-        #     o2 = {}
-        #     o2['name'] = o['name'] + '_decal'
-        #     o2['contexts'] = []
-        #     c2 = {}
-        #     c2['name'] = decal_context
-        #     c2['bind_constants'] = []
-        #     c2['bind_textures'] = []
-        #     defs2 = []
-        #     tree = material.node_tree
-        #     output_node = nodes.get_node_by_type(tree, 'OUTPUT_MATERIAL')
-        #     mix_node = nodes.find_node_by_link(tree, output_node, output_node.inputs[0])
-        #     surface_node1 = nodes.find_node_by_link(tree, mix_node, mix_node.inputs[1])
-        #     surface_node2 = nodes.find_node_by_link(tree, mix_node, mix_node.inputs[2])
-        #     make_material.parse_from(self, material, c, defs, surface_node1)
-        #     make_material.parse_from(self, material, c2, defs2, surface_node2)
-        #     o['contexts'].append(c)
-        #     o2['contexts'].append(c2)
-        #     self.finalize_shader(o2, defs2, [decal_context])
-        #     self.output['material_datas'].append(o2)
-
-        # Override context
-        if material.override_shader_context:
-            c['name'] = material.override_shader_context_name
-        # If material has height map switch to tessellation displacement context
-        elif '_HeightTex' in defs:
-            c['name'] = ArmoryExporter.mesh_context + 'height'
-            const = {}
-            const['name'] = 'innerLevel'
-            const['float'] = material.height_tess_inner
-            c['bind_constants'].append(const)
-            const = {}
-            const['name'] = 'outerLevel'
-            const['float'] = material.height_tess_outer
-            c['bind_constants'].append(const)
-            # Append shadows height context
-            if wrd.generate_shadows == True:
-                if material.height_tess_shadows:
-                    c2 = {}
-                    c2['name'] = ArmoryExporter.shadows_context + 'height'
-                    c2['bind_constants'] = []
-                    c2['bind_textures'] = []
-                    for bc in c['bind_constants']:
-                        if bc['name'] == 'heightStrength':
-                            c2['bind_constants'].append(bc)
-                            break
-                    for bt in c['bind_textures']:
-                        if bt['name'] == 'sheight':
-                            c2['bind_textures'].append(bt)
-                            break
-                    const = {}
-                    const['name'] = 'innerLevel'
-                    const['float'] = material.height_tess_shadows_inner
-                    c2['bind_constants'].append(const)
-                    const = {}
-                    const['name'] = 'outerLevel'
-                    const['float'] = material.height_tess_shadows_outer
-                    c2['bind_constants'].append(const)
-                    o['contexts'].append(c2)
-                else:
-                    # Non-tessellated shadow context
-                    c2 = {}
-                    c2['name'] = ArmoryExporter.shadows_context
-                    o['contexts'].append(c2)
-        # X-Ray enabled
-        elif material.overlay:
-            # Change to overlay context
-            c['name'] = ArmoryExporter.overlay_context
-        # Switch main context to translucent
-        elif '_Translucent' in defs:
-            c['name'] = ArmoryExporter.translucent_context
-            # Opacity for shadowmap in Translucent context
-            if wrd.generate_shadows == True and material.transluc_shadows == True:
-                texname = ''
-                if '_OpacTex' in defs:
-                    texname = 'sopacity'
-                elif '_BaseTex' in defs:
-                    texname = 'sbase'
-                if texname != '':
-                    c2 = {}
-                    c2['name'] = ArmoryExporter.shadows_context
-                    o['contexts'].append(c2)
-                    for bt in c['bind_textures']:
-                        if bt['name'] == texname:
-                            c2['bind_textures'] = [bt]
-                            break
-        # Otherwise add shadows context
-        else:
-            if wrd.generate_shadows == True:
-                c2 = {}
-                c2['name'] = ArmoryExporter.shadows_context
-                o['contexts'].append(c2)
-
-
-        # VGI Voxels enabled, append context
-        if wrd.voxelgi:
-            #defs.append('_VoxelGI')
-            c2 = {}
-            c2['name'] = 'voxel' # TODO: Hard-coded context name for now
-            for bc in c['bind_constants']:
-                if bc['name'] == 'baseCol':
-                    c2['bind_constants'] = [bc]
-                    break
-            for bt in c['bind_textures']:
-                if bt['name'] == 'sbase':
-                    c2['bind_textures'] = [bt]
-                    break
-            o['contexts'].append(c2)
-        
-        # Additional geometry contexts, useful for depth-prepass
-        # No pre-pass for translucent
-        if ArmoryExporter.mesh_context_empty != '' and '_Translucent' not in defs:
-            c2 = {}
-            c2['name'] = ArmoryExporter.mesh_context_empty
-            # Depth pre-pass for height context
-            if '_HeightTex' in defs:
-                c2['name'] += 'height'
-                c2['bind_constants'] = []
-                c2['bind_textures'] = []
-                for bc in c['bind_constants']:
-                    if bc['name'] == 'heightStrength':
-                        c2['bind_constants'].append(bc)
-                        break
-                for bt in c['bind_textures']:
-                    if bt['name'] == 'sheight':
-                        c2['bind_textures'].append(bt)
-                        break
-                const = {}
-                const['name'] = 'innerLevel'
-                const['float'] = material.height_tess_inner
-                c2['bind_constants'].append(const)
-                const = {}
-                const['name'] = 'outerLevel'
-                const['float'] = material.height_tess_outer
-                c2['bind_constants'].append(const)
-            
-            o['contexts'].append(c2)
-
-        # Material users        
-        for ob in mat_users:
-            # Instancing used by material user
-            if ob.instanced_children or len(ob.particle_systems) > 0:
-                defs.append('_Instancing')
-            # GPU Skinning
-            if ob.find_armature() and armutils.is_bone_animation_enabled(ob) and bpy.data.worlds['Arm'].generate_gpu_skin == True:
-                defs.append('_Skinning')
-            # Perform billboarding constraint in shader
-            if len(ob.constraints) > 0 and ob.constraints[0].type == 'TRACK_TO' and ob.constraints[0].target != None and \
-               ob.constraints[0].target.type == 'CAMERA' and ob.constraints[0].mute == False:
-                defs.append('_Billboard')
-
-        # Whether objects should export tangent data
-        normal_mapping = '_NorTex' in defs
-        if material.export_tangents != normal_mapping:
-            material.export_tangents = normal_mapping
-            # Delete mesh caches
-            for ob in mat_users:
-                ob.data.mesh_cached = False
-
-        # Process defs and append datas
-        if material.override_shader == False:
-            with_tess = False
-            geom_context = None
-            # TODO: auto-detect tessellation shaders
-            if '_HeightTex' in defs:
-                with_tess = True
-            if wrd.voxelgi:
-                geom_context = 'voxel'
-            self.finalize_shader(o, defs, ArmoryExporter.renderpath_passes, with_tess=with_tess, geom_context=geom_context)
-        else:
-            o['shader'] = material.override_shader_name
     
     def post_export_world(self, world, o):
         defs = bpy.data.worlds['Arm'].world_defs
@@ -3087,59 +2883,3 @@ class ArmoryExporter:
         po['volume'] = volume
         po['volume_center'] = volume_center
         return po
-
-    def finalize_shader(self, o, defs, renderpath_passes, with_tess=False, geom_context=None):
-        # Merge duplicates and sort
-        defs = sorted(list(set(defs)))
-        # Select correct shader variant
-        ext = ''
-        for d in defs:
-            ext += d
-        # Append world defs
-        ext += bpy.data.worlds['Arm'].world_defs
-        
-        # Shader data
-        shader_data_name = ArmoryExporter.renderpath_id + ext
-        shader_data_path = 'build/compiled/ShaderDatas/' + ArmoryExporter.renderpath_id + '/' + shader_data_name + '.arm'
-        # Stencil mask
-        # if material.stencil_mask > 0:
-        #   mask_ext = "_mask" + str(material.stencil_mask)
-        #   shader_data_name_with_mask = shader_data_name + mask_ext
-        #   shader_data_path_with_mask = 'build/compiled/ShaderDatas/' + ArmoryExporter.renderpath_id + '/' + shader_data_name_with_mask + '.arm'
-        #   # Copy data if it does not exist and set stencil mask
-        #   if not os.path.isfile(shader_data_path_with_mask):
-        #       with open(shader_data_path) as f:
-        #          json_file = f.read()
-        #       json_data = json.loads(json_file)
-        #       dat = json_data['shader_datas'][0]
-        #       dat['name'] += mask_ext
-        #       for c in dat['contexts']:
-        #           c['stencil_pass'] = 'replace'
-        #           c['stencil_reference_value'] = material.stencil_mask
-        #       with open(shader_data_path_with_mask, 'w') as f:
-        #           json.dump(json_data, f)
-        #   assets.add_shader_data(shader_data_path_with_mask)
-        #   o.shader = shader_data_name_with_mask + '/' + shader_data_name_with_mask
-        # # No stencil mask
-        # else:
-        assets.add_shader_data(shader_data_path)
-        o['shader'] = shader_data_name + '/' + shader_data_name
-        # Process all passes from render path
-        if with_tess: # TODO: properly handle adding height pass shaders to khafile
-            rpasses = [ArmoryExporter.mesh_context + 'height']
-            if ArmoryExporter.mesh_context_empty != '':
-                rpasses.append(ArmoryExporter.mesh_context_empty + 'height')
-            if bpy.data.worlds['Arm'].generate_shadows == True:
-                rpasses.append(ArmoryExporter.shadows_context + 'height')
-        else:
-            rpasses = renderpath_passes
-        for ren_pass in rpasses:
-            shader_name = ren_pass + ext
-            full_name = 'build/compiled/Shaders/' + ArmoryExporter.renderpath_id + '/' + shader_name
-            assets.add_shader(full_name + '.vert.glsl')
-            assets.add_shader(full_name + '.frag.glsl')
-            if geom_context == ren_pass:
-                assets.add_shader(full_name + '.geom.glsl')
-            if with_tess:
-                assets.add_shader(full_name + '.tesc.glsl')
-                assets.add_shader(full_name + '.tese.glsl')

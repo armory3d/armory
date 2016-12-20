@@ -383,7 +383,6 @@ class ArmoryBuildPanel(bpy.types.Panel):
             layout.prop(wrd, 'arm_optimize_mesh')
             layout.prop(wrd, 'arm_sampled_animation')
             layout.prop(wrd, 'arm_deinterleaved_buffers')
-            layout.prop(wrd, 'arm_material_level')
             layout.label('Libraries')
             layout.prop(wrd, 'arm_physics')
             layout.prop(wrd, 'arm_navigation')

@@ -249,6 +249,8 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     if compo_depth:
         compositor_defs += '_CompoDepth'
 
+    wrd.compo_defs = compositor_defs
+
     defs = world_defs + compositor_defs
     data_name = scon + defs
     

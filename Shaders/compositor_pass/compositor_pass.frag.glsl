@@ -10,7 +10,7 @@ precision highp float;
 // tonemapFilmic()
 #include "../std/math.glsl"
 // linearize()
-#ifdef _CompoDOF
+#ifdef _CDOF
 #include "../std/dof.glsl"
 #endif
 
@@ -19,12 +19,12 @@ uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
-// #ifdef _CompoPos
+// #ifdef _CPos
 // uniform vec3 eye;
 // uniform vec3 eyeLook;
 // #endif
 
-#ifdef _CompoGlare
+#ifdef _CGlare
 uniform vec3 light;
 uniform mat4 VP;
 uniform vec3 eye;
@@ -32,13 +32,13 @@ uniform vec3 eyeLook;
 uniform float aspectRatio;
 #endif
 
-#ifdef _CompoFXAA
+#ifdef _CFXAA
 uniform vec2 texStep;
-#elif _CompoDOF
+#elif _CDOF
 uniform vec2 texStep;
 #endif
 
-#ifdef _CompoGrain
+#ifdef _CGrain
 uniform float time;
 #endif
 
@@ -47,12 +47,12 @@ uniform float dynamicScale;
 #endif
 
 in vec2 texCoord;
-// #ifdef _CompoPos
+// #ifdef _CPos
 	// in vec3 viewRay;
 // #endif
 out vec4 fragColor;
 
-#ifdef _CompoFog
+#ifdef _CFog
 // const vec3 compoFogColor = vec3(0.5, 0.6, 0.7);
 // const float compoFogAmountA = 1.0; // b = 0.01
 // const float compoFogAmountB = 1.0; // c = 0.1
@@ -76,7 +76,7 @@ float vignette() {
 	return 0.3 + 0.7 * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
 }
 
-#ifdef _CompoGlare
+#ifdef _CGlare
 // Based on lense flare implementation by musk
 // https://www.shadertoy.com/view/4sX3Rs 
 vec3 lensflare(vec2 uv, vec2 pos) {
@@ -114,7 +114,7 @@ void main() {
 	texCo *= dynamicScale;
 #endif
 
-#ifdef _CompoFishEye
+#ifdef _CFishEye
 	const float fishEyeStrength = -0.01;
 	const vec2 m = vec2(0.5, 0.5);
 	vec2 d = texCo - m;
@@ -131,11 +131,11 @@ void main() {
 	}
 #endif
 
-#ifdef _CompoDepth
+#ifdef _CDepth
 	float depth = texture(gbufferD, texCo).r * 2.0 - 1.0;
 #endif
 
-#ifdef _CompoFXAA
+#ifdef _CFXAA
 	const float FXAA_REDUCE_MIN = 1.0 / 128.0;
 	const float FXAA_REDUCE_MUL = 1.0 / 8.0;
 	const float FXAA_SPAN_MAX = 8.0;
@@ -186,7 +186,7 @@ void main() {
 
 #else
 	
-	#ifdef _CompoDOF
+	#ifdef _CDOF
 	vec3 col = dof(texCo, depth, tex, gbufferD, texStep);
 	#else
 	vec3 col = texture(tex, texCo).rgb;
@@ -194,7 +194,7 @@ void main() {
 
 #endif
 
-#ifdef _CompoFog
+#ifdef _CFog
 	// if (depth < 1.0) {
 		// vec3 pos = getPos(depth);
 		// float dist = distance(pos, eye);
@@ -205,7 +205,7 @@ void main() {
 	// }
 #endif
 
-#ifdef _CompoGlare
+#ifdef _CGlare
 	if (dot(light, eyeLook) > 0.0) { // Facing light
 		vec4 lndc = VP * vec4(light, 1.0);
 		lndc.xy /= lndc.w;
@@ -221,21 +221,21 @@ void main() {
 	}
 #endif
 
-#ifdef _CompoGrain
+#ifdef _CGrain
 	// const float compoGrainStrength = 4.0;
 	float x = (texCo.x + 4.0) * (texCo.y + 4.0) * (time * 10.0);
 	col.rgb += vec3(mod((mod(x, 13.0) + 1.0) * (mod(x, 123.0) + 1.0), 0.01) - 0.005) * compoGrainStrength;
 #endif
 	
-#ifdef _CompoVignette
+#ifdef _CVignette
 	col.rgb *= vignette();
 #endif
 
-#ifdef _CompoExposure
+#ifdef _CExposure
 	col.rgb *= compoExposureStrength;
 #endif
 
-#ifdef _CompoTonemap
+#ifdef _CTonemap
 	col.rgb = tonemapUncharted2(col.rgb);
 	// col.rgb = tonemapFilmic(col.rgb); // With gamma
 #endif
@@ -243,22 +243,22 @@ void main() {
 	// To gamma
 	col.rgb = pow(col.rgb, vec3(1.0 / 2.2));
 	
-#ifdef _CompoBW
+#ifdef _CBW
 	// col.rgb = vec3(clamp(dot(col.rgb, col.rgb), 0.0, 1.0));
 	col.rgb = vec3((col.r * 0.3 + col.g * 0.59 + col.b * 0.11) / 3.0) * 2.5;
 #endif
 
-// #ifdef _CompoContrast
+// #ifdef _CContrast
 	// -0.5 - 0.5
 	// const float compoContrast = 0.2;
 	// col.rgb = ((col.rgb - 0.5) * max(compoContrast + 1.0, 0.0)) + 0.5;
 // #endif
 
-// #ifdef _CompoBrighness
+// #ifdef _CBrighness
 	// col.rgb += compoBrightness;
 // #endif
 
-#ifdef _CompoLetterbox
+#ifdef _CLetterbox
 	// const float compoLetterboxSize = 0.1;
 	col.rgb *= 1.0 - step(0.5 - compoLetterboxSize, abs(0.5 - texCo.y));
 #endif

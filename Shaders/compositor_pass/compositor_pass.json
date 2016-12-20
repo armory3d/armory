@@ -9,54 +9,54 @@
 				{
 					"name": "eye",
 					"link": "_cameraPosition",
-					"ifdef": ["_CompoGlare"]
+					"ifdef": ["_CGlare"]
 				},
 				{
 					"name": "eye",
 					"link": "_cameraPosition",
-					"ifdef": ["_Disabled_CompoPos"]
+					"ifdef": ["_Disabled_CPos"]
 				},
 				{
 					"name": "eyeLook",
 					"link": "_cameraLook",
-					"ifdef": ["_CompoGlare"]
+					"ifdef": ["_CGlare"]
 				},
 				{
 					"name": "eyeLook",
 					"link": "_cameraLook",
-					"ifdef": ["_Disabled_CompoPos"]
+					"ifdef": ["_Disabled_CPos"]
 				},
 				{
 					"name": "invVP",
 					"link": "_inverseViewProjectionMatrix",
-					"ifdef": ["_Disabled_CompoPos"]
+					"ifdef": ["_Disabled_CPos"]
 				},
 				{
 					"name": "light",
 					"link": "_lampPosition",
-					"ifdef": ["_CompoGlare"]
+					"ifdef": ["_CGlare"]
 				},
 				{
 					"name": "VP",
 					"link": "_viewProjectionMatrix",
-					"ifdef": ["_CompoGlare"]
+					"ifdef": ["_CGlare"]
 				},
 				{
 					"name": "time",
 					"link": "_time",
-					"ifdef": ["_CompoGrain"]
+					"ifdef": ["_CGrain"]
 				},
 
 				
 				{
 					"name": "texStep",
 					"link": "_screenSizeInv",
-					"ifdef": ["_CompoFXAA", "_CompoDOF"]
+					"ifdef": ["_CFXAA", "_CDOF"]
 				},
 				{
 					"name": "texStep",
 					"link": "_screenSizeInv",
-					"ifdef": ["_CompoFXAA"]
+					"ifdef": ["_CFXAA"]
 				},
 
 
@@ -68,7 +68,7 @@
 				{
 					"name": "aspectRatio",
 					"link": "_aspectRatioF",
-					"ifdef": ["_CompoGlare"]
+					"ifdef": ["_CGlare"]
 				}
 			],
 			"texture_params": [],
