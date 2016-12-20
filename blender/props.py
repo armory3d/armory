@@ -146,9 +146,8 @@ def init_properties():
     bpy.types.Armature.actiontraitlist_index = bpy.props.IntProperty(name="Action index", default=0)
     # For camera
     bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", description="Perform frustum culling for this camera", default=True)
-    bpy.types.Camera.renderpath_path = bpy.props.StringProperty(name="Render Path", description="Render path nodes used for this camera", default="deferred_path_low") # default="armory_default")
-    bpy.types.Camera.renderpath_id = bpy.props.StringProperty(name="Render Path ID", description="Asset ID", default="deferred")
-    # TODO: Specify multiple material ids, merge ids from multiple cameras 
+    bpy.types.Camera.renderpath_path = bpy.props.StringProperty(name="Render Path", description="Render path nodes used for this camera", default="deferred_path_low", update=assets.invalidate_shader_cache) # default="armory_default")
+    bpy.types.Camera.renderpath_id = bpy.props.StringProperty(name="Render Path ID", description="Asset ID", default="deferred") 
     bpy.types.Camera.renderpath_passes = bpy.props.StringProperty(name="Render Path Passes", description="Referenced render passes", default="")
     bpy.types.Camera.is_probe = bpy.props.BoolProperty(name="Probe", description="Render this camera as environment probe using Cycles", default=False)
     bpy.types.Camera.probe_generate_radiance = bpy.props.BoolProperty(name="Generate Radiance", description="Generate radiance textures", default=False)
@@ -208,7 +207,11 @@ def init_properties():
     bpy.types.Camera.rp_ssao = bpy.props.BoolProperty(name="SSAO", description="Screen space ambient occlusion", default=True)
     bpy.types.Camera.rp_ssr = bpy.props.BoolProperty(name="SSR", description="Screen space reflections", default=False)
     bpy.types.Camera.rp_bloom = bpy.props.BoolProperty(name="Bloom", description="Bloom processing", default=False)
-    bpy.types.Camera.rp_motionblur = bpy.props.BoolProperty(name="Motion Blur", description="Motion blur processing", default=False)
+    bpy.types.Camera.rp_motionblur = EnumProperty(
+        items=[('None', 'None', 'None'),
+               ('Basic', 'Basic', 'Basic'),
+               ('Velocity', 'Velocity', 'Velocity')],
+        name="Motion Blur", description="Motion blur processing", default='None')
     bpy.types.Camera.rp_translucency = bpy.props.BoolProperty(name="Translucency", description="Order independent translucency", default=False)
     bpy.types.Camera.rp_decals = bpy.props.BoolProperty(name="Decals", description="Render decals", default=False)
     bpy.types.Camera.rp_overlays = bpy.props.BoolProperty(name="Overlays", description="Render overlays", default=False)
@@ -314,6 +317,7 @@ def init_properties():
     bpy.types.World.voxelgi = bpy.props.BoolProperty(name="VGI", description="Voxel-based Global Illumination", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi_dimensions = bpy.props.FloatVectorProperty(name="Dimensions", description="3D texture size", size=3, default=[128, 128, 128], update=assets.invalidate_shader_cache)
     # For material
+    bpy.types.Material.is_cached = bpy.props.BoolProperty(name="Material Cached", description="No need to reexport material data", default=False)
     bpy.types.Material.cast_shadow = bpy.props.BoolProperty(name="Cast Shadow", default=True)
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.override_shader = bpy.props.BoolProperty(name="Override Shader", default=False)

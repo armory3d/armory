@@ -230,6 +230,15 @@ class InvalidateCacheButton(bpy.types.Operator):
         context.object.data.mesh_cached = False
         return{'FINISHED'}
 
+class InvalidateMaterialCacheButton(bpy.types.Operator):
+    '''Delete cached material data'''
+    bl_idname = "arm.invalidate_material_cache"
+    bl_label = "Invalidate Cache"
+ 
+    def execute(self, context):
+        context.object.material.is_cached = False
+        return{'FINISHED'}
+
 class InvalidateGPCacheButton(bpy.types.Operator):
     '''Delete cached grease pencil data'''
     bl_idname = "arm.invalidate_gp_cache"
@@ -285,6 +294,8 @@ class MaterialPropsPanel(bpy.types.Panel):
                 layout.prop(mat, 'height_tess_shadows_inner')
                 layout.prop(mat, 'height_tess_shadows_outer')
             layout.prop(mat, 'transluc_shadows')
+
+            layout.operator("arm.invalidate_cache")
 
 class WorldPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"

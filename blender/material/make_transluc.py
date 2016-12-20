@@ -7,11 +7,13 @@ def make(context_id):
 		'blend_source': 'blend_one', 'blend_destination': 'blend_one', 'blend_operation': 'add', \
 		'alpha_blend_source': 'blend_zero', 'alpha_blend_destination': 'inverse_source_alpha', 'alpha_blend_operation': 'add' })
 
-	make_mesh.make_forward(con_transluc, mrt=2, parse_opacity=True)
+	make_mesh.make_forward_base(con_transluc, parse_opacity=True)
 
 	vert = con_transluc.vert
 	frag = con_transluc.frag
 	tese = con_transluc.tese
+
+	frag.add_out('vec4[2] fragColor')
 
 	if tese != None:
 		tese.add_out('vec4 wvpposition')

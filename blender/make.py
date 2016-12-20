@@ -139,13 +139,13 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
 
     if armutils.get_os() == 'win':
         node_path = sdk_path + '/nodejs/node.exe'
-        khamake_path = sdk_path + '/win32/resources/app/extensions/kha/Kha/make'
+        khamake_path = sdk_path + '/win32/Kha/make'
     elif armutils.get_os() == 'mac':
         node_path = sdk_path + '/nodejs/node-osx'
-        khamake_path = sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/kha/Kha/make'
+        khamake_path = sdk_path + '/Kode Studio.app/Contents/Kha/make'
     else:
         node_path = sdk_path + '/nodejs/node-linux64'
-        khamake_path = sdk_path + '/linux64/resources/app/extensions/kha/Kha/make'
+        khamake_path = sdk_path + '/linux64/Kha/make'
     
     kha_target_name = make_utils.get_kha_target(target_name)
     cmd = [node_path, khamake_path, kha_target_name]
@@ -394,13 +394,13 @@ def on_compiled(mode): # build, play, play_viewport, publish
             webbrowser.open(html5_app_path)
         elif wrd.arm_play_runtime == 'Krom':
             if armutils.get_os() == 'win':
-                krom_location = sdk_path + '/win32/resources/app/extensions/krom/Krom/win32'
+                krom_location = sdk_path + '/win32/Krom/win32'
                 krom_path = krom_location + '/Krom.exe'
             elif armutils.get_os() == 'mac':
-                krom_location = sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/krom/Krom/macos/Krom.app/Contents/MacOS'
+                krom_location = sdk_path + '/Kode Studio.app/Contents/Krom/macos/Krom.app/Contents/MacOS'
                 krom_path = krom_location + '/Krom'
             else:
-                krom_location = sdk_path + '/linux64/resources/app/extensions/krom/Krom/linux'
+                krom_location = sdk_path + '/linux64/Krom/linux'
                 krom_path = krom_location + '/Krom'
             os.chdir(krom_location)
             state.playproc = subprocess.Popen([krom_path, armutils.get_fp() + '/build/window/krom', armutils.get_fp() + '/build/window/krom-resources'], stderr=subprocess.PIPE)

@@ -28,7 +28,7 @@ def set_preset(preset):
         cam.rp_ssao = False
         cam.rp_ssr = False
         cam.rp_bloom = False
-        cam.rp_motionblur = False
+        cam.rp_motionblur = 'None'
     elif preset == 'Forward':
         cam.rp_renderer = 'Forward'
         cam.rp_shadowmap = '2048'
@@ -48,7 +48,7 @@ def set_preset(preset):
         cam.rp_ssao = False
         cam.rp_ssr = False
         cam.rp_bloom = False
-        cam.rp_motionblur = False
+        cam.rp_motionblur = 'None'
     elif preset == 'Forward High':
         cam.rp_renderer = 'Forward'
         cam.rp_shadowmap = '4096'
@@ -68,7 +68,7 @@ def set_preset(preset):
         cam.rp_ssao = True
         cam.rp_ssr = True
         cam.rp_bloom = False
-        cam.rp_motionblur = False
+        cam.rp_motionblur = 'None'
     elif preset == 'Deferred Low':
         cam.rp_renderer = 'Deferred'
         cam.rp_shadowmap = '2048'
@@ -88,7 +88,7 @@ def set_preset(preset):
         cam.rp_ssao = True
         cam.rp_ssr = False
         cam.rp_bloom = False
-        cam.rp_motionblur = False
+        cam.rp_motionblur = 'None'
     elif preset == 'Deferred':
         cam.rp_renderer = 'Deferred'
         cam.rp_shadowmap = '2048'
@@ -108,7 +108,7 @@ def set_preset(preset):
         cam.rp_ssao = True
         cam.rp_ssr = True
         cam.rp_bloom = True
-        cam.rp_motionblur = False
+        cam.rp_motionblur = 'None'
     elif preset == 'Deferred High':
         cam.rp_renderer = 'Deferred'
         cam.rp_shadowmap = '4096'
@@ -128,7 +128,7 @@ def set_preset(preset):
         cam.rp_ssao = True
         cam.rp_ssr = True
         cam.rp_bloom = True
-        cam.rp_motionblur = False
+        cam.rp_motionblur = 'None'
     elif preset == 'VR Low':
         cam.rp_renderer = 'Forward'
         cam.rp_shadowmap = '1024'
@@ -148,7 +148,7 @@ def set_preset(preset):
         cam.rp_ssao = False
         cam.rp_ssr = False
         cam.rp_bloom = False
-        cam.rp_motionblur = False
+        cam.rp_motionblur = 'None'
     elif preset == 'Grease Pencil':
         cam.rp_renderer = 'Forward'
         cam.rp_shadowmap = 'None'
@@ -168,7 +168,7 @@ def set_preset(preset):
         cam.rp_ssao = False
         cam.rp_ssr = False
         cam.rp_bloom = False
-        cam.rp_motionblur = False
+        cam.rp_motionblur = 'None'
 
 # Menu in camera data region
 class GenRPDataPropsPanel(bpy.types.Panel):

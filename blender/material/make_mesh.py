@@ -19,9 +19,9 @@ def make(context_id, rid):
 
     return con_mesh
 
-def make_base(con_mesh, mrt, parse_opacity):
+def make_base(con_mesh, parse_opacity):
     vert = con_mesh.make_vert()
-    frag = con_mesh.make_frag(mrt=mrt)
+    frag = con_mesh.make_frag()
     geom = None
     tesc = None
     tese = None
@@ -31,8 +31,6 @@ def make_base(con_mesh, mrt, parse_opacity):
     vert.add_uniform('mat4 N', '_normalMatrix')
     vert.write_pre = True
     vert.write('vec4 spos = vec4(pos, 1.0);')
-    if mat_state.data.is_elem('off'):
-        vert.write('spos.xyz += off;')
     vert.write_pre = False
 
     if mat_utils.disp_linked(mat_state.output_node):
@@ -144,24 +142,55 @@ def write_norpos(vert, declare=False):
         vert.write(prep + 'wnormal = normalize(mat3(N) * (nor + 2.0 * cross(skinA.xyz, cross(skinA.xyz, nor) + skinA.w * nor)));')
     else:
         vert.write(prep + 'wnormal = normalize(mat3(N) * nor);')
+    if mat_state.data.is_elem('off'):
+        vert.write('spos.xyz += off;')
     vert.write('wposition = vec4(W * spos).xyz;')
     vert.write_pre = False
 
 def make_deferred(con_mesh):
-    make_base(con_mesh, mrt=2, parse_opacity=False)
+    wrd = bpy.data.worlds['Arm']
+    make_base(con_mesh, parse_opacity=False)
+
+    frag = con_mesh.frag
+    vert = con_mesh.vert
+
+    if '_Veloc' in wrd.world_defs:
+        frag.add_out('vec4[3] fragColor')
+        vert.add_uniform('mat4 prevWVP', link='_prevWorldViewProjectionMatrix')
+        vert.add_out('vec4 wvpposition')
+        vert.add_out('vec4 prevwvpposition')
+        vert.write('wvpposition = gl_Position;')
+        vert.write('prevwvpposition = prevWVP * spos;')
+    else:
+        frag.add_out('vec4[2] fragColor')
 
     # Pack gbuffer
-    frag = con_mesh.frag
     frag.add_include('../../Shaders/std/gbuffer.glsl')
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
     frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - gl_FragCoord.z);')
     frag.write('fragColor[1] = vec4(basecol.rgb, occlusion);')
 
+    if '_Veloc' in wrd.world_defs:
+        frag.write('vec2 posa = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
+        frag.write('vec2 posb = (prevwvpposition.xy / prevwvpposition.w) * 0.5 + 0.5;')
+        frag.write('fragColor[2].rg = vec2(posa - posb);')
+
     return con_mesh
 
-def make_forward(con_mesh, mrt=1, parse_opacity=False):
-    make_base(con_mesh, mrt=mrt, parse_opacity=parse_opacity)
+def make_forward(con_mesh):
+    make_forward_base(con_mesh)
+
+    frag.add_out('vec4 fragColor')
+
+    frag.write('fragColor = vec4(direct * lightColor * visibility + indirect * occlusion * envmapStrength, 1.0);')
+    
+    if '_LDR' in bpy.data.worlds['Arm'].world_defs:
+        frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2);')
+
+def make_forward_base(con_mesh, parse_opacity=False):
+    wrd = bpy.data.worlds['Arm']
+    make_base(con_mesh, parse_opacity=parse_opacity)
     vert = con_mesh.vert
     frag = con_mesh.frag
     tese = con_mesh.tese
@@ -175,9 +204,10 @@ def make_forward(con_mesh, mrt=1, parse_opacity=False):
     frag.add_uniform('int lightType', '_lampType')
     frag.add_uniform('float shirr[27]', link='_envmapIrradiance', included=True)
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
-    frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance', ifdef='_Rad')
-    frag.add_uniform('sampler2D senvmapBrdf', link='_envmapBrdf', ifdef='_Rad')
-    frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps', ifdef='_Rad')
+    if '_Rad' in wrd.world_defs:
+        frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance')
+        frag.add_uniform('sampler2D senvmapBrdf', link='_envmapBrdf')
+        frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps')
 
     frag.write('vec3 l = lightType == 0 ? lightDir : normalize(lightPos - wposition);')
     frag.write('vec3 h = normalize(v + l);')
@@ -185,7 +215,6 @@ def make_forward(con_mesh, mrt=1, parse_opacity=False):
     frag.write('float dotNH = dot(n, h);')
     frag.write('float dotVH = dot(v, h);')
 
-    wrd = bpy.data.worlds['Arm']
     if '_PCSS' in wrd.world_defs:
         is_pcss = True
     else:
@@ -241,19 +270,12 @@ def make_forward(con_mesh, mrt=1, parse_opacity=False):
     frag.write('direct += specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);')
 
     frag.write('vec3 indirect = (shIrradiance(n, 2.2) / PI) * albedo;')
-    frag.write('#ifdef _Rad')
-    frag.write('vec3 reflectionWorld = reflect(-v, n);')
-    frag.write('float lod = getMipFromRoughness(roughness, envmapNumMipmaps);')
-    frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')
-    frag.write('#ifdef _EnvLDR')
-    frag.write('prefilteredColor = pow(prefilteredColor, vec3(2.2);')
-    frag.write('#endif')
-    frag.write('vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;')
-    frag.write('indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);')
-    frag.write('#endif')
-
-    if mrt == 1:
-        frag.write('fragColor = vec4(direct * lightColor * visibility + indirect * occlusion * envmapStrength, 1.0);')
-        frag.write('#ifdef _LDR')
-        frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2);')
-        frag.write('#endif')
+    
+    if '_RAD' in wrd.world_defs:
+        frag.write('vec3 reflectionWorld = reflect(-v, n);')
+        frag.write('float lod = getMipFromRoughness(roughness, envmapNumMipmaps);')
+        frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')
+        if '_EnvLDR' in wrd.world_defs:
+            frag.write('prefilteredColor = pow(prefilteredColor, vec3(2.2);')
+        frag.write('vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;')
+        frag.write('indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);')

@@ -60,11 +60,11 @@ def get_sdk_path():
             # blender.app/Contents/MacOS/blender
             return bpy.app.binary_path[:-22] + '/armsdk/'
         elif get_os() == 'linux':
-            # blender
-            return bpy.app.binary_path[:-7] + '/armsdk/'
+            # /blender
+            return bpy.app.binary_path.rsplit('/', 1)[0] + '/armsdk/'
         else:
-            # blender.exe
-            return bpy.app.binary_path[:-11] + '/armsdk/'
+            # /blender.exe
+            return bpy.app.binary_path.replace('\\', '/').rsplit('/', 1)[0] + '/armsdk/'
     else:
         return addon_prefs.sdk_path
 
@@ -106,7 +106,10 @@ def safefilename(s):
     return s
 
 def safe_source_name(s):
-    return safefilename(s).replace('.', '_').replace('-', '_').replace(' ', '')
+    s = safefilename(s).replace('.', '_').replace('-', '_').replace(' ', '')
+    if s[0].isdigit():
+        s = '_' + s
+    return s
 
 def safe_assetpath(s):
     return s[2:] if s[:2] == '//' else s # Remove leading '//'

@@ -20,7 +20,8 @@ def parse(material, mat_data, mat_users, rid):
     mat_state.output_node = cycles.node_by_type(mat_state.nodes, 'OUTPUT_MATERIAL')
     if mat_state.output_node == None:
         return None
-    mat_state.path = armutils.get_fp() + '/build/compiled/ShaderRaws/' + material.name
+    matname = armutils.safe_source_name(material.name)
+    mat_state.path = armutils.get_fp() + '/build/compiled/ShaderRaws/' + matname
     if not os.path.exists(mat_state.path):
         os.makedirs(mat_state.path)
 
@@ -77,42 +78,28 @@ def parse(material, mat_data, mat_users, rid):
         
         write_shaders(con, rp)
 
-    armutils.write_arm(mat_state.path + '/' + material.name + '_data.arm', mat_state.data.get())
+    armutils.write_arm(mat_state.path + '/' + matname + '_data.arm', mat_state.data.get())
 
-    shader_data_name = material.name + '_data'
-    shader_data_path = 'build/compiled/ShaderRaws/' + material.name + '/' + shader_data_name + '.arm'
+    shader_data_name = matname + '_data'
+    shader_data_path = 'build/compiled/ShaderRaws/' + matname + '/' + shader_data_name + '.arm'
     assets.add_shader_data(shader_data_path)
     mat_data['shader'] = shader_data_name + '/' + shader_data_name
 
     return mat_state.data.sd
 
 def write_shaders(con, rpass):
-    if con.vert != None:
-        shader_path = mat_state.path + '/' + mat_state.material.name + '_' + rpass + '.vert.glsl'
-        assets.add_shader(shader_path)
+    keep_cache = mat_state.material.is_cached
+    write_shader(con.vert, 'vert', rpass, keep_cache)
+    write_shader(con.frag, 'frag', rpass, keep_cache)
+    write_shader(con.geom, 'geom', rpass, keep_cache)
+    write_shader(con.tesc, 'tesc', rpass, keep_cache)
+    write_shader(con.tese, 'tese', rpass, keep_cache)
+
+def write_shader(shader, ext, rpass, keep_cache=True):
+    if shader == None:
+        return
+    shader_path = mat_state.path + '/' + armutils.safe_source_name(mat_state.material.name) + '_' + rpass + '.' + ext + '.glsl'
+    assets.add_shader(shader_path)
+    if not os.path.isfile(shader_path) or keep_cache:
         with open(shader_path, 'w') as f:
-            f.write(con.vert.get())
-    
-    if con.frag != None:
-        shader_path = mat_state.path + '/' + mat_state.material.name + '_' + rpass + '.frag.glsl'
-        assets.add_shader(shader_path)
-        with open(shader_path, 'w') as f:
-            f.write(con.frag.get())
-    
-    if con.geom != None:
-        shader_path = mat_state.path + '/' + mat_state.material.name + '_' + rpass + '.geom.glsl'
-        assets.add_shader(shader_path)
-        with open(shader_path, 'w') as f:
-            f.write(con.geom.get())
-    
-    if con.tesc != None:
-        shader_path = mat_state.path + '/' + mat_state.material.name + '_' + rpass + '.tesc.glsl'
-        assets.add_shader(shader_path)
-        with open(shader_path, 'w') as f:
-            f.write(con.tesc.get())
-    
-    if con.tese != None:
-        shader_path = mat_state.path + '/' + mat_state.material.name + '_' + rpass + '.tese.glsl'
-        assets.add_shader(shader_path)
-        with open(shader_path, 'w') as f:
-            f.write(con.tese.get())
+            f.write(shader.get())

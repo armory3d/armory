@@ -13,6 +13,7 @@ def make(context_id, rpasses):
     tesc = None
     tese = None
 
+    frag.add_out('vec4 fragColor')
     vert.write('vec4 spos = vec4(pos, 1.0);')
 
     parse_opacity = 'translucent' in rpasses

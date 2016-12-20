@@ -2176,6 +2176,7 @@ class ArmoryExporter:
                     ob.data.mesh_cached = False
 
             self.output['material_datas'].append(o)
+            material.is_cached = True
 
         # Object with no material assigned in the scene
         if self.export_default_material:
@@ -2552,14 +2553,7 @@ class ArmoryExporter:
                     with open(targetpath, 'w') as f:
                         f.write(bpy.data.texts[t.jsscript_prop].as_string())
                     sdk_path = armutils.get_sdk_path()
-                    # Extract path to built-in python binary
-                    if armutils.get_os() == 'win':
-                        # Remove 'os.py' from path
-                        python_path = os.__file__[:-5] + '../bin/python.exe'
-                    elif armutils.get_os() == 'mac':
-                        python_path = os.__file__[:-5] + '../../bin/python3.5m'
-                    else:
-                        python_path = os.__file__[:-5] + '../../bin/python3.5m'
+                    python_path = bpy.app.binary_path_python
                     cwd = os.getcwd()
                     os.chdir(scriptspath)
                     # Disable minification for now, too slow

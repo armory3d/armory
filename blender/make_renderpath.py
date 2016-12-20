@@ -129,7 +129,7 @@ def make_draw_meshes(stage, node_group, node):
     # Context
     context = node.inputs[1].default_value
     # Store shadowmap size
-    if context == build_node_tree.cam.shadows_context:
+    if context == 'shadowmap':
         bpy.data.worlds['Arm'].shadowmap_size = buildNode.last_set_target_w
     stage['params'].append(context)
     # Order

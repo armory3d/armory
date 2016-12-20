@@ -1,4 +1,5 @@
 from material.shader import Shader
+import armutils
 
 class ShaderData:
 
@@ -8,7 +9,8 @@ class ShaderData:
         self.sd = {}
         self.data = {}
         self.data['shader_datas'] = [self.sd]
-        self.sd['name'] = material.name + '_data'
+        self.matname = armutils.safe_source_name(material.name)
+        self.sd['name'] = self.matname + '_data'
         self.sd['vertex_structure'] = []
         self.sd['contexts'] = []
 
@@ -57,6 +59,7 @@ class ShaderContext:
         self.tesc = None
         self.tese = None
         self.material = material
+        self.matname = armutils.safe_source_name(material.name)
         self.shader_data = shader_data
         self.data = {}
         self.data['name'] = props['name']
@@ -113,30 +116,26 @@ class ShaderContext:
         self.tunits.append(c)
 
     def make_vert(self):
-        self.data['vertex_shader'] = self.material.name + '_' + self.data['name'] + '.vert'
+        self.data['vertex_shader'] = self.matname + '_' + self.data['name'] + '.vert'
         self.vert = Shader(self, 'vert')        
         return self.vert
 
-    def make_frag(self, mrt=1):
-        self.data['fragment_shader'] = self.material.name + '_' + self.data['name'] + '.frag'
+    def make_frag(self):
+        self.data['fragment_shader'] = self.matname + '_' + self.data['name'] + '.frag'
         self.frag = Shader(self, 'frag')
-        if mrt > 1:
-            self.frag.add_out('vec4[{0}] fragColor'.format(mrt))
-        else:
-            self.frag.add_out('vec4 fragColor')
         return self.frag
 
     def make_geom(self):
-        self.data['geometry_shader'] = self.material.name + '_' + self.data['name'] + '.geom'
+        self.data['geometry_shader'] = self.matname + '_' + self.data['name'] + '.geom'
         self.geom = Shader(self, 'geom')
         return self.geom
 
     def make_tesc(self):
-        self.data['tesscontrol_shader'] = self.material.name + '_' + self.data['name'] + '.tesc'
+        self.data['tesscontrol_shader'] = self.matname + '_' + self.data['name'] + '.tesc'
         self.tesc = Shader(self, 'tesc')
         return self.tesc
 
     def make_tese(self):
-        self.data['tesseval_shader'] = self.material.name + '_' + self.data['name'] + '.tese'
+        self.data['tesseval_shader'] = self.matname + '_' + self.data['name'] + '.tese'
         self.tese = Shader(self, 'tese')
         return self.tese

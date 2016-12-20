@@ -254,7 +254,8 @@ def parse_color(world, node, context, envmap_strength_const):
 
     # Append sky define
     elif node.type == 'TEX_SKY':
-        envmap_strength_const['float'] *= 0.25 # Match to Cycles
+        # Match to cycles
+        envmap_strength_const['float'] *= 0.1
         
         bpy.data.worlds['Arm'].world_defs += '_EnvSky'
         # Append sky properties to material
