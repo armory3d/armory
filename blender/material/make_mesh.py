@@ -181,6 +181,7 @@ def make_deferred(con_mesh):
 def make_forward(con_mesh):
     make_forward_base(con_mesh)
 
+    frag = con_mesh.frag
     frag.add_out('vec4 fragColor')
 
     frag.write('fragColor = vec4(direct * lightColor * visibility + indirect * occlusion * envmapStrength, 1.0);')

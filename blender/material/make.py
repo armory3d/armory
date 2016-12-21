@@ -100,6 +100,6 @@ def write_shader(shader, ext, rpass, keep_cache=True):
         return
     shader_path = mat_state.path + '/' + armutils.safe_source_name(mat_state.material.name) + '_' + rpass + '.' + ext + '.glsl'
     assets.add_shader(shader_path)
-    if not os.path.isfile(shader_path) or keep_cache:
+    if not os.path.isfile(shader_path) or not keep_cache:
         with open(shader_path, 'w') as f:
             f.write(shader.get())

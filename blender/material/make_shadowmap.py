@@ -18,6 +18,8 @@ def make(context_id, rpasses):
 
     parse_opacity = 'translucent' in rpasses
     if parse_opacity:
+        frag.write('vec3 n = vec3(0.0);') # Discard at compile time
+        frag.write('float dotNV = 0.0;')
         frag.write('float opacity;')
 
     if mat_state.data.is_elem('bone'):

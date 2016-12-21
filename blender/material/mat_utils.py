@@ -26,7 +26,7 @@ def get_rpasses(material):
     else:
         ar.append('mesh')
 
-    if 'mesh' in ar or 'translucent' in ar:
+    if material.cast_shadow and ('mesh' in ar or 'translucent' in ar):
         ar.append('shadowmap')
 
     return ar

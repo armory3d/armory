@@ -19,7 +19,7 @@ import assets
 import make_state
 import material.mat_state as mat_state
 import material.texture as texture
-import material.functions
+import material.functions as functions
 
 def parse(nodes, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
@@ -38,6 +38,7 @@ def parse_output(node, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse
     global tese
     global parse_surface
     global parse_opacity
+    global parsing_basecol
     vert = _vert
     frag = _frag
     geom = _geom
@@ -45,6 +46,7 @@ def parse_output(node, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse
     tese = _tese
     parse_surface = _parse_surface
     parse_opacity = _parse_opacity
+    parsing_basecol = False
 
     # Surface
     if parse_surface or parse_opacity:
@@ -128,6 +130,7 @@ def write_normal(inp):
             normal_written = True
 
 def parse_shader(node, socket):   
+    global parsing_basecol
     out_basecol = 'vec3(0.8)'
     out_roughness = '0.0'
     out_metallic = '0.0'
@@ -138,7 +141,9 @@ def parse_shader(node, socket):
         if node.node_tree.name.startswith('Armory PBR'):
             
             if parse_surface:
+                parsing_basecol = True
                 out_basecol = parse_vector_input(node.inputs[0])
+                parsing_basecol = False
                 # TODO: deprecated, occlussion is value instead of vector now
                 if node.inputs[1].type == 'RGBA':
                     out_occlusion = '{0}.r'.format(parse_vector_input(node.inputs[1]))
@@ -171,7 +176,9 @@ def parse_shader(node, socket):
         bc1, rough1, met1, occ1, opac1 = parse_shader_input(node.inputs[1])
         bc2, rough2, met2, occ2, opac2 = parse_shader_input(node.inputs[2])
         if parse_surface:
+            parsing_basecol = True
             out_basecol = '({0} * {3} + {1} * {2})'.format(bc1, bc2, fac_var, fac_inv_var)
+            parsing_basecol = False
             out_roughness = '({0} * {3} + {1} * {2})'.format(rough1, rough2, fac_var, fac_inv_var)
             out_metallic = '({0} * {3} + {1} * {2})'.format(met1, met2, fac_var, fac_inv_var)
             out_occlusion = '({0} * {3} + {1} * {2})'.format(occ1, occ2, fac_var, fac_inv_var)
@@ -182,7 +189,9 @@ def parse_shader(node, socket):
         bc1, rough1, met1, occ1, opac1 = parse_shader_input(node.inputs[0])
         bc2, rough2, met2, occ2, opac2 = parse_shader_input(node.inputs[1])
         if parse_surface:
+            parsing_basecol = True
             out_basecol = '({0} + {1})'.format(bc1, bc2)
+            parsing_basecol = False
             out_roughness = '({0} * 0.5 + {1} * 0.5)'.format(rough1, rough2)
             out_metallic = '({0} * 0.5 + {1} * 0.5)'.format(met1, met2)
             out_occlusion = '({0} * 0.5 + {1} * 0.5)'.format(occ1, occ2)
@@ -192,13 +201,17 @@ def parse_shader(node, socket):
     elif node.type == 'BSDF_DIFFUSE':
         if parse_surface:
             write_normal(node.inputs[2])
+            parsing_basecol = True
             out_basecol = parse_vector_input(node.inputs[0])
+            parsing_basecol = False
             out_roughness = parse_value_input(node.inputs[1])
 
     elif node.type == 'BSDF_GLOSSY':
         if parse_surface:
             write_normal(node.inputs[2])
+            parsing_basecol = True
             out_basecol = parse_vector_input(node.inputs[0])
+            parsing_basecol = False
             out_roughness = parse_value_input(node.inputs[1])
             out_metallic = '1.0'
 
@@ -211,14 +224,18 @@ def parse_shader(node, socket):
         if parse_surface:
             write_normal(node.inputs[4])
             # Revert to glossy
+            parsing_basecol = True
             out_basecol = parse_vector_input(node.inputs[0])
+            parsing_basecol = False
             out_roughness = parse_value_input(node.inputs[1])
             out_metallic = '1.0'
 
     elif node.type == 'EMISSION':
         if parse_surface:
             # Multiply basecol
+            parsing_basecol = True
             out_basecol = parse_vector_input(node.inputs[0])
+            parsing_basecol = False
             strength = parse_value_input(node.inputs[1])
             out_basecol = '({0} * {1} * 50.0)'.format(out_basecol, strength)
 
@@ -262,7 +279,9 @@ def parse_shader(node, socket):
     elif node.type == 'BSDF_VELVET':
         if parse_surface:
             write_normal(node.inputs[2])
+            parsing_basecol = True
             out_basecol = parse_vector_input(node.inputs[0])
+            parsing_basecol = False
             out_roughness = '1.0'
             out_metallic = '1.0'
 
@@ -398,7 +417,8 @@ def parse_rgb(node, socket):
         tex_name = armutils.safe_source_name(node.name)
         tex = texture.make_texture(node, tex_name)
         if tex != None:
-            return '{0}.rgb'.format(texture_store(node, tex, tex_name))
+            to_linear = parsing_basecol and not tex['file'].endswith('.hdr')
+            return '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear))
         else:
             return tovec3([0.0, 0.0, 0.0])
 
@@ -603,7 +623,7 @@ def parse_rgb(node, socket):
 def store_var_name(node):
     return node_name(node.name) + '_store'
 
-def texture_store(node, tex, tex_name):
+def texture_store(node, tex, tex_name, to_linear=False):
     mat_state.mat_context['bind_textures'].append(tex)
     mat_state.data.add_elem('tex', 2)
     curshader.add_uniform('sampler2D {0}'.format(tex_name))
@@ -613,7 +633,7 @@ def texture_store(node, tex, tex_name):
         uv_name = 'texCoord'
     tex_store = store_var_name(node)
     curshader.write('vec4 {0} = texture({1}, {2}.xy);'.format(tex_store, tex_name, uv_name))
-    if not tex['file'].endswith('.hdr'):
+    if to_linear:
         curshader.write('{0}.rgb = pow({0}.rgb, vec3(2.2));'.format(tex_store))
     return tex_store
 
@@ -678,24 +698,24 @@ def parse_vector(node, socket):
         #obj = node.object
         #dupli = node.from_dupli
         if socket == node.outputs[0]: # Generated
-            return 'vec2(0.0)'
+            return 'vec2(0.0)', 2
         elif socket == node.outputs[1]: # Normal
-            return 'vec2(0.0)'
+            return 'vec2(0.0)', 2
         elif socket == node.outputs[2]: # UV
-            return 'vec2(0.0)'
+            return 'texCoord', 2
         elif socket == node.outputs[3]: # Object
-            return 'vec2(0.0)'
+            return 'vec2(0.0)', 2
         elif socket == node.outputs[4]: # Camera
-            return 'vec2(0.0)'
+            return 'vec2(0.0)', 2
         elif socket == node.outputs[5]: # Window
-            return 'vec2(0.0)'
+            return 'vec2(0.0)', 2
         elif socket == node.outputs[6]: # Reflection
-            return 'vec2(0.0)'
+            return 'vec2(0.0)', 2
 
     elif node.type == 'UVMAP':
         #map = node.uv_map
         #dupli = node.from_dupli
-        return 'vec2(0.0)'
+        return 'vec2(0.0)', 2
 
     elif node.type == 'BUMP':
         #invert = node.invert
@@ -707,8 +727,7 @@ def parse_vector(node, socket):
         return 'n'
 
     elif node.type == 'MAPPING':
-        # vector = parse_vector_input(node.inputs[0])
-        return 'vec3(0.0)'
+        return parse_vector_input(node.inputs[0]), 2
 
     elif node.type == 'NORMAL':
         if socket == node.outputs[0]:
@@ -718,11 +737,14 @@ def parse_vector(node, socket):
             return 'vec3(dot({0}, {1}))'.format(tovec3(node.outputs[0].default_value), nor)
 
     elif node.type == 'NORMAL_MAP':
-        #space = node.space
-        #map = node.uv_map
-        # strength = parse_value_input(node.inputs[0])
-        parse_normal_map_color_input(node.inputs[1]) # Color
-        return None
+        if curshader == tese:
+            return parse_vector_input(node.inputs[1])
+        else:
+            #space = node.space
+            #map = node.uv_map
+            # strength = parse_value_input(node.inputs[0])
+            parse_normal_map_color_input(node.inputs[1]) # Color
+            return None
 
     elif node.type == 'CURVE_VEC':
         # fac = parse_value_input(node.inputs[0])
@@ -846,33 +868,33 @@ def parse_value(node, socket):
     elif node.type == 'LIGHT_PATH':
         if socket == node.outputs[0]: # Is Camera Ray
             return '1.0'
-        elif socket == node.outputs[0]: # Is Shadow Ray
+        elif socket == node.outputs[1]: # Is Shadow Ray
             return '0.0'
-        elif socket == node.outputs[0]: # Is Diffuse Ray
+        elif socket == node.outputs[2]: # Is Diffuse Ray
             return '1.0'
-        elif socket == node.outputs[0]: # Is Glossy Ray
+        elif socket == node.outputs[3]: # Is Glossy Ray
             return '1.0'
-        elif socket == node.outputs[0]: # Is Singular Ray
+        elif socket == node.outputs[4]: # Is Singular Ray
             return '0.0'
-        elif socket == node.outputs[0]: # Is Reflection Ray
+        elif socket == node.outputs[5]: # Is Reflection Ray
             return '0.0'
-        elif socket == node.outputs[0]: # Is Transmission Ray
+        elif socket == node.outputs[6]: # Is Transmission Ray
             return '0.0'
-        elif socket == node.outputs[0]: # Ray Length
+        elif socket == node.outputs[7]: # Ray Length
             return '0.0'
-        elif socket == node.outputs[0]: # Ray Depth
+        elif socket == node.outputs[8]: # Ray Depth
             return '0.0'
-        elif socket == node.outputs[0]: # Transparent Depth
+        elif socket == node.outputs[9]: # Transparent Depth
             return '0.0'
-        elif socket == node.outputs[0]: # Transmission Depth
+        elif socket == node.outputs[10]: # Transmission Depth
             return '0.0'
 
     elif node.type == 'OBJECT_INFO':
         if socket == node.outputs[0]: # Object Index
             return '0.0'
-        elif socket == node.outputs[0]: # Material Index
+        elif socket == node.outputs[1]: # Material Index
             return '0.0'
-        elif socket == node.outputs[0]: # Random
+        elif socket == node.outputs[2]: # Random
             return '0.0'
 
     elif node.type == 'PARTICLE_INFO':

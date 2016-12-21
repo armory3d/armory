@@ -1804,6 +1804,10 @@ class ArmoryExporter:
         # arbitrary stage in the modifier stack.
         exportMesh = bobject.to_mesh(scene, applyModifiers, "RENDER", True, False)
 
+        if exportMesh == None:
+            print('Armory Warning: ' + oid + ' was not exported')
+            return
+
         if len(exportMesh.uv_layers) > 2:
             print('Armory Warning: ' + oid + ' exceeds maximum of 2 UV Maps supported')
 
@@ -2218,6 +2222,8 @@ class ArmoryExporter:
             self.output['world_datas'].append(o)
 
     def export_grease_pencils(self):
+        return # Disabled for now
+        
         gpRef = self.scene.grease_pencil
         if gpRef == None or self.scene.gp_export == False:
             return

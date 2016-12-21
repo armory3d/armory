@@ -236,7 +236,7 @@ class InvalidateMaterialCacheButton(bpy.types.Operator):
     bl_label = "Invalidate Cache"
  
     def execute(self, context):
-        context.object.material.is_cached = False
+        context.material.is_cached = False
         return{'FINISHED'}
 
 class InvalidateGPCacheButton(bpy.types.Operator):
@@ -295,7 +295,7 @@ class MaterialPropsPanel(bpy.types.Panel):
                 layout.prop(mat, 'height_tess_shadows_outer')
             layout.prop(mat, 'transluc_shadows')
 
-            layout.operator("arm.invalidate_cache")
+            layout.operator("arm.invalidate_material_cache")
 
 class WorldPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
