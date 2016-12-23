@@ -3,6 +3,7 @@ import nodes_renderpath
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 import make_renderer
+import assets
 
 def set_preset(preset):
     cam = bpy.context.camera
@@ -198,7 +199,7 @@ class GenRPDataPropsPanel(bpy.types.Panel):
             layout.prop(dat, "rp_hdr")
             layout.prop(dat, "rp_worldnodes")
             layout.prop(dat, "rp_stereo")
-            layout.prop(dat, "rp_greasepencil")
+            # layout.prop(dat, "rp_greasepencil")
 
             layout.separator()
             layout.prop(dat, "rp_render_to_texture")
@@ -306,6 +307,7 @@ class ArmorySetRenderPathButton(bpy.types.Operator):
     def execute(self, context):
         if bpy.context.camera == None:
             return {'CANCELLED'}
+        assets.invalidate_shader_cache(self, context)
         make_renderer.make_renderer(bpy.context.camera)
         bpy.context.camera.renderpath_path = 'armory_default'
         return {'FINISHED'}

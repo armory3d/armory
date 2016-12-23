@@ -11,13 +11,13 @@ def make_renderer(cam):
     global links
 
     if cam.rp_renderer == 'Forward':
-        nodes_renderpath.load_library('forward_path_high', 'armory_default')
+        nodes_renderpath.load_library('forward_path', 'armory_default')
         group = bpy.data.node_groups['armory_default']
         nodes = group.nodes
         links = group.links
         make_forward(cam)
     else: # Deferred
-        nodes_renderpath.load_library('deferred_path_high', 'armory_default')
+        nodes_renderpath.load_library('deferred_path', 'armory_default')
         group = bpy.data.node_groups['armory_default']
         nodes = group.nodes
         links = group.links
@@ -31,53 +31,52 @@ def relink(start_node, next_node):
 
 def make_forward(cam):
 
-    if not cam.rp_hdr:
-        nodes['Begin'].inputs[5].default_value = False
+    nodes['Begin'].inputs[1].default_value = cam.rp_hdr
+    nodes['Screen'].inputs[0].default_value = int(cam.rp_supersampling)
 
     if cam.rp_shadowmap != 'None':
         n = nodes['Shadow Map']
         n.inputs[1].default_value = n.inputs[2].default_value = int(cam.rp_shadowmap)
-
-    if cam.rp_supersampling != '1':
-        nodes['Screen'].inputs[0].default_value = int(cam.rp_supersampling)
+    else:
+        l = nodes['Begin'].outputs[0].links[0]
+        links.remove(l)
+        links.new(nodes['Begin'].outputs[0], nodes['Set Target Mesh'].inputs[0])
 
     if not cam.rp_worldnodes:
-        relink('Draw World', 'Clear Target.002')
-
-    if not cam.rp_overlays:
-        relink('Clear Target.002', 'Set Target.004')
+        relink('Draw World', 'Set Target Accum')
 
     if not cam.rp_translucency:
-        relink('Set Target.004', 'Draw Compositor + FXAA')
+        relink('Set Target Accum', 'Draw Compositor + FXAA')
+
+    if cam.rp_overlays:
+        links.new(nodes['Draw Compositor + FXAA'].outputs[0], nodes['Clear Target Overlay'].inputs[0])
 
 def make_deferred(cam):
 
-    if not cam.rp_hdr:
-        nodes['Begin'].inputs[5].default_value = False
+    nodes['Begin'].inputs[1].default_value = cam.rp_hdr
+    nodes['Screen'].inputs[0].default_value = int(cam.rp_supersampling)
 
     if cam.rp_shadowmap != 'None':
         n = nodes['Shadow Map']
         n.inputs[1].default_value = n.inputs[2].default_value = int(cam.rp_shadowmap)
+    else:
+        l = nodes['Loop Lamps'].outputs[1].links[0]
+        links.remove(l)
+        links.new(nodes['Loop Lamps'].outputs[1], nodes['Deferred Light'].inputs[0])
 
-    if cam.rp_supersampling != '1':
-        nodes['Screen'].inputs[0].default_value = int(cam.rp_supersampling)
-
-    if not cam.rp_worldnodes:
-        relink('Draw World', 'Set Target.002')
-
-    if not cam.rp_translucency:
-        relink('Set Target.002', 'Bloom')
-
-    if not cam.rp_overlays:
-        relink('Clear Target.004', 'SMAA')
-
-    if not cam.rp_decals:
-        relink('Set Target.005', 'SSAO')
+    # if not cam.rp_decals:
+        # relink('Set Target.005', 'SSAO')
 
     if not cam.rp_ssao:
         relink('SSAO', 'Deferred Indirect')        
         l = nodes['Deferred Indirect'].inputs[3].links[0]
         links.remove(l)
+
+    if not cam.rp_worldnodes:
+        relink('Draw World', 'Set Target Accum')
+
+    if not cam.rp_translucency:
+        relink('Set Target Accum', 'Bloom')
 
     if not cam.rp_bloom:
         relink('Bloom', 'SSR')
@@ -85,19 +84,26 @@ def make_deferred(cam):
     if not cam.rp_ssr:
         relink('SSR', 'Draw Compositor')
 
-    if cam.rp_compositornodes:
+    if not cam.rp_compositornodes:
         pass
 
+    last_node = 'Draw Compositor'
     if cam.rp_antialiasing == 'SMAA':
-        l = nodes['SMAA'].outputs[0].links[0]
-        links.remove(l)
-        n = nodes['Framebuffer']
-        links.new(n.outputs[0], nodes['SMAA'].inputs[1])
-        l = nodes['SMAA'].inputs[5].links[0] # Veloc
-        links.remove(l)
-        l = nodes['GBuffer'].inputs[2].links[0]
-        links.remove(l)
-    elif cam.rp_antialiasing == 'FXAA' or cam.rp_antialiasing == 'None':
+        last_node = 'SMAA'
+    elif cam.rp_antialiasing == 'TAA':
+        last_node = 'Copy'
+        links.new(nodes['SMAA'].outputs[0], nodes['TAA'].inputs[0])
+        links.new(nodes['Reroute.019'].outputs[0], nodes['SMAA'].inputs[5])
+        links.new(nodes['gbuffer2'].outputs[0], nodes['GBuffer'].inputs[2])
+        links.new(nodes['Reroute.014'].outputs[0], nodes['SMAA'].inputs[1])
+    elif cam.rp_antialiasing == 'FXAA':
+        last_node = 'FXAA'
         relink('SMAA', 'FXAA')
-        l = nodes['GBuffer'].inputs[2].links[0]
+    elif cam.rp_antialiasing == 'None':
+        last_node = 'Draw Compositor'
+        l = nodes['Draw Compositor'].outputs[0].links[0]
         links.remove(l)
+        links.new(nodes['Framebuffer'].outputs[0], nodes['Draw Compositor'].inputs[1])
+
+    if cam.rp_overlays:
+        links.new(nodes[last_node].outputs[0], nodes['Clear Target Overlay'].inputs[0])

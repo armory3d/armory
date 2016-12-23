@@ -146,7 +146,7 @@ def init_properties():
     bpy.types.Armature.actiontraitlist_index = bpy.props.IntProperty(name="Action index", default=0)
     # For camera
     bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", description="Perform frustum culling for this camera", default=True)
-    bpy.types.Camera.renderpath_path = bpy.props.StringProperty(name="Render Path", description="Render path nodes used for this camera", default="deferred_path_low", update=assets.invalidate_shader_cache) # default="armory_default")
+    bpy.types.Camera.renderpath_path = bpy.props.StringProperty(name="Render Path", description="Render path nodes used for this camera", default="armory_default", update=assets.invalidate_shader_cache)
     bpy.types.Camera.renderpath_id = bpy.props.StringProperty(name="Render Path ID", description="Asset ID", default="deferred") 
     bpy.types.Camera.renderpath_passes = bpy.props.StringProperty(name="Render Path Passes", description="Referenced render passes", default="")
     bpy.types.Camera.is_probe = bpy.props.BoolProperty(name="Probe", description="Render this camera as environment probe using Cycles", default=False)
@@ -169,7 +169,7 @@ def init_properties():
                ('Deferred', 'Deferred', 'Deferred'),
                ('Deferred High', 'Deferred High', 'Deferred High'),
                ('VR Low', 'VR Low', 'VR Low'),
-               ('Grease Pencil', 'Grease Pencil', 'Grease Pencil'),
+               #('Grease Pencil', 'Grease Pencil', 'Grease Pencil'),
                #('Path-Trace', 'Path-Trace', 'Path-Trace')],
                ],
         name="Preset", description="Render path preset", default='None', update=update_preset)
@@ -179,7 +179,7 @@ def init_properties():
                #('Path-Trace', 'Path-Trace', 'Path-Trace')],
                ],
         name="Renderer", description="Renderer type", default='Deferred')
-    bpy.types.Camera.rp_depthprepass = bpy.props.BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=True)
+    bpy.types.Camera.rp_depthprepass = bpy.props.BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=False)
     bpy.types.Camera.rp_meshes = bpy.props.BoolProperty(name="Meshes", description="Render mesh objects", default=True)
     bpy.types.Camera.rp_hdr = bpy.props.BoolProperty(name="HDR", description="Render in HDR Space", default=True)
     bpy.types.Camera.rp_render_to_texture = bpy.props.BoolProperty(name="Post Process", description="Render scene to texture for further processing", default=True)

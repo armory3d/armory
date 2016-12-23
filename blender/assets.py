@@ -61,6 +61,8 @@ def invalidate_shader_cache(self, context):
     fp = armutils.get_fp()
     if os.path.isdir(fp + '/build/compiled/ShaderDatas'):
         shutil.rmtree(fp + '/build/compiled/ShaderDatas')
+    if os.path.isdir(fp + '/build/compiled/ShaderRaws'):
+        shutil.rmtree(fp + '/build/compiled/ShaderRaws')
 
 def invalidate_compiled_data(self, context):
     global invalidate_enabled
