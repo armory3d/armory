@@ -21,7 +21,8 @@ def parse(material, mat_data, mat_users, rid):
     if mat_state.output_node == None:
         return None
     matname = armutils.safe_source_name(material.name)
-    mat_state.path = armutils.get_fp() + '/build/compiled/ShaderRaws/' + matname
+    mat_state.rel_path = 'build/compiled/ShaderRaws/' + matname
+    mat_state.path = armutils.get_fp() + '/' + mat_state.rel_path
     if not os.path.exists(mat_state.path):
         os.makedirs(mat_state.path)
 
@@ -98,8 +99,9 @@ def write_shaders(con, rpass):
 def write_shader(shader, ext, rpass, keep_cache=True):
     if shader == None:
         return
-    shader_path = mat_state.path + '/' + armutils.safe_source_name(mat_state.material.name) + '_' + rpass + '.' + ext + '.glsl'
-    assets.add_shader(shader_path)
+    shader_rel_path = mat_state.rel_path + '/' + armutils.safe_source_name(mat_state.material.name) + '_' + rpass + '.' + ext + '.glsl'
+    shader_path = armutils.get_fp() + '/' + shader_rel_path
+    assets.add_shader(shader_rel_path)
     if not os.path.isfile(shader_path) or not keep_cache:
         with open(shader_path, 'w') as f:
             f.write(shader.get())
