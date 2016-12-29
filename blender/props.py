@@ -22,7 +22,7 @@ def update_preset(self, context):
     preset_done = True
     self.rp_preset = 'None'
 
-arm_ver = '16.12.1'
+arm_ver = '17.1'
 def init_properties():
     global arm_ver
     bpy.types.World.arm_progress = bpy.props.FloatProperty(name="Progress", description="Current build progress", default=100.0, min=0.0, max=100.0, soft_min=0.0, soft_max=100.0, subtype='PERCENTAGE', get=log.get_progress)
