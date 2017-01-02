@@ -20,6 +20,7 @@ import make_state
 import material.mat_state as mat_state
 import material.texture as texture
 import material.functions as functions
+import log
 
 def parse(nodes, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
@@ -155,6 +156,8 @@ def parse_shader(node, socket):
                 if node.inputs[4].is_linked or node.inputs[4].default_value != 1.0:
                     out_roughness = '({0} * {1})'.format(out_roughness, parse_value_input(node.inputs[4]))
                 out_metallic = parse_value_input(node.inputs[5])
+                if node.inputs[6].is_linked and node.inputs[6].links[0].from_node.type == 'NORMAL_MAP':
+                    log.warn(mat_state.material.name + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
                 parse_normal_map_color_input(node.inputs[6], node.inputs[7])
             
             if parse_opacity:
