@@ -61,10 +61,15 @@ project.addSources('Sources');
 
         if wrd.arm_play_console:
             f.write("project.addDefine('arm_profile');\n")
-            f.write(add_armory_library(sdk_path, 'lib/zui'))
-            font_path =  sdk_path + '/armory/Assets/droid_sans.ttf'
-            font_path = font_path.replace('\\', '/')
-            f.write('project.addAssets("' + font_path + '");\n')
+
+        if wrd.arm_play_console or wrd.arm_bui:
+            f.write(add_armory_library(sdk_path, 'lib/bui'))
+            p = sdk_path + '/lib/bui/Assets/dejavu.ttf'
+            f.write('project.addAssets("' + p.replace('\\', '/') + '");\n')
+            p = sdk_path + '/lib/bui/Assets/btheme.json'
+            f.write('project.addAssets("' + p.replace('\\', '/') + '");\n')
+            p = sdk_path + '/lib/bui/Assets/batlas.png'
+            f.write('project.addAssets("' + p.replace('\\', '/') + '");\n')
 
         # f.write(add_armory_library(sdk_path, 'lib/haxeui/haxeui-core'))
         # f.write(add_armory_library(sdk_path, 'lib/haxeui/haxeui-kha'))

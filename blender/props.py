@@ -57,6 +57,7 @@ def init_properties():
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('Recast', 'Recast', 'Recast')],
         name = "Navigation", default='Recast')
+    bpy.types.World.arm_bui = BoolProperty(name="BUI", description="Include BUI library", default=False)
     bpy.types.World.arm_khafile = StringProperty(name = "Khafile", description="Source appended to khafile.js")
     bpy.types.World.arm_command_line = StringProperty(name = "Command Line", description="Commands appended to khamake")
     bpy.types.World.arm_minimize = BoolProperty(name="Minimize Data", description="Export scene data in binary", default=True, update=assets.invalidate_compiled_data)

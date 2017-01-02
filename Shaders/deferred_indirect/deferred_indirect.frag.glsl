@@ -11,22 +11,13 @@ precision mediump float;
 #include "../std/math.glsl"
 // envMapEquirect()
 #include "../std/brdf.glsl"
-// ...
-#ifdef _Probes
-	#include "../std/shirr_probe.glsl"
-#else
-	#include "../std/shirr.glsl"
-#endif
+#include "../std/shirr.glsl"
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
-#ifdef _Probes
-	//!uniform float shirr[27 * 6]; // Maximum of 6 SH sets
-#else
-	//!uniform float shirr[27];
-#endif
+//!uniform float shirr[27];
 uniform float envmapStrength;
 #ifdef _Rad
 	uniform sampler2D senvmapRadiance;
@@ -66,37 +57,11 @@ void main() {
 #endif
 
 	// Indirect
-#ifdef _Probes
-	float probeFactor = g0.a; // mask_probe
-	float probeID = floor(probeFactor);
-	float probeFract = fract(probeFactor);
-	vec3 indirect;
-	#ifdef _Rad
-		float lod = getMipFromRoughness(metrough.y, envmapNumMipmaps);
-		vec3 reflectionWorld = reflect(-v, n); 
-		vec2 envCoordRefl = envMapEquirect(reflectionWorld);
-		vec3 prefilteredColor = textureLod(senvmapRadiance, envCoordRefl, lod).rgb;
-	#endif
-	
-	// Global probe only
-	if (probeID == 0.0) {
-		indirect = shIrradiance(n, 2.2, 0) / PI;
-	}
-	// fract 0 = local probe, 1 = global probe 
-	else {
-		indirect = (shIrradiance(n, 2.2, int(probeID)) / PI) * (1.0 - probeFract);
-		//prefilteredColor /= 4.0;
-		if (probeFract > 0.0) {
-			indirect += (shIrradiance(n, 2.2, 0) / PI) * (probeFract);
-		}
-	}
-#else // No probes   
 	vec3 indirect = shIrradiance(n, 2.2) / PI;
-	#ifdef _Rad
-		vec3 reflectionWorld = reflect(-v, n);
-		float lod = getMipFromRoughness(metrough.y, envmapNumMipmaps);
-		vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
-	#endif
+#ifdef _Rad
+	vec3 reflectionWorld = reflect(-v, n);
+	float lod = getMipFromRoughness(metrough.y, envmapNumMipmaps);
+	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
 #endif
 
 #ifdef _EnvLDR

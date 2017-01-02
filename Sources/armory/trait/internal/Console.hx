@@ -6,8 +6,88 @@ import kha.Scheduler;
 import iron.data.RenderPath;
 import iron.object.CameraObject;
 import iron.object.MeshObject;
-import zui.Zui;
-import zui.Id;
+import bui.Bui;
+#end
+
+#if arm_profile
+@:keep
+class ProfilePanel extends Panel {
+
+	var console:Console;
+
+	public function new(console:Console) {
+		super();
+		this.console = console;
+		label = "Profile (ms)";
+	}
+
+	public override function draw(layout:Layout) {
+		var avg = Math.round(console.frameTimeAvg * 10000) / 10;
+		var avgMin = Math.round(console.frameTimeAvgMin * 10000) / 10;
+		var avgMax = Math.round(console.frameTimeAvgMax * 10000) / 10;
+		layout.label('frame: $avg ($avgMin/$avgMax)');
+		var gpuTime = console.frameTimeAvg - console.renderTimeAvg - console.updateTimeAvg;
+		if (gpuTime < console.renderTimeAvg) gpuTime = console.renderTimeAvg;
+		layout.label("gpu: " + Math.round(gpuTime * 10000) / 10);
+		layout.label("render: " + Math.round(console.renderTimeAvg * 10000) / 10);
+		layout.label("update: " + Math.round(console.updateTimeAvg * 10000) / 10);
+		layout.label("  phys: " + Math.round(console.physTimeAvg * 10000) / 10);
+		layout.label("  anim: 0.0");
+	}
+}
+
+@:keep
+class PathPanel extends Panel {
+
+	var console:Console;
+
+	var passProps:Array<BoolProperty> = null;
+
+	public function new(console:Console) {
+		super();
+		this.console = console;
+		closed = true;
+		label = "Render Path";
+	}
+
+	public override function draw(layout:Layout) {
+		var path = console.path;
+		layout.label("draw calls: " + RenderPath.drawCalls);
+		layout.label("render targets: " + path.data.pathdata.raw.render_targets.length);
+		
+		for (i in 0...path.passNames.length) {
+			path.passEnabled[i] = layout._bool(path.passNames[i], path.passEnabled[i]);
+		}
+	}
+}
+
+@:keep
+class OutlinerPanel extends Panel {
+
+	var console:Console;
+
+	public function new(console:Console) {
+		super();
+		this.console = console;
+		closed = true;
+		label = "Outliner";
+	}
+
+	public override function draw(layout:Layout) {
+		for (o in iron.Scene.active.meshes) {
+			o.visible = layout._bool(o.name, o.visible);
+		}
+		for (o in iron.Scene.active.lamps) {
+			o.visible = layout._bool(o.name, o.visible);
+		}
+		for (o in iron.Scene.active.cameras) {
+			o.visible = layout._bool(o.name, o.visible);
+		}
+		for (o in iron.Scene.active.speakers) {
+			o.visible = layout._bool(o.name, o.visible);
+		}
+	}
+}
 #end
 
 @:keep
@@ -17,32 +97,43 @@ class Console extends Trait {
 	public function new() { super(); }
 #else
 
-	var ui:Zui;
-	var path:RenderPath;
+	var bui:Bui;
+	var area:Area;
+
+	public var path:RenderPath;
 
 	var lastTime = 0.0;
 	var frameTime = 0.0;
 	var totalTime = 0.0;
 	var frames = 0;
 
-	var frameTimeAvg = 0.0;
-	var frameTimeAvgMin = 0.0;
-	var frameTimeAvgMax = 0.0;
-	var renderTime = 0.0;
-	var renderTimeAvg = 0.0;
-	var updateTime = 0.0;
-	var updateTimeAvg = 0.0;
-	var physTime = 0.0;
-	var physTimeAvg = 0.0;
+	public var frameTimeAvg = 0.0;
+	public var frameTimeAvgMin = 0.0;
+	public var frameTimeAvgMax = 0.0;
+	public var renderTime = 0.0;
+	public var renderTimeAvg = 0.0;
+	public var updateTime = 0.0;
+	public var updateTimeAvg = 0.0;
+	public var physTime = 0.0;
+	public var physTimeAvg = 0.0;
 
 	public function new() {
 		super();
 
-		iron.data.Data.getFont('droid_sans.ttf', function(font:kha.Font) {
-			ui = new Zui(font, 17, 16, 0, 1.0, 2.0);
+		iron.data.Data.getFont('dejavu.ttf', function(font:kha.Font) {
+		iron.data.Data.getBlob('btheme.json', function(blob:kha.Blob) {
+		iron.data.Data.getImage('batlas.png', function(image:kha.Image) {
+			bui = new Bui(blob, image, font);
+			area = bui.addArea(0, 0, 160, iron.App.h());
+			area.addPanel(new ProfilePanel(this));
+			area.addPanel(new PathPanel(this));
+			area.addPanel(new OutlinerPanel(this));
+
 			notifyOnInit(init);
 			notifyOnRender2D(render2D);
 			notifyOnUpdate(update);
+		});
+		});
 		});
 	}
 
@@ -51,59 +142,14 @@ class Console extends Trait {
 	}
 
 	function render2D(g:kha.graphics2.Graphics) {
-		g.end();
-		ui.begin(g);
-		if (ui.window(Id.window(), 0, 0, 250, iron.App.h())) {
-			if (ui.node(Id.node(), "Profile (ms)", 0, true)) {
-				var avg = Math.round(frameTimeAvg * 10000) / 10;
-				var avgMin = Math.round(frameTimeAvgMin * 10000) / 10;
-				var avgMax = Math.round(frameTimeAvgMax * 10000) / 10;
-				ui.text('frame: $avg ($avgMin/$avgMax)');
-				var gpuTime = frameTimeAvg - renderTimeAvg - updateTimeAvg;
-				if (gpuTime < renderTimeAvg) gpuTime = renderTimeAvg;
-				ui.text("gpu: " + Math.round(gpuTime * 10000) / 10);
-				ui.text("render: " + Math.round(renderTimeAvg * 10000) / 10);
-				ui.text("update: " + Math.round(updateTimeAvg * 10000) / 10);
-				ui.indent();
-				ui.text("phys: " + Math.round(physTimeAvg * 10000) / 10);
-				ui.text("anim: 0.0");
-				ui.unindent();
-			}
-			ui.separator();
-			if (ui.node(Id.node(), "Render Path", 0, false)) {
-				ui.text("draw calls: " + RenderPath.drawCalls);
-				ui.text("render targets: " + path.data.pathdata.raw.render_targets.length);
-				for (i in 0...path.passNames.length) {
-					path.passEnabled[i] = ui.check(Id.nest(Id.check(), i), path.passNames[i], path.passEnabled[i]);
-				}
-			}
-			ui.separator();
-			if (ui.node(Id.node(), "Inspector", 0, false)) {
-				
-				function drawList(id:String, objs:Array<iron.object.Object>) {
-					for (i in 0...objs.length) {
-						var o = objs[i];
-						var text = o.name + " (" + Std.int(o.transform.absx() * 100) / 100 + ", " + Std.int(o.transform.absy() * 100) / 100 + ", " + Std.int(o.transform.absz() * 100) / 100 + ")";
-						if (Std.is(o, MeshObject)) text += " - " + Std.int(cast(o, MeshObject).screenSize * 100) / 100;
-						o.visible = ui.check(Id.nest(id, i), text, o.visible);
-					}
-				}
-
-				drawList(Id.check(), cast iron.Scene.active.meshes);
-				drawList(Id.check(), cast iron.Scene.active.lamps);
-				drawList(Id.check(), cast iron.Scene.active.cameras);
-				drawList(Id.check(), cast iron.Scene.active.speakers);
-			}
-		}
-		ui.end();
-
-		g.begin(false);
+		bui.draw(g);
 
 #if arm_profile
 		totalTime += frameTime;
 		renderTime += iron.App.renderTime;
 		frames++;
 		if (totalTime > 1.0) {
+			area.tagRedraw();
 			var t = totalTime / frames;
 			// Second frame
 			if (frameTimeAvg > 0) {

@@ -397,6 +397,7 @@ class ArmoryBuildPanel(bpy.types.Panel):
             layout.label('Libraries')
             layout.prop(wrd, 'arm_physics')
             layout.prop(wrd, 'arm_navigation')
+            layout.prop(wrd, 'arm_bui')
 
 class ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
