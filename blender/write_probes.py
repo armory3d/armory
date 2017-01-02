@@ -60,16 +60,16 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     if armutils.get_os() == 'win':
         output = subprocess.check_output([ \
             kraffiti_path,
-            'from=' + input_file,
-            'to=' + scaled_file,
+            'from="' + input_file + '"',
+            'to="' + scaled_file + '"',
             'format=' + rad_format,
             'width=' + str(target_w),
             'height=' + str(target_h)])
     else:
         output = subprocess.check_output([ \
             kraffiti_path + \
-            ' from=' + input_file + \
-            ' to=' + scaled_file + \
+            ' from="' + input_file + '"' + \
+            ' to="' + scaled_file + '"' + \
             ' format=' + rad_format + \
             ' width=' + str(target_w) + \
             ' height=' + str(target_h)], shell=True)
@@ -122,7 +122,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     if armutils.get_os() == 'win':
         subprocess.call([ \
             cmft_path,
-            '--input', input_file,
+            '--input', '"' + input_file + '"',
             '--filter radiance',
             '--dstFaceSize', str(face_size),
             '--srcFaceSize', str(face_size),
@@ -148,7 +148,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     else:
         subprocess.call([ \
             cmft_path + \
-            ' --input ' + input_file + \
+            ' --input ' + '"' + input_file + '"' + \
             ' --filter radiance' + \
             ' --dstFaceSize ' + str(face_size) + \
             ' --srcFaceSize ' + str(face_size) + \
