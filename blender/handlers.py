@@ -119,14 +119,15 @@ def on_scene_update_post(context):
             elif edit_obj.type == 'ARMATURE':
                 edit_obj.data.data_cached = False
 
-    obj = bpy.context.object
-    if obj != None:
-        if operators_changed:
-            # Modifier was added/removed, recache mesh
-            if ops[-1].bl_idname == 'OBJECT_OT_modifier_add' or ops[-1].bl_idname == 'OBJECT_OT_modifier_remove':
-                obj.data.mesh_cached = False
-        if obj.active_material != None and obj.active_material.is_updated:
-            obj.active_material.is_cached = False
+    if hasattr(bpy.context, 'object'):
+        obj = bpy.context.object
+        if obj != None:
+            if operators_changed:
+                # Modifier was added/removed, recache mesh
+                if ops[-1].bl_idname == 'OBJECT_OT_modifier_add' or ops[-1].bl_idname == 'OBJECT_OT_modifier_remove':
+                    obj.data.mesh_cached = False
+            if obj.active_material != None and obj.active_material.is_updated:
+                obj.active_material.is_cached = False
 
 @persistent
 def on_load_post(context):
