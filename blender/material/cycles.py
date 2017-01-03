@@ -89,11 +89,13 @@ def parse_group(node, socket): # Entering group
     parents.pop()
     return out_group
 
-def parse_input_group(node, socket): # Leaving group
+def parse_group_input(node, socket):
     index = socket_index(node, socket)
-    parent = parents[-1]
+    parent = parents.pop() # Leaving group
     inp = parent.inputs[index]
-    return parse_input(inp)
+    res = parse_input(inp)
+    parents.append(parent) # Return to group
+    return res
 
 def parse_input(inp):
     if inp.type == 'SHADER':
@@ -180,7 +182,7 @@ def parse_shader(node, socket):
             return parse_group(node, socket)
 
     elif node.type == 'GROUP_INPUT':
-        return parse_input_group(node, socket)
+        return parse_group_input(node, socket)
 
     elif node.type == 'MIX_SHADER':
         fac = parse_value_input(node.inputs[0])
@@ -373,7 +375,7 @@ def parse_rgb(node, socket):
         return parse_group(node, socket)
 
     elif node.type == 'GROUP_INPUT':
-        return parse_input_group(node, socket)
+        return parse_group_input(node, socket)
 
     elif node.type == 'ATTRIBUTE':
         # Vcols only for now
@@ -463,7 +465,7 @@ def parse_rgb(node, socket):
         # detail = parse_value_input(node.inputs[2])
         # distortion = parse_value_input(node.inputs[3])
         # Slow..
-        return 'vec3(tex_noise({0} * {1}), tex_noise({0} * {1} + vec3(0.33)), tex_noise({0} * {1} + vec3(0.66)))'.format(co, scale)
+        return 'vec3(tex_noise({0} * {1}), tex_noise({0} * {1} + 0.33), tex_noise({0} * {1} + 0.66))'.format(co, scale)
 
     elif node.type == 'TEX_POINTDENSITY':
         # Pass through
@@ -658,10 +660,11 @@ def parse_vector(node, socket):
         return parse_group(node, socket)
 
     elif node.type == 'GROUP_INPUT':
-        return parse_input_group(node, socket)
+        return parse_group_input(node, socket)
 
     elif node.type == 'ATTRIBUTE':
         # UVMaps only for now
+        mat_state.data.add_elem('tex', 2)
         mat = mat_state.material
         mat_users = mat_state.mat_users
         if mat_users != None and mat in mat_users:
@@ -717,6 +720,7 @@ def parse_vector(node, socket):
         elif socket == node.outputs[1]: # Normal
             return 'vec2(0.0)', 2
         elif socket == node.outputs[2]: # UV
+            mat_state.data.add_elem('tex', 2)
             return 'texCoord', 2
         elif socket == node.outputs[3]: # Object
             return 'vec2(0.0)', 2
@@ -837,7 +841,7 @@ def parse_value(node, socket):
             return parse_group(node, socket)
 
     elif node.type == 'GROUP_INPUT':
-        return parse_input_group(node, socket)
+        return parse_group_input(node, socket)
 
     elif node.type == 'ATTRIBUTE':
         # Pass time till drivers are implemented

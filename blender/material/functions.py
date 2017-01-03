@@ -10,6 +10,9 @@ str_tex_checker = """vec3 tex_checker(const vec3 co, const vec3 col1, const vec3
     bool check = ((mod(xi, 2.0) == mod(yi, 2.0)) == bool(mod(zi, 2.0)));
     return check ? col1 : col2;
 }
+vec3 tex_checker(const vec2 co, const vec3 col1, const vec3 col2, const float scale) {
+    return tex_checker(vec3(co.x, co.y, 1.0), col1, col2, scale);
+}
 """
 
 # Created by inigo quilez - iq/2013
@@ -22,7 +25,7 @@ str_tex_voronoi = """//vec3 hash(vec3 x) {
     //return fract(sin(x) * 43758.5453123);
 //}
 vec4 tex_voronoi(const vec3 x) {
-    vec3 xx = x / 3.0; // Match cycles
+    vec3 xx = x * 20.0; // Match cycles
     vec3 p = floor(xx);
     vec3 f = fract(xx);
     float id = 0.0;
@@ -43,6 +46,9 @@ vec4 tex_voronoi(const vec3 x) {
     }
     vec3 col = 0.5 + 0.5 * cos(id * 0.35 + vec3(0.0, 1.0, 2.0));
     return vec4(col, sqrt(res));
+}
+vec4 tex_voronoi(const vec2 x) {
+    return tex_voronoi(vec3(x.x, x.y, 1.0));
 }
 """
 
@@ -69,7 +75,7 @@ vec4 tex_voronoi(const vec3 x) {
 # Created by Nikita Miropolskiy, nikat/2013
 # Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
 str_tex_noise = """
-vec3 random3(vec3 c) {
+vec3 random3(const vec3 c) {
     // Might not be precise on lowp floats
     float j = 4096.0 * sin(dot(c, vec3(17.0, 59.4, 15.0)));
     vec3 r;
@@ -80,7 +86,7 @@ vec3 random3(vec3 c) {
     r.y = fract(512.0 * j);
     return r - 0.5;
 }
-float tex_noise_f(vec3 p) {
+float tex_noise_f(const vec3 p) {
     const float F3 = 0.3333333;
     const float G3 = 0.1666667;
     vec3 s = floor(p + dot(p, vec3(F3)));
@@ -106,10 +112,13 @@ float tex_noise_f(vec3 p) {
     d *= w;
     return clamp(dot(d, vec4(52.0)), 0.0, 1.0);
 }
-float tex_noise(vec3 p) {
+float tex_noise(const vec3 p) {
     return 0.5333333 * tex_noise_f(p)
         + 0.2666667 * tex_noise_f(2.0 * p)
         + 0.1333333 * tex_noise_f(4.0 * p)
         + 0.0666667 * tex_noise_f(8.0 * p);
+}
+float tex_noise(const vec2 p) {
+    return tex_noise(vec3(p.x, p.y, 1.0));
 }
 """

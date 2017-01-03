@@ -7,6 +7,7 @@ import write_probes
 import assets
 import armutils
 import nodes
+import log
 
 def build_node_trees(active_worlds):
     s = bpy.data.filepath.split(os.path.sep)
@@ -139,6 +140,14 @@ def parse_color(world, node, context, envmap_strength_const):
 
     # Env map included
     if node.type == 'TEX_ENVIRONMENT' and node.image != None:
+
+        image = node.image
+        filepath = image.filepath
+        
+        if image.packed_file == None and not os.path.isfile(filepath):
+            log.warn(world.name + ' - unable to open ' + image.filepath)
+            return
+
         envmap_strength_const['float'] *= 2.0 # Match to cycles
 
         tex = {}
@@ -146,9 +155,6 @@ def parse_color(world, node, context, envmap_strength_const):
         tex['name'] = 'envmap'
         tex['u_addressing'] = 'clamp'
         tex['v_addressing'] = 'clamp'
-        
-        image = node.image
-        filepath = image.filepath
 
         # Reference image name
         tex['file'] = armutils.extract_filename(image.filepath)

@@ -1311,7 +1311,10 @@ class ArmoryExporter:
                     for i in range(0, num_psys):
                         self.export_particle_system_ref(bobject.particle_systems[i], i, o)
                     
-                o['dimensions'] = [bobject.dimensions[0], bobject.dimensions[1], bobject.dimensions[2]] 
+                if hasattr(bobject.data, 'mesh_aabb'):
+                    o['dimensions'] = [bobject.data.mesh_aabb[0] * bobject.scale[0], bobject.data.mesh_aabb[1] * bobject.scale[1], bobject.data.mesh_aabb[2] * bobject.scale[2]]
+                else:
+                    o['dimensions'] = [bobject.dimensions[0], bobject.dimensions[1], bobject.dimensions[2]] 
 
                 #shapeKeys = ArmoryExporter.get_shape_keys(objref)
                 #if (shapeKeys):
@@ -1826,6 +1829,30 @@ class ArmoryExporter:
                 self.export_skin_quality(bobject, armature, vert_list, om)
                 # self.export_skin_fast(bobject, armature, vert_list, om)
 
+        # Save aabb
+        for va in om['vertex_arrays']:
+            if va['attrib'] == 'position':
+                positions = va['values']
+                aabb_min = [-0.01, -0.01, -0.01]
+                aabb_max = [0.01, 0.01, 0.01]
+                i = 0
+                while i < len(positions):
+                    if positions[i] > aabb_max[0]:
+                        aabb_max[0] = positions[i];
+                    if positions[i + 1] > aabb_max[1]:
+                        aabb_max[1] = positions[i + 1];
+                    if positions[i + 2] > aabb_max[2]:
+                        aabb_max[2] = positions[i + 2];
+                    if positions[i] < aabb_min[0]:
+                        aabb_min[0] = positions[i];
+                    if positions[i + 1] < aabb_min[1]:
+                        aabb_min[1] = positions[i + 1];
+                    if positions[i + 2] < aabb_min[2]:
+                        aabb_min[2] = positions[i + 2];
+                    i += 3;
+                bobject.data.mesh_aabb = [abs(aabb_min[0]) + abs(aabb_max[0]), abs(aabb_min[1]) + abs(aabb_max[1]), abs(aabb_min[2]) + abs(aabb_max[2])]
+                break
+
         # Restore the morph state
         if shapeKeys:
             bobject.active_shape_key_index = activeShapeKeyIndex
@@ -2164,13 +2191,19 @@ class ArmoryExporter:
             uv_export = False
             tan_export = False
             vcol_export = False
+            vs_str = ''
             for elem in sd['vertex_structure']:
+                if len(vs_str) > 0:
+                    vs_str += ','
+                vs_str += elem['name']
+
                 if elem['name'] == 'tan':
                     tan_export = True
                 elif elem['name'] == 'tex':
                     uv_export = True
                 elif elem['name'] == 'col':
                     vcol_export = True
+            material.vertex_structure = vs_str
 
             if (material.export_tangents != tan_export) or \
                (material.export_uvs != uv_export) or \
@@ -2312,7 +2345,7 @@ class ArmoryExporter:
         self.preprocess()
 
         for bobject in self.scene.objects:
-            if (not bobject.parent):
+            if not bobject.parent:
                 self.process_bobject(bobject)
 
         self.process_skinned_meshes()
@@ -2335,6 +2368,15 @@ class ArmoryExporter:
 
             self.output['material_datas'] = []
             self.export_materials()
+
+            # Ensure same vertex structure for object materials
+            for bobject in self.scene.objects:
+                if len(bobject.material_slots) > 1:
+                    vs = bobject.material_slots[0].material.vertex_structure
+                    for i in range(len(bobject.material_slots)):
+                        if vs != bobject.material_slots[i].material.vertex_structure:
+                            log.warn('Object ' + bobject.name + ' - unable to bind materials to vertex data, please separate object by material for now (select object - edit mode - P - By Material)')
+                            break
 
             self.output['particle_datas'] = []
             self.export_particle_systems()
