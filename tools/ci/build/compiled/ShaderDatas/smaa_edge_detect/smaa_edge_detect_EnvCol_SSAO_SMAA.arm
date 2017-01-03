@@ -1,0 +1,1 @@
+¬shader_datas‘ƒ°vertex_structure‘‚¤name£pos¤size¤nameÙ!smaa_edge_detect_EnvCol_SSAO_SMAA¨contexts‘ˆ¬compare_mode¦always©constants‘ƒ¤link®_screenSizeInv¤name­screenSizeInv¤type¤vec2¤name°smaa_edge_detect¯fragment_shaderÙ&smaa_edge_detect_EnvCol_SSAO_SMAA.frag©cull_mode¤none­vertex_shaderÙ&smaa_edge_detect_EnvCol_SSAO_SMAA.vert­texture_units‘¤name¨colorTex«depth_writeÂ

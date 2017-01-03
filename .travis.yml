@@ -1,0 +1,13 @@
+sudo: false
+os:
+  - linux
+  - osx
+language: node_js
+before_script:
+  - git clone --recursive https://github.com/kode/Kha.git tools/ci/Kha
+  - git clone https://github.com/armory3d/iron.git tools/ci/Libraries/iron
+  - git clone https://github.com/kode/nodejs_bin.git tools/ci/nodejs_bin
+  - tools/ci/nodejs_bin/copysysbin.sh
+script: 
+  - cd tools/ci
+  - nodejs_bin/node Kha/make.js krom
