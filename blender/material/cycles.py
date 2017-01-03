@@ -142,23 +142,35 @@ def parse_shader(node, socket):
         if node.node_tree.name.startswith('Armory PBR'):
             
             if parse_surface:
+                # Base color
                 parsing_basecol = True
                 out_basecol = parse_vector_input(node.inputs[0])
                 parsing_basecol = False
-                # TODO: deprecated, occlussion is value instead of vector now
+                # Occlusion TODO: deprecated, occlussion is value instead of vector now
                 if node.inputs[1].type == 'RGBA':
                     out_occlusion = '{0}.r'.format(parse_vector_input(node.inputs[1]))
                 else:
                     out_occlusion = parse_value_input(node.inputs[1])
                 if node.inputs[2].is_linked or node.inputs[2].default_value != 1.0:
                     out_occlusion = '({0} * {1})'.format(out_occlusion, parse_value_input(node.inputs[2]))
+                # Roughness
                 out_roughness = parse_value_input(node.inputs[3])
                 if node.inputs[4].is_linked or node.inputs[4].default_value != 1.0:
                     out_roughness = '({0} * {1})'.format(out_roughness, parse_value_input(node.inputs[4]))
+                # Metallic
                 out_metallic = parse_value_input(node.inputs[5])
+                # Normal
                 if node.inputs[6].is_linked and node.inputs[6].links[0].from_node.type == 'NORMAL_MAP':
                     log.warn(mat_state.material.name + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
                 parse_normal_map_color_input(node.inputs[6], node.inputs[7])
+                # Emission
+                if node.inputs[8].is_linked:
+                    parsing_basecol = True
+                    out_emission = parse_vector_input(node.inputs[8])
+                    parsing_basecol = False
+                    if node.inputs[9].is_linked or node.inputs[9].default_value != 1.0:
+                        out_emission = '({0} * {1})'.format(out_emission, parse_value_input(node.inputs[9]))
+                    out_basecol = '({0} + {1})'.format(out_basecol, out_emission)
             
             if parse_opacity:
                 out_opacity = parse_value_input(node.inputs[12])

@@ -465,7 +465,9 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
         nodes_renderpath.check_default()
 
         assets.invalidate_enabled = False
-        if state.playproc == None:
+        if state.playproc == None and state.krom_running == False:
+            if context.area.type != 'VIEW_3D':
+                return {"CANCELLED"}
             log.clear()
             # Cancel viewport render
             for space in context.area.spaces:
