@@ -12,15 +12,11 @@ try:
 except ImportError:
     pass
 
-preset_done = False
 def update_preset(self, context):
-    global preset_done
-    if preset_done:
-        preset_done = False
-        return
-    props_renderer.set_preset(self.rp_preset)
-    preset_done = True
-    self.rp_preset = 'None'
+    props_renderer.set_preset(self, context, self.rp_preset)
+
+def update_renderpath(self, context):
+    props_renderer.set_renderpath(self, context)
 
 arm_ver = '17.1'
 def init_properties():
@@ -162,8 +158,7 @@ def init_properties():
     bpy.types.Camera.mirror_resolution_y = bpy.props.FloatProperty(name="Y", default=256.0)
     # Render path generator
     bpy.types.Camera.rp_preset = EnumProperty(
-        items=[('None', '', 'None'),
-               ('Forward Low', 'Forward Low', 'Forward Low'),
+        items=[('Forward Low', 'Forward Low', 'Forward Low'),
                ('Forward', 'Forward', 'Forward'),
                ('Forward High', 'Forward High', 'Forward High'),
                ('Deferred Low', 'Deferred Low', 'Deferred Low'),
@@ -173,51 +168,51 @@ def init_properties():
                #('Grease Pencil', 'Grease Pencil', 'Grease Pencil'),
                #('Path-Trace', 'Path-Trace', 'Path-Trace')],
                ],
-        name="Preset", description="Render path preset", default='None', update=update_preset)
+        name="Preset", description="Render path preset", default='Deferred Low', update=update_preset)
     bpy.types.Camera.rp_renderer = EnumProperty(
         items=[('Forward', 'Forward', 'Forward'),
                ('Deferred', 'Deferred', 'Deferred'),
                #('Path-Trace', 'Path-Trace', 'Path-Trace')],
                ],
-        name="Renderer", description="Renderer type", default='Deferred')
-    bpy.types.Camera.rp_depthprepass = bpy.props.BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=False)
-    bpy.types.Camera.rp_meshes = bpy.props.BoolProperty(name="Meshes", description="Render mesh objects", default=True)
-    bpy.types.Camera.rp_hdr = bpy.props.BoolProperty(name="HDR", description="Render in HDR Space", default=True)
-    bpy.types.Camera.rp_render_to_texture = bpy.props.BoolProperty(name="Post Process", description="Render scene to texture for further processing", default=True)
-    bpy.types.Camera.rp_worldnodes = bpy.props.BoolProperty(name="World Nodes", description="Draw world nodes", default=True)
-    bpy.types.Camera.rp_compositornodes = bpy.props.BoolProperty(name="Compositor Nodes", description="Draw compositor nodes", default=True)
+        name="Renderer", description="Renderer type", default='Deferred', update=update_renderpath)
+    bpy.types.Camera.rp_depthprepass = bpy.props.BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=False, update=update_renderpath)
+    bpy.types.Camera.rp_meshes = bpy.props.BoolProperty(name="Meshes", description="Render mesh objects", default=True, update=update_renderpath)
+    bpy.types.Camera.rp_hdr = bpy.props.BoolProperty(name="HDR", description="Render in HDR Space", default=True, update=update_renderpath)
+    bpy.types.Camera.rp_render_to_texture = bpy.props.BoolProperty(name="Post Process", description="Render scene to texture for further processing", default=True, update=update_renderpath)
+    bpy.types.Camera.rp_worldnodes = bpy.props.BoolProperty(name="World Nodes", description="Draw world nodes", default=True, update=update_renderpath)
+    bpy.types.Camera.rp_compositornodes = bpy.props.BoolProperty(name="Compositor Nodes", description="Draw compositor nodes", default=True, update=update_renderpath)
     bpy.types.Camera.rp_shadowmap = EnumProperty(
         items=[('None', 'None', 'None'),
                ('512', '512', '512'),
                ('1024', '1024', '1024'),
                ('2048', '2048', '2048'),
                ('4096', '4096', '4096')],
-        name="Shadow Map", description="Shadow map resolution", default='2048')
+        name="Shadow Map", description="Shadow map resolution", default='2048', update=update_renderpath)
     bpy.types.Camera.rp_supersampling = EnumProperty(
         items=[('1', '1X', '1X'),
                ('2', '2X', '2X'),
                ('4', '4X', '4X')],
-        name="Super Sampling", description="Screen resolution multiplier", default='1')
+        name="Super Sampling", description="Screen resolution multiplier", default='1', update=update_renderpath)
     bpy.types.Camera.rp_antialiasing = EnumProperty(
         items=[('None', 'None', 'None'),
                ('FXAA', 'FXAA', 'FXAA'),
                ('SMAA', 'SMAA', 'SMAA'),
                ('TAA', 'TAA', 'TAA')],
-        name="Anti Aliasing", description="Post-process anti aliasing technique", default='SMAA')
-    bpy.types.Camera.rp_volumetriclight = bpy.props.BoolProperty(name="Volumetric Light", description="Use volumetric lighting", default=False)
-    bpy.types.Camera.rp_ssao = bpy.props.BoolProperty(name="SSAO", description="Screen space ambient occlusion", default=True)
-    bpy.types.Camera.rp_ssr = bpy.props.BoolProperty(name="SSR", description="Screen space reflections", default=False)
-    bpy.types.Camera.rp_bloom = bpy.props.BoolProperty(name="Bloom", description="Bloom processing", default=False)
+        name="Anti Aliasing", description="Post-process anti aliasing technique", default='SMAA', update=update_renderpath)
+    bpy.types.Camera.rp_volumetriclight = bpy.props.BoolProperty(name="Volumetric Light", description="Use volumetric lighting", default=False, update=update_renderpath)
+    bpy.types.Camera.rp_ssao = bpy.props.BoolProperty(name="SSAO", description="Screen space ambient occlusion", default=True, update=update_renderpath)
+    bpy.types.Camera.rp_ssr = bpy.props.BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
+    bpy.types.Camera.rp_bloom = bpy.props.BoolProperty(name="Bloom", description="Bloom processing", default=False, update=update_renderpath)
     bpy.types.Camera.rp_motionblur = EnumProperty(
         items=[('None', 'None', 'None'),
                ('Basic', 'Basic', 'Basic'),
                ('Velocity', 'Velocity', 'Velocity')],
-        name="Motion Blur", description="Motion blur processing", default='None')
-    bpy.types.Camera.rp_translucency = bpy.props.BoolProperty(name="Translucency", description="Order independent translucency", default=False)
-    bpy.types.Camera.rp_decals = bpy.props.BoolProperty(name="Decals", description="Render decals", default=False)
-    bpy.types.Camera.rp_overlays = bpy.props.BoolProperty(name="Overlays", description="Render overlays", default=False)
-    bpy.types.Camera.rp_stereo = bpy.props.BoolProperty(name="Stereo", description="Stereo rendering", default=False)
-    bpy.types.Camera.rp_greasepencil = bpy.props.BoolProperty(name="Grease Pencil", description="Render Grease Pencil data", default=False)
+        name="Motion Blur", description="Motion blur processing", default='None', update=update_renderpath)
+    bpy.types.Camera.rp_translucency = bpy.props.BoolProperty(name="Translucency", description="Order independent translucency", default=False, update=update_renderpath)
+    bpy.types.Camera.rp_decals = bpy.props.BoolProperty(name="Decals", description="Render decals", default=False, update=update_renderpath)
+    bpy.types.Camera.rp_overlays = bpy.props.BoolProperty(name="Overlays", description="Render overlays", default=False, update=update_renderpath)
+    bpy.types.Camera.rp_stereo = bpy.props.BoolProperty(name="Stereo", description="Stereo rendering", default=False, update=update_renderpath)
+    bpy.types.Camera.rp_greasepencil = bpy.props.BoolProperty(name="Grease Pencil", description="Render Grease Pencil data", default=False, update=update_renderpath)
 
     # For world
     bpy.types.World.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')

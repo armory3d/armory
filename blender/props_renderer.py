@@ -5,10 +5,16 @@ from bpy.props import *
 import make_renderer
 import assets
 
-def set_preset(preset):
+updating_preset = False
+
+def set_preset(self, context, preset):
+    global updating_preset
+
     cam = bpy.context.camera
     if cam == None:
         return
+
+    updating_preset = True
 
     if preset == 'Forward Low':
         cam.rp_renderer = 'Forward'
@@ -171,6 +177,19 @@ def set_preset(preset):
         cam.rp_bloom = False
         cam.rp_motionblur = 'None'
 
+    updating_preset = False
+    set_renderpath(self, context)
+
+def set_renderpath(self, context):
+    global updating_preset
+    if updating_preset == True:
+        return
+    if bpy.context.camera == None:
+        return
+    assets.invalidate_shader_cache(self, context)
+    make_renderer.make_renderer(bpy.context.camera)
+    bpy.context.camera.renderpath_path = 'armory_default'
+
 # Menu in camera data region
 class GenRPDataPropsPanel(bpy.types.Panel):
     bl_label = "Armory Render Path"
@@ -212,8 +231,6 @@ class GenRPDataPropsPanel(bpy.types.Panel):
                 layout.prop(dat, "rp_ssr")
                 layout.prop(dat, "rp_bloom")
                 layout.prop(dat, "rp_motionblur")
-            
-            layout.operator("arm.set_renderpath")
 
 class PropsRPDataPropsPanel(bpy.types.Panel):
     bl_label = "Armory Render Props"
@@ -298,19 +315,6 @@ class PropsRPDataPropsPanel(bpy.types.Panel):
                 # if wrd.generate_volumetric_light:
                 layout.prop(wrd, 'generate_volumetric_light_air_turbidity')
                 layout.prop(wrd, 'generate_volumetric_light_air_color')
-
-class ArmorySetRenderPathButton(bpy.types.Operator):
-    '''Auto-generate render path based on settings'''
-    bl_idname = 'arm.set_renderpath'
-    bl_label = 'Set'
- 
-    def execute(self, context):
-        if bpy.context.camera == None:
-            return {'CANCELLED'}
-        assets.invalidate_shader_cache(self, context)
-        make_renderer.make_renderer(bpy.context.camera)
-        bpy.context.camera.renderpath_path = 'armory_default'
-        return {'FINISHED'}
 
 def register():
     bpy.utils.register_module(__name__)

@@ -1326,7 +1326,9 @@ class ArmoryExporter:
                 o['data_ref'] = self.lampArray[objref]["structName"]
 
             elif type == NodeTypeCamera:
-                if 'spawn' in o and o['spawn']:
+                if 'spawn' in o and o['spawn'] == False:
+                    self.camera_spawned = False
+                else:
                     self.camera_spawned = True
                 if not objref in self.cameraArray:
                     self.cameraArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
