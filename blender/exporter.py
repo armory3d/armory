@@ -1326,6 +1326,8 @@ class ArmoryExporter:
                 o['data_ref'] = self.lampArray[objref]["structName"]
 
             elif type == NodeTypeCamera:
+                if 'spawn' in o and o['spawn']:
+                    self.camera_spawned = True
                 if not objref in self.cameraArray:
                     self.cameraArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
@@ -2288,6 +2290,7 @@ class ArmoryExporter:
         self.meshArray = {}
         self.lampArray = {}
         self.cameraArray = {}
+        self.camera_spawned = False
         self.speakerArray = {}
         self.materialArray = {}
         self.particleSystemArray = {}
@@ -2363,6 +2366,9 @@ class ArmoryExporter:
 
         self.export_objects(self.scene)
         
+        if not self.camera_spawned:
+            log.warn('No camera found in active scene layers')
+
         self.postprocess()
 
         if (self.restoreFrame):
