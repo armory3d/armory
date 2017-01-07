@@ -20,7 +20,8 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     if not os.path.exists('build/compiled/Assets/envmaps'):
         os.makedirs('build/compiled/Assets/envmaps')
 
-    base_name = image_filepath.rsplit(os.path.sep, 1)[1].rsplit('.', 1)[0] # Extract file name without extension
+    base_name = image_filepath.replace(os.path.sep, '/')
+    base_name = base_name.rsplit('/', 1)[1].rsplit('.', 1)[0] # Extract file name without extension
     
     # Assets to be generated
     output_file_irr = 'build/compiled/Assets/envmaps/' + base_name + '_irradiance'
@@ -60,16 +61,16 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     if armutils.get_os() == 'win':
         output = subprocess.check_output([ \
             kraffiti_path,
-            'from="' + input_file + '"',
-            'to="' + scaled_file + '"',
+            'from=' + input_file,
+            'to=' + scaled_file,
             'format=' + rad_format,
             'width=' + str(target_w),
             'height=' + str(target_h)])
     else:
         output = subprocess.check_output([ \
             kraffiti_path + \
-            ' from="' + input_file + '"' + \
-            ' to="' + scaled_file + '"' + \
+            ' from=' + input_file + \
+            ' to=' + scaled_file + \
             ' format=' + rad_format + \
             ' width=' + str(target_w) + \
             ' height=' + str(target_h)], shell=True)
@@ -122,7 +123,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     if armutils.get_os() == 'win':
         subprocess.call([ \
             cmft_path,
-            '--input', '"' + input_file + '"',
+            '--input', input_file,
             '--filter radiance',
             '--dstFaceSize', str(face_size),
             '--srcFaceSize', str(face_size),
@@ -148,7 +149,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     else:
         subprocess.call([ \
             cmft_path + \
-            ' --input ' + '"' + input_file + '"' + \
+            ' --input ' + input_file + \
             ' --filter radiance' + \
             ' --dstFaceSize ' + str(face_size) + \
             ' --srcFaceSize ' + str(face_size) + \
