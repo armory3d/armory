@@ -11,6 +11,10 @@ import iron.math.RayCaster;
 class ContactPair {
 	public var a:Int;
 	public var b:Int;
+	public var posA:Vec4;
+	public var posB:Vec4;
+	public var nor:Vec4;
+	public var impulse:Float;
 	public function new(a:Int, b:Int) {
 		this.a = a;
 		this.b = b;
@@ -88,27 +92,32 @@ class PhysicsWorld extends Trait {
 
 	public function getContacts(body:RigidBody):Array<RigidBody> {
 		if (contacts.length == 0) return null;
-		
 		var res:Array<RigidBody> = [];
 		for (i in 0...contacts.length) {
-
 			var c = contacts[i];
+#if js
+			if (c.a == untyped body.body.userIndex) res.push(rbMap.get(c.b));
+			else if (c.b == untyped body.body.userIndex) res.push(rbMap.get(c.a));
+#elseif cpp
+			if (c.a == body.body.ptr.getUserIndex()) res.push(rbMap.get(c.b));
+			else if (c.b == body.body.ptr.getUserIndex()) res.push(rbMap.get(c.a));
+#end
+		}
+		return res;
+	}
 
-			#if js
-			if (c.a == untyped body.body.userIndex) {
-				res.push(rbMap.get(c.b));
-			}
-			else if (c.b == untyped body.body.userIndex) {
-				res.push(rbMap.get(c.a));
-			}
-			#elseif cpp
-			if (c.a == body.body.ptr.getUserIndex()) {
-				res.push(rbMap.get(c.b));
-			}
-			else if (c.b == body.body.ptr.getUserIndex()) {
-				res.push(rbMap.get(c.a));
-			}
-			#end
+	public function getContactPairs(body:RigidBody):Array<ContactPair> {
+		if (contacts.length == 0) return null;
+		var res:Array<ContactPair> = [];
+		for (i in 0...contacts.length) {
+			var c = contacts[i];
+#if js
+			if (c.a == untyped body.body.userIndex) res.push(c);
+			else if (c.b == untyped body.body.userIndex) res.push(c);
+#elseif cpp
+			if (c.a == body.body.ptr.getUserIndex()) res.push(c);
+			else if (c.b == body.body.ptr.getUserIndex()) res.push(c);
+#end
 		}
 		return res;
 	}
@@ -148,11 +157,21 @@ class PhysicsWorld extends Trait {
 
 			var numContacts = contactManifold.value.getNumContacts();
 			for (j in 0...numContacts) {
-				var pt = contactManifold.value.getContactPoint(j);
-
+				var pt:BtManifoldPoint = contactManifold.value.getContactPoint(j);
 				if (pt.getDistance() < 0) {
-					//var ptA = pt.getPositionWorldOnA();
-					//var ptB = pt.getPositionWorldOnB();
+					#if js
+					var posA = pt.get_m_positionWorldOnA();
+					var posB = pt.get_m_positionWorldOnB();
+					var nor = pt.get_m_normalWorldOnB();
+					#elseif cpp
+					var posA = pt.m_positionWorldOnA;
+					var posB = pt.m_positionWorldOnB;
+					var nor = pt.m_normalWorldOnB;
+					#end
+					cp.posA = new Vec4(posA.x(), posA.y(), posA.z());
+					cp.posB = new Vec4(posB.x(), posB.y(), posB.z());
+					cp.nor = new Vec4(nor.x(), nor.y(), nor.z());
+					cp.impulse = pt.getAppliedImpulse();
 					contacts.push(cp);
 					break; // TODO: only one contact point for now
 				}

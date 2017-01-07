@@ -152,7 +152,7 @@ class RigidBody extends Trait {
 		nextId++;
 
 		if (linearDamping != 0.04 || angularDamping != 0.1) {
-			body.setDamping(linearDamping, angularDamping);
+			body.ptr.setDamping(linearDamping, angularDamping);
 		}
 
 		#if js

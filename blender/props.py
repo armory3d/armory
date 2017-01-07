@@ -18,7 +18,7 @@ def update_preset(self, context):
 def update_renderpath(self, context):
     props_renderer.set_renderpath(self, context)
 
-arm_ver = '17.1'
+arm_ver = '17.01'
 def init_properties():
     global arm_ver
     bpy.types.World.arm_progress = bpy.props.FloatProperty(name="Progress", description="Current build progress", default=100.0, min=0.0, max=100.0, soft_min=0.0, soft_max=100.0, subtype='PERCENTAGE', get=log.get_progress)
@@ -411,7 +411,8 @@ def init_properties_on_load():
     wrd = bpy.data.worlds['Arm']
 
     # Outdated project
-    if int(wrd.arm_version.replace(".", "")) < int(arm_ver.replace(".", "")):
+    if int(wrd.arm_version.replace(".", "")[:4]) < int(arm_ver.replace(".", "")[:4]):
+        # 17.01 - 17.01.1
         wrd.arm_version = arm_ver
 
     # Set url for embedded player

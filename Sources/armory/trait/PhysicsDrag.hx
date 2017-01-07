@@ -15,7 +15,7 @@ class PhysicsDrag extends Trait {
 	public function new() { super(); }
 #else
 
-	var physics:PhysicsWorld;
+	static var physics:PhysicsWorld = null;
 
 	var pickConstraint:BtGeneric6DofConstraintPointer = null;
 	var pickDist:Float;
@@ -31,7 +31,7 @@ class PhysicsDrag extends Trait {
 	}
 
 	function init() {
-		physics = armory.trait.internal.PhysicsWorld.active;
+		if (physics == null) physics = armory.trait.internal.PhysicsWorld.active;
 		notifyOnUpdate(update);
 	}
 
@@ -62,6 +62,7 @@ class PhysicsDrag extends Trait {
 				// var localPivot:BtVector3 = BtVector3.create(localPivotVec.x, localPivotVec.y, localPivotVec.z);
 
 				var ct = b.body.ptr.getCenterOfMassTransform();
+				return; // TODO: .inverse() missing in new ammo
 				var inv = ct.inverse();
 				
 				#if js

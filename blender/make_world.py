@@ -144,7 +144,7 @@ def parse_color(world, node, context, envmap_strength_const):
         image = node.image
         filepath = image.filepath
         
-        if image.packed_file == None and not os.path.isfile(filepath):
+        if image.packed_file == None and not os.path.isfile(armutils.safe_assetpath(filepath)):
             log.warn(world.name + ' - unable to open ' + image.filepath)
             return
 
