@@ -151,6 +151,14 @@ def check_camera(self):
         return False
     return True
 
+def check_sdkpath(self):
+    s = get_sdk_path()
+    for c in r'[];,><&*:%=+@!#^()|?^':
+        if c in s:
+            self.report({"ERROR"}, "SDK path contains special characters")
+            return False
+    return True
+
 def tess_enabled(target):
     return target == 'krom' or target == 'native'
 

@@ -439,6 +439,9 @@ class ArmoryPlayButton(bpy.types.Operator):
 
         if not armutils.check_camera(self):
             return {"CANCELLED"}
+
+        if not armutils.check_sdkpath(self):
+            return {"CANCELLED"}
             
         nodes_renderpath.check_default()
 
@@ -457,6 +460,9 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
             return {"CANCELLED"}
 
         if not armutils.check_camera(self):
+            return {"CANCELLED"}
+
+        if not armutils.check_sdkpath(self):
             return {"CANCELLED"}
 
         if context.area == None:
@@ -498,6 +504,12 @@ class ArmoryBuildButton(bpy.types.Operator):
  
     def execute(self, context):
         if not armutils.check_saved(self):
+            return {"CANCELLED"}
+
+        if not armutils.check_camera(self):
+            return {"CANCELLED"}
+
+        if not armutils.check_sdkpath(self):
             return {"CANCELLED"}
 
         assets.invalidate_enabled = False
@@ -601,6 +613,12 @@ class ArmoryPublishButton(bpy.types.Operator):
  
     def execute(self, context):
         if not armutils.check_saved(self):
+            return {"CANCELLED"}
+
+        if not armutils.check_camera(self):
+            return {"CANCELLED"}
+
+        if not armutils.check_sdkpath(self):
             return {"CANCELLED"}
 
         make.publish_project()
