@@ -148,8 +148,6 @@ def parse_color(world, node, context, envmap_strength_const):
             log.warn(world.name + ' - unable to open ' + image.filepath)
             return
 
-        envmap_strength_const['float'] *= 2.0 # Match to cycles
-
         tex = {}
         context['bind_textures'].append(tex)
         tex['name'] = 'envmap'

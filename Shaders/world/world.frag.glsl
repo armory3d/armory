@@ -194,6 +194,9 @@ void main() {
 #ifdef _EnvTex
 	vec3 n = normalize(normal);
 	vec3 R = texture(envmap, envMapEquirect(n)).rgb * envmapStrength;
+	#ifdef _EnvLDR
+	R = pow(R, vec3(2.2));
+	#endif
 #endif
 #endif
 
@@ -214,9 +217,6 @@ void main() {
 	float gamma_val = acos(cos_gamma);
 
 	vec3 R = Z * hosekWilkie(cos_theta, gamma_val, cos_gamma) * envmapStrength;
-// #ifndef _LDR
-	// R = pow(R, vec3(2.2));
-// #endif
 #endif
 
 #ifdef _EnvClouds
