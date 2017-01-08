@@ -40,6 +40,7 @@ def parse_output(node, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse
     global parse_surface
     global parse_opacity
     global parsing_basecol
+    global parse_teximage_vector
     vert = _vert
     frag = _frag
     geom = _geom
@@ -48,6 +49,7 @@ def parse_output(node, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse
     parse_surface = _parse_surface
     parse_opacity = _parse_opacity
     parsing_basecol = False
+    parse_teximage_vector = True
 
     # Surface
     if parse_surface or parse_opacity:
@@ -641,10 +643,11 @@ def store_var_name(node):
     return node_name(node.name) + '_store'
 
 def texture_store(node, tex, tex_name, to_linear=False):
+    global parse_teximage_vector
     mat_state.mat_context['bind_textures'].append(tex)
     mat_state.data.add_elem('tex', 2)
     curshader.add_uniform('sampler2D {0}'.format(tex_name))
-    if node.inputs[0].is_linked:
+    if node.inputs[0].is_linked and parse_teximage_vector:
         uv_name = parse_vector_input(node.inputs[0])
     else:
         uv_name = 'texCoord'
@@ -801,10 +804,13 @@ def parse_vector(node, socket):
             return 'normalize({0})'.format(vec1)
 
 def parse_normal_map_color_input(inp, str_inp=None):
+    global parse_teximage_vector
     if inp.is_linked == False:
         return
     frag.write_pre = True
+    parse_teximage_vector = False # Force texCoord for normal map image vector
     frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
+    parse_teximage_vector = True
     frag.write('n = normalize(TBN * normalize(n));')
     mat_state.data.add_elem('tan', 3)
     frag.write_pre = False

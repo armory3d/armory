@@ -153,14 +153,26 @@ def make_deferred(con_mesh):
 
     frag = con_mesh.frag
     vert = con_mesh.vert
+    tese = con_mesh.tese
 
     if '_Veloc' in wrd.world_defs:
         frag.add_out('vec4[3] fragColor')
-        vert.add_uniform('mat4 prevWVP', link='_prevWorldViewProjectionMatrix')
-        vert.add_out('vec4 wvpposition')
-        vert.add_out('vec4 prevwvpposition')
-        vert.write('wvpposition = gl_Position;')
-        vert.write('prevwvpposition = prevWVP * spos;')
+        if tese == None:
+            vert.add_uniform('mat4 prevWVP', link='_prevWorldViewProjectionMatrix')
+            vert.add_out('vec4 wvpposition')
+            vert.add_out('vec4 prevwvpposition')
+            vert.write('wvpposition = gl_Position;')
+            vert.write('prevwvpposition = prevWVP * spos;')
+        else:
+            vert.add_uniform('mat4 prevW', link='_prevWorldMatrix')
+            vert.add_out('vec3 prevwposition')
+            vert.write('prevwposition = vec4(prevW * spos).xyz;')
+            tese.add_out('vec4 wvpposition')
+            tese.add_out('vec4 prevwvpposition')
+            tese.add_uniform('mat4 prevVP', '_prevViewProjectionMatrix')
+            tese.write('wvpposition = gl_Position;')
+            make_tess.interpolate(tese, 'prevwposition', 3)
+            tese.write('prevwvpposition = prevVP * vec4(prevwposition, 1.0);')
     else:
         frag.add_out('vec4[2] fragColor')
 
