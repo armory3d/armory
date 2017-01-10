@@ -1155,8 +1155,11 @@ class ArmoryExporter:
             s += '_' + bdata.library.name
         return s
 
-    def export_material_ref(self, material, index, o):
-        if material == None:
+    def export_material_ref(self, bobject, material, index, o):
+        if material == None: # Use default for empty mat slots
+            o['material_refs'].append('__default')
+            self.defaultMaterialObjects.append(bobject)
+            self.export_default_material = True
             return
         if not material in self.materialArray:
             self.materialArray[material] = {"structName" : self.asset_name(material)}
@@ -1298,7 +1301,7 @@ class ArmoryExporter:
                     if bobject.override_material: # Overwrite material slot
                         o['material_refs'].append(bobject.override_material_name)
                     else: # Export assigned material
-                        self.export_material_ref(bobject.material_slots[i].material, i, o)
+                        self.export_material_ref(bobject, bobject.material_slots[i].material, i, o)
                 # No material, mimick cycles and assign default
                 if len(o['material_refs']) == 0:
                     o['material_refs'].append('__default')
@@ -1718,7 +1721,8 @@ class ArmoryExporter:
             # Find material index for multi-mat mesh
             if len(exportMesh.materials) > 1:
                 for i in range(0, len(exportMesh.materials)):
-                    if exportMesh.materials[i] != None and mat == exportMesh.materials[i].name:
+                    if (exportMesh.materials[i] != None and mat == exportMesh.materials[i].name) or \
+                       (exportMesh.materials[i] == None and mat == ''): # Default material for empty slots
                         ia['material'] = i
                         break
             om['index_arrays'].append(ia)
@@ -2380,9 +2384,15 @@ class ArmoryExporter:
             # Ensure same vertex structure for object materials
             for bobject in self.scene.objects:
                 if len(bobject.material_slots) > 1:
-                    vs = bobject.material_slots[0].material.vertex_structure
+                    mat = bobject.material_slots[0].material
+                    if mat == None:
+                        continue
+                    vs = mat.vertex_structure
                     for i in range(len(bobject.material_slots)):
-                        if vs != bobject.material_slots[i].material.vertex_structure:
+                        nmat = bobject.material_slots[i].material
+                        if nmat == None:
+                            continue
+                        if vs != nmat.vertex_structure:
                             log.warn('Object ' + bobject.name + ' - unable to bind materials to vertex data, please separate object by material for now (select object - edit mode - P - By Material)')
                             break
 
