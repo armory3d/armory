@@ -447,6 +447,9 @@ class ArmoryPlayButton(bpy.types.Operator):
     bl_label = 'Play'
  
     def execute(self, context):
+        if state.compileproc != None:
+            return {"CANCELLED"}
+        
         if not armutils.check_saved(self):
             return {"CANCELLED"}
 
@@ -469,6 +472,9 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
     bl_label = 'Play in Viewport'
  
     def execute(self, context):
+        if state.compileproc != None:
+            return {"CANCELLED"}
+
         if not armutils.check_saved(self):
             return {"CANCELLED"}
 
