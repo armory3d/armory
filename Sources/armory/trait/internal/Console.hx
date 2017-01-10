@@ -6,7 +6,7 @@ import kha.Scheduler;
 import iron.data.RenderPath;
 import iron.object.CameraObject;
 import iron.object.MeshObject;
-import bui.Bui;
+import armui.Armui;
 #end
 
 #if arm_profile
@@ -40,8 +40,6 @@ class ProfilePanel extends Panel {
 class PathPanel extends Panel {
 
 	var console:Console;
-
-	var passProps:Array<BoolProperty> = null;
 
 	public function new(console:Console) {
 		super();
@@ -97,7 +95,7 @@ class Console extends Trait {
 	public function new() { super(); }
 #else
 
-	var bui:Bui;
+	var ui:Armui;
 	var area:Area;
 
 	public var path:RenderPath;
@@ -121,10 +119,8 @@ class Console extends Trait {
 		super();
 
 		iron.data.Data.getFont('dejavu.ttf', function(font:kha.Font) {
-		iron.data.Data.getBlob('btheme.json', function(blob:kha.Blob) {
-		iron.data.Data.getImage('batlas.png', function(image:kha.Image) {
-			bui = new Bui(blob, image, font);
-			area = bui.addArea(0, 0, 160, iron.App.h());
+			ui = new Armui(font);
+			area = ui.addArea(0, 0, 160, iron.App.h());
 			area.addPanel(new ProfilePanel(this));
 			area.addPanel(new PathPanel(this));
 			area.addPanel(new OutlinerPanel(this));
@@ -133,8 +129,6 @@ class Console extends Trait {
 			notifyOnRender2D(render2D);
 			notifyOnUpdate(update);
 		});
-		});
-		});
 	}
 
 	function init() {
@@ -142,7 +136,7 @@ class Console extends Trait {
 	}
 
 	function render2D(g:kha.graphics2.Graphics) {
-		bui.draw(g);
+		ui.draw(g);
 
 #if arm_profile
 		totalTime += frameTime;

@@ -252,7 +252,7 @@ def build_project(is_play=False, is_publish=False, in_viewport=False, target=Non
         old_type = area.type
         area.type = 'TEXT_EDITOR'
         for text in bpy.data.texts:
-            if text.filepath != '' and text.is_dirty:
+            if text.filepath != '' and text.is_dirty and os.path.isfile(text.filepath):
                 area.spaces[0].text = text
                 bpy.ops.text.save()
         area.type = old_type

@@ -62,13 +62,9 @@ project.addSources('Sources');
         if wrd.arm_play_console:
             f.write("project.addDefine('arm_profile');\n")
 
-        if wrd.arm_play_console or wrd.arm_bui:
-            f.write(add_armory_library(sdk_path, 'lib/bui'))
-            p = sdk_path + '/lib/bui/Assets/dejavu.ttf'
-            f.write('project.addAssets("' + p.replace('\\', '/') + '");\n')
-            p = sdk_path + '/lib/bui/Assets/btheme.json'
-            f.write('project.addAssets("' + p.replace('\\', '/') + '");\n')
-            p = sdk_path + '/lib/bui/Assets/batlas.png'
+        if wrd.arm_play_console or wrd.arm_ui:
+            f.write(add_armory_library(sdk_path, 'lib/armui'))
+            p = sdk_path + '/lib/armui/Assets/dejavu.ttf'
             f.write('project.addAssets("' + p.replace('\\', '/') + '");\n')
 
         # f.write(add_armory_library(sdk_path, 'lib/haxeui/haxeui-core'))
