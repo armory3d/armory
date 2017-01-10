@@ -670,9 +670,9 @@ class ConvexHull {
 		computeFaceNormals();
 	}
 
+	var cb = new Vec4();
+	var ab = new Vec4();
 	function computeFaceNormals() {
-		var cb = new Vec4();
-		var ab = new Vec4();
 		for (f in 0...face3s.length) {
 			var face = face3s[f];
 			var va = vertices[face.a];

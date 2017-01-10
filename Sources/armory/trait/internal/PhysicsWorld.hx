@@ -33,7 +33,12 @@ class PhysicsWorld extends Trait {
 
 	public static var active:PhysicsWorld = null;
 
+#if arm_physics_soft
+	public var world:BtSoftRigidDynamicsWorldPointer;
+#else
 	public var world:BtDiscreteDynamicsWorldPointer;
+#end
+
 	var dispatcher:BtCollisionDispatcherPointer;
 	var contacts:Array<ContactPair> = [];
 	var preUpdates:Array<Void->Void> = null;
@@ -60,13 +65,29 @@ class PhysicsWorld extends Trait {
 
 		var broadphase = BtDbvtBroadphase.create();
 
+#if arm_physics_soft
+		var collisionConfiguration = BtSoftBodyRigidBodyCollisionConfiguration.create();
+#else
 		var collisionConfiguration = BtDefaultCollisionConfiguration.create();
-		dispatcher = BtCollisionDispatcher.create(collisionConfiguration);
+#end
 		
+		dispatcher = BtCollisionDispatcher.create(collisionConfiguration);
 		var solver = BtSequentialImpulseConstraintSolver.create();
 
-		world = BtDiscreteDynamicsWorld.create(dispatcher, broadphase, solver, collisionConfiguration);
 		var gravity = iron.Scene.active.raw.gravity == null ? [0, 0, -9.81] : iron.Scene.active.raw.gravity;
+
+#if arm_physics_soft
+		var softSolver = BtDefaultSoftBodySolver.create();
+		world = BtSoftRigidDynamicsWorld.create(dispatcher, broadphase, solver, collisionConfiguration, softSolver);
+		#if js
+		world.ptr.getWorldInfo().set_m_gravity(BtVector3.create(gravity[0], gravity[1], gravity[2]).value);
+		#elseif cpp
+		world.ptr.getWorldInfo().m_gravity = BtVector3.create(gravity[0], gravity[1], gravity[2]).value;
+		#end
+#else
+		world = BtDiscreteDynamicsWorld.create(dispatcher, broadphase, solver, collisionConfiguration);
+#end
+
 		world.ptr.setGravity(BtVector3.create(gravity[0], gravity[1], gravity[2]).value);
 
 		Scene.active.notifyOnInit(function() {

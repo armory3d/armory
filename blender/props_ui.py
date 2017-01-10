@@ -109,7 +109,6 @@ class ObjectPropsPanel(bpy.types.Panel):
                         layout.prop(animitem, "loop_prop")
                         layout.prop(animitem, "reflect_prop")
 
-# Menu in modifiers region
 class ModifiersPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
@@ -129,6 +128,20 @@ class ModifiersPropsPanel(bpy.types.Panel):
             layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_base_color')
             layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_water_color')
             layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_fade')
+
+class PhysicsPropsPanel(bpy.types.Panel):
+    bl_label = "Armory Props"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "physics"
+ 
+    def draw(self, context):
+        layout = self.layout
+        obj = bpy.context.object
+        if obj == None:
+            return
+
+        layout.prop(obj, 'soft_body_margin')
 
 # Menu in data region
 class DataPropsPanel(bpy.types.Panel):

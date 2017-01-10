@@ -2713,6 +2713,30 @@ class ArmoryExporter:
             x['parameters'].append(rb.type == 'PASSIVE')
             o['traits'].append(x)
         
+        # Soft bodies modifier
+        soft_type = -1
+        soft_mod = None
+        for m in bobject.modifiers:
+            if m.type == 'CLOTH':
+                soft_type = 0
+                soft_mod = m
+                break
+            elif m.type == 'SOFT_BODY':
+                soft_type = 1 # Volume
+                soft_mod = m
+                break
+        if soft_type >= 0:
+            assets.add_khafile_def('arm_physics_soft')
+            cloth_trait = {}
+            cloth_trait['type'] = 'Script'
+            cloth_trait['class_name'] = 'armory.trait.internal.SoftBody'
+            if soft_type == 0:
+                bend = soft_mod.settings.bending_stiffness
+            elif soft_type == 1:
+                bend = (soft_mod.settings.bend + 1.0) * 10
+            cloth_trait['parameters'] = [soft_type, bend, soft_mod.settings.mass, bobject.soft_body_margin]
+            o['traits'].append(cloth_trait)
+
         if type == NodeTypeCamera:
             # Debug console enabled, attach console overlay to each camera
             if bpy.data.worlds['Arm'].arm_play_console:
