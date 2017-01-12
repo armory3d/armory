@@ -41,6 +41,7 @@ def is_transluc(material):
     return is_transluc_traverse(surface_node)
 
 def is_transluc_traverse(node):
+    # TODO: traverse groups
     if is_transluc_type(node):
         return True
     for inp in node.inputs:

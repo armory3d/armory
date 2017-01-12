@@ -2736,6 +2736,7 @@ class ArmoryExporter:
                 soft_mod = m
                 break
         if soft_type >= 0:
+            ArmoryExporter.export_physics = True
             assets.add_khafile_def('arm_physics_soft')
             cloth_trait = {}
             cloth_trait['type'] = 'Script'

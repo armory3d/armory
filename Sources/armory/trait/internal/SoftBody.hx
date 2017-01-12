@@ -33,11 +33,7 @@ class SoftBody extends Trait {
 		this.mass = mass;
 		this.margin = margin;
 
-		iron.system.Tween.timer(3, function() {
-			notifyOnInit(init);
-		});
-
-		// notifyOnInit(init);
+		notifyOnInit(init);
 	}
 
 	function init() {
@@ -97,7 +93,7 @@ class SoftBody extends Trait {
 #end
 		softBody.ptr.setTotalMass(mass, false);
 		
-		softBody.ptr.getCollisionShape().setMargin(0.2);
+		softBody.ptr.getCollisionShape().setMargin(margin);
 
 		physics.world.ptr.addSoftBody(softBody, 1, -1);
 		softBody.ptr.setActivationState(4);
