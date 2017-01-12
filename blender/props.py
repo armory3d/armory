@@ -18,6 +18,15 @@ def update_preset(self, context):
 def update_renderpath(self, context):
     props_renderer.set_renderpath(self, context)
 
+def update_translucency_state(self, context):
+    if self.rp_translucency_state == 'On':
+        self.rp_translucency = True
+    elif self.rp_translucency_state == 'Off':
+        self.rp_translucency = False
+    else: # Auto - updates rp at build time if translucent mat is used
+        return
+    update_renderpath(self, context)
+
 arm_ver = '17.01'
 def init_properties():
     global arm_ver
@@ -210,7 +219,12 @@ def init_properties():
                ('Basic', 'Basic', 'Basic'),
                ('Velocity', 'Velocity', 'Velocity')],
         name="Motion Blur", description="Motion blur processing", default='None', update=update_renderpath)
-    bpy.types.Camera.rp_translucency = bpy.props.BoolProperty(name="Translucency", description="Order independent translucency", default=False, update=update_renderpath)
+    bpy.types.Camera.rp_translucency = bpy.props.BoolProperty(name="Translucency", description="Current render-path state", default=False)
+    bpy.types.Camera.rp_translucency_state = bpy.props.EnumProperty(
+        items=[('On', 'On', 'On'),
+               ('Off', 'Off', 'Off'), 
+               ('Auto', 'Auto', 'Auto')],
+        name="Translucency", description="Order independent translucency", default='Auto', update=update_translucency_state)
     bpy.types.Camera.rp_decals = bpy.props.BoolProperty(name="Decals", description="Render decals", default=False, update=update_renderpath)
     bpy.types.Camera.rp_overlays = bpy.props.BoolProperty(name="Overlays", description="Render overlays", default=False, update=update_renderpath)
     bpy.types.Camera.rp_stereo = bpy.props.BoolProperty(name="Stereo", description="Stereo rendering", default=False, update=update_renderpath)

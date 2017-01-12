@@ -23,6 +23,8 @@ import subprocess
 import log
 import material.make as make_material
 import nodes
+import make_renderer
+import make_renderpath
 
 NodeTypeNode = 0
 NodeTypeBone = 1
@@ -2176,6 +2178,7 @@ class ArmoryExporter:
 
     def export_materials(self):
         # This function exports all of the materials used in the scene
+        transluc_used = False
         for materialRef in self.materialArray.items():
             material = materialRef[0]
             # If the material is unlinked, material becomes None
@@ -2198,7 +2201,9 @@ class ArmoryExporter:
 
             o['contexts'] = []
 
-            sd = make_material.parse(material, o, self.materialToObjectDict, ArmoryExporter.renderpath_id)
+            sd, is_transluc = make_material.parse(material, o, self.materialToObjectDict, ArmoryExporter.renderpath_id)
+            if is_transluc:
+                transluc_used = True
 
             uv_export = False
             tan_export = False
@@ -2244,6 +2249,15 @@ class ArmoryExporter:
                 make_material.parse(mat, o, mat_users, ArmoryExporter.renderpath_id)
                 self.output['material_datas'].append(o)
                 bpy.data.materials.remove(mat)
+        # Auto-enable translucency
+        if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].rp_translucency_state == 'Auto':
+            if bpy.data.cameras[0].rp_translucency != transluc_used:
+                bpy.data.cameras[0].rp_translucency = transluc_used
+                # No shader invalidate required?
+                make_renderer.make_renderer(bpy.data.cameras[0])
+                # Rebuild modified path
+                assets_path = armutils.get_sdk_path() + 'armory/Assets/'
+                make_renderpath.build_node_trees(assets_path)
 
     def export_particle_systems(self):
         for particleRef in self.particleSystemArray.items():
@@ -2519,7 +2533,7 @@ class ArmoryExporter:
 
         # Only one render path for scene for now
         # Used for material shader export and khafile
-        if (len(bpy.data.cameras) > 0):
+        if len(bpy.data.cameras) > 0:
             ArmoryExporter.renderpath_id = bpy.data.cameras[0].renderpath_id
             ArmoryExporter.renderpath_passes = bpy.data.cameras[0].renderpath_passes.split('_')
             ArmoryExporter.mesh_context = 'mesh'

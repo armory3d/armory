@@ -86,7 +86,7 @@ def parse(material, mat_data, mat_users, rid):
     assets.add_shader_data(shader_data_path)
     mat_data['shader'] = shader_data_name + '/' + shader_data_name
 
-    return mat_state.data.sd
+    return mat_state.data.sd, 'translucent' in rpasses
 
 def write_shaders(con, rpass):
     keep_cache = mat_state.material.is_cached
