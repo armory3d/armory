@@ -20,8 +20,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     if not os.path.exists('build/compiled/Assets/envmaps'):
         os.makedirs('build/compiled/Assets/envmaps')
 
-    base_name = image_filepath.replace(os.path.sep, '/')
-    base_name = base_name.rsplit('/', 1)[1].rsplit('.', 1)[0] # Extract file name without extension
+    base_name = armutils.extract_filename(armutils.safe_assetpath(image_filepath)).rsplit('.', 1)[0]
     
     # Assets to be generated
     output_file_irr = 'build/compiled/Assets/envmaps/' + base_name + '_irradiance'
@@ -61,8 +60,8 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     if armutils.get_os() == 'win':
         output = subprocess.check_output([ \
             kraffiti_path,
-            'from="' + input_file + '"',
-            'to="' + scaled_file + '"',
+            'from=' + input_file.replace(' ', '\ '),
+            'to=' + scaled_file.replace(' ', '\ '),
             'format=' + rad_format,
             'width=' + str(target_w),
             'height=' + str(target_h)])
@@ -88,7 +87,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     if armutils.get_os() == 'win':
         subprocess.call([ \
             cmft_path,
-            '--input', '"' + scaled_file + '"',
+            '--input', scaled_file.replace(' ', '\ '),
             '--filter', 'shcoeffs',
             #gama_options + \
             '--outputNum', '1',

@@ -153,9 +153,9 @@ def check_camera(self):
 
 def check_sdkpath(self):
     s = get_sdk_path()
-    for c in r'[];,><&*:%=+@!#^()|?^':
+    for c in r'[];><&*%=+@!#^()|?^':
         if c in s:
-            self.report({"ERROR"}, "SDK path contains special characters")
+            self.report({"ERROR"}, "SDK path '{0}' contains special characters. Please move SDK to different path for now.".format(s))
             return False
     return True
 

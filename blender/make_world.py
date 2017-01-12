@@ -155,7 +155,7 @@ def parse_color(world, node, context, envmap_strength_const):
         tex['v_addressing'] = 'clamp'
 
         # Reference image name
-        tex['file'] = armutils.extract_filename(image.filepath)
+        tex['file'] = armutils.extract_filename(armutils.safe_assetpath(image.filepath))
         tex['file'] = armutils.safe_filename(tex['file'])
         base = tex['file'].rsplit('.', 1)
         ext = base[1].lower()
