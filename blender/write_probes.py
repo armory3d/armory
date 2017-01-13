@@ -122,8 +122,8 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     if armutils.get_os() == 'win':
         subprocess.call([ \
             cmft_path,
-            '--input', input_file,
-            '--filter radiance',
+            '--input', input_file.replace(' ', '\ '),
+            '--filter', 'radiance',
             '--dstFaceSize', str(face_size),
             '--srcFaceSize', str(face_size),
             '--excludeBase', 'false',
@@ -143,12 +143,12 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
             '--outputGammaNumerator', '1.0',
             '--outputGammaDenominator', output_gama_numerator,
             '--outputNum', '1',
-            '--output0', output_file_rad,
+            '--output0', output_file_rad.replace(' ', '\ '),
             '--output0params', 'hdr,rgbe,latlong'])
     else:
         subprocess.call([ \
             cmft_path + \
-            ' --input ' + input_file + \
+            ' --input "' + input_file + '"' + \
             ' --filter radiance' + \
             ' --dstFaceSize ' + str(face_size) + \
             ' --srcFaceSize ' + str(face_size) + \
@@ -169,7 +169,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
             ' --outputGammaNumerator 1.0' + \
             ' --outputGammaDenominator ' + output_gama_numerator + \
             ' --outputNum 1' + \
-            ' --output0 ' + output_file_rad + \
+            ' --output0 "' + output_file_rad + '"' + \
             ' --output0params hdr,rgbe,latlong'], shell=True)
 
     # Remove size extensions in file name
