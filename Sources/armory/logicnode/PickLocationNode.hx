@@ -1,7 +1,6 @@
 package armory.logicnode;
 
 #if arm_physics
-import haxebullet.Bullet;
 import armory.trait.internal.PhysicsWorld;
 #end
 
@@ -38,9 +37,9 @@ class PickLocationNode extends LocationNode {
 
 		if (rb != null && b == rb) {
 			#if js
-			var p:BtVector3 = physics.rayCallback.get_m_hitPointWorld();
+			var p:haxebullet.Bullet.BtVector3 = physics.rayCallback.get_m_hitPointWorld();
 			#elseif cpp
-			var p:BtVector3 = physics.rayCallback.value.m_hitPointWorld;
+			var p:haxebullet.Bullet.BtVector3 = physics.rayCallback.value.m_hitPointWorld;
 			#end
 			loc.set(p.x(), p.y(), p.z());
 		}
