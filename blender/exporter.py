@@ -2254,7 +2254,9 @@ class ArmoryExporter:
             if bpy.data.cameras[0].rp_translucency != transluc_used:
                 bpy.data.cameras[0].rp_translucency = transluc_used
                 # No shader invalidate required?
+                wdefs = bpy.data.worlds['Arm'].world_defs
                 make_renderer.make_renderer(bpy.data.cameras[0])
+                bpy.data.worlds['Arm'].world_defs = wdefs
                 # Rebuild modified path
                 assets_path = armutils.get_sdk_path() + 'armory/Assets/'
                 make_renderpath.build_node_trees(assets_path)
