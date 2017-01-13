@@ -55,8 +55,8 @@ def make_texture(image_node, tex_name):
         assets.add(unpack_filepath)
 
     else:
-        if not os.path.isfile(image.filepath):
-            log.warn(matname + '/' + image.name + ' - file not found')
+        if not os.path.isfile(armutils.safe_assetpath(image.filepath)):
+            log.warn('Material ' + matname + '/' + image.name + ' - file not found(' + image.filepath + ')')
             return None
 
         if do_convert:
