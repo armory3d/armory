@@ -146,6 +146,9 @@ def register():
     bpy.app.handlers.scene_update_post.append(on_scene_update_post)
     bpy.app.handlers.save_pre.append(on_save_pre)
     bpy.app.handlers.load_post.append(on_load_post)
+    # On windows, on_load_post is not called when opening .blend file from explorer
+    if armutils.get_os() == 'win' and armutils.get_fp() != '':
+        on_load_post(None)
 
 def unregister():
     bpy.app.handlers.scene_update_post.remove(on_scene_update_post)
