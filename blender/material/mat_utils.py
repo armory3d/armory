@@ -1,14 +1,19 @@
 import armutils
-import make_state as state
+import make_state
 import material.cycles as cycles
+import log
 
 def disp_linked(output_node):
-    # Armory PBR with unlinked height socket 
-    if output_node.inputs[2].is_linked:
+    # Armory PBR with unlinked height socket
+    linked = output_node.inputs[2].is_linked
+    tess_enabled = armutils.tess_enabled(make_state.target)
+    if linked:
         l = output_node.inputs[2].links[0]
         if l.from_node.type == 'GROUP' and l.from_node.node_tree.name.startswith('Armory PBR') and l.from_node.inputs[10].is_linked == False:
             return False
-    return armutils.tess_enabled(state.target) and output_node.inputs[2].is_linked
+    if linked and not tess_enabled:
+        log.warn('Tessellation not available on ' + make_state.target)
+    return tess_enabled and linked
 
 def get_rpasses(material):
 

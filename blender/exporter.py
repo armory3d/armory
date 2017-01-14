@@ -1889,7 +1889,7 @@ class ArmoryExporter:
         self.write_mesh(bobject, fp, o)
 
     def export_mesh_quality(self, exportMesh, bobject, fp, o, om):
-        # Triangulate mesh and remap vertices to eliminate duplicates.
+        # Triangulate mesh and remap vertices to eliminate duplicates
         material_table = []
         export_vertex_array = ArmoryExporter.deindex_mesh(exportMesh, material_table)
         triangleCount = len(material_table)
@@ -1897,23 +1897,22 @@ class ArmoryExporter:
         indexTable = []
         unifiedVertexArray = ArmoryExporter.unify_vertices(export_vertex_array, indexTable)
 
-        # Write the position array.
+        # Write the position array
         om['vertex_arrays'] = []
-
         pa = {}
         pa['attrib'] = "position"
         pa['size'] = 3
         pa['values'] = self.write_vertex_array3d(unifiedVertexArray, "position")
         om['vertex_arrays'].append(pa)
-
-        # Write the normal array.
+        
+        # Write the normal array
         na = {}
         na['attrib'] = "normal"
         na['size'] = 3
         na['values'] = self.write_vertex_array3d(unifiedVertexArray, "normal")
         om['vertex_arrays'].append(na)
 
-        # Write the color array if it exists.
+        # Write the color array if it exists
         colorCount = len(exportMesh.tessface_vertex_colors)
         if self.get_export_vcols(exportMesh) == True and colorCount > 0:
             ca = {}
@@ -1922,7 +1921,7 @@ class ArmoryExporter:
             ca['values'] = self.write_vertex_array3d(unifiedVertexArray, "color")
             om['vertex_arrays'].append(ca)
 
-        # Write the texcoord arrays.
+        # Write the texcoord arrays
         texcoordCount = len(exportMesh.tessface_uv_textures)
         if self.get_export_uvs(exportMesh) == True and texcoordCount > 0:
             ta = {}
@@ -1938,7 +1937,7 @@ class ArmoryExporter:
                 ta2['values'] = self.write_vertex_array2d(unifiedVertexArray, "texcoord1")
                 om['vertex_arrays'].append(ta2)
 
-        # If there are multiple morph targets, export them here.
+        # If there are multiple morph targets, export them here
         # if (shapeKeys):
         #   shapeKeys.key_blocks[0].value = 0.0
         #   for m in range(1, len(currentMorphValue)):
