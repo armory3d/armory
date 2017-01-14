@@ -27,6 +27,11 @@ def update_translucency_state(self, context):
         return
     update_renderpath(self, context)
 
+def invalidate_mesh_cache(self, context):
+    if context.object == None or context.object.data == None:
+        return
+    context.object.data.mesh_cached = False
+
 arm_ver = '17.01.1'
 def init_properties():
     global arm_ver
@@ -99,7 +104,7 @@ def init_properties():
     bpy.types.World.arm_loadbar = BoolProperty(name="Load Bar", description="Show asset loading progress on published builds", default=True)
 
     # For object
-    bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced Children", description="Use instaced rendering", default=False)
+    bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced Children", description="Use instaced rendering", default=False, update=invalidate_mesh_cache)
     bpy.types.Object.instanced_children_loc_x = bpy.props.BoolProperty(name="X", default=True)
     bpy.types.Object.instanced_children_loc_y = bpy.props.BoolProperty(name="Y", default=True)
     bpy.types.Object.instanced_children_loc_z = bpy.props.BoolProperty(name="Z", default=True)

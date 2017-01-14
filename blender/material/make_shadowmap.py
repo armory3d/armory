@@ -25,6 +25,9 @@ def make(context_id, rpasses):
     if mat_state.data.is_elem('bone'):
         make_skin.skin_pos(vert)
 
+    if mat_state.data.is_elem('off'):
+        vert.write('spos.xyz += off;')
+
     if mat_utils.disp_linked(mat_state.output_node) and mat_state.material.height_tess_shadows:
         tesc = con_shadowmap.make_tesc()
         tese = con_shadowmap.make_tese()

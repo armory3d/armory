@@ -134,7 +134,7 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
             found = find_def(defs, s)
             if line.startswith('#ifndef'):
                 found = not found
-            if found == False or s == '_Instancing': # TODO: Prevent instanced data to go into main vertex structure
+            if found == False:
                 stack.append(0)
             else:
                 stack.append(1)
