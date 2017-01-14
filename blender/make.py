@@ -107,7 +107,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
         # Data does not exist yet
         if not os.path.isfile(fp + '/' + ref):
             shader_name = ref.split('/')[3] # Extract from 'build/compiled/...'
-            defs = make_utils.def_strings_to_array(wrd.world_defs)
+            defs = make_utils.def_strings_to_array(wrd.world_defs + wrd.rp_defs)
             if shader_name.startswith('compositor_pass'):
                 defs += make_utils.def_strings_to_array(wrd.compo_defs)
             compile_shader(raw_shaders_path, shader_name, defs)

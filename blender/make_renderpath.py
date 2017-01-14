@@ -26,6 +26,8 @@ def build_node_trees(assets_path):
     assets.add(assets_path + 'brdf.png')
     assets.add_embedded_data('brdf.png')
 
+    bpy.data.worlds['Arm'].rp_defs = ''
+
     # Export render path for each camera
     parsed_paths = []
     for cam in bpy.data.cameras:
@@ -197,7 +199,7 @@ def make_draw_material_quad(stage, node_group, node, context_index=1):
 def make_draw_quad(stage, node_group, node, context_index=1, shader_context=None):
     stage['command'] = 'draw_shader_quad'
     # Append world defs to get proper context
-    world_defs = bpy.data.worlds['Arm'].world_defs
+    world_defs = bpy.data.worlds['Arm'].world_defs + bpy.data.worlds['Arm'].rp_defs
     if shader_context == None:
         shader_context = node.inputs[context_index].default_value
     scon = shader_context.split('/')
@@ -223,7 +225,7 @@ def make_draw_world(stage, node_group, node, dome=True):
 def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     scon = 'compositor_pass'
     wrd = bpy.data.worlds['Arm']
-    world_defs = wrd.world_defs
+    world_defs = wrd.world_defs + wrd.rp_defs
     compositor_defs = make_compositor.parse_defs(bpy.data.scenes[0].node_tree) # Thrown in scene 0 for now
     # Additional compositor flags
     compo_depth = False # Read depth
@@ -669,10 +671,10 @@ def get_root_node(node_group):
             # TODO: deprecated
             if len(n.inputs) > 5:
                 if n.inputs[5].default_value == False:
-                    bpy.data.worlds['Arm'].world_defs += '_LDR'
+                    bpy.data.worlds['Arm'].rp_defs += '_LDR'
             else:
                 if n.inputs[1].default_value == False:
-                    bpy.data.worlds['Arm'].world_defs += '_LDR'
+                    bpy.data.worlds['Arm'].rp_defs += '_LDR'
             
             rn = nodes.find_node_by_link_from(node_group, n, n.outputs[0])
             break
@@ -701,27 +703,27 @@ def traverse_renderpath(node, node_group, render_targets, depth_buffers):
     if node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':
         if preprocess_renderpath.velocity_def_added == False:
             assets.add_khafile_def('arm_veloc')
-            bpy.data.worlds['Arm'].world_defs += '_Veloc'
+            bpy.data.worlds['Arm'].rp_defs += '_Veloc'
             preprocess_renderpath.velocity_def_added = True
         if node.bl_idname == 'TAAPassNodeType':
             assets.add_khafile_def('arm_taa')
-            # bpy.data.worlds['Arm'].world_defs += '_TAA'
+            # bpy.data.worlds['Arm'].rp_defs += '_TAA'
     elif node.bl_idname == 'SMAAPassNodeType':
-        bpy.data.worlds['Arm'].world_defs += '_SMAA'
+        bpy.data.worlds['Arm'].rp_defs += '_SMAA'
 
     elif node.bl_idname == 'SSAOPassNodeType' or node.bl_idname == 'ApplySSAOPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':
         if bpy.data.worlds['Arm'].generate_ssao: # SSAO enabled
-            bpy.data.worlds['Arm'].world_defs += '_SSAO'
+            bpy.data.worlds['Arm'].rp_defs += '_SSAO'
 
     elif node.bl_idname == 'DrawStereoNodeType':
         assets.add_khafile_def('arm_vr')
-        bpy.data.worlds['Arm'].world_defs += '_VR'
+        bpy.data.worlds['Arm'].rp_defs += '_VR'
 
     elif node.bl_idname == 'CallFunctionNodeType':
         global dynRes_added
         fstr = node.inputs[1].default_value
         if not dynRes_added and fstr.startswith('armory.renderpath.DynamicResolutionScale'):
-            bpy.data.worlds['Arm'].world_defs += '_DynRes'
+            bpy.data.worlds['Arm'].rp_defs += '_DynRes'
             dynRes_added = True
 
     # Collect render targets
@@ -810,7 +812,7 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
                     # break
                     # Clamp omni-shadows, remove
                     if lamp.lamp_omni_shadows:
-                        bpy.data.worlds['Arm'].world_defs += '_Clampstc'
+                        bpy.data.worlds['Arm'].rp_defs += '_Clampstc'
     
     elif node.bl_idname == 'ImageNodeType' or node.bl_idname == 'Image3DNodeType':
         # Target already exists

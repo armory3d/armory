@@ -74,7 +74,7 @@ def make(context_id, rpasses):
             vert.add_out('vec3 vcolor')
             vert.write('vcolor = col;')
             tese.write_pre = True
-            make_tess.interpolate(tese, 'vcolor', 2, declare_out=frag.contains('vcolor'))
+            make_tess.interpolate(tese, 'vcolor', 3, declare_out=frag.contains('vcolor'))
             tese.write_pre = False
 
         tese.add_uniform('mat4 LVP', '_lampViewProjectionMatrix')

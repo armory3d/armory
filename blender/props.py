@@ -240,6 +240,7 @@ def init_properties():
     bpy.types.World.world_envtex_turbidity = bpy.props.FloatProperty(name="Turbidity", default=1.0)
     bpy.types.World.world_envtex_ground_albedo = bpy.props.FloatProperty(name="Ground Albedo", default=0.0)
     bpy.types.World.world_defs = bpy.props.StringProperty(name="World Shader Defs", default='')
+    bpy.types.World.rp_defs = bpy.props.StringProperty(name="Render Path Shader Defs", default='')
     bpy.types.World.compo_defs = bpy.props.StringProperty(name="Compositor Shader Defs", default='')
     bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Probe Radiance", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_radiance_size = EnumProperty(

@@ -155,7 +155,7 @@ def make_deferred(con_mesh):
     vert = con_mesh.vert
     tese = con_mesh.tese
 
-    if '_Veloc' in wrd.world_defs:
+    if '_Veloc' in wrd.rp_defs:
         frag.add_out('vec4[3] fragColor')
         if tese == None:
             vert.add_uniform('mat4 prevWVP', link='_prevWorldViewProjectionMatrix')
@@ -183,7 +183,7 @@ def make_deferred(con_mesh):
     frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - gl_FragCoord.z);')
     frag.write('fragColor[1] = vec4(basecol.rgb, occlusion);')
 
-    if '_Veloc' in wrd.world_defs:
+    if '_Veloc' in wrd.rp_defs:
         frag.write('vec2 posa = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
         frag.write('vec2 posb = (prevwvpposition.xy / prevwvpposition.w) * 0.5 + 0.5;')
         frag.write('fragColor[2].rg = vec2(posa - posb);')
@@ -198,7 +198,7 @@ def make_forward(con_mesh):
 
     frag.write('fragColor = vec4(direct * lightColor * visibility + indirect * occlusion * envmapStrength, 1.0);')
     
-    if '_LDR' in bpy.data.worlds['Arm'].world_defs:
+    if '_LDR' in bpy.data.worlds['Arm'].rp_defs:
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2);')
 
 def make_forward_base(con_mesh, parse_opacity=False):
@@ -284,7 +284,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
 
     frag.write('vec3 indirect = (shIrradiance(n, 2.2) / PI) * albedo;')
     
-    if '_RAD' in wrd.world_defs:
+    if '_Rad' in wrd.world_defs:
         frag.write('vec3 reflectionWorld = reflect(-v, n);')
         frag.write('float lod = getMipFromRoughness(roughness, envmapNumMipmaps);')
         frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')

@@ -855,7 +855,7 @@ def parse_value(node, socket):
             curshader.add_uniform('float time', link='_time')
             return 'time'
         else:
-            return None
+            return '0.0'
 
     elif node.type == 'CAMERA':
         # View Z Depth
@@ -880,7 +880,7 @@ def parse_value(node, socket):
         # Is Strand
         # Intercept
         # Thickness
-        pass
+        return '0.5'
 
     elif node.type == 'LAYER_WEIGHT':
         blend = parse_value_input(node.inputs[0])

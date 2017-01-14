@@ -99,7 +99,7 @@ def write_output(output):
     dir_name = 'world'
     # Append world defs
     wrd = bpy.data.worlds['Arm']
-    data_name = 'world' + wrd.world_defs
+    data_name = 'world' + wrd.world_defs + wrd.rp_defs
     
     # Reference correct shader context
     dat = output['material_datas'][0]
