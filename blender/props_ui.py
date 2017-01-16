@@ -440,6 +440,8 @@ class ArmoryProjectPanel(bpy.types.Panel):
             layout.prop(wrd, 'arm_spawn_all_layers')
             layout.label('Armory v' + wrd.arm_version)
             layout.operator('arm.check_updates')
+            layout.operator('arm.open_manual')
+            layout.operator('arm.report_issue')
 
 class ArmoryPlayButton(bpy.types.Operator):
     '''Launch player in new window'''
@@ -567,7 +569,25 @@ class ArmoryCheckUpdatesButton(bpy.types.Operator):
     bl_label = 'Check for Updates'
  
     def execute(self, context):
-        webbrowser.open("http://armory3d.org/manual")
+        webbrowser.open("http://armory3d.org/download.html")
+        return{'FINISHED'}
+
+class ArmoryManualButton(bpy.types.Operator):
+    '''Open a website in the web-browser'''
+    bl_idname = 'arm.open_manual'
+    bl_label = 'Manual'
+ 
+    def execute(self, context):
+        webbrowser.open("http://armory3d.org/manual/")
+        return{'FINISHED'}
+
+class ArmoryReportIssueButton(bpy.types.Operator):
+    '''Open a website in the web-browser'''
+    bl_idname = 'arm.report_issue'
+    bl_label = 'Report Issue'
+ 
+    def execute(self, context):
+        webbrowser.open("https://github.com/armory3d/armory/issues")
         return{'FINISHED'}
 
 class ArmoryKodeStudioButton(bpy.types.Operator):

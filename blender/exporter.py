@@ -2423,22 +2423,6 @@ class ArmoryExporter:
 
             self.output['gravity'] = [self.scene.gravity[0], self.scene.gravity[1], self.scene.gravity[2]]
 
-            # Scene root traits
-            if bpy.data.worlds['Arm'].arm_physics != 'Disabled':
-                if not 'traits' in self.output:
-                    self.output['traits'] = []
-                x = {}
-                x['type'] = 'Script'
-                x['class_name'] = 'armory.trait.internal.PhysicsWorld'
-                self.output['traits'].append(x)
-            if bpy.data.worlds['Arm'].arm_navigation != 'Disabled':
-                if not 'traits' in self.output:
-                    self.output['traits'] = []
-                x = {}
-                x['type'] = 'Script'
-                x['class_name'] = 'armory.trait.internal.Navigation'
-                self.output['traits'].append(x)
-
         self.export_objects(self.scene)
         
         if not self.camera_spawned:
@@ -2446,8 +2430,24 @@ class ArmoryExporter:
 
         self.postprocess()
 
-        if (self.restoreFrame):
+        if self.restoreFrame:
             self.scene.frame_set(originalFrame, originalSubframe)
+
+        # Scene root traits
+        if bpy.data.worlds['Arm'].arm_physics != 'Disabled' and ArmoryExporter.export_physics:
+            if not 'traits' in self.output:
+                self.output['traits'] = []
+            x = {}
+            x['type'] = 'Script'
+            x['class_name'] = 'armory.trait.internal.PhysicsWorld'
+            self.output['traits'].append(x)
+        if bpy.data.worlds['Arm'].arm_navigation != 'Disabled' and ArmoryExporter.export_navigation:
+            if not 'traits' in self.output:
+                self.output['traits'] = []
+            x = {}
+            x['type'] = 'Script'
+            x['class_name'] = 'armory.trait.internal.Navigation'
+            self.output['traits'].append(x)
 
         # Write embedded data references
         if len(assets.embedded_data) > 0:

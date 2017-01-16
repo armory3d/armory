@@ -199,7 +199,7 @@ def make_forward(con_mesh):
     frag.write('fragColor = vec4(direct * lightColor * visibility + indirect * occlusion * envmapStrength, 1.0);')
     
     if '_LDR' in bpy.data.worlds['Arm'].rp_defs:
-        frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2);')
+        frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
 
 def make_forward_base(con_mesh, parse_opacity=False):
     wrd = bpy.data.worlds['Arm']
