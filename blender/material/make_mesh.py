@@ -289,6 +289,6 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.write('float lod = getMipFromRoughness(roughness, envmapNumMipmaps);')
         frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')
         if '_EnvLDR' in wrd.world_defs:
-            frag.write('prefilteredColor = pow(prefilteredColor, vec3(2.2);')
+            frag.write('prefilteredColor = pow(prefilteredColor, vec3(2.2));')
         frag.write('vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;')
         frag.write('indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);')

@@ -17,23 +17,27 @@ def add_rad_assets(output_file_rad, rad_format, num_mips):
 
 # Generate probes from environment map
 def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance=True):
-    if not os.path.exists('build/compiled/Assets/envmaps'):
-        os.makedirs('build/compiled/Assets/envmaps')
+    envpath = 'build/compiled/Assets/envmaps'
+    
+    if not os.path.exists(envpath):
+        os.makedirs(envpath)
 
     base_name = armutils.extract_filename(armutils.safe_assetpath(image_filepath)).rsplit('.', 1)[0]
     
     # Assets to be generated
-    output_file_irr = 'build/compiled/Assets/envmaps/' + base_name + '_irradiance'
+    output_file_irr = envpath + '/' + base_name + '_irradiance'
     if generate_radiance:
-        output_file_rad = 'build/compiled/Assets/envmaps/' + base_name + '_radiance'
+        output_file_rad = envpath + '/' + base_name + '_radiance'
         rad_format = 'jpg' if disable_hdr else 'hdr'
 
-    # Irradiance exists, keep cache
-    if os.path.exists('build/compiled/Assets/envmaps/' + base_name + '_irradiance.arm'):
-        add_irr_assets(output_file_irr)
-        if generate_radiance:
-            add_rad_assets(output_file_rad, rad_format, cached_num_mips)
-        return cached_num_mips
+    # Radiance & irradiance exists, keep cache
+    basep = envpath + '/' + base_name
+    if os.path.exists(basep + '_irradiance.arm'):
+        if not generate_radiance or os.path.exists(basep + '_radiance_0.' + rad_format):
+            add_irr_assets(output_file_irr)
+            if generate_radiance:
+                add_rad_assets(output_file_rad, rad_format, cached_num_mips)
+            return cached_num_mips
     
     # Get paths
     sdk_path = armutils.get_sdk_path()
@@ -119,6 +123,8 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     else:
         mip_count = 7
     
+    use_opencl = 'true' if wrd.arm_gpu_processing else 'false'
+
     if armutils.get_os() == 'win':
         subprocess.call([ \
             cmft_path,
@@ -133,7 +139,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
             '--lightingModel', 'blinnbrdf',
             '--edgeFixup', 'none',
             '--numCpuProcessingThreads', '4',
-            '--useOpenCL', 'true',
+            '--useOpenCL', use_opencl,
             '--clVendor', 'anyGpuVendor',
             '--deviceType', 'gpu',
             '--deviceIndex', '0',
@@ -159,7 +165,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
             ' --lightingModel blinnbrdf' + \
             ' --edgeFixup none' + \
             ' --numCpuProcessingThreads 4' + \
-            ' --useOpenCL true' + \
+            ' --useOpenCL ' + use_opencl + \
             ' --clVendor anyGpuVendor' + \
             ' --deviceType gpu' + \
             ' --deviceIndex 0' + \
@@ -269,10 +275,11 @@ def write_sky_irradiance(base_name):
     else: # Fake
         irradiance_floats = [0.5282714503101548,0.6576873502619733,1.0692444882409775,0.17108712865136044,-0.08840906601412168,-0.5016437779078063,-0.05123227009753221,-0.06724088656181595,-0.07651659183264257,-0.09740705087869408,-0.19569235551561795,-0.3087497307203731,0.056717192983076405,0.1109186355691673,0.20616582000220154,0.013898321643280141,0.05985657405787638,0.12638202463080392,-0.003224443014484806,0.013764449325286695,0.04288850064700093,0.1796545401960917,0.21595731080039757,0.29144356515614844,0.10152875101705996,0.2651761450155488,0.4778582813756466]
 
-    if not os.path.exists('build/compiled/Assets/envmaps'):
-        os.makedirs('build/compiled/Assets/envmaps')
+    envpath = 'build/compiled/Assets/envmaps'
+    if not os.path.exists(envpath):
+        os.makedirs(envpath)
     
-    output_file = 'build/compiled/Assets/envmaps/' + base_name + '_irradiance'
+    output_file = envpath + '/' + base_name + '_irradiance'
     
     sh_json = {}
     sh_json['irradiance'] = irradiance_floats
@@ -286,10 +293,11 @@ def write_color_irradiance(base_name, col):
     for i in range(0, 24):
         irradiance_floats.append(0.0)
     
-    if not os.path.exists('build/compiled/Assets/envmaps'):
-        os.makedirs('build/compiled/Assets/envmaps')
+    envpath = 'build/compiled/Assets/envmaps'
+    if not os.path.exists(envpath):
+        os.makedirs(envpath)
     
-    output_file = 'build/compiled/Assets/envmaps/' + base_name + '_irradiance'
+    output_file = envpath + '/' + base_name + '_irradiance'
     
     sh_json = {}
     sh_json['irradiance'] = irradiance_floats
