@@ -136,6 +136,8 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
     # Set build command
     if target_name == None:
         target_name = wrd.arm_project_target
+    elif target_name == 'native':
+        target_name = ''
 
     if armutils.get_os() == 'win':
         node_path = sdk_path + '/nodejs/node.exe'
@@ -313,6 +315,15 @@ def watch_patch():
     state.compileproc = None
     state.compileproc_finished = True
 
+def runtime_to_target(in_viewport):
+    wrd = bpy.data.worlds['Arm']
+    if in_viewport or wrd.arm_play_runtime == 'Krom':
+        return 'krom'
+    elif wrd.arm_play_runtime == 'Native':
+        return 'native'
+    else:
+        return 'html5'
+
 def play_project(self, in_viewport):
     wrd = bpy.data.worlds['Arm']
 
@@ -320,13 +331,7 @@ def play_project(self, in_viewport):
     if armutils.with_krom() and in_viewport and bpy.context.area.type == 'VIEW_3D':
         state.play_area = bpy.context.area
 
-    # Set target
-    if in_viewport or wrd.arm_play_runtime == 'Krom':
-        state.target = 'krom'
-    elif wrd.arm_play_runtime == 'Native':
-        state.target = 'native'
-    else:
-        state.target = 'html5'
+    state.target = runtime_to_target(in_viewport)
 
     # Build data
     build_project(is_play=True, in_viewport=in_viewport, target=state.target)

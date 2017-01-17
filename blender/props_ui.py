@@ -344,18 +344,8 @@ class WorldPropsPanel(bpy.types.Panel):
         #     layout.prop(wrd, 'generate_fog_amounta')
         #     layout.prop(wrd, 'generate_fog_amountb')
 
-class ArmoryHelpButton(bpy.types.Operator):
-    '''Open a website in the web-browser'''
-    bl_idname = "arm.help"
-    bl_label = "Help"
- 
-    def execute(self, context):
-        webbrowser.open("http://armory3d.org/manual")
-        return{"FINISHED"}
-
-# Menu in render region
-class ArmoryPlayPanel(bpy.types.Panel):
-    bl_label = "Armory Play"
+class ArmoryPlayerPanel(bpy.types.Panel):
+    bl_label = "Armory Player"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
@@ -368,6 +358,16 @@ class ArmoryPlayPanel(bpy.types.Panel):
         else:
             layout.operator("arm.stop", icon="MESH_PLANE")
         layout.prop(wrd, 'arm_play_runtime')
+
+        row = layout.row(align=True)
+        row.alignment = 'EXPAND'
+        if state.playproc == None and state.krom_running == False:
+            row.operator("arm.build")
+        else:
+            row.operator("arm.patch")
+        row.operator("arm.clean_menu")
+        layout.operator("arm.kode_studio")
+
         layout.prop(wrd, 'arm_play_viewport_camera')
         if wrd.arm_play_viewport_camera:
             layout.prop(wrd, 'arm_play_viewport_navigation')
@@ -380,27 +380,7 @@ class ArmoryPlayPanel(bpy.types.Panel):
                 if wrd.arm_play_live_patch:
                     layout.prop(wrd, 'arm_play_auto_build')
             layout.operator("arm.render", icon="RENDER_STILL")
-        layout.operator("arm.help")
 
-class ArmoryBuildPanel(bpy.types.Panel):
-    bl_label = "Armory Build"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "render"
-    bl_options = {'DEFAULT_CLOSED'}
- 
-    def draw(self, context):
-        layout = self.layout
-        wrd = bpy.data.worlds['Arm']
-        if state.playproc == None and state.krom_running == False:
-            layout.operator("arm.build")
-        else:
-            layout.operator("arm.patch")
-        layout.operator("arm.kode_studio")
-        layout.operator("arm.clean_menu")
-        layout.prop(wrd, 'arm_project_target')
-        layout.prop(wrd, 'arm_build_advanced')
-        if wrd.arm_build_advanced:
             layout.prop(wrd, 'arm_cache_shaders')
             layout.prop(wrd, 'arm_gpu_processing')
             layout.prop(wrd, 'arm_minimize')
@@ -533,9 +513,10 @@ class ArmoryBuildButton(bpy.types.Operator):
         if not armutils.check_sdkpath(self):
             return {"CANCELLED"}
 
+        state.target = make.runtime_to_target(in_viewport=False)
         assets.invalidate_enabled = False
-        make.build_project()
-        make.compile_project(watch=True)
+        make.build_project(target=state.target)
+        make.compile_project(target_name=state.target, watch=True)
         assets.invalidate_enabled = True
         return{'FINISHED'}
 

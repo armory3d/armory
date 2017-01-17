@@ -45,8 +45,7 @@ def init_properties():
                  ('ios', 'iOS', 'ios'),
                  ('android-native', 'Android', 'android-native'),
                  ('krom', 'Krom', 'krom')],
-        name="Target", default='html5',
-        description='Build paltform')
+        name="Target", default='html5', description='Build paltform')
     bpy.types.World.arm_project_target = target_prop
     bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="")
     bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm")
@@ -100,7 +99,7 @@ def init_properties():
                ('Browser', 'Browser', 'Browser'),
                ('Native', 'C++', 'Native'),
                ('Krom', 'Krom', 'Krom')],
-        name="Runtime", description="Player runtime used when launching in new window", default='Krom')
+        name="Runtime", description="Player runtime used when launching in new window", default='Krom', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_loadbar = BoolProperty(name="Load Bar", description="Show asset loading progress on published builds", default=True)
 
     # For object

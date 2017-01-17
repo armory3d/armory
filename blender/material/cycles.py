@@ -350,6 +350,9 @@ def write_result(l):
             if res == None:
                 return None
             curshader.write('float {0} = {1};'.format(res_var, res))
+    # Normal map already parsed, return
+    elif l.from_node.type == 'NORMAL_MAP':
+        return None
     return res_var
 
 def parse_vector_input(inp):
