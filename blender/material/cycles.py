@@ -439,7 +439,9 @@ def parse_rgb(node, socket):
             to_linear = parsing_basecol and not tex['file'].endswith('.hdr')
             return '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear))
         else:
-            return tovec3([0.0, 0.0, 0.0])
+            tex_store = store_var_name(node) # Pink color for missing texture
+            curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0);'.format(tex_store))
+            return '{0}.rgb'.format(tex_store)
 
     elif node.type == 'TEX_MAGIC':
         # Pass through
@@ -967,7 +969,9 @@ def parse_value(node, socket):
         if tex != None:
             return '{0}.a'.format(texture_store(node, tex, tex_name))
         else:
-            return '0.0'
+            tex_store = store_var_name(node) # Pink color for missing texture
+            curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0);'.format(tex_store))
+            return '{0}.a'.format(tex_store)
 
     elif node.type == 'TEX_MAGIC':
         return '0.0'
