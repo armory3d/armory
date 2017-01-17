@@ -267,6 +267,11 @@ const float ssrJitter = """ + str(round(wrd.generate_ssr_jitter * 100) / 100) + 
 const float ssrTextureScale = """ + str(round(wrd.generate_ssr_texture_scale * 10) / 10) + """;
 """)
 
+        if wrd.generate_ssrs:
+            f.write(
+"""const float ssrsRayStep = """ + str(round(wrd.generate_ssrs_ray_step * 100) / 100) + """;
+""")
+
         if wrd.generate_volumetric_light:
             f.write(
 """const float volumAirTurbidity = """ + str(round(wrd.generate_volumetric_light_air_turbidity * 100) / 100) + """;

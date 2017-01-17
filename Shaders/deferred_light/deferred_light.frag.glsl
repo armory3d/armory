@@ -66,13 +66,16 @@ uniform vec3 lampArea3;
 uniform vec3 eye;
 // uniform vec3 eyeLook;
 // uniform vec2 screenSize;
+#ifdef _SSRS
+uniform mat4 VP;
+#endif
 
 #ifdef _LampColTex
 uniform sampler2D texlampcolor;
 #endif
 
-// in vec2 texCoord;
 in vec4 wvpposition;
+// in vec2 texCoord;
 // in vec3 viewRay;
 out vec4 fragColor;
 
@@ -119,6 +122,38 @@ float shadowTest(vec4 lPos) {
 	#else
 	return PCF(lPos.xy, lPos.z - shadowsBias);
 	#endif
+}
+#endif
+
+#ifdef _SSRS
+vec2 getProjectedCoord(vec3 hitCoord) {
+	vec4 projectedCoord = VP * vec4(hitCoord, 1.0);
+	projectedCoord.xy /= projectedCoord.w;
+	projectedCoord.xy = projectedCoord.xy * 0.5 + 0.5;
+	return projectedCoord.xy;
+}
+float getDeltaDepth(vec3 hitCoord) {
+	vec2 texCoord = getProjectedCoord(hitCoord);
+	vec4 g0 = texture(gbuffer0, texCoord);
+	float depth = (1.0 - g0.a) * 2.0 - 1.0;
+	vec3 wpos = getPos2(invVP, depth, texCoord);
+	float d1 = length(eye - wpos);
+	float d2 = length(eye - hitCoord);
+	return d1 - d2;
+}
+float traceShadow(vec3 dir, vec3 hitCoord) {
+	dir *= ssrsRayStep;
+	// for (int i = 0; i < maxSteps; i++) {
+		hitCoord += dir;
+		if (getDeltaDepth(hitCoord) > 0.0) return 0.0;
+		hitCoord += dir;
+		if (getDeltaDepth(hitCoord) > 0.0) return 0.0;
+		hitCoord += dir;
+		if (getDeltaDepth(hitCoord) > 0.0) return 0.0;
+		hitCoord += dir;
+		if (getDeltaDepth(hitCoord) > 0.0) return 0.0;
+	//}
+	return 1.0;
 }
 #endif
 
@@ -235,6 +270,15 @@ void main() {
 	if (mask == 2.0) {
 		direct *= SSSSTransmittance(1.0, 0.005, p, n, l);
 	}
+#endif
+
+#ifdef _SSRS
+	float tvis = traceShadow(-l, p);
+	// vec2 coords = getProjectedCoord(hitCoord);
+	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
+	// float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
+	// tvis *= screenEdgeFactor;
+	visibility *= tvis;
 #endif
 
 	// Direct

@@ -71,6 +71,10 @@ def build_node_tree(world):
         assets.add(sdk_path + 'armory/Assets/noise64.png')
         assets.add_embedded_data('noise64.png')
 
+    # Screen-space ray-traced shadows
+    if wrd.generate_ssrs:
+        wrd.world_defs += '_SSRS'
+
     # Alternative models
     if wrd.diffuse_model == 'Oren Nayar':
         wrd.world_defs += '_OrenNayar'

@@ -253,6 +253,7 @@ class PropsRPDataPropsPanel(bpy.types.Panel):
                 layout.prop(wrd, 'generate_pcss_state')
                 if wrd.generate_pcss_state == 'On' or wrd.generate_pcss_state == 'Auto':
                     layout.prop(wrd, 'generate_pcss_rings')
+                layout.prop(wrd, 'generate_ssrs')
             
             layout.prop(wrd, 'arm_samples_per_pixel')
             layout.prop(wrd, 'generate_gpu_skin')
@@ -281,7 +282,7 @@ class PropsRPDataPropsPanel(bpy.types.Panel):
                     layout.prop(wrd, 'generate_clouds_precipitation')
                     layout.prop(wrd, 'generate_clouds_eccentricity')
                 
-                layout.label('Screen-Space Ambient Occlusion')
+                layout.label('SSAO')
                 # layout.prop(wrd, 'generate_ssao')
                 # if wrd.generate_ssao:
                 layout.prop(wrd, 'generate_ssao_size')
@@ -300,7 +301,7 @@ class PropsRPDataPropsPanel(bpy.types.Panel):
                 # if wrd.generate_motion_blur:
                 layout.prop(wrd, 'generate_motion_blur_intensity')
                 
-                layout.label('Screen-Space Reflections')
+                layout.label('SSR')
                 # layout.prop(wrd, 'generate_ssr')
                 # if wrd.generate_ssr:
                 layout.prop(wrd, 'generate_ssr_ray_step')
@@ -309,6 +310,9 @@ class PropsRPDataPropsPanel(bpy.types.Panel):
                 layout.prop(wrd, 'generate_ssr_falloff_exp')
                 layout.prop(wrd, 'generate_ssr_jitter')
                 layout.prop(wrd, 'generate_ssr_texture_scale')
+
+                layout.label('SSRS')
+                layout.prop(wrd, 'generate_ssrs_ray_step')
 
                 layout.label('Volumetric Light')
                 # layout.prop(wrd, 'generate_volumetric_light')

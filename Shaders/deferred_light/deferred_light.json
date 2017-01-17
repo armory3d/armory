@@ -145,6 +145,11 @@
 					"name": "senvmapBrdf",
 					"link": "_envmapBrdf",
 					"ifdef": ["_VoxelGI"]
+				},
+				{
+					"name": "VP",
+					"link": "_viewProjectionMatrix",
+					"ifdef": ["_SSRS"]
 				}
 			],
 			"vertex_shader": "deferred_light.vert.glsl",

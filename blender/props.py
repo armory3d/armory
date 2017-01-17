@@ -307,6 +307,8 @@ def init_properties():
                ('Auto', 'Auto', 'Auto')],
         name="Soft Shadows", description="Percentage Closer Soft Shadows", default='Off', update=assets.invalidate_shader_cache)
     bpy.types.World.generate_pcss_rings = bpy.props.IntProperty(name="Rings", description="", default=20, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_ssrs = bpy.props.BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_ssrs_ray_step = bpy.props.FloatProperty(name="Ray Step", default=0.01, update=assets.invalidate_shader_cache)
     # Compositor
     bpy.types.World.generate_letterbox = bpy.props.BoolProperty(name="Letterbox", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_letterbox_size = bpy.props.FloatProperty(name="Size", default=0.1, update=assets.invalidate_shader_cache)

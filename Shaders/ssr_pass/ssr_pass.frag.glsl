@@ -32,16 +32,16 @@ out vec4 fragColor;
 vec3 hitCoord;
 float depth;
 
-vec4 getProjectedCoord(vec3 hitCoord) {
+vec2 getProjectedCoord(vec3 hitCoord) {
 	vec4 projectedCoord = P * vec4(hitCoord, 1.0);
 	projectedCoord.xy /= projectedCoord.w;
 	projectedCoord.xy = projectedCoord.xy * 0.5 + 0.5;
-	return projectedCoord;
+	return projectedCoord.xy;
 }
 
 float getDeltaDepth(vec3 hitCoord) {	
-	// depth = 1.0 - texture(gbuffer0, getProjectedCoord(hitCoord).xy).a;
-	depth = texture(gbufferD, getProjectedCoord(hitCoord).xy).r * 2.0 - 1.0;
+	// depth = 1.0 - texture(gbuffer0, getProjectedCoord(hitCoord)).a;
+	depth = texture(gbufferD, getProjectedCoord(hitCoord)).r * 2.0 - 1.0;
 	vec3 viewPos = getPosView(viewRay, depth);
 	return viewPos.z - hitCoord.z;
 }
@@ -95,7 +95,7 @@ vec4 binarySearch(vec3 dir) {
 			return vec4(0.0);
 		}
 	// }
-	return vec4(getProjectedCoord(hitCoord).xy, 0.0, 1.0);
+	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
 vec4 rayCast(vec3 dir) {

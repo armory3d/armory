@@ -1864,7 +1864,8 @@ class ArmoryExporter:
                     if positions[i + 2] < aabb_min[2]:
                         aabb_min[2] = positions[i + 2];
                     i += 3;
-                bobject.data.mesh_aabb = [abs(aabb_min[0]) + abs(aabb_max[0]), abs(aabb_min[1]) + abs(aabb_max[1]), abs(aabb_min[2]) + abs(aabb_max[2])]
+                if hasattr(bobject.data, 'mesh_aabb'):
+                    bobject.data.mesh_aabb = [abs(aabb_min[0]) + abs(aabb_max[0]), abs(aabb_min[1]) + abs(aabb_max[1]), abs(aabb_min[2]) + abs(aabb_max[2])]
                 break
 
         # Restore the morph state
