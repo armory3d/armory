@@ -1,4 +1,6 @@
 import os
+import glob
+import time
 import shutil
 import bpy
 import json
@@ -22,6 +24,7 @@ import lib.make_variants
 import lib.server
 
 exporter = ArmoryExporter()
+scripts_mtime = 0 # Monitor source changes
 
 def compile_shader(raw_shaders_path, shader_name, defs):
     os.chdir(raw_shaders_path + './' + shader_name)
@@ -161,7 +164,7 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
         cmd.append('opengl2')
 
     if kha_target_name == 'krom':
-        if state.in_viewport or patch:
+        if state.in_viewport:
             if armutils.glsl_version() >= 330:
                 cmd.append('--shaderversion')
                 cmd.append('330')
@@ -178,7 +181,7 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
         for s in bpy.data.texts[cmd_text].as_string().split(' '):
             cmd.append(s)
 
-    if state.krom_running:
+    if patch:
         if state.compileproc == None: # Already compiling
             # Patch running game, stay silent, disable krafix and haxe
             # cmd.append('--silent')
@@ -189,21 +192,21 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
             cmd.append('""')
             # Khamake throws error when krafix is not found, hide for now
             state.compileproc = subprocess.Popen(cmd, stderr=subprocess.PIPE)
-            threading.Timer(0.1, watch_patch).start()
+            if state.playproc == None:
+                if state.in_viewport:
+                    mode = 'play_viewport'
+                else:
+                    mode = 'play'
+            else:
+                mode = 'build'
+            threading.Timer(0.1, watch_patch, [mode]).start()
             return state.compileproc
-    elif watch == True:
+    elif watch:
         state.compileproc = subprocess.Popen(cmd)
         threading.Timer(0.1, watch_compile, ['build']).start()
         return state.compileproc
     else:
         return subprocess.Popen(cmd)
-
-# For live patching
-def patch_project():
-    sdk_path = armutils.get_sdk_path()
-    fp = armutils.get_fp()
-    os.chdir(fp)
-    export_data(fp, sdk_path, is_play=True)
 
 def build_project(is_play=False, is_publish=False, in_viewport=False, target=None):
     wrd = bpy.data.worlds['Arm']
@@ -303,17 +306,20 @@ def watch_compile(mode):
     state.compileproc = None
     state.compileproc_finished = True
     if result == 0:
+        bpy.data.worlds['Arm'].arm_recompile = False
         state.compileproc_success = True
         on_compiled(mode)
     else:
         state.compileproc_success = False
         log.print_info('Build failed, check console')
 
-def watch_patch():
+def watch_patch(mode):
     state.compileproc.wait()
+    log.print_progress(100)
     # result = state.compileproc.poll()
     state.compileproc = None
     state.compileproc_finished = True
+    on_compiled(mode)
 
 def runtime_to_target(in_viewport):
     wrd = bpy.data.worlds['Arm']
@@ -324,11 +330,20 @@ def runtime_to_target(in_viewport):
     else:
         return 'html5'
 
-def play_project(self, in_viewport):
+def get_khajs_path(in_viewport, target):
+    if in_viewport:
+        return 'build/krom/krom.js'
+    elif target == 'krom':
+        return 'build/window/krom/krom.js'
+    else: # browser, electron
+        return 'build/html5/kha.js'
+
+def play_project(in_viewport):
+    global scripts_mtime
     wrd = bpy.data.worlds['Arm']
 
     # Store area
-    if armutils.with_krom() and in_viewport and bpy.context.area.type == 'VIEW_3D':
+    if armutils.with_krom() and in_viewport and bpy.context.area != None and bpy.context.area.type == 'VIEW_3D':
         state.play_area = bpy.context.area
 
     state.target = runtime_to_target(in_viewport)
@@ -337,21 +352,51 @@ def play_project(self, in_viewport):
     build_project(is_play=True, in_viewport=in_viewport, target=state.target)
     state.in_viewport = in_viewport
 
-    # Compile
-    mode = 'play'
-    if state.target == 'native':
-        state.compileproc = compile_project(target_name='--run')
-    elif state.target == 'krom':
-        if in_viewport:
-            mode = 'play_viewport'
-        state.compileproc = compile_project(target_name='krom')
-    else: # Electron, Browser
-        w, h = armutils.get_render_resolution()
-        write_data.write_electronjs(w, h)
-        write_data.write_indexhtml(w, h)
-        state.compileproc = compile_project(target_name='html5')
+    khajs_path = get_khajs_path(in_viewport, state.target)
+    if wrd.arm_recompile or \
+       wrd.arm_recompile_trigger or \
+       not wrd.arm_cache_compiler or \
+       not wrd.arm_cache_shaders or \
+       not os.path.isfile(khajs_path) or \
+       state.last_target != state.target:
+        wrd.arm_recompile = True
 
-    threading.Timer(0.1, watch_compile, [mode]).start()
+    wrd.arm_recompile_trigger = False
+    state.last_target = state.target
+
+    # Trait sources modified
+    script_path = armutils.get_fp() + '/Sources/' + wrd.arm_project_package
+    if os.path.isdir(script_path):
+        for fn in glob.iglob(os.path.join(script_path, '**', '*.hx'), recursive=True):
+            mtime = os.path.getmtime(fn)
+            if scripts_mtime < mtime:
+                scripts_mtime = mtime
+                wrd.arm_recompile = True
+
+    # New compile requred - traits or materials changed
+    if wrd.arm_recompile:
+
+        # Unable to live-patch, stop player
+        if state.krom_running:
+            bpy.ops.arm.space_stop()
+            # play_project(in_viewport=True) # Restart
+            return
+
+        mode = 'play'
+        if state.target == 'native':
+            state.compileproc = compile_project(target_name='--run')
+        elif state.target == 'krom':
+            if in_viewport:
+                mode = 'play_viewport'
+            state.compileproc = compile_project(target_name='krom')
+        else: # Electron, Browser
+            w, h = armutils.get_render_resolution()
+            write_data.write_electronjs(w, h)
+            write_data.write_indexhtml(w, h)
+            state.compileproc = compile_project(target_name='html5')
+        threading.Timer(0.1, watch_compile, [mode]).start()
+    else: # kha.js up to date
+        compile_project(target_name=state.target, patch=True)
 
 def on_compiled(mode): # build, play, play_viewport, publish
     log.clear()
@@ -433,20 +478,9 @@ def clean_project():
     os.chdir(armutils.get_fp())
     wrd = bpy.data.worlds['Arm']
 
-    # Preserve envmaps
-    # if wrd.arm_cache_envmaps:
-        # envmaps_path = 'build/compiled/Assets/envmaps'
-        # if os.path.isdir(envmaps_path):
-            # shutil.move(envmaps_path, '.')
-
     # Remove build and compiled data
     if os.path.isdir('build'):
         shutil.rmtree('build')
-
-    # Move envmaps back
-    # if wrd.arm_cache_envmaps and os.path.isdir('envmaps'):
-        # os.makedirs('build/compiled/Assets')
-        # shutil.move('envmaps', 'build/compiled/Assets')
 
     # Remove compiled nodes
     nodes_path = 'Sources/' + wrd.arm_project_package.replace('.', '/') + '/node/'

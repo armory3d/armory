@@ -32,9 +32,17 @@ def invalidate_mesh_cache(self, context):
         return
     context.object.data.mesh_cached = False
 
+def update_mat_cache(self, context):
+    if self.is_cached == True:
+        self.lock_cache = True
+    else:
+        bpy.data.worlds['Arm'].arm_recompile_trigger = True
+
 arm_ver = '17.01.1'
 def init_properties():
     global arm_ver
+    bpy.types.World.arm_recompile = bpy.props.BoolProperty(name="Recompile", description="Recompile sources on next play", default=True)
+    bpy.types.World.arm_recompile_trigger = bpy.props.BoolProperty(name="Recompile Trigger", description="Force upcoming recomilation", default=False)
     bpy.types.World.arm_progress = bpy.props.FloatProperty(name="Progress", description="Current build progress", default=100.0, min=0.0, max=100.0, soft_min=0.0, soft_max=100.0, subtype='PERCENTAGE', get=log.get_progress)
     bpy.types.World.arm_version = StringProperty(name="Version", description="Armory SDK version", default=arm_ver)
     target_prop = EnumProperty(
@@ -85,6 +93,7 @@ def init_properties():
     bpy.types.World.arm_lod_gen_levels = IntProperty(name="Levels", description="Number of levels to generate", default=3, min=1)
     bpy.types.World.arm_lod_gen_ratio = FloatProperty(name="Decimate Ratio", description="Decimate ratio", default=0.8)
     bpy.types.World.arm_cache_shaders = BoolProperty(name="Cache Shaders", description="Do not rebuild existing shaders", default=True, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_cache_compiler = BoolProperty(name="Cache Compiler", description="Only recompile sources when required", default=True)
     bpy.types.World.arm_gpu_processing = BoolProperty(name="GPU Processing", description="Utilize GPU for asset pre-processing at build time", default=True)
     bpy.types.World.arm_play_live_patch = BoolProperty(name="Live Patching", description="Sync running player data to Blender", default=True)
     bpy.types.World.arm_play_auto_build = BoolProperty(name="Auto Build", description="Rebuild scene on operator changes", default=True)
@@ -336,7 +345,8 @@ def init_properties():
     bpy.types.World.voxelgi = bpy.props.BoolProperty(name="VGI", description="Voxel-based Global Illumination", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi_dimensions = bpy.props.FloatVectorProperty(name="Dimensions", description="3D texture size", size=3, default=[128, 128, 128], update=assets.invalidate_shader_cache)
     # For material
-    bpy.types.Material.is_cached = bpy.props.BoolProperty(name="Material Cached", description="No need to reexport material data", default=False)
+    bpy.types.Material.is_cached = bpy.props.BoolProperty(name="Material Cached", description="No need to reexport material data", default=False, update=update_mat_cache)
+    bpy.types.Material.lock_cache = bpy.props.BoolProperty(name="Lock Material Cache", description="Prevent is_cached from updating", default=False)
     bpy.types.Material.cast_shadow = bpy.props.BoolProperty(name="Cast Shadow", default=True)
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.override_shader = bpy.props.BoolProperty(name="Override Shader", default=False)

@@ -1,5 +1,6 @@
 
 target = 'krom'
+last_target = 'krom'
 in_viewport = False
 playproc = None
 compileproc = None

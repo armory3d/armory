@@ -57,14 +57,14 @@ def on_scene_update_post(context):
                 break
 
     # Auto patch on every operator change
+    wrd = bpy.data.worlds['Arm']
     if state.krom_running and \
-       bpy.data.worlds['Arm'].arm_play_live_patch and \
-       bpy.data.worlds['Arm'].arm_play_auto_build and \
+       wrd.arm_play_live_patch and \
+       wrd.arm_play_auto_build and \
        operators_changed:
         # Otherwise rebuild scene
         if bridge.send_operator(last_operator) == False:
-            make.patch_project()
-            make.compile_project(target_name="krom", patch=True)
+            make.play_project(in_viewport=True)
 
     # Use frame rate for update frequency for now
     if time.time() - last_time >= (1 / bpy.context.scene.render.fps):
@@ -131,7 +131,10 @@ def on_scene_update_post(context):
                     obj.data.mesh_cached = False
 
             if obj.active_material != None and obj.active_material.is_updated:
-                obj.active_material.is_cached = False
+                if obj.active_material.lock_cache == True: # is_cached was set to true
+                    obj.active_material.lock_cache = False
+                else:
+                    obj.active_material.is_cached = False
 
 @persistent
 def on_load_post(context):

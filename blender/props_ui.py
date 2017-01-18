@@ -382,6 +382,7 @@ class ArmoryPlayerPanel(bpy.types.Panel):
             layout.operator("arm.render", icon="RENDER_STILL")
 
             layout.prop(wrd, 'arm_cache_shaders')
+            layout.prop(wrd, 'arm_cache_compiler')
             layout.prop(wrd, 'arm_gpu_processing')
             layout.prop(wrd, 'arm_minimize')
             layout.prop(wrd, 'arm_optimize_mesh')
@@ -444,7 +445,7 @@ class ArmoryPlayButton(bpy.types.Operator):
         nodes_renderpath.check_default()
 
         assets.invalidate_enabled = False
-        make.play_project(self, False)
+        make.play_project(False)
         assets.invalidate_enabled = True
         return{'FINISHED'}
 
@@ -482,10 +483,9 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
                     if space.viewport_shade == 'RENDERED':
                         space.viewport_shade = 'SOLID'
                     break
-            make.play_project(self, True)
+            make.play_project(True)
         else:
-            make.patch_project()
-            make.compile_project()
+            make.play_project(True)
         assets.invalidate_enabled = True
         return{'FINISHED'}
 
@@ -527,8 +527,7 @@ class ArmoryPatchButton(bpy.types.Operator):
  
     def execute(self, context):
         assets.invalidate_enabled = False
-        make.patch_project()
-        make.compile_project()
+        make.play_project(True)
         assets.invalidate_enabled = True
         return{'FINISHED'}
 

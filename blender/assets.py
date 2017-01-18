@@ -1,22 +1,29 @@
 import armutils
 import shutil
 import os
+import bpy
 
 assets = []
 khafile_defs = []
+khafile_defs_last = []
 embedded_data = []
 shaders = []
+shaders_last = []
 shader_datas = []
 
 def reset():
     global assets
     global khafile_defs
+    global khafile_defs_last
     global embedded_data
     global shaders
+    global shaders_last
     global shader_datas
     assets = []
+    khafile_defs_last = khafile_defs
     khafile_defs = []
     embedded_data = []
+    shaders_last = shaders
     shaders = []
     shader_datas = []
 
@@ -27,8 +34,13 @@ def add(file):
 
 def add_khafile_def(d):
     global khafile_defs
+    global khafile_defs_last
     if d not in khafile_defs:
         khafile_defs.append(d)
+
+        wrd = bpy.data.worlds['Arm']
+        if not wrd.arm_recompile_trigger and d not in khafile_defs_last:
+            wrd.arm_recompile_trigger = True
 
 def add_embedded_data(file):
     global embedded_data
@@ -37,8 +49,13 @@ def add_embedded_data(file):
 
 def add_shader(file):
     global shaders
+    global shaders_last
     if file not in shaders:
         shaders.append(file)
+
+        wrd = bpy.data.worlds['Arm']
+        if not wrd.arm_recompile_trigger and file not in shaders_last:
+            wrd.arm_recompile_trigger = True
 
 def add_shader_data(file):
     global shader_datas
