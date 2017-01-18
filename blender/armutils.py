@@ -117,8 +117,8 @@ def safe_assetpath(s):
 def extract_filename(s):
     return os.path.basename(s)
 
-def get_render_resolution(scene_index=0):
-    render = bpy.data.scenes[scene_index].render
+def get_render_resolution(scene):
+    render = scene.render
     scale = render.resolution_percentage / 100
     return int(render.resolution_x * scale), int(render.resolution_y * scale)
 
@@ -128,6 +128,10 @@ def get_project_scene_name():
         return safe_filename(bpy.context.screen.scene.name)
     else:
         return safe_filename(wrd.arm_project_scene)
+
+def get_active_scene():
+    wrd = bpy.data.worlds['Arm']
+    return bpy.context.screen.scene if wrd.arm_play_active_scene else bpy.data.scenes[wrd.arm_project_scene]
 
 krom_found = False
 def with_krom():

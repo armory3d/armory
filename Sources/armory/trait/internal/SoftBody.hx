@@ -96,7 +96,7 @@ class SoftBody extends Trait {
 		softBody.ptr.getCollisionShape().setMargin(margin);
 
 		physics.world.ptr.addSoftBody(softBody, 1, -1);
-		softBody.ptr.setActivationState(4);
+		softBody.ptr.setActivationState(BtCollisionObject.DISABLE_DEACTIVATION);
 
 		notifyOnUpdate(update);
 	}

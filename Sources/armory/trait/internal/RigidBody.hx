@@ -201,9 +201,9 @@ class RigidBody extends Trait {
 		body.ptr.setGravity(BtVector3.create(v.x, v.y, v.z).value);
 	}*/
 
-	/*public function setActivationState(newState:Int) {
+	public function setActivationState(newState:Int) {
 		body.ptr.setActivationState(newState);
-	}*/
+	}
 
 	public function applyImpulse(impulse:Vec4, loc:Vec4 = null) {
 		if (loc == null) {
@@ -297,4 +297,10 @@ class RigidBody extends Trait {
 	var Capsule = 6;
 	var Terrain = 7;
 	var StaticMesh = 8;
+}
+
+@:enum abstract ActivationState(Int) from Int {
+	var Active = 1;
+	var NoDeactivation = 4;
+	var NoSimulation = 5;
 }

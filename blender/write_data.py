@@ -92,7 +92,7 @@ project.addSources('Sources');
 # Write Main.hx
 def write_main(is_play, in_viewport, is_publish):
     wrd = bpy.data.worlds['Arm']
-    resx, resy = armutils.get_render_resolution()
+    resx, resy = armutils.get_render_resolution(armutils.get_active_scene())
     scene_name = armutils.get_project_scene_name()
     scene_ext = '.zip' if (bpy.data.scenes[scene_name].data_compressed and is_publish) else ''
     #if not os.path.isfile('Sources/Main.hx'):

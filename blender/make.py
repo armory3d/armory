@@ -390,7 +390,7 @@ def play_project(in_viewport):
                 mode = 'play_viewport'
             state.compileproc = compile_project(target_name='krom')
         else: # Electron, Browser
-            w, h = armutils.get_render_resolution()
+            w, h = armutils.get_render_resolution(armutils.get_active_scene())
             write_data.write_electronjs(w, h)
             write_data.write_indexhtml(w, h)
             state.compileproc = compile_project(target_name='html5')
