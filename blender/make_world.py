@@ -60,10 +60,6 @@ def build_node_tree(world):
     if wrd.generate_clouds:
         wrd.world_defs += '_EnvClouds'
 
-    # Shadows disabled
-    if wrd.generate_shadows == False:
-        wrd.world_defs += '_NoShadows'
-
     # Percentage closer soft shadows
     if wrd.generate_pcss_state == 'On':
         wrd.world_defs += '_PCSS'
@@ -87,7 +83,8 @@ def build_node_tree(world):
     for cam in bpy.data.cameras:
         if cam.is_probe:
             wrd.world_defs += '_Probes'
-            break
+        if cam.rp_shadowmap == 'None':
+            wrd.world_defs += '_NoShadows'
 
     # Area lamps
     for lamp in bpy.data.lamps:

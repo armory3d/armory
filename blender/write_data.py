@@ -243,10 +243,6 @@ const float seaFade = """ + str(round(wrd.generate_ocean_fade * 100) / 100) + ""
 const float ssaoStrength = """ + str(round(wrd.generate_ssao_strength * 100) / 100) + """;
 const float ssaoTextureScale = """ + str(round(wrd.generate_ssao_texture_scale * 10) / 10) + """;
 """)
-        # if wrd.generate_shadows:
-            # f.write(
-# """const float shadowsBias = """ + str(wrd.generate_shadows_bias) + """;
-# """)
         if wrd.generate_bloom:
             f.write(
 """const float bloomThreshold = """ + str(round(wrd.generate_bloom_threshold * 100) / 100) + """;

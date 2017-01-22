@@ -228,40 +228,46 @@ def make_forward_base(con_mesh, parse_opacity=False):
     frag.write('float dotNH = dot(n, h);')
     frag.write('float dotVH = dot(v, h);')
 
+    if '_NoShadows' in wrd.world_defs:
+        is_shadows = False
+    else:
+        is_shadows = True
     if '_PCSS' in wrd.world_defs:
         is_pcss = True
     else:
         is_pcss = False
 
-    if tese != None:
-        tese.add_out('vec4 lampPos')
-        tese.add_uniform('mat4 LVP', '_lampViewProjectionMatrix')
-        tese.write('lampPos = LVP * vec4(wposition, 1.0);')
-    else:
-        vert.add_out('vec4 lampPos')
-        vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrix')
-        vert.write('lampPos = LWVP * spos;')
-    
-    if is_pcss:
-        frag.add_include('../../Shaders/std/shadows_pcss.glsl')
-        frag.add_uniform('sampler2D snoise', link='_noise64', included=True)
-        frag.add_uniform('float lampSizeUV', link='_lampSizeUV', included=True)
-    else:
-        frag.add_include('../../Shaders/std/shadows.glsl')
-    frag.add_uniform('sampler2D shadowMap', included=True)
-    frag.add_uniform('bool receiveShadow')
-    frag.add_uniform('float shadowsBias', '_lampShadowsBias')
     frag.write('float visibility = 1.0;')
-    frag.write('if (receiveShadow && lampPos.w > 0.0) {')
-    frag.tab += 1
-    frag.write('vec3 lpos = lampPos.xyz / lampPos.w;')
-    frag.write('lpos.xy = lpos.xy * 0.5 + 0.5;')
-    if is_pcss:
-        frag.write('visibility = PCSS(lpos.xy, lpos.z - shadowsBias);')
-    else:
-        frag.write('visibility = PCF(lpos.xy, lpos.z - shadowsBias);')
-    frag.tab -= 1
-    frag.write('}')
+    if is_shadows:
+        if tese != None:
+            tese.add_out('vec4 lampPos')
+            tese.add_uniform('mat4 LVP', '_lampViewProjectionMatrix')
+            tese.write('lampPos = LVP * vec4(wposition, 1.0);')
+        else:
+            vert.add_out('vec4 lampPos')
+            vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrix')
+            vert.write('lampPos = LWVP * spos;')
+        
+        if is_pcss:
+            frag.add_include('../../Shaders/std/shadows_pcss.glsl')
+            frag.add_uniform('sampler2D snoise', link='_noise64', included=True)
+            frag.add_uniform('float lampSizeUV', link='_lampSizeUV', included=True)
+        else:
+            frag.add_include('../../Shaders/std/shadows.glsl')
+        frag.add_uniform('sampler2D shadowMap', included=True)
+        frag.add_uniform('bool receiveShadow')
+        frag.add_uniform('float shadowsBias', '_lampShadowsBias')
+
+        frag.write('if (receiveShadow && lampPos.w > 0.0) {')
+        frag.tab += 1
+        frag.write('vec3 lpos = lampPos.xyz / lampPos.w;')
+        frag.write('lpos.xy = lpos.xy * 0.5 + 0.5;')
+        if is_pcss:
+            frag.write('visibility = PCSS(lpos.xy, lpos.z - shadowsBias);')
+        else:
+            frag.write('visibility = PCF(lpos.xy, lpos.z - shadowsBias);')
+        frag.tab -= 1
+        frag.write('}')
 
     frag.add_uniform('float spotlightCutoff', '_spotlampCutoff')
     frag.add_uniform('float spotlightExponent', '_spotlampExponent')

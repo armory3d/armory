@@ -41,6 +41,8 @@ def make_forward(cam):
         l = nodes['Begin'].outputs[0].links[0]
         links.remove(l)
         links.new(nodes['Begin'].outputs[0], nodes['Set Target Mesh'].inputs[0])
+        relink('Bind Target Mesh SM', 'Draw Meshes Mesh') # No shadowmap bind
+        relink('Bind Target Transluc SM', 'Draw Meshes Transluc')
 
     if not cam.rp_worldnodes:
         relink('Draw World', 'Set Target Accum')
@@ -63,6 +65,11 @@ def make_deferred(cam):
         l = nodes['Loop Lamps'].outputs[1].links[0]
         links.remove(l)
         links.new(nodes['Loop Lamps'].outputs[1], nodes['Deferred Light'].inputs[0])
+        l = nodes['Deferred Light'].inputs[3].links[0] # No shadowmap bind
+        links.remove(l)
+        l = nodes['Volumetric Light'].inputs[6].links[0]
+        links.remove(l)
+        relink('Bind Target Transluc SM', 'Draw Meshes Transluc')
 
     # if not cam.rp_decals:
         # relink('Set Target.005', 'SSAO')

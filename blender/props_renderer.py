@@ -248,12 +248,10 @@ class PropsRPDataPropsPanel(bpy.types.Panel):
         wrd = bpy.data.worlds['Arm']
 
         if obj.type == 'CAMERA':
-            layout.prop(wrd, 'generate_shadows')
-            if wrd.generate_shadows:
-                layout.prop(wrd, 'generate_pcss_state')
-                if wrd.generate_pcss_state == 'On' or wrd.generate_pcss_state == 'Auto':
-                    layout.prop(wrd, 'generate_pcss_rings')
-                layout.prop(wrd, 'generate_ssrs')
+            layout.prop(wrd, 'generate_pcss_state')
+            if wrd.generate_pcss_state == 'On' or wrd.generate_pcss_state == 'Auto':
+                layout.prop(wrd, 'generate_pcss_rings')
+            layout.prop(wrd, 'generate_ssrs')
             
             layout.prop(wrd, 'arm_samples_per_pixel')
             layout.prop(wrd, 'generate_gpu_skin')

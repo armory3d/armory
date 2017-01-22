@@ -2201,6 +2201,9 @@ class ArmoryExporter:
 
             o['contexts'] = []
 
+            if not material.use_nodes:
+                material.use_nodes = True
+
             sd, is_transluc = make_material.parse(material, o, self.materialToObjectDict, ArmoryExporter.renderpath_id)
             if is_transluc:
                 transluc_used = True
