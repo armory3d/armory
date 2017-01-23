@@ -255,7 +255,8 @@ def init_properties():
     bpy.types.World.world_defs = bpy.props.StringProperty(name="World Shader Defs", default='')
     bpy.types.World.rp_defs = bpy.props.StringProperty(name="Render Path Shader Defs", default='')
     bpy.types.World.compo_defs = bpy.props.StringProperty(name="Compositor Shader Defs", default='')
-    bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Probe Radiance", default=True, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_irradiance = bpy.props.BoolProperty(name="Probe Irradiance", description="Generate spherical harmonics", default=True, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Probe Radiance", description="Generate radiance textures", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_radiance_size = EnumProperty(
         items=[('512', '512', '512'),
                ('1024', '1024', '1024'), 

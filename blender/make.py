@@ -182,18 +182,12 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
             cmd.append(s)
 
     if patch:
-        if state.compileproc == None: # Already compiling
-            # Patch running game, stay silent, disable krafix and haxe
-            cmd.append('--krafix')
-            cmd.append('""')
-            cmd.append('--haxe')
-            cmd.append('""')
-            # cmd.append('--silent')
+        if state.compileproc == None:
+            # Quick build - disable krafix and haxe
+            cmd.append('--nohaxe')
+            cmd.append('--noshaders')
             cmd.append('--noproject')
-            # Khamake throws error when krafix is not found, hide for now
-            # state.compileproc = subprocess.Popen(cmd, stderr=subprocess.PIPE)
-            # shell=False results in --krafix arg not parsed
-            state.compileproc = subprocess.Popen(' '.join(cmd), stderr=subprocess.PIPE, shell=True)
+            state.compileproc = subprocess.Popen(cmd, stderr=subprocess.PIPE)
             if state.playproc == None:
                 if state.in_viewport:
                     mode = 'play_viewport'

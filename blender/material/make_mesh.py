@@ -210,17 +210,19 @@ def make_forward_base(con_mesh, parse_opacity=False):
 
     frag.add_include('../../Shaders/std/brdf.glsl')
     frag.add_include('../../Shaders/std/math.glsl')
-    frag.add_include('../../Shaders/std/shirr.glsl')
     frag.add_uniform('vec3 lightColor', '_lampColor')
     frag.add_uniform('vec3 lightDir', '_lampDirection')
     frag.add_uniform('vec3 lightPos', '_lampPosition')
     frag.add_uniform('int lightType', '_lampType')
-    frag.add_uniform('float shirr[27]', link='_envmapIrradiance', included=True)
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
-    if '_Rad' in wrd.world_defs:
-        frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance')
-        frag.add_uniform('sampler2D senvmapBrdf', link='_envmapBrdf')
-        frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps')
+
+    if '_Irr' in wrd.world_defs:
+        frag.add_include('../../Shaders/std/shirr.glsl')
+        frag.add_uniform('float shirr[27]', link='_envmapIrradiance', included=True)
+        if '_Rad' in wrd.world_defs:
+            frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance')
+            frag.add_uniform('sampler2D senvmapBrdf', link='_envmapBrdf')
+            frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps')
 
     frag.write('vec3 l = lightType == 0 ? lightDir : normalize(lightPos - wposition);')
     frag.write('vec3 h = normalize(v + l);')
@@ -288,13 +290,17 @@ def make_forward_base(con_mesh, parse_opacity=False):
     frag.write('vec3 direct = lambertDiffuseBRDF(albedo, dotNL);')
     frag.write('direct += specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);')
 
-    frag.write('vec3 indirect = (shIrradiance(n, 2.2) / PI) * albedo;')
-    
-    if '_Rad' in wrd.world_defs:
-        frag.write('vec3 reflectionWorld = reflect(-v, n);')
-        frag.write('float lod = getMipFromRoughness(roughness, envmapNumMipmaps);')
-        frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')
-        if '_EnvLDR' in wrd.world_defs:
-            frag.write('prefilteredColor = pow(prefilteredColor, vec3(2.2));')
-        frag.write('vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;')
-        frag.write('indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);')
+
+    if '_Irr' in wrd.world_defs:
+        frag.write('vec3 indirect = (shIrradiance(n, 2.2) / PI) * albedo;')
+
+        if '_Rad' in wrd.world_defs:
+            frag.write('vec3 reflectionWorld = reflect(-v, n);')
+            frag.write('float lod = getMipFromRoughness(roughness, envmapNumMipmaps);')
+            frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')
+            if '_EnvLDR' in wrd.world_defs:
+                frag.write('prefilteredColor = pow(prefilteredColor, vec3(2.2));')
+            frag.write('vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;')
+            frag.write('indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);')
+    else:
+        frag.write('vec3 indirect = albedo;')

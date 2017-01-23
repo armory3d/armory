@@ -11,14 +11,18 @@ precision mediump float;
 #include "../std/math.glsl"
 // envMapEquirect()
 #include "../std/brdf.glsl"
-#include "../std/shirr.glsl"
+#ifdef _Irr
+	#include "../std/shirr.glsl"
+#endif
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
-//!uniform float shirr[27];
 uniform float envmapStrength;
+#ifdef _Irr
+	//!uniform float shirr[27];
+#endif
 #ifdef _Rad
 	uniform sampler2D senvmapRadiance;
 	uniform sampler2D senvmapBrdf;
@@ -57,7 +61,12 @@ void main() {
 #endif
 
 	// Indirect
+#ifdef _Irr
 	vec3 indirect = shIrradiance(n, 2.2) / PI;
+#else
+	vec3 indirect = vec3(1.0);
+#endif
+
 #ifdef _Rad
 	vec3 reflectionWorld = reflect(-v, n);
 	float lod = getMipFromRoughness(metrough.y, envmapNumMipmaps);

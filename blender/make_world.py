@@ -78,6 +78,7 @@ def build_node_tree(world):
     if wrd.voxelgi:
         wrd.world_defs += '_VoxelGI'
         wrd.world_defs += '_Rad' # Always do radiance for voxels
+        wrd.world_defs += '_Irr'
 
     # Enable probes
     for cam in bpy.data.cameras:
@@ -138,6 +139,10 @@ def parse_surface(world, node, context):
 
 def parse_color(world, node, context, envmap_strength_const):       
     wrd = bpy.data.worlds['Arm']
+
+    # Append irradiance define
+    if wrd.generate_irradiance:
+        bpy.data.worlds['Arm'].world_defs += '_Irr'
 
     # Env map included
     if node.type == 'TEX_ENVIRONMENT' and node.image != None:
@@ -204,13 +209,12 @@ def parse_color(world, node, context, envmap_strength_const):
                 assets.add(armutils.safe_assetpath(image.filepath))
 
         # Generate prefiltered envmaps
-        generate_radiance = wrd.generate_radiance
         world.world_envtex_name = tex['file']
         world.world_envtex_irr_name = tex['file'].rsplit('.', 1)[0]
         disable_hdr = target_format == 'JPEG'
         
         mip_count = world.world_envtex_num_mips
-        mip_count = write_probes.write_probes(filepath, disable_hdr, mip_count, generate_radiance=generate_radiance)
+        mip_count = write_probes.write_probes(filepath, disable_hdr, mip_count, generate_radiance=wrd.generate_radiance)
         
         world.world_envtex_num_mips = mip_count
         
@@ -220,9 +224,8 @@ def parse_color(world, node, context, envmap_strength_const):
         if disable_hdr:
             bpy.data.worlds['Arm'].world_defs += '_EnvLDR'
         # Append radiance define
-        if generate_radiance:
+        if wrd.generate_irradiance and wrd.generate_radiance:
             bpy.data.worlds['Arm'].world_defs += '_Rad'
-    
 
     # Static image background
     elif node.type == 'TEX_IMAGE':
@@ -280,7 +283,7 @@ def parse_color(world, node, context, envmap_strength_const):
         write_probes.write_sky_irradiance(world.name)
 
         # Radiance
-        if wrd.generate_radiance_sky and wrd.generate_radiance:
+        if wrd.generate_radiance_sky and wrd.generate_radiance and wrd.generate_irradiance:
             bpy.data.worlds['Arm'].world_defs += '_Rad'
             
             if wrd.generate_radiance_sky_type == 'Hosek':

@@ -22,7 +22,8 @@
 				},
 				{
 					"name": "shirr",
-					"link": "_envmapIrradiance"
+					"link": "_envmapIrradiance",
+					"ifdef": ["_Irr"]
 				},
 				{
 					"name": "senvmapRadiance",

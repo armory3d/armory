@@ -161,6 +161,10 @@ def check_sdkpath(self):
         if c in s:
             self.report({"ERROR"}, "SDK path '{0}' contains special characters. Please move SDK to different path for now.".format(s))
             return False
+    for c in s:
+        if ord(c) > 127:
+            self.report({"ERROR"}, "SDK path '{0}' contains special characters. Please move SDK to different path for now.".format(s))
+            return False
     return True
 
 def tess_enabled(target):

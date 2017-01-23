@@ -321,13 +321,15 @@ class WorldPropsPanel(bpy.types.Panel):
         # wrd = bpy.context.world
         wrd = bpy.data.worlds['Arm']
         
-        layout.prop(wrd, 'generate_radiance')
-        if wrd.generate_radiance:
-            layout.prop(wrd, 'generate_radiance_size')
+        layout.prop(wrd, 'generate_irradiance')
+        if wrd.generate_irradiance:
+            layout.prop(wrd, 'generate_radiance')
+            if wrd.generate_radiance:
+                layout.prop(wrd, 'generate_radiance_size')
 
-            layout.prop(wrd, 'generate_radiance_sky')
-            if wrd.generate_radiance_sky:
-                layout.prop(wrd, 'generate_radiance_sky_type')
+                layout.prop(wrd, 'generate_radiance_sky')
+                if wrd.generate_radiance_sky:
+                    layout.prop(wrd, 'generate_radiance_sky_type')
 
         # layout.separator()
         # TODO: migrate to compositor
@@ -408,7 +410,10 @@ class ArmoryProjectPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_project_package')
         layout.prop_search(wrd, 'arm_khafile', bpy.data, 'texts', 'Khafile')
         layout.prop_search(wrd, 'arm_command_line', bpy.data, 'texts', 'Command Line')
-        layout.operator('arm.publish')
+        row = layout.row(align=True)
+        row.alignment = 'EXPAND'
+        row.operator("arm.build_project")
+        row.operator("arm.publish_project")
         layout.prop(wrd, 'arm_project_target')
 
         layout.prop(wrd, 'arm_project_advanced')
@@ -520,10 +525,32 @@ class ArmoryBuildButton(bpy.types.Operator):
         assets.invalidate_enabled = True
         return{'FINISHED'}
 
+class ArmoryBuildProjectButton(bpy.types.Operator):
+    '''Build and compile project'''
+    bl_idname = 'arm.build_project'
+    bl_label = 'Build'
+ 
+    def execute(self, context):
+        if not armutils.check_saved(self):
+            return {"CANCELLED"}
+
+        if not armutils.check_camera(self):
+            return {"CANCELLED"}
+
+        if not armutils.check_sdkpath(self):
+            return {"CANCELLED"}
+
+        state.target = bpy.data.worlds['Arm'].arm_project_target
+        assets.invalidate_enabled = False
+        make.build_project(target=state.target)
+        make.compile_project(target_name=state.target, watch=True)
+        assets.invalidate_enabled = True
+        return{'FINISHED'}
+
 class ArmoryPatchButton(bpy.types.Operator):
     '''Update currently running player instance'''
     bl_idname = 'arm.patch'
-    bl_label = 'Live Patch'
+    bl_label = 'Patch'
  
     def execute(self, context):
         assets.invalidate_enabled = False
@@ -627,8 +654,8 @@ class ArmoryCleanProjectButton(bpy.types.Operator):
 
 class ArmoryPublishButton(bpy.types.Operator):
     '''Build project ready for publishing'''
-    bl_idname = 'arm.publish'
-    bl_label = 'Publish Project'
+    bl_idname = 'arm.publish_project'
+    bl_label = 'Publish'
  
     def execute(self, context):
         if not armutils.check_saved(self):
