@@ -120,8 +120,15 @@ def parse_world_output(world, node, context):
         parse_surface(world, surface_node, context)
     
 def parse_surface(world, node, context):
+    wrd = bpy.data.worlds['Arm']
+    
     # Extract environment strength
     if node.type == 'BACKGROUND':
+        
+        # Append irradiance define
+        if wrd.generate_irradiance:
+            bpy.data.worlds['Arm'].world_defs += '_Irr'
+
         # Strength
         envmap_strength_const = {}
         envmap_strength_const['name'] = 'envmapStrength'
@@ -139,10 +146,6 @@ def parse_surface(world, node, context):
 
 def parse_color(world, node, context, envmap_strength_const):       
     wrd = bpy.data.worlds['Arm']
-
-    # Append irradiance define
-    if wrd.generate_irradiance:
-        bpy.data.worlds['Arm'].world_defs += '_Irr'
 
     # Env map included
     if node.type == 'TEX_ENVIRONMENT' and node.image != None:

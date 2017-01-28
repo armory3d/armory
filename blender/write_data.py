@@ -5,7 +5,7 @@ import armutils
 import make_state as state
 
 def add_armory_library(sdk_path, name):
-    return ('project.addLibrary("../' + bpy.path.relpath(sdk_path + '/' + name)[2:] + '");\n').replace('\\', '/')
+    return ('project.addLibrary("' + sdk_path + '/' + name + '");\n').replace('\\', '/')
 
 # Write khafile.js
 def write_khafilejs(is_play, export_physics, export_navigation, dce_full=False):

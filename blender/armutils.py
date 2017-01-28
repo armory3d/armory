@@ -57,8 +57,11 @@ def get_sdk_path():
     if with_krom() and addon_prefs.sdk_bundled:
         if get_os() == 'mac':
             # SDK on MacOS is located in .app folder due to security
-            # blender.app/Contents/MacOS/blender
-            return bpy.app.binary_path[:-22] + '/armsdk/'
+            p = bpy.app.binary_path
+            if p.endswith('Contents/MacOS/blender'):
+                return p[:-len('Contents/MacOS/blender')] + '/armsdk/'
+            else:
+                return p[:-len('Contents/MacOS/./blender')] + '/armsdk/'
         elif get_os() == 'linux':
             # /blender
             return bpy.app.binary_path.rsplit('/', 1)[0] + '/armsdk/'

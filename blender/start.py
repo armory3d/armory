@@ -15,7 +15,11 @@ import space_armory
 import armutils
 import keymap
 
+registered = False
+
 def register():
+    global registered
+    registered = True
     armutils.register()
     props_traits_action.register()
     props_traits_clip.register()
@@ -33,6 +37,8 @@ def register():
     keymap.register()
 
 def unregister():
+    global registered
+    registered = False
     keymap.unregister()
     armutils.unregister()
     nodes_logic.unregister()
