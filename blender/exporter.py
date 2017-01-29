@@ -1159,7 +1159,7 @@ class ArmoryExporter:
 
     def export_material_ref(self, bobject, material, index, o):
         if material == None: # Use default for empty mat slots
-            o['material_refs'].append('__default')
+            o['material_refs'].append('armdefault')
             self.defaultMaterialObjects.append(bobject)
             self.export_default_material = True
             return
@@ -1304,9 +1304,9 @@ class ArmoryExporter:
                         o['material_refs'].append(bobject.override_material_name)
                     else: # Export assigned material
                         self.export_material_ref(bobject, bobject.material_slots[i].material, i, o)
-                # No material, mimick cycles and assign default
+                # No material, mimic cycles and assign default
                 if len(o['material_refs']) == 0:
-                    o['material_refs'].append('__default')
+                    o['material_refs'].append('armdefault')
                     self.defaultMaterialObjects.append(bobject)
                     self.export_default_material = True
 
@@ -2241,8 +2241,8 @@ class ArmoryExporter:
 
         # Object with no material assigned in the scene
         if self.export_default_material:
-            if not '__default' in bpy.data.materials:
-                mat = bpy.data.materials.new(name="__default")
+            if not 'armdefault' in bpy.data.materials:
+                mat = bpy.data.materials.new(name="armdefault")
                 mat.use_nodes = True
                 o = {}
                 o['name'] = mat.name
