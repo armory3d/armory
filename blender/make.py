@@ -354,11 +354,13 @@ def play_project(in_viewport):
        not wrd.arm_cache_compiler or \
        not wrd.arm_cache_shaders or \
        not os.path.isfile(khajs_path) or \
-       state.last_target != state.target:
+       state.last_target != state.target or \
+       state.last_in_viewport != state.in_viewport:
         wrd.arm_recompile = True
 
     wrd.arm_recompile_trigger = False
     state.last_target = state.target
+    state.last_in_viewport = state.in_viewport
 
     # Trait sources modified
     script_path = armutils.get_fp() + '/Sources/' + wrd.arm_project_package
@@ -370,7 +372,7 @@ def play_project(in_viewport):
                 wrd.arm_recompile = True
 
     # New compile requred - traits or materials changed
-    if wrd.arm_recompile:
+    if wrd.arm_recompile or state.target == 'native':
 
         # Unable to live-patch, stop player
         if state.krom_running:

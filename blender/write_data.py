@@ -184,14 +184,6 @@ def write_indexhtml(w, h):
 <head>
     <meta charset="utf-8"/>
     <title>Armory</title>
-    <style>
-        html, body, canvas, div {
-            margin:0; padding: 0; width:100%; height:100%;
-        }
-        #khanvas {
-            display:block; border:none; outline:none;
-        }
-    </style>
 </head>
 <body>
     <canvas id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """'></canvas>

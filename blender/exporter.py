@@ -1248,7 +1248,10 @@ class ArmoryExporter:
                 o['spawn'] = False
 
             if bobject.mobile == False:
-                p['mobile'] = False
+                o['mobile'] = False
+
+            if bobject.dupli_type == 'GROUP' and bobject.dupli_group != None:
+                o['group_ref'] = bobject.dupli_group.name
 
             if ArmoryExporter.option_spawn_all_layers == False:
                 layer_found = False
@@ -2384,9 +2387,19 @@ class ArmoryExporter:
             self.output['name'] += '.zip'
 
         self.output['objects'] = []
-        for object in self.scene.objects:
-            if (not object.parent):
-                self.export_object(object, self.scene)
+        for obj in self.scene.objects:
+            if not obj.parent:
+                self.export_object(obj, self.scene)
+
+        if len(bpy.data.groups) > 0:
+            self.output['groups'] = []
+            for group in bpy.data.groups:
+                o = {}
+                o['name'] = group.name
+                o['object_refs'] = []
+                for obj in group.objects:
+                    o['object_refs'].append(obj.name)
+                self.output['groups'].append(o)
 
         if not ArmoryExporter.option_mesh_only:
             if self.scene.camera != None:
@@ -2515,6 +2528,17 @@ class ArmoryExporter:
                     # instance_offsets.append(m[1][3]) #* m[1][1])
                     # instance_offsets.append(m[2][3]) #* m[2][2])
                 break
+            # Instance render groups with same children?
+            # elif n.dupli_type == 'GROUP' and n.dupli_group != None:
+            #     is_instanced = True
+            #     instance_offsets = []
+            #     for sn in bpy.data.groups[n.dupli_group].objects:
+            #         loc = sn.matrix_local.to_translation()
+            #         instance_offsets.append(loc.x)
+            #         instance_offsets.append(loc.y)
+            #         instance_offsets.append(loc.z)
+            #     break
+
         return is_instanced, instance_offsets
 
     def preprocess(self):
