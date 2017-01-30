@@ -46,12 +46,32 @@ def make_forward(cam):
 
     if not cam.rp_worldnodes:
         relink('Draw World', 'Set Target Accum')
+        nodes['Clear Target Mesh'].inputs[1].default_value = True
+
+    if not cam.rp_render_to_texture:
+        links.new(nodes['Framebuffer'].outputs[0], nodes['Set Target Mesh'].inputs[1])
+        if cam.rp_worldnodes:
+            l = nodes['Draw World'].outputs[0].links[0]
+        else:
+            l = nodes['Draw Meshes Mesh'].outputs[0].links[0]
+        links.remove(l)
 
     if not cam.rp_translucency:
         relink('Set Target Accum', 'Draw Compositor + FXAA')
 
+    last_node = 'Draw Compositor + FXAA'
+    if cam.rp_antialiasing == 'SMAA':
+        pass
+    elif cam.rp_antialiasing == 'TAA':
+        pass
+    elif cam.rp_antialiasing == 'FXAA':
+        pass
+    elif cam.rp_antialiasing == 'None':
+        last_node = 'Draw Compositor'
+        relink('Draw Compositor + FXAA', 'Draw Compositor')
+
     if cam.rp_overlays:
-        links.new(nodes['Draw Compositor + FXAA'].outputs[0], nodes['Clear Target Overlay'].inputs[0])
+        links.new(last_node.outputs[0], nodes['Clear Target Overlay'].inputs[0])
 
 def make_deferred(cam):
 

@@ -399,10 +399,11 @@ def play_project(in_viewport):
 def on_compiled(mode): # build, play, play_viewport, publish
     log.clear()
     sdk_path = armutils.get_sdk_path()
+    wrd = bpy.data.worlds['Arm']
 
     # Print info
     if mode == 'publish':
-        target_name = make_utils.get_kha_target(bpy.data.worlds['Arm'].arm_project_target)
+        target_name = make_utils.get_kha_target(wrd.arm_project_target)
         print('Project published')
         files_path = armutils.get_fp() + '/build/' + target_name
         if target_name == 'html5':
@@ -412,14 +413,13 @@ def on_compiled(mode): # build, play, play_viewport, publish
         elif target_name == 'windows':
             print('VisualStudio 2015 project files are located in ' + files_path + '-build')
         elif target_name == 'android-native':
-            print('Android Studio project files are located in ' + files_path + '-build')
+            print('Android Studio project files are located in ' + files_path + '-build/' + wrd.arm_project_name)
         else:
             print('Makefiles are located in ' + files_path + '-build')
         return
 
     # Launch project in new window
     elif mode =='play':
-        wrd = bpy.data.worlds['Arm']
         if wrd.arm_play_runtime == 'Electron':
             electron_app_path = './build/electron.js'
 

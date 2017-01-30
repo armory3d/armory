@@ -2842,7 +2842,7 @@ class ArmoryExporter:
     def post_export_world(self, world, o):
         defs = bpy.data.worlds['Arm'].world_defs + bpy.data.worlds['Arm'].rp_defs
         bgcol = world.world_envtex_color
-        if '_LDR' in defs:
+        if '_LDR' in defs: # No compositor used
             for i in range(0, 3):
                 bgcol[i] = pow(bgcol[i], 1.0 / 2.2)
         o['background_color'] = armutils.color_to_int(bgcol)
