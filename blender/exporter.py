@@ -1041,42 +1041,42 @@ class ArmoryExporter:
             o['animation']['end'] = (action.frame_range[1] - self.beginFrame) * self.frameTime
             o['animation']['tracks'] = []
 
-            if (locationAnimated):
+            if locationAnimated:
                 for i in range(3):
                     if (locAnimated[i]):
                         tracko = self.export_animation_track(locAnimCurve[i], locAnimKind[i], subtranslationName[i], structFlag)
                         o['animation']['tracks'].append(tracko)
                         structFlag = True
 
-            if (rotationAnimated):
+            if rotationAnimated:
                 for i in range(3):
                     if (rotAnimated[i]):
                         tracko = self.export_animation_track(rotAnimCurve[i], rotAnimKind[i], subrotationName[i], structFlag)
                         o['animation']['tracks'].append(tracko)
                         structFlag = True
 
-            if (scaleAnimated):
+            if scaleAnimated:
                 for i in range(3):
                     if (sclAnimated[i]):
                         tracko = self.export_animation_track(sclAnimCurve[i], sclAnimKind[i], subscaleName[i], structFlag)
                         o['animation']['tracks'].append(tracko)
                         structFlag = True
 
-            if (deltaPositionAnimated):
+            if deltaPositionAnimated:
                 for i in range(3):
                     if (deltaPosAnimated[i]):
                         tracko = self.export_animation_track(deltaPosAnimCurve[i], deltaPosAnimKind[i], deltaSubtranslationName[i], structFlag)
                         o['animation']['tracks'].append(tracko)
                         structFlag = True
 
-            if (deltaRotationAnimated):
+            if deltaRotationAnimated:
                 for i in range(3):
                     if (deltaRotAnimated[i]):
                         tracko = self.export_animation_track(deltaRotAnimCurve[i], deltaRotAnimKind[i], deltaSubrotationName[i], structFlag)
                         o['animation']['tracks'].append(tracko)
                         structFlag = True
 
-            if (deltaScaleAnimated):
+            if deltaScaleAnimated:
                 for i in range(3):
                     if (deltaSclAnimated[i]):
                         tracko = self.export_animation_track(deltaSclAnimCurve[i], deltaSclAnimKind[i], deltaSubscaleName[i], structFlag)
@@ -1091,7 +1091,7 @@ class ArmoryExporter:
             self.process_bone(subbobject)
 
     def process_bobject(self, bobject):
-        if ((ArmoryExporter.exportAllFlag) or (bobject.select)):
+        if ArmoryExporter.exportAllFlag or bobject.select:
             btype = ArmoryExporter.get_bobject_type(bobject)
 
             if ArmoryExporter.option_mesh_only and btype != NodeTypeMesh:
@@ -1099,14 +1099,14 @@ class ArmoryExporter:
 
             self.bobjectArray[bobject] = {"objectType" : btype, "structName" : self.asset_name(bobject)}
 
-            if (bobject.parent_type == "BONE"):
+            if bobject.parent_type == "BONE":
                 boneSubbobjectArray = self.boneParentArray.get(bobject.parent_bone)
-                if (boneSubbobjectArray):
+                if boneSubbobjectArray:
                     boneSubbobjectArray.append(bobject)
                 else:
                     self.boneParentArray[bobject.parent_bone] = [bobject]
 
-            if (bobject.type == "ARMATURE"):
+            if bobject.type == "ARMATURE":
                 skeleton = bobject.data
                 if (skeleton):
                     for bone in skeleton.bones:
@@ -1438,7 +1438,7 @@ class ArmoryExporter:
 
         if bobject.type != 'MESH' or bobject.instanced_children == False:
             for subbobject in bobject.children:
-                if (subbobject.parent_type != "BONE"):
+                if subbobject.parent_type != "BONE":
                     self.export_object(subbobject, scene, None, o)
 
     def export_skin_quality(self, bobject, armature, export_vertex_array, om):

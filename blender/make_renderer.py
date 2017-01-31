@@ -24,10 +24,11 @@ def make_renderer(cam):
         make_deferred(cam)
 
 def relink(start_node, next_node):
-    n = nodes[start_node].inputs[0].links[0].from_node
-    l = n.outputs[0].links[0]
-    links.remove(l)
-    links.new(n.outputs[0], nodes[next_node].inputs[0])
+    if len(nodes[start_node].inputs[0].links) > 0:
+        n = nodes[start_node].inputs[0].links[0].from_node
+        l = n.outputs[0].links[0]
+        links.remove(l)
+        links.new(n.outputs[0], nodes[next_node].inputs[0])
 
 def make_forward(cam):
 
