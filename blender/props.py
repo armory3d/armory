@@ -45,7 +45,7 @@ def init_properties():
     bpy.types.World.arm_recompile_trigger = bpy.props.BoolProperty(name="Recompile Trigger", description="Force upcoming recomilation", default=False)
     bpy.types.World.arm_progress = bpy.props.FloatProperty(name="Progress", description="Current build progress", default=100.0, min=0.0, max=100.0, soft_min=0.0, soft_max=100.0, subtype='PERCENTAGE', get=log.get_progress)
     bpy.types.World.arm_version = StringProperty(name="Version", description="Armory SDK version", default=arm_ver)
-    target_prop = EnumProperty(
+    bpy.types.World.arm_project_target = EnumProperty(
         items = [('html5', 'HTML5', 'html5'),
                  ('windows', 'Windows', 'windows'),
                  ('macos', 'MacOS', 'macos'),
@@ -54,7 +54,6 @@ def init_properties():
                  ('android-native', 'Android', 'android-native'),
                  ('krom', 'Krom', 'krom')],
         name="Target", default='html5', description='Build paltform')
-    bpy.types.World.arm_project_target = target_prop
     bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="")
     bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm")
     bpy.types.World.arm_play_active_scene = BoolProperty(name="Play Active Scene", description="Load currently edited scene when launching player", default=True)
@@ -111,6 +110,32 @@ def init_properties():
                ('Krom', 'Krom', 'Krom')],
         name="Runtime", description="Player runtime used when launching in new window", default='Krom', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_loadbar = BoolProperty(name="Load Bar", description="Show asset loading progress on published builds", default=True)
+    bpy.types.World.arm_gapi_win = EnumProperty(
+        items = [('opengl2', 'OpenGL', 'opengl2'),
+                 ('vulkan', 'Vulkan', 'vulkan'),
+                 ('direct3d9', 'Direct3D9', 'direct3d9'),
+                 ('direct3d11', 'Direct3D11', 'direct3d11'),
+                 ('direct3d12', 'Direct3D12', 'direct3d12')],
+        name="Graphics API", default='opengl2', description='Based on currently selected target')
+    bpy.types.World.arm_gapi_linux = EnumProperty(
+        items = [('opengl2', 'OpenGL', 'opengl2'),
+                 ('vulkan', 'Vulkan', 'vulkan')],
+        name="Graphics API", default='opengl2', description='Based on currently selected target')
+    bpy.types.World.arm_gapi_android = EnumProperty(
+        items = [('opengl2', 'OpenGL', 'opengl2'),
+                 ('vulkan', 'Vulkan', 'vulkan')],
+        name="Graphics API", default='opengl2', description='Based on currently selected target')
+    bpy.types.World.arm_gapi_mac = EnumProperty(
+        items = [('opengl2', 'OpenGL', 'opengl2'),
+                 ('metal', 'Metal', 'metal')],
+        name="Graphics API", default='opengl2', description='Based on currently selected target')
+    bpy.types.World.arm_gapi_ios = EnumProperty(
+        items = [('opengl2', 'OpenGL', 'opengl2'),
+                 ('metal', 'Metal', 'metal')],
+        name="Graphics API", default='opengl2', description='Based on currently selected target')
+    bpy.types.World.arm_gapi_html5 = EnumProperty(
+        items = [('webgl', 'WebGL', 'webgl')],
+        name="Graphics API", default='webgl', description='Based on currently selected target')
 
     # For object
     bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced Children", description="Use instaced rendering", default=False, update=invalidate_mesh_cache)

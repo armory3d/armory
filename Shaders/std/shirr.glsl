@@ -1,4 +1,4 @@
-uniform float shirr[27];
+uniform float shirr[28];
 
 vec3 shIrradiance(const vec3 nor, const float scale) {
 	const float c1 = 0.429043;
