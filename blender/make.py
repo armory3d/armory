@@ -159,17 +159,9 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
         cmd.append('--ffmpeg')
         cmd.append('"' + ffmpeg_path + '"')
 
-    if armutils.get_os() == 'win':
+    if target_name == '' or target_name == '--run':
         cmd.append('-g')
-        if target_name == '' or target_name == '--run':
-            if wrd.arm_gapi_win == 'direct3d9':
-                cmd.append('direct3d9')
-            elif wrd.arm_gapi_win == 'direct3d11':
-                cmd.append('direct3d11')
-            else:
-                cmd.append('opengl2')
-        else:
-            cmd.append('opengl2')
+        cmd.append(getattr(wrd, 'arm_gapi_' + armutils.get_os()))
 
     if kha_target_name == 'krom':
         if state.in_viewport:

@@ -7,6 +7,8 @@ import props_renderer
 import assets
 import log
 import armutils
+import os
+import shutil
 try:
     import barmory
 except ImportError:
@@ -37,6 +39,34 @@ def update_mat_cache(self, context):
         self.lock_cache = True
     else:
         bpy.data.worlds['Arm'].arm_recompile_trigger = True
+
+def update_gapi_win(self, context):
+    if os.path.isdir(armutils.get_fp() + 'build/windows-build'):
+        shutil.rmtree(armutils.get_fp() + 'build/windows-build')
+    bpy.data.worlds['Arm'].arm_recompile_trigger = True
+
+def update_gapi_linux(self, context):
+    if os.path.isdir(armutils.get_fp() + 'build/linux-build'):
+        shutil.rmtree(armutils.get_fp() + 'build/linux-build')
+    bpy.data.worlds['Arm'].arm_recompile_trigger = True
+
+def update_gapi_mac(self, context):
+    if os.path.isdir(armutils.get_fp() + 'build/osx-build'):
+        shutil.rmtree(armutils.get_fp() + 'build/osx-build')
+    bpy.data.worlds['Arm'].arm_recompile_trigger = True
+
+def update_gapi_android(self, context):
+    if os.path.isdir(armutils.get_fp() + 'build/android-build'):
+        shutil.rmtree(armutils.get_fp() + 'build/android-build')
+    bpy.data.worlds['Arm'].arm_recompile_trigger = True
+
+def update_gapi_ios(self, context):
+    if os.path.isdir(armutils.get_fp() + 'build/ios-build'):
+        shutil.rmtree(armutils.get_fp() + 'build/ios-build')
+    bpy.data.worlds['Arm'].arm_recompile_trigger = True
+
+def update_gapi_html5(self, context):
+    bpy.data.worlds['Arm'].arm_recompile_trigger = True
 
 arm_ver = '17.01.1'
 def init_properties():
@@ -116,26 +146,26 @@ def init_properties():
                  ('direct3d9', 'Direct3D9', 'direct3d9'),
                  ('direct3d11', 'Direct3D11', 'direct3d11'),
                  ('direct3d12', 'Direct3D12', 'direct3d12')],
-        name="Graphics API", default='opengl2', description='Based on currently selected target')
+        name="Graphics API", default='opengl2', description='Based on currently selected target', update=update_gapi_win)
     bpy.types.World.arm_gapi_linux = EnumProperty(
         items = [('opengl2', 'OpenGL', 'opengl2'),
                  ('vulkan', 'Vulkan', 'vulkan')],
-        name="Graphics API", default='opengl2', description='Based on currently selected target')
+        name="Graphics API", default='opengl2', description='Based on currently selected target', update=update_gapi_linux)
     bpy.types.World.arm_gapi_android = EnumProperty(
         items = [('opengl2', 'OpenGL', 'opengl2'),
                  ('vulkan', 'Vulkan', 'vulkan')],
-        name="Graphics API", default='opengl2', description='Based on currently selected target')
+        name="Graphics API", default='opengl2', description='Based on currently selected target', update=update_gapi_android)
     bpy.types.World.arm_gapi_mac = EnumProperty(
         items = [('opengl2', 'OpenGL', 'opengl2'),
                  ('metal', 'Metal', 'metal')],
-        name="Graphics API", default='opengl2', description='Based on currently selected target')
+        name="Graphics API", default='opengl2', description='Based on currently selected target', update=update_gapi_mac)
     bpy.types.World.arm_gapi_ios = EnumProperty(
         items = [('opengl2', 'OpenGL', 'opengl2'),
                  ('metal', 'Metal', 'metal')],
-        name="Graphics API", default='opengl2', description='Based on currently selected target')
+        name="Graphics API", default='opengl2', description='Based on currently selected target', update=update_gapi_ios)
     bpy.types.World.arm_gapi_html5 = EnumProperty(
         items = [('webgl', 'WebGL', 'webgl')],
-        name="Graphics API", default='webgl', description='Based on currently selected target')
+        name="Graphics API", default='webgl', description='Based on currently selected target', update=update_gapi_html5)
 
     # For object
     bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced Children", description="Use instaced rendering", default=False, update=invalidate_mesh_cache)
