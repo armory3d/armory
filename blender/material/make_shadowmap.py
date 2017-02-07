@@ -16,6 +16,11 @@ def make(context_id, rpasses):
     frag.add_out('vec4 fragColor')
     vert.write('vec4 spos = vec4(pos, 1.0);')
 
+    # TODO: pass vbuf with proper struct
+    vert.write('vec3 t1 = nor; // Temp for d3d')
+    if mat_state.data.is_elem('tex'):
+        vert.write('vec2 t2 = tex; // Temp for d3d')
+
     parse_opacity = 'translucent' in rpasses
     if parse_opacity:
         frag.write('vec3 n = vec3(0.0);') # Discard at compile time

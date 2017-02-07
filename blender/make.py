@@ -161,8 +161,13 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
 
     if armutils.get_os() == 'win':
         cmd.append('-g')
-        if (target_name == '' or target_name == '--run') and wrd.arm_gapi_win == 'direct3d9':
-            cmd.append('direct3d9')
+        if target_name == '' or target_name == '--run':
+            if wrd.arm_gapi_win == 'direct3d9':
+                cmd.append('direct3d9')
+            elif wrd.arm_gapi_win == 'direct3d11':
+                cmd.append('direct3d11')
+            else:
+                cmd.append('opengl2')
         else:
             cmd.append('opengl2')
 

@@ -62,14 +62,15 @@ project.addSources('Sources');
         if wrd.arm_play_console:
             f.write("project.addDefine('arm_profile');\n")
 
-        if wrd.arm_play_console or wrd.arm_ui:
+        if wrd.arm_play_console:
             f.write(add_armory_library(sdk_path, 'lib/armui'))
             p = sdk_path + '/lib/armui/Assets/dejavu.ttf'
             f.write('project.addAssets("' + p.replace('\\', '/') + '");\n')
 
-        # f.write(add_armory_library(sdk_path, 'lib/haxeui/haxeui-core'))
-        # f.write(add_armory_library(sdk_path, 'lib/haxeui/haxeui-kha'))
-        # f.write(add_armory_library(sdk_path, 'lib/haxeui/hscript'))
+        if wrd.arm_ui:
+            f.write(add_armory_library(sdk_path, 'lib/haxeui-core'))
+            f.write(add_armory_library(sdk_path, 'lib/haxeui-kha'))
+            f.write(add_armory_library(sdk_path, 'lib/hscript'))
 
         if wrd.arm_minimize == False:
             f.write("project.addDefine('arm_json');\n")

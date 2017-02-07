@@ -30,8 +30,12 @@ class Shader:
         if ar[0] == 'sampler2D':
             self.context.add_texture_unit(ar[0], ar[1], link=link)
         else:
+            # Prefer vec4[] for d3d to avoid padding
             if ar[0] == 'float' and '[' in ar[1]:
                 ar[0] = 'floats'
+                ar[1] = ar[1].split('[', 1)[0]
+            elif ar[0] == 'vec4' and '[' in ar[1]:
+                ar[0] = 'float4s'
                 ar[1] = ar[1].split('[', 1)[0]
             self.context.add_constant(ar[0], ar[1], link=link)
         if included == False and s not in self.uniforms:

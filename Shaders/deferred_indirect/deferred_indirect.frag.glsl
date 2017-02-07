@@ -21,7 +21,7 @@ uniform sampler2D gbuffer1;
 
 uniform float envmapStrength;
 #ifdef _Irr
-	//!uniform float shirr[27];
+	//!uniform vec4 shirr[7];
 #endif
 #ifdef _Rad
 	uniform sampler2D senvmapRadiance;

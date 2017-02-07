@@ -218,7 +218,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
 
     if '_Irr' in wrd.world_defs:
         frag.add_include('../../Shaders/std/shirr.glsl')
-        frag.add_uniform('float shirr[28]', link='_envmapIrradiance', included=True)
+        frag.add_uniform('vec4 shirr[7]', link='_envmapIrradiance', included=True)
         if '_Rad' in wrd.world_defs:
             frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance')
             frag.add_uniform('sampler2D senvmapBrdf', link='_envmapBrdf')

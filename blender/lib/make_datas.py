@@ -221,7 +221,10 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
             else: # Constant
                 if cid.find('[') != -1: # Float arrays
                     cid = cid.split('[')[0]
-                    ctype = 'floats'
+                    if ctype == 'vec4':
+                        ctype = 'float4s'
+                    else:
+                        ctype = 'floats'
                 for const in con['constants']:
                     if const['name'] == cid:
                         found = True

@@ -1,4 +1,4 @@
-uniform float shirr[28];
+uniform vec4 shirr[7];
 
 vec3 shIrradiance(const vec3 nor, const float scale) {
 	const float c1 = 0.429043;
@@ -6,16 +6,16 @@ vec3 shIrradiance(const vec3 nor, const float scale) {
 	const float c3 = 0.743125;
 	const float c4 = 0.886227;
 	const float c5 = 0.247708;
-	vec3 cl00, cl1m1, cl10, cl11, cl2m2, cl2m1, cl20, cl21, cl22;
-	cl00 = vec3(shirr[0], shirr[1], shirr[2]);
-	cl1m1 = vec3(shirr[3], shirr[4], shirr[5]);
-	cl10 = vec3(shirr[6], shirr[7], shirr[8]);
-	cl11 = vec3(shirr[9], shirr[10], shirr[11]);
-	cl2m2 = vec3(shirr[12], shirr[13], shirr[14]);
-	cl2m1 = vec3(shirr[15], shirr[16], shirr[17]);
-	cl20 = vec3(shirr[18], shirr[19], shirr[20]);
-	cl21 = vec3(shirr[21], shirr[22], shirr[23]);
-	cl22 = vec3(shirr[24], shirr[25], shirr[26]);
+	// TODO: Use padding for 4th component and pass shirr[].xyz directly
+	vec3 cl00 = vec3(shirr[0].x, shirr[0].y, shirr[0].z);
+	vec3 cl1m1 = vec3(shirr[0].w, shirr[1].x, shirr[1].y);
+	vec3 cl10 = vec3(shirr[1].z, shirr[1].w, shirr[2].x);
+	vec3 cl11 = vec3(shirr[2].y, shirr[2].z, shirr[2].w);
+	vec3 cl2m2 = vec3(shirr[3].x, shirr[3].y, shirr[3].z);
+	vec3 cl2m1 = vec3(shirr[3].w, shirr[4].x, shirr[4].y);
+	vec3 cl20 = vec3(shirr[4].z, shirr[4].w, shirr[5].x);
+	vec3 cl21 = vec3(shirr[5].y, shirr[5].z, shirr[5].w);
+	vec3 cl22 = vec3(shirr[6].x, shirr[6].y, shirr[6].z);
 	return (
 		c1 * cl22 * (nor.y * nor.y - (-nor.z) * (-nor.z)) +
 		c3 * cl20 * nor.x * nor.x +

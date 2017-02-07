@@ -10,6 +10,8 @@ import material.make_mesh as make_mesh
 import material.make_shadowmap as make_shadowmap
 import material.make_transluc as make_transluc
 import material.make_overlay as make_overlay
+import material.make_depth as make_depth
+import material.make_decal as make_decal
 
 def parse(material, mat_data, mat_users, rid):
     wrd = bpy.data.worlds['Arm']
