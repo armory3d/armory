@@ -2,6 +2,7 @@ import armutils
 import make_state
 import material.cycles as cycles
 import log
+import bpy
 
 def disp_linked(output_node):
     # Armory PBR with unlinked height socket
@@ -31,7 +32,13 @@ def get_rpasses(material):
     else:
         ar.append('mesh')
 
-    if material.cast_shadow and ('mesh' in ar or 'translucent' in ar):
+    shadows_enabled = False
+    for cam in bpy.data.cameras:
+        if cam.rp_shadowmap != 'None':
+            shadows_enabled = True
+            break
+
+    if material.cast_shadow and shadows_enabled and ('mesh' in ar or 'translucent' in ar):
         ar.append('shadowmap')
 
     return ar

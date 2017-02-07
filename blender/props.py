@@ -68,7 +68,7 @@ def update_gapi_ios(self, context):
 def update_gapi_html5(self, context):
     bpy.data.worlds['Arm'].arm_recompile_trigger = True
 
-arm_ver = '17.01.1'
+arm_ver = '17.02'
 def init_properties():
     global arm_ver
     bpy.types.World.arm_recompile = bpy.props.BoolProperty(name="Recompile", description="Recompile sources on next play", default=True)
