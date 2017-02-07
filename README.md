@@ -3,11 +3,8 @@ armory
 
 [![Build Status](https://travis-ci.org/armory3d/armory.svg?branch=master)](https://travis-ci.org/armory3d/armory)
 
-Note: The engine is still in development and will not work yet.
-Once ready, a single download SDK will be provided, as well as steps to
-setup project using git.
-
 [armory3d.org](http://armory3d.org) - [Manual](http://armory3d.org/manual/) - [Forums](http://forums.armory3d.org)
 
+In development! Armory is a real-time 3D engine aimed at creation of 3D games and applications - featuring full Blender integration, state of art rendering and ultra portability. The engine is currently available in a form of [early preview](http://armory3d.org/download.html).
+
 ![](http://armory3d.org/git/img1.jpg)
-![](http://armory3d.org/git/img2.jpg)
