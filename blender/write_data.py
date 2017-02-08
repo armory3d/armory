@@ -25,9 +25,15 @@ let project = new Project('""" + wrd.arm_project_name + """');
 
 project.addSources('Sources');
 """)
-        
-        f.write(add_armory_library(sdk_path, 'armory'))
-        f.write(add_armory_library(sdk_path, 'iron'))
+        if os.path.exists('Libraries/armory'):
+            f.write('project.addLibrary("armory")')
+        else:
+            f.write(add_armory_library(sdk_path, 'armory'))
+
+        if os.path.exists('Libraries/iron'):
+            f.write('project.addLibrary("iron")')
+        else:
+            f.write(add_armory_library(sdk_path, 'iron'))
         
         if export_physics:
             f.write("project.addDefine('arm_physics');\n")

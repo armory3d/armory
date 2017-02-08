@@ -76,14 +76,33 @@ def get_ffmpeg_path():
     addon_prefs = user_preferences.addons['armory'].preferences
     return addon_prefs.ffmpeg_path
 
+def get_node_path():
+    if get_os() == 'win':
+        return get_sdk_path() + '/nodejs/node.exe'
+    elif get_os() == 'mac':
+        return get_sdk_path() + '/nodejs/node-osx'
+    else:
+        return get_sdk_path() + '/nodejs/node-linux64'
+
+def get_khamake_path():
+
+    if os.path.exists('Kha'):
+        return 'Kha/make'
+
+    if get_os() == 'win':
+        return get_sdk_path() + '/win32/Kha/make'
+    elif get_os() == 'mac':
+        return get_sdk_path() + '/Kode Studio.app/Contents/Kha/make'
+    else:
+        return get_sdk_path() + '/linux64/Kha/make'
+
 def fetch_script_names():
     if bpy.data.filepath == "":
         return
 
-    sdk_path = get_sdk_path()
     wrd = bpy.data.worlds['Arm']
     wrd.bundled_scripts_list.clear()
-    os.chdir(sdk_path + '/armory/Sources/armory/trait')
+    os.chdir(get_sdk_path() + '/armory/Sources/armory/trait')
     for file in glob.glob('*.hx'):
         wrd.bundled_scripts_list.add().name = file.rsplit('.')[0]
     wrd.scripts_list.clear()

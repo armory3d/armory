@@ -132,7 +132,6 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     write_data.write_main(is_play, in_viewport, is_publish)
 
 def compile_project(target_name=None, is_publish=False, watch=False, patch=False):
-    sdk_path =  armutils.get_sdk_path()
     ffmpeg_path = armutils.get_ffmpeg_path()
     wrd = bpy.data.worlds['Arm']
 
@@ -142,15 +141,8 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
     elif target_name == 'native':
         target_name = ''
 
-    if armutils.get_os() == 'win':
-        node_path = sdk_path + '/nodejs/node.exe'
-        khamake_path = sdk_path + '/win32/Kha/make'
-    elif armutils.get_os() == 'mac':
-        node_path = sdk_path + '/nodejs/node-osx'
-        khamake_path = sdk_path + '/Kode Studio.app/Contents/Kha/make'
-    else:
-        node_path = sdk_path + '/nodejs/node-linux64'
-        khamake_path = sdk_path + '/linux64/Kha/make'
+    node_path = armutils.get_node_path()
+    khamake_path = armutils.get_khamake_path()
     
     kha_target_name = make_utils.get_kha_target(target_name)
     cmd = [node_path, khamake_path, kha_target_name]

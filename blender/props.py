@@ -141,30 +141,36 @@ def init_properties():
         name="Runtime", description="Player runtime used when launching in new window", default='Krom', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_loadbar = BoolProperty(name="Load Bar", description="Show asset loading progress on published builds", default=True)
     bpy.types.World.arm_gapi_win = EnumProperty(
-        items = [('opengl2', 'OpenGL', 'opengl2'),
+        items = [('opengl2', 'Auto', 'opengl2'),
+                 ('opengl2', 'OpenGL', 'opengl2'),
                  ('vulkan', 'Vulkan', 'vulkan'),
                  ('direct3d9', 'Direct3D9', 'direct3d9'),
                  ('direct3d11', 'Direct3D11', 'direct3d11'),
                  ('direct3d12', 'Direct3D12', 'direct3d12')],
         name="Graphics API", default='opengl2', description='Based on currently selected target', update=update_gapi_win)
     bpy.types.World.arm_gapi_linux = EnumProperty(
-        items = [('opengl2', 'OpenGL', 'opengl2'),
+        items = [('opengl2', 'Auto', 'opengl2'),
+                 ('opengl2', 'OpenGL', 'opengl2'),
                  ('vulkan', 'Vulkan', 'vulkan')],
         name="Graphics API", default='opengl2', description='Based on currently selected target', update=update_gapi_linux)
     bpy.types.World.arm_gapi_android = EnumProperty(
-        items = [('opengl2', 'OpenGL', 'opengl2'),
+        items = [('opengl2', 'Auto', 'opengl2'),
+                 ('opengl2', 'OpenGL', 'opengl2'),
                  ('vulkan', 'Vulkan', 'vulkan')],
         name="Graphics API", default='opengl2', description='Based on currently selected target', update=update_gapi_android)
     bpy.types.World.arm_gapi_mac = EnumProperty(
-        items = [('opengl2', 'OpenGL', 'opengl2'),
+        items = [('opengl2', 'Auto', 'opengl2'),
+                 ('opengl2', 'OpenGL', 'opengl2'),
                  ('metal', 'Metal', 'metal')],
         name="Graphics API", default='opengl2', description='Based on currently selected target', update=update_gapi_mac)
     bpy.types.World.arm_gapi_ios = EnumProperty(
-        items = [('opengl2', 'OpenGL', 'opengl2'),
+        items = [('opengl2', 'Auto', 'opengl2'),
+                 ('opengl2', 'OpenGL', 'opengl2'),
                  ('metal', 'Metal', 'metal')],
         name="Graphics API", default='opengl2', description='Based on currently selected target', update=update_gapi_ios)
     bpy.types.World.arm_gapi_html5 = EnumProperty(
-        items = [('webgl', 'WebGL', 'webgl')],
+        items = [('webgl', 'Auto', 'webgl'),
+                 ('webgl', 'WebGL', 'webgl')],
         name="Graphics API", default='webgl', description='Based on currently selected target', update=update_gapi_html5)
 
     # For object
