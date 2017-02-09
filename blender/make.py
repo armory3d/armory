@@ -227,8 +227,9 @@ def build_project(is_play=False, is_publish=False, in_viewport=False, target=Non
     os.chdir(fp)
 
     # Create directories
-    if not os.path.exists('Sources'):
-        os.makedirs('Sources')
+    sources_path = 'Sources/' + wrd.arm_project_package
+    if not os.path.exists(sources_path):
+        os.makedirs(sources_path)
 
     # Compile path tracer shaders
     if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].renderpath_path == 'pathtrace_path':
