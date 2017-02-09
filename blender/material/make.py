@@ -13,6 +13,9 @@ import material.make_overlay as make_overlay
 import material.make_depth as make_depth
 import material.make_decal as make_decal
 
+rpass_hook = None
+mesh_make = make_mesh.make
+
 def parse(material, mat_data, mat_users, rid):
     wrd = bpy.data.worlds['Arm']
     mat_state.material = material
@@ -58,7 +61,7 @@ def parse(material, mat_data, mat_users, rid):
             const['name'] = 'receiveShadow'
             const['bool'] = material.receive_shadow
             c['bind_constants'].append(const)
-            con = make_mesh.make(rp, rid)
+            con = mesh_make(rp, rid)
 
         elif rp == 'shadowmap':
             con = make_shadowmap.make(rp, rpasses)
@@ -78,6 +81,9 @@ def parse(material, mat_data, mat_users, rid):
 
         elif rp == 'depth':
             con = make_depth.make(rp)
+
+        elif rpass_hook != None:
+            con = rpass_hook(rp)
         
         write_shaders(con, rp)
 

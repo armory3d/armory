@@ -4,6 +4,8 @@ import material.cycles as cycles
 import log
 import bpy
 
+add_mesh_contexts = []
+
 def disp_linked(output_node):
     # Armory PBR with unlinked height socket
     linked = output_node.inputs[2].is_linked
@@ -25,12 +27,15 @@ def get_rpasses(material):
 
     # if material.decal:
         # ar.append('decal')
+        
     if material.overlay:
         ar.append('overlay')
     elif is_transluc(material):
         ar.append('translucent')
     else:
         ar.append('mesh')
+        for con in add_mesh_contexts:
+            ar.append(con)
 
     shadows_enabled = False
     for cam in bpy.data.cameras:

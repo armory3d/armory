@@ -8,6 +8,8 @@ import time
 import bridge
 import log
 import props
+import os
+import sys
 from bpy.app.handlers import persistent
 try:
     import barmory
@@ -137,10 +139,26 @@ def on_scene_update_post(context):
                 else:
                     obj.active_material.is_cached = False
 
+last_py_path = None
+
 @persistent
 def on_load_post(context):
+    global last_py_path
+
     props.init_properties_on_load()
     nodes_renderpath.reload_blend_data()
+
+    # Calls register() on optional project.py script
+    if last_py_path != None:
+        sys.path.remove(last_py_path)
+        last_py_path = None
+
+    py_path = armutils.get_fp() + '/py'
+    if os.path.exists(py_path):
+        last_py_path = py_path
+        sys.path.append(py_path)
+        import project
+        project.register()
 
 @persistent
 def on_save_pre(context):
