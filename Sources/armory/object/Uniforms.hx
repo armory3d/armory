@@ -7,9 +7,9 @@ import iron.math.Vec4;
 class Uniforms {
 
 	public static function register() {
-		iron.object.Uniforms.externalTextureLink = externalTextureLink;
-		iron.object.Uniforms.externalVec3Link = externalVec3Link;
-		iron.object.Uniforms.externalFloatLink = externalFloatLink;
+		iron.object.Uniforms.externalTextureLinks = [externalTextureLink];
+		iron.object.Uniforms.externalVec3Links = [externalVec3Link];
+		iron.object.Uniforms.externalFloatLinks = [externalFloatLink];
 	}
 
 	public static function externalTextureLink(tulink:String):kha.Image {
