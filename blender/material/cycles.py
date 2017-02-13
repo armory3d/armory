@@ -441,6 +441,11 @@ def parse_rgb(node, socket):
         if tex != None:
             to_linear = parsing_basecol and not tex['file'].endswith('.hdr')
             return '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear))
+        elif node.image == None: # Empty texture
+            tex = {}
+            tex['name'] = tex_name
+            tex['file'] = ''
+            return '{0}.rgb'.format(texture_store(node, tex, tex_name, True))
         else:
             tex_store = store_var_name(node) # Pink color for missing texture
             curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0);'.format(tex_store))

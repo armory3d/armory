@@ -25,6 +25,11 @@ let project = new Project('""" + wrd.arm_project_name + """');
 
 project.addSources('Sources');
 """)
+
+        # Auto-add assets located in Bundled directory
+        if os.path.exists('Bundled'):
+            f.write('project.addAssets("Bundled/**");\n')
+
         if os.path.exists('Libraries/armory'):
             f.write('project.addLibrary("armory")')
         else:
@@ -68,15 +73,15 @@ project.addSources('Sources');
         if wrd.arm_play_console:
             f.write("project.addDefine('arm_profile');\n")
 
-        if wrd.arm_play_console:
+        if wrd.arm_play_console or wrd.arm_ui:
             f.write(add_armory_library(sdk_path, 'lib/armui'))
             p = sdk_path + '/lib/armui/Assets/dejavu.ttf'
             f.write('project.addAssets("' + p.replace('\\', '/') + '");\n')
 
-        if wrd.arm_ui:
-            f.write(add_armory_library(sdk_path, 'lib/haxeui-core'))
-            f.write(add_armory_library(sdk_path, 'lib/haxeui-kha'))
-            f.write(add_armory_library(sdk_path, 'lib/hscript'))
+        # if wrd.arm_ui:
+            # f.write(add_armory_library(sdk_path, 'lib/haxeui-core'))
+            # f.write(add_armory_library(sdk_path, 'lib/haxeui-kha'))
+            # f.write(add_armory_library(sdk_path, 'lib/hscript'))
 
         if wrd.arm_minimize == False:
             f.write("project.addDefine('arm_json');\n")
