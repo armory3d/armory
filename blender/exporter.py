@@ -398,7 +398,7 @@ class ArmoryExporter:
 
             material_table.append(face.material_index)
 
-            if (len(face.vertices) == 4):
+            if len(face.vertices) == 4:
                 k1 = face.vertices[0]
                 k2 = face.vertices[2]
                 k3 = face.vertices[3]
@@ -433,7 +433,7 @@ class ArmoryExporter:
             faceIndex += 1
 
         colorCount = len(mesh.tessface_vertex_colors)
-        if (colorCount > 0):
+        if colorCount > 0:
             colorFace = mesh.tessface_vertex_colors[0].data
             vertexIndex = 0
             faceIndex = 0
@@ -447,7 +447,7 @@ class ArmoryExporter:
                 export_vertex_array[vertexIndex].color = cf.color3
                 vertexIndex += 1
 
-                if (len(face.vertices) == 4):
+                if len(face.vertices) == 4:
                     export_vertex_array[vertexIndex].color = cf.color1
                     vertexIndex += 1
                     export_vertex_array[vertexIndex].color = cf.color3
@@ -458,7 +458,7 @@ class ArmoryExporter:
                 faceIndex += 1
 
         texcoordCount = len(mesh.tessface_uv_textures)
-        if (texcoordCount > 0):
+        if texcoordCount > 0:
             texcoordFace = mesh.tessface_uv_textures[0].data
             vertexIndex = 0
             faceIndex = 0
@@ -472,7 +472,7 @@ class ArmoryExporter:
                 export_vertex_array[vertexIndex].texcoord0 = [tf.uv3[0], 1.0 - tf.uv3[1]]
                 vertexIndex += 1
 
-                if (len(face.vertices) == 4):
+                if len(face.vertices) == 4:
                     export_vertex_array[vertexIndex].texcoord0 = [tf.uv1[0], 1.0 - tf.uv1[1]]
                     vertexIndex += 1
                     export_vertex_array[vertexIndex].texcoord0 = [tf.uv3[0], 1.0 - tf.uv3[1]]
@@ -482,26 +482,26 @@ class ArmoryExporter:
 
                 faceIndex += 1
 
-            if (texcoordCount > 1):
+            if texcoordCount > 1:
                 texcoordFace = mesh.tessface_uv_textures[1].data
                 vertexIndex = 0
                 faceIndex = 0
 
                 for face in mesh.tessfaces:
                     tf = texcoordFace[faceIndex]
-                    export_vertex_array[vertexIndex].texcoord1 = tf.uv1
+                    export_vertex_array[vertexIndex].texcoord1 = [tf.uv1[0], 1.0 - tf.uv1[1]]
                     vertexIndex += 1
-                    export_vertex_array[vertexIndex].texcoord1 = tf.uv2
+                    export_vertex_array[vertexIndex].texcoord1 = [tf.uv2[0], 1.0 - tf.uv2[1]]
                     vertexIndex += 1
-                    export_vertex_array[vertexIndex].texcoord1 = tf.uv3
+                    export_vertex_array[vertexIndex].texcoord1 = [tf.uv3[0], 1.0 - tf.uv3[1]]
                     vertexIndex += 1
 
-                    if (len(face.vertices) == 4):
-                        export_vertex_array[vertexIndex].texcoord1 = tf.uv1
+                    if len(face.vertices) == 4:
+                        export_vertex_array[vertexIndex].texcoord1 = [tf.uv1[0], 1.0 - tf.uv1[1]]
                         vertexIndex += 1
-                        export_vertex_array[vertexIndex].texcoord1 = tf.uv3
+                        export_vertex_array[vertexIndex].texcoord1 = [tf.uv3[0], 1.0 - tf.uv3[1]]
                         vertexIndex += 1
-                        export_vertex_array[vertexIndex].texcoord1 = tf.uv4
+                        export_vertex_array[vertexIndex].texcoord1 = [tf.uv4[0], 1.0 - tf.uv4[1]]
                         vertexIndex += 1
 
                     faceIndex += 1
@@ -516,7 +516,7 @@ class ArmoryExporter:
         # This function looks for identical vertices having exactly the same position, normal,
         # color, and texcoords. Duplicate vertices are unified, and a new index table is returned.
         bucketCount = len(export_vertex_array) >> 3
-        if (bucketCount > 1):
+        if bucketCount > 1:
             # Round down to nearest power of two.
             while True:
                 count = bucketCount & (bucketCount - 1)
@@ -551,7 +551,7 @@ class ArmoryExporter:
     def export_bone(self, armature, bone, scene, o, action):
         bobjectRef = self.bobjectArray.get(bone)
         
-        if (bobjectRef):
+        if bobjectRef:
             o['type'] = structIdentifier[bobjectRef["objectType"]]
             o['name'] = bobjectRef["structName"]
 
@@ -565,7 +565,7 @@ class ArmoryExporter:
 
         # Export any ordinary objects that are parented to this bone
         boneSubbobjectArray = self.boneParentArray.get(bone.name)
-        if (boneSubbobjectArray):
+        if boneSubbobjectArray:
             poseBone = None
             if (not bone.use_relative_parent):
                 poseBone = armature.pose.bones.get(bone.name)
@@ -585,11 +585,11 @@ class ArmoryExporter:
         for i in range(self.beginFrame, self.endFrame):
             scene.frame_set(i)
             m2 = bobject.matrix_local
-            if (ArmoryExporter.matrices_different(m1, m2)):
+            if ArmoryExporter.matrices_different(m1, m2):
                 animationFlag = True
                 break
         # Font out
-        if (animationFlag):
+        if animationFlag:
             o['animation'] = {}
 
             tracko = {}
@@ -643,7 +643,7 @@ class ArmoryExporter:
                 animationFlag = True
                 break
 
-        if (animationFlag):
+        if animationFlag:
             o['animation'] = {}
             tracko = {}
             tracko['target'] = "transform"
@@ -659,7 +659,7 @@ class ArmoryExporter:
             tracko['value']['values'] = []
 
             parent = poseBone.parent
-            if (parent):
+            if parent:
                 for i in range(begin_frame, end_frame):
                     scene.frame_set(i)
                     tracko['value']['values'].append(self.write_matrix(parent.matrix.inverted() * poseBone.matrix))
@@ -778,7 +778,7 @@ class ArmoryExporter:
 
         if ((not sampledAnimation) and (bobject.animation_data)):
             action = bobject.animation_data.action
-            if (action):
+            if action:
                 for fcurve in action.fcurves:
                     kind = ArmoryExporter.classify_animation_curve(fcurve)
                     if kind != AnimationTypeSampled:
@@ -1654,7 +1654,7 @@ class ArmoryExporter:
                 t0data[i * 2 + 1] = 1.0 - vtx.uvs[0].y # Reverse TCY
                 if num_uv_layers > 1:
                     t1data[i * 2] = vtx.uvs[1].x
-                    t1data[i * 2 + 1] = vtx.uvs[1].y
+                    t1data[i * 2 + 1] = 1.0 - vtx.uvs[1].y
             if num_colors > 0:
                 cdata[i * 3] = vtx.col[0]
                 cdata[i * 3 + 1] = vtx.col[1]
