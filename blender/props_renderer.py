@@ -21,8 +21,8 @@ def set_preset(self, context, preset):
         cam.rp_shadowmap = '1024'
         cam.rp_meshes = True
         cam.rp_translucency_state = 'Off'
-        cam.rp_overlays = False
-        cam.rp_decals = False
+        cam.rp_overlays_state = 'Off'
+        cam.rp_decals_state = 'Off'
         cam.rp_hdr = False
         cam.rp_worldnodes = False
         cam.rp_stereo = False
@@ -41,8 +41,8 @@ def set_preset(self, context, preset):
         cam.rp_shadowmap = '2048'
         cam.rp_meshes = True
         cam.rp_translucency_state = 'Auto'
-        cam.rp_overlays = False
-        cam.rp_decals = False
+        cam.rp_overlays_state = 'Auto'
+        cam.rp_decals_state = 'Auto'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
         cam.rp_stereo = False
@@ -61,8 +61,8 @@ def set_preset(self, context, preset):
         cam.rp_shadowmap = '4096'
         cam.rp_meshes = True
         cam.rp_translucency_state = 'Auto'
-        cam.rp_overlays = False
-        cam.rp_decals = False
+        cam.rp_overlays_state = 'Auto'
+        cam.rp_decals_state = 'Auto'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
         cam.rp_stereo = False
@@ -81,8 +81,8 @@ def set_preset(self, context, preset):
         cam.rp_shadowmap = '2048'
         cam.rp_meshes = True
         cam.rp_translucency_state = 'Auto'
-        cam.rp_overlays = False
-        cam.rp_decals = False
+        cam.rp_overlays_state = 'Auto'
+        cam.rp_decals_state = 'Auto'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
         cam.rp_stereo = False
@@ -101,8 +101,8 @@ def set_preset(self, context, preset):
         cam.rp_shadowmap = '2048'
         cam.rp_meshes = True
         cam.rp_translucency_state = 'Auto'
-        cam.rp_overlays = False
-        cam.rp_decals = False
+        cam.rp_overlays_state = 'Auto'
+        cam.rp_decals_state = 'Auto'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
         cam.rp_stereo = False
@@ -121,8 +121,8 @@ def set_preset(self, context, preset):
         cam.rp_shadowmap = '4096'
         cam.rp_meshes = True
         cam.rp_translucency_state = 'Auto'
-        cam.rp_overlays = False
-        cam.rp_decals = False
+        cam.rp_overlays_state = 'Auto'
+        cam.rp_decals_state = 'Auto'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
         cam.rp_stereo = False
@@ -141,8 +141,8 @@ def set_preset(self, context, preset):
         cam.rp_shadowmap = '1024'
         cam.rp_meshes = True
         cam.rp_translucency_state = 'Off'
-        cam.rp_overlays = False
-        cam.rp_decals = False
+        cam.rp_overlays_state = 'Off'
+        cam.rp_decals_state = 'Off'
         cam.rp_hdr = False
         cam.rp_worldnodes = True
         cam.rp_stereo = True
@@ -161,8 +161,8 @@ def set_preset(self, context, preset):
         cam.rp_shadowmap = 'None'
         cam.rp_meshes = False
         cam.rp_translucency_state = 'Off'
-        cam.rp_overlays = False
-        cam.rp_decals = False
+        cam.rp_overlays_state = 'Off'
+        cam.rp_decals_state = 'Off'
         cam.rp_hdr = False
         cam.rp_worldnodes = False
         cam.rp_stereo = False
@@ -213,8 +213,8 @@ class GenRPDataPropsPanel(bpy.types.Panel):
             layout.prop(dat, "rp_shadowmap")
             layout.prop(dat, "rp_meshes")
             layout.prop(dat, "rp_translucency_state")
-            layout.prop(dat, "rp_overlays")
-            layout.prop(dat, "rp_decals")
+            layout.prop(dat, "rp_overlays_state")
+            layout.prop(dat, "rp_decals_state")
             layout.prop(dat, "rp_hdr")
             layout.prop(dat, "rp_worldnodes")
             layout.prop(dat, "rp_stereo")

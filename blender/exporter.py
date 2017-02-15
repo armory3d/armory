@@ -2182,6 +2182,8 @@ class ArmoryExporter:
     def export_materials(self):
         # This function exports all of the materials used in the scene
         transluc_used = False
+        overlays_used = False
+        decals_used = False
         for materialRef in self.materialArray.items():
             material = materialRef[0]
             # If the material is unlinked, material becomes None
@@ -2207,9 +2209,14 @@ class ArmoryExporter:
             if not material.use_nodes:
                 material.use_nodes = True
 
-            sd, is_transluc = make_material.parse(material, o, self.materialToObjectDict, ArmoryExporter.renderpath_id)
+            sd, is_transluc, is_overlays, is_decals = make_material.parse(material, o, self.materialToObjectDict, ArmoryExporter.renderpath_id)
+
             if is_transluc:
                 transluc_used = True
+            if is_overlays:
+                overlays_used = True
+            if is_decals:
+                decals_used = True
 
             uv_export = False
             tan_export = False
@@ -2255,15 +2262,29 @@ class ArmoryExporter:
                 make_material.parse(mat, o, mat_users, ArmoryExporter.renderpath_id)
                 self.output['material_datas'].append(o)
                 bpy.data.materials.remove(mat)
-        # Auto-enable translucency
-        if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].rp_translucency_state == 'Auto':
-            if bpy.data.cameras[0].rp_translucency != transluc_used:
-                bpy.data.cameras[0].rp_translucency = transluc_used
-                # No shader invalidate required?
-                make_renderer.make_renderer(bpy.data.cameras[0])
-                # Rebuild modified path
-                assets_path = armutils.get_sdk_path() + 'armory/Assets/'
-                make_renderpath.build_node_trees(assets_path)
+
+        # Auto-enable render-path featues
+        if len(bpy.data.cameras) > 0:
+            rebuild_rp = False
+            cam = bpy.data.cameras[0]
+            if cam.rp_translucency_state == 'Auto' and cam.rp_translucency != transluc_used:
+                cam.rp_translucency = transluc_used
+                rebuild_rp = True
+            if cam.rp_overlays_state == 'Auto' and cam.rp_overlays != overlays_used:
+                cam.rp_overlays = overlays_used
+                rebuild_rp = True
+            if cam.rp_decals_state == 'Auto' and cam.rp_decals != decals_used:
+                cam.rp_decals = decals_used
+                rebuild_rp = True
+            if rebuild_rp:
+                self.rebuild_render_path(cam)
+
+    def rebuild_render_path(self, cam):
+        # No shader invalidate required?
+        make_renderer.make_renderer(cam)
+        # Rebuild modified path
+        assets_path = armutils.get_sdk_path() + 'armory/Assets/'
+        make_renderpath.build_node_trees(assets_path)
 
     def export_particle_systems(self):
         for particleRef in self.particleSystemArray.items():

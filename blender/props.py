@@ -29,6 +29,24 @@ def update_translucency_state(self, context):
         return
     update_renderpath(self, context)
 
+def update_decals_state(self, context):
+    if self.rp_decals_state == 'On':
+        self.rp_decals = True
+    elif self.rp_decals_state == 'Off':
+        self.rp_decals = False
+    else: # Auto - updates rp at build time if decal mat is used
+        return
+    update_renderpath(self, context)
+
+def update_overlays_state(self, context):
+    if self.rp_overlays_state == 'On':
+        self.rp_overlays = True
+    elif self.rp_overlays_state == 'Off':
+        self.rp_overlays = False
+    else: # Auto - updates rp at build time if x-ray mat is used
+        return
+    update_renderpath(self, context)
+
 def invalidate_mesh_cache(self, context):
     if context.object == None or context.object.data == None:
         return
@@ -300,8 +318,18 @@ def init_properties():
                ('Off', 'Off', 'Off'), 
                ('Auto', 'Auto', 'Auto')],
         name="Translucency", description="Order independent translucency", default='Auto', update=update_translucency_state)
-    bpy.types.Camera.rp_decals = bpy.props.BoolProperty(name="Decals", description="Render decals", default=False, update=update_renderpath)
-    bpy.types.Camera.rp_overlays = bpy.props.BoolProperty(name="Overlays", description="Render overlays", default=False, update=update_renderpath)
+    bpy.types.Camera.rp_decals = bpy.props.BoolProperty(name="Decals", description="Current render-path state", default=False)
+    bpy.types.Camera.rp_decals_state = bpy.props.EnumProperty(
+        items=[('On', 'On', 'On'),
+               ('Off', 'Off', 'Off'), 
+               ('Auto', 'Auto', 'Auto')],
+        name="Decals", description="Decals pass", default='Auto', update=update_decals_state)
+    bpy.types.Camera.rp_overlays = bpy.props.BoolProperty(name="Overlays", description="Current render-path state", default=False)
+    bpy.types.Camera.rp_overlays_state = bpy.props.EnumProperty(
+        items=[('On', 'On', 'On'),
+               ('Off', 'Off', 'Off'), 
+               ('Auto', 'Auto', 'Auto')],
+        name="Overlays", description="X-Ray pass", default='Auto', update=update_overlays_state)
     bpy.types.Camera.rp_stereo = bpy.props.BoolProperty(name="Stereo", description="Stereo rendering", default=False, update=update_renderpath)
     bpy.types.Camera.rp_greasepencil = bpy.props.BoolProperty(name="Grease Pencil", description="Render Grease Pencil data", default=False, update=update_renderpath)
 
