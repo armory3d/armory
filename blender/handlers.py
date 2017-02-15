@@ -49,6 +49,10 @@ def on_scene_update_post(context):
     if len(ops) > 0 and last_operator != ops[-1]:
         last_operator = ops[-1]
         operators_changed = True
+    # Undo was performed - Blender clears the complete operator stack, undo last known operator atleast
+    if len(ops) == 0 and last_operator != None:
+        op_changed(last_operator, bpy.context.obj)
+        last_operator = None
 
     # Player running
     state.krom_running = False
@@ -125,22 +129,23 @@ def on_scene_update_post(context):
         obj = bpy.context.object
         if obj != None:
             if operators_changed:
-                # Recache mesh data
-                if ops[-1].bl_idname == 'OBJECT_OT_modifier_add' or \
-                   ops[-1].bl_idname == 'OBJECT_OT_modifier_remove' or \
-                   ops[-1].bl_idname == 'OBJECT_OT_transform_apply' or \
-                   ops[-1].bl_idname == 'OBJECT_OT_shade_smooth' or \
-                   ops[-1].bl_idname == 'OBJECT_OT_shade_flat':
-                    obj.data.mesh_cached = False
-
+                op_changed(ops[-1], obj)
             if obj.active_material != None and obj.active_material.is_updated:
                 if obj.active_material.lock_cache == True: # is_cached was set to true
                     obj.active_material.lock_cache = False
                 else:
                     obj.active_material.is_cached = False
 
-last_py_path = None
+def op_changed(op, obj):
+    # Recache mesh data
+    if op.bl_idname == 'OBJECT_OT_modifier_add' or \
+       op.bl_idname == 'OBJECT_OT_modifier_remove' or \
+       op.bl_idname == 'OBJECT_OT_transform_apply' or \
+       op.bl_idname == 'OBJECT_OT_shade_smooth' or \
+       op.bl_idname == 'OBJECT_OT_shade_flat':
+        obj.data.mesh_cached = False
 
+last_py_path = None
 @persistent
 def on_load_post(context):
     global last_py_path

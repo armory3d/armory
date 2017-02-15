@@ -31,7 +31,7 @@ def make_texture(image_node, tex_name):
         return None
 
     ext = s[1].lower()
-    do_convert = ext != 'jpg' and ext != 'png' and ext != 'hdr' # Convert image
+    do_convert = ext != 'jpg' and ext != 'png' and ext != 'hdr' and ext != 'mp4' # Convert image
     if do_convert:
         tex['file'] = tex['file'].rsplit('.', 1)[0] + '.jpg'
         # log.warn(matname + '/' + image.name + ' - image format is not (jpg/png/hdr), converting to jpg.')
@@ -104,15 +104,15 @@ def make_texture(image_node, tex_name):
             tex['u_addressing'] = 'clamp'
             tex['v_addressing'] = 'clamp'
     
-    # if image.source == 'MOVIE': # Just append movie texture trait for now
-    #     movie_trait = {}
-    #     movie_trait['type'] = 'Script'
-    #     movie_trait['class_name'] = 'armory.trait.internal.MovieTexture'
-    #     movie_trait['parameters'] = [tex['file']]
-    #     for o in self.materialToGameObjectDict[material]:
-    #         o['traits'].append(movie_trait)
-    #     tex['source'] = 'movie'
-    #     tex['file'] = '' # MovieTexture will load the video
+    if image.source == 'MOVIE': # Just append movie texture trait for now
+        movie_trait = {}
+        movie_trait['type'] = 'Script'
+        movie_trait['class_name'] = 'armory.trait.internal.MovieTexture'
+        movie_trait['parameters'] = [tex['file']]
+        for o in mat_state.mat_armusers[mat_state.material]:
+            o['traits'].append(movie_trait)
+        tex['source'] = 'movie'
+        tex['file'] = '' # MovieTexture will load the video
 
     return tex
 

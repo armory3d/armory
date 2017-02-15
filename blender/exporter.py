@@ -2209,7 +2209,7 @@ class ArmoryExporter:
             if not material.use_nodes:
                 material.use_nodes = True
 
-            sd, is_transluc, is_overlays, is_decals = make_material.parse(material, o, self.materialToObjectDict, ArmoryExporter.renderpath_id)
+            sd, is_transluc, is_overlays, is_decals = make_material.parse(material, o, self.materialToObjectDict, self.materialToArmObjectDict, ArmoryExporter.renderpath_id)
 
             if is_transluc:
                 transluc_used = True
@@ -2259,7 +2259,9 @@ class ArmoryExporter:
                 o['contexts'] = []
                 mat_users = dict()
                 mat_users[mat] = self.defaultMaterialObjects
-                make_material.parse(mat, o, mat_users, ArmoryExporter.renderpath_id)
+                mat_armusers = dict()
+                mat_armusers[mat] = [o]
+                make_material.parse(mat, o, mat_users, mat_armusers, ArmoryExporter.renderpath_id)
                 self.output['material_datas'].append(o)
                 bpy.data.materials.remove(mat)
 
@@ -2386,8 +2388,8 @@ class ArmoryExporter:
         self.boneParentArray = {}
         self.materialToObjectDict = dict()
         self.defaultMaterialObjects = []
-        self.materialToGameObjectDict = dict()
-        self.objectToGameObjectDict = dict()
+        self.materialToArmObjectDict = dict()
+        self.objectToArmObjectDict = dict()
         self.uvprojectUsersArray = [] # For processing decals
         self.export_default_material = False # If no material is assigned, provide default to mimick cycles
         self.active_layers = []
@@ -2617,8 +2619,8 @@ class ArmoryExporter:
                 if m.type == 'UV_PROJECT':
                     # Mark all projectors as decals
                     for pnode in m.projectors:
-                        o = self.objectToGameObjectDict[bobject]
-                        po = self.objectToGameObjectDict[pnode.object]
+                        o = self.objectToArmObjectDict[bobject]
+                        po = self.objectToArmObjectDict[pnode.object]
                         po['type'] = 'decal_object'
                         po['material_refs'] = [o['material_refs'][0] + '_decal'] # Will fetch a proper context used in render path
                     break
@@ -2827,17 +2829,17 @@ class ArmoryExporter:
                 o['traits'].append(navigation_trait)
 
         # Map objects to game objects
-        self.objectToGameObjectDict[bobject] = o
+        self.objectToArmObjectDict[bobject] = o
         
         # Map objects to materials, can be used in later stages
         for i in range(len(bobject.material_slots)):
             mat = bobject.material_slots[i].material
             if mat in self.materialToObjectDict:
                 self.materialToObjectDict[mat].append(bobject)
-                self.materialToGameObjectDict[mat].append(o)
+                self.materialToArmObjectDict[mat].append(o)
             else:
                 self.materialToObjectDict[mat] = [bobject]
-                self.materialToGameObjectDict[mat] = [o]
+                self.materialToArmObjectDict[mat] = [o]
 
         # Export constraints
         if len(bobject.constraints) > 0:

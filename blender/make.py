@@ -132,7 +132,6 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     write_data.write_main(is_play, in_viewport, is_publish)
 
 def compile_project(target_name=None, is_publish=False, watch=False, patch=False):
-    ffmpeg_path = armutils.get_ffmpeg_path()
     wrd = bpy.data.worlds['Arm']
 
     # Set build command
@@ -147,9 +146,10 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
     kha_target_name = make_utils.get_kha_target(target_name)
     cmd = [node_path, khamake_path, kha_target_name]
 
+    ffmpeg_path = armutils.get_ffmpeg_path() # Path to binary
     if ffmpeg_path != '':
         cmd.append('--ffmpeg')
-        cmd.append('"' + ffmpeg_path + '"')
+        cmd.append(ffmpeg_path) # '"' + ffmpeg_path + '"'
 
     if target_name == '' or target_name == '--run':
         cmd.append('-g')

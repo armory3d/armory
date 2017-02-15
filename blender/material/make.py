@@ -16,12 +16,13 @@ import material.make_decal as make_decal
 rpass_hook = None
 mesh_make = make_mesh.make
 
-def parse(material, mat_data, mat_users, rid):
+def parse(material, mat_data, mat_users, mat_armusers, rid):
     wrd = bpy.data.worlds['Arm']
     mat_state.material = material
     mat_state.nodes = material.node_tree.nodes
     mat_state.mat_data = mat_data
     mat_state.mat_users = mat_users
+    mat_state.mat_armusers = mat_armusers
     mat_state.output_node = cycles.node_by_type(mat_state.nodes, 'OUTPUT_MATERIAL')
     if mat_state.output_node == None:
         return None
