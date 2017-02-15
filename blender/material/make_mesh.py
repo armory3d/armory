@@ -290,7 +290,6 @@ def make_forward_base(con_mesh, parse_opacity=False):
     frag.write('vec3 direct = lambertDiffuseBRDF(albedo, dotNL);')
     frag.write('direct += specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);')
 
-
     if '_Irr' in wrd.world_defs:
         frag.write('vec3 indirect = (shIrradiance(n, 2.2) / PI) * albedo;')
 

@@ -132,7 +132,7 @@ void main() {
 #endif
 
 #ifdef _CDepth
-	float depth = texture(gbufferD, texCo).r * 2.0 - 1.0;
+	float depth = (1.0 - texture(gbuffer0, texCo).a) * 2.0 - 1.0;
 #endif
 
 #ifdef _CFXAA
@@ -187,7 +187,7 @@ void main() {
 #else
 	
 	#ifdef _CDOF
-	vec3 col = dof(texCo, depth, tex, gbufferD, texStep);
+	vec3 col = dof(texCo, depth, tex, gbuffer0, texStep);
 	#else
 	vec3 col = texture(tex, texCo).rgb;
 	#endif
@@ -210,7 +210,7 @@ void main() {
 		vec4 lndc = VP * vec4(light, 1.0);
 		lndc.xy /= lndc.w;
 		vec2 lss = lndc.xy * 0.5 + 0.5;
-		float lssdepth = linearize(texture(gbufferD, lss).r * 2.0 - 1.0);
+		float lssdepth = linearize((1.0 - texture(gbuffer0, lss).a) * 2.0 - 1.0);
 		float lightDistance = distance(eye, light);
 		if (lightDistance <= lssdepth) {
 			vec2 lensuv = texCo * 2.0 - 1.0;

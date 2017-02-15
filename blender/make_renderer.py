@@ -112,10 +112,15 @@ def make_deferred(cam):
     if not cam.rp_ssr:
         relink('SSR', 'Draw Compositor')
 
+    last_node = 'Draw Compositor'
     if not cam.rp_compositornodes:
         pass
 
-    last_node = 'Draw Compositor'
+    if cam.rp_overlays:
+        links.new(nodes[last_node].outputs[0], nodes['Clear Target Overlay'].inputs[0])
+        last_node = 'Draw Meshes Overlay'
+        links.new(nodes[last_node].outputs[0], nodes['SMAA'].inputs[0])
+
     if cam.rp_antialiasing == 'SMAA':
         last_node = 'SMAA'
     elif cam.rp_antialiasing == 'TAA':
@@ -132,6 +137,3 @@ def make_deferred(cam):
         l = nodes['Draw Compositor'].outputs[0].links[0]
         links.remove(l)
         links.new(nodes['Framebuffer'].outputs[0], nodes['Draw Compositor'].inputs[1])
-
-    if cam.rp_overlays:
-        links.new(nodes[last_node].outputs[0], nodes['Clear Target Overlay'].inputs[0])
