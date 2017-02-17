@@ -50,9 +50,10 @@ def on_scene_update_post(context):
         last_operator = ops[-1]
         operators_changed = True
     # Undo was performed - Blender clears the complete operator stack, undo last known operator atleast
-    if len(ops) == 0 and last_operator != None:
-        op_changed(last_operator, bpy.context.obj)
-        last_operator = None
+    # if len(ops) == 0 and last_operator != None:
+        # if hasattr(bpy.context, 'object'):
+            # op_changed(last_operator, bpy.context.object)
+        # last_operator = None
 
     # Player running
     state.krom_running = False
