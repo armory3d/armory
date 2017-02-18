@@ -12,6 +12,7 @@ import material.make_transluc as make_transluc
 import material.make_overlay as make_overlay
 import material.make_depth as make_depth
 import material.make_decal as make_decal
+import material.make_voxel as make_voxel
 
 rpass_hook = None
 mesh_make = make_mesh.make
@@ -82,6 +83,9 @@ def parse(material, mat_data, mat_users, mat_armusers, rid):
 
         elif rp == 'depth':
             con = make_depth.make(rp)
+
+        elif rp == 'voxel':
+            con = make_voxel.make(rp)
 
         elif rpass_hook != None:
             con = rpass_hook(rp)

@@ -104,7 +104,7 @@ class ShaderContext:
             c['link'] = link
         self.constants.append(c)
 
-    def add_texture_unit(self, ctype, name, link=None):
+    def add_texture_unit(self, ctype, name, link=None, is_image=None):
         for c in self.tunits:
             if c['name'] == name:
                 return
@@ -112,6 +112,8 @@ class ShaderContext:
         c = { 'name': name }
         if link != None:
             c['link'] = link
+        if is_image != None:
+            c['is_image'] = is_image
         self.tunits.append(c)
 
     def make_vert(self):

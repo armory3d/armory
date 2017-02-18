@@ -36,6 +36,8 @@ def get_rpasses(material):
         ar.append('mesh')
         for con in add_mesh_contexts:
             ar.append(con)
+        if bpy.data.worlds['Arm'].voxelgi:
+            ar.append('voxel')
 
     shadows_enabled = False
     for cam in bpy.data.cameras:

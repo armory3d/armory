@@ -13,6 +13,7 @@ class Shader:
         self.functions = {}
         self.main = ''
         self.main_pre = ''
+        self.header = ''
         self.write_pre = False
         self.tab = 1
 
@@ -27,8 +28,12 @@ class Shader:
 
     def add_uniform(self, s, link=None, included=False):
         ar = s.split(' ')
-        if ar[0] == 'sampler2D':
-            self.context.add_texture_unit(ar[0], ar[1], link=link)
+        # layout(RGBA8) image3D voxels
+        utype = ar[-2]
+        uname = ar[-1]
+        if utype.startswith('sampler') or utype.startswith('image'):
+            is_image = True if utype.startswith('image') else None
+            self.context.add_texture_unit(utype, uname, link=link, is_image=is_image)
         else:
             # Prefer vec4[] for d3d to avoid padding
             if ar[0] == 'float' and '[' in ar[1]:
@@ -56,8 +61,13 @@ class Shader:
         else:
             self.main += '\t' * self.tab + s + '\n'
 
+    def write_header(self, s):
+        self.header += s + '\n'
+
     def get(self):
         s = '#version 450\n'
+
+        s += self.header
 
         defs = make_utils.def_strings_to_array(bpy.data.worlds['Arm'].world_defs)
         for a in defs:
@@ -77,7 +87,7 @@ class Shader:
             s += 'layout(vertices = 3) out;\n'
             # Gen outs
             for sin in self.ins:
-                ar = sin.split(' ') # vec3 wnormal
+                ar = sin.rsplit(' ', 1) # vec3 wnormal
                 tc_s = 'tc_' + ar[1]
                 self.add_out(ar[0] + ' ' + tc_s)
                 # Pass data
@@ -86,6 +96,11 @@ class Shader:
         elif self.shader_type == 'tese':
             in_ext = '[]'
             s += 'layout(triangles, equal_spacing, ccw) in;\n'
+
+        elif self.shader_type == 'geom':
+            in_ext = '[]'
+            s += 'layout(triangles) in;\n'
+            s += 'layout(triangle_strip, max_vertices = 3) out;\n'
 
         for a in self.includes:
             s += '#include "' + a + '"\n'

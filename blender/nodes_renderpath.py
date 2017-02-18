@@ -295,6 +295,8 @@ class DeferredLightPassNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Target")
         self.inputs.new('NodeSocketShader', "GBuffer")
         self.inputs.new('NodeSocketShader', "Shadow Map")
+        # Testing voxels
+        self.inputs.new('NodeSocketShader', "Voxels")
 
         self.outputs.new('NodeSocketShader', "Stage")
 

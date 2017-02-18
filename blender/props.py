@@ -432,7 +432,7 @@ def init_properties():
         items=[('Lambert', 'Lambert', 'Lambert'),
                ('Oren Nayar', 'Oren Nayar', 'Oren Nayar')],
         name="Diffuse", description="Diffuse model", default='Lambert', update=assets.invalidate_shader_cache)
-    bpy.types.World.voxelgi = bpy.props.BoolProperty(name="VGI", description="Voxel-based Global Illumination", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.voxelgi = bpy.props.BoolProperty(name="Voxel GI", description="Voxel-based Global Illumination", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi_dimensions = bpy.props.FloatVectorProperty(name="Dimensions", description="3D texture size", size=3, default=[128, 128, 128], update=assets.invalidate_shader_cache)
     # For material
     bpy.types.Material.is_cached = bpy.props.BoolProperty(name="Material Cached", description="No need to reexport material data", default=False, update=update_mat_cache)

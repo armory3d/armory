@@ -10,7 +10,9 @@ precision mediump float;
 // #ifdef _PolyLight
 #include "../std/ltc.glsl"
 // #endif
-// ...
+#ifdef _VoxelGI
+	#include "../std/conetrace.glsl"
+#endif
 #ifndef _NoShadows
 	#ifdef _PCSS
 	#include "../std/shadows_pcss.glsl"

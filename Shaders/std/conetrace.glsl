@@ -1,6 +1,6 @@
 uniform sampler3D voxels;
 const float voxelGridWorldSize = 150.0;
-const int voxelDimensions = 512;
+const int voxelDimensions = 128;
 const float maxDist = 30.0;
 const float alphaThreshold = 0.95;
 const int numCones = 6;
@@ -45,12 +45,12 @@ vec4 coneTrace(vec3 posWorld, vec3 direction, vec3 norWorld, float tanHalfAngle,
 }
 
 vec4 coneTraceIndirect(vec3 posWorld, mat3 tanToWorld, vec3 norWorld, out float occlusion) {
-	vec4 color = vec4(0);
+	vec4 color = vec4(0.0);
 	occlusion = 0.0;
 
 	for (int i = 0; i < numCones; i++) {
 		float coneOcclusion;
-		const float tanangle = tan(30):
+		const float tanangle = tan(30.0);
 		color += coneWeights[i] * coneTrace(posWorld, tanToWorld * coneDirections[i], norWorld, tanangle, coneOcclusion);
 		occlusion += coneWeights[i] * coneOcclusion;
 	}
