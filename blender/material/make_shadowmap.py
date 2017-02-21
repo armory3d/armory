@@ -5,7 +5,7 @@ import material.make_skin as make_skin
 import material.make_tess as make_tess
 
 def make(context_id, rpasses):
-    con_shadowmap = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
+    con_shadowmap = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False })
 
     vert = con_shadowmap.make_vert()
     frag = con_shadowmap.make_frag()
