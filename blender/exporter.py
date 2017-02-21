@@ -1733,7 +1733,7 @@ class ArmoryExporter:
             om['index_arrays'].append(ia)
         
         # Make tangents
-        if self.get_export_tangents(exportMesh) == True and num_uv_layers > 0:
+        if self.get_export_uvs(exportMesh) == True and self.get_export_tangents(exportMesh) == True and num_uv_layers > 0:
             tana = {}
             tana['attrib'] = "tangent"
             tana['size'] = 3
