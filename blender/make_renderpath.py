@@ -312,7 +312,7 @@ def make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices
     bind_target_used = False
     for i in range(0, len(bind_target_indices)):
         index = bind_target_indices[i]
-        if node.inputs[index].is_linked:
+        if len(node.inputs) > index and node.inputs[index].is_linked:
             bind_target_used = True
             if bind_target_constants == None:
                 constant_name = node.inputs[index + 1].default_value
@@ -425,8 +425,7 @@ def make_water_pass(stages, node_group, node):
 
 def make_deferred_light_pass(stages, node_group, node):
     # Draw lamp volume - TODO: properly generate stage
-    # make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'shadowMap'], shader_context='deferred_light/deferred_light/deferred_light')
-    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['gbuffer', 'shadowMap', 'voxels'], shader_context='deferred_light/deferred_light/deferred_light')
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'shadowMap'], shader_context='deferred_light/deferred_light/deferred_light')
     stages[-1]['command'] = 'draw_lamp_volume'
 
 def make_volumetric_light_pass(stages, node_group, node):
@@ -438,9 +437,7 @@ def make_volumetric_light_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y_blend_add')
 
 def make_deferred_indirect_pass(stages, node_group, node):
-    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'ssaotex'], shader_context='deferred_indirect/deferred_indirect/deferred_indirect')
-    # Testing voxels
-    # make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['gbuffer', 'ssaotex', 'voxels'], shader_context='deferred_indirect/deferred_indirect/deferred_indirect')
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['gbuffer', 'ssaotex', 'voxels'], shader_context='deferred_indirect/deferred_indirect/deferred_indirect')
 
 def make_translucent_resolve_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2], bind_target_constants=['gbuffer'], shader_context='translucent_resolve/translucent_resolve/translucent_resolve')

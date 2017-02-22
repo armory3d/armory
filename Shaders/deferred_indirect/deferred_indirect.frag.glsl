@@ -14,10 +14,17 @@ precision mediump float;
 #ifdef _Irr
 	#include "../std/shirr.glsl"
 #endif
+#ifdef _VoxelGI
+	#include "../std/conetrace.glsl"
+#endif
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
+
+#ifdef _VoxelGI
+	//!uniform sampler3D voxels;
+#endif
 
 uniform float envmapStrength;
 #ifdef _Irr
@@ -54,17 +61,38 @@ void main() {
 
 	vec2 metrough = unpackFloat(g0.b);
 
+	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, occlusion
+	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
+
 #ifdef _Rad
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	vec3 p = getPos(eye, eyeLook, viewRay, depth);
 	vec3 v = normalize(eye - p.xyz);
+
+	float dotNV = max(dot(n, v), 0.0);
+	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
+	vec2 envBRDF = texture(senvmapBrdf, vec2(metrough.y, 1.0 - dotNV)).xy;
 #endif
 
-	// Indirect
+#ifdef _VoxelGI
+	vec3 indirectDiffuse = indirectDiffuseLight(n, p / voxelgiDimensions.x);
+	
+	vec3 reflectWorld = reflect(-v, n);
+	vec3 indirectSpecular = traceSpecularVoxelCone(p / voxelgiDimensions.x, reflectWorld, n, metrough.y * 10.0);
+	indirectSpecular *= f0 * envBRDF.x + envBRDF.y;
+
+	fragColor.rgb = indirectDiffuse * 0.1 * albedo + indirectSpecular;
+	fragColor.rgb *= texture(ssaotex, texCoord).r;
+
+	// if (opacity < 1.0) fragColor.rgb = mix(indirectRefractiveLight(-v), fragColor.rgb); // Transparency
+	return;
+#endif
+	
+	// Envmap
 #ifdef _Irr
-	vec3 indirect = shIrradiance(n, 2.2) / PI;
+	fragColor.rgb = shIrradiance(n, 2.2) / PI;
 #else
-	vec3 indirect = vec3(1.0);
+	fragColor.rgb = vec3(1.0);
 #endif
 
 #ifdef _Rad
@@ -74,32 +102,22 @@ void main() {
 #endif
 
 #ifdef _EnvLDR
-	indirect = pow(indirect, vec3(2.2));
+	fragColor.rgb = pow(fragColor.rgb, vec3(2.2));
 	#ifdef _Rad
 		prefilteredColor = pow(prefilteredColor, vec3(2.2));
 	#endif
 #endif
 
-	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, occlusion
-	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
-	indirect *= albedo;
+	fragColor.rgb *= albedo;
 	
-#ifdef _Rad
-	// Indirect specular
-	float dotNV = max(dot(n, v), 0.0);
-	
-	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
-
-	vec2 envBRDF = texture(senvmapBrdf, vec2(metrough.y, 1.0 - dotNV)).xy;
-	indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
+#ifdef _Rad // Indirect specular
+	fragColor.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 #endif
 
-	indirect = indirect * envmapStrength;// * lightColor;
-	indirect = indirect * g1.a; // Occlusion
+	fragColor.rgb = fragColor.rgb * envmapStrength;// * lightColor;
+	fragColor.rgb = fragColor.rgb * g1.a; // Occlusion
 
 #ifdef _SSAO
-	indirect *= texture(ssaotex, texCoord).r; // SSAO
+	fragColor.rgb *= texture(ssaotex, texCoord).r; // SSAO
 #endif
-	
-	fragColor.rgb = indirect;
 }

@@ -79,6 +79,18 @@ def make_deferred(cam):
     nodes['Begin'].inputs[1].default_value = cam.rp_hdr
     nodes['Screen'].inputs[0].default_value = int(cam.rp_supersampling)
 
+    if cam.rp_voxelgi:
+        links.new(nodes['Begin'].outputs[0], nodes['Set Target Voxels'].inputs[0])
+        links.new(nodes['Generate Mipmaps Voxels'].outputs[0], nodes['Set Target Mesh'].inputs[0])
+        n = nodes['Image 3D Voxels']
+        n.inputs[1].default_value = cam.rp_voxelgi_resolution[0]
+        n.inputs[2].default_value = cam.rp_voxelgi_resolution[1]
+        n.inputs[3].default_value = cam.rp_voxelgi_resolution[2]
+        n = nodes['Set Viewport Voxels']
+        n.inputs[1].default_value = cam.rp_voxelgi_resolution[0]
+        n.inputs[2].default_value = cam.rp_voxelgi_resolution[1]
+        links.new(nodes['Image 3D Voxels'].outputs[0], nodes['Deferred Indirect'].inputs[4])
+
     if cam.rp_shadowmap != 'None':
         n = nodes['Shadow Map']
         n.inputs[1].default_value = n.inputs[2].default_value = int(cam.rp_shadowmap)

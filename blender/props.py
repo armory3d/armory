@@ -332,6 +332,8 @@ def init_properties():
         name="Overlays", description="X-Ray pass", default='Auto', update=update_overlays_state)
     bpy.types.Camera.rp_stereo = bpy.props.BoolProperty(name="Stereo", description="Stereo rendering", default=False, update=update_renderpath)
     bpy.types.Camera.rp_greasepencil = bpy.props.BoolProperty(name="Grease Pencil", description="Render Grease Pencil data", default=False, update=update_renderpath)
+    bpy.types.Camera.rp_voxelgi = bpy.props.BoolProperty(name="Voxel GI", description="Voxel-based Global Illumination", default=False, update=update_renderpath)
+    bpy.types.Camera.rp_voxelgi_resolution = bpy.props.FloatVectorProperty(name="Resolution", description="3D texture resolution", size=3, default=[128, 128, 128], update=update_renderpath)
 
     # For world
     bpy.types.World.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
@@ -432,8 +434,7 @@ def init_properties():
         items=[('Lambert', 'Lambert', 'Lambert'),
                ('Oren Nayar', 'Oren Nayar', 'Oren Nayar')],
         name="Diffuse", description="Diffuse model", default='Lambert', update=assets.invalidate_shader_cache)
-    bpy.types.World.voxelgi = bpy.props.BoolProperty(name="Voxel GI", description="Voxel-based Global Illumination", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.voxelgi_dimensions = bpy.props.FloatVectorProperty(name="Dimensions", description="3D texture size", size=3, default=[128, 128, 128], update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_voxelgi_dimensions = bpy.props.FloatVectorProperty(name="Dimensions", description="Voxelization bounds", size=3, default=[16, 16, 16], update=assets.invalidate_shader_cache)
     # For material
     bpy.types.Material.is_cached = bpy.props.BoolProperty(name="Material Cached", description="No need to reexport material data", default=False, update=update_mat_cache)
     bpy.types.Material.lock_cache = bpy.props.BoolProperty(name="Lock Material Cache", description="Prevent is_cached from updating", default=False)

@@ -219,6 +219,9 @@ class GenRPDataPropsPanel(bpy.types.Panel):
             layout.prop(dat, "rp_worldnodes")
             layout.prop(dat, "rp_stereo")
             # layout.prop(dat, "rp_greasepencil")
+            layout.prop(dat, 'rp_voxelgi')
+            if dat.rp_voxelgi:
+                layout.prop(dat, 'rp_voxelgi_resolution')
 
             layout.separator()
             layout.prop(dat, "rp_render_to_texture")
@@ -261,10 +264,6 @@ class PropsRPDataPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'diffuse_model')
             layout.prop(wrd, 'tessellation_enabled')
             layout.prop(wrd, 'force_no_culling')
-            layout.prop(wrd, 'voxelgi')
-            if wrd.voxelgi:
-                layout.prop(wrd, 'voxelgi_dimensions')
-
             
             layout.prop(wrd, 'arm_camera_props_advanced')
             if wrd.arm_camera_props_advanced:
@@ -317,6 +316,9 @@ class PropsRPDataPropsPanel(bpy.types.Panel):
                 # if wrd.generate_volumetric_light:
                 layout.prop(wrd, 'generate_volumetric_light_air_turbidity')
                 layout.prop(wrd, 'generate_volumetric_light_air_color')
+
+                layout.label('Voxel GI')
+                layout.prop(wrd, 'generate_voxelgi_dimensions')
 
 def register():
     bpy.utils.register_module(__name__)

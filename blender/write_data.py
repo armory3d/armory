@@ -313,13 +313,20 @@ const float compoDOFFstop = """ + str(round(bpy.data.cameras[0].gpu_dof.fstop * 
 const float compoDOFLength = """ + str(round(bpy.data.cameras[0].lens * 100) / 100) + """;
 """)
 
+        if bpy.data.cameras[0].rp_voxelgi:
+            f.write(
+"""const vec3 voxelgiResolution = ivec3(""" + str(round(bpy.data.cameras[0].rp_voxelgi_resolution[0])) + """, """ + str(round(bpy.data.cameras[0].rp_voxelgi_resolution[1])) + """, """ + str(round(bpy.data.cameras[0].rp_voxelgi_resolution[2])) + """);
+const vec3 voxelgiDimensions = ivec3(""" + str(round(wrd.generate_voxelgi_dimensions[0])) + """, """ + str(round(wrd.generate_voxelgi_dimensions[1])) + """, """ + str(round(wrd.generate_voxelgi_dimensions[2])) + """);
+""")
+
         # Skinning
         if wrd.generate_gpu_skin:
             f.write(
 """const int skinMaxBones = """ + str(wrd.generate_gpu_skin_max_bones) + """;
 """)
 
-        f.write("""#endif // _COMPILED_GLSL_""")
+        f.write("""#endif // _COMPILED_GLSL_
+""")
 
 def write_traithx(class_name):
     wrd = bpy.data.worlds['Arm']

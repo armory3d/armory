@@ -7,12 +7,12 @@ precision mediump float;
 #include "../compiled.glsl"
 #include "../std/brdf.glsl"
 #include "../std/math.glsl"
+// #ifdef _VoxelGI
+	// #include "../std/conetrace.glsl"
+// #endif
 // #ifdef _PolyLight
 #include "../std/ltc.glsl"
 // #endif
-#ifdef _VoxelGI
-	#include "../std/conetrace.glsl"
-#endif
 #ifndef _NoShadows
 	#ifdef _PCSS
 	#include "../std/shadows_pcss.glsl"
@@ -26,6 +26,10 @@ precision mediump float;
 // octahedronWrap()
 // unpackFloat()
 
+// #ifdef _VoxelGI
+	//-!uniform sampler3D voxels;
+// #endif
+
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
@@ -36,12 +40,6 @@ uniform sampler2D gbuffer1;
 	//!uniform sampler2D snoise;
 	//!uniform float lampSizeUV;
 	#endif
-#endif
-
-#ifdef _VoxelGI
-	uniform sampler2D ssaotex;
-	uniform sampler2D senvmapBrdf;
-	//!uniform sampler3D voxels;
 #endif
 
 #ifdef _PolyLight
@@ -185,6 +183,14 @@ void main() {
 	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
 	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
 	
+	float visibility = 1.0;
+#ifndef _NoShadows
+	vec4 lampPos = LWVP * vec4(p, 1.0);
+	if (lampPos.w > 0.0) {
+		visibility = shadowTest(lampPos);
+	}
+#endif
+
 	// Per-light
 	vec3 l;
 	if (lightType == 0) { // Sun
@@ -192,6 +198,7 @@ void main() {
 	}
 	else { // Point, spot
 		l = normalize(lightPos - p);
+		visibility *= attenuate(distance(p, lightPos));
 	}
 	
 	vec3 h = normalize(v + l);
@@ -200,14 +207,6 @@ void main() {
 	float dotNL = dot(n, l);
 	// float dotLV = dot(l, v);
 	// float dotLH = dot(l, h);
-	
-	float visibility = 1.0;
-#ifndef _NoShadows
-	vec4 lampPos = LWVP * vec4(p, 1.0);
-	if (lampPos.w > 0.0) {
-		visibility = shadowTest(lampPos);
-	}
-#endif
 	
 	// Direct
 	vec3 direct;
@@ -283,40 +282,10 @@ void main() {
 	visibility *= tvis;
 #endif
 
+// #ifdef _VoxelGI
+	// if (dotNL > 0.0) visibility *= traceShadowCone(p / voxelgiResolution.x, l, distance(p, lightPos) / voxelgiResolution.x, n);
+// #endif
+
 	// Direct
 	fragColor = vec4(vec3(direct * visibility), 1.0);
-
-	// Voxels test..
-#ifdef _VoxelGI
-	vec4 g1a = texture(gbuffer1, texCoord); // Basecolor.rgb, occlusion
-	vec3 albedoa = surfaceAlbedo(g1a.rgb, metrough.x); // g1a.rgb - basecolor
-
-	vec3 tangent = normalize(cross(n, vec3(0.0, 1.0, 0.0)));
-	if (length(tangent) == 0.0) {
-		tangent = normalize(cross(n, vec3(0.0, 0.0, 1.0)));
-	}
-	vec3 bitangent = normalize(cross(n, tangent));
-	mat3 tanToWorld = inverse(transpose(mat3(tangent, bitangent, n)));
-
-	float diffOcclusion = 0.0;
-	vec3 indirectDiffusea = coneTraceIndirect(p, tanToWorld, n, diffOcclusion).rgb * 4.0;
-	indirectDiffusea *= albedoa;
-	diffOcclusion = min(1.0, 1.5 * diffOcclusion);
-
-	vec3 reflectWorld = reflect(-v, n);
-	float specularOcclusion;
-	float lodOffset = 0.0;//getMipFromRoughness(roughness, numMips);
-	vec3 indirectSpecular = coneTrace(p, reflectWorld, n, 0.07 + lodOffset, specularOcclusion).rgb;
-
-	if (metrough.y > 0.0) { // Temp..
-		float dotNVa = max(dot(n, v), 0.0);
-		vec3 f0a = surfaceF0(g1a.rgb, metrough.x);
-		vec2 envBRDFa = texture(senvmapBrdf, vec2(metrough.y, 1.0 - dotNVa)).xy;
-		indirectSpecular *= (f0a * envBRDFa.x + envBRDFa.y);
-	}
-
-	vec3 indirect1 = indirectDiffusea * diffOcclusion + indirectSpecular;
-	indirect1 *= texture(ssaotex, texCoord).r;
-	fragColor.rgb += indirect1;
-#endif
 }

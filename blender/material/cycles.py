@@ -1029,7 +1029,9 @@ def parse_value(node, socket):
         return '0.0'
 
     elif node.type == 'LIGHT_FALLOFF':
-        return '0.0'
+        # Constant, linear, quadratic
+        # Shaders default to quadratic for now
+        return '1.0'
 
     elif node.type == 'NORMAL':
         nor = parse_vector_input(node.inputs[0])

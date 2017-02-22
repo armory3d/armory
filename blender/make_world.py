@@ -75,17 +75,20 @@ def build_node_tree(world):
     if wrd.diffuse_model == 'Oren Nayar':
         wrd.world_defs += '_OrenNayar'
 
-    if wrd.voxelgi:
-        wrd.world_defs += '_VoxelGI'
-        wrd.world_defs += '_Rad' # Always do radiance for voxels
-        wrd.world_defs += '_Irr'
-
-    # Enable probes
+    voxelgi = False
     for cam in bpy.data.cameras:
         if cam.is_probe:
             wrd.world_defs += '_Probes'
         if cam.rp_shadowmap == 'None':
             wrd.world_defs += '_NoShadows'
+        if cam.rp_voxelgi:
+            voxelgi = True
+
+    if voxelgi:
+        assets.add_khafile_def('arm_voxelgi')
+        wrd.world_defs += '_VoxelGI'
+        wrd.world_defs += '_Rad' # Always do radiance for voxels
+        wrd.world_defs += '_Irr'
 
     # Area lamps
     for lamp in bpy.data.lamps:
