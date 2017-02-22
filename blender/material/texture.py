@@ -67,7 +67,12 @@ def make_texture(image_node, tex_name):
             assets.add(converted_path)
         else:
             # Link image path to assets
-            assets.add(armutils.safe_assetpath(image.filepath))
+            # TODO: Khamake converts .PNG to .jpg? Convert ext to lowercase on windows
+            if armutils.get_os() == 'win':
+                s = image.filepath.rsplit('.', 1)
+                assets.add(armutils.safe_assetpath(s[0] + '.' + s[1].lower()))
+            else:
+                assets.add(armutils.safe_assetpath(image.filepath))
 
 
     # if image_format != 'RGBA32':

@@ -44,8 +44,9 @@ class ObjectPropsPanel(bpy.types.Panel):
                 layout.prop(obj, 'game_visible')
             else:
                 layout.prop(obj, 'hide_render')
-            layout.prop(obj, 'spawn')
-            layout.prop(obj, 'mobile')
+            row = layout.row(align=True)
+            row.prop(obj, 'spawn')
+            row.prop(obj, 'mobile')
             if obj.type == 'MESH':
                 layout.prop(obj, 'instanced_children')
                 if obj.instanced_children:
@@ -106,8 +107,9 @@ class ObjectPropsPanel(bpy.types.Panel):
                         row.prop(animitem, "start_prop")
                         row.prop(animitem, "end_prop")
                         layout.prop(animitem, "speed_prop")
-                        layout.prop(animitem, "loop_prop")
-                        layout.prop(animitem, "reflect_prop")
+                        row = layout.row(align=True)
+                        row.prop(animitem, "loop_prop")
+                        row.prop(animitem, "reflect_prop")
 
 class ModifiersPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -166,19 +168,23 @@ class DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'is_mirror')
             if obj.data.is_mirror == True:
                 layout.label('Resolution')
-                layout.prop(obj.data, 'mirror_resolution_x')
-                layout.prop(obj.data, 'mirror_resolution_y')
+                row = layout.row(align=True)
+                row.prop(obj.data, 'mirror_resolution_x')
+                row.prop(obj.data, 'mirror_resolution_y')
             layout.prop(obj.data, 'frustum_culling')
             layout.prop_search(obj.data, "renderpath_path", bpy.data, "node_groups")
         elif obj.type == 'MESH' or obj.type == 'FONT' or obj.type == 'META':
-            layout.prop(obj.data, 'dynamic_usage')
-            layout.prop(obj.data, 'data_compressed')
+            row = layout.row(align=True)
+            row.prop(obj.data, 'dynamic_usage')
+            row.prop(obj.data, 'data_compressed')
             layout.operator("arm.invalidate_cache")
         elif obj.type == 'LAMP':
-            layout.prop(obj.data, 'lamp_clip_start')
-            layout.prop(obj.data, 'lamp_clip_end')
-            layout.prop(obj.data, 'lamp_fov')
-            layout.prop(obj.data, 'lamp_shadows_bias')
+            row = layout.row(align=True)
+            row.prop(obj.data, 'lamp_clip_start')
+            row.prop(obj.data, 'lamp_clip_end')
+            row = layout.row(align=False)
+            row.prop(obj.data, 'lamp_fov')
+            row.prop(obj.data, 'lamp_shadows_bias')
             if obj.data.type == 'POINT':
                 layout.prop(obj.data, 'lamp_omni_shadows')
                 if obj.data.lamp_omni_shadows:
@@ -274,12 +280,13 @@ class MaterialPropsPanel(bpy.types.Panel):
         if mat == None:
             return
 
-        layout.prop(mat, 'cast_shadow')
-        layout.prop(mat, 'receive_shadow')
-        layout.prop(mat, 'overlay')
+        row = layout.row(align=True)
+        row.prop(mat, 'cast_shadow')
+        row.prop(mat, 'receive_shadow')
         
         layout.prop(bpy.data.worlds['Arm'], 'arm_material_advanced')
         if bpy.data.worlds['Arm'].arm_material_advanced:
+            layout.prop(mat, 'overlay')
             layout.prop(mat, 'override_cull')
             if mat.override_cull:
                 layout.prop(mat, 'override_cull_mode')
@@ -300,12 +307,14 @@ class MaterialPropsPanel(bpy.types.Panel):
             layout.label('Height map')
             layout.prop(mat, 'height_tess')
             if mat.height_tess:
-                layout.prop(mat, 'height_tess_inner')
-                layout.prop(mat, 'height_tess_outer')
+                row = layout.row(align=True)
+                row.prop(mat, 'height_tess_inner')
+                row.prop(mat, 'height_tess_outer')
             layout.prop(mat, 'height_tess_shadows')
             if mat.height_tess_shadows:
-                layout.prop(mat, 'height_tess_shadows_inner')
-                layout.prop(mat, 'height_tess_shadows_outer')
+                row = layout.row(align=True)
+                row.prop(mat, 'height_tess_shadows_inner')
+                row.prop(mat, 'height_tess_shadows_outer')
             layout.prop(mat, 'transluc_shadows')
 
             layout.operator("arm.invalidate_material_cache")
@@ -321,9 +330,10 @@ class WorldPropsPanel(bpy.types.Panel):
         # wrd = bpy.context.world
         wrd = bpy.data.worlds['Arm']
         
-        layout.prop(wrd, 'generate_irradiance')
+        row = layout.row(align=True)
+        row.prop(wrd, 'generate_irradiance')
         if wrd.generate_irradiance:
-            layout.prop(wrd, 'generate_radiance')
+            row.prop(wrd, 'generate_radiance')
             if wrd.generate_radiance:
                 layout.prop(wrd, 'generate_radiance_size')
 
@@ -379,16 +389,19 @@ class ArmoryPlayerPanel(bpy.types.Panel):
             layout.prop(wrd, make_utils.runtime_to_gapi())
             layout.prop(wrd, 'arm_play_console')
             if armutils.with_krom():
-                layout.prop(wrd, 'arm_play_live_patch')
+                row = layout.row(align=True)
+                row.prop(wrd, 'arm_play_live_patch')
                 if wrd.arm_play_live_patch:
-                    layout.prop(wrd, 'arm_play_auto_build')
+                    row.prop(wrd, 'arm_play_auto_build')
             layout.operator("arm.render", icon="RENDER_STILL")
 
-            layout.prop(wrd, 'arm_cache_shaders')
-            layout.prop(wrd, 'arm_cache_compiler')
+            row = layout.row(align=True)
+            row.prop(wrd, 'arm_cache_shaders')
+            row.prop(wrd, 'arm_cache_compiler')
+            row = layout.row(align=True)
+            row.prop(wrd, 'arm_minimize')
+            row.prop(wrd, 'arm_optimize_mesh')
             layout.prop(wrd, 'arm_gpu_processing')
-            layout.prop(wrd, 'arm_minimize')
-            layout.prop(wrd, 'arm_optimize_mesh')
             layout.prop(wrd, 'arm_sampled_animation')
             layout.prop(wrd, 'arm_deinterleaved_buffers')
             layout.label('Libraries')
@@ -428,8 +441,10 @@ class ArmoryProjectPanel(bpy.types.Panel):
             layout.prop(wrd, 'arm_spawn_all_layers')
             layout.label('Armory v' + wrd.arm_version)
             layout.operator('arm.check_updates')
-            layout.operator('arm.open_manual')
-            layout.operator('arm.report_issue')
+            row = layout.row(align=True)
+            row.alignment = 'EXPAND'
+            row.operator('arm.open_manual')
+            row.operator('arm.report_issue')
 
 class ArmoryPlayButton(bpy.types.Operator):
     '''Launch player in new window'''
