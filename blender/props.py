@@ -544,6 +544,7 @@ def init_properties_on_load():
 
 def register():
     init_properties()
+    armutils.fetch_bundled_script_names()
 
 def unregister():
     pass

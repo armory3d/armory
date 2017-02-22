@@ -101,15 +101,17 @@ def get_khamake_path():
     else:
         return get_sdk_path() + '/linux64/Kha/make'
 
-def fetch_script_names():
-    if bpy.data.filepath == "":
-        return
-
+def fetch_bundled_script_names():
     wrd = bpy.data.worlds['Arm']
     wrd.bundled_scripts_list.clear()
     os.chdir(get_sdk_path() + '/armory/Sources/armory/trait')
     for file in glob.glob('*.hx'):
         wrd.bundled_scripts_list.add().name = file.rsplit('.')[0]
+
+def fetch_script_names():
+    if bpy.data.filepath == "":
+        return
+    wrd = bpy.data.worlds['Arm']
     wrd.scripts_list.clear()
     sources_path = get_fp() + '/Sources/' + wrd.arm_project_package
     if os.path.isdir(sources_path):

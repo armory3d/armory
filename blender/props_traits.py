@@ -204,6 +204,7 @@ class ArmoryRefreshScriptsListButton(bpy.types.Operator):
     bl_label = 'Refresh Scripts List'
  
     def execute(self, context):
+        armutils.fetch_bundled_script_names()
         armutils.fetch_script_names()
         return{'FINISHED'}
 
