@@ -2081,9 +2081,11 @@ class ArmoryExporter:
                 o['strength'] = n.inputs[1].default_value
                 # Normalize point/spot strength
                 if o['type'] == 'point' or o['type'] == 'spot':
-                    o['strength'] /= 1000.0
+                    o['strength'] /= 40.0
                 elif o['type'] == 'area':
-                    o['strength'] /= 1000.0
+                    o['strength'] /= 40.0
+                elif o['type'] == 'sun':
+                    o['strength'] *= 0.4
                 # Texture test..
                 # if n.inputs[0].is_linked:
                     # color_node = nodes.find_node_by_link(tree, n, n.inputs[0])

@@ -31,4 +31,12 @@ float linearize(const float depth) {
 	return -cameraPlane.y * cameraPlane.x / (depth * (cameraPlane.y - cameraPlane.x) - cameraPlane.y);
 }
 
+float attenuate(const float dist) {
+// float attenuate(float dist, float constant, float linear, float quadratic) {
+	return 1.0 / (dist * dist);
+	// 1.0 / (constant * 1.0)
+	// 1.0 / (lienar * dist)
+	// 1.0 / (quadratic * dist * dist);
+}
+
 #endif

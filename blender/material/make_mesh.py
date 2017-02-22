@@ -224,12 +224,6 @@ def make_forward_base(con_mesh, parse_opacity=False):
             frag.add_uniform('sampler2D senvmapBrdf', link='_envmapBrdf')
             frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps')
 
-    frag.write('vec3 l = lightType == 0 ? lightDir : normalize(lightPos - wposition);')
-    frag.write('vec3 h = normalize(v + l);')
-    frag.write('float dotNL = dot(n, l);')
-    frag.write('float dotNH = dot(n, h);')
-    frag.write('float dotVH = dot(v, h);')
-
     if '_NoShadows' in wrd.world_defs:
         is_shadows = False
     else:
@@ -270,6 +264,15 @@ def make_forward_base(con_mesh, parse_opacity=False):
             frag.write('visibility = PCF(lpos.xy, lpos.z - shadowsBias);')
         frag.tab -= 1
         frag.write('}')
+
+
+    frag.write('vec3 l;')
+    frag.write('if (lightType == 0) l = lightDir;')
+    frag.write('else { l = normalize(lightPos - wposition); visibility *= attenuate(distance(wposition, lightPos)); }')
+    frag.write('vec3 h = normalize(v + l);')
+    frag.write('float dotNL = dot(n, l);')
+    frag.write('float dotNH = dot(n, h);')
+    frag.write('float dotVH = dot(v, h);')
 
     frag.add_uniform('float spotlightCutoff', '_spotlampCutoff')
     frag.add_uniform('float spotlightExponent', '_spotlampExponent')
