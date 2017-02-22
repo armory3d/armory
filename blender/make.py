@@ -207,7 +207,9 @@ def build_project(is_play=False, is_publish=False, in_viewport=False, target=Non
     state.in_viewport = False
 
     # Save blend
-    bpy.ops.wm.save_mainfile()
+    if armutils.get_save_on_build():
+        bpy.ops.wm.save_mainfile()
+    
     log.clear()
 
     # Set camera in active scene
