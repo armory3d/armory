@@ -17,7 +17,7 @@ def parse_operator(text):
         elif cmd[1] == 'setx':
             bpy.context.scene.objects[cmd[2]].location.x = float(cmd[3])
         elif cmd[1] == 'select':
-            if bpy.context.object != None:
+            if hasattr(bpy.context, 'object') and bpy.context.object != None:
                 bpy.context.object.select = False
             bpy.context.scene.objects[cmd[2]].select = True
             bpy.context.scene.objects.active = bpy.context.scene.objects[cmd[2]]
@@ -32,7 +32,7 @@ def parse_operator(text):
 
 def send_operator(op):
     # Try to translate operator directly to armory
-    if armutils.with_krom() and bpy.context.object != None:
+    if armutils.with_krom() and hasattr(bpy.context, 'object') and bpy.context.object != None:
         objname = bpy.context.object.name
         if op.name == 'Translate':
             vec = bpy.context.object.location
