@@ -365,21 +365,20 @@ class ArmoryPlayerPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds['Arm']
-        if state.playproc == None and state.compileproc == None:
-            layout.operator("arm.play", icon="PLAY")
-        else:
-            layout.operator("arm.stop", icon="MESH_PLANE")
-        layout.prop(wrd, 'arm_play_runtime')
 
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
+        if state.playproc == None and state.compileproc == None:
+            row.operator("arm.play", icon="PLAY")
+        else:
+            row.operator("arm.stop", icon="MESH_PLANE")
         if state.playproc == None and state.krom_running == False:
             row.operator("arm.build")
         else:
             row.operator("arm.patch")
         row.operator("arm.clean_menu")
-        layout.operator("arm.kode_studio")
-
+        
+        layout.prop(wrd, 'arm_play_runtime')
         layout.prop(wrd, 'arm_play_viewport_camera')
         if wrd.arm_play_viewport_camera:
             layout.prop(wrd, 'arm_play_viewport_navigation')
@@ -424,6 +423,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_project_package')
         layout.prop_search(wrd, 'arm_khafile', bpy.data, 'texts', 'Khafile')
         layout.prop_search(wrd, 'arm_command_line', bpy.data, 'texts', 'Command Line')
+        layout.operator("arm.kode_studio")
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
         row.operator("arm.build_project")

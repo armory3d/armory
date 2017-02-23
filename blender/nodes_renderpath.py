@@ -388,6 +388,19 @@ class ClearTargetNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
+class ClearImageNode(Node, CGPipelineTreeNode):
+    '''Clear target image node'''
+    bl_idname = 'ClearImageNodeType'
+    bl_label = 'Clear Image'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketShader', "Image")
+        self.inputs.new('NodeSocketColor', "Color")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
 class GenerateMipmapsNode(Node, CGPipelineTreeNode):
     '''Generate mipmaps node'''
     bl_idname = 'GenerateMipmapsNodeType'
@@ -776,6 +789,7 @@ node_categories = [
         NodeItem("DrawMeshesNodeType"),
         NodeItem("DrawDecalsNodeType"),
         NodeItem("ClearTargetNodeType"),
+        NodeItem("ClearImageNodeType"),
         NodeItem("GenerateMipmapsNodeType"),
         NodeItem("SetTargetNodeType"),
         NodeItem("SetViewportNodeType"),

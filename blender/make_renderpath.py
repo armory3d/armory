@@ -117,6 +117,11 @@ def make_clear_target(stage, color_val=None, depth_val=None, stencil_val=None):
         stage['params'].append('stencil')
         stage['params'].append(str(stencil_val))
 
+def make_clear_image(stage, image_name, color_val):
+    stage['command'] = 'clear_image'
+    stage['params'].append(image_name)
+    stage['params'].append(str(armutils.to_hex(color_val)))
+
 def make_generate_mipmaps(stage, node_group, node):
     stage['command'] = 'generate_mipmaps'
 
@@ -474,6 +479,12 @@ def buildNode(stages, node, node_group):
             stencil_val = node.inputs[6].default_value
         make_clear_target(stage, color_val=color_val, depth_val=depth_val, stencil_val=stencil_val)
     
+    elif node.bl_idname == 'ClearImageNodeType':
+        image_node = node.inputs[1].links[0].from_node
+        image_name = image_node.inputs[0].default_value
+        color_val = node.inputs[2].default_value
+        make_clear_image(stage, image_name, color_val)
+
     elif node.bl_idname == 'GenerateMipmapsNodeType':
         make_generate_mipmaps(stage, node_group, node)
 
