@@ -15,7 +15,7 @@ vec3 orthogonal(const vec3 u) {
 	return abs(dot(u, v)) > 0.99999 ? cross(u, vec3(0.0, 1.0, 0.0)) : cross(u, v);
 }
 
-vec3 traceDiffuseVoxelCone(const vec3 from, vec3 direction) {
+vec4 traceDiffuseVoxelCone(const vec3 from, vec3 direction) {
 	direction = normalize(direction);
 	const float CONE_SPREAD = 0.325;
 	vec4 acc = vec4(0.0);
@@ -33,10 +33,11 @@ vec3 traceDiffuseVoxelCone(const vec3 from, vec3 direction) {
 		acc += 0.075 * ll * voxel * pow(1.0 - voxel.a, 2.0);
 		dist += ll * VOXEL_SIZE * 2.0;
 	}
-	return pow(acc.rgb * 2.0, vec3(1.5));
+	acc.rgb = pow(acc.rgb * 2.0, vec3(1.5));
+	return acc;
 }
 
-vec3 indirectDiffuseLight(const vec3 normal, const vec3 wpos) {
+vec4 indirectDiffuseLight(const vec3 normal, const vec3 wpos) {
 	const float ANGLE_MIX = 0.5; // Angle mix (1.0f -> orthogonal direction, 0.0f -> direction of normal)
 	const float w[3] = { 1.0, 1.0, 1.0 }; // Cone weights
 	// Find a base for the side cones with the normal as one of its base vectors
@@ -51,7 +52,7 @@ vec3 indirectDiffuseLight(const vec3 normal, const vec3 wpos) {
 	const vec3 C_ORIGIN = wpos + N_OFFSET;
 
 	// Accumulate indirect diffuse light
-	vec3 acc = vec3(0.0);
+	vec4 acc = vec4(0.0);
 
 	// We offset forward in normal direction, and backward in cone direction
 	// Backward in cone direction improves GI, and forward direction removes artifacts
@@ -79,7 +80,7 @@ vec3 indirectDiffuseLight(const vec3 normal, const vec3 wpos) {
 	acc += w[2] * traceDiffuseVoxelCone(C_ORIGIN + CONE_OFFSET * corner2, c3);
 	acc += w[2] * traceDiffuseVoxelCone(C_ORIGIN - CONE_OFFSET * corner2, c4);
 
-	return acc + vec3(0.001);
+	return acc + vec4(0.001);
 }
 
 vec3 traceSpecularVoxelCone(vec3 from, vec3 direction, const vec3 normal, const float specularDiffusion) {
