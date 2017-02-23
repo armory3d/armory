@@ -80,7 +80,7 @@ def make_deferred(cam):
     nodes['Screen'].inputs[0].default_value = int(cam.rp_supersampling)
 
     if cam.rp_voxelgi:
-        links.new(nodes['Begin'].outputs[0], nodes['Set Target Voxels'].inputs[0])
+        links.new(nodes['Begin'].outputs[0], nodes['Clear Image Voxels'].inputs[0])
         links.new(nodes['Generate Mipmaps Voxels'].outputs[0], nodes['Set Target Mesh'].inputs[0])
         n = nodes['Image 3D Voxels']
         n.inputs[1].default_value = cam.rp_voxelgi_resolution[0]
