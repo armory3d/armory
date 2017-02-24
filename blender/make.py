@@ -371,7 +371,7 @@ def play_project(in_viewport):
 
         # Unable to live-patch, stop player
         if state.krom_running:
-            bpy.ops.arm.space_stop()
+            bpy.ops.arm.space_stop('EXEC_DEFAULT')
             # play_project(in_viewport=True) # Restart
             return
 

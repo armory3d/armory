@@ -176,6 +176,38 @@ class ArmoryEditScriptButton(bpy.types.Operator):
         
         return{'FINISHED'}
 
+class ArmoryEditBundledScriptButton(bpy.types.Operator):
+    '''Copy script to project and edit in Kode Studio'''
+    bl_idname = 'arm.edit_bundled_script'
+    bl_label = 'Edit Script'
+ 
+    def execute(self, context):
+        sdk_path = armutils.get_sdk_path()
+        project_path = armutils.get_fp()
+        pkg = bpy.data.worlds['Arm'].arm_project_package
+        item = context.object.my_traitlist[context.object.traitlist_index]  
+        source_hx_path = sdk_path + '/armory/Sources/armory/trait/' + item.class_name_prop + '.hx'
+        target_hx_path = project_path + '/Sources/' + pkg + '/' + item.class_name_prop + '.hx'
+
+        if not os.path.isfile(target_hx_path):
+            # Rewrite package and copy
+            sf = open(source_hx_path)
+            sf.readline()
+            tf = open(target_hx_path, 'w')
+            tf.write('package ' + pkg + ';\n')
+            shutil.copyfileobj(sf, tf)
+            sf.close()
+            tf.close()
+            armutils.fetch_script_names()
+
+        # From bundled to script
+        item.type_prop = 'Haxe Script'
+
+        # Edit in Kode Studio
+        bpy.ops.arm.edit_script('EXEC_DEFAULT')
+        
+        return{'FINISHED'}
+
 class ArmoryNewScriptDialog(bpy.types.Operator):
     '''Create blank script'''
     bl_idname = "arm.new_script"
@@ -284,6 +316,8 @@ class ToolsTraitsPanel(bpy.types.Panel):
                     row.operator("arm.edit_script")
                     layout.operator("arm.new_script")
                     layout.operator("arm.refresh_scripts_list")
+                else: # Bundled
+                    layout.operator("arm.edit_bundled_script")
             
             # JS/Python Script
             elif item.type_prop == 'JS Script' or item.type_prop == 'Python Script':
