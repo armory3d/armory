@@ -418,6 +418,13 @@ def init_properties():
     bpy.types.World.generate_fog_color = bpy.props.FloatVectorProperty(name="Color", size=3, subtype='COLOR', default=[0.5, 0.6, 0.7], update=assets.invalidate_shader_cache)
     bpy.types.World.generate_fog_amounta = bpy.props.FloatProperty(name="Amount A", default=0.25, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_fog_amountb = bpy.props.FloatProperty(name="Amount B", default=0.5, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_tonemap = EnumProperty(
+        items=[('None', 'None', 'None'),
+               ('Filmic', 'Filmic', 'Filmic'),
+               ('Filmic2', 'Filmic2', 'Filmic2'),
+               ('Reinhard', 'Reinhard', 'Reinhard'),
+               ('Uncharted', 'Uncharted', 'Uncharted')],
+        name='Tonemap', description='Tonemapping operator', default='Filmic', update=assets.invalidate_shader_cache)
     # Skin
     bpy.types.World.generate_gpu_skin = bpy.props.BoolProperty(name="GPU Skinning", description="Calculate skinning on GPU", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=84, update=assets.invalidate_shader_cache)

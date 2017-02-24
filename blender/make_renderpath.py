@@ -232,6 +232,7 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     wrd = bpy.data.worlds['Arm']
     world_defs = wrd.world_defs + wrd.rp_defs
     compositor_defs = make_compositor.parse_defs(bpy.data.scenes[0].node_tree) # Thrown in scene 0 for now
+    compositor_defs += '_CTone' + wrd.generate_tonemap
     # Additional compositor flags
     compo_depth = False # Read depth
     # compo_pos = False # Construct position from depth

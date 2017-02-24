@@ -11,9 +11,6 @@ def parse_defs(node_group):
     parse_defs.defs = []
     build_node(node_group, nodes.get_input_node(node_group, rn, 0))
 
-    # Always include tonemap for now
-    add_def('_CompoTonemap')
-
     # To string
     s = ''
     for d in parse_defs.defs:

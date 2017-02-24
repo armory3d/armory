@@ -341,20 +341,21 @@ class WorldPropsPanel(bpy.types.Panel):
                 if wrd.generate_radiance_sky:
                     layout.prop(wrd, 'generate_radiance_sky_type')
 
-        # layout.separator()
+        layout.separator()
         # TODO: migrate to compositor
-        # layout.label('Compositor')
-        # layout.prop(wrd, 'generate_letterbox')
-        # if wrd.generate_letterbox:
-        #     layout.prop(wrd, 'generate_letterbox_size')
-        # layout.prop(wrd, 'generate_grain')
-        # if wrd.generate_grain:
-        #     layout.prop(wrd, 'generate_grain_strength')
-        # layout.prop(wrd, 'generate_fog')
-        # if wrd.generate_fog:
-        #     layout.prop(wrd, 'generate_fog_color')
-        #     layout.prop(wrd, 'generate_fog_amounta')
-        #     layout.prop(wrd, 'generate_fog_amountb')
+        layout.label('Compositor (deprecated)')
+        layout.prop(wrd, 'generate_tonemap')
+        layout.prop(wrd, 'generate_letterbox')
+        if wrd.generate_letterbox:
+            layout.prop(wrd, 'generate_letterbox_size')
+        layout.prop(wrd, 'generate_grain')
+        if wrd.generate_grain:
+            layout.prop(wrd, 'generate_grain_strength')
+        layout.prop(wrd, 'generate_fog')
+        if wrd.generate_fog:
+            layout.prop(wrd, 'generate_fog_color')
+            layout.prop(wrd, 'generate_fog_amounta')
+            layout.prop(wrd, 'generate_fog_amountb')
 
 class ArmoryPlayerPanel(bpy.types.Panel):
     bl_label = "Armory Player"

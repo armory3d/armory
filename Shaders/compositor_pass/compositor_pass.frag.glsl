@@ -235,13 +235,24 @@ void main() {
 	col.rgb *= compoExposureStrength;
 #endif
 
-#ifdef _CTonemap
-	col.rgb = tonemapUncharted2(col.rgb);
-	// col.rgb = tonemapFilmic(col.rgb); // With gamma
+#ifdef _CToneFilmic
+	col.rgb = tonemapFilmic(col.rgb); // With gamma
 #endif
-
-	// To gamma
+#ifdef _CToneFilmic2
+	col.rgb = acesFilm(col.rgb);
 	col.rgb = pow(col.rgb, vec3(1.0 / 2.2));
+#endif
+#ifdef _CToneReinhard
+	col.rgb = tonemapReinhard(col.rgb);
+	col.rgb = pow(col.rgb, vec3(1.0 / 2.2));
+#endif
+#ifdef _CToneUncharted
+	col.rgb = tonemapUncharted2(col.rgb);
+	col.rgb = pow(col.rgb, vec3(1.0 / 2.2)); // To gamma
+#endif
+#ifdef _CToneNone
+	col.rgb = pow(col.rgb, vec3(1.0 / 2.2)); // To gamma
+#endif
 	
 #ifdef _CBW
 	// col.rgb = vec3(clamp(dot(col.rgb, col.rgb), 0.0, 1.0));
