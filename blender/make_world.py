@@ -75,6 +75,10 @@ def build_node_tree(world):
     if wrd.diffuse_model == 'Oren Nayar':
         wrd.world_defs += '_OrenNayar'
 
+    # TODO: Lamp texture test..
+    if wrd.generate_lamp_texture != '':
+        bpy.data.worlds['Arm'].world_defs += '_LampColTex'
+
     voxelgi = False
     for cam in bpy.data.cameras:
         if cam.is_probe:

@@ -69,6 +69,11 @@
 					"name": "aspectRatio",
 					"link": "_aspectRatioF",
 					"ifdef": ["_CGlare"]
+				},
+				{
+					"name": "lensTexture",
+					"link": "_lensTexture",
+					"ifdef": ["_CLensTex"]
 				}
 			],
 			"texture_params": [],

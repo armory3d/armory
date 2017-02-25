@@ -22,6 +22,7 @@ import armutils
 import subprocess
 import log
 import material.make as make_material
+import material.texture as make_texture
 import nodes
 import make_renderer
 import make_renderpath
@@ -2086,13 +2087,11 @@ class ArmoryExporter:
                     o['strength'] /= 40.0
                 elif o['type'] == 'sun':
                     o['strength'] *= 0.4
-                # Texture test..
-                # if n.inputs[0].is_linked:
-                    # color_node = nodes.find_node_by_link(tree, n, n.inputs[0])
-                    # if color_node.type == 'TEX_IMAGE':
-                        # o['color_texture'] = color_node.image.name
-                        # make_texture(None, '', color_node, None)
-                        ## bpy.data.worlds['Arm'].world_defs += '_LampColTex'
+                # TODO: Lamp texture test..
+                if n.inputs[0].is_linked:
+                    color_node = n.inputs[0].links[0].from_node
+                    if color_node.type == 'TEX_IMAGE':
+                        o['color_texture'] = color_node.image.name
                 break
 
         # Fake omni shadows

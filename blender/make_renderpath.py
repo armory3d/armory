@@ -256,6 +256,10 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     if compo_depth:
         compositor_defs += '_CDepth'
 
+    if wrd.generate_lens_texture != '':
+        compositor_defs += '_CLensTex'
+        assets.add_embedded_data('lenstexture.jpg')
+
     wrd.compo_defs = compositor_defs
 
     defs = world_defs + compositor_defs

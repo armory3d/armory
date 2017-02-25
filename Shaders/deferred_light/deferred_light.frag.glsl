@@ -263,7 +263,7 @@ void main() {
 
 #ifdef _LampColTex
 	// direct *= texture(texlampcolor, envMapEquirect(l)).rgb;
-	direct *= pow(texture(texlampcolor, l.xy).rgb, vec3(2.2));	
+	direct *= pow(texture(texlampcolor, l.xy).rgb, vec3(2.2));
 #endif
 	
 #ifdef _SSS

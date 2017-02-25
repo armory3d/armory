@@ -6,13 +6,14 @@ import material.mat_state as mat_state
 import make_state as state
 import bpy
 
-def make_texture(image_node, tex_name):
+def make_texture(image_node, tex_name, matname=None):
     wrd = bpy.data.worlds['Arm']
     tex = {}
     tex['name'] = tex_name
     tex['file'] = ''
     image = image_node.image
-    matname = mat_state.material.name
+    if matname == None:
+        matname = mat_state.material.name
 
     if image == None:
         return None

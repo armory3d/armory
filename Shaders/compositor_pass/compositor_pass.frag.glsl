@@ -19,6 +19,10 @@ uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
+#ifdef _CLensTex
+uniform sampler2D lensTexture;
+#endif
+
 // #ifdef _CPos
 // uniform vec3 eye;
 // uniform vec3 eyeLook;
@@ -268,6 +272,10 @@ void main() {
 // #ifdef _CBrighness
 	// col.rgb += compoBrightness;
 // #endif
+
+#ifdef _CLensTex
+	col.rgb *= texture(lensTexture, texCo).rgb;
+#endif
 
 #ifdef _CLetterbox
 	// const float compoLetterboxSize = 0.1;

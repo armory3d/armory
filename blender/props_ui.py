@@ -356,6 +356,8 @@ class WorldPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'generate_fog_color')
             layout.prop(wrd, 'generate_fog_amounta')
             layout.prop(wrd, 'generate_fog_amountb')
+        layout.prop(wrd, 'generate_lamp_texture')
+        layout.prop(wrd, 'generate_lens_texture')
 
 class ArmoryPlayerPanel(bpy.types.Panel):
     bl_label = "Armory Player"
@@ -401,8 +403,9 @@ class ArmoryPlayerPanel(bpy.types.Panel):
             row = layout.row(align=True)
             row.prop(wrd, 'arm_minimize')
             row.prop(wrd, 'arm_optimize_mesh')
-            layout.prop(wrd, 'arm_gpu_processing')
-            layout.prop(wrd, 'arm_sampled_animation')
+            row = layout.row(align=True)
+            row.prop(wrd, 'arm_gpu_processing')
+            row.prop(wrd, 'arm_sampled_animation')
             layout.prop(wrd, 'arm_deinterleaved_buffers')
             layout.label('Libraries')
             layout.prop(wrd, 'arm_physics')

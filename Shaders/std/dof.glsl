@@ -12,7 +12,7 @@
 
 const int samples = 3; // Samples on the first ring
 const int rings = 3; // Ring count
-// const vec2 focus = vec2(0.5, 0.5);
+const vec2 focus = vec2(0.5, 0.5);
 const float coc = 0.03; // Circle of confusion size in mm (35mm film = 0.03mm)
 const float maxblur = 1.0;
 const float threshold = 0.5; // Highlight threshold
@@ -35,8 +35,8 @@ vec3 color(vec2 coords, const float blur, const sampler2D tex, const vec2 texSte
 
 vec3 dof(const vec2 texCoord, const float gdepth, const sampler2D tex, const sampler2D gbuffer0, const vec2 texStep) {
 	float depth = linearize(gdepth);
-	const float fDepth = compoDOFDistance;
-	// float fDepth = linearize((1.0 - texture(gbuffer0, focus).a) * 2.0 - 1.0); // Autofocus
+	// const float fDepth = compoDOFDistance;
+	float fDepth = linearize((1.0 - texture(gbuffer0, focus).a) * 2.0 - 1.0); // Autofocus
 	
 	const float f = compoDOFLength; // Focal length in mm
 	const float d = fDepth * 1000.0; // Focal plane in mm
