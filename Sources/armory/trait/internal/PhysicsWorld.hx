@@ -61,7 +61,7 @@ class PhysicsWorld extends Trait {
 
 		//var min = BtVector3.create(-100, -100, -100);
 		//var max = BtVector3.create(100, 100, 100);
-		//var broadphase = BtAxisSweep3.create(min.value, max.value);
+		//var broadphase = BtAxisSweep3.create(min, max);
 
 		var broadphase = BtDbvtBroadphase.create();
 
@@ -80,15 +80,15 @@ class PhysicsWorld extends Trait {
 		var softSolver = BtDefaultSoftBodySolver.create();
 		world = BtSoftRigidDynamicsWorld.create(dispatcher, broadphase, solver, collisionConfiguration, softSolver);
 		#if js
-		world.ptr.getWorldInfo().set_m_gravity(BtVector3.create(gravity[0], gravity[1], gravity[2]).value);
+		world.getWorldInfo().set_m_gravity(BtVector3.create(gravity[0], gravity[1], gravity[2]));
 		#elseif cpp
-		world.ptr.getWorldInfo().m_gravity = BtVector3.create(gravity[0], gravity[1], gravity[2]).value;
+		world.getWorldInfo().m_gravity = BtVector3.create(gravity[0], gravity[1], gravity[2]);
 		#end
 #else
 		world = BtDiscreteDynamicsWorld.create(dispatcher, broadphase, solver, collisionConfiguration);
 #end
 
-		world.ptr.setGravity(BtVector3.create(gravity[0], gravity[1], gravity[2]).value);
+		world.setGravity(BtVector3.create(gravity[0], gravity[1], gravity[2]));
 
 		Scene.active.notifyOnInit(function() {
 			notifyOnUpdate(update);
@@ -96,16 +96,16 @@ class PhysicsWorld extends Trait {
 	}
 
 	public function addRigidBody(body:RigidBody) {
-		world.ptr.addRigidBody(body.body);
+		world.addRigidBody(body.body);
 		rbMap.set(body.id, body);
 	}
 
 	public function removeRigidBody(body:RigidBody) {
-		if (world.ptr != null) world.ptr.removeRigidBody(body.body);
+		if (world != null) world.removeRigidBody(body.body);
 		#if js
 		Ammo.destroy(body.body);
 		#elseif cpp
-		body.body.destroy();
+		// body.body.destroy(); // delete body;
 		#end
 
 		rbMap.remove(body.id);
@@ -120,8 +120,8 @@ class PhysicsWorld extends Trait {
 			if (c.a == untyped body.body.userIndex) res.push(rbMap.get(c.b));
 			else if (c.b == untyped body.body.userIndex) res.push(rbMap.get(c.a));
 #elseif cpp
-			if (c.a == body.body.ptr.getUserIndex()) res.push(rbMap.get(c.b));
-			else if (c.b == body.body.ptr.getUserIndex()) res.push(rbMap.get(c.a));
+			if (c.a == body.body.getUserIndex()) res.push(rbMap.get(c.b));
+			else if (c.b == body.body.getUserIndex()) res.push(rbMap.get(c.a));
 #end
 		}
 		return res;
@@ -136,8 +136,8 @@ class PhysicsWorld extends Trait {
 			if (c.a == untyped body.body.userIndex) res.push(c);
 			else if (c.b == untyped body.body.userIndex) res.push(c);
 #elseif cpp
-			if (c.a == body.body.ptr.getUserIndex()) res.push(c);
-			else if (c.b == body.body.ptr.getUserIndex()) res.push(c);
+			if (c.a == body.body.getUserIndex()) res.push(c);
+			else if (c.b == body.body.getUserIndex()) res.push(c);
 #end
 		}
 		return res;
@@ -150,7 +150,7 @@ class PhysicsWorld extends Trait {
 
 		if (preUpdates != null) for (f in preUpdates) f();
 
-		world.ptr.stepSimulation(timeStep, 1, fixedStep);
+		world.stepSimulation(timeStep, 1, fixedStep);
 		updateContacts();
 
 #if arm_profile
@@ -161,24 +161,24 @@ class PhysicsWorld extends Trait {
 	function updateContacts() {
 		contacts = [];
 
-		var numManifolds = dispatcher.value.getNumManifolds();
+		var numManifolds = dispatcher.getNumManifolds();
 
 		for (i in 0...numManifolds) {
-			var contactManifold = dispatcher.value.getManifoldByIndexInternal(i);
-			var obA = contactManifold.value.getBody0();
-			var obB = contactManifold.value.getBody1();
+			var contactManifold = dispatcher.getManifoldByIndexInternal(i);
 			#if js
+			var obA = contactManifold.getBody0();
+			var obB = contactManifold.getBody1();
 			var bodyA = untyped Ammo.btRigidBody.prototype.upcast(obA);
 			var bodyB = untyped Ammo.btRigidBody.prototype.upcast(obB);
 			// TODO: remove ContactPair
 			var cp = new ContactPair(untyped bodyA.userIndex, untyped bodyB.userIndex);
 			#elseif cpp
-			var cp = new ContactPair(obA.value.getUserIndex(), obB.value.getUserIndex());
+			var cp = new ContactPair(contactManifold.getBody0().getUserIndex(), contactManifold.getBody1().getUserIndex());
 			#end
 
-			var numContacts = contactManifold.value.getNumContacts();
+			var numContacts = contactManifold.getNumContacts();
 			for (j in 0...numContacts) {
-				var pt:BtManifoldPoint = contactManifold.value.getContactPoint(j);
+				var pt:BtManifoldPoint = contactManifold.getContactPoint(j);
 				if (pt.getDistance() < 0) {
 					#if js
 					var posA = pt.get_m_positionWorldOnA();
@@ -200,23 +200,24 @@ class PhysicsWorld extends Trait {
 		}
 	}
 
-	public var rayCallback:ClosestRayResultCallbackPointer;
+	public var hitPointWorld:BtVector3;
 	public function pickClosest(inputX:Float, inputY:Float):RigidBody {
 
 		var rayFrom = getRayFrom();
 		var rayTo = getRayTo(inputX, inputY);
 
-		rayCallback = ClosestRayResultCallback.create(rayFrom.value, rayTo.value);
-		world.ptr.rayTest(rayFrom.value, rayTo.value, rayCallback.value);
+		var rayCallback = ClosestRayResultCallback.create(rayFrom, rayTo);
+		world.rayTest(rayFrom, rayTo, rayCallback);
 		
-		if (rayCallback.value.hasHit()) {
+		if (rayCallback.hasHit()) {
 			#if js
-			var co = rayCallback.value.get_m_collisionObject();
+			var co = rayCallback.get_m_collisionObject();
 			var body = untyped Ammo.btRigidBody.prototype.upcast(co);
+			hitPointWorld = rayCallback.get_m_hitPointWorld();
 			return rbMap.get(untyped body.userIndex);
 			#elseif cpp
-			var co = rayCallback.value.m_collisionObject;
-			return rbMap.get(co.value.getUserIndex());
+			hitPointWorld = rayCallback.m_hitPointWorld;
+			return rbMap.get(rayCallback.m_collisionObject.getUserIndex());
 			#end
 		}
 		else {
@@ -224,12 +225,12 @@ class PhysicsWorld extends Trait {
 		}
 	}
 
-	public function getRayFrom():BtVector3Pointer {
+	public function getRayFrom():BtVector3 {
 		var camera = iron.Scene.active.camera;
 		return BtVector3.create(camera.transform.absx(), camera.transform.absy(), camera.transform.absz());
 	}
 
-	public function getRayTo(inputX:Float, inputY:Float):BtVector3Pointer {
+	public function getRayTo(inputX:Float, inputY:Float):BtVector3 {
 		var camera = iron.Scene.active.camera;
 		var start = new Vec4();
 		var end = new Vec4();

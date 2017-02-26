@@ -80,7 +80,7 @@ class RigidBody extends Trait {
 			_shape = BtBoxShape.create(BtVector3.create(
 				withMargin(transform.size.x / 2),
 				withMargin(transform.size.y / 2),
-				withMargin(transform.size.z / 2)).value);
+				withMargin(transform.size.z / 2)));
 		}
 		else if (shape == Shape.Sphere) {
 			_shape = BtSphereShape.create(withMargin(transform.size.x / 2));
@@ -99,7 +99,7 @@ class RigidBody extends Trait {
 			_shape = BtCylinderShapeZ.create(BtVector3.create(
 				withMargin(transform.size.x / 2),
 				withMargin(transform.size.y / 2),
-				withMargin(transform.size.z / 2)).value);
+				withMargin(transform.size.z / 2)));
 		}
 		else if (shape == Shape.Capsule) {
 			var r = transform.size.x / 2;
@@ -118,48 +118,48 @@ class RigidBody extends Trait {
 		}
 
 		var _transform = BtTransform.create();
-		_transform.value.setIdentity();
-		_transform.value.setOrigin(BtVector3.create(
+		_transform.setIdentity();
+		_transform.setOrigin(BtVector3.create(
 			transform.loc.x,
 			transform.loc.y,
-			transform.loc.z).value);
-		_transform.value.setRotation(BtQuaternion.create(
+			transform.loc.z));
+		_transform.setRotation(BtQuaternion.create(
 			transform.rot.x,
 			transform.rot.y,
 			transform.rot.z,
-			transform.rot.w).value);
+			transform.rot.w));
 
 		var _centerOfMassOffset = BtTransform.create();
-		_centerOfMassOffset.value.setIdentity();
-		_motionState = BtDefaultMotionState.create(_transform.value, _centerOfMassOffset.value);
+		_centerOfMassOffset.setIdentity();
+		_motionState = BtDefaultMotionState.create(_transform, _centerOfMassOffset);
 
 		if (!shapeConvexCreated) {
 			if (shape != Shape.StaticMesh && shape != Shape.Terrain) {
-				_shape.ptr.calculateLocalInertia(mass, _inertia);
+				_shape.calculateLocalInertia(mass, _inertia);
 			}
-			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shape, _inertia.value);
-			body = BtRigidBody.create(_bodyCI.value);
-			body.ptr.setFriction(friction);
-			body.ptr.setRollingFriction(friction);
+			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shape, _inertia);
+			body = BtRigidBody.create(_bodyCI);
+			body.setFriction(friction);
+			body.setRollingFriction(friction);
 		}
 		else {
-			_shapeConvex.ptr.calculateLocalInertia(mass, _inertia);
-			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shapeConvex, _inertia.value);
-			body = BtRigidBody.create(_bodyCI.value);
+			_shapeConvex.calculateLocalInertia(mass, _inertia);
+			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shapeConvex, _inertia);
+			body = BtRigidBody.create(_bodyCI);
 		}
 
 		id = nextId;
 		nextId++;
 
 		if (linearDamping != 0.04 || angularDamping != 0.1) {
-			body.ptr.setDamping(linearDamping, angularDamping);
+			body.setDamping(linearDamping, angularDamping);
 		}
 
 		#if js
 		//body.setUserIndex(nextId);
 		untyped body.userIndex = id;
 		#elseif cpp
-		body.ptr.setUserIndex(id);
+		body.setUserIndex(id);
 		#end
 
 		physics.addRigidBody(this);
@@ -173,7 +173,7 @@ class RigidBody extends Trait {
 			syncTransform();
 		}
 		else {
-			var trans = body.ptr.getWorldTransform();
+			var trans = body.getWorldTransform();
 			var p = trans.getOrigin();
 			var q = trans.getRotation();
 			transform.loc.set(p.x(), p.y(), p.z());
@@ -188,7 +188,7 @@ class RigidBody extends Trait {
 	}
 
 	public function activate() {
-		body.ptr.activate(false);
+		body.activate(false);
 	}
 
 	public function disableGravity() {
@@ -198,54 +198,54 @@ class RigidBody extends Trait {
 	}
 
 	/*public function setGravity(v:Vec4) {
-		body.ptr.setGravity(BtVector3.create(v.x, v.y, v.z).value);
+		body.setGravity(BtVector3.create(v.x, v.y, v.z));
 	}*/
 
 	public function setActivationState(newState:Int) {
-		body.ptr.setActivationState(newState);
+		body.setActivationState(newState);
 	}
 
 	public function applyImpulse(impulse:Vec4, loc:Vec4 = null) {
 		if (loc == null) {
-			body.ptr.applyCentralImpulse(BtVector3.create(impulse.x, impulse.y, impulse.z).value);
+			body.applyCentralImpulse(BtVector3.create(impulse.x, impulse.y, impulse.z));
 		}
 		else {
-			body.ptr.applyImpulse(BtVector3.create(impulse.x, impulse.y, impulse.z).value,
-								  BtVector3.create(loc.x, loc.y, loc.z).value);
+			body.applyImpulse(BtVector3.create(impulse.x, impulse.y, impulse.z),
+								  BtVector3.create(loc.x, loc.y, loc.z));
 		}
 	}
 
 	public function setLinearFactor(x:Float, y:Float, z:Float) {
-		body.ptr.setLinearFactor(BtVector3.create(x, y, z).value);
+		body.setLinearFactor(BtVector3.create(x, y, z));
 	}
 
 	public function setAngularFactor(x:Float, y:Float, z:Float) {
-		body.ptr.setAngularFactor(BtVector3.create(x, y, z).value);
+		body.setAngularFactor(BtVector3.create(x, y, z));
 	}
 
 	public function getLinearVelocity():BtVector3 {
-		return body.ptr.getLinearVelocity(); // Unable to compile in cpp
+		return body.getLinearVelocity(); // Unable to compile in cpp
 	}
 
 	public function setLinearVelocity(x:Float, y:Float, z:Float) {
-		body.ptr.setLinearVelocity(BtVector3.create(x, y, z).value);
+		body.setLinearVelocity(BtVector3.create(x, y, z));
 	}
 
 	// public function getAngularVelocity():BtVector3 {
-	// 	return body.ptr.getAngularVelocity();
+	// 	return body.getAngularVelocity();
 	// }
 
 	public function setAngularVelocity(x:Float, y:Float, z:Float) {
-		body.ptr.setAngularVelocity(BtVector3.create(x, y, z).value);
+		body.setAngularVelocity(BtVector3.create(x, y, z));
 	}
 
 	public function syncTransform() {
 		var trans = BtTransform.create();
-		trans.value.setOrigin(BtVector3.create(transform.loc.x, transform.loc.y, transform.loc.z).value);
-		trans.value.setRotation(BtQuaternion.create(transform.rot.x, transform.rot.y, transform.rot.z, transform.rot.w).value);
-		body.ptr.setCenterOfMassTransform(trans.value);
+		trans.setOrigin(BtVector3.create(transform.loc.x, transform.loc.y, transform.loc.z));
+		trans.setRotation(BtQuaternion.create(transform.rot.x, transform.rot.y, transform.rot.z, transform.rot.w));
+		body.setCenterOfMassTransform(trans);
 		// _motionState.getWorldTransform(trans);
-		// trans.setOrigin(BtVector3.create(transform.loc.x, transform.loc.y, transform.loc.z).value);
+		// trans.setOrigin(BtVector3.create(transform.loc.x, transform.loc.y, transform.loc.z));
 		// _motionState.setWorldTransform(trans);
 	}
 
@@ -257,12 +257,7 @@ class RigidBody extends Trait {
 		var sz = scale.z * (1.0 - margin);
 
 		for (i in 0...Std.int(positions.length / 3)) {
-			#if js
-			shape.addPoint(
-			#elseif cpp
-			shape.ptr.addPoint(
-			#end
-				BtVector3.create(positions[i * 3] * sx, positions[i * 3 + 1] * sy, positions[i * 3 + 2] * sz).value, true);
+			shape.addPoint(BtVector3.create(positions[i * 3] * sx, positions[i * 3 + 1] * sy, positions[i * 3 + 2] * sz), true);
 		}
 	}
 
@@ -271,16 +266,16 @@ class RigidBody extends Trait {
 		var indices = cast(object, MeshObject).data.mesh.indices;
 
 		for (i in 0...Std.int(indices[0].length / 3)) {
-			triangleMesh.ptr.addTriangle(
+			triangleMesh.addTriangle(
 				BtVector3.create(positions[indices[0][i * 3 + 0] * 3 + 0] * scale.x,
 							  	 positions[indices[0][i * 3 + 0] * 3 + 1] * scale.y,
-							  	 positions[indices[0][i * 3 + 0] * 3 + 2] * scale.z).value,
+							  	 positions[indices[0][i * 3 + 0] * 3 + 2] * scale.z),
 				BtVector3.create(positions[indices[0][i * 3 + 1] * 3 + 0] * scale.x,
 							  	 positions[indices[0][i * 3 + 1] * 3 + 1] * scale.y,
-							  	 positions[indices[0][i * 3 + 1] * 3 + 2] * scale.z).value,
+							  	 positions[indices[0][i * 3 + 1] * 3 + 2] * scale.z),
 				BtVector3.create(positions[indices[0][i * 3 + 2] * 3 + 0] * scale.x,
 							  	 positions[indices[0][i * 3 + 2] * 3 + 1] * scale.y,
-							  	 positions[indices[0][i * 3 + 2] * 3 + 2] * scale.z).value
+							  	 positions[indices[0][i * 3 + 2] * 3 + 2] * scale.z)
 			);
 		}
 	}

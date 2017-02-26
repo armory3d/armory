@@ -21,8 +21,8 @@ class PhysicsDrag extends Trait {
 	var pickDist:Float;
 	var pickedBody:RigidBody = null;
 
-	var rayFrom:BtVector3Pointer;
-	var rayTo:BtVector3Pointer;
+	var rayFrom:BtVector3;
+	var rayTo:BtVector3;
 
 	public function new() {
 		super();
@@ -43,16 +43,12 @@ class PhysicsDrag extends Trait {
 		if (Input.started) {
 			var b = physics.pickClosest(Input.x, Input.y);
 
-			if (b != null && b.mass > 0 && !b.body.ptr.isKinematicObject() && b.object.getTrait(PhysicsDrag) != null) {
+			if (b != null && b.mass > 0 && !b.body.isKinematicObject() && b.object.getTrait(PhysicsDrag) != null) {
 
 				setRays();
 				pickedBody = b;
 
-				#if js
-				var pickPos:BtVector3 = physics.rayCallback.get_m_hitPointWorld();
-				#elseif cpp
-				var pickPos:BtVector3 = physics.rayCallback.value.m_hitPointWorld;
-				#end
+				var pickPos:BtVector3 = physics.hitPointWorld;
 				
 				// var ct = b.object.transform.matrix;
 				// var inv = iron.math.Mat4.identity();
@@ -61,48 +57,48 @@ class PhysicsDrag extends Trait {
 				// localPivotVec.applyMat4(inv);
 				// var localPivot:BtVector3 = BtVector3.create(localPivotVec.x, localPivotVec.y, localPivotVec.z);
 
-				var ct = b.body.ptr.getCenterOfMassTransform();
+				var ct = b.body.getCenterOfMassTransform();
 				return; // TODO: .inverse() missing in new ammo
 				var inv = ct.inverse();
 				
 				#if js
 				var localPivot:BtVector3 = inv.mulVec(pickPos);
 				#elseif cpp
-				var localPivot:BtVector3 = untyped __cpp__("inv.value * pickPos.value"); // Operator overload
+				var localPivot:BtVector3 = untyped __cpp__("inv * pickPos"); // Operator overload
 				#end
 
 				var tr = BtTransform.create();
-				tr.value.setIdentity();
-				tr.value.setOrigin(localPivot);
+				tr.setIdentity();
+				tr.setOrigin(localPivot);
 
-				pickConstraint = BtGeneric6DofConstraint.create(b.body.value, tr.value, false);
+				pickConstraint = BtGeneric6DofConstraint.create(b.body, tr, false);
 				
-				pickConstraint.value.setLinearLowerLimit(BtVector3.create(0, 0, 0).value);
-				pickConstraint.value.setLinearUpperLimit(BtVector3.create(0, 0, 0).value);
-				pickConstraint.value.setAngularLowerLimit(BtVector3.create(-10, -10, -10).value);
-				pickConstraint.value.setAngularUpperLimit(BtVector3.create(10, 10, 10).value);
+				pickConstraint.setLinearLowerLimit(BtVector3.create(0, 0, 0));
+				pickConstraint.setLinearUpperLimit(BtVector3.create(0, 0, 0));
+				pickConstraint.setAngularLowerLimit(BtVector3.create(-10, -10, -10));
+				pickConstraint.setAngularUpperLimit(BtVector3.create(10, 10, 10));
 
-				physics.world.ptr.addConstraint(pickConstraint, false);
+				physics.world.addConstraint(pickConstraint, false);
 
-				/*pickConstraint.value.setParam(4, 0.8, 0);
-				pickConstraint.value.setParam(4, 0.8, 1);
-				pickConstraint.value.setParam(4, 0.8, 2);
-				pickConstraint.value.setParam(4, 0.8, 3);
-				pickConstraint.value.setParam(4, 0.8, 4);
-				pickConstraint.value.setParam(4, 0.8, 5);
+				/*pickConstraint.setParam(4, 0.8, 0);
+				pickConstraint.setParam(4, 0.8, 1);
+				pickConstraint.setParam(4, 0.8, 2);
+				pickConstraint.setParam(4, 0.8, 3);
+				pickConstraint.setParam(4, 0.8, 4);
+				pickConstraint.setParam(4, 0.8, 5);
 
-				pickConstraint.value.setParam(1, 0.1, 0);
-				pickConstraint.value.setParam(1, 0.1, 1);
-				pickConstraint.value.setParam(1, 0.1, 2);
-				pickConstraint.value.setParam(1, 0.1, 3);
-				pickConstraint.value.setParam(1, 0.1, 4);
-				pickConstraint.value.setParam(1, 0.1, 5);*/
+				pickConstraint.setParam(1, 0.1, 0);
+				pickConstraint.setParam(1, 0.1, 1);
+				pickConstraint.setParam(1, 0.1, 2);
+				pickConstraint.setParam(1, 0.1, 3);
+				pickConstraint.setParam(1, 0.1, 4);
+				pickConstraint.setParam(1, 0.1, 5);*/
 
-				var v = BtVector3.create(pickPos.x() - rayFrom.value.x(),
-										 pickPos.y() - rayFrom.value.y(),
-										 pickPos.z() - rayFrom.value.z());
+				var v = BtVector3.create(pickPos.x() - rayFrom.x(),
+										 pickPos.y() - rayFrom.y(),
+										 pickPos.z() - rayFrom.z());
 
-				pickDist = v.value.length();
+				pickDist = v.length();
 
 				Input.occupied = true;
 			}
@@ -111,7 +107,7 @@ class PhysicsDrag extends Trait {
 		else if (Input.released) {
 
 			if (pickConstraint != null) {
-				physics.world.ptr.removeConstraint(pickConstraint);
+				physics.world.removeConstraint(pickConstraint);
 				pickConstraint = null;
 				pickedBody = null;
 			}
@@ -126,26 +122,26 @@ class PhysicsDrag extends Trait {
 				setRays();
 
 				// Keep it at the same picking distance
-				var btRayTo = BtVector3.create(rayTo.value.x(), rayTo.value.y(), rayTo.value.z());
-				var btRayFrom = BtVector3.create(rayFrom.value.x(), rayFrom.value.y(), rayFrom.value.z());
+				var btRayTo = BtVector3.create(rayTo.x(), rayTo.y(), rayTo.z());
+				var btRayFrom = BtVector3.create(rayFrom.x(), rayFrom.y(), rayFrom.z());
 
-				var dir = BtVector3.create(btRayTo.value.x() - btRayFrom.value.x(),
-										   btRayTo.value.y() - btRayFrom.value.y(),
-										   btRayTo.value.z() - btRayFrom.value.z());
+				var dir = BtVector3.create(btRayTo.x() - btRayFrom.x(),
+										   btRayTo.y() - btRayFrom.y(),
+										   btRayTo.z() - btRayFrom.z());
 
-				var bt = dir.value.normalize();
+				var bt = dir.normalize();
 				bt.setX(bt.x() * pickDist);
 				bt.setY(bt.y() * pickDist);
 				bt.setZ(bt.z() * pickDist);
 				
-				var newPivotB = BtVector3.create(btRayFrom.value.x() + bt.x(),
-												 btRayFrom.value.y() + bt.y(),
-												 btRayFrom.value.z() + bt.z());
+				var newPivotB = BtVector3.create(btRayFrom.x() + bt.x(),
+												 btRayFrom.y() + bt.y(),
+												 btRayFrom.z() + bt.z());
 
 				#if js
-				pickConstraint.value.getFrameOffsetA().setOrigin(newPivotB.value);
+				pickConstraint.getFrameOffsetA().setOrigin(newPivotB);
 				#elseif cpp
-				pickConstraint.value.setFrameOffsetAOrigin(newPivotB.value);
+				pickConstraint.setFrameOffsetAOrigin(newPivotB);
 				#end
 			}
 		}

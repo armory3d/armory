@@ -84,58 +84,54 @@ class VehicleBody extends Trait {
 			wheels.push(iron.Scene.active.root.getChild(n));
 		}
 
-		var wheelDirectionCS0 = BtVector3.create(0, 0, -1).value;
-		var wheelAxleCS = BtVector3.create(1, 0, 0).value;
+		var wheelDirectionCS0 = BtVector3.create(0, 0, -1);
+		var wheelAxleCS = BtVector3.create(1, 0, 0);
 
 		var chassisShape = BtBoxShape.create(BtVector3.create(
 				transform.size.x / 2,
 				transform.size.y / 2,
-				transform.size.z / 2).value);
+				transform.size.z / 2));
 
 		var compound = BtCompoundShape.create();
 		
 		var localTrans = BtTransform.create();
-		localTrans.value.setIdentity();
-		localTrans.value.setOrigin(BtVector3.create(0, 0, 1).value);
+		localTrans.setIdentity();
+		localTrans.setOrigin(BtVector3.create(0, 0, 1));
 
-		#if js
 		compound.addChildShape(localTrans, chassisShape);
-		#elseif cpp
-		compound.value.addChildShape(localTrans.value, chassisShape);
-		#end
 
 		carChassis = createRigidBody(chassis_mass, compound);
 
 		// Create vehicle
 		var tuning = BtVehicleTuning.create();
 		var vehicleRayCaster = BtDefaultVehicleRaycaster.create(physics.world);
-		vehicle = BtRaycastVehicle.create(tuning.value, carChassis, vehicleRayCaster);
+		vehicle = BtRaycastVehicle.create(tuning, carChassis, vehicleRayCaster);
 
 		// Never deactivate the vehicle
-		carChassis.ptr.setActivationState(BtCollisionObject.DISABLE_DEACTIVATION);
+		carChassis.setActivationState(BtCollisionObject.DISABLE_DEACTIVATION);
 
 		// Choose coordinate system
 		var rightIndex = 0; 
 		var upIndex = 2; 
 		var forwardIndex = 1;
-		vehicle.ptr.setCoordinateSystem(rightIndex, upIndex, forwardIndex);
+		vehicle.setCoordinateSystem(rightIndex, upIndex, forwardIndex);
 
 		// Add wheels
 		for (i in 0...wheels.length) {
 			var vehicleWheel = new VehicleWheel(i, wheels[i].transform, object.transform);
-			vehicle.ptr.addWheel(
+			vehicle.addWheel(
 					vehicleWheel.getConnectionPoint(),
 					wheelDirectionCS0,
 					wheelAxleCS,
 					suspensionRestLength,
 					vehicleWheel.wheelRadius,
-					tuning.value,
+					tuning,
 					vehicleWheel.isFrontWheel);
 		}
 
 		// Setup wheels
-		for (i in 0...vehicle.ptr.getNumWheels()){
-			var wheel = vehicle.ptr.getWheelInfo(i);
+		for (i in 0...vehicle.getNumWheels()){
+			var wheel = vehicle.getWheelInfo(i);
 			wheel.m_suspensionStiffness = suspensionStiffness;
 			wheel.m_wheelsDampingRelaxation = suspensionDamping;
 			wheel.m_wheelsDampingCompression = suspensionCompression;
@@ -143,7 +139,7 @@ class VehicleBody extends Trait {
 			wheel.m_rollInfluence = rollInfluence;
 		}
 
-		physics.world.ptr.addAction(vehicle);
+		physics.world.addAction(vehicle);
 
 		kha.input.Keyboard.get().notify(onKeyDown, onKeyUp);
 		notifyOnUpdate(update);
@@ -178,19 +174,19 @@ class VehicleBody extends Trait {
 			else vehicleSteering += step;
 		}
 
-		vehicle.ptr.applyEngineForce(engineForce, 2);
-		vehicle.ptr.setBrake(breakingForce, 2);
-		vehicle.ptr.applyEngineForce(engineForce, 3);
-		vehicle.ptr.setBrake(breakingForce, 3);
-		vehicle.ptr.setSteeringValue(vehicleSteering, 0);
-		vehicle.ptr.setSteeringValue(vehicleSteering, 1);
+		vehicle.applyEngineForce(engineForce, 2);
+		vehicle.setBrake(breakingForce, 2);
+		vehicle.applyEngineForce(engineForce, 3);
+		vehicle.setBrake(breakingForce, 3);
+		vehicle.setSteeringValue(vehicleSteering, 0);
+		vehicle.setSteeringValue(vehicleSteering, 1);
 
-		for (i in 0...vehicle.ptr.getNumWheels()) {
+		for (i in 0...vehicle.getNumWheels()) {
 			// Synchronize the wheels with the chassis worldtransform
-			vehicle.ptr.updateWheelTransform(i, true);
+			vehicle.updateWheelTransform(i, true);
 			
 			// Update wheels transforms
-			var trans = vehicle.ptr.getWheelTransformWS(i);
+			var trans = vehicle.getWheelTransformWS(i);
 			var p = trans.getOrigin();
 			var q = trans.getRotation();
 			wheels[i].transform.localOnly = true;
@@ -199,7 +195,7 @@ class VehicleBody extends Trait {
 			wheels[i].transform.dirty = true;
 		}
 
-		var trans = carChassis.ptr.getWorldTransform();
+		var trans = carChassis.getWorldTransform();
 		var p = trans.getOrigin();
 		var q = trans.getRotation();
 		transform.loc.set(p.x(), p.y(), p.z());
@@ -216,30 +212,30 @@ class VehicleBody extends Trait {
 	function createRigidBody(mass:Float, shape:BtCompoundShapePointer):BtRigidBodyPointer {
 		
 		var localInertia = BtVector3.create(0, 0, 0);
-		shape.ptr.calculateLocalInertia(mass, localInertia.value);
+		shape.calculateLocalInertia(mass, localInertia);
 
 		var centerOfMassOffset = BtTransform.create();
-		centerOfMassOffset.value.setIdentity();
+		centerOfMassOffset.setIdentity();
 		
 		var startTransform = BtTransform.create();
-		startTransform.value.setIdentity();
-		startTransform.value.setOrigin(BtVector3.create(
+		startTransform.setIdentity();
+		startTransform.setOrigin(BtVector3.create(
 			transform.loc.x,
 			transform.loc.y,
-			transform.loc.z).value);
-		startTransform.value.setRotation(BtQuaternion.create(
+			transform.loc.z));
+		startTransform.setRotation(BtQuaternion.create(
 			transform.rot.x,
 			transform.rot.y,
 			transform.rot.z,
-			transform.rot.w).value);
+			transform.rot.w));
 
-		var myMotionState = BtDefaultMotionState.create(startTransform.value, centerOfMassOffset.value);
-		var cInfo = BtRigidBodyConstructionInfo.create(mass, myMotionState, shape, localInertia.value).value;
+		var myMotionState = BtDefaultMotionState.create(startTransform, centerOfMassOffset);
+		var cInfo = BtRigidBodyConstructionInfo.create(mass, myMotionState, shape, localInertia);
 			
 		var body = BtRigidBody.create(cInfo);
-		body.ptr.setLinearVelocity(BtVector3.create(0, 0, 0).value);
-		body.ptr.setAngularVelocity(BtVector3.create(0, 0, 0).value);
-		physics.world.ptr.addRigidBody(body);
+		body.setLinearVelocity(BtVector3.create(0, 0, 0));
+		body.setAngularVelocity(BtVector3.create(0, 0, 0));
+		physics.world.addRigidBody(body);
 
 		return body;
 	}
@@ -270,7 +266,7 @@ class VehicleWheel {
 	}
 
 	public function getConnectionPoint():BtVector3 {
-		return BtVector3.create(locX, locY, locZ).value;
+		return BtVector3.create(locX, locY, locZ);
 	}
 #end
 }

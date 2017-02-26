@@ -57,7 +57,7 @@ class SoftBody extends Trait {
 		object.transform.loc.set(0, 0, 0);
 		object.transform.buildMatrix();
 
-		var wrdinfo = physics.world.ptr.getWorldInfo();
+		var wrdinfo = physics.world.getWorldInfo();
 		var vecind = haxe.ds.Vector.fromData(mesh.indices[0]);
 		var numtri = Std.int(mesh.indices[0].length / 3);
 #if js
@@ -66,9 +66,9 @@ class SoftBody extends Trait {
 		untyped __cpp__("softBody = softBodyHelpers->CreateFromTriMesh(wrdinfo, positions->Pointer(), vecind->Pointer(), numtri);");
 #end
 
-		// softBody.ptr.generateClusters(4);
+		// softBody.generateClusters(4);
 #if js
-		var cfg = softBody.ptr.get_m_cfg();
+		var cfg = softBody.get_m_cfg();
 		cfg.set_viterations(10);
 		cfg.set_piterations(10);
 		// cfg.set_collisions(0x0001 + 0x0020 + 0x0040); // self collision
@@ -80,7 +80,7 @@ class SoftBody extends Trait {
 			cfg.set_kPR(bend);
 		}
 #elseif cpp
-		var cfg = softBody.ptr.m_cfg;
+		var cfg = softBody.m_cfg;
 		cfg.viterations = 10;
 		cfg.piterations = 10;
 		// cfg.collisions = 0x0001 + 0x0020 + 0x0040;
@@ -91,12 +91,12 @@ class SoftBody extends Trait {
 			cfg.kPR = bend;
 		}
 #end
-		softBody.ptr.setTotalMass(mass, false);
+		softBody.setTotalMass(mass, false);
 		
-		softBody.ptr.getCollisionShape().setMargin(margin);
+		softBody.getCollisionShape().setMargin(margin);
 
-		physics.world.ptr.addSoftBody(softBody, 1, -1);
-		softBody.ptr.setActivationState(BtCollisionObject.DISABLE_DEACTIVATION);
+		physics.world.addSoftBody(softBody, 1, -1);
+		softBody.setActivationState(BtCollisionObject.DISABLE_DEACTIVATION);
 
 		notifyOnUpdate(update);
 	}
@@ -114,9 +114,9 @@ class SoftBody extends Trait {
 		var numVerts = Std.int(v.length / l);
 
 #if js
-		var nodes = softBody.ptr.get_m_nodes();
+		var nodes = softBody.get_m_nodes();
 #elseif cpp
-		var nodes = softBody.ptr.m_nodes;
+		var nodes = softBody.m_nodes;
 #end
 
 		for (i in 0...numVerts) {

@@ -39,7 +39,7 @@ class PickLocationNode extends LocationNode {
 			#if js
 			var p:haxebullet.Bullet.BtVector3 = physics.rayCallback.get_m_hitPointWorld();
 			#elseif cpp
-			var p:haxebullet.Bullet.BtVector3 = physics.rayCallback.value.m_hitPointWorld;
+			var p:haxebullet.Bullet.BtVector3 = physics.rayCallback.m_hitPointWorld;
 			#end
 			loc.set(p.x(), p.y(), p.z());
 		}
