@@ -23,7 +23,7 @@ def make_texture(image_node, tex_name, matname=None):
         return None
 
     # Reference image name
-    tex['file'] = armutils.extract_filename(armutils.safe_assetpath(image.filepath))
+    tex['file'] = armutils.extract_filename(image.filepath)
     tex['file'] = armutils.safefilename(tex['file'])
     s = tex['file'].rsplit('.', 1)
     

@@ -38,7 +38,8 @@ uniform float aspectRatio;
 
 #ifdef _CFXAA
 uniform vec2 texStep;
-#elif _CDOF
+#endif
+#ifdef _CDOF
 uniform vec2 texStep;
 #endif
 
@@ -274,7 +275,7 @@ void main() {
 // #endif
 
 #ifdef _CLensTex
-	col.rgb *= texture(lensTexture, texCo).rgb;
+	col.rgb += texture(lensTexture, texCo).rgb;
 #endif
 
 #ifdef _CLetterbox

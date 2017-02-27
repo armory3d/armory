@@ -356,6 +356,8 @@ class WorldPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'generate_fog_color')
             layout.prop(wrd, 'generate_fog_amounta')
             layout.prop(wrd, 'generate_fog_amountb')
+        layout.prop(wrd, 'generate_fisheye')
+        layout.prop(wrd, 'generate_vignette')
         layout.prop(wrd, 'generate_lamp_texture')
         layout.prop(wrd, 'generate_lens_texture')
 

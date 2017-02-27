@@ -22,7 +22,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     if not os.path.exists(envpath):
         os.makedirs(envpath)
 
-    base_name = armutils.extract_filename(armutils.safe_assetpath(image_filepath)).rsplit('.', 1)[0]
+    base_name = armutils.extract_filename(image_filepath).rsplit('.', 1)[0]
     
     # Assets to be generated
     output_file_irr = envpath + '/' + base_name + '_irradiance'

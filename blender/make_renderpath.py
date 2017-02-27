@@ -260,6 +260,12 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
         compositor_defs += '_CLensTex'
         assets.add_embedded_data('lenstexture.jpg')
 
+    if wrd.generate_fisheye:
+        compositor_defs += '_CFishEye'
+
+    if wrd.generate_vignette:
+        compositor_defs += '_CVignette'
+
     wrd.compo_defs = compositor_defs
 
     defs = world_defs + compositor_defs
