@@ -53,11 +53,6 @@
 					"link": "_screenSizeInv",
 					"ifdef": ["_CFXAA", "_CDOF"]
 				},
-				{
-					"name": "texStep",
-					"link": "_screenSizeInv",
-					"ifdef": ["_CFXAA"]
-				},
 
 
 				{

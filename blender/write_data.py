@@ -74,8 +74,8 @@ project.addSources('Sources');
             f.write("project.addDefine('arm_profile');\n")
 
         if wrd.arm_play_console or wrd.arm_ui:
-            f.write(add_armory_library(sdk_path, 'lib/armui'))
-            p = sdk_path + '/lib/armui/Assets/dejavu.ttf'
+            f.write(add_armory_library(sdk_path, 'lib/zui'))
+            p = sdk_path + '/armory/Assets/droid_sans.ttf'
             f.write('project.addAssets("' + p.replace('\\', '/') + '");\n')
 
         # if wrd.arm_ui:
@@ -310,8 +310,8 @@ const vec3 compoFogColor = vec3(""" + str(round(wrd.generate_fog_color[0] * 100)
             f.write(
 """const float compoDOFDistance = """ + str(round(bpy.data.cameras[0].dof_distance * 100) / 100) + """;
 const float compoDOFFstop = """ + str(round(bpy.data.cameras[0].gpu_dof.fstop * 100) / 100) + """;
-const float compoDOFLength = """ + str(round(bpy.data.cameras[0].lens * 100) / 100) + """;
-""")
+const float compoDOFLength = 160.0;
+""") # str(round(bpy.data.cameras[0].lens * 100) / 100)
 
         if bpy.data.cameras[0].rp_voxelgi:
             f.write(

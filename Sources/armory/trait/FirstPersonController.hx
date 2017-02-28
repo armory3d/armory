@@ -20,7 +20,7 @@ class FirstPersonController extends CameraController {
 	public function new() {
 		super();
 
-		Scene.active.notifyOnInit(init);
+		armory.Scene.active.notifyOnInit(init);
 	}
 	
 	function init() {

@@ -429,7 +429,9 @@ class ArmoryProjectPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_project_package')
         layout.prop_search(wrd, 'arm_khafile', bpy.data, 'texts', 'Khafile')
         layout.prop_search(wrd, 'arm_command_line', bpy.data, 'texts', 'Command Line')
-        layout.operator("arm.kode_studio")
+        row = layout.row(align=True)
+        row.operator("arm.kode_studio")
+        row.operator("arm.open_project_folder")
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
         row.operator("arm.build_project")
@@ -581,9 +583,9 @@ class ArmoryPatchButton(bpy.types.Operator):
         assets.invalidate_enabled = True
         return{'FINISHED'}
 
-class ArmoryFolderButton(bpy.types.Operator):
+class ArmoryOpenProjectFolderButton(bpy.types.Operator):
     '''Open project folder'''
-    bl_idname = 'arm.folder'
+    bl_idname = 'arm.open_project_folder'
     bl_label = 'Project Folder'
  
     def execute(self, context):
