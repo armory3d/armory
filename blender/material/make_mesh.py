@@ -237,11 +237,11 @@ def make_forward_base(con_mesh, parse_opacity=False):
     if is_shadows:
         if tese != None:
             tese.add_out('vec4 lampPos')
-            tese.add_uniform('mat4 LVP', '_lampViewProjectionMatrix')
+            tese.add_uniform('mat4 LVP', '_biasLampViewProjectionMatrix')
             tese.write('lampPos = LVP * vec4(wposition, 1.0);')
         else:
             vert.add_out('vec4 lampPos')
-            vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrix')
+            vert.add_uniform('mat4 LWVP', '_biasLampWorldViewProjectionMatrix')
             vert.write('lampPos = LWVP * spos;')
         
         if is_pcss:
@@ -257,7 +257,6 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.write('if (receiveShadow && lampPos.w > 0.0) {')
         frag.tab += 1
         frag.write('vec3 lpos = lampPos.xyz / lampPos.w;')
-        frag.write('lpos.xy = lpos.xy * 0.5 + 0.5;')
         if is_pcss:
             frag.write('visibility = PCSS(lpos.xy, lpos.z - shadowsBias);')
         else:

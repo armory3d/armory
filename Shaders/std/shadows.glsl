@@ -3,7 +3,7 @@
 uniform sampler2D shadowMap;
 
 float texture2DCompare(const vec2 uv, const float compare){
-	float depth = texture(shadowMap, uv).r; // * 2.0 - 1.0; // - mult compare instead
+	float depth = texture(shadowMap, uv).r;
 	return step(compare, depth);
 }
 
@@ -27,7 +27,6 @@ float PCF(const vec2 uv, float compare) {
 		// for(int y = -1; y <= 1; y++){
 			// vec2 off = vec2(x, y) / shadowmapSize;
 			// result += texture2DShadowLerp(shadowmapSize, uv + off, compare);
-			compare = compare * 0.5 + 0.5;
 			float result = texture2DShadowLerp(uv + (vec2(-1.0, -1.0) / shadowmapSize), compare);
 			result += texture2DShadowLerp(uv + (vec2(-1.0, 0.0) / shadowmapSize), compare);
 			result += texture2DShadowLerp(uv + (vec2(-1.0, 1.0) / shadowmapSize), compare);

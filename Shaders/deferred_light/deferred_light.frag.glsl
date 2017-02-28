@@ -105,7 +105,6 @@ vec3 SSSSTransmittance(float translucency, float sssWidth, vec3 worldPosition, v
 #ifndef _NoShadows
 float shadowTest(vec4 lPos) {
 	lPos.xyz /= lPos.w;
-	lPos.xy = lPos.xy * 0.5 + 0.5;
 	
 	#ifdef _Clampstc
 	// Filtering out of bounds, remove
