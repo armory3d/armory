@@ -331,9 +331,9 @@ class ArmoryExporter:
 
         if armature.animation_data:
             action = armature.animation_data.action
-            if (action):
+            if action:
                 for fcurve in action.fcurves:
-                    if (fcurve.data_path.startswith(path)):
+                    if fcurve.data_path.startswith(path):
                         curve_array.append(fcurve)
         return curve_array
 
@@ -555,7 +555,6 @@ class ArmoryExporter:
         if bobjectRef:
             o['type'] = structIdentifier[bobjectRef["objectType"]]
             o['name'] = bobjectRef["structName"]
-
             self.export_bone_transform(armature, bone, scene, o, action)
 
         o['children'] = []
@@ -568,9 +567,8 @@ class ArmoryExporter:
         boneSubbobjectArray = self.boneParentArray.get(bone.name)
         if boneSubbobjectArray:
             poseBone = None
-            if (not bone.use_relative_parent):
+            if not bone.use_relative_parent:
                 poseBone = armature.pose.bones.get(bone.name)
-
             for subbobject in boneSubbobjectArray:
                 self.export_object(subbobject, scene, poseBone, o)
         
@@ -1126,7 +1124,7 @@ class ArmoryExporter:
                     for bone in armature.data.bones:
                         boneRef = self.find_node(bone.name)
                         if boneRef:
-                            # If an object is used as a bone, then we force its type to be a bone.
+                            # If an object is used as a bone, then we force its type to be a bone
                             boneRef[1]["objectType"] = NodeTypeBone
 
     def export_bone_transform(self, armature, bone, scene, o, action):
@@ -1142,7 +1140,7 @@ class ArmoryExporter:
         if poseBone:
             transform = poseBone.matrix.copy()
             parentPoseBone = poseBone.parent
-            if (parentPoseBone):
+            if parentPoseBone:
                 transform = parentPoseBone.matrix.inverted() * transform
 
         o['transform'] = {}
@@ -1384,39 +1382,41 @@ class ArmoryExporter:
                     o['local_transform_only'] = True
 
             if bobject.type == "ARMATURE":
-                armdata = bobject.data # Armature data
+                bdata = bobject.data # Armature data
                 action = None # Reference start action
                 if bobject.edit_actions_prop:
                     action = bpy.data.actions[bobject.start_action_name_prop]
                 elif bobject.animation_data != None: # Use default
                     action = bobject.animation_data.action
                     
-                if armdata and action != None:
-                    armatureid = self.asset_name(armdata)
+                if bdata and action != None:
+                    armatureid = self.asset_name(bdata)
                     armatureid = armutils.safe_filename(armatureid)
                     ext = ''
-                    if self.is_compress(armdata):
+                    if self.is_compress(bdata):
                        ext = '.zip'
                     o['bones_ref'] = 'bones_' + armatureid + '_' + action.name + ext
 
                     # Write bones
-                    if armdata.edit_actions:
+                    if bdata.edit_actions:
                         export_actions = []
-                        for t in armdata.my_actiontraitlist:
+                        for t in bdata.my_actiontraitlist:
                             export_actions.append(bpy.data.actions[t.name])
                     else: # Use default
                         export_actions = [action]
 
+                    orig_action = bobject.animation_data.action
                     for action in export_actions:
-                        if armdata.animation_data == None:
-                            continue
-                        armdata.animation_data.action = action
-                        fp = self.get_meshes_file_path('bones_' + armatureid + '_' + action.name, compressed=self.is_compress(armdata))
+                        # if bdata.animation_data == None:
+                            # continue # bdata.animation_data_create()
+                        # bdata.animation_data.action = action
+                        bobject.animation_data.action = action
+                        fp = self.get_meshes_file_path('bones_' + armatureid + '_' + action.name, compressed=self.is_compress(bdata))
                         assets.add(fp)
-                        if armdata.data_cached == False or not os.path.exists(fp):
+                        if bdata.data_cached == False or not os.path.exists(fp):
                             bones = []
-                            for bone in armdata.bones:
-                                if (not bone.parent):
+                            for bone in bdata.bones:
+                                if not bone.parent:
                                     boneo = {}
                                     self.export_bone(bobject, bone, scene, boneo, action)
                                     #o.objects.append(boneo)
@@ -1425,7 +1425,8 @@ class ArmoryExporter:
                             bones_obj = {}
                             bones_obj['objects'] = bones
                             armutils.write_arm(fp, bones_obj)
-                    armdata.data_cached = True
+                    bobject.animation_data.action = orig_action
+                    bdata.data_cached = True
 
             if parento == None:
                 self.output['objects'].append(o)
@@ -1482,7 +1483,7 @@ class ArmoryExporter:
         for group in bobject.vertex_groups:
             groupName = group.name
             for i in range(boneCount):
-                if (boneArray[i].name == groupName):
+                if boneArray[i].name == groupName:
                     groupRemap.append(i)
                     break
             else:
@@ -1499,14 +1500,16 @@ class ArmoryExporter:
             for element in mesh_vertex_array[ev.vertexIndex].groups:
                 boneIndex = groupRemap[element.group]
                 boneWeight = element.weight
-                if ((boneIndex >= 0) and (boneWeight != 0.0)):
+                if boneIndex >= 0 and boneWeight != 0.0:
                     boneCount += 1
                     totalWeight += boneWeight
                     boneIndexArray.append(boneIndex)
                     boneWeightArray.append(boneWeight)
+                    if boneCount == 4: # Four bones max - TODO: take biggest weights
+                        break
             boneCountArray.append(boneCount)
 
-            if (totalWeight != 0.0):
+            if totalWeight != 0.0:
                 normalizer = 1.0 / totalWeight
                 for i in range(-boneCount, 0):
                     boneWeightArray[i] *= normalizer
@@ -1520,41 +1523,41 @@ class ArmoryExporter:
         # Write the bone weight array. The number of entries is the sum of the bone counts for all vertices.
         oskin['bone_weight_array'] = boneWeightArray
 
-    def export_skin_fast(self, bobject, armature, vert_list, om):
-        oskin = {}
-        om['skin'] = oskin
+    # def export_skin_fast(self, bobject, armature, vert_list, om):
+    #     oskin = {}
+    #     om['skin'] = oskin
 
-        otrans = {}
-        oskin['transform'] = otrans
-        otrans['values'] = self.write_matrix(bobject.matrix_world)
+    #     otrans = {}
+    #     oskin['transform'] = otrans
+    #     otrans['values'] = self.write_matrix(bobject.matrix_world)
 
-        oskel = {}
-        oskin['skeleton'] = oskel
-        oskel['bone_ref_array'] = []
+    #     oskel = {}
+    #     oskin['skeleton'] = oskel
+    #     oskel['bone_ref_array'] = []
 
-        boneArray = armature.data.bones
-        boneCount = len(boneArray)
-        for i in range(boneCount):
-            boneRef = self.find_node(boneArray[i].name)
-            if (boneRef):
-                oskel['bone_ref_array'].append(boneRef[1]["structName"])
-            else:
-                oskel['bone_ref_array'].append("null")
+    #     boneArray = armature.data.bones
+    #     boneCount = len(boneArray)
+    #     for i in range(boneCount):
+    #         boneRef = self.find_node(boneArray[i].name)
+    #         if (boneRef):
+    #             oskel['bone_ref_array'].append(boneRef[1]["structName"])
+    #         else:
+    #             oskel['bone_ref_array'].append("null")
 
-        oskel['transforms'] = []
-        for i in range(boneCount):
-            oskel['transforms'].append(self.write_matrix(armature.matrix_world * boneArray[i].matrix_local))
+    #     oskel['transforms'] = []
+    #     for i in range(boneCount):
+    #         oskel['transforms'].append(self.write_matrix(armature.matrix_world * boneArray[i].matrix_local))
 
-        boneCountArray = []
-        boneIndexArray = []
-        boneWeightArray = []
-        for vtx in vert_list:
-            boneCountArray.append(vtx.bone_count)
-            boneIndexArray += vtx.bone_indices
-            boneWeightArray += vtx.bone_weights
-        oskin['bone_count_array'] = boneCountArray
-        oskin['bone_index_array'] = boneIndexArray
-        oskin['bone_weight_array'] = boneWeightArray
+    #     boneCountArray = []
+    #     boneIndexArray = []
+    #     boneWeightArray = []
+    #     for vtx in vert_list:
+    #         boneCountArray.append(vtx.bone_count)
+    #         boneIndexArray += vtx.bone_indices
+    #         boneWeightArray += vtx.bone_weights
+    #     oskin['bone_count_array'] = boneCountArray
+    #     oskin['bone_index_array'] = boneIndexArray
+    #     oskin['bone_weight_array'] = boneWeightArray
 
     def calc_tangents(self, posa, nora, uva, ia):
         triangle_count = int(len(ia) / 3)
