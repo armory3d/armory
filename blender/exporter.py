@@ -1156,11 +1156,17 @@ class ArmoryExporter:
             s += '_' + bdata.library.name
         return s
 
-    def export_material_ref(self, bobject, material, index, o):
-        if material == None: # Use default for empty mat slots
+    def use_default_material(self, bobject, o):
+        if bobject.find_armature() and armutils.is_bone_animation_enabled(bobject):
+            o['material_refs'].append('armdefaultskin')
+            self.defaultSkinMaterialObjects.append(bobject)
+        else:
             o['material_refs'].append('armdefault')
             self.defaultMaterialObjects.append(bobject)
-            self.export_default_material = True
+
+    def export_material_ref(self, bobject, material, index, o):
+        if material == None: # Use default for empty mat slots
+            self.use_default_material(bobject, o)
             return
         if not material in self.materialArray:
             self.materialArray[material] = {"structName" : self.asset_name(material)}
@@ -1308,9 +1314,7 @@ class ArmoryExporter:
                         self.export_material_ref(bobject, bobject.material_slots[i].material, i, o)
                 # No material, mimic cycles and assign default
                 if len(o['material_refs']) == 0:
-                    o['material_refs'].append('armdefault')
-                    self.defaultMaterialObjects.append(bobject)
-                    self.export_default_material = True
+                    self.use_default_material(bobject, o)
 
                 num_psys = len(bobject.particle_systems)
                 if num_psys > 0:
@@ -2183,6 +2187,22 @@ class ArmoryExporter:
         o['attenuation'] = objref.attenuation
         self.output['speaker_datas'].append(o)
 
+    def make_default_mat(self, mat_name, mat_objs):
+        if mat_name in bpy.data.materials:
+            return
+        mat = bpy.data.materials.new(name=mat_name)
+        mat.use_nodes = True
+        o = {}
+        o['name'] = mat.name
+        o['contexts'] = []
+        mat_users = dict()
+        mat_users[mat] = mat_objs
+        mat_armusers = dict()
+        mat_armusers[mat] = [o]
+        make_material.parse(mat, o, mat_users, mat_armusers, ArmoryExporter.renderpath_id)
+        self.output['material_datas'].append(o)
+        bpy.data.materials.remove(mat)
+
     def export_materials(self):
         # This function exports all of the materials used in the scene
         transluc_used = False
@@ -2254,20 +2274,10 @@ class ArmoryExporter:
             material.is_cached = True
 
         # Object with no material assigned in the scene
-        if self.export_default_material:
-            if not 'armdefault' in bpy.data.materials:
-                mat = bpy.data.materials.new(name="armdefault")
-                mat.use_nodes = True
-                o = {}
-                o['name'] = mat.name
-                o['contexts'] = []
-                mat_users = dict()
-                mat_users[mat] = self.defaultMaterialObjects
-                mat_armusers = dict()
-                mat_armusers[mat] = [o]
-                make_material.parse(mat, o, mat_users, mat_armusers, ArmoryExporter.renderpath_id)
-                self.output['material_datas'].append(o)
-                bpy.data.materials.remove(mat)
+        if len(self.defaultMaterialObjects) > 0:
+            self.make_default_mat('armdefault', self.defaultMaterialObjects)
+        if len(self.defaultSkinMaterialObjects) > 0:
+            self.make_default_mat('armdefaultskin', self.defaultSkinMaterialObjects)
 
         # Auto-enable render-path featues
         if len(bpy.data.cameras) > 0:
@@ -2391,11 +2401,11 @@ class ArmoryExporter:
         self.worldArray = {} # Export all worlds
         self.boneParentArray = {}
         self.materialToObjectDict = dict()
-        self.defaultMaterialObjects = []
+        self.defaultMaterialObjects = [] # If no material is assigned, provide default to mimick cycles
+        self.defaultSkinMaterialObjects = []
         self.materialToArmObjectDict = dict()
         self.objectToArmObjectDict = dict()
         self.uvprojectUsersArray = [] # For processing decals
-        self.export_default_material = False # If no material is assigned, provide default to mimick cycles
         self.active_layers = []
         for i in range(0, len(self.scene.layers)):
             if self.scene.layers[i] == True:
