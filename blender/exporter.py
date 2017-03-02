@@ -1742,11 +1742,11 @@ class ArmoryExporter:
         
         # Make tangents
         if self.get_export_uvs(exportMesh) == True and self.get_export_tangents(exportMesh) == True and num_uv_layers > 0:
-            tana = {}
-            tana['attrib'] = "tangent"
-            tana['size'] = 3
-            tana['values'] = self.calc_tangents(pa['values'], na['values'], ta['values'], om['index_arrays'][0]['values'])  
-            om['vertex_arrays'].append(tana)
+            tanga = {}
+            tanga['attrib'] = "tangent"
+            tanga['size'] = 3
+            tanga['values'] = self.calc_tangents(pa['values'], na['values'], ta['values'], om['index_arrays'][0]['values'])  
+            om['vertex_arrays'].append(tanga)
 
         return vert_list
 
@@ -2033,11 +2033,11 @@ class ArmoryExporter:
 
         # Export tangents
         if self.get_export_tangents(exportMesh) == True and len(exportMesh.uv_textures) > 0:
-            tana = {}
-            tana['attrib'] = "tangent"
-            tana['size'] = 3
-            tana['values'] = self.calc_tangents(pa['values'], na['values'], ta['values'], om['index_arrays'][0]['values'])  
-            om['vertex_arrays'].append(tana)
+            tanga = {}
+            tanga['attrib'] = "tangent"
+            tanga['size'] = 3
+            tanga['values'] = self.calc_tangents(pa['values'], na['values'], ta['values'], om['index_arrays'][0]['values'])  
+            om['vertex_arrays'].append(tanga)
 
         # Delete the new mesh that we made earlier
         bpy.data.meshes.remove(exportMesh)
@@ -2243,7 +2243,7 @@ class ArmoryExporter:
                 decals_used = True
 
             uv_export = False
-            tan_export = False
+            tang_export = False
             vcol_export = False
             vs_str = ''
             for elem in sd['vertex_structure']:
@@ -2251,21 +2251,21 @@ class ArmoryExporter:
                     vs_str += ','
                 vs_str += elem['name']
 
-                if elem['name'] == 'tan':
-                    tan_export = True
+                if elem['name'] == 'tang':
+                    tang_export = True
                 elif elem['name'] == 'tex':
                     uv_export = True
                 elif elem['name'] == 'col':
                     vcol_export = True
             material.vertex_structure = vs_str
 
-            if (material.export_tangents != tan_export) or \
+            if (material.export_tangents != tang_export) or \
                (material.export_uvs != uv_export) or \
                (material.export_vcols != vcol_export):
 
                 material.export_uvs = uv_export
                 material.export_vcols = vcol_export
-                material.export_tangents = tan_export
+                material.export_tangents = tang_export
                 mat_users = self.materialToObjectDict[material]
                 for ob in mat_users:
                     ob.data.mesh_cached = False

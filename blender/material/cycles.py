@@ -822,7 +822,7 @@ def parse_normal_map_color_input(inp, str_inp=None):
     frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
     parse_teximage_vector = True
     frag.write('n = normalize(TBN * normalize(n));')
-    mat_state.data.add_elem('tan', 3)
+    mat_state.data.add_elem('tang', 3)
     frag.write_pre = False
 
 def parse_value_input(inp):

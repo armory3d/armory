@@ -101,12 +101,12 @@ def make_base(con_mesh, parse_opacity):
             make_tess.interpolate(tese, 'vcolor', 3, declare_out=frag.contains('vcolor'))
             tese.write_pre = False
 
-    if mat_state.data.is_elem('tan'):
+    if mat_state.data.is_elem('tang'):
         if tese != None:
             vert.add_out('vec3 wnormal')
             vert.add_out('vec3 wtangent')
             write_norpos(vert)
-            vert.write('wtangent = normalize(mat3(N) * tan);')
+            vert.write('wtangent = normalize(mat3(N) * tang);')
             tese.add_out('mat3 TBN')
             make_tess.interpolate(tese, 'wtangent', 3, normalize=True)
             tese.write('vec3 wbitangent = normalize(cross(wnormal, wtangent));')
@@ -114,7 +114,7 @@ def make_base(con_mesh, parse_opacity):
         else:
             vert.add_out('mat3 TBN')
             write_norpos(vert, declare=True)
-            vert.write('vec3 tangent = normalize(mat3(N) * tan);')
+            vert.write('vec3 tangent = normalize(mat3(N) * tang);')
             vert.write('vec3 bitangent = normalize(cross(wnormal, tangent));')
             vert.write('TBN = mat3(tangent, bitangent, wnormal);')
     else:
@@ -234,6 +234,15 @@ def make_forward_base(con_mesh, parse_opacity=False):
         is_pcss = False
 
     frag.write('float visibility = 1.0;')
+
+    frag.write('vec3 l;')
+    frag.write('if (lightType == 0) l = lightDir;')
+    frag.write('else { l = normalize(lightPos - wposition); visibility *= attenuate(distance(wposition, lightPos)); }')
+    frag.write('vec3 h = normalize(v + l);')
+    frag.write('float dotNL = dot(n, l);')
+    frag.write('float dotNH = dot(n, h);')
+    frag.write('float dotVH = dot(v, h);')
+
     if is_shadows:
         if tese != None:
             tese.add_out('vec4 lampPos')
@@ -257,21 +266,13 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.write('if (receiveShadow && lampPos.w > 0.0) {')
         frag.tab += 1
         frag.write('vec3 lpos = lampPos.xyz / lampPos.w;')
+        # frag.write('float bias = clamp(shadowsBias * 1.0 * tan(acos(clamp(dotNL, 0.0, 1.0))), 0.0, 0.01);')
         if is_pcss:
             frag.write('visibility = PCSS(lpos.xy, lpos.z - shadowsBias);')
         else:
             frag.write('visibility = PCF(lpos.xy, lpos.z - shadowsBias);')
         frag.tab -= 1
         frag.write('}')
-
-
-    frag.write('vec3 l;')
-    frag.write('if (lightType == 0) l = lightDir;')
-    frag.write('else { l = normalize(lightPos - wposition); visibility *= attenuate(distance(wposition, lightPos)); }')
-    frag.write('vec3 h = normalize(v + l);')
-    frag.write('float dotNL = dot(n, l);')
-    frag.write('float dotNH = dot(n, h);')
-    frag.write('float dotVH = dot(v, h);')
 
     frag.add_uniform('float spotlightCutoff', '_spotlampCutoff')
     frag.add_uniform('float spotlightExponent', '_spotlampExponent')

@@ -41,7 +41,7 @@ class ShaderData:
         # TODO: temporary, Sort vertex data
         for sd in self.data['shader_datas']:
             vs = []
-            ar = ['pos', 'nor', 'tex', 'tex1', 'col', 'tan', 'bone', 'weight', 'off']
+            ar = ['pos', 'nor', 'tex', 'tex1', 'col', 'tang', 'bone', 'weight', 'off']
             for ename in ar:  
                 elem = self.get_elem(ename)
                 if elem != None:

@@ -103,8 +103,7 @@ vec3 SSSSTransmittance(float translucency, float sssWidth, vec3 worldPosition, v
 #endif
 
 #ifndef _NoShadows
-float shadowTest(vec4 lPos) {
-	lPos.xyz /= lPos.w;
+float shadowTest(const vec3 lPos) {
 	
 	#ifdef _Clampstc
 	// Filtering out of bounds, remove
@@ -186,7 +185,7 @@ void main() {
 #ifndef _NoShadows
 	vec4 lampPos = LWVP * vec4(p, 1.0);
 	if (lampPos.w > 0.0) {
-		visibility = shadowTest(lampPos);
+		visibility = shadowTest(lampPos.xyz / lampPos.w);
 	}
 #endif
 
