@@ -2070,6 +2070,10 @@ class ArmoryExporter:
         o['far_plane'] = objref.lamp_clip_end
         o['fov'] = objref.lamp_fov
         o['shadows_bias'] = objref.lamp_shadows_bias
+        if bpy.data.cameras[0].rp_shadowmap == 'None':
+            o['shadowmap_size'] = 0
+        else:
+            o['shadowmap_size'] = int(bpy.data.cameras[0].rp_shadowmap)
         if o['type'] == 'sun': # Scale bias for ortho light matrix
             o['shadows_bias'] *= 10.0
         if (objtype == 'POINT' or objtype == 'SPOT') and objref.shadow_soft_size > 0.1: # No sun for now

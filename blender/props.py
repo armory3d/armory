@@ -86,7 +86,7 @@ def update_gapi_ios(self, context):
 def update_gapi_html5(self, context):
     bpy.data.worlds['Arm'].arm_recompile_trigger = True
 
-arm_ver = '17.02'
+arm_ver = '17.03'
 def init_properties():
     global arm_ver
     bpy.types.World.arm_recompile = bpy.props.BoolProperty(name="Recompile", description="Recompile sources on next play", default=True)
@@ -290,7 +290,8 @@ def init_properties():
                ('512', '512', '512'),
                ('1024', '1024', '1024'),
                ('2048', '2048', '2048'),
-               ('4096', '4096', '4096')],
+               ('4096', '4096', '4096'),
+               ('8192', '8192', '8192')],
         name="Shadow Map", description="Shadow map resolution", default='2048', update=update_renderpath)
     bpy.types.Camera.rp_supersampling = EnumProperty(
         items=[('1', '1X', '1X'),

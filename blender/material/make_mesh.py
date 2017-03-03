@@ -277,21 +277,45 @@ def make_forward_base(con_mesh, parse_opacity=False):
     frag.add_uniform('float spotlightCutoff', '_spotlampCutoff')
     frag.add_uniform('float spotlightExponent', '_spotlampExponent')
     frag.write('if (lightType == 2) {')
-    frag.tab += 1
-    frag.write('float spotEffect = dot(lightDir, l);')
-    frag.write('if (spotEffect < spotlightCutoff) {')
-    frag.tab += 1
-    frag.write('spotEffect = smoothstep(spotlightCutoff - spotlightExponent, spotlightCutoff, spotEffect);')
-    frag.write('visibility *= spotEffect;')
-    frag.tab -= 1
-    frag.write('}')
-    frag.tab -= 1
+    frag.write('    float spotEffect = dot(lightDir, l);')
+    frag.write('    if (spotEffect < spotlightCutoff) {')
+    frag.write('        spotEffect = smoothstep(spotlightCutoff - spotlightExponent, spotlightCutoff, spotEffect);')
+    frag.write('        visibility *= spotEffect;')
+    frag.write('    }')
     frag.write('}')
 
     frag.write('vec3 albedo = surfaceAlbedo(basecol, metallic);')
     frag.write('vec3 f0 = surfaceF0(basecol, metallic);')
-    frag.write('vec3 direct = lambertDiffuseBRDF(albedo, dotNL);')
+    frag.write('vec3 direct;')
+
+    if '_PolyLight' in wrd.world_defs:
+        frag.add_include('../../Shaders/std/ltc.glsl')
+        frag.add_uniform('sampler2D sltcMat', link='_ltcMat')
+        frag.add_uniform('sampler2D sltcMag', link='_ltcMag')
+        frag.add_uniform('vec3 lampArea0', link='_lampArea0')
+        frag.add_uniform('vec3 lampArea1', link='_lampArea1')
+        frag.add_uniform('vec3 lampArea2', link='_lampArea2')
+        frag.add_uniform('vec3 lampArea3', link='_lampArea3')
+        frag.write('if (lightType == 3) {')
+        frag.write('    float theta = acos(dotNV);')
+        frag.write('    vec2 tuv = vec2(roughness, theta / (0.5 * PI));')
+        frag.write('    tuv = tuv * LUT_SCALE + LUT_BIAS;')
+        frag.write('    vec4 t = texture(sltcMat, tuv);')
+        frag.write('    mat3 invM = mat3(vec3(1.0, 0.0, t.y), vec3(0.0, t.z, 0.0), vec3(t.w, 0.0, t.x));')
+        frag.write('    float ltcspec = ltcEvaluate(n, v, dotNV, wposition, invM, lampArea0, lampArea1, lampArea2, lampArea3);')
+        frag.write('    ltcspec *= texture(sltcMag, tuv).a;')
+        frag.write('    float ltcdiff = ltcEvaluate(n, v, dotNV, wposition, mat3(1.0), lampArea0, lampArea1, lampArea2, lampArea3);')
+        frag.write('    direct = albedo * ltcdiff + ltcspec;')
+        frag.write('}')
+        frag.write('else {')
+        frag.tab += 1
+
+    frag.write('direct = lambertDiffuseBRDF(albedo, dotNL);')
     frag.write('direct += specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);')
+
+    if '_PolyLight' in wrd.world_defs:
+        frag.write('}')
+        frag.tab -= 1
 
     if '_Irr' in wrd.world_defs:
         frag.write('vec3 indirect = (shIrradiance(n, 2.2) / PI) * albedo;')

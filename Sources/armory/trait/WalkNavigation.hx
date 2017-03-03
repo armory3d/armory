@@ -12,7 +12,7 @@ import armory.system.Keymap;
 @:keep
 class WalkNavigation extends Trait {
 
-	static inline var speed = 50.0;
+	static inline var speed = 5.0;
 
 	var camera:CameraObject;
 

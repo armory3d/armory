@@ -1,7 +1,5 @@
 // Linearly Transformed Cosines
 // https://eheitzresearch.wordpress.com/415-2/
-uniform sampler2D sltcMat;
-uniform sampler2D sltcMag;
 
 const float LUT_SIZE = 64.0;
 const float LUT_SCALE = (LUT_SIZE - 1.0) / LUT_SIZE;
@@ -30,7 +28,7 @@ float integrateEdge(vec3 v1, vec3 v2) {
 }
 
 int clipQuadToHorizon(/*inout vec3 L[5], out int n*/) {
-	int n;
+	int n = 0;
 	// Detect clipping config
 	int config = 0;
 	if (L0.z > 0.0) config += 1;
@@ -121,7 +119,7 @@ int clipQuadToHorizon(/*inout vec3 L[5], out int n*/) {
 	return n;
 }
 
-vec3 ltcEvaluate(vec3 N, vec3 V, float dotNV, vec3 P, mat3 Minv, vec3 points0, vec3 points1, vec3 points2, vec3 points3, bool twoSided) {
+float ltcEvaluate(vec3 N, vec3 V, float dotNV, vec3 P, mat3 Minv, vec3 points0, vec3 points1, vec3 points2, vec3 points3) {
 	// Construct orthonormal basis around N
 	vec3 T1, T2;
 	T1 = normalize(V - N * dotNV);
@@ -136,11 +134,12 @@ vec3 ltcEvaluate(vec3 N, vec3 V, float dotNV, vec3 P, mat3 Minv, vec3 points0, v
 	L1 = Minv * (points1 - P);
 	L2 = Minv * (points2 - P);
 	L3 = Minv * (points3 - P);
+	L4 = vec3(0.0);
 
 	// int n;
 	int n = clipQuadToHorizon(/*L, n*/);
 	
-	if (n == 0) return vec3(0.0);
+	if (n == 0) return 0.0;
 
 	// Project onto sphere
 	L0 = normalize(L0);
@@ -159,6 +158,6 @@ vec3 ltcEvaluate(vec3 N, vec3 V, float dotNV, vec3 P, mat3 Minv, vec3 points0, v
 	if (n >= 4) sum += integrateEdge(L3, L4);
 	if (n == 5) sum += integrateEdge(L4, L0);
 
-	sum = twoSided ? abs(sum) : max(0.0, -sum);
-	return vec3(sum);
+	// return twoSided ? abs(sum) : max(0.0, -sum);
+	return max(0.0, -sum);
 }

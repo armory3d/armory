@@ -42,11 +42,6 @@ uniform sampler2D gbuffer1;
 	#endif
 #endif
 
-#ifdef _PolyLight
-	//!uniform sampler2D sltcMat;
-	//!uniform sampler2D sltcMag;
-#endif
-
 uniform mat4 invVP;
 uniform mat4 LWVP;
 uniform vec3 lightPos;
@@ -62,6 +57,8 @@ uniform vec3 lampArea0;
 uniform vec3 lampArea1;
 uniform vec3 lampArea2;
 uniform vec3 lampArea3;
+uniform sampler2D sltcMat;
+uniform sampler2D sltcMag;
 #endif
 uniform vec3 eye;
 // uniform vec3 eyeLook;
@@ -156,8 +153,8 @@ float traceShadow(vec3 dir, vec3 hitCoord) {
 #endif
 
 void main() {
-	vec2 screenPosition = wvpposition.xy / wvpposition.w;
-	vec2 texCoord = screenPosition * 0.5 + 0.5;
+	vec2 texCoord = wvpposition.xy / wvpposition.w;
+	texCoord = texCoord * 0.5 + 0.5;
 	// texCoord += vec2(0.5 / screenSize); // Half pixel offset
 
 	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, mask
@@ -214,19 +211,16 @@ void main() {
 		float theta = acos(dotNV);
 		vec2 tuv = vec2(metrough.y, theta / (0.5 * PI));
 		tuv = tuv * LUT_SCALE + LUT_BIAS;
-		// vec4 t = texture(sltcMat, tuv);
-		vec4 t = clamp(texture(sltcMat, tuv), 0.0, 1.0);
+		vec4 t = texture(sltcMat, tuv);
 		mat3 invM = mat3(
 			vec3(1.0, 0.0, t.y),
 			vec3(0.0, t.z, 0.0),
 			vec3(t.w, 0.0, t.x));
 
-		vec3 ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lampArea0, lampArea1, lampArea2, lampArea3, true); 
+		float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lampArea0, lampArea1, lampArea2, lampArea3);
 		ltcspec *= texture(sltcMag, tuv).a;
-		
-		vec3 ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lampArea0, lampArea1, lampArea2, lampArea3, true);
-		direct = ltcdiff * albedo + ltcspec;
-		direct = clamp(direct, 0.0, 10.0);
+		float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lampArea0, lampArea1, lampArea2, lampArea3);
+		direct = albedo * ltcdiff + ltcspec;
 	}
 	else {
 #endif
