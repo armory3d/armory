@@ -268,9 +268,9 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.write('vec3 lpos = lampPos.xyz / lampPos.w;')
         # frag.write('float bias = clamp(shadowsBias * 1.0 * tan(acos(clamp(dotNL, 0.0, 1.0))), 0.0, 0.01);')
         if is_pcss:
-            frag.write('visibility = PCSS(lpos.xy, lpos.z - shadowsBias);')
+            frag.write('visibility *= PCSS(lpos.xy, lpos.z - shadowsBias);')
         else:
-            frag.write('visibility = PCF(lpos.xy, lpos.z - shadowsBias);')
+            frag.write('visibility *= PCF(lpos.xy, lpos.z - shadowsBias);')
         frag.tab -= 1
         frag.write('}')
 

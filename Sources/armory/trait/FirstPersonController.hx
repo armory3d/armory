@@ -15,7 +15,7 @@ class FirstPersonController extends CameraController {
 
 	var head:Object;
 	var locked = false;
-	static inline var rotationSpeed = 1.0; 
+	static inline var rotationSpeed = 2.0; 
 
 	public function new() {
 		super();
@@ -36,16 +36,17 @@ class FirstPersonController extends CameraController {
 	function preUpdate() {
 		if (Input.occupied || !body.ready) return;
 		
-		if (Input.started && !locked) {
-			kha.SystemImpl.lockMouse();
-			locked = true;
-		}
-		else if (escape && locked) {
-			kha.SystemImpl.unlockMouse();
-			locked = false;
-		}
+		// if (Input.started && !locked) {
+			// kha.SystemImpl.lockMouse();
+			// locked = true;
+		// }
+		// else if (escape && locked) {
+			// kha.SystemImpl.unlockMouse();
+			// locked = false;
+		// }
 		
-		if (locked) {
+		// if (locked) {
+		if (Input.down) {
 			head.transform.rotate(xVec, -Input.movementY / 250 * rotationSpeed);
 			transform.rotate(zVec, -Input.movementX / 250 * rotationSpeed);
 			body.syncTransform();

@@ -2091,11 +2091,11 @@ class ArmoryExporter:
                 col = n.inputs[0].default_value
                 o['color'] = [col[0], col[1], col[2]]
                 o['strength'] = n.inputs[1].default_value
-                # Normalize point/spot strength
+                # Normalize lamp strength
                 if o['type'] == 'point' or o['type'] == 'spot':
-                    o['strength'] /= 40.0
+                    o['strength'] *= 0.025
                 elif o['type'] == 'area':
-                    o['strength'] /= 40.0
+                    o['strength'] *= 0.025
                 elif o['type'] == 'sun':
                     o['strength'] *= 0.4
                 # TODO: Lamp texture test..
