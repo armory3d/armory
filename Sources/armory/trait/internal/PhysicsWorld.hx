@@ -47,6 +47,8 @@ class PhysicsWorld extends Trait {
 	static inline var timeStep = 1 / 60;
 	static inline var fixedStep = 1 / 60;
 
+	public var hitPointWorld:BtVector3;
+
 	public function new() {
 		super();
 
@@ -200,7 +202,6 @@ class PhysicsWorld extends Trait {
 		}
 	}
 
-	public var hitPointWorld:BtVector3;
 	public function pickClosest(inputX:Float, inputY:Float):RigidBody {
 
 		var rayFrom = getRayFrom();

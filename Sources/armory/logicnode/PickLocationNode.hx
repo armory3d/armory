@@ -28,6 +28,8 @@ class PickLocationNode extends LocationNode {
 
 	override function fetch() {
 #if arm_physics
+		if (inputs[_target].target == null) return;
+		
 		var physics = armory.trait.internal.PhysicsWorld.active;
 		
 		var coords = inputs[_coords];
@@ -36,11 +38,7 @@ class PickLocationNode extends LocationNode {
 		var rb = inputs[_target].target.getTrait(armory.trait.internal.RigidBody);
 
 		if (rb != null && b == rb) {
-			#if js
-			var p:haxebullet.Bullet.BtVector3 = physics.rayCallback.get_m_hitPointWorld();
-			#elseif cpp
-			var p:haxebullet.Bullet.BtVector3 = physics.rayCallback.m_hitPointWorld;
-			#end
+			var p:haxebullet.Bullet.BtVector3 = physics.hitPointWorld;
 			loc.set(p.x(), p.y(), p.z());
 		}
 #end
