@@ -193,7 +193,9 @@ void main() {
 	}
 	else { // Point, spot
 		l = normalize(lightPos - p);
+#ifndef _NoLampFalloff
 		visibility *= attenuate(distance(p, lightPos));
+#endif
 	}
 	
 	vec3 h = normalize(v + l);

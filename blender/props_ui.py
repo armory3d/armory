@@ -360,6 +360,7 @@ class WorldPropsPanel(bpy.types.Panel):
         layout.prop(wrd, 'generate_vignette')
         layout.prop(wrd, 'generate_lamp_texture')
         layout.prop(wrd, 'generate_lens_texture')
+        layout.prop(wrd, 'generate_lamp_falloff')
 
 class ArmoryPlayerPanel(bpy.types.Panel):
     bl_label = "Armory Player"

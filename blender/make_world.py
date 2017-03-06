@@ -79,6 +79,9 @@ def build_node_tree(world):
     if wrd.generate_lamp_texture != '':
         bpy.data.worlds['Arm'].world_defs += '_LampColTex'
 
+    if not wrd.generate_lamp_falloff:
+        bpy.data.worlds['Arm'].world_defs += '_NoLampFalloff'
+
     voxelgi = False
     for cam in bpy.data.cameras:
         if cam.is_probe:

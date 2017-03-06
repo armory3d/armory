@@ -431,6 +431,7 @@ def init_properties():
         name='Tonemap', description='Tonemapping operator', default='Filmic', update=assets.invalidate_shader_cache)
     bpy.types.World.generate_lamp_texture = bpy.props.StringProperty(name="Lamp Texture", default="")
     bpy.types.World.generate_lens_texture = bpy.props.StringProperty(name="Lens Texture", default="")
+    bpy.types.World.generate_lamp_falloff = bpy.props.BoolProperty(name="Lamp Falloff", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_fisheye = bpy.props.BoolProperty(name="Fish Eye", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_vignette = bpy.props.BoolProperty(name="Vignette", default=False, update=assets.invalidate_shader_cache)
     # Skin
