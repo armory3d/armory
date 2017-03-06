@@ -1,27 +1,16 @@
 package armory.logicnode;
 
-import armory.trait.internal.NodeExecutor;
-
 class SetVisibleNode extends Node {
 
-	public static inline var _target = 0; // Target
-	public static inline var _visible = 1; // Bool
-
-	public function new() {
-		super();
+	public function new(trait:armory.Trait) {
+		super(trait);
 	}
 
-	public override function inputChanged() {
-		if (inputs[_target].target != null) {
-			inputs[_target].target.visible = inputs[_visible].val;
-		}
-		super.inputChanged();
-	}
+	override function run() {
+		var object = inputs[1].get();
+		var visible = inputs[2].get();
+		object.visible = visible;
 
-	public static function create(target:iron.object.Object, visible:Bool):SetVisibleNode {
-		var n = new SetVisibleNode();
-		n.inputs.push(target);
-		n.inputs.push(BoolNode.create(visible));
-		return n;
+		super.run();
 	}
 }

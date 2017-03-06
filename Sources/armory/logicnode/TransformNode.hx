@@ -7,57 +7,20 @@ import iron.object.Transform;
 
 class TransformNode extends Node {
 
-	public static inline var _location = 0; // Vector
-	public static inline var _rotation = 1; // Vector
-	public static inline var _scale = 2; // Vector
-	
-	public var matrix:Mat4 = null;
-	
-	var loc:Vec4 = null;
-	var rot:Quat = null;
-	var scale:Vec4 = null;
+	var value:Mat4 = Mat4.identity();
+	static var q:Quat = new Quat();
 
-	var buildMatrix:Bool;
-
-	public function new(buildMatrix = true) {
-		super();
-
-		this.buildMatrix = buildMatrix;
-		if (buildMatrix) {
-			matrix = Mat4.identity();
-			loc = new Vec4();
-			rot = new Quat();
-			scale = new Vec4();
-		}
+	public function new(trait:armory.Trait) {
+		super(trait);
 	}
 
-	public override function inputChanged() {
-		if (buildMatrix) {
-			loc.set(inputs[_location].inputs[VectorNode._x].val,
-					inputs[_location].inputs[VectorNode._y].val,
-					inputs[_location].inputs[VectorNode._z].val);
+	override function get():Dynamic {
 
-			rot.fromEuler(inputs[_rotation].inputs[VectorNode._x].val,
-						  inputs[_rotation].inputs[VectorNode._y].val,
-						  inputs[_rotation].inputs[VectorNode._z].val);
-
-			scale.set(inputs[_scale].inputs[VectorNode._x].val,
-					  inputs[_scale].inputs[VectorNode._y].val,
-					  inputs[_scale].inputs[VectorNode._z].val);
-
-			matrix.compose(loc, rot, scale);
-		}
-
-		super.inputChanged();
-	}
-
-	public static function create(positionX:Float, positionY:Float, positionZ:Float,
-								  rotationX:Float, rotationY:Float, rotationZ:Float,
-								  scaleX:Float, scaleY:Float, scaleZ:Float):TransformNode {
-		var n = new TransformNode();
-		n.inputs.push(VectorNode.create(positionX, positionY, positionZ));
-		n.inputs.push(VectorNode.create(rotationX, rotationY, rotationZ));
-		n.inputs.push(VectorNode.create(scaleX, scaleY, scaleZ));
-		return n;
+		var loc = inputs[0].get();
+		var rot = inputs[1].get();
+		q.fromEuler(rot.x, rot.y, rot.z);
+		var scale = inputs[2].get();
+		value.compose(loc, q, scale);
+		return value;
 	}
 }

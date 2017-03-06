@@ -2,15 +2,15 @@ package armory.logicnode;
 
 class FloatNode extends Node {
 
-	public var val:Float = 0.0;
+	public var value:Float;
 
-	public function new() {
-		super();
+	public function new(trait:armory.Trait, value = 0.0) {
+		super(trait);
+		this.value = value;
 	}
 
-	public static function create(f:Float) {
-		var n = new FloatNode();
-		n.val = f;
-		return n;
+	override function get():Dynamic {
+		if (inputs.length > 0) return inputs[0].get();
+		return value;
 	}
 }

@@ -3,6 +3,7 @@ import nodes_logic
 import nodes_renderpath
 import props_traits_action
 import props_traits_clip
+import props_traits_library
 import props_traits_params
 import props_traits
 import props_lod
@@ -23,11 +24,12 @@ def register():
     armutils.register()
     props_traits_action.register()
     props_traits_clip.register()
+    props_traits_library.register()
     props.register()
     props_ui.register()
     props_renderer.register()
-    handlers.register()
     nodes_logic.register()
+    handlers.register()
     nodes_renderpath.register()
     props_traits_params.register()
     props_traits.register()
@@ -53,4 +55,5 @@ def unregister():
     props.unregister()
     props_traits_action.unregister()
     props_traits_clip.unregister()
+    props_traits_library.unregister()
     space_armory.unregister()

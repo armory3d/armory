@@ -390,7 +390,7 @@ class ArmoryPlayerPanel(bpy.types.Panel):
 
         layout.prop(wrd, 'arm_play_advanced')
         if wrd.arm_play_advanced:
-            layout.prop(wrd, make_utils.runtime_to_gapi())
+            # layout.prop(wrd, make_utils.runtime_to_gapi())
             layout.prop(wrd, 'arm_play_console')
             if armutils.with_krom():
                 row = layout.row(align=True)
@@ -437,7 +437,28 @@ class ArmoryProjectPanel(bpy.types.Panel):
         row.operator("arm.build_project")
         row.operator("arm.publish_project")
         layout.prop(wrd, 'arm_project_target')
-        layout.prop(wrd, make_utils.target_to_gapi())
+        # layout.prop(wrd, make_utils.target_to_gapi())
+
+        layout.label("Libraries")
+        rows = 2
+        if len(wrd.my_librarytraitlist) > 1:
+            rows = 4
+        
+        row = layout.row()
+        row.template_list("MY_UL_LibraryTraitList", "The_List", wrd, "my_librarytraitlist", wrd, "librarytraitlist_index", rows=rows)
+
+        col = row.column(align=True)
+        col.operator("my_librarytraitlist.new_item", icon='ZOOMIN', text="")
+        col.operator("my_librarytraitlist.delete_item", icon='ZOOMOUT', text="")
+
+        if len(wrd.my_librarytraitlist) > 1:
+            col.separator()
+            col.operator("my_librarytraitlist.move_item", icon='TRIA_UP', text="").direction = 'UP'
+            col.operator("my_librarytraitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
+
+        # if wrd.librarytraitlist_index >= 0 and len(wrd.my_librarytraitlist) > 0:
+            # libitem = wrd.my_librarytraitlist[wrd.librarytraitlist_index]         
+            
 
         layout.prop(wrd, 'arm_project_advanced')
         if wrd.arm_project_advanced:

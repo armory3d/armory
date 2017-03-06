@@ -146,25 +146,29 @@ def op_changed(op, obj):
        op.bl_idname == 'OBJECT_OT_shade_flat':
         obj.data.mesh_cached = False
 
-last_py_path = None
+appended_py_paths = []
 @persistent
 def on_load_post(context):
-    global last_py_path
+    global appended_py_paths
 
     props.init_properties_on_load()
     nodes_renderpath.reload_blend_data()
 
-    # Calls register() on optional project.py script
-    if last_py_path != None:
-        sys.path.remove(last_py_path)
-        last_py_path = None
+    # Check for blender.py scripts in enabled libraries
+    # for fp in appended_py_paths:
+        # sys.path.remove(fp)
+    # appended_py_paths = []
 
-    py_path = armutils.get_fp() + '/py'
-    if os.path.exists(py_path):
-        last_py_path = py_path
-        sys.path.append(py_path)
-        import project
-        project.register()
+    wrd = bpy.data.worlds['Arm']
+    for lib in wrd.my_librarytraitlist:
+        if lib.enabled_prop:
+            fp = armutils.get_fp() + '/Libraries/' + lib.name
+            if fp not in appended_py_paths and os.path.exists(fp + '/blender.py'):
+            # if os.path.exists(fp + '/blender.py'):
+                sys.path.append(fp)
+                appended_py_paths.append(fp)
+                import blender
+                blender.register()
 
 @persistent
 def on_save_pre(context):

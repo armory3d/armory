@@ -2,15 +2,15 @@ package armory.logicnode;
 
 class BoolNode extends Node {
 
-	public var val:Bool = false;
+	public var value:Bool;
 
-	public function new() {
-		super();
+	public function new(trait:armory.Trait, value = false) {
+		super(trait);
+		this.value = value;
 	}
 
-	public static function create(b:Bool) {
-		var n = new BoolNode();
-		n.val = b;
-		return n;
+	override function get():Dynamic {
+		if (inputs.length > 0) return inputs[0].get();
+		return value;
 	}
 }

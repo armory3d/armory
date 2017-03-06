@@ -2,6 +2,7 @@ import bpy
 from bpy.props import *
 from props_traits_clip import *
 from props_traits_action import *
+from props_traits_library import *
 import props_ui
 import props_renderer
 import assets
@@ -104,6 +105,8 @@ def init_properties():
         name="Target", default='html5', description='Build paltform')
     bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="")
     bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm")
+    bpy.types.World.my_librarytraitlist = bpy.props.CollectionProperty(type=ListLibraryTraitItem)
+    bpy.types.World.librarytraitlist_index = bpy.props.IntProperty(name="Library index", default=0)
     bpy.types.World.arm_play_active_scene = BoolProperty(name="Play Active Scene", description="Load currently edited scene when launching player", default=True)
     bpy.types.World.arm_project_scene = StringProperty(name="Scene", description="Scene to load when launching player")
     bpy.types.World.arm_samples_per_pixel = EnumProperty(

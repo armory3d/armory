@@ -1,37 +1,21 @@
 package armory.logicnode;
 
-import armory.trait.internal.NodeExecutor;
-
 class Node {
 
-	var executor:NodeExecutor;
+	var trait:armory.Trait;
+	var inputs:Array<Node> = [];
+	var outputs:Array<Node> = [];
 
-	var parents:Array<Node> = [];
-	public var inputs:Array<Dynamic> = [];
-
-	public function new() {}
-
-	public function start(executor:NodeExecutor, parent:Node = null) {
-		this.executor = executor;
-		if (parent != null) parents.push(parent);
-
-		for (inp in inputs) inp.start(executor, this);
-
-		inputChanged();
+	public function new(trait:armory.Trait) {
+		this.trait = trait;
 	}
 
-	public function inputChanged() {
-		for (p in parents) {
-			p.inputChanged();
-		}
+	public function addInput(node:Node) {
+		inputs.push(node);
+		node.outputs.push(this);
 	}
 
-	// public function fetch(done:Void->Void) {
-	public function fetch() {
-		
-	}
+	function run() { for (o in outputs) o.run(); }
 
-	public function consumed() {
-		
-	}
+	function get():Dynamic { return this; }
 }

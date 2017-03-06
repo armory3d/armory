@@ -1,10 +1,14 @@
 package armory.logicnode;
 
-class SelfNode extends Node {
+class InitNode extends Node {
 
 	public function new(trait:armory.Trait) {
 		super(trait);
+
+		trait.notifyOnInit(init);
 	}
 
-	override function get():Dynamic { return trait.object; }
+	function init() {
+		run();
+	}
 }

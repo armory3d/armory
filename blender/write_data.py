@@ -39,6 +39,11 @@ project.addSources('Sources');
             f.write('project.addLibrary("iron")')
         else:
             f.write(add_armory_library(sdk_path, 'iron'))
+
+        # Project libraries
+        for lib in wrd.my_librarytraitlist:
+            if lib.enabled_prop:
+                f.write('project.addLibrary("{0}");\n'.format(lib.name))
         
         if export_physics:
             f.write("project.addDefine('arm_physics');\n")

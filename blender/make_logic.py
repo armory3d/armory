@@ -32,16 +32,16 @@ def build_node_tree(node_group):
     with open(path + node_group_name + '.hx', 'w') as f:
         f.write('package ' + bpy.data.worlds['Arm'].arm_project_package + '.node;\n\n')
         f.write('import armory.logicnode.*;\n\n')
-        f.write('@:keep class ' + node_group_name + ' extends armory.trait.internal.NodeExecutor {\n\n')
+        f.write('@:keep class ' + node_group_name + ' extends armory.Trait {\n\n')
         f.write('\tpublic function new() { super(); notifyOnAdd(add); }\n\n')
         f.write('\tfunction add() {\n')
         # Make sure root node exists
         roots = get_root_nodes(node_group)
         created_nodes = []
+        print(roots)
         for rn in roots:
             name = '_' + rn.name.replace('.', '_').replace(' ', '')
             buildNode(node_group, rn, f, created_nodes)
-            f.write('\n\t\tstart(' + name + ');\n\n')
         f.write('\t}\n')
         f.write('}\n')
 
@@ -56,7 +56,7 @@ def buildNode(node_group, node, f, created_nodes):
 
     # Create node
     type = node.name.split(".")[0].replace(' ', '') + "Node"
-    f.write('\t\tvar ' + name + ' = new ' + type + '();\n')
+    f.write('\t\tvar ' + name + ' = new ' + type + '(this);\n')
     created_nodes.append(name)
     
     # Properties
@@ -83,25 +83,28 @@ def buildNode(node_group, node, f, created_nodes):
             inpname = build_default_node(inp)
         
         # Add input
-        f.write('\t\t' + name + '.inputs.push(' + inpname + ');\n')
+        f.write('\t\t' + name + '.addInput(' + inpname + ');\n')
         
     return name
     
 def get_root_nodes(node_group):
     roots = []
     for n in node_group.nodes:
-        if len(n.outputs) == 0: # Assume node with no outputs as roots
+        linked = False
+        for o in n.outputs:
+            if o.is_linked:
+                linked = True
+                break
+        if not linked: # Assume node with no connected outputs as roots
             roots.append(n)
     return roots
 
 def build_default_node(inp):
     inpname = ''
     if inp.type == "VECTOR":
-        inpname = 'VectorNode.create(' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ", " + str(inp.default_value[2]) + ')'
+        inpname = 'new VectorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ", " + str(inp.default_value[2]) + ')'
     elif inp.type == "VALUE":
-        inpname = 'FloatNode.create(' + str(inp.default_value) + ')'
+        inpname = 'new FloatNode(this, ' + str(inp.default_value) + ')'
     elif inp.type == 'BOOLEAN':
-        inpname = 'BoolNode.create(' + str(inp.default_value).lower() + ')'
-    else:
-        inpname = 'BoolNode.create(true)' # Unlinked triggers
+        inpname = 'new BoolNode(this, ' + str(inp.default_value).lower() + ')'
     return inpname
