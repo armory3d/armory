@@ -16,5 +16,5 @@ out vec4 fragColor;
 void main() {
 	vec4 col = texture(tex, texCoord);
 	vec3 n = getNor(col.rg);
-	fragColor = vec4(n * 0.5 + 0.5, 1.0);
+	fragColor.rgb = n * 0.5 + 0.5;
 }

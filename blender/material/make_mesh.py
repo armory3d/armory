@@ -28,7 +28,7 @@ def make_base(con_mesh, parse_opacity):
 
     vert.add_out('vec3 wposition')
     vert.add_uniform('mat4 W', '_worldMatrix')
-    vert.add_uniform('mat4 N', '_normalMatrix')
+    vert.add_uniform('mat3 N', '_normalMatrix')
     vert.write_pre = True
     vert.write('vec4 spos = vec4(pos, 1.0);')
     vert.write_pre = False
@@ -106,7 +106,7 @@ def make_base(con_mesh, parse_opacity):
             vert.add_out('vec3 wnormal')
             vert.add_out('vec3 wtangent')
             write_norpos(vert)
-            vert.write('wtangent = normalize(mat3(N) * tang);')
+            vert.write('wtangent = normalize(N * tang);')
             tese.add_out('mat3 TBN')
             make_tess.interpolate(tese, 'wtangent', 3, normalize=True)
             tese.write('vec3 wbitangent = normalize(cross(wnormal, wtangent));')
@@ -114,7 +114,7 @@ def make_base(con_mesh, parse_opacity):
         else:
             vert.add_out('mat3 TBN')
             write_norpos(vert, declare=True)
-            vert.write('vec3 tangent = normalize(mat3(N) * tang);')
+            vert.write('vec3 tangent = normalize(N * tang);')
             vert.write('vec3 bitangent = normalize(cross(wnormal, tangent));')
             vert.write('TBN = mat3(tangent, bitangent, wnormal);')
     else:
@@ -139,9 +139,9 @@ def write_norpos(vert, declare=False):
     vert.write_pre = True
     if mat_state.data.is_elem('bone'):
         make_skin.skin_pos(vert)
-        vert.write(prep + 'wnormal = normalize(mat3(N) * (nor + 2.0 * cross(skinA.xyz, cross(skinA.xyz, nor) + skinA.w * nor)));')
+        vert.write(prep + 'wnormal = normalize(N * (nor + 2.0 * cross(skinA.xyz, cross(skinA.xyz, nor) + skinA.w * nor)));')
     else:
-        vert.write(prep + 'wnormal = normalize(mat3(N) * nor);')
+        vert.write(prep + 'wnormal = normalize(N * nor);')
     if mat_state.data.is_elem('off'):
         vert.write('spos.xyz += off;')
     vert.write('wposition = vec4(W * spos).xyz;')
@@ -180,8 +180,10 @@ def make_deferred(con_mesh):
     frag.add_include('../../Shaders/std/gbuffer.glsl')
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
-    frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - gl_FragCoord.z);')
-    frag.write('fragColor[1] = vec4(basecol.rgb, occlusion);')
+    # TODO: store_depth
+    # frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - gl_FragCoord.z);')
+    frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), occlusion);')
+    frag.write('fragColor[1] = vec4(basecol.rgb, 0.0);')
 
     if '_Veloc' in wrd.rp_defs:
         frag.write('vec2 posa = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
@@ -234,7 +236,6 @@ def make_forward_base(con_mesh, parse_opacity=False):
         is_pcss = False
 
     frag.write('float visibility = 1.0;')
-
     frag.write('vec3 l;')
     frag.write('if (lightType == 0) l = lightDir;')
     frag.write('else { l = normalize(lightPos - wposition); visibility *= attenuate(distance(wposition, lightPos)); }')
@@ -274,13 +275,11 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.tab -= 1
         frag.write('}')
 
-    frag.add_uniform('float spotlightCutoff', '_spotlampCutoff')
-    frag.add_uniform('float spotlightExponent', '_spotlampExponent')
+    frag.add_uniform('vec2 spotlightData', '_spotlampData') # cutoff, cutoff - exponent
     frag.write('if (lightType == 2) {')
     frag.write('    float spotEffect = dot(lightDir, l);')
-    frag.write('    if (spotEffect < spotlightCutoff) {')
-    frag.write('        spotEffect = smoothstep(spotlightCutoff - spotlightExponent, spotlightCutoff, spotEffect);')
-    frag.write('        visibility *= spotEffect;')
+    frag.write('    if (spotEffect < spotlightData.x) {')
+    frag.write('        visibility *= smoothstep(spotlightData.y, spotlightData.x, spotEffect);')
     frag.write('    }')
     frag.write('}')
 

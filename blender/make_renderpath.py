@@ -300,13 +300,15 @@ def process_call_function(stage, stages, node, node_group):
         buildNode(stage['returns_true'], stageNode, node_group)
     
     stage['returns_false'] = []
+    margeNode = None
     if node.outputs[1].is_linked:
         stageNode = nodes.find_node_by_link_from(node_group, node, node.outputs[1])
         margeNode = buildNode(stage['returns_false'], stageNode, node_group)
     
     # Continue using top level stages after merge node
-    afterMergeNode = nodes.find_node_by_link_from(node_group, margeNode, margeNode.outputs[0])
-    buildNode(stages, afterMergeNode, node_group)
+    if margeNode != None:
+        afterMergeNode = nodes.find_node_by_link_from(node_group, margeNode, margeNode.outputs[0])
+        buildNode(stages, afterMergeNode, node_group)
 
 def make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 5, 7], bind_target_constants=None, shader_context=None, viewport_scale=1.0, with_clear=False):
     # Set target
@@ -674,6 +676,9 @@ def buildNode(stages, node, node_group):
     if node.outputs[0].is_linked:
         stageNode = nodes.find_node_by_link_from(node_group, node, node.outputs[0])
         buildNode(stages, stageNode, node_group)
+
+    return None
+
 # Used to merge bind target nodes into one stage
 buildNode.last_bind_target = None
 # Used to determine shadowmap size

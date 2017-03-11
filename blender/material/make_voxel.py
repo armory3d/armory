@@ -15,7 +15,7 @@ def make(context_id):
     frag.ins = geom.outs
 
     vert.add_uniform('mat4 W', '_worldMatrix')
-    vert.add_uniform('mat4 N', '_normalMatrix')
+    vert.add_uniform('mat3 N', '_normalMatrix')
 
     vert.add_out('vec3 wpositionGeom')
     vert.add_out('vec3 wnormalGeom')
@@ -27,7 +27,7 @@ def make(context_id):
         vert.write('texCoordGeom = tex;')
 
     vert.write('wpositionGeom = vec3(W * vec4(pos, 1.0)) / voxelgiDimensions.x;')
-    vert.write('wnormalGeom = normalize(mat3(N) * nor);')
+    vert.write('wnormalGeom = normalize(N * nor);')
     vert.write('gl_Position = vec4(0.0, 0.0, 0.0, 1.0);')
 
     geom.add_out('vec3 wposition')
@@ -64,7 +64,6 @@ def make(context_id):
     frag.add_uniform('vec3 lightPos', '_lampPosition')
     frag.add_uniform('vec3 lightColor', '_lampColor')
 
-    frag.write('vec3 color = vec3(0.0);')
     frag.write('if (!isInsideCube(wposition)) return;')
 
     frag.write('vec3 basecol;')
@@ -72,10 +71,10 @@ def make(context_id):
     frag.write('float metallic;') #
     frag.write('float occlusion;') #
     frag.write_pre = True
-    frag.write('mat3 TBN = mat3(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0);') # TODO: discard, parse basecolor only
+    frag.write('mat3 TBN;') # TODO: discard, parse basecolor only
     frag.write_pre = False
     cycles.parse(mat_state.nodes, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False)
-    frag.write('color = basecol * lightColor * max(dot(wnormal, normalize(lightPos - wposition * voxelgiDimensions.x)), 0.0) * attenuate(distance(wposition * voxelgiDimensions.x, lightPos));')
+    frag.write('vec3 color = basecol * lightColor * max(dot(wnormal, normalize(lightPos - wposition * voxelgiDimensions.x)), 0.0) * attenuate(distance(wposition * voxelgiDimensions.x, lightPos));')
     frag.write('vec3 voxel = wposition * 0.5 + vec3(0.5);')
     frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));') # , alpha
 

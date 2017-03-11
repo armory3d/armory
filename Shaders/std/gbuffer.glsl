@@ -66,6 +66,19 @@ float packFloat(const float f1, const float f2) {
 	return index + alpha;
 }
 
-vec2 unpackFloat(float f) {
+vec2 unpackFloat(const float f) {
 	return vec2(floor(f) / 100.0, fract(f));
+}
+
+vec4 encodeRGBM(const vec3 rgb) {
+	const float maxRange = 6.0;
+	float maxRGB = max(rgb.x, max(rgb.g, rgb.b));
+	float m = maxRGB / maxRange;
+	m = ceil(m * 255.0) / 255.0;
+	return vec4(rgb / (m * maxRange), m);
+}
+
+vec3 decodeRGBM(const vec4 rgbm) {
+	const float maxRange = 6.0;
+    return rgbm.rgb * rgbm.a * maxRange;
 }

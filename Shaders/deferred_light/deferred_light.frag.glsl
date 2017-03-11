@@ -49,26 +49,26 @@ uniform vec3 lightDir;
 uniform int lightType;
 // uniform int lightIndex;
 uniform vec3 lightColor;
+uniform int lightShadow;
 uniform float shadowsBias;
-uniform float spotlightCutoff;
-uniform float spotlightExponent;
+uniform vec2 spotlightData;
 #ifdef _PolyLight
-uniform vec3 lampArea0;
-uniform vec3 lampArea1;
-uniform vec3 lampArea2;
-uniform vec3 lampArea3;
-uniform sampler2D sltcMat;
-uniform sampler2D sltcMag;
+	uniform vec3 lampArea0;
+	uniform vec3 lampArea1;
+	uniform vec3 lampArea2;
+	uniform vec3 lampArea3;
+	uniform sampler2D sltcMat;
+	uniform sampler2D sltcMag;
 #endif
 uniform vec3 eye;
 // uniform vec3 eyeLook;
 // uniform vec2 screenSize;
 #ifdef _SSRS
-uniform mat4 VP;
+	uniform mat4 VP;
 #endif
 
 #ifdef _LampColTex
-uniform sampler2D texlampcolor;
+	uniform sampler2D texlampcolor;
 #endif
 
 in vec4 wvpposition;
@@ -130,7 +130,9 @@ vec2 getProjectedCoord(vec3 hitCoord) {
 float getDeltaDepth(vec3 hitCoord) {
 	vec2 texCoord = getProjectedCoord(hitCoord);
 	vec4 g0 = texture(gbuffer0, texCoord);
-	float depth = (1.0 - g0.a) * 2.0 - 1.0;
+	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+	// TODO: store_depth
+	// float depth = (1.0 - g0.a) * 2.0 - 1.0;
 	vec3 wpos = getPos2(invVP, depth, texCoord);
 	float d1 = length(eye - wpos);
 	float d2 = length(eye - hitCoord);
@@ -157,12 +159,11 @@ void main() {
 	texCoord = texCoord * 0.5 + 0.5;
 	// texCoord += vec2(0.5 / screenSize); // Half pixel offset
 
-	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, mask
-	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, occlusion
-	// 0 - 1 => -1 - 1
-	// float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	// TODO: Can not read and test depth buffer at once, fetch depth from g0
-	float depth = (1.0 - g0.a) * 2.0 - 1.0;
+	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, occlusion
+	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, 
+	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0; // 0 - 1 => -1 - 1
+	// TODO: store_depth
+	// float depth = (1.0 - g0.a) * 2.0 - 1.0;
 
 	vec3 n;
 	n.z = 1.0 - abs(g0.x) - abs(g0.y);
@@ -180,9 +181,11 @@ void main() {
 	
 	float visibility = 1.0;
 #ifndef _NoShadows
-	vec4 lampPos = LWVP * vec4(p, 1.0);
-	if (lampPos.w > 0.0) {
-		visibility = shadowTest(lampPos.xyz / lampPos.w);
+	if (lightShadow == 1) {
+		vec4 lampPos = LWVP * vec4(p, 1.0);
+		if (lampPos.w > 0.0) {
+			visibility = shadowTest(lampPos.xyz / lampPos.w);
+		}
 	}
 #endif
 
@@ -191,11 +194,22 @@ void main() {
 	if (lightType == 0) { // Sun
 		l = lightDir;
 	}
-	else { // Point, spot
+	else if (lightType == 2) { // Spot
 		l = normalize(lightPos - p);
-#ifndef _NoLampFalloff
+		#ifndef _NoLampFalloff
 		visibility *= attenuate(distance(p, lightPos));
-#endif
+		#endif
+		float spotEffect = dot(lightDir, l);
+		// x - cutoff, y - cutoff - exponent
+		if (spotEffect < spotlightData.x) {
+			visibility *= smoothstep(spotlightData.y, spotlightData.x, spotEffect);
+		}
+	}
+	else { // Point = 1, Area = 3
+		l = normalize(lightPos - p);
+		#ifndef _NoLampFalloff
+		visibility *= attenuate(distance(p, lightPos));
+		#endif
 	}
 	
 	vec3 h = normalize(v + l);
@@ -206,8 +220,6 @@ void main() {
 	// float dotLH = dot(l, h);
 	
 	// Direct
-	vec3 direct;
-
 #ifdef _PolyLight
 	if (lightType == 3) { // Area
 		float theta = acos(dotNV);
@@ -222,24 +234,16 @@ void main() {
 		float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lampArea0, lampArea1, lampArea2, lampArea3);
 		ltcspec *= texture(sltcMag, tuv).a;
 		float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lampArea0, lampArea1, lampArea2, lampArea3);
-		direct = albedo * ltcdiff + ltcspec;
+		fragColor.rgb = albedo * ltcdiff + ltcspec;
 	}
 	else {
 #endif
 
 #ifdef _OrenNayar
-	direct = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
+	fragColor.rgb = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
 #else
-	direct = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
+	fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
 #endif
-
-		if (lightType == 2) { // Spot
-			float spotEffect = dot(lightDir, l);
-			if (spotEffect < spotlightCutoff) {
-				float spotEffect = smoothstep(spotlightCutoff - spotlightExponent, spotlightCutoff, spotEffect);
-				direct *= spotEffect;
-			}
-		}
 
 #ifdef _PolyLight
 	}
@@ -250,20 +254,20 @@ void main() {
 	// float shinyParallel = metrough.y;
 	// float shinyPerpendicular = 0.08;
 	// vec3 fiberDirection = vec3(0.0, 1.0, 8.0);
-	// vec3 direct = diffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH, dotLV) + wardSpecular(n, h, dotNL, dotNV, dotNH, fiberDirection, shinyParallel, shinyPerpendicular);
+	// fragColor.rgb = diffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH, dotLV) + wardSpecular(n, h, dotNL, dotNV, dotNH, fiberDirection, shinyParallel, shinyPerpendicular);
 	// #endif
 
-	direct *= lightColor;
+	fragColor.rgb *= lightColor;
 
 #ifdef _LampColTex
-	// direct *= texture(texlampcolor, envMapEquirect(l)).rgb;
-	direct *= pow(texture(texlampcolor, l.xy).rgb, vec3(2.2));
+	// fragColor.rgb *= texture(texlampcolor, envMapEquirect(l)).rgb;
+	fragColor.rgb *= pow(texture(texlampcolor, l.xy).rgb, vec3(2.2));
 #endif
 	
 #ifdef _SSS
 	float mask = g0.a;
 	if (mask == 2.0) {
-		direct *= SSSSTransmittance(1.0, 0.005, p, n, l);
+		fragColor.rgb *= SSSSTransmittance(1.0, 0.005, p, n, l);
 	}
 #endif
 
@@ -280,6 +284,5 @@ void main() {
 	// if (dotNL > 0.0) visibility *= traceShadowCone(p / voxelgiResolution.x, l, distance(p, lightPos) / voxelgiResolution.x, n);
 // #endif
 
-	// Direct
-	fragColor = vec4(vec3(direct * visibility), 1.0);
+	fragColor.rgb *= visibility;
 }

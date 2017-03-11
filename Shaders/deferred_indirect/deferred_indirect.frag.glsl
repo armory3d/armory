@@ -52,7 +52,7 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 void main() {
-	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, mask
+	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, occlusion
 	
 	vec3 n;
 	n.z = 1.0 - abs(g0.x) - abs(g0.y);
@@ -61,7 +61,7 @@ void main() {
 
 	vec2 metrough = unpackFloat(g0.b);
 
-	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, occlusion
+	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, 
 	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
 
 #ifdef _Rad
@@ -115,8 +115,7 @@ void main() {
 	fragColor.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 #endif
 
-	fragColor.rgb = fragColor.rgb * envmapStrength;// * lightColor;
-	fragColor.rgb = fragColor.rgb * g1.a; // Occlusion
+	fragColor.rgb *= envmapStrength * g0.a; // Occlusion
 
 #ifdef _SSAO
 	fragColor.rgb *= texture(ssaotex, texCoord).r; // SSAO

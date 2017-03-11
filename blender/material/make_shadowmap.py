@@ -13,18 +13,18 @@ def make(context_id, rpasses):
     tesc = None
     tese = None
 
-    frag.add_out('vec4 fragColor')
+    # frag.add_out('vec4 fragColor')
     vert.write('vec4 spos = vec4(pos, 1.0);')
 
     # TODO: pass vbuf with proper struct
-    vert.write('vec3 t1 = nor; // Temp for d3d')
+    vert.write('vec3 t1 = nor; // TODO: Temp for d3d')
     if mat_state.data.is_elem('tex'):
-        vert.write('vec2 t2 = tex; // Temp for d3d')
+        vert.write('vec2 t2 = tex; // TODO: Temp for d3d')
 
     parse_opacity = 'translucent' in rpasses
     if parse_opacity:
-        frag.write('vec3 n = vec3(0.0);') # Discard at compile time
-        frag.write('float dotNV = 0.0;')
+        frag.write('vec3 n;') # Discard at compile time
+        frag.write('float dotNV;')
         frag.write('float opacity;')
 
     if mat_state.data.is_elem('bone'):
@@ -43,8 +43,8 @@ def make(context_id, rpasses):
         vert.add_out('vec3 wposition')
         vert.add_out('vec3 wnormal')
         vert.add_uniform('mat4 W', '_worldMatrix')
-        vert.add_uniform('mat4 N', '_normalMatrix')
-        vert.write('wnormal = normalize(mat3(N) * nor);')
+        vert.add_uniform('mat3 N', '_normalMatrix')
+        vert.write('wnormal = normalize(N * nor);')
         vert.write('wposition = vec4(W * spos).xyz;')
         
         const = {}
@@ -112,6 +112,6 @@ def make(context_id, rpasses):
     if parse_opacity:
         frag.write('if (opacity < 0.5) discard;')
 
-    frag.write('fragColor = vec4(0.0);')
+    # frag.write('fragColor = vec4(0.0);')
 
     return con_shadowmap

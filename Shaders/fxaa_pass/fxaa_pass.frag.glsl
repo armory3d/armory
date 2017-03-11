@@ -51,11 +51,12 @@ void main() {
 	vec3 rgbA = 0.5 * (
 		texture(tex, texCoord + dir * (1.0 / 3.0 - 0.5)).rgb +
 		texture(tex, texCoord + dir * (2.0 / 3.0 - 0.5)).rgb);
-	vec3 rgbB = rgbA * 0.5 + 0.25 * (
+	fragColor.rgb = rgbA * 0.5 + 0.25 * ( // vec3 rgbB
 		texture(tex, texCoord + dir * -0.5).rgb +
 		texture(tex, texCoord + dir * 0.5).rgb);
 		
-	float lumaB = dot(rgbB, luma);
-	if ((lumaB < lumaMin) || (lumaB > lumaMax)) fragColor = vec4(rgbA, texColor.a);
-	else fragColor = vec4(rgbB, texColor.a);
+	// float lumaB = dot(rgbB, luma);
+	float lumaB = dot(fragColor.rgb, luma);
+	if ((lumaB < lumaMin) || (lumaB > lumaMax)) fragColor.rgb = rgbA;
+	// else fragColor.rgb = rgbB;
 }

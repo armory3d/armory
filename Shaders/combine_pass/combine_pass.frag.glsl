@@ -11,7 +11,5 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 void main() {
-	vec3 col = texture(tex, texCoord).rgb;
-	vec3 col2 = texture(tex2, texCoord).rgb;
-	fragColor.rgb = col + col2;
+	fragColor.rgb = texture(tex, texCoord).rgb + texture(tex2, texCoord).rgb;
 }

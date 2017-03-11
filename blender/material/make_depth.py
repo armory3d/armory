@@ -15,7 +15,7 @@ def make(context_id):
     vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
     vert.write('gl_Position = WVP * vec4(pos, 1.0);')
 
-    frag.add_out('vec4 fragColor')
-    frag.write('fragColor = vec4(0.0);')
+    # frag.add_out('vec4 fragColor')
+    # frag.write('fragColor = vec4(0.0);')
 
     return con_depth

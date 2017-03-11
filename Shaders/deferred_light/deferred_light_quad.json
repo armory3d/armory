@@ -38,12 +38,8 @@
 					"link": "_lampBias"
 				},
 				{
-					"name": "spotlightCutoff",
-					"link": "_spotlampCutoff"
-				},
-				{
-					"name": "spotlightExponent",
-					"link": "_spotlampExponent"
+					"name": "spotlightData",
+					"link": "_spotlampData"
 				},
 				{
 					"name": "eye",

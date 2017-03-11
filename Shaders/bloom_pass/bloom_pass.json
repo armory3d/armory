@@ -2,6 +2,7 @@
 	"contexts": [
 		{
 			"name": "bloom_pass",
+			"color_write_alpha": false,
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",

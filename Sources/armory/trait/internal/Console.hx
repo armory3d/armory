@@ -53,7 +53,8 @@ class Console extends Trait {
 	function render2D(g:kha.graphics2.Graphics) {
 		g.end();
 		ui.begin(g);
-		if (ui.window(Id.handle(), 0, 0, 250, iron.App.h(), true)) {
+		var hwin = Id.handle();
+		if (ui.window(hwin, 0, 0, 250, iron.App.h(), true)) {
 			if (ui.panel(Id.handle({selected: true}), "Profile (ms)")) {
 				var avg = Math.round(frameTimeAvg * 10000) / 10;
 				var avgMin = Math.round(frameTimeAvgMin * 10000) / 10;
@@ -74,10 +75,6 @@ class Console extends Trait {
 			if (ui.panel(Id.handle(), "Render Path")) {
 				ui.text("draw calls: " + RenderPath.drawCalls);
 				ui.text("render targets: " + path.data.pathdata.raw.render_targets.length);
-				var hcheck = Id.handle();
-				for (i in 0...path.passNames.length) {
-					path.passEnabled[i] = ui.check(hcheck.nest(i, {selected: path.passEnabled[i]}), path.passNames[i]);
-				}
 			}
 			ui.separator();
 
@@ -105,6 +102,7 @@ class Console extends Trait {
 		renderTime += iron.App.renderTime;
 		frames++;
 		if (totalTime > 1.0) {
+			hwin.redraws = 1;
 			var t = totalTime / frames;
 			// Second frame
 			if (frameTimeAvg > 0) {

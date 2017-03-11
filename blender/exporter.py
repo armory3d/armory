@@ -1271,7 +1271,7 @@ class ArmoryExporter:
             objref = bobject.data
 
             # Lods
-            if bobject.type == 'MESH' and len(objref.my_lodlist) > 0:
+            if bobject.type == 'MESH' and hasattr(objref, 'my_lodlist') and len(objref.my_lodlist) > 0:
                 o['lods'] = []
                 for l in objref.my_lodlist:
                     if l.enabled_prop == False:

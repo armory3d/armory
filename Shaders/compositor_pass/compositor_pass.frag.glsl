@@ -137,7 +137,7 @@ void main() {
 #endif
 
 #ifdef _CDepth
-	float depth = (1.0 - texture(gbuffer0, texCo).a) * 2.0 - 1.0;
+	float depth = texture(gbufferD, texCo).r * 2.0 - 1.0;
 #endif
 
 #ifdef _CFXAA
@@ -184,17 +184,16 @@ void main() {
 		texture(tex, texCo + dir * -0.5).rgb +
 		texture(tex, texCo + dir * 0.5).rgb);
 	
-	vec3 col;
 	float lumaB = dot(rgbB, luma);
-	if ((lumaB < lumaMin) || (lumaB > lumaMax)) col = rgbA;
-	else col = rgbB;
+	if ((lumaB < lumaMin) || (lumaB > lumaMax)) fragColor.rgb = rgbA;
+	else fragColor.rgb = rgbB;
 
 #else
 	
 	#ifdef _CDOF
-	vec3 col = dof(texCo, depth, tex, gbuffer0, texStep);
+	fragColor.rgb = dof(texCo, depth, tex, gbufferD, texStep);
 	#else
-	vec3 col = texture(tex, texCo).rgb;
+	fragColor.rgb = texture(tex, texCo).rgb;
 	#endif
 
 #endif
@@ -205,8 +204,8 @@ void main() {
 		// float dist = distance(pos, eye);
 		float dist = linearize(depth);
 		// vec3 eyedir = eyeLook;// normalize(eye + pos);
-		// col.rgb = applyFog(col.rgb, dist, eye, eyedir);
-		col.rgb = applyFog(col.rgb, dist);
+		// fragColor.rgb = applyFog(fragColor.rgb, dist, eye, eyedir);
+		fragColor.rgb = applyFog(fragColor.rgb, dist);
 	// }
 #endif
 
@@ -215,13 +214,13 @@ void main() {
 		vec4 lndc = VP * vec4(light, 1.0);
 		lndc.xy /= lndc.w;
 		vec2 lss = lndc.xy * 0.5 + 0.5;
-		float lssdepth = linearize((1.0 - texture(gbuffer0, lss).a) * 2.0 - 1.0);
+		float lssdepth = linearize(texture(gbufferD, lss).r * 2.0 - 1.0);
 		float lightDistance = distance(eye, light);
 		if (lightDistance <= lssdepth) {
 			vec2 lensuv = texCo * 2.0 - 1.0;
 			lensuv.x *= aspectRatio;
 			vec3 lensflarecol = vec3(1.4, 1.2, 1.0) * lensflare(lensuv, lndc.xy);
-			col.rgb += lensflarecol;
+			fragColor.rgb += lensflarecol;
 		}
 	}
 #endif
@@ -229,59 +228,57 @@ void main() {
 #ifdef _CGrain
 	// const float compoGrainStrength = 4.0;
 	float x = (texCo.x + 4.0) * (texCo.y + 4.0) * (time * 10.0);
-	col.rgb += vec3(mod((mod(x, 13.0) + 1.0) * (mod(x, 123.0) + 1.0), 0.01) - 0.005) * compoGrainStrength;
+	fragColor.rgb += vec3(mod((mod(x, 13.0) + 1.0) * (mod(x, 123.0) + 1.0), 0.01) - 0.005) * compoGrainStrength;
 #endif
 	
 #ifdef _CVignette
-	col.rgb *= vignette();
+	fragColor.rgb *= vignette();
 #endif
 
 #ifdef _CExposure
-	col.rgb *= compoExposureStrength;
+	fragColor.rgb *= compoExposureStrength;
 #endif
 
 #ifdef _CToneFilmic
-	col.rgb = tonemapFilmic(col.rgb); // With gamma
+	fragColor.rgb = tonemapFilmic(fragColor.rgb); // With gamma
 #endif
 #ifdef _CToneFilmic2
-	col.rgb = acesFilm(col.rgb);
-	col.rgb = pow(col.rgb, vec3(1.0 / 2.2));
+	fragColor.rgb = acesFilm(fragColor.rgb);
+	fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));
 #endif
 #ifdef _CToneReinhard
-	col.rgb = tonemapReinhard(col.rgb);
-	col.rgb = pow(col.rgb, vec3(1.0 / 2.2));
+	fragColor.rgb = tonemapReinhard(fragColor.rgb);
+	fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));
 #endif
 #ifdef _CToneUncharted
-	col.rgb = tonemapUncharted2(col.rgb);
-	col.rgb = pow(col.rgb, vec3(1.0 / 2.2)); // To gamma
+	fragColor.rgb = tonemapUncharted2(fragColor.rgb);
+	fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2)); // To gamma
 #endif
 #ifdef _CToneNone
-	col.rgb = pow(col.rgb, vec3(1.0 / 2.2)); // To gamma
+	fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2)); // To gamma
 #endif
 	
 #ifdef _CBW
-	// col.rgb = vec3(clamp(dot(col.rgb, col.rgb), 0.0, 1.0));
-	col.rgb = vec3((col.r * 0.3 + col.g * 0.59 + col.b * 0.11) / 3.0) * 2.5;
+	// fragColor.rgb = vec3(clamp(dot(fragColor.rgb, fragColor.rgb), 0.0, 1.0));
+	fragColor.rgb = vec3((fragColor.r * 0.3 + fragColor.g * 0.59 + fragColor.b * 0.11) / 3.0) * 2.5;
 #endif
 
 // #ifdef _CContrast
 	// -0.5 - 0.5
 	// const float compoContrast = 0.2;
-	// col.rgb = ((col.rgb - 0.5) * max(compoContrast + 1.0, 0.0)) + 0.5;
+	// fragColor.rgb = ((fragColor.rgb - 0.5) * max(compoContrast + 1.0, 0.0)) + 0.5;
 // #endif
 
 // #ifdef _CBrighness
-	// col.rgb += compoBrightness;
+	// fragColor.rgb += compoBrightness;
 // #endif
 
 #ifdef _CLensTex
-	col.rgb += texture(lensTexture, texCo).rgb;
+	fragColor.rgb += texture(lensTexture, texCo).rgb;
 #endif
 
 #ifdef _CLetterbox
 	// const float compoLetterboxSize = 0.1;
-	col.rgb *= 1.0 - step(0.5 - compoLetterboxSize, abs(0.5 - texCo.y));
+	fragColor.rgb *= 1.0 - step(0.5 - compoLetterboxSize, abs(0.5 - texCo.y));
 #endif
-
-	fragColor = vec4(col, 1.0); 
 }

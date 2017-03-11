@@ -6,27 +6,22 @@ precision mediump float;
 
 uniform sampler2D tex;
 
-uniform vec2 dir;
-uniform vec2 screenSize;
+uniform vec2 dirInv;
 
 in vec2 texCoord;
 out vec4 fragColor;
 
-void main() {
-	vec2 step = dir / screenSize;
-	
-	vec3 result = texture(tex, texCoord + (step * 5.5)).rgb;
-	result += texture(tex, texCoord + (step * 4.5)).rgb;
-	result += texture(tex, texCoord + (step * 3.5)).rgb;
-	result += texture(tex, texCoord + (step * 2.5)).rgb;
-	result += texture(tex, texCoord + step * 1.5).rgb;
-	result += texture(tex, texCoord).rgb;
-	result += texture(tex, texCoord - step * 1.5).rgb;
-	result += texture(tex, texCoord - (step * 2.5)).rgb;
-	result += texture(tex, texCoord - (step * 3.5)).rgb;
-	result += texture(tex, texCoord - (step * 4.5)).rgb;
-	result += texture(tex, texCoord - (step * 5.5)).rgb;
-	result /= vec3(11.0);
-	
-	fragColor.rgb = vec3(result);
+void main() {	
+	fragColor.rgb = texture(tex, texCoord + (dirInv * 5.5)).rgb;
+	fragColor.rgb += texture(tex, texCoord + (dirInv * 4.5)).rgb;
+	fragColor.rgb += texture(tex, texCoord + (dirInv * 3.5)).rgb;
+	fragColor.rgb += texture(tex, texCoord + (dirInv * 2.5)).rgb;
+	fragColor.rgb += texture(tex, texCoord + dirInv * 1.5).rgb;
+	fragColor.rgb += texture(tex, texCoord).rgb;
+	fragColor.rgb += texture(tex, texCoord - dirInv * 1.5).rgb;
+	fragColor.rgb += texture(tex, texCoord - (dirInv * 2.5)).rgb;
+	fragColor.rgb += texture(tex, texCoord - (dirInv * 3.5)).rgb;
+	fragColor.rgb += texture(tex, texCoord - (dirInv * 4.5)).rgb;
+	fragColor.rgb += texture(tex, texCoord - (dirInv * 5.5)).rgb;
+	fragColor.rgb /= vec3(11.0);
 }

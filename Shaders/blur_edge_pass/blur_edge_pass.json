@@ -2,17 +2,16 @@
 	"contexts": [
 		{
 			"name": "blur_edge_pass_x",
+			"color_write_alpha": false,
+			"color_write_green": false,
+			"color_write_blue": false,
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
 			"links": [
 				{
-					"name": "dir",
-					"link": "_vec2x"
-				},
-				{
-					"name": "screenSize",
-					"link": "_screenSize"
+					"name": "dirInv",
+					"link": "_vec2xInv"
 				}
 			],
 			"texture_params": [],
@@ -22,17 +21,16 @@
 		},
 		{
 			"name": "blur_edge_pass_y",
+			"color_write_alpha": false,
+			"color_write_green": false,
+			"color_write_blue": false,
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
 			"links": [
 				{
-					"name": "dir",
-					"link": "_vec2y"
-				},
-				{
-					"name": "screenSize",
-					"link": "_screenSize"
+					"name": "dirInv",
+					"link": "_vec2yInv"
 				}
 			],
 			"texture_params": [],
@@ -42,6 +40,9 @@
 		},
 		{
 			"name": "blur_edge_pass_y_blend",
+			"color_write_alpha": false,
+			"color_write_green": false,
+			"color_write_blue": false,
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
@@ -50,12 +51,8 @@
 			"blend_operation": "add",
 			"links": [
 				{
-					"name": "dir",
-					"link": "_vec2y"
-				},
-				{
-					"name": "screenSize",
-					"link": "_screenSize"
+					"name": "dirInv",
+					"link": "_vec2yInv"
 				}
 			],
 			"texture_params": [],
@@ -66,6 +63,9 @@
 
 		{
 			"name": "blur_edge_pass_y_blend_add",
+			"color_write_alpha": false,
+			"color_write_green": false,
+			"color_write_blue": false,
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
@@ -77,12 +77,8 @@
 			"alpha_blend_operation": "add",
 			"links": [
 				{
-					"name": "dir",
-					"link": "_vec2y"
-				},
-				{
-					"name": "screenSize",
-					"link": "_screenSize"
+					"name": "dirInv",
+					"link": "_vec2yInv"
 				}
 			],
 			"texture_params": [],

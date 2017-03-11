@@ -3,6 +3,7 @@
 		{
 			"name": "deferred_light",
 			"depth_write": false,
+			"color_write_alpha": false,
 			"compare_mode": "greater",
 			"cull_mode": "counter_clockwise",
 			"blend_source": "blend_one",
@@ -38,6 +39,10 @@
 					"link": "_lampColor"
 				},
 				{
+					"name": "lightShadow",
+					"link": "_lampCastShadow"
+				},
+				{
 					"name": "texlampcolor",
 					"link": "_lampColorTexture",
 					"ifdef": ["_LampColTex"]
@@ -47,12 +52,8 @@
 					"link": "_lampShadowsBias"
 				},
 				{
-					"name": "spotlightCutoff",
-					"link": "_spotlampCutoff"
-				},
-				{
-					"name": "spotlightExponent",
-					"link": "_spotlampExponent"
+					"name": "spotlightData",
+					"link": "_spotlampData"
 				},
 				{
 					"name": "lampArea0",
