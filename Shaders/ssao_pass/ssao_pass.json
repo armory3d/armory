@@ -3,6 +3,9 @@
 		{
 			"name": "ssao_pass",
 			"depth_write": false,
+			"color_write_alpha": false,
+			"color_write_green": false,
+			"color_write_blue": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
 			"links": [

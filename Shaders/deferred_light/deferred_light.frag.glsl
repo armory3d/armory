@@ -10,21 +10,17 @@ precision mediump float;
 // #ifdef _VoxelGI
 	// #include "../std/conetrace.glsl"
 // #endif
-// #ifdef _PolyLight
-#include "../std/ltc.glsl"
-// #endif
+#ifdef _PolyLight
+	#include "../std/ltc.glsl"
+#endif
 #ifndef _NoShadows
 	#ifdef _PCSS
 	#include "../std/shadows_pcss.glsl"
-	// PCSS()
 	#else
 	#include "../std/shadows.glsl"
-	// PCF()
 	#endif
 #endif
 #include "../std/gbuffer.glsl"
-// octahedronWrap()
-// unpackFloat()
 
 // #ifdef _VoxelGI
 	//-!uniform sampler3D voxels;
@@ -44,11 +40,10 @@ uniform sampler2D gbuffer1;
 
 uniform mat4 invVP;
 uniform mat4 LWVP;
-uniform vec3 lightPos;
-uniform vec3 lightDir;
-uniform int lightType;
-// uniform int lightIndex;
 uniform vec3 lightColor;
+uniform vec3 lightDir;
+uniform vec3 lightPos;
+uniform int lightType;
 uniform int lightShadow;
 uniform float shadowsBias;
 uniform vec2 spotlightData;
@@ -219,7 +214,6 @@ void main() {
 	// float dotLV = dot(l, v);
 	// float dotLH = dot(l, h);
 	
-	// Direct
 #ifdef _PolyLight
 	if (lightType == 3) { // Area
 		float theta = acos(dotNV);

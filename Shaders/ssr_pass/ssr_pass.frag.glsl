@@ -6,10 +6,7 @@ precision mediump float;
 
 #include "../compiled.glsl"
 #include "../std/math.glsl"
-// rand()
 #include "../std/gbuffer.glsl"
-// octahedronWrap()
-// unpackFloat()
 
 uniform sampler2D tex;
 uniform sampler2D gbufferD;
@@ -165,23 +162,21 @@ vec4 rayCast(vec3 dir) {
 		// hitCoord += dir;
 		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 	// }
-	return vec4(0.0, 0.0, 0.0, 0.0);
+	return vec4(0.0);
 }
 
 void main() {
-
 	vec4 g0 = texture(gbuffer0, texCoord);
 	float roughness = unpackFloat(g0.b).y;
 
 	if (roughness == 1.0) {
-		fragColor = vec4(0.0);
+		fragColor.rgb = vec3(0.0);
 		return;
 	}
-	float reflectivity = 1.0 - roughness;
 	
 	float d = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	if (d == 1.0) {
-		fragColor = vec4(0.0);
+		fragColor.rgb = vec3(0.0);
 		return;
 	}
 
@@ -191,17 +186,16 @@ void main() {
 	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
 	n = normalize(n);
 	
-	vec4 viewNormal = vec4(n, 1.0);
-	
-	if (viewNormal.z <= 0.9) {
-		fragColor = vec4(0.0);
-		return; // Only up facing surfaces for now
+	if (n.z <= 0.9) { // Only up facing surfaces for now
+		fragColor.rgb = vec3(0.0);
+		return;
 	}
-
-	viewNormal = tiV * normalize(viewNormal);
+	
+	vec4 viewNormal = vec4(n, 1.0);
+	viewNormal = tiV * viewNormal;
 	vec3 viewPos = getPosView(viewRay, d);
 	
-	vec3 reflected = normalize(reflect((viewPos.xyz), normalize(viewNormal.xyz)));
+	vec3 reflected = normalize(reflect((viewPos), normalize(viewNormal.xyz)));
 	hitCoord = viewPos.xyz;
 	
 	vec3 dir = reflected * max(ssrMinRayStep, -viewPos.z) * (1.0 - rand(texCoord) * ssrJitter * roughness);
@@ -210,6 +204,7 @@ void main() {
 	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
 
+	float reflectivity = 1.0 - roughness;
 	float intensity = pow(reflectivity, ssrFalloffExp) *
 		screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) *
 		clamp((ssrSearchDist - length(viewPos.xyz - hitCoord)) * (1.0 / ssrSearchDist), 0.0, 1.0) * coords.w;
@@ -220,12 +215,12 @@ void main() {
 	intensity = clamp(intensity, 0.0, 1.0);
 	
 	if (intensity == 0.0) {
-		fragColor = vec4(0.0);
+		fragColor.rgb = vec3(0.0);
 		return;
 	}
 	
-	vec4 reflCol = vec4(texture(tex, coords.xy).rgb, 1.0);
+	vec3 reflCol = texture(tex, coords.xy).rgb;
 	reflCol = clamp(reflCol, 0.0, 1.0);
-	// fragColor = texColor * (1.0 - intensity) + reflCol * intensity;
-	fragColor = reflCol * intensity * 0.5; //
+	// fragColor.rgb = texColor * (1.0 - intensity) + reflCol * intensity;
+	fragColor.rgb = reflCol * intensity * 0.5; //
 }

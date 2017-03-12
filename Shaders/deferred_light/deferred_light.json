@@ -30,11 +30,6 @@
 					"link": "_lampType"
 				},
 				{
-					"name": "lightIndex",
-					"link": "_lampIndex",
-					"ifdef": ["_Disabled"]
-				},
-				{
 					"name": "lightColor",
 					"link": "_lampColor"
 				},

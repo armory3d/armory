@@ -2,6 +2,9 @@
 	"contexts": [
 		{
 			"name": "ssao_reproject_pass",
+			"color_write_alpha": false,
+			"color_write_green": false,
+			"color_write_blue": false,
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",

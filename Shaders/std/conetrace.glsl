@@ -21,10 +21,9 @@ vec4 traceDiffuseVoxelCone(const vec3 from, vec3 direction) {
 	vec4 acc = vec4(0.0);
 	// Controls bleeding from close surfaces
 	// Low values look rather bad if using shadow cone tracing
-	// Might be a better choice to use shadow maps and lower this value
-	float dist = 0.1953125;
-	const float SQRT2 = 1.414213;
-	while (dist < SQRT2 && acc.a < 1) {
+	float dist = 0.1953125 / 9.0;
+	const float SQRT2 = 1.414213 / 9.0;
+	while (dist < SQRT2 && acc.a < 1.0) {
 		vec3 c = vec3(from + dist * direction) * 0.5 + vec3(0.5);
 		float l = (1.0 + CONE_SPREAD * dist / VOXEL_SIZE);
 		float level = log2(l);

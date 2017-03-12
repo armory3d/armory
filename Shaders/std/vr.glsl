@@ -2,7 +2,7 @@ uniform mat4 U; // Undistortion
 uniform float maxRadSq;
 
 // GoogleVR Distortion using Vertex Displacement
-float distortionFactor(float rSquared) {
+float distortionFactor(const float rSquared) {
 	float ret = 0.0;
 	ret = rSquared * (ret + U[1][1]);
 	ret = rSquared * (ret + U[0][1]);

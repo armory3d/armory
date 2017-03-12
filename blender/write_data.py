@@ -94,6 +94,9 @@ project.addSources('Sources');
         if wrd.arm_deinterleaved_buffers == True:
             f.write("project.addDefine('arm_deinterleaved');\n")
 
+        if wrd.arm_batch_meshes == True:
+            f.write("project.addDefine('arm_batch');\n")
+
         if wrd.generate_gpu_skin == False:
             f.write("project.addDefine('arm_cpu_skin');\n")
 

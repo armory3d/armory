@@ -6,10 +6,7 @@ precision mediump float;
 
 #include "../compiled.glsl"
 #include "../std/gbuffer.glsl"
-// octahedronWrap()
-// unpackFloat()
 #include "../std/math.glsl"
-// envMapEquirect()
 #include "../std/brdf.glsl"
 #ifdef _Irr
 	#include "../std/shirr.glsl"
@@ -81,9 +78,10 @@ void main() {
 	vec3 indirectSpecular = traceSpecularVoxelCone(p / voxelgiDimensions.x, reflectWorld, n, metrough.y * 10.0);
 	indirectSpecular *= f0 * envBRDF.x + envBRDF.y;
 
-	fragColor.rgb = indirectDiffuse.rgb * 1.0 * albedo + indirectSpecular;
-	fragColor.rgb *= indirectDiffuse.a / 2.0; // Occ
-	// fragColor.rgb *= texture(ssaotex, texCoord).r;
+	// fragColor.rgb = indirectDiffuse.rgb * 60.0 * albedo + indirectSpecular;
+	fragColor.rgb = max(vec3(1.0 - (indirectDiffuse.a / 2.0)), 0.05) * albedo;
+	// fragColor.rgb *= 1.0 - (indirectDiffuse.a / 2.0); // Occ
+	fragColor.rgb *= texture(ssaotex, texCoord).r * 0.5 + 0.5;
 
 	// if (opacity < 1.0) fragColor.rgb = mix(indirectRefractiveLight(-v), fragColor.rgb); // Transparency
 	return;
@@ -91,9 +89,9 @@ void main() {
 	
 	// Envmap
 #ifdef _Irr
-	fragColor.rgb = shIrradiance(n, 2.2) / PI;
+	vec3 envl = shIrradiance(n, 2.2) / PI;
 #else
-	fragColor.rgb = vec3(1.0);
+	vec3 envl = vec3(1.0);
 #endif
 
 #ifdef _Rad
@@ -103,21 +101,28 @@ void main() {
 #endif
 
 #ifdef _EnvLDR
-	fragColor.rgb = pow(fragColor.rgb, vec3(2.2));
+	envl.rgb = pow(envl.rgb, vec3(2.2));
 	#ifdef _Rad
 		prefilteredColor = pow(prefilteredColor, vec3(2.2));
 	#endif
 #endif
 
-	fragColor.rgb *= albedo;
+	envl.rgb *= albedo;
 	
 #ifdef _Rad // Indirect specular
-	fragColor.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
+	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 #endif
 
-	fragColor.rgb *= envmapStrength * g0.a; // Occlusion
+	envl.rgb *= envmapStrength * g0.a; // Occlusion
 
 #ifdef _SSAO
-	fragColor.rgb *= texture(ssaotex, texCoord).r; // SSAO
+	envl.rgb *= texture(ssaotex, texCoord).r; // SSAO
+#endif
+
+#ifdef _VoxelGI
+	float m = (fragColor.r + fragColor.g + fragColor.b) / 3.0;
+	fragColor.rgb += (envl / 5.0) * m;
+#else
+	fragColor.rgb = envl;
 #endif
 }

@@ -7,7 +7,6 @@ precision mediump float;
 
 #include "../compiled.glsl"
 #include "../std/gbuffer.glsl"
-// octahedronWrap
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
@@ -54,7 +53,7 @@ vec4 doDO(vec3 point, vec3 noise, float radius, vec3 center_pos, float max_dista
 void main() {
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	if (depth == 1.0) {
-		fragColor = vec4(1.0);
+		fragColor.rgb = vec3(1.0);
 		return;
 	}
 	
@@ -93,10 +92,10 @@ void main() {
 	points[31] = vec3(0.534, 0.157, -0.250);
 	
 	vec2 enc = texture(gbuffer0, texCoord).rg;      
-	vec3 currentNormal;
-	currentNormal.z = 1.0 - abs(enc.x) - abs(enc.y);
-	currentNormal.xy = currentNormal.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
-	currentNormal = normalize(currentNormal);
+	vec3 n;
+	n.z = 1.0 - abs(enc.x) - abs(enc.y);
+	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
+	n = normalize(n);
 	
 	vec3 currentPos = getPos2(invVP, depth, texCoord);
 	// float currentDistance = length(currentPos);	
@@ -110,7 +109,7 @@ void main() {
 	// float attenuation_angle_threshold = 0.1;
 	
 	vec3 noise = texture(snoise, (texCoord * screenSize) / noise_texture_size).xyz * 2.0 - 1.0;
-	vec3 center_normal = currentNormal;
+	vec3 center_normal = n;
 	
 	vec4 occlusion_sh2 = vec4(0.0);
 	
@@ -149,5 +148,5 @@ void main() {
 		occlusion_sh2 += doDO(points[31], noise, radius, center_pos, max_distance_inv, center_normal);
 	// }
 	
-	fragColor = vec4(vec3(1.0 - occlusion_sh2.rgb), 1.0);
+	fragColor.rgb = vec3(1.0 - occlusion_sh2.rgb);
 }

@@ -34,17 +34,15 @@ vec2 getVelocity(vec2 coord, float depth) {
 }
 
 void main() {
-	vec4 color = texture(tex, texCoord);
+	fragColor.rgb = texture(tex, texCoord).rgb;
 	
 	// Do not blur masked objects
 	if (texture(gbuffer0, texCoord).a == 1.0) {
-		fragColor = color;
 		return;
 	}
 	
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	if (depth == 1.0) {
-		fragColor = color;
 		return;
 	}
 
@@ -57,53 +55,52 @@ void main() {
 	// for(int i = 1; i < samples; ++i) {
 		offset += velocity;
 		if (texture(gbuffer0, offset).a != 1.0) {
-			color += texture(tex, offset);
+			fragColor.rgb += texture(tex, offset).rgb;
 			processed++;
 		}
 
 		offset += velocity;
 		if (texture(gbuffer0, offset).a != 1.0) {
-			color += texture(tex, offset);
+			fragColor.rgb += texture(tex, offset).rgb;
 			processed++;
 		}
 		
 		offset += velocity;
 		if (texture(gbuffer0, offset).a != 1.0) {
-			color += texture(tex, offset);
+			fragColor.rgb += texture(tex, offset).rgb;
 			processed++;
 		}
 		
 		offset += velocity;
 		if (texture(gbuffer0, offset).a != 1.0) {
-			color += texture(tex, offset);
+			fragColor.rgb += texture(tex, offset).rgb;
 			processed++;
 		}
 		
 		offset += velocity;
 		if (texture(gbuffer0, offset).a != 1.0) {
-			color += texture(tex, offset);
+			fragColor.rgb += texture(tex, offset).rgb;
 			processed++;
 		}
 		
 		offset += velocity;
 		if (texture(gbuffer0, offset).a != 1.0) {
-			color += texture(tex, offset);
+			fragColor.rgb += texture(tex, offset).rgb;
 			processed++;
 		}
 		
 		offset += velocity;
 		if (texture(gbuffer0, offset).a != 1.0) {
-			color += texture(tex, offset);
+			fragColor.rgb += texture(tex, offset).rgb;
 			processed++;
 		}
 		
 		offset += velocity;
 		if (texture(gbuffer0, offset).a != 1.0) {
-			color += texture(tex, offset);
+			fragColor.rgb += texture(tex, offset).rgb;
 			processed++;
 		}
 	// }
-	 
-	vec4 finalColor = color / processed; 
-	fragColor = finalColor;
+	
+	fragColor.rgb /= processed;
 }

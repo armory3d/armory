@@ -3,8 +3,6 @@
 
 #include "../compiled.glsl"
 #include "math.glsl"
-// linearize()
-// rand2()
 
 // const float compoDOFDistance = 10.0; // Focal distance value in meters
 // const float compoDOFLength = 160.0; // Focal length in mm 18-200

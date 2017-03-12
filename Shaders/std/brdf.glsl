@@ -22,7 +22,7 @@ vec2 LightingFuncGGX_FV(const float dotLH, const float roughness) {
 float LightingFuncGGX_D(const float dotNH, const float roughness) {
 	float alpha = roughness * roughness;
 	float alphaSqr = alpha * alpha;
-	float pi = 3.14159;
+	const float pi = 3.14159;
 	float denom = dotNH * dotNH * (alphaSqr - 1.0) + 1.0;
 
 	float D = alphaSqr / (pi * denom * denom);
@@ -46,16 +46,16 @@ float LightingFuncGGX_OPT3(const float dotNL, const float dotLH, const float dot
 }
 
 vec3 f_schlick(const vec3 f0, const float vh) {
-	return f0 + (1.0-f0)*exp2((-5.55473 * vh - 6.98316)*vh);
+	return f0 + (1.0 - f0) * exp2((-5.55473 * vh - 6.98316) * vh);
 }
 
 float v_smithschlick(const float nl, const float nv, const float a) {
-	return 1.0 / ( (nl*(1.0-a)+a) * (nv*(1.0-a)+a) );
+	return 1.0 / ((nl * (1.0 - a) + a) * (nv * (1.0 - a) + a));
 }
 
 float d_ggx(const float nh, const float a) {
-	float a2 = a*a;
-	float denom = pow(nh*nh * (a2-1.0) + 1.0, 2.0);
+	float a2 = a * a;
+	float denom = pow(nh * nh * (a2 - 1.0) + 1.0, 2.0);
 	return a2 * (1.0 / 3.1415926535) / denom;
 }
 

@@ -19,7 +19,7 @@ mat4 getBoneMat(const int boneIndex) {
 				0.0, 0.0, 0.0, 1.0);
 }
 
-mat4 getSkinningMat(ivec4 bone, vec4 weight) {
+mat4 getSkinningMat(const ivec4 bone, const vec4 weight) {
 	return weight.x * getBoneMat(bone.x) +
 		   weight.y * getBoneMat(bone.y) +
 		   weight.z * getBoneMat(bone.z) +

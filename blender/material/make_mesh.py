@@ -41,15 +41,10 @@ def make_base(con_mesh, parse_opacity):
         frag.ins = tese.outs
 
         const = {}
-        const['name'] = 'innerLevel'
-        const['float'] = mat_state.material.height_tess_inner
+        const['name'] = 'tessLevel'
+        const['float'] = [mat_state.material.height_tess_inner, mat_state.material.height_tess_outer]
         mat_state.mat_context['bind_constants'].append(const)
-        const = {}
-        const['name'] = 'outerLevel'
-        const['float'] = mat_state.material.height_tess_outer
-        mat_state.mat_context['bind_constants'].append(const)
-        tesc.add_uniform('float innerLevel')
-        tesc.add_uniform('float outerLevel')
+        tesc.add_uniform('vec2 tessLevel')
         make_tess.tesc_levels(tesc)
         tese.add_out('vec3 eyeDir')
         make_tess.interpolate(tese, 'wposition', 3, declare_out=True)
@@ -216,6 +211,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
     frag.add_uniform('vec3 lightDir', '_lampDirection')
     frag.add_uniform('vec3 lightPos', '_lampPosition')
     frag.add_uniform('int lightType', '_lampType')
+    frag.add_uniform('vec2 spotlightData', '_spotlampData') # cutoff, cutoff - exponent
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
 
     if '_Irr' in wrd.world_defs:
@@ -275,7 +271,6 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.tab -= 1
         frag.write('}')
 
-    frag.add_uniform('vec2 spotlightData', '_spotlampData') # cutoff, cutoff - exponent
     frag.write('if (lightType == 2) {')
     frag.write('    float spotEffect = dot(lightDir, l);')
     frag.write('    if (spotEffect < spotlightData.x) {')

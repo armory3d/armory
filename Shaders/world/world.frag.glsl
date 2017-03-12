@@ -7,7 +7,6 @@ precision mediump float;
 #include "../compiled.glsl"
 #ifdef _EnvTex
 #include "../std/math.glsl"
-// envMapEquirect()
 #endif
 
 #ifdef _EnvCol
@@ -184,7 +183,7 @@ void main() {
 	// }
 
 #ifdef _EnvCol
-	vec3 R = backgroundCol;
+	fragColor.rgb = backgroundCol;
 #ifdef _EnvClouds
 	vec3 n = normalize(normal);
 #endif
@@ -193,9 +192,9 @@ void main() {
 #ifndef _EnvSky // Prevent case when sky radiance is enabled
 #ifdef _EnvTex
 	vec3 n = normalize(normal);
-	vec3 R = texture(envmap, envMapEquirect(n)).rgb * envmapStrength;
+	fragColor.rgb = texture(envmap, envMapEquirect(n)).rgb * envmapStrength;
 	#ifdef _EnvLDR
-	R = pow(R, vec3(2.2));
+	fragColor.rgb = pow(fragColor.rgb, vec3(2.2));
 	#endif
 #endif
 #endif
@@ -203,7 +202,7 @@ void main() {
 #ifdef _EnvImg // Static background
 	// Will have to get rid of gl_FragCoord, pass tc from VS
 	vec2 texco = gl_FragCoord.xy / screenSize;
-	vec3 R = texture(envmap, vec2(texco.x, 1.0 - texco.y)).rgb * envmapStrength;
+	fragColor.rgb = texture(envmap, vec2(texco.x, 1.0 - texco.y)).rgb * envmapStrength;
 #endif
 
 #ifdef _EnvSky
@@ -216,18 +215,16 @@ void main() {
 	float cos_gamma = dot(n, sunDir);
 	float gamma_val = acos(cos_gamma);
 
-	vec3 R = Z * hosekWilkie(cos_theta, gamma_val, cos_gamma) * envmapStrength;
+	fragColor.rgb = Z * hosekWilkie(cos_theta, gamma_val, cos_gamma) * envmapStrength;
 #endif
 
 #ifdef _EnvClouds
-	// cloudsColor(R, eye, n)
-	vec3 clouds = cloudsColor(R, vec3(0.0), n);
-	if (n.z > 0.0) R = mix(R, clouds, n.z * 5.0 * envmapStrength);
+	// cloudsColor(fragColor.rgb, eye, n)
+	vec3 clouds = cloudsColor(fragColor.rgb, vec3(0.0), n);
+	if (n.z > 0.0) fragColor.rgb = mix(fragColor.rgb, clouds, n.z * 5.0 * envmapStrength);
 #endif
 
 #ifdef _LDR
-	R = pow(R, vec3(1.0 / 2.2));
+	fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));
 #endif
-
-	fragColor = vec4(R, 1.0);
 }

@@ -60,6 +60,10 @@ class Console extends Trait {
 				var avgMin = Math.round(frameTimeAvgMin * 10000) / 10;
 				var avgMax = Math.round(frameTimeAvgMax * 10000) / 10;
 				ui.text('frame: $avg ($avgMin/$avgMax)');
+				var fpsAvg = avg > 0 ? Math.round(1000 / avg) : 0;
+				var fpsAvgMin = avgMin > 0 ? Math.round(1000 / avgMin) : 0;
+				var fpsAvgMax = avgMax > 0 ? Math.round(1000 / avgMax) : 0;
+				ui.text('fps: $fpsAvg ($fpsAvgMin/$fpsAvgMax)');
 				var gpuTime = frameTimeAvg - renderTimeAvg - updateTimeAvg;
 				if (gpuTime < renderTimeAvg) gpuTime = renderTimeAvg;
 				ui.text("gpu: " + Math.round(gpuTime * 10000) / 10);
@@ -74,6 +78,8 @@ class Console extends Trait {
 
 			if (ui.panel(Id.handle(), "Render Path")) {
 				ui.text("draw calls: " + RenderPath.drawCalls);
+				ui.text("batch calls: " + RenderPath.batchCalls);
+				ui.text("batch buckets: " + RenderPath.batchBuckets);
 				ui.text("render targets: " + path.data.pathdata.raw.render_targets.length);
 			}
 			ui.separator();
