@@ -278,7 +278,7 @@ def save_data(path, base_name, subset, res):
 
 def make(base_name, json_data, fp, defs):
     
-    path = fp + '/build/compiled/ShaderDatas/' + base_name
+    path = fp + '/build/compiled/Shaders/' + base_name
     if not os.path.exists(path):
         os.makedirs(path)
 

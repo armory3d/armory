@@ -67,25 +67,6 @@ vec4 binarySearch(vec3 dir) {
 		dir *= 0.5;
 		hitCoord -= dir;
 		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		////
-		// dir *= 0.5;
-		// hitCoord -= dir;
-		// if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		// dir *= 0.5;
-		// hitCoord -= dir;
-		// if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		// dir *= 0.5;
-		// hitCoord -= dir;
-		// if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		// dir *= 0.5;
-		// hitCoord -= dir;
-		// if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		// dir *= 0.5;
-		// hitCoord -= dir;
-		// if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		// dir *= 0.5;
-		// hitCoord -= dir;
-		// if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
 		
 		// Ugly discard of hits too far away
 		if (abs(getDeltaDepth(hitCoord)) > 0.01) {
@@ -136,31 +117,6 @@ vec4 rayCast(vec3 dir) {
 		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 		hitCoord += dir;
 		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		////
-		// hitCoord += dir;
-		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		// hitCoord += dir;
-		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		// hitCoord += dir;
-		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		// hitCoord += dir;
-		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		// hitCoord += dir;
-		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		// hitCoord += dir;
-		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		// hitCoord += dir;
-		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		// hitCoord += dir;
-		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		// hitCoord += dir;
-		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		// hitCoord += dir;
-		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		// hitCoord += dir;
-		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		// hitCoord += dir;
-		// if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
 	// }
 	return vec4(0.0);
 }
@@ -209,9 +165,6 @@ void main() {
 		screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) *
 		clamp((ssrSearchDist - length(viewPos.xyz - hitCoord)) * (1.0 / ssrSearchDist), 0.0, 1.0) * coords.w;
 
-	// vec4 texColor = texture(tex, texCoord);
-	// float brightness = dot(texColor.rgb, vec3(0.2126, 0.7152, 0.0722));
-	// intensity *= min(brightness, 1.0);
 	intensity = clamp(intensity, 0.0, 1.0);
 	
 	if (intensity == 0.0) {
@@ -221,6 +174,5 @@ void main() {
 	
 	vec3 reflCol = texture(tex, coords.xy).rgb;
 	reflCol = clamp(reflCol, 0.0, 1.0);
-	// fragColor.rgb = texColor * (1.0 - intensity) + reflCol * intensity;
 	fragColor.rgb = reflCol * intensity * 0.5; //
 }

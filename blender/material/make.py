@@ -1,120 +1,80 @@
 import bpy
 import armutils
-import os
-import assets
-from material.shader_data import ShaderData
-import material.cycles as cycles
+import material.make_shader as make_shader
+import material.mat_batch as mat_batch
 import material.mat_state as mat_state
-import material.mat_utils as mat_utils
-import material.make_mesh as make_mesh
-import material.make_shadowmap as make_shadowmap
-import material.make_transluc as make_transluc
-import material.make_overlay as make_overlay
-import material.make_depth as make_depth
-import material.make_decal as make_decal
-import material.make_voxel as make_voxel
+import material.texture as texture
 
-rpass_hook = None
-mesh_make = make_mesh.make
+def glsltype(t): # Merge with cycles
+    if t == 'RGB' or t == 'RGBA' or t == 'VECTOR':
+        return 'vec3'
+    else:
+        return 'float'
+
+def glslvalue(val):
+    if str(type(val)) == "<class 'bpy_prop_array'>":
+        res = []
+        for v in val:
+            res.append(v)
+        return res
+    else:
+        return val
 
 def parse(material, mat_data, mat_users, mat_armusers, rid):
     wrd = bpy.data.worlds['Arm']
-    mat_state.material = material
-    mat_state.nodes = material.node_tree.nodes
-    mat_state.mat_data = mat_data
-    mat_state.mat_users = mat_users
-    mat_state.mat_armusers = mat_armusers
-    mat_state.output_node = cycles.node_by_type(mat_state.nodes, 'OUTPUT_MATERIAL')
-    if mat_state.output_node == None:
-        return None
-    matname = armutils.safe_source_name(material.name)
-    mat_state.rel_path = 'build/compiled/ShaderRaws/' + matname
-    mat_state.path = armutils.get_fp() + '/' + mat_state.rel_path
-    if not os.path.exists(mat_state.path):
-        os.makedirs(mat_state.path)
 
-    mat_state.data = ShaderData(material)
-    mat_state.data.add_elem('pos', 3)
-    mat_state.data.add_elem('nor', 3)
+    # No batch - shader data per material
+    if not wrd.arm_batch_materials or material.name.startswith('armdefault'):
+        rpasses, shader_data, shader_data_name, bind_constants, bind_textures = make_shader.build(material, mat_users, mat_armusers, rid)
+    else:
+        rpasses, shader_data, shader_data_name, bind_constants, bind_textures = mat_batch.get(material)
 
-    if mat_users != None:
-        for bo in mat_users[material]:
-            # GPU Skinning
-            if bo.find_armature() and armutils.is_bone_animation_enabled(bo) and wrd.generate_gpu_skin == True:
-                mat_state.data.add_elem('bone', 4)
-                mat_state.data.add_elem('weight', 4)
-            
-            # Instancing
-            if bo.instanced_children or len(bo.particle_systems) > 0:
-                mat_state.data.add_elem('off', 3)
-
-    rpasses = mat_utils.get_rpasses(material)
-
+    # Material
     for rp in rpasses:
+
         c = {}
         c['name'] = rp
-        c['bind_constants'] = []
-        c['bind_textures'] = []
-        mat_state.mat_data['contexts'].append(c)
-        mat_state.mat_context = c
+        c['bind_constants'] = [] + bind_constants[rp]
+        c['bind_textures'] = [] + bind_textures[rp]
+        mat_data['contexts'].append(c)
 
         if rp == 'mesh':
             const = {}
             const['name'] = 'receiveShadow'
             const['bool'] = material.receive_shadow
             c['bind_constants'].append(const)
-            con = mesh_make(rp, rid)
 
-        elif rp == 'shadowmap':
-            con = make_shadowmap.make(rp, rpasses)
+            # TODO: Mesh only material batching
+            if wrd.arm_batch_materials:
+                # Set textures uniforms
+                if len(c['bind_textures']) > 0:
+                    c['bind_textures'] = []
+                    for node in material.node_tree.nodes:
+                        if node.type == 'TEX_IMAGE':
+                            tex_name = armutils.safe_source_name(node.name)
+                            tex = texture.make_texture(node, tex_name)
+                            if tex == None: # Empty texture
+                                tex = {}
+                                tex['name'] = tex_name
+                                tex['file'] = ''
+                            c['bind_textures'].append(tex)
+
+                # Set marked inputs as uniforms
+                for node in material.node_tree.nodes:
+                    for inp in node.inputs:
+                        if inp.is_uniform:
+                            uname = armutils.safe_source_name(inp.node.name) + armutils.safe_source_name(inp.name)  # Merge with cycles
+                            const = {}
+                            const['name'] = uname
+                            const[glsltype(inp.type)] = glslvalue(inp.default_value)
+                            c['bind_constants'].append(const)
 
         elif rp == 'translucent':
             const = {}
             const['name'] = 'receiveShadow'
             const['bool'] = material.receive_shadow
             c['bind_constants'].append(const)
-            con = make_transluc.make(rp)
-
-        elif rp == 'overlay':
-            con = make_overlay.make(rp)
-
-        elif rp == 'decal':
-            con = make_decal.make(rp)
-
-        elif rp == 'depth':
-            con = make_depth.make(rp)
-
-        elif rp == 'voxel':
-            con = make_voxel.make(rp)
-
-        elif rpass_hook != None:
-            con = rpass_hook(rp)
-        
-        write_shaders(con, rp)
-
-    armutils.write_arm(mat_state.path + '/' + matname + '_data.arm', mat_state.data.get())
-
-    shader_data_name = matname + '_data'
-    shader_data_path = 'build/compiled/ShaderRaws/' + matname + '/' + shader_data_name + '.arm'
-    assets.add_shader_data(shader_data_path)
+    
     mat_data['shader'] = shader_data_name + '/' + shader_data_name
 
-    return mat_state.data.sd, 'translucent' in rpasses, 'overlay' in rpasses, 'decal' in rpasses
-
-def write_shaders(con, rpass):
-    keep_cache = mat_state.material.is_cached
-    write_shader(con.vert, 'vert', rpass, keep_cache)
-    write_shader(con.frag, 'frag', rpass, keep_cache)
-    write_shader(con.geom, 'geom', rpass, keep_cache)
-    write_shader(con.tesc, 'tesc', rpass, keep_cache)
-    write_shader(con.tese, 'tese', rpass, keep_cache)
-
-def write_shader(shader, ext, rpass, keep_cache=True):
-    if shader == None:
-        return
-    shader_rel_path = mat_state.rel_path + '/' + armutils.safe_source_name(mat_state.material.name) + '_' + rpass + '.' + ext + '.glsl'
-    shader_path = armutils.get_fp() + '/' + shader_rel_path
-    assets.add_shader(shader_rel_path)
-    if not os.path.isfile(shader_path) or not keep_cache:
-        with open(shader_path, 'w') as f:
-            f.write(shader.get())
+    return shader_data.sd, rpasses

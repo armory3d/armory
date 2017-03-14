@@ -1,7 +1,7 @@
-data = None
+data = None # ShaderData
 material = None
 nodes = None
-mat_data = None
 mat_users = None
-mat_context = None
-path = None
+bind_constants = None # Merged with mat_context bind constants
+bind_textures = None # Merged with mat_context bind textures
+batch = False

@@ -55,6 +55,9 @@ class Shader:
     def contains(self, s):
         return (s in self.main or s in self.main_pre)
 
+    def prepend(self, s):
+        self.main_pre = s + self.main_pre
+
     def write(self, s):
         if self.write_pre:
             self.main_pre += '\t' * 1 + s + '\n'

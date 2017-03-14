@@ -124,6 +124,10 @@ def make_deferred(cam):
     if not cam.rp_ssr:
         relink('SSR', 'Draw Compositor')
 
+    if bpy.data.worlds['Arm'].generate_ssr_half_res: # TODO: Move to cam
+        links.new(nodes['ssra'].outputs[0], nodes['SSR'].inputs[2])
+        links.new(nodes['ssrb'].outputs[0], nodes['SSR'].inputs[3])
+
     last_node = 'Draw Compositor'
     if not cam.rp_compositornodes:
         pass

@@ -50,7 +50,7 @@ def make(context_id, rpasses):
         const = {}
         const['name'] = 'tessLevel'
         const['vec2'] = [mat_state.material.height_tess_shadows_inner, mat_state.material.height_tess_shadows_outer]
-        mat_state.mat_context['bind_constants'].append(const)
+        mat_state.bind_constants.append(const)
         tesc.add_uniform('vec2 tessLevel')
         make_tess.tesc_levels(tesc)
 

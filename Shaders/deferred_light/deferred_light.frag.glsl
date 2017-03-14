@@ -57,7 +57,6 @@ uniform vec2 spotlightData;
 #endif
 uniform vec3 eye;
 // uniform vec3 eyeLook;
-// uniform vec2 screenSize;
 #ifdef _SSRS
 	uniform mat4 VP;
 #endif
@@ -152,7 +151,6 @@ float traceShadow(vec3 dir, vec3 hitCoord) {
 void main() {
 	vec2 texCoord = wvpposition.xy / wvpposition.w;
 	texCoord = texCoord * 0.5 + 0.5;
-	// texCoord += vec2(0.5 / screenSize); // Half pixel offset
 
 	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, occlusion
 	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, 

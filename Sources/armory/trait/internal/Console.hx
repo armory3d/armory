@@ -80,6 +80,7 @@ class Console extends Trait {
 				ui.text("draw calls: " + RenderPath.drawCalls);
 				ui.text("batch calls: " + RenderPath.batchCalls);
 				ui.text("batch buckets: " + RenderPath.batchBuckets);
+				ui.text("culled: " + RenderPath.culled);
 				ui.text("render targets: " + path.data.pathdata.raw.render_targets.length);
 			}
 			ui.separator();

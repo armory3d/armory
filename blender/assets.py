@@ -63,7 +63,7 @@ def add_shader_data(file):
         shader_datas.append(file)
 
 def add_shader2(dir_name, data_name):
-    add_shader_data('build/compiled/ShaderDatas/' + dir_name + '/' + data_name + '.arm')
+    add_shader_data('build/compiled/Shaders/' + dir_name + '/' + data_name + '.arm')
     full_name = 'build/compiled/Shaders/' + dir_name + '/' + data_name
     add_shader(full_name + '.vert.glsl')
     add_shader(full_name + '.frag.glsl')
@@ -76,8 +76,8 @@ def invalidate_shader_cache(self, context):
     if invalidate_enabled == False:
         return
     fp = armutils.get_fp()
-    if os.path.isdir(fp + '/build/compiled/ShaderDatas'):
-        shutil.rmtree(fp + '/build/compiled/ShaderDatas')
+    if os.path.isdir(fp + '/build/compiled/Shaders'):
+        shutil.rmtree(fp + '/build/compiled/Shaders')
     if os.path.isdir(fp + '/build/compiled/ShaderRaws'):
         shutil.rmtree(fp + '/build/compiled/ShaderRaws')
 
@@ -88,8 +88,8 @@ def invalidate_compiled_data(self, context):
     fp = armutils.get_fp()
     if os.path.isdir(fp + '/build/compiled/Assets'):
         shutil.rmtree(fp + '/build/compiled/Assets')
-    if os.path.isdir(fp + '/build/compiled/ShaderDatas'):
-        shutil.rmtree(fp + '/build/compiled/ShaderDatas')
+    if os.path.isdir(fp + '/build/compiled/Shaders'):
+        shutil.rmtree(fp + '/build/compiled/Shaders')
 
 def invalidate_mesh_data(self, context):
     fp = armutils.get_fp()

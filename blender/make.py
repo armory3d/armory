@@ -56,13 +56,8 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
             shutil.rmtree('build/window/krom-resources')
         if os.path.isdir('build/compiled/Shaders'):
             shutil.rmtree('build/compiled/Shaders')
-        if os.path.isdir('build/compiled/ShaderDatas'):
-            shutil.rmtree('build/compiled/ShaderDatas')
         if os.path.isdir('build/compiled/ShaderRaws'):
             shutil.rmtree('build/compiled/ShaderRaws')
-    # Remove shader datas if shaders were deleted
-    elif os.path.isdir('build/compiled/Shaders') == False and os.path.isdir('build/compiled/ShaderDatas') == True:
-        shutil.rmtree('build/compiled/ShaderDatas')
 
     raw_shaders_path = sdk_path + 'armory/Shaders/'
     assets_path = sdk_path + 'armory/Assets/'
@@ -467,6 +462,10 @@ def clean_cache():
         os.makedirs('build/compiled/Assets')
         shutil.move('envmaps', 'build/compiled/Assets')
 
+    # Temp: To recache signatures for batched materials
+    for mat in bpy.data.materials:
+        mat.signature = ''
+
 def clean_project():
     os.chdir(armutils.get_fp())
     wrd = bpy.data.worlds['Arm']
@@ -487,6 +486,10 @@ def clean_project():
         os.remove('korefile.js')
     if os.path.isfile('Sources/Main.hx'):
         os.remove('Sources/Main.hx')
+
+    # Temp: To recache signatures for batched materials
+    for mat in bpy.data.materials:
+        mat.signature = ''
 
     print('Project cleaned')
 

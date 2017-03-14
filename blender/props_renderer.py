@@ -284,7 +284,7 @@ class PropsRPDataPropsPanel(bpy.types.Panel):
                 # if wrd.generate_ssao:
                 layout.prop(wrd, 'generate_ssao_size')
                 layout.prop(wrd, 'generate_ssao_strength')
-                layout.prop(wrd, 'generate_ssao_texture_scale')
+                layout.prop(wrd, 'generate_ssao_half_res')
                 
                 layout.label('Bloom')
                 # layout.prop(wrd, 'generate_bloom')
@@ -306,7 +306,7 @@ class PropsRPDataPropsPanel(bpy.types.Panel):
                 layout.prop(wrd, 'generate_ssr_search_dist')
                 layout.prop(wrd, 'generate_ssr_falloff_exp')
                 layout.prop(wrd, 'generate_ssr_jitter')
-                layout.prop(wrd, 'generate_ssr_texture_scale')
+                layout.prop(wrd, 'generate_ssr_half_res')
 
                 layout.label('SSRS')
                 layout.prop(wrd, 'generate_ssrs_ray_step')

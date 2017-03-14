@@ -22,6 +22,7 @@ import armutils
 import subprocess
 import log
 import material.make as make_material
+import material.mat_batch as mat_batch
 import material.texture as make_texture
 import nodes
 import make_renderer
@@ -2208,7 +2209,14 @@ class ArmoryExporter:
         bpy.data.materials.remove(mat)
 
     def export_materials(self):
-        # This function exports all of the materials used in the scene
+        wrd = bpy.data.worlds['Arm']
+
+        if wrd.arm_batch_materials:
+            mat_users = self.materialToObjectDict
+            mat_armusers = self.materialToArmObjectDict
+            rid = ArmoryExporter.renderpath_id
+            mat_batch.build(self.materialArray, mat_users, mat_armusers, rid)
+
         transluc_used = False
         overlays_used = False
         decals_used = False
@@ -2221,7 +2229,6 @@ class ArmoryExporter:
             o = {}
             o['name'] = materialRef[1]["structName"]
 
-            wrd = bpy.data.worlds['Arm']
             if material.skip_context != '':
                 o['skip_context'] = material.skip_context
             
@@ -2237,13 +2244,16 @@ class ArmoryExporter:
             if not material.use_nodes:
                 material.use_nodes = True
 
-            sd, is_transluc, is_overlays, is_decals = make_material.parse(material, o, self.materialToObjectDict, self.materialToArmObjectDict, ArmoryExporter.renderpath_id)
+            mat_users = self.materialToObjectDict
+            mat_armusers = self.materialToArmObjectDict
+            rid = ArmoryExporter.renderpath_id
+            sd, rpasses = make_material.parse(material, o, mat_users, mat_armusers, rid)
 
-            if is_transluc:
+            if 'translucent' in rpasses:
                 transluc_used = True
-            if is_overlays:
+            if 'overlay' in rpasses:
                 overlays_used = True
-            if is_decals:
+            if 'decal' in rpasses:
                 decals_used = True
 
             uv_export = False
@@ -2346,7 +2356,7 @@ class ArmoryExporter:
             ext = '.zip'
         self.output['grease_pencil_ref'] = 'greasepencil_' + gpRef.name + ext + '/' + gpRef.name
 
-        assets.add_shader_data('build/compiled/ShaderDatas/grease_pencil/grease_pencil.arm')
+        assets.add_shader_data('build/compiled/Shaders/grease_pencil/grease_pencil.arm')
         assets.add_shader('build/compiled/Shaders/grease_pencil/grease_pencil.frag.glsl')
         assets.add_shader('build/compiled/Shaders/grease_pencil/grease_pencil.vert.glsl')
         assets.add_shader('build/compiled/Shaders/grease_pencil/grease_pencil_shadows.frag.glsl')

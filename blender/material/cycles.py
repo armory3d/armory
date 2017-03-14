@@ -187,11 +187,12 @@ def parse_shader(node, socket):
         return parse_group_input(node, socket)
 
     elif node.type == 'MIX_SHADER':
+        prefix = '' if node.inputs[0].is_linked else 'const '
         fac = parse_value_input(node.inputs[0])
         fac_var = node_name(node.name) + '_fac'
         fac_inv_var = node_name(node.name) + '_fac_inv'
-        curshader.write('float {0} = {1};'.format(fac_var, fac))
-        curshader.write('float {0} = 1.0 - {1};'.format(fac_inv_var, fac_var))
+        curshader.write('{0}float {1} = {2};'.format(prefix, fac_var, fac))
+        curshader.write('{0}float {1} = 1.0 - {2};'.format(prefix, fac_inv_var, fac_var))
         bc1, rough1, met1, occ1, opac1 = parse_shader_input(node.inputs[1])
         bc2, rough2, met2, occ2, opac2 = parse_shader_input(node.inputs[2])
         if parse_surface:
@@ -355,6 +356,17 @@ def write_result(l):
         return None
     return res_var
 
+def glsltype(t):
+    if t == 'RGB' or t == 'RGBA' or t == 'VECTOR':
+        return 'vec3'
+    else:
+        return 'float'
+
+def touniform(inp):
+    uname = armutils.safe_source_name(inp.node.name) + armutils.safe_source_name(inp.name)
+    curshader.add_uniform(glsltype(inp.type) + ' ' + uname)
+    return uname
+
 def parse_vector_input(inp):
     if inp.is_linked:
         l = inp.links[0]
@@ -372,7 +384,10 @@ def parse_vector_input(inp):
         if inp.type == 'VALUE': # Unlinked reroute
             return tovec3([0.0, 0.0, 0.0])
         else:
-            return tovec3(inp.default_value)
+            if mat_state.batch and inp.is_uniform:
+                return touniform(inp)
+            else:
+                return tovec3(inp.default_value)
 
 def parse_rgb(node, socket):
 
@@ -654,7 +669,7 @@ def store_var_name(node):
 
 def texture_store(node, tex, tex_name, to_linear=False):
     global parse_teximage_vector
-    mat_state.mat_context['bind_textures'].append(tex)
+    mat_state.bind_textures.append(tex)
     mat_state.data.add_elem('tex', 2)
     curshader.add_uniform('sampler2D {0}'.format(tex_name))
     if node.inputs[0].is_linked and parse_teximage_vector:
@@ -692,7 +707,7 @@ def parse_vector(node, socket):
 
     elif node.type == 'CAMERA':
         # View Vector
-        return 'v'
+        return 'vVec'
 
     elif node.type == 'NEW_GEOMETRY':
         if socket == node.outputs[0]: # Position
@@ -704,7 +719,7 @@ def parse_vector(node, socket):
         elif socket == node.outputs[3]: # True Normal
             return 'n'
         elif socket == node.outputs[4]: # Incoming
-            return 'v'
+            return 'vVec'
         elif socket == node.outputs[5]: # Parametric
             return 'wposition'
 
@@ -839,7 +854,10 @@ def parse_value_input(inp):
         else: # VALUE
             return res_var
     else:
-        return tovec1(inp.default_value)
+        if mat_state.batch and inp.is_uniform:
+            return touniform(inp)
+        else:
+            return tovec1(inp.default_value)
 
 def parse_value(node, socket):
 

@@ -8,8 +8,9 @@ import material.make_tess as make_tess
 import armutils
 import assets
 
-def make(context_id, rid):
+is_displacement = False
 
+def make(context_id, rid):
     con_mesh = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
 
     if rid == 'forward':
@@ -19,48 +20,76 @@ def make(context_id, rid):
 
     return con_mesh
 
+def make_finalize(con_mesh):
+    vert = con_mesh.vert
+    frag = con_mesh.frag
+    geom = con_mesh.geom
+    tesc = con_mesh.tesc
+    tese = con_mesh.tese
+
+    # Additional values referenced in cycles
+    if frag.contains('dotNV') and not frag.contains('float dotNV'):
+        frag.prepend('float dotNV = max(dot(n, vVec), 0.0);')
+    
+    if frag.contains('vVec') and not frag.contains('vec3 vVec'):
+        if is_displacement:
+            tese.add_out('vec3 eyeDir')
+            tese.add_uniform('vec3 eye', '_cameraPosition')
+            tese.write('eyeDir = eye - wposition;')
+        else:
+            vert.add_out('vec3 eyeDir')
+            vert.add_uniform('vec3 eye', '_cameraPosition')
+            vert.write('eyeDir = eye - wposition;')
+        frag.prepend('vec3 vVec = normalize(eyeDir);')
+    
+    if frag.contains('wposition') and not frag.contains('vec3 wposition'):
+        if not is_displacement: # Displacement always outputs wposition
+            vert.add_uniform('mat4 W', '_worldMatrix')
+            vert.add_out('vec3 wposition')
+            vert.write('wposition = vec4(W * spos).xyz;')
+
 def make_base(con_mesh, parse_opacity):
+    global is_displacement
+
     vert = con_mesh.make_vert()
     frag = con_mesh.make_frag()
     geom = None
     tesc = None
     tese = None
 
-    vert.add_out('vec3 wposition')
-    vert.add_uniform('mat4 W', '_worldMatrix')
     vert.add_uniform('mat3 N', '_normalMatrix')
     vert.write_pre = True
     vert.write('vec4 spos = vec4(pos, 1.0);')
     vert.write_pre = False
 
     if mat_utils.disp_linked(mat_state.output_node):
+        is_displacement = True
         tesc = con_mesh.make_tesc()
         tese = con_mesh.make_tese()
         tesc.ins = vert.outs
         tese.ins = tesc.outs
         frag.ins = tese.outs
 
+        vert.add_uniform('mat4 W', '_worldMatrix')
+        vert.add_out('vec3 wposition')
+        vert.write('wposition = vec4(W * spos).xyz;')
+
         const = {}
         const['name'] = 'tessLevel'
         const['float'] = [mat_state.material.height_tess_inner, mat_state.material.height_tess_outer]
-        mat_state.mat_context['bind_constants'].append(const)
+        mat_state.bind_constants.append(const)
         tesc.add_uniform('vec2 tessLevel')
         make_tess.tesc_levels(tesc)
-        tese.add_out('vec3 eyeDir')
         make_tess.interpolate(tese, 'wposition', 3, declare_out=True)
         make_tess.interpolate(tese, 'wnormal', 3, declare_out=True, normalize=True)
     # No displacement
     else:
+        is_displacement = False
         frag.ins = vert.outs
-        vert.add_out('vec3 eyeDir')
         vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
-        vert.add_uniform('vec3 eye', '_cameraPosition')
-        vert.write('eyeDir = eye - wposition;')
         vert.write('gl_Position = WVP * spos;')
 
     frag.add_include('../../Shaders/compiled.glsl')
-    frag.write('vec3 v = normalize(eyeDir);')
-    frag.write('float dotNV = max(dot(n, v), 0.0);') # frag.write('float dotNV = dot(n, v);')
 
     frag.write('vec3 basecol;')
     frag.write('float roughness;')
@@ -123,8 +152,6 @@ def make_base(con_mesh, parse_opacity):
         tese.add_uniform('mat4 VP', '_viewProjectionMatrix')
         # TODO: Sample disp at neightbour points to calc normal
         tese.write('wposition += wnormal * disp * 0.2;')
-        tese.add_uniform('vec3 eye', '_cameraPosition')
-        tese.write('eyeDir = eye - wposition;')
         tese.write('gl_Position = VP * vec4(wposition, 1.0);')
 
 def write_norpos(vert, declare=False):
@@ -139,7 +166,6 @@ def write_norpos(vert, declare=False):
         vert.write(prep + 'wnormal = normalize(N * nor);')
     if mat_state.data.is_elem('off'):
         vert.write('spos.xyz += off;')
-    vert.write('wposition = vec4(W * spos).xyz;')
     vert.write_pre = False
 
 def make_deferred(con_mesh):
@@ -205,6 +231,21 @@ def make_forward_base(con_mesh, parse_opacity=False):
     frag = con_mesh.frag
     tese = con_mesh.tese
 
+    if is_displacement:
+        tese.add_out('vec3 eyeDir')
+        tese.add_uniform('vec3 eye', '_cameraPosition')
+        tese.write('eyeDir = eye - wposition;')
+    else:
+        vert.add_out('vec3 wposition')
+        vert.add_uniform('mat4 W', '_worldMatrix')
+        vert.write('wposition = vec4(W * spos).xyz;')
+        vert.add_out('vec3 eyeDir')
+        vert.add_uniform('vec3 eye', '_cameraPosition')
+        vert.write('eyeDir = eye - wposition;')
+
+    frag.write('vec3 vVec = normalize(eyeDir);')
+    frag.write('float dotNV = max(dot(n, vVec), 0.0);')
+
     frag.add_include('../../Shaders/std/brdf.glsl')
     frag.add_include('../../Shaders/std/math.glsl')
     frag.add_uniform('vec3 lightColor', '_lampColor')
@@ -235,10 +276,10 @@ def make_forward_base(con_mesh, parse_opacity=False):
     frag.write('vec3 l;')
     frag.write('if (lightType == 0) l = lightDir;')
     frag.write('else { l = normalize(lightPos - wposition); visibility *= attenuate(distance(wposition, lightPos)); }')
-    frag.write('vec3 h = normalize(v + l);')
+    frag.write('vec3 h = normalize(vVec + l);')
     frag.write('float dotNL = dot(n, l);')
     frag.write('float dotNH = dot(n, h);')
-    frag.write('float dotVH = dot(v, h);')
+    frag.write('float dotVH = dot(vVec, h);')
 
     if is_shadows:
         if tese != None:
@@ -296,9 +337,9 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.write('    tuv = tuv * LUT_SCALE + LUT_BIAS;')
         frag.write('    vec4 t = texture(sltcMat, tuv);')
         frag.write('    mat3 invM = mat3(vec3(1.0, 0.0, t.y), vec3(0.0, t.z, 0.0), vec3(t.w, 0.0, t.x));')
-        frag.write('    float ltcspec = ltcEvaluate(n, v, dotNV, wposition, invM, lampArea0, lampArea1, lampArea2, lampArea3);')
+        frag.write('    float ltcspec = ltcEvaluate(n, vVec, dotNV, wposition, invM, lampArea0, lampArea1, lampArea2, lampArea3);')
         frag.write('    ltcspec *= texture(sltcMag, tuv).a;')
-        frag.write('    float ltcdiff = ltcEvaluate(n, v, dotNV, wposition, mat3(1.0), lampArea0, lampArea1, lampArea2, lampArea3);')
+        frag.write('    float ltcdiff = ltcEvaluate(n, vVec, dotNV, wposition, mat3(1.0), lampArea0, lampArea1, lampArea2, lampArea3);')
         frag.write('    direct = albedo * ltcdiff + ltcspec;')
         frag.write('}')
         frag.write('else {')
@@ -315,7 +356,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.write('vec3 indirect = (shIrradiance(n, 2.2) / PI) * albedo;')
 
         if '_Rad' in wrd.world_defs:
-            frag.write('vec3 reflectionWorld = reflect(-v, n);')
+            frag.write('vec3 reflectionWorld = reflect(-vVec, n);')
             frag.write('float lod = getMipFromRoughness(roughness, envmapNumMipmaps);')
             frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')
             if '_EnvLDR' in wrd.world_defs:
