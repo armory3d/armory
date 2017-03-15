@@ -1,6 +1,6 @@
 import armutils
 import make_state
-import material.cycles as cycles
+import armmaterial.cycles as cycles
 import log
 import bpy
 

@@ -1,10 +1,10 @@
 import bpy
 import make_state as state
-import material.mat_state as mat_state
-import material.mat_utils as mat_utils
-import material.cycles as cycles
-import material.make_skin as make_skin
-import material.make_tess as make_tess
+import armmaterial.mat_state as mat_state
+import armmaterial.mat_utils as mat_utils
+import armmaterial.cycles as cycles
+import armmaterial.make_skin as make_skin
+import armmaterial.make_tess as make_tess
 import armutils
 import assets
 

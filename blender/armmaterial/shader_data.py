@@ -1,4 +1,4 @@
-from material.shader import Shader
+from armmaterial.shader import Shader
 import armutils
 
 class ShaderData:

@@ -1,7 +1,7 @@
 import bpy
 import make_state as state
-import material.mat_state as mat_state
-import material.mat_utils as mat_utils
+import armmaterial.mat_state as mat_state
+import armmaterial.mat_utils as mat_utils
 import armutils
 import assets
 

@@ -1,7 +1,7 @@
 import bpy
-import material.cycles as cycles
-import material.make_shader as make_shader
-import material.mat_state as mat_state
+import armmaterial.cycles as cycles
+import armmaterial.make_shader as make_shader
+import armmaterial.mat_state as mat_state
 
 # TODO: handle groups
 # TODO: handle cached shaders

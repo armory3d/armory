@@ -1,9 +1,9 @@
 import bpy
 import armutils
-import material.make_shader as make_shader
-import material.mat_batch as mat_batch
-import material.mat_state as mat_state
-import material.texture as texture
+import armmaterial.make_shader as make_shader
+import armmaterial.mat_batch as mat_batch
+import armmaterial.mat_state as mat_state
+import armmaterial.texture as texture
 
 def glsltype(t): # Merge with cycles
     if t == 'RGB' or t == 'RGBA' or t == 'VECTOR':

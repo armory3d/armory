@@ -19,9 +19,9 @@ from exporter import ArmoryExporter
 import armutils
 import assets
 import log
-import lib.make_datas
-import lib.make_variants
-import lib.server
+import armlib.make_datas
+import armlib.make_variants
+import armlib.server
 
 exporter = ArmoryExporter()
 scripts_mtime = 0 # Monitor source changes
@@ -37,8 +37,8 @@ def compile_shader(raw_shaders_path, shader_name, defs):
         json_file = f.read()
     json_data = json.loads(json_file)
     
-    lib.make_datas.make(base_name, json_data, fp, defs)
-    lib.make_variants.make(base_name, json_data, fp, defs)
+    armlib.make_datas.make(base_name, json_data, fp, defs)
+    armlib.make_variants.make(base_name, json_data, fp, defs)
 
 def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False):
     global exporter
@@ -425,7 +425,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
         elif wrd.arm_play_runtime == 'Browser':
             # Start server
             os.chdir(armutils.get_fp())
-            t = threading.Thread(name='localserver', target=lib.server.run)
+            t = threading.Thread(name='localserver', target=armlib.server.run)
             t.daemon = True
             t.start()
             html5_app_path = 'http://localhost:8040/build/html5'

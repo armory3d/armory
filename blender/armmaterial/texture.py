@@ -2,7 +2,7 @@ import log
 import os
 import armutils
 import assets
-import material.mat_state as mat_state
+import armmaterial.mat_state as mat_state
 import make_state as state
 import bpy
 

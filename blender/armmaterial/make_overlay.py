@@ -1,6 +1,6 @@
-import material.cycles as cycles
-import material.mat_state as mat_state
-import material.make_mesh as make_mesh
+import armmaterial.cycles as cycles
+import armmaterial.mat_state as mat_state
+import armmaterial.make_mesh as make_mesh
 
 def make(context_id):
 	con_overlay = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })

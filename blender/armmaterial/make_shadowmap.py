@@ -1,8 +1,8 @@
-import material.cycles as cycles
-import material.mat_state as mat_state
-import material.mat_utils as mat_utils
-import material.make_skin as make_skin
-import material.make_tess as make_tess
+import armmaterial.cycles as cycles
+import armmaterial.mat_state as mat_state
+import armmaterial.mat_utils as mat_utils
+import armmaterial.make_skin as make_skin
+import armmaterial.make_tess as make_tess
 
 def make(context_id, rpasses):
     con_shadowmap = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False })

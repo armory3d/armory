@@ -2,7 +2,7 @@ import bpy
 import json
 import os
 import glob
-import lib.umsgpack
+import armlib.umsgpack
 import platform
 import zipfile
 import re
@@ -11,13 +11,13 @@ def write_arm(filepath, output):
     if filepath.endswith('.zip'):
         with zipfile.ZipFile(filepath, 'w', zipfile.ZIP_DEFLATED) as zip_file:
             if bpy.data.worlds['Arm'].arm_minimize:
-                zip_file.writestr('data.arm', lib.umsgpack.dumps(output))
+                zip_file.writestr('data.arm', armlib.umsgpack.dumps(output))
             else:
                 zip_file.writestr('data.arm', json.dumps(output, sort_keys=True, indent=4))
     else:
         if bpy.data.worlds['Arm'].arm_minimize:
             with open(filepath, 'wb') as f:
-                f.write(lib.umsgpack.dumps(output))
+                f.write(armlib.umsgpack.dumps(output))
         else:
             with open(filepath, 'w') as f:
                 f.write(json.dumps(output, sort_keys=True, indent=4))

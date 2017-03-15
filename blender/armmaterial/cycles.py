@@ -17,9 +17,9 @@
 import armutils
 import assets
 import make_state
-import material.mat_state as mat_state
-import material.texture as texture
-import material.functions as functions
+import armmaterial.mat_state as mat_state
+import armmaterial.texture as texture
+import armmaterial.functions as functions
 import log
 
 def parse(nodes, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True):

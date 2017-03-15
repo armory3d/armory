@@ -21,9 +21,9 @@ import assets
 import armutils
 import subprocess
 import log
-import material.make as make_material
-import material.mat_batch as mat_batch
-import material.texture as make_texture
+import armmaterial.make as make_material
+import armmaterial.mat_batch as mat_batch
+import armmaterial.texture as make_texture
 import nodes
 import make_renderer
 import make_renderpath

@@ -2,17 +2,17 @@ import armutils
 import os
 import bpy
 import assets
-import material.mat_utils as mat_utils
-import material.mat_state as mat_state
-from material.shader_data import ShaderData
-import material.cycles as cycles
-import material.make_mesh as make_mesh
-import material.make_shadowmap as make_shadowmap
-import material.make_transluc as make_transluc
-import material.make_overlay as make_overlay
-import material.make_depth as make_depth
-import material.make_decal as make_decal
-import material.make_voxel as make_voxel
+import armmaterial.mat_utils as mat_utils
+import armmaterial.mat_state as mat_state
+from armmaterial.shader_data import ShaderData
+import armmaterial.cycles as cycles
+import armmaterial.make_mesh as make_mesh
+import armmaterial.make_shadowmap as make_shadowmap
+import armmaterial.make_transluc as make_transluc
+import armmaterial.make_overlay as make_overlay
+import armmaterial.make_depth as make_depth
+import armmaterial.make_decal as make_decal
+import armmaterial.make_voxel as make_voxel
 
 rpass_hook = None
 mesh_make = make_mesh.make
