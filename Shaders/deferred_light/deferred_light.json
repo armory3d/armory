@@ -85,47 +85,12 @@
 					"link": "_cameraPosition"
 				},
 				{
-					"name": "eyeLook",
-					"link": "_cameraLook",
-					"ifdef": ["_Disabled"]
-				},
-				{
 					"name": "invVP",
 					"link": "_inverseViewProjectionMatrix"
 				},
 				{
 					"name": "LWVP",
 					"link": "_biasLampWorldViewProjectionMatrix"
-				},
-				{
-					"name": "screenSize",
-					"link": "_screenSize",
-					"ifdef": ["_Disabled"]
-				},
-				{
-					"name": "shirr",
-					"link": "_envmapIrradiance",
-					"ifdef": ["_Disabled"]
-				},
-				{
-					"name": "senvmapRadiance",
-					"link": "_envmapRadiance",
-					"ifdef": ["_Disabled"]
-				},
-				{
-					"name": "envmapNumMipmaps",
-					"link": "_envmapNumMipmaps",
-					"ifdef": ["_Disabled"]
-				},
-				{
-					"name": "senvmapBrdf",
-					"link": "_envmapBrdf",
-					"ifdef": ["_Disabled"]
-				},
-				{
-					"name": "envmapStrength",
-					"link": "_envmapStrength",
-					"ifdef": ["_Disabled"]
 				},
 				{
 					"name": "snoise",

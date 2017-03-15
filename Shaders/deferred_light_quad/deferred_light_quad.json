@@ -1,0 +1,74 @@
+{
+	"contexts": [
+		{
+			"name": "deferred_light_quad",
+			"depth_write": false,
+			"color_write_alpha": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"blend_source": "blend_one",
+			"blend_destination": "blend_one",
+			"blend_operation": "add",
+			"alpha_blend_source": "blend_one",
+			"alpha_blend_destination": "blend_one",
+			"alpha_blend_operation": "add",
+			"links": [
+				{
+					"name": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				},
+				{
+					"name": "l",
+					"link": "_lampDirection"
+				},
+				{
+					"name": "lightColor",
+					"link": "_lampColor"
+				},
+				{
+					"name": "lightShadow",
+					"link": "_lampCastShadow"
+				},
+				{
+					"name": "texlampcolor",
+					"link": "_lampColorTexture",
+					"ifdef": ["_LampColTex"]
+				},
+				{
+					"name": "shadowsBias",
+					"link": "_lampShadowsBias"
+				},
+				{
+					"name": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"name": "eyeLook",
+					"link": "_cameraLook"
+				},
+				{
+					"name": "LWVP",
+					"link": "_biasLampWorldViewProjectionMatrix"
+				},
+				{
+					"name": "snoise",
+					"link": "_noise64",
+					"ifdef": ["_PCSS"]
+				},
+				{
+					"name": "lampSizeUV",
+					"link": "_lampSizeUV",
+					"ifdef": ["_PCSS"]
+				},
+				{
+					"name": "VP",
+					"link": "_viewProjectionMatrix",
+					"ifdef": ["_SSRS"]
+				}
+			],
+			"vertex_shader": "deferred_light_quad.vert.glsl",
+			"vertex_shader_path": "../include/pass_viewray.vert.glsl",
+			"fragment_shader": "deferred_light_quad.frag.glsl"
+		}
+	]
+}

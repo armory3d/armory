@@ -310,7 +310,7 @@ def process_call_function(stage, stages, node, node_group):
         afterMergeNode = nodes.find_node_by_link_from(node_group, margeNode, margeNode.outputs[0])
         buildNode(stages, afterMergeNode, node_group)
 
-def make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 5, 7], bind_target_constants=None, shader_context=None, viewport_scale=1.0, with_clear=False):
+def make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 5, 7], bind_target_constants=None, shader_context=None, viewport_scale=1.0, with_clear=False, with_draw_quad=True):
     # Set target
     if target_index != None and node.inputs[target_index].is_linked:
         stage = {}
@@ -342,8 +342,9 @@ def make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices
         stage = {}
         stage['params'] = []
     # Draw quad
-    make_draw_quad(stage, node_group, node, context_index=2, shader_context=shader_context)
-    stages.append(stage)
+    if with_draw_quad:
+        make_draw_quad(stage, node_group, node, context_index=2, shader_context=shader_context)
+        stages.append(stage)
 
 def make_ssao_pass(stages, node_group, node):
     sc = 0.5 if bpy.data.worlds['Arm'].generate_ssao_half_res else 1.0
@@ -443,9 +444,22 @@ def make_water_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['tex', 'gbufferD'], shader_context='water_pass/water_pass/water_pass')
 
 def make_deferred_light_pass(stages, node_group, node):
-    # Draw lamp volume - TODO: properly generate stage
-    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'shadowMap'], shader_context='deferred_light/deferred_light/deferred_light')
-    stages[-1]['command'] = 'draw_lamp_volume'
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'shadowMap'], shader_context='', with_draw_quad=False)
+    stage = {}
+    stage['command'] = 'call_function'
+    stage['params'] = ['iron.data.RenderPath.lampIsSun']
+    # Draw fs quad
+    stage_true = {}
+    stage_true['params'] = []
+    make_draw_quad(stage_true, node_group, node, context_index=2, shader_context='deferred_light_quad/deferred_light_quad/deferred_light_quad')
+    # Draw lamp volume
+    stage_false = {}
+    stage_false['params'] = []
+    make_draw_quad(stage_false, node_group, node, context_index=2, shader_context='deferred_light/deferred_light/deferred_light')
+    stage_false['command'] = 'draw_lamp_volume'
+    stage['returns_true'] = [stage_true]
+    stage['returns_false'] = [stage_false]
+    stages.append(stage)
 
 def make_volumetric_light_pass(stages, node_group, node):
     # Draw lamp volume - TODO: properly generate stage

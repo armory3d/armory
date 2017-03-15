@@ -849,6 +849,7 @@ node_categories = [
 ]
 
 def register():
+    bpy.utils.register_class(CGPipelineTree)
     bpy.utils.register_class(BeginNode)
     bpy.utils.register_class(DrawMeshesNode)
     bpy.utils.register_class(DrawDecalsNode)
@@ -909,6 +910,7 @@ def register():
 def unregister():
     nodeitems_utils.unregister_node_categories("CG_PIPELINE_NODES")
     
+    bpy.utils.unregister_class(CGPipelineTree)
     bpy.utils.unregister_class(BeginNode)
     bpy.utils.unregister_class(DrawMeshesNode)
     bpy.utils.unregister_class(DrawDecalsNode)
