@@ -595,23 +595,21 @@ class ArmoryExporter:
             tracko = {}
             tracko['target'] = "transform"
 
-            tracko['time'] = {}
-            tracko['time']['values'] = []
+            tracko['times'] = []
 
             for i in range(self.beginFrame, self.endFrame):
-                tracko['time']['values'].append(((i - self.beginFrame) * self.frameTime))
+                tracko['times'].append(((i - self.beginFrame) * self.frameTime))
 
-            tracko['time']['values'].append((self.endFrame * self.frameTime))
+            tracko['times'].append((self.endFrame * self.frameTime))
 
-            tracko['value'] = {}
-            tracko['value']['values'] = []
+            tracko['values'] = []
 
             for i in range(self.beginFrame, self.endFrame):
                 scene.frame_set(i)
-                tracko['value']['values'].append(self.write_matrix(bobject.matrix_local))
+                tracko['values'] += self.write_matrix(bobject.matrix_local) # Continuos array of matrix transforms
 
             scene.frame_set(self.endFrame)
-            tracko['value']['values'].append(self.write_matrix(bobject.matrix_local))
+            tracko['values'] += self.write_matrix(bobject.matrix_local)
             o['animation']['tracks'] = [tracko]
 
         scene.frame_set(currentFrame, currentSubframe)
@@ -647,44 +645,41 @@ class ArmoryExporter:
             o['animation'] = {}
             tracko = {}
             tracko['target'] = "transform"
-            tracko['time'] = {}
-            tracko['time']['values'] = []
+            tracko['times'] = []
 
             for i in range(begin_frame, end_frame):
-                tracko['time']['values'].append(((i - begin_frame) * self.frameTime))
+                tracko['times'].append(((i - begin_frame) * self.frameTime))
 
-            tracko['time']['values'].append((end_frame * self.frameTime))
+            tracko['times'].append((end_frame * self.frameTime))
 
-            tracko['value'] = {}
-            tracko['value']['values'] = []
+            tracko['values'] = []
 
             parent = poseBone.parent
             if parent:
                 for i in range(begin_frame, end_frame):
                     scene.frame_set(i)
-                    tracko['value']['values'].append(self.write_matrix(parent.matrix.inverted() * poseBone.matrix))
+                    tracko['values'] += self.write_matrix(parent.matrix.inverted() * poseBone.matrix)
 
                 scene.frame_set(end_frame)
-                tracko['value']['values'].append(self.write_matrix(parent.matrix.inverted() * poseBone.matrix))
+                tracko['values'] += self.write_matrix(parent.matrix.inverted() * poseBone.matrix)
             else:
                 for i in range(begin_frame, end_frame):
                     scene.frame_set(i)
-                    tracko['value']['values'].append(self.write_matrix(poseBone.matrix))
+                    tracko['values'] += self.write_matrix(poseBone.matrix)
 
                 scene.frame_set(end_frame)
-                tracko['value']['values'].append(self.write_matrix(poseBone.matrix))
+                tracko['values'] += self.write_matrix(poseBone.matrix)
             o['animation']['tracks'] = [tracko]
 
         scene.frame_set(currentFrame, currentSubframe)
 
 
     def export_key_times(self, fcurve):
-        keyo = {}
-        keyo['values'] = []
+        keyo = []
         keyCount = len(fcurve.keyframe_points)
         for i in range(keyCount):
             time = fcurve.keyframe_points[i].co[0] - self.beginFrame
-            keyo['values'].append(time * self.frameTime)
+            keyo.append(time * self.frameTime)
         return keyo
 
     def export_key_time_control_points(self, fcurve):
@@ -702,29 +697,26 @@ class ArmoryExporter:
 
         return keyminuso, keypluso
 
-    def ExportKeyValues(self, fcurve):
-        keyo = {}
-        keyo['values'] = []
+    def export_key_values(self, fcurve):
+        keyo = []
         keyCount = len(fcurve.keyframe_points)
         for i in range(keyCount):
             value = fcurve.keyframe_points[i].co[1]
-            keyo['values'].append(value)
+            keyo.append(value)
 
         return keyo
 
     def export_key_value_control_points(self, fcurve):
-        keyminuso = {}
-        keyminuso['values'] = []
+        keyminuso = []
         keyCount = len(fcurve.keyframe_points)
         for i in range(keyCount):
             ctrl = fcurve.keyframe_points[i].handle_left[1]
-            keyminuso['values'].append(ctrl)
+            keyminuso.append(ctrl)
 
-        keypluso = {}
-        keypluso['values'] = []
+        keypluso = []
         for i in range(keyCount):
             ctrl = fcurve.keyframe_points[i].handle_right[1]
-            keypluso['values'].append(ctrl)
+            keypluso.append(ctrl)
         return keypluso, keypluso
 
     def export_animation_track(self, fcurve, kind, target, newline):
@@ -733,15 +725,15 @@ class ArmoryExporter:
         tracko = {}
         tracko['target'] = target
         if (kind != AnimationTypeBezier):
-            tracko['time'] = self.export_key_times(fcurve)
-            tracko['value'] = self.ExportKeyValues(fcurve)
+            tracko['times'] = self.export_key_times(fcurve)
+            tracko['values'] = self.export_key_values(fcurve)
         else:
             tracko['curve'] = 'bezier'
-            tracko['time'] = self.export_key_times(fcurve)
-            tracko['time_control_plus'], tracko['time_control_minus'] = self.export_key_time_control_points(fcurve)
+            tracko['times'] = self.export_key_times(fcurve)
+            tracko['times_control_plus'], tracko['times_control_minus'] = self.export_key_time_control_points(fcurve)
 
-            tracko['value'] = self.ExportKeyValues(fcurve)
-            tracko['value_control_plus'], tracko['value_control_minus'] = self.export_key_value_control_points(fcurve)
+            tracko['values'] = self.export_key_values(fcurve)
+            tracko['values_control_plus'], tracko['values_control_minus'] = self.export_key_value_control_points(fcurve)
         return tracko
 
     def export_object_transform(self, bobject, scene, o):
