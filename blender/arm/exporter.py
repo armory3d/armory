@@ -1193,30 +1193,30 @@ class ArmoryExporter:
                         return space.region_3d.perspective_matrix
         return None
 
-    def make_fake_omni_lamps(self, o, bobject):
-        # Look down
-        o['transform']['values'] = [1.0, 0.0, 0.0, bobject.location.x, 0.0, 1.0, 0.0, bobject.location.y, 0.0, 0.0, 1.0, bobject.location.z, 0.0, 0.0, 0.0, 1.0]
-        if not hasattr(o, 'children'):
-            o['children'] = []
-        # Make child lamps
-        for i in range(0, 5):
-            child_lamp = {}
-            child_lamp['name'] = o['name'] + '__' + str(i)
-            child_lamp['data_ref'] = o['data_ref']
-            child_lamp['type'] = 'lamp_object'
-            if i == 0:
-                mat = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-            elif i == 1:
-                mat = [0.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-            elif i == 2:
-                mat = [0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-            elif i == 3:
-                mat = [0.0, -1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-            elif i == 4:
-                mat = [-1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-            child_lamp['transform'] = {}
-            child_lamp['transform']['values'] = mat
-            o['children'].append(child_lamp)
+    # def make_fake_omni_lamps(self, o, bobject):
+    #     # Look down
+    #     o['transform']['values'] = [1.0, 0.0, 0.0, bobject.location.x, 0.0, 1.0, 0.0, bobject.location.y, 0.0, 0.0, 1.0, bobject.location.z, 0.0, 0.0, 0.0, 1.0]
+    #     if not hasattr(o, 'children'):
+    #         o['children'] = []
+    #     # Make child lamps
+    #     for i in range(0, 5):
+    #         child_lamp = {}
+    #         child_lamp['name'] = o['name'] + '__' + str(i)
+    #         child_lamp['data_ref'] = o['data_ref']
+    #         child_lamp['type'] = 'lamp_object'
+    #         if i == 0:
+    #             mat = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    #         elif i == 1:
+    #             mat = [0.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    #         elif i == 2:
+    #             mat = [0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    #         elif i == 3:
+    #             mat = [0.0, -1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    #         elif i == 4:
+    #             mat = [-1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    #         child_lamp['transform'] = {}
+    #         child_lamp['transform']['values'] = mat
+    #         o['children'].append(child_lamp)
 
     def export_object(self, bobject, scene, poseBone = None, parento = None):
         # This function exports a single object in the scene and includes its name,
@@ -1367,8 +1367,8 @@ class ArmoryExporter:
             self.export_object_transform(bobject, scene, o)
 
             # 6 directional lamps
-            if type == NodeTypeLamp and objref.type == 'POINT' and objref.lamp_omni_shadows:
-                self.make_fake_omni_lamps(o, bobject)
+            # if type == NodeTypeLamp and objref.type == 'POINT' and objref.lamp_omni_shadows:
+                # self.make_fake_omni_lamps(o, bobject)
 
             # Viewport Camera - overwrite active camera matrix with viewport matrix
             if type == NodeTypeCamera and bpy.data.worlds['Arm'].arm_play_viewport_camera and self.scene.camera != None and bobject.name == self.scene.camera.name:
@@ -2101,7 +2101,8 @@ class ArmoryExporter:
         # Fake omni shadows
         if objref.lamp_omni_shadows:
             o['fov'] = 1.5708 # 90 deg
-            o['strength'] /= 6
+            o['shadowmap_cube'] = True
+            # o['strength'] /= 6
 
         self.output['lamp_datas'].append(o)
 

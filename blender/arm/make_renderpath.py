@@ -844,14 +844,14 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
             
             # Second shadowmap for point lamps
             # TODO: check if lamp users are visible
-            for lamp in bpy.data.lamps:
-                if lamp.type == 'POINT':
+            # for lamp in bpy.data.lamps:
+                # if lamp.type == 'POINT':
                     # target = make_shadowmap_target(node, scale, '2')
                     # render_targets.append(target)
                     # break
                     # Clamp omni-shadows, remove
-                    if lamp.lamp_omni_shadows:
-                        bpy.data.worlds['Arm'].rp_defs += '_Clampstc'
+                    # if lamp.lamp_omni_shadows:
+                        # bpy.data.worlds['Arm'].rp_defs += '_Clampstc'
     
     elif node.bl_idname == 'ImageNodeType' or node.bl_idname == 'Image3DNodeType':
         # Target already exists
@@ -896,7 +896,6 @@ def make_render_target(n, scale, depth_buffer_id=None):
 
 def make_shadowmap_target(n, scale, postfix=''):
     target = {}
-    # target['name'] = '_shadow_' + n.inputs[0].default_value + postfix
     target['name'] = n.inputs[0].default_value + postfix
     target['width'] = n.inputs[1].default_value
     target['height'] = n.inputs[2].default_value

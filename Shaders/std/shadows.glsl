@@ -1,6 +1,7 @@
 #include "../compiled.glsl"
 
 uniform sampler2D shadowMap;
+uniform samplerCube shadowMapCube;
 
 float texture2DCompare(const vec2 uv, const float compare){
 	float depth = texture(shadowMap, uv).r;
@@ -21,7 +22,7 @@ float texture2DShadowLerp(const vec2 uv, const float compare){
 	return c;
 }
 
-float PCF(const vec2 uv, float compare) {
+float PCF(const vec2 uv, const float compare) {
 	// float result = 0.0;
 	// for (int x = -1; x <= 1; x++){
 		// for(int y = -1; y <= 1; y++){
@@ -39,4 +40,9 @@ float PCF(const vec2 uv, float compare) {
 		// }
 	// }
 	return result / 9.0;
+}
+
+float PCFCube(const vec3 l, const float compare) {
+	// No PCF yet..
+	return float(texture(shadowMapCube, -l).r > compare);
 }

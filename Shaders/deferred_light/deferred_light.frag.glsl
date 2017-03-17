@@ -30,8 +30,10 @@ uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
+// TODO: separate shaders
 #ifndef _NoShadows
 	//!uniform sampler2D shadowMap;
+	//!uniform samplerCube shadowMapCube;
 	#ifdef _PCSS
 	//!uniform sampler2D snoise;
 	//!uniform float lampSizeUV;
@@ -109,6 +111,9 @@ float shadowTest(const vec3 lPos) {
 	return PCF(lPos.xy, lPos.z - shadowsBias);
 	#endif
 }
+float shadowTestCube(const vec3 lPos, const vec3 l) {
+	return PCFCube(l, lPos.z - shadowsBias);
+}
 #endif
 
 #ifdef _SSRS
@@ -169,19 +174,23 @@ void main() {
 	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
 	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
 	
+	vec3 l;
+	l = normalize(lightPos - p);
+
 	float visibility = 1.0;
 #ifndef _NoShadows
+	// TODO: merge..
 	if (lightShadow == 1) {
 		vec4 lampPos = LWVP * vec4(p, 1.0);
-		if (lampPos.w > 0.0) {
-			visibility = shadowTest(lampPos.xyz / lampPos.w);
-		}
+		if (lampPos.w > 0.0) visibility = shadowTest(lampPos.xyz / lampPos.w);
+	}
+	else if (lightShadow == 2) { // Cube
+		vec4 lampPos = LWVP * vec4(p, 1.0);
+		if (lampPos.w > 0.0) visibility = shadowTestCube(lampPos.xyz / lampPos.w, l);
 	}
 #endif
 
 	// Per-light
-	vec3 l;
-	l = normalize(lightPos - p);
 #ifndef _NoLampFalloff
 	visibility *= attenuate(distance(p, lightPos));
 #endif
