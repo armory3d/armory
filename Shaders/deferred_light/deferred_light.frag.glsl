@@ -45,6 +45,7 @@ uniform mat4 LWVP;
 uniform vec3 lightColor;
 uniform vec3 lightDir;
 uniform vec3 lightPos;
+uniform vec2 lightPlane;
 uniform int lightType;
 uniform int lightShadow;
 uniform float shadowsBias;
@@ -111,8 +112,8 @@ float shadowTest(const vec3 lPos) {
 	return PCF(lPos.xy, lPos.z - shadowsBias);
 	#endif
 }
-float shadowTestCube(const vec3 lPos, const vec3 l) {
-	return PCFCube(l, lPos.z - shadowsBias);
+float shadowTestCube(const vec3 lp, const vec3 l) {
+	return PCFCube(lp, -l, shadowsBias, lightPlane);
 }
 #endif
 
@@ -174,8 +175,8 @@ void main() {
 	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
 	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
 	
-	vec3 l;
-	l = normalize(lightPos - p);
+	vec3 lp = lightPos - p;
+	vec3 l = normalize(lp);
 
 	float visibility = 1.0;
 #ifndef _NoShadows
@@ -185,8 +186,7 @@ void main() {
 		if (lampPos.w > 0.0) visibility = shadowTest(lampPos.xyz / lampPos.w);
 	}
 	else if (lightShadow == 2) { // Cube
-		vec4 lampPos = LWVP * vec4(p, 1.0);
-		if (lampPos.w > 0.0) visibility = shadowTestCube(lampPos.xyz / lampPos.w, l);
+		visibility = shadowTestCube(lp, l);
 	}
 #endif
 
