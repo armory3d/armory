@@ -540,16 +540,13 @@ def parse_rgb(node, socket):
         return 'pow({0}, vec3({1}))'.format(out_col, gamma)
 
     elif node.type == 'HUE_SAT':
-#         hue = parse_value_input(node.inputs[0])
-#         sat = parse_value_input(node.inputs[1])
-#         val = parse_value_input(node.inputs[2])
-#         fac = parse_value_input(node.inputs[3])
-        out_col = parse_vector_input(node.inputs[4])
-#         curshader.add_function(\
-# """vec3 hue_sat(const float hue, const float sat, const float val, const float fac, const vec3 col) {
-# }
-# """)
-        return out_col
+        curshader.add_function(functions.str_hsv_to_rgb)
+        hue = parse_value_input(node.inputs[0])
+        sat = parse_value_input(node.inputs[1])
+        val = parse_value_input(node.inputs[2])
+        # fac = parse_value_input(node.inputs[3])
+        # col = parse_vector_input(node.inputs[4])
+        return 'hsv_to_rgb(vec3({0}, {1}, {2}))'.format(hue, sat, val)
 
     elif node.type == 'INVERT':
         fac = parse_value_input(node.inputs[0])
@@ -943,12 +940,15 @@ def parse_value(node, socket):
             return '0.0'
 
     elif node.type == 'OBJECT_INFO':
-        if socket == node.outputs[0]: # Object Index
-            return '0.0'
-        elif socket == node.outputs[1]: # Material Index
-            return '0.0'
-        elif socket == node.outputs[2]: # Random
-            return '0.0'
+        if socket == node.outputs[1]: # Object Index
+            curshader.add_uniform('float objectInfoIndex', link='_objectInfoIndex')
+            return 'objectInfoIndex'
+        elif socket == node.outputs[2]: # Material Index
+            curshader.add_uniform('float objectInfoMaterialIndex', link='_objectInfoMaterialIndex')
+            return 'objectInfoMaterialIndex'
+        elif socket == node.outputs[3]: # Random
+            curshader.add_uniform('float objectInfoRandom', link='_objectInfoRandom')
+            return 'objectInfoRandom'
 
     elif node.type == 'PARTICLE_INFO':
         if socket == node.outputs[0]: # Index

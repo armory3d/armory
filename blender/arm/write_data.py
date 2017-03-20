@@ -225,7 +225,6 @@ const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;
 const vec2 cameraPlane = vec2(""" + str(round(clip_start * 100) / 100) + """, """ + str(round(clip_end * 100) / 100) + """);
 const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shadowmap_size) + """);
-const vec2 shadowmapCubeSize = shadowmapSize / 4.0;
 """)
         if wrd.generate_clouds:
             f.write(

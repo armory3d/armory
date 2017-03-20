@@ -45,6 +45,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     wrd = bpy.data.worlds['Arm']
 
     print('\nArmory v' + wrd.arm_version)
+    print('OS: ' + arm.utils.get_os() + ', Target: ' + state.target)
 
     # Clean compiled variants if cache is disabled
     if wrd.arm_cache_shaders == False:
@@ -443,7 +444,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
                 krom_location = sdk_path + '/linux64/Krom/linux'
                 krom_path = krom_location + '/Krom'
             os.chdir(krom_location)
-            state.playproc = subprocess.Popen([krom_path, arm.utils.get_fp() + '/build/window/krom', arm.utils.get_fp() + '/build/window/krom-resources'], stderr=subprocess.PIPE)
+            state.playproc = subprocess.Popen([krom_path, arm.utils.get_fp() + '/build/window/krom', arm.utils.get_fp() + '/build/window/krom-resources', '--nosound'], stderr=subprocess.PIPE)
             watch_play()
 
 def clean_cache():
