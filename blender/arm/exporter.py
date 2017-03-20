@@ -2618,6 +2618,7 @@ class ArmoryExporter:
         # Animation setup
         if arm.utils.is_bone_animation_enabled(bobject) or arm.utils.is_object_animation_enabled(bobject):
             x = {}
+            x['frame_time'] = 1 / self.scene.render.fps
             if len(bobject.my_cliptraitlist) > 0:
                 # Edit clips enabled
                 x['names'] = []
