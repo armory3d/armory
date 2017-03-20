@@ -1,4 +1,3 @@
 
 
----
-optional - drag & drop .blend file here
+*(optional - drag & drop zipped .blend file here)*

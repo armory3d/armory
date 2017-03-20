@@ -406,7 +406,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
         elif target_name == 'windows':
             print('VisualStudio 2015 project files are located in ' + files_path + '-build')
         elif target_name == 'android-native':
-            print('Android Studio project files are located in ' + files_path + '-build/' + wrd.arm_project_name)
+            print('Android Studio project files are located in ' + files_path + '-build/' + arm.utils.safefilename(wrd.arm_project_name))
         else:
             print('Makefiles are located in ' + files_path + '-build')
         return

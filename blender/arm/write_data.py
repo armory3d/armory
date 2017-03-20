@@ -22,7 +22,7 @@ def write_khafilejs(is_play, export_physics, export_navigation, dce_full=False):
     with open('khafile.js', 'w') as f:
         f.write(
 """// Auto-generated
-let project = new Project('""" + wrd.arm_project_name + """');
+let project = new Project('""" + arm.utils.safefilename(wrd.arm_project_name) + """');
 
 project.addSources('Sources');
 """)

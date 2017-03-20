@@ -1461,6 +1461,7 @@ class ArmoryExporter:
         boneIndexArray = []
         boneWeightArray = []
 
+        warn_bones = False
         mesh_vertex_array = bobject.data.vertices
         for ev in export_vertex_array:
             boneCount = 0
@@ -1474,6 +1475,7 @@ class ArmoryExporter:
                     boneIndexArray.append(boneIndex)
                     boneWeightArray.append(boneWeight)
                     if boneCount == 4: # Four bones max - TODO: take biggest weights
+                        warn_bones = True
                         break
             boneCountArray.append(boneCount)
 
@@ -1481,6 +1483,9 @@ class ArmoryExporter:
                 normalizer = 1.0 / totalWeight
                 for i in range(-boneCount, 0):
                     boneWeightArray[i] *= normalizer
+
+        if warn_bones:
+            log.warn(bobject.name + ' - more than 4 bones influence single vertex')
 
         # Write the bone count array. There is one entry per vertex.
         oskin['bone_count_array'] = boneCountArray

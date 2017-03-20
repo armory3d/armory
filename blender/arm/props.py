@@ -559,7 +559,7 @@ def init_properties_on_load():
     wrd = bpy.data.worlds['Arm']
 
     # Outdated project
-    if wrd.arm_version != arm_version:
+    if bpy.data.filepath != '' and wrd.arm_version != arm_version: # Call on project load only
         print('Project updated to sdk v' + arm_version)
         wrd.arm_version = arm_version
         arm.make.clean_project()
