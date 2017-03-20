@@ -522,20 +522,11 @@ def init_properties_on_save():
         wrd.arm_project_scene = bpy.data.scenes[0].name
         # Switch to Cycles
         for scene in bpy.data.scenes:
-            # if scene.render.engine != 'CYCLES':
-                # scene.render.engine = 'CYCLES'
-            scene.render.fps = 60 # Default to 60fps for chromium update loop
+            scene.render.fps = 60 # Default to 60fps
         # Force camera far to at least 200 units for now, to prevent fighting with light far plane
         for c in bpy.data.cameras:
             if c.clip_end < 200:
                 c.clip_end = 200
-        # Move default lamp a little further to keep fov low for now
-        if 'Lamp' in bpy.data.objects:
-            loc = bpy.data.objects['Lamp'].location
-            if int(loc.x) == 4 and int(loc.y) == 1 and int(loc.z) == 5:
-                loc.x = 11.0
-                loc.y = 4.0
-                loc.z = 16.0
         # Use nodes
         for w in bpy.data.worlds:
             w.use_nodes = True
@@ -545,7 +536,6 @@ def init_properties_on_save():
             l.use_nodes = True
         for m in bpy.data.materials:
             m.use_nodes = True
-
         init_properties_on_load()
 
 def init_properties_on_load():
