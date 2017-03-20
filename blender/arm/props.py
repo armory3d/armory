@@ -10,10 +10,14 @@ import arm.props_renderer as props_renderer
 import arm.assets as assets
 import arm.log as log
 import arm.utils
+import arm.make
 try:
     import barmory
 except ImportError:
     pass
+
+# Armory version
+arm_version = '17.03.1'
 
 def update_preset(self, context):
     props_renderer.set_preset(self, context, self.rp_preset)
@@ -87,13 +91,12 @@ def update_gapi_ios(self, context):
 def update_gapi_html5(self, context):
     bpy.data.worlds['Arm'].arm_recompile_trigger = True
 
-arm_ver = '17.03'
 def init_properties():
-    global arm_ver
+    global arm_version
     bpy.types.World.arm_recompile = bpy.props.BoolProperty(name="Recompile", description="Recompile sources on next play", default=True)
     bpy.types.World.arm_recompile_trigger = bpy.props.BoolProperty(name="Recompile Trigger", description="Force upcoming recomilation", default=False)
     bpy.types.World.arm_progress = bpy.props.FloatProperty(name="Progress", description="Current build progress", default=100.0, min=0.0, max=100.0, soft_min=0.0, soft_max=100.0, subtype='PERCENTAGE', get=log.get_progress)
-    bpy.types.World.arm_version = StringProperty(name="Version", description="Armory SDK version", default=arm_ver)
+    bpy.types.World.arm_version = StringProperty(name="Version", description="Armory SDK version", default="")
     bpy.types.World.arm_project_target = EnumProperty(
         items = [('html5', 'HTML5', 'html5'),
                  ('windows', 'Windows', 'windows'),
@@ -509,6 +512,7 @@ def init_properties():
     if not 'Arm' in bpy.data.worlds:
         wrd = bpy.data.worlds.new('Arm')
         wrd.use_fake_user = True # Store data world object, add fake user to keep it alive
+        wrd.arm_version = arm_version
 
 def init_properties_on_save():
     wrd = bpy.data.worlds['Arm']
@@ -545,7 +549,7 @@ def init_properties_on_save():
         init_properties_on_load()
 
 def init_properties_on_load():
-    global arm_ver    
+    global arm_version    
     
     if not 'Arm' in bpy.data.worlds:
         init_properties()
@@ -555,9 +559,10 @@ def init_properties_on_load():
     wrd = bpy.data.worlds['Arm']
 
     # Outdated project
-    if int(wrd.arm_version.replace(".", "")[:4]) < int(arm_ver.replace(".", "")[:4]):
-        # 17.01 - 17.01.1
-        wrd.arm_version = arm_ver
+    if wrd.arm_version != arm_version:
+        print('Project updated to sdk v' + arm_version)
+        wrd.arm_version = arm_version
+        arm.make.clean_project()
 
     # Set url for embedded player
     if arm.utils.with_krom():
