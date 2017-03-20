@@ -89,17 +89,19 @@ def get_node_path():
     else:
         return get_sdk_path() + '/nodejs/node-linux64'
 
-def get_khamake_path():
-
+def get_kha_path():
     if os.path.exists('Kha'):
-        return 'Kha/make'
+        return 'Kha'
 
     if get_os() == 'win':
-        return get_sdk_path() + '/win32/Kha/make'
+        return get_sdk_path() + '/win32/Kha'
     elif get_os() == 'mac':
-        return get_sdk_path() + '/Kode Studio.app/Contents/Kha/make'
+        return get_sdk_path() + '/Kode Studio.app/Contents/Kha'
     else:
-        return get_sdk_path() + '/linux64/Kha/make'
+        return get_sdk_path() + '/linux64/Kha'
+
+def get_khamake_path():
+    return get_kha_path() + '/make'
 
 def fetch_bundled_script_names():
     wrd = bpy.data.worlds['Arm']

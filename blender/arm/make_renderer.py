@@ -157,7 +157,7 @@ def make_deferred(cam):
 
 # Handling node data
 def check_default():
-    if bpy.data.node_groups.get('armory_default') == None and len(bpy.data.cameras) > 0:
+    if (bpy.data.node_groups.get('armory_default') == None or bpy.data.filepath == '') and len(bpy.data.cameras) > 0: # Old RP nodes can be saved in startup file, reload those when fp is ''
         make_renderer(bpy.data.cameras[0])
 
 def reload_blend_data():

@@ -1,5 +1,6 @@
 import bpy
 import os
+import shutil
 import arm.utils
 import arm.assets as assets
 import arm.make_state as state
@@ -66,6 +67,20 @@ project.addSources('Sources');
 
         for ref in shader_references:
             f.write("project.addShaders('" + ref + "');\n")
+
+        # TODO: Khamake bug workaround - assets & shaders located in folder starting with '.' get discarded - copy them to project
+        if '/.' in sdk_path:
+            if not os.path.exists('build/compiled/KhaShaders'):
+                kha_shaders_path = arm.utils.get_kha_path() + '/Sources/Shaders'
+                shutil.copytree(kha_shaders_path, 'build/compiled/KhaShaders')
+            f.write("project.addShaders('build/compiled/KhaShaders/**');\n")
+            arm_assets = 'build/compiled/ArmoryAssets'
+            if not os.path.exists('build/compiled/ArmoryAssets'):
+                shutil.copytree(sdk_path + '/armory/Assets', arm_assets)
+            for i in range(0, len(asset_references)): # Redirect paths to local copy
+                if '/.' in asset_references[i]:
+                    fname = asset_references[i].rsplit('/', 1)[1]
+                    asset_references[i] = arm_assets + '/' + fname
         
         for ref in shader_data_references:
             ref = ref.replace('\\', '/')
