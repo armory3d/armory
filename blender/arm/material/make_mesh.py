@@ -17,6 +17,8 @@ def make(context_id, rid):
     elif rid == 'deferred':
         make_deferred(con_mesh)
 
+    make_finalize(con_mesh)
+
     return con_mesh
 
 def make_finalize(con_mesh):
@@ -27,6 +29,7 @@ def make_finalize(con_mesh):
     tese = con_mesh.tese
 
     # Additional values referenced in cycles
+    # TODO: enable from cycles.py
     if frag.contains('dotNV') and not frag.contains('float dotNV'):
         frag.prepend('float dotNV = max(dot(n, vVec), 0.0);')
     
@@ -75,7 +78,7 @@ def make_base(con_mesh, parse_opacity):
 
         const = {}
         const['name'] = 'tessLevel'
-        const['float'] = [mat_state.material.height_tess_inner, mat_state.material.height_tess_outer]
+        const['vec2'] = [mat_state.material.height_tess_inner, mat_state.material.height_tess_outer]
         mat_state.bind_constants.append(const)
         tesc.add_uniform('vec2 tessLevel')
         make_tess.tesc_levels(tesc)

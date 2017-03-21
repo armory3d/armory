@@ -43,5 +43,3 @@ typedef TTransform = iron.data.SceneFormat.TTransform;
 typedef TAnimationTransform = iron.data.SceneFormat.TAnimationTransform;
 typedef TAnimation = iron.data.SceneFormat.TAnimation;
 typedef TTrack = iron.data.SceneFormat.TTrack;
-typedef TTime = iron.data.SceneFormat.TTime;
-typedef TValue = iron.data.SceneFormat.TValue;

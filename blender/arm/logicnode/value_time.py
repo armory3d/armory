@@ -10,6 +10,6 @@ class TimeNode(Node, ArmLogicTreeNode):
     bl_icon = 'TIME'
     
     def init(self, context):
-        self.outputs.new('NodeSocketFloat', "Time")
+        self.outputs.new('NodeSocketFloat', "Value")
 
 add_node(TimeNode, category='Value')

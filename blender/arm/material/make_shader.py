@@ -47,14 +47,14 @@ def build(material, mat_users, mat_armusers, rid):
             if bo.instanced_children or len(bo.particle_systems) > 0:
                 mat_state.data.add_elem('off', 3)
 
-    bind_contants = dict()
+    bind_constants = dict()
     bind_textures = dict()
 
     for rp in rpasses:
 
         car = []
-        bind_contants[rp] = car
-        mat_state.bind_contants = car
+        bind_constants[rp] = car
+        mat_state.bind_constants = car
         tar = []
         bind_textures[rp] = tar
         mat_state.bind_textures = tar
@@ -90,7 +90,7 @@ def build(material, mat_users, mat_armusers, rid):
     shader_data_path = 'build/compiled/ShaderRaws/' + matname + '/' + shader_data_name + '.arm'
     assets.add_shader_data(shader_data_path)
 
-    return rpasses, mat_state.data, shader_data_name, bind_contants, bind_textures
+    return rpasses, mat_state.data, shader_data_name, bind_constants, bind_textures
 
 def write_shaders(rel_path, con, rpass):
     keep_cache = mat_state.material.is_cached

@@ -2,6 +2,7 @@
 #include "../compiled.glsl"
 
 uniform sampler2D shadowMap;
+uniform samplerCube shadowMapCube;
 uniform sampler2D snoise;
 uniform float lampSizeUV;
 
@@ -187,4 +188,31 @@ float PCSS(const vec2 uv, const float zReceiver) {
 	float penumbraRatio = (zReceiver - avgBlockerDepth) / avgBlockerDepth;
 	float filterRadius = penumbraRatio * lampSizeUV * lampNear / zReceiver;
 	return filterPCF(uv, zReceiver, filterRadius);
+}
+
+// No soft shadows for cube yet..
+float lpToDepth(vec3 lp, const vec2 lightPlane) {
+	float d = lightPlane.y - lightPlane.x;
+	lp = abs(lp);
+	float zcomp = max(lp.x, max(lp.y, lp.z));
+	zcomp = (lightPlane.y + lightPlane.x) / (d) - (2.0 * lightPlane.y * lightPlane.x) / (d) / zcomp;
+	return zcomp * 0.5 + 0.5;
+}
+
+float PCFCube(const vec3 lp, const vec3 ml, const float bias, const vec2 lightPlane) {
+	// return float(texture(shadowMapCube, ml).r + bias > lpToDepth(lp));
+
+	const float s = 0.001; // TODO: incorrect...
+	float compare = lpToDepth(lp, lightPlane) - bias;
+	float result = step(compare, texture(shadowMapCube, ml).r);
+	result += step(compare, texture(shadowMapCube, ml + vec3(s, s, s)).r);
+	result += step(compare, texture(shadowMapCube, ml + vec3(-s, s, s)).r);
+	result += step(compare, texture(shadowMapCube, ml + vec3(s, -s, s)).r);
+	result += step(compare, texture(shadowMapCube, ml + vec3(s, s, -s)).r);
+	result += step(compare, texture(shadowMapCube, ml + vec3(-s, -s, s)).r);
+	result += step(compare, texture(shadowMapCube, ml + vec3(s, -s, -s)).r);
+	result += step(compare, texture(shadowMapCube, ml + vec3(-s, s, -s)).r);
+	result += step(compare, texture(shadowMapCube, ml + vec3(-s, -s, -s)).r);
+	result /= 9.0;
+	return result;
 }
