@@ -199,7 +199,7 @@ def check_sdkpath(self):
     return True
 
 def tess_enabled(target):
-    return target == 'krom' or target == 'native'
+    return (target == 'krom' or target == 'native') and bpy.data.worlds['Arm'].tessellation_enabled
 
 def is_object_animation_enabled(bobject):
     # Checks if animation is present and enabled

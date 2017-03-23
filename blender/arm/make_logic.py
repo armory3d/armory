@@ -38,7 +38,6 @@ def build_node_tree(node_group):
         # Make sure root node exists
         roots = get_root_nodes(node_group)
         created_nodes = []
-        print(roots)
         for rn in roots:
             name = '_' + rn.name.replace('.', '_').replace(' ', '')
             buildNode(node_group, rn, f, created_nodes)

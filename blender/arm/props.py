@@ -11,6 +11,7 @@ import arm.assets as assets
 import arm.log as log
 import arm.utils
 import arm.make
+import arm.make_renderer as make_renderer
 try:
     import barmory
 except ImportError:
@@ -167,33 +168,33 @@ def init_properties():
         name="Runtime", description="Player runtime used when launching in new window", default='Krom', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_loadbar = BoolProperty(name="Load Bar", description="Show asset loading progress on published builds", default=True)
     bpy.types.World.arm_gapi_win = EnumProperty(
-        items = [('opengl2', 'Auto', 'opengl2'),
-                 ('opengl2', 'OpenGL', 'opengl2'),
+        items = [('opengl', 'Auto', 'opengl'),
+                 ('opengl', 'OpenGL', 'opengl'),
                  ('vulkan', 'Vulkan', 'vulkan'),
                  ('direct3d9', 'Direct3D9', 'direct3d9'),
                  ('direct3d11', 'Direct3D11', 'direct3d11'),
                  ('direct3d12', 'Direct3D12', 'direct3d12')],
-        name="Graphics API", default='opengl2', description='Based on currently selected target', update=update_gapi_win)
+        name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_win)
     bpy.types.World.arm_gapi_linux = EnumProperty(
-        items = [('opengl2', 'Auto', 'opengl2'),
-                 ('opengl2', 'OpenGL', 'opengl2'),
+        items = [('opengl', 'Auto', 'opengl'),
+                 ('opengl', 'OpenGL', 'opengl'),
                  ('vulkan', 'Vulkan', 'vulkan')],
-        name="Graphics API", default='opengl2', description='Based on currently selected target', update=update_gapi_linux)
+        name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_linux)
     bpy.types.World.arm_gapi_android = EnumProperty(
-        items = [('opengl2', 'Auto', 'opengl2'),
-                 ('opengl2', 'OpenGL', 'opengl2'),
+        items = [('opengl', 'Auto', 'opengl'),
+                 ('opengl', 'OpenGL', 'opengl'),
                  ('vulkan', 'Vulkan', 'vulkan')],
-        name="Graphics API", default='opengl2', description='Based on currently selected target', update=update_gapi_android)
+        name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_android)
     bpy.types.World.arm_gapi_mac = EnumProperty(
-        items = [('opengl2', 'Auto', 'opengl2'),
-                 ('opengl2', 'OpenGL', 'opengl2'),
+        items = [('opengl', 'Auto', 'opengl'),
+                 ('opengl', 'OpenGL', 'opengl'),
                  ('metal', 'Metal', 'metal')],
-        name="Graphics API", default='opengl2', description='Based on currently selected target', update=update_gapi_mac)
+        name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_mac)
     bpy.types.World.arm_gapi_ios = EnumProperty(
-        items = [('opengl2', 'Auto', 'opengl2'),
-                 ('opengl2', 'OpenGL', 'opengl2'),
+        items = [('opengl', 'Auto', 'opengl'),
+                 ('opengl', 'OpenGL', 'opengl'),
                  ('metal', 'Metal', 'metal')],
-        name="Graphics API", default='opengl2', description='Based on currently selected target', update=update_gapi_ios)
+        name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_ios)
     bpy.types.World.arm_gapi_html5 = EnumProperty(
         items = [('webgl', 'Auto', 'webgl'),
                  ('webgl', 'WebGL', 'webgl')],
@@ -449,7 +450,7 @@ def init_properties():
                ('Auto', 'Auto', 'Auto')],
         name="Anisotropic Filtering", description="Texture filtering", default='On')
     bpy.types.World.force_no_culling = bpy.props.BoolProperty(name="Force No Culling", default=False)
-    bpy.types.World.tessellation_enabled = bpy.props.BoolProperty(name="Tessellation", description="Enable tessellation for height maps on supported targets", default=True)
+    bpy.types.World.tessellation_enabled = bpy.props.BoolProperty(name="Tessellation", description="Enable tessellation for height maps on supported targets", default=True, update=assets.invalidate_shader_cache)
     # Lighting flags
     bpy.types.World.diffuse_model = EnumProperty(
         items=[('Lambert', 'Lambert', 'Lambert'),
@@ -553,6 +554,8 @@ def init_properties_on_load():
         print('Project updated to sdk v' + arm_version)
         wrd.arm_version = arm_version
         arm.make.clean_project()
+        if len(bpy.data.cameras) > 0:
+            make_renderer.make_renderer(bpy.data.cameras[0])
 
     # Set url for embedded player
     if arm.utils.with_krom():

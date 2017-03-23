@@ -126,9 +126,9 @@ vec2 getProjectedCoord(vec3 hitCoord) {
 }
 float getDeltaDepth(vec3 hitCoord) {
 	vec2 texCoord = getProjectedCoord(hitCoord);
-	vec4 g0 = texture(gbuffer0, texCoord);
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	// TODO: store_depth
+	// vec4 g0 = texture(gbuffer0, texCoord);
 	// float depth = (1.0 - g0.a) * 2.0 - 1.0;
 	vec3 wpos = getPos2(invVP, depth, texCoord);
 	float d1 = length(eye - wpos);

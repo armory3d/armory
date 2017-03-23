@@ -33,22 +33,36 @@ def make_finalize(con_mesh):
     if frag.contains('dotNV') and not frag.contains('float dotNV'):
         frag.prepend('float dotNV = max(dot(n, vVec), 0.0);')
     
+    write_wpos = False
     if frag.contains('vVec') and not frag.contains('vec3 vVec'):
         if is_displacement:
             tese.add_out('vec3 eyeDir')
             tese.add_uniform('vec3 eye', '_cameraPosition')
             tese.write('eyeDir = eye - wposition;')
+
         else:
             vert.add_out('vec3 eyeDir')
             vert.add_uniform('vec3 eye', '_cameraPosition')
             vert.write('eyeDir = eye - wposition;')
+            write_wpos = True
         frag.prepend('vec3 vVec = normalize(eyeDir);')
     
+    export_wpos = False
     if frag.contains('wposition') and not frag.contains('vec3 wposition'):
         if not is_displacement: # Displacement always outputs wposition
-            vert.add_uniform('mat4 W', '_worldMatrix')
-            vert.add_out('vec3 wposition')
-            vert.write('wposition = vec4(W * spos).xyz;')
+            export_wpos = True
+    
+    if export_wpos:
+        vert.add_uniform('mat4 W', '_worldMatrix')
+        vert.add_out('vec3 wposition')
+        vert.write_pre = True
+        vert.write('wposition = vec4(W * spos).xyz;')
+        vert.write_pre = False
+    elif write_wpos:
+        vert.add_uniform('mat4 W', '_worldMatrix')
+        vert.write_pre = True
+        vert.write('vec3 wposition = vec4(W * spos).xyz;')
+        vert.write_pre = False
 
 def make_base(con_mesh, parse_opacity):
     global is_displacement
@@ -60,9 +74,7 @@ def make_base(con_mesh, parse_opacity):
     tese = None
 
     vert.add_uniform('mat3 N', '_normalMatrix')
-    vert.write_pre = True
-    vert.write('vec4 spos = vec4(pos, 1.0);')
-    vert.write_pre = False
+    vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
 
     if mat_utils.disp_linked(mat_state.output_node):
         is_displacement = True
@@ -147,7 +159,7 @@ def make_base(con_mesh, parse_opacity):
         vert.add_out('vec3 wnormal')
         write_norpos(vert)
         frag.write_pre = True
-        frag.write('vec3 n = normalize(wnormal);')
+        frag.write_main_header('vec3 n = normalize(wnormal);')
         frag.write_pre = False
 
     if tese != None:

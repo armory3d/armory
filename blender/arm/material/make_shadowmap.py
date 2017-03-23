@@ -3,6 +3,7 @@ import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
 import arm.material.make_skin as make_skin
 import arm.material.make_tess as make_tess
+import arm.material.make_mesh as make_mesh
 
 def make(context_id, rpasses):
     con_shadowmap = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False })
@@ -14,7 +15,7 @@ def make(context_id, rpasses):
     tese = None
 
     # frag.add_out('vec4 fragColor')
-    vert.write('vec4 spos = vec4(pos, 1.0);')
+    vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
 
     # TODO: pass vbuf with proper struct
     vert.write('vec3 t1 = nor; // TODO: Temp for d3d')
@@ -108,5 +109,7 @@ def make(context_id, rpasses):
         frag.write('if (opacity < 0.5) discard;')
 
     # frag.write('fragColor = vec4(0.0);')
+
+    make_mesh.make_finalize(con_shadowmap)
 
     return con_shadowmap

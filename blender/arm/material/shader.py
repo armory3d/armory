@@ -13,6 +13,7 @@ class Shader:
         self.functions = {}
         self.main = ''
         self.main_pre = ''
+        self.main_header = ''
         self.header = ''
         self.write_pre = False
         self.tab = 1
@@ -56,7 +57,7 @@ class Shader:
         return (s in self.main or s in self.main_pre or s in self.ins)
 
     def prepend(self, s):
-        self.main_pre = s + self.main_pre
+        self.main_pre = s + '\n' + self.main_pre
 
     def write(self, s):
         if self.write_pre:
@@ -66,6 +67,9 @@ class Shader:
 
     def write_header(self, s):
         self.header += s + '\n'
+
+    def write_main_header(self, s):
+        self.main_header += s + '\n'
 
     def get(self):
         s = '#version 450\n'
@@ -116,6 +120,7 @@ class Shader:
         for f in self.functions:
             s += self.functions[f]
         s += 'void main() {\n'
+        s += self.main_header
         s += self.main_pre
         s += self.main
         s += '}\n'
