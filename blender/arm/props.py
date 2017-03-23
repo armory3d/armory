@@ -277,6 +277,7 @@ def init_properties():
                ('Deferred Low', 'Deferred Low', 'Deferred Low'),
                ('Deferred', 'Deferred', 'Deferred'),
                ('Deferred High', 'Deferred High', 'Deferred High'),
+               ('Deferred Plus', 'Deferred Plus', 'Deferred Plus'),
                ('VR Low', 'VR Low', 'VR Low'),
                #('Grease Pencil', 'Grease Pencil', 'Grease Pencil'),
                #('Path-Trace', 'Path-Trace', 'Path-Trace')],
@@ -285,6 +286,7 @@ def init_properties():
     bpy.types.Camera.rp_renderer = EnumProperty(
         items=[('Forward', 'Forward', 'Forward'),
                ('Deferred', 'Deferred', 'Deferred'),
+               ('Deferred Plus', 'Deferred Plus', 'Deferred Plus'),
                #('Path-Trace', 'Path-Trace', 'Path-Trace')],
                ],
         name="Renderer", description="Renderer type", default='Deferred', update=update_renderpath)

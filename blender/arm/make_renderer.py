@@ -17,12 +17,18 @@ def make_renderer(cam):
         nodes = group.nodes
         links = group.links
         make_forward(cam)
-    else: # Deferred
+    elif cam.rp_renderer == 'Deferred':
         load_library('deferred_path', 'armory_default')
         group = bpy.data.node_groups['armory_default']
         nodes = group.nodes
         links = group.links
         make_deferred(cam)
+    elif cam.rp_renderer == 'Deferred Plus':
+        load_library('deferred_plus_path', 'armory_default')
+        group = bpy.data.node_groups['armory_default']
+        nodes = group.nodes
+        links = group.links
+        make_deferred_plus(cam)
 
 def relink(start_node, next_node):
     if len(nodes[start_node].inputs[0].links) > 0:
@@ -154,6 +160,9 @@ def make_deferred(cam):
         l = nodes['Draw Compositor'].outputs[0].links[0]
         links.remove(l)
         links.new(nodes['Framebuffer'].outputs[0], nodes['Draw Compositor'].inputs[1])
+
+def make_deferred_plus(cam):
+    pass
 
 # Handling node data
 def check_default():

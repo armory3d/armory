@@ -136,6 +136,8 @@ def set_preset(self, context, preset):
         cam.rp_ssr = True
         cam.rp_bloom = True
         cam.rp_motionblur = 'None'
+    elif preset == 'Deferred Plus':
+        pass
     elif preset == 'VR Low':
         cam.rp_renderer = 'Forward'
         cam.rp_shadowmap = '1024'

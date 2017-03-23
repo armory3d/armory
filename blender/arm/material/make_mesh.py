@@ -16,6 +16,8 @@ def make(context_id, rid):
         make_forward(con_mesh)
     elif rid == 'deferred':
         make_deferred(con_mesh)
+    elif rid == 'deferred_plus':
+        make_deferred_plus(con_mesh)
 
     make_finalize(con_mesh)
 
@@ -226,6 +228,39 @@ def make_deferred(con_mesh):
         frag.write('fragColor[2].rg = vec2(posa - posb);')
 
     return con_mesh
+
+def make_deferred_plus(con_mesh):
+    wrd = bpy.data.worlds['Arm']
+    vert = con_mesh.make_vert()
+    frag = con_mesh.make_frag()
+
+    frag.add_out('vec4[2] fragColor')
+
+    vert.add_uniform('mat3 N', '_normalMatrix')
+    vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
+
+    frag.ins = vert.outs
+    vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
+    vert.write('gl_Position = WVP * spos;')
+
+    frag.add_include('../../Shaders/compiled.glsl')
+
+    if mat_state.data.is_elem('tex'):
+        vert.add_out('vec2 texCoord')
+        vert.write('texCoord = tex;')
+
+    vert.add_out('vec3 wnormal')
+    write_norpos(vert)
+    frag.write_pre = True
+    frag.write_main_header('vec3 n = normalize(wnormal);')
+    frag.write_pre = False
+
+    # Pack gbuffer
+    frag.add_include('../../Shaders/std/gbuffer.glsl')
+    frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
+    frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
+    frag.write('fragColor[0] = vec4(n.x, n.y, 0.0, 0.0);')
+    frag.write('fragColor[1] = vec4(0.0, 0.0, 0.0, 0.0);')
 
 def make_forward(con_mesh):
     make_forward_base(con_mesh)
