@@ -388,7 +388,7 @@ class ArmoryPlayerPanel(bpy.types.Panel):
 
         layout.prop(wrd, 'arm_play_advanced')
         if wrd.arm_play_advanced:
-            # layout.prop(wrd, make_utils.runtime_to_gapi())
+            layout.prop(wrd, make_utils.runtime_to_gapi())
             layout.prop(wrd, 'arm_play_console')
             if arm.utils.with_krom():
                 row = layout.row(align=True)
@@ -437,7 +437,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
         row.operator("arm.build_project")
         row.operator("arm.publish_project")
         layout.prop(wrd, 'arm_project_target')
-        # layout.prop(wrd, make_utils.target_to_gapi())
+        layout.prop(wrd, make_utils.target_to_gapi())
 
         layout.label("Libraries")
         rows = 2

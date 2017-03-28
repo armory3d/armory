@@ -38,6 +38,8 @@ def get_rpasses(material):
             ar.append(con)
         if bpy.data.cameras[0].rp_voxelgi:
             ar.append('voxel')
+        if bpy.data.cameras[0].rp_renderer == 'Deferred Plus':
+            ar.append('rect')
 
     shadows_enabled = False
     for cam in bpy.data.cameras:

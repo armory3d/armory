@@ -155,6 +155,19 @@ class CopyPassNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
+class MatIDToDepthNode(Node, CGPipelineTreeNode):
+    '''Copy material IDs to depth'''
+    bl_idname = 'MatIDToDepthNodeType'
+    bl_label = 'MatID to Depth'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "Material ID")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
 class BlendPassNode(Node, CGPipelineTreeNode):
     '''Blend to target node'''
     bl_idname = 'BlendPassNodeType'
@@ -355,7 +368,19 @@ class DrawMeshesNode(Node, CGPipelineTreeNode):
         self.inputs[2].default_value = 'front_to_back'
 
         self.outputs.new('NodeSocketShader', "Stage")
-        
+
+class DrawRectsNode(Node, CGPipelineTreeNode):
+    '''Draw rects of specified context node'''
+    bl_idname = 'DrawRectsNodeType'
+    bl_label = 'Draw Rects'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketString', "Context")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+ 
 class DrawDecalsNode(Node, CGPipelineTreeNode):
     '''Draw decals node'''
     bl_idname = 'DrawDecalsNodeType'
@@ -527,7 +552,7 @@ class DepthBufferNode(Node, CGPipelineTreeNode):
     
     def init(self, context):
         self.inputs.new('NodeSocketString', "ID")
-        self.inputs.new('NodeSocketBool', "Stencil")
+        self.inputs.new('NodeSocketString', "Format")
         
         self.outputs.new('NodeSocketShader', "Target")
 
@@ -785,6 +810,7 @@ node_categories = [
     MyCommandNodeCategory("COMMANDNODES", "Command", items=[
         NodeItem("BeginNodeType"),
         NodeItem("DrawMeshesNodeType"),
+        NodeItem("DrawRectsNodeType"),
         NodeItem("DrawDecalsNodeType"),
         NodeItem("ClearTargetNodeType"),
         NodeItem("ClearImageNodeType"),
@@ -819,6 +845,7 @@ node_categories = [
         NodeItem("MotionBlurPassNodeType"),
         NodeItem("MotionBlurVelocityPassNodeType"),
         NodeItem("CopyPassNodeType"),
+        NodeItem("MatIDToDepthNodeType"),
         NodeItem("BlendPassNodeType"),
         NodeItem("CombinePassNodeType"),
         NodeItem("BlurBasicPassNodeType"),
@@ -852,6 +879,7 @@ def register():
     bpy.utils.register_class(CGPipelineTree)
     bpy.utils.register_class(BeginNode)
     bpy.utils.register_class(DrawMeshesNode)
+    bpy.utils.register_class(DrawRectsNode)
     bpy.utils.register_class(DrawDecalsNode)
     bpy.utils.register_class(ClearTargetNode)
     bpy.utils.register_class(ClearImageNode)
@@ -882,6 +910,7 @@ def register():
     bpy.utils.register_class(MotionBlurPassNode)
     bpy.utils.register_class(MotionBlurVelocityPassNode)
     bpy.utils.register_class(CopyPassNode)
+    bpy.utils.register_class(MatIDToDepthNode)
     bpy.utils.register_class(BlendPassNode)
     bpy.utils.register_class(CombinePassNode)
     bpy.utils.register_class(BlurBasicPassNode)
@@ -913,6 +942,7 @@ def unregister():
     bpy.utils.unregister_class(CGPipelineTree)
     bpy.utils.unregister_class(BeginNode)
     bpy.utils.unregister_class(DrawMeshesNode)
+    bpy.utils.unregister_class(DrawRectsNode)
     bpy.utils.unregister_class(DrawDecalsNode)
     bpy.utils.unregister_class(ClearTargetNode)
     bpy.utils.unregister_class(ClearImageNode)
@@ -943,6 +973,7 @@ def unregister():
     bpy.utils.unregister_class(MotionBlurPassNode)
     bpy.utils.unregister_class(MotionBlurVelocityPassNode)
     bpy.utils.unregister_class(CopyPassNode)
+    bpy.utils.unregister_class(MatIDToDepthNode)
     bpy.utils.unregister_class(BlendPassNode)
     bpy.utils.unregister_class(CombinePassNode)
     bpy.utils.unregister_class(BlurBasicPassNode)

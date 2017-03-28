@@ -142,7 +142,12 @@ def make_draw_meshes(stage, node_group, node):
     # Order
     order = node.inputs[2].default_value
     stage['params'].append(order)
-    
+
+def make_draw_rects(stage, node_group, node):
+    stage['command'] = 'draw_rects'
+    context = node.inputs[1].default_value
+    stage['params'].append(context)
+ 
 def make_draw_decals(stage, node_group, node):
     stage['command'] = 'draw_decals'
     context = node.inputs[1].default_value
@@ -387,6 +392,9 @@ def make_motion_blur_velocity_pass(stages, node_group, node):
 def make_copy_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='copy_pass/copy_pass/copy_pass')
 
+def make_materialid_to_depth(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='matid_to_depth/matid_to_depth/matid_to_depth')
+
 def make_blend_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='blend_pass/blend_pass/blend_pass')
 
@@ -518,7 +526,10 @@ def buildNode(stages, node, node_group):
 
     elif node.bl_idname == 'DrawMeshesNodeType':
         make_draw_meshes(stage, node_group, node)
-        
+    
+    elif node.bl_idname == 'DrawRectsNodeType':
+        make_draw_rects(stage, node_group, node)
+
     elif node.bl_idname == 'DrawDecalsNodeType':
         make_draw_decals(stage, node_group, node)
         
@@ -643,6 +654,9 @@ def buildNode(stages, node, node_group):
         append_stage = False
     elif node.bl_idname == 'CopyPassNodeType':
         make_copy_pass(stages, node_group, node)
+        append_stage = False
+    elif node.bl_idname == 'MatIDToDepthNodeType':
+        make_materialid_to_depth(stages, node_group, node)
         append_stage = False
     elif node.bl_idname == 'BlendPassNodeType':
         make_blend_pass(stages, node_group, node)
@@ -778,7 +792,7 @@ def traverse_renderpath(node, node_group, render_targets, depth_buffers):
             traverse_renderpath(loop_node, node_group, render_targets, depth_buffers)
     
     # Prebuilt
-    elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'BlendPassNodeType' or node.bl_idname == 'CombinePassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'DeferredIndirectPassNodeType' or node.bl_idname == 'VolumetricLightPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
+    elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'MatIDToDepthNodeType' or node.bl_idname == 'BlendPassNodeType' or node.bl_idname == 'CombinePassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'DeferredIndirectPassNodeType' or node.bl_idname == 'VolumetricLightPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
         if node.inputs[1].is_linked:
             tnode = nodes.find_node_by_link(node_group, node, node.inputs[1])
             parse_render_target(tnode, node_group, render_targets, depth_buffers)
@@ -824,7 +838,8 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
             if found == False:
                 db = {}
                 db['name'] = depth_buffer_id
-                db['stencil_buffer'] = depth_node.inputs[1].default_value
+                if depth_node.inputs[1] != '':
+                    db['format'] = depth_node.inputs[1].default_value
                 depth_buffers.append(db)    
         # Get scale
         scale = 1.0

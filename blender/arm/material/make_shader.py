@@ -7,6 +7,7 @@ import arm.material.mat_state as mat_state
 from arm.material.shader_data import ShaderData
 import arm.material.cycles as cycles
 import arm.material.make_mesh as make_mesh
+import arm.material.make_rect as make_rect
 import arm.material.make_shadowmap as make_shadowmap
 import arm.material.make_transluc as make_transluc
 import arm.material.make_overlay as make_overlay
@@ -61,6 +62,9 @@ def build(material, mat_users, mat_armusers, rid):
 
         if rp == 'mesh':
             con = mesh_make(rp, rid)
+
+        elif rp == 'rect':
+            con = make_rect.make(rp)
 
         elif rp == 'shadowmap':
             con = make_shadowmap.make(rp, rpasses)

@@ -17,6 +17,7 @@ class Shader:
         self.header = ''
         self.write_pre = False
         self.tab = 1
+        self.vertex_structure_as_vsinput = True
 
     def add_include(self, s):
         self.includes.append(s)
@@ -83,7 +84,7 @@ class Shader:
         in_ext = ''
         out_ext = ''
 
-        if self.shader_type == 'vert': # Vertex structure as vertex shader input
+        if self.shader_type == 'vert' and self.vertex_structure_as_vsinput: # Vertex structure as vertex shader input
             vs = self.context.shader_data['vertex_structure']
             for e in vs:
                 self.add_in('vec' + str(e['size']) + ' ' + e['name'])

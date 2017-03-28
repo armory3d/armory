@@ -126,10 +126,10 @@ vec2 getProjectedCoord(vec3 hitCoord) {
 }
 float getDeltaDepth(vec3 hitCoord) {
 	vec2 texCoord = getProjectedCoord(hitCoord);
-	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+	// float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	// TODO: store_depth
-	// vec4 g0 = texture(gbuffer0, texCoord);
-	// float depth = (1.0 - g0.a) * 2.0 - 1.0;
+	vec4 g0 = texture(gbuffer0, texCoord);
+	float depth = (1.0 - g0.a) * 2.0 - 1.0;
 	vec3 wpos = getPos2(invVP, depth, texCoord);
 	float d1 = length(eye - wpos);
 	float d2 = length(eye - hitCoord);
@@ -157,9 +157,9 @@ void main() {
 
 	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, occlusion
 	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, 
-	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0; // 0 - 1 => -1 - 1
+	// float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0; // 0 - 1 => -1 - 1
 	// TODO: store_depth
-	// float depth = (1.0 - g0.a) * 2.0 - 1.0;
+	float depth = (1.0 - g0.a) * 2.0 - 1.0;
 
 	vec3 n;
 	n.z = 1.0 - abs(g0.x) - abs(g0.y);

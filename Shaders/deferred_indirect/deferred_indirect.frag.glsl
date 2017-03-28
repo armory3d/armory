@@ -113,7 +113,7 @@ void main() {
 	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 #endif
 
-	envl.rgb *= envmapStrength * g0.a; // Occlusion
+	envl.rgb *= envmapStrength * g1.a; // Occlusion
 
 #ifdef _SSAO
 	envl.rgb *= texture(ssaotex, texCoord).r; // SSAO

@@ -218,9 +218,8 @@ def make_deferred(con_mesh):
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
     # TODO: store_depth
-    # frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - gl_FragCoord.z);')
-    frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), occlusion);')
-    frag.write('fragColor[1] = vec4(basecol.rgb, 0.0);')
+    frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - gl_FragCoord.z);')
+    frag.write('fragColor[1] = vec4(basecol.rgb, occlusion);')
 
     if '_Veloc' in wrd.rp_defs:
         frag.write('vec2 posa = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
@@ -234,7 +233,7 @@ def make_deferred_plus(con_mesh):
     vert = con_mesh.make_vert()
     frag = con_mesh.make_frag()
 
-    frag.add_out('vec4[2] fragColor')
+    frag.add_out('vec4[3] fragColor')
 
     vert.add_uniform('mat3 N', '_normalMatrix')
     vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
@@ -245,9 +244,13 @@ def make_deferred_plus(con_mesh):
 
     frag.add_include('../../Shaders/compiled.glsl')
 
+    vert.add_out('vec2 texCoord')
+
+    mat_state.data.add_elem('tex', 2) #### Add using cycles.py
     if mat_state.data.is_elem('tex'):
-        vert.add_out('vec2 texCoord')
         vert.write('texCoord = tex;')
+    else:
+        vert.write('texCoord = vec2(0.0);')
 
     vert.add_out('vec3 wnormal')
     write_norpos(vert)
@@ -255,12 +258,16 @@ def make_deferred_plus(con_mesh):
     frag.write_main_header('vec3 n = normalize(wnormal);')
     frag.write_pre = False
 
+    frag.add_uniform('float materialID', link='_objectInfoMaterialIndex')
+
     # Pack gbuffer
     frag.add_include('../../Shaders/std/gbuffer.glsl')
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
-    frag.write('fragColor[0] = vec4(n.x, n.y, 0.0, 0.0);')
-    frag.write('fragColor[1] = vec4(0.0, 0.0, 0.0, 0.0);')
+    frag.write('fragColor[0] = vec4(n.xy, fract(texCoord));')
+    frag.write('fragColor[1] = vec4(materialID, 0.0, 0.0, 0.0);')
+    frag.write('fragColor[2] = vec4(dFdx(texCoord), dFdy(texCoord));')
+    # + tangent space
 
 def make_forward(con_mesh):
     make_forward_base(con_mesh)

@@ -674,7 +674,10 @@ def texture_store(node, tex, tex_name, to_linear=False):
     else:
         uv_name = 'texCoord'
     tex_store = store_var_name(node)
-    curshader.write('vec4 {0} = texture({1}, {2}.xy);'.format(tex_store, tex_name, uv_name))
+    if mat_state.texture_grad:
+        curshader.write('vec4 {0} = textureGrad({1}, {2}.xy, g2.xy, g2.zw);'.format(tex_store, tex_name, uv_name))
+    else:
+        curshader.write('vec4 {0} = texture({1}, {2}.xy);'.format(tex_store, tex_name, uv_name))
     if to_linear:
         curshader.write('{0}.rgb = pow({0}.rgb, vec3(2.2));'.format(tex_store))
     return tex_store

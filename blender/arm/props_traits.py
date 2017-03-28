@@ -169,7 +169,7 @@ class ArmoryEditScriptButton(bpy.types.Operator):
             subprocess.Popen([kode_path, arm.utils.get_fp(), hx_path])
         elif arm.utils.get_os() == 'mac':
             kode_path = '"' + sdk_path + '/Kode Studio.app/Contents/MacOS/Electron"'
-            subprocess.Popen([kode_path + ' ' + arm.utils.get_fp() + ' ' + hx_path], shell=True)
+            subprocess.Popen([kode_path + ' "' + arm.utils.get_fp() + '" "' + hx_path + '"'], shell=True)
         else:
             kode_path = sdk_path + '/linux64/kodestudio'
             subprocess.Popen([kode_path, arm.utils.get_fp(), hx_path])
