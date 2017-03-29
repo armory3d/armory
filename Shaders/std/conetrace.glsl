@@ -21,8 +21,8 @@ vec4 traceDiffuseVoxelCone(const vec3 from, vec3 direction) {
 	vec4 acc = vec4(0.0);
 	// Controls bleeding from close surfaces
 	// Low values look rather bad if using shadow cone tracing
-	float dist = 0.1953125 / 9.0;
-	const float SQRT2 = 1.414213 / 9.0;
+	float dist = 0.1953125;
+	const float SQRT2 = 1.414213;
 	while (dist < SQRT2 && acc.a < 1.0) {
 		vec3 c = vec3(from + dist * direction) * 0.5 + vec3(0.5);
 		float l = (1.0 + CONE_SPREAD * dist / VOXEL_SIZE);
@@ -32,7 +32,22 @@ vec4 traceDiffuseVoxelCone(const vec3 from, vec3 direction) {
 		acc += 0.075 * ll * voxel * pow(1.0 - voxel.a, 2.0);
 		dist += ll * VOXEL_SIZE * 2.0;
 	}
+
+	vec4 occ = vec4(0.0);
+	dist = 0.1953125 / 9.0;
+	const float SQRT2a = 1.414213 / 9.0;
+	while (dist < SQRT2a && acc.a < 1.0) {
+		vec3 c = vec3(from + dist * direction) * 0.5 + vec3(0.5);
+		float l = (1.0 + CONE_SPREAD * dist / VOXEL_SIZE);
+		float level = log2(l);
+		float ll = (level + 1.0) * (level + 1.0);
+		vec4 voxel = textureLod(voxels, c, min(MAX_MIPMAP, level));
+		occ += 0.075 * ll * voxel * pow(1.0 - voxel.a, 2.0);
+		dist += ll * VOXEL_SIZE * 2.0;
+	}
+
 	acc.rgb = pow(acc.rgb * 2.0, vec3(1.5));
+	acc.a = occ.a;
 	return acc;
 }
 

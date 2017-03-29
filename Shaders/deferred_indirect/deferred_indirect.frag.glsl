@@ -78,13 +78,13 @@ void main() {
 	vec3 indirectSpecular = traceSpecularVoxelCone(p / voxelgiDimensions.x, reflectWorld, n, metrough.y * 10.0);
 	indirectSpecular *= f0 * envBRDF.x + envBRDF.y;
 
-	// fragColor.rgb = indirectDiffuse.rgb * 60.0 * albedo + indirectSpecular;
-	fragColor.rgb = max(vec3(1.0 - (indirectDiffuse.a / 2.0)), 0.05) * albedo;
-	// fragColor.rgb *= 1.0 - (indirectDiffuse.a / 2.0); // Occ
+	fragColor.rgb = indirectDiffuse.rgb * 1.3 * albedo + indirectSpecular;
+	// fragColor.rgb = max(vec3(1.0 - (indirectDiffuse.a / 2.0)), 0.05) * albedo;
+	fragColor.rgb *= 1.0 - (indirectDiffuse.a / 2.2); // Occ
 	fragColor.rgb *= texture(ssaotex, texCoord).r * 0.5 + 0.5;
 
 	// if (opacity < 1.0) fragColor.rgb = mix(indirectRefractiveLight(-v), fragColor.rgb); // Transparency
-	return;
+	// return;
 #endif
 	
 	// Envmap
@@ -121,7 +121,7 @@ void main() {
 
 #ifdef _VoxelGI
 	float m = (fragColor.r + fragColor.g + fragColor.b) / 3.0;
-	fragColor.rgb += (envl / 5.0) * m;
+	fragColor.rgb += (envl / 2.0) * m;
 #else
 	fragColor.rgb = envl;
 #endif
