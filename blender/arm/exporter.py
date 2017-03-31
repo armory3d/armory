@@ -2663,88 +2663,89 @@ class ArmoryExporter:
 
         # Export traits
         o['traits'] = []
-        for t in bobject.my_traitlist:
-            if t.enabled_prop == False:
-                continue
-            x = {}
-            if t.type_prop == 'Logic Nodes' and t.nodes_name_prop != '':
-                x['type'] = 'Script'
-                x['class_name'] = bpy.data.worlds['Arm'].arm_project_package + '.node.' + arm.utils.safe_source_name(t.nodes_name_prop)
-            elif t.type_prop == 'JS Script' or t.type_prop == 'Python Script':
-                basename = t.jsscript_prop.split('.')[0]
-                x['type'] = 'Script'
-                x['class_name'] = 'armory.trait.internal.JSScript'
-                x['parameters'] = [arm.utils.safe_filename(basename)]
-                scriptspath = arm.utils.get_fp() + '/build/compiled/scripts/'
-                if not os.path.exists(scriptspath):
-                    os.makedirs(scriptspath)
-                # Compile to JS
-                if t.type_prop == 'Python Script':
-                    # Write py to file
-                    basename_ext = basename + '.py'
-                    targetpath = scriptspath + basename_ext
-                    with open(targetpath, 'w') as f:
-                        f.write(bpy.data.texts[t.jsscript_prop].as_string())
-                    sdk_path = arm.utils.get_sdk_path()
-                    python_path = bpy.app.binary_path_python
-                    cwd = os.getcwd()
-                    os.chdir(scriptspath)
-                    # Disable minification for now, too slow
-                    transproc = subprocess.Popen([python_path + ' ' + sdk_path + '/lib/transcrypt/__main__.py' + ' ' + basename_ext + ' --nomin'], shell=True)
-                    transproc.wait()
-                    if transproc.poll() != 0:
-                        log.print_info('Compiling ' + t.jsscript_prop + ' failed, check console')
-                    os.chdir(cwd)
-                    # Compiled file
-                    assets.add('build/compiled/scripts/__javascript__/' + basename + '.js')
-                else:
-                    # Write js to file
-                    assetpath = 'build/compiled/scripts/' + t.jsscript_prop + '.js'
-                    targetpath = arm.utils.get_fp() + '/' + assetpath
-                    with open(targetpath, 'w') as f:
-                        f.write(bpy.data.texts[t.jsscript_prop].as_string())
-                    assets.add(assetpath)
-            else: # Haxe/Bundled Script
-                if t.class_name_prop == '': # Empty class name, skip
+        if hasattr(bobject, 'my_traitlist'):
+            for t in bobject.my_traitlist:
+                if t.enabled_prop == False:
                     continue
-                x['type'] = 'Script'
-                if t.type_prop == 'Bundled Script':
-                    trait_prefix = 'armory.trait.'
-                    # TODO: temporary, export single mesh navmesh as obj
-                    if t.class_name_prop == 'NavMesh' and bobject.type == 'MESH' and bpy.data.worlds['Arm'].arm_navigation != 'Disabled':
-                        ArmoryExporter.export_navigation = True
-                        nav_path = arm.utils.get_fp() + '/build/compiled/Assets/navigation'
-                        if not os.path.exists(nav_path):
-                            os.makedirs(nav_path)
-                        nav_filepath = nav_path + '/nav_' + bobject.data.name + '.arm'
-                        assets.add(nav_filepath)
-                        # TODO: Implement cache
-                        #if os.path.isfile(nav_filepath) == False:
-                        override = {'selected_objects': [bobject]}
-                        # bobject.scale.y *= -1
-                        # mesh = obj.data
-                        # for face in mesh.faces:
-                            # face.v.reverse()
-                        # bpy.ops.export_scene.obj(override, use_selection=True, filepath=nav_filepath, check_existing=False, use_normals=False, use_uvs=False, use_materials=False)
-                        # bobject.scale.y *= -1
-                        with open(nav_filepath, 'w') as f:
-                            for v in bobject.data.vertices:
-                                f.write("v %.4f " % (v.co[0] * bobject.scale.x))
-                                f.write("%.4f " % (v.co[2] * bobject.scale.z))
-                                f.write("%.4f\n" % (v.co[1] * bobject.scale.y)) # Flipped
-                            for p in bobject.data.polygons:
-                                f.write("f")
-                                for i in reversed(p.vertices): # Flipped normals
-                                    f.write(" %d" % (i + 1))
-                                f.write("\n")
-                else:
-                    trait_prefix = bpy.data.worlds['Arm'].arm_project_package + '.'
-                x['class_name'] = trait_prefix + t.class_name_prop
-                if len(t.my_paramstraitlist) > 0:
-                    x['parameters'] = []
-                    for pt in t.my_paramstraitlist: # Append parameters
-                        x['parameters'].append(ast.literal_eval(pt.name))
-            o['traits'].append(x)
+                x = {}
+                if t.type_prop == 'Logic Nodes' and t.nodes_name_prop != '':
+                    x['type'] = 'Script'
+                    x['class_name'] = bpy.data.worlds['Arm'].arm_project_package + '.node.' + arm.utils.safe_source_name(t.nodes_name_prop)
+                elif t.type_prop == 'JS Script' or t.type_prop == 'Python Script':
+                    basename = t.jsscript_prop.split('.')[0]
+                    x['type'] = 'Script'
+                    x['class_name'] = 'armory.trait.internal.JSScript'
+                    x['parameters'] = [arm.utils.safe_filename(basename)]
+                    scriptspath = arm.utils.get_fp() + '/build/compiled/scripts/'
+                    if not os.path.exists(scriptspath):
+                        os.makedirs(scriptspath)
+                    # Compile to JS
+                    if t.type_prop == 'Python Script':
+                        # Write py to file
+                        basename_ext = basename + '.py'
+                        targetpath = scriptspath + basename_ext
+                        with open(targetpath, 'w') as f:
+                            f.write(bpy.data.texts[t.jsscript_prop].as_string())
+                        sdk_path = arm.utils.get_sdk_path()
+                        python_path = bpy.app.binary_path_python
+                        cwd = os.getcwd()
+                        os.chdir(scriptspath)
+                        # Disable minification for now, too slow
+                        transproc = subprocess.Popen([python_path + ' ' + sdk_path + '/lib/transcrypt/__main__.py' + ' ' + basename_ext + ' --nomin'], shell=True)
+                        transproc.wait()
+                        if transproc.poll() != 0:
+                            log.print_info('Compiling ' + t.jsscript_prop + ' failed, check console')
+                        os.chdir(cwd)
+                        # Compiled file
+                        assets.add('build/compiled/scripts/__javascript__/' + basename + '.js')
+                    else:
+                        # Write js to file
+                        assetpath = 'build/compiled/scripts/' + t.jsscript_prop + '.js'
+                        targetpath = arm.utils.get_fp() + '/' + assetpath
+                        with open(targetpath, 'w') as f:
+                            f.write(bpy.data.texts[t.jsscript_prop].as_string())
+                        assets.add(assetpath)
+                else: # Haxe/Bundled Script
+                    if t.class_name_prop == '': # Empty class name, skip
+                        continue
+                    x['type'] = 'Script'
+                    if t.type_prop == 'Bundled Script':
+                        trait_prefix = 'armory.trait.'
+                        # TODO: temporary, export single mesh navmesh as obj
+                        if t.class_name_prop == 'NavMesh' and bobject.type == 'MESH' and bpy.data.worlds['Arm'].arm_navigation != 'Disabled':
+                            ArmoryExporter.export_navigation = True
+                            nav_path = arm.utils.get_fp() + '/build/compiled/Assets/navigation'
+                            if not os.path.exists(nav_path):
+                                os.makedirs(nav_path)
+                            nav_filepath = nav_path + '/nav_' + bobject.data.name + '.arm'
+                            assets.add(nav_filepath)
+                            # TODO: Implement cache
+                            #if os.path.isfile(nav_filepath) == False:
+                            override = {'selected_objects': [bobject]}
+                            # bobject.scale.y *= -1
+                            # mesh = obj.data
+                            # for face in mesh.faces:
+                                # face.v.reverse()
+                            # bpy.ops.export_scene.obj(override, use_selection=True, filepath=nav_filepath, check_existing=False, use_normals=False, use_uvs=False, use_materials=False)
+                            # bobject.scale.y *= -1
+                            with open(nav_filepath, 'w') as f:
+                                for v in bobject.data.vertices:
+                                    f.write("v %.4f " % (v.co[0] * bobject.scale.x))
+                                    f.write("%.4f " % (v.co[2] * bobject.scale.z))
+                                    f.write("%.4f\n" % (v.co[1] * bobject.scale.y)) # Flipped
+                                for p in bobject.data.polygons:
+                                    f.write("f")
+                                    for i in reversed(p.vertices): # Flipped normals
+                                        f.write(" %d" % (i + 1))
+                                    f.write("\n")
+                    else:
+                        trait_prefix = bpy.data.worlds['Arm'].arm_project_package + '.'
+                    x['class_name'] = trait_prefix + t.class_name_prop
+                    if len(t.my_paramstraitlist) > 0:
+                        x['parameters'] = []
+                        for pt in t.my_paramstraitlist: # Append parameters
+                            x['parameters'].append(ast.literal_eval(pt.name))
+                o['traits'].append(x)
 
         # Rigid body trait
         if bobject.rigid_body != None:

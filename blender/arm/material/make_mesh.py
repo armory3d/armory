@@ -299,7 +299,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
         vert.add_uniform('vec3 eye', '_cameraPosition')
         vert.write('eyeDir = eye - wposition;')
 
-    frag.write('vec3 vVec = normalize(eyeDir);')
+    frag.prepend('vec3 vVec = normalize(eyeDir);')
     frag.write('float dotNV = max(dot(n, vVec), 0.0);')
 
     frag.add_include('../../Shaders/std/brdf.glsl')

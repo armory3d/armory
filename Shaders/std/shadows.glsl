@@ -51,7 +51,7 @@ float lpToDepth(vec3 lp, const vec2 lightPlane) {
 }
 
 float PCFCube(const vec3 lp, const vec3 ml, const float bias, const vec2 lightPlane) {
-	// return float(texture(shadowMapCube, ml).r + bias > lpToDepth(lp));
+	// return float(texture(shadowMapCube, ml).r + bias > lpToDepth(lp, lightPlane));
 
 	const float s = 0.001; // TODO: incorrect...
 	float compare = lpToDepth(lp, lightPlane) - bias;

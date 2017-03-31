@@ -90,6 +90,8 @@ def invalidate_compiled_data(self, context):
         shutil.rmtree(fp + '/build/compiled/Assets')
     if os.path.isdir(fp + '/build/compiled/Shaders'):
         shutil.rmtree(fp + '/build/compiled/Shaders')
+    if os.path.isdir(fp + '/build/compiled/ShaderRaws'):
+        shutil.rmtree(fp + '/build/compiled/ShaderRaws')
 
 def invalidate_mesh_data(self, context):
     fp = arm.utils.get_fp()

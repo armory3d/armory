@@ -39,7 +39,7 @@ uniform float aspectRatio;
 #ifdef _CFXAA
 uniform vec2 texStep;
 #endif
-#ifdef _CDOF
+#ifdef _CDOF // TODO: redefinition
 uniform vec2 texStep;
 #endif
 
