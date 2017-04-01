@@ -158,7 +158,7 @@ class ArmoryExporter:
             k += 1
 
         count &= 7
-        if (count != 0):
+        if count != 0:
             for j in range(count - 1):
                 va += self.write_vector2d(getattr(vertexArray[k], attrib))
                 k += 1
@@ -211,12 +211,10 @@ class ArmoryExporter:
             triangle_index += 1
 
         count &= 15
-        if (count != 0):
-
+        if count != 0:
             for j in range(count - 1):
                 va += self.write_triangle(triangle_index, index_table)
                 triangle_index += 1
-
             va += self.write_triangle(triangle_index, index_table)
 
         return va
@@ -307,13 +305,13 @@ class ArmoryExporter:
             key = fcurve.keyframe_points[0].co[1]
             left = fcurve.keyframe_points[0].handle_left[1]
             right = fcurve.keyframe_points[0].handle_right[1]
-            if ((math.fabs(key - left) > ExportEpsilon) or (math.fabs(right - key) > ExportEpsilon)):
+            if (math.fabs(key - left) > ExportEpsilon) or (math.fabs(right - key) > ExportEpsilon):
                 return True
             for i in range(1, key_count):
                 key = fcurve.keyframe_points[i].co[1]
                 left = fcurve.keyframe_points[i].handle_left[1]
                 right = fcurve.keyframe_points[i].handle_right[1]
-                if ((math.fabs(key - left) > ExportEpsilon) or (math.fabs(right - key) > ExportEpsilon)):
+                if (math.fabs(key - left) > ExportEpsilon) or (math.fabs(right - key) > ExportEpsilon):
                     return True
         return False
 
@@ -522,7 +520,7 @@ class ArmoryExporter:
             # Round down to nearest power of two.
             while True:
                 count = bucketCount & (bucketCount - 1)
-                if (count == 0):
+                if count == 0:
                     break
                 bucketCount = count
         else:
@@ -637,7 +635,7 @@ class ArmoryExporter:
         for i in range(begin_frame, end_frame):
             scene.frame_set(i)
             m2 = poseBone.matrix
-            if (ArmoryExporter.matrices_different(m1, m2)):
+            if ArmoryExporter.matrices_different(m1, m2):
                 animationFlag = True
                 break
 
@@ -724,7 +722,7 @@ class ArmoryExporter:
         # Time and Value structures are given by the kind parameter.
         tracko = {}
         tracko['target'] = target
-        if (kind != AnimationTypeBezier):
+        if kind != AnimationTypeBezier:
             tracko['times'] = self.export_key_times(fcurve)
             tracko['values'] = self.export_key_values(fcurve)
         else:
@@ -768,7 +766,7 @@ class ArmoryExporter:
         mode = bobject.rotation_mode
         sampledAnimation = ((ArmoryExporter.sampleAnimationFlag) or (mode == "QUATERNION") or (mode == "AXIS_ANGLE"))
 
-        if ((not sampledAnimation) and (bobject.animation_data)):
+        if (not sampledAnimation) and (bobject.animation_data):
             action = bobject.animation_data.action
             if action:
                 for fcurve in action.fcurves:
@@ -776,47 +774,47 @@ class ArmoryExporter:
                     if kind != AnimationTypeSampled:
                         if fcurve.data_path == "location":
                             for i in range(3):
-                                if ((fcurve.array_index == i) and (not locAnimCurve[i])):
+                                if (fcurve.array_index == i) and (not locAnimCurve[i]):
                                     locAnimCurve[i] = fcurve
                                     locAnimKind[i] = kind
                                     if ArmoryExporter.animation_present(fcurve, kind):
                                         locAnimated[i] = True
                         elif fcurve.data_path == "delta_location":
                             for i in range(3):
-                                if ((fcurve.array_index == i) and (not deltaPosAnimCurve[i])):
+                                if (fcurve.array_index == i) and (not deltaPosAnimCurve[i]):
                                     deltaPosAnimCurve[i] = fcurve
                                     deltaPosAnimKind[i] = kind
                                     if ArmoryExporter.animation_present(fcurve, kind):
                                         deltaPosAnimated[i] = True
                         elif fcurve.data_path == "rotation_euler":
                             for i in range(3):
-                                if ((fcurve.array_index == i) and (not rotAnimCurve[i])):
+                                if (fcurve.array_index == i) and (not rotAnimCurve[i]):
                                     rotAnimCurve[i] = fcurve
                                     rotAnimKind[i] = kind
                                     if ArmoryExporter.animation_present(fcurve, kind):
                                         rotAnimated[i] = True
                         elif fcurve.data_path == "delta_rotation_euler":
                             for i in range(3):
-                                if ((fcurve.array_index == i) and (not deltaRotAnimCurve[i])):
+                                if (fcurve.array_index == i) and (not deltaRotAnimCurve[i]):
                                     deltaRotAnimCurve[i] = fcurve
                                     deltaRotAnimKind[i] = kind
                                     if ArmoryExporter.animation_present(fcurve, kind):
                                         deltaRotAnimated[i] = True
                         elif fcurve.data_path == "scale":
                             for i in range(3):
-                                if ((fcurve.array_index == i) and (not sclAnimCurve[i])):
+                                if (fcurve.array_index == i) and (not sclAnimCurve[i]):
                                     sclAnimCurve[i] = fcurve
                                     sclAnimKind[i] = kind
                                     if ArmoryExporter.animation_present(fcurve, kind):
                                         sclAnimated[i] = True
                         elif fcurve.data_path == "delta_scale":
                             for i in range(3):
-                                if ((fcurve.array_index == i) and (not deltaSclAnimCurve[i])):
+                                if (fcurve.array_index == i) and (not deltaSclAnimCurve[i]):
                                     deltaSclAnimCurve[i] = fcurve
                                     deltaSclAnimKind[i] = kind
                                     if ArmoryExporter.animation_present(fcurve, kind):
                                         deltaSclAnimated[i] = True
-                        elif ((fcurve.data_path == "rotation_axis_angle") or (fcurve.data_path == "rotation_quaternion") or (fcurve.data_path == "delta_rotation_quaternion")):
+                        elif (fcurve.data_path == "rotation_axis_angle") or (fcurve.data_path == "rotation_quaternion") or (fcurve.data_path == "delta_rotation_quaternion"):
                             sampledAnimation = True
                             break
                     else:
@@ -831,7 +829,7 @@ class ArmoryExporter:
         deltaRotationAnimated = deltaRotAnimated[0] | deltaRotAnimated[1] | deltaRotAnimated[2]
         deltaScaleAnimated = deltaSclAnimated[0] | deltaSclAnimated[1] | deltaSclAnimated[2]
 
-        if ((sampledAnimation) or ((not locationAnimated) and (not rotationAnimated) and (not scaleAnimated) and (not deltaPositionAnimated) and (not deltaRotationAnimated) and (not deltaScaleAnimated))):
+        if (sampledAnimation) or ((not locationAnimated) and (not rotationAnimated) and (not scaleAnimated) and (not deltaPositionAnimated) and (not deltaRotationAnimated) and (not deltaScaleAnimated)):
             # If there's no keyframe animation at all, then write the object transform as a single 4x4 matrix.
             # We might still be exporting sampled animation below.
             o['transform'] = {}
@@ -857,7 +855,7 @@ class ArmoryExporter:
                 # so they can be targeted by different tracks having different sets of keys.
                 for i in range(3):
                     pos = deltaTranslation[i]
-                    if ((deltaPosAnimated[i]) or (math.fabs(pos) > ExportEpsilon)):
+                    if (deltaPosAnimated[i]) or (math.fabs(pos) > ExportEpsilon):
                         animo = {}
                         o['animation_transforms'].append(animo)
                         animo['type'] = 'translation_' + axisName[i]
@@ -875,7 +873,7 @@ class ArmoryExporter:
                         # self.IndentWrite(B"}\n", 0, True)
                         structFlag = True
 
-            elif ((math.fabs(deltaTranslation[0]) > ExportEpsilon) or (math.fabs(deltaTranslation[1]) > ExportEpsilon) or (math.fabs(deltaTranslation[2]) > ExportEpsilon)):
+            elif (math.fabs(deltaTranslation[0]) > ExportEpsilon) or (math.fabs(deltaTranslation[1]) > ExportEpsilon) or (math.fabs(deltaTranslation[2]) > ExportEpsilon):
                 animo = {}
                 o['animation_transforms'].append(animo)
                 animo['type'] = 'translation'
@@ -888,7 +886,7 @@ class ArmoryExporter:
                 # so they can be targeted by different tracks having different sets of keys.
                 for i in range(3):
                     pos = translation[i]
-                    if ((locAnimated[i]) or (math.fabs(pos) > ExportEpsilon)):
+                    if (locAnimated[i]) or (math.fabs(pos) > ExportEpsilon):
                         animo = {}
                         o['animation_transforms'].append(animo)
                         animo['type'] = 'translation_' + axisName[i]
@@ -896,7 +894,7 @@ class ArmoryExporter:
                         animo['value'] = pos
                         structFlag = True
 
-            elif ((math.fabs(translation[0]) > ExportEpsilon) or (math.fabs(translation[1]) > ExportEpsilon) or (math.fabs(translation[2]) > ExportEpsilon)):
+            elif (math.fabs(translation[0]) > ExportEpsilon) or (math.fabs(translation[1]) > ExportEpsilon) or (math.fabs(translation[2]) > ExportEpsilon):
                 animo = {}
                 o['animation_transforms'].append(animo)
                 animo['type'] = 'translation'
@@ -909,7 +907,7 @@ class ArmoryExporter:
                 for i in range(3):
                     axis = ord(mode[2 - i]) - 0x58
                     angle = bobject.delta_rotation_euler[axis]
-                    if ((deltaRotAnimated[axis]) or (math.fabs(angle) > ExportEpsilon)):
+                    if (deltaRotAnimated[axis]) or (math.fabs(angle) > ExportEpsilon):
                         animo = {}
                         o['animation_transforms'].append(animo)
                         animo['type'] = 'rotation_' + axisName[axis]
@@ -922,7 +920,7 @@ class ArmoryExporter:
                 # the object's current rotation mode. (There is no axis-angle delta rotation.)
                 if mode == "QUATERNION":
                     quaternion = bobject.delta_rotation_quaternion
-                    if ((math.fabs(quaternion[0] - 1.0) > ExportEpsilon) or (math.fabs(quaternion[1]) > ExportEpsilon) or (math.fabs(quaternion[2]) > ExportEpsilon) or (math.fabs(quaternion[3]) > ExportEpsilon)):
+                    if (math.fabs(quaternion[0] - 1.0) > ExportEpsilon) or (math.fabs(quaternion[1]) > ExportEpsilon) or (math.fabs(quaternion[2]) > ExportEpsilon) or (math.fabs(quaternion[3]) > ExportEpsilon):
                         animo = {}
                         o['animation_transforms'].append(animo)
                         animo['type'] = 'rotation_quaternion'
@@ -946,7 +944,7 @@ class ArmoryExporter:
                 for i in range(3):
                     axis = ord(mode[2 - i]) - 0x58
                     angle = bobject.rotation_euler[axis]
-                    if ((rotAnimated[axis]) or (math.fabs(angle) > ExportEpsilon)):
+                    if (rotAnimated[axis]) or (math.fabs(angle) > ExportEpsilon):
                         animo = {}
                         o['animation_transforms'].append(animo)
                         animo['type'] = 'rotation_' + axisName[axis]
@@ -957,17 +955,17 @@ class ArmoryExporter:
             else:
                 # When the rotation is not animated, write it in the representation given by
                 # the object's current rotation mode.
-                if (mode == "QUATERNION"):
+                if mode == "QUATERNION":
                     quaternion = bobject.rotation_quaternion
-                    if ((math.fabs(quaternion[0] - 1.0) > ExportEpsilon) or (math.fabs(quaternion[1]) > ExportEpsilon) or (math.fabs(quaternion[2]) > ExportEpsilon) or (math.fabs(quaternion[3]) > ExportEpsilon)):
+                    if (math.fabs(quaternion[0] - 1.0) > ExportEpsilon) or (math.fabs(quaternion[1]) > ExportEpsilon) or (math.fabs(quaternion[2]) > ExportEpsilon) or (math.fabs(quaternion[3]) > ExportEpsilon):
                         animo = {}
                         o['animation_transforms'].append(animo)
                         animo['type'] = 'rotation_quaternion'
                         animo['values'] = self.WriteQuaternion(quaternion)
                         structFlag = True
 
-                elif (mode == "AXIS_ANGLE"):
-                    if (math.fabs(bobject.rotation_axis_angle[0]) > ExportEpsilon):
+                elif mode == "AXIS_ANGLE":
+                    if math.fabs(bobject.rotation_axis_angle[0]) > ExportEpsilon:
                         animo = {}
                         o['animation_transforms'].append(animo)
                         animo['type'] = 'rotation_axis'
@@ -978,7 +976,7 @@ class ArmoryExporter:
                     for i in range(3):
                         axis = ord(mode[2 - i]) - 0x58
                         angle = bobject.rotation_euler[axis]
-                        if (math.fabs(angle) > ExportEpsilon):
+                        if math.fabs(angle) > ExportEpsilon:
                             animo = {}
                             o['animation_transforms'].append(animo)
                             animo['type'] = 'rotation_' + axisName[axis]
@@ -986,12 +984,12 @@ class ArmoryExporter:
                             structFlag = True
 
             deltaScale = bobject.delta_scale
-            if (deltaScaleAnimated):
+            if deltaScaleAnimated:
                 # When the delta scale is animated, write the x, y, and z components separately
                 # so they can be targeted by different tracks having different sets of keys.
                 for i in range(3):
                     scl = deltaScale[i]
-                    if ((deltaSclAnimated[i]) or (math.fabs(scl) > ExportEpsilon)):
+                    if (deltaSclAnimated[i]) or (math.fabs(scl) > ExportEpsilon):
                         animo = {}
                         o['animation_transforms'].append(animo)
                         animo['type'] = 'scale_' + axisName[i]
@@ -999,7 +997,7 @@ class ArmoryExporter:
                         animo['value'] = scl
                         structFlag = True
 
-            elif ((math.fabs(deltaScale[0] - 1.0) > ExportEpsilon) or (math.fabs(deltaScale[1] - 1.0) > ExportEpsilon) or (math.fabs(deltaScale[2] - 1.0) > ExportEpsilon)):
+            elif (math.fabs(deltaScale[0] - 1.0) > ExportEpsilon) or (math.fabs(deltaScale[1] - 1.0) > ExportEpsilon) or (math.fabs(deltaScale[2] - 1.0) > ExportEpsilon):
                 animo = {}
                 o['animation_transforms'].append(animo)
                 animo['type'] = 'scale'
@@ -1007,12 +1005,12 @@ class ArmoryExporter:
                 structFlag = True
 
             scale = bobject.scale
-            if (scaleAnimated):
+            if scaleAnimated:
                 # When the scale is animated, write the x, y, and z components separately
                 # so they can be targeted by different tracks having different sets of keys.
                 for i in range(3):
                     scl = scale[i]
-                    if ((sclAnimated[i]) or (math.fabs(scl) > ExportEpsilon)):
+                    if (sclAnimated[i]) or (math.fabs(scl) > ExportEpsilon):
                         animo = {}
                         o['animation_transforms'].append(animo)
                         animo['type'] = 'scale_' + axisName[i]
@@ -1020,14 +1018,14 @@ class ArmoryExporter:
                         animo['value'] = scl
                         structFlag = True
 
-            elif ((math.fabs(scale[0] - 1.0) > ExportEpsilon) or (math.fabs(scale[1] - 1.0) > ExportEpsilon) or (math.fabs(scale[2] - 1.0) > ExportEpsilon)):
+            elif (math.fabs(scale[0] - 1.0) > ExportEpsilon) or (math.fabs(scale[1] - 1.0) > ExportEpsilon) or (math.fabs(scale[2] - 1.0) > ExportEpsilon):
                 animo = {}
                 o['animation_transforms'].append(animo)
                 animo['type'] = 'scale'
                 animo['values'] = self.write_vector3d(scale)
                 structFlag = True
 
-            # Export the animation tracks.      
+            # Export the animation tracks
             o['animation'] = {}
             o['animation']['begin'] = (action.frame_range[0] - self.beginFrame) * self.frameTime
             o['animation']['end'] = (action.frame_range[1] - self.beginFrame) * self.frameTime
@@ -1035,48 +1033,48 @@ class ArmoryExporter:
 
             if locationAnimated:
                 for i in range(3):
-                    if (locAnimated[i]):
+                    if locAnimated[i]:
                         tracko = self.export_animation_track(locAnimCurve[i], locAnimKind[i], subtranslationName[i], structFlag)
                         o['animation']['tracks'].append(tracko)
                         structFlag = True
 
             if rotationAnimated:
                 for i in range(3):
-                    if (rotAnimated[i]):
+                    if rotAnimated[i]:
                         tracko = self.export_animation_track(rotAnimCurve[i], rotAnimKind[i], subrotationName[i], structFlag)
                         o['animation']['tracks'].append(tracko)
                         structFlag = True
 
             if scaleAnimated:
                 for i in range(3):
-                    if (sclAnimated[i]):
+                    if sclAnimated[i]:
                         tracko = self.export_animation_track(sclAnimCurve[i], sclAnimKind[i], subscaleName[i], structFlag)
                         o['animation']['tracks'].append(tracko)
                         structFlag = True
 
             if deltaPositionAnimated:
                 for i in range(3):
-                    if (deltaPosAnimated[i]):
+                    if deltaPosAnimated[i]:
                         tracko = self.export_animation_track(deltaPosAnimCurve[i], deltaPosAnimKind[i], deltaSubtranslationName[i], structFlag)
                         o['animation']['tracks'].append(tracko)
                         structFlag = True
 
             if deltaRotationAnimated:
                 for i in range(3):
-                    if (deltaRotAnimated[i]):
+                    if deltaRotAnimated[i]:
                         tracko = self.export_animation_track(deltaRotAnimCurve[i], deltaRotAnimKind[i], deltaSubrotationName[i], structFlag)
                         o['animation']['tracks'].append(tracko)
                         structFlag = True
 
             if deltaScaleAnimated:
                 for i in range(3):
-                    if (deltaSclAnimated[i]):
+                    if deltaSclAnimated[i]:
                         tracko = self.export_animation_track(deltaSclAnimCurve[i], deltaSclAnimKind[i], deltaSubscaleName[i], structFlag)
                         o['animation']['tracks'].append(tracko)
                         structFlag = True
             
     def process_bone(self, bone):
-        if ((ArmoryExporter.exportAllFlag) or (bone.select)):
+        if (ArmoryExporter.exportAllFlag) or (bone.select):
             self.bobjectArray[bone] = {"objectType" : NodeTypeBone, "structName" : bone.name}
 
         for subbobject in bone.children:
@@ -1100,9 +1098,9 @@ class ArmoryExporter:
 
             if bobject.type == "ARMATURE":
                 skeleton = bobject.data
-                if (skeleton):
+                if skeleton:
                     for bone in skeleton.bones:
-                        if (not bone.parent):
+                        if not bone.parent:
                             self.process_bone(bone)
 
         if bobject.type != 'MESH' or bobject.instanced_children == False:
@@ -1304,7 +1302,7 @@ class ArmoryExporter:
                         o['dimensions'][2] = dz
 
                 #shapeKeys = ArmoryExporter.get_shape_keys(objref)
-                #if (shapeKeys):
+                #if shapeKeys:
                 #   self.ExportMorphWeights(bobject, shapeKeys, scene, o)
                 # TODO
 
@@ -1435,7 +1433,7 @@ class ArmoryExporter:
 
         for i in range(boneCount):
             boneRef = self.find_node(boneArray[i].name)
-            if (boneRef):
+            if boneRef:
                 oskel['bone_ref_array'].append(boneRef[1]["structName"])
             else:
                 oskel['bone_ref_array'].append("null")
@@ -1512,7 +1510,7 @@ class ArmoryExporter:
     #     boneCount = len(boneArray)
     #     for i in range(boneCount):
     #         boneRef = self.find_node(boneArray[i].name)
-    #         if (boneRef):
+    #         if boneRef:
     #             oskel['bone_ref_array'].append(boneRef[1]["structName"])
     #         else:
     #             oskel['bone_ref_array'].append("null")
@@ -1771,7 +1769,7 @@ class ArmoryExporter:
                     # self.IndentWrite(B"Morph (index = ", 0, structFlag)
                     # self.WriteInt(morphCount)
 
-                    # if ((relative) and (morphCount != baseIndex)):
+                    # if (relative) and (morphCount != baseIndex):
                     #   self.Write(B", base = ")
                     #   self.WriteInt(baseIndex)
 
@@ -1806,11 +1804,11 @@ class ArmoryExporter:
         exportMesh = bobject.to_mesh(scene, applyModifiers, "RENDER", True, False)
 
         if exportMesh == None:
-            print('Armory Warning: ' + oid + ' was not exported')
+            log.warn(oid + ' was not exported')
             return
 
         if len(exportMesh.uv_layers) > 2:
-            print('Armory Warning: ' + oid + ' exceeds maximum of 2 UV Maps supported')
+            log.warn(oid + ' exceeds maximum of 2 UV Maps supported')
 
         # Process meshes
         if ArmoryExporter.option_optimize_mesh:
@@ -1911,7 +1909,7 @@ class ArmoryExporter:
             ta['values'] = self.write_vertex_array2d(unifiedVertexArray, "texcoord0")
             om['vertex_arrays'].append(ta)
 
-            if (texcoordCount > 1):
+            if texcoordCount > 1:
                 ta2 = {}
                 ta2['attrib'] = "texcoord1"
                 ta2['size'] = 2
@@ -1919,7 +1917,7 @@ class ArmoryExporter:
                 om['vertex_arrays'].append(ta2)
 
         # If there are multiple morph targets, export them here
-        # if (shapeKeys):
+        # if shapeKeys:
         #   shapeKeys.key_blocks[0].value = 0.0
         #   for m in range(1, len(currentMorphValue)):
         #       shapeKeys.key_blocks[m].value = 1.0
@@ -1985,10 +1983,10 @@ class ArmoryExporter:
                 materialTriangleCount[material_table[i]] += 1
 
             for m in range(maxMaterialIndex + 1):
-                if (materialTriangleCount[m] != 0):
+                if materialTriangleCount[m] != 0:
                     materialIndexTable = []
                     for i in range(len(material_table)):
-                        if (material_table[i] == m):
+                        if material_table[i] == m:
                             k = i * 3
                             materialIndexTable.append(indexTable[k])
                             materialIndexTable.append(indexTable[k + 1])
@@ -2400,7 +2398,7 @@ class ArmoryExporter:
         self.process_skinned_meshes()
 
         self.output['name'] = arm.utils.safe_filename(self.scene.name)
-        if (self.filepath.endswith('.zip')):
+        if self.filepath.endswith('.zip'):
             self.output['name'] += '.zip'
 
         self.output['objects'] = []

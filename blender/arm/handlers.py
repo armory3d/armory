@@ -21,6 +21,7 @@ last_time = time.time()
 last_operator = None
 redraw_ui = False
 redraw_progress = False
+first_update = True
 
 @persistent
 def on_scene_update_post(context):
@@ -29,6 +30,11 @@ def on_scene_update_post(context):
     global last_operator
     global redraw_ui
     global redraw_progress
+    global first_update
+
+    if first_update == True: # Skip first one, object reports is_update_data
+        first_update = False
+        return
 
     # Redraw at the start of 'next' frame
     if redraw_ui and bpy.context.screen != None:
@@ -118,13 +124,19 @@ def on_scene_update_post(context):
                         last_operator = ops[-1]
 
     # No attribute when using multiple windows?
-    if hasattr(bpy.context, 'edit_object'):
-        edit_obj = bpy.context.edit_object
-        if edit_obj != None and edit_obj.is_updated_data:
-            if edit_obj.type == 'MESH':
-                edit_obj.data.mesh_cached = False
-            elif edit_obj.type == 'ARMATURE':
-                edit_obj.data.data_cached = False
+    if hasattr(bpy.context, 'active_object'):
+        obj = bpy.context.active_object
+        if obj != None:
+            if obj.is_updated_data: # + data.is_updated
+                recache(obj)
+            if obj.type == 'ARMATURE': # Newly parented objects needs to be recached
+                for c in obj.children:
+                    if c.is_updated_data:
+                        recache(c)
+    if hasattr(bpy.context, 'sculpt_object') and bpy.context.sculpt_object != None:
+        recache(bpy.context.sculpt_object)
+    if hasattr(bpy.context, 'active_pose_bone') and bpy.context.active_pose_bone != None:
+        recache(bpy.context.active_object)
 
     if hasattr(bpy.context, 'object'):
         obj = bpy.context.object
@@ -136,6 +148,12 @@ def on_scene_update_post(context):
                     obj.active_material.lock_cache = False
                 else:
                     obj.active_material.is_cached = False
+
+def recache(edit_obj):
+    if edit_obj.type == 'MESH':
+        edit_obj.data.mesh_cached = False
+    elif edit_obj.type == 'ARMATURE':
+        edit_obj.data.data_cached = False
 
 def op_changed(op, obj):
     # Recache mesh data
@@ -150,6 +168,9 @@ appended_py_paths = []
 @persistent
 def on_load_post(context):
     global appended_py_paths
+    global first_update
+
+    first_update = True
 
     props.init_properties_on_load()
     make_renderer.reload_blend_data()

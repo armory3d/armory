@@ -203,7 +203,7 @@ def tess_enabled(target):
 
 def is_object_animation_enabled(bobject):
     # Checks if animation is present and enabled
-    if bobject.object_animation_enabled == False or bobject.type == 'ARMATURE' or bobject.type == 'BONE':
+    if bobject.object_animation_enabled == False or bobject.type == 'BONE' or bobject.type == 'ARMATURE':
         return False
     if bobject.animation_data and bobject.animation_data.action:
         return True
