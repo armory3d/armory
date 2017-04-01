@@ -835,16 +835,21 @@ def parse_normal_map_color_input(inp, str_inp=None):
         return
     frag.write_pre = True
     parse_teximage_vector = False # Force texCoord for normal map image vector
-    if bpy.data.worlds['Arm'].arm_export_tangents:
+    defplus = bpy.data.cameras[0].rp_renderer == 'Deferred Plus'
+    if not bpy.data.worlds['Arm'].arm_export_tangents or defplus: # Compute TBN matrix
+        frag.write('vec3 texn = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
+        frag.add_include('../../Shaders/std/normals.glsl')
+        if defplus:
+            frag.write('mat3 TBN = cotangentFrame(n, -vVec, g2.xy, g2.zw);')
+        else:
+            frag.write('mat3 TBN = cotangentFrame(n, -vVec, texCoord);')
+        frag.write('n = TBN * normalize(texn);')
+    else:
         frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
         # frag.write('n = normalize(TBN * normalize(n));')
         frag.write('n = TBN * normalize(n);')
         mat_state.data.add_elem('tang', 3)
-    else: # Compute TBN matrix
-        frag.write('vec3 texn = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
-        frag.add_include('../../Shaders/std/normals.glsl')
-        frag.write('mat3 TBN = cotangentFrame(n, -vVec, texCoord);')
-        frag.write('n = TBN * normalize(texn);')
+
     parse_teximage_vector = True
     frag.write_pre = False
 

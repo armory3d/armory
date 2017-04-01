@@ -1,10 +1,8 @@
 // http://www.thetenthplanet.de/archives/1180
-mat3 cotangentFrame(vec3 n, vec3 p, vec2 texCoord) {
+mat3 cotangentFrame(const vec3 n, const vec3 p, const vec2 duv1, const vec2 duv2) {
     // Get edge vectors of the pixel triangle
     vec3 dp1 = dFdx(p);
     vec3 dp2 = dFdy(p);
-    vec2 duv1 = dFdx(texCoord);
-    vec2 duv2 = dFdy(texCoord);
  
     // Solve the linear system
     vec3 dp2perp = cross(dp2, n);
@@ -15,6 +13,10 @@ mat3 cotangentFrame(vec3 n, vec3 p, vec2 texCoord) {
     // Construct a scale-invariant frame 
     float invmax = inversesqrt(max(dot(t, t), dot(b, b)));
     return mat3(t * invmax, b * invmax, n);
+}
+
+mat3 cotangentFrame(const vec3 n, const vec3 p, const vec2 texCoord) {
+    return cotangentFrame(n, p, dFdx(texCoord), dFdy(texCoord));
 }
 
 // vec3 perturbNormal(vec3 n, vec3 v, vec2 texCoord) {

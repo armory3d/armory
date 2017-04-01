@@ -107,11 +107,6 @@
 					"ifdef": ["_PCSS"]
 				},
 				{
-					"name": "senvmapBrdf",
-					"link": "_envmapBrdf",
-					"ifdef": ["_VoxelGI"]
-				},
-				{
 					"name": "VP",
 					"link": "_viewProjectionMatrix",
 					"ifdef": ["_SSRS"]

@@ -68,6 +68,7 @@ def make_rect(con_rect):
     frag.add_uniform('sampler2D senvmapBrdf', link='_envmapBrdf')
     frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps')
 
+    frag.write_pre = True
     frag.write('vec4 g0 = texture(gbuffer0, texCoordRect);')
     frag.write('vec4 g1 = texture(gbuffer1, texCoordRect);')
     frag.write('vec4 g2 = texture(gbuffer2, texCoordRect);')
@@ -78,16 +79,17 @@ def make_rect(con_rect):
     frag.write('n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);')
     frag.write('n = normalize(n);')
     frag.write('vec2 texCoord = g0.zw;');
-
     frag.write('vec3 wposition = getPos(eye, eyeLook, viewRay, depth);')
-    frag.write('vec3 v = normalize(eye - wposition);')
-    frag.write('float dotNV = dot(n, v);')
+    frag.write('vec3 vVec = normalize(eye - wposition);')
+    frag.write_pre = False
+
+    frag.write('float dotNV = dot(n, vVec);')
     frag.write('vec3 lp = lightPos - wposition;')
     frag.write('vec3 l = normalize(lp);')
     frag.write('float dotNL = max(dot(n, l), 0.0);')
-    frag.write('vec3 h = normalize(v + l);')
+    frag.write('vec3 h = normalize(vVec + l);')
     frag.write('float dotNH = dot(n, h);')
-    frag.write('float dotVH = dot(v, h);')
+    frag.write('float dotVH = dot(vVec, h);')
     frag.write('float visibility = 1.0;')
     
     frag.write('vec3 basecol;')
@@ -117,7 +119,7 @@ def make_rect(con_rect):
     frag.write('vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;')
     frag.write('vec3 envl = shIrradiance(n, 2.2) / PI;')
 
-    frag.write('vec3 reflectionWorld = reflect(-v, n);')
+    frag.write('vec3 reflectionWorld = reflect(-vVec, n);')
     frag.write('float lod = getMipFromRoughness(roughness, envmapNumMipmaps);')
     frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')
 
