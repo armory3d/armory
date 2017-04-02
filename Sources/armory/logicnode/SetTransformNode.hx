@@ -10,6 +10,8 @@ class SetTransformNode extends Node {
 		var object = inputs[1].get();
 		var transform = inputs[2].get();
 
+		if (object == null) object = trait.object;
+
 		object.transform.setMatrix(transform);
 
 		super.run();

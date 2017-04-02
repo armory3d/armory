@@ -8,6 +8,9 @@ class GetTransformNode extends Node {
 
 	override function get():Dynamic {
 		var object = inputs[1].get();
+
+		if (object == null) object = trait.object;
+
 		return object.transform.matrix;
 	}
 }
