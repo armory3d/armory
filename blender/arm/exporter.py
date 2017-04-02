@@ -1202,7 +1202,7 @@ class ArmoryExporter:
         if bobjectRef:
             type = bobjectRef["objectType"]
 
-            o = {}
+            o = self.objectToArmObjectDict[bobject]
             o['type'] = structIdentifier[type]
             o['name'] = bobjectRef["structName"]
 
@@ -1792,16 +1792,15 @@ class ArmoryExporter:
         # om['primitive'] = "triangles"
 
         armature = bobject.find_armature()
-        applyModifiers = not armature
+        apply_modifiers = not armature
 
-        # Apply all modifiers to create a new mesh with tessfaces.
-
+        # Apply all modifiers to create a new mesh with tessfaces
         # We don't apply modifiers for a skinned mesh because we need the vertex positions
         # before they are deformed by the armature modifier in order to export the proper
         # bind pose. This does mean that modifiers preceding the armature modifier are ignored,
         # but the Blender API does not provide a reasonable way to retrieve the mesh at an
         # arbitrary stage in the modifier stack.
-        exportMesh = bobject.to_mesh(scene, applyModifiers, "RENDER", True, False)
+        exportMesh = bobject.to_mesh(scene, apply_modifiers, "RENDER", True, False)
 
         if exportMesh == None:
             log.warn(oid + ' was not exported')
@@ -1924,7 +1923,7 @@ class ArmoryExporter:
         #       mesh.update()
 
         #       bobject.active_shape_key_index = m
-        #       morphMesh = bobject.to_mesh(scene, applyModifiers, "RENDER", True, False)
+        #       morphMesh = bobject.to_mesh(scene, apply_modifiers, "RENDER", True, False)
 
         #       # Write the morph target position array.
 
@@ -2052,6 +2051,7 @@ class ArmoryExporter:
         if objtype == 'POINT' and objref.lamp_omni_shadows:
             o['fov'] = 1.5708 # 90 deg
             o['shadowmap_cube'] = True
+            o['shadows_bias'] *= 4.0
 
         # Parse nodes
         # Emission only for now
@@ -2392,6 +2392,11 @@ class ArmoryExporter:
         self.preprocess()
 
         for bobject in self.scene.objects:
+            # Map objects to game objects
+            o = {}
+            o['traits'] = []
+            self.objectToArmObjectDict[bobject] = o
+            # Process
             if not bobject.parent:
                 self.process_bobject(bobject)
 
@@ -2660,7 +2665,6 @@ class ArmoryExporter:
             o['animation_setup'] = x
 
         # Export traits
-        o['traits'] = []
         if hasattr(bobject, 'my_traitlist'):
             for t in bobject.my_traitlist:
                 if t.enabled_prop == False:
@@ -2805,7 +2809,28 @@ class ArmoryExporter:
                 bend = (soft_mod.settings.bend + 1.0) * 10
             cloth_trait['parameters'] = [soft_type, bend, soft_mod.settings.mass, bobject.soft_body_margin]
             o['traits'].append(cloth_trait)
+            if soft_type == 0 and soft_mod.settings.use_pin_cloth:
+                self.add_hook_trait(o, bobject, '', soft_mod.settings.vertex_group_mass)
 
+        # RB Constraint
+        if bobject.rigid_body_constraint != None:
+            rbc = bobject.rigid_body_constraint
+            target = rbc.object1 if rbc.object2.name == bobject.name else rbc.object2
+            to = self.objectToArmObjectDict[target]
+            self.add_hook_trait(to, target, bobject.name, '')
+
+        # Hook modifier
+        hook_mod = None
+        for m in bobject.modifiers:
+            if m.type == 'HOOK':
+                hook_mod = m
+                break
+        if hook_mod != None:
+            group_name = hook_mod.vertex_group
+            target_name = hook_mod.object.name
+            self.add_hook_trait(o, bobject, target_name, group_name)
+
+        # Camera traits
         if type == NodeTypeCamera:
             # Debug console enabled, attach console overlay to each camera
             if bpy.data.worlds['Arm'].arm_play_console:
@@ -2821,9 +2846,6 @@ class ArmoryExporter:
                 navigation_trait['class_name'] = 'armory.trait.WalkNavigation'
                 navigation_trait['parameters'] = []
                 o['traits'].append(navigation_trait)
-
-        # Map objects to game objects
-        self.objectToArmObjectDict[bobject] = o
         
         # Map objects to materials, can be used in later stages
         for i in range(len(bobject.material_slots)):
@@ -2856,6 +2878,22 @@ class ArmoryExporter:
                     co['influence'] = constr.influence
                 o['constraints'].append(co)
     
+    def add_hook_trait(self, o, bobject, target_name, group_name):
+        hook_trait = {}
+        hook_trait['type'] = 'Script'
+        hook_trait['class_name'] = 'armory.trait.internal.PhysicsHook'
+        verts = []
+        if group_name != '':
+            group = bobject.vertex_groups[group_name].index
+            for v in bobject.data.vertices:
+                for g in v.groups:
+                    if g.group == group:
+                        verts.append(v.co.x)
+                        verts.append(v.co.y)
+                        verts.append(v.co.z)
+        hook_trait['parameters'] = [target_name, verts]
+        o['traits'].append(hook_trait)
+
     def post_export_world(self, world, o):
         defs = bpy.data.worlds['Arm'].world_defs + bpy.data.worlds['Arm'].rp_defs
         bgcol = world.world_envtex_color

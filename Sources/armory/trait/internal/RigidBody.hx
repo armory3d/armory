@@ -65,11 +65,21 @@ class RigidBody extends Trait {
 	}
 
 	public function init() {
-		transform = object.transform;
-		physics = armory.trait.internal.PhysicsWorld.active;
-
 		if (ready) return;
 		ready = true;
+
+		transform = object.transform;
+
+		// Parented rigid body - clear parent location
+		if (object.parent != null && object.parent.name != "") {
+			transform.loc.x += object.parent.transform.absx();
+			transform.loc.y += object.parent.transform.absy();
+			transform.loc.z += object.parent.transform.absz();
+			transform.localOnly = true;
+			transform.buildMatrix();
+		}
+
+		physics = armory.trait.internal.PhysicsWorld.active;
 
 		var _shape:BtCollisionShapePointer = null;
 		var _shapeConvex:BtConvexHullShapePointer = null;
@@ -139,14 +149,14 @@ class RigidBody extends Trait {
 			}
 			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shape, _inertia);
 			body = BtRigidBody.create(_bodyCI);
-			body.setFriction(friction);
-			body.setRollingFriction(friction);
 		}
 		else {
 			_shapeConvex.calculateLocalInertia(mass, _inertia);
 			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shapeConvex, _inertia);
 			body = BtRigidBody.create(_bodyCI);
 		}
+		body.setFriction(friction);
+		body.setRollingFriction(friction);
 
 		id = nextId;
 		nextId++;

@@ -12,6 +12,7 @@ import armory.trait.internal.PhysicsWorld;
 import haxebullet.Bullet;
 #end
 
+@:keep
 class SoftBody extends Trait {
 #if (!arm_physics_soft)
 	public function new() { super(); }
@@ -19,12 +20,17 @@ class SoftBody extends Trait {
 
 	static var physics:PhysicsWorld = null;
 
+	public var ready = false;
 	var shape:SoftShape;
 	var bend:Float;
 	var mass:Float;
 	var margin:Float;
 
-	var softBody:BtSoftBodyPointer;
+	public var vertOffsetX = 0.0;
+	public var vertOffsetY = 0.0;
+	public var vertOffsetZ = 0.0;
+
+	public var body:BtSoftBodyPointer;
 
 	public function new(shape = SoftShape.Cloth, bend = 0.5, mass = 1.0, margin = 0.04) {
 		super();
@@ -33,10 +39,15 @@ class SoftBody extends Trait {
 		this.mass = mass;
 		this.margin = margin;
 
-		notifyOnInit(init);
+		Scene.active.notifyOnInit(function() {
+			notifyOnInit(init);
+		});
 	}
 
 	function init() {
+		if (ready) return;
+		ready = true;
+
 		if (physics == null) physics = armory.trait.internal.PhysicsWorld.active;
 
 		var softBodyHelpers = BtSoftBodyHelpers.create();
@@ -44,15 +55,28 @@ class SoftBody extends Trait {
 		mo.frustumCulling = false;
 		var mesh = mo.data.mesh;
 
+		// Parented soft body - clear parent location
+		if (object.parent != null && object.parent.name != "") {
+			object.transform.loc.x += object.parent.transform.absx();
+			object.transform.loc.y += object.parent.transform.absy();
+			object.transform.loc.z += object.parent.transform.absz();
+			object.transform.localOnly = true;
+			object.transform.buildMatrix();
+		}
+
 		var positions:haxe.ds.Vector<kha.FastFloat> = cast haxe.ds.Vector.fromData(mesh.positions.copy());
 		for (i in 0...Std.int(positions.length / 3)) {
 			positions[i * 3] *= object.transform.scale.x;
 			positions[i * 3 + 1] *= object.transform.scale.y;
 			positions[i * 3 + 2] *= object.transform.scale.z;
-			positions[i * 3] += object.transform.loc.x;
-			positions[i * 3 + 1] += object.transform.loc.y;
-			positions[i * 3 + 2] += object.transform.loc.z;
+			positions[i * 3] += object.transform.absx();
+			positions[i * 3 + 1] += object.transform.absy();
+			positions[i * 3 + 2] += object.transform.absz();
 		}
+		vertOffsetX = object.transform.absx();
+		vertOffsetY = object.transform.absy();
+		vertOffsetZ = object.transform.absz();
+
 		object.transform.scale.set(1, 1, 1);
 		object.transform.loc.set(0, 0, 0);
 		object.transform.buildMatrix();
@@ -61,14 +85,14 @@ class SoftBody extends Trait {
 		var vecind = haxe.ds.Vector.fromData(mesh.indices[0]);
 		var numtri = Std.int(mesh.indices[0].length / 3);
 #if js
-		softBody = softBodyHelpers.CreateFromTriMesh(wrdinfo, positions, vecind, numtri);
+		body = softBodyHelpers.CreateFromTriMesh(wrdinfo, positions, vecind, numtri);
 #elseif cpp
-		untyped __cpp__("softBody = softBodyHelpers->CreateFromTriMesh(wrdinfo, positions->Pointer(), vecind->Pointer(), numtri);");
+		untyped __cpp__("body = softBodyHelpers.CreateFromTriMesh(wrdinfo, positions->Pointer(), vecind->Pointer(), numtri);");
 #end
 
-		// softBody.generateClusters(4);
+		// body.generateClusters(4);
 #if js
-		var cfg = softBody.get_m_cfg();
+		var cfg = body.get_m_cfg();
 		cfg.set_viterations(10);
 		cfg.set_piterations(10);
 		// cfg.set_collisions(0x0001 + 0x0020 + 0x0040); // self collision
@@ -80,7 +104,7 @@ class SoftBody extends Trait {
 			cfg.set_kPR(bend);
 		}
 #elseif cpp
-		var cfg = softBody.m_cfg;
+		var cfg = body.m_cfg;
 		cfg.viterations = 10;
 		cfg.piterations = 10;
 		// cfg.collisions = 0x0001 + 0x0020 + 0x0040;
@@ -91,12 +115,12 @@ class SoftBody extends Trait {
 			cfg.kPR = bend;
 		}
 #end
-		softBody.setTotalMass(mass, false);
+		body.setTotalMass(mass, false);
 		
-		softBody.getCollisionShape().setMargin(margin);
+		body.getCollisionShape().setMargin(margin);
 
-		physics.world.addSoftBody(softBody, 1, -1);
-		softBody.setActivationState(BtCollisionObject.DISABLE_DEACTIVATION);
+		physics.world.addSoftBody(body, 1, -1);
+		body.setActivationState(BtCollisionObject.DISABLE_DEACTIVATION);
 
 		notifyOnUpdate(update);
 	}
@@ -114,9 +138,9 @@ class SoftBody extends Trait {
 		var numVerts = Std.int(v.length / l);
 
 #if js
-		var nodes = softBody.get_m_nodes();
+		var nodes = body.get_m_nodes();
 #elseif cpp
-		var nodes = softBody.m_nodes;
+		var nodes = body.m_nodes;
 #end
 
 		for (i in 0...numVerts) {
