@@ -14,7 +14,7 @@ import haxebullet.Bullet;
 
 @:keep
 class PhysicsHook extends Trait {
-#if (!arm_physics_soft)
+#if (!arm_physics)
 	public function new() { super(); }
 #else
 
@@ -41,6 +41,7 @@ class PhysicsHook extends Trait {
 		var physics = PhysicsWorld.active;
 
 		// Soft body hook
+	#if arm_physics_soft
 		var sb:SoftBody = object.getTrait(SoftBody);
 		if (sb != null && sb.ready) {
 
@@ -97,6 +98,7 @@ class PhysicsHook extends Trait {
 			}
 			return;
 		}
+	#end
 
 		// Rigid body hook
 		var rb1:RigidBody = object.getTrait(RigidBody);
