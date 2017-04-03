@@ -6,7 +6,7 @@ class TimeNode extends Node {
 		super(trait);
 	}
 
-	override function get():Dynamic {
+	override function get(from:Int):Dynamic {
 		return armory.system.Time.time();
 	}
 }

@@ -32,6 +32,7 @@ def register_nodes():
     node_categories = [
         LogicNodeCategory("LogicEventNodes", "Event", items=arm_nodes.category_items['Event']),
         LogicNodeCategory("LogicValueNodes", "Value", items=arm_nodes.category_items['Value']),
+        LogicNodeCategory("LogicVariableNodes", "Variable", items=arm_nodes.category_items['Variable']),
         LogicNodeCategory("LogicLogicNodes", "Logic", items=arm_nodes.category_items['Logic']),
         LogicNodeCategory("LogicOperatorNodes", "Operator", items=arm_nodes.category_items['Operator']),
     ]

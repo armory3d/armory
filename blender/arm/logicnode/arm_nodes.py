@@ -4,6 +4,7 @@ nodes = []
 category_items = {}
 category_items['Event'] = []
 category_items['Value'] = []
+category_items['Variable'] = []
 category_items['Logic'] = []
 category_items['Operator'] = []
 

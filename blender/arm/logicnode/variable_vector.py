@@ -6,9 +6,7 @@ from arm.logicnode.arm_nodes import *
 class VectorNode(Node, ArmLogicTreeNode):
     '''Vector node'''
     bl_idname = 'VectorNodeType'
-    # Label for nice name display
     bl_label = 'Vector'
-    # Icon identifier
     bl_icon = 'CURVE_PATH'
     
     def init(self, context):
@@ -18,4 +16,4 @@ class VectorNode(Node, ArmLogicTreeNode):
         
         self.outputs.new('NodeSocketVector', "Vector")
 
-add_node(VectorNode, category='Value')
+add_node(VectorNode, category='Variable')

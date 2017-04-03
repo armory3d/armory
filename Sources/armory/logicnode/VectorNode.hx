@@ -10,16 +10,20 @@ class VectorNode extends Node {
 		super(trait);
 
 		if (x != null) {
-			addInput(new FloatNode(trait, x));
-			addInput(new FloatNode(trait, y));
-			addInput(new FloatNode(trait, z));
+			addInput(new FloatNode(trait, x), 0);
+			addInput(new FloatNode(trait, y), 0);
+			addInput(new FloatNode(trait, z), 0);
 		}
 	}
 
-	override function get():Dynamic {
+	override function get(from:Int):Dynamic {
 		value.x = inputs[0].get();
 		value.y = inputs[1].get();
 		value.z = inputs[2].get();
 		return value;
+	}
+
+	override function set(value:Dynamic) {
+		this.value = value;
 	}
 }

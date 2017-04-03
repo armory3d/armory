@@ -6,7 +6,7 @@ class GetTransformNode extends Node {
 		super(trait);
 	}
 
-	override function get():Dynamic {
+	override function get(from:Int):Dynamic {
 		var object = inputs[1].get();
 
 		if (object == null) object = trait.object;

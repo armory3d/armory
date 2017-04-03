@@ -29,6 +29,6 @@ class GateNode extends Node {
 			cond = v1 <= v2;
 		}
 
-		if (cond) for (o in outputs) o.run();
+		if (cond) super.run();
 	}
 }

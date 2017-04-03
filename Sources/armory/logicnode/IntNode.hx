@@ -1,10 +1,10 @@
 package armory.logicnode;
 
-class FloatNode extends Node {
+class IntNode extends Node {
 
-	public var value:Float;
+	public var value:Int;
 
-	public function new(trait:armory.Trait, value = 0.0) {
+	public function new(trait:armory.Trait, value = 0) {
 		super(trait);
 		this.value = value;
 	}
@@ -15,7 +15,6 @@ class FloatNode extends Node {
 	}
 
 	override function set(value:Dynamic) {
-		if (inputs.length > 0) inputs[0].set(value);
-		else this.value = value;
+		this.value = value;
 	}
 }

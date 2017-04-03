@@ -9,8 +9,12 @@ class BoolNode extends Node {
 		this.value = value;
 	}
 
-	override function get():Dynamic {
+	override function get(from:Int):Dynamic {
 		if (inputs.length > 0) return inputs[0].get();
 		return value;
+	}
+
+	override function set(value:Dynamic) {
+		this.value = value;
 	}
 }

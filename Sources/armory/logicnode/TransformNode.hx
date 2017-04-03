@@ -14,7 +14,7 @@ class TransformNode extends Node {
 		super(trait);
 	}
 
-	override function get():Dynamic {
+	override function get(from:Int):Dynamic {
 
 		var loc = inputs[0].get();
 		var rot = inputs[1].get();
@@ -22,5 +22,9 @@ class TransformNode extends Node {
 		var scale = inputs[2].get();
 		value.compose(loc, q, scale);
 		return value;
+	}
+
+	override function set(value:Dynamic) {
+		this.value = value;
 	}
 }

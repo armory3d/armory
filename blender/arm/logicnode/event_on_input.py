@@ -3,10 +3,10 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class InputNode(Node, ArmLogicTreeNode):
-    '''Input node'''
-    bl_idname = 'InputNodeType'
-    bl_label = 'Input'
+class OnInputNode(Node, ArmLogicTreeNode):
+    '''On input node'''
+    bl_idname = 'OnInputNodeType'
+    bl_label = 'On Input'
     bl_icon = 'CURVE_PATH'
     property0 = EnumProperty(
         items = [('Down', 'Down', 'Down'),
@@ -16,9 +16,9 @@ class InputNode(Node, ArmLogicTreeNode):
         name='', default='Down')
     
     def init(self, context):
-        self.outputs.new('NodeSocketBool', 'State')
+        self.outputs.new('NodeSocketShader', 'Out')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
 
-add_node(InputNode, category='Value')
+add_node(OnInputNode, category='Event')

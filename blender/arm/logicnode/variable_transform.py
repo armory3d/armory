@@ -16,4 +16,4 @@ class TransformNode(Node, ArmLogicTreeNode):
         self.inputs[-1].default_value = [1.0, 1.0, 1.0]
         self.outputs.new('NodeSocketString', "Transform")
 
-add_node(TransformNode, category='Value')
+add_node(TransformNode, category='Variable')

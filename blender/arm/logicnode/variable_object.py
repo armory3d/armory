@@ -16,4 +16,4 @@ class ObjectNode(Node, ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop_search(self, "property0", context.scene, "objects", text = "")
 
-add_node(ObjectNode, category='Value')
+add_node(ObjectNode, category='Variable')

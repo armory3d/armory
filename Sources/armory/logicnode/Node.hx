@@ -3,19 +3,49 @@ package armory.logicnode;
 class Node {
 
 	var trait:armory.Trait;
-	var inputs:Array<Node> = [];
-	var outputs:Array<Node> = [];
+	var inputs:Array<NodeInput> = [];
+	var outputs:Array<Array<Node>> = [];
 
 	public function new(trait:armory.Trait) {
 		this.trait = trait;
 	}
 
-	public function addInput(node:Node) {
-		inputs.push(node);
-		node.outputs.push(this);
+	public function addInput(node:Node, from:Int) {
+		inputs.push(new NodeInput(node, from));
 	}
 
-	function run() { for (o in outputs) o.run(); }
+	public function addOutputs(nodes:Array<Node>) {
+		outputs.push(nodes);
+	}
 
-	function get():Dynamic { return this; }
+	function run() { for (ar in outputs) for (o in ar) o.run(); }
+
+	function runOutputs(i:Int) { for (o in outputs[i]) o.run(); }
+
+	@:allow(armory.logicnode.NodeInput)
+	function get(from:Int):Dynamic { return this; }
+
+	@:allow(armory.logicnode.NodeInput)
+	function set(value:Dynamic) { }
+}
+
+class NodeInput {
+
+	var node:Node;
+	var from:Int; // Socket index
+
+	public function new(node:Node, from:Int) {
+		this.node = node;
+		this.from = from;
+	}
+
+	@:allow(armory.logicnode.Node)
+	function get():Dynamic {
+		return node.get(from);
+	}
+
+	@:allow(armory.logicnode.Node)
+	function set(value:Dynamic) {
+		node.set(value);
+	}
 }

@@ -8,7 +8,7 @@ class MathNode extends Node {
 		super(trait);
 	}
 
-	override function get():Dynamic {
+	override function get(from:Int):Dynamic {
 		var v1 = inputs[0].get();
 		var v2 = inputs[1].get();
 		switch (property0) {

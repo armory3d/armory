@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class InitNode extends Node {
+class OnInitNode extends Node {
 
 	public function new(trait:armory.Trait) {
 		super(trait);

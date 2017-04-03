@@ -62,16 +62,36 @@ def build_node(node_group, node, f):
     # Create inputs
     for inp in node.inputs:
         # Is linked - find node
-        inp_name = 'new NullNode(this)'
         if inp.is_linked:
             n = inp.links[0].from_node
+            socket = inp.links[0].from_socket
             inp_name = build_node(node_group, n, f)
+            for i in range(0, len(n.outputs)):
+                if n.outputs[i] == socket:
+                    inp_from = i
+                    break
         # Not linked - create node with default values
         else:
             inp_name = build_default_node(inp)
+            inp_from = 0
         # Add input
-        f.write('\t\t' + name + '.addInput(' + inp_name + ');\n')
-        
+        f.write('\t\t' + name + '.addInput(' + inp_name + ', ' + str(inp_from) + ');\n')
+    
+    # Create outputs
+    for out in node.outputs:
+        if out.is_linked:
+            out_name = ''
+            for l in out.links:
+                n = l.to_node
+                out_name += '[' if len(out_name) == 0 else ', '
+                out_name += build_node(node_group, n, f)
+            out_name += ']'
+        # Not linked - create node with default values
+        else:
+            out_name = '[' + build_default_node(out) + ']'
+        # Add input
+        f.write('\t\t' + name + '.addOutputs(' + out_name + ');\n')
+
     return name
     
 def get_root_nodes(node_group):
@@ -94,6 +114,10 @@ def build_default_node(inp):
         inp_name = 'new VectorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ')'
     elif inp.type == 'VALUE':
         inp_name = 'new FloatNode(this, ' + str(inp.default_value) + ')'
+    elif inp.type == 'INT':
+        inp_name = 'new IntNode(this, ' + str(inp.default_value) + ')'
     elif inp.type == 'BOOLEAN':
         inp_name = 'new BoolNode(this, ' + str(inp.default_value).lower() + ')'
+    elif inp.type == 'STRING':
+        inp_name = 'new StringNode(this, "' + str(inp.default_value) + '")'
     return inp_name

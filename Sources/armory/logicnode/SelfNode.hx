@@ -6,5 +6,5 @@ class SelfNode extends Node {
 		super(trait);
 	}
 
-	override function get():Dynamic { return trait.object; }
+	override function get(from:Int):Dynamic { return trait.object; }
 }

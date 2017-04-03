@@ -6,5 +6,5 @@ class NullNode extends Node {
 		super(trait);
 	}
 
-	override function get():Dynamic { return null; }
+	override function get(from:Int):Dynamic { return null; }
 }

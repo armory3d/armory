@@ -13,7 +13,7 @@ class MathNode(Node, ArmLogicTreeNode):
                  ('Multiply', 'Multiply', 'Multiply'),
         		 ('Sine', 'Sine', 'Sine'),
                  ('Cosine', 'Cosine', 'Cosine')],
-        name="", default='Add')
+        name='', default='Add')
     
     def init(self, context):
         self.inputs.new('NodeSocketFloat', "Value")
@@ -21,6 +21,6 @@ class MathNode(Node, ArmLogicTreeNode):
         self.outputs.new('NodeSocketFloat', "Value")
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "property0")
+        layout.prop(self, 'property0')
 
 add_node(MathNode, category='Value')
