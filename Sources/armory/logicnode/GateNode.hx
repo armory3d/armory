@@ -4,14 +4,14 @@ class GateNode extends Node {
 
 	public var property0:String;
 
-	public function new(trait:armory.Trait) {
-		super(trait);
+	public function new(tree:LogicTree) {
+		super(tree);
 	}
 
 	override function run() {
 
-		var v1 = inputs[1].get();
-		var v2 = inputs[2].get();
+		var v1:Dynamic = inputs[1].get();
+		var v2:Dynamic = inputs[2].get();
 		var cond = false;
 
 		switch (property0) {

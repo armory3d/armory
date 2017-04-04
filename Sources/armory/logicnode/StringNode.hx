@@ -4,8 +4,8 @@ class StringNode extends Node {
 
 	public var value:String;
 
-	public function new(trait:armory.Trait, value = "") {
-		super(trait);
+	public function new(tree:LogicTree, value = "") {
+		super(tree);
 		this.value = value;
 	}
 

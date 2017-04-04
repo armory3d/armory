@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 
 class WhileNode(Node, ArmLogicTreeNode):
     '''While node'''
-    bl_idname = 'WhileNodeType'
+    bl_idname = 'LNWhileNode'
     bl_label = 'While'
     bl_icon = 'CURVE_PATH'
     

@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 
 class LoopNode(Node, ArmLogicTreeNode):
     '''Loop node'''
-    bl_idname = 'LoopNodeType'
+    bl_idname = 'LNLoopNode'
     bl_label = 'Loop'
     bl_icon = 'CURVE_PATH'
     

@@ -7,6 +7,9 @@ category_items['Value'] = []
 category_items['Variable'] = []
 category_items['Logic'] = []
 category_items['Operator'] = []
+category_items['Native'] = []
+category_items['Physics'] = []
+category_items['Navmesh'] = []
 
 class ArmLogicTreeNode:
     @classmethod

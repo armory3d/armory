@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 
 class GateNode(Node, ArmLogicTreeNode):
     '''Gate node'''
-    bl_idname = 'GateNodeType'
+    bl_idname = 'LNGateNode'
     bl_label = 'Gate'
     bl_icon = 'CURVE_PATH'
     property0 = EnumProperty(

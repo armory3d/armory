@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 
 class TimeNode(Node, ArmLogicTreeNode):
     '''Time node'''
-    bl_idname = 'TimeNodeType'
+    bl_idname = 'LNTimeNode'
     bl_label = 'Time'
     bl_icon = 'TIME'
     

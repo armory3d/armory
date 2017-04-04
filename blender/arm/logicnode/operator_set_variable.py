@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 
 class SetVariableNode(Node, ArmLogicTreeNode):
     '''SetVariable node'''
-    bl_idname = 'SetVariableNodeType'
+    bl_idname = 'LNSetVariableNode'
     bl_label = 'Set Variable'
     bl_icon = 'GAME'
 

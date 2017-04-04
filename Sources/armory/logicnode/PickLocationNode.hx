@@ -1,20 +1,21 @@
 package armory.logicnode;
 
+import armory.object.Object;
 import armory.math.Vec4;
 
 class PickLocationNode extends Node {
 
 	var loc = new Vec4();
 
-	public function new(trait:armory.Trait) {
-		super(trait);
+	public function new(tree:LogicTree) {
+		super(tree);
 	}
 
 	override function get(from:Int):Dynamic {
-		var object = inputs[0].get();
-		var coords = inputs[1].get();
+		var object:Object = inputs[0].get();
+		var coords:Vec4 = inputs[1].get();
 		
-		if (object == null) object = trait.object;
+		if (object == null) object = tree.object;
 
 #if arm_physics
 		var physics = armory.trait.internal.PhysicsWorld.active;

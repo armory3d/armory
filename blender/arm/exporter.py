@@ -1148,7 +1148,7 @@ class ArmoryExporter:
         return s
 
     def use_default_material(self, bobject, o):
-        if bobject.find_armature() and arm.utils.is_bone_animation_enabled(bobject):
+        if arm.utils.export_bone_data(bobject):
             o['material_refs'].append('armdefaultskin')
             self.defaultSkinMaterialObjects.append(bobject)
         else:
@@ -2406,10 +2406,26 @@ class ArmoryExporter:
         if self.filepath.endswith('.zip'):
             self.output['name'] += '.zip'
 
+        # Fix material variants
+        # Skinned and non-skined objects can not share material
+        matvars = []
+        matvars_boskin = []
+        for bo in self.scene.objects:
+            if arm.utils.export_bone_data(bo):
+                matvars_boskin.append(bo)
+                for slot in bo.material_slots:
+                    mat_name = slot.material.name + '_armskin'
+                    mat = bpy.data.materials.get(mat_name)
+                    if mat == None:
+                        mat = slot.material.copy()
+                        mat.name = mat_name
+                        matvars.append(mat)
+                    slot.material = mat
+
         self.output['objects'] = []
-        for obj in self.scene.objects:
-            if not obj.parent:
-                self.export_object(obj, self.scene)
+        for bo in self.scene.objects:
+            if not bo.parent:
+                self.export_object(bo, self.scene)
 
         if len(bpy.data.groups) > 0:
             self.output['groups'] = []
@@ -2494,6 +2510,14 @@ class ArmoryExporter:
 
         # Write scene file
         arm.utils.write_arm(self.filepath, self.output)
+
+        # Remove created material variants
+        for bo in matvars_boskin:
+            for slot in bo.material_slots: # Set back to original material
+                orig_mat = slot.material.name[:-len('_armskin')]
+                slot.material = bpy.data.materials[orig_mat]
+        for mat in matvars:
+            bpy.data.materials.remove(mat, do_unlink=True)
 
         print('Scene built in ' + str(time.time() - profile_time))
         return {'FINISHED'}

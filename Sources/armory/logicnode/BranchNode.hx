@@ -2,13 +2,12 @@ package armory.logicnode;
 
 class BranchNode extends Node {
 
-	public function new(trait:armory.Trait) {
-		super(trait);
+	public function new(tree:LogicTree) {
+		super(tree);
 	}
 
 	override function run() {
-
-		var b = inputs[1].get();
+		var b:Bool = inputs[1].get();
 		b ? runOutputs(0) : runOutputs(1);
 	}
 }

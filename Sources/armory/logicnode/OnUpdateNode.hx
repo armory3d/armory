@@ -2,10 +2,10 @@ package armory.logicnode;
 
 class OnUpdateNode extends Node {
 
-	public function new(trait:armory.Trait) {
-		super(trait);
+	public function new(tree:LogicTree) {
+		super(tree);
 
-		trait.notifyOnUpdate(update);
+		tree.notifyOnUpdate(update);
 	}
 
 	function update() {

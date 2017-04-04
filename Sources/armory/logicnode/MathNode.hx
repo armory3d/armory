@@ -4,13 +4,13 @@ class MathNode extends Node {
 
 	public var property0:String;
 
-	public function new(trait:armory.Trait) {
-		super(trait);
+	public function new(tree:LogicTree) {
+		super(tree);
 	}
 
 	override function get(from:Int):Dynamic {
-		var v1 = inputs[0].get();
-		var v2 = inputs[1].get();
+		var v1:Dynamic = inputs[0].get();
+		var v2:Dynamic = inputs[1].get();
 		switch (property0) {
 		case "Add":
 			return v1 + v2;

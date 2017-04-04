@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 
 class BranchNode(Node, ArmLogicTreeNode):
     '''Branch node'''
-    bl_idname = 'BranchNodeType'
+    bl_idname = 'LNBranchNode'
     bl_label = 'Branch'
     bl_icon = 'CURVE_PATH'
     

@@ -2,12 +2,12 @@ package armory.logicnode;
 
 class Node {
 
-	var trait:armory.Trait;
+	var tree:LogicTree;
 	var inputs:Array<NodeInput> = [];
 	var outputs:Array<Array<Node>> = [];
 
-	public function new(trait:armory.Trait) {
-		this.trait = trait;
+	public function new(tree:LogicTree) {
+		this.tree = tree;
 	}
 
 	public function addInput(node:Node, from:Int) {
@@ -31,6 +31,7 @@ class Node {
 
 class NodeInput {
 
+	@:allow(armory.logicnode.Node)
 	var node:Node;
 	var from:Int; // Socket index
 

@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 
 class InputCoordsNode(Node, ArmLogicTreeNode):
     '''Input coords node'''
-    bl_idname = 'InputCoordsNodeType'
+    bl_idname = 'LNInputCoordsNode'
     bl_label = 'Input Coords'
     bl_icon = 'CURVE_PATH'
     

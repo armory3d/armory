@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 
 class GoToLocationNode(Node, ArmLogicTreeNode):
     '''Navigate to location node'''
-    bl_idname = 'GoToLocationNodeType'
+    bl_idname = 'LNGoToLocationNode'
     bl_label = 'Go To Location'
     bl_icon = 'GAME'
 
@@ -15,4 +15,4 @@ class GoToLocationNode(Node, ArmLogicTreeNode):
         self.inputs.new('NodeSocketShader', "Location")
         self.outputs.new('NodeSocketShader', "Out")
 
-add_node(GoToLocationNode, category='Operator')
+add_node(GoToLocationNode, category='Navmesh')

@@ -6,13 +6,13 @@ class VectorNode extends Node {
 
 	var value = new Vec4();
 
-	public function new(trait:armory.Trait, x:Null<Float> = null, y:Null<Float> = null, z:Null<Float> = null) {
-		super(trait);
+	public function new(tree:LogicTree, x:Null<Float> = null, y:Null<Float> = null, z:Null<Float> = null) {
+		super(tree);
 
 		if (x != null) {
-			addInput(new FloatNode(trait, x), 0);
-			addInput(new FloatNode(trait, y), 0);
-			addInput(new FloatNode(trait, z), 0);
+			addInput(new FloatNode(tree, x), 0);
+			addInput(new FloatNode(tree, y), 0);
+			addInput(new FloatNode(tree, z), 0);
 		}
 	}
 

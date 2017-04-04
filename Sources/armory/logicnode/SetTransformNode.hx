@@ -1,18 +1,21 @@
 package armory.logicnode;
 
+import armory.object.Object;
+import armory.math.Mat4;
+
 class SetTransformNode extends Node {
 
-	public function new(trait:armory.Trait) {
-		super(trait);
+	public function new(tree:LogicTree) {
+		super(tree);
 	}
 
 	override function run() {
-		var object = inputs[1].get();
-		var transform = inputs[2].get();
+		var object:Object = inputs[1].get();
+		var matrix:Mat4 = inputs[2].get();
 
-		if (object == null) object = trait.object;
+		if (object == null) object = tree.object;
 
-		object.transform.setMatrix(transform);
+		object.transform.setMatrix(matrix);
 
 		super.run();
 	}

@@ -1,12 +1,15 @@
 package armory.logicnode;
 
-class IntNode extends Node {
+import armory.math.Vec4;
 
-	public var value:Int;
+class ColorNode extends Node {
 
-	public function new(trait:armory.Trait, value = 0) {
-		super(trait);
-		this.value = value;
+	var value = new Vec4();
+
+	public function new(tree:LogicTree, r = 0.8, g = 0.8, b = 0.8, a = 1.0) {
+		super(tree);
+
+		value.set(r, g, b, a);
 	}
 
 	override function get(from:Int):Dynamic {

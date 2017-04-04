@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 
 class PrintNode(Node, ArmLogicTreeNode):
     '''Print node'''
-    bl_idname = 'PrintNodeType'
+    bl_idname = 'LNPrintNode'
     bl_label = 'Print'
     bl_icon = 'GAME'
 

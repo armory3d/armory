@@ -3,10 +3,10 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class WaitNode(Node, ArmLogicTreeNode):
-    '''Wait node'''
-    bl_idname = 'WaitNodeType'
-    bl_label = 'Wait'
+class SleepNode(Node, ArmLogicTreeNode):
+    '''Sleep node'''
+    bl_idname = 'LNSleepNode'
+    bl_label = 'Sleep'
     bl_icon = 'GAME'
 
     def init(self, context):
@@ -14,4 +14,4 @@ class WaitNode(Node, ArmLogicTreeNode):
         self.inputs.new('NodeSocketFloat', "Time")
         self.outputs.new('NodeSocketShader', "Out")
 
-add_node(WaitNode, category='Operator')
+add_node(SleepNode, category='Operator')

@@ -1,0 +1,22 @@
+package armory.logicnode;
+
+import armory.object.Object;
+
+class SetPropertyNode extends Node {
+
+	public function new(tree:LogicTree) {
+		super(tree);
+	}
+
+	override function run() {
+		var object:Object = inputs[1].get();
+		var property:String = inputs[2].get();
+		var value:Dynamic = inputs[3].get();
+		
+		if (object == null) object = tree.object;
+
+		Reflect.setProperty(object, property, value);
+
+		super.run();
+	}
+}

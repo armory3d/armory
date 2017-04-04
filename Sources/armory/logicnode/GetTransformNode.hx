@@ -1,16 +1,18 @@
 package armory.logicnode;
 
+import armory.object.Object;
+
 class GetTransformNode extends Node {
 
-	public function new(trait:armory.Trait) {
-		super(trait);
+	public function new(tree:LogicTree) {
+		super(tree);
 	}
 
 	override function get(from:Int):Dynamic {
-		var object = inputs[1].get();
+		var object:Object = inputs[0].get();
 
-		if (object == null) object = trait.object;
+		if (object == null) object = tree.object;
 
-		return object.transform.matrix;
+		return object.transform;
 	}
 }

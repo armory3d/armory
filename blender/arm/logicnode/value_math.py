@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 
 class MathNode(Node, ArmLogicTreeNode):
     '''Math node'''
-    bl_idname = 'MathNodeType'
+    bl_idname = 'LNMathNode'
     bl_label = 'Math'
     bl_icon = 'CURVE_PATH'
     property0 = EnumProperty(

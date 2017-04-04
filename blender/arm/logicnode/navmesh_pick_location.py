@@ -5,13 +5,13 @@ from arm.logicnode.arm_nodes import *
 
 class PickLocationNode(Node, ArmLogicTreeNode):
     '''Pick location node'''
-    bl_idname = 'PickLocationNodeType'
+    bl_idname = 'LNPickLocationNode'
     bl_label = 'Pick Location'
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', "Object")
-        self.inputs.new('NodeSocketShader', "Coords")
+        self.inputs.new('NodeSocketShader', "Navmesh")
+        self.inputs.new('NodeSocketShader', "Screen Coords")
         self.outputs.new('NodeSocketShader', "Location")
 
-add_node(PickLocationNode, category='Value')
+add_node(PickLocationNode, category='Navmesh')

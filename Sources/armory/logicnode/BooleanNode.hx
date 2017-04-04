@@ -1,11 +1,11 @@
 package armory.logicnode;
 
-class BoolNode extends Node {
+class BooleanNode extends Node {
 
 	public var value:Bool;
 
-	public function new(trait:armory.Trait, value = false) {
-		super(trait);
+	public function new(tree:LogicTree, value = false) {
+		super(tree);
 		this.value = value;
 	}
 

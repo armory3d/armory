@@ -30,7 +30,7 @@ def build_node_tree(node_group):
     with open(path + group_name + '.hx', 'w') as f:
         f.write('package ' + bpy.data.worlds['Arm'].arm_project_package + '.node;\n\n')
         f.write('import armory.logicnode.*;\n\n')
-        f.write('@:keep class ' + group_name + ' extends armory.Trait {\n\n')
+        f.write('@:keep class ' + group_name + ' extends armory.logicnode.LogicTree {\n\n')
         f.write('\tpublic function new() { super(); notifyOnAdd(add); }\n\n')
         f.write('\tfunction add() {\n')
         for node in root_nodes:
@@ -42,6 +42,9 @@ def build_node_tree(node_group):
 def build_node(node_group, node, f):
     global parsed_nodes
 
+    if node.type == 'REROUTE':
+        return build_node(node_group, node.inputs[0].links[0].from_node, f)
+
     # Get node name
     name = '_' + node.name.replace('.', '_').replace(' ', '')
 
@@ -50,7 +53,7 @@ def build_node(node_group, node, f):
         return name
 
     # Create node
-    node_type = node.bl_idname[:-4] # Scrap TimeNode'Type'
+    node_type = node.bl_idname[2:] # Discard 'LN'TimeNode prefix
     f.write('\t\tvar ' + name + ' = new ' + node_type + '(this);\n')
     parsed_nodes.append(name)
     
@@ -112,12 +115,16 @@ def build_default_node(inp):
     inp_name = 'new NullNode(this)'
     if inp.type == 'VECTOR':
         inp_name = 'new VectorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ')'
+    elif inp.type == 'RGBA':
+        inp_name = 'new ColorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ', ' + str(inp.default_value[3]) + ')'
+    elif inp.type == 'RGB':
+        inp_name = 'new ColorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ')'
     elif inp.type == 'VALUE':
         inp_name = 'new FloatNode(this, ' + str(inp.default_value) + ')'
     elif inp.type == 'INT':
-        inp_name = 'new IntNode(this, ' + str(inp.default_value) + ')'
+        inp_name = 'new IntegerNode(this, ' + str(inp.default_value) + ')'
     elif inp.type == 'BOOLEAN':
-        inp_name = 'new BoolNode(this, ' + str(inp.default_value).lower() + ')'
+        inp_name = 'new BooleanNode(this, ' + str(inp.default_value).lower() + ')'
     elif inp.type == 'STRING':
         inp_name = 'new StringNode(this, "' + str(inp.default_value) + '")'
     return inp_name

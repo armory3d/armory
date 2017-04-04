@@ -1,19 +1,20 @@
 package armory.logicnode;
 
 import armory.trait.internal.Navigation;
+import armory.object.Object;
 
 class GoToLocationNode extends Node {
 
-	public function new(trait:armory.Trait) {
-		super(trait);
+	public function new(tree:LogicTree) {
+		super(tree);
 	}
 
 	override function run() {
-		var object = inputs[1].get();
-		var location = inputs[2].get();
+		var object:Object = inputs[1].get();
+		var location:Vec4 = inputs[2].get();
 		
 		if (location == null) return;
-		if (object == null) object = trait.object;
+		if (object == null) object = tree.object;
 
 #if arm_navigation
 		// Assume navmesh exists..

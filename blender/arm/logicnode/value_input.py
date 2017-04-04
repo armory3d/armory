@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 
 class InputNode(Node, ArmLogicTreeNode):
     '''Input node'''
-    bl_idname = 'InputNodeType'
+    bl_idname = 'LNInputNode'
     bl_label = 'Input'
     bl_icon = 'CURVE_PATH'
     property0 = EnumProperty(

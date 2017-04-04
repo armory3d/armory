@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 
 class OnInitNode(Node, ArmLogicTreeNode):
     '''On init node'''
-    bl_idname = 'OnInitNodeType'
+    bl_idname = 'LNOnInitNode'
     bl_label = 'On Init'
     bl_icon = 'CURVE_PATH'
     

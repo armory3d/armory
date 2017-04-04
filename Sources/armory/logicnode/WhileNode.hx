@@ -2,12 +2,12 @@ package armory.logicnode;
 
 class WhileNode extends Node {
 
-	public function new(trait:armory.Trait) {
-		super(trait);
+	public function new(tree:LogicTree) {
+		super(tree);
 	}
 
 	override function run() {
-		var b = inputs[1].get();
+		var b:Bool = inputs[1].get();
 		while (b) {
 			runOutputs(0);
 			b = inputs[1].get();

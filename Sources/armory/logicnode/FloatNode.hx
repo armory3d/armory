@@ -4,8 +4,8 @@ class FloatNode extends Node {
 
 	public var value:Float;
 
-	public function new(trait:armory.Trait, value = 0.0) {
-		super(trait);
+	public function new(tree:LogicTree, value = 0.0) {
+		super(tree);
 		this.value = value;
 	}
 

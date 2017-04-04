@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 
 class SelfNode(Node, ArmLogicTreeNode):
     '''Self node'''
-    bl_idname = 'SelfNodeType'
+    bl_idname = 'LNSelfNode'
     bl_label = 'Self'
     bl_icon = 'GAME'
     

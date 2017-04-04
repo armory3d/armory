@@ -6,8 +6,8 @@ class InputCoordsNode extends Node {
 
 	var coords = new Vec4();
 
-	public function new(trait:armory.Trait) {
-		super(trait);
+	public function new(tree:LogicTree) {
+		super(tree);
 	}
 
 	override function get(from:Int):Dynamic {

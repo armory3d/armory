@@ -41,7 +41,7 @@ def build(material, mat_users, mat_armusers, rid):
     if mat_users != None:
         for bo in mat_users[material]:
             # GPU Skinning
-            if bo.find_armature() and arm.utils.is_bone_animation_enabled(bo) and wrd.generate_gpu_skin == True:
+            if arm.utils.export_bone_data(bo):
                 mat_state.data.add_elem('bone', 4)
                 mat_state.data.add_elem('weight', 4)
             # Instancing

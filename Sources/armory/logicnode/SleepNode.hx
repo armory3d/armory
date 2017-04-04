@@ -1,13 +1,13 @@
 package armory.logicnode;
 
-class WaitNode extends Node {
+class SleepNode extends Node {
 
-	public function new(trait:armory.Trait) {
-		super(trait);
+	public function new(tree:LogicTree) {
+		super(tree);
 	}
 
 	override function run() {
-		var time = inputs[1].get();
+		var time:Float = inputs[1].get();
 		armory.system.Tween.timer(time, done);
 	}
 

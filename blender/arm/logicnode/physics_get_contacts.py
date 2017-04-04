@@ -1,0 +1,16 @@
+import bpy
+from bpy.props import *
+from bpy.types import Node, NodeSocket
+from arm.logicnode.arm_nodes import *
+
+class GetContactsNode(Node, ArmLogicTreeNode):
+    '''Get contacts node'''
+    bl_idname = 'LNGetContactsNode'
+    bl_label = 'Get Contacts'
+    bl_icon = 'GAME'
+
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Object")
+        self.outputs.new('NodeSocketShader', "Array")
+
+add_node(GetContactsNode, category='Physics')

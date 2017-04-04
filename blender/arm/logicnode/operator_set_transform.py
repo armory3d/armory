@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 
 class SetTransformNode(Node, ArmLogicTreeNode):
     '''Set transform node'''
-    bl_idname = 'SetTransformNodeType'
+    bl_idname = 'LNSetTransformNode'
     bl_label = 'Set Transform'
     bl_icon = 'GAME'
 

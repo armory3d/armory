@@ -5,7 +5,7 @@ from arm.logicnode.arm_nodes import *
 
 class VectorNode(Node, ArmLogicTreeNode):
     '''Vector node'''
-    bl_idname = 'VectorNodeType'
+    bl_idname = 'LNVectorNode'
     bl_label = 'Vector'
     bl_icon = 'CURVE_PATH'
     
