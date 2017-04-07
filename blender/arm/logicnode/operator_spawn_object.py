@@ -10,10 +10,10 @@ class SpawnObjectNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', "In")
-        self.inputs.new('NodeSocketShader', "Object")
-        self.inputs.new('NodeSocketShader', "Tansform")
-        self.outputs.new('NodeSocketShader', "Out")
-        self.outputs.new('NodeSocketShader', "Object")
+        self.inputs.new('ArmNodeSocketOperator', 'In')
+        self.inputs.new('ArmNodeSocketObject', 'Object')
+        self.inputs.new('NodeSocketShader', 'Tansform')
+        self.outputs.new('ArmNodeSocketOperator', 'Out')
+        self.outputs.new('ArmNodeSocketObject', 'Object')
 
 add_node(SpawnObjectNode, category='Operator')

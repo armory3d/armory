@@ -10,7 +10,7 @@ class IntegerNode(Node, ArmLogicTreeNode):
     bl_icon = 'CURVE_PATH'
     
     def init(self, context):
-        self.inputs.new('NodeSocketInt', "Value")
-        self.outputs.new('NodeSocketInt', "Int")
+        self.inputs.new('NodeSocketInt', 'Value')
+        self.outputs.new('NodeSocketInt', 'Int')
 
-add_node(IntegerNode, category='Variable')
+add_node(IntegerNode, category='Input')

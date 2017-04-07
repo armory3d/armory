@@ -98,6 +98,9 @@ project.addSources('Sources');
             p = sdk_path + '/armory/Assets/droid_sans.ttf'
             f.write('project.addAssets("' + p.replace('\\', '/') + '");\n')
 
+        if wrd.arm_hscript:
+            f.write(add_armory_library(sdk_path, 'lib/hscript'))
+
         # if wrd.arm_ui:
             # f.write(add_armory_library(sdk_path, 'lib/haxeui-core'))
             # f.write(add_armory_library(sdk_path, 'lib/haxeui-kha'))

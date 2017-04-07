@@ -10,10 +10,10 @@ class ArraySetNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', "In")
+        self.inputs.new('ArmNodeSocketOperator', "In")
         self.inputs.new('NodeSocketShader', "Array")
         self.inputs.new('NodeSocketInt', "Index")
         self.inputs.new('NodeSocketShader', "Value")
-        self.outputs.new('NodeSocketShader', "Out")
+        self.outputs.new('ArmNodeSocketOperator', "Out")
 
 add_node(ArraySetNode, category='Operator')

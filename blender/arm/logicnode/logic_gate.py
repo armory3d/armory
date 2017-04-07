@@ -15,15 +15,15 @@ class GateNode(Node, ArmLogicTreeNode):
                  ('Greater Equal', 'Greater Equal', 'Greater Equal'),
                  ('Less', 'Less', 'Less'),
                  ('Less Equal', 'Less Equal', 'Less Equal')],
-        name="", default='Equal')
+        name='', default='Equal')
     
     def init(self, context):
-        self.inputs.new('NodeSocketShader', "In")
-        self.inputs.new('NodeSocketShader', "Value")
-        self.inputs.new('NodeSocketShader', "Value")
-        self.outputs.new('NodeSocketFloat', "Out")
+        self.inputs.new('ArmNodeSocketOperator', 'In')
+        self.inputs.new('NodeSocketShader', 'Value')
+        self.inputs.new('NodeSocketShader', 'Value')
+        self.outputs.new('ArmNodeSocketOperator', 'Out')
 
     def draw_buttons(self, context, layout):
-        layout.prop(self, "property0")
+        layout.prop(self, 'property0')
 
 add_node(GateNode, category='Logic')

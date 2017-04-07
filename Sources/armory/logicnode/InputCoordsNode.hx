@@ -14,11 +14,15 @@ class InputCoordsNode extends Node {
 		if (from == 0) {
 			coords.x = armory.system.Input.x;
 			coords.y = armory.system.Input.y;
+			return coords;
 		}
 		else if (from == 1) {
 			coords.x = armory.system.Input.movementX;
 			coords.y = armory.system.Input.movementY;
+			return coords;
 		}
-		return coords;
+		else {
+			return armory.system.Input.wheelDelta;
+		}
 	}
 }

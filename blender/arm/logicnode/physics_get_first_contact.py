@@ -10,7 +10,7 @@ class GetFirstContactNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', "Object")
-        self.outputs.new('NodeSocketShader', "Object")
+        self.inputs.new('ArmNodeSocketObject', 'Object')
+        self.outputs.new('ArmNodeSocketObject', 'Object')
 
 add_node(GetFirstContactNode, category='Physics')

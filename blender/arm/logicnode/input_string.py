@@ -10,7 +10,7 @@ class StringNode(Node, ArmLogicTreeNode):
     bl_icon = 'CURVE_PATH'
     
     def init(self, context):
-        self.inputs.new('NodeSocketString', "Value")
-        self.outputs.new('NodeSocketString', "String")
+        self.inputs.new('NodeSocketString', 'Value')
+        self.outputs.new('NodeSocketString', 'String')
 
-add_node(StringNode, category='Variable')
+add_node(StringNode, category='Input')

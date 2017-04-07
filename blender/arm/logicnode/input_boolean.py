@@ -10,7 +10,7 @@ class BooleanNode(Node, ArmLogicTreeNode):
     bl_icon = 'CURVE_PATH'
     
     def init(self, context):
-        self.inputs.new('NodeSocketBool', "Value")
-        self.outputs.new('NodeSocketBool', "Bool")
+        self.inputs.new('NodeSocketBool', 'Value')
+        self.outputs.new('NodeSocketBool', 'Bool')
 
-add_node(BooleanNode, category='Variable')
+add_node(BooleanNode, category='Input')

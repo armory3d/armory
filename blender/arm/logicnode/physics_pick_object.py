@@ -10,7 +10,7 @@ class PickObjectNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', "Screen Coords")
-        self.outputs.new('NodeSocketShader', "Object")
+        self.inputs.new('NodeSocketVector', 'Screen Coords')
+        self.outputs.new('ArmNodeSocketObject', 'Object')
 
 add_node(PickObjectNode, category='Physics')

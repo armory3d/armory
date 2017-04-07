@@ -129,6 +129,7 @@ def init_properties():
                  ('Recast', 'Recast', 'Recast')],
         name = "Navigation", default='Recast')
     bpy.types.World.arm_ui = BoolProperty(name="UI Library", description="Include UI library", default=False)
+    bpy.types.World.arm_hscript = BoolProperty(name="hscript", description="Include hscript library", default=False)
     bpy.types.World.arm_engine_on = bpy.props.BoolProperty(name="Armory On", description="Armory engine enabled", default=True)
     bpy.types.World.arm_khafile = StringProperty(name = "Khafile", description="Source appended to khafile.js")
     bpy.types.World.arm_command_line = StringProperty(name = "Command Line", description="Commands appended to khamake")

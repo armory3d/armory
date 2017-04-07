@@ -10,6 +10,6 @@ class NavigableLocationNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.outputs.new('NodeSocketShader', "Location")
+        self.outputs.new('NodeSocketShader', 'Location')
 
 add_node(NavigableLocationNode, category='Navmesh')

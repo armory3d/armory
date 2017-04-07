@@ -10,9 +10,9 @@ class GoToLocationNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', "In")
-        self.inputs.new('NodeSocketShader', "Object")
-        self.inputs.new('NodeSocketShader', "Location")
-        self.outputs.new('NodeSocketShader', "Out")
+        self.inputs.new('ArmNodeSocketOperator', 'In')
+        self.inputs.new('ArmNodeSocketObject', 'Object')
+        self.inputs.new('NodeSocketShader', 'Location')
+        self.outputs.new('ArmNodeSocketOperator', 'Out')
 
 add_node(GoToLocationNode, category='Navmesh')

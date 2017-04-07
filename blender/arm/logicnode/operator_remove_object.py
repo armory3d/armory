@@ -10,8 +10,8 @@ class RemoveObjectNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', "In")
-        self.inputs.new('NodeSocketShader', "Object")
-        self.outputs.new('NodeSocketShader', "Out")
+        self.inputs.new('ArmNodeSocketOperator', 'In')
+        self.inputs.new('ArmNodeSocketObject', 'Object')
+        self.outputs.new('ArmNodeSocketOperator', 'Out')
 
 add_node(RemoveObjectNode, category='Operator')

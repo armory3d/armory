@@ -10,7 +10,7 @@ class GetVisibleNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', "Object")
-        self.outputs.new('NodeSocketBool', "Visible")
+        self.inputs.new('ArmNodeSocketObject', 'Object')
+        self.outputs.new('NodeSocketBool', 'Visible')
 
 add_node(GetVisibleNode, category='Value')

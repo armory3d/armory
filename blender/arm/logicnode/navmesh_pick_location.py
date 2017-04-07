@@ -10,8 +10,8 @@ class PickLocationNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', "Navmesh")
-        self.inputs.new('NodeSocketShader', "Screen Coords")
-        self.outputs.new('NodeSocketShader', "Location")
+        self.inputs.new('ArmNodeSocketObject', 'Navmesh')
+        self.inputs.new('NodeSocketVector', 'Screen Coords')
+        self.outputs.new('NodeSocketVector', 'Location')
 
 add_node(PickLocationNode, category='Navmesh')

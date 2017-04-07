@@ -10,8 +10,8 @@ class ColorNode(Node, ArmLogicTreeNode):
     bl_icon = 'CURVE_PATH'
     
     def init(self, context):
-        self.inputs.new('NodeSocketColor', "Color")
+        self.inputs.new('NodeSocketColor', 'Color')
         self.inputs[-1].default_value = [0.8, 0.8, 0.8, 1.0]
-        self.outputs.new('NodeSocketColor', "Color")
+        self.outputs.new('NodeSocketColor', 'Color')
 
-add_node(ColorNode, category='Variable')
+add_node(ColorNode, category='Input')

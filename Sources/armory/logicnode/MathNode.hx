@@ -9,8 +9,8 @@ class MathNode extends Node {
 	}
 
 	override function get(from:Int):Dynamic {
-		var v1:Dynamic = inputs[0].get();
-		var v2:Dynamic = inputs[1].get();
+		var v1:Float = inputs[0].get();
+		var v2:Float = inputs[1].get();
 		switch (property0) {
 		case "Add":
 			return v1 + v2;

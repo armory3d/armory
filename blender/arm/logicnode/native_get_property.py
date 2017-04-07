@@ -10,8 +10,8 @@ class GetPropertyNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', "Object")
-        self.inputs.new('NodeSocketString', "Property")
-        self.outputs.new('NodeSocketShader', "Value")
+        self.inputs.new('ArmNodeSocketObject', 'Object')
+        self.inputs.new('NodeSocketString', 'Property')
+        self.outputs.new('NodeSocketShader', 'Value')
 
 add_node(GetPropertyNode, category='Native')

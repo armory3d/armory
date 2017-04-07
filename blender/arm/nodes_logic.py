@@ -32,12 +32,14 @@ def register_nodes():
     node_categories = [
         LogicNodeCategory('LogicEventNodes', 'Event', items=arm_nodes.category_items['Event']),
         LogicNodeCategory('LogicValueNodes', 'Value', items=arm_nodes.category_items['Value']),
-        LogicNodeCategory('LogicVariableNodes', 'Variable', items=arm_nodes.category_items['Variable']),
+        LogicNodeCategory('LogicInputNodes', 'Input', items=arm_nodes.category_items['Input']),
         LogicNodeCategory('LogicLogicNodes', 'Logic', items=arm_nodes.category_items['Logic']),
         LogicNodeCategory('LogicOperatorNodes', 'Operator', items=arm_nodes.category_items['Operator']),
         LogicNodeCategory('LogicNativeNodes', 'Native', items=arm_nodes.category_items['Native']),
         LogicNodeCategory('LogicPhysicsNodes', 'Physics', items=arm_nodes.category_items['Physics']),
         LogicNodeCategory('LogicNavmeshNodes', 'Navmesh', items=arm_nodes.category_items['Navmesh']),
+        LogicNodeCategory('LogicAnimationNodes', 'Animation', items=arm_nodes.category_items['Animation']),
+        LogicNodeCategory('LogicSoundNodes', 'Sound', items=arm_nodes.category_items['Sound']),
     ]
 
     nodeitems_utils.register_node_categories('ArmLogicNodes', node_categories)

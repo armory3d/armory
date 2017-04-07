@@ -10,10 +10,10 @@ class ArrayLoopNode(Node, ArmLogicTreeNode):
     bl_icon = 'CURVE_PATH'
     
     def init(self, context):
-        self.inputs.new('NodeSocketShader', 'In')
+        self.inputs.new('ArmNodeSocketOperator', 'In')
         self.inputs.new('NodeSocketShader', 'Array')
-        self.outputs.new('NodeSocketShader', 'Loop')
+        self.outputs.new('ArmNodeSocketOperator', 'Loop')
         self.outputs.new('NodeSocketInt', 'Value')
-        self.outputs.new('NodeSocketShader', 'Done')
+        self.outputs.new('ArmNodeSocketOperator', 'Done')
 
 add_node(ArrayLoopNode, category='Logic')

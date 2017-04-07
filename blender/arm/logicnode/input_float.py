@@ -10,7 +10,7 @@ class FloatNode(Node, ArmLogicTreeNode):
     bl_icon = 'CURVE_PATH'
     
     def init(self, context):
-        self.inputs.new('NodeSocketFloat', "Value")
-        self.outputs.new('NodeSocketFloat', "Float")
+        self.inputs.new('NodeSocketFloat', 'Value')
+        self.outputs.new('NodeSocketFloat', 'Float')
 
-add_node(FloatNode, category='Variable')
+add_node(FloatNode, category='Input')

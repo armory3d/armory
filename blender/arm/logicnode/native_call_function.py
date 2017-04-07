@@ -10,10 +10,10 @@ class CallFunctionNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', 'In')
-        self.inputs.new('NodeSocketShader', 'Object')
+        self.inputs.new('ArmNodeSocketOperator', 'In')
+        self.inputs.new('ArmNodeSocketObject', 'Object')
         self.inputs.new('NodeSocketString', 'Function')
-        self.outputs.new('NodeSocketShader', 'Out')
+        self.outputs.new('ArmNodeSocketOperator', 'Out')
         self.outputs.new('NodeSocketShader', 'Result')
 
 add_node(CallFunctionNode, category='Native')

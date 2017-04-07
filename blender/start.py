@@ -8,6 +8,8 @@ import arm.props_traits_params
 import arm.props_traits
 import arm.props_lod
 import arm.props_navigation
+import arm.props_globalvars
+import arm.props_virtualinput
 import arm.props
 import arm.props_ui
 import arm.props_renderer
@@ -36,6 +38,8 @@ def register():
     arm.props_traits.register()
     arm.props_lod.register()
     arm.props_navigation.register()
+    arm.props_globalvars.register()
+    arm.props_virtualinput.register()
     arm.space_armory.register()
     arm.keymap.register()
 
@@ -51,6 +55,8 @@ def unregister():
     arm.props_traits.unregister()
     arm.props_lod.unregister()
     arm.props_navigation.unregister()
+    arm.props_globalvars.unregister()
+    arm.props_virtualinput.unregister()
     arm.handlers.unregister()
     arm.props_renderer.unregister()
     arm.props_ui.unregister()

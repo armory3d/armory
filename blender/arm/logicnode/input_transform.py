@@ -10,10 +10,10 @@ class TransformNode(Node, ArmLogicTreeNode):
     bl_icon = 'SOUND'
 
     def init(self, context):
-        self.inputs.new('NodeSocketVector', "Location")
-        self.inputs.new('NodeSocketVector', "Rotation")
-        self.inputs.new('NodeSocketVector', "Scale")
+        self.inputs.new('NodeSocketVector', 'Location')
+        self.inputs.new('NodeSocketVector', 'Rotation')
+        self.inputs.new('NodeSocketVector', 'Scale')
         self.inputs[-1].default_value = [1.0, 1.0, 1.0]
-        self.outputs.new('NodeSocketShader', "Transform")
+        self.outputs.new('NodeSocketShader', 'Transform')
 
-add_node(TransformNode, category='Variable')
+add_node(TransformNode, category='Input')

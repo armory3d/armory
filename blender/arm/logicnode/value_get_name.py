@@ -10,7 +10,7 @@ class GetNameNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', 'Object')
+        self.inputs.new('ArmNodeSocketObject', 'Object')
         self.outputs.new('NodeSocketString', 'Name')
 
 add_node(GetNameNode, category='Value')

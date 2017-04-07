@@ -10,10 +10,10 @@ class VectorNode(Node, ArmLogicTreeNode):
     bl_icon = 'CURVE_PATH'
     
     def init(self, context):
-        self.inputs.new('NodeSocketFloat', "X")
-        self.inputs.new('NodeSocketFloat', "Y")
-        self.inputs.new('NodeSocketFloat', "Z")
+        self.inputs.new('NodeSocketFloat', 'X')
+        self.inputs.new('NodeSocketFloat', 'Y')
+        self.inputs.new('NodeSocketFloat', 'Z')
         
-        self.outputs.new('NodeSocketVector', "Vector")
+        self.outputs.new('NodeSocketVector', 'Vector')
 
-add_node(VectorNode, category='Variable')
+add_node(VectorNode, category='Input')

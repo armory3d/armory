@@ -1,6 +1,7 @@
 import os
 import bpy
 import arm.utils
+import arm.log
 
 parsed_nodes = []
 
@@ -100,6 +101,9 @@ def build_node(node_group, node, f):
 def get_root_nodes(node_group):
     roots = []
     for node in node_group.nodes:
+        if node.bl_idname == 'NodeUndefined':
+            arm.log.warn('Undefined logic nodes in ' + node_group.name)
+            return []
         if node.type == 'FRAME':
             continue
         linked = False
@@ -113,7 +117,11 @@ def get_root_nodes(node_group):
 
 def build_default_node(inp):
     inp_name = 'new NullNode(this)'
-    if inp.type == 'VECTOR':
+    if inp.bl_idname == 'ArmNodeSocketOperator':
+        return inp_name
+    if inp.bl_idname == 'ArmNodeSocketObject':
+        inp_name = 'new ObjectNode(this, "' + str(inp.default_value) + '")'
+    elif inp.type == 'VECTOR':
         inp_name = 'new VectorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ')'
     elif inp.type == 'RGBA':
         inp_name = 'new ColorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ', ' + str(inp.default_value[3]) + ')'

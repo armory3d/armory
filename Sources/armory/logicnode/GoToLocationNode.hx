@@ -2,6 +2,7 @@ package armory.logicnode;
 
 import armory.trait.internal.Navigation;
 import armory.object.Object;
+import armory.math.Vec4;
 
 class GoToLocationNode extends Node {
 

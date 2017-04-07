@@ -17,7 +17,6 @@ class ApplyImpulseNode extends Node {
 		if (object == null) object = tree.object;
 
 #if arm_physics
-		var physics = armory.trait.internal.PhysicsWorld.active;
 		var rb:RigidBody = object.getTrait(RigidBody);
 		rb.applyImpulse(impulse);
 #end

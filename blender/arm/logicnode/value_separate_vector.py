@@ -6,7 +6,7 @@ from arm.logicnode.arm_nodes import *
 class SeparateVectorNode(Node, ArmLogicTreeNode):
     '''Separate vector node'''
     bl_idname = 'LNSeparateVectorNode'
-    bl_label = 'Separate Vector'
+    bl_label = 'Separate XYZ'
     bl_icon = 'CURVE_PATH'
     
     def init(self, context):

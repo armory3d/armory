@@ -12,5 +12,6 @@ class InputCoordsNode(Node, ArmLogicTreeNode):
     def init(self, context):
         self.outputs.new('NodeSocketVector', 'Coords')
         self.outputs.new('NodeSocketVector', 'Movement')
+        self.outputs.new('NodeSocketInt', 'Wheel')
 
 add_node(InputCoordsNode, category='Value')

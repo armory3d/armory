@@ -175,17 +175,11 @@ def on_load_post(context):
     props.init_properties_on_load()
     make_renderer.reload_blend_data()
 
-    # Check for blender.py scripts in enabled libraries
-    # for fp in appended_py_paths:
-        # sys.path.remove(fp)
-    # appended_py_paths = []
-
     wrd = bpy.data.worlds['Arm']
     for lib in wrd.my_librarytraitlist:
         if lib.enabled_prop:
             fp = arm.utils.get_fp() + '/Libraries/' + lib.name
             if fp not in appended_py_paths and os.path.exists(fp + '/blender.py'):
-            # if os.path.exists(fp + '/blender.py'):
                 sys.path.append(fp)
                 appended_py_paths.append(fp)
                 import blender

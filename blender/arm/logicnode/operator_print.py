@@ -10,8 +10,8 @@ class PrintNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', "In")
-        self.inputs.new('NodeSocketShader', "Value")
-        self.outputs.new('NodeSocketShader', "Out")
+        self.inputs.new('ArmNodeSocketOperator', 'In')
+        self.inputs.new('NodeSocketShader', 'Value')
+        self.outputs.new('ArmNodeSocketOperator', 'Out')
 
 add_node(PrintNode, category='Operator')

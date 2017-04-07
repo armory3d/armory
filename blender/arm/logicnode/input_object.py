@@ -8,12 +8,9 @@ class ObjectNode(Node, ArmLogicTreeNode):
     bl_idname = 'LNObjectNode'
     bl_label = 'Object'
     bl_icon = 'GAME'
-    property0 = StringProperty(name = "Object", default="")
     
     def init(self, context):
-        self.outputs.new('NodeSocketShader', "Object")
+        self.inputs.new('ArmNodeSocketObject', 'Object')
+        self.outputs.new('ArmNodeSocketObject', 'Object')
 
-    def draw_buttons(self, context, layout):
-        layout.prop_search(self, "property0", context.scene, "objects", text = "")
-
-add_node(ObjectNode, category='Variable')
+add_node(ObjectNode, category='Input')

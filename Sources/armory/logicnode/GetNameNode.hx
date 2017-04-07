@@ -11,6 +11,8 @@ class GetNameNode extends Node {
 	override function get(from:Int):Dynamic {
 		var object:Object = inputs[0].get();
 
+		if (object == null) object = tree.object;
+
 		return object.name;
 	}
 }
