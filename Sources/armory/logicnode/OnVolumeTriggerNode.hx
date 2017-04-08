@@ -3,7 +3,7 @@ package armory.logicnode;
 import armory.object.Object;
 import armory.math.Vec4;
 
-class OnVolumeTriggerNode extends Node {
+class OnVolumeTriggerNode extends LogicNode {
 
 	public var property0:String;
 	var lastOverlap = false;

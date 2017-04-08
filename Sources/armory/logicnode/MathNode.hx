@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class MathNode extends Node {
+class MathNode extends LogicNode {
 
 	public var property0:String;
 

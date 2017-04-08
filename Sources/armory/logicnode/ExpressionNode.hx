@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class ExpressionNode extends Node {
+class ExpressionNode extends LogicNode {
 
 	public var property0:String;
 	var result:Dynamic;

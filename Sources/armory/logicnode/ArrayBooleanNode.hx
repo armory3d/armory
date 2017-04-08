@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class ArrayBooleanNode extends Node {
+class ArrayBooleanNode extends LogicNode {
 
 	public var value:Array<Bool> = [];
 	var initialized = false;

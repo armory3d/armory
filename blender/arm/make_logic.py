@@ -35,7 +35,7 @@ def build_node_tree(node_group):
         f.write('\tpublic function new() { super(); notifyOnAdd(add); }\n\n')
         f.write('\tfunction add() {\n')
         for node in root_nodes:
-            name = '_' + node.name.replace('.', '_').replace(' ', '')
+            name = '_' + arm.utils.safe_source_name(node.name)
             build_node(node_group, node, f)
         f.write('\t}\n')
         f.write('}\n')
@@ -47,7 +47,7 @@ def build_node(node_group, node, f):
         return build_node(node_group, node.inputs[0].links[0].from_node, f)
 
     # Get node name
-    name = '_' + node.name.replace('.', '_').replace(' ', '')
+    name = '_' + arm.utils.safe_source_name(node.name)
 
     # Check if node already exists
     if name in parsed_nodes:
@@ -117,7 +117,7 @@ def get_root_nodes(node_group):
 
 def build_default_node(inp):
     inp_name = 'new NullNode(this)'
-    if inp.bl_idname == 'ArmNodeSocketOperator':
+    if inp.bl_idname == 'ArmNodeSocketAction':
         return inp_name
     if inp.bl_idname == 'ArmNodeSocketObject':
         inp_name = 'new ObjectNode(this, "' + str(inp.default_value) + '")'

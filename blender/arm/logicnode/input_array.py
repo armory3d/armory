@@ -21,6 +21,7 @@ class ArrayNode(Node, ArmLogicTreeNode):
 
         op = row.operator('arm.node_add_input', text='New', icon='PLUS', emboss=True)
         op.node_index = str(id(self))
+        op.socket_type = 'NodeSocketShader'
         op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
 

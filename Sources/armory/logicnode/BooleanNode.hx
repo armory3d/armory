@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class BooleanNode extends Node {
+class BooleanNode extends LogicNode {
 
 	public var value:Bool;
 

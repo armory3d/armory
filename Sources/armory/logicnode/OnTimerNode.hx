@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class OnTimerNode extends Node {
+class OnTimerNode extends LogicNode {
 
 	var duration = 0.0;
 	var repeat = false;

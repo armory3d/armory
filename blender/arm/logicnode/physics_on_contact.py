@@ -17,7 +17,7 @@ class OnContactNode(Node, ArmLogicTreeNode):
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object 1')
         self.inputs.new('ArmNodeSocketObject', 'Object 2')
-        self.outputs.new('ArmNodeSocketOperator', 'Out')
+        self.outputs.new('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

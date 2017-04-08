@@ -10,9 +10,9 @@ class BranchNode(Node, ArmLogicTreeNode):
     bl_icon = 'CURVE_PATH'
     
     def init(self, context):
-        self.inputs.new('ArmNodeSocketOperator', 'In')
+        self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('NodeSocketBool', 'Bool')
-        self.outputs.new('ArmNodeSocketOperator', 'True')
-        self.outputs.new('ArmNodeSocketOperator', 'False')
+        self.outputs.new('ArmNodeSocketAction', 'True')
+        self.outputs.new('ArmNodeSocketAction', 'False')
 
 add_node(BranchNode, category='Logic')

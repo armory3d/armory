@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import armory.math.Vec4;
 
-class VectorMathNode extends Node {
+class VectorMathNode extends LogicNode {
 
 	public var property0:String;
 	var v = new Vec4();

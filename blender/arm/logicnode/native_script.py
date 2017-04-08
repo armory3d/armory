@@ -16,8 +16,8 @@ class ScriptNode(Node, ArmLogicTreeNode):
     property0_ = StringProperty(name='Text', default='')
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketOperator', 'In')
-        self.outputs.new('ArmNodeSocketOperator', 'Out')
+        self.inputs.new('ArmNodeSocketAction', 'In')
+        self.outputs.new('ArmNodeSocketAction', 'Out')
         self.outputs.new('NodeSocketShader', 'Result')
 
     def draw_buttons(self, context, layout):

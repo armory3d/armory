@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class ArrayIntegerNode extends Node {
+class ArrayIntegerNode extends LogicNode {
 
 	public var value:Array<Int> = [];
 	var initialized = false;

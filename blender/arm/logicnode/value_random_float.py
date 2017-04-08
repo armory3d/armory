@@ -6,7 +6,7 @@ from arm.logicnode.arm_nodes import *
 class RandomFloatNode(Node, ArmLogicTreeNode):
     '''Random float node'''
     bl_idname = 'LNRandomFloatNode'
-    bl_label = 'Random Float'
+    bl_label = 'Random (Float)'
     bl_icon = 'GAME'
 
     def init(self, context):

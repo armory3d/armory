@@ -10,6 +10,6 @@ class OnUpdateNode(Node, ArmLogicTreeNode):
     bl_icon = 'CURVE_PATH'
     
     def init(self, context):
-        self.outputs.new('ArmNodeSocketOperator', 'Out')
+        self.outputs.new('ArmNodeSocketAction', 'Out')
 
 add_node(OnUpdateNode, category='Event')

@@ -3,7 +3,7 @@ package armory.logicnode;
 import armory.object.Object;
 import armory.trait.internal.RigidBody;
 
-class OnContactNode extends Node {
+class OnContactNode extends LogicNode {
 
 	public var property0:String;
 	var lastContact = false;

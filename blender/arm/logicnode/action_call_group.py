@@ -17,10 +17,10 @@ class CallGroupNode(Node, ArmLogicTreeNode):
     property0_ = StringProperty(name='Group', default='')
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketOperator', 'In')
-        self.outputs.new('ArmNodeSocketOperator', 'Out')
+        self.inputs.new('ArmNodeSocketAction', 'In')
+        self.outputs.new('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0_', bpy.data, 'node_groups', icon='NONE', text='')
 
-add_node(CallGroupNode, category='Operator')
+add_node(CallGroupNode, category='Action')

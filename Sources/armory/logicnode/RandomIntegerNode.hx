@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class RandomIntegerNode extends Node {
+class RandomIntegerNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);

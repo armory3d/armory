@@ -4,7 +4,7 @@ import iron.math.Mat4;
 import iron.math.Vec4;
 import iron.math.Quat;
 
-class SeparateTransformNode extends Node {
+class SeparateTransformNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);

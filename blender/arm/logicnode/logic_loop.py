@@ -10,11 +10,11 @@ class LoopNode(Node, ArmLogicTreeNode):
     bl_icon = 'CURVE_PATH'
     
     def init(self, context):
-        self.inputs.new('ArmNodeSocketOperator', 'In')
+        self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('NodeSocketInt', 'From')
         self.inputs.new('NodeSocketInt', 'To')
-        self.outputs.new('ArmNodeSocketOperator', 'Loop')
+        self.outputs.new('ArmNodeSocketAction', 'Loop')
         self.outputs.new('NodeSocketInt', 'Index')
-        self.outputs.new('ArmNodeSocketOperator', 'Done')
+        self.outputs.new('ArmNodeSocketAction', 'Done')
 
 add_node(LoopNode, category='Logic')

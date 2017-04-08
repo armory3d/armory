@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import armory.object.SpeakerObject;
 
-class PlaySoundNode extends Node {
+class PlaySoundNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);

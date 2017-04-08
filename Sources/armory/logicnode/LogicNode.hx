@@ -1,20 +1,20 @@
 package armory.logicnode;
 
-class Node {
+class LogicNode {
 
 	var tree:LogicTree;
-	var inputs:Array<NodeInput> = [];
-	var outputs:Array<Array<Node>> = [];
+	var inputs:Array<LogicNodeInput> = [];
+	var outputs:Array<Array<LogicNode>> = [];
 
 	public function new(tree:LogicTree) {
 		this.tree = tree;
 	}
 
-	public function addInput(node:Node, from:Int) {
-		inputs.push(new NodeInput(node, from));
+	public function addInput(node:LogicNode, from:Int) {
+		inputs.push(new LogicNodeInput(node, from));
 	}
 
-	public function addOutputs(nodes:Array<Node>) {
+	public function addOutputs(nodes:Array<LogicNode>) {
 		outputs.push(nodes);
 	}
 
@@ -22,30 +22,30 @@ class Node {
 
 	function runOutputs(i:Int) { for (o in outputs[i]) o.run(); }
 
-	@:allow(armory.logicnode.NodeInput)
+	@:allow(armory.logicnode.LogicNodeInput)
 	function get(from:Int):Dynamic { return this; }
 
-	@:allow(armory.logicnode.NodeInput)
+	@:allow(armory.logicnode.LogicNodeInput)
 	function set(value:Dynamic) { }
 }
 
-class NodeInput {
+class LogicNodeInput {
 
-	@:allow(armory.logicnode.Node)
-	var node:Node;
+	@:allow(armory.logicnode.LogicNode)
+	var node:LogicNode;
 	var from:Int; // Socket index
 
-	public function new(node:Node, from:Int) {
+	public function new(node:LogicNode, from:Int) {
 		this.node = node;
 		this.from = from;
 	}
 
-	@:allow(armory.logicnode.Node)
+	@:allow(armory.logicnode.LogicNode)
 	function get():Dynamic {
 		return node.get(from);
 	}
 
-	@:allow(armory.logicnode.Node)
+	@:allow(armory.logicnode.LogicNode)
 	function set(value:Dynamic) {
 		node.set(value);
 	}

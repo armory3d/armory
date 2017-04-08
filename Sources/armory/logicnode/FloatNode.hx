@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class FloatNode extends Node {
+class FloatNode extends LogicNode {
 
 	public var value:Float;
 

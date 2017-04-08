@@ -4,7 +4,7 @@ import armory.object.Object;
 import armory.math.Vec4;
 import armory.trait.internal.RigidBody;
 
-class ApplyImpulseNode extends Node {
+class ApplyImpulseNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);

@@ -3,7 +3,7 @@ package armory.logicnode;
 import armory.object.Object;
 import armory.math.Mat4;
 
-class SpawnObjectNode extends Node {
+class SpawnObjectNode extends LogicNode {
 
 	var object:Object;
 

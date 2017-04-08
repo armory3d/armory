@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class SelfNode extends Node {
+class SelfNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);

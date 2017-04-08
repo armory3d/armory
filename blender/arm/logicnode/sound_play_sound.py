@@ -10,8 +10,8 @@ class PlaySoundNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketOperator', 'In')
+        self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'Speaker')
-        self.outputs.new('ArmNodeSocketOperator', 'Out')
+        self.outputs.new('ArmNodeSocketAction', 'Out')
 
 add_node(PlaySoundNode, category='Sound')

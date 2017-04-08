@@ -764,7 +764,7 @@ class ArmoryExporter:
         deltaSclAnimated = [False, False, False]
 
         mode = bobject.rotation_mode
-        sampledAnimation = ((ArmoryExporter.sampleAnimationFlag) or (mode == "QUATERNION") or (mode == "AXIS_ANGLE"))
+        sampledAnimation = (ArmoryExporter.sample_animation_flag or mode == "QUATERNION" or mode == "AXIS_ANGLE")
 
         if (not sampledAnimation) and (bobject.animation_data):
             action = bobject.animation_data.action
@@ -1074,14 +1074,14 @@ class ArmoryExporter:
                         structFlag = True
             
     def process_bone(self, bone):
-        if (ArmoryExporter.exportAllFlag) or (bone.select):
+        if ArmoryExporter.export_all_flag or bone.select:
             self.bobjectArray[bone] = {"objectType" : NodeTypeBone, "structName" : bone.name}
 
         for subbobject in bone.children:
             self.process_bone(subbobject)
 
     def process_bobject(self, bobject):
-        if ArmoryExporter.exportAllFlag or bobject.select:
+        if ArmoryExporter.export_all_flag or bobject.select:
             btype = ArmoryExporter.get_bobject_type(bobject)
 
             if ArmoryExporter.option_mesh_only and btype != NodeTypeMesh:
@@ -1120,7 +1120,7 @@ class ArmoryExporter:
 
     def export_bone_transform(self, armature, bone, scene, o, action):
         curveArray = self.collect_bone_animation(armature, bone.name)
-        animation = ((len(curveArray) != 0) or (ArmoryExporter.sampleAnimationFlag))
+        animation = ((len(curveArray) != 0) or ArmoryExporter.sample_animation_flag)
 
         transform = bone.matrix_local.copy()
         parentBone = bone.parent
@@ -2353,13 +2353,13 @@ class ArmoryExporter:
             self.output['mesh_datas'] = [];
             self.do_export_mesh(objectRef, scene)
 
-    def execute(self, context, filepath):
+    def execute(self, context, filepath, scene=None):
         profile_time = time.time()
         
         self.output = {}
         self.filepath = filepath
 
-        self.scene = context.scene
+        self.scene = context.scene if scene == None else scene
         originalFrame = self.scene.frame_current
         originalSubframe = self.scene.frame_subframe
         self.restoreFrame = False
@@ -2586,7 +2586,7 @@ class ArmoryExporter:
         return is_instanced, instance_offsets
 
     def preprocess(self):
-        ArmoryExporter.exportAllFlag = True
+        ArmoryExporter.export_all_flag = True
         ArmoryExporter.export_physics = False # Indicates whether rigid body is exported
         ArmoryExporter.export_navigation = False
         if not hasattr(ArmoryExporter, 'compress_enabled'):
@@ -2600,7 +2600,7 @@ class ArmoryExporter:
         ArmoryExporter.option_spawn_all_layers = bpy.data.worlds['Arm'].arm_spawn_all_layers
         ArmoryExporter.option_minimize = bpy.data.worlds['Arm'].arm_minimize
         ArmoryExporter.option_sample_animation = bpy.data.worlds['Arm'].arm_sampled_animation
-        ArmoryExporter.sampleAnimationFlag = ArmoryExporter.option_sample_animation
+        ArmoryExporter.sample_animation_flag = ArmoryExporter.option_sample_animation
 
         # Only one render path for scene for now
         # Used for material shader export and khafile

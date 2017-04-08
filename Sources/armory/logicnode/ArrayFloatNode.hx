@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class ArrayFloatNode extends Node {
+class ArrayFloatNode extends LogicNode {
 
 	public var value:Array<Float> = [];
 	var initialized = false;

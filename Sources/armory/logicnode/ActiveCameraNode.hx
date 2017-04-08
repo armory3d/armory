@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class ActiveCameraNode extends Node {
+class ActiveCameraNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);

@@ -4,7 +4,7 @@ import iron.math.Mat4;
 import iron.math.Vec4;
 import iron.math.Quat;
 
-class TransformNode extends Node {
+class TransformNode extends LogicNode {
 
 	var value:Mat4 = Mat4.identity();
 	static var q = new Quat();

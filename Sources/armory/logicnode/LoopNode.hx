@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class LoopNode extends Node {
+class LoopNode extends LogicNode {
 
 	var index:Int;
 

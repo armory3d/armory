@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import armory.object.Object;
 
-class GetDistanceNode extends Node {
+class GetDistanceNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);

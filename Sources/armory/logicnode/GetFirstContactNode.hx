@@ -3,7 +3,7 @@ package armory.logicnode;
 import armory.object.Object;
 import armory.trait.internal.RigidBody;
 
-class GetFirstContactNode extends Node {
+class GetFirstContactNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);

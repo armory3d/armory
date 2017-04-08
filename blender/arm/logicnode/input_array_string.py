@@ -23,5 +23,6 @@ class StringArrayNode(Node, ArmLogicTreeNode):
         op.node_index = str(id(self))
         op.socket_type = 'NodeSocketString'
         op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
+        op2.node_index = str(id(self))
 
 add_node(StringArrayNode, category='Input')

@@ -3,7 +3,7 @@ package armory.logicnode;
 import armory.object.Object;
 import armory.math.Mat4;
 
-class SetTransformNode extends Node {
+class SetTransformNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);

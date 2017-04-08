@@ -4,7 +4,7 @@ import armory.object.Object;
 import armory.math.Vec4;
 import armory.trait.internal.RigidBody;
 
-class SetVelocityNode extends Node {
+class SetVelocityNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);

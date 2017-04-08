@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import armory.math.Vec4;
 
-class SeparateVectorNode extends Node {
+class SeparateVectorNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);

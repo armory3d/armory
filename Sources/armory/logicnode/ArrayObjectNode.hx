@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import armory.object.Object;
 
-class ArrayObjectNode extends Node {
+class ArrayObjectNode extends LogicNode {
 
 	public var value:Array<Object> = [];
 	var initialized = false;

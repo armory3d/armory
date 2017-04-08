@@ -6,7 +6,7 @@ from arm.logicnode.arm_nodes import *
 class RandomVectorNode(Node, ArmLogicTreeNode):
     '''Random vector node'''
     bl_idname = 'LNRandomVectorNode'
-    bl_label = 'Random Vector'
+    bl_label = 'Random (Vector)'
     bl_icon = 'GAME'
 
     def init(self, context):

@@ -10,6 +10,6 @@ class GroupOutputNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketOperator', 'In')
+        self.inputs.new('ArmNodeSocketAction', 'In')
 
-add_node(GroupOutputNode, category='Operator')
+add_node(GroupOutputNode, category='Action')

@@ -10,9 +10,9 @@ class CallStaticFunctionNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketOperator', 'In')
+        self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('NodeSocketString', 'Function')
-        self.outputs.new('ArmNodeSocketOperator', 'Out')
+        self.outputs.new('ArmNodeSocketAction', 'Out')
         self.outputs.new('NodeSocketShader', 'Result')
 
 add_node(CallStaticFunctionNode, category='Native')

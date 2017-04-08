@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class GateNode extends Node {
+class GateNode extends LogicNode {
 
 	public var property0:String;
 
@@ -27,6 +27,10 @@ class GateNode extends Node {
 			cond = v1 < v2;
 		case "Less Equal":
 			cond = v1 <= v2;
+		case "Or":
+			cond = v1 || v2;
+		case "And":
+			cond = v1 && v2;
 		}
 
 		if (cond) super.run();

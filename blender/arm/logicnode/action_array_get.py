@@ -14,4 +14,4 @@ class ArrayGetNode(Node, ArmLogicTreeNode):
         self.inputs.new('NodeSocketInt', 'Index')
         self.outputs.new('NodeSocketShader', 'Value')
 
-add_node(ArrayGetNode, category='Operator')
+add_node(ArrayGetNode, category='Action')

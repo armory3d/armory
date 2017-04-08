@@ -3,7 +3,7 @@ package armory.logicnode;
 import armory.math.Vec4;
 import armory.trait.internal.Navigation;
 
-class NavigableLocationNode extends Node {
+class NavigableLocationNode extends LogicNode {
 
 	var loc:Vec4;
 
@@ -11,7 +11,7 @@ class NavigableLocationNode extends Node {
 		super(tree);
 
 		armory.Scene.active.notifyOnInit(function() {
-			get();
+			get(0);
 		});
 	}
 

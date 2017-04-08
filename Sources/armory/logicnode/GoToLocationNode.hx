@@ -4,7 +4,7 @@ import armory.trait.internal.Navigation;
 import armory.object.Object;
 import armory.math.Vec4;
 
-class GoToLocationNode extends Node {
+class GoToLocationNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);

@@ -16,7 +16,7 @@ class OnInputNode(Node, ArmLogicTreeNode):
         name='', default='Down')
     
     def init(self, context):
-        self.outputs.new('ArmNodeSocketOperator', 'Out')
+        self.outputs.new('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')

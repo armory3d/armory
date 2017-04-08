@@ -12,8 +12,8 @@ class ExpressionNode(Node, ArmLogicTreeNode):
     property0 = StringProperty(name='', default='')
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketOperator', 'In')
-        self.outputs.new('ArmNodeSocketOperator', 'Out')
+        self.inputs.new('ArmNodeSocketAction', 'In')
+        self.outputs.new('ArmNodeSocketAction', 'Out')
         self.outputs.new('NodeSocketShader', 'Result')
 
     def draw_buttons(self, context, layout):

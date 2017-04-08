@@ -3,7 +3,7 @@ package armory.logicnode;
 import armory.object.Object;
 import armory.math.Vec4;
 
-class PickLocationNode extends Node {
+class PickLocationNode extends LogicNode {
 
 	var loc = new Vec4();
 

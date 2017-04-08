@@ -12,5 +12,6 @@ class PickObjectNode(Node, ArmLogicTreeNode):
     def init(self, context):
         self.inputs.new('NodeSocketVector', 'Screen Coords')
         self.outputs.new('ArmNodeSocketObject', 'Object')
+        self.outputs.new('NodeSocketVector', 'Hit')
 
 add_node(PickObjectNode, category='Physics')

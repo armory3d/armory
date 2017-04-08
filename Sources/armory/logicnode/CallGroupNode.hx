@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class CallGroupNode extends Node {
+class CallGroupNode extends LogicNode {
 
 	public var property0:String;
 	var instance:LogicTree = null;

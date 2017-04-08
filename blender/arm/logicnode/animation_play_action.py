@@ -10,10 +10,10 @@ class PlayActionNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketOperator', 'In')
+        self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'Object')
         self.inputs.new('NodeSocketString', 'Clip')
-        self.outputs.new('ArmNodeSocketOperator', 'Out')
-        self.outputs.new('ArmNodeSocketOperator', 'Done')
+        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.outputs.new('ArmNodeSocketAction', 'Done')
 
 add_node(PlayActionNode, category='Animation')

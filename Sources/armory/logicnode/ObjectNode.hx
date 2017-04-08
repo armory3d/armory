@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import armory.object.Object;
 
-class ObjectNode extends Node {
+class ObjectNode extends LogicNode {
 
 	public var objectName:String;
 	public var value:Object;

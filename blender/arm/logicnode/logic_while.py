@@ -10,9 +10,9 @@ class WhileNode(Node, ArmLogicTreeNode):
     bl_icon = 'CURVE_PATH'
     
     def init(self, context):
-        self.inputs.new('ArmNodeSocketOperator', 'In')
+        self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('NodeSocketBool', 'Condition')
-        self.outputs.new('ArmNodeSocketOperator', 'Loop')
-        self.outputs.new('ArmNodeSocketOperator', 'Done')
+        self.outputs.new('ArmNodeSocketAction', 'Loop')
+        self.outputs.new('ArmNodeSocketAction', 'Done')
 
 add_node(WhileNode, category='Logic')

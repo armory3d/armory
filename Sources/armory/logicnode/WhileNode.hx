@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class WhileNode extends Node {
+class WhileNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);

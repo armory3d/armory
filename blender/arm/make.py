@@ -88,7 +88,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
         if scene.game_export:
             ext = '.zip' if (scene.data_compressed and is_publish) else '.arm'
             asset_path = 'build/compiled/Assets/' + arm.utils.safe_filename(scene.name) + ext
-            exporter.execute(bpy.context, asset_path)
+            exporter.execute(bpy.context, asset_path, scene=scene)
             if physics_found == False and ArmoryExporter.export_physics:
                 physics_found = True
             if navigation_found == False and ArmoryExporter.export_navigation:

@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import armory.math.Vec4;
 
-class ArrayColorNode extends Node {
+class ArrayColorNode extends LogicNode {
 
 	public var value:Array<Vec4> = [];
 	var initialized = false;

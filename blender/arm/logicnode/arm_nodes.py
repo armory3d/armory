@@ -8,7 +8,7 @@ category_items['Event'] = []
 category_items['Value'] = []
 category_items['Input'] = []
 category_items['Logic'] = []
-category_items['Operator'] = []
+category_items['Action'] = []
 category_items['Native'] = []
 category_items['Physics'] = []
 category_items['Navmesh'] = []
@@ -23,9 +23,9 @@ class ArmLogicTreeNode:
     def poll(cls, ntree):
         return ntree.bl_idname == 'ArmLogicTreeType'
 
-class ArmOperatorSocket(bpy.types.NodeSocket):
-    bl_idname = 'ArmNodeSocketOperator'
-    bl_label = 'Operator Socket'
+class ArmActionSocket(bpy.types.NodeSocket):
+    bl_idname = 'ArmNodeSocketAction'
+    bl_label = 'Action Socket'
 
     def draw(self, context, layout, node, text):
         layout.label(self.name)
@@ -78,7 +78,7 @@ class ArmNodeAddInputButton(bpy.types.Operator):
 
     def execute(self, context):
         global array_nodes
-        array_nodes[self.node_index].inputs.new(self.socket_type, '')
+        array_nodes[self.node_index].inputs.new(self.socket_type, 'Input 1')
         return{'FINISHED'}
 
 class ArmNodeRemoveInputButton(bpy.types.Operator):
@@ -99,7 +99,7 @@ def add_node(node_class, category):
     nodes.append(node_class)
     category_items[category].append(NodeItem(node_class.bl_idname))
 
-bpy.utils.register_class(ArmOperatorSocket)
+bpy.utils.register_class(ArmActionSocket)
 bpy.utils.register_class(ArmObjectSocket)
 bpy.utils.register_class(ArmNodeEyedropButton)
 bpy.utils.register_class(ArmNodeAddInputButton)

@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class SetVariableNode extends Node {
+class SetVariableNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);

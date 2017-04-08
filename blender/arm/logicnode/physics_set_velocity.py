@@ -10,7 +10,7 @@ class SetVelocityNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketOperator', 'In')
+        self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'Object')
         self.inputs.new('NodeSocketVector', 'Linear')
         self.inputs.new('NodeSocketVector', 'Linear Factor')
@@ -18,6 +18,6 @@ class SetVelocityNode(Node, ArmLogicTreeNode):
         self.inputs.new('NodeSocketVector', 'Angular')
         self.inputs.new('NodeSocketVector', 'Angular Factor')
         self.inputs[-1].default_value = [1.0, 1.0, 1.0]
-        self.outputs.new('ArmNodeSocketOperator', 'Out')
+        self.outputs.new('ArmNodeSocketAction', 'Out')
 
 add_node(SetVelocityNode, category='Physics')

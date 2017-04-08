@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class ArrayStringNode extends Node {
+class ArrayStringNode extends LogicNode {
 
 	public var value:Array<String> = [];
 	var initialized = false;

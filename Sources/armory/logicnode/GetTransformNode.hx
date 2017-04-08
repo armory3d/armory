@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import armory.object.Object;
 
-class GetTransformNode extends Node {
+class GetTransformNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);

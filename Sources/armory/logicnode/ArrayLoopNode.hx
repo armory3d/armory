@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class ArrayLoopNode extends Node {
+class ArrayLoopNode extends LogicNode {
 
 	var value:Dynamic;
 
