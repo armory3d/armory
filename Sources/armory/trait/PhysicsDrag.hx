@@ -40,8 +40,9 @@ class PhysicsDrag extends Trait {
 			pickedBody.activate();
 		}
 
-		if (Input.started) {
-			var b = physics.pickClosest(Input.x, Input.y);
+		var mouse = Input.getMouse();
+		if (mouse.started()) {
+			var b = physics.pickClosest(mouse.x, mouse.y);
 
 			if (b != null && b.mass > 0 && !b.body.isKinematicObject() && b.object.getTrait(PhysicsDrag) != null) {
 
@@ -104,7 +105,7 @@ class PhysicsDrag extends Trait {
 			}
 		}
 
-		else if (Input.released) {
+		else if (mouse.released()) {
 
 			if (pickConstraint != null) {
 				physics.world.removeConstraint(pickConstraint);
@@ -115,7 +116,7 @@ class PhysicsDrag extends Trait {
 			Input.occupied = false;
 		}
 
-		else if (Input.down) {
+		else if (mouse.down()) {
 
 			if (pickConstraint != null) {
 				
@@ -148,8 +149,9 @@ class PhysicsDrag extends Trait {
 	}
 
 	inline function setRays() {
+		var mouse = Input.getMouse();
 		rayFrom = physics.getRayFrom();
-		rayTo = physics.getRayTo(Input.x, Input.y);
+		rayTo = physics.getRayTo(mouse.x, mouse.y);
 	}
 #end
 }

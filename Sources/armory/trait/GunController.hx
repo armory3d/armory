@@ -9,7 +9,6 @@ import iron.object.Object;
 import iron.object.Transform;
 import iron.object.CameraObject;
 import armory.trait.internal.RigidBody;
-import armory.system.Keymap;
 
 @:keep
 class GunController extends Trait {
@@ -19,28 +18,19 @@ class GunController extends Trait {
 #else
 
 	var projectileRef:String;
-	var firePointRef:String;
 	var firePoint:Transform;
 	var fireStrength = 25;
 
 	public function new(projectileRef:String, firePointRef:String) {
 		super();
-
-		this.projectileRef = projectileRef;
-		this.firePointRef = firePointRef;
-		notifyOnInit(init);
-	}
-	
-	function init() {
-		firePoint = object.getChild(firePointRef).transform;
-		kha.input.Keyboard.get().notify(onDown, null);
-	}
-
-	function onDown(key: kha.Key, char: String) {
-		char = char.toLowerCase();
-		if (char == Keymap.fire) {
-			shoot();
-		}
+		
+		notifyOnInit(function() {
+			firePoint = object.getChild(firePointRef).transform;
+		});
+		
+		notifyOnUpdate(function() {
+			if (Input.getKeyboard().started("f")) shoot();
+		});
 	}
 
 	function shoot() {

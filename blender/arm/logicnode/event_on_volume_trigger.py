@@ -16,7 +16,8 @@ class OnVolumeTriggerNode(Node, ArmLogicTreeNode):
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketShader', 'Object Volume')
+        self.inputs.new('ArmNodeSocketObject', 'Volume')
+        self.inputs[-1].default_value = 'Volume'
         self.outputs.new('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):

@@ -43,27 +43,22 @@ class SpaceArmory extends Trait {
 
 		if (first) {
 			first = false;
-			kha.input.Keyboard.get().notify(onKeyDown, onKeyUp);
-
-#if (js && webgl)
+			#if (js && webgl)
 			electronRenderCapture();
-#end
+			#end
 		}
 	}
 
-	function onKeyDown(key: kha.Key, char: String) {
-		if (key == kha.Key.ESC) trace('__arm|quit');
-	}
-
-	function onKeyUp(key: kha.Key, char: String) {
-		
-	}
-
 	function update() {
-		if (Input.started2) {
+
+		var keyboard = Input.getKeyboard();
+		if (keyboard.started("esc")) trace('__arm|quit');
+
+		var mouse = Input.getMouse();
+		if (mouse.started("right")) {
 			var transforms:Array<Transform> = [];
 			for (o in iron.Scene.active.meshes) transforms.push(o.transform);
-			var hit = RayCaster.getClosestBoxIntersect(transforms, Input.x, Input.y, iron.Scene.active.camera);
+			var hit = RayCaster.getClosestBoxIntersect(transforms, mouse.x, mouse.y, iron.Scene.active.camera);
 			if (hit != null) {
 				var loc = hit.loc;
 				// gizmo.transform.loc.set(loc.x, loc.y, loc.z);
@@ -74,11 +69,11 @@ class SpaceArmory extends Trait {
 		}
 
 		// if (selected != null) {
-		// 	if (Input.started) {
+		// 	if (mouse.started()) {
 
 		// 		var transforms = [arrowX.transform, arrowY.transform, arrowZ.transform];
 
-		// 		var hit = RayCaster.getClosestBoxIntersect(transforms, Input.x, Input.y, iron.Scene.active.camera);
+		// 		var hit = RayCaster.getClosestBoxIntersect(transforms, mouse.x, mouse.y, iron.Scene.active.camera);
 		// 		if (hit != null) {
 		// 			if (hit.object.name == 'ArrowX') moveX = true;
 		// 			else if (hit.object.name == 'ArrowY') moveY = true;
@@ -90,9 +85,9 @@ class SpaceArmory extends Trait {
 		// 		Input.occupied = true;
 
 				
-		// 		if (moveX) selected.loc.x += Input.deltaX / 110.0;
-		// 		if (moveY) selected.loc.y += Input.deltaX / 110.0;
-		// 		if (moveZ) selected.loc.z += Input.deltaX / 110.0;
+		// 		if (moveX) selected.loc.x += mouse.deltaX / 110.0;
+		// 		if (moveY) selected.loc.y += mouse.deltaX / 110.0;
+		// 		if (moveZ) selected.loc.z += mouse.deltaX / 110.0;
 				
 		// 		selected.buildMatrix();
 
@@ -101,7 +96,7 @@ class SpaceArmory extends Trait {
 		// 	}
 		// }
 
-		// if (Input.released) {
+		// if (mouse.released()) {
 		// 	Input.occupied = false;
 		// 	// Move operator creator into separate class..
 		// 	// Map directly to bl operators - setx to translate

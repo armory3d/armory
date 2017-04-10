@@ -36,7 +36,9 @@ class FirstPersonController extends CameraController {
 	function preUpdate() {
 		if (Input.occupied || !body.ready) return;
 		
-		// if (Input.started && !locked) {
+		var mouse = Input.getMouse();
+		
+		// if (mouse.started() && !locked) {
 			// kha.SystemImpl.lockMouse();
 			// locked = true;
 		// }
@@ -46,9 +48,9 @@ class FirstPersonController extends CameraController {
 		// }
 		
 		// if (locked) {
-		if (Input.down) {
-			head.transform.rotate(xVec, -Input.movementY / 250 * rotationSpeed);
-			transform.rotate(zVec, -Input.movementX / 250 * rotationSpeed);
+		if (mouse.down()) {
+			head.transform.rotate(xVec, -mouse.movementY / 250 * rotationSpeed);
+			transform.rotate(zVec, -mouse.movementX / 250 * rotationSpeed);
 			body.syncTransform();
 		}
 	}

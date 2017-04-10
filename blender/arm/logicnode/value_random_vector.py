@@ -10,10 +10,10 @@ class RandomVectorNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('NodeSocketFloat', 'Min')
-        self.inputs[-1].default_value = -1.0
-        self.inputs.new('NodeSocketFloat', 'Max')
-        self.inputs[-1].default_value = 1.0
+        self.inputs.new('NodeSocketVector', 'Min')
+        self.inputs[-1].default_value = [-1.0, -1.0, -1.0]
+        self.inputs.new('NodeSocketVector', 'Max')
+        self.inputs[-1].default_value = [1.0, 1.0, 1.0]
         self.outputs.new('NodeSocketVector', 'Vector')
 
 add_node(RandomVectorNode, category='Value')

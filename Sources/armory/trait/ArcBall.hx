@@ -18,10 +18,11 @@ class ArcBall extends Trait {
 	function update() {
 		if (Input.occupied) return;
 
-		if (Input.down) {
-			object.transform.rotate(new Vec4(0, 0, 1), -Input.movementX / 100);
+		var mouse = Input.getMouse();
+		if (mouse.down()) {
+			object.transform.rotate(new Vec4(0, 0, 1), -mouse.movementX / 100);
 			object.transform.buildMatrix();
-			object.transform.rotate(object.transform.matrix.right(), -Input.movementY / 100);
+			object.transform.rotate(object.transform.matrix.right(), -mouse.movementY / 100);
 			object.transform.buildMatrix();
 		}
 	}

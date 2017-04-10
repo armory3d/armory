@@ -1,13 +1,10 @@
 package armory.trait;
 
-import kha.Key;
 import iron.Trait;
 import iron.system.Input;
 import iron.system.Time;
 import iron.object.CameraObject;
 import iron.math.Vec4;
-import iron.math.Quat;
-import armory.system.Keymap;
 
 @:keep
 class WalkNavigation extends Trait {
@@ -19,15 +16,8 @@ class WalkNavigation extends Trait {
 	public function new() {
 		super();
 
-		kha.input.Keyboard.get().notify(onKeyDown, onKeyUp);
-
 		notifyOnInit(init);
 		notifyOnUpdate(update);
-		notifyOnRemove(removed);
-	}
-	
-	function removed() {
-		kha.input.Keyboard.get().remove(onKeyDown, onKeyUp);
 	}
 
 	function init() {
@@ -37,7 +27,16 @@ class WalkNavigation extends Trait {
 	function update() {
 		if (Input.occupied) return;
 
-		var d = Time.delta * speed * fast * slow;
+		var keyboard = Input.getKeyboard();
+		var moveForward = keyboard.down("w") || keyboard.down("up");
+		var moveBackward = keyboard.down("s") || keyboard.down("down");
+		var strafeLeft = keyboard.down("a") || keyboard.down("left");
+		var strafeRight = keyboard.down("d") || keyboard.down("right");
+		var strafeUp = keyboard.down("e");
+		var strafeDown = keyboard.down("q");
+		var fast = keyboard.down("shift") ? 2.0 : (keyboard.down("alt") ? 0.5 : 1.0);
+
+		var d = Time.delta * speed * fast;
 
 		if (moveForward) {
 			camera.move(camera.look(), d);
@@ -60,41 +59,10 @@ class WalkNavigation extends Trait {
 			camera.move(dir, -d);
 		}
 
-		if (Input.down) {
-			camera.rotate(Vec4.zAxis(), -Input.movementX / 200);
-			camera.rotate(camera.right(), -Input.movementY / 200);
+		var mouse = Input.getMouse();
+		if (mouse.down()) {
+			camera.rotate(Vec4.zAxis(), -mouse.movementX / 200);
+			camera.rotate(camera.right(), -mouse.movementY / 200);
 		}
-	}
-
-	var moveForward = false;
-	var moveBackward = false;
-	var strafeLeft = false;
-	var strafeRight = false;
-	var strafeUp = false;
-	var strafeDown = false;
-	var fast = 1.0;
-	var slow = 1.0;
-	function onKeyDown(key:Key, char:String) {
-		char = char.toLowerCase();
-		if (char == Keymap.forward || key == Key.UP) moveForward = true;
-		else if (char == Keymap.backward || key == Key.DOWN) moveBackward = true;
-		else if (char == Keymap.left || key == Key.LEFT) strafeLeft = true;
-		else if (char == Keymap.right || key == Key.RIGHT) strafeRight = true;
-		else if (char == Keymap.up) strafeUp = true;
-		else if (char == Keymap.down) strafeDown = true;
-		else if (key == Keymap.fast) fast = 2.0;
-		else if (key == Keymap.slow) slow = 0.5;
-	}
-
-	function onKeyUp(key:kha.Key, char:String) {
-		char = char.toLowerCase();
-		if (char == Keymap.forward || key == Key.UP) moveForward = false;
-		else if (char == Keymap.backward || key == Key.DOWN) moveBackward = false;
-		else if (char == Keymap.left || key == Key.LEFT) strafeLeft = false;
-		else if (char == Keymap.right || key == Key.RIGHT) strafeRight = false;
-		else if (char == Keymap.up) strafeUp = false;
-		else if (char == Keymap.down) strafeDown = false;
-		else if (key == Keymap.fast) fast = 1.0;
-		else if (key == Keymap.slow) slow = 1.0;
 	}
 }

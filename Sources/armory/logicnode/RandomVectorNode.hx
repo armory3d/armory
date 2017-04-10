@@ -11,11 +11,11 @@ class RandomVectorNode extends LogicNode {
 	}
 
 	override function get(from:Int):Dynamic {
-		var min:Float = inputs[0].get();
-		var max:Float = inputs[1].get();
-		var x = min + (Math.random() * (max - min));
-		var y = min + (Math.random() * (max - min));
-		var z = min + (Math.random() * (max - min));
+		var min:Vec4 = inputs[0].get();
+		var max:Vec4 = inputs[1].get();
+		var x = min.x + (Math.random() * (max.x - min.x));
+		var y = min.y + (Math.random() * (max.y - min.y));
+		var z = min.z + (Math.random() * (max.z - min.z));
 		v.set(x, y, z);
 		return v;
 	}

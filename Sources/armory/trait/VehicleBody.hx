@@ -6,7 +6,6 @@ import iron.object.CameraObject;
 import iron.object.Transform;
 import iron.system.Time;
 import armory.trait.internal.PhysicsWorld;
-import armory.system.Keymap;
 #if arm_physics
 import haxebullet.Bullet;
 #end
@@ -50,29 +49,6 @@ class VehicleBody extends Trait {
 		wheelNames = [wheelName1, wheelName2, wheelName3, wheelName4];
 
 		Scene.active.notifyOnInit(init);
-	}
-	
-	var forward = false;
-	var backward = false;
-	var left = false;
-	var right = false;
-	var brake = false;
-	function onKeyDown(key:kha.Key, char:String) {
-		char = char.toLowerCase();
-		if (char == Keymap.forward) forward = true;
-		else if (char == Keymap.backward) backward = true;
-		else if (char == Keymap.left) left = true;
-		else if (char == Keymap.right) right = true;
-		else if (char == Keymap.brake) brake = true;
-	}
-
-	function onKeyUp(key:kha.Key, char:String) {
-		char = char.toLowerCase();
-		if (char == Keymap.forward) forward = false;
-		else if (char == Keymap.backward) backward = false;
-		else if (char == Keymap.left) left = false;
-		else if (char == Keymap.right) right = false;
-		else if (char == Keymap.brake) brake = false;
 	}
 
 	function init() {
@@ -141,12 +117,18 @@ class VehicleBody extends Trait {
 
 		physics.world.addAction(vehicle);
 
-		kha.input.Keyboard.get().notify(onKeyDown, onKeyUp);
 		notifyOnUpdate(update);
 	}
 
 	function update() {
 		if (vehicle == null) return;
+
+		var keyboard = armory.system.Input.getKeyboard();
+		var forward = keyboard.down("w");
+		var backward = keyboard.down("s");
+		var left = keyboard.down("a");
+		var right = keyboard.down("d");
+		var brake = keyboard.down("space");
 
 		if (forward) {
 			engineForce = maxEngineForce;

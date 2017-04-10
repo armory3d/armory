@@ -4,16 +4,17 @@ from nodeitems_utils import NodeItem
 
 nodes = []
 category_items = {}
-category_items['Event'] = []
-category_items['Value'] = []
-category_items['Input'] = []
 category_items['Logic'] = []
+category_items['Event'] = []
 category_items['Action'] = []
-category_items['Native'] = []
+category_items['Value'] = []
+category_items['Variable'] = []
+category_items['Input'] = []
+category_items['Animation'] = []
 category_items['Physics'] = []
 category_items['Navmesh'] = []
-category_items['Animation'] = []
 category_items['Sound'] = []
+category_items['Native'] = []
 
 object_sockets = dict()
 array_nodes = dict()

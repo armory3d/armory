@@ -31,10 +31,11 @@ class ThirdPersonController extends CameraController {
 	function preUpdate() {
 		if (Input.occupied || !body.ready) return;
 		
-		if (Input.down) {
+		var mouse = Input.getMouse();
+		if (mouse.down()) {
 			// kha.SystemImpl.lockMouse();
-			camera.transform.rotate(xVec, Input.movementY / 250 * rotationSpeed);
-			transform.rotate(zVec, -Input.movementX / 250 * rotationSpeed);
+			camera.transform.rotate(xVec, mouse.movementY / 250 * rotationSpeed);
+			transform.rotate(zVec, -mouse.movementX / 250 * rotationSpeed);
 			camera.buildMatrix();
 			body.syncTransform();
 		}
