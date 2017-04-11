@@ -15,6 +15,11 @@ class LoopNode extends LogicNode {
 		for (i in from...to) {
 			index = i;
 			runOutputs(0);
+
+			if (tree.loopBreak) {
+				tree.loopBreak = false;
+				break;
+			}
 		}
 		runOutputs(2);
 	}

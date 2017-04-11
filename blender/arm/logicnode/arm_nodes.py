@@ -79,7 +79,8 @@ class ArmNodeAddInputButton(bpy.types.Operator):
 
     def execute(self, context):
         global array_nodes
-        array_nodes[self.node_index].inputs.new(self.socket_type, 'Input 1')
+        inps = array_nodes[self.node_index].inputs
+        inps.new(self.socket_type, 'Input ' + str(len(inps)))
         return{'FINISHED'}
 
 class ArmNodeRemoveInputButton(bpy.types.Operator):
@@ -95,6 +96,32 @@ class ArmNodeRemoveInputButton(bpy.types.Operator):
             inps.remove(inps.values()[-1])
         return{'FINISHED'}
 
+class ArmNodeAddOutputButton(bpy.types.Operator):
+    '''Add new output'''
+    bl_idname = 'arm.node_add_output'
+    bl_label = 'Add Output'
+    node_index = StringProperty(name='Node Index', default='')
+    socket_type = StringProperty(name='Socket Type', default='NodeSocketShader')
+
+    def execute(self, context):
+        global array_nodes
+        outs = array_nodes[self.node_index].outputs
+        outs.new(self.socket_type, 'Output ' + str(len(outs)))
+        return{'FINISHED'}
+
+class ArmNodeRemoveOutputButton(bpy.types.Operator):
+    '''Remove last output'''
+    bl_idname = 'arm.node_remove_output'
+    bl_label = 'Remove Output'
+    node_index = StringProperty(name='Node Index', default='')
+
+    def execute(self, context):
+        global array_nodes
+        outs = array_nodes[self.node_index].outputs
+        if len(outs) > 0:
+            outs.remove(outs.values()[-1])
+        return{'FINISHED'}
+
 def add_node(node_class, category):
     global nodes
     nodes.append(node_class)
@@ -105,3 +132,5 @@ bpy.utils.register_class(ArmObjectSocket)
 bpy.utils.register_class(ArmNodeEyedropButton)
 bpy.utils.register_class(ArmNodeAddInputButton)
 bpy.utils.register_class(ArmNodeRemoveInputButton)
+bpy.utils.register_class(ArmNodeAddOutputButton)
+bpy.utils.register_class(ArmNodeRemoveOutputButton)
