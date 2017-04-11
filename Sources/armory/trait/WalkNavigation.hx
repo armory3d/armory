@@ -10,6 +10,8 @@ import iron.math.Vec4;
 class WalkNavigation extends Trait {
 
 	static inline var speed = 5.0;
+	var dir = new Vec4();
+	var ease = 1.0;
 
 	var camera:CameraObject;
 
@@ -36,28 +38,22 @@ class WalkNavigation extends Trait {
 		var strafeDown = keyboard.down("q");
 		var fast = keyboard.down("shift") ? 2.0 : (keyboard.down("alt") ? 0.5 : 1.0);
 
-		var d = Time.delta * speed * fast;
+		if (moveForward || moveBackward || strafeRight || strafeLeft || strafeUp || strafeDown) {
+			ease = 1.0;
+			dir.set(0, 0, 0);
+			if (moveForward) dir.addf(camera.look().x, camera.look().y, camera.look().z);
+			if (moveBackward) dir.addf(-camera.look().x, -camera.look().y, -camera.look().z);
+			if (strafeRight) dir.addf(camera.right().x, camera.right().y, camera.right().z);
+			if (strafeLeft) dir.addf(-camera.right().x, -camera.right().y, -camera.right().z);
+			if (strafeUp) dir.addf(0, 0, 1);
+			if (strafeDown) dir.addf(0, 0, -1);
+		}
+		else {
+			ease -= Time.delta * 15.0 * ease;
+		}
 
-		if (moveForward) {
-			camera.move(camera.look(), d);
-		}
-		else if (moveBackward) {
-			camera.move(camera.look(), -d);
-		}
-		if (strafeRight) {
-			camera.move(camera.right(), d);
-		}
-		else if (strafeLeft) {
-			camera.move(camera.right(), -d);
-		}
-		if (strafeUp) {
-			var dir = new Vec4(0, 0, 1);
-			camera.move(dir, d);
-		}
-		else if (strafeDown) {
-			var dir = new Vec4(0, 0, 1);
-			camera.move(dir, -d);
-		}
+		var d = Time.delta * speed * fast * ease;
+		if (d > 0.0) camera.move(dir, d);
 
 		var mouse = Input.getMouse();
 		if (mouse.down()) {
