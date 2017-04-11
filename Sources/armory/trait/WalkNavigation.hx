@@ -13,6 +13,7 @@ class WalkNavigation extends Trait {
 	var dir = new Vec4();
 	var xvec = new Vec4();
 	var yvec = new Vec4();
+	var easing = true;
 	var ease = 1.0;
 
 	var camera:CameraObject;
@@ -21,9 +22,10 @@ class WalkNavigation extends Trait {
 	var gamepad:Gamepad;
 	var mouse:Mouse;
 
-	public function new() {
+	public function new(easing = true) {
 		super();
 
+		this.easing = easing;
 		notifyOnInit(init);
 		notifyOnUpdate(update);
 	}
@@ -75,7 +77,11 @@ class WalkNavigation extends Trait {
 		}
 		
 		if (moveForward || moveBackward || strafeRight || strafeLeft || strafeUp || strafeDown) {
-			ease = 1.0;
+			if (easing) {
+				ease += Time.delta * 15;
+				if (ease > 1.0) ease = 1.0;
+			}
+			else ease = 1.0;
 			dir.set(0, 0, 0);
 			if (moveForward) dir.addf(camera.look().x, camera.look().y, camera.look().z);
 			if (moveBackward) dir.addf(-camera.look().x, -camera.look().y, -camera.look().z);
@@ -85,7 +91,11 @@ class WalkNavigation extends Trait {
 			if (strafeDown) dir.addf(0, 0, -1);
 		}
 		else {
-			ease -= Time.delta * 15.0 * ease;
+			if (easing) {
+				ease -= Time.delta * 20.0 * ease;
+				if (ease < 0.0) ease = 0.0;
+			}
+			else ease = 0.0;
 		}
 
 		var d = Time.delta * speed * fast * ease;

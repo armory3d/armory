@@ -7,7 +7,7 @@ class TimeNode extends LogicNode {
 	}
 
 	override function get(from:Int):Dynamic {
-		if (from == 0.0) return armory.system.Time.time();
+		if (from == 0) return armory.system.Time.time();
 		else return armory.system.Time.delta;
 	}
 }

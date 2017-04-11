@@ -259,9 +259,12 @@ class PropsRPDataPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'generate_ssrs')
             
             layout.prop(wrd, 'arm_samples_per_pixel')
-            layout.prop(wrd, 'generate_gpu_skin')
+            row = layout.row()
+            row.prop(wrd, 'generate_gpu_skin')
             if wrd.generate_gpu_skin:
-                layout.prop(wrd, 'generate_gpu_skin_max_bones')
+                row.prop(wrd, 'generate_gpu_skin_max_bones_auto')
+                if not wrd.generate_gpu_skin_max_bones_auto:
+                    layout.prop(wrd, 'generate_gpu_skin_max_bones')
             layout.prop(wrd, 'anisotropic_filtering_state')
             layout.prop(wrd, 'diffuse_model')
             layout.prop(wrd, 'tessellation_enabled')

@@ -50,11 +50,11 @@ deltaSubscaleName = ["dxscl", "dyscl", "dzscl"]
 axisName = ["x", "y", "z"]
 
 class Vertex:
-    __slots__ = ("co", "normal", "uvs", "col", "loop_indices", "index", "bone_weights", "bone_indices", "bone_count", "vertexIndex")
+    __slots__ = ("co", "normal", "uvs", "col", "loop_indices", "index", "bone_weights", "bone_indices", "bone_count", "vertex_index")
     def __init__(self, mesh, loop):
-        self.vertexIndex = loop.vertex_index
+        self.vertex_index = loop.vertex_index
         i = loop.index
-        self.co = mesh.vertices[self.vertexIndex].co.freeze()
+        self.co = mesh.vertices[self.vertex_index].co.freeze()
         self.normal = loop.normal.freeze()
         self.uvs = tuple(layer.data[i].uv.freeze() for layer in mesh.uv_layers)
         self.col = [0, 0, 0]
@@ -63,7 +63,7 @@ class Vertex:
         self.loop_indices = [i]
 
         # Take the four most influential groups
-        # groups = sorted(mesh.vertices[self.vertexIndex].groups, key=lambda group: group.weight, reverse=True)
+        # groups = sorted(mesh.vertices[self.vertex_index].groups, key=lambda group: group.weight, reverse=True)
         # if len(groups) > 4:
             # groups = groups[:4]
 
@@ -90,7 +90,7 @@ class Vertex:
         return eq
 
 class ExportVertex:
-    __slots__ = ("hash", "vertexIndex", "faceIndex", "position", "normal", "color", "texcoord0", "texcoord1")
+    __slots__ = ("hash", "vertex_index", "face_index", "position", "normal", "color", "texcoord0", "texcoord1")
 
     def __init__(self):
         self.color = [1.0, 1.0, 1.0]
@@ -364,7 +364,7 @@ class ArmoryExporter:
         # Three separate ExportVertex structures are created for each triangle.
         vertexArray = mesh.vertices
         export_vertex_array = []
-        faceIndex = 0
+        face_index = 0
 
         for face in mesh.tessfaces:
             k1 = face.vertices[0]
@@ -376,22 +376,22 @@ class ArmoryExporter:
             v3 = vertexArray[k3]
 
             exportVertex = ExportVertex()
-            exportVertex.vertexIndex = k1
-            exportVertex.faceIndex = faceIndex
+            exportVertex.vertex_index = k1
+            exportVertex.face_index = face_index
             exportVertex.position = v1.co
             exportVertex.normal = v1.normal if (face.use_smooth) else face.normal
             export_vertex_array.append(exportVertex)
 
             exportVertex = ExportVertex()
-            exportVertex.vertexIndex = k2
-            exportVertex.faceIndex = faceIndex
+            exportVertex.vertex_index = k2
+            exportVertex.face_index = face_index
             exportVertex.position = v2.co
             exportVertex.normal = v2.normal if (face.use_smooth) else face.normal
             export_vertex_array.append(exportVertex)
 
             exportVertex = ExportVertex()
-            exportVertex.vertexIndex = k3
-            exportVertex.faceIndex = faceIndex
+            exportVertex.vertex_index = k3
+            exportVertex.face_index = face_index
             exportVertex.position = v3.co
             exportVertex.normal = v3.normal if (face.use_smooth) else face.normal
             export_vertex_array.append(exportVertex)
@@ -408,103 +408,103 @@ class ArmoryExporter:
                 v3 = vertexArray[k3]
 
                 exportVertex = ExportVertex()
-                exportVertex.vertexIndex = k1
-                exportVertex.faceIndex = faceIndex
+                exportVertex.vertex_index = k1
+                exportVertex.face_index = face_index
                 exportVertex.position = v1.co
                 exportVertex.normal = v1.normal if (face.use_smooth) else face.normal
                 export_vertex_array.append(exportVertex)
 
                 exportVertex = ExportVertex()
-                exportVertex.vertexIndex = k2
-                exportVertex.faceIndex = faceIndex
+                exportVertex.vertex_index = k2
+                exportVertex.face_index = face_index
                 exportVertex.position = v2.co
                 exportVertex.normal = v2.normal if (face.use_smooth) else face.normal
                 export_vertex_array.append(exportVertex)
 
                 exportVertex = ExportVertex()
-                exportVertex.vertexIndex = k3
-                exportVertex.faceIndex = faceIndex
+                exportVertex.vertex_index = k3
+                exportVertex.face_index = face_index
                 exportVertex.position = v3.co
                 exportVertex.normal = v3.normal if (face.use_smooth) else face.normal
                 export_vertex_array.append(exportVertex)
 
                 material_table.append(face.material_index)
 
-            faceIndex += 1
+            face_index += 1
 
         colorCount = len(mesh.tessface_vertex_colors)
         if colorCount > 0:
             colorFace = mesh.tessface_vertex_colors[0].data
-            vertexIndex = 0
-            faceIndex = 0
+            vertex_index = 0
+            face_index = 0
 
             for face in mesh.tessfaces:
-                cf = colorFace[faceIndex]
-                export_vertex_array[vertexIndex].color = cf.color1
-                vertexIndex += 1
-                export_vertex_array[vertexIndex].color = cf.color2
-                vertexIndex += 1
-                export_vertex_array[vertexIndex].color = cf.color3
-                vertexIndex += 1
+                cf = colorFace[face_index]
+                export_vertex_array[vertex_index].color = cf.color1
+                vertex_index += 1
+                export_vertex_array[vertex_index].color = cf.color2
+                vertex_index += 1
+                export_vertex_array[vertex_index].color = cf.color3
+                vertex_index += 1
 
                 if len(face.vertices) == 4:
-                    export_vertex_array[vertexIndex].color = cf.color1
-                    vertexIndex += 1
-                    export_vertex_array[vertexIndex].color = cf.color3
-                    vertexIndex += 1
-                    export_vertex_array[vertexIndex].color = cf.color4
-                    vertexIndex += 1
+                    export_vertex_array[vertex_index].color = cf.color1
+                    vertex_index += 1
+                    export_vertex_array[vertex_index].color = cf.color3
+                    vertex_index += 1
+                    export_vertex_array[vertex_index].color = cf.color4
+                    vertex_index += 1
 
-                faceIndex += 1
+                face_index += 1
 
         texcoordCount = len(mesh.tessface_uv_textures)
         if texcoordCount > 0:
             texcoordFace = mesh.tessface_uv_textures[0].data
-            vertexIndex = 0
-            faceIndex = 0
+            vertex_index = 0
+            face_index = 0
 
             for face in mesh.tessfaces:
-                tf = texcoordFace[faceIndex]
-                export_vertex_array[vertexIndex].texcoord0 = [tf.uv1[0], 1.0 - tf.uv1[1]] # Reverse TCY
-                vertexIndex += 1
-                export_vertex_array[vertexIndex].texcoord0 = [tf.uv2[0], 1.0 - tf.uv2[1]]
-                vertexIndex += 1
-                export_vertex_array[vertexIndex].texcoord0 = [tf.uv3[0], 1.0 - tf.uv3[1]]
-                vertexIndex += 1
+                tf = texcoordFace[face_index]
+                export_vertex_array[vertex_index].texcoord0 = [tf.uv1[0], 1.0 - tf.uv1[1]] # Reverse TCY
+                vertex_index += 1
+                export_vertex_array[vertex_index].texcoord0 = [tf.uv2[0], 1.0 - tf.uv2[1]]
+                vertex_index += 1
+                export_vertex_array[vertex_index].texcoord0 = [tf.uv3[0], 1.0 - tf.uv3[1]]
+                vertex_index += 1
 
                 if len(face.vertices) == 4:
-                    export_vertex_array[vertexIndex].texcoord0 = [tf.uv1[0], 1.0 - tf.uv1[1]]
-                    vertexIndex += 1
-                    export_vertex_array[vertexIndex].texcoord0 = [tf.uv3[0], 1.0 - tf.uv3[1]]
-                    vertexIndex += 1
-                    export_vertex_array[vertexIndex].texcoord0 = [tf.uv4[0], 1.0 - tf.uv4[1]]
-                    vertexIndex += 1
+                    export_vertex_array[vertex_index].texcoord0 = [tf.uv1[0], 1.0 - tf.uv1[1]]
+                    vertex_index += 1
+                    export_vertex_array[vertex_index].texcoord0 = [tf.uv3[0], 1.0 - tf.uv3[1]]
+                    vertex_index += 1
+                    export_vertex_array[vertex_index].texcoord0 = [tf.uv4[0], 1.0 - tf.uv4[1]]
+                    vertex_index += 1
 
-                faceIndex += 1
+                face_index += 1
 
             if texcoordCount > 1:
                 texcoordFace = mesh.tessface_uv_textures[1].data
-                vertexIndex = 0
-                faceIndex = 0
+                vertex_index = 0
+                face_index = 0
 
                 for face in mesh.tessfaces:
-                    tf = texcoordFace[faceIndex]
-                    export_vertex_array[vertexIndex].texcoord1 = [tf.uv1[0], 1.0 - tf.uv1[1]]
-                    vertexIndex += 1
-                    export_vertex_array[vertexIndex].texcoord1 = [tf.uv2[0], 1.0 - tf.uv2[1]]
-                    vertexIndex += 1
-                    export_vertex_array[vertexIndex].texcoord1 = [tf.uv3[0], 1.0 - tf.uv3[1]]
-                    vertexIndex += 1
+                    tf = texcoordFace[face_index]
+                    export_vertex_array[vertex_index].texcoord1 = [tf.uv1[0], 1.0 - tf.uv1[1]]
+                    vertex_index += 1
+                    export_vertex_array[vertex_index].texcoord1 = [tf.uv2[0], 1.0 - tf.uv2[1]]
+                    vertex_index += 1
+                    export_vertex_array[vertex_index].texcoord1 = [tf.uv3[0], 1.0 - tf.uv3[1]]
+                    vertex_index += 1
 
                     if len(face.vertices) == 4:
-                        export_vertex_array[vertexIndex].texcoord1 = [tf.uv1[0], 1.0 - tf.uv1[1]]
-                        vertexIndex += 1
-                        export_vertex_array[vertexIndex].texcoord1 = [tf.uv3[0], 1.0 - tf.uv3[1]]
-                        vertexIndex += 1
-                        export_vertex_array[vertexIndex].texcoord1 = [tf.uv4[0], 1.0 - tf.uv4[1]]
-                        vertexIndex += 1
+                        export_vertex_array[vertex_index].texcoord1 = [tf.uv1[0], 1.0 - tf.uv1[1]]
+                        vertex_index += 1
+                        export_vertex_array[vertex_index].texcoord1 = [tf.uv3[0], 1.0 - tf.uv3[1]]
+                        vertex_index += 1
+                        export_vertex_array[vertex_index].texcoord1 = [tf.uv4[0], 1.0 - tf.uv4[1]]
+                        vertex_index += 1
 
-                    faceIndex += 1
+                    face_index += 1
 
         for ev in export_vertex_array:
             ev.Hash()
@@ -1347,52 +1347,57 @@ class ArmoryExporter:
                     # Do not apply parent matrix
                     o['local_transform_only'] = True
 
-            if bobject.type == "ARMATURE":
+            if bobject.type == 'ARMATURE' and bobject.data != None:
                 bdata = bobject.data # Armature data
                 action = None # Reference start action
+                
+                # Get action
+                if bobject.animation_data == None:
+                    bobject.animation_data_create()
+                else:
+                    action = bobject.animation_data.action
+                
+                if action == None:
+                    actions = bpy.data.actions
+                    action = actions.get('armorypose', actions.new(name='armorypose'))
+
                 if bobject.edit_actions_prop:
                     action = bpy.data.actions[bobject.start_action_name_prop]
-                elif bobject.animation_data != None: # Use default
-                    action = bobject.animation_data.action
-                    
-                if bdata and action != None:
-                    armatureid = self.asset_name(bdata)
-                    armatureid = arm.utils.safe_filename(armatureid)
-                    ext = ''
-                    if self.is_compress(bdata):
-                       ext = '.zip'
-                    o['bones_ref'] = 'bones_' + armatureid + '_' + action.name + ext
 
-                    # Write bones
-                    if bdata.edit_actions:
-                        export_actions = []
-                        for t in bdata.my_actiontraitlist:
-                            export_actions.append(bpy.data.actions[t.name])
-                    else: # Use default
-                        export_actions = [action]
+                # Bone export
+                armatureid = self.asset_name(bdata)
+                armatureid = arm.utils.safe_filename(armatureid)
+                ext = ''
+                if self.is_compress(bdata):
+                   ext = '.zip'
+                o['bones_ref'] = 'bones_' + armatureid + '_' + action.name + ext
 
-                    orig_action = bobject.animation_data.action
-                    for action in export_actions:
-                        # if bdata.animation_data == None:
-                            # continue # bdata.animation_data_create()
-                        # bdata.animation_data.action = action
-                        bobject.animation_data.action = action
-                        fp = self.get_meshes_file_path('bones_' + armatureid + '_' + action.name, compressed=self.is_compress(bdata))
-                        assets.add(fp)
-                        if bdata.data_cached == False or not os.path.exists(fp):
-                            bones = []
-                            for bone in bdata.bones:
-                                if not bone.parent:
-                                    boneo = {}
-                                    self.export_bone(bobject, bone, scene, boneo, action)
-                                    #o.objects.append(boneo)
-                                    bones.append(boneo)
-                            # Save bones separately
-                            bones_obj = {}
-                            bones_obj['objects'] = bones
-                            arm.utils.write_arm(fp, bones_obj)
-                    bobject.animation_data.action = orig_action
-                    bdata.data_cached = True
+                # Write bones
+                if bdata.edit_actions:
+                    export_actions = []
+                    for t in bdata.my_actiontraitlist:
+                        export_actions.append(bpy.data.actions[t.name])
+                else: # Use default
+                    export_actions = [action]
+
+                # orig_action = bobject.animation_data.action
+                # bobject.animation_data.action = orig_action
+                for action in export_actions:
+                    bobject.animation_data.action = action
+                    fp = self.get_meshes_file_path('bones_' + armatureid + '_' + action.name, compressed=self.is_compress(bdata))
+                    assets.add(fp)
+                    if bdata.data_cached == False or not os.path.exists(fp):
+                        bones = []
+                        for bone in bdata.bones:
+                            if not bone.parent:
+                                boneo = {}
+                                self.export_bone(bobject, bone, scene, boneo, action)
+                                bones.append(boneo)
+                        # Save bones separately
+                        bones_obj = {}
+                        bones_obj['objects'] = bones
+                        arm.utils.write_arm(fp, bones_obj)
+                bdata.data_cached = True
 
             if parento == None:
                 self.output['objects'].append(o)
@@ -1428,11 +1433,14 @@ class ArmoryExporter:
         # Write the bone object reference array
         oskel['bone_ref_array'] = []
 
-        boneArray = armature.data.bones
-        boneCount = len(boneArray)
+        bone_array = armature.data.bones
+        bone_count = len(bone_array)
+        max_bones = bpy.data.worlds['Arm'].generate_gpu_skin_max_bones
+        if bone_count > max_bones:
+            log.warn(bobject.name + ' - ' + str(bone_count) + ' bones found, exceeds maximum of ' + str(max_bones) + ' bones defined - raise the value in Camera Data - Armory Render Props - Max Bones')
 
-        for i in range(boneCount):
-            boneRef = self.find_node(boneArray[i].name)
+        for i in range(bone_count):
+            boneRef = self.find_node(bone_array[i].name)
             if boneRef:
                 oskel['bone_ref_array'].append(boneRef[1]["structName"])
             else:
@@ -1440,59 +1448,65 @@ class ArmoryExporter:
 
         # Write the bind pose transform array
         oskel['transforms'] = []
-        for i in range(boneCount):
-            oskel['transforms'].append(self.write_matrix(armature.matrix_world * boneArray[i].matrix_local))
+        for i in range(bone_count):
+            oskel['transforms'].append(self.write_matrix(armature.matrix_world * bone_array[i].matrix_local))
 
         # Export the per-vertex bone influence data
-        groupRemap = []
+        group_remap = []
 
         for group in bobject.vertex_groups:
-            groupName = group.name
-            for i in range(boneCount):
-                if boneArray[i].name == groupName:
-                    groupRemap.append(i)
+            group_name = group.name
+            for i in range(bone_count):
+                if bone_array[i].name == group_name:
+                    group_remap.append(i)
                     break
             else:
-                groupRemap.append(-1)
+                group_remap.append(-1)
 
-        boneCountArray = []
-        boneIndexArray = []
-        boneWeightArray = []
+        bone_count_array = []
+        bone_index_array = []
+        bone_weight_array = []
 
         warn_bones = False
         mesh_vertex_array = bobject.data.vertices
         for ev in export_vertex_array:
-            boneCount = 0
-            totalWeight = 0.0
-            for element in mesh_vertex_array[ev.vertexIndex].groups:
-                boneIndex = groupRemap[element.group]
-                boneWeight = element.weight
-                if boneIndex >= 0 and boneWeight != 0.0:
-                    boneCount += 1
-                    totalWeight += boneWeight
-                    boneIndexArray.append(boneIndex)
-                    boneWeightArray.append(boneWeight)
-                    if boneCount == 4: # Four bones max - TODO: take biggest weights
-                        warn_bones = True
-                        break
-            boneCountArray.append(boneCount)
+            bone_count = 0
+            total_weight = 0.0
+            bone_values = []
+            for element in mesh_vertex_array[ev.vertex_index].groups:
+                bone_index = group_remap[element.group]
+                bone_weight = element.weight
+                if bone_index >= 0 and bone_weight != 0.0:
+                    bone_values.append((bone_weight, bone_index))
+                    total_weight += bone_weight
+                    bone_count += 1
 
-            if totalWeight != 0.0:
-                normalizer = 1.0 / totalWeight
-                for i in range(-boneCount, 0):
-                    boneWeightArray[i] *= normalizer
+            if bone_count > 4: # Four bones max
+                bone_count = 4
+                bone_values = bone_values[:4]
+                warn_bones = True
+            bone_count_array.append(bone_count)
+
+            # Take highest weights
+            for bv in reversed(sorted(bone_values)):
+                bone_index_array.append(bv[1])
+                bone_weight_array.append(bv[0])
+            if total_weight != 0.0:
+                normalizer = 1.0 / total_weight
+                for i in range(0, bone_count):
+                    bone_weight_array[-i] *= normalizer
 
         if warn_bones:
-            log.warn(bobject.name + ' - more than 4 bones influence single vertex')
+            log.warn(bobject.name + ' - more than 4 bones influence single vertex - taking highest weights')
 
         # Write the bone count array. There is one entry per vertex.
-        oskin['bone_count_array'] = boneCountArray
+        oskin['bone_count_array'] = bone_count_array
 
         # Write the bone index array. The number of entries is the sum of the bone counts for all vertices.
-        oskin['bone_index_array'] = boneIndexArray
+        oskin['bone_index_array'] = bone_index_array
 
         # Write the bone weight array. The number of entries is the sum of the bone counts for all vertices.
-        oskin['bone_weight_array'] = boneWeightArray
+        oskin['bone_weight_array'] = bone_weight_array
 
     # def export_skin_fast(self, bobject, armature, vert_list, om):
     #     oskin = {}
@@ -1506,29 +1520,29 @@ class ArmoryExporter:
     #     oskin['skeleton'] = oskel
     #     oskel['bone_ref_array'] = []
 
-    #     boneArray = armature.data.bones
-    #     boneCount = len(boneArray)
-    #     for i in range(boneCount):
-    #         boneRef = self.find_node(boneArray[i].name)
+    #     bone_array = armature.data.bones
+    #     bone_count = len(bone_array)
+    #     for i in range(bone_count):
+    #         boneRef = self.find_node(bone_array[i].name)
     #         if boneRef:
     #             oskel['bone_ref_array'].append(boneRef[1]["structName"])
     #         else:
     #             oskel['bone_ref_array'].append("null")
 
     #     oskel['transforms'] = []
-    #     for i in range(boneCount):
-    #         oskel['transforms'].append(self.write_matrix(armature.matrix_world * boneArray[i].matrix_local))
+    #     for i in range(bone_count):
+    #         oskel['transforms'].append(self.write_matrix(armature.matrix_world * bone_array[i].matrix_local))
 
-    #     boneCountArray = []
-    #     boneIndexArray = []
-    #     boneWeightArray = []
+    #     bone_count_array = []
+    #     bone_index_array = []
+    #     bone_weight_array = []
     #     for vtx in vert_list:
-    #         boneCountArray.append(vtx.bone_count)
-    #         boneIndexArray += vtx.bone_indices
-    #         boneWeightArray += vtx.bone_weights
-    #     oskin['bone_count_array'] = boneCountArray
-    #     oskin['bone_index_array'] = boneIndexArray
-    #     oskin['bone_weight_array'] = boneWeightArray
+    #         bone_count_array.append(vtx.bone_count)
+    #         bone_index_array += vtx.bone_indices
+    #         bone_weight_array += vtx.bone_weights
+    #     oskin['bone_count_array'] = bone_count_array
+    #     oskin['bone_index_array'] = bone_index_array
+    #     oskin['bone_weight_array'] = bone_weight_array
 
     def calc_tangents(self, posa, nora, uva, ia):
         triangle_count = int(len(ia) / 3)
@@ -2422,6 +2436,15 @@ class ArmoryExporter:
                         matvars.append(mat)
                     slot.material = mat
 
+        # Auto-bones
+        wrd = bpy.data.worlds['Arm']
+        if wrd.generate_gpu_skin_max_bones_auto:
+            max_bones = 8
+            for armature in bpy.data.armatures:
+                if max_bones < len(armature.bones):
+                    max_bones = len(armature.bones)
+            wrd.generate_gpu_skin_max_bones = max_bones
+
         self.output['objects'] = []
         for bo in self.scene.objects:
             if not bo.parent:
@@ -2868,7 +2891,7 @@ class ArmoryExporter:
                 navigation_trait = {}
                 navigation_trait['type'] = 'Script'
                 navigation_trait['class_name'] = 'armory.trait.WalkNavigation'
-                navigation_trait['parameters'] = []
+                navigation_trait['parameters'] = [arm.utils.get_ease_viewport_camera()]
                 o['traits'].append(navigation_trait)
         
         # Map objects to materials, can be used in later stages
