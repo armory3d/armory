@@ -3,7 +3,7 @@ package armory.logicnode;
 import armory.object.Object;
 import armory.math.Vec4;
 
-class OnVolumeTriggerNode extends LogicNode {
+class VolumeTriggerNode extends LogicNode {
 
 	public var property0:String;
 	var lastOverlap = false;
@@ -13,11 +13,9 @@ class OnVolumeTriggerNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);
-
-		tree.notifyOnUpdate(update);
 	}
 
-	function update() {
+	override function get(from:Int) {
 		var object:Object = inputs[0].get();
 		var volume:Object = inputs[1].get();
 
@@ -46,7 +44,6 @@ class OnVolumeTriggerNode extends LogicNode {
 		}
 
 		lastOverlap = overlap;
-
-		if (b) run();
+		return b;
 	}
 }

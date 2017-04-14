@@ -11,6 +11,7 @@ class VectorMathNode(Node, ArmLogicTreeNode):
     property0 = EnumProperty(
         items = [('Add', 'Add', 'Add'),
                  ('Dot Product', 'Dot Product', 'Dot Product'),
+                 ('Multiply', 'Multiply', 'Multiply'),
                  ('Normalize', 'Normalize', 'Normalize')],
         name='', default='Add')
     

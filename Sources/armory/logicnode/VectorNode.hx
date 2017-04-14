@@ -24,6 +24,8 @@ class VectorNode extends LogicNode {
 	}
 
 	override function set(value:Dynamic) {
-		this.value = value;
+		inputs[0].set(value.x);
+		inputs[1].set(value.y);
+		inputs[2].set(value.z);
 	}
 }

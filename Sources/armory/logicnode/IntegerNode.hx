@@ -15,6 +15,7 @@ class IntegerNode extends LogicNode {
 	}
 
 	override function set(value:Dynamic) {
-		this.value = value;
+		if (inputs.length > 0) inputs[0].set(value);
+		else this.value = value;
 	}
 }

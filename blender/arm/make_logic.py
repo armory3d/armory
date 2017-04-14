@@ -4,6 +4,7 @@ import arm.utils
 import arm.log
 
 parsed_nodes = []
+parsed_labels = dict()
 
 # Generating node sources
 def build_node_trees():
@@ -22,7 +23,9 @@ def build_node_trees():
 
 def build_node_tree(node_group):
     global parsed_nodes
+    global parsed_labels
     parsed_nodes = []
+    parsed_labels = dict()
     root_nodes = get_root_nodes(node_group)
 
     path = 'Sources/' + bpy.data.worlds['Arm'].arm_project_package.replace('.', '/') + '/node/'
@@ -35,13 +38,13 @@ def build_node_tree(node_group):
         f.write('\tpublic function new() { super(); notifyOnAdd(add); }\n\n')
         f.write('\tfunction add() {\n')
         for node in root_nodes:
-            name = '_' + arm.utils.safe_source_name(node.name)
             build_node(node_group, node, f)
         f.write('\t}\n')
         f.write('}\n')
 
 def build_node(node_group, node, f):
     global parsed_nodes
+    global parsed_labels
 
     if node.type == 'REROUTE':
         return build_node(node_group, node.inputs[0].links[0].from_node, f)
@@ -49,14 +52,21 @@ def build_node(node_group, node, f):
     # Get node name
     name = '_' + arm.utils.safe_source_name(node.name)
 
+    # Link nodes using labels
+    if node.label != '':
+        if node.label in parsed_labels:
+            return parsed_labels[node.label]
+        parsed_labels[node.label] = name
+
     # Check if node already exists
     if name in parsed_nodes:
         return name
 
+    parsed_nodes.append(name)
+
     # Create node
     node_type = node.bl_idname[2:] # Discard 'LN'TimeNode prefix
     f.write('\t\tvar ' + name + ' = new ' + node_type + '(this);\n')
-    parsed_nodes.append(name)
     
     # Properties
     for i in range(0, 5):

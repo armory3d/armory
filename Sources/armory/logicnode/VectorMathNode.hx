@@ -22,6 +22,10 @@ class VectorMathNode extends LogicNode {
 		case "Dot Product":
 			f = v.dot(v2);
 			v.set(f, f, f);
+		case "Multiply":
+			v.x *= v2.x;
+			v.y *= v2.y;
+			v.z *= v2.z;
 		case "Normalize":
 			v.normalize();
 		}

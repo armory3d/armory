@@ -12,7 +12,10 @@ class MathNode(Node, ArmLogicTreeNode):
         items = [('Add', 'Add', 'Add'),
                  ('Multiply', 'Multiply', 'Multiply'),
         		 ('Sine', 'Sine', 'Sine'),
-                 ('Cosine', 'Cosine', 'Cosine')],
+                 ('Cosine', 'Cosine', 'Cosine'),
+                 ('Max', 'Max', 'Max'),
+                 ('Min', 'Min', 'Min'),
+                 ('Abs', 'Abs', 'Abs')],
         name='', default='Add')
     
     def init(self, context):

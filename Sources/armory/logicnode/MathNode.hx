@@ -20,6 +20,12 @@ class MathNode extends LogicNode {
 			return Math.sin(v1);
 		case "Cosine":
 			return Math.cos(v1);
+		case "Max":
+			return Math.max(v1, v2);
+		case "Min":
+			return Math.min(v1, v2);
+		case "Abs":
+			return Math.abs(v1);
 		default:
 			return 0.0;
 		}

@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import armory.object.Object;
 
-class GetTransformNode extends LogicNode {
+class GetLocationNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);
@@ -13,6 +13,6 @@ class GetTransformNode extends LogicNode {
 
 		if (object == null) object = tree.object;
 
-		return object.transform.matrix;
+		return object.transform.loc;
 	}
 }
