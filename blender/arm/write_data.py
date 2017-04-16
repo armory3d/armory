@@ -5,12 +5,27 @@ import arm.utils
 import arm.assets as assets
 import arm.make_state as state
 
+check_dot_path = False
+
 def add_armory_library(sdk_path, name):
     return ('project.addLibrary("' + sdk_path + '/' + name + '");\n').replace('\\', '/')
 
+def add_assets(path):
+    global check_dot_path
+    if check_dot_path and '/.' in path: # Redirect path to local copy
+        armpath = 'build/compiled/ArmoryAssets/'
+        if not os.path.exists(armpath):
+            os.makedirs(armpath)
+        localpath = armpath + path.rsplit('/')[-1]
+        if not os.path.isfile(localpath):
+            shutil.copy(path, localpath)
+        path = localpath
+    return 'project.addAssets("' + path + '");\n'
+
 # Write khafile.js
 def write_khafilejs(is_play, export_physics, export_navigation, dce_full=False):
-    
+    global check_dot_path
+
     sdk_path = arm.utils.get_sdk_path()
     
     # Merge duplicates and sort
@@ -27,9 +42,18 @@ let project = new Project('""" + arm.utils.safefilename(wrd.arm_project_name) + 
 project.addSources('Sources');
 """)
 
+        # TODO: Khamake bug workaround - assets & shaders located in folder starting with '.' get discarded - copy them to project
+        check_dot_path = False
+        if '/.' in sdk_path:
+            check_dot_path = True
+            if not os.path.exists('build/compiled/KhaShaders'):
+                kha_shaders_path = arm.utils.get_kha_path() + '/Sources/Shaders'
+                shutil.copytree(kha_shaders_path, 'build/compiled/KhaShaders')
+            f.write("project.addShaders('build/compiled/KhaShaders/**');\n")
+
         # Auto-add assets located in Bundled directory
         if os.path.exists('Bundled'):
-            f.write('project.addAssets("Bundled/**");\n')
+            f.write(add_assets("Bundled/**"))
 
         if os.path.exists('Libraries/armory'):
             f.write('project.addLibrary("armory")')
@@ -52,7 +76,7 @@ project.addSources('Sources');
             if state.target == 'krom' or state.target == 'html5':
                 ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
                 ammojs_path = ammojs_path.replace('\\', '/')
-                f.write("project.addAssets('" + ammojs_path + "');\n")
+                f.write(add_assets(ammojs_path))
 
         if export_navigation:
             f.write("project.addDefine('arm_navigation');\n")
@@ -60,7 +84,7 @@ project.addSources('Sources');
             if state.target == 'krom' or state.target == 'html5':
                 recastjs_path = sdk_path + '/lib/haxerecast/js/recast/recast.js'
                 recastjs_path = recastjs_path.replace('\\', '/')
-                f.write("project.addAssets('" + recastjs_path + "');\n")
+                f.write(add_assets(recastjs_path))
 
         if dce_full:
             f.write("project.addParameter('-dce full');")
@@ -68,27 +92,13 @@ project.addSources('Sources');
         for ref in shader_references:
             f.write("project.addShaders('" + ref + "');\n")
 
-        # TODO: Khamake bug workaround - assets & shaders located in folder starting with '.' get discarded - copy them to project
-        if '/.' in sdk_path:
-            if not os.path.exists('build/compiled/KhaShaders'):
-                kha_shaders_path = arm.utils.get_kha_path() + '/Sources/Shaders'
-                shutil.copytree(kha_shaders_path, 'build/compiled/KhaShaders')
-            f.write("project.addShaders('build/compiled/KhaShaders/**');\n")
-            arm_assets = 'build/compiled/ArmoryAssets'
-            if not os.path.exists('build/compiled/ArmoryAssets'):
-                shutil.copytree(sdk_path + '/armory/Assets', arm_assets)
-            for i in range(0, len(asset_references)): # Redirect paths to local copy
-                if '/.' in asset_references[i]:
-                    fname = asset_references[i].rsplit('/', 1)[1]
-                    asset_references[i] = arm_assets + '/' + fname
-        
         for ref in shader_data_references:
             ref = ref.replace('\\', '/')
-            f.write("project.addAssets('" + ref + "');\n")
+            f.write(add_assets(ref))
 
         for ref in asset_references:
             ref = ref.replace('\\', '/')
-            f.write("project.addAssets('" + ref + "');\n")
+            f.write(add_assets(ref))
 
         if wrd.arm_play_console:
             f.write("project.addDefine('arm_profile');\n")
@@ -96,7 +106,7 @@ project.addSources('Sources');
         if wrd.arm_play_console or wrd.arm_ui:
             f.write(add_armory_library(sdk_path, 'lib/zui'))
             p = sdk_path + '/armory/Assets/droid_sans.ttf'
-            f.write('project.addAssets("' + p.replace('\\', '/') + '");\n')
+            f.write(add_assets(p.replace('\\', '/')))
 
         if wrd.arm_hscript:
             f.write(add_armory_library(sdk_path, 'lib/hscript'))
