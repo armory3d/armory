@@ -48,8 +48,10 @@ class ArmObjectSocket(bpy.types.NodeSocket):
     def draw(self, context, layout, node, text):
         if self.is_output:
             layout.label(self.name)
+        elif self.is_linked:
+            layout.label(self.name)
         else:
-            row = layout.row(align = True)
+            row = layout.row(align=True)
             row.prop_search(self, 'default_value', bpy.context.scene, 'objects', icon='NONE', text='')
             op = row.operator('arm.node_eyedrop', text='', icon='EYEDROPPER', emboss=True)
             op.socket_index = str(id(self))

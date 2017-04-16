@@ -4,6 +4,9 @@ import armory.object.Object;
 import armory.math.Mat4;
 import armory.math.Quat;
 import armory.math.Vec4;
+#if arm_physics
+import armory.trait.internal.RigidBody;
+#end
 
 class RotateObjectNode extends LogicNode {
 
@@ -23,6 +26,14 @@ class RotateObjectNode extends LogicNode {
 
 		object.transform.rot.mult(q);
 		object.transform.buildMatrix();
+
+		#if arm_physics
+		var rigidBody = object.getTrait(RigidBody);
+		if (rigidBody != null) {
+			rigidBody.syncTransform();
+			rigidBody.activate();
+		}
+		#end
 
 		super.run();
 	}

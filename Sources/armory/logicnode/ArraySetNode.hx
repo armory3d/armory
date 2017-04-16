@@ -10,7 +10,9 @@ class ArraySetNode extends LogicNode {
 		var ar:Array<Dynamic> = inputs[1].get();
 		var i:Int = inputs[2].get();
 		var value:Dynamic = inputs[3].get();
-		ar[i] = value;
+
+		if (i < 0) ar[ar.length + i] = value;
+		else ar[i] = value;
 
 		super.run();
 	}

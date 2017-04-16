@@ -14,5 +14,6 @@ class ArrayRemoveNode(Node, ArmLogicTreeNode):
         self.inputs.new('NodeSocketShader', 'Array')
         self.inputs.new('NodeSocketInt', 'Index')
         self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.outputs.new('NodeSocketShader', 'Value')
 
 add_node(ArrayRemoveNode, category='Action')

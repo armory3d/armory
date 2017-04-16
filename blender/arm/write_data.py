@@ -224,7 +224,16 @@ def write_indexhtml(w, h):
     <title>Armory</title>
 </head>
 <body>
-    <canvas id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """'></canvas>
+""")
+        if bpy.data.cameras[0].rp_stereo:
+            f.write("""
+    <canvas style="outline: none; position: absolute; left: 0; top: 0;" id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """'></canvas>
+""")
+        else:
+            f.write("""
+    <p align="center"><canvas style="outline: none;" id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """'></canvas></p>
+""")
+        f.write("""
     <script src='kha.js'></script>
 </body>
 </html>

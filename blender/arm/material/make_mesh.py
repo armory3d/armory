@@ -357,7 +357,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
         else:
             frag.add_include('../../Shaders/std/shadows.glsl')
         frag.add_uniform('sampler2D shadowMap', included=True)
-        frag.add_uniform('sampler2D shadowMapCube', included=True)
+        frag.add_uniform('samplerCube shadowMapCube', included=True)
         frag.add_uniform('bool receiveShadow')
         frag.add_uniform('float shadowsBias', '_lampShadowsBias')
         frag.add_uniform('int lightShadow', '_lampCastShadow')

@@ -3,6 +3,9 @@ package armory.logicnode;
 import armory.object.Object;
 import armory.math.Mat4;
 import armory.math.Vec4;
+#if arm_physics
+import armory.trait.internal.RigidBody;
+#end
 
 class ScaleObjectNode extends LogicNode {
 
@@ -18,6 +21,14 @@ class ScaleObjectNode extends LogicNode {
 
 		object.transform.scale.add(vec);
 		object.transform.buildMatrix();
+
+		#if arm_physics
+		var rigidBody = object.getTrait(RigidBody);
+		if (rigidBody != null) {
+			rigidBody.syncTransform();
+			rigidBody.activate();
+		}
+		#end
 
 		super.run();
 	}

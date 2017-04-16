@@ -14,6 +14,7 @@ class OnGamepadNode extends LogicNode {
 	function update() {
 		var num:Int = inputs[0].get();
 		var gamepad = armory.system.Input.getGamepad(num);
+		if (gamepad == null) return;
 		var b = false;
 		switch (property0) {
 		case "Down":

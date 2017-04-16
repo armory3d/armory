@@ -2,6 +2,9 @@ package armory.logicnode;
 
 import armory.object.Object;
 import armory.math.Vec4;
+#if arm_physics
+import armory.trait.internal.RigidBody;
+#end
 
 class SetLocationNode extends LogicNode {
 
@@ -17,6 +20,14 @@ class SetLocationNode extends LogicNode {
 
 		object.transform.loc.setFrom(vec);
 		object.transform.buildMatrix();
+
+		#if arm_physics
+		var rigidBody = object.getTrait(RigidBody);
+		if (rigidBody != null) {
+			rigidBody.syncTransform();
+			rigidBody.activate();
+		}
+		#end
 
 		super.run();
 	}

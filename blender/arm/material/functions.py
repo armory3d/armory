@@ -25,9 +25,8 @@ str_tex_voronoi = """//vec3 hash(vec3 x) {
     //return fract(sin(x) * 43758.5453123);
 //}
 vec4 tex_voronoi(const vec3 x) {
-    vec3 xx = x * 20.0; // Match cycles
-    vec3 p = floor(xx);
-    vec3 f = fract(xx);
+    vec3 p = floor(x);
+    vec3 f = fract(x);
     float id = 0.0;
     float res = 100.0;
     for (int k = -1; k <= 1; k++)
@@ -113,10 +112,10 @@ float tex_noise_f(const vec3 p) {
     return clamp(dot(d, vec4(52.0)), 0.0, 1.0);
 }
 float tex_noise(const vec3 p) {
-    return 0.5333333 * tex_noise_f(p)
-        + 0.2666667 * tex_noise_f(2.0 * p)
-        + 0.1333333 * tex_noise_f(4.0 * p)
-        + 0.0666667 * tex_noise_f(8.0 * p);
+    return 0.5333333 * tex_noise_f(0.5 * p)
+        + 0.2666667 * tex_noise_f(p)
+        + 0.1333333 * tex_noise_f(2.0 * p)
+        + 0.0666667 * tex_noise_f(4.0 * p);
 }
 float tex_noise(const vec2 p) {
     return tex_noise(vec3(p.x, p.y, 1.0));

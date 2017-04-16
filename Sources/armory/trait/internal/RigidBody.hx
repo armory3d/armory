@@ -48,12 +48,10 @@ class RigidBody extends Trait {
 		this.linearDamping = linearDamping;
 		this.angularDamping = angularDamping;
 		this.passive = passive;
-		
-		Scene.active.notifyOnInit(function() {
-			notifyOnInit(init);
-			notifyOnLateUpdate(lateUpdate);
-			notifyOnRemove(removeFromWorld);
-		});
+
+		notifyOnAdd(init);
+		notifyOnLateUpdate(lateUpdate);
+		notifyOnRemove(removeFromWorld);
 	}
 	
 	inline function withMargin(f:Float) {

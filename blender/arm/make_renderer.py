@@ -11,6 +11,9 @@ def make_renderer(cam):
     global nodes
     global links
 
+    if bpy.data.filepath.endswith('arm_data.blend'): # Prevent load in library itself
+        return
+
     if cam.rp_renderer == 'Forward':
         load_library('forward_path', 'armory_default')
         group = bpy.data.node_groups['armory_default']
@@ -51,6 +54,13 @@ def make_forward(cam):
         links.new(nodes['Begin'].outputs[0], nodes['Set Target Mesh'].inputs[0])
         relink('Bind Target Mesh SM', 'Draw Meshes Mesh') # No shadowmap bind
         relink('Bind Target Transluc SM', 'Draw Meshes Transluc')
+
+    if cam.rp_stereo:
+        if cam.rp_shadowmap != 'None':
+            links.new(nodes['Bind Target Mesh SM'].outputs[0], nodes['Draw Stereo'].inputs[0])
+        else:
+            links.new(nodes['Clear Target Mesh'].outputs[0], nodes['Draw Stereo'].inputs[0])
+        links.new(nodes['Draw Stereo'].outputs[1], nodes['Draw Meshes Mesh'].inputs[0])
 
     if not cam.rp_worldnodes:
         relink('Draw World', 'Set Target Accum')
@@ -175,8 +185,10 @@ def reload_blend_data():
     check_default()
 
 def load_library(asset_name, rename=None):
+    if bpy.data.filepath.endswith('arm_data.blend'): # Prevent load in library itself
+        return
     sdk_path = arm.utils.get_sdk_path()
-    data_path = sdk_path + '/armory/blender/data/data.blend'
+    data_path = sdk_path + '/armory/blender/data/arm_data.blend'
     data_names = [asset_name]
 
     # Remove old

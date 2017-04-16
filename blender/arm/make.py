@@ -364,8 +364,10 @@ def play_project(in_viewport):
                 scripts_mtime = mtime
                 wrd.arm_recompile = True
 
+    if state.krom_running: # TODO: Temp live-patch fix till compiler cache is disabled
+        compile_project(target_name=state.target, patch=True)
     # New compile requred - traits or materials changed
-    if wrd.arm_recompile or state.target == 'native':
+    elif wrd.arm_recompile or state.target == 'native':
 
         # Unable to live-patch, stop player
         if state.krom_running:

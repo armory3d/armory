@@ -13,6 +13,6 @@ class GetLocationNode extends LogicNode {
 
 		if (object == null) object = tree.object;
 
-		return object.transform.loc;
+		return object.transform.abs;
 	}
 }

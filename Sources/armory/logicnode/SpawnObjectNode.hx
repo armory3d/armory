@@ -13,12 +13,12 @@ class SpawnObjectNode extends LogicNode {
 
 	override function run() {
 
-		var objectName:String = cast(inputs[1].node, ObjectNode).property0;
+		var objectName:String = cast(inputs[1].node, ObjectNode).objectName;
 		var matrix:Mat4 = inputs[2].get();
 
 		Scene.active.spawnObject(objectName, null, function(o:armory.object.Object) {
 			object = o;
-			object.transform.setMatrix(matrix);
+			if (matrix != null) object.transform.setMatrix(matrix);
 			object.visible = true;
 			runOutputs(0);
 		});
