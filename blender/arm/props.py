@@ -68,29 +68,35 @@ def update_gapi_win(self, context):
     if os.path.isdir(arm.utils.get_fp() + 'build/windows-build'):
         shutil.rmtree(arm.utils.get_fp() + 'build/windows-build')
     bpy.data.worlds['Arm'].arm_recompile_trigger = True
+    assets.invalidate_compiled_data(self, context)
 
 def update_gapi_linux(self, context):
     if os.path.isdir(arm.utils.get_fp() + 'build/linux-build'):
         shutil.rmtree(arm.utils.get_fp() + 'build/linux-build')
     bpy.data.worlds['Arm'].arm_recompile_trigger = True
+    assets.invalidate_compiled_data(self, context)
 
 def update_gapi_mac(self, context):
     if os.path.isdir(arm.utils.get_fp() + 'build/osx-build'):
         shutil.rmtree(arm.utils.get_fp() + 'build/osx-build')
     bpy.data.worlds['Arm'].arm_recompile_trigger = True
+    assets.invalidate_compiled_data(self, context)
 
 def update_gapi_android(self, context):
     if os.path.isdir(arm.utils.get_fp() + 'build/android-build'):
         shutil.rmtree(arm.utils.get_fp() + 'build/android-build')
     bpy.data.worlds['Arm'].arm_recompile_trigger = True
+    assets.invalidate_compiled_data(self, context)
 
 def update_gapi_ios(self, context):
     if os.path.isdir(arm.utils.get_fp() + 'build/ios-build'):
         shutil.rmtree(arm.utils.get_fp() + 'build/ios-build')
     bpy.data.worlds['Arm'].arm_recompile_trigger = True
+    assets.invalidate_compiled_data(self, context)
 
 def update_gapi_html5(self, context):
     bpy.data.worlds['Arm'].arm_recompile_trigger = True
+    assets.invalidate_compiled_data(self, context)
 
 def init_properties():
     global arm_version

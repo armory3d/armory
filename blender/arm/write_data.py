@@ -42,6 +42,9 @@ let project = new Project('""" + arm.utils.safefilename(wrd.arm_project_name) + 
 project.addSources('Sources');
 """)
 
+        # TODO: Move to khamake
+        f.write("project.addDefine('arm_" + getattr(wrd, 'arm_gapi_' + arm.utils.get_os()) + "');\n")
+
         # TODO: Khamake bug workaround - assets & shaders located in folder starting with '.' get discarded - copy them to project
         check_dot_path = False
         if '/.' in sdk_path:

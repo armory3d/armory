@@ -14,7 +14,7 @@ def make(context_id, rpasses):
     tesc = None
     tese = None
 
-    # frag.add_out('vec4 fragColor')
+    frag.add_out('vec4 fragColor') # Definition requred for d3d9 - pixel shader must minimally write all four components of COLOR0
     vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
 
     # TODO: pass vbuf with proper struct
