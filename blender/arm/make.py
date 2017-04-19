@@ -149,7 +149,7 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
 
     if target_name == '' or target_name == '--run':
         cmd.append('-g')
-        cmd.append(getattr(wrd, 'arm_gapi_' + arm.utils.get_os()))
+        cmd.append(arm.utils.get_gapi())
 
     if kha_target_name == 'krom':
         if state.in_viewport:
@@ -164,9 +164,8 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
             cmd.append('build/window')
 
     # User defined commands
-    cmd_text = wrd.arm_command_line
-    if cmd_text != '':
-        for s in bpy.data.texts[cmd_text].as_string().split(' '):
+    if wrd.arm_khamake != '':
+        for s in bpy.data.texts[wrd.arm_khamake].as_string().split(' '):
             cmd.append(s)
 
     if patch:

@@ -51,6 +51,9 @@ def get_os():
     else:
         return 'linux'
 
+def get_gapi():
+    return getattr(bpy.data.worlds['Arm'], 'arm_gapi_' + get_os())
+
 def get_sdk_path():
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences

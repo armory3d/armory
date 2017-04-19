@@ -4,6 +4,7 @@ import arm.material.mat_utils as mat_utils
 import arm.material.make_skin as make_skin
 import arm.material.make_tess as make_tess
 import arm.material.make_mesh as make_mesh
+import arm.utils
 
 def make(context_id, rpasses):
     con_shadowmap = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False })
@@ -14,7 +15,8 @@ def make(context_id, rpasses):
     tesc = None
     tese = None
 
-    frag.add_out('vec4 fragColor') # Definition requred for d3d9 - pixel shader must minimally write all four components of COLOR0
+    if arm.utils.get_gapi() == 'arm_direct3d9':
+        frag.add_out('vec4 fragColor') # Definition requred for d3d9 - pixel shader must minimally write all four components of COLOR0
     vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
 
     # TODO: pass vbuf with proper struct
