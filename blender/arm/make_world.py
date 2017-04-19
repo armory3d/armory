@@ -97,6 +97,9 @@ def build_node_tree(world):
         wrd.world_defs += '_Rad' # Always do radiance for voxels
         wrd.world_defs += '_Irr'
 
+    if arm.utils.get_gapi().startswith('direct3d'): # Flip Y axis in drawQuad command
+        wrd.world_defs += '_InvY'
+
     # Area lamps
     for lamp in bpy.data.lamps:
         if lamp.type == 'AREA':

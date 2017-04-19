@@ -13,7 +13,11 @@ out vec4 offset;
 
 void main() {
 	// Scale vertex attribute to [0-1] range
+	#ifdef _InvY
+	const vec2 madd = vec2(0.5, -0.5);
+	#else
 	const vec2 madd = vec2(0.5, 0.5);
+	#endif
 	texCoord = pos.xy * madd + madd;
 
 	// Neighborhood Blending Vertex Shader

@@ -19,7 +19,11 @@ const int SMAA_MAX_SEARCH_STEPS = 16;
 
 void main() {
 	// Scale vertex attribute to [0-1] range
+	#ifdef _InvY
+	const vec2 madd = vec2(0.5, -0.5);
+	#else
 	const vec2 madd = vec2(0.5, 0.5);
+	#endif
 	texCoord = pos.xy * madd + madd;
 	
 	// Blend Weight Calculation Vertex Shader

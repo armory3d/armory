@@ -15,7 +15,11 @@ out vec4 offset2;
 
 void main() {
 	// Scale vertex attribute to [0-1] range
+	#ifdef _InvY
+	const vec2 madd = vec2(0.5, -0.5);
+	#else
 	const vec2 madd = vec2(0.5, 0.5);
+	#endif
 	texCoord = pos.xy * madd + madd;
 
 	// Edge Detection Vertex Shader
