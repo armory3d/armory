@@ -31,7 +31,6 @@ def register():
     arm.props_ui.register()
     arm.props_renderer.register()
     arm.nodes_logic.register()
-    arm.handlers.register()
     arm.nodes_renderpath.register()
     arm.make_renderer.register()
     arm.props_traits_params.register()
@@ -42,6 +41,7 @@ def register():
     arm.props_virtualinput.register()
     arm.space_armory.register()
     arm.keymap.register()
+    arm.handlers.register()
 
 def unregister():
     global registered

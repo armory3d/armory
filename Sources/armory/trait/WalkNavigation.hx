@@ -50,29 +50,38 @@ class WalkNavigation extends Trait {
 		var fast = keyboard.down("shift") ? 2.0 : (keyboard.down("alt") ? 0.5 : 1.0);
 
 		if (gamepad != null) {
-			dir.set(0, 0, 0);
+			var leftStickY = Math.abs(gamepad.leftStick.y) > 0.05;
+			var leftStickX = Math.abs(gamepad.leftStick.x) > 0.05;
+			var r1 = gamepad.down("r1") > 0.0;
+			var l1 = gamepad.down("l1") > 0.0;
+			var rightStickX = Math.abs(gamepad.rightStick.x) > 0.1;
+			var rightStickY = Math.abs(gamepad.rightStick.y) > 0.1;
 
-			if (Math.abs(gamepad.leftStick.y) > 0.05) {
-				yvec.setFrom(camera.look());
-				yvec.mult(gamepad.leftStick.y);
-				dir.add(yvec);
-			}
-			if (Math.abs(gamepad.leftStick.x) > 0.05) {
-				xvec.setFrom(camera.right());
-				xvec.mult(gamepad.leftStick.x);
-				dir.add(xvec);
-			}
-			if (gamepad.down("r1") > 0.0) dir.addf(0, 0, 1);
-			if (gamepad.down("l1") > 0.0) dir.addf(0, 0, -1);
+			if (leftStickY || leftStickX || r1 || l1 || rightStickX || rightStickY) {
+				dir.set(0, 0, 0);
 
-			var d = Time.delta * speed * fast;
-			camera.move(dir, d);
+				if (leftStickY) {
+					yvec.setFrom(camera.look());
+					yvec.mult(gamepad.leftStick.y);
+					dir.add(yvec);
+				}
+				if (leftStickX) {
+					xvec.setFrom(camera.right());
+					xvec.mult(gamepad.leftStick.x);
+					dir.add(xvec);
+				}
+				if (r1) dir.addf(0, 0, 1);
+				if (l1) dir.addf(0, 0, -1);
 
-			if (Math.abs(gamepad.rightStick.x) > 0.1) {
-				camera.rotate(Vec4.zAxis(), -gamepad.rightStick.x / 15.0);
-			}
-			if (Math.abs(gamepad.rightStick.y) > 0.1) {
-				camera.rotate(camera.right(), gamepad.rightStick.y / 15.0);
+				var d = Time.delta * speed * fast;
+				camera.move(dir, d);
+
+				if (rightStickX) {
+					camera.rotate(Vec4.zAxis(), -gamepad.rightStick.x / 15.0);
+				}
+				if (rightStickY) {
+					camera.rotate(camera.right(), gamepad.rightStick.y / 15.0);
+				}
 			}
 		}
 		
