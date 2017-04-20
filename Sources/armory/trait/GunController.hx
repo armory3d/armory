@@ -23,6 +23,8 @@ class GunController extends Trait {
 
 	public function new(projectileRef:String, firePointRef:String) {
 		super();
+
+		this.projectileRef = projectileRef;
 		
 		notifyOnInit(function() {
 			firePoint = object.getChild(firePointRef).transform;
@@ -41,10 +43,9 @@ class GunController extends Trait {
 			o.transform.loc.z = firePoint.absz();
 			// Apply force
 			var rb:RigidBody = o.getTrait(RigidBody);
-			rb.notifyOnReady(function() {
-				var look = object.transform.look().normalize();
-				rb.setLinearVelocity(look.x * fireStrength, look.y * fireStrength, look.z * fireStrength);
-			});
+			rb.syncTransform();
+			var look = object.transform.look().normalize();
+			rb.setLinearVelocity(look.x * fireStrength, look.y * fireStrength, look.z * fireStrength);
 			// Remove projectile after a period of time
 			kha.Scheduler.addTimeTask(function() {
 				o.remove();

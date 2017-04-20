@@ -60,6 +60,7 @@ class RigidBody extends Trait {
 
 	public function notifyOnReady(f:Void->Void) {
 		onReady = f;
+		if (ready) onReady();
 	}
 
 	public function init() {
