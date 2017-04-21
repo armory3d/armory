@@ -28,7 +28,8 @@ def build(material, mat_users, mat_armusers, rid):
     mat_state.data.add_elem('nor', 3)
     mat_state.output_node = cycles.node_by_type(mat_state.nodes, 'OUTPUT_MATERIAL')
     if mat_state.output_node == None:
-        return None
+        # Place empty material output to keep compiler happy..
+        mat_state.output_node = mat_state.nodes.new('ShaderNodeOutputMaterial')
 
     wrd = bpy.data.worlds['Arm']
     rpasses = mat_utils.get_rpasses(material)
