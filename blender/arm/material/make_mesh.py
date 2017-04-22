@@ -8,6 +8,7 @@ import arm.material.make_tess as make_tess
 import arm.utils
 
 is_displacement = False
+write_material_attribs = None
 
 def make(context_id, rid):
     con_mesh = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
@@ -68,6 +69,7 @@ def make_finalize(con_mesh):
 
 def make_base(con_mesh, parse_opacity):
     global is_displacement
+    global write_material_attribs
 
     vert = con_mesh.make_vert()
     frag = con_mesh.make_frag()
@@ -107,14 +109,16 @@ def make_base(con_mesh, parse_opacity):
 
     frag.add_include('../../Shaders/compiled.glsl')
 
-    frag.write('vec3 basecol;')
-    frag.write('float roughness;')
-    frag.write('float metallic;')
-    frag.write('float occlusion;')
-    if parse_opacity:
-        frag.write('float opacity;')
-
-    cycles.parse(mat_state.nodes, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity)
+    if write_material_attribs != None:
+        write_material_attribs(frag)
+    else:
+        frag.write('vec3 basecol;')
+        frag.write('float roughness;')
+        frag.write('float metallic;')
+        frag.write('float occlusion;')
+        if parse_opacity:
+            frag.write('float opacity;')
+        cycles.parse(mat_state.nodes, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity)
 
     if mat_state.data.is_elem('tex'):
         vert.add_out('vec2 texCoord')

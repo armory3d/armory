@@ -14,14 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import bpy
-import arm.utils
-import arm.assets as assets
-import arm.make_state as make_state
-import arm.log as log
-import arm.material.mat_state as mat_state
-import arm.material.texture as texture
-import arm.material.functions as functions
+import arm.material.cycles_functions as c_functions
+import arm.material.cycles_state as c_state
 
 def parse(nodes, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
@@ -72,7 +66,7 @@ def parse_output(node, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse
     # parse_volume_input(node.inputs[1])
 
     # Displacement
-    if parse_displacement and arm.utils.tess_enabled(make_state.target) and node.inputs[2].is_linked and tese != None:
+    if parse_displacement and c_state.tess_enabled() and node.inputs[2].is_linked and tese != None:
         parsed = []
         parents = []
         normal_written = False
@@ -166,7 +160,7 @@ def parse_shader(node, socket):
                 out_metallic = parse_value_input(node.inputs[5])
                 # Normal
                 if node.inputs[6].is_linked and node.inputs[6].links[0].from_node.type == 'NORMAL_MAP':
-                    log.warn(mat_state.material.name + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
+                    c_state.warn(c_state.mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
                 parse_normal_map_color_input(node.inputs[6], node.inputs[7])
                 # Emission
                 if node.inputs[8].is_linked:
@@ -326,7 +320,7 @@ def parse_displacement_input(inp):
         return None
 
 def res_var_name(node, socket):
-    return node_name(node.name) + '_' + socket_name(socket.name) + '_res'
+    return node_name(node.name) + '_' + c_state.safe_source_name(socket.name) + '_res'
 
 def write_result(l):
     res_var = res_var_name(l.from_node, l.from_socket)
@@ -364,7 +358,7 @@ def glsltype(t):
         return 'float'
 
 def touniform(inp):
-    uname = arm.utils.safe_source_name(inp.node.name) + arm.utils.safe_source_name(inp.name)
+    uname = c_state.safe_source_name(inp.node.name) + c_state.safe_source_name(inp.name)
     curshader.add_uniform(glsltype(inp.type) + ' ' + uname)
     return uname
 
@@ -385,7 +379,7 @@ def parse_vector_input(inp):
         if inp.type == 'VALUE': # Unlinked reroute
             return tovec3([0.0, 0.0, 0.0])
         else:
-            if mat_state.batch and inp.is_uniform:
+            if c_state.mat_batch() and inp.is_uniform:
                 return touniform(inp)
             else:
                 return tovec3(inp.default_value)
@@ -401,7 +395,7 @@ def parse_rgb(node, socket):
     elif node.type == 'ATTRIBUTE':
         # Vcols only for now
         # node.attribute_name
-        mat_state.data.add_elem('col', 3)
+        c_state.mat_add_elem('col', 3)
         return 'vcolor'
 
     elif node.type == 'RGB':
@@ -412,7 +406,7 @@ def parse_rgb(node, socket):
         return tovec3([0.0, 0.0, 0.0])
 
     elif node.type == 'TEX_CHECKER':
-        curshader.add_function(functions.str_tex_checker)
+        curshader.add_function(c_functions.str_tex_checker)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
@@ -452,8 +446,8 @@ def parse_rgb(node, socket):
         # Already fetched
         if res_var_name(node, node.outputs[1]) in parsed:
             return '{0}.rgb'.format(store_var_name(node))
-        tex_name = arm.utils.safe_source_name(node.name)
-        tex = texture.make_texture(node, tex_name)
+        tex_name = c_state.safe_source_name(node.name)
+        tex = c_state.make_texture(node, tex_name)
         if tex != None:
             to_linear = parsing_basecol and not tex['file'].endswith('.hdr')
             return '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear))
@@ -473,7 +467,7 @@ def parse_rgb(node, socket):
 
     elif node.type == 'TEX_MUSGRAVE':
         # Fall back to noise
-        curshader.add_function(functions.str_tex_noise)
+        curshader.add_function(c_functions.str_tex_noise)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
@@ -484,7 +478,7 @@ def parse_rgb(node, socket):
         return 'vec3(tex_noise_f({0} * {1}))'.format(co, scale)
 
     elif node.type == 'TEX_NOISE':
-        curshader.add_function(functions.str_tex_noise)
+        curshader.add_function(c_functions.str_tex_noise)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
@@ -504,9 +498,9 @@ def parse_rgb(node, socket):
         return tovec3([0.0, 0.0, 0.0])
 
     elif node.type == 'TEX_VORONOI':
-        curshader.add_function(functions.str_tex_voronoi)
-        assets.add(arm.utils.get_sdk_path() + '/armory/Assets/' + 'noise64.png')
-        assets.add_embedded_data('noise64.png')
+        curshader.add_function(c_functions.str_tex_voronoi)
+        c_state.assets_add(c_state.get_sdk_path() + '/armory/Assets/' + 'noise64.png')
+        c_state.assets_add_embedded_data('noise64.png')
         curshader.add_uniform('sampler2D snoise', link='_noise64')
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
@@ -541,7 +535,7 @@ def parse_rgb(node, socket):
         return 'pow({0}, vec3({1}))'.format(out_col, gamma)
 
     elif node.type == 'HUE_SAT':
-        curshader.add_function(functions.str_hsv_to_rgb)
+        curshader.add_function(c_functions.str_hsv_to_rgb)
         hue = parse_value_input(node.inputs[0])
         sat = parse_value_input(node.inputs[1])
         val = parse_value_input(node.inputs[2])
@@ -667,15 +661,15 @@ def store_var_name(node):
 
 def texture_store(node, tex, tex_name, to_linear=False):
     global parse_teximage_vector
-    mat_state.bind_textures.append(tex)
-    mat_state.data.add_elem('tex', 2)
+    c_state.mat_bind_texture(tex)
+    c_state.mat_add_elem('tex', 2)
     curshader.add_uniform('sampler2D {0}'.format(tex_name))
     if node.inputs[0].is_linked and parse_teximage_vector:
         uv_name = parse_vector_input(node.inputs[0])
     else:
         uv_name = 'texCoord'
     tex_store = store_var_name(node)
-    if mat_state.texture_grad:
+    if c_state.mat_texture_grad():
         curshader.write('vec4 {0} = textureGrad({1}, {2}.xy, g2.xy, g2.zw);'.format(tex_store, tex_name, uv_name))
     else:
         curshader.write('vec4 {0} = texture({1}, {2}.xy);'.format(tex_store, tex_name, uv_name))
@@ -693,16 +687,16 @@ def parse_vector(node, socket):
 
     elif node.type == 'ATTRIBUTE':
         # UVMaps only for now
-        mat_state.data.add_elem('tex', 2)
-        mat = mat_state.material
-        mat_users = mat_state.mat_users
+        c_state.mat_add_elem('tex', 2)
+        mat = c_state.mat_get_material()
+        mat_users = c_state.mat_get_material_users()
         if mat_users != None and mat in mat_users:
             mat_user = mat_users[mat][0]
             if hasattr(mat_user.data, 'uv_layers'): # No uvlayers for Curve
                 lays = mat_user.data.uv_layers
                 # Second uvmap referenced
                 if len(lays) > 1 and node.attribute_name == lays[1].name:
-                    mat_state.data.add_elem('tex1', 2)
+                    c_state.mat_add_elem('tex1', 2)
                     return 'texCoord1', 2
         return 'texCoord', 2
 
@@ -749,7 +743,7 @@ def parse_vector(node, socket):
         elif socket == node.outputs[1]: # Normal
             return 'vec2(0.0)', 2
         elif socket == node.outputs[2]: # UV
-            mat_state.data.add_elem('tex', 2)
+            c_state.mat_add_elem('tex', 2)
             return 'texCoord', 2
         elif socket == node.outputs[3]: # Object
             return 'vec2(0.0)', 2
@@ -835,8 +829,8 @@ def parse_normal_map_color_input(inp, str_inp=None):
         return
     frag.write_pre = True
     parse_teximage_vector = False # Force texCoord for normal map image vector
-    defplus = bpy.data.cameras[0].rp_renderer == 'Deferred Plus'
-    if not bpy.data.worlds['Arm'].arm_export_tangents or defplus: # Compute TBN matrix
+    defplus = c_state.get_rp_renderer() == 'Deferred Plus'
+    if not c_state.get_arm_export_tangents() or defplus: # Compute TBN matrix
         frag.write('vec3 texn = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
         frag.add_include('../../Shaders/std/normals.glsl')
         if defplus:
@@ -848,7 +842,7 @@ def parse_normal_map_color_input(inp, str_inp=None):
         frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
         # frag.write('n = normalize(TBN * normalize(n));')
         frag.write('n = TBN * normalize(n);')
-        mat_state.data.add_elem('tang', 3)
+        c_state.mat_add_elem('tang', 3)
 
     parse_teximage_vector = True
     frag.write_pre = False
@@ -867,7 +861,7 @@ def parse_value_input(inp):
         else: # VALUE
             return res_var
     else:
-        if mat_state.batch and inp.is_uniform:
+        if c_state.mat_batch() and inp.is_uniform:
             return touniform(inp)
         else:
             return tovec1(inp.default_value)
@@ -989,7 +983,7 @@ def parse_value(node, socket):
 
     elif node.type == 'TEX_CHECKER':
         # TODO: do not recompute when color socket is also connected
-        curshader.add_function(functions.str_tex_checker)
+        curshader.add_function(c_functions.str_tex_checker)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
@@ -1006,8 +1000,8 @@ def parse_value(node, socket):
         # Already fetched
         if res_var_name(node, node.outputs[0]) in parsed:
             return '{0}.a'.format(store_var_name(node))
-        tex_name = arm.utils.safe_source_name(node.name)
-        tex = texture.make_texture(node, tex_name)
+        tex_name = c_state.safe_source_name(node.name)
+        tex = c_state.make_texture(node, tex_name)
         if tex != None:
             return '{0}.a'.format(texture_store(node, tex, tex_name))
         else:
@@ -1020,7 +1014,7 @@ def parse_value(node, socket):
 
     elif node.type == 'TEX_MUSGRAVE':
         # Fall back to noise
-        curshader.add_function(functions.str_tex_noise)
+        curshader.add_function(c_functions.str_tex_noise)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
@@ -1031,7 +1025,7 @@ def parse_value(node, socket):
         return 'tex_noise_f({0} * {1})'.format(co, scale)
 
     elif node.type == 'TEX_NOISE':
-        curshader.add_function(functions.str_tex_noise)
+        curshader.add_function(c_functions.str_tex_noise)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
@@ -1045,9 +1039,9 @@ def parse_value(node, socket):
         return '0.0'
 
     elif node.type == 'TEX_VORONOI':
-        curshader.add_function(functions.str_tex_voronoi)
-        assets.add(arm.utils.get_sdk_path() + '/armory/Assets/' + 'noise64.png')
-        assets.add_embedded_data('noise64.png')
+        curshader.add_function(c_functions.str_tex_voronoi)
+        c_state.assets_add(c_state.get_sdk_path() + '/armory/Assets/' + 'noise64.png')
+        c_state.assets_add_embedded_data('noise64.png')
         curshader.add_uniform('sampler2D snoise', link='_noise64')
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
@@ -1180,10 +1174,7 @@ def socket_index(node, socket):
             return i
 
 def node_name(s):
-    s = arm.utils.safe_source_name(s)
+    s = c_state.safe_source_name(s)
     if len(parents) > 0:
-        s = arm.utils.safe_source_name(parents[-1].name) + '_' + s
+        s = c_state.safe_source_name(parents[-1].name) + '_' + s
     return s
-
-def socket_name(s):
-    return arm.utils.safe_source_name(s)

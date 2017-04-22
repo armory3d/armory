@@ -432,7 +432,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_project_name')
         layout.prop(wrd, 'arm_project_package')
         layout.prop_search(wrd, 'arm_khafile', bpy.data, 'texts', 'Khafile')
-        layout.prop_search(wrd, 'arm_command_line', bpy.data, 'texts', 'Command Line')
+        layout.prop_search(wrd, 'arm_khamake', bpy.data, 'texts', 'Khamake')
         row = layout.row(align=True)
         row.operator("arm.kode_studio")
         row.operator("arm.open_project_folder")

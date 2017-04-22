@@ -6,7 +6,7 @@ import arm.assets as assets
 import arm.material.mat_state as mat_state
 import arm.make_state as state
 
-def make_texture(image_node, tex_name, matname=None):
+def make(image_node, tex_name, matname=None):
     wrd = bpy.data.worlds['Arm']
     tex = {}
     tex['name'] = tex_name
