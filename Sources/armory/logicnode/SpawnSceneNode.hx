@@ -19,7 +19,6 @@ class SpawnSceneNode extends LogicNode {
 		Scene.active.addScene(sceneName, null, function(o:armory.object.Object) {
 			root = o;
 			if (matrix != null) root.transform.setMatrix(matrix);
-			Scene.active.root.addChild(root);
 			runOutputs(0);
 		});
 	}
