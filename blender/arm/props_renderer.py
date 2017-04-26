@@ -200,7 +200,7 @@ def set_renderpath(self, context):
         return
     if bpy.context.camera == None:
         return
-    assets.invalidate_shader_cache(self, context)
+    assets.invalidate_compiled_data(self, context)
     make_renderer.make_renderer(bpy.context.camera)
     bpy.context.camera.renderpath_path = 'armory_default'
 

@@ -411,6 +411,9 @@ def make_debug_normals_pass(stages, node_group, node):
 def make_fxaa_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='fxaa_pass/fxaa_pass/fxaa_pass')
 
+def make_ss_resolve(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='supersample_resolve/supersample_resolve/supersample_resolve')
+
 def make_smaa_pass(stages, node_group, node):
     stage = {}
     stage['params'] = []
@@ -673,6 +676,9 @@ def buildNode(stages, node, node_group):
     elif node.bl_idname == 'FXAAPassNodeType':
         make_fxaa_pass(stages, node_group, node)
         append_stage = False
+    elif node.bl_idname == 'SSResolveNodeType':
+        make_ss_resolve(stages, node_group, node)
+        append_stage = False
     elif node.bl_idname == 'SMAAPassNodeType':
         make_smaa_pass(stages, node_group, node)
         append_stage = False
@@ -794,7 +800,7 @@ def traverse_renderpath(node, node_group, render_targets, depth_buffers):
             traverse_renderpath(loop_node, node_group, render_targets, depth_buffers)
     
     # Prebuilt
-    elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'MatIDToDepthNodeType' or node.bl_idname == 'BlendPassNodeType' or node.bl_idname == 'CombinePassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'DeferredIndirectPassNodeType' or node.bl_idname == 'VolumetricLightPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
+    elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'MatIDToDepthNodeType' or node.bl_idname == 'BlendPassNodeType' or node.bl_idname == 'CombinePassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'SSResolveNodeType' or node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'DeferredIndirectPassNodeType' or node.bl_idname == 'VolumetricLightPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
         if node.inputs[1].is_linked:
             tnode = nodes.find_node_by_link(node_group, node, node.inputs[1])
             parse_render_target(tnode, node_group, render_targets, depth_buffers)

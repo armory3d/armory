@@ -171,6 +171,21 @@ def make_deferred(cam):
         links.remove(l)
         links.new(nodes['Framebuffer'].outputs[0], nodes['Draw Compositor'].inputs[1])
 
+    if cam.rp_supersampling == '4':
+        links.new(nodes[last_node].outputs[0], nodes['SS Resolve'].inputs[0])
+        if cam.rp_antialiasing == 'SMAA':
+            links.new(nodes['Reroute.014'].outputs[0], nodes['SMAA'].inputs[1])
+            links.new(nodes['Reroute.014'].outputs[0], nodes['SS Resolve'].inputs[2])
+        elif cam.rp_antialiasing == 'TAA':
+            links.new(nodes['Reroute.008'].outputs[0], nodes['TAA'].inputs[1])
+            links.new(nodes['Reroute.008'].outputs[0], nodes['SS Resolve'].inputs[2])
+        elif cam.rp_antialiasing == 'FXAA':
+            links.new(nodes['Reroute.008'].outputs[0], nodes['FXAA'].inputs[1])
+            links.new(nodes['Reroute.008'].outputs[0], nodes['SS Resolve'].inputs[2])
+        elif cam.rp_antialiasing == 'None':
+            links.new(nodes['Reroute.008'].outputs[0], nodes['Draw Compositor'].inputs[1])
+            links.new(nodes['Reroute.008'].outputs[0], nodes['SS Resolve'].inputs[2])
+
 def make_deferred_plus(cam):
     pass
 

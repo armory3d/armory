@@ -234,6 +234,19 @@ class FXAAPassNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
+class SSResolveNode(Node, CGPipelineTreeNode):
+    '''Super Sampling resolve node'''
+    bl_idname = 'SSResolveNodeType'
+    bl_label = 'SS Resolve'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "Color")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
 class SMAAPassNode(Node, CGPipelineTreeNode):
     '''Subpixel morphological anti-aliasing node'''
     bl_idname = 'SMAAPassNodeType'
@@ -851,6 +864,7 @@ node_categories = [
         NodeItem("BlurBasicPassNodeType"),
         NodeItem("DebugNormalsPassNodeType"),
         NodeItem("FXAAPassNodeType"),
+        NodeItem("SSResolveNodeType"),
         NodeItem("SMAAPassNodeType"),
         NodeItem("TAAPassNodeType"),
         NodeItem("SSSPassNodeType"),
@@ -916,6 +930,7 @@ def register():
     bpy.utils.register_class(BlurBasicPassNode)
     bpy.utils.register_class(DebugNormalsPassNode)
     bpy.utils.register_class(FXAAPassNode)
+    bpy.utils.register_class(SSResolveNode)
     bpy.utils.register_class(SMAAPassNode)
     bpy.utils.register_class(TAAPassNode)
     bpy.utils.register_class(SSSPassNode)
