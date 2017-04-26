@@ -18,7 +18,7 @@ except ImportError:
     pass
 
 # Armory version
-arm_version = '17.04'
+arm_version = '17.05'
 
 def update_preset(self, context):
     props_renderer.set_preset(self, context, self.rp_preset)
@@ -298,6 +298,11 @@ def init_properties():
                #('Path-Trace', 'Path-Trace', 'Path-Trace')],
                ],
         name="Renderer", description="Renderer type", default='Deferred', update=update_renderpath)
+    bpy.types.Camera.rp_materials = EnumProperty(
+        items=[('Full', 'Full', 'Full'),
+               ('Restricted', 'Restricted', 'Restricted'),
+               ],
+        name="Materials", description="Material builder", default='Full', update=update_renderpath)
     bpy.types.Camera.rp_depthprepass = bpy.props.BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=False, update=update_renderpath)
     bpy.types.Camera.rp_meshes = bpy.props.BoolProperty(name="Meshes", description="Render mesh objects", default=True, update=update_renderpath)
     bpy.types.Camera.rp_hdr = bpy.props.BoolProperty(name="HDR", description="Render in HDR Space", default=True, update=update_renderpath)

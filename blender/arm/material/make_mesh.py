@@ -14,7 +14,10 @@ def make(context_id, rid):
     con_mesh = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
 
     if rid == 'forward':
-        make_forward(con_mesh)
+        if bpy.data.cameras[0].rp_materials == 'Full':
+            make_forward(con_mesh)
+        else:
+            make_forward_restricted(con_mesh)
     elif rid == 'deferred':
         make_deferred(con_mesh)
     elif rid == 'deferred_plus':
@@ -272,6 +275,80 @@ def make_deferred_plus(con_mesh):
     frag.write('fragColor[1] = vec4(materialID, 0.0, 0.0, 0.0);')
     frag.write('fragColor[2] = vec4(dFdx(texCoord), dFdy(texCoord));')
     # + tangent space
+
+def make_forward_restricted(con_mesh):
+    wrd = bpy.data.worlds['Arm']
+    vert = con_mesh.make_vert()
+    frag = con_mesh.make_frag()
+    geom = None
+    tesc = None
+    tese = None
+
+    vert.add_uniform('mat3 N', '_normalMatrix')
+    vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
+    frag.ins = vert.outs
+    vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
+    vert.write('gl_Position = WVP * spos;')
+
+    frag.add_include('../../Shaders/compiled.glsl')
+    frag.write('vec3 basecol;')
+    cycles.parse(mat_state.nodes, vert, frag, geom, tesc, tese, basecol_only=True, parse_opacity=False, parse_displacement=False)
+
+    if mat_state.data.is_elem('tex'):
+        vert.add_out('vec2 texCoord')
+        vert.write('texCoord = tex;')
+
+    if mat_state.data.is_elem('col'):
+        vert.add_out('vec3 vcolor')
+        vert.write('vcolor = col;')
+
+    vert.add_out('vec3 wnormal')
+    write_norpos(vert)
+    frag.write_pre = True
+    frag.write_main_header('vec3 n = normalize(wnormal);')
+    frag.write_pre = False
+
+    frag.add_uniform('vec3 lightColor', '_lampColor')
+    frag.add_uniform('vec3 lightDir', '_lampDirection')
+    frag.add_uniform('float envmapStrength', link='_envmapStrength')
+
+    if '_NoShadows' in wrd.world_defs:
+        is_shadows = False
+    else:
+        is_shadows = True
+
+    frag.write('float visibility = 1.0;')
+    frag.write('float dotNL = dot(n, lightDir);')
+
+    if is_shadows:
+        vert.add_out('vec4 lampPos')
+        vert.add_uniform('mat4 LWVP', '_biasLampWorldViewProjectionMatrix')
+        vert.write('lampPos = LWVP * spos;')
+        frag.add_include('../../Shaders/std/shadows.glsl')
+        frag.add_uniform('sampler2D shadowMap', included=True)
+        frag.add_uniform('float shadowsBias', '_lampShadowsBias')
+        frag.write('    if (lampPos.w > 0.0) {')
+        frag.write('    vec3 lpos = lampPos.xyz / lampPos.w;')
+        # frag.write('    visibility *= PCF(lpos.xy, lpos.z - shadowsBias);')
+        frag.write('    const float texelSize = 1.0 / shadowmapSize.x;')
+        frag.write('    visibility = 0.0;')
+        frag.write('    visibility += float(texture(shadowMap, lpos.xy).r + shadowsBias > lpos.z);')
+        frag.write('    visibility += float(texture(shadowMap, lpos.xy + vec2(texelSize, 0.0)).r + shadowsBias > lpos.z) * 0.5;')
+        frag.write('    visibility += float(texture(shadowMap, lpos.xy + vec2(-texelSize, 0.0)).r + shadowsBias > lpos.z) * 0.25;')
+        frag.write('    visibility += float(texture(shadowMap, lpos.xy + vec2(0.0, texelSize)).r + shadowsBias > lpos.z) * 0.5;')
+        frag.write('    visibility += float(texture(shadowMap, lpos.xy + vec2(0.0, -texelSize)).r + shadowsBias > lpos.z) * 0.25;')
+        frag.write('    visibility /= 2.5;')
+        frag.write('    visibility = max(visibility, 0.5);')
+        # frag.write('    visibility = max(float(texture(shadowMap, lpos.xy).r + shadowsBias > lpos.z), 0.5);')
+        frag.write('    }')
+
+    frag.write('vec3 direct = basecol * max(dotNL, 0.1);')
+
+    frag.add_out('vec4 fragColor')
+    frag.write('fragColor = vec4(direct * lightColor * visibility, 1.0);')
+    
+    if '_LDR' in bpy.data.worlds['Arm'].rp_defs:
+        frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
 
 def make_forward(con_mesh):
     make_forward_base(con_mesh)

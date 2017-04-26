@@ -771,6 +771,8 @@ def traverse_renderpath(node, node_group, render_targets, depth_buffers):
     elif node.bl_idname == 'DrawStereoNodeType':
         assets.add_khafile_def('arm_vr')
         bpy.data.worlds['Arm'].rp_defs += '_VR'
+        assets.add(build_node_trees.assets_path + 'vr.png')
+        assets.add_embedded_data('vr.png')
 
     elif node.bl_idname == 'CallFunctionNodeType':
         global dynRes_added

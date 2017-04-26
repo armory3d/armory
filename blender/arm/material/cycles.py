@@ -17,12 +17,12 @@
 import arm.material.cycles_functions as c_functions
 import arm.material.cycles_state as c_state
 
-def parse(nodes, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True):
+def parse(nodes, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
     if output_node != None:
-        parse_output(output_node, vert, frag, geom, tesc, tese, parse_surface, parse_opacity, parse_displacement)
+        parse_output(output_node, vert, frag, geom, tesc, tese, parse_surface, parse_opacity, parse_displacement, basecol_only)
 
-def parse_output(node, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse_opacity, parse_displacement):
+def parse_output(node, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse_opacity, _parse_displacement, _basecol_only):
     global parsed # Compute nodes only once
     global parents
     global normal_written # Normal socket is linked on shader node - overwrite fs normal
@@ -36,6 +36,7 @@ def parse_output(node, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse
     global parse_opacity
     global parsing_basecol
     global parse_teximage_vector
+    global basecol_only
     vert = _vert
     frag = _frag
     geom = _geom
@@ -45,6 +46,7 @@ def parse_output(node, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse
     parse_opacity = _parse_opacity
     parsing_basecol = False
     parse_teximage_vector = True
+    basecol_only = _basecol_only
 
     # Surface
     if parse_surface or parse_opacity:
@@ -52,13 +54,18 @@ def parse_output(node, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse
         parents = []
         normal_written = False
         curshader = frag
+
+        if basecol_only:
+            frag.lock = True
         
         out_basecol, out_roughness, out_metallic, out_occlusion, out_opacity = parse_shader_input(node.inputs[0])
         if parse_surface:
+            frag.lock = False
             frag.write('basecol = {0};'.format(out_basecol))
-            frag.write('roughness = {0};'.format(out_roughness))
-            frag.write('metallic = {0};'.format(out_metallic))
-            frag.write('occlusion = {0};'.format(out_occlusion))
+            if not basecol_only:
+                frag.write('roughness = {0};'.format(out_roughness))
+                frag.write('metallic = {0};'.format(out_metallic))
+                frag.write('occlusion = {0};'.format(out_occlusion))
         if parse_opacity:
             frag.write('opacity = {0};'.format(out_opacity))
 
@@ -66,7 +73,7 @@ def parse_output(node, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse
     # parse_volume_input(node.inputs[1])
 
     # Displacement
-    if parse_displacement and c_state.tess_enabled() and node.inputs[2].is_linked and tese != None:
+    if _parse_displacement and c_state.tess_enabled() and node.inputs[2].is_linked and tese != None:
         parsed = []
         parents = []
         normal_written = False
@@ -129,6 +136,14 @@ def write_normal(inp):
             curshader.write('n = {0};'.format(normal_res))
             normal_written = True
 
+def parsing_basecolor(b):
+    global parsing_basecol
+    global basecol_only
+    global curshader
+    parsing_basecol = b
+    if basecol_only:
+        curshader.lock = not b
+
 def parse_shader(node, socket):   
     global parsing_basecol
     out_basecol = 'vec3(0.8)'
@@ -142,9 +157,9 @@ def parse_shader(node, socket):
             
             if parse_surface:
                 # Base color
-                parsing_basecol = True
+                parsing_basecolor(True)
                 out_basecol = parse_vector_input(node.inputs[0])
-                parsing_basecol = False
+                parsing_basecolor(False)
                 # Occlusion TODO: deprecated, occlussion is value instead of vector now
                 if node.inputs[1].type == 'RGBA':
                     out_occlusion = '{0}.r'.format(parse_vector_input(node.inputs[1]))
@@ -164,9 +179,9 @@ def parse_shader(node, socket):
                 parse_normal_map_color_input(node.inputs[6], node.inputs[7])
                 # Emission
                 if node.inputs[8].is_linked:
-                    parsing_basecol = True
+                    parsing_basecolor(True)
                     out_emission = parse_vector_input(node.inputs[8])
-                    parsing_basecol = False
+                    parsing_basecolor(False)
                     if node.inputs[9].is_linked or node.inputs[9].default_value != 1.0:
                         out_emission = '({0} * {1})'.format(out_emission, parse_value_input(node.inputs[9]))
                     out_basecol = '({0} + {1})'.format(out_basecol, out_emission)
@@ -191,9 +206,9 @@ def parse_shader(node, socket):
         bc1, rough1, met1, occ1, opac1 = parse_shader_input(node.inputs[1])
         bc2, rough2, met2, occ2, opac2 = parse_shader_input(node.inputs[2])
         if parse_surface:
-            parsing_basecol = True
+            parsing_basecolor(True)
             out_basecol = '({0} * {3} + {1} * {2})'.format(bc1, bc2, fac_var, fac_inv_var)
-            parsing_basecol = False
+            parsing_basecolor(False)
             out_roughness = '({0} * {3} + {1} * {2})'.format(rough1, rough2, fac_var, fac_inv_var)
             out_metallic = '({0} * {3} + {1} * {2})'.format(met1, met2, fac_var, fac_inv_var)
             out_occlusion = '({0} * {3} + {1} * {2})'.format(occ1, occ2, fac_var, fac_inv_var)
@@ -204,9 +219,9 @@ def parse_shader(node, socket):
         bc1, rough1, met1, occ1, opac1 = parse_shader_input(node.inputs[0])
         bc2, rough2, met2, occ2, opac2 = parse_shader_input(node.inputs[1])
         if parse_surface:
-            parsing_basecol = True
+            parsing_basecolor(True)
             out_basecol = '({0} + {1})'.format(bc1, bc2)
-            parsing_basecol = False
+            parsing_basecolor(False)
             out_roughness = '({0} * 0.5 + {1} * 0.5)'.format(rough1, rough2)
             out_metallic = '({0} * 0.5 + {1} * 0.5)'.format(met1, met2)
             out_occlusion = '({0} * 0.5 + {1} * 0.5)'.format(occ1, occ2)
@@ -216,17 +231,17 @@ def parse_shader(node, socket):
     elif node.type == 'BSDF_DIFFUSE':
         if parse_surface:
             write_normal(node.inputs[2])
-            parsing_basecol = True
+            parsing_basecolor(True)
             out_basecol = parse_vector_input(node.inputs[0])
-            parsing_basecol = False
+            parsing_basecolor(False)
             out_roughness = parse_value_input(node.inputs[1])
 
     elif node.type == 'BSDF_GLOSSY':
         if parse_surface:
             write_normal(node.inputs[2])
-            parsing_basecol = True
+            parsing_basecolor(True)
             out_basecol = parse_vector_input(node.inputs[0])
-            parsing_basecol = False
+            parsing_basecolor(False)
             out_roughness = parse_value_input(node.inputs[1])
             out_metallic = '1.0'
 
@@ -239,18 +254,18 @@ def parse_shader(node, socket):
         if parse_surface:
             write_normal(node.inputs[4])
             # Revert to glossy
-            parsing_basecol = True
+            parsing_basecolor(True)
             out_basecol = parse_vector_input(node.inputs[0])
-            parsing_basecol = False
+            parsing_basecolor(False)
             out_roughness = parse_value_input(node.inputs[1])
             out_metallic = '1.0'
 
     elif node.type == 'EMISSION':
         if parse_surface:
             # Multiply basecol
-            parsing_basecol = True
+            parsing_basecolor(True)
             out_basecol = parse_vector_input(node.inputs[0])
-            parsing_basecol = False
+            parsing_basecolor(False)
             strength = parse_value_input(node.inputs[1])
             out_basecol = '({0} * {1} * 50.0)'.format(out_basecol, strength)
 
@@ -294,9 +309,9 @@ def parse_shader(node, socket):
     elif node.type == 'BSDF_VELVET':
         if parse_surface:
             write_normal(node.inputs[2])
-            parsing_basecol = True
+            parsing_basecolor(True)
             out_basecol = parse_vector_input(node.inputs[0])
-            parsing_basecol = False
+            parsing_basecolor(False)
             out_roughness = '1.0'
             out_metallic = '1.0'
 

@@ -15,14 +15,16 @@ def make(context_id, rpasses):
     tesc = None
     tese = None
 
-    if arm.utils.get_gapi() == 'direct3d9':
+    gapi = arm.utils.get_gapi()
+    if gapi == 'direct3d9':
         frag.add_out('vec4 fragColor') # Definition requred for d3d9 - pixel shader must minimally write all four components of COLOR0
     vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
 
     # TODO: pass vbuf with proper struct
-    vert.write('vec3 t1 = nor; // TODO: Temp for d3d')
-    if mat_state.data.is_elem('tex'):
-        vert.write('vec2 t2 = tex; // TODO: Temp for d3d')
+    if gapi.startswith('direct3d'):
+        vert.write('vec3 t1 = nor; // TODO: Temp for d3d')
+        if mat_state.data.is_elem('tex'):
+            vert.write('vec2 t2 = tex; // TODO: Temp for d3d')
 
     parse_opacity = 'translucent' in rpasses
     if parse_opacity:

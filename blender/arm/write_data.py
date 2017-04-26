@@ -233,18 +233,28 @@ def write_indexhtml(w, h):
 """<!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8"/>
+    <meta charset="utf-8"/>""")
+        if bpy.data.cameras[0].rp_stereo:
+            f.write("""
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <style>
+    body {
+        margin: 0;
+    }
+    </style>
+""")
+        f.write("""
     <title>Armory</title>
 </head>
 <body>
 """)
         if bpy.data.cameras[0].rp_stereo:
             f.write("""
-    <canvas style="outline: none; position: absolute; left: 0; top: 0;" id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """'></canvas>
+    <canvas style="width: 100vw; height: 100vh; display: block;" id='khanvas'></canvas>
 """)
         else:
             f.write("""
-    <p align="center"><canvas style="outline: none;" id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """'></canvas></p>
+    <p align="center"><canvas align="center" style="outline: none;" id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """'></canvas></p>
 """)
         f.write("""
     <script src='kha.js'></script>

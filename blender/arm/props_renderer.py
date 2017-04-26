@@ -18,6 +18,7 @@ def set_preset(self, context, preset):
 
     if preset == 'Forward Low':
         cam.rp_renderer = 'Forward'
+        cam.rp_materials = 'Full'
         cam.rp_shadowmap = '1024'
         cam.rp_meshes = True
         cam.rp_translucency_state = 'Off'
@@ -27,6 +28,7 @@ def set_preset(self, context, preset):
         cam.rp_worldnodes = False
         cam.rp_stereo = False
         cam.rp_greasepencil = False
+        cam.rp_voxelgi = False
         cam.rp_render_to_texture = False
         cam.rp_supersampling = '1'
         cam.rp_antialiasing = 'None'
@@ -38,6 +40,7 @@ def set_preset(self, context, preset):
         cam.rp_motionblur = 'None'
     elif preset == 'Forward':
         cam.rp_renderer = 'Forward'
+        cam.rp_materials = 'Full'
         cam.rp_shadowmap = '2048'
         cam.rp_meshes = True
         cam.rp_translucency_state = 'Auto'
@@ -47,6 +50,7 @@ def set_preset(self, context, preset):
         cam.rp_worldnodes = True
         cam.rp_stereo = False
         cam.rp_greasepencil = False
+        cam.rp_voxelgi = False
         cam.rp_render_to_texture = True
         cam.rp_supersampling = '1'
         cam.rp_antialiasing = 'FXAA'
@@ -58,6 +62,7 @@ def set_preset(self, context, preset):
         cam.rp_motionblur = 'None'
     elif preset == 'Forward High':
         cam.rp_renderer = 'Forward'
+        cam.rp_materials = 'Full'
         cam.rp_shadowmap = '4096'
         cam.rp_meshes = True
         cam.rp_translucency_state = 'Auto'
@@ -67,6 +72,7 @@ def set_preset(self, context, preset):
         cam.rp_worldnodes = True
         cam.rp_stereo = False
         cam.rp_greasepencil = False
+        cam.rp_voxelgi = False
         cam.rp_render_to_texture = True
         cam.rp_supersampling = '1'
         cam.rp_antialiasing = 'SMAA'
@@ -87,6 +93,7 @@ def set_preset(self, context, preset):
         cam.rp_worldnodes = True
         cam.rp_stereo = False
         cam.rp_greasepencil = False
+        cam.rp_voxelgi = False
         cam.rp_render_to_texture = True
         cam.rp_supersampling = '1'
         cam.rp_antialiasing = 'FXAA'
@@ -107,6 +114,7 @@ def set_preset(self, context, preset):
         cam.rp_worldnodes = True
         cam.rp_stereo = False
         cam.rp_greasepencil = False
+        cam.rp_voxelgi = False
         cam.rp_render_to_texture = True
         cam.rp_supersampling = '1'
         cam.rp_antialiasing = 'SMAA'
@@ -127,6 +135,7 @@ def set_preset(self, context, preset):
         cam.rp_worldnodes = True
         cam.rp_stereo = False
         cam.rp_greasepencil = False
+        cam.rp_voxelgi = False
         cam.rp_render_to_texture = True
         cam.rp_supersampling = '1'
         cam.rp_antialiasing = 'TAA'
@@ -140,15 +149,17 @@ def set_preset(self, context, preset):
         pass
     elif preset == 'VR Low':
         cam.rp_renderer = 'Forward'
+        cam.rp_materials = 'Restricted'
         cam.rp_shadowmap = '1024'
         cam.rp_meshes = True
         cam.rp_translucency_state = 'Off'
         cam.rp_overlays_state = 'Off'
         cam.rp_decals_state = 'Off'
         cam.rp_hdr = False
-        cam.rp_worldnodes = True
+        cam.rp_worldnodes = False
         cam.rp_stereo = True
         cam.rp_greasepencil = False
+        cam.rp_voxelgi = False
         cam.rp_render_to_texture = False
         cam.rp_supersampling = '1'
         cam.rp_antialiasing = 'None'
@@ -159,7 +170,8 @@ def set_preset(self, context, preset):
         cam.rp_bloom = False
         cam.rp_motionblur = 'None'
     elif preset == 'Grease Pencil':
-        cam.rp_renderer = 'Forward'
+        cam.rp_renderer = 'Restricted'
+        cam.rp_materials = 'Full'
         cam.rp_shadowmap = 'None'
         cam.rp_meshes = False
         cam.rp_translucency_state = 'Off'
@@ -212,6 +224,7 @@ class GenRPDataPropsPanel(bpy.types.Panel):
             layout.prop(dat, "rp_preset")
             layout.separator()
             layout.prop(dat, "rp_renderer")
+            layout.prop(dat, "rp_materials")
             layout.prop(dat, "rp_shadowmap")
             layout.prop(dat, "rp_meshes")
             layout.prop(dat, "rp_translucency_state")

@@ -18,6 +18,7 @@ class Shader:
         self.write_pre = False
         self.tab = 1
         self.vertex_structure_as_vsinput = True
+        self.lock = False
 
     def add_include(self, s):
         self.includes.append(s)
@@ -61,6 +62,8 @@ class Shader:
         self.main_pre = s + '\n' + self.main_pre
 
     def write(self, s):
+        if self.lock:
+            return
         if self.write_pre:
             self.main_pre += '\t' * 1 + s + '\n'
         else:
