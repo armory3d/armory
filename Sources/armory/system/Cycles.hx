@@ -1,5 +1,7 @@
 package armory.system;
 
+import iron.data.SceneFormat;
+
 typedef TNodeCanvas = {
 	public var nodes: Array<TNode>;
 	public var links: Array<TNodeLink>;
@@ -13,6 +15,7 @@ typedef TNode = {
 	public var y: Float;
 	public var inputs: Array<TNodeSocket>;
 	public var outputs: Array<TNodeSocket>;
+	public var buttons: Array<TNodeButton>;
 }
 
 typedef TNodeSocket = {
@@ -31,15 +34,347 @@ typedef TNodeLink = {
 	public var to_socket: Int;
 }
 
+typedef TNodeButton = {
+	public var name: String;
+	public var type: String;
+	public var output: Int;
+	@:optional public var default_value: Dynamic;
+}
+
+typedef TMaterial = {
+	public var name:String;
+	public var canvas:TNodeCanvas;
+}
+
+class ShaderData {
+
+	var material:TMaterial;
+	var matname:String;
+	var contexts:Array<ShaderContext> = [];
+	public var data:TSceneFormat;
+	var sd:TShaderData;
+
+	public function new(material:TMaterial) {
+		this.material = material;
+		matname = material.name;
+
+		sd = {
+			name: matname + '_data',
+			vertex_structure: [],
+			contexts: []
+		};
+
+		data = {
+			shader_datas: [sd]
+		};
+	}
+
+	public function add_elem(name:String, size:Int) {
+		for (e in sd.vertex_structure) {
+			if (e.name == name) return;
+		}
+		var elem:TVertexData = { name: name, size: size };
+		sd.vertex_structure.push(elem);
+	}
+
+	public function is_elem(name:String) {
+		for (elem in sd.vertex_structure)
+			if (elem.name == name)
+				return true;
+		return false;
+	}
+
+	public function get_elem(name:String):TVertexData {
+		for (elem in sd.vertex_structure)
+			if (elem.name == name)
+				return elem;
+		return null;
+	}
+
+	public function add_context(props:Dynamic):ShaderContext {
+		var con = new ShaderContext(material, sd, props);
+		// if con not in self.sd['contexts']:
+		sd.contexts.push(con.get());
+		return con;
+	}
+
+	public function get() {
+		// TODO: temporary, Sort vertex data
+		// for sd in self.data['shader_datas']:
+		var vs:Array<TVertexData> = [];
+		var ar = ['pos', 'nor', 'tex', 'tex1', 'col', 'tang', 'bone', 'weight', 'off'];
+		for (ename in ar) {
+			var elem = get_elem(ename);
+			if (elem != null)
+				vs.push(elem);
+		}
+		sd.vertex_structure = vs;
+		return data;
+	}
+}
+
+class ShaderContext {
+	public var vert:Shader;
+	public var frag:Shader;
+	public var geom:Shader;
+	public var tesc:Shader;
+	public var tese:Shader;
+	var material:TMaterial;
+	var matname = '';
+	public var shader_data:TShaderData;
+	public var data:TShaderContext;
+
+	var constants:Array<TShaderConstant>;
+	var tunits:Array<TTextureUnit>;
+
+	public function new(material:TMaterial, shader_data:TShaderData, props:Dynamic) {
+		this.material = material;
+		matname = material.name;
+		this.shader_data = shader_data;
+		data = {
+			name: props.name,
+			depth_write: props.depth_write,
+			compare_mode: props.compare_mode,
+			cull_mode: props.cull_mode,
+			fragment_shader: '',
+			vertex_shader: ''
+		};
+
+  //       if 'blend_source' in props:
+  //           self.data['blend_source'] = props['blend_source']
+  //       if 'blend_destination' in props:
+  //           self.data['blend_destination'] = props['blend_destination']
+  //       if 'blend_operation' in props:
+  //           self.data['blend_operation'] = props['blend_operation']
+  //       if 'alpha_blend_source' in props:
+  //           self.data['alpha_blend_source'] = props['alpha_blend_source']
+  //       if 'alpha_blend_destination' in props:
+  //           self.data['alpha_blend_destination'] = props['alpha_blend_destination']
+  //       if 'alpha_blend_operation' in props:
+  //           self.data['alpha_blend_operation'] = props['alpha_blend_operation']
+  //       if 'color_write_red' in props:
+  //           self.data['color_write_red'] = props['color_write_red']
+  //       if 'color_write_green' in props:
+  //           self.data['color_write_green'] = props['color_write_green']
+  //       if 'color_write_blue' in props:
+  //           self.data['color_write_blue'] = props['color_write_blue']
+  //       if 'color_write_alpha' in props:
+  //           self.data['color_write_alpha'] = props['color_write_alpha']
+
+		data.texture_units = [];
+		tunits = data.texture_units;
+		data.constants = [];
+		constants = data.constants;
+	}
+
+	public function get() {
+		return data;
+	}
+
+	public function add_constant(ctype:String, name:String, link:String = null) {
+		for (c in constants)
+			if (c.name == name)
+				return;
+
+		var c:TShaderConstant = { name: name, type: ctype };
+		if (link != null)
+			c.link = link;
+		constants.push(c);
+	}
+
+	public function add_texture_unit(ctype:String, name:String, link:String = null, is_image = false) {
+		for (c in tunits)
+			if (c.name == name)
+				return;
+
+		var c:TTextureUnit = { name: name };
+		if (link != null)
+			c.link = link;
+		if (is_image)
+			c.is_image = is_image;
+		tunits.push(c);
+	}
+
+	public function make_vert() {
+		data.vertex_shader = matname + '_' + data.name + '.vert';
+		vert = new Shader(this, 'vert');
+		return vert;
+	}
+
+	public function make_frag() {
+		data.fragment_shader = matname + '_' + data.name + '.frag';
+		frag = new Shader(this, 'frag');
+		return frag;
+	}
+
+	// def make_geom(self):
+	//     self.data['geometry_shader'] = self.matname + '_' + self.data['name'] + '.geom'
+	//     self.geom = Shader(self, 'geom')
+	//     return self.geom
+
+	// def make_tesc(self):
+	//     self.data['tesscontrol_shader'] = self.matname + '_' + self.data['name'] + '.tesc'
+	//     self.tesc = Shader(self, 'tesc')
+	//     return self.tesc
+
+	// def make_tese(self):
+	//     self.data['tesseval_shader'] = self.matname + '_' + self.data['name'] + '.tese'
+	//     self.tese = Shader(self, 'tese')
+	//     return self.tese
+}
+
 class Shader {
-	public var text = '';
 
-	public function new() {
+	public var context:ShaderContext;
+	var shader_type = '';
+	var includes:Array<String> = [];
+	public var ins:Array<String> = [];
+	public var outs:Array<String> = [];
+	var uniforms:Array<String> = [];
+	var functions = new Map<String, String>();
 
+	public var main = '';
+	public var main_pre = '';
+	var header = '';
+	var main_header = '';
+	var write_pre = false;
+	var tab = 1;
+	var lock = false;
+	var vertex_structure_as_vsinput = true;
+
+	public function new(context:ShaderContext, shader_type:String) {
+		this.context = context;
+		this.shader_type = shader_type;
+	}
+
+	public function add_include(s:String) {
+		includes.push(s);
+	}
+
+	public function add_in(s:String) {
+		ins.push(s);
+	}
+
+	public function add_out(s:String) {
+		outs.push(s);
+	}
+
+	public function add_uniform(s:String, link:Dynamic = null, included = false) {
+		var ar = s.split(' ');
+		// layout(RGBA8) image3D voxels
+		var utype = ar[ar.length - 2];
+		var uname = ar[ar.length - 1];
+		if (StringTools.startsWith(utype, 'sampler') || StringTools.startsWith(utype, 'image')) {
+			var is_image = StringTools.startsWith(utype, 'image') ? true : false;
+			context.add_texture_unit(utype, uname, link, is_image);
+		}
+		else {
+			// Prefer vec4[] for d3d to avoid padding
+			if (ar[0] == 'float' && ar[1].indexOf('[') >= 0) {
+				ar[0] = 'floats';
+				ar[1] = ar[1].split('[')[0];
+			}
+			else if (ar[0] == 'vec4' && ar[1].indexOf('[') >= 0) {
+				ar[0] = 'floats';
+				ar[1] = ar[1].split('[')[0];
+			}
+			context.add_constant(ar[0], ar[1], link);
+		}
+		if (included == false && uniforms.indexOf(s) == -1) {
+			uniforms.push(s);
+		}
+	}
+
+	public function add_function(s:String) {
+		var fname = s.split('(')[0];
+		if (functions.exists(fname)) return;
+		functions.set(fname, s);
+	}
+
+	public function contains(s) {
+		return (main.indexOf(s) >= 0 || main_pre.indexOf(s) >= 0 || ins.indexOf(s) >= 0);
+	}
+
+	public function prepend(self, s) {
+		main_pre = s + '\n' + main_pre;
 	}
 
 	public function write(s:String) {
-		text += s + '\n';
+		if (lock) return;
+		if (write_pre) {
+			main_pre += '\t' + s + '\n';
+		}
+		else {
+			var pre = '';
+			for (i in 0...tab) pre += '\t';
+			main += pre + s + '\n';
+		}
+	}
+
+	public function write_header(s:String) {
+		header += s + '\n';
+	}
+
+	public function write_main_header(s:String) {
+		main_header += s + '\n';
+	}
+
+	public function get() {
+		var s = '#version 450\n';
+
+		s += header;
+
+		// var defs = make_utils.def_strings_to_array(bpy.data.worlds['Arm'].world_defs)
+		// for (a in defs)
+			// s += '#define $a\n';
+
+		var in_ext = '';
+		var out_ext = '';
+
+		if (shader_type == 'vert' && vertex_structure_as_vsinput) {
+			var vs = context.shader_data.vertex_structure;
+			for (e in vs) {
+				add_in('vec' + e.size + ' ' + e.name);
+			}
+		}
+		// else if (shader_type == 'tesc') {
+		// 	in_ext = '[]'
+		// 	out_ext = '[]'
+		// 	s += 'layout(vertices = 3) out;\n'
+		// 	# Gen outs
+		// 	for sin in self.ins:
+		// 		ar = sin.rsplit(' ', 1) # vec3 wnormal
+		// 		tc_s = 'tc_' + ar[1]
+		// 		self.add_out(ar[0] + ' ' + tc_s)
+		// 		# Pass data
+		// 		self.write('{0}[gl_InvocationID] = {1}[gl_InvocationID];'.format(tc_s, ar[1]))
+		// }
+		// else if (shader_type == 'tese') {
+			// in_ext = '[]'
+			// s += 'layout(triangles, equal_spacing, ccw) in;\n'
+		// }
+		// else if (shader_type == 'geom') {
+			// in_ext = '[]'
+			// s += 'layout(triangles) in;\n'
+			// s += 'layout(triangle_strip, max_vertices = 3) out;\n'
+		// }
+
+		for (a in includes)
+			s += '#include "' + a + '"\n';
+		for (a in ins)
+			s += 'in $a$in_ext;\n';
+		for (a in outs)
+			s += 'out $a$out_ext;\n';
+		for (a in uniforms)
+			s += 'uniform ' + a + ';\n';
+		for (f in functions)
+			s += functions.get(f);
+		s += 'void main() {\n';
+		s += main_header;
+		s += main_pre;
+		s += main;
+		s += '}\n';
+		return s;
 	}
 }
 
@@ -65,6 +400,7 @@ class Cycles {
 	static var links:Array<TNodeLink>;
 
 	static var parsing_basecol:Bool;
+	static var normal_written:Bool; // Normal socket is linked on shader node - overwrite fs normal
 
 	static function getNode(id: Int): TNode {
 		for (n in nodes) if (n.id == id) return n;
@@ -101,6 +437,7 @@ class Cycles {
 		curshader = frag;
 
 		parsing_basecol = false;
+		normal_written = false;
 
 		var output_node = node_by_type(nodes, 'OUTPUT_MATERIAL');
 		if (output_node != null) {
@@ -122,7 +459,7 @@ class Cycles {
 	//     if output_node == None:
 	//         return
 	//     inp = output_node.inputs[index]
-	//     parents.append(node)
+	//     parents.push(node)
 	//     out_group = parse_input(inp)
 	//     parents.pop()
 	//     return out_group
@@ -132,7 +469,7 @@ class Cycles {
 	//     parent = parents.pop() # Leaving group
 	//     inp = parent.inputs[index]
 	//     res = parse_input(inp)
-	//     parents.append(parent) # Return to group
+	//     parents.push(parent) # Return to group
 	//     return res
 
 	static function parse_input(inp:TNodeSocket):Dynamic {
@@ -167,6 +504,17 @@ class Cycles {
 				out_opacity: '1.0'
 			}
 			return sout;
+		}
+	}
+
+	static function write_normal(inp) {
+		var l = getInputLink(inp);
+		if (l != null) {
+			var normal_res = parse_vector_input(inp);
+			if (normal_res != null) {
+				curshader.write('n = $normal_res;');
+				normal_written = true;
+			}
 		}
 	}
 
@@ -249,13 +597,14 @@ class Cycles {
 		//     if parse_opacity:
 		//         out_opacity = '({0} * 0.5 + {1} * 0.5)'.format(opac1, opac2)
 
-		// elif node.type == 'BSDF_DIFFUSE':
-		//     if parse_surface:
-		//         write_normal(node.inputs[2])
-		//         parsing_basecol = True
-		//         out_basecol = parse_vector_input(node.inputs[0])
-		//         parsing_basecol = False
-		//         out_roughness = parse_value_input(node.inputs[1])
+		else if (node.type == 'BSDF_DIFFUSE') {
+			//if parse_surface:
+			write_normal(node.inputs[2]);
+			parsing_basecol = true;
+			sout.out_basecol = parse_vector_input(node.inputs[0]);
+			parsing_basecol = false;
+			sout.out_roughness = parse_value_input(node.inputs[1]);
+		}
 
 		// elif node.type == 'BSDF_GLOSSY':
 		//     if parse_surface:
@@ -424,7 +773,6 @@ class Cycles {
 	}
 
 	static function parse_rgb(node:TNode, socket:TNodeSocket):String {
-		return '';
 
 		//     if (node.type == 'GROUP')
 		//         return parse_group(node, socket)
@@ -439,8 +787,9 @@ class Cycles {
 		//         return 'vcolor'
 		//     }
 
-		//     elif node.type == 'RGB':
-		//         return tovec3(socket.default_value)
+			if (node.type == 'RGB') {
+				return tovec3(socket.default_value);
+			}
 
 		//     elif node.type == 'TEX_BRICK':
 		//         # Pass through
@@ -696,6 +1045,8 @@ class Cycles {
 		//     elif node.type == 'WAVELENGTH':
 		//         # Pass constant
 		//         return tovec3([0.0, 0.27, 0.19])
+
+		return tovec3([0.0, 0.0, 0.0]);
 	}
 
 	static function store_var_name(node:TNode):String {

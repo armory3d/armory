@@ -2866,15 +2866,15 @@ class ArmoryExporter:
             self.add_hook_trait(to, target, bobject.name, '')
 
         # Hook modifier
-        hook_mod = None
-        for m in bobject.modifiers:
-            if m.type == 'HOOK':
-                hook_mod = m
-                break
-        if hook_mod != None:
-            group_name = hook_mod.vertex_group
-            target_name = hook_mod.object.name
-            self.add_hook_trait(o, bobject, target_name, group_name)
+        # hook_mod = None
+        # for m in bobject.modifiers:
+            # if m.type == 'HOOK':
+                # hook_mod = m
+                # break
+        # if hook_mod != None:
+            # group_name = hook_mod.vertex_group
+            # target_name = hook_mod.object.name
+            # self.add_hook_trait(o, bobject, target_name, group_name)
 
         # Camera traits
         if type == NodeTypeCamera:

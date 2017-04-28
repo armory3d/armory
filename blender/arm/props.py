@@ -458,7 +458,8 @@ def init_properties():
     # Skin
     bpy.types.World.generate_gpu_skin = bpy.props.BoolProperty(name="GPU Skinning", description="Calculate skinning on GPU", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_gpu_skin_max_bones_auto = bpy.props.BoolProperty(name="Auto Bones", description="Calculate amount of maximum bones based on armatures", default=True, update=assets.invalidate_compiled_data)
-    bpy.types.World.generate_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=84, update=assets.invalidate_shader_cache)
+    # bpy.types.World.generate_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=84, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=3000, update=assets.invalidate_shader_cache)
     # Material override flags
     bpy.types.World.anisotropic_filtering_state = EnumProperty(
         items=[('On', 'On', 'On'),
