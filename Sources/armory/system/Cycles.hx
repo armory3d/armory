@@ -152,14 +152,14 @@ class ShaderContext {
   //           self.data['alpha_blend_destination'] = props['alpha_blend_destination']
   //       if 'alpha_blend_operation' in props:
   //           self.data['alpha_blend_operation'] = props['alpha_blend_operation']
-  //       if 'color_write_red' in props:
-  //           self.data['color_write_red'] = props['color_write_red']
-  //       if 'color_write_green' in props:
-  //           self.data['color_write_green'] = props['color_write_green']
-  //       if 'color_write_blue' in props:
-  //           self.data['color_write_blue'] = props['color_write_blue']
-  //       if 'color_write_alpha' in props:
-  //           self.data['color_write_alpha'] = props['color_write_alpha']
+		if (props.color_write_red != null)
+			data.color_write_red = props.color_write_red;
+		if (props.color_write_green != null)
+			data.color_write_green = props.color_write_green;
+		if (props.color_write_blue != null)
+			data.color_write_blue = props.color_write_blue;
+		if (props.color_write_alpha != null)
+			data.color_write_alpha = props.color_write_alpha;
 
 		data.texture_units = [];
 		tunits = data.texture_units;
@@ -320,7 +320,8 @@ class Shader {
 	}
 
 	public function get() {
-		var s = '#version 450\n';
+		// var s = '#version 450\n';
+		var s = '#version 330\n';
 
 		s += header;
 

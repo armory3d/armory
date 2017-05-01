@@ -54,19 +54,19 @@ class SpaceArmory extends Trait {
 		var keyboard = Input.getKeyboard();
 		if (keyboard.started("esc")) trace('__arm|quit');
 
-		var mouse = Input.getMouse();
-		if (mouse.started("right")) {
-			var transforms:Array<Transform> = [];
-			for (o in iron.Scene.active.meshes) transforms.push(o.transform);
-			var hit = RayCaster.getClosestBoxIntersect(transforms, mouse.x, mouse.y, iron.Scene.active.camera);
-			if (hit != null) {
-				var loc = hit.loc;
-				// gizmo.transform.loc.set(loc.x, loc.y, loc.z);
-				// gizmo.transform.buildMatrix();
-				selected = hit;
-				trace('__arm|select|' + selected.object.name);
-			}
-		}
+		// var mouse = Input.getMouse();
+		// if (mouse.started("right")) {
+		// 	var transforms:Array<Transform> = [];
+		// 	for (o in iron.Scene.active.meshes) transforms.push(o.transform);
+		// 	var hit = RayCaster.getClosestBoxIntersect(transforms, mouse.x, mouse.y, iron.Scene.active.camera);
+		// 	if (hit != null) {
+		// 		var loc = hit.loc;
+		// 		// gizmo.transform.loc.set(loc.x, loc.y, loc.z);
+		// 		// gizmo.transform.buildMatrix();
+		// 		selected = hit;
+		// 		trace('__arm|select|' + selected.object.name);
+		// 	}
+		// }
 
 		// if (selected != null) {
 		// 	if (mouse.started()) {

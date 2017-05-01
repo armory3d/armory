@@ -112,9 +112,10 @@ def make_base(con_mesh, parse_opacity):
 
     frag.add_include('../../Shaders/compiled.glsl')
 
+    written = False
     if write_material_attribs != None:
-        write_material_attribs(frag)
-    else:
+        written = write_material_attribs(frag)
+    if written == False:
         frag.write('vec3 basecol;')
         frag.write('float roughness;')
         frag.write('float metallic;')
