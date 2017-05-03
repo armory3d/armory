@@ -403,17 +403,17 @@ class Cycles {
 	static var parsing_basecol:Bool;
 	static var normal_written:Bool; // Normal socket is linked on shader node - overwrite fs normal
 
-	static function getNode(id: Int): TNode {
+	public static function getNode(id: Int): TNode {
 		for (n in nodes) if (n.id == id) return n;
 		return null;
 	}
 
-	static function getLink(id: Int): TNodeLink {
+	public static function getLink(id: Int): TNodeLink {
 		for (l in links) if (l.id == id) return l;
 		return null;
 	}
 
-	static function getInputLink(inp: TNodeSocket): TNodeLink {
+	public static function getInputLink(inp: TNodeSocket): TNodeLink {
 		for (l in links) {
 			if (l.to_id == inp.node_id) {
 				var node = getNode(inp.node_id);
@@ -422,6 +422,21 @@ class Cycles {
 			}
 		}
 		return null;
+	}
+
+	public static function getOutputLinks(out: TNodeSocket): Array<TNodeLink> {
+		var ls:Array<TNodeLink> = null;
+		for (l in links) {
+			if (l.from_id == out.node_id) {
+				var node = getNode(out.node_id);
+				if (node.outputs.length <= l.from_socket) continue;
+				if (node.outputs[l.from_socket] == out) {
+					if (ls == null) ls = [];
+					ls.push(l);
+				}
+			}
+		}
+		return ls;
 	}
 
 	public static function parse(canvas:TNodeCanvas, _vert:Shader, _frag:Shader, _geom:Shader, _tesc:Shader, _tese:Shader):TShaderOut {
@@ -607,14 +622,15 @@ class Cycles {
 			sout.out_roughness = parse_value_input(node.inputs[1]);
 		}
 
-		// elif node.type == 'BSDF_GLOSSY':
-		//     if parse_surface:
-		//         write_normal(node.inputs[2])
-		//         parsing_basecol = True
-		//         out_basecol = parse_vector_input(node.inputs[0])
-		//         parsing_basecol = False
-		//         out_roughness = parse_value_input(node.inputs[1])
-		//         out_metallic = '1.0'
+		else if (node.type == 'BSDF_GLOSSY') {
+		    // if parse_surface:
+		    write_normal(node.inputs[2]);
+		    parsing_basecol = true;
+		    sout.out_basecol = parse_vector_input(node.inputs[0]);
+		    parsing_basecol = false;
+		    sout.out_roughness = parse_value_input(node.inputs[1]);
+		    sout.out_metallic = '1.0';
+		}
 
 		// elif node.type == 'AMBIENT_OCCLUSION':
 		//     if parse_surface:    
