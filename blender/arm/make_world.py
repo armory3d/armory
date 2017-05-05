@@ -72,8 +72,8 @@ def build_node_tree(world):
         wrd.world_defs += '_SSRS'
 
     # Alternative models
-    if wrd.diffuse_model == 'Oren Nayar':
-        wrd.world_defs += '_OrenNayar'
+    if wrd.lighting_model == 'Cycles':
+        wrd.world_defs += '_Cycles'
 
     # TODO: Lamp texture test..
     if wrd.generate_lamp_texture != '':

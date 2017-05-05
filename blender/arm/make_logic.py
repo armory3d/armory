@@ -38,16 +38,16 @@ def build_node_tree(node_group):
         f.write('\tpublic function new() { super(); notifyOnAdd(add); }\n\n')
         f.write('\tfunction add() {\n')
         for node in root_nodes:
-            build_node(node_group, node, f)
+            build_node(node, f)
         f.write('\t}\n')
         f.write('}\n')
 
-def build_node(node_group, node, f):
+def build_node(node, f):
     global parsed_nodes
     global parsed_labels
 
     if node.type == 'REROUTE':
-        return build_node(node_group, node.inputs[0].links[0].from_node, f)
+        return build_node(node.inputs[0].links[0].from_node, f)
 
     # Get node name
     name = '_' + arm.utils.safe_source_name(node.name)
@@ -79,7 +79,7 @@ def build_node(node_group, node, f):
         if inp.is_linked:
             n = inp.links[0].from_node
             socket = inp.links[0].from_socket
-            inp_name = build_node(node_group, n, f)
+            inp_name = build_node(n, f)
             for i in range(0, len(n.outputs)):
                 if n.outputs[i] == socket:
                     inp_from = i
@@ -98,7 +98,7 @@ def build_node(node_group, node, f):
             for l in out.links:
                 n = l.to_node
                 out_name += '[' if len(out_name) == 0 else ', '
-                out_name += build_node(node_group, n, f)
+                out_name += build_node(n, f)
             out_name += ']'
         # Not linked - create node with default values
         else:

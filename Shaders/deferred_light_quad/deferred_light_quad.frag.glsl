@@ -165,7 +165,7 @@ void main() {
 	// float dotLV = dot(l, v);
 	// float dotLH = dot(l, h);
 
-#ifdef _OrenNayar
+#ifdef _Cycles
 	fragColor.rgb = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
 #else
 	fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);

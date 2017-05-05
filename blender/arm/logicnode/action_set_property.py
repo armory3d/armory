@@ -16,4 +16,4 @@ class SetPropertyNode(Node, ArmLogicTreeNode):
         self.inputs.new('NodeSocketShader', 'Value')
         self.outputs.new('ArmNodeSocketAction', 'Out')
 
-add_node(SetPropertyNode, category='Native')
+add_node(SetPropertyNode, category='Action')

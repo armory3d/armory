@@ -11,7 +11,7 @@ import zui.Id;
 #end
 
 @:keep
-class Console extends Trait {
+class DebugConsole extends Trait {
 
 #if (!arm_profile)
 	public function new() { super(); }
@@ -43,8 +43,17 @@ class Console extends Trait {
 			notifyOnInit(init);
 			notifyOnRender2D(render2D);
 			notifyOnUpdate(update);
+			haxeTrace = haxe.Log.trace;
+			haxe.Log.trace = consoleTrace;
 		});
 	}
+
+	static var haxeTrace:Dynamic->haxe.PosInfos->Void;
+	static var lastTrace = '';
+	static function consoleTrace(v:Dynamic, ?inf:haxe.PosInfos) {
+		lastTrace = Std.string(v);
+		haxeTrace(v, inf);
+    }
 
 	function init() {
 		path = cast(object, CameraObject).renderPath;
@@ -55,6 +64,7 @@ class Console extends Trait {
 		ui.begin(g);
 		var hwin = Id.handle();
 		if (ui.window(hwin, 0, 0, 250, iron.App.h(), true)) {
+			ui.text(lastTrace);
 			if (ui.panel(Id.handle({selected: true}), "Profile (ms)")) {
 				var avg = Math.round(frameTimeAvg * 10000) / 10;
 				var avgMin = Math.round(frameTimeAvgMin * 10000) / 10;

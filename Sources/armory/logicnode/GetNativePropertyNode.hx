@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import armory.object.Object;
 
-class GetPropertyNode extends LogicNode {
+class GetNativePropertyNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);
@@ -13,7 +13,7 @@ class GetPropertyNode extends LogicNode {
 		var property:String = inputs[1].get();
 
 		if (object == null) object = tree.object;
-		if (object.properties == null) return null;
-		return object.properties.get(property);
+
+		return Reflect.getProperty(object, property);
 	}
 }

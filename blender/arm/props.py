@@ -469,10 +469,10 @@ def init_properties():
     bpy.types.World.force_no_culling = bpy.props.BoolProperty(name="Force No Culling", default=False)
     bpy.types.World.tessellation_enabled = bpy.props.BoolProperty(name="Tessellation", description="Enable tessellation for height maps on supported targets", default=True, update=assets.invalidate_shader_cache)
     # Lighting flags
-    bpy.types.World.diffuse_model = EnumProperty(
-        items=[('Lambert', 'Lambert', 'Lambert'),
-               ('Oren Nayar', 'Oren Nayar', 'Oren Nayar')],
-        name="Diffuse", description="Diffuse model", default='Lambert', update=assets.invalidate_shader_cache)
+    bpy.types.World.lighting_model = EnumProperty(
+        items=[('PBR', 'PBR', 'PBR'),
+               ('Cycles', 'Cycles', 'Cycles')],
+        name="Lighting", description="Preferred lighting calibration", default='PBR', update=assets.invalidate_shader_cache)
     bpy.types.World.generate_voxelgi_dimensions = bpy.props.FloatVectorProperty(name="Dimensions", description="Voxelization bounds", size=3, default=[16, 16, 16], update=assets.invalidate_shader_cache)
     # For material
     bpy.types.NodeSocket.is_uniform = bpy.props.BoolProperty(name="Is Uniform", description="Mark node sockets to be processed as material uniforms", default=False)

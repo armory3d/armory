@@ -2076,11 +2076,11 @@ class ArmoryExporter:
                 o['strength'] = n.inputs[1].default_value
                 # Normalize lamp strength
                 if o['type'] == 'point' or o['type'] == 'spot':
-                    o['strength'] *= 0.025
+                    o['strength'] *= 0.026
                 elif o['type'] == 'area':
-                    o['strength'] *= 0.025
+                    o['strength'] *= 0.026
                 elif o['type'] == 'sun':
-                    o['strength'] *= 0.4
+                    o['strength'] *= 0.325
                 # TODO: Lamp texture test..
                 if n.inputs[0].is_linked:
                     color_node = n.inputs[0].links[0].from_node
@@ -2882,7 +2882,7 @@ class ArmoryExporter:
             if bpy.data.worlds['Arm'].arm_play_console:
                 console_trait = {}
                 console_trait['type'] = 'Script'
-                console_trait['class_name'] = 'armory.trait.internal.Console'
+                console_trait['class_name'] = 'armory.trait.internal.DebugConsole'
                 console_trait['parameters'] = []
                 o['traits'].append(console_trait)
             # Viewport camera enabled, attach navigation to active camera if enabled

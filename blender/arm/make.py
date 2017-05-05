@@ -229,8 +229,8 @@ def build_project(is_play=False, is_publish=False, in_viewport=False, target=Non
         os.makedirs(sources_path)
 
     # Compile path tracer shaders
-    if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].renderpath_path == 'pathtrace_path':
-        path_tracer.compile(raw_shaders_path + 'pt_trace_pass/pt_trace_pass.frag.glsl')
+    # if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].renderpath_path == 'pathtrace_path':
+        # path_tracer.compile(raw_shaders_path + 'pt_trace_pass/pt_trace_pass.frag.glsl')
 
     # Save external scripts edited inside Blender
     write_texts = False

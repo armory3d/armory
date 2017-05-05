@@ -158,6 +158,7 @@ class LogicTree extends armory.Trait {
 		}
 	}
 
+	// Merge with Cycles.hx
 	static function getNode(id: Int): TNode {
 		for (n in canvas.nodes) if (n.id == id) return n;
 		return null;

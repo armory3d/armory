@@ -3,10 +3,10 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class GetPropertyNode(Node, ArmLogicTreeNode):
-    '''Get property node'''
-    bl_idname = 'LNGetPropertyNode'
-    bl_label = 'Get Property'
+class GetNativePropertyNode(Node, ArmLogicTreeNode):
+    '''Get native property node'''
+    bl_idname = 'LNGetNativePropertyNode'
+    bl_label = 'Get Native Property'
     bl_icon = 'GAME'
 
     def init(self, context):
@@ -14,4 +14,4 @@ class GetPropertyNode(Node, ArmLogicTreeNode):
         self.inputs.new('NodeSocketString', 'Property')
         self.outputs.new('NodeSocketShader', 'Value')
 
-add_node(GetPropertyNode, category='Native')
+add_node(GetNativePropertyNode, category='Native')

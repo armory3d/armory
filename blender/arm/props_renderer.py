@@ -219,12 +219,14 @@ class GenRPDataPropsPanel(bpy.types.Panel):
             return
 
         dat = obj.data
+        wrd = bpy.data.worlds['Arm']
 
         if obj.type == 'CAMERA':
             layout.prop(dat, "rp_preset")
             layout.separator()
             layout.prop(dat, "rp_renderer")
             layout.prop(dat, "rp_materials")
+            layout.prop(wrd, 'lighting_model')
             layout.prop(dat, "rp_shadowmap")
             layout.prop(dat, "rp_meshes")
             layout.prop(dat, "rp_translucency_state")
@@ -237,6 +239,7 @@ class GenRPDataPropsPanel(bpy.types.Panel):
             layout.prop(dat, 'rp_voxelgi')
             if dat.rp_voxelgi:
                 layout.prop(dat, 'rp_voxelgi_resolution')
+                layout.prop(wrd, 'generate_voxelgi_dimensions')
 
             layout.separator()
             layout.prop(dat, "rp_render_to_texture")
@@ -279,7 +282,6 @@ class PropsRPDataPropsPanel(bpy.types.Panel):
                 if not wrd.generate_gpu_skin_max_bones_auto:
                     layout.prop(wrd, 'generate_gpu_skin_max_bones')
             layout.prop(wrd, 'anisotropic_filtering_state')
-            layout.prop(wrd, 'diffuse_model')
             layout.prop(wrd, 'tessellation_enabled')
             layout.prop(wrd, 'force_no_culling')
             
@@ -334,9 +336,6 @@ class PropsRPDataPropsPanel(bpy.types.Panel):
                 # if wrd.generate_volumetric_light:
                 layout.prop(wrd, 'generate_volumetric_light_air_turbidity')
                 layout.prop(wrd, 'generate_volumetric_light_air_color')
-
-                layout.label('Voxel GI')
-                layout.prop(wrd, 'generate_voxelgi_dimensions')
 
 def register():
     bpy.utils.register_class(GenRPDataPropsPanel)

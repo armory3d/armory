@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import armory.object.Object;
 
-class SetPropertyNode extends LogicNode {
+class SetNativePropertyNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);
@@ -14,8 +14,8 @@ class SetPropertyNode extends LogicNode {
 		var value:Dynamic = inputs[3].get();
 		
 		if (object == null) object = tree.object;
-		if (object.properties == null) object.properties = new Map();
-		object.properties.set(property, value);
+
+		Reflect.setProperty(object, property, value);
 
 		super.run();
 	}
