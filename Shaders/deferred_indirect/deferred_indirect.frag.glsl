@@ -80,7 +80,7 @@ void main() {
 
 	fragColor.rgb = indirectDiffuse.rgb * 1.3 * albedo + indirectSpecular;
 	// fragColor.rgb = max(vec3(1.0 - (indirectDiffuse.a / 2.0)), 0.05) * albedo;
-	fragColor.rgb *= 1.0 - (indirectDiffuse.a / 2.2); // Occ
+	fragColor.rgb *= 1.0 - indirectDiffuse.a; // Occ
 	fragColor.rgb *= texture(ssaotex, texCoord).r * 0.5 + 0.5;
 
 	// if (opacity < 1.0) fragColor.rgb = mix(indirectRefractiveLight(-v), fragColor.rgb); // Transparency
