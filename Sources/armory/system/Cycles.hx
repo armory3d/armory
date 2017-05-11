@@ -92,7 +92,7 @@ class ShaderData {
 	}
 
 	public function add_context(props:Dynamic):ShaderContext {
-		var con = new ShaderContext(material, sd, props);
+		var con = new ShaderContext(this, material, sd, props);
 		// if con not in self.sd['contexts']:
 		sd.contexts.push(con.get());
 		return con;
@@ -123,11 +123,13 @@ class ShaderContext {
 	var matname = '';
 	public var shader_data:TShaderData;
 	public var data:TShaderContext;
+	public var sdata:ShaderData;
 
 	var constants:Array<TShaderConstant>;
 	var tunits:Array<TTextureUnit>;
 
-	public function new(material:TMaterial, shader_data:TShaderData, props:Dynamic) {
+	public function new(sdata:ShaderData, material:TMaterial, shader_data:TShaderData, props:Dynamic) {
+		this.sdata = sdata;
 		this.material = material;
 		matname = material.name;
 		this.shader_data = shader_data;
@@ -395,6 +397,7 @@ class Cycles {
 	static var tesc:Shader;
 	static var tese:Shader;
 	static var curshader:Shader;
+	static var matcon:TMaterialContext;
 	static var parsed:Array<String>;
 
 	static var nodes:Array<TNode>;
@@ -439,7 +442,7 @@ class Cycles {
 		return ls;
 	}
 
-	public static function parse(canvas:TNodeCanvas, _vert:Shader, _frag:Shader, _geom:Shader, _tesc:Shader, _tese:Shader):TShaderOut {
+	public static function parse(canvas:TNodeCanvas, _vert:Shader, _frag:Shader, _geom:Shader, _tesc:Shader, _tese:Shader, _matcon:TMaterialContext):TShaderOut {
 
 		nodes = canvas.nodes;
 		links = canvas.links;
@@ -451,6 +454,7 @@ class Cycles {
 		tesc = _tesc;
 		tese = _tese;
 		curshader = frag;
+		matcon = _matcon;
 
 		parsing_basecol = false;
 		normal_written = false;
@@ -581,24 +585,34 @@ class Cycles {
 		// elif node.type == 'GROUP_INPUT':
 		//     return parse_group_input(node, socket)
 
-		// elif node.type == 'MIX_SHADER':
-		//     prefix = '' if node.inputs[0].is_linked else 'const '
-		//     fac = parse_value_input(node.inputs[0])
-		//     fac_var = node_name(node.name) + '_fac'
-		//     fac_inv_var = node_name(node.name) + '_fac_inv'
-		//     curshader.write('{0}float {1} = {2};'.format(prefix, fac_var, fac))
-		//     curshader.write('{0}float {1} = 1.0 - {2};'.format(prefix, fac_inv_var, fac_var))
-		//     bc1, rough1, met1, occ1, opac1 = parse_shader_input(node.inputs[1])
-		//     bc2, rough2, met2, occ2, opac2 = parse_shader_input(node.inputs[2])
-		//     if parse_surface:
-		//         parsing_basecol = True
-		//         out_basecol = '({0} * {3} + {1} * {2})'.format(bc1, bc2, fac_var, fac_inv_var)
-		//         parsing_basecol = False
-		//         out_roughness = '({0} * {3} + {1} * {2})'.format(rough1, rough2, fac_var, fac_inv_var)
-		//         out_metallic = '({0} * {3} + {1} * {2})'.format(met1, met2, fac_var, fac_inv_var)
-		//         out_occlusion = '({0} * {3} + {1} * {2})'.format(occ1, occ2, fac_var, fac_inv_var)
-		//     if parse_opacity:
-		//         out_opacity = '({0} * {3} + {1} * {2})'.format(opac1, opac2, fac_var, fac_inv_var)
+		else if (node.type == 'MIX_SHADER') {
+			// var prefix = node.inputs[0].is_linked ? '' : 'const ';
+			var prefix = '';
+			var fac = parse_value_input(node.inputs[0]);
+			var fac_var = node_name(node) + '_fac';
+			var fac_inv_var = node_name(node) + '_fac_inv';
+			curshader.write(prefix + 'float $fac_var = $fac;');
+			curshader.write(prefix + 'float $fac_inv_var = 1.0 - $fac_var;');
+			var sout1 = parse_shader_input(node.inputs[1]);
+			var sout2 = parse_shader_input(node.inputs[2]);
+			var bc1 = sout1.out_basecol;
+			var bc2 = sout2.out_basecol;
+			var rough1 = sout1.out_roughness;
+			var rough2 = sout2.out_roughness;
+			var met1 = sout1.out_metallic;
+			var met2 = sout2.out_metallic;
+			var occ1 = sout1.out_occlusion;
+			var occ2 = sout2.out_occlusion;
+			// if parse_surface:
+				parsing_basecol = true;
+				sout.out_basecol = '($bc1 * $fac_var + $bc2 * $fac_inv_var)';
+				parsing_basecol = false;
+				sout.out_roughness = '($rough1 * $fac_var + $rough2 * $fac_inv_var)';
+				sout.out_metallic = '($met1 * $fac_var + $met2 * $fac_inv_var)';
+				sout.out_occlusion = '($occ1 * $fac_var + $occ2 * $fac_inv_var)';
+			// if parse_opacity:
+				// out_opacity = '({0} * {3} + {1} * {2})'.format(opac1, opac2, fac_var, fac_inv_var)
+		}
 
 		// elif node.type == 'ADD_SHADER':
 		//     bc1, rough1, met1, occ1, opac1 = parse_shader_input(node.inputs[0])
@@ -623,13 +637,13 @@ class Cycles {
 		}
 
 		else if (node.type == 'BSDF_GLOSSY') {
-		    // if parse_surface:
-		    write_normal(node.inputs[2]);
-		    parsing_basecol = true;
-		    sout.out_basecol = parse_vector_input(node.inputs[0]);
-		    parsing_basecol = false;
-		    sout.out_roughness = parse_value_input(node.inputs[1]);
-		    sout.out_metallic = '1.0';
+			// if parse_surface:
+			write_normal(node.inputs[2]);
+			parsing_basecol = true;
+			sout.out_basecol = parse_vector_input(node.inputs[0]);
+			parsing_basecol = false;
+			sout.out_roughness = parse_value_input(node.inputs[1]);
+			sout.out_metallic = '1.0';
 		}
 
 		// elif node.type == 'AMBIENT_OCCLUSION':
@@ -712,7 +726,7 @@ class Cycles {
 	}
 
 	static function res_var_name(node:TNode, socket:TNodeSocket):String {
-		return node_name(node.name) + '_' + safe_source_name(socket.name) + '_res';
+		return node_name(node) + '_' + safe_source_name(socket.name) + '_res';
 	}
 
 	static function write_result(l:TNodeLink):String {
@@ -849,24 +863,31 @@ class Cycles {
 		//             f = 'max(1.0 - sqrt({0}.x * {0}.x + {0}.y * {0}.y + {0}.z * {0}.z), 0.0)'.format(co)
 		//         return 'vec3(clamp({0}, 0.0, 1.0))'.format(f)
 
-		//     elif node.type == 'TEX_IMAGE':
-		//         # Already fetched
-		//         if res_var_name(node, node.outputs[1]) in parsed:
-		//             return '{0}.rgb'.format(store_var_name(node))
-		//         tex_name = c_state.safe_source_name(node.name)
-		//         tex = c_state.make_texture(node, tex_name)
-		//         if tex != None:
-		//             to_linear = parsing_basecol and not tex['file'].endswith('.hdr')
-		//             return '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear))
-		//         elif node.image == None: # Empty texture
-		//             tex = {}
-		//             tex['name'] = tex_name
-		//             tex['file'] = ''
-		//             return '{0}.rgb'.format(texture_store(node, tex, tex_name, True))
-		//         else:
-		//             tex_store = store_var_name(node) # Pink color for missing texture
-		//             curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0);'.format(tex_store))
-		//             return '{0}.rgb'.format(tex_store)
+			else if (node.type == 'TEX_IMAGE') {
+				// Already fetched
+				if (parsed.indexOf(res_var_name(node, node.outputs[1])) >= 0) {
+					var varname = store_var_name(node);
+					return '$varname.rgb';
+				}
+				var tex_name = safe_source_name(node.name);
+				var tex = make_texture(node, tex_name);
+				if (tex != null) {
+					var to_linear = parsing_basecol;// && !tex['file'].endswith('.hdr');
+					var texstore = texture_store(node, tex, tex_name, to_linear);
+					return '$texstore.rgb';
+				}
+				// else if (node.image == null) { // Empty texture
+					// tex = {};
+					// tex['name'] = tex_name;
+					// tex['file'] = '';
+					// return '{0}.rgb'.format(texture_store(node, tex, tex_name, True));
+				// }
+				else {
+					var tex_store = store_var_name(node); // Pink color for missing texture
+					curshader.write('vec4 $tex_store = vec4(1.0, 0.0, 1.0, 1.0);');
+					return '$tex_store.rgb';
+				}
+			}
 
 		//     elif node.type == 'TEX_MAGIC':
 		//         # Pass through
@@ -957,7 +978,7 @@ class Cycles {
 
 		//     elif node.type == 'MIX_RGB':
 		//         fac = parse_value_input(node.inputs[0])
-		//         fac_var = node_name(node.name) + '_fac'
+		//         fac_var = node_name(node) + '_fac'
 		//         curshader.write('float {0} = {1};'.format(fac_var, fac))
 		//         col1 = parse_vector_input(node.inputs[1])
 		//         col2 = parse_vector_input(node.inputs[2])
@@ -1019,14 +1040,14 @@ class Cycles {
 		//         if len(elems) == 1:
 		//             return tovec3(elems[0].color)
 		//         if interp == 'CONSTANT':
-		//             fac_var = node_name(node.name) + '_fac'
+		//             fac_var = node_name(node) + '_fac'
 		//             curshader.write('float {0} = {1};'.format(fac_var, fac))
 		//             # Get index
 		//             out_i = '0'
 		//             for i in  range(1, len(elems)):
 		//                 out_i += ' + ({0} > {1} ? 1 : 0)'.format(fac_var, elems[i].position)
 		//             # Write cols array
-		//             cols_var = node_name(node.name) + '_cols'
+		//             cols_var = node_name(node) + '_cols'
 		//             curshader.write('vec3 {0}[{1}];'.format(cols_var, len(elems)))
 		//             for i in range(0, len(elems)):
 		//                 curshader.write('{0}[{1}] = vec3({2}, {3}, {4});'.format(cols_var, i, elems[i].color[0], elems[i].color[1], elems[i].color[2]))
@@ -1067,26 +1088,29 @@ class Cycles {
 	}
 
 	static function store_var_name(node:TNode):String {
-		return node_name(node.name) + '_store';
+		return node_name(node) + '_store';
 	}
 
-	static function texture_store(node:TNode, tex, tex_name:String, to_linear = false):String {
+	public static var texCoordName = 'texCoord';
+	static function texture_store(node:TNode, tex:TBindTexture, tex_name:String, to_linear = false):String {
 		// global parse_teximage_vector
-		// c_state.mat_bind_texture(tex)
-		// c_state.mat_add_elem('tex', 2)
-		// curshader.add_uniform('sampler2D {0}'.format(tex_name))
+		
+		matcon.bind_textures.push(tex);
+		curshader.context.sdata.add_elem('tex', 2);
+		curshader.add_uniform('sampler2D $tex_name');
 		var uv_name = '';
 		// if (isInputLinked(node.inputs[0]) and parse_teximage_vector:
 			// uv_name = parse_vector_input(node.inputs[0])
 		// else:
-			uv_name = 'texCoord';
+			uv_name = texCoordName;
 		var tex_store = store_var_name(node);
 		// if c_state.mat_texture_grad():
 			// curshader.write('vec4 {0} = textureGrad({1}, {2}.xy, g2.xy, g2.zw);'.format(tex_store, tex_name, uv_name))
 		// else:
 			curshader.write('vec4 $tex_store = texture($tex_name, $uv_name.xy);');
-		// if to_linear:
-			// curshader.write('{0}.rgb = pow({0}.rgb, vec3(2.2));'.format(tex_store))
+		if (to_linear) {
+			curshader.write('$tex_store.rgb = pow($tex_store.rgb, vec3(2.2));');
+		}
 		return tex_store;
 	}
 
@@ -1286,7 +1310,6 @@ class Cycles {
 	}
 
 	static function parse_value(node:TNode, socket:TNodeSocket):String {
-		return '';
 		// if node.type == 'GROUP':
 		//     if node.node_tree.name.startswith('Armory PBR'):
 		//         # Displacement
@@ -1389,8 +1412,9 @@ class Cycles {
 		//     elif socket == node.outputs[4]: # Size
 		//         return '0.0'
 
-		// elif node.type == 'VALUE':
-		//     return tovec1(node.outputs[0].default_value)
+		if (node.type == 'VALUE') {
+			return tovec1(node.outputs[0].default_value);
+		}
 
 		// elif node.type == 'WIREFRAME':
 		//     #node.use_pixel_size
@@ -1569,6 +1593,8 @@ class Cycles {
 		//         return 'dot({0}, {1})'.format(vec1, vec2)
 		//     else:
 		//         return '0.0'
+
+		return '0.0';
 	}
 
 	static function tovec1(v:Float):String {
@@ -1610,14 +1636,169 @@ class Cycles {
 		return -1;
 	}
 
-	static function node_name(s):String {
-		s = safe_source_name(s);
+	static function node_name(node:TNode):String {
+		var s = safe_source_name(node.name) + node.id;
 		// if len(parents) > 0:
 			// s = c_state.safe_source_name(parents[-1].name) + '_' + s
 		return s;
 	}
 
-	static function safe_source_name(s):String {
+	static function safe_source_name(s:String):String {
+		return StringTools.replace(s, ' ', '');
+	}
+
+	static function make_texture(image_node:TNode, tex_name:String, matname:String = null):TBindTexture {
+
+		var tex:TBindTexture = {
+			name: tex_name,
+			file: ''
+		};
+
+		// var image = image_node.image;
+		// if (matname == null) {
+			// matname = material.name;
+		// }
+
+		// if (image == null) {
+			// return null;
+		// }
+
+		// if (image.filepath == '') {
+			// log.warn(matname + '/' + image.name + ' - file path not found')
+			// return null;
+		// }
+
+		// Reference image name
+		// tex.file = extract_filename(image.filepath);
+		// tex.file = safefilename(tex.file);
+
+		tex.file = image_node.buttons[0].default_value;
+
+		// var s = tex.file.split('.');
+		
+		// if (s.length == 1) {
+			// log.warn(matname + '/' + image.name + ' - file extension required for image name')
+			// return null;
+		// }
+
+		// var ext = s[1].lower();
+		// do_convert = ext != 'jpg' and ext != 'png' and ext != 'hdr' and ext != 'mp4' # Convert image
+		// if do_convert:
+			// tex['file'] = tex['file'].rsplit('.', 1)[0] + '.jpg'
+			// # log.warn(matname + '/' + image.name + ' - image format is not (jpg/png/hdr), converting to jpg.')
+
+		// if image.packed_file != None:
+		// 	# Extract packed data
+		// 	unpack_path = arm.utils.get_fp() + '/build/compiled/Assets/unpacked'
+		// 	if not os.path.exists(unpack_path):
+		// 		os.makedirs(unpack_path)
+		// 	unpack_filepath = unpack_path + '/' + tex['file']
+			
+		// 	if do_convert:
+		// 		if not os.path.isfile(unpack_filepath):
+		// 			arm.utils.write_image(image, unpack_filepath)
+			
+		// 	# Write bytes if size is different or file does not exist yet
+		// 	elif os.path.isfile(unpack_filepath) == False or os.path.getsize(unpack_filepath) != image.packed_file.size:
+		// 		with open(unpack_filepath, 'wb') as f:
+		// 			f.write(image.packed_file.data)
+
+		// 	assets.add(unpack_filepath)
+
+		// else:
+			// if not os.path.isfile(arm.utils.safe_assetpath(image.filepath)):
+				// log.warn('Material ' + matname + '/' + image.name + ' - file not found(' + image.filepath + ')')
+				// return None
+
+			// if do_convert:
+			// 	converted_path = arm.utils.get_fp() + '/build/compiled/Assets/unpacked/' + tex['file']
+			// 	# TODO: delete cache when file changes
+			// 	if not os.path.isfile(converted_path):
+			// 		arm.utils.write_image(image, converted_path)
+			// 	assets.add(converted_path)
+			// else:
+				// Link image path to assets
+				// TODO: Khamake converts .PNG to .jpg? Convert ext to lowercase on windows
+				// if arm.utils.get_os() == 'win':
+					// s = image.filepath.rsplit('.', 1)
+					// assets.add(arm.utils.safe_assetpath(s[0] + '.' + s[1].lower()))
+				// else:
+					// assets.add(safe_assetpath(image.filepath));
+
+
+		 // if image_format != 'RGBA32':
+			 // tex['format'] = image_format
+		
+		// var interpolation = image_node.interpolation;
+		// var aniso = 'On';//wrd.anisotropic_filtering_state;
+		// if (aniso == 'On') {
+			// interpolation = 'Smart';
+		// }
+		// else if (aniso == 'Off' && interpolation == 'Smart') {
+			// interpolation = 'Linear';
+		// }
+		
+		// TODO: Blender seems to load full images on size request, cache size instead
+		// var powimage = true;//is_pow(image.size[0]) && is_pow(image.size[1]);
+
+		// Pow2 required to generate mipmaps
+		// if (powimage) {
+		// 	if (interpolation == 'Cubic') { // Mipmap linear
+		// 		tex.mipmap_filter = 'linear';
+		// 		tex.generate_mipmaps = true;
+		// 	}
+		// 	else if (interpolation == 'Smart') { // Mipmap anisotropic
+		// 		tex.min_filter = 'anisotropic';
+		// 		tex.mipmap_filter = 'linear';
+		// 		tex.generate_mipmaps = true;
+		// 	}
+		// }
+		// else if (image_node.interpolation == 'Cubic' || image_node.interpolation == 'Smart') {
+			// log.warn(matname + '/' + image.name + ' - power of 2 texture required for ' + image_node.interpolation + ' interpolation')
+		// }
+
+		// if (image_node.extension != 'REPEAT') { // Extend or clip
+			// tex.u_addressing = 'clamp';
+			// tex.v_addressing = 'clamp';
+		// }
+		// else {
+			// if state.target == 'html5' and powimage == False:
+				// log.warn(matname + '/' + image.name + ' - non power of 2 texture can not use repeat mode on HTML5 target')
+				// tex.u_addressing = 'clamp';
+				// tex.v_addressing = 'clamp';
+		// }
+		
+		// if image.source == 'MOVIE': # Just append movie texture trait for now
+		// 	movie_trait = {}
+		// 	movie_trait['type'] = 'Script'
+		// 	movie_trait['class_name'] = 'armory.trait.internal.MovieTexture'
+		// 	movie_trait['parameters'] = [tex['file']]
+		// 	for o in mat_state.mat_armusers[mat_state.material]:
+		// 		o['traits'].append(movie_trait)
+		// 	tex['source'] = 'movie'
+		// 	tex['file'] = '' # MovieTexture will load the video
+
+		return tex;
+	}
+
+	static function is_pow(num:Int):Bool {
+		return ((num & (num - 1)) == 0) && num != 0;
+	}
+
+	static function safe_assetpath(s:String):String {
+		// return s[2:] if s[:2] == '//' else s # Remove leading '//';
+		return s;
+	}
+
+	static function extract_filename(s:String):String {
+		// return os.path.basename(safe_assetpath(s));
+		var ar = s.split(".");
+		return ar[ar.length - 2] + "." + ar[ar.length - 1];
+	}
+
+	static function safefilename(s:String):String {
+		// for c in r'[]/\;,><&*:%=+@!#^()|?^':
+			// s = s.replace(c, '-')
 		return s;
 	}
 }

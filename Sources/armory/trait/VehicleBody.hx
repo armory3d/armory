@@ -33,7 +33,7 @@ class VehicleBody extends Trait {
 	var suspensionStiffness = 20.0;
 	var suspensionDamping = 2.3;
 	var suspensionCompression = 4.4;
-	var suspensionRestLength = 0.6;
+	var suspensionRestLength = 0.3;
 	var rollInfluence = 0.1;
 
 	var maxEngineForce = 3000.0;

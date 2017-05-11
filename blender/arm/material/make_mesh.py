@@ -9,6 +9,8 @@ import arm.utils
 
 is_displacement = False
 write_material_attribs = None
+write_material_attribs_post = None
+write_vertex_attribs = None
 
 def make(context_id, rid):
     con_mesh = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
@@ -73,6 +75,8 @@ def make_finalize(con_mesh):
 def make_base(con_mesh, parse_opacity):
     global is_displacement
     global write_material_attribs
+    global write_material_attribs_post
+    global write_vertex_attribs
 
     vert = con_mesh.make_vert()
     frag = con_mesh.make_frag()
@@ -107,8 +111,12 @@ def make_base(con_mesh, parse_opacity):
     else:
         is_displacement = False
         frag.ins = vert.outs
-        vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
-        vert.write('gl_Position = WVP * spos;')
+        written = False
+        if write_vertex_attribs != None:
+            written = write_vertex_attribs(vert)
+        if written == False:
+            vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
+            vert.write('gl_Position = WVP * spos;')
 
     frag.add_include('../../Shaders/compiled.glsl')
 
@@ -123,6 +131,8 @@ def make_base(con_mesh, parse_opacity):
         if parse_opacity:
             frag.write('float opacity;')
         cycles.parse(mat_state.nodes, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity)
+    if write_material_attribs_post != None:
+        write_material_attribs_post(frag)
 
     if mat_state.data.is_elem('tex'):
         vert.add_out('vec2 texCoord')
