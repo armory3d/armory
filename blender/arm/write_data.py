@@ -158,6 +158,7 @@ class Main {
     static inline var projectWidth = """ + str(resx) + """;
     static inline var projectHeight = """ + str(resy) + """;
     static inline var projectSamplesPerPixel = """ + str(int(wrd.arm_samples_per_pixel)) + """;
+    static inline var projectVSync = """ + ('true' if wrd.arm_vsync else 'false') + """;
     static inline var projectScene = '""" + scene_name + scene_ext + """';
     static var state:Int;
     #if js
@@ -181,7 +182,7 @@ class Main {
     static function start() {
         if (state > 0) return;
         armory.object.Uniforms.register();
-        kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel}, function() {
+        kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel, vSync: projectVSync}, function() {
             iron.App.init(function() {
 """)
         if is_publish and wrd.arm_loadbar:
