@@ -1691,7 +1691,7 @@ class ArmoryExporter:
             if len(exportMesh.materials) == 0:
                 prim = prims['']
             else:
-                mat = exportMesh.materials[poly.material_index]
+                mat = exportMesh.materials[min(poly.material_index, len(exportMesh.materials) - 1)]
                 prim = prims[mat.name if mat else '']
             indices = [vert_dict[i].index for i in range(first, first+poly.loop_total)]
 
