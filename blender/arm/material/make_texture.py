@@ -89,26 +89,25 @@ def make(image_node, tex_name, matname=None):
     # TODO: Blender seems to load full images on size request, cache size instead
     powimage = is_pow(image.size[0]) and is_pow(image.size[1])
 
-    # Pow2 required to generate mipmaps
-    if powimage == True:
-        if interpolation == 'Cubic': # Mipmap linear
-            tex['mipmap_filter'] = 'linear'
-            tex['generate_mipmaps'] = True
-        elif interpolation == 'Smart': # Mipmap anisotropic
-            tex['min_filter'] = 'anisotropic'
-            tex['mipmap_filter'] = 'linear'
-            tex['generate_mipmaps'] = True
-    elif (image_node.interpolation == 'Cubic' or image_node.interpolation == 'Smart'):
-        log.warn(matname + '/' + image.name + ' - power of 2 texture required for ' + image_node.interpolation + ' interpolation')
+    if state.target == 'html5' and powimage == False and (image_node.interpolation == 'Cubic' or image_node.interpolation == 'Smart'):
+        log.warn(matname + '/' + image.name + ' - non power of 2 texture using ' + image_node.interpolation + ' interpolation requires WebGL2')
+
+    if interpolation == 'Cubic': # Mipmap linear
+        tex['mipmap_filter'] = 'linear'
+        tex['generate_mipmaps'] = True
+    elif interpolation == 'Smart': # Mipmap anisotropic
+        tex['min_filter'] = 'anisotropic'
+        tex['mipmap_filter'] = 'linear'
+        tex['generate_mipmaps'] = True
 
     if image_node.extension != 'REPEAT': # Extend or clip
         tex['u_addressing'] = 'clamp'
         tex['v_addressing'] = 'clamp'
     else:
         if state.target == 'html5' and powimage == False:
-            log.warn(matname + '/' + image.name + ' - non power of 2 texture can not use repeat mode on HTML5 target')
-            tex['u_addressing'] = 'clamp'
-            tex['v_addressing'] = 'clamp'
+            log.warn(matname + '/' + image.name + ' - non power of 2 texture using repeat mode requires WebGL2')
+            # tex['u_addressing'] = 'clamp'
+            # tex['v_addressing'] = 'clamp'
     
     if image.source == 'MOVIE': # Just append movie texture trait for now
         movie_trait = {}

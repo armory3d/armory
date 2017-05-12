@@ -175,6 +175,7 @@ def init_properties():
                ('Krom', 'Krom', 'Krom')],
         name="Runtime", description="Player runtime used when launching in new window", default='Krom', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_loadbar = BoolProperty(name="Load Bar", description="Show asset loading progress on published builds", default=True)
+    bpy.types.World.arm_vsync = BoolProperty(name="VSync", description="Vertical Synchronization", default=True)
     bpy.types.World.arm_gapi_win = EnumProperty(
         items = [('opengl', 'Auto', 'opengl'),
                  ('opengl', 'OpenGL', 'opengl'),

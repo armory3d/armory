@@ -466,12 +466,15 @@ class ArmoryProjectPanel(bpy.types.Panel):
 
         layout.prop(wrd, 'arm_project_advanced')
         if wrd.arm_project_advanced:
-            layout.prop(wrd, 'arm_loadbar')
+            row = layout.row()
+            row.prop(wrd, 'arm_loadbar')
+            row.prop(wrd, 'arm_vsync')
+            row = layout.row()
+            row.prop(wrd, 'arm_export_hide_render')
+            row.prop(wrd, 'arm_spawn_all_layers')
             layout.prop(wrd, 'arm_play_active_scene')
             if wrd.arm_play_active_scene == False:
                 layout.prop_search(wrd, 'arm_project_scene', bpy.data, 'scenes', 'Scene')
-            layout.prop(wrd, 'arm_export_hide_render')
-            layout.prop(wrd, 'arm_spawn_all_layers')
             layout.label('Armory v' + wrd.arm_version)
             layout.operator('arm.check_updates')
             row = layout.row(align=True)

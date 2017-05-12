@@ -323,7 +323,15 @@ class Shader {
 
 	public function get() {
 		// var s = '#version 450\n';
+		#if kha_webgl // WebGL2
+		var s = '#version 300 es\n';
+		if (shader_type == 'frag') {
+			s += 'precision mediump float;\n';
+			s += 'precision mediump int;\n';
+		}
+		#else
 		var s = '#version 330\n';
+		#end
 
 		s += header;
 

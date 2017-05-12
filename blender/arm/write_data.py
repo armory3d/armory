@@ -246,7 +246,7 @@ def write_indexhtml(w, h):
         f.write("""
     <title>Armory</title>
 </head>
-<body>
+<body style="margin: 0; padding: 0;">
 """)
         if bpy.data.cameras[0].rp_stereo:
             f.write("""

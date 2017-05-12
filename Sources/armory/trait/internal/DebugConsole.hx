@@ -39,7 +39,9 @@ class DebugConsole extends Trait {
 		super();
 
 		iron.data.Data.getFont('droid_sans.ttf', function(font:kha.Font) {
-			ui = new Zui({font: font});
+			var theme = Reflect.copy(zui.Themes.dark);
+			theme.WINDOW_BG_COL = 0xee111111;
+			ui = new Zui({font: font, theme: theme});
 			notifyOnInit(init);
 			notifyOnRender2D(render2D);
 			notifyOnUpdate(update);
@@ -64,43 +66,41 @@ class DebugConsole extends Trait {
 		ui.begin(g);
 		var hwin = Id.handle();
 		if (ui.window(hwin, 0, 0, 250, iron.App.h(), true)) {
-			ui.text(lastTrace);
-			if (ui.panel(Id.handle({selected: true}), "Profile (ms)")) {
-				var avg = Math.round(frameTimeAvg * 10000) / 10;
+			ui.text('Console ' + lastTrace);
+			var avg = Math.round(frameTimeAvg * 10000) / 10;
+			var fpsAvg = avg > 0 ? Math.round(1000 / avg) : 0;
+			if (ui.panel(Id.handle(), 'Profile ($avg ms / $fpsAvg fps)')) {
 				var avgMin = Math.round(frameTimeAvgMin * 10000) / 10;
 				var avgMax = Math.round(frameTimeAvgMax * 10000) / 10;
-				ui.text('frame: $avg ($avgMin/$avgMax)');
-				var fpsAvg = avg > 0 ? Math.round(1000 / avg) : 0;
+				ui.text('frame min/max: $avgMin/$avgMax');
 				var fpsAvgMin = avgMin > 0 ? Math.round(1000 / avgMin) : 0;
 				var fpsAvgMax = avgMax > 0 ? Math.round(1000 / avgMax) : 0;
-				ui.text('fps: $fpsAvg ($fpsAvgMin/$fpsAvgMax)');
-				var gpuTime = frameTimeAvg - renderTimeAvg - updateTimeAvg;
-				if (gpuTime < renderTimeAvg) gpuTime = renderTimeAvg;
-				ui.text("gpu: " + Math.round(gpuTime * 10000) / 10);
-				ui.text("render: " + Math.round(renderTimeAvg * 10000) / 10);
-				ui.text("update: " + Math.round(updateTimeAvg * 10000) / 10);
+				ui.text('fps min/max: $fpsAvgMin/$fpsAvgMax');
+				ui.text('render: ' + Math.round(renderTimeAvg * 10000) / 10);
+				ui.text('update: ' + Math.round(updateTimeAvg * 10000) / 10);
 				ui.indent();
-				ui.text("phys: " + Math.round(physTimeAvg * 10000) / 10);
-				ui.text("anim: 0.0");
+				ui.text('phys: ' + Math.round(physTimeAvg * 10000) / 10);
+				ui.text('anim: 0.0');
 				ui.unindent();
 			}
 			ui.separator();
 
-			if (ui.panel(Id.handle(), "Render Path")) {
-				ui.text("draw calls: " + RenderPath.drawCalls);
-				ui.text("batch calls: " + RenderPath.batchCalls);
-				ui.text("batch buckets: " + RenderPath.batchBuckets);
-				ui.text("culled: " + RenderPath.culled);
-				ui.text("render targets: " + path.data.pathdata.raw.render_targets.length);
+			var dcalls = RenderPath.drawCalls;
+			if (ui.panel(Id.handle(), 'Render Path ($dcalls draw calls)')) {
+				ui.text('batch calls: ' + RenderPath.batchCalls);
+				ui.text('batch buckets: ' + RenderPath.batchBuckets);
+				ui.text('culled: ' + RenderPath.culled);
+				ui.text('render targets: ' + path.data.pathdata.raw.render_targets.length);
 			}
 			ui.separator();
 
-			if (ui.panel(Id.handle(), "Inspector")) {	
+			var numObjects = iron.Scene.active.meshes.length;
+			if (ui.panel(Id.handle(), 'Inspector ($numObjects meshes)')) {	
 				function drawList(h:Handle, objs:Array<iron.object.Object>) {
 					for (i in 0...objs.length) {
 						var o = objs[i];
-						var text = o.name + " (" + Std.int(o.transform.absx() * 100) / 100 + ", " + Std.int(o.transform.absy() * 100) / 100 + ", " + Std.int(o.transform.absz() * 100) / 100 + ")";
-						if (Std.is(o, MeshObject)) text += " - " + Std.int(cast(o, MeshObject).screenSize * 100) / 100;
+						var text = o.name + ' (' + Std.int(o.transform.absx() * 100) / 100 + ', ' + Std.int(o.transform.absy() * 100) / 100 + ', ' + Std.int(o.transform.absz() * 100) / 100 + ')';
+						if (Std.is(o, MeshObject)) text += ' - ' + Std.int(cast(o, MeshObject).screenSize * 100) / 100;
 						o.visible = ui.check(h.nest(i, {selected: o.visible}), text);
 					}
 				}
