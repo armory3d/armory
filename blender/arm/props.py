@@ -468,6 +468,7 @@ def init_properties():
                ('Auto', 'Auto', 'Auto')],
         name="Anisotropic Filtering", description="Texture filtering", default='On')
     bpy.types.World.force_no_culling = bpy.props.BoolProperty(name="Force No Culling", default=False)
+    bpy.types.World.generate_two_sided_area_lamp = bpy.props.BoolProperty(name="Two-Sided Area Lamps", description="Emit light from both faces of area lamp", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.tessellation_enabled = bpy.props.BoolProperty(name="Tessellation", description="Enable tessellation for height maps on supported targets", default=True, update=assets.invalidate_shader_cache)
     # Lighting flags
     bpy.types.World.lighting_model = EnumProperty(

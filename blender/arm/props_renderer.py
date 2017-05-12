@@ -284,6 +284,7 @@ class PropsRPDataPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'anisotropic_filtering_state')
             layout.prop(wrd, 'tessellation_enabled')
             layout.prop(wrd, 'force_no_culling')
+            layout.prop(wrd, 'generate_two_sided_area_lamp')
             
             layout.prop(wrd, 'arm_camera_props_advanced')
             if wrd.arm_camera_props_advanced:

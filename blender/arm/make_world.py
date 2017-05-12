@@ -71,6 +71,9 @@ def build_node_tree(world):
     if wrd.generate_ssrs:
         wrd.world_defs += '_SSRS'
 
+    if wrd.generate_two_sided_area_lamp:
+        wrd.world_defs += '_TwoSidedAreaLamp'
+
     # Alternative models
     if wrd.lighting_model == 'Cycles':
         wrd.world_defs += '_Cycles'
