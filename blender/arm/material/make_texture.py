@@ -5,12 +5,12 @@ import arm.utils
 import arm.assets as assets
 import arm.material.mat_state as mat_state
 import arm.make_state as state
+import shutil
 
 def make(image_node, tex_name, matname=None):
     wrd = bpy.data.worlds['Arm']
     tex = {}
     tex['name'] = tex_name
-    tex['file'] = ''
     image = image_node.image
     if matname == None:
         matname = mat_state.material.name
@@ -23,8 +23,9 @@ def make(image_node, tex_name, matname=None):
         return None
 
     # Reference image name
-    tex['file'] = arm.utils.extract_filename(image.filepath)
-    tex['file'] = arm.utils.safefilename(tex['file'])
+    texpath = arm.utils.asset_path(image.filepath)
+    texfile = arm.utils.extract_filename(image.filepath)
+    tex['file'] = arm.utils.safestr(texfile)
     s = tex['file'].rsplit('.', 1)
     
     if len(s) == 1:
@@ -37,8 +38,8 @@ def make(image_node, tex_name, matname=None):
         tex['file'] = tex['file'].rsplit('.', 1)[0] + '.jpg'
         # log.warn(matname + '/' + image.name + ' - image format is not (jpg/png/hdr), converting to jpg.')
 
-    if image.packed_file != None:
-        # Extract packed data
+    if image.packed_file != None or not is_ascii(texfile):
+        # Extract packed data / copy non-ascii texture
         unpack_path = arm.utils.get_fp() + '/build/compiled/Assets/unpacked'
         if not os.path.exists(unpack_path):
             os.makedirs(unpack_path)
@@ -47,16 +48,22 @@ def make(image_node, tex_name, matname=None):
         if do_convert:
             if not os.path.isfile(unpack_filepath):
                 arm.utils.write_image(image, unpack_filepath)
-        
-        # Write bytes if size is different or file does not exist yet
-        elif os.path.isfile(unpack_filepath) == False or os.path.getsize(unpack_filepath) != image.packed_file.size:
-            with open(unpack_filepath, 'wb') as f:
-                f.write(image.packed_file.data)
+        else:
+
+            # Write bytes if size is different or file does not exist yet
+            if image.packed_file != None:
+                if not os.path.isfile(unpack_filepath) or os.path.getsize(unpack_filepath) != image.packed_file.size:
+                    with open(unpack_filepath, 'wb') as f:
+                        f.write(image.packed_file.data)
+            # Copy non-ascii texture
+            else:
+                if not os.path.isfile(unpack_filepath) or os.path.getsize(unpack_filepath) != os.path.getsize(texpath):
+                    shutil.copy(texpath, unpack_filepath)
 
         assets.add(unpack_filepath)
 
     else:
-        if not os.path.isfile(arm.utils.safe_assetpath(image.filepath)):
+        if not os.path.isfile(arm.utils.asset_path(image.filepath)):
             log.warn('Material ' + matname + '/' + image.name + ' - file not found(' + image.filepath + ')')
             return None
 
@@ -71,9 +78,9 @@ def make(image_node, tex_name, matname=None):
             # TODO: Khamake converts .PNG to .jpg? Convert ext to lowercase on windows
             if arm.utils.get_os() == 'win':
                 s = image.filepath.rsplit('.', 1)
-                assets.add(arm.utils.safe_assetpath(s[0] + '.' + s[1].lower()))
+                assets.add(arm.utils.asset_path(s[0] + '.' + s[1].lower()))
             else:
-                assets.add(arm.utils.safe_assetpath(image.filepath))
+                assets.add(arm.utils.asset_path(image.filepath))
 
 
     # if image_format != 'RGBA32':
@@ -123,3 +130,6 @@ def make(image_node, tex_name, matname=None):
 
 def is_pow(num):
     return ((num & (num - 1)) == 0) and num != 0
+
+def is_ascii(s):
+    return len(s) == len(s.encode())

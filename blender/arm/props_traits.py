@@ -160,8 +160,9 @@ class ArmoryEditScriptButton(bpy.types.Operator):
  
     def execute(self, context):
         project_path = arm.utils.get_fp()
-        item = context.object.my_traitlist[context.object.traitlist_index]  
-        hx_path = project_path + '/Sources/' + bpy.data.worlds['Arm'].arm_project_package + '/' + item.class_name_prop + '.hx'
+        item = context.object.my_traitlist[context.object.traitlist_index]
+        pkg = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
+        hx_path = project_path + '/Sources/' + pkg + '/' + item.class_name_prop + '.hx'
 
         sdk_path = arm.utils.get_sdk_path()
         if arm.utils.get_os() == 'win':
@@ -184,7 +185,7 @@ class ArmoryEditBundledScriptButton(bpy.types.Operator):
     def execute(self, context):
         sdk_path = arm.utils.get_sdk_path()
         project_path = arm.utils.get_fp()
-        pkg = bpy.data.worlds['Arm'].arm_project_package
+        pkg = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
         item = context.object.my_traitlist[context.object.traitlist_index]  
         source_hx_path = sdk_path + '/armory/Sources/armory/trait/' + item.class_name_prop + '.hx'
         target_hx_path = project_path + '/Sources/' + pkg + '/' + item.class_name_prop + '.hx'

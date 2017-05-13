@@ -37,7 +37,7 @@ def write_khafilejs(is_play, export_physics, export_navigation, dce_full=False):
     with open('khafile.js', 'w') as f:
         f.write(
 """// Auto-generated
-let project = new Project('""" + arm.utils.safefilename(wrd.arm_project_name) + """');
+let project = new Project('""" + arm.utils.safestr(wrd.arm_project_name) + """');
 
 project.addSources('Sources');
 """)
@@ -152,14 +152,14 @@ def write_main(is_play, in_viewport, is_publish):
 """// Auto-generated
 package ;
 class Main {
-    public static inline var projectName = '""" + wrd.arm_project_name + """';
-    public static inline var projectPackage = '""" + wrd.arm_project_package + """';
+    public static inline var projectName = '""" + arm.utils.safestr(wrd.arm_project_name) + """';
+    public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';
     public static inline var projectAssets = """ + str(len(assets.assets)) + """;
     static inline var projectWidth = """ + str(resx) + """;
     static inline var projectHeight = """ + str(resy) + """;
     static inline var projectSamplesPerPixel = """ + str(int(wrd.arm_samples_per_pixel)) + """;
     static inline var projectVSync = """ + ('true' if wrd.arm_vsync else 'false') + """;
-    static inline var projectScene = '""" + scene_name + scene_ext + """';
+    static inline var projectScene = '""" + arm.utils.safestr(scene_name) + scene_ext + """';
     static var state:Int;
     #if js
     static function loadLib(name:String) {
@@ -173,7 +173,7 @@ class Main {
     public static function main() {
         iron.system.CompileTime.importPackage('armory.trait');
         iron.system.CompileTime.importPackage('armory.renderpath');
-        iron.system.CompileTime.importPackage('""" + wrd.arm_project_package + """');
+        iron.system.CompileTime.importPackage('""" + arm.utils.safestr(wrd.arm_project_package) + """');
         state = 1;
         #if (js && arm_physics) state++; loadLib("ammo.js"); #end
         #if (js && arm_navigation) state++; loadLib("recast.js"); #end
@@ -389,12 +389,12 @@ const vec3 voxelgiDimensions = ivec3(""" + str(round(wrd.generate_voxelgi_dimens
 
 def write_traithx(class_name):
     wrd = bpy.data.worlds['Arm']
-    package_path = arm.utils.get_fp() + '/Sources/' + wrd.arm_project_package
+    package_path = arm.utils.get_fp() + '/Sources/' + arm.utils.safestr(wrd.arm_project_package)
     if not os.path.exists(package_path):
         os.makedirs(package_path)
     with open(package_path + '/' + class_name + '.hx', 'w') as f:
         f.write(
-"""package """ + wrd.arm_project_package + """;
+"""package """ + arm.utils.safestr(wrd.arm_project_package) + """;
 
 class """ + class_name + """ extends armory.Trait {
     public function new() {

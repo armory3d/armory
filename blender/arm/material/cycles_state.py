@@ -12,8 +12,8 @@ def get_rp_renderer():
 def get_arm_export_tangents():
     return bpy.data.worlds['Arm'].arm_export_tangents
 
-def safe_source_name(name):
-    return arm.utils.safe_source_name(name)
+def safesrc(name):
+    return arm.utils.safesrc(name)
 
 def get_sdk_path():
     return arm.utils.get_sdk_path()

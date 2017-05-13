@@ -123,7 +123,7 @@ def fetch_script_names():
         return
     wrd = bpy.data.worlds['Arm']
     wrd.scripts_list.clear()
-    sources_path = get_fp() + '/Sources/' + wrd.arm_project_package
+    sources_path = get_fp() + '/Sources/' + safestr(wrd.arm_project_package)
     if os.path.isdir(sources_path):
         os.chdir(sources_path)
         for file in glob.glob('*.hx'):
@@ -136,25 +136,22 @@ def to_hex(val):
 def color_to_int(val):
     return (int(val[3] * 255) << 24) + (int(val[0] * 255) << 16) + (int(val[1] * 255) << 8) + int(val[2] * 255)
 
-def safe_filename(s):
-    return s
-
-def safefilename(s):
-    for c in r'[]/\;,><&*:%=+@!#^()|?^':
-        s = s.replace(c, '-')
-    return s
-
-def safe_source_name(s):
-    s = safefilename(s).replace('.', '_').replace('-', '_').replace(' ', '')
+def safesrc(s):
+    s = safestr(s).replace('.', '_').replace('-', '_').replace(' ', '')
     if s[0].isdigit():
         s = '_' + s
     return s
 
-def safe_assetpath(s):
+def safestr(s):
+    for c in r'[]/\;,><&*:%=+@!#^()|?^':
+        s = s.replace(c, '_')
+    return ''.join([i if ord(i) < 128 else '_' for i in s])
+
+def asset_path(s):
     return s[2:] if s[:2] == '//' else s # Remove leading '//'
 
 def extract_filename(s):
-    return os.path.basename(safe_assetpath(s))
+    return os.path.basename(asset_path(s))
 
 def get_render_resolution(scene):
     render = scene.render
@@ -164,9 +161,9 @@ def get_render_resolution(scene):
 def get_project_scene_name():
     wrd = bpy.data.worlds['Arm']
     if wrd.arm_play_active_scene:
-        return safe_filename(bpy.context.screen.scene.name)
+        return bpy.context.screen.scene.name
     else:
-        return safe_filename(wrd.arm_project_scene)
+        return wrd.arm_project_scene
 
 def get_active_scene():
     wrd = bpy.data.worlds['Arm']

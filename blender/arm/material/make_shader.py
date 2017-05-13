@@ -32,7 +32,7 @@ def build(material, mat_users, mat_armusers, rid):
 
     wrd = bpy.data.worlds['Arm']
     rpasses = mat_utils.get_rpasses(material)
-    matname = arm.utils.safe_source_name(material.name)
+    matname = arm.utils.safesrc(material.name)
     rel_path = 'build/compiled/ShaderRaws/' + matname
     full_path = arm.utils.get_fp() + '/' + rel_path
     if not os.path.exists(full_path):
@@ -107,7 +107,7 @@ def write_shaders(rel_path, con, rpass):
 def write_shader(rel_path, shader, ext, rpass, keep_cache=True):
     if shader == None:
         return
-    shader_rel_path = rel_path + '/' + arm.utils.safe_source_name(mat_state.material.name) + '_' + rpass + '.' + ext + '.glsl'
+    shader_rel_path = rel_path + '/' + arm.utils.safesrc(mat_state.material.name) + '_' + rpass + '.' + ext + '.glsl'
     shader_path = arm.utils.get_fp() + '/' + shader_rel_path
     assets.add_shader(shader_rel_path)
     if not os.path.isfile(shader_path) or not keep_cache:

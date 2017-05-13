@@ -1234,6 +1234,8 @@ class ArmoryExporter:
 
             # Export the object reference and material references
             objref = bobject.data
+            if objref != None:
+                objname = self.asset_name(objref)
 
             # Lods
             if bobject.type == 'MESH' and hasattr(objref, 'my_lodlist') and len(objref.my_lodlist) > 0:
@@ -1247,14 +1249,6 @@ class ArmoryExporter:
                     o['lods'].append(lod)
                 if objref.lod_material:
                     o['lod_material'] = True
-            
-            # Remove unsafe chars from data names
-            if objref != None:
-                safe = arm.utils.safefilename(objref.name)
-                if objref.name != safe:
-                    objref.name = safe
-
-                objname = self.asset_name(objref)
 
             if type == NodeTypeMesh:
                 if not objref in self.meshArray:
@@ -1262,7 +1256,7 @@ class ArmoryExporter:
                 else:
                     self.meshArray[objref]["objectTable"].append(bobject)
 
-                oid = arm.utils.safe_filename(self.meshArray[objref]["structName"])
+                oid = arm.utils.safestr(self.meshArray[objref]["structName"])
                 if ArmoryExporter.option_mesh_per_file:
                     ext = ''
                     if self.is_compress(objref):
@@ -1365,7 +1359,7 @@ class ArmoryExporter:
 
                 # Bone export
                 armatureid = self.asset_name(bdata)
-                armatureid = arm.utils.safe_filename(armatureid)
+                armatureid = arm.utils.safestr(armatureid)
                 ext = ''
                 if self.is_compress(bdata):
                    ext = '.zip'
@@ -1733,7 +1727,7 @@ class ArmoryExporter:
     def do_export_mesh(self, objectRef, scene):
         # This function exports a single mesh object
         bobject = objectRef[1]["objectTable"][0]
-        oid = arm.utils.safe_filename(objectRef[1]["structName"])
+        oid = arm.utils.safestr(objectRef[1]["structName"])
 
         # Check if mesh is using instanced rendering
         is_instanced, instance_offsets = self.object_process_instancing(bobject, objectRef[1]["objectTable"])
@@ -2155,10 +2149,9 @@ class ArmoryExporter:
                 assets.add(unpack_filepath)
             # External
             else:
-                assets.add(arm.utils.safe_assetpath(objref.sound.filepath)) # Link sound to assets
+                assets.add(arm.utils.asset_path(objref.sound.filepath)) # Link sound to assets
             
             o['sound'] = arm.utils.extract_filename(objref.sound.filepath)
-            o['sound'] = arm.utils.safe_filename(o['sound'])
         else:
             o['sound'] = ''
         o['muted'] = objref.muted
@@ -2415,7 +2408,7 @@ class ArmoryExporter:
 
         self.process_skinned_meshes()
 
-        self.output['name'] = arm.utils.safe_filename(self.scene.name)
+        self.output['name'] = arm.utils.safestr(self.scene.name)
         if self.filepath.endswith('.zip'):
             self.output['name'] += '.zip'
 
@@ -2463,7 +2456,7 @@ class ArmoryExporter:
             if self.scene.camera != None:
                 self.output['camera_ref'] = self.scene.camera.name
             else:
-                if arm.utils.safe_filename(self.scene.name) == arm.utils.get_project_scene_name():
+                if self.scene.name == arm.utils.get_project_scene_name():
                     print('Armory Warning: No camera found in active scene')
 
             self.output['material_datas'] = []
@@ -2718,12 +2711,12 @@ class ArmoryExporter:
                 x = {}
                 if t.type_prop == 'Logic Nodes' and t.nodes_name_prop != '':
                     x['type'] = 'Script'
-                    x['class_name'] = bpy.data.worlds['Arm'].arm_project_package + '.node.' + arm.utils.safe_source_name(t.nodes_name_prop)
+                    x['class_name'] = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + arm.utils.safesrc(t.nodes_name_prop)
                 elif t.type_prop == 'JS Script' or t.type_prop == 'Python Script':
                     basename = t.jsscript_prop.split('.')[0]
                     x['type'] = 'Script'
                     x['class_name'] = 'armory.trait.internal.JSScript'
-                    x['parameters'] = [arm.utils.safe_filename(basename)]
+                    x['parameters'] = [basename]
                     scriptspath = arm.utils.get_fp() + '/build/compiled/scripts/'
                     if not os.path.exists(scriptspath):
                         os.makedirs(scriptspath)
@@ -2787,7 +2780,7 @@ class ArmoryExporter:
                                         f.write(" %d" % (i + 1))
                                     f.write("\n")
                     else:
-                        trait_prefix = bpy.data.worlds['Arm'].arm_project_package + '.'
+                        trait_prefix = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.'
                     x['class_name'] = trait_prefix + t.class_name_prop
                     if len(t.my_paramstraitlist) > 0:
                         x['parameters'] = []
@@ -2948,7 +2941,7 @@ class ArmoryExporter:
                 bgcol[i] = pow(bgcol[i], 1.0 / 2.2)
         o['background_color'] = arm.utils.color_to_int(bgcol)
 
-        wmat_name = arm.utils.safe_filename(world.name) + '_material'
+        wmat_name = arm.utils.safestr(world.name) + '_material'
         o['material_ref'] = wmat_name + '/' + wmat_name + '/world'
         o['probes'] = []
         # Main probe

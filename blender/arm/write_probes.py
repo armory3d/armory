@@ -53,7 +53,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
         kraffiti_path = '"' + sdk_path + '/linux64/Kha/Kore/Tools/kraffiti/kraffiti-linux64"'
     
     output_gama_numerator = '1.0' if disable_hdr else '2.2'
-    input_file = arm.utils.safe_assetpath(image_filepath)
+    input_file = arm.utils.asset_path(image_filepath)
     
     # Scale map
     wrd = bpy.data.worlds['Arm']

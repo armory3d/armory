@@ -30,7 +30,8 @@ def build_node_tree(world):
     output = {}
     dat = {}
     output['material_datas'] = [dat]
-    dat['name'] = arm.utils.safe_filename(world.name) + '_material'
+    wname = arm.utils.safestr(world.name)
+    dat['name'] = wname + '_material'
     context = {}
     dat['contexts'] = [context]
     context['name'] = 'world'
@@ -52,9 +53,9 @@ def build_node_tree(world):
             wrd.world_defs += '_EnvCol'
         
         # Irradiance json file name
-        world.world_envtex_name = world.name
-        world.world_envtex_irr_name = world.name
-        write_probes.write_color_irradiance(world.name, world.world_envtex_color)
+        world.world_envtex_name = wname
+        world.world_envtex_irr_name = wname
+        write_probes.write_color_irradiance(wname, world.world_envtex_color)
 
     # Clouds enabled
     if wrd.generate_clouds:
@@ -169,7 +170,7 @@ def parse_color(world, node, context, envmap_strength_const):
         image = node.image
         filepath = image.filepath
         
-        if image.packed_file == None and not os.path.isfile(arm.utils.safe_assetpath(filepath)):
+        if image.packed_file == None and not os.path.isfile(arm.utils.asset_path(filepath)):
             log.warn(world.name + ' - unable to open ' + image.filepath)
             return
 
@@ -181,7 +182,6 @@ def parse_color(world, node, context, envmap_strength_const):
 
         # Reference image name
         tex['file'] = arm.utils.extract_filename(image.filepath)
-        tex['file'] = arm.utils.safe_filename(tex['file'])
         base = tex['file'].rsplit('.', 1)
         ext = base[1].lower()
 
@@ -225,7 +225,7 @@ def parse_color(world, node, context, envmap_strength_const):
                 assets.add(converted_path)
             else:
                 # Link image path to assets
-                assets.add(arm.utils.safe_assetpath(image.filepath))
+                assets.add(arm.utils.asset_path(image.filepath))
 
         # Generate prefiltered envmaps
         world.world_envtex_name = tex['file']
@@ -272,11 +272,10 @@ def parse_color(world, node, context, envmap_strength_const):
             assets.add(unpack_filepath)
         else:
             # Link image path to assets
-            assets.add(arm.utils.safe_assetpath(image.filepath))
+            assets.add(arm.utils.asset_path(image.filepath))
 
         # Reference image name
         tex['file'] = arm.utils.extract_filename(image.filepath)
-        tex['file'] = arm.utils.safe_filename(tex['file'])
 
 
     # Append sky define
@@ -298,8 +297,9 @@ def parse_color(world, node, context, envmap_strength_const):
         world.world_envtex_ground_albedo = node.ground_albedo
         
         # Irradiance json file name
-        world.world_envtex_irr_name = world.name
-        write_probes.write_sky_irradiance(world.name)
+        wname = arm.utils.safestr(world.name)
+        world.world_envtex_irr_name = wname
+        write_probes.write_sky_irradiance(wname)
 
         # Radiance
         if wrd.generate_radiance_sky and wrd.generate_radiance and wrd.generate_irradiance:

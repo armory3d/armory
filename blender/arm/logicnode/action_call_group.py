@@ -12,7 +12,7 @@ class CallGroupNode(Node, ArmLogicTreeNode):
 
     @property
     def property0(self):
-        return bpy.data.worlds['Arm'].arm_project_package + '.node.' + arm.utils.safe_source_name(self.property0_)
+        return arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + arm.utils.safe_source_name(self.property0_)
 
     property0_ = StringProperty(name='Group', default='')
 

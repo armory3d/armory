@@ -11,7 +11,7 @@ def build_node_trees():
     os.chdir(arm.utils.get_fp())
 
     # Make sure package dir exists
-    nodes_path = 'Sources/' + bpy.data.worlds['Arm'].arm_project_package.replace(".", "/") + "/node"
+    nodes_path = 'Sources/' + arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package).replace(".", "/") + "/node"
     if not os.path.exists(nodes_path):
         os.makedirs(nodes_path)
     
@@ -28,11 +28,12 @@ def build_node_tree(node_group):
     parsed_labels = dict()
     root_nodes = get_root_nodes(node_group)
 
-    path = 'Sources/' + bpy.data.worlds['Arm'].arm_project_package.replace('.', '/') + '/node/'
-    group_name = arm.utils.safe_source_name(node_group.name)
+    pack_path = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
+    path = 'Sources/' + pack_path.replace('.', '/') + '/node/'
+    group_name = arm.utils.safesrc(node_group.name)
 
     with open(path + group_name + '.hx', 'w') as f:
-        f.write('package ' + bpy.data.worlds['Arm'].arm_project_package + '.node;\n\n')
+        f.write('package ' + pack_path + '.node;\n\n')
         f.write('import armory.logicnode.*;\n\n')
         f.write('@:keep class ' + group_name + ' extends armory.logicnode.LogicTree {\n\n')
         f.write('\tpublic function new() { super(); notifyOnAdd(add); }\n\n')
@@ -50,7 +51,7 @@ def build_node(node, f):
         return build_node(node.inputs[0].links[0].from_node, f)
 
     # Get node name
-    name = '_' + arm.utils.safe_source_name(node.name)
+    name = '_' + arm.utils.safesrc(node.name)
 
     # Link nodes using labels
     if node.label != '':

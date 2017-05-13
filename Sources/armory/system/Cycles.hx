@@ -734,7 +734,7 @@ class Cycles {
 	}
 
 	static function res_var_name(node:TNode, socket:TNodeSocket):String {
-		return node_name(node) + '_' + safe_source_name(socket.name) + '_res';
+		return node_name(node) + '_' + safesrc(socket.name) + '_res';
 	}
 
 	static function write_result(l:TNodeLink):String {
@@ -781,7 +781,7 @@ class Cycles {
 	}
 
 	// def touniform(inp):
- //    uname = c_state.safe_source_name(inp.node.name) + c_state.safe_source_name(inp.name)
+ //    uname = c_state.safesrc(inp.node.name) + c_state.safesrc(inp.name)
  //    curshader.add_uniform(glsltype(inp.type) + ' ' + uname)
  //    return uname
 
@@ -877,7 +877,7 @@ class Cycles {
 					var varname = store_var_name(node);
 					return '$varname.rgb';
 				}
-				var tex_name = safe_source_name(node.name);
+				var tex_name = safesrc(node.name);
 				var tex = make_texture(node, tex_name);
 				if (tex != null) {
 					var to_linear = parsing_basecol;// && !tex['file'].endswith('.hdr');
@@ -1451,7 +1451,7 @@ class Cycles {
 		//     # Already fetched
 		//     if res_var_name(node, node.outputs[0]) in parsed:
 		//         return '{0}.a'.format(store_var_name(node))
-		//     tex_name = c_state.safe_source_name(node.name)
+		//     tex_name = c_state.safesrc(node.name)
 		//     tex = c_state.make_texture(node, tex_name)
 		//     if tex != None:
 		//         return '{0}.a'.format(texture_store(node, tex, tex_name))
@@ -1645,13 +1645,13 @@ class Cycles {
 	}
 
 	static function node_name(node:TNode):String {
-		var s = safe_source_name(node.name) + node.id;
+		var s = safesrc(node.name) + node.id;
 		// if len(parents) > 0:
-			// s = c_state.safe_source_name(parents[-1].name) + '_' + s
+			// s = c_state.safesrc(parents[-1].name) + '_' + s
 		return s;
 	}
 
-	static function safe_source_name(s:String):String {
+	static function safesrc(s:String):String {
 		return StringTools.replace(s, ' ', '');
 	}
 
@@ -1678,7 +1678,7 @@ class Cycles {
 
 		// Reference image name
 		// tex.file = extract_filename(image.filepath);
-		// tex.file = safefilename(tex.file);
+		// tex.file = safestr(tex.file);
 
 		tex.file = image_node.buttons[0].default_value;
 
@@ -1714,7 +1714,7 @@ class Cycles {
 		// 	assets.add(unpack_filepath)
 
 		// else:
-			// if not os.path.isfile(arm.utils.safe_assetpath(image.filepath)):
+			// if not os.path.isfile(arm.utils.asset_path(image.filepath)):
 				// log.warn('Material ' + matname + '/' + image.name + ' - file not found(' + image.filepath + ')')
 				// return None
 
@@ -1729,9 +1729,9 @@ class Cycles {
 				// TODO: Khamake converts .PNG to .jpg? Convert ext to lowercase on windows
 				// if arm.utils.get_os() == 'win':
 					// s = image.filepath.rsplit('.', 1)
-					// assets.add(arm.utils.safe_assetpath(s[0] + '.' + s[1].lower()))
+					// assets.add(arm.utils.asset_path(s[0] + '.' + s[1].lower()))
 				// else:
-					// assets.add(safe_assetpath(image.filepath));
+					// assets.add(asset_path(image.filepath));
 
 
 		 // if image_format != 'RGBA32':
@@ -1793,18 +1793,18 @@ class Cycles {
 		return ((num & (num - 1)) == 0) && num != 0;
 	}
 
-	static function safe_assetpath(s:String):String {
+	static function asset_path(s:String):String {
 		// return s[2:] if s[:2] == '//' else s # Remove leading '//';
 		return s;
 	}
 
 	static function extract_filename(s:String):String {
-		// return os.path.basename(safe_assetpath(s));
+		// return os.path.basename(asset_path(s));
 		var ar = s.split(".");
 		return ar[ar.length - 2] + "." + ar[ar.length - 1];
 	}
 
-	static function safefilename(s:String):String {
+	static function safestr(s:String):String {
 		// for c in r'[]/\;,><&*:%=+@!#^()|?^':
 			// s = s.replace(c, '-')
 		return s;

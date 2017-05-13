@@ -51,7 +51,7 @@ def parse(material, mat_data, mat_users, mat_armusers, rid):
                     c['bind_textures'] = []
                     for node in material.node_tree.nodes:
                         if node.type == 'TEX_IMAGE':
-                            tex_name = arm.utils.safe_source_name(node.name)
+                            tex_name = arm.utils.safesrc(node.name)
                             tex = make_texture.make(node, tex_name)
                             if tex == None: # Empty texture
                                 tex = {}
@@ -63,7 +63,7 @@ def parse(material, mat_data, mat_users, mat_armusers, rid):
                 for node in material.node_tree.nodes:
                     for inp in node.inputs:
                         if inp.is_uniform:
-                            uname = arm.utils.safe_source_name(inp.node.name) + arm.utils.safe_source_name(inp.name)  # Merge with cycles
+                            uname = arm.utils.safesrc(inp.node.name) + arm.utils.safesrc(inp.name)  # Merge with cycles
                             const = {}
                             const['name'] = uname
                             const[glsltype(inp.type)] = glslvalue(inp.default_value)

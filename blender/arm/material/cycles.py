@@ -335,7 +335,7 @@ def parse_displacement_input(inp):
         return None
 
 def res_var_name(node, socket):
-    return node_name(node.name) + '_' + c_state.safe_source_name(socket.name) + '_res'
+    return node_name(node.name) + '_' + c_state.safesrc(socket.name) + '_res'
 
 def write_result(l):
     res_var = res_var_name(l.from_node, l.from_socket)
@@ -373,7 +373,7 @@ def glsltype(t):
         return 'float'
 
 def touniform(inp):
-    uname = c_state.safe_source_name(inp.node.name) + c_state.safe_source_name(inp.name)
+    uname = c_state.safesrc(inp.node.name) + c_state.safesrc(inp.name)
     curshader.add_uniform(glsltype(inp.type) + ' ' + uname)
     return uname
 
@@ -461,7 +461,7 @@ def parse_rgb(node, socket):
         # Already fetched
         if res_var_name(node, node.outputs[1]) in parsed:
             return '{0}.rgb'.format(store_var_name(node))
-        tex_name = c_state.safe_source_name(node.name)
+        tex_name = c_state.safesrc(node.name)
         tex = c_state.make_texture(node, tex_name)
         if tex != None:
             to_linear = parsing_basecol and not tex['file'].endswith('.hdr')
@@ -1015,7 +1015,7 @@ def parse_value(node, socket):
         # Already fetched
         if res_var_name(node, node.outputs[0]) in parsed:
             return '{0}.a'.format(store_var_name(node))
-        tex_name = c_state.safe_source_name(node.name)
+        tex_name = c_state.safesrc(node.name)
         tex = c_state.make_texture(node, tex_name)
         if tex != None:
             return '{0}.a'.format(texture_store(node, tex, tex_name))
@@ -1189,7 +1189,7 @@ def socket_index(node, socket):
             return i
 
 def node_name(s):
-    s = c_state.safe_source_name(s)
+    s = c_state.safesrc(s)
     if len(parents) > 0:
-        s = c_state.safe_source_name(parents[-1].name) + '_' + s
+        s = c_state.safesrc(parents[-1].name) + '_' + s
     return s

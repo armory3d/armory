@@ -87,7 +87,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     for scene in bpy.data.scenes:
         if scene.game_export:
             ext = '.zip' if (scene.data_compressed and is_publish) else '.arm'
-            asset_path = 'build/compiled/Assets/' + arm.utils.safe_filename(scene.name) + ext
+            asset_path = 'build/compiled/Assets/' + arm.utils.safestr(scene.name) + ext
             exporter.execute(bpy.context, asset_path, scene=scene)
             if physics_found == False and ArmoryExporter.export_physics:
                 physics_found = True
@@ -226,7 +226,7 @@ def build_project(is_play=False, is_publish=False, in_viewport=False, target=Non
     os.chdir(fp)
 
     # Create directories
-    sources_path = 'Sources/' + wrd.arm_project_package
+    sources_path = 'Sources/' + arm.utils.safestr(wrd.arm_project_package)
     if not os.path.exists(sources_path):
         os.makedirs(sources_path)
 
@@ -253,7 +253,7 @@ def build_project(is_play=False, is_publish=False, in_viewport=False, target=Non
     # Save internal Haxe scripts
     for text in bpy.data.texts:
         if text.filepath == '' and text.name[-3:] == '.hx':
-            with open('Sources/' + bpy.data.worlds['Arm'].arm_project_package + '/' + text.name, 'w') as f:
+            with open('Sources/' + arm.utils.safestr(wrd.arm_project_package) + '/' + text.name, 'w') as f:
                 f.write(text.as_string())
 
     # Export data
@@ -357,7 +357,7 @@ def play_project(in_viewport):
     state.last_in_viewport = state.in_viewport
 
     # Trait sources modified
-    script_path = arm.utils.get_fp() + '/Sources/' + wrd.arm_project_package
+    script_path = arm.utils.get_fp() + '/Sources/' + arm.utils.safestr(wrd.arm_project_package)
     if os.path.isdir(script_path):
         for fn in glob.iglob(os.path.join(script_path, '**', '*.hx'), recursive=True):
             mtime = os.path.getmtime(fn)
@@ -409,7 +409,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
         elif target_name == 'windows':
             print('VisualStudio 2015 project files are located in ' + files_path + '-build')
         elif target_name == 'android-native':
-            print('Android Studio project files are located in ' + files_path + '-build/' + arm.utils.safefilename(wrd.arm_project_name))
+            print('Android Studio project files are located in ' + files_path + '-build/' + arm.utils.safestr(wrd.arm_project_name))
         else:
             print('Makefiles are located in ' + files_path + '-build')
         return
@@ -481,7 +481,7 @@ def clean_project():
         shutil.rmtree('build')
 
     # Remove compiled nodes
-    nodes_path = 'Sources/' + wrd.arm_project_package.replace('.', '/') + '/node/'
+    nodes_path = 'Sources/' + arm.utils.safestr(wrd.arm_project_package).replace('.', '/') + '/node/'
     if os.path.isdir(nodes_path):
         shutil.rmtree(nodes_path)
 
