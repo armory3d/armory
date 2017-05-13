@@ -45,7 +45,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     wrd = bpy.data.worlds['Arm']
 
     print('\nArmory v' + wrd.arm_version)
-    print('OS: ' + arm.utils.get_os() + ', Target: ' + state.target)
+    print('OS: ' + arm.utils.get_os() + ', Target: ' + state.target + ', GAPI: ' + arm.utils.get_gapi())
 
     # Clean compiled variants if cache is disabled
     if wrd.arm_cache_shaders == False:
@@ -152,6 +152,8 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
         cmd.append(arm.utils.get_gapi())
 
     if kha_target_name == 'krom':
+        cmd.append('-g')
+        cmd.append('opengl')
         if state.in_viewport:
             if arm.utils.glsl_version() >= 330:
                 cmd.append('--shaderversion')

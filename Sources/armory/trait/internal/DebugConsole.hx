@@ -28,10 +28,12 @@ class DebugConsole extends Trait {
 	var frameTimeAvg = 0.0;
 	var frameTimeAvgMin = 0.0;
 	var frameTimeAvgMax = 0.0;
-	var renderTime = 0.0;
-	var renderTimeAvg = 0.0;
+	var renderPathTime = 0.0;
+	var renderPathTimeAvg = 0.0;
 	var updateTime = 0.0;
 	var updateTimeAvg = 0.0;
+	var animTime = 0.0;
+	var animTimeAvg = 0.0;
 	var physTime = 0.0;
 	var physTimeAvg = 0.0;
 
@@ -72,15 +74,16 @@ class DebugConsole extends Trait {
 			if (ui.panel(Id.handle(), 'Profile ($avg ms / $fpsAvg fps)')) {
 				var avgMin = Math.round(frameTimeAvgMin * 10000) / 10;
 				var avgMax = Math.round(frameTimeAvgMax * 10000) / 10;
-				ui.text('frame min/max: $avgMin/$avgMax');
+				ui.text('frame (min/max): $avgMin/$avgMax');
 				var fpsAvgMin = avgMin > 0 ? Math.round(1000 / avgMin) : 0;
 				var fpsAvgMax = avgMax > 0 ? Math.round(1000 / avgMax) : 0;
-				ui.text('fps min/max: $fpsAvgMin/$fpsAvgMax');
-				ui.text('render: ' + Math.round(renderTimeAvg * 10000) / 10);
+				ui.text('fps (min/max): $fpsAvgMin/$fpsAvgMax');
+				ui.text('rpath: ' + Math.round(renderPathTimeAvg * 10000) / 10);
 				ui.text('update: ' + Math.round(updateTimeAvg * 10000) / 10);
 				ui.indent();
-				ui.text('phys: ' + Math.round(physTimeAvg * 10000) / 10);
-				ui.text('anim: 0.0');
+				ui.text('- phys: ' + Math.round(physTimeAvg * 10000) / 10);
+				ui.text('- anim: ' + Math.round(animTimeAvg * 10000) / 10);
+				// ui.text('mem: ' + Std.int(getMem() / 1024 / 1024));
 				ui.unindent();
 			}
 			ui.separator();
@@ -96,6 +99,7 @@ class DebugConsole extends Trait {
 
 			var numObjects = iron.Scene.active.meshes.length;
 			if (ui.panel(Id.handle(), 'Inspector ($numObjects meshes)')) {	
+				ui.text('name (pos) - screen size');
 				function drawList(h:Handle, objs:Array<iron.object.Object>) {
 					for (i in 0...objs.length) {
 						var o = objs[i];
@@ -116,7 +120,7 @@ class DebugConsole extends Trait {
 
 #if arm_profile
 		totalTime += frameTime;
-		renderTime += iron.App.renderTime;
+		renderPathTime += iron.App.renderPathTime;
 		frames++;
 		if (totalTime > 1.0) {
 			hwin.redraws = 1;
@@ -128,13 +132,15 @@ class DebugConsole extends Trait {
 			}
 
 			frameTimeAvg = t;
-			renderTimeAvg = renderTime / frames;
+			renderPathTimeAvg = renderPathTime / frames;
 			updateTimeAvg = updateTime / frames;
+			animTimeAvg = animTime / frames;
 			physTimeAvg = physTime / frames;
 			
 			totalTime = 0;
-			renderTime = 0;
+			renderPathTime = 0;
 			updateTime = 0;
+			animTime = 0;
 			physTime = 0;
 			frames = 0;
 		}
@@ -146,10 +152,28 @@ class DebugConsole extends Trait {
 	function update() {
 #if arm_profile
 		updateTime += iron.App.updateTime;
+		animTime += iron.object.Animation.animTime;
 	#if arm_physics
 		physTime += PhysicsWorld.physTime;
 	#end
 #end
 	}
+
+	// function getMem():Int {
+	// 	#if cpp
+	// 	return untyped __global__.__hxcpp_gc_used_bytes();
+	// 	#elseif kha_webgl
+	// 	return untyped __js__("(window.performance && window.performance.memory) ? window.performance.memory.usedJSHeapSize : 0");
+	// 	#else
+	// 	return 0;
+	// 	#end
+	// }
+
+	// function rungc() {
+	// 	#if cpp
+	// 	return cpp.vm.Gc.run(true);	
+	// 	#end
+	// }
+
 #end
 }
