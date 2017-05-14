@@ -53,7 +53,7 @@ class SoftBody extends Trait {
 		var softBodyHelpers = BtSoftBodyHelpers.create();
 		var mo = cast(object, MeshObject);
 		mo.frustumCulling = false;
-		var mesh = mo.data.mesh;
+		var geom = mo.data.geom;
 
 		// Parented soft body - clear parent location
 		if (object.parent != null && object.parent.name != "") {
@@ -64,7 +64,7 @@ class SoftBody extends Trait {
 			object.transform.buildMatrix();
 		}
 
-		var positions:haxe.ds.Vector<kha.FastFloat> = cast haxe.ds.Vector.fromData(mesh.positions.copy());
+		var positions:haxe.ds.Vector<kha.FastFloat> = cast haxe.ds.Vector.fromData(geom.positions.copy());
 		for (i in 0...Std.int(positions.length / 3)) {
 			positions[i * 3] *= object.transform.scale.x;
 			positions[i * 3 + 1] *= object.transform.scale.y;
@@ -82,8 +82,8 @@ class SoftBody extends Trait {
 		object.transform.buildMatrix();
 
 		var wrdinfo = physics.world.getWorldInfo();
-		var vecind = haxe.ds.Vector.fromData(mesh.indices[0]);
-		var numtri = Std.int(mesh.indices[0].length / 3);
+		var vecind = haxe.ds.Vector.fromData(geom.indices[0]);
+		var numtri = Std.int(geom.indices[0].length / 3);
 #if js
 		body = softBodyHelpers.CreateFromTriMesh(wrdinfo, positions, vecind, numtri);
 #elseif cpp
@@ -131,10 +131,10 @@ class SoftBody extends Trait {
 	var cb = new Vec4();
 	var ab = new Vec4();
 	function update() {
-		var mesh = cast(object, MeshObject).data.mesh;
+		var geom = cast(object, MeshObject).data.geom;
 		
-		var v = mesh.vertexBuffer.lock();
-		var l = mesh.structLength;
+		var v = geom.vertexBuffer.lock();
+		var l = geom.structLength;
 		var numVerts = Std.int(v.length / l);
 
 #if js
@@ -159,10 +159,10 @@ class SoftBody extends Trait {
 			v.set(i * l + 4, nodeNor.y());
 			v.set(i * l + 5, nodeNor.z());
 		}
-		// for (i in 0...Std.int(mesh.indices[0].length / 3)) {
-		// 	var a = mesh.indices[0][i * 3];
-		// 	var b = mesh.indices[0][i * 3 + 1];
-		// 	var c = mesh.indices[0][i * 3 + 2];
+		// for (i in 0...Std.int(geom.indices[0].length / 3)) {
+		// 	var a = geom.indices[0][i * 3];
+		// 	var b = geom.indices[0][i * 3 + 1];
+		// 	var c = geom.indices[0][i * 3 + 2];
 		// 	va.set(v.get(a * l), v.get(a * l + 1), v.get(a * l + 2));
 		// 	vb.set(v.get(b * l), v.get(b * l + 1), v.get(b * l + 2));
 		// 	vc.set(v.get(c * l), v.get(c * l + 1), v.get(c * l + 2));
@@ -180,7 +180,7 @@ class SoftBody extends Trait {
 		// 	v.set(c * l + 4, cb.y);
 		// 	v.set(c * l + 5, cb.z);
 		// }
-		mesh.vertexBuffer.unlock();
+		geom.vertexBuffer.unlock();
 	}
 
 #end

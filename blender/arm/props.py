@@ -146,6 +146,7 @@ def init_properties():
     bpy.types.World.arm_export_tangents = BoolProperty(name="Export Tangents", description="Precompute tangents for normal mapping, otherwise computed in shader", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_batch_meshes = BoolProperty(name="Batch Meshes", description="Group meshes by materials to speed up rendering", default=False)
     bpy.types.World.arm_batch_materials = BoolProperty(name="Batch Materials", description="Marge similar materials into single pipeline state", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_stream_scene = BoolProperty(name="Stream Scene", description="Stream scene content", default=False)
     bpy.types.World.arm_export_hide_render = BoolProperty(name="Export Hidden Renders", description="Export hidden objects", default=True)
     bpy.types.World.arm_spawn_all_layers = BoolProperty(name="Spawn All Layers", description="Spawn objects from all scene layers", default=False)
     bpy.types.World.arm_play_advanced = BoolProperty(name="Advanced", default=False)

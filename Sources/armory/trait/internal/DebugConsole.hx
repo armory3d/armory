@@ -89,15 +89,16 @@ class DebugConsole extends Trait {
 			ui.separator();
 
 			var dcalls = RenderPath.drawCalls;
+			var numObjects = iron.Scene.active.meshes.length;
 			if (ui.panel(Id.handle(), 'Render Path ($dcalls draw calls)')) {
 				ui.text('batch calls: ' + RenderPath.batchCalls);
 				ui.text('batch buckets: ' + RenderPath.batchBuckets);
-				ui.text('culled: ' + RenderPath.culled);
+				ui.text('culled: ' + RenderPath.culled + ' / ' + numObjects * 2); // Assumes shadow context for all meshes
+				ui.text('streamed: 0 / 0');
 				ui.text('render targets: ' + path.data.pathdata.raw.render_targets.length);
 			}
 			ui.separator();
 
-			var numObjects = iron.Scene.active.meshes.length;
 			if (ui.panel(Id.handle(), 'Inspector ($numObjects meshes)')) {	
 				ui.text('name (pos) - screen size');
 				function drawList(h:Handle, objs:Array<iron.object.Object>) {

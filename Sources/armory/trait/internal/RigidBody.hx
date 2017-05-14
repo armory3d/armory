@@ -258,7 +258,7 @@ class RigidBody extends Trait {
 	}
 
 	function addPointsToConvexHull(shape:BtConvexHullShapePointer, scale:Vec4, margin:Float) {
-		var positions = cast(object, MeshObject).data.mesh.positions;
+		var positions = cast(object, MeshObject).data.geom.positions;
 
 		var sx = scale.x * (1.0 - margin);
 		var sy = scale.y * (1.0 - margin);
@@ -270,8 +270,8 @@ class RigidBody extends Trait {
 	}
 
 	function fillTriangleMesh(triangleMesh:BtTriangleMeshPointer, scale:Vec4) {
-		var positions = cast(object, MeshObject).data.mesh.positions;
-		var indices = cast(object, MeshObject).data.mesh.ids;
+		var positions = cast(object, MeshObject).data.geom.positions;
+		var indices = cast(object, MeshObject).data.geom.ids;
 
 		for (i in 0...Std.int(indices[0].length / 3)) {
 			triangleMesh.addTriangle(

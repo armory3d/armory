@@ -128,6 +128,9 @@ project.addSources('Sources');
         if wrd.arm_batch_meshes == True:
             f.write("project.addDefine('arm_batch');\n")
 
+        if wrd.arm_stream_scene:
+            f.write("project.addDefine('arm_stream');\n")
+
         if wrd.generate_gpu_skin == False:
             f.write("project.addDefine('arm_cpu_skin');\n")
 

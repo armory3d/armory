@@ -412,6 +412,7 @@ class ArmoryPlayerPanel(bpy.types.Panel):
             row = layout.row(align=True)
             row.prop(wrd, 'arm_deinterleaved_buffers')
             row.prop(wrd, 'arm_export_tangents')
+            layout.prop(wrd, 'arm_stream_scene')
             layout.label('Libraries')
             layout.prop(wrd, 'arm_physics')
             layout.prop(wrd, 'arm_navigation')

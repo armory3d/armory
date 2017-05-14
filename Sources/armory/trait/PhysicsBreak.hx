@@ -63,7 +63,7 @@ class PhysicsBreak extends Trait {
 					var friction = 0.5;
 					var margin = 0.06;
 					o.addTrait(new armory.trait.internal.RigidBody(ud.mass, Shape.ConvexHull, friction, margin));
-					if (cast(o, MeshObject).data.mesh.positions.length < 600) {
+					if (cast(o, MeshObject).data.geom.positions.length < 600) {
 						o.addTrait(new PhysicsBreak());
 					}
 				}
@@ -116,7 +116,7 @@ class ConvexBreaker {
 	}
 
 	public function initBreakableObject(object:MeshObject, mass:Float, velocity:Vec4, angularVelocity:Vec4, breakable:Bool) {
-		var ar = object.data.mesh.positions;
+		var ar = object.data.geom.positions;
 		// Create vertices mark
 		var sc = object.transform.scale;
 		var vertices = new Array<Vec4>();
@@ -125,7 +125,7 @@ class ConvexBreaker {
 			vertices.push(new Vec4(ar[i * 3] * sc.x, ar[i * 3 + 1] * sc.y, ar[i * 3 + 2] * sc.z, 0));
 		}
 
-		var ind = object.data.mesh.indices[0];
+		var ind = object.data.geom.indices[0];
 		var faces = new Array<Face3>();
 		for (i in 0...Std.int(ind.length / 3)) {
 			var a = ind[i * 3];
@@ -547,7 +547,7 @@ class ConvexBreaker {
 		};
 
 		var md = MeshData.newSync(rawmeshData);
-		md.mesh.calculateAABB();
+		md.geom.calculateAABB();
 		return md;
 	}
 }
