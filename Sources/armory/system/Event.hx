@@ -26,6 +26,6 @@ class Event {
 }
 
 typedef TEvent = {
-	public var onEvent:Void->Void;
-	public var mask:Int;
+	var onEvent:Void->Void;
+	var mask:Int;
 }

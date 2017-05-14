@@ -91,10 +91,17 @@ class DebugConsole extends Trait {
 			var dcalls = RenderPath.drawCalls;
 			var numObjects = iron.Scene.active.meshes.length;
 			if (ui.panel(Id.handle(), 'Render Path ($dcalls draw calls)')) {
+				ui.text('tris mesh: ' + RenderPath.numTrisMesh);
+				ui.text('tris shadow: ' + RenderPath.numTrisShadow);
+				#if arm_batch
 				ui.text('batch calls: ' + RenderPath.batchCalls);
 				ui.text('batch buckets: ' + RenderPath.batchBuckets);
+				#end
 				ui.text('culled: ' + RenderPath.culled + ' / ' + numObjects * 2); // Assumes shadow context for all meshes
-				ui.text('streamed: 0 / 0');
+				#if arm_stream
+				var total = iron.Scene.active.sceneStream.sceneTotal();
+				ui.text('streamed: $numObjects / $total');
+				#end
 				ui.text('render targets: ' + path.data.pathdata.raw.render_targets.length);
 			}
 			ui.separator();
