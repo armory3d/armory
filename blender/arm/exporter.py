@@ -2814,7 +2814,7 @@ class ArmoryExporter:
             x = {}
             x['type'] = 'Script'
             x['class_name'] = 'armory.trait.internal.RigidBody'
-            x['parameters'] = [body_mass, shape, rb.friction]
+            x['parameters'] = [body_mass, shape, rb.friction, rb.restitution]
             if rb.use_margin:
                 x['parameters'].append(rb.collision_margin)
             else:

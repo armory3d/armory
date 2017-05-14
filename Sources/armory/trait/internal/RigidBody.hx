@@ -23,6 +23,7 @@ class RigidBody extends Trait {
 
 	public var mass:Float;
 	public var friction:Float;
+	public var restitution:Float;
 	public var collisionMargin:Float;
 	public var linearDamping:Float;
 	public var angularDamping:Float;
@@ -37,13 +38,14 @@ class RigidBody extends Trait {
 
 	public var onReady:Void->Void = null;
 
-	public function new(mass = 1.0, shape = Shape.Box, friction = 0.5, collisionMargin = 0.0,
+	public function new(mass = 1.0, shape = Shape.Box, friction = 0.5, restitution = 0.0, collisionMargin = 0.0,
 						linearDamping = 0.04, angularDamping = 0.1, passive = false) {
 		super();
 
 		this.mass = mass;
 		this.shape = shape;
 		this.friction = friction;
+		this.restitution = restitution;
 		this.collisionMargin = collisionMargin;
 		this.linearDamping = linearDamping;
 		this.angularDamping = angularDamping;
@@ -156,6 +158,7 @@ class RigidBody extends Trait {
 		}
 		body.setFriction(friction);
 		body.setRollingFriction(friction);
+		body.setRestitution(restitution);
 
 		id = nextId;
 		nextId++;
