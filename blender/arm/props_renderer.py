@@ -242,6 +242,15 @@ class GenRPDataPropsPanel(bpy.types.Panel):
             if dat.rp_voxelgi:
                 layout.prop(dat, 'rp_voxelgi_resolution')
                 layout.prop(wrd, 'generate_voxelgi_dimensions')
+                row = layout.row()
+                row.prop(wrd, 'voxelgi_revoxelize')
+                row.prop(wrd, 'voxelgi_multibounce')
+                row = layout.row()
+                row.prop(wrd, 'voxelgi_diff')
+                row.prop(wrd, 'voxelgi_spec')
+                row = layout.row()
+                row.prop(wrd, 'voxelgi_occ')
+                row.prop(wrd, 'voxelgi_env')
 
             layout.separator()
             layout.prop(dat, "rp_render_to_texture")

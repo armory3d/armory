@@ -97,6 +97,10 @@ def build_node_tree(world):
 
     if voxelgi:
         assets.add_khafile_def('arm_voxelgi')
+        if wrd.voxelgi_revoxelize:
+            assets.add_khafile_def('arm_voxelgi_revox')
+        if wrd.voxelgi_multibounce:
+            wrd.world_defs += '_VoxelGIMulti'
         wrd.world_defs += '_VoxelGI'
         wrd.world_defs += '_Rad' # Always do radiance for voxels
         wrd.world_defs += '_Irr'

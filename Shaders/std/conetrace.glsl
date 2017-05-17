@@ -32,9 +32,6 @@ vec4 traceDiffuseVoxelCone(const vec3 from, vec3 direction) {
 		acc += 0.075 * ll * voxel * pow(1.0 - voxel.a, 2.0);
 		dist += ll * VOXEL_SIZE * 2.0;
 	}
-
-	acc.rgb = pow(acc.rgb * 2.0, vec3(1.5));
-	acc.a /= 3.8;
 	return acc;
 }
 
