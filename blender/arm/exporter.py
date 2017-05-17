@@ -15,7 +15,6 @@ import bpy
 import math
 from mathutils import *
 import time
-import ast
 import subprocess
 import arm.utils
 import arm.write_probes as write_probes
@@ -142,7 +141,7 @@ class ArmoryExporter:
     def write_vector3d(self, vector):
         return [vector[0], vector[1], vector[2]]
 
-    def write_vertex_array2d(self, vertexArray, attrib):
+    def write_va2d(self, vertexArray, attrib):
         va = []
         count = len(vertexArray)
         k = 0
@@ -166,7 +165,7 @@ class ArmoryExporter:
 
         return va
 
-    def write_vertex_array3d(self, vertex_array, attrib):
+    def write_va3d(self, vertex_array, attrib):
         va = []
         count = len(vertex_array)
         k = 0
@@ -431,8 +430,8 @@ class ArmoryExporter:
 
             face_index += 1
 
-        colorCount = len(mesh.tessface_vertex_colors)
-        if colorCount > 0:
+        color_count = len(mesh.tessface_vertex_colors)
+        if color_count > 0:
             colorFace = mesh.tessface_vertex_colors[0].data
             vertex_index = 0
             face_index = 0
@@ -526,7 +525,7 @@ class ArmoryExporter:
             bucketCount = 1
 
         hashTable = [[] for i in range(bucketCount)]
-        unifiedVertexArray = []
+        unifiedVA = []
 
         for i in range(len(export_vertex_array)):
             ev = export_vertex_array[i]
@@ -539,13 +538,13 @@ class ArmoryExporter:
                     break
             
             if index < 0:
-                indexTable.append(len(unifiedVertexArray))
-                unifiedVertexArray.append(ev)
+                indexTable.append(len(unifiedVA))
+                unifiedVA.append(ev)
                 hashTable[bucket].append(i)
             else:
                 indexTable.append(indexTable[index])
 
-        return unifiedVertexArray
+        return unifiedVA
 
     def export_bone(self, armature, bone, scene, o, action):
         bobjectRef = self.bobjectArray.get(bone)
@@ -1407,11 +1406,11 @@ class ArmoryExporter:
                 if subbobject.parent_type != "BONE":
                     self.export_object(subbobject, scene, None, o)
 
-    def export_skin_quality(self, bobject, armature, export_vertex_array, om):
+    def export_skin_quality(self, bobject, armature, export_vertex_array, o):
         # This function exports all skinning data, which includes the skeleton
         # and per-vertex bone influence data
         oskin = {}
-        om['skin'] = oskin
+        o['skin'] = oskin
 
         # Write the skin bind pose transform
         otrans = {}
@@ -1501,9 +1500,9 @@ class ArmoryExporter:
         # Write the bone weight array. The number of entries is the sum of the bone counts for all vertices.
         oskin['bone_weight_array'] = bone_weight_array
 
-    # def export_skin_fast(self, bobject, armature, vert_list, om):
+    # def export_skin_fast(self, bobject, armature, vert_list, o):
     #     oskin = {}
-    #     om['skin'] = oskin
+    #     o['skin'] = oskin
 
     #     otrans = {}
     #     oskin['transform'] = otrans
@@ -1606,73 +1605,88 @@ class ArmoryExporter:
         else:
             self.output['mesh_datas'].append(o)
 
-    def export_mesh_fast(self, exportMesh, bobject, fp, o, om):
+    def make_va(self, attrib, size, values):
+        va = {}
+        va['attrib'] = attrib
+        va['size'] = size
+        va['values'] = values
+        return va
+
+    def export_mesh_fast(self, exportMesh, bobject, fp, o):
         # Much faster export but produces slightly less efficient data
         exportMesh.calc_normals_split()
         exportMesh.calc_tessface()
         vert_list = { Vertex(exportMesh, loop) : 0 for loop in exportMesh.loops}.keys()
         num_verts = len(vert_list)
         num_uv_layers = len(exportMesh.uv_layers)
+        has_tex = self.get_export_uvs(exportMesh) == True and num_uv_layers > 0
+        has_tex1 = has_tex == True and num_uv_layers > 1
         num_colors = len(exportMesh.vertex_colors)
+        has_col = self.get_export_vcols(exportMesh) == True and num_colors > 0
+        has_tang = self.has_tangents(exportMesh)
+
         vdata = [0] * num_verts * 3
         ndata = [0] * num_verts * 3
-        if num_uv_layers > 0:
+        if has_tex:
             t0data = [0] * num_verts * 2
-            if num_uv_layers > 1:
+            if has_tex1:
                 t1data = [0] * num_verts * 2
-        if num_colors > 0:
+        if has_col:
             cdata = [0] * num_verts * 3
+
+
+        # va_stride = 3 + 3 # pos + nor
+        # va_name = 'pos_nor'
+        # if has_tex:
+        #     va_stride += 2
+        #     va_name += '_tex'
+        #     if has_tex1:
+        #         va_stride += 2
+        #         va_name += '_tex1'
+        # if has_col > 0:
+        #     va_stride += 3
+        #     va_name += '_col'
+        # if has_tang:
+        #     va_stride += 3
+        #     va_name += '_tang'
+        # vdata = [0] * num_verts * va_stride
+        
         # Make arrays
         for i, vtx in enumerate(vert_list):
             vtx.index = i
-
             co = vtx.co
             normal = vtx.normal
             for j in range(3):
                 vdata[(i * 3) + j] = co[j]
                 ndata[(i * 3) + j] = normal[j]
-            if num_uv_layers > 0:
+            if has_tex:
                 t0data[i * 2] = vtx.uvs[0].x
                 t0data[i * 2 + 1] = 1.0 - vtx.uvs[0].y # Reverse TCY
-                if num_uv_layers > 1:
+                if has_tex1:
                     t1data[i * 2] = vtx.uvs[1].x
                     t1data[i * 2 + 1] = 1.0 - vtx.uvs[1].y
-            if num_colors > 0:
+            if has_col > 0:
                 cdata[i * 3] = vtx.col[0]
                 cdata[i * 3 + 1] = vtx.col[1]
                 cdata[i * 3 + 2] = vtx.col[2]
+
         # Output
-        om['vertex_arrays'] = []
-        pa = {}
-        pa['attrib'] = "position"
-        pa['size'] = 3
-        pa['values'] = vdata
-        om['vertex_arrays'].append(pa)
-        na = {}
-        na['attrib'] = "normal"
-        na['size'] = 3
-        na['values'] = ndata
-        om['vertex_arrays'].append(na)
+        o['vertex_arrays'] = []
+        pa = self.make_va('pos', 3, vdata)
+        o['vertex_arrays'].append(pa)
+        na = self.make_va('nor', 3, ndata)
+        o['vertex_arrays'].append(na)
         
-        if self.get_export_uvs(exportMesh) == True and num_uv_layers > 0:
-            ta = {}
-            ta['attrib'] = "texcoord"
-            ta['size'] = 2
-            ta['values'] = t0data
-            om['vertex_arrays'].append(ta)
-            if num_uv_layers > 1:
-                ta1 = {}
-                ta1['attrib'] = "texcoord1"
-                ta1['size'] = 2
-                ta1['values'] = t1data
-                om['vertex_arrays'].append(ta1)
+        if has_tex:
+            ta = self.make_va('tex', 2, t0data)
+            o['vertex_arrays'].append(ta)
+            if has_tex1:
+                ta1 = self.make_va('tex1', 2, t1data)
+                o['vertex_arrays'].append(ta1)
         
-        if self.get_export_vcols(exportMesh) == True and num_colors > 0:
-            ca = {}
-            ca['attrib'] = "color"
-            ca['size'] = 3
-            ca['values'] = cdata
-            om['vertex_arrays'].append(ca)
+        if has_col:
+            ca = self.make_va('col', 3, cdata)
+            o['vertex_arrays'].append(ca)
         
         # Indices
         prims = {ma.name if ma else '': [] for ma in exportMesh.materials}
@@ -1696,7 +1710,7 @@ class ArmoryExporter:
                     prim += (indices[-1], indices[i], indices[i + 1])
         
         # Write indices
-        om['index_arrays'] = []
+        o['index_arrays'] = []
         for mat, prim in prims.items():
             idata = [0] * len(prim)
             for i, v in enumerate(prim):
@@ -1712,17 +1726,18 @@ class ArmoryExporter:
                        (exportMesh.materials[i] == None and mat == ''): # Default material for empty slots
                         ia['material'] = i
                         break
-            om['index_arrays'].append(ia)
+            o['index_arrays'].append(ia)
         
         # Make tangents
-        if self.get_export_uvs(exportMesh) == True and self.get_export_tangents(exportMesh) == True and num_uv_layers > 0:
-            tanga = {}
-            tanga['attrib'] = "tangent"
-            tanga['size'] = 3
-            tanga['values'] = self.calc_tangents(pa['values'], na['values'], ta['values'], om['index_arrays'][0]['values'])  
-            om['vertex_arrays'].append(tanga)
+        if has_tang:
+            tanga_vals = self.calc_tangents(pa['values'], na['values'], ta['values'], o['index_arrays'][0]['values'])
+            tanga = self.make_va('tang', 3, tanga_vals)
+            o['vertex_arrays'].append(tanga)
 
         return vert_list
+
+    def has_tangents(self, exportMesh):
+        return self.get_export_uvs(exportMesh) == True and self.get_export_tangents(exportMesh) == True and len(exportMesh.uv_layers) > 0
 
     def do_export_mesh(self, objectRef, scene):
         # This function exports a single mesh object
@@ -1794,19 +1809,10 @@ class ArmoryExporter:
             shapeKeys.key_blocks[0].value = 1.0
             mesh.update()
 
-        om = {}
-        # Triangles is default
-        # om['primitive'] = "triangles"
-
         armature = bobject.find_armature()
         apply_modifiers = not armature
 
         # Apply all modifiers to create a new mesh with tessfaces
-        # We don't apply modifiers for a skinned mesh because we need the vertex positions
-        # before they are deformed by the armature modifier in order to export the proper
-        # bind pose. This does mean that modifiers preceding the armature modifier are ignored,
-        # but the Blender API does not provide a reasonable way to retrieve the mesh at an
-        # arbitrary stage in the modifier stack.
         exportMesh = bobject.to_mesh(scene, apply_modifiers, "RENDER", True, False)
 
         if exportMesh == None:
@@ -1818,19 +1824,28 @@ class ArmoryExporter:
 
         # Process meshes
         if ArmoryExporter.option_optimize_mesh:
-            unifiedVertexArray = self.export_mesh_quality(exportMesh, bobject, fp, o, om)
+            vert_list = self.export_mesh_quality(exportMesh, bobject, fp, o)
             if armature:
-                self.export_skin_quality(bobject, armature, unifiedVertexArray, om)
+                self.export_skin_quality(bobject, armature, vert_list, o)
         else:
-            vert_list = self.export_mesh_fast(exportMesh, bobject, fp, o, om)
+            vert_list = self.export_mesh_fast(exportMesh, bobject, fp, o)
             if armature:
-                self.export_skin_quality(bobject, armature, vert_list, om)
-                # self.export_skin_fast(bobject, armature, vert_list, om)
+                self.export_skin_quality(bobject, armature, vert_list, o)
+                # self.export_skin_fast(bobject, armature, vert_list, o)
 
         # Save aabb
-        for va in om['vertex_arrays']:
-            if va['attrib'] == 'position':
+        for va in o['vertex_arrays']:
+            if va['attrib'].startswith('pos'):
                 positions = va['values']
+                stride = 0
+                ar = va['attrib'].split('_')
+                for a in ar:
+                    if a == 'pos' or a == 'nor' or a == 'col' or a == 'tang':
+                        stride += 3
+                    elif a == 'tex' or a == 'tex1':
+                        stride += 2
+                    elif a == 'bone' or a == 'weight':
+                        stride += 4
                 aabb_min = [-0.01, -0.01, -0.01]
                 aabb_max = [0.01, 0.01, 0.01]
                 i = 0
@@ -1847,7 +1862,7 @@ class ArmoryExporter:
                         aabb_min[1] = positions[i + 1];
                     if positions[i + 2] < aabb_min[2]:
                         aabb_min[2] = positions[i + 2];
-                    i += 3;
+                    i += stride;
                 if hasattr(bobject.data, 'mesh_aabb'):
                     bobject.data.mesh_aabb = [abs(aabb_min[0]) + abs(aabb_max[0]), abs(aabb_min[1]) + abs(aabb_max[1]), abs(aabb_min[2]) + abs(aabb_max[2])]
                 break
@@ -1864,63 +1879,46 @@ class ArmoryExporter:
 
         # Save offset data for instanced rendering
         if is_instanced == True:
-            om['instance_offsets'] = instance_offsets
+            o['instance_offsets'] = instance_offsets
 
         # Export usage
         if bobject.data.dynamic_usage:
-            om['dynamic_usage'] = bobject.data.dynamic_usage
+            o['dynamic_usage'] = bobject.data.dynamic_usage
 
-        o['mesh'] = om
         self.write_mesh(bobject, fp, o)
 
-    def export_mesh_quality(self, exportMesh, bobject, fp, o, om):
+    def export_mesh_quality(self, exportMesh, bobject, fp, o):
         # Triangulate mesh and remap vertices to eliminate duplicates
         material_table = []
         export_vertex_array = ArmoryExporter.deindex_mesh(exportMesh, material_table)
         triangleCount = len(material_table)
 
         indexTable = []
-        unifiedVertexArray = ArmoryExporter.unify_vertices(export_vertex_array, indexTable)
+        unifiedVA = ArmoryExporter.unify_vertices(export_vertex_array, indexTable)
 
         # Write the position array
-        om['vertex_arrays'] = []
-        pa = {}
-        pa['attrib'] = "position"
-        pa['size'] = 3
-        pa['values'] = self.write_vertex_array3d(unifiedVertexArray, "position")
-        om['vertex_arrays'].append(pa)
+        o['vertex_arrays'] = []
+        pa = self.make_va('pos', 3, self.write_va3d(unifiedVA, "position"))
+        o['vertex_arrays'].append(pa)
         
         # Write the normal array
-        na = {}
-        na['attrib'] = "normal"
-        na['size'] = 3
-        na['values'] = self.write_vertex_array3d(unifiedVertexArray, "normal")
-        om['vertex_arrays'].append(na)
+        na = self.make_va('nor', 3, self.write_va3d(unifiedVA, "normal"))
+        o['vertex_arrays'].append(na)
 
         # Write the color array if it exists
-        colorCount = len(exportMesh.tessface_vertex_colors)
-        if self.get_export_vcols(exportMesh) == True and colorCount > 0:
-            ca = {}
-            ca['attrib'] = "color"
-            ca['size'] = 3
-            ca['values'] = self.write_vertex_array3d(unifiedVertexArray, "color")
-            om['vertex_arrays'].append(ca)
+        color_count = len(exportMesh.tessface_vertex_colors)
+        if self.get_export_vcols(exportMesh) == True and color_count > 0:
+            ca = self.make_va('col', 3, self.write_va3d(unifiedVA, "color"))
+            o['vertex_arrays'].append(ca)
 
         # Write the texcoord arrays
         texcoordCount = len(exportMesh.tessface_uv_textures)
         if self.get_export_uvs(exportMesh) == True and texcoordCount > 0:
-            ta = {}
-            ta['attrib'] = "texcoord"
-            ta['size'] = 2
-            ta['values'] = self.write_vertex_array2d(unifiedVertexArray, "texcoord0")
-            om['vertex_arrays'].append(ta)
-
+            ta = self.make_va('tex', 2, self.write_va2d(unifiedVA, "texcoord0"))
+            o['vertex_arrays'].append(ta)
             if texcoordCount > 1:
-                ta2 = {}
-                ta2['attrib'] = "texcoord1"
-                ta2['size'] = 2
-                ta2['values'] = self.write_vertex_array2d(unifiedVertexArray, "texcoord1")
-                om['vertex_arrays'].append(ta2)
+                ta2 = self.make_va('tex1', 2, self.write_va2d(unifiedVA, "texcoord1"))
+                o['vertex_arrays'].append(ta2)
 
         # If there are multiple morph targets, export them here
         # if shapeKeys:
@@ -1942,7 +1940,7 @@ class ArmoryExporter:
 
         #       self.IndentWrite(B"float[3]\t\t// ")
         #       self.IndentWrite(B"{\n", 0, True)
-        #       self.WriteMorphPositionArray3D(unifiedVertexArray, morphMesh.vertices)
+        #       self.WriteMorphPositionArray3D(unifiedVA, morphMesh.vertices)
         #       self.IndentWrite(B"}\n")
 
         #       self.indentLevel -= 1
@@ -1958,7 +1956,7 @@ class ArmoryExporter:
 
         #       self.IndentWrite(B"float[3]\t\t// ")
         #       self.IndentWrite(B"{\n", 0, True)
-        #       self.WriteMorphNormalArray3D(unifiedVertexArray, morphMesh.vertices, morphMesh.tessfaces)
+        #       self.WriteMorphNormalArray3D(unifiedVA, morphMesh.vertices, morphMesh.tessfaces)
         #       self.IndentWrite(B"}\n")
 
         #       self.indentLevel -= 1
@@ -1967,7 +1965,7 @@ class ArmoryExporter:
         #       bpy.data.meshes.remove(morphMesh)
 
         # Write the index arrays
-        om['index_arrays'] = []
+        o['index_arrays'] = []
 
         maxMaterialIndex = 0
         for i in range(len(material_table)):
@@ -1981,7 +1979,7 @@ class ArmoryExporter:
             ia['size'] = 3
             ia['values'] = self.write_triangle_array(triangleCount, indexTable)
             ia['material'] = 0
-            om['index_arrays'].append(ia)
+            o['index_arrays'].append(ia)
         else:
             # If there are multiple material indexes, then write a separate index array for each one.
             materialTriangleCount = [0 for i in range(maxMaterialIndex + 1)]
@@ -2002,19 +2000,17 @@ class ArmoryExporter:
                     ia['size'] = 3
                     ia['values'] = self.write_triangle_array(materialTriangleCount[m], materialIndexTable)
                     ia['material'] = m
-                    om['index_arrays'].append(ia)   
+                    o['index_arrays'].append(ia)   
 
         # Export tangents
-        if self.get_export_tangents(exportMesh) == True and len(exportMesh.uv_textures) > 0:
-            tanga = {}
-            tanga['attrib'] = "tangent"
-            tanga['size'] = 3
-            tanga['values'] = self.calc_tangents(pa['values'], na['values'], ta['values'], om['index_arrays'][0]['values'])  
-            om['vertex_arrays'].append(tanga)
+        if self.has_tangents(exportMesh):
+            tanga_vals = self.calc_tangents(pa['values'], na['values'], ta['values'], o['index_arrays'][0]['values'])  
+            tanga = make_va('tang', 3, tanga_vals)
+            o['vertex_arrays'].append(tanga)
 
         # Delete the new mesh that we made earlier
         bpy.data.meshes.remove(exportMesh)
-        return unifiedVertexArray
+        return unifiedVA
 
     def export_lamp(self, objectRef):
         # This function exports a single lamp object
@@ -2572,7 +2568,7 @@ class ArmoryExporter:
             if n.instanced_children == True:
                 is_instanced = True
                 # Save offset data
-                instance_offsets = [0, 0, 0] # Include parent
+                instance_offsets = [0.0, 0.0, 0.0] # Include parent
                 for sn in n.children:
                     # Child hidden
                     if sn.game_export == False or (sn.hide_render and ArmoryExporter.option_export_hide_render == False):
@@ -2785,7 +2781,7 @@ class ArmoryExporter:
                     if len(t.my_paramstraitlist) > 0:
                         x['parameters'] = []
                         for pt in t.my_paramstraitlist: # Append parameters
-                            x['parameters'].append(ast.literal_eval(pt.name))
+                            x['parameters'].append(pt.name)
                 o['traits'].append(x)
 
         # Rigid body trait
@@ -2814,14 +2810,14 @@ class ArmoryExporter:
             x = {}
             x['type'] = 'Script'
             x['class_name'] = 'armory.trait.internal.RigidBody'
-            x['parameters'] = [body_mass, shape, rb.friction, rb.restitution]
+            x['parameters'] = [str(body_mass), str(shape), str(rb.friction), str(rb.restitution)]
             if rb.use_margin:
-                x['parameters'].append(rb.collision_margin)
+                x['parameters'].append(str(rb.collision_margin))
             else:
-                x['parameters'].append(0.0)
-            x['parameters'].append(rb.linear_damping)
-            x['parameters'].append(rb.angular_damping)
-            x['parameters'].append(rb.type == 'PASSIVE')
+                x['parameters'].append('0.0')
+            x['parameters'].append(str(rb.linear_damping))
+            x['parameters'].append(str(rb.angular_damping))
+            x['parameters'].append(str(rb.type == 'PASSIVE').lower())
             o['traits'].append(x)
         
         # Soft bodies modifier
@@ -2846,7 +2842,7 @@ class ArmoryExporter:
                 bend = soft_mod.settings.bending_stiffness
             elif soft_type == 1:
                 bend = (soft_mod.settings.bend + 1.0) * 10
-            cloth_trait['parameters'] = [soft_type, bend, soft_mod.settings.mass, bobject.soft_body_margin]
+            cloth_trait['parameters'] = [str(soft_type), str(bend), str(soft_mod.settings.mass), str(bobject.soft_body_margin)]
             o['traits'].append(cloth_trait)
             if soft_type == 0 and soft_mod.settings.use_pin_cloth:
                 self.add_hook_trait(o, bobject, '', soft_mod.settings.vertex_group_mass)
@@ -2883,7 +2879,7 @@ class ArmoryExporter:
                 navigation_trait = {}
                 navigation_trait['type'] = 'Script'
                 navigation_trait['class_name'] = 'armory.trait.WalkNavigation'
-                navigation_trait['parameters'] = [arm.utils.get_ease_viewport_camera()]
+                navigation_trait['parameters'] = [str(arm.utils.get_ease_viewport_camera()).lower()]
                 o['traits'].append(navigation_trait)
         
         # Map objects to materials, can be used in later stages
@@ -2930,7 +2926,7 @@ class ArmoryExporter:
                         verts.append(v.co.x)
                         verts.append(v.co.y)
                         verts.append(v.co.z)
-        hook_trait['parameters'] = [target_name, verts]
+        hook_trait['parameters'] = [target_name, str(verts)]
         o['traits'].append(hook_trait)
 
     def post_export_world(self, world, o):

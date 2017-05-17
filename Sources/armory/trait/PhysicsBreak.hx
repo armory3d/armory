@@ -517,36 +517,39 @@ class ConvexBreaker {
 			addFlatNormal(f.normal, f.c);
 		}
 
+		// TODO:
+		var paa = new kha.arrays.Float32Array(pa.length);
+		for (i in 0...pa.length) paa.set(i, pa[i]);
+		var naa = new kha.arrays.Float32Array(na.length);
+		for (i in 0...na.length) naa.set(i, na[i]);
+		var inda = new kha.arrays.Uint32Array(ind.length);
+		for (i in 0...ind.length) inda.set(i, ind[i]);
+		
 		var pos:TVertexArray = {
 			attrib: "position",
 			size: 3,
-			values: pa
+			values: paa
 		};
 
 		var nor:TVertexArray = {
 			attrib: "normal",
 			size: 3,
-			values: na
+			values: naa
 		};
 
 		var indices:TIndexArray = {
 			material: 0,
 			size: 3,
-			values: ind
+			values: inda
 		};
 
-		var rawmesh:TMesh = {
-			primitive: "triangles",
+		var rawmesh:TMeshData = { 
+			name: "TempMesh" + (meshIndex++),
 			vertex_arrays: [pos, nor],
 			index_arrays: [indices]
 		};
 
-		var rawmeshData:TMeshData = { 
-			name: "TempMesh" + (meshIndex++),
-			mesh: rawmesh 
-		};
-
-		var md = MeshData.newSync(rawmeshData);
+		var md = MeshData.newSync(rawmesh);
 		md.geom.calculateAABB();
 		return md;
 	}

@@ -76,7 +76,7 @@ class PhysicsWorld extends Trait {
 		dispatcher = BtCollisionDispatcher.create(collisionConfiguration);
 		var solver = BtSequentialImpulseConstraintSolver.create();
 
-		var gravity = iron.Scene.active.raw.gravity == null ? [0, 0, -9.81] : iron.Scene.active.raw.gravity;
+		var gravity = iron.Scene.active.raw.gravity == null ? gravityArray() : iron.Scene.active.raw.gravity;
 
 #if arm_physics_soft
 		var softSolver = BtDefaultSoftBodySolver.create();
@@ -95,6 +95,14 @@ class PhysicsWorld extends Trait {
 		Scene.active.notifyOnInit(function() {
 			notifyOnUpdate(update);
 		});
+	}
+
+	function gravityArray():kha.arrays.Float32Array {
+		var ar = new kha.arrays.Float32Array(3);
+		ar[0] = 0.0;
+		ar[1] = 0.0;
+		ar[2] = -9.81;
+		return ar;
 	}
 
 	public function addRigidBody(body:RigidBody) {

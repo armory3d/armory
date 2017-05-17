@@ -73,7 +73,7 @@ def make_set_target(stage, node_group, node, currentNode=None, target_index=1, v
 
     # First param is viewport scale
     if len(stage['params']) == 0:
-        stage['params'].append(viewport_scale)
+        stage['params'].append(str(viewport_scale))
 
     currentNode = nodes.find_node_by_link(node_group, currentNode, currentNode.inputs[target_index])
     
