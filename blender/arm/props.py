@@ -281,18 +281,17 @@ def init_properties():
     bpy.types.Camera.mirror_resolution_y = bpy.props.FloatProperty(name="Y", default=256.0)
     # Render path generator
     bpy.types.Camera.rp_preset = EnumProperty(
-        items=[('Forward Low', 'Forward Low', 'Forward Low'),
-               ('Forward', 'Forward', 'Forward'),
-               ('Forward High', 'Forward High', 'Forward High'),
-               ('Deferred Low', 'Deferred Low', 'Deferred Low'),
-               ('Deferred', 'Deferred', 'Deferred'),
-               ('Deferred High', 'Deferred High', 'Deferred High'),
-               ('Deferred Plus', 'Deferred Plus', 'Deferred Plus'),
+        items=[('Low', 'Low', 'Low'),
                ('VR Low', 'VR Low', 'VR Low'),
+               ('Forward', 'Forward', 'Forward'),
+               ('Deferred', 'Deferred', 'Deferred'),
+               ('Deferred Plus', 'Deferred Plus (experimental)', 'Deferred Plus'),
+               ('Max', 'Max', 'Max'),
+               ('Render Capture', 'Render Capture', 'Render Capture'),
                #('Grease Pencil', 'Grease Pencil', 'Grease Pencil'),
                #('Path-Trace', 'Path-Trace', 'Path-Trace')],
                ],
-        name="Preset", description="Render path preset", default='Deferred Low', update=update_preset)
+        name="Preset", description="Render path preset", default='Deferred', update=update_preset)
     bpy.types.Camera.rp_renderer = EnumProperty(
         items=[('Forward', 'Forward', 'Forward'),
                ('Deferred', 'Deferred', 'Deferred'),

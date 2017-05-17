@@ -14,9 +14,11 @@ def set_preset(self, context, preset):
     if cam == None:
         return
 
+    wrd = bpy.data.worlds['Arm']
+
     updating_preset = True
 
-    if preset == 'Forward Low':
+    if preset == 'Low':
         cam.rp_renderer = 'Forward'
         cam.rp_materials = 'Full'
         cam.rp_shadowmap = '1024'
@@ -53,54 +55,11 @@ def set_preset(self, context, preset):
         cam.rp_voxelgi = False
         cam.rp_render_to_texture = True
         cam.rp_supersampling = '1'
-        cam.rp_antialiasing = 'FXAA'
-        cam.rp_compositornodes = True
-        cam.rp_volumetriclight = False
-        cam.rp_ssao = False
-        cam.rp_ssr = False
-        cam.rp_bloom = False
-        cam.rp_motionblur = 'None'
-    elif preset == 'Forward High':
-        cam.rp_renderer = 'Forward'
-        cam.rp_materials = 'Full'
-        cam.rp_shadowmap = '4096'
-        cam.rp_meshes = True
-        cam.rp_translucency_state = 'Auto'
-        cam.rp_overlays_state = 'Auto'
-        cam.rp_decals_state = 'Auto'
-        cam.rp_hdr = True
-        cam.rp_worldnodes = True
-        cam.rp_stereo = False
-        cam.rp_greasepencil = False
-        cam.rp_voxelgi = False
-        cam.rp_render_to_texture = True
-        cam.rp_supersampling = '1'
         cam.rp_antialiasing = 'SMAA'
         cam.rp_compositornodes = True
         cam.rp_volumetriclight = False
         cam.rp_ssao = True
         cam.rp_ssr = True
-        cam.rp_bloom = False
-        cam.rp_motionblur = 'None'
-    elif preset == 'Deferred Low':
-        cam.rp_renderer = 'Deferred'
-        cam.rp_shadowmap = '2048'
-        cam.rp_meshes = True
-        cam.rp_translucency_state = 'Auto'
-        cam.rp_overlays_state = 'Auto'
-        cam.rp_decals_state = 'Auto'
-        cam.rp_hdr = True
-        cam.rp_worldnodes = True
-        cam.rp_stereo = False
-        cam.rp_greasepencil = False
-        cam.rp_voxelgi = False
-        cam.rp_render_to_texture = True
-        cam.rp_supersampling = '1'
-        cam.rp_antialiasing = 'FXAA'
-        cam.rp_compositornodes = True
-        cam.rp_volumetriclight = False
-        cam.rp_ssao = True
-        cam.rp_ssr = False
         cam.rp_bloom = False
         cam.rp_motionblur = 'None'
     elif preset == 'Deferred':
@@ -117,14 +76,14 @@ def set_preset(self, context, preset):
         cam.rp_voxelgi = False
         cam.rp_render_to_texture = True
         cam.rp_supersampling = '1'
-        cam.rp_antialiasing = 'SMAA'
+        cam.rp_antialiasing = 'FXAA'
         cam.rp_compositornodes = True
         cam.rp_volumetriclight = False
         cam.rp_ssao = True
-        cam.rp_ssr = True
-        cam.rp_bloom = True
+        cam.rp_ssr = False
+        cam.rp_bloom = False
         cam.rp_motionblur = 'None'
-    elif preset == 'Deferred High':
+    elif preset == 'Max':
         cam.rp_renderer = 'Deferred'
         cam.rp_shadowmap = '4096'
         cam.rp_meshes = True
@@ -143,10 +102,52 @@ def set_preset(self, context, preset):
         cam.rp_volumetriclight = False
         cam.rp_ssao = True
         cam.rp_ssr = True
+        cam.rp_bloom = False
+        cam.rp_motionblur = 'None'
+    elif preset == 'Render Capture':
+        cam.rp_renderer = 'Deferred'
+        cam.rp_shadowmap = '8192'
+        cam.rp_meshes = True
+        cam.rp_translucency_state = 'Auto'
+        cam.rp_overlays_state = 'Auto'
+        cam.rp_decals_state = 'Auto'
+        cam.rp_hdr = True
+        cam.rp_worldnodes = True
+        cam.rp_stereo = False
+        cam.rp_greasepencil = False
+        cam.rp_voxelgi = True
+        cam.rp_render_to_texture = True
+        cam.rp_supersampling = '2'
+        cam.rp_antialiasing = 'TAA'
+        cam.rp_compositornodes = True
+        cam.rp_volumetriclight = False
+        cam.rp_ssao = True
+        cam.rp_ssr = True
         cam.rp_bloom = True
         cam.rp_motionblur = 'None'
+        wrd.lighting_model = 'Cycles'
+        wrd.generate_pcss_state = 'On'
     elif preset == 'Deferred Plus':
-        pass
+        cam.rp_renderer = 'Deferred Plus'
+        cam.rp_shadowmap = '4096'
+        cam.rp_meshes = True
+        cam.rp_translucency_state = 'Auto'
+        cam.rp_overlays_state = 'Auto'
+        cam.rp_decals_state = 'Auto'
+        cam.rp_hdr = True
+        cam.rp_worldnodes = True
+        cam.rp_stereo = False
+        cam.rp_greasepencil = False
+        cam.rp_voxelgi = False
+        cam.rp_render_to_texture = True
+        cam.rp_supersampling = '1'
+        cam.rp_antialiasing = 'TAA'
+        cam.rp_compositornodes = True
+        cam.rp_volumetriclight = False
+        cam.rp_ssao = True
+        cam.rp_ssr = True
+        cam.rp_bloom = False
+        cam.rp_motionblur = 'None'
     elif preset == 'VR Low':
         cam.rp_renderer = 'Forward'
         cam.rp_materials = 'Restricted'
