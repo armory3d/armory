@@ -171,8 +171,8 @@ def set_preset(self, context, preset):
         cam.rp_bloom = False
         cam.rp_motionblur = 'None'
     elif preset == 'Grease Pencil':
-        cam.rp_renderer = 'Restricted'
-        cam.rp_materials = 'Full'
+        cam.rp_renderer = 'Forward'
+        cam.rp_materials = 'Restricted'
         cam.rp_shadowmap = 'None'
         cam.rp_meshes = False
         cam.rp_translucency_state = 'Off'
@@ -237,7 +237,7 @@ class GenRPDataPropsPanel(bpy.types.Panel):
             layout.prop(dat, "rp_hdr")
             layout.prop(dat, "rp_worldnodes")
             layout.prop(dat, "rp_stereo")
-            # layout.prop(dat, "rp_greasepencil")
+            layout.prop(dat, "rp_greasepencil")
             layout.prop(dat, 'rp_voxelgi')
             if dat.rp_voxelgi:
                 layout.prop(dat, 'rp_voxelgi_resolution')

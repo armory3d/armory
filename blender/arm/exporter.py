@@ -2307,9 +2307,7 @@ class ArmoryExporter:
             self.post_export_world(w, o)
             self.output['world_datas'].append(o)
 
-    def export_grease_pencils(self):
-        return # Disabled for now
-        
+    def export_grease_pencils(self):        
         gpRef = self.scene.grease_pencil
         if gpRef == None or self.scene.gp_export == False:
             return

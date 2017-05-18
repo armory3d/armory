@@ -102,7 +102,8 @@ class DebugConsole extends Trait {
 				var total = iron.Scene.active.sceneStream.sceneTotal();
 				ui.text('streamed: $numObjects / $total');
 				#end
-				ui.text('render targets: ' + path.data.pathdata.raw.render_targets.length);
+				var rts = path.data.pathdata.raw.render_targets;
+				ui.text('render targets: ' + (rts != null ? rts.length : 0));
 			}
 			ui.separator();
 

@@ -62,6 +62,16 @@ def make_forward(cam):
             links.new(nodes['Clear Target Mesh'].outputs[0], nodes['Draw Stereo'].inputs[0])
         links.new(nodes['Draw Stereo'].outputs[1], nodes['Draw Meshes Mesh'].inputs[0])
 
+    if cam.rp_greasepencil:
+        if cam.rp_shadowmap != 'None':
+            links.new(nodes['Bind Target Mesh SM'].outputs[0], nodes['Draw Grease Pencil'].inputs[0])
+        else:
+            links.new(nodes['Clear Target Mesh'].outputs[0], nodes['Draw Grease Pencil'].inputs[0])
+        links.new(nodes['Draw Grease Pencil'].outputs[0], nodes['Draw Meshes Mesh'].inputs[0])
+
+    if not cam.rp_meshes:
+        relink('Draw Meshes Mesh', 'Draw World')
+
     if not cam.rp_worldnodes:
         relink('Draw World', 'Set Target Accum')
         nodes['Clear Target Mesh'].inputs[1].default_value = True
@@ -70,6 +80,8 @@ def make_forward(cam):
         links.new(nodes['Framebuffer'].outputs[0], nodes['Set Target Mesh'].inputs[1])
         if cam.rp_worldnodes:
             l = nodes['Draw World'].outputs[0].links[0]
+        elif cam.rp_greasepencil and not cam.rp_meshes:
+            l = nodes['Draw Grease Pencil'].outputs[0].links[0]
         else:
             l = nodes['Draw Meshes Mesh'].outputs[0].links[0]
         links.remove(l)

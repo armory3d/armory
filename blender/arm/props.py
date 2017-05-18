@@ -288,7 +288,7 @@ def init_properties():
                ('Deferred Plus', 'Deferred Plus (experimental)', 'Deferred Plus'),
                ('Max', 'Max', 'Max'),
                ('Render Capture', 'Render Capture', 'Render Capture'),
-               #('Grease Pencil', 'Grease Pencil', 'Grease Pencil'),
+               ('Grease Pencil', 'Grease Pencil', 'Grease Pencil'),
                #('Path-Trace', 'Path-Trace', 'Path-Trace')],
                ],
         name="Preset", description="Render path preset", default='Deferred', update=update_preset)

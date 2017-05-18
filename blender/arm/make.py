@@ -109,6 +109,8 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
             defs = make_utils.def_strings_to_array(wrd.world_defs + wrd.rp_defs)
             if shader_name.startswith('compositor_pass'):
                 defs += make_utils.def_strings_to_array(wrd.compo_defs)
+            elif shader_name.startswith('grease_pencil'):
+                defs = []
             compile_shader(raw_shaders_path, shader_name, defs)
 
     # Reset path
