@@ -292,7 +292,7 @@ class PropsRPDataPropsPanel(bpy.types.Panel):
                 row.prop(wrd, 'generate_gpu_skin_max_bones_auto')
                 if not wrd.generate_gpu_skin_max_bones_auto:
                     layout.prop(wrd, 'generate_gpu_skin_max_bones')
-            layout.prop(wrd, 'anisotropic_filtering_state')
+            layout.prop(wrd, 'texture_filtering_state')
             layout.prop(wrd, 'tessellation_enabled')
             layout.prop(wrd, 'force_no_culling')
             layout.prop(wrd, 'generate_two_sided_area_lamp')

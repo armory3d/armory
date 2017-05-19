@@ -87,11 +87,13 @@ def make(image_node, tex_name, matname=None):
         # tex['format'] = image_format
     
     interpolation = image_node.interpolation
-    aniso = wrd.anisotropic_filtering_state
-    if aniso == 'On':
+    texfilter = wrd.texture_filtering_state
+    if texfilter == 'Anisotropic':
         interpolation = 'Smart'
-    elif aniso == 'Off' and interpolation == 'Smart':
+    elif texfilter == 'Linear':
         interpolation = 'Linear'
+    elif texfilter == 'Point':
+        interpolation = 'Closest'
     
     # TODO: Blender seems to load full images on size request, cache size instead
     powimage = is_pow(image.size[0]) and is_pow(image.size[1])
@@ -106,6 +108,10 @@ def make(image_node, tex_name, matname=None):
         tex['min_filter'] = 'anisotropic'
         tex['mipmap_filter'] = 'linear'
         tex['generate_mipmaps'] = True
+    elif interpolation == 'Closest':
+        tex['min_filter'] = 'point'
+        tex['mag_filter'] = 'point'
+    # else defaults to linear
 
     if image_node.extension != 'REPEAT': # Extend or clip
         tex['u_addressing'] = 'clamp'

@@ -468,11 +468,12 @@ def init_properties():
     # bpy.types.World.generate_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=84, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=3000, update=assets.invalidate_shader_cache)
     # Material override flags
-    bpy.types.World.anisotropic_filtering_state = EnumProperty(
-        items=[('On', 'On', 'On'),
-               ('Off', 'Off', 'Off'), 
-               ('Auto', 'Auto', 'Auto')],
-        name="Anisotropic Filtering", description="Texture filtering", default='On')
+    bpy.types.World.texture_filtering_state = EnumProperty(
+        items=[('Anisotropic', 'Anisotropic', 'Anisotropic'),
+               ('Linear', 'Linear', 'Linear'), 
+               ('Point', 'Point', 'Point'), 
+               ('Manual', 'Manual', 'Manual')],
+        name="Texture Filtering", description="Set Manual to honor interpolation setting on Image Texture node", default='Anisotropic')
     bpy.types.World.force_no_culling = bpy.props.BoolProperty(name="Force No Culling", default=False)
     bpy.types.World.generate_two_sided_area_lamp = bpy.props.BoolProperty(name="Two-Sided Area Lamps", description="Emit light from both faces of area lamp", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.tessellation_enabled = bpy.props.BoolProperty(name="Tessellation", description="Enable tessellation for height maps on supported targets", default=True, update=assets.invalidate_shader_cache)
