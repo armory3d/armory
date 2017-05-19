@@ -80,7 +80,8 @@ def on_scene_update_post(context):
             make.play_project(in_viewport=True)
 
     # Use frame rate for update frequency for now
-    if time.time() - last_time >= (1 / bpy.context.scene.render.fps):
+    fps_mult = 2.0 if (state.krom_running and arm.utils.get_os() == 'win') else 1.0 # Handlers called less frequently on Windows?
+    if time.time() - last_time >= (1 / (bpy.context.scene.render.fps * fps_mult)):
         last_time = time.time()
 
         if state.krom_running:
