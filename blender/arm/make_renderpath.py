@@ -864,6 +864,11 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
         else: # ShadowMapNodeType
             target = make_shadowmap_target(node, scale)
             render_targets.append(target)
+            # Clamp non-cubemap omni-shadows
+            for lamp in bpy.data.lamps:
+                if lamp.type == 'POINT' and lamp.lamp_omni_shadows and not lamp.lamp_omni_shadows_cubemap:
+                    bpy.data.worlds['Arm'].rp_defs += '_Clampstc'
+
     
     elif node.bl_idname == 'ImageNodeType' or node.bl_idname == 'Image3DNodeType':
         # Target already exists

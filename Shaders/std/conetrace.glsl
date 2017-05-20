@@ -8,6 +8,7 @@ uniform sampler3D voxels;
 
 const float VOXEL_SIZE = 1.0 / voxelgiResolution.x;
 const float MAX_MIPMAP = 5.4;
+const float VOXEL_RATIO = 128.0 / voxelgiResolution.x;
 
 vec3 orthogonal(const vec3 u) {
 	// Pass normalized u
@@ -21,8 +22,8 @@ vec4 traceDiffuseVoxelCone(const vec3 from, vec3 direction) {
 	vec4 acc = vec4(0.0);
 	// Controls bleeding from close surfaces
 	// Low values look rather bad if using shadow cone tracing
-	float dist = 0.1953125 / 9.0;
-	const float SQRT2 = 1.414213;
+	float dist = 0.1953125 / (9.0 * VOXEL_RATIO * voxelgiStep);
+	const float SQRT2 = 1.414213 * voxelgiRange;
 	while (dist < SQRT2 && acc.a < 1.0) {
 		vec3 c = vec3(from + dist * direction) * 0.5 + vec3(0.5);
 		float l = (1.0 + CONE_SPREAD * dist / VOXEL_SIZE);
@@ -107,12 +108,12 @@ vec3 traceSpecularVoxelCone(vec3 from, vec3 direction, const vec3 normal, const 
 	return 1.0 * pow(specularDiffusion + 1, 0.8) * acc.rgb;
 }
 
-// vec3 indirectRefractiveLight(const vec3 v, const vec3 normal){
-	// float refractiveIndex = 1.2;
-	// const vec3 refraction = refract(v, normal, 1.0 / refractiveIndex);
-	// const vec3 cmix = mix(specularColor, 0.5 * (specularColor + vec3(1)), transparency);
-	// return cmix * traceSpecularVoxelCone(worldPositionFrag, refraction, 0.1);
-// }
+vec3 indirectRefractiveLight(const vec3 v, const vec3 normal, const vec3 specCol, const float opacity, const vec3 wpos) {
+	const float refractiveIndex = 1.2;
+	vec3 refraction = refract(v, normal, 1.0 / refractiveIndex);
+	vec3 cmix = mix(0.5 * (specCol + vec3(1.0)), specCol, opacity);
+	return cmix * traceSpecularVoxelCone(wpos, refraction, normal, 0.1);
+}
 
 float traceShadowCone(vec3 from, vec3 direction, float targetDistance, vec3 normal) {
 	from += normal * 0.0; // Removes artifacts but makes self shadowing for dense meshes meh

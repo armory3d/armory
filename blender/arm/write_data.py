@@ -383,6 +383,8 @@ const float voxelgiDiff = """ + str(round(wrd.voxelgi_diff * 100) / 100) + """;
 const float voxelgiSpec = """ + str(round(wrd.voxelgi_spec * 100) / 100) + """;
 const float voxelgiOcc = """ + str(round(wrd.voxelgi_occ * 100) / 100) + """;
 const float voxelgiEnv = """ + str(round(wrd.voxelgi_env * 100) / 100) + """;
+const float voxelgiStep = """ + str(round(wrd.voxelgi_step * 100) / 100) + """;
+const float voxelgiRange = """ + str(round(wrd.voxelgi_range * 100) / 100) + """;
 """)
 
         # Skinning

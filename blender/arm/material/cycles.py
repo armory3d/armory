@@ -267,7 +267,7 @@ def parse_shader(node, socket):
             out_basecol = parse_vector_input(node.inputs[0])
             parsing_basecolor(False)
             strength = parse_value_input(node.inputs[1])
-            out_basecol = '({0} * {1} * 50.0)'.format(out_basecol, strength)
+            out_basecol = '({0} * ({1} * 10.0))'.format(out_basecol, strength)
 
     elif node.type == 'BSDF_GLASS':
         if parse_surface:

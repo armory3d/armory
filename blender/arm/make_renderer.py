@@ -74,7 +74,8 @@ def make_forward(cam):
 
     if not cam.rp_worldnodes:
         relink('Draw World', 'Set Target Accum')
-        nodes['Clear Target Mesh'].inputs[1].default_value = True
+        if cam.rp_clearbackground:
+            nodes['Clear Target Mesh'].inputs[1].default_value = True
 
     if not cam.rp_render_to_texture:
         links.new(nodes['Framebuffer'].outputs[0], nodes['Set Target Mesh'].inputs[1])
@@ -109,9 +110,11 @@ def make_deferred(cam):
     nodes['Screen'].inputs[0].default_value = int(cam.rp_supersampling)
 
     if cam.rp_voxelgi:
+        n = nodes['Image 3D Voxels']
+        # if cam.rp_voxelgi_hdr:
+            # n.inputs[4].default_value = 'RGBA64'
         links.new(nodes['Begin'].outputs[0], nodes['Branch Function Voxelize'].inputs[0])
         links.new(nodes['Merge Stages Voxelize'].outputs[0], nodes['Set Target Mesh'].inputs[0])
-        n = nodes['Image 3D Voxels']
         n.inputs[1].default_value = cam.rp_voxelgi_resolution[0]
         n.inputs[2].default_value = cam.rp_voxelgi_resolution[1]
         n.inputs[3].default_value = cam.rp_voxelgi_resolution[2]
@@ -143,6 +146,8 @@ def make_deferred(cam):
 
     if not cam.rp_worldnodes:
         relink('Draw World', 'Set Target Accum')
+        if cam.rp_clearbackground:
+            nodes['Clear Target Mesh'].inputs[1].default_value = True
 
     if not cam.rp_translucency:
         relink('Set Target Accum', 'Bloom')

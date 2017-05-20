@@ -28,6 +28,7 @@ def set_preset(self, context, preset):
         cam.rp_decals_state = 'Off'
         cam.rp_hdr = False
         cam.rp_worldnodes = False
+        cam.rp_clearbackground = True
         cam.rp_stereo = False
         cam.rp_greasepencil = False
         cam.rp_voxelgi = False
@@ -50,6 +51,7 @@ def set_preset(self, context, preset):
         cam.rp_decals_state = 'Auto'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
+        cam.rp_clearbackground = False
         cam.rp_stereo = False
         cam.rp_greasepencil = False
         cam.rp_voxelgi = False
@@ -71,6 +73,7 @@ def set_preset(self, context, preset):
         cam.rp_decals_state = 'Auto'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
+        cam.rp_clearbackground = False
         cam.rp_stereo = False
         cam.rp_greasepencil = False
         cam.rp_voxelgi = False
@@ -92,6 +95,7 @@ def set_preset(self, context, preset):
         cam.rp_decals_state = 'Auto'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
+        cam.rp_clearbackground = False
         cam.rp_stereo = False
         cam.rp_greasepencil = False
         cam.rp_voxelgi = False
@@ -113,6 +117,7 @@ def set_preset(self, context, preset):
         cam.rp_decals_state = 'Auto'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
+        cam.rp_clearbackground = False
         cam.rp_stereo = False
         cam.rp_greasepencil = False
         cam.rp_voxelgi = True
@@ -136,6 +141,7 @@ def set_preset(self, context, preset):
         cam.rp_decals_state = 'Auto'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
+        cam.rp_clearbackground = False
         cam.rp_stereo = False
         cam.rp_greasepencil = False
         cam.rp_voxelgi = False
@@ -158,6 +164,7 @@ def set_preset(self, context, preset):
         cam.rp_decals_state = 'Off'
         cam.rp_hdr = False
         cam.rp_worldnodes = False
+        cam.rp_clearbackground = True
         cam.rp_stereo = True
         cam.rp_greasepencil = False
         cam.rp_voxelgi = False
@@ -180,6 +187,7 @@ def set_preset(self, context, preset):
         cam.rp_decals_state = 'Off'
         cam.rp_hdr = False
         cam.rp_worldnodes = False
+        cam.rp_clearbackground = True
         cam.rp_stereo = False
         cam.rp_greasepencil = True
         cam.rp_render_to_texture = False
@@ -236,6 +244,8 @@ class GenRPDataPropsPanel(bpy.types.Panel):
             layout.prop(dat, "rp_decals_state")
             layout.prop(dat, "rp_hdr")
             layout.prop(dat, "rp_worldnodes")
+            if not dat.rp_worldnodes:
+                layout.prop(dat, "rp_clearbackground")
             layout.prop(dat, "rp_stereo")
             layout.prop(dat, "rp_greasepencil")
             layout.prop(dat, 'rp_voxelgi')
@@ -243,14 +253,18 @@ class GenRPDataPropsPanel(bpy.types.Panel):
                 layout.prop(dat, 'rp_voxelgi_resolution')
                 layout.prop(wrd, 'generate_voxelgi_dimensions')
                 row = layout.row()
-                row.prop(wrd, 'voxelgi_revoxelize')
-                row.prop(wrd, 'voxelgi_multibounce')
-                row = layout.row()
                 row.prop(wrd, 'voxelgi_diff')
                 row.prop(wrd, 'voxelgi_spec')
                 row = layout.row()
                 row.prop(wrd, 'voxelgi_occ')
                 row.prop(wrd, 'voxelgi_env')
+                row = layout.row()
+                row.prop(wrd, 'voxelgi_step')
+                row.prop(wrd, 'voxelgi_range')
+                row = layout.row()
+                row.prop(wrd, 'voxelgi_revoxelize')
+                row.prop(wrd, 'voxelgi_multibounce')
+                row.prop(dat, 'rp_voxelgi_hdr')
 
             layout.separator()
             layout.prop(dat, "rp_render_to_texture")

@@ -72,22 +72,24 @@ void main() {
 #endif
 
 #ifdef _VoxelGI
-	vec4 indirectDiffuse = indirectDiffuseLight(n, p / voxelgiDimensions.x);
-	indirectDiffuse.a *= 0.26 * voxelgiOcc;
+	vec3 wpos = p / voxelgiDimensions.x;
+	vec4 indirectDiffuse = indirectDiffuseLight(n, wpos);
 
 	vec3 reflectWorld = reflect(-v, n);
-	vec3 indirectSpecular = traceSpecularVoxelCone(p / voxelgiDimensions.x, reflectWorld, n, metrough.y * 10.0);
+	vec3 indirectSpecular = traceSpecularVoxelCone(wpos, reflectWorld, n, metrough.y * 10.0);
 	indirectSpecular *= f0 * envBRDF.x + envBRDF.y;
 
-	fragColor.rgb = indirectDiffuse.rgb * voxelgiDiff * albedo + indirectSpecular * voxelgiSpec;
-	float occ = 1.0 - indirectDiffuse.a;
+	fragColor.rgb = indirectDiffuse.rgb * voxelgiDiff * g1.rgb + indirectSpecular * voxelgiSpec;
+	float occ = 1.0 - indirectDiffuse.a * 0.25 * voxelgiOcc;
 	fragColor.rgb *= occ;
 
 	#ifdef _SSAO
 	fragColor.rgb *= texture(ssaotex, texCoord).r * 0.5 + 0.5;
 	#endif
 
-	// if (opacity < 1.0) fragColor.rgb = mix(indirectRefractiveLight(-v), fragColor.rgb); // Transparency
+	// float opacity = g1.a;
+	// if (opacity < 1.0) fragColor.rgb = mix(indirectRefractiveLight(-v, n, vec3(1.0), opacity, wpos), fragColor.rgb, opacity);
+
 	// return;
 #endif
 	

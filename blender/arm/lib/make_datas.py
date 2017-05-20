@@ -57,7 +57,7 @@ def write_data(res, defs, json_data, base_name):
             'blend_source', 'blend_destination', 'blend_operation', \
             'alpha_blend_source', 'alpha_blend_destination', 'alpha_blend_operation' \
             'color_write_red', 'color_write_green', 'color_write_blue', \
-            'color_write_alpha']
+            'color_write_alpha', 'conservative_raster']
 
         for p in params:
             if p in c:

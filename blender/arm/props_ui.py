@@ -187,6 +187,10 @@ class DataPropsPanel(bpy.types.Panel):
             row.prop(obj.data, 'lamp_shadows_bias')
             if obj.data.type == 'POINT':
                 layout.prop(obj.data, 'lamp_omni_shadows')
+                if obj.data.lamp_omni_shadows:
+                    layout.prop(obj.data, 'lamp_omni_shadows_cubemap')
+                    if not obj.data.lamp_omni_shadows_cubemap:
+                        layout.label('Warning: Will result in performance loss')
         elif obj.type == 'SPEAKER':
             layout.prop(obj.data, 'loop')
             layout.prop(obj.data, 'stream')
