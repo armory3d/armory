@@ -4,6 +4,8 @@ from bpy.props import *
 import arm.nodes as nodes
 
 def parse_defs(node_group):
+    if node_group == None:
+        return ''
     rn = nodes.get_node_by_type(node_group, 'COMPOSITE')
     if rn == None:
         return ''

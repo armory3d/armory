@@ -114,11 +114,6 @@ project.addSources('Sources');
         if wrd.arm_hscript:
             f.write(add_armory_library(sdk_path, 'lib/hscript'))
 
-        # if wrd.arm_ui:
-            # f.write(add_armory_library(sdk_path, 'lib/haxeui-core'))
-            # f.write(add_armory_library(sdk_path, 'lib/haxeui-kha'))
-            # f.write(add_armory_library(sdk_path, 'lib/hscript'))
-
         if wrd.arm_minimize == False:
             f.write("project.addDefine('arm_json');\n")
         
