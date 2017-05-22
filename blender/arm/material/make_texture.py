@@ -40,7 +40,7 @@ def make(image_node, tex_name, matname=None):
 
     if image.packed_file != None or not is_ascii(texfile):
         # Extract packed data / copy non-ascii texture
-        unpack_path = arm.utils.get_fp() + '/build/compiled/Assets/unpacked'
+        unpack_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked'
         if not os.path.exists(unpack_path):
             os.makedirs(unpack_path)
         unpack_filepath = unpack_path + '/' + tex['file']
@@ -68,7 +68,7 @@ def make(image_node, tex_name, matname=None):
             return None
 
         if do_convert:
-            converted_path = arm.utils.get_fp() + '/build/compiled/Assets/unpacked/' + tex['file']
+            converted_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked/' + tex['file']
             # TODO: delete cache when file changes
             if not os.path.isfile(converted_path):
                 arm.utils.write_image(image, converted_path)

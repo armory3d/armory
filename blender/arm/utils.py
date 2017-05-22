@@ -37,10 +37,19 @@ def write_image(image, path, file_format='JPEG'):
     ren.image_settings.quality = orig_quality
     ren.image_settings.file_format = orig_file_format
 
+def blend_name():
+    return bpy.path.basename(bpy.context.blend_data.filepath).rsplit('.')[0]
+
+def build_dir():
+    return 'build_' + safestr(blend_name())
+
 def get_fp():
     s = bpy.data.filepath.split(os.path.sep)
     s.pop()
     return os.path.sep.join(s)
+
+def get_fp_build():
+    return get_fp() + '/' + build_dir()
 
 def get_os():
     s = platform.system()

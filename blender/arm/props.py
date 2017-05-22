@@ -65,32 +65,32 @@ def update_mat_cache(self, context):
         bpy.data.worlds['Arm'].arm_recompile_trigger = True
 
 def update_gapi_win(self, context):
-    if os.path.isdir(arm.utils.get_fp() + 'build/windows-build'):
-        shutil.rmtree(arm.utils.get_fp() + 'build/windows-build')
+    if os.path.isdir(arm.utils.get_fp_build() + '/windows-build'):
+        shutil.rmtree(arm.utils.get_fp_build() + '/windows-build')
     bpy.data.worlds['Arm'].arm_recompile_trigger = True
     assets.invalidate_compiled_data(self, context)
 
 def update_gapi_linux(self, context):
-    if os.path.isdir(arm.utils.get_fp() + 'build/linux-build'):
-        shutil.rmtree(arm.utils.get_fp() + 'build/linux-build')
+    if os.path.isdir(arm.utils.get_fp_build() + '/linux-build'):
+        shutil.rmtree(arm.utils.get_fp_build() + '/linux-build')
     bpy.data.worlds['Arm'].arm_recompile_trigger = True
     assets.invalidate_compiled_data(self, context)
 
 def update_gapi_mac(self, context):
-    if os.path.isdir(arm.utils.get_fp() + 'build/osx-build'):
-        shutil.rmtree(arm.utils.get_fp() + 'build/osx-build')
+    if os.path.isdir(arm.utils.get_fp_build() + '/osx-build'):
+        shutil.rmtree(arm.utils.get_fp_build() + '/osx-build')
     bpy.data.worlds['Arm'].arm_recompile_trigger = True
     assets.invalidate_compiled_data(self, context)
 
 def update_gapi_android(self, context):
-    if os.path.isdir(arm.utils.get_fp() + 'build/android-build'):
-        shutil.rmtree(arm.utils.get_fp() + 'build/android-build')
+    if os.path.isdir(arm.utils.get_fp_build() + '/android-build'):
+        shutil.rmtree(arm.utils.get_fp_build() + '/android-build')
     bpy.data.worlds['Arm'].arm_recompile_trigger = True
     assets.invalidate_compiled_data(self, context)
 
 def update_gapi_ios(self, context):
-    if os.path.isdir(arm.utils.get_fp() + 'build/ios-build'):
-        shutil.rmtree(arm.utils.get_fp() + 'build/ios-build')
+    if os.path.isdir(arm.utils.get_fp_build() + '/ios-build'):
+        shutil.rmtree(arm.utils.get_fp_build() + '/ios-build')
     bpy.data.worlds['Arm'].arm_recompile_trigger = True
     assets.invalidate_compiled_data(self, context)
 
@@ -551,7 +551,7 @@ def init_properties_on_save():
     wrd = bpy.data.worlds['Arm']
     if wrd.arm_project_name == '':
         # Take blend file name
-        wrd.arm_project_name = bpy.path.basename(bpy.context.blend_data.filepath).rsplit('.')[0]
+        wrd.arm_project_name = arm.utils.blend_name()
         wrd.arm_project_scene = bpy.data.scenes[0].name
         # Switch to Cycles
         for scene in bpy.data.scenes:
@@ -591,7 +591,7 @@ def init_properties_on_load():
 
     # Set url for embedded player
     if arm.utils.with_krom():
-        barmory.set_files_location(arm.utils.get_fp() + '/build/krom')
+        barmory.set_files_location(arm.utils.get_fp_build() + '/krom')
 
 def register():
     init_properties()

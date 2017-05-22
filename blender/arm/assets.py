@@ -63,8 +63,8 @@ def add_shader_data(file):
         shader_datas.append(file)
 
 def add_shader2(dir_name, data_name):
-    add_shader_data('build/compiled/Shaders/' + dir_name + '/' + data_name + '.arm')
-    full_name = 'build/compiled/Shaders/' + dir_name + '/' + data_name
+    add_shader_data(arm.utils.build_dir() + '/compiled/Shaders/' + dir_name + '/' + data_name + '.arm')
+    full_name = arm.utils.build_dir() + '/compiled/Shaders/' + dir_name + '/' + data_name
     add_shader(full_name + '.vert.glsl')
     add_shader(full_name + '.frag.glsl')
 
@@ -75,30 +75,30 @@ def invalidate_shader_cache(self, context):
     global invalidate_enabled
     if invalidate_enabled == False:
         return
-    fp = arm.utils.get_fp()
-    if os.path.isdir(fp + '/build/compiled/Shaders'):
-        shutil.rmtree(fp + '/build/compiled/Shaders')
-    if os.path.isdir(fp + '/build/compiled/ShaderRaws'):
-        shutil.rmtree(fp + '/build/compiled/ShaderRaws')
+    fp = arm.utils.get_fp_build()
+    if os.path.isdir(fp + '/compiled/Shaders'):
+        shutil.rmtree(fp + '/compiled/Shaders')
+    if os.path.isdir(fp + '/compiled/ShaderRaws'):
+        shutil.rmtree(fp + '/compiled/ShaderRaws')
 
 def invalidate_compiled_data(self, context):
     global invalidate_enabled
     if invalidate_enabled == False:
         return
-    fp = arm.utils.get_fp()
-    if os.path.isdir(fp + '/build/compiled/Assets'):
-        shutil.rmtree(fp + '/build/compiled/Assets')
-    if os.path.isdir(fp + '/build/compiled/Shaders'):
-        shutil.rmtree(fp + '/build/compiled/Shaders')
-    if os.path.isdir(fp + '/build/compiled/ShaderRaws'):
-        shutil.rmtree(fp + '/build/compiled/ShaderRaws')
+    fp = arm.utils.get_fp_build()
+    if os.path.isdir(fp + '/compiled/Assets'):
+        shutil.rmtree(fp + '/compiled/Assets')
+    if os.path.isdir(fp + '/compiled/Shaders'):
+        shutil.rmtree(fp + '/compiled/Shaders')
+    if os.path.isdir(fp + '/compiled/ShaderRaws'):
+        shutil.rmtree(fp + '/compiled/ShaderRaws')
 
 def invalidate_mesh_data(self, context):
-    fp = arm.utils.get_fp()
-    if os.path.isdir(fp + '/build/compiled/Assets/meshes'):
-        shutil.rmtree(fp + '/build/compiled/Assets/meshes')
+    fp = arm.utils.get_fp_build()
+    if os.path.isdir(fp + '/compiled/Assets/meshes'):
+        shutil.rmtree(fp + '/compiled/Assets/meshes')
 
 def invalidate_envmap_data(self, context):
-    fp = arm.utils.get_fp()
-    if os.path.isdir(fp + '/build/compiled/Assets/envmaps'):
-        shutil.rmtree(fp + '/build/compiled/Assets/envmaps')
+    fp = arm.utils.get_fp_build()
+    if os.path.isdir(fp + '/compiled/Assets/envmaps'):
+        shutil.rmtree(fp + '/compiled/Assets/envmaps')

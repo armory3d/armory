@@ -2169,7 +2169,7 @@ class ArmoryExporter:
         if objref.sound:
             # Packed
             if objref.sound.packed_file != None:
-                unpack_path = arm.utils.get_fp() + '/build/compiled/Assets/unpacked'
+                unpack_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked'
                 if not os.path.exists(unpack_path):
                     os.makedirs(unpack_path)
                 unpack_filepath = unpack_path + '/' + objref.sound.name
@@ -2354,11 +2354,11 @@ class ArmoryExporter:
             ext = '.zip'
         self.output['grease_pencil_ref'] = 'greasepencil_' + gpRef.name + ext + '/' + gpRef.name
 
-        assets.add_shader_data('build/compiled/Shaders/grease_pencil/grease_pencil.arm')
-        assets.add_shader('build/compiled/Shaders/grease_pencil/grease_pencil.frag.glsl')
-        assets.add_shader('build/compiled/Shaders/grease_pencil/grease_pencil.vert.glsl')
-        assets.add_shader('build/compiled/Shaders/grease_pencil/grease_pencil_shadows.frag.glsl')
-        assets.add_shader('build/compiled/Shaders/grease_pencil/grease_pencil_shadows.vert.glsl')
+        assets.add_shader_data(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil.arm')
+        assets.add_shader(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil.frag.glsl')
+        assets.add_shader(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil.vert.glsl')
+        assets.add_shader(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil_shadows.frag.glsl')
+        assets.add_shader(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil_shadows.vert.glsl')
 
         if gpRef.data_cached == True and os.path.exists(fp):
             return
@@ -2745,7 +2745,7 @@ class ArmoryExporter:
                     x['type'] = 'Script'
                     x['class_name'] = 'armory.trait.internal.JSScript'
                     x['parameters'] = [basename]
-                    scriptspath = arm.utils.get_fp() + '/build/compiled/scripts/'
+                    scriptspath = arm.utils.get_fp_build() + '/compiled/scripts/'
                     if not os.path.exists(scriptspath):
                         os.makedirs(scriptspath)
                     # Compile to JS
@@ -2766,10 +2766,10 @@ class ArmoryExporter:
                             log.print_info('Compiling ' + t.jsscript_prop + ' failed, check console')
                         os.chdir(cwd)
                         # Compiled file
-                        assets.add('build/compiled/scripts/__javascript__/' + basename + '.js')
+                        assets.add(arm.utils.build_dir() + '/compiled/scripts/__javascript__/' + basename + '.js')
                     else:
                         # Write js to file
-                        assetpath = 'build/compiled/scripts/' + t.jsscript_prop + '.js'
+                        assetpath = arm.utils.build_dir() + '/compiled/scripts/' + t.jsscript_prop + '.js'
                         targetpath = arm.utils.get_fp() + '/' + assetpath
                         with open(targetpath, 'w') as f:
                             f.write(bpy.data.texts[t.jsscript_prop].as_string())
@@ -2783,7 +2783,7 @@ class ArmoryExporter:
                         # TODO: temporary, export single mesh navmesh as obj
                         if t.class_name_prop == 'NavMesh' and bobject.type == 'MESH' and bpy.data.worlds['Arm'].arm_navigation != 'Disabled':
                             ArmoryExporter.export_navigation = True
-                            nav_path = arm.utils.get_fp() + '/build/compiled/Assets/navigation'
+                            nav_path = arm.utils.get_fp_build() + '/compiled/Assets/navigation'
                             if not os.path.exists(nav_path):
                                 os.makedirs(nav_path)
                             nav_filepath = nav_path + '/nav_' + bobject.data.name + '.arm'

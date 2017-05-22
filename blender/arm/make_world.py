@@ -16,8 +16,8 @@ def build_node_trees(active_worlds):
     os.chdir(fp)
 
     # Make sure Assets dir exists
-    if not os.path.exists('build/compiled/Assets/materials'):
-        os.makedirs('build/compiled/Assets/materials')
+    if not os.path.exists(arm.utils.build_dir() + '/compiled/Assets/materials'):
+        os.makedirs(arm.utils.build_dir() + '/compiled/Assets/materials')
     
     # Export world nodes
     world_outputs = []
@@ -130,7 +130,7 @@ def write_output(output):
     assets.add_shader2(dir_name, data_name)
 
     # Write material json
-    path = 'build/compiled/Assets/materials/'
+    path = arm.utils.build_dir() + '/compiled/Assets/materials/'
     asset_path = path + dat['name'] + '.arm'
     arm.utils.write_arm(asset_path, output)
     assets.add(asset_path)
@@ -204,7 +204,7 @@ def parse_color(world, node, context, envmap_strength_const):
 
         if image.packed_file != None:
             # Extract packed data
-            unpack_path = arm.utils.get_fp() + '/build/compiled/Assets/unpacked'
+            unpack_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked'
             if not os.path.exists(unpack_path):
                 os.makedirs(unpack_path)
             unpack_filepath = unpack_path + '/' + tex['file']
@@ -221,7 +221,7 @@ def parse_color(world, node, context, envmap_strength_const):
             assets.add(unpack_filepath)
         else:
             if do_convert:
-                converted_path = arm.utils.get_fp() + '/build/compiled/Assets/unpacked/' + tex['file']
+                converted_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked/' + tex['file']
                 filepath = converted_path
                 # TODO: delete cache when file changes
                 if not os.path.isfile(converted_path):
@@ -265,7 +265,7 @@ def parse_color(world, node, context, envmap_strength_const):
 
         if image.packed_file != None:
             # Extract packed data
-            filepath = '/build/compiled/Assets/unpacked'
+            filepath = arm.utils.build_dir() + '/compiled/Assets/unpacked'
             unpack_path = arm.utils.get_fp() + filepath
             if not os.path.exists(unpack_path):
                 os.makedirs(unpack_path)

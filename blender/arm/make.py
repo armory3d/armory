@@ -28,7 +28,6 @@ scripts_mtime = 0 # Monitor source changes
 
 def compile_shader(raw_shaders_path, shader_name, defs):
     os.chdir(raw_shaders_path + './' + shader_name)
-    fp = arm.utils.get_fp()
 
     # Open json file
     json_name = shader_name + '.json'
@@ -37,6 +36,7 @@ def compile_shader(raw_shaders_path, shader_name, defs):
         json_file = f.read()
     json_data = json.loads(json_file)
     
+    fp = arm.utils.get_fp_build()
     arm.lib.make_datas.make(base_name, json_data, fp, defs)
     arm.lib.make_variants.make(base_name, json_data, fp, defs)
 
@@ -49,16 +49,17 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
 
     # Clean compiled variants if cache is disabled
     if wrd.arm_cache_shaders == False:
-        if os.path.isdir('build/html5-resources'):
-            shutil.rmtree('build/html5-resources')
-        if os.path.isdir('build/krom-resources'):
-            shutil.rmtree('build/krom-resources')
-        if os.path.isdir('build/window/krom-resources'):
-            shutil.rmtree('build/window/krom-resources')
-        if os.path.isdir('build/compiled/Shaders'):
-            shutil.rmtree('build/compiled/Shaders')
-        if os.path.isdir('build/compiled/ShaderRaws'):
-            shutil.rmtree('build/compiled/ShaderRaws')
+        build_dir = arm.utils.build_dir()
+        if os.path.isdir(build_dir + '/build/html5-resources'):
+            shutil.rmtree(build_dir + '/build/html5-resources')
+        if os.path.isdir(build_dir + '/build/krom-resources'):
+            shutil.rmtree(build_dir + '/build/krom-resources')
+        if os.path.isdir(build_dir + '/window/krom-resources'):
+            shutil.rmtree(build_dir + '/window/krom-resources')
+        if os.path.isdir(build_dir + '/compiled/Shaders'):
+            shutil.rmtree(build_dir + '/compiled/Shaders')
+        if os.path.isdir(build_dir + '/compiled/ShaderRaws'):
+            shutil.rmtree(build_dir + '/compiled/ShaderRaws')
 
     raw_shaders_path = sdk_path + 'armory/Shaders/'
     assets_path = sdk_path + 'armory/Assets/'
@@ -87,7 +88,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     for scene in bpy.data.scenes:
         if scene.game_export:
             ext = '.zip' if (scene.data_compressed and is_publish) else '.arm'
-            asset_path = 'build/compiled/Assets/' + arm.utils.safestr(scene.name) + ext
+            asset_path = arm.utils.build_dir() + '/compiled/Assets/' + arm.utils.safestr(scene.name) + ext
             exporter.execute(bpy.context, asset_path, scene=scene)
             if physics_found == False and ArmoryExporter.export_physics:
                 physics_found = True
@@ -117,8 +118,8 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     os.chdir(fp)
 
     # Copy std shaders
-    if not os.path.isdir('build/compiled/Shaders/std'):
-        shutil.copytree(raw_shaders_path + 'std', 'build/compiled/Shaders/std')
+    if not os.path.isdir(arm.utils.build_dir() + '/compiled/Shaders/std'):
+        shutil.copytree(raw_shaders_path + 'std', arm.utils.build_dir() + '/compiled/Shaders/std')
 
     # Write compiled.glsl
     write_data.write_compiledglsl()
@@ -163,9 +164,12 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
             else:
                 cmd.append('--shaderversion')
                 cmd.append('110')
-        else:
-            cmd.append('--to')
-            cmd.append('build/window')
+    
+    cmd.append('--to')
+    if kha_target_name == 'krom' and not state.in_viewport:
+        cmd.append(arm.utils.get_fp_build() + '/window')
+    else:
+        cmd.append(arm.utils.get_fp_build())
 
     # User defined commands
     if wrd.arm_khamake != '':
@@ -322,11 +326,11 @@ def runtime_to_target(in_viewport):
 
 def get_khajs_path(in_viewport, target):
     if in_viewport:
-        return 'build/krom/krom.js'
+        return arm.utils.build_dir() + '/build/krom/krom.js'
     elif target == 'krom':
-        return 'build/window/krom/krom.js'
+        return arm.utils.build_dir() + '/window/krom/krom.js'
     else: # browser, electron
-        return 'build/html5/kha.js'
+        return arm.utils.build_dir() + '/build/html5/kha.js'
 
 def play_project(in_viewport):
     global scripts_mtime
@@ -403,7 +407,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
     if mode == 'publish':
         target_name = make_utils.get_kha_target(wrd.arm_project_target)
         print('Project published')
-        files_path = arm.utils.get_fp() + '/build/' + target_name
+        files_path = arm.utils.get_fp_build() + '/' + target_name
         if target_name == 'html5':
             print('HTML5 files are located in ' + files_path)
         elif target_name == 'ios' or target_name == 'osx': # TODO: to macos
@@ -419,7 +423,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
     # Launch project in new window
     elif mode =='play':
         if wrd.arm_play_runtime == 'Electron':
-            electron_app_path = './build/electron.js'
+            electron_app_path = './' + arm.utils.build_dir() + '/electron.js'
 
             if arm.utils.get_os() == 'win':
                 electron_path = sdk_path + 'win32/Kode Studio.exe'
@@ -436,7 +440,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
             t = threading.Thread(name='localserver', target=arm.lib.server.run)
             t.daemon = True
             t.start()
-            html5_app_path = 'http://localhost:8040/build/html5'
+            html5_app_path = 'http://localhost:8040/' + arm.utils.build_dir() + '/html5'
             webbrowser.open(html5_app_path)
         elif wrd.arm_play_runtime == 'Krom':
             if arm.utils.get_os() == 'win':
@@ -449,7 +453,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
                 krom_location = sdk_path + '/linux64/Krom/linux'
                 krom_path = krom_location + '/Krom'
             os.chdir(krom_location)
-            state.playproc = subprocess.Popen([krom_path, arm.utils.get_fp() + '/build/window/krom', arm.utils.get_fp() + '/build/window/krom-resources', '--nosound'], stderr=subprocess.PIPE)
+            state.playproc = subprocess.Popen([krom_path, arm.utils.get_fp_build() + '/window/krom', arm.utils.get_fp_build() + '/window/krom-resources', '--nosound'], stderr=subprocess.PIPE)
             watch_play()
 
 def clean_cache():
@@ -457,18 +461,18 @@ def clean_cache():
     wrd = bpy.data.worlds['Arm']
 
     # Preserve envmaps
-    envmaps_path = 'build/compiled/Assets/envmaps'
+    envmaps_path = arm.utils.build_dir() + '/compiled/Assets/envmaps'
     if os.path.isdir(envmaps_path):
         shutil.move(envmaps_path, '.')
 
     # Remove compiled data
-    if os.path.isdir('build/compiled'):
-        shutil.rmtree('build/compiled')
+    if os.path.isdir(arm.utils.build_dir() + '/compiled'):
+        shutil.rmtree(arm.utils.build_dir() + '/compiled')
 
     # Move envmaps back
     if os.path.isdir('envmaps'):
-        os.makedirs('build/compiled/Assets')
-        shutil.move('envmaps', 'build/compiled/Assets')
+        os.makedirs(arm.utils.build_dir() + '/compiled/Assets')
+        shutil.move('envmaps', arm.utils.build_dir() + '/compiled/Assets')
 
     # Temp: To recache signatures for batched materials
     for mat in bpy.data.materials:
@@ -479,8 +483,8 @@ def clean_project():
     wrd = bpy.data.worlds['Arm']
 
     # Remove build and compiled data
-    if os.path.isdir('build'):
-        shutil.rmtree('build')
+    if os.path.isdir(arm.utils.build_dir()):
+        shutil.rmtree(arm.utils.build_dir())
 
     # Remove compiled nodes
     nodes_path = 'Sources/' + arm.utils.safestr(wrd.arm_project_package).replace('.', '/') + '/node/'
@@ -514,5 +518,5 @@ def publish_project():
     assets.invalidate_enabled = True
 
 def get_render_result():
-    with open(arm.utils.get_fp() + '/build/html5/render.msg', 'w') as f:
+    with open(arm.utils.get_fp_build() + '/html5/render.msg', 'w') as f:
         pass

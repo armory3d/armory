@@ -13,7 +13,7 @@ def add_armory_library(sdk_path, name):
 def add_assets(path):
     global check_dot_path
     if check_dot_path and '/.' in path: # Redirect path to local copy
-        armpath = 'build/compiled/ArmoryAssets/'
+        armpath = arm.utils.build_dir() + '/compiled/ArmoryAssets/'
         if not os.path.exists(armpath):
             os.makedirs(armpath)
         localpath = armpath + path.rsplit('/')[-1]
@@ -49,10 +49,10 @@ project.addSources('Sources');
         check_dot_path = False
         if '/.' in sdk_path:
             check_dot_path = True
-            if not os.path.exists('build/compiled/KhaShaders'):
+            if not os.path.exists(arm.utils.build_dir() + '/compiled/KhaShaders'):
                 kha_shaders_path = arm.utils.get_kha_path() + '/Sources/Shaders'
-                shutil.copytree(kha_shaders_path, 'build/compiled/KhaShaders')
-            f.write("project.addShaders('build/compiled/KhaShaders/**');\n")
+                shutil.copytree(kha_shaders_path, arm.utils.build_dir() + '/compiled/KhaShaders')
+            f.write("project.addShaders('" + arm.utils.build_dir() + "/compiled/KhaShaders/**');\n")
 
         # Auto-add assets located in Bundled directory
         if os.path.exists('Bundled'):
@@ -203,7 +203,7 @@ class Main {
 # Write electron.js
 def write_electronjs(w, h):
     wrd = bpy.data.worlds['Arm']
-    with open('build/electron.js', 'w') as f:
+    with open(arm.utils.build_dir() + '/electron.js', 'w') as f:
         f.write(
 """// Auto-generated
 'use strict';
@@ -215,7 +215,7 @@ let mainWindow;
 function createWindow () {
     mainWindow = new BrowserWindow({width: """ + str(int(w)) + """, height: """ + str(int(h)) + """, autoHideMenuBar: true, useContentSize: true});
     mainWindow.loadURL('file://' + __dirname + '/html5/index.html');
-    //mainWindow.loadURL('http://localhost:8040/build/html5/index.html');
+    //mainWindow.loadURL('http://localhost:8040/""" + arm.utils.build_dir() + """/html5/index.html');
     mainWindow.on('closed', function() { mainWindow = null; });
 }
 app.on('ready', createWindow);
@@ -225,9 +225,9 @@ app.on('activate', function () { if (mainWindow === null) { createWindow(); } })
 
 # Write index.html
 def write_indexhtml(w, h):
-    if not os.path.exists('build/html5'):
-        os.makedirs('build/html5')
-    with open('build/html5/index.html', 'w') as f:
+    if not os.path.exists(arm.utils.build_dir() + '/html5'):
+        os.makedirs(arm.utils.build_dir() + '/html5')
+    with open(arm.utils.build_dir() + '/html5/index.html', 'w') as f:
         f.write(
 """<!DOCTYPE html>
 <html>
@@ -266,7 +266,7 @@ def write_compiledglsl():
     clip_end = bpy.data.cameras[0].clip_end
     shadowmap_size = bpy.data.worlds['Arm'].shadowmap_size
     wrd = bpy.data.worlds['Arm']
-    with open('build/compiled/Shaders/compiled.glsl', 'w') as f:
+    with open(arm.utils.build_dir() + '/compiled/Shaders/compiled.glsl', 'w') as f:
         f.write(
 """#ifndef _COMPILED_GLSL_
 #define _COMPILED_GLSL_

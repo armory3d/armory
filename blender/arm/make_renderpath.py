@@ -18,8 +18,8 @@ def build_node_trees(assets_path):
     os.chdir(fp)
 
     # Make sure Assets dir exists
-    if not os.path.exists('build/compiled/Assets/renderpaths'):
-        os.makedirs('build/compiled/Assets/renderpaths')
+    if not os.path.exists(arm.utils.build_dir() + '/compiled/Assets/renderpaths'):
+        os.makedirs(arm.utils.build_dir() + '/compiled/Assets/renderpaths')
     
     build_node_trees.assets_path = assets_path
     # Always include
@@ -43,7 +43,7 @@ def build_node_tree(cam, node_group):
     dat = {}
     output['renderpath_datas'] = [dat]
     
-    path = 'build/compiled/Assets/renderpaths/'
+    path = arm.utils.build_dir() + '/compiled/Assets/renderpaths/'
     node_group_name = node_group.name.replace('.', '_')
     
     rn = get_root_node(node_group)
