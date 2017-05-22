@@ -43,6 +43,7 @@ float PCF(const vec2 uv, const float compare) {
 }
 
 float lpToDepth(vec3 lp, const vec2 lightPlane) {
+	// TODO: precompute..
 	float d = lightPlane.y - lightPlane.x;
 	lp = abs(lp);
 	float zcomp = max(lp.x, max(lp.y, lp.z));
@@ -53,7 +54,7 @@ float lpToDepth(vec3 lp, const vec2 lightPlane) {
 float PCFCube(const vec3 lp, const vec3 ml, const float bias, const vec2 lightPlane) {
 	// return float(texture(shadowMapCube, ml).r + bias > lpToDepth(lp, lightPlane));
 
-	const float s = 0.001; // TODO: incorrect...
+	const float s = shadowmapCubePcfSize; // 0.001 TODO: incorrect...
 	float compare = lpToDepth(lp, lightPlane) - bias;
 	float result = step(compare, texture(shadowMapCube, ml).r);
 	result += step(compare, texture(shadowMapCube, ml + vec3(s, s, s)).r);

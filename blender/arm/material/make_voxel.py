@@ -88,6 +88,8 @@ def make(context_id):
         frag.write('    if (texture(shadowMap, lpos.xy).r < lpos.z - shadowsBias) visibility = 0.0;')
         frag.write('}')
         frag.write('else if (lightShadow == 2) visibility = float(texture(shadowMapCube, -l).r + shadowsBias > lpToDepth(lp, lightPlane));')
+    else:
+        frag.write('int lightShadow = 0;')
 
     frag.add_include('../../Shaders/std/math.glsl')
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')

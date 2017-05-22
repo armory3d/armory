@@ -56,5 +56,5 @@ void main() {
 		// weight += doBlur(blurWeights[9], 9, nor, tc);
 	// }
 
-	fragColor.r /= weight; // SSAO only
+	fragColor = vec4(fragColor.r / weight); // SSAO only
 }

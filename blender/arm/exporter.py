@@ -2034,7 +2034,7 @@ class ArmoryExporter:
         # Export tangents
         if self.has_tangents(exportMesh):
             tanga_vals = self.calc_tangents(pa['values'], na['values'], ta['values'], o['index_arrays'][0]['values'])  
-            tanga = make_va('tang', 3, tanga_vals)
+            tanga = self.make_va('tang', 3, tanga_vals)
             o['vertex_arrays'].append(tanga)
 
         # Delete the new mesh that we made earlier

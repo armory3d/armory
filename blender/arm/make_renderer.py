@@ -136,6 +136,9 @@ def make_deferred(cam):
         links.remove(l)
         relink('Bind Target Transluc SM', 'Draw Meshes Transluc')
 
+    if cam.rp_volumetriclight:
+        links.new(nodes['Deferred Light'].outputs[0], nodes['Volumetric Light'].inputs[0])
+
     # if not cam.rp_decals:
         # relink('Set Target.005', 'SSAO')
 

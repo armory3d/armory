@@ -7,10 +7,12 @@ precision mediump float;
 
 #include "../compiled.glsl"
 #include "../std/gbuffer.glsl"
+#include "../std/shadows.glsl"
 
 uniform sampler2D gbufferD;
 #ifndef _NoShadows
-	uniform sampler2D shadowMap;
+	//!uniform sampler2D shadowMap;
+	//!uniform samplerCube shadowMapCube;
 #endif
 uniform sampler2D snoise;
 
@@ -22,6 +24,8 @@ uniform vec3 lightPos;
 uniform vec3 lightColor;
 uniform float lightRadius;
 uniform float shadowsBias;
+uniform int lightShadow;
+uniform vec2 lightPlane;
 
 in vec4 wvpposition;
 out vec4 fragColor;
@@ -55,10 +59,10 @@ void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatter
 	vec4 lampPos = LWVP * vec4(curPos, 1.0);
 	if (lampPos.w > 0.0) {
 		lampPos.xyz /= lampPos.w;
-		lampPos.xy = lampPos.xy * 0.5 + 0.5;
-		float distanceFromLight = texture(shadowMap, lampPos.xy).r * 2.0 - 1.0;
-		visibility = float(distanceFromLight > lampPos.z - shadowsBias);
+		visibility = float(texture(shadowMap, lampPos.xy).r > lampPos.z - shadowsBias);
 	}
+	// Cubemap
+	// visibility = float(texture(shadowMapCube, -l).r + shadowsBias > lpToDepth(lp, lightPlane));
 
 	scatteredLightAmount += curOpticalDepth * l1 * visibility;
 }
@@ -184,6 +188,5 @@ void main() {
 	// }
 
 	// curOpticalDepth
-	fragColor = vec4(scatteredLightAmount * lightColor.rgb * volumAirColor * volumAirTurbidity, 0.0);
-	// fragColor = vec4(scatteredLightAmount * lightColor.rgb * ((1.0 - depth) * 10.0), 0.0);
+	fragColor = vec4(vec3(scatteredLightAmount * volumAirColor * normalize(lightColor.rgb) * volumAirTurbidity), 0.0); // * ((1.0 - depth) * 10.0)
 }

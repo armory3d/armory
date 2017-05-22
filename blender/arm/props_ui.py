@@ -191,6 +191,8 @@ class DataPropsPanel(bpy.types.Panel):
                     layout.prop(obj.data, 'lamp_omni_shadows_cubemap')
                     if not obj.data.lamp_omni_shadows_cubemap:
                         layout.label('Warning: Will result in performance loss')
+                    else:
+                        layout.prop(bpy.data.worlds['Arm'], 'lamp_omni_shadows_cubemap_pcfsize')
         elif obj.type == 'SPEAKER':
             layout.prop(obj.data, 'loop')
             layout.prop(obj.data, 'stream')

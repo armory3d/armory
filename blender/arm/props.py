@@ -160,7 +160,7 @@ def init_properties():
     bpy.types.World.arm_lod_gen_ratio = FloatProperty(name="Decimate Ratio", description="Decimate ratio", default=0.8)
     bpy.types.World.arm_cache_shaders = BoolProperty(name="Cache Shaders", description="Do not rebuild existing shaders", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_cache_compiler = BoolProperty(name="Cache Compiler", description="Only recompile sources when required", default=False)
-    bpy.types.World.arm_gpu_processing = BoolProperty(name="GPU Processing", description="Utilize GPU for asset pre-processing at build time", default=True)
+    bpy.types.World.arm_gpu_processing = BoolProperty(name="GPU Processing", description="Utilize GPU for asset pre-processing at build time", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_play_live_patch = BoolProperty(name="Live Patching", description="Sync running player data to Blender", default=True)
     bpy.types.World.arm_play_auto_build = BoolProperty(name="Auto Build", description="Rebuild scene on operator changes", default=True)
     bpy.types.World.arm_play_viewport_camera = BoolProperty(name="Viewport Camera", description="Start player at viewport camera position", default=False)
@@ -540,6 +540,7 @@ def init_properties():
     bpy.types.Lamp.lamp_shadows_bias = bpy.props.FloatProperty(name="Bias", description="Depth offset for shadow acne", default=0.0001)
     bpy.types.Lamp.lamp_omni_shadows = bpy.props.BoolProperty(name="Omnidirectional Shadows", description="Draw shadows to all faces of the cube map", default=True)
     bpy.types.Lamp.lamp_omni_shadows_cubemap = bpy.props.BoolProperty(name="Cubemap Capture", description="Store shadowmap in a single cubemap", default=True)
+    bpy.types.World.lamp_omni_shadows_cubemap_pcfsize = bpy.props.FloatProperty(name="PCF Size", description="Filter size", default=0.001)
 
     if not 'Arm' in bpy.data.worlds:
         wrd = bpy.data.worlds.new('Arm')

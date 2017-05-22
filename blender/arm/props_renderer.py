@@ -121,6 +121,9 @@ def set_preset(self, context, preset):
         cam.rp_stereo = False
         cam.rp_greasepencil = False
         cam.rp_voxelgi = True
+        cam.rp_voxelgi_resolution[0] = 256
+        cam.rp_voxelgi_resolution[1] = 256
+        cam.rp_voxelgi_resolution[2] = 256
         cam.rp_render_to_texture = True
         cam.rp_supersampling = '2'
         cam.rp_antialiasing = 'TAA'

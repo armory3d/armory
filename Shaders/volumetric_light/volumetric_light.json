@@ -45,6 +45,14 @@
 				{
 					"name": "snoise",
 					"link": "_noise8"
+				},
+				{
+					"name": "lightPlane",
+					"link": "_lampPlane"
+				},
+				{
+					"name": "lightShadow",
+					"link": "_lampCastShadow"
 				}
 			],
 			"texture_params": [],
