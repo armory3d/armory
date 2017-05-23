@@ -290,7 +290,7 @@ class SSSPassNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Target Out")
         self.inputs.new('NodeSocketShader', "Color")
         self.inputs.new('NodeSocketShader', "GBufferD")
-        self.inputs.new('NodeSocketShader', "GBuffer0")
+        self.inputs.new('NodeSocketShader', "GBuffer1")
 
         self.outputs.new('NodeSocketShader', "Stage")
 

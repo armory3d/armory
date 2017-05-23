@@ -448,8 +448,8 @@ def make_taa_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['tex', 'tex2', 'sveloc'], shader_context='taa_pass/taa_pass/taa_pass')
 
 def make_sss_pass(stages, node_group, node):
-    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 4, 5], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='sss_pass/sss_pass/sss_pass_x')
-    make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[3, 4, 5], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='sss_pass/sss_pass/sss_pass_y')
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 4, 5], bind_target_constants=['tex', 'gbufferD', 'gbuffer1'], shader_context='sss_pass/sss_pass/sss_pass_x')
+    make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[3, 4, 5], bind_target_constants=['tex', 'gbufferD', 'gbuffer1'], shader_context='sss_pass/sss_pass/sss_pass_y')
 
 def make_water_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['tex', 'gbufferD'], shader_context='water_pass/water_pass/water_pass')
@@ -769,6 +769,9 @@ def traverse_renderpath(node, node_group, render_targets, depth_buffers):
             # bpy.data.worlds['Arm'].rp_defs += '_TAA'
     elif node.bl_idname == 'SMAAPassNodeType':
         bpy.data.worlds['Arm'].rp_defs += '_SMAA'
+
+    elif node.bl_idname == 'SSSPassNodeType':
+        bpy.data.worlds['Arm'].rp_defs += '_SSS'        
 
     elif node.bl_idname == 'SSAOPassNodeType' or node.bl_idname == 'ApplySSAOPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':
         if bpy.data.worlds['Arm'].generate_ssao: # SSAO enabled

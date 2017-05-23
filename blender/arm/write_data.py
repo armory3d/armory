@@ -383,6 +383,11 @@ const float voxelgiStep = """ + str(round(wrd.voxelgi_step * 100) / 100) + """;
 const float voxelgiRange = """ + str(round(wrd.voxelgi_range * 100) / 100) + """;
 """)
 
+        if bpy.data.cameras[0].rp_sss_state == 'On':
+            f.write(
+"""const float sssWidth = """ + str(wrd.sss_width / 10.0) + """;
+""")
+
         # Skinning
         if wrd.generate_gpu_skin:
             f.write(

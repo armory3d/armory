@@ -156,7 +156,10 @@ def make_deferred(cam):
         relink('Set Target Accum', 'Bloom')
 
     # if not cam.rp_bloom:
-    relink('Bloom', 'SSR')
+    relink('Bloom', 'SSS')
+
+    if not cam.rp_sss_state == 'On':
+        relink('SSS', 'SSR')
 
     if not cam.rp_ssr:
         relink('SSR', 'Draw Compositor')

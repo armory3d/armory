@@ -357,6 +357,10 @@ def init_properties():
                ('Off', 'Off', 'Off'), 
                ('Auto', 'Auto', 'Auto')],
         name="Overlays", description="X-Ray pass", default='Auto', update=update_overlays_state)
+    bpy.types.Camera.rp_sss_state = bpy.props.EnumProperty(
+        items=[('On', 'On', 'On'),
+               ('Off', 'Off', 'Off')],
+        name="SSS", description="Sub-surface scattering pass", default='Off', update=update_renderpath)
     bpy.types.Camera.rp_stereo = bpy.props.BoolProperty(name="Stereo", description="Stereo rendering", default=False, update=update_renderpath)
     bpy.types.Camera.rp_greasepencil = bpy.props.BoolProperty(name="Grease Pencil", description="Render Grease Pencil data", default=False, update=update_renderpath)
     bpy.types.Camera.rp_voxelgi = bpy.props.BoolProperty(name="Voxel GI", description="Voxel-based Global Illumination", default=False, update=update_renderpath)
@@ -370,6 +374,7 @@ def init_properties():
     bpy.types.World.voxelgi_env = bpy.props.FloatProperty(name="Env Map", description="Contribute light from environment map", default=0.0, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi_step = bpy.props.FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi_range = bpy.props.FloatProperty(name="Range", description="Maximum range", default=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.sss_width = bpy.props.FloatProperty(name="SSS Width", description="SSS blur strength", default=1.0, update=assets.invalidate_shader_cache)
 
     # For world
     bpy.types.World.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')

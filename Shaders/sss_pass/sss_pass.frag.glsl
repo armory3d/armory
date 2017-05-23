@@ -1,37 +1,37 @@
-/**
- * Copyright (C) 2012 Jorge Jimenez (jorge@iryoku.com)
- * Copyright (C) 2012 Diego Gutierrez (diegog@unizar.es)
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- * 
- *    1. Redistributions of source code must retain the above copyright notice,
- *       this list of conditions and the following disclaimer.
- *
- *    2. Redistributions in binary form must reproduce the following disclaimer
- *       in the documentation and/or other materials provided with the 
- *       distribution:
- *
- *       "Uses Separable SSS. Copyright (C) 2012 by Jorge Jimenez and Diego
- *        Gutierrez."
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS 
- * IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, 
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR 
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDERS OR CONTRIBUTORS 
- * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
- * POSSIBILITY OF SUCH DAMAGE.
- *
- * The views and conclusions contained in the software and documentation are 
- * those of the authors and should not be interpreted as representing official
- * policies, either expressed or implied, of the copyright holders.
- */
+//
+// Copyright (C) 2012 Jorge Jimenez (jorge@iryoku.com)
+// Copyright (C) 2012 Diego Gutierrez (diegog@unizar.es)
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+//    1. Redistributions of source code must retain the above copyright notice,
+//       this list of conditions and the following disclaimer.
+//
+//    2. Redistributions in binary form must reproduce the following disclaimer
+//       in the documentation and/or other materials provided with the 
+//       distribution:
+//
+//       "Uses Separable SSS. Copyright (C) 2012 by Jorge Jimenez and Diego
+//        Gutierrez."
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS 
+// IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, 
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR 
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDERS OR CONTRIBUTORS 
+// BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// The views and conclusions contained in the software and documentation are 
+// those of the authors and should not be interpreted as representing official
+// policies, either expressed or implied, of the copyright holders.
+//
 
 #version 450
 
@@ -42,7 +42,7 @@ precision mediump float;
 #include "../compiled.glsl"
 
 uniform sampler2D gbufferD;
-uniform sampler2D gbuffer0;
+uniform sampler2D gbuffer1;
 uniform sampler2D tex;
 
 uniform vec2 dir;
@@ -53,7 +53,8 @@ out vec4 fragColor;
 const float SSSS_FOVY = 45.0;
 
 // Separable SSS Reflectance
-vec4 SSSSBlur(float sssWidth) {
+// const float sssWidth = 0.005;
+vec4 SSSSBlur() {
 	// Quality = 0
 	const int SSSS_N_SAMPLES  = 11;
 	vec4 kernel[SSSS_N_SAMPLES];		
@@ -76,12 +77,10 @@ vec4 SSSSBlur(float sssWidth) {
 		// if (SSSS_STREGTH_SOURCE == 0.0) discard;
 
 	// Fetch linear depth of current pixel
-	// vec4 g0 = texture(gbuffer0, texCoord);
-	// float depth = 1.0 - g0.a;
-	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+	float depth = texture(gbufferD, texCoord).r;
 	const float projectionA = cameraPlane.y / (cameraPlane.y - cameraPlane.x);
 	const float projectionB = (-cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
-	float depthM = projectionB / (depth * 0.5 + 0.5 - projectionA);
+	float depthM = projectionB / (depth - projectionA);
 
 	// Calculate the sssWidth scale (1.0 for a unit plane sitting on the projection window)
 	float distanceToProjectionWindow = 1.0 / tan(0.5 * radians(SSSS_FOVY));
@@ -89,7 +88,7 @@ vec4 SSSSBlur(float sssWidth) {
 
 	// Calculate the final step to fetch the surrounding pixels
 	vec2 finalStep = sssWidth * scale * dir;
-	finalStep *= 1.0;//SSSS_STREGTH_SOURCE; // Modulate it using the alpha channel.
+	// finalStep *= 1.0;//SSSS_STREGTH_SOURCE; // Modulate it using the alpha channel.
 	finalStep *= 1.0 / 3.0; // Divide by 3 as the kernels range from -3 to 3.
 
 	// Accumulate the center sample:
@@ -154,8 +153,8 @@ vec4 SSSSBlur(float sssWidth) {
 
 void main() {
 	// SSS only masked objects
-	if (texture(gbuffer0, texCoord).a == 2.0) {
-		fragColor = SSSSBlur(0.005);
+	if (floor(texture(gbuffer1, texCoord).a) == 2) {
+		fragColor = clamp(SSSSBlur(), 0.0, 1.0);
 	}
 	else {
 		fragColor = texture(tex, texCoord);

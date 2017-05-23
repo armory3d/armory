@@ -1,5 +1,6 @@
 import bpy
 import arm.utils
+import arm.nodes
 import arm.material.make_shader as make_shader
 import arm.material.mat_batch as mat_batch
 import arm.material.mat_state as mat_state
@@ -43,6 +44,14 @@ def parse(material, mat_data, mat_users, mat_armusers, rid):
             const['name'] = 'receiveShadow'
             const['bool'] = material.receive_shadow
             c['bind_constants'].append(const)
+
+            if bpy.data.cameras[0].rp_sss_state == 'On':
+                sss_node = arm.nodes.get_node_by_type(material.node_tree, 'SUBSURFACE_SCATTERING')
+                if sss_node != None and sss_node.outputs[0].is_linked: # Check linked node
+                    const = {}
+                    const['name'] = 'materialID'
+                    const['int'] = 2
+                    c['bind_constants'].append(const)
 
             # TODO: Mesh only material batching
             if wrd.arm_batch_materials:

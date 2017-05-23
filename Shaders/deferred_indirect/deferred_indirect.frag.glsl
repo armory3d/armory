@@ -49,7 +49,7 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 void main() {
-	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, occlusion
+	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, depth
 	
 	vec3 n;
 	n.z = 1.0 - abs(g0.x) - abs(g0.y);
@@ -119,7 +119,11 @@ void main() {
 	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
 #endif
 
+#ifdef _SSS
+	envl.rgb *= envmapStrength * fract(g1.a);
+#else
 	envl.rgb *= envmapStrength * g1.a; // Occlusion
+#endif
 
 #ifdef _SSAO
 	envl.rgb *= texture(ssaotex, texCoord).r; // SSAO

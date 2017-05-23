@@ -289,8 +289,11 @@ def parse_shader(node, socket):
         pass
 
     elif node.type == 'SUBSURFACE_SCATTERING':
-        # write_normal(node.inputs[4])
-        pass
+        if parse_surface:
+            write_normal(node.inputs[4])
+            parsing_basecolor(True)
+            out_basecol = parse_vector_input(node.inputs[0])
+            parsing_basecolor(False)
 
     elif node.type == 'BSDF_TOON':
         # write_normal(node.inputs[3])

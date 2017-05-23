@@ -245,6 +245,9 @@ class GenRPDataPropsPanel(bpy.types.Panel):
             layout.prop(dat, "rp_translucency_state")
             layout.prop(dat, "rp_overlays_state")
             layout.prop(dat, "rp_decals_state")
+            layout.prop(dat, "rp_sss_state")
+            if dat.rp_sss_state == 'On':
+                layout.prop(wrd, 'sss_width')
             layout.prop(dat, "rp_hdr")
             layout.prop(dat, "rp_worldnodes")
             if not dat.rp_worldnodes:

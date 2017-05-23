@@ -237,7 +237,11 @@ def make_deferred(con_mesh):
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
     # TODO: store_depth
     frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - gl_FragCoord.z);')
-    frag.write('fragColor[1] = vec4(basecol.rgb, occlusion);')
+    if '_SSS' in wrd.rp_defs:
+        frag.add_uniform('int materialID')
+        frag.write('fragColor[1] = vec4(basecol.rgb, materialID + clamp(occlusion, 0.0, 1.0 - 0.001));')
+    else:
+        frag.write('fragColor[1] = vec4(basecol.rgb, occlusion);')
 
     if '_Veloc' in wrd.rp_defs:
         frag.write('vec2 posa = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')

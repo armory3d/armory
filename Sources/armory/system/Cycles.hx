@@ -697,9 +697,13 @@ class Cycles {
 		//     # write_normal(node.inputs[3])
 		//     pass
 
-		// elif node.type == 'SUBSURFACE_SCATTERING':
-		//     # write_normal(node.inputs[4])
-		//     pass
+		else if (node.type == 'SUBSURFACE_SCATTERING') {
+		    //if parse_surface:
+			write_normal(node.inputs[4]);
+			parsing_basecol = true;
+			sout.out_basecol = parse_vector_input(node.inputs[0]);
+			parsing_basecol = false;
+		}
 
 		// elif node.type == 'BSDF_TOON':
 		//     # write_normal(node.inputs[3])
