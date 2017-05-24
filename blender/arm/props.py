@@ -510,7 +510,8 @@ def init_properties():
     bpy.types.Material.export_tangents = bpy.props.BoolProperty(name="Export Tangents", default=False)
     bpy.types.Material.vertex_structure = bpy.props.StringProperty(name="Vertex Structure", default='')
     bpy.types.Material.skip_context = bpy.props.StringProperty(name="Skip Context", default='')
-    bpy.types.Material.overlay = bpy.props.BoolProperty(name="X-Ray", default=False)
+    bpy.types.Material.overlay = bpy.props.BoolProperty(name="Overlay", default=False)
+    bpy.types.Material.decal = bpy.props.BoolProperty(name="Decal", default=False)
     bpy.types.Material.override_cull = bpy.props.BoolProperty(name="Override Cull-Mode", default=False)
     bpy.types.Material.override_cull_mode = EnumProperty(
         items = [('none', 'None', 'None'),

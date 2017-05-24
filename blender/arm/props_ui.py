@@ -290,6 +290,7 @@ class MaterialPropsPanel(bpy.types.Panel):
         layout.prop(bpy.data.worlds['Arm'], 'arm_material_advanced')
         if bpy.data.worlds['Arm'].arm_material_advanced:
             layout.prop(mat, 'overlay')
+            layout.prop(mat, 'decal')
             layout.prop(mat, 'override_cull')
             if mat.override_cull:
                 layout.prop(mat, 'override_cull_mode')

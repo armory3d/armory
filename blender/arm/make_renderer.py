@@ -139,8 +139,8 @@ def make_deferred(cam):
     if cam.rp_volumetriclight:
         links.new(nodes['Deferred Light'].outputs[0], nodes['Volumetric Light'].inputs[0])
 
-    # if not cam.rp_decals:
-        # relink('Set Target.005', 'SSAO')
+    if not cam.rp_decals:
+        relink('Set Target Decal', 'SSAO')
 
     if not cam.rp_ssao:
         relink('SSAO', 'Deferred Indirect')        

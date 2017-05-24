@@ -32,12 +32,13 @@ NodeTypeMesh = 2
 NodeTypeLamp = 3
 NodeTypeCamera = 4
 NodeTypeSpeaker = 5
+NodeTypeDecal = 6
 AnimationTypeSampled = 0
 AnimationTypeLinear = 1
 AnimationTypeBezier = 2
 ExportEpsilon = 1.0e-6
 
-structIdentifier = ["object", "bone_object", "mesh_object", "lamp_object", "camera_object", "speaker_object"]
+structIdentifier = ["object", "bone_object", "mesh_object", "lamp_object", "camera_object", "speaker_object", "decal_object"]
 
 subtranslationName = ["xloc", "yloc", "zloc"]
 subrotationName = ["xrot", "yrot", "zrot"]
@@ -1295,6 +1296,8 @@ class ArmoryExporter:
                         o['material_refs'].append(bobject.override_material_name)
                     else: # Export assigned material
                         self.export_material_ref(bobject, bobject.material_slots[i].material, i, o)
+                        if bobject.material_slots[i].material.decal:
+                            o['type'] = 'decal_object'
                 # No material, mimic cycles and assign default
                 if len(o['material_refs']) == 0:
                     self.use_default_material(bobject, o)
@@ -2417,7 +2420,6 @@ class ArmoryExporter:
         self.defaultSkinMaterialObjects = []
         self.materialToArmObjectDict = dict()
         self.objectToArmObjectDict = dict()
-        self.uvprojectUsersArray = [] # For processing decals
         self.active_layers = []
         for i in range(0, len(self.scene.layers)):
             if self.scene.layers[i] == True:
@@ -2523,8 +2525,6 @@ class ArmoryExporter:
         
         if not self.camera_spawned:
             log.warn('No camera found in active scene layers')
-
-        self.postprocess()
 
         if self.restoreFrame:
             self.scene.frame_set(originalFrame, originalSubframe)
@@ -2671,23 +2671,8 @@ class ArmoryExporter:
                 wrd.generate_ocean = True
                 # Take position and bounds
                 wrd.generate_ocean_level = bobject.location.z
-            elif m.type == 'UV_PROJECT' and m.show_render:
-                self.uvprojectUsersArray.append(bobject)
                 
         return export_object
-
-    def postprocess(self):
-        # Check uv project users
-        for bobject in self.uvprojectUsersArray:
-            for m in bobject.modifiers:
-                if m.type == 'UV_PROJECT':
-                    # Mark all projectors as decals
-                    for pnode in m.projectors:
-                        o = self.objectToArmObjectDict[bobject]
-                        po = self.objectToArmObjectDict[pnode.object]
-                        po['type'] = 'decal_object'
-                        po['material_refs'] = [o['material_refs'][0] + '_decal'] # Will fetch a proper context used in render path
-                    break
 
     def post_export_object(self, bobject, o, type):
         # Animation setup

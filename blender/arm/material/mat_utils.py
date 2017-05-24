@@ -25,10 +25,9 @@ def get_rpasses(material):
     # if material.depthpass:
         # ar.append('depth')
 
-    # if material.decal:
-        # ar.append('decal')
-        
-    if material.overlay:
+    if material.decal:
+        ar.append('decal')
+    elif material.overlay:
         ar.append('overlay')
     elif is_transluc(material):
         ar.append('translucent')

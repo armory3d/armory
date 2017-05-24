@@ -17,6 +17,8 @@
 import arm.material.cycles_functions as c_functions
 import arm.material.cycles_state as c_state
 
+basecol_texname = ''
+
 def parse(nodes, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
     if output_node != None:
@@ -37,6 +39,7 @@ def parse_output(node, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse
     global parsing_basecol
     global parse_teximage_vector
     global basecol_only
+    global basecol_texname
     vert = _vert
     frag = _frag
     geom = _geom
@@ -47,6 +50,7 @@ def parse_output(node, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse
     parsing_basecol = False
     parse_teximage_vector = True
     basecol_only = _basecol_only
+    basecol_texname = ''
 
     # Surface
     if parse_surface or parse_opacity:
@@ -679,6 +683,8 @@ def store_var_name(node):
 
 def texture_store(node, tex, tex_name, to_linear=False):
     global parse_teximage_vector
+    global parsing_basecol
+    global basecol_texname
     c_state.mat_bind_texture(tex)
     c_state.mat_add_elem('tex', 2)
     curshader.add_uniform('sampler2D {0}'.format(tex_name))
@@ -693,6 +699,8 @@ def texture_store(node, tex, tex_name, to_linear=False):
         curshader.write('vec4 {0} = texture({1}, {2}.xy);'.format(tex_store, tex_name, uv_name))
     if to_linear:
         curshader.write('{0}.rgb = pow({0}.rgb, vec3(2.2));'.format(tex_store))
+    if parsing_basecol:
+        basecol_texname = tex_store
     return tex_store
 
 def parse_vector(node, socket):
@@ -848,7 +856,7 @@ def parse_normal_map_color_input(inp, str_inp=None):
     frag.write_pre = True
     parse_teximage_vector = False # Force texCoord for normal map image vector
     defplus = c_state.get_rp_renderer() == 'Deferred Plus'
-    if not c_state.get_arm_export_tangents() or defplus: # Compute TBN matrix
+    if not c_state.get_arm_export_tangents() or defplus or c_state.mat_get_material().decal: # Compute TBN matrix
         frag.write('vec3 texn = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
         frag.add_include('../../Shaders/std/normals.glsl')
         if defplus:

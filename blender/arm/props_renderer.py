@@ -26,6 +26,7 @@ def set_preset(self, context, preset):
         cam.rp_translucency_state = 'Off'
         cam.rp_overlays_state = 'Off'
         cam.rp_decals_state = 'Off'
+        cam.rp_sss_state = 'Off'
         cam.rp_hdr = False
         cam.rp_worldnodes = False
         cam.rp_clearbackground = True
@@ -49,6 +50,7 @@ def set_preset(self, context, preset):
         cam.rp_translucency_state = 'Auto'
         cam.rp_overlays_state = 'Auto'
         cam.rp_decals_state = 'Auto'
+        cam.rp_sss_state = 'Off'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
         cam.rp_clearbackground = False
@@ -71,6 +73,7 @@ def set_preset(self, context, preset):
         cam.rp_translucency_state = 'Auto'
         cam.rp_overlays_state = 'Auto'
         cam.rp_decals_state = 'Auto'
+        cam.rp_sss_state = 'Off'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
         cam.rp_clearbackground = False
@@ -93,6 +96,7 @@ def set_preset(self, context, preset):
         cam.rp_translucency_state = 'Auto'
         cam.rp_overlays_state = 'Auto'
         cam.rp_decals_state = 'Auto'
+        cam.rp_sss_state = 'Off'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
         cam.rp_clearbackground = False
@@ -115,6 +119,7 @@ def set_preset(self, context, preset):
         cam.rp_translucency_state = 'Auto'
         cam.rp_overlays_state = 'Auto'
         cam.rp_decals_state = 'Auto'
+        cam.rp_sss_state = 'Off'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
         cam.rp_clearbackground = False
@@ -142,6 +147,7 @@ def set_preset(self, context, preset):
         cam.rp_translucency_state = 'Auto'
         cam.rp_overlays_state = 'Auto'
         cam.rp_decals_state = 'Auto'
+        cam.rp_sss_state = 'Off'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
         cam.rp_clearbackground = False
@@ -165,6 +171,7 @@ def set_preset(self, context, preset):
         cam.rp_translucency_state = 'Off'
         cam.rp_overlays_state = 'Off'
         cam.rp_decals_state = 'Off'
+        cam.rp_sss_state = 'Off'
         cam.rp_hdr = False
         cam.rp_worldnodes = False
         cam.rp_clearbackground = True
@@ -188,6 +195,7 @@ def set_preset(self, context, preset):
         cam.rp_translucency_state = 'Off'
         cam.rp_overlays_state = 'Off'
         cam.rp_decals_state = 'Off'
+        cam.rp_sss_state = 'Off'
         cam.rp_hdr = False
         cam.rp_worldnodes = False
         cam.rp_clearbackground = True
