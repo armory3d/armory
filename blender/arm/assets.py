@@ -53,10 +53,6 @@ def add_shader(file):
     if file not in shaders:
         shaders.append(file)
 
-        wrd = bpy.data.worlds['Arm']
-        if not wrd.arm_recompile_trigger and file not in shaders_last:
-            wrd.arm_recompile_trigger = True
-
 def add_shader_data(file):
     global shader_datas
     if file not in shader_datas:

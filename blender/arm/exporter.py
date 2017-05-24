@@ -2068,6 +2068,8 @@ class ArmoryExporter:
 
         o['cast_shadow'] = objref.cycles.cast_shadow
         o['near_plane'] = objref.lamp_clip_start
+        if (o['near_plane'] <= 0.11 and o['type'] == 'point'):
+            o['near_plane'] /= 10 # Prevent acne on close surfaces
         o['far_plane'] = objref.lamp_clip_end
         o['fov'] = objref.lamp_fov
         o['shadows_bias'] = objref.lamp_shadows_bias

@@ -11,6 +11,7 @@ import arm.make as make
 import arm.make_state as state
 import arm.space_armory as space_armory
 import arm.make_renderer as make_renderer
+import arm.assets as assets
 try:
     import barmory
 except ImportError:
@@ -77,7 +78,9 @@ def on_scene_update_post(context):
        operators_changed:
         # Otherwise rebuild scene
         if bridge.send_operator(last_operator) == False:
+            assets.invalidate_enabled = False
             make.play_project(in_viewport=True)
+            assets.invalidate_enabled = True
 
     # Use frame rate for update frequency for now
     fps_mult = 2.0 if (state.krom_running and arm.utils.get_os() == 'win') else 1.0 # Handlers called less frequently on Windows?
@@ -177,6 +180,8 @@ def on_load_post(context):
     make_renderer.reload_blend_data()
 
     wrd = bpy.data.worlds['Arm']
+    wrd.arm_recompile = True
+
     for lib in wrd.my_librarytraitlist:
         if lib.enabled_prop:
             fp = arm.utils.get_fp() + '/Libraries/' + lib.name

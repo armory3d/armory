@@ -62,46 +62,45 @@ def update_mat_cache(self, context):
     if self.is_cached == True:
         self.lock_cache = True
     else:
-        bpy.data.worlds['Arm'].arm_recompile_trigger = True
+        pass
 
 def update_gapi_win(self, context):
     if os.path.isdir(arm.utils.get_fp_build() + '/windows-build'):
         shutil.rmtree(arm.utils.get_fp_build() + '/windows-build')
-    bpy.data.worlds['Arm'].arm_recompile_trigger = True
+    bpy.data.worlds['Arm'].arm_recompile = True
     assets.invalidate_compiled_data(self, context)
 
 def update_gapi_linux(self, context):
     if os.path.isdir(arm.utils.get_fp_build() + '/linux-build'):
         shutil.rmtree(arm.utils.get_fp_build() + '/linux-build')
-    bpy.data.worlds['Arm'].arm_recompile_trigger = True
+    bpy.data.worlds['Arm'].arm_recompile = True
     assets.invalidate_compiled_data(self, context)
 
 def update_gapi_mac(self, context):
     if os.path.isdir(arm.utils.get_fp_build() + '/osx-build'):
         shutil.rmtree(arm.utils.get_fp_build() + '/osx-build')
-    bpy.data.worlds['Arm'].arm_recompile_trigger = True
+    bpy.data.worlds['Arm'].arm_recompile = True
     assets.invalidate_compiled_data(self, context)
 
 def update_gapi_android(self, context):
     if os.path.isdir(arm.utils.get_fp_build() + '/android-build'):
         shutil.rmtree(arm.utils.get_fp_build() + '/android-build')
-    bpy.data.worlds['Arm'].arm_recompile_trigger = True
+    bpy.data.worlds['Arm'].arm_recompile = True
     assets.invalidate_compiled_data(self, context)
 
 def update_gapi_ios(self, context):
     if os.path.isdir(arm.utils.get_fp_build() + '/ios-build'):
         shutil.rmtree(arm.utils.get_fp_build() + '/ios-build')
-    bpy.data.worlds['Arm'].arm_recompile_trigger = True
+    bpy.data.worlds['Arm'].arm_recompile = True
     assets.invalidate_compiled_data(self, context)
 
 def update_gapi_html5(self, context):
-    bpy.data.worlds['Arm'].arm_recompile_trigger = True
+    bpy.data.worlds['Arm'].arm_recompile = True
     assets.invalidate_compiled_data(self, context)
 
 def init_properties():
     global arm_version
     bpy.types.World.arm_recompile = bpy.props.BoolProperty(name="Recompile", description="Recompile sources on next play", default=True)
-    bpy.types.World.arm_recompile_trigger = bpy.props.BoolProperty(name="Recompile Trigger", description="Force upcoming recomilation", default=False)
     bpy.types.World.arm_progress = bpy.props.FloatProperty(name="Progress", description="Current build progress", default=100.0, min=0.0, max=100.0, soft_min=0.0, soft_max=100.0, subtype='PERCENTAGE', get=log.get_progress)
     bpy.types.World.arm_version = StringProperty(name="Version", description="Armory SDK version", default="")
     bpy.types.World.arm_project_target = EnumProperty(
@@ -159,7 +158,7 @@ def init_properties():
     bpy.types.World.arm_lod_gen_levels = IntProperty(name="Levels", description="Number of levels to generate", default=3, min=1)
     bpy.types.World.arm_lod_gen_ratio = FloatProperty(name="Decimate Ratio", description="Decimate ratio", default=0.8)
     bpy.types.World.arm_cache_shaders = BoolProperty(name="Cache Shaders", description="Do not rebuild existing shaders", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_cache_compiler = BoolProperty(name="Cache Compiler", description="Only recompile sources when required", default=False)
+    bpy.types.World.arm_cache_compiler = BoolProperty(name="Cache Compiler", description="Only recompile sources when required", default=True)
     bpy.types.World.arm_gpu_processing = BoolProperty(name="GPU Processing", description="Utilize GPU for asset pre-processing at build time", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_play_live_patch = BoolProperty(name="Live Patching", description="Sync running player data to Blender", default=True)
     bpy.types.World.arm_play_auto_build = BoolProperty(name="Auto Build", description="Rebuild scene on operator changes", default=True)

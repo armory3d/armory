@@ -92,6 +92,10 @@ project.addSources('Sources');
         if dce_full:
             f.write("project.addParameter('-dce full');")
 
+        if wrd.arm_cache_compiler and (is_play or (state.target == 'html5' and not is_publish)):
+            # Load shaders manually
+            f.write("project.addDefine('arm_debug');\n")
+
         for ref in shader_references:
             f.write("project.addShaders('" + ref + "');\n")
 

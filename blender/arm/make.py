@@ -178,10 +178,9 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
 
     if patch:
         if state.compileproc == None:
-            # Quick build - disable krafix and haxe
             cmd.append('--nohaxe')
-            cmd.append('--noshaders')
             cmd.append('--noproject')
+            # cmd.append('--noshaders')
             state.compileproc = subprocess.Popen(cmd, stderr=subprocess.PIPE)
             if state.playproc == None:
                 if state.in_viewport:
@@ -319,7 +318,6 @@ def watch_compile(mode):
 def watch_patch(mode):
     state.compileproc.wait()
     log.print_progress(100)
-    # result = state.compileproc.poll()
     state.compileproc = None
     state.compileproc_finished = True
     on_compiled(mode)
@@ -335,11 +333,11 @@ def runtime_to_target(in_viewport):
 
 def get_khajs_path(in_viewport, target):
     if in_viewport:
-        return arm.utils.build_dir() + '/build/krom/krom.js'
+        return arm.utils.build_dir() + '/krom/krom.js'
     elif target == 'krom':
         return arm.utils.build_dir() + '/window/krom/krom.js'
     else: # browser, electron
-        return arm.utils.build_dir() + '/build/html5/kha.js'
+        return arm.utils.build_dir() + '/html5/kha.js'
 
 def play_project(in_viewport):
     global scripts_mtime
@@ -358,16 +356,13 @@ def play_project(in_viewport):
     state.in_viewport = in_viewport
 
     khajs_path = get_khajs_path(in_viewport, state.target)
-    if wrd.arm_recompile or \
-       wrd.arm_recompile_trigger or \
-       not wrd.arm_cache_compiler or \
-       not wrd.arm_cache_shaders or \
+    if not wrd.arm_cache_compiler or \
        not os.path.isfile(khajs_path) or \
        state.last_target != state.target or \
-       state.last_in_viewport != state.in_viewport:
+       state.last_in_viewport != state.in_viewport or \
+       state.target == 'native':
         wrd.arm_recompile = True
 
-    wrd.arm_recompile_trigger = False
     state.last_target = state.target
     state.last_in_viewport = state.in_viewport
 
@@ -380,15 +375,11 @@ def play_project(in_viewport):
                 scripts_mtime = mtime
                 wrd.arm_recompile = True
 
-    if state.krom_running: # TODO: Temp live-patch fix till compiler cache is disabled
-        compile_project(target_name=state.target, patch=True)
-    # New compile requred - traits or materials changed
-    elif wrd.arm_recompile or state.target == 'native':
-
+    # New compile requred - traits changed
+    if wrd.arm_recompile:
         # Unable to live-patch, stop player
         if state.krom_running:
             bpy.ops.arm.space_stop('EXEC_DEFAULT')
-            # play_project(in_viewport=True) # Restart
             return
 
         mode = 'play'
