@@ -23,7 +23,7 @@ class SpaceArmory extends Trait {
 
 #if js
 	static var patchTime = 0.0;
-	static var lastMtime:Dynamic;
+	static var lastMtime:Dynamic = null;
 	static var lastSize:Dynamic;
 #end
 
@@ -43,7 +43,7 @@ class SpaceArmory extends Trait {
 
 		if (first) {
 			first = false;
-			#if (js && webgl)
+			#if (js && kha_webgl)
 			electronRenderCapture();
 			#end
 		}
@@ -103,9 +103,35 @@ class SpaceArmory extends Trait {
 		// 	if (moveX) trace('__arm|setx|' + selected.object.name + '|' + selected.loc.x);
 		// 	moveX = moveY = moveZ = false;
 		// }
+
+		#if (js && kha_webgl)
+		time += iron.system.Time.delta;
+		if (time > 1.0) {
+			time = 0;
+			reloadOnUpdate();
+		}
+		#end
+	}
+	var time = 0.0;
+
+#if (js && kha_webgl)
+	function reloadOnUpdate() {
+		// Reload page on kha.js rewrite
+		var khaPath = "kha.js";
+		var xhr = new js.html.XMLHttpRequest();
+		xhr.open('HEAD', khaPath, true); 
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState == 4 && xhr.status == 200) {
+				var mtime = xhr.getResponseHeader('Last-Modified');
+				if (lastMtime != null && mtime.toString() != lastMtime) {
+					untyped __js__('window.location.reload(true)');
+				}
+				lastMtime = mtime;
+			}
+		}
+		xhr.send();
 	}
 
-#if (js && webgl)
 	public static function getRenderResult():js.html.Uint8Array {
 		var gl = kha.SystemImpl.gl;
 		var w = gl.drawingBufferWidth;

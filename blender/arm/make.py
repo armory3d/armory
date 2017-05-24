@@ -265,6 +265,15 @@ def build_project(is_play=False, is_publish=False, in_viewport=False, target=Non
     # Export data
     export_data(fp, sdk_path, is_play=is_play, is_publish=is_publish, in_viewport=in_viewport)
 
+    if state.target == 'html5':
+        w, h = arm.utils.get_render_resolution(arm.utils.get_active_scene())
+        write_data.write_electronjs(w, h)
+        write_data.write_indexhtml(w, h)
+        # Bundle files from include dir
+        if os.path.isdir('include'):
+            for fn in glob.iglob(os.path.join('include', '**'), recursive=False):
+                shutil.copy(fn, arm.utils.build_dir() + '/html5/' + os.path.basename(fn))
+
     if state.playproc == None:
         log.print_progress(50)
 
@@ -390,9 +399,6 @@ def play_project(in_viewport):
                 mode = 'play_viewport'
             state.compileproc = compile_project(target_name='krom')
         else: # Electron, Browser
-            w, h = arm.utils.get_render_resolution(arm.utils.get_active_scene())
-            write_data.write_electronjs(w, h)
-            write_data.write_indexhtml(w, h)
             state.compileproc = compile_project(target_name='html5')
         threading.Timer(0.1, watch_compile, [mode]).start()
     else: # kha.js up to date

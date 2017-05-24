@@ -189,7 +189,7 @@ class Main {
         f.write("""
                 iron.Scene.setActive(projectScene, function(object:iron.object.Object) {""")
         # if arm.utils.with_krom() and in_viewport and is_play:
-        if is_play:
+        if is_play or (state.target == 'html5' and not is_publish):
             f.write("""
                     object.addTrait(new armory.trait.internal.SpaceArmory());""")
         f.write("""
