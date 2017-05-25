@@ -42,9 +42,6 @@ let project = new Project('""" + arm.utils.safestr(wrd.arm_project_name) + """')
 project.addSources('Sources');
 """)
 
-        # TODO: Move to khamake
-        f.write("project.addDefine('arm_" + arm.utils.get_gapi() + "');\n")
-
         # TODO: Khamake bug workaround - assets & shaders located in folder starting with '.' get discarded - copy them to project
         check_dot_path = False
         if '/.' in sdk_path:
@@ -74,7 +71,7 @@ project.addSources('Sources');
                 f.write('project.addLibrary("{0}");\n'.format(lib.name))
         
         if export_physics:
-            f.write("project.addDefine('arm_physics');\n")
+            assets.add_khafile_def('arm_physics')
             f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
             if state.target == 'krom' or state.target == 'html5':
                 ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
@@ -82,7 +79,7 @@ project.addSources('Sources');
                 f.write(add_assets(ammojs_path))
 
         if export_navigation:
-            f.write("project.addDefine('arm_navigation');\n")
+            assets.add_khafile_def('arm_navigation')
             f.write(add_armory_library(sdk_path + '/lib/', 'haxerecast'))
             if state.target == 'krom' or state.target == 'html5':
                 recastjs_path = sdk_path + '/lib/haxerecast/js/recast/recast.js'
@@ -94,7 +91,7 @@ project.addSources('Sources');
 
         if wrd.arm_cache_compiler and (is_play or (state.target == 'html5' and not is_publish)):
             # Load shaders manually
-            f.write("project.addDefine('arm_debug');\n")
+            assets.add_khafile_def('arm_debug')
 
         for ref in shader_references:
             f.write("project.addShaders('" + ref + "');\n")
@@ -108,7 +105,7 @@ project.addSources('Sources');
             f.write(add_assets(ref))
 
         if wrd.arm_play_console:
-            f.write("project.addDefine('arm_profile');\n")
+            assets.add_khafile_def('arm_profile')
 
         if wrd.arm_play_console or wrd.arm_ui:
             f.write(add_armory_library(sdk_path, 'lib/zui'))
@@ -119,19 +116,19 @@ project.addSources('Sources');
             f.write(add_armory_library(sdk_path, 'lib/hscript'))
 
         if wrd.arm_minimize == False:
-            f.write("project.addDefine('arm_json');\n")
+            assets.add_khafile_def('arm_json')
         
         if wrd.arm_deinterleaved_buffers == True:
-            f.write("project.addDefine('arm_deinterleaved');\n")
+            assets.add_khafile_def('arm_deinterleaved')
 
         if wrd.arm_batch_meshes == True:
-            f.write("project.addDefine('arm_batch');\n")
+            assets.add_khafile_def('arm_batch')
 
         if wrd.arm_stream_scene:
-            f.write("project.addDefine('arm_stream');\n")
+            assets.add_khafile_def('arm_stream')
 
         if wrd.generate_gpu_skin == False:
-            f.write("project.addDefine('arm_cpu_skin');\n")
+            assets.add_khafile_def('arm_cpu_skin')
 
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")

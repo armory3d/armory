@@ -39,9 +39,6 @@ def mat_name():
 def mat_batch():
     return mat_state.batch
 
-def mat_add_elem(name, size):
-    mat_state.data.add_elem(name, size)
-
 def mat_bind_texture(tex):
     mat_state.bind_textures.append(tex)
 

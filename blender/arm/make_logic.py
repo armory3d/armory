@@ -31,8 +31,12 @@ def build_node_tree(node_group):
     pack_path = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
     path = 'Sources/' + pack_path.replace('.', '/') + '/node/'
     group_name = arm.utils.safesrc(node_group.name)
+    file = path + group_name + '.hx'
 
-    with open(path + group_name + '.hx', 'w') as f:
+    if node_group.is_cached and os.path.isfile(file):
+        return
+
+    with open(file, 'w') as f:
         f.write('package ' + pack_path + '.node;\n\n')
         f.write('import armory.logicnode.*;\n\n')
         f.write('@:keep class ' + group_name + ' extends armory.logicnode.LogicTree {\n\n')
@@ -42,6 +46,7 @@ def build_node_tree(node_group):
             build_node(node, f)
         f.write('\t}\n')
         f.write('}\n')
+    node_group.is_cached = True
 
 def build_node(node, f):
     global parsed_nodes

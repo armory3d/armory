@@ -88,7 +88,7 @@ class Shader:
         out_ext = ''
 
         if self.shader_type == 'vert' and self.vertex_structure_as_vsinput: # Vertex structure as vertex shader input
-            vs = self.context.shader_data['vertex_structure']
+            vs = self.context.data['vertex_structure']
             for e in vs:
                 self.add_in('vec' + str(e['size']) + ' ' + e['name'])
 

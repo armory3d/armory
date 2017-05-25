@@ -24,8 +24,6 @@ def build(material, mat_users, mat_armusers, rid):
     mat_state.material = material
     mat_state.nodes = material.node_tree.nodes
     mat_state.data = ShaderData(material)
-    mat_state.data.add_elem('pos', 3)
-    mat_state.data.add_elem('nor', 3)
     mat_state.output_node = cycles.node_by_type(mat_state.nodes, 'OUTPUT_MATERIAL')
     if mat_state.output_node == None:
         # Place empty material output to keep compiler happy..
@@ -39,15 +37,17 @@ def build(material, mat_users, mat_armusers, rid):
     if not os.path.exists(full_path):
         os.makedirs(full_path)
 
+    global_elems = []
     if mat_users != None:
         for bo in mat_users[material]:
             # GPU Skinning
             if arm.utils.export_bone_data(bo):
-                mat_state.data.add_elem('bone', 4)
-                mat_state.data.add_elem('weight', 4)
+                global_elems.append({'name': 'bone', 'size': 4})
+                global_elems.append({'name': 'weight', 'size': 4})
             # Instancing
             if bo.instanced_children or len(bo.particle_systems) > 0:
-                mat_state.data.add_elem('off', 3)
+                global_elems.append({'name': 'off', 'size': 3})
+    mat_state.data.global_elems = global_elems
 
     bind_constants = dict()
     bind_textures = dict()
@@ -90,7 +90,7 @@ def build(material, mat_users, mat_armusers, rid):
 
         elif rpass_hook != None:
             con = rpass_hook(rp)
-        
+
         write_shaders(rel_path, con, rp)
 
     arm.utils.write_arm(full_path + '/' + matname + '_data.arm', mat_state.data.get())

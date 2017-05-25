@@ -29,7 +29,7 @@ def make(context_id):
 
     vert.add_include('../../Shaders/compiled.glsl')
 
-    if mat_state.data.is_elem('tex'):
+    if con_voxel.is_elem('tex'):
         vert.add_out('vec2 texCoordGeom')
         vert.write('texCoordGeom = tex;')
 
@@ -46,7 +46,7 @@ def make(context_id):
     geom.add_out('vec3 wnormal')
     if is_shadows:
         geom.add_out('vec4 lampPos')
-    if mat_state.data.is_elem('tex'):
+    if con_voxel.is_elem('tex'):
         geom.add_out('vec2 texCoord')
 
     geom.write('const vec3 p1 = wpositionGeom[1] - wpositionGeom[0];')
@@ -57,7 +57,7 @@ def make(context_id):
     geom.write('    wnormal = wnormalGeom[i];')
     if is_shadows:
         geom.write('    lampPos = lampPosGeom[i];')
-    if mat_state.data.is_elem('tex'):
+    if con_voxel.is_elem('tex'):
         geom.write('    texCoord = texCoordGeom[i];')
     geom.write('    if (p.z > p.x && p.z > p.y) {')
     geom.write('        gl_Position = vec4(wposition.x, wposition.y, 0.0, 1.0);')
@@ -110,7 +110,7 @@ def make(context_id):
     frag.write_pre = False
     frag.write('float dotNV = 0.0;')
     frag.write('float dotNL = max(dot(wnormal, l), 0.0);')
-    cycles.parse(mat_state.nodes, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False)
+    cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False)
     frag.write('vec3 color;')
     frag.write('if (lightShadow > 0) color = basecol * visibility * lightColor * dotNL * attenuate(distance(wposition * voxelgiDimensions.x, lightPos));')
     frag.write('else color = (basecol - 1.0);') # Emission only when no lamp or shadowmap is present

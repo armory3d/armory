@@ -130,11 +130,11 @@ def make_base(con_mesh, parse_opacity):
         frag.write('float occlusion;')
         if parse_opacity:
             frag.write('float opacity;')
-        cycles.parse(mat_state.nodes, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity)
+        cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity)
     if write_material_attribs_post != None:
         write_material_attribs_post(frag)
 
-    if mat_state.data.is_elem('tex'):
+    if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
         vert.write('texCoord = tex;')
         if tese != None:
@@ -143,7 +143,7 @@ def make_base(con_mesh, parse_opacity):
             make_tess.interpolate(tese, 'texCoord', 2, declare_out=frag.contains('texCoord'))
             tese.write_pre = False
 
-    if mat_state.data.is_elem('tex1'):
+    if con_mesh.is_elem('tex1'):
         vert.add_out('vec2 texCoord1')
         vert.write('texCoord1 = tex1;')
         if tese != None:
@@ -151,7 +151,7 @@ def make_base(con_mesh, parse_opacity):
             make_tess.interpolate(tese, 'texCoord1', 2, declare_out=frag.contains('texCoord1'))
             tese.write_pre = False
 
-    if mat_state.data.is_elem('col'):
+    if con_mesh.is_elem('col'):
         vert.add_out('vec3 vcolor')
         vert.write('vcolor = col;')
         if tese != None:
@@ -159,11 +159,11 @@ def make_base(con_mesh, parse_opacity):
             make_tess.interpolate(tese, 'vcolor', 3, declare_out=frag.contains('vcolor'))
             tese.write_pre = False
 
-    if mat_state.data.is_elem('tang'):
+    if con_mesh.is_elem('tang'):
         if tese != None:
             vert.add_out('vec3 wnormal')
             vert.add_out('vec3 wtangent')
-            write_norpos(vert)
+            write_norpos(con_mesh, vert)
             vert.write('wtangent = normalize(N * tang);')
             tese.add_out('mat3 TBN')
             make_tess.interpolate(tese, 'wtangent', 3, normalize=True)
@@ -171,13 +171,13 @@ def make_base(con_mesh, parse_opacity):
             tese.write('TBN = mat3(wtangent, wbitangent, wnormal);')
         else:
             vert.add_out('mat3 TBN')
-            write_norpos(vert, declare=True)
+            write_norpos(con_mesh, vert, declare=True)
             vert.write('vec3 tangent = normalize(N * tang);')
             vert.write('vec3 bitangent = normalize(cross(wnormal, tangent));')
             vert.write('TBN = mat3(tangent, bitangent, wnormal);')
     else:
         vert.add_out('vec3 wnormal')
-        write_norpos(vert)
+        write_norpos(con_mesh, vert)
         frag.write_pre = True
         frag.write_main_header('vec3 n = normalize(wnormal);')
         frag.write_pre = False
@@ -188,17 +188,17 @@ def make_base(con_mesh, parse_opacity):
         tese.write('wposition += wnormal * disp * 0.2;')
         tese.write('gl_Position = VP * vec4(wposition, 1.0);')
 
-def write_norpos(vert, declare=False):
+def write_norpos(con_mesh, vert, declare=False):
     prep = ''
     if declare:
         prep = 'vec3 '
     vert.write_pre = True
-    if mat_state.data.is_elem('bone'):
+    if con_mesh.is_elem('bone'):
         make_skin.skin_pos(vert)
         vert.write(prep + 'wnormal = normalize(N * (nor + 2.0 * cross(skinA.xyz, cross(skinA.xyz, nor) + skinA.w * nor)));')
     else:
         vert.write(prep + 'wnormal = normalize(N * nor);')
-    if mat_state.data.is_elem('off'):
+    if con_mesh.is_elem('off'):
         vert.write('spos.xyz += off;')
     vert.write_pre = False
 
@@ -269,13 +269,13 @@ def make_deferred_plus(con_mesh):
     vert.add_out('vec2 texCoord')
 
     mat_state.data.add_elem('tex', 2) #### Add using cycles.py
-    if mat_state.data.is_elem('tex'):
+    if con_mesh.is_elem('tex'):
         vert.write('texCoord = tex;')
     else:
         vert.write('texCoord = vec2(0.0);')
 
     vert.add_out('vec3 wnormal')
-    write_norpos(vert)
+    write_norpos(con_mesh, vert)
     frag.write_pre = True
     frag.write_main_header('vec3 n = normalize(wnormal);')
     frag.write_pre = False
@@ -307,18 +307,18 @@ def make_forward_restricted(con_mesh):
 
     frag.add_include('../../Shaders/compiled.glsl')
     frag.write('vec3 basecol;')
-    cycles.parse(mat_state.nodes, vert, frag, geom, tesc, tese, basecol_only=True, parse_opacity=False, parse_displacement=False)
+    cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, basecol_only=True, parse_opacity=False, parse_displacement=False)
 
-    if mat_state.data.is_elem('tex'):
+    if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
         vert.write('texCoord = tex;')
 
-    if mat_state.data.is_elem('col'):
+    if con_mesh.is_elem('col'):
         vert.add_out('vec3 vcolor')
         vert.write('vcolor = col;')
 
     vert.add_out('vec3 wnormal')
-    write_norpos(vert)
+    write_norpos(con_mesh, vert)
     frag.write_pre = True
     frag.write_main_header('vec3 n = normalize(wnormal);')
     frag.write_pre = False

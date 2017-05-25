@@ -1,3 +1,4 @@
+import bpy
 import arm.material.cycles as cycles
 import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
@@ -7,7 +8,19 @@ import arm.material.make_mesh as make_mesh
 import arm.utils
 
 def make(context_id, rpasses):
-    con_shadowmap = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False })
+
+    is_disp = mat_utils.disp_linked(mat_state.output_node) and mat_state.material.height_tess_shadows
+
+    vs = [{'name': 'pos', 'size': 3}]
+    if is_disp:
+        vs.append({'name': 'nor', 'size': 3})
+
+    # TODO: interleaved buffer has to match vertex structure of mesh context
+    if not bpy.data.worlds['Arm'].arm_deinterleaved_buffers:
+        vs.append({'name': 'nor', 'size': 3})
+        # vs.append({'name': 'tex', 'size': 2})
+
+    con_shadowmap = mat_state.data.add_context({ 'name': context_id, 'vertex_structure': vs, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False })
 
     vert = con_shadowmap.make_vert()
     frag = con_shadowmap.make_frag()
@@ -23,7 +36,7 @@ def make(context_id, rpasses):
     # TODO: pass vbuf with proper struct
     if gapi.startswith('direct3d'):
         vert.write('vec3 t1 = nor; // TODO: Temp for d3d')
-        if mat_state.data.is_elem('tex'):
+        if con_shadowmap.is_elem('tex'):
             vert.write('vec2 t2 = tex; // TODO: Temp for d3d')
 
     parse_opacity = 'translucent' in rpasses
@@ -32,13 +45,13 @@ def make(context_id, rpasses):
         frag.write('float dotNV;')
         frag.write('float opacity;')
 
-    if mat_state.data.is_elem('bone'):
+    if con_shadowmap.is_elem('bone'):
         make_skin.skin_pos(vert)
 
-    if mat_state.data.is_elem('off'):
+    if con_shadowmap.is_elem('off'):
         vert.write('spos.xyz += off;')
 
-    if mat_utils.disp_linked(mat_state.output_node) and mat_state.material.height_tess_shadows:
+    if is_disp:
         tesc = con_shadowmap.make_tesc()
         tese = con_shadowmap.make_tese()
         tesc.ins = vert.outs
@@ -62,23 +75,23 @@ def make(context_id, rpasses):
         make_tess.interpolate(tese, 'wposition', 3)
         make_tess.interpolate(tese, 'wnormal', 3, normalize=True)
 
-        cycles.parse(mat_state.nodes, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=parse_opacity)
+        cycles.parse(mat_state.nodes, con_shadowmap, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=parse_opacity)
 
-        if mat_state.data.is_elem('tex'):
+        if con_shadowmap.is_elem('tex'):
             vert.add_out('vec2 texCoord')
             vert.write('texCoord = tex;')
             tese.write_pre = True
             make_tess.interpolate(tese, 'texCoord', 2, declare_out=frag.contains('texCoord'))
             tese.write_pre = False
 
-        if mat_state.data.is_elem('tex1'):
+        if con_shadowmap.is_elem('tex1'):
             vert.add_out('vec2 texCoord1')
             vert.write('texCoord1 = tex1;')
             tese.write_pre = True
             make_tess.interpolate(tese, 'texCoord1', 2, declare_out=frag.contains('texCoord1'))
             tese.write_pre = False
 
-        if mat_state.data.is_elem('col'):
+        if con_shadowmap.is_elem('col'):
             vert.add_out('vec3 vcolor')
             vert.write('vcolor = col;')
             tese.write_pre = True
@@ -95,17 +108,17 @@ def make(context_id, rpasses):
         vert.write('gl_Position = LWVP * spos;')
 
         if parse_opacity:
-            cycles.parse(mat_state.nodes, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=True)
+            cycles.parse(mat_state.nodes, con_shadowmap, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=True)
 
-            if mat_state.data.is_elem('tex'):
+            if con_shadowmap.is_elem('tex'):
                 vert.add_out('vec2 texCoord')
                 vert.write('texCoord = tex;')
 
-            if mat_state.data.is_elem('tex1'):
+            if con_shadowmap.is_elem('tex1'):
                 vert.add_out('vec2 texCoord1')
                 vert.write('texCoord1 = tex1;')
 
-            if mat_state.data.is_elem('col'):
+            if con_shadowmap.is_elem('col'):
                 vert.add_out('vec3 vcolor')
                 vert.write('vcolor = col;')
     

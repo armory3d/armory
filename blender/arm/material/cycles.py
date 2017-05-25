@@ -19,16 +19,17 @@ import arm.material.cycles_state as c_state
 
 basecol_texname = ''
 
-def parse(nodes, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
+def parse(nodes, con, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
     if output_node != None:
-        parse_output(output_node, vert, frag, geom, tesc, tese, parse_surface, parse_opacity, parse_displacement, basecol_only)
+        parse_output(output_node, con, vert, frag, geom, tesc, tese, parse_surface, parse_opacity, parse_displacement, basecol_only)
 
-def parse_output(node, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse_opacity, _parse_displacement, _basecol_only):
+def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse_opacity, _parse_displacement, _basecol_only):
     global parsed # Compute nodes only once
     global parents
     global normal_written # Normal socket is linked on shader node - overwrite fs normal
     global curshader # Active shader - frag for surface / tese for displacement
+    global con
     global vert
     global frag
     global geom
@@ -40,6 +41,7 @@ def parse_output(node, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse
     global parse_teximage_vector
     global basecol_only
     global basecol_texname
+    con = _con
     vert = _vert
     frag = _frag
     geom = _geom
@@ -417,7 +419,7 @@ def parse_rgb(node, socket):
     elif node.type == 'ATTRIBUTE':
         # Vcols only for now
         # node.attribute_name
-        c_state.mat_add_elem('col', 3)
+        con.add_elem('col', 3)
         return 'vcolor'
 
     elif node.type == 'RGB':
@@ -686,7 +688,7 @@ def texture_store(node, tex, tex_name, to_linear=False):
     global parsing_basecol
     global basecol_texname
     c_state.mat_bind_texture(tex)
-    c_state.mat_add_elem('tex', 2)
+    con.add_elem('tex', 2)
     curshader.add_uniform('sampler2D {0}'.format(tex_name))
     if node.inputs[0].is_linked and parse_teximage_vector:
         uv_name = parse_vector_input(node.inputs[0])
@@ -713,7 +715,7 @@ def parse_vector(node, socket):
 
     elif node.type == 'ATTRIBUTE':
         # UVMaps only for now
-        c_state.mat_add_elem('tex', 2)
+        con.add_elem('tex', 2)
         mat = c_state.mat_get_material()
         mat_users = c_state.mat_get_material_users()
         if mat_users != None and mat in mat_users:
@@ -722,7 +724,7 @@ def parse_vector(node, socket):
                 lays = mat_user.data.uv_layers
                 # Second uvmap referenced
                 if len(lays) > 1 and node.attribute_name == lays[1].name:
-                    c_state.mat_add_elem('tex1', 2)
+                    con.add_elem('tex1', 2)
                     return 'texCoord1', 2
         return 'texCoord', 2
 
@@ -769,7 +771,7 @@ def parse_vector(node, socket):
         elif socket == node.outputs[1]: # Normal
             return 'vec2(0.0)', 2
         elif socket == node.outputs[2]: # UV
-            c_state.mat_add_elem('tex', 2)
+            con.add_elem('tex', 2)
             return 'texCoord', 2
         elif socket == node.outputs[3]: # Object
             return 'vec2(0.0)', 2
@@ -868,7 +870,7 @@ def parse_normal_map_color_input(inp, str_inp=None):
         frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
         # frag.write('n = normalize(TBN * normalize(n));')
         frag.write('n = TBN * normalize(n);')
-        c_state.mat_add_elem('tang', 3)
+        con.add_elem('tang', 3)
 
     parse_teximage_vector = True
     frag.write_pre = False

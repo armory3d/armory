@@ -11,7 +11,6 @@ def write_data(res, defs, json_data, base_name):
         shader_id += s
 
     sres['name'] = shader_id
-    sres['vertex_structure'] = []
     sres['contexts'] = []
 
     # Parse
@@ -21,6 +20,7 @@ def write_data(res, defs, json_data, base_name):
         con['name'] = c['name']
         con['constants'] = []
         con['texture_units'] = []
+        con['vertex_structure'] = []
 
         # Names
         vert_name = c['vertex_shader'].split('.')[0]
@@ -78,7 +78,7 @@ def write_data(res, defs, json_data, base_name):
             with open(c['fragment_shader']) as f:
                 frag = f.read().splitlines()
         
-        parse_shader(sres, c, con, defs, vert, len(sres['contexts']) == 1) # Parse attribs for the first vertex shader
+        parse_shader(sres, c, con, defs, vert, True) # Parse attribs for vertex shader
         parse_shader(sres, c, con, defs, frag, False)
 
         if 'geometry_shader' in c:
@@ -158,7 +158,7 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
             s = line.split(' ')
             vd['size'] = int(s[1][-1:])
             vd['name'] = s[2][:-1]
-            sres['vertex_structure'].append(vd)
+            con['vertex_structure'].append(vd)
         if vertex_structure_parsing == True and len(line) > 0 and line.startswith('//') == False and line.startswith('in ') == False:
             vertex_structure_parsed = True
 

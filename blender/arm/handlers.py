@@ -153,6 +153,16 @@ def on_scene_update_post(context):
                 else:
                     obj.active_material.is_cached = False
 
+    if hasattr(bpy.context, 'window') and bpy.context.window != None:
+        # Invalidate logic node tree cache if it is being edited..
+        areas = bpy.context.window.screen.areas
+        for area in areas:
+            if area.type == 'NODE_EDITOR':
+                for space in area.spaces:
+                    if space.type == 'NODE_EDITOR':
+                        if space.node_tree != None and space.node_tree.bl_idname == 'ArmLogicTreeType': # and space.node_tree.is_updated:
+                            space.node_tree.is_cached = False
+
 def recache(edit_obj):
     if edit_obj.type == 'MESH':
         edit_obj.data.mesh_cached = False

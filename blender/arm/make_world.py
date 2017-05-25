@@ -92,6 +92,7 @@ def build_node_tree(world):
             wrd.world_defs += '_Probes'
         if cam.rp_shadowmap == 'None':
             wrd.world_defs += '_NoShadows'
+            assets.add_khafile_def('arm_no_shadows')
         if cam.rp_voxelgi:
             voxelgi = True
 

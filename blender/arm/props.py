@@ -493,6 +493,7 @@ def init_properties():
     bpy.types.World.generate_voxelgi_dimensions = bpy.props.FloatVectorProperty(name="Dimensions", description="Voxelization bounds", size=3, default=[16, 16, 16], update=assets.invalidate_shader_cache)
     # For material
     bpy.types.NodeSocket.is_uniform = bpy.props.BoolProperty(name="Is Uniform", description="Mark node sockets to be processed as material uniforms", default=False)
+    bpy.types.NodeTree.is_cached = bpy.props.BoolProperty(name="Node Tree Cached", description="No need to reexport node tree", default=False)
     # bpy.types.Node.is_uniform = bpy.props.BoolProperty(name="Is Uniform", description="Mark node values to be processed as material uniforms", default=False)
     bpy.types.Material.signature = bpy.props.StringProperty(name="Signature", description="Unique string generated from material nodes", default="")
     bpy.types.Material.is_cached = bpy.props.BoolProperty(name="Material Cached", description="No need to reexport material data", default=False, update=update_mat_cache)

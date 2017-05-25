@@ -6,47 +6,23 @@ class ShaderData:
     def __init__(self, material):
         self.material = material
         self.contexts = []
+        self.global_elems = [] # bone, weight, off
         self.sd = {}
         self.data = {}
         self.data['shader_datas'] = [self.sd]
         self.matname = arm.utils.safesrc(material.name)
         self.sd['name'] = self.matname + '_data'
-        self.sd['vertex_structure'] = []
         self.sd['contexts'] = []
-
-    def add_elem(self, name, size):
-        elem = { 'name': name, 'size': size }
-        if elem not in self.sd['vertex_structure']:
-            self.sd['vertex_structure'].append(elem)
-
-    def is_elem(self, name):
-        for elem in self.sd['vertex_structure']:
-            if elem['name'] == name:
-                return True
-        return False
-
-    def get_elem(self, name):
-        for elem in self.sd['vertex_structure']:
-            if elem['name'] == name:
-                return elem
-        return None
 
     def add_context(self, props):
         con = ShaderContext(self.material, self.sd, props)
         if con not in self.sd['contexts']:
+            for elem in self.global_elems:
+                con.add_elem(elem['name'], elem['size'])
             self.sd['contexts'].append(con.get())
         return con
 
     def get(self):
-        # TODO: temporary, Sort vertex data
-        for sd in self.data['shader_datas']:
-            vs = []
-            ar = ['pos', 'nor', 'tex', 'tex1', 'col', 'tang', 'bone', 'weight', 'off']
-            for ename in ar:  
-                elem = self.get_elem(ename)
-                if elem != None:
-                    vs.append(elem)
-            sd['vertex_structure'] = vs
         return self.data
 
 class ShaderContext:
@@ -65,6 +41,10 @@ class ShaderContext:
         self.data['depth_write'] = props['depth_write']
         self.data['compare_mode'] = props['compare_mode']
         self.data['cull_mode'] = props['cull_mode']
+        if 'vertex_structure' in props:
+            self.data['vertex_structure'] = props['vertex_structure']
+        else:
+            self.data['vertex_structure'] = [{'name': 'pos', 'size': 3}, {'name': 'nor', 'size': 3}]
         if 'blend_source' in props:
             self.data['blend_source'] = props['blend_source']
         if 'blend_destination' in props:
@@ -90,6 +70,34 @@ class ShaderContext:
         self.tunits = self.data['texture_units']
         self.data['constants'] = []
         self.constants = self.data['constants']
+
+    def add_elem(self, name, size):
+        elem = { 'name': name, 'size': size }
+        if elem not in self.data['vertex_structure']:
+            self.data['vertex_structure'].append(elem)
+            self.sort_vs()
+
+    def sort_vs(self):
+        # TODO: sort vertex data
+        vs = []
+        ar = ['pos', 'nor', 'tex', 'tex1', 'col', 'tang', 'bone', 'weight', 'off']
+        for ename in ar:  
+            elem = self.get_elem(ename)
+            if elem != None:
+                vs.append(elem)
+        self.data['vertex_structure'] = vs
+
+    def is_elem(self, name):
+        for elem in self.data['vertex_structure']:
+            if elem['name'] == name:
+                return True
+        return False
+
+    def get_elem(self, name):
+        for elem in self.data['vertex_structure']:
+            if elem['name'] == name:
+                return elem
+        return None
 
     def get(self):
         return self.data

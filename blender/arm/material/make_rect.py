@@ -98,7 +98,7 @@ def make_rect(con_rect):
     frag.write('float occlusion;')
 
     mat_state.texture_grad = True
-    cycles.parse(mat_state.nodes, vert, frag, None, None, None, parse_opacity=False, parse_displacement=False)
+    cycles.parse(mat_state.nodes, con_rect, vert, frag, None, None, None, parse_opacity=False, parse_displacement=False)
     mat_state.texture_grad = False
 
     frag.write('vec3 albedo = surfaceAlbedo(basecol, metallic);')

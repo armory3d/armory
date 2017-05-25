@@ -54,7 +54,7 @@ def make(context_id):
     frag.write('float roughness;')
     frag.write('float metallic;')
     frag.write('float occlusion;')
-    cycles.parse(mat_state.nodes, vert, frag, geom, tesc, tese, parse_opacity=False)
+    cycles.parse(mat_state.nodes, con_decal, vert, frag, geom, tesc, tese, parse_opacity=False)
 
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')

@@ -34,13 +34,8 @@ def add(file):
 
 def add_khafile_def(d):
     global khafile_defs
-    global khafile_defs_last
     if d not in khafile_defs:
         khafile_defs.append(d)
-
-        wrd = bpy.data.worlds['Arm']
-        if not wrd.arm_recompile_trigger and d not in khafile_defs_last:
-            wrd.arm_recompile_trigger = True
 
 def add_embedded_data(file):
     global embedded_data

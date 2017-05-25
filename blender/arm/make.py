@@ -358,6 +358,7 @@ def play_project(in_viewport):
     khajs_path = get_khajs_path(in_viewport, state.target)
     if not wrd.arm_cache_compiler or \
        not os.path.isfile(khajs_path) or \
+       assets.khafile_defs_last != assets.khafile_defs or \
        state.last_target != state.target or \
        state.last_in_viewport != state.in_viewport or \
        state.target == 'native':

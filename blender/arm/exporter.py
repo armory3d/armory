@@ -2068,8 +2068,6 @@ class ArmoryExporter:
 
         o['cast_shadow'] = objref.cycles.cast_shadow
         o['near_plane'] = objref.lamp_clip_start
-        if (o['near_plane'] <= 0.11 and o['type'] == 'point'):
-            o['near_plane'] /= 10 # Prevent acne on close surfaces
         o['far_plane'] = objref.lamp_clip_end
         o['fov'] = objref.lamp_fov
         o['shadows_bias'] = objref.lamp_shadows_bias
@@ -2090,6 +2088,8 @@ class ArmoryExporter:
             if objref.lamp_omni_shadows_cubemap:
                 o['shadowmap_cube'] = True
                 o['shadows_bias'] *= 4.0
+                # if (o['near_plane'] <= 0.11:
+                    # o['near_plane'] /= 10 # Prevent acne on close surfaces
 
         # Parse nodes
         # Emission only for now
@@ -2265,17 +2265,18 @@ class ArmoryExporter:
             tang_export = False
             vcol_export = False
             vs_str = ''
-            for elem in sd['vertex_structure']:
-                if len(vs_str) > 0:
-                    vs_str += ','
-                vs_str += elem['name']
-
-                if elem['name'] == 'tang':
-                    tang_export = True
-                elif elem['name'] == 'tex':
-                    uv_export = True
-                elif elem['name'] == 'col':
-                    vcol_export = True
+            for con in sd['contexts']:
+                for elem in con['vertex_structure']:
+                    if len(vs_str) > 0:
+                        vs_str += ','
+                    vs_str += elem['name']
+                    if elem['name'] == 'tang':
+                        tang_export = True
+                    elif elem['name'] == 'tex':
+                        uv_export = True
+                    elif elem['name'] == 'col':
+                        vcol_export = True
+            # TODO: use array and remove duplis to ensure correctness
             material.vertex_structure = vs_str
 
             if (material.export_tangents != tang_export) or \
@@ -2495,19 +2496,20 @@ class ArmoryExporter:
             self.export_materials()
 
             # Ensure same vertex structure for object materials
-            for bobject in self.scene.objects:
-                if len(bobject.material_slots) > 1:
-                    mat = bobject.material_slots[0].material
-                    if mat == None:
-                        continue
-                    vs = mat.vertex_structure
-                    for i in range(len(bobject.material_slots)):
-                        nmat = bobject.material_slots[i].material
-                        if nmat == None:
+            if not bpy.data.worlds['Arm'].arm_deinterleaved_buffers:
+                for bobject in self.scene.objects:
+                    if len(bobject.material_slots) > 1:
+                        mat = bobject.material_slots[0].material
+                        if mat == None:
                             continue
-                        if vs != nmat.vertex_structure:
-                            log.warn('Object ' + bobject.name + ' - unable to bind materials to vertex data, please separate object by material for now (select object - edit mode - P - By Material)')
-                            break
+                        vs = mat.vertex_structure
+                        for i in range(len(bobject.material_slots)):
+                            nmat = bobject.material_slots[i].material
+                            if nmat == None:
+                                continue
+                            if vs != nmat.vertex_structure:
+                                log.warn('Object ' + bobject.name + ' - unable to bind materials to vertex data, please separate object by material (select object - edit mode - P - By Material) or enable Deinterleaved Buffers in Armory Player')
+                                break
 
             self.output['particle_datas'] = []
             self.export_particle_systems()
