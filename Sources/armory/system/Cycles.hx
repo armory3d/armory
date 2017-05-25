@@ -60,35 +60,12 @@ class ShaderData {
 
 		sd = {
 			name: matname + '_data',
-			vertex_structure: [],
 			contexts: []
 		};
 
 		data = {
 			shader_datas: [sd]
 		};
-	}
-
-	public function add_elem(name:String, size:Int) {
-		for (e in sd.vertex_structure) {
-			if (e.name == name) return;
-		}
-		var elem:TVertexData = { name: name, size: size };
-		sd.vertex_structure.push(elem);
-	}
-
-	public function is_elem(name:String) {
-		for (elem in sd.vertex_structure)
-			if (elem.name == name)
-				return true;
-		return false;
-	}
-
-	public function get_elem(name:String):TVertexData {
-		for (elem in sd.vertex_structure)
-			if (elem.name == name)
-				return elem;
-		return null;
 	}
 
 	public function add_context(props:Dynamic):ShaderContext {
@@ -99,16 +76,6 @@ class ShaderData {
 	}
 
 	public function get() {
-		// TODO: temporary, Sort vertex data
-		// for sd in self.data['shader_datas']:
-		var vs:Array<TVertexData> = [];
-		var ar = ['pos', 'nor', 'tex', 'tex1', 'col', 'tang', 'bone', 'weight', 'off'];
-		for (ename in ar) {
-			var elem = get_elem(ename);
-			if (elem != null)
-				vs.push(elem);
-		}
-		sd.vertex_structure = vs;
 		return data;
 	}
 }
@@ -139,7 +106,8 @@ class ShaderContext {
 			compare_mode: props.compare_mode,
 			cull_mode: props.cull_mode,
 			fragment_shader: '',
-			vertex_shader: ''
+			vertex_shader: '',
+			vertex_structure: Reflect.hasField(props, 'vertex_structure') ? props.vertex_structure : [ {"name": "pos", "size": 3}, {"name": "nor", "size": 3}]
 		};
 
   //       if 'blend_source' in props:
@@ -170,7 +138,38 @@ class ShaderContext {
 	}
 
 	public function get() {
+		// TODO: Sort vertex data
+		var vs:Array<TVertexData> = [];
+		var ar = ['pos', 'nor', 'tex', 'tex1', 'col', 'tang', 'bone', 'weight', 'off'];
+		for (ename in ar) {
+			var elem = get_elem(ename);
+			if (elem != null)
+				vs.push(elem);
+		}
+		data.vertex_structure = vs;
 		return data;
+	}
+
+	public function add_elem(name:String, size:Int) {
+		for (e in data.vertex_structure) {
+			if (e.name == name) return;
+		}
+		var elem:TVertexData = { name: name, size: size };
+		data.vertex_structure.push(elem);
+	}
+
+	public function is_elem(name:String) {
+		for (elem in data.vertex_structure)
+			if (elem.name == name)
+				return true;
+		return false;
+	}
+
+	public function get_elem(name:String):TVertexData {
+		for (elem in data.vertex_structure)
+			if (elem.name == name)
+				return elem;
+		return null;
 	}
 
 	public function add_constant(ctype:String, name:String, link:String = null) {
@@ -343,7 +342,7 @@ class Shader {
 		var out_ext = '';
 
 		if (shader_type == 'vert' && vertex_structure_as_vsinput) {
-			var vs = context.shader_data.vertex_structure;
+			var vs = context.data.vertex_structure;
 			for (e in vs) {
 				add_in('vec' + e.size + ' ' + e.name);
 			}
@@ -399,6 +398,7 @@ typedef TShaderOut = {
 
 class Cycles {
 	
+	static var con:ShaderContext;
 	static var vert:Shader;
 	static var frag:Shader;
 	static var geom:Shader;
@@ -450,12 +450,13 @@ class Cycles {
 		return ls;
 	}
 
-	public static function parse(canvas:TNodeCanvas, _vert:Shader, _frag:Shader, _geom:Shader, _tesc:Shader, _tese:Shader, _matcon:TMaterialContext):TShaderOut {
+	public static function parse(canvas:TNodeCanvas, _con:ShaderContext, _vert:Shader, _frag:Shader, _geom:Shader, _tesc:Shader, _tese:Shader, _matcon:TMaterialContext):TShaderOut {
 
 		nodes = canvas.nodes;
 		links = canvas.links;
 
 		parsed = [];
+		con = _con;
 		vert = _vert;
 		frag = _frag;
 		geom = _geom;
@@ -826,7 +827,7 @@ class Cycles {
 		//     else if (node.type == 'ATTRIBUTE') {
 		//         # Vcols only for now
 		//         # node.attribute_name
-		//         c_state.mat_add_elem('col', 3)
+		//         con.add_elem('col', 3)
 		//         return 'vcolor'
 		//     }
 
@@ -1108,7 +1109,7 @@ class Cycles {
 		// global parse_teximage_vector
 		
 		matcon.bind_textures.push(tex);
-		curshader.context.sdata.add_elem('tex', 2);
+		curshader.context.add_elem('tex', 2);
 		curshader.add_uniform('sampler2D $tex_name');
 		var uv_name = '';
 		// if (isInputLinked(node.inputs[0]) and parse_teximage_vector:
@@ -1137,7 +1138,7 @@ class Cycles {
 
 		// elif node.type == 'ATTRIBUTE':
 		// 	# UVMaps only for now
-		// 	c_state.mat_add_elem('tex', 2)
+		// 	con.add_elem('tex', 2)
 		// 	mat = c_state.mat_get_material()
 		// 	mat_users = c_state.mat_get_material_users()
 		// 	if mat_users != None and mat in mat_users:
@@ -1146,7 +1147,7 @@ class Cycles {
 		// 			lays = mat_user.data.uv_layers
 		// 			# Second uvmap referenced
 		// 			if len(lays) > 1 and node.attribute_name == lays[1].name:
-		// 				c_state.mat_add_elem('tex1', 2)
+		// 				con.add_elem('tex1', 2)
 		// 				return 'texCoord1', 2
 		// 	return 'texCoord', 2
 
@@ -1193,7 +1194,7 @@ class Cycles {
 		// 	elif socket == node.outputs[1]: # Normal
 		// 		return 'vec2(0.0)', 2
 		// 	elif socket == node.outputs[2]: # UV
-		// 		c_state.mat_add_elem('tex', 2)
+		// 		con.add_elem('tex', 2)
 		// 		return 'texCoord', 2
 		// 	elif socket == node.outputs[3]: # Object
 		// 		return 'vec2(0.0)', 2
@@ -1293,7 +1294,7 @@ class Cycles {
 		//     frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
 		//     # frag.write('n = normalize(TBN * normalize(n));')
 		//     frag.write('n = TBN * normalize(n);')
-		//     c_state.mat_add_elem('tang', 3)
+		//     con.add_elem('tang', 3)
 
 		// parse_teximage_vector = True
 		// frag.write_pre = False

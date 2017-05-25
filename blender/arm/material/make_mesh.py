@@ -122,7 +122,7 @@ def make_base(con_mesh, parse_opacity):
 
     written = False
     if write_material_attribs != None:
-        written = write_material_attribs(frag)
+        written = write_material_attribs(con_mesh, frag)
     if written == False:
         frag.write('vec3 basecol;')
         frag.write('float roughness;')
@@ -132,7 +132,7 @@ def make_base(con_mesh, parse_opacity):
             frag.write('float opacity;')
         cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity)
     if write_material_attribs_post != None:
-        write_material_attribs_post(frag)
+        write_material_attribs_post(con_mesh, frag)
 
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
