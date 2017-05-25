@@ -24,6 +24,25 @@ def make(context_id):
 
     vert.add_include('../../Shaders/compiled.glsl')
 
+
+    frag.write('if (!isInsideCube(wposition)) return;')
+
+    frag.write('vec3 voxel = wposition * 0.5 + vec3(0.5);')
+
+
+    frag.write('vec3 basecol;')
+    frag.write('float roughness;') #
+    frag.write('float metallic;') #
+    frag.write('float occlusion;') #
+    # frag.write('float opacity;') #
+    frag.write_pre = True
+    frag.write('mat3 TBN;') # TODO: discard, parse basecolor only
+    frag.write_pre = False
+    frag.write('float dotNV = 0.0;')
+    # frag.write('float dotNL = max(dot(wnormal, l), 0.0);')
+    cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False)
+    
+
     if con_voxel.is_elem('tex'):
         vert.add_out('vec2 texCoordGeom')
         vert.write('texCoordGeom = tex;')
@@ -66,23 +85,6 @@ def make(context_id):
 
     frag.add_uniform('layout(RGBA8) image3D voxelsto')
     frag.add_uniform('sampler3D voxels', included=True)
-
-    frag.write('if (!isInsideCube(wposition)) return;')
-
-    frag.write('vec3 voxel = wposition * 0.5 + vec3(0.5);')
-
-
-    frag.write('vec3 basecol;')
-    frag.write('float roughness;') #
-    frag.write('float metallic;') #
-    frag.write('float occlusion;') #
-    # frag.write('float opacity;') #
-    frag.write_pre = True
-    frag.write('mat3 TBN;') # TODO: discard, parse basecolor only
-    frag.write_pre = False
-    frag.write('float dotNV = 0.0;')
-    # frag.write('float dotNL = max(dot(wnormal, l), 0.0);')
-    cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False)
 
 
     # frag.write('vec3 color = texture(voxels, voxel).rgb / 2.0 + indirectDiffuseLight(wnormal, wposition / voxelgiDimensions.x).rgb * basecol;')

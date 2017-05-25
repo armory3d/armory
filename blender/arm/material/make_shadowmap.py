@@ -33,12 +33,6 @@ def make(context_id, rpasses):
         frag.add_out('vec4 fragColor') # Definition requred for d3d9 - pixel shader must minimally write all four components of COLOR0
     vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
 
-    # TODO: pass vbuf with proper struct
-    if gapi.startswith('direct3d'):
-        vert.write('vec3 t1 = nor; // TODO: Temp for d3d')
-        if con_shadowmap.is_elem('tex'):
-            vert.write('vec2 t2 = tex; // TODO: Temp for d3d')
-
     parse_opacity = 'translucent' in rpasses
     if parse_opacity:
         frag.write('vec3 n;') # Discard at compile time
@@ -122,6 +116,12 @@ def make(context_id, rpasses):
                 vert.add_out('vec3 vcolor')
                 vert.write('vcolor = col;')
     
+    # TODO: pass vbuf with proper struct
+    if gapi.startswith('direct3d'):
+        vert.write('vec3 t1 = nor; // TODO: Temp for d3d')
+        if con_shadowmap.is_elem('tex'):
+            vert.write('vec2 t2 = tex; // TODO: Temp for d3d')
+
     if parse_opacity:
         frag.write('if (opacity < 0.5) discard;')
 

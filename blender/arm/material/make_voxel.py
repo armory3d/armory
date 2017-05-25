@@ -21,6 +21,49 @@ def make(context_id):
     geom.ins = vert.outs
     frag.ins = geom.outs
 
+
+    frag.write('vec3 lp = lightPos - wposition * voxelgiDimensions.x;')
+    frag.write('vec3 l = normalize(lp);')
+    frag.write('float visibility = 1.0;')
+    frag.add_include('../../Shaders/compiled.glsl')
+    if is_shadows:
+        frag.add_include('../../Shaders/std/shadows.glsl')
+        frag.add_uniform('sampler2D shadowMap', included=True)
+        frag.add_uniform('samplerCube shadowMapCube', included=True)
+        frag.add_uniform('int lightShadow', '_lampCastShadow')
+        frag.add_uniform('vec2 lightPlane', '_lampPlane')
+        frag.add_uniform('float shadowsBias', '_lampShadowsBias')
+        frag.write('if (lightShadow == 1 && lampPos.w > 0.0) {')
+        frag.write('    vec3 lpos = lampPos.xyz / lampPos.w;')
+        frag.write('    if (texture(shadowMap, lpos.xy).r < lpos.z - shadowsBias) visibility = 0.0;')
+        frag.write('}')
+        frag.write('else if (lightShadow == 2) visibility = float(texture(shadowMapCube, -l).r + shadowsBias > lpToDepth(lp, lightPlane));')
+    else:
+        frag.write('int lightShadow = 0;')
+
+    frag.add_include('../../Shaders/std/math.glsl')
+    frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
+
+    frag.add_uniform('layout(RGBA8) image3D voxels')
+    frag.add_uniform('vec3 lightPos', '_lampPosition')
+    frag.add_uniform('vec3 lightColor', '_lampColor')
+
+    frag.write('if (!isInsideCube(wposition)) return;')
+
+    frag.write('vec3 basecol;')
+    frag.write('float roughness;') #
+    frag.write('float metallic;') #
+    frag.write('float occlusion;') #
+    # frag.write('float opacity;') #
+    frag.write_pre = True
+    frag.write('mat3 TBN;') # TODO: discard, parse basecolor only
+    frag.write_pre = False
+    frag.write('float dotNV = 0.0;')
+    frag.write('float dotNL = max(dot(wnormal, l), 0.0);')
+    cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False)
+
+
+
     vert.add_uniform('mat4 W', '_worldMatrix')
     vert.add_uniform('mat3 N', '_normalMatrix')
 
@@ -72,45 +115,8 @@ def make(context_id):
     geom.write('}')
     geom.write('EndPrimitive();')
 
-    frag.write('vec3 lp = lightPos - wposition * voxelgiDimensions.x;')
-    frag.write('vec3 l = normalize(lp);')
-    frag.write('float visibility = 1.0;')
-    frag.add_include('../../Shaders/compiled.glsl')
-    if is_shadows:
-        frag.add_include('../../Shaders/std/shadows.glsl')
-        frag.add_uniform('sampler2D shadowMap', included=True)
-        frag.add_uniform('samplerCube shadowMapCube', included=True)
-        frag.add_uniform('int lightShadow', '_lampCastShadow')
-        frag.add_uniform('vec2 lightPlane', '_lampPlane')
-        frag.add_uniform('float shadowsBias', '_lampShadowsBias')
-        frag.write('if (lightShadow == 1 && lampPos.w > 0.0) {')
-        frag.write('    vec3 lpos = lampPos.xyz / lampPos.w;')
-        frag.write('    if (texture(shadowMap, lpos.xy).r < lpos.z - shadowsBias) visibility = 0.0;')
-        frag.write('}')
-        frag.write('else if (lightShadow == 2) visibility = float(texture(shadowMapCube, -l).r + shadowsBias > lpToDepth(lp, lightPlane));')
-    else:
-        frag.write('int lightShadow = 0;')
 
-    frag.add_include('../../Shaders/std/math.glsl')
-    frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
 
-    frag.add_uniform('layout(RGBA8) image3D voxels')
-    frag.add_uniform('vec3 lightPos', '_lampPosition')
-    frag.add_uniform('vec3 lightColor', '_lampColor')
-
-    frag.write('if (!isInsideCube(wposition)) return;')
-
-    frag.write('vec3 basecol;')
-    frag.write('float roughness;') #
-    frag.write('float metallic;') #
-    frag.write('float occlusion;') #
-    # frag.write('float opacity;') #
-    frag.write_pre = True
-    frag.write('mat3 TBN;') # TODO: discard, parse basecolor only
-    frag.write_pre = False
-    frag.write('float dotNV = 0.0;')
-    frag.write('float dotNL = max(dot(wnormal, l), 0.0);')
-    cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False)
     frag.write('vec3 color;')
     frag.write('if (lightShadow > 0) color = basecol * visibility * lightColor * dotNL * attenuate(distance(wposition * voxelgiDimensions.x, lightPos));')
     frag.write('else color = (basecol - 1.0);') # Emission only when no lamp or shadowmap is present
