@@ -133,6 +133,9 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
 def compile_project(target_name=None, is_publish=False, watch=False, patch=False):
     wrd = bpy.data.worlds['Arm']
 
+    fp = arm.utils.get_fp()
+    os.chdir(fp)
+
     # Set build command
     if target_name == None:
         target_name = wrd.arm_project_target
@@ -167,9 +170,9 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
     
     cmd.append('--to')
     if kha_target_name == 'krom' and not state.in_viewport:
-        cmd.append(arm.utils.get_fp_build() + '/window')
+        cmd.append(arm.utils.build_dir() + '/window')
     else:
-        cmd.append(arm.utils.get_fp_build())
+        cmd.append(arm.utils.build_dir())
 
     # User defined commands
     if wrd.arm_khamake != '':
