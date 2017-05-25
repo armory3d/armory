@@ -23,7 +23,7 @@ def add_assets(path):
     return 'project.addAssets("' + path + '");\n'
 
 # Write khafile.js
-def write_khafilejs(is_play, export_physics, export_navigation, dce_full=False):
+def write_khafilejs(is_play, export_physics, export_navigation, is_publish):
     global check_dot_path
 
     sdk_path = arm.utils.get_sdk_path()
@@ -86,7 +86,7 @@ project.addSources('Sources');
                 recastjs_path = recastjs_path.replace('\\', '/')
                 f.write(add_assets(recastjs_path))
 
-        if dce_full:
+        if is_publish:
             f.write("project.addParameter('-dce full');")
 
         if wrd.arm_cache_compiler and (is_play or (state.target == 'html5' and not is_publish)):
