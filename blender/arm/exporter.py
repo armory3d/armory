@@ -2733,7 +2733,7 @@ class ArmoryExporter:
                     basename = t.jsscript_prop.split('.')[0]
                     x['type'] = 'Script'
                     x['class_name'] = 'armory.trait.internal.JSScript'
-                    x['parameters'] = [basename]
+                    x['parameters'] = ["'" + basename + "'"]
                     scriptspath = arm.utils.get_fp_build() + '/compiled/scripts/'
                     if not os.path.exists(scriptspath):
                         os.makedirs(scriptspath)
@@ -2743,6 +2743,11 @@ class ArmoryExporter:
                     with open(targetpath, 'w') as f:
                         f.write(bpy.data.texts[t.jsscript_prop].as_string())
                     assets.add(assetpath)
+                elif t.type_prop == 'UI Canvas':
+                    x['type'] = 'Script'
+                    x['class_name'] = 'armory.trait.internal.CanvasScript'
+                    x['parameters'] = ["'" + t.canvas_name_prop + "'"]
+                    # assets.add(assetpath) # Bundled is auto-added
                 else: # Haxe/Bundled Script
                     if t.class_name_prop == '': # Empty class name, skip
                         continue

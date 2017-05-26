@@ -269,7 +269,6 @@ def build_project(is_play=False, is_publish=False, in_viewport=False, target=Non
 
     if state.target == 'html5':
         w, h = arm.utils.get_render_resolution(arm.utils.get_active_scene())
-        # write_data.write_electronjs(w, h)
         write_data.write_indexhtml(w, h)
         # Bundle files from include dir
         if os.path.isdir('include'):
@@ -339,7 +338,7 @@ def get_khajs_path(in_viewport, target):
         return arm.utils.build_dir() + '/krom/krom.js'
     elif target == 'krom':
         return arm.utils.build_dir() + '/window/krom/krom.js'
-    else: # browser
+    else: # Browser
         return arm.utils.build_dir() + '/html5/kha.js'
 
 def play_project(in_viewport):

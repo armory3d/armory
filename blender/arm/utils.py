@@ -131,12 +131,20 @@ def fetch_script_names():
     if bpy.data.filepath == "":
         return
     wrd = bpy.data.worlds['Arm']
+    # Sources
     wrd.scripts_list.clear()
     sources_path = get_fp() + '/Sources/' + safestr(wrd.arm_project_package)
     if os.path.isdir(sources_path):
         os.chdir(sources_path)
         for file in glob.glob('*.hx'):
             wrd.scripts_list.add().name = file.rsplit('.')[0]
+    # Canvas
+    wrd.canvas_list.clear()
+    canvas_path = get_fp() + '/Bundled/canvas'
+    if os.path.isdir(canvas_path):
+        os.chdir(canvas_path)
+        for file in glob.glob('*.json'):
+            wrd.canvas_list.add().name = file.rsplit('.')[0]
     os.chdir(get_fp())
 
 def to_hex(val):

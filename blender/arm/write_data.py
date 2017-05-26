@@ -399,3 +399,18 @@ class """ + class_name + """ extends armory.Trait {
     }
 }
 """)
+
+def write_canvasjson(canvas_name):
+    canvas_path = arm.utils.get_fp() + '/Bundled/canvas'
+    if not os.path.exists(canvas_path):
+        os.makedirs(canvas_path)
+    with open(canvas_path + '/' + canvas_name + '.json', 'w') as f:
+        f.write(
+"""{ "name": "untitled", "x": 0.0, "y": 0.0, "width": 960, "height": 540, "elements": [], "assets": [] }""")
+
+def write_canvasprefs(canvas_path):
+    sdk_path = arm.utils.get_sdk_path()
+    prefs_path = sdk_path + 'armory/tools/armorui/prefs.json'
+    with open(prefs_path, 'w') as f:
+        f.write(
+'{ "path": "' + canvas_path + '" }')

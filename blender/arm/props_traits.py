@@ -25,12 +25,18 @@ class ListTraitItem(bpy.types.PropertyGroup):
         items = [('Haxe Script', 'Haxe Script', 'Haxe Script'),
                  ('JS Script', 'JS Script', 'JS Script'),
                  ('Bundled Script', 'Bundled Script', 'Bundled Script'),
+                 ('UI Canvas', 'UI Canvas', 'UI Canvas'),
                  ('Logic Nodes', 'Logic Nodes', 'Logic Nodes')
                  ],
         name = "Type")
 
     class_name_prop = bpy.props.StringProperty(
            name="Class",
+           description="A name for this item",
+           default="")
+
+    canvas_name_prop = bpy.props.StringProperty(
+           name="Canvas",
            description="A name for this item",
            default="")
 
@@ -203,6 +209,29 @@ class ArmoryEditBundledScriptButton(bpy.types.Operator):
         
         return{'FINISHED'}
 
+class ArmoryEditCanvasButton(bpy.types.Operator):
+    '''Edit ui canvas'''
+    bl_idname = 'arm.edit_canvas'
+    bl_label = 'Edit Canvas'
+ 
+    def execute(self, context):
+        project_path = arm.utils.get_fp()
+        item = context.object.my_traitlist[context.object.traitlist_index]
+        canvas_path = project_path + '/Bundled/canvas/' + item.canvas_name_prop + '.json'
+        write_data.write_canvasprefs(canvas_path)
+
+        sdk_path = arm.utils.get_sdk_path()
+        electron_app_path = sdk_path + '/armory/tools/armorui/electron.js'
+        if arm.utils.get_os() == 'win':
+            electron_path = sdk_path + 'win32/Kode Studio.exe'
+        elif arm.utils.get_os() == 'mac':
+            electron_path = sdk_path + 'Kode Studio.app/Contents/MacOS/Electron'
+        else:
+            electron_path = sdk_path + 'linux64/kodestudio'
+        subprocess.Popen([electron_path, '--chromedebug', '--remote-debugging-port=9222', '--enable-logging', electron_app_path, canvas_path])
+        
+        return{'FINISHED'}
+
 class ArmoryNewScriptDialog(bpy.types.Operator):
     '''Create blank script'''
     bl_idname = "arm.new_script"
@@ -225,6 +254,28 @@ class ArmoryNewScriptDialog(bpy.types.Operator):
         self.class_name = 'MyTrait'
         return context.window_manager.invoke_props_dialog(self)
 
+class ArmoryNewCanvasDialog(bpy.types.Operator):
+    '''Create blank canvas'''
+    bl_idname = "arm.new_canvas"
+    bl_label = "New Canvas"
+ 
+    canvas_name = StringProperty(name="Name")
+ 
+    def execute(self, context):
+        self.canvas_name = self.canvas_name.replace(' ', '')
+        write_data.write_canvasjson(self.canvas_name)
+        arm.utils.fetch_script_names()
+        obj = context.object
+        item = obj.my_traitlist[obj.traitlist_index] 
+        item.canvas_name_prop = self.canvas_name 
+        return {'FINISHED'}
+ 
+    def invoke(self, context, event):
+        if not arm.utils.check_saved(self):
+            return {'CANCELLED'}
+        self.canvas_name = 'MyCanvas'
+        return context.window_manager.invoke_props_dialog(self)
+
 class ArmoryRefreshScriptsListButton(bpy.types.Operator):
     '''Fetch all script names'''
     bl_idname = 'arm.refresh_scripts_list'
@@ -232,6 +283,15 @@ class ArmoryRefreshScriptsListButton(bpy.types.Operator):
  
     def execute(self, context):
         arm.utils.fetch_bundled_script_names()
+        arm.utils.fetch_script_names()
+        return{'FINISHED'}
+
+class ArmoryRefreshCanvasListButton(bpy.types.Operator):
+    '''Fetch all canvas names'''
+    bl_idname = 'arm.refresh_canvas_list'
+    bl_label = 'Refresh Canvas List'
+ 
+    def execute(self, context):
         arm.utils.fetch_script_names()
         return{'FINISHED'}
 
@@ -320,6 +380,18 @@ class ToolsTraitsPanel(bpy.types.Panel):
                 row = layout.row()
                 row.prop_search(item, "jsscript_prop", bpy.data, "texts", "Text")
 
+            # UI
+            elif item.type_prop == 'UI Canvas':
+                item.name = item.canvas_name_prop
+                row = layout.row()
+                row.prop_search(item, "canvas_name_prop", bpy.data.worlds['Arm'], "canvas_list", "Canvas")
+                row = layout.row()
+                if item.canvas_name_prop == '':
+                    row.enabled = False
+                row.operator("arm.edit_canvas")
+                layout.operator("arm.new_canvas")
+                layout.operator("arm.refresh_canvas_list")
+
             # Nodes
             elif item.type_prop == 'Logic Nodes':
                 item.name = item.nodes_name_prop
@@ -334,8 +406,11 @@ def register():
     bpy.utils.register_class(LIST_OT_TraitMoveItem)
     bpy.utils.register_class(ArmoryEditScriptButton)
     bpy.utils.register_class(ArmoryEditBundledScriptButton)
+    bpy.utils.register_class(ArmoryEditCanvasButton)
     bpy.utils.register_class(ArmoryNewScriptDialog)
+    bpy.utils.register_class(ArmoryNewCanvasDialog)
     bpy.utils.register_class(ArmoryRefreshScriptsListButton)
+    bpy.utils.register_class(ArmoryRefreshCanvasListButton)
     bpy.utils.register_class(ToolsTraitsPanel)
 
     initObjectProperties()
@@ -348,6 +423,9 @@ def unregister():
     bpy.utils.unregister_class(LIST_OT_TraitMoveItem)
     bpy.utils.unregister_class(ArmoryEditScriptButton)
     bpy.utils.unregister_class(ArmoryEditBundledScriptButton)
+    bpy.utils.unregister_class(ArmoryEditCanvasButton)
     bpy.utils.unregister_class(ArmoryNewScriptDialog)
+    bpy.utils.unregister_class(ArmoryNewCanvasDialog)
     bpy.utils.unregister_class(ArmoryRefreshScriptsListButton)
+    bpy.utils.unregister_class(ArmoryRefreshCanvasListButton)
     bpy.utils.unregister_class(ToolsTraitsPanel)
