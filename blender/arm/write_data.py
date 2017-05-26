@@ -201,29 +201,6 @@ class Main {
 }
 """)
 
-# Write electron.js
-def write_electronjs(w, h):
-    wrd = bpy.data.worlds['Arm']
-    with open(arm.utils.build_dir() + '/electron.js', 'w') as f:
-        f.write(
-"""// Auto-generated
-'use strict';
-const electron = require('electron');
-const app = electron.app;
-const BrowserWindow = electron.BrowserWindow;
-let mainWindow;
-
-function createWindow () {
-    mainWindow = new BrowserWindow({width: """ + str(int(w)) + """, height: """ + str(int(h)) + """, autoHideMenuBar: true, useContentSize: true});
-    mainWindow.loadURL('file://' + __dirname + '/html5/index.html');
-    //mainWindow.loadURL('http://localhost:8040/""" + arm.utils.build_dir() + """/html5/index.html');
-    mainWindow.on('closed', function() { mainWindow = null; });
-}
-app.on('ready', createWindow);
-app.on('window-all-closed', function () { app.quit(); });
-app.on('activate', function () { if (mainWindow === null) { createWindow(); } });
-""")
-
 # Write index.html
 def write_indexhtml(w, h):
     if not os.path.exists(arm.utils.build_dir() + '/html5'):

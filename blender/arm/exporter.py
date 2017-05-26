@@ -2729,7 +2729,7 @@ class ArmoryExporter:
                 if t.type_prop == 'Logic Nodes' and t.nodes_name_prop != '':
                     x['type'] = 'Script'
                     x['class_name'] = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + arm.utils.safesrc(t.nodes_name_prop)
-                elif t.type_prop == 'JS Script' or t.type_prop == 'Python Script':
+                elif t.type_prop == 'JS Script':
                     basename = t.jsscript_prop.split('.')[0]
                     x['type'] = 'Script'
                     x['class_name'] = 'armory.trait.internal.JSScript'
@@ -2737,32 +2737,12 @@ class ArmoryExporter:
                     scriptspath = arm.utils.get_fp_build() + '/compiled/scripts/'
                     if not os.path.exists(scriptspath):
                         os.makedirs(scriptspath)
-                    # Compile to JS
-                    if t.type_prop == 'Python Script':
-                        # Write py to file
-                        basename_ext = basename + '.py'
-                        targetpath = scriptspath + basename_ext
-                        with open(targetpath, 'w') as f:
-                            f.write(bpy.data.texts[t.jsscript_prop].as_string())
-                        sdk_path = arm.utils.get_sdk_path()
-                        python_path = bpy.app.binary_path_python
-                        cwd = os.getcwd()
-                        os.chdir(scriptspath)
-                        # Disable minification for now, too slow
-                        transproc = subprocess.Popen([python_path + ' ' + sdk_path + '/lib/transcrypt/__main__.py' + ' ' + basename_ext + ' --nomin'], shell=True)
-                        transproc.wait()
-                        if transproc.poll() != 0:
-                            log.print_info('Compiling ' + t.jsscript_prop + ' failed, check console')
-                        os.chdir(cwd)
-                        # Compiled file
-                        assets.add(arm.utils.build_dir() + '/compiled/scripts/__javascript__/' + basename + '.js')
-                    else:
-                        # Write js to file
-                        assetpath = arm.utils.build_dir() + '/compiled/scripts/' + t.jsscript_prop + '.js'
-                        targetpath = arm.utils.get_fp() + '/' + assetpath
-                        with open(targetpath, 'w') as f:
-                            f.write(bpy.data.texts[t.jsscript_prop].as_string())
-                        assets.add(assetpath)
+                    # Write js to file
+                    assetpath = arm.utils.build_dir() + '/compiled/scripts/' + t.jsscript_prop + '.js'
+                    targetpath = arm.utils.get_fp() + '/' + assetpath
+                    with open(targetpath, 'w') as f:
+                        f.write(bpy.data.texts[t.jsscript_prop].as_string())
+                    assets.add(assetpath)
                 else: # Haxe/Bundled Script
                     if t.class_name_prop == '': # Empty class name, skip
                         continue

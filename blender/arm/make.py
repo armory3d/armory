@@ -269,7 +269,7 @@ def build_project(is_play=False, is_publish=False, in_viewport=False, target=Non
 
     if state.target == 'html5':
         w, h = arm.utils.get_render_resolution(arm.utils.get_active_scene())
-        write_data.write_electronjs(w, h)
+        # write_data.write_electronjs(w, h)
         write_data.write_indexhtml(w, h)
         # Bundle files from include dir
         if os.path.isdir('include'):
@@ -339,7 +339,7 @@ def get_khajs_path(in_viewport, target):
         return arm.utils.build_dir() + '/krom/krom.js'
     elif target == 'krom':
         return arm.utils.build_dir() + '/window/krom/krom.js'
-    else: # browser, electron
+    else: # browser
         return arm.utils.build_dir() + '/html5/kha.js'
 
 def play_project(in_viewport):
@@ -393,7 +393,7 @@ def play_project(in_viewport):
             if in_viewport:
                 mode = 'play_viewport'
             state.compileproc = compile_project(target_name='krom')
-        else: # Electron, Browser
+        else: # Browser
             state.compileproc = compile_project(target_name='html5')
         threading.Timer(0.1, watch_compile, [mode]).start()
     else: # kha.js up to date
@@ -423,19 +423,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
 
     # Launch project in new window
     elif mode =='play':
-        if wrd.arm_play_runtime == 'Electron':
-            electron_app_path = './' + arm.utils.build_dir() + '/electron.js'
-
-            if arm.utils.get_os() == 'win':
-                electron_path = sdk_path + 'win32/Kode Studio.exe'
-            elif arm.utils.get_os() == 'mac':
-                electron_path = sdk_path + 'Kode Studio.app/Contents/MacOS/Electron'
-            else:
-                electron_path = sdk_path + 'linux64/kodestudio'
-
-            state.playproc = subprocess.Popen([electron_path, '--chromedebug', '--remote-debugging-port=9222', '--enable-logging', electron_app_path], stderr=subprocess.PIPE)
-            watch_play()
-        elif wrd.arm_play_runtime == 'Browser':
+        if wrd.arm_play_runtime == 'Browser':
             # Start server
             os.chdir(arm.utils.get_fp())
             t = threading.Thread(name='localserver', target=arm.lib.server.run)

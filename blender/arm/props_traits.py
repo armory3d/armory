@@ -23,17 +23,11 @@ class ListTraitItem(bpy.types.PropertyGroup):
 
     type_prop = bpy.props.EnumProperty(
         items = [('Haxe Script', 'Haxe Script', 'Haxe Script'),
-                 ('Python Script', 'Python Script', 'Python Script'),
                  ('JS Script', 'JS Script', 'JS Script'),
                  ('Bundled Script', 'Bundled Script', 'Bundled Script'),
                  ('Logic Nodes', 'Logic Nodes', 'Logic Nodes')
                  ],
         name = "Type")
-
-    # data_prop = bpy.props.StringProperty(
-    #        name="Data",
-    #        description="A name for this item",
-    #        default="")
 
     class_name_prop = bpy.props.StringProperty(
            name="Class",
@@ -320,8 +314,8 @@ class ToolsTraitsPanel(bpy.types.Panel):
                 else: # Bundled
                     layout.operator("arm.edit_bundled_script")
             
-            # JS/Python Script
-            elif item.type_prop == 'JS Script' or item.type_prop == 'Python Script':
+            # JS Script
+            elif item.type_prop == 'JS Script':
                 item.name = item.jsscript_prop
                 row = layout.row()
                 row.prop_search(item, "jsscript_prop", bpy.data, "texts", "Text")

@@ -169,8 +169,7 @@ def init_properties():
         name="Navigation", description="Enable camera controls", default='Walk')
     bpy.types.World.arm_play_console = BoolProperty(name="Debug Console", description="Show inspector in player", default=False)
     bpy.types.World.arm_play_runtime = EnumProperty(
-        items=[('Electron', 'Electron', 'Electron'), 
-               ('Browser', 'Browser', 'Browser'),
+        items=[('Browser', 'Browser', 'Browser'),
                ('Native', 'C++', 'Native'),
                ('Krom', 'Krom', 'Krom')],
         name="Runtime", description="Player runtime used when launching in new window", default='Krom', update=assets.invalidate_shader_cache)
