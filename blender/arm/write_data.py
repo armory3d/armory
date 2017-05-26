@@ -111,6 +111,7 @@ project.addSources('Sources');
             f.write(add_armory_library(sdk_path, 'lib/zui'))
             p = sdk_path + '/armory/Assets/droid_sans.ttf'
             f.write(add_assets(p.replace('\\', '/')))
+            assets.add_khafile_def('arm_ui')
 
         if wrd.arm_hscript:
             f.write(add_armory_library(sdk_path, 'lib/hscript'))

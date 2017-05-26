@@ -1,11 +1,15 @@
 package armory.trait.internal;
 
 import iron.Trait;
+#if arm_ui
 import zui.Zui;
 import zui.Canvas;
+#end
 
 @:keep
 class CanvasScript extends Trait {
+
+#if arm_ui
 
 	var cui: Zui;
 	var canvas:TCanvas = null;
@@ -36,4 +40,10 @@ class CanvasScript extends Trait {
 			}
 		});
 	}
+
+#else
+
+	public function new(canvasName:String) { super(); }
+
+#end
 }
