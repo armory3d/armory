@@ -2932,7 +2932,7 @@ class ArmoryExporter:
                         verts.append(v.co.x)
                         verts.append(v.co.y)
                         verts.append(v.co.z)
-        hook_trait['parameters'] = [target_name, str(verts)]
+        hook_trait['parameters'] = ["'" + target_name + "'", str(verts)]
         o['traits'].append(hook_trait)
 
     def post_export_world(self, world, o):

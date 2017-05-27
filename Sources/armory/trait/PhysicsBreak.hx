@@ -526,13 +526,13 @@ class ConvexBreaker {
 		for (i in 0...ind.length) inda.set(i, ind[i]);
 		
 		var pos:TVertexArray = {
-			attrib: "position",
+			attrib: "pos",
 			size: 3,
 			values: paa
 		};
 
 		var nor:TVertexArray = {
-			attrib: "normal",
+			attrib: "nor",
 			size: 3,
 			values: naa
 		};

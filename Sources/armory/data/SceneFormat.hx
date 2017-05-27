@@ -2,7 +2,6 @@ package armory.data;
 
 typedef TSceneFormat = iron.data.SceneFormat.TSceneFormat;
 typedef TMeshData = iron.data.SceneFormat.TMeshData;
-typedef TMesh = iron.data.SceneFormat.TMesh;
 typedef TSkin = iron.data.SceneFormat.TSkin;
 typedef TSkeleton = iron.data.SceneFormat.TSkeleton;
 typedef TVertexArray = iron.data.SceneFormat.TVertexArray;

@@ -44,6 +44,18 @@ class SoftBody extends Trait {
 		});
 	}
 
+	function fromF32(ar:kha.arrays.Float32Array):haxe.ds.Vector<kha.FastFloat> {
+		var vals = new haxe.ds.Vector<kha.FastFloat>(ar.length);
+		for (i in 0...vals.length) vals[i] = ar[i];
+		return vals;
+	}
+
+	function fromU32(ar:kha.arrays.Uint32Array):haxe.ds.Vector<Int> {
+		var vals = new haxe.ds.Vector<Int>(ar.length);
+		for (i in 0...vals.length) vals[i] = ar[i];
+		return vals;
+	}
+
 	function init() {
 		if (ready) return;
 		ready = true;
@@ -64,7 +76,7 @@ class SoftBody extends Trait {
 			object.transform.buildMatrix();
 		}
 
-		var positions:haxe.ds.Vector<kha.FastFloat> = cast haxe.ds.Vector.fromData(geom.positions.copy());
+		var positions:haxe.ds.Vector<kha.FastFloat> = fromF32(geom.positions);
 		for (i in 0...Std.int(positions.length / 3)) {
 			positions[i * 3] *= object.transform.scale.x;
 			positions[i * 3 + 1] *= object.transform.scale.y;
@@ -82,7 +94,7 @@ class SoftBody extends Trait {
 		object.transform.buildMatrix();
 
 		var wrdinfo = physics.world.getWorldInfo();
-		var vecind = haxe.ds.Vector.fromData(geom.indices[0]);
+		var vecind = fromU32(geom.indices[0]);
 		var numtri = Std.int(geom.indices[0].length / 3);
 #if js
 		body = softBodyHelpers.CreateFromTriMesh(wrdinfo, positions, vecind, numtri);
@@ -133,8 +145,10 @@ class SoftBody extends Trait {
 	function update() {
 		var geom = cast(object, MeshObject).data.geom;
 		
-		var v = geom.vertexBuffer.lock();
-		var l = geom.structLength;
+		// Deinterleaved
+		var v = geom.vertexBuffers[0].lock();
+		var n = geom.vertexBuffers[1].lock();
+		var l = 3;//geom.structLength;
 		var numVerts = Std.int(v.length / l);
 
 #if js
@@ -155,9 +169,12 @@ class SoftBody extends Trait {
 			v.set(i * l, nodePos.x());
 			v.set(i * l + 1, nodePos.y());
 			v.set(i * l + 2, nodePos.z());
-			v.set(i * l + 3, nodeNor.x());
-			v.set(i * l + 4, nodeNor.y());
-			v.set(i * l + 5, nodeNor.z());
+			// v.set(i * l + 3, nodeNor.x());
+			// v.set(i * l + 4, nodeNor.y());
+			// v.set(i * l + 5, nodeNor.z());
+			n.set(i * l, nodeNor.x());
+			n.set(i * l + 1, nodeNor.y());
+			n.set(i * l + 2, nodeNor.z());
 		}
 		// for (i in 0...Std.int(geom.indices[0].length / 3)) {
 		// 	var a = geom.indices[0][i * 3];
@@ -180,7 +197,8 @@ class SoftBody extends Trait {
 		// 	v.set(c * l + 4, cb.y);
 		// 	v.set(c * l + 5, cb.z);
 		// }
-		geom.vertexBuffer.unlock();
+		geom.vertexBuffers[0].unlock();
+		geom.vertexBuffers[1].unlock();
 	}
 
 #end
