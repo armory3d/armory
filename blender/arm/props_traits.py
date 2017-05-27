@@ -24,8 +24,8 @@ class ListTraitItem(bpy.types.PropertyGroup):
     type_prop = bpy.props.EnumProperty(
         items = [('Haxe Script', 'Haxe Script', 'Haxe Script'),
                  ('JS Script', 'JS Script', 'JS Script'),
-                 ('Bundled Script', 'Bundled Script', 'Bundled Script'),
                  ('UI Canvas', 'UI Canvas', 'UI Canvas'),
+                 ('Bundled Script', 'Bundled Script', 'Bundled Script'),
                  ('Logic Nodes', 'Logic Nodes', 'Logic Nodes')
                  ],
         name = "Type")
