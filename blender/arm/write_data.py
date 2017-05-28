@@ -141,9 +141,8 @@ project.addSources('Sources');
         f.write("\n\nresolve(project);\n")
 
 # Write Main.hx
-def write_main(is_play, in_viewport, is_publish):
+def write_main(resx, resy, is_play, in_viewport, is_publish):
     wrd = bpy.data.worlds['Arm']
-    resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
     scene_name = arm.utils.get_project_scene_name()
     scene_ext = '.zip' if (bpy.data.scenes[scene_name].data_compressed and is_publish) else ''
     #if not os.path.isfile('Sources/Main.hx'):

@@ -128,7 +128,12 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     write_data.write_khafilejs(is_play, export_physics, export_navigation, is_publish)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
-    write_data.write_main(is_play, in_viewport, is_publish)
+    resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
+    write_data.write_main(resx, resy, is_play, in_viewport, is_publish)
+    if resx != state.last_resx or resy != state.last_resy:
+        wrd.arm_recompile = True
+    state.last_resx = resx
+    state.last_resy = resy
 
 def compile_project(target_name=None, is_publish=False, watch=False, patch=False):
     wrd = bpy.data.worlds['Arm']
