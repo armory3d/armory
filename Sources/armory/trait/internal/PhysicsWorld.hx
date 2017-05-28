@@ -7,6 +7,7 @@ import iron.Trait;
 import iron.system.Time;
 import iron.math.Vec4;
 import iron.math.RayCaster;
+import iron.data.SceneFormat;
 
 class ContactPair {
 	public var a:Int;
@@ -97,8 +98,8 @@ class PhysicsWorld extends Trait {
 		});
 	}
 
-	function gravityArray():kha.arrays.Float32Array {
-		var ar = new kha.arrays.Float32Array(3);
+	function gravityArray():TFloat32Array {
+		var ar = new TFloat32Array(3);
 		ar[0] = 0.0;
 		ar[1] = 0.0;
 		ar[2] = -9.81;

@@ -44,13 +44,13 @@ class SoftBody extends Trait {
 		});
 	}
 
-	function fromF32(ar:kha.arrays.Float32Array):haxe.ds.Vector<kha.FastFloat> {
+	function fromF32(ar:TFloat32Array):haxe.ds.Vector<kha.FastFloat> {
 		var vals = new haxe.ds.Vector<kha.FastFloat>(ar.length);
 		for (i in 0...vals.length) vals[i] = ar[i];
 		return vals;
 	}
 
-	function fromU32(ar:kha.arrays.Uint32Array):haxe.ds.Vector<Int> {
+	function fromU32(ar:TUint32Array):haxe.ds.Vector<Int> {
 		var vals = new haxe.ds.Vector<Int>(ar.length);
 		for (i in 0...vals.length) vals[i] = ar[i];
 		return vals;

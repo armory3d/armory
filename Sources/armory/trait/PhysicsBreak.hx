@@ -518,11 +518,11 @@ class ConvexBreaker {
 		}
 
 		// TODO:
-		var paa = new kha.arrays.Float32Array(pa.length);
+		var paa = new TFloat32Array(pa.length);
 		for (i in 0...pa.length) paa.set(i, pa[i]);
-		var naa = new kha.arrays.Float32Array(na.length);
+		var naa = new TFloat32Array(na.length);
 		for (i in 0...na.length) naa.set(i, na[i]);
-		var inda = new kha.arrays.Uint32Array(ind.length);
+		var inda = new TUint32Array(ind.length);
 		for (i in 0...ind.length) inda.set(i, ind[i]);
 		
 		var pos:TVertexArray = {
