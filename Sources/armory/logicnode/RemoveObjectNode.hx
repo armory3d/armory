@@ -12,7 +12,7 @@ class RemoveObjectNode extends LogicNode {
 		var object:Object = inputs[1].get();
 
 		// Prevent self-destruct
-		if (object != tree.object) object.remove();
+		if (object != null && object != tree.object) object.remove();
 
 		super.run();
 	}
