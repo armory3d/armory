@@ -62,7 +62,9 @@ void main() {
 	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
 
 #ifdef _Rad
-	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+	// TODO: Firefox throws transform loop error even when no depth write is performed
+	// float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+	float depth = (1.0 - g0.a) * 2.0 - 1.0;
 	vec3 p = getPos(eye, eyeLook, viewRay, depth);
 	vec3 v = normalize(eye - p.xyz);
 
