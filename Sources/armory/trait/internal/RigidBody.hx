@@ -274,7 +274,7 @@ class RigidBody extends Trait {
 
 	function fillTriangleMesh(triangleMesh:BtTriangleMeshPointer, scale:Vec4) {
 		var positions = cast(object, MeshObject).data.geom.positions;
-		var indices = cast(object, MeshObject).data.geom.ids;
+		var indices = cast(object, MeshObject).data.geom.indices;
 
 		for (i in 0...Std.int(indices[0].length / 3)) {
 			triangleMesh.addTriangle(

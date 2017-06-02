@@ -89,9 +89,10 @@ project.addSources('Sources');
         if is_publish:
             f.write("project.addParameter('-dce full');")
 
-        if wrd.arm_cache_compiler and (is_play or (state.target == 'html5' and not is_publish)):
+        shaderload = state.target == 'krom' or state.target == 'html5'
+        if wrd.arm_cache_compiler and shaderload and not is_publish:
             # Load shaders manually
-            assets.add_khafile_def('arm_debug')
+            assets.add_khafile_def('arm_shaderload')
 
         for ref in shader_references:
             f.write("project.addShaders('" + ref + "');\n")
