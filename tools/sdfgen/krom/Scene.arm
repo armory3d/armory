@@ -1,0 +1,105 @@
+{
+    "name": "Scene",
+    "renderpath_datas": [
+        {
+            "name": "simple_path",
+            "render_targets": [
+                {
+                    "name": "sdf",
+                    "width": 2500,
+                    "height": 50,
+                    "format": "A32"
+                }
+            ],
+            "stages": [
+                {
+                    "command": "call_function",
+                    "params": ["Main.begin"]
+                },
+                {
+                    "command": "set_target",
+                    "params": [
+                        1.0, "sdf"
+                    ]
+                },
+                {
+                    "command": "clear_target",
+                    "params": [
+                        "color", "#ff000000",
+                        "depth", "1.0"
+                    ]
+                },
+                {
+                    "command": "draw_shader_quad",
+                    "params": [
+                        "Scene/sdfgen/sdfgen"
+                    ]
+                },
+                {
+                    "command": "call_function",
+                    "params": ["Main.end"]
+                }
+            ]
+        }
+    ],
+    "shader_datas": [
+        {
+            "contexts": [
+                {
+                    "name": "sdfgen",
+                    "compare_mode": "always",
+                    "constants": [
+                        {
+                            "name": "meshverts",
+                            "type": "int",
+                            "link": "_meshverts"
+                        }
+                    ],
+                    "cull_mode": "none",
+                    "depth_write": false,
+                    "fragment_shader": "sdfgen.frag",
+                    "vertex_shader": "sdfgen.vert",
+                    "texture_units": [
+                        {
+                            "name": "meshtex",
+                            "link": "_meshtex"
+                        }
+                    ],
+                    "vertex_structure": [
+                        {
+                            "name": "pos",
+                            "size": 2
+                        }
+                    ]
+                }
+            ],
+            "name": "sdfgen"
+        }
+    ],
+    "camera_datas": [
+        {
+            "name": "CameraData",
+            "type": "perspective",
+            "near_plane": 0.1,
+            "far_plane": 100.0,
+            "fov": 0.85,
+            "render_path": "simple_path"
+        }
+    ],
+    "camera_ref": "Camera",
+    "objects": [
+        {
+            "name": "Camera",
+            "type": "camera_object",
+            "data_ref": "CameraData",
+            "transform": {
+                "values": [
+                    0.6859206557273865,-0.32401347160339355,0.6515582203865051,7.481131553649902,
+                    0.7276763319969177,0.305420845746994,-0.6141703724861145,-6.5076398849487305,
+                    0.0,0.8953956365585327,0.44527140259742737,5.34366512298584,
+                    0.0,0.0,0.0,1.0
+                ]
+            }
+        }
+    ]
+}

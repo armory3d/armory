@@ -120,6 +120,19 @@ def get_kha_path():
 def get_khamake_path():
     return get_kha_path() + '/make'
 
+def krom_paths():
+    sdk_path = get_sdk_path()
+    if arm.utils.get_os() == 'win':
+        krom_location = sdk_path + '/win32/Krom/win32'
+        krom_path = krom_location + '/Krom.exe'
+    elif arm.utils.get_os() == 'mac':
+        krom_location = sdk_path + '/Kode Studio.app/Contents/Krom/macos/Krom.app/Contents/MacOS'
+        krom_path = krom_location + '/Krom'
+    else:
+        krom_location = sdk_path + '/linux64/Krom/linux'
+        krom_path = krom_location + '/Krom'
+    return krom_location, krom_path
+
 def fetch_bundled_script_names():
     wrd = bpy.data.worlds['Arm']
     wrd.bundled_scripts_list.clear()

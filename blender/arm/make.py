@@ -436,15 +436,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
             html5_app_path = 'http://localhost:8040/' + arm.utils.build_dir() + '/html5'
             webbrowser.open(html5_app_path)
         elif wrd.arm_play_runtime == 'Krom':
-            if arm.utils.get_os() == 'win':
-                krom_location = sdk_path + '/win32/Krom/win32'
-                krom_path = krom_location + '/Krom.exe'
-            elif arm.utils.get_os() == 'mac':
-                krom_location = sdk_path + '/Kode Studio.app/Contents/Krom/macos/Krom.app/Contents/MacOS'
-                krom_path = krom_location + '/Krom'
-            else:
-                krom_location = sdk_path + '/linux64/Krom/linux'
-                krom_path = krom_location + '/Krom'
+            krom_location, krom_path = arm.utils.krom_paths()
             os.chdir(krom_location)
             state.playproc = subprocess.Popen([krom_path, arm.utils.get_fp_build() + '/window/krom', arm.utils.get_fp_build() + '/window/krom-resources', '--nosound'], stderr=subprocess.PIPE)
             watch_play()

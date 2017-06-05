@@ -16,6 +16,7 @@ import math
 from mathutils import *
 import time
 import subprocess
+import shutil
 import arm.utils
 import arm.write_probes as write_probes
 import arm.assets as assets
@@ -1917,7 +1918,27 @@ class ArmoryExporter:
         if bobject.data.dynamic_usage:
             o['dynamic_usage'] = bobject.data.dynamic_usage
 
+        if bobject.data.sdfgen:
+            o['sdf_ref'] = 'sdf_' + oid
+
         self.write_mesh(bobject, fp, o)
+
+        if bobject.data.sdfgen:
+            # Copy input
+            sdk_path = arm.utils.get_sdk_path()
+            sdfgen_path = sdk_path + '/armory/tools/sdfgen'
+            shutil.copy(fp, sdfgen_path + '/krom/mesh.arm')
+            # Run
+            krom_location, krom_path = arm.utils.krom_paths()
+            krom_dir = sdfgen_path + '/krom'
+            krom_res = sdfgen_path + '/krom-resources'
+            subprocess.check_output([krom_path, krom_dir, krom_res, '--nosound', '--nowindow'])
+            # Copy output
+            sdf_path = fp.replace('/mesh_', '/sdf_')
+            shutil.copy('out.bin', sdf_path)
+            assets.add(sdf_path)
+            os.remove('out.bin')
+            os.remove(sdfgen_path + '/krom/mesh.arm')
 
     def export_mesh_quality(self, exportMesh, bobject, fp, o):
         # Triangulate mesh and remap vertices to eliminate duplicates

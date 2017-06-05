@@ -289,6 +289,8 @@ class GenRPDataPropsPanel(bpy.types.Panel):
                 layout.prop(dat, "rp_volumetriclight")
                 layout.prop(dat, "rp_ssao")
                 layout.prop(dat, "rp_ssr")
+                layout.prop(dat, "rp_dfao")
+                layout.prop(dat, "rp_dfss")
                 layout.prop(dat, "rp_bloom")
                 layout.prop(dat, "rp_motionblur")
 
