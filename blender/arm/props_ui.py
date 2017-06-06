@@ -485,6 +485,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
             layout.prop(wrd, 'arm_play_active_scene')
             if wrd.arm_play_active_scene == False:
                 layout.prop_search(wrd, 'arm_project_scene', bpy.data, 'scenes', 'Scene')
+            layout.prop(wrd, 'arm_winmode')
             layout.label('Armory v' + wrd.arm_version)
             layout.operator('arm.check_updates')
             row = layout.row(align=True)

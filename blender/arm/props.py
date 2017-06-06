@@ -18,7 +18,7 @@ except ImportError:
     pass
 
 # Armory version
-arm_version = '17.05'
+arm_version = '17.06'
 
 def update_preset(self, context):
     props_renderer.set_preset(self, context, self.rp_preset)
@@ -175,6 +175,11 @@ def init_properties():
         name="Runtime", description="Player runtime used when launching in new window", default='Krom', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_loadbar = BoolProperty(name="Load Bar", description="Show asset loading progress on published builds", default=True)
     bpy.types.World.arm_vsync = BoolProperty(name="VSync", description="Vertical Synchronization", default=True)
+    bpy.types.World.arm_winmode = EnumProperty(
+        items = [('Window', 'Window', 'Window'),
+                 ('BorderlessWindow', 'Borderless', 'BorderlessWindow'),
+                 ('Fullscreen', 'Fullscreen', 'Fullscreen')],
+        name="Window Mode", default='Window', description='Window mode to start in')
     bpy.types.World.arm_gapi_win = EnumProperty(
         items = [('opengl', 'Auto', 'opengl'),
                  ('opengl', 'OpenGL', 'opengl'),
