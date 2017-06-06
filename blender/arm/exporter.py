@@ -1784,6 +1784,9 @@ class ArmoryExporter:
         if ArmoryExporter.option_mesh_per_file:
             fp = self.get_meshes_file_path('mesh_' + oid, compressed=self.is_compress(bobject.data))
             assets.add(fp)
+            if bobject.data.sdfgen:
+                sdf_path = fp.replace('/mesh_', '/sdf_')
+                assets.add(sdf_path)
             if self.object_is_mesh_cached(bobject) == True and os.path.exists(fp):
                 return
 

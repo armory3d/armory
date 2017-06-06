@@ -110,6 +110,11 @@
 					"name": "VP",
 					"link": "_viewProjectionMatrix",
 					"ifdef": ["_SSRS"]
+				},
+				{
+					"name": "sdftex",
+					"link": "_sdfTexture",
+					"ifdef": ["_DFRS"]
 				}
 			],
 			"vertex_shader": "deferred_light.vert.glsl",

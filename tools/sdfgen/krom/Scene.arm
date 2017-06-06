@@ -19,7 +19,7 @@
                 {
                     "command": "set_target",
                     "params": [
-                        1.0, "sdf"
+                        "1.0", "sdf"
                     ]
                 },
                 {

@@ -20,6 +20,9 @@ precision mediump float;
 	#include "../std/shadows.glsl"
 	#endif
 #endif
+#ifdef _DFRS
+#include "../std/sdf.glsl"
+#endif
 #ifdef _SSS
 #include "../std/sss.glsl"
 #endif
@@ -41,6 +44,9 @@ uniform sampler2D gbuffer1;
 	//!uniform sampler2D snoise;
 	//!uniform float lampSizeUV;
 	#endif
+#endif
+#ifdef _DFRS
+	//!uniform sampler2D sdftex;
 #endif
 
 uniform mat4 invVP;
@@ -167,6 +173,72 @@ void main() {
 	}
 	else if (lightShadow == 2) { // Cube
 		visibility = shadowTestCube(lp, l);
+	}
+#endif
+
+#ifdef _DFRS
+
+	const float distmax = 40.0;
+	const float eps = 0.02;
+	const int maxSteps = 30;
+	float dist = 0.1;
+
+	// float test = mapsdf2(p);
+	// if (test < 0.1) {
+		// fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+		// return;
+	// }
+
+	float lastd = distmax;
+	for (int i = 0; i < maxSteps; i++) {
+		vec3 rd = l * dist;
+		float d = sdBox(p + rd, vec3(1.0));
+
+		// Going out of volume box
+		// if (d > 0.0 && lastd < d) {
+		// 	break;
+		// }
+		// lastd = d;
+
+		if (d <= 0.0) { // In volume
+			d = mapsdf(p, rd);
+
+			if (d < eps) {
+				visibility = 0.0;
+				break;
+			}
+		}
+		else { // To volume
+			// d += mapsdf(p, rd);
+
+			vec3 sampleBorder = clamp(p + rd, vec3(-1.0), vec3(1.0)); 
+			float phi = mapsdf2(sampleBorder, rd);
+			float dd = 0.1;
+			float grad_x = mapsdf2(sampleBorder + vec3(dd, 0, 0), rd) - phi;
+			float grad_y = mapsdf2(sampleBorder + vec3(0, dd, 0), rd) - phi;
+			vec3 grad = vec3(grad_x, grad_y, 1.0);
+			vec3 endpoint = sampleBorder - normalize(grad) * phi;
+			d = distance(endpoint, p + rd);
+
+			// float dd = 0.1;
+			// vec3 p0 = clamp(p, vec3(-1.0), vec3(1.0));
+			// vec3 p1 = clamp(p, vec3(-0.99), vec3(0.99));
+			// float r0 = mapsdf2(p0, rd);
+			// float r1 = mapsdf2(p1, rd);
+			// float h0 = 0.5 + (r0 * r0 - r1 * r1) / (2.0 * dd * dd);
+			// float ri = sqrt(abs(r0 * r0 - h0 * h0 * dd * dd));
+			// vec3 p2 = p0 + (p1 - p0) * h0;
+			// vec3 p3 = p2 + vec3(p1.z - p0.z, p1.y - p0.y, p1.x - p0.x) * ri;
+			// d = length((p + rd) - p3);
+		}
+		
+		const float k = 2.0;
+		visibility = min(visibility, (k * d / dist));
+		dist += d;
+		
+		if (dist > distmax) {
+			break;
+		}
 	}
 #endif
 

@@ -246,7 +246,7 @@ def init_properties():
     bpy.types.Mesh.mesh_aabb = bpy.props.FloatVectorProperty(name="AABB", size=3, default=[0,0,0])
     bpy.types.Mesh.dynamic_usage = bpy.props.BoolProperty(name="Dynamic Usage", description="Mesh data can change at runtime", default=False)
     bpy.types.Mesh.data_compressed = bpy.props.BoolProperty(name="Compress Data", description="Pack data into zip file", default=False)
-    bpy.types.Mesh.sdfgen = bpy.props.BoolProperty(name="Generate SDF", description="Make signed distance field data", default=False)
+    bpy.types.Mesh.sdfgen = bpy.props.BoolProperty(name="Generate SDF", description="Make signed distance field data", default=False, update=invalidate_mesh_cache)
     bpy.types.Curve.mesh_cached = bpy.props.BoolProperty(name="Mesh Cached", description="No need to reexport curve data", default=False)
     bpy.types.Curve.data_compressed = bpy.props.BoolProperty(name="Compress Data", description="Pack data into zip file", default=False)
     bpy.types.Curve.dynamic_usage = bpy.props.BoolProperty(name="Dynamic Data Usage", description="Curve data can change at runtime", default=False)
@@ -282,6 +282,7 @@ def init_properties():
     bpy.types.Camera.rp_preset = EnumProperty(
         items=[('Low', 'Low', 'Low'),
                ('VR Low', 'VR Low', 'VR Low'),
+               ('Mobile Low', 'Mobile Low', 'Mobile Low'),
                ('Forward', 'Forward', 'Forward'),
                ('Deferred', 'Deferred', 'Deferred'),
                ('Deferred Plus', 'Deferred Plus (experimental)', 'Deferred Plus'),
@@ -333,7 +334,7 @@ def init_properties():
     bpy.types.Camera.rp_ssao = bpy.props.BoolProperty(name="SSAO", description="Screen space ambient occlusion", default=True, update=update_renderpath)
     bpy.types.Camera.rp_ssr = bpy.props.BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
     bpy.types.Camera.rp_dfao = bpy.props.BoolProperty(name="DFAO", description="Distance field ambient occlusion", default=False)
-    bpy.types.Camera.rp_dfss = bpy.props.BoolProperty(name="DFSS", description="Distance field soft shadows", default=False)
+    bpy.types.Camera.rp_dfrs = bpy.props.BoolProperty(name="DFRS", description="Distance field ray-traced shadows", default=False)
     bpy.types.Camera.rp_bloom = bpy.props.BoolProperty(name="Bloom", description="Bloom processing", default=False, update=update_renderpath)
     bpy.types.Camera.rp_motionblur = EnumProperty(
         items=[('None', 'None', 'None'),

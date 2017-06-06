@@ -95,6 +95,12 @@ def build_node_tree(world):
             assets.add_khafile_def('arm_no_shadows')
         if cam.rp_voxelgi:
             voxelgi = True
+        if cam.rp_dfrs:
+            wrd.world_defs += '_DFRS'
+            assets.add_khafile_def('arm_sdf')
+        if cam.rp_dfao:
+            wrd.world_defs += '_DFAO'
+            assets.add_khafile_def('arm_sdf')
 
     if voxelgi:
         assets.add_khafile_def('arm_voxelgi')

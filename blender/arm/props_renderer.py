@@ -40,6 +40,8 @@ def set_preset(self, context, preset):
         cam.rp_volumetriclight = False
         cam.rp_ssao = False
         cam.rp_ssr = False
+        cam.rp_dfrs = False
+        cam.rp_dfao = False
         cam.rp_bloom = False
         cam.rp_motionblur = 'None'
     elif preset == 'Forward':
@@ -64,6 +66,8 @@ def set_preset(self, context, preset):
         cam.rp_volumetriclight = False
         cam.rp_ssao = True
         cam.rp_ssr = True
+        cam.rp_dfrs = False
+        cam.rp_dfao = False
         cam.rp_bloom = False
         cam.rp_motionblur = 'None'
     elif preset == 'Deferred':
@@ -87,6 +91,8 @@ def set_preset(self, context, preset):
         cam.rp_volumetriclight = False
         cam.rp_ssao = True
         cam.rp_ssr = False
+        cam.rp_dfrs = False
+        cam.rp_dfao = False
         cam.rp_bloom = False
         cam.rp_motionblur = 'None'
     elif preset == 'Max':
@@ -110,6 +116,8 @@ def set_preset(self, context, preset):
         cam.rp_volumetriclight = False
         cam.rp_ssao = True
         cam.rp_ssr = True
+        cam.rp_dfrs = False
+        cam.rp_dfao = False
         cam.rp_bloom = False
         cam.rp_motionblur = 'None'
     elif preset == 'Render Capture':
@@ -136,6 +144,8 @@ def set_preset(self, context, preset):
         cam.rp_volumetriclight = False
         cam.rp_ssao = True
         cam.rp_ssr = True
+        cam.rp_dfrs = False
+        cam.rp_dfao = False
         cam.rp_bloom = True
         cam.rp_motionblur = 'None'
         wrd.lighting_model = 'Cycles'
@@ -161,6 +171,8 @@ def set_preset(self, context, preset):
         cam.rp_volumetriclight = False
         cam.rp_ssao = True
         cam.rp_ssr = True
+        cam.rp_dfrs = False
+        cam.rp_dfao = False
         cam.rp_bloom = False
         cam.rp_motionblur = 'None'
     elif preset == 'VR Low':
@@ -185,6 +197,34 @@ def set_preset(self, context, preset):
         cam.rp_volumetriclight = False
         cam.rp_ssao = False
         cam.rp_ssr = False
+        cam.rp_dfrs = False
+        cam.rp_dfao = False
+        cam.rp_bloom = False
+        cam.rp_motionblur = 'None'
+    elif preset == 'Mobile Low':
+        cam.rp_renderer = 'Forward'
+        cam.rp_materials = 'Restricted'
+        cam.rp_shadowmap = '1024'
+        cam.rp_meshes = True
+        cam.rp_translucency_state = 'Off'
+        cam.rp_overlays_state = 'Off'
+        cam.rp_decals_state = 'Off'
+        cam.rp_sss_state = 'Off'
+        cam.rp_hdr = False
+        cam.rp_worldnodes = False
+        cam.rp_clearbackground = True
+        cam.rp_stereo = False
+        cam.rp_greasepencil = False
+        cam.rp_voxelgi = False
+        cam.rp_render_to_texture = False
+        cam.rp_supersampling = '1'
+        cam.rp_antialiasing = 'None'
+        cam.rp_compositornodes = False
+        cam.rp_volumetriclight = False
+        cam.rp_ssao = False
+        cam.rp_ssr = False
+        cam.rp_dfrs = False
+        cam.rp_dfao = False
         cam.rp_bloom = False
         cam.rp_motionblur = 'None'
     elif preset == 'Grease Pencil':
@@ -208,6 +248,8 @@ def set_preset(self, context, preset):
         cam.rp_volumetriclight = False
         cam.rp_ssao = False
         cam.rp_ssr = False
+        cam.rp_dfrs = False
+        cam.rp_dfao = False
         cam.rp_bloom = False
         cam.rp_motionblur = 'None'
 
@@ -290,7 +332,7 @@ class GenRPDataPropsPanel(bpy.types.Panel):
                 layout.prop(dat, "rp_ssao")
                 layout.prop(dat, "rp_ssr")
                 layout.prop(dat, "rp_dfao")
-                layout.prop(dat, "rp_dfss")
+                layout.prop(dat, "rp_dfrs")
                 layout.prop(dat, "rp_bloom")
                 layout.prop(dat, "rp_motionblur")
 
