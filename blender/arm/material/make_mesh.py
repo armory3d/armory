@@ -268,7 +268,7 @@ def make_deferred_plus(con_mesh):
 
     vert.add_out('vec2 texCoord')
 
-    mat_state.data.add_elem('tex', 2) #### Add using cycles.py
+    con_mesh.add_elem('tex', 2) #### Add using cycles.py
     if con_mesh.is_elem('tex'):
         vert.write('texCoord = tex;')
     else:
