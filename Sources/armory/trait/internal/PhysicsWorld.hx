@@ -41,7 +41,7 @@ class PhysicsWorld extends Trait {
 #end
 
 	var dispatcher:BtCollisionDispatcherPointer;
-	var contacts:Array<ContactPair> = [];
+	var contacts:Array<ContactPair>;
 	var preUpdates:Array<Void->Void> = null;
 	public var rbMap:Map<Int, RigidBody>;
 
@@ -53,15 +53,25 @@ class PhysicsWorld extends Trait {
 	public function new() {
 		super();
 
-		if (active != null) {
+		if (active == null) {
+			createPhysics();
+		}
+		else {
 			for (rb in active.rbMap) removeRigidBody(rb);
-			active.rbMap = new Map();
-			return;
+			this.dispatcher = active.dispatcher;
+			this.world = active.world;
 		}
 
-		active = this;
+		contacts = [];
 		rbMap = new Map();
+		active = this;
 
+		Scene.active.notifyOnInit(function() {
+			notifyOnUpdate(update);
+		});
+	}
+
+	function createPhysics() {
 		//var min = BtVector3.create(-100, -100, -100);
 		//var max = BtVector3.create(100, 100, 100);
 		//var broadphase = BtAxisSweep3.create(min, max);
@@ -92,10 +102,6 @@ class PhysicsWorld extends Trait {
 #end
 
 		world.setGravity(BtVector3.create(gravity[0], gravity[1], gravity[2]));
-
-		Scene.active.notifyOnInit(function() {
-			notifyOnUpdate(update);
-		});
 	}
 
 	function gravityArray():TFloat32Array {
