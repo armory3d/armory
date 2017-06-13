@@ -470,7 +470,7 @@ def parse_rgb(node, socket):
         # Already fetched
         if res_var_name(node, node.outputs[1]) in parsed:
             return '{0}.rgb'.format(store_var_name(node))
-        tex_name = c_state.safesrc(node.name)
+        tex_name = c_state.safesrc(node.name) # node_name()
         tex = c_state.make_texture(node, tex_name)
         if tex != None:
             to_linear = parsing_basecol and not tex['file'].endswith('.hdr')

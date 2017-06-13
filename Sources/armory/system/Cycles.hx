@@ -105,6 +105,12 @@ class ShaderContext {
 			depth_write: props.depth_write,
 			compare_mode: props.compare_mode,
 			cull_mode: props.cull_mode,
+			blend_source: props.blend_source,
+			blend_destination: props.blend_destination,
+			blend_operation: props.blend_operation,
+			alpha_blend_source: props.alpha_blend_source,
+			alpha_blend_destination: props.alpha_blend_destination,
+			alpha_blend_operation: props.alpha_blend_operation,
 			fragment_shader: '',
 			vertex_shader: '',
 			vertex_structure: Reflect.hasField(props, 'vertex_structure') ? props.vertex_structure : [ {"name": "pos", "size": 3}, {"name": "nor", "size": 3}]
@@ -878,11 +884,11 @@ class Cycles {
 
 			else if (node.type == 'TEX_IMAGE') {
 				// Already fetched
-				if (parsed.indexOf(res_var_name(node, node.outputs[1])) >= 0) {
+				if (parsed.indexOf(res_var_name(node, node.outputs[1])) >= 0) { // TODO: node.outputs[0]
 					var varname = store_var_name(node);
 					return '$varname.rgb';
 				}
-				var tex_name = safesrc(node.name);
+				var tex_name = node_name(node);
 				var tex = make_texture(node, tex_name);
 				if (tex != null) {
 					var to_linear = parsing_basecol;// && !tex['file'].endswith('.hdr');
@@ -1685,7 +1691,8 @@ class Cycles {
 		// tex.file = extract_filename(image.filepath);
 		// tex.file = safestr(tex.file);
 
-		tex.file = image_node.buttons[0].default_value;
+		// tex.file = image_node.buttons[0].default_value;
+		tex.file = image_node.outputs[image_node.buttons[0].output].default_value;
 
 		// var s = tex.file.split('.');
 		
