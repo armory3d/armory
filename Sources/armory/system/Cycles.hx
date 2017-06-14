@@ -244,7 +244,7 @@ class Shader {
 	public var main_pre = '';
 	var header = '';
 	var main_header = '';
-	var write_pre = false;
+	public var write_pre = false;
 	var tab = 1;
 	var lock = false;
 	var vertex_structure_as_vsinput = true;
@@ -418,7 +418,10 @@ class Cycles {
 	static var links:Array<TNodeLink>;
 
 	static var parsing_basecol:Bool;
+	static var parse_teximage_vector:Bool;
 	static var normal_written:Bool; // Normal socket is linked on shader node - overwrite fs normal
+	
+	public static var out_normaltan:String; // Raw tangent space normal parsed from normal map
 
 	public static function getNode(id: Int): TNode {
 		for (n in nodes) if (n.id == id) return n;
@@ -472,7 +475,10 @@ class Cycles {
 		matcon = _matcon;
 
 		parsing_basecol = false;
+		parse_teximage_vector = true;
 		normal_written = false;
+
+		out_normaltan = 'vec3(0.5, 0.5, 1.0)';
 
 		var output_node = node_by_type(nodes, 'OUTPUT_MATERIAL');
 		if (output_node != null) {
@@ -620,11 +626,11 @@ class Cycles {
 			var occ2 = sout2.out_occlusion;
 			// if parse_surface:
 				parsing_basecol = true;
-				sout.out_basecol = '($bc1 * $fac_var + $bc2 * $fac_inv_var)';
+				sout.out_basecol = '($bc1 * $fac_inv_var + $bc2 * $fac_var)';
 				parsing_basecol = false;
-				sout.out_roughness = '($rough1 * $fac_var + $rough2 * $fac_inv_var)';
-				sout.out_metallic = '($met1 * $fac_var + $met2 * $fac_inv_var)';
-				sout.out_occlusion = '($occ1 * $fac_var + $occ2 * $fac_inv_var)';
+				sout.out_roughness = '($rough1 * $fac_inv_var + $rough2 * $fac_var)';
+				sout.out_metallic = '($met1 * $fac_inv_var + $met2 * $fac_var)';
+				sout.out_occlusion = '($occ1 * $fac_inv_var + $occ2 * $fac_var)';
 			// if parse_opacity:
 				// out_opacity = '({0} * {3} + {1} * {2})'.format(opac1, opac2, fac_var, fac_inv_var)
 		}
@@ -649,6 +655,7 @@ class Cycles {
 			sout.out_basecol = parse_vector_input(node.inputs[0]);
 			parsing_basecol = false;
 			sout.out_roughness = parse_value_input(node.inputs[1]);
+
 		}
 
 		else if (node.type == 'BSDF_GLOSSY') {
@@ -1111,9 +1118,7 @@ class Cycles {
 	}
 
 	public static var texCoordName = 'texCoord';
-	static function texture_store(node:TNode, tex:TBindTexture, tex_name:String, to_linear = false):String {
-		// global parse_teximage_vector
-		
+	static function texture_store(node:TNode, tex:TBindTexture, tex_name:String, to_linear = false):String {		
 		matcon.bind_textures.push(tex);
 		curshader.context.add_elem('tex', 2);
 		curshader.add_uniform('sampler2D $tex_name');
@@ -1135,7 +1140,6 @@ class Cycles {
 
 	static function parse_vector(node:TNode, socket:TNodeSocket):String {
 
-		return '';
 		// if node.type == 'GROUP':
 		// 	return parse_group(node, socket)
 
@@ -1235,15 +1239,16 @@ class Cycles {
 		// 		nor = parse_vector_input(node.inputs[0])
 		// 		return 'vec3(dot({0}, {1}))'.format(tovec3(node.outputs[0].default_value), nor)
 
-		// elif node.type == 'NORMAL_MAP':
-		// 	if curshader == tese:
-		// 		return parse_vector_input(node.inputs[1])
-		// 	else:
-		// 		#space = node.space
-		// 		#map = node.uv_map
-		// 		# strength = parse_value_input(node.inputs[0])
-		// 		parse_normal_map_color_input(node.inputs[1]) # Color
-		// 		return None
+		if (node.type == 'NORMAL_MAP') {
+			// if curshader == tese:
+				// return parse_vector_input(node.inputs[1])
+			// else:
+				// #space = node.space
+				// #map = node.uv_map
+				// #strength = parse_value_input(node.inputs[0])
+				parse_normal_map_color_input(node.inputs[1]); // Color
+				return null;
+		}
 
 		// elif node.type == 'CURVE_VEC':
 		// 	# fac = parse_value_input(node.inputs[0])
@@ -1279,17 +1284,19 @@ class Cycles {
 		// 		return 'cross({0}, {1})'.format(vec1, vec2)
 		// 	elif op == 'NORMALIZE':
 		// 		return 'normalize({0})'.format(vec1)
+
+		return 'vec3(0.0)';
 	}
 
 	static function parse_normal_map_color_input(inp:TNodeSocket) { 
-		// global parse_teximage_vector
 		// if isInputLinked(inp) == False:
 		//     return
-		// frag.write_pre = True
-		// parse_teximage_vector = False # Force texCoord for normal map image vector
+		frag.write_pre = true;
+		parse_teximage_vector = false; // Force texCoord for normal map image vector
+		out_normaltan = parse_vector_input(inp);
 		// defplus = c_state.get_rp_renderer() == 'Deferred Plus'
 		// if not c_state.get_arm_export_tangents() or defplus: # Compute TBN matrix
-		//     frag.write('vec3 texn = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
+		//     frag.write('vec3 texn = ({0}) * 2.0 - 1.0;'.format(out_normaltan))
 		//     frag.add_include('../../Shaders/std/normals.glsl')
 		//     if defplus:
 		//         frag.write('mat3 TBN = cotangentFrame(n, -vVec, g2.xy, g2.zw);')
@@ -1297,13 +1304,13 @@ class Cycles {
 		//         frag.write('mat3 TBN = cotangentFrame(n, -vVec, texCoord);')
 		//     frag.write('n = TBN * normalize(texn);')
 		// else:
-		//     frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
+		//     frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(out_normaltan))
 		//     # frag.write('n = normalize(TBN * normalize(n));')
 		//     frag.write('n = TBN * normalize(n);')
 		//     con.add_elem('tang', 3)
 
-		// parse_teximage_vector = True
-		// frag.write_pre = False
+		parse_teximage_vector = true;
+		frag.write_pre = false;
 	}
 
 	static function parse_value_input(inp:TNodeSocket):String {
