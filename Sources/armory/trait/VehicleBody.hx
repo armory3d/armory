@@ -48,7 +48,7 @@ class VehicleBody extends Trait {
 
 		wheelNames = [wheelName1, wheelName2, wheelName3, wheelName4];
 
-		Scene.active.notifyOnInit(init);
+		iron.Scene.active.notifyOnInit(init);
 	}
 
 	function init() {

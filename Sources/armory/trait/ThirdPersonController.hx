@@ -17,7 +17,7 @@ class ThirdPersonController extends CameraController {
 	public function new() {
 		super();
 
-		Scene.active.notifyOnInit(init);
+		iron.Scene.active.notifyOnInit(init);
 	}
 	
 	function init() {
