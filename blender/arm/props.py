@@ -432,7 +432,7 @@ def init_properties():
     bpy.types.World.generate_ocean_fade = bpy.props.FloatProperty(name="Fade", default=1.8, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_ssao = bpy.props.BoolProperty(name="SSAO", description="Screen-Space Ambient Occlusion", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_ssao_size = bpy.props.FloatProperty(name="Size", default=0.12, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ssao_strength = bpy.props.FloatProperty(name="Strength", default=0.25, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_ssao_strength = bpy.props.FloatProperty(name="Strength", default=0.2, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_ssao_half_res = bpy.props.BoolProperty(name="Half Res", description="Trace in half resolution", default=False, update=assets.invalidate_shader_cache) # TODO: Refactor as quality enum
     bpy.types.World.generate_bloom = bpy.props.BoolProperty(name="Bloom", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_bloom_threshold = bpy.props.FloatProperty(name="Threshold", default=20.0, update=assets.invalidate_shader_cache)
