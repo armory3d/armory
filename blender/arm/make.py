@@ -65,6 +65,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     assets_path = sdk_path + 'armory/Assets/'
     export_physics = bpy.data.worlds['Arm'].arm_physics != 'Disabled'
     export_navigation = bpy.data.worlds['Arm'].arm_navigation != 'Disabled'
+    export_ui = bpy.data.worlds['Arm'].arm_ui != 'Disabled'
     assets.reset()
 
     # Build node trees
@@ -83,6 +84,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     assets.embedded_data = sorted(list(set(assets.embedded_data)))
     physics_found = False
     navigation_found = False
+    ui_found = False
     ArmoryExporter.compress_enabled = is_publish
     ArmoryExporter.in_viewport = in_viewport
     for scene in bpy.data.scenes:
@@ -90,17 +92,25 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
             ext = '.zip' if (scene.data_compressed and is_publish) else '.arm'
             asset_path = arm.utils.build_dir() + '/compiled/Assets/' + arm.utils.safestr(scene.name) + ext
             exporter.execute(bpy.context, asset_path, scene=scene)
-            if physics_found == False and ArmoryExporter.export_physics:
+            if ArmoryExporter.export_physics:
                 physics_found = True
-            if navigation_found == False and ArmoryExporter.export_navigation:
+            if ArmoryExporter.export_navigation:
                 navigation_found = True
+            if ArmoryExporter.export_ui:
+                ui_found = True
             assets.add(asset_path)
     
-    if physics_found == False: # Disable physics anyway if no rigid body exported
+    if physics_found == False: # Disable physics if no rigid body is exported
         export_physics = False
 
     if navigation_found == False:
         export_navigation = False
+
+    if ui_found == False:
+        export_ui = False
+
+    if wrd.arm_ui == 'Enabled':
+        export_ui = True
 
     # Write referenced shader variants
     for ref in assets.shader_datas:
@@ -125,7 +135,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     write_data.write_compiledglsl()
 
     # Write khafile.js
-    write_data.write_khafilejs(is_play, export_physics, export_navigation, is_publish)
+    write_data.write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())

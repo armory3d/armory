@@ -2660,6 +2660,7 @@ class ArmoryExporter:
         ArmoryExporter.export_all_flag = True
         ArmoryExporter.export_physics = False # Indicates whether rigid body is exported
         ArmoryExporter.export_navigation = False
+        ArmoryExporter.export_ui = False
         if not hasattr(ArmoryExporter, 'compress_enabled'):
             ArmoryExporter.compress_enabled = False
         if not hasattr(ArmoryExporter, 'in_viewport'):
@@ -2768,6 +2769,7 @@ class ArmoryExporter:
                         f.write(bpy.data.texts[t.jsscript_prop].as_string())
                     assets.add(assetpath)
                 elif t.type_prop == 'UI Canvas':
+                    ArmoryExporter.export_ui = True
                     x['type'] = 'Script'
                     x['class_name'] = 'armory.trait.internal.CanvasScript'
                     x['parameters'] = ["'" + t.canvas_name_prop + "'"]
@@ -2899,6 +2901,7 @@ class ArmoryExporter:
         if type == NodeTypeCamera:
             # Debug console enabled, attach console overlay to each camera
             if bpy.data.worlds['Arm'].arm_play_console:
+                ArmoryExporter.export_ui = True
                 console_trait = {}
                 console_trait['type'] = 'Script'
                 console_trait['class_name'] = 'armory.trait.internal.DebugConsole'

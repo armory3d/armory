@@ -425,9 +425,8 @@ class ArmoryPlayerPanel(bpy.types.Panel):
             layout.label('Libraries')
             layout.prop(wrd, 'arm_physics')
             layout.prop(wrd, 'arm_navigation')
-            row = layout.row(align=True)
-            row.prop(wrd, 'arm_ui')
-            row.prop(wrd, 'arm_hscript')
+            layout.prop(wrd, 'arm_ui')
+            layout.prop(wrd, 'arm_hscript')
 
 class ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"

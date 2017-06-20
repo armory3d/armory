@@ -23,7 +23,7 @@ def add_assets(path):
     return 'project.addAssets("' + path + '");\n'
 
 # Write khafile.js
-def write_khafilejs(is_play, export_physics, export_navigation, is_publish):
+def write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish):
     global check_dot_path
 
     sdk_path = arm.utils.get_sdk_path()
@@ -108,7 +108,7 @@ project.addSources('Sources');
         if wrd.arm_play_console:
             assets.add_khafile_def('arm_profile')
 
-        if wrd.arm_play_console or wrd.arm_ui:
+        if export_ui:
             f.write(add_armory_library(sdk_path, 'lib/zui'))
             p = sdk_path + '/armory/Assets/droid_sans.ttf'
             f.write(add_assets(p.replace('\\', '/')))
