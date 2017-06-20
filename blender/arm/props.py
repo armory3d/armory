@@ -70,6 +70,12 @@ def update_gapi_win(self, context):
     bpy.data.worlds['Arm'].arm_recompile = True
     assets.invalidate_compiled_data(self, context)
 
+def update_gapi_winapp(self, context):
+    if os.path.isdir(arm.utils.get_fp_build() + '/windowsapp-build'):
+        shutil.rmtree(arm.utils.get_fp_build() + '/windowsapp-build')
+    bpy.data.worlds['Arm'].arm_recompile = True
+    assets.invalidate_compiled_data(self, context)
+
 def update_gapi_linux(self, context):
     if os.path.isdir(arm.utils.get_fp_build() + '/linux-build'):
         shutil.rmtree(arm.utils.get_fp_build() + '/linux-build')
@@ -106,6 +112,7 @@ def init_properties():
     bpy.types.World.arm_project_target = EnumProperty(
         items = [('html5', 'HTML5', 'html5'),
                  ('windows', 'Windows', 'windows'),
+                 ('windowsapp', 'WindowsApp', 'windowsapp'),
                  ('macos', 'MacOS', 'macos'),
                  ('linux', 'Linux', 'linux'),
                  ('ios', 'iOS', 'ios'),
@@ -179,6 +186,7 @@ def init_properties():
         name="Runtime", description="Player runtime used when launching in new window", default='Krom', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_loadbar = BoolProperty(name="Load Bar", description="Show asset loading progress on published builds", default=True)
     bpy.types.World.arm_vsync = BoolProperty(name="VSync", description="Vertical Synchronization", default=True)
+    bpy.types.World.arm_dce = BoolProperty(name="DCE", description="Enable dead code elimination for publish builds", default=True)
     bpy.types.World.arm_winmode = EnumProperty(
         items = [('Window', 'Window', 'Window'),
                  ('BorderlessWindow', 'Borderless', 'BorderlessWindow'),
@@ -192,6 +200,10 @@ def init_properties():
                  ('direct3d11', 'Direct3D11', 'direct3d11'),
                  ('direct3d12', 'Direct3D12', 'direct3d12')],
         name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_win)
+    bpy.types.World.arm_gapi_winapp = EnumProperty(
+        items = [('direct3d11', 'Auto', 'direct3d11'),
+                 ('direct3d11', 'Direct3D11', 'direct3d11')],
+        name="Graphics API", default='direct3d11', description='Based on currently selected target', update=update_gapi_winapp)
     bpy.types.World.arm_gapi_linux = EnumProperty(
         items = [('opengl', 'Auto', 'opengl'),
                  ('opengl', 'OpenGL', 'opengl'),

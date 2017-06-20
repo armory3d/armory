@@ -451,6 +451,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
         row.operator("arm.publish_project")
         layout.prop(wrd, 'arm_project_target')
         layout.prop(wrd, make_utils.target_to_gapi())
+        layout.prop(wrd, 'arm_dce')
 
         layout.label("Libraries")
         rows = 2

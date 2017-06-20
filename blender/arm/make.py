@@ -135,7 +135,8 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     write_data.write_compiledglsl()
 
     # Write khafile.js
-    write_data.write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish)
+    enable_dce = is_publish and wrd.arm_dce
+    write_data.write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
@@ -428,7 +429,9 @@ def on_compiled(mode): # build, play, play_viewport, publish
         elif target_name == 'ios' or target_name == 'osx': # TODO: to macos
             print('XCode project files are located in ' + files_path + '-build')
         elif target_name == 'windows':
-            print('VisualStudio 2015 project files are located in ' + files_path + '-build')
+            print('VisualStudio 2017 project files are located in ' + files_path + '-build')
+        elif target_name == 'windowsapp':
+            print('VisualStudio 2017 project files are located in ' + files_path + '-build')
         elif target_name == 'android-native':
             print('Android Studio project files are located in ' + files_path + '-build/' + arm.utils.safestr(wrd.arm_project_name))
         else:

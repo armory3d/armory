@@ -43,6 +43,8 @@ def target_to_gapi():
         return 'arm_gapi_mac'
     elif wrd.arm_project_target == 'windows':
         return 'arm_gapi_win'
+    elif wrd.arm_project_target == 'windowsapp':
+        return 'arm_gapi_winapp'
     elif wrd.arm_project_target == 'android-native':
         return 'arm_gapi_android'
     else:
