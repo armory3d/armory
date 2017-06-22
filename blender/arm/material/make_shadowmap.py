@@ -117,7 +117,7 @@ def make(context_id, rpasses):
                 vert.write('vcolor = col;')
     
     # TODO: pass vbuf with proper struct
-    if gapi.startswith('direct3d'):
+    if gapi.startswith('direct3d') and bpy.data.worlds['Arm'].arm_deinterleaved_buffers == False:
         vert.write('vec3 t1 = nor; // TODO: Temp for d3d')
         if con_shadowmap.is_elem('tex'):
             vert.write('vec2 t2 = tex; // TODO: Temp for d3d')

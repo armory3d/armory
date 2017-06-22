@@ -58,6 +58,13 @@ def invalidate_mesh_cache(self, context):
         return
     context.object.data.mesh_cached = False
 
+def invalidate_instance_cache(self, context):
+    if context.object == None or context.object.data == None:
+        return
+    invalidate_mesh_cache(self, context)
+    for slot in context.object.material_slots:
+        slot.material.is_cached = False
+
 def update_mat_cache(self, context):
     if self.is_cached == True:
         self.lock_cache = True
@@ -230,7 +237,7 @@ def init_properties():
         name="Graphics API", default='webgl', description='Based on currently selected target', update=update_gapi_html5)
 
     # For object
-    bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced Children", description="Use instaced rendering", default=False, update=invalidate_mesh_cache)
+    bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced Children", description="Use instaced rendering", default=False, update=invalidate_instance_cache)
     bpy.types.Object.instanced_children_loc_x = bpy.props.BoolProperty(name="X", default=True)
     bpy.types.Object.instanced_children_loc_y = bpy.props.BoolProperty(name="Y", default=True)
     bpy.types.Object.instanced_children_loc_z = bpy.props.BoolProperty(name="Z", default=True)
