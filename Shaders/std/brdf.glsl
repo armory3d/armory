@@ -1,50 +1,5 @@
-
-vec2 LightingFuncGGX_FV(const float dotLH, const float roughness) {
-	float alpha = roughness * roughness;
-
-	// F
-	float F_a, F_b;
-	float dotLH5 = pow(1.0 - dotLH, 5.0);
-	F_a = 1.0;
-	F_b = dotLH5;
-
-	// V
-	float vis;
-	float k = alpha / 2.0;
-	float k2 = k * k;
-	float invK2 = 1.0 - k2;
-	//vis = rcp(dotLH * dotLH * invK2 + k2);
-	vis = inversesqrt(dotLH * dotLH * invK2 + k2);
-
-	return vec2(F_a * vis, F_b * vis);
-}
-
-float LightingFuncGGX_D(const float dotNH, const float roughness) {
-	float alpha = roughness * roughness;
-	float alphaSqr = alpha * alpha;
-	const float pi = 3.14159;
-	float denom = dotNH * dotNH * (alphaSqr - 1.0) + 1.0;
-
-	float D = alphaSqr / (pi * denom * denom);
-	return D;
-}
-
-// John Hable - Optimizing GGX Shaders
-// http://www.filmicworlds.com/2014/04/21/optimizing-ggx-shaders-with-dotlh/
-float LightingFuncGGX_OPT3(const float dotNL, const float dotLH, const float dotNH, const float roughness, const float F0) {
-	// vec3 H = normalize(V + L);
-	// float dotNL = clamp(dot(N, L), 0.0, 1.0);
-	// float dotLH = clamp(dot(L, H), 0.0, 1.0);
-	// float dotNH = clamp(dot(N, H), 0.0, 1.0);
-
-	float D = LightingFuncGGX_D(dotNH, roughness);
-	vec2 FV_helper = LightingFuncGGX_FV(dotLH, roughness);
-	float FV = F0 * FV_helper.x + (1.0 - F0) * FV_helper.y;
-	float specular = dotNL * D * FV;
-
-	return specular;
-}
-
+// http://xlgames-inc.github.io/posts/improvedibl/
+// http://blog.selfshadow.com/publications/s2013-shading-course/
 vec3 f_schlick(const vec3 f0, const float vh) {
 	return f0 + (1.0 - f0) * exp2((-5.55473 * vh - 6.98316) * vh);
 }
@@ -62,7 +17,31 @@ float d_ggx(const float nh, const float a) {
 vec3 specularBRDF(const vec3 f0, const float roughness, const float nl, const float nh, const float nv, const float vh) {
 	float a = roughness * roughness;
 	return d_ggx(nh, a) * clamp(v_smithschlick(nl, nv, a), 0.0, 1.0) * f_schlick(f0, vh) / 4.0;
-	//return vec3(LightingFuncGGX_OPT3(nl, lh, nh, roughness, f0[0]));
+}
+
+// John Hable - Optimizing GGX Shaders
+// http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/
+vec3 specularBRDFb(const vec3 f0, const float roughness, const float dotNL, const float dotNH, const float dotLH) {
+	// D
+	const float pi = 3.1415926535;
+	float alpha = roughness * roughness;
+	float alphaSqr = alpha * alpha;
+	float denom = dotNH * dotNH * (alphaSqr - 1.0) + 1.0;
+	float D = alphaSqr / (pi * denom * denom);
+	// F
+	const float F_a = 1.0;
+	float F_b = pow(1.0 - dotLH, 5.0);
+	// V
+	float vis;
+	float k = alpha / 2.0;
+	float k2 = k * k;
+	float invK2 = 1.0 - k2;
+	vis = 1.0 / (dotLH * dotLH * invK2 + k2);
+	vec2 FV_helper = vec2((F_a - F_b) * vis, F_b * vis);
+
+	vec3 FV = f0 * FV_helper.x + FV_helper.y;
+	vec3 specular = clamp(dotNL, 0.0, 1.0) * D * FV;
+	return specular / 4.0; // TODO: get rid of / 4.0
 }
 
 vec3 orenNayarDiffuseBRDF(const vec3 albedo, const float roughness, const float nv, const float nl, const float vh) {
