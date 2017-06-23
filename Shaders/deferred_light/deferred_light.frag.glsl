@@ -108,14 +108,20 @@ vec2 getProjectedCoord(vec3 hitCoord) {
 	vec4 projectedCoord = VP * vec4(hitCoord, 1.0);
 	projectedCoord.xy /= projectedCoord.w;
 	projectedCoord.xy = projectedCoord.xy * 0.5 + 0.5;
+	#ifdef _InvY
+	projectedCoord.y = 1.0 - projectedCoord.y;
+	#endif
 	return projectedCoord.xy;
 }
 float getDeltaDepth(vec3 hitCoord) {
 	vec2 texCoord = getProjectedCoord(hitCoord);
+	// #ifdef _InvY // D3D
 	// float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+	// #else
 	// TODO: store_depth
 	vec4 g0 = texture(gbuffer0, texCoord);
 	float depth = (1.0 - g0.a) * 2.0 - 1.0;
+	// #endif
 	vec3 wpos = getPos2(invVP, depth, texCoord);
 	float d1 = length(eye - wpos);
 	float d2 = length(eye - hitCoord);
@@ -140,12 +146,18 @@ float traceShadow(vec3 dir, vec3 hitCoord) {
 void main() {
 	vec2 texCoord = wvpposition.xy / wvpposition.w;
 	texCoord = texCoord * 0.5 + 0.5;
+	#ifdef _InvY
+	texCoord.y = 1.0 - texCoord.y;
+	#endif
 
 	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, occlusion
 	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, 
+	// #ifdef _InvY // D3D
 	// float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0; // 0 - 1 => -1 - 1
+	// #else
 	// TODO: store_depth
 	float depth = (1.0 - g0.a) * 2.0 - 1.0;
+	// #endif
 
 	vec3 n;
 	n.z = 1.0 - abs(g0.x) - abs(g0.y);

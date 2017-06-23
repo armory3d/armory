@@ -39,21 +39,36 @@ vec3 getPosNoEye(const vec3 eyeLook, const vec3 viewRay, const float depth) {
 	return wposition;
 }
 
+#ifdef _InvY
+vec3 getPos2(const mat4 invVP, const float depth, vec2 coord) {
+	coord.y = 1.0 - coord.y;
+#else
 vec3 getPos2(const mat4 invVP, const float depth, const vec2 coord) {
+#endif
 	vec4 pos = vec4(coord * 2.0 - 1.0, depth, 1.0);
 	pos = invVP * pos;
 	pos.xyz /= pos.w;
 	return pos.xyz;
 }
 
+#ifdef _InvY
+vec3 getPosView2(const mat4 invP, const float depth, vec2 coord) {
+	coord.y = 1.0 - coord.y;
+#else
 vec3 getPosView2(const mat4 invP, const float depth, const vec2 coord) {
+#endif
 	vec4 pos = vec4(coord * 2.0 - 1.0, depth, 1.0);
 	pos = invP * pos;
 	pos.xyz /= pos.w;
 	return pos.xyz;
 }
 
+#ifdef _InvY
+vec3 getPos2NoEye(const vec3 eye, const mat4 invVP, const float depth, vec2 coord) {
+	coord.y = 1.0 - coord.y;
+#else
 vec3 getPos2NoEye(const vec3 eye, const mat4 invVP, const float depth, const vec2 coord) {
+#endif
 	vec4 pos = vec4(coord * 2.0 - 1.0, depth, 1.0);
 	pos = invVP * pos;
 	pos.xyz /= pos.w;

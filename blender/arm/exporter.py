@@ -2107,7 +2107,7 @@ class ArmoryExporter:
             if lamp_size > 1:
                 o['shadows_bias'] += 0.00001 * lamp_size
             o['lamp_size'] = lamp_size * 10 # Match to Cycles
-        if objtype == 'POINT' and objref.lamp_omni_shadows:
+        if objtype == 'POINT' and objref.lamp_omni_shadows and not arm.utils.get_gapi().startswith('direct3d'):
             o['fov'] = 1.5708 # 90 deg
             if objref.lamp_omni_shadows_cubemap:
                 o['shadowmap_cube'] = True

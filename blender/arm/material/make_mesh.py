@@ -210,6 +210,7 @@ def make_deferred(con_mesh):
     vert = con_mesh.vert
     tese = con_mesh.tese
 
+    gapi = arm.utils.get_gapi()
     if '_Veloc' in wrd.rp_defs:
         frag.add_out('vec4[3] fragColor')
         if tese == None:
@@ -228,6 +229,10 @@ def make_deferred(con_mesh):
             tese.write('wvpposition = gl_Position;')
             make_tess.interpolate(tese, 'prevwposition', 3)
             tese.write('prevwvpposition = prevVP * vec4(prevwposition, 1.0);')
+    elif gapi.startswith('direct3d'):
+        vert.add_out('vec4 wvpposition')
+        vert.write('wvpposition = gl_Position;')
+        frag.add_out('vec4[2] fragColor')
     else:
         frag.add_out('vec4[2] fragColor')
 
@@ -236,7 +241,10 @@ def make_deferred(con_mesh):
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
     # TODO: store_depth
-    frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - gl_FragCoord.z);')
+    if gapi.startswith('direct3d'):
+        frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - ((wvpposition.z / wvpposition.w) * 0.5 + 0.5));')
+    else:
+        frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - gl_FragCoord.z);')
     if '_SSS' in wrd.rp_defs:
         frag.add_uniform('int materialID')
         frag.write('fragColor[1] = vec4(basecol.rgb, materialID + clamp(occlusion, 0.0, 1.0 - 0.001));')
