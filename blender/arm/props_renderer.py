@@ -146,7 +146,7 @@ def set_preset(self, context, preset):
         cam.rp_ssr = True
         cam.rp_dfrs = False
         cam.rp_dfao = False
-        cam.rp_bloom = True
+        cam.rp_bloom = False
         cam.rp_motionblur = 'None'
         wrd.lighting_model = 'Cycles'
         wrd.generate_pcss_state = 'On'

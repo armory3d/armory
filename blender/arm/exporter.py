@@ -2127,7 +2127,7 @@ class ArmoryExporter:
                 if o['type'] == 'point' or o['type'] == 'spot':
                     o['strength'] *= 0.026
                 elif o['type'] == 'area':
-                    o['strength'] *= 0.026
+                    o['strength'] *= 0.26
                 elif o['type'] == 'sun':
                     o['strength'] *= 0.325
                 # TODO: Lamp texture test..

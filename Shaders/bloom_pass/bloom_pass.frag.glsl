@@ -23,9 +23,9 @@ void main() {
 	col /= 4.0;
 
 	float brightness = dot(col.rgb, vec3(0.2126, 0.7152, 0.0722));
-	// if (brightness > bloomThreshold) {
-		// fragColor.rgb = vec3(col.rgb);
-		// return;
-	// }
+	if (brightness > bloomThreshold) {
+		fragColor.rgb = vec3(col.rgb / 2);
+		return;
+	}
 	fragColor.rgb = vec3(0.0);
 }

@@ -155,8 +155,8 @@ def make_deferred(cam):
     if not cam.rp_translucency:
         relink('Set Target Accum', 'Bloom')
 
-    # if not cam.rp_bloom:
-    relink('Bloom', 'SSS')
+    if not cam.rp_bloom:
+        relink('Bloom', 'SSS')
 
     if not cam.rp_sss_state == 'On':
         relink('SSS', 'SSR')
