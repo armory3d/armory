@@ -34,9 +34,9 @@ void main() {
 	float weight = 0.5 * clamp(1.0 - sqrt(delta) * SMAA_REPROJECTION_WEIGHT_SCALE, 0.0, 1.0);
 
 	// Blend the pixels according to the calculated weight:
-	fragColor.rgb = mix(current.rgb, previous.rgb, weight);
+	fragColor = vec4(mix(current.rgb, previous.rgb, weight), 1.0);
 #else
 	vec4 previous = texture(tex2, texCoord);
-	fragColor = mix(current.rgb, previous.rgb, 0.5);
+	fragColor = vec4(mix(current.rgb, previous.rgb, 0.5), 1.0);
 #endif
 }

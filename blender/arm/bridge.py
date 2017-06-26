@@ -21,14 +21,6 @@ def parse_operator(text):
                 bpy.context.object.select = False
             bpy.context.scene.objects[cmd[2]].select = True
             bpy.context.scene.objects.active = bpy.context.scene.objects[cmd[2]]
-        elif cmd[1] == 'render':
-            import numpy
-            data = numpy.fromfile(arm.utils.get_fp_build() + '/html5/render.bin', dtype=numpy.uint8)
-            data = data.astype(float)
-            data = numpy.divide(data, 255)
-            image = bpy.data.images.new("Render Result", width=int(cmd[2]), height=int(cmd[3]))
-            image.pixels = data
-            return
 
 def send_operator(op):
     # Try to translate operator directly to armory

@@ -196,6 +196,7 @@ def make_deferred(cam):
 
     if cam.rp_supersampling == '4':
         links.new(nodes[last_node].outputs[0], nodes['SS Resolve'].inputs[0])
+        last_node = 'SS Resolve'
         if cam.rp_antialiasing == 'SMAA':
             links.new(nodes['Reroute.014'].outputs[0], nodes['SMAA'].inputs[1])
             links.new(nodes['Reroute.014'].outputs[0], nodes['SS Resolve'].inputs[2])
@@ -208,6 +209,15 @@ def make_deferred(cam):
         elif cam.rp_antialiasing == 'None':
             links.new(nodes['Reroute.008'].outputs[0], nodes['Draw Compositor'].inputs[1])
             links.new(nodes['Reroute.008'].outputs[0], nodes['SS Resolve'].inputs[2])
+
+    if cam.rp_rendercapture:
+        # links.new(nodes[last_node].outputs[0], nodes['CopyCapture'].inputs[0])
+        fb = nodes['Framebuffer']
+        cc = nodes['CopyCapture']
+        cn = nodes['Capture']
+        for l in fb.outputs[0].links:
+            if l.to_node != cc:
+                links.new(cn.outputs[0], l.to_socket)
 
 def make_deferred_plus(cam):
     pass

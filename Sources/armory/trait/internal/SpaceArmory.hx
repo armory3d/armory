@@ -21,12 +21,6 @@ class SpaceArmory extends Trait {
 
 	static var first = true;
 
-#if js
-	static var patchTime = 0.0;
-	static var lastMtime:Dynamic = null;
-	static var lastSize:Dynamic;
-#end
-
 	public function new() {
 		super();
 		
@@ -43,8 +37,8 @@ class SpaceArmory extends Trait {
 
 		if (first) {
 			first = false;
-			#if (js && kha_webgl)
-			electronRenderCapture();
+			#if (kha_krom && arm_render)
+			renderCapture();
 			#end
 		}
 	}
@@ -112,9 +106,10 @@ class SpaceArmory extends Trait {
 		}
 		#end
 	}
-	var time = 0.0;
 
 #if (js && kha_webgl)
+	static var time = 0.0;
+	static var lastMtime:Dynamic = null;
 	function reloadOnUpdate() {
 		// Reload page on kha.js rewrite
 		var khaPath = "kha.js";
@@ -131,58 +126,33 @@ class SpaceArmory extends Trait {
 		}
 		xhr.send();
 	}
+#end
 
-	public static function getRenderResult():js.html.Uint8Array {
-		var gl = kha.SystemImpl.gl;
-		var w = gl.drawingBufferWidth;
-		var h = gl.drawingBufferHeight;
-		var pixels = new js.html.Uint8Array(w * h * 4);
-		gl.readPixels(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, js.html.webgl.GL.RGBA, js.html.webgl.GL.UNSIGNED_BYTE, pixels);
-		return pixels;
-		// var bytes = haxe.io.Bytes.ofData(pixels.buffer);
-		// var pngdata = armory.trait.internal.png.Tools.buildRGB(w, h, bytes);
-		// var output = new haxe.io.BytesOutput();
-		// var writer = new armory.trait.internal.png.Writer(output);
-		// writer.write(pngdata);
-		// return output.getBytes();
-	}
-	
-	function electronRenderCapture() {
-		var electron = untyped __js__('window && window.process && window.process.versions["electron"]');
-		if (electron) {
-			untyped __js__('var fs = require("fs");');
-			
-			App.notifyOnUpdate(function() {
-				patchTime += iron.system.Time.delta;
-				
-				if (patchTime > 0.2) {
-					patchTime = 0;
-					var repatch = false;
-					untyped __js__('
-						if (fs.existsSync(__dirname + "/" + "render.msg")) {
-							{0} = true;
-							fs.unlinkSync(__dirname + "/" + "render.msg");
-						}'
-					, repatch);
-
-					if (repatch) {
-						var pixels = getRenderResult();
-						untyped __js__('
-							fs.writeFileSync(__dirname + "/render.bin", new Buffer({0}));
-						', pixels);
-						var w = kha.SystemImpl.gl.drawingBufferWidth;
-						var h = kha.SystemImpl.gl.drawingBufferHeight;
-						trace("__arm|render" + "|" + w + "|" + h);
-					}
-					// Compare mtime and size of file
-					// untyped __js__('fs.stat(__dirname + "/" + {0} + ".arm", function(err, stats) {', Scene.active.raw.name);
-					// untyped __js__('	if ({0} > stats.mtime || {0} < stats.mtime || {1} !== stats.size) { if ({0} !== undefined) { {2} = true; } {0} = stats.mtime; {1} = stats.size; }', lastMtime, lastSize, repatch);
-					// if (repatch) {
+#if (kha_krom && arm_render)
+	static var frame = 0;	
+	function renderCapture() {
+		App.notifyOnRender(function(g:kha.graphics4.Graphics) {
+			frame++;
+			if (frame >= 3) {
+				var pd = iron.Scene.active.cameras[0].data.pathdata;
+				var tex = pd.renderTargets.get("capture").image;
+				if (tex != null) {
+					var pixels = tex.getPixels();
+					Krom.fileSaveBytes("render.bin", pixels.getData());
+					// var bo = new haxe.io.BytesOutput();
+					// var rgb = haxe.io.Bytes.alloc(tex.width * tex.height * 3);
+					// for (i in 0...tex.width * tex.height) {
+					// 	rgb.set(i * 3 + 0, pixels.get(i * 4 + 2));
+					// 	rgb.set(i * 3 + 1, pixels.get(i * 4 + 1));
+					// 	rgb.set(i * 3 + 2, pixels.get(i * 4 + 0));
 					// }
-					// untyped __js__('});');
+					// var pngwriter = new armory.format.png.Writer(bo);
+					// pngwriter.write(armory.format.png.Tools.buildRGB(tex.width, tex.height, rgb));
+					// Krom.fileSaveBytes("render.png", bo.getBytes().getData());
 				}
-			});
-		}
+				kha.System.requestShutdown();
+			}
+		});
 	}
 #end
 }

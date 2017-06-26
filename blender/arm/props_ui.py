@@ -740,10 +740,15 @@ class ArmoryRenderButton(bpy.types.Operator):
     bl_label = 'Render'
  
     def execute(self, context):
-        if state.playproc == None:
-            self.report({"ERROR"}, "Run Armory player in electron window first")
-            return {"CANCELLED"}
+        if state.playproc != None:
+            make.stop_project()
+        if bpy.data.worlds['Arm'].arm_play_runtime != 'Krom':
+            bpy.data.worlds['Arm'].arm_play_runtime = 'Krom'
+        if bpy.data.cameras[0].rp_preset != 'Render Capture':
+            bpy.data.cameras[0].rp_preset = 'Render Capture'
+        assets.invalidate_enabled = False
         make.get_render_result()
+        assets.invalidate_enabled = True
         return{'FINISHED'}
 
 # Play button in 3D View panel

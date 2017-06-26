@@ -13,3 +13,4 @@ compileproc_success = False
 play_area = None
 krom_running = False
 is_paused = False
+is_render = False

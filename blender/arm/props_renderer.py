@@ -43,6 +43,7 @@ def set_preset(self, context, preset):
         cam.rp_dfrs = False
         cam.rp_dfao = False
         cam.rp_bloom = False
+        cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
     elif preset == 'Forward':
         cam.rp_renderer = 'Forward'
@@ -69,6 +70,7 @@ def set_preset(self, context, preset):
         cam.rp_dfrs = False
         cam.rp_dfao = False
         cam.rp_bloom = False
+        cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
     elif preset == 'Deferred':
         cam.rp_renderer = 'Deferred'
@@ -94,6 +96,7 @@ def set_preset(self, context, preset):
         cam.rp_dfrs = False
         cam.rp_dfao = False
         cam.rp_bloom = False
+        cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
     elif preset == 'Max':
         cam.rp_renderer = 'Deferred'
@@ -119,6 +122,7 @@ def set_preset(self, context, preset):
         cam.rp_dfrs = False
         cam.rp_dfao = False
         cam.rp_bloom = False
+        cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
     elif preset == 'Render Capture':
         cam.rp_renderer = 'Deferred'
@@ -147,6 +151,7 @@ def set_preset(self, context, preset):
         cam.rp_dfrs = False
         cam.rp_dfao = False
         cam.rp_bloom = False
+        cam.rp_rendercapture = True
         cam.rp_motionblur = 'None'
         wrd.lighting_model = 'Cycles'
         wrd.generate_pcss_state = 'On'
@@ -174,6 +179,7 @@ def set_preset(self, context, preset):
         cam.rp_dfrs = False
         cam.rp_dfao = False
         cam.rp_bloom = False
+        cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
     elif preset == 'VR Low':
         cam.rp_renderer = 'Forward'
@@ -200,6 +206,7 @@ def set_preset(self, context, preset):
         cam.rp_dfrs = False
         cam.rp_dfao = False
         cam.rp_bloom = False
+        cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
     elif preset == 'Mobile Low':
         cam.rp_renderer = 'Forward'
@@ -226,6 +233,7 @@ def set_preset(self, context, preset):
         cam.rp_dfrs = False
         cam.rp_dfao = False
         cam.rp_bloom = False
+        cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
     elif preset == 'Grease Pencil':
         cam.rp_renderer = 'Forward'
@@ -251,6 +259,7 @@ def set_preset(self, context, preset):
         cam.rp_dfrs = False
         cam.rp_dfao = False
         cam.rp_bloom = False
+        cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
 
     updating_preset = False
@@ -335,6 +344,7 @@ class GenRPDataPropsPanel(bpy.types.Panel):
                 layout.prop(dat, "rp_dfrs")
                 layout.prop(dat, "rp_bloom")
                 layout.prop(dat, "rp_motionblur")
+                layout.prop(dat, "rp_rendercapture")
 
 class PropsRPDataPropsPanel(bpy.types.Panel):
     bl_label = "Armory Render Props"

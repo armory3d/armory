@@ -62,6 +62,23 @@ def on_scene_update_post(context):
             # op_changed(last_operator, bpy.context.object)
         # last_operator = None
 
+    if state.is_render:
+        fp = arm.utils.get_fp_build()
+        resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
+        if os.path.isfile(fp + '/render.bin') and os.path.getsize(fp + '/render.bin') == resx * resy * 4:
+            import numpy
+            data = numpy.fromfile(fp + '/render.bin', dtype=numpy.uint8)
+            # data = data.astype(float)
+            data = numpy.divide(data, 255)
+            n = "Render Result"
+            if n in bpy.data.images and bpy.data.images[n].size[0] == resx and bpy.data.images[n].size[1] == resy:
+                bpy.data.images[n].pixels = data
+            else:
+                image = bpy.data.images.new("Render Result", width=resx, height=resy)
+                image.pixels = data
+            state.is_render = False
+            os.remove(fp + '/render.bin')
+
     # Player running
     state.krom_running = False
     if not state.is_paused and bpy.context.screen != None:

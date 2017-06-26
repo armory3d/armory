@@ -217,8 +217,10 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
     else:
         return subprocess.Popen(cmd)
 
-def build_project(is_play=False, is_publish=False, in_viewport=False, target=None):
+def build_project(is_play=False, is_publish=False, is_render=False, in_viewport=False, target=None):
     wrd = bpy.data.worlds['Arm']
+
+    state.is_render = is_render
 
     # Set target
     if target == None:
@@ -357,7 +359,7 @@ def get_khajs_path(in_viewport, target):
     else: # Browser
         return arm.utils.build_dir() + '/html5/kha.js'
 
-def play_project(in_viewport):
+def play_project(in_viewport, is_render=False):
     global scripts_mtime
     wrd = bpy.data.worlds['Arm']
 
@@ -370,7 +372,7 @@ def play_project(in_viewport):
     state.target = runtime_to_target(in_viewport)
 
     # Build data
-    build_project(is_play=True, in_viewport=in_viewport, target=state.target)
+    build_project(is_play=True, is_render=is_render, in_viewport=in_viewport, target=state.target)
     state.in_viewport = in_viewport
 
     khajs_path = get_khajs_path(in_viewport, state.target)
@@ -450,8 +452,12 @@ def on_compiled(mode): # build, play, play_viewport, publish
             webbrowser.open(html5_app_path)
         elif wrd.arm_play_runtime == 'Krom':
             krom_location, krom_path = arm.utils.krom_paths()
-            os.chdir(krom_location)
-            state.playproc = subprocess.Popen([krom_path, arm.utils.get_fp_build() + '/window/krom', arm.utils.get_fp_build() + '/window/krom-resources', '--nosound'], stderr=subprocess.PIPE)
+            # os.chdir(krom_location)
+            os.chdir(arm.utils.get_fp_build())
+            args = [krom_path, arm.utils.get_fp_build() + '/window/krom', arm.utils.get_fp_build() + '/window/krom-resources', '--nosound']
+            # if state.is_render:
+                # args.append('--nowindow')
+            state.playproc = subprocess.Popen(args, stderr=subprocess.PIPE)
             watch_play()
 
 def clean_cache():
@@ -516,5 +522,4 @@ def publish_project():
     assets.invalidate_enabled = True
 
 def get_render_result():
-    with open(arm.utils.get_fp_build() + '/html5/render.msg', 'w') as f:
-        pass
+    play_project(False, is_render=True)
