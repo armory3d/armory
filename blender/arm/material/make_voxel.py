@@ -118,7 +118,10 @@ def make(context_id):
     if wrd.lighting_model == 'Cycles':
         frag.write('basecol /= 10.0;') # Higher range to allow emission
 
-    frag.write('vec3 color = basecol * visibility * lightColor * dotNL * attenuate(distance(wposition * voxelgiDimensions.x, lightPos));')
+    if cycles.emission_found:
+        frag.write('vec3 color = basecol;')
+    else:
+        frag.write('vec3 color = basecol * visibility * lightColor * dotNL * attenuate(distance(wposition * voxelgiDimensions.x, lightPos));')
     frag.write('vec3 voxel = wposition * 0.5 + vec3(0.5);')
     frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
 

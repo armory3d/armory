@@ -18,6 +18,7 @@ import arm.material.cycles_functions as c_functions
 import arm.material.cycles_state as c_state
 
 basecol_texname = ''
+emission_found = False
 
 def parse(nodes, con, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
@@ -41,6 +42,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     global parse_teximage_vector
     global basecol_only
     global basecol_texname
+    global emission_found
     con = _con
     vert = _vert
     frag = _frag
@@ -53,6 +55,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     parse_teximage_vector = True
     basecol_only = _basecol_only
     basecol_texname = ''
+    emission_found = False
 
     # Surface
     if parse_surface or parse_opacity:
@@ -187,10 +190,11 @@ def parse_shader(node, socket):
                 if node.inputs[8].is_linked:
                     parsing_basecolor(True)
                     out_emission = parse_vector_input(node.inputs[8])
+                    emission_found = True
                     parsing_basecolor(False)
                     if node.inputs[9].is_linked or node.inputs[9].default_value != 1.0:
-                        out_emission = '({0} * {1} * 10.0)'.format(out_emission, parse_value_input(node.inputs[9]))
-                    out_basecol = '({0} + {1})'.format(out_basecol, out_emission)
+                        out_emission = '({0} * {1})'.format(out_emission, parse_value_input(node.inputs[9]))
+                    out_basecol = '({0} + {1} * 10.0)'.format(out_basecol, out_emission)
             
             if parse_opacity:
                 out_opacity = parse_value_input(node.inputs[12])
@@ -272,6 +276,7 @@ def parse_shader(node, socket):
             parsing_basecolor(True)
             out_basecol = parse_vector_input(node.inputs[0])
             parsing_basecolor(False)
+            emission_found = True
             strength = parse_value_input(node.inputs[1])
             out_basecol = '({0} * ({1} * 10.0))'.format(out_basecol, strength)
 
