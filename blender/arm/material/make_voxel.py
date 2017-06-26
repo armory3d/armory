@@ -115,11 +115,10 @@ def make(context_id):
     geom.write('}')
     geom.write('EndPrimitive();')
 
+    if wrd.lighting_model == 'Cycles':
+        frag.write('basecol /= 10.0;') # Higher range to allow emission
 
-
-    frag.write('vec3 color;')
-    frag.write('if (lightShadow > 0) color = basecol * visibility * lightColor * dotNL * attenuate(distance(wposition * voxelgiDimensions.x, lightPos));')
-    frag.write('else color = (basecol - 1.0);') # Emission only when no lamp or shadowmap is present
+    frag.write('vec3 color = basecol * visibility * lightColor * dotNL * attenuate(distance(wposition * voxelgiDimensions.x, lightPos));')
     frag.write('vec3 voxel = wposition * 0.5 + vec3(0.5);')
     frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
 

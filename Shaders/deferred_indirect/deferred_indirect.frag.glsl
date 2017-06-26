@@ -81,7 +81,7 @@ void main() {
 	vec4 indirectDiffuse = indirectDiffuseLight(n, wpos);
 
 	vec3 reflectWorld = reflect(-v, n);
-	vec3 indirectSpecular = traceSpecularVoxelCone(wpos, reflectWorld, n, metrough.y * 10.0);
+	vec3 indirectSpecular = traceSpecularVoxelCone(wpos, reflectWorld, n, metrough.y * 12.0);
 	indirectSpecular *= f0 * envBRDF.x + envBRDF.y;
 
 	fragColor.rgb = indirectDiffuse.rgb * voxelgiDiff * g1.rgb + indirectSpecular * voxelgiSpec;

@@ -22,9 +22,10 @@ void main() {
 	col += texture(tex, vec2(texCoord.x, texCoord.y + texStep.y * 1.5));
 	col /= 4.0;
 
-	float brightness = dot(col.rgb, vec3(0.2126, 0.7152, 0.0722));
-	if (brightness > bloomThreshold) {
-		fragColor.rgb = vec3(col.rgb / 2);
+	// float brightness = dot(col.rgb, vec3(0.2126, 0.7152, 0.0722));
+	// if (brightness > bloomThreshold) {
+	if (col.r + col.g + col.b > bloomThreshold) {
+		fragColor.rgb = col.rgb;
 		return;
 	}
 	fragColor.rgb = vec3(0.0);

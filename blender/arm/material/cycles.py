@@ -189,7 +189,7 @@ def parse_shader(node, socket):
                     out_emission = parse_vector_input(node.inputs[8])
                     parsing_basecolor(False)
                     if node.inputs[9].is_linked or node.inputs[9].default_value != 1.0:
-                        out_emission = '({0} * {1})'.format(out_emission, parse_value_input(node.inputs[9]))
+                        out_emission = '({0} * {1} * 10.0)'.format(out_emission, parse_value_input(node.inputs[9]))
                     out_basecol = '({0} + {1})'.format(out_basecol, out_emission)
             
             if parse_opacity:
