@@ -10,6 +10,7 @@ import arm.make_renderer as make_renderer
 import arm.make as make
 import arm.make_utils as make_utils
 import arm.make_state as state
+import arm.props_renderer as props_renderer
 import arm.assets as assets
 import arm.log as log
 
@@ -513,6 +514,10 @@ class ArmoryPlayButton(bpy.types.Operator):
             
         make_renderer.check_default()
 
+        if bpy.data.cameras[0].rp_rendercapture == True:
+            self.report({"ERROR"}, "Disable Camera - Armory Render Path - Render Capture first")
+            return {"CANCELLED"}
+
         assets.invalidate_enabled = False
         make.play_project(False)
         assets.invalidate_enabled = True
@@ -540,6 +545,10 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
             return {"CANCELLED"}
 
         make_renderer.check_default()
+
+        if bpy.data.cameras[0].rp_rendercapture == True:
+            self.report({"ERROR"}, "Disable Camera - Armory Render Path - Render Capture first")
+            return {"CANCELLED"}
 
         assets.invalidate_enabled = False
         if state.playproc == None and state.krom_running == False:
@@ -744,8 +753,9 @@ class ArmoryRenderButton(bpy.types.Operator):
             make.stop_project()
         if bpy.data.worlds['Arm'].arm_play_runtime != 'Krom':
             bpy.data.worlds['Arm'].arm_play_runtime = 'Krom'
-        if bpy.data.cameras[0].rp_preset != 'Render Capture':
-            bpy.data.cameras[0].rp_preset = 'Render Capture'
+        if bpy.data.cameras[0].rp_rendercapture == False:
+            self.report({"ERROR"}, "Set Camera - Armory Render Path - Preset to Render Capture first")
+            return {"CANCELLED"}
         assets.invalidate_enabled = False
         make.get_render_result()
         assets.invalidate_enabled = True

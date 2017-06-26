@@ -78,6 +78,7 @@ def on_scene_update_post(context):
                 image.pixels = data
             state.is_render = False
             os.remove(fp + '/render.bin')
+            print('Output image captured into Blender - UV/Image Editor - Render Result')
 
     # Player running
     state.krom_running = False

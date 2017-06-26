@@ -455,8 +455,8 @@ def on_compiled(mode): # build, play, play_viewport, publish
             # os.chdir(krom_location)
             os.chdir(arm.utils.get_fp_build())
             args = [krom_path, arm.utils.get_fp_build() + '/window/krom', arm.utils.get_fp_build() + '/window/krom-resources', '--nosound']
-            # if state.is_render:
-                # args.append('--nowindow')
+            if state.is_render:
+                args.append('--nowindow')
             state.playproc = subprocess.Popen(args, stderr=subprocess.PIPE)
             watch_play()
 
