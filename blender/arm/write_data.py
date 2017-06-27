@@ -159,8 +159,8 @@ class Main {
     public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';
     public static inline var projectAssets = """ + str(len(assets.assets)) + """;
     public static var projectWindowMode = kha.WindowMode.""" + str(wrd.arm_winmode) + """;
-    static inline var projectWidth = """ + str(resx) + """;
-    static inline var projectHeight = """ + str(resy) + """;
+    public static inline var projectWidth = """ + str(resx) + """;
+    public static inline var projectHeight = """ + str(resy) + """;
     static inline var projectSamplesPerPixel = """ + str(int(wrd.arm_samples_per_pixel)) + """;
     static inline var projectVSync = """ + ('true' if wrd.arm_vsync else 'false') + """;
     static inline var projectScene = '""" + arm.utils.safestr(scene_name) + scene_ext + """';
