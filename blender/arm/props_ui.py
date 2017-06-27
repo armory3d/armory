@@ -775,6 +775,8 @@ def draw_view3d_header(self, context):
 # Info panel in header
 def draw_info_header(self, context):
     layout = self.layout
+    if 'Arm' not in bpy.data.worlds:
+        return
     wrd = bpy.data.worlds['Arm']
     if wrd.arm_progress < 100:
         layout.prop(wrd, 'arm_progress')
