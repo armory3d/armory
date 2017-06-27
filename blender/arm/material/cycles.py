@@ -194,7 +194,7 @@ def parse_shader(node, socket):
                     parsing_basecolor(False)
                     if node.inputs[9].is_linked or node.inputs[9].default_value != 1.0:
                         out_emission = '({0} * {1})'.format(out_emission, parse_value_input(node.inputs[9]))
-                    out_basecol = '({0} + {1} * 10.0)'.format(out_basecol, out_emission)
+                    out_basecol = '({0} + {1} * 100.0)'.format(out_basecol, out_emission)
             
             if parse_opacity:
                 out_opacity = parse_value_input(node.inputs[12])
@@ -300,7 +300,7 @@ def parse_shader(node, socket):
             parsing_basecolor(False)
             emission_found = True
             strength = parse_value_input(node.inputs[1])
-            out_basecol = '({0} * ({1} * 10.0))'.format(out_basecol, strength)
+            out_basecol = '({0} * ({1} * 100.0))'.format(out_basecol, strength)
 
     elif node.type == 'BSDF_GLASS':
         if parse_surface:

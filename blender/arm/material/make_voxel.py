@@ -115,14 +115,15 @@ def make(context_id):
     geom.write('}')
     geom.write('EndPrimitive();')
 
-    if wrd.lighting_model == 'Cycles':
-        frag.write('basecol /= 10.0;') # Higher range to allow emission
-
     if cycles.emission_found:
         frag.write('vec3 color = basecol;')
     else:
         frag.write('vec3 color = basecol * visibility * lightColor * dotNL * attenuate(distance(wposition * voxelgiDimensions.x, lightPos));')
     frag.write('vec3 voxel = wposition * 0.5 + vec3(0.5);')
+
+    if wrd.lighting_model == 'Cycles':
+        frag.write('color = min(color * 0.9, vec3(0.9)) + min(color / 200.0, 0.1);') # Higher range to allow emission
+
     frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
 
     return con_voxel

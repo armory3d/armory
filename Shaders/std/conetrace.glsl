@@ -31,7 +31,7 @@ vec4 traceDiffuseVoxelCone(const vec3 from, vec3 direction) {
 		float ll = (level + 1.0) * (level + 1.0);
 		vec4 voxel = textureLod(voxels, c, min(MAX_MIPMAP, level));
 #ifdef _Cycles
-		voxel.rgb *= 10.0; // Higher range to allow emission
+		voxel.rgb = min(voxel.rgb * 0.9, vec3(0.9)) + max((voxel.rgb - 0.9) * 200.0, 0.0); // Higher range to allow emission
 #endif
 		acc += 0.075 * ll * voxel * pow(1.0 - voxel.a, 2.0);
 		dist += ll * VOXEL_SIZE * 2.0;
