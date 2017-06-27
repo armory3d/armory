@@ -648,6 +648,29 @@ class Cycles {
 		//     if parse_opacity:
 		//         out_opacity = '({0} * 0.5 + {1} * 0.5)'.format(opac1, opac2)
 
+		else if (node.type == 'BSDF_PRINCIPLED') {
+			//if parse_surface:
+			write_normal(node.inputs[16]);
+			parsing_basecol = true;
+			sout.out_basecol = parse_vector_input(node.inputs[0]);
+			parsing_basecol = false;
+			sout.out_roughness = parse_value_input(node.inputs[7]);
+			sout.out_metallic = parse_value_input(node.inputs[4]);
+			// subsurface = parse_vector_input(node.inputs[1])
+			// subsurface_radius = parse_vector_input(node.inputs[2])
+			// subsurface_color = parse_vector_input(node.inputs[3])
+			// specular = parse_vector_input(node.inputs[5])
+			// specular_tint = parse_vector_input(node.inputs[6])
+			// aniso = parse_vector_input(node.inputs[8])
+			// aniso_rot = parse_vector_input(node.inputs[9])
+			// sheen = parse_vector_input(node.inputs[10])
+			// sheen_tint = parse_vector_input(node.inputs[11])
+			// clearcoat = parse_vector_input(node.inputs[12])
+			// clearcoat_rough = parse_vector_input(node.inputs[13])
+			// ior = parse_vector_input(node.inputs[14])
+			// transmission = parse_vector_input(node.inputs[15])
+		}
+
 		else if (node.type == 'BSDF_DIFFUSE') {
 			//if parse_surface:
 			write_normal(node.inputs[2]);
@@ -712,7 +735,7 @@ class Cycles {
 		//     pass
 
 		else if (node.type == 'SUBSURFACE_SCATTERING') {
-		    //if parse_surface:
+			//if parse_surface:
 			write_normal(node.inputs[4]);
 			parsing_basecol = true;
 			sout.out_basecol = parse_vector_input(node.inputs[0]);

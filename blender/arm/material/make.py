@@ -46,8 +46,14 @@ def parse(material, mat_data, mat_users, mat_armusers, rid):
             c['bind_constants'].append(const)
 
             if bpy.data.cameras[0].rp_sss_state == 'On':
+                sss = False
                 sss_node = arm.nodes.get_node_by_type(material.node_tree, 'SUBSURFACE_SCATTERING')
                 if sss_node != None and sss_node.outputs[0].is_linked: # Check linked node
+                    sss = True
+                sss_node = arm.nodes.get_node_by_type(material.node_tree, 'BSDF_PRINCIPLED')
+                if sss_node != None and sss_node.outputs[0].is_linked and (sss_node.inputs[1].is_linked or sss_node.inputs[1].default_value != 0.0):
+                    sss = True
+                if sss:
                     const = {}
                     const['name'] = 'materialID'
                     const['int'] = 2
