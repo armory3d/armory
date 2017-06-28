@@ -85,7 +85,7 @@ void main() {
 	indirectSpecular *= f0 * envBRDF.x + envBRDF.y;
 
 	fragColor.rgb = indirectDiffuse.rgb * voxelgiDiff * g1.rgb + indirectSpecular * voxelgiSpec;
-	float occ = 1.0 - indirectDiffuse.a * 0.25 * voxelgiOcc;
+	float occ = 1.0 - indirectDiffuse.a * 0.2 * voxelgiOcc;
 	fragColor.rgb *= occ;
 
 	#ifdef _SSAO
