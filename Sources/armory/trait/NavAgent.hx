@@ -46,13 +46,13 @@ class NavAgent extends Trait {
 		var targetAngle = Math.atan2(orient.y, orient.x) + Math.PI / 2;
 		var currentAngle = object.transform.rot.toAxisAngle(Vec4.zAxis());
 		angle = currentAngle;
-		Tween.to(this, 0.4, { angle: targetAngle }, null, 0, 0);
+		Tween.to({ target: this, props: { angle: targetAngle }, duration: 0.4});
 
-		Tween.to(object.transform.loc, dist * speed, { x: p.x, y: p.y /*, z: p.z*/ }, function() {
+		Tween.to({ target: object.transform.loc, props: { x: p.x, y: p.y /*, z: p.z*/ }, duration: dist * speed, done: function() {
 			index++;
 			if (index < path.length) go();
 			else removeUpdate(update);
-		}, 0, 0);
+		}});
 	}
 
 	function update() {
