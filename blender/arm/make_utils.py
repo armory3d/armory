@@ -47,5 +47,7 @@ def target_to_gapi():
         return 'arm_gapi_winapp'
     elif wrd.arm_project_target == 'android-native':
         return 'arm_gapi_android'
+    elif wrd.arm_project_target == 'node':
+        return 'arm_gapi_html5'
     else:
         return 'arm_gapi_' + wrd.arm_project_target

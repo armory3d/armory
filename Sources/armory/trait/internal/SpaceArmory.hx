@@ -98,7 +98,7 @@ class SpaceArmory extends Trait {
 		// 	moveX = moveY = moveZ = false;
 		// }
 
-		#if (js && kha_webgl)
+		#if (js && kha_webgl && !kha_node)
 		time += iron.system.Time.delta;
 		if (time > 1.0) {
 			time = 0;
@@ -107,7 +107,7 @@ class SpaceArmory extends Trait {
 		#end
 	}
 
-#if (js && kha_webgl)
+#if (js && kha_webgl && !kha_node)
 	static var time = 0.0;
 	static var lastMtime:Dynamic = null;
 	function reloadOnUpdate() {

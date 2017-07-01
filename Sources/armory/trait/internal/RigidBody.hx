@@ -258,6 +258,7 @@ class RigidBody extends Trait {
 		// _motionState.getWorldTransform(trans);
 		// trans.setOrigin(BtVector3.create(transform.loc.x, transform.loc.y, transform.loc.z));
 		// _motionState.setWorldTransform(trans);
+		activate();
 	}
 
 	function addPointsToConvexHull(shape:BtConvexHullShapePointer, scale:Vec4, margin:Float) {

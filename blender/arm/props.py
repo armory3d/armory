@@ -124,7 +124,8 @@ def init_properties():
                  ('linux', 'Linux', 'linux'),
                  ('ios', 'iOS', 'ios'),
                  ('android-native', 'Android', 'android-native'),
-                 ('krom', 'Krom', 'krom')],
+                 ('krom', 'Krom', 'krom'),
+                 ('node', 'Node', 'node')],
         name="Target", default='html5', description='Build paltform')
     bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="")
     bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm")

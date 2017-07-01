@@ -23,10 +23,7 @@ class SetRotationNode extends LogicNode {
 
 		#if arm_physics
 		var rigidBody = object.getTrait(RigidBody);
-		if (rigidBody != null) {
-			rigidBody.syncTransform();
-			rigidBody.activate();
-		}
+		if (rigidBody != null) rigidBody.syncTransform();
 		#end
 
 		super.run();

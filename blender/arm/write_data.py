@@ -73,7 +73,7 @@ project.addSources('Sources');
         if export_physics:
             assets.add_khafile_def('arm_physics')
             f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
-            if state.target == 'krom' or state.target == 'html5':
+            if state.target == 'krom' or state.target == 'html5' or state.target == 'node':
                 ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
                 ammojs_path = ammojs_path.replace('\\', '/')
                 f.write(add_assets(ammojs_path))
