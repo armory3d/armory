@@ -218,6 +218,12 @@ def make_deferred(cam):
         for l in fb.outputs[0].links:
             if l.to_node != cc:
                 links.new(cn.outputs[0], l.to_socket)
+        if cam.rp_rendercapture_format == '8bit':
+            cn.inputs[4].default_value = 'RGBA32'
+        elif cam.rp_rendercapture_format == '16bit':
+            cn.inputs[4].default_value = 'RGBA64'
+        elif cam.rp_rendercapture_format == '32bit':
+            cn.inputs[4].default_value = 'RGBA128'
 
 def make_deferred_plus(cam):
     pass

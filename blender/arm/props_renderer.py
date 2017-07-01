@@ -152,6 +152,7 @@ def set_preset(self, context, preset):
         cam.rp_dfao = False
         cam.rp_bloom = False
         cam.rp_rendercapture = True
+        cam.rp_rendercapture_format = '8bit'
         cam.rp_motionblur = 'None'
         wrd.lighting_model = 'Cycles'
         wrd.generate_pcss_state = 'On'
@@ -345,6 +346,8 @@ class GenRPDataPropsPanel(bpy.types.Panel):
                 layout.prop(dat, "rp_bloom")
                 layout.prop(dat, "rp_motionblur")
                 layout.prop(dat, "rp_rendercapture")
+                if dat.rp_rendercapture:
+                    layout.prop(dat, "rp_rendercapture_format")
 
 class PropsRPDataPropsPanel(bpy.types.Panel):
     bl_label = "Armory Render Props"

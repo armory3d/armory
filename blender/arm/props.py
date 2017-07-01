@@ -366,6 +366,11 @@ def init_properties():
     bpy.types.Camera.rp_dfrs = bpy.props.BoolProperty(name="DFRS", description="Distance field ray-traced shadows", default=False)
     bpy.types.Camera.rp_bloom = bpy.props.BoolProperty(name="Bloom", description="Bloom processing", default=False, update=update_renderpath)
     bpy.types.Camera.rp_rendercapture = bpy.props.BoolProperty(name="Render Capture", description="Save output as render result", default=False, update=update_renderpath)
+    bpy.types.Camera.rp_rendercapture_format = EnumProperty(
+        items=[('8bit', '8bit', '8bit'),
+               ('16bit', '16bit', '16bit'),
+               ('32bit', '32bit', '32bit')],
+        name="Capture Format", description="Bits per color channel", default='8bit', update=update_renderpath)
     bpy.types.Camera.rp_motionblur = EnumProperty(
         items=[('None', 'None', 'None'),
                ('Basic', 'Basic', 'Basic'),
