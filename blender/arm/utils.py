@@ -117,6 +117,14 @@ def get_kha_path():
     else:
         return get_sdk_path() + '/linux64/Kha'
 
+def get_haxe_path():
+    if get_os() == 'win':
+        return get_sdk_path() + '/win32/Kha/Tools/haxe/haxe.exe'
+    elif get_os() == 'mac':
+        return get_sdk_path() + '/Kode Studio.app/Contents/Kha/Tools/haxe/haxe-osx'
+    else:
+        return get_sdk_path() + '/linux64/Kha/Tools/haxe/haxe-linux64'
+
 def get_khamake_path():
     return get_kha_path() + '/make'
 

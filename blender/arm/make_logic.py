@@ -38,7 +38,7 @@ def build_node_tree(node_group):
 
     with open(file, 'w') as f:
         f.write('package ' + pack_path + '.node;\n\n')
-        f.write('import armory.logicnode.*;\n\n')
+        # f.write('import armory.logicnode.*;\n\n')
         f.write('@:keep class ' + group_name + ' extends armory.logicnode.LogicTree {\n\n')
         f.write('\tpublic function new() { super(); notifyOnAdd(add); }\n\n')
         f.write('\tfunction add() {\n')
@@ -72,7 +72,7 @@ def build_node(node, f):
 
     # Create node
     node_type = node.bl_idname[2:] # Discard 'LN'TimeNode prefix
-    f.write('\t\tvar ' + name + ' = new ' + node_type + '(this);\n')
+    f.write('\t\tvar ' + name + ' = new armory.logicnode.' + node_type + '(this);\n')
     
     # Properties
     for i in range(0, 5):
@@ -132,23 +132,23 @@ def get_root_nodes(node_group):
     return roots
 
 def build_default_node(inp):
-    inp_name = 'new NullNode(this)'
+    inp_name = 'new armory.logicnode.NullNode(this)'
     if inp.bl_idname == 'ArmNodeSocketAction':
         return inp_name
     if inp.bl_idname == 'ArmNodeSocketObject':
-        inp_name = 'new ObjectNode(this, "' + str(inp.default_value) + '")'
+        inp_name = 'new armory.logicnode.ObjectNode(this, "' + str(inp.default_value) + '")'
     elif inp.type == 'VECTOR':
-        inp_name = 'new VectorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ')'
+        inp_name = 'new armory.logicnode.VectorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ')'
     elif inp.type == 'RGBA':
-        inp_name = 'new ColorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ', ' + str(inp.default_value[3]) + ')'
+        inp_name = 'new armory.logicnode.ColorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ', ' + str(inp.default_value[3]) + ')'
     elif inp.type == 'RGB':
-        inp_name = 'new ColorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ')'
+        inp_name = 'new armory.logicnode.ColorNode(this, ' + str(inp.default_value[0]) + ', ' + str(inp.default_value[1]) + ', ' + str(inp.default_value[2]) + ')'
     elif inp.type == 'VALUE':
-        inp_name = 'new FloatNode(this, ' + str(inp.default_value) + ')'
+        inp_name = 'new armory.logicnode.FloatNode(this, ' + str(inp.default_value) + ')'
     elif inp.type == 'INT':
-        inp_name = 'new IntegerNode(this, ' + str(inp.default_value) + ')'
+        inp_name = 'new armory.logicnode.IntegerNode(this, ' + str(inp.default_value) + ')'
     elif inp.type == 'BOOLEAN':
-        inp_name = 'new BooleanNode(this, ' + str(inp.default_value).lower() + ')'
+        inp_name = 'new armory.logicnode.BooleanNode(this, ' + str(inp.default_value).lower() + ')'
     elif inp.type == 'STRING':
-        inp_name = 'new StringNode(this, "' + str(inp.default_value) + '")'
+        inp_name = 'new armory.logicnode.StringNode(this, "' + str(inp.default_value) + '")'
     return inp_name

@@ -22,9 +22,14 @@ import arm.lib.make_datas
 import arm.lib.make_variants
 import arm.lib.server
 from arm.exporter import ArmoryExporter
+try:
+    import barmory
+except ImportError:
+    pass
 
 exporter = ArmoryExporter()
 scripts_mtime = 0 # Monitor source changes
+code_parsed = False
 
 def compile_shader(raw_shaders_path, shader_name, defs):
     os.chdir(raw_shaders_path + './' + shader_name)
@@ -136,7 +141,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
 
     # Write khafile.js
     enable_dce = is_publish and wrd.arm_dce
-    write_data.write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce)
+    write_data.write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce, in_viewport)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
@@ -361,6 +366,7 @@ def get_khajs_path(in_viewport, target):
 
 def play_project(in_viewport, is_render=False):
     global scripts_mtime
+    global code_parsed
     wrd = bpy.data.worlds['Arm']
 
     log.clear()
@@ -388,20 +394,34 @@ def play_project(in_viewport, is_render=False):
     state.last_in_viewport = state.in_viewport
 
     # Trait sources modified
+    state.mod_scripts = []
     script_path = arm.utils.get_fp() + '/Sources/' + arm.utils.safestr(wrd.arm_project_package)
     if os.path.isdir(script_path):
+        new_mtime = scripts_mtime
         for fn in glob.iglob(os.path.join(script_path, '**', '*.hx'), recursive=True):
             mtime = os.path.getmtime(fn)
             if scripts_mtime < mtime:
-                scripts_mtime = mtime
+                fn = fn.split('Sources/')[1]
+                fn = fn[:-3] #.hx
+                fn = fn.replace('/', '.')
+                state.mod_scripts.append(fn)
                 wrd.arm_recompile = True
+                if new_mtime < mtime:
+                    new_mtime = mtime
+        scripts_mtime = new_mtime
 
     # New compile requred - traits changed
     if wrd.arm_recompile:
-        # Unable to live-patch, stop player
+        state.recompiled = True
         if state.krom_running:
-            bpy.ops.arm.space_stop('EXEC_DEFAULT')
-            return
+            # Unable to live-patch, stop player
+            # bpy.ops.arm.space_stop('EXEC_DEFAULT')
+            # return
+            if not code_parsed:
+                code_parsed = True
+                barmory.parse_code()
+        else:
+            code_parsed = False
 
         mode = 'play'
         if state.target == 'native':
@@ -414,6 +434,7 @@ def play_project(in_viewport, is_render=False):
             state.compileproc = compile_project(target_name='html5')
         threading.Timer(0.1, watch_compile, [mode]).start()
     else: # kha.js up to date
+        state.recompiled = False
         compile_project(target_name=state.target, patch=True)
 
 def on_compiled(mode): # build, play, play_viewport, publish

@@ -148,7 +148,12 @@ def on_scene_update_post(context):
             if state.compileproc_success:
                 # Notify embedded player
                 if state.krom_running:
-                    barmory.call_js('armory.Scene.patch();')
+                    if state.recompiled and wrd.arm_play_live_patch:
+                        barmory.parse_code()
+                        for s in state.mod_scripts:
+                            barmory.call_js('armory.Scene.patchTrait("' + s + '");')
+                    else:
+                        barmory.call_js('armory.Scene.patch();')
                 # Or switch to armory space
                 elif arm.utils.with_krom() and state.in_viewport:
                     state.play_area.type = 'VIEW_ARMORY'

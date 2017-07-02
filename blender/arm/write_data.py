@@ -23,7 +23,7 @@ def add_assets(path):
     return 'project.addAssets("' + path + '");\n'
 
 # Write khafile.js
-def write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce):
+def write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce, in_viewport):
     global check_dot_path
 
     sdk_path = arm.utils.get_sdk_path()
@@ -96,6 +96,11 @@ project.addSources('Sources');
         if wrd.arm_cache_compiler and shaderload and not is_publish:
             # Load shaders manually
             assets.add_khafile_def('arm_shaderload')
+
+        sceneload = state.target == 'krom'
+        if wrd.arm_play_live_patch and is_play and in_viewport and sceneload:
+            # Scene patch
+            assets.add_khafile_def('arm_sceneload')
 
         for ref in shader_references:
             f.write("project.addShaders('" + ref + "');\n")
