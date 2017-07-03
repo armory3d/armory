@@ -235,7 +235,7 @@ def build_project(is_play=False, is_publish=False, is_render=False, in_viewport=
     state.in_viewport = False
 
     # Save blend
-    if arm.utils.get_save_on_build():
+    if arm.utils.get_save_on_build() and not state.krom_running:
         bpy.ops.wm.save_mainfile()
     
     log.clear()
