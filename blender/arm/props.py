@@ -373,9 +373,9 @@ def init_properties():
         name="Capture Format", description="Bits per color channel", default='8bit', update=update_renderpath)
     bpy.types.Camera.rp_motionblur = EnumProperty(
         items=[('None', 'None', 'None'),
-               ('Basic', 'Basic', 'Basic'),
-               ('Velocity', 'Velocity', 'Velocity')],
-        name="Motion Blur", description="Motion blur processing", default='None', update=update_renderpath)
+               ('Camera', 'Camera', 'Camera'),
+               ('Object', 'Object', 'Object')],
+        name="Motion Blur", description="Velocity buffer is used for object based motion blur", default='None', update=update_renderpath)
     bpy.types.Camera.rp_translucency = bpy.props.BoolProperty(name="Translucency", description="Current render-path state", default=False)
     bpy.types.Camera.rp_translucency_state = bpy.props.EnumProperty(
         items=[('On', 'On', 'On'),
