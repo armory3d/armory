@@ -107,9 +107,11 @@ def on_scene_update_post(context):
        operators_changed:
         # Otherwise rebuild scene
         if bridge.send_operator(last_operator) == False:
-            assets.invalidate_enabled = False
-            make.play_project(in_viewport=True)
-            assets.invalidate_enabled = True
+            if state.compileproc == None:
+                # state.is_paused = True # Speeds up recompile
+                assets.invalidate_enabled = False
+                make.play_project(in_viewport=True)
+                assets.invalidate_enabled = True
 
     # Use frame rate for update frequency for now
     fps_mult = 2.0 if (state.krom_running and arm.utils.get_os() == 'win') else 1.0 # Handlers called less frequently on Windows?
@@ -149,6 +151,7 @@ def on_scene_update_post(context):
                 # Notify embedded player
                 if state.krom_running:
                     if state.recompiled and wrd.arm_play_live_patch:
+                        # state.is_paused = False
                         barmory.parse_code()
                         for s in state.mod_scripts:
                             barmory.call_js('armory.Scene.patchTrait("' + s + '");')
@@ -187,15 +190,10 @@ def on_scene_update_post(context):
                 else:
                     obj.active_material.is_cached = False
 
-    if hasattr(bpy.context, 'window') and bpy.context.window != None:
-        # Invalidate logic node tree cache if it is being edited..
-        areas = bpy.context.window.screen.areas
-        for area in areas:
-            if area.type == 'NODE_EDITOR':
-                for space in area.spaces:
-                    if space.type == 'NODE_EDITOR':
-                        if space.node_tree != None and space.node_tree.bl_idname == 'ArmLogicTreeType': # and space.node_tree.is_updated:
-                            space.node_tree.is_cached = False
+    # Invalidate logic node tree cache if it is being edited..
+    space = arm.utils.logic_editor_space()
+    if space != None:
+        space.node_tree.is_cached = False
 
 def recache(edit_obj):
     if edit_obj.type == 'MESH':

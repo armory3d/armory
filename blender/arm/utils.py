@@ -207,6 +207,17 @@ def get_active_scene():
     wrd = bpy.data.worlds['Arm']
     return bpy.context.screen.scene if wrd.arm_play_active_scene else bpy.data.scenes[wrd.arm_project_scene]
 
+def logic_editor_space():
+    if hasattr(bpy.context, 'window') and bpy.context.window != None:
+        areas = bpy.context.window.screen.areas
+        for area in areas:
+            if area.type == 'NODE_EDITOR':
+                for space in area.spaces:
+                    if space.type == 'NODE_EDITOR':
+                        if space.node_tree != None and space.node_tree.bl_idname == 'ArmLogicTreeType': # and space.node_tree.is_updated:
+                            return space
+    return None
+
 krom_found = False
 def with_krom():
     global krom_found

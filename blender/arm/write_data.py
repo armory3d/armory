@@ -124,6 +124,7 @@ project.addSources('Sources');
 
         if wrd.arm_hscript:
             f.write(add_armory_library(sdk_path, 'lib/hscript'))
+            assets.add_khafile_def('arm_hscript')
 
         if wrd.arm_minimize == False:
             assets.add_khafile_def('arm_json')
@@ -150,7 +151,7 @@ project.addSources('Sources');
         f.write("\n\nresolve(project);\n")
 
 # Write Main.hx
-def write_main(resx, resy, is_play, in_viewport, is_publish):
+def write_main(resx, resy, is_play, in_viewport, is_publish, import_logicnodes):
     wrd = bpy.data.worlds['Arm']
     scene_name = arm.utils.get_project_scene_name()
     scene_ext = '.zip' if (bpy.data.scenes[scene_name].data_compressed and is_publish) else ''
@@ -182,6 +183,12 @@ class Main {
     public static function main() {
         iron.system.CompileTime.importPackage('armory.trait');
         iron.system.CompileTime.importPackage('armory.renderpath');
+""")
+        if import_logicnodes:
+            f.write("""
+        iron.system.CompileTime.importPackage('armory.logicnode');
+""")
+        f.write("""
         iron.system.CompileTime.importPackage('""" + arm.utils.safestr(wrd.arm_project_package) + """');
         state = 1;
         #if (js && arm_physics) state++; loadLib("ammo.js"); #end

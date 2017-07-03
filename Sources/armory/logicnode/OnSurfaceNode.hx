@@ -15,11 +15,11 @@ class OnSurfaceNode extends LogicNode {
 		var b = false;
 		switch (property0) {
 		case "Touched":
-			b = surface.down;
+			b = surface.down();
 		case "Started":
-			b = surface.started;
+			b = surface.started();
 		case "Released":
-			b = surface.released;
+			b = surface.released();
 		case "Moved":
 			b = surface.moved;
 		}

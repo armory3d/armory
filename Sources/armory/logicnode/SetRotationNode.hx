@@ -18,7 +18,7 @@ class SetRotationNode extends LogicNode {
 
 		if (object == null) object = tree.object;
 
-		object.transform.rot.fromEuler(vec);
+		object.transform.rot.fromEuler(vec.x, vec.y, vec.z);
 		object.transform.buildMatrix();
 
 		#if arm_physics

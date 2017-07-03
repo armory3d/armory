@@ -145,7 +145,9 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
-    write_data.write_main(resx, resy, is_play, in_viewport, is_publish)
+    # Import all logic nodes for patching if logic is being edited
+    import_logic = arm.utils.logic_editor_space() != None
+    write_data.write_main(resx, resy, is_play, in_viewport, is_publish, import_logic)
     if resx != state.last_resx or resy != state.last_resy:
         wrd.arm_recompile = True
     state.last_resx = resx
