@@ -148,9 +148,12 @@ def make_deferred(cam):
         links.remove(l)
 
     if not cam.rp_worldnodes:
-        relink('Draw World', 'Set Target Accum')
+        relink('Draw World', 'Water')
         if cam.rp_clearbackground:
             nodes['Clear Target Mesh'].inputs[1].default_value = True
+
+    if not cam.rp_ocean:
+        relink('Water', 'Set Target Accum')
 
     if not cam.rp_translucency:
         relink('Set Target Accum', 'Bloom')

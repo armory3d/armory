@@ -348,6 +348,7 @@ class GenRPDataPropsPanel(bpy.types.Panel):
                 layout.prop(dat, "rp_rendercapture")
                 if dat.rp_rendercapture:
                     layout.prop(dat, "rp_rendercapture_format")
+                layout.prop(dat, "rp_ocean")
 
 class PropsRPDataPropsPanel(bpy.types.Panel):
     bl_label = "Armory Render Props"

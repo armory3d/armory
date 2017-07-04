@@ -10,6 +10,7 @@ precision mediump float;
 
 #include "../compiled.glsl"
 #include "../std/gbuffer.glsl"
+// #include "../std/math.glsl"
 
 uniform sampler2D tex;
 uniform sampler2D gbufferD;
@@ -20,7 +21,8 @@ uniform sampler2D snoise;
 uniform float time;
 uniform vec3 eye;
 uniform vec3 eyeLook;
-uniform vec3 light;
+// uniform vec3 light;
+uniform vec3 ld;
 uniform float envmapStrength;
 
 in vec2 texCoord;
@@ -229,15 +231,20 @@ void main() {
 	vec3 color = colorOriginal.rgb;
 	vec3 position = getPos(eye, eyeLook, viewRay, gdepth);
 	
+	if (eye.z < seaLevel) {
+		fragColor = colorOriginal;
+		return;
+	}
+
 	if (position.z <= seaLevel + seaMaxAmplitude) {
-		const vec3 ld = normalize(vec3(0.3, -0.3, 1.0));
-		vec3 lightDir = light - position.xyz;
+		// const vec3 ld = normalize(vec3(0.3, -0.3, 1.0));
+		// vec3 lightDir = light - position.xyz;
 		vec3 eyeDir = eye - position.xyz;
-		vec3 l = normalize(lightDir);
+		// vec3 ld = normalize(lightDir);
 		vec3 v = normalize(eyeDir);
 		
 		vec3 surfacePoint = heightMapTracing(eye, -v);
-		surfacePoint.z += seaLevel;
+		// surfacePoint.z += seaLevel;
 		// float depth = length(position - surfacePoint);
 		float depthZ = surfacePoint.z - position.z;
 		

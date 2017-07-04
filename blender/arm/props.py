@@ -400,6 +400,7 @@ def init_properties():
         name="SSS", description="Sub-surface scattering pass", default='Off', update=update_renderpath)
     bpy.types.Camera.rp_stereo = bpy.props.BoolProperty(name="Stereo", description="Stereo rendering", default=False, update=update_renderpath)
     bpy.types.Camera.rp_greasepencil = bpy.props.BoolProperty(name="Grease Pencil", description="Render Grease Pencil data", default=False, update=update_renderpath)
+    bpy.types.Camera.rp_ocean = bpy.props.BoolProperty(name="Ocean", description="Ocean pass", default=False, update=update_renderpath)
     bpy.types.Camera.rp_voxelgi = bpy.props.BoolProperty(name="Voxel GI", description="Voxel-based Global Illumination", default=False, update=update_renderpath)
     bpy.types.Camera.rp_voxelgi_resolution = bpy.props.FloatVectorProperty(name="Resolution", description="3D texture resolution", size=3, default=[128, 128, 128], update=update_renderpath)
     bpy.types.Camera.rp_voxelgi_hdr = bpy.props.BoolProperty(name="HDR", description="Store voxels in RGBA64 instead of RGBA32", default=False, update=update_renderpath)
@@ -451,13 +452,13 @@ def init_properties():
     bpy.types.World.bundled_scripts_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.canvas_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.generate_ocean = bpy.props.BoolProperty(name="Ocean", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ocean_base_color = bpy.props.FloatVectorProperty(name="Base Color", size=3, default=[0.1, 0.19, 0.37], subtype='COLOR', update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ocean_water_color = bpy.props.FloatVectorProperty(name="Water Color", size=3, default=[0.6, 0.7, 0.9], subtype='COLOR', update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_ocean_base_color = bpy.props.FloatVectorProperty(name="Base Color", size=3, default=[0.1, 0.19, 0.37], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_ocean_water_color = bpy.props.FloatVectorProperty(name="Water Color", size=3, default=[0.6, 0.7, 0.9], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_ocean_level = bpy.props.FloatProperty(name="Level", default=0.0, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_ocean_amplitude = bpy.props.FloatProperty(name="Amplitude", default=2.5, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_ocean_height = bpy.props.FloatProperty(name="Height", default=0.6, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_ocean_choppy = bpy.props.FloatProperty(name="Choppy", default=4.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ocean_speed = bpy.props.FloatProperty(name="Speed", default=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_ocean_speed = bpy.props.FloatProperty(name="Speed", default=1.5, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_ocean_freq = bpy.props.FloatProperty(name="Freq", default=0.16, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_ocean_fade = bpy.props.FloatProperty(name="Fade", default=1.8, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_ssao = bpy.props.BoolProperty(name="SSAO", description="Screen-Space Ambient Occlusion", default=True, update=assets.invalidate_shader_cache)
@@ -479,7 +480,7 @@ def init_properties():
     bpy.types.World.generate_ssr_half_res = bpy.props.BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath) # TODO: Refactor as quality enum
     bpy.types.World.generate_volumetric_light = bpy.props.BoolProperty(name="Volumetric Light", description="", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_volumetric_light_air_turbidity = bpy.props.FloatProperty(name="Air Turbidity", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_volumetric_light_air_color = bpy.props.FloatVectorProperty(name="Air Color", size=3, default=[1.0, 1.0, 1.0], subtype='COLOR', update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_volumetric_light_air_color = bpy.props.FloatVectorProperty(name="Air Color", size=3, default=[1.0, 1.0, 1.0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_pcss_state = EnumProperty(
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off'), 
@@ -494,7 +495,7 @@ def init_properties():
     bpy.types.World.generate_grain = bpy.props.BoolProperty(name="Film Grain", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_grain_strength = bpy.props.FloatProperty(name="Strength", default=2.0, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_fog = bpy.props.BoolProperty(name="Volumetric Fog", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_fog_color = bpy.props.FloatVectorProperty(name="Color", size=3, subtype='COLOR', default=[0.5, 0.6, 0.7], update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_fog_color = bpy.props.FloatVectorProperty(name="Color", size=3, subtype='COLOR', default=[0.5, 0.6, 0.7], min=0, max=1, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_fog_amounta = bpy.props.FloatProperty(name="Amount A", default=0.25, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_fog_amountb = bpy.props.FloatProperty(name="Amount B", default=0.5, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_tonemap = EnumProperty(

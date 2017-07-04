@@ -131,6 +131,12 @@ class ModifiersPropsPanel(bpy.types.Panel):
             layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_base_color')
             layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_water_color')
             layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_fade')
+            layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_amplitude')
+            layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_height')
+            layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_choppy')
+            layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_speed')
+            layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_freq')
+            layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_fade')
 
 class PhysicsPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"

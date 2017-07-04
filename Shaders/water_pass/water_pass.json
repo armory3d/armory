@@ -23,8 +23,8 @@
 					"link": "_cameraLook"
 				},
 				{
-					"name": "light",
-					"link": "_lampPosition"
+					"name": "ld",
+					"link": "_lampDirection"
 				},
 				{
 					"name": "invVP",

@@ -2699,8 +2699,8 @@ class ArmoryExporter:
                 wrd = bpy.data.worlds['Arm']
                 wrd.generate_ocean = True
                 # Take position and bounds
-                wrd.generate_ocean_level = bobject.location.z
-                
+                wrd.generate_ocean_level = 0.0#bobject.location.z
+
         return export_object
 
     def post_export_object(self, bobject, o, type):

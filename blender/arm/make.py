@@ -475,8 +475,8 @@ def on_compiled(mode): # build, play, play_viewport, publish
             webbrowser.open(html5_app_path)
         elif wrd.arm_play_runtime == 'Krom':
             krom_location, krom_path = arm.utils.krom_paths()
-            # os.chdir(krom_location)
-            os.chdir(arm.utils.get_fp_build())
+            os.chdir(krom_location)
+            # os.chdir(arm.utils.get_fp_build())
             args = [krom_path, arm.utils.get_fp_build() + '/window/krom', arm.utils.get_fp_build() + '/window/krom-resources', '--nosound']
             if state.is_render:
                 args.append('--nowindow')
