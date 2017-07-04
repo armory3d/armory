@@ -2884,7 +2884,10 @@ class ArmoryExporter:
             rbc = bobject.rigid_body_constraint
             target = rbc.object1 if rbc.object2.name == bobject.name else rbc.object2
             to = self.objectToArmObjectDict[target]
-            self.add_hook_trait(to, target, bobject.name, '')
+            if rbc.type == 'HINGE':
+                self.add_constraint_trait(o, rbc.object1, rbc.object2)
+            else:
+                self.add_hook_trait(to, target, bobject.name, '')
 
         # Hook modifier
         # hook_mod = None
@@ -2961,6 +2964,13 @@ class ArmoryExporter:
                         verts.append(v.co.z)
         hook_trait['parameters'] = ["'" + target_name + "'", str(verts)]
         o['traits'].append(hook_trait)
+
+    def add_constraint_trait(self, o, rb1, rb2):
+        constr_trait = {}
+        constr_trait['type'] = 'Script'
+        constr_trait['class_name'] = 'armory.trait.internal.PhysicsConstraint'
+        constr_trait['parameters'] = ["'" + rb1.name + "'", "'" + rb2.name + "'"]
+        o['traits'].append(constr_trait)
 
     def post_export_world(self, world, o):
         defs = bpy.data.worlds['Arm'].world_defs + bpy.data.worlds['Arm'].rp_defs

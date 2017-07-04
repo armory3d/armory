@@ -18,7 +18,7 @@ except ImportError:
     pass
 
 # Armory version
-arm_version = '17.06'
+arm_version = '17.07'
 
 def update_preset(self, context):
     props_renderer.set_preset(self, context, self.rp_preset)
