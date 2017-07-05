@@ -15,11 +15,6 @@ def make(context_id, rpasses):
     if is_disp:
         vs.append({'name': 'nor', 'size': 3})
 
-    # TODO: interleaved buffer has to match vertex structure of mesh context
-    if not bpy.data.worlds['Arm'].arm_deinterleaved_buffers:
-        vs.append({'name': 'nor', 'size': 3})
-        # vs.append({'name': 'tex', 'size': 2})
-
     con_shadowmap = mat_state.data.add_context({ 'name': context_id, 'vertex_structure': vs, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False })
 
     vert = con_shadowmap.make_vert()
@@ -34,6 +29,7 @@ def make(context_id, rpasses):
     vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
 
     parse_opacity = 'translucent' in rpasses
+    # parse_opacity = True #### Discarded transparency
     if parse_opacity:
         frag.write('vec3 n;') # Discard at compile time
         frag.write('float dotNV;')
@@ -116,6 +112,11 @@ def make(context_id, rpasses):
                 vert.add_out('vec3 vcolor')
                 vert.write('vcolor = col;')
     
+    # TODO: interleaved buffer has to match vertex structure of mesh context
+    if not bpy.data.worlds['Arm'].arm_deinterleaved_buffers:
+        con_shadowmap.add_elem('nor', 3)
+        con_shadowmap.add_elem('tex', 2)
+
     # TODO: pass vbuf with proper struct
     if gapi.startswith('direct3d') and bpy.data.worlds['Arm'].arm_deinterleaved_buffers == False:
         vert.write('vec3 t1 = nor; // TODO: Temp for d3d')
@@ -123,7 +124,7 @@ def make(context_id, rpasses):
             vert.write('vec2 t2 = tex; // TODO: Temp for d3d')
 
     if parse_opacity:
-        frag.write('if (opacity < 0.5) discard;')
+        frag.write('if (opacity < 0.1) discard;')
 
     # frag.write('fragColor = vec4(0.0);')
 

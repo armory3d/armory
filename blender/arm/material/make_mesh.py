@@ -205,10 +205,13 @@ def write_norpos(con_mesh, vert, declare=False):
 def make_deferred(con_mesh):
     wrd = bpy.data.worlds['Arm']
     make_base(con_mesh, parse_opacity=False)
+    # make_base(con_mesh, parse_opacity=True) #### Discarded transparency
 
     frag = con_mesh.frag
     vert = con_mesh.vert
     tese = con_mesh.tese
+
+    # frag.write('if (opacity < 0.2) {discard;}') #### Discarded transparency
 
     gapi = arm.utils.get_gapi()
     if '_Veloc' in wrd.rp_defs:
@@ -238,6 +241,10 @@ def make_deferred(con_mesh):
 
     # Pack gbuffer
     frag.add_include('../../Shaders/std/gbuffer.glsl')
+
+    # frag.add_uniform('vec3 v', link='_cameraLook') #### Double sided shading
+    # frag.write('if (dot(n, v) > 0.0) n = -n;')
+
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
     # TODO: store_depth

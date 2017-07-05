@@ -26,6 +26,9 @@ precision mediump float;
 #ifdef _SSS
 #include "../std/sss.glsl"
 #endif
+#ifdef _SSRS
+#include "../std/ssrs.glsl"
+#endif
 #include "../std/gbuffer.glsl"
 
 // #ifdef _VoxelGI
@@ -69,7 +72,7 @@ uniform vec2 spotlightData;
 #endif
 uniform vec3 eye;
 #ifdef _SSRS
-	uniform mat4 VP;
+	//!uniform mat4 VP;
 #endif
 
 #ifdef _LampColTex
@@ -100,46 +103,6 @@ float shadowTest(const vec3 lPos) {
 }
 float shadowTestCube(const vec3 lp, const vec3 l) {
 	return PCFCube(lp, -l, shadowsBias, lightPlane);
-}
-#endif
-
-#ifdef _SSRS
-vec2 getProjectedCoord(vec3 hitCoord) {
-	vec4 projectedCoord = VP * vec4(hitCoord, 1.0);
-	projectedCoord.xy /= projectedCoord.w;
-	projectedCoord.xy = projectedCoord.xy * 0.5 + 0.5;
-	#ifdef _InvY
-	projectedCoord.y = 1.0 - projectedCoord.y;
-	#endif
-	return projectedCoord.xy;
-}
-float getDeltaDepth(vec3 hitCoord) {
-	vec2 texCoord = getProjectedCoord(hitCoord);
-	// #ifdef _InvY // D3D
-	// float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	// #else
-	// TODO: store_depth
-	vec4 g0 = texture(gbuffer0, texCoord);
-	float depth = (1.0 - g0.a) * 2.0 - 1.0;
-	// #endif
-	vec3 wpos = getPos2(invVP, depth, texCoord);
-	float d1 = length(eye - wpos);
-	float d2 = length(eye - hitCoord);
-	return d1 - d2;
-}
-float traceShadow(vec3 dir, vec3 hitCoord) {
-	dir *= ssrsRayStep;
-	// for (int i = 0; i < maxSteps; i++) {
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return 0.0;
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return 0.0;
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return 0.0;
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return 0.0;
-	//}
-	return 1.0;
 }
 #endif
 
@@ -337,7 +300,7 @@ void main() {
 #endif
 
 #ifdef _SSRS
-	float tvis = traceShadow(-l, p);
+	float tvis = traceShadow(-l, p, gbuffer0, invVP, eye);
 	// vec2 coords = getProjectedCoord(hitCoord);
 	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	// float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);

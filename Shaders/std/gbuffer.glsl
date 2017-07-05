@@ -1,3 +1,6 @@
+#ifndef _GBUFFER_GLSL_
+#define _GBUFFER_GLSL_
+
 #include "../compiled.glsl"
 
 vec2 octahedronWrap(const vec2 v) {
@@ -97,3 +100,5 @@ vec3 decodeRGBM(const vec4 rgbm) {
 	const float maxRange = 6.0;
     return rgbm.rgb * rgbm.a * maxRange;
 }
+
+#endif
