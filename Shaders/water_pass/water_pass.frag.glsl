@@ -12,7 +12,6 @@ precision mediump float;
 #include "../std/gbuffer.glsl"
 // #include "../std/math.glsl"
 
-uniform sampler2D tex;
 uniform sampler2D gbufferD;
 // uniform sampler2D gbuffer0;
 // uniform sampler2D senvmapRadiance;
@@ -222,86 +221,92 @@ vec3 getSeaColor(vec3 p, vec3 n, vec3 l, vec3 eye, vec3 dist) {
 
 void main() {
 	float gdepth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	vec4 colorOriginal = texture(tex, texCoord);
-	// if (gdepth == 1.0) {
-		// fragColor = colorOriginal;
-		// return;
-	// }
+	// vec4 colorOriginal = vec4(1.0);//texture(tex, texCoord);
+	if (gdepth == 1.0) {
+		fragColor = vec4(0.0);
+		return;
+	}
 	
-	vec3 color = colorOriginal.rgb;
+	vec3 color = vec3(1.0);//colorOriginal.rgb;
 	vec3 position = getPos(eye, eyeLook, viewRay, gdepth);
 	
 	if (eye.z < seaLevel) {
-		fragColor = colorOriginal;
+		// fragColor = colorOriginal;
+		fragColor = vec4(0.0);
 		return;
 	}
 
-	if (position.z <= seaLevel + seaMaxAmplitude) {
-		// const vec3 ld = normalize(vec3(0.3, -0.3, 1.0));
-		// vec3 lightDir = light - position.xyz;
-		vec3 eyeDir = eye - position.xyz;
-		// vec3 ld = normalize(lightDir);
-		vec3 v = normalize(eyeDir);
-		
-		vec3 surfacePoint = heightMapTracing(eye, -v);
-		// surfacePoint.z += seaLevel;
-		// float depth = length(position - surfacePoint);
-		float depthZ = surfacePoint.z - position.z;
-		
-		// float dist = length(surfacePoint - eye);
-		// float epsx = clamp(dot(dist/2.0,dist/2.0) * 0.001, 0.01, 0.1);
-		float dist = max(0.1, length(surfacePoint - eye) * 1.2);
-		float epsx = dot(dist, dist) * 0.00005; // Fade in distance to prevent noise
-		vec3 normal = getNormal(surfacePoint, epsx);
-		// vec3 normal = getNormal(surfacePoint, 0.1);
-		
-		// float fresnel = 1.0 - max(dot(normal,-v),0.0);
-		// fresnel = pow(fresnel,3.0) * 0.65;
-		
-		// vec2 texco = texCoord.xy;
-		// texco.x += sin((time) * 0.002 + 3.0 * abs(position.z)) * (refractionScale * min(depthZ, 1.0));
-		// vec3 refraction = texture(tex, texco).rgb;
-		// vec3 _p = getPos(eye, eyeLook, viewRay, 1.0 - texture(gbuffer0, texco).a);
-		// if (_p.z > seaLevel) {
-		//     refraction = colorOriginal.rgb;
-		// }
-		
-		// vec3 reflect = textureLod(senvmapRadiance, envMapEquirect(reflect(v,normal)), 2.0).rgb;
-		// vec3 depthN = vec3(depth * fadeSpeed);
-		// vec3 waterCol = vec3(clamp(length(sunColor) / 3.0, 0.0, 1.0));
-		// refraction = mix(mix(refraction, depthColour * waterCol, clamp(depthN / visibility, 0.0, 1.0)), bigDepthColour * waterCol, clamp(depthZ / extinction, 0.0, 1.0));
-
-		// float foam = 0.0;    
-		// // texco = (surfacePoint.xy + v.xy * 0.1) * 0.05 + (time) * 0.00001 * wind + sin((time) * 0.001 + position.x) * 0.005;
-		// // vec2 texco2 = (surfacePoint.xy + v.xy * 0.1) * 0.05 + (time) * 0.00002 * wind + sin((time) * 0.001 + position.y) * 0.005;
-		// // if (depthZ < foamExistence.x) {
-		// //     foam = (texture(fmap, texco).r + texture(fmap, texco2).r) * 0.5;
-		// // }
-		// // else if (depthZ < foamExistence.y) {
-		// //     foam = mix((texture(fmap, texco).r + texture(fmap, texco2).r) * 0.5, 0.0,
-		// //                  (depthZ - foamExistence.x) / (foamExistence.y - foamExistence.x));
-		// // }
-		// // if (seaMaxAmplitude - foamExistence.z > 0.0001) {
-		// //     foam += (texture(fmap, texco).r + texture(fmap, texco2).r) * 0.5 * 
-		// //         clamp((seaLevel - (seaLevel + foamExistence.z)) / (seaMaxAmplitude - foamExistence.z), 0.0, 1.0);
-		// // }
-
-		// vec3 mirrorEye = (2.0 * dot(v, normal) * normal - v);
-		// float dotSpec = clamp(dot(mirrorEye.xyz, -lightDir) * 0.5 + 0.5, 0.0, 1.0);
-		// vec3 specular = (1.0 - fresnel) * clamp(-lightDir.z, 0.0, 1.0) * ((pow(dotSpec, 512.0)) * (shininess * 1.8 + 0.2))* sunColor;
-		// specular += specular * 25 * clamp(shininess - 0.05, 0.0, 1.0) * sunColor;   
-		// color = mix(refraction, reflect, fresnel);
-		// color = clamp(color + max(specular, foam * sunColor), 0.0, 1.0);
-		// color = mix(refraction, color, clamp(depth * shoreHardness, 0.0, 1.0));
-		
-		color = getSeaColor(surfacePoint, normal, ld, -v, surfacePoint - eye) * max(0.5, (envmapStrength + 0.2) * 1.4);
-		// color = pow(color, vec3(2.2));
-		color = mix(colorOriginal.rgb, color, clamp(depthZ * seaFade, 0.0, 1.0));
-
-		// Fade on horizon
-		vec3 vecn = normalize(vecnormal);
-		color = mix(color, colorOriginal.rgb, clamp((vecn.z + 0.03) * 10.0, 0.0, 1.0));
+	if (position.z > seaLevel + seaMaxAmplitude) {
+		// fragColor = colorOriginal;
+		fragColor = vec4(0.0);
+		return;
 	}
 
+	// const vec3 ld = normalize(vec3(0.3, -0.3, 1.0));
+	// vec3 lightDir = light - position.xyz;
+	vec3 eyeDir = eye - position.xyz;
+	// vec3 ld = normalize(lightDir);
+	vec3 v = normalize(eyeDir);
+	
+	vec3 surfacePoint = heightMapTracing(eye, -v);
+	// surfacePoint.z += seaLevel;
+	// float depth = length(position - surfacePoint);
+	float depthZ = surfacePoint.z - position.z;
+	
+	// float dist = length(surfacePoint - eye);
+	// float epsx = clamp(dot(dist/2.0,dist/2.0) * 0.001, 0.01, 0.1);
+	float dist = max(0.1, length(surfacePoint - eye) * 1.2);
+	float epsx = dot(dist, dist) * 0.00005; // Fade in distance to prevent noise
+	vec3 normal = getNormal(surfacePoint, epsx);
+	// vec3 normal = getNormal(surfacePoint, 0.1);
+	
+	// float fresnel = 1.0 - max(dot(normal,-v),0.0);
+	// fresnel = pow(fresnel,3.0) * 0.65;
+	
+	// vec2 texco = texCoord.xy;
+	// texco.x += sin((time) * 0.002 + 3.0 * abs(position.z)) * (refractionScale * min(depthZ, 1.0));
+	// vec3 refraction = texture(tex, texco).rgb;
+	// vec3 _p = getPos(eye, eyeLook, viewRay, 1.0 - texture(gbuffer0, texco).a);
+	// if (_p.z > seaLevel) {
+	//     refraction = colorOriginal.rgb;
+	// }
+	
+	// vec3 reflect = textureLod(senvmapRadiance, envMapEquirect(reflect(v,normal)), 2.0).rgb;
+	// vec3 depthN = vec3(depth * fadeSpeed);
+	// vec3 waterCol = vec3(clamp(length(sunColor) / 3.0, 0.0, 1.0));
+	// refraction = mix(mix(refraction, depthColour * waterCol, clamp(depthN / visibility, 0.0, 1.0)), bigDepthColour * waterCol, clamp(depthZ / extinction, 0.0, 1.0));
+
+	// float foam = 0.0;    
+	// // texco = (surfacePoint.xy + v.xy * 0.1) * 0.05 + (time) * 0.00001 * wind + sin((time) * 0.001 + position.x) * 0.005;
+	// // vec2 texco2 = (surfacePoint.xy + v.xy * 0.1) * 0.05 + (time) * 0.00002 * wind + sin((time) * 0.001 + position.y) * 0.005;
+	// // if (depthZ < foamExistence.x) {
+	// //     foam = (texture(fmap, texco).r + texture(fmap, texco2).r) * 0.5;
+	// // }
+	// // else if (depthZ < foamExistence.y) {
+	// //     foam = mix((texture(fmap, texco).r + texture(fmap, texco2).r) * 0.5, 0.0,
+	// //                  (depthZ - foamExistence.x) / (foamExistence.y - foamExistence.x));
+	// // }
+	// // if (seaMaxAmplitude - foamExistence.z > 0.0001) {
+	// //     foam += (texture(fmap, texco).r + texture(fmap, texco2).r) * 0.5 * 
+	// //         clamp((seaLevel - (seaLevel + foamExistence.z)) / (seaMaxAmplitude - foamExistence.z), 0.0, 1.0);
+	// // }
+
+	// vec3 mirrorEye = (2.0 * dot(v, normal) * normal - v);
+	// float dotSpec = clamp(dot(mirrorEye.xyz, -lightDir) * 0.5 + 0.5, 0.0, 1.0);
+	// vec3 specular = (1.0 - fresnel) * clamp(-lightDir.z, 0.0, 1.0) * ((pow(dotSpec, 512.0)) * (shininess * 1.8 + 0.2))* sunColor;
+	// specular += specular * 25 * clamp(shininess - 0.05, 0.0, 1.0) * sunColor;   
+	// color = mix(refraction, reflect, fresnel);
+	// color = clamp(color + max(specular, foam * sunColor), 0.0, 1.0);
+	// color = mix(refraction, color, clamp(depth * shoreHardness, 0.0, 1.0));
+	
+	color = getSeaColor(surfacePoint, normal, ld, -v, surfacePoint - eye) * max(0.5, (envmapStrength + 0.2) * 1.4);
+	// color = pow(color, vec3(2.2));
+	// color = mix(colorOriginal.rgb, color, clamp(depthZ * seaFade, 0.0, 1.0));
+
+	// Fade on horizon
+	vec3 vecn = normalize(vecnormal);
+	color = mix(color, vec3(1.0), clamp((vecn.z + 0.03) * 10.0, 0.0, 1.0));
+
 	fragColor.rgb = color;
+	fragColor.a = clamp(depthZ * seaFade, 0.0, 1.0);
 }

@@ -5,6 +5,12 @@
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
+			"blend_source": "source_alpha",
+			"blend_destination": "inverse_source_alpha",
+			"blend_operation": "add",
+			"alpha_blend_source": "blend_one",
+			"alpha_blend_destination": "blend_one",
+			"alpha_blend_operation": "add",
 			"links": [
 				{
 					"name": "transpV",

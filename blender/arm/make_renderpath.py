@@ -453,7 +453,7 @@ def make_sss_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[3, 4, 5], bind_target_constants=['tex', 'gbufferD', 'gbuffer1'], shader_context='sss_pass/sss_pass/sss_pass_y')
 
 def make_water_pass(stages, node_group, node):
-    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['tex', 'gbufferD'], shader_context='water_pass/water_pass/water_pass')
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='water_pass/water_pass/water_pass')
 
 def make_deferred_light_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'shadowMap'], shader_context='', with_draw_quad=False)
