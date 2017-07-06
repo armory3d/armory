@@ -552,12 +552,11 @@ def init_properties():
     bpy.types.Material.skip_context = bpy.props.StringProperty(name="Skip Context", default='')
     bpy.types.Material.overlay = bpy.props.BoolProperty(name="Overlay", default=False)
     bpy.types.Material.decal = bpy.props.BoolProperty(name="Decal", default=False)
-    bpy.types.Material.override_cull = bpy.props.BoolProperty(name="Override Cull-Mode", default=False)
     bpy.types.Material.override_cull_mode = EnumProperty(
         items = [('none', 'None', 'None'),
                  ('clockwise', 'Clockwise', 'Clockwise'),
                  ('counter_clockwise', 'Counter-Clockwise', 'Counter-Clockwise')],
-        name = "Cull-Mode", default='clockwise')
+        name = "Face Culling", default='clockwise')
     bpy.types.Material.override_compare = bpy.props.BoolProperty(name="Override Compare-Mode", default=False)
     bpy.types.Material.override_compare_mode = EnumProperty(
         items = [('Always', 'Always', 'Always'),

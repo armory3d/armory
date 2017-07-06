@@ -2261,7 +2261,7 @@ class ArmoryExporter:
             if material.skip_context != '':
                 o['skip_context'] = material.skip_context
             
-            if material.override_cull or wrd.force_no_culling:
+            if material.override_cull_mode != 'Clockwise' or wrd.force_no_culling:
                 o['override_context'] = {}
                 if wrd.force_no_culling:
                     o['override_context']['cull_mode'] = 'none'
