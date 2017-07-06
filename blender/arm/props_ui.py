@@ -300,7 +300,9 @@ class MaterialPropsPanel(bpy.types.Panel):
         if bpy.data.worlds['Arm'].arm_material_advanced:
             layout.prop(mat, 'overlay')
             layout.prop(mat, 'decal')
-            layout.prop(mat, 'override_cull_mode')
+            layout.prop(mat, 'two_sided_shading')
+            if not mat.two_sided_shading:
+                layout.prop(mat, 'override_cull_mode')
             layout.prop(mat, 'override_shader')
             if mat.override_shader:
                 layout.prop(mat, 'override_shader_name')

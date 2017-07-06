@@ -242,8 +242,9 @@ def make_deferred(con_mesh):
     # Pack gbuffer
     frag.add_include('../../Shaders/std/gbuffer.glsl')
 
-    # frag.add_uniform('vec3 v', link='_cameraLook') #### Double sided shading
-    # frag.write('if (dot(n, v) > 0.0) n = -n;')
+    if mat_state.material.two_sided_shading:
+        frag.add_uniform('vec3 v', link='_cameraLook')
+        frag.write('if (dot(n, v) > 0.0) n = -n;')
 
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')

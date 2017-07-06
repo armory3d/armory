@@ -552,6 +552,7 @@ def init_properties():
     bpy.types.Material.skip_context = bpy.props.StringProperty(name="Skip Context", default='')
     bpy.types.Material.overlay = bpy.props.BoolProperty(name="Overlay", default=False)
     bpy.types.Material.decal = bpy.props.BoolProperty(name="Decal", default=False)
+    bpy.types.Material.two_sided_shading = bpy.props.BoolProperty(name="Two-Sided Shading", default=False)
     bpy.types.Material.override_cull_mode = EnumProperty(
         items = [('none', 'None', 'None'),
                  ('clockwise', 'Clockwise', 'Clockwise'),
