@@ -21,6 +21,11 @@ def get_node_by_type(node_group, ntype):
         if node.type == ntype:
             return node
 
+def get_node_armorypbr(node_group):
+    for node in node_group.nodes:
+        if node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR'):
+            return node
+
 def get_input_node(node_group, to_node, input_index):
     for link in node_group.links:
         if link.to_node == to_node and link.to_socket == to_node.inputs[input_index]:

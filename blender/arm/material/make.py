@@ -53,6 +53,9 @@ def parse(material, mat_data, mat_users, mat_armusers, rid):
                 sss_node = arm.nodes.get_node_by_type(material.node_tree, 'BSDF_PRINCIPLED')
                 if sss_node != None and sss_node.outputs[0].is_linked and (sss_node.inputs[1].is_linked or sss_node.inputs[1].default_value != 0.0):
                     sss = True
+                sss_node = arm.nodes.get_node_armorypbr(material.node_tree)
+                if sss_node != None and sss_node.outputs[0].is_linked and (sss_node.inputs[10].is_linked or sss_node.inputs[10].default_value != 0.0):
+                    sss = True
                 if sss:
                     const = {}
                     const['name'] = 'materialID'

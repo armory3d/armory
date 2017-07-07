@@ -12,7 +12,8 @@ def disp_linked(output_node):
     tess_enabled = arm.utils.tess_enabled(make_state.target)
     if linked:
         l = output_node.inputs[2].links[0]
-        if l.from_node.type == 'GROUP' and l.from_node.node_tree.name.startswith('Armory PBR') and l.from_node.inputs[10].is_linked == False:
+        if l.from_node.type == 'GROUP' and l.from_node.node_tree.name.startswith('Armory PBR') and \
+            ((len(l.from_node.inputs) == 14 and l.from_node.inputs[10].is_linked == False) or (l.from_node.inputs[9].is_linked == False)):
             return False
     if linked and not tess_enabled:
         log.warn('Tessellation not available on ' + make_state.target)
@@ -77,6 +78,7 @@ def is_transluc_type(node):
     if node.type == 'BSDF_GLASS' or \
        node.type == 'BSDF_TRANSPARENT' or \
        node.type == 'BSDF_TRANSLUCENT' or \
-       (node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR') and (node.inputs[12].is_linked or node.inputs[12].default_value != 1.0)):
+       (node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR') and len(node.inputs) == 14 and (node.inputs[12].is_linked or node.inputs[12].default_value != 1.0)) or \
+       (node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR') and (node.inputs[1].is_linked or node.inputs[1].default_value != 1.0)):
        return True
     return False
