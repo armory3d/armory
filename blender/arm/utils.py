@@ -89,9 +89,7 @@ def get_ffmpeg_path():
     return addon_prefs.ffmpeg_path
 
 def get_ease_viewport_camera():
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
-    return addon_prefs.ease_viewport_camera
+    return True
 
 def get_save_on_build():
     user_preferences = bpy.context.user_preferences

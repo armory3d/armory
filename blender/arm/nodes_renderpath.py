@@ -304,6 +304,7 @@ class WaterPassNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Stage")
         self.inputs.new('NodeSocketShader', "Target")
         self.inputs.new('NodeSocketShader', "GBufferD")
+        self.inputs.new('NodeSocketShader', "Shadow Map")
 
         self.outputs.new('NodeSocketShader', "Stage")
 

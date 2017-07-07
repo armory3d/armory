@@ -11,8 +11,19 @@ precision mediump float;
 #include "../compiled.glsl"
 #include "../std/gbuffer.glsl"
 // #include "../std/math.glsl"
+// #ifndef _NoShadows
+// #include "../std/shadows.glsl"
+// #endif
 
 uniform sampler2D gbufferD;
+// #ifndef _NoShadows
+// uniform mat4 LWVP;
+// uniform float shadowsBias;
+// uniform vec2 lightPlane;
+// uniform int lightShadow;
+//-!-uniform sampler2D shadowMap;
+//-!-uniform samplerCube shadowMapCube;
+// #endif
 // uniform sampler2D gbuffer0;
 // uniform sampler2D senvmapRadiance;
 uniform sampler2D snoise;
@@ -20,7 +31,7 @@ uniform sampler2D snoise;
 uniform float time;
 uniform vec3 eye;
 uniform vec3 eyeLook;
-// uniform vec3 light;
+// uniform vec3 lightPos;
 uniform vec3 ld;
 uniform float envmapStrength;
 
@@ -219,6 +230,15 @@ vec3 getSeaColor(vec3 p, vec3 n, vec3 l, vec3 eye, vec3 dist) {
 	return color;
 }
 
+// #ifndef _NoShadows
+// float shadowTest(const vec3 lPos) {
+// 	return PCF(lPos.xy, lPos.z - shadowsBias);
+// }
+// float shadowTestCube(const vec3 lp, const vec3 l) {
+// 	return PCFCube(lp, -l, shadowsBias, lightPlane);
+// }
+// #endif
+
 void main() {
 	float gdepth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	// vec4 colorOriginal = vec4(1.0);//texture(tex, texCoord);
@@ -309,4 +329,16 @@ void main() {
 
 	fragColor.rgb = color;
 	fragColor.a = clamp(depthZ * seaFade, 0.0, 1.0);
+
+	// #ifndef _NoShadows
+	// if (lightShadow == 1) {
+	// 	vec4 lampPos = LWVP * vec4(surfacePoint.xyz, 1.0);
+	// 	if (lampPos.w > 0.0) fragColor.rgb *= shadowTest(lampPos.xyz / lampPos.w);
+	// }
+	// else if (lightShadow == 2) { // Cube
+	// 	vec3 lp = lightPos - surfacePoint.xyz;
+	// 	vec3 l = normalize(lp);
+	// 	fragColor.rgb *= shadowTestCube(lp, l);
+	// }
+	// #endif
 }

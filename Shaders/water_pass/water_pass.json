@@ -43,6 +43,31 @@
 				{
 					"name": "envmapStrength",
 					"link": "_envmapStrength"
+				},
+				{
+					"name": "LWVP",
+					"link": "_biasLampWorldViewProjectionMatrix",
+					"ifdef": ["_Disabled"]
+				},
+				{
+					"name": "shadowsBias",
+					"link": "_lampShadowsBias",
+					"ifdef": ["_Disabled"]
+				},
+				{
+					"name": "lightPlane",
+					"link": "_lampPlane",
+					"ifdef": ["_Disabled"]
+				},
+				{
+					"name": "lightShadow",
+					"link": "_lampCastShadow",
+					"ifdef": ["_Disabled"]
+				},
+				{
+					"name": "lightPos",
+					"link": "_lampPosition",
+					"ifdef": ["_Disabled"]
 				}
 			],
 			"texture_params": [],
