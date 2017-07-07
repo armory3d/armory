@@ -154,7 +154,6 @@ def init_properties():
                  ('Auto', 'Auto', 'Auto')],
         name = "UI Library", default='Auto', description="Include UI library")
     bpy.types.World.arm_hscript = BoolProperty(name="hscript", description="Include hscript library", default=False)
-    bpy.types.World.arm_engine_on = bpy.props.BoolProperty(name="Armory On", description="Armory engine enabled", default=True)
     bpy.types.World.arm_khafile = StringProperty(name="Khafile", description="Source appended to khafile.js")
     bpy.types.World.arm_khamake = StringProperty(name="Khamake", description="Command line params appended to khamake")
     bpy.types.World.arm_minimize = BoolProperty(name="Minimize Data", description="Export scene data in binary", default=True, update=assets.invalidate_compiled_data)
