@@ -79,6 +79,6 @@ def is_transluc_type(node):
        node.type == 'BSDF_TRANSPARENT' or \
        node.type == 'BSDF_TRANSLUCENT' or \
        (node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR') and len(node.inputs) == 14 and (node.inputs[12].is_linked or node.inputs[12].default_value != 1.0)) or \
-       (node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR') and (node.inputs[1].is_linked or node.inputs[1].default_value != 1.0)):
+       (node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR') and len(node.inputs) != 14 and (node.inputs[1].is_linked or node.inputs[1].default_value != 1.0)):
        return True
     return False

@@ -153,6 +153,11 @@ def init_properties():
                  ('Enabled', 'Enabled', 'Enabled'),
                  ('Auto', 'Auto', 'Auto')],
         name = "UI Library", default='Auto', description="Include UI library")
+    # bpy.types.World.arm_networking = EnumProperty(
+    #     items = [('Disabled', 'Disabled', 'Disabled'), 
+    #              ('Enabled', 'Enabled', 'Enabled'),
+    #              ('Auto', 'Auto', 'Auto')],
+    #     name = "Networking", default='Auto')
     bpy.types.World.arm_hscript = BoolProperty(name="hscript", description="Include hscript library", default=False)
     bpy.types.World.arm_khafile = StringProperty(name="Khafile", description="Source appended to khafile.js")
     bpy.types.World.arm_khamake = StringProperty(name="Khamake", description="Command line params appended to khamake")
