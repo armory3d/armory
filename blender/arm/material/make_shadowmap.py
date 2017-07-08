@@ -115,7 +115,8 @@ def make(context_id, rpasses):
     # TODO: interleaved buffer has to match vertex structure of mesh context
     if not bpy.data.worlds['Arm'].arm_deinterleaved_buffers:
         con_shadowmap.add_elem('nor', 3)
-        con_shadowmap.add_elem('tex', 2)
+        if mat_state.material.export_uvs:
+            con_shadowmap.add_elem('tex', 2)
 
     # TODO: pass vbuf with proper struct
     if gapi.startswith('direct3d') and bpy.data.worlds['Arm'].arm_deinterleaved_buffers == False:
