@@ -1,0 +1,58 @@
+{
+	"contexts": [
+		{
+			"name": "volumetric_light_quad",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "LWVP",
+					"link": "_biasLampWorldViewProjectionMatrix"
+				},
+				{
+					"name": "shadowsBias",
+					"link": "_lampShadowsBias"
+				},
+				{
+					"name": "lightPos",
+					"link": "_lampPosition"
+				},
+				{
+					"name": "lightRadius",
+					"link": "_lampRadius"
+				},
+				{
+					"name": "lightColor",
+					"link": "_lampColor"
+				},
+				{
+					"name": "snoise",
+					"link": "_noise8"
+				},
+				{
+					"name": "lightPlane",
+					"link": "_lampPlane",
+					"ifdef": ["_Disabled"]
+				},
+				{
+					"name": "lightShadow",
+					"link": "_lampCastShadow",
+					"ifdef": ["_Disabled"]
+				},
+				{
+					"name": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"name": "eyeLook",
+					"link": "_cameraLook"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "volumetric_light_quad.vert.glsl",
+			"vertex_shader_path": "../include/pass_viewray.vert.glsl",
+			"fragment_shader": "volumetric_light_quad.frag.glsl"
+		}
+	]
+}

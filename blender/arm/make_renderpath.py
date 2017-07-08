@@ -474,10 +474,24 @@ def make_deferred_light_pass(stages, node_group, node):
     stages.append(stage)
 
 def make_volumetric_light_pass(stages, node_group, node):
-    # Draw lamp volume - TODO: properly generate stage
     # make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[5, 6], bind_target_constants=['gbufferD', 'shadowMap'], shader_context='volumetric_light/volumetric_light/volumetric_light_blend')
-    make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[5, 6], bind_target_constants=['gbufferD', 'shadowMap'], shader_context='volumetric_light/volumetric_light/volumetric_light')
-    stages[-1]['command'] = 'draw_lamp_volume'
+    make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[5, 6], bind_target_constants=['gbufferD', 'shadowMap'], shader_context='', with_draw_quad=False)
+    stage = {}
+    stage['command'] = 'call_function'
+    stage['params'] = ['iron.data.RenderPath.lampIsSun']
+    # Draw fs quad
+    stage_true = {}
+    stage_true['params'] = []
+    make_draw_quad(stage_true, node_group, node, context_index=2, shader_context='volumetric_light_quad/volumetric_light_quad/volumetric_light_quad')
+    # Draw lamp volume
+    stage_false = {}
+    stage_false['params'] = []
+    make_draw_quad(stage_false, node_group, node, context_index=2, shader_context='volumetric_light/volumetric_light/volumetric_light')
+    stage_false['command'] = 'draw_lamp_volume'
+    stage['returns_true'] = [stage_true]
+    stage['returns_false'] = [stage_false]
+    stages.append(stage)
+    # Blur
     make_quad_pass(stages, node_group, node, target_index=3, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x')
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y_blend_add')
 

@@ -27,7 +27,7 @@
 					"link": "_screenSize"
 				},
 				{
-					"name": "viewPos",
+					"name": "eye",
 					"link": "_cameraPosition"
 				},
 				{
