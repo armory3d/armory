@@ -204,14 +204,18 @@ def write_norpos(con_mesh, vert, declare=False):
 
 def make_deferred(con_mesh):
     wrd = bpy.data.worlds['Arm']
-    make_base(con_mesh, parse_opacity=False)
-    # make_base(con_mesh, parse_opacity=True) #### Discarded transparency
+
+    discard_transparent = mat_state.material.discard_transparent
+
+    make_base(con_mesh, parse_opacity=discard_transparent)
 
     frag = con_mesh.frag
     vert = con_mesh.vert
     tese = con_mesh.tese
 
-    # frag.write('if (opacity < 0.2) {discard;}') #### Discarded transparency
+    if discard_transparent:
+        opac = mat_state.material.discard_transparent_opacity
+        frag.write('if (opacity < {0}) discard;'.format(opac))
 
     gapi = arm.utils.get_gapi()
     if '_Veloc' in wrd.rp_defs:

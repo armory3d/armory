@@ -28,8 +28,7 @@ def make(context_id, rpasses):
         frag.add_out('vec4 fragColor') # Definition requred for d3d9 - pixel shader must minimally write all four components of COLOR0
     vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
 
-    parse_opacity = 'translucent' in rpasses
-    # parse_opacity = True #### Discarded transparency
+    parse_opacity = 'translucent' in rpasses or mat_state.material.discard_transparent
     if parse_opacity:
         frag.write('vec3 n;') # Discard at compile time
         frag.write('float dotNV;')
@@ -125,7 +124,8 @@ def make(context_id, rpasses):
             vert.write('vec2 t2 = tex; // TODO: Temp for d3d')
 
     if parse_opacity:
-        frag.write('if (opacity < 0.1) discard;')
+        opac = mat_state.material.discard_transparent_opacity_shadows
+        frag.write('if (opacity < {0}) discard;'.format(opac))
 
     # frag.write('fragColor = vec4(0.0);')
 

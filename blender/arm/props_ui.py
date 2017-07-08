@@ -303,6 +303,10 @@ class MaterialPropsPanel(bpy.types.Panel):
             layout.prop(mat, 'two_sided_shading')
             if not mat.two_sided_shading:
                 layout.prop(mat, 'override_cull_mode')
+            layout.prop(mat, 'discard_transparent')
+            if mat.discard_transparent:
+                layout.prop(mat, 'discard_transparent_opacity')
+                layout.prop(mat, 'discard_transparent_opacity_shadows')
             layout.prop(mat, 'override_shader')
             if mat.override_shader:
                 layout.prop(mat, 'override_shader_name')

@@ -557,6 +557,9 @@ def init_properties():
                  ('clockwise', 'Clockwise', 'Clockwise'),
                  ('counter_clockwise', 'Counter-Clockwise', 'Counter-Clockwise')],
         name = "Face Culling", default='clockwise')
+    bpy.types.Material.discard_transparent = bpy.props.BoolProperty(name="Discard Transparent", default=False)
+    bpy.types.Material.discard_transparent_opacity = bpy.props.FloatProperty(name="Discard Opacity", default=0.2, min=0, max=1)
+    bpy.types.Material.discard_transparent_opacity_shadows = bpy.props.FloatProperty(name="Discard Opacity Shadows", default=0.1, min=0, max=1)
     bpy.types.Material.override_compare = bpy.props.BoolProperty(name="Override Compare-Mode", default=False)
     bpy.types.Material.override_compare_mode = EnumProperty(
         items = [('Always', 'Always', 'Always'),

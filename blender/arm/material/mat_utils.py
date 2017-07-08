@@ -30,7 +30,7 @@ def get_rpasses(material):
         ar.append('decal')
     elif material.overlay:
         ar.append('overlay')
-    elif is_transluc(material):
+    elif is_transluc(material) and not material.discard_transparent:
         ar.append('translucent')
     else:
         ar.append('mesh')
