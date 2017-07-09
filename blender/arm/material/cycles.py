@@ -180,17 +180,12 @@ def parse_shader(node, socket):
                     # Normal
                     if node.inputs[5].is_linked and node.inputs[5].links[0].from_node.type == 'NORMAL_MAP':
                         c_state.warn(c_state.mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
-                    parse_normal_map_color_input(node.inputs[5], node.inputs[6])
+                    parse_normal_map_color_input(node.inputs[5])
                     # Emission
-                    dv = node.inputs[7].default_value
-                    if node.inputs[7].is_linked or dv[0] != 0.0 or dv[1] != 0.0 or dv[2] != 0.0:
-                        parsing_basecolor(True)
-                        out_emission = parse_vector_input(node.inputs[7])
+                    if node.inputs[6].is_linked or node.inputs[6].default_value != 0.0:
+                        out_emission = parse_value_input(node.inputs[6])
                         emission_found = True
-                        parsing_basecolor(False)
-                        if node.inputs[8].is_linked or node.inputs[8].default_value != 1.0:
-                            out_emission = '({0} * {1})'.format(out_emission, parse_value_input(node.inputs[9]))
-                        out_basecol = '({0} + {1} * 100.0)'.format(out_basecol, out_emission)
+                        out_basecol = '({0} + vec3({1} * 100.0))'.format(out_basecol, out_emission)
 
                 else: # Deprecated
                     # Base color
@@ -213,7 +208,7 @@ def parse_shader(node, socket):
                     # Normal
                     if node.inputs[6].is_linked and node.inputs[6].links[0].from_node.type == 'NORMAL_MAP':
                         c_state.warn(c_state.mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
-                    parse_normal_map_color_input(node.inputs[6], node.inputs[7])
+                    parse_normal_map_color_input(node.inputs[6])
                     # Emission
                     if node.inputs[8].is_linked:
                         parsing_basecolor(True)
@@ -912,7 +907,7 @@ def parse_vector(node, socket):
         elif op == 'NORMALIZE':
             return 'normalize({0})'.format(vec1)
 
-def parse_normal_map_color_input(inp, str_inp=None):
+def parse_normal_map_color_input(inp):
     global parse_teximage_vector
     if inp.is_linked == False:
         return
@@ -963,7 +958,7 @@ def parse_value(node, socket):
             if socket == node.outputs[1]:
 
                 if len(node.inputs) != 14:
-                    res = parse_value_input(node.inputs[9])
+                    res = parse_value_input(node.inputs[7])
                 else: # Deprecated
                     res = parse_value_input(node.inputs[10])
                     if node.inputs[11].is_linked or node.inputs[11].default_value != 1.0:

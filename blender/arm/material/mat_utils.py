@@ -13,7 +13,7 @@ def disp_linked(output_node):
     if linked:
         l = output_node.inputs[2].links[0]
         if l.from_node.type == 'GROUP' and l.from_node.node_tree.name.startswith('Armory PBR') and \
-            ((len(l.from_node.inputs) == 14 and l.from_node.inputs[10].is_linked == False) or (l.from_node.inputs[9].is_linked == False)):
+            ((len(l.from_node.inputs) == 14 and l.from_node.inputs[10].is_linked == False) or (len(l.from_node.inputs) != 14 and l.from_node.inputs[7].is_linked == False)):
             return False
     if linked and not tess_enabled:
         log.warn('Tessellation not available on ' + make_state.target)

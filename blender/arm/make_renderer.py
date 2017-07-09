@@ -237,7 +237,11 @@ def check_default():
         make_renderer(bpy.data.cameras[0])
 
 def reload_blend_data():
-    if bpy.data.node_groups.get('Armory PBR') == None:
+    armory_pbr = bpy.data.node_groups.get('Armory PBR')
+    if armory_pbr != None and len(armory_pbr.inputs) == 14:
+        armory_pbr.name = 'Armory PBR Old'
+        armory_pbr = None
+    if armory_pbr == None:
         load_library('Armory PBR')
     check_default()
 
