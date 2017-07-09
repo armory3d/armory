@@ -484,13 +484,22 @@ class Cycles {
 		if (output_node != null) {
 			return parse_output(output_node);
 		}
+		output_node = node_by_type(nodes, 'OUTPUT_MATERIAL_PBR');
+		if (output_node != null) {
+			return parse_output_pbr(output_node);
+		}
 		return null;
 	}
 
 	static function parse_output(node:TNode):TShaderOut {
 		// if parse_surface or parse_opacity:
 		return parse_shader_input(node.inputs[0]);
+		// Parse volume, displacement..
+	}
 
+	static function parse_output_pbr(node:TNode):TShaderOut {
+		// if parse_surface or parse_opacity:
+		return parse_shader(node, null);
 		// Parse volume, displacement..
 	}
 
@@ -569,36 +578,27 @@ class Cycles {
 		}
 
 		// if (node.type == 'GROUP') {
-		if (node.type == 'Armory PBR') {
+		if (node.type == 'Armory PBR' || node.type == 'OUTPUT_MATERIAL_PBR') {
 			// if parse_surface:
 			// Base color
 			parsing_basecol = true;
 			sout.out_basecol = parse_vector_input(node.inputs[0]);
 			parsing_basecol = false;
 			// Occlusion
-			sout.out_occlusion = parse_value_input(node.inputs[1]);
-			// if (isInputLinked(node.inputs[2]) or node.inputs[2].default_value != 1.0:
-				// out_occlusion = '({0} * {1})'.format(out_occlusion, parse_value_input(node.inputs[2]))
+			sout.out_occlusion = parse_value_input(node.inputs[2]);
 			// # Roughness
 			sout.out_roughness = parse_value_input(node.inputs[3]);
-			// if (isInputLinked(node.inputs[4]) or node.inputs[4].default_value != 1.0:
-				// out_roughness = '({0} * {1})'.format(out_roughness, parse_value_input(node.inputs[4]))
 			// # Metallic
-			sout.out_metallic = parse_value_input(node.inputs[5]);
+			sout.out_metallic = parse_value_input(node.inputs[4]);
 			// # Normal
-			// if (isInputLinked(node.inputs[6]) and node.inputs[6].links[0].from_node.type == 'NORMAL_MAP':
-				// c_state.warn(c_state.mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
-			parse_normal_map_color_input(node.inputs[6]);//, node.inputs[7]);
+			parse_normal_map_color_input(node.inputs[5]);
 			// # Emission
-			// if (isInputLinked(node.inputs[8]):
-				parsing_basecol = true;
-				// out_emission = parse_vector_input(node.inputs[8])
-				parsing_basecol = false;
-				// if (isInputLinked(node.inputs[9]) or node.inputs[9].default_value != 1.0:
-					// out_emission = '({0} * {1})'.format(out_emission, parse_value_input(node.inputs[9]))
+			// if (isInputLinked(node.inputs[6]) || node.inputs[6].default_value != 0.0):
+				// out_emission = parse_value_input(node.inputs[8])
 				// out_basecol = '({0} + {1})'.format(out_basecol, out_emission)
+			
 			// if parse_opacity
-			sout.out_opacity = parse_value_input(node.inputs[12]);
+			sout.out_opacity = parse_value_input(node.inputs[1]);
 		}
 			// else:
 				// return parse_group(node, socket)
