@@ -1712,17 +1712,19 @@ class Cycles {
 			// return null;
 		// }
 
-		// if (image.filepath == '') {
+		var filepath = image_node.outputs[image_node.buttons[0].output].default_value;
+
+		if (filepath == '') {
 			// log.warn(matname + '/' + image.name + ' - file path not found')
-			// return null;
-		// }
+			return null;
+		}
 
 		// Reference image name
 		// tex.file = extract_filename(image.filepath);
 		// tex.file = safestr(tex.file);
 
 		// tex.file = image_node.buttons[0].default_value;
-		tex.file = image_node.outputs[image_node.buttons[0].output].default_value;
+		tex.file = filepath;
 
 		// var s = tex.file.split('.');
 		

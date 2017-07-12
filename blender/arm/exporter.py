@@ -1297,7 +1297,7 @@ class ArmoryExporter:
                         o['material_refs'].append(bobject.override_material_name)
                     else: # Export assigned material
                         self.export_material_ref(bobject, bobject.material_slots[i].material, i, o)
-                        if bobject.material_slots[i].material.decal:
+                        if bobject.material_slots[i].material != None and bobject.material_slots[i].material.decal:
                             o['type'] = 'decal_object'
                 # No material, mimic cycles and assign default
                 if len(o['material_refs']) == 0:
