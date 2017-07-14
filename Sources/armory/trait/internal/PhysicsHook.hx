@@ -106,9 +106,9 @@ class PhysicsHook extends Trait {
 			#if js // TODO
 			var btrans = BtTransform.create();
 			btrans.setIdentity();
-			var dx = targetTransform.absx() - object.transform.absx();
-			var dy = targetTransform.absy() - object.transform.absy();
-			var dz = targetTransform.absz() - object.transform.absz();
+			var dx = targetTransform.worldx() - object.transform.worldx();
+			var dy = targetTransform.worldy() - object.transform.worldy();
+			var dz = targetTransform.worldz() - object.transform.worldz();
 			btrans.setOrigin(BtVector3.create(dx, dy, dz));
 			var constraint = BtGeneric6DofConstraint.create(rb1.body, btrans, false); // cpp - fix rb1.body pass
 			constraint.setLinearLowerLimit(BtVector3.create(0, 0, 0));

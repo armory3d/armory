@@ -183,9 +183,9 @@ class PathTracer extends Trait {
 		// 	var t:Transform = transformMap.get(loc);
 		// 	t.buildMatrix();
 		// 	var c = context.raw.bind_constants[loc];
-		// 	c.vec3[0] = t.absx();
-		// 	c.vec3[1] = t.absy();
-		// 	c.vec3[2] = t.absz();
+		// 	c.vec3[0] = t.worldx();
+		// 	c.vec3[1] = t.worldy();
+		// 	c.vec3[2] = t.worldz();
 		// }
     }
 	

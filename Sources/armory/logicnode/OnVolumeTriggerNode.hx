@@ -26,8 +26,8 @@ class OnVolumeTriggerNode extends LogicNode {
 
 		var t1 = object.transform;
 		var t2 = volume.transform;
-		l1.set(t1.absx(), t1.absy(), t1.absz());
-		l2.set(t2.absx(), t2.absy(), t2.absz());
+		l1.set(t1.worldx(), t1.worldy(), t1.worldz());
+		l2.set(t2.worldx(), t2.worldy(), t2.worldz());
 		var s1 = t1.size;
 		var s2 = t2.size;
 

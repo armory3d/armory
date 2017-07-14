@@ -112,7 +112,7 @@ class DebugConsole extends Trait {
 				function drawList(h:Handle, objs:Array<iron.object.Object>) {
 					for (i in 0...objs.length) {
 						var o = objs[i];
-						var text = o.name + ' (' + Std.int(o.transform.absx() * 100) / 100 + ', ' + Std.int(o.transform.absy() * 100) / 100 + ', ' + Std.int(o.transform.absz() * 100) / 100 + ')';
+						var text = o.name + ' (' + Std.int(o.transform.worldx() * 100) / 100 + ', ' + Std.int(o.transform.worldy() * 100) / 100 + ', ' + Std.int(o.transform.worldz() * 100) / 100 + ')';
 						if (Std.is(o, MeshObject)) text += ' - ' + Std.int(cast(o, MeshObject).screenSize * 100) / 100;
 						o.visible = ui.check(h.nest(i, {selected: o.visible}), text);
 					}

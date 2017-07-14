@@ -28,7 +28,7 @@ class Character extends Trait {
 
 	function update() {
 		var tr = object.transform;
-		loc.set(tr.absx(), tr.absy(), tr.absz());
+		loc.set(tr.worldx(), tr.worldy(), tr.worldz());
 
 		if (lastLoc == null) lastLoc = new Vec4(loc.x, loc.y, loc.z);
 

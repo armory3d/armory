@@ -73,9 +73,9 @@ class RigidBody extends Trait {
 
 		// Parented rigid body - clear parent location
 		if (object.parent != null && object.parent.name != "") {
-			transform.loc.x += object.parent.transform.absx();
-			transform.loc.y += object.parent.transform.absy();
-			transform.loc.z += object.parent.transform.absz();
+			transform.loc.x += object.parent.transform.worldx();
+			transform.loc.y += object.parent.transform.worldy();
+			transform.loc.z += object.parent.transform.worldz();
 			transform.localOnly = true;
 			transform.buildMatrix();
 		}

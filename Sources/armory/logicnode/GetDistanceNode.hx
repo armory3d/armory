@@ -12,6 +12,6 @@ class GetDistanceNode extends LogicNode {
 		var object1:Object = inputs[0].get();
 		var object2:Object = inputs[1].get();
 
-		return armory.math.Vec4.distance3d(object1.transform.abs, object2.transform.abs);
+		return armory.math.Vec4.distance3d(object1.transform.world, object2.transform.world);
 	}
 }

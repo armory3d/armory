@@ -243,7 +243,7 @@ class PhysicsWorld extends Trait {
 
 	public function getRayFrom():BtVector3 {
 		var camera = iron.Scene.active.camera;
-		return BtVector3.create(camera.transform.absx(), camera.transform.absy(), camera.transform.absz());
+		return BtVector3.create(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
 	}
 
 	public function getRayTo(inputX:Float, inputY:Float):BtVector3 {

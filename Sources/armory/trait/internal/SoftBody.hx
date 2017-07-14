@@ -69,9 +69,9 @@ class SoftBody extends Trait {
 
 		// Parented soft body - clear parent location
 		if (object.parent != null && object.parent.name != "") {
-			object.transform.loc.x += object.parent.transform.absx();
-			object.transform.loc.y += object.parent.transform.absy();
-			object.transform.loc.z += object.parent.transform.absz();
+			object.transform.loc.x += object.parent.transform.worldx();
+			object.transform.loc.y += object.parent.transform.worldy();
+			object.transform.loc.z += object.parent.transform.worldz();
 			object.transform.localOnly = true;
 			object.transform.buildMatrix();
 		}
@@ -81,13 +81,13 @@ class SoftBody extends Trait {
 			positions[i * 3] *= object.transform.scale.x;
 			positions[i * 3 + 1] *= object.transform.scale.y;
 			positions[i * 3 + 2] *= object.transform.scale.z;
-			positions[i * 3] += object.transform.absx();
-			positions[i * 3 + 1] += object.transform.absy();
-			positions[i * 3 + 2] += object.transform.absz();
+			positions[i * 3] += object.transform.worldx();
+			positions[i * 3 + 1] += object.transform.worldy();
+			positions[i * 3 + 2] += object.transform.worldz();
 		}
-		vertOffsetX = object.transform.absx();
-		vertOffsetY = object.transform.absy();
-		vertOffsetZ = object.transform.absz();
+		vertOffsetX = object.transform.worldx();
+		vertOffsetY = object.transform.worldy();
+		vertOffsetZ = object.transform.worldz();
 
 		object.transform.scale.set(1, 1, 1);
 		object.transform.loc.set(0, 0, 0);

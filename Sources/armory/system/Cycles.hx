@@ -16,6 +16,7 @@ typedef TNode = {
 	var inputs: Array<TNodeSocket>;
 	var outputs: Array<TNodeSocket>;
 	var buttons: Array<TNodeButton>;
+	var color: Int;
 }
 
 typedef TNodeSocket = {
@@ -23,7 +24,10 @@ typedef TNodeSocket = {
 	var node_id: Int;
 	var name: String;
 	var type: String;
+	var color: Int;
 	var default_value: Dynamic;
+	@:optional var min: Null<Float>;
+	@:optional var max: Null<Float>;
 }
 
 typedef TNodeLink = {
@@ -39,6 +43,9 @@ typedef TNodeButton = {
 	var type: String;
 	var output: Int;
 	@:optional var default_value: Dynamic;
+	@:optional var data: Array<String>;
+	@:optional var min: Null<Float>;
+	@:optional var max: Null<Float>;
 }
 
 typedef TMaterial = {
@@ -298,11 +305,11 @@ class Shader {
 		functions.set(fname, s);
 	}
 
-	public function contains(s) {
+	public function contains(s:String):Bool {
 		return (main.indexOf(s) >= 0 || main_pre.indexOf(s) >= 0 || ins.indexOf(s) >= 0);
 	}
 
-	public function prepend(self, s) {
+	public function prepend(s:String) {
 		main_pre = s + '\n' + main_pre;
 	}
 
@@ -384,7 +391,7 @@ class Shader {
 		for (a in uniforms)
 			s += 'uniform ' + a + ';\n';
 		for (f in functions)
-			s += functions.get(f);
+			s += f + '\n';
 		s += 'void main() {\n';
 		s += main_header;
 		s += main_pre;
@@ -402,6 +409,20 @@ typedef TShaderOut = {
 	var out_opacity:String;
 }
 
+// This module builds upon Cycles nodes work licensed as
+// Copyright 2011-2013 Blender Foundation
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 class Cycles {
 	
 	static var con:ShaderContext;
@@ -420,7 +441,10 @@ class Cycles {
 	static var parsing_basecol:Bool;
 	static var parse_teximage_vector:Bool;
 	static var normal_written:Bool; // Normal socket is linked on shader node - overwrite fs normal
+	static var cotangentFrameWritten:Bool;
 	
+
+	public static var arm_export_tangents = true;
 	public static var out_normaltan:String; // Raw tangent space normal parsed from normal map
 
 	public static function getNode(id: Int): TNode {
@@ -477,6 +501,7 @@ class Cycles {
 		parsing_basecol = false;
 		parse_teximage_vector = true;
 		normal_written = false;
+		cotangentFrameWritten = false;
 
 		out_normaltan = 'vec3(0.5, 0.5, 1.0)';
 
@@ -585,20 +610,20 @@ class Cycles {
 			sout.out_basecol = parse_vector_input(node.inputs[0]);
 			parsing_basecol = false;
 			// Occlusion
-			sout.out_occlusion = parse_value_input(node.inputs[2]);
+			sout.out_occlusion = parse_value_input(node.inputs[2 - 1]);
 			// # Roughness
-			sout.out_roughness = parse_value_input(node.inputs[3]);
+			sout.out_roughness = parse_value_input(node.inputs[3 - 1]);
 			// # Metallic
-			sout.out_metallic = parse_value_input(node.inputs[4]);
+			sout.out_metallic = parse_value_input(node.inputs[4 - 1]);
 			// # Normal
-			parse_normal_map_color_input(node.inputs[5]);
+			parse_normal_map_color_input(node.inputs[5 - 1]);
 			// # Emission
 			// if (isInputLinked(node.inputs[6]) || node.inputs[6].default_value != 0.0):
 				// out_emission = parse_value_input(node.inputs[8])
 				// out_basecol = '({0} + {1})'.format(out_basecol, out_emission)
 			
 			// if parse_opacity
-			sout.out_opacity = parse_value_input(node.inputs[1]);
+			// sout.out_opacity = parse_value_input(node.inputs[1]);
 		}
 			// else:
 				// return parse_group(node, socket)
@@ -871,46 +896,60 @@ class Cycles {
 				return tovec3(socket.default_value);
 			}
 
-		//     elif node.type == 'TEX_BRICK':
-		//         # Pass through
-		//         return tovec3([0.0, 0.0, 0.0])
+			// else if (node.type == 'TEX_BRICK') {
+				// Pass through
+				// return tovec3([0.0, 0.0, 0.0]);
+			// }
 
-		//     elif node.type == 'TEX_CHECKER':
-		//         curshader.add_function(c_functions.str_tex_checker)
+			else if (node.type == 'TEX_CHECKER') {
+				curshader.add_function(CyclesFunctions.str_tex_checker);
 		//         if (isInputLinked(node.inputs[0]):
 		//             co = parse_vector_input(node.inputs[0])
 		//         else:
-		//             co = 'wposition'
-		//         col1 = parse_vector_input(node.inputs[1])
-		//         col2 = parse_vector_input(node.inputs[2])
-		//         scale = parse_value_input(node.inputs[3])
-		//         return 'tex_checker({0}, {1}, {2}, {3})'.format(co, col1, col2, scale)
+					var co = 'wposition';
+				var col1 = parse_vector_input(node.inputs[1]);
+				var col2 = parse_vector_input(node.inputs[2]);
+				var scale = parse_value_input(node.inputs[3]);
+				return 'tex_checker($co, $col1, $col2, $scale)';
+			}
 
-		//     elif node.type == 'TEX_ENVIRONMENT':
-		//         # Pass through
+		//     else if (node.type == 'TEX_ENVIRONMENT') {
+		//         // Pass through
 		//         return tovec3([0.0, 0.0, 0.0])
+		// }
 
-		//     elif node.type == 'TEX_GRADIENT':
-		//         if (isInputLinked(node.inputs[0]):
-		//             co = parse_vector_input(node.inputs[0])
-		//         else:
-		//             co = 'wposition'
-		//         grad = node.gradient_type
-		//         if grad == 'LINEAR':
-		//             f = '{0}.x'.format(co)
-		//         elif grad == 'QUADRATIC':
-		//             f = '0.0'
-		//         elif grad == 'EASING':
-		//             f = '0.0'
-		//         elif grad == 'DIAGONAL':
-		//             f = '({0}.x + {0}.y) * 0.5'.format(co)
-		//         elif grad == 'RADIAL':
-		//             f = 'atan({0}.y, {0}.x) / PI2 + 0.5'.format(co)
-		//         elif grad == 'QUADRATIC_SPHERE':
-		//             f = '0.0'
-		//         elif grad == 'SPHERICAL':
-		//             f = 'max(1.0 - sqrt({0}.x * {0}.x + {0}.y * {0}.y + {0}.z * {0}.z), 0.0)'.format(co)
-		//         return 'vec3(clamp({0}, 0.0, 1.0))'.format(f)
+			else if (node.type == 'TEX_GRADIENT') {
+				// if (isInputLinked(node.inputs[0]):
+					// co = parse_vector_input(node.inputs[0])
+				// else:
+					var co = 'wposition';
+				var but = node.buttons[0]; //gradient_type;
+				var grad = but.data[but.default_value].toUpperCase();
+				grad = StringTools.replace(grad, " ", "_");
+				var f = '';
+				if (grad == 'LINEAR') {
+					f = '$co.x';
+				}
+				else if (grad == 'QUADRATIC') {
+					f = '0.0';
+				}
+				else if (grad == 'EASING') {
+					f = '0.0';
+				}
+				else if (grad == 'DIAGONAL') {
+					f = '($co.x + $co.y) * 0.5';
+				}
+				else if (grad == 'RADIAL') {
+					f = 'atan($co.y, $co.x) / (3.141592 * 2.0) + 0.5';
+				}
+				else if (grad == 'QUADRATIC_SPHERE') {
+					f = '0.0';
+				}
+				else if (grad == 'SPHERICAL') {
+					f = 'max(1.0 - sqrt($co.x * $co.x + $co.y * $co.y + $co.z * $co.z), 0.0)';
+				}
+				return 'vec3(clamp($f, 0.0, 1.0))';
+			}
 
 			else if (node.type == 'TEX_IMAGE') {
 				// Already fetched
@@ -954,18 +993,19 @@ class Cycles {
 		//         # distortion = parse_value_input(node.inputs[3])
 		//         return 'vec3(tex_noise_f({0} * {1}))'.format(co, scale)
 
-		//     elif node.type == 'TEX_NOISE':
-		//         curshader.add_function(c_functions.str_tex_noise)
+			else if (node.type == 'TEX_NOISE') {
+				curshader.add_function(CyclesFunctions.str_tex_noise);
+			
 		//         if (isInputLinked(node.inputs[0]):
 		//             co = parse_vector_input(node.inputs[0])
 		//         else:
-		//             co = 'wposition'
-		//         scale = parse_value_input(node.inputs[1])
+				var co = 'wposition';
+				var scale = parse_value_input(node.inputs[1]);
 		//         # detail = parse_value_input(node.inputs[2])
 		//         # distortion = parse_value_input(node.inputs[3])
 		//         # Slow..
-		//         return 'vec3(tex_noise({0} * {1}), tex_noise({0} * {1} + 0.33), tex_noise({0} * {1} + 0.66))'.format(co, scale)
-
+				return 'vec3(tex_noise($co * $scale), tex_noise($co * $scale + 0.33), tex_noise($co * $scale + 0.66))';
+			}
 		//     elif node.type == 'TEX_POINTDENSITY':
 		//         # Pass through
 		//         return tovec3([0.0, 0.0, 0.0])
@@ -974,105 +1014,133 @@ class Cycles {
 		//         # Pass through
 		//         return tovec3([0.0, 0.0, 0.0])
 
-		//     elif node.type == 'TEX_VORONOI':
-		//         curshader.add_function(c_functions.str_tex_voronoi)
+			else if (node.type == 'TEX_VORONOI') {
+				curshader.add_function(CyclesFunctions.str_tex_voronoi);
 		//         c_state.assets_add(c_state.get_sdk_path() + '/armory/Assets/' + 'noise64.png')
 		//         c_state.assets_add_embedded_data('noise64.png')
-		//         curshader.add_uniform('sampler2D snoise', link='_noise64')
+				curshader.add_uniform('sampler2D snoise', '_noise64');
 		//         if (isInputLinked(node.inputs[0]):
 		//             co = parse_vector_input(node.inputs[0])
 		//         else:
-		//             co = 'wposition'
-		//         scale = parse_value_input(node.inputs[1])
-		//         if node.coloring == 'INTENSITY':
-		//             return 'vec3(tex_voronoi({0} / {1}).a)'.format(co, scale)
-		//         else: # CELLS
-		//             return 'tex_voronoi({0} / {1}).rgb'.format(co, scale)
-
+				var co = 'wposition';
+				var scale = parse_value_input(node.inputs[1]);
+				var but = node.buttons[0]; //coloring;
+				var coloring = but.data[but.default_value].toUpperCase();
+				coloring = StringTools.replace(coloring, " ", "_");
+				if (coloring == 'INTENSITY') {
+					return 'vec3(tex_voronoi($co / $scale).a)';
+				}
+				else { // Cells
+					return 'tex_voronoi($co / $scale).rgb';
+				}
+			}
 		//     elif node.type == 'TEX_WAVE':
 		//         # Pass through
 		//         return tovec3([0.0, 0.0, 0.0])
 
-		//     elif node.type == 'BRIGHTCONTRAST':
-		//         out_col = parse_vector_input(node.inputs[0])
-		//         bright = parse_value_input(node.inputs[1])
-		//         contr = parse_value_input(node.inputs[2])
-		//         curshader.add_function(\
-		// """vec3 brightcontrast(const vec3 col, const float bright, const float contr) {
-		//     float a = 1.0 + contr;
-		//     float b = bright - contr * 0.5;
-		//     return max(a * col + b, 0.0);
-		// }
-		// """)
-		//         return 'brightcontrast({0}, {1}, {2})'.format(out_col, bright, contr)
+			else if (node.type == 'BRIGHTCONTRAST') {
+				var out_col = parse_vector_input(node.inputs[0]);
+				var bright = parse_value_input(node.inputs[1]);
+				var contr = parse_value_input(node.inputs[2]);
+				curshader.add_function("vec3 brightcontrast(const vec3 col, const float bright, const float contr) {
+					float a = 1.0 + contr;
+					float b = bright - contr * 0.5;
+					return max(a * col + b, 0.0);
+				}");
+				return 'brightcontrast($out_col, $bright, $contr)';
+			}
+			else if (node.type == 'GAMMA') {
+				var out_col = parse_vector_input(node.inputs[0]);
+				var gamma = parse_value_input(node.inputs[1]);
+				return 'pow($out_col, vec3($gamma))';
+			}
 
-		//     elif node.type == 'GAMMA':
-		//         out_col = parse_vector_input(node.inputs[0])
-		//         gamma = parse_value_input(node.inputs[1])
-		//         return 'pow({0}, vec3({1}))'.format(out_col, gamma)
+			else if (node.type == 'HUE_SAT') {
+				curshader.add_function(CyclesFunctions.str_hsv_to_rgb);
+				var hue = parse_value_input(node.inputs[0]);
+				var sat = parse_value_input(node.inputs[1]);
+				var val = parse_value_input(node.inputs[2]);
+				// var fac = parse_value_input(node.inputs[3]);
+				// var col = parse_vector_input(node.inputs[4]);
+				return 'hsv_to_rgb(vec3($hue, $sat, $val))';
+			}
 
-		//     elif node.type == 'HUE_SAT':
-		//         curshader.add_function(c_functions.str_hsv_to_rgb)
-		//         hue = parse_value_input(node.inputs[0])
-		//         sat = parse_value_input(node.inputs[1])
-		//         val = parse_value_input(node.inputs[2])
-		//         # fac = parse_value_input(node.inputs[3])
-		//         # col = parse_vector_input(node.inputs[4])
-		//         return 'hsv_to_rgb(vec3({0}, {1}, {2}))'.format(hue, sat, val)
-
-		//     elif node.type == 'INVERT':
-		//         fac = parse_value_input(node.inputs[0])
-		//         out_col = parse_vector_input(node.inputs[1])
-		//         return 'mix({0}, vec3(1.0) - ({0}), {1})'.format(out_col, fac)
-
-		//     elif node.type == 'MIX_RGB':
-		//         fac = parse_value_input(node.inputs[0])
-		//         fac_var = node_name(node) + '_fac'
-		//         curshader.write('float {0} = {1};'.format(fac_var, fac))
-		//         col1 = parse_vector_input(node.inputs[1])
-		//         col2 = parse_vector_input(node.inputs[2])
-		//         blend = node.blend_type
-		//         if blend == 'MIX':
-		//             out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var)
-		//         elif blend == 'ADD':
-		//             out_col = 'mix({0}, {0} + {1}, {2})'.format(col1, col2, fac_var)
-		//         elif blend == 'MULTIPLY':
-		//             out_col = 'mix({0}, {0} * {1}, {2})'.format(col1, col2, fac_var)
-		//         elif blend == 'SUBTRACT':
-		//             out_col = 'mix({0}, {0} - {1}, {2})'.format(col1, col2, fac_var)
-		//         elif blend == 'SCREEN':
-		//             out_col = '(vec3(1.0) - (vec3(1.0 - {2}) + {2} * (vec3(1.0) - {1})) * (vec3(1.0) - {0}))'.format(col1, col2, fac_var)
-		//         elif blend == 'DIVIDE':
-		//             out_col = '(vec3((1.0 - {2}) * {0} + {2} * {0} / {1}))'.format(col1, col2, fac_var)
-		//         elif blend == 'DIFFERENCE':
-		//             out_col = 'mix({0}, abs({0} - {1}), {2})'.format(col1, col2, fac_var)
-		//         elif blend == 'DARKEN':
-		//             out_col = 'min({0}, {1} * {2})'.format(col1, col2, fac_var)
-		//         elif blend == 'LIGHTEN':
-		//             out_col = 'max({0}, {1} * {2})'.format(col1, col2, fac_var)
-		//         elif blend == 'OVERLAY':
-		//             out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
-		//         elif blend == 'DODGE':
-		//             out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
-		//         elif blend == 'BURN':
-		//             out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
-		//         elif blend == 'HUE':
-		//             out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
-		//         elif blend == 'SATURATION':
-		//             out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
-		//         elif blend == 'VALUE':
-		//             out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
-		//         elif blend == 'COLOR':
-		//             out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
-		//         elif blend == 'SOFT_LIGHT':
-		//             out_col = '((1.0 - {2}) * {0} + {2} * ((vec3(1.0) - {0}) * {1} * {0} + {0} * (vec3(1.0) - (vec3(1.0) - {1}) * (vec3(1.0) - {0}))));'.format(col1, col2, fac)
-		//         elif blend == 'LINEAR_LIGHT':
-		//             out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var) # Revert to mix
-		//             # out_col = '({0} + {2} * (2.0 * ({1} - vec3(0.5))))'.format(col1, col2, fac_var)
-		//         if node.use_clamp:
-		//             return 'clamp({0}, vec3(0.0), vec3(1.0))'.format(out_col)
-		//         else:
-		//             return out_col
+			else if (node.type == 'INVERT') {
+				var fac = parse_value_input(node.inputs[0]);
+				var out_col = parse_vector_input(node.inputs[1]);
+				return 'mix($out_col, vec3(1.0) - ($out_col), $fac)';
+			}
+			
+			else if (node.type == 'MIX_RGB') {
+				var fac = parse_value_input(node.inputs[0]);
+				var fac_var = node_name(node) + '_fac';
+				curshader.write('float $fac_var = $fac;');
+				var col1 = parse_vector_input(node.inputs[1]);
+				var col2 = parse_vector_input(node.inputs[2]);
+				var but = node.buttons[0]; // blend_type
+				var blend = but.data[but.default_value].toUpperCase();
+				blend = StringTools.replace(blend, " ", "_");
+				but = node.buttons[1]; // use_clamp
+				var use_clamp = but.default_value == "true";
+				var out_col = '';
+				if (blend == 'MIX') {
+					out_col = 'mix($col1, $col2, $fac_var)';
+				}
+				else if (blend == 'ADD') {
+					out_col = 'mix($col1, $col1 + $col2, $fac_var)';
+				}
+				else if (blend == 'MULTIPLY') {
+					out_col = 'mix($col1, $col1 * $col2, $fac_var)';
+				}
+				else if (blend == 'SUBTRACT') {
+					out_col = 'mix($col1, $col1 - $col2, $fac_var)';
+				}
+				else if (blend == 'SCREEN') {
+					out_col = '(vec3(1.0) - (vec3(1.0 - $fac_var) + $fac_var * (vec3(1.0) - $col2)) * (vec3(1.0) - $col1))';
+				}
+				else if (blend == 'DIVIDE') {
+					out_col = '(vec3((1.0 - $fac_var) * $col1 + $fac_var * $col1 / $col2))';
+				}
+				else if (blend == 'DIFFERENCE') {
+					out_col = 'mix($col1, abs($col1 - $col2), $fac_var)';
+				}
+				else if (blend == 'DARKEN') {
+					out_col = 'min($col1, $col2 * $fac_var)';
+				}
+				else if (blend == 'LIGHTEN') {
+					out_col = 'max($col1, $col2 * $fac_var)';
+				}
+				// else if (blend == 'OVERLAY') {
+				// 	out_col = 'mix($col1, $col2, $fac_var)'.format(col1, col2, fac_var) // Revert to mix
+				// }
+				// else if (blend == 'DODGE') {
+				// 	out_col = 'mix($col1, $col2, $fac_var)'.format(col1, col2, fac_var) // Revert to mix
+				// }
+				// else if (blend == 'BURN') {
+				// 	out_col = 'mix($col1, $col2, $fac_var)'.format(col1, col2, fac_var) // Revert to mix
+				// }
+				// else if (blend == 'HUE') {
+				// 	out_col = 'mix($col1, $col2, $fac_var)'.format(col1, col2, fac_var) // Revert to mix
+				// }
+				// else if (blend == 'SATURATION') {
+				// 	out_col = 'mix($col1, $col2, $fac_var)'.format(col1, col2, fac_var) // Revert to mix
+				// }
+				// else if (blend == 'VALUE') {
+				// 	out_col = 'mix($col1, $col2, $fac_var)'.format(col1, col2, fac_var) // Revert to mix
+				// }
+				// else if (blend == 'COLOR') {
+				// 	out_col = 'mix($col1, $col2, $fac_var)'.format(col1, col2, fac_var) // Revert to mix
+				// }
+				else if (blend == 'SOFT_LIGHT') {
+					out_col = '((1.0 - $fac_var) * $col1 + $fac_var * ((vec3(1.0) - $col1) * $col2 * $col1 + $col1 * (vec3(1.0) - (vec3(1.0) - $col2) * (vec3(1.0) - $col1))));';
+				}
+				// else if (blend == 'LINEAR_LIGHT') {
+					// out_col = 'mix($col1, $col2, $fac_var)'.format(col1, col2, fac_var) # Revert to mix
+					// out_col = '($col1 + $fac_var * (2.0 * ($col2 - vec3(0.5))))'.format(col1, col2, fac_var)
+				// }
+				if (use_clamp) return 'clamp($out_col, vec3(0.0), vec3(1.0))';
+				else return out_col;
+			}
 
 		//     elif node.type == 'CURVE_RGB':
 		//         # Pass throuh
@@ -1106,29 +1174,15 @@ class Cycles {
 		//             return 'mix({0}, {1}, clamp(({2} - {3}) * (1.0 / (1.0 - {3})), 0.0, 1.0))'.format(tovec3(elems[0].color), tovec3(elems[1].color), fac, elems[0].position)
 
 		//     elif node.type == 'COMBHSV':
-		// # vec3 hsv2rgb(vec3 c) {
-		// #     vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-		// #     vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-		// #     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-		// # }
-		// # vec3 rgb2hsv(vec3 c) {
-		// #     vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
-		// #     vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
-		// #     vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
-
-		// #     float d = q.x - min(q.w, q.y);
-		// #     float e = 1.0e-10;
-		// #     return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
-		// # }
 		//         # Pass constant
 		//         return tovec3([0.0, 0.0, 0.0])
 
-		//     elif node.type == 'COMBRGB':
-		//         r = parse_value_input(node.inputs[0])
-		//         g = parse_value_input(node.inputs[1])
-		//         b = parse_value_input(node.inputs[2])
-		//         return 'vec3({0}, {1}, {2})'.format(r, g, b)
-
+			else if (node.type == 'COMBRGB') {
+				var r = parse_value_input(node.inputs[0]);
+				var g = parse_value_input(node.inputs[1]);
+				var b = parse_value_input(node.inputs[2]);
+				return 'vec3($r, $g, $b)';
+			}
 		//     elif node.type == 'WAVELENGTH':
 		//         # Pass constant
 		//         return tovec3([0.0, 0.27, 0.19])
@@ -1184,9 +1238,10 @@ class Cycles {
 		// 				return 'texCoord1', 2
 		// 	return 'texCoord', 2
 
-		// elif node.type == 'CAMERA':
-		// 	# View Vector
-		// 	return 'vVec'
+		if (node.type == 'CAMERA') {
+			// View Vector
+			return 'vVec';
+		}
 
 		// elif node.type == 'NEW_GEOMETRY':
 		// 	if socket == node.outputs[0]: # Position
@@ -1319,13 +1374,22 @@ class Cycles {
 		out_normaltan = parse_vector_input(inp);
 		// defplus = c_state.get_rp_renderer() == 'Deferred Plus'
 		// if not c_state.get_arm_export_tangents() or defplus: # Compute TBN matrix
-		//     frag.write('vec3 texn = ({0}) * 2.0 - 1.0;'.format(out_normaltan))
+		if (!arm_export_tangents) {
+
+			frag.write('vec3 texn = ($out_normaltan) * 2.0 - 1.0;');
 		//     frag.add_include('../../Shaders/std/normals.glsl')
+
 		//     if defplus:
 		//         frag.write('mat3 TBN = cotangentFrame(n, -vVec, g2.xy, g2.zw);')
 		//     else:
-		//         frag.write('mat3 TBN = cotangentFrame(n, -vVec, texCoord);')
-		//     frag.write('n = TBN * normalize(texn);')
+			if (!cotangentFrameWritten) {
+				cotangentFrameWritten = true;
+				frag.write_header('mat3 cotangentFrame(const vec3 n, const vec3 p, const vec2 duv1, const vec2 duv2) {vec3 dp1 = dFdx(p);vec3 dp2 = dFdy(p);vec3 dp2perp = cross(dp2, n);vec3 dp1perp = cross(n, dp1);vec3 t = dp2perp * duv1.x + dp1perp * duv2.x;vec3 b = dp2perp * duv1.y + dp1perp * duv2.y;float invmax = inversesqrt(max(dot(t, t), dot(b, b)));return mat3(t * invmax, b * invmax, n);}');
+			}
+			// frag.write('mat3 TBN = cotangentFrame(n, -vVec, texCoord);')
+			frag.write('mat3 TBN = cotangentFrame(n, -vVec, dFdx(texCoord), dFdy(texCoord));');
+			frag.write('n = TBN * normalize(texn);');
+		}
 		// else:
 		//     frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(out_normaltan))
 		//     # frag.write('n = normalize(TBN * normalize(n));')
@@ -1726,12 +1790,12 @@ class Cycles {
 		// tex.file = image_node.buttons[0].default_value;
 		tex.file = filepath;
 
-		// var s = tex.file.split('.');
+		var s = tex.file.split('.');
 		
-		// if (s.length == 1) {
+		if (s.length == 1) {
 			// log.warn(matname + '/' + image.name + ' - file extension required for image name')
-			// return null;
-		// }
+			return null;
+		}
 
 		// var ext = s[1].lower();
 		// do_convert = ext != 'jpg' and ext != 'png' and ext != 'hdr' and ext != 'mp4' # Convert image
@@ -1781,11 +1845,11 @@ class Cycles {
 		 // if image_format != 'RGBA32':
 			 // tex['format'] = image_format
 		
-		// var interpolation = image_node.interpolation;
-		// var aniso = 'On';//wrd.anisotropic_filtering_state;
-		// if (aniso == 'On') {
-			// interpolation = 'Smart';
-		// }
+		var interpolation = 'Smart';//image_node.interpolation;
+		var aniso = 'On';//wrd.anisotropic_filtering_state;
+		if (aniso == 'On') {
+			interpolation = 'Smart';
+		}
 		// else if (aniso == 'Off' && interpolation == 'Smart') {
 			// interpolation = 'Linear';
 		// }
@@ -1800,9 +1864,9 @@ class Cycles {
 		// 		tex.generate_mipmaps = true;
 		// 	}
 		// 	else if (interpolation == 'Smart') { // Mipmap anisotropic
-		// 		tex.min_filter = 'anisotropic';
-		// 		tex.mipmap_filter = 'linear';
-		// 		tex.generate_mipmaps = true;
+				tex.min_filter = 'anisotropic';
+				tex.mipmap_filter = 'linear';
+				tex.generate_mipmaps = true;
 		// 	}
 		// }
 		// else if (image_node.interpolation == 'Cubic' || image_node.interpolation == 'Smart') {
