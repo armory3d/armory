@@ -182,7 +182,7 @@ class VehicleBody extends Trait {
 		var q = trans.getRotation();
 		transform.loc.set(p.x(), p.y(), p.z());
 		transform.rot.set(q.x(), q.y(), q.z(), q.w());
-		var up = transform.matrix.up();
+		var up = transform.world.up();
 		transform.loc.add(up);
 		transform.dirty = true;
 

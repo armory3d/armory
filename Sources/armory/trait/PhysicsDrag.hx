@@ -54,7 +54,7 @@ class PhysicsDrag extends Trait {
 				var hit = physics.hitPointWorld;
 				var pickPos:BtVector3 = BtVector3.create(hit.x, hit.y, hit.z);
 				
-				// var ct = b.object.transform.matrix;
+				// var ct = b.object.transform.world;
 				// var inv = iron.math.Mat4.identity();
 				// inv.getInverse(ct);
 				// var localPivotVec = new iron.math.Vec4(pickPos.x(), pickPos.y(), pickPos.z());
@@ -155,7 +155,7 @@ class PhysicsDrag extends Trait {
 		var mouse = Input.getMouse();
 		var camera = iron.Scene.active.camera;
 		
-		var v = camera.transform.world;
+		var v = camera.transform.world.getLoc();
 		rayFrom = BtVector3.create(v.x, v.y, v.z);
 		var start = new Vec4();
 		var end = new Vec4();

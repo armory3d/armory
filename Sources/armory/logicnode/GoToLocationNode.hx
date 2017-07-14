@@ -19,7 +19,7 @@ class GoToLocationNode extends LogicNode {
 
 #if arm_navigation
 		// Assume navmesh exists..
-		var from = object.transform.world;
+		var from = object.transform.world.getLoc();
 		var to = location;
 		Navigation.active.navMeshes[0].findPath(from, to, function(path:Array<iron.math.Vec4>) {
 			var agent:armory.trait.NavAgent = object.getTrait(armory.trait.NavAgent);

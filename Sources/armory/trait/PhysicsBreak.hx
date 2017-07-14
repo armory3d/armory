@@ -332,7 +332,7 @@ class ConvexBreaker {
 		// Transform the plane to object local space
 		var localPlane = this.tempPlane;
 		object.transform.buildMatrix();
-		transformPlaneToLocalSpace(plane, object.transform.matrix, localPlane);
+		transformPlaneToLocalSpace(plane, object.transform.world, localPlane);
 
 		// Iterate through the faces adding points to both pieces
 		for (i in 0...faces.length) {

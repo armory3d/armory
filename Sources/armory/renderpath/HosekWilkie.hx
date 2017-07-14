@@ -125,7 +125,7 @@ class HosekWilkie {
 		// var mat = iron.data.Data.getMaterial("World_material", "World_material").data;
 		// var lamp = iron.Scene.active.lamps[0];
 		// var ltr = lamp.transform;
-		// var lf = ltr.matrix.look2();
+		// var lf = ltr.world.look2();
 		// lamp.data.data.strength = 3.3 - Math.abs(ltr.worldy()) / 45;
 		// probe.strength = 1.2 - Math.abs(ltr.worldy()) / 45;
 		// mat.contexts[0].bind_constants[0].float = probe.strength + 0.5;

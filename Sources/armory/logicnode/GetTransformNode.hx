@@ -13,6 +13,6 @@ class GetTransformNode extends LogicNode {
 
 		if (object == null) object = tree.object;
 
-		return object.transform.matrix;
+		return object.transform.world;
 	}
 }

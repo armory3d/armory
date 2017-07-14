@@ -222,7 +222,7 @@ class PhysicsWorld extends Trait {
 		var start = new Vec4();
 		var end = new Vec4();
 		RayCaster.getDirection(start, end, inputX, inputY, camera);
-		return rayCast(camera.transform.world, end);
+		return rayCast(camera.transform.world.getLoc(), end);
 	}
 
 	public function rayCast(from:Vec4, to:Vec4):RigidBody {
