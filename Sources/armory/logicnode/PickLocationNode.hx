@@ -23,8 +23,8 @@ class PickLocationNode extends LogicNode {
 		var rb = object.getTrait(armory.trait.internal.RigidBody);
 
 		if (rb != null && b == rb) {
-			var p:haxebullet.Bullet.BtVector3 = physics.hitPointWorld;
-			loc.set(p.x(), p.y(), p.z());
+			var p = physics.hitPointWorld;
+			loc.set(p.x, p.y, p.z);
 			return loc;
 		}
 #end

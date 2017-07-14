@@ -22,7 +22,7 @@ class PickObjectNode extends LogicNode {
 			return rb.object;
 		}
 		else { // Hit
-			return v.set(physics.hitPointWorld.x(), physics.hitPointWorld.y(), physics.hitPointWorld.z());
+			return v.set(physics.hitPointWorld.x, physics.hitPointWorld.y, physics.hitPointWorld.z);
 		}
 #end
 		return null;

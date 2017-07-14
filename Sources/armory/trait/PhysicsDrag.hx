@@ -2,6 +2,8 @@ package armory.trait;
 
 import iron.Trait;
 import iron.system.Input;
+import iron.math.Vec4;
+import iron.math.RayCaster;
 import armory.trait.internal.RigidBody;
 import armory.trait.internal.PhysicsWorld;
 #if arm_physics
@@ -49,7 +51,8 @@ class PhysicsDrag extends Trait {
 				setRays();
 				pickedBody = b;
 
-				var pickPos:BtVector3 = physics.hitPointWorld;
+				var hit = physics.hitPointWorld;
+				var pickPos:BtVector3 = BtVector3.create(hit.x, hit.y, hit.z);
 				
 				// var ct = b.object.transform.matrix;
 				// var inv = iron.math.Mat4.identity();
@@ -150,8 +153,14 @@ class PhysicsDrag extends Trait {
 
 	inline function setRays() {
 		var mouse = Input.getMouse();
-		rayFrom = physics.getRayFrom();
-		rayTo = physics.getRayTo(mouse.x, mouse.y);
+		var camera = iron.Scene.active.camera;
+		
+		var v = camera.transform.world;
+		rayFrom = BtVector3.create(v.x, v.y, v.z);
+		var start = new Vec4();
+		var end = new Vec4();
+		RayCaster.getDirection(start, end, mouse.x, mouse.y, camera);
+		rayTo = BtVector3.create(end.x, end.y, end.z);
 	}
 #end
 }

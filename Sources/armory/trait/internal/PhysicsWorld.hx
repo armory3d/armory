@@ -48,7 +48,7 @@ class PhysicsWorld extends Trait {
 	static inline var timeStep = 1 / 60;
 	static inline var fixedStep = 1 / 60;
 
-	public var hitPointWorld:BtVector3;
+	public var hitPointWorld = new Vec4();
 
 	public function new() {
 		super();
@@ -218,40 +218,35 @@ class PhysicsWorld extends Trait {
 	}
 
 	public function pickClosest(inputX:Float, inputY:Float):RigidBody {
-
-		var rayFrom = getRayFrom();
-		var rayTo = getRayTo(inputX, inputY);
-
-		var rayCallback = ClosestRayResultCallback.create(rayFrom, rayTo);
-		world.rayTest(rayFrom, rayTo, rayCallback);
-		
-		if (rayCallback.hasHit()) {
-			#if js
-			var co = rayCallback.get_m_collisionObject();
-			var body = untyped Ammo.btRigidBody.prototype.upcast(co);
-			hitPointWorld = rayCallback.get_m_hitPointWorld();
-			return rbMap.get(untyped body.userIndex);
-			#elseif cpp
-			hitPointWorld = rayCallback.m_hitPointWorld;
-			return rbMap.get(rayCallback.m_collisionObject.getUserIndex());
-			#end
-		}
-		else {
-			return null;
-		}
-	}
-
-	public function getRayFrom():BtVector3 {
-		var camera = iron.Scene.active.camera;
-		return BtVector3.create(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
-	}
-
-	public function getRayTo(inputX:Float, inputY:Float):BtVector3 {
 		var camera = iron.Scene.active.camera;
 		var start = new Vec4();
 		var end = new Vec4();
 		RayCaster.getDirection(start, end, inputX, inputY, camera);
-		return BtVector3.create(end.x, end.y, end.z);
+		return rayCast(camera.transform.world, end);
+	}
+
+	public function rayCast(from:Vec4, to:Vec4):RigidBody {
+
+		var rayFrom = BtVector3.create(from.x, from.y, from.z);
+		var rayTo = BtVector3.create(to.x, to.y, to.z);
+
+		var rayCallback = ClosestRayResultCallback.create(rayFrom, rayTo);
+		world.rayTest(rayFrom, rayTo, rayCallback);
+
+		if (rayCallback.hasHit()) {
+			#if js
+			var co = rayCallback.get_m_collisionObject();
+			var body = untyped Ammo.btRigidBody.prototype.upcast(co);
+			var hit = rayCallback.get_m_hitPointWorld();
+			hitPointWorld.set(hit.x(), hit.y(), hit.z());
+			return rbMap.get(untyped body.userIndex);
+			#elseif cpp
+			var hit = rayCallback.m_hitPointWorld;
+			hitPointWorld.set(hit.x(), hit.y(), hit.z());
+			return rbMap.get(rayCallback.m_collisionObject.getUserIndex());
+			#end
+		}
+		return null;
 	}
 
 	public function notifyOnPreUpdate(f:Void->Void) {
