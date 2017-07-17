@@ -14,6 +14,9 @@ precision mediump float;
 #ifdef _VoxelGI
 	#include "../std/conetrace.glsl"
 #endif
+#ifdef _DFAO
+#include "../std/sdf.glsl"
+#endif
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
@@ -40,6 +43,9 @@ uniform float envmapStrength;
 #ifdef _Rad
 	uniform vec3 eye;
 	uniform vec3 eyeLook;
+#endif
+#ifdef _DFAO
+	//!uniform sampler2D sdftex;
 #endif
 
 in vec2 texCoord;
@@ -131,7 +137,11 @@ void main() {
 #endif
 
 #ifdef _SSAO
-	envl.rgb *= texture(ssaotex, texCoord).r; // SSAO
+	envl.rgb *= texture(ssaotex, texCoord).r;
+#endif
+
+#ifdef _DFAO
+	envl.rgb *= dfao(p, n);
 #endif
 
 #ifdef _VoxelGI

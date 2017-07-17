@@ -44,6 +44,11 @@
 				{
 					"name": "envmapStrength",
 					"link": "_envmapStrength"
+				},
+				{
+					"name": "sdftex",
+					"link": "_sdfTexture",
+					"ifdef": ["_DFAO"]
 				}
 			],
 			"vertex_shader": "deferred_indirect.vert.glsl",

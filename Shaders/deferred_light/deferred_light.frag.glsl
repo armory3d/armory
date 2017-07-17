@@ -156,7 +156,7 @@ void main() {
 	const float distmax = 40.0;
 	const float eps = 0.02;
 	const int maxSteps = 30;
-	float dist = 0.1;
+	float dist = 0.2;
 
 	// float test = mapsdf2(p);
 	// if (test < 0.1) {
@@ -207,7 +207,7 @@ void main() {
 			// d = length((p + rd) - p3);
 		}
 		
-		const float k = 2.0;
+		const float k = 1.0;
 		visibility = min(visibility, (k * d / dist));
 		dist += d;
 		

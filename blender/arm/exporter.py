@@ -1934,7 +1934,7 @@ class ArmoryExporter:
             # Run
             krom_location, krom_path = arm.utils.krom_paths()
             krom_dir = sdfgen_path + '/krom'
-            krom_res = sdfgen_path + '/krom-resources'
+            krom_res = sdfgen_path + '/krom'
             subprocess.check_output([krom_path, krom_dir, krom_res, '--nosound', '--nowindow'])
             # Copy output
             sdf_path = fp.replace('/mesh_', '/sdf_')
