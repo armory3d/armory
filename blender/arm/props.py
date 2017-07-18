@@ -204,6 +204,9 @@ def init_properties():
                  ('BorderlessWindow', 'Borderless', 'BorderlessWindow'),
                  ('Fullscreen', 'Fullscreen', 'Fullscreen')],
         name="Window Mode", default='Window', description='Window mode to start in')
+    bpy.types.World.arm_winresize = BoolProperty(name="Resizable", description="Allow window resize", default=False)
+    bpy.types.World.arm_winmaximize = BoolProperty(name="Maximizable", description="Allow window maximize", default=False)
+    bpy.types.World.arm_winminimize = BoolProperty(name="Minimizable", description="Allow window minimize", default=True)
     bpy.types.World.arm_gapi_win = EnumProperty(
         items = [('opengl', 'Auto', 'opengl'),
                  ('opengl', 'OpenGL', 'opengl'),
