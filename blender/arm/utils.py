@@ -146,6 +146,28 @@ def fetch_bundled_script_names():
     for file in glob.glob('*.hx'):
         wrd.bundled_scripts_list.add().name = file.rsplit('.')[0]
 
+script_props = {}
+def fetch_script_props(file):
+    with open(file) as f:
+        if '/' in file:
+            file = file.split('/')[-1]
+        if '\\' in file:
+            file = file.split('\\')[-1]
+        name = file.rsplit('.')[0]
+        script_props[name] = []
+        lines = f.read().splitlines()
+        readprop = False
+        for l in lines:
+            if readprop:
+                p = l.split('var ')[1]
+                if ':' in p:
+                    p = p.split(':')[0].strip()
+                    script_props[name].append(p)
+                elif '=' in p:
+                    p = p.split('=')[0].strip()
+                    script_props[name].append(p)
+            readprop = l.strip().startswith('@prop')
+
 def fetch_script_names():
     if bpy.data.filepath == "":
         return
@@ -156,7 +178,10 @@ def fetch_script_names():
     if os.path.isdir(sources_path):
         os.chdir(sources_path)
         for file in glob.glob('*.hx'):
-            wrd.scripts_list.add().name = file.rsplit('.')[0]
+            name = file.rsplit('.')[0]
+            wrd.scripts_list.add().name = name
+            fetch_script_props(file)
+
     # Canvas
     wrd.canvas_list.clear()
     canvas_path = get_fp() + '/Bundled/canvas'
@@ -165,6 +190,28 @@ def fetch_script_names():
         for file in glob.glob('*.json'):
             wrd.canvas_list.add().name = file.rsplit('.')[0]
     os.chdir(get_fp())
+
+def fetch_trait_props():
+    for o in bpy.data.objects:
+        for item in o.my_traitlist:
+            if item.name not in script_props:
+                continue
+            props = script_props[item.name]
+            # Remove old props
+            for i in range(len(item.my_propstraitlist) - 1, -1, -1):
+                ip = item.my_propstraitlist[i]
+                if ip.name not in props:
+                    item.my_propstraitlist.remove(i)
+            # Add new props
+            for p in props:
+                found = False
+                for ip in item.my_propstraitlist:
+                    if ip.name == p:
+                        found = True
+                        break
+                if not found:
+                    prop = item.my_propstraitlist.add()
+                    prop.name = p
 
 def to_hex(val):
     return '#%02x%02x%02x%02x' % (int(val[3] * 255), int(val[0] * 255), int(val[1] * 255), int(val[2] * 255))

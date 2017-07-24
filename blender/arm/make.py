@@ -403,6 +403,7 @@ def play_project(in_viewport, is_render=False):
         for fn in glob.iglob(os.path.join(script_path, '**', '*.hx'), recursive=True):
             mtime = os.path.getmtime(fn)
             if scripts_mtime < mtime:
+                arm.utils.fetch_script_props(fn) # Trait props
                 fn = fn.split('Sources/')[1]
                 fn = fn[:-3] #.hx
                 fn = fn.replace('/', '.')
@@ -411,6 +412,8 @@ def play_project(in_viewport, is_render=False):
                 if new_mtime < mtime:
                     new_mtime = mtime
         scripts_mtime = new_mtime
+        if len(state.mod_scripts) > 0: # Trait props
+            arm.utils.fetch_trait_props()
 
     # New compile requred - traits changed
     if wrd.arm_recompile:

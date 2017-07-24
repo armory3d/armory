@@ -2814,6 +2814,11 @@ class ArmoryExporter:
                         x['parameters'] = []
                         for pt in t.my_paramstraitlist: # Append parameters
                             x['parameters'].append(pt.name)
+                    if len(t.my_propstraitlist) > 0:
+                        x['props'] = []
+                        for pt in t.my_propstraitlist: # Append props
+                            x['props'].append(pt.name)
+                            x['props'].append(pt.value)
                 o['traits'].append(x)
 
         # Rigid body trait

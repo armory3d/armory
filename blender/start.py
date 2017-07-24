@@ -5,6 +5,7 @@ import arm.props_traits_action
 import arm.props_traits_clip
 import arm.props_traits_library
 import arm.props_traits_params
+import arm.props_traits_props
 import arm.props_traits
 import arm.props_lod
 import arm.props_navigation
@@ -34,6 +35,7 @@ def register():
     arm.nodes_renderpath.register()
     arm.make_renderer.register()
     arm.props_traits_params.register()
+    arm.props_traits_props.register()
     arm.props_traits.register()
     arm.props_lod.register()
     arm.props_navigation.register()
@@ -52,6 +54,7 @@ def unregister():
     arm.make_renderer.unregister()
     arm.nodes_renderpath.unregister()
     arm.props_traits_params.unregister()
+    arm.props_traits_props.unregister()
     arm.props_traits.unregister()
     arm.props_lod.unregister()
     arm.props_navigation.unregister()

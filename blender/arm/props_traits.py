@@ -6,6 +6,7 @@ import json
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 from arm.props_traits_params import *
+from arm.props_traits_props import *
 import arm.utils
 import arm.write_data as write_data
 
@@ -53,6 +54,9 @@ class ListTraitItem(bpy.types.PropertyGroup):
     my_paramstraitlist = bpy.props.CollectionProperty(type=ListParamsTraitItem)
     paramstraitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
 
+    my_propstraitlist = bpy.props.CollectionProperty(type=ListPropsTraitItem)
+    propstraitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
+
 class MY_UL_TraitList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here...
@@ -78,7 +82,7 @@ class LIST_OT_TraitNewItem(bpy.types.Operator):
     bl_label = "Add a new item"
 
     def execute(self, context):
-        bpy.context.object.my_traitlist.add()
+        trait = bpy.context.object.my_traitlist.add()
         bpy.context.object.traitlist_index = len(bpy.context.object.my_traitlist) - 1
         return{'FINISHED'}
 
@@ -284,6 +288,7 @@ class ArmoryRefreshScriptsListButton(bpy.types.Operator):
     def execute(self, context):
         arm.utils.fetch_bundled_script_names()
         arm.utils.fetch_script_names()
+        arm.utils.fetch_trait_props()
         return{'FINISHED'}
 
 class ArmoryRefreshCanvasListButton(bpy.types.Operator):
@@ -338,6 +343,16 @@ class ToolsTraitsPanel(bpy.types.Panel):
                     row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "scripts_list", "Class")
                 else:
                     row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "bundled_scripts_list", "Class")
+                
+                # Props
+                if len(item.my_propstraitlist) > 0:
+                    propsrow = layout.row()
+                    propsrows = 2
+                    if len(item.my_propstraitlist) > 2:
+                        propsrows = 4
+                    row = layout.row()
+                    row.template_list("MY_UL_PropsTraitList", "The_List", item, "my_propstraitlist", item, "propstraitlist_index", rows=propsrows)
+                
                 # Params
                 layout.label("Parameters")
                 paramsrow = layout.row()
