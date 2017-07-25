@@ -225,15 +225,10 @@ class ArmoryEditCanvasButton(bpy.types.Operator):
         write_data.write_canvasprefs(canvas_path)
 
         sdk_path = arm.utils.get_sdk_path()
-        electron_app_path = sdk_path + '/armory/tools/armorui/electron.js'
-        if arm.utils.get_os() == 'win':
-            electron_path = sdk_path + 'win32/Kode Studio.exe'
-        elif arm.utils.get_os() == 'mac':
-            electron_path = sdk_path + 'Kode Studio.app/Contents/MacOS/Electron'
-        else:
-            electron_path = sdk_path + 'linux64/kodestudio'
-        subprocess.Popen([electron_path, '--chromedebug', '--remote-debugging-port=9222', '--enable-logging', electron_app_path, canvas_path])
-        
+        armorui_path = sdk_path + '/armory/tools/armorui/krom'
+        krom_location, krom_path = arm.utils.krom_paths()
+        os.chdir(krom_location)
+        subprocess.Popen([krom_path, armorui_path, armorui_path, '--nosound'])
         return{'FINISHED'}
 
 class ArmoryNewScriptDialog(bpy.types.Operator):
