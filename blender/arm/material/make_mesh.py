@@ -400,10 +400,17 @@ def make_forward(con_mesh):
 
 def make_forward_base(con_mesh, parse_opacity=False):
     wrd = bpy.data.worlds['Arm']
+    
     make_base(con_mesh, parse_opacity=parse_opacity)
+
     vert = con_mesh.vert
     frag = con_mesh.frag
     tese = con_mesh.tese
+
+    frag.main_pre += """
+    vec3 vVec = normalize(eyeDir);
+    float dotNV = max(dot(n, vVec), 0.0);
+    """
 
     if is_displacement:
         tese.add_out('vec3 eyeDir')
@@ -416,9 +423,6 @@ def make_forward_base(con_mesh, parse_opacity=False):
         vert.add_out('vec3 eyeDir')
         vert.add_uniform('vec3 eye', '_cameraPosition')
         vert.write('eyeDir = eye - wposition;')
-
-    frag.prepend("""    vec3 vVec = normalize(eyeDir);
-    float dotNV = max(dot(n, vVec), 0.0);""")
 
     frag.add_include('../../Shaders/std/brdf.glsl')
     frag.add_include('../../Shaders/std/math.glsl')
