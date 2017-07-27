@@ -176,10 +176,6 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
         cmd.append('--ffmpeg')
         cmd.append(ffmpeg_path) # '"' + ffmpeg_path + '"'
 
-    if target_name == '' or target_name == '--run':
-        cmd.append('-g')
-        cmd.append(arm.utils.get_gapi())
-
     if kha_target_name == 'krom':
         cmd.append('-g')
         cmd.append('opengl')
@@ -190,6 +186,9 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
             else:
                 cmd.append('--shaderversion')
                 cmd.append('110')
+    else:
+        cmd.append('-g')
+        cmd.append(arm.utils.get_gapi())
     
     cmd.append('--to')
     if kha_target_name == 'krom' and not state.in_viewport:
