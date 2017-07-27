@@ -297,6 +297,15 @@ def check_sdkpath(self):
             return False
     return True
 
+def check_engine(self):
+    if bpy.context == None or bpy.context.scene == None:
+        return
+    engine = bpy.context.scene.render.engine
+    if engine != 'CYCLES' and engine != 'EEVEE':
+        self.report({"ERROR"}, "Switch to Cycles or Eevee engine first")
+        return False
+    return True
+
 def tess_enabled(target):
     return (target == 'krom' or target == 'native') and bpy.data.worlds['Arm'].tessellation_enabled
 

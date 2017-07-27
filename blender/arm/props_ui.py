@@ -524,6 +524,9 @@ class ArmoryPlayButton(bpy.types.Operator):
 
         if not arm.utils.check_sdkpath(self):
             return {"CANCELLED"}
+
+        if not arm.utils.check_engine(self):
+            return {"CANCELLED"}
             
         make_renderer.check_default()
 
@@ -552,6 +555,9 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
             return {"CANCELLED"}
 
         if not arm.utils.check_sdkpath(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_engine(self):
             return {"CANCELLED"}
 
         if context.area == None:
@@ -603,6 +609,9 @@ class ArmoryBuildButton(bpy.types.Operator):
         if not arm.utils.check_sdkpath(self):
             return {"CANCELLED"}
 
+        if not arm.utils.check_engine(self):
+            return {"CANCELLED"}
+
         state.target = make.runtime_to_target(in_viewport=False)
         assets.invalidate_enabled = False
         make.build_project(target=state.target)
@@ -623,6 +632,9 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
             return {"CANCELLED"}
 
         if not arm.utils.check_sdkpath(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_engine(self):
             return {"CANCELLED"}
 
         state.target = bpy.data.worlds['Arm'].arm_project_target
@@ -750,6 +762,9 @@ class ArmoryPublishButton(bpy.types.Operator):
             return {"CANCELLED"}
 
         if not arm.utils.check_sdkpath(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_engine(self):
             return {"CANCELLED"}
 
         make.publish_project()
