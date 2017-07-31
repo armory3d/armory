@@ -610,20 +610,20 @@ class Cycles {
 			sout.out_basecol = parse_vector_input(node.inputs[0]);
 			parsing_basecol = false;
 			// Occlusion
-			sout.out_occlusion = parse_value_input(node.inputs[2 - 1]);
+			sout.out_occlusion = parse_value_input(node.inputs[2]);
 			// # Roughness
-			sout.out_roughness = parse_value_input(node.inputs[3 - 1]);
+			sout.out_roughness = parse_value_input(node.inputs[3]);
 			// # Metallic
-			sout.out_metallic = parse_value_input(node.inputs[4 - 1]);
+			sout.out_metallic = parse_value_input(node.inputs[4]);
 			// # Normal
-			parse_normal_map_color_input(node.inputs[5 - 1]);
+			parse_normal_map_color_input(node.inputs[5]);
 			// # Emission
 			// if (isInputLinked(node.inputs[6]) || node.inputs[6].default_value != 0.0):
 				// out_emission = parse_value_input(node.inputs[8])
 				// out_basecol = '({0} + {1})'.format(out_basecol, out_emission)
 			
 			// if parse_opacity
-			// sout.out_opacity = parse_value_input(node.inputs[1]);
+			sout.out_opacity = parse_value_input(node.inputs[1]);
 		}
 			// else:
 				// return parse_group(node, socket)
@@ -1552,18 +1552,31 @@ class Cycles {
 		// elif node.type == 'TEX_GRADIENT':
 		//     return '0.0'
 
-		// elif node.type == 'TEX_IMAGE':
-		//     # Already fetched
-		//     if res_var_name(node, node.outputs[0]) in parsed:
-		//         return '{0}.a'.format(store_var_name(node))
-		//     tex_name = c_state.safesrc(node.name)
-		//     tex = c_state.make_texture(node, tex_name)
-		//     if tex != None:
-		//         return '{0}.a'.format(texture_store(node, tex, tex_name))
-		//     else:
-		//         tex_store = store_var_name(node) # Pink color for missing texture
-		//         curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0);'.format(tex_store))
-		//         return '{0}.a'.format(tex_store)
+		else if (node.type == 'TEX_IMAGE') {
+			// Already fetched
+			if (parsed.indexOf(res_var_name(node, node.outputs[0])) >= 0) { // TODO: node.outputs[1]
+				var varname = store_var_name(node);
+				return '$varname.a';
+			}
+			var tex_name = node_name(node);
+			var tex = make_texture(node, tex_name);
+			if (tex != null) {
+				var to_linear = parsing_basecol;// && !tex['file'].endswith('.hdr');
+				var texstore = texture_store(node, tex, tex_name, to_linear);
+				return '$texstore.a';
+			}
+		}
+		    // # Already fetched
+		    // if res_var_name(node, node.outputs[0]) in parsed:
+		    //     return '{0}.a'.format(store_var_name(node))
+		    // tex_name = c_state.safesrc(node.name)
+		    // tex = c_state.make_texture(node, tex_name)
+		    // if tex != None:
+		    //     return '{0}.a'.format(texture_store(node, tex, tex_name))
+		    // else:
+		    //     tex_store = store_var_name(node) # Pink color for missing texture
+		    //     curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0);'.format(tex_store))
+		    //     return '{0}.a'.format(tex_store)
 
 		// elif node.type == 'TEX_MAGIC':
 		//     return '0.0'
