@@ -8,10 +8,10 @@
 // const float compoDOFLength = 160.0; // Focal length in mm 18-200
 // const float compoDOFFstop = 128.0; // F-stop value
 
-const int samples = 3; // Samples on the first ring
-const int rings = 3; // Ring count
+const int samples = 6; // Samples on the first ring
+const int rings = 6; // Ring count
 const vec2 focus = vec2(0.5, 0.5);
-const float coc = 0.03; // Circle of confusion size in mm (35mm film = 0.03mm)
+const float coc = 0.11; // Circle of confusion size in mm (35mm film = 0.03mm)
 const float maxblur = 1.0;
 const float threshold = 0.5; // Highlight threshold
 const float gain = 2.0; // Highlight gain
@@ -57,166 +57,20 @@ vec3 dof(const vec2 texCoord, const float gdepth, const sampler2D tex, const sam
 		float s = 1.0;
 		int ringsamples;
 		
-		// for (int i = 1; i <= rings; ++i) {   
-		// 	ringsamples = i * samples;
-		// 	for (int j = 0 ; j < ringsamples; ++j) {
-		// 		float step = PI2 / float(ringsamples);
-		// 		float pw = (cos(float(j) * step) * float(i));
-		// 		float ph = (sin(float(j) * step) * float(i));
-		// 		float p = 1.0;
-		// 		if (pentagon) { 
-		// 			p = penta(vec2(pw, ph));
-		//		}
-		// 		col += color(texCoord + vec2(pw * w, ph * h), blur) * mix(1.0, (float(i)) / (float(rings)), bias) * p;  
-		// 		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p;  
-		// 	}
-		// }
-		
-		// Unroll..
-		int i = 1; // i <= rings   
-		ringsamples = i * samples;
-		
-		int j = 0; // j < ringsamples
-		float step = PI2 / float(ringsamples);
-		float pw = cos(float(j) * step) * float(i);
-		float ph = sin(float(j) * step) * float(i);
-		float p = 1.0;
-		col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		j = 1; //////
-		step = PI2 / float(ringsamples);
-		pw = cos(float(j) * step) * float(i);
-		ph = sin(float(j) * step) * float(i);
-		p = 1.0;
-		col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p; 
-		j = 2; //////
-		step = PI2 / float(ringsamples);
-		pw = cos(float(j) * step) * float(i);
-		ph = sin(float(j) * step) * float(i);
-		p = 1.0;
-		col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p; 
-		//------
-		
-		i = 2; // i <= rings   
-		ringsamples = i * samples;
-		
-		j = 0; // j < ringsamples
-		step = PI2 / float(ringsamples);
-		pw = cos(float(j) * step) * float(i);
-		ph = sin(float(j) * step) * float(i);
-		p = 1.0;
-		col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		j = 1; //////
-		step = PI2 / float(ringsamples);
-		pw = cos(float(j) * step) * float(i);
-		ph = sin(float(j) * step) * float(i);
-		p = 1.0;
-		col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p; 
-		j = 2; //////
-		step = PI2 / float(ringsamples);
-		pw = cos(float(j) * step) * float(i);
-		ph = sin(float(j) * step) * float(i);
-		p = 1.0;
-		col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p; 
-		j = 3; //////
-		step = PI2 / float(ringsamples);
-		pw = cos(float(j) * step) * float(i);
-		ph = sin(float(j) * step) * float(i);
-		p = 1.0;
-		col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p; 
-		j = 4; //////
-		step = PI2 / float(ringsamples);
-		pw = cos(float(j) * step) * float(i);
-		ph = sin(float(j) * step) * float(i);
-		p = 1.0;
-		col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p; 
-		j = 5; //////
-		step = PI2 / float(ringsamples);
-		pw = cos(float(j) * step) * float(i);
-		ph = sin(float(j) * step) * float(i);
-		p = 1.0;
-		col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p; 
-		//------	
-		
-		i = 3; // i <= rings   
-		ringsamples = i * samples;
-		
-		j = 0; // j < ringsamples
-		step = PI2 / float(ringsamples);
-		pw = cos(float(j) * step) * float(i);
-		ph = sin(float(j) * step) * float(i);
-		p = 1.0;
-		col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		j = 1; //////
-		step = PI2 / float(ringsamples);
-		pw = cos(float(j) * step) * float(i);
-		ph = sin(float(j) * step) * float(i);
-		p = 1.0;
-		col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p; 
-		j = 2; //////
-		step = PI2 / float(ringsamples);
-		pw = cos(float(j) * step) * float(i);
-		ph = sin(float(j) * step) * float(i);
-		p = 1.0;
-		col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p; 
-		j = 3; //////
-		step = PI2 / float(ringsamples);
-		pw = cos(float(j) * step) * float(i);
-		ph = sin(float(j) * step) * float(i);
-		p = 1.0;
-		col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p; 
-		j = 4; //////
-		step = PI2 / float(ringsamples);
-		pw = cos(float(j) * step) * float(i);
-		ph = sin(float(j) * step) * float(i);
-		p = 1.0;
-		col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p; 
-		j = 5; //////
-		step = PI2 / float(ringsamples);
-		pw = cos(float(j) * step) * float(i);
-		ph = sin(float(j) * step) * float(i);
-		p = 1.0;
-		col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p; 
-		j = 6; //////
-		step = PI2 / float(ringsamples);
-		pw = cos(float(j) * step) * float(i);
-		ph = sin(float(j) * step) * float(i);
-		p = 1.0;
-		col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p; 
-		j = 7; //////
-		step = PI2 / float(ringsamples);
-		pw = cos(float(j) * step) * float(i);
-		ph = sin(float(j) * step) * float(i);
-		p = 1.0;
-		col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p; 
-		j = 8; //////
-		step = PI2 / float(ringsamples);
-		pw = cos(float(j) * step) * float(i);
-		ph = sin(float(j) * step) * float(i);
-		p = 1.0;
-		col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;
-		s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p; 
-		//------
-		
+		for (int i = 1; i <= rings; ++i) {   
+			ringsamples = i * samples;
+			for (int j = 0 ; j < ringsamples; ++j) {
+				float step = PI2 / float(ringsamples);
+				float pw = (cos(float(j) * step) * float(i));
+				float ph = (sin(float(j) * step) * float(i));
+				float p = 1.0;
+				// if (pentagon) p = penta(vec2(pw, ph));
+				col += color(texCoord + vec2(pw * w, ph * h), blur, tex, texStep) * mix(1.0, (float(i)) / (float(rings)), bias) * p;  
+				s += 1.0 * mix(1.0, (float(i)) / (float(rings)), bias) * p;  
+			}
+		}
 		col /= s;
 	}
-
 	return col;
 }
 

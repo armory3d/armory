@@ -64,7 +64,9 @@ def on_scene_update_post(context):
 
     if state.is_render:
         import numpy
-        fp = arm.utils.get_fp_build()
+        # fp = arm.utils.get_fp_build()
+        krom_location, krom_path = arm.utils.krom_paths()
+        fp = krom_location
         resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
         cformat = bpy.data.cameras[0].rp_rendercapture_format
         if cformat == '8bit':
@@ -85,7 +87,8 @@ def on_scene_update_post(context):
             if n in bpy.data.images and bpy.data.images[n].size[0] == resx and bpy.data.images[n].size[1] == resy:
                 bpy.data.images[n].pixels = data
             else:
-                image = bpy.data.images.new("Render Result", width=resx, height=resy, float=True)
+                float_buffer = cformat != '8bit'
+                image = bpy.data.images.new("Render Result", width=resx, height=resy, float_buffer=float_buffer)
                 image.pixels = data
             state.is_render = False
             os.remove(fp + '/render.bin')
