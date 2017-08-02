@@ -42,6 +42,7 @@ def set_preset(self, context, preset):
         cam.rp_ssr = False
         cam.rp_dfrs = False
         cam.rp_dfao = False
+        cam.rp_dfgi = False
         cam.rp_bloom = False
         cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
@@ -69,6 +70,7 @@ def set_preset(self, context, preset):
         cam.rp_ssr = True
         cam.rp_dfrs = False
         cam.rp_dfao = False
+        cam.rp_dfgi = False
         cam.rp_bloom = False
         cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
@@ -95,6 +97,7 @@ def set_preset(self, context, preset):
         cam.rp_ssr = False
         cam.rp_dfrs = False
         cam.rp_dfao = False
+        cam.rp_dfgi = False
         cam.rp_bloom = False
         cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
@@ -121,6 +124,7 @@ def set_preset(self, context, preset):
         cam.rp_ssr = True
         cam.rp_dfrs = False
         cam.rp_dfao = False
+        cam.rp_dfgi = False
         cam.rp_bloom = False
         cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
@@ -150,6 +154,7 @@ def set_preset(self, context, preset):
         cam.rp_ssr = True
         cam.rp_dfrs = False
         cam.rp_dfao = False
+        cam.rp_dfgi = False
         cam.rp_bloom = False
         cam.rp_rendercapture = True
         cam.rp_rendercapture_format = '8bit'
@@ -179,6 +184,7 @@ def set_preset(self, context, preset):
         cam.rp_ssr = True
         cam.rp_dfrs = False
         cam.rp_dfao = False
+        cam.rp_dfgi = False
         cam.rp_bloom = False
         cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
@@ -206,6 +212,7 @@ def set_preset(self, context, preset):
         cam.rp_ssr = False
         cam.rp_dfrs = False
         cam.rp_dfao = False
+        cam.rp_dfgi = False
         cam.rp_bloom = False
         cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
@@ -233,6 +240,7 @@ def set_preset(self, context, preset):
         cam.rp_ssr = False
         cam.rp_dfrs = False
         cam.rp_dfao = False
+        cam.rp_dfgi = False
         cam.rp_bloom = False
         cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
@@ -259,6 +267,7 @@ def set_preset(self, context, preset):
         cam.rp_ssr = False
         cam.rp_dfrs = False
         cam.rp_dfao = False
+        cam.rp_dfgi = False
         cam.rp_bloom = False
         cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
@@ -341,8 +350,9 @@ class GenRPDataPropsPanel(bpy.types.Panel):
                 layout.prop(dat, "rp_volumetriclight")
                 layout.prop(dat, "rp_ssao")
                 layout.prop(dat, "rp_ssr")
-                layout.prop(dat, "rp_dfao")
-                layout.prop(dat, "rp_dfrs")
+                # layout.prop(dat, "rp_dfao")
+                # layout.prop(dat, "rp_dfrs")
+                # layout.prop(dat, "rp_dfgi")
                 layout.prop(dat, "rp_bloom")
                 layout.prop(dat, "rp_motionblur")
                 layout.prop(dat, "rp_rendercapture")

@@ -45,7 +45,7 @@ uniform float envmapStrength;
 	uniform vec3 eyeLook;
 #endif
 #ifdef _DFAO
-	//!uniform sampler2D sdftex;
+	//!uniform sampler3D sdftex;
 #endif
 
 in vec2 texCoord;
@@ -103,7 +103,7 @@ void main() {
 
 	// return;
 #endif
-	
+
 	// Envmap
 #ifdef _Irr
 	vec3 envl = shIrradiance(n, 2.2) / PI;
@@ -134,6 +134,10 @@ void main() {
 	envl.rgb *= envmapStrength * fract(g1.a);
 #else
 	envl.rgb *= envmapStrength * g1.a; // Occlusion
+#endif
+
+#ifdef _DFGI
+	envl.rgb = dfgi(p, n) * albedo;
 #endif
 
 #ifdef _SSAO

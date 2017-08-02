@@ -101,6 +101,11 @@ def build_node_tree(world):
         if cam.rp_dfao:
             wrd.world_defs += '_DFAO'
             assets.add_khafile_def('arm_sdf')
+        if cam.rp_dfgi:
+            wrd.world_defs += '_DFGI'
+            assets.add_khafile_def('arm_sdf')
+            wrd.world_defs += '_Rad' # Always do radiance for gi
+            wrd.world_defs += '_Irr'
 
     if voxelgi:
         assets.add_khafile_def('arm_voxelgi')

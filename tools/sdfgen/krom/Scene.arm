@@ -6,8 +6,8 @@
             "render_targets": [
                 {
                     "name": "sdf",
-                    "width": 2500,
-                    "height": 50,
+                    "width": 50,
+                    "height": 2500,
                     "format": "A32"
                 }
             ],

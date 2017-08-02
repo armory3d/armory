@@ -371,6 +371,7 @@ def init_properties():
     bpy.types.Camera.rp_ssr = bpy.props.BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
     bpy.types.Camera.rp_dfao = bpy.props.BoolProperty(name="DFAO", description="Distance field ambient occlusion", default=False)
     bpy.types.Camera.rp_dfrs = bpy.props.BoolProperty(name="DFRS", description="Distance field ray-traced shadows", default=False)
+    bpy.types.Camera.rp_dfgi = bpy.props.BoolProperty(name="DFGI", description="Distance field global illumination", default=False)
     bpy.types.Camera.rp_bloom = bpy.props.BoolProperty(name="Bloom", description="Bloom processing", default=False, update=update_renderpath)
     bpy.types.Camera.rp_rendercapture = bpy.props.BoolProperty(name="Render Capture", description="Save output as render result", default=False, update=update_renderpath)
     bpy.types.Camera.rp_rendercapture_format = EnumProperty(
