@@ -11,12 +11,12 @@ const float VOXEL_SIZE = 1.0 / voxelgiResolution;
 const float MAX_MIPMAP = 5.4;
 const float VOXEL_RATIO = 128.0 / voxelgiResolution;
 
-// vec3 tangent(const vec3 n) {
-// 	vec3 t1 = cross(n, vec3(0, 0, 1));
-// 	vec3 t2 = cross(n, vec3(0, 1, 0));
-// 	if (length(t1) > length(t2)) return normalize(t1);
-// 	else return normalize(t2);
-// }
+vec3 tangent(const vec3 n) {
+	vec3 t1 = cross(n, vec3(0, 0, 1));
+	vec3 t2 = cross(n, vec3(0, 1, 0));
+	if (length(t1) > length(t2)) return normalize(t1);
+	else return normalize(t2);
+}
 
 // uvec3 face_indices(vec3 dir) {
 // 	uvec3 ret;
@@ -39,59 +39,56 @@ vec3 orthogonal(const vec3 u) {
 	return abs(dot(u, v)) > 0.99999 ? cross(u, vec3(0.0, 1.0, 0.0)) : cross(u, v);
 }
 
-// vec4 trace_cone(vec3 origin, vec3 dir, float aperture, float max_dist) {
-// 	dir = normalize(dir);
-// 	// uvec3 indices = face_indices(dir);
-// 	vec4 sample_color = vec4(0.0);
-// 	float dist = 3 * VOXEL_SIZE;
-// 	float diam = dist * aperture;
-// 	vec3 sample_position = dir * dist + origin;
-// 	// Step until alpha > 1 or out of bounds
-// 	while (sample_color.a < 1.0 && dist < max_dist) {
-// 		// Choose mip level based on the diameter of the cone
-// 		float mip = max(log2(diam * voxelgiResolution), 0);
-// 		// vec4 mip_sample = sample_voxel(sample_position, dir, indices, mip);
-// 		vec4 mip_sample = textureLod(voxels, sample_position * 0.5 + vec3(0.5), mip);
-// 		// Blend mip sample with current sample color
-// 		sample_color += (1 - sample_color.a) * mip_sample;
-// 		float step_size = max(diam / 2, VOXEL_SIZE);
-// 		dist += step_size;
-// 		diam = dist * aperture;
-// 		sample_position = dir * dist + origin;
-// 	}
-// 	return sample_color;
-// }
+vec4 trace_cone(vec3 origin, vec3 dir, float aperture, float max_dist) {
+	dir = normalize(dir);
+	// uvec3 indices = face_indices(dir);
+	vec4 sample_color = vec4(0.0);
+	float dist = 3 * VOXEL_SIZE;
+	float diam = dist * aperture;
+	vec3 sample_position = dir * dist + origin;
+	// Step until alpha > 1 or out of bounds
+	while (sample_color.a < 1.0 && dist < max_dist) {
+		// Choose mip level based on the diameter of the cone
+		float mip = max(log2(diam * voxelgiResolution), 0);
+		// vec4 mip_sample = sample_voxel(sample_position, dir, indices, mip);
+		vec4 mip_sample = textureLod(voxels, sample_position * 0.5 + vec3(0.5), mip);
+		// Blend mip sample with current sample color
+		sample_color += ((1 - sample_color.a) * mip_sample) * (1.0 / max(voxelgiOcc, 0.1));
+		float step_size = max(diam / 2, VOXEL_SIZE);
+		dist += step_size;
+		diam = dist * aperture;
+		sample_position = dir * dist + origin;
+	}
+	return sample_color;
+}
 
-// vec4 traceDiffuse(vec3 origin, vec3 normal) {
-// 	const float TAN_22_5 = 0.55785173935;
-// 	const float MAX_DISTANCE = 1.73205080757;
-// 	const float angle_mix = 0.5f;
-// 	const float aperture = TAN_22_5;
-// 	vec4 result_diffuse = vec4(0.0); 
+vec4 traceDiffuse(vec3 origin, vec3 normal) {
+	const float TAN_22_5 = 0.55785173935;
+	const float MAX_DISTANCE = 1.73205080757;
+	const float angle_mix = 0.5f;
+	const float aperture = TAN_22_5;
+	const vec3 o1 = normalize(tangent(normal));
+	const vec3 o2 = normalize(cross(o1, normal));
+	const vec3 c1 = 0.5f * (o1 + o2);
+	const vec3 c2 = 0.5f * (o1 - o2);
 
-// 	const vec3 o1 = normalize(tangent(normal));
-// 	const vec3 o2 = normalize(cross(o1, normal));
+	// Normal direction
+	vec4 col = trace_cone(origin, normal, aperture, MAX_DISTANCE);
 
-// 	const vec3 c1 = 0.5f * (o1 + o2);
-// 	const vec3 c2 = 0.5f * (o1 - o2);
+	// 4 side cones
+	col += trace_cone(origin, mix(normal, o1, angle_mix), aperture, MAX_DISTANCE);
+	col += trace_cone(origin, mix(normal, -o1, angle_mix), aperture, MAX_DISTANCE);
+	col += trace_cone(origin, mix(normal, o2, angle_mix), aperture, MAX_DISTANCE);
+	col += trace_cone(origin, mix(normal, -o2, angle_mix), aperture, MAX_DISTANCE);
 
-// 	// Normal direction
-// 	result_diffuse += trace_cone(origin, normal, aperture, MAX_DISTANCE);
+	// 4 corners
+	col += trace_cone(origin, mix(normal, c1, angle_mix), aperture, MAX_DISTANCE);
+	col += trace_cone(origin, mix(normal, -c1, angle_mix), aperture, MAX_DISTANCE);
+	col += trace_cone(origin, mix(normal, c2, angle_mix), aperture, MAX_DISTANCE);
+	col += trace_cone(origin, mix(normal, -c2, angle_mix), aperture, MAX_DISTANCE);
 
-// 	// 4 side cones
-// 	result_diffuse += trace_cone(origin, mix(normal, o1, angle_mix), aperture, MAX_DISTANCE);
-// 	result_diffuse += trace_cone(origin, mix(normal, -o1, angle_mix), aperture, MAX_DISTANCE);
-// 	result_diffuse += trace_cone(origin, mix(normal, o2, angle_mix), aperture, MAX_DISTANCE);
-// 	result_diffuse += trace_cone(origin, mix(normal, -o2, angle_mix), aperture, MAX_DISTANCE);
-
-// 	// 4 corners
-// 	result_diffuse += trace_cone(origin, mix(normal, c1, angle_mix), aperture, MAX_DISTANCE);
-// 	result_diffuse += trace_cone(origin, mix(normal, -c1, angle_mix), aperture, MAX_DISTANCE);
-// 	result_diffuse += trace_cone(origin, mix(normal, c2, angle_mix), aperture, MAX_DISTANCE);
-// 	result_diffuse += trace_cone(origin, mix(normal, -c2, angle_mix), aperture, MAX_DISTANCE);
-
-// 	return vec4(result_diffuse.rgb / 9, 1.0);
-// }
+	return col / 9.0;
+}
 
 vec4 traceDiffuseVoxelCone(const vec3 from, vec3 direction) {
 	direction = normalize(direction);

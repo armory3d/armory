@@ -426,7 +426,7 @@ def init_properties():
     bpy.types.World.voxelgi_diff = bpy.props.FloatProperty(name="Diffuse", description="", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi_spec = bpy.props.FloatProperty(name="Specular", description="", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi_occ = bpy.props.FloatProperty(name="Occlussion", description="", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.voxelgi_env = bpy.props.FloatProperty(name="Env Map", description="Contribute light from environment map", default=0.2, update=assets.invalidate_shader_cache)
+    bpy.types.World.voxelgi_env = bpy.props.FloatProperty(name="Env Map", description="Contribute light from environment map", default=0.0, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi_step = bpy.props.FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi_range = bpy.props.FloatProperty(name="Range", description="Maximum range", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.sss_width = bpy.props.FloatProperty(name="SSS Width", description="SSS blur strength", default=1.0, update=assets.invalidate_shader_cache)
