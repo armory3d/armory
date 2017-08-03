@@ -83,8 +83,15 @@ void main() {
 #endif
 
 #ifdef _VoxelGI
-	vec3 wpos = p / voxelgiDimensions.x;
-	vec4 indirectDiffuse = indirectDiffuseLight(n, wpos);
+	#ifdef _VoxelGICam
+	const float step = voxelgiDimensions / voxelgiResolution;
+	vec3 eyeSnap = ivec3(eye / step) * step;
+	vec3 wpos = (p - eyeSnap) / voxelgiDimensions;
+	#else
+	vec3 wpos = p / voxelgiDimensions;
+	#endif
+	vec4 indirectDiffuse = indirectDiffuseLight(wpos, n);
+	// vec4 indirectDiffuse = traceDiffuse(wpos, n);
 
 	vec3 reflectWorld = reflect(-v, n);
 	vec3 indirectSpecular = traceSpecularVoxelCone(wpos, reflectWorld, n, metrough.y * 12.0);

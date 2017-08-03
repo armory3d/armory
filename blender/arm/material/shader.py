@@ -34,8 +34,8 @@ class Shader:
         # layout(RGBA8) image3D voxels
         utype = ar[-2]
         uname = ar[-1]
-        if utype.startswith('sampler') or utype.startswith('image'):
-            is_image = True if utype.startswith('image') else None
+        if utype.startswith('sampler') or utype.startswith('image') or utype.startswith('uimage'):
+            is_image = True if (utype.startswith('image') or utype.startswith('uimage')) else None
             self.context.add_texture_unit(utype, uname, link=link, is_image=is_image)
         else:
             # Prefer vec4[] for d3d to avoid padding

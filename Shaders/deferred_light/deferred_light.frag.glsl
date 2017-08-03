@@ -247,7 +247,7 @@ void main() {
 #endif
 
 // #ifdef _VoxelGI
-	// if (dotNL > 0.0) visibility *= traceShadowCone(p / voxelgiResolution.x, l, distance(p, lightPos) / voxelgiResolution.x, n);
+	// if (dotNL > 0.0) visibility *= traceShadowCone(p / voxelgiResolution, l, distance(p, lightPos) / voxelgiResolution, n);
 // #endif
 
 	fragColor.rgb *= visibility;

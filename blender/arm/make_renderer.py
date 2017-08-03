@@ -115,12 +115,13 @@ def make_deferred(cam):
             # n.inputs[4].default_value = 'RGBA64'
         links.new(nodes['Begin'].outputs[0], nodes['Branch Function Voxelize'].inputs[0])
         links.new(nodes['Merge Stages Voxelize'].outputs[0], nodes['Set Target Mesh'].inputs[0])
-        n.inputs[1].default_value = cam.rp_voxelgi_resolution[0]
-        n.inputs[2].default_value = cam.rp_voxelgi_resolution[1]
-        n.inputs[3].default_value = cam.rp_voxelgi_resolution[2]
+        res = int(cam.rp_voxelgi_resolution)
+        n.inputs[1].default_value = res
+        n.inputs[2].default_value = res
+        n.inputs[3].default_value = res
         n = nodes['Set Viewport Voxels']
-        n.inputs[1].default_value = cam.rp_voxelgi_resolution[0]
-        n.inputs[2].default_value = cam.rp_voxelgi_resolution[1]
+        n.inputs[1].default_value = res
+        n.inputs[2].default_value = res
         links.new(nodes['Image 3D Voxels'].outputs[0], nodes['Deferred Indirect'].inputs[4])
 
     if cam.rp_shadowmap != 'None':

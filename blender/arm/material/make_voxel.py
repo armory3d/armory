@@ -22,7 +22,7 @@ def make(context_id):
     frag.ins = geom.outs
 
 
-    frag.write('vec3 lp = lightPos - wposition * voxelgiDimensions.x;')
+    frag.write('vec3 lp = lightPos - wposition * voxelgiDimensions;')
     frag.write('vec3 l = normalize(lp);')
     frag.write('float visibility = 1.0;')
     frag.add_include('../../Shaders/compiled.glsl')
@@ -42,9 +42,15 @@ def make(context_id):
         frag.write('int lightShadow = 0;')
 
     frag.add_include('../../Shaders/std/math.glsl')
+    frag.add_include('../../Shaders/std/imageatomic.glsl')
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
 
-    frag.add_uniform('layout(RGBA8) image3D voxels')
+    # if bpy.data.cameras[0].rp_voxelgi_hdr:
+        # frag.add_uniform('layout(RGBA16) image3D voxels')
+    # else:
+    # frag.add_uniform('layout(RGBA8) image3D voxels')
+    frag.add_uniform('layout(r32ui) uimage3D voxels')
+
     frag.add_uniform('vec3 lightPos', '_lampPosition')
     frag.add_uniform('vec3 lightColor', '_lampColor')
 
@@ -63,7 +69,8 @@ def make(context_id):
     cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False)
 
 
-
+    if wrd.voxelgi_camera:
+        vert.add_uniform('vec3 eye', '_cameraPosition')
     vert.add_uniform('mat4 W', '_worldMatrix')
     vert.add_uniform('mat3 N', '_normalMatrix')
 
@@ -76,7 +83,12 @@ def make(context_id):
         vert.add_out('vec2 texCoordGeom')
         vert.write('texCoordGeom = tex;')
 
-    vert.write('wpositionGeom = vec3(W * vec4(pos, 1.0)) / voxelgiDimensions.x;')
+    if wrd.voxelgi_camera:
+        vert.write('const float step = voxelgiDimensions / voxelgiResolution;') # TODO: Pass as uniform
+        vert.write('vec3 eyeSnap = ivec3(eye / step) * step;') # TODO: Pass as uniform
+        vert.write('wpositionGeom = (vec3(W * vec4(pos, 1.0)) - eyeSnap) / voxelgiDimensions;')
+    else: 
+        vert.write('wpositionGeom = vec3(W * vec4(pos, 1.0)) / voxelgiDimensions;')
     vert.write('wnormalGeom = normalize(N * nor);')
     vert.write('gl_Position = vec4(0.0, 0.0, 0.0, 1.0);')
 
@@ -118,12 +130,54 @@ def make(context_id):
     if cycles.emission_found:
         frag.write('vec3 color = basecol;')
     else:
-        frag.write('vec3 color = basecol * visibility * lightColor * dotNL * attenuate(distance(wposition * voxelgiDimensions.x, lightPos));')
+        frag.write('vec3 color = basecol * visibility * lightColor * dotNL * attenuate(distance(wposition * voxelgiDimensions, lightPos));')
     frag.write('vec3 voxel = wposition * 0.5 + vec3(0.5);')
 
     if wrd.lighting_model == 'Cycles':
         frag.write('color = min(color * 0.9, vec3(0.9)) + min(color / 200.0, 0.1);') # Higher range to allow emission
 
-    frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
+    # if bpy.data.cameras[0].rp_voxelgi_hdr:
+        # frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
+    # else:
+    frag.write('color = clamp(color, vec3(0.0), vec3(1.0));')
+    frag.write('uint val = convVec4ToRGBA8(vec4(color, 1.0) * 255);')
+    frag.write('imageAtomicMax(voxels, ivec3(voxelgiResolution * voxel), val);')
+    
+    # frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
+    # frag.write('imageAtomicRGBA8Avg(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
+        
+    # frag.write('ivec3 coords = ivec3(voxelgiResolution * voxel);')
+    # frag.write('vec4 val = vec4(color, 1.0);')
+
+    # frag.write('val *= 255.0;')
+    # frag.write('uint newVal = encUnsignedNibble(convVec4ToRGBA8(val), 1);')
+    # frag.write('uint prevStoredVal = 0;')
+    # frag.write('uint currStoredVal;')
+    # # frag.write('int counter = 0;')
+    # frag.write('// Loop as long as destination value gets changed by other threads')
+    # # frag.write('while ((currStoredVal = imageAtomicCompSwap(voxels, coords, prevStoredVal, newVal)) != prevStoredVal && counter < 16) {')
+    # frag.write('while ((currStoredVal = imageAtomicCompSwap(voxels, coords, prevStoredVal, newVal)) != prevStoredVal) {')
+    # frag.write('    vec4 rval = convRGBA8ToVec4(currStoredVal & 0xFEFEFEFE);')
+    # frag.write('    uint n = decUnsignedNibble(currStoredVal);')
+    # frag.write('    rval = rval * n + val;')
+    # frag.write('    rval /= ++n;')
+    # frag.write('    rval = round(rval / 2) * 2;')
+    # frag.write('    newVal = encUnsignedNibble(convVec4ToRGBA8(rval), n);')
+    # frag.write('    prevStoredVal = currStoredVal;')
+    # # frag.write('    counter++;')
+    # frag.write('}')
+
+    # frag.write('val.rgb *= 255.0f;')
+    # frag.write('uint newVal = convVec4ToRGBA8(val);')
+    # frag.write('uint prevStoredVal = 0;')
+    # frag.write('uint curStoredVal;')
+    # frag.write('while ((curStoredVal = imageAtomicCompSwap(voxels, coords, prevStoredVal, newVal)) != prevStoredVal) {')
+    # frag.write('    prevStoredVal = curStoredVal;')
+    # frag.write('    vec4 rval = convRGBA8ToVec4(curStoredVal);')
+    # frag.write('    rval.xyz = (rval.xyz * rval.w);')
+    # frag.write('    vec4 curValF = rval + val;')
+    # frag.write('    curValF.xyz /= (curValF.w);')
+    # frag.write('    newVal = convVec4ToRGBA8(curValF);')
+    # frag.write('}')
 
     return con_voxel

@@ -371,8 +371,8 @@ const float compoDOFLength = 160.0;
 
         if bpy.data.cameras[0].rp_voxelgi:
             f.write(
-"""const vec3 voxelgiResolution = ivec3(""" + str(round(bpy.data.cameras[0].rp_voxelgi_resolution[0])) + """, """ + str(round(bpy.data.cameras[0].rp_voxelgi_resolution[1])) + """, """ + str(round(bpy.data.cameras[0].rp_voxelgi_resolution[2])) + """);
-const vec3 voxelgiDimensions = ivec3(""" + str(round(wrd.generate_voxelgi_dimensions[0])) + """, """ + str(round(wrd.generate_voxelgi_dimensions[1])) + """, """ + str(round(wrd.generate_voxelgi_dimensions[2])) + """);
+"""const float voxelgiResolution = """ + str(bpy.data.cameras[0].rp_voxelgi_resolution) + """;
+const float voxelgiDimensions = """ + str(round(wrd.generate_voxelgi_dimensions)) + """;
 const float voxelgiDiff = """ + str(round(wrd.voxelgi_diff * 100) / 100) + """;
 const float voxelgiSpec = """ + str(round(wrd.voxelgi_spec * 100) / 100) + """;
 const float voxelgiOcc = """ + str(round(wrd.voxelgi_occ * 100) / 100) + """;
