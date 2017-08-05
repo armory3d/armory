@@ -80,6 +80,7 @@ void main() {
 	float dotNV = max(dot(n, v), 0.0);
 	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
 	vec2 envBRDF = texture(senvmapBrdf, vec2(metrough.y, 1.0 - dotNV)).xy;
+	// vec2 envBRDF = texture(senvmapBrdf, vec2(dotNV, metrough.y)).xy;
 #endif
 
 #ifdef _VoxelGI

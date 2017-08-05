@@ -63,6 +63,7 @@ def make(context_id):
     # frag.write('float opacity;') #
     frag.write_pre = True
     frag.write('mat3 TBN;') # TODO: discard, parse basecolor only
+    frag.write('vec3 n;')
     frag.write_pre = False
     frag.write('float dotNV = 0.0;')
     frag.write('float dotNL = max(dot(wnormal, l), 0.0);')
