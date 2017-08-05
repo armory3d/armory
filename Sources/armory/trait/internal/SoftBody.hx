@@ -145,9 +145,12 @@ class SoftBody extends Trait {
 	function update() {
 		var geom = cast(object, MeshObject).data.geom;
 		
-		// Deinterleaved
+		#if arm_deinterleaved
 		var v = geom.vertexBuffers[0].lock();
 		var n = geom.vertexBuffers[1].lock();
+		#else
+		var v = geom.vertexBuffer.lock();
+		#end
 		var l = 3;//geom.structLength;
 		var numVerts = Std.int(v.length / l);
 
@@ -166,15 +169,21 @@ class SoftBody extends Trait {
 			var nodePos = node.m_x;
 			var nodeNor = node.m_n;
 			#end
+			#if arm_deinterleaved
 			v.set(i * l, nodePos.x());
 			v.set(i * l + 1, nodePos.y());
 			v.set(i * l + 2, nodePos.z());
-			// v.set(i * l + 3, nodeNor.x());
-			// v.set(i * l + 4, nodeNor.y());
-			// v.set(i * l + 5, nodeNor.z());
 			n.set(i * l, nodeNor.x());
 			n.set(i * l + 1, nodeNor.y());
 			n.set(i * l + 2, nodeNor.z());
+			#else
+			v.set(i * l, nodePos.x());
+			v.set(i * l + 1, nodePos.y());
+			v.set(i * l + 2, nodePos.z());
+			v.set(i * l + 3, nodeNor.x());
+			v.set(i * l + 4, nodeNor.y());
+			v.set(i * l + 5, nodeNor.z());
+			#end
 		}
 		// for (i in 0...Std.int(geom.indices[0].length / 3)) {
 		// 	var a = geom.indices[0][i * 3];
@@ -197,8 +206,12 @@ class SoftBody extends Trait {
 		// 	v.set(c * l + 4, cb.y);
 		// 	v.set(c * l + 5, cb.z);
 		// }
+		#if arm_deinterleaved
 		geom.vertexBuffers[0].unlock();
 		geom.vertexBuffers[1].unlock();
+		#else
+		geom.vertexBuffer.unlock();
+		#end
 	}
 
 #end
