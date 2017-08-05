@@ -63,12 +63,15 @@ def make(context_id):
     # frag.write('float opacity;') #
     frag.write_pre = True
     frag.write('mat3 TBN;') # TODO: discard, parse basecolor only
-    frag.write('vec3 n;')
     frag.write_pre = False
     frag.write('float dotNV = 0.0;')
     frag.write('float dotNL = max(dot(wnormal, l), 0.0);')
     cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False)
 
+    if not frag.contains('vec3 n ='):
+        frag.write_pre = True
+        frag.write('vec3 n;')
+        frag.write_pre = False
 
     if wrd.voxelgi_camera:
         vert.add_uniform('vec3 eye', '_cameraPosition')
