@@ -405,18 +405,18 @@ def write_traithx(class_name):
 """package """ + arm.utils.safestr(wrd.arm_project_package) + """;
 
 class """ + class_name + """ extends armory.Trait {
-    public function new() {
-        super();
+\tpublic function new() {
+\t\tsuper();
 
-        // notifyOnInit(function() {
-        // });
-        
-        // notifyOnUpdate(function() {
-        // });
+\t\t// notifyOnInit(function() {
+\t\t// });
 
-        // notifyOnRemove(function() {
-        // });
-    }
+\t\t// notifyOnUpdate(function() {
+\t\t// });
+
+\t\t// notifyOnRemove(function() {
+\t\t// });
+\t}
 }
 """)
 
