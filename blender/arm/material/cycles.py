@@ -155,6 +155,7 @@ def parsing_basecolor(b):
 
 def parse_shader(node, socket):   
     global parsing_basecol
+    global emission_found
     out_basecol = 'vec3(0.8)'
     out_roughness = '0.0'
     out_metallic = '0.0'
@@ -182,7 +183,7 @@ def parse_shader(node, socket):
                         c_state.warn(c_state.mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
                     parse_normal_map_color_input(node.inputs[5])
                     # Emission
-                    if node.inputs[6].is_linked or node.inputs[6].default_value != 1.0:
+                    if node.inputs[6].is_linked or node.inputs[6].default_value != 0.0:
                         out_emission = parse_value_input(node.inputs[6])
                         emission_found = True
                         out_basecol = '({0} + vec3({1} * 100.0))'.format(out_basecol, out_emission)
