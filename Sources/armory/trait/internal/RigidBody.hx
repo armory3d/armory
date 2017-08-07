@@ -217,6 +217,7 @@ class RigidBody extends Trait {
 	}
 
 	public function applyImpulse(impulse:Vec4, loc:Vec4 = null) {
+		activate();
 		if (loc == null) {
 			body.applyCentralImpulse(BtVector3.create(impulse.x, impulse.y, impulse.z));
 		}

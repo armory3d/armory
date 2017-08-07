@@ -6,7 +6,7 @@ class Event {
 
 	public static function send(name:String, mask = -1) {
 		var entries = get(name);
-		for (e in entries) if (mask == -1 || mask == e.mask ) e.onEvent();
+		if (entries != null) for (e in entries) if (mask == -1 || mask == e.mask ) e.onEvent();
 	}
 
 	public static function get(name:String):Array<TEvent> {

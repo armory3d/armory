@@ -2787,10 +2787,11 @@ class ArmoryExporter:
                     # assets.add(assetpath) # Bundled is auto-added
                     # Read file list and add canvas assets
                     assetpath = arm.utils.get_fp() + '/Bundled/canvas/' + t.canvas_name_prop + '.files'
-                    with open(assetpath) as f:
-                        fileList = f.read().splitlines()
-                        for asset in fileList:
-                            assets.add(asset)
+                    if os.path.exists(assetpath):
+                        with open(assetpath) as f:
+                            fileList = f.read().splitlines()
+                            for asset in fileList:
+                                assets.add(asset)
                 else: # Haxe/Bundled Script
                     if t.class_name_prop == '': # Empty class name, skip
                         continue

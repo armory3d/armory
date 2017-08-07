@@ -26,14 +26,18 @@ class CanvasScript extends Trait {
 					cui = new Zui({font: f});			
 					var c:TCanvas = haxe.Json.parse(blob.toString());
 
+					
+					if (c.assets == null || c.assets.length == 0) canvas = c;
 					// Load canvas assets
-					var loaded = 0;
-					for (asset in c.assets) {
-						var file = asset.file;
-						iron.data.Data.getImage(file, function(image:kha.Image) {
-							Canvas.assetMap.set(asset.id, image);
-							if (++loaded >= c.assets.length) canvas = c;
-						});
+					else {
+						var loaded = 0;
+						for (asset in c.assets) {
+							var file = asset.file;
+							iron.data.Data.getImage(file, function(image:kha.Image) {
+								Canvas.assetMap.set(asset.id, image);
+								if (++loaded >= c.assets.length) canvas = c;
+							});
+						}
 					}
 				});
 			});
@@ -46,7 +50,7 @@ class CanvasScript extends Trait {
 
 			for (e in events) {
 				var all = armory.system.Event.get(e);
-				for (entry in all) entry.onEvent();
+				if (all != null) for (entry in all) entry.onEvent();
 			}
 		});
 	}
