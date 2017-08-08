@@ -54,7 +54,7 @@ def set_preset(self, context, preset):
         cam.rp_translucency_state = 'Auto'
         cam.rp_overlays_state = 'Auto'
         cam.rp_decals_state = 'Auto'
-        cam.rp_sss_state = 'Off'
+        cam.rp_sss_state = 'Auto'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
         cam.rp_clearbackground = False
@@ -82,7 +82,7 @@ def set_preset(self, context, preset):
         cam.rp_translucency_state = 'Auto'
         cam.rp_overlays_state = 'Auto'
         cam.rp_decals_state = 'Auto'
-        cam.rp_sss_state = 'Off'
+        cam.rp_sss_state = 'Auto'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
         cam.rp_clearbackground = False
@@ -110,7 +110,7 @@ def set_preset(self, context, preset):
         cam.rp_translucency_state = 'Auto'
         cam.rp_overlays_state = 'Auto'
         cam.rp_decals_state = 'Auto'
-        cam.rp_sss_state = 'Off'
+        cam.rp_sss_state = 'Auto'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
         cam.rp_clearbackground = False
@@ -137,7 +137,7 @@ def set_preset(self, context, preset):
         cam.rp_translucency_state = 'Auto'
         cam.rp_overlays_state = 'Auto'
         cam.rp_decals_state = 'Auto'
-        cam.rp_sss_state = 'Off'
+        cam.rp_sss_state = 'Auto'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
         cam.rp_clearbackground = False
@@ -169,7 +169,7 @@ def set_preset(self, context, preset):
         cam.rp_translucency_state = 'Auto'
         cam.rp_overlays_state = 'Auto'
         cam.rp_decals_state = 'Auto'
-        cam.rp_sss_state = 'Off'
+        cam.rp_sss_state = 'Auto'
         cam.rp_hdr = True
         cam.rp_worldnodes = True
         cam.rp_clearbackground = False
@@ -315,7 +315,7 @@ class GenRPDataPropsPanel(bpy.types.Panel):
             layout.prop(dat, "rp_overlays_state")
             layout.prop(dat, "rp_decals_state")
             layout.prop(dat, "rp_sss_state")
-            if dat.rp_sss_state == 'On':
+            if dat.rp_sss_state != 'Off':
                 layout.prop(wrd, 'sss_width')
             layout.prop(dat, "rp_hdr")
             layout.prop(dat, "rp_worldnodes")

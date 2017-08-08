@@ -162,7 +162,7 @@ def make_deferred(cam):
     if not cam.rp_bloom:
         relink('Bloom', 'SSS')
 
-    if not cam.rp_sss_state == 'On':
+    if not cam.rp_sss:
         relink('SSS', 'SSR')
 
     if not cam.rp_ssr:

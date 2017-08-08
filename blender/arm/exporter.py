@@ -2260,6 +2260,7 @@ class ArmoryExporter:
         transluc_used = False
         overlays_used = False
         decals_used = False
+        # sss_used = False
         for materialRef in self.materialArray.items():
             material = materialRef[0]
             # If the material is unlinked, material becomes None
@@ -2347,6 +2348,9 @@ class ArmoryExporter:
             if cam.rp_decals_state == 'Auto' and cam.rp_decals != decals_used:
                 cam.rp_decals = decals_used
                 rebuild_rp = True
+            # if cam.rp_sss_state == 'Auto' and cam.rp_sss != sss_used:
+                # cam.rp_sss = sss_used
+                # rebuild_rp = True
             if rebuild_rp:
                 self.rebuild_render_path(cam)
 
