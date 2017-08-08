@@ -275,10 +275,10 @@ class ArmoryNewCanvasDialog(bpy.types.Operator):
         self.canvas_name = 'MyCanvas'
         return context.window_manager.invoke_props_dialog(self)
 
-class ArmoryRefreshScriptsListButton(bpy.types.Operator):
+class ArmoryRefreshScriptsButton(bpy.types.Operator):
     '''Fetch all script names'''
-    bl_idname = 'arm.refresh_scripts_list'
-    bl_label = 'Refresh Scripts List'
+    bl_idname = 'arm.refresh_scripts'
+    bl_label = 'Refresh Scripts'
  
     def execute(self, context):
         arm.utils.fetch_bundled_script_names()
@@ -375,12 +375,15 @@ class ToolsTraitsPanel(bpy.types.Panel):
                     layout.prop(paramitem, 'color_picker')
 
                 if item.type_prop == 'Haxe Script':
-                    row = layout.row()
+                    row = layout.row(align=True)
+                    row.alignment = 'EXPAND'
+                    column = row.column(align=True)
+                    column.alignment = 'EXPAND'
                     if item.class_name_prop == '':
-                        row.enabled = False
-                    row.operator("arm.edit_script")
-                    layout.operator("arm.new_script")
-                    layout.operator("arm.refresh_scripts_list")
+                        column.enabled = False
+                    column.operator("arm.edit_script")
+                    row.operator("arm.new_script")
+                    row.operator("arm.refresh_scripts")
                 else: # Bundled
                     layout.operator("arm.edit_bundled_script")
             
@@ -419,7 +422,7 @@ def register():
     bpy.utils.register_class(ArmoryEditCanvasButton)
     bpy.utils.register_class(ArmoryNewScriptDialog)
     bpy.utils.register_class(ArmoryNewCanvasDialog)
-    bpy.utils.register_class(ArmoryRefreshScriptsListButton)
+    bpy.utils.register_class(ArmoryRefreshScriptsButton)
     bpy.utils.register_class(ArmoryRefreshCanvasListButton)
     bpy.utils.register_class(ToolsTraitsPanel)
 
@@ -436,6 +439,6 @@ def unregister():
     bpy.utils.unregister_class(ArmoryEditCanvasButton)
     bpy.utils.unregister_class(ArmoryNewScriptDialog)
     bpy.utils.unregister_class(ArmoryNewCanvasDialog)
-    bpy.utils.unregister_class(ArmoryRefreshScriptsListButton)
+    bpy.utils.unregister_class(ArmoryRefreshScriptsButton)
     bpy.utils.unregister_class(ArmoryRefreshCanvasListButton)
     bpy.utils.unregister_class(ToolsTraitsPanel)

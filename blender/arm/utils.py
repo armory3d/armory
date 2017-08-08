@@ -147,6 +147,7 @@ def fetch_bundled_script_names():
         wrd.bundled_scripts_list.add().name = file.rsplit('.')[0]
 
 script_props = {}
+script_props_defaults = {}
 def fetch_script_props(file):
     with open(file) as f:
         if '/' in file:
@@ -155,17 +156,27 @@ def fetch_script_props(file):
             file = file.split('\\')[-1]
         name = file.rsplit('.')[0]
         script_props[name] = []
+        script_props_defaults[name] = []
         lines = f.read().splitlines()
         readprop = False
         for l in lines:
             if readprop:
                 p = l.split('var ')[1]
                 if ':' in p:
+                    if '=' in p: # Fetch default value
+                        s = p.split('=')
+                        v = s[1].split(';')[0].strip()
+                    else:
+                        v = ''
                     p = p.split(':')[0].strip()
                     script_props[name].append(p)
+                    script_props_defaults[name].append(v)
                 elif '=' in p:
-                    p = p.split('=')[0].strip()
+                    s = p.split('=')
+                    p = s[0].strip()
+                    v = s[1].split(';')[0].strip()
                     script_props[name].append(p)
+                    script_props_defaults[name].append(v)
             readprop = l.strip().startswith('@prop')
 
 def fetch_script_names():
@@ -197,13 +208,15 @@ def fetch_trait_props():
             if item.name not in script_props:
                 continue
             props = script_props[item.name]
+            defaults = script_props_defaults[item.name]
             # Remove old props
             for i in range(len(item.my_propstraitlist) - 1, -1, -1):
                 ip = item.my_propstraitlist[i]
                 if ip.name not in props:
                     item.my_propstraitlist.remove(i)
             # Add new props
-            for p in props:
+            for i in range(0, len(props)):
+                p = props[i]
                 found = False
                 for ip in item.my_propstraitlist:
                     if ip.name == p:
@@ -212,6 +225,7 @@ def fetch_trait_props():
                 if not found:
                     prop = item.my_propstraitlist.add()
                     prop.name = p
+                    prop.value = defaults[i]
 
 def to_hex(val):
     return '#%02x%02x%02x%02x' % (int(val[3] * 255), int(val[0] * 255), int(val[1] * 255), int(val[2] * 255))
