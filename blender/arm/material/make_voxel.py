@@ -137,7 +137,7 @@ def make(context_id):
         frag.write('vec3 color = basecol * visibility * lightColor * dotNL * attenuate(distance(wposition * voxelgiDimensions, lightPos));')
     frag.write('vec3 voxel = wposition * 0.5 + vec3(0.5);')
 
-    if wrd.lighting_model == 'Cycles':
+    if wrd.material_model == 'Cycles':
         frag.write('color = min(color * 0.9, vec3(0.9)) + min(color / 200.0, 0.1);') # Higher range to allow emission
 
     # if bpy.data.cameras[0].rp_voxelgi_hdr:

@@ -16,7 +16,7 @@ def make(context_id, rid):
     con_mesh = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
 
     if rid == 'forward':
-        if bpy.data.cameras[0].rp_materials == 'Full':
+        if bpy.data.worlds['Arm'].material_model != 'Restricted':
             make_forward(con_mesh)
         else:
             make_forward_restricted(con_mesh)

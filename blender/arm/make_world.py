@@ -76,7 +76,7 @@ def build_node_tree(world):
         wrd.world_defs += '_TwoSidedAreaLamp'
 
     # Alternative models
-    if wrd.lighting_model == 'Cycles':
+    if wrd.material_model == 'Cycles':
         wrd.world_defs += '_Cycles'
 
     # TODO: Lamp texture test..

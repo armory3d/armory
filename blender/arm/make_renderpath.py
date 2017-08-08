@@ -22,7 +22,7 @@ def build_node_trees(assets_path):
         os.makedirs(arm.utils.build_dir() + '/compiled/Assets/renderpaths')
     
     build_node_trees.assets_path = assets_path
-    if bpy.data.cameras[0].rp_materials == 'Full':
+    if bpy.data.worlds['Arm'].material_model != 'Restricted':
         # Always include
         assets.add(assets_path + 'brdf.png')
         assets.add_embedded_data('brdf.png')

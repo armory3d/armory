@@ -20,7 +20,7 @@ def set_preset(self, context, preset):
 
     if preset == 'Low':
         cam.rp_renderer = 'Forward'
-        cam.rp_materials = 'Full'
+        wrd.material_model = 'PBR'
         cam.rp_shadowmap = '1024'
         cam.rp_meshes = True
         cam.rp_translucency_state = 'Off'
@@ -48,7 +48,7 @@ def set_preset(self, context, preset):
         cam.rp_motionblur = 'None'
     elif preset == 'Forward':
         cam.rp_renderer = 'Forward'
-        cam.rp_materials = 'Full'
+        wrd.material_model = 'PBR'
         cam.rp_shadowmap = '2048'
         cam.rp_meshes = True
         cam.rp_translucency_state = 'Auto'
@@ -76,6 +76,7 @@ def set_preset(self, context, preset):
         cam.rp_motionblur = 'None'
     elif preset == 'Deferred':
         cam.rp_renderer = 'Deferred'
+        wrd.material_model = 'PBR'
         cam.rp_shadowmap = '2048'
         cam.rp_meshes = True
         cam.rp_translucency_state = 'Auto'
@@ -103,6 +104,7 @@ def set_preset(self, context, preset):
         cam.rp_motionblur = 'None'
     elif preset == 'Max':
         cam.rp_renderer = 'Deferred'
+        wrd.material_model = 'PBR'
         cam.rp_shadowmap = '4096'
         cam.rp_meshes = True
         cam.rp_translucency_state = 'Auto'
@@ -157,10 +159,11 @@ def set_preset(self, context, preset):
         cam.rp_rendercapture = True
         cam.rp_rendercapture_format = '8bit'
         cam.rp_motionblur = 'None'
-        wrd.lighting_model = 'Cycles'
+        wrd.material_model = 'Cycles'
         wrd.generate_pcss_state = 'On'
     elif preset == 'Deferred Plus':
         cam.rp_renderer = 'Deferred Plus'
+        wrd.material_model = 'PBR'
         cam.rp_shadowmap = '4096'
         cam.rp_meshes = True
         cam.rp_translucency_state = 'Auto'
@@ -188,7 +191,7 @@ def set_preset(self, context, preset):
         cam.rp_motionblur = 'None'
     elif preset == 'VR Low':
         cam.rp_renderer = 'Forward'
-        cam.rp_materials = 'Restricted'
+        wrd.material_model = 'Restricted'
         cam.rp_shadowmap = '1024'
         cam.rp_meshes = True
         cam.rp_translucency_state = 'Off'
@@ -216,7 +219,7 @@ def set_preset(self, context, preset):
         cam.rp_motionblur = 'None'
     elif preset == 'Mobile Low':
         cam.rp_renderer = 'Forward'
-        cam.rp_materials = 'Restricted'
+        wrd.material_model = 'Restricted'
         cam.rp_shadowmap = '1024'
         cam.rp_meshes = True
         cam.rp_translucency_state = 'Off'
@@ -244,7 +247,7 @@ def set_preset(self, context, preset):
         cam.rp_motionblur = 'None'
     elif preset == 'Grease Pencil':
         cam.rp_renderer = 'Forward'
-        cam.rp_materials = 'Restricted'
+        wrd.material_model = 'Restricted'
         cam.rp_shadowmap = 'None'
         cam.rp_meshes = False
         cam.rp_translucency_state = 'Off'
@@ -305,8 +308,7 @@ class GenRPDataPropsPanel(bpy.types.Panel):
             layout.prop(dat, "rp_preset")
             layout.separator()
             layout.prop(dat, "rp_renderer")
-            layout.prop(dat, "rp_materials")
-            layout.prop(wrd, 'lighting_model')
+            layout.prop(wrd, 'material_model')
             layout.prop(dat, "rp_shadowmap")
             layout.prop(dat, "rp_meshes")
             layout.prop(dat, "rp_translucency_state")

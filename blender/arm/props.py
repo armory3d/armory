@@ -26,6 +26,10 @@ def update_preset(self, context):
 def update_renderpath(self, context):
     props_renderer.set_renderpath(self, context)
 
+def update_material_model(self, context):
+    assets.invalidate_shader_cache(self, context)
+    update_renderpath(self, context)
+
 def update_translucency_state(self, context):
     if self.rp_translucency_state == 'On':
         self.rp_translucency = True
@@ -325,21 +329,14 @@ def init_properties():
                ('Max', 'Max', 'Max'),
                ('Render Capture', 'Render Capture', 'Render Capture'),
                ('Grease Pencil', 'Grease Pencil', 'Grease Pencil'),
-               #('Path-Trace', 'Path-Trace', 'Path-Trace')],
                ],
         name="Preset", description="Render path preset", default='Deferred', update=update_preset)
     bpy.types.Camera.rp_renderer = EnumProperty(
         items=[('Forward', 'Forward', 'Forward'),
                ('Deferred', 'Deferred', 'Deferred'),
                ('Deferred Plus', 'Deferred Plus', 'Deferred Plus'),
-               #('Path-Trace', 'Path-Trace', 'Path-Trace')],
                ],
         name="Renderer", description="Renderer type", default='Deferred', update=update_renderpath)
-    bpy.types.Camera.rp_materials = EnumProperty(
-        items=[('Full', 'Full', 'Full'),
-               ('Restricted', 'Restricted', 'Restricted'),
-               ],
-        name="Materials", description="Material builder", default='Full', update=update_renderpath)
     bpy.types.Camera.rp_depthprepass = bpy.props.BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=False, update=update_renderpath)
     bpy.types.Camera.rp_meshes = bpy.props.BoolProperty(name="Meshes", description="Render mesh objects", default=True, update=update_renderpath)
     bpy.types.Camera.rp_hdr = bpy.props.BoolProperty(name="HDR", description="Render in HDR Space", default=True, update=update_renderpath)
@@ -542,11 +539,13 @@ def init_properties():
     bpy.types.World.force_no_culling = bpy.props.BoolProperty(name="Force No Culling", default=False)
     bpy.types.World.generate_two_sided_area_lamp = bpy.props.BoolProperty(name="Two-Sided Area Lamps", description="Emit light from both faces of area lamp", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.tessellation_enabled = bpy.props.BoolProperty(name="Tessellation", description="Enable tessellation for height maps on supported targets", default=True, update=assets.invalidate_shader_cache)
-    # Lighting flags
-    bpy.types.World.lighting_model = EnumProperty(
+    # Material builder flags
+    bpy.types.World.material_model = EnumProperty(
         items=[('PBR', 'PBR', 'PBR'),
-               ('Cycles', 'Cycles', 'Cycles')],
-        name="Lighting", description="Preferred lighting calibration", default='PBR', update=assets.invalidate_shader_cache)
+               ('Cycles', 'Cycles', 'Cycles'),
+               ('Restricted', 'Restricted', 'Restricted'),
+               ],
+        name="Materials", description="Material builder", default='PBR', update=update_material_model)
     # For material
     bpy.types.NodeSocket.is_uniform = bpy.props.BoolProperty(name="Is Uniform", description="Mark node sockets to be processed as material uniforms", default=False)
     bpy.types.NodeTree.is_cached = bpy.props.BoolProperty(name="Node Tree Cached", description="No need to reexport node tree", default=False)
