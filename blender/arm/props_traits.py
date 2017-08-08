@@ -278,7 +278,7 @@ class ArmoryNewCanvasDialog(bpy.types.Operator):
 class ArmoryRefreshScriptsButton(bpy.types.Operator):
     '''Fetch all script names'''
     bl_idname = 'arm.refresh_scripts'
-    bl_label = 'Refresh Scripts'
+    bl_label = 'Refresh'
  
     def execute(self, context):
         arm.utils.fetch_bundled_script_names()
@@ -289,7 +289,7 @@ class ArmoryRefreshScriptsButton(bpy.types.Operator):
 class ArmoryRefreshCanvasListButton(bpy.types.Operator):
     '''Fetch all canvas names'''
     bl_idname = 'arm.refresh_canvas_list'
-    bl_label = 'Refresh Canvas List'
+    bl_label = 'Refresh'
  
     def execute(self, context):
         arm.utils.fetch_script_names()
@@ -398,12 +398,16 @@ class ToolsTraitsPanel(bpy.types.Panel):
                 item.name = item.canvas_name_prop
                 row = layout.row()
                 row.prop_search(item, "canvas_name_prop", bpy.data.worlds['Arm'], "canvas_list", "Canvas")
-                row = layout.row()
+                
+                row = layout.row(align=True)
+                row.alignment = 'EXPAND'
+                column = row.column(align=True)
+                column.alignment = 'EXPAND'
                 if item.canvas_name_prop == '':
-                    row.enabled = False
-                row.operator("arm.edit_canvas")
-                layout.operator("arm.new_canvas")
-                layout.operator("arm.refresh_canvas_list")
+                    column.enabled = False
+                column.operator("arm.edit_canvas")
+                row.operator("arm.new_canvas")
+                row.operator("arm.refresh_canvas_list")
 
             # Nodes
             elif item.type_prop == 'Logic Nodes':

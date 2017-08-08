@@ -1227,9 +1227,11 @@ class ArmoryExporter:
         if bobjectRef:
             type = bobjectRef["objectType"]
 
+            # Linked object, not present in scene
             if bobject not in self.objectToArmObjectDict:
                 o = {}
                 o['traits'] = []
+                o['spawn'] = False
                 self.objectToArmObjectDict[bobject] = o
 
             o = self.objectToArmObjectDict[bobject]
@@ -2530,7 +2532,6 @@ class ArmoryExporter:
                     if bobject.parent == None:
                         # Add external linked objects
                         if bobject.name not in self.scene.objects:
-                            bobject.spawn = False
                             self.process_bobject(bobject)
                             self.export_object(bobject, self.scene)
                             o['object_refs'].append(bobject.name + '_Lib')
