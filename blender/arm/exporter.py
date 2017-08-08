@@ -1227,6 +1227,11 @@ class ArmoryExporter:
         if bobjectRef:
             type = bobjectRef["objectType"]
 
+            if bobject not in self.objectToArmObjectDict:
+                o = {}
+                o['traits'] = []
+                self.objectToArmObjectDict[bobject] = o
+
             o = self.objectToArmObjectDict[bobject]
             o['type'] = structIdentifier[type]
             o['name'] = bobjectRef["structName"]
@@ -2520,8 +2525,17 @@ class ArmoryExporter:
                 o = {}
                 o['name'] = group.name
                 o['object_refs'] = []
-                for obj in group.objects:
-                    o['object_refs'].append(obj.name)
+                # Add unparented objects only, then instantiate full object child tree
+                for bobject in group.objects:
+                    if bobject.parent == None:
+                        # Add external linked objects
+                        if bobject.name not in self.scene.objects:
+                            bobject.spawn = False
+                            self.process_bobject(bobject)
+                            self.export_object(bobject, self.scene)
+                            o['object_refs'].append(bobject.name + '_Lib')
+                        else:
+                            o['object_refs'].append(bobject.name)
                 self.output['groups'].append(o)
 
         if not ArmoryExporter.option_mesh_only:
