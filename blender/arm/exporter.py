@@ -2810,6 +2810,8 @@ class ArmoryExporter:
                         with open(assetpath) as f:
                             fileList = f.read().splitlines()
                             for asset in fileList:
+                                # Relative to the root/Bundled/canvas path
+                                asset = asset[6:] # Strip ../../ to start in project root
                                 assets.add(asset)
                 else: # Haxe/Bundled Script
                     if t.class_name_prop == '': # Empty class name, skip
