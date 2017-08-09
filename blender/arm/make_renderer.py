@@ -190,7 +190,7 @@ def make_deferred(cam):
         links.new(nodes['gbuffer2'].outputs[0], nodes['GBuffer'].inputs[2])
         links.new(nodes['Reroute.014'].outputs[0], nodes['SMAA'].inputs[1])
         # Clear velocity
-        links.new(nodes['Begin'].outputs[0], nodes['Set Target Veloc'].inputs[0])
+        relink('Set Target Mesh', 'Set Target Veloc')
         links.new(nodes['Clear Target Veloc'].outputs[0], nodes['Set Target Mesh'].inputs[0])
     elif cam.rp_antialiasing == 'FXAA':
         last_node = 'FXAA'
