@@ -31,7 +31,7 @@ class CanvasScript extends Trait {
 					else {
 						var loaded = 0;
 						for (asset in c.assets) {
-							var file = asset.file;
+							var file = asset.name;
 							iron.data.Data.getImage(file, function(image:kha.Image) {
 								Canvas.assetMap.set(asset.id, image);
 								if (++loaded >= c.assets.length) canvas = c;
