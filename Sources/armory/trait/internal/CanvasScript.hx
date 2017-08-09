@@ -25,7 +25,6 @@ class CanvasScript extends Trait {
 
 					cui = new Zui({font: f});			
 					var c:TCanvas = haxe.Json.parse(blob.toString());
-
 					
 					if (c.assets == null || c.assets.length == 0) canvas = c;
 					// Load canvas assets
