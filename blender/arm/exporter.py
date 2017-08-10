@@ -1188,8 +1188,29 @@ class ArmoryExporter:
             if area.type == 'VIEW_3D':
                 for space in area.spaces:
                     if space.type == 'VIEW_3D':
-                        return space.region_3d.perspective_matrix
-        return None
+                        # return space.region_3d.perspective_matrix # pesp = window * view
+                        return space.region_3d.window_matrix, space.region_3d.is_perspective
+        return None, False
+
+    def get_viewport_panels_w(self):
+        w = 0
+        screen = bpy.context.window.screen
+        for area in screen.areas:
+            if area.type == 'VIEW_3D':
+                for region in area.regions:
+                    if region.type == 'TOOLS' or region.type == 'UI':
+                        if region.width > 1:
+                            w += region.width
+        return w
+
+    def get_viewport_w(self):
+        screen = bpy.context.window.screen
+        for area in screen.areas:
+            if area.type == 'VIEW_3D':
+                for region in area.regions:
+                    if region.type == 'HEADER': # Use header to report full width, panels included
+                        return region.width
+        return 0
 
     def make_fake_omni_lamps(self, o, bobject):
         # Look down
@@ -2174,16 +2195,15 @@ class ArmoryExporter:
         o['far_plane'] = objref.clip_end
         o['fov'] = objref.angle
 
-        # Viewport Camera - override fov for every camera for now
-        # if bpy.data.worlds['Arm'].arm_play_viewport_camera and ArmoryExporter.in_viewport:
-        #     # Extract fov from projection
-        #     mat = self.get_viewport_projection_matrix()
-        #     if mat != None:
-        #         yscale = mat[1][1]
-        #         if yscale < 0:
-        #             yscale *= -1 # Reverse
-        #         fov = math.atan(1.0 / yscale) * 0.9
-        #         o['fov'] = fov
+        if bpy.data.worlds['Arm'].arm_play_viewport_camera and ArmoryExporter.in_viewport:
+            pw = self.get_viewport_panels_w()
+            # Tool shelf and properties hidden
+            proj, is_persp = self.get_viewport_projection_matrix()
+            if pw == 0 and is_persp:
+                o['projection'] = self.write_matrix(proj)
+            # if pw > 0:
+                # w = self.get_viewport_w()
+                # o['projection'][0] *= aspect
         
         if objref.type == 'PERSP':
             o['type'] = 'perspective'
