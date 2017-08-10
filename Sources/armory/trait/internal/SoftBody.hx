@@ -12,7 +12,6 @@ import armory.trait.internal.PhysicsWorld;
 import haxebullet.Bullet;
 #end
 
-@:keep
 class SoftBody extends Trait {
 #if (!arm_physics_soft)
 	public function new() { super(); }

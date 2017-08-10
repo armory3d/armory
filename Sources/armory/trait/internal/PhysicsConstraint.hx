@@ -12,7 +12,6 @@ import armory.trait.internal.PhysicsWorld;
 import haxebullet.Bullet;
 #end
 
-@:keep
 class PhysicsConstraint extends Trait {
 #if (!arm_physics)
 	public function new() { super(); }

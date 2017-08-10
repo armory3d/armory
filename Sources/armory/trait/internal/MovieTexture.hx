@@ -5,7 +5,6 @@ import kha.Video;
 import iron.Trait;
 import iron.object.MeshObject;
 
-@:keep
 class MovieTexture extends Trait {
 
 	var video:Video;

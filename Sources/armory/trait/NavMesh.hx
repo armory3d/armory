@@ -9,7 +9,6 @@ import iron.Trait;
 import iron.data.Data;
 import iron.math.Vec4;
 
-@:keep
 class NavMesh extends Trait {
 
 #if (!arm_navigation)

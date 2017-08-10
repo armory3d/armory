@@ -5,7 +5,6 @@ import iron.math.Vec4;
 import iron.math.Quat;
 import iron.system.Tween;
 
-@:keep
 class NavAgent extends Trait {
 
 	var path:Array<Vec4> = null;

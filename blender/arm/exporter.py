@@ -2595,6 +2595,7 @@ class ArmoryExporter:
             x['type'] = 'Script'
             x['class_name'] = 'armory.trait.internal.PhysicsWorld'
             self.output['traits'].append(x)
+            ArmoryExporter.import_traits.append(x['class_name'])
         if bpy.data.worlds['Arm'].arm_navigation != 'Disabled' and ArmoryExporter.export_navigation:
             if not 'traits' in self.output:
                 self.output['traits'] = []
@@ -2602,6 +2603,7 @@ class ArmoryExporter:
             x['type'] = 'Script'
             x['class_name'] = 'armory.trait.internal.Navigation'
             self.output['traits'].append(x)
+            ArmoryExporter.import_traits.append(x['class_name'])
 
         # Write embedded data references
         if len(assets.embedded_data) > 0:
@@ -2695,6 +2697,7 @@ class ArmoryExporter:
             ArmoryExporter.compress_enabled = False
         if not hasattr(ArmoryExporter, 'in_viewport'):
             ArmoryExporter.in_viewport = False
+        ArmoryExporter.import_traits = [] # Referenced traits
         ArmoryExporter.option_mesh_only = False
         ArmoryExporter.option_mesh_per_file = True
         ArmoryExporter.option_optimize_mesh = bpy.data.worlds['Arm'].arm_optimize_mesh
@@ -2992,6 +2995,9 @@ class ArmoryExporter:
                     co['use_offset'] = constr.use_offset
                     co['influence'] = constr.influence
                 o['constraints'].append(co)
+
+        for x in o['traits']:
+            ArmoryExporter.import_traits.append(x['class_name'])
     
     def add_hook_trait(self, o, bobject, target_name, group_name):
         hook_trait = {}

@@ -2,7 +2,6 @@ package armory.trait;
 
 import iron.Trait;
 
-@:keep
 class SceneInstance extends Trait {
 
 	function safeFilename(s:String) {

@@ -9,7 +9,6 @@ import iron.data.Data;
 import iron.data.MaterialData;
 import iron.data.MaterialData.MaterialContext;
 
-@:keep
 class PathTracer extends Trait {
 
 	var context:MaterialContext;

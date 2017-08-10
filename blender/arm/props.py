@@ -18,7 +18,7 @@ except ImportError:
     pass
 
 # Armory version
-arm_version = '17.07'
+arm_version = '17.08'
 
 def update_preset(self, context):
     props_renderer.set_preset(self, context, self.rp_preset)
@@ -212,6 +212,7 @@ def init_properties():
     bpy.types.World.arm_loadbar = BoolProperty(name="Load Bar", description="Show asset loading progress on published builds", default=True)
     bpy.types.World.arm_vsync = BoolProperty(name="VSync", description="Vertical Synchronization", default=True)
     bpy.types.World.arm_dce = BoolProperty(name="DCE", description="Enable dead code elimination for publish builds", default=True)
+    bpy.types.World.arm_asset_compression = BoolProperty(name="Asset Compression", description="Enable scene data compression", default=False)
     bpy.types.World.arm_winmode = EnumProperty(
         items = [('Window', 'Window', 'Window'),
                  ('BorderlessWindow', 'Borderless', 'BorderlessWindow'),

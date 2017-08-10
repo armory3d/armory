@@ -6,7 +6,6 @@ import iron.object.Object;
 import armory.trait.internal.PhysicsWorld;
 import armory.trait.internal.CameraController;
 
-@:keep
 class FirstPersonController extends CameraController {
 
 #if (!arm_physics)

@@ -2,7 +2,6 @@ package armory.trait.internal;
 
 import iron.Trait;
 
-@:keep
 class JSScript extends Trait {
 
 	static var api:JSScriptAPI = null;

@@ -8,7 +8,6 @@ import iron.math.Vec4;
 import iron.object.Transform;
 import iron.object.MeshObject;
 
-@:keep
 class RigidBody extends Trait {
 
 #if (!arm_physics)

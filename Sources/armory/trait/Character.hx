@@ -6,7 +6,6 @@ import iron.system.Input;
 import iron.math.Vec4;
 import iron.math.Quat;
 
-@:keep
 class Character extends Trait {
 
 	var speed = 0.0;

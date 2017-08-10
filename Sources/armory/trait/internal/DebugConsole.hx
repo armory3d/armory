@@ -10,7 +10,6 @@ import zui.Zui;
 import zui.Id;
 #end
 
-@:keep
 class DebugConsole extends Trait {
 
 #if (!arm_profile)

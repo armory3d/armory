@@ -23,7 +23,7 @@ def add_assets(path):
     return 'project.addAssets("' + path + '");\n'
 
 # Write khafile.js
-def write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce, in_viewport):
+def write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce, in_viewport, import_traits, import_logicnodes):
     global check_dot_path
 
     sdk_path = arm.utils.get_sdk_path()
@@ -87,7 +87,16 @@ project.addSources('Sources');
                 f.write(add_assets(recastjs_path))
 
         if enable_dce:
-            f.write("project.addParameter('-dce full');")
+            f.write("project.addParameter('-dce full');\n")
+
+        import_traits.append('armory.trait.internal.JSScriptAPI')
+        import_traits = list(set(import_traits))
+        for i in range(0, len(import_traits)):
+            f.write("project.addParameter('" + import_traits[i] + "');\n")
+            f.write("""project.addParameter("--macro keep('""" + import_traits[i] + """')");\n""")
+
+        if import_logicnodes: # Live patching for logic nodes
+            f.write("""project.addParameter("--macro include('armory.logicnode')");\n""")
 
         if state.is_render:
             assets.add_khafile_def('arm_render')
@@ -151,7 +160,7 @@ project.addSources('Sources');
         f.write("\n\nresolve(project);\n")
 
 # Write Main.hx
-def write_main(resx, resy, is_play, in_viewport, is_publish, import_logicnodes):
+def write_main(resx, resy, is_play, in_viewport, is_publish):
     wrd = bpy.data.worlds['Arm']
     scene_name = arm.utils.get_project_scene_name()
     scene_ext = '.zip' if (bpy.data.scenes[scene_name].data_compressed and is_publish) else ''
@@ -182,17 +191,10 @@ class Main {
             start();
         });
     }
-    #end
-    public static function main() {
-        iron.system.CompileTime.importPackage('armory.trait');
-        iron.system.CompileTime.importPackage('armory.renderpath');
-""")
-        if import_logicnodes:
-            f.write("""
-        iron.system.CompileTime.importPackage('armory.logicnode');
-""")
+    #end""")
+
         f.write("""
-        iron.system.CompileTime.importPackage('""" + arm.utils.safestr(wrd.arm_project_package) + """');
+    public static function main() {
         state = 1;
         #if (js && arm_physics) state++; loadLib("ammo.js"); #end
         #if (js && arm_navigation) state++; loadLib("recast.js"); #end

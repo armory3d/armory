@@ -3,7 +3,6 @@ package armory.trait;
 import iron.Trait;
 import iron.object.MeshObject;
 
-@:keep
 class MirrorTexture extends Trait {
 
 	var cameraName:String;

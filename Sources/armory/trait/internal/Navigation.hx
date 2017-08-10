@@ -5,7 +5,6 @@ import haxerecast.Recast;
 import armory.trait.NavMesh;
 #end
 
-@:keep
 class Navigation extends iron.Trait {
 
 #if (!arm_navigation)

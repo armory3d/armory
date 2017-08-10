@@ -90,7 +90,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     physics_found = False
     navigation_found = False
     ui_found = False
-    ArmoryExporter.compress_enabled = is_publish
+    ArmoryExporter.compress_enabled = is_publish and wrd.arm_asset_compression
     ArmoryExporter.in_viewport = in_viewport
     for scene in bpy.data.scenes:
         if scene.game_export:
@@ -141,13 +141,13 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
 
     # Write khafile.js
     enable_dce = is_publish and wrd.arm_dce
-    write_data.write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce, in_viewport)
+    import_logic = not is_publish and arm.utils.logic_editor_space() != None
+    write_data.write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce, in_viewport, ArmoryExporter.import_traits, import_logic)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
     # Import all logic nodes for patching if logic is being edited
-    import_logic = arm.utils.logic_editor_space() != None
-    write_data.write_main(resx, resy, is_play, in_viewport, is_publish, import_logic)
+    write_data.write_main(resx, resy, is_play, in_viewport, is_publish)
     if resx != state.last_resx or resy != state.last_resy:
         wrd.arm_recompile = True
     state.last_resx = resx

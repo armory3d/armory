@@ -10,7 +10,6 @@ import armory.trait.internal.PhysicsWorld;
 import haxebullet.Bullet;
 #end
 
-@:keep
 class VehicleBody extends Trait {
 
 #if (!arm_physics)

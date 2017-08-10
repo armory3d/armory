@@ -6,7 +6,6 @@ import zui.Zui;
 import zui.Canvas;
 #end
 
-@:keep
 class CanvasScript extends Trait {
 
 #if arm_ui

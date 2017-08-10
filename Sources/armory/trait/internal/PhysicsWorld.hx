@@ -22,7 +22,6 @@ class ContactPair {
 	}
 }
 
-@:keep
 class PhysicsWorld extends Trait {
 
 #if (!arm_physics)

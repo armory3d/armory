@@ -3,7 +3,6 @@ package armory.trait;
 import iron.math.Vec4;
 import armory.trait.internal.CameraController;
 
-@:keep
 class SidescrollerController extends CameraController {
 
 #if (!arm_physics)

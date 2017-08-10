@@ -1,6 +1,5 @@
 package armory.trait.internal;
 
-@:keep
 class LoadBar {
 
 	public static function render(g:kha.graphics2.Graphics) {

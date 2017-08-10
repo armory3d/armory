@@ -6,7 +6,6 @@ import iron.system.Time;
 import iron.object.CameraObject;
 import iron.math.Vec4;
 
-@:keep
 class VRNavigation extends Trait {
 
 #if arm_vr

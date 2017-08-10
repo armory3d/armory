@@ -2,7 +2,6 @@ package armory.trait.internal;
 
 #if cpp
 
-@:keep
 class JSScriptAPI { }
 
 #else

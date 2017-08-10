@@ -5,7 +5,6 @@ import iron.system.Input;
 import iron.object.Transform;
 import iron.object.CameraObject;
 
-@:keep
 class CameraController extends Trait {
 
 #if (!arm_physics)
