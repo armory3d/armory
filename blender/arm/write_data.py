@@ -86,6 +86,13 @@ project.addSources('Sources');
                 recastjs_path = recastjs_path.replace('\\', '/')
                 f.write(add_assets(recastjs_path))
 
+        if not is_publish:
+            f.write("""project.addParameter("--macro include('armory.trait')");\n""")
+            f.write("""project.addParameter("--macro include('armory.trait.internal')");\n""")
+
+        if import_logicnodes: # Live patching for logic nodes
+            f.write("""project.addParameter("--macro include('armory.logicnode')");\n""")
+
         if enable_dce:
             f.write("project.addParameter('-dce full');\n")
 
@@ -94,9 +101,6 @@ project.addSources('Sources');
         for i in range(0, len(import_traits)):
             f.write("project.addParameter('" + import_traits[i] + "');\n")
             f.write("""project.addParameter("--macro keep('""" + import_traits[i] + """')");\n""")
-
-        if import_logicnodes: # Live patching for logic nodes
-            f.write("""project.addParameter("--macro include('armory.logicnode')");\n""")
 
         if state.is_render:
             assets.add_khafile_def('arm_render')

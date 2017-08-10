@@ -2254,6 +2254,9 @@ class ArmoryExporter:
         make_material.parse(mat, o, mat_users, mat_armusers, ArmoryExporter.renderpath_id)
         self.output['material_datas'].append(o)
         bpy.data.materials.remove(mat)
+        if bpy.data.worlds['Arm'].force_no_culling:
+            o['override_context'] = {}
+            o['override_context']['cull_mode'] = 'none'
 
     def export_materials(self):
         wrd = bpy.data.worlds['Arm']
