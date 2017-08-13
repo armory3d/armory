@@ -60,13 +60,15 @@ def make(context_id):
     frag.write('float roughness;') #
     frag.write('float metallic;') #
     frag.write('float occlusion;') #
-    # frag.write('float opacity;') #
+    parse_opacity = wrd.voxelgi_refraction
+    if parse_opacity:
+        frag.write('float opacity;')
     frag.write_pre = True
     frag.write('mat3 TBN;') # TODO: discard, parse basecolor only
     frag.write_pre = False
     frag.write('float dotNV = 0.0;')
     frag.write('float dotNL = max(dot(wnormal, l), 0.0);')
-    cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False)
+    cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False)
 
     if not frag.contains('vec3 n ='):
         frag.write_pre = True
@@ -152,7 +154,10 @@ def make(context_id):
     # frag.write('imageAtomicRGBA8Avg(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
         
     frag.write('ivec3 coords = ivec3(voxelgiResolution * voxel);')
-    frag.write('vec4 val = vec4(color, 1.0);')
+    if parse_opacity:
+        frag.write('vec4 val = vec4(color, opacity);')
+    else:
+        frag.write('vec4 val = vec4(color, 1.0);')
     frag.write('val *= 255.0;')
     frag.write('uint newVal = encUnsignedNibble(convVec4ToRGBA8(val), 1);')
     frag.write('uint prevStoredVal = 0;')

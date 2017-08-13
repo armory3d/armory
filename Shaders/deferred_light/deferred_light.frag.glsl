@@ -7,9 +7,9 @@ precision mediump float;
 #include "../compiled.glsl"
 #include "../std/brdf.glsl"
 #include "../std/math.glsl"
-// #ifdef _VoxelGI
-	// #include "../std/conetrace.glsl"
-// #endif
+#ifdef _VoxelGIDirect
+	#include "../std/conetrace.glsl"
+#endif
 #ifdef _PolyLight
 	#include "../std/ltc.glsl"
 #endif
@@ -31,9 +31,9 @@ precision mediump float;
 #endif
 #include "../std/gbuffer.glsl"
 
-// #ifdef _VoxelGI
-	//-!uniform sampler3D voxels;
-// #endif
+#ifdef _VoxelGIDirect
+	//!uniform sampler3D voxels;
+#endif
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
@@ -138,6 +138,10 @@ void main() {
 	
 	vec3 lp = lightPos - p;
 	vec3 l = normalize(lp);
+	vec3 h = normalize(v + l);
+	float dotNH = dot(n, h);
+	float dotVH = dot(v, h);
+	float dotNL = dot(n, l);
 
 	float visibility = 1.0;
 #ifndef _NoShadows
@@ -150,6 +154,11 @@ void main() {
 		visibility = shadowTestCube(lp, l);
 	}
 #endif
+	
+#ifdef _VoxelGIShadow // #else
+	if (dotNL > 0.0) visibility = max(0, 1.0 - traceShadow(p / voxelgiDimensions, l, 0.1, length(lp)));
+#endif
+
 
 #ifdef _DFRS
 	visibility = dfrs(p, l, lightPos);
@@ -166,13 +175,6 @@ void main() {
 			visibility *= smoothstep(spotlightData.y, spotlightData.x, spotEffect);
 		}
 	}
-	
-	vec3 h = normalize(v + l);
-	float dotNH = dot(n, h);
-	float dotVH = dot(v, h);
-	float dotNL = dot(n, l);
-	// float dotLV = dot(l, v);
-	// float dotLH = dot(l, h);
 	
 #ifdef _PolyLight
 	if (lightType == 3) { // Area
@@ -238,7 +240,7 @@ void main() {
 #endif
 
 #ifdef _SSRS
-	float tvis = traceShadow(-l, p, gbuffer0, invVP, eye);
+	float tvis = traceShadowSS(-l, p, gbuffer0, invVP, eye);
 	// vec2 coords = getProjectedCoord(hitCoord);
 	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	// float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
@@ -246,9 +248,9 @@ void main() {
 	visibility *= tvis;
 #endif
 
-// #ifdef _VoxelGI
-	// if (dotNL > 0.0) visibility *= traceShadowCone(p / voxelgiResolution, l, distance(p, lightPos) / voxelgiResolution, n);
-// #endif
-
 	fragColor.rgb *= visibility;
+
+#ifdef _VoxelGIRefract
+	fragColor.rgb = mix(traceRefraction(p / voxelgiDimensions, n, -v, metrough.y), fragColor.rgb, g1.a);
+#endif
 }

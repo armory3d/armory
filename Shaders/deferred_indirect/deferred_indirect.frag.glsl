@@ -136,7 +136,9 @@ void main() {
 #ifdef _SSS
 	envl.rgb *= envmapStrength * fract(g1.a);
 #else
+	#ifndef _VoxelGIRefract
 	envl.rgb *= envmapStrength * g1.a; // Occlusion
+	#endif
 #endif
 
 #ifdef _DFGI

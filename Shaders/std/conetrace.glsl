@@ -90,7 +90,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal) {
 }
 
 float traceShadow(const vec3 origin, const vec3 dir, const float aperture, const float targetDistance) {
-	const float offset = 3 * VOXEL_SIZE;
+	const float offset = 4 * VOXEL_SIZE;
 	return traceCone(origin, dir, aperture, targetDistance, offset).a;
 }
 
@@ -107,7 +107,7 @@ vec3 traceRefraction(const vec3 pos, const vec3 normal, const vec3 viewDir, cons
 	const float ior = 1.440;
 	const float transmittance = 1.0;
 	vec3 refraction = refract(viewDir, normal, 1.0 / ior);
-	float rough = max(roughness, 0.15);
+	float rough = max(roughness, 0.03);
 	float specularAperture = clamp(tan((3.14159265 / 2) * rough), 0.0174533, 3.14159265);
 	const float offset = 3 * VOXEL_SIZE;
 	return transmittance * traceCone(pos, refraction, specularAperture, MAX_DISTANCE, offset).xyz;

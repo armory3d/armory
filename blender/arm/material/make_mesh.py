@@ -206,8 +206,9 @@ def make_deferred(con_mesh):
     wrd = bpy.data.worlds['Arm']
 
     discard_transparent = mat_state.material.discard_transparent
+    parse_opacity = discard_transparent or wrd.voxelgi_refraction
 
-    make_base(con_mesh, parse_opacity=discard_transparent)
+    make_base(con_mesh, parse_opacity=parse_opacity)
 
     frag = con_mesh.frag
     vert = con_mesh.vert
@@ -260,6 +261,8 @@ def make_deferred(con_mesh):
     if '_SSS' in wrd.rp_defs:
         frag.add_uniform('int materialID')
         frag.write('fragColor[1] = vec4(basecol.rgb, materialID + clamp(occlusion, 0.0, 1.0 - 0.001));')
+    elif wrd.voxelgi_refraction:
+        frag.write('fragColor[1] = vec4(basecol.rgb, opacity);')
     else:
         frag.write('fragColor[1] = vec4(basecol.rgb, occlusion);')
 

@@ -123,6 +123,10 @@ def make_deferred(cam):
         n.inputs[1].default_value = res
         n.inputs[2].default_value = res
         links.new(nodes['Image 3D Voxels'].outputs[0], nodes['Deferred Indirect'].inputs[4])
+        wrd = bpy.data.worlds['Arm']
+        if wrd.voxelgi_shadows or wrd.voxelgi_refraction:
+            links.new(nodes['Image 3D Voxels'].outputs[0], nodes['Deferred Light'].inputs[4])
+            links.new(nodes['Image 3D Voxels'].outputs[0], nodes['Deferred Light.001'].inputs[4])
 
     if cam.rp_shadowmap != 'None':
         n = nodes['Shadow Map']

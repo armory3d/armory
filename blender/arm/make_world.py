@@ -115,6 +115,12 @@ def build_node_tree(world):
             wrd.world_defs += '_VoxelGIMulti'
         if wrd.voxelgi_camera:
             wrd.world_defs += '_VoxelGICam'
+        if wrd.voxelgi_shadows:
+            wrd.world_defs += '_VoxelGIDirect'
+            wrd.world_defs += '_VoxelGIShadow'
+        if wrd.voxelgi_refraction:
+            wrd.world_defs += '_VoxelGIDirect'
+            wrd.world_defs += '_VoxelGIRefract'
         wrd.world_defs += '_VoxelGI'
         wrd.world_defs += '_Rad' # Always do radiance for voxels
         wrd.world_defs += '_Irr'

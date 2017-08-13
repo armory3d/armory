@@ -342,6 +342,9 @@ class GenRPDataPropsPanel(bpy.types.Panel):
                 row = layout.row()
                 row.prop(wrd, 'voxelgi_camera')
                 row.prop(wrd, 'voxelgi_anisotropic')
+                row = layout.row()
+                row.prop(wrd, 'voxelgi_shadows')
+                row.prop(wrd, 'voxelgi_refraction')
                 layout.prop(dat, 'rp_voxelgi_hdr')
 
             layout.separator()

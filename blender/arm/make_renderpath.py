@@ -456,7 +456,11 @@ def make_water_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbufferD', 'shadowMap'], shader_context='water_pass/water_pass/water_pass')
 
 def make_deferred_light_pass(stages, node_group, node):
-    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'shadowMap'], shader_context='', with_draw_quad=False)
+    wrd = bpy.data.worlds['Arm']
+    if wrd.voxelgi_shadows or wrd.voxelgi_refraction:
+        make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['gbuffer', 'shadowMap', 'voxels'], shader_context='', with_draw_quad=False)
+    else:
+        make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'shadowMap'], shader_context='', with_draw_quad=False)
     stage = {}
     stage['command'] = 'call_function'
     stage['params'] = ['iron.data.RenderPath.lampIsSun']

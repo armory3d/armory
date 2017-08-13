@@ -432,6 +432,8 @@ def init_properties():
     bpy.types.World.voxelgi_multibounce = bpy.props.BoolProperty(name="Multi-bounce", description="Accumulate multiple light bounces", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi_camera = bpy.props.BoolProperty(name="Camera", description="Use camera as voxelization origin", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi_anisotropic = bpy.props.BoolProperty(name="Anisotropic", description="Use anisotropic voxels", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.voxelgi_shadows = bpy.props.BoolProperty(name="Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
+    bpy.types.World.voxelgi_refraction = bpy.props.BoolProperty(name="Refraction", description="Use voxels to render refraction", default=False, update=update_renderpath)
     bpy.types.World.voxelgi_diff = bpy.props.FloatProperty(name="Diffuse", description="", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi_spec = bpy.props.FloatProperty(name="Specular", description="", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi_occ = bpy.props.FloatProperty(name="Occlussion", description="", default=1.0, update=assets.invalidate_shader_cache)
