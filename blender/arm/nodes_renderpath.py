@@ -195,6 +195,19 @@ class CombinePassNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
+class HistogramPassNode(Node, CGPipelineTreeNode):
+    '''Render histogram node'''
+    bl_idname = 'HistogramPassNodeType'
+    bl_label = 'Histogram'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "Color")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
 class BlurBasicPassNode(Node, CGPipelineTreeNode):
     '''Blur node'''
     bl_idname = 'BlurBasicPassNodeType'
@@ -730,6 +743,7 @@ class DrawCompositorNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Color")
         self.inputs.new('NodeSocketShader', "Depth")
         self.inputs.new('NodeSocketShader', "Normals")
+        self.inputs.new('NodeSocketShader', "Histogram")
 
         self.outputs.new('NodeSocketShader', "Stage")
 
@@ -745,6 +759,7 @@ class DrawCompositorWithFXAANode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Color")
         self.inputs.new('NodeSocketShader', "Depth")
         self.inputs.new('NodeSocketShader', "Normals")
+        self.inputs.new('NodeSocketShader', "Histogram")
 
         self.outputs.new('NodeSocketShader', "Stage")
 
@@ -862,6 +877,7 @@ node_categories = [
         NodeItem("MatIDToDepthNodeType"),
         NodeItem("BlendPassNodeType"),
         NodeItem("CombinePassNodeType"),
+        NodeItem("HistogramPassNodeType"),
         NodeItem("BlurBasicPassNodeType"),
         NodeItem("DebugNormalsPassNodeType"),
         NodeItem("FXAAPassNodeType"),
@@ -928,6 +944,7 @@ def register():
     bpy.utils.register_class(MatIDToDepthNode)
     bpy.utils.register_class(BlendPassNode)
     bpy.utils.register_class(CombinePassNode)
+    bpy.utils.register_class(HistogramPassNode)
     bpy.utils.register_class(BlurBasicPassNode)
     bpy.utils.register_class(DebugNormalsPassNode)
     bpy.utils.register_class(FXAAPassNode)
@@ -992,6 +1009,7 @@ def unregister():
     bpy.utils.unregister_class(MatIDToDepthNode)
     bpy.utils.unregister_class(BlendPassNode)
     bpy.utils.unregister_class(CombinePassNode)
+    bpy.utils.unregister_class(HistogramPassNode)
     bpy.utils.unregister_class(BlurBasicPassNode)
     bpy.utils.unregister_class(DebugNormalsPassNode)
     bpy.utils.unregister_class(FXAAPassNode)

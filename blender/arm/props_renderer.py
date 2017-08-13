@@ -44,6 +44,7 @@ def set_preset(self, context, preset):
         cam.rp_dfao = False
         cam.rp_dfgi = False
         cam.rp_bloom = False
+        cam.rp_eyeadapt = False
         cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
     elif preset == 'Forward':
@@ -72,6 +73,7 @@ def set_preset(self, context, preset):
         cam.rp_dfao = False
         cam.rp_dfgi = False
         cam.rp_bloom = False
+        cam.rp_eyeadapt = False
         cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
     elif preset == 'Deferred':
@@ -100,6 +102,7 @@ def set_preset(self, context, preset):
         cam.rp_dfao = False
         cam.rp_dfgi = False
         cam.rp_bloom = False
+        cam.rp_eyeadapt = False
         cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
     elif preset == 'Max':
@@ -128,6 +131,7 @@ def set_preset(self, context, preset):
         cam.rp_dfao = False
         cam.rp_dfgi = False
         cam.rp_bloom = False
+        cam.rp_eyeadapt = False
         cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
     elif preset == 'Render Capture':
@@ -156,6 +160,7 @@ def set_preset(self, context, preset):
         cam.rp_dfao = False
         cam.rp_dfgi = False
         cam.rp_bloom = False
+        cam.rp_eyeadapt = False
         cam.rp_rendercapture = True
         cam.rp_rendercapture_format = '8bit'
         cam.rp_motionblur = 'None'
@@ -187,6 +192,7 @@ def set_preset(self, context, preset):
         cam.rp_dfao = False
         cam.rp_dfgi = False
         cam.rp_bloom = False
+        cam.rp_eyeadapt = False
         cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
     elif preset == 'VR Low':
@@ -215,6 +221,7 @@ def set_preset(self, context, preset):
         cam.rp_dfao = False
         cam.rp_dfgi = False
         cam.rp_bloom = False
+        cam.rp_eyeadapt = False
         cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
     elif preset == 'Mobile Low':
@@ -243,6 +250,7 @@ def set_preset(self, context, preset):
         cam.rp_dfao = False
         cam.rp_dfgi = False
         cam.rp_bloom = False
+        cam.rp_eyeadapt = False
         cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
     elif preset == 'Grease Pencil':
@@ -270,6 +278,7 @@ def set_preset(self, context, preset):
         cam.rp_dfao = False
         cam.rp_dfgi = False
         cam.rp_bloom = False
+        cam.rp_eyeadapt = False
         cam.rp_rendercapture = False
         cam.rp_motionblur = 'None'
 
@@ -360,6 +369,7 @@ class GenRPDataPropsPanel(bpy.types.Panel):
                 # layout.prop(dat, "rp_dfrs")
                 # layout.prop(dat, "rp_dfgi")
                 layout.prop(dat, "rp_bloom")
+                layout.prop(dat, "rp_eyeadapt")
                 layout.prop(dat, "rp_motionblur")
                 layout.prop(dat, "rp_rendercapture")
                 if dat.rp_rendercapture:

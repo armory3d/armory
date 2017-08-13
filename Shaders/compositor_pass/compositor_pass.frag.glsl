@@ -23,6 +23,10 @@ uniform sampler2D gbuffer1;
 uniform sampler2D lensTexture;
 #endif
 
+#ifdef _Hist
+uniform sampler2D texhist;
+#endif
+
 // #ifdef _CPos
 // uniform vec3 eye;
 // uniform vec3 eyeLook;

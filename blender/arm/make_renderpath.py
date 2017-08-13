@@ -402,6 +402,9 @@ def make_blend_pass(stages, node_group, node):
 def make_combine_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['tex', 'tex2'], shader_context='combine_pass/combine_pass/combine_pass')
 
+def make_histogram_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2], bind_target_constants=['texhist'], shader_context='histogram_pass/histogram_pass/histogram_pass')
+
 def make_blur_basic_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[1], bind_target_constants=['tex'], shader_context='blur_pass/blur_pass/blur_pass_x')
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='blur_pass/blur_pass/blur_pass_y')
@@ -686,6 +689,9 @@ def buildNode(stages, node, node_group):
     elif node.bl_idname == 'CombinePassNodeType':
         make_combine_pass(stages, node_group, node)
         append_stage = False
+    elif node.bl_idname == 'HistogramPassNodeType':
+        make_histogram_pass(stages, node_group, node)
+        append_stage = False
     elif node.bl_idname == 'BlurBasicPassNodeType':
         make_blur_basic_pass(stages, node_group, node)
         append_stage = False
@@ -790,7 +796,10 @@ def traverse_renderpath(node, node_group, render_targets, depth_buffers):
         bpy.data.worlds['Arm'].rp_defs += '_SMAA'
 
     elif node.bl_idname == 'SSSPassNodeType':
-        bpy.data.worlds['Arm'].rp_defs += '_SSS'        
+        bpy.data.worlds['Arm'].rp_defs += '_SSS'
+
+    elif node.bl_idname == 'HistogramPassNodeType':
+        bpy.data.worlds['Arm'].rp_defs += '_Hist'
 
     elif node.bl_idname == 'SSAOPassNodeType' or node.bl_idname == 'ApplySSAOPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':
         if bpy.data.worlds['Arm'].generate_ssao: # SSAO enabled
@@ -822,7 +831,7 @@ def traverse_renderpath(node, node_group, render_targets, depth_buffers):
             traverse_renderpath(loop_node, node_group, render_targets, depth_buffers)
     
     # Prebuilt
-    elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'MatIDToDepthNodeType' or node.bl_idname == 'BlendPassNodeType' or node.bl_idname == 'CombinePassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'SSResolveNodeType' or node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'DeferredIndirectPassNodeType' or node.bl_idname == 'VolumetricLightPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
+    elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'MatIDToDepthNodeType' or node.bl_idname == 'BlendPassNodeType' or node.bl_idname == 'CombinePassNodeType' or node.bl_idname == 'HistogramPassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'SSResolveNodeType' or node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'DeferredIndirectPassNodeType' or node.bl_idname == 'VolumetricLightPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
         if node.inputs[1].is_linked:
             tnode = nodes.find_node_by_link(node_group, node, node.inputs[1])
             parse_render_target(tnode, node_group, render_targets, depth_buffers)

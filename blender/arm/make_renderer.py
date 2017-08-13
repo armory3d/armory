@@ -221,6 +221,11 @@ def make_deferred(cam):
             links.new(nodes['Reroute.008'].outputs[0], nodes['Draw Compositor'].inputs[1])
             links.new(nodes['Reroute.008'].outputs[0], nodes['SS Resolve'].inputs[2])
 
+    if cam.rp_eyeadapt:
+        links.new(nodes[last_node].outputs[0], nodes['Histogram'].inputs[0])
+        links.new(nodes['histogram'].outputs[0], nodes['Draw Compositor'].inputs[5])
+
+
     if cam.rp_rendercapture:
         # links.new(nodes[last_node].outputs[0], nodes['CopyCapture'].inputs[0])
         fb = nodes['Framebuffer']
