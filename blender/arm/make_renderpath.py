@@ -594,7 +594,7 @@ def buildNode(stages, node, node_group):
             make_set_target(stage, node_group, node)
             stages.append(stage)
         # Bind targets
-        if node.inputs[2].is_linked or node.inputs[3].is_linked or node.inputs[4].is_linked or node.inputs[5].is_linked:
+        if node.inputs[2].is_linked or node.inputs[3].is_linked or node.inputs[4].is_linked or (len(node.inputs) > 5 and node.inputs[5].is_linked):
             stage = {}
             stage['params'] = []
             buildNode.last_bind_target = stage
@@ -604,7 +604,7 @@ def buildNode(stages, node, node_group):
                 make_bind_target(stage, node_group, node, target_index=3, constant_name='gbufferD')
             if node.inputs[4].is_linked:
                 make_bind_target(stage, node_group, node, target_index=4, constant_name='gbuffer0')
-            if node.inputs[5].is_linked:
+            if (len(node.inputs) > 5 and node.inputs[5].is_linked):
                 make_bind_target(stage, node_group, node, target_index=5, constant_name='histogram')
             stages.append(stage)
         # Draw quad

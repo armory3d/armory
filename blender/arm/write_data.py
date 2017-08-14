@@ -56,12 +56,12 @@ project.addSources('Sources');
             f.write(add_assets("Bundled/**"))
 
         if os.path.exists('Libraries/armory'):
-            f.write('project.addLibrary("armory")')
+            f.write('project.addLibrary("armory");\n')
         else:
             f.write(add_armory_library(sdk_path, 'armory'))
 
         if os.path.exists('Libraries/iron'):
-            f.write('project.addLibrary("iron")')
+            f.write('project.addLibrary("iron");\n')
         else:
             f.write(add_armory_library(sdk_path, 'iron'))
 
@@ -72,7 +72,10 @@ project.addSources('Sources');
         
         if export_physics:
             assets.add_khafile_def('arm_physics')
-            f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
+            if os.path.exists('Libraries/haxebullet'):
+                f.write('project.addLibrary("haxebullet");\n')
+            else:
+                f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
             if state.target == 'krom' or state.target == 'html5' or state.target == 'node':
                 ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
                 ammojs_path = ammojs_path.replace('\\', '/')
@@ -80,7 +83,10 @@ project.addSources('Sources');
 
         if export_navigation:
             assets.add_khafile_def('arm_navigation')
-            f.write(add_armory_library(sdk_path + '/lib/', 'haxerecast'))
+            if os.path.exists('Libraries/haxerecast'):
+                f.write('project.addLibrary("haxerecast");\n')
+            else:
+                f.write(add_armory_library(sdk_path + '/lib/', 'haxerecast'))
             if state.target == 'krom' or state.target == 'html5':
                 recastjs_path = sdk_path + '/lib/haxerecast/js/recast/recast.js'
                 recastjs_path = recastjs_path.replace('\\', '/')
@@ -130,13 +136,19 @@ project.addSources('Sources');
             assets.add_khafile_def('arm_profile')
 
         if export_ui:
-            f.write(add_armory_library(sdk_path, 'lib/zui'))
+            if os.path.exists('Libraries/zui'):
+                f.write('project.addLibrary("zui");\n')
+            else:
+                f.write(add_armory_library(sdk_path, 'lib/zui'))
             p = sdk_path + '/armory/Assets/droid_sans.ttf'
             f.write(add_assets(p.replace('\\', '/')))
             assets.add_khafile_def('arm_ui')
 
         if wrd.arm_hscript:
-            f.write(add_armory_library(sdk_path, 'lib/hscript'))
+            if os.path.exists('Libraries/hscript'):
+                f.write('project.addLibrary("hscript");\n')
+            else:
+                f.write(add_armory_library(sdk_path, 'lib/hscript'))
             assets.add_khafile_def('arm_hscript')
 
         if wrd.arm_minimize == False:
