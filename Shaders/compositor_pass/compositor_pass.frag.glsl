@@ -24,7 +24,7 @@ uniform sampler2D lensTexture;
 #endif
 
 #ifdef _Hist
-uniform sampler2D texhist;
+uniform sampler2D histogram;
 #endif
 
 // #ifdef _CPos
@@ -241,6 +241,33 @@ void main() {
 
 #ifdef _CExposure
 	fragColor.rgb *= compoExposureStrength;
+#endif
+
+#ifdef _Hist // Auto-exposure
+	if (texCoord.x < 0.1) fragColor.rgb = textureLod(histogram, vec2(0, 0), 9.0).rrr; // 512x512
+	// float minBrightness = 0.03f;
+	// float maxBrightness = 2.0f;
+	// float minAdaptation = 0.60f;
+	// float maxAdaptation = 0.9f;
+	// float minFractionSum = minAdaptation * sumValue;
+	// float maxFractionSum = maxAdaptation * sumValue;
+	// float sumWithoutOutliers = 0.0f;
+	// float sumWithoutOutliersRaw = 0.0f;
+	// for (int i = 0; i < numHistogramBuckets; ++i) {
+	// 	float localValue = luminanceHistogram[i];
+	// 	float vmin = min(localValue, minFractionSum);
+	// 	localValue -= vmin;
+	// 	localValue = localValue - vmin;
+	// 	minFractionSum -= vmin;
+	// 	maxFractionSum -= vmin;
+	// 	localValue = min(localValue, maxFractionSum);
+	// 	maxFractionSum -= localValue;
+	// 	float luminanceAtBucket = GetLuminanceAtBucket(i);
+	// 	sumWithoutOutliers += luminanceAtBucket * localValue;
+	// 	sumWithoutOutliersRaw += localValue;
+	// }
+	// float unclampedLuminance = sumWithoutOutliers / max(0.0001f, sumWithoutOutliersRaw);
+	// float clampedLuminace = clamp(unclampedLuminance, minBrightness, maxBrightness);
 #endif
 
 #ifdef _CToneFilmic

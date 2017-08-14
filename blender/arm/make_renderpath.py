@@ -403,7 +403,7 @@ def make_combine_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['tex', 'tex2'], shader_context='combine_pass/combine_pass/combine_pass')
 
 def make_histogram_pass(stages, node_group, node):
-    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2], bind_target_constants=['texhist'], shader_context='histogram_pass/histogram_pass/histogram_pass')
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='histogram_pass/histogram_pass/histogram_pass')
 
 def make_blur_basic_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[1], bind_target_constants=['tex'], shader_context='blur_pass/blur_pass/blur_pass_x')
@@ -594,7 +594,7 @@ def buildNode(stages, node, node_group):
             make_set_target(stage, node_group, node)
             stages.append(stage)
         # Bind targets
-        if node.inputs[2].is_linked or node.inputs[3].is_linked or node.inputs[4].is_linked:
+        if node.inputs[2].is_linked or node.inputs[3].is_linked or node.inputs[4].is_linked or node.inputs[5].is_linked:
             stage = {}
             stage['params'] = []
             buildNode.last_bind_target = stage
@@ -604,6 +604,8 @@ def buildNode(stages, node, node_group):
                 make_bind_target(stage, node_group, node, target_index=3, constant_name='gbufferD')
             if node.inputs[4].is_linked:
                 make_bind_target(stage, node_group, node, target_index=4, constant_name='gbuffer0')
+            if node.inputs[5].is_linked:
+                make_bind_target(stage, node_group, node, target_index=5, constant_name='histogram')
             stages.append(stage)
         # Draw quad
         stage = {}
