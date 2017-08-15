@@ -17,4 +17,9 @@ float iesAttenuation(vec3 L, ShadowLightInfo light) {
 	vec3 pl = normalize(p - lightPos);
 	float f = asin(dot(pl, l)) / PI + 0.5;
 	return texture(texIES, vec2(f, 0.0)).r;
+
+	// 1D texture
+	float cosTheta = dot(lightToPos, lightDir);
+	float angle = acos(cosTheta) * (1.0 / PI);
+	return texture(texIES, vec2(angle, 0.0), 0.0).r;
 }
