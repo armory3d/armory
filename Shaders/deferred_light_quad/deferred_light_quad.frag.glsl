@@ -143,7 +143,7 @@ void main() {
 #endif
 
 #ifdef _SSRS
-	float tvis = traceShadow(-l, p, gbuffer0, invVP, eye);
+	float tvis = traceShadowSS(-l, p, gbuffer0, invVP, eye);
 	// vec2 coords = getProjectedCoord(hitCoord);
 	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	// float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
