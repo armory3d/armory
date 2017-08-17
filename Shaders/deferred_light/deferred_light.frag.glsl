@@ -7,6 +7,9 @@ precision mediump float;
 #include "../compiled.glsl"
 #include "../std/brdf.glsl"
 #include "../std/math.glsl"
+#ifdef _LampIES
+#include "../std/ies.glsl"
+#endif
 #ifdef _VoxelGIDirect
 	#include "../std/conetrace.glsl"
 #endif
@@ -50,6 +53,9 @@ uniform sampler2D gbuffer1;
 #endif
 #ifdef _DFRS
 	//!uniform sampler3D sdftex;
+#endif
+#ifdef _LampIES
+	//!uniform sampler2D texIES;
 #endif
 
 uniform mat4 invVP;
@@ -167,6 +173,9 @@ void main() {
 	// Per-light
 #ifndef _NoLampFalloff
 	visibility *= attenuate(distance(p, lightPos));
+#endif
+#ifdef _LampIES
+	visibility *= iesAttenuation(-l);
 #endif
 	if (lightType == 2) { // Spot
 		float spotEffect = dot(lightDir, l);

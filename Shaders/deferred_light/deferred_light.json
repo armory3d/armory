@@ -47,6 +47,11 @@
 					"ifdef": ["_LampColTex"]
 				},
 				{
+					"name": "texIES",
+					"link": "_iesTexture",
+					"ifdef": ["_LampIES"]
+				},
+				{
 					"name": "shadowsBias",
 					"link": "_lampShadowsBias"
 				},

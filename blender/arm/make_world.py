@@ -83,6 +83,10 @@ def build_node_tree(world):
     if wrd.generate_lamp_texture != '':
         bpy.data.worlds['Arm'].world_defs += '_LampColTex'
 
+    if wrd.generate_lamp_ies_texture != '':
+        bpy.data.worlds['Arm'].world_defs += '_LampIES'
+        assets.add_embedded_data('iestexture.png')
+
     if not wrd.generate_lamp_falloff:
         bpy.data.worlds['Arm'].world_defs += '_NoLampFalloff'
 
