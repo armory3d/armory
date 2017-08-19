@@ -2,8 +2,6 @@ import bpy
 from bpy.props import *
 import os
 import shutil
-from arm.props_traits_clip import *
-from arm.props_traits_action import *
 from arm.props_traits_library import *
 import arm.props_ui as props_ui
 import arm.props_renderer as props_renderer
@@ -165,13 +163,11 @@ def init_properties():
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('Enabled', 'Enabled', 'Enabled'),
                  ('Auto', 'Auto', 'Auto')],
-        name = "UI Library", default='Auto', description="Include UI library")
-    # bpy.types.World.arm_networking = EnumProperty(
-    #     items = [('Disabled', 'Disabled', 'Disabled'), 
-    #              ('Enabled', 'Enabled', 'Enabled'),
-    #              ('Auto', 'Auto', 'Auto')],
-    #     name = "Networking", default='Auto')
-    bpy.types.World.arm_hscript = BoolProperty(name="hscript", description="Include hscript library", default=False)
+        name = "Zui", default='Auto', description="Include UI library")
+    bpy.types.World.arm_hscript = EnumProperty(
+        items = [('Disabled', 'Disabled', 'Disabled'), 
+                 ('Enabled', 'Enabled', 'Enabled')],
+        name = "Hscript", default='Disabled', description="Include Hscript library")
     bpy.types.World.arm_khafile = StringProperty(name="Khafile", description="Source appended to khafile.js")
     bpy.types.World.arm_khamake = StringProperty(name="Khamake", description="Command line params appended to khamake")
     bpy.types.World.arm_minimize = BoolProperty(name="Minimize Data", description="Export scene data in binary", default=True, update=assets.invalidate_compiled_data)
@@ -182,27 +178,18 @@ def init_properties():
     bpy.types.World.arm_batch_meshes = BoolProperty(name="Batch Meshes", description="Group meshes by materials to speed up rendering", default=False)
     bpy.types.World.arm_batch_materials = BoolProperty(name="Batch Materials", description="Marge similar materials into single pipeline state", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_stream_scene = BoolProperty(name="Stream Scene", description="Stream scene content", default=False)
-    bpy.types.World.arm_export_hide_render = BoolProperty(name="Export Hidden Renders", description="Export hidden objects", default=True)
-    bpy.types.World.arm_spawn_all_layers = BoolProperty(name="Spawn All Layers", description="Spawn objects from all scene layers", default=False)
-    bpy.types.World.arm_play_advanced = BoolProperty(name="Advanced", default=False)
-    bpy.types.World.arm_build_advanced = BoolProperty(name="Advanced", default=False)
-    bpy.types.World.arm_project_advanced = BoolProperty(name="Advanced", default=False)
-    bpy.types.World.arm_object_advanced = BoolProperty(name="Advanced", default=False)
-    bpy.types.World.arm_material_advanced = BoolProperty(name="Advanced", default=False)
-    bpy.types.World.arm_camera_props_advanced = BoolProperty(name="Advanced", default=False)
-    bpy.types.World.arm_lod_advanced = BoolProperty(name="Advanced", default=False)
     bpy.types.World.arm_lod_gen_levels = IntProperty(name="Levels", description="Number of levels to generate", default=3, min=1)
     bpy.types.World.arm_lod_gen_ratio = FloatProperty(name="Decimate Ratio", description="Decimate ratio", default=0.8)
     bpy.types.World.arm_cache_shaders = BoolProperty(name="Cache Shaders", description="Do not rebuild existing shaders", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_cache_compiler = BoolProperty(name="Cache Compiler", description="Only recompile sources when required", default=True)
     bpy.types.World.arm_gpu_processing = BoolProperty(name="GPU Processing", description="Utilize GPU for asset pre-processing at build time", default=True, update=assets.invalidate_compiled_data)
-    bpy.types.World.arm_play_live_patch = BoolProperty(name="Live Patching", description="Sync running player data to Blender", default=True)
+    bpy.types.World.arm_play_live_patch = BoolProperty(name="Live Patch", description="Sync running player data to Blender", default=True)
     bpy.types.World.arm_play_auto_build = BoolProperty(name="Auto Build", description="Rebuild scene on operator changes", default=True)
-    bpy.types.World.arm_play_viewport_camera = BoolProperty(name="Viewport Camera", description="Start player at viewport camera position", default=False)
-    bpy.types.World.arm_play_viewport_navigation = EnumProperty(
-        items=[('None', 'None', 'None'),
-               ('Walk', 'Walk', 'Walk')],
-        name="Navigation", description="Enable camera controls", default='Walk')
+    bpy.types.World.arm_play_camera = EnumProperty(
+        items=[('Scene', 'Scene', 'Scene'),
+               ('Viewport', 'Viewport', 'Viewport'),
+               ('Viewport Shared', 'Viewport Shared', 'Viewport Shared')],
+        name="Camera", description="Viewport camera", default='Scene')
     bpy.types.World.arm_play_console = BoolProperty(name="Debug Console", description="Show inspector in player", default=False)
     bpy.types.World.arm_play_runtime = EnumProperty(
         items=[('Browser', 'Browser', 'Browser'),
@@ -217,7 +204,7 @@ def init_properties():
         items = [('Window', 'Window', 'Window'),
                  ('BorderlessWindow', 'Borderless', 'BorderlessWindow'),
                  ('Fullscreen', 'Fullscreen', 'Fullscreen')],
-        name="Window Mode", default='Window', description='Window mode to start in')
+        name="", default='Window', description='Window mode to start in')
     bpy.types.World.arm_winresize = BoolProperty(name="Resizable", description="Allow window resize", default=False)
     bpy.types.World.arm_winmaximize = BoolProperty(name="Maximizable", description="Allow window maximize", default=False)
     bpy.types.World.arm_winminimize = BoolProperty(name="Minimizable", description="Allow window minimize", default=True)
@@ -272,20 +259,11 @@ def init_properties():
     bpy.types.Object.override_material = bpy.props.BoolProperty(name="Override Material", default=False)
     bpy.types.Object.override_material_name = bpy.props.StringProperty(name="Name", default="")
     bpy.types.Object.game_export = bpy.props.BoolProperty(name="Export", description="Export object data", default=True)
-    bpy.types.Object.game_visible = bpy.props.BoolProperty(name="Visible", description="Render this object", default=True)
     bpy.types.Object.spawn = bpy.props.BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True)
     bpy.types.Object.mobile = bpy.props.BoolProperty(name="Mobile", description="Object moves during gameplay", default=True)
     bpy.types.Object.soft_body_margin = bpy.props.FloatProperty(name="Soft Body Margin", description="Collision margin", default=0.04)
-    # - Clips
-    bpy.types.Object.bone_animation_enabled = bpy.props.BoolProperty(name="Bone Animation", description="Enable skinning", default=True)
-    bpy.types.Object.object_animation_enabled = bpy.props.BoolProperty(name="Object Animation", description="Enable timeline animation", default=True)
-    bpy.types.Object.edit_tracks_prop = bpy.props.BoolProperty(name="Edit Clips", description="Manually set animation frames", default=False)
-    bpy.types.Object.start_track_name_prop = bpy.props.StringProperty(name="Start Track", description="Play this track by default", default="")
-    bpy.types.Object.my_cliptraitlist = bpy.props.CollectionProperty(type=ListClipTraitItem)
-    bpy.types.Object.cliptraitlist_index = bpy.props.IntProperty(name="Clip index", default=0)
-    # - Actions
-    bpy.types.Object.edit_actions_prop = bpy.props.BoolProperty(name="Edit Actions", description="Manually set used actions", default=False)
-    bpy.types.Object.start_action_name_prop = bpy.props.StringProperty(name="Start Action", description="Play this action by default", default="")
+    bpy.types.Object.bone_animation_enabled = bpy.props.BoolProperty(name="Animation", description="Enable skinning", default=True)
+    bpy.types.Object.object_animation_enabled = bpy.props.BoolProperty(name="Animation", description="Enable timeline animation", default=True)
     # For speakers
     bpy.types.Speaker.loop = bpy.props.BoolProperty(name="Loop", description="Loop this sound", default=False)
     bpy.types.Speaker.stream = bpy.props.BoolProperty(name="Stream", description="Stream this sound", default=False)
@@ -309,22 +287,11 @@ def init_properties():
     # For armature
     bpy.types.Armature.data_cached = bpy.props.BoolProperty(name="Armature Cached", description="No need to reexport armature data", default=False)
     bpy.types.Armature.data_compressed = bpy.props.BoolProperty(name="Compress Data", description="Pack data into zip file", default=False)
-    # Actions
-    bpy.types.Armature.edit_actions = bpy.props.BoolProperty(name="Edit Actions", description="Manually set used actions", default=False)
-    bpy.types.Armature.my_actiontraitlist = bpy.props.CollectionProperty(type=ListActionTraitItem)
-    bpy.types.Armature.actiontraitlist_index = bpy.props.IntProperty(name="Action index", default=0)
     # For camera
     bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", description="Perform frustum culling for this camera", default=True)
     bpy.types.Camera.renderpath_path = bpy.props.StringProperty(name="Render Path", description="Render path nodes used for this camera", default="armory_default", update=assets.invalidate_shader_cache)
     bpy.types.Camera.renderpath_id = bpy.props.StringProperty(name="Render Path ID", description="Asset ID", default="deferred") 
     bpy.types.Camera.renderpath_passes = bpy.props.StringProperty(name="Render Path Passes", description="Referenced render passes", default="")
-    bpy.types.Camera.is_probe = bpy.props.BoolProperty(name="Probe", description="Render this camera as environment probe using Cycles", default=False)
-    bpy.types.Camera.probe_generate_radiance = bpy.props.BoolProperty(name="Generate Radiance", description="Generate radiance textures", default=False)
-    bpy.types.Camera.probe_texture = bpy.props.StringProperty(name="Texture", default="")
-    bpy.types.Camera.probe_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
-    bpy.types.Camera.probe_volume = bpy.props.StringProperty(name="Volume", default="")
-    bpy.types.Camera.probe_strength = bpy.props.FloatProperty(name="Strength", default=1.0)
-    bpy.types.Camera.probe_blending = bpy.props.FloatProperty(name="Blending", default=0.0)
     bpy.types.Camera.is_mirror = bpy.props.BoolProperty(name="Mirror", description="Render this camera into texture", default=False)
     bpy.types.Camera.mirror_resolution_x = bpy.props.FloatProperty(name="X", default=512.0)
     bpy.types.Camera.mirror_resolution_y = bpy.props.FloatProperty(name="Y", default=256.0)
@@ -382,7 +349,7 @@ def init_properties():
     bpy.types.Camera.rp_bloom = bpy.props.BoolProperty(name="Bloom", description="Bloom processing", default=False, update=update_renderpath)
     bpy.types.Camera.rp_eyeadapt = bpy.props.BoolProperty(name="Eye Adaptation", description="Auto-exposure based on histogram", default=False, update=update_renderpath)
     bpy.types.Camera.rp_rendercapture = bpy.props.BoolProperty(name="Render Capture", description="Save output as render result", default=False, update=update_renderpath)
-    bpy.types.Camera.rp_rendercapture_format = EnumProperty(
+    bpy.types.World.rp_rendercapture_format = EnumProperty(
         items=[('8bit', '8bit', '8bit'),
                ('16bit', '16bit', '16bit'),
                ('32bit', '32bit', '32bit')],
@@ -455,18 +422,18 @@ def init_properties():
     bpy.types.World.world_defs = bpy.props.StringProperty(name="World Shader Defs", default='')
     bpy.types.World.rp_defs = bpy.props.StringProperty(name="Render Path Shader Defs", default='')
     bpy.types.World.compo_defs = bpy.props.StringProperty(name="Compositor Shader Defs", default='')
-    bpy.types.World.generate_irradiance = bpy.props.BoolProperty(name="Probe Irradiance", description="Generate spherical harmonics", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Probe Radiance", description="Generate radiance textures", default=True, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_irradiance = bpy.props.BoolProperty(name="Irradiance", description="Generate spherical harmonics", default=True, update=assets.invalidate_shader_cache)
+    bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Radiance", description="Generate radiance textures", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_radiance_size = EnumProperty(
         items=[('512', '512', '512'),
                ('1024', '1024', '1024'), 
                ('2048', '2048', '2048')],
-        name="Probe Size", description="Prefiltered map size", default='1024', update=assets.invalidate_envmap_data)
+        name="", description="Prefiltered map size", default='1024', update=assets.invalidate_envmap_data)
     bpy.types.World.generate_radiance_sky = bpy.props.BoolProperty(name="Sky Radiance", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_radiance_sky_type = EnumProperty(
         items=[('Fake', 'Fake', 'Fake'), 
                ('Hosek', 'Hosek', 'Hosek')],
-        name="Type", description="Prefiltered maps to be used for radiance", default='Hosek', update=assets.invalidate_envmap_data)
+        name="", description="Prefiltered maps to be used for radiance", default='Hosek', update=assets.invalidate_envmap_data)
     bpy.types.World.generate_clouds = bpy.props.BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_clouds_density = bpy.props.FloatProperty(name="Density", default=0.5, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_clouds_size = bpy.props.FloatProperty(name="Size", default=1.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
@@ -534,10 +501,9 @@ def init_properties():
                ('Reinhard', 'Reinhard', 'Reinhard'),
                ('Uncharted', 'Uncharted', 'Uncharted')],
         name='Tonemap', description='Tonemapping operator', default='Filmic', update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_lamp_texture = bpy.props.StringProperty(name="Lamp Texture", default="")
-    bpy.types.World.generate_lamp_ies_texture = bpy.props.StringProperty(name="Lamp IES Texture", default="")
+    bpy.types.World.generate_lamp_texture = bpy.props.StringProperty(name="Mask Texture", default="")
+    bpy.types.World.generate_lamp_ies_texture = bpy.props.StringProperty(name="IES Texture", default="")
     bpy.types.World.generate_lens_texture = bpy.props.StringProperty(name="Lens Texture", default="")
-    bpy.types.World.generate_lamp_falloff = bpy.props.BoolProperty(name="Lamp Falloff", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_fisheye = bpy.props.BoolProperty(name="Fish Eye", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_vignette = bpy.props.BoolProperty(name="Vignette", default=False, update=assets.invalidate_shader_cache)
     # Skin
@@ -572,9 +538,9 @@ def init_properties():
     bpy.types.Material.cast_shadow = bpy.props.BoolProperty(name="Cast Shadow", default=True)
     bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.override_shader = bpy.props.BoolProperty(name="Override Shader", default=False)
-    bpy.types.Material.override_shader_name = bpy.props.StringProperty(name="Name", default='')
+    bpy.types.Material.override_shader_name = bpy.props.StringProperty(name="", default='')
     bpy.types.Material.override_shader_context = bpy.props.BoolProperty(name="Override Context", default=False)
-    bpy.types.Material.override_shader_context_name = bpy.props.StringProperty(name="Name", default='')
+    bpy.types.Material.override_shader_context_name = bpy.props.StringProperty(name="", default='')
     bpy.types.Material.stencil_mask = bpy.props.IntProperty(name="Stencil Mask", default=0)
     bpy.types.Material.export_uvs = bpy.props.BoolProperty(name="Export UVs", default=False)
     bpy.types.Material.export_vcols = bpy.props.BoolProperty(name="Export VCols", default=False)
@@ -583,15 +549,15 @@ def init_properties():
     bpy.types.Material.skip_context = bpy.props.StringProperty(name="Skip Context", default='')
     bpy.types.Material.overlay = bpy.props.BoolProperty(name="Overlay", default=False)
     bpy.types.Material.decal = bpy.props.BoolProperty(name="Decal", default=False)
-    bpy.types.Material.two_sided_shading = bpy.props.BoolProperty(name="Two-Sided Shading", default=False)
+    bpy.types.Material.two_sided_shading = bpy.props.BoolProperty(name="Two-Sided", default=False)
     bpy.types.Material.override_cull_mode = EnumProperty(
-        items = [('none', 'None', 'None'),
-                 ('clockwise', 'Clockwise', 'Clockwise'),
-                 ('counter_clockwise', 'Counter-Clockwise', 'Counter-Clockwise')],
-        name = "Face Culling", default='clockwise')
-    bpy.types.Material.discard_transparent = bpy.props.BoolProperty(name="Discard Transparent", default=False)
-    bpy.types.Material.discard_transparent_opacity = bpy.props.FloatProperty(name="Discard Opacity", default=0.2, min=0, max=1)
-    bpy.types.Material.discard_transparent_opacity_shadows = bpy.props.FloatProperty(name="Discard Opacity Shadows", default=0.1, min=0, max=1)
+        items=[('none', 'Both', 'None'),
+                 ('clockwise', 'Front', 'Clockwise'),
+                 ('counter_clockwise', 'Back', 'Counter-Clockwise')],
+        name="", default='clockwise', description="Draw geometry faces")
+    bpy.types.Material.discard_transparent = bpy.props.BoolProperty(name="Discard", default=False)
+    bpy.types.Material.discard_transparent_opacity = bpy.props.FloatProperty(name="Mesh Opacity", default=0.2, min=0, max=1)
+    bpy.types.Material.discard_transparent_opacity_shadows = bpy.props.FloatProperty(name="Shadows Opacity", default=0.1, min=0, max=1)
     bpy.types.Material.override_compare = bpy.props.BoolProperty(name="Override Compare-Mode", default=False)
     bpy.types.Material.override_compare_mode = EnumProperty(
         items = [('Always', 'Always', 'Always'),
@@ -602,12 +568,12 @@ def init_properties():
         items = [('True', 'True', 'True'),
                  ('False', 'False', 'False')],
         name = "Depth-Write", default='True')
-    bpy.types.Material.height_tess = bpy.props.BoolProperty(name="Tessellated Displacement", description="Use tessellation shaders to subdivide and displace surface", default=True)
-    bpy.types.Material.height_tess_inner = bpy.props.IntProperty(name="Inner Level", description="Inner tessellation level for mesh", default=14)
-    bpy.types.Material.height_tess_outer = bpy.props.IntProperty(name="Outer Level", description="Outer tessellation level for mesh", default=14)
-    bpy.types.Material.height_tess_shadows = bpy.props.BoolProperty(name="Tessellated Shadows", description="Use tessellation shaders when rendering shadow maps", default=True)
-    bpy.types.Material.height_tess_shadows_inner = bpy.props.IntProperty(name="Inner Level", description="Inner tessellation level for shadows", default=7)
-    bpy.types.Material.height_tess_shadows_outer = bpy.props.IntProperty(name="Outer Level", description="Outer tessellation level for shadows", default=7)
+    bpy.types.Material.height_tess = bpy.props.BoolProperty(name="Tess Displacement", description="Use tessellation shaders to subdivide and displace surface", default=True)
+    bpy.types.Material.height_tess_inner = bpy.props.IntProperty(name="Inner", description="Inner tessellation level for mesh", default=14)
+    bpy.types.Material.height_tess_outer = bpy.props.IntProperty(name="Outer", description="Outer tessellation level for mesh", default=14)
+    bpy.types.Material.height_tess_shadows = bpy.props.BoolProperty(name="Tess Shadows", description="Use tessellation shaders when rendering shadow maps", default=True)
+    bpy.types.Material.height_tess_shadows_inner = bpy.props.IntProperty(name="Inner", description="Inner tessellation level for shadows", default=7)
+    bpy.types.Material.height_tess_shadows_outer = bpy.props.IntProperty(name="Outer", description="Outer tessellation level for shadows", default=7)
     bpy.types.Material.transluc_shadows = bpy.props.BoolProperty(name="Translucent Shadows", description="Cast shadows for translucent surfaces", default=True)
     # For scene
     bpy.types.Scene.game_export = bpy.props.BoolProperty(name="Export", description="Export scene data", default=True)
@@ -618,9 +584,8 @@ def init_properties():
     bpy.types.Lamp.lamp_clip_end = bpy.props.FloatProperty(name="Clip End", default=50.0)
     bpy.types.Lamp.lamp_fov = bpy.props.FloatProperty(name="Field of View", default=0.84)
     bpy.types.Lamp.lamp_shadows_bias = bpy.props.FloatProperty(name="Bias", description="Depth offset for shadow acne", default=0.0001)
-    bpy.types.Lamp.lamp_omni_shadows = bpy.props.BoolProperty(name="Omnidirectional Shadows", description="Draw shadows to all faces of the cube map", default=True)
-    bpy.types.Lamp.lamp_omni_shadows_cubemap = bpy.props.BoolProperty(name="Cubemap Capture", description="Store shadowmap in a single cubemap", default=True)
-    bpy.types.World.lamp_omni_shadows_cubemap_pcfsize = bpy.props.FloatProperty(name="PCF Size", description="Filter size", default=0.001)
+    bpy.types.Lamp.lamp_omni_shadows = bpy.props.BoolProperty(name="Omni-Shadows", description="Draw shadows to all faces of the cube map", default=True)
+    bpy.types.World.lamp_omni_shadows_pcfsize = bpy.props.FloatProperty(name="PCF Size", description="Filter size", default=0.001)
 
     if not 'Arm' in bpy.data.worlds:
         wrd = bpy.data.worlds.new('Arm')

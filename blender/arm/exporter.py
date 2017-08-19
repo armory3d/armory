@@ -1212,31 +1212,6 @@ class ArmoryExporter:
                         return region.width
         return 0
 
-    def make_fake_omni_lamps(self, o, bobject):
-        # Look down
-        o['transform']['values'] = [1.0, 0.0, 0.0, bobject.location.x, 0.0, 1.0, 0.0, bobject.location.y, 0.0, 0.0, 1.0, bobject.location.z, 0.0, 0.0, 0.0, 1.0]
-        if not hasattr(o, 'children'):
-            o['children'] = []
-        # Make child lamps
-        for i in range(0, 5):
-            child_lamp = {}
-            child_lamp['name'] = o['name'] + '__' + str(i)
-            child_lamp['data_ref'] = o['data_ref']
-            child_lamp['type'] = 'lamp_object'
-            if i == 0:
-                mat = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-            elif i == 1:
-                mat = [0.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-            elif i == 2:
-                mat = [0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-            elif i == 3:
-                mat = [0.0, -1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-            elif i == 4:
-                mat = [-1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-            child_lamp['transform'] = {}
-            child_lamp['transform']['values'] = mat
-            o['children'].append(child_lamp)
-
     def export_object(self, bobject, scene, poseBone = None, parento = None):
         # This function exports a single object in the scene and includes its name,
         # object reference, material references (for meshes), and transform.
@@ -1259,7 +1234,7 @@ class ArmoryExporter:
             o['type'] = structIdentifier[type]
             o['name'] = bobjectRef["structName"]
 
-            if bobject.hide_render or not bobject.game_visible:
+            if bobject.hide_render:
                 o['visible'] = False
 
             if not bobject.cycles_visibility.camera:
@@ -1277,14 +1252,14 @@ class ArmoryExporter:
             if bobject.dupli_type == 'GROUP' and bobject.dupli_group != None:
                 o['group_ref'] = bobject.dupli_group.name
 
-            if ArmoryExporter.option_spawn_all_layers == False:
-                layer_found = False
-                for l in self.active_layers:
-                    if bobject.layers[l] == True:
-                        layer_found = True
-                        break
-                if layer_found == False:
-                    o['spawn'] = False
+            # if ArmoryExporter.option_spawn_all_layers == False:
+            layer_found = False
+            for l in self.active_layers:
+                if bobject.layers[l] == True:
+                    layer_found = True
+                    break
+            if layer_found == False:
+                o['spawn'] = False
 
             # Export the object reference and material references
             objref = bobject.data
@@ -1388,12 +1363,8 @@ class ArmoryExporter:
             # Export the transform. If object is animated, then animation tracks are exported here
             self.export_object_transform(bobject, scene, o)
 
-            # 6 directional lamps if cubemap is disabled
-            if type == NodeTypeLamp and objref.type == 'POINT' and objref.lamp_omni_shadows and not objref.lamp_omni_shadows_cubemap:
-                self.make_fake_omni_lamps(o, bobject)
-
             # Viewport Camera - overwrite active camera matrix with viewport matrix
-            if type == NodeTypeCamera and bpy.data.worlds['Arm'].arm_play_viewport_camera and self.scene.camera != None and bobject.name == self.scene.camera.name:
+            if type == NodeTypeCamera and bpy.data.worlds['Arm'].arm_play_camera != 'Scene' and self.scene.camera != None and bobject.name == self.scene.camera.name:
                 viewport_matrix = self.get_viewport_view_matrix()
                 if viewport_matrix != None:
                     o['transform']['values'] = self.write_matrix(viewport_matrix.inverted())
@@ -1414,9 +1385,6 @@ class ArmoryExporter:
                     actions = bpy.data.actions
                     action = actions.get('armorypose', actions.new(name='armorypose'))
 
-                if bobject.edit_actions_prop:
-                    action = bpy.data.actions[bobject.start_action_name_prop]
-
                 # Bone export
                 armatureid = self.asset_name(bdata)
                 armatureid = arm.utils.safestr(armatureid)
@@ -1426,12 +1394,7 @@ class ArmoryExporter:
                 o['bones_ref'] = 'bones_' + armatureid + '_' + action.name + ext
 
                 # Write bones
-                if bdata.edit_actions:
-                    export_actions = []
-                    for t in bdata.my_actiontraitlist:
-                        export_actions.append(bpy.data.actions[t.name])
-                else: # Use default
-                    export_actions = [action]
+                export_actions = [action]
 
                 # orig_action = bobject.animation_data.action
                 # bobject.animation_data.action = orig_action
@@ -2148,11 +2111,8 @@ class ArmoryExporter:
             o['lamp_size'] = lamp_size * 10 # Match to Cycles
         if objtype == 'POINT' and objref.lamp_omni_shadows and not arm.utils.get_gapi().startswith('direct3d'):
             o['fov'] = 1.5708 # 90 deg
-            if objref.lamp_omni_shadows_cubemap:
-                o['shadowmap_cube'] = True
-                o['shadows_bias'] *= 4.0
-                # if (o['near_plane'] <= 0.11:
-                    # o['near_plane'] /= 10 # Prevent acne on close surfaces
+            o['shadowmap_cube'] = True
+            o['shadows_bias'] *= 4.0
 
         # Parse nodes
         # Emission only for now
@@ -2176,10 +2136,6 @@ class ArmoryExporter:
                         o['color_texture'] = color_node.image.name
                 break
 
-        if objtype == 'POINT' and objref.lamp_omni_shadows and not objref.lamp_omni_shadows_cubemap:
-            # 6 separate maps
-            o['strength'] /= 6
-
         self.output['lamp_datas'].append(o)
 
     def export_camera(self, objectRef):
@@ -2195,7 +2151,7 @@ class ArmoryExporter:
         o['far_plane'] = objref.clip_end
         o['fov'] = objref.angle
 
-        if bpy.data.worlds['Arm'].arm_play_viewport_camera and ArmoryExporter.in_viewport:
+        if bpy.data.worlds['Arm'].arm_play_camera != 'Scene' and ArmoryExporter.in_viewport:
             pw = self.get_viewport_panels_w()
             # Tool shelf and properties hidden
             proj, is_persp = self.get_viewport_projection_matrix()
@@ -2686,7 +2642,7 @@ class ArmoryExporter:
                 instance_offsets = [0.0, 0.0, 0.0] # Include parent
                 for sn in n.children:
                     # Child hidden
-                    if sn.game_export == False or (sn.hide_render and ArmoryExporter.option_export_hide_render == False):
+                    if sn.game_export == False:
                         continue
                     # Do not take parent matrix into account
                     loc = sn.matrix_local.to_translation()
@@ -2724,8 +2680,6 @@ class ArmoryExporter:
         ArmoryExporter.option_mesh_only = False
         ArmoryExporter.option_mesh_per_file = True
         ArmoryExporter.option_optimize_mesh = bpy.data.worlds['Arm'].arm_optimize_mesh
-        ArmoryExporter.option_export_hide_render = bpy.data.worlds['Arm'].arm_export_hide_render
-        ArmoryExporter.option_spawn_all_layers = bpy.data.worlds['Arm'].arm_spawn_all_layers
         ArmoryExporter.option_minimize = bpy.data.worlds['Arm'].arm_minimize
         ArmoryExporter.option_sample_animation = bpy.data.worlds['Arm'].arm_sampled_animation
         ArmoryExporter.sample_animation_flag = ArmoryExporter.option_sample_animation
@@ -2745,7 +2699,7 @@ class ArmoryExporter:
         export_object = True
 
         # Disabled object   
-        if bobject.game_export == False or (bobject.hide_render and ArmoryExporter.option_export_hide_render == False):
+        if bobject.game_export == False:
             return False
         
         for m in bobject.modifiers:
@@ -2764,41 +2718,19 @@ class ArmoryExporter:
         if arm.utils.is_bone_animation_enabled(bobject) or arm.utils.is_object_animation_enabled(bobject):
             x = {}
             x['frame_time'] = 1 / self.scene.render.fps
-            if len(bobject.my_cliptraitlist) > 0:
-                # Edit clips enabled
-                x['names'] = []
-                x['starts'] = []
-                x['ends'] = []
-                x['speeds'] = []
-                x['loops'] = []
-                x['reflects'] = []
-                for at in bobject.my_cliptraitlist:
-                    if at.enabled_prop:
-                        x['names'].append(at.name)
-                        x['starts'].append(at.start_prop)
-                        x['ends'].append(at.end_prop)
-                        x['speeds'].append(at.speed_prop)
-                        x['loops'].append(at.loop_prop)
-                        x['reflects'].append(at.reflect_prop)
-                start_track = bobject.start_track_name_prop
-                if start_track == '' and len(bobject.my_cliptraitlist) > 0: # Start track undefined
-                    start_track = bobject.my_cliptraitlist[0].name
-                x['start_track'] = start_track
-                x['max_bones'] = bpy.data.worlds['Arm'].generate_gpu_skin_max_bones
+            # Export assigned action
+            if arm.utils.is_bone_animation_enabled(bobject):
+                begin_frame, end_frame = self.get_action_framerange(bobject.parent.animation_data.action)
             else:
-                # Export default clip, taking full action
-                if arm.utils.is_bone_animation_enabled(bobject):
-                    begin_frame, end_frame = self.get_action_framerange(bobject.parent.animation_data.action)
-                else:
-                    begin_frame, end_frame = self.get_action_framerange(bobject.animation_data.action)
-                x['start_track'] = 'default'
-                x['names'] = ['default']
-                x['starts'] = [begin_frame]
-                x['ends'] = [end_frame]
-                x['speeds'] = [1.0]
-                x['loops'] = [True]
-                x['reflects'] = [False]
-                x['max_bones'] = bpy.data.worlds['Arm'].generate_gpu_skin_max_bones
+                begin_frame, end_frame = self.get_action_framerange(bobject.animation_data.action)
+            x['start_track'] = 'default'
+            x['names'] = ['default']
+            x['starts'] = [begin_frame]
+            x['ends'] = [end_frame]
+            x['speeds'] = [1.0]
+            x['loops'] = [True]
+            x['reflects'] = [False]
+            x['max_bones'] = bpy.data.worlds['Arm'].generate_gpu_skin_max_bones
             o['animation_setup'] = x
 
         # Export traits
@@ -2980,8 +2912,8 @@ class ArmoryExporter:
                 console_trait['class_name'] = 'armory.trait.internal.DebugConsole'
                 console_trait['parameters'] = []
                 o['traits'].append(console_trait)
-            # Viewport camera enabled, attach navigation to active camera if enabled
-            if self.scene.camera != None and bobject.name == self.scene.camera.name and bpy.data.worlds['Arm'].arm_play_viewport_camera and bpy.data.worlds['Arm'].arm_play_viewport_navigation == 'Walk':
+            # Viewport camera enabled, attach navigation to active camera
+            if self.scene.camera != None and bobject.name == self.scene.camera.name and bpy.data.worlds['Arm'].arm_play_camera != 'Scene':
                 navigation_trait = {}
                 navigation_trait['type'] = 'Script'
                 navigation_trait['class_name'] = 'armory.trait.WalkNavigation'
@@ -3080,26 +3012,6 @@ class ArmoryExporter:
             po['sun_direction'] =  list(world.world_envtex_sun_direction)
             po['turbidity'] = world.world_envtex_turbidity
             po['ground_albedo'] = world.world_envtex_ground_albedo
-        
-        # Probe cameras attached in scene
-        for cam in bpy.data.cameras:
-            if cam.is_probe:
-                # Generate probe straight here for now
-                volume_object = bpy.data.objects[cam.probe_volume]
-                # Assume empty box of size 2, multiply by scale and dividy by 2 to get half extents
-                volume = [2 * volume_object.scale[0] / 2, 2 * volume_object.scale[1] / 2, 2 * volume_object.scale[2] / 2] 
-                volume_center = [volume_object.location[0], volume_object.location[1], volume_object.location[2]]
-                
-                disable_hdr = cam.probe_texture.endswith('.jpg')
-                generate_radiance = cam.probe_generate_radiance
-                if world_generate_radiance == False:
-                    generate_radiance = False
-                
-                texture_path = '//' + cam.probe_texture
-                cam.probe_num_mips = write_probes.write_probes(texture_path, disable_hdr, cam.probe_num_mips, generate_radiance=generate_radiance)
-                base_name = cam.probe_texture.rsplit('.', 1)[0]
-                po = self.make_probe(cam.name, base_name, base_name, cam.probe_num_mips, cam.probe_strength, cam.probe_blending, volume, volume_center, generate_radiance, generate_irradiance, disable_hdr)
-                o['probes'].append(po)
     
     def post_export_grease_pencil(self, gp):
         o = {}

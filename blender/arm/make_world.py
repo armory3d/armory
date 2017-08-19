@@ -87,13 +87,8 @@ def build_node_tree(world):
         bpy.data.worlds['Arm'].world_defs += '_LampIES'
         assets.add_embedded_data('iestexture.png')
 
-    if not wrd.generate_lamp_falloff:
-        bpy.data.worlds['Arm'].world_defs += '_NoLampFalloff'
-
     voxelgi = False
     for cam in bpy.data.cameras:
-        if cam.is_probe:
-            wrd.world_defs += '_Probes'
         if cam.rp_shadowmap == 'None':
             wrd.world_defs += '_NoShadows'
             assets.add_khafile_def('arm_no_shadows')

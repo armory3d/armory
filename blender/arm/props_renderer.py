@@ -372,8 +372,6 @@ class GenRPDataPropsPanel(bpy.types.Panel):
                 layout.prop(dat, "rp_eyeadapt")
                 layout.prop(dat, "rp_motionblur")
                 layout.prop(dat, "rp_rendercapture")
-                if dat.rp_rendercapture:
-                    layout.prop(dat, "rp_rendercapture_format")
                 layout.prop(dat, "rp_ocean")
 
 class PropsRPDataPropsPanel(bpy.types.Panel):
@@ -408,58 +406,71 @@ class PropsRPDataPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'tessellation_enabled')
             layout.prop(wrd, 'force_no_culling')
             layout.prop(wrd, 'generate_two_sided_area_lamp')
+
+            layout.prop(wrd, 'generate_clouds')
+            if wrd.generate_clouds:
+                layout.prop(wrd, 'generate_clouds_density')
+                layout.prop(wrd, 'generate_clouds_size')
+                layout.prop(wrd, 'generate_clouds_lower')
+                layout.prop(wrd, 'generate_clouds_upper')
+                layout.prop(wrd, 'generate_clouds_wind')
+                layout.prop(wrd, 'generate_clouds_secondary')
+                layout.prop(wrd, 'generate_clouds_precipitation')
+                layout.prop(wrd, 'generate_clouds_eccentricity')
             
-            layout.prop(wrd, 'arm_camera_props_advanced')
-            if wrd.arm_camera_props_advanced:
+            layout.label('SSAO')
+            # layout.prop(wrd, 'generate_ssao')
+            # if wrd.generate_ssao:
+            layout.prop(wrd, 'generate_ssao_size')
+            layout.prop(wrd, 'generate_ssao_strength')
+            layout.prop(wrd, 'generate_ssao_half_res')
+            
+            layout.label('Bloom')
+            # layout.prop(wrd, 'generate_bloom')
+            # if wrd.generate_bloom:
+            layout.prop(wrd, 'generate_bloom_threshold')
+            layout.prop(wrd, 'generate_bloom_strength')
+            layout.prop(wrd, 'generate_bloom_radius')
+            
+            layout.label('Motion Blur')
+            # layout.prop(wrd, 'generate_motion_blur')
+            # if wrd.generate_motion_blur:
+            layout.prop(wrd, 'generate_motion_blur_intensity')
+            
+            layout.label('SSR')
+            # layout.prop(wrd, 'generate_ssr')
+            # if wrd.generate_ssr:
+            layout.prop(wrd, 'generate_ssr_ray_step')
+            layout.prop(wrd, 'generate_ssr_min_ray_step')
+            layout.prop(wrd, 'generate_ssr_search_dist')
+            layout.prop(wrd, 'generate_ssr_falloff_exp')
+            layout.prop(wrd, 'generate_ssr_jitter')
+            layout.prop(wrd, 'generate_ssr_half_res')
 
-                layout.prop(wrd, 'generate_clouds')
-                if wrd.generate_clouds:
-                    layout.prop(wrd, 'generate_clouds_density')
-                    layout.prop(wrd, 'generate_clouds_size')
-                    layout.prop(wrd, 'generate_clouds_lower')
-                    layout.prop(wrd, 'generate_clouds_upper')
-                    layout.prop(wrd, 'generate_clouds_wind')
-                    layout.prop(wrd, 'generate_clouds_secondary')
-                    layout.prop(wrd, 'generate_clouds_precipitation')
-                    layout.prop(wrd, 'generate_clouds_eccentricity')
-                
-                layout.label('SSAO')
-                # layout.prop(wrd, 'generate_ssao')
-                # if wrd.generate_ssao:
-                layout.prop(wrd, 'generate_ssao_size')
-                layout.prop(wrd, 'generate_ssao_strength')
-                layout.prop(wrd, 'generate_ssao_half_res')
-                
-                layout.label('Bloom')
-                # layout.prop(wrd, 'generate_bloom')
-                # if wrd.generate_bloom:
-                layout.prop(wrd, 'generate_bloom_threshold')
-                layout.prop(wrd, 'generate_bloom_strength')
-                layout.prop(wrd, 'generate_bloom_radius')
-                
-                layout.label('Motion Blur')
-                # layout.prop(wrd, 'generate_motion_blur')
-                # if wrd.generate_motion_blur:
-                layout.prop(wrd, 'generate_motion_blur_intensity')
-                
-                layout.label('SSR')
-                # layout.prop(wrd, 'generate_ssr')
-                # if wrd.generate_ssr:
-                layout.prop(wrd, 'generate_ssr_ray_step')
-                layout.prop(wrd, 'generate_ssr_min_ray_step')
-                layout.prop(wrd, 'generate_ssr_search_dist')
-                layout.prop(wrd, 'generate_ssr_falloff_exp')
-                layout.prop(wrd, 'generate_ssr_jitter')
-                layout.prop(wrd, 'generate_ssr_half_res')
+            layout.label('SSRS')
+            layout.prop(wrd, 'generate_ssrs_ray_step')
 
-                layout.label('SSRS')
-                layout.prop(wrd, 'generate_ssrs_ray_step')
+            layout.label('Volumetric Light')
+            # layout.prop(wrd, 'generate_volumetric_light')
+            # if wrd.generate_volumetric_light:
+            layout.prop(wrd, 'generate_volumetric_light_air_turbidity')
+            layout.prop(wrd, 'generate_volumetric_light_air_color')
 
-                layout.label('Volumetric Light')
-                # layout.prop(wrd, 'generate_volumetric_light')
-                # if wrd.generate_volumetric_light:
-                layout.prop(wrd, 'generate_volumetric_light_air_turbidity')
-                layout.prop(wrd, 'generate_volumetric_light_air_color')
+            layout.prop(wrd, 'generate_tonemap')
+            layout.prop(wrd, 'generate_letterbox')
+            if wrd.generate_letterbox:
+                layout.prop(wrd, 'generate_letterbox_size')
+            layout.prop(wrd, 'generate_grain')
+            if wrd.generate_grain:
+                layout.prop(wrd, 'generate_grain_strength')
+            layout.prop(wrd, 'generate_fog')
+            if wrd.generate_fog:
+                layout.prop(wrd, 'generate_fog_color')
+                layout.prop(wrd, 'generate_fog_amounta')
+                layout.prop(wrd, 'generate_fog_amountb')
+            layout.prop(wrd, 'generate_fisheye')
+            layout.prop(wrd, 'generate_vignette')
+            layout.prop(wrd, 'generate_lens_texture')
 
 def register():
     bpy.utils.register_class(GenRPDataPropsPanel)

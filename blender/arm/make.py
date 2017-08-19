@@ -15,7 +15,6 @@ import arm.make_renderpath as make_renderpath
 import arm.make_world as make_world
 import arm.make_utils as make_utils
 import arm.make_state as state
-import arm.path_tracer as path_tracer
 import arm.assets as assets
 import arm.log as log
 import arm.lib.make_datas
@@ -116,6 +115,15 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
 
     if wrd.arm_ui == 'Enabled':
         export_ui = True
+
+    modules = []
+    if export_physics:
+        modules.append('physics')
+    if export_navigation:
+        modules.append('navigation')
+    if export_ui:
+        modules.append('ui')
+    print('Exported modules: ' + str(modules))
 
     # Write referenced shader variants
     for ref in assets.shader_datas:
@@ -261,10 +269,6 @@ def build_project(is_play=False, is_publish=False, is_render=False, in_viewport=
     sources_path = 'Sources/' + arm.utils.safestr(wrd.arm_project_package)
     if not os.path.exists(sources_path):
         os.makedirs(sources_path)
-
-    # Compile path tracer shaders
-    # if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].renderpath_path == 'pathtrace_path':
-        # path_tracer.compile(raw_shaders_path + 'pt_trace_pass/pt_trace_pass.frag.glsl')
 
     # Save external scripts edited inside Blender
     write_texts = False

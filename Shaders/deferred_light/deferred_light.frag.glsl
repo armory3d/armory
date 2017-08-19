@@ -170,10 +170,8 @@ void main() {
 	visibility = dfrs(p, l, lightPos);
 #endif
 
-	// Per-light
-#ifndef _NoLampFalloff
 	visibility *= attenuate(distance(p, lightPos));
-#endif
+
 #ifdef _LampIES
 	visibility *= iesAttenuation(-l);
 #endif

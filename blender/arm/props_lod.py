@@ -156,7 +156,6 @@ class ToolsLodPanel(bpy.types.Panel):
             return
 
         mdata = obj.data
-        layout.prop(mdata, "lod_material")
 
         rows = 2
         if len(mdata.my_lodlist) > 1:
@@ -180,10 +179,11 @@ class ToolsLodPanel(bpy.types.Panel):
             layout.separator()
             layout.operator("arm.generate_lod")
             wrd = bpy.data.worlds['Arm']
-            layout.prop(wrd, 'arm_lod_advanced')
-            if wrd.arm_lod_advanced:
-                layout.prop(wrd, 'arm_lod_gen_levels')
-                layout.prop(wrd, 'arm_lod_gen_ratio')
+            row = layout.row()
+            row.prop(wrd, 'arm_lod_gen_levels')
+            row.prop(wrd, 'arm_lod_gen_ratio')
+
+        layout.prop(mdata, "lod_material")
 
 def register():
     bpy.utils.register_class(ListLodItem)
