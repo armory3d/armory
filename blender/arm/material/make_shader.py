@@ -45,7 +45,7 @@ def build(material, mat_users, mat_armusers, rid):
                 global_elems.append({'name': 'bone', 'size': 4})
                 global_elems.append({'name': 'weight', 'size': 4})
             # Instancing
-            if bo.instanced_children or len(bo.particle_systems) > 0:
+            if bo.arm_instanced or len(bo.particle_systems) > 0:
                 global_elems.append({'name': 'off', 'size': 3})
     mat_state.data.global_elems = global_elems
 

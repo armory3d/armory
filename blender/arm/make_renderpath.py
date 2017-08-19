@@ -17,29 +17,27 @@ def build_node_trees(assets_path):
     fp = os.path.sep.join(s)
     os.chdir(fp)
 
+    wrd = bpy.data.worlds['Arm']
+
     # Make sure Assets dir exists
     if not os.path.exists(arm.utils.build_dir() + '/compiled/Assets/renderpaths'):
         os.makedirs(arm.utils.build_dir() + '/compiled/Assets/renderpaths')
     
     build_node_trees.assets_path = assets_path
-    if bpy.data.worlds['Arm'].material_model != 'Restricted':
+    if wrd.material_model != 'Restricted':
         # Always include
         assets.add(assets_path + 'brdf.png')
         assets.add_embedded_data('brdf.png')
 
-    bpy.data.worlds['Arm'].rp_defs = ''
-
-    # Export render path for each camera
+    wrd.rp_defs = ''
     parsed_paths = []
-    for cam in bpy.data.cameras:
-        # if cam.game_export
-        if cam.renderpath_path not in parsed_paths:
-            node_group = bpy.data.node_groups[cam.renderpath_path]
-            build_node_tree(cam, node_group)
-            parsed_paths.append(cam.renderpath_path)
+    if wrd.renderpath_path not in parsed_paths:
+        node_group = bpy.data.node_groups[wrd.renderpath_path]
+        build_node_tree(wrd, node_group)
+        parsed_paths.append(wrd.renderpath_path)
 
-def build_node_tree(cam, node_group):
-    build_node_tree.cam = cam
+def build_node_tree(wrd, node_group):
+    build_node_tree.wrd = wrd
     output = {}
     dat = {}
     output['renderpath_datas'] = [dat]
@@ -253,7 +251,7 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     if wrd.generate_fog:
         compositor_defs += '_CFog'
         # compo_pos = True
-    if build_node_tree.cam.dof_distance > 0.0:
+    if bpy.data.cameras[0].dof_distance > 0.0:
         compositor_defs += '_CDOF'
         compo_depth = True
     # if compo_pos:
@@ -753,7 +751,7 @@ def get_root_node(node_group):
     for n in node_group.nodes:
         if n.bl_idname == 'BeginNodeType':
             # Store contexts
-            build_node_tree.cam.renderpath_id = n.inputs[0].default_value            
+            build_node_tree.wrd.renderpath_id = n.inputs[0].default_value            
             # TODO: deprecated
             if len(n.inputs) > 5:
                 if n.inputs[5].default_value == False:
@@ -774,16 +772,16 @@ def preprocess_renderpath(root_node, node_group):
     render_targets3D = []
     depth_buffers = []
     preprocess_renderpath.velocity_def_added = False
-    build_node_tree.cam.renderpath_passes = ''
+    build_node_tree.wrd.renderpath_passes = ''
     traverse_renderpath(root_node, node_group, render_targets, depth_buffers)
     return render_targets, depth_buffers
     
 def traverse_renderpath(node, node_group, render_targets, depth_buffers):
     # Gather linked draw geometry contexts
     if node.bl_idname == 'DrawMeshesNodeType':
-        if build_node_tree.cam.renderpath_passes != '':
-            build_node_tree.cam.renderpath_passes += '_' # Separator
-        build_node_tree.cam.renderpath_passes += node.inputs[1].default_value
+        if build_node_tree.wrd.renderpath_passes != '':
+            build_node_tree.wrd.renderpath_passes += '_' # Separator
+        build_node_tree.wrd.renderpath_passes += node.inputs[1].default_value
 
     # Gather defs from linked nodes
     if node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':

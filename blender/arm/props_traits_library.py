@@ -33,44 +33,44 @@ class MY_UL_LibraryTraitList(bpy.types.UIList):
 
 class LIST_OT_LibraryTraitNewItem(bpy.types.Operator):
     # Add a new item to the list
-    bl_idname = "my_librarytraitlist.new_item"
+    bl_idname = "arm_librarylist.new_item"
     bl_label = "Add a new item"
 
     def execute(self, context):
         trait = bpy.data.worlds['Arm']
-        trait.my_librarytraitlist.add()
-        trait.librarytraitlist_index = len(trait.my_librarytraitlist) - 1
+        trait.arm_librarylist.add()
+        trait.arm_librarylist_index = len(trait.arm_librarylist) - 1
         return{'FINISHED'}
 
 
 class LIST_OT_LibraryTraitDeleteItem(bpy.types.Operator):
     # Delete the selected item from the list
-    bl_idname = "my_librarytraitlist.delete_item"
+    bl_idname = "arm_librarylist.delete_item"
     bl_label = "Deletes an item"
 
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list """
         trait = bpy.data.worlds['Arm']
-        return len(trait.my_librarytraitlist) > 0
+        return len(trait.arm_librarylist) > 0
 
     def execute(self, context):
         trait = bpy.data.worlds['Arm']
-        list = trait.my_librarytraitlist
-        index = trait.librarytraitlist_index
+        list = trait.arm_librarylist
+        index = trait.arm_librarylist_index
 
         list.remove(index)
 
         if index > 0:
             index = index - 1
 
-        trait.librarytraitlist_index = index
+        trait.arm_librarylist_index = index
         return{'FINISHED'}
 
 
 class LIST_OT_LibraryTraitMoveItem(bpy.types.Operator):
     # Move an item in the list
-    bl_idname = "my_librarytraitlist.move_item"
+    bl_idname = "arm_librarylist.move_item"
     bl_label = "Move an item in the list"
     direction = bpy.props.EnumProperty(
                 items=(
@@ -81,14 +81,14 @@ class LIST_OT_LibraryTraitMoveItem(bpy.types.Operator):
     def poll(self, context):
         """ Enable if there's something in the list. """
         trait = bpy.data.worlds['Arm']
-        return len(trait.my_librarytraitlist) > 0
+        return len(trait.arm_librarylist) > 0
 
 
     def move_index(self):
         # Move index of an item render queue while clamping it
         trait = bpy.data.worlds['Arm']
-        index = trait.librarytraitlist_index
-        list_length = len(trait.my_librarytraitlist) - 1
+        index = trait.arm_librarylist_index
+        list_length = len(trait.arm_librarylist) - 1
         new_index = 0
 
         if self.direction == 'UP':
@@ -102,8 +102,8 @@ class LIST_OT_LibraryTraitMoveItem(bpy.types.Operator):
 
     def execute(self, context):
         trait = bpy.data.worlds['Arm']
-        list = trait.my_librarytraitlist
-        index = trait.librarytraitlist_index
+        list = trait.arm_librarylist
+        index = trait.arm_librarylist_index
 
         if self.direction == 'DOWN':
             neighbor = index + 1

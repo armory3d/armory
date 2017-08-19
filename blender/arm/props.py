@@ -4,7 +4,6 @@ import os
 import shutil
 from arm.props_traits_library import *
 import arm.props_ui as props_ui
-import arm.props_renderer as props_renderer
 import arm.assets as assets
 import arm.log as log
 import arm.utils
@@ -19,10 +18,10 @@ except ImportError:
 arm_version = '17.08'
 
 def update_preset(self, context):
-    props_renderer.set_preset(self, context, self.rp_preset)
+    make_renderer.set_preset(self, context, self.rp_preset)
 
 def update_renderpath(self, context):
-    props_renderer.set_renderpath(self, context)
+    make_renderer.set_renderpath(self, context)
 
 def update_material_model(self, context):
     assets.invalidate_shader_cache(self, context)
@@ -140,8 +139,8 @@ def init_properties():
         name="Target", default='html5', description='Build paltform')
     bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="")
     bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm")
-    bpy.types.World.my_librarytraitlist = bpy.props.CollectionProperty(type=ListLibraryTraitItem)
-    bpy.types.World.librarytraitlist_index = bpy.props.IntProperty(name="Library index", default=0)
+    bpy.types.World.arm_librarylist = bpy.props.CollectionProperty(type=ListLibraryTraitItem)
+    bpy.types.World.arm_librarylist_index = bpy.props.IntProperty(name="Library index", default=0)
     bpy.types.World.arm_play_active_scene = BoolProperty(name="Play Active Scene", description="Load currently edited scene when launching player", default=True)
     bpy.types.World.arm_project_scene = StringProperty(name="Scene", description="Scene to load when launching player")
     bpy.types.World.arm_samples_per_pixel = EnumProperty(
@@ -246,18 +245,16 @@ def init_properties():
         name="Graphics API", default='webgl', description='Based on currently selected target', update=update_gapi_html5)
 
     # For object
-    bpy.types.Object.instanced_children = bpy.props.BoolProperty(name="Instanced Children", description="Use instaced rendering", default=False, update=invalidate_instance_cache)
-    bpy.types.Object.instanced_children_loc_x = bpy.props.BoolProperty(name="X", default=True)
-    bpy.types.Object.instanced_children_loc_y = bpy.props.BoolProperty(name="Y", default=True)
-    bpy.types.Object.instanced_children_loc_z = bpy.props.BoolProperty(name="Z", default=True)
-    bpy.types.Object.instanced_children_rot_x = bpy.props.BoolProperty(name="X", default=False)
-    bpy.types.Object.instanced_children_rot_y = bpy.props.BoolProperty(name="Y", default=False)
-    bpy.types.Object.instanced_children_rot_z = bpy.props.BoolProperty(name="Z", default=False)
-    bpy.types.Object.instanced_children_scale_x = bpy.props.BoolProperty(name="X", default=False)
-    bpy.types.Object.instanced_children_scale_y = bpy.props.BoolProperty(name="Y", default=False)
-    bpy.types.Object.instanced_children_scale_z = bpy.props.BoolProperty(name="Z", default=False)
-    bpy.types.Object.override_material = bpy.props.BoolProperty(name="Override Material", default=False)
-    bpy.types.Object.override_material_name = bpy.props.StringProperty(name="Name", default="")
+    bpy.types.Object.arm_instanced = bpy.props.BoolProperty(name="Instanced Children", description="Use instaced rendering", default=False, update=invalidate_instance_cache)
+    bpy.types.Object.arm_instanced_loc_x = bpy.props.BoolProperty(name="X", default=True)
+    bpy.types.Object.arm_instanced_loc_y = bpy.props.BoolProperty(name="Y", default=True)
+    bpy.types.Object.arm_instanced_loc_z = bpy.props.BoolProperty(name="Z", default=True)
+    # bpy.types.Object.arm_instanced_rot_x = bpy.props.BoolProperty(name="X", default=False)
+    # bpy.types.Object.arm_instanced_rot_y = bpy.props.BoolProperty(name="Y", default=False)
+    # bpy.types.Object.arm_instanced_rot_z = bpy.props.BoolProperty(name="Z", default=False)
+    # bpy.types.Object.arm_instanced_scale_x = bpy.props.BoolProperty(name="X", default=False)
+    # bpy.types.Object.arm_instanced_scale_y = bpy.props.BoolProperty(name="Y", default=False)
+    # bpy.types.Object.arm_instanced_scale_z = bpy.props.BoolProperty(name="Z", default=False)
     bpy.types.Object.game_export = bpy.props.BoolProperty(name="Export", description="Export object data", default=True)
     bpy.types.Object.spawn = bpy.props.BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True)
     bpy.types.Object.mobile = bpy.props.BoolProperty(name="Mobile", description="Object moves during gameplay", default=True)
@@ -289,14 +286,16 @@ def init_properties():
     bpy.types.Armature.data_compressed = bpy.props.BoolProperty(name="Compress Data", description="Pack data into zip file", default=False)
     # For camera
     bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", description="Perform frustum culling for this camera", default=True)
-    bpy.types.Camera.renderpath_path = bpy.props.StringProperty(name="Render Path", description="Render path nodes used for this camera", default="armory_default", update=assets.invalidate_shader_cache)
-    bpy.types.Camera.renderpath_id = bpy.props.StringProperty(name="Render Path ID", description="Asset ID", default="deferred") 
-    bpy.types.Camera.renderpath_passes = bpy.props.StringProperty(name="Render Path Passes", description="Referenced render passes", default="")
     bpy.types.Camera.is_mirror = bpy.props.BoolProperty(name="Mirror", description="Render this camera into texture", default=False)
     bpy.types.Camera.mirror_resolution_x = bpy.props.FloatProperty(name="X", default=512.0)
     bpy.types.Camera.mirror_resolution_y = bpy.props.FloatProperty(name="Y", default=256.0)
+
+
+    bpy.types.World.renderpath_path = bpy.props.StringProperty(name="Render Path", description="Render path nodes", default="armory_default", update=assets.invalidate_shader_cache)
+    bpy.types.World.renderpath_id = bpy.props.StringProperty(name="Render Path ID", description="Asset ID", default="deferred") 
+    bpy.types.World.renderpath_passes = bpy.props.StringProperty(name="Render Path Passes", description="Referenced render passes", default="")
     # Render path generator
-    bpy.types.Camera.rp_preset = EnumProperty(
+    bpy.types.World.rp_preset = EnumProperty(
         items=[('Low', 'Low', 'Low'),
                ('VR Low', 'VR Low', 'VR Low'),
                ('Mobile Low', 'Mobile Low', 'Mobile Low'),
@@ -308,20 +307,20 @@ def init_properties():
                ('Grease Pencil', 'Grease Pencil', 'Grease Pencil'),
                ],
         name="Preset", description="Render path preset", default='Deferred', update=update_preset)
-    bpy.types.Camera.rp_renderer = EnumProperty(
+    bpy.types.World.rp_renderer = EnumProperty(
         items=[('Forward', 'Forward', 'Forward'),
                ('Deferred', 'Deferred', 'Deferred'),
                ('Deferred Plus', 'Deferred Plus', 'Deferred Plus'),
                ],
         name="Renderer", description="Renderer type", default='Deferred', update=update_renderpath)
-    bpy.types.Camera.rp_depthprepass = bpy.props.BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=False, update=update_renderpath)
-    bpy.types.Camera.rp_meshes = bpy.props.BoolProperty(name="Meshes", description="Render mesh objects", default=True, update=update_renderpath)
-    bpy.types.Camera.rp_hdr = bpy.props.BoolProperty(name="HDR", description="Render in HDR Space", default=True, update=update_renderpath)
-    bpy.types.Camera.rp_render_to_texture = bpy.props.BoolProperty(name="Post Process", description="Render scene to texture for further processing", default=True, update=update_renderpath)
-    bpy.types.Camera.rp_worldnodes = bpy.props.BoolProperty(name="World Nodes", description="Draw world nodes", default=True, update=update_renderpath)
-    bpy.types.Camera.rp_clearbackground = bpy.props.BoolProperty(name="Clear Background", description="Clear background with solid color", default=False, update=update_renderpath)
-    bpy.types.Camera.rp_compositornodes = bpy.props.BoolProperty(name="Compositor Nodes", description="Draw compositor nodes", default=True, update=update_renderpath)
-    bpy.types.Camera.rp_shadowmap = EnumProperty(
+    bpy.types.World.rp_depthprepass = bpy.props.BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=False, update=update_renderpath)
+    bpy.types.World.rp_meshes = bpy.props.BoolProperty(name="Meshes", description="Render mesh objects", default=True, update=update_renderpath)
+    bpy.types.World.rp_hdr = bpy.props.BoolProperty(name="HDR", description="Render in HDR Space", default=True, update=update_renderpath)
+    bpy.types.World.rp_render_to_texture = bpy.props.BoolProperty(name="Post Process", description="Render scene to texture for further processing", default=True, update=update_renderpath)
+    bpy.types.World.rp_worldnodes = bpy.props.BoolProperty(name="World Nodes", description="Draw world nodes", default=True, update=update_renderpath)
+    bpy.types.World.rp_clearbackground = bpy.props.BoolProperty(name="Clear Background", description="Clear background with solid color", default=False, update=update_renderpath)
+    bpy.types.World.rp_compositornodes = bpy.props.BoolProperty(name="Compositor Nodes", description="Draw compositor nodes", default=True, update=update_renderpath)
+    bpy.types.World.rp_shadowmap = EnumProperty(
         items=[('None', 'None', 'None'),
                ('512', '512', '512'),
                ('1024', '1024', '1024'),
@@ -329,72 +328,72 @@ def init_properties():
                ('4096', '4096', '4096'),
                ('8192', '8192', '8192')],
         name="Shadow Map", description="Shadow map resolution", default='2048', update=update_renderpath)
-    bpy.types.Camera.rp_supersampling = EnumProperty(
+    bpy.types.World.rp_supersampling = EnumProperty(
         items=[('1', '1X', '1X'),
                ('2', '2X', '2X'),
                ('4', '4X', '4X')],
         name="Super Sampling", description="Screen resolution multiplier", default='1', update=update_renderpath)
-    bpy.types.Camera.rp_antialiasing = EnumProperty(
+    bpy.types.World.rp_antialiasing = EnumProperty(
         items=[('None', 'None', 'None'),
                ('FXAA', 'FXAA', 'FXAA'),
                ('SMAA', 'SMAA', 'SMAA'),
                ('TAA', 'TAA', 'TAA')],
         name="Anti Aliasing", description="Post-process anti aliasing technique", default='SMAA', update=update_renderpath)
-    bpy.types.Camera.rp_volumetriclight = bpy.props.BoolProperty(name="Volumetric Light", description="Use volumetric lighting", default=False, update=update_renderpath)
-    bpy.types.Camera.rp_ssao = bpy.props.BoolProperty(name="SSAO", description="Screen space ambient occlusion", default=True, update=update_renderpath)
-    bpy.types.Camera.rp_ssr = bpy.props.BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
-    bpy.types.Camera.rp_dfao = bpy.props.BoolProperty(name="DFAO", description="Distance field ambient occlusion", default=False)
-    bpy.types.Camera.rp_dfrs = bpy.props.BoolProperty(name="DFRS", description="Distance field ray-traced shadows", default=False)
-    bpy.types.Camera.rp_dfgi = bpy.props.BoolProperty(name="DFGI", description="Distance field global illumination", default=False)
-    bpy.types.Camera.rp_bloom = bpy.props.BoolProperty(name="Bloom", description="Bloom processing", default=False, update=update_renderpath)
-    bpy.types.Camera.rp_eyeadapt = bpy.props.BoolProperty(name="Eye Adaptation", description="Auto-exposure based on histogram", default=False, update=update_renderpath)
-    bpy.types.Camera.rp_rendercapture = bpy.props.BoolProperty(name="Render Capture", description="Save output as render result", default=False, update=update_renderpath)
+    bpy.types.World.rp_volumetriclight = bpy.props.BoolProperty(name="Volumetric Light", description="Use volumetric lighting", default=False, update=update_renderpath)
+    bpy.types.World.rp_ssao = bpy.props.BoolProperty(name="SSAO", description="Screen space ambient occlusion", default=True, update=update_renderpath)
+    bpy.types.World.rp_ssr = bpy.props.BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
+    bpy.types.World.rp_dfao = bpy.props.BoolProperty(name="DFAO", description="Distance field ambient occlusion", default=False)
+    bpy.types.World.rp_dfrs = bpy.props.BoolProperty(name="DFRS", description="Distance field ray-traced shadows", default=False)
+    bpy.types.World.rp_dfgi = bpy.props.BoolProperty(name="DFGI", description="Distance field global illumination", default=False)
+    bpy.types.World.rp_bloom = bpy.props.BoolProperty(name="Bloom", description="Bloom processing", default=False, update=update_renderpath)
+    bpy.types.World.rp_eyeadapt = bpy.props.BoolProperty(name="Eye Adaptation", description="Auto-exposure based on histogram", default=False, update=update_renderpath)
+    bpy.types.World.rp_rendercapture = bpy.props.BoolProperty(name="Render Capture", description="Save output as render result", default=False, update=update_renderpath)
     bpy.types.World.rp_rendercapture_format = EnumProperty(
         items=[('8bit', '8bit', '8bit'),
                ('16bit', '16bit', '16bit'),
                ('32bit', '32bit', '32bit')],
         name="Capture Format", description="Bits per color channel", default='8bit', update=update_renderpath)
-    bpy.types.Camera.rp_motionblur = EnumProperty(
+    bpy.types.World.rp_motionblur = EnumProperty(
         items=[('None', 'None', 'None'),
                ('Camera', 'Camera', 'Camera'),
                ('Object', 'Object', 'Object')],
         name="Motion Blur", description="Velocity buffer is used for object based motion blur", default='None', update=update_renderpath)
-    bpy.types.Camera.rp_translucency = bpy.props.BoolProperty(name="Translucency", description="Current render-path state", default=False)
-    bpy.types.Camera.rp_translucency_state = bpy.props.EnumProperty(
+    bpy.types.World.rp_translucency = bpy.props.BoolProperty(name="Translucency", description="Current render-path state", default=False)
+    bpy.types.World.rp_translucency_state = bpy.props.EnumProperty(
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off'), 
                ('Auto', 'Auto', 'Auto')],
         name="Translucency", description="Order independent translucency", default='Auto', update=update_translucency_state)
-    bpy.types.Camera.rp_decals = bpy.props.BoolProperty(name="Decals", description="Current render-path state", default=False)
-    bpy.types.Camera.rp_decals_state = bpy.props.EnumProperty(
+    bpy.types.World.rp_decals = bpy.props.BoolProperty(name="Decals", description="Current render-path state", default=False)
+    bpy.types.World.rp_decals_state = bpy.props.EnumProperty(
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off'), 
                ('Auto', 'Auto', 'Auto')],
         name="Decals", description="Decals pass", default='Auto', update=update_decals_state)
-    bpy.types.Camera.rp_overlays = bpy.props.BoolProperty(name="Overlays", description="Current render-path state", default=False)
-    bpy.types.Camera.rp_overlays_state = bpy.props.EnumProperty(
+    bpy.types.World.rp_overlays = bpy.props.BoolProperty(name="Overlays", description="Current render-path state", default=False)
+    bpy.types.World.rp_overlays_state = bpy.props.EnumProperty(
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off'), 
                ('Auto', 'Auto', 'Auto')],
         name="Overlays", description="X-Ray pass", default='Auto', update=update_overlays_state)
-    bpy.types.Camera.rp_sss = bpy.props.BoolProperty(name="SSS", description="Current render-path state", default=False)
-    bpy.types.Camera.rp_sss_state = bpy.props.EnumProperty(
+    bpy.types.World.rp_sss = bpy.props.BoolProperty(name="SSS", description="Current render-path state", default=False)
+    bpy.types.World.rp_sss_state = bpy.props.EnumProperty(
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off'),
                ('Auto', 'Auto', 'Auto')],
         name="SSS", description="Sub-surface scattering pass", default='Auto', update=update_sss_state)
-    bpy.types.Camera.rp_stereo = bpy.props.BoolProperty(name="Stereo", description="Stereo rendering", default=False, update=update_renderpath)
-    bpy.types.Camera.rp_greasepencil = bpy.props.BoolProperty(name="Grease Pencil", description="Render Grease Pencil data", default=False, update=update_renderpath)
-    bpy.types.Camera.rp_ocean = bpy.props.BoolProperty(name="Ocean", description="Ocean pass", default=False, update=update_renderpath)
-    bpy.types.Camera.rp_voxelgi = bpy.props.BoolProperty(name="Voxel GI", description="Voxel-based Global Illumination", default=False, update=update_renderpath)
-    bpy.types.Camera.rp_voxelgi_resolution = bpy.props.EnumProperty(
+    bpy.types.World.rp_stereo = bpy.props.BoolProperty(name="Stereo", description="Stereo rendering", default=False, update=update_renderpath)
+    bpy.types.World.rp_greasepencil = bpy.props.BoolProperty(name="Grease Pencil", description="Render Grease Pencil data", default=False, update=update_renderpath)
+    bpy.types.World.rp_ocean = bpy.props.BoolProperty(name="Ocean", description="Ocean pass", default=False, update=update_renderpath)
+    bpy.types.World.rp_voxelgi = bpy.props.BoolProperty(name="Voxel GI", description="Voxel-based Global Illumination", default=False, update=update_renderpath)
+    bpy.types.World.rp_voxelgi_resolution = bpy.props.EnumProperty(
         items=[('32', '32', '32'),
                ('64', '64', '64'),
                ('128', '128', '128'),
                ('256', '256', '256'),
                ('512', '512', '512')],
         name="Resolution", description="3D texture resolution", default='128', update=update_renderpath)
-    bpy.types.Camera.rp_voxelgi_hdr = bpy.props.BoolProperty(name="HDR", description="Store voxels in RGBA64 instead of RGBA32", default=False, update=update_renderpath)
+    bpy.types.World.rp_voxelgi_hdr = bpy.props.BoolProperty(name="HDR", description="Store voxels in RGBA64 instead of RGBA32", default=False, update=update_renderpath)
     bpy.types.World.generate_voxelgi_dimensions = bpy.props.FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi_revoxelize = bpy.props.BoolProperty(name="Revoxelize", description="Revoxelize scene each frame", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.voxelgi_multibounce = bpy.props.BoolProperty(name="Multi-bounce", description="Accumulate multiple light bounces", default=False, update=assets.invalidate_shader_cache)
@@ -509,7 +508,6 @@ def init_properties():
     # Skin
     bpy.types.World.generate_gpu_skin = bpy.props.BoolProperty(name="GPU Skinning", description="Calculate skinning on GPU", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_gpu_skin_max_bones_auto = bpy.props.BoolProperty(name="Auto Bones", description="Calculate amount of maximum bones based on armatures", default=True, update=assets.invalidate_compiled_data)
-    # bpy.types.World.generate_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=84, update=assets.invalidate_shader_cache)
     bpy.types.World.generate_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=3000, update=assets.invalidate_shader_cache)
     # Material override flags
     bpy.types.World.texture_filtering_state = EnumProperty(
@@ -531,7 +529,6 @@ def init_properties():
     # For material
     bpy.types.NodeSocket.is_uniform = bpy.props.BoolProperty(name="Is Uniform", description="Mark node sockets to be processed as material uniforms", default=False)
     bpy.types.NodeTree.is_cached = bpy.props.BoolProperty(name="Node Tree Cached", description="No need to reexport node tree", default=False)
-    # bpy.types.Node.is_uniform = bpy.props.BoolProperty(name="Is Uniform", description="Mark node values to be processed as material uniforms", default=False)
     bpy.types.Material.signature = bpy.props.StringProperty(name="Signature", description="Unique string generated from material nodes", default="")
     bpy.types.Material.is_cached = bpy.props.BoolProperty(name="Material Cached", description="No need to reexport material data", default=False, update=update_mat_cache)
     bpy.types.Material.lock_cache = bpy.props.BoolProperty(name="Lock Material Cache", description="Prevent is_cached from updating", default=False)
@@ -618,22 +615,16 @@ def init_properties_on_save():
 
 def init_properties_on_load():
     global arm_version    
-    
     if not 'Arm' in bpy.data.worlds:
         init_properties()
-
     arm.utils.fetch_script_names()
-    
     wrd = bpy.data.worlds['Arm']
-
     # Outdated project
     if bpy.data.filepath != '' and wrd.arm_version != arm_version: # Call on project load only
         print('Project updated to sdk v' + arm_version)
         wrd.arm_version = arm_version
         arm.make.clean_project()
-        if len(bpy.data.cameras) > 0:
-            make_renderer.make_renderer(bpy.data.cameras[0])
-
+        make_renderer.make_renderer(bpy.data.worlds['Arm'])
     # Set url for embedded player
     if arm.utils.with_krom():
         barmory.set_files_location(arm.utils.get_fp_build() + '/krom')

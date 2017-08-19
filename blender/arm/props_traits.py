@@ -296,7 +296,7 @@ class ArmoryRefreshCanvasListButton(bpy.types.Operator):
         return{'FINISHED'}
 
 # Menu in tools region
-class ToolsTraitsPanel(bpy.types.Panel):
+class ArmTraitsPanel(bpy.types.Panel):
     bl_label = "Armory Traits"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -428,7 +428,7 @@ def register():
     bpy.utils.register_class(ArmoryNewCanvasDialog)
     bpy.utils.register_class(ArmoryRefreshScriptsButton)
     bpy.utils.register_class(ArmoryRefreshCanvasListButton)
-    bpy.utils.register_class(ToolsTraitsPanel)
+    bpy.utils.register_class(ArmTraitsPanel)
 
     initObjectProperties()
 
@@ -445,4 +445,4 @@ def unregister():
     bpy.utils.unregister_class(ArmoryNewCanvasDialog)
     bpy.utils.unregister_class(ArmoryRefreshScriptsButton)
     bpy.utils.unregister_class(ArmoryRefreshCanvasListButton)
-    bpy.utils.unregister_class(ToolsTraitsPanel)
+    bpy.utils.unregister_class(ArmTraitsPanel)

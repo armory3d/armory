@@ -66,7 +66,7 @@ project.addSources('Sources');
             f.write(add_armory_library(sdk_path, 'iron'))
 
         # Project libraries
-        for lib in wrd.my_librarytraitlist:
+        for lib in wrd.arm_librarylist:
             if lib.enabled_prop:
                 f.write('project.addLibrary("{0}");\n'.format(lib.name))
         
@@ -249,7 +249,7 @@ def write_indexhtml(w, h):
 <html>
 <head>
     <meta charset="utf-8"/>""")
-        if bpy.data.cameras[0].rp_stereo:
+        if bpy.data.worlds['Arm'].rp_stereo:
             f.write("""
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <style>
@@ -263,7 +263,7 @@ def write_indexhtml(w, h):
 </head>
 <body style="margin: 0; padding: 0;">
 """)
-        if bpy.data.cameras[0].rp_stereo:
+        if bpy.data.worlds['Arm'].rp_stereo:
             f.write("""
     <canvas style="width: 100vw; height: 100vh; display: block;" id='khanvas'></canvas>
 """)
@@ -387,9 +387,9 @@ const float compoDOFFstop = """ + str(round(bpy.data.cameras[0].gpu_dof.fstop * 
 const float compoDOFLength = 160.0;
 """) # str(round(bpy.data.cameras[0].lens * 100) / 100)
 
-        if bpy.data.cameras[0].rp_voxelgi:
+        if bpy.data.worlds['Arm'].rp_voxelgi:
             f.write(
-"""const float voxelgiResolution = """ + str(bpy.data.cameras[0].rp_voxelgi_resolution) + """;
+"""const float voxelgiResolution = """ + str(bpy.data.worlds['Arm'].rp_voxelgi_resolution) + """;
 const float voxelgiDimensions = """ + str(round(wrd.generate_voxelgi_dimensions)) + """;
 const float voxelgiDiff = """ + str(round(wrd.voxelgi_diff * 100) / 100) + """;
 const float voxelgiSpec = """ + str(round(wrd.voxelgi_spec * 100) / 100) + """;
@@ -399,7 +399,7 @@ const float voxelgiStep = """ + str(round(wrd.voxelgi_step * 100) / 100) + """;
 const float voxelgiRange = """ + str(round(wrd.voxelgi_range * 100) / 100) + """;
 """)
 
-        if bpy.data.cameras[0].rp_sss_state == 'On':
+        if bpy.data.worlds['Arm'].rp_sss_state == 'On':
             f.write(
 """const float sssWidth = """ + str(wrd.sss_width / 10.0) + """;
 """)

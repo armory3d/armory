@@ -88,23 +88,24 @@ def build_node_tree(world):
         assets.add_embedded_data('iestexture.png')
 
     voxelgi = False
-    for cam in bpy.data.cameras:
-        if cam.rp_shadowmap == 'None':
-            wrd.world_defs += '_NoShadows'
-            assets.add_khafile_def('arm_no_shadows')
-        if cam.rp_voxelgi:
-            voxelgi = True
-        if cam.rp_dfrs:
-            wrd.world_defs += '_DFRS'
-            assets.add_khafile_def('arm_sdf')
-        if cam.rp_dfao:
-            wrd.world_defs += '_DFAO'
-            assets.add_khafile_def('arm_sdf')
-        if cam.rp_dfgi:
-            wrd.world_defs += '_DFGI'
-            assets.add_khafile_def('arm_sdf')
-            wrd.world_defs += '_Rad' # Always do radiance for gi
-            wrd.world_defs += '_Irr'
+    # for wrd in bpy.data.worlds:
+    wrd = bpy.data.worlds['Arm']
+    if wrd.rp_shadowmap == 'None':
+        wrd.world_defs += '_NoShadows'
+        assets.add_khafile_def('arm_no_shadows')
+    if wrd.rp_voxelgi:
+        voxelgi = True
+    if wrd.rp_dfrs:
+        wrd.world_defs += '_DFRS'
+        assets.add_khafile_def('arm_sdf')
+    if wrd.rp_dfao:
+        wrd.world_defs += '_DFAO'
+        assets.add_khafile_def('arm_sdf')
+    if wrd.rp_dfgi:
+        wrd.world_defs += '_DFGI'
+        assets.add_khafile_def('arm_sdf')
+        wrd.world_defs += '_Rad' # Always do radiance for gi
+        wrd.world_defs += '_Irr'
 
     if voxelgi:
         assets.add_khafile_def('arm_voxelgi')

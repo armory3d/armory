@@ -8,7 +8,6 @@ import arm.make_renderer as make_renderer
 import arm.make as make
 import arm.make_utils as make_utils
 import arm.make_state as state
-import arm.props_renderer as props_renderer
 import arm.assets as assets
 import arm.log as log
 
@@ -41,26 +40,23 @@ class ObjectPropsPanel(bpy.types.Panel):
             row.prop(obj, 'object_animation_enabled')
 
         if obj.type == 'MESH':
-            layout.prop(obj, 'instanced_children')
-            if obj.instanced_children:
+            layout.prop(obj, 'arm_instanced')
+            if obj.arm_instanced:
                 layout.label('Location')
                 column = layout.column()
-                column.prop(obj, 'instanced_children_loc_x')
-                column.prop(obj, 'instanced_children_loc_y')
-                column.prop(obj, 'instanced_children_loc_z')
+                column.prop(obj, 'arm_instanced_child')
+                column.prop(obj, 'arm_instanced_child')
+                column.prop(obj, 'arm_instanced_child')
                 # layout.label('Rotation')
                 # row = layout.row()
-                # row.prop(obj, 'instanced_children_rot_x')
-                # row.prop(obj, 'instanced_children_rot_y')
-                # row.prop(obj, 'instanced_children_rot_z')
+                # row.prop(obj, 'arm_instanced_child')
+                # row.prop(obj, 'arm_instanced_child')
+                # row.prop(obj, 'arm_instanced_child')
                 # layout.label('Scale')
                 # row = layout.row()
-                # row.prop(obj, 'instanced_children_scale_x')
-                # row.prop(obj, 'instanced_children_scale_y')
-                # row.prop(obj, 'instanced_children_scale_z')
-            # layout.prop(obj, 'override_material')
-            # if obj.override_material:
-                # layout.prop(obj, 'override_material_name')
+                # row.prop(obj, 'arm_instanced_childre')
+                # row.prop(obj, 'arm_instanced_childre')
+                # row.prop(obj, 'arm_instanced_childre')
 
 class ModifiersPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -431,23 +427,23 @@ class ArmoryProjectPanel(bpy.types.Panel):
         layout.separator()
         layout.label("Libraries:")
         rows = 2
-        if len(wrd.my_librarytraitlist) > 1:
+        if len(wrd.arm_librarylist) > 1:
             rows = 4
         
         row = layout.row()
-        row.template_list("MY_UL_LibraryTraitList", "The_List", wrd, "my_librarytraitlist", wrd, "librarytraitlist_index", rows=rows)
+        row.template_list("MY_UL_LibraryTraitList", "The_List", wrd, "arm_librarylist", wrd, "arm_librarylist_index", rows=rows)
 
         col = row.column(align=True)
-        col.operator("my_librarytraitlist.new_item", icon='ZOOMIN', text="")
-        col.operator("my_librarytraitlist.delete_item", icon='ZOOMOUT', text="")
+        col.operator("arm_librarylist.new_item", icon='ZOOMIN', text="")
+        col.operator("arm_librarylist.delete_item", icon='ZOOMOUT', text="")
 
-        if len(wrd.my_librarytraitlist) > 1:
+        if len(wrd.arm_librarylist) > 1:
             col.separator()
-            col.operator("my_librarytraitlist.move_item", icon='TRIA_UP', text="").direction = 'UP'
-            col.operator("my_librarytraitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
+            col.operator("arm_librarylist.move_item", icon='TRIA_UP', text="").direction = 'UP'
+            col.operator("arm_librarylist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
 
-        # if wrd.librarytraitlist_index >= 0 and len(wrd.my_librarytraitlist) > 0:
-            # libitem = wrd.my_librarytraitlist[wrd.librarytraitlist_index]         
+        # if wrd.arm_librarylist_index >= 0 and len(wrd.arm_librarylist) > 0:
+            # libitem = wrd.arm_librarylist[wrd.arm_librarylist_index]         
 
         layout.label('Armory v' + wrd.arm_version)
 
@@ -533,7 +529,7 @@ class ArmoryPlayButton(bpy.types.Operator):
             
         make_renderer.check_default()
 
-        if bpy.data.cameras[0].rp_rendercapture == True:
+        if bpy.data.worlds['Arm'].rp_rendercapture == True:
             self.report({"ERROR"}, "Disable Camera - Armory Render Path - Render Capture first")
             return {"CANCELLED"}
 
@@ -568,7 +564,7 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
 
         make_renderer.check_default()
 
-        if bpy.data.cameras[0].rp_rendercapture == True:
+        if bpy.data.worlds['Arm'].rp_rendercapture == True:
             self.report({"ERROR"}, "Disable Camera - Armory Render Path - Render Capture first")
             return {"CANCELLED"}
 
@@ -757,7 +753,7 @@ class ArmoryRenderButton(bpy.types.Operator):
             make.stop_project()
         if bpy.data.worlds['Arm'].arm_play_runtime != 'Krom':
             bpy.data.worlds['Arm'].arm_play_runtime = 'Krom'
-        if bpy.data.cameras[0].rp_rendercapture == False:
+        if bpy.data.worlds['Arm'].rp_rendercapture == False:
             self.report({"ERROR"}, "Set Camera - Armory Render Path - Preset to Render Capture first")
             return {"CANCELLED"}
         assets.invalidate_enabled = False
@@ -801,6 +797,263 @@ def draw_info_header(self, context):
     if log.info_text != '':
         layout.label(log.info_text)
 
+class ArmRenderPathPanel(bpy.types.Panel):
+    bl_label = "Armory Render Path"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = {'DEFAULT_CLOSED'}
+ 
+    def draw(self, context):
+        layout = self.layout
+
+        dat = bpy.data.worlds['Arm']
+        wrd = bpy.data.worlds['Arm']
+
+        layout.prop(dat, "rp_preset")
+        layout.separator()
+        layout.prop(dat, "rp_renderer")
+        layout.prop(wrd, 'material_model')
+        layout.prop(dat, "rp_shadowmap")
+        layout.prop(dat, "rp_meshes")
+        layout.prop(dat, "rp_translucency_state")
+        layout.prop(dat, "rp_overlays_state")
+        layout.prop(dat, "rp_decals_state")
+        layout.prop(dat, "rp_sss_state")
+        if dat.rp_sss_state != 'Off':
+            layout.prop(wrd, 'sss_width')
+        layout.prop(dat, "rp_hdr")
+        layout.prop(dat, "rp_worldnodes")
+        if not dat.rp_worldnodes:
+            layout.prop(dat, "rp_clearbackground")
+        layout.prop(dat, "rp_stereo")
+        layout.prop(dat, "rp_greasepencil")
+        layout.prop(dat, 'rp_voxelgi')
+        if dat.rp_voxelgi:
+            layout.prop(dat, 'rp_voxelgi_resolution')
+            layout.prop(wrd, 'generate_voxelgi_dimensions')
+            row = layout.row()
+            row.prop(wrd, 'voxelgi_diff')
+            row.prop(wrd, 'voxelgi_spec')
+            row = layout.row()
+            row.prop(wrd, 'voxelgi_occ')
+            row.prop(wrd, 'voxelgi_env')
+            row = layout.row()
+            row.prop(wrd, 'voxelgi_step')
+            row.prop(wrd, 'voxelgi_range')
+            row = layout.row()
+            row.prop(wrd, 'voxelgi_revoxelize')
+            row.prop(wrd, 'voxelgi_multibounce')
+            row = layout.row()
+            row.prop(wrd, 'voxelgi_camera')
+            row.prop(wrd, 'voxelgi_anisotropic')
+            row = layout.row()
+            row.prop(wrd, 'voxelgi_shadows')
+            row.prop(wrd, 'voxelgi_refraction')
+            layout.prop(dat, 'rp_voxelgi_hdr')
+
+        layout.separator()
+        layout.prop(dat, "rp_render_to_texture")
+        if dat.rp_render_to_texture:
+            layout.prop(dat, "rp_supersampling")
+            layout.prop(dat, "rp_antialiasing")
+            layout.prop(dat, "rp_compositornodes")
+            layout.prop(dat, "rp_volumetriclight")
+            layout.prop(dat, "rp_ssao")
+            layout.prop(dat, "rp_ssr")
+            # layout.prop(dat, "rp_dfao")
+            # layout.prop(dat, "rp_dfrs")
+            # layout.prop(dat, "rp_dfgi")
+            layout.prop(dat, "rp_bloom")
+            layout.prop(dat, "rp_eyeadapt")
+            layout.prop(dat, "rp_motionblur")
+            layout.prop(dat, "rp_rendercapture")
+            layout.prop(dat, "rp_ocean")
+
+class ArmRenderPropsPanel(bpy.types.Panel):
+    bl_label = "Armory Render Props"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = {'DEFAULT_CLOSED'}
+ 
+    def draw(self, context):
+        layout = self.layout
+        wrd = bpy.data.worlds['Arm']
+
+        layout.prop(wrd, 'generate_pcss_state')
+        if wrd.generate_pcss_state == 'On' or wrd.generate_pcss_state == 'Auto':
+            layout.prop(wrd, 'generate_pcss_rings')
+        layout.prop(wrd, 'generate_ssrs')
+        
+        layout.prop(wrd, 'arm_samples_per_pixel')
+        row = layout.row()
+        row.prop(wrd, 'generate_gpu_skin')
+        if wrd.generate_gpu_skin:
+            row.prop(wrd, 'generate_gpu_skin_max_bones_auto')
+            if not wrd.generate_gpu_skin_max_bones_auto:
+                layout.prop(wrd, 'generate_gpu_skin_max_bones')
+        layout.prop(wrd, 'texture_filtering_state')
+        layout.prop(wrd, 'tessellation_enabled')
+        layout.prop(wrd, 'force_no_culling')
+        layout.prop(wrd, 'generate_two_sided_area_lamp')
+
+        layout.prop(wrd, 'generate_clouds')
+        if wrd.generate_clouds:
+            layout.prop(wrd, 'generate_clouds_density')
+            layout.prop(wrd, 'generate_clouds_size')
+            layout.prop(wrd, 'generate_clouds_lower')
+            layout.prop(wrd, 'generate_clouds_upper')
+            layout.prop(wrd, 'generate_clouds_wind')
+            layout.prop(wrd, 'generate_clouds_secondary')
+            layout.prop(wrd, 'generate_clouds_precipitation')
+            layout.prop(wrd, 'generate_clouds_eccentricity')
+        
+        layout.label('SSAO')
+        # layout.prop(wrd, 'generate_ssao')
+        # if wrd.generate_ssao:
+        layout.prop(wrd, 'generate_ssao_size')
+        layout.prop(wrd, 'generate_ssao_strength')
+        layout.prop(wrd, 'generate_ssao_half_res')
+        
+        layout.label('Bloom')
+        # layout.prop(wrd, 'generate_bloom')
+        # if wrd.generate_bloom:
+        layout.prop(wrd, 'generate_bloom_threshold')
+        layout.prop(wrd, 'generate_bloom_strength')
+        layout.prop(wrd, 'generate_bloom_radius')
+        
+        layout.label('Motion Blur')
+        # layout.prop(wrd, 'generate_motion_blur')
+        # if wrd.generate_motion_blur:
+        layout.prop(wrd, 'generate_motion_blur_intensity')
+        
+        layout.label('SSR')
+        # layout.prop(wrd, 'generate_ssr')
+        # if wrd.generate_ssr:
+        layout.prop(wrd, 'generate_ssr_ray_step')
+        layout.prop(wrd, 'generate_ssr_min_ray_step')
+        layout.prop(wrd, 'generate_ssr_search_dist')
+        layout.prop(wrd, 'generate_ssr_falloff_exp')
+        layout.prop(wrd, 'generate_ssr_jitter')
+        layout.prop(wrd, 'generate_ssr_half_res')
+
+        layout.label('SSRS')
+        layout.prop(wrd, 'generate_ssrs_ray_step')
+
+        layout.label('Volumetric Light')
+        # layout.prop(wrd, 'generate_volumetric_light')
+        # if wrd.generate_volumetric_light:
+        layout.prop(wrd, 'generate_volumetric_light_air_turbidity')
+        layout.prop(wrd, 'generate_volumetric_light_air_color')
+
+        layout.prop(wrd, 'generate_tonemap')
+        layout.prop(wrd, 'generate_letterbox')
+        if wrd.generate_letterbox:
+            layout.prop(wrd, 'generate_letterbox_size')
+        layout.prop(wrd, 'generate_grain')
+        if wrd.generate_grain:
+            layout.prop(wrd, 'generate_grain_strength')
+        layout.prop(wrd, 'generate_fog')
+        if wrd.generate_fog:
+            layout.prop(wrd, 'generate_fog_color')
+            layout.prop(wrd, 'generate_fog_amounta')
+            layout.prop(wrd, 'generate_fog_amountb')
+        layout.prop(wrd, 'generate_fisheye')
+        layout.prop(wrd, 'generate_vignette')
+        layout.prop(wrd, 'generate_lens_texture')
+
+class ArmGenLodButton(bpy.types.Operator):
+    '''Automatically generate LoD levels'''
+    bl_idname = 'arm.generate_lod'
+    bl_label = 'Auto Generate'
+ 
+    def lod_name(self, name, level):
+        return name + '_LOD' + str(level + 1)
+
+    def execute(self, context):
+        obj = context.object
+        if obj == None:
+            return{'CANCELLED'}
+
+        # Clear
+        mdata = context.object.data
+        mdata.lodlist_index = 0
+        mdata.my_lodlist.clear()
+
+        # Lod levels
+        wrd = bpy.data.worlds['Arm']
+        ratio = wrd.arm_lod_gen_ratio
+        num_levels = wrd.arm_lod_gen_levels
+        for level in range(0, num_levels):
+            new_obj = obj.copy()
+            for i in range(0, 3):
+                new_obj.location[i] = 0
+                new_obj.rotation_euler[i] = 0
+                new_obj.scale[i] = 1
+            new_obj.data = obj.data.copy()
+            new_obj.name = self.lod_name(obj.name, level)
+            new_obj.parent = obj
+            new_obj.hide = True
+            new_obj.hide_render = True
+            mod = new_obj.modifiers.new('Decimate', 'DECIMATE')
+            mod.ratio = ratio
+            ratio *= wrd.arm_lod_gen_ratio
+            context.scene.objects.link(new_obj)
+            
+        # Screen sizes
+        for level in range(0, num_levels):
+            mdata.my_lodlist.add()
+            mdata.my_lodlist[-1].name = self.lod_name(obj.name, level)
+            mdata.my_lodlist[-1].screen_size_prop = (1 - (1 / (num_levels + 1)) * level) - (1 / (num_levels + 1))
+
+        return{'FINISHED'}
+
+class ArmLodPanel(bpy.types.Panel):
+    bl_label = "Armory Lod"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "object"
+    bl_options = {'DEFAULT_CLOSED'}
+ 
+    def draw(self, context):
+        layout = self.layout
+        obj = bpy.context.object
+
+        # Mesh only for now
+        if obj.type != 'MESH':
+            return
+
+        mdata = obj.data
+
+        rows = 2
+        if len(mdata.my_lodlist) > 1:
+            rows = 4
+        
+        row = layout.row()
+        row.template_list("MY_UL_LodList", "The_List", mdata, "my_lodlist", mdata, "lodlist_index", rows=rows)
+        col = row.column(align=True)
+        col.operator("my_lodlist.new_item", icon='ZOOMIN', text="")
+        col.operator("my_lodlist.delete_item", icon='ZOOMOUT', text="")
+
+        if mdata.lodlist_index >= 0 and len(mdata.my_lodlist) > 0:
+            item = mdata.my_lodlist[mdata.lodlist_index]
+            row = layout.row()
+            row.prop_search(item, "name", bpy.data, "objects", "Object")
+            row = layout.row()
+            row.prop(item, "screen_size_prop")
+
+        # Auto lod for meshes
+        if obj.type == 'MESH':
+            layout.separator()
+            layout.operator("arm.generate_lod")
+            wrd = bpy.data.worlds['Arm']
+            row = layout.row()
+            row.prop(wrd, 'arm_lod_gen_levels')
+            row.prop(wrd, 'arm_lod_gen_ratio')
+
+        layout.prop(mdata, "lod_material")
+
 def register():
     bpy.utils.register_class(ObjectPropsPanel)
     bpy.utils.register_class(ModifiersPropsPanel)
@@ -816,6 +1069,8 @@ def register():
     bpy.utils.register_class(ArmoryRenderPanel)
     bpy.utils.register_class(ArmoryExporterPanel)
     bpy.utils.register_class(ArmoryProjectPanel)
+    bpy.utils.register_class(ArmRenderPathPanel)
+    bpy.utils.register_class(ArmRenderPropsPanel)
     # bpy.utils.register_class(ArmVirtualInputPanel)
     # bpy.utils.register_class(ArmGlobalVarsPanel)
     bpy.utils.register_class(ArmoryPlayButton)
@@ -835,6 +1090,8 @@ def register():
     bpy.utils.register_class(ArmoryRenderAnimButton)
     bpy.utils.register_class(ArmoryGenerateNavmeshButton)
     bpy.utils.register_class(ArmNavigationPanel)
+    bpy.utils.register_class(ArmGenLodButton)
+    bpy.utils.register_class(ArmLodPanel)
 
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
     bpy.types.INFO_HT_header.prepend(draw_info_header)
@@ -857,6 +1114,8 @@ def unregister():
     bpy.utils.unregister_class(ArmoryRenderPanel)
     bpy.utils.unregister_class(ArmoryExporterPanel)
     bpy.utils.unregister_class(ArmoryProjectPanel)
+    bpy.utils.unregister_class(ArmRenderPathPanel)
+    bpy.utils.unregister_class(ArmRenderPropsPanel)
     # bpy.utils.unregister_class(ArmVirtualInputPanel)
     # bpy.utils.unregister_class(ArmGlobalVarsPanel)
     bpy.utils.unregister_class(ArmoryPlayButton)
@@ -876,3 +1135,5 @@ def unregister():
     bpy.utils.unregister_class(ArmoryRenderAnimButton)
     bpy.utils.unregister_class(ArmoryGenerateNavmeshButton)
     bpy.utils.unregister_class(ArmNavigationPanel)
+    bpy.utils.unregister_class(ArmGenLodButton)
+    bpy.utils.unregister_class(ArmLodPanel)

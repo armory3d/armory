@@ -1103,7 +1103,7 @@ class ArmoryExporter:
                         if not bone.parent:
                             self.process_bone(bone)
 
-        if bobject.type != 'MESH' or bobject.instanced_children == False:
+        if bobject.type != 'MESH' or bobject.arm_instanced == False:
             for subbobject in bobject.children:
                 self.process_bobject(subbobject)
 
@@ -1296,12 +1296,9 @@ class ArmoryExporter:
                 
                 o['material_refs'] = []
                 for i in range(len(bobject.material_slots)):
-                    if bobject.override_material: # Overwrite material slot
-                        o['material_refs'].append(bobject.override_material_name)
-                    else: # Export assigned material
-                        self.export_material_ref(bobject, bobject.material_slots[i].material, i, o)
-                        if bobject.material_slots[i].material != None and bobject.material_slots[i].material.decal:
-                            o['type'] = 'decal_object'
+                    self.export_material_ref(bobject, bobject.material_slots[i].material, i, o)
+                    if bobject.material_slots[i].material != None and bobject.material_slots[i].material.decal:
+                        o['type'] = 'decal_object'
                 # No material, mimic cycles and assign default
                 if len(o['material_refs']) == 0:
                     self.use_default_material(bobject, o)
@@ -1425,7 +1422,7 @@ class ArmoryExporter:
             if not hasattr(o, 'children') and len(bobject.children) > 0:
                 o['children'] = []
 
-        if bobject.type != 'MESH' or bobject.instanced_children == False:
+        if bobject.type != 'MESH' or bobject.arm_instanced == False:
             for subbobject in bobject.children:
                 if subbobject.parent_type != "BONE":
                     self.export_object(subbobject, scene, None, o)
@@ -2097,10 +2094,11 @@ class ArmoryExporter:
         o['far_plane'] = objref.lamp_clip_end
         o['fov'] = objref.lamp_fov
         o['shadows_bias'] = objref.lamp_shadows_bias
-        if bpy.data.cameras[0].rp_shadowmap == 'None':
+        wrd = bpy.data.worlds['Arm']
+        if wrd.rp_shadowmap == 'None':
             o['shadowmap_size'] = 0
         else:
-            o['shadowmap_size'] = int(bpy.data.cameras[0].rp_shadowmap)
+            o['shadowmap_size'] = int(wrd.rp_shadowmap)
         if o['type'] == 'sun': # Scale bias for ortho light matrix
             o['shadows_bias'] *= 10.0
         if (objtype == 'POINT' or objtype == 'SPOT') and objref.shadow_soft_size > 0.1: # No sun for now
@@ -2151,7 +2149,8 @@ class ArmoryExporter:
         o['far_plane'] = objref.clip_end
         o['fov'] = objref.angle
 
-        if bpy.data.worlds['Arm'].arm_play_camera != 'Scene' and ArmoryExporter.in_viewport:
+        wrd = bpy.data.worlds['Arm']
+        if wrd.arm_play_camera != 'Scene' and ArmoryExporter.in_viewport:
             pw = self.get_viewport_panels_w()
             # Tool shelf and properties hidden
             proj, is_persp = self.get_viewport_projection_matrix()
@@ -2172,7 +2171,7 @@ class ArmoryExporter:
             o['mirror_resolution_y'] = int(objref.mirror_resolution_y)
 
         o['frustum_culling'] = objref.frustum_culling
-        o['render_path'] = objref.renderpath_path + '/' + objref.renderpath_path # Same file name and id
+        o['render_path'] = wrd.renderpath_path + '/' + wrd.renderpath_path # Same file name and id
         
         if self.scene.world != None and 'Background' in self.scene.world.node_tree.nodes: # TODO: parse node tree
             background_node = self.scene.world.node_tree.nodes['Background']
@@ -2322,27 +2321,26 @@ class ArmoryExporter:
             self.make_default_mat('armdefaultskin', self.defaultSkinMaterialObjects)
 
         # Auto-enable render-path featues
-        if len(bpy.data.cameras) > 0:
-            rebuild_rp = False
-            cam = bpy.data.cameras[0]
-            if cam.rp_translucency_state == 'Auto' and cam.rp_translucency != transluc_used:
-                cam.rp_translucency = transluc_used
-                rebuild_rp = True
-            if cam.rp_overlays_state == 'Auto' and cam.rp_overlays != overlays_used:
-                cam.rp_overlays = overlays_used
-                rebuild_rp = True
-            if cam.rp_decals_state == 'Auto' and cam.rp_decals != decals_used:
-                cam.rp_decals = decals_used
-                rebuild_rp = True
-            # if cam.rp_sss_state == 'Auto' and cam.rp_sss != sss_used:
-                # cam.rp_sss = sss_used
-                # rebuild_rp = True
-            if rebuild_rp:
-                self.rebuild_render_path(cam)
+        rebuild_rp = False
+        wrd = bpy.data.worlds['Arm']
+        if wrd.rp_translucency_state == 'Auto' and wrd.rp_translucency != transluc_used:
+            wrd.rp_translucency = transluc_used
+            rebuild_rp = True
+        if wrd.rp_overlays_state == 'Auto' and wrd.rp_overlays != overlays_used:
+            wrd.rp_overlays = overlays_used
+            rebuild_rp = True
+        if wrd.rp_decals_state == 'Auto' and wrd.rp_decals != decals_used:
+            wrd.rp_decals = decals_used
+            rebuild_rp = True
+        # if wrd.rp_sss_state == 'Auto' and wrd.rp_sss != sss_used:
+            # wrd.rp_sss = sss_used
+            # rebuild_rp = True
+        if rebuild_rp:
+            self.rebuild_render_path(wrd)
 
-    def rebuild_render_path(self, cam):
+    def rebuild_render_path(self, wrd):
         # No shader invalidate required?
-        make_renderer.make_renderer(cam)
+        make_renderer.make_renderer(wrd)
         # Rebuild modified path
         assets_path = arm.utils.get_sdk_path() + 'armory/Assets/'
         make_renderpath.build_node_trees(assets_path)
@@ -2636,7 +2634,7 @@ class ArmoryExporter:
         is_instanced = False
         instance_offsets = None
         for n in refs:
-            if n.instanced_children == True:
+            if n.arm_instanced == True:
                 is_instanced = True
                 # Save offset data
                 instance_offsets = [0.0, 0.0, 0.0] # Include parent
@@ -2668,6 +2666,7 @@ class ArmoryExporter:
         return is_instanced, instance_offsets
 
     def preprocess(self):
+        wrd = bpy.data.worlds['Arm']
         ArmoryExporter.export_all_flag = True
         ArmoryExporter.export_physics = False # Indicates whether rigid body is exported
         ArmoryExporter.export_navigation = False
@@ -2679,21 +2678,19 @@ class ArmoryExporter:
         ArmoryExporter.import_traits = [] # Referenced traits
         ArmoryExporter.option_mesh_only = False
         ArmoryExporter.option_mesh_per_file = True
-        ArmoryExporter.option_optimize_mesh = bpy.data.worlds['Arm'].arm_optimize_mesh
-        ArmoryExporter.option_minimize = bpy.data.worlds['Arm'].arm_minimize
-        ArmoryExporter.option_sample_animation = bpy.data.worlds['Arm'].arm_sampled_animation
+        ArmoryExporter.option_optimize_mesh = wrd.arm_optimize_mesh
+        ArmoryExporter.option_minimize = wrd.arm_minimize
+        ArmoryExporter.option_sample_animation = wrd.arm_sampled_animation
         ArmoryExporter.sample_animation_flag = ArmoryExporter.option_sample_animation
 
-        # Only one render path for scene for now
         # Used for material shader export and khafile
-        if len(bpy.data.cameras) > 0:
-            ArmoryExporter.renderpath_id = bpy.data.cameras[0].renderpath_id
-            ArmoryExporter.renderpath_passes = bpy.data.cameras[0].renderpath_passes.split('_')
-            ArmoryExporter.mesh_context = 'mesh'
-            ArmoryExporter.mesh_context_empty = ''
-            ArmoryExporter.shadows_context = 'shadowmap'
-            ArmoryExporter.translucent_context = 'translucent'
-            ArmoryExporter.overlay_context = 'overlay'
+        ArmoryExporter.renderpath_id = wrd.renderpath_id
+        ArmoryExporter.renderpath_passes = wrd.renderpath_passes.split('_')
+        ArmoryExporter.mesh_context = 'mesh'
+        ArmoryExporter.mesh_context_empty = ''
+        ArmoryExporter.shadows_context = 'shadowmap'
+        ArmoryExporter.translucent_context = 'translucent'
+        ArmoryExporter.overlay_context = 'overlay'
 
     def preprocess_object(self, bobject): # Returns false if object should not be exported
         export_object = True

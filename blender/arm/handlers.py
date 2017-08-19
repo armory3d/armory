@@ -68,7 +68,7 @@ def on_scene_update_post(context):
         krom_location, krom_path = arm.utils.krom_paths()
         fp = krom_location
         resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
-        cformat = bpy.data.cameras[0].rp_rendercapture_format
+        cformat = bpy.data.worlds['Arm'].rp_rendercapture_format
         if cformat == '8bit':
             cbits = 4
             ctype = numpy.uint8
@@ -227,7 +227,7 @@ def on_load_post(context):
     wrd = bpy.data.worlds['Arm']
     wrd.arm_recompile = True
 
-    for lib in wrd.my_librarytraitlist:
+    for lib in wrd.arm_librarylist:
         if lib.enabled_prop:
             fp = arm.utils.get_fp() + '/Libraries/' + lib.name
             if fp not in appended_py_paths and os.path.exists(fp + '/blender.py'):
