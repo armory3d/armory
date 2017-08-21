@@ -780,6 +780,20 @@ class ArmoryRenderButton(bpy.types.Operator):
     bl_label = 'Render'
  
     def execute(self, context):
+        if not arm.utils.check_saved(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_camera(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_sdkpath(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_engine(self):
+            return {"CANCELLED"}
+
+        make_renderer.check_default()
+
         if state.playproc != None:
             make.stop_project()
         if bpy.data.worlds['Arm'].arm_play_runtime != 'Krom':
