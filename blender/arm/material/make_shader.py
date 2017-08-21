@@ -18,7 +18,7 @@ import arm.material.make_voxelbounce as make_voxelbounce
 
 rpass_hook = None
 
-def build(material, mat_users, mat_armusers, rid):
+def build(material, mat_users, mat_armusers):
     mat_state.mat_users = mat_users
     mat_state.mat_armusers = mat_armusers
     mat_state.material = material
@@ -62,7 +62,7 @@ def build(material, mat_users, mat_armusers, rid):
         mat_state.bind_textures = tar
 
         if rp == 'mesh':
-            con = make_mesh.make(rp, rid)
+            con = make_mesh.make(rp)
 
         elif rp == 'rect':
             con = make_rect.make(rp)

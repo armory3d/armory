@@ -6,6 +6,8 @@ import platform
 import zipfile
 import re
 import arm.lib.armpack
+import arm.make_state as state
+import arm.make_utils as make_utils
 
 def write_arm(filepath, output):
     if filepath.endswith('.zip'):
@@ -61,7 +63,15 @@ def get_os():
         return 'linux'
 
 def get_gapi():
-    return getattr(bpy.data.worlds['Arm'], 'arm_gapi_' + get_os())
+    wrd = bpy.data.worlds['Arm']
+    if state.is_export:
+        item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+        return getattr(item, make_utils.target_to_gapi(item.arm_project_target))
+    else:
+        if wrd.arm_play_runtime == 'Browser':
+            return 'webgl'
+        else:
+            return 'opengl'
 
 def get_sdk_path():
     user_preferences = bpy.context.user_preferences

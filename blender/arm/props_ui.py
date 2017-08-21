@@ -110,7 +110,6 @@ class DataPropsPanel(bpy.types.Panel):
 
         wrd = bpy.data.worlds['Arm']
         if obj.type == 'CAMERA':
-            layout.prop_search(wrd, "renderpath_path", bpy.data, "node_groups")
             layout.prop(obj.data, 'arm_frustum_culling')
             layout.prop(obj.data, 'arm_render_to_texture')
             col = layout.column()
@@ -327,8 +326,21 @@ class ArmoryExporterPanel(bpy.types.Panel):
         row.alignment = 'EXPAND'
         row.operator("arm.build_project")
         row.operator("arm.publish_project")
-        layout.prop(wrd, 'arm_project_target')
-        layout.prop(wrd, make_utils.target_to_gapi())
+        row.enabled = wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0
+
+        rows = 2
+        if len(wrd.arm_exporterlist) > 1:
+            rows = 4
+        row = layout.row()
+        row.template_list("ArmExporterList", "The_List", wrd, "arm_exporterlist", wrd, "arm_exporterlist_index", rows=rows)
+        col = row.column(align=True)
+        col.operator("arm_exporterlist.new_item", icon='ZOOMIN', text="")
+        col.operator("arm_exporterlist.delete_item", icon='ZOOMOUT', text="")
+
+        if wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0:
+            item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+            layout.prop(item, 'arm_project_target')
+            layout.prop(item, make_utils.target_to_gapi(item.arm_project_target))
 
 class ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
@@ -516,6 +528,7 @@ class ArmoryPlayButton(bpy.types.Operator):
             self.report({"ERROR"}, "Disable Camera - Armory Render Path - Render Capture first")
             return {"CANCELLED"}
 
+        state.is_export = False
         assets.invalidate_enabled = False
         make.play_project(False)
         assets.invalidate_enabled = True
@@ -551,6 +564,7 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
             self.report({"ERROR"}, "Disable Camera - Armory Render Path - Render Capture first")
             return {"CANCELLED"}
 
+        state.is_export = False
         assets.invalidate_enabled = False
         if state.playproc == None and state.krom_running == False:
             if context.area.type != 'VIEW_3D':
@@ -595,9 +609,10 @@ class ArmoryBuildButton(bpy.types.Operator):
             return {"CANCELLED"}
 
         state.target = make.runtime_to_target(in_viewport=False)
+        state.is_export = False
         assets.invalidate_enabled = False
-        make.build_project(target=state.target)
-        make.compile_project(target_name=state.target, watch=True)
+        make.build_project()
+        make.compile_project(watch=True)
         assets.invalidate_enabled = True
         return{'FINISHED'}
 
@@ -619,11 +634,15 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
         if not arm.utils.check_engine(self):
             return {"CANCELLED"}
 
-        state.target = bpy.data.worlds['Arm'].arm_project_target
+        wrd = bpy.data.worlds['Arm']
+        state.target = wrd.arm_exporterlist[wrd.arm_exporterlist_index].arm_project_target
+        state.is_export = True
+        assets.invalidate_shader_cache(None, None)
         assets.invalidate_enabled = False
-        make.build_project(target=state.target)
-        make.compile_project(target_name=state.target, watch=True)
+        make.build_project()
+        make.compile_project(watch=True)
         assets.invalidate_enabled = True
+        state.is_export = False
         return{'FINISHED'}
 
 class ArmoryPatchButton(bpy.types.Operator):
@@ -722,7 +741,9 @@ class ArmoryPublishButton(bpy.types.Operator):
         if not arm.utils.check_engine(self):
             return {"CANCELLED"}
 
+        state.is_export = True
         make.publish_project()
+        state.is_export = False
         self.report({'INFO'}, 'Publishing project, check console for details.')
         return{'FINISHED'}
 

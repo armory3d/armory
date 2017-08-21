@@ -75,6 +75,10 @@ def build_node_tree(world):
     if wrd.arm_two_sided_area_lamp:
         wrd.world_defs += '_TwoSidedAreaLamp'
 
+    # Store contexts
+    if wrd.rp_hdr == False:
+        wrd.world_defs += '_LDR'
+
     # Alternative models
     if wrd.arm_material_model == 'Cycles':
         wrd.world_defs += '_Cycles'
@@ -142,7 +146,7 @@ def write_output(output):
     dir_name = 'world'
     # Append world defs
     wrd = bpy.data.worlds['Arm']
-    data_name = 'world' + wrd.world_defs + wrd.rp_defs
+    data_name = 'world' + wrd.world_defs
     
     # Reference correct shader context
     dat = output['material_datas'][0]

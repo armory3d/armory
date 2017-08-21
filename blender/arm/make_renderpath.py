@@ -28,13 +28,9 @@ def build_node_trees(assets_path):
         # Always include
         assets.add(assets_path + 'brdf.png')
         assets.add_embedded_data('brdf.png')
-
-    wrd.rp_defs = ''
-    parsed_paths = []
-    if wrd.renderpath_path not in parsed_paths:
-        node_group = bpy.data.node_groups[wrd.renderpath_path]
-        build_node_tree(wrd, node_group)
-        parsed_paths.append(wrd.renderpath_path)
+    
+    node_group = bpy.data.node_groups['armory_default']
+    build_node_tree(wrd, node_group)
 
 def build_node_tree(wrd, node_group):
     build_node_tree.wrd = wrd
@@ -208,7 +204,8 @@ def make_draw_material_quad(stage, node_group, node, context_index=1):
 def make_draw_quad(stage, node_group, node, context_index=1, shader_context=None):
     stage['command'] = 'draw_shader_quad'
     # Append world defs to get proper context
-    world_defs = bpy.data.worlds['Arm'].world_defs + bpy.data.worlds['Arm'].rp_defs
+    wrd = bpy.data.worlds['Arm']
+    world_defs = wrd.world_defs
     if shader_context == None:
         shader_context = node.inputs[context_index].default_value
     scon = shader_context.split('/')
@@ -234,7 +231,7 @@ def make_draw_world(stage, node_group, node, dome=True):
 def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     scon = 'compositor_pass'
     wrd = bpy.data.worlds['Arm']
-    world_defs = wrd.world_defs + wrd.rp_defs
+    world_defs = wrd.world_defs
     compositor_defs = make_compositor.parse_defs(bpy.data.scenes[0].node_tree) # Thrown in scene 0 for now
     compositor_defs += '_CTone' + wrd.arm_tonemap
     # Additional compositor flags
@@ -750,10 +747,6 @@ def get_root_node(node_group):
     rn = None
     for n in node_group.nodes:
         if n.bl_idname == 'BeginNodeType':
-            # Store contexts
-            build_node_tree.wrd.renderpath_id = n.inputs[0].default_value            
-            if n.inputs[1].default_value == False:
-                bpy.data.worlds['Arm'].rp_defs += '_LDR'
             rn = nodes.find_node_by_link_from(node_group, n, n.outputs[0])
             break
     return rn
@@ -771,30 +764,31 @@ def preprocess_renderpath(root_node, node_group):
     
 def traverse_renderpath(node, node_group, render_targets, depth_buffers):
     # Gather defs from linked nodes
+    wrd = bpy.data.worlds['Arm']
     if node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':
         if preprocess_renderpath.velocity_def_added == False:
             assets.add_khafile_def('arm_veloc')
-            bpy.data.worlds['Arm'].rp_defs += '_Veloc'
+            wrd.world_defs += '_Veloc'
             preprocess_renderpath.velocity_def_added = True
         if node.bl_idname == 'TAAPassNodeType':
             assets.add_khafile_def('arm_taa')
-            # bpy.data.worlds['Arm'].rp_defs += '_TAA'
+            # wrd.world_defs += '_TAA'
     elif node.bl_idname == 'SMAAPassNodeType':
-        bpy.data.worlds['Arm'].rp_defs += '_SMAA'
+        wrd.world_defs += '_SMAA'
 
     elif node.bl_idname == 'SSSPassNodeType':
-        bpy.data.worlds['Arm'].rp_defs += '_SSS'
+        wrd.world_defs += '_SSS'
 
     elif node.bl_idname == 'HistogramPassNodeType':
-        bpy.data.worlds['Arm'].rp_defs += '_Hist'
+        wrd.world_defs += '_Hist'
 
     elif node.bl_idname == 'SSAOPassNodeType' or node.bl_idname == 'ApplySSAOPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':
         if bpy.data.worlds['Arm'].arm_ssao: # SSAO enabled
-            bpy.data.worlds['Arm'].rp_defs += '_SSAO'
+            wrd.world_defs += '_SSAO'
 
     elif node.bl_idname == 'DrawStereoNodeType':
         assets.add_khafile_def('arm_vr')
-        bpy.data.worlds['Arm'].rp_defs += '_VR'
+        wrd.world_defs += '_VR'
         assets.add(build_node_trees.assets_path + 'vr.png')
         assets.add_embedded_data('vr.png')
 
@@ -802,7 +796,7 @@ def traverse_renderpath(node, node_group, render_targets, depth_buffers):
         global dynRes_added
         fstr = node.inputs[1].default_value
         if not dynRes_added and fstr.startswith('armory.renderpath.DynamicResolutionScale'):
-            bpy.data.worlds['Arm'].rp_defs += '_DynRes'
+            wrd.world_defs += '_DynRes'
             dynRes_added = True
 
     # Collect render targets

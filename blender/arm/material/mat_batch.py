@@ -73,7 +73,7 @@ def mark_uniforms(mats):
                             ar[i].inputs[j].is_uniform = True
                         break
 
-def build(materialArray, mat_users, mat_armusers, rid):
+def build(materialArray, mat_users, mat_armusers):
     global batchDict
     batchDict = dict() # Stores shader data for given material
     signatureDict = dict() # Stores materials for given signature
@@ -106,7 +106,7 @@ def build(materialArray, mat_users, mat_armusers, rid):
 
             # Signature not found  - build it
             if mat == mat2:
-                batchDict[mat] = make_shader.build(mat, mat_users, mat_armusers, rid)
+                batchDict[mat] = make_shader.build(mat, mat_users, mat_armusers)
                 break
 
             # Already batched

@@ -281,7 +281,6 @@ def set_renderpath(self, context):
     # assets.invalidate_compiled_data(self, context)
     assets.invalidate_shader_cache(self, context)
     make_renderer(bpy.data.worlds['Arm'])
-    bpy.data.worlds['Arm'].renderpath_path = 'armory_default'
 
 def make_renderer(wrd):
     global group

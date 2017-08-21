@@ -27,27 +27,19 @@ def get_kha_target(target_name): # TODO: remove
         return 'osx'
     return target_name
 
-def runtime_to_gapi():
-    wrd = bpy.data.worlds['Arm']
-    if wrd.arm_play_runtime == 'Krom' or wrd.arm_play_runtime == 'Native':
-        return 'arm_gapi_' + arm.utils.get_os()
-    else:
-        return 'arm_gapi_html5'
-
-def target_to_gapi():
+def target_to_gapi(arm_project_target):
     # TODO: align target names
-    wrd = bpy.data.worlds['Arm']
-    if wrd.arm_project_target == 'krom':
+    if arm_project_target == 'krom':
         return 'arm_gapi_' + arm.utils.get_os()
-    elif wrd.arm_project_target == 'macos':
+    elif arm_project_target == 'macos':
         return 'arm_gapi_mac'
-    elif wrd.arm_project_target == 'windows':
+    elif arm_project_target == 'windows':
         return 'arm_gapi_win'
-    elif wrd.arm_project_target == 'windowsapp':
+    elif arm_project_target == 'windowsapp':
         return 'arm_gapi_winapp'
-    elif wrd.arm_project_target == 'android-native':
+    elif arm_project_target == 'android-native':
         return 'arm_gapi_android'
-    elif wrd.arm_project_target == 'node':
+    elif arm_project_target == 'node':
         return 'arm_gapi_html5'
     else:
-        return 'arm_gapi_' + wrd.arm_project_target
+        return 'arm_gapi_' + arm_project_target

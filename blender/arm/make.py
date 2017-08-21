@@ -130,7 +130,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
         # Data does not exist yet
         if not os.path.isfile(fp + '/' + ref):
             shader_name = ref.split('/')[3] # Extract from 'build/compiled/...'
-            defs = make_utils.def_strings_to_array(wrd.world_defs + wrd.rp_defs)
+            defs = make_utils.def_strings_to_array(wrd.world_defs)
             if shader_name.startswith('compositor_pass'):
                 defs += make_utils.def_strings_to_array(wrd.compo_defs)
             elif shader_name.startswith('grease_pencil'):
@@ -161,7 +161,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     state.last_resx = resx
     state.last_resy = resy
 
-def compile_project(target_name=None, is_publish=False, watch=False, patch=False):
+def compile_project(target_name=None, watch=False, patch=False):
     wrd = bpy.data.worlds['Arm']
 
     fp = arm.utils.get_fp()
@@ -169,7 +169,7 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
 
     # Set build command
     if target_name == None:
-        target_name = wrd.arm_project_target
+        target_name = state.target
     elif target_name == 'native':
         target_name = ''
 
@@ -231,14 +231,10 @@ def compile_project(target_name=None, is_publish=False, watch=False, patch=False
     else:
         return subprocess.Popen(cmd)
 
-def build_project(is_play=False, is_publish=False, is_render=False, in_viewport=False, target=None):
+def build_project(is_play=False, is_publish=False, is_render=False, in_viewport=False):
     wrd = bpy.data.worlds['Arm']
 
     state.is_render = is_render
-
-    # Set target
-    if target == None:
-        state.target = wrd.arm_project_target.lower()
 
     # Clear flag
     state.in_viewport = False
@@ -383,7 +379,7 @@ def play_project(in_viewport, is_render=False):
     state.target = runtime_to_target(in_viewport)
 
     # Build data
-    build_project(is_play=True, is_render=is_render, in_viewport=in_viewport, target=state.target)
+    build_project(is_play=True, is_render=is_render, in_viewport=in_viewport)
     state.in_viewport = in_viewport
 
     khajs_path = get_khajs_path(in_viewport, state.target)
@@ -443,7 +439,7 @@ def play_project(in_viewport, is_render=False):
         threading.Timer(0.1, watch_compile, [mode]).start()
     else: # kha.js up to date
         state.recompiled = False
-        compile_project(target_name=state.target, patch=True)
+        compile_project(patch=True)
 
 def on_compiled(mode): # build, play, play_viewport, publish
     log.clear()
@@ -452,7 +448,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
 
     # Print info
     if mode == 'publish':
-        target_name = make_utils.get_kha_target(wrd.arm_project_target)
+        target_name = make_utils.get_kha_target(state.target)
         print('Project published')
         files_path = arm.utils.get_fp_build() + '/' + target_name
         if target_name == 'html5':
@@ -539,15 +535,13 @@ def clean_project():
     print('Project cleaned')
 
 def publish_project():
-    # Force minimize data
     assets.invalidate_enabled = False
-    minimize = bpy.data.worlds['Arm'].arm_minimize
-    bpy.data.worlds['Arm'].arm_minimize = True
+    wrd = bpy.data.worlds['Arm']
+    state.target = wrd.arm_exporterlist[wrd.arm_exporterlist_index].arm_project_target
     clean_project()
     build_project(is_publish=True)
-    state.compileproc = compile_project(target_name=bpy.data.worlds['Arm'].arm_project_target, is_publish=True)
+    state.compileproc = compile_project()
     threading.Timer(0.1, watch_compile, ['publish']).start()
-    bpy.data.worlds['Arm'].arm_minimize = minimize
     assets.invalidate_enabled = True
 
 def get_render_result():

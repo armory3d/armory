@@ -2170,7 +2170,7 @@ class ArmoryExporter:
             o['texture_resolution_y'] = int(objref.arm_texture_resolution_y)
 
         o['frustum_culling'] = objref.arm_frustum_culling
-        o['render_path'] = wrd.renderpath_path + '/' + wrd.renderpath_path # Same file name and id
+        o['render_path'] = 'armory_default/armory_default'
         
         if self.scene.world != None and 'Background' in self.scene.world.node_tree.nodes: # TODO: parse node tree
             background_node = self.scene.world.node_tree.nodes['Background']
@@ -2225,7 +2225,7 @@ class ArmoryExporter:
         mat_users[mat] = mat_objs
         mat_armusers = dict()
         mat_armusers[mat] = [o]
-        make_material.parse(mat, o, mat_users, mat_armusers, ArmoryExporter.renderpath_id)
+        make_material.parse(mat, o, mat_users, mat_armusers)
         self.output['material_datas'].append(o)
         bpy.data.materials.remove(mat)
         if bpy.data.worlds['Arm'].arm_culling == False:
@@ -2238,8 +2238,7 @@ class ArmoryExporter:
         if wrd.arm_batch_materials:
             mat_users = self.materialToObjectDict
             mat_armusers = self.materialToArmObjectDict
-            rid = ArmoryExporter.renderpath_id
-            mat_batch.build(self.materialArray, mat_users, mat_armusers, rid)
+            mat_batch.build(self.materialArray, mat_users, mat_armusers)
 
         transluc_used = False
         overlays_used = False
@@ -2268,8 +2267,7 @@ class ArmoryExporter:
 
             mat_users = self.materialToObjectDict
             mat_armusers = self.materialToArmObjectDict
-            rid = ArmoryExporter.renderpath_id
-            sd, rpasses = make_material.parse(material, o, mat_users, mat_armusers, rid)
+            sd, rpasses = make_material.parse(material, o, mat_users, mat_armusers)
 
             if 'translucent' in rpasses:
                 transluc_used = True
@@ -2680,7 +2678,6 @@ class ArmoryExporter:
         ArmoryExporter.sample_animation_flag = ArmoryExporter.option_sample_animation
 
         # Used for material shader export and khafile
-        ArmoryExporter.renderpath_id = wrd.renderpath_id
         ArmoryExporter.mesh_context = 'mesh'
         ArmoryExporter.mesh_context_empty = ''
         ArmoryExporter.shadows_context = 'shadowmap'
@@ -2970,7 +2967,7 @@ class ArmoryExporter:
         o['traits'].append(constr_trait)
 
     def post_export_world(self, world, o):
-        defs = bpy.data.worlds['Arm'].world_defs + bpy.data.worlds['Arm'].rp_defs
+        defs = bpy.data.worlds['Arm'].world_defs
         bgcol = world.arm_envtex_color
         if '_LDR' in defs: # No compositor used
             for i in range(0, 3):

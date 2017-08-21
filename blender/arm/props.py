@@ -81,62 +81,11 @@ def update_mat_cache(self, context):
     else:
         pass
 
-def update_gapi_win(self, context):
-    if os.path.isdir(arm.utils.get_fp_build() + '/windows-build'):
-        shutil.rmtree(arm.utils.get_fp_build() + '/windows-build')
-    bpy.data.worlds['Arm'].arm_recompile = True
-    assets.invalidate_compiled_data(self, context)
-
-def update_gapi_winapp(self, context):
-    if os.path.isdir(arm.utils.get_fp_build() + '/windowsapp-build'):
-        shutil.rmtree(arm.utils.get_fp_build() + '/windowsapp-build')
-    bpy.data.worlds['Arm'].arm_recompile = True
-    assets.invalidate_compiled_data(self, context)
-
-def update_gapi_linux(self, context):
-    if os.path.isdir(arm.utils.get_fp_build() + '/linux-build'):
-        shutil.rmtree(arm.utils.get_fp_build() + '/linux-build')
-    bpy.data.worlds['Arm'].arm_recompile = True
-    assets.invalidate_compiled_data(self, context)
-
-def update_gapi_mac(self, context):
-    if os.path.isdir(arm.utils.get_fp_build() + '/osx-build'):
-        shutil.rmtree(arm.utils.get_fp_build() + '/osx-build')
-    bpy.data.worlds['Arm'].arm_recompile = True
-    assets.invalidate_compiled_data(self, context)
-
-def update_gapi_android(self, context):
-    if os.path.isdir(arm.utils.get_fp_build() + '/android-build'):
-        shutil.rmtree(arm.utils.get_fp_build() + '/android-build')
-    bpy.data.worlds['Arm'].arm_recompile = True
-    assets.invalidate_compiled_data(self, context)
-
-def update_gapi_ios(self, context):
-    if os.path.isdir(arm.utils.get_fp_build() + '/ios-build'):
-        shutil.rmtree(arm.utils.get_fp_build() + '/ios-build')
-    bpy.data.worlds['Arm'].arm_recompile = True
-    assets.invalidate_compiled_data(self, context)
-
-def update_gapi_html5(self, context):
-    bpy.data.worlds['Arm'].arm_recompile = True
-    assets.invalidate_compiled_data(self, context)
-
 def init_properties():
     global arm_version
     bpy.types.World.arm_recompile = bpy.props.BoolProperty(name="Recompile", description="Recompile sources on next play", default=True)
     bpy.types.World.arm_progress = bpy.props.FloatProperty(name="Progress", description="Current build progress", default=100.0, min=0.0, max=100.0, soft_min=0.0, soft_max=100.0, subtype='PERCENTAGE', get=log.get_progress)
     bpy.types.World.arm_version = StringProperty(name="Version", description="Armory SDK version", default="")
-    bpy.types.World.arm_project_target = EnumProperty(
-        items = [('html5', 'HTML5', 'html5'),
-                 ('windows', 'Windows', 'windows'),
-                 ('windowsapp', 'WindowsApp', 'windowsapp'),
-                 ('macos', 'MacOS', 'macos'),
-                 ('linux', 'Linux', 'linux'),
-                 ('ios', 'iOS', 'ios'),
-                 ('android-native', 'Android', 'android-native'),
-                 ('krom', 'Krom', 'krom'),
-                 ('node', 'Node', 'node')],
-        name="Target", default='html5', description='Build paltform')
     bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="")
     bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm")
     bpy.types.World.arm_play_active_scene = BoolProperty(name="Play Active Scene", description="Load currently edited scene when launching player", default=True)
@@ -206,43 +155,6 @@ def init_properties():
     bpy.types.World.arm_winresize = BoolProperty(name="Resizable", description="Allow window resize", default=False)
     bpy.types.World.arm_winmaximize = BoolProperty(name="Maximizable", description="Allow window maximize", default=False)
     bpy.types.World.arm_winminimize = BoolProperty(name="Minimizable", description="Allow window minimize", default=True)
-    bpy.types.World.arm_gapi_win = EnumProperty(
-        items = [('opengl', 'Auto', 'opengl'),
-                 ('opengl', 'OpenGL', 'opengl'),
-                 ('vulkan', 'Vulkan', 'vulkan'),
-                 ('direct3d9', 'Direct3D9', 'direct3d9'),
-                 ('direct3d11', 'Direct3D11', 'direct3d11'),
-                 ('direct3d12', 'Direct3D12', 'direct3d12')],
-        name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_win)
-    bpy.types.World.arm_gapi_winapp = EnumProperty(
-        items = [('direct3d11', 'Auto', 'direct3d11'),
-                 ('direct3d11', 'Direct3D11', 'direct3d11')],
-        name="Graphics API", default='direct3d11', description='Based on currently selected target', update=update_gapi_winapp)
-    bpy.types.World.arm_gapi_linux = EnumProperty(
-        items = [('opengl', 'Auto', 'opengl'),
-                 ('opengl', 'OpenGL', 'opengl'),
-                 ('vulkan', 'Vulkan', 'vulkan')],
-        name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_linux)
-    bpy.types.World.arm_gapi_android = EnumProperty(
-        items = [('opengl', 'Auto', 'opengl'),
-                 ('opengl', 'OpenGL', 'opengl'),
-                 ('vulkan', 'Vulkan', 'vulkan')],
-        name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_android)
-    bpy.types.World.arm_gapi_mac = EnumProperty(
-        items = [('opengl', 'Auto', 'opengl'),
-                 ('opengl', 'OpenGL', 'opengl'),
-                 ('metal', 'Metal', 'metal')],
-        name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_mac)
-    bpy.types.World.arm_gapi_ios = EnumProperty(
-        items = [('opengl', 'Auto', 'opengl'),
-                 ('opengl', 'OpenGL', 'opengl'),
-                 ('metal', 'Metal', 'metal')],
-        name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_ios)
-    bpy.types.World.arm_gapi_html5 = EnumProperty(
-        items = [('webgl', 'Auto', 'webgl'),
-                 ('webgl', 'WebGL', 'webgl')],
-        name="Graphics API", default='webgl', description='Based on currently selected target', update=update_gapi_html5)
-
     # For object
     bpy.types.Object.arm_instanced = bpy.props.BoolProperty(name="Instanced Children", description="Use instaced rendering", default=False, update=invalidate_instance_cache)
     bpy.types.Object.arm_instanced_loc_x = bpy.props.BoolProperty(name="X", default=True)
@@ -288,9 +200,6 @@ def init_properties():
     bpy.types.Camera.arm_texture_resolution_x = bpy.props.FloatProperty(name="X", default=512.0)
     bpy.types.Camera.arm_texture_resolution_y = bpy.props.FloatProperty(name="Y", default=256.0)
 
-
-    bpy.types.World.renderpath_path = bpy.props.StringProperty(name="Render Path", description="Render path nodes", default="armory_default", update=assets.invalidate_shader_cache)
-    bpy.types.World.renderpath_id = bpy.props.StringProperty(name="Render Path ID", description="Asset ID", default="deferred") 
     # Render path generator
     bpy.types.World.rp_preset = EnumProperty(
         items=[('Low', 'Low', 'Low'),
@@ -552,7 +461,6 @@ def init_properties():
     bpy.types.World.arm_bundled_scripts_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.arm_canvas_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.world_defs = bpy.props.StringProperty(name="World Shader Defs", default='')
-    bpy.types.World.rp_defs = bpy.props.StringProperty(name="Render Path Shader Defs", default='')
     bpy.types.World.compo_defs = bpy.props.StringProperty(name="Compositor Shader Defs", default='')
     bpy.types.Material.export_uvs = bpy.props.BoolProperty(name="Export UVs", default=False)
     bpy.types.Material.export_vcols = bpy.props.BoolProperty(name="Export VCols", default=False)

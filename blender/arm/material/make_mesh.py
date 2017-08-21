@@ -12,17 +12,18 @@ write_material_attribs = None
 write_material_attribs_post = None
 write_vertex_attribs = None
 
-def make(context_id, rid):
+def make(context_id):
     con_mesh = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
 
-    if rid == 'forward':
+    rid = bpy.data.worlds['Arm'].rp_renderer
+    if rid == 'Forward':
         if bpy.data.worlds['Arm'].arm_material_model != 'Restricted':
             make_forward(con_mesh)
         else:
             make_forward_restricted(con_mesh)
-    elif rid == 'deferred':
+    elif rid == 'Deferred':
         make_deferred(con_mesh)
-    elif rid == 'deferred_plus':
+    elif rid == 'Deferred Plus':
         make_deferred_plus(con_mesh)
 
     make_finalize(con_mesh)
@@ -219,7 +220,7 @@ def make_deferred(con_mesh):
         frag.write('if (opacity < {0}) discard;'.format(opac))
 
     gapi = arm.utils.get_gapi()
-    if '_Veloc' in wrd.rp_defs:
+    if '_Veloc' in wrd.world_defs:
         frag.add_out('vec4[3] fragColor')
         if tese == None:
             vert.add_uniform('mat4 prevWVP', link='_prevWorldViewProjectionMatrix')
@@ -258,7 +259,7 @@ def make_deferred(con_mesh):
         frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - ((wvpposition.z / wvpposition.w) * 0.5 + 0.5));')
     else:
         frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - gl_FragCoord.z);')
-    if '_SSS' in wrd.rp_defs:
+    if '_SSS' in wrd.world_defs:
         frag.add_uniform('int materialID')
         frag.write('fragColor[1] = vec4(basecol.rgb, materialID + clamp(occlusion, 0.0, 1.0 - 0.001));')
     elif wrd.arm_voxelgi_refraction:
@@ -266,7 +267,7 @@ def make_deferred(con_mesh):
     else:
         frag.write('fragColor[1] = vec4(basecol.rgb, occlusion);')
 
-    if '_Veloc' in wrd.rp_defs:
+    if '_Veloc' in wrd.world_defs:
         frag.write('vec2 posa = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
         frag.write('vec2 posb = (prevwvpposition.xy / prevwvpposition.w) * 0.5 + 0.5;')
         frag.write('fragColor[2].rg = vec2(posa - posb);')
@@ -385,10 +386,11 @@ def make_forward_restricted(con_mesh):
     frag.add_out('vec4 fragColor')
     frag.write('fragColor = vec4(direct * lightColor * visibility, 1.0);')
     
-    if '_LDR' in bpy.data.worlds['Arm'].rp_defs:
+    if '_LDR' in wrd.world_defs:
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
 
 def make_forward(con_mesh):
+    wrd = bpy.data.worlds['Arm']
     make_forward_base(con_mesh)
 
     frag = con_mesh.frag
@@ -396,7 +398,7 @@ def make_forward(con_mesh):
 
     frag.write('fragColor = vec4(direct * lightColor * visibility + indirect * occlusion * envmapStrength, 1.0);')
     
-    if '_LDR' in bpy.data.worlds['Arm'].rp_defs:
+    if '_LDR' in wrd.world_defs:
         frag.add_include('../../Shaders/std/tonemap.glsl')
         frag.write('fragColor.rgb = tonemapFilmic(fragColor.rgb);')
         # frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')

@@ -21,12 +21,12 @@ def glslvalue(val):
     else:
         return val
 
-def parse(material, mat_data, mat_users, mat_armusers, rid):
+def parse(material, mat_data, mat_users, mat_armusers):
     wrd = bpy.data.worlds['Arm']
 
     # No batch - shader data per material
     if not wrd.arm_batch_materials or material.name.startswith('armdefault'):
-        rpasses, shader_data, shader_data_name, bind_constants, bind_textures = make_shader.build(material, mat_users, mat_armusers, rid)
+        rpasses, shader_data, shader_data_name, bind_constants, bind_textures = make_shader.build(material, mat_users, mat_armusers)
     else:
         rpasses, shader_data, shader_data_name, bind_constants, bind_textures = mat_batch.get(material)
 
