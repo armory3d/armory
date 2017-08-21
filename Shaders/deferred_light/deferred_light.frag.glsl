@@ -91,15 +91,8 @@ out vec4 fragColor;
 #ifndef _NoShadows
 float shadowTest(const vec3 lPos) {
 	
-	#ifdef _Clampstc
-	// Filtering out of bounds, remove
-	// const vec2 border = vec2(1.0 / shadowmapSize[0], 1.0 / shadowmapSize[1]) * 2.0;
-	// lPos.xy = clamp(lPos.xy, border[0], 1.0 - border[1]);
-	if (lPos.x < 0.0) return 1.0;
-	if (lPos.y < 0.0) return 1.0;
-	if (lPos.x > 1.0) return 1.0;
-	if (lPos.y > 1.0) return 1.0;
-	#endif
+	// Out of bounds
+	if (lPos.x < 0.0 || lPos.y < 0.0 || lPos.x > 1.0 || lPos.y > 1.0) return 1.0;
 
 	#ifdef _PCSS
 	return PCSS(lPos.xy, lPos.z - shadowsBias);
