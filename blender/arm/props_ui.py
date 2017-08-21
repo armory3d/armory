@@ -23,9 +23,7 @@ class ObjectPropsPanel(bpy.types.Panel):
         obj = bpy.context.object
         if obj == None:
             return
-            
-        wrd = bpy.data.worlds['Arm']
-
+        
         row = layout.row()
         row.prop(obj, 'arm_export')
         if not obj.arm_export:
@@ -254,7 +252,6 @@ class WorldPropsPanel(bpy.types.Panel):
  
     def draw(self, context):
         layout = self.layout
-        # wrd = bpy.context.world
         wrd = bpy.data.worlds['Arm']
         
         layout.prop(wrd, 'arm_irradiance')
@@ -305,12 +302,10 @@ class ArmoryRenderPanel(bpy.types.Panel):
  
     def draw(self, context):
         layout = self.layout
-        wrd = bpy.data.worlds['Arm']
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
         row.operator("arm.render", icon="RENDER_STILL")
         row.operator("arm.render_anim", icon="RENDER_ANIMATION")
-        layout.prop(wrd, "rp_rendercapture_format")
 
 class ArmoryExporterPanel(bpy.types.Panel):
     bl_label = "Armory Exporter"
@@ -341,6 +336,10 @@ class ArmoryExporterPanel(bpy.types.Panel):
             item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
             layout.prop(item, 'arm_project_target')
             layout.prop(item, make_utils.target_to_gapi(item.arm_project_target))
+            wrd.arm_rpcache_list.clear() # Make UIList work with prop_search()
+            for i in wrd.arm_rplist:
+                wrd.arm_rpcache_list.add().name = i.name
+            layout.prop_search(item, "arm_project_rp", wrd, "arm_rpcache_list", "Render Path")
 
 class ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
@@ -524,9 +523,9 @@ class ArmoryPlayButton(bpy.types.Operator):
             
         make_renderer.check_default()
 
-        if bpy.data.worlds['Arm'].rp_rendercapture == True:
-            self.report({"ERROR"}, "Disable Camera - Armory Render Path - Render Capture first")
-            return {"CANCELLED"}
+        rpdat = arm.utils.get_rp()
+        if rpdat.rp_rendercapture == True:
+            rpdat.rp_rendercapture = False
 
         state.is_export = False
         assets.invalidate_enabled = False
@@ -560,9 +559,9 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
 
         make_renderer.check_default()
 
-        if bpy.data.worlds['Arm'].rp_rendercapture == True:
-            self.report({"ERROR"}, "Disable Camera - Armory Render Path - Render Capture first")
-            return {"CANCELLED"}
+        rpdat = arm.utils.get_rp()
+        if rpdat.rp_rendercapture == True:
+            rpdat.rp_rendercapture = False
 
         state.is_export = False
         assets.invalidate_enabled = False
@@ -608,6 +607,8 @@ class ArmoryBuildButton(bpy.types.Operator):
         if not arm.utils.check_engine(self):
             return {"CANCELLED"}
 
+        make_renderer.check_default()
+
         state.target = make.runtime_to_target(in_viewport=False)
         state.is_export = False
         assets.invalidate_enabled = False
@@ -634,8 +635,19 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
         if not arm.utils.check_engine(self):
             return {"CANCELLED"}
 
+        make_renderer.check_default()
+
         wrd = bpy.data.worlds['Arm']
-        state.target = wrd.arm_exporterlist[wrd.arm_exporterlist_index].arm_project_target
+        item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+        if item.arm_project_rp == '':
+            item.arm_project_rp = wrd.arm_rplist[wrd.arm_rplist_index].name
+        # Assume unique rp names
+        rplist_index = wrd.arm_rplist_index
+        for i in range(0, len(wrd.arm_rplist)):
+            if wrd.arm_rplist[i].name == item.arm_project_rp:
+                wrd.arm_rplist_index = i
+                break
+        state.target = item.arm_project_target
         state.is_export = True
         assets.invalidate_shader_cache(None, None)
         assets.invalidate_enabled = False
@@ -643,6 +655,7 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
         make.compile_project(watch=True)
         assets.invalidate_enabled = True
         state.is_export = False
+        wrd.arm_rplist_index = rplist_index
         return{'FINISHED'}
 
 class ArmoryPatchButton(bpy.types.Operator):
@@ -741,9 +754,23 @@ class ArmoryPublishButton(bpy.types.Operator):
         if not arm.utils.check_engine(self):
             return {"CANCELLED"}
 
+        make_renderer.check_default()
+
+        wrd = bpy.data.worlds['Arm']
+        item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+        if item.arm_project_rp == '':
+            item.arm_project_rp = wrd.arm_rplist[wrd.arm_rplist_index].name
+        # Assume unique rp names
+        rplist_index = wrd.arm_rplist_index
+        for i in range(0, len(wrd.arm_rplist)):
+            if wrd.arm_rplist[i].name == item.arm_project_rp:
+                wrd.arm_rplist_index = i
+                break
+
         state.is_export = True
         make.publish_project()
         state.is_export = False
+        wrd.arm_rplist_index = rplist_index
         self.report({'INFO'}, 'Publishing project, check console for details.')
         return{'FINISHED'}
 
@@ -757,9 +784,9 @@ class ArmoryRenderButton(bpy.types.Operator):
             make.stop_project()
         if bpy.data.worlds['Arm'].arm_play_runtime != 'Krom':
             bpy.data.worlds['Arm'].arm_play_runtime = 'Krom'
-        if bpy.data.worlds['Arm'].rp_rendercapture == False:
-            self.report({"ERROR"}, "Set Camera - Armory Render Path - Preset to Render Capture first")
-            return {"CANCELLED"}
+        rpdat = arm.utils.get_rp()
+        if rpdat.rp_rendercapture == False:
+            rpdat.rp_rendercapture = True
         assets.invalidate_enabled = False
         make.get_render_result()
         assets.invalidate_enabled = True
@@ -807,65 +834,75 @@ class ArmRenderPathPanel(bpy.types.Panel):
     bl_region_type = "WINDOW"
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
- 
+
     def draw(self, context):
         layout = self.layout
-
-        dat = bpy.data.worlds['Arm']
         wrd = bpy.data.worlds['Arm']
 
-        layout.prop(dat, "rp_preset")
-        layout.separator()
-        layout.prop(dat, "rp_renderer")
-        layout.prop(wrd, "arm_material_model")
-        layout.prop(dat, "rp_shadowmap")
-        layout.prop(dat, "rp_translucency_state")
-        layout.prop(dat, "rp_overlays_state")
-        layout.prop(dat, "rp_decals_state")
-        layout.prop(dat, "rp_sss_state")
-        layout.prop(dat, "rp_hdr")
-        layout.prop(dat, "rp_world")
-        col = layout.column()
-        col.enabled = not dat.rp_world
-        col.prop(dat, "rp_clearbackground")
-        layout.prop(dat, "rp_stereo")
-        layout.prop(dat, "rp_greasepencil")
-        layout.prop(dat, 'rp_voxelgi')
-
-        layout.separator()
-        layout.prop(dat, "rp_render_to_texture")
-        if dat.rp_render_to_texture:
-            layout.prop(dat, "rp_supersampling")
-            layout.prop(dat, "rp_antialiasing")
-            layout.prop(dat, "rp_compositornodes")
-            layout.prop(dat, "rp_volumetriclight")
-            layout.prop(dat, "rp_ssao")
-            layout.prop(dat, "rp_ssr")
-            # layout.prop(dat, "rp_dfao")
-            # layout.prop(dat, "rp_dfrs")
-            # layout.prop(dat, "rp_dfgi")
-            layout.prop(dat, "rp_bloom")
-            layout.prop(dat, "rp_eyeadapt")
-            layout.prop(dat, "rp_motionblur")
-            layout.prop(dat, "rp_rendercapture")
-            layout.prop(dat, "rp_ocean")
-
-        layout.prop(wrd, 'arm_pcss_state')
-        layout.prop(wrd, 'arm_ssrs')
-        
-        layout.prop(wrd, 'arm_samples_per_pixel')
+        rows = 2
+        if len(wrd.arm_rplist) > 1:
+            rows = 4
         row = layout.row()
-        row.prop(wrd, 'arm_gpu_skin')
-        if wrd.arm_gpu_skin:
-            row.prop(wrd, 'arm_gpu_skin_max_bones_auto')
-            if not wrd.arm_gpu_skin_max_bones_auto:
-                layout.prop(wrd, 'arm_gpu_skin_max_bones')
-        layout.prop(wrd, 'arm_texture_filter')
-        layout.prop(wrd, 'arm_tessellation')
-        layout.prop(wrd, 'arm_culling')
-        layout.prop(wrd, 'arm_two_sided_area_lamp')
-        layout.prop(wrd, 'arm_clouds')
-        layout.prop(wrd, 'arm_tonemap')
+        row.template_list("ArmRPList", "The_List", wrd, "arm_rplist", wrd, "arm_rplist_index", rows=rows)
+        col = row.column(align=True)
+        col.operator("arm_rplist.new_item", icon='ZOOMIN', text="")
+        col.operator("arm_rplist.delete_item", icon='ZOOMOUT', text="")
+
+        if wrd.arm_rplist_index >= 0 and len(wrd.arm_rplist) > 0:
+            rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
+            layout.prop(wrd, "rp_preset")
+            layout.separator()
+            layout.prop(rpdat, "rp_renderer")
+            layout.prop(rpdat, "arm_material_model")
+            layout.prop(rpdat, "rp_shadowmap")
+            layout.prop(rpdat, "rp_translucency_state")
+            layout.prop(rpdat, "rp_overlays_state")
+            layout.prop(rpdat, "rp_decals_state")
+            layout.prop(rpdat, "rp_sss_state")
+            layout.prop(rpdat, "rp_hdr")
+            layout.prop(rpdat, "rp_world")
+            col = layout.column()
+            col.enabled = not rpdat.rp_world
+            col.prop(rpdat, "rp_clearbackground")
+            layout.prop(rpdat, "rp_stereo")
+            layout.prop(rpdat, "rp_greasepencil")
+            layout.prop(rpdat, 'rp_voxelgi')
+            layout.prop(rpdat, 'rp_voxelgi_resolution')
+            layout.prop(rpdat, 'arm_voxelgi_dimensions')
+            layout.prop(rpdat, 'arm_voxelgi_revoxelize')
+            # layout.prop(rpdat, 'arm_voxelgi_camera')
+            # layout.prop(rpdat, 'arm_voxelgi_multibounce')
+            # layout.prop(rpdat, 'arm_voxelgi_anisotropic')
+            layout.prop(rpdat, 'arm_voxelgi_shadows')
+            layout.prop(rpdat, 'arm_voxelgi_refraction')
+            # layout.prop(rpdat, 'rp_voxelgi_hdr')
+
+            layout.separator()
+            layout.prop(rpdat, "rp_render_to_texture")
+            if rpdat.rp_render_to_texture:
+                layout.prop(rpdat, "rp_supersampling")
+                layout.prop(rpdat, "rp_antialiasing")
+                layout.prop(rpdat, "rp_compositornodes")
+                layout.prop(rpdat, "rp_volumetriclight")
+                layout.prop(rpdat, "rp_ssao")
+                layout.prop(rpdat, "rp_ssr")
+                layout.prop(rpdat, 'arm_ssr_half_res')
+                # layout.prop(rpdat, "rp_dfao")
+                # layout.prop(rpdat, "rp_dfrs")
+                # layout.prop(rpdat, "rp_dfgi")
+                layout.prop(rpdat, "rp_bloom")
+                layout.prop(rpdat, "rp_eyeadapt")
+                layout.prop(rpdat, "rp_motionblur")
+                layout.prop(rpdat, "rp_rendercapture_format")
+                layout.prop(rpdat, "rp_ocean")
+
+            layout.prop(rpdat, 'arm_pcss_state')
+            layout.prop(rpdat, 'arm_ssrs')
+            
+            layout.prop(rpdat, 'arm_samples_per_pixel')
+            layout.prop(rpdat, 'arm_texture_filter')
+            layout.prop(rpdat, 'arm_tessellation')
+            layout.prop(rpdat, 'arm_clouds')
 
 class ArmRenderPropsPanel(bpy.types.Panel):
     bl_label = "Armory Render Props"
@@ -878,6 +915,15 @@ class ArmRenderPropsPanel(bpy.types.Panel):
         layout = self.layout
         wrd = bpy.data.worlds['Arm']
         dat = bpy.data.worlds['Arm']
+
+        layout.prop(wrd, 'arm_tonemap')
+        layout.prop(wrd, 'arm_culling')
+        layout.prop(wrd, 'arm_two_sided_area_lamp')
+        layout.prop(wrd, 'arm_gpu_skin')
+        if wrd.arm_gpu_skin:
+            layout.prop(wrd, 'arm_gpu_skin_max_bones_auto')
+            if not wrd.arm_gpu_skin_max_bones_auto:
+                layout.prop(wrd, 'arm_gpu_skin_max_bones')
 
         layout.label('PCSS')
         layout.prop(wrd, 'arm_pcss_rings')
@@ -893,8 +939,6 @@ class ArmRenderPropsPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_clouds_eccentricity')
         
         layout.label('Voxel GI')
-        layout.prop(dat, 'rp_voxelgi_resolution')
-        layout.prop(wrd, 'arm_voxelgi_dimensions')
         row = layout.row()
         row.prop(wrd, 'arm_voxelgi_diff')
         row.prop(wrd, 'arm_voxelgi_spec')
@@ -904,16 +948,6 @@ class ArmRenderPropsPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(wrd, 'arm_voxelgi_step')
         row.prop(wrd, 'arm_voxelgi_range')
-        row = layout.row()
-        row.prop(wrd, 'arm_voxelgi_revoxelize')
-        row.prop(wrd, 'arm_voxelgi_multibounce')
-        row = layout.row()
-        row.prop(wrd, 'arm_voxelgi_camera')
-        row.prop(wrd, 'arm_voxelgi_anisotropic')
-        row = layout.row()
-        row.prop(wrd, 'arm_voxelgi_shadows')
-        row.prop(wrd, 'arm_voxelgi_refraction')
-        layout.prop(dat, 'rp_voxelgi_hdr')
 
         layout.label('SSAO')
         layout.prop(wrd, 'arm_ssao_size')
@@ -934,7 +968,6 @@ class ArmRenderPropsPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_ssr_search_dist')
         layout.prop(wrd, 'arm_ssr_falloff_exp')
         layout.prop(wrd, 'arm_ssr_jitter')
-        layout.prop(wrd, 'arm_ssr_half_res')
 
         layout.label('SSS')
         layout.prop(wrd, 'arm_sss_width')

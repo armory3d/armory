@@ -26,8 +26,8 @@ def get_rpasses(material):
     # if material.depthpass:
         # ar.append('depth')
 
-    wrd = bpy.data.worlds['Arm']
-    vgirefract = wrd.rp_voxelgi and wrd.arm_voxelgi_refraction
+    rpdat = arm.utils.get_rp()
+    vgirefract = rpdat.rp_voxelgi and rpdat.arm_voxelgi_refraction
 
     if material.arm_decal:
         ar.append('arm_decal')
@@ -39,19 +39,14 @@ def get_rpasses(material):
         ar.append('mesh')
         for con in add_mesh_contexts:
             ar.append(con)
-        if wrd.rp_voxelgi:
+        if rpdat.rp_voxelgi:
             ar.append('voxel')
-            if wrd.arm_voxelgi_multibounce:
-                ar.append('voxelbounce')
-        if wrd.rp_renderer == 'Deferred Plus':
+        if rpdat.rp_renderer == 'Deferred Plus':
             ar.append('rect')
 
     shadows_enabled = False
-    # for wrd in bpy.data.worlds:
-    wrd = bpy.data.worlds['Arm']
-    if wrd.rp_shadowmap != 'None':
+    if rpdat.rp_shadowmap != 'None':
         shadows_enabled = True
-        # break
 
     if material.arm_cast_shadow and shadows_enabled and ('mesh' in ar or 'translucent' in ar):
         ar.append('shadowmap')

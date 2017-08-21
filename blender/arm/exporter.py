@@ -2093,11 +2093,11 @@ class ArmoryExporter:
         o['far_plane'] = objref.arm_clip_end
         o['fov'] = objref.arm_fov
         o['shadows_bias'] = objref.arm_shadows_bias
-        wrd = bpy.data.worlds['Arm']
-        if wrd.rp_shadowmap == 'None':
+        rpdat = arm.utils.get_rp()
+        if rpdat.rp_shadowmap == 'None':
             o['shadowmap_size'] = 0
         else:
-            o['shadowmap_size'] = int(wrd.rp_shadowmap)
+            o['shadowmap_size'] = int(rpdat.rp_shadowmap)
         if o['type'] == 'sun': # Scale bias for ortho light matrix
             o['shadows_bias'] *= 10.0
         if (objtype == 'POINT' or objtype == 'SPOT') and objref.shadow_soft_size > 0.1: # No sun for now
@@ -2316,25 +2316,25 @@ class ArmoryExporter:
 
         # Auto-enable render-path featues
         rebuild_rp = False
-        wrd = bpy.data.worlds['Arm']
-        if wrd.rp_translucency_state == 'Auto' and wrd.rp_translucency != transluc_used:
-            wrd.rp_translucency = transluc_used
+        rpdat = arm.utils.get_rp()
+        if rpdat.rp_translucency_state == 'Auto' and rpdat.rp_translucency != transluc_used:
+            rpdat.rp_translucency = transluc_used
             rebuild_rp = True
-        if wrd.rp_overlays_state == 'Auto' and wrd.rp_overlays != overlays_used:
-            wrd.rp_overlays = overlays_used
+        if rpdat.rp_overlays_state == 'Auto' and rpdat.rp_overlays != overlays_used:
+            rpdat.rp_overlays = overlays_used
             rebuild_rp = True
-        if wrd.rp_decals_state == 'Auto' and wrd.rp_decals != decals_used:
-            wrd.rp_decals = decals_used
+        if rpdat.rp_decals_state == 'Auto' and rpdat.rp_decals != decals_used:
+            rpdat.rp_decals = decals_used
             rebuild_rp = True
-        # if wrd.rp_sss_state == 'Auto' and wrd.rp_sss != sss_used:
-            # wrd.rp_sss = sss_used
+        # if rpdat.rp_sss_state == 'Auto' and rpdat.rp_sss != sss_used:
+            # rpdat.rp_sss = sss_used
             # rebuild_rp = True
         if rebuild_rp:
-            self.rebuild_render_path(wrd)
+            self.rebuild_render_path(rpdat)
 
-    def rebuild_render_path(self, wrd):
+    def rebuild_render_path(self, rpdat):
         # No shader invalidate required?
-        make_renderer.make_renderer(wrd)
+        make_renderer.make_renderer(rpdat)
         # Rebuild modified path
         assets_path = arm.utils.get_sdk_path() + 'armory/Assets/'
         make_renderpath.build_node_trees(assets_path)

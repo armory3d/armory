@@ -17,23 +17,23 @@ def build_node_trees(assets_path):
     fp = os.path.sep.join(s)
     os.chdir(fp)
 
-    wrd = bpy.data.worlds['Arm']
+    rpdat = arm.utils.get_rp()
 
     # Make sure Assets dir exists
     if not os.path.exists(arm.utils.build_dir() + '/compiled/Assets/renderpaths'):
         os.makedirs(arm.utils.build_dir() + '/compiled/Assets/renderpaths')
     
     build_node_trees.assets_path = assets_path
-    if wrd.arm_material_model != 'Restricted':
+    if rpdat.arm_material_model != 'Restricted':
         # Always include
         assets.add(assets_path + 'brdf.png')
         assets.add_embedded_data('brdf.png')
     
     node_group = bpy.data.node_groups['armory_default']
-    build_node_tree(wrd, node_group)
+    build_node_tree(rpdat, node_group)
 
-def build_node_tree(wrd, node_group):
-    build_node_tree.wrd = wrd
+def build_node_tree(rpdat, node_group):
+    build_node_tree.rpdat = rpdat
     output = {}
     dat = {}
     output['renderpath_datas'] = [dat]
@@ -348,7 +348,8 @@ def make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices
         stages.append(stage)
 
 def make_ssao_pass(stages, node_group, node):
-    sc = 0.5 if bpy.data.worlds['Arm'].arm_ssao_half_res else 1.0
+    rpdat = build_node_tree.rpdat
+    sc = 0.5 if rpdat.arm_ssao_half_res else 1.0
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 4], bind_target_constants=['gbufferD', 'gbuffer0'], shader_context='ssao_pass/ssao_pass/ssao_pass', viewport_scale=sc)
     make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[1, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x', viewport_scale=sc)
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y')
@@ -454,8 +455,8 @@ def make_water_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbufferD', 'shadowMap'], shader_context='water_pass/water_pass/water_pass')
 
 def make_deferred_light_pass(stages, node_group, node):
-    wrd = bpy.data.worlds['Arm']
-    if wrd.arm_voxelgi_shadows or wrd.arm_voxelgi_refraction:
+    rpdat = build_node_tree.rpdat
+    if rpdat.arm_voxelgi_shadows or rpdat.arm_voxelgi_refraction:
         make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['gbuffer', 'shadowMap', 'voxels'], shader_context='', with_draw_quad=False)
     else:
         make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'shadowMap'], shader_context='', with_draw_quad=False)
@@ -783,8 +784,7 @@ def traverse_renderpath(node, node_group, render_targets, depth_buffers):
         wrd.world_defs += '_Hist'
 
     elif node.bl_idname == 'SSAOPassNodeType' or node.bl_idname == 'ApplySSAOPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':
-        if bpy.data.worlds['Arm'].arm_ssao: # SSAO enabled
-            wrd.world_defs += '_SSAO'
+        wrd.world_defs += '_SSAO'
 
     elif node.bl_idname == 'DrawStereoNodeType':
         assets.add_khafile_def('arm_vr')

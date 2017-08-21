@@ -8,7 +8,6 @@ import arm.make_state as state
 import shutil
 
 def make(image_node, tex_name, matname=None):
-    wrd = bpy.data.worlds['Arm']
     tex = {}
     tex['name'] = tex_name
     image = image_node.image
@@ -87,7 +86,8 @@ def make(image_node, tex_name, matname=None):
         # tex['format'] = image_format
     
     interpolation = image_node.interpolation
-    texfilter = wrd.arm_texture_filter
+    rpdat = arm.utils.get_rp()
+    texfilter = rpdat.arm_texture_filter
     if texfilter == 'Anisotropic':
         interpolation = 'Smart'
     elif texfilter == 'Linear':

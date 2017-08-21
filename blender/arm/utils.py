@@ -73,6 +73,10 @@ def get_gapi():
         else:
             return 'opengl'
 
+def get_rp():
+    wrd = bpy.data.worlds['Arm']
+    return wrd.arm_rplist[wrd.arm_rplist_index]
+
 def get_sdk_path():
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
@@ -331,7 +335,8 @@ def check_engine(self):
     return True
 
 def tess_enabled(target):
-    return (target == 'krom' or target == 'native') and bpy.data.worlds['Arm'].arm_tessellation
+    rpdat = get_rp()
+    return (target == 'krom' or target == 'native') and rpdat.arm_tessellation
 
 def is_object_animation_enabled(bobject):
     # Checks if animation is present and enabled

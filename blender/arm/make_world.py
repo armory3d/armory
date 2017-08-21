@@ -58,29 +58,30 @@ def build_node_tree(world):
         write_probes.write_color_irradiance(wname, world.arm_envtex_color)
 
     # Clouds enabled
-    if wrd.arm_clouds:
+    rpdat = arm.utils.get_rp()
+    if rpdat.arm_clouds:
         wrd.world_defs += '_EnvClouds'
 
     # Percentage closer soft shadows
-    if wrd.arm_pcss_state == 'On':
+    if rpdat.arm_pcss_state == 'On':
         wrd.world_defs += '_PCSS'
         sdk_path = arm.utils.get_sdk_path()
         assets.add(sdk_path + 'armory/Assets/noise64.png')
         assets.add_embedded_data('noise64.png')
 
     # Screen-space ray-traced shadows
-    if wrd.arm_ssrs:
+    if rpdat.arm_ssrs:
         wrd.world_defs += '_SSRS'
 
     if wrd.arm_two_sided_area_lamp:
         wrd.world_defs += '_TwoSidedAreaLamp'
 
     # Store contexts
-    if wrd.rp_hdr == False:
+    if rpdat.rp_hdr == False:
         wrd.world_defs += '_LDR'
 
     # Alternative models
-    if wrd.arm_material_model == 'Cycles':
+    if rpdat.arm_material_model == 'Cycles':
         wrd.world_defs += '_Cycles'
 
     # TODO: Lamp texture test..
@@ -92,20 +93,18 @@ def build_node_tree(world):
         assets.add_embedded_data('iestexture.png')
 
     voxelgi = False
-    # for wrd in bpy.data.worlds:
-    wrd = bpy.data.worlds['Arm']
-    if wrd.rp_shadowmap == 'None':
+    if rpdat.rp_shadowmap == 'None':
         wrd.world_defs += '_NoShadows'
         assets.add_khafile_def('arm_no_shadows')
-    if wrd.rp_voxelgi:
+    if rpdat.rp_voxelgi:
         voxelgi = True
-    if wrd.rp_dfrs:
+    if rpdat.rp_dfrs:
         wrd.world_defs += '_DFRS'
         assets.add_khafile_def('arm_sdf')
-    if wrd.rp_dfao:
+    if rpdat.rp_dfao:
         wrd.world_defs += '_DFAO'
         assets.add_khafile_def('arm_sdf')
-    if wrd.rp_dfgi:
+    if rpdat.rp_dfgi:
         wrd.world_defs += '_DFGI'
         assets.add_khafile_def('arm_sdf')
         wrd.world_defs += '_Rad' # Always do radiance for gi
@@ -115,8 +114,6 @@ def build_node_tree(world):
         assets.add_khafile_def('arm_voxelgi')
         if wrd.arm_voxelgi_revoxelize:
             assets.add_khafile_def('arm_voxelgi_revox')
-        if wrd.arm_voxelgi_multibounce:
-            wrd.world_defs += '_VoxelGIMulti'
         if wrd.arm_voxelgi_camera:
             wrd.world_defs += '_VoxelGICam'
         if wrd.arm_voxelgi_shadows:

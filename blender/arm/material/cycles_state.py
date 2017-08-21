@@ -7,7 +7,7 @@ import arm.material.make_texture
 import arm.material.mat_state as mat_state
 
 def get_rp_renderer():
-    return bpy.data.worlds['Arm'].rp_renderer
+    return arm.utils.get_rp().rp_renderer
 
 def get_arm_export_tangents():
     return bpy.data.worlds['Arm'].arm_export_tangents

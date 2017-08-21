@@ -15,9 +15,10 @@ write_vertex_attribs = None
 def make(context_id):
     con_mesh = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
 
-    rid = bpy.data.worlds['Arm'].rp_renderer
+    rpdat = arm.utils.get_rp()
+    rid = rpdat.rp_renderer
     if rid == 'Forward':
-        if bpy.data.worlds['Arm'].arm_material_model != 'Restricted':
+        if rpdat.arm_material_model != 'Restricted':
             make_forward(con_mesh)
         else:
             make_forward_restricted(con_mesh)
@@ -205,9 +206,10 @@ def write_norpos(con_mesh, vert, declare=False):
 
 def make_deferred(con_mesh):
     wrd = bpy.data.worlds['Arm']
+    rpdat = arm.utils.get_rp()
 
     arm_discard = mat_state.material.arm_discard
-    parse_opacity = arm_discard or wrd.arm_voxelgi_refraction
+    parse_opacity = arm_discard or rpdat.arm_voxelgi_refraction
 
     make_base(con_mesh, parse_opacity=parse_opacity)
 
@@ -262,7 +264,7 @@ def make_deferred(con_mesh):
     if '_SSS' in wrd.world_defs:
         frag.add_uniform('int materialID')
         frag.write('fragColor[1] = vec4(basecol.rgb, materialID + clamp(occlusion, 0.0, 1.0 - 0.001));')
-    elif wrd.arm_voxelgi_refraction:
+    elif rpdat.arm_voxelgi_refraction:
         frag.write('fragColor[1] = vec4(basecol.rgb, opacity);')
     else:
         frag.write('fragColor[1] = vec4(basecol.rgb, occlusion);')
@@ -275,7 +277,6 @@ def make_deferred(con_mesh):
     return con_mesh
 
 def make_deferred_plus(con_mesh):
-    wrd = bpy.data.worlds['Arm']
     vert = con_mesh.make_vert()
     frag = con_mesh.make_frag()
 

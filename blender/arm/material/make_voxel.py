@@ -45,7 +45,8 @@ def make(context_id):
     frag.add_include('../../Shaders/std/imageatomic.glsl')
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
 
-    # if bpy.data.worlds['Arm'].rp_voxelgi_hdr:
+    # rpdat = arm.utils.get_rp()
+    # if rpdat.rp_voxelgi_hdr:
         # frag.add_uniform('layout(RGBA16) image3D voxels')
     # else:
     # frag.add_uniform('layout(RGBA8) image3D voxels')
@@ -142,7 +143,7 @@ def make(context_id):
     if wrd.arm_material_model == 'Cycles':
         frag.write('color = min(color * 0.9, vec3(0.9)) + min(color / 200.0, 0.1);') # Higher range to allow emission
 
-    # if bpy.data.worlds['Arm'].rp_voxelgi_hdr:
+    # if rpdat.rp_voxelgi_hdr:
         # frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
     # else:
     frag.write('color = clamp(color, vec3(0.0), vec3(1.0));')

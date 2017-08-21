@@ -14,7 +14,6 @@ import arm.material.make_overlay as make_overlay
 import arm.material.make_depth as make_depth
 import arm.material.make_decal as make_decal
 import arm.material.make_voxel as make_voxel
-import arm.material.make_voxelbounce as make_voxelbounce
 
 rpass_hook = None
 
@@ -84,9 +83,6 @@ def build(material, mat_users, mat_armusers):
 
         elif rp == 'voxel':
             con = make_voxel.make(rp)
-
-        elif rp == 'voxelbounce':
-            con = make_voxelbounce.make(rp)
 
         elif rpass_hook != None:
             con = rpass_hook(rp)

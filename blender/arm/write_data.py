@@ -178,6 +178,7 @@ project.addSources('Sources');
 # Write Main.hx
 def write_main(resx, resy, is_play, in_viewport, is_publish):
     wrd = bpy.data.worlds['Arm']
+    rpdat = arm.utils.get_rp()
     scene_name = arm.utils.get_project_scene_name()
     scene_ext = '.zip' if (bpy.data.scenes[scene_name].arm_compress and is_publish) else ''
     #if not os.path.isfile('Sources/Main.hx'):
@@ -195,7 +196,7 @@ class Main {
     public static inline var projectWindowMinimize = """ + ('true' if wrd.arm_winminimize else 'false') + """;
     public static inline var projectWidth = """ + str(resx) + """;
     public static inline var projectHeight = """ + str(resy) + """;
-    static inline var projectSamplesPerPixel = """ + str(int(wrd.arm_samples_per_pixel)) + """;
+    static inline var projectSamplesPerPixel = """ + str(int(rpdat.arm_samples_per_pixel)) + """;
     static inline var projectVSync = """ + ('true' if wrd.arm_vsync else 'false') + """;
     static inline var projectScene = '""" + arm.utils.safestr(scene_name) + scene_ext + """';
     static var state:Int;
@@ -241,6 +242,7 @@ class Main {
 
 # Write index.html
 def write_indexhtml(w, h):
+    rpdat = arm.utils.get_rp()
     if not os.path.exists(arm.utils.build_dir() + '/html5'):
         os.makedirs(arm.utils.build_dir() + '/html5')
     with open(arm.utils.build_dir() + '/html5/index.html', 'w') as f:
@@ -249,7 +251,7 @@ def write_indexhtml(w, h):
 <html>
 <head>
     <meta charset="utf-8"/>""")
-        if bpy.data.worlds['Arm'].rp_stereo:
+        if rpdat.rp_stereo:
             f.write("""
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <style>
@@ -263,7 +265,7 @@ def write_indexhtml(w, h):
 </head>
 <body style="margin: 0; padding: 0;">
 """)
-        if bpy.data.worlds['Arm'].rp_stereo:
+        if rpdat.rp_stereo:
             f.write("""
     <canvas style="width: 100vw; height: 100vh; display: block;" id='khanvas'></canvas>
 """)
@@ -280,8 +282,9 @@ def write_indexhtml(w, h):
 def write_compiledglsl():
     clip_start = bpy.data.cameras[0].clip_start # Same clip values for all cameras for now
     clip_end = bpy.data.cameras[0].clip_end
-    shadowmap_size = bpy.data.worlds['Arm'].arm_shadowmap_size_cache
     wrd = bpy.data.worlds['Arm']
+    shadowmap_size = wrd.arm_shadowmap_size_cache
+    rpdat = arm.utils.get_rp()
     with open(arm.utils.build_dir() + '/compiled/Shaders/compiled.glsl', 'w') as f:
         f.write(
 """#ifndef _COMPILED_GLSL_
@@ -292,7 +295,7 @@ const vec2 cameraPlane = vec2(""" + str(round(clip_start * 100) / 100) + """, ""
 const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shadowmap_size) + """);
 const float shadowmapCubePcfSize = """ + str(round(wrd.arm_pcfsize * 10000) / 10000) + """;
 """)
-        if wrd.arm_clouds:
+        if rpdat.arm_clouds:
             f.write(
 """const float cloudsDensity = """ + str(round(wrd.arm_clouds_density * 100) / 100) + """;
 const float cloudsSize = """ + str(round(wrd.arm_clouds_size * 100) / 100) + """;
@@ -303,7 +306,7 @@ const float cloudsSecondary = """ + str(round(wrd.arm_clouds_secondary * 100) / 
 const float cloudsPrecipitation = """ + str(round(wrd.arm_clouds_precipitation * 100) / 100) + """;
 const float cloudsEccentricity = """ + str(round(wrd.arm_clouds_eccentricity * 100) / 100) + """;
 """)
-        if wrd.arm_ocean:
+        if rpdat.arm_ocean:
             f.write(
 """const float seaLevel = """ + str(round(wrd.arm_ocean_level * 100) / 100) + """;
 const float seaMaxAmplitude = """ + str(round(wrd.arm_ocean_amplitude * 100) / 100) + """;
@@ -315,25 +318,21 @@ const vec3 seaBaseColor = vec3(""" + str(round(wrd.arm_ocean_base_color[0] * 100
 const vec3 seaWaterColor = vec3(""" + str(round(wrd.arm_ocean_water_color[0] * 100) / 100) + """, """ + str(round(wrd.arm_ocean_water_color[1] * 100) / 100) + """, """ + str(round(wrd.arm_ocean_water_color[2] * 100) / 100) + """);
 const float seaFade = """ + str(round(wrd.arm_ocean_fade * 100) / 100) + """;
 """)
-        if wrd.arm_ssao:
-            scale = 0.5 if wrd.arm_ssao_half_res else 1.0
-            f.write(
+        scale = 0.5 if rpdat.arm_ssao_half_res else 1.0
+        f.write(
 """const float ssaoSize = """ + str(round(wrd.arm_ssao_size * 100) / 100) + """;
 const float ssaoStrength = """ + str(round(wrd.arm_ssao_strength * 100) / 100) + """;
 const float ssaoTextureScale = """ + str(scale) + """;
 """)
-        if wrd.arm_bloom:
-            f.write(
+        f.write(
 """const float bloomThreshold = """ + str(round(wrd.arm_bloom_threshold * 100) / 100) + """;
 const float bloomStrength = """ + str(round(wrd.arm_bloom_strength * 100) / 100) + """;
 const float bloomRadius = """ + str(round(wrd.arm_bloom_radius * 100) / 100) + """;
 """)
-        if wrd.arm_motion_blur:
-            f.write(
+        f.write(
 """const float motionBlurIntensity = """ + str(round(wrd.arm_motion_blur_intensity * 100) / 100) + """;
 """)
-        if wrd.arm_ssr:
-            f.write(
+        f.write(
 """const float ssrRayStep = """ + str(round(wrd.arm_ssr_ray_step * 100) / 100) + """;
 const float ssrMinRayStep = """ + str(round(wrd.arm_ssr_min_ray_step * 100) / 100) + """;
 const float ssrSearchDist = """ + str(round(wrd.arm_ssr_search_dist * 100) / 100) + """;
@@ -341,18 +340,17 @@ const float ssrFalloffExp = """ + str(round(wrd.arm_ssr_falloff_exp * 100) / 100
 const float ssrJitter = """ + str(round(wrd.arm_ssr_jitter * 100) / 100) + """;
 """)
 
-        if wrd.arm_ssrs:
+        if rpdat.arm_ssrs:
             f.write(
 """const float ssrsRayStep = """ + str(round(wrd.arm_ssrs_ray_step * 100) / 100) + """;
 """)
 
-        if wrd.arm_volumetric_light:
-            f.write(
+        f.write(
 """const float volumAirTurbidity = """ + str(round(wrd.arm_volumetric_light_air_turbidity * 100) / 100) + """;
 const vec3 volumAirColor = vec3(""" + str(round(wrd.arm_volumetric_light_air_color[0] * 100) / 100) + """, """ + str(round(wrd.arm_volumetric_light_air_color[1] * 100) / 100) + """, """ + str(round(wrd.arm_volumetric_light_air_color[2] * 100) / 100) + """);
 """)
 
-        if wrd.arm_pcss_state == 'On':
+        if rpdat.arm_pcss_state == 'On':
             f.write(
 """const int pcssRings = """ + str(wrd.arm_pcss_rings) + """;
 """)
@@ -387,10 +385,10 @@ const float compoDOFFstop = """ + str(round(bpy.data.cameras[0].gpu_dof.fstop * 
 const float compoDOFLength = 160.0;
 """) # str(round(bpy.data.cameras[0].lens * 100) / 100)
 
-        if bpy.data.worlds['Arm'].rp_voxelgi:
+        if rpdat.rp_voxelgi:
             f.write(
-"""const float voxelgiResolution = """ + str(bpy.data.worlds['Arm'].rp_voxelgi_resolution) + """;
-const float voxelgiDimensions = """ + str(round(wrd.arm_voxelgi_dimensions)) + """;
+"""const float voxelgiResolution = """ + str(rpdat.rp_voxelgi_resolution) + """;
+const float voxelgiDimensions = """ + str(round(rpdat.arm_voxelgi_dimensions)) + """;
 const float voxelgiDiff = """ + str(round(wrd.arm_voxelgi_diff * 100) / 100) + """;
 const float voxelgiSpec = """ + str(round(wrd.arm_voxelgi_spec * 100) / 100) + """;
 const float voxelgiOcc = """ + str(round(wrd.arm_voxelgi_occ * 100) / 100) + """;
@@ -399,7 +397,7 @@ const float voxelgiStep = """ + str(round(wrd.arm_voxelgi_step * 100) / 100) + "
 const float voxelgiRange = """ + str(round(wrd.arm_voxelgi_range * 100) / 100) + """;
 """)
 
-        if bpy.data.worlds['Arm'].rp_sss_state == 'On':
+        if rpdat.rp_sss_state == 'On':
             f.write(
 """const float sssWidth = """ + str(wrd.arm_sss_width / 10.0) + """;
 """)
