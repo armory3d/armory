@@ -1,46 +1,15 @@
-import shutil
 import bpy
-import os
-import json
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
-from arm.utils import to_hex
 
-def object_picker_update(self, context):
-    o = context.object
-    tl = o.my_traitlist[o.traitlist_index]
-    pl = tl.my_paramstraitlist[tl.paramstraitlist_index]
-    pl.name = "'" + pl.object_picker + "'"
-
-def color_picker_update(self, context):
-    o = context.object
-    tl = o.my_traitlist[o.traitlist_index]
-    pl = tl.my_paramstraitlist[tl.paramstraitlist_index]
-    col = pl.color_picker
-    pl.name = str(to_hex(col))
-
-class ListParamsTraitItem(bpy.types.PropertyGroup):
+class ArmTraitParamListItem(bpy.types.PropertyGroup):
     # Group of properties representing an item in the list
     name = bpy.props.StringProperty(
            name="Name",
            description="A name for this item",
            default="Untitled")
 
-    object_picker = bpy.props.StringProperty(
-           name="Object",
-           description="A name for this item",
-           default="",
-           update=object_picker_update)
-
-    color_picker = bpy.props.FloatVectorProperty(
-           name="Color",
-           description="A name for this item",
-           size=4,
-           subtype='COLOR',
-           default=[1, 1, 1, 1],
-           update=color_picker_update)
-
-class MY_UL_ParamsTraitList(bpy.types.UIList):
+class ArmTraitParamList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here...
         custom_icon = 'OBJECT_DATAMODE'
@@ -55,52 +24,52 @@ class MY_UL_ParamsTraitList(bpy.types.UIList):
             layout.alignment = 'CENTER'
             layout.label("", icon = custom_icon)
 
-class LIST_OT_ParamsTraitNewItem(bpy.types.Operator):
+class ArmTraitParamListNewItem(bpy.types.Operator):
     # Add a new item to the list
-    bl_idname = "my_paramstraitlist.new_item"
+    bl_idname = "arm_traitparamslist.new_item"
     bl_label = "Add a new item"
 
     def execute(self, context):
-        if len(context.object.my_traitlist) == 0:
+        if len(context.object.arm_traitlist) == 0:
             return
-        trait = context.object.my_traitlist[context.object.traitlist_index]
-        trait.my_paramstraitlist.add()
-        trait.paramstraitlist_index = len(trait.my_paramstraitlist) - 1
+        trait = context.object.arm_traitlist[context.object.arm_traitlist_index]
+        trait.arm_traitparamslist.add()
+        trait.arm_traitparamslist_index = len(trait.arm_traitparamslist) - 1
         return{'FINISHED'}
 
 
-class LIST_OT_ParamsTraitDeleteItem(bpy.types.Operator):
+class ArmTraitParamListDeleteItem(bpy.types.Operator):
     # Delete the selected item from the list
-    bl_idname = "my_paramstraitlist.delete_item"
+    bl_idname = "arm_traitparamslist.delete_item"
     bl_label = "Deletes an item"
 
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list """
-        if len(context.object.my_traitlist) == 0:
+        if len(context.object.arm_traitlist) == 0:
             return False
-        trait = context.object.my_traitlist[context.object.traitlist_index]
-        return len(trait.my_paramstraitlist) > 0
+        trait = context.object.arm_traitlist[context.object.arm_traitlist_index]
+        return len(trait.arm_traitparamslist) > 0
 
     def execute(self, context):
-        if len(context.object.my_traitlist) == 0:
+        if len(context.object.arm_traitlist) == 0:
             return
-        trait = context.object.my_traitlist[context.object.traitlist_index]
-        list = trait.my_paramstraitlist
-        index = trait.paramstraitlist_index
+        trait = context.object.arm_traitlist[context.object.arm_traitlist_index]
+        list = trait.arm_traitparamslist
+        index = trait.arm_traitparamslist_index
 
         list.remove(index)
 
         if index > 0:
             index = index - 1
 
-        trait.paramstraitlist_index = index
+        trait.arm_traitparamslist_index = index
         return{'FINISHED'}
 
 
-class LIST_OT_ParamsTraitMoveItem(bpy.types.Operator):
+class ArmTraitParamListMoveItem(bpy.types.Operator):
     # Move an item in the list
-    bl_idname = "my_paramstraitlist.move_item"
+    bl_idname = "arm_traitparamslist.move_item"
     bl_label = "Move an item in the list"
     direction = bpy.props.EnumProperty(
                 items=(
@@ -110,19 +79,19 @@ class LIST_OT_ParamsTraitMoveItem(bpy.types.Operator):
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list. """
-        if len(context.object.my_traitlist) == 0:
+        if len(context.object.arm_traitlist) == 0:
             return False
-        trait = context.object.my_traitlist[context.object.traitlist_index]
-        return len(trait.my_paramstraitlist) > 0
+        trait = context.object.arm_traitlist[context.object.arm_traitlist_index]
+        return len(trait.arm_traitparamslist) > 0
 
 
     def move_index(self):
         # Move index of an item render queue while clamping it
-        if len(context.object.my_traitlist) == 0:
+        if len(context.object.arm_traitlist) == 0:
             return
-        trait = context.object.my_traitlist[context.object.traitlist_index]
-        index = trait.paramstraitlist_index
-        list_length = len(trait.my_paramstraitlist) - 1
+        trait = context.object.arm_traitlist[context.object.arm_traitlist_index]
+        index = trait.arm_traitparamslist_index
+        list_length = len(trait.arm_traitparamslist) - 1
         new_index = 0
 
         if self.direction == 'UP':
@@ -135,11 +104,11 @@ class LIST_OT_ParamsTraitMoveItem(bpy.types.Operator):
 
 
     def execute(self, context):
-        if len(context.object.my_traitlist) == 0:
+        if len(context.object.arm_traitlist) == 0:
             return
-        trait = context.object.my_traitlist[context.object.traitlist_index]
-        list = trait.my_paramstraitlist
-        index = trait.paramstraitlist_index
+        trait = context.object.arm_traitlist[context.object.arm_traitlist_index]
+        list = trait.arm_traitparamslist
+        index = trait.arm_traitparamslist_index
 
         if self.direction == 'DOWN':
             neighbor = index + 1
@@ -155,15 +124,15 @@ class LIST_OT_ParamsTraitMoveItem(bpy.types.Operator):
         return{'FINISHED'}
 
 def register():
-    bpy.utils.register_class(ListParamsTraitItem)
-    bpy.utils.register_class(MY_UL_ParamsTraitList)
-    bpy.utils.register_class(LIST_OT_ParamsTraitNewItem)
-    bpy.utils.register_class(LIST_OT_ParamsTraitDeleteItem)
-    bpy.utils.register_class(LIST_OT_ParamsTraitMoveItem)
+    bpy.utils.register_class(ArmTraitParamListItem)
+    bpy.utils.register_class(ArmTraitParamList)
+    bpy.utils.register_class(ArmTraitParamListNewItem)
+    bpy.utils.register_class(ArmTraitParamListDeleteItem)
+    bpy.utils.register_class(ArmTraitParamListMoveItem)
 
 def unregister():
-    bpy.utils.unregister_class(ListParamsTraitItem)
-    bpy.utils.unregister_class(MY_UL_ParamsTraitList)
-    bpy.utils.unregister_class(LIST_OT_ParamsTraitNewItem)
-    bpy.utils.unregister_class(LIST_OT_ParamsTraitDeleteItem)
-    bpy.utils.unregister_class(LIST_OT_ParamsTraitMoveItem)
+    bpy.utils.unregister_class(ArmTraitParamListItem)
+    bpy.utils.unregister_class(ArmTraitParamList)
+    bpy.utils.unregister_class(ArmTraitParamListNewItem)
+    bpy.utils.unregister_class(ArmTraitParamListDeleteItem)
+    bpy.utils.unregister_class(ArmTraitParamListMoveItem)

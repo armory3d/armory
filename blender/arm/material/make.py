@@ -42,7 +42,7 @@ def parse(material, mat_data, mat_users, mat_armusers, rid):
         if rp == 'mesh':
             const = {}
             const['name'] = 'receiveShadow'
-            const['bool'] = material.receive_shadow
+            const['bool'] = material.arm_receive_shadow
             c['bind_constants'].append(const)
 
             if bpy.data.worlds['Arm'].rp_sss_state == 'On':
@@ -90,7 +90,7 @@ def parse(material, mat_data, mat_users, mat_armusers, rid):
         elif rp == 'translucent':
             const = {}
             const['name'] = 'receiveShadow'
-            const['bool'] = material.receive_shadow
+            const['bool'] = material.arm_receive_shadow
             c['bind_constants'].append(const)
     
     mat_data['shader'] = shader_data_name + '/' + shader_data_name

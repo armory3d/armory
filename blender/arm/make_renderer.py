@@ -1,6 +1,7 @@
 import bpy
 import arm.nodes_renderpath as nodes_renderpath
 import arm.utils
+import arm.assets as assets
 
 group = None
 nodes = None
@@ -17,15 +18,14 @@ def set_preset(self, context, preset):
 
     if preset == 'Low':
         wrd.rp_renderer = 'Forward'
-        wrd.material_model = 'PBR'
+        wrd.arm_material_model = 'PBR'
         wrd.rp_shadowmap = '1024'
-        wrd.rp_meshes = True
         wrd.rp_translucency_state = 'Off'
         wrd.rp_overlays_state = 'Off'
         wrd.rp_decals_state = 'Off'
         wrd.rp_sss_state = 'Off'
         wrd.rp_hdr = False
-        wrd.rp_worldnodes = False
+        wrd.rp_world = False
         wrd.rp_clearbackground = True
         wrd.rp_stereo = False
         wrd.rp_greasepencil = False
@@ -46,15 +46,14 @@ def set_preset(self, context, preset):
         wrd.rp_motionblur = 'None'
     elif preset == 'Forward':
         wrd.rp_renderer = 'Forward'
-        wrd.material_model = 'PBR'
+        wrd.arm_material_model = 'PBR'
         wrd.rp_shadowmap = '2048'
-        wrd.rp_meshes = True
         wrd.rp_translucency_state = 'Auto'
         wrd.rp_overlays_state = 'Auto'
         wrd.rp_decals_state = 'Auto'
         wrd.rp_sss_state = 'Auto'
         wrd.rp_hdr = True
-        wrd.rp_worldnodes = True
+        wrd.rp_world = True
         wrd.rp_clearbackground = False
         wrd.rp_stereo = False
         wrd.rp_greasepencil = False
@@ -75,15 +74,14 @@ def set_preset(self, context, preset):
         wrd.rp_motionblur = 'None'
     elif preset == 'Deferred':
         wrd.rp_renderer = 'Deferred'
-        wrd.material_model = 'PBR'
+        wrd.arm_material_model = 'PBR'
         wrd.rp_shadowmap = '2048'
-        wrd.rp_meshes = True
         wrd.rp_translucency_state = 'Auto'
         wrd.rp_overlays_state = 'Auto'
         wrd.rp_decals_state = 'Auto'
         wrd.rp_sss_state = 'Auto'
         wrd.rp_hdr = True
-        wrd.rp_worldnodes = True
+        wrd.rp_world = True
         wrd.rp_clearbackground = False
         wrd.rp_stereo = False
         wrd.rp_greasepencil = False
@@ -104,15 +102,14 @@ def set_preset(self, context, preset):
         wrd.rp_motionblur = 'None'
     elif preset == 'Max':
         wrd.rp_renderer = 'Deferred'
-        wrd.material_model = 'PBR'
+        wrd.arm_material_model = 'PBR'
         wrd.rp_shadowmap = '4096'
-        wrd.rp_meshes = True
         wrd.rp_translucency_state = 'Auto'
         wrd.rp_overlays_state = 'Auto'
         wrd.rp_decals_state = 'Auto'
         wrd.rp_sss_state = 'Auto'
         wrd.rp_hdr = True
-        wrd.rp_worldnodes = True
+        wrd.rp_world = True
         wrd.rp_clearbackground = False
         wrd.rp_stereo = False
         wrd.rp_greasepencil = False
@@ -134,13 +131,12 @@ def set_preset(self, context, preset):
     elif preset == 'Render Capture':
         wrd.rp_renderer = 'Deferred'
         wrd.rp_shadowmap = '8192'
-        wrd.rp_meshes = True
         wrd.rp_translucency_state = 'Auto'
         wrd.rp_overlays_state = 'Auto'
         wrd.rp_decals_state = 'Auto'
         wrd.rp_sss_state = 'Auto'
         wrd.rp_hdr = True
-        wrd.rp_worldnodes = True
+        wrd.rp_world = True
         wrd.rp_clearbackground = False
         wrd.rp_stereo = False
         wrd.rp_greasepencil = False
@@ -161,19 +157,18 @@ def set_preset(self, context, preset):
         wrd.rp_rendercapture = True
         wrd.rp_rendercapture_format = '8bit'
         wrd.rp_motionblur = 'None'
-        wrd.material_model = 'Cycles'
-        wrd.generate_pcss_state = 'On'
+        wrd.arm_material_model = 'Cycles'
+        wrd.arm_pcss_state = 'On'
     elif preset == 'Deferred Plus':
         wrd.rp_renderer = 'Deferred Plus'
-        wrd.material_model = 'PBR'
+        wrd.arm_material_model = 'PBR'
         wrd.rp_shadowmap = '4096'
-        wrd.rp_meshes = True
         wrd.rp_translucency_state = 'Auto'
         wrd.rp_overlays_state = 'Auto'
         wrd.rp_decals_state = 'Auto'
         wrd.rp_sss_state = 'Auto'
         wrd.rp_hdr = True
-        wrd.rp_worldnodes = True
+        wrd.rp_world = True
         wrd.rp_clearbackground = False
         wrd.rp_stereo = False
         wrd.rp_greasepencil = False
@@ -194,15 +189,14 @@ def set_preset(self, context, preset):
         wrd.rp_motionblur = 'None'
     elif preset == 'VR Low':
         wrd.rp_renderer = 'Forward'
-        wrd.material_model = 'Restricted'
+        wrd.arm_material_model = 'Restricted'
         wrd.rp_shadowmap = '1024'
-        wrd.rp_meshes = True
         wrd.rp_translucency_state = 'Off'
         wrd.rp_overlays_state = 'Off'
         wrd.rp_decals_state = 'Off'
         wrd.rp_sss_state = 'Off'
         wrd.rp_hdr = False
-        wrd.rp_worldnodes = False
+        wrd.rp_world = False
         wrd.rp_clearbackground = True
         wrd.rp_stereo = True
         wrd.rp_greasepencil = False
@@ -223,15 +217,14 @@ def set_preset(self, context, preset):
         wrd.rp_motionblur = 'None'
     elif preset == 'Mobile Low':
         wrd.rp_renderer = 'Forward'
-        wrd.material_model = 'Restricted'
+        wrd.arm_material_model = 'Restricted'
         wrd.rp_shadowmap = '1024'
-        wrd.rp_meshes = True
         wrd.rp_translucency_state = 'Off'
         wrd.rp_overlays_state = 'Off'
         wrd.rp_decals_state = 'Off'
         wrd.rp_sss_state = 'Off'
         wrd.rp_hdr = False
-        wrd.rp_worldnodes = False
+        wrd.rp_world = False
         wrd.rp_clearbackground = True
         wrd.rp_stereo = False
         wrd.rp_greasepencil = False
@@ -252,15 +245,14 @@ def set_preset(self, context, preset):
         wrd.rp_motionblur = 'None'
     elif preset == 'Grease Pencil':
         wrd.rp_renderer = 'Forward'
-        wrd.material_model = 'Restricted'
+        wrd.arm_material_model = 'Restricted'
         wrd.rp_shadowmap = 'None'
-        wrd.rp_meshes = False
         wrd.rp_translucency_state = 'Off'
         wrd.rp_overlays_state = 'Off'
         wrd.rp_decals_state = 'Off'
         wrd.rp_sss_state = 'Off'
         wrd.rp_hdr = False
-        wrd.rp_worldnodes = False
+        wrd.rp_world = False
         wrd.rp_clearbackground = True
         wrd.rp_stereo = False
         wrd.rp_greasepencil = True
@@ -288,7 +280,7 @@ def set_renderpath(self, context):
         return
     # assets.invalidate_compiled_data(self, context)
     assets.invalidate_shader_cache(self, context)
-    make_renderer.make_renderer(bpy.data.worlds['Arm'])
+    make_renderer(bpy.data.worlds['Arm'])
     bpy.data.worlds['Arm'].renderpath_path = 'armory_default'
 
 def make_renderer(wrd):
@@ -354,19 +346,16 @@ def make_forward(wrd):
             links.new(nodes['Clear Target Mesh'].outputs[0], nodes['Draw Grease Pencil'].inputs[0])
         links.new(nodes['Draw Grease Pencil'].outputs[0], nodes['Draw Meshes Mesh'].inputs[0])
 
-    if not wrd.rp_meshes:
-        relink('Draw Meshes Mesh', 'Draw World')
-
-    if not wrd.rp_worldnodes:
+    if not wrd.rp_world:
         relink('Draw World', 'Set Target Accum')
         if wrd.rp_clearbackground:
             nodes['Clear Target Mesh'].inputs[1].default_value = True
 
     if not wrd.rp_render_to_texture:
         links.new(nodes['Framebuffer'].outputs[0], nodes['Set Target Mesh'].inputs[1])
-        if wrd.rp_worldnodes:
+        if wrd.rp_world:
             l = nodes['Draw World'].outputs[0].links[0]
-        elif wrd.rp_greasepencil and not wrd.rp_meshes:
+        elif wrd.rp_greasepencil:
             l = nodes['Draw Grease Pencil'].outputs[0].links[0]
         else:
             l = nodes['Draw Meshes Mesh'].outputs[0].links[0]
@@ -409,7 +398,7 @@ def make_deferred(wrd):
         n.inputs[2].default_value = res
         links.new(nodes['Image 3D Voxels'].outputs[0], nodes['Deferred Indirect'].inputs[4])
         wrd = bpy.data.worlds['Arm']
-        if wrd.voxelgi_shadows or wrd.voxelgi_refraction:
+        if wrd.arm_voxelgi_shadows or wrd.arm_voxelgi_refraction:
             links.new(nodes['Image 3D Voxels'].outputs[0], nodes['Deferred Light'].inputs[4])
             links.new(nodes['Image 3D Voxels'].outputs[0], nodes['Deferred Light.001'].inputs[4])
 
@@ -437,7 +426,7 @@ def make_deferred(wrd):
         l = nodes['Deferred Indirect'].inputs[3].links[0]
         links.remove(l)
 
-    if not wrd.rp_worldnodes:
+    if not wrd.rp_world:
         relink('Draw World', 'Water')
         if wrd.rp_clearbackground:
             nodes['Clear Target Mesh'].inputs[1].default_value = True
@@ -457,7 +446,7 @@ def make_deferred(wrd):
     if not wrd.rp_ssr:
         relink('SSR', 'Draw Compositor')
 
-    if bpy.data.worlds['Arm'].generate_ssr_half_res:
+    if bpy.data.worlds['Arm'].arm_ssr_half_res:
         links.new(nodes['ssra'].outputs[0], nodes['SSR'].inputs[2])
         links.new(nodes['ssrb'].outputs[0], nodes['SSR'].inputs[3])
 

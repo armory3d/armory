@@ -87,7 +87,7 @@ def make(image_node, tex_name, matname=None):
         # tex['format'] = image_format
     
     interpolation = image_node.interpolation
-    texfilter = wrd.texture_filtering_state
+    texfilter = wrd.arm_texture_filter
     if texfilter == 'Anisotropic':
         interpolation = 'Smart'
     elif texfilter == 'Linear':

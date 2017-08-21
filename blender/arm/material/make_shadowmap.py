@@ -9,7 +9,7 @@ import arm.utils
 
 def make(context_id, rpasses):
 
-    is_disp = mat_utils.disp_linked(mat_state.output_node) and mat_state.material.height_tess_shadows
+    is_disp = mat_utils.disp_linked(mat_state.output_node) and mat_state.material.arm_tess_shadows
 
     vs = [{'name': 'pos', 'size': 3}]
     if is_disp:
@@ -28,7 +28,7 @@ def make(context_id, rpasses):
         frag.add_out('vec4 fragColor') # Definition requred for d3d9 - pixel shader must minimally write all four components of COLOR0
     vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
 
-    parse_opacity = 'translucent' in rpasses or mat_state.material.discard_transparent
+    parse_opacity = 'translucent' in rpasses or mat_state.material.arm_discard
     if parse_opacity:
         frag.write('vec3 n;') # Discard at compile time
         frag.write('float dotNV;')
@@ -56,7 +56,7 @@ def make(context_id, rpasses):
         
         const = {}
         const['name'] = 'tessLevel'
-        const['vec2'] = [mat_state.material.height_tess_shadows_inner, mat_state.material.height_tess_shadows_outer]
+        const['vec2'] = [mat_state.material.arm_tess_shadows_inner, mat_state.material.arm_tess_shadows_outer]
         mat_state.bind_constants.append(const)
         tesc.add_uniform('vec2 tessLevel')
         make_tess.tesc_levels(tesc)
@@ -124,7 +124,7 @@ def make(context_id, rpasses):
             vert.write('vec2 t2 = tex; // TODO: Temp for d3d')
 
     if parse_opacity:
-        opac = mat_state.material.discard_transparent_opacity_shadows
+        opac = mat_state.material.arm_discard_opacity_shadows
         frag.write('if (opacity < {0}) discard;'.format(opac))
 
     # frag.write('fragColor = vec4(0.0);')

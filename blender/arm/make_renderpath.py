@@ -24,7 +24,7 @@ def build_node_trees(assets_path):
         os.makedirs(arm.utils.build_dir() + '/compiled/Assets/renderpaths')
     
     build_node_trees.assets_path = assets_path
-    if wrd.material_model != 'Restricted':
+    if wrd.arm_material_model != 'Restricted':
         # Always include
         assets.add(assets_path + 'brdf.png')
         assets.add_embedded_data('brdf.png')
@@ -136,7 +136,7 @@ def make_draw_meshes(stage, node_group, node):
     context = node.inputs[1].default_value
     # Store shadowmap size
     if context == 'shadowmap':
-        bpy.data.worlds['Arm'].shadowmap_size = buildNode.last_set_target_w
+        bpy.data.worlds['Arm'].arm_shadowmap_size_cache = buildNode.last_set_target_w
     stage['params'].append(context)
     # Order
     order = node.inputs[2].default_value
@@ -236,19 +236,19 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     wrd = bpy.data.worlds['Arm']
     world_defs = wrd.world_defs + wrd.rp_defs
     compositor_defs = make_compositor.parse_defs(bpy.data.scenes[0].node_tree) # Thrown in scene 0 for now
-    compositor_defs += '_CTone' + wrd.generate_tonemap
+    compositor_defs += '_CTone' + wrd.arm_tonemap
     # Additional compositor flags
     compo_depth = False # Read depth
     # compo_pos = False # Construct position from depth
     if with_fxaa: # FXAA directly in compositor, useful for forward path
         compositor_defs += '_CFXAA'
-    if wrd.generate_letterbox:
+    if wrd.arm_letterbox:
         compositor_defs += '_CLetterbox'
-    if wrd.generate_grain:
+    if wrd.arm_grain:
         compositor_defs += '_CGrain'
     if bpy.data.scenes[0].cycles.film_exposure != 1.0:
         compositor_defs += '_CExposure'
-    if wrd.generate_fog:
+    if wrd.arm_fog:
         compositor_defs += '_CFog'
         # compo_pos = True
     if bpy.data.cameras[0].dof_distance > 0.0:
@@ -260,14 +260,14 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     if compo_depth:
         compositor_defs += '_CDepth'
 
-    if wrd.generate_lens_texture != '':
+    if wrd.arm_lens_texture != '':
         compositor_defs += '_CLensTex'
         assets.add_embedded_data('lenstexture.jpg')
 
-    if wrd.generate_fisheye:
+    if wrd.arm_fisheye:
         compositor_defs += '_CFishEye'
 
-    if wrd.generate_vignette:
+    if wrd.arm_vignette:
         compositor_defs += '_CVignette'
 
     wrd.compo_defs = compositor_defs
@@ -351,7 +351,7 @@ def make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices
         stages.append(stage)
 
 def make_ssao_pass(stages, node_group, node):
-    sc = 0.5 if bpy.data.worlds['Arm'].generate_ssao_half_res else 1.0
+    sc = 0.5 if bpy.data.worlds['Arm'].arm_ssao_half_res else 1.0
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 4], bind_target_constants=['gbufferD', 'gbuffer0'], shader_context='ssao_pass/ssao_pass/ssao_pass', viewport_scale=sc)
     make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[1, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_x', viewport_scale=sc)
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_edge_pass/blur_edge_pass/blur_edge_pass_y')
@@ -458,7 +458,7 @@ def make_water_pass(stages, node_group, node):
 
 def make_deferred_light_pass(stages, node_group, node):
     wrd = bpy.data.worlds['Arm']
-    if wrd.voxelgi_shadows or wrd.voxelgi_refraction:
+    if wrd.arm_voxelgi_shadows or wrd.arm_voxelgi_refraction:
         make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3, 4], bind_target_constants=['gbuffer', 'shadowMap', 'voxels'], shader_context='', with_draw_quad=False)
     else:
         make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 3], bind_target_constants=['gbuffer', 'shadowMap'], shader_context='', with_draw_quad=False)
@@ -752,14 +752,8 @@ def get_root_node(node_group):
         if n.bl_idname == 'BeginNodeType':
             # Store contexts
             build_node_tree.wrd.renderpath_id = n.inputs[0].default_value            
-            # TODO: deprecated
-            if len(n.inputs) > 5:
-                if n.inputs[5].default_value == False:
-                    bpy.data.worlds['Arm'].rp_defs += '_LDR'
-            else:
-                if n.inputs[1].default_value == False:
-                    bpy.data.worlds['Arm'].rp_defs += '_LDR'
-            
+            if n.inputs[1].default_value == False:
+                bpy.data.worlds['Arm'].rp_defs += '_LDR'
             rn = nodes.find_node_by_link_from(node_group, n, n.outputs[0])
             break
     return rn
@@ -772,17 +766,10 @@ def preprocess_renderpath(root_node, node_group):
     render_targets3D = []
     depth_buffers = []
     preprocess_renderpath.velocity_def_added = False
-    build_node_tree.wrd.renderpath_passes = ''
     traverse_renderpath(root_node, node_group, render_targets, depth_buffers)
     return render_targets, depth_buffers
     
 def traverse_renderpath(node, node_group, render_targets, depth_buffers):
-    # Gather linked draw geometry contexts
-    if node.bl_idname == 'DrawMeshesNodeType':
-        if build_node_tree.wrd.renderpath_passes != '':
-            build_node_tree.wrd.renderpath_passes += '_' # Separator
-        build_node_tree.wrd.renderpath_passes += node.inputs[1].default_value
-
     # Gather defs from linked nodes
     if node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':
         if preprocess_renderpath.velocity_def_added == False:
@@ -802,7 +789,7 @@ def traverse_renderpath(node, node_group, render_targets, depth_buffers):
         bpy.data.worlds['Arm'].rp_defs += '_Hist'
 
     elif node.bl_idname == 'SSAOPassNodeType' or node.bl_idname == 'ApplySSAOPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':
-        if bpy.data.worlds['Arm'].generate_ssao: # SSAO enabled
+        if bpy.data.worlds['Arm'].arm_ssao: # SSAO enabled
             bpy.data.worlds['Arm'].rp_defs += '_SSAO'
 
     elif node.bl_idname == 'DrawStereoNodeType':

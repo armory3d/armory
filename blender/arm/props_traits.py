@@ -2,7 +2,6 @@ import shutil
 import bpy
 import subprocess
 import os
-import json
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 from arm.props_traits_params import *
@@ -51,13 +50,54 @@ class ListTraitItem(bpy.types.PropertyGroup):
            description="A name for this item",
            default="")
 
-    my_paramstraitlist = bpy.props.CollectionProperty(type=ListParamsTraitItem)
-    paramstraitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
+class ArmTraitListItem(bpy.types.PropertyGroup):
+    # Group of properties representing an item in the list
+    name = bpy.props.StringProperty(
+           name="Name",
+           description="A name for this item",
+           default="")
+           
+    enabled_prop = bpy.props.BoolProperty(
+           name="",
+           description="A name for this item",
+           default=True)
 
-    my_propstraitlist = bpy.props.CollectionProperty(type=ListPropsTraitItem)
-    propstraitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
+    type_prop = bpy.props.EnumProperty(
+        items = [('Haxe Script', 'Haxe Script', 'Haxe Script'),
+                 ('JS Script', 'JS Script', 'JS Script'),
+                 ('UI Canvas', 'UI Canvas', 'UI Canvas'),
+                 ('Bundled Script', 'Bundled Script', 'Bundled Script'),
+                 ('Logic Nodes', 'Logic Nodes', 'Logic Nodes')
+                 ],
+        name = "Type")
 
-class MY_UL_TraitList(bpy.types.UIList):
+    class_name_prop = bpy.props.StringProperty(
+           name="Class",
+           description="A name for this item",
+           default="")
+
+    canvas_name_prop = bpy.props.StringProperty(
+           name="Canvas",
+           description="A name for this item",
+           default="")
+
+    jsscript_prop = bpy.props.StringProperty(
+           name="Text",
+           description="A name for this item",
+           default="")
+
+    nodes_name_prop = bpy.props.StringProperty(
+           name="Nodes",
+           description="A name for this item",
+           default="")
+
+    arm_traitparamslist = bpy.props.CollectionProperty(type=ArmTraitParamListItem)
+    arm_traitparamslist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
+
+    arm_traitpropslist = bpy.props.CollectionProperty(type=ArmTraitPropListItem)
+    arm_traitpropslist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
+
+class ArmTraitList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here...
         custom_icon = 'OBJECT_DATAMODE'
@@ -71,48 +111,43 @@ class MY_UL_TraitList(bpy.types.UIList):
             layout.alignment = 'CENTER'
             layout.label("", icon = custom_icon)
 
-def initObjectProperties():
-    bpy.types.Object.my_traitlist = bpy.props.CollectionProperty(type=ListTraitItem)
-    bpy.types.Object.traitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
-
-
-class LIST_OT_TraitNewItem(bpy.types.Operator):
+class ArmTraitListNewItem(bpy.types.Operator):
     # Add a new item to the list
-    bl_idname = "my_traitlist.new_item"
+    bl_idname = "arm_traitlist.new_item"
     bl_label = "Add a new item"
 
     def execute(self, context):
-        trait = bpy.context.object.my_traitlist.add()
-        bpy.context.object.traitlist_index = len(bpy.context.object.my_traitlist) - 1
+        trait = bpy.context.object.arm_traitlist.add()
+        bpy.context.object.arm_traitlist_index = len(bpy.context.object.arm_traitlist) - 1
         return{'FINISHED'}
 
 
-class LIST_OT_TraitDeleteItem(bpy.types.Operator):
+class ArmTraitListDeleteItem(bpy.types.Operator):
     # Delete the selected item from the list
-    bl_idname = "my_traitlist.delete_item"
+    bl_idname = "arm_traitlist.delete_item"
     bl_label = "Deletes an item"
 
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list """
-        return len(bpy.context.object.my_traitlist) > 0
+        return len(bpy.context.object.arm_traitlist) > 0
 
     def execute(self, context):
-        list = bpy.context.object.my_traitlist
-        index = bpy.context.object.traitlist_index
+        list = bpy.context.object.arm_traitlist
+        index = bpy.context.object.arm_traitlist_index
 
         list.remove(index)
 
         if index > 0:
             index = index - 1
 
-        bpy.context.object.traitlist_index = index
+        bpy.context.object.arm_traitlist_index = index
         return{'FINISHED'}
 
 
-class LIST_OT_TraitMoveItem(bpy.types.Operator):
+class ArmTraitListMoveItem(bpy.types.Operator):
     # Move an item in the list
-    bl_idname = "my_traitlist.move_item"
+    bl_idname = "arm_traitlist.move_item"
     bl_label = "Move an item in the list"
     direction = bpy.props.EnumProperty(
                 items=(
@@ -122,13 +157,13 @@ class LIST_OT_TraitMoveItem(bpy.types.Operator):
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list. """
-        return len(bpy.context.object.my_traitlist) > 0
+        return len(bpy.context.object.arm_traitlist) > 0
 
 
     def move_index(self):
         # Move index of an item render queue while clamping it
-        index = bpy.context.object.traitlist_index
-        list_length = len(bpy.context.object.my_traitlist) - 1
+        index = bpy.context.object.arm_traitlist_index
+        list_length = len(bpy.context.object.arm_traitlist) - 1
         new_index = 0
 
         if self.direction == 'UP':
@@ -141,8 +176,8 @@ class LIST_OT_TraitMoveItem(bpy.types.Operator):
 
 
     def execute(self, context):
-        list = bpy.context.object.my_traitlist
-        index = bpy.context.object.traitlist_index
+        list = bpy.context.object.arm_traitlist
+        index = bpy.context.object.arm_traitlist_index
 
         if self.direction == 'DOWN':
             neighbor = index + 1
@@ -157,14 +192,14 @@ class LIST_OT_TraitMoveItem(bpy.types.Operator):
             return{'CANCELLED'}
         return{'FINISHED'}
 
-class ArmoryEditScriptButton(bpy.types.Operator):
+class ArmEditScriptButton(bpy.types.Operator):
     '''Edit script in Kode Studio'''
     bl_idname = 'arm.edit_script'
     bl_label = 'Edit Script'
  
     def execute(self, context):
         project_path = arm.utils.get_fp()
-        item = context.object.my_traitlist[context.object.traitlist_index]
+        item = context.object.arm_traitlist[context.object.arm_traitlist_index]
         pkg = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
         hx_path = project_path + '/Sources/' + pkg + '/' + item.class_name_prop + '.hx'
 
@@ -181,7 +216,7 @@ class ArmoryEditScriptButton(bpy.types.Operator):
         
         return{'FINISHED'}
 
-class ArmoryEditBundledScriptButton(bpy.types.Operator):
+class ArmEditBundledScriptButton(bpy.types.Operator):
     '''Copy script to project and edit in Kode Studio'''
     bl_idname = 'arm.edit_bundled_script'
     bl_label = 'Edit Script'
@@ -190,7 +225,7 @@ class ArmoryEditBundledScriptButton(bpy.types.Operator):
         sdk_path = arm.utils.get_sdk_path()
         project_path = arm.utils.get_fp()
         pkg = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
-        item = context.object.my_traitlist[context.object.traitlist_index]  
+        item = context.object.arm_traitlist[context.object.arm_traitlist_index]  
         source_hx_path = sdk_path + '/armory/Sources/armory/trait/' + item.class_name_prop + '.hx'
         target_hx_path = project_path + '/Sources/' + pkg + '/' + item.class_name_prop + '.hx'
 
@@ -213,14 +248,14 @@ class ArmoryEditBundledScriptButton(bpy.types.Operator):
         
         return{'FINISHED'}
 
-class ArmoryEditCanvasButton(bpy.types.Operator):
+class ArmEditCanvasButton(bpy.types.Operator):
     '''Edit ui canvas'''
     bl_idname = 'arm.edit_canvas'
     bl_label = 'Edit Canvas'
  
     def execute(self, context):
         project_path = arm.utils.get_fp()
-        item = context.object.my_traitlist[context.object.traitlist_index]
+        item = context.object.arm_traitlist[context.object.arm_traitlist_index]
         canvas_path = project_path + '/Bundled/canvas/' + item.canvas_name_prop + '.json'
         write_data.write_canvasprefs(canvas_path)
 
@@ -231,7 +266,7 @@ class ArmoryEditCanvasButton(bpy.types.Operator):
         subprocess.Popen([krom_path, armorui_path, armorui_path, '--nosound'])
         return{'FINISHED'}
 
-class ArmoryNewScriptDialog(bpy.types.Operator):
+class ArmNewScriptDialog(bpy.types.Operator):
     '''Create blank script'''
     bl_idname = "arm.new_script"
     bl_label = "New Script"
@@ -243,7 +278,7 @@ class ArmoryNewScriptDialog(bpy.types.Operator):
         write_data.write_traithx(self.class_name)
         arm.utils.fetch_script_names()
         obj = context.object
-        item = obj.my_traitlist[obj.traitlist_index] 
+        item = obj.arm_traitlist[obj.arm_traitlist_index] 
         item.class_name_prop = self.class_name 
         return {'FINISHED'}
  
@@ -253,7 +288,7 @@ class ArmoryNewScriptDialog(bpy.types.Operator):
         self.class_name = 'MyTrait'
         return context.window_manager.invoke_props_dialog(self)
 
-class ArmoryNewCanvasDialog(bpy.types.Operator):
+class ArmNewCanvasDialog(bpy.types.Operator):
     '''Create blank canvas'''
     bl_idname = "arm.new_canvas"
     bl_label = "New Canvas"
@@ -265,7 +300,7 @@ class ArmoryNewCanvasDialog(bpy.types.Operator):
         write_data.write_canvasjson(self.canvas_name)
         arm.utils.fetch_script_names()
         obj = context.object
-        item = obj.my_traitlist[obj.traitlist_index] 
+        item = obj.arm_traitlist[obj.arm_traitlist_index] 
         item.canvas_name_prop = self.canvas_name 
         return {'FINISHED'}
  
@@ -275,7 +310,7 @@ class ArmoryNewCanvasDialog(bpy.types.Operator):
         self.canvas_name = 'MyCanvas'
         return context.window_manager.invoke_props_dialog(self)
 
-class ArmoryRefreshScriptsButton(bpy.types.Operator):
+class ArmRefreshScriptsButton(bpy.types.Operator):
     '''Fetch all script names'''
     bl_idname = 'arm.refresh_scripts'
     bl_label = 'Refresh'
@@ -286,7 +321,7 @@ class ArmoryRefreshScriptsButton(bpy.types.Operator):
         arm.utils.fetch_trait_props()
         return{'FINISHED'}
 
-class ArmoryRefreshCanvasListButton(bpy.types.Operator):
+class ArmRefreshCanvasListButton(bpy.types.Operator):
     '''Fetch all canvas names'''
     bl_idname = 'arm.refresh_canvas_list'
     bl_label = 'Refresh'
@@ -308,23 +343,23 @@ class ArmTraitsPanel(bpy.types.Panel):
         obj = bpy.context.object
 
         rows = 2
-        if len(obj.my_traitlist) > 1:
+        if len(obj.arm_traitlist) > 1:
             rows = 4
         
         row = layout.row()
-        row.template_list("MY_UL_TraitList", "The_List", obj, "my_traitlist", obj, "traitlist_index", rows=rows)
+        row.template_list("ArmTraitList", "The_List", obj, "arm_traitlist", obj, "arm_traitlist_index", rows=rows)
         
         col = row.column(align=True)
-        col.operator("my_traitlist.new_item", icon='ZOOMIN', text="")
-        col.operator("my_traitlist.delete_item", icon='ZOOMOUT', text="")#.all = False
+        col.operator("arm_traitlist.new_item", icon='ZOOMIN', text="")
+        col.operator("arm_traitlist.delete_item", icon='ZOOMOUT', text="")#.all = False
 
-        if len(obj.my_traitlist) > 1:
+        if len(obj.arm_traitlist) > 1:
             col.separator()
-            col.operator("my_traitlist.move_item", icon='TRIA_UP', text="").direction = 'UP'
-            col.operator("my_traitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
+            col.operator("arm_traitlist.move_item", icon='TRIA_UP', text="").direction = 'UP'
+            col.operator("arm_traitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
 
-        if obj.traitlist_index >= 0 and len(obj.my_traitlist) > 0:
-            item = obj.my_traitlist[obj.traitlist_index]
+        if obj.arm_traitlist_index >= 0 and len(obj.arm_traitlist) > 0:
+            item = obj.arm_traitlist[obj.arm_traitlist_index]
             # Default props
             row = layout.row()
             row.prop(item, "type_prop")
@@ -335,44 +370,40 @@ class ArmTraitsPanel(bpy.types.Panel):
                 row = layout.row()
                 # row.prop(item, "class_name_prop")
                 if item.type_prop == 'Haxe Script':
-                    row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "scripts_list", "Class")
+                    row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_scripts_list", "Class")
                 else:
-                    row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "bundled_scripts_list", "Class")
+                    row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_bundled_scripts_list", "Class")
                 
                 # Props
-                if len(item.my_propstraitlist) > 0:
+                if len(item.arm_traitpropslist) > 0:
                     propsrow = layout.row()
                     propsrows = 2
-                    if len(item.my_propstraitlist) > 2:
+                    if len(item.arm_traitpropslist) > 2:
                         propsrows = 4
                     row = layout.row()
-                    row.template_list("MY_UL_PropsTraitList", "The_List", item, "my_propstraitlist", item, "propstraitlist_index", rows=propsrows)
+                    row.template_list("ArmTraitPropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows)
                 
                 # Params
                 layout.label("Parameters")
                 paramsrow = layout.row()
                 paramsrows = 2
-                if len(item.my_paramstraitlist) > 1:
+                if len(item.arm_traitparamslist) > 1:
                     paramsrows = 4
                 
                 row = layout.row()
-                row.template_list("MY_UL_ParamsTraitList", "The_List", item, "my_paramstraitlist", item, "paramstraitlist_index", rows=paramsrows)
+                row.template_list("ArmTraitParamList", "The_List", item, "arm_traitparamslist", item, "arm_traitparamslist_index", rows=paramsrows)
 
                 col = row.column(align=True)
-                col.operator("my_paramstraitlist.new_item", icon='ZOOMIN', text="")
-                col.operator("my_paramstraitlist.delete_item", icon='ZOOMOUT', text="")
+                col.operator("arm_traitparamslist.new_item", icon='ZOOMIN', text="")
+                col.operator("arm_traitparamslist.delete_item", icon='ZOOMOUT', text="")
 
-                if len(item.my_paramstraitlist) > 1:
+                if len(item.arm_traitparamslist) > 1:
                     col.separator()
-                    col.operator("my_paramstraitlist.move_item", icon='TRIA_UP', text="").direction = 'UP'
-                    col.operator("my_paramstraitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
+                    col.operator("arm_traitparamslist.move_item", icon='TRIA_UP', text="").direction = 'UP'
+                    col.operator("arm_traitparamslist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
 
-                if item.paramstraitlist_index >= 0 and len(item.my_paramstraitlist) > 0:
-                    paramitem = item.my_paramstraitlist[item.paramstraitlist_index]   
-                    # Picker
-                    layout.label('Pickers')
-                    layout.prop_search(paramitem, 'object_picker', bpy.context.scene, "objects", "Object")
-                    layout.prop(paramitem, 'color_picker')
+                if item.arm_traitparamslist_index >= 0 and len(item.arm_traitparamslist) > 0:
+                    paramitem = item.arm_traitparamslist[item.arm_traitparamslist_index]   
 
                 if item.type_prop == 'Haxe Script':
                     row = layout.row(align=True)
@@ -397,7 +428,7 @@ class ArmTraitsPanel(bpy.types.Panel):
             elif item.type_prop == 'UI Canvas':
                 item.name = item.canvas_name_prop
                 row = layout.row()
-                row.prop_search(item, "canvas_name_prop", bpy.data.worlds['Arm'], "canvas_list", "Canvas")
+                row.prop_search(item, "canvas_name_prop", bpy.data.worlds['Arm'], "arm_canvas_list", "Canvas")
                 
                 row = layout.row(align=True)
                 row.alignment = 'EXPAND'
@@ -416,33 +447,40 @@ class ArmTraitsPanel(bpy.types.Panel):
                 row.prop_search(item, "nodes_name_prop", bpy.data, "node_groups", "Tree")
 
 def register():  
-    bpy.utils.register_class(ListTraitItem)
-    bpy.utils.register_class(MY_UL_TraitList)
-    bpy.utils.register_class(LIST_OT_TraitNewItem)
-    bpy.utils.register_class(LIST_OT_TraitDeleteItem)
-    bpy.utils.register_class(LIST_OT_TraitMoveItem)
-    bpy.utils.register_class(ArmoryEditScriptButton)
-    bpy.utils.register_class(ArmoryEditBundledScriptButton)
-    bpy.utils.register_class(ArmoryEditCanvasButton)
-    bpy.utils.register_class(ArmoryNewScriptDialog)
-    bpy.utils.register_class(ArmoryNewCanvasDialog)
-    bpy.utils.register_class(ArmoryRefreshScriptsButton)
-    bpy.utils.register_class(ArmoryRefreshCanvasListButton)
+    bpy.utils.register_class(ArmTraitListItem)
+    bpy.utils.register_class(ArmTraitList)
+    bpy.utils.register_class(ArmTraitListNewItem)
+    bpy.utils.register_class(ArmTraitListDeleteItem)
+    bpy.utils.register_class(ArmTraitListMoveItem)
+    bpy.utils.register_class(ArmEditScriptButton)
+    bpy.utils.register_class(ArmEditBundledScriptButton)
+    bpy.utils.register_class(ArmEditCanvasButton)
+    bpy.utils.register_class(ArmNewScriptDialog)
+    bpy.utils.register_class(ArmNewCanvasDialog)
+    bpy.utils.register_class(ArmRefreshScriptsButton)
+    bpy.utils.register_class(ArmRefreshCanvasListButton)
     bpy.utils.register_class(ArmTraitsPanel)
+    bpy.types.Object.arm_traitlist = bpy.props.CollectionProperty(type=ArmTraitListItem)
+    bpy.types.Object.arm_traitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
 
-    initObjectProperties()
+    # Deprecated
+    bpy.utils.register_class(ListTraitItem)
+    bpy.types.Object.my_traitlist = bpy.props.CollectionProperty(type=ListTraitItem)
 
 def unregister():
-    bpy.utils.unregister_class(ListTraitItem)
-    bpy.utils.unregister_class(MY_UL_TraitList)
-    bpy.utils.unregister_class(LIST_OT_TraitNewItem)
-    bpy.utils.unregister_class(LIST_OT_TraitDeleteItem)
-    bpy.utils.unregister_class(LIST_OT_TraitMoveItem)
-    bpy.utils.unregister_class(ArmoryEditScriptButton)
-    bpy.utils.unregister_class(ArmoryEditBundledScriptButton)
-    bpy.utils.unregister_class(ArmoryEditCanvasButton)
-    bpy.utils.unregister_class(ArmoryNewScriptDialog)
-    bpy.utils.unregister_class(ArmoryNewCanvasDialog)
-    bpy.utils.unregister_class(ArmoryRefreshScriptsButton)
-    bpy.utils.unregister_class(ArmoryRefreshCanvasListButton)
+    bpy.utils.unregister_class(ArmTraitListItem)
+    bpy.utils.unregister_class(ArmTraitList)
+    bpy.utils.unregister_class(ArmTraitListNewItem)
+    bpy.utils.unregister_class(ArmTraitListDeleteItem)
+    bpy.utils.unregister_class(ArmTraitListMoveItem)
+    bpy.utils.unregister_class(ArmEditScriptButton)
+    bpy.utils.unregister_class(ArmEditBundledScriptButton)
+    bpy.utils.unregister_class(ArmEditCanvasButton)
+    bpy.utils.unregister_class(ArmNewScriptDialog)
+    bpy.utils.unregister_class(ArmNewCanvasDialog)
+    bpy.utils.unregister_class(ArmRefreshScriptsButton)
+    bpy.utils.unregister_class(ArmRefreshCanvasListButton)
     bpy.utils.unregister_class(ArmTraitsPanel)
+
+    # Deprecated
+    bpy.utils.unregister_class(ListTraitItem)

@@ -200,9 +200,9 @@ def on_scene_update_post(context):
 
 def recache(edit_obj):
     if edit_obj.type == 'MESH':
-        edit_obj.data.mesh_cached = False
+        edit_obj.data.arm_cached = False
     elif edit_obj.type == 'ARMATURE':
-        edit_obj.data.data_cached = False
+        edit_obj.data.arm_data_cached = False
 
 def op_changed(op, obj):
     # Recache mesh data
@@ -211,7 +211,7 @@ def op_changed(op, obj):
        op.bl_idname == 'OBJECT_OT_transform_apply' or \
        op.bl_idname == 'OBJECT_OT_shade_smooth' or \
        op.bl_idname == 'OBJECT_OT_shade_flat':
-        obj.data.mesh_cached = False
+        obj.data.arm_cached = False
 
 appended_py_paths = []
 @persistent

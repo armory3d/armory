@@ -5,7 +5,7 @@ import json
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
-class ListLibraryTraitItem(bpy.types.PropertyGroup):
+class ArmLibraryListItem(bpy.types.PropertyGroup):
     name = bpy.props.StringProperty(
            name="Name",
            description="A name for this item",
@@ -16,7 +16,7 @@ class ListLibraryTraitItem(bpy.types.PropertyGroup):
            description="A name for this item",
            default=True)
 
-class MY_UL_LibraryTraitList(bpy.types.UIList):
+class ArmLibraryList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here...
         custom_icon = 'OBJECT_DATAMODE'
@@ -31,7 +31,7 @@ class MY_UL_LibraryTraitList(bpy.types.UIList):
             layout.alignment = 'CENTER'
             layout.label("", icon = custom_icon)
 
-class LIST_OT_LibraryTraitNewItem(bpy.types.Operator):
+class ArmLibraryListNewItem(bpy.types.Operator):
     # Add a new item to the list
     bl_idname = "arm_librarylist.new_item"
     bl_label = "Add a new item"
@@ -43,7 +43,7 @@ class LIST_OT_LibraryTraitNewItem(bpy.types.Operator):
         return{'FINISHED'}
 
 
-class LIST_OT_LibraryTraitDeleteItem(bpy.types.Operator):
+class ArmLibraryListDeleteItem(bpy.types.Operator):
     # Delete the selected item from the list
     bl_idname = "arm_librarylist.delete_item"
     bl_label = "Deletes an item"
@@ -68,7 +68,7 @@ class LIST_OT_LibraryTraitDeleteItem(bpy.types.Operator):
         return{'FINISHED'}
 
 
-class LIST_OT_LibraryTraitMoveItem(bpy.types.Operator):
+class ArmLibraryListMoveItem(bpy.types.Operator):
     # Move an item in the list
     bl_idname = "arm_librarylist.move_item"
     bl_label = "Move an item in the list"
@@ -119,15 +119,18 @@ class LIST_OT_LibraryTraitMoveItem(bpy.types.Operator):
         return{'FINISHED'}
 
 def register():
-    bpy.utils.register_class(ListLibraryTraitItem)
-    bpy.utils.register_class(MY_UL_LibraryTraitList)
-    bpy.utils.register_class(LIST_OT_LibraryTraitNewItem)
-    bpy.utils.register_class(LIST_OT_LibraryTraitDeleteItem)
-    bpy.utils.register_class(LIST_OT_LibraryTraitMoveItem)
+    bpy.utils.register_class(ArmLibraryListItem)
+    bpy.utils.register_class(ArmLibraryList)
+    bpy.utils.register_class(ArmLibraryListNewItem)
+    bpy.utils.register_class(ArmLibraryListDeleteItem)
+    bpy.utils.register_class(ArmLibraryListMoveItem)
+
+    bpy.types.World.arm_librarylist = bpy.props.CollectionProperty(type=ArmLibraryListItem)
+    bpy.types.World.arm_librarylist_index = bpy.props.IntProperty(name="Library index", default=0)
 
 def unregister():
-    bpy.utils.unregister_class(ListLibraryTraitItem)
-    bpy.utils.unregister_class(MY_UL_LibraryTraitList)
-    bpy.utils.unregister_class(LIST_OT_LibraryTraitNewItem)
-    bpy.utils.unregister_class(LIST_OT_LibraryTraitDeleteItem)
-    bpy.utils.unregister_class(LIST_OT_LibraryTraitMoveItem)
+    bpy.utils.unregister_class(ArmLibraryListItem)
+    bpy.utils.unregister_class(ArmLibraryList)
+    bpy.utils.unregister_class(ArmLibraryListNewItem)
+    bpy.utils.unregister_class(ArmLibraryListDeleteItem)
+    bpy.utils.unregister_class(ArmLibraryListMoveItem)

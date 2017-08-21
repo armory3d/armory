@@ -53,37 +53,37 @@ def build_node_tree(world):
             wrd.world_defs += '_EnvCol'
         
         # Irradiance json file name
-        world.world_envtex_name = wname
-        world.world_envtex_irr_name = wname
-        write_probes.write_color_irradiance(wname, world.world_envtex_color)
+        world.arm_envtex_name = wname
+        world.arm_envtex_irr_name = wname
+        write_probes.write_color_irradiance(wname, world.arm_envtex_color)
 
     # Clouds enabled
-    if wrd.generate_clouds:
+    if wrd.arm_clouds:
         wrd.world_defs += '_EnvClouds'
 
     # Percentage closer soft shadows
-    if wrd.generate_pcss_state == 'On':
+    if wrd.arm_pcss_state == 'On':
         wrd.world_defs += '_PCSS'
         sdk_path = arm.utils.get_sdk_path()
         assets.add(sdk_path + 'armory/Assets/noise64.png')
         assets.add_embedded_data('noise64.png')
 
     # Screen-space ray-traced shadows
-    if wrd.generate_ssrs:
+    if wrd.arm_ssrs:
         wrd.world_defs += '_SSRS'
 
-    if wrd.generate_two_sided_area_lamp:
+    if wrd.arm_two_sided_area_lamp:
         wrd.world_defs += '_TwoSidedAreaLamp'
 
     # Alternative models
-    if wrd.material_model == 'Cycles':
+    if wrd.arm_material_model == 'Cycles':
         wrd.world_defs += '_Cycles'
 
     # TODO: Lamp texture test..
-    if wrd.generate_lamp_texture != '':
+    if wrd.arm_lamp_texture != '':
         bpy.data.worlds['Arm'].world_defs += '_LampColTex'
 
-    if wrd.generate_lamp_ies_texture != '':
+    if wrd.arm_lamp_ies_texture != '':
         bpy.data.worlds['Arm'].world_defs += '_LampIES'
         assets.add_embedded_data('iestexture.png')
 
@@ -109,16 +109,16 @@ def build_node_tree(world):
 
     if voxelgi:
         assets.add_khafile_def('arm_voxelgi')
-        if wrd.voxelgi_revoxelize:
+        if wrd.arm_voxelgi_revoxelize:
             assets.add_khafile_def('arm_voxelgi_revox')
-        if wrd.voxelgi_multibounce:
+        if wrd.arm_voxelgi_multibounce:
             wrd.world_defs += '_VoxelGIMulti'
-        if wrd.voxelgi_camera:
+        if wrd.arm_voxelgi_camera:
             wrd.world_defs += '_VoxelGICam'
-        if wrd.voxelgi_shadows:
+        if wrd.arm_voxelgi_shadows:
             wrd.world_defs += '_VoxelGIDirect'
             wrd.world_defs += '_VoxelGIShadow'
-        if wrd.voxelgi_refraction:
+        if wrd.arm_voxelgi_refraction:
             wrd.world_defs += '_VoxelGIDirect'
             wrd.world_defs += '_VoxelGIRefract'
         wrd.world_defs += '_VoxelGI'
@@ -167,7 +167,7 @@ def parse_surface(world, node, context):
     if node.type == 'BACKGROUND':
         
         # Append irradiance define
-        if wrd.generate_irradiance:
+        if wrd.arm_irradiance:
             bpy.data.worlds['Arm'].world_defs += '_Irr'
 
         # Strength
@@ -182,8 +182,8 @@ def parse_surface(world, node, context):
             parse_color(world, color_node, context, envmap_strength_const)
 
         # Cache results
-        world.world_envtex_color = node.inputs[0].default_value
-        world.world_envtex_strength = envmap_strength_const['float']
+        world.arm_envtex_color = node.inputs[0].default_value
+        world.arm_envtex_strength = envmap_strength_const['float']
 
 def parse_color(world, node, context, envmap_strength_const):       
     wrd = bpy.data.worlds['Arm']
@@ -252,14 +252,14 @@ def parse_color(world, node, context, envmap_strength_const):
                 assets.add(arm.utils.asset_path(image.filepath))
 
         # Generate prefiltered envmaps
-        world.world_envtex_name = tex['file']
-        world.world_envtex_irr_name = tex['file'].rsplit('.', 1)[0]
+        world.arm_envtex_name = tex['file']
+        world.arm_envtex_irr_name = tex['file'].rsplit('.', 1)[0]
         disable_hdr = target_format == 'JPEG'
         
-        mip_count = world.world_envtex_num_mips
-        mip_count = write_probes.write_probes(filepath, disable_hdr, mip_count, generate_radiance=wrd.generate_radiance)
+        mip_count = world.arm_envtex_num_mips
+        mip_count = write_probes.write_probes(filepath, disable_hdr, mip_count, arm_radiance=wrd.arm_radiance)
         
-        world.world_envtex_num_mips = mip_count
+        world.arm_envtex_num_mips = mip_count
         
         # Append envtex define
         bpy.data.worlds['Arm'].world_defs += '_EnvTex'
@@ -267,7 +267,7 @@ def parse_color(world, node, context, envmap_strength_const):
         if disable_hdr:
             bpy.data.worlds['Arm'].world_defs += '_EnvLDR'
         # Append radiance define
-        if wrd.generate_irradiance and wrd.generate_radiance:
+        if wrd.arm_irradiance and wrd.arm_radiance:
             bpy.data.worlds['Arm'].world_defs += '_Rad'
 
     # Static image background
@@ -316,20 +316,20 @@ def parse_color(world, node, context, envmap_strength_const):
         const['vec3'] = list(sun_direction)
         context['bind_constants'].append(const)
         
-        world.world_envtex_sun_direction = sun_direction
-        world.world_envtex_turbidity = node.turbidity
-        world.world_envtex_ground_albedo = node.ground_albedo
+        world.arm_envtex_sun_direction = sun_direction
+        world.arm_envtex_turbidity = node.turbidity
+        world.arm_envtex_ground_albedo = node.ground_albedo
         
         # Irradiance json file name
         wname = arm.utils.safestr(world.name)
-        world.world_envtex_irr_name = wname
+        world.arm_envtex_irr_name = wname
         write_probes.write_sky_irradiance(wname)
 
         # Radiance
-        if wrd.generate_radiance_sky and wrd.generate_radiance and wrd.generate_irradiance:
+        if wrd.arm_radiance_sky and wrd.arm_radiance and wrd.arm_irradiance:
             bpy.data.worlds['Arm'].world_defs += '_Rad'
             
-            if wrd.generate_radiance_sky_type == 'Hosek':
+            if wrd.arm_radiance_sky_type == 'Hosek':
                 hosek_path = 'armory/Assets/hosek/'
             else:
                 hosek_path = 'armory/Assets/hosek_fake/'
@@ -340,5 +340,5 @@ def parse_color(world, node, context, envmap_strength_const):
             for i in range(0, 8):
                 assets.add(sdk_path + hosek_path + 'hosek_radiance_' + str(i) + '.hdr')
             
-            world.world_envtex_name = 'hosek'
-            world.world_envtex_num_mips = 8
+            world.arm_envtex_name = 'hosek'
+            world.arm_envtex_num_mips = 8

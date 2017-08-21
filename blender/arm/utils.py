@@ -141,10 +141,10 @@ def krom_paths():
 
 def fetch_bundled_script_names():
     wrd = bpy.data.worlds['Arm']
-    wrd.bundled_scripts_list.clear()
+    wrd.arm_bundled_scripts_list.clear()
     os.chdir(get_sdk_path() + '/armory/Sources/armory/trait')
     for file in glob.glob('*.hx'):
-        wrd.bundled_scripts_list.add().name = file.rsplit('.')[0]
+        wrd.arm_bundled_scripts_list.add().name = file.rsplit('.')[0]
 
 script_props = {}
 script_props_defaults = {}
@@ -184,46 +184,46 @@ def fetch_script_names():
         return
     wrd = bpy.data.worlds['Arm']
     # Sources
-    wrd.scripts_list.clear()
+    wrd.arm_scripts_list.clear()
     sources_path = get_fp() + '/Sources/' + safestr(wrd.arm_project_package)
     if os.path.isdir(sources_path):
         os.chdir(sources_path)
         for file in glob.glob('*.hx'):
             name = file.rsplit('.')[0]
-            wrd.scripts_list.add().name = name
+            wrd.arm_scripts_list.add().name = name
             fetch_script_props(file)
 
     # Canvas
-    wrd.canvas_list.clear()
+    wrd.arm_canvas_list.clear()
     canvas_path = get_fp() + '/Bundled/canvas'
     if os.path.isdir(canvas_path):
         os.chdir(canvas_path)
         for file in glob.glob('*.json'):
-            wrd.canvas_list.add().name = file.rsplit('.')[0]
+            wrd.arm_canvas_list.add().name = file.rsplit('.')[0]
     os.chdir(get_fp())
 
 def fetch_trait_props():
     for o in bpy.data.objects:
-        for item in o.my_traitlist:
+        for item in o.arm_traitlist:
             if item.name not in script_props:
                 continue
             props = script_props[item.name]
             defaults = script_props_defaults[item.name]
             # Remove old props
-            for i in range(len(item.my_propstraitlist) - 1, -1, -1):
-                ip = item.my_propstraitlist[i]
+            for i in range(len(item.arm_traitpropslist) - 1, -1, -1):
+                ip = item.arm_traitpropslist[i]
                 if ip.name not in props:
-                    item.my_propstraitlist.remove(i)
+                    item.arm_traitpropslist.remove(i)
             # Add new props
             for i in range(0, len(props)):
                 p = props[i]
                 found = False
-                for ip in item.my_propstraitlist:
+                for ip in item.arm_traitpropslist:
                     if ip.name == p:
                         found = True
                         break
                 if not found:
-                    prop = item.my_propstraitlist.add()
+                    prop = item.arm_traitpropslist.add()
                     prop.name = p
                     prop.value = defaults[i]
 
@@ -321,11 +321,11 @@ def check_engine(self):
     return True
 
 def tess_enabled(target):
-    return (target == 'krom' or target == 'native') and bpy.data.worlds['Arm'].tessellation_enabled
+    return (target == 'krom' or target == 'native') and bpy.data.worlds['Arm'].arm_tessellation
 
 def is_object_animation_enabled(bobject):
     # Checks if animation is present and enabled
-    if bobject.object_animation_enabled == False or bobject.type == 'BONE' or bobject.type == 'ARMATURE':
+    if bobject.arm_animation_enabled == False or bobject.type == 'BONE' or bobject.type == 'ARMATURE':
         return False
     if bobject.animation_data and bobject.animation_data.action:
         return True
@@ -334,14 +334,14 @@ def is_object_animation_enabled(bobject):
 def is_bone_animation_enabled(bobject):
     # Checks if animation is present and enabled for parented armature
     if bobject.parent and bobject.parent.type == 'ARMATURE':
-        if bobject.parent.bone_animation_enabled == False:
+        if bobject.parent.arm_animation_enabled == False:
             return False
         if bobject.parent.animation_data and bobject.parent.animation_data.action:
             return True
     return False
 
 def export_bone_data(bobject):
-    return bobject.find_armature() and is_bone_animation_enabled(bobject) and bpy.data.worlds['Arm'].generate_gpu_skin == True
+    return bobject.find_armature() and is_bone_animation_enabled(bobject) and bpy.data.worlds['Arm'].arm_gpu_skin == True
 
 def register():
     global krom_found

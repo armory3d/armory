@@ -1243,16 +1243,15 @@ class ArmoryExporter:
             if not bobject.cycles_visibility.shadow:
                 o['visible_shadow'] = False
 
-            if bobject.spawn == False:
+            if bobject.arm_spawn == False:
                 o['spawn'] = False
 
-            if bobject.mobile == False:
+            if bobject.arm_mobile == False:
                 o['mobile'] = False
 
             if bobject.dupli_type == 'GROUP' and bobject.dupli_group != None:
                 o['group_ref'] = bobject.dupli_group.name
 
-            # if ArmoryExporter.option_spawn_all_layers == False:
             layer_found = False
             for l in self.active_layers:
                 if bobject.layers[l] == True:
@@ -1267,17 +1266,17 @@ class ArmoryExporter:
                 objname = self.asset_name(objref)
 
             # Lods
-            if bobject.type == 'MESH' and hasattr(objref, 'my_lodlist') and len(objref.my_lodlist) > 0:
+            if bobject.type == 'MESH' and hasattr(objref, 'arm_lodlist') and len(objref.arm_lodlist) > 0:
                 o['lods'] = []
-                for l in objref.my_lodlist:
+                for l in objref.arm_lodlist:
                     if l.enabled_prop == False:
                         continue
                     lod = {}
                     lod['object_ref'] = l.name
                     lod['screen_size'] = l.screen_size_prop
                     o['lods'].append(lod)
-                if objref.lod_material:
-                    o['lod_material'] = True
+                if objref.arm_lod_material:
+                    o['arm_lod_material'] = True
 
             if type == NodeTypeMesh:
                 if not objref in self.meshArray:
@@ -1297,7 +1296,7 @@ class ArmoryExporter:
                 o['material_refs'] = []
                 for i in range(len(bobject.material_slots)):
                     self.export_material_ref(bobject, bobject.material_slots[i].material, i, o)
-                    if bobject.material_slots[i].material != None and bobject.material_slots[i].material.decal:
+                    if bobject.material_slots[i].material != None and bobject.material_slots[i].material.arm_decal:
                         o['type'] = 'decal_object'
                 # No material, mimic cycles and assign default
                 if len(o['material_refs']) == 0:
@@ -1311,10 +1310,10 @@ class ArmoryExporter:
                     
                 o['dimensions'] = [bobject.dimensions[0], bobject.dimensions[1], bobject.dimensions[2]] 
                 # Origin not in geometry center
-                if hasattr(bobject.data, 'mesh_aabb'):
-                    dx = bobject.data.mesh_aabb[0] * bobject.scale[0]
-                    dy = bobject.data.mesh_aabb[1] * bobject.scale[1]
-                    dz = bobject.data.mesh_aabb[2] * bobject.scale[2]
+                if hasattr(bobject.data, 'arm_aabb'):
+                    dx = bobject.data.arm_aabb[0] * bobject.scale[0]
+                    dy = bobject.data.arm_aabb[1] * bobject.scale[1]
+                    dz = bobject.data.arm_aabb[2] * bobject.scale[2]
                     if dx > o['dimensions'][0]:
                         o['dimensions'][0] = dx
                     if dy > o['dimensions'][1]:
@@ -1399,7 +1398,7 @@ class ArmoryExporter:
                     bobject.animation_data.action = action
                     fp = self.get_meshes_file_path('bones_' + armatureid + '_' + action.name, compressed=self.is_compress(bdata))
                     assets.add(fp)
-                    if bdata.data_cached == False or not os.path.exists(fp):
+                    if bdata.arm_data_cached == False or not os.path.exists(fp):
                         bones = []
                         for bone in bdata.bones:
                             if not bone.parent:
@@ -1410,7 +1409,7 @@ class ArmoryExporter:
                         bones_obj = {}
                         bones_obj['objects'] = bones
                         arm.utils.write_arm(fp, bones_obj)
-                bdata.data_cached = True
+                bdata.arm_data_cached = True
 
             if parento == None:
                 self.output['objects'].append(o)
@@ -1448,7 +1447,7 @@ class ArmoryExporter:
 
         bone_array = armature.data.bones
         bone_count = len(bone_array)
-        max_bones = bpy.data.worlds['Arm'].generate_gpu_skin_max_bones
+        max_bones = bpy.data.worlds['Arm'].arm_gpu_skin_max_bones
         if bone_count > max_bones:
             log.warn(bobject.name + ' - ' + str(bone_count) + ' bones found, exceeds maximum of ' + str(max_bones) + ' bones defined - raise the value in Camera Data - Armory Render Props - Max Bones')
 
@@ -1619,10 +1618,10 @@ class ArmoryExporter:
             mesh_obj['mesh_datas'] = [o]
             arm.utils.write_arm(fp, mesh_obj)
 
-            bobject.data.mesh_cached = True
+            bobject.data.arm_cached = True
             if bobject.type != 'FONT' and bobject.type != 'META':
-                bobject.data.mesh_cached_verts = len(bobject.data.vertices)
-                bobject.data.mesh_cached_edges = len(bobject.data.edges)
+                bobject.data.arm_cached_verts = len(bobject.data.vertices)
+                bobject.data.arm_cached_edges = len(bobject.data.edges)
         else:
             self.output['mesh_datas'].append(o)
 
@@ -1772,10 +1771,10 @@ class ArmoryExporter:
         if ArmoryExporter.option_mesh_per_file:
             fp = self.get_meshes_file_path('mesh_' + oid, compressed=self.is_compress(bobject.data))
             assets.add(fp)
-            if bobject.data.sdfgen:
+            if hasattr(bobject.data, 'arm_sdfgen') and bobject.data.arm_sdfgen:
                 sdf_path = fp.replace('/mesh_', '/sdf_')
                 assets.add(sdf_path)
-            if self.object_is_mesh_cached(bobject) == True and os.path.exists(fp):
+            if self.object_is_cached(bobject) == True and os.path.exists(fp):
                 return
 
         print('Exporting mesh ' + self.asset_name(bobject.data))
@@ -1887,8 +1886,8 @@ class ArmoryExporter:
                     if positions[i + 2] < aabb_min[2]:
                         aabb_min[2] = positions[i + 2];
                     i += stride;
-                if hasattr(bobject.data, 'mesh_aabb'):
-                    bobject.data.mesh_aabb = [abs(aabb_min[0]) + abs(aabb_max[0]), abs(aabb_min[1]) + abs(aabb_max[1]), abs(aabb_min[2]) + abs(aabb_max[2])]
+                if hasattr(bobject.data, 'arm_aabb'):
+                    bobject.data.arm_aabb = [abs(aabb_min[0]) + abs(aabb_max[0]), abs(aabb_min[1]) + abs(aabb_max[1]), abs(aabb_min[2]) + abs(aabb_max[2])]
                 break
 
         # Restore the morph state
@@ -1906,15 +1905,15 @@ class ArmoryExporter:
             o['instance_offsets'] = instance_offsets
 
         # Export usage
-        if bobject.data.dynamic_usage:
-            o['dynamic_usage'] = bobject.data.dynamic_usage
+        if bobject.data.arm_dynamic_usage:
+            o['dynamic_usage'] = bobject.data.arm_dynamic_usage
 
-        if bobject.data.sdfgen:
+        if hasattr(bobject.data, 'arm_sdfgen') and bobject.data.arm_sdfgen:
             o['sdf_ref'] = 'sdf_' + oid
 
         self.write_mesh(bobject, fp, o)
 
-        if bobject.data.sdfgen:
+        if hasattr(bobject.data, 'arm_sdfgen') and bobject.data.arm_sdfgen:
             # Copy input
             sdk_path = arm.utils.get_sdk_path()
             sdfgen_path = sdk_path + '/armory/tools/sdfgen'
@@ -2090,10 +2089,10 @@ class ArmoryExporter:
             o['type'] = 'sun'
 
         o['cast_shadow'] = objref.cycles.cast_shadow
-        o['near_plane'] = objref.lamp_clip_start
-        o['far_plane'] = objref.lamp_clip_end
-        o['fov'] = objref.lamp_fov
-        o['shadows_bias'] = objref.lamp_shadows_bias
+        o['near_plane'] = objref.arm_clip_start
+        o['far_plane'] = objref.arm_clip_end
+        o['fov'] = objref.arm_fov
+        o['shadows_bias'] = objref.arm_shadows_bias
         wrd = bpy.data.worlds['Arm']
         if wrd.rp_shadowmap == 'None':
             o['shadowmap_size'] = 0
@@ -2107,7 +2106,7 @@ class ArmoryExporter:
             if lamp_size > 1:
                 o['shadows_bias'] += 0.00001 * lamp_size
             o['lamp_size'] = lamp_size * 10 # Match to Cycles
-        if objtype == 'POINT' and objref.lamp_omni_shadows and not arm.utils.get_gapi().startswith('direct3d'):
+        if objtype == 'POINT' and objref.arm_omni_shadows and not arm.utils.get_gapi().startswith('direct3d'):
             o['fov'] = 1.5708 # 90 deg
             o['shadowmap_cube'] = True
             o['shadows_bias'] *= 4.0
@@ -2165,12 +2164,12 @@ class ArmoryExporter:
         else:
             o['type'] = 'orthographic'
 
-        if objref.is_mirror:
-            o['is_mirror'] = True
-            o['mirror_resolution_x'] = int(objref.mirror_resolution_x)
-            o['mirror_resolution_y'] = int(objref.mirror_resolution_y)
+        if objref.arm_render_to_texture:
+            o['render_to_texture'] = True
+            o['texture_resolution_x'] = int(objref.arm_texture_resolution_x)
+            o['texture_resolution_y'] = int(objref.arm_texture_resolution_y)
 
-        o['frustum_culling'] = objref.frustum_culling
+        o['frustum_culling'] = objref.arm_frustum_culling
         o['render_path'] = wrd.renderpath_path + '/' + wrd.renderpath_path # Same file name and id
         
         if self.scene.world != None and 'Background' in self.scene.world.node_tree.nodes: # TODO: parse node tree
@@ -2207,8 +2206,8 @@ class ArmoryExporter:
         else:
             o['sound'] = ''
         o['muted'] = objref.muted
-        o['loop'] = objref.loop
-        o['stream'] = objref.stream
+        o['loop'] = objref.arm_loop
+        o['stream'] = objref.arm_stream
         o['volume'] = objref.volume
         o['pitch'] = objref.pitch
         o['attenuation'] = objref.attenuation
@@ -2229,7 +2228,7 @@ class ArmoryExporter:
         make_material.parse(mat, o, mat_users, mat_armusers, ArmoryExporter.renderpath_id)
         self.output['material_datas'].append(o)
         bpy.data.materials.remove(mat)
-        if bpy.data.worlds['Arm'].force_no_culling:
+        if bpy.data.worlds['Arm'].arm_culling == False:
             o['override_context'] = {}
             o['override_context']['cull_mode'] = 'none'
 
@@ -2254,16 +2253,13 @@ class ArmoryExporter:
             
             o = {}
             o['name'] = materialRef[1]["structName"]
-
-            if material.skip_context != '':
-                o['skip_context'] = material.skip_context
             
-            if material.two_sided_shading or wrd.force_no_culling:
+            if material.arm_two_sided or wrd.arm_culling == False:
                 o['override_context'] = {}
                 o['override_context']['cull_mode'] = 'none'
-            elif material.override_cull_mode != 'Clockwise':
+            elif material.arm_cull_mode != 'Clockwise':
                 o['override_context'] = {}
-                o['override_context']['cull_mode'] = material.override_cull_mode
+                o['override_context']['cull_mode'] = material.arm_cull_mode
 
             o['contexts'] = []
 
@@ -2309,7 +2305,7 @@ class ArmoryExporter:
                 material.export_tangents = tang_export
                 mat_users = self.materialToObjectDict[material]
                 for ob in mat_users:
-                    ob.data.mesh_cached = False
+                    ob.data.arm_cached = False
 
             self.output['material_datas'].append(o)
             material.is_cached = True
@@ -2372,7 +2368,7 @@ class ArmoryExporter:
 
     def export_grease_pencils(self):        
         gpRef = self.scene.grease_pencil
-        if gpRef == None or self.scene.gp_export == False:
+        if gpRef == None or self.scene.arm_gp_export == False:
             return
         
         # ArmoryExporter.option_mesh_per_file # Currently always exports to separate file
@@ -2389,17 +2385,17 @@ class ArmoryExporter:
         assets.add_shader(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil_shadows.frag.glsl')
         assets.add_shader(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil_shadows.vert.glsl')
 
-        if gpRef.data_cached == True and os.path.exists(fp):
+        if gpRef.arm_data_cached == True and os.path.exists(fp):
             return
 
         gpo = self.post_export_grease_pencil(gpRef)
         gp_obj = {}
         gp_obj['grease_pencil_datas'] = [gpo]
         arm.utils.write_arm(fp, gp_obj)
-        gpRef.data_cached = True
+        gpRef.arm_data_cached = True
 
     def is_compress(self, obj):
-        return ArmoryExporter.compress_enabled and obj.data_compressed
+        return ArmoryExporter.compress_enabled and obj.arm_compress
 
     def export_objects(self, scene):
         if not ArmoryExporter.option_mesh_only:
@@ -2486,12 +2482,12 @@ class ArmoryExporter:
 
         # Auto-bones
         wrd = bpy.data.worlds['Arm']
-        if wrd.generate_gpu_skin_max_bones_auto:
+        if wrd.arm_gpu_skin_max_bones_auto:
             max_bones = 8
             for armature in bpy.data.armatures:
                 if max_bones < len(armature.bones):
                     max_bones = len(armature.bones)
-            wrd.generate_gpu_skin_max_bones = max_bones
+            wrd.arm_gpu_skin_max_bones = max_bones
 
         self.output['objects'] = []
         for bo in self.scene.objects:
@@ -2603,14 +2599,14 @@ class ArmoryExporter:
         return {'FINISHED'}
 
     # Callbacks
-    def object_is_mesh_cached(self, bobject):
+    def object_is_cached(self, bobject):
         if bobject.type == 'FONT' or bobject.type == 'META': # No verts
-            return bobject.data.mesh_cached
-        if bobject.data.mesh_cached_verts != len(bobject.data.vertices):
+            return bobject.data.arm_cached
+        if bobject.data.arm_cached_verts != len(bobject.data.vertices):
             return False
-        if bobject.data.mesh_cached_edges != len(bobject.data.edges):
+        if bobject.data.arm_cached_edges != len(bobject.data.edges):
             return False
-        return bobject.data.mesh_cached
+        return bobject.data.arm_cached
 
     def get_export_tangents(self, mesh):
         for m in mesh.materials:
@@ -2640,7 +2636,7 @@ class ArmoryExporter:
                 instance_offsets = [0.0, 0.0, 0.0] # Include parent
                 for sn in n.children:
                     # Child hidden
-                    if sn.game_export == False:
+                    if sn.arm_export == False:
                         continue
                     # Do not take parent matrix into account
                     loc = sn.matrix_local.to_translation()
@@ -2685,7 +2681,6 @@ class ArmoryExporter:
 
         # Used for material shader export and khafile
         ArmoryExporter.renderpath_id = wrd.renderpath_id
-        ArmoryExporter.renderpath_passes = wrd.renderpath_passes.split('_')
         ArmoryExporter.mesh_context = 'mesh'
         ArmoryExporter.mesh_context_empty = ''
         ArmoryExporter.shadows_context = 'shadowmap'
@@ -2696,7 +2691,7 @@ class ArmoryExporter:
         export_object = True
 
         # Disabled object   
-        if bobject.game_export == False:
+        if bobject.arm_export == False:
             return False
         
         for m in bobject.modifiers:
@@ -2704,9 +2699,9 @@ class ArmoryExporter:
                 # Do not export ocean mesh, just take specified constants
                 export_object = False
                 wrd = bpy.data.worlds['Arm']
-                wrd.generate_ocean = True
+                wrd.arm_ocean = True
                 # Take position and bounds
-                wrd.generate_ocean_level = 0.0#bobject.location.z
+                wrd.arm_ocean_level = 0.0#bobject.location.z
 
         return export_object
 
@@ -2727,12 +2722,12 @@ class ArmoryExporter:
             x['speeds'] = [1.0]
             x['loops'] = [True]
             x['reflects'] = [False]
-            x['max_bones'] = bpy.data.worlds['Arm'].generate_gpu_skin_max_bones
+            x['max_bones'] = bpy.data.worlds['Arm'].arm_gpu_skin_max_bones
             o['animation_setup'] = x
 
         # Export traits
-        if hasattr(bobject, 'my_traitlist'):
-            for t in bobject.my_traitlist:
+        if hasattr(bobject, 'arm_traitlist'):
+            for t in bobject.arm_traitlist:
                 if t.enabled_prop == False:
                     continue
                 x = {}
@@ -2804,13 +2799,13 @@ class ArmoryExporter:
                     else:
                         trait_prefix = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.'
                     x['class_name'] = trait_prefix + t.class_name_prop
-                    if len(t.my_paramstraitlist) > 0:
+                    if len(t.arm_traitparamslist) > 0:
                         x['parameters'] = []
-                        for pt in t.my_paramstraitlist: # Append parameters
+                        for pt in t.arm_traitparamslist: # Append parameters
                             x['parameters'].append(pt.name)
-                    if len(t.my_propstraitlist) > 0:
+                    if len(t.arm_traitpropslist) > 0:
                         x['props'] = []
-                        for pt in t.my_propstraitlist: # Append props
+                        for pt in t.arm_traitpropslist: # Append props
                             x['props'].append(pt.name)
                             x['props'].append(pt.value)
                 o['traits'].append(x)
@@ -2873,7 +2868,7 @@ class ArmoryExporter:
                 bend = soft_mod.settings.bending_stiffness
             elif soft_type == 1:
                 bend = (soft_mod.settings.bend + 1.0) * 10
-            cloth_trait['parameters'] = [str(soft_type), str(bend), str(soft_mod.settings.mass), str(bobject.soft_body_margin)]
+            cloth_trait['parameters'] = [str(soft_type), str(bend), str(soft_mod.settings.mass), str(bobject.arm_soft_body_margin)]
             o['traits'].append(cloth_trait)
             if soft_type == 0 and soft_mod.settings.use_pin_cloth:
                 self.add_hook_trait(o, bobject, '', soft_mod.settings.vertex_group_mass)
@@ -2976,7 +2971,7 @@ class ArmoryExporter:
 
     def post_export_world(self, world, o):
         defs = bpy.data.worlds['Arm'].world_defs + bpy.data.worlds['Arm'].rp_defs
-        bgcol = world.world_envtex_color
+        bgcol = world.arm_envtex_color
         if '_LDR' in defs: # No compositor used
             for i in range(0, 3):
                 bgcol[i] = pow(bgcol[i], 1.0 / 2.2)
@@ -2986,29 +2981,29 @@ class ArmoryExporter:
         o['material_ref'] = wmat_name + '/' + wmat_name + '/world'
         o['probes'] = []
         # Main probe
-        world_generate_radiance = False
-        generate_irradiance = True #'_EnvTex' in defs or '_EnvSky' in defs or '_EnvCon' in defs
-        disable_hdr = world.world_envtex_name.endswith('.jpg')
-        radtex = world.world_envtex_name.rsplit('.', 1)[0]
-        irrsharmonics = world.world_envtex_irr_name
+        world_arm_radiance = False
+        arm_irradiance = True #'_EnvTex' in defs or '_EnvSky' in defs or '_EnvCon' in defs
+        disable_hdr = world.arm_envtex_name.endswith('.jpg')
+        radtex = world.arm_envtex_name.rsplit('.', 1)[0]
+        irrsharmonics = world.arm_envtex_irr_name
 
         # Radiance
         if '_EnvTex' in defs:
-            world_generate_radiance = bpy.data.worlds['Arm'].generate_radiance
-        elif '_EnvSky' in defs and bpy.data.worlds['Arm'].generate_radiance_sky:
-            world_generate_radiance = bpy.data.worlds['Arm'].generate_radiance
+            world_arm_radiance = bpy.data.worlds['Arm'].arm_radiance
+        elif '_EnvSky' in defs and bpy.data.worlds['Arm'].arm_radiance_sky:
+            world_arm_radiance = bpy.data.worlds['Arm'].arm_radiance
             radtex = 'hosek'
 
-        num_mips = world.world_envtex_num_mips
-        strength = world.world_envtex_strength
-        po = self.make_probe(world.name, irrsharmonics, radtex, num_mips, strength, 1.0, [0, 0, 0], [0, 0, 0], world_generate_radiance, generate_irradiance, disable_hdr)
+        num_mips = world.arm_envtex_num_mips
+        strength = world.arm_envtex_strength
+        po = self.make_probe(world.name, irrsharmonics, radtex, num_mips, strength, 1.0, [0, 0, 0], [0, 0, 0], world_arm_radiance, arm_irradiance, disable_hdr)
         o['probes'].append(po)
         
         if '_EnvSky' in defs:
             # Sky data for probe
-            po['sun_direction'] =  list(world.world_envtex_sun_direction)
-            po['turbidity'] = world.world_envtex_turbidity
-            po['ground_albedo'] = world.world_envtex_ground_albedo
+            po['sun_direction'] =  list(world.arm_envtex_sun_direction)
+            po['turbidity'] = world.arm_envtex_turbidity
+            po['ground_albedo'] = world.arm_envtex_ground_albedo
     
     def post_export_grease_pencil(self, gp):
         o = {}
@@ -3113,17 +3108,17 @@ class ArmoryExporter:
         co['fill_alpha'] = color.fill_alpha
         return co
 
-    def make_probe(self, id, irrsharmonics, radtex, mipmaps, strength, blending, volume, volume_center, generate_radiance, generate_irradiance, disable_hdr):
+    def make_probe(self, id, irrsharmonics, radtex, mipmaps, strength, blending, volume, volume_center, arm_radiance, arm_irradiance, disable_hdr):
         po = {}
         po['name'] = id
-        if generate_radiance:
+        if arm_radiance:
             po['radiance'] = radtex + '_radiance'
             if disable_hdr:
                 po['radiance'] += '.jpg'
             else:
                 po['radiance'] += '.hdr'
             po['radiance_mipmaps'] = mipmaps
-        if generate_irradiance:
+        if arm_irradiance:
             po['irradiance'] = irrsharmonics + '_irradiance'
         else:
             po['irradiance'] = '' # No irradiance data, fallback to default at runtime

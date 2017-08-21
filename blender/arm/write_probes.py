@@ -16,7 +16,7 @@ def add_rad_assets(output_file_rad, rad_format, num_mips):
         assets.add(output_file_rad + '_' + str(i) + '.' + rad_format)
 
 # Generate probes from environment map
-def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance=True):
+def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True):
     envpath = arm.utils.build_dir() + '/compiled/Assets/envmaps'
     
     if not os.path.exists(envpath):
@@ -26,16 +26,16 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     
     # Assets to be generated
     output_file_irr = envpath + '/' + base_name + '_irradiance'
-    if generate_radiance:
+    if arm_radiance:
         output_file_rad = envpath + '/' + base_name + '_radiance'
         rad_format = 'jpg' if disable_hdr else 'hdr'
 
     # Radiance & irradiance exists, keep cache
     basep = envpath + '/' + base_name
     if os.path.exists(basep + '_irradiance.arm'):
-        if not generate_radiance or os.path.exists(basep + '_radiance_0.' + rad_format):
+        if not arm_radiance or os.path.exists(basep + '_radiance_0.' + rad_format):
             add_irr_assets(output_file_irr)
-            if generate_radiance:
+            if arm_radiance:
                 add_rad_assets(output_file_rad, rad_format, cached_num_mips)
             return cached_num_mips
     
@@ -57,7 +57,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     
     # Scale map
     wrd = bpy.data.worlds['Arm']
-    target_w = int(wrd.generate_radiance_size)
+    target_w = int(wrd.arm_radiance_size)
     target_h = int(target_w / 2)
     scaled_file = output_file_rad + '.' + rad_format
 
@@ -109,7 +109,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, generate_radiance
     add_irr_assets(output_file_irr)
     
     # Mip-mapped radiance
-    if generate_radiance == False:
+    if arm_radiance == False:
         return cached_num_mips
 
     # 4096 = 256 face
@@ -267,7 +267,7 @@ def parse_band_floats(irradiance_floats, band_line):
 def write_sky_irradiance(base_name):
     wrd = bpy.data.worlds['Arm']
 
-    if wrd.generate_radiance_sky_type == 'Hosek':
+    if wrd.arm_radiance_sky_type == 'Hosek':
         # Hosek spherical harmonics
         irradiance_floats = [1.5519331988822218,2.3352207154503266,2.997277451988076,0.2673894962434794,0.4305630474135794,0.11331825259716752,-0.04453633521758638,-0.038753175134160295,-0.021302768541875794,0.00055858020486499,0.000371654770334503,0.000126606145406403,-0.000135708721978705,-0.000787399554583089,-0.001550090690860059,0.021947399048903773,0.05453650591711572,0.08783641266630278,0.17053593578630663,0.14734127083304463,0.07775404698816404,-2.6924363189795e-05,-7.9350169701934e-05,-7.559914435231e-05,0.27035455385870993,0.23122918445556914,0.12158817295211832]
         for i in range(0, len(irradiance_floats)):

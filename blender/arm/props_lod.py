@@ -6,13 +6,13 @@ def update_size_prop(self, context):
     if context.object == None:
         return
     mdata = context.object.data
-    i = mdata.lodlist_index
-    ar = mdata.my_lodlist
+    i = mdata.arm_lodlist_index
+    ar = mdata.arm_lodlist
     # Clamp screen size to not exceed previous entry
     if i > 0 and ar[i - 1].screen_size_prop < self.screen_size_prop:
         self.screen_size_prop = ar[i - 1].screen_size_prop
 
-class ListLodItem(bpy.types.PropertyGroup):
+class ArmLodListItem(bpy.types.PropertyGroup):
     # Group of properties representing an item in the list
     name = bpy.props.StringProperty(
            name="Name",
@@ -32,7 +32,7 @@ class ListLodItem(bpy.types.PropertyGroup):
            default=0.0,
            update=update_size_prop)
 
-class MY_UL_LodList(bpy.types.UIList):
+class ArmLodList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here...
         custom_icon = 'OBJECT_DATAMODE'
@@ -52,50 +52,54 @@ class MY_UL_LodList(bpy.types.UIList):
             layout.alignment = 'CENTER'
             layout.label("", icon = custom_icon)
 
-class LIST_OT_LodNewItem(bpy.types.Operator):
+class ArmLodListNewItem(bpy.types.Operator):
     # Add a new item to the list
-    bl_idname = "my_lodlist.new_item"
+    bl_idname = "arm_lodlist.new_item"
     bl_label = "Add a new item"
 
     def execute(self, context):
         mdata = bpy.context.object.data
-        mdata.my_lodlist.add()
-        mdata.lodlist_index = len(mdata.my_lodlist) - 1
+        mdata.arm_lodlist.add()
+        mdata.arm_lodlist_index = len(mdata.arm_lodlist) - 1
         return{'FINISHED'}
 
 
-class LIST_OT_LodDeleteItem(bpy.types.Operator):
+class ArmLodListDeleteItem(bpy.types.Operator):
     # Delete the selected item from the list
-    bl_idname = "my_lodlist.delete_item"
+    bl_idname = "arm_lodlist.delete_item"
     bl_label = "Deletes an item"
 
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list """
         mdata = bpy.context.object.data
-        return len(mdata.my_lodlist) > 0
+        return len(mdata.arm_lodlist) > 0
 
     def execute(self, context):
         mdata = bpy.context.object.data
-        list = mdata.my_lodlist
-        index = mdata.lodlist_index
+        list = mdata.arm_lodlist
+        index = mdata.arm_lodlist_index
 
         list.remove(index)
 
         if index > 0:
             index = index - 1
 
-        mdata.lodlist_index = index
+        mdata.arm_lodlist_index = index
         return{'FINISHED'}
 
 def register():
-    bpy.utils.register_class(ListLodItem)
-    bpy.utils.register_class(MY_UL_LodList)
-    bpy.utils.register_class(LIST_OT_LodNewItem)
-    bpy.utils.register_class(LIST_OT_LodDeleteItem)
+    bpy.utils.register_class(ArmLodListItem)
+    bpy.utils.register_class(ArmLodList)
+    bpy.utils.register_class(ArmLodListNewItem)
+    bpy.utils.register_class(ArmLodListDeleteItem)
+
+    bpy.types.Mesh.arm_lodlist = bpy.props.CollectionProperty(type=ArmLodListItem)
+    bpy.types.Mesh.arm_lodlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
+    bpy.types.Mesh.arm_lod_material = bpy.props.BoolProperty(name="Material Lod", description="Use materials of lod objects", default=False)
 
 def unregister():
-    bpy.utils.unregister_class(ListLodItem)
-    bpy.utils.unregister_class(MY_UL_LodList)
-    bpy.utils.unregister_class(LIST_OT_LodNewItem)
-    bpy.utils.unregister_class(LIST_OT_LodDeleteItem)
+    bpy.utils.unregister_class(ArmLodListItem)
+    bpy.utils.unregister_class(ArmLodList)
+    bpy.utils.unregister_class(ArmLodListNewItem)
+    bpy.utils.unregister_class(ArmLodListDeleteItem)

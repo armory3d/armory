@@ -6,7 +6,7 @@ from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 from arm.utils import to_hex
 
-class ListPropsTraitItem(bpy.types.PropertyGroup):
+class ArmTraitPropListItem(bpy.types.PropertyGroup):
     # Group of properties representing an item in the list
     name = bpy.props.StringProperty(
            name="Name",
@@ -18,7 +18,7 @@ class ListPropsTraitItem(bpy.types.PropertyGroup):
            description="A name for this item",
            default="")
 
-class MY_UL_PropsTraitList(bpy.types.UIList):
+class ArmTraitPropList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here...
         custom_icon = 'OBJECT_DATAMODE'
@@ -35,9 +35,9 @@ class MY_UL_PropsTraitList(bpy.types.UIList):
             layout.label("", icon = custom_icon)
 
 def register():
-    bpy.utils.register_class(ListPropsTraitItem)
-    bpy.utils.register_class(MY_UL_PropsTraitList)
+    bpy.utils.register_class(ArmTraitPropListItem)
+    bpy.utils.register_class(ArmTraitPropList)
 
 def unregister():
-    bpy.utils.unregister_class(ListPropsTraitItem)
-    bpy.utils.unregister_class(MY_UL_PropsTraitList)
+    bpy.utils.unregister_class(ArmTraitPropListItem)
+    bpy.utils.unregister_class(ArmTraitPropList)

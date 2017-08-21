@@ -163,7 +163,7 @@ project.addSources('Sources');
         if wrd.arm_stream_scene:
             assets.add_khafile_def('arm_stream')
 
-        if wrd.generate_gpu_skin == False:
+        if wrd.arm_gpu_skin == False:
             assets.add_khafile_def('arm_cpu_skin')
 
         for d in assets.khafile_defs:
@@ -179,7 +179,7 @@ project.addSources('Sources');
 def write_main(resx, resy, is_play, in_viewport, is_publish):
     wrd = bpy.data.worlds['Arm']
     scene_name = arm.utils.get_project_scene_name()
-    scene_ext = '.zip' if (bpy.data.scenes[scene_name].data_compressed and is_publish) else ''
+    scene_ext = '.zip' if (bpy.data.scenes[scene_name].arm_compress and is_publish) else ''
     #if not os.path.isfile('Sources/Main.hx'):
     with open('Sources/Main.hx', 'w') as f:
         f.write(
@@ -280,7 +280,7 @@ def write_indexhtml(w, h):
 def write_compiledglsl():
     clip_start = bpy.data.cameras[0].clip_start # Same clip values for all cameras for now
     clip_end = bpy.data.cameras[0].clip_end
-    shadowmap_size = bpy.data.worlds['Arm'].shadowmap_size
+    shadowmap_size = bpy.data.worlds['Arm'].arm_shadowmap_size_cache
     wrd = bpy.data.worlds['Arm']
     with open(arm.utils.build_dir() + '/compiled/Shaders/compiled.glsl', 'w') as f:
         f.write(
@@ -290,82 +290,82 @@ const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;
 const vec2 cameraPlane = vec2(""" + str(round(clip_start * 100) / 100) + """, """ + str(round(clip_end * 100) / 100) + """);
 const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shadowmap_size) + """);
-const float shadowmapCubePcfSize = """ + str(round(wrd.lamp_omni_shadows_pcfsize * 10000) / 10000) + """;
+const float shadowmapCubePcfSize = """ + str(round(wrd.arm_pcfsize * 10000) / 10000) + """;
 """)
-        if wrd.generate_clouds:
+        if wrd.arm_clouds:
             f.write(
-"""const float cloudsDensity = """ + str(round(wrd.generate_clouds_density * 100) / 100) + """;
-const float cloudsSize = """ + str(round(wrd.generate_clouds_size * 100) / 100) + """;
-const float cloudsLower = """ + str(round(wrd.generate_clouds_lower * 1000)) + """;
-const float cloudsUpper = """ + str(round(wrd.generate_clouds_upper * 1000)) + """;
-const vec2 cloudsWind = vec2(""" + str(round(wrd.generate_clouds_wind[0] * 1000) / 1000) + """, """ + str(round(wrd.generate_clouds_wind[1] * 1000) / 1000) + """);
-const float cloudsSecondary = """ + str(round(wrd.generate_clouds_secondary * 100) / 100) + """;
-const float cloudsPrecipitation = """ + str(round(wrd.generate_clouds_precipitation * 100) / 100) + """;
-const float cloudsEccentricity = """ + str(round(wrd.generate_clouds_eccentricity * 100) / 100) + """;
+"""const float cloudsDensity = """ + str(round(wrd.arm_clouds_density * 100) / 100) + """;
+const float cloudsSize = """ + str(round(wrd.arm_clouds_size * 100) / 100) + """;
+const float cloudsLower = """ + str(round(wrd.arm_clouds_lower * 1000)) + """;
+const float cloudsUpper = """ + str(round(wrd.arm_clouds_upper * 1000)) + """;
+const vec2 cloudsWind = vec2(""" + str(round(wrd.arm_clouds_wind[0] * 1000) / 1000) + """, """ + str(round(wrd.arm_clouds_wind[1] * 1000) / 1000) + """);
+const float cloudsSecondary = """ + str(round(wrd.arm_clouds_secondary * 100) / 100) + """;
+const float cloudsPrecipitation = """ + str(round(wrd.arm_clouds_precipitation * 100) / 100) + """;
+const float cloudsEccentricity = """ + str(round(wrd.arm_clouds_eccentricity * 100) / 100) + """;
 """)
-        if wrd.generate_ocean:
+        if wrd.arm_ocean:
             f.write(
-"""const float seaLevel = """ + str(round(wrd.generate_ocean_level * 100) / 100) + """;
-const float seaMaxAmplitude = """ + str(round(wrd.generate_ocean_amplitude * 100) / 100) + """;
-const float seaHeight = """ + str(round(wrd.generate_ocean_height * 100) / 100) + """;
-const float seaChoppy = """ + str(round(wrd.generate_ocean_choppy * 100) / 100) + """;
-const float seaSpeed = """ + str(round(wrd.generate_ocean_speed * 100) / 100) + """;
-const float seaFreq = """ + str(round(wrd.generate_ocean_freq * 100) / 100) + """;
-const vec3 seaBaseColor = vec3(""" + str(round(wrd.generate_ocean_base_color[0] * 100) / 100) + """, """ + str(round(wrd.generate_ocean_base_color[1] * 100) / 100) + """, """ + str(round(wrd.generate_ocean_base_color[2] * 100) / 100) + """);
-const vec3 seaWaterColor = vec3(""" + str(round(wrd.generate_ocean_water_color[0] * 100) / 100) + """, """ + str(round(wrd.generate_ocean_water_color[1] * 100) / 100) + """, """ + str(round(wrd.generate_ocean_water_color[2] * 100) / 100) + """);
-const float seaFade = """ + str(round(wrd.generate_ocean_fade * 100) / 100) + """;
+"""const float seaLevel = """ + str(round(wrd.arm_ocean_level * 100) / 100) + """;
+const float seaMaxAmplitude = """ + str(round(wrd.arm_ocean_amplitude * 100) / 100) + """;
+const float seaHeight = """ + str(round(wrd.arm_ocean_height * 100) / 100) + """;
+const float seaChoppy = """ + str(round(wrd.arm_ocean_choppy * 100) / 100) + """;
+const float seaSpeed = """ + str(round(wrd.arm_ocean_speed * 100) / 100) + """;
+const float seaFreq = """ + str(round(wrd.arm_ocean_freq * 100) / 100) + """;
+const vec3 seaBaseColor = vec3(""" + str(round(wrd.arm_ocean_base_color[0] * 100) / 100) + """, """ + str(round(wrd.arm_ocean_base_color[1] * 100) / 100) + """, """ + str(round(wrd.arm_ocean_base_color[2] * 100) / 100) + """);
+const vec3 seaWaterColor = vec3(""" + str(round(wrd.arm_ocean_water_color[0] * 100) / 100) + """, """ + str(round(wrd.arm_ocean_water_color[1] * 100) / 100) + """, """ + str(round(wrd.arm_ocean_water_color[2] * 100) / 100) + """);
+const float seaFade = """ + str(round(wrd.arm_ocean_fade * 100) / 100) + """;
 """)
-        if wrd.generate_ssao:
-            scale = 0.5 if wrd.generate_ssao_half_res else 1.0
+        if wrd.arm_ssao:
+            scale = 0.5 if wrd.arm_ssao_half_res else 1.0
             f.write(
-"""const float ssaoSize = """ + str(round(wrd.generate_ssao_size * 100) / 100) + """;
-const float ssaoStrength = """ + str(round(wrd.generate_ssao_strength * 100) / 100) + """;
+"""const float ssaoSize = """ + str(round(wrd.arm_ssao_size * 100) / 100) + """;
+const float ssaoStrength = """ + str(round(wrd.arm_ssao_strength * 100) / 100) + """;
 const float ssaoTextureScale = """ + str(scale) + """;
 """)
-        if wrd.generate_bloom:
+        if wrd.arm_bloom:
             f.write(
-"""const float bloomThreshold = """ + str(round(wrd.generate_bloom_threshold * 100) / 100) + """;
-const float bloomStrength = """ + str(round(wrd.generate_bloom_strength * 100) / 100) + """;
-const float bloomRadius = """ + str(round(wrd.generate_bloom_radius * 100) / 100) + """;
+"""const float bloomThreshold = """ + str(round(wrd.arm_bloom_threshold * 100) / 100) + """;
+const float bloomStrength = """ + str(round(wrd.arm_bloom_strength * 100) / 100) + """;
+const float bloomRadius = """ + str(round(wrd.arm_bloom_radius * 100) / 100) + """;
 """)
-        if wrd.generate_motion_blur:
+        if wrd.arm_motion_blur:
             f.write(
-"""const float motionBlurIntensity = """ + str(round(wrd.generate_motion_blur_intensity * 100) / 100) + """;
+"""const float motionBlurIntensity = """ + str(round(wrd.arm_motion_blur_intensity * 100) / 100) + """;
 """)
-        if wrd.generate_ssr:
+        if wrd.arm_ssr:
             f.write(
-"""const float ssrRayStep = """ + str(round(wrd.generate_ssr_ray_step * 100) / 100) + """;
-const float ssrMinRayStep = """ + str(round(wrd.generate_ssr_min_ray_step * 100) / 100) + """;
-const float ssrSearchDist = """ + str(round(wrd.generate_ssr_search_dist * 100) / 100) + """;
-const float ssrFalloffExp = """ + str(round(wrd.generate_ssr_falloff_exp * 100) / 100) + """;
-const float ssrJitter = """ + str(round(wrd.generate_ssr_jitter * 100) / 100) + """;
-""")
-
-        if wrd.generate_ssrs:
-            f.write(
-"""const float ssrsRayStep = """ + str(round(wrd.generate_ssrs_ray_step * 100) / 100) + """;
+"""const float ssrRayStep = """ + str(round(wrd.arm_ssr_ray_step * 100) / 100) + """;
+const float ssrMinRayStep = """ + str(round(wrd.arm_ssr_min_ray_step * 100) / 100) + """;
+const float ssrSearchDist = """ + str(round(wrd.arm_ssr_search_dist * 100) / 100) + """;
+const float ssrFalloffExp = """ + str(round(wrd.arm_ssr_falloff_exp * 100) / 100) + """;
+const float ssrJitter = """ + str(round(wrd.arm_ssr_jitter * 100) / 100) + """;
 """)
 
-        if wrd.generate_volumetric_light:
+        if wrd.arm_ssrs:
             f.write(
-"""const float volumAirTurbidity = """ + str(round(wrd.generate_volumetric_light_air_turbidity * 100) / 100) + """;
-const vec3 volumAirColor = vec3(""" + str(round(wrd.generate_volumetric_light_air_color[0] * 100) / 100) + """, """ + str(round(wrd.generate_volumetric_light_air_color[1] * 100) / 100) + """, """ + str(round(wrd.generate_volumetric_light_air_color[2] * 100) / 100) + """);
+"""const float ssrsRayStep = """ + str(round(wrd.arm_ssrs_ray_step * 100) / 100) + """;
 """)
 
-        if wrd.generate_pcss_state == 'On':
+        if wrd.arm_volumetric_light:
             f.write(
-"""const int pcssRings = """ + str(wrd.generate_pcss_rings) + """;
+"""const float volumAirTurbidity = """ + str(round(wrd.arm_volumetric_light_air_turbidity * 100) / 100) + """;
+const vec3 volumAirColor = vec3(""" + str(round(wrd.arm_volumetric_light_air_color[0] * 100) / 100) + """, """ + str(round(wrd.arm_volumetric_light_air_color[1] * 100) / 100) + """, """ + str(round(wrd.arm_volumetric_light_air_color[2] * 100) / 100) + """);
+""")
+
+        if wrd.arm_pcss_state == 'On':
+            f.write(
+"""const int pcssRings = """ + str(wrd.arm_pcss_rings) + """;
 """)
 
         # Compositor
-        if wrd.generate_letterbox:
+        if wrd.arm_letterbox:
             f.write(
-"""const float compoLetterboxSize = """ + str(round(wrd.generate_letterbox_size * 100) / 100) + """;
+"""const float compoLetterboxSize = """ + str(round(wrd.arm_letterbox_size * 100) / 100) + """;
 """)
 
-        if wrd.generate_grain:
+        if wrd.arm_grain:
             f.write(
-"""const float compoGrainStrength = """ + str(round(wrd.generate_grain_strength * 100) / 100) + """;
+"""const float compoGrainStrength = """ + str(round(wrd.arm_grain_strength * 100) / 100) + """;
 """)
 
         if bpy.data.scenes[0].cycles.film_exposure != 1.0:
@@ -373,11 +373,11 @@ const vec3 volumAirColor = vec3(""" + str(round(wrd.generate_volumetric_light_ai
 """const float compoExposureStrength = """ + str(round(bpy.data.scenes[0].cycles.film_exposure * 100) / 100) + """;
 """)
 
-        if wrd.generate_fog:
+        if wrd.arm_fog:
             f.write(
-"""const float compoFogAmountA = """ + str(round(wrd.generate_fog_amounta * 100) / 100) + """;
-const float compoFogAmountB = """ + str(round(wrd.generate_fog_amountb * 100) / 100) + """;
-const vec3 compoFogColor = vec3(""" + str(round(wrd.generate_fog_color[0] * 100) / 100) + """, """ + str(round(wrd.generate_fog_color[1] * 100) / 100) + """, """ + str(round(wrd.generate_fog_color[2] * 100) / 100) + """);
+"""const float compoFogAmountA = """ + str(round(wrd.arm_fog_amounta * 100) / 100) + """;
+const float compoFogAmountB = """ + str(round(wrd.arm_fog_amountb * 100) / 100) + """;
+const vec3 compoFogColor = vec3(""" + str(round(wrd.arm_fog_color[0] * 100) / 100) + """, """ + str(round(wrd.arm_fog_color[1] * 100) / 100) + """, """ + str(round(wrd.arm_fog_color[2] * 100) / 100) + """);
 """)
 
         if bpy.data.cameras[0].dof_distance > 0.0:
@@ -390,24 +390,24 @@ const float compoDOFLength = 160.0;
         if bpy.data.worlds['Arm'].rp_voxelgi:
             f.write(
 """const float voxelgiResolution = """ + str(bpy.data.worlds['Arm'].rp_voxelgi_resolution) + """;
-const float voxelgiDimensions = """ + str(round(wrd.generate_voxelgi_dimensions)) + """;
-const float voxelgiDiff = """ + str(round(wrd.voxelgi_diff * 100) / 100) + """;
-const float voxelgiSpec = """ + str(round(wrd.voxelgi_spec * 100) / 100) + """;
-const float voxelgiOcc = """ + str(round(wrd.voxelgi_occ * 100) / 100) + """;
-const float voxelgiEnv = """ + str(round(wrd.voxelgi_env * 100) / 100) + """;
-const float voxelgiStep = """ + str(round(wrd.voxelgi_step * 100) / 100) + """;
-const float voxelgiRange = """ + str(round(wrd.voxelgi_range * 100) / 100) + """;
+const float voxelgiDimensions = """ + str(round(wrd.arm_voxelgi_dimensions)) + """;
+const float voxelgiDiff = """ + str(round(wrd.arm_voxelgi_diff * 100) / 100) + """;
+const float voxelgiSpec = """ + str(round(wrd.arm_voxelgi_spec * 100) / 100) + """;
+const float voxelgiOcc = """ + str(round(wrd.arm_voxelgi_occ * 100) / 100) + """;
+const float voxelgiEnv = """ + str(round(wrd.arm_voxelgi_env * 100) / 100) + """;
+const float voxelgiStep = """ + str(round(wrd.arm_voxelgi_step * 100) / 100) + """;
+const float voxelgiRange = """ + str(round(wrd.arm_voxelgi_range * 100) / 100) + """;
 """)
 
         if bpy.data.worlds['Arm'].rp_sss_state == 'On':
             f.write(
-"""const float sssWidth = """ + str(wrd.sss_width / 10.0) + """;
+"""const float sssWidth = """ + str(wrd.arm_sss_width / 10.0) + """;
 """)
 
         # Skinning
-        if wrd.generate_gpu_skin:
+        if wrd.arm_gpu_skin:
             f.write(
-"""const int skinMaxBones = """ + str(wrd.generate_gpu_skin_max_bones) + """;
+"""const int skinMaxBones = """ + str(wrd.arm_gpu_skin_max_bones) + """;
 """)
 
         f.write("""#endif // _COMPILED_GLSL_

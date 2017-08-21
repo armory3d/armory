@@ -2,7 +2,7 @@ import bpy
 from bpy.props import *
 import os
 import shutil
-from arm.props_traits_library import *
+from arm.props_library import *
 import arm.props_ui as props_ui
 import arm.assets as assets
 import arm.log as log
@@ -15,7 +15,7 @@ except ImportError:
     pass
 
 # Armory version
-arm_version = '17.08'
+arm_version = '17.08.1'
 
 def update_preset(self, context):
     make_renderer.set_preset(self, context, self.rp_preset)
@@ -66,7 +66,7 @@ def update_sss_state(self, context):
 def invalidate_mesh_cache(self, context):
     if context.object == None or context.object.data == None:
         return
-    context.object.data.mesh_cached = False
+    context.object.data.arm_cached = False
 
 def invalidate_instance_cache(self, context):
     if context.object == None or context.object.data == None:
@@ -139,8 +139,6 @@ def init_properties():
         name="Target", default='html5', description='Build paltform')
     bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="")
     bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm")
-    bpy.types.World.arm_librarylist = bpy.props.CollectionProperty(type=ListLibraryTraitItem)
-    bpy.types.World.arm_librarylist_index = bpy.props.IntProperty(name="Library index", default=0)
     bpy.types.World.arm_play_active_scene = BoolProperty(name="Play Active Scene", description="Load currently edited scene when launching player", default=True)
     bpy.types.World.arm_project_scene = StringProperty(name="Scene", description="Scene to load when launching player")
     bpy.types.World.arm_samples_per_pixel = EnumProperty(
@@ -187,7 +185,8 @@ def init_properties():
     bpy.types.World.arm_play_camera = EnumProperty(
         items=[('Scene', 'Scene', 'Scene'),
                ('Viewport', 'Viewport', 'Viewport'),
-               ('Viewport Shared', 'Viewport Shared', 'Viewport Shared')],
+               # ('Viewport Shared', 'Viewport Shared', 'Viewport Shared')
+               ],
         name="Camera", description="Viewport camera", default='Scene')
     bpy.types.World.arm_play_console = BoolProperty(name="Debug Console", description="Show inspector in player", default=False)
     bpy.types.World.arm_play_runtime = EnumProperty(
@@ -255,45 +254,43 @@ def init_properties():
     # bpy.types.Object.arm_instanced_scale_x = bpy.props.BoolProperty(name="X", default=False)
     # bpy.types.Object.arm_instanced_scale_y = bpy.props.BoolProperty(name="Y", default=False)
     # bpy.types.Object.arm_instanced_scale_z = bpy.props.BoolProperty(name="Z", default=False)
-    bpy.types.Object.game_export = bpy.props.BoolProperty(name="Export", description="Export object data", default=True)
-    bpy.types.Object.spawn = bpy.props.BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True)
-    bpy.types.Object.mobile = bpy.props.BoolProperty(name="Mobile", description="Object moves during gameplay", default=True)
-    bpy.types.Object.soft_body_margin = bpy.props.FloatProperty(name="Soft Body Margin", description="Collision margin", default=0.04)
-    bpy.types.Object.bone_animation_enabled = bpy.props.BoolProperty(name="Animation", description="Enable skinning", default=True)
-    bpy.types.Object.object_animation_enabled = bpy.props.BoolProperty(name="Animation", description="Enable timeline animation", default=True)
+    bpy.types.Object.arm_export = bpy.props.BoolProperty(name="Export", description="Export object data", default=True)
+    bpy.types.Object.arm_spawn = bpy.props.BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True)
+    bpy.types.Object.arm_mobile = bpy.props.BoolProperty(name="Mobile", description="Object moves during gameplay", default=True)
+    bpy.types.Object.arm_soft_body_margin = bpy.props.FloatProperty(name="Soft Body Margin", description="Collision margin", default=0.04)
+    bpy.types.Object.arm_animation_enabled = bpy.props.BoolProperty(name="Animation", description="Enable skinning & timeline animation", default=True)
     # For speakers
-    bpy.types.Speaker.loop = bpy.props.BoolProperty(name="Loop", description="Loop this sound", default=False)
-    bpy.types.Speaker.stream = bpy.props.BoolProperty(name="Stream", description="Stream this sound", default=False)
+    bpy.types.Speaker.arm_loop = bpy.props.BoolProperty(name="Loop", description="Loop this sound", default=False)
+    bpy.types.Speaker.arm_stream = bpy.props.BoolProperty(name="Stream", description="Stream this sound", default=False)
     # For mesh
-    bpy.types.Mesh.mesh_cached = bpy.props.BoolProperty(name="Mesh Cached", description="No need to reexport mesh data", default=False)
-    bpy.types.Mesh.mesh_cached_verts = bpy.props.IntProperty(name="Last Verts", description="Number of vertices in last export", default=0)
-    bpy.types.Mesh.mesh_cached_edges = bpy.props.IntProperty(name="Last Edges", description="Number of edges in last export", default=0)
-    bpy.types.Mesh.mesh_aabb = bpy.props.FloatVectorProperty(name="AABB", size=3, default=[0,0,0])
-    bpy.types.Mesh.dynamic_usage = bpy.props.BoolProperty(name="Dynamic Usage", description="Mesh data can change at runtime", default=False)
-    bpy.types.Mesh.data_compressed = bpy.props.BoolProperty(name="Compress Data", description="Pack data into zip file", default=False)
-    bpy.types.Mesh.sdfgen = bpy.props.BoolProperty(name="Generate SDF", description="Make signed distance field data", default=False, update=invalidate_mesh_cache)
-    bpy.types.Curve.mesh_cached = bpy.props.BoolProperty(name="Mesh Cached", description="No need to reexport curve data", default=False)
-    bpy.types.Curve.data_compressed = bpy.props.BoolProperty(name="Compress Data", description="Pack data into zip file", default=False)
-    bpy.types.Curve.dynamic_usage = bpy.props.BoolProperty(name="Dynamic Data Usage", description="Curve data can change at runtime", default=False)
-    bpy.types.MetaBall.mesh_cached = bpy.props.BoolProperty(name="Mesh Cached", description="No need to reexport metaball data", default=False)
-    bpy.types.MetaBall.data_compressed = bpy.props.BoolProperty(name="Compress Data", description="Pack data into zip file", default=False)
-    bpy.types.MetaBall.dynamic_usage = bpy.props.BoolProperty(name="Dynamic Data Usage", description="Metaball data can change at runtime", default=False)
+    bpy.types.Mesh.arm_cached = bpy.props.BoolProperty(name="Mesh Cached", description="No need to reexport mesh data", default=False)
+    bpy.types.Mesh.arm_cached_verts = bpy.props.IntProperty(name="Last Verts", description="Number of vertices in last export", default=0)
+    bpy.types.Mesh.arm_cached_edges = bpy.props.IntProperty(name="Last Edges", description="Number of edges in last export", default=0)
+    bpy.types.Mesh.arm_aabb = bpy.props.FloatVectorProperty(name="AABB", size=3, default=[0,0,0])
+    bpy.types.Mesh.arm_dynamic_usage = bpy.props.BoolProperty(name="Dynamic Usage", description="Mesh data can change at runtime", default=False)
+    bpy.types.Mesh.arm_compress = bpy.props.BoolProperty(name="Compress", description="Pack data into zip file", default=False)
+    bpy.types.Mesh.arm_sdfgen = bpy.props.BoolProperty(name="Generate SDF", description="Make signed distance field data", default=False, update=invalidate_mesh_cache)
+    bpy.types.Curve.arm_cached = bpy.props.BoolProperty(name="Mesh Cached", description="No need to reexport curve data", default=False)
+    bpy.types.Curve.arm_compress = bpy.props.BoolProperty(name="Compress", description="Pack data into zip file", default=False)
+    bpy.types.Curve.arm_dynamic_usage = bpy.props.BoolProperty(name="Dynamic Data Usage", description="Curve data can change at runtime", default=False)
+    bpy.types.MetaBall.arm_cached = bpy.props.BoolProperty(name="Mesh Cached", description="No need to reexport metaball data", default=False)
+    bpy.types.MetaBall.arm_compress = bpy.props.BoolProperty(name="Compress", description="Pack data into zip file", default=False)
+    bpy.types.MetaBall.arm_dynamic_usage = bpy.props.BoolProperty(name="Dynamic Data Usage", description="Metaball data can change at runtime", default=False)
     # For grease pencil
-    bpy.types.GreasePencil.data_cached = bpy.props.BoolProperty(name="GP Cached", description="No need to reexport grease pencil data", default=False)
-    bpy.types.GreasePencil.data_compressed = bpy.props.BoolProperty(name="Compress Data", description="Pack data into zip file", default=True)
+    bpy.types.GreasePencil.arm_data_cached = bpy.props.BoolProperty(name="GP Cached", description="No need to reexport grease pencil data", default=False)
+    bpy.types.GreasePencil.arm_compress = bpy.props.BoolProperty(name="Compress", description="Pack data into zip file", default=True)
     # For armature
-    bpy.types.Armature.data_cached = bpy.props.BoolProperty(name="Armature Cached", description="No need to reexport armature data", default=False)
-    bpy.types.Armature.data_compressed = bpy.props.BoolProperty(name="Compress Data", description="Pack data into zip file", default=False)
+    bpy.types.Armature.arm_data_cached = bpy.props.BoolProperty(name="Armature Cached", description="No need to reexport armature data", default=False)
+    bpy.types.Armature.arm_compress = bpy.props.BoolProperty(name="Compress", description="Pack data into zip file", default=False)
     # For camera
-    bpy.types.Camera.frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", description="Perform frustum culling for this camera", default=True)
-    bpy.types.Camera.is_mirror = bpy.props.BoolProperty(name="Mirror", description="Render this camera into texture", default=False)
-    bpy.types.Camera.mirror_resolution_x = bpy.props.FloatProperty(name="X", default=512.0)
-    bpy.types.Camera.mirror_resolution_y = bpy.props.FloatProperty(name="Y", default=256.0)
+    bpy.types.Camera.arm_frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", description="Perform frustum culling for this camera", default=True)
+    bpy.types.Camera.arm_render_to_texture = bpy.props.BoolProperty(name="Render to Texture", description="Render this camera into texture", default=False)
+    bpy.types.Camera.arm_texture_resolution_x = bpy.props.FloatProperty(name="X", default=512.0)
+    bpy.types.Camera.arm_texture_resolution_y = bpy.props.FloatProperty(name="Y", default=256.0)
 
 
     bpy.types.World.renderpath_path = bpy.props.StringProperty(name="Render Path", description="Render path nodes", default="armory_default", update=assets.invalidate_shader_cache)
     bpy.types.World.renderpath_id = bpy.props.StringProperty(name="Render Path ID", description="Asset ID", default="deferred") 
-    bpy.types.World.renderpath_passes = bpy.props.StringProperty(name="Render Path Passes", description="Referenced render passes", default="")
     # Render path generator
     bpy.types.World.rp_preset = EnumProperty(
         items=[('Low', 'Low', 'Low'),
@@ -314,12 +311,11 @@ def init_properties():
                ],
         name="Renderer", description="Renderer type", default='Deferred', update=update_renderpath)
     bpy.types.World.rp_depthprepass = bpy.props.BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=False, update=update_renderpath)
-    bpy.types.World.rp_meshes = bpy.props.BoolProperty(name="Meshes", description="Render mesh objects", default=True, update=update_renderpath)
     bpy.types.World.rp_hdr = bpy.props.BoolProperty(name="HDR", description="Render in HDR Space", default=True, update=update_renderpath)
     bpy.types.World.rp_render_to_texture = bpy.props.BoolProperty(name="Post Process", description="Render scene to texture for further processing", default=True, update=update_renderpath)
-    bpy.types.World.rp_worldnodes = bpy.props.BoolProperty(name="World Nodes", description="Draw world nodes", default=True, update=update_renderpath)
-    bpy.types.World.rp_clearbackground = bpy.props.BoolProperty(name="Clear Background", description="Clear background with solid color", default=False, update=update_renderpath)
-    bpy.types.World.rp_compositornodes = bpy.props.BoolProperty(name="Compositor Nodes", description="Draw compositor nodes", default=True, update=update_renderpath)
+    bpy.types.World.rp_world = bpy.props.BoolProperty(name="World", description="Draw world nodes", default=True, update=update_renderpath)
+    bpy.types.World.rp_clearbackground = bpy.props.BoolProperty(name="Clear", description="Clear background with solid color", default=False, update=update_renderpath)
+    bpy.types.World.rp_compositornodes = bpy.props.BoolProperty(name="Compositor", description="Draw compositor nodes", default=True, update=update_renderpath)
     bpy.types.World.rp_shadowmap = EnumProperty(
         items=[('None', 'None', 'None'),
                ('512', '512', '512'),
@@ -394,195 +390,179 @@ def init_properties():
                ('512', '512', '512')],
         name="Resolution", description="3D texture resolution", default='128', update=update_renderpath)
     bpy.types.World.rp_voxelgi_hdr = bpy.props.BoolProperty(name="HDR", description="Store voxels in RGBA64 instead of RGBA32", default=False, update=update_renderpath)
-    bpy.types.World.generate_voxelgi_dimensions = bpy.props.FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_shader_cache)
-    bpy.types.World.voxelgi_revoxelize = bpy.props.BoolProperty(name="Revoxelize", description="Revoxelize scene each frame", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.voxelgi_multibounce = bpy.props.BoolProperty(name="Multi-bounce", description="Accumulate multiple light bounces", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.voxelgi_camera = bpy.props.BoolProperty(name="Camera", description="Use camera as voxelization origin", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.voxelgi_anisotropic = bpy.props.BoolProperty(name="Anisotropic", description="Use anisotropic voxels", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.voxelgi_shadows = bpy.props.BoolProperty(name="Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
-    bpy.types.World.voxelgi_refraction = bpy.props.BoolProperty(name="Refraction", description="Use voxels to render refraction", default=False, update=update_renderpath)
-    bpy.types.World.voxelgi_diff = bpy.props.FloatProperty(name="Diffuse", description="", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.voxelgi_spec = bpy.props.FloatProperty(name="Specular", description="", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.voxelgi_occ = bpy.props.FloatProperty(name="Occlussion", description="", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.voxelgi_env = bpy.props.FloatProperty(name="Env Map", description="Contribute light from environment map", default=0.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.voxelgi_step = bpy.props.FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.voxelgi_range = bpy.props.FloatProperty(name="Range", description="Maximum range", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.sss_width = bpy.props.FloatProperty(name="SSS Width", description="SSS blur strength", default=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_voxelgi_dimensions = bpy.props.FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_voxelgi_revoxelize = bpy.props.BoolProperty(name="Revoxelize", description="Revoxelize scene each frame", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_voxelgi_multibounce = bpy.props.BoolProperty(name="Multi-bounce", description="Accumulate multiple light bounces", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_voxelgi_camera = bpy.props.BoolProperty(name="Camera", description="Use camera as voxelization origin", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_voxelgi_anisotropic = bpy.props.BoolProperty(name="Anisotropic", description="Use anisotropic voxels", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_voxelgi_shadows = bpy.props.BoolProperty(name="Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
+    bpy.types.World.arm_voxelgi_refraction = bpy.props.BoolProperty(name="Refraction", description="Use voxels to render refraction", default=False, update=update_renderpath)
+    bpy.types.World.arm_voxelgi_diff = bpy.props.FloatProperty(name="Diffuse", description="", default=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_voxelgi_spec = bpy.props.FloatProperty(name="Specular", description="", default=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_voxelgi_occ = bpy.props.FloatProperty(name="Occlussion", description="", default=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_voxelgi_env = bpy.props.FloatProperty(name="Env Map", description="Contribute light from environment map", default=0.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_voxelgi_step = bpy.props.FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_voxelgi_range = bpy.props.FloatProperty(name="Range", description="Maximum range", default=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_sss_width = bpy.props.FloatProperty(name="SSS Width", description="SSS blur strength", default=1.0, update=assets.invalidate_shader_cache)
 
     # For world
-    bpy.types.World.world_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
-    bpy.types.World.world_envtex_irr_name = bpy.props.StringProperty(name="Environment Irradiance", default='')
-    bpy.types.World.world_envtex_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
-    bpy.types.World.world_envtex_color = bpy.props.FloatVectorProperty(name="Environment Color", size=4, default=[0,0,0,1])
-    bpy.types.World.world_envtex_strength = bpy.props.FloatProperty(name="Environment Strength", default=1.0)
-    bpy.types.World.world_envtex_sun_direction = bpy.props.FloatVectorProperty(name="Sun Direction", size=3, default=[0,0,0])
-    bpy.types.World.world_envtex_turbidity = bpy.props.FloatProperty(name="Turbidity", default=1.0)
-    bpy.types.World.world_envtex_ground_albedo = bpy.props.FloatProperty(name="Ground Albedo", default=0.0)
-    bpy.types.World.world_defs = bpy.props.StringProperty(name="World Shader Defs", default='')
-    bpy.types.World.rp_defs = bpy.props.StringProperty(name="Render Path Shader Defs", default='')
-    bpy.types.World.compo_defs = bpy.props.StringProperty(name="Compositor Shader Defs", default='')
-    bpy.types.World.generate_irradiance = bpy.props.BoolProperty(name="Irradiance", description="Generate spherical harmonics", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_radiance = bpy.props.BoolProperty(name="Radiance", description="Generate radiance textures", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_radiance_size = EnumProperty(
+    bpy.types.World.arm_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
+    bpy.types.World.arm_envtex_irr_name = bpy.props.StringProperty(name="Environment Irradiance", default='')
+    bpy.types.World.arm_envtex_num_mips = bpy.props.IntProperty(name="Number of mips", default=0)
+    bpy.types.World.arm_envtex_color = bpy.props.FloatVectorProperty(name="Environment Color", size=4, default=[0,0,0,1])
+    bpy.types.World.arm_envtex_strength = bpy.props.FloatProperty(name="Environment Strength", default=1.0)
+    bpy.types.World.arm_envtex_sun_direction = bpy.props.FloatVectorProperty(name="Sun Direction", size=3, default=[0,0,0])
+    bpy.types.World.arm_envtex_turbidity = bpy.props.FloatProperty(name="Turbidity", default=1.0)
+    bpy.types.World.arm_envtex_ground_albedo = bpy.props.FloatProperty(name="Ground Albedo", default=0.0)
+    bpy.types.World.arm_irradiance = bpy.props.BoolProperty(name="Irradiance", description="Generate spherical harmonics", default=True, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_radiance = bpy.props.BoolProperty(name="Radiance", description="Generate radiance textures", default=True, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_radiance_size = EnumProperty(
         items=[('512', '512', '512'),
                ('1024', '1024', '1024'), 
                ('2048', '2048', '2048')],
         name="", description="Prefiltered map size", default='1024', update=assets.invalidate_envmap_data)
-    bpy.types.World.generate_radiance_sky = bpy.props.BoolProperty(name="Sky Radiance", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_radiance_sky_type = EnumProperty(
+    bpy.types.World.arm_radiance_sky = bpy.props.BoolProperty(name="Sky Radiance", default=True, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_radiance_sky_type = EnumProperty(
         items=[('Fake', 'Fake', 'Fake'), 
                ('Hosek', 'Hosek', 'Hosek')],
         name="", description="Prefiltered maps to be used for radiance", default='Hosek', update=assets.invalidate_envmap_data)
-    bpy.types.World.generate_clouds = bpy.props.BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_clouds_density = bpy.props.FloatProperty(name="Density", default=0.5, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_clouds_size = bpy.props.FloatProperty(name="Size", default=1.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_clouds_lower = bpy.props.FloatProperty(name="Lower", default=2.0, min=1.0, max=10.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_clouds_upper = bpy.props.FloatProperty(name="Upper", default=3.5, min=1.0, max=10.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_clouds_wind = bpy.props.FloatVectorProperty(name="Wind", default=[0.2, 0.06], size=2, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_clouds_secondary = bpy.props.FloatProperty(name="Secondary", default=0.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_clouds_precipitation = bpy.props.FloatProperty(name="Precipitation", default=1.0, min=0.0, max=2.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_clouds_eccentricity = bpy.props.FloatProperty(name="Eccentricity", default=0.6, min=0.0, max=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.shadowmap_size = bpy.props.IntProperty(name="Shadowmap Size", default=0, update=assets.invalidate_shader_cache)
-    bpy.types.World.scripts_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
-    bpy.types.World.bundled_scripts_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
-    bpy.types.World.canvas_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
-    bpy.types.World.generate_ocean = bpy.props.BoolProperty(name="Ocean", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ocean_base_color = bpy.props.FloatVectorProperty(name="Base Color", size=3, default=[0.1, 0.19, 0.37], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ocean_water_color = bpy.props.FloatVectorProperty(name="Water Color", size=3, default=[0.6, 0.7, 0.9], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ocean_level = bpy.props.FloatProperty(name="Level", default=0.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ocean_amplitude = bpy.props.FloatProperty(name="Amplitude", default=2.5, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ocean_height = bpy.props.FloatProperty(name="Height", default=0.6, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ocean_choppy = bpy.props.FloatProperty(name="Choppy", default=4.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ocean_speed = bpy.props.FloatProperty(name="Speed", default=1.5, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ocean_freq = bpy.props.FloatProperty(name="Freq", default=0.16, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ocean_fade = bpy.props.FloatProperty(name="Fade", default=1.8, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ssao = bpy.props.BoolProperty(name="SSAO", description="Screen-Space Ambient Occlusion", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ssao_size = bpy.props.FloatProperty(name="Size", default=0.12, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ssao_strength = bpy.props.FloatProperty(name="Strength", default=0.1, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ssao_half_res = bpy.props.BoolProperty(name="Half Res", description="Trace in half resolution", default=False, update=assets.invalidate_shader_cache) # TODO: Refactor as quality enum
-    bpy.types.World.generate_bloom = bpy.props.BoolProperty(name="Bloom", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_bloom_threshold = bpy.props.FloatProperty(name="Threshold", default=5.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_bloom_strength = bpy.props.FloatProperty(name="Strength", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_bloom_radius = bpy.props.FloatProperty(name="Radius", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_motion_blur = bpy.props.BoolProperty(name="Motion Blur", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_motion_blur_intensity = bpy.props.FloatProperty(name="Intensity", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ssr = bpy.props.BoolProperty(name="SSR", description="Screen-Space Reflections", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ssr_ray_step = bpy.props.FloatProperty(name="Ray Step", default=0.04, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ssr_min_ray_step = bpy.props.FloatProperty(name="Ray Step Min", default=0.05, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ssr_search_dist = bpy.props.FloatProperty(name="Search Dist", default=5.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ssr_falloff_exp = bpy.props.FloatProperty(name="Falloff Exp", default=5.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ssr_jitter = bpy.props.FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ssr_half_res = bpy.props.BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath) # TODO: Refactor as quality enum
-    bpy.types.World.generate_volumetric_light = bpy.props.BoolProperty(name="Volumetric Light", description="", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_volumetric_light_air_turbidity = bpy.props.FloatProperty(name="Air Turbidity", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_volumetric_light_air_color = bpy.props.FloatVectorProperty(name="Air Color", size=3, default=[1.0, 1.0, 1.0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_pcss_state = EnumProperty(
+    bpy.types.World.arm_clouds = bpy.props.BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_density = bpy.props.FloatProperty(name="Density", default=0.5, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_size = bpy.props.FloatProperty(name="Size", default=1.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_lower = bpy.props.FloatProperty(name="Lower", default=2.0, min=1.0, max=10.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_upper = bpy.props.FloatProperty(name="Upper", default=3.5, min=1.0, max=10.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_wind = bpy.props.FloatVectorProperty(name="Wind", default=[0.2, 0.06], size=2, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_secondary = bpy.props.FloatProperty(name="Secondary", default=0.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_precipitation = bpy.props.FloatProperty(name="Precipitation", default=1.0, min=0.0, max=2.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_clouds_eccentricity = bpy.props.FloatProperty(name="Eccentricity", default=0.6, min=0.0, max=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ocean = bpy.props.BoolProperty(name="Ocean", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ocean_base_color = bpy.props.FloatVectorProperty(name="Base Color", size=3, default=[0.1, 0.19, 0.37], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ocean_water_color = bpy.props.FloatVectorProperty(name="Water Color", size=3, default=[0.6, 0.7, 0.9], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ocean_level = bpy.props.FloatProperty(name="Level", default=0.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ocean_amplitude = bpy.props.FloatProperty(name="Amplitude", default=2.5, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ocean_height = bpy.props.FloatProperty(name="Height", default=0.6, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ocean_choppy = bpy.props.FloatProperty(name="Choppy", default=4.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ocean_speed = bpy.props.FloatProperty(name="Speed", default=1.5, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ocean_freq = bpy.props.FloatProperty(name="Freq", default=0.16, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ocean_fade = bpy.props.FloatProperty(name="Fade", default=1.8, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssao = bpy.props.BoolProperty(name="SSAO", description="Screen-Space Ambient Occlusion", default=True, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssao_size = bpy.props.FloatProperty(name="Size", default=0.12, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssao_strength = bpy.props.FloatProperty(name="Strength", default=0.1, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssao_half_res = bpy.props.BoolProperty(name="Half Res", description="Trace in half resolution", default=False, update=assets.invalidate_shader_cache) # TODO: Refactor as quality enum
+    bpy.types.World.arm_bloom = bpy.props.BoolProperty(name="Bloom", default=True, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_bloom_threshold = bpy.props.FloatProperty(name="Threshold", default=5.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_bloom_strength = bpy.props.FloatProperty(name="Strength", default=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_bloom_radius = bpy.props.FloatProperty(name="Radius", default=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_motion_blur = bpy.props.BoolProperty(name="Motion Blur", default=True, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_motion_blur_intensity = bpy.props.FloatProperty(name="Intensity", default=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssr = bpy.props.BoolProperty(name="SSR", description="Screen-Space Reflections", default=True, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssr_ray_step = bpy.props.FloatProperty(name="Ray Step", default=0.04, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssr_min_ray_step = bpy.props.FloatProperty(name="Ray Step Min", default=0.05, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssr_search_dist = bpy.props.FloatProperty(name="Search Dist", default=5.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssr_falloff_exp = bpy.props.FloatProperty(name="Falloff Exp", default=5.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssr_jitter = bpy.props.FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssr_half_res = bpy.props.BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath) # TODO: Refactor as quality enum
+    bpy.types.World.arm_volumetric_light = bpy.props.BoolProperty(name="Volumetric Light", description="", default=True, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_volumetric_light_air_turbidity = bpy.props.FloatProperty(name="Air Turbidity", default=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_volumetric_light_air_color = bpy.props.FloatVectorProperty(name="Air Color", size=3, default=[1.0, 1.0, 1.0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_pcss_state = EnumProperty(
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off'), 
                ('Auto', 'Auto', 'Auto')],
         name="Soft Shadows", description="Percentage Closer Soft Shadows", default='Off', update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_pcss_rings = bpy.props.IntProperty(name="Rings", description="", default=20, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ssrs = bpy.props.BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_ssrs_ray_step = bpy.props.FloatProperty(name="Ray Step", default=0.01, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_pcss_rings = bpy.props.IntProperty(name="Rings", description="", default=20, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssrs = bpy.props.BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssrs_ray_step = bpy.props.FloatProperty(name="Ray Step", default=0.01, update=assets.invalidate_shader_cache)
     # Compositor
-    bpy.types.World.generate_letterbox = bpy.props.BoolProperty(name="Letterbox", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_letterbox_size = bpy.props.FloatProperty(name="Size", default=0.1, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_grain = bpy.props.BoolProperty(name="Film Grain", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_grain_strength = bpy.props.FloatProperty(name="Strength", default=2.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_fog = bpy.props.BoolProperty(name="Volumetric Fog", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_fog_color = bpy.props.FloatVectorProperty(name="Color", size=3, subtype='COLOR', default=[0.5, 0.6, 0.7], min=0, max=1, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_fog_amounta = bpy.props.FloatProperty(name="Amount A", default=0.25, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_fog_amountb = bpy.props.FloatProperty(name="Amount B", default=0.5, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_tonemap = EnumProperty(
+    bpy.types.World.arm_letterbox = bpy.props.BoolProperty(name="Letterbox", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_letterbox_size = bpy.props.FloatProperty(name="Size", default=0.1, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_grain = bpy.props.BoolProperty(name="Film Grain", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_grain_strength = bpy.props.FloatProperty(name="Strength", default=2.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_fog = bpy.props.BoolProperty(name="Volumetric Fog", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_fog_color = bpy.props.FloatVectorProperty(name="Color", size=3, subtype='COLOR', default=[0.5, 0.6, 0.7], min=0, max=1, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_fog_amounta = bpy.props.FloatProperty(name="Amount A", default=0.25, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_fog_amountb = bpy.props.FloatProperty(name="Amount B", default=0.5, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_tonemap = EnumProperty(
         items=[('None', 'None', 'None'),
                ('Filmic', 'Filmic', 'Filmic'),
                ('Filmic2', 'Filmic2', 'Filmic2'),
                ('Reinhard', 'Reinhard', 'Reinhard'),
                ('Uncharted', 'Uncharted', 'Uncharted')],
         name='Tonemap', description='Tonemapping operator', default='Filmic', update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_lamp_texture = bpy.props.StringProperty(name="Mask Texture", default="")
-    bpy.types.World.generate_lamp_ies_texture = bpy.props.StringProperty(name="IES Texture", default="")
-    bpy.types.World.generate_lens_texture = bpy.props.StringProperty(name="Lens Texture", default="")
-    bpy.types.World.generate_fisheye = bpy.props.BoolProperty(name="Fish Eye", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_vignette = bpy.props.BoolProperty(name="Vignette", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_lamp_texture = bpy.props.StringProperty(name="Mask Texture", default="")
+    bpy.types.World.arm_lamp_ies_texture = bpy.props.StringProperty(name="IES Texture", default="")
+    bpy.types.World.arm_lens_texture = bpy.props.StringProperty(name="Lens Texture", default="")
+    bpy.types.World.arm_fisheye = bpy.props.BoolProperty(name="Fish Eye", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_vignette = bpy.props.BoolProperty(name="Vignette", default=False, update=assets.invalidate_shader_cache)
     # Skin
-    bpy.types.World.generate_gpu_skin = bpy.props.BoolProperty(name="GPU Skinning", description="Calculate skinning on GPU", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.generate_gpu_skin_max_bones_auto = bpy.props.BoolProperty(name="Auto Bones", description="Calculate amount of maximum bones based on armatures", default=True, update=assets.invalidate_compiled_data)
-    bpy.types.World.generate_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=3000, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_gpu_skin = bpy.props.BoolProperty(name="GPU Skinning", description="Calculate skinning on GPU", default=True, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_gpu_skin_max_bones_auto = bpy.props.BoolProperty(name="Auto Bones", description="Calculate amount of maximum bones based on armatures", default=True, update=assets.invalidate_compiled_data)
+    bpy.types.World.arm_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=3000, update=assets.invalidate_shader_cache)
     # Material override flags
-    bpy.types.World.texture_filtering_state = EnumProperty(
+    bpy.types.World.arm_texture_filter = EnumProperty(
         items=[('Anisotropic', 'Anisotropic', 'Anisotropic'),
                ('Linear', 'Linear', 'Linear'), 
                ('Point', 'Point', 'Point'), 
                ('Manual', 'Manual', 'Manual')],
         name="Texture Filtering", description="Set Manual to honor interpolation setting on Image Texture node", default='Anisotropic')
-    bpy.types.World.force_no_culling = bpy.props.BoolProperty(name="Force No Culling", default=False)
-    bpy.types.World.generate_two_sided_area_lamp = bpy.props.BoolProperty(name="Two-Sided Area Lamps", description="Emit light from both faces of area lamp", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.tessellation_enabled = bpy.props.BoolProperty(name="Tessellation", description="Enable tessellation for height maps on supported targets", default=True, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_culling = bpy.props.BoolProperty(name="Culling", default=True)
+    bpy.types.World.arm_two_sided_area_lamp = bpy.props.BoolProperty(name="Two-Sided Area Lamps", description="Emit light from both faces of area lamp", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_tessellation = bpy.props.BoolProperty(name="Tessellation", description="Enable tessellation for height maps on supported targets", default=True, update=assets.invalidate_shader_cache)
     # Material builder flags
-    bpy.types.World.material_model = EnumProperty(
+    bpy.types.World.arm_material_model = EnumProperty(
         items=[('PBR', 'PBR', 'PBR'),
                ('Cycles', 'Cycles', 'Cycles'),
                ('Restricted', 'Restricted', 'Restricted'),
                ],
         name="Materials", description="Material builder", default='PBR', update=update_material_model)
     # For material
+    bpy.types.Material.arm_cast_shadow = bpy.props.BoolProperty(name="Cast Shadow", default=True)
+    bpy.types.Material.arm_receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
+    bpy.types.Material.arm_overlay = bpy.props.BoolProperty(name="Overlay", default=False)
+    bpy.types.Material.arm_decal = bpy.props.BoolProperty(name="Decal", default=False)
+    bpy.types.Material.arm_two_sided = bpy.props.BoolProperty(name="Two-Sided", default=False)
+    bpy.types.Material.arm_cull_mode = EnumProperty(
+        items=[('none', 'Both', 'None'),
+                 ('clockwise', 'Front', 'Clockwise'),
+                 ('counter_clockwise', 'Back', 'Counter-Clockwise')],
+        name="", default='clockwise', description="Draw geometry faces")
+    bpy.types.Material.arm_discard = bpy.props.BoolProperty(name="Discard", default=False)
+    bpy.types.Material.arm_discard_opacity = bpy.props.FloatProperty(name="Mesh Opacity", default=0.2, min=0, max=1)
+    bpy.types.Material.arm_discard_opacity_shadows = bpy.props.FloatProperty(name="Shadows Opacity", default=0.1, min=0, max=1)
+    bpy.types.Material.arm_tess = bpy.props.BoolProperty(name="Tess Displacement", description="Use tessellation shaders to subdivide and displace surface", default=True)
+    bpy.types.Material.arm_tess_inner = bpy.props.IntProperty(name="Inner", description="Inner tessellation level for mesh", default=14)
+    bpy.types.Material.arm_tess_outer = bpy.props.IntProperty(name="Outer", description="Outer tessellation level for mesh", default=14)
+    bpy.types.Material.arm_tess_shadows = bpy.props.BoolProperty(name="Tess Shadows", description="Use tessellation shaders when rendering shadow maps", default=True)
+    bpy.types.Material.arm_tess_shadows_inner = bpy.props.IntProperty(name="Inner", description="Inner tessellation level for shadows", default=7)
+    bpy.types.Material.arm_tess_shadows_outer = bpy.props.IntProperty(name="Outer", description="Outer tessellation level for shadows", default=7)
+    # For scene
+    bpy.types.Scene.arm_export = bpy.props.BoolProperty(name="Export", description="Export scene data", default=True)
+    bpy.types.Scene.arm_gp_export = bpy.props.BoolProperty(name="Export GP", description="Export grease pencil data", default=True)
+    bpy.types.Scene.arm_compress = bpy.props.BoolProperty(name="Compress", description="Pack data into zip file", default=False)
+    # For lamp
+    bpy.types.Lamp.arm_clip_start = bpy.props.FloatProperty(name="Clip Start", default=0.1)
+    bpy.types.Lamp.arm_clip_end = bpy.props.FloatProperty(name="Clip End", default=50.0)
+    bpy.types.Lamp.arm_fov = bpy.props.FloatProperty(name="Field of View", default=0.84)
+    bpy.types.Lamp.arm_shadows_bias = bpy.props.FloatProperty(name="Bias", description="Depth offset for shadow acne", default=0.0001)
+    bpy.types.Lamp.arm_omni_shadows = bpy.props.BoolProperty(name="Omni-Shadows", description="Draw shadows to all faces of the cube map", default=True)
+    bpy.types.World.arm_pcfsize = bpy.props.FloatProperty(name="PCF Size", description="Filter size", default=0.001)
+
+    bpy.types.World.arm_shadowmap_size_cache = bpy.props.IntProperty(name="Shadowmap Size", default=0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_scripts_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
+    bpy.types.World.arm_bundled_scripts_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
+    bpy.types.World.arm_canvas_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
+    bpy.types.World.world_defs = bpy.props.StringProperty(name="World Shader Defs", default='')
+    bpy.types.World.rp_defs = bpy.props.StringProperty(name="Render Path Shader Defs", default='')
+    bpy.types.World.compo_defs = bpy.props.StringProperty(name="Compositor Shader Defs", default='')
+    bpy.types.Material.export_uvs = bpy.props.BoolProperty(name="Export UVs", default=False)
+    bpy.types.Material.export_vcols = bpy.props.BoolProperty(name="Export VCols", default=False)
+    bpy.types.Material.export_tangents = bpy.props.BoolProperty(name="Export Tangents", default=False)
+    bpy.types.Material.vertex_structure = bpy.props.StringProperty(name="Vertex Structure", default='')
     bpy.types.NodeSocket.is_uniform = bpy.props.BoolProperty(name="Is Uniform", description="Mark node sockets to be processed as material uniforms", default=False)
     bpy.types.NodeTree.is_cached = bpy.props.BoolProperty(name="Node Tree Cached", description="No need to reexport node tree", default=False)
     bpy.types.Material.signature = bpy.props.StringProperty(name="Signature", description="Unique string generated from material nodes", default="")
     bpy.types.Material.is_cached = bpy.props.BoolProperty(name="Material Cached", description="No need to reexport material data", default=False, update=update_mat_cache)
     bpy.types.Material.lock_cache = bpy.props.BoolProperty(name="Lock Material Cache", description="Prevent is_cached from updating", default=False)
-    bpy.types.Material.cast_shadow = bpy.props.BoolProperty(name="Cast Shadow", default=True)
-    bpy.types.Material.receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
-    bpy.types.Material.override_shader = bpy.props.BoolProperty(name="Override Shader", default=False)
-    bpy.types.Material.override_shader_name = bpy.props.StringProperty(name="", default='')
-    bpy.types.Material.override_shader_context = bpy.props.BoolProperty(name="Override Context", default=False)
-    bpy.types.Material.override_shader_context_name = bpy.props.StringProperty(name="", default='')
-    bpy.types.Material.stencil_mask = bpy.props.IntProperty(name="Stencil Mask", default=0)
-    bpy.types.Material.export_uvs = bpy.props.BoolProperty(name="Export UVs", default=False)
-    bpy.types.Material.export_vcols = bpy.props.BoolProperty(name="Export VCols", default=False)
-    bpy.types.Material.export_tangents = bpy.props.BoolProperty(name="Export Tangents", default=False)
-    bpy.types.Material.vertex_structure = bpy.props.StringProperty(name="Vertex Structure", default='')
-    bpy.types.Material.skip_context = bpy.props.StringProperty(name="Skip Context", default='')
-    bpy.types.Material.overlay = bpy.props.BoolProperty(name="Overlay", default=False)
-    bpy.types.Material.decal = bpy.props.BoolProperty(name="Decal", default=False)
-    bpy.types.Material.two_sided_shading = bpy.props.BoolProperty(name="Two-Sided", default=False)
-    bpy.types.Material.override_cull_mode = EnumProperty(
-        items=[('none', 'Both', 'None'),
-                 ('clockwise', 'Front', 'Clockwise'),
-                 ('counter_clockwise', 'Back', 'Counter-Clockwise')],
-        name="", default='clockwise', description="Draw geometry faces")
-    bpy.types.Material.discard_transparent = bpy.props.BoolProperty(name="Discard", default=False)
-    bpy.types.Material.discard_transparent_opacity = bpy.props.FloatProperty(name="Mesh Opacity", default=0.2, min=0, max=1)
-    bpy.types.Material.discard_transparent_opacity_shadows = bpy.props.FloatProperty(name="Shadows Opacity", default=0.1, min=0, max=1)
-    bpy.types.Material.override_compare = bpy.props.BoolProperty(name="Override Compare-Mode", default=False)
-    bpy.types.Material.override_compare_mode = EnumProperty(
-        items = [('Always', 'Always', 'Always'),
-                 ('Less', 'Less', 'Less')],
-        name = "Compare-Mode", default='Less')
-    bpy.types.Material.override_depthwrite = bpy.props.BoolProperty(name="Override Depth-Write", default=False)
-    bpy.types.Material.override_depthwrite_mode = EnumProperty(
-        items = [('True', 'True', 'True'),
-                 ('False', 'False', 'False')],
-        name = "Depth-Write", default='True')
-    bpy.types.Material.height_tess = bpy.props.BoolProperty(name="Tess Displacement", description="Use tessellation shaders to subdivide and displace surface", default=True)
-    bpy.types.Material.height_tess_inner = bpy.props.IntProperty(name="Inner", description="Inner tessellation level for mesh", default=14)
-    bpy.types.Material.height_tess_outer = bpy.props.IntProperty(name="Outer", description="Outer tessellation level for mesh", default=14)
-    bpy.types.Material.height_tess_shadows = bpy.props.BoolProperty(name="Tess Shadows", description="Use tessellation shaders when rendering shadow maps", default=True)
-    bpy.types.Material.height_tess_shadows_inner = bpy.props.IntProperty(name="Inner", description="Inner tessellation level for shadows", default=7)
-    bpy.types.Material.height_tess_shadows_outer = bpy.props.IntProperty(name="Outer", description="Outer tessellation level for shadows", default=7)
-    bpy.types.Material.transluc_shadows = bpy.props.BoolProperty(name="Translucent Shadows", description="Cast shadows for translucent surfaces", default=True)
-    # For scene
-    bpy.types.Scene.game_export = bpy.props.BoolProperty(name="Export", description="Export scene data", default=True)
-    bpy.types.Scene.gp_export = bpy.props.BoolProperty(name="Export Grease Pencil", description="Export grease pencil data", default=True)
-    bpy.types.Scene.data_compressed = bpy.props.BoolProperty(name="Compress Data", description="Pack data into zip file", default=False)
-    # For lamp
-    bpy.types.Lamp.lamp_clip_start = bpy.props.FloatProperty(name="Clip Start", default=0.1)
-    bpy.types.Lamp.lamp_clip_end = bpy.props.FloatProperty(name="Clip End", default=50.0)
-    bpy.types.Lamp.lamp_fov = bpy.props.FloatProperty(name="Field of View", default=0.84)
-    bpy.types.Lamp.lamp_shadows_bias = bpy.props.FloatProperty(name="Bias", description="Depth offset for shadow acne", default=0.0001)
-    bpy.types.Lamp.lamp_omni_shadows = bpy.props.BoolProperty(name="Omni-Shadows", description="Draw shadows to all faces of the cube map", default=True)
-    bpy.types.World.lamp_omni_shadows_pcfsize = bpy.props.FloatProperty(name="PCF Size", description="Filter size", default=0.001)
 
     if not 'Arm' in bpy.data.worlds:
         wrd = bpy.data.worlds.new('Arm')
@@ -625,6 +605,19 @@ def init_properties_on_load():
         wrd.arm_version = arm_version
         arm.make.clean_project()
         make_renderer.make_renderer(bpy.data.worlds['Arm'])
+        # Deprecated: migrate traits
+        for bobject in bpy.data.objects:
+            if not hasattr(bobject, 'my_traitlist'):
+                continue
+            for trait in bobject.my_traitlist:
+                t = bobject.arm_traitlist.add()
+                t.name = trait.name
+                t.enabled_prop = trait.enabled_prop
+                t.type_prop = trait.type_prop
+                t.class_name_prop = trait.class_name_prop
+                t.canvas_name_prop = trait.canvas_name_prop
+                t.jsscript_prop = trait.jsscript_prop
+                t.nodes_name_prop = trait.nodes_name_prop
     # Set url for embedded player
     if arm.utils.with_krom():
         barmory.set_files_location(arm.utils.get_fp_build() + '/krom')

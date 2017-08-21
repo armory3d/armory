@@ -77,7 +77,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     make_logic.build_node_trees()
     active_worlds = set()
     for scene in bpy.data.scenes:
-        if scene.game_export and scene.world != None:
+        if scene.arm_export and scene.world != None:
             active_worlds.add(scene.world)
     world_outputs = make_world.build_node_trees(active_worlds)
     make_renderpath.build_node_trees(assets_path)
@@ -92,8 +92,8 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     ArmoryExporter.compress_enabled = is_publish and wrd.arm_asset_compression
     ArmoryExporter.in_viewport = in_viewport
     for scene in bpy.data.scenes:
-        if scene.game_export:
-            ext = '.zip' if (scene.data_compressed and is_publish) else '.arm'
+        if scene.arm_export:
+            ext = '.zip' if (scene.arm_compress and is_publish) else '.arm'
             asset_path = arm.utils.build_dir() + '/compiled/Assets/' + arm.utils.safestr(scene.name) + ext
             exporter.execute(bpy.context, asset_path, scene=scene)
             if ArmoryExporter.export_physics:

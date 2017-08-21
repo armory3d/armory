@@ -27,36 +27,33 @@ class ObjectPropsPanel(bpy.types.Panel):
         wrd = bpy.data.worlds['Arm']
 
         row = layout.row()
-        row.prop(obj, 'game_export')
-        if not obj.game_export:
+        row.prop(obj, 'arm_export')
+        if not obj.arm_export:
             return
-        row.prop(obj, 'spawn')
+        row.prop(obj, 'arm_spawn')
 
         row = layout.row()
-        row.prop(obj, 'mobile')
-        if obj.type == 'ARMATURE':
-            row.prop(obj, 'bone_animation_enabled')
-        else:
-            row.prop(obj, 'object_animation_enabled')
+        row.prop(obj, 'arm_mobile')
+        row.prop(obj, 'arm_animation_enabled')
 
         if obj.type == 'MESH':
             layout.prop(obj, 'arm_instanced')
             if obj.arm_instanced:
                 layout.label('Location')
                 column = layout.column()
-                column.prop(obj, 'arm_instanced_child')
-                column.prop(obj, 'arm_instanced_child')
-                column.prop(obj, 'arm_instanced_child')
+                column.prop(obj, 'arm_instanced_loc_x')
+                column.prop(obj, 'arm_instanced_loc_y')
+                column.prop(obj, 'arm_instanced_loc_z')
                 # layout.label('Rotation')
                 # row = layout.row()
-                # row.prop(obj, 'arm_instanced_child')
-                # row.prop(obj, 'arm_instanced_child')
-                # row.prop(obj, 'arm_instanced_child')
+                # row.prop(obj, 'arm_instanced')
+                # row.prop(obj, 'arm_instanced')
+                # row.prop(obj, 'arm_instanced')
                 # layout.label('Scale')
                 # row = layout.row()
-                # row.prop(obj, 'arm_instanced_childre')
-                # row.prop(obj, 'arm_instanced_childre')
-                # row.prop(obj, 'arm_instanced_childre')
+                # row.prop(obj, 'arm_instanced')
+                # row.prop(obj, 'arm_instanced')
+                # row.prop(obj, 'arm_instanced')
 
 class ModifiersPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -74,15 +71,15 @@ class ModifiersPropsPanel(bpy.types.Panel):
 
         # Assume as first modifier
         if len(obj.modifiers) > 0 and obj.modifiers[0].type == 'OCEAN':
-            layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_base_color')
-            layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_water_color')
-            layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_fade')
-            layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_amplitude')
-            layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_height')
-            layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_choppy')
-            layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_speed')
-            layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_freq')
-            layout.prop(bpy.data.worlds['Arm'], 'generate_ocean_fade')
+            layout.prop(bpy.data.worlds['Arm'], 'arm_ocean_base_color')
+            layout.prop(bpy.data.worlds['Arm'], 'arm_ocean_water_color')
+            layout.prop(bpy.data.worlds['Arm'], 'arm_ocean_fade')
+            layout.prop(bpy.data.worlds['Arm'], 'arm_ocean_amplitude')
+            layout.prop(bpy.data.worlds['Arm'], 'arm_ocean_height')
+            layout.prop(bpy.data.worlds['Arm'], 'arm_ocean_choppy')
+            layout.prop(bpy.data.worlds['Arm'], 'arm_ocean_speed')
+            layout.prop(bpy.data.worlds['Arm'], 'arm_ocean_freq')
+            layout.prop(bpy.data.worlds['Arm'], 'arm_ocean_fade')
 
 class PhysicsPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -96,7 +93,7 @@ class PhysicsPropsPanel(bpy.types.Panel):
         if obj == None:
             return
 
-        layout.prop(obj, 'soft_body_margin')
+        layout.prop(obj, 'arm_soft_body_margin')
 
 # Menu in data region
 class DataPropsPanel(bpy.types.Panel):
@@ -113,42 +110,42 @@ class DataPropsPanel(bpy.types.Panel):
 
         wrd = bpy.data.worlds['Arm']
         if obj.type == 'CAMERA':
-            layout.prop_search(obj.data, "renderpath_path", bpy.data, "node_groups")
-            layout.prop(obj.data, 'frustum_culling')
-            layout.prop(obj.data, 'is_mirror')
+            layout.prop_search(wrd, "renderpath_path", bpy.data, "node_groups")
+            layout.prop(obj.data, 'arm_frustum_culling')
+            layout.prop(obj.data, 'arm_render_to_texture')
             col = layout.column()
-            col.enabled = obj.data.is_mirror
+            col.enabled = obj.data.arm_render_to_texture
             row = col.row(align=True)
             row.label('Resolution')
-            row.prop(obj.data, 'mirror_resolution_x')
-            row.prop(obj.data, 'mirror_resolution_y')
+            row.prop(obj.data, 'arm_texture_resolution_x')
+            row.prop(obj.data, 'arm_texture_resolution_y')
         elif obj.type == 'MESH' or obj.type == 'FONT' or obj.type == 'META':
             row = layout.row(align=True)
-            row.prop(obj.data, 'dynamic_usage')
-            row.prop(obj.data, 'data_compressed')
+            row.prop(obj.data, 'arm_dynamic_usage')
+            row.prop(obj.data, 'arm_compress')
             if obj.type == 'MESH':
-                layout.prop(obj.data, 'sdfgen')
+                layout.prop(obj.data, 'arm_sdfgen')
             layout.operator("arm.invalidate_cache")
         elif obj.type == 'LAMP':
             row = layout.row(align=True)
             col = row.column()
-            col.prop(obj.data, 'lamp_clip_start')
-            col.prop(obj.data, 'lamp_clip_end')
+            col.prop(obj.data, 'arm_clip_start')
+            col.prop(obj.data, 'arm_clip_end')
             col = row.column()
-            col.prop(obj.data, 'lamp_fov')
-            col.prop(obj.data, 'lamp_shadows_bias')
+            col.prop(obj.data, 'arm_fov')
+            col.prop(obj.data, 'arm_shadows_bias')
             if obj.data.type == 'POINT':
-                layout.prop(obj.data, 'lamp_omni_shadows')
+                layout.prop(obj.data, 'arm_omni_shadows')
                 col = layout.column()
-                col.enabled = obj.data.lamp_omni_shadows
-                col.prop(wrd, 'lamp_omni_shadows_pcfsize')
-            layout.prop(wrd, 'generate_lamp_texture')
-            layout.prop(wrd, 'generate_lamp_ies_texture')
+                col.enabled = obj.data.arm_omni_shadows
+                col.prop(wrd, 'arm_pcfsize')
+            layout.prop(wrd, 'arm_lamp_texture')
+            layout.prop(wrd, 'arm_lamp_ies_texture')
         elif obj.type == 'SPEAKER':
             layout.prop(obj.data, 'loop')
             layout.prop(obj.data, 'stream')
         elif obj.type == 'ARMATURE':
-            layout.prop(obj.data, 'data_compressed')
+            layout.prop(obj.data, 'arm_compress')
 
 class ScenePropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -163,12 +160,12 @@ class ScenePropsPanel(bpy.types.Panel):
             return
         row = layout.row()
         column = row.column()
-        column.prop(scene, 'game_export')
-        column.prop(scene, 'data_compressed')
+        column.prop(scene, 'arm_export')
+        column.prop(scene, 'arm_compress')
         column = row.column()
-        column.prop(scene, 'gp_export')
+        column.prop(scene, 'arm_gp_export')
         columnb = column.column()
-        columnb.enabled = scene.gp_export
+        columnb.enabled = scene.arm_gp_export
         columnb.operator('arm.invalidate_gp_cache')
 
 class InvalidateCacheButton(bpy.types.Operator):
@@ -177,7 +174,7 @@ class InvalidateCacheButton(bpy.types.Operator):
     bl_label = "Invalidate Cache"
  
     def execute(self, context):
-        context.object.data.mesh_cached = False
+        context.object.data.arm_cached = False
         return{'FINISHED'}
 
 class InvalidateMaterialCacheButton(bpy.types.Operator):
@@ -196,7 +193,7 @@ class InvalidateGPCacheButton(bpy.types.Operator):
  
     def execute(self, context):
         if context.scene.grease_pencil != None:
-            context.scene.grease_pencil.data_cached = False
+            context.scene.grease_pencil.arm_data_cached = False
         return{'FINISHED'}
 
 class MaterialPropsPanel(bpy.types.Panel):
@@ -213,58 +210,40 @@ class MaterialPropsPanel(bpy.types.Panel):
 
         row = layout.row()
         column = row.column()
-        column.prop(mat, 'cast_shadow')
-        column.prop(mat, 'receive_shadow')
+        column.prop(mat, 'arm_cast_shadow')
+        column.prop(mat, 'arm_receive_shadow')
         column.separator()
-        column.prop(mat, 'two_sided_shading')
+        column.prop(mat, 'arm_two_sided')
         columnb = column.column()
-        columnb.enabled = not mat.two_sided_shading
-        columnb.prop(mat, 'override_cull_mode')
+        columnb.enabled = not mat.arm_two_sided
+        columnb.prop(mat, 'arm_cull_mode')
         
         column = row.column()
-        column.prop(mat, 'overlay')
-        column.prop(mat, 'decal')
+        column.prop(mat, 'arm_overlay')
+        column.prop(mat, 'arm_decal')
 
         column.separator()
-        column.prop(mat, 'discard_transparent')
+        column.prop(mat, 'arm_discard')
         columnb = column.column()
-        columnb.enabled = mat.discard_transparent
-        columnb.prop(mat, 'discard_transparent_opacity')
-        columnb.prop(mat, 'discard_transparent_opacity_shadows')
-
-        # row = layout.row()
-        # column = row.column()
-        # column.prop(mat, 'override_shader')
-        # columnb = column.column()
-        # columnb.enabled = mat.override_shader
-        # columnb.prop(mat, 'override_shader_name')
-        # column = row.column()
-        # column.prop(mat, 'override_shader_context')
-        # columnb = column.column()
-        # columnb.enabled = mat.override_shader_context
-        # columnb.prop(mat, 'override_shader_context_name')
-
-        # row = layout.row()
-        # row.prop(mat, 'stencil_mask')
-        # row.prop(mat, 'skip_context')
+        columnb.enabled = mat.arm_discard
+        columnb.prop(mat, 'arm_discard_opacity')
+        columnb.prop(mat, 'arm_discard_opacity_shadows')
 
         layout.separator()
         row = layout.row()
         column = row.column()
-        column.prop(mat, 'height_tess')
+        column.prop(mat, 'arm_tess')
         columnb = column.column()
-        columnb.enabled = mat.height_tess
-        columnb.prop(mat, 'height_tess_inner')
-        columnb.prop(mat, 'height_tess_outer')
+        columnb.enabled = mat.arm_tess
+        columnb.prop(mat, 'arm_tess_inner')
+        columnb.prop(mat, 'arm_tess_outer')
 
         column = row.column()
-        column.prop(mat, 'height_tess_shadows')
+        column.prop(mat, 'arm_tess_shadows')
         columnb = column.column()
-        columnb.enabled = mat.height_tess_shadows
-        columnb.prop(mat, 'height_tess_shadows_inner')
-        columnb.prop(mat, 'height_tess_shadows_outer')
-
-        layout.prop(mat, 'transluc_shadows')
+        columnb.enabled = mat.arm_tess_shadows
+        columnb.prop(mat, 'arm_tess_shadows_inner')
+        columnb.prop(mat, 'arm_tess_shadows_outer')
 
         layout.operator("arm.invalidate_material_cache")
 
@@ -279,15 +258,19 @@ class WorldPropsPanel(bpy.types.Panel):
         # wrd = bpy.context.world
         wrd = bpy.data.worlds['Arm']
         
-        layout.prop(wrd, 'generate_irradiance')
+        layout.prop(wrd, 'arm_irradiance')
         row = layout.row()
-        row.enabled = wrd.generate_irradiance
+        row.enabled = wrd.arm_irradiance
         column = row.column()
-        column.prop(wrd, 'generate_radiance')
-        column.prop(wrd, 'generate_radiance_size')
+        column.prop(wrd, 'arm_radiance')
+        columnb = column.column()
+        columnb.enabled = wrd.arm_radiance
+        columnb.prop(wrd, 'arm_radiance_size')
         column = row.column()
-        column.prop(wrd, 'generate_radiance_sky')
-        column.prop(wrd, 'generate_radiance_sky_type')
+        column.prop(wrd, 'arm_radiance_sky')
+        columnb = column.column()
+        columnb.enabled = wrd.arm_radiance_sky
+        columnb.prop(wrd, 'arm_radiance_sky_type')
 
 class ArmoryPlayerPanel(bpy.types.Panel):
     bl_label = "Armory Player"
@@ -431,7 +414,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
             rows = 4
         
         row = layout.row()
-        row.template_list("MY_UL_LibraryTraitList", "The_List", wrd, "arm_librarylist", wrd, "arm_librarylist_index", rows=rows)
+        row.template_list("ArmLibraryList", "The_List", wrd, "arm_librarylist", wrd, "arm_librarylist_index", rows=rows)
 
         col = row.column(align=True)
         col.operator("arm_librarylist.new_item", icon='ZOOMIN', text="")
@@ -494,15 +477,15 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         # TODO: build tilecache here
 
         # Navmesh trait
-        obj.my_traitlist.add()
-        obj.my_traitlist[-1].type_prop = 'Bundled Script'
-        obj.my_traitlist[-1].class_name_prop = 'NavMesh'
+        obj.arm_traitlist.add()
+        obj.arm_traitlist[-1].type_prop = 'Bundled Script'
+        obj.arm_traitlist[-1].class_name_prop = 'NavMesh'
 
         # For visualization
         bpy.ops.mesh.navmesh_make('EXEC_DEFAULT')
         obj = context.active_object
         obj.hide_render = True
-        obj.game_export = False
+        obj.arm_export = False
 
         return{'FINISHED'}
 
@@ -813,44 +796,20 @@ class ArmRenderPathPanel(bpy.types.Panel):
         layout.prop(dat, "rp_preset")
         layout.separator()
         layout.prop(dat, "rp_renderer")
-        layout.prop(wrd, 'material_model')
+        layout.prop(wrd, "arm_material_model")
         layout.prop(dat, "rp_shadowmap")
-        layout.prop(dat, "rp_meshes")
         layout.prop(dat, "rp_translucency_state")
         layout.prop(dat, "rp_overlays_state")
         layout.prop(dat, "rp_decals_state")
         layout.prop(dat, "rp_sss_state")
-        if dat.rp_sss_state != 'Off':
-            layout.prop(wrd, 'sss_width')
         layout.prop(dat, "rp_hdr")
-        layout.prop(dat, "rp_worldnodes")
-        if not dat.rp_worldnodes:
-            layout.prop(dat, "rp_clearbackground")
+        layout.prop(dat, "rp_world")
+        col = layout.column()
+        col.enabled = not dat.rp_world
+        col.prop(dat, "rp_clearbackground")
         layout.prop(dat, "rp_stereo")
         layout.prop(dat, "rp_greasepencil")
         layout.prop(dat, 'rp_voxelgi')
-        if dat.rp_voxelgi:
-            layout.prop(dat, 'rp_voxelgi_resolution')
-            layout.prop(wrd, 'generate_voxelgi_dimensions')
-            row = layout.row()
-            row.prop(wrd, 'voxelgi_diff')
-            row.prop(wrd, 'voxelgi_spec')
-            row = layout.row()
-            row.prop(wrd, 'voxelgi_occ')
-            row.prop(wrd, 'voxelgi_env')
-            row = layout.row()
-            row.prop(wrd, 'voxelgi_step')
-            row.prop(wrd, 'voxelgi_range')
-            row = layout.row()
-            row.prop(wrd, 'voxelgi_revoxelize')
-            row.prop(wrd, 'voxelgi_multibounce')
-            row = layout.row()
-            row.prop(wrd, 'voxelgi_camera')
-            row.prop(wrd, 'voxelgi_anisotropic')
-            row = layout.row()
-            row.prop(wrd, 'voxelgi_shadows')
-            row.prop(wrd, 'voxelgi_refraction')
-            layout.prop(dat, 'rp_voxelgi_hdr')
 
         layout.separator()
         layout.prop(dat, "rp_render_to_texture")
@@ -870,6 +829,23 @@ class ArmRenderPathPanel(bpy.types.Panel):
             layout.prop(dat, "rp_rendercapture")
             layout.prop(dat, "rp_ocean")
 
+        layout.prop(wrd, 'arm_pcss_state')
+        layout.prop(wrd, 'arm_ssrs')
+        
+        layout.prop(wrd, 'arm_samples_per_pixel')
+        row = layout.row()
+        row.prop(wrd, 'arm_gpu_skin')
+        if wrd.arm_gpu_skin:
+            row.prop(wrd, 'arm_gpu_skin_max_bones_auto')
+            if not wrd.arm_gpu_skin_max_bones_auto:
+                layout.prop(wrd, 'arm_gpu_skin_max_bones')
+        layout.prop(wrd, 'arm_texture_filter')
+        layout.prop(wrd, 'arm_tessellation')
+        layout.prop(wrd, 'arm_culling')
+        layout.prop(wrd, 'arm_two_sided_area_lamp')
+        layout.prop(wrd, 'arm_clouds')
+        layout.prop(wrd, 'arm_tonemap')
+
 class ArmRenderPropsPanel(bpy.types.Panel):
     bl_label = "Armory Render Props"
     bl_space_type = "PROPERTIES"
@@ -880,88 +856,87 @@ class ArmRenderPropsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds['Arm']
+        dat = bpy.data.worlds['Arm']
 
-        layout.prop(wrd, 'generate_pcss_state')
-        if wrd.generate_pcss_state == 'On' or wrd.generate_pcss_state == 'Auto':
-            layout.prop(wrd, 'generate_pcss_rings')
-        layout.prop(wrd, 'generate_ssrs')
+        layout.label('PCSS')
+        layout.prop(wrd, 'arm_pcss_rings')
+
+        layout.label('Clouds')
+        layout.prop(wrd, 'arm_clouds_density')
+        layout.prop(wrd, 'arm_clouds_size')
+        layout.prop(wrd, 'arm_clouds_lower')
+        layout.prop(wrd, 'arm_clouds_upper')
+        layout.prop(wrd, 'arm_clouds_wind')
+        layout.prop(wrd, 'arm_clouds_secondary')
+        layout.prop(wrd, 'arm_clouds_precipitation')
+        layout.prop(wrd, 'arm_clouds_eccentricity')
         
-        layout.prop(wrd, 'arm_samples_per_pixel')
+        layout.label('Voxel GI')
+        layout.prop(dat, 'rp_voxelgi_resolution')
+        layout.prop(wrd, 'arm_voxelgi_dimensions')
         row = layout.row()
-        row.prop(wrd, 'generate_gpu_skin')
-        if wrd.generate_gpu_skin:
-            row.prop(wrd, 'generate_gpu_skin_max_bones_auto')
-            if not wrd.generate_gpu_skin_max_bones_auto:
-                layout.prop(wrd, 'generate_gpu_skin_max_bones')
-        layout.prop(wrd, 'texture_filtering_state')
-        layout.prop(wrd, 'tessellation_enabled')
-        layout.prop(wrd, 'force_no_culling')
-        layout.prop(wrd, 'generate_two_sided_area_lamp')
+        row.prop(wrd, 'arm_voxelgi_diff')
+        row.prop(wrd, 'arm_voxelgi_spec')
+        row = layout.row()
+        row.prop(wrd, 'arm_voxelgi_occ')
+        row.prop(wrd, 'arm_voxelgi_env')
+        row = layout.row()
+        row.prop(wrd, 'arm_voxelgi_step')
+        row.prop(wrd, 'arm_voxelgi_range')
+        row = layout.row()
+        row.prop(wrd, 'arm_voxelgi_revoxelize')
+        row.prop(wrd, 'arm_voxelgi_multibounce')
+        row = layout.row()
+        row.prop(wrd, 'arm_voxelgi_camera')
+        row.prop(wrd, 'arm_voxelgi_anisotropic')
+        row = layout.row()
+        row.prop(wrd, 'arm_voxelgi_shadows')
+        row.prop(wrd, 'arm_voxelgi_refraction')
+        layout.prop(dat, 'rp_voxelgi_hdr')
 
-        layout.prop(wrd, 'generate_clouds')
-        if wrd.generate_clouds:
-            layout.prop(wrd, 'generate_clouds_density')
-            layout.prop(wrd, 'generate_clouds_size')
-            layout.prop(wrd, 'generate_clouds_lower')
-            layout.prop(wrd, 'generate_clouds_upper')
-            layout.prop(wrd, 'generate_clouds_wind')
-            layout.prop(wrd, 'generate_clouds_secondary')
-            layout.prop(wrd, 'generate_clouds_precipitation')
-            layout.prop(wrd, 'generate_clouds_eccentricity')
-        
         layout.label('SSAO')
-        # layout.prop(wrd, 'generate_ssao')
-        # if wrd.generate_ssao:
-        layout.prop(wrd, 'generate_ssao_size')
-        layout.prop(wrd, 'generate_ssao_strength')
-        layout.prop(wrd, 'generate_ssao_half_res')
+        layout.prop(wrd, 'arm_ssao_size')
+        layout.prop(wrd, 'arm_ssao_strength')
+        layout.prop(wrd, 'arm_ssao_half_res')
         
         layout.label('Bloom')
-        # layout.prop(wrd, 'generate_bloom')
-        # if wrd.generate_bloom:
-        layout.prop(wrd, 'generate_bloom_threshold')
-        layout.prop(wrd, 'generate_bloom_strength')
-        layout.prop(wrd, 'generate_bloom_radius')
+        layout.prop(wrd, 'arm_bloom_threshold')
+        layout.prop(wrd, 'arm_bloom_strength')
+        layout.prop(wrd, 'arm_bloom_radius')
         
         layout.label('Motion Blur')
-        # layout.prop(wrd, 'generate_motion_blur')
-        # if wrd.generate_motion_blur:
-        layout.prop(wrd, 'generate_motion_blur_intensity')
+        layout.prop(wrd, 'arm_motion_blur_intensity')
         
         layout.label('SSR')
-        # layout.prop(wrd, 'generate_ssr')
-        # if wrd.generate_ssr:
-        layout.prop(wrd, 'generate_ssr_ray_step')
-        layout.prop(wrd, 'generate_ssr_min_ray_step')
-        layout.prop(wrd, 'generate_ssr_search_dist')
-        layout.prop(wrd, 'generate_ssr_falloff_exp')
-        layout.prop(wrd, 'generate_ssr_jitter')
-        layout.prop(wrd, 'generate_ssr_half_res')
+        layout.prop(wrd, 'arm_ssr_ray_step')
+        layout.prop(wrd, 'arm_ssr_min_ray_step')
+        layout.prop(wrd, 'arm_ssr_search_dist')
+        layout.prop(wrd, 'arm_ssr_falloff_exp')
+        layout.prop(wrd, 'arm_ssr_jitter')
+        layout.prop(wrd, 'arm_ssr_half_res')
+
+        layout.label('SSS')
+        layout.prop(wrd, 'arm_sss_width')
 
         layout.label('SSRS')
-        layout.prop(wrd, 'generate_ssrs_ray_step')
+        layout.prop(wrd, 'arm_ssrs_ray_step')
 
         layout.label('Volumetric Light')
-        # layout.prop(wrd, 'generate_volumetric_light')
-        # if wrd.generate_volumetric_light:
-        layout.prop(wrd, 'generate_volumetric_light_air_turbidity')
-        layout.prop(wrd, 'generate_volumetric_light_air_color')
+        layout.prop(wrd, 'arm_volumetric_light_air_turbidity')
+        layout.prop(wrd, 'arm_volumetric_light_air_color')
 
-        layout.prop(wrd, 'generate_tonemap')
-        layout.prop(wrd, 'generate_letterbox')
-        if wrd.generate_letterbox:
-            layout.prop(wrd, 'generate_letterbox_size')
-        layout.prop(wrd, 'generate_grain')
-        if wrd.generate_grain:
-            layout.prop(wrd, 'generate_grain_strength')
-        layout.prop(wrd, 'generate_fog')
-        if wrd.generate_fog:
-            layout.prop(wrd, 'generate_fog_color')
-            layout.prop(wrd, 'generate_fog_amounta')
-            layout.prop(wrd, 'generate_fog_amountb')
-        layout.prop(wrd, 'generate_fisheye')
-        layout.prop(wrd, 'generate_vignette')
-        layout.prop(wrd, 'generate_lens_texture')
+        layout.label('Compositor')
+        layout.prop(wrd, 'arm_letterbox')
+        layout.prop(wrd, 'arm_letterbox_size')
+        layout.prop(wrd, 'arm_grain')
+        layout.prop(wrd, 'arm_grain_strength')
+        layout.prop(wrd, 'arm_fog')
+        layout.prop(wrd, 'arm_fog_color')
+        layout.prop(wrd, 'arm_fog_amounta')
+        layout.prop(wrd, 'arm_fog_amountb')
+        layout.prop(wrd, 'arm_fisheye')
+        layout.prop(wrd, 'arm_vignette')
+        layout.prop(wrd, 'arm_lens_texture')
 
 class ArmGenLodButton(bpy.types.Operator):
     '''Automatically generate LoD levels'''
@@ -978,8 +953,8 @@ class ArmGenLodButton(bpy.types.Operator):
 
         # Clear
         mdata = context.object.data
-        mdata.lodlist_index = 0
-        mdata.my_lodlist.clear()
+        mdata.arm_lodlist_index = 0
+        mdata.arm_lodlist.clear()
 
         # Lod levels
         wrd = bpy.data.worlds['Arm']
@@ -1003,9 +978,9 @@ class ArmGenLodButton(bpy.types.Operator):
             
         # Screen sizes
         for level in range(0, num_levels):
-            mdata.my_lodlist.add()
-            mdata.my_lodlist[-1].name = self.lod_name(obj.name, level)
-            mdata.my_lodlist[-1].screen_size_prop = (1 - (1 / (num_levels + 1)) * level) - (1 / (num_levels + 1))
+            mdata.arm_lodlist.add()
+            mdata.arm_lodlist[-1].name = self.lod_name(obj.name, level)
+            mdata.arm_lodlist[-1].screen_size_prop = (1 - (1 / (num_levels + 1)) * level) - (1 / (num_levels + 1))
 
         return{'FINISHED'}
 
@@ -1027,17 +1002,17 @@ class ArmLodPanel(bpy.types.Panel):
         mdata = obj.data
 
         rows = 2
-        if len(mdata.my_lodlist) > 1:
+        if len(mdata.arm_lodlist) > 1:
             rows = 4
         
         row = layout.row()
-        row.template_list("MY_UL_LodList", "The_List", mdata, "my_lodlist", mdata, "lodlist_index", rows=rows)
+        row.template_list("ArmLodList", "The_List", mdata, "arm_lodlist", mdata, "arm_lodlist_index", rows=rows)
         col = row.column(align=True)
-        col.operator("my_lodlist.new_item", icon='ZOOMIN', text="")
-        col.operator("my_lodlist.delete_item", icon='ZOOMOUT', text="")
+        col.operator("arm_lodlist.new_item", icon='ZOOMIN', text="")
+        col.operator("arm_lodlist.delete_item", icon='ZOOMOUT', text="")
 
-        if mdata.lodlist_index >= 0 and len(mdata.my_lodlist) > 0:
-            item = mdata.my_lodlist[mdata.lodlist_index]
+        if mdata.arm_lodlist_index >= 0 and len(mdata.arm_lodlist) > 0:
+            item = mdata.arm_lodlist[mdata.arm_lodlist_index]
             row = layout.row()
             row.prop_search(item, "name", bpy.data, "objects", "Object")
             row = layout.row()
@@ -1052,7 +1027,7 @@ class ArmLodPanel(bpy.types.Panel):
             row.prop(wrd, 'arm_lod_gen_levels')
             row.prop(wrd, 'arm_lod_gen_ratio')
 
-        layout.prop(mdata, "lod_material")
+        layout.prop(mdata, "arm_lod_material")
 
 def register():
     bpy.utils.register_class(ObjectPropsPanel)

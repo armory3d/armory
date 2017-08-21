@@ -25,12 +25,11 @@ def get_signature(mat):
     if output_node != None:
         sign = traverse_tree(output_node, '')
         # Append flags
-        sign += '1' if mat.cast_shadow else '0'
-        sign += '1' if mat.overlay else '0'
-        sign += '1' if mat.override_cull_mode == 'Clockwise' else '0'
-        sign += '1' if mat.height_tess else '0'
-        sign += '1' if mat.height_tess_shadows else '0'
-        sign += '1' if mat.transluc_shadows else '0'
+        sign += '1' if mat.arm_cast_shadow else '0'
+        sign += '1' if mat.arm_overlay else '0'
+        sign += '1' if mat.arm_cull_mode == 'Clockwise' else '0'
+        sign += '1' if mat.arm_tess else '0'
+        sign += '1' if mat.arm_tess_shadows else '0'
         return sign
 
 def traverse_tree2(node, ar):

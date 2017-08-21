@@ -16,7 +16,7 @@ def make(context_id, rid):
     con_mesh = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
 
     if rid == 'forward':
-        if bpy.data.worlds['Arm'].material_model != 'Restricted':
+        if bpy.data.worlds['Arm'].arm_material_model != 'Restricted':
             make_forward(con_mesh)
         else:
             make_forward_restricted(con_mesh)
@@ -101,7 +101,7 @@ def make_base(con_mesh, parse_opacity):
 
         const = {}
         const['name'] = 'tessLevel'
-        const['vec2'] = [mat_state.material.height_tess_inner, mat_state.material.height_tess_outer]
+        const['vec2'] = [mat_state.material.arm_tess_inner, mat_state.material.arm_tess_outer]
         mat_state.bind_constants.append(const)
         tesc.add_uniform('vec2 tessLevel')
         make_tess.tesc_levels(tesc)
@@ -205,8 +205,8 @@ def write_norpos(con_mesh, vert, declare=False):
 def make_deferred(con_mesh):
     wrd = bpy.data.worlds['Arm']
 
-    discard_transparent = mat_state.material.discard_transparent
-    parse_opacity = discard_transparent or wrd.voxelgi_refraction
+    arm_discard = mat_state.material.arm_discard
+    parse_opacity = arm_discard or wrd.arm_voxelgi_refraction
 
     make_base(con_mesh, parse_opacity=parse_opacity)
 
@@ -214,8 +214,8 @@ def make_deferred(con_mesh):
     vert = con_mesh.vert
     tese = con_mesh.tese
 
-    if discard_transparent:
-        opac = mat_state.material.discard_transparent_opacity
+    if arm_discard:
+        opac = mat_state.material.arm_discard_transpa
         frag.write('if (opacity < {0}) discard;'.format(opac))
 
     gapi = arm.utils.get_gapi()
@@ -247,7 +247,7 @@ def make_deferred(con_mesh):
     # Pack gbuffer
     frag.add_include('../../Shaders/std/gbuffer.glsl')
 
-    if mat_state.material.two_sided_shading:
+    if mat_state.material.arm_two_sided:
         frag.add_uniform('vec3 v', link='_cameraLook')
         frag.write('if (dot(n, v) > 0.0) n = -n;')
 
@@ -261,7 +261,7 @@ def make_deferred(con_mesh):
     if '_SSS' in wrd.rp_defs:
         frag.add_uniform('int materialID')
         frag.write('fragColor[1] = vec4(basecol.rgb, materialID + clamp(occlusion, 0.0, 1.0 - 0.001));')
-    elif wrd.voxelgi_refraction:
+    elif wrd.arm_voxelgi_refraction:
         frag.write('fragColor[1] = vec4(basecol.rgb, opacity);')
     else:
         frag.write('fragColor[1] = vec4(basecol.rgb, occlusion);')
