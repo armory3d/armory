@@ -67,18 +67,8 @@ class RigidBody extends Trait {
 	public function init() {
 		if (ready) return;
 		ready = true;
-
+		
 		transform = object.transform;
-
-		// Parented rigid body - clear parent location
-		if (object.parent != null && object.parent.name != "") {
-			transform.loc.x += object.parent.transform.worldx();
-			transform.loc.y += object.parent.transform.worldy();
-			transform.loc.z += object.parent.transform.worldz();
-			transform.localOnly = true;
-			transform.buildMatrix();
-		}
-
 		physics = armory.trait.internal.PhysicsWorld.active;
 
 		var _shape:BtCollisionShapePointer = null;
@@ -130,9 +120,9 @@ class RigidBody extends Trait {
 		var _transform = BtTransform.create();
 		_transform.setIdentity();
 		_transform.setOrigin(BtVector3.create(
-			transform.loc.x,
-			transform.loc.y,
-			transform.loc.z));
+			transform.worldx(),
+			transform.worldy(),
+			transform.worldz()));
 		_transform.setRotation(BtQuaternion.create(
 			transform.rot.x,
 			transform.rot.y,
@@ -252,7 +242,7 @@ class RigidBody extends Trait {
 
 	public function syncTransform() {
 		var trans = BtTransform.create();
-		trans.setOrigin(BtVector3.create(transform.loc.x, transform.loc.y, transform.loc.z));
+		trans.setOrigin(BtVector3.create(transform.worldx(), transform.worldy(), transform.worldz()));
 		trans.setRotation(BtQuaternion.create(transform.rot.x, transform.rot.y, transform.rot.z, transform.rot.w));
 		body.setCenterOfMassTransform(trans);
 		// _motionState.getWorldTransform(trans);
