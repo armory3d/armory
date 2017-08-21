@@ -112,14 +112,14 @@ def build_node_tree(world):
 
     if voxelgi:
         assets.add_khafile_def('arm_voxelgi')
-        if wrd.arm_voxelgi_revoxelize:
+        if rpdat.arm_voxelgi_revoxelize:
             assets.add_khafile_def('arm_voxelgi_revox')
-        if wrd.arm_voxelgi_camera:
+        if rpdat.arm_voxelgi_camera:
             wrd.world_defs += '_VoxelGICam'
-        if wrd.arm_voxelgi_shadows:
+        if rpdat.arm_voxelgi_shadows:
             wrd.world_defs += '_VoxelGIDirect'
             wrd.world_defs += '_VoxelGIShadow'
-        if wrd.arm_voxelgi_refraction:
+        if rpdat.arm_voxelgi_refraction:
             wrd.world_defs += '_VoxelGIDirect'
             wrd.world_defs += '_VoxelGIRefract'
         wrd.world_defs += '_VoxelGI'

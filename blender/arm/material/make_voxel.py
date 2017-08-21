@@ -1,4 +1,5 @@
 import bpy
+import arm.utils
 import arm.material.cycles as cycles
 import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
@@ -45,7 +46,7 @@ def make(context_id):
     frag.add_include('../../Shaders/std/imageatomic.glsl')
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
 
-    # rpdat = arm.utils.get_rp()
+    rpdat = arm.utils.get_rp()
     # if rpdat.rp_voxelgi_hdr:
         # frag.add_uniform('layout(RGBA16) image3D voxels')
     # else:
@@ -61,7 +62,7 @@ def make(context_id):
     frag.write('float roughness;') #
     frag.write('float metallic;') #
     frag.write('float occlusion;') #
-    parse_opacity = wrd.arm_voxelgi_refraction
+    parse_opacity = rpdat.arm_voxelgi_refraction
     if parse_opacity:
         frag.write('float opacity;')
     frag.write_pre = True
@@ -76,7 +77,7 @@ def make(context_id):
         frag.write('vec3 n;')
         frag.write_pre = False
 
-    if wrd.arm_voxelgi_camera:
+    if rpdat.arm_voxelgi_camera:
         vert.add_uniform('vec3 eye', '_cameraPosition')
     vert.add_uniform('mat4 W', '_worldMatrix')
     vert.add_uniform('mat3 N', '_normalMatrix')
@@ -90,7 +91,7 @@ def make(context_id):
         vert.add_out('vec2 texCoordGeom')
         vert.write('texCoordGeom = tex;')
 
-    if wrd.arm_voxelgi_camera:
+    if rpdat.arm_voxelgi_camera:
         vert.write('const float step = voxelgiDimensions / voxelgiResolution;') # TODO: Pass as uniform
         vert.write('vec3 eyeSnap = ivec3(eye / step) * step;') # TODO: Pass as uniform
         vert.write('wpositionGeom = (vec3(W * vec4(pos, 1.0)) - eyeSnap) / voxelgiDimensions;')
@@ -140,7 +141,7 @@ def make(context_id):
         frag.write('vec3 color = basecol * visibility * lightColor * dotNL * attenuate(distance(wposition * voxelgiDimensions, lightPos));')
     frag.write('vec3 voxel = wposition * 0.5 + vec3(0.5);')
 
-    if wrd.arm_material_model == 'Cycles':
+    if rpdat.arm_material_model == 'Cycles':
         frag.write('color = min(color * 0.9, vec3(0.9)) + min(color / 200.0, 0.1);') # Higher range to allow emission
 
     # if rpdat.rp_voxelgi_hdr:
