@@ -787,6 +787,8 @@ class ArmoryRenderButton(bpy.types.Operator):
         rpdat = arm.utils.get_rp()
         if rpdat.rp_rendercapture == False:
             rpdat.rp_rendercapture = True
+        if rpdat.rp_antialiasing != 'TAA':
+            rpdat.rp_antialiasing = 'TAA'
         assets.invalidate_enabled = False
         make.get_render_result()
         assets.invalidate_enabled = True
