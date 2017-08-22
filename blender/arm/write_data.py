@@ -281,8 +281,8 @@ def write_indexhtml(w, h):
 """)
 
 def write_compiledglsl():
-    clip_start = bpy.data.cameras[0].clip_start # Same clip values for all cameras for now
-    clip_end = bpy.data.cameras[0].clip_end
+    clip_start = bpy.data.cameras[0].clip_start if len(bpy.data.cameras) > 0 else 0.1 # Same clip values for all cameras for now
+    clip_end = bpy.data.cameras[0].clip_end if len(bpy.data.cameras) > 0 else 200.0
     wrd = bpy.data.worlds['Arm']
     shadowmap_size = wrd.arm_shadowmap_size_cache
     rpdat = arm.utils.get_rp()
@@ -379,7 +379,7 @@ const float compoFogAmountB = """ + str(round(wrd.arm_fog_amountb * 100) / 100) 
 const vec3 compoFogColor = vec3(""" + str(round(wrd.arm_fog_color[0] * 100) / 100) + """, """ + str(round(wrd.arm_fog_color[1] * 100) / 100) + """, """ + str(round(wrd.arm_fog_color[2] * 100) / 100) + """);
 """)
 
-        if bpy.data.cameras[0].dof_distance > 0.0:
+        if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].dof_distance > 0.0:
             f.write(
 """const float compoDOFDistance = """ + str(round(bpy.data.cameras[0].dof_distance * 100) / 100) + """;
 const float compoDOFFstop = """ + str(round(bpy.data.cameras[0].gpu_dof.fstop * 100) / 100) + """;

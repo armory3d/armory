@@ -2136,12 +2136,8 @@ class ArmoryExporter:
         self.output['lamp_datas'].append(o)
 
     def export_camera(self, objectRef):
-        # This function exports a single camera object
         o = {}
         o['name'] = objectRef[1]["structName"]
-
-        #self.WriteNodeTable(objectRef)
-
         objref = objectRef[0]
 
         o['near_plane'] = objref.clip_start
@@ -2177,6 +2173,10 @@ class ArmoryExporter:
             col = background_node.inputs[0].default_value
             strength = background_node.inputs[1].default_value
             o['clear_color'] = [col[0] * strength, col[1] * strength, col[2] * strength, col[3]]
+            o['clear_color'][0] = max(min(o['clear_color'][0], 1.0), 0.0)
+            o['clear_color'][1] = max(min(o['clear_color'][1], 1.0), 0.0)
+            o['clear_color'][2] = max(min(o['clear_color'][2], 1.0), 0.0)
+            o['clear_color'][3] = max(min(o['clear_color'][3], 1.0), 0.0)
         else:
             o['clear_color'] = [0.0, 0.0, 0.0, 1.0]
 
@@ -2554,6 +2554,53 @@ class ArmoryExporter:
         
         if not self.camera_spawned:
             log.warn('No camera found in active scene layers')
+
+        if len(self.output['camera_datas']) == 0:
+            log.warn('Creating default camera')
+            o = {}
+            o['name'] = 'DefaultCamera'
+            o['near_plane'] = 0.1
+            o['far_plane'] = 200.0
+            o['fov'] = 0.85
+            if ArmoryExporter.in_viewport:
+                pw = self.get_viewport_panels_w()
+                proj, is_persp = self.get_viewport_projection_matrix()
+                if pw == 0 and is_persp:
+                    o['projection'] = self.write_matrix(proj)
+                    o['projection'][5] = 2.027726888656616 # Wrong val returned when no camera present?
+            o['type'] = 'perspective'
+            o['frustum_culling'] = True
+            o['render_path'] = 'armory_default/armory_default'
+            o['clear_color'] = [0.0, 0.0, 0.0, 1.0]
+            self.output['camera_datas'].append(o)
+            o = {}
+            o['name'] = 'DefaultCamera'
+            o['type'] = 'camera_object'
+            o['data_ref'] = 'DefaultCamera'
+            o['material_refs'] = []
+            o['transform'] = {}
+            viewport_matrix = self.get_viewport_view_matrix()
+            if viewport_matrix != None:
+                o['transform']['values'] = self.write_matrix(viewport_matrix.inverted())
+                o['local_transform_only'] = True
+            else:
+                o['transform']['values'] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+            o['traits'] = []
+            # Debug console enabled, attach console overlay to each camera
+            if bpy.data.worlds['Arm'].arm_play_console:
+                ArmoryExporter.export_ui = True
+                console_trait = {}
+                console_trait['type'] = 'Script'
+                console_trait['class_name'] = 'armory.trait.internal.DebugConsole'
+                console_trait['parameters'] = []
+                o['traits'].append(console_trait)
+            navigation_trait = {}
+            navigation_trait['type'] = 'Script'
+            navigation_trait['class_name'] = 'armory.trait.WalkNavigation'
+            navigation_trait['parameters'] = [str(arm.utils.get_ease_viewport_camera()).lower()]
+            o['traits'].append(navigation_trait)
+            self.output['objects'].append(o)
+            self.output['camera_ref'] = 'DefaultCamera'
 
         if self.restoreFrame:
             self.scene.frame_set(originalFrame, originalSubframe)

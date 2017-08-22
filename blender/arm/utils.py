@@ -307,12 +307,6 @@ def check_saved(self):
         return False
     return True
 
-def check_camera(self):
-    if len(bpy.data.cameras) == 0:
-        self.report({"ERROR"}, "No camera found in scene")
-        return False
-    return True
-
 def check_sdkpath(self):
     s = get_sdk_path()
     for c in r'[];><&*%=+@!#^()|?^':

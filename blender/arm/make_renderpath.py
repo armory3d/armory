@@ -248,7 +248,7 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     if wrd.arm_fog:
         compositor_defs += '_CFog'
         # compo_pos = True
-    if bpy.data.cameras[0].dof_distance > 0.0:
+    if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].dof_distance > 0.0:
         compositor_defs += '_CDOF'
         compo_depth = True
     # if compo_pos:

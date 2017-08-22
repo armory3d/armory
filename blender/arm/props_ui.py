@@ -512,9 +512,6 @@ class ArmoryPlayButton(bpy.types.Operator):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
 
-        if not arm.utils.check_camera(self):
-            return {"CANCELLED"}
-
         if not arm.utils.check_sdkpath(self):
             return {"CANCELLED"}
 
@@ -543,9 +540,6 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
             return {"CANCELLED"}
 
         if not arm.utils.check_saved(self):
-            return {"CANCELLED"}
-
-        if not arm.utils.check_camera(self):
             return {"CANCELLED"}
 
         if not arm.utils.check_sdkpath(self):
@@ -598,9 +592,6 @@ class ArmoryBuildButton(bpy.types.Operator):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
 
-        if not arm.utils.check_camera(self):
-            return {"CANCELLED"}
-
         if not arm.utils.check_sdkpath(self):
             return {"CANCELLED"}
 
@@ -624,9 +615,6 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
  
     def execute(self, context):
         if not arm.utils.check_saved(self):
-            return {"CANCELLED"}
-
-        if not arm.utils.check_camera(self):
             return {"CANCELLED"}
 
         if not arm.utils.check_sdkpath(self):
@@ -745,9 +733,6 @@ class ArmoryPublishButton(bpy.types.Operator):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
 
-        if not arm.utils.check_camera(self):
-            return {"CANCELLED"}
-
         if not arm.utils.check_sdkpath(self):
             return {"CANCELLED"}
 
@@ -781,9 +766,6 @@ class ArmoryRenderButton(bpy.types.Operator):
  
     def execute(self, context):
         if not arm.utils.check_saved(self):
-            return {"CANCELLED"}
-
-        if not arm.utils.check_camera(self):
             return {"CANCELLED"}
 
         if not arm.utils.check_sdkpath(self):

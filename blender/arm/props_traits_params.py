@@ -46,6 +46,8 @@ class ArmTraitParamListDeleteItem(bpy.types.Operator):
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list """
+        if bpy.context.object == None:
+            return False
         if len(context.object.arm_traitlist) == 0:
             return False
         trait = context.object.arm_traitlist[context.object.arm_traitlist_index]
@@ -79,6 +81,8 @@ class ArmTraitParamListMoveItem(bpy.types.Operator):
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list. """
+        if bpy.context.object == None:
+            return False
         if len(context.object.arm_traitlist) == 0:
             return False
         trait = context.object.arm_traitlist[context.object.arm_traitlist_index]

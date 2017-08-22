@@ -130,6 +130,8 @@ class ArmTraitListDeleteItem(bpy.types.Operator):
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list """
+        if bpy.context.object == None:
+            return False
         return len(bpy.context.object.arm_traitlist) > 0
 
     def execute(self, context):
@@ -156,6 +158,8 @@ class ArmTraitListMoveItem(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
+        if bpy.context.object == None:
+            return False
         """ Enable if there's something in the list. """
         return len(bpy.context.object.arm_traitlist) > 0
 
