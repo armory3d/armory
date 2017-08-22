@@ -62,15 +62,50 @@ class DebugConsole extends Trait {
 		path = cast(object, CameraObject).renderPath;
 	}
 
+	static var lrow = [1/2, 1/2];
+	@:access(zui.Zui)
 	function render2D(g:kha.graphics2.Graphics) {
 		g.end();
 		ui.begin(g);
 		var hwin = Id.handle();
-		if (ui.window(hwin, 0, 0, 250, iron.App.h(), true)) {
-			ui.text('Console: ' + lastTrace);
+		if (ui.window(hwin, 0, 0, 280, iron.App.h(), true)) {
+
+			var numObjects = iron.Scene.active.meshes.length;
+			var htab = Id.handle({position: 1});
+			if (ui.tab(htab, '')) {}
+			if (ui.tab(htab, 'Inspector')) {
+				ui.text('Console: ' + lastTrace);
+				var i = 0;
+				function drawList(h:Handle, o:iron.object.Object) {
+					ui.row(lrow);
+					var b = false;
+					if (o.children.length > 0) {
+						b = ui.panel(h.nest(i, {selected: true}), o.name, 0, true);
+					}
+					else {
+						ui._x += 18; // Sign offset
+						ui.text(o.name);
+						ui._x -= 18;
+					}
+					ui.text('(' + Std.int(o.transform.worldx() * 10) / 10 + ', ' + Std.int(o.transform.worldy() * 10) / 10 + ', ' + Std.int(o.transform.worldz() * 10) / 10 + ')', Align.Right);
+					i++;
+					if (b) {
+						for (c in o.children) {
+							ui.indent();
+							drawList(h, c);
+							ui.unindent();
+						}
+					}
+				}
+				for (c in iron.Scene.active.root.children) {
+					drawList(Id.handle(), c);
+				}
+			}
+
 			var avg = Math.round(frameTimeAvg * 10000) / 10;
 			var fpsAvg = avg > 0 ? Math.round(1000 / avg) : 0;
-			if (ui.panel(Id.handle(), 'Profile ($avg ms / $fpsAvg fps)')) {
+			if (ui.tab(htab, '$avg ms')) {
+				// ui.check(Id.handle(), "Show empties");
 				var avgMin = Math.round(frameTimeAvgMin * 10000) / 10;
 				var avgMax = Math.round(frameTimeAvgMax * 10000) / 10;
 				ui.text('frame (min/max): $avgMin/$avgMax');
@@ -84,12 +119,8 @@ class DebugConsole extends Trait {
 				ui.text('- anim: ' + Math.round(animTimeAvg * 10000) / 10);
 				// ui.text('mem: ' + Std.int(getMem() / 1024 / 1024));
 				ui.unindent();
-			}
-			ui.separator();
 
-			var dcalls = RenderPath.drawCalls;
-			var numObjects = iron.Scene.active.meshes.length;
-			if (ui.panel(Id.handle(), 'Render Path ($dcalls draw calls)')) {
+				ui.text('draw calls: ' + RenderPath.drawCalls);
 				ui.text('tris mesh: ' + RenderPath.numTrisMesh);
 				ui.text('tris shadow: ' + RenderPath.numTrisShadow);
 				#if arm_batch
@@ -105,22 +136,6 @@ class DebugConsole extends Trait {
 				ui.text('render targets: ' + (rts != null ? rts.length : 0));
 			}
 			ui.separator();
-
-			if (ui.panel(Id.handle(), 'Inspector ($numObjects meshes)')) {	
-				ui.text('name (pos) - screen size');
-				function drawList(h:Handle, objs:Array<iron.object.Object>) {
-					for (i in 0...objs.length) {
-						var o = objs[i];
-						var text = o.name + ' (' + Std.int(o.transform.worldx() * 100) / 100 + ', ' + Std.int(o.transform.worldy() * 100) / 100 + ', ' + Std.int(o.transform.worldz() * 100) / 100 + ')';
-						if (Std.is(o, MeshObject)) text += ' - ' + Std.int(cast(o, MeshObject).screenSize * 100) / 100;
-						o.visible = ui.check(h.nest(i, {selected: o.visible}), text);
-					}
-				}
-				drawList(Id.handle(), cast iron.Scene.active.meshes);
-				drawList(Id.handle(), cast iron.Scene.active.lamps);
-				drawList(Id.handle(), cast iron.Scene.active.cameras);
-				drawList(Id.handle(), cast iron.Scene.active.speakers);
-			}
 		}
 		ui.end();
 
