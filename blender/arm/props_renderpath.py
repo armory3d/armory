@@ -134,6 +134,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_greasepencil = bpy.props.BoolProperty(name="Grease Pencil", description="Render Grease Pencil data", default=False, update=update_renderpath)
     rp_ocean = bpy.props.BoolProperty(name="Ocean", description="Ocean pass", default=False, update=update_renderpath)
     rp_voxelgi = bpy.props.BoolProperty(name="Voxel GI", description="Voxel-based Global Illumination", default=False, update=update_renderpath)
+    rp_voxelao = bpy.props.BoolProperty(name="Voxel AO", description="Voxel-based Ambient Occlussion", default=False, update=update_renderpath)
     rp_voxelgi_resolution = bpy.props.EnumProperty(
         items=[('32', '32', '32'),
                ('64', '64', '64'),

@@ -112,3 +112,44 @@ vec3 traceRefraction(const vec3 pos, const vec3 normal, const vec3 viewDir, cons
 	const float offset = 3 * VOXEL_SIZE;
 	return transmittance * traceCone(pos, refraction, specularAperture, MAX_DISTANCE, offset).xyz;
 }
+
+float traceConeAO(const vec3 origin, vec3 dir, float aperture, const float maxDist, const float offset) {
+	dir = normalize(dir);
+	float sampleCol = 0.0;
+	float dist = offset;
+	float diam = dist * aperture;
+	vec3 samplePos = dir * dist + origin;
+	while (sampleCol < 1.0 && dist < maxDist) {
+		float mip = max(log2(diam * voxelgiResolution), 0);
+		float mipSample = textureLod(voxels, samplePos * 0.5 + vec3(0.5), mip).r;
+		sampleCol += (1 - sampleCol) * mipSample;
+		dist += max(diam / 2, VOXEL_SIZE);
+		diam = dist * aperture;
+		samplePos = dir * dist + origin;
+	}
+	return sampleCol;
+}
+
+float traceAO(const vec3 origin, const vec3 normal) {
+	const float TAN_22_5 = 0.55785173935;
+	const float angleMix = 0.5f;
+	const float aperture = TAN_22_5;
+	const vec3 o1 = normalize(tangent(normal));
+	const vec3 o2 = normalize(cross(o1, normal));
+	const vec3 c1 = 0.5f * (o1 + o2);
+	const vec3 c2 = 0.5f * (o1 - o2);
+	const float offset = 3 * VOXEL_SIZE;
+	// Normal direction
+	float col = traceConeAO(origin, normal, aperture, MAX_DISTANCE, offset);
+	// 4 side cones
+	col += traceConeAO(origin, mix(normal, o1, angleMix), aperture, MAX_DISTANCE, offset);
+	col += traceConeAO(origin, mix(normal, -o1, angleMix), aperture, MAX_DISTANCE, offset);
+	col += traceConeAO(origin, mix(normal, o2, angleMix), aperture, MAX_DISTANCE, offset);
+	col += traceConeAO(origin, mix(normal, -o2, angleMix), aperture, MAX_DISTANCE, offset);
+	// 4 corners
+	col += traceConeAO(origin, mix(normal, c1, angleMix), aperture, MAX_DISTANCE, offset);
+	col += traceConeAO(origin, mix(normal, -c1, angleMix), aperture, MAX_DISTANCE, offset);
+	col += traceConeAO(origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE, offset);
+	col += traceConeAO(origin, mix(normal, -c2, angleMix), aperture, MAX_DISTANCE, offset);
+	return col / 9.0;
+}

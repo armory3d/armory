@@ -5,6 +5,13 @@ import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
 
 def make(context_id):
+    rpdat = arm.utils.get_rp()
+    if rpdat.rp_voxelgi:
+        return make_gi(context_id)
+    else:
+        return make_ao(context_id)
+
+def make_gi(context_id):
     con_voxel = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'always', 'cull_mode': 'none', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False, 'conservative_raster': True })
     wrd = bpy.data.worlds['Arm']
 
@@ -189,5 +196,62 @@ def make(context_id):
     # frag.write('    curValF.xyz /= (curValF.w);')
     # frag.write('    newVal = convVec4ToRGBA8(curValF);')
     # frag.write('}')
+
+    return con_voxel
+
+def make_ao(context_id):
+    con_voxel = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'always', 'cull_mode': 'none', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False, 'conservative_raster': True })
+    wrd = bpy.data.worlds['Arm']
+
+    vert = con_voxel.make_vert()
+    frag = con_voxel.make_frag()
+    geom = con_voxel.make_geom()
+    tesc = None
+    tese = None
+
+    geom.ins = vert.outs
+    frag.ins = geom.outs
+
+    frag.add_include('../../Shaders/compiled.glsl')
+    frag.add_include('../../Shaders/std/math.glsl')
+    frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
+
+    rpdat = arm.utils.get_rp()
+    frag.add_uniform('layout(RGBA8) image3D voxels')
+    # frag.add_uniform('layout(R8) image3D voxels')
+
+    frag.write('if (!isInsideCube(wposition)) return;')
+
+    if rpdat.arm_voxelgi_camera:
+        vert.add_uniform('vec3 eye', '_cameraPosition')
+    vert.add_uniform('mat4 W', '_worldMatrix')
+
+    vert.add_out('vec3 wpositionGeom')
+
+    vert.add_include('../../Shaders/compiled.glsl')
+    vert.write('wpositionGeom = vec3(W * vec4(pos, 1.0)) / voxelgiDimensions;')
+    vert.write('gl_Position = vec4(0.0, 0.0, 0.0, 1.0);')
+
+    geom.add_out('vec3 wposition')
+    geom.write('const vec3 p1 = wpositionGeom[1] - wpositionGeom[0];')
+    geom.write('const vec3 p2 = wpositionGeom[2] - wpositionGeom[0];')
+    geom.write('const vec3 p = abs(cross(p1, p2));')
+    geom.write('for (uint i = 0; i < 3; ++i) {')
+    geom.write('    wposition = wpositionGeom[i];')
+    geom.write('    if (p.z > p.x && p.z > p.y) {')
+    geom.write('        gl_Position = vec4(wposition.x, wposition.y, 0.0, 1.0);')
+    geom.write('    }')
+    geom.write('    else if (p.x > p.y && p.x > p.z) {')
+    geom.write('        gl_Position = vec4(wposition.y, wposition.z, 0.0, 1.0);')
+    geom.write('    }')
+    geom.write('    else {')
+    geom.write('        gl_Position = vec4(wposition.x, wposition.z, 0.0, 1.0);')
+    geom.write('    }')
+    geom.write('    EmitVertex();')
+    geom.write('}')
+    geom.write('EndPrimitive();')
+
+    frag.write('vec3 voxel = wposition * 0.5 + vec3(0.5);')
+    frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(1.0));')
 
     return con_voxel

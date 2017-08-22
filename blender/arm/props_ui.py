@@ -883,6 +883,8 @@ class ArmRenderPathPanel(bpy.types.Panel):
             layout.prop(rpdat, "rp_stereo")
             layout.prop(rpdat, "rp_greasepencil")
             layout.prop(rpdat, 'rp_voxelgi')
+            if not rpdat.rp_voxelgi:
+                layout.prop(rpdat, 'rp_voxelao')
             layout.prop(rpdat, 'rp_voxelgi_resolution')
             layout.prop(rpdat, 'arm_voxelgi_dimensions')
             layout.prop(rpdat, 'arm_voxelgi_revoxelize')

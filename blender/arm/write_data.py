@@ -385,7 +385,7 @@ const float compoDOFFstop = """ + str(round(bpy.data.cameras[0].gpu_dof.fstop * 
 const float compoDOFLength = 160.0;
 """) # str(round(bpy.data.cameras[0].lens * 100) / 100)
 
-        if rpdat.rp_voxelgi:
+        if rpdat.rp_voxelgi or rpdat.rp_voxelao:
             f.write(
 """const float voxelgiResolution = """ + str(rpdat.rp_voxelgi_resolution) + """;
 const float voxelgiDimensions = """ + str(round(rpdat.arm_voxelgi_dimensions)) + """;

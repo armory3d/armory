@@ -93,11 +93,14 @@ def build_node_tree(world):
         assets.add_embedded_data('iestexture.png')
 
     voxelgi = False
+    voxelao = False
     if rpdat.rp_shadowmap == 'None':
         wrd.world_defs += '_NoShadows'
         assets.add_khafile_def('arm_no_shadows')
     if rpdat.rp_voxelgi:
         voxelgi = True
+    elif rpdat.rp_voxelao:
+        voxelao = True
     if rpdat.rp_dfrs:
         wrd.world_defs += '_DFRS'
         assets.add_khafile_def('arm_sdf')
@@ -124,6 +127,13 @@ def build_node_tree(world):
             wrd.world_defs += '_VoxelGIRefract'
         wrd.world_defs += '_VoxelGI'
         wrd.world_defs += '_Rad' # Always do radiance for voxels
+        wrd.world_defs += '_Irr'
+    elif voxelao:
+        assets.add_khafile_def('arm_voxelgi')
+        if rpdat.arm_voxelgi_revoxelize:
+            assets.add_khafile_def('arm_voxelgi_revox')
+        wrd.world_defs += '_VoxelAO'
+        wrd.world_defs += '_Rad'
         wrd.world_defs += '_Irr'
 
     if arm.utils.get_gapi().startswith('direct3d'): # Flip Y axis in drawQuad command

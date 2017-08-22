@@ -39,7 +39,7 @@ def get_rpasses(material):
         ar.append('mesh')
         for con in add_mesh_contexts:
             ar.append(con)
-        if rpdat.rp_voxelgi:
+        if rpdat.rp_voxelgi or rpdat.rp_voxelao:
             ar.append('voxel')
         if rpdat.rp_renderer == 'Deferred Plus':
             ar.append('rect')
