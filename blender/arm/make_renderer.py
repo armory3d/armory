@@ -35,8 +35,7 @@ def set_preset(self, context, preset):
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
         rpdat.rp_hdr = False
-        rpdat.rp_world = False
-        rpdat.rp_clearbackground = True
+        rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
         rpdat.rp_greasepencil = False
         rpdat.rp_voxelgi = False
@@ -63,8 +62,7 @@ def set_preset(self, context, preset):
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
         rpdat.rp_hdr = True
-        rpdat.rp_world = True
-        rpdat.rp_clearbackground = False
+        rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
         rpdat.rp_greasepencil = False
         rpdat.rp_voxelgi = False
@@ -91,8 +89,7 @@ def set_preset(self, context, preset):
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
         rpdat.rp_hdr = True
-        rpdat.rp_world = True
-        rpdat.rp_clearbackground = False
+        rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
         rpdat.rp_greasepencil = False
         rpdat.rp_voxelgi = False
@@ -119,8 +116,7 @@ def set_preset(self, context, preset):
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
         rpdat.rp_hdr = True
-        rpdat.rp_world = True
-        rpdat.rp_clearbackground = False
+        rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
         rpdat.rp_greasepencil = False
         rpdat.rp_voxelgi = False
@@ -146,8 +142,7 @@ def set_preset(self, context, preset):
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
         rpdat.rp_hdr = True
-        rpdat.rp_world = True
-        rpdat.rp_clearbackground = False
+        rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
         rpdat.rp_greasepencil = False
         rpdat.rp_voxelgi = True
@@ -178,8 +173,7 @@ def set_preset(self, context, preset):
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
         rpdat.rp_hdr = True
-        rpdat.rp_world = True
-        rpdat.rp_clearbackground = False
+        rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
         rpdat.rp_greasepencil = False
         rpdat.rp_voxelgi = False
@@ -206,8 +200,7 @@ def set_preset(self, context, preset):
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
         rpdat.rp_hdr = False
-        rpdat.rp_world = False
-        rpdat.rp_clearbackground = True
+        rpdat.rp_background = 'World'
         rpdat.rp_stereo = True
         rpdat.rp_greasepencil = False
         rpdat.rp_voxelgi = False
@@ -234,8 +227,7 @@ def set_preset(self, context, preset):
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
         rpdat.rp_hdr = False
-        rpdat.rp_world = False
-        rpdat.rp_clearbackground = True
+        rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
         rpdat.rp_greasepencil = False
         rpdat.rp_voxelgi = False
@@ -262,8 +254,7 @@ def set_preset(self, context, preset):
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
         rpdat.rp_hdr = False
-        rpdat.rp_world = False
-        rpdat.rp_clearbackground = True
+        rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
         rpdat.rp_greasepencil = True
         rpdat.rp_render_to_texture = False
@@ -355,14 +346,14 @@ def make_forward(rpdat):
             links.new(nodes['Clear Target Mesh'].outputs[0], nodes['Draw Grease Pencil'].inputs[0])
         links.new(nodes['Draw Grease Pencil'].outputs[0], nodes['Draw Meshes Mesh'].inputs[0])
 
-    if not rpdat.rp_world:
+    if rpdat.rp_background != 'World':
         relink('Draw World', 'Set Target Accum')
-        if rpdat.rp_clearbackground:
+        if rpdat.rp_background == 'Clear':
             nodes['Clear Target Mesh'].inputs[1].default_value = True
 
     if not rpdat.rp_render_to_texture:
         links.new(nodes['Framebuffer'].outputs[0], nodes['Set Target Mesh'].inputs[1])
-        if rpdat.rp_world:
+        if rpdat.rp_background == 'World':
             l = nodes['Draw World'].outputs[0].links[0]
         elif rpdat.rp_greasepencil:
             l = nodes['Draw Grease Pencil'].outputs[0].links[0]
@@ -447,9 +438,9 @@ def make_deferred(rpdat):
         l = nodes['Deferred Indirect'].inputs[3].links[0]
         links.remove(l)
 
-    if not rpdat.rp_world:
+    if rpdat.rp_background != 'World':
         relink('Draw World', 'Water')
-        if rpdat.rp_clearbackground:
+        if rpdat.rp_background == 'Clear':
             nodes['Clear Target Mesh'].inputs[1].default_value = True
 
     if not rpdat.rp_ocean:

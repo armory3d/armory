@@ -857,11 +857,8 @@ class ArmRenderPathPanel(bpy.types.Panel):
             layout.prop(rpdat, "rp_overlays_state")
             layout.prop(rpdat, "rp_decals_state")
             layout.prop(rpdat, "rp_sss_state")
+            layout.prop(rpdat, "rp_background")
             layout.prop(rpdat, "rp_hdr")
-            layout.prop(rpdat, "rp_world")
-            col = layout.column()
-            col.enabled = not rpdat.rp_world
-            col.prop(rpdat, "rp_clearbackground")
             layout.prop(rpdat, "rp_stereo")
             layout.prop(rpdat, "rp_greasepencil")
             layout.prop(rpdat, 'rp_voxelgi')

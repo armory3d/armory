@@ -67,7 +67,7 @@ class DebugConsole extends Trait {
 		ui.begin(g);
 		var hwin = Id.handle();
 		if (ui.window(hwin, 0, 0, 250, iron.App.h(), true)) {
-			ui.text('Console ' + lastTrace);
+			ui.text('Console: ' + lastTrace);
 			var avg = Math.round(frameTimeAvg * 10000) / 10;
 			var fpsAvg = avg > 0 ? Math.round(1000 / avg) : 0;
 			if (ui.panel(Id.handle(), 'Profile ($avg ms / $fpsAvg fps)')) {

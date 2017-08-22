@@ -65,8 +65,12 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_depthprepass = bpy.props.BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=False, update=update_renderpath)
     rp_hdr = bpy.props.BoolProperty(name="HDR", description="Render in HDR Space", default=True, update=update_renderpath)
     rp_render_to_texture = bpy.props.BoolProperty(name="Post Process", description="Render scene to texture for further processing", default=True, update=update_renderpath)
-    rp_world = bpy.props.BoolProperty(name="World", description="Draw world nodes", default=True, update=update_renderpath)
-    rp_clearbackground = bpy.props.BoolProperty(name="Clear", description="Clear background with solid color", default=False, update=update_renderpath)
+    rp_background = EnumProperty(
+      items=[('World', 'World', 'World'),
+             ('Clear', 'Clear', 'Clear'),
+             ('None', 'None', 'None'),
+      ],
+      name="Background", description="Background type", default='World', update=update_renderpath)    
     rp_compositornodes = bpy.props.BoolProperty(name="Compositor", description="Draw compositor nodes", default=True, update=update_renderpath)
     rp_shadowmap = EnumProperty(
         items=[('None', 'None', 'None'),

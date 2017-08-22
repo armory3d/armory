@@ -115,8 +115,9 @@ class ArmExporterList(bpy.types.UIList):
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             row = layout.row()
             row.prop(item, "name", text="", emboss=False, icon=custom_icon)
-            row.alignment = 'RIGHT'
-            row.label(item.arm_project_target)
+            col = row.column()
+            col.alignment = 'RIGHT'
+            col.label(item.arm_project_target)
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'

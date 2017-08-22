@@ -45,8 +45,9 @@ class ArmLodList(bpy.types.UIList):
                 name = 'None'
             row = layout.row()
             row.label(name, icon=custom_icon)
-            row.alignment = 'RIGHT'
-            row.label("{:.2f}".format(item.screen_size_prop))
+            col = row.column()
+            col.alignment = 'RIGHT'
+            col.label("{:.2f}".format(item.screen_size_prop))
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
