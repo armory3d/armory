@@ -31,8 +31,8 @@ def make_rect(con_rect):
     vert.add_uniform('vec3 eye', link='_cameraPosition')
     vert.write('const vec2 madd = vec2(0.5, 0.5);') 
     vert.write('texCoordRect = pos.xy * madd + madd;')
-    # vert.write('const float fstep = 1.0 / 16777216.0; // 24bit')
-    vert.write('const float fstep = 1.0 / 65536.0; // 16bit')
+    vert.write('const float fstep = 1.0 / 16777216.0; // 24bit')
+    # vert.write('const float fstep = 1.0 / 65536.0; // 16bit')
     vert.write('gl_Position = vec4(pos.xy, (materialID * fstep) * 2.0 - 1.0, 1.0);')
     vert.write('vec4 v = vec4(pos.xy, 1.0, 1.0);')
     vert.write('v = vec4(invVP * v);')
@@ -60,6 +60,8 @@ def make_rect(con_rect):
     frag.add_uniform('vec3 eyeLook', link='_cameraLook')
     frag.add_uniform('vec3 lightPos', link='_lampPosition')
     frag.add_uniform('vec3 lightColor', link='_lampColor')
+    frag.add_uniform('int lightShadow', link='_lampCastShadow')
+    frag.add_uniform('vec2 lightPlane', link='_lampPlane')
     frag.add_uniform('float shadowsBias', link='_lampShadowsBias')
     # TODO: ifdef
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
@@ -105,9 +107,14 @@ def make_rect(con_rect):
     frag.write('vec3 f0 = surfaceF0(basecol, metallic);')
 
     # Shadows
-    frag.write('vec4 lampPos = LWVP * vec4(wposition, 1.0);')
-    frag.write('lampPos.xyz /= lampPos.w;')
-    frag.write('visibility = PCF(lampPos.xy, lampPos.z - shadowsBias);')
+    frag.write('if (lightShadow == 1) {')
+    frag.write('    vec4 lPos = LWVP * vec4(wposition, 1.0);')
+    frag.write('    lPos.xyz /= lPos.w;')
+    frag.write('    if (lPos.x > 0.0 && lPos.y > 0.0 && lPos.x < 1.0 && lPos.y < 1.0) visibility = PCF(lPos.xy, lPos.z - shadowsBias);;')
+    frag.write('}')
+    frag.write('else if (lightShadow == 2) {')
+    frag.write('    visibility = PCFCube(lp, -l, shadowsBias, lightPlane);')
+    frag.write('}')
 
     frag.write('visibility *= attenuate(distance(wposition, lightPos));')
 

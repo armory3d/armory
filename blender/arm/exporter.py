@@ -2562,12 +2562,12 @@ class ArmoryExporter:
             o['near_plane'] = 0.1
             o['far_plane'] = 200.0
             o['fov'] = 0.85
-            if ArmoryExporter.in_viewport:
-                pw = self.get_viewport_panels_w()
-                proj, is_persp = self.get_viewport_projection_matrix()
-                if pw == 0 and is_persp:
-                    o['projection'] = self.write_matrix(proj)
-                    o['projection'][5] = 2.027726888656616 # Wrong val returned when no camera present?
+            # if ArmoryExporter.in_viewport:
+                # pw = self.get_viewport_panels_w()
+                # proj, is_persp = self.get_viewport_projection_matrix()
+                # if pw == 0 and is_persp:
+                    # o['projection'] = self.write_matrix(proj)
+                    # o['projection'][5] = 2.027726888656616 # Wrong val returned when no camera present?
             o['type'] = 'perspective'
             o['frustum_culling'] = True
             o['render_path'] = 'armory_default/armory_default'
