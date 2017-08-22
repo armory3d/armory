@@ -179,6 +179,12 @@ class RigidBody extends Trait {
 			var q = trans.getRotation();
 			transform.loc.set(p.x(), p.y(), p.z());
 			transform.rot.set(q.x(), q.y(), q.z(), q.w());
+			if (object.parent != null) {
+				var ptransform = object.parent.transform;
+				transform.loc.x -= ptransform.worldx();
+				transform.loc.y -= ptransform.worldy();
+				transform.loc.z -= ptransform.worldz();
+			}
 			transform.buildMatrix();
 		}
 	}

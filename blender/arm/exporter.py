@@ -1276,7 +1276,7 @@ class ArmoryExporter:
                     lod['screen_size'] = l.screen_size_prop
                     o['lods'].append(lod)
                 if objref.arm_lod_material:
-                    o['arm_lod_material'] = True
+                    o['lod_material'] = True
 
             if type == NodeTypeMesh:
                 if not objref in self.meshArray:
@@ -2716,7 +2716,8 @@ class ArmoryExporter:
             ArmoryExporter.compress_enabled = False
         if not hasattr(ArmoryExporter, 'in_viewport'):
             ArmoryExporter.in_viewport = False
-        ArmoryExporter.import_traits = [] # Referenced traits
+        if not hasattr(ArmoryExporter, 'import_traits'):
+            ArmoryExporter.import_traits = [] # Referenced traits
         ArmoryExporter.option_mesh_only = False
         ArmoryExporter.option_mesh_per_file = True
         ArmoryExporter.option_optimize_mesh = wrd.arm_optimize_mesh

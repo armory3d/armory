@@ -91,6 +91,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     ui_found = False
     ArmoryExporter.compress_enabled = is_publish and wrd.arm_asset_compression
     ArmoryExporter.in_viewport = in_viewport
+    ArmoryExporter.import_traits = []
     for scene in bpy.data.scenes:
         if scene.arm_export:
             ext = '.zip' if (scene.arm_compress and is_publish) else '.arm'
