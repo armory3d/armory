@@ -854,7 +854,19 @@ def parse_vector(node, socket):
         return 'n'
 
     elif node.type == 'MAPPING':
-        return parse_vector_input(node.inputs[0]), 2
+        out = parse_vector_input(node.inputs[0])
+        if node.scale[0] != 1.0 or node.scale[1] != 1.0 or node.scale[2] != 1.0:
+            out = '({0} * vec2({1}, {2}))'.format(out, node.scale[0], node.scale[1])
+        if node.translation[0] != 0.0 or node.translation[1] != 0.0 or node.translation[2] != 0.0:
+            out = '({0} + vec2({1}, {2}))'.format(out, node.translation[0], node.translation[1])
+        # if node.rotation[0] != 0.0 or node.rotation[1] != 0.0 or node.rotation[2] != 0.0:
+            # out.x = x * cos(rotation[0]) - y * sin(rotation[0])
+            # out.y = y * cos(rotation[0]) + x * sin(rotation[0])
+        # if node.use_min:
+            # out = max(out, vec2(min[0], min[1]))
+        # if node.use_max:
+            # out = min(out, vec2(max[0], max[1]))
+        return out, 2
 
     elif node.type == 'NORMAL':
         if socket == node.outputs[0]:

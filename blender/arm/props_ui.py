@@ -905,6 +905,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
                 layout.prop(rpdat, "rp_ssao")
                 layout.prop(rpdat, "rp_ssr")
                 layout.prop(rpdat, 'arm_ssr_half_res')
+                # layout.prop(wrd, 'arm_ssao_half_res')
                 # layout.prop(rpdat, "rp_dfao")
                 # layout.prop(rpdat, "rp_dfrs")
                 # layout.prop(rpdat, "rp_dfgi")
@@ -970,7 +971,6 @@ class ArmRenderPropsPanel(bpy.types.Panel):
         layout.label('SSAO')
         layout.prop(wrd, 'arm_ssao_size')
         layout.prop(wrd, 'arm_ssao_strength')
-        layout.prop(wrd, 'arm_ssao_half_res')
         
         layout.label('Bloom')
         layout.prop(wrd, 'arm_bloom_threshold')

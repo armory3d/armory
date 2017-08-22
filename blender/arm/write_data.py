@@ -194,8 +194,8 @@ class Main {
     public static inline var projectWindowResize = """ + ('true' if wrd.arm_winresize else 'false') + """;
     public static inline var projectWindowMaximize = """ + ('true' if wrd.arm_winmaximize else 'false') + """;
     public static inline var projectWindowMinimize = """ + ('true' if wrd.arm_winminimize else 'false') + """;
-    public static inline var projectWidth = """ + str(resx) + """;
-    public static inline var projectHeight = """ + str(resy) + """;
+    public static var projectWidth = """ + str(resx) + """;
+    public static var projectHeight = """ + str(resy) + """;
     static inline var projectSamplesPerPixel = """ + str(int(rpdat.arm_samples_per_pixel)) + """;
     static inline var projectVSync = """ + ('true' if wrd.arm_vsync else 'false') + """;
     static inline var projectScene = '""" + arm.utils.safestr(scene_name) + scene_ext + """';
@@ -220,6 +220,7 @@ class Main {
     static function start() {
         if (state > 0) return;
         armory.object.Uniforms.register();
+        if (projectWindowMode == kha.WindowMode.Fullscreen) { projectWindowMode = kha.WindowMode.BorderlessWindow; projectWidth = kha.Display.width(0); projectHeight = kha.Display.height(0); }
         kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel, vSync: projectVSync, windowMode: projectWindowMode, resizable: projectWindowResize, maximizable: projectWindowMaximize, minimizable: projectWindowMinimize}, function() {
             iron.App.init(function() {
 """)
