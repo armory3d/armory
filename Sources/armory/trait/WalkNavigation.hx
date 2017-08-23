@@ -8,6 +8,7 @@ import iron.math.Vec4;
 
 class WalkNavigation extends Trait {
 
+	public static var enabled = true;
 	static inline var speed = 5.0;
 	var dir = new Vec4();
 	var xvec = new Vec4();
@@ -38,7 +39,7 @@ class WalkNavigation extends Trait {
 	}
 
 	function update() {
-		if (Input.occupied) return;
+		if (!enabled || Input.occupied) return;
 
 		var moveForward = keyboard.down("w") || keyboard.down("up");
 		var moveBackward = keyboard.down("s") || keyboard.down("down");

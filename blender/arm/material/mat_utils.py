@@ -30,9 +30,9 @@ def get_rpasses(material):
     vgirefract = rpdat.rp_voxelgi and rpdat.arm_voxelgi_refraction
 
     if material.arm_decal:
-        ar.append('arm_decal')
+        ar.append('decal')
     elif material.arm_overlay:
-        ar.append('arm_overlay')
+        ar.append('overlay')
     elif is_transluc(material) and not material.arm_discard and not vgirefract:
         ar.append('translucent')
     else:

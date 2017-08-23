@@ -54,13 +54,7 @@ def make(context_id, rpasses):
         vert.write('wnormal = normalize(N * nor);')
         vert.write('wposition = vec4(W * spos).xyz;')
         
-        const = {}
-        const['name'] = 'tessLevel'
-        const['vec2'] = [mat_state.material.arm_tess_shadows_inner, mat_state.material.arm_tess_shadows_outer]
-        mat_state.bind_constants.append(const)
-        tesc.add_uniform('vec2 tessLevel')
-        make_tess.tesc_levels(tesc)
-
+        make_tess.tesc_levels(tesc, mat_state.material.arm_tess_shadows_inner, mat_state.material.arm_tess_shadows_outer)
         make_tess.interpolate(tese, 'wposition', 3)
         make_tess.interpolate(tese, 'wnormal', 3, normalize=True)
 

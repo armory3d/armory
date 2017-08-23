@@ -100,13 +100,7 @@ def make_base(con_mesh, parse_opacity):
         vert.add_uniform('mat4 W', '_worldMatrix')
         vert.add_out('vec3 wposition')
         vert.write('wposition = vec4(W * spos).xyz;')
-
-        const = {}
-        const['name'] = 'tessLevel'
-        const['vec2'] = [mat_state.material.arm_tess_inner, mat_state.material.arm_tess_outer]
-        mat_state.bind_constants.append(const)
-        tesc.add_uniform('vec2 tessLevel')
-        make_tess.tesc_levels(tesc)
+        make_tess.tesc_levels(tesc, mat_state.material.arm_tess_inner, mat_state.material.arm_tess_outer)
         make_tess.interpolate(tese, 'wposition', 3, declare_out=True)
         make_tess.interpolate(tese, 'wnormal', 3, declare_out=True, normalize=True)
     # No displacement
@@ -155,7 +149,7 @@ def make_base(con_mesh, parse_opacity):
 
     if con_mesh.is_elem('col'):
         vert.add_out('vec3 vcolor')
-        vert.write('vcolor = col;')
+        vert.write('vcolor = pow(col, vec3(2.2));')
         if tese != None:
             tese.write_pre = True
             make_tess.interpolate(tese, 'vcolor', 3, declare_out=frag.contains('vcolor'))
@@ -218,7 +212,7 @@ def make_deferred(con_mesh):
     tese = con_mesh.tese
 
     if arm_discard:
-        opac = mat_state.material.arm_discard_transpa
+        opac = mat_state.material.arm_discard_opacity
         frag.write('if (opacity < {0}) discard;'.format(opac))
 
     gapi = arm.utils.get_gapi()

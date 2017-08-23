@@ -1,12 +1,12 @@
 
-def tesc_levels(tesc):
+def tesc_levels(tesc, innerLevel, outerLevel):
     tesc.write('if (gl_InvocationID == 0) {')
-    tesc.write('    gl_TessLevelInner[0] = tessLevel.x; // inner level')
-    tesc.write('    gl_TessLevelInner[1] = tessLevel.x;')
-    tesc.write('    gl_TessLevelOuter[0] = tessLevel.y; // outer level')
-    tesc.write('    gl_TessLevelOuter[1] = tessLevel.y;')
-    tesc.write('    gl_TessLevelOuter[2] = tessLevel.y;')
-    tesc.write('    gl_TessLevelOuter[3] = tessLevel.y;')
+    tesc.write('    gl_TessLevelInner[0] = {0}; // inner level'.format(innerLevel))
+    tesc.write('    gl_TessLevelInner[1] = {0};'.format(innerLevel))
+    tesc.write('    gl_TessLevelOuter[0] = {0}; // outer level'.format(outerLevel))
+    tesc.write('    gl_TessLevelOuter[1] = {0};'.format(outerLevel))
+    tesc.write('    gl_TessLevelOuter[2] = {0};'.format(outerLevel))
+    tesc.write('    gl_TessLevelOuter[3] = {0};'.format(outerLevel))
     tesc.write('}')
 
 def interpolate(tese, var, size, normalize=False, declare_out=False):

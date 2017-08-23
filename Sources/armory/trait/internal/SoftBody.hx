@@ -147,10 +147,11 @@ class SoftBody extends Trait {
 		#if arm_deinterleaved
 		var v = geom.vertexBuffers[0].lock();
 		var n = geom.vertexBuffers[1].lock();
+		var l = 3;//geom.structLength;
 		#else
 		var v = geom.vertexBuffer.lock();
+		var l = geom.structLength;
 		#end
-		var l = 3;//geom.structLength;
 		var numVerts = Std.int(v.length / l);
 
 #if js

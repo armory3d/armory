@@ -10,6 +10,7 @@ import zui.Zui;
 import zui.Id;
 #end
 
+@:access(zui.Zui)
 class DebugConsole extends Trait {
 
 #if (!arm_profile)
@@ -63,14 +64,12 @@ class DebugConsole extends Trait {
 	}
 
 	static var lrow = [1/2, 1/2];
-	@:access(zui.Zui)
 	function render2D(g:kha.graphics2.Graphics) {
 		g.end();
 		ui.begin(g);
 		var hwin = Id.handle();
 		if (ui.window(hwin, 0, 0, 280, iron.App.h(), true)) {
 
-			var numObjects = iron.Scene.active.meshes.length;
 			var htab = Id.handle({position: 1});
 			if (ui.tab(htab, '')) {}
 			if (ui.tab(htab, 'Inspector')) {
@@ -106,6 +105,8 @@ class DebugConsole extends Trait {
 			var fpsAvg = avg > 0 ? Math.round(1000 / avg) : 0;
 			if (ui.tab(htab, '$avg ms')) {
 				// ui.check(Id.handle(), "Show empties");
+				var numObjects = iron.Scene.active.meshes.length;
+				ui.text("meshes: " + numObjects);
 				var avgMin = Math.round(frameTimeAvgMin * 10000) / 10;
 				var avgMax = Math.round(frameTimeAvgMax * 10000) / 10;
 				ui.text('frame (min/max): $avgMin/$avgMax');
@@ -141,7 +142,6 @@ class DebugConsole extends Trait {
 
 		g.begin(false);
 
-#if arm_profile
 		totalTime += frameTime;
 		renderPathTime += iron.App.renderPathTime;
 		frames++;
@@ -169,17 +169,15 @@ class DebugConsole extends Trait {
 		}
 		frameTime = Scheduler.realTime() - lastTime;
 		lastTime = Scheduler.realTime();
-#end
 	}
 
 	function update() {
-#if arm_profile
+		armory.trait.WalkNavigation.enabled = !(ui.isScrolling || (ui.currentWindow != null && ui.currentWindow.dragging));
 		updateTime += iron.App.updateTime;
 		animTime += iron.object.Animation.animTime;
 	#if arm_physics
 		physTime += PhysicsWorld.physTime;
 	#end
-#end
 	}
 
 	// function getMem():Int {

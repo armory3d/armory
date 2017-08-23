@@ -768,6 +768,11 @@ class ArmoryExporter:
 
         if (not sampledAnimation) and (bobject.animation_data):
             action = bobject.animation_data.action
+
+            # TODO: Collect all strips
+            # action = bpy.data.objects['Gate'].animation_data.nla_tracks[0].strips[0]
+            # bpy.data.objects['Gate'].animation_data.nla_tracks["[Action Stash]"].strips["GateActionOpen"]
+
             if action:
                 for fcurve in action.fcurves:
                     kind = ArmoryExporter.classify_animation_curve(fcurve)
@@ -2555,7 +2560,7 @@ class ArmoryExporter:
         if not self.camera_spawned:
             log.warn('No camera found in active scene layers')
 
-        if len(self.output['camera_datas']) == 0:
+        if len(self.output['camera_datas']) == 0 and len(bpy.data.cameras) == 0:
             log.warn('Creating default camera')
             o = {}
             o['name'] = 'DefaultCamera'
@@ -2743,8 +2748,9 @@ class ArmoryExporter:
             if m.type == 'OCEAN':
                 # Do not export ocean mesh, just take specified constants
                 export_object = False
+                rdpat = arm.utils.get_rp()
                 wrd = bpy.data.worlds['Arm']
-                wrd.arm_ocean = True
+                rdpat.arm_ocean = True
                 # Take position and bounds
                 wrd.arm_ocean_level = 0.0#bobject.location.z
 
