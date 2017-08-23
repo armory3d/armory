@@ -100,11 +100,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_bloom = bpy.props.BoolProperty(name="Bloom", description="Bloom processing", default=False, update=update_renderpath)
     rp_eyeadapt = bpy.props.BoolProperty(name="Eye Adaptation", description="Auto-exposure based on histogram", default=False, update=update_renderpath)
     rp_rendercapture = bpy.props.BoolProperty(name="Render Capture", description="Save output as render result", default=False, update=update_renderpath)
-    rp_rendercapture_format = EnumProperty(
-        items=[('8bit', '8bit', '8bit'),
-               ('16bit', '16bit', '16bit'),
-               ('32bit', '32bit', '32bit')],
-        name="Capture Format", description="Bits per color channel", default='8bit', update=update_renderpath)
     rp_motionblur = EnumProperty(
         items=[('None', 'None', 'None'),
                ('Camera', 'Camera', 'Camera'),

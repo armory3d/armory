@@ -68,8 +68,8 @@ def on_scene_update_post(context):
         krom_location, krom_path = arm.utils.krom_paths()
         fp = krom_location
         resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
-        rpdat = arm.utils.get_rp()
-        cformat = rpdat.rp_rendercapture_format
+        wrd = bpy.data.worlds['Arm']
+        cformat = wrd.rp_rendercapture_format
         if cformat == '8bit':
             cbits = 4
             ctype = numpy.uint8

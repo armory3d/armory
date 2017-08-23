@@ -160,7 +160,6 @@ def set_preset(self, context, preset):
         rpdat.rp_bloom = False
         rpdat.rp_eyeadapt = False
         rpdat.rp_rendercapture = True
-        rpdat.rp_rendercapture_format = '8bit'
         rpdat.rp_motionblur = 'None'
         rpdat.arm_material_model = 'Cycles'
         rpdat.arm_pcss_state = 'On'
@@ -520,11 +519,12 @@ def make_deferred(rpdat):
         for l in fb.outputs[0].links:
             if l.to_node != cc:
                 links.new(cn.outputs[0], l.to_socket)
-        if rpdat.rp_rendercapture_format == '8bit':
+        wrd = bpy.data.worlds['Arm']
+        if wrd.rp_rendercapture_format == '8bit':
             cn.inputs[4].default_value = 'RGBA32'
-        elif rpdat.rp_rendercapture_format == '16bit':
+        elif wrd.rp_rendercapture_format == '16bit':
             cn.inputs[4].default_value = 'RGBA64'
-        elif rpdat.rp_rendercapture_format == '32bit':
+        elif wrd.rp_rendercapture_format == '32bit':
             cn.inputs[4].default_value = 'RGBA128'
 
 def make_deferred_plus(rpdat):

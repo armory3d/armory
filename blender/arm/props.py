@@ -9,6 +9,7 @@ import arm.log as log
 import arm.utils
 import arm.make
 import arm.make_renderer as make_renderer
+import arm.props_renderpath as props_renderpath
 try:
     import barmory
 except ImportError:
@@ -222,6 +223,11 @@ def init_properties():
     bpy.types.World.arm_volumetric_light_air_color = bpy.props.FloatVectorProperty(name="Air Color", size=3, default=[1.0, 1.0, 1.0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_pcss_rings = bpy.props.IntProperty(name="Rings", description="", default=20, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_ssrs_ray_step = bpy.props.FloatProperty(name="Ray Step", default=0.01, update=assets.invalidate_shader_cache)
+    bpy.types.World.rp_rendercapture_format = EnumProperty(
+        items=[('8bit', '8bit', '8bit'),
+               ('16bit', '16bit', '16bit'),
+               ('32bit', '32bit', '32bit')],
+        name="Capture Format", description="Bits per color channel", default='8bit', update=props_renderpath.update_renderpath)
     # Compositor
     bpy.types.World.arm_letterbox = bpy.props.BoolProperty(name="Letterbox", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_letterbox_size = bpy.props.FloatProperty(name="Size", default=0.1, update=assets.invalidate_shader_cache)

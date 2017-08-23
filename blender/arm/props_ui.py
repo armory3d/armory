@@ -306,6 +306,7 @@ class ArmoryRenderPanel(bpy.types.Panel):
         row.alignment = 'EXPAND'
         row.operator("arm.render", icon="RENDER_STILL")
         row.operator("arm.render_anim", icon="RENDER_ANIMATION")
+        layout.prop(bpy.data.worlds['Arm'], "rp_rendercapture_format")
 
 class ArmoryExporterPanel(bpy.types.Panel):
     bl_label = "Armory Exporter"
@@ -864,15 +865,16 @@ class ArmRenderPathPanel(bpy.types.Panel):
             layout.prop(rpdat, 'rp_voxelgi')
             if not rpdat.rp_voxelgi:
                 layout.prop(rpdat, 'rp_voxelao')
-            layout.prop(rpdat, 'rp_voxelgi_resolution')
-            layout.prop(rpdat, 'arm_voxelgi_dimensions')
-            layout.prop(rpdat, 'arm_voxelgi_revoxelize')
-            # layout.prop(rpdat, 'arm_voxelgi_camera')
-            # layout.prop(rpdat, 'arm_voxelgi_multibounce')
-            # layout.prop(rpdat, 'arm_voxelgi_anisotropic')
-            layout.prop(rpdat, 'arm_voxelgi_shadows')
-            layout.prop(rpdat, 'arm_voxelgi_refraction')
-            # layout.prop(rpdat, 'rp_voxelgi_hdr')
+            else:
+            	layout.prop(rpdat, 'rp_voxelgi_resolution')
+            	layout.prop(rpdat, 'arm_voxelgi_dimensions')
+            	layout.prop(rpdat, 'arm_voxelgi_revoxelize')
+            	# layout.prop(rpdat, 'arm_voxelgi_camera')
+            	# layout.prop(rpdat, 'arm_voxelgi_multibounce')
+            	# layout.prop(rpdat, 'arm_voxelgi_anisotropic')
+            	layout.prop(rpdat, 'arm_voxelgi_shadows')
+            	layout.prop(rpdat, 'arm_voxelgi_refraction')
+            	# layout.prop(rpdat, 'rp_voxelgi_hdr')
 
             layout.separator()
             layout.prop(rpdat, "rp_render_to_texture")
@@ -883,20 +885,20 @@ class ArmRenderPathPanel(bpy.types.Panel):
                 layout.prop(rpdat, "rp_volumetriclight")
                 layout.prop(rpdat, "rp_ssao")
                 layout.prop(rpdat, "rp_ssr")
-                layout.prop(rpdat, 'arm_ssr_half_res')
+                if rpdat.rp_ssr:
+                	layout.prop(rpdat, 'arm_ssr_half_res')
                 # layout.prop(wrd, 'arm_ssao_half_res')
                 # layout.prop(rpdat, "rp_dfao")
                 # layout.prop(rpdat, "rp_dfrs")
                 # layout.prop(rpdat, "rp_dfgi")
                 layout.prop(rpdat, "rp_bloom")
-                layout.prop(rpdat, "rp_eyeadapt")
+                # layout.prop(rpdat, "rp_eyeadapt")
                 layout.prop(rpdat, "rp_motionblur")
-                layout.prop(rpdat, "rp_rendercapture_format")
                 layout.prop(rpdat, "rp_ocean")
 
+            layout.separator()
             layout.prop(rpdat, 'arm_pcss_state')
-            layout.prop(rpdat, 'arm_ssrs')
-            
+            layout.prop(rpdat, 'arm_ssrs')            
             layout.prop(rpdat, 'arm_samples_per_pixel')
             layout.prop(rpdat, 'arm_texture_filter')
             layout.prop(rpdat, 'arm_tessellation')
