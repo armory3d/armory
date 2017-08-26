@@ -116,9 +116,15 @@ class ArmTraitListNewItem(bpy.types.Operator):
     bl_idname = "arm_traitlist.new_item"
     bl_label = "Add a new item"
 
+    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
+
     def execute(self, context):
-        trait = bpy.context.object.arm_traitlist.add()
-        bpy.context.object.arm_traitlist_index = len(bpy.context.object.arm_traitlist) - 1
+        if self.is_object:
+            obj = bpy.context.scene
+        else:
+            obj = bpy.context.object
+        trait = obj.arm_traitlist.add()
+        obj.arm_traitlist_index = len(obj.arm_traitlist) - 1
         return{'FINISHED'}
 
 
@@ -127,23 +133,33 @@ class ArmTraitListDeleteItem(bpy.types.Operator):
     bl_idname = "arm_traitlist.delete_item"
     bl_label = "Deletes an item"
 
+    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
+
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list """
-        if bpy.context.object == None:
+        if is_object:
+            obj = bpy.context.object
+        else:
+            obj = bpy.context.scene
+        if obj == None:
             return False
-        return len(bpy.context.object.arm_traitlist) > 0
+        return len(obj.arm_traitlist) > 0
 
     def execute(self, context):
-        list = bpy.context.object.arm_traitlist
-        index = bpy.context.object.arm_traitlist_index
+        if is_object:
+            obj = bpy.context.object
+        else:
+            obj = bpy.context.scene
+        list = obj.arm_traitlist
+        index = obj.arm_traitlist_index
 
         list.remove(index)
 
         if index > 0:
             index = index - 1
 
-        bpy.context.object.arm_traitlist_index = index
+        obj.arm_traitlist_index = index
         return{'FINISHED'}
 
 
@@ -156,18 +172,28 @@ class ArmTraitListMoveItem(bpy.types.Operator):
                     ('UP', 'Up', ""),
                     ('DOWN', 'Down', ""),))
 
+    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
+
     @classmethod
     def poll(self, context):
-        if bpy.context.object == None:
+        if is_object:
+            obj = bpy.context.object
+        else:
+            obj = bpy.context.scene
+        if obj == None:
             return False
         """ Enable if there's something in the list. """
-        return len(bpy.context.object.arm_traitlist) > 0
+        return len(obj.arm_traitlist) > 0
 
 
     def move_index(self):
         # Move index of an item render queue while clamping it
-        index = bpy.context.object.arm_traitlist_index
-        list_length = len(bpy.context.object.arm_traitlist) - 1
+        if is_object:
+            obj = bpy.context.object
+        else:
+            obj = bpy.context.scene
+        index = obj.arm_traitlist_index
+        list_length = len(obj.arm_traitlist) - 1
         new_index = 0
 
         if self.direction == 'UP':
@@ -180,8 +206,12 @@ class ArmTraitListMoveItem(bpy.types.Operator):
 
 
     def execute(self, context):
-        list = bpy.context.object.arm_traitlist
-        index = bpy.context.object.arm_traitlist_index
+        if is_object:
+            obj = bpy.context.object
+        else:
+            obj = bpy.context.scene
+        list = obj.arm_traitlist
+        index = obj.arm_traitlist_index
 
         if self.direction == 'DOWN':
             neighbor = index + 1
@@ -200,8 +230,14 @@ class ArmEditScriptButton(bpy.types.Operator):
     '''Edit script in Kode Studio'''
     bl_idname = 'arm.edit_script'
     bl_label = 'Edit Script'
+
+    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
  
     def execute(self, context):
+        if is_object:
+            obj = bpy.context.object
+        else:
+            obj = bpy.context.scene
         project_path = arm.utils.get_fp()
         item = context.object.arm_traitlist[context.object.arm_traitlist_index]
         pkg = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
@@ -224,6 +260,8 @@ class ArmEditBundledScriptButton(bpy.types.Operator):
     '''Copy script to project and edit in Kode Studio'''
     bl_idname = 'arm.edit_bundled_script'
     bl_label = 'Edit Script'
+
+    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
  
     def execute(self, context):
         sdk_path = arm.utils.get_sdk_path()
@@ -256,6 +294,8 @@ class ArmEditCanvasButton(bpy.types.Operator):
     '''Edit ui canvas'''
     bl_idname = 'arm.edit_canvas'
     bl_label = 'Edit Canvas'
+
+    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
  
     def execute(self, context):
         project_path = arm.utils.get_fp()
@@ -275,14 +315,14 @@ class ArmNewScriptDialog(bpy.types.Operator):
     bl_idname = "arm.new_script"
     bl_label = "New Script"
  
+    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
     class_name = StringProperty(name="Name")
  
     def execute(self, context):
         self.class_name = self.class_name.replace(' ', '')
         write_data.write_traithx(self.class_name)
         arm.utils.fetch_script_names()
-        obj = context.object
-        item = obj.arm_traitlist[obj.arm_traitlist_index] 
+        item = context.object.arm_traitlist[context.object.arm_traitlist_index] 
         item.class_name_prop = self.class_name 
         return {'FINISHED'}
  
@@ -297,6 +337,7 @@ class ArmNewCanvasDialog(bpy.types.Operator):
     bl_idname = "arm.new_canvas"
     bl_label = "New Canvas"
  
+    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
     canvas_name = StringProperty(name="Name")
  
     def execute(self, context):
@@ -334,7 +375,6 @@ class ArmRefreshCanvasListButton(bpy.types.Operator):
         arm.utils.fetch_script_names()
         return{'FINISHED'}
 
-# Menu in tools region
 class ArmTraitsPanel(bpy.types.Panel):
     bl_label = "Armory Traits"
     bl_space_type = "PROPERTIES"
@@ -343,112 +383,128 @@ class ArmTraitsPanel(bpy.types.Panel):
  
     def draw(self, context):
         layout = self.layout
-        
         obj = bpy.context.object
+        draw_traits(layout, obj, is_object=True)
 
-        rows = 2
-        if len(obj.arm_traitlist) > 1:
-            rows = 4
-        
+class ArmSceneTraitsPanel(bpy.types.Panel):
+    bl_label = "Armory Traits"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "scene"
+ 
+    def draw(self, context):
+        layout = self.layout        
+        obj = bpy.context.scene
+        draw_traits(layout, obj, is_object=False)
+
+def draw_traits(layout, obj, is_object):
+    rows = 2
+    if len(obj.arm_traitlist) > 1:
+        rows = 4
+    
+    row = layout.row()
+    row.template_list("ArmTraitList", "The_List", obj, "arm_traitlist", obj, "arm_traitlist_index", rows=rows)
+    
+    col = row.column(align=True)
+    op = col.operator("arm_traitlist.new_item", icon='ZOOMIN', text="")
+    op.is_object = is_object
+    op = col.operator("arm_traitlist.delete_item", icon='ZOOMOUT', text="")#.all = False
+    op.is_object = is_object
+
+    if len(obj.arm_traitlist) > 1:
+        col.separator()
+        op = col.operator("arm_traitlist.move_item", icon='TRIA_UP', text="").direction = 'UP'
+        op.is_object = is_object
+        op = col.operator("arm_traitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
+        op.is_object = is_object
+
+    if obj.arm_traitlist_index >= 0 and len(obj.arm_traitlist) > 0:
+        item = obj.arm_traitlist[obj.arm_traitlist_index]
+        # Default props
         row = layout.row()
-        row.template_list("ArmTraitList", "The_List", obj, "arm_traitlist", obj, "arm_traitlist_index", rows=rows)
-        
-        col = row.column(align=True)
-        col.operator("arm_traitlist.new_item", icon='ZOOMIN', text="")
-        col.operator("arm_traitlist.delete_item", icon='ZOOMOUT', text="")#.all = False
+        row.prop(item, "type_prop")
 
-        if len(obj.arm_traitlist) > 1:
-            col.separator()
-            col.operator("arm_traitlist.move_item", icon='TRIA_UP', text="").direction = 'UP'
-            col.operator("arm_traitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
-
-        if obj.arm_traitlist_index >= 0 and len(obj.arm_traitlist) > 0:
-            item = obj.arm_traitlist[obj.arm_traitlist_index]
-            # Default props
+        # Script
+        if item.type_prop == 'Haxe Script' or item.type_prop == 'Bundled Script':
+            item.name = item.class_name_prop
             row = layout.row()
-            row.prop(item, "type_prop")
-
-            # Script
-            if item.type_prop == 'Haxe Script' or item.type_prop == 'Bundled Script':
-                item.name = item.class_name_prop
-                row = layout.row()
-                # row.prop(item, "class_name_prop")
-                if item.type_prop == 'Haxe Script':
-                    row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_scripts_list", "Class")
-                else:
-                    row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_bundled_scripts_list", "Class")
-                
-                # Props
-                if len(item.arm_traitpropslist) > 0:
-                    propsrow = layout.row()
-                    propsrows = 2
-                    if len(item.arm_traitpropslist) > 2:
-                        propsrows = 4
-                    row = layout.row()
-                    row.template_list("ArmTraitPropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows)
-                
-                # Params
-                layout.label("Parameters")
-                paramsrow = layout.row()
-                paramsrows = 2
-                if len(item.arm_traitparamslist) > 1:
-                    paramsrows = 4
-                
-                row = layout.row()
-                row.template_list("ArmTraitParamList", "The_List", item, "arm_traitparamslist", item, "arm_traitparamslist_index", rows=paramsrows)
-
-                col = row.column(align=True)
-                col.operator("arm_traitparamslist.new_item", icon='ZOOMIN', text="")
-                col.operator("arm_traitparamslist.delete_item", icon='ZOOMOUT', text="")
-
-                if len(item.arm_traitparamslist) > 1:
-                    col.separator()
-                    col.operator("arm_traitparamslist.move_item", icon='TRIA_UP', text="").direction = 'UP'
-                    col.operator("arm_traitparamslist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
-
-                if item.arm_traitparamslist_index >= 0 and len(item.arm_traitparamslist) > 0:
-                    paramitem = item.arm_traitparamslist[item.arm_traitparamslist_index]   
-
-                if item.type_prop == 'Haxe Script':
-                    row = layout.row(align=True)
-                    row.alignment = 'EXPAND'
-                    column = row.column(align=True)
-                    column.alignment = 'EXPAND'
-                    if item.class_name_prop == '':
-                        column.enabled = False
-                    column.operator("arm.edit_script")
-                    row.operator("arm.new_script")
-                    row.operator("arm.refresh_scripts")
-                else: # Bundled
-                    layout.operator("arm.edit_bundled_script")
+            # row.prop(item, "class_name_prop")
+            if item.type_prop == 'Haxe Script':
+                row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_scripts_list", "Class")
+            else:
+                row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_bundled_scripts_list", "Class")
             
-            # JS Script
-            elif item.type_prop == 'JS Script':
-                item.name = item.jsscript_prop
+            # Props
+            if len(item.arm_traitpropslist) > 0:
+                propsrow = layout.row()
+                propsrows = 2
+                if len(item.arm_traitpropslist) > 2:
+                    propsrows = 4
                 row = layout.row()
-                row.prop_search(item, "jsscript_prop", bpy.data, "texts", "Text")
+                row.template_list("ArmTraitPropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows)
+            
+            # Params
+            layout.label("Parameters")
+            paramsrow = layout.row()
+            paramsrows = 2
+            if len(item.arm_traitparamslist) > 1:
+                paramsrows = 4
+            
+            row = layout.row()
+            row.template_list("ArmTraitParamList", "The_List", item, "arm_traitparamslist", item, "arm_traitparamslist_index", rows=paramsrows)
 
-            # UI
-            elif item.type_prop == 'UI Canvas':
-                item.name = item.canvas_name_prop
-                row = layout.row()
-                row.prop_search(item, "canvas_name_prop", bpy.data.worlds['Arm'], "arm_canvas_list", "Canvas")
-                
+            col = row.column(align=True)
+            col.operator("arm_traitparamslist.new_item", icon='ZOOMIN', text="")
+            col.operator("arm_traitparamslist.delete_item", icon='ZOOMOUT', text="")
+
+            if len(item.arm_traitparamslist) > 1:
+                col.separator()
+                col.operator("arm_traitparamslist.move_item", icon='TRIA_UP', text="").direction = 'UP'
+                col.operator("arm_traitparamslist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
+
+            if item.arm_traitparamslist_index >= 0 and len(item.arm_traitparamslist) > 0:
+                paramitem = item.arm_traitparamslist[item.arm_traitparamslist_index]   
+
+            if item.type_prop == 'Haxe Script':
                 row = layout.row(align=True)
                 row.alignment = 'EXPAND'
                 column = row.column(align=True)
                 column.alignment = 'EXPAND'
-                if item.canvas_name_prop == '':
+                if item.class_name_prop == '':
                     column.enabled = False
-                column.operator("arm.edit_canvas")
-                row.operator("arm.new_canvas")
-                row.operator("arm.refresh_canvas_list")
+                column.operator("arm.edit_script")
+                row.operator("arm.new_script")
+                row.operator("arm.refresh_scripts")
+            else: # Bundled
+                layout.operator("arm.edit_bundled_script")
+        
+        # JS Script
+        elif item.type_prop == 'JS Script':
+            item.name = item.jsscript_prop
+            row = layout.row()
+            row.prop_search(item, "jsscript_prop", bpy.data, "texts", "Text")
 
-            # Nodes
-            elif item.type_prop == 'Logic Nodes':
-                item.name = item.nodes_name_prop
-                row = layout.row()
-                row.prop_search(item, "nodes_name_prop", bpy.data, "node_groups", "Tree")
+        # UI
+        elif item.type_prop == 'UI Canvas':
+            item.name = item.canvas_name_prop
+            row = layout.row()
+            row.prop_search(item, "canvas_name_prop", bpy.data.worlds['Arm'], "arm_canvas_list", "Canvas")
+            
+            row = layout.row(align=True)
+            row.alignment = 'EXPAND'
+            column = row.column(align=True)
+            column.alignment = 'EXPAND'
+            if item.canvas_name_prop == '':
+                column.enabled = False
+            column.operator("arm.edit_canvas")
+            row.operator("arm.new_canvas")
+            row.operator("arm.refresh_canvas_list")
+
+        # Nodes
+        elif item.type_prop == 'Logic Nodes':
+            item.name = item.nodes_name_prop
+            row = layout.row()
+            row.prop_search(item, "nodes_name_prop", bpy.data, "node_groups", "Tree")
 
 def register():  
     bpy.utils.register_class(ArmTraitListItem)
@@ -464,8 +520,11 @@ def register():
     bpy.utils.register_class(ArmRefreshScriptsButton)
     bpy.utils.register_class(ArmRefreshCanvasListButton)
     bpy.utils.register_class(ArmTraitsPanel)
+    bpy.utils.register_class(ArmSceneTraitsPanel)
     bpy.types.Object.arm_traitlist = bpy.props.CollectionProperty(type=ArmTraitListItem)
     bpy.types.Object.arm_traitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
+    bpy.types.Scene.arm_traitlist = bpy.props.CollectionProperty(type=ArmTraitListItem)
+    bpy.types.Scene.arm_traitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
 
     # Deprecated
     bpy.utils.register_class(ListTraitItem)
@@ -485,6 +544,7 @@ def unregister():
     bpy.utils.unregister_class(ArmRefreshScriptsButton)
     bpy.utils.unregister_class(ArmRefreshCanvasListButton)
     bpy.utils.unregister_class(ArmTraitsPanel)
+    bpy.utils.unregister_class(ArmSceneTraitsPanel)
 
     # Deprecated
     bpy.utils.unregister_class(ListTraitItem)
