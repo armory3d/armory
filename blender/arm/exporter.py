@@ -2618,7 +2618,6 @@ class ArmoryExporter:
             x['type'] = 'Script'
             x['class_name'] = 'armory.trait.internal.PhysicsWorld'
             self.output['traits'].append(x)
-            ArmoryExporter.import_traits.append(x['class_name'])
         if bpy.data.worlds['Arm'].arm_navigation != 'Disabled' and ArmoryExporter.export_navigation:
             if not 'traits' in self.output:
                 self.output['traits'] = []
@@ -2626,7 +2625,13 @@ class ArmoryExporter:
             x['type'] = 'Script'
             x['class_name'] = 'armory.trait.internal.Navigation'
             self.output['traits'].append(x)
-            ArmoryExporter.import_traits.append(x['class_name'])
+        if len(self.scene.arm_traitlist) > 0:
+            if not 'traits' in self.output:
+                self.output['traits'] = []
+            self.export_traits(self.scene, self.output)
+        if 'traits' in self.output:
+            for x in self.output['traits']:
+                ArmoryExporter.import_traits.append(x['class_name'])
 
         # Write embedded data references
         if len(assets.embedded_data) > 0:
@@ -2777,89 +2782,7 @@ class ArmoryExporter:
             o['animation_setup'] = x
 
         # Export traits
-        if hasattr(bobject, 'arm_traitlist'):
-            for t in bobject.arm_traitlist:
-                if t.enabled_prop == False:
-                    continue
-                x = {}
-                if t.type_prop == 'Logic Nodes' and t.nodes_name_prop != '':
-                    x['type'] = 'Script'
-                    x['class_name'] = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + arm.utils.safesrc(t.nodes_name_prop)
-                elif t.type_prop == 'JS Script':
-                    basename = t.jsscript_prop.split('.')[0]
-                    x['type'] = 'Script'
-                    x['class_name'] = 'armory.trait.internal.JSScript'
-                    x['parameters'] = ["'" + basename + "'"]
-                    scriptspath = arm.utils.get_fp_build() + '/compiled/scripts/'
-                    if not os.path.exists(scriptspath):
-                        os.makedirs(scriptspath)
-                    # Write js to file
-                    assetpath = arm.utils.build_dir() + '/compiled/scripts/' + t.jsscript_prop + '.js'
-                    targetpath = arm.utils.get_fp() + '/' + assetpath
-                    with open(targetpath, 'w') as f:
-                        f.write(bpy.data.texts[t.jsscript_prop].as_string())
-                    assets.add(assetpath)
-                elif t.type_prop == 'UI Canvas':
-                    ArmoryExporter.export_ui = True
-                    x['type'] = 'Script'
-                    x['class_name'] = 'armory.trait.internal.CanvasScript'
-                    x['parameters'] = ["'" + t.canvas_name_prop + "'"]
-                    # assets.add(assetpath) # Bundled is auto-added
-                    # Read file list and add canvas assets
-                    assetpath = arm.utils.get_fp() + '/Bundled/canvas/' + t.canvas_name_prop + '.files'
-                    if os.path.exists(assetpath):
-                        with open(assetpath) as f:
-                            fileList = f.read().splitlines()
-                            for asset in fileList:
-                                # Relative to the root/Bundled/canvas path
-                                asset = asset[6:] # Strip ../../ to start in project root
-                                assets.add(asset)
-                else: # Haxe/Bundled Script
-                    if t.class_name_prop == '': # Empty class name, skip
-                        continue
-                    x['type'] = 'Script'
-                    if t.type_prop == 'Bundled Script':
-                        trait_prefix = 'armory.trait.'
-                        # TODO: temporary, export single mesh navmesh as obj
-                        if t.class_name_prop == 'NavMesh' and bobject.type == 'MESH' and bpy.data.worlds['Arm'].arm_navigation != 'Disabled':
-                            ArmoryExporter.export_navigation = True
-                            nav_path = arm.utils.get_fp_build() + '/compiled/Assets/navigation'
-                            if not os.path.exists(nav_path):
-                                os.makedirs(nav_path)
-                            nav_filepath = nav_path + '/nav_' + bobject.data.name + '.arm'
-                            assets.add(nav_filepath)
-                            # TODO: Implement cache
-                            #if os.path.isfile(nav_filepath) == False:
-                            override = {'selected_objects': [bobject]}
-                            # bobject.scale.y *= -1
-                            # mesh = obj.data
-                            # for face in mesh.faces:
-                                # face.v.reverse()
-                            # bpy.ops.export_scene.obj(override, use_selection=True, filepath=nav_filepath, check_existing=False, use_normals=False, use_uvs=False, use_materials=False)
-                            # bobject.scale.y *= -1
-                            with open(nav_filepath, 'w') as f:
-                                for v in bobject.data.vertices:
-                                    f.write("v %.4f " % (v.co[0] * bobject.scale.x))
-                                    f.write("%.4f " % (v.co[2] * bobject.scale.z))
-                                    f.write("%.4f\n" % (v.co[1] * bobject.scale.y)) # Flipped
-                                for p in bobject.data.polygons:
-                                    f.write("f")
-                                    for i in reversed(p.vertices): # Flipped normals
-                                        f.write(" %d" % (i + 1))
-                                    f.write("\n")
-                    else:
-                        trait_prefix = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.'
-                    x['class_name'] = trait_prefix + t.class_name_prop
-                    if len(t.arm_traitparamslist) > 0:
-                        x['parameters'] = []
-                        for pt in t.arm_traitparamslist: # Append parameters
-                            x['parameters'].append(pt.name)
-                    if len(t.arm_traitpropslist) > 0:
-                        x['props'] = []
-                        for pt in t.arm_traitpropslist: # Append props
-                            x['props'].append(pt.name)
-                            x['props'].append(pt.value)
-                o['traits'].append(x)
+        self.export_traits(bobject, o)
 
         # Rigid body trait
         if bobject.rigid_body != None:
@@ -2997,6 +2920,91 @@ class ArmoryExporter:
         for x in o['traits']:
             ArmoryExporter.import_traits.append(x['class_name'])
     
+    def export_traits(self, bobject, o):
+        if hasattr(bobject, 'arm_traitlist'):
+            for t in bobject.arm_traitlist:
+                if t.enabled_prop == False:
+                    continue
+                x = {}
+                if t.type_prop == 'Logic Nodes' and t.nodes_name_prop != '':
+                    x['type'] = 'Script'
+                    x['class_name'] = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + arm.utils.safesrc(t.nodes_name_prop)
+                elif t.type_prop == 'JS Script':
+                    basename = t.jsscript_prop.split('.')[0]
+                    x['type'] = 'Script'
+                    x['class_name'] = 'armory.trait.internal.JSScript'
+                    x['parameters'] = ["'" + basename + "'"]
+                    scriptspath = arm.utils.get_fp_build() + '/compiled/scripts/'
+                    if not os.path.exists(scriptspath):
+                        os.makedirs(scriptspath)
+                    # Write js to file
+                    assetpath = arm.utils.build_dir() + '/compiled/scripts/' + t.jsscript_prop + '.js'
+                    targetpath = arm.utils.get_fp() + '/' + assetpath
+                    with open(targetpath, 'w') as f:
+                        f.write(bpy.data.texts[t.jsscript_prop].as_string())
+                    assets.add(assetpath)
+                elif t.type_prop == 'UI Canvas':
+                    ArmoryExporter.export_ui = True
+                    x['type'] = 'Script'
+                    x['class_name'] = 'armory.trait.internal.CanvasScript'
+                    x['parameters'] = ["'" + t.canvas_name_prop + "'"]
+                    # assets.add(assetpath) # Bundled is auto-added
+                    # Read file list and add canvas assets
+                    assetpath = arm.utils.get_fp() + '/Bundled/canvas/' + t.canvas_name_prop + '.files'
+                    if os.path.exists(assetpath):
+                        with open(assetpath) as f:
+                            fileList = f.read().splitlines()
+                            for asset in fileList:
+                                # Relative to the root/Bundled/canvas path
+                                asset = asset[6:] # Strip ../../ to start in project root
+                                assets.add(asset)
+                else: # Haxe/Bundled Script
+                    if t.class_name_prop == '': # Empty class name, skip
+                        continue
+                    x['type'] = 'Script'
+                    if t.type_prop == 'Bundled Script':
+                        trait_prefix = 'armory.trait.'
+                        # TODO: temporary, export single mesh navmesh as obj
+                        if t.class_name_prop == 'NavMesh' and bobject.type == 'MESH' and bpy.data.worlds['Arm'].arm_navigation != 'Disabled':
+                            ArmoryExporter.export_navigation = True
+                            nav_path = arm.utils.get_fp_build() + '/compiled/Assets/navigation'
+                            if not os.path.exists(nav_path):
+                                os.makedirs(nav_path)
+                            nav_filepath = nav_path + '/nav_' + bobject.data.name + '.arm'
+                            assets.add(nav_filepath)
+                            # TODO: Implement cache
+                            #if os.path.isfile(nav_filepath) == False:
+                            override = {'selected_objects': [bobject]}
+                            # bobject.scale.y *= -1
+                            # mesh = obj.data
+                            # for face in mesh.faces:
+                                # face.v.reverse()
+                            # bpy.ops.export_scene.obj(override, use_selection=True, filepath=nav_filepath, check_existing=False, use_normals=False, use_uvs=False, use_materials=False)
+                            # bobject.scale.y *= -1
+                            with open(nav_filepath, 'w') as f:
+                                for v in bobject.data.vertices:
+                                    f.write("v %.4f " % (v.co[0] * bobject.scale.x))
+                                    f.write("%.4f " % (v.co[2] * bobject.scale.z))
+                                    f.write("%.4f\n" % (v.co[1] * bobject.scale.y)) # Flipped
+                                for p in bobject.data.polygons:
+                                    f.write("f")
+                                    for i in reversed(p.vertices): # Flipped normals
+                                        f.write(" %d" % (i + 1))
+                                    f.write("\n")
+                    else:
+                        trait_prefix = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.'
+                    x['class_name'] = trait_prefix + t.class_name_prop
+                    if len(t.arm_traitparamslist) > 0:
+                        x['parameters'] = []
+                        for pt in t.arm_traitparamslist: # Append parameters
+                            x['parameters'].append(pt.name)
+                    if len(t.arm_traitpropslist) > 0:
+                        x['props'] = []
+                        for pt in t.arm_traitpropslist: # Append props
+                            x['props'].append(pt.name)
+                            x['props'].append(pt.value)
+                o['traits'].append(x)
+
     def add_hook_trait(self, o, bobject, target_name, group_name):
         hook_trait = {}
         hook_trait['type'] = 'Script'

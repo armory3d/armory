@@ -29,10 +29,16 @@ class ArmTraitParamListNewItem(bpy.types.Operator):
     bl_idname = "arm_traitparamslist.new_item"
     bl_label = "Add a new item"
 
+    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
+
     def execute(self, context):
-        if len(context.object.arm_traitlist) == 0:
+        if self.is_object:
+            obj = bpy.context.object
+        else:
+            obj = bpy.context.scene
+        if len(obj.arm_traitlist) == 0:
             return
-        trait = context.object.arm_traitlist[context.object.arm_traitlist_index]
+        trait = obj.arm_traitlist[obj.arm_traitlist_index]
         trait.arm_traitparamslist.add()
         trait.arm_traitparamslist_index = len(trait.arm_traitparamslist) - 1
         return{'FINISHED'}
@@ -43,20 +49,30 @@ class ArmTraitParamListDeleteItem(bpy.types.Operator):
     bl_idname = "arm_traitparamslist.delete_item"
     bl_label = "Deletes an item"
 
+    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
+
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list """
-        if bpy.context.object == None:
+        if self.is_object:
+            obj = bpy.context.object
+        else:
+            obj = bpy.context.scene
+        if obj == None:
             return False
-        if len(context.object.arm_traitlist) == 0:
+        if len(obj.arm_traitlist) == 0:
             return False
-        trait = context.object.arm_traitlist[context.object.arm_traitlist_index]
+        trait = obj.arm_traitlist[obj.arm_traitlist_index]
         return len(trait.arm_traitparamslist) > 0
 
     def execute(self, context):
-        if len(context.object.arm_traitlist) == 0:
+        if self.is_object:
+            obj = bpy.context.object
+        else:
+            obj = bpy.context.scene
+        if len(obj.arm_traitlist) == 0:
             return
-        trait = context.object.arm_traitlist[context.object.arm_traitlist_index]
+        trait = obj.arm_traitlist[obj.arm_traitlist_index]
         list = trait.arm_traitparamslist
         index = trait.arm_traitparamslist_index
 
@@ -78,22 +94,32 @@ class ArmTraitParamListMoveItem(bpy.types.Operator):
                     ('UP', 'Up', ""),
                     ('DOWN', 'Down', ""),))
 
+    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
+
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list. """
-        if bpy.context.object == None:
+        if self.is_object:
+            obj = bpy.context.object
+        else:
+            obj = bpy.context.scene
+        if obj == None:
             return False
-        if len(context.object.arm_traitlist) == 0:
+        if len(obj.arm_traitlist) == 0:
             return False
-        trait = context.object.arm_traitlist[context.object.arm_traitlist_index]
+        trait = obj.arm_traitlist[obj.arm_traitlist_index]
         return len(trait.arm_traitparamslist) > 0
 
 
     def move_index(self):
         # Move index of an item render queue while clamping it
-        if len(context.object.arm_traitlist) == 0:
+        if self.is_object:
+            obj = bpy.context.object
+        else:
+            obj = bpy.context.scene
+        if len(obj.arm_traitlist) == 0:
             return
-        trait = context.object.arm_traitlist[context.object.arm_traitlist_index]
+        trait = obj.arm_traitlist[obj.arm_traitlist_index]
         index = trait.arm_traitparamslist_index
         list_length = len(trait.arm_traitparamslist) - 1
         new_index = 0
@@ -108,9 +134,13 @@ class ArmTraitParamListMoveItem(bpy.types.Operator):
 
 
     def execute(self, context):
-        if len(context.object.arm_traitlist) == 0:
+        if self.is_object:
+            obj = bpy.context.object
+        else:
+            obj = bpy.context.scene
+        if len(obj.arm_traitlist) == 0:
             return
-        trait = context.object.arm_traitlist[context.object.arm_traitlist_index]
+        trait = obj.arm_traitlist[obj.arm_traitlist_index]
         list = trait.arm_traitparamslist
         index = trait.arm_traitparamslist_index
 
