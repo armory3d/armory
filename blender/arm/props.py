@@ -16,7 +16,7 @@ except ImportError:
     pass
 
 # Armory version
-arm_version = '17.08.1'
+arm_version = '17.09'
 
 def update_preset(self, context):
     make_renderer.set_preset(self, context, self.rp_preset)
@@ -305,9 +305,6 @@ def init_properties():
     bpy.types.Material.is_cached = bpy.props.BoolProperty(name="Material Cached", description="No need to reexport material data", default=False, update=update_mat_cache)
     bpy.types.Material.lock_cache = bpy.props.BoolProperty(name="Lock Material Cache", description="Prevent is_cached from updating", default=False)
 
-    # Deprecated
-    bpy.types.World.arm_play_viewport_camera = BoolProperty(name="Viewport Camera", description="Start player at viewport camera position", default=False)
-
     if not 'Arm' in bpy.data.worlds:
         wrd = bpy.data.worlds.new('Arm')
         wrd.use_fake_user = True # Store data world object, add fake user to keep it alive
@@ -348,22 +345,6 @@ def init_properties_on_load():
         print('Project updated to sdk v' + arm_version)
         wrd.arm_version = arm_version
         arm.make.clean_project()
-        # Deprecated: migrate props
-        for bobject in bpy.data.objects:
-            if not hasattr(bobject, 'my_traitlist'):
-                continue
-            for trait in bobject.my_traitlist:
-                t = bobject.arm_traitlist.add()
-                t.name = trait.name
-                t.enabled_prop = trait.enabled_prop
-                t.type_prop = trait.type_prop
-                t.class_name_prop = trait.class_name_prop
-                t.canvas_name_prop = trait.canvas_name_prop
-                t.jsscript_prop = trait.jsscript_prop
-                t.nodes_name_prop = trait.nodes_name_prop
-        if hasattr(wrd, 'arm_play_viewport_camera'):
-            if wrd.arm_play_viewport_camera:
-                wrd.arm_play_camera = 'Viewport'
     # Set url for embedded player
     if arm.utils.with_krom():
         barmory.set_files_location(arm.utils.get_fp_build() + '/krom')

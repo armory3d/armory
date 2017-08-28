@@ -166,69 +166,28 @@ def parse_shader(node, socket):
         if node.node_tree.name.startswith('Armory PBR'):
             
             if parse_surface:
-
-                if len(node.inputs) != 14:
-                    # Base color
-                    parsing_basecolor(True)
-                    out_basecol = parse_vector_input(node.inputs[0])
-                    parsing_basecolor(False)
-                    # Occlusion
-                    out_occlusion = parse_value_input(node.inputs[2])
-                    # Roughness
-                    out_roughness = parse_value_input(node.inputs[3])
-                    # Metallic
-                    out_metallic = parse_value_input(node.inputs[4])
-                    # Normal
-                    if node.inputs[5].is_linked and node.inputs[5].links[0].from_node.type == 'NORMAL_MAP':
-                        c_state.warn(c_state.mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
-                    parse_normal_map_color_input(node.inputs[5])
-                    # Emission
-                    if node.inputs[6].is_linked or node.inputs[6].default_value != 0.0:
-                        out_emission = parse_value_input(node.inputs[6])
-                        emission_found = True
-                        out_basecol = '({0} + vec3({1} * 100.0))'.format(out_basecol, out_emission)
-
-                else: # Deprecated
-                    # Base color
-                    parsing_basecolor(True)
-                    out_basecol = parse_vector_input(node.inputs[0])
-                    parsing_basecolor(False)
-                    # Occlusion TODO: deprecated, occlussion is value instead of vector now
-                    if node.inputs[1].type == 'RGBA':
-                        out_occlusion = '{0}.r'.format(parse_vector_input(node.inputs[1]))
-                    else:
-                        out_occlusion = parse_value_input(node.inputs[1])
-                    if node.inputs[2].is_linked or node.inputs[2].default_value != 1.0:
-                        out_occlusion = '({0} * {1})'.format(out_occlusion, parse_value_input(node.inputs[2]))
-                    # Roughness
-                    out_roughness = parse_value_input(node.inputs[3])
-                    if node.inputs[4].is_linked or node.inputs[4].default_value != 1.0:
-                        out_roughness = '({0} * {1})'.format(out_roughness, parse_value_input(node.inputs[4]))
-                    # Metallic
-                    out_metallic = parse_value_input(node.inputs[5])
-                    # Normal
-                    if node.inputs[6].is_linked and node.inputs[6].links[0].from_node.type == 'NORMAL_MAP':
-                        c_state.warn(c_state.mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
-                    parse_normal_map_color_input(node.inputs[6])
-                    # Emission
-                    if node.inputs[8].is_linked:
-                        parsing_basecolor(True)
-                        out_emission = parse_vector_input(node.inputs[8])
-                        emission_found = True
-                        parsing_basecolor(False)
-                        if node.inputs[9].is_linked or node.inputs[9].default_value != 1.0:
-                            out_emission = '({0} * {1})'.format(out_emission, parse_value_input(node.inputs[9]))
-                        out_basecol = '({0} + {1} * 100.0)'.format(out_basecol, out_emission)
-            
+                # Base color
+                parsing_basecolor(True)
+                out_basecol = parse_vector_input(node.inputs[0])
+                parsing_basecolor(False)
+                # Occlusion
+                out_occlusion = parse_value_input(node.inputs[2])
+                # Roughness
+                out_roughness = parse_value_input(node.inputs[3])
+                # Metallic
+                out_metallic = parse_value_input(node.inputs[4])
+                # Normal
+                if node.inputs[5].is_linked and node.inputs[5].links[0].from_node.type == 'NORMAL_MAP':
+                    c_state.warn(c_state.mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
+                parse_normal_map_color_input(node.inputs[5])
+                # Emission
+                if node.inputs[6].is_linked or node.inputs[6].default_value != 0.0:
+                    out_emission = parse_value_input(node.inputs[6])
+                    emission_found = True
+                    out_basecol = '({0} + vec3({1} * 100.0))'.format(out_basecol, out_emission)            
             
             if parse_opacity:
-
-                if len(node.inputs) != 14:
-                    out_opacity = parse_value_input(node.inputs[1])
-                else: # Deprecated
-                    out_opacity = parse_value_input(node.inputs[12])
-                    if node.inputs[13].is_linked or node.inputs[13].default_value != 1.0:
-                        out_opacity = '({0} * {1})'.format(out_opacity, parse_value_input(node.inputs[13]))
+                out_opacity = parse_value_input(node.inputs[1])
         
         else:
             return parse_group(node, socket)
@@ -969,15 +928,7 @@ def parse_value(node, socket):
         if node.node_tree.name.startswith('Armory PBR'):
             # Displacement
             if socket == node.outputs[1]:
-
-                if len(node.inputs) != 14:
-                    res = parse_value_input(node.inputs[7])
-                else: # Deprecated
-                    res = parse_value_input(node.inputs[10])
-                    if node.inputs[11].is_linked or node.inputs[11].default_value != 1.0:
-                        res = "({0} * {1})".format(res, parse_value_input(node.inputs[11]))
-                
-                return res
+                return parse_value_input(node.inputs[7])
             else:
                 return None
         else:

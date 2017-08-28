@@ -552,10 +552,6 @@ def register():
     bpy.types.Scene.arm_traitlist = bpy.props.CollectionProperty(type=ArmTraitListItem)
     bpy.types.Scene.arm_traitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
 
-    # Deprecated
-    bpy.utils.register_class(ListTraitItem)
-    bpy.types.Object.my_traitlist = bpy.props.CollectionProperty(type=ListTraitItem)
-
 def unregister():
     bpy.utils.unregister_class(ArmTraitListItem)
     bpy.utils.unregister_class(ArmTraitList)
@@ -571,6 +567,3 @@ def unregister():
     bpy.utils.unregister_class(ArmRefreshCanvasListButton)
     bpy.utils.unregister_class(ArmTraitsPanel)
     bpy.utils.unregister_class(ArmSceneTraitsPanel)
-
-    # Deprecated
-    bpy.utils.unregister_class(ListTraitItem)
