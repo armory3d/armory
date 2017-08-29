@@ -316,22 +316,6 @@ def init_properties_on_save():
         # Take blend file name
         wrd.arm_project_name = arm.utils.blend_name()
         wrd.arm_project_scene = bpy.data.scenes[0].name
-        # Switch to Cycles
-        for scene in bpy.data.scenes:
-            scene.render.fps = 60 # Default to 60fps
-        # Force camera far to at least 200 units for now, to prevent fighting with light far plane
-        for c in bpy.data.cameras:
-            if c.clip_end < 200:
-                c.clip_end = 200
-        # Use nodes
-        for w in bpy.data.worlds:
-            w.use_nodes = True
-        for s in bpy.data.scenes:
-            s.use_nodes = True
-        for l in bpy.data.lamps:
-            l.use_nodes = True
-        for m in bpy.data.materials:
-            m.use_nodes = True
         init_properties_on_load()
 
 def init_properties_on_load():
