@@ -2119,24 +2119,29 @@ class ArmoryExporter:
         # Parse nodes
         # Emission only for now
         tree = objref.node_tree
-        for n in tree.nodes:
-            if n.type == 'EMISSION':
-                col = n.inputs[0].default_value
-                o['color'] = [col[0], col[1], col[2]]
-                o['strength'] = n.inputs[1].default_value
-                # Normalize lamp strength
-                if o['type'] == 'point' or o['type'] == 'spot':
-                    o['strength'] *= 0.026
-                elif o['type'] == 'area':
-                    o['strength'] *= 0.26
-                elif o['type'] == 'sun':
-                    o['strength'] *= 0.325
-                # TODO: Lamp texture test..
-                if n.inputs[0].is_linked:
-                    color_node = n.inputs[0].links[0].from_node
-                    if color_node.type == 'TEX_IMAGE':
-                        o['color_texture'] = color_node.image.name
-                break
+        if tree != None:
+            for n in tree.nodes:
+                if n.type == 'EMISSION':
+                    col = n.inputs[0].default_value
+                    o['color'] = [col[0], col[1], col[2]]
+                    o['strength'] = n.inputs[1].default_value
+                    # Normalize lamp strength
+                    if o['type'] == 'point' or o['type'] == 'spot':
+                        o['strength'] *= 0.026
+                    elif o['type'] == 'area':
+                        o['strength'] *= 0.26
+                    elif o['type'] == 'sun':
+                        o['strength'] *= 0.325
+                    # TODO: Lamp texture test..
+                    if n.inputs[0].is_linked:
+                        color_node = n.inputs[0].links[0].from_node
+                        if color_node.type == 'TEX_IMAGE':
+                            o['color_texture'] = color_node.image.name
+                    break
+        else:
+            o['color'] = [1.0, 1.0, 1.0]
+            o['strength'] = 100.0 * 0.026
+            o['type'] = 'point'
 
         self.output['lamp_datas'].append(o)
 
@@ -2173,7 +2178,7 @@ class ArmoryExporter:
         o['frustum_culling'] = objref.arm_frustum_culling
         o['render_path'] = 'armory_default/armory_default'
         
-        if self.scene.world != None and 'Background' in self.scene.world.node_tree.nodes: # TODO: parse node tree
+        if self.scene.world != None and self.scene.world.node_tree != None and 'Background' in self.scene.world.node_tree.nodes: # TODO: parse node tree
             background_node = self.scene.world.node_tree.nodes['Background']
             col = background_node.inputs[0].default_value
             strength = background_node.inputs[1].default_value
@@ -2183,7 +2188,7 @@ class ArmoryExporter:
             o['clear_color'][2] = max(min(o['clear_color'][2], 1.0), 0.0)
             o['clear_color'][3] = max(min(o['clear_color'][3], 1.0), 0.0)
         else:
-            o['clear_color'] = [0.0, 0.0, 0.0, 1.0]
+            o['clear_color'] = [0.051, 0.051, 0.051, 1.0]
 
         self.output['camera_datas'].append(o)
 

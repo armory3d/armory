@@ -38,15 +38,27 @@ def build_node_tree(world):
     context['bind_constants'] = []
     context['bind_textures'] = []
     
-    bpy.data.worlds['Arm'].world_defs = ''
+    wrd = bpy.data.worlds['Arm']
+    wrd.world_defs = ''
     
     # Traverse world node tree
-    output_node = nodes.get_node_by_type(world.node_tree, 'OUTPUT_WORLD')
-    if output_node != None:
-        parse_world_output(world, output_node, context)
+    parsed = False
+    if world.node_tree != None:
+        output_node = nodes.get_node_by_type(world.node_tree, 'OUTPUT_WORLD')
+        if output_node != None:
+            parse_world_output(world, output_node, context)
+            parsed = True
+    if parsed == False:
+        if wrd.arm_irradiance:
+            wrd.world_defs += '_Irr'
+        envmap_strength_const = {}
+        envmap_strength_const['name'] = 'envmapStrength'
+        envmap_strength_const['float'] = 1.0
+        context['bind_constants'].append(envmap_strength_const)
+        world.arm_envtex_color = [0.051, 0.051, 0.051, 1.0]
+        world.arm_envtex_strength = envmap_strength_const['float']
     
     # Clear to color if no texture or sky is provided
-    wrd = bpy.data.worlds['Arm']
     if '_EnvSky' not in wrd.world_defs and '_EnvTex' not in wrd.world_defs:
         
         if '_EnvImg' not in wrd.world_defs:
@@ -86,10 +98,10 @@ def build_node_tree(world):
 
     # TODO: Lamp texture test..
     if wrd.arm_lamp_texture != '':
-        bpy.data.worlds['Arm'].world_defs += '_LampColTex'
+        wrd.world_defs += '_LampColTex'
 
     if wrd.arm_lamp_ies_texture != '':
-        bpy.data.worlds['Arm'].world_defs += '_LampIES'
+        wrd.world_defs += '_LampIES'
         assets.add_embedded_data('iestexture.png')
 
     voxelgi = False
