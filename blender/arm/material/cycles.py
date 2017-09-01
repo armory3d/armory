@@ -693,8 +693,10 @@ def parse_rgb(node, socket):
         return 'vec3({0}, {1}, {2})'.format(r, g, b)
 
     elif node.type == 'WAVELENGTH':
-        # Pass constant
-        return tovec3([0.0, 0.27, 0.19])
+        curshader.add_function(c_functions.str_wavelength_to_rgb)
+        wl = parse_value_input(node.inputs[0])
+        # Roughly map to cycles - 450 to 600 nanometers
+        return 'wavelength_to_rgb(({0} - 450.0) / 150.0)'.format(wl)
 
 def store_var_name(node):
     return node_name(node.name) + '_store'

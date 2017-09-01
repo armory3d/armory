@@ -428,9 +428,11 @@ def draw_traits(layout, obj, is_object):
 
     if len(obj.arm_traitlist) > 1:
         col.separator()
-        op = col.operator("arm_traitlist.move_item", icon='TRIA_UP', text="").direction = 'UP'
+        op = col.operator("arm_traitlist.move_item", icon='TRIA_UP', text="")
+        op.direction = 'UP'
         op.is_object = is_object
-        op = col.operator("arm_traitlist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
+        op = col.operator("arm_traitlist.move_item", icon='TRIA_DOWN', text="")
+        op.direction = 'DOWN'
         op.is_object = is_object
 
     if obj.arm_traitlist_index >= 0 and len(obj.arm_traitlist) > 0:
@@ -476,9 +478,11 @@ def draw_traits(layout, obj, is_object):
 
             if len(item.arm_traitparamslist) > 1:
                 col.separator()
-                op = col.operator("arm_traitparamslist.move_item", icon='TRIA_UP', text="").direction = 'UP'
+                op = col.operator("arm_traitparamslist.move_item", icon='TRIA_UP', text="")
+                op.direction = 'UP'
                 op.is_object = is_object
-                op = col.operator("arm_traitparamslist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
+                op = col.operator("arm_traitparamslist.move_item", icon='TRIA_DOWN', text="")
+                op.direction = 'DOWN'
                 op.is_object = is_object
 
             if item.arm_traitparamslist_index >= 0 and len(item.arm_traitparamslist) > 0:

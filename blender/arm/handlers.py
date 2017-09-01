@@ -104,6 +104,8 @@ def on_scene_update_post(context):
                 break
 
     # Auto patch on every operator change
+    if not 'Arm' in bpy.data.worlds:
+        props.create_wrd()
     wrd = bpy.data.worlds['Arm']
     if state.krom_running and \
        wrd.arm_play_live_patch and \

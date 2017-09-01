@@ -141,3 +141,11 @@ vec3 rgb_to_hsv(const vec3 c) {
     return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
 }
 """
+
+# https://twitter.com/Donzanoid/status/903424376707657730
+str_wavelength_to_rgb = """
+vec3 wavelength_to_rgb(const float t) {
+    vec3 r = t * 2.1 - vec3(1.8, 1.14, 0.3);
+    return 1.0 - r * r;
+}
+"""
