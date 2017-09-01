@@ -906,7 +906,7 @@ class Cycles {
 		//         if (isInputLinked(node.inputs[0]):
 		//             co = parse_vector_input(node.inputs[0])
 		//         else:
-					var co = 'wposition';
+					var co = 'mposition';
 				var col1 = parse_vector_input(node.inputs[1]);
 				var col2 = parse_vector_input(node.inputs[2]);
 				var scale = parse_value_input(node.inputs[3]);
@@ -922,7 +922,7 @@ class Cycles {
 				// if (isInputLinked(node.inputs[0]):
 					// co = parse_vector_input(node.inputs[0])
 				// else:
-					var co = 'wposition';
+					var co = 'mposition';
 				var but = node.buttons[0]; //gradient_type;
 				var grad = but.data[but.default_value].toUpperCase();
 				grad = StringTools.replace(grad, " ", "_");
@@ -987,7 +987,7 @@ class Cycles {
 		//         if (isInputLinked(node.inputs[0]):
 		//             co = parse_vector_input(node.inputs[0])
 		//         else:
-		//             co = 'wposition'
+		//             co = 'mposition'
 		//         scale = parse_value_input(node.inputs[1])
 		//         # detail = parse_value_input(node.inputs[2])
 		//         # distortion = parse_value_input(node.inputs[3])
@@ -999,7 +999,7 @@ class Cycles {
 		//         if (isInputLinked(node.inputs[0]):
 		//             co = parse_vector_input(node.inputs[0])
 		//         else:
-				var co = 'wposition';
+				var co = 'mposition';
 				var scale = parse_value_input(node.inputs[1]);
 		//         # detail = parse_value_input(node.inputs[2])
 		//         # distortion = parse_value_input(node.inputs[3])
@@ -1022,7 +1022,7 @@ class Cycles {
 		//         if (isInputLinked(node.inputs[0]):
 		//             co = parse_vector_input(node.inputs[0])
 		//         else:
-				var co = 'wposition';
+				var co = 'mposition';
 				var scale = parse_value_input(node.inputs[1]);
 				var but = node.buttons[0]; //coloring;
 				var coloring = but.data[but.default_value].toUpperCase();
@@ -1183,9 +1183,12 @@ class Cycles {
 				var b = parse_value_input(node.inputs[2]);
 				return 'vec3($r, $g, $b)';
 			}
-		//     elif node.type == 'WAVELENGTH':
-		//         # Pass constant
-		//         return tovec3([0.0, 0.27, 0.19])
+			else if (node.type == 'WAVELENGTH') {
+				curshader.add_function(CyclesFunctions.str_wavelength_to_rgb);
+				var wl = parse_value_input(node.inputs[0]);
+				// Roughly map to cycles - 450 to 600 nanometers
+				return 'wavelength_to_rgb(($wl - 450.0) / 150.0)';
+			}
 
 		return tovec3([0.0, 0.0, 0.0]);
 	}
@@ -1243,19 +1246,26 @@ class Cycles {
 			return 'vVec';
 		}
 
-		// elif node.type == 'NEW_GEOMETRY':
-		// 	if socket == node.outputs[0]: # Position
-		// 		return 'wposition'
-		// 	elif socket == node.outputs[1]: # Normal
-		// 		return 'n'
-		// 	elif socket == node.outputs[2]: # Tangent
-		// 		return 'vec3(0.0)'
-		// 	elif socket == node.outputs[3]: # True Normal
-		// 		return 'n'
-		// 	elif socket == node.outputs[4]: # Incoming
-		// 		return 'vVec'
-		// 	elif socket == node.outputs[5]: # Parametric
-		// 		return 'wposition'
+		else if (node.type == 'NEW_GEOMETRY') {
+			if (socket == node.outputs[0]) { // Position
+				return 'wposition';
+			}
+			else if (socket == node.outputs[1]) { // Normal
+				return 'n';
+			}
+			else if (socket == node.outputs[2]) { // Tangent
+				return 'vec3(0.0)';
+			}
+			else if (socket == node.outputs[3]) { // True Normal
+				return 'n';
+			}
+			else if (socket == node.outputs[4]) { // Incoming
+				return 'vVec';
+			}
+			else if (socket == node.outputs[5]) { // Parametric
+				return 'mposition';
+			}
+		}
 
 		// elif node.type == 'HAIR_INFO':
 		// 	return 'vec3(0.0)' # Tangent Normal
@@ -1307,8 +1317,20 @@ class Cycles {
 		// 	# Sample height around the normal and compute normal
 		// 	return 'n'
 
-		// elif node.type == 'MAPPING':
-		// 	return parse_vector_input(node.inputs[0]), 2
+		else if (node.type == 'MAPPING') {
+			var out = parse_vector_input(node.inputs[0]);
+			var trans = parse_vector_input(node.inputs[1]);
+			var sc = parse_vector_input(node.inputs[2]);
+			// if (node.scale[0] != 1.0 || node.scale[1] != 1.0 || node.scale[2] != 1.0) {
+				// out = '({0} * vec2({1}, {2}))'.format(out, node.scale[0], node.scale[1])
+			// }
+			// if (node.translation[0] != 0.0 || node.translation[1] != 0.0 || node.translation[2] != 0.0) {
+				// out = '({0} + vec2({1}, {2}))'.format(out, node.translation[0], node.translation[1])
+			// }
+			out = '($out * ($sc))';
+			out = '($out + ($trans))';
+			return out;
+		}
 
 		// elif node.type == 'NORMAL':
 		// 	if socket == node.outputs[0]:
@@ -1340,28 +1362,38 @@ class Cycles {
 		// 	# Pass throuh
 		// 	return parse_vector_input(node.inputs[0])
 
-		// elif node.type == 'COMBXYZ':
-		// 	x = parse_value_input(node.inputs[0])
-		// 	y = parse_value_input(node.inputs[1])
-		// 	z = parse_value_input(node.inputs[2])
-		// 	return 'vec3({0}, {1}, {2})'.format(x, y, z)
+		else if (node.type == 'COMBXYZ') {
+			var x = parse_value_input(node.inputs[0]);
+			var y = parse_value_input(node.inputs[1]);
+			var z = parse_value_input(node.inputs[2]);
+			return 'vec3($x, $y, $z)';
+		}
 
-		// elif node.type == 'VECT_MATH':
-		// 	vec1 = parse_vector_input(node.inputs[0])
-		// 	vec2 = parse_vector_input(node.inputs[1])
-		// 	op = node.operation
-		// 	if op == 'ADD':
-		// 		return '({0} + {1})'.format(vec1, vec2)
-		// 	elif op == 'SUBTRACT':
-		// 		return '({0} - {1})'.format(vec1, vec2)
-		// 	elif op == 'AVERAGE':
-		// 		return '(({0} + {1}) / 2.0)'.format(vec1, vec2)
-		// 	elif op == 'DOT_PRODUCT':
-		// 		return 'vec3(dot({0}, {1}))'.format(vec1, vec2)
-		// 	elif op == 'CROSS_PRODUCT':
-		// 		return 'cross({0}, {1})'.format(vec1, vec2)
-		// 	elif op == 'NORMALIZE':
-		// 		return 'normalize({0})'.format(vec1)
+		else if (node.type == 'VECT_MATH') {
+			var vec1 = parse_vector_input(node.inputs[0]);
+			var vec2 = parse_vector_input(node.inputs[1]);
+			var but = node.buttons[0]; //operation;
+			var op = but.data[but.default_value].toUpperCase();
+			op = StringTools.replace(op, " ", "_");
+			if (op == 'ADD') {
+				return '($vec1 + $vec2)';
+			}
+			else if (op == 'SUBTRACT') {
+				return '($vec1 - $vec2)';
+			}
+			else if (op == 'AVERAGE') {
+				return '(($vec1 + $vec2) / 2.0)';
+			}
+			else if (op == 'DOT_PRODUCT') {
+				return 'vec3(dot($vec1, $vec2))';
+			}
+			else if (op == 'CROSS_PRODUCT') {
+				return 'cross($vec1, $vec2)';
+			}
+			else if (op == 'NORMALIZE') {
+				return 'normalize($vec1)';
+			}
+		}
 
 		return 'vec3(0.0)';
 	}
@@ -1447,18 +1479,22 @@ class Cycles {
 		//     else:
 		//         return '0.0'
 
-		// elif node.type == 'CAMERA':
-		//     # View Z Depth
-		//     if socket == node.outputs[1]:
-		//         return 'gl_FragCoord.z'
-		//     # View Distance
-		//     else:
-		//         return 'length(eyeDir)'
+		if (node.type == 'CAMERA') {
+			// View Z Depth
+			if (socket == node.outputs[1]) {
+				return 'gl_FragCoord.z';
+			}
+			// View Distance
+			else {
+				return 'length(eyeDir)';
+			}
+		}
 
-		// elif node.type == 'FRESNEL':
-		//     ior = parse_value_input(node.inputs[0])
-		//     #nor = parse_vectorZ_input(node.inputs[1])
-		//     return 'pow(1.0 - dotNV, 7.25 / {0})'.format(ior) # max(dotNV, 0.0)
+		else if (node.type == 'FRESNEL') {
+			var ior = parse_value_input(node.inputs[0]);
+			// var nor = parse_vector_input(node.inputs[1])
+			return 'pow(1.0 - dotNV, 7.25 / $ior)';
+		}
 
 		// elif node.type == 'NEW_GEOMETRY':
 		//     if socket == node.outputs[6]: # Backfacing
@@ -1472,13 +1508,16 @@ class Cycles {
 		//     # Thickness
 		//     return '0.5'
 
-		// elif node.type == 'LAYER_WEIGHT':
-		//     blend = parse_value_input(node.inputs[0])
-		//     # nor = parse_vector_input(node.inputs[1])
-		//     if socket == node.outputs[0]: # Fresnel
-		//         return 'clamp(pow(1.0 - dotNV, (1.0 - {0}) * 10.0), 0.0, 1.0)'.format(blend)
-		//     elif socket == node.outputs[1]: # Facing
-		//         return '((1.0 - dotNV) * {0})'.format(blend)
+		else if (node.type == 'LAYER_WEIGHT') {
+			var blend = parse_value_input(node.inputs[0]);
+			// var nor = parse_vector_input(node.inputs[1])
+			if (socket == node.outputs[0]) { // Fresnel
+				return 'clamp(pow(1.0 - dotNV, (1.0 - $blend) * 10.0), 0.0, 1.0)';
+			}
+			else if (socket == node.outputs[1]) { // Facing
+				return '((1.0 - dotNV) * $blend)';
+			}
+		}
 
 		// elif node.type == 'LIGHT_PATH':
 		//     if socket == node.outputs[0]: # Is Camera Ray
@@ -1525,7 +1564,7 @@ class Cycles {
 		//     elif socket == node.outputs[4]: # Size
 		//         return '0.0'
 
-		if (node.type == 'VALUE') {
+		else if (node.type == 'VALUE') {
 			return tovec1(node.outputs[0].default_value);
 		}
 
@@ -1537,17 +1576,21 @@ class Cycles {
 		// elif node.type == 'TEX_BRICK':
 		//     return '0.0'
 
-		// elif node.type == 'TEX_CHECKER':
-		//     # TODO: do not recompute when color socket is also connected
-		//     curshader.add_function(c_functions.str_tex_checker)
-		//     if (isInputLinked(node.inputs[0]):
-		//         co = parse_vector_input(node.inputs[0])
-		//     else:
-		//         co = 'wposition'
-		//     col1 = parse_vector_input(node.inputs[1])
-		//     col2 = parse_vector_input(node.inputs[2])
-		//     scale = parse_value_input(node.inputs[3])
-		//     return 'tex_checker({0}, {1}, {2}, {3}).r'.format(co, col1, col2, scale)
+		else if (node.type == 'TEX_CHECKER') {
+			// TODO: do not recompute when color socket is also connected
+			curshader.add_function(CyclesFunctions.str_tex_checker);
+			var co = '';
+			// if (node.inputs[0].is_linked) {
+				// co = parse_vector_input(node.inputs[0]);
+			// }
+			// else {
+				co = 'mposition';
+			// }
+			var col1 = parse_vector_input(node.inputs[1]);
+			var col2 = parse_vector_input(node.inputs[2]);
+			var scale = parse_value_input(node.inputs[3]);
+			return 'tex_checker($co, $col1, $col2, $scale).r';
+		}
 
 		// elif node.type == 'TEX_GRADIENT':
 		//     return '0.0'
@@ -1565,18 +1608,18 @@ class Cycles {
 				var texstore = texture_store(node, tex, tex_name, to_linear);
 				return '$texstore.a';
 			}
+			// # Already fetched
+			// if res_var_name(node, node.outputs[0]) in parsed:
+			//     return '{0}.a'.format(store_var_name(node))
+			// tex_name = c_state.safesrc(node.name)
+			// tex = c_state.make_texture(node, tex_name)
+			// if tex != None:
+			//     return '{0}.a'.format(texture_store(node, tex, tex_name))
+			// else:
+			//     tex_store = store_var_name(node) # Pink color for missing texture
+			//     curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0);'.format(tex_store))
+			//     return '{0}.a'.format(tex_store)
 		}
-		    // # Already fetched
-		    // if res_var_name(node, node.outputs[0]) in parsed:
-		    //     return '{0}.a'.format(store_var_name(node))
-		    // tex_name = c_state.safesrc(node.name)
-		    // tex = c_state.make_texture(node, tex_name)
-		    // if tex != None:
-		    //     return '{0}.a'.format(texture_store(node, tex, tex_name))
-		    // else:
-		    //     tex_store = store_var_name(node) # Pink color for missing texture
-		    //     curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0);'.format(tex_store))
-		    //     return '{0}.a'.format(tex_store)
 
 		// elif node.type == 'TEX_MAGIC':
 		//     return '0.0'
@@ -1587,40 +1630,47 @@ class Cycles {
 		//     if (isInputLinked(node.inputs[0]):
 		//         co = parse_vector_input(node.inputs[0])
 		//     else:
-		//         co = 'wposition'
+		//         co = 'mposition'
 		//     scale = parse_value_input(node.inputs[1])
 		//     # detail = parse_value_input(node.inputs[2])
 		//     # distortion = parse_value_input(node.inputs[3])
 		//     return 'tex_noise_f({0} * {1})'.format(co, scale)
 
-		// elif node.type == 'TEX_NOISE':
-		//     curshader.add_function(c_functions.str_tex_noise)
-		//     if (isInputLinked(node.inputs[0]):
-		//         co = parse_vector_input(node.inputs[0])
-		//     else:
-		//         co = 'wposition'
-		//     scale = parse_value_input(node.inputs[1])
-		//     # detail = parse_value_input(node.inputs[2])
-		//     # distortion = parse_value_input(node.inputs[3])
-		//     return 'tex_noise({0} * {1})'.format(co, scale)
+		else if (node.type == 'TEX_NOISE') {
+			curshader.add_function(CyclesFunctions.str_tex_noise);
+			// if (isInputLinked(node.inputs[0]):
+				// co = parse_vector_input(node.inputs[0])
+			// else:
+				var co = 'mposition';
+			var scale = parse_value_input(node.inputs[1]);
+			// detail = parse_value_input(node.inputs[2]);
+			// distortion = parse_value_input(node.inputs[3]);
+			return 'tex_noise($co * $scale)';
+		}
 
 		// elif node.type == 'TEX_POINTDENSITY':
 		//     return '0.0'
 
-		// elif node.type == 'TEX_VORONOI':
-		//     curshader.add_function(c_functions.str_tex_voronoi)
-		//     c_state.assets_add(c_state.get_sdk_path() + '/armory/Assets/' + 'noise64.png')
-		//     c_state.assets_add_embedded_data('noise64.png')
-		//     curshader.add_uniform('sampler2D snoise', link='_noise64')
-		//     if (isInputLinked(node.inputs[0]):
-		//         co = parse_vector_input(node.inputs[0])
-		//     else:
-		//         co = 'wposition'
-		//     scale = parse_value_input(node.inputs[1])
-		//     if node.coloring == 'INTENSITY':
-		//         return 'tex_voronoi({0} * {1}).a'.format(co, scale)
-		//     else: # CELLS
-		//         return 'tex_voronoi({0} * {1}).r'.format(co, scale)
+		else if (node.type == 'TEX_VORONOI') {
+			curshader.add_function(CyclesFunctions.str_tex_voronoi);
+		//         c_state.assets_add(c_state.get_sdk_path() + '/armory/Assets/' + 'noise64.png')
+		//         c_state.assets_add_embedded_data('noise64.png')
+			curshader.add_uniform('sampler2D snoise', '_noise64');
+		//         if (isInputLinked(node.inputs[0]):
+		//             co = parse_vector_input(node.inputs[0])
+		//         else:
+			var co = 'mposition';
+			var scale = parse_value_input(node.inputs[1]);
+			var but = node.buttons[0]; //coloring;
+			var coloring = but.data[but.default_value].toUpperCase();
+			coloring = StringTools.replace(coloring, " ", "_");
+			if (coloring == 'INTENSITY') {
+				return 'vec3(tex_voronoi($co / $scale).a)';
+			}
+			else { // Cells
+				return 'tex_voronoi($co / $scale).r';
+			}
+		}
 
 		// elif node.type == 'TEX_WAVE':
 		//     return '0.0'
@@ -1637,88 +1687,127 @@ class Cycles {
 		// elif node.type == 'VALTORGB': # ColorRamp
 		//     return '1.0'
 
-		// elif node.type == 'MATH':
-		//     val1 = parse_value_input(node.inputs[0])
-		//     val2 = parse_value_input(node.inputs[1])
-		//     op = node.operation
-		//     if op == 'ADD':
-		//         out_val = '({0} + {1})'.format(val1, val2)
-		//     elif op == 'SUBTRACT':
-		//         out_val = '({0} - {1})'.format(val1, val2)
-		//     elif op == 'MULTIPLY':
-		//         out_val = '({0} * {1})'.format(val1, val2)
-		//     elif op == 'DIVIDE':
-		//         out_val = '({0} / {1})'.format(val1, val2)
-		//     elif op == 'SINE':
-		//         out_val = 'sin({0})'.format(val1)
-		//     elif op == 'COSINE':
-		//         out_val = 'cos({0})'.format(val1)
-		//     elif op == 'TANGENT':
-		//         out_val = 'tan({0})'.format(val1)
-		//     elif op == 'ARCSINE':
-		//         out_val = 'asin({0})'.format(val1)
-		//     elif op == 'ARCCOSINE':
-		//         out_val = 'acos({0})'.format(val1)
-		//     elif op == 'ARCTANGENT':
-		//         out_val = 'atan({0})'.format(val1)
-		//     elif op == 'POWER':
-		//         out_val = 'pow({0}, {1})'.format(val1, val2)
-		//     elif op == 'LOGARITHM':
-		//         out_val = 'log({0})'.format(val1)
-		//     elif op == 'MINIMUM':
-		//         out_val = 'min({0}, {1})'.format(val1, val2)
-		//     elif op == 'MAXIMUM':
-		//         out_val = 'max({0}, {1})'.format(val1, val2)
-		//     elif op == 'ROUND':
-		//         # out_val = 'round({0})'.format(val1)
-		//         out_val = 'floor({0} + 0.5)'.format(val1)
-		//     elif op == 'LESS_THAN':
-		//         out_val = 'float({0} < {1})'.format(val1, val2)
-		//     elif op == 'GREATER_THAN':
-		//         out_val = 'float({0} > {1})'.format(val1, val2)
-		//     elif op == 'MODULO':
-		//         # out_val = 'float({0} % {1})'.format(val1, val2)
-		//         out_val = 'mod({0}, {1})'.format(val1, val2)
-		//     elif op == 'ABSOLUTE':
-		//         out_val = 'abs({0})'.format(val1)
-		//     if node.use_clamp:
-		//         return 'clamp({0}, 0.0, 1.0)'.format(out_val)
-		//     else:
-		//         return out_val
+		else if (node.type == 'MATH') {
+			var val1 = parse_value_input(node.inputs[0]);
+			var val2 = parse_value_input(node.inputs[1]);
+			var but = node.buttons[0]; //operation;
+			var op = but.data[but.default_value].toUpperCase();
+			op = StringTools.replace(op, " ", "_");
+			but = node.buttons[1]; // use_clamp
+			var use_clamp = but.default_value == "true";
+			var out_val = '';
+			if (op == 'ADD') {
+				out_val = '($val1 + $val2)';
+			}
+			else if (op == 'SUBTRACT') {
+				out_val = '($val1 - $val2)';
+			}
+			else if (op == 'MULTIPLY') {
+				out_val = '($val1 * $val2)';
+			}
+			else if (op == 'DIVIDE') {
+				out_val = '($val1 / $val2)';
+			}
+			else if (op == 'SINE') {
+				out_val = 'sin($val1)';
+			}
+			else if (op == 'COSINE') {
+				out_val = 'cos($val1)';
+			}
+			else if (op == 'TANGENT') {
+				out_val = 'tan($val1)';
+			}
+			else if (op == 'ARCSINE') {
+				out_val = 'asin($val1)';
+			}
+			else if (op == 'ARCCOSINE') {
+				out_val = 'acos($val1)';
+			}
+			else if (op == 'ARCTANGENT') {
+				out_val = 'atan($val1)';
+			}
+			else if (op == 'POWER') {
+				out_val = 'pow($val1, $val2)';
+			}
+			else if (op == 'LOGARITHM') {
+				out_val = 'log($val1)';
+			}
+			else if (op == 'MINIMUM') {
+				out_val = 'min($val1, $val2)';
+			}
+			else if (op == 'MAXIMUM') {
+				out_val = 'max($val1, $val2)';
+			}
+			else if (op == 'ROUND') {
+				out_val = 'floor($val1 + 0.5)';
+			}
+			else if (op == 'LESS_THAN') {
+				out_val = 'float($val1 < $val2)';
+			}
+			else if (op == 'GREATER_THAN') {
+				out_val = 'float($val1 > $val2)';
+			}
+			else if (op == 'MODULO') {
+				out_val = 'mod($val1, $val2)';
+			}
+			else if (op == 'ABSOLUTE') {
+				out_val = 'abs($val1)';
+			}
+			if (use_clamp) {
+				return 'clamp($out_val, 0.0, 1.0)';
+			}
+			else {
+				return out_val;
+			}
+		}
 
-		// elif node.type == 'RGBTOBW':
-		//     col = parse_vector_input(node.inputs[0])
-		//     return '((({0}.r * 0.3 + {0}.g * 0.59 + {0}.b * 0.11) / 3.0) * 2.5)'.format(col)
+		else if (node.type == 'RGBTOBW') {
+			var col = parse_vector_input(node.inputs[0]);
+			return '((($col.r * 0.3 + $col.g * 0.59 + $col.b * 0.11) / 3.0) * 2.5)';
+		}
 
 		// elif node.type == 'SEPHSV':
 		//     return '0.0'
 
-		// elif node.type == 'SEPRGB':
-		//     col = parse_vector_input(node.inputs[0])
-		//     if socket == node.outputs[0]:
-		//         return '{0}.r'.format(col)
-		//     elif socket == node.outputs[1]:
-		//         return '{0}.g'.format(col)
-		//     elif socket == node.outputs[2]:
-		//         return '{0}.b'.format(col)
+		else if (node.type == 'SEPRGB') {
+			var col = parse_vector_input(node.inputs[0]);
+			if (socket == node.outputs[0]) {
+				return '$col.r';
+			}
+			else if (socket == node.outputs[1]) {
+				return '$col.g';
+			}
+			else if (socket == node.outputs[2]) {
+				return '$col.b';
+			}
+		}
 
-		// elif node.type == 'SEPXYZ':
-		//     vec = parse_vector_input(node.inputs[0])
-		//     if socket == node.outputs[0]:
-		//         return '{0}.x'.format(vec)
-		//     elif socket == node.outputs[1]:
-		//         return '{0}.y'.format(vec)
-		//     elif socket == node.outputs[2]:
-		//         return '{0}.z'.format(vec)
+		else if (node.type == 'SEPXYZ') {
+			var vec = parse_vector_input(node.inputs[0]);
+			if (socket == node.outputs[0]) {
+				return '$vec.x';
+			}
+			else if (socket == node.outputs[1]) {
+				return '$vec.y';
+			}
+			else if (socket == node.outputs[2]) {
+				return '$vec.z';
+			}
+		}
 
-		// elif node.type == 'VECT_MATH':
-		//     vec1 = parse_vector_input(node.inputs[0])
-		//     vec2 = parse_vector_input(node.inputs[1])
-		//     op = node.operation
-		//     if op == 'DOT_PRODUCT':
-		//         return 'dot({0}, {1})'.format(vec1, vec2)
-		//     else:
-		//         return '0.0'
+		else if (node.type == 'VECT_MATH') {
+			var vec1 = parse_vector_input(node.inputs[0]);
+			var vec2 = parse_vector_input(node.inputs[1]);
+			var but = node.buttons[0]; //operation;
+			var op = but.data[but.default_value].toUpperCase();
+			op = StringTools.replace(op, " ", "_");
+			if (op == 'DOT_PRODUCT') {
+				return 'dot($vec1, $vec2)';
+			}
+			else {
+				return '0.0';
+			}
+		}
 
 		return '0.0';
 	}

@@ -74,6 +74,12 @@ def make_finalize(con_mesh):
         vert.write('vec3 wposition = vec4(W * spos).xyz;')
         vert.write_pre = False
 
+    if frag.contains('mposition') and not frag.contains('vec3 mposition'):
+        vert.add_out('vec3 mposition')
+        vert.write_pre = True
+        vert.write('mposition = spos.xyz;')
+        vert.write_pre = False
+
 def make_base(con_mesh, parse_opacity):
     global is_displacement
     global write_material_attribs

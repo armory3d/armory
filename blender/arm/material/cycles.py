@@ -450,7 +450,7 @@ def parse_rgb(node, socket):
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
-            co = 'wposition'
+            co = 'mposition'
         col1 = parse_vector_input(node.inputs[1])
         col2 = parse_vector_input(node.inputs[2])
         scale = parse_value_input(node.inputs[3])
@@ -464,7 +464,7 @@ def parse_rgb(node, socket):
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
-            co = 'wposition'
+            co = 'mposition'
         grad = node.gradient_type
         if grad == 'LINEAR':
             f = '{0}.x'.format(co)
@@ -511,7 +511,7 @@ def parse_rgb(node, socket):
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
-            co = 'wposition'
+            co = 'mposition'
         scale = parse_value_input(node.inputs[1])
         # detail = parse_value_input(node.inputs[2])
         # distortion = parse_value_input(node.inputs[3])
@@ -522,7 +522,7 @@ def parse_rgb(node, socket):
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
-            co = 'wposition'
+            co = 'mposition'
         scale = parse_value_input(node.inputs[1])
         # detail = parse_value_input(node.inputs[2])
         # distortion = parse_value_input(node.inputs[3])
@@ -545,7 +545,7 @@ def parse_rgb(node, socket):
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
-            co = 'wposition'
+            co = 'mposition'
         scale = parse_value_input(node.inputs[1])
         if node.coloring == 'INTENSITY':
             return 'vec3(tex_voronoi({0} / {1}).a)'.format(co, scale)
@@ -762,7 +762,7 @@ def parse_vector(node, socket):
         elif socket == node.outputs[4]: # Incoming
             return 'vVec'
         elif socket == node.outputs[5]: # Parametric
-            return 'wposition'
+            return 'mposition'
 
     elif node.type == 'HAIR_INFO':
         return 'vec3(0.0)' # Tangent Normal
@@ -1042,7 +1042,7 @@ def parse_value(node, socket):
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
-            co = 'wposition'
+            co = 'mposition'
         col1 = parse_vector_input(node.inputs[1])
         col2 = parse_vector_input(node.inputs[2])
         scale = parse_value_input(node.inputs[3])
@@ -1073,7 +1073,7 @@ def parse_value(node, socket):
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
-            co = 'wposition'
+            co = 'mposition'
         scale = parse_value_input(node.inputs[1])
         # detail = parse_value_input(node.inputs[2])
         # distortion = parse_value_input(node.inputs[3])
@@ -1084,7 +1084,7 @@ def parse_value(node, socket):
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
-            co = 'wposition'
+            co = 'mposition'
         scale = parse_value_input(node.inputs[1])
         # detail = parse_value_input(node.inputs[2])
         # distortion = parse_value_input(node.inputs[3])
@@ -1101,7 +1101,7 @@ def parse_value(node, socket):
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
-            co = 'wposition'
+            co = 'mposition'
         scale = parse_value_input(node.inputs[1])
         if node.coloring == 'INTENSITY':
             return 'tex_voronoi({0} * {1}).a'.format(co, scale)
