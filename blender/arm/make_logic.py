@@ -109,7 +109,7 @@ def build_node(node, f):
         # Not linked - create node with default values
         else:
             out_name = '[' + build_default_node(out) + ']'
-        # Add input
+        # Add outputs
         f.write('\t\t' + name + '.addOutputs(' + out_name + ');\n')
 
     return name

@@ -1,0 +1,262 @@
+package armory.system;
+
+import armory.logicnode.*;
+import armory.system.Cycles;
+
+// typedef TNodeCanvas = {
+// 	var nodes: Array<TNode>;
+// 	var links: Array<TNodeLink>;
+// }
+
+// typedef TNode = {
+// 	var id: Int;
+// 	var name: String;
+// 	var type: String;
+// 	var x: Float;
+// 	var y: Float;
+// 	var inputs: Array<TNodeSocket>;
+// 	var outputs: Array<TNodeSocket>;
+// 	var buttons: Array<TNodeButton>;
+// 	var color: Int;
+// }
+
+// typedef TNodeSocket = {
+// 	var id: Int;
+// 	var node_id: Int;
+// 	var name: String;
+// 	var type: String;
+// 	var color: Int;
+// 	var default_value: Dynamic;
+// 	@:optional var min: Null<Float>;
+// 	@:optional var max: Null<Float>;
+// }
+
+// typedef TNodeLink = {
+// 	var id: Int;
+// 	var from_id: Int;
+// 	var from_socket: Int;
+// 	var to_id: Int;
+// 	var to_socket: Int;
+// }
+
+// typedef TNodeButton = {
+// 	var name: String;
+// 	var type: String;
+// 	var output: Int;
+// 	@:optional var default_value: Dynamic;
+// 	@:optional var data: Array<String>;
+// 	@:optional var min: Null<Float>;
+// 	@:optional var max: Null<Float>;
+// }
+
+class Logic {
+
+	static var nodes:Array<TNode>;
+	static var links:Array<TNodeLink>;
+
+	static var parsed_nodes:Array<String> = null;
+	static var parsed_labels:Map<String, String> = null;
+	static var nodeMap:Map<String, armory.logicnode.LogicNode>;
+
+	public static function getNode(id: Int): TNode {
+		for (n in nodes) if (n.id == id) return n;
+		return null;
+	}
+
+	public static function getLink(id: Int): TNodeLink {
+		for (l in links) if (l.id == id) return l;
+		return null;
+	}
+
+	public static function getInputLink(inp: TNodeSocket): TNodeLink {
+		for (l in links) {
+			if (l.to_id == inp.node_id) {
+				var node = getNode(inp.node_id);
+				if (node.inputs.length <= l.to_socket) return null;
+				if (node.inputs[l.to_socket] == inp) return l;
+			}
+		}
+		return null;
+	}
+
+	public static function getOutputLinks(out: TNodeSocket): Array<TNodeLink> {
+		var res: Array<TNodeLink> = [];
+		for (l in links) {
+			if (l.from_id == out.node_id) {
+				var node = getNode(out.node_id);
+				if (node.outputs.length <= l.from_socket) continue;
+				if (node.outputs[l.from_socket] == out) res.push(l);
+			}
+		}
+		return res;
+	}
+
+	static function safesrc(s:String):String {
+		return StringTools.replace(s, ' ', '');
+	}
+
+	static function node_name(node:TNode):String {
+		var s = safesrc(node.name) + node.id;
+		return s;
+	}
+
+	static var tree:armory.logicnode.LogicTree;
+	public static function parse(canvas:TNodeCanvas):iron.Trait {
+		nodes = canvas.nodes;
+		links = canvas.links;
+
+		parsed_nodes = [];
+		parsed_labels = new Map();
+		nodeMap = new Map();
+		var root_nodes = get_root_nodes(canvas);
+
+		tree = new armory.logicnode.LogicTree();
+		tree.notifyOnAdd(function() {
+			for (node in root_nodes) {
+				build_node(node);
+			}
+		});
+		return tree;
+	}
+
+	static function build_node(node:TNode):String {
+
+		// Get node name
+		var name =  node_name(node);
+
+		// Link nodes using labels
+		// if (node.label != '') {
+			// var l = parsed_labels.get(node.label);
+			// if (l != null) {
+				// return l;
+			// }
+			// parsed_labels.set(node.label, name);
+		// }
+
+		// Check if node already exists
+		if (parsed_nodes.indexOf(name) != -1) {
+			return name;
+		}
+
+		parsed_nodes.push(name);
+
+		// Create node
+		var node_type = node.type; //[2:] // Discard 'LN'TimeNode prefix
+		var n = 'armory.logicnode.' + node_type;
+		var v = Type.createInstance(Type.resolveClass(n), [tree]);
+		nodeMap.set(name, v);
+
+		// Properties
+		for (i in 0...5) {
+			for (b in node.buttons) {
+				if (b.name == 'property' + i) {
+					Reflect.setProperty(v, b.name, b.data[b.default_value]);
+				}
+			}
+		}
+		
+		// Create inputs
+		var inp_node:armory.logicnode.LogicNode = null;
+		var inp_from = 0;
+		for (i in 0...node.inputs.length) {
+			var inp = node.inputs[i];
+			// Is linked - find node
+			var l = getInputLink(inp);
+			if (l != null) {
+				var n = getNode(l.from_id);
+				var socket = n.outputs[l.from_socket];
+				inp_node = nodeMap.get(build_node(n));
+				for (i in 0...n.outputs.length) {
+					if (n.outputs[i] == socket) {
+						inp_from = i;
+						break;
+					}
+				}
+			}
+			// Not linked - create node with default values
+			else {
+				inp_node = build_default_node(inp);
+				inp_from = 0;
+			}
+			// Add input
+			v.addInput(inp_node, inp_from);
+		}
+
+		// Create outputs
+		for (out in node.outputs) {
+			var outNodes:Array<armory.logicnode.LogicNode> = [];
+			var ls = getOutputLinks(out);
+			if (ls != null && ls.length > 0) {
+				for (l in ls) {
+					var n = getNode(l.to_id);
+					var out_name = build_node(n);
+					outNodes.push(nodeMap.get(out_name));
+				}
+			}
+			// Not linked - create node with default values
+			else {
+				outNodes.push(build_default_node(out));
+			}
+			// Add outputs
+			v.addOutputs(outNodes);
+		}
+
+		return name;
+	}
+		
+	static function get_root_nodes(node_group:TNodeCanvas):Array<TNode> {
+		var roots:Array<TNode> = [];
+		for (node in node_group.nodes) {
+			// if (node.bl_idname == 'NodeUndefined') {
+				// arm.log.warn('Undefined logic nodes in ' + node_group.name)
+				// return []
+			// }
+			var linked = false;
+			for (out in node.outputs) {
+				var ls = getOutputLinks(out);
+				if (ls != null && ls.length > 0) {
+					linked = true;
+					break;
+				}
+			}
+			if (!linked) { // Assume node with no connected outputs as roots
+				roots.push(node);
+			}
+		}
+		return roots;
+	}
+
+	static function build_default_node(inp:TNodeSocket):armory.logicnode.LogicNode {
+		
+		var v:armory.logicnode.LogicNode = null;
+		
+		if (inp.type == 'ACTION') {
+			v = Type.createInstance(Type.resolveClass('armory.logicnode.NullNode'), [tree]);
+		}
+		else if (inp.type == 'OBJECT') {
+			v = Type.createInstance(Type.resolveClass('armory.logicnode.ObjectNode'), [tree, inp.default_value]);
+		}
+		else if (inp.type == 'VECTOR') {
+			v = Type.createInstance(Type.resolveClass('armory.logicnode.VectorNode'), [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2]]);
+		}
+		else if (inp.type == 'RGBA') {
+			v = Type.createInstance(Type.resolveClass('armory.logicnode.ColorNode'), [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2], inp.default_value[3]]);
+		}
+		else if (inp.type == 'RGB') {
+			v = Type.createInstance(Type.resolveClass('armory.logicnode.ColorNode'), [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2]]);
+		}
+		else if (inp.type == 'VALUE') { 
+			v = Type.createInstance(Type.resolveClass('armory.logicnode.FloatNode'), [tree, inp.default_value]);
+		}
+		else if (inp.type == 'INT') {
+			v = Type.createInstance(Type.resolveClass('armory.logicnode.IntegerNode'), [tree, inp.default_value]);
+		}
+		else if (inp.type == 'BOOLEAN') {
+			v = Type.createInstance(Type.resolveClass('armory.logicnode.BooleanNode'), [tree, inp.default_value]);
+		}
+		else if (inp.type == 'STRING') {
+			v = Type.createInstance(Type.resolveClass('armory.logicnode.StringNode'), [tree, inp.default_value]);
+		}
+		return v;
+	}
+}
