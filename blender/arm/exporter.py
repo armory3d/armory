@@ -2625,7 +2625,6 @@ class ArmoryExporter:
         if wrd.arm_play_console:
             if not 'traits' in self.output:
                 self.output['traits'] = []
-            # Debug console enabled, attach console overlay to each camera
             ArmoryExporter.export_ui = True
             x = {}
             x['type'] = 'Script'

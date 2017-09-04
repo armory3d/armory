@@ -1,6 +1,7 @@
 import bpy
 import subprocess
 import webbrowser
+import threading
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 import arm.utils
@@ -642,9 +643,63 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
         assets.invalidate_enabled = False
         make.build_project()
         make.compile_project(watch=True)
-        assets.invalidate_enabled = True
         state.is_export = False
         wrd.arm_rplist_index = rplist_index
+        assets.invalidate_enabled = True
+        return{'FINISHED'}
+
+class ArmoryPublishProjectButton(bpy.types.Operator):
+    '''Build project ready for publishing'''
+    bl_idname = 'arm.publish_project'
+    bl_label = 'Publish'
+ 
+    def execute(self, context):
+        if not arm.utils.check_saved(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_sdkpath(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_engine(self):
+            return {"CANCELLED"}
+
+        make_renderer.check_default()
+
+        wrd = bpy.data.worlds['Arm']
+        item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+        if item.arm_project_rp == '':
+            item.arm_project_rp = wrd.arm_rplist[wrd.arm_rplist_index].name
+        # Assume unique rp names
+        rplist_index = wrd.arm_rplist_index
+        for i in range(0, len(wrd.arm_rplist)):
+            if wrd.arm_rplist[i].name == item.arm_project_rp:
+                wrd.arm_rplist_index = i
+                break
+
+        make.clean_project()
+        state.target = item.arm_project_target
+        state.is_export = True
+        assets.invalidate_enabled = False
+        make.build_project(is_publish=True)
+        make.compile_project(watch=True)
+        state.is_export = False
+        wrd.arm_rplist_index = rplist_index
+        assets.invalidate_enabled = True
+        target_name = make_utils.get_kha_target(state.target)
+        files_path = arm.utils.get_fp_build() + '/' + target_name
+        if target_name == 'html5':
+            print('HTML5 files are being exported to ' + files_path)
+        elif target_name == 'ios' or target_name == 'osx': # TODO: to macos
+            print('XCode project files are being exported to ' + files_path + '-build')
+        elif target_name == 'windows':
+            print('VisualStudio 2017 project files are being exported to ' + files_path + '-build')
+        elif target_name == 'windowsapp':
+            print('VisualStudio 2017 project files are being exported to ' + files_path + '-build')
+        elif target_name == 'android-native':
+            print('Android Studio project files are being exported to ' + files_path + '-build/' + arm.utils.safestr(wrd.arm_project_name))
+        else:
+            print('Makefiles are being exported to ' + files_path + '-build')
+        self.report({'INFO'}, 'Publishing project, check console for details.')
         return{'FINISHED'}
 
 class ArmoryPatchButton(bpy.types.Operator):
@@ -723,41 +778,6 @@ class ArmoryCleanProjectButton(bpy.types.Operator):
             return {"CANCELLED"}
 
         make.clean_project()
-        return{'FINISHED'}
-
-class ArmoryPublishButton(bpy.types.Operator):
-    '''Build project ready for publishing'''
-    bl_idname = 'arm.publish_project'
-    bl_label = 'Publish'
- 
-    def execute(self, context):
-        if not arm.utils.check_saved(self):
-            return {"CANCELLED"}
-
-        if not arm.utils.check_sdkpath(self):
-            return {"CANCELLED"}
-
-        if not arm.utils.check_engine(self):
-            return {"CANCELLED"}
-
-        make_renderer.check_default()
-
-        wrd = bpy.data.worlds['Arm']
-        item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-        if item.arm_project_rp == '':
-            item.arm_project_rp = wrd.arm_rplist[wrd.arm_rplist_index].name
-        # Assume unique rp names
-        rplist_index = wrd.arm_rplist_index
-        for i in range(0, len(wrd.arm_rplist)):
-            if wrd.arm_rplist[i].name == item.arm_project_rp:
-                wrd.arm_rplist_index = i
-                break
-
-        state.is_export = True
-        make.publish_project()
-        state.is_export = False
-        wrd.arm_rplist_index = rplist_index
-        self.report({'INFO'}, 'Publishing project, check console for details.')
         return{'FINISHED'}
 
 class ArmoryRenderButton(bpy.types.Operator):
@@ -1113,7 +1133,7 @@ def register():
     bpy.utils.register_class(CleanButtonMenu)
     bpy.utils.register_class(ArmoryCleanCacheButton)
     bpy.utils.register_class(ArmoryCleanProjectButton)
-    bpy.utils.register_class(ArmoryPublishButton)
+    bpy.utils.register_class(ArmoryPublishProjectButton)
     bpy.utils.register_class(ArmoryRenderButton)
     bpy.utils.register_class(ArmoryRenderAnimButton)
     bpy.utils.register_class(ArmoryGenerateNavmeshButton)
@@ -1158,7 +1178,7 @@ def unregister():
     bpy.utils.unregister_class(CleanButtonMenu)
     bpy.utils.unregister_class(ArmoryCleanCacheButton)
     bpy.utils.unregister_class(ArmoryCleanProjectButton)
-    bpy.utils.unregister_class(ArmoryPublishButton)
+    bpy.utils.unregister_class(ArmoryPublishProjectButton)
     bpy.utils.unregister_class(ArmoryRenderButton)
     bpy.utils.unregister_class(ArmoryRenderAnimButton)
     bpy.utils.unregister_class(ArmoryGenerateNavmeshButton)

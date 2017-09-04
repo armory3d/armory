@@ -8,6 +8,8 @@ from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
 def update_renderpath(self, context):
+    if assets.invalidate_enabled == False:
+        return
     make_renderer.set_renderpath(self, context)
 
 def update_material_model(self, context):

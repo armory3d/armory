@@ -447,27 +447,8 @@ def on_compiled(mode): # build, play, play_viewport, publish
     sdk_path = arm.utils.get_sdk_path()
     wrd = bpy.data.worlds['Arm']
 
-    # Print info
-    if mode == 'publish':
-        target_name = make_utils.get_kha_target(state.target)
-        print('Project published')
-        files_path = arm.utils.get_fp_build() + '/' + target_name
-        if target_name == 'html5':
-            print('HTML5 files are located in ' + files_path)
-        elif target_name == 'ios' or target_name == 'osx': # TODO: to macos
-            print('XCode project files are located in ' + files_path + '-build')
-        elif target_name == 'windows':
-            print('VisualStudio 2017 project files are located in ' + files_path + '-build')
-        elif target_name == 'windowsapp':
-            print('VisualStudio 2017 project files are located in ' + files_path + '-build')
-        elif target_name == 'android-native':
-            print('Android Studio project files are located in ' + files_path + '-build/' + arm.utils.safestr(wrd.arm_project_name))
-        else:
-            print('Makefiles are located in ' + files_path + '-build')
-        return
-
     # Launch project in new window
-    elif mode =='play':
+    if mode =='play':
         if wrd.arm_play_runtime == 'Browser':
             # Start server
             os.chdir(arm.utils.get_fp())
@@ -532,18 +513,9 @@ def clean_project():
     # Temp: To recache signatures for batched materials
     for mat in bpy.data.materials:
         mat.signature = ''
+        mat.is_cached = False
 
     print('Project cleaned')
-
-def publish_project():
-    assets.invalidate_enabled = False
-    wrd = bpy.data.worlds['Arm']
-    state.target = wrd.arm_exporterlist[wrd.arm_exporterlist_index].arm_project_target
-    clean_project()
-    build_project(is_publish=True)
-    state.compileproc = compile_project()
-    threading.Timer(0.1, watch_compile, ['publish']).start()
-    assets.invalidate_enabled = True
 
 def get_render_result():
     play_project(False, is_render=True)
