@@ -60,7 +60,7 @@ class DebugConsole extends Trait {
     }
 
 	function init() {
-		path = cast(object, CameraObject).renderPath;
+		path = iron.Scene.active.camera.renderPath;
 	}
 
 	static var lrow = [1/2, 1/2];

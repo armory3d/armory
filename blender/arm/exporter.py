@@ -2531,7 +2531,7 @@ class ArmoryExporter:
             self.export_materials()
 
             # Ensure same vertex structure for object materials
-            if not bpy.data.worlds['Arm'].arm_deinterleaved_buffers:
+            if not wrd.arm_deinterleaved_buffers:
                 for bobject in self.scene.objects:
                     if len(bobject.material_slots) > 1:
                         mat = bobject.material_slots[0].material
@@ -2596,14 +2596,6 @@ class ArmoryExporter:
             else:
                 o['transform']['values'] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
             o['traits'] = []
-            # Debug console enabled, attach console overlay to each camera
-            if bpy.data.worlds['Arm'].arm_play_console:
-                ArmoryExporter.export_ui = True
-                console_trait = {}
-                console_trait['type'] = 'Script'
-                console_trait['class_name'] = 'armory.trait.internal.DebugConsole'
-                console_trait['parameters'] = []
-                o['traits'].append(console_trait)
             navigation_trait = {}
             navigation_trait['type'] = 'Script'
             navigation_trait['class_name'] = 'armory.trait.WalkNavigation'
@@ -2616,19 +2608,29 @@ class ArmoryExporter:
             self.scene.frame_set(originalFrame, originalSubframe)
 
         # Scene root traits
-        if bpy.data.worlds['Arm'].arm_physics != 'Disabled' and ArmoryExporter.export_physics:
+        if wrd.arm_physics != 'Disabled' and ArmoryExporter.export_physics:
             if not 'traits' in self.output:
                 self.output['traits'] = []
             x = {}
             x['type'] = 'Script'
             x['class_name'] = 'armory.trait.internal.PhysicsWorld'
             self.output['traits'].append(x)
-        if bpy.data.worlds['Arm'].arm_navigation != 'Disabled' and ArmoryExporter.export_navigation:
+        if wrd.arm_navigation != 'Disabled' and ArmoryExporter.export_navigation:
             if not 'traits' in self.output:
                 self.output['traits'] = []
             x = {}
             x['type'] = 'Script'
             x['class_name'] = 'armory.trait.internal.Navigation'
+            self.output['traits'].append(x)
+        if wrd.arm_play_console:
+            if not 'traits' in self.output:
+                self.output['traits'] = []
+            # Debug console enabled, attach console overlay to each camera
+            ArmoryExporter.export_ui = True
+            x = {}
+            x['type'] = 'Script'
+            x['class_name'] = 'armory.trait.internal.DebugConsole'
+            x['parameters'] = []
             self.output['traits'].append(x)
         if len(self.scene.arm_traitlist) > 0:
             if not 'traits' in self.output:
@@ -2875,14 +2877,6 @@ class ArmoryExporter:
 
         # Camera traits
         if type == NodeTypeCamera:
-            # Debug console enabled, attach console overlay to each camera
-            if bpy.data.worlds['Arm'].arm_play_console:
-                ArmoryExporter.export_ui = True
-                console_trait = {}
-                console_trait['type'] = 'Script'
-                console_trait['class_name'] = 'armory.trait.internal.DebugConsole'
-                console_trait['parameters'] = []
-                o['traits'].append(console_trait)
             # Viewport camera enabled, attach navigation to active camera
             if self.scene.camera != None and bobject.name == self.scene.camera.name and bpy.data.worlds['Arm'].arm_play_camera != 'Scene':
                 navigation_trait = {}
