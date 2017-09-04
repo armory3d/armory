@@ -231,14 +231,16 @@ def on_load_post(context):
     wrd = bpy.data.worlds['Arm']
     wrd.arm_recompile = True
 
-    for lib in wrd.arm_librarylist:
-        if lib.enabled_prop:
-            fp = arm.utils.get_fp() + '/Libraries/' + lib.name
-            if fp not in appended_py_paths and os.path.exists(fp + '/blender.py'):
-                sys.path.append(fp)
-                appended_py_paths.append(fp)
-                import blender
-                blender.register()
+    if os.path.exists(arm.utils.get_fp() + '/Libraries'):
+        libs = os.listdir(arm.utils.get_fp() + '/Libraries')
+        for lib in libs:
+            if os.path.isdir(arm.utils.get_fp() + '/Libraries/' + lib):
+                fp = arm.utils.get_fp() + '/Libraries/' + lib
+                if fp not in appended_py_paths and os.path.exists(fp + '/blender.py'):
+                    sys.path.append(fp)
+                    appended_py_paths.append(fp)
+                    import blender
+                    blender.register()
 
 @persistent
 def on_save_pre(context):

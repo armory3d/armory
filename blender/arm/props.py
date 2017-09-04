@@ -2,7 +2,6 @@ import bpy
 from bpy.props import *
 import os
 import shutil
-from arm.props_library import *
 import arm.props_ui as props_ui
 import arm.assets as assets
 import arm.log as log

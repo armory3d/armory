@@ -1,7 +1,5 @@
 import bpy
-import subprocess
 import webbrowser
-import threading
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 import arm.utils
@@ -418,28 +416,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_project_name')
         layout.prop(wrd, 'arm_project_package')
         layout.prop_search(wrd, 'arm_khafile', bpy.data, 'texts', 'Khafile')
-        layout.prop_search(wrd, 'arm_khamake', bpy.data, 'texts', 'Khamake')
-
-        layout.separator()
-        layout.label("Libraries:")
-        rows = 2
-        if len(wrd.arm_librarylist) > 1:
-            rows = 4
-        
-        row = layout.row()
-        row.template_list("ArmLibraryList", "The_List", wrd, "arm_librarylist", wrd, "arm_librarylist_index", rows=rows)
-
-        col = row.column(align=True)
-        col.operator("arm_librarylist.new_item", icon='ZOOMIN', text="")
-        col.operator("arm_librarylist.delete_item", icon='ZOOMOUT', text="")
-
-        if len(wrd.arm_librarylist) > 1:
-            col.separator()
-            col.operator("arm_librarylist.move_item", icon='TRIA_UP', text="").direction = 'UP'
-            col.operator("arm_librarylist.move_item", icon='TRIA_DOWN', text="").direction = 'DOWN'
-
-        # if wrd.arm_librarylist_index >= 0 and len(wrd.arm_librarylist) > 0:
-            # libitem = wrd.arm_librarylist[wrd.arm_librarylist_index]         
+        layout.prop_search(wrd, 'arm_khamake', bpy.data, 'texts', 'Khamake')   
 
         layout.label('Armory v' + wrd.arm_version)
 

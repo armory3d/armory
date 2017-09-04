@@ -55,26 +55,22 @@ project.addSources('Sources');
         if os.path.exists('Bundled'):
             f.write(add_assets("Bundled/**"))
 
-        if os.path.exists('Libraries/armory'):
-            f.write('project.addLibrary("armory");\n')
-        else:
+        if not os.path.exists('Libraries/armory'):
             f.write(add_armory_library(sdk_path, 'armory'))
 
-        if os.path.exists('Libraries/iron'):
-            f.write('project.addLibrary("iron");\n')
-        else:
+        if not os.path.exists('Libraries/iron'):
             f.write(add_armory_library(sdk_path, 'iron'))
 
         # Project libraries
-        for lib in wrd.arm_librarylist:
-            if lib.enabled_prop:
-                f.write('project.addLibrary("{0}");\n'.format(lib.name))
+        if os.path.exists('Libraries'):
+            libs = os.listdir('Libraries')
+            for lib in libs:
+                if os.path.isdir('Libraries/' + lib):
+                    f.write('project.addLibrary("{0}");\n'.format(lib))
         
         if export_physics:
             assets.add_khafile_def('arm_physics')
-            if os.path.exists('Libraries/haxebullet'):
-                f.write('project.addLibrary("haxebullet");\n')
-            else:
+            if not os.path.exists('Libraries/haxebullet'):
                 f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
             if state.target == 'krom' or state.target == 'html5' or state.target == 'node':
                 ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
@@ -83,9 +79,7 @@ project.addSources('Sources');
 
         if export_navigation:
             assets.add_khafile_def('arm_navigation')
-            if os.path.exists('Libraries/haxerecast'):
-                f.write('project.addLibrary("haxerecast");\n')
-            else:
+            if not os.path.exists('Libraries/haxerecast'):
                 f.write(add_armory_library(sdk_path + '/lib/', 'haxerecast'))
             if state.target == 'krom' or state.target == 'html5':
                 recastjs_path = sdk_path + '/lib/haxerecast/js/recast/recast.js'
@@ -136,18 +130,14 @@ project.addSources('Sources');
             assets.add_khafile_def('arm_profile')
 
         if export_ui:
-            if os.path.exists('Libraries/zui'):
-                f.write('project.addLibrary("zui");\n')
-            else:
+            if not os.path.exists('Libraries/zui'):
                 f.write(add_armory_library(sdk_path, 'lib/zui'))
             p = sdk_path + '/armory/Assets/droid_sans.ttf'
             f.write(add_assets(p.replace('\\', '/')))
             assets.add_khafile_def('arm_ui')
 
         if wrd.arm_hscript == 'Enabled':
-            if os.path.exists('Libraries/hscript'):
-                f.write('project.addLibrary("hscript");\n')
-            else:
+            if not os.path.exists('Libraries/hscript'):
                 f.write(add_armory_library(sdk_path, 'lib/hscript'))
             assets.add_khafile_def('arm_hscript')
 

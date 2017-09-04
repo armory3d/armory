@@ -1,7 +1,6 @@
 import arm.nodes_logic
 import arm.nodes_renderpath
 import arm.make_renderer
-import arm.props_library
 import arm.props_traits_params
 import arm.props_traits_props
 import arm.props_traits
@@ -27,7 +26,6 @@ def register():
     arm.props_lod.register()
     arm.props_exporter.register()
     arm.props_renderpath.register()
-    arm.props_library.register()
     arm.props.register()
     arm.props_ui.register()
     arm.nodes_logic.register()
@@ -48,7 +46,6 @@ def unregister():
     arm.handlers.unregister()
     arm.props_ui.unregister()
     arm.props.unregister()
-    arm.props_library.unregister()
     arm.props_traits_params.unregister()
     arm.props_traits_props.unregister()
     arm.props_traits.unregister()
