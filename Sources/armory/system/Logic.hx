@@ -58,6 +58,8 @@ class Logic {
 	static var parsed_labels:Map<String, String> = null;
 	static var nodeMap:Map<String, armory.logicnode.LogicNode>;
 
+	public static var packageName = "armory.logicnode";
+
 	public static function getNode(id: Int): TNode {
 		for (n in nodes) if (n.id == id) return n;
 		return null;
@@ -101,7 +103,8 @@ class Logic {
 	}
 
 	static var tree:armory.logicnode.LogicTree;
-	public static function parse(canvas:TNodeCanvas):iron.Trait {
+	public static function parse(canvas:TNodeCanvas, onAdd = true):armory.logicnode.LogicTree {
+
 		nodes = canvas.nodes;
 		links = canvas.links;
 
@@ -111,11 +114,14 @@ class Logic {
 		var root_nodes = get_root_nodes(canvas);
 
 		tree = new armory.logicnode.LogicTree();
-		tree.notifyOnAdd(function() {
-			for (node in root_nodes) {
-				build_node(node);
-			}
-		});
+		if (onAdd) {
+			tree.notifyOnAdd(function() {
+				for (node in root_nodes) build_node(node);
+			});
+		}
+		else {
+			for (node in root_nodes) build_node(node);
+		}
 		return tree;
 	}
 
@@ -141,9 +147,7 @@ class Logic {
 		parsed_nodes.push(name);
 
 		// Create node
-		var node_type = node.type; //[2:] // Discard 'LN'TimeNode prefix
-		var n = 'armory.logicnode.' + node_type;
-		var v = Type.createInstance(Type.resolveClass(n), [tree]);
+		var v = createClassInstance(node.type, [tree]);
 		nodeMap.set(name, v);
 
 		// Properties
@@ -231,32 +235,38 @@ class Logic {
 		var v:armory.logicnode.LogicNode = null;
 		
 		if (inp.type == 'ACTION') {
-			v = Type.createInstance(Type.resolveClass('armory.logicnode.NullNode'), [tree]);
+			v = createClassInstance('NullNode', [tree]);
 		}
 		else if (inp.type == 'OBJECT') {
-			v = Type.createInstance(Type.resolveClass('armory.logicnode.ObjectNode'), [tree, inp.default_value]);
+			v = createClassInstance('ObjectNode', [tree, inp.default_value]);
 		}
 		else if (inp.type == 'VECTOR') {
-			v = Type.createInstance(Type.resolveClass('armory.logicnode.VectorNode'), [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2]]);
+			v = createClassInstance('VectorNode', [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2]]);
 		}
 		else if (inp.type == 'RGBA') {
-			v = Type.createInstance(Type.resolveClass('armory.logicnode.ColorNode'), [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2], inp.default_value[3]]);
+			v = createClassInstance('ColorNode', [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2], inp.default_value[3]]);
 		}
 		else if (inp.type == 'RGB') {
-			v = Type.createInstance(Type.resolveClass('armory.logicnode.ColorNode'), [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2]]);
+			v = createClassInstance('ColorNode', [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2]]);
 		}
 		else if (inp.type == 'VALUE') { 
-			v = Type.createInstance(Type.resolveClass('armory.logicnode.FloatNode'), [tree, inp.default_value]);
+			v = createClassInstance('FloatNode', [tree, inp.default_value]);
 		}
 		else if (inp.type == 'INT') {
-			v = Type.createInstance(Type.resolveClass('armory.logicnode.IntegerNode'), [tree, inp.default_value]);
+			v = createClassInstance('IntegerNode', [tree, inp.default_value]);
 		}
 		else if (inp.type == 'BOOLEAN') {
-			v = Type.createInstance(Type.resolveClass('armory.logicnode.BooleanNode'), [tree, inp.default_value]);
+			v = createClassInstance('BooleanNode', [tree, inp.default_value]);
 		}
 		else if (inp.type == 'STRING') {
-			v = Type.createInstance(Type.resolveClass('armory.logicnode.StringNode'), [tree, inp.default_value]);
+			v = createClassInstance('StringNode', [tree, inp.default_value]);
 		}
 		return v;
+	}
+
+	static function createClassInstance(className:String, args:Array<Dynamic>):Dynamic {
+		var cname = Type.resolveClass(packageName + '.' + className);
+		if (cname == null) return null;
+		return Type.createInstance(cname, args);
 	}
 }

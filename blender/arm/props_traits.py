@@ -500,7 +500,6 @@ def draw_traits(layout, obj, is_object):
                 op = row.operator("arm.new_script")
                 op.is_object = is_object
                 op = row.operator("arm.refresh_scripts")
-                op.is_object = is_object
             else: # Bundled
                 op = layout.operator("arm.edit_bundled_script")
                 op.is_object = is_object
