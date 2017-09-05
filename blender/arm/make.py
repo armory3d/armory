@@ -171,7 +171,7 @@ def compile_project(target_name=None, watch=False, patch=False):
     # Set build command
     if target_name == None:
         target_name = state.target
-    elif target_name == 'native':
+    if target_name == 'native':
         target_name = ''
 
     node_path = arm.utils.get_node_path()

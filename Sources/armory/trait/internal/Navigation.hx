@@ -20,7 +20,7 @@ class Navigation extends iron.Trait {
 		super();
 		active = this;
 
-		recast = untyped __js__("(1, eval)('this').recast");
+		recast = new Recast();
 	}
 #end
 }

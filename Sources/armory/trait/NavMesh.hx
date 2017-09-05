@@ -41,18 +41,18 @@ class NavMesh extends Trait {
 
 	public function findPath(from:Vec4, to:Vec4, done:Array<Vec4>->Void) {
 		if (!ready) return;
-		recast.findPath(from.x, from.z, from.y, to.x, to.z, to.y, 1000, untyped recast.cb(function(path:Array<RecastWaypoint>) {
+		recast.findPath(from.x, from.z, from.y, to.x, to.z, to.y, 1000, function(path:Array<RecastWaypoint>) {
 			var ar:Array<Vec4> = [];
 			for (p in path) ar.push(new Vec4(p.x, p.z, -p.y));
 			done(ar);
-		}));
+		});
 	}
 
 	public function getRandomPoint(done:Vec4->Void) {
 		if (!ready) return;
-		recast.getRandomPoint(untyped recast.cb(function(x:Float, y:Float, z:Float) {
+		recast.getRandomPoint(function(x:Float, y:Float, z:Float) {
 			done(new Vec4(x, z, -y));
-		}));
+		});
 	}
 
 #end
