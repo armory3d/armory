@@ -9,20 +9,25 @@ import iron.math.Quat;
 class Character extends Trait {
 
 	var speed = 0.0;
-	var animIdle:String;
-	var animMove:String;
+	var actionIdle:String;
+	var actionMove:String;
 
 	var loc:Vec4 = new Vec4();
 	var lastLoc:Vec4 = null;
 	var state = 0;
 
-	public function new(animIdle:String, animMove:String) {
+	public function new(actionIdle:String, actionMove:String) {
 		super();
 
-		this.animIdle = animIdle;
-		this.animMove = animMove;
+		this.actionIdle = actionIdle;
+		this.actionMove = actionMove;
 
+		notifyOnInit(init);
 		notifyOnUpdate(update);
+	}
+
+	function init() {
+		object.animation.pause();
 	}
 
 	function update() {
@@ -36,11 +41,12 @@ class Character extends Trait {
 
 		if (state == 0 && speed > 0) {
 			state = 1;
-			object.animation.player.play(animMove);
+			object.animation.play(actionMove);
 		}
 		else if (state == 1 && speed == 0) {
 			state = 0;
-			object.animation.player.pause();//play(animIdle);
+			object.animation.pause();
+			// object.animation.play(actionIdle);
 		}
 	}
 }

@@ -65,11 +65,10 @@ class ThirdPersonController extends CameraController {
 		body.setLinearVelocity(0.0, 0.0, btvec.z() - 1.0);
 
 		var arm = object.getChild("Ballie");
-		arm.animation.player.paused = true;
+		arm.animation.paused = true;
 
 		if (moveForward || moveBackward || moveLeft || moveRight) {			
-			arm.animation.player.paused = false;
-			arm.animation.player.dir = moveBackward ? -1 : 1;
+			arm.animation.paused = false;
 			dir.mult(-4 * 0.7);
 			body.activate();
 			body.setLinearVelocity(dir.x, dir.y, btvec.z() - 1.0);

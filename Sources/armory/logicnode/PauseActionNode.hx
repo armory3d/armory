@@ -13,7 +13,7 @@ class PauseActionNode extends LogicNode {
 		
 		if (object == null) object = tree.object;
 
-		object.animation.player.pause();
+		object.animation.pause();
 
 		super.run();
 	}

@@ -13,8 +13,8 @@ class AnimationStateNode extends LogicNode {
 
 		if (object == null) object = tree.object;
 
-		if (from == 0) return !object.animation.player.paused; // is playing
-		else if (from == 1) return object.animation.player.timeIndex;
-		else return object.animation.player.current.name;
+		if (from == 0) return !object.animation.paused; // is playing
+		else if (from == 1) return object.animation.timeIndex;
+		else return object.animation.action;
 	}
 }

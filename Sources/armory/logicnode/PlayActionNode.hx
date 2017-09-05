@@ -14,7 +14,7 @@ class PlayActionNode extends LogicNode {
 		
 		if (object == null) object = tree.object;
 
-		object.animation.player.play(action, function() {
+		object.animation.play(action, function() {
 			runOutputs(1);
 		});
 

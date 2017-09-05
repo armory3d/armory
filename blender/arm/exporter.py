@@ -1375,33 +1375,39 @@ class ArmoryExporter:
             if bobject.type == 'ARMATURE' and bobject.data != None:
                 bdata = bobject.data # Armature data
                 action = None # Reference start action
-                
-                # Get action
-                if bobject.animation_data == None:
+                adata = bobject.animation_data
+
+                # Active action
+                if adata == None:
                     bobject.animation_data_create()
-                else:
-                    action = bobject.animation_data.action
-                
-                if action == None:
                     actions = bpy.data.actions
                     action = actions.get('armorypose', actions.new(name='armorypose'))
+                else:
+                    action = adata.action
 
-                # Bone export
-                armatureid = self.asset_name(bdata)
-                armatureid = arm.utils.safestr(armatureid)
-                ext = ''
-                if self.is_compress(bdata):
-                   ext = '.zip'
-                o['bones_ref'] = 'bones_' + armatureid + '_' + action.name + ext
-
-                # Write bones
+                # Export actions
                 export_actions = [action]
+                if adata.nla_tracks != None:
+                    for track in adata.nla_tracks:
+                        if track.strips == None:
+                            continue
+                        for strip in track.strips:
+                            if strip.action == None:
+                                continue
+                            if strip.action.name == action.name:
+                                continue
+                            export_actions.append(strip.action)
 
-                # orig_action = bobject.animation_data.action
-                # bobject.animation_data.action = orig_action
+                armatureid = arm.utils.safestr(self.asset_name(bdata))
+                ext = '.zip' if self.is_compress(bdata) else ''
+                o['action_refs'] = []
+                for a in export_actions:
+                    o['action_refs'].append('action_' + armatureid + '_' + a.name + ext)
+
+                orig_action = bobject.animation_data.action
                 for action in export_actions:
                     bobject.animation_data.action = action
-                    fp = self.get_meshes_file_path('bones_' + armatureid + '_' + action.name, compressed=self.is_compress(bdata))
+                    fp = self.get_meshes_file_path('action_' + armatureid + '_' + action.name, compressed=self.is_compress(bdata))
                     assets.add(fp)
                     if bdata.arm_data_cached == False or not os.path.exists(fp):
                         bones = []
@@ -1410,10 +1416,12 @@ class ArmoryExporter:
                                 boneo = {}
                                 self.export_bone(bobject, bone, scene, boneo, action)
                                 bones.append(boneo)
-                        # Save bones separately
-                        bones_obj = {}
-                        bones_obj['objects'] = bones
-                        arm.utils.write_arm(fp, bones_obj)
+                        # Save action separately
+                        action_obj = {}
+                        action_obj['name'] = action.name
+                        action_obj['objects'] = bones
+                        arm.utils.write_arm(fp, action_obj)
+                bobject.animation_data.action = orig_action
                 bdata.arm_data_cached = True
 
             if parento == None:
@@ -2768,25 +2776,6 @@ class ArmoryExporter:
         return export_object
 
     def post_export_object(self, bobject, o, type):
-        # Animation setup
-        if arm.utils.is_bone_animation_enabled(bobject) or arm.utils.is_object_animation_enabled(bobject):
-            x = {}
-            x['frame_time'] = 1 / self.scene.render.fps
-            # Export assigned action
-            if arm.utils.is_bone_animation_enabled(bobject):
-                begin_frame, end_frame = self.get_action_framerange(bobject.parent.animation_data.action)
-            else:
-                begin_frame, end_frame = self.get_action_framerange(bobject.animation_data.action)
-            x['start_track'] = 'default'
-            x['names'] = ['default']
-            x['starts'] = [begin_frame]
-            x['ends'] = [end_frame]
-            x['speeds'] = [1.0]
-            x['loops'] = [True]
-            x['reflects'] = [False]
-            x['max_bones'] = bpy.data.worlds['Arm'].arm_gpu_skin_max_bones
-            o['animation_setup'] = x
-
         # Export traits
         self.export_traits(bobject, o)
 

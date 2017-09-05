@@ -202,6 +202,7 @@ class Main {
 
         f.write("""
     public static function main() {
+        iron.object.BoneAnimation.skinMaxBones = """ + str(wrd.arm_gpu_skin_max_bones) + """;
         state = 1;
         #if (js && arm_physics) state++; loadLib("ammo.js"); #end
         #if (js && arm_navigation) state++; loadLib("recast.js"); #end
