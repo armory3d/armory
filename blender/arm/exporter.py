@@ -3016,9 +3016,9 @@ class ArmoryExporter:
         o['traits'].append(constr_trait)
 
     def post_export_world(self, world, o):
-        defs = bpy.data.worlds['Arm'].world_defs
+        wrd = bpy.data.worlds['Arm']
         bgcol = world.arm_envtex_color
-        if '_LDR' in defs: # No compositor used
+        if '_LDR' in wrd.world_defs: # No compositor used
             for i in range(0, 3):
                 bgcol[i] = pow(bgcol[i], 1.0 / 2.2)
         o['background_color'] = arm.utils.color_to_int(bgcol)
@@ -3026,30 +3026,46 @@ class ArmoryExporter:
         wmat_name = arm.utils.safestr(world.name) + '_material'
         o['material_ref'] = wmat_name + '/' + wmat_name + '/world'
         o['probes'] = []
+
         # Main probe
-        world_arm_radiance = False
-        arm_irradiance = True #'_EnvTex' in defs or '_EnvSky' in defs or '_EnvCon' in defs
+        restricted = wrd.arm_rplist[wrd.arm_rplist_index].arm_material_model == 'Restricted'
+        arm_irradiance = wrd.arm_irradiance and not restricted
+        arm_radiance = False
         disable_hdr = world.arm_envtex_name.endswith('.jpg')
         radtex = world.arm_envtex_name.rsplit('.', 1)[0]
         irrsharmonics = world.arm_envtex_irr_name
-
         # Radiance
-        if '_EnvTex' in defs:
-            world_arm_radiance = bpy.data.worlds['Arm'].arm_radiance
-        elif '_EnvSky' in defs and bpy.data.worlds['Arm'].arm_radiance_sky:
-            world_arm_radiance = bpy.data.worlds['Arm'].arm_radiance
+        if '_EnvTex' in wrd.world_defs:
+            arm_radiance = bpy.data.worlds['Arm'].arm_radiance
+        elif '_EnvSky' in wrd.world_defs and bpy.data.worlds['Arm'].arm_radiance_sky:
+            arm_radiance = bpy.data.worlds['Arm'].arm_radiance
             radtex = 'hosek'
-
         num_mips = world.arm_envtex_num_mips
         strength = world.arm_envtex_strength
-        po = self.make_probe(world.name, irrsharmonics, radtex, num_mips, strength, 1.0, [0, 0, 0], [0, 0, 0], world_arm_radiance, arm_irradiance, disable_hdr)
-        o['probes'].append(po)
-        
-        if '_EnvSky' in defs:
+
+        po = {}
+        po['name'] = world.name
+        if arm_irradiance:
+            po['irradiance'] = irrsharmonics + '_irradiance'
+            if arm_radiance:
+                po['radiance'] = radtex + '_radiance'
+                if disable_hdr:
+                    po['radiance'] += '.jpg'
+                else:
+                    po['radiance'] += '.hdr'
+                po['radiance_mipmaps'] = num_mips
+        else:
+            po['irradiance'] = '' # No irradiance data, fallback to default at runtime
+        po['strength'] = strength
+        po['blending'] = 1.0
+        po['volume'] = [0, 0, 0]
+        po['volume_center'] = [0, 0, 0]
+        if '_EnvSky' in wrd.world_defs:
             # Sky data for probe
             po['sun_direction'] =  list(world.arm_envtex_sun_direction)
             po['turbidity'] = world.arm_envtex_turbidity
             po['ground_albedo'] = world.arm_envtex_ground_albedo
+        o['probes'].append(po)
     
     def post_export_grease_pencil(self, gp):
         o = {}
@@ -3153,23 +3169,3 @@ class ArmoryExporter:
         co['fill_color'] = [color.fill_color[0], color.fill_color[1], color.fill_color[2]]
         co['fill_alpha'] = color.fill_alpha
         return co
-
-    def make_probe(self, id, irrsharmonics, radtex, mipmaps, strength, blending, volume, volume_center, arm_radiance, arm_irradiance, disable_hdr):
-        po = {}
-        po['name'] = id
-        if arm_radiance:
-            po['radiance'] = radtex + '_radiance'
-            if disable_hdr:
-                po['radiance'] += '.jpg'
-            else:
-                po['radiance'] += '.hdr'
-            po['radiance_mipmaps'] = mipmaps
-        if arm_irradiance:
-            po['irradiance'] = irrsharmonics + '_irradiance'
-        else:
-            po['irradiance'] = '' # No irradiance data, fallback to default at runtime
-        po['strength'] = strength
-        po['blending'] = blending
-        po['volume'] = volume
-        po['volume_center'] = volume_center
-        return po

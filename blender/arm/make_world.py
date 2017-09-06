@@ -49,7 +49,7 @@ def build_node_tree(world):
             parse_world_output(world, output_node, context)
             parsed = True
     if parsed == False:
-        if wrd.arm_irradiance:
+        if wrd.arm_irradiance and wrd.arm_rplist[wrd.arm_rplist_index].arm_material_model != 'Restricted':
             wrd.world_defs += '_Irr'
         envmap_strength_const = {}
         envmap_strength_const['name'] = 'envmapStrength'
@@ -185,13 +185,14 @@ def parse_world_output(world, node, context):
     
 def parse_surface(world, node, context):
     wrd = bpy.data.worlds['Arm']
+    restricted = wrd.arm_rplist[wrd.arm_rplist_index].arm_material_model == 'Restricted'
     
     # Extract environment strength
     if node.type == 'BACKGROUND':
         
         # Append irradiance define
-        if wrd.arm_irradiance:
-            bpy.data.worlds['Arm'].world_defs += '_Irr'
+        if wrd.arm_irradiance and not restricted:
+            wrd.world_defs += '_Irr'
 
         # Strength
         envmap_strength_const = {}
@@ -210,6 +211,7 @@ def parse_surface(world, node, context):
 
 def parse_color(world, node, context, envmap_strength_const):       
     wrd = bpy.data.worlds['Arm']
+    restricted = wrd.arm_rplist[wrd.arm_rplist_index].arm_material_model == 'Restricted'
 
     # Env map included
     if node.type == 'TEX_ENVIRONMENT' and node.image != None:
@@ -285,17 +287,17 @@ def parse_color(world, node, context, envmap_strength_const):
         world.arm_envtex_num_mips = mip_count
         
         # Append envtex define
-        bpy.data.worlds['Arm'].world_defs += '_EnvTex'
+        wrd.world_defs += '_EnvTex'
         # Append LDR define
         if disable_hdr:
-            bpy.data.worlds['Arm'].world_defs += '_EnvLDR'
+            wrd.world_defs += '_EnvLDR'
         # Append radiance define
-        if wrd.arm_irradiance and wrd.arm_radiance:
-            bpy.data.worlds['Arm'].world_defs += '_Rad'
+        if wrd.arm_irradiance and wrd.arm_radiance and not restricted:
+            wrd.world_defs += '_Rad'
 
     # Static image background
     elif node.type == 'TEX_IMAGE':
-        bpy.data.worlds['Arm'].world_defs += '_EnvImg'
+        wrd.world_defs += '_EnvImg'
         tex = {}
         context['bind_textures'].append(tex)
         tex['name'] = 'envmap'
@@ -330,7 +332,7 @@ def parse_color(world, node, context, envmap_strength_const):
         # Match to cycles
         envmap_strength_const['float'] *= 0.1
         
-        bpy.data.worlds['Arm'].world_defs += '_EnvSky'
+        wrd.world_defs += '_EnvSky'
         # Append sky properties to material
         const = {}
         const['name'] = 'sunDirection'
@@ -349,8 +351,8 @@ def parse_color(world, node, context, envmap_strength_const):
         write_probes.write_sky_irradiance(wname)
 
         # Radiance
-        if wrd.arm_radiance_sky and wrd.arm_radiance and wrd.arm_irradiance:
-            bpy.data.worlds['Arm'].world_defs += '_Rad'
+        if wrd.arm_radiance_sky and wrd.arm_radiance and wrd.arm_irradiance and not restricted:
+            wrd.world_defs += '_Rad'
             
             if wrd.arm_radiance_sky_type == 'Hosek':
                 hosek_path = 'armory/Assets/hosek/'

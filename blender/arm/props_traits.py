@@ -138,23 +138,20 @@ class ArmTraitListDeleteItem(bpy.types.Operator):
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list """
-        if self.is_object:
-            obj = bpy.context.object
-        else:
-            obj = bpy.context.scene
+        obj = bpy.context.object
         if obj == None:
             return False
         return len(obj.arm_traitlist) > 0
 
     def execute(self, context):
-        if self.is_object:
-            obj = bpy.context.object
-        else:
-            obj = bpy.context.scene
-        list = obj.arm_traitlist
+        obj = bpy.context.object
+        lst = obj.arm_traitlist
         index = obj.arm_traitlist_index
 
-        list.remove(index)
+        if len(lst) <= index:
+            return{'FINISHED'}
+
+        lst.remove(index)
 
         if index > 0:
             index = index - 1
@@ -162,6 +159,36 @@ class ArmTraitListDeleteItem(bpy.types.Operator):
         obj.arm_traitlist_index = index
         return{'FINISHED'}
 
+class ArmTraitListDeleteItemScene(bpy.types.Operator):
+    # Delete the selected item from the list
+    bl_idname = "arm_traitlist.delete_item_scene"
+    bl_label = "Deletes an item"
+
+    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
+
+    @classmethod
+    def poll(self, context):
+        """ Enable if there's something in the list """
+        obj = bpy.context.scene
+        if obj == None:
+            return False
+        return len(obj.arm_traitlist) > 0
+
+    def execute(self, context):
+        obj = bpy.context.scene
+        lst = obj.arm_traitlist
+        index = obj.arm_traitlist_index
+
+        if len(lst) <= index:
+            return{'FINISHED'}
+
+        lst.remove(index)
+
+        if index > 0:
+            index = index - 1
+
+        obj.arm_traitlist_index = index
+        return{'FINISHED'}
 
 class ArmTraitListMoveItem(bpy.types.Operator):
     # Move an item in the list
@@ -174,16 +201,16 @@ class ArmTraitListMoveItem(bpy.types.Operator):
 
     is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
 
-    @classmethod
-    def poll(self, context):
-        if self.is_object:
-            obj = bpy.context.object
-        else:
-            obj = bpy.context.scene
-        if obj == None:
-            return False
-        """ Enable if there's something in the list. """
-        return len(obj.arm_traitlist) > 0
+    # @classmethod
+    # def poll(self, context):
+    #     if self.is_object:
+    #         obj = bpy.context.object
+    #     else:
+    #         obj = bpy.context.scene
+    #     if obj == None:
+    #         return False
+    #     """ Enable if there's something in the list. """
+    #     return len(obj.arm_traitlist) > 0
 
 
     def move_index(self):
@@ -423,7 +450,10 @@ def draw_traits(layout, obj, is_object):
     col = row.column(align=True)
     op = col.operator("arm_traitlist.new_item", icon='ZOOMIN', text="")
     op.is_object = is_object
-    op = col.operator("arm_traitlist.delete_item", icon='ZOOMOUT', text="")#.all = False
+    if is_object:
+        op = col.operator("arm_traitlist.delete_item", icon='ZOOMOUT', text="")#.all = False
+    else:
+        op = col.operator("arm_traitlist.delete_item_scene", icon='ZOOMOUT', text="")#.all = False
     op.is_object = is_object
 
     if len(obj.arm_traitlist) > 1:
@@ -540,6 +570,7 @@ def register():
     bpy.utils.register_class(ArmTraitList)
     bpy.utils.register_class(ArmTraitListNewItem)
     bpy.utils.register_class(ArmTraitListDeleteItem)
+    bpy.utils.register_class(ArmTraitListDeleteItemScene)
     bpy.utils.register_class(ArmTraitListMoveItem)
     bpy.utils.register_class(ArmEditScriptButton)
     bpy.utils.register_class(ArmEditBundledScriptButton)
@@ -560,6 +591,7 @@ def unregister():
     bpy.utils.unregister_class(ArmTraitList)
     bpy.utils.unregister_class(ArmTraitListNewItem)
     bpy.utils.unregister_class(ArmTraitListDeleteItem)
+    bpy.utils.unregister_class(ArmTraitListDeleteItemScene)
     bpy.utils.unregister_class(ArmTraitListMoveItem)
     bpy.utils.unregister_class(ArmEditScriptButton)
     bpy.utils.unregister_class(ArmEditBundledScriptButton)

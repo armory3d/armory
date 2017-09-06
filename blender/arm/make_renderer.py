@@ -226,7 +226,7 @@ def set_preset(self, context, preset):
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
         rpdat.rp_hdr = False
-        rpdat.rp_background = 'World'
+        rpdat.rp_background = 'Clear'
         rpdat.rp_stereo = False
         rpdat.rp_greasepencil = False
         rpdat.rp_voxelgi = False
