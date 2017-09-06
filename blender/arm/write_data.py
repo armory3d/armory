@@ -53,9 +53,9 @@ project.addSources('Sources');
 
         # Auto-add assets located in Bundled directory
         if os.path.exists('Bundled'):
-            bundled = glob.glob("Bundled/*.*")
-            for file in bundled:
-                assets.add(file)
+            for file in glob.glob("Bundled/**", recursive=True):
+                if os.path.isfile(file):
+                    assets.add(file)
 
         if not os.path.exists('Libraries/armory'):
             f.write(add_armory_library(sdk_path, 'armory'))
@@ -130,7 +130,6 @@ project.addSources('Sources');
         for ref in asset_references:
             ref = ref.replace('\\', '/')
             quality = 1.0
-            print(ref)
             s = ref.lower()
             if s.endswith('.wav'):
                 quality = wrd.arm_sound_quality
