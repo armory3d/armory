@@ -4,13 +4,14 @@ import shutil
 import arm.utils
 import arm.assets as assets
 import arm.make_state as state
+import glob
 
 check_dot_path = False
 
 def add_armory_library(sdk_path, name):
     return ('project.addLibrary("' + sdk_path + '/' + name + '");\n').replace('\\', '/')
 
-def add_assets(path):
+def add_assets(path, quality=1.0):
     global check_dot_path
     if check_dot_path and '/.' in path: # Redirect path to local copy
         armpath = arm.utils.build_dir() + '/compiled/ArmoryAssets/'
@@ -20,18 +21,17 @@ def add_assets(path):
         if not os.path.isfile(localpath):
             shutil.copy(path, localpath)
         path = localpath
-    return 'project.addAssets("' + path + '");\n'
+
+    s = 'project.addAssets("' + path + '"';
+    if quality < 1.0:
+        s += ', { quality: ' + str(quality) + ' }'
+    s += ');\n'
+    return s
 
 # Write khafile.js
 def write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce, in_viewport, import_traits, import_logicnodes):
     global check_dot_path
-
     sdk_path = arm.utils.get_sdk_path()
-    
-    # Merge duplicates and sort
-    shader_references = sorted(list(set(assets.shaders)))
-    shader_data_references = sorted(list(set(assets.shader_datas)))
-    asset_references = sorted(list(set(assets.assets)))
     wrd = bpy.data.worlds['Arm']
 
     with open('khafile.js', 'w') as f:
@@ -53,7 +53,9 @@ project.addSources('Sources');
 
         # Auto-add assets located in Bundled directory
         if os.path.exists('Bundled'):
-            f.write(add_assets("Bundled/**"))
+            bundled = glob.glob("Bundled/*.*")
+            for file in bundled:
+                assets.add(file)
 
         if not os.path.exists('Libraries/armory'):
             f.write(add_armory_library(sdk_path, 'armory'))
@@ -115,16 +117,32 @@ project.addSources('Sources');
             # Scene patch
             assets.add_khafile_def('arm_sceneload')
 
+        shader_references = sorted(list(set(assets.shaders)))
         for ref in shader_references:
             f.write("project.addShaders('" + ref + "');\n")
 
+        shader_data_references = sorted(list(set(assets.shader_datas)))
         for ref in shader_data_references:
             ref = ref.replace('\\', '/')
             f.write(add_assets(ref))
 
+        asset_references = sorted(list(set(assets.assets)))
         for ref in asset_references:
             ref = ref.replace('\\', '/')
-            f.write(add_assets(ref))
+            quality = 1.0
+            print(ref)
+            s = ref.lower()
+            if s.endswith('.wav'):
+                quality = wrd.arm_sound_quality
+            elif s.endswith('.png') or s.endswith('.jpg'):
+                quality = wrd.arm_texture_quality
+            f.write(add_assets(ref, quality=quality))
+
+        if wrd.arm_sound_quality < 1.0 or state.target == 'html5':
+            assets.add_khafile_def('arm_soundcompress')
+
+        if wrd.arm_texture_quality < 1.0:
+            assets.add_khafile_def('arm_texcompress')
 
         if wrd.arm_play_console:
             assets.add_khafile_def('arm_profile')

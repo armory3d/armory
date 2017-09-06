@@ -66,6 +66,8 @@ def init_properties():
         name = "Hscript", default='Disabled', description="Include Hscript library")
     bpy.types.World.arm_khafile = StringProperty(name="Khafile", description="Source appended to khafile.js")
     bpy.types.World.arm_khamake = StringProperty(name="Khamake", description="Command line params appended to khamake")
+    bpy.types.World.arm_texture_quality = bpy.props.FloatProperty(name="Texture Quality", default=1.0, min=0.0, max=1.0, subtype='FACTOR')
+    bpy.types.World.arm_sound_quality = bpy.props.FloatProperty(name="Sound Quality", default=0.9, min=0.0, max=1.0, subtype='FACTOR')
     bpy.types.World.arm_minimize = BoolProperty(name="Minimize Data", description="Export scene data in binary", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_optimize_mesh = BoolProperty(name="Optimize Meshes", description="Export more efficient geometry indices, can prolong build times", default=False, update=assets.invalidate_mesh_data)
     bpy.types.World.arm_sampled_animation = BoolProperty(name="Sampled Animation", description="Export object animation as raw matrices", default=False, update=assets.invalidate_compiled_data)

@@ -460,8 +460,10 @@ def on_compiled(mode): # build, play, play_viewport, publish
         elif wrd.arm_play_runtime == 'Krom':
             krom_location, krom_path = arm.utils.krom_paths()
             os.chdir(krom_location)
-            # os.chdir(arm.utils.get_fp_build())
-            args = [krom_path, arm.utils.get_fp_build() + '/window/krom', arm.utils.get_fp_build() + '/window/krom-resources', '--nosound']
+            args = [krom_path, arm.utils.get_fp_build() + '/window/krom', arm.utils.get_fp_build() + '/window/krom-resources']
+            # TODO: Krom sound freezes on MacOS
+            if arm.utils.get_os() == 'mac':
+                args.append('--nosound')
             if state.is_render:
                 args.append('--nowindow')
             state.playproc = subprocess.Popen(args, stderr=subprocess.PIPE)
