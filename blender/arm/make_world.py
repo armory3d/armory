@@ -40,6 +40,7 @@ def build_node_tree(world):
     
     wrd = bpy.data.worlds['Arm']
     wrd.world_defs = ''
+    rpdat = arm.utils.get_rp()
     
     # Traverse world node tree
     parsed = False
@@ -49,7 +50,7 @@ def build_node_tree(world):
             parse_world_output(world, output_node, context)
             parsed = True
     if parsed == False:
-        if wrd.arm_irradiance and wrd.arm_rplist[wrd.arm_rplist_index].arm_material_model != 'Restricted':
+        if wrd.arm_irradiance and rpdat.arm_material_model != 'Restricted':
             wrd.world_defs += '_Irr'
         envmap_strength_const = {}
         envmap_strength_const['name'] = 'envmapStrength'
@@ -70,7 +71,6 @@ def build_node_tree(world):
         write_probes.write_color_irradiance(wname, world.arm_envtex_color)
 
     # Clouds enabled
-    rpdat = arm.utils.get_rp()
     if rpdat.arm_clouds:
         wrd.world_defs += '_EnvClouds'
 
@@ -185,7 +185,8 @@ def parse_world_output(world, node, context):
     
 def parse_surface(world, node, context):
     wrd = bpy.data.worlds['Arm']
-    restricted = wrd.arm_rplist[wrd.arm_rplist_index].arm_material_model == 'Restricted'
+    rpdat = arm.utils.get_rp()
+    restricted = rpdat.arm_material_model == 'Restricted'
     
     # Extract environment strength
     if node.type == 'BACKGROUND':
@@ -211,7 +212,8 @@ def parse_surface(world, node, context):
 
 def parse_color(world, node, context, envmap_strength_const):       
     wrd = bpy.data.worlds['Arm']
-    restricted = wrd.arm_rplist[wrd.arm_rplist_index].arm_material_model == 'Restricted'
+    rpdat = arm.utils.get_rp()
+    restricted = rpdat.arm_material_model == 'Restricted'
 
     # Env map included
     if node.type == 'TEX_ENVIRONMENT' and node.image != None:

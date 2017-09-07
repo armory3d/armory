@@ -2122,7 +2122,9 @@ class ArmoryExporter:
             if lamp_size > 1:
                 o['shadows_bias'] += 0.00001 * lamp_size
             o['lamp_size'] = lamp_size * 10 # Match to Cycles
-        if objtype == 'POINT' and objref.arm_omni_shadows and not arm.utils.get_gapi().startswith('direct3d'):
+        gapi = arm.utils.get_gapi()
+        restricted = rpdat.arm_material_model == 'Restricted'
+        if objtype == 'POINT' and objref.arm_omni_shadows and not gapi.startswith('direct3d') and not restricted:
             o['fov'] = 1.5708 # 90 deg
             o['shadowmap_cube'] = True
             o['shadows_bias'] *= 4.0
@@ -3034,7 +3036,8 @@ class ArmoryExporter:
         o['probes'] = []
 
         # Main probe
-        restricted = wrd.arm_rplist[wrd.arm_rplist_index].arm_material_model == 'Restricted'
+        rpdat = arm.utils.get_rp()
+        restricted = rpdat.arm_material_model == 'Restricted'
         arm_irradiance = wrd.arm_irradiance and not restricted
         arm_radiance = False
         disable_hdr = world.arm_envtex_name.endswith('.jpg')
