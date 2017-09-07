@@ -164,7 +164,14 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ],
         name="Materials", description="Material builder", default='PBR', update=update_material_model)
     arm_tessellation = bpy.props.BoolProperty(name="Tessellation", description="Enable tessellation for height maps on supported targets", default=True, update=assets.invalidate_shader_cache)
-
+    arm_rp_resolution = EnumProperty(
+        items=[('Display', 'Display', 'Display'),
+               ('480', '480p', '480p'), 
+               ('720', '720p', '720p'), 
+               ('1080', '1080p', '1080p'),
+               ('1440', '1440p', '1440p'),
+               ('2160', '2160p', '2160p')],
+        name="Resolution", description="Render at specific resolution, regardless of display resolution", default='Display', update=update_renderpath)
     arm_ssr_half_res = bpy.props.BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
 
     rp_voxelgi_hdr = bpy.props.BoolProperty(name="HDR", description="Store voxels in RGBA64 instead of RGBA32", default=False, update=update_renderpath)

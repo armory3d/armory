@@ -53,6 +53,7 @@ def set_preset(self, context, preset):
         rpdat.rp_eyeadapt = False
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'None'
+        rpdat.arm_rp_resolution = 'Display'
     elif preset == 'Forward':
         rpdat.rp_renderer = 'Forward'
         rpdat.arm_material_model = 'PBR'
@@ -80,6 +81,7 @@ def set_preset(self, context, preset):
         rpdat.rp_eyeadapt = False
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'None'
+        rpdat.arm_rp_resolution = 'Display'
     elif preset == 'Deferred':
         rpdat.rp_renderer = 'Deferred'
         rpdat.arm_material_model = 'PBR'
@@ -107,6 +109,7 @@ def set_preset(self, context, preset):
         rpdat.rp_eyeadapt = False
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'None'
+        rpdat.arm_rp_resolution = 'Display'
     elif preset == 'Max':
         rpdat.rp_renderer = 'Deferred'
         rpdat.arm_material_model = 'PBR'
@@ -134,6 +137,7 @@ def set_preset(self, context, preset):
         rpdat.rp_eyeadapt = False
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'None'
+        rpdat.arm_rp_resolution = 'Display'
     elif preset == 'Render Capture':
         rpdat.rp_renderer = 'Deferred'
         rpdat.rp_shadowmap = '8192'
@@ -161,6 +165,7 @@ def set_preset(self, context, preset):
         rpdat.rp_eyeadapt = False
         rpdat.rp_rendercapture = True
         rpdat.rp_motionblur = 'None'
+        rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_material_model = 'Cycles'
         rpdat.arm_pcss_state = 'On'
     elif preset == 'Deferred Plus':
@@ -190,6 +195,7 @@ def set_preset(self, context, preset):
         rpdat.rp_eyeadapt = False
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'None'
+        rpdat.arm_rp_resolution = 'Display'
     elif preset == 'VR Low':
         rpdat.rp_renderer = 'Forward'
         rpdat.arm_material_model = 'Restricted'
@@ -217,6 +223,7 @@ def set_preset(self, context, preset):
         rpdat.rp_eyeadapt = False
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'None'
+        rpdat.arm_rp_resolution = 'Display'
     elif preset == 'Mobile Low':
         rpdat.rp_renderer = 'Forward'
         rpdat.arm_material_model = 'Restricted'
@@ -244,6 +251,7 @@ def set_preset(self, context, preset):
         rpdat.rp_eyeadapt = False
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'None'
+        rpdat.arm_rp_resolution = 'Display'
     elif preset == 'Grease Pencil':
         rpdat.rp_renderer = 'Forward'
         rpdat.arm_material_model = 'Restricted'
@@ -270,6 +278,7 @@ def set_preset(self, context, preset):
         rpdat.rp_eyeadapt = False
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'None'
+        rpdat.arm_rp_resolution = 'Display'
 
     updating_preset = False
     set_renderpath(self, context)

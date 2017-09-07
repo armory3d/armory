@@ -863,7 +863,7 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
                 depth_buffers.append(db)    
         # Get scale
         scale = 1.0
-        if node.inputs[1].is_linked:
+        if node.inputs[1].is_linked: # Assume Screen node
             size_node = nodes.find_node_by_link(node_group, node, node.inputs[1])
             while size_node.bl_idname == 'NodeReroute': # Step through reroutes
                 size_node = nodes.find_node_by_link(node_group, size_node, size_node.inputs[0])
@@ -886,7 +886,7 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
 
         # Get scale
         scale = 1.0
-        if node.inputs[1].is_linked:
+        if node.inputs[1].is_linked: # Assume Screen node
             size_node = nodes.find_node_by_link(node_group, node, node.inputs[1])
             while size_node.bl_idname == 'NodeReroute': # Step through reroutes
                 size_node = nodes.find_node_by_link(node_group, size_node, size_node.inputs[0])
@@ -916,6 +916,10 @@ def make_render_target(n, scale, depth_buffer_id=None):
         target['scale'] = scale    
     if depth_buffer_id != None:
         target['depth_buffer'] = depth_buffer_id
+    # Manual resolution
+    rpdat = build_node_tree.rpdat
+    if target['width'] == 0 and rpdat.arm_rp_resolution != 'Display':
+        target['displayp'] = int(rpdat.arm_rp_resolution)
     return target
 
 def make_shadowmap_target(n, scale, postfix=''):

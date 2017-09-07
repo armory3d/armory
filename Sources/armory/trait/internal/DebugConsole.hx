@@ -174,7 +174,7 @@ class DebugConsole extends Trait {
 	function update() {
 		armory.trait.WalkNavigation.enabled = !(ui.isScrolling || (ui.currentWindow != null && ui.currentWindow.dragging));
 		updateTime += iron.App.updateTime;
-		animTime += iron.object.Animation.animTime;
+		animTime += iron.object.Animation.animationTime;
 	#if arm_physics
 		physTime += PhysicsWorld.physTime;
 	#end
