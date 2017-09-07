@@ -1378,12 +1378,15 @@ class ArmoryExporter:
                 adata = bobject.animation_data
 
                 # Active action
-                if adata == None:
+                if adata != None:
+                    action = adata.action
+                if action == None:
+                    log.warn('Object ' + bobject.name + ' - No action assigned, setting to pose')
                     bobject.animation_data_create()
                     actions = bpy.data.actions
-                    action = actions.get('armorypose', actions.new(name='armorypose'))
-                else:
-                    action = adata.action
+                    action = actions.get('armorypose')
+                    if action == None:
+                        action = actions.new(name='armorypose')
 
                 # Export actions
                 export_actions = [action]
@@ -2153,6 +2156,20 @@ class ArmoryExporter:
 
         self.output['lamp_datas'].append(o)
 
+    def get_camera_clear_color(self):
+        if self.scene.world != None and self.scene.world.node_tree != None and 'Background' in self.scene.world.node_tree.nodes: # TODO: parse node tree
+            background_node = self.scene.world.node_tree.nodes['Background']
+            col = background_node.inputs[0].default_value
+            strength = background_node.inputs[1].default_value
+            ar = [col[0] * strength, col[1] * strength, col[2] * strength, col[3]]
+            ar[0] = max(min(ar[0], 1.0), 0.0)
+            ar[1] = max(min(ar[1], 1.0), 0.0)
+            ar[2] = max(min(ar[2], 1.0), 0.0)
+            ar[3] = max(min(ar[3], 1.0), 0.0)
+            return ar
+        else:
+            return [0.051, 0.051, 0.051, 1.0]
+
     def export_camera(self, objectRef):
         o = {}
         o['name'] = objectRef[1]["structName"]
@@ -2185,18 +2202,7 @@ class ArmoryExporter:
 
         o['frustum_culling'] = objref.arm_frustum_culling
         o['render_path'] = 'armory_default/armory_default'
-        
-        if self.scene.world != None and self.scene.world.node_tree != None and 'Background' in self.scene.world.node_tree.nodes: # TODO: parse node tree
-            background_node = self.scene.world.node_tree.nodes['Background']
-            col = background_node.inputs[0].default_value
-            strength = background_node.inputs[1].default_value
-            o['clear_color'] = [col[0] * strength, col[1] * strength, col[2] * strength, col[3]]
-            o['clear_color'][0] = max(min(o['clear_color'][0], 1.0), 0.0)
-            o['clear_color'][1] = max(min(o['clear_color'][1], 1.0), 0.0)
-            o['clear_color'][2] = max(min(o['clear_color'][2], 1.0), 0.0)
-            o['clear_color'][3] = max(min(o['clear_color'][3], 1.0), 0.0)
-        else:
-            o['clear_color'] = [0.051, 0.051, 0.051, 1.0]
+        o['clear_color'] = self.get_camera_clear_color()
 
         self.output['camera_datas'].append(o)
 
@@ -2533,7 +2539,7 @@ class ArmoryExporter:
                 self.output['camera_ref'] = self.scene.camera.name
             else:
                 if self.scene.name == arm.utils.get_project_scene_name():
-                    print('Armory Warning: No camera found in active scene')
+                    log.warn('Armory Warning: No camera found in active scene')
 
             self.output['material_datas'] = []
             self.export_materials()
@@ -2573,7 +2579,7 @@ class ArmoryExporter:
         if not self.camera_spawned:
             log.warn('No camera found in active scene layers')
 
-        if len(self.output['camera_datas']) == 0 and len(bpy.data.cameras) == 0:
+        if (len(self.output['camera_datas']) == 0 and len(bpy.data.cameras) == 0) or not self.camera_spawned:
             log.warn('Creating default camera')
             o = {}
             o['name'] = 'DefaultCamera'
@@ -2589,7 +2595,7 @@ class ArmoryExporter:
             o['type'] = 'perspective'
             o['frustum_culling'] = True
             o['render_path'] = 'armory_default/armory_default'
-            o['clear_color'] = [0.0, 0.0, 0.0, 1.0]
+            o['clear_color'] = self.get_camera_clear_color()
             self.output['camera_datas'].append(o)
             o = {}
             o['name'] = 'DefaultCamera'
