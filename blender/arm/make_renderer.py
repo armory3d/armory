@@ -330,6 +330,9 @@ def make_forward(rpdat):
     nodes['Begin'].inputs[1].default_value = rpdat.rp_hdr
     nodes['Screen'].inputs[0].default_value = int(rpdat.rp_supersampling)
 
+    if not rpdat.rp_hdr:
+        nodes['lbuf'].inputs[4].default_value = 'RGBA32'
+
     if rpdat.rp_shadowmap != 'None':
         n = nodes['Shadow Map']
         n.inputs[1].default_value = n.inputs[2].default_value = int(rpdat.rp_shadowmap)
@@ -385,6 +388,9 @@ def make_forward(rpdat):
 
     if rpdat.rp_overlays:
         links.new(last_node.outputs[0], nodes['Clear Target Overlay'].inputs[0])
+
+    if not rpdat.rp_compositornodes:
+        relink(last_node, 'Copy')
 
 def make_deferred(rpdat):
 
