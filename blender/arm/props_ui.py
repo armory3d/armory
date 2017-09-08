@@ -606,6 +606,8 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
         if not arm.utils.check_engine(self):
             return {"CANCELLED"}
 
+        arm.utils.check_projectpath(self)
+
         make_renderer.check_default()
 
         wrd = bpy.data.worlds['Arm']
@@ -644,6 +646,10 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
         if not arm.utils.check_engine(self):
             return {"CANCELLED"}
 
+        self.report({'INFO'}, 'Publishing project, check console for details.')
+
+        arm.utils.check_projectpath(self)
+
         make_renderer.check_default()
 
         wrd = bpy.data.worlds['Arm']
@@ -680,7 +686,6 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
             print('Android Studio project files are being exported to ' + files_path + '-build/' + arm.utils.safestr(wrd.arm_project_name))
         else:
             print('Makefiles are being exported to ' + files_path + '-build')
-        self.report({'INFO'}, 'Publishing project, check console for details.')
         return{'FINISHED'}
 
 class ArmoryPatchButton(bpy.types.Operator):

@@ -307,17 +307,30 @@ def check_saved(self):
         return False
     return True
 
-def check_sdkpath(self):
-    s = get_sdk_path()
+def check_path(s):
     for c in r'[];><&*%=+@!#^()|?^':
         if c in s:
-            self.report({"ERROR"}, "SDK path '{0}' contains special characters. Please move SDK to different path for now.".format(s))
             return False
     for c in s:
         if ord(c) > 127:
-            self.report({"ERROR"}, "SDK path '{0}' contains special characters. Please move SDK to different path for now.".format(s))
             return False
     return True
+
+def check_sdkpath(self):
+    s = get_sdk_path()
+    if check_path(s) == False:
+        self.report({"ERROR"}, "SDK path '{0}' contains special characters. Please move SDK to different path for now.".format(s))
+        return False
+    else:
+        return True
+
+def check_projectpath(self):
+    s = get_fp()
+    if check_path(s) == False:
+        self.report({"WARNING"}, "Project path '{0}' contains special characters, build process may fail.".format(s))
+        return False
+    else:
+        return True
 
 def check_engine(self):
     if bpy.context == None or bpy.context.scene == None:
