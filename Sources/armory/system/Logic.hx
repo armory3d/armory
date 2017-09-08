@@ -240,6 +240,9 @@ class Logic {
 		else if (inp.type == 'OBJECT') {
 			v = createClassInstance('ObjectNode', [tree, inp.default_value]);
 		}
+		else if (inp.type == 'ANIMACTION') {
+			v = createClassInstance('StringNode', [tree, inp.default_value]);
+		}
 		else if (inp.type == 'VECTOR') {
 			v = createClassInstance('VectorNode', [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2]]);
 		}

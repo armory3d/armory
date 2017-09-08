@@ -72,6 +72,22 @@ class ArmNodeEyedropButton(bpy.types.Operator):
             object_sockets[self.socket_index].default_value = obj.name
         return{'FINISHED'}
 
+class ArmAnimActionSocket(bpy.types.NodeSocket):
+    bl_idname = 'ArmNodeSocketAnimAction'
+    bl_label = 'Action Socket'
+    default_value = StringProperty(name='Action', default='')
+
+    def draw(self, context, layout, node, text):
+        if self.is_output:
+            layout.label(self.name)
+        elif self.is_linked:
+            layout.label(self.name)
+        else:
+            layout.prop_search(self, 'default_value', bpy.data, 'actions', icon='NONE', text='')
+
+    def draw_color(self, context, node):
+        return (0.8, 0.8, 0.8, 1)
+
 class ArmNodeAddInputButton(bpy.types.Operator):
     '''Add new input'''
     bl_idname = 'arm.node_add_input'
@@ -132,6 +148,7 @@ def add_node(node_class, category):
 bpy.utils.register_class(ArmActionSocket)
 bpy.utils.register_class(ArmObjectSocket)
 bpy.utils.register_class(ArmNodeEyedropButton)
+bpy.utils.register_class(ArmAnimActionSocket)
 bpy.utils.register_class(ArmNodeAddInputButton)
 bpy.utils.register_class(ArmNodeRemoveInputButton)
 bpy.utils.register_class(ArmNodeAddOutputButton)

@@ -14,6 +14,9 @@ class PlayActionNode extends LogicNode {
 		
 		if (object == null) object = tree.object;
 
+		// Try first child if we are running from armature
+		if (object.animation == null) object = object.children[0];
+
 		object.animation.play(action, function() {
 			runOutputs(1);
 		});

@@ -8,6 +8,8 @@ def socket_type(s):
 		return 'ACTION'
 	elif s == 'ArmNodeSocketObject':
 		return 'OBJECT'
+	elif s == 'ArmNodeSocketAnimAction':
+		return 'ANIMACTION'
 	elif s == 'NodeSocketShader':
 		return 'SHADER'
 	elif s == 'NodeSocketInt':
