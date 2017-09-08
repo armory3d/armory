@@ -180,6 +180,10 @@ project.addSources('Sources');
         if config_text != '':
             f.write(bpy.data.texts[config_text].as_string())
 
+        if wrd.arm_winorient != 'Multi':
+            if state.target == 'android-native':
+                f.write("project.targetOptions.android_native.screenOrientation = '{0}';\n".format(wrd.arm_winorient.lower()))
+
         f.write("\n\nresolve(project);\n")
 
 # Write Main.hx

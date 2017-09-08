@@ -104,6 +104,11 @@ def init_properties():
                  ('BorderlessWindow', 'Borderless', 'BorderlessWindow'),
                  ('Fullscreen', 'Fullscreen', 'Fullscreen')],
         name="", default='Window', description='Window mode to start in')
+    bpy.types.World.arm_winorient = EnumProperty(
+        items = [('Multi', 'Multi', 'Multi'),
+                 ('Portrait', 'Portrait', 'Portrait'),
+                 ('Landscape', 'Landscape', 'Landscape')],
+        name="Orientation", default='Multi', description='Set screen orientation on mobile devices')
     bpy.types.World.arm_winresize = BoolProperty(name="Resizable", description="Allow window resize", default=False)
     bpy.types.World.arm_winmaximize = BoolProperty(name="Maximizable", description="Allow window maximize", default=False)
     bpy.types.World.arm_winminimize = BoolProperty(name="Minimizable", description="Allow window minimize", default=True)

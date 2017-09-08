@@ -404,6 +404,8 @@ class ArmoryProjectPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_winmaximize')
         col.prop(wrd, 'arm_winminimize')
 
+        layout.prop(wrd, 'arm_winorient')
+
         layout.label('Assets:')
         layout.prop(wrd, 'arm_texture_quality')
         layout.prop(wrd, 'arm_sound_quality')
