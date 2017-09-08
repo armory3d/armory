@@ -54,6 +54,7 @@ def set_preset(self, context, preset):
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'None'
         rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_texture_filter = 'Anisotropic'
     elif preset == 'Forward':
         rpdat.rp_renderer = 'Forward'
         rpdat.arm_material_model = 'PBR'
@@ -82,6 +83,7 @@ def set_preset(self, context, preset):
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'None'
         rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_texture_filter = 'Anisotropic'
     elif preset == 'Deferred':
         rpdat.rp_renderer = 'Deferred'
         rpdat.arm_material_model = 'PBR'
@@ -110,6 +112,7 @@ def set_preset(self, context, preset):
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'None'
         rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_texture_filter = 'Anisotropic'
     elif preset == 'Max':
         rpdat.rp_renderer = 'Deferred'
         rpdat.arm_material_model = 'PBR'
@@ -138,6 +141,7 @@ def set_preset(self, context, preset):
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'None'
         rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_texture_filter = 'Anisotropic'
     elif preset == 'Render Capture':
         rpdat.rp_renderer = 'Deferred'
         rpdat.rp_shadowmap = '8192'
@@ -168,6 +172,7 @@ def set_preset(self, context, preset):
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_material_model = 'Cycles'
         rpdat.arm_pcss_state = 'On'
+        rpdat.arm_texture_filter = 'Anisotropic'
     elif preset == 'Deferred Plus':
         rpdat.rp_renderer = 'Deferred Plus'
         rpdat.arm_material_model = 'PBR'
@@ -196,6 +201,7 @@ def set_preset(self, context, preset):
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'None'
         rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_texture_filter = 'Anisotropic'
     elif preset == 'VR Low':
         rpdat.rp_renderer = 'Forward'
         rpdat.arm_material_model = 'Restricted'
@@ -224,6 +230,7 @@ def set_preset(self, context, preset):
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'None'
         rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_texture_filter = 'Point'
     elif preset == 'Mobile Low':
         rpdat.rp_renderer = 'Forward'
         rpdat.arm_material_model = 'Restricted'
@@ -252,6 +259,7 @@ def set_preset(self, context, preset):
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'None'
         rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_texture_filter = 'Point'
     elif preset == 'Grease Pencil':
         rpdat.rp_renderer = 'Forward'
         rpdat.arm_material_model = 'Restricted'
@@ -279,6 +287,7 @@ def set_preset(self, context, preset):
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'None'
         rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_texture_filter = 'Anisotropic'
 
     updating_preset = False
     set_renderpath(self, context)

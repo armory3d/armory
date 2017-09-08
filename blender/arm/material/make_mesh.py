@@ -328,6 +328,9 @@ def make_forward_restricted(con_mesh):
     vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
     frag.ins = vert.outs
     vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
+    vert.add_uniform('mat4 W', '_worldMatrix')
+    vert.add_out('vec3 wposition')
+    vert.write('wposition = vec4(W * spos).xyz;')
     vert.write('gl_Position = WVP * spos;')
 
     frag.add_include('../../Shaders/compiled.glsl')
@@ -348,8 +351,10 @@ def make_forward_restricted(con_mesh):
     frag.write_main_header('vec3 n = normalize(wnormal);')
     frag.write_pre = False
 
+    frag.add_include('../../Shaders/std/math.glsl')
     frag.add_uniform('vec3 lightColor', '_lampColor')
     frag.add_uniform('vec3 lightDir', '_lampDirection')
+    frag.add_uniform('vec3 lightPos', '_lampPosition')
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
 
     if '_NoShadows' in wrd.world_defs:
@@ -358,7 +363,7 @@ def make_forward_restricted(con_mesh):
         is_shadows = True
 
     frag.write('float visibility = 1.0;')
-    frag.write('float dotNL = dot(n, lightDir);')
+    frag.write('float dotNL = max(dot(n, lightDir), 0.0);')
 
     if is_shadows:
         vert.add_out('vec4 lampPos')
@@ -382,11 +387,12 @@ def make_forward_restricted(con_mesh):
         # frag.write('    visibility = max(float(texture(shadowMap, lpos.xy).r + shadowsBias > lpos.z), 0.5);')
         frag.write('    }')
 
-    frag.write('vec3 direct = basecol * max(dotNL, 0.1);')
+    frag.write('vec3 direct = basecol * dotNL * lightColor;')
+    frag.write('direct *= attenuate(distance(wposition, lightPos));')
 
     frag.add_out('vec4 fragColor')
-    frag.write('fragColor = vec4(direct * lightColor * visibility, 1.0);')
-    
+    frag.write('fragColor = vec4(direct * visibility + basecol * 0.05 * envmapStrength, 1.0);')
+
     if '_LDR' in wrd.world_defs:
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
 
