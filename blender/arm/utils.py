@@ -272,13 +272,15 @@ def get_render_resolution(scene):
 def get_project_scene_name():
     wrd = bpy.data.worlds['Arm']
     if wrd.arm_play_active_scene:
-        return bpy.context.screen.scene.name
+        context_scene = bpy.context.screen.scene if hasattr(bpy.context.screen, "scene") else bpy.context.scene # 2.8
+        return context_scene.name
     else:
         return wrd.arm_project_scene
 
 def get_active_scene():
     wrd = bpy.data.worlds['Arm']
-    return bpy.context.screen.scene if wrd.arm_play_active_scene else bpy.data.scenes[wrd.arm_project_scene]
+    context_scene = bpy.context.screen.scene if hasattr(bpy.context.screen, "scene") else bpy.context.scene # 2.8
+    return context_scene if wrd.arm_play_active_scene else bpy.data.scenes[wrd.arm_project_scene]
 
 def logic_editor_space():
     if hasattr(bpy.context, 'window') and bpy.context.window != None:
@@ -336,7 +338,7 @@ def check_engine(self):
     if bpy.context == None or bpy.context.scene == None:
         return
     engine = bpy.context.scene.render.engine
-    if engine != 'CYCLES' and engine != 'EEVEE':
+    if engine != 'CYCLES' and engine != 'BLENDER_EEVEE':
         self.report({"ERROR"}, "Switch to Cycles or Eevee engine first")
         return False
     return True

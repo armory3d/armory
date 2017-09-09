@@ -1852,7 +1852,10 @@ class ArmoryExporter:
         apply_modifiers = not armature
 
         # Apply all modifiers to create a new mesh with tessfaces
-        exportMesh = bobject.to_mesh(scene, apply_modifiers, "RENDER", True, False)
+        if hasattr(bpy.context.scene, "master_collection"): # 2.8
+            exportMesh = bobject.to_mesh(scene, bpy.context.workspace.render_layer, apply_modifiers, "RENDER", True, False)
+        else:
+            exportMesh = bobject.to_mesh(scene, apply_modifiers, "RENDER", True, False)
 
         if exportMesh == None:
             log.warn(oid + ' was not exported')
@@ -2473,7 +2476,8 @@ class ArmoryExporter:
 
         self.preprocess()
 
-        for bobject in self.scene.objects:
+        scene_objects = self.scene.master_collection.collections[0].objects if hasattr(self.scene, "master_collection") else self.scene.objects # 2.8
+        for bobject in scene_objects:
             # Map objects to game objects
             o = {}
             o['traits'] = []
@@ -2492,7 +2496,7 @@ class ArmoryExporter:
         # Skinned and non-skined objects can not share material
         matvars = []
         matvars_boskin = []
-        for bo in self.scene.objects:
+        for bo in scene_objects:
             if arm.utils.export_bone_data(bo):
                 matvars_boskin.append(bo)
                 for slot in bo.material_slots:
@@ -2514,7 +2518,7 @@ class ArmoryExporter:
             wrd.arm_gpu_skin_max_bones = max_bones
 
         self.output['objects'] = []
-        for bo in self.scene.objects:
+        for bo in scene_objects:
             if not bo.parent:
                 self.export_object(bo, self.scene)
 
@@ -2528,7 +2532,7 @@ class ArmoryExporter:
                 for bobject in group.objects:
                     if bobject.parent == None:
                         # Add external linked objects
-                        if bobject.name not in self.scene.objects:
+                        if bobject.name not in scene_objects:
                             self.process_bobject(bobject)
                             self.export_object(bobject, self.scene)
                             o['object_refs'].append(bobject.name + '_Lib')
@@ -2548,7 +2552,7 @@ class ArmoryExporter:
 
             # Ensure same vertex structure for object materials
             if not wrd.arm_deinterleaved_buffers:
-                for bobject in self.scene.objects:
+                for bobject in scene_objects:
                     if len(bobject.material_slots) > 1:
                         mat = bobject.material_slots[0].material
                         if mat == None:

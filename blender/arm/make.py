@@ -247,7 +247,7 @@ def build_project(is_play=False, is_publish=False, is_render=False, in_viewport=
     log.clear()
 
     # Set camera in active scene
-    active_scene = bpy.context.screen.scene if wrd.arm_play_active_scene else bpy.data.scenes[wrd.arm_project_scene]
+    active_scene = arm.utils.get_active_scene()
     if active_scene.camera == None:
         for o in active_scene.objects:
             if o.type == 'CAMERA':
