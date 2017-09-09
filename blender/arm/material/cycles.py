@@ -20,12 +20,12 @@ import arm.material.cycles_state as c_state
 basecol_texname = ''
 emission_found = False
 
-def parse(nodes, con, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
+def parse(nodes, con, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
     if output_node != None:
-        parse_output(output_node, con, vert, frag, geom, tesc, tese, parse_surface, parse_opacity, parse_displacement, basecol_only)
+        parse_output(output_node, con, vert, frag, geom, tesc, tese, parse_surface, parse_opacity, parse_displacement)
 
-def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse_opacity, _parse_displacement, _basecol_only):
+def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse_opacity, _parse_displacement):
     global parsed # Compute nodes only once
     global parents
     global normal_written # Normal socket is linked on shader node - overwrite fs normal
@@ -40,7 +40,6 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     global parse_opacity
     global parsing_basecol
     global parse_teximage_vector
-    global basecol_only
     global basecol_texname
     global emission_found
     con = _con
@@ -53,7 +52,6 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     parse_opacity = _parse_opacity
     parsing_basecol = False
     parse_teximage_vector = True
-    basecol_only = _basecol_only
     basecol_texname = ''
     emission_found = False
 
@@ -63,18 +61,13 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
         parents = []
         normal_written = False
         curshader = frag
-
-        if basecol_only:
-            frag.lock = True
         
         out_basecol, out_roughness, out_metallic, out_occlusion, out_opacity = parse_shader_input(node.inputs[0])
         if parse_surface:
-            frag.lock = False
             frag.write('basecol = {0};'.format(out_basecol))
-            if not basecol_only:
-                frag.write('roughness = {0};'.format(out_roughness))
-                frag.write('metallic = {0};'.format(out_metallic))
-                frag.write('occlusion = {0};'.format(out_occlusion))
+            frag.write('roughness = {0};'.format(out_roughness))
+            frag.write('metallic = {0};'.format(out_metallic))
+            frag.write('occlusion = {0};'.format(out_occlusion))
         if parse_opacity:
             frag.write('opacity = {0};'.format(out_opacity))
 
@@ -147,11 +140,8 @@ def write_normal(inp):
 
 def parsing_basecolor(b):
     global parsing_basecol
-    global basecol_only
     global curshader
     parsing_basecol = b
-    if basecol_only:
-        curshader.lock = not b
 
 def parse_shader(node, socket):   
     global parsing_basecol

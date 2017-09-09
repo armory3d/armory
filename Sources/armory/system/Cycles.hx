@@ -306,7 +306,7 @@ class Shader {
 	}
 
 	public function contains(s:String):Bool {
-		return (main.indexOf(s) >= 0 || main_pre.indexOf(s) >= 0 || ins.indexOf(s) >= 0);
+		return (main.indexOf(s) >= 0 || main_pre.indexOf(s) >= 0 || main_header.indexOf(s) >= 0 || ins.indexOf(s) >= 0);
 	}
 
 	public function prepend(s:String) {

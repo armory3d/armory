@@ -51,10 +51,11 @@ def make_finalize(con_mesh):
             tese.write('eyeDir = eye - wposition;')
 
         else:
+            if not vert.contains('wposition'):
+                write_wpos = True
             vert.add_out('vec3 eyeDir')
             vert.add_uniform('vec3 eye', '_cameraPosition')
             vert.write('eyeDir = eye - wposition;')
-            write_wpos = True
         frag.prepend('vec3 vVec = normalize(eyeDir);')
     
     export_wpos = False
@@ -335,7 +336,10 @@ def make_forward_restricted(con_mesh):
 
     frag.add_include('../../Shaders/compiled.glsl')
     frag.write('vec3 basecol;')
-    cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, basecol_only=True, parse_opacity=False, parse_displacement=False)
+    frag.write('float roughness;')
+    frag.write('float metallic;')
+    frag.write('float occlusion;')
+    cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False)
 
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
@@ -352,6 +356,7 @@ def make_forward_restricted(con_mesh):
     frag.write_pre = False
 
     frag.add_include('../../Shaders/std/math.glsl')
+    frag.add_include('../../Shaders/std/brdf.glsl')
     frag.add_uniform('vec3 lightColor', '_lampColor')
     frag.add_uniform('vec3 lightDir', '_lampDirection')
     frag.add_uniform('vec3 lightPos', '_lampPosition')
@@ -388,6 +393,7 @@ def make_forward_restricted(con_mesh):
         frag.write('    }')
 
     frag.write('vec3 direct = basecol * dotNL * lightColor;')
+    frag.write('direct += vec3(D_Approx(max(roughness, 0.1), dot(reflect(-vVec, n), lightDir)));')
     frag.write('direct *= attenuate(distance(wposition, lightPos));')
 
     frag.add_out('vec4 fragColor')

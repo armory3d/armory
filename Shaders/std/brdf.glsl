@@ -91,3 +91,28 @@ float wardSpecular(vec3 N, vec3 H, float dotNL, float dotNV, float dotNH, vec3 f
 	float theta = (pow(dotXH/shinyParallel, 2.0) + pow(dotYH/shinyPerpendicular, 2.0)) / (1.0 + dotNH);
 	return clamp(coeff * exp(-2.0 * theta), 0.0, 1.0);
 }
+
+// https://www.unrealengine.com/en-US/blog/physically-based-shading-on-mobile
+// vec3 EnvBRDFApprox(vec3 SpecularColor, float Roughness, float NoV) {
+// 	const vec4 c0 = { -1, -0.0275, -0.572, 0.022 };
+// 	const vec4 c1 = { 1, 0.0425, 1.04, -0.04 };
+// 	vec4 r = Roughness * c0 + c1;
+// 	float a004 = min( r.x * r.x, exp2( -9.28 * NoV ) ) * r.x + r.y;
+// 	vec2 AB = vec2( -1.04, 1.04 ) * a004 + r.zw;
+// 	return SpecularColor * AB.x + AB.y;
+// }
+// float EnvBRDFApproxNonmetal(float Roughness, float NoV) {
+// 	// Same as EnvBRDFApprox( 0.04, Roughness, NoV )
+// 	const vec2 c0 = { -1, -0.0275 };
+// 	const vec2 c1 = { 1, 0.0425 };
+// 	vec2 r = Roughness * c0 + c1;
+// 	return min( r.x * r.x, exp2( -9.28 * NoV ) ) * r.x + r.y;
+// }
+float D_Approx(const float Roughness, const float RoL) {
+	float a = Roughness * Roughness;
+	float a2 = a * a;
+	float rcp_a2 = 1.0 / a2;//rcp(a2);
+	// 0.5 / ln(2), 0.275 / ln(2)
+	float c = 0.72134752 * rcp_a2 + 0.39674113;
+	return rcp_a2 * exp2( c * RoL - c );
+}
