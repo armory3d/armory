@@ -272,14 +272,19 @@ def get_render_resolution(scene):
 def get_project_scene_name():
     wrd = bpy.data.worlds['Arm']
     if wrd.arm_play_active_scene:
-        context_scene = bpy.context.screen.scene if hasattr(bpy.context.screen, "scene") else bpy.context.scene # 2.8
-        return context_scene.name
+        if bpy.app.version >= (2, 80, 1): # 2.8
+            return bpy.context.scene.name
+        else:
+            return bpy.context.screen.scene.name
     else:
         return wrd.arm_project_scene
 
 def get_active_scene():
     wrd = bpy.data.worlds['Arm']
-    context_scene = bpy.context.screen.scene if hasattr(bpy.context.screen, "scene") else bpy.context.scene # 2.8
+    if bpy.app.version >= (2, 80, 1): # 2.8
+        context_scene = bpy.context.scene
+    else:
+        context_scene = bpy.context.screen.scene
     return context_scene if wrd.arm_play_active_scene else bpy.data.scenes[wrd.arm_project_scene]
 
 def logic_editor_space():

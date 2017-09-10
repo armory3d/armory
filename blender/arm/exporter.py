@@ -1262,6 +1262,8 @@ class ArmoryExporter:
                 if bobject.layers[l] == True:
                     layer_found = True
                     break
+            if bpy.app.version >= (2, 80, 1): # 2.8 Spawn all layers for now
+                layer_found = True
             if layer_found == False:
                 o['spawn'] = False
 
@@ -1852,7 +1854,7 @@ class ArmoryExporter:
         apply_modifiers = not armature
 
         # Apply all modifiers to create a new mesh with tessfaces
-        if hasattr(bpy.context.scene, "master_collection"): # 2.8
+        if bpy.app.version >= (2, 80, 1): # 2.8
             exportMesh = bobject.to_mesh(scene, bpy.context.workspace.render_layer, apply_modifiers, "RENDER", True, False)
         else:
             exportMesh = bobject.to_mesh(scene, apply_modifiers, "RENDER", True, False)
@@ -2476,7 +2478,10 @@ class ArmoryExporter:
 
         self.preprocess()
 
-        scene_objects = self.scene.master_collection.collections[0].objects if hasattr(self.scene, "master_collection") else self.scene.objects # 2.8
+        if bpy.app.version >= (2, 80, 1): # 2.8
+            scene_objects = self.scene.master_collection.collections[0].objects
+        else:
+            scene_objects = self.scene.objects
         for bobject in scene_objects:
             # Map objects to game objects
             o = {}
