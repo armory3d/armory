@@ -317,7 +317,7 @@ class ArmEditBundledScriptButton(bpy.types.Operator):
         item.type_prop = 'Haxe Script'
 
         # Edit in Kode Studio
-        bpy.ops.arm.edit_script('EXEC_DEFAULT', is_object=is_object)
+        bpy.ops.arm.edit_script('EXEC_DEFAULT', is_object=self.is_object)
         
         return{'FINISHED'}
 
