@@ -282,6 +282,7 @@ def init_properties():
     bpy.types.Material.arm_tess_shadows = bpy.props.BoolProperty(name="Tess Shadows", description="Use tessellation shaders when rendering shadow maps", default=True)
     bpy.types.Material.arm_tess_shadows_inner = bpy.props.IntProperty(name="Inner", description="Inner tessellation level for shadows", default=7)
     bpy.types.Material.arm_tess_shadows_outer = bpy.props.IntProperty(name="Outer", description="Outer tessellation level for shadows", default=7)
+    bpy.types.Material.arm_custom_material = bpy.props.StringProperty(name="Custom Material", description="Write custom material", default='')
     # For scene
     bpy.types.Scene.arm_export = bpy.props.BoolProperty(name="Export", description="Export scene data", default=True)
     bpy.types.Scene.arm_gp_export = bpy.props.BoolProperty(name="Export GP", description="Export grease pencil data", default=True)

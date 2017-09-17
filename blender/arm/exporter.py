@@ -2287,7 +2287,7 @@ class ArmoryExporter:
             if material.arm_two_sided or wrd.arm_culling == False:
                 o['override_context'] = {}
                 o['override_context']['cull_mode'] = 'none'
-            elif material.arm_cull_mode != 'Clockwise':
+            elif material.arm_cull_mode != 'clockwise':
                 o['override_context'] = {}
                 o['override_context']['cull_mode'] = material.arm_cull_mode
 

@@ -241,6 +241,8 @@ class MaterialPropsPanel(bpy.types.Panel):
         columnb.prop(mat, 'arm_tess_shadows_inner')
         columnb.prop(mat, 'arm_tess_shadows_outer')
 
+        layout.prop(mat, 'arm_custom_material')
+
         layout.operator("arm.invalidate_material_cache")
 
 class WorldPropsPanel(bpy.types.Panel):

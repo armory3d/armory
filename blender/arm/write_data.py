@@ -57,6 +57,11 @@ project.addSources('Sources');
                 if os.path.isfile(file):
                     assets.add(file)
 
+        if os.path.exists('Shaders'):
+            for file in glob.glob("Shaders/**", recursive=True):
+                if os.path.isfile(file):
+                    assets.add_shader(file)
+
         if not os.path.exists('Libraries/armory'):
             f.write(add_armory_library(sdk_path, 'armory'))
 

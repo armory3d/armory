@@ -26,10 +26,30 @@ def parse(material, mat_data, mat_users, mat_armusers):
     rpdat = arm.utils.get_rp()
 
     # No batch - shader data per material
-    if not wrd.arm_batch_materials or material.name.startswith('armdefault'):
+    if material.arm_custom_material != '':
+        rpasses = ['mesh']
+        sd = {}
+        sd['contexts'] = []
+        con = {}
+        con['vertex_structure'] = []
+        elem = {}
+        elem['name'] = 'pos'
+        con['vertex_structure'].append(elem)
+        elem = {}
+        elem['name'] = 'nor'
+        con['vertex_structure'].append(elem)
+        sd['contexts'].append(con)
+        shader_data_name = material.arm_custom_material
+        bind_constants = {}
+        bind_constants['mesh'] = []
+        bind_textures = {}
+        bind_textures['mesh'] = []
+    elif not wrd.arm_batch_materials or material.name.startswith('armdefault'):
         rpasses, shader_data, shader_data_name, bind_constants, bind_textures = make_shader.build(material, mat_users, mat_armusers)
+        sd = shader_data.sd
     else:
         rpasses, shader_data, shader_data_name, bind_constants, bind_textures = mat_batch.get(material)
+        sd = shader_data.sd
 
     # Material
     for rp in rpasses:
@@ -96,4 +116,4 @@ def parse(material, mat_data, mat_users, mat_armusers):
     
     mat_data['shader'] = shader_data_name + '/' + shader_data_name
 
-    return shader_data.sd, rpasses
+    return sd, rpasses
