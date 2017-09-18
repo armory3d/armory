@@ -53,6 +53,11 @@ class CanvasScript extends Trait {
 		});
 	}
 
+	public function getElement(name:String):TElement {
+		for (e in canvas.elements) if (e.name == name) return e;
+		return null;
+	}
+
 #else
 
 	public function new(canvasName:String) { super(); }

@@ -557,7 +557,6 @@ def draw_traits(layout, obj, is_object):
             op = row.operator("arm.new_canvas")
             op.is_object = is_object
             op = row.operator("arm.refresh_canvas_list")
-            op.is_object = is_object
 
         # Nodes
         elif item.type_prop == 'Logic Nodes':
