@@ -324,7 +324,7 @@ const float cloudsSecondary = """ + str(round(wrd.arm_clouds_secondary * 100) / 
 const float cloudsPrecipitation = """ + str(round(wrd.arm_clouds_precipitation * 100) / 100) + """;
 const float cloudsEccentricity = """ + str(round(wrd.arm_clouds_eccentricity * 100) / 100) + """;
 """)
-        if rpdat.arm_ocean:
+        if rpdat.rp_ocean:
             f.write(
 """const float seaLevel = """ + str(round(wrd.arm_ocean_level * 100) / 100) + """;
 const float seaMaxAmplitude = """ + str(round(wrd.arm_ocean_amplitude * 100) / 100) + """;

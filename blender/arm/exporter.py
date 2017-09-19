@@ -2786,7 +2786,7 @@ class ArmoryExporter:
                 export_object = False
                 rdpat = arm.utils.get_rp()
                 wrd = bpy.data.worlds['Arm']
-                rdpat.arm_ocean = True
+                rdpat.rp_ocean = True
                 # Take position and bounds
                 wrd.arm_ocean_level = 0.0#bobject.location.z
 

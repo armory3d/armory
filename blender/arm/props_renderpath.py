@@ -144,7 +144,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('512', '512', '512')],
         name="Resolution", description="3D texture resolution", default='128', update=update_renderpath)
     arm_clouds = bpy.props.BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
-    arm_ocean = bpy.props.BoolProperty(name="Ocean", default=False, update=assets.invalidate_shader_cache)
     arm_pcss_state = EnumProperty(
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off'), 
