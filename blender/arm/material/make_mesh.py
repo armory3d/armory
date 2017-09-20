@@ -556,7 +556,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.tab -= 1
 
     if '_Irr' in wrd.world_defs:
-        frag.write('vec3 indirect = (shIrradiance(n, 2.2) / PI) * albedo;')
+        frag.write('vec3 indirect = (shIrradiance(n) / PI) * albedo;')
 
         if '_Rad' in wrd.world_defs:
             frag.write('vec3 reflectionWorld = reflect(-vVec, n);')
@@ -565,6 +565,6 @@ def make_forward_base(con_mesh, parse_opacity=False):
             if '_EnvLDR' in wrd.world_defs:
                 frag.write('prefilteredColor = pow(prefilteredColor, vec3(2.2));')
             frag.write('vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;')
-            frag.write('indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);')
+            frag.write('indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5;')
     else:
         frag.write('vec3 indirect = albedo;')

@@ -124,7 +124,7 @@ def make_rect(con_rect):
 
     # Env
     frag.write('vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;')
-    frag.write('vec3 envl = shIrradiance(n, 2.2) / PI;')
+    frag.write('vec3 envl = shIrradiance(n) / PI;')
 
     frag.write('vec3 reflectionWorld = reflect(-vVec, n);')
     frag.write('float lod = getMipFromRoughness(roughness, envmapNumMipmaps);')

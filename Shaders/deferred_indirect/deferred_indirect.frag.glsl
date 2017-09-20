@@ -86,7 +86,6 @@ void main() {
 	float dotNV = max(dot(n, v), 0.0);
 	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
 	vec2 envBRDF = texture(senvmapBrdf, vec2(metrough.y, 1.0 - dotNV)).xy;
-	// vec2 envBRDF = texture(senvmapBrdf, vec2(dotNV, metrough.y)).xy;
 #endif
 
 #ifdef _VoxelGI
@@ -115,7 +114,7 @@ void main() {
 
 	// Envmap
 #ifdef _Irr
-	vec3 envl = shIrradiance(n, 2.2) / PI;
+	vec3 envl = shIrradiance(n) / PI;
 #else
 	vec3 envl = vec3(1.0);
 #endif
@@ -136,7 +135,7 @@ void main() {
 	envl.rgb *= albedo;
 	
 #ifdef _Rad // Indirect specular
-	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y);
+	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5;
 #endif
 
 #ifdef _SSS

@@ -52,7 +52,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
         cmft_path = '"' + sdk_path + '/armory/tools/cmft/cmft-linux64"'
         kraffiti_path = '"' + sdk_path + '/linux64/Kha/Kore/Tools/kraffiti/kraffiti-linux64"'
     
-    output_gama_numerator = '1.0' if disable_hdr else '2.2'
+    output_gama_numerator = '2.2' if disable_hdr else '1.0'
     input_file = arm.utils.asset_path(image_filepath)
     
     # Scale map
@@ -77,15 +77,6 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             ' format=' + rad_format + \
             ' width=' + str(target_w) + \
             ' height=' + str(target_h)], shell=True)
-
-    # Generate irradiance
-    # gama_options = ''
-    # if disable_hdr:
-        # gama_options = \
-        # ' --inputGammaNumerator 2.2' + \
-        # ' --inputGammaDenominator 1.0' + \
-        # ' --outputGammaNumerator 1.0' + \
-        # ' --outputGammaDenominator ' + output_gama_numerator
     
     # Irradiance spherical harmonics
     if arm.utils.get_os() == 'win':
@@ -93,7 +84,6 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             cmft_path,
             '--input', scaled_file.replace(' ', '\ '),
             '--filter', 'shcoeffs',
-            #gama_options + \
             '--outputNum', '1',
             '--output0', output_file_irr.replace(' ', '\ ')])
     else:
@@ -101,7 +91,6 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             cmft_path + \
             ' --input ' + '"' + scaled_file + '"' + \
             ' --filter shcoeffs' + \
-            #gama_options + \
             ' --outputNum 1' + \
             ' --output0 ' + '"' + output_file_irr + '"'], shell=True)
 
@@ -134,7 +123,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             '--srcFaceSize', str(face_size),
             '--excludeBase', 'false',
             # '--mipCount', str(mip_count),
-            '--glossScale', '7',
+            '--glossScale', '8',
             '--glossBias', '3',
             '--lightingModel', 'blinnbrdf',
             '--edgeFixup', 'none',
@@ -144,10 +133,10 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             '--deviceType', 'gpu',
             '--deviceIndex', '0',
             '--generateMipChain', 'true',
-            '--inputGammaNumerator', '2.2',
+            '--inputGammaNumerator', output_gama_numerator,
             '--inputGammaDenominator', '1.0',
             '--outputGammaNumerator', '1.0',
-            '--outputGammaDenominator', output_gama_numerator,
+            '--outputGammaDenominator', '1.0',
             '--outputNum', '1',
             '--output0', output_file_rad.replace(' ', '\ '),
             '--output0params', 'hdr,rgbe,latlong'])
@@ -160,7 +149,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             ' --srcFaceSize ' + str(face_size) + \
             ' --excludeBase false' + \
             #' --mipCount ' + str(mip_count) + \
-            ' --glossScale 7' + \
+            ' --glossScale 8' + \
             ' --glossBias 3' + \
             ' --lightingModel blinnbrdf' + \
             ' --edgeFixup none' + \
@@ -170,10 +159,10 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             ' --deviceType gpu' + \
             ' --deviceIndex 0' + \
             ' --generateMipChain true' + \
-            ' --inputGammaNumerator 2.2' + \
+            ' --inputGammaNumerator ' + output_gama_numerator + \
             ' --inputGammaDenominator 1.0' + \
             ' --outputGammaNumerator 1.0' + \
-            ' --outputGammaDenominator ' + output_gama_numerator + \
+            ' --outputGammaDenominator 1.0' + \
             ' --outputNum 1' + \
             ' --output0 "' + output_file_rad + '"' + \
             ' --output0params hdr,rgbe,latlong'], shell=True)
