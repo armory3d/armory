@@ -95,7 +95,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             '--filter', 'shcoeffs',
             #gama_options + \
             '--outputNum', '1',
-            '--output0', output_file_irr])
+            '--output0', output_file_irr.replace(' ', '\ ')])
     else:
         subprocess.call([ \
             cmft_path + \
@@ -103,7 +103,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             ' --filter shcoeffs' + \
             #gama_options + \
             ' --outputNum 1' + \
-            ' --output0 ' + output_file_irr], shell=True)
+            ' --output0 ' + '"' + output_file_irr + '"'], shell=True)
 
     sh_to_json(output_file_irr)
     add_irr_assets(output_file_irr)
@@ -190,7 +190,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
         mip_w = int(mip_w / 2)
         mip_num += 1
 
-    # Append mips       
+    # Append mips
     generated_files = []
     for i in range(0, mip_count):
         generated_files.append(output_file_rad + '_' + str(i))
@@ -219,15 +219,15 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
         if arm.utils.get_os() == 'win':
             subprocess.call([ \
                 kraffiti_path,
-                'from=' + last + '.' + rad_format,
-                'to=' + out + '.' + rad_format,
+                'from=' + '"' + last + '.' + rad_format + '"',
+                'to=' + '"' + out + '.' + rad_format + '"',
                 'scale=0.5',
                 'format=' + rad_format], shell=True)
         else:
             subprocess.call([ \
                 kraffiti_path + \
-                ' from=' + last + '.' + rad_format + \
-                ' to=' + out + '.' + rad_format + \
+                ' from=' + '"' + last + '.' + rad_format + '"' + \
+                ' to=' + '"' + out + '.' + rad_format + '"' + \
                 ' scale=0.5' + \
                 ' format=' + rad_format], shell=True)
         generated_files.append(out)
