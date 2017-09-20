@@ -12,7 +12,7 @@ class GetTraitNode extends LogicNode {
 		var object:Object = inputs[0].get();
 		var name:String = inputs[1].get();
 
-		if (object == null) object = tree.object;
+		if (object == null) return null;
 
 		return null; // TODO
 	}

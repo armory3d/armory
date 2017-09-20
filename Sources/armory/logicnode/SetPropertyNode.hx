@@ -13,7 +13,7 @@ class SetPropertyNode extends LogicNode {
 		var property:String = inputs[2].get();
 		var value:Dynamic = inputs[3].get();
 		
-		if (object == null) object = tree.object;
+		if (object == null) return;
 		if (object.properties == null) object.properties = new Map();
 		object.properties.set(property, value);
 

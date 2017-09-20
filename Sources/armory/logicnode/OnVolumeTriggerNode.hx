@@ -21,7 +21,7 @@ class OnVolumeTriggerNode extends LogicNode {
 		var object:Object = inputs[0].get();
 		var volume:Object = inputs[1].get();
 
-		if (object == null) object = tree.object;
+		if (object == null) return;
 		if (volume == null) volume = tree.object;
 
 		var t1 = object.transform;

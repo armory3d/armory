@@ -11,7 +11,7 @@ class AnimationStateNode extends LogicNode {
 	override function get(from:Int):Dynamic {
 		var object:Object = inputs[0].get();
 
-		if (object == null) object = tree.object;
+		if (object == null) return null;
 
 		if (from == 0) return !object.animation.paused; // is playing
 		else if (from == 1) return object.animation.timeIndex;

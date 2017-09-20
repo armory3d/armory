@@ -12,7 +12,7 @@ class SetParentNode extends LogicNode {
 		var object:Object = inputs[1].get();
 		var parent:Object = inputs[2].get();
 		
-		if (object == null) object = tree.object;
+		if (object == null) return;
 		if (parent == null) parent = tree.object;
 
 		object.parent.children.remove(object);

@@ -11,7 +11,7 @@ class GetParentNode extends LogicNode {
 	override function get(from:Int):Dynamic {
 		var object:Object = inputs[0].get();
 
-		if (object == null) object = tree.object;
+		if (object == null) return null;
 
 		return object.parent;
 	}

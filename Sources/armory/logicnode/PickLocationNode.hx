@@ -15,7 +15,7 @@ class PickLocationNode extends LogicNode {
 		var object:Object = inputs[0].get();
 		var coords:Vec4 = inputs[1].get();
 		
-		if (object == null) object = tree.object;
+		if (object == null) null;
 
 #if arm_physics
 		var physics = armory.trait.internal.PhysicsWorld.active;

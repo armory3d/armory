@@ -16,7 +16,7 @@ class AppendTransformNode extends LogicNode {
 		var object:Object = inputs[1].get();
 		var matrix:Mat4 = inputs[2].get();
 
-		if (object == null) object = tree.object;
+		if (object == null) return;
 
 		object.transform.multMatrix(matrix);
 

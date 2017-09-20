@@ -13,7 +13,7 @@ class SetMaterialNode extends LogicNode {
 		var object:MeshObject = inputs[1].get();
 		var mat:MaterialData = inputs[2].get();
 		
-		if (object == null) object = cast(tree.object, MeshObject);
+		if (object == null) return;
 
 		object.materials[0] = mat;
 

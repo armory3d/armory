@@ -13,7 +13,7 @@ class SetMeshNode extends LogicNode {
 		var object:MeshObject = inputs[1].get();
 		var mesh:MeshData = inputs[2].get();
 		
-		if (object == null) object = cast(tree.object, MeshObject);
+		if (object == null) return;
 
 		object.data = mesh;
 

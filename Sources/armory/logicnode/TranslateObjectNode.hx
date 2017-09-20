@@ -17,7 +17,7 @@ class TranslateObjectNode extends LogicNode {
 		var object:Object = inputs[1].get();
 		var vec:Vec4 = inputs[2].get();
 
-		if (object == null) object = tree.object;
+		if (object == null) return;
 
 		object.transform.loc.add(vec);
 		object.transform.buildMatrix();

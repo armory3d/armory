@@ -13,7 +13,7 @@ class SetNativePropertyNode extends LogicNode {
 		var property:String = inputs[2].get();
 		var value:Dynamic = inputs[3].get();
 		
-		if (object == null) object = tree.object;
+		if (object == null) return;
 
 		Reflect.setProperty(object, property, value);
 

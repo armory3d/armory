@@ -12,7 +12,7 @@ class SetVisibleNode extends LogicNode {
 		var object:Object = inputs[1].get();
 		var visible:Bool = inputs[2].get();
 		
-		if (object == null) object = tree.object;
+		if (object == null) return;
 
 		object.visible = visible;
 

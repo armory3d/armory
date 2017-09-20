@@ -12,7 +12,7 @@ class SetNameNode extends LogicNode {
 		var object:Object = inputs[1].get();
 		var name:String = inputs[2].get();
 		
-		if (object == null) object = tree.object;
+		if (object == null) return;
 
 		object.name = name;
 

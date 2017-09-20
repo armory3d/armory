@@ -11,7 +11,7 @@ class GetMaterialNode extends LogicNode {
 	override function get(from:Int):Dynamic {
 		var object:MeshObject = inputs[0].get();
 
-		if (object == null) object = cast(tree.object, MeshObject);
+		if (object == null) return null;
 
 		return object.materials[0];
 	}

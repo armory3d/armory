@@ -12,7 +12,7 @@ class GetNativePropertyNode extends LogicNode {
 		var object:Object = inputs[0].get();
 		var property:String = inputs[1].get();
 
-		if (object == null) object = tree.object;
+		if (object == null) return null;
 
 		return Reflect.getProperty(object, property);
 	}

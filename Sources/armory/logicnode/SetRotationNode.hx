@@ -16,7 +16,7 @@ class SetRotationNode extends LogicNode {
 		var object:Object = inputs[1].get();
 		var vec:Vec4 = inputs[2].get();
 
-		if (object == null) object = tree.object;
+		if (object == null) return;
 
 		object.transform.rot.fromEuler(vec.x, vec.y, vec.z);
 		object.transform.buildMatrix();
