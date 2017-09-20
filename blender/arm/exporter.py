@@ -2933,20 +2933,21 @@ class ArmoryExporter:
                 if t.type_prop == 'Logic Nodes' and t.nodes_name_prop != '':
                     x['type'] = 'Script'
                     x['class_name'] = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + arm.utils.safesrc(t.nodes_name_prop)
-                elif t.type_prop == 'JS Script':
-                    basename = t.jsscript_prop.split('.')[0]
-                    x['type'] = 'Script'
-                    x['class_name'] = 'armory.trait.internal.JSScript'
-                    x['parameters'] = ["'" + basename + "'"]
-                    scriptspath = arm.utils.get_fp_build() + '/compiled/scripts/'
-                    if not os.path.exists(scriptspath):
-                        os.makedirs(scriptspath)
-                    # Write js to file
-                    assetpath = arm.utils.build_dir() + '/compiled/scripts/' + t.jsscript_prop + '.js'
-                    targetpath = arm.utils.get_fp() + '/' + assetpath
-                    with open(targetpath, 'w') as f:
-                        f.write(bpy.data.texts[t.jsscript_prop].as_string())
-                    assets.add(assetpath)
+                elif t.type_prop == 'WebAssembly':
+                    pass
+                    # basename = t.jsscript_prop.split('.')[0]
+                    # x['type'] = 'Script'
+                    # x['class_name'] = 'armory.trait.internal.JSScript'
+                    # x['parameters'] = ["'" + basename + "'"]
+                    # scriptspath = arm.utils.get_fp_build() + '/compiled/scripts/'
+                    # if not os.path.exists(scriptspath):
+                    #     os.makedirs(scriptspath)
+                    # # Write js to file
+                    # assetpath = arm.utils.build_dir() + '/compiled/scripts/' + t.jsscript_prop + '.js'
+                    # targetpath = arm.utils.get_fp() + '/' + assetpath
+                    # with open(targetpath, 'w') as f:
+                    #     f.write(bpy.data.texts[t.jsscript_prop].as_string())
+                    # assets.add(assetpath)
                 elif t.type_prop == 'UI Canvas':
                     ArmoryExporter.export_ui = True
                     x['type'] = 'Script'

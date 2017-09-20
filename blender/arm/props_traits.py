@@ -9,47 +9,6 @@ from arm.props_traits_props import *
 import arm.utils
 import arm.write_data as write_data
 
-class ListTraitItem(bpy.types.PropertyGroup):
-    # Group of properties representing an item in the list
-    name = bpy.props.StringProperty(
-           name="Name",
-           description="A name for this item",
-           default="")
-           
-    enabled_prop = bpy.props.BoolProperty(
-           name="",
-           description="A name for this item",
-           default=True)
-
-    type_prop = bpy.props.EnumProperty(
-        items = [('Haxe Script', 'Haxe Script', 'Haxe Script'),
-                 ('JS Script', 'JS Script', 'JS Script'),
-                 ('UI Canvas', 'UI Canvas', 'UI Canvas'),
-                 ('Bundled Script', 'Bundled Script', 'Bundled Script'),
-                 ('Logic Nodes', 'Logic Nodes', 'Logic Nodes')
-                 ],
-        name = "Type")
-
-    class_name_prop = bpy.props.StringProperty(
-           name="Class",
-           description="A name for this item",
-           default="")
-
-    canvas_name_prop = bpy.props.StringProperty(
-           name="Canvas",
-           description="A name for this item",
-           default="")
-
-    jsscript_prop = bpy.props.StringProperty(
-           name="Text",
-           description="A name for this item",
-           default="")
-
-    nodes_name_prop = bpy.props.StringProperty(
-           name="Nodes",
-           description="A name for this item",
-           default="")
-
 class ArmTraitListItem(bpy.types.PropertyGroup):
     # Group of properties representing an item in the list
     name = bpy.props.StringProperty(
@@ -64,7 +23,7 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
 
     type_prop = bpy.props.EnumProperty(
         items = [('Haxe Script', 'Haxe Script', 'Haxe Script'),
-                 ('JS Script', 'JS Script', 'JS Script'),
+                 ('WebAssembly', 'WebAssembly', 'WebAssembly'),
                  ('UI Canvas', 'UI Canvas', 'UI Canvas'),
                  ('Bundled Script', 'Bundled Script', 'Bundled Script'),
                  ('Logic Nodes', 'Logic Nodes', 'Logic Nodes')
@@ -81,7 +40,7 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
            description="A name for this item",
            default="")
 
-    jsscript_prop = bpy.props.StringProperty(
+    webassembly_prop = bpy.props.StringProperty(
            name="Text",
            description="A name for this item",
            default="")
@@ -471,7 +430,6 @@ def draw_traits(layout, obj, is_object):
         row = layout.row()
         row.prop(item, "type_prop")
 
-        # Script
         if item.type_prop == 'Haxe Script' or item.type_prop == 'Bundled Script':
             item.name = item.class_name_prop
             row = layout.row()
@@ -534,13 +492,12 @@ def draw_traits(layout, obj, is_object):
                 op = layout.operator("arm.edit_bundled_script")
                 op.is_object = is_object
         
-        # JS Script
-        elif item.type_prop == 'JS Script':
-            item.name = item.jsscript_prop
-            row = layout.row()
-            row.prop_search(item, "jsscript_prop", bpy.data, "texts", "Text")
+        elif item.type_prop == 'WebAssembly':
+            pass
+            # item.name = item.webassembly_prop
+            # row = layout.row()
+            # row.prop_search(item, "webassembly_prop", bpy.data, "texts", "Text")
 
-        # UI
         elif item.type_prop == 'UI Canvas':
             item.name = item.canvas_name_prop
             row = layout.row()
@@ -558,7 +515,6 @@ def draw_traits(layout, obj, is_object):
             op.is_object = is_object
             op = row.operator("arm.refresh_canvas_list")
 
-        # Nodes
         elif item.type_prop == 'Logic Nodes':
             item.name = item.nodes_name_prop
             row = layout.row()
