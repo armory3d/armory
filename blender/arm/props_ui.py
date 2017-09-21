@@ -52,6 +52,16 @@ class ObjectPropsPanel(bpy.types.Panel):
                 # row.prop(obj, 'arm_instanced')
                 # row.prop(obj, 'arm_instanced')
 
+            wrd = bpy.data.worlds['Arm']
+            layout.prop_search(obj, "arm_tilesheet", wrd, "arm_tilesheetlist", "Tilesheet")
+            if obj.arm_tilesheet != '':
+                selected_ts = None
+                for ts in wrd.arm_tilesheetlist:
+                    if ts.name == obj.arm_tilesheet:
+                        selected_ts = ts
+                        break
+                layout.prop_search(obj, "arm_tilesheet_action", selected_ts, "arm_tilesheetactionlist", "Action")
+
 class ModifiersPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
@@ -243,6 +253,7 @@ class MaterialPropsPanel(bpy.types.Panel):
 
         layout.prop(mat, 'arm_custom_material')
         layout.prop(mat, 'arm_billboard')
+        layout.prop(mat, 'arm_tilesheet_mat')
 
         layout.operator("arm.invalidate_material_cache")
 
@@ -1094,6 +1105,50 @@ class ArmLodPanel(bpy.types.Panel):
 
         layout.prop(mdata, "arm_lod_material")
 
+class ArmTilesheetPanel(bpy.types.Panel):
+    bl_label = "Armory Tilesheet"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "object"
+    bl_options = {'DEFAULT_CLOSED'}
+ 
+    def draw(self, context):
+        layout = self.layout
+        wrd = bpy.data.worlds['Arm']
+
+        rows = 2
+        if len(wrd.arm_tilesheetlist) > 1:
+            rows = 4
+        row = layout.row()
+        row.template_list("ArmTilesheetList", "The_List", wrd, "arm_tilesheetlist", wrd, "arm_tilesheetlist_index", rows=rows)
+        col = row.column(align=True)
+        col.operator("arm_tilesheetlist.new_item", icon='ZOOMIN', text="")
+        col.operator("arm_tilesheetlist.delete_item", icon='ZOOMOUT', text="")
+
+        if wrd.arm_tilesheetlist_index >= 0 and len(wrd.arm_tilesheetlist) > 0:
+            dat = wrd.arm_tilesheetlist[wrd.arm_tilesheetlist_index]
+            row = layout.row()
+            row.prop(dat, "tilesx_prop")
+            row.prop(dat, "tilesy_prop")
+            layout.prop(dat, "framerate_prop")
+
+            layout.label('Actions')
+            rows = 2
+            if len(dat.arm_tilesheetactionlist) > 1:
+                rows = 4
+            row = layout.row()
+            row.template_list("ArmTilesheetList", "The_List", dat, "arm_tilesheetactionlist", dat, "arm_tilesheetactionlist_index", rows=rows)
+            col = row.column(align=True)
+            col.operator("arm_tilesheetactionlist.new_item", icon='ZOOMIN', text="")
+            col.operator("arm_tilesheetactionlist.delete_item", icon='ZOOMOUT', text="")
+
+            if dat.arm_tilesheetactionlist_index >= 0 and len(dat.arm_tilesheetactionlist) > 0:
+                adat = dat.arm_tilesheetactionlist[dat.arm_tilesheetactionlist_index]
+                row = layout.row()
+                row.prop(adat, "start_prop")
+                row.prop(adat, "end_prop")
+                layout.prop(adat, "loop_prop")
+
 def register():
     bpy.utils.register_class(ObjectPropsPanel)
     bpy.utils.register_class(ModifiersPropsPanel)
@@ -1132,6 +1187,7 @@ def register():
     bpy.utils.register_class(ArmNavigationPanel)
     bpy.utils.register_class(ArmGenLodButton)
     bpy.utils.register_class(ArmLodPanel)
+    bpy.utils.register_class(ArmTilesheetPanel)
 
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
     bpy.types.INFO_HT_header.prepend(draw_info_header)
@@ -1177,3 +1233,4 @@ def unregister():
     bpy.utils.unregister_class(ArmNavigationPanel)
     bpy.utils.unregister_class(ArmGenLodButton)
     bpy.utils.unregister_class(ArmLodPanel)
+    bpy.utils.unregister_class(ArmTilesheetPanel)

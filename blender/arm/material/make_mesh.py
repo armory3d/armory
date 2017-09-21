@@ -144,7 +144,12 @@ def make_base(con_mesh, parse_opacity):
 
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
-        vert.write('texCoord = tex;')
+        if mat_state.material.arm_tilesheet_mat:
+            vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
+            vert.write('texCoord = tex + tilesheetOffset;')
+        else:
+            vert.write('texCoord = tex;')
+
         if tese != None:
             # TODO: also includes texCoord1
             tese.write_pre = True

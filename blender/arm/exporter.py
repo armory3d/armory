@@ -1258,6 +1258,10 @@ class ArmoryExporter:
             if bobject.dupli_type == 'GROUP' and bobject.dupli_group != None:
                 o['group_ref'] = bobject.dupli_group.name
 
+            if bobject.arm_tilesheet != '':
+                o['tilesheet_ref'] = bobject.arm_tilesheet
+                o['tilesheet_action_ref'] = bobject.arm_tilesheet_action
+
             layer_found = False
             for l in self.active_layers:
                 if bobject.layers[l] == True:
@@ -2372,6 +2376,8 @@ class ArmoryExporter:
         make_renderpath.build_node_trees(assets_path)
 
     def export_particle_systems(self):
+        if len(self.particleSystemArray) > 0:
+            self.output['particle_datas'] = []
         for particleRef in self.particleSystemArray.items():
             o = {}
             psettings = particleRef[0]
@@ -2397,6 +2403,26 @@ class ArmoryExporter:
                 o['size_random'] = 0.0
             self.output['particle_datas'].append(o)
             
+    def export_tilesheets(self):
+        wrd = bpy.data.worlds['Arm']
+        if len(wrd.arm_tilesheetlist) > 0:
+            self.output['tilesheet_datas'] = []
+        for ts in wrd.arm_tilesheetlist:
+            o = {}
+            o['name'] = ts.name
+            o['tilesx'] = ts.tilesx_prop
+            o['tilesy'] = ts.tilesy_prop
+            o['framerate'] = ts.framerate_prop
+            o['actions'] = []
+            for tsa in ts.arm_tilesheetactionlist:
+                ao = {}
+                ao['name'] = tsa.name
+                ao['start'] = tsa.start_prop
+                ao['end'] = tsa.end_prop
+                ao['loop'] = tsa.loop_prop
+                o['actions'].append(ao)
+            self.output['tilesheet_datas'].append(o)
+
     def export_worlds(self):
         worldRef = self.scene.world
         if worldRef != None:
@@ -2582,14 +2608,11 @@ class ArmoryExporter:
                                 log.warn('Object ' + bobject.name + ' - unable to bind materials to vertex data, please separate object by material (select object - edit mode - P - By Material) or enable Deinterleaved Buffers in Armory Player')
                                 break
 
-            self.output['particle_datas'] = []
-            self.export_particle_systems()
-            
+            self.export_particle_systems()            
             self.output['world_datas'] = []
             self.export_worlds()
-
-            self.output['grease_pencil_datas'] = []
             self.export_grease_pencils()
+            self.export_tilesheets()
 
             if self.scene.world != None:
                 self.output['world_ref'] = self.scene.world.name

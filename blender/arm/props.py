@@ -128,6 +128,8 @@ def init_properties():
     bpy.types.Object.arm_mobile = bpy.props.BoolProperty(name="Mobile", description="Object moves during gameplay", default=True)
     bpy.types.Object.arm_soft_body_margin = bpy.props.FloatProperty(name="Soft Body Margin", description="Collision margin", default=0.04)
     bpy.types.Object.arm_animation_enabled = bpy.props.BoolProperty(name="Animation", description="Enable skinning & timeline animation", default=True)
+    bpy.types.Object.arm_tilesheet = bpy.props.StringProperty(name="Tilesheet", description="Set tilesheet animation", default='')
+    bpy.types.Object.arm_tilesheet_action = bpy.props.StringProperty(name="Tilesheet Action", description="Set startup action", default='')
     # For speakers
     bpy.types.Speaker.arm_loop = bpy.props.BoolProperty(name="Loop", description="Loop this sound", default=False)
     bpy.types.Speaker.arm_stream = bpy.props.BoolProperty(name="Stream", description="Stream this sound", default=False)
@@ -288,6 +290,7 @@ def init_properties():
                ('spherical', 'Spherical', 'Spherical'),
                ('cylindrical', 'Cylindrical', 'Cylindrical')],
         name="Billboard", default='none', description="Track camera")
+    bpy.types.Material.arm_tilesheet_mat = bpy.props.BoolProperty(name="Tilesheet", description="Generate tilesheet shaders", default=False)
     # For scene
     bpy.types.Scene.arm_export = bpy.props.BoolProperty(name="Export", description="Export scene data", default=True)
     bpy.types.Scene.arm_gp_export = bpy.props.BoolProperty(name="Export GP", description="Export grease pencil data", default=True)

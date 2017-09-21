@@ -5,6 +5,7 @@ import arm.props_traits_params
 import arm.props_traits_props
 import arm.props_traits
 import arm.props_lod
+import arm.props_tilesheet
 import arm.props_exporter
 import arm.props_renderpath
 import arm.props
@@ -24,6 +25,7 @@ def register():
     arm.props_traits_props.register()
     arm.props_traits.register()
     arm.props_lod.register()
+    arm.props_tilesheet.register()
     arm.props_exporter.register()
     arm.props_renderpath.register()
     arm.props.register()
@@ -50,6 +52,7 @@ def unregister():
     arm.props_traits_props.unregister()
     arm.props_traits.unregister()
     arm.props_lod.unregister()
+    arm.props_tilesheet.unregister()
     arm.props_exporter.unregister()
     arm.props_renderpath.unregister()
     arm.space_armory.unregister()

@@ -153,7 +153,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_texture_filter = EnumProperty(
         items=[('Anisotropic', 'Anisotropic', 'Anisotropic'),
                ('Linear', 'Linear', 'Linear'), 
-               ('Point', 'Point', 'Point'), 
+               ('Point', 'Closest', 'Point'), 
                ('Manual', 'Manual', 'Manual')],
         name="Texture Filtering", description="Set Manual to honor interpolation setting on Image Texture node", default='Anisotropic')
     arm_material_model = EnumProperty(
