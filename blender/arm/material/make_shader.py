@@ -44,7 +44,12 @@ def build(material, mat_users, mat_armusers):
                 global_elems.append({'name': 'bone', 'size': 4})
                 global_elems.append({'name': 'weight', 'size': 4})
             # Instancing
-            if bo.arm_instanced or len(bo.particle_systems) > 0:
+            has_particles = False
+            for ps in bpy.data.particles:
+                if ps.render_type == 'OBJECT' and ps.dupli_object == bo:
+                    has_particles = True
+                    break
+            if bo.arm_instanced or has_particles:
                 global_elems.append({'name': 'off', 'size': 3})
     mat_state.data.global_elems = global_elems
 

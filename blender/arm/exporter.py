@@ -1169,13 +1169,14 @@ class ArmoryExporter:
         o['material_refs'].append(self.materialArray[material]["structName"])
 
     def export_particle_system_ref(self, psys, index, o):
-        if not psys.settings in self.particleSystemArray:
-            self.particleSystemArray[psys.settings] = {"structName" : psys.settings.name}
-
+        if psys.settings in self.particleSystemArray: # or not modifier.show_render:
+            return
+        
+        self.particleSystemArray[psys.settings] = {"structName" : psys.settings.name}
         pref = {}
         pref['name'] = psys.name
         pref['seed'] = psys.seed
-        pref['particle'] = self.particleSystemArray[psys.settings]["structName"]
+        pref['particle'] = psys.settings.name
         o['particle_refs'].append(pref)
 
     def get_viewport_view_matrix(self):
@@ -2379,11 +2380,21 @@ class ArmoryExporter:
                 continue
 
             o['name'] = particleRef[1]["structName"]
+            o['type'] = 0 if psettings.type == 'Emitter' else 1 # Hair
             o['count'] = psettings.count
             o['lifetime'] = psettings.lifetime
             o['normal_factor'] = psettings.normal_factor;
             o['object_align_factor'] = [psettings.object_align_factor[0], psettings.object_align_factor[1], psettings.object_align_factor[2]]
             o['factor_random'] = psettings.factor_random
+            if psettings.render_type == 'OBJECT':
+                o['dupli_object'] = psettings.dupli_object.name
+                o['particle_size'] = psettings.particle_size
+                o['size_random'] = psettings.size_random
+                self.objectToArmObjectDict[psettings.dupli_object]['is_particle'] = True
+            else:
+                o['dupli_object'] = ''
+                o['particle_size'] = 1.0
+                o['size_random'] = 0.0
             self.output['particle_datas'].append(o)
             
     def export_worlds(self):
@@ -2583,7 +2594,10 @@ class ArmoryExporter:
             if self.scene.world != None:
                 self.output['world_ref'] = self.scene.world.name
 
-            self.output['gravity'] = [self.scene.gravity[0], self.scene.gravity[1], self.scene.gravity[2]]
+            if self.scene.use_gravity:
+                self.output['gravity'] = [self.scene.gravity[0], self.scene.gravity[1], self.scene.gravity[2]]
+            else:
+                self.output['gravity'] = [0.0, 0.0, 0.0]
 
         self.export_objects(self.scene)
         
