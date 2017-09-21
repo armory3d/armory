@@ -87,13 +87,13 @@ def make(context_id, rpasses):
     # No displacement
     else:
         frag.ins = vert.outs
-        # billboard = mat_state.material.arm_billboard
-        # if billboard == 'spherical':
-        #     vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrixSphere')
-        # elif billboard == 'cylindrical':
-        #     vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrixCylinder')
-        # else: # none
-        vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrix')
+        billboard = mat_state.material.arm_billboard
+        if billboard == 'spherical':
+            vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrixSphere')
+        elif billboard == 'cylindrical':
+            vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrixCylinder')
+        else: # none
+            vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrix')
         vert.write('gl_Position = LWVP * spos;')
 
         if parse_opacity:

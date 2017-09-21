@@ -291,6 +291,7 @@ def init_properties():
                ('cylindrical', 'Cylindrical', 'Cylindrical')],
         name="Billboard", default='none', description="Track camera")
     bpy.types.Material.arm_tilesheet_mat = bpy.props.BoolProperty(name="Tilesheet", description="Generate tilesheet shaders", default=False)
+    bpy.types.Material.arm_blending = bpy.props.BoolProperty(name="Blending", description="Enable additive blending", default=False)
     # For scene
     bpy.types.Scene.arm_export = bpy.props.BoolProperty(name="Export", description="Export scene data", default=True)
     bpy.types.Scene.arm_gp_export = bpy.props.BoolProperty(name="Export GP", description="Export grease pencil data", default=True)

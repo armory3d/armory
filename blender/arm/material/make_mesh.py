@@ -13,7 +13,13 @@ write_material_attribs_post = None
 write_vertex_attribs = None
 
 def make(context_id):
-    con_mesh = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
+    con = { 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' }
+    if mat_state.material.arm_blending:
+        con['blend_source'] = 'blend_one'
+        con['blend_destination'] = 'blend_one'
+        con['blend_operation'] = 'add'
+        con['cull_mode'] = 'none'
+    con_mesh = mat_state.data.add_context(con)
 
     rpdat = arm.utils.get_rp()
     rid = rpdat.rp_renderer
