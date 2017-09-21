@@ -118,9 +118,14 @@ def make_base(con_mesh, parse_opacity):
         if write_vertex_attribs != None:
             written = write_vertex_attribs(vert)
         if written == False:
-            vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
+            billboard = mat_state.material.arm_billboard
+            if billboard == 'spherical':
+                vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrixSphere')
+            elif billboard == 'cylindrical':
+                vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrixCylinder')
+            else: # none
+                vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
             vert.write('gl_Position = WVP * spos;')
-
     frag.add_include('../../Shaders/compiled.glsl')
 
     written = False

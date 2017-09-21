@@ -270,8 +270,8 @@ def init_properties():
     bpy.types.Material.arm_two_sided = bpy.props.BoolProperty(name="Two-Sided", default=False)
     bpy.types.Material.arm_cull_mode = EnumProperty(
         items=[('none', 'Both', 'None'),
-                 ('clockwise', 'Front', 'Clockwise'),
-                 ('counter_clockwise', 'Back', 'Counter-Clockwise')],
+               ('clockwise', 'Front', 'Clockwise'),
+               ('counter_clockwise', 'Back', 'Counter-Clockwise')],
         name="", default='clockwise', description="Draw geometry faces")
     bpy.types.Material.arm_discard = bpy.props.BoolProperty(name="Discard", default=False)
     bpy.types.Material.arm_discard_opacity = bpy.props.FloatProperty(name="Mesh Opacity", default=0.2, min=0, max=1)
@@ -283,6 +283,11 @@ def init_properties():
     bpy.types.Material.arm_tess_shadows_inner = bpy.props.IntProperty(name="Inner", description="Inner tessellation level for shadows", default=7)
     bpy.types.Material.arm_tess_shadows_outer = bpy.props.IntProperty(name="Outer", description="Outer tessellation level for shadows", default=7)
     bpy.types.Material.arm_custom_material = bpy.props.StringProperty(name="Custom Material", description="Write custom material", default='')
+    bpy.types.Material.arm_billboard = EnumProperty(
+        items=[('none', 'None', 'None'),
+               ('spherical', 'Spherical', 'Spherical'),
+               ('cylindrical', 'Cylindrical', 'Cylindrical')],
+        name="Billboard", default='none', description="Track camera")
     # For scene
     bpy.types.Scene.arm_export = bpy.props.BoolProperty(name="Export", description="Export scene data", default=True)
     bpy.types.Scene.arm_gp_export = bpy.props.BoolProperty(name="Export GP", description="Export grease pencil data", default=True)
