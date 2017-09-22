@@ -101,7 +101,11 @@ def make(context_id, rpasses):
 
             if con_shadowmap.is_elem('tex'):
                 vert.add_out('vec2 texCoord')
-                vert.write('texCoord = tex;')
+                if mat_state.material.arm_tilesheet_mat:
+                    vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
+                    vert.write('texCoord = tex + tilesheetOffset;')
+                else:
+                    vert.write('texCoord = tex;')
 
             if con_shadowmap.is_elem('tex1'):
                 vert.add_out('vec2 texCoord1')
