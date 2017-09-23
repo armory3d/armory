@@ -16,6 +16,8 @@ class Character extends Trait {
 	var lastLoc:Vec4 = null;
 	var state = 0;
 
+	var animation:iron.object.Animation;
+
 	public function new(actionIdle:String, actionMove:String) {
 		super();
 
@@ -27,7 +29,12 @@ class Character extends Trait {
 	}
 
 	function init() {
-		object.animation.pause();
+		animation = object.animation;
+
+		// Try first child if we are running from armature
+		if (animation == null) animation = object.children[0].animation;
+
+		animation.pause();
 	}
 
 	function update() {
@@ -41,12 +48,12 @@ class Character extends Trait {
 
 		if (state == 0 && speed > 0) {
 			state = 1;
-			object.animation.play(actionMove);
+			animation.play(actionMove);
 		}
 		else if (state == 1 && speed == 0) {
 			state = 0;
-			object.animation.pause();
-			// object.animation.play(actionIdle);
+			animation.pause();
+			// animation.play(actionIdle);
 		}
 	}
 }
