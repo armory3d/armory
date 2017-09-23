@@ -1,6 +1,7 @@
 package armory.trait;
 
 import iron.object.Object;
+import iron.object.Animation;
 import iron.Trait;
 import iron.system.Input;
 import iron.math.Vec4;
@@ -8,15 +9,14 @@ import iron.math.Quat;
 
 class Character extends Trait {
 
-	var speed = 0.0;
 	var actionIdle:String;
 	var actionMove:String;
+	var animation:Animation;
 
+	var delta = 0.0;
 	var loc:Vec4 = new Vec4();
 	var lastLoc:Vec4 = null;
-	var state = 0;
-
-	var animation:iron.object.Animation;
+	var state = 0; // Idle, walking
 
 	public function new(actionIdle:String, actionMove:String) {
 		super();
@@ -43,17 +43,18 @@ class Character extends Trait {
 
 		if (lastLoc == null) lastLoc = new Vec4(loc.x, loc.y, loc.z);
 
-		speed = Vec4.distance3d(loc, lastLoc);
+		delta = Vec4.distance3d(loc, lastLoc);
 		lastLoc.setFrom(loc);
 
-		if (state == 0 && speed > 0) {
+		// Character started to move
+		if (state == 0 && delta > 0) {
 			state = 1;
 			animation.play(actionMove);
 		}
-		else if (state == 1 && speed == 0) {
+		// Character just stopped moving
+		else if (state == 1 && delta == 0) {
 			state = 0;
 			animation.pause();
-			// animation.play(actionIdle);
 		}
 	}
 }
