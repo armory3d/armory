@@ -256,6 +256,7 @@ class MaterialPropsPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(mat, 'arm_tilesheet_mat')
         row.prop(mat, 'arm_blending')
+        layout.prop(mat, 'arm_particle')
 
         layout.operator("arm.invalidate_material_cache")
 

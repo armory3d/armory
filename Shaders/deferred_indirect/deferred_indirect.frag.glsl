@@ -114,7 +114,10 @@ void main() {
 
 	// Envmap
 #ifdef _Irr
-	vec3 envl = shIrradiance(n) / PI;
+	vec3 envl = shIrradiance(n);
+	#ifdef _EnvTex
+	envl /= PI;
+	#endif
 #else
 	vec3 envl = vec3(1.0);
 #endif
