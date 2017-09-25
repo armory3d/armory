@@ -572,7 +572,10 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.tab -= 1
 
     if '_Irr' in wrd.world_defs:
-        frag.write('vec3 indirect = (shIrradiance(n) / PI) * albedo;')
+        frag.write('vec3 indirect = shIrradiance(n);')
+        if '_EnvTex' in wrd.world_defs:
+            frag.write('indirect /= PI;')
+        frag.write('indirect *= albedo;')
 
         if '_Rad' in wrd.world_defs:
             frag.write('vec3 reflectionWorld = reflect(-vVec, n);')
