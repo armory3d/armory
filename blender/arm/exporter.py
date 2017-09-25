@@ -2387,16 +2387,30 @@ class ArmoryExporter:
 
             o['name'] = particleRef[1]["structName"]
             o['type'] = 0 if psettings.type == 'Emitter' else 1 # Hair
+            # Emission
             o['count'] = psettings.count
+            o['frame_start'] = psettings.frame_start
+            o['frame_end'] = psettings.frame_end
             o['lifetime'] = psettings.lifetime
-            o['normal_factor'] = psettings.normal_factor;
+            o['lifetime_random'] = psettings.lifetime_random
+            o['emit_from'] = 1 if psettings.emit_from == 'VOLUME' else 0 # VERT, FACE
+            # Velocity
+            # o['normal_factor'] = psettings.normal_factor;
+            # o['tangent_factor'] = psettings.tangent_factor;
+            # o['tangent_phase'] = psettings.tangent_phase;
             o['object_align_factor'] = [psettings.object_align_factor[0], psettings.object_align_factor[1], psettings.object_align_factor[2]]
+            # o['object_factor'] = psettings.object_factor;
             o['factor_random'] = psettings.factor_random
+            # Physics
+            o['physics_type'] = 1 if psettings.physics_type == 'NEWTON' else 0
+            # Render
             if psettings.render_type == 'OBJECT':
                 o['dupli_object'] = psettings.dupli_object.name
                 o['particle_size'] = psettings.particle_size
                 o['size_random'] = psettings.size_random
                 self.objectToArmObjectDict[psettings.dupli_object]['is_particle'] = True
+            # elif psettings.render_type == 'BILLBOARD':
+                # o['billboard_object'] = psettings.billboard_object.name
             else:
                 o['dupli_object'] = ''
                 o['particle_size'] = 1.0
