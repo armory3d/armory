@@ -2403,18 +2403,12 @@ class ArmoryExporter:
             o['factor_random'] = psettings.factor_random
             # Physics
             o['physics_type'] = 1 if psettings.physics_type == 'NEWTON' else 0
+            o['particle_size'] = psettings.particle_size
+            o['size_random'] = psettings.size_random
+            o['mass'] = psettings.mass
             # Render
-            if psettings.render_type == 'OBJECT':
-                o['dupli_object'] = psettings.dupli_object.name
-                o['particle_size'] = psettings.particle_size
-                o['size_random'] = psettings.size_random
-                self.objectToArmObjectDict[psettings.dupli_object]['is_particle'] = True
-            # elif psettings.render_type == 'BILLBOARD':
-                # o['billboard_object'] = psettings.billboard_object.name
-            else:
-                o['dupli_object'] = ''
-                o['particle_size'] = 1.0
-                o['size_random'] = 0.0
+            o['dupli_object'] = psettings.dupli_object.name
+            self.objectToArmObjectDict[psettings.dupli_object]['is_particle'] = True
             self.output['particle_datas'].append(o)
             
     def export_tilesheets(self):

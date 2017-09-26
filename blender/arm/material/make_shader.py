@@ -44,13 +44,22 @@ def build(material, mat_users, mat_armusers):
                 global_elems.append({'name': 'bone', 'size': 4})
                 global_elems.append({'name': 'weight', 'size': 4})
             # Instancing
-            has_particles = False
-            for ps in bpy.data.particles:
-                if ps.render_type == 'OBJECT' and ps.dupli_object == bo:
-                    has_particles = True
-                    break
-            if bo.arm_instanced or has_particles:
+            # has_particles = False
+            # for ps in bpy.data.particles:
+                # if ps.render_type == 'OBJECT' and ps.dupli_object == bo:
+                    # has_particles = True
+                    # break
+            cpu_particles = False
+            gpu_particles = False
+            if material.arm_particle:
+                if wrd.arm_gpu_particles:
+                    gpu_particles = True
+                else:
+                    cpu_particles = True
+            if bo.arm_instanced or cpu_particles:
                 global_elems.append({'name': 'off', 'size': 3})
+            elif gpu_particles:
+                global_elems.append({'name': 'offp', 'size': 4})
     mat_state.data.global_elems = global_elems
 
     bind_constants = dict()

@@ -4,6 +4,7 @@ import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
 import arm.material.make_skin as make_skin
 import arm.material.make_tess as make_tess
+import arm.material.make_particle as make_particle
 import arm.material.make_mesh as make_mesh
 import arm.utils
 
@@ -39,6 +40,10 @@ def make(context_id, rpasses):
 
     if con_shadowmap.is_elem('off'):
         vert.write('spos.xyz += off;')
+
+    wrd = bpy.data.worlds['Arm']
+    if wrd.arm_gpu_particles and mat_state.material.arm_particle:
+        make_particle.write(vert)
 
     if is_disp:
         tesc = con_shadowmap.make_tesc()

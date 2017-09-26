@@ -178,6 +178,9 @@ project.addSources('Sources');
         if wrd.arm_gpu_skin == False:
             assets.add_khafile_def('arm_cpu_skin')
 
+        if wrd.arm_gpu_particles == False:
+            assets.add_khafile_def('arm_cpu_particles')
+
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
 

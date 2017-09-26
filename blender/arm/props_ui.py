@@ -950,6 +950,7 @@ class ArmRenderPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'arm_gpu_skin_max_bones_auto')
             if not wrd.arm_gpu_skin_max_bones_auto:
                 layout.prop(wrd, 'arm_gpu_skin_max_bones')
+        layout.prop(wrd, 'arm_gpu_particles')
 
         layout.label('PCSS')
         layout.prop(wrd, 'arm_pcss_rings')

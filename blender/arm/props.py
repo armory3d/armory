@@ -261,6 +261,7 @@ def init_properties():
     bpy.types.World.arm_gpu_skin = bpy.props.BoolProperty(name="GPU Skinning", description="Calculate skinning on GPU", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_gpu_skin_max_bones_auto = bpy.props.BoolProperty(name="Auto Bones", description="Calculate amount of maximum bones based on armatures", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=3000, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_gpu_particles = bpy.props.BoolProperty(name="GPU Particles", description="Calculate particle simulation on GPU", default=True, update=assets.invalidate_shader_cache)
     # Material override flags
     bpy.types.World.arm_culling = bpy.props.BoolProperty(name="Culling", default=True)
     bpy.types.World.arm_two_sided_area_lamp = bpy.props.BoolProperty(name="Two-Sided Area Lamps", description="Emit light from both faces of area lamp", default=False, update=assets.invalidate_shader_cache)

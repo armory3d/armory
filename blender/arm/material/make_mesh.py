@@ -5,6 +5,7 @@ import arm.material.mat_utils as mat_utils
 import arm.material.cycles as cycles
 import arm.material.make_skin as make_skin
 import arm.material.make_tess as make_tess
+import arm.material.make_particle as make_particle
 import arm.utils
 
 is_displacement = False
@@ -124,6 +125,11 @@ def make_base(con_mesh, parse_opacity):
         if write_vertex_attribs != None:
             written = write_vertex_attribs(vert)
         if written == False:
+            # Particles
+            wrd = bpy.data.worlds['Arm']
+            if wrd.arm_gpu_particles and mat_state.material.arm_particle:
+                make_particle.write(vert)
+            # Billboards
             billboard = mat_state.material.arm_billboard
             if billboard == 'spherical':
                 vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrixSphere')
@@ -132,6 +138,7 @@ def make_base(con_mesh, parse_opacity):
             else: # none
                 vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
             vert.write('gl_Position = WVP * spos;')
+
     frag.add_include('../../Shaders/compiled.glsl')
 
     written = False
