@@ -2289,6 +2289,9 @@ class ArmoryExporter:
             o = {}
             o['name'] = materialRef[1]["structName"]
             
+            if material.arm_skip_context != '':
+                o['skip_context'] = material.arm_skip_context
+
             if material.arm_two_sided or wrd.arm_culling == False:
                 o['override_context'] = {}
                 o['override_context']['cull_mode'] = 'none'

@@ -16,7 +16,7 @@ vec2 envMapEquirect(const vec3 normal) {
 }
 
 float rand(const vec2 co) { // Unreliable
-	return fract(sin(dot(co.xy, vec2(12.9898,78.233))) * 43758.5453);
+	return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
 vec2 rand2(const vec2 coord) {

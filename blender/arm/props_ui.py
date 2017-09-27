@@ -252,6 +252,7 @@ class MaterialPropsPanel(bpy.types.Panel):
         columnb.prop(mat, 'arm_tess_shadows_outer')
 
         layout.prop(mat, 'arm_custom_material')
+        layout.prop(mat, 'arm_skip_context')
         layout.prop(mat, 'arm_billboard')
         row = layout.row()
         row.prop(mat, 'arm_tilesheet_mat')
