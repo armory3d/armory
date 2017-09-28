@@ -44,22 +44,9 @@ def build(material, mat_users, mat_armusers):
                 global_elems.append({'name': 'bone', 'size': 4})
                 global_elems.append({'name': 'weight', 'size': 4})
             # Instancing
-            # has_particles = False
-            # for ps in bpy.data.particles:
-                # if ps.render_type == 'OBJECT' and ps.dupli_object == bo:
-                    # has_particles = True
-                    # break
-            cpu_particles = False
-            gpu_particles = False
-            if material.arm_particle:
-                if wrd.arm_gpu_particles:
-                    gpu_particles = True
-                else:
-                    cpu_particles = True
-            if bo.arm_instanced or cpu_particles:
+            if bo.arm_instanced or material.arm_particle != 'off':
                 global_elems.append({'name': 'off', 'size': 3})
-            elif gpu_particles:
-                global_elems.append({'name': 'offp', 'size': 4})
+                
     mat_state.data.global_elems = global_elems
 
     bind_constants = dict()
@@ -121,6 +108,11 @@ def write_shaders(rel_path, con, rpass):
 def write_shader(rel_path, shader, ext, rpass, keep_cache=True):
     if shader == None:
         return
+
+    # TODO: blend context
+    if mat_state.material.arm_blending and rpass == 'mesh':
+        rpass = 'blend'
+
     shader_rel_path = rel_path + '/' + arm.utils.safesrc(mat_state.material.name) + '_' + rpass + '.' + ext + '.glsl'
     shader_path = arm.utils.get_fp() + '/' + shader_rel_path
     assets.add_shader(shader_rel_path)

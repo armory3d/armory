@@ -15,16 +15,20 @@ write_vertex_attribs = None
 
 def make(context_id):
     con = { 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' }
-    if mat_state.material.arm_blending:
+    
+    # TODO: blend context
+    blend = mat_state.material.arm_blending
+    if blend:
+        con['name'] = 'blend'
         con['blend_source'] = 'blend_one'
         con['blend_destination'] = 'blend_one'
         con['blend_operation'] = 'add'
-        con['cull_mode'] = 'none'
+        con['depth_write'] = False
     con_mesh = mat_state.data.add_context(con)
 
     rpdat = arm.utils.get_rp()
     rid = rpdat.rp_renderer
-    if rid == 'Forward':
+    if rid == 'Forward' or blend:
         if rpdat.arm_material_model != 'Restricted':
             make_forward(con_mesh)
         else:
@@ -125,19 +129,30 @@ def make_base(con_mesh, parse_opacity):
         if write_vertex_attribs != None:
             written = write_vertex_attribs(vert)
         if written == False:
-            # Particles
-            wrd = bpy.data.worlds['Arm']
-            if wrd.arm_gpu_particles and mat_state.material.arm_particle:
-                make_particle.write(vert)
-            # Billboards
             billboard = mat_state.material.arm_billboard
-            if billboard == 'spherical':
-                vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrixSphere')
-            elif billboard == 'cylindrical':
-                vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrixCylinder')
-            else: # none
-                vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
-            vert.write('gl_Position = WVP * spos;')
+            particle = mat_state.material.arm_particle
+            wrd = bpy.data.worlds['Arm']
+            # Particles
+            if particle != 'off':
+                if particle == 'gpu':
+                    make_particle.write(vert)
+                # Billboards
+                if billboard == 'spherical':
+                    vert.add_uniform('mat4 WV', '_worldViewMatrix')
+                    vert.add_uniform('mat4 P', '_projectionMatrix')
+                    vert.write('gl_Position = P * (WV * vec4(0.0, 0.0, spos.z, 1.0) + vec4(spos.x, spos.y, 0.0, 0.0));')
+                else:
+                    vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
+                    vert.write('gl_Position = WVP * spos;')
+            else:
+                # Billboards
+                if billboard == 'spherical':
+                    vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrixSphere')
+                elif billboard == 'cylindrical':
+                    vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrixCylinder')
+                else: # off
+                    vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
+                vert.write('gl_Position = WVP * spos;')
 
     frag.add_include('../../Shaders/compiled.glsl')
 
@@ -158,8 +173,11 @@ def make_base(con_mesh, parse_opacity):
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
         if mat_state.material.arm_tilesheet_mat:
-            vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
-            vert.write('texCoord = tex + tilesheetOffset;')
+            if mat_state.material.arm_particle != 'off':
+                make_particle.write_tilesheet(vert)
+            else:
+                vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
+                vert.write('texCoord = tex + tilesheetOffset;')
         else:
             vert.write('texCoord = tex;')
 

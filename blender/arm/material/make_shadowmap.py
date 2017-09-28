@@ -42,7 +42,7 @@ def make(context_id, rpasses):
         vert.write('spos.xyz += off;')
 
     wrd = bpy.data.worlds['Arm']
-    if wrd.arm_gpu_particles and mat_state.material.arm_particle:
+    if mat_state.material.arm_particle == 'gpu':
         make_particle.write(vert)
 
     if is_disp:
@@ -97,7 +97,7 @@ def make(context_id, rpasses):
             vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrixSphere')
         elif billboard == 'cylindrical':
             vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrixCylinder')
-        else: # none
+        else: # off
             vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrix')
         vert.write('gl_Position = LWVP * spos;')
 

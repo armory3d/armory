@@ -88,6 +88,20 @@ class ModifiersPropsPanel(bpy.types.Panel):
             layout.prop(bpy.data.worlds['Arm'], 'arm_ocean_freq')
             layout.prop(bpy.data.worlds['Arm'], 'arm_ocean_fade')
 
+class ParticlesPropsPanel(bpy.types.Panel):
+    bl_label = "Armory Props"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "particle"
+ 
+    def draw(self, context):
+        layout = self.layout
+        obj = bpy.context.particle_system
+        if obj == None:
+            return
+
+        layout.prop(obj.settings, 'arm_gpu_sim')
+
 class PhysicsPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
@@ -254,10 +268,10 @@ class MaterialPropsPanel(bpy.types.Panel):
         layout.prop(mat, 'arm_custom_material')
         layout.prop(mat, 'arm_skip_context')
         layout.prop(mat, 'arm_billboard')
+        layout.prop(mat, 'arm_particle')
         row = layout.row()
         row.prop(mat, 'arm_tilesheet_mat')
         row.prop(mat, 'arm_blending')
-        layout.prop(mat, 'arm_particle')
 
         layout.operator("arm.invalidate_material_cache")
 
@@ -884,6 +898,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
             layout.prop(rpdat, "rp_overlays_state")
             layout.prop(rpdat, "rp_decals_state")
             layout.prop(rpdat, "rp_sss_state")
+            layout.prop(rpdat, "rp_blending_state")
             layout.prop(rpdat, "rp_background")
             layout.prop(rpdat, "rp_hdr")
             layout.prop(rpdat, "rp_stereo")
@@ -951,7 +966,6 @@ class ArmRenderPropsPanel(bpy.types.Panel):
             layout.prop(wrd, 'arm_gpu_skin_max_bones_auto')
             if not wrd.arm_gpu_skin_max_bones_auto:
                 layout.prop(wrd, 'arm_gpu_skin_max_bones')
-        layout.prop(wrd, 'arm_gpu_particles')
 
         layout.label('PCSS')
         layout.prop(wrd, 'arm_pcss_rings')
@@ -1157,6 +1171,7 @@ class ArmTilesheetPanel(bpy.types.Panel):
 def register():
     bpy.utils.register_class(ObjectPropsPanel)
     bpy.utils.register_class(ModifiersPropsPanel)
+    bpy.utils.register_class(ParticlesPropsPanel)
     bpy.utils.register_class(PhysicsPropsPanel)
     bpy.utils.register_class(DataPropsPanel)
     bpy.utils.register_class(ScenePropsPanel)
@@ -1203,6 +1218,7 @@ def unregister():
 
     bpy.utils.unregister_class(ObjectPropsPanel)
     bpy.utils.unregister_class(ModifiersPropsPanel)
+    bpy.utils.unregister_class(ParticlesPropsPanel)
     bpy.utils.unregister_class(PhysicsPropsPanel)
     bpy.utils.unregister_class(DataPropsPanel)
     bpy.utils.unregister_class(ScenePropsPanel)

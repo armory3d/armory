@@ -2330,6 +2330,9 @@ class ArmoryExporter:
                         uv_export = True
                     elif elem['name'] == 'col':
                         vcol_export = True
+            for con in o['contexts']: # TODO: blend context
+                if con['name'] == 'mesh' and material.arm_blending:
+                    con['name'] = 'blend'
             # TODO: use array and remove duplis to ensure correctness
             material.vertex_structure = vs_str
 
@@ -2389,6 +2392,10 @@ class ArmoryExporter:
                 continue
 
             o['name'] = particleRef[1]["structName"]
+
+            if psettings.arm_gpu_sim:
+                o['gpu_sim'] = True
+
             o['type'] = 0 if psettings.type == 'Emitter' else 1 # Hair
             # Emission
             o['count'] = psettings.count

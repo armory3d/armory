@@ -261,7 +261,6 @@ def init_properties():
     bpy.types.World.arm_gpu_skin = bpy.props.BoolProperty(name="GPU Skinning", description="Calculate skinning on GPU", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_gpu_skin_max_bones_auto = bpy.props.BoolProperty(name="Auto Bones", description="Calculate amount of maximum bones based on armatures", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=3000, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_gpu_particles = bpy.props.BoolProperty(name="GPU Particles", description="Calculate particle simulation on GPU", default=True, update=assets.invalidate_shader_cache)
     # Material override flags
     bpy.types.World.arm_culling = bpy.props.BoolProperty(name="Culling", default=True)
     bpy.types.World.arm_two_sided_area_lamp = bpy.props.BoolProperty(name="Two-Sided Area Lamps", description="Emit light from both faces of area lamp", default=False, update=assets.invalidate_shader_cache)
@@ -270,7 +269,6 @@ def init_properties():
     bpy.types.Material.arm_receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.arm_overlay = bpy.props.BoolProperty(name="Overlay", default=False)
     bpy.types.Material.arm_decal = bpy.props.BoolProperty(name="Decal", default=False)
-    bpy.types.Material.arm_particle = bpy.props.BoolProperty(name="Particle", default=False)
     bpy.types.Material.arm_two_sided = bpy.props.BoolProperty(name="Two-Sided", default=False)
     bpy.types.Material.arm_cull_mode = EnumProperty(
         items=[('none', 'Both', 'None'),
@@ -288,10 +286,15 @@ def init_properties():
     bpy.types.Material.arm_tess_shadows_outer = bpy.props.IntProperty(name="Outer", description="Outer tessellation level for shadows", default=7)
     bpy.types.Material.arm_custom_material = bpy.props.StringProperty(name="Custom Material", description="Write custom material", default='')
     bpy.types.Material.arm_billboard = EnumProperty(
-        items=[('none', 'None', 'None'),
+        items=[('off', 'Off', 'Off'),
                ('spherical', 'Spherical', 'Spherical'),
                ('cylindrical', 'Cylindrical', 'Cylindrical')],
-        name="Billboard", default='none', description="Track camera")
+        name="Billboard", default='off', description="Track camera")
+    bpy.types.Material.arm_particle = EnumProperty(
+        items=[('off', 'Off', 'Off'),
+               ('gpu', 'GPU', 'GPU'),
+               ('cpu', 'CPU', 'CPU')],
+        name="Particle", default='off', description="Use this material for particle system rendering")
     bpy.types.Material.arm_tilesheet_mat = bpy.props.BoolProperty(name="Tilesheet", description="Generate tilesheet shaders", default=False)
     bpy.types.Material.arm_blending = bpy.props.BoolProperty(name="Blending", description="Enable additive blending", default=False)
     # For scene
@@ -323,6 +326,8 @@ def init_properties():
     bpy.types.Material.signature = bpy.props.StringProperty(name="Signature", description="Unique string generated from material nodes", default="")
     bpy.types.Material.is_cached = bpy.props.BoolProperty(name="Material Cached", description="No need to reexport material data", default=False, update=update_mat_cache)
     bpy.types.Material.lock_cache = bpy.props.BoolProperty(name="Lock Material Cache", description="Prevent is_cached from updating", default=False)
+    # Particles
+    bpy.types.ParticleSettings.arm_gpu_sim = bpy.props.BoolProperty(name="GPU Simulation", description="Calculate particle simulation on GPU", default=False, update=assets.invalidate_shader_cache)
 
     create_wrd()
 

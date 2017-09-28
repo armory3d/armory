@@ -80,7 +80,7 @@ class ShaderContext:
     def sort_vs(self):
         # TODO: sort vertex data
         vs = []
-        ar = ['pos', 'nor', 'tex', 'tex1', 'col', 'tang', 'bone', 'weight', 'off', 'offp']
+        ar = ['pos', 'nor', 'tex', 'tex1', 'col', 'tang', 'bone', 'weight', 'off']
         for ename in ar:  
             elem = self.get_elem(ename)
             if elem != None:

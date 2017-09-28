@@ -34,6 +34,7 @@ def set_preset(self, context, preset):
         rpdat.rp_overlays_state = 'Off'
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
+        rpdat.rp_blending_state = 'Off'
         rpdat.rp_hdr = False
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
@@ -63,6 +64,7 @@ def set_preset(self, context, preset):
         rpdat.rp_overlays_state = 'Auto'
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
+        rpdat.rp_blending_state = 'Off'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
@@ -92,6 +94,7 @@ def set_preset(self, context, preset):
         rpdat.rp_overlays_state = 'Auto'
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
+        rpdat.rp_blending_state = 'Off'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
@@ -121,6 +124,7 @@ def set_preset(self, context, preset):
         rpdat.rp_overlays_state = 'Auto'
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
+        rpdat.rp_blending_state = 'Off'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
@@ -149,6 +153,7 @@ def set_preset(self, context, preset):
         rpdat.rp_overlays_state = 'Auto'
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
+        rpdat.rp_blending_state = 'Off'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
@@ -181,6 +186,7 @@ def set_preset(self, context, preset):
         rpdat.rp_overlays_state = 'Auto'
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
+        rpdat.rp_blending_state = 'Off'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
@@ -210,6 +216,7 @@ def set_preset(self, context, preset):
         rpdat.rp_overlays_state = 'Off'
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
+        rpdat.rp_blending_state = 'Off'
         rpdat.rp_hdr = False
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = True
@@ -239,6 +246,7 @@ def set_preset(self, context, preset):
         rpdat.rp_overlays_state = 'Off'
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
+        rpdat.rp_blending_state = 'Off'
         rpdat.rp_hdr = False
         rpdat.rp_background = 'Clear'
         rpdat.rp_stereo = False
@@ -268,6 +276,7 @@ def set_preset(self, context, preset):
         rpdat.rp_overlays_state = 'Off'
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
+        rpdat.rp_blending_state = 'Off'
         rpdat.rp_hdr = False
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
@@ -467,7 +476,10 @@ def make_deferred(rpdat):
             nodes['Clear Target Mesh'].inputs[1].default_value = True
 
     if not rpdat.rp_ocean:
-        relink('Water', 'Set Target Accum')
+        relink('Water', 'Draw Meshes Blend')
+
+    if rpdat.rp_blending_state == 'Off':
+        relink('Draw Meshes Blend', 'Set Target Accum')
 
     if not rpdat.rp_translucency:
         relink('Set Target Accum', 'Bloom')

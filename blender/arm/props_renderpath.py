@@ -131,6 +131,10 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Off', 'Off', 'Off'),
                ('Auto', 'Auto', 'Auto')],
         name="SSS", description="Sub-surface scattering pass", default='Auto', update=update_sss_state)
+    rp_blending_state = bpy.props.EnumProperty(
+        items=[('On', 'On', 'On'),
+               ('Off', 'Off', 'Off')],
+        name="Blending", description="Additive blending pass", default='Off', update=update_renderpath)
     rp_stereo = bpy.props.BoolProperty(name="Stereo", description="Stereo rendering", default=False, update=update_renderpath)
     rp_greasepencil = bpy.props.BoolProperty(name="Grease Pencil", description="Render Grease Pencil data", default=False, update=update_renderpath)
     rp_ocean = bpy.props.BoolProperty(name="Ocean", description="Ocean pass", default=False, update=update_renderpath)
