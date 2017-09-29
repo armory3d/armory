@@ -14,7 +14,7 @@ class PickObjectNode extends LogicNode {
 		var coords:Vec4 = inputs[0].get();
 
 #if arm_physics
-		var physics = armory.trait.internal.PhysicsWorld.active;
+		var physics = armory.trait.physics.PhysicsWorld.active;
 		var rb = physics.pickClosest(coords.x, coords.y);
 		if (rb == null) return null;
 

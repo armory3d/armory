@@ -1,4 +1,4 @@
-package armory.trait.internal;
+package armory.trait.physics.bullet;
 
 import iron.math.Vec4;
 import iron.math.Mat4;
@@ -7,8 +7,8 @@ import iron.object.MeshObject;
 import iron.data.MeshData;
 import iron.data.SceneFormat;
 #if arm_physics_soft
-import armory.trait.internal.RigidBody;
-import armory.trait.internal.PhysicsWorld;
+import armory.trait.physics.RigidBody;
+import armory.trait.physics.PhysicsWorld;
 import haxebullet.Bullet;
 #end
 
@@ -59,7 +59,7 @@ class SoftBody extends Trait {
 		if (ready) return;
 		ready = true;
 
-		if (physics == null) physics = armory.trait.internal.PhysicsWorld.active;
+		if (physics == null) physics = armory.trait.physics.PhysicsWorld.active;
 
 		var softBodyHelpers = BtSoftBodyHelpers.create();
 		var mo = cast(object, MeshObject);

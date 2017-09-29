@@ -4,8 +4,8 @@ import iron.Trait;
 import iron.system.Input;
 import iron.math.Vec4;
 import iron.math.RayCaster;
-import armory.trait.internal.RigidBody;
-import armory.trait.internal.PhysicsWorld;
+import armory.trait.physics.RigidBody;
+import armory.trait.physics.PhysicsWorld;
 #if arm_physics
 import haxebullet.Bullet;
 #end
@@ -32,7 +32,7 @@ class PhysicsDrag extends Trait {
 	}
 
 	function init() {
-		if (physics == null) physics = armory.trait.internal.PhysicsWorld.active;
+		if (physics == null) physics = armory.trait.physics.PhysicsWorld.active;
 		notifyOnUpdate(update);
 	}
 

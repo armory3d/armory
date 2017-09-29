@@ -3,7 +3,7 @@ package armory.logicnode;
 import armory.object.Object;
 import armory.math.Vec4;
 #if arm_physics
-import armory.trait.internal.RigidBody;
+import armory.trait.physics.RigidBody;
 #end
 
 class SetLocationNode extends LogicNode {

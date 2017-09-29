@@ -77,12 +77,17 @@ project.addSources('Sources');
         
         if export_physics:
             assets.add_khafile_def('arm_physics')
-            if not os.path.exists('Libraries/haxebullet'):
-                f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
-            if state.target == 'krom' or state.target == 'html5' or state.target == 'node':
-                ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
-                ammojs_path = ammojs_path.replace('\\', '/')
-                f.write(add_assets(ammojs_path))
+            if wrd.arm_physics == 'Bullet':
+                assets.add_khafile_def('arm_bullet')
+                if not os.path.exists('Libraries/haxebullet'):
+                    f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
+                if state.target == 'krom' or state.target == 'html5' or state.target == 'node':
+                    ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
+                    ammojs_path = ammojs_path.replace('\\', '/')
+                    f.write(add_assets(ammojs_path))
+            elif wrd.arm_physics == 'Oimo':
+                if not os.path.exists('Libraries/oimo'):
+                    f.write(add_armory_library(sdk_path + '/lib/', 'oimo'))
 
         if export_navigation:
             assets.add_khafile_def('arm_navigation')
@@ -96,6 +101,14 @@ project.addSources('Sources');
         if not is_publish:
             f.write("""project.addParameter("--macro include('armory.trait')");\n""")
             f.write("""project.addParameter("--macro include('armory.trait.internal')");\n""")
+            if export_physics:
+                f.write("""project.addParameter("--macro include('armory.trait.physics')");\n""")
+                if wrd.arm_physics == 'Bullet':
+                    f.write("""project.addParameter("--macro include('armory.trait.physics.bullet')");\n""")
+                else:
+                    f.write("""project.addParameter("--macro include('armory.trait.physics.oimo')");\n""")
+            if export_navigation:
+                f.write("""project.addParameter("--macro include('armory.trait.navigation')");\n""")
 
         if import_logicnodes: # Live patching for logic nodes
             f.write("""project.addParameter("--macro include('armory.logicnode')");\n""")

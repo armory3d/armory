@@ -7,8 +7,9 @@ import iron.object.MeshObject;
 import iron.data.MeshData;
 import iron.data.SceneFormat;
 #if arm_physics
-import armory.trait.internal.RigidBody;
-import armory.trait.internal.PhysicsWorld;
+import armory.trait.physics.bullet.RigidBody; // TODO - import Shape
+import armory.trait.physics.RigidBody;
+import armory.trait.physics.PhysicsWorld;
 import haxebullet.Bullet;
 #end
 
@@ -30,7 +31,7 @@ class PhysicsBreak extends Trait {
 	}
 
 	function init() {
-		if (physics == null) physics = armory.trait.internal.PhysicsWorld.active;
+		if (physics == null) physics = armory.trait.physics.PhysicsWorld.active;
 
 		body = object.getTrait(RigidBody);
 		breaker.initBreakableObject(cast object, body.mass, new Vec4(), new Vec4(), true);
@@ -62,7 +63,7 @@ class PhysicsBreak extends Trait {
 					var ud = breaker.userDataMap.get(cast o);
 					var friction = 0.5;
 					var margin = 0.06;
-					o.addTrait(new armory.trait.internal.RigidBody(ud.mass, Shape.ConvexHull, friction, margin));
+					o.addTrait(new armory.trait.physics.RigidBody(ud.mass, Shape.ConvexHull, friction, margin));
 					if (cast(o, MeshObject).data.geom.positions.length < 600) {
 						o.addTrait(new PhysicsBreak());
 					}

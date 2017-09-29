@@ -1,4 +1,4 @@
-package armory.trait.internal;
+package armory.trait.navigation;
 
 #if arm_navigation
 import haxerecast.Recast;

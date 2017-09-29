@@ -4,6 +4,7 @@ import iron.Trait;
 import iron.system.Input;
 import iron.object.Transform;
 import iron.object.CameraObject;
+import armory.trait.physics.RigidBody;
 
 class CameraController extends Trait {
 

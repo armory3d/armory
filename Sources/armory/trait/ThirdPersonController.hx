@@ -2,7 +2,7 @@ package armory.trait;
 
 import iron.math.Vec4;
 import iron.system.Input;
-import armory.trait.internal.PhysicsWorld;
+import armory.trait.physics.PhysicsWorld;
 import armory.trait.internal.CameraController;
 
 class ThirdPersonController extends CameraController {

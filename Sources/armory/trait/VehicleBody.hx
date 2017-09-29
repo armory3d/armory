@@ -5,7 +5,7 @@ import iron.object.Object;
 import iron.object.CameraObject;
 import iron.object.Transform;
 import iron.system.Time;
-import armory.trait.internal.PhysicsWorld;
+import armory.trait.physics.PhysicsWorld;
 #if arm_physics
 import haxebullet.Bullet;
 #end
@@ -51,7 +51,7 @@ class VehicleBody extends Trait {
 	}
 
 	function init() {
-		physics = armory.trait.internal.PhysicsWorld.active;
+		physics = armory.trait.physics.PhysicsWorld.active;
 		transform = object.transform;
 		camera = iron.Scene.active.camera;
 

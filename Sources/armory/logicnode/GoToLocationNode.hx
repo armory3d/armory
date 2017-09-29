@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import armory.trait.internal.Navigation;
+import armory.trait.navigation.Navigation;
 import armory.object.Object;
 import armory.math.Vec4;
 

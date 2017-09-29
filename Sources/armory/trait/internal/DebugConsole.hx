@@ -176,7 +176,7 @@ class DebugConsole extends Trait {
 		updateTime += iron.App.updateTime;
 		animTime += iron.object.Animation.animationTime;
 	#if arm_physics
-		physTime += PhysicsWorld.physTime;
+		physTime += armory.trait.physics.PhysicsWorld.physTime;
 	#end
 	}
 

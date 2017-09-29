@@ -18,9 +18,9 @@ class PickLocationNode extends LogicNode {
 		if (object == null) null;
 
 #if arm_physics
-		var physics = armory.trait.internal.PhysicsWorld.active;
+		var physics = armory.trait.physics.PhysicsWorld.active;
 		var b = physics.pickClosest(coords.x, coords.y);
-		var rb = object.getTrait(armory.trait.internal.RigidBody);
+		var rb = object.getTrait(armory.trait.physics.RigidBody);
 
 		if (rb != null && b == rb) {
 			var p = physics.hitPointWorld;

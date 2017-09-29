@@ -1,4 +1,4 @@
-package armory.trait.internal;
+package armory.trait.physics.bullet;
 
 import iron.math.Vec4;
 import iron.math.Mat4;
@@ -6,16 +6,11 @@ import iron.Trait;
 import iron.object.MeshObject;
 import iron.data.MeshData;
 import iron.data.SceneFormat;
-#if arm_physics
-import armory.trait.internal.RigidBody;
-import armory.trait.internal.PhysicsWorld;
+import armory.trait.physics.RigidBody;
+import armory.trait.physics.PhysicsWorld;
 import haxebullet.Bullet;
-#end
 
 class PhysicsConstraint extends Trait {
-#if (!arm_physics)
-	public function new() { super(); }
-#else
 
 	var body1:String;
 	var body2:String;
@@ -59,6 +54,4 @@ class PhysicsConstraint extends Trait {
 		// Rigid body not initialized yet
 		notifyOnInit(init);
 	}
-
-#end
 }

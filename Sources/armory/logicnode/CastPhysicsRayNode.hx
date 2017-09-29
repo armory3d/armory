@@ -19,7 +19,7 @@ class CastPhysicsRayNode extends LogicNode {
 		var vto:Vec4 = inputs[1].get();
 
 #if arm_physics
-		var physics = armory.trait.internal.PhysicsWorld.active;
+		var physics = armory.trait.physics.PhysicsWorld.active;
 		var rb = physics.rayCast(vfrom, vto);
 
 		if (from == 0) { // Object

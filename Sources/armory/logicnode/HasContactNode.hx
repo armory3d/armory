@@ -1,7 +1,7 @@
 package armory.logicnode;
 
 import armory.object.Object;
-import armory.trait.internal.RigidBody;
+import armory.trait.physics.RigidBody;
 
 class HasContactNode extends LogicNode {
 
@@ -14,7 +14,7 @@ class HasContactNode extends LogicNode {
 		var object2:Object = inputs[1].get();
 
 #if arm_physics
-		var physics = armory.trait.internal.PhysicsWorld.active;
+		var physics = armory.trait.physics.PhysicsWorld.active;
 		var rb2 = object2.getTrait(RigidBody);
 		var rbs = physics.getContacts(object1.getTrait(RigidBody));
 		if (rbs != null) for (rb in rbs) if (rb == rb2) return true;

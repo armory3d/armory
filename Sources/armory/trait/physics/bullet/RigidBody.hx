@@ -1,18 +1,12 @@
-package armory.trait.internal;
+package armory.trait.physics.bullet;
 
-#if arm_physics
 import haxebullet.Bullet;
-#end
 import iron.Trait;
 import iron.math.Vec4;
 import iron.object.Transform;
 import iron.object.MeshObject;
 
 class RigidBody extends Trait {
-
-#if (!arm_physics)
-	public function new() { super(); }
-#else
 
 	var shape:Shape;
 	var _motionState:BtMotionStatePointer;
@@ -69,7 +63,7 @@ class RigidBody extends Trait {
 		ready = true;
 		
 		transform = object.transform;
-		physics = armory.trait.internal.PhysicsWorld.active;
+		physics = armory.trait.physics.PhysicsWorld.active;
 
 		var _shape:BtCollisionShapePointer = null;
 		var _shapeConvex:BtConvexHullShapePointer = null;
@@ -287,7 +281,6 @@ class RigidBody extends Trait {
 			);
 		}
 	}
-#end
 }
 
 @:enum abstract Shape(Int) from Int {

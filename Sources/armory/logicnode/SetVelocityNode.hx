@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import armory.object.Object;
 import armory.math.Vec4;
-import armory.trait.internal.RigidBody;
+import armory.trait.physics.RigidBody;
 
 class SetVelocityNode extends LogicNode {
 

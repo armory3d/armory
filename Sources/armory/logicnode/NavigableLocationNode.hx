@@ -1,7 +1,7 @@
 package armory.logicnode;
 
 import armory.math.Vec4;
-import armory.trait.internal.Navigation;
+import armory.trait.navigation.Navigation;
 
 class NavigableLocationNode extends LogicNode {
 

@@ -1,8 +1,6 @@
-package armory.trait.internal;
+package armory.trait.physics.bullet;
 
-#if arm_physics
 import haxebullet.Bullet;
-#end
 import iron.Trait;
 import iron.system.Time;
 import iron.math.Vec4;
@@ -24,9 +22,6 @@ class ContactPair {
 
 class PhysicsWorld extends Trait {
 
-#if (!arm_physics)
-	public function new() { super(); }
-#else
 #if arm_profile
 	public static var physTime = 0.0;
 #end
@@ -256,5 +251,4 @@ class PhysicsWorld extends Trait {
 	public function removePreUpdate(f:Void->Void) {
 		preUpdates.remove(f);
 	}
-#end
 }

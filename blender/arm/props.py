@@ -49,7 +49,8 @@ def init_properties():
     bpy.types.World.arm_project_scene = StringProperty(name="Scene", description="Scene to load when launching player")  
     bpy.types.World.arm_physics = EnumProperty(
         items = [('Disabled', 'Disabled', 'Disabled'), 
-                 ('Bullet', 'Bullet', 'Bullet')],
+                 ('Bullet', 'Bullet', 'Bullet'),
+                 ('Oimo', 'Oimo', 'Oimo')],
         name = "Physics", default='Bullet')
     bpy.types.World.arm_navigation = EnumProperty(
         items = [('Disabled', 'Disabled', 'Disabled'), 

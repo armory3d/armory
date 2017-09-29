@@ -2693,14 +2693,14 @@ class ArmoryExporter:
                 self.output['traits'] = []
             x = {}
             x['type'] = 'Script'
-            x['class_name'] = 'armory.trait.internal.PhysicsWorld'
+            x['class_name'] = 'armory.trait.physics.PhysicsWorld'
             self.output['traits'].append(x)
         if wrd.arm_navigation != 'Disabled' and ArmoryExporter.export_navigation:
             if not 'traits' in self.output:
                 self.output['traits'] = []
             x = {}
             x['type'] = 'Script'
-            x['class_name'] = 'armory.trait.internal.Navigation'
+            x['class_name'] = 'armory.trait.navigation.Navigation'
             self.output['traits'].append(x)
         if wrd.arm_play_console:
             if not 'traits' in self.output:
@@ -2876,7 +2876,7 @@ class ArmoryExporter:
                 body_mass = rb.mass
             x = {}
             x['type'] = 'Script'
-            x['class_name'] = 'armory.trait.internal.RigidBody'
+            x['class_name'] = 'armory.trait.physics.RigidBody'
             x['parameters'] = [str(body_mass), str(shape), str(rb.friction), str(rb.restitution)]
             if rb.use_margin:
                 x['parameters'].append(str(rb.collision_margin))
@@ -2904,7 +2904,7 @@ class ArmoryExporter:
             assets.add_khafile_def('arm_physics_soft')
             cloth_trait = {}
             cloth_trait['type'] = 'Script'
-            cloth_trait['class_name'] = 'armory.trait.internal.SoftBody'
+            cloth_trait['class_name'] = 'armory.trait.physics.SoftBody'
             if soft_type == 0:
                 bend = soft_mod.settings.bending_stiffness
             elif soft_type == 1:
@@ -3068,7 +3068,7 @@ class ArmoryExporter:
     def add_hook_trait(self, o, bobject, target_name, group_name):
         hook_trait = {}
         hook_trait['type'] = 'Script'
-        hook_trait['class_name'] = 'armory.trait.internal.PhysicsHook'
+        hook_trait['class_name'] = 'armory.trait.physics.PhysicsHook'
         verts = []
         if group_name != '':
             group = bobject.vertex_groups[group_name].index
@@ -3084,7 +3084,7 @@ class ArmoryExporter:
     def add_constraint_trait(self, o, rb1, rb2):
         constr_trait = {}
         constr_trait['type'] = 'Script'
-        constr_trait['class_name'] = 'armory.trait.internal.PhysicsConstraint'
+        constr_trait['class_name'] = 'armory.trait.physics.PhysicsConstraint'
         constr_trait['parameters'] = ["'" + rb1.name + "'", "'" + rb2.name + "'"]
         o['traits'].append(constr_trait)
 
