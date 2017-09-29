@@ -457,14 +457,23 @@ def make_forward(con_mesh):
         frag.write('fragColor.rgb = tonemapFilmic(fragColor.rgb);')
         # frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
 
+    # Particle opacity
+    # if mat_state.material.arm_particle == 'gpu':
+        # frag.write('fragColor.rgb *= popac;')
+
 def make_forward_base(con_mesh, parse_opacity=False):
     wrd = bpy.data.worlds['Arm']
-    
-    make_base(con_mesh, parse_opacity=parse_opacity)
+
+    arm_discard = mat_state.material.arm_discard
+    make_base(con_mesh, parse_opacity=(parse_opacity or arm_discard))
 
     vert = con_mesh.vert
     frag = con_mesh.frag
     tese = con_mesh.tese
+
+    if arm_discard:
+        opac = mat_state.material.arm_discard_opacity
+        frag.write('if (opacity < {0}) discard;'.format(opac))
 
     frag.main_pre += """
     vec3 vVec = normalize(eyeDir);

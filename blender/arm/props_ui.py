@@ -101,6 +101,7 @@ class ParticlesPropsPanel(bpy.types.Panel):
             return
 
         layout.prop(obj.settings, 'arm_gpu_sim')
+        layout.prop(obj.settings, 'arm_count_mult')
 
 class PhysicsPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"

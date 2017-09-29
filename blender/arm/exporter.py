@@ -2398,7 +2398,7 @@ class ArmoryExporter:
 
             o['type'] = 0 if psettings.type == 'Emitter' else 1 # Hair
             # Emission
-            o['count'] = psettings.count
+            o['count'] = psettings.count * psettings.arm_count_mult
             o['frame_start'] = psettings.frame_start
             o['frame_end'] = psettings.frame_end
             o['lifetime'] = psettings.lifetime

@@ -38,6 +38,10 @@ def write(vert):
 
     vert.write('spos.xyz += ppos;')
 
+    # Particle opacity
+    # vert.add_out('float popac')
+    # vert.write('popac = sin(min((ptime / 2) * 3.141592, 3.141592));')
+
 def write_tilesheet(vert):
     # tilesx, tilesy, framerate - pd[3][0], pd[3][1], pd[3][2]
     vert.write('int frame = int((ptime / 2) / pd[3][2]);')
