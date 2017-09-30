@@ -86,6 +86,7 @@ project.addSources('Sources');
                     ammojs_path = ammojs_path.replace('\\', '/')
                     f.write(add_assets(ammojs_path))
             elif wrd.arm_physics == 'Oimo':
+                assets.add_khafile_def('arm_oimo')
                 if not os.path.exists('Libraries/oimo'):
                     f.write(add_armory_library(sdk_path + '/lib/', 'oimo'))
 
@@ -243,7 +244,7 @@ class Main {
     public static function main() {
         iron.object.BoneAnimation.skinMaxBones = """ + str(wrd.arm_gpu_skin_max_bones) + """;
         state = 1;
-        #if (js && arm_physics) state++; loadLib("ammo.js"); #end
+        #if (js && arm_bullet) state++; loadLib("ammo.js"); #end
         #if (js && arm_navigation) state++; loadLib("recast.js"); #end
         state--; start();
     }

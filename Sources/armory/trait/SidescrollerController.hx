@@ -5,7 +5,7 @@ import armory.trait.internal.CameraController;
 
 class SidescrollerController extends CameraController {
 
-#if (!arm_physics)
+#if (!arm_bullet)
 	public function new() { super(); }
 #else
 

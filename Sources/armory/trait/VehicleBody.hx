@@ -6,13 +6,13 @@ import iron.object.CameraObject;
 import iron.object.Transform;
 import iron.system.Time;
 import armory.trait.physics.PhysicsWorld;
-#if arm_physics
+#if arm_bullet
 import haxebullet.Bullet;
 #end
 
 class VehicleBody extends Trait {
 
-#if (!arm_physics)
+#if (!arm_bullet)
 	public function new() { super(); }
 #else
 
@@ -225,7 +225,7 @@ class VehicleBody extends Trait {
 
 class VehicleWheel {
 
-#if (!arm_physics)
+#if (!arm_bullet)
 	public function new() { }
 #else
 

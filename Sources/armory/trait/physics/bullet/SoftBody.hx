@@ -1,5 +1,7 @@
 package armory.trait.physics.bullet;
 
+#if arm_bullet
+
 import iron.math.Vec4;
 import iron.math.Mat4;
 import iron.Trait;
@@ -221,3 +223,5 @@ class SoftBody extends Trait {
 	var Cloth = 0;
 	var Volume = 1;
 }
+
+#end

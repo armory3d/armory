@@ -1,5 +1,7 @@
 package armory.trait.physics.bullet;
 
+#if arm_bullet
+
 import iron.math.Vec4;
 import iron.math.Mat4;
 import iron.Trait;
@@ -55,3 +57,5 @@ class PhysicsConstraint extends Trait {
 		notifyOnInit(init);
 	}
 }
+
+#end

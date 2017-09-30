@@ -6,13 +6,13 @@ import iron.math.Vec4;
 import iron.math.RayCaster;
 import armory.trait.physics.RigidBody;
 import armory.trait.physics.PhysicsWorld;
-#if arm_physics
+#if arm_bullet
 import haxebullet.Bullet;
 #end
 
 class PhysicsDrag extends Trait {
 
-#if (!arm_physics)
+#if (!arm_bullet)
 	public function new() { super(); }
 #else
 

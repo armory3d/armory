@@ -6,15 +6,15 @@ import iron.Trait;
 import iron.object.MeshObject;
 import iron.data.MeshData;
 import iron.data.SceneFormat;
-#if arm_physics
-import armory.trait.physics.bullet.RigidBody; // TODO - import Shape
+#if arm_bullet
+import armory.trait.physics.bullet.RigidBody;
 import armory.trait.physics.RigidBody;
 import armory.trait.physics.PhysicsWorld;
 import haxebullet.Bullet;
 #end
 
 class PhysicsBreak extends Trait {
-#if (!arm_physics)
+#if (!arm_bullet)
 	public function new() { super(); }
 #else
 

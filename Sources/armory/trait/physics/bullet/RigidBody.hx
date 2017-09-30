@@ -1,5 +1,7 @@
 package armory.trait.physics.bullet;
 
+#if arm_bullet
+
 import haxebullet.Bullet;
 import iron.Trait;
 import iron.math.Vec4;
@@ -300,3 +302,5 @@ class RigidBody extends Trait {
 	var NoDeactivation = 4;
 	var NoSimulation = 5;
 }
+
+#end

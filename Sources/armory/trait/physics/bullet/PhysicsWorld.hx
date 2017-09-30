@@ -1,5 +1,7 @@
 package armory.trait.physics.bullet;
 
+#if arm_bullet
+
 import haxebullet.Bullet;
 import iron.Trait;
 import iron.system.Time;
@@ -252,3 +254,5 @@ class PhysicsWorld extends Trait {
 		preUpdates.remove(f);
 	}
 }
+
+#end
