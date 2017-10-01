@@ -1516,20 +1516,23 @@ class ArmoryExporter:
                     total_weight += bone_weight
                     bone_count += 1
 
+            # Take highest weights
+            bone_values = reversed(sorted(bone_values))
+
             if bone_count > 4: # Four bones max
                 bone_count = 4
                 bone_values = bone_values[:4]
                 warn_bones = True
             bone_count_array.append(bone_count)
 
-            # Take highest weights
-            for bv in reversed(sorted(bone_values)):
-                bone_index_array.append(bv[1])
+            for bv in bone_values:
                 bone_weight_array.append(bv[0])
+                bone_index_array.append(bv[1])
+
             if total_weight != 0.0:
                 normalizer = 1.0 / total_weight
-                for i in range(0, bone_count):
-                    bone_weight_array[-i] *= normalizer
+                for i in range(-bone_count, 0):
+                    bone_weight_array[i] *= normalizer
 
         if warn_bones:
             log.warn(bobject.name + ' - more than 4 bones influence single vertex - taking highest weights')
