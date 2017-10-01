@@ -15,7 +15,7 @@ except ImportError:
     pass
 
 # Armory version
-arm_version = '17.09'
+arm_version = '17.10'
 
 def update_preset(self, context):
     make_renderer.set_preset(self, context, self.rp_preset)
