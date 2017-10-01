@@ -437,6 +437,9 @@ def draw_traits(layout, obj, is_object):
             if item.type_prop == 'Haxe Script':
                 row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_scripts_list", "Class")
             else:
+                # Bundled scripts not yet fetched
+                if len(bpy.data.worlds['Arm'].arm_bundled_scripts_list) == 0:
+                    arm.utils.fetch_bundled_script_names()
                 row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_bundled_scripts_list", "Class")
             
             # Props
