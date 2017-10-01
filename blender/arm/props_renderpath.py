@@ -162,11 +162,15 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name="Texture Filtering", description="Set Manual to honor interpolation setting on Image Texture node", default='Anisotropic')
     arm_material_model = EnumProperty(
         items=[('Full', 'Full', 'Full'),
-               ('Cycles', 'Cycles', 'Cycles'),
                ('Mobile', 'Mobile', 'Mobile'),
                ('Solid', 'Solid', 'Solid'),
                ],
         name="Materials", description="Material builder", default='Full', update=update_material_model)
+    arm_diffuse_model = EnumProperty(
+        items=[('Lambert', 'Lambert', 'Lambert'),
+               ('OrenNayar', 'OrenNayar', 'OrenNayar'),
+               ],
+        name="Diffuse", description="Diffuse model", default='Lambert', update=assets.invalidate_shader_cache)
     arm_tessellation = bpy.props.BoolProperty(name="Tessellation", description="Enable tessellation for height maps on supported targets", default=True, update=assets.invalidate_shader_cache)
     arm_rp_resolution = EnumProperty(
         items=[('Display', 'Display', 'Display'),

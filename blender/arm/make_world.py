@@ -94,8 +94,8 @@ def build_node_tree(world):
         wrd.world_defs += '_LDR'
 
     # Alternative models
-    if rpdat.arm_material_model == 'Cycles':
-        wrd.world_defs += '_Cycles'
+    if rpdat.arm_diffuse_model == 'OrenNayar':
+        wrd.world_defs += '_OrenNayar'
 
     # TODO: Lamp texture test..
     if wrd.arm_lamp_texture != '':

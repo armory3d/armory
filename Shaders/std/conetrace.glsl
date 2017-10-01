@@ -53,9 +53,9 @@ vec4 traceCone(const vec3 origin, vec3 dir, float aperture, const float maxDist,
 		float mip = max(log2(diam * voxelgiResolution), 0);
 		// vec4 mipSample = sampleVoxel(samplePos, dir, indices, mip);
 		vec4 mipSample = textureLod(voxels, samplePos * 0.5 + vec3(0.5), mip);
-#ifdef _Cycles
-		mipSample.rgb = min(mipSample.rgb * 0.9, vec3(0.9)) + max((mipSample.rgb - 0.9) * 200.0, 0.0); // Higher range to allow emission
-#endif
+// #ifdef _Cycles
+		// mipSample.rgb = min(mipSample.rgb * 0.9, vec3(0.9)) + max((mipSample.rgb - 0.9) * 200.0, 0.0); // Higher range to allow emission
+// #endif
 		// Blend mip sample with current sample color
 		sampleCol += ((1 - sampleCol.a) * mipSample) * (1.0 / max(voxelgiOcc, 0.1));
 		dist += max(diam / 2, VOXEL_SIZE); // Step size

@@ -168,9 +168,8 @@ def init_properties():
                ('Forward', 'Forward', 'Forward'),
                ('Deferred', 'Deferred', 'Deferred'),
                ('Deferred Plus', 'Deferred Plus (experimental)', 'Deferred Plus'),
-               ('Max', 'Max', 'Max'),
-               ('Render Capture', 'Render Capture', 'Render Capture'),
                ('Grease Pencil', 'Grease Pencil', 'Grease Pencil'),
+               ('Render Capture', 'Render Capture', 'Render Capture'),
                ],
         name="Preset", description="Render path preset", default='Deferred', update=update_preset)
     bpy.types.World.arm_voxelgi_diff = bpy.props.FloatProperty(name="Diffuse", description="", default=1.0, update=assets.invalidate_shader_cache)
@@ -356,6 +355,14 @@ def init_properties_on_load():
     # Outdated project
     if bpy.data.filepath != '' and wrd.arm_version != arm_version: # Call on project load only
         print('Project updated to sdk v' + arm_version)
+        # TODO: deprecated - Cycles profile merged into Full
+        if arm_version == '17.10':
+            if len(wrd.arm_rplist) > 0:
+                rpdat = arm.utils.get_rp()
+                if rpdat.arm_material_model == 'Solid':
+                    rpdat.arm_material_model = 'Mobile'
+                else:
+                    rpdat.arm_material_model = 'Full'
         wrd.arm_version = arm_version
         arm.make.clean_project()
     # Set url for embedded player

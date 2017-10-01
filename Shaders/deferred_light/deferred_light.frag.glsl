@@ -128,6 +128,9 @@ void main() {
 
 	vec3 p = getPos2(invVP, depth, texCoord);
 	vec2 metrough = unpackFloat(g0.b);
+
+	float facdif = min((1.0 - metrough.x) * 3.0, 1.0);
+	float facspec = min(metrough.x * 3.0, 1.0);
 	
 	vec3 v = normalize(eye - p);
 	float dotNV = dot(n, v);
@@ -190,27 +193,19 @@ void main() {
 		float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lampArea0, lampArea1, lampArea2, lampArea3);
 		ltcspec *= texture(sltcMag, tuv).a;
 		float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lampArea0, lampArea1, lampArea2, lampArea3);
-		#ifdef _Cycles
-			float facdif = min((1.0 - metrough.x) * 3.0, 1.0);
-			float facspec = min(metrough.x * 3.0, 1.0);
-			fragColor.rgb = albedo * ltcdiff * facdif + ltcspec * facspec;
-		#else
-			fragColor.rgb = albedo * ltcdiff + ltcspec;
-		#endif
+		fragColor.rgb = albedo * ltcdiff * facdif + ltcspec * facspec;
 	}
 	else {
 #endif
 
-#ifdef _Cycles
+#ifdef _OrenNayar
 	// Diff/glossy
-	float facdif = min((1.0 - metrough.x) * 3.0, 1.0);
-	float facspec = min(metrough.x * 3.0, 1.0);
 	float rough = pow(metrough.y, 0.5);
 	fragColor.rgb = orenNayarDiffuseBRDF(albedo, rough, dotNV, dotNL, dotVH) * max(1.0 - metrough.y, 0.88) * facdif + specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) * 3.5 * facspec;
 	// Metallic
 	// fragColor.rgb = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
 #else
-	fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
+	fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) * facdif + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH) * facspec;
 #endif
 
 #ifdef _PolyLight
