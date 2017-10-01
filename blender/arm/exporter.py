@@ -598,9 +598,9 @@ class ArmoryExporter:
             tracko['times'] = []
 
             for i in range(self.beginFrame, self.endFrame):
-                tracko['times'].append(((i - self.beginFrame) * self.frameTime))
+                tracko['times'].append(((i - self.beginFrame)))
 
-            tracko['times'].append((self.endFrame * self.frameTime))
+            tracko['times'].append((self.endFrame))
 
             tracko['values'] = []
 
@@ -648,9 +648,9 @@ class ArmoryExporter:
             tracko['times'] = []
 
             for i in range(begin_frame, end_frame):
-                tracko['times'].append(((i - begin_frame) * self.frameTime))
+                tracko['times'].append(((i - begin_frame)))
 
-            tracko['times'].append((end_frame * self.frameTime))
+            tracko['times'].append((end_frame))
 
             tracko['values'] = []
 
@@ -679,21 +679,19 @@ class ArmoryExporter:
         keyCount = len(fcurve.keyframe_points)
         for i in range(keyCount):
             time = fcurve.keyframe_points[i].co[0] - self.beginFrame
-            keyo.append(time * self.frameTime)
+            keyo.append(time)
         return keyo
 
     def export_key_time_control_points(self, fcurve):
-        keyminuso = {}
-        keyminuso['values'] = []
+        keyminuso = []
         keyCount = len(fcurve.keyframe_points)
         for i in range(keyCount):
             ctrl = fcurve.keyframe_points[i].handle_left[0] - self.beginFrame
-            keyminuso['values'].append(ctrl * self.frameTime)
-        keypluso = {}
-        keypluso['values'] = []
+            keyminuso.append(ctrl)
+        keypluso = []
         for i in range(keyCount):
             ctrl = fcurve.keyframe_points[i].handle_right[0] - self.beginFrame
-            keypluso['values'].append(ctrl * self.frameTime)
+            keypluso.append(ctrl)
 
         return keyminuso, keypluso
 
@@ -1034,8 +1032,8 @@ class ArmoryExporter:
 
             # Export the animation tracks
             o['animation'] = {}
-            o['animation']['begin'] = (action.frame_range[0] - self.beginFrame) * self.frameTime
-            o['animation']['end'] = (action.frame_range[1] - self.beginFrame) * self.frameTime
+            o['animation']['begin'] = (action.frame_range[0] - self.beginFrame)
+            o['animation']['end'] = (action.frame_range[1] - self.beginFrame)
             o['animation']['tracks'] = []
 
             if locationAnimated:
@@ -2511,7 +2509,7 @@ class ArmoryExporter:
 
         self.beginFrame = self.scene.frame_start
         self.endFrame = self.scene.frame_end
-        self.frameTime = 1.0 / (self.scene.render.fps_base * self.scene.render.fps)
+        self.output['frame_time'] = 1.0 / (self.scene.render.fps / self.scene.render.fps_base)
 
         self.bobjectArray = {}
         self.meshArray = {}

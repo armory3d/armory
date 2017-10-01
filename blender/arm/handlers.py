@@ -119,7 +119,7 @@ def on_scene_update_post(context):
                 make.play_project(in_viewport=True)
                 assets.invalidate_enabled = True
 
-    # Use frame rate for update frequency for now
+    # Update at 60 fps
     fps_mult = 2.0 if (state.krom_running and arm.utils.get_os() == 'win') else 1.0 # Handlers called less frequently on Windows?
     fps = 60
     if time.time() - last_time >= (1 / (fps * fps_mult)):
