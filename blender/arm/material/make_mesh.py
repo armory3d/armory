@@ -236,16 +236,19 @@ def make_base(con_mesh, parse_opacity):
         tese.write('wposition += wnormal * disp * 0.2;')
         tese.write('gl_Position = VP * vec4(wposition, 1.0);')
 
-def write_norpos(con_mesh, vert, declare=False):
+def write_norpos(con_mesh, vert, declare=False, write_nor=True):
     prep = ''
     if declare:
         prep = 'vec3 '
     vert.write_pre = True
-    if con_mesh.is_elem('bone'):
+    is_bone = con_mesh.is_elem('bone')
+    if is_bone:
         make_skin.skin_pos(vert)
-        vert.write(prep + 'wnormal = normalize(N * (nor + 2.0 * cross(skinA.xyz, cross(skinA.xyz, nor) + skinA.w * nor)));')
-    else:
-        vert.write(prep + 'wnormal = normalize(N * nor);')
+    if write_nor:
+        if is_bone:
+            vert.write(prep + 'wnormal = normalize(N * (nor + 2.0 * cross(skinA.xyz, cross(skinA.xyz, nor) + skinA.w * nor)));')
+        else:
+            vert.write(prep + 'wnormal = normalize(N * nor);')
     if con_mesh.is_elem('off'):
         vert.write('spos.xyz += off;')
     vert.write_pre = False
@@ -475,7 +478,7 @@ def make_forward_solid(con_mesh):
         vert.add_out('vec3 vcolor')
         vert.write('vcolor = col;')
 
-    write_norpos(con_mesh, vert, declare=True)
+    write_norpos(con_mesh, vert, write_nor=False)
 
     frag.add_out('vec4 fragColor')
     frag.write('fragColor = vec4(basecol, 1.0);')
