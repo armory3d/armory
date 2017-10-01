@@ -24,7 +24,8 @@ def build_node_trees(assets_path):
         os.makedirs(arm.utils.build_dir() + '/compiled/Assets/renderpaths')
     
     build_node_trees.assets_path = assets_path
-    if rpdat.arm_material_model != 'Mobile':
+    mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
+    if not mobile_mat:
         # Always include
         assets.add(assets_path + 'brdf.png')
         assets.add_embedded_data('brdf.png')

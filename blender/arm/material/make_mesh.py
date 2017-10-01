@@ -29,11 +29,15 @@ def make(context_id):
     rpdat = arm.utils.get_rp()
     rid = rpdat.rp_renderer
     if rid == 'Forward' or blend:
-        if rpdat.arm_material_model != 'Mobile':
-            make_forward(con_mesh)
-        else:
+        if rpdat.arm_material_model == 'Mobile':
             make_forward_mobile(con_mesh)
+        elif rpdat.arm_material_model == 'Solid':
+            make_forward_solid(con_mesh)
+        else:
+            make_forward(con_mesh)
     elif rid == 'Deferred':
+        if rpdat.arm_material_model != 'Full': # TODO: hide material enum
+            print('Armory Warning: Deferred renderer only supports Full materials')
         make_deferred(con_mesh)
     elif rid == 'Deferred Plus':
         make_deferred_plus(con_mesh)
@@ -439,6 +443,42 @@ def make_forward_mobile(con_mesh):
 
     frag.add_out('vec4 fragColor')
     frag.write('fragColor = vec4(direct * visibility + basecol * 0.05 * envmapStrength, 1.0);')
+
+    if '_LDR' in wrd.world_defs:
+        frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
+
+def make_forward_solid(con_mesh):
+    wrd = bpy.data.worlds['Arm']
+    vert = con_mesh.make_vert()
+    frag = con_mesh.make_frag()
+    geom = None
+    tesc = None
+    tese = None
+
+    vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
+    frag.ins = vert.outs
+    vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
+    vert.write('gl_Position = WVP * spos;')
+
+    frag.add_include('../../Shaders/compiled.glsl')
+    frag.write('vec3 basecol;')
+    frag.write('float roughness;')
+    frag.write('float metallic;')
+    frag.write('float occlusion;')
+    cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False)
+
+    if con_mesh.is_elem('tex'):
+        vert.add_out('vec2 texCoord')
+        vert.write('texCoord = tex;')
+
+    if con_mesh.is_elem('col'):
+        vert.add_out('vec3 vcolor')
+        vert.write('vcolor = col;')
+
+    write_norpos(con_mesh, vert, declare=True)
+
+    frag.add_out('vec4 fragColor')
+    frag.write('fragColor = vec4(basecol, 1.0);')
 
     if '_LDR' in wrd.world_defs:
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')

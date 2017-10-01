@@ -50,7 +50,8 @@ def build_node_tree(world):
             parse_world_output(world, output_node, context)
             parsed = True
     if parsed == False:
-        if wrd.arm_irradiance and rpdat.arm_material_model != 'Mobile':
+        mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
+        if wrd.arm_irradiance and not mobile_mat:
             wrd.world_defs += '_Irr'
         envmap_strength_const = {}
         envmap_strength_const['name'] = 'envmapStrength'
@@ -186,7 +187,7 @@ def parse_world_output(world, node, context):
 def parse_surface(world, node, context):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
-    mobile_mat = rpdat.arm_material_model == 'Mobile'
+    mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
     
     # Extract environment strength
     if node.type == 'BACKGROUND':
@@ -213,7 +214,7 @@ def parse_surface(world, node, context):
 def parse_color(world, node, context, envmap_strength_const):       
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
-    mobile_mat = rpdat.arm_material_model == 'Mobile'
+    mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
 
     # Env map included
     if node.type == 'TEX_ENVIRONMENT' and node.image != None:

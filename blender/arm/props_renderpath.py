@@ -164,6 +164,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         items=[('Full', 'Full', 'Full'),
                ('Cycles', 'Cycles', 'Cycles'),
                ('Mobile', 'Mobile', 'Mobile'),
+               ('Solid', 'Solid', 'Solid'),
                ],
         name="Materials", description="Material builder", default='Full', update=update_material_model)
     arm_tessellation = bpy.props.BoolProperty(name="Tessellation", description="Enable tessellation for height maps on supported targets", default=True, update=assets.invalidate_shader_cache)

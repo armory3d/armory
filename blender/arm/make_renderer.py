@@ -270,7 +270,7 @@ def set_preset(self, context, preset):
         rpdat.arm_texture_filter = 'Point'
     elif preset == 'Grease Pencil':
         rpdat.rp_renderer = 'Forward'
-        rpdat.arm_material_model = 'Mobile'
+        rpdat.arm_material_model = 'Solid'
         rpdat.rp_shadowmap = 'None'
         rpdat.rp_translucency_state = 'Off'
         rpdat.rp_overlays_state = 'Off'
