@@ -28,7 +28,7 @@ def set_preset(self, context, preset):
 
     if preset == 'Low':
         rpdat.rp_renderer = 'Forward'
-        rpdat.arm_material_model = 'PBR'
+        rpdat.arm_material_model = 'Full'
         rpdat.rp_shadowmap = '1024'
         rpdat.rp_translucency_state = 'Off'
         rpdat.rp_overlays_state = 'Off'
@@ -58,7 +58,7 @@ def set_preset(self, context, preset):
         rpdat.arm_texture_filter = 'Anisotropic'
     elif preset == 'Forward':
         rpdat.rp_renderer = 'Forward'
-        rpdat.arm_material_model = 'PBR'
+        rpdat.arm_material_model = 'Full'
         rpdat.rp_shadowmap = '2048'
         rpdat.rp_translucency_state = 'Auto'
         rpdat.rp_overlays_state = 'Auto'
@@ -88,7 +88,7 @@ def set_preset(self, context, preset):
         rpdat.arm_texture_filter = 'Anisotropic'
     elif preset == 'Deferred':
         rpdat.rp_renderer = 'Deferred'
-        rpdat.arm_material_model = 'PBR'
+        rpdat.arm_material_model = 'Full'
         rpdat.rp_shadowmap = '2048'
         rpdat.rp_translucency_state = 'Auto'
         rpdat.rp_overlays_state = 'Auto'
@@ -118,7 +118,7 @@ def set_preset(self, context, preset):
         rpdat.arm_texture_filter = 'Anisotropic'
     elif preset == 'Max':
         rpdat.rp_renderer = 'Deferred'
-        rpdat.arm_material_model = 'PBR'
+        rpdat.arm_material_model = 'Full'
         rpdat.rp_shadowmap = '4096'
         rpdat.rp_translucency_state = 'Auto'
         rpdat.rp_overlays_state = 'Auto'
@@ -180,7 +180,7 @@ def set_preset(self, context, preset):
         rpdat.arm_texture_filter = 'Anisotropic'
     elif preset == 'Deferred Plus':
         rpdat.rp_renderer = 'Deferred Plus'
-        rpdat.arm_material_model = 'PBR'
+        rpdat.arm_material_model = 'Full'
         rpdat.rp_shadowmap = '4096'
         rpdat.rp_translucency_state = 'Auto'
         rpdat.rp_overlays_state = 'Auto'
@@ -210,7 +210,7 @@ def set_preset(self, context, preset):
         rpdat.arm_texture_filter = 'Anisotropic'
     elif preset == 'VR Low':
         rpdat.rp_renderer = 'Forward'
-        rpdat.arm_material_model = 'Restricted'
+        rpdat.arm_material_model = 'Mobile'
         rpdat.rp_shadowmap = '1024'
         rpdat.rp_translucency_state = 'Off'
         rpdat.rp_overlays_state = 'Off'
@@ -240,7 +240,7 @@ def set_preset(self, context, preset):
         rpdat.arm_texture_filter = 'Point'
     elif preset == 'Mobile Low':
         rpdat.rp_renderer = 'Forward'
-        rpdat.arm_material_model = 'Restricted'
+        rpdat.arm_material_model = 'Mobile'
         rpdat.rp_shadowmap = '1024'
         rpdat.rp_translucency_state = 'Off'
         rpdat.rp_overlays_state = 'Off'
@@ -270,7 +270,7 @@ def set_preset(self, context, preset):
         rpdat.arm_texture_filter = 'Point'
     elif preset == 'Grease Pencil':
         rpdat.rp_renderer = 'Forward'
-        rpdat.arm_material_model = 'Restricted'
+        rpdat.arm_material_model = 'Mobile'
         rpdat.rp_shadowmap = 'None'
         rpdat.rp_translucency_state = 'Off'
         rpdat.rp_overlays_state = 'Off'

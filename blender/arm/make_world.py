@@ -50,7 +50,7 @@ def build_node_tree(world):
             parse_world_output(world, output_node, context)
             parsed = True
     if parsed == False:
-        if wrd.arm_irradiance and rpdat.arm_material_model != 'Restricted':
+        if wrd.arm_irradiance and rpdat.arm_material_model != 'Mobile':
             wrd.world_defs += '_Irr'
         envmap_strength_const = {}
         envmap_strength_const['name'] = 'envmapStrength'
@@ -186,13 +186,13 @@ def parse_world_output(world, node, context):
 def parse_surface(world, node, context):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
-    restricted = rpdat.arm_material_model == 'Restricted'
+    mobile_mat = rpdat.arm_material_model == 'Mobile'
     
     # Extract environment strength
     if node.type == 'BACKGROUND':
         
         # Append irradiance define
-        if wrd.arm_irradiance and not restricted:
+        if wrd.arm_irradiance and not mobile_mat:
             wrd.world_defs += '_Irr'
 
         # Strength
@@ -213,7 +213,7 @@ def parse_surface(world, node, context):
 def parse_color(world, node, context, envmap_strength_const):       
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
-    restricted = rpdat.arm_material_model == 'Restricted'
+    mobile_mat = rpdat.arm_material_model == 'Mobile'
 
     # Env map included
     if node.type == 'TEX_ENVIRONMENT' and node.image != None:
@@ -294,7 +294,7 @@ def parse_color(world, node, context, envmap_strength_const):
         if disable_hdr:
             wrd.world_defs += '_EnvLDR'
         # Append radiance define
-        if wrd.arm_irradiance and wrd.arm_radiance and not restricted:
+        if wrd.arm_irradiance and wrd.arm_radiance and not mobile_mat:
             wrd.world_defs += '_Rad'
 
     # Static image background
@@ -353,7 +353,7 @@ def parse_color(world, node, context, envmap_strength_const):
         write_probes.write_sky_irradiance(wname)
 
         # Radiance
-        if wrd.arm_radiance_sky and wrd.arm_radiance and wrd.arm_irradiance and not restricted:
+        if wrd.arm_radiance_sky and wrd.arm_radiance and wrd.arm_irradiance and not mobile_mat:
             wrd.world_defs += '_Rad'
             
             if wrd.arm_radiance_sky_type == 'Hosek':

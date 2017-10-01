@@ -29,10 +29,10 @@ def make(context_id):
     rpdat = arm.utils.get_rp()
     rid = rpdat.rp_renderer
     if rid == 'Forward' or blend:
-        if rpdat.arm_material_model != 'Restricted':
+        if rpdat.arm_material_model != 'Mobile':
             make_forward(con_mesh)
         else:
-            make_forward_restricted(con_mesh)
+            make_forward_mobile(con_mesh)
     elif rid == 'Deferred':
         make_deferred(con_mesh)
     elif rid == 'Deferred Plus':
@@ -358,7 +358,7 @@ def make_deferred_plus(con_mesh):
     frag.write('fragColor[2] = vec4(dFdx(texCoord), dFdy(texCoord));')
     # + tangent space
 
-def make_forward_restricted(con_mesh):
+def make_forward_mobile(con_mesh):
     wrd = bpy.data.worlds['Arm']
     vert = con_mesh.make_vert()
     frag = con_mesh.make_frag()
