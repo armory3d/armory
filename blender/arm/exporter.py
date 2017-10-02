@@ -2200,10 +2200,16 @@ class ArmoryExporter:
             # Tool shelf and properties hidden
             proj, is_persp = self.get_viewport_projection_matrix()
             if pw == 0 and is_persp:
-                o['projection'] = self.write_matrix(proj)
-            # if pw > 0:
-                # w = self.get_viewport_w()
-                # o['projection'][0] *= aspect
+                # Extract projection values
+                a = proj[0][0]
+                b = proj[1][1]
+                c = proj[2][2]
+                d = proj[2][3]
+                k = (c - 1.0) / (c + 1.0)
+                o['near_plane'] = (d * (1.0 - k)) / (2.0 * k)
+                o['far_plane'] = k * o['near_plane'];
+                o['fov'] = 2.0 * math.atan(1.0 / b)
+                o['aspect'] = b / a
         
         if objref.type == 'PERSP':
             o['type'] = 'perspective'
@@ -2655,12 +2661,19 @@ class ArmoryExporter:
             o['near_plane'] = 0.1
             o['far_plane'] = 200.0
             o['fov'] = 0.85
-            # if ArmoryExporter.in_viewport:
-                # pw = self.get_viewport_panels_w()
-                # proj, is_persp = self.get_viewport_projection_matrix()
-                # if pw == 0 and is_persp:
-                    # o['projection'] = self.write_matrix(proj)
-                    # o['projection'][5] = 2.027726888656616 # Wrong val returned when no camera present?
+            # if ArmoryExporter.in_viewport: # Wrong P returned when no camera present?
+            #     pw = self.get_viewport_panels_w()
+            #     proj, is_persp = self.get_viewport_projection_matrix()
+            #     if pw == 0 and is_persp:
+            #         a = proj[0][0]
+            #         b = proj[1][1]
+            #         c = proj[2][2]
+            #         d = proj[2][3]
+            #         k = (c - 1.0) / (c + 1.0)
+            #         o['near_plane'] = (d * (1.0 - k)) / (2.0 * k)
+            #         o['far_plane'] = k * o['near_plane'];
+            #         o['fov'] = 2.0 * math.atan(1.0 / b)
+            #         o['aspect'] = b / a
             o['type'] = 'perspective'
             o['frustum_culling'] = True
             o['render_path'] = 'armory_default/armory_default'
