@@ -64,8 +64,8 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
     if arm.utils.get_os() == 'win':
         output = subprocess.check_output([ \
             kraffiti_path,
-            'from=' + input_file.replace(' ', '\ '),
-            'to=' + scaled_file.replace(' ', '\ '),
+            'from=' + input_file,
+            'to=' + scaled_file,
             'format=' + rad_format,
             'width=' + str(target_w),
             'height=' + str(target_h)])
@@ -82,10 +82,10 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
     if arm.utils.get_os() == 'win':
         subprocess.call([ \
             cmft_path,
-            '--input', scaled_file.replace(' ', '\ '),
+            '--input', scaled_file,
             '--filter', 'shcoeffs',
             '--outputNum', '1',
-            '--output0', output_file_irr.replace(' ', '\ ')])
+            '--output0', output_file_irr])
     else:
         subprocess.call([ \
             cmft_path + \
@@ -117,7 +117,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
     if arm.utils.get_os() == 'win':
         subprocess.call([ \
             cmft_path,
-            '--input', input_file.replace(' ', '\ '),
+            '--input', input_file,
             '--filter', 'radiance',
             '--dstFaceSize', str(face_size),
             '--srcFaceSize', str(face_size),
@@ -138,7 +138,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             '--outputGammaNumerator', '1.0',
             '--outputGammaDenominator', '1.0',
             '--outputNum', '1',
-            '--output0', output_file_rad.replace(' ', '\ '),
+            '--output0', output_file_rad,
             '--output0params', 'hdr,rgbe,latlong'])
     else:
         subprocess.call([ \
@@ -196,8 +196,8 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
             else:
                 subprocess.call([ \
                     kraffiti_path + \
-                    ' from=' + f + '.hdr' + \
-                    ' to=' + f + '.jpg' + \
+                    ' from="' + f + '.hdr"' + \
+                    ' to="' + f + '.jpg"' + \
                     ' format=jpg'], shell=True)
             os.remove(f + '.hdr')
     
@@ -208,8 +208,8 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
         if arm.utils.get_os() == 'win':
             subprocess.call([ \
                 kraffiti_path,
-                'from=' + '"' + last + '.' + rad_format + '"',
-                'to=' + '"' + out + '.' + rad_format + '"',
+                'from=' + last + '.' + rad_format,
+                'to=' + out + '.' + rad_format,
                 'scale=0.5',
                 'format=' + rad_format], shell=True)
         else:
