@@ -441,11 +441,11 @@ def make_forward_mobile(con_mesh):
         frag.write('    }')
 
     frag.write('vec3 direct = basecol * dotNL * lightColor;')
-    frag.write('direct += vec3(D_Approx(max(roughness, 0.1), dot(reflect(-vVec, n), lightDir)));')
+    frag.write('direct += vec3(D_Approx(max(roughness, 0.3), dot(reflect(-vVec, n), lightDir)));')
     frag.write('direct *= attenuate(distance(wposition, lightPos));')
 
     frag.add_out('vec4 fragColor')
-    frag.write('fragColor = vec4(direct * visibility + basecol * 0.05 * envmapStrength, 1.0);')
+    frag.write('fragColor = vec4(direct * visibility + basecol * 0.5 * envmapStrength, 1.0);')
 
     if '_LDR' in wrd.world_defs:
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
