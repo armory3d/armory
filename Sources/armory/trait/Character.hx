@@ -13,7 +13,7 @@ class Character extends Trait {
 	var actionMove:String;
 	var animation:Animation;
 
-	var delta = 0.0;
+	var speed = 0.0;
 	var loc:Vec4 = new Vec4();
 	var lastLoc:Vec4 = null;
 	var state = 0; // Idle, walking
@@ -38,21 +38,28 @@ class Character extends Trait {
 	}
 
 	function update() {
+		// get current position
 		var tr = object.transform;
 		loc.set(tr.worldx(), tr.worldy(), tr.worldz());
 
+		// set previous position to current position if there is no previous position
 		if (lastLoc == null) lastLoc = new Vec4(loc.x, loc.y, loc.z);
 
-		delta = Vec4.distance3d(loc, lastLoc);
+		// check if character moved compared from last position
+		speed = Vec4.distance3d(loc, lastLoc);
+
+		// update previous position to current position
+		// in preparation for next check
 		lastLoc.setFrom(loc);
 
-		// Character started to move
-		if (state == 0 && delta > 0) {
+		// if state is zero (idle) and speed is greater than zero, play move walk animation
+		if (state == 0 && speed > 0) {
 			state = 1;
 			animation.play(actionMove);
 		}
-		// Character just stopped moving
-		else if (state == 1 && delta == 0) {
+
+		// otherwise if state is one (walking) and speed equals zero, pause the walk animation
+		else if (state == 1 && speed == 0) {
 			state = 0;
 			animation.pause();
 		}
