@@ -62,7 +62,9 @@ def on_scene_update_post(context):
             # op_changed(last_operator, bpy.context.object)
         # last_operator = None
 
-    if state.is_render:
+    if state.is_render_anim:
+        pass
+    elif state.is_render:
         import numpy
         # fp = arm.utils.get_fp_build()
         krom_location, krom_path = arm.utils.krom_paths()

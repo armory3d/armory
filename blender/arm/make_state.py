@@ -15,5 +15,6 @@ play_area = None
 krom_running = False
 is_paused = False
 is_render = False
+is_render_anim = False
 recompiled = False
 mod_scripts = []

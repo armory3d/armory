@@ -129,8 +129,63 @@ class SpaceArmory extends Trait {
 
 #if (kha_krom && arm_render)
 	static var frame = 0;	
+	static var captured = false;
+	
+	#if arm_render_anim
+
+	static var current = 0.0;
+	static var framesCaptured = 0;
+
+	@:access(kha.Scheduler)
+	function renderCapture() {
+		App.pauseUpdates = true;
+		App.notifyOnRender(function(g:kha.graphics4.Graphics) {
+			if (captured) return;
+			kha.Scheduler.current = current;
+			frame++;
+			if (frame >= 2) { // Init TAA
+				App.pauseUpdates = false;
+				if (frame % 2 == 0) { // Alternate TAA
+					current += iron.system.Time.delta;
+					return;
+				}
+				var info = iron.Scene.active.raw.capture_info;
+				var pd = iron.Scene.active.cameras[0].data.pathdata;
+				var tex = pd.renderTargets.get("capture").image;
+			
+				if (tex != null) {
+					var pixels = tex.getPixels();
+					var bd = pixels.getData();
+					var bo = new haxe.io.BytesOutput();
+					var rgb = haxe.io.Bytes.alloc(tex.width * tex.height * 3);
+					for (j in 0...tex.height) {
+						for (i in 0...tex.width) {
+							var k = j * tex.width + i;
+							var l = (tex.height - j) * tex.width + i; // Reverse Y
+							rgb.set(k * 3 + 0, pixels.get(l * 4 + 2));
+							rgb.set(k * 3 + 1, pixels.get(l * 4 + 1));
+							rgb.set(k * 3 + 2, pixels.get(l * 4 + 0));
+						}
+					}
+					var pngwriter = new iron.format.png.Writer(bo);
+					pngwriter.write(iron.format.png.Tools.buildRGB(tex.width, tex.height, rgb));
+					var fname = framesCaptured + "";
+					while (fname.length < 4) fname = "0" + fname;
+					Krom.fileSaveBytes(info.path +  "/" + fname + ".png", bo.getBytes().getData());
+				}
+				if (framesCaptured++ == info.frame_end) {
+					captured = true;
+					kha.System.requestShutdown();
+				}
+			}
+		});
+	}
+
+	#else
+
 	function renderCapture() {
 		App.notifyOnRender(function(g:kha.graphics4.Graphics) {
+			if (captured) return;
 			frame++;
 			if (frame >= 3) {
 				var pd = iron.Scene.active.cameras[0].data.pathdata;
@@ -138,20 +193,12 @@ class SpaceArmory extends Trait {
 				if (tex != null) {
 					var pixels = tex.getPixels();
 					Krom.fileSaveBytes("render.bin", pixels.getData());
-					// var bo = new haxe.io.BytesOutput();
-					// var rgb = haxe.io.Bytes.alloc(tex.width * tex.height * 3);
-					// for (i in 0...tex.width * tex.height) {
-					// 	rgb.set(i * 3 + 0, pixels.get(i * 4 + 2));
-					// 	rgb.set(i * 3 + 1, pixels.get(i * 4 + 1));
-					// 	rgb.set(i * 3 + 2, pixels.get(i * 4 + 0));
-					// }
-					// var pngwriter = new armory.format.png.Writer(bo);
-					// pngwriter.write(armory.format.png.Tools.buildRGB(tex.width, tex.height, rgb));
-					// Krom.fileSaveBytes("render.png", bo.getBytes().getData());
 				}
+				captured = true;
 				kha.System.requestShutdown();
 			}
 		});
 	}
+	#end
 #end
 }

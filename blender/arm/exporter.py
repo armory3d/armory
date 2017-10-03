@@ -2508,7 +2508,7 @@ class ArmoryExporter:
             self.output['mesh_datas'] = [];
             self.do_export_mesh(objectRef, scene)
 
-    def execute(self, context, filepath, scene=None):
+    def execute(self, context, filepath, scene=None, write_capture_info=False):
         profile_time = time.time()
         
         self.output = {}
@@ -2522,6 +2522,12 @@ class ArmoryExporter:
         self.beginFrame = self.scene.frame_start
         self.endFrame = self.scene.frame_end
         self.output['frame_time'] = 1.0 / (self.scene.render.fps / self.scene.render.fps_base)
+
+        if write_capture_info:
+            self.output['capture_info'] = {}
+            self.output['capture_info']['path'] = self.scene.render.filepath
+            self.output['capture_info']['frame_start'] = self.scene.frame_start
+            self.output['capture_info']['frame_end'] = self.scene.frame_end
 
         self.bobjectArray = {}
         self.meshArray = {}

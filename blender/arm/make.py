@@ -96,7 +96,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
         if scene.arm_export:
             ext = '.zip' if (scene.arm_compress and is_publish) else '.arm'
             asset_path = arm.utils.build_dir() + '/compiled/Assets/' + arm.utils.safestr(scene.name) + ext
-            exporter.execute(bpy.context, asset_path, scene=scene)
+            exporter.execute(bpy.context, asset_path, scene=scene, write_capture_info=state.is_render_anim)
             if ArmoryExporter.export_physics:
                 physics_found = True
             if ArmoryExporter.export_navigation:
@@ -232,10 +232,11 @@ def compile_project(target_name=None, watch=False, patch=False):
     else:
         return subprocess.Popen(cmd)
 
-def build_project(is_play=False, is_publish=False, is_render=False, in_viewport=False):
+def build_project(is_play=False, is_publish=False, is_render=False, is_render_anim=False, in_viewport=False):
     wrd = bpy.data.worlds['Arm']
 
     state.is_render = is_render
+    state.is_render_anim = is_render_anim
 
     # Clear flag
     state.in_viewport = False
@@ -366,7 +367,7 @@ def get_khajs_path(in_viewport, target):
     else: # Browser
         return arm.utils.build_dir() + '/html5/kha.js'
 
-def play_project(in_viewport, is_render=False):
+def play_project(in_viewport, is_render=False, is_render_anim=False):
     global scripts_mtime
     global code_parsed
     wrd = bpy.data.worlds['Arm']
@@ -380,7 +381,7 @@ def play_project(in_viewport, is_render=False):
     state.target = runtime_to_target(in_viewport)
 
     # Build data
-    build_project(is_play=True, is_render=is_render, in_viewport=in_viewport)
+    build_project(is_play=True, is_render=is_render, is_render_anim=is_render_anim, in_viewport=in_viewport)
     state.in_viewport = in_viewport
 
     khajs_path = get_khajs_path(in_viewport, state.target)
@@ -521,3 +522,8 @@ def clean_project():
 
 def get_render_result():
     play_project(False, is_render=True)
+
+def get_render_anim_result():
+    if bpy.context.scene != None:
+        print('Capturing animation frames into ' + bpy.context.scene.render.filepath)
+    play_project(False, is_render=True, is_render_anim=True)

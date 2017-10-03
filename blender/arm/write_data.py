@@ -125,6 +125,10 @@ project.addSources('Sources');
 
         if state.is_render:
             assets.add_khafile_def('arm_render')
+            if state.is_render_anim:
+                assets.add_khafile_def('arm_render_anim')
+                if not os.path.exists('Libraries/iron_format'):
+                    f.write(add_armory_library(sdk_path + '/lib/', 'iron_format'))
 
         shaderload = state.target == 'krom' or state.target == 'html5'
         if wrd.arm_cache_compiler and shaderload and not is_publish:

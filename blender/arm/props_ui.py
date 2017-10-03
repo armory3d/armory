@@ -838,13 +838,30 @@ class ArmoryRenderAnimButton(bpy.types.Operator):
     bl_label = 'Animation'
  
     def execute(self, context):
+        if not arm.utils.check_saved(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_sdkpath(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_engine(self):
+            return {"CANCELLED"}
+
+        make_renderer.check_default()
+
         if state.playproc != None:
             make.stop_project()
         if bpy.data.worlds['Arm'].arm_play_runtime != 'Krom':
             bpy.data.worlds['Arm'].arm_play_runtime = 'Krom'
-        self.report({"ERROR"}, "Animation capture not yet supported")
-        return {"CANCELLED"}
-        # return{'FINISHED'}
+        rpdat = arm.utils.get_rp()
+        if rpdat.rp_rendercapture == False:
+            rpdat.rp_rendercapture = True
+        if rpdat.rp_antialiasing != 'TAA':
+            rpdat.rp_antialiasing = 'TAA'
+        assets.invalidate_enabled = False
+        make.get_render_anim_result()
+        assets.invalidate_enabled = True
+        return{'FINISHED'}
 
 # Play button in 3D View panel
 def draw_view3d_header(self, context):
