@@ -1517,7 +1517,8 @@ class ArmoryExporter:
                     bone_count += 1
 
             # Take highest weights
-            bone_values = reversed(sorted(bone_values))
+            bone_values.sort()
+            bone_values.reverse();
 
             if bone_count > 4: # Four bones max
                 bone_count = 4
