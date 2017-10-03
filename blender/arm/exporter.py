@@ -1713,9 +1713,9 @@ class ArmoryExporter:
                     t1data[i * 2] = vtx.uvs[1][0]
                     t1data[i * 2 + 1] = 1.0 - vtx.uvs[1][1]
             if has_col > 0:
-                cdata[i * 3] = vtx.col[0]
-                cdata[i * 3 + 1] = vtx.col[1]
-                cdata[i * 3 + 2] = vtx.col[2]
+                cdata[i * 3] = pow(vtx.col[0], 2.2)
+                cdata[i * 3 + 1] = pow(vtx.col[1], 2.2)
+                cdata[i * 3 + 2] = pow(vtx.col[2], 2.2)
 
         # Output
         o['vertex_arrays'] = []
@@ -1993,6 +1993,8 @@ class ArmoryExporter:
         color_count = len(exportMesh.tessface_vertex_colors)
         if self.get_export_vcols(exportMesh) == True and color_count > 0:
             ca = self.make_va('col', 3, self.write_va3d(unifiedVA, "color"))
+            for i in range(0, len(ca.values)):
+                ca.values[i] = pow(ca.values[i], 2.2)
             o['vertex_arrays'].append(ca)
 
         # Write the texcoord arrays

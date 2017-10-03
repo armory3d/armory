@@ -20,12 +20,12 @@ import arm.material.cycles_state as c_state
 basecol_texname = ''
 emission_found = False
 
-def parse(nodes, con, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True):
+def parse(nodes, con, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
     if output_node != None:
-        parse_output(output_node, con, vert, frag, geom, tesc, tese, parse_surface, parse_opacity, parse_displacement)
+        parse_output(output_node, con, vert, frag, geom, tesc, tese, parse_surface, parse_opacity, parse_displacement, basecol_only)
 
-def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse_opacity, _parse_displacement):
+def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse_opacity, _parse_displacement, _basecol_only):
     global parsed # Compute nodes only once
     global parents
     global normal_written # Normal socket is linked on shader node - overwrite fs normal
@@ -38,6 +38,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     global tese
     global parse_surface
     global parse_opacity
+    global basecol_only
     global parsing_basecol
     global parse_teximage_vector
     global basecol_texname
@@ -50,6 +51,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     tese = _tese
     parse_surface = _parse_surface
     parse_opacity = _parse_opacity
+    basecol_only = _basecol_only
     parsing_basecol = False
     parse_teximage_vector = True
     basecol_texname = ''
@@ -872,6 +874,8 @@ def parse_vector(node, socket):
             return 'normalize({0})'.format(vec1)
 
 def parse_normal_map_color_input(inp):
+    if basecol_only:
+        return
     global parse_teximage_vector
     if inp.is_linked == False:
         return

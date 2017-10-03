@@ -72,17 +72,21 @@ def make_gi(context_id):
     parse_opacity = rpdat.arm_voxelgi_refraction
     if parse_opacity:
         frag.write('float opacity;')
-    frag.write_pre = True
-    frag.write('mat3 TBN;') # TODO: discard, parse basecolor only
-    frag.write_pre = False
     frag.write('float dotNV = 0.0;')
     frag.write('float dotNL = max(dot(wnormal, l), 0.0);')
-    cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False)
+    cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False, basecol_only=True)
 
     if not frag.contains('vec3 n ='):
         frag.write_pre = True
         frag.write('vec3 n;')
         frag.write_pre = False
+
+    export_mpos = frag.contains('mposition') and not frag.contains('vec3 mposition')
+    if export_mpos:
+        vert.add_out('vec3 mpositionGeom')
+        vert.write_pre = True
+        vert.write('mpositionGeom = pos;')
+        vert.write_pre = False
 
     if rpdat.arm_voxelgi_camera:
         vert.add_uniform('vec3 eye', '_cameraPosition')
@@ -93,6 +97,10 @@ def make_gi(context_id):
     vert.add_out('vec3 wnormalGeom')
 
     vert.add_include('../../Shaders/compiled.glsl')
+
+    if con_voxel.is_elem('col'):
+        vert.add_out('vec3 vcolorGeom')
+        vert.write('vcolorGeom = col;')
 
     if con_voxel.is_elem('tex'):
         vert.add_out('vec2 texCoordGeom')
@@ -116,8 +124,12 @@ def make_gi(context_id):
     geom.add_out('vec3 wnormal')
     if is_shadows:
         geom.add_out('vec4 lampPos')
+    if con_voxel.is_elem('col'):
+        geom.add_out('vec3 vcolor')
     if con_voxel.is_elem('tex'):
         geom.add_out('vec2 texCoord')
+    if export_mpos:
+        geom.add_out('vec3 mposition')
 
     geom.write('const vec3 p1 = wpositionGeom[1] - wpositionGeom[0];')
     geom.write('const vec3 p2 = wpositionGeom[2] - wpositionGeom[0];')
@@ -127,8 +139,12 @@ def make_gi(context_id):
     geom.write('    wnormal = wnormalGeom[i];')
     if is_shadows:
         geom.write('    lampPos = lampPosGeom[i];')
+    if con_voxel.is_elem('col'):
+        geom.write('    vcolor = vcolorGeom[i];')
     if con_voxel.is_elem('tex'):
         geom.write('    texCoord = texCoordGeom[i];')
+    if export_mpos:
+        geom.write('    mposition = mpositionGeom[i];')
     geom.write('    if (p.z > p.x && p.z > p.y) {')
     geom.write('        gl_Position = vec4(wposition.x, wposition.y, 0.0, 1.0);')
     geom.write('    }')
