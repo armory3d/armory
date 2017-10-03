@@ -94,6 +94,10 @@ def make_gi(context_id):
 
     vert.add_include('../../Shaders/compiled.glsl')
 
+    if con_voxel.is_elem('col'):
+        vert.add_out('vec3 vcolorGeom')
+        vert.write('vcolorGeom = col;')
+
     if con_voxel.is_elem('tex'):
         vert.add_out('vec2 texCoordGeom')
         vert.write('texCoordGeom = tex;')
@@ -116,6 +120,8 @@ def make_gi(context_id):
     geom.add_out('vec3 wnormal')
     if is_shadows:
         geom.add_out('vec4 lampPos')
+    if con_voxel.is_elem('col'):
+        geom.add_out('vec3 vcolor')
     if con_voxel.is_elem('tex'):
         geom.add_out('vec2 texCoord')
 
@@ -127,6 +133,8 @@ def make_gi(context_id):
     geom.write('    wnormal = wnormalGeom[i];')
     if is_shadows:
         geom.write('    lampPos = lampPosGeom[i];')
+    if con_voxel.is_elem('col'):
+        geom.write('    vcolor = vcolorGeom[i];')
     if con_voxel.is_elem('tex'):
         geom.write('    texCoord = texCoordGeom[i];')
     geom.write('    if (p.z > p.x && p.z > p.y) {')

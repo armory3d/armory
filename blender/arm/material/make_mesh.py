@@ -201,7 +201,7 @@ def make_base(con_mesh, parse_opacity):
 
     if con_mesh.is_elem('col'):
         vert.add_out('vec3 vcolor')
-        vert.write('vcolor = pow(col, vec3(2.2));')
+        vert.write('vcolor = col;')
         if tese != None:
             tese.write_pre = True
             make_tess.interpolate(tese, 'vcolor', 3, declare_out=frag.contains('vcolor'))
