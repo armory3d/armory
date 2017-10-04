@@ -96,7 +96,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
         if scene.arm_export:
             ext = '.zip' if (scene.arm_compress and is_publish) else '.arm'
             asset_path = arm.utils.build_dir() + '/compiled/Assets/' + arm.utils.safestr(scene.name) + ext
-            exporter.execute(bpy.context, asset_path, scene=scene, write_capture_info=state.is_render_anim)
+            exporter.execute(bpy.context, asset_path, scene=scene, write_capture_info=state.is_render_anim, play_area=state.play_area)
             if ArmoryExporter.export_physics:
                 physics_found = True
             if ArmoryExporter.export_navigation:

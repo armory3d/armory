@@ -87,7 +87,7 @@ def init_properties():
     bpy.types.World.arm_play_camera = EnumProperty(
         items=[('Scene', 'Scene', 'Scene'),
                ('Viewport', 'Viewport', 'Viewport'),
-               # ('Viewport Shared', 'Viewport Shared', 'Viewport Shared')
+               ('Viewport Shared', 'Viewport Shared', 'Viewport Shared')
                ],
         name="Camera", description="Viewport camera", default='Scene')
     bpy.types.World.arm_play_console = BoolProperty(name="Debug Console", description="Show inspector in player", default=False)

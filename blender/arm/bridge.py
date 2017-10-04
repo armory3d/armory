@@ -1,6 +1,8 @@
 # Translating operators from/to Armory player
+from mathutils import Matrix
 import bpy
 import arm.utils
+import arm.make_state as state
 try:
     import barmory
 except ImportError:
@@ -14,6 +16,13 @@ def parse_operator(text):
     if cmd[0] == '__arm':
         if cmd[1] == 'quit':
             bpy.ops.arm.space_stop('EXEC_DEFAULT')
+            # Copy view matrix
+            if len(cmd) > 2 and bpy.data.worlds['Arm'].arm_play_camera == 'Viewport Shared':
+                arstr = cmd[2][1:-1] # Remove []
+                ar = arstr.split(',')
+                mat = [float(i) for i in ar]
+                set_view_mat(mat)
+
         elif cmd[1] == 'setx':
             bpy.context.scene.objects[cmd[2]].location.x = float(cmd[3])
         elif cmd[1] == 'select':
@@ -42,3 +51,28 @@ def send_operator(op):
             barmory.call_js(js_source)
             return True
     return False
+
+def set_view_mat(mat):
+    if state.play_area == None:
+        return
+    for space in state.play_area.spaces:
+        if space.type == 'VIEW_3D':
+            m = Matrix()
+            m[0][0] = mat[0]
+            m[0][1] = mat[1]
+            m[0][2] = mat[2]
+            m[0][3] = mat[3]
+            m[1][0] = mat[4]
+            m[1][1] = mat[5]
+            m[1][2] = mat[6]
+            m[1][3] = mat[7]
+            m[2][0] = mat[8]
+            m[2][1] = mat[9]
+            m[2][2] = mat[10]
+            m[2][3] = mat[11]
+            m[3][0] = mat[12]
+            m[3][1] = mat[13]
+            m[3][2] = mat[14]
+            m[3][3] = mat[15]
+            space.region_3d.view_matrix = m
+            break

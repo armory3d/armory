@@ -1180,22 +1180,18 @@ class ArmoryExporter:
         o['particle_refs'].append(pref)
 
     def get_viewport_view_matrix(self):
-        screen = bpy.context.window.screen
-        for area in screen.areas:
-            if area.type == 'VIEW_3D':
-                for space in area.spaces:
-                    if space.type == 'VIEW_3D':
-                        return space.region_3d.view_matrix
+        if self.play_area != None:
+            for space in self.play_area.spaces:
+                if space.type == 'VIEW_3D':
+                    return space.region_3d.view_matrix
         return None
 
     def get_viewport_projection_matrix(self):
-        screen = bpy.context.window.screen
-        for area in screen.areas:
-            if area.type == 'VIEW_3D':
-                for space in area.spaces:
-                    if space.type == 'VIEW_3D':
-                        # return space.region_3d.perspective_matrix # pesp = window * view
-                        return space.region_3d.window_matrix, space.region_3d.is_perspective
+        if self.play_area != None:
+            for space in self.play_area.spaces:
+                if space.type == 'VIEW_3D':
+                    # return space.region_3d.perspective_matrix # pesp = window * view
+                    return space.region_3d.window_matrix, space.region_3d.is_perspective
         return None, False
 
     def get_viewport_panels_w(self):
@@ -2508,11 +2504,12 @@ class ArmoryExporter:
             self.output['mesh_datas'] = [];
             self.do_export_mesh(objectRef, scene)
 
-    def execute(self, context, filepath, scene=None, write_capture_info=False):
+    def execute(self, context, filepath, scene=None, write_capture_info=False, play_area=None):
         profile_time = time.time()
         
         self.output = {}
         self.filepath = filepath
+        self.play_area = play_area
 
         self.scene = context.scene if scene == None else scene
         originalFrame = self.scene.frame_current
