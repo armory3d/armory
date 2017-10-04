@@ -1179,19 +1179,34 @@ class ArmoryExporter:
         pref['particle'] = psys.settings.name
         o['particle_refs'].append(pref)
 
+    def get_view3d_area(self):
+        screen = bpy.context.window.screen
+        for area in screen.areas:
+            if area.type == 'VIEW_3D':
+                return area
+        return None
+
     def get_viewport_view_matrix(self):
-        if self.play_area != None:
-            for space in self.play_area.spaces:
-                if space.type == 'VIEW_3D':
-                    return space.region_3d.view_matrix
+        area = self.play_area
+        if area == None:
+            area = self.get_view3d_area()
+        if area == None:
+            return None
+        for space in area.spaces:
+            if space.type == 'VIEW_3D':
+                return space.region_3d.view_matrix
         return None
 
     def get_viewport_projection_matrix(self):
-        if self.play_area != None:
-            for space in self.play_area.spaces:
-                if space.type == 'VIEW_3D':
-                    # return space.region_3d.perspective_matrix # pesp = window * view
-                    return space.region_3d.window_matrix, space.region_3d.is_perspective
+        area = self.play_area
+        if area == None:
+            area = self.get_view3d_area()
+        if area == None:
+            return None, False
+        for space in self.play_area.spaces:
+            if space.type == 'VIEW_3D':
+                # return space.region_3d.perspective_matrix # pesp = window * view
+                return space.region_3d.window_matrix, space.region_3d.is_perspective
         return None, False
 
     def get_viewport_panels_w(self):
