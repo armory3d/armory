@@ -270,6 +270,8 @@ class MaterialPropsPanel(bpy.types.Panel):
         layout.prop(mat, 'arm_skip_context')
         layout.prop(mat, 'arm_billboard')
         layout.prop(mat, 'arm_particle')
+        if mat.arm_particle == 'gpu':
+            layout.prop(mat, 'arm_particle_fade')
         row = layout.row()
         row.prop(mat, 'arm_tilesheet_mat')
         row.prop(mat, 'arm_blending')

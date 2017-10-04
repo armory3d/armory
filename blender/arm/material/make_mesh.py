@@ -111,8 +111,9 @@ def make_base(con_mesh, parse_opacity):
     vert.add_uniform('mat3 N', '_normalMatrix')
     vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
 
-    if mat_utils.disp_linked(mat_state.output_node):
-        is_displacement = True
+    vattr_written = False
+    is_displacement = mat_utils.disp_linked(mat_state.output_node)
+    if is_displacement:
         tesc = con_mesh.make_tesc()
         tese = con_mesh.make_tese()
         tesc.ins = vert.outs
@@ -127,36 +128,9 @@ def make_base(con_mesh, parse_opacity):
         make_tess.interpolate(tese, 'wnormal', 3, declare_out=True, normalize=True)
     # No displacement
     else:
-        is_displacement = False
         frag.ins = vert.outs
-        written = False
         if write_vertex_attribs != None:
-            written = write_vertex_attribs(vert)
-        if written == False:
-            billboard = mat_state.material.arm_billboard
-            particle = mat_state.material.arm_particle
-            wrd = bpy.data.worlds['Arm']
-            # Particles
-            if particle != 'off':
-                if particle == 'gpu':
-                    make_particle.write(vert)
-                # Billboards
-                if billboard == 'spherical':
-                    vert.add_uniform('mat4 WV', '_worldViewMatrix')
-                    vert.add_uniform('mat4 P', '_projectionMatrix')
-                    vert.write('gl_Position = P * (WV * vec4(0.0, 0.0, spos.z, 1.0) + vec4(spos.x, spos.y, 0.0, 0.0));')
-                else:
-                    vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
-                    vert.write('gl_Position = WVP * spos;')
-            else:
-                # Billboards
-                if billboard == 'spherical':
-                    vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrixSphere')
-                elif billboard == 'cylindrical':
-                    vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrixCylinder')
-                else: # off
-                    vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
-                vert.write('gl_Position = WVP * spos;')
+            vattr_written = write_vertex_attribs(vert)
 
     frag.add_include('../../Shaders/compiled.glsl')
 
@@ -173,6 +147,32 @@ def make_base(con_mesh, parse_opacity):
         cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity)
     if write_material_attribs_post != None:
         write_material_attribs_post(con_mesh, frag)
+
+    if not is_displacement and not vattr_written:
+        billboard = mat_state.material.arm_billboard
+        particle = mat_state.material.arm_particle
+        wrd = bpy.data.worlds['Arm']
+        # Particles
+        if particle != 'off':
+            if particle == 'gpu':
+                make_particle.write(vert, particle_info=cycles.particle_info)
+            # Billboards
+            if billboard == 'spherical':
+                vert.add_uniform('mat4 WV', '_worldViewMatrix')
+                vert.add_uniform('mat4 P', '_projectionMatrix')
+                vert.write('gl_Position = P * (WV * vec4(0.0, 0.0, spos.z, 1.0) + vec4(spos.x, spos.y, 0.0, 0.0));')
+            else:
+                vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
+                vert.write('gl_Position = WVP * spos;')
+        else:
+            # Billboards
+            if billboard == 'spherical':
+                vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrixSphere')
+            elif billboard == 'cylindrical':
+                vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrixCylinder')
+            else: # off
+                vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
+            vert.write('gl_Position = WVP * spos;')
 
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
@@ -501,8 +501,8 @@ def make_forward(con_mesh):
         # frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
 
     # Particle opacity
-    # if mat_state.material.arm_particle == 'gpu':
-        # frag.write('fragColor.rgb *= popac;')
+    if mat_state.material.arm_particle == 'gpu' and mat_state.material.arm_particle_fade:
+        frag.write('fragColor.rgb *= p_fade;')
 
 def make_forward_base(con_mesh, parse_opacity=False):
     wrd = bpy.data.worlds['Arm']

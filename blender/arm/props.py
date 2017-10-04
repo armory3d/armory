@@ -295,6 +295,7 @@ def init_properties():
                ('gpu', 'GPU', 'GPU'),
                ('cpu', 'CPU', 'CPU')],
         name="Particle", default='off', description="Use this material for particle system rendering", update=assets.invalidate_shader_cache)
+    bpy.types.Material.arm_particle_fade = bpy.props.BoolProperty(name="Particle Fade", description="Fade particles in and out", default=False)
     bpy.types.Material.arm_tilesheet_mat = bpy.props.BoolProperty(name="Tilesheet", description="Generate tilesheet shaders", default=False)
     bpy.types.Material.arm_blending = bpy.props.BoolProperty(name="Blending", description="Enable additive blending", default=False)
     # For scene

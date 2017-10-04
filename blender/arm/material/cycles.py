@@ -19,6 +19,7 @@ import arm.material.cycles_state as c_state
 
 basecol_texname = ''
 emission_found = False
+particle_info = None # Particle info export
 
 def parse(nodes, con, vert, frag, geom, tesc, tese, parse_surface=True, parse_opacity=True, parse_displacement=True, basecol_only=False):
     output_node = node_by_type(nodes, 'OUTPUT_MATERIAL')
@@ -43,6 +44,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     global parse_teximage_vector
     global basecol_texname
     global emission_found
+    global particle_info
     con = _con
     vert = _vert
     frag = _frag
@@ -56,6 +58,14 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     parse_teximage_vector = True
     basecol_texname = ''
     emission_found = False
+    particle_info = {}
+    particle_info['index'] = False
+    particle_info['age'] = False
+    particle_info['lifetime'] = False
+    particle_info['location'] = False
+    particle_info['size'] = False
+    particle_info['velocity'] = False
+    particle_info['angular_velocity'] = False
 
     # Surface
     if parse_surface or parse_opacity:
@@ -716,6 +726,7 @@ def texture_store(node, tex, tex_name, to_linear=False):
     return tex_store
 
 def parse_vector(node, socket):
+    global particle_info
 
     if node.type == 'GROUP':
         return parse_group(node, socket)
@@ -764,10 +775,13 @@ def parse_vector(node, socket):
 
     elif node.type == 'PARTICLE_INFO':
         if socket == node.outputs[3]: # Location
-            return 'vec3(0.0)'
+            particle_info['location'] = True
+            return 'p_location' if c_state.mat_get_material().arm_particle == 'gpu' else 'vec3(0.0)'
         elif socket == node.outputs[5]: # Velocity
-            return 'vec3(0.0)'
+            particle_info['velocity'] = True
+            return 'p_velocity' if c_state.mat_get_material().arm_particle == 'gpu' else 'vec3(0.0)'
         elif socket == node.outputs[6]: # Angular Velocity
+            particle_info['angular_velocity'] = True
             return 'vec3(0.0)'
 
     elif node.type == 'TANGENT':
@@ -919,6 +933,7 @@ def parse_value_input(inp):
             return tovec1(inp.default_value)
 
 def parse_value(node, socket):
+    global particle_info
 
     if node.type == 'GROUP':
         if node.node_tree.name.startswith('Armory PBR'):
@@ -1011,13 +1026,17 @@ def parse_value(node, socket):
 
     elif node.type == 'PARTICLE_INFO':
         if socket == node.outputs[0]: # Index
-            return '0.0'
+            particle_info['index'] = True
+            return 'p_index' if c_state.mat_get_material().arm_particle == 'gpu' else '0.0'
         elif socket == node.outputs[1]: # Age
-            return '0.0'
+            particle_info['age'] = True
+            return 'p_age' if c_state.mat_get_material().arm_particle == 'gpu' else '0.0'
         elif socket == node.outputs[2]: # Lifetime
-            return '0.0'
+            particle_info['lifetime'] = True
+            return 'p_lifetime' if c_state.mat_get_material().arm_particle == 'gpu' else '0.0'
         elif socket == node.outputs[4]: # Size
-            return '0.0'
+            particle_info['size'] = True
+            return '1.0'
 
     elif node.type == 'VALUE':
         return tovec1(node.outputs[0].default_value)
