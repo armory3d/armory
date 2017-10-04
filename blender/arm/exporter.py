@@ -2525,7 +2525,7 @@ class ArmoryExporter:
 
         if write_capture_info:
             self.output['capture_info'] = {}
-            self.output['capture_info']['path'] = self.scene.render.filepath
+            self.output['capture_info']['path'] = bpy.path.abspath(self.scene.render.filepath)
             self.output['capture_info']['frame_start'] = self.scene.frame_start
             self.output['capture_info']['frame_end'] = self.scene.frame_end
 
