@@ -2404,7 +2404,7 @@ class ArmoryExporter:
             if psettings.arm_gpu_sim:
                 o['gpu_sim'] = True
 
-            o['type'] = 0 if psettings.type == 'Emitter' else 1 # Hair
+            o['type'] = 0 if psettings.type == 'EMITTER' else 1 # HAIR
             # Emission
             o['count'] = psettings.count * psettings.arm_count_mult
             o['frame_start'] = psettings.frame_start
@@ -2570,11 +2570,13 @@ class ArmoryExporter:
         # Fix material variants
         # Skinned and non-skined objects can not share material
         matvars = []
-        matvars_boskin = []
+        matslots = []
         for bo in scene_objects:
             if arm.utils.export_bone_data(bo):
-                matvars_boskin.append(bo)
                 for slot in bo.material_slots:
+                    if slot.material == None:
+                        continue
+                    matslots.append(slot)
                     mat_name = slot.material.name + '_armskin'
                     mat = bpy.data.materials.get(mat_name)
                     if mat == None:
@@ -2752,10 +2754,9 @@ class ArmoryExporter:
         arm.utils.write_arm(self.filepath, self.output)
 
         # Remove created material variants
-        for bo in matvars_boskin:
-            for slot in bo.material_slots: # Set back to original material
-                orig_mat = slot.material.name[:-len('_armskin')]
-                slot.material = bpy.data.materials[orig_mat]
+        for slot in matslots: # Set back to original material
+            orig_mat = slot.material.name[:-len('_armskin')]
+            slot.material = bpy.data.materials[orig_mat]
         for mat in matvars:
             bpy.data.materials.remove(mat, do_unlink=True)
 
