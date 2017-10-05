@@ -1171,6 +1171,9 @@ class ArmoryExporter:
     def export_particle_system_ref(self, psys, index, o):
         if psys.settings in self.particleSystemArray: # or not modifier.show_render:
             return
+
+        if psys.settings.dupli_object == None or psys.settings.render_type != 'OBJECT':
+             return
         
         self.particleSystemArray[psys.settings] = {"structName" : psys.settings.name}
         pref = {}
@@ -2412,6 +2415,9 @@ class ArmoryExporter:
             psettings = particleRef[0]
 
             if psettings == None:
+                continue
+
+            if psettings.dupli_object == None or psettings.render_type != 'OBJECT':
                 continue
 
             o['name'] = particleRef[1]["structName"]
