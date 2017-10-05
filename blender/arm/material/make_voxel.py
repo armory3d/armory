@@ -29,11 +29,31 @@ def make_gi(context_id):
     geom.ins = vert.outs
     frag.ins = geom.outs
 
-
-    frag.write('vec3 lp = lightPos - wposition * voxelgiDimensions;')
-    frag.write('vec3 l = normalize(lp);')
-    frag.write('float visibility = 1.0;')
     frag.add_include('../../Shaders/compiled.glsl')
+    frag.add_include('../../Shaders/std/math.glsl')
+    frag.add_include('../../Shaders/std/imageatomic.glsl')
+    frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
+
+    rpdat = arm.utils.get_rp()
+    # if rpdat.rp_voxelgi_hdr:
+        # frag.add_uniform('layout(RGBA16) image3D voxels')
+    # else:
+    # frag.add_uniform('layout(RGBA8) image3D voxels')
+    frag.add_uniform('layout(r32ui) uimage3D voxels')
+
+    frag.add_uniform('vec3 lightPos', '_lampPosition')
+    frag.add_uniform('vec3 lightColor', '_lampColorVoxel')
+    frag.add_uniform('int lightType', '_lampType')
+    frag.add_uniform('vec3 lightDir', '_lampDirection')
+
+    frag.write('if (!isInsideCube(wposition)) return;')
+
+    frag.write('float visibility = 1.0;')
+    frag.write('vec3 lp = lightPos - wposition * voxelgiDimensions;')
+    frag.write('vec3 l;')
+    frag.write('if (lightType == 0) l = lightDir;')
+    frag.write('else { l = normalize(lp); visibility *= attenuate(distance(wposition * voxelgiDimensions, lightPos)); }')
+
     if is_shadows:
         frag.add_include('../../Shaders/std/shadows.glsl')
         frag.add_uniform('sampler2D shadowMap', included=True)
@@ -49,21 +69,34 @@ def make_gi(context_id):
     else:
         frag.write('int lightShadow = 0;')
 
-    frag.add_include('../../Shaders/std/math.glsl')
-    frag.add_include('../../Shaders/std/imageatomic.glsl')
-    frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
+    # frag.write('if (lightType == 2) {')
+    # frag.write('    float spotEffect = dot(lightDir, l);')
+    # frag.write('    if (spotEffect < spotlightData.x) {')
+    # frag.write('        visibility *= smoothstep(spotlightData.y, spotlightData.x, spotEffect);')
+    # frag.write('    }')
+    # frag.write('}')
 
-    rpdat = arm.utils.get_rp()
-    # if rpdat.rp_voxelgi_hdr:
-        # frag.add_uniform('layout(RGBA16) image3D voxels')
-    # else:
-    # frag.add_uniform('layout(RGBA8) image3D voxels')
-    frag.add_uniform('layout(r32ui) uimage3D voxels')
-
-    frag.add_uniform('vec3 lightPos', '_lampPosition')
-    frag.add_uniform('vec3 lightColor', '_lampColorVoxel')
-
-    frag.write('if (!isInsideCube(wposition)) return;')
+    # if '_PolyLight' in wrd.world_defs:
+    #     frag.add_include('../../Shaders/std/ltc.glsl')
+    #     frag.add_uniform('sampler2D sltcMat', link='_ltcMat')
+    #     frag.add_uniform('sampler2D sltcMag', link='_ltcMag')
+    #     frag.add_uniform('vec3 lampArea0', link='_lampArea0')
+    #     frag.add_uniform('vec3 lampArea1', link='_lampArea1')
+    #     frag.add_uniform('vec3 lampArea2', link='_lampArea2')
+    #     frag.add_uniform('vec3 lampArea3', link='_lampArea3')
+    #     frag.write('if (lightType == 3) {')
+    #     frag.write('    float theta = acos(dotNV);')
+    #     frag.write('    vec2 tuv = vec2(roughness, theta / (0.5 * PI));')
+    #     frag.write('    tuv = tuv * LUT_SCALE + LUT_BIAS;')
+    #     frag.write('    vec4 t = texture(sltcMat, tuv);')
+    #     frag.write('    mat3 invM = mat3(vec3(1.0, 0.0, t.y), vec3(0.0, t.z, 0.0), vec3(t.w, 0.0, t.x));')
+    #     frag.write('    float ltcspec = ltcEvaluate(n, vVec, dotNV, wposition, invM, lampArea0, lampArea1, lampArea2, lampArea3);')
+    #     frag.write('    ltcspec *= texture(sltcMag, tuv).a;')
+    #     frag.write('    float ltcdiff = ltcEvaluate(n, vVec, dotNV, wposition, mat3(1.0), lampArea0, lampArea1, lampArea2, lampArea3);')
+    #     frag.write('    direct = albedo * ltcdiff + ltcspec;')
+    #     frag.write('}')
+    #     frag.write('else {')
+    #     frag.tab += 1
 
     frag.write('vec3 basecol;')
     frag.write('float roughness;') #
@@ -161,7 +194,7 @@ def make_gi(context_id):
     if cycles.emission_found:
         frag.write('vec3 color = basecol;')
     else:
-        frag.write('vec3 color = basecol * visibility * lightColor * dotNL * attenuate(distance(wposition * voxelgiDimensions, lightPos));')
+        frag.write('vec3 color = basecol * visibility * lightColor * dotNL;')
     frag.write('vec3 voxel = wposition * 0.5 + vec3(0.5);')
 
     # if rpdat.arm_material_model == 'Cycles':
