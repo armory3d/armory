@@ -65,7 +65,7 @@ def make_gi(context_id):
         frag.write('    vec3 lpos = lampPos.xyz / lampPos.w;')
         frag.write('    if (texture(shadowMap, lpos.xy).r < lpos.z - shadowsBias) visibility = 0.0;')
         frag.write('}')
-        frag.write('else if (lightShadow == 2) visibility = float(texture(shadowMapCube, -l).r + shadowsBias > lpToDepth(lp, lightPlane));')
+        frag.write('else if (lightShadow == 2) visibility *= float(texture(shadowMapCube, -l).r + shadowsBias > lpToDepth(lp, lightPlane));')
     else:
         frag.write('int lightShadow = 0;')
 
