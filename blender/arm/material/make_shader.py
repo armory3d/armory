@@ -30,7 +30,7 @@ def build(material, mat_users, mat_armusers):
 
     wrd = bpy.data.worlds['Arm']
     rpasses = mat_utils.get_rpasses(material)
-    matname = arm.utils.safesrc(material.name)
+    matname = arm.utils.safesrc(arm.utils.asset_name(material))
     rel_path = arm.utils.build_dir() + '/compiled/ShaderRaws/' + matname
     full_path = arm.utils.get_fp() + '/' + rel_path
     if not os.path.exists(full_path):
@@ -88,7 +88,7 @@ def build(material, mat_users, mat_armusers):
         elif rpass_hook != None:
             con = rpass_hook(rp)
 
-        write_shaders(rel_path, con, rp)
+        write_shaders(rel_path, con, rp, matname)
 
     arm.utils.write_arm(full_path + '/' + matname + '_data.arm', mat_state.data.get())
     shader_data_name = matname + '_data'
@@ -97,15 +97,15 @@ def build(material, mat_users, mat_armusers):
 
     return rpasses, mat_state.data, shader_data_name, bind_constants, bind_textures
 
-def write_shaders(rel_path, con, rpass):
+def write_shaders(rel_path, con, rpass, matname):
     keep_cache = mat_state.material.is_cached
-    write_shader(rel_path, con.vert, 'vert', rpass, keep_cache)
-    write_shader(rel_path, con.frag, 'frag', rpass, keep_cache)
-    write_shader(rel_path, con.geom, 'geom', rpass, keep_cache)
-    write_shader(rel_path, con.tesc, 'tesc', rpass, keep_cache)
-    write_shader(rel_path, con.tese, 'tese', rpass, keep_cache)
+    write_shader(rel_path, con.vert, 'vert', rpass, matname, keep_cache=keep_cache)
+    write_shader(rel_path, con.frag, 'frag', rpass, matname, keep_cache=keep_cache)
+    write_shader(rel_path, con.geom, 'geom', rpass, matname, keep_cache=keep_cache)
+    write_shader(rel_path, con.tesc, 'tesc', rpass, matname, keep_cache=keep_cache)
+    write_shader(rel_path, con.tese, 'tese', rpass, matname, keep_cache=keep_cache)
 
-def write_shader(rel_path, shader, ext, rpass, keep_cache=True):
+def write_shader(rel_path, shader, ext, rpass, matname, keep_cache=True):
     if shader == None:
         return
 
@@ -113,7 +113,7 @@ def write_shader(rel_path, shader, ext, rpass, keep_cache=True):
     if mat_state.material.arm_blending and rpass == 'mesh':
         rpass = 'blend'
 
-    shader_rel_path = rel_path + '/' + arm.utils.safesrc(mat_state.material.name) + '_' + rpass + '.' + ext + '.glsl'
+    shader_rel_path = rel_path + '/' + matname + '_' + rpass + '.' + ext + '.glsl'
     shader_path = arm.utils.get_fp() + '/' + shader_rel_path
     assets.add_shader(shader_rel_path)
     if not os.path.isfile(shader_path) or not keep_cache:

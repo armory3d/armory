@@ -1092,7 +1092,7 @@ class ArmoryExporter:
             if ArmoryExporter.option_mesh_only and btype != NodeTypeMesh:
                 return
 
-            self.bobjectArray[bobject] = {"objectType" : btype, "structName" : self.asset_name(bobject)}
+            self.bobjectArray[bobject] = {"objectType" : btype, "structName" : arm.utils.asset_name(bobject)}
 
             if bobject.parent_type == "BONE":
                 boneSubbobjectArray = self.boneParentArray.get(bobject.parent_bone)
@@ -1145,13 +1145,6 @@ class ArmoryExporter:
         if animation and poseBone:
             self.export_bone_sampled_animation(poseBone, scene, o, action)
 
-    def asset_name(self, bdata):
-        s = bdata.name
-        # Append library name if linked
-        if bdata.library != None:
-            s += '_' + bdata.library.name
-        return s
-
     def use_default_material(self, bobject, o):
         if arm.utils.export_bone_data(bobject):
             o['material_refs'].append('armdefaultskin')
@@ -1165,7 +1158,7 @@ class ArmoryExporter:
             self.use_default_material(bobject, o)
             return
         if not material in self.materialArray:
-            self.materialArray[material] = {"structName" : self.asset_name(material)}
+            self.materialArray[material] = {"structName" : arm.utils.asset_name(material)}
         o['material_refs'].append(self.materialArray[material]["structName"])
 
     def export_particle_system_ref(self, psys, index, o):
@@ -1289,7 +1282,7 @@ class ArmoryExporter:
             # Export the object reference and material references
             objref = bobject.data
             if objref != None:
-                objname = self.asset_name(objref)
+                objname = arm.utils.asset_name(objref)
 
             # Lods
             if bobject.type == 'MESH' and hasattr(objref, 'arm_lodlist') and len(objref.arm_lodlist) > 0:
@@ -1422,7 +1415,7 @@ class ArmoryExporter:
                                 continue
                             export_actions.append(strip.action)
 
-                armatureid = arm.utils.safestr(self.asset_name(bdata))
+                armatureid = arm.utils.safestr(arm.utils.asset_name(bdata))
                 ext = '.zip' if self.is_compress(bdata) else ''
                 o['action_refs'] = []
                 for a in export_actions:
@@ -1818,7 +1811,7 @@ class ArmoryExporter:
             if self.object_is_cached(bobject) == True and os.path.exists(fp):
                 return
 
-        print('Exporting mesh ' + self.asset_name(bobject.data))
+        print('Exporting mesh ' + arm.utils.asset_name(bobject.data))
 
         o = {}
         o['name'] = oid

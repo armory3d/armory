@@ -258,6 +258,13 @@ def safestr(s):
         s = s.replace(c, '_')
     return ''.join([i if ord(i) < 128 else '_' for i in s])
 
+def asset_name(bdata):
+    s = bdata.name
+    # Append library name if linked
+    if bdata.library != None:
+        s += '_' + bdata.library.name
+    return s
+
 def asset_path(s):
     return s[2:] if s[:2] == '//' else s # Remove leading '//'
 

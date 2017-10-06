@@ -10,7 +10,7 @@ class ShaderData:
         self.sd = {}
         self.data = {}
         self.data['shader_datas'] = [self.sd]
-        self.matname = arm.utils.safesrc(material.name)
+        self.matname = arm.utils.safesrc(arm.utils.asset_name(material))
         self.sd['name'] = self.matname + '_data'
         self.sd['contexts'] = []
 
@@ -34,7 +34,7 @@ class ShaderContext:
         self.tesc = None
         self.tese = None
         self.material = material
-        self.matname = arm.utils.safesrc(material.name)
+        self.matname = arm.utils.safesrc(arm.utils.asset_name(material))
         self.shader_data = shader_data
         self.data = {}
         self.data['name'] = props['name']
