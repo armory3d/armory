@@ -30,6 +30,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     global parsed # Compute nodes only once
     global parents
     global normal_written # Normal socket is linked on shader node - overwrite fs normal
+    global normal_parsed
     global curshader # Active shader - frag for surface / tese for displacement
     global con
     global vert
@@ -72,6 +73,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
         parsed = []
         parents = []
         normal_written = False
+        normal_parsed = False
         curshader = frag
         
         out_basecol, out_roughness, out_metallic, out_occlusion, out_opacity = parse_shader_input(node.inputs[0])
@@ -90,6 +92,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     if _parse_displacement and c_state.tess_enabled() and node.inputs[2].is_linked and tese != None:
         parsed = []
         parents = []
+        normal_parsed = False
         normal_written = False
         curshader = tese
 
@@ -888,12 +891,16 @@ def parse_vector(node, socket):
             return 'normalize({0})'.format(vec1)
 
 def parse_normal_map_color_input(inp):
+    global normal_parsed
+    global parse_teximage_vector
     if basecol_only:
         return
-    global parse_teximage_vector
     if inp.is_linked == False:
         return
-    frag.write_pre = True
+    if normal_parsed:
+        return
+    normal_parsed = True
+    frag.write_pre_header = True
     parse_teximage_vector = False # Force texCoord for normal map image vector
     defplus = c_state.get_rp_renderer() == 'Deferred Plus'
     if not c_state.get_arm_export_tangents() or defplus or c_state.mat_get_material().arm_decal: # Compute TBN matrix
@@ -911,7 +918,7 @@ def parse_normal_map_color_input(inp):
         con.add_elem('tang', 3)
 
     parse_teximage_vector = True
-    frag.write_pre = False
+    frag.write_pre_header = False
 
 def parse_value_input(inp):
     if inp.is_linked:
