@@ -10,10 +10,7 @@ import arm.nodes as nodes
 import arm.log as log
 
 def build_node_trees(active_worlds):
-    s = bpy.data.filepath.split(os.path.sep)
-    s.pop()
-    fp = os.path.sep.join(s)
-    os.chdir(fp)
+    fp = arm.utils.get_fp()
 
     # Make sure Assets dir exists
     if not os.path.exists(arm.utils.build_dir() + '/compiled/Assets/materials'):

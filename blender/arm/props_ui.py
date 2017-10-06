@@ -458,6 +458,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_project_package')
         layout.prop_search(wrd, 'arm_khafile', bpy.data, 'texts', 'Khafile')
         layout.prop_search(wrd, 'arm_khamake', bpy.data, 'texts', 'Khamake')   
+        layout.prop(wrd, 'arm_project_root')   
 
         layout.label('Armory v' + wrd.arm_version)
 

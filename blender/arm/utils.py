@@ -46,9 +46,13 @@ def build_dir():
     return 'build_' + safestr(blend_name())
 
 def get_fp():
-    s = bpy.data.filepath.split(os.path.sep)
-    s.pop()
-    return os.path.sep.join(s)
+    wrd = bpy.data.worlds['Arm']
+    if wrd.arm_project_root != '':
+        return bpy.path.abspath(wrd.arm_project_root)
+    else:
+        s = bpy.data.filepath.split(os.path.sep)
+        s.pop()
+        return os.path.sep.join(s)
 
 def get_fp_build():
     return get_fp() + '/' + build_dir()

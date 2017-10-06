@@ -45,6 +45,7 @@ def init_properties():
     bpy.types.World.arm_version = StringProperty(name="Version", description="Armory SDK version", default="")
     bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="")
     bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm")
+    bpy.types.World.arm_project_root = StringProperty(name="Root", description="Set root folder for linked assets", default="", subtype="FILE_PATH")
     bpy.types.World.arm_play_active_scene = BoolProperty(name="Play Active Scene", description="Load currently edited scene when launching player", default=True)
     bpy.types.World.arm_project_scene = StringProperty(name="Scene", description="Scene to load when launching player")  
     bpy.types.World.arm_physics = EnumProperty(

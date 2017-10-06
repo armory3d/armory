@@ -12,10 +12,7 @@ import arm.utils
 import arm.nodes as nodes
 
 def build_node_trees(assets_path):
-    s = bpy.data.filepath.split(os.path.sep)
-    s.pop()
-    fp = os.path.sep.join(s)
-    os.chdir(fp)
+    fp = arm.utils.get_fp()
 
     rpdat = arm.utils.get_rp()
 
