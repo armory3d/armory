@@ -11,6 +11,7 @@ class PlayActionNode extends LogicNode {
 	override function run() {
 		var object:Object = inputs[1].get();
 		var action:String = inputs[2].get();
+		var blendTime:Float = inputs[3].get();
 		
 		if (object == null) return;
 
@@ -19,7 +20,7 @@ class PlayActionNode extends LogicNode {
 
 		object.animation.play(action, function() {
 			runOutputs(1);
-		});
+		}, blendTime);
 
 		runOutputs(0);
 	}

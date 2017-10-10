@@ -13,6 +13,7 @@ class PlayActionNode(Node, ArmLogicTreeNode):
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'Object')
         self.inputs.new('ArmNodeSocketAnimAction', 'Action')
+        self.inputs.new('NodeSocketFloat', 'Blend Time')
         self.outputs.new('ArmNodeSocketAction', 'Out')
         self.outputs.new('ArmNodeSocketAction', 'Done')
 
