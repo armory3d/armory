@@ -1200,9 +1200,10 @@ class ArmProxyPanel(bpy.types.Panel):
  
     def draw(self, context):
         layout = self.layout
-        obj = bpy.context.object
-
         layout.operator("arm.make_proxy")
+        obj = bpy.context.object
+        if obj.proxy != None:
+            pass
 
 class ArmMakeProxyButton(bpy.types.Operator):
     '''Create proxy from linked object'''
@@ -1213,6 +1214,8 @@ class ArmMakeProxyButton(bpy.types.Operator):
         obj = context.object
         if obj == None:
             return{'CANCELLED'}
+        if obj.library == None:
+            self.report({'ERROR'}, 'Select linked object.')
         arm.proxy.make(obj)
         return{'FINISHED'}
 
