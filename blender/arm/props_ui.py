@@ -9,6 +9,7 @@ import arm.make_utils as make_utils
 import arm.make_state as state
 import arm.assets as assets
 import arm.log as log
+import arm.proxy
 
 # Menu in object region
 class ObjectPropsPanel(bpy.types.Panel):
@@ -1190,6 +1191,31 @@ class ArmTilesheetPanel(bpy.types.Panel):
                 row.prop(adat, "end_prop")
                 layout.prop(adat, "loop_prop")
 
+class ArmProxyPanel(bpy.types.Panel):
+    bl_label = "Armory Proxy"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "object"
+    bl_options = {'DEFAULT_CLOSED'}
+ 
+    def draw(self, context):
+        layout = self.layout
+        obj = bpy.context.object
+
+        layout.operator("arm.make_proxy")
+
+class ArmMakeProxyButton(bpy.types.Operator):
+    '''Create proxy from linked object'''
+    bl_idname = 'arm.make_proxy'
+    bl_label = 'Make Proxy'
+
+    def execute(self, context):
+        obj = context.object
+        if obj == None:
+            return{'CANCELLED'}
+        arm.proxy.make(obj)
+        return{'FINISHED'}
+
 def register():
     bpy.utils.register_class(ObjectPropsPanel)
     bpy.utils.register_class(ModifiersPropsPanel)
@@ -1230,6 +1256,8 @@ def register():
     bpy.utils.register_class(ArmGenLodButton)
     bpy.utils.register_class(ArmLodPanel)
     bpy.utils.register_class(ArmTilesheetPanel)
+    bpy.utils.register_class(ArmProxyPanel)
+    bpy.utils.register_class(ArmMakeProxyButton)
 
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
     bpy.types.INFO_HT_header.prepend(draw_info_header)
@@ -1277,3 +1305,5 @@ def unregister():
     bpy.utils.unregister_class(ArmGenLodButton)
     bpy.utils.unregister_class(ArmLodPanel)
     bpy.utils.unregister_class(ArmTilesheetPanel)
+    bpy.utils.unregister_class(ArmProxyPanel)
+    bpy.utils.unregister_class(ArmMakeProxyButton)
