@@ -205,7 +205,8 @@ def on_scene_update_post(context):
         space.node_tree.is_cached = False
 
 def recache(edit_obj):
-    edit_obj.data.arm_cached = False
+    if hasattr(edit_obj.data, 'arm_cached'):
+        edit_obj.data.arm_cached = False
 
 def op_changed(op, obj):
     # Recache mesh data
