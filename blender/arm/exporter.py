@@ -550,20 +550,21 @@ class ArmoryExporter:
 
         return unifiedVA
 
+
     def export_bone(self, armature, bone, scene, o, action):
         bobjectRef = self.bobjectArray.get(bone)
-        
+
         if bobjectRef:
             o['type'] = structIdentifier[bobjectRef["objectType"]]
             o['name'] = bobjectRef["structName"]
             self.export_bone_transform(armature, bone, scene, o, action)
-
+        
         o['children'] = []
         for subbobject in bone.children:
             so = {}
             self.export_bone(armature, subbobject, scene, so, action)
             o['children'].append(so)
-
+        
         # Export any ordinary objects that are parented to this bone
         boneSubbobjectArray = self.boneParentArray.get(bone.name)
         if boneSubbobjectArray:
@@ -655,24 +656,18 @@ class ArmoryExporter:
             tracko['values'] = []
 
             parent = poseBone.parent
+            # TODO: this gets slow :/
             if parent:
-                for i in range(begin_frame, end_frame):
+                for i in range(begin_frame, end_frame + 1):
                     scene.frame_set(i)
                     tracko['values'] += self.write_matrix(parent.matrix.inverted() * poseBone.matrix)
-
-                scene.frame_set(end_frame)
-                tracko['values'] += self.write_matrix(parent.matrix.inverted() * poseBone.matrix)
             else:
-                for i in range(begin_frame, end_frame):
+                for i in range(begin_frame, end_frame + 1):
                     scene.frame_set(i)
                     tracko['values'] += self.write_matrix(poseBone.matrix)
-
-                scene.frame_set(end_frame)
-                tracko['values'] += self.write_matrix(poseBone.matrix)
             o['animation']['tracks'] = [tracko]
 
         scene.frame_set(currentFrame, currentSubframe)
-
 
     def export_key_times(self, fcurve):
         keyo = []
@@ -1124,6 +1119,7 @@ class ArmoryExporter:
                             boneRef[1]["objectType"] = NodeTypeBone
 
     def export_bone_transform(self, armature, bone, scene, o, action):
+
         curveArray = self.collect_bone_animation(armature, bone.name)
         animation = ((len(curveArray) != 0) or ArmoryExporter.sample_animation_flag)
 
@@ -1430,6 +1426,7 @@ class ArmoryExporter:
                     fp = self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=self.is_compress(bdata))
                     assets.add(fp)
                     if bdata.arm_cached == False or not os.path.exists(fp):
+                        print('Exporting action ' + aname)
                         bones = []
                         for bone in bdata.bones:
                             if not bone.parent:
@@ -2529,6 +2526,8 @@ class ArmoryExporter:
         self.play_area = play_area
 
         self.scene = context.scene if scene == None else scene
+        print('Exporting ' + arm.utils.asset_name(self.scene))
+
         originalFrame = self.scene.frame_current
         originalSubframe = self.scene.frame_subframe
         self.restoreFrame = False
@@ -2592,6 +2591,8 @@ class ArmoryExporter:
             if arm.utils.export_bone_data(bo):
                 for slot in bo.material_slots:
                     if slot.material == None:
+                        continue
+                    if slot.material.name.endswith('_armskin'):
                         continue
                     matslots.append(slot)
                     mat_name = slot.material.name + '_armskin'
