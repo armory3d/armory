@@ -25,6 +25,7 @@ def make(context_id):
         con['blend_operation'] = 'add'
         con['depth_write'] = False
     con_mesh = mat_state.data.add_context(con)
+    mat_state.con_mesh = con_mesh
 
     rpdat = arm.utils.get_rp()
     rid = rpdat.rp_renderer
@@ -246,7 +247,7 @@ def write_norpos(con_mesh, vert, declare=False, write_nor=True):
         make_skin.skin_pos(vert)
     if write_nor:
         if is_bone:
-            vert.write(prep + 'wnormal = normalize(N * (nor + 2.0 * cross(skinA.xyz, cross(skinA.xyz, nor) + skinA.w * nor)));')
+            make_skin.skin_nor(vert, prep)
         else:
             vert.write(prep + 'wnormal = normalize(N * nor);')
     if con_mesh.is_elem('off'):

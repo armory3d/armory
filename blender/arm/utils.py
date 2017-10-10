@@ -381,7 +381,7 @@ def is_bone_animation_enabled(bobject):
     return False
 
 def export_bone_data(bobject):
-    return bobject.find_armature() and is_bone_animation_enabled(bobject) and bpy.data.worlds['Arm'].arm_gpu_skin == True
+    return bobject.find_armature() and is_bone_animation_enabled(bobject) and bpy.data.worlds['Arm'].arm_skin.startswith('GPU')
 
 def register():
     global krom_found

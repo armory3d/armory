@@ -1404,7 +1404,8 @@ class ArmoryExporter:
 
                 # Export actions
                 export_actions = [action]
-                if adata.nla_tracks != None:
+                # hasattr - armature modifier may reference non-parent armature object to deform with
+                if hasattr(adata, 'nla_tracks') and adata.nla_tracks != None:
                     for track in adata.nla_tracks:
                         if track.strips == None:
                             continue
@@ -1418,15 +1419,17 @@ class ArmoryExporter:
                 armatureid = arm.utils.safestr(arm.utils.asset_name(bdata))
                 ext = '.zip' if self.is_compress(bdata) else ''
                 o['action_refs'] = []
-                for a in export_actions:
-                    o['action_refs'].append('action_' + armatureid + '_' + a.name + ext)
+                for action in export_actions:
+                    aname = arm.utils.safestr(arm.utils.asset_name(action))
+                    o['action_refs'].append('action_' + armatureid + '_' + aname + ext)
 
                 orig_action = bobject.animation_data.action
                 for action in export_actions:
+                    aname = arm.utils.safestr(arm.utils.asset_name(action))
                     bobject.animation_data.action = action
-                    fp = self.get_meshes_file_path('action_' + armatureid + '_' + action.name, compressed=self.is_compress(bdata))
+                    fp = self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=self.is_compress(bdata))
                     assets.add(fp)
-                    if bdata.arm_data_cached == False or not os.path.exists(fp):
+                    if bdata.arm_cached == False or not os.path.exists(fp):
                         bones = []
                         for bone in bdata.bones:
                             if not bone.parent:
@@ -1435,11 +1438,11 @@ class ArmoryExporter:
                                 bones.append(boneo)
                         # Save action separately
                         action_obj = {}
-                        action_obj['name'] = action.name
+                        action_obj['name'] = aname
                         action_obj['objects'] = bones
                         arm.utils.write_arm(fp, action_obj)
                 bobject.animation_data.action = orig_action
-                bdata.arm_data_cached = True
+                bdata.arm_cached = True
 
             if parento == None:
                 self.output['objects'].append(o)
@@ -1477,7 +1480,7 @@ class ArmoryExporter:
 
         bone_array = armature.data.bones
         bone_count = len(bone_array)
-        max_bones = bpy.data.worlds['Arm'].arm_gpu_skin_max_bones
+        max_bones = bpy.data.worlds['Arm'].arm_skin_max_bones
         if bone_count > max_bones:
             log.warn(bobject.name + ' - ' + str(bone_count) + ' bones found, exceeds maximum of ' + str(max_bones) + ' bones defined - raise the value in Camera Data - Armory Render Props - Max Bones')
 
@@ -2491,14 +2494,14 @@ class ArmoryExporter:
         assets.add_shader(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil_shadows.frag.glsl')
         assets.add_shader(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil_shadows.vert.glsl')
 
-        if gpRef.arm_data_cached == True and os.path.exists(fp):
+        if gpRef.arm_cached == True and os.path.exists(fp):
             return
 
         gpo = self.post_export_grease_pencil(gpRef)
         gp_obj = {}
         gp_obj['grease_pencil_datas'] = [gpo]
         arm.utils.write_arm(fp, gp_obj)
-        gpRef.arm_data_cached = True
+        gpRef.arm_cached = True
 
     def is_compress(self, obj):
         return ArmoryExporter.compress_enabled and obj.arm_compress
@@ -2601,12 +2604,12 @@ class ArmoryExporter:
 
         # Auto-bones
         wrd = bpy.data.worlds['Arm']
-        if wrd.arm_gpu_skin_max_bones_auto:
+        if wrd.arm_skin_max_bones_auto:
             max_bones = 8
             for armature in bpy.data.armatures:
                 if max_bones < len(armature.bones):
                     max_bones = len(armature.bones)
-            wrd.arm_gpu_skin_max_bones = max_bones
+            wrd.arm_skin_max_bones = max_bones
 
         self.output['objects'] = []
         for bo in scene_objects:

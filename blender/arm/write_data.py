@@ -193,8 +193,10 @@ project.addSources('Sources');
         if wrd.arm_stream_scene:
             assets.add_khafile_def('arm_stream')
 
-        if wrd.arm_gpu_skin == False:
-            assets.add_khafile_def('arm_cpu_skin')
+        if wrd.arm_skin == 'CPU':
+            assets.add_khafile_def('arm_skin_cpu')
+        elif wrd.arm_skin == 'GPU (Matrix)':
+            assets.add_khafile_def('arm_skin_mat')
 
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
@@ -246,7 +248,7 @@ class Main {
 
         f.write("""
     public static function main() {
-        iron.object.BoneAnimation.skinMaxBones = """ + str(wrd.arm_gpu_skin_max_bones) + """;
+        iron.object.BoneAnimation.skinMaxBones = """ + str(wrd.arm_skin_max_bones) + """;
         state = 1;
         #if (js && arm_bullet) state++; loadLib("ammo.js"); #end
         #if (js && arm_navigation) state++; loadLib("recast.js"); #end
@@ -439,9 +441,9 @@ const float voxelgiRange = """ + str(round(wrd.arm_voxelgi_range * 100) / 100) +
 """)
 
         # Skinning
-        if wrd.arm_gpu_skin:
+        if wrd.arm_skin.startswith('GPU'):
             f.write(
-"""const int skinMaxBones = """ + str(wrd.arm_gpu_skin_max_bones) + """;
+"""const int skinMaxBones = """ + str(wrd.arm_skin_max_bones) + """;
 """)
 
         f.write("""#endif // _COMPILED_GLSL_

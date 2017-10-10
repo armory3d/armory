@@ -6,3 +6,4 @@ bind_constants = None # Merged with mat_context bind constants
 bind_textures = None # Merged with mat_context bind textures
 batch = False
 texture_grad = False # Sample textures using textureGrad()
+con_mesh = None # Mesh context

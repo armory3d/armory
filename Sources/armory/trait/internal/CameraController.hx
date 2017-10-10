@@ -37,7 +37,7 @@ class CameraController extends Trait {
 			moveRight = keyboard.down("d");
 			moveBackward = keyboard.down("s");
 			moveLeft = keyboard.down("a");
-			jump = keyboard.down("space");
+			jump = keyboard.started("space");
 		});
 	}
 #end

@@ -150,10 +150,10 @@ def init_properties():
     bpy.types.MetaBall.arm_compress = bpy.props.BoolProperty(name="Compress", description="Pack data into zip file", default=False)
     bpy.types.MetaBall.arm_dynamic_usage = bpy.props.BoolProperty(name="Dynamic Data Usage", description="Metaball data can change at runtime", default=False)
     # For grease pencil
-    bpy.types.GreasePencil.arm_data_cached = bpy.props.BoolProperty(name="GP Cached", description="No need to reexport grease pencil data", default=False)
+    bpy.types.GreasePencil.arm_cached = bpy.props.BoolProperty(name="GP Cached", description="No need to reexport grease pencil data", default=False)
     bpy.types.GreasePencil.arm_compress = bpy.props.BoolProperty(name="Compress", description="Pack data into zip file", default=True)
     # For armature
-    bpy.types.Armature.arm_data_cached = bpy.props.BoolProperty(name="Armature Cached", description="No need to reexport armature data", default=False)
+    bpy.types.Armature.arm_cached = bpy.props.BoolProperty(name="Armature Cached", description="No need to reexport armature data", default=False)
     bpy.types.Armature.arm_compress = bpy.props.BoolProperty(name="Compress", description="Pack data into zip file", default=False)
     # For camera
     bpy.types.Camera.arm_frustum_culling = bpy.props.BoolProperty(name="Frustum Culling", description="Perform frustum culling for this camera", default=True)
@@ -259,9 +259,13 @@ def init_properties():
     bpy.types.World.arm_fisheye = bpy.props.BoolProperty(name="Fish Eye", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_vignette = bpy.props.BoolProperty(name="Vignette", default=False, update=assets.invalidate_shader_cache)
     # Skin
-    bpy.types.World.arm_gpu_skin = bpy.props.BoolProperty(name="GPU Skinning", description="Calculate skinning on GPU", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_gpu_skin_max_bones_auto = bpy.props.BoolProperty(name="Auto Bones", description="Calculate amount of maximum bones based on armatures", default=True, update=assets.invalidate_compiled_data)
-    bpy.types.World.arm_gpu_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=3000, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_skin = EnumProperty(
+        items=[('GPU (Dual-Quat)', 'GPU (Dual-Quat)', 'GPU (Dual-Quat)'),
+               ('GPU (Matrix)', 'GPU (Matrix)', 'GPU (Matrix)'),
+               ('CPU', 'CPU', 'CPU')],
+        name='Skinning', description='Skinning method', default='GPU (Dual-Quat)', update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_skin_max_bones_auto = bpy.props.BoolProperty(name="Auto Bones", description="Calculate amount of maximum bones based on armatures", default=True, update=assets.invalidate_compiled_data)
+    bpy.types.World.arm_skin_max_bones = bpy.props.IntProperty(name="Max Bones", default=50, min=1, max=3000, update=assets.invalidate_shader_cache)
     # Material override flags
     bpy.types.World.arm_culling = bpy.props.BoolProperty(name="Culling", default=True)
     bpy.types.World.arm_two_sided_area_lamp = bpy.props.BoolProperty(name="Two-Sided Area Lamps", description="Emit light from both faces of area lamp", default=False, update=assets.invalidate_shader_cache)

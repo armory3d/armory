@@ -2,6 +2,7 @@ package armory.trait;
 
 import iron.math.Vec4;
 import iron.system.Input;
+import iron.object.Object;
 import armory.trait.physics.PhysicsWorld;
 import armory.trait.internal.CameraController;
 
@@ -13,13 +14,24 @@ class ThirdPersonController extends CameraController {
 
 	static inline var rotationSpeed = 1.0; 
 
-	public function new() {
+	var animObject:String;
+	var idleAction:String;
+	var runAction:String;
+	var state = 0; // Idle, run
+	var arm:Object;
+
+	public function new(animObject:String, idle = "idle", run = "run") {
 		super();
+
+		this.animObject = animObject;
+		this.idleAction = idle;
+		this.runAction = run;
 
 		iron.Scene.active.notifyOnInit(init);
 	}
 	
 	function init() {
+		arm = object.getChild(animObject);
 		PhysicsWorld.active.notifyOnPreUpdate(preUpdate);
 		notifyOnUpdate(update);
 		notifyOnRemove(removed);
@@ -48,10 +60,7 @@ class ThirdPersonController extends CameraController {
 	function update() {
 		if (!body.ready) return;
 
-		if (jump) {
-			body.applyImpulse(new Vec4(0, 0, 20));
-			jump = false;
-		}
+		if (jump) body.applyImpulse(new Vec4(0, 0, 20));
 
 		// Move
 		dir.set(0, 0, 0);
@@ -64,14 +73,21 @@ class ThirdPersonController extends CameraController {
 		var btvec = body.getLinearVelocity();
 		body.setLinearVelocity(0.0, 0.0, btvec.z() - 1.0);
 
-		var arm = object.getChild("Ballie");
-		arm.animation.paused = true;
-
-		if (moveForward || moveBackward || moveLeft || moveRight) {			
+		if (moveForward || moveBackward || moveLeft || moveRight) {
+			if (state != 1) {
+				arm.animation.play(runAction, null, 0.2);
+				state = 1;		
+			}
 			arm.animation.paused = false;
 			dir.mult(-4 * 0.7);
 			body.activate();
 			body.setLinearVelocity(dir.x, dir.y, btvec.z() - 1.0);
+		}
+		else {
+			if (state != 0) {
+				arm.animation.play(idleAction, null, 0.2);
+				state = 0;
+			}
 		}
 
 		// Keep vertical

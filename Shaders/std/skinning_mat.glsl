@@ -29,8 +29,3 @@ mat4 getSkinningMat(const ivec4 bone, const vec4 weight) {
 mat3 getSkinningMatVec(const mat4 skinningMat) {
 	return mat3(skinningMat[0].xyz, skinningMat[1].xyz, skinningMat[2].xyz);
 }
-
-// mat4 skinningMat = getSkinningMat();
-// mat3 skinningMatVec = getSkinningMatVec(skinningMat);
-// sPos = sPos * skinningMat;
-// vec3 _normal = normalize(mat3(N) * (nor * skinningMatVec));

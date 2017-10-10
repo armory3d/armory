@@ -214,7 +214,7 @@ class InvalidateGPCacheButton(bpy.types.Operator):
  
     def execute(self, context):
         if context.scene.grease_pencil != None:
-            context.scene.grease_pencil.arm_data_cached = False
+            context.scene.grease_pencil.arm_cached = False
         return{'FINISHED'}
 
 class MaterialPropsPanel(bpy.types.Panel):
@@ -983,11 +983,11 @@ class ArmRenderPropsPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_tonemap')
         layout.prop(wrd, 'arm_culling')
         layout.prop(wrd, 'arm_two_sided_area_lamp')
-        layout.prop(wrd, 'arm_gpu_skin')
-        if wrd.arm_gpu_skin:
-            layout.prop(wrd, 'arm_gpu_skin_max_bones_auto')
-            if not wrd.arm_gpu_skin_max_bones_auto:
-                layout.prop(wrd, 'arm_gpu_skin_max_bones')
+        layout.prop(wrd, 'arm_skin')
+        if wrd.arm_skin.startswith('GPU'):
+            layout.prop(wrd, 'arm_skin_max_bones_auto')
+            if not wrd.arm_skin_max_bones_auto:
+                layout.prop(wrd, 'arm_skin_max_bones')
 
         layout.label('PCSS')
         layout.prop(wrd, 'arm_pcss_rings')
