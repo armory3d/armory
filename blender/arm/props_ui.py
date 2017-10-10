@@ -342,6 +342,8 @@ class ArmoryRenderPanel(bpy.types.Panel):
         row.operator("arm.render", icon="RENDER_STILL")
         row.operator("arm.render_anim", icon="RENDER_ANIMATION")
         layout.prop(bpy.data.worlds['Arm'], "rp_rendercapture_format")
+        if bpy.context.scene != None:
+            layout.prop(bpy.context.scene.render, "filepath")
 
 class ArmoryExporterPanel(bpy.types.Panel):
     bl_label = "Armory Exporter"
