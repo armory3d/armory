@@ -27,7 +27,7 @@ def get_rpasses(material):
         # ar.append('depth')
 
     rpdat = arm.utils.get_rp()
-    vgirefract = rpdat.rp_voxelgi and rpdat.arm_voxelgi_refraction
+    vgirefract = rpdat.rp_gi == 'Voxel GI' and rpdat.arm_voxelgi_refraction
 
     if material.arm_decal:
         ar.append('decal')
@@ -39,7 +39,7 @@ def get_rpasses(material):
         ar.append('mesh')
         for con in add_mesh_contexts:
             ar.append(con)
-        if rpdat.rp_voxelgi or rpdat.rp_voxelao:
+        if rpdat.rp_gi == 'Voxel GI' or rpdat.rp_gi == 'Voxel AO':
             ar.append('voxel')
         if rpdat.rp_renderer == 'Deferred Plus':
             ar.append('rect')

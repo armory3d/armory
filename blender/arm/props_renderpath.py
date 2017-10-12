@@ -80,8 +80,15 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('1024', '1024', '1024'),
                ('2048', '2048', '2048'),
                ('4096', '4096', '4096'),
-               ('8192', '8192', '8192')],
+               ('8192', '8192', '8192'),
+               ('16384', '16384', '16384'),],
         name="Shadow Map", description="Shadow map resolution", default='2048', update=update_renderpath)
+    rp_shadowmap_cascades = EnumProperty(
+        items=[('1', '1', '1'),
+               ('2', '2', '2'),
+               ('3', '3', '3'),
+               ('4', '4', '4')],
+        name="Cascades", description="Shadow map cascades", default='3', update=update_renderpath)
     rp_supersampling = EnumProperty(
         items=[('1', '1X', '1X'),
                ('2', '2X', '2X'),
@@ -138,8 +145,13 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_stereo = bpy.props.BoolProperty(name="Stereo", description="Stereo rendering", default=False, update=update_renderpath)
     rp_greasepencil = bpy.props.BoolProperty(name="Grease Pencil", description="Render Grease Pencil data", default=False, update=update_renderpath)
     rp_ocean = bpy.props.BoolProperty(name="Ocean", description="Ocean pass", default=False, update=update_renderpath)
-    rp_voxelgi = bpy.props.BoolProperty(name="Voxel GI", description="Voxel-based Global Illumination", default=False, update=update_renderpath)
-    rp_voxelao = bpy.props.BoolProperty(name="Voxel AO", description="Voxel-based Ambient Occlussion", default=False, update=update_renderpath)
+    
+    rp_gi = bpy.props.EnumProperty(
+        items=[('Off', 'Off', 'Off'),
+               ('Voxel GI', 'Voxel GI', 'Voxel GI'),
+               ('Voxel AO', 'Voxel AO', 'Voxel AO')
+               ],
+        name="Global Illumination", description="Dynamic global illumination", default='Off', update=update_renderpath)
     rp_voxelgi_resolution = bpy.props.EnumProperty(
         items=[('32', '32', '32'),
                ('64', '64', '64'),
@@ -186,10 +198,10 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_voxelgi_dimensions = bpy.props.FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_shader_cache)
     arm_voxelgi_revoxelize = bpy.props.BoolProperty(name="Revoxelize", description="Revoxelize scene each frame", default=False, update=assets.invalidate_shader_cache)
     # arm_voxelgi_multibounce = bpy.props.BoolProperty(name="Multi-bounce", description="Accumulate multiple light bounces", default=False, update=assets.invalidate_shader_cache)
-    arm_voxelgi_camera = bpy.props.BoolProperty(name="Camera", description="Use camera as voxelization origin", default=False, update=assets.invalidate_shader_cache)
+    arm_voxelgi_camera = bpy.props.BoolProperty(name="Dynamic Camera", description="Use camera as voxelization origin", default=False, update=assets.invalidate_shader_cache)
     # arm_voxelgi_anisotropic = bpy.props.BoolProperty(name="Anisotropic", description="Use anisotropic voxels", default=False, update=update_renderpath)
-    arm_voxelgi_shadows = bpy.props.BoolProperty(name="Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
-    arm_voxelgi_refraction = bpy.props.BoolProperty(name="Refraction", description="Use voxels to render refraction", default=False, update=update_renderpath)
+    arm_voxelgi_shadows = bpy.props.BoolProperty(name="Trace Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
+    arm_voxelgi_refraction = bpy.props.BoolProperty(name="Trace Refraction", description="Use voxels to render refraction", default=False, update=update_renderpath)
     arm_samples_per_pixel = EnumProperty(
         items=[('1', '1X', '1X'),
                ('2', '2X', '2X'),

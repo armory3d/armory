@@ -246,6 +246,12 @@ class Main {
     }
     #end""")
 
+        if rpdat.rp_gi == 'Voxel GI' or rpdat.rp_gi == 'Voxel AO':
+            f.write("""
+    public static inline var voxelgiVoxelSize = """ + str(rpdat.arm_voxelgi_dimensions) + " / " + str(rpdat.rp_voxelgi_resolution) + """;
+    public static inline var voxelgiHalfExtents = """ + str(round(rpdat.arm_voxelgi_dimensions / 2.0)) + """;
+""")
+
         f.write("""
     public static function main() {
         iron.object.BoneAnimation.skinMaxBones = """ + str(wrd.arm_skin_max_bones) + """;
@@ -332,6 +338,7 @@ const float PI2 = PI * 2.0;
 const vec2 cameraPlane = vec2(""" + str(round(clip_start * 100) / 100) + """, """ + str(round(clip_end * 100) / 100) + """);
 const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shadowmap_size) + """);
 const float shadowmapCubePcfSize = """ + str(round(wrd.arm_pcfsize * 10000) / 10000) + """;
+const int shadowmapCascades = """ + str(rpdat.rp_shadowmap_cascades) + """;
 """)
         if rpdat.arm_clouds:
             f.write(
@@ -423,10 +430,10 @@ const float compoDOFFstop = """ + str(round(bpy.data.cameras[0].gpu_dof.fstop * 
 const float compoDOFLength = 160.0;
 """) # str(round(bpy.data.cameras[0].lens * 100) / 100)
 
-        if rpdat.rp_voxelgi or rpdat.rp_voxelao:
+        if rpdat.rp_gi == 'Voxel GI' or rpdat.rp_gi == 'Voxel AO':
             f.write(
-"""const float voxelgiResolution = """ + str(rpdat.rp_voxelgi_resolution) + """;
-const float voxelgiDimensions = """ + str(round(rpdat.arm_voxelgi_dimensions)) + """;
+"""const int voxelgiResolution = """ + str(rpdat.rp_voxelgi_resolution) + """;
+const float voxelgiHalfExtents = """ + str(round(rpdat.arm_voxelgi_dimensions / 2.0)) + """;
 const float voxelgiDiff = """ + str(round(wrd.arm_voxelgi_diff * 100) / 100) + """;
 const float voxelgiSpec = """ + str(round(wrd.arm_voxelgi_spec * 100) / 100) + """;
 const float voxelgiOcc = """ + str(round(wrd.arm_voxelgi_occ * 100) / 100) + """;

@@ -7,10 +7,14 @@
 			"compare_mode": "always",
 			"cull_mode": "none",
 			"links": [
-				
 				{
 					"name": "eye",
 					"link": "_cameraPosition"
+				},
+				{
+					"name": "eyeSnap",
+					"link": "_cameraPositionSnap",
+					"ifdef": ["_VoxelGI"]
 				},
 				{
 					"name": "eyeLook",

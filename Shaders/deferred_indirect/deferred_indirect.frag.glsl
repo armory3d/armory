@@ -27,9 +27,11 @@ uniform sampler2D gbuffer1;
 
 #ifdef _VoxelGI
 	//!uniform sampler3D voxels;
+	uniform vec3 eyeSnap;
 #endif
 #ifdef _VoxelAO
 	//!uniform sampler3D voxels;
+	uniform vec3 eyeSnap;
 #endif
 
 uniform float envmapStrength;
@@ -90,24 +92,27 @@ void main() {
 
 #ifdef _VoxelGI
 	#ifdef _VoxelGICam
-	const float step = voxelgiDimensions / voxelgiResolution;
-	vec3 eyeSnap = ivec3(eye / step) * step;
-	vec3 wpos = (p - eyeSnap) / voxelgiDimensions;
+	vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
 	#else
-	vec3 wpos = p / voxelgiDimensions;
+	vec3 voxpos = p / voxelgiHalfExtents;
 	#endif
-	vec4 indirectDiffuse = traceDiffuse(wpos, n);
-	vec3 indirectSpecular = traceSpecular(wpos, n, v, metrough.y);
+
+	vec4 indirectDiffuse = traceDiffuse(voxpos, n);
+		
+	vec3 indirectSpecular = traceSpecular(voxpos, n, v, metrough.y);
 	indirectSpecular *= f0 * envBRDF.x + envBRDF.y;
+	indirectSpecular = vec3(0.0);
 
 	fragColor.rgb = indirectDiffuse.rgb * voxelgiDiff * g1.rgb + indirectSpecular * voxelgiSpec;
+
+	// if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
 
 	#ifdef _SSAO
 	fragColor.rgb *= texture(ssaotex, texCoord).r * 0.5 + 0.5;
 	#endif
 
 	// float opacity = g1.a;
-	// if (opacity < 1.0) fragColor.rgb = mix(indirectRefractiveLight(-v, n, vec3(1.0), opacity, wpos), fragColor.rgb, opacity);
+	// if (opacity < 1.0) fragColor.rgb = mix(indirectRefractiveLight(-v, n, vec3(1.0), opacity, voxpos), fragColor.rgb, opacity);
 
 	// return;
 #endif
@@ -162,8 +167,14 @@ void main() {
 #endif
 
 #ifdef _VoxelAO
-	vec3 wpos = p / voxelgiDimensions;
-	envl.rgb *= 1.0 - traceAO(wpos, n);
+
+	#ifdef _VoxelGICam
+	vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
+	#else
+	vec3 voxpos = p / voxelgiHalfExtents;
+	#endif
+	
+	envl.rgb *= 1.0 - traceAO(voxpos, n);
 #endif
 
 #ifdef _VoxelGI
@@ -171,4 +182,14 @@ void main() {
 #else
 	fragColor.rgb = envl;
 #endif
+
+	// Show voxels
+	// vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
+	// vec3 direction = vec3(0.0, 0.0, -1.0);
+	// vec4 color = vec4(0.0f);
+	// for(uint step = 0; step < 400 && color.a < 0.99f; ++step) {
+	// 	vec3 point = origin + 0.005 * step * direction;
+	// 	color += (1.0f - color.a) * textureLod(voxels, point * 0.5 + 0.5, 0);
+	// } 
+	// fragColor.rgb += color.rgb;
 }

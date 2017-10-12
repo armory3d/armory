@@ -107,9 +107,12 @@ def build_node_tree(world):
     if rpdat.rp_shadowmap == 'None':
         wrd.world_defs += '_NoShadows'
         assets.add_khafile_def('arm_no_shadows')
-    if rpdat.rp_voxelgi:
+    if rpdat.rp_shadowmap_cascades != '1':
+        wrd.world_defs += '_CSM'
+        assets.add_khafile_def('arm_csm')
+    if rpdat.rp_gi == 'Voxel GI':
         voxelgi = True
-    elif rpdat.rp_voxelao:
+    elif rpdat.rp_gi == 'Voxel AO':
         voxelao = True
     if rpdat.rp_dfrs:
         wrd.world_defs += '_DFRS'

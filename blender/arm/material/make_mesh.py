@@ -411,10 +411,7 @@ def make_forward_mobile(con_mesh):
     frag.add_uniform('vec3 lightPos', '_lampPosition')
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
 
-    if '_NoShadows' in wrd.world_defs:
-        is_shadows = False
-    else:
-        is_shadows = True
+    is_shadows = not '_NoShadows' in wrd.world_defs
 
     frag.write('float visibility = 1.0;')
     frag.write('float dotNL = max(dot(n, lightDir), 0.0);')
@@ -553,14 +550,8 @@ def make_forward_base(con_mesh, parse_opacity=False):
             frag.add_uniform('sampler2D senvmapBrdf', link='_envmapBrdf')
             frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps')
 
-    if '_NoShadows' in wrd.world_defs:
-        is_shadows = False
-    else:
-        is_shadows = True
-    if '_PCSS' in wrd.world_defs:
-        is_pcss = True
-    else:
-        is_pcss = False
+    is_shadows = not '_NoShadows' in wrd.world_defs
+    is_pcss = '_PCSS' in wrd.world_defs
 
     frag.write('float visibility = 1.0;')
     frag.write('vec3 lp = lightPos - wposition;')

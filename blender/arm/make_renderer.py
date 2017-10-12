@@ -39,7 +39,7 @@ def set_preset(self, context, preset):
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
         rpdat.rp_greasepencil = False
-        rpdat.rp_voxelgi = False
+        rpdat.rp_gi = 'Off'
         rpdat.rp_render_to_texture = False
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'None'
@@ -70,7 +70,7 @@ def set_preset(self, context, preset):
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
         rpdat.rp_greasepencil = False
-        rpdat.rp_voxelgi = False
+        rpdat.rp_gi = 'Off'
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'SMAA'
@@ -101,7 +101,7 @@ def set_preset(self, context, preset):
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
         rpdat.rp_greasepencil = False
-        rpdat.rp_voxelgi = False
+        rpdat.rp_gi = 'Off'
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'FXAA'
@@ -131,7 +131,7 @@ def set_preset(self, context, preset):
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
         rpdat.rp_greasepencil = False
-        rpdat.rp_voxelgi = True
+        rpdat.rp_gi = 'Voxel GI'
         rpdat.rp_voxelgi_resolution = '256'
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '2'
@@ -165,7 +165,7 @@ def set_preset(self, context, preset):
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
         rpdat.rp_greasepencil = False
-        rpdat.rp_voxelgi = False
+        rpdat.rp_gi = 'Off'
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'TAA'
@@ -196,7 +196,7 @@ def set_preset(self, context, preset):
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = True
         rpdat.rp_greasepencil = False
-        rpdat.rp_voxelgi = False
+        rpdat.rp_gi = 'Off'
         rpdat.rp_render_to_texture = False
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'None'
@@ -227,7 +227,7 @@ def set_preset(self, context, preset):
         rpdat.rp_background = 'Clear'
         rpdat.rp_stereo = False
         rpdat.rp_greasepencil = False
-        rpdat.rp_voxelgi = False
+        rpdat.rp_gi = 'Off'
         rpdat.rp_render_to_texture = False
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'None'
@@ -393,11 +393,17 @@ def make_deferred(rpdat):
     nodes['Begin'].inputs[1].default_value = rpdat.rp_hdr
     nodes['Screen'].inputs[0].default_value = int(rpdat.rp_supersampling)
 
-    if rpdat.rp_voxelgi:
+    if rpdat.rp_gi == 'Voxel GI':
         n = nodes['Image 3D Voxels']
         # if rpdat.rp_voxelgi_hdr:
             # n.inputs[4].default_value = 'RGBA64'
-        links.new(nodes['Begin'].outputs[0], nodes['Branch Function Voxelize'].inputs[0])
+
+        # One lamp only for now - draw shadow map in advance
+        links.new(nodes['Begin'].outputs[0], nodes['Set Target SM'].inputs[0])
+        links.new(nodes['Draw Meshes SM'].outputs[0], nodes['Branch Function Voxelize'].inputs[0])
+        l = nodes['Loop Lamps'].outputs[1].links[0]
+        links.remove(l)
+        links.new(nodes['Loop Lamps'].outputs[1], nodes['Deferred Light'].inputs[0])
         links.new(nodes['Merge Stages Voxelize'].outputs[0], nodes['Set Target Mesh'].inputs[0])
         res = int(rpdat.rp_voxelgi_resolution)
         n.inputs[1].default_value = res
@@ -410,7 +416,7 @@ def make_deferred(rpdat):
         if rpdat.arm_voxelgi_shadows or rpdat.arm_voxelgi_refraction:
             links.new(nodes['Image 3D Voxels'].outputs[0], nodes['Deferred Light'].inputs[4])
             links.new(nodes['Image 3D Voxels'].outputs[0], nodes['Deferred Light.001'].inputs[4])
-    elif rpdat.rp_voxelao:
+    elif rpdat.rp_gi == 'Voxel AO':
         n = nodes['Image 3D Voxels']
         # n.inputs[4].default_value = 'R8'
         links.new(nodes['Begin'].outputs[0], nodes['Branch Function Voxelize'].inputs[0])

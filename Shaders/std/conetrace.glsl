@@ -8,7 +8,7 @@
 // https://research.nvidia.com/sites/default/files/publications/GIVoxels-pg2011-authors.pdf
 
 const float MAX_DISTANCE = 1.73205080757;
-const float VOXEL_SIZE = 1.0 / voxelgiResolution;
+const float VOXEL_SIZE = 2.0 / voxelgiResolution;
 
 uniform sampler3D voxels;
 
@@ -73,7 +73,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal) {
 	const vec3 o2 = normalize(cross(o1, normal));
 	const vec3 c1 = 0.5f * (o1 + o2);
 	const vec3 c2 = 0.5f * (o1 - o2);
-	const float offset = 3 * VOXEL_SIZE;
+	const float offset = 1.5 * VOXEL_SIZE;
 	// Normal direction
 	vec4 col = traceCone(origin, normal, aperture, MAX_DISTANCE, offset);
 	// 4 side cones
@@ -90,7 +90,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal) {
 }
 
 float traceShadow(const vec3 origin, const vec3 dir, const float aperture, const float targetDistance) {
-	const float offset = 4 * VOXEL_SIZE;
+	const float offset = 2 * VOXEL_SIZE;
 	return traceCone(origin, dir, aperture, targetDistance, offset).a;
 }
 
@@ -99,7 +99,7 @@ vec3 traceSpecular(const vec3 pos, const vec3 normal, const vec3 viewDir, const 
 	float specularAperture = clamp(tan((3.14159265 / 2) * rough * 0.75), 0.0174533, 3.14159265);
 	vec3 specularDir = normalize(reflect(-viewDir, normal));
 	// Clamp to 1 grad and pi, exponent is angle of cone in radians
-	const float offset = 6 * VOXEL_SIZE;
+	const float offset = 3 * VOXEL_SIZE;
 	return traceCone(pos, specularDir, specularAperture, MAX_DISTANCE, offset).xyz;
 }
 
@@ -109,7 +109,7 @@ vec3 traceRefraction(const vec3 pos, const vec3 normal, const vec3 viewDir, cons
 	vec3 refraction = refract(viewDir, normal, 1.0 / ior);
 	float rough = max(roughness, 0.03);
 	float specularAperture = clamp(tan((3.14159265 / 2) * rough), 0.0174533, 3.14159265);
-	const float offset = 3 * VOXEL_SIZE;
+	const float offset = 1.5 * VOXEL_SIZE;
 	return transmittance * traceCone(pos, refraction, specularAperture, MAX_DISTANCE, offset).xyz;
 }
 
@@ -138,7 +138,7 @@ float traceAO(const vec3 origin, const vec3 normal) {
 	const vec3 o2 = normalize(cross(o1, normal));
 	const vec3 c1 = 0.5f * (o1 + o2);
 	const vec3 c2 = 0.5f * (o1 - o2);
-	const float offset = 3 * VOXEL_SIZE;
+	const float offset = 1.5 * VOXEL_SIZE;
 	// Normal direction
 	float col = traceConeAO(origin, normal, aperture, MAX_DISTANCE, offset);
 	// 4 side cones

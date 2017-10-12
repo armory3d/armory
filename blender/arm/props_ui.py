@@ -918,6 +918,8 @@ class ArmRenderPathPanel(bpy.types.Panel):
             layout.prop(rpdat, "rp_renderer")
             layout.prop(rpdat, "arm_material_model")
             layout.prop(rpdat, "rp_shadowmap")
+            if rpdat.rp_shadowmap != 'None':
+                layout.prop(rpdat, "rp_shadowmap_cascades")
             layout.prop(rpdat, "rp_translucency_state")
             layout.prop(rpdat, "rp_overlays_state")
             layout.prop(rpdat, "rp_decals_state")
@@ -927,19 +929,18 @@ class ArmRenderPathPanel(bpy.types.Panel):
             layout.prop(rpdat, "rp_hdr")
             layout.prop(rpdat, "rp_stereo")
             layout.prop(rpdat, "rp_greasepencil")
-            layout.prop(rpdat, 'rp_voxelgi')
-            if not rpdat.rp_voxelgi:
-                layout.prop(rpdat, 'rp_voxelao')
-            else:
-            	layout.prop(rpdat, 'rp_voxelgi_resolution')
-            	layout.prop(rpdat, 'arm_voxelgi_dimensions')
-            	layout.prop(rpdat, 'arm_voxelgi_revoxelize')
-            	# layout.prop(rpdat, 'arm_voxelgi_camera')
-            	# layout.prop(rpdat, 'arm_voxelgi_multibounce')
-            	# layout.prop(rpdat, 'arm_voxelgi_anisotropic')
-            	layout.prop(rpdat, 'arm_voxelgi_shadows')
-            	layout.prop(rpdat, 'arm_voxelgi_refraction')
-            	# layout.prop(rpdat, 'rp_voxelgi_hdr')
+            layout.prop(rpdat, 'rp_gi')
+            if rpdat.rp_gi != 'Off':
+                layout.prop(rpdat, 'rp_voxelgi_resolution')
+                layout.prop(rpdat, 'arm_voxelgi_dimensions')
+                layout.prop(rpdat, 'arm_voxelgi_revoxelize')
+                if rpdat.arm_voxelgi_revoxelize:
+                    layout.prop(rpdat, 'arm_voxelgi_camera')
+                # layout.prop(rpdat, 'arm_voxelgi_multibounce')
+                # layout.prop(rpdat, 'arm_voxelgi_anisotropic')
+                layout.prop(rpdat, 'arm_voxelgi_shadows')
+                layout.prop(rpdat, 'arm_voxelgi_refraction')
+                # layout.prop(rpdat, 'rp_voxelgi_hdr')
 
             layout.separator()
             layout.prop(rpdat, "rp_render_to_texture")
@@ -951,7 +952,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
                 layout.prop(rpdat, "rp_ssao")
                 layout.prop(rpdat, "rp_ssr")
                 if rpdat.rp_ssr:
-                	layout.prop(rpdat, 'arm_ssr_half_res')
+                    layout.prop(rpdat, 'arm_ssr_half_res')
                 # layout.prop(wrd, 'arm_ssao_half_res')
                 # layout.prop(rpdat, "rp_dfao")
                 # layout.prop(rpdat, "rp_dfrs")
