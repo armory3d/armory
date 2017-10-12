@@ -17,13 +17,13 @@ class ObjectPropsPanel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "object"
- 
+
     def draw(self, context):
         layout = self.layout
         obj = bpy.context.object
         if obj == None:
             return
-        
+
         row = layout.row()
         row.prop(obj, 'arm_export')
         if not obj.arm_export:
@@ -68,7 +68,7 @@ class ModifiersPropsPanel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "modifier"
- 
+
     def draw(self, context):
         layout = self.layout
         obj = bpy.context.object
@@ -94,7 +94,7 @@ class ParticlesPropsPanel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "particle"
- 
+
     def draw(self, context):
         layout = self.layout
         obj = bpy.context.particle_system
@@ -109,7 +109,7 @@ class PhysicsPropsPanel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "physics"
- 
+
     def draw(self, context):
         layout = self.layout
         obj = bpy.context.object
@@ -124,7 +124,7 @@ class DataPropsPanel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "data"
- 
+
     def draw(self, context):
         layout = self.layout
         obj = bpy.context.object
@@ -174,7 +174,7 @@ class ScenePropsPanel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "scene"
- 
+
     def draw(self, context):
         layout = self.layout
         scene = bpy.context.scene
@@ -194,7 +194,7 @@ class InvalidateCacheButton(bpy.types.Operator):
     '''Delete cached mesh data'''
     bl_idname = "arm.invalidate_cache"
     bl_label = "Invalidate Cache"
- 
+
     def execute(self, context):
         context.object.data.arm_cached = False
         return{'FINISHED'}
@@ -203,7 +203,7 @@ class InvalidateMaterialCacheButton(bpy.types.Operator):
     '''Delete cached material data'''
     bl_idname = "arm.invalidate_material_cache"
     bl_label = "Invalidate Cache"
- 
+
     def execute(self, context):
         context.material.is_cached = False
         return{'FINISHED'}
@@ -212,7 +212,7 @@ class InvalidateGPCacheButton(bpy.types.Operator):
     '''Delete cached grease pencil data'''
     bl_idname = "arm.invalidate_gp_cache"
     bl_label = "Invalidate GP Cache"
- 
+
     def execute(self, context):
         if context.scene.grease_pencil != None:
             context.scene.grease_pencil.arm_cached = False
@@ -239,7 +239,7 @@ class MaterialPropsPanel(bpy.types.Panel):
         columnb = column.column()
         columnb.enabled = not mat.arm_two_sided
         columnb.prop(mat, 'arm_cull_mode')
-        
+
         column = row.column()
         column.prop(mat, 'arm_overlay')
         column.prop(mat, 'arm_decal')
@@ -284,11 +284,11 @@ class WorldPropsPanel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "world"
- 
+
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds['Arm']
-        
+
         layout.prop(wrd, 'arm_irradiance')
         row = layout.row()
         row.enabled = wrd.arm_irradiance
@@ -308,7 +308,7 @@ class ArmoryPlayerPanel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
- 
+
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds['Arm']
@@ -324,7 +324,7 @@ class ArmoryPlayerPanel(bpy.types.Panel):
         else:
             row.operator("arm.patch")
         row.operator("arm.clean_menu")
-        
+
         layout.prop(wrd, 'arm_play_runtime')
         layout.prop(wrd, 'arm_play_camera')
 
@@ -334,7 +334,7 @@ class ArmoryRenderPanel(bpy.types.Panel):
     bl_region_type = "WINDOW"
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
- 
+
     def draw(self, context):
         layout = self.layout
         row = layout.row(align=True)
@@ -351,13 +351,14 @@ class ArmoryExporterPanel(bpy.types.Panel):
     bl_region_type = "WINDOW"
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
- 
+
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds['Arm']
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
         row.operator("arm.build_project")
+        row.operator("arm.patch_project")
         row.operator("arm.publish_project")
         row.enabled = wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0
 
@@ -385,7 +386,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
     bl_region_type = "WINDOW"
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
- 
+
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds['Arm']
@@ -400,7 +401,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
 
         col.prop(wrd, 'arm_play_console')
         col.prop(wrd, 'arm_stream_scene')
-        
+
         if arm.utils.with_krom():
             col.prop(wrd, 'arm_play_live_patch')
             colb = col.column()
@@ -460,8 +461,8 @@ class ArmoryProjectPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_project_name')
         layout.prop(wrd, 'arm_project_package')
         layout.prop_search(wrd, 'arm_khafile', bpy.data, 'texts', 'Khafile')
-        layout.prop_search(wrd, 'arm_khamake', bpy.data, 'texts', 'Khamake')   
-        layout.prop(wrd, 'arm_project_root')   
+        layout.prop_search(wrd, 'arm_khamake', bpy.data, 'texts', 'Khamake')
+        layout.prop(wrd, 'arm_project_root')
 
         layout.label('Armory v' + wrd.arm_version)
 
@@ -471,7 +472,7 @@ class ArmVirtualInputPanel(bpy.types.Panel):
     bl_region_type = "WINDOW"
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
- 
+
     def draw(self, context):
         layout = self.layout
 
@@ -481,7 +482,7 @@ class ArmGlobalVarsPanel(bpy.types.Panel):
     bl_region_type = "WINDOW"
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
- 
+
     def draw(self, context):
         layout = self.layout
 
@@ -490,7 +491,7 @@ class ArmNavigationPanel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "scene"
- 
+
     def draw(self, context):
         layout = self.layout
         scene = bpy.context.scene
@@ -503,7 +504,7 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
     '''Generate navmesh from selected meshes'''
     bl_idname = 'arm.generate_navmesh'
     bl_label = 'Generate Navmesh'
- 
+
     def execute(self, context):
         obj = context.active_object
         if obj == None or obj.type != 'MESH':
@@ -528,11 +529,11 @@ class ArmoryPlayButton(bpy.types.Operator):
     '''Launch player in new window'''
     bl_idname = 'arm.play'
     bl_label = 'Play'
- 
+
     def execute(self, context):
         if state.compileproc != None:
             return {"CANCELLED"}
-        
+
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
 
@@ -541,7 +542,7 @@ class ArmoryPlayButton(bpy.types.Operator):
 
         if not arm.utils.check_engine(self):
             return {"CANCELLED"}
-            
+
         make_renderer.check_default()
 
         rpdat = arm.utils.get_rp()
@@ -558,7 +559,7 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
     '''Launch player in 3D viewport'''
     bl_idname = 'arm.play_in_viewport'
     bl_label = 'Play in Viewport'
- 
+
     def execute(self, context):
         if state.compileproc != None:
             return {"CANCELLED"}
@@ -602,7 +603,7 @@ class ArmoryStopButton(bpy.types.Operator):
     '''Stop currently running player'''
     bl_idname = 'arm.stop'
     bl_label = 'Stop'
- 
+
     def execute(self, context):
         make.stop_project()
         return{'FINISHED'}
@@ -611,7 +612,7 @@ class ArmoryBuildButton(bpy.types.Operator):
     '''Build and compile project'''
     bl_idname = 'arm.build'
     bl_label = 'Build'
- 
+
     def execute(self, context):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -636,7 +637,7 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
     '''Build and compile project'''
     bl_idname = 'arm.build_project'
     bl_label = 'Build'
- 
+
     def execute(self, context):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -672,11 +673,51 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
         assets.invalidate_enabled = True
         return{'FINISHED'}
 
+class ArmoryPatchProjectButton(bpy.types.Operator):
+    '''Build and compile project'''
+    bl_idname = 'arm.patch_project'
+    bl_label = 'Patch'
+
+    def execute(self, context):
+        if not arm.utils.check_saved(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_sdkpath(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_engine(self):
+            return {"CANCELLED"}
+
+        arm.utils.check_projectpath(self)
+
+        make_renderer.check_default()
+
+        wrd = bpy.data.worlds['Arm']
+        item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+        if item.arm_project_rp == '':
+            item.arm_project_rp = wrd.arm_rplist[wrd.arm_rplist_index].name
+        # Assume unique rp names
+        rplist_index = wrd.arm_rplist_index
+        for i in range(0, len(wrd.arm_rplist)):
+            if wrd.arm_rplist[i].name == item.arm_project_rp:
+                wrd.arm_rplist_index = i
+                break
+        state.target = item.arm_project_target
+        state.is_export = True
+        assets.invalidate_shader_cache(None, None)
+        assets.invalidate_enabled = False
+        make.build_project()
+        make.compile_project(patch=True, watch=True)
+        state.is_export = False
+        wrd.arm_rplist_index = rplist_index
+        assets.invalidate_enabled = True
+        return{'FINISHED'}
+
 class ArmoryPublishProjectButton(bpy.types.Operator):
     '''Build project ready for publishing'''
     bl_idname = 'arm.publish_project'
     bl_label = 'Publish'
- 
+
     def execute(self, context):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -733,7 +774,7 @@ class ArmoryPatchButton(bpy.types.Operator):
     '''Update currently running player instance'''
     bl_idname = 'arm.patch'
     bl_label = 'Patch'
- 
+
     def execute(self, context):
         assets.invalidate_enabled = False
         make.play_project(True)
@@ -744,7 +785,7 @@ class ArmoryOpenProjectFolderButton(bpy.types.Operator):
     '''Open project folder'''
     bl_idname = 'arm.open_project_folder'
     bl_label = 'Project Folder'
- 
+
     def execute(self, context):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -757,7 +798,7 @@ class ArmoryKodeStudioButton(bpy.types.Operator):
     bl_idname = 'arm.kode_studio'
     bl_label = 'Kode Studio'
     bl_description = 'Open Project in Kode Studio'
- 
+
     def execute(self, context):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -778,7 +819,7 @@ class CleanButtonMenu(bpy.types.Operator):
     '''Clean cached data'''
     bl_label = "Clean"
     bl_idname = "arm.clean_menu"
- 
+
     def execute(self, context):
         bpy.ops.wm.call_menu(name=CleanMenu.bl_idname)
         return {"FINISHED"}
@@ -787,7 +828,7 @@ class ArmoryCleanCacheButton(bpy.types.Operator):
     '''Delete all compiled data'''
     bl_idname = 'arm.clean_cache'
     bl_label = 'Clean Cache'
- 
+
     def execute(self, context):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -799,7 +840,7 @@ class ArmoryCleanProjectButton(bpy.types.Operator):
     '''Delete all cached project data'''
     bl_idname = 'arm.clean_project'
     bl_label = 'Clean Project'
- 
+
     def execute(self, context):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -811,7 +852,7 @@ class ArmoryRenderButton(bpy.types.Operator):
     '''Capture Armory output as render result'''
     bl_idname = 'arm.render'
     bl_label = 'Render'
- 
+
     def execute(self, context):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -842,7 +883,7 @@ class ArmoryRenderAnimButton(bpy.types.Operator):
     '''Capture Armory output as render result'''
     bl_idname = 'arm.render_anim'
     bl_label = 'Animation'
- 
+
     def execute(self, context):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -964,11 +1005,11 @@ class ArmRenderPathPanel(bpy.types.Panel):
                 layout.prop(rpdat, 'arm_rp_resolution')
 
             layout.separator()
-            layout.prop(rpdat, 'arm_pcss_state')     
+            layout.prop(rpdat, 'arm_pcss_state')
             layout.prop(rpdat, 'arm_samples_per_pixel')
             layout.prop(rpdat, 'arm_texture_filter')
             layout.prop(rpdat, "arm_diffuse_model")
-            layout.prop(rpdat, 'arm_ssrs')  
+            layout.prop(rpdat, 'arm_ssrs')
             layout.prop(rpdat, 'arm_tessellation')
             layout.prop(rpdat, 'arm_clouds')
 
@@ -978,7 +1019,7 @@ class ArmRenderPropsPanel(bpy.types.Panel):
     bl_region_type = "WINDOW"
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
- 
+
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds['Arm']
@@ -1005,7 +1046,7 @@ class ArmRenderPropsPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_clouds_secondary')
         layout.prop(wrd, 'arm_clouds_precipitation')
         layout.prop(wrd, 'arm_clouds_eccentricity')
-        
+
         layout.label('Voxel GI')
         row = layout.row()
         row.prop(wrd, 'arm_voxelgi_diff')
@@ -1021,15 +1062,15 @@ class ArmRenderPropsPanel(bpy.types.Panel):
         layout.label('SSAO')
         layout.prop(wrd, 'arm_ssao_size')
         layout.prop(wrd, 'arm_ssao_strength')
-        
+
         layout.label('Bloom')
         layout.prop(wrd, 'arm_bloom_threshold')
         layout.prop(wrd, 'arm_bloom_strength')
         layout.prop(wrd, 'arm_bloom_radius')
-        
+
         layout.label('Motion Blur')
         layout.prop(wrd, 'arm_motion_blur_intensity')
-        
+
         layout.label('SSR')
         layout.prop(wrd, 'arm_ssr_ray_step')
         layout.prop(wrd, 'arm_ssr_min_ray_step')
@@ -1064,7 +1105,7 @@ class ArmGenLodButton(bpy.types.Operator):
     '''Automatically generate LoD levels'''
     bl_idname = 'arm.generate_lod'
     bl_label = 'Auto Generate'
- 
+
     def lod_name(self, name, level):
         return name + '_LOD' + str(level + 1)
 
@@ -1097,7 +1138,7 @@ class ArmGenLodButton(bpy.types.Operator):
             mod.ratio = ratio
             ratio *= wrd.arm_lod_gen_ratio
             context.scene.objects.link(new_obj)
-            
+
         # Screen sizes
         for level in range(0, num_levels):
             mdata.arm_lodlist.add()
@@ -1112,7 +1153,7 @@ class ArmLodPanel(bpy.types.Panel):
     bl_region_type = "WINDOW"
     bl_context = "object"
     bl_options = {'DEFAULT_CLOSED'}
- 
+
     def draw(self, context):
         layout = self.layout
         obj = bpy.context.object
@@ -1126,7 +1167,7 @@ class ArmLodPanel(bpy.types.Panel):
         rows = 2
         if len(mdata.arm_lodlist) > 1:
             rows = 4
-        
+
         row = layout.row()
         row.template_list("ArmLodList", "The_List", mdata, "arm_lodlist", mdata, "arm_lodlist_index", rows=rows)
         col = row.column(align=True)
@@ -1157,7 +1198,7 @@ class ArmTilesheetPanel(bpy.types.Panel):
     bl_region_type = "WINDOW"
     bl_context = "object"
     bl_options = {'DEFAULT_CLOSED'}
- 
+
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds['Arm']
@@ -1201,7 +1242,7 @@ class ArmProxyPanel(bpy.types.Panel):
     bl_region_type = "WINDOW"
     bl_context = "object"
     bl_options = {'DEFAULT_CLOSED'}
- 
+
     def draw(self, context):
         layout = self.layout
         layout.operator("arm.make_proxy")
@@ -1248,6 +1289,7 @@ def register():
     bpy.utils.register_class(ArmoryStopButton)
     bpy.utils.register_class(ArmoryBuildButton)
     bpy.utils.register_class(ArmoryBuildProjectButton)
+    bpy.utils.register_class(ArmoryPatchProjectButton)
     bpy.utils.register_class(ArmoryPatchButton)
     bpy.utils.register_class(ArmoryOpenProjectFolderButton)
     bpy.utils.register_class(ArmoryKodeStudioButton)
@@ -1297,6 +1339,7 @@ def unregister():
     bpy.utils.unregister_class(ArmoryStopButton)
     bpy.utils.unregister_class(ArmoryBuildButton)
     bpy.utils.unregister_class(ArmoryBuildProjectButton)
+    bpy.utils.unregister_class(ArmoryPatchProjectButton)
     bpy.utils.unregister_class(ArmoryPatchButton)
     bpy.utils.unregister_class(ArmoryOpenProjectFolderButton)
     bpy.utils.unregister_class(ArmoryKodeStudioButton)
