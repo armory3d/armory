@@ -264,23 +264,24 @@ def make_ao(context_id):
 
     frag.add_include('../../Shaders/compiled.glsl')
     frag.add_include('../../Shaders/std/math.glsl')
+    frag.add_include('../../Shaders/std/imageatomic.glsl')
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
 
     rpdat = arm.utils.get_rp()
-    frag.add_uniform('layout(RGBA8) image3D voxels')
-    # frag.add_uniform('layout(R8) image3D voxels')
+    frag.add_uniform('layout(r32ui) uimage3D voxels')
 
     frag.write('if (!isInsideCube(voxposition)) return;')
-    frag.write('vec3 wposition = voxposition * voxelgiHalfExtents;')
-
-    # if rpdat.arm_voxelgi_camera:
-        # vert.add_uniform('vec3 eye', '_cameraPosition')
-    vert.add_uniform('mat4 W', '_worldMatrix')
-
-    vert.add_out('vec3 voxpositionGeom')
 
     vert.add_include('../../Shaders/compiled.glsl')
-    vert.write('voxpositionGeom = vec3(W * vec4(pos, 1.0)) / voxelgiHalfExtents;')
+    vert.add_uniform('mat4 W', '_worldMatrix')
+    vert.add_out('vec3 voxpositionGeom')
+
+    if rpdat.arm_voxelgi_camera:
+        vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
+        vert.write('voxpositionGeom = (vec3(W * vec4(pos, 1.0)) - eyeSnap) / voxelgiHalfExtents;')
+    else: 
+        vert.write('voxpositionGeom = vec3(W * vec4(pos, 1.0)) / voxelgiHalfExtents;')
+
     # vert.write('gl_Position = vec4(0.0, 0.0, 0.0, 1.0);')
 
     geom.add_out('vec3 voxposition')
@@ -303,6 +304,8 @@ def make_ao(context_id):
     geom.write('EndPrimitive();')
 
     frag.write('vec3 voxel = voxposition * 0.5 + vec3(0.5);')
-    frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(1.0));')
+    # frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(1.0));')
+    frag.write('uint val = convVec4ToRGBA8(vec4(1.0) * 255);')
+    frag.write('imageAtomicMax(voxels, ivec3(voxelgiResolution * voxel), val);')
 
     return con_voxel

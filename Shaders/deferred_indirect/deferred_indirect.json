@@ -14,7 +14,7 @@
 				{
 					"name": "eyeSnap",
 					"link": "_cameraPositionSnap",
-					"ifdef": ["_VoxelGI"]
+					"ifdef": ["_VoxelGICam"]
 				},
 				{
 					"name": "eyeLook",

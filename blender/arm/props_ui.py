@@ -1016,6 +1016,7 @@ class ArmRenderPropsPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(wrd, 'arm_voxelgi_step')
         row.prop(wrd, 'arm_voxelgi_range')
+        layout.prop(wrd, 'arm_voxelgi_diff_cones')
 
         layout.label('SSAO')
         layout.prop(wrd, 'arm_ssao_size')

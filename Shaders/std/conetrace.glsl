@@ -76,6 +76,13 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal) {
 	const float offset = 1.5 * VOXEL_SIZE;
 	// Normal direction
 	vec4 col = traceCone(origin, normal, aperture, MAX_DISTANCE, offset);
+	#ifdef _VoxelGICone5
+	col += traceCone(origin, mix(normal, -o1, angleMix), aperture, MAX_DISTANCE, offset);
+	col += traceCone(origin, mix(normal, -o2, angleMix), aperture, MAX_DISTANCE, offset);
+	col += traceCone(origin, mix(normal, c1, angleMix), aperture, MAX_DISTANCE, offset);
+	col += traceCone(origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE, offset);
+	return col / 5.0;
+	#else
 	// 4 side cones
 	col += traceCone(origin, mix(normal, o1, angleMix), aperture, MAX_DISTANCE, offset);
 	col += traceCone(origin, mix(normal, -o1, angleMix), aperture, MAX_DISTANCE, offset);
@@ -87,6 +94,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal) {
 	col += traceCone(origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE, offset);
 	col += traceCone(origin, mix(normal, -c2, angleMix), aperture, MAX_DISTANCE, offset);
 	return col / 9.0;
+	#endif
 }
 
 float traceShadow(const vec3 origin, const vec3 dir, const float aperture, const float targetDistance) {
@@ -143,13 +151,14 @@ float traceAO(const vec3 origin, const vec3 normal) {
 	float col = traceConeAO(origin, normal, aperture, MAX_DISTANCE, offset);
 	// 4 side cones
 	col += traceConeAO(origin, mix(normal, o1, angleMix), aperture, MAX_DISTANCE, offset);
-	col += traceConeAO(origin, mix(normal, -o1, angleMix), aperture, MAX_DISTANCE, offset);
+	// col += traceConeAO(origin, mix(normal, -o1, angleMix), aperture, MAX_DISTANCE, offset);
 	col += traceConeAO(origin, mix(normal, o2, angleMix), aperture, MAX_DISTANCE, offset);
-	col += traceConeAO(origin, mix(normal, -o2, angleMix), aperture, MAX_DISTANCE, offset);
+	// col += traceConeAO(origin, mix(normal, -o2, angleMix), aperture, MAX_DISTANCE, offset);
 	// 4 corners
-	col += traceConeAO(origin, mix(normal, c1, angleMix), aperture, MAX_DISTANCE, offset);
+	// col += traceConeAO(origin, mix(normal, c1, angleMix), aperture, MAX_DISTANCE, offset);
 	col += traceConeAO(origin, mix(normal, -c1, angleMix), aperture, MAX_DISTANCE, offset);
-	col += traceConeAO(origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE, offset);
+	// col += traceConeAO(origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE, offset);
 	col += traceConeAO(origin, mix(normal, -c2, angleMix), aperture, MAX_DISTANCE, offset);
-	return col / 9.0;
+	// return col / 9.0;
+	return col / 5.0;
 }

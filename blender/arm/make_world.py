@@ -126,12 +126,18 @@ def build_node_tree(world):
         wrd.world_defs += '_Rad' # Always do radiance for gi
         wrd.world_defs += '_Irr'
 
-    if voxelgi:
+    if voxelgi or voxelao:
         assets.add_khafile_def('arm_voxelgi')
         if rpdat.arm_voxelgi_revoxelize:
             assets.add_khafile_def('arm_voxelgi_revox')
         if rpdat.arm_voxelgi_camera:
             wrd.world_defs += '_VoxelGICam'
+        if wrd.arm_voxelgi_diff_cones == '5':
+            wrd.world_defs += '_VoxelGICone5'
+        wrd.world_defs += '_Rad' # Always do radiance for voxels
+        wrd.world_defs += '_Irr'
+    if voxelgi:
+        assets.add_khafile_def('arm_voxelgi')
         if rpdat.arm_voxelgi_shadows:
             wrd.world_defs += '_VoxelGIDirect'
             wrd.world_defs += '_VoxelGIShadow'
@@ -139,15 +145,9 @@ def build_node_tree(world):
             wrd.world_defs += '_VoxelGIDirect'
             wrd.world_defs += '_VoxelGIRefract'
         wrd.world_defs += '_VoxelGI'
-        wrd.world_defs += '_Rad' # Always do radiance for voxels
-        wrd.world_defs += '_Irr'
+        
     elif voxelao:
-        assets.add_khafile_def('arm_voxelgi')
-        if rpdat.arm_voxelgi_revoxelize:
-            assets.add_khafile_def('arm_voxelgi_revox')
         wrd.world_defs += '_VoxelAO'
-        wrd.world_defs += '_Rad'
-        wrd.world_defs += '_Irr'
 
     if arm.utils.get_gapi().startswith('direct3d'): # Flip Y axis in drawQuad command
         wrd.world_defs += '_InvY'
