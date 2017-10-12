@@ -45,6 +45,9 @@ def make_gi(context_id):
 
     frag.write('if (!isInsideCube(voxposition)) return;')
     frag.write('vec3 wposition = voxposition * voxelgiHalfExtents;')
+    if rpdat.arm_voxelgi_camera:
+        frag.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
+        frag.write('wposition += eyeSnap;')
 
     frag.write('float visibility = 1.0;')
     frag.write('vec3 lp = lightPos - wposition;')
