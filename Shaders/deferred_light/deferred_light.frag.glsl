@@ -158,7 +158,12 @@ void main() {
 #endif
 	
 #ifdef _VoxelGIShadow // #else
-	if (dotNL > 0.0) visibility = max(0, 1.0 - traceShadow(p / voxelgiDimensions, l, 0.1, length(lp)));
+	#ifdef _VoxelGICam
+	vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
+	#else
+	vec3 voxpos = p / voxelgiHalfExtents;
+	#endif
+	if (dotNL > 0.0) visibility = max(0, 1.0 - traceShadow(voxpos, l, 0.1, length(lp)));
 #endif
 
 
