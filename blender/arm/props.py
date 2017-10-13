@@ -260,6 +260,7 @@ def init_properties():
         name='Tonemap', description='Tonemapping operator', default='Filmic', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_lamp_texture = bpy.props.StringProperty(name="Mask Texture", default="")
     bpy.types.World.arm_lamp_ies_texture = bpy.props.StringProperty(name="IES Texture", default="")
+    bpy.types.World.arm_lamp_clouds_texture = bpy.props.StringProperty(name="Clouds Texture", default="")
     bpy.types.World.arm_lens_texture = bpy.props.StringProperty(name="Lens Texture", default="")
     bpy.types.World.arm_fisheye = bpy.props.BoolProperty(name="Fish Eye", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_vignette = bpy.props.BoolProperty(name="Vignette", default=False, update=assets.invalidate_shader_cache)

@@ -45,7 +45,7 @@ def make_gi(context_id):
 
     frag.write('if (!isInsideCube(voxposition)) return;')
     frag.write('vec3 wposition = voxposition * voxelgiHalfExtents;')
-    if rpdat.arm_voxelgi_camera:
+    if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
         frag.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
         frag.write('wposition += eyeSnap;')
 
@@ -141,7 +141,7 @@ def make_gi(context_id):
         vert.add_out('vec2 texCoordGeom')
         vert.write('texCoordGeom = tex;')
 
-    if rpdat.arm_voxelgi_camera:
+    if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
         vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
         vert.write('voxpositionGeom = (vec3(W * vec4(pos, 1.0)) - eyeSnap) / voxelgiHalfExtents;')
     else: 
@@ -276,7 +276,7 @@ def make_ao(context_id):
     vert.add_uniform('mat4 W', '_worldMatrix')
     vert.add_out('vec3 voxpositionGeom')
 
-    if rpdat.arm_voxelgi_camera:
+    if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
         vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
         vert.write('voxpositionGeom = (vec3(W * vec4(pos, 1.0)) - eyeSnap) / voxelgiHalfExtents;')
     else: 

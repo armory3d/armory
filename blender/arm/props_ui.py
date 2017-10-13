@@ -163,9 +163,10 @@ class DataPropsPanel(bpy.types.Panel):
                 col.prop(wrd, 'arm_pcfsize')
             layout.prop(wrd, 'arm_lamp_texture')
             layout.prop(wrd, 'arm_lamp_ies_texture')
+            layout.prop(wrd, 'arm_lamp_clouds_texture')
         elif obj.type == 'SPEAKER':
-            layout.prop(obj.data, 'loop')
-            layout.prop(obj.data, 'stream')
+            layout.prop(obj.data, 'arm_loop')
+            layout.prop(obj.data, 'arm_stream')
         elif obj.type == 'ARMATURE':
             layout.prop(obj.data, 'arm_compress')
 
@@ -1054,9 +1055,9 @@ class ArmRenderPropsPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(wrd, 'arm_voxelgi_occ')
         row.prop(wrd, 'arm_voxelgi_env')
-        row = layout.row()
-        row.prop(wrd, 'arm_voxelgi_step')
-        row.prop(wrd, 'arm_voxelgi_range')
+        # row = layout.row()
+        # row.prop(wrd, 'arm_voxelgi_step')
+        # row.prop(wrd, 'arm_voxelgi_range')
         layout.prop(wrd, 'arm_voxelgi_diff_cones')
 
         layout.label('SSAO')

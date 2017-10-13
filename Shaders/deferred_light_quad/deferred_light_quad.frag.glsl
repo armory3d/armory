@@ -33,6 +33,10 @@ uniform sampler2D gbuffer1;
 	//!uniform float lampSizeUV;
 	#endif
 #endif
+#ifdef _LampClouds
+	uniform sampler2D texClouds;
+	uniform float time;
+#endif
 
 uniform mat4 LWVP;
 uniform vec3 lightColor;
@@ -139,6 +143,11 @@ void main() {
 	// float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
 	// tvis *= screenEdgeFactor;
 	visibility *= tvis;
+#endif
+
+#ifdef _LampClouds
+
+	visibility *= texture(texClouds, vec2(p.xy / 100.0 + time / 80.0)).r * dot(n, vec3(0,0,1));
 #endif
 
 	fragColor.rgb *= visibility;

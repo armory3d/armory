@@ -35,6 +35,16 @@
 					"ifdef": ["_LampColTex"]
 				},
 				{
+					"name": "texClouds",
+					"link": "_cloudsTexture",
+					"ifdef": ["_LampClouds"]
+				},
+				{
+					"name": "time",
+					"link": "_time",
+					"ifdef": ["_LampClouds"]
+				},
+				{
 					"name": "shadowsBias",
 					"link": "_lampShadowsBias"
 				},

@@ -27,6 +27,12 @@ class Uniforms {
 			if (armory.data.ConstData.ltcMagTex == null) armory.data.ConstData.initLTC();
 			return armory.data.ConstData.ltcMagTex;
 		}
+		else if (tulink == "_lensTexture") {
+			return Scene.active.embedded.get('lenstexture.jpg');
+		}
+		else if (tulink == "_cloudsTexture") {
+			return Scene.active.embedded.get('cloudstexture.png');
+		}
 		return null;
 	}
 

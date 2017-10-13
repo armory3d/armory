@@ -102,6 +102,10 @@ def build_node_tree(world):
         wrd.world_defs += '_LampIES'
         assets.add_embedded_data('iestexture.png')
 
+    if wrd.arm_lamp_clouds_texture != '':
+        wrd.world_defs += '_LampClouds'
+        assets.add_embedded_data('cloudstexture.png')
+
     voxelgi = False
     voxelao = False
     if rpdat.rp_shadowmap == 'None':
@@ -130,8 +134,8 @@ def build_node_tree(world):
         assets.add_khafile_def('arm_voxelgi')
         if rpdat.arm_voxelgi_revoxelize:
             assets.add_khafile_def('arm_voxelgi_revox')
-        if rpdat.arm_voxelgi_camera:
-            wrd.world_defs += '_VoxelGICam'
+            if rpdat.arm_voxelgi_camera:
+                wrd.world_defs += '_VoxelGICam'
         if wrd.arm_voxelgi_diff_cones == '5':
             wrd.world_defs += '_VoxelGICone5'
         wrd.world_defs += '_Rad' # Always do radiance for voxels
