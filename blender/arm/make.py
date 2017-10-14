@@ -52,8 +52,8 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     print('OS: ' + arm.utils.get_os() + ', Target: ' + state.target + ', GAPI: ' + arm.utils.get_gapi())
 
     # Clean compiled variants if cache is disabled
+    build_dir = arm.utils.build_dir()
     if wrd.arm_cache_shaders == False:
-        build_dir = arm.utils.build_dir()
         if os.path.isdir(build_dir + '/build/html5-resources'):
             shutil.rmtree(build_dir + '/build/html5-resources')
         if os.path.isdir(build_dir + '/build/krom-resources'):
@@ -64,6 +64,18 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
             shutil.rmtree(build_dir + '/compiled/Shaders')
         if os.path.isdir(build_dir + '/compiled/ShaderRaws'):
             shutil.rmtree(build_dir + '/compiled/ShaderRaws')
+
+    # Detect camera plane changes
+    if len(bpy.data.cameras) > 0:
+        cam = bpy.data.cameras[0]
+        if state.last_clip_start == 0:
+            state.last_clip_start = cam.clip_start
+            state.last_clip_end = cam.clip_end
+        elif cam.clip_start != state.last_clip_start or cam.clip_end != state.last_clip_end:
+            if os.path.isdir(build_dir + '/compiled/Shaders'):
+                shutil.rmtree(build_dir + '/compiled/Shaders')
+            state.last_clip_start = cam.clip_start
+            state.last_clip_end = cam.clip_end
 
     raw_shaders_path = sdk_path + 'armory/Shaders/'
     assets_path = sdk_path + 'armory/Assets/'
@@ -159,8 +171,8 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     write_data.write_main(resx, resy, is_play, in_viewport, is_publish)
     if resx != state.last_resx or resy != state.last_resy:
         wrd.arm_recompile = True
-    state.last_resx = resx
-    state.last_resy = resy
+        state.last_resx = resx
+        state.last_resy = resy
 
 def compile_project(target_name=None, watch=False, patch=False):
     wrd = bpy.data.worlds['Arm']
