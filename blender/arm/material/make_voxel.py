@@ -198,8 +198,8 @@ def make_gi(context_id):
         frag.write('vec3 color = basecol * visibility * lightColor * dotNL;')
     frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
 
-    # if rpdat.arm_material_model == 'Cycles':
-        # frag.write('color = min(color * 0.9, vec3(0.9)) + min(color / 200.0, 0.1);') # Higher range to allow emission
+    if rpdat.arm_voxelgi_emission:
+        frag.write('color = min(color * 0.9, vec3(0.9)) + min(color / 200.0, 0.1);') # Higher range to allow emission
 
     # if rpdat.rp_voxelgi_hdr:
         # frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')

@@ -984,6 +984,8 @@ class ArmRenderPathPanel(bpy.types.Panel):
                 layout.prop(rpdat, 'arm_voxelgi_shadows')
                 layout.prop(rpdat, 'arm_voxelgi_refraction')
                 # layout.prop(rpdat, 'rp_voxelgi_hdr')
+                if rpdat.rp_gi == 'Voxel GI':
+                    layout.prop(rpdat, 'arm_voxelgi_emission')
 
             layout.separator()
             layout.prop(rpdat, "rp_render_to_texture")

@@ -171,6 +171,7 @@ def init_properties():
                ('Deferred Plus', 'Deferred Plus (experimental)', 'Deferred Plus'),
                ('Grease Pencil', 'Grease Pencil', 'Grease Pencil'),
                ('Render Capture', 'Render Capture', 'Render Capture'),
+               ('Max', 'Max', 'Max'),
                ],
         name="Preset", description="Render path preset", default='Deferred', update=update_preset)
     bpy.types.World.arm_voxelgi_diff = bpy.props.FloatProperty(name="Diffuse", description="", default=1.0, update=assets.invalidate_shader_cache)

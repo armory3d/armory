@@ -101,7 +101,6 @@ void main() {
 		
 	vec3 indirectSpecular = traceSpecular(voxpos, n, v, metrough.y);
 	indirectSpecular *= f0 * envBRDF.x + envBRDF.y;
-	indirectSpecular = vec3(0.0);
 
 	fragColor.rgb = indirectDiffuse.rgb * voxelgiDiff * g1.rgb + indirectSpecular * voxelgiSpec;
 

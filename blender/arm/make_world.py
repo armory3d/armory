@@ -140,6 +140,7 @@ def build_node_tree(world):
             wrd.world_defs += '_VoxelGICone5'
         wrd.world_defs += '_Rad' # Always do radiance for voxels
         wrd.world_defs += '_Irr'
+
     if voxelgi:
         assets.add_khafile_def('arm_voxelgi')
         if rpdat.arm_voxelgi_shadows:
@@ -148,8 +149,9 @@ def build_node_tree(world):
         if rpdat.arm_voxelgi_refraction:
             wrd.world_defs += '_VoxelGIDirect'
             wrd.world_defs += '_VoxelGIRefract'
+        if rpdat.arm_voxelgi_emission:
+            wrd.world_defs += '_VoxelGIEmission'
         wrd.world_defs += '_VoxelGI'
-        
     elif voxelao:
         wrd.world_defs += '_VoxelAO'
 

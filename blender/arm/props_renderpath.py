@@ -202,6 +202,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     # arm_voxelgi_anisotropic = bpy.props.BoolProperty(name="Anisotropic", description="Use anisotropic voxels", default=False, update=update_renderpath)
     arm_voxelgi_shadows = bpy.props.BoolProperty(name="Trace Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
     arm_voxelgi_refraction = bpy.props.BoolProperty(name="Trace Refraction", description="Use voxels to render refraction", default=False, update=update_renderpath)
+    arm_voxelgi_emission = bpy.props.BoolProperty(name="Emission", description="Encode emission into voxelized data", default=False, update=update_renderpath)
     arm_samples_per_pixel = EnumProperty(
         items=[('1', '1X', '1X'),
                ('2', '2X', '2X'),
