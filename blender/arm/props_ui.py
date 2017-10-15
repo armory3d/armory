@@ -101,6 +101,7 @@ class ParticlesPropsPanel(bpy.types.Panel):
         if obj == None:
             return
 
+        layout.prop(obj.settings, 'arm_loop')
         layout.prop(obj.settings, 'arm_gpu_sim')
         layout.prop(obj.settings, 'arm_count_mult')
 

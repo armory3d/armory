@@ -2419,6 +2419,7 @@ class ArmoryExporter:
                 o['gpu_sim'] = True
 
             o['type'] = 0 if psettings.type == 'EMITTER' else 1 # HAIR
+            o['loop'] = psettings.arm_loop
             # Emission
             o['count'] = psettings.count * psettings.arm_count_mult
             o['frame_start'] = psettings.frame_start

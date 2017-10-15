@@ -21,10 +21,15 @@ def write(vert, particle_info=None):
     if out_age:
         prep = ''
         vert.add_out('float p_age')
-    # var p_age = (count - p.i) * spawnRate;
-    vert.write(prep + 'p_age = (pd[0][0] - gl_InstanceID) * pd[0][1];')
+    # var p_age = lapTime - p.i * spawnRate
+    vert.write(prep + 'p_age = pd[3][3] - gl_InstanceID * pd[0][1];')
     # p_age -= p_age * fhash(i) * r.lifetime_random;
     vert.write('p_age -= p_age * fhash(gl_InstanceID) * pd[2][3];')
+
+    # Loop
+    # pd[0][0] - animtime, loop stored in sign
+    # vert.write('while (p_age < 0) p_age += pd[0][0];')
+    vert.write('if (pd[0][0] > 0 && p_age < 0) p_age += (int(-p_age / pd[0][0]) + 1) * pd[0][0];')
 
     # lifetime
     prep = 'float '
@@ -33,9 +38,9 @@ def write(vert, particle_info=None):
         vert.add_out('float p_lifetime')
     vert.write(prep + 'p_lifetime = pd[0][2];')
     # todo: properly discard
-    vert.write('if (gl_InstanceID > pd[0][0] || p_age < 0 || p_age > p_lifetime) { spos.x = spos.y = spos.z = -99999; }')
+    vert.write('if (p_age < 0 || p_age > p_lifetime) { spos.x = spos.y = spos.z = -99999; }')
 
-    vert.write('p_age /= 2;')
+    vert.write('p_age /= 2;') # Match
     
     # object_align_factor / 2 + gxyz
     prep = 'vec3 '
@@ -76,7 +81,7 @@ def write(vert, particle_info=None):
 
 def write_tilesheet(vert):
     # tilesx, tilesy, framerate - pd[3][0], pd[3][1], pd[3][2]
-    vert.write('int frame = int((p_age / 2) / pd[3][2]);')
+    vert.write('int frame = int((p_age) / pd[3][2]);')
     vert.write('int tx = frame % int(pd[3][0]);')
     vert.write('int ty = int(frame / pd[3][0]);')
     vert.write('vec2 tilesheetOffset = vec2(tx * (1 / pd[3][0]), ty * (1 / pd[3][1]));')

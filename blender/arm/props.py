@@ -341,6 +341,7 @@ def init_properties():
     # Particles
     bpy.types.ParticleSettings.arm_gpu_sim = bpy.props.BoolProperty(name="GPU Simulation", description="Calculate particle simulation on GPU", default=False, update=assets.invalidate_shader_cache)
     bpy.types.ParticleSettings.arm_count_mult = bpy.props.FloatProperty(name="Multiply Count", description="Multiply particle count when rendering in Armory", default=1.0)
+    bpy.types.ParticleSettings.arm_loop = bpy.props.BoolProperty(name="Loop", description="Loop this particle system", default=False)
 
     create_wrd()
 
