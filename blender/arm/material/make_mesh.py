@@ -443,7 +443,11 @@ def make_forward_mobile(con_mesh):
     frag.write('direct *= attenuate(distance(wposition, lightPos));')
 
     frag.add_out('vec4 fragColor')
-    frag.write('fragColor = vec4(direct * visibility + basecol * 0.5 * envmapStrength, 1.0);')
+    blend = mat_state.material.arm_blending
+    if blend:
+        frag.write('fragColor = vec4(basecol * visibility, 1.0);')
+    else:
+        frag.write('fragColor = vec4(direct * visibility + basecol * 0.5 * envmapStrength, 1.0);')
 
     if '_LDR' in wrd.world_defs:
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
@@ -491,7 +495,11 @@ def make_forward(con_mesh):
     frag = con_mesh.frag
     frag.add_out('vec4 fragColor')
 
-    frag.write('fragColor = vec4(direct * lightColor * visibility + indirect * occlusion * envmapStrength, 1.0);')
+    blend = mat_state.material.arm_blending
+    if blend:
+        frag.write('fragColor = vec4(basecol * lightColor * visibility, 1.0);')
+    else:
+        frag.write('fragColor = vec4(direct * lightColor * visibility + indirect * occlusion * envmapStrength, 1.0);')
     
     if '_LDR' in wrd.world_defs:
         frag.add_include('../../Shaders/std/tonemap.glsl')

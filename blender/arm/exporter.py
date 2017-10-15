@@ -2441,6 +2441,8 @@ class ArmoryExporter:
             # Render
             o['dupli_object'] = psettings.dupli_object.name
             self.objectToArmObjectDict[psettings.dupli_object]['is_particle'] = True
+            # Field weights
+            o['weight_gravity'] = psettings.effector_weights.gravity
             self.output['particle_datas'].append(o)
             
     def export_tilesheets(self):
