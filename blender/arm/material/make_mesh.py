@@ -446,7 +446,7 @@ def make_forward_mobile(con_mesh):
         return
 
     frag.write('vec3 direct = basecol * dotNL * lightColor;')
-    frag.write('direct += vec3(D_Approx(max(roughness, 0.3), dot(reflect(-vVec, n), lightDir)));')
+    # frag.write('direct += vec3(D_Approx(max(roughness, 0.3), dot(reflect(-vVec, n), lightDir)));')
     frag.write('direct *= attenuate(distance(wposition, lightPos));')
 
     frag.write('fragColor = vec4(direct * visibility + basecol * 0.5 * envmapStrength, 1.0);')
