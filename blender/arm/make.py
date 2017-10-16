@@ -39,7 +39,7 @@ def compile_shader(raw_shaders_path, shader_name, defs):
     with open(json_name) as f:
         json_file = f.read()
     json_data = json.loads(json_file)
-    
+
     fp = arm.utils.get_fp_build()
     arm.lib.make_datas.make(base_name, json_data, fp, defs)
     arm.lib.make_variants.make(base_name, json_data, fp, defs)
@@ -116,7 +116,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
             if ArmoryExporter.export_ui:
                 ui_found = True
             assets.add(asset_path)
-    
+
     if physics_found == False: # Disable physics if no rigid body is exported
         export_physics = False
 
@@ -174,7 +174,10 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
         state.last_resx = resx
         state.last_resy = resy
 
-def compile_project(target_name=None, watch=False, patch=False):
+def compile_project(target_name=None, watch=False, patch=False, no_project_file=False):
+    """
+    :param no_project_file: Pass '--noproject' to kha make. In the future assets will be copied.
+    """
     wrd = bpy.data.worlds['Arm']
 
     fp = arm.utils.get_fp()
@@ -188,7 +191,7 @@ def compile_project(target_name=None, watch=False, patch=False):
 
     node_path = arm.utils.get_node_path()
     khamake_path = arm.utils.get_khamake_path()
-    
+
     kha_target_name = make_utils.get_kha_target(target_name)
     cmd = [node_path, khamake_path, kha_target_name]
 
@@ -210,7 +213,7 @@ def compile_project(target_name=None, watch=False, patch=False):
     else:
         cmd.append('-g')
         cmd.append(arm.utils.get_gapi())
-    
+
     cmd.append('--to')
     if kha_target_name == 'krom' and not state.in_viewport:
         cmd.append(arm.utils.build_dir() + '/window')
@@ -242,6 +245,10 @@ def compile_project(target_name=None, watch=False, patch=False):
         threading.Timer(0.1, watch_compile, ['build']).start()
         return state.compileproc
     else:
+        if no_project_file:
+            cmd.append('--noproject')
+            #TODO [montonero] add option to copy assets w/o generating project file
+        print("Running:\n", cmd)
         return subprocess.Popen(cmd)
 
 def build_project(is_play=False, is_publish=False, is_render=False, is_render_anim=False, in_viewport=False):
@@ -256,7 +263,7 @@ def build_project(is_play=False, is_publish=False, is_render=False, is_render_an
     # Save blend
     if arm.utils.get_save_on_build() and not state.krom_running:
         bpy.ops.wm.save_mainfile()
-    
+
     log.clear()
 
     # Set camera in active scene
@@ -270,7 +277,7 @@ def build_project(is_play=False, is_publish=False, is_render=False, is_render_an
     # Get paths
     sdk_path = arm.utils.get_sdk_path()
     raw_shaders_path = sdk_path + '/armory/Shaders/'
-    
+
     # Set dir
     fp = arm.utils.get_fp()
     os.chdir(fp)
@@ -326,7 +333,7 @@ def watch_play():
         return
     line = b''
     while state.playproc != None and state.playproc.poll() == None:
-        char = state.playproc.stderr.read(1) # Read immediately one by one 
+        char = state.playproc.stderr.read(1) # Read immediately one by one
         if char == b'\n':
             msg = str(line).split('"', 1) # Extract message
             if len(msg) > 1:
