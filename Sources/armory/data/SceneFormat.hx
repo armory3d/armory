@@ -34,7 +34,6 @@ typedef TIrradiance = iron.data.SceneFormat.TIrradiance;
 typedef TParticleData = iron.data.SceneFormat.TParticleData;
 typedef TObj = iron.data.SceneFormat.TObj;
 typedef TGroup = iron.data.SceneFormat.TGroup;
-typedef TAnimationSetup = iron.data.SceneFormat.TAnimationSetup;
 typedef TConstraint = iron.data.SceneFormat.TConstraint;
 typedef TParticleReference = iron.data.SceneFormat.TParticleReference;
 typedef TTrait = iron.data.SceneFormat.TTrait;
