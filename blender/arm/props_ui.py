@@ -676,10 +676,12 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryPatchProjectButton(bpy.types.Operator):
-    '''Build and compile project'''
+    '''
+    Build/compile project without generating project files.
+    This allows iterating faster on native platforms since project file is not reloaded.
+    '''
     bl_idname = 'arm.patch_project'
     bl_label = 'Patch'
-
     def execute(self, context):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
@@ -689,6 +691,8 @@ class ArmoryPatchProjectButton(bpy.types.Operator):
 
         if not arm.utils.check_engine(self):
             return {"CANCELLED"}
+
+        self.report({'INFO'}, 'Patching project, check console for details.')
 
         arm.utils.check_projectpath(self)
 
@@ -704,12 +708,13 @@ class ArmoryPatchProjectButton(bpy.types.Operator):
             if wrd.arm_rplist[i].name == item.arm_project_rp:
                 wrd.arm_rplist_index = i
                 break
+
+        #make.clean_project()
         state.target = item.arm_project_target
         state.is_export = True
-        assets.invalidate_shader_cache(None, None)
         assets.invalidate_enabled = False
-        make.build_project()
-        make.compile_project(patch=True, watch=True)
+        make.build_project(is_publish=True)
+        make.compile_project(no_project_file=True)
         state.is_export = False
         wrd.arm_rplist_index = rplist_index
         assets.invalidate_enabled = True
@@ -984,7 +989,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
                 if rpdat.rp_gi == 'Voxel GI':
                     layout.prop(rpdat, 'arm_voxelgi_emission')
                 layout.separator()
-                
+
             layout.prop(rpdat, "rp_hdr")
             layout.prop(rpdat, "rp_stereo")
             layout.prop(rpdat, "rp_greasepencil")
