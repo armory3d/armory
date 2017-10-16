@@ -27,7 +27,6 @@ class WalkNavigation extends Trait {
 
 		this.easing = easing;
 		notifyOnInit(init);
-		notifyOnUpdate(update);
 	}
 
 	function init() {
@@ -36,6 +35,7 @@ class WalkNavigation extends Trait {
 		mouse = Input.getMouse();
 
 		camera = cast(object, CameraObject);
+		notifyOnUpdate(update);
 	}
 
 	function update() {
