@@ -20,7 +20,7 @@ class ThirdPersonController extends CameraController {
 	var state = 0; // Idle, run
 	var arm:Object;
 
-	public function new(animObject:String, idle = "idle", run = "run") {
+	public function new(animObject = "", idle = "idle", run = "run") {
 		super();
 
 		this.animObject = animObject;
@@ -29,9 +29,20 @@ class ThirdPersonController extends CameraController {
 
 		iron.Scene.active.notifyOnInit(init);
 	}
+
+	function findAnimation(o:Object):Object {
+		if (o.animation != null) return o;
+		for (c in o.children) {
+			var co = findAnimation(c);
+			if (co != null) return co;
+		}
+		return null;
+	}
 	
 	function init() {
-		arm = object.getChild(animObject);
+		if (animObject == "") arm = findAnimation(object);
+		else arm = object.getChild(animObject);
+
 		PhysicsWorld.active.notifyOnPreUpdate(preUpdate);
 		notifyOnUpdate(update);
 		notifyOnRemove(removed);
