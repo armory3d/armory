@@ -110,7 +110,7 @@ def make_base(con_mesh, parse_opacity):
     tese = None
 
     vert.add_uniform('mat3 N', '_normalMatrix')
-    vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
+    vert.write_main_header('    vec4 spos = vec4(pos, 1.0);')
 
     vattr_written = False
     is_displacement = mat_utils.disp_linked(mat_state.output_node)
@@ -178,7 +178,7 @@ def make_base(con_mesh, parse_opacity):
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
         if mat_state.material.arm_tilesheet_mat:
-            if mat_state.material.arm_particle != 'off':
+            if mat_state.material.arm_particle == 'gpu':
                 make_particle.write_tilesheet(vert)
             else:
                 vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
@@ -228,7 +228,7 @@ def make_base(con_mesh, parse_opacity):
         vert.add_out('vec3 wnormal')
         write_norpos(con_mesh, vert)
         frag.write_pre = True
-        frag.write_main_header('vec3 n = normalize(wnormal);')
+        frag.write_main_header('    vec3 n = normalize(wnormal);')
         frag.write_pre = False
 
     if tese != None:
@@ -438,16 +438,18 @@ def make_forward_mobile(con_mesh):
         # frag.write('    visibility = max(float(texture(shadowMap, lpos.xy).r + shadowsBias > lpos.z), 0.5);')
         frag.write('    }')
 
+    frag.add_out('vec4 fragColor')
+    blend = mat_state.material.arm_blending
+    if blend:
+        # frag.write('fragColor = vec4(basecol * visibility, 1.0);')
+        frag.write('fragColor = vec4(basecol, 1.0);')
+        return
+
     frag.write('vec3 direct = basecol * dotNL * lightColor;')
     frag.write('direct += vec3(D_Approx(max(roughness, 0.3), dot(reflect(-vVec, n), lightDir)));')
     frag.write('direct *= attenuate(distance(wposition, lightPos));')
 
-    frag.add_out('vec4 fragColor')
-    blend = mat_state.material.arm_blending
-    if blend:
-        frag.write('fragColor = vec4(basecol * visibility, 1.0);')
-    else:
-        frag.write('fragColor = vec4(direct * visibility + basecol * 0.5 * envmapStrength, 1.0);')
+    frag.write('fragColor = vec4(direct * visibility + basecol * 0.5 * envmapStrength, 1.0);')
 
     if '_LDR' in wrd.world_defs:
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
@@ -493,18 +495,15 @@ def make_forward(con_mesh):
     make_forward_base(con_mesh)
 
     frag = con_mesh.frag
-    frag.add_out('vec4 fragColor')
 
     blend = mat_state.material.arm_blending
-    if blend:
-        frag.write('fragColor = vec4(basecol * lightColor * visibility, 1.0);')
-    else:
-        frag.write('fragColor = vec4(direct * lightColor * visibility + indirect * occlusion * envmapStrength, 1.0);')
+    if not blend:
+        frag.add_out('vec4 fragColor')
     
-    if '_LDR' in wrd.world_defs:
-        frag.add_include('../../Shaders/std/tonemap.glsl')
-        frag.write('fragColor.rgb = tonemapFilmic(fragColor.rgb);')
-        # frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
+        if '_LDR' in wrd.world_defs:
+            frag.add_include('../../Shaders/std/tonemap.glsl')
+            frag.write('fragColor.rgb = tonemapFilmic(fragColor.rgb);')
+            # frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
 
     # Particle opacity
     if mat_state.material.arm_particle == 'gpu' and mat_state.material.arm_particle_fade:
@@ -527,7 +526,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
     frag.main_pre += """
     vec3 vVec = normalize(eyeDir);
     float dotNV = max(dot(n, vVec), 0.0);
-    """
+"""
 
     if is_displacement:
         tese.add_out('vec3 eyeDir')
@@ -614,6 +613,14 @@ def make_forward_base(con_mesh, parse_opacity=False):
     frag.write('        visibility *= smoothstep(spotlightData.y, spotlightData.x, spotEffect);')
     frag.write('    }')
     frag.write('}')
+
+    blend = mat_state.material.arm_blending
+    if blend:
+        frag.add_out('vec4 fragColor')
+        # frag.write('fragColor = vec4(basecol * lightColor * visibility, 1.0);')
+        frag.write('fragColor = vec4(basecol, 1.0);')
+        # TODO: Fade out fragments near depth buffer here
+        return
 
     frag.write('vec3 albedo = surfaceAlbedo(basecol, metallic);')
     frag.write('vec3 f0 = surfaceF0(basecol, metallic);')

@@ -14,7 +14,7 @@ def write(vert, particle_info=None):
 
     vert.add_uniform('mat4 pd', '_particleData')
 
-    str_tex_hash = "float fhash(float n) { return fract(sin(n) * 43758.5453); }"
+    str_tex_hash = "    float fhash(float n) { return fract(sin(n) * 43758.5453); }"
     vert.add_function(str_tex_hash)
     
     prep = 'float '

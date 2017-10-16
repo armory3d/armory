@@ -251,6 +251,11 @@ void main() {
 	fragColor.rgb *= visibility;
 
 #ifdef _VoxelGIRefract
-	fragColor.rgb = mix(traceRefraction(p / voxelgiDimensions, n, -v, metrough.y), fragColor.rgb, g1.a);
+	#ifdef _VoxelGICam
+	vec3 voxposr = (p - eyeSnap) / voxelgiHalfExtents;
+	#else
+	vec3 voxposr = p / voxelgiHalfExtents;
+	#endif
+	fragColor.rgb = mix(traceRefraction(voxposr, n, -v, metrough.y), fragColor.rgb, g1.a);
 #endif
 }

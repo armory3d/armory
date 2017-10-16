@@ -969,9 +969,6 @@ class ArmRenderPathPanel(bpy.types.Panel):
             layout.prop(rpdat, "rp_sss_state")
             layout.prop(rpdat, "rp_blending_state")
             layout.prop(rpdat, "rp_background")
-            layout.prop(rpdat, "rp_hdr")
-            layout.prop(rpdat, "rp_stereo")
-            layout.prop(rpdat, "rp_greasepencil")
             layout.prop(rpdat, 'rp_gi')
             if rpdat.rp_gi != 'Off':
                 layout.prop(rpdat, 'rp_voxelgi_resolution')
@@ -986,6 +983,11 @@ class ArmRenderPathPanel(bpy.types.Panel):
                 # layout.prop(rpdat, 'rp_voxelgi_hdr')
                 if rpdat.rp_gi == 'Voxel GI':
                     layout.prop(rpdat, 'arm_voxelgi_emission')
+                layout.separator()
+                
+            layout.prop(rpdat, "rp_hdr")
+            layout.prop(rpdat, "rp_stereo")
+            layout.prop(rpdat, "rp_greasepencil")
 
             layout.separator()
             layout.prop(rpdat, "rp_render_to_texture")

@@ -3,6 +3,7 @@ import arm.utils
 import arm.material.cycles as cycles
 import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
+import arm.material.make_particle as make_particle
 
 def make(context_id):
     rpdat = arm.utils.get_rp()
@@ -112,6 +113,11 @@ def make_gi(context_id):
         frag.write('float opacity;')
     frag.write('float dotNV = 0.0;')
     cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False, basecol_only=True)
+
+    # Voxelized particles
+    # particle = mat_state.material.arm_particle
+    # if particle == 'gpu':
+        # make_particle.write(vert, particle_info=cycles.particle_info)
 
     if not frag.contains('vec3 n ='):
         frag.write_pre = True
