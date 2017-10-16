@@ -1258,8 +1258,21 @@ class ArmProxyPanel(bpy.types.Panel):
         layout = self.layout
         layout.operator("arm.make_proxy")
         obj = bpy.context.object
-        if obj.proxy != None:
-            pass
+        if obj != None and obj.proxy != None:
+            layout.label("Reset")
+            col = layout.column(align=True)
+            col.alignment = 'EXPAND'
+            row = col.row(align=True)
+            row.alignment = 'EXPAND'
+            row.operator("arm.reset_proxy_loc")
+            row.operator("arm.reset_proxy_rot")
+            row.operator("arm.reset_proxy_scale")
+            row = col.row(align=True)
+            row.alignment = 'EXPAND'
+            row.operator("arm.reset_proxy_materials")
+            row.operator("arm.reset_proxy_modifiers")
+            row.operator("arm.reset_proxy_traits")
+            layout.prop(obj, "arm_proxy_sync")
 
 class ArmMakeProxyButton(bpy.types.Operator):
     '''Create proxy from linked object'''
@@ -1273,6 +1286,78 @@ class ArmMakeProxyButton(bpy.types.Operator):
         if obj.library == None:
             self.report({'ERROR'}, 'Select linked object.')
         arm.proxy.make(obj)
+        return{'FINISHED'}
+
+class ArmResetProxyLocButton(bpy.types.Operator):
+    bl_idname = 'arm.reset_proxy_loc'
+    bl_label = 'Location'
+    def execute(self, context):
+        if context.object.arm_proxy_sync:
+            for obj in bpy.data.objects:
+                if obj.proxy == context.object.proxy:
+                    arm.proxy.reset_location(obj)
+        else:
+            arm.proxy.reset_location(context.object)
+        return{'FINISHED'}
+
+class ArmResetProxyRotButton(bpy.types.Operator):
+    bl_idname = 'arm.reset_proxy_rot'
+    bl_label = 'Rotation'
+    def execute(self, context):
+        if context.object.arm_proxy_sync:
+            for obj in bpy.data.objects:
+                if obj.proxy == context.object.proxy:
+                    arm.proxy.reset_rotation(obj)
+        else:
+            arm.proxy.reset_rotation(context.object)
+        return{'FINISHED'}
+
+class ArmResetProxyScaleButton(bpy.types.Operator):
+    bl_idname = 'arm.reset_proxy_scale'
+    bl_label = 'Scale'
+    def execute(self, context):
+        if context.object.arm_proxy_sync:
+            for obj in bpy.data.objects:
+                if obj.proxy == context.object.proxy:
+                    arm.proxy.reset_scale(obj)
+        else:
+            arm.proxy.reset_scale(context.object)
+        return{'FINISHED'}
+
+class ArmResetProxyMaterialsButton(bpy.types.Operator):
+    bl_idname = 'arm.reset_proxy_materials'
+    bl_label = 'Materials'
+    def execute(self, context):
+        if context.object.arm_proxy_sync:
+            for obj in bpy.data.objects:
+                if obj.proxy == context.object.proxy:
+                    arm.proxy.reset_materials(obj)
+        else:
+            arm.proxy.reset_materials(context.object)
+        return{'FINISHED'}
+
+class ArmResetProxyModifiersButton(bpy.types.Operator):
+    bl_idname = 'arm.reset_proxy_modifiers'
+    bl_label = 'Modifiers'
+    def execute(self, context):
+        if context.object.arm_proxy_sync:
+            for obj in bpy.data.objects:
+                if obj.proxy == context.object.proxy:
+                    arm.proxy.reset_modifiers(obj)
+        else:
+            arm.proxy.reset_modifiers(context.object)
+        return{'FINISHED'}
+
+class ArmResetProxyTraitsButton(bpy.types.Operator):
+    bl_idname = 'arm.reset_proxy_traits'
+    bl_label = 'Traits'
+    def execute(self, context):
+        if context.object.arm_proxy_sync:
+            for obj in bpy.data.objects:
+                if obj.proxy == context.object.proxy:
+                    arm.proxy.reset_traits(obj)
+        else:
+            arm.proxy.reset_traits(context.object)
         return{'FINISHED'}
 
 def register():
@@ -1318,6 +1403,12 @@ def register():
     bpy.utils.register_class(ArmTilesheetPanel)
     bpy.utils.register_class(ArmProxyPanel)
     bpy.utils.register_class(ArmMakeProxyButton)
+    bpy.utils.register_class(ArmResetProxyLocButton)
+    bpy.utils.register_class(ArmResetProxyRotButton)
+    bpy.utils.register_class(ArmResetProxyScaleButton)
+    bpy.utils.register_class(ArmResetProxyMaterialsButton)
+    bpy.utils.register_class(ArmResetProxyModifiersButton)
+    bpy.utils.register_class(ArmResetProxyTraitsButton)
 
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
     bpy.types.INFO_HT_header.prepend(draw_info_header)
@@ -1368,3 +1459,9 @@ def unregister():
     bpy.utils.unregister_class(ArmTilesheetPanel)
     bpy.utils.unregister_class(ArmProxyPanel)
     bpy.utils.unregister_class(ArmMakeProxyButton)
+    bpy.utils.unregister_class(ArmResetProxyLocButton)
+    bpy.utils.unregister_class(ArmResetProxyRotButton)
+    bpy.utils.unregister_class(ArmResetProxyScaleButton)
+    bpy.utils.unregister_class(ArmResetProxyMaterialsButton)
+    bpy.utils.unregister_class(ArmResetProxyModifiersButton)
+    bpy.utils.unregister_class(ArmResetProxyTraitsButton)

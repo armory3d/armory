@@ -132,6 +132,7 @@ def init_properties():
     bpy.types.Object.arm_animation_enabled = bpy.props.BoolProperty(name="Animation", description="Enable skinning & timeline animation", default=True)
     bpy.types.Object.arm_tilesheet = bpy.props.StringProperty(name="Tilesheet", description="Set tilesheet animation", default='')
     bpy.types.Object.arm_tilesheet_action = bpy.props.StringProperty(name="Tilesheet Action", description="Set startup action", default='')
+    bpy.types.Object.arm_proxy_sync = bpy.props.BoolProperty(name="Sync", description="Sycnhronize changes with all proxy instances", default=False)
     # For speakers
     bpy.types.Speaker.arm_loop = bpy.props.BoolProperty(name="Loop", description="Loop this sound", default=False)
     bpy.types.Speaker.arm_stream = bpy.props.BoolProperty(name="Stream", description="Stream this sound", default=False)
