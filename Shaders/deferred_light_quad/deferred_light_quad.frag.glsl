@@ -110,7 +110,9 @@ void main() {
 	// float dotLH = dot(l, h);
 
 #ifdef _OrenNayar
-	fragColor.rgb = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
+	float facdif = min((1.0 - metrough.x) * 3.0, 1.0);
+	float facspec = min(metrough.x * 3.0, 1.0);
+	fragColor.rgb = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) * facdif + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH) * facspec;
 #else
 	fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
 #endif

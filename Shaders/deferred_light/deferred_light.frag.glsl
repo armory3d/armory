@@ -128,9 +128,6 @@ void main() {
 
 	vec3 p = getPos2(invVP, depth, texCoord);
 	vec2 metrough = unpackFloat(g0.b);
-
-	float facdif = min((1.0 - metrough.x) * 3.0, 1.0);
-	float facspec = min(metrough.x * 3.0, 1.0);
 	
 	vec3 v = normalize(eye - p);
 	float dotNV = dot(n, v);
@@ -183,7 +180,12 @@ void main() {
 			visibility *= smoothstep(spotlightData.y, spotlightData.x, spotEffect);
 		}
 	}
-	
+
+#ifdef _OrenNayar
+	float facdif = min((1.0 - metrough.x) * 3.0, 1.0);
+	float facspec = min(metrough.x * 3.0, 1.0);
+#endif
+
 #ifdef _PolyLight
 	if (lightType == 3) { // Area
 		float theta = acos(dotNV);
@@ -198,7 +200,11 @@ void main() {
 		float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lampArea0, lampArea1, lampArea2, lampArea3);
 		ltcspec *= texture(sltcMag, tuv).a;
 		float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lampArea0, lampArea1, lampArea2, lampArea3);
+	#ifdef _OrenNayar
 		fragColor.rgb = albedo * ltcdiff * facdif + ltcspec * facspec;
+	#else
+		fragColor.rgb = albedo * ltcdiff + ltcspec;
+	#endif
 	}
 	else {
 #endif
@@ -210,7 +216,7 @@ void main() {
 	// Metallic
 	// fragColor.rgb = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
 #else
-	fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) * facdif + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH) * facspec;
+	fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
 #endif
 
 #ifdef _PolyLight
