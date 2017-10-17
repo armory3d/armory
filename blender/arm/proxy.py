@@ -2,9 +2,9 @@
 import bpy
 
 def make(obj):
-    traverse(obj)
+    traverse(obj, is_parent=True)
 
-def traverse(obj):
+def traverse(obj, is_parent=False):
     if obj == None or obj.library == None or obj.proxy != None:
         return
 
@@ -23,7 +23,13 @@ def traverse(obj):
             c.parent = bpy.context.scene.objects.active
             c.matrix_parent_inverse = bpy.context.scene.objects.active.matrix_world.inverted()
 
-    sync_modifiers(bpy.context.scene.objects.active)
+    active = bpy.context.scene.objects.active
+    sync_modifiers(active)
+    # No transform sync for parent
+    if is_parent:
+        active.arm_proxy_sync_loc = False
+        active.arm_proxy_sync_rot = False
+        active.arm_proxy_sync_scale = False
 
 def sync_location(obj):
     obj.location = obj.proxy.location

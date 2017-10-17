@@ -1271,7 +1271,7 @@ class ArmProxyPanel(bpy.types.Panel):
             row.prop(obj, "arm_proxy_sync_traits")
             row = layout.row(align=True)
             row.alignment = 'EXPAND'
-            row.operator("arm.proxy_toggle")
+            row.operator("arm.proxy_toggle_all")
             row.operator("arm.proxy_apply_all")
 
 class ArmMakeProxyButton(bpy.types.Operator):
@@ -1288,9 +1288,9 @@ class ArmMakeProxyButton(bpy.types.Operator):
         arm.proxy.make(obj)
         return{'FINISHED'}
 
-class ArmProxyToggleButton(bpy.types.Operator):
-    bl_idname = 'arm.proxy_toggle'
-    bl_label = 'Toggle'
+class ArmProxyToggleAllButton(bpy.types.Operator):
+    bl_idname = 'arm.proxy_toggle_all'
+    bl_label = 'Toggle All'
     def execute(self, context):
         obj = context.object
         b = not obj.arm_proxy_sync_loc
@@ -1382,7 +1382,7 @@ def register():
     bpy.utils.register_class(ArmTilesheetPanel)
     bpy.utils.register_class(ArmProxyPanel)
     bpy.utils.register_class(ArmMakeProxyButton)
-    bpy.utils.register_class(ArmProxyToggleButton)
+    bpy.utils.register_class(ArmProxyToggleAllButton)
     bpy.utils.register_class(ArmProxyApplyAllButton)
     bpy.utils.register_class(ArmSyncProxyButton)
 
@@ -1435,6 +1435,6 @@ def unregister():
     bpy.utils.unregister_class(ArmTilesheetPanel)
     bpy.utils.unregister_class(ArmProxyPanel)
     bpy.utils.unregister_class(ArmMakeProxyButton)
-    bpy.utils.unregister_class(ArmProxyToggleButton)
+    bpy.utils.unregister_class(ArmProxyToggleAllButton)
     bpy.utils.unregister_class(ArmProxyApplyAllButton)
     bpy.utils.unregister_class(ArmSyncProxyButton)
