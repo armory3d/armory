@@ -9,6 +9,7 @@ import arm.utils
 import arm.make
 import arm.make_renderer as make_renderer
 import arm.props_renderpath as props_renderpath
+import arm.proxy
 try:
     import barmory
 except ImportError:
@@ -37,6 +38,42 @@ def update_mat_cache(self, context):
         self.lock_cache = True
     else:
         pass
+
+def proxy_sync_loc(self, context):
+    if context.object == None or context.object.proxy == None:
+        return
+    if context.object.arm_proxy_sync_loc:
+        arm.proxy.sync_location(context.object)
+
+def proxy_sync_rot(self, context):
+    if context.object == None or context.object.proxy == None:
+        return
+    if context.object.arm_proxy_sync_rot:
+        arm.proxy.sync_rotation(context.object)
+
+def proxy_sync_scale(self, context):
+    if context.object == None or context.object.proxy == None:
+        return
+    if context.object.arm_proxy_sync_scale:
+        arm.proxy.sync_scale(context.object)
+
+def proxy_sync_materials(self, context):
+    if context.object == None or context.object.proxy == None:
+        return
+    if context.object.arm_proxy_sync_materials:
+        arm.proxy.sync_materials(context.object)
+
+def proxy_sync_modifiers(self, context):
+    if context.object == None or context.object.proxy == None:
+        return
+    if context.object.arm_proxy_sync_modifiers:
+        arm.proxy.sync_modifiers(context.object)
+
+def proxy_sync_traits(self, context):
+    if context.object == None or context.object.proxy == None:
+        return
+    if context.object.arm_proxy_sync_traits:
+        arm.proxy.sync_traits(context.object)
 
 def init_properties():
     global arm_version
@@ -132,7 +169,12 @@ def init_properties():
     bpy.types.Object.arm_animation_enabled = bpy.props.BoolProperty(name="Animation", description="Enable skinning & timeline animation", default=True)
     bpy.types.Object.arm_tilesheet = bpy.props.StringProperty(name="Tilesheet", description="Set tilesheet animation", default='')
     bpy.types.Object.arm_tilesheet_action = bpy.props.StringProperty(name="Tilesheet Action", description="Set startup action", default='')
-    bpy.types.Object.arm_proxy_sync = bpy.props.BoolProperty(name="Sync", description="Sycnhronize changes with all proxy instances", default=False)
+    bpy.types.Object.arm_proxy_sync_loc = bpy.props.BoolProperty(name="Location", description="Keep location synchronized with proxy object", default=False, update=proxy_sync_loc)
+    bpy.types.Object.arm_proxy_sync_rot = bpy.props.BoolProperty(name="Rotation", description="Keep rotation synchronized with proxy object", default=False, update=proxy_sync_rot)
+    bpy.types.Object.arm_proxy_sync_scale = bpy.props.BoolProperty(name="Scale", description="Keep scale synchronized with proxy object", default=False, update=proxy_sync_scale)
+    bpy.types.Object.arm_proxy_sync_materials = bpy.props.BoolProperty(name="Materials", description="Keep materials synchronized with proxy object", default=False, update=proxy_sync_materials)
+    bpy.types.Object.arm_proxy_sync_modifiers = bpy.props.BoolProperty(name="Modifiers", description="Keep modifiers synchronized with proxy object", default=False, update=proxy_sync_modifiers)
+    bpy.types.Object.arm_proxy_sync_traits = bpy.props.BoolProperty(name="Traits", description="Keep traits synchronized with proxy object", default=False, update=proxy_sync_traits)
     # For speakers
     bpy.types.Speaker.arm_loop = bpy.props.BoolProperty(name="Loop", description="Loop this sound", default=False)
     bpy.types.Speaker.arm_stream = bpy.props.BoolProperty(name="Stream", description="Stream this sound", default=False)

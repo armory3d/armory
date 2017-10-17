@@ -23,17 +23,19 @@ def traverse(obj):
             c.parent = bpy.context.scene.objects.active
             c.matrix_parent_inverse = bpy.context.scene.objects.active.matrix_world.inverted()
 
-def reset_location(obj):
+    sync_modifiers(bpy.context.scene.objects.active)
+
+def sync_location(obj):
     obj.location = obj.proxy.location
 
-def reset_rotation(obj):
+def sync_rotation(obj):
     obj.rotation_euler = obj.proxy.rotation_euler
 
-def reset_scale(obj):
+def sync_scale(obj):
     obj.scale = obj.proxy.scale
 
 # https://blender.stackexchange.com/questions/4878
-def reset_modifiers(obj):
+def sync_modifiers(obj):
     proxy = obj.proxy
     obj.modifiers.clear()
     for mSrc in obj.proxy.modifiers:
@@ -64,13 +66,13 @@ def sync_collection(cSrc, cDst):
         for prop in properties:
             setattr(mDst, prop, getattr(mSrc, prop))
 
-def reset_traits(obj):
+def sync_traits(obj):
     sync_collection(obj.proxy.arm_traitlist, obj.arm_traitlist)
     for i in range(0, len(obj.arm_traitlist)):
         sync_collection(obj.proxy.arm_traitlist[i].arm_traitparamslist, obj.arm_traitlist[i].arm_traitparamslist)
         sync_collection(obj.proxy.arm_traitlist[i].arm_traitpropslist, obj.arm_traitlist[i].arm_traitpropslist)
 
-def reset_materials(obj):
+def sync_materials(obj):
     # Blender likes to crash here:(
     proxy_mats = []
     for slot in obj.proxy.material_slots:
