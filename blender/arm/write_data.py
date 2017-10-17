@@ -142,6 +142,7 @@ project.addSources('Sources');
 
         shader_references = sorted(list(set(assets.shaders)))
         for ref in shader_references:
+            ref = ref.replace('\\', '/')
             f.write("project.addShaders('" + ref + "');\n")
 
         shader_data_references = sorted(list(set(assets.shader_datas)))
