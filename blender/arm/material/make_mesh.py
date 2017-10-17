@@ -499,6 +499,7 @@ def make_forward(con_mesh):
     blend = mat_state.material.arm_blending
     if not blend:
         frag.add_out('vec4 fragColor')
+        frag.write('fragColor = vec4(direct * lightColor * visibility + indirect * occlusion * envmapStrength, 1.0);')
     
         if '_LDR' in wrd.world_defs:
             frag.add_include('../../Shaders/std/tonemap.glsl')
