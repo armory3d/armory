@@ -41,16 +41,17 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
     
     # Get paths
     sdk_path = arm.utils.get_sdk_path()
+    kha_path = arm.utils.get_kha_path()
 
     if arm.utils.get_os() == 'win':
         cmft_path = sdk_path + '/armory/tools/cmft/cmft.exe'
-        kraffiti_path = sdk_path + '/win32/Kha/Kore/Tools/kraffiti/kraffiti.exe'
+        kraffiti_path = kha_path + '/Kore/Tools/kraffiti/kraffiti.exe'
     elif arm.utils.get_os() == 'mac':
         cmft_path = '"' + sdk_path + '/armory/tools/cmft/cmft-osx"'
-        kraffiti_path = '"' + sdk_path + '/Kode Studio.app/Contents/Kha/Kore/Tools/kraffiti/kraffiti-osx"'
+        kraffiti_path = '"' + kha_path + '/Kore/Tools/kraffiti/kraffiti-osx"'
     else:
         cmft_path = '"' + sdk_path + '/armory/tools/cmft/cmft-linux64"'
-        kraffiti_path = '"' + sdk_path + '/linux64/Kha/Kore/Tools/kraffiti/kraffiti-linux64"'
+        kraffiti_path = '"' + kha_path + '/Kore/Tools/kraffiti/kraffiti-linux64"'
     
     output_gama_numerator = '2.2' if disable_hdr else '1.0'
     input_file = arm.utils.asset_path(image_filepath)

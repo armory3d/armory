@@ -127,19 +127,19 @@ def get_kha_path():
         return 'Kha'
 
     if get_os() == 'win':
-        return get_sdk_path() + '/win32/Kha'
+        return get_sdk_path() + '/win32/Kha' # Using symlink on Windows
     elif get_os() == 'mac':
-        return get_sdk_path() + '/Kode Studio.app/Contents/Kha'
+        return get_sdk_path() + '/Kode Studio.app/Contents/Resources/app/extensions/kha/Kha'
     else:
-        return get_sdk_path() + '/linux64/Kha'
+        return get_sdk_path() + '/linux64/app/extensions/kha/Kha'
 
 def get_haxe_path():
     if get_os() == 'win':
-        return get_sdk_path() + '/win32/Kha/Tools/haxe/haxe.exe'
+        return get_kha_path() + '/Tools/haxe/haxe.exe'
     elif get_os() == 'mac':
-        return get_sdk_path() + '/Kode Studio.app/Contents/Kha/Tools/haxe/haxe-osx'
+        return get_kha_path() + '/Tools/haxe/haxe-osx'
     else:
-        return get_sdk_path() + '/linux64/Kha/Tools/haxe/haxe-linux64'
+        return get_kha_path() + '/Tools/haxe/haxe-linux64'
 
 def get_khamake_path():
     return get_kha_path() + '/make'
@@ -147,13 +147,13 @@ def get_khamake_path():
 def krom_paths():
     sdk_path = get_sdk_path()
     if arm.utils.get_os() == 'win':
-        krom_location = sdk_path + '/win32/Krom/win32'
+        krom_location = sdk_path + '/win32/Krom/win32' # Using symlink on Windows
         krom_path = krom_location + '/Krom.exe'
     elif arm.utils.get_os() == 'mac':
-        krom_location = sdk_path + '/Kode Studio.app/Contents/Krom/macos/Krom.app/Contents/MacOS'
+        krom_location = sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/krom/Krom/macos/Krom.app/Contents/MacOS'
         krom_path = krom_location + '/Krom'
     else:
-        krom_location = sdk_path + '/linux64/Krom/linux'
+        krom_location = sdk_path + '/linux64/app/extensions/krom/Krom/linux'
         krom_path = krom_location + '/Krom'
     return krom_location, krom_path
 
