@@ -245,6 +245,14 @@ class Main {
             start();
         });
     }
+    static function loadLibAmmo(name:String) {
+        kha.LoaderImpl.loadBlobFromDescription({ files: [name] }, function(b:kha.Blob) {
+            var print = function(s:String) { trace(s); };
+            var loaded = function() { state--; start(); }
+            untyped __js__("(1, eval)({0})", b.toString());
+            untyped __js__("Ammo({print:print}).then(loaded)");
+        });
+    }
     #end""")
 
         if rpdat.rp_gi == 'Voxel GI' or rpdat.rp_gi == 'Voxel AO':
@@ -257,7 +265,7 @@ class Main {
     public static function main() {
         iron.object.BoneAnimation.skinMaxBones = """ + str(wrd.arm_skin_max_bones) + """;
         state = 1;
-        #if (js && arm_bullet) state++; loadLib("ammo.js"); #end
+        #if (js && arm_bullet) state++; loadLibAmmo("ammo.js"); #end
         #if (js && arm_navigation) state++; loadLib("recast.js"); #end
         state--; start();
     }
