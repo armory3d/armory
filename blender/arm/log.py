@@ -17,7 +17,7 @@ def clear():
 def format_text(text):
     return (text[:80] + '..') if len(text) > 80 else text # Limit str size
 
-def electron_trace(text):
+def krom_trace(text):
     txt = text.split(' ', 1)
     if len(txt) > 1 and txt[1].startswith('__arm'):
         bridge.parse_operator(txt[1])

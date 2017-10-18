@@ -11,12 +11,14 @@ class ScriptNode(Node, ArmLogicTreeNode):
 
     @property
     def property0(self):
-        return bpy.data.texts[self.property0_].as_string()
+        return bpy.data.texts[self.property0_].as_string() if self.property0_ in bpy.data.texts else ''
+
 
     property0_ = StringProperty(name='Text', default='')
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
+        self.inputs.new('NodeSocketShader', 'Array')
         self.outputs.new('ArmNodeSocketAction', 'Out')
         self.outputs.new('NodeSocketShader', 'Result')
 

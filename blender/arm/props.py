@@ -78,7 +78,7 @@ def proxy_sync_traits(self, context):
 def init_properties():
     global arm_version
     bpy.types.World.arm_recompile = bpy.props.BoolProperty(name="Recompile", description="Recompile sources on next play", default=True)
-    bpy.types.World.arm_progress = bpy.props.FloatProperty(name="Progress", description="Current build progress", default=100.0, min=0.0, max=100.0, soft_min=0.0, soft_max=100.0, subtype='PERCENTAGE', get=log.get_progress)
+    bpy.types.World.arm_progress = bpy.props.FloatProperty(name="Building", description="Current build progress", default=100.0, min=0.0, max=100.0, soft_min=0.0, soft_max=100.0, subtype='PERCENTAGE', get=log.get_progress)
     bpy.types.World.arm_version = StringProperty(name="Version", description="Armory SDK version", default="")
     bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="")
     bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm")

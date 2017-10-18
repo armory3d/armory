@@ -248,7 +248,7 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
         if no_project_file:
             cmd.append('--noproject')
             #TODO [montonero] add option to copy assets w/o generating project file
-        print("Running:\n", cmd)
+        print("Running: ", cmd)
         return subprocess.Popen(cmd)
 
 def build_project(is_play=False, is_publish=False, is_render=False, is_render_anim=False, in_viewport=False):
@@ -338,7 +338,7 @@ def watch_play():
             msg = str(line).split('"', 1) # Extract message
             if len(msg) > 1:
                 trace = msg[1].rsplit('"', 1)[0]
-                log.electron_trace(trace)
+                log.krom_trace(trace)
             line = b''
         else:
             line += char
