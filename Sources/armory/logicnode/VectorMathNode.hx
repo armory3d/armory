@@ -19,15 +19,24 @@ class VectorMathNode extends LogicNode {
 		switch (property0) {
 		case "Add":
 			v.add(v2);
+		case "Subtract":
+			v.sub(v2);
+		case "Average":
+			v.add(v2);
+			v.x *= 0.5;
+			v.y *= 0.5;
+			v.z *= 0.5;
 		case "Dot Product":
 			f = v.dot(v2);
 			v.set(f, f, f);
+		case "Cross Product":
+			v.cross(v2);
+		case "Normalize":
+			v.normalize();
 		case "Multiply":
 			v.x *= v2.x;
 			v.y *= v2.y;
 			v.z *= v2.z;
-		case "Normalize":
-			v.normalize();
 		}
 
 		if (from == 0) return v;

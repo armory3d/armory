@@ -13,17 +13,38 @@ class MathNode(Node, ArmLogicTreeNode):
                  ('Multiply', 'Multiply', 'Multiply'),
         		 ('Sine', 'Sine', 'Sine'),
                  ('Cosine', 'Cosine', 'Cosine'),
-                 ('Max', 'Max', 'Max'),
-                 ('Min', 'Min', 'Min'),
-                 ('Abs', 'Abs', 'Abs')],
+                 ('Max', 'Maximum', 'Max'),
+                 ('Min', 'Minimum', 'Min'),
+                 ('Abs', 'Absolute', 'Abs'),
+
+                 ('Subtract', 'Subtract', 'Subtract'),
+                 ('Divide', 'Divide', 'Divide'),
+                 ('Tangent', 'Tangent', 'Tangent'),
+                 ('Arcsine', 'Arcsine', 'Arcsine'),
+                 ('Arccosine', 'Arccosine', 'Arccosine'),
+                 ('Arctangent', 'Arctangent', 'Arctangent'),
+                 ('Power', 'Power', 'Power'),
+                 ('Logarithm', 'Logarithm', 'Logarithm'),
+                 ('Round', 'Round', 'Round'),
+                 ('Less Than', 'Less Than', 'Less Than'),
+                 ('Greater Than', 'Greater Than', 'Greater Than'),
+                 ('Modulo', 'Modulo', 'Modulo'),
+                 ],
         name='', default='Add')
     
+    @property
+    def property1(self):
+        return 'true' if self.property1_ else 'false'
+
+    property1_ = BoolProperty(name='Clamp', default=False)
+
     def init(self, context):
         self.inputs.new('NodeSocketFloat', 'Value')
         self.inputs.new('NodeSocketFloat', 'Value')
         self.outputs.new('NodeSocketFloat', 'Value')
 
     def draw_buttons(self, context, layout):
+        layout.prop(self, 'property1_')
         layout.prop(self, 'property0')
 
 add_node(MathNode, category='Value')
