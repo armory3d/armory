@@ -178,7 +178,9 @@ def fetch_script_props(file):
         lines = f.read().splitlines()
         readprop = False
         for l in lines:
-            if readprop:
+            if not readprop:
+                readprop = '@prop' in l
+            if readprop and 'var ' in l:
                 p = l.split('var ')[1]
                 if ':' in p:
                     if '=' in p: # Fetch default value
@@ -195,7 +197,7 @@ def fetch_script_props(file):
                     v = s[1].split(';')[0].strip()
                     script_props[name].append(p)
                     script_props_defaults[name].append(v)
-            readprop = l.strip().startswith('@prop')
+                readprop = False
 
 def fetch_script_names():
     if bpy.data.filepath == "":
