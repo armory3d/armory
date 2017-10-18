@@ -1324,6 +1324,8 @@ class ArmSyncProxyButton(bpy.types.Operator):
     def execute(self, context):
         if len(bpy.data.libraries) > 0:
             for obj in bpy.data.objects:
+                if obj == None or obj.proxy == None:
+                    continue
                 if obj.arm_proxy_sync_loc:
                     arm.proxy.sync_location(obj)
                 if obj.arm_proxy_sync_rot:
