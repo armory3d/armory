@@ -40,7 +40,9 @@ class MathNode(Node, ArmLogicTreeNode):
 
     def init(self, context):
         self.inputs.new('NodeSocketFloat', 'Value')
+        self.inputs[-1].default_value = 0.5
         self.inputs.new('NodeSocketFloat', 'Value')
+        self.inputs[-1].default_value = 0.5
         self.outputs.new('NodeSocketFloat', 'Value')
 
     def draw_buttons(self, context, layout):

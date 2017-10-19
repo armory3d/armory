@@ -21,7 +21,9 @@ class VectorMathNode(Node, ArmLogicTreeNode):
     
     def init(self, context):
         self.inputs.new('NodeSocketVector', 'Vector')
+        self.inputs[-1].default_value = [0.5, 0.5, 0.5]
         self.inputs.new('NodeSocketVector', 'Vector')
+        self.inputs[-1].default_value = [0.5, 0.5, 0.5]
         self.outputs.new('NodeSocketVector', 'Vector')
         self.outputs.new('NodeSocketFloat', 'Value')
 

@@ -13,8 +13,11 @@ class AnimationStateNode extends LogicNode {
 
 		if (object == null) return null;
 
+		// Try first child if we are running from armature
+		if (object.animation == null) object = object.children[0];
+
 		if (from == 0) return !object.animation.paused; // is playing
-		else if (from == 1) return object.animation.timeIndex;
-		else return object.animation.action;
+		else if (from == 1) return object.animation.action;
+		else return object.animation.timeIndex;
 	}
 }
