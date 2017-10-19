@@ -9,6 +9,10 @@ from arm.props_traits_props import *
 import arm.utils
 import arm.write_data as write_data
 
+def trigger_recompile(self, context):
+    wrd = bpy.data.worlds['Arm']
+    wrd.arm_recompile = True
+
 class ArmTraitListItem(bpy.types.PropertyGroup):
     # Group of properties representing an item in the list
     name = bpy.props.StringProperty(
@@ -19,7 +23,8 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
     enabled_prop = bpy.props.BoolProperty(
            name="",
            description="A name for this item",
-           default=True)
+           default=True,
+           update=trigger_recompile)
 
     type_prop = bpy.props.EnumProperty(
         items = [('Haxe Script', 'Haxe Script', 'Haxe Script'),
@@ -84,6 +89,7 @@ class ArmTraitListNewItem(bpy.types.Operator):
             obj = bpy.context.scene
         trait = obj.arm_traitlist.add()
         obj.arm_traitlist_index = len(obj.arm_traitlist) - 1
+        trigger_recompile(None, None)
         return{'FINISHED'}
 
 
