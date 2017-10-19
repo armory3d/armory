@@ -598,6 +598,7 @@ class ArmoryExporter:
                 o['object_actions'] = []
 
             oaction = {}
+            oaction['sampled'] = True
             o['object_actions'].append(oaction)
             action = bobject.animation_data.action
             oaction['name'] = action.name
@@ -860,183 +861,183 @@ class ArmoryExporter:
             o['object_actions'].append(oaction)
             action = bobject.animation_data.action
             oaction['name'] = action.name
-            oaction['transforms'] = []
+            # oaction['transforms'] = []
 
-            deltaTranslation = bobject.delta_location
-            if deltaPositionAnimated:
-                # When the delta location is animated, write the x, y, and z components separately
-                # so they can be targeted by different tracks having different sets of keys.
-                for i in range(3):
-                    pos = deltaTranslation[i]
-                    if (deltaPosAnimated[i]) or (math.fabs(pos) > ExportEpsilon):
-                        animo = {}
-                        oaction['transforms'].append(animo)
-                        animo['type'] = 'translation_' + axisName[i]
-                        animo['name'] = deltaSubtranslationName[i]
-                        animo['value'] = pos
-                        # self.IndentWrite(B"Translation %", 0, structFlag)
-                        # self.Write(deltaSubtranslationName[i])
-                        # self.Write(B" (kind = \"")
-                        # self.Write(axisName[i])
-                        # self.Write(B"\")\n")
-                        # self.IndentWrite(B"{\n")
-                        # self.IndentWrite(B"float {", 1)
-                        # self.WriteFloat(pos)
-                        # self.Write(B"}")
-                        # self.IndentWrite(B"}\n", 0, True)
-                        structFlag = True
+            # deltaTranslation = bobject.delta_location
+            # if deltaPositionAnimated:
+            #     # When the delta location is animated, write the x, y, and z components separately
+            #     # so they can be targeted by different tracks having different sets of keys.
+            #     for i in range(3):
+            #         pos = deltaTranslation[i]
+            #         if (deltaPosAnimated[i]) or (math.fabs(pos) > ExportEpsilon):
+            #             animo = {}
+            #             oaction['transforms'].append(animo)
+            #             animo['type'] = 'translation_' + axisName[i]
+            #             animo['name'] = deltaSubtranslationName[i]
+            #             animo['value'] = pos
+            #             # self.IndentWrite(B"Translation %", 0, structFlag)
+            #             # self.Write(deltaSubtranslationName[i])
+            #             # self.Write(B" (kind = \"")
+            #             # self.Write(axisName[i])
+            #             # self.Write(B"\")\n")
+            #             # self.IndentWrite(B"{\n")
+            #             # self.IndentWrite(B"float {", 1)
+            #             # self.WriteFloat(pos)
+            #             # self.Write(B"}")
+            #             # self.IndentWrite(B"}\n", 0, True)
+            #             structFlag = True
 
-            elif (math.fabs(deltaTranslation[0]) > ExportEpsilon) or (math.fabs(deltaTranslation[1]) > ExportEpsilon) or (math.fabs(deltaTranslation[2]) > ExportEpsilon):
-                animo = {}
-                oaction['transforms'].append(animo)
-                animo['type'] = 'translation'
-                animo['values'] = self.write_vector3d(deltaTranslation)
-                structFlag = True
+            # elif (math.fabs(deltaTranslation[0]) > ExportEpsilon) or (math.fabs(deltaTranslation[1]) > ExportEpsilon) or (math.fabs(deltaTranslation[2]) > ExportEpsilon):
+            #     animo = {}
+            #     oaction['transforms'].append(animo)
+            #     animo['type'] = 'translation'
+            #     animo['values'] = self.write_vector3d(deltaTranslation)
+            #     structFlag = True
 
-            translation = bobject.location
-            if locationAnimated:
-                # When the location is animated, write the x, y, and z components separately
-                # so they can be targeted by different tracks having different sets of keys.
-                for i in range(3):
-                    pos = translation[i]
-                    if (locAnimated[i]) or (math.fabs(pos) > ExportEpsilon):
-                        animo = {}
-                        oaction['transforms'].append(animo)
-                        animo['type'] = 'translation_' + axisName[i]
-                        animo['name'] = subtranslationName[i]
-                        animo['value'] = pos
-                        structFlag = True
+            # translation = bobject.location
+            # if locationAnimated:
+            #     # When the location is animated, write the x, y, and z components separately
+            #     # so they can be targeted by different tracks having different sets of keys.
+            #     for i in range(3):
+            #         pos = translation[i]
+            #         if (locAnimated[i]) or (math.fabs(pos) > ExportEpsilon):
+            #             animo = {}
+            #             oaction['transforms'].append(animo)
+            #             animo['type'] = 'translation_' + axisName[i]
+            #             animo['name'] = subtranslationName[i]
+            #             animo['value'] = pos
+            #             structFlag = True
 
-            elif (math.fabs(translation[0]) > ExportEpsilon) or (math.fabs(translation[1]) > ExportEpsilon) or (math.fabs(translation[2]) > ExportEpsilon):
-                animo = {}
-                oaction['transforms'].append(animo)
-                animo['type'] = 'translation'
-                animo['values'] = self.write_vector3d(translation)
-                structFlag = True
+            # elif (math.fabs(translation[0]) > ExportEpsilon) or (math.fabs(translation[1]) > ExportEpsilon) or (math.fabs(translation[2]) > ExportEpsilon):
+            #     animo = {}
+            #     oaction['transforms'].append(animo)
+            #     animo['type'] = 'translation'
+            #     animo['values'] = self.write_vector3d(translation)
+            #     structFlag = True
 
-            if deltaRotationAnimated:
-                # When the delta rotation is animated, write three separate Euler angle rotations
-                # so they can be targeted by different tracks having different sets of keys.
-                for i in range(3):
-                    axis = ord(mode[2 - i]) - 0x58
-                    angle = bobject.delta_rotation_euler[axis]
-                    if (deltaRotAnimated[axis]) or (math.fabs(angle) > ExportEpsilon):
-                        animo = {}
-                        oaction['transforms'].append(animo)
-                        animo['type'] = 'rotation_' + axisName[axis]
-                        animo['name'] = deltaSubrotationName[axis]
-                        animo['value'] = angle
-                        structFlag = True
+            # if deltaRotationAnimated:
+            #     # When the delta rotation is animated, write three separate Euler angle rotations
+            #     # so they can be targeted by different tracks having different sets of keys.
+            #     for i in range(3):
+            #         axis = ord(mode[2 - i]) - 0x58
+            #         angle = bobject.delta_rotation_euler[axis]
+            #         if (deltaRotAnimated[axis]) or (math.fabs(angle) > ExportEpsilon):
+            #             animo = {}
+            #             oaction['transforms'].append(animo)
+            #             animo['type'] = 'rotation_' + axisName[axis]
+            #             animo['name'] = deltaSubrotationName[axis]
+            #             animo['value'] = angle
+            #             structFlag = True
 
-            else:
-                # When the delta rotation is not animated, write it in the representation given by
-                # the object's current rotation mode. (There is no axis-angle delta rotation.)
-                if mode == "QUATERNION":
-                    quaternion = bobject.delta_rotation_quaternion
-                    if (math.fabs(quaternion[0] - 1.0) > ExportEpsilon) or (math.fabs(quaternion[1]) > ExportEpsilon) or (math.fabs(quaternion[2]) > ExportEpsilon) or (math.fabs(quaternion[3]) > ExportEpsilon):
-                        animo = {}
-                        oaction['transforms'].append(animo)
-                        animo['type'] = 'rotation_quaternion'
-                        animo['values'] = self.WriteQuaternion(quaternion)
-                        structFlag = True
+            # else:
+            #     # When the delta rotation is not animated, write it in the representation given by
+            #     # the object's current rotation mode. (There is no axis-angle delta rotation.)
+            #     if mode == "QUATERNION":
+            #         quaternion = bobject.delta_rotation_quaternion
+            #         if (math.fabs(quaternion[0] - 1.0) > ExportEpsilon) or (math.fabs(quaternion[1]) > ExportEpsilon) or (math.fabs(quaternion[2]) > ExportEpsilon) or (math.fabs(quaternion[3]) > ExportEpsilon):
+            #             animo = {}
+            #             oaction['transforms'].append(animo)
+            #             animo['type'] = 'rotation_quaternion'
+            #             animo['values'] = self.WriteQuaternion(quaternion)
+            #             structFlag = True
 
-                else:
-                    for i in range(3):
-                        axis = ord(mode[2 - i]) - 0x58
-                        angle = bobject.delta_rotation_euler[axis]
-                        if math.fabs(angle) > ExportEpsilon:
-                            animo = {}
-                            oaction['transforms'].append(animo)
-                            animo['type'] = 'rotation_' + axisName[axis]
-                            animo['value'] = angle
-                            structFlag = True
+            #     else:
+            #         for i in range(3):
+            #             axis = ord(mode[2 - i]) - 0x58
+            #             angle = bobject.delta_rotation_euler[axis]
+            #             if math.fabs(angle) > ExportEpsilon:
+            #                 animo = {}
+            #                 oaction['transforms'].append(animo)
+            #                 animo['type'] = 'rotation_' + axisName[axis]
+            #                 animo['value'] = angle
+            #                 structFlag = True
 
-            if rotationAnimated:
-                # When the rotation is animated, write three separate Euler angle rotations
-                # so they can be targeted by different tracks having different sets of keys.
-                for i in range(3):
-                    axis = ord(mode[2 - i]) - 0x58
-                    angle = bobject.rotation_euler[axis]
-                    if (rotAnimated[axis]) or (math.fabs(angle) > ExportEpsilon):
-                        animo = {}
-                        oaction['transforms'].append(animo)
-                        animo['type'] = 'rotation_' + axisName[axis]
-                        animo['name'] = subrotationName[axis]
-                        animo['value'] = angle
-                        structFlag = True
+            # if rotationAnimated:
+            #     # When the rotation is animated, write three separate Euler angle rotations
+            #     # so they can be targeted by different tracks having different sets of keys.
+            #     for i in range(3):
+            #         axis = ord(mode[2 - i]) - 0x58
+            #         angle = bobject.rotation_euler[axis]
+            #         if (rotAnimated[axis]) or (math.fabs(angle) > ExportEpsilon):
+            #             animo = {}
+            #             oaction['transforms'].append(animo)
+            #             animo['type'] = 'rotation_' + axisName[axis]
+            #             animo['name'] = subrotationName[axis]
+            #             animo['value'] = angle
+            #             structFlag = True
 
-            else:
-                # When the rotation is not animated, write it in the representation given by
-                # the object's current rotation mode.
-                if mode == "QUATERNION":
-                    quaternion = bobject.rotation_quaternion
-                    if (math.fabs(quaternion[0] - 1.0) > ExportEpsilon) or (math.fabs(quaternion[1]) > ExportEpsilon) or (math.fabs(quaternion[2]) > ExportEpsilon) or (math.fabs(quaternion[3]) > ExportEpsilon):
-                        animo = {}
-                        oaction['transforms'].append(animo)
-                        animo['type'] = 'rotation_quaternion'
-                        animo['values'] = self.WriteQuaternion(quaternion)
-                        structFlag = True
+            # else:
+            #     # When the rotation is not animated, write it in the representation given by
+            #     # the object's current rotation mode.
+            #     if mode == "QUATERNION":
+            #         quaternion = bobject.rotation_quaternion
+            #         if (math.fabs(quaternion[0] - 1.0) > ExportEpsilon) or (math.fabs(quaternion[1]) > ExportEpsilon) or (math.fabs(quaternion[2]) > ExportEpsilon) or (math.fabs(quaternion[3]) > ExportEpsilon):
+            #             animo = {}
+            #             oaction['transforms'].append(animo)
+            #             animo['type'] = 'rotation_quaternion'
+            #             animo['values'] = self.WriteQuaternion(quaternion)
+            #             structFlag = True
 
-                elif mode == "AXIS_ANGLE":
-                    if math.fabs(bobject.rotation_axis_angle[0]) > ExportEpsilon:
-                        animo = {}
-                        oaction['transforms'].append(animo)
-                        animo['type'] = 'rotation_axis'
-                        animo['values'] = self.WriteVector4D(bobject.rotation_axis_angle)
-                        structFlag = True
+            #     elif mode == "AXIS_ANGLE":
+            #         if math.fabs(bobject.rotation_axis_angle[0]) > ExportEpsilon:
+            #             animo = {}
+            #             oaction['transforms'].append(animo)
+            #             animo['type'] = 'rotation_axis'
+            #             animo['values'] = self.WriteVector4D(bobject.rotation_axis_angle)
+            #             structFlag = True
 
-                else:
-                    for i in range(3):
-                        axis = ord(mode[2 - i]) - 0x58
-                        angle = bobject.rotation_euler[axis]
-                        if math.fabs(angle) > ExportEpsilon:
-                            animo = {}
-                            oaction['transforms'].append(animo)
-                            animo['type'] = 'rotation_' + axisName[axis]
-                            animo['value'] = angle
-                            structFlag = True
+            #     else:
+            #         for i in range(3):
+            #             axis = ord(mode[2 - i]) - 0x58
+            #             angle = bobject.rotation_euler[axis]
+            #             if math.fabs(angle) > ExportEpsilon:
+            #                 animo = {}
+            #                 oaction['transforms'].append(animo)
+            #                 animo['type'] = 'rotation_' + axisName[axis]
+            #                 animo['value'] = angle
+            #                 structFlag = True
 
-            deltaScale = bobject.delta_scale
-            if deltaScaleAnimated:
-                # When the delta scale is animated, write the x, y, and z components separately
-                # so they can be targeted by different tracks having different sets of keys.
-                for i in range(3):
-                    scl = deltaScale[i]
-                    if (deltaSclAnimated[i]) or (math.fabs(scl) > ExportEpsilon):
-                        animo = {}
-                        oaction['transforms'].append(animo)
-                        animo['type'] = 'scale_' + axisName[i]
-                        animo['name'] = deltaSubscaleName[i]
-                        animo['value'] = scl
-                        structFlag = True
+            # deltaScale = bobject.delta_scale
+            # if deltaScaleAnimated:
+            #     # When the delta scale is animated, write the x, y, and z components separately
+            #     # so they can be targeted by different tracks having different sets of keys.
+            #     for i in range(3):
+            #         scl = deltaScale[i]
+            #         if (deltaSclAnimated[i]) or (math.fabs(scl) > ExportEpsilon):
+            #             animo = {}
+            #             oaction['transforms'].append(animo)
+            #             animo['type'] = 'scale_' + axisName[i]
+            #             animo['name'] = deltaSubscaleName[i]
+            #             animo['value'] = scl
+            #             structFlag = True
 
-            elif (math.fabs(deltaScale[0] - 1.0) > ExportEpsilon) or (math.fabs(deltaScale[1] - 1.0) > ExportEpsilon) or (math.fabs(deltaScale[2] - 1.0) > ExportEpsilon):
-                animo = {}
-                oaction['transforms'].append(animo)
-                animo['type'] = 'scale'
-                animo['values'] = self.write_vector3d(deltaScale)
-                structFlag = True
+            # elif (math.fabs(deltaScale[0] - 1.0) > ExportEpsilon) or (math.fabs(deltaScale[1] - 1.0) > ExportEpsilon) or (math.fabs(deltaScale[2] - 1.0) > ExportEpsilon):
+            #     animo = {}
+            #     oaction['transforms'].append(animo)
+            #     animo['type'] = 'scale'
+            #     animo['values'] = self.write_vector3d(deltaScale)
+            #     structFlag = True
 
-            scale = bobject.scale
-            if scaleAnimated:
-                # When the scale is animated, write the x, y, and z components separately
-                # so they can be targeted by different tracks having different sets of keys.
-                for i in range(3):
-                    scl = scale[i]
-                    if (sclAnimated[i]) or (math.fabs(scl) > ExportEpsilon):
-                        animo = {}
-                        oaction['transforms'].append(animo)
-                        animo['type'] = 'scale_' + axisName[i]
-                        animo['name'] = subscaleName[i]
-                        animo['value'] = scl
-                        structFlag = True
+            # scale = bobject.scale
+            # if scaleAnimated:
+            #     # When the scale is animated, write the x, y, and z components separately
+            #     # so they can be targeted by different tracks having different sets of keys.
+            #     for i in range(3):
+            #         scl = scale[i]
+            #         if (sclAnimated[i]) or (math.fabs(scl) > ExportEpsilon):
+            #             animo = {}
+            #             oaction['transforms'].append(animo)
+            #             animo['type'] = 'scale_' + axisName[i]
+            #             animo['name'] = subscaleName[i]
+            #             animo['value'] = scl
+            #             structFlag = True
 
-            elif (math.fabs(scale[0] - 1.0) > ExportEpsilon) or (math.fabs(scale[1] - 1.0) > ExportEpsilon) or (math.fabs(scale[2] - 1.0) > ExportEpsilon):
-                animo = {}
-                oaction['transforms'].append(animo)
-                animo['type'] = 'scale'
-                animo['values'] = self.write_vector3d(scale)
-                structFlag = True
+            # elif (math.fabs(scale[0] - 1.0) > ExportEpsilon) or (math.fabs(scale[1] - 1.0) > ExportEpsilon) or (math.fabs(scale[2] - 1.0) > ExportEpsilon):
+            #     animo = {}
+            #     oaction['transforms'].append(animo)
+            #     animo['type'] = 'scale'
+            #     animo['values'] = self.write_vector3d(scale)
+            #     structFlag = True
 
             # Export the animation tracks
             oanim = {}
