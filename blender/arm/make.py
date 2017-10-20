@@ -439,9 +439,9 @@ def play_project(in_viewport, is_render=False, is_render_anim=False):
     if wrd.arm_recompile:
         state.recompiled = True
         if state.krom_running:
-            # Unable to live-patch, stop player
-            # bpy.ops.arm.space_stop('EXEC_DEFAULT')
-            # return
+            # TODO: Unable to live-patch, stop player
+            bpy.ops.arm.space_stop('EXEC_DEFAULT')
+            return
             if not code_parsed:
                 code_parsed = True
                 barmory.parse_code()
