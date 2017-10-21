@@ -44,6 +44,10 @@ def compile_shader(raw_shaders_path, shader_name, defs):
     arm.lib.make_datas.make(base_name, json_data, fp, defs)
     arm.lib.make_variants.make(base_name, json_data, fp, defs)
 
+def remove_readonly(func, path, excinfo):
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
 def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False):
     global exporter
     wrd = bpy.data.worlds['Arm']
@@ -55,15 +59,15 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     build_dir = arm.utils.build_dir()
     if wrd.arm_cache_shaders == False:
         if os.path.isdir(build_dir + '/build/html5-resources'):
-            shutil.rmtree(build_dir + '/build/html5-resources')
+            shutil.rmtree(build_dir + '/build/html5-resources', onerror=remove_readonly)
         if os.path.isdir(build_dir + '/build/krom-resources'):
-            shutil.rmtree(build_dir + '/build/krom-resources')
+            shutil.rmtree(build_dir + '/build/krom-resources', onerror=remove_readonly)
         if os.path.isdir(build_dir + '/window/krom-resources'):
-            shutil.rmtree(build_dir + '/window/krom-resources')
+            shutil.rmtree(build_dir + '/window/krom-resources', onerror=remove_readonly)
         if os.path.isdir(build_dir + '/compiled/Shaders'):
-            shutil.rmtree(build_dir + '/compiled/Shaders')
+            shutil.rmtree(build_dir + '/compiled/Shaders', onerror=remove_readonly)
         if os.path.isdir(build_dir + '/compiled/ShaderRaws'):
-            shutil.rmtree(build_dir + '/compiled/ShaderRaws')
+            shutil.rmtree(build_dir + '/compiled/ShaderRaws', onerror=remove_readonly)
 
     # Detect camera plane changes
     if len(bpy.data.cameras) > 0:
@@ -73,7 +77,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
             state.last_clip_end = cam.clip_end
         elif cam.clip_start != state.last_clip_start or cam.clip_end != state.last_clip_end:
             if os.path.isdir(build_dir + '/compiled/Shaders'):
-                shutil.rmtree(build_dir + '/compiled/Shaders')
+                shutil.rmtree(build_dir + '/compiled/Shaders', onerror=remove_readonly)
             state.last_clip_start = cam.clip_start
             state.last_clip_end = cam.clip_end
 
@@ -500,7 +504,7 @@ def clean_cache():
 
     # Remove compiled data
     if os.path.isdir(arm.utils.build_dir() + '/compiled'):
-        shutil.rmtree(arm.utils.build_dir() + '/compiled')
+        shutil.rmtree(arm.utils.build_dir() + '/compiled', onerror=remove_readonly)
 
     # Move envmaps back
     if os.path.isdir('envmaps'):
@@ -517,12 +521,12 @@ def clean_project():
 
     # Remove build and compiled data
     if os.path.isdir(arm.utils.build_dir()):
-        shutil.rmtree(arm.utils.build_dir())
+        shutil.rmtree(arm.utils.build_dir(), onerror=remove_readonly)
 
     # Remove compiled nodes
     nodes_path = 'Sources/' + arm.utils.safestr(wrd.arm_project_package).replace('.', '/') + '/node/'
     if os.path.isdir(nodes_path):
-        shutil.rmtree(nodes_path)
+        shutil.rmtree(nodes_path, onerror=remove_readonly)
 
     # Remove khafile/korefile/Main.hx
     if os.path.isfile('khafile.js'):

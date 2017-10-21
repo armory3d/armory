@@ -61,6 +61,10 @@ def add_shader2(dir_name, data_name):
 
 invalidate_enabled = True # Disable invalidating during build process
 
+def remove_readonly(func, path, excinfo):
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
 def invalidate_shader_cache(self, context):
     # compiled.glsl changed, recompile all shaders next time
     global invalidate_enabled
@@ -68,9 +72,9 @@ def invalidate_shader_cache(self, context):
         return
     fp = arm.utils.get_fp_build()
     if os.path.isdir(fp + '/compiled/Shaders'):
-        shutil.rmtree(fp + '/compiled/Shaders')
+        shutil.rmtree(fp + '/compiled/Shaders', onerror=remove_readonly)
     if os.path.isdir(fp + '/compiled/ShaderRaws'):
-        shutil.rmtree(fp + '/compiled/ShaderRaws')
+        shutil.rmtree(fp + '/compiled/ShaderRaws', onerror=remove_readonly)
 
 def invalidate_compiled_data(self, context):
     global invalidate_enabled
@@ -78,18 +82,18 @@ def invalidate_compiled_data(self, context):
         return
     fp = arm.utils.get_fp_build()
     if os.path.isdir(fp + '/compiled/Assets'):
-        shutil.rmtree(fp + '/compiled/Assets')
+        shutil.rmtree(fp + '/compiled/Assets', onerror=remove_readonly)
     if os.path.isdir(fp + '/compiled/Shaders'):
-        shutil.rmtree(fp + '/compiled/Shaders')
+        shutil.rmtree(fp + '/compiled/Shaders', onerror=remove_readonly)
     if os.path.isdir(fp + '/compiled/ShaderRaws'):
-        shutil.rmtree(fp + '/compiled/ShaderRaws')
+        shutil.rmtree(fp + '/compiled/ShaderRaws', onerror=remove_readonly)
 
 def invalidate_mesh_data(self, context):
     fp = arm.utils.get_fp_build()
     if os.path.isdir(fp + '/compiled/Assets/meshes'):
-        shutil.rmtree(fp + '/compiled/Assets/meshes')
+        shutil.rmtree(fp + '/compiled/Assets/meshes', onerror=remove_readonly)
 
 def invalidate_envmap_data(self, context):
     fp = arm.utils.get_fp_build()
     if os.path.isdir(fp + '/compiled/Assets/envmaps'):
-        shutil.rmtree(fp + '/compiled/Assets/envmaps')
+        shutil.rmtree(fp + '/compiled/Assets/envmaps', onerror=remove_readonly)

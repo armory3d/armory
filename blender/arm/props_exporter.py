@@ -6,39 +6,43 @@ import bpy
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
+def remove_readonly(func, path, excinfo):
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
 def update_gapi_win(self, context):
     if os.path.isdir(arm.utils.get_fp_build() + '/windows-build'):
-        shutil.rmtree(arm.utils.get_fp_build() + '/windows-build')
+        shutil.rmtree(arm.utils.get_fp_build() + '/windows-build', onerror=remove_readonly)
     bpy.data.worlds['Arm'].arm_recompile = True
     assets.invalidate_compiled_data(self, context)
 
 def update_gapi_winapp(self, context):
     if os.path.isdir(arm.utils.get_fp_build() + '/windowsapp-build'):
-        shutil.rmtree(arm.utils.get_fp_build() + '/windowsapp-build')
+        shutil.rmtree(arm.utils.get_fp_build() + '/windowsapp-build', onerror=remove_readonly)
     bpy.data.worlds['Arm'].arm_recompile = True
     assets.invalidate_compiled_data(self, context)
 
 def update_gapi_linux(self, context):
     if os.path.isdir(arm.utils.get_fp_build() + '/linux-build'):
-        shutil.rmtree(arm.utils.get_fp_build() + '/linux-build')
+        shutil.rmtree(arm.utils.get_fp_build() + '/linux-build', onerror=remove_readonly)
     bpy.data.worlds['Arm'].arm_recompile = True
     assets.invalidate_compiled_data(self, context)
 
 def update_gapi_mac(self, context):
     if os.path.isdir(arm.utils.get_fp_build() + '/osx-build'):
-        shutil.rmtree(arm.utils.get_fp_build() + '/osx-build')
+        shutil.rmtree(arm.utils.get_fp_build() + '/osx-build', onerror=remove_readonly)
     bpy.data.worlds['Arm'].arm_recompile = True
     assets.invalidate_compiled_data(self, context)
 
 def update_gapi_android(self, context):
     if os.path.isdir(arm.utils.get_fp_build() + '/android-build'):
-        shutil.rmtree(arm.utils.get_fp_build() + '/android-build')
+        shutil.rmtree(arm.utils.get_fp_build() + '/android-build', onerror=remove_readonly)
     bpy.data.worlds['Arm'].arm_recompile = True
     assets.invalidate_compiled_data(self, context)
 
 def update_gapi_ios(self, context):
     if os.path.isdir(arm.utils.get_fp_build() + '/ios-build'):
-        shutil.rmtree(arm.utils.get_fp_build() + '/ios-build')
+        shutil.rmtree(arm.utils.get_fp_build() + '/ios-build', onerror=remove_readonly)
     bpy.data.worlds['Arm'].arm_recompile = True
     assets.invalidate_compiled_data(self, context)
 
