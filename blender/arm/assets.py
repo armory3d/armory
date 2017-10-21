@@ -1,5 +1,6 @@
 import shutil
 import os
+import stat
 import bpy
 import arm.utils
 

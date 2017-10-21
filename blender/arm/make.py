@@ -4,6 +4,7 @@ import time
 import shutil
 import bpy
 import json
+import stat
 from bpy.props import *
 import subprocess
 import threading

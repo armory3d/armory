@@ -3,6 +3,7 @@ import shutil
 import arm.assets as assets
 import arm.make_utils as make_utils
 import bpy
+import stat
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
