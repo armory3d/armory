@@ -1093,6 +1093,7 @@ class ArmoryExporter:
                     if deltaPosAnimated[i]:
                         tracko = self.export_animation_track(deltaPosAnimCurve[i], deltaPosAnimKind[i], deltaSubtranslationName[i], structFlag)
                         oanim['tracks'].append(tracko)
+                        oanim['has_delta'] = True
                         structFlag = True
 
             if deltaRotationAnimated:
@@ -1100,6 +1101,7 @@ class ArmoryExporter:
                     if deltaRotAnimated[i]:
                         tracko = self.export_animation_track(deltaRotAnimCurve[i], deltaRotAnimKind[i], deltaSubrotationName[i], structFlag)
                         oanim['tracks'].append(tracko)
+                        oanim['has_delta'] = True
                         structFlag = True
 
             if deltaScaleAnimated:
@@ -1107,6 +1109,7 @@ class ArmoryExporter:
                     if deltaSclAnimated[i]:
                         tracko = self.export_animation_track(deltaSclAnimCurve[i], deltaSclAnimKind[i], deltaSubscaleName[i], structFlag)
                         oanim['tracks'].append(tracko)
+                        oanim['has_delta'] = True
                         structFlag = True
             
             if True: #action.arm_cached == False or not os.path.exists(fp):
