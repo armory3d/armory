@@ -589,7 +589,7 @@ class ArmoryExporter:
         #     if ArmoryExporter.matrices_different(m1, m2):
         #         animationFlag = True
         #         break
-        animationFlag = bobject.animation_data != None and bobject.animation_data.action != None
+        animationFlag = bobject.animation_data != None and bobject.animation_data.action != None and bobject.type != 'ARMATURE'
 
         # Font out
         if animationFlag:
@@ -789,7 +789,7 @@ class ArmoryExporter:
         mode = bobject.rotation_mode
         sampledAnimation = ArmoryExporter.sample_animation_flag or mode == "QUATERNION" or mode == "AXIS_ANGLE"
 
-        if not sampledAnimation and bobject.animation_data:
+        if not sampledAnimation and bobject.animation_data and bobject.type != 'ARMATURE':
             action = bobject.animation_data.action
             if action:
                 for fcurve in action.fcurves:
