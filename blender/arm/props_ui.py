@@ -977,6 +977,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
             layout.prop(rpdat, 'rp_gi')
             if rpdat.rp_gi != 'Off':
                 layout.prop(rpdat, 'rp_voxelgi_resolution')
+                layout.prop(rpdat, 'rp_voxelgi_resolution_z')
                 layout.prop(rpdat, 'arm_voxelgi_dimensions')
                 layout.prop(rpdat, 'arm_voxelgi_revoxelize')
                 if rpdat.arm_voxelgi_revoxelize:

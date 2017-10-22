@@ -445,7 +445,7 @@ def make_deferred(rpdat):
         res = int(rpdat.rp_voxelgi_resolution)
         n.inputs[1].default_value = res
         n.inputs[2].default_value = res
-        n.inputs[3].default_value = res
+        n.inputs[3].default_value = int(res * float(rpdat.rp_voxelgi_resolution_z))
         n = nodes['Set Viewport Voxels']
         n.inputs[1].default_value = res
         n.inputs[2].default_value = res
@@ -461,7 +461,7 @@ def make_deferred(rpdat):
         res = int(rpdat.rp_voxelgi_resolution)
         n.inputs[1].default_value = res
         n.inputs[2].default_value = res
-        n.inputs[3].default_value = res
+        n.inputs[3].default_value = int(res * float(rpdat.rp_voxelgi_resolution_z))
         n = nodes['Set Viewport Voxels']
         n.inputs[1].default_value = res
         n.inputs[2].default_value = res

@@ -159,6 +159,11 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('256', '256', '256'),
                ('512', '512', '512')],
         name="Resolution", description="3D texture resolution", default='128', update=update_renderpath)
+    rp_voxelgi_resolution_z = bpy.props.EnumProperty(
+        items=[('1.0', '1.0', '1.0'),
+               ('0.5', '0.5', '0.5'),
+               ('0.25', '0.25', '0.25')],
+        name="Resolution Z", description="3D texture z resolution multiplier", default='1.0', update=update_renderpath)
     arm_clouds = bpy.props.BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
     arm_pcss_state = EnumProperty(
         items=[('On', 'On', 'On'),

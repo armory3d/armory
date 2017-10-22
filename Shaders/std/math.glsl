@@ -39,8 +39,4 @@ float attenuate(const float dist) {
 	// 1.0 / (quadratic * dist * dist);
 }
 
-bool isInsideCube(const vec3 p) {
-	return abs(p.x) < 1 && abs(p.y) < 1 && abs(p.z) < 1;
-}
-
 #endif

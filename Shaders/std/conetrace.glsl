@@ -8,7 +8,7 @@
 // https://research.nvidia.com/sites/default/files/publications/GIVoxels-pg2011-authors.pdf
 
 const float MAX_DISTANCE = 1.73205080757;
-const float VOXEL_SIZE = 2.0 / voxelgiResolution;
+const float VOXEL_SIZE = (2.0 / voxelgiResolution.x);
 
 uniform sampler3D voxels;
 
@@ -50,7 +50,7 @@ vec4 traceCone(const vec3 origin, vec3 dir, float aperture, const float maxDist,
 	// Step until alpha > 1 or out of bounds
 	while (sampleCol.a < 1.0 && dist < maxDist) {
 		// Choose mip level based on the diameter of the cone
-		float mip = max(log2(diam * voxelgiResolution), 0);
+		float mip = max(log2(diam * voxelgiResolution.x), 0);
 		// vec4 mipSample = sampleVoxel(samplePos, dir, indices, mip);
 		vec4 mipSample = textureLod(voxels, samplePos * 0.5 + vec3(0.5), mip);
 #ifdef _VoxelGIEmission
@@ -128,7 +128,7 @@ float traceConeAO(const vec3 origin, vec3 dir, float aperture, const float maxDi
 	float diam = dist * aperture;
 	vec3 samplePos = dir * dist + origin;
 	while (sampleCol < 1.0 && dist < maxDist) {
-		float mip = max(log2(diam * voxelgiResolution), 0);
+		float mip = max(log2(diam * voxelgiResolution.x), 0);
 		float mipSample = textureLod(voxels, samplePos * 0.5 + vec3(0.5), mip).r;
 		sampleCol += (1 - sampleCol) * mipSample;
 		dist += max(diam / 2, VOXEL_SIZE);

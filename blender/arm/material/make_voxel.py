@@ -44,7 +44,7 @@ def make_gi(context_id):
     frag.add_uniform('int lightType', '_lampType')
     frag.add_uniform('vec3 lightDir', '_lampDirection')
 
-    frag.write('if (!isInsideCube(voxposition)) return;')
+    frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
     frag.write('vec3 wposition = voxposition * voxelgiHalfExtents;')
     if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
         frag.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
@@ -275,8 +275,7 @@ def make_ao(context_id):
 
     rpdat = arm.utils.get_rp()
     frag.add_uniform('layout(r32ui) uimage3D voxels')
-
-    frag.write('if (!isInsideCube(voxposition)) return;')
+    frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
 
     vert.add_include('../../Shaders/compiled.glsl')
     vert.add_uniform('mat4 W', '_worldMatrix')

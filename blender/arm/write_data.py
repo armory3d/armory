@@ -440,9 +440,12 @@ const float compoDOFLength = 160.0;
 """) # str(round(bpy.data.cameras[0].lens * 100) / 100)
 
         if rpdat.rp_gi == 'Voxel GI' or rpdat.rp_gi == 'Voxel AO':
+            halfext = round(rpdat.arm_voxelgi_dimensions / 2.0)
             f.write(
-"""const int voxelgiResolution = """ + str(rpdat.rp_voxelgi_resolution) + """;
-const float voxelgiHalfExtents = """ + str(round(rpdat.arm_voxelgi_dimensions / 2.0)) + """;
+# """const int voxelgiResolution = """ + str(rpdat.rp_voxelgi_resolution) + """;
+"""const ivec3 voxelgiResolution = ivec3(""" + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """, """ + str(int(int(rpdat.rp_voxelgi_resolution) * float(rpdat.rp_voxelgi_resolution_z))) + """);
+//const float voxelgiHalfExtents = """ + str(round(rpdat.arm_voxelgi_dimensions / 2.0)) + """;
+const vec3 voxelgiHalfExtents = vec3(""" + str(halfext) + """, """ + str(halfext) + """, """ + str(round(halfext * float(rpdat.rp_voxelgi_resolution_z))) + """);
 const float voxelgiDiff = """ + str(round(wrd.arm_voxelgi_diff * 100) / 100) + """;
 const float voxelgiSpec = """ + str(round(wrd.arm_voxelgi_spec * 100) / 100) + """;
 const float voxelgiOcc = """ + str(round(wrd.arm_voxelgi_occ * 100) / 100) + """;
