@@ -2,6 +2,9 @@ package armory.logicnode;
 
 import armory.object.Object;
 import armory.math.Mat4;
+#if arm_physics
+import armory.trait.physics.RigidBody;
+#end
 
 class SpawnObjectNode extends LogicNode {
 
@@ -19,7 +22,16 @@ class SpawnObjectNode extends LogicNode {
 
 		Scene.active.spawnObject(objectName, null, function(o:armory.object.Object) {
 			object = o;
-			if (matrix != null) object.transform.setMatrix(matrix);
+			if (matrix != null) {
+				object.transform.setMatrix(matrix);
+				#if arm_physics
+				var rigidBody = object.getTrait(RigidBody);
+				if (rigidBody != null) {
+					object.transform.buildMatrix();
+					rigidBody.syncTransform();
+				}
+				#end
+			}
 			object.visible = true;
 			runOutputs(0);
 		});
