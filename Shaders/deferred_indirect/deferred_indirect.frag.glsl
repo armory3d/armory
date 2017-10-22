@@ -43,6 +43,9 @@ uniform float envmapStrength;
 	uniform sampler2D senvmapBrdf;
 	uniform int envmapNumMipmaps;
 #endif
+#ifdef _EnvCol
+	uniform vec3 backgroundCol;
+#endif
 
 #ifdef _SSAO
 	uniform sampler2D ssaotex;
@@ -143,6 +146,11 @@ void main() {
 	
 #ifdef _Rad // Indirect specular
 	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5;
+#else
+	#ifdef _EnvCol
+	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
+	envl.rgb += backgroundCol * f0;
+	#endif
 #endif
 
 #ifdef _SSS

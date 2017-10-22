@@ -53,6 +53,11 @@
 					"name": "sdftex",
 					"link": "_sdfTexture",
 					"ifdef": ["_DFAO"]
+				},
+				{
+					"name": "backgroundCol",
+					"link": "_backgroundCol",
+					"ifdef": ["_EnvCol"]
 				}
 			],
 			"vertex_shader": "deferred_indirect.vert.glsl",
