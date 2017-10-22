@@ -597,13 +597,18 @@ class ArmoryExporter:
             if not 'object_actions' in o:
                 o['object_actions'] = []
 
+            action = bobject.animation_data.action
+            aname = arm.utils.safestr(arm.utils.asset_name(action))
+            fp = self.get_meshes_file_path('action_' + aname, compressed=self.is_compress(bobject.data))
+            assets.add(fp)
+            ext = '.zip' if self.is_compress(bobject.data) else ''
+            o['object_actions'].append('action_' + aname + ext)
+
             oaction = {}
             oaction['sampled'] = True
-            o['object_actions'].append(oaction)
-            action = bobject.animation_data.action
             oaction['name'] = action.name
             oanim = {}
-            oaction['animation'] = oanim
+            oaction['anim'] = oanim
 
             tracko = {}
             tracko['target'] = "transform"
@@ -624,6 +629,17 @@ class ArmoryExporter:
             scene.frame_set(self.endFrame)
             tracko['values'] += self.write_matrix(bobject.matrix_local)
             oanim['tracks'] = [tracko]
+
+            if True: #action.arm_cached == False or not os.path.exists(fp):
+                print('Exporting object action ' + aname)
+                actionf = {}
+                actionf['objects'] = []
+                actionf['objects'].append(oaction)
+                oaction['type'] = 'object'
+                oaction['name'] = aname
+                oaction['data_ref'] = ''
+                oaction['transform'] = []
+                arm.utils.write_arm(fp, actionf)
 
         scene.frame_set(currentFrame, currentSubframe)
 
@@ -655,7 +671,7 @@ class ArmoryExporter:
                 break
 
         if animationFlag:
-            o['bone'] = {}
+            o['anim'] = {}
             tracko = {}
             tracko['target'] = "transform"
             tracko['times'] = []
@@ -677,7 +693,7 @@ class ArmoryExporter:
                 for i in range(begin_frame, end_frame + 1):
                     scene.frame_set(i)
                     tracko['values'] += self.write_matrix(poseBone.matrix)
-            o['bone']['tracks'] = [tracko]
+            o['anim']['tracks'] = [tracko]
 
         scene.frame_set(currentFrame, currentSubframe)
 
@@ -856,10 +872,15 @@ class ArmoryExporter:
 
             if not 'object_actions' in o:
                 o['object_actions'] = []
-                
-            oaction = {}
-            o['object_actions'].append(oaction)
+            
             action = bobject.animation_data.action
+            aname = arm.utils.safestr(arm.utils.asset_name(action))
+            fp = self.get_meshes_file_path('action_' + aname, compressed=self.is_compress(bobject.data))
+            assets.add(fp)
+            ext = '.zip' if self.is_compress(bobject.data) else ''
+            o['object_actions'].append('action_' + aname + ext)
+
+            oaction = {}
             oaction['name'] = action.name
             # oaction['transforms'] = []
 
@@ -1041,7 +1062,7 @@ class ArmoryExporter:
 
             # Export the animation tracks
             oanim = {}
-            oaction['animation'] = oanim
+            oaction['anim'] = oanim
             oanim['begin'] = (action.frame_range[0] - self.beginFrame)
             oanim['end'] = (action.frame_range[1] - self.beginFrame)
             oanim['tracks'] = []
@@ -1088,6 +1109,17 @@ class ArmoryExporter:
                         oanim['tracks'].append(tracko)
                         structFlag = True
             
+            if True: #action.arm_cached == False or not os.path.exists(fp):
+                print('Exporting object action ' + aname)
+                actionf = {}
+                actionf['objects'] = []
+                actionf['objects'].append(oaction)
+                oaction['type'] = 'object'
+                oaction['name'] = aname
+                oaction['data_ref'] = ''
+                oaction['transform'] = []
+                arm.utils.write_arm(fp, actionf)
+
     def process_bone(self, bone):
         if ArmoryExporter.export_all_flag or bone.select:
             self.bobjectArray[bone] = {"objectType" : NodeTypeBone, "structName" : bone.name}
@@ -1459,7 +1491,7 @@ class ArmoryExporter:
                     fp = self.get_meshes_file_path('action_' + armatureid + '_' + aname, compressed=self.is_compress(bdata))
                     assets.add(fp)
                     if bdata.arm_cached == False or not os.path.exists(fp):
-                        print('Exporting action ' + aname)
+                        print('Exporting armature action ' + aname)
                         bones = []
                         for bone in bdata.bones:
                             if not bone.parent:
@@ -1472,6 +1504,7 @@ class ArmoryExporter:
                         action_obj['objects'] = bones
                         arm.utils.write_arm(fp, action_obj)
                 bobject.animation_data.action = orig_action
+                # TODO: cache per action
                 bdata.arm_cached = True
 
             if parento == None:
