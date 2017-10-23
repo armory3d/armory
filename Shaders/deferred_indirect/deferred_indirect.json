@@ -9,7 +9,8 @@
 			"links": [
 				{
 					"name": "eye",
-					"link": "_cameraPosition"
+					"link": "_cameraPosition",
+					"ifdef": ["_Rad"]
 				},
 				{
 					"name": "eyeSnap",

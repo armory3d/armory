@@ -3000,6 +3000,12 @@ class ArmoryExporter:
             x['parameters'].append(str(rb.linear_damping))
             x['parameters'].append(str(rb.angular_damping))
             x['parameters'].append(str(rb.type == 'PASSIVE').lower())
+            x['parameters'].append(str(bobject.arm_rb_linear_factor[0]))
+            x['parameters'].append(str(bobject.arm_rb_linear_factor[1]))
+            x['parameters'].append(str(bobject.arm_rb_linear_factor[2]))
+            x['parameters'].append(str(bobject.arm_rb_angular_factor[0]))
+            x['parameters'].append(str(bobject.arm_rb_angular_factor[1]))
+            x['parameters'].append(str(bobject.arm_rb_angular_factor[2]))
             o['traits'].append(x)
         
         # Soft bodies modifier

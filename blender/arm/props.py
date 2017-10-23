@@ -166,6 +166,8 @@ def init_properties():
     bpy.types.Object.arm_spawn = bpy.props.BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True)
     bpy.types.Object.arm_mobile = bpy.props.BoolProperty(name="Mobile", description="Object moves during gameplay", default=True)
     bpy.types.Object.arm_soft_body_margin = bpy.props.FloatProperty(name="Soft Body Margin", description="Collision margin", default=0.04)
+    bpy.types.Object.arm_rb_linear_factor = bpy.props.FloatVectorProperty(name="Linear Factor", size=3, description="Set to 0 to lock axis", default=[1,1,1])
+    bpy.types.Object.arm_rb_angular_factor = bpy.props.FloatVectorProperty(name="Angular Factor", size=3, description="Set to 0 to lock axis", default=[1,1,1])
     bpy.types.Object.arm_animation_enabled = bpy.props.BoolProperty(name="Animation", description="Enable skinning & timeline animation", default=True)
     bpy.types.Object.arm_tilesheet = bpy.props.StringProperty(name="Tilesheet", description="Set tilesheet animation", default='')
     bpy.types.Object.arm_tilesheet_action = bpy.props.StringProperty(name="Tilesheet Action", description="Set startup action", default='')

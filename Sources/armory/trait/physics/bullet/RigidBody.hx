@@ -23,6 +23,12 @@ class RigidBody extends Trait {
 	public var linearDamping:Float;
 	public var angularDamping:Float;
 	public var passive:Bool;
+	var linearFactorX:Float;
+	var linearFactorY:Float;
+	var linearFactorZ:Float;
+	var angularFactorX:Float;
+	var angularFactorY:Float;
+	var angularFactorZ:Float;
 
 	public var body:BtRigidBodyPointer = null;
 	public var ready = false;
@@ -34,7 +40,9 @@ class RigidBody extends Trait {
 	public var onReady:Void->Void = null;
 
 	public function new(mass = 1.0, shape = Shape.Box, friction = 0.5, restitution = 0.0, collisionMargin = 0.0,
-						linearDamping = 0.04, angularDamping = 0.1, passive = false) {
+						linearDamping = 0.04, angularDamping = 0.1, passive = false,
+						linearFactorX = 1.0, linearFactorY = 1.0, linearFactorZ = 1.0,
+						angularFactorX = 1.0, angularFactorY = 1.0, angularFactorZ = 1.0) {
 		super();
 
 		this.mass = mass;
@@ -45,6 +53,12 @@ class RigidBody extends Trait {
 		this.linearDamping = linearDamping;
 		this.angularDamping = angularDamping;
 		this.passive = passive;
+		this.linearFactorX = linearFactorX;
+		this.linearFactorY = linearFactorY;
+		this.linearFactorZ = linearFactorZ;
+		this.angularFactorX = angularFactorX;
+		this.angularFactorY = angularFactorY;
+		this.angularFactorZ = angularFactorZ;
 
 		notifyOnAdd(init);
 		notifyOnLateUpdate(lateUpdate);
@@ -150,6 +164,14 @@ class RigidBody extends Trait {
 
 		if (linearDamping != 0.04 || angularDamping != 0.1) {
 			body.setDamping(linearDamping, angularDamping);
+		}
+
+		if (linearFactorX != 1.0 || linearFactorY != 1.0 || linearFactorZ != 1.0) {
+			setLinearFactor(linearFactorX, linearFactorY, linearFactorZ);
+		}
+
+		if (angularFactorX != 1.0 || angularFactorY != 1.0 || angularFactorZ != 1.0) {
+			setAngularFactor(angularFactorX, angularFactorY, angularFactorZ);
 		}
 
 		#if js

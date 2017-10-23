@@ -117,6 +117,8 @@ class PhysicsPropsPanel(bpy.types.Panel):
         if obj == None:
             return
 
+        layout.prop(obj, 'arm_rb_linear_factor')
+        layout.prop(obj, 'arm_rb_angular_factor')
         layout.prop(obj, 'arm_soft_body_margin')
 
 # Menu in data region
