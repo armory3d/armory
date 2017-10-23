@@ -21,9 +21,11 @@ class Character extends Trait {
 	public function new(actionIdle:String, actionMove:String) {
 		super();
 
-		this.actionIdle = actionIdle;
-		this.actionMove = actionMove;
-
+		if(actionIdle != null && actionMove != null){
+			this.actionIdle = actionIdle;
+			this.actionMove = actionMove;
+		}
+		
 		notifyOnInit(init);
 		notifyOnUpdate(update);
 	}
@@ -32,9 +34,16 @@ class Character extends Trait {
 		animation = object.animation;
 
 		// Try first child if we are running from armature
-		if (animation == null) animation = object.children[0].animation;
+		if (animation == null){
+			if(object.children.length > 0) {
+				animation = object.children[0].animation;
+			}
+		}
 
-		animation.pause();
+		// null check animation
+		if(animation != null) {
+			animation.pause();
+		}
 	}
 
 	function update() {
@@ -55,13 +64,21 @@ class Character extends Trait {
 		// if state is zero (idle) and speed is greater than zero, play move walk animation
 		if (state == 0 && speed > 0) {
 			state = 1;
-			animation.play(actionMove);
+
+			// null check animation and actionMove
+			if(animation != null && actionMove != null){
+				animation.play(actionMove);
+			}
 		}
 
 		// otherwise if state is one (walking) and speed equals zero, pause the walk animation
 		else if (state == 1 && speed == 0) {
 			state = 0;
-			animation.pause();
+
+			// null check animation
+			if(animation != null){
+				animation.pause();
+			}
 		}
 	}
 }
