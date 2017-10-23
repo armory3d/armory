@@ -494,6 +494,7 @@ def make_forward(con_mesh):
     if not blend:
         frag.add_out('vec4 fragColor')
         frag.write('fragColor = vec4(direct * lightColor * visibility + indirect * occlusion * envmapStrength, 1.0);')
+        # frag.write('fragColor = vec4(indirect, 1.0);') # AO view
     
         if '_LDR' in wrd.world_defs:
             frag.add_include('../../Shaders/std/tonemap.glsl')
@@ -666,3 +667,21 @@ def make_forward_base(con_mesh, parse_opacity=False):
             frag.write('indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5;')
     else:
         frag.write('vec3 indirect = albedo;')
+
+    if '_VoxelGI' in wrd.world_defs or '_VoxelAO' in wrd.world_defs:
+        frag.add_include('../../Shaders/std/conetrace.glsl')
+        frag.add_uniform('sampler3D voxels', included=True)
+        if '_VoxelGICam' in wrd.world_defs:
+            frag.add_uniform('vec3 eyeSnap', link='_cameraPositionSnap')
+            frag.write('vec3 voxpos = (wposition - eyeSnap) / voxelgiHalfExtents;')
+        else:
+            frag.write('vec3 voxpos = wposition / voxelgiHalfExtents;')
+        if '_VoxelAO' in wrd.world_defs:
+            frag.write('indirect *= vec3(1.0 - traceAO(voxpos, n));')
+            # frag.write('indirect = vec3(1.0 - traceAO(voxpos, n));') # AO view
+        else:
+            frag.write('vec4 indirectDiffuse = traceDiffuse(voxpos, n);')
+            frag.write('vec3 indirectSpecular = traceSpecular(voxpos, n, vVec, roughness);')
+            frag.write('indirectSpecular *= f0 * envBRDF.x + envBRDF.y;')
+            frag.write('indirect = indirect * voxelgiEnv + vec3(indirectDiffuse.rgb * voxelgiDiff * basecol + indirectSpecular * voxelgiSpec);')
+            

@@ -363,8 +363,30 @@ def make_forward(rpdat):
     nodes['Begin'].inputs[1].default_value = rpdat.rp_hdr
     nodes['Screen'].inputs[0].default_value = int(rpdat.rp_supersampling)
 
+    if rpdat.rp_gi == 'Voxel GI' or rpdat.rp_gi == 'Voxel AO':
+        n = nodes['Image 3D Voxels']
+        if rpdat.rp_gi == 'Voxel AO':
+            n.inputs[4].default_value = 'R8'
+        elif rpdat.rp_voxelgi_hdr:
+             n.inputs[4].default_value = 'RGBA64'
+        # One lamp only for now - draw shadow map in advance
+        links.new(nodes['Draw Meshes SM'].outputs[0], nodes['Branch Function Voxelize'].inputs[0])
+        links.new(nodes['Merge Stages Voxelize'].outputs[0], nodes['Set Target Mesh'].inputs[0])
+        res = int(rpdat.rp_voxelgi_resolution)
+        n.inputs[1].default_value = res
+        n.inputs[2].default_value = res
+        n.inputs[3].default_value = int(res * float(rpdat.rp_voxelgi_resolution_z))
+        n = nodes['Set Viewport Voxels']
+        n.inputs[1].default_value = res
+        n.inputs[2].default_value = res
+    else:
+        relink('Bind Target Mesh Voxels', 'Draw Meshes Mesh')
+
     if not rpdat.rp_hdr:
         nodes['lbuf'].inputs[4].default_value = 'RGBA32'
+
+    if not rpdat.rp_depthprepass:
+        relink('Draw Meshes Depth', 'Bind Target Mesh SM')
 
     if rpdat.rp_shadowmap != 'None':
         n = nodes['Shadow Map']

@@ -966,6 +966,8 @@ class ArmRenderPathPanel(bpy.types.Panel):
             layout.prop(wrd, "rp_preset")
             layout.separator()
             layout.prop(rpdat, "rp_renderer")
+            if rpdat.rp_renderer == 'Forward':
+                layout.prop(rpdat, 'rp_depthprepass')
             layout.prop(rpdat, "arm_material_model")
             layout.prop(rpdat, "rp_shadowmap")
             if rpdat.rp_shadowmap != 'None':
