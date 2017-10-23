@@ -34,8 +34,15 @@ class WalkNavigation extends Trait {
 		gamepad = Input.getGamepad();
 		mouse = Input.getMouse();
 
-		camera = cast(object, CameraObject);
-		notifyOnUpdate(update);
+		try {
+			camera = cast(object, CameraObject);
+		} catch(msg:String){
+			trace("Error occurred: " + msg + "\nWalkNavigation trait should be used with a camera object.");
+		}
+
+		if (camera != null){
+			notifyOnUpdate(update);
+		}
 	}
 
 	function update() {
