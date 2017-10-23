@@ -70,7 +70,7 @@ class DebugConsole extends Trait {
 		var hwin = Id.handle();
 		if (ui.window(hwin, 0, 0, 280, iron.App.h(), true)) {
 
-			var htab = Id.handle({position: 1});
+			var htab = Id.handle({position: 0});
 			if (ui.tab(htab, '')) {}
 			if (ui.tab(htab, 'Inspector')) {
 				ui.text('Console: ' + lastTrace);
@@ -105,6 +105,7 @@ class DebugConsole extends Trait {
 			var fpsAvg = avg > 0 ? Math.round(1000 / avg) : 0;
 			if (ui.tab(htab, '$avg ms')) {
 				// ui.check(Id.handle(), "Show empties");
+				ui.text('$fpsAvg fps');
 				var numObjects = iron.Scene.active.meshes.length;
 				ui.text("meshes: " + numObjects);
 				var avgMin = Math.round(frameTimeAvgMin * 10000) / 10;

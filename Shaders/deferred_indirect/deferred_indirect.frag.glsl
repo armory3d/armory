@@ -27,10 +27,12 @@ uniform sampler2D gbuffer1;
 
 #ifdef _VoxelGI
 	//!uniform sampler3D voxels;
-	uniform vec3 eyeSnap;
+	
 #endif
 #ifdef _VoxelAO
 	//!uniform sampler3D voxels;
+#endif
+#ifdef _VoxelGICam
 	uniform vec3 eyeSnap;
 #endif
 

@@ -62,6 +62,9 @@ class Shader:
     def prepend(self, s):
         self.main_pre = s + '\n' + self.main_pre
 
+    def prepend_header(self, s):
+        self.main_header = s + '\n' + self.main_header
+
     def write(self, s):
         if self.lock:
             return

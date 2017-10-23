@@ -432,8 +432,8 @@ def make_deferred(rpdat):
 
     if rpdat.rp_gi == 'Voxel GI':
         n = nodes['Image 3D Voxels']
-        # if rpdat.rp_voxelgi_hdr:
-            # n.inputs[4].default_value = 'RGBA64'
+        if rpdat.rp_voxelgi_hdr:
+            n.inputs[4].default_value = 'RGBA64'
 
         # One lamp only for now - draw shadow map in advance
         links.new(nodes['Begin'].outputs[0], nodes['Set Target SM'].inputs[0])
@@ -455,7 +455,7 @@ def make_deferred(rpdat):
             links.new(nodes['Image 3D Voxels'].outputs[0], nodes['Deferred Light.001'].inputs[4])
     elif rpdat.rp_gi == 'Voxel AO':
         n = nodes['Image 3D Voxels']
-        # n.inputs[4].default_value = 'R8'
+        n.inputs[4].default_value = 'R8'
         links.new(nodes['Begin'].outputs[0], nodes['Branch Function Voxelize'].inputs[0])
         links.new(nodes['Merge Stages Voxelize'].outputs[0], nodes['Set Target Mesh'].inputs[0])
         res = int(rpdat.rp_voxelgi_resolution)

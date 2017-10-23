@@ -53,6 +53,11 @@
 					"link": "_cameraPosition"
 				},
 				{
+					"name": "eyeSnap",
+					"link": "_cameraPositionSnap",
+					"ifdef": ["_VoxelGICam"]
+				},
+				{
 					"name": "eyeLook",
 					"link": "_cameraLook"
 				},

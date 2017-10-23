@@ -199,7 +199,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name="Resolution", description="Render at specific resolution, regardless of display resolution", default='Display', update=update_renderpath)
     arm_ssr_half_res = bpy.props.BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
 
-    rp_voxelgi_hdr = bpy.props.BoolProperty(name="HDR", description="Store voxels in RGBA64 instead of RGBA32", default=False, update=update_renderpath)
+    rp_voxelgi_hdr = bpy.props.BoolProperty(name="HDR Voxels", description="Store voxels in RGBA64 instead of RGBA32", default=False, update=update_renderpath)
     arm_voxelgi_dimensions = bpy.props.FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_shader_cache)
     arm_voxelgi_revoxelize = bpy.props.BoolProperty(name="Revoxelize", description="Revoxelize scene each frame", default=False, update=assets.invalidate_shader_cache)
     # arm_voxelgi_multibounce = bpy.props.BoolProperty(name="Multi-bounce", description="Accumulate multiple light bounces", default=False, update=assets.invalidate_shader_cache)
@@ -207,7 +207,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     # arm_voxelgi_anisotropic = bpy.props.BoolProperty(name="Anisotropic", description="Use anisotropic voxels", default=False, update=update_renderpath)
     arm_voxelgi_shadows = bpy.props.BoolProperty(name="Trace Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
     arm_voxelgi_refraction = bpy.props.BoolProperty(name="Trace Refraction", description="Use voxels to render refraction", default=False, update=update_renderpath)
-    arm_voxelgi_emission = bpy.props.BoolProperty(name="Emission", description="Encode emission into voxelized data", default=False, update=update_renderpath)
+    arm_voxelgi_emission = bpy.props.BoolProperty(name="Emission Voxels", description="Encode emission into voxelized data", default=False, update=update_renderpath)
     arm_samples_per_pixel = EnumProperty(
         items=[('1', '1X', '1X'),
                ('2', '2X', '2X'),

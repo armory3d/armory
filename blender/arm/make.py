@@ -63,8 +63,8 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
             shutil.rmtree(build_dir + '/build/html5-resources', onerror=remove_readonly)
         if os.path.isdir(build_dir + '/build/krom-resources'):
             shutil.rmtree(build_dir + '/build/krom-resources', onerror=remove_readonly)
-        if os.path.isdir(build_dir + '/window/krom-resources'):
-            shutil.rmtree(build_dir + '/window/krom-resources', onerror=remove_readonly)
+        if os.path.isdir(build_dir + '/windowed/krom-resources'):
+            shutil.rmtree(build_dir + '/windowed/krom-resources', onerror=remove_readonly)
         if os.path.isdir(build_dir + '/compiled/Shaders'):
             shutil.rmtree(build_dir + '/compiled/Shaders', onerror=remove_readonly)
         if os.path.isdir(build_dir + '/compiled/ShaderRaws'):
@@ -221,7 +221,7 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
 
     cmd.append('--to')
     if kha_target_name == 'krom' and not state.in_viewport:
-        cmd.append(arm.utils.build_dir() + '/window')
+        cmd.append(arm.utils.build_dir() + '/windowed')
     else:
         cmd.append(arm.utils.build_dir())
 
@@ -387,7 +387,7 @@ def get_khajs_path(in_viewport, target):
     if in_viewport:
         return arm.utils.build_dir() + '/krom/krom.js'
     elif target == 'krom':
-        return arm.utils.build_dir() + '/window/krom/krom.js'
+        return arm.utils.build_dir() + '/windowed/krom/krom.js'
     else: # Browser
         return arm.utils.build_dir() + '/html5/kha.js'
 
@@ -485,7 +485,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
         elif wrd.arm_play_runtime == 'Krom':
             krom_location, krom_path = arm.utils.krom_paths()
             os.chdir(krom_location)
-            args = [krom_path, arm.utils.get_fp_build() + '/window/krom', arm.utils.get_fp_build() + '/window/krom-resources']
+            args = [krom_path, arm.utils.get_fp_build() + '/windowed/krom', arm.utils.get_fp_build() + '/windowed/krom-resources']
             # TODO: Krom sound freezes on MacOS
             if arm.utils.get_os() == 'mac':
                 args.append('--nosound')

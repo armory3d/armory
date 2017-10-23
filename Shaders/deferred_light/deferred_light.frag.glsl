@@ -37,6 +37,9 @@ precision mediump float;
 #ifdef _VoxelGIDirect
 	//!uniform sampler3D voxels;
 #endif
+#ifdef _VoxelGICam
+	uniform vec3 eyeSnap;
+#endif
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;

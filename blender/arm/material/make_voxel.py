@@ -33,11 +33,11 @@ def make_gi(context_id):
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
 
     rpdat = arm.utils.get_rp()
-    # if rpdat.rp_voxelgi_hdr:
-        # frag.add_uniform('layout(RGBA16) image3D voxels')
-    # else:
-    # frag.add_uniform('layout(RGBA8) image3D voxels')
-    frag.add_uniform('layout(r32ui) uimage3D voxels')
+    if rpdat.rp_voxelgi_hdr:
+        frag.add_uniform('layout(rgba16) image3D voxels')
+    else:
+        # frag.add_uniform('layout(rgba8) image3D voxels')
+        frag.add_uniform('layout(r32ui) uimage3D voxels')
 
     frag.add_uniform('vec3 lightPos', '_lampPosition')
     frag.add_uniform('vec3 lightColor', '_lampColorVoxel')
@@ -207,51 +207,51 @@ def make_gi(context_id):
     if rpdat.arm_voxelgi_emission:
         frag.write('color = min(color * 0.9, vec3(0.9)) + min(color / 200.0, 0.1);') # Higher range to allow emission
 
-    # if rpdat.rp_voxelgi_hdr:
-        # frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
-    # else:
     frag.write('color = clamp(color, vec3(0.0), vec3(1.0));')
-    
-    frag.write('uint val = convVec4ToRGBA8(vec4(color, 1.0) * 255);')
-    frag.write('imageAtomicMax(voxels, ivec3(voxelgiResolution * voxel), val);')
-    
-    # frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
-    # frag.write('imageAtomicRGBA8Avg(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
-        
-    # frag.write('ivec3 coords = ivec3(voxelgiResolution * voxel);')
-    # if parse_opacity:
-    #     frag.write('vec4 val = vec4(color, opacity);')
-    # else:
-    #     frag.write('vec4 val = vec4(color, 1.0);')
-    # frag.write('val *= 255.0;')
-    # frag.write('uint newVal = encUnsignedNibble(convVec4ToRGBA8(val), 1);')
-    # frag.write('uint prevStoredVal = 0;')
-    # frag.write('uint currStoredVal;')
-    # # frag.write('int counter = 0;')
-    # # frag.write('while ((currStoredVal = imageAtomicCompSwap(voxels, coords, prevStoredVal, newVal)) != prevStoredVal && counter < 16) {')
-    # frag.write('while ((currStoredVal = imageAtomicCompSwap(voxels, coords, prevStoredVal, newVal)) != prevStoredVal) {')
-    # frag.write('    vec4 rval = convRGBA8ToVec4(currStoredVal & 0xFEFEFEFE);')
-    # frag.write('    uint n = decUnsignedNibble(currStoredVal);')
-    # frag.write('    rval = rval * n + val;')
-    # frag.write('    rval /= ++n;')
-    # frag.write('    rval = round(rval / 2) * 2;')
-    # frag.write('    newVal = encUnsignedNibble(convVec4ToRGBA8(rval), n);')
-    # frag.write('    prevStoredVal = currStoredVal;')
-    # # frag.write('    counter++;')
-    # frag.write('}')
 
-    # frag.write('val.rgb *= 255.0f;')
-    # frag.write('uint newVal = convVec4ToRGBA8(val);')
-    # frag.write('uint prevStoredVal = 0;')
-    # frag.write('uint curStoredVal;')
-    # frag.write('while ((curStoredVal = imageAtomicCompSwap(voxels, coords, prevStoredVal, newVal)) != prevStoredVal) {')
-    # frag.write('    prevStoredVal = curStoredVal;')
-    # frag.write('    vec4 rval = convRGBA8ToVec4(curStoredVal);')
-    # frag.write('    rval.xyz = (rval.xyz * rval.w);')
-    # frag.write('    vec4 curValF = rval + val;')
-    # frag.write('    curValF.xyz /= (curValF.w);')
-    # frag.write('    newVal = convVec4ToRGBA8(curValF);')
-    # frag.write('}')
+    if rpdat.rp_voxelgi_hdr:
+        frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
+    else:
+        frag.write('uint val = convVec4ToRGBA8(vec4(color, 1.0) * 255);')
+        frag.write('imageAtomicMax(voxels, ivec3(voxelgiResolution * voxel), val);')
+        
+        # frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
+        # frag.write('imageAtomicRGBA8Avg(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
+            
+        # frag.write('ivec3 coords = ivec3(voxelgiResolution * voxel);')
+        # if parse_opacity:
+        #     frag.write('vec4 val = vec4(color, opacity);')
+        # else:
+        #     frag.write('vec4 val = vec4(color, 1.0);')
+        # frag.write('val *= 255.0;')
+        # frag.write('uint newVal = encUnsignedNibble(convVec4ToRGBA8(val), 1);')
+        # frag.write('uint prevStoredVal = 0;')
+        # frag.write('uint currStoredVal;')
+        # # frag.write('int counter = 0;')
+        # # frag.write('while ((currStoredVal = imageAtomicCompSwap(voxels, coords, prevStoredVal, newVal)) != prevStoredVal && counter < 16) {')
+        # frag.write('while ((currStoredVal = imageAtomicCompSwap(voxels, coords, prevStoredVal, newVal)) != prevStoredVal) {')
+        # frag.write('    vec4 rval = convRGBA8ToVec4(currStoredVal & 0xFEFEFEFE);')
+        # frag.write('    uint n = decUnsignedNibble(currStoredVal);')
+        # frag.write('    rval = rval * n + val;')
+        # frag.write('    rval /= ++n;')
+        # frag.write('    rval = round(rval / 2) * 2;')
+        # frag.write('    newVal = encUnsignedNibble(convVec4ToRGBA8(rval), n);')
+        # frag.write('    prevStoredVal = currStoredVal;')
+        # # frag.write('    counter++;')
+        # frag.write('}')
+
+        # frag.write('val.rgb *= 255.0f;')
+        # frag.write('uint newVal = convVec4ToRGBA8(val);')
+        # frag.write('uint prevStoredVal = 0;')
+        # frag.write('uint curStoredVal;')
+        # frag.write('while ((curStoredVal = imageAtomicCompSwap(voxels, coords, prevStoredVal, newVal)) != prevStoredVal) {')
+        # frag.write('    prevStoredVal = curStoredVal;')
+        # frag.write('    vec4 rval = convRGBA8ToVec4(curStoredVal);')
+        # frag.write('    rval.xyz = (rval.xyz * rval.w);')
+        # frag.write('    vec4 curValF = rval + val;')
+        # frag.write('    curValF.xyz /= (curValF.w);')
+        # frag.write('    newVal = convVec4ToRGBA8(curValF);')
+        # frag.write('}')
 
     return con_voxel
 
@@ -274,7 +274,8 @@ def make_ao(context_id):
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
 
     rpdat = arm.utils.get_rp()
-    frag.add_uniform('layout(r32ui) uimage3D voxels')
+    # frag.add_uniform('layout(r32ui) uimage3D voxels')
+    frag.add_uniform('layout(r8) image3D voxels')
     frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
 
     vert.add_include('../../Shaders/compiled.glsl')
@@ -309,8 +310,6 @@ def make_ao(context_id):
     geom.write('EndPrimitive();')
 
     frag.write('vec3 voxel = voxposition * 0.5 + vec3(0.5);')
-    # frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(1.0));')
-    frag.write('uint val = convVec4ToRGBA8(vec4(1.0) * 255);')
-    frag.write('imageAtomicMax(voxels, ivec3(voxelgiResolution * voxel), val);')
+    frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(1.0));')
 
     return con_voxel
