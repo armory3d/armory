@@ -222,7 +222,7 @@ def init_properties():
                ('Max', 'Max', 'Max'),
                ],
         name="Preset", description="Render path preset", default='Deferred', update=update_preset)
-    bpy.types.World.arm_voxelgi_diff = bpy.props.FloatProperty(name="Diffuse", description="", default=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_voxelgi_diff = bpy.props.FloatProperty(name="Diffuse", description="", default=3.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_voxelgi_diff_cones = EnumProperty(
         items=[('9', '9', '9'),
                ('5', '5', '5'),
@@ -236,7 +236,7 @@ def init_properties():
     bpy.types.World.arm_voxelgi_offset_spec = bpy.props.FloatProperty(name="Specular Offset", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_voxelgi_offset_shadow = bpy.props.FloatProperty(name="Shadow Offset", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_voxelgi_offset_refract = bpy.props.FloatProperty(name="Refract Offset", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_voxelgi_range = bpy.props.FloatProperty(name="Range", description="Maximum range", default=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_voxelgi_range = bpy.props.FloatProperty(name="Range", description="Maximum range", default=0.5, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_sss_width = bpy.props.FloatProperty(name="SSS Width", description="SSS blur strength", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_envtex_name = bpy.props.StringProperty(name="Environment Texture", default='')
     bpy.types.World.arm_envtex_irr_name = bpy.props.StringProperty(name="Environment Irradiance", default='')
