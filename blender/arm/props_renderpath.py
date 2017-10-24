@@ -64,7 +64,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Deferred Plus', 'Deferred Plus', 'Deferred Plus'),
                ],
         name="Renderer", description="Renderer type", default='Deferred', update=update_renderpath)
-    rp_depthprepass = bpy.props.BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=False, update=update_renderpath)
+    rp_depthprepass = bpy.props.BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=True, update=update_renderpath)
     rp_hdr = bpy.props.BoolProperty(name="HDR", description="Render in HDR Space", default=True, update=update_renderpath)
     rp_render_to_texture = bpy.props.BoolProperty(name="Post Process", description="Render scene to texture for further processing", default=True, update=update_renderpath)
     rp_background = EnumProperty(

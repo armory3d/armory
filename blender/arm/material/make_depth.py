@@ -1,20 +1,165 @@
 import bpy
-import arm.make_state as state
+import arm.material.cycles as cycles
 import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
+import arm.material.make_skin as make_skin
+import arm.material.make_tess as make_tess
+import arm.material.make_particle as make_particle
+import arm.material.make_mesh as make_mesh
 import arm.utils
 
-def make(context_id):
+def make(context_id, rpasses, shadowmap=False):
 
-    con_depth = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False })
+    is_disp = mat_utils.disp_linked(mat_state.output_node) and mat_state.material.arm_tess_shadows
+
+    vs = [{'name': 'pos', 'size': 3}]
+    if is_disp:
+        vs.append({'name': 'nor', 'size': 3})
+
+    con_depth = mat_state.data.add_context({ 'name': context_id, 'vertex_structure': vs, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False })
 
     vert = con_depth.make_vert()
     frag = con_depth.make_frag()
+    geom = None
+    tesc = None
+    tese = None
 
-    vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
-    vert.write('gl_Position = WVP * vec4(pos, 1.0);')
+    gapi = arm.utils.get_gapi()
+    if gapi == 'direct3d9':
+        frag.add_out('vec4 fragColor') # Definition requred for d3d9 - pixel shader must minimally write all four components of COLOR0
+    vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
 
-    # frag.add_out('vec4 fragColor')
+    parse_opacity = 'translucent' in rpasses or mat_state.material.arm_discard
+    if parse_opacity:
+        frag.write('vec3 n;') # Discard at compile time
+        frag.write('float dotNV;')
+        frag.write('float opacity;')
+
+    if con_depth.is_elem('bone'):
+        make_skin.skin_pos(vert)
+
+    if con_depth.is_elem('off'):
+        vert.write('spos.xyz += off;')
+
+    wrd = bpy.data.worlds['Arm']
+    if mat_state.material.arm_particle == 'gpu':
+        make_particle.write(vert)
+
+    if is_disp:
+        tesc = con_depth.make_tesc()
+        tese = con_depth.make_tese()
+        tesc.ins = vert.outs
+        tese.ins = tesc.outs
+        frag.ins = tese.outs
+
+        vert.add_out('vec3 wposition')
+        vert.add_out('vec3 wnormal')
+        vert.add_uniform('mat4 W', '_worldMatrix')
+        vert.add_uniform('mat3 N', '_normalMatrix')
+        vert.write('wnormal = normalize(N * nor);')
+        vert.write('wposition = vec4(W * spos).xyz;')
+        
+        make_tess.tesc_levels(tesc, mat_state.material.arm_tess_shadows_inner, mat_state.material.arm_tess_shadows_outer)
+        make_tess.interpolate(tese, 'wposition', 3)
+        make_tess.interpolate(tese, 'wnormal', 3, normalize=True)
+
+        cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=parse_opacity)
+
+        if con_depth.is_elem('tex'):
+            vert.add_out('vec2 texCoord')
+            vert.write('texCoord = tex;')
+            tese.write_pre = True
+            make_tess.interpolate(tese, 'texCoord', 2, declare_out=frag.contains('texCoord'))
+            tese.write_pre = False
+
+        if con_depth.is_elem('tex1'):
+            vert.add_out('vec2 texCoord1')
+            vert.write('texCoord1 = tex1;')
+            tese.write_pre = True
+            make_tess.interpolate(tese, 'texCoord1', 2, declare_out=frag.contains('texCoord1'))
+            tese.write_pre = False
+
+        if con_depth.is_elem('col'):
+            vert.add_out('vec3 vcolor')
+            vert.write('vcolor = col;')
+            tese.write_pre = True
+            make_tess.interpolate(tese, 'vcolor', 3, declare_out=frag.contains('vcolor'))
+            tese.write_pre = False
+
+        if shadowmap:
+            tese.add_uniform('mat4 LVP', '_lampViewProjectionMatrix')
+            tese.write('wposition += wnormal * disp * 0.2;')
+            tese.write('gl_Position = LVP * vec4(wposition, 1.0);')
+        else:
+            tese.add_uniform('mat4 VP', '_viewProjectionMatrix')
+            tese.write('wposition += wnormal * disp * 0.2;')
+            tese.write('gl_Position = VP * vec4(wposition, 1.0);')
+    # No displacement
+    else:
+        frag.ins = vert.outs
+        billboard = mat_state.material.arm_billboard
+        if shadowmap:
+            if billboard == 'spherical':
+                vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrixSphere')
+            elif billboard == 'cylindrical':
+                vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrixCylinder')
+            else: # off
+                vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrix')
+            vert.write('gl_Position = LWVP * spos;')
+        else:
+            if billboard == 'spherical':
+                vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrixSphere')
+            elif billboard == 'cylindrical':
+                vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrixCylinder')
+            else: # off
+                vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
+            vert.write('gl_Position = WVP * spos;')
+
+        if parse_opacity:
+            cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=True)
+
+            if con_depth.is_elem('tex'):
+                vert.add_out('vec2 texCoord')
+                if mat_state.material.arm_tilesheet_mat:
+                    vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
+                    vert.write('texCoord = tex + tilesheetOffset;')
+                else:
+                    vert.write('texCoord = tex;')
+
+            if con_depth.is_elem('tex1'):
+                vert.add_out('vec2 texCoord1')
+                vert.write('texCoord1 = tex1;')
+
+            if con_depth.is_elem('col'):
+                vert.add_out('vec3 vcolor')
+                vert.write('vcolor = col;')
+    
+    # TODO: interleaved buffer has to match vertex structure of mesh context
+    if not bpy.data.worlds['Arm'].arm_deinterleaved_buffers:
+        con_depth.add_elem('nor', 3)
+        if mat_state.con_mesh != None:
+            if mat_state.con_mesh.is_elem('tex'):
+                con_depth.add_elem('tex', 2)
+            if mat_state.con_mesh.is_elem('tex1'):
+                con_depth.add_elem('tex1', 2)
+            if mat_state.con_mesh.is_elem('col'):
+                con_depth.add_elem('col', 3)
+            if mat_state.con_mesh.is_elem('tang'):
+                con_depth.add_elem('tang', 4)
+
+    # TODO: pass vbuf with proper struct
+    if gapi.startswith('direct3d') and bpy.data.worlds['Arm'].arm_deinterleaved_buffers == False:
+        vert.write('vec3 t1 = nor; // TODO: Temp for d3d')
+        if con_depth.is_elem('tex'):
+            vert.write('vec2 t2 = tex; // TODO: Temp for d3d')
+
+    if parse_opacity:
+        opac = mat_state.material.arm_discard_opacity_shadows
+        frag.write('if (opacity < {0}) discard;'.format(opac))
+
     # frag.write('fragColor = vec4(0.0);')
 
+    make_mesh.make_finalize(con_depth)
+
     return con_depth
+

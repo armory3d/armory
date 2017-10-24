@@ -8,7 +8,6 @@ from arm.material.shader_data import ShaderData
 import arm.material.cycles as cycles
 import arm.material.make_mesh as make_mesh
 import arm.material.make_rect as make_rect
-import arm.material.make_shadowmap as make_shadowmap
 import arm.material.make_transluc as make_transluc
 import arm.material.make_overlay as make_overlay
 import arm.material.make_depth as make_depth
@@ -68,7 +67,7 @@ def build(material, mat_users, mat_armusers):
             con = make_rect.make(rp)
 
         elif rp == 'shadowmap':
-            con = make_shadowmap.make(rp, rpasses)
+            con = make_depth.make(rp, rpasses, shadowmap=True)
 
         elif rp == 'translucent':
             con = make_transluc.make(rp)
@@ -80,7 +79,7 @@ def build(material, mat_users, mat_armusers):
             con = make_decal.make(rp)
 
         elif rp == 'depth':
-            con = make_depth.make(rp)
+            con = make_depth.make(rp, rpasses)
 
         elif rp == 'voxel':
             con = make_voxel.make(rp)

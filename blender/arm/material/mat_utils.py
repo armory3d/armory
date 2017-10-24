@@ -23,9 +23,6 @@ def get_rpasses(material):
 
     ar = []
 
-    # if material.depthpass:
-        # ar.append('depth')
-
     rpdat = arm.utils.get_rp()
     vgirefract = rpdat.rp_gi == 'Voxel GI' and rpdat.arm_voxelgi_refraction
 
@@ -43,7 +40,9 @@ def get_rpasses(material):
             ar.append('voxel')
         if rpdat.rp_renderer == 'Deferred Plus':
             ar.append('rect')
-
+        if rpdat.rp_depthprepass:
+            ar.append('depth')
+            
     shadows_enabled = False
     if rpdat.rp_shadowmap != 'None':
         shadows_enabled = True

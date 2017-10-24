@@ -14,6 +14,9 @@ write_material_attribs_post = None
 write_vertex_attribs = None
 
 def make(context_id):
+    rpdat = arm.utils.get_rp()
+    rid = rpdat.rp_renderer
+
     con = { 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' }
     
     # TODO: blend context
@@ -24,11 +27,14 @@ def make(context_id):
         con['blend_destination'] = 'blend_one'
         con['blend_operation'] = 'add'
         con['depth_write'] = False
+    dprepass = rid == 'Forward' and rpdat.rp_depthprepass
+    if dprepass:
+        con['depth_write'] = False
+        con['compare_mode'] = 'equal'
+
     con_mesh = mat_state.data.add_context(con)
     mat_state.con_mesh = con_mesh
 
-    rpdat = arm.utils.get_rp()
-    rid = rpdat.rp_renderer
     if rid == 'Forward' or blend:
         if rpdat.arm_material_model == 'Mobile':
             make_forward_mobile(con_mesh)
