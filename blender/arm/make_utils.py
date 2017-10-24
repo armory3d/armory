@@ -3,20 +3,22 @@ import subprocess
 import bpy
 import os
 
+def kode_studio_mklink(sdk_path):
+    # Fight long-path issues on Windows
+    if not os.path.exists(sdk_path + '/win32/resources/app/extensions/kha/Kha'):
+        source = sdk_path + '/win32/resources/app/extensions/kha/Kha'
+        target = sdk_path + '/win32/Kha'
+        subprocess.check_call('mklink /J "%s" "%s"' % (source, target), shell=True)
+    if not os.path.exists(sdk_path + '/win32/resources/app/extensions/krom/Krom'):
+        source = sdk_path + '/win32/resources/app/extensions/krom/Krom'
+        target = sdk_path + '/win32/Krom'
+        subprocess.check_call('mklink /J "%s" "%s"' % (source, target), shell=True)
+
 def kode_studio():
     sdk_path = arm.utils.get_sdk_path()
     project_path = arm.utils.get_fp()
-
     if arm.utils.get_os() == 'win':
-        # Fight long-path issues on Windows
-        if not os.path.exists(sdk_path + '/win32/resources/app/extensions/kha/Kha'):
-            source = sdk_path + '/win32/resources/app/extensions/kha/Kha'
-            target = sdk_path + '/win32/Kha'
-            subprocess.check_call('mklink /J "%s" "%s"' % (source, target), shell=True)
-        if not os.path.exists(sdk_path + '/win32/resources/app/extensions/krom/Krom'):
-            source = sdk_path + '/win32/resources/app/extensions/krom/Krom'
-            target = sdk_path + '/win32/Krom'
-            subprocess.check_call('mklink /J "%s" "%s"' % (source, target), shell=True)
+        kode_studio_mklink(sdk_path)
         kode_path = sdk_path + '/win32/Kode Studio.exe'
         subprocess.Popen([kode_path, arm.utils.get_fp()])
     elif arm.utils.get_os() == 'mac':
