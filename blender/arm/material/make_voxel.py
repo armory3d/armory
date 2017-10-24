@@ -115,9 +115,18 @@ def make_gi(context_id):
     cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False, basecol_only=True)
 
     # Voxelized particles
-    # particle = mat_state.material.arm_particle
-    # if particle == 'gpu':
+    particle = mat_state.material.arm_particle
+    if particle == 'gpu':
         # make_particle.write(vert, particle_info=cycles.particle_info)
+        frag.write_pre = True
+        frag.write('const float p_index = 0;')
+        frag.write('const float p_age = 0;')
+        frag.write('const float p_lifetime = 0;')
+        frag.write('const vec3 p_location = vec3(0);')
+        frag.write('const float p_size = 0;')
+        frag.write('const vec3 p_velocity = vec3(0);')
+        frag.write('const vec3 p_angular_velocity = vec3(0);')
+        frag.write_pre = False
 
     if not frag.contains('vec3 n ='):
         frag.write_pre = True
