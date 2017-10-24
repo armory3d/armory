@@ -2264,14 +2264,31 @@ class ArmoryExporter:
         else:
             return [0.051, 0.051, 0.051, 1.0]
 
+    def extract_projection(self, o, proj, with_aspect=False):
+        a = proj[0][0]
+        b = proj[1][1]
+        c = proj[2][2]
+        d = proj[2][3]
+        k = (c - 1.0) / (c + 1.0)
+        o['near_plane'] = (d * (1.0 - k)) / (2.0 * k)
+        o['far_plane'] = k * o['near_plane'];
+        o['fov'] = 2.0 * math.atan(1.0 / b)
+        if with_aspect:
+            o['aspect'] = b / a
+
     def export_camera(self, objectRef):
         o = {}
         o['name'] = objectRef[1]["structName"]
         objref = objectRef[0]
 
-        o['near_plane'] = objref.clip_start
-        o['far_plane'] = objref.clip_end
-        o['fov'] = objref.angle
+        camera = objectRef[1]["objectTable"][0]
+        render = self.scene.render
+        proj = camera.calc_matrix_camera(
+            render.resolution_x,
+            render.resolution_y,
+            render.pixel_aspect_x,
+            render.pixel_aspect_y)
+        self.extract_projection(o, proj)
 
         wrd = bpy.data.worlds['Arm']
         if wrd.arm_play_camera != 'Scene' and ArmoryExporter.in_viewport:
@@ -2279,16 +2296,7 @@ class ArmoryExporter:
             # Tool shelf and properties hidden
             proj, is_persp = self.get_viewport_projection_matrix()
             if pw == 0 and is_persp:
-                # Extract projection values
-                a = proj[0][0]
-                b = proj[1][1]
-                c = proj[2][2]
-                d = proj[2][3]
-                k = (c - 1.0) / (c + 1.0)
-                o['near_plane'] = (d * (1.0 - k)) / (2.0 * k)
-                o['far_plane'] = k * o['near_plane'];
-                o['fov'] = 2.0 * math.atan(1.0 / b)
-                o['aspect'] = b / a
+                self.extract_projection(o, proj, with_aspect=True)
         
         if objref.type == 'PERSP':
             o['type'] = 'perspective'
