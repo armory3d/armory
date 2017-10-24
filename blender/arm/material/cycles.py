@@ -913,8 +913,7 @@ def parse_normal_map_color_input(inp):
         frag.write('n = TBN * normalize(texn);')
     else:
         frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
-        # frag.write('n = normalize(TBN * normalize(n));')
-        frag.write('n = TBN * normalize(n);')
+        frag.write('n = normalize(TBN * n);')
         con.add_elem('tang', 3)
 
     parse_teximage_vector = True
