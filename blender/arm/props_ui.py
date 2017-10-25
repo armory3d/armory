@@ -303,9 +303,6 @@ class WorldPropsPanel(bpy.types.Panel):
         columnb.prop(wrd, 'arm_radiance_size')
         column = row.column()
         column.prop(wrd, 'arm_radiance_sky')
-        columnb = column.column()
-        columnb.enabled = wrd.arm_radiance_sky
-        columnb.prop(wrd, 'arm_radiance_sky_type')
 
 class ArmoryPlayerPanel(bpy.types.Panel):
     bl_label = "Armory Player"

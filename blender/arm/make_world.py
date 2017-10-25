@@ -362,12 +362,7 @@ def parse_color(world, node, context, envmap_strength_const):
         # Radiance
         if wrd.arm_radiance_sky and wrd.arm_radiance and wrd.arm_irradiance and not mobile_mat:
             wrd.world_defs += '_Rad'
-            
-            if wrd.arm_radiance_sky_type == 'Hosek':
-                hosek_path = 'armory/Assets/hosek/'
-            else:
-                hosek_path = 'armory/Assets/hosek_fake/'
-
+            hosek_path = 'armory/Assets/hosek/'
             sdk_path = arm.utils.get_sdk_path()
             # Use fake maps for now
             assets.add(sdk_path + hosek_path + 'hosek_radiance.hdr')

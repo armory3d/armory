@@ -254,10 +254,6 @@ def init_properties():
                ('2048', '2048', '2048')],
         name="", description="Prefiltered map size", default='1024', update=assets.invalidate_envmap_data)
     bpy.types.World.arm_radiance_sky = bpy.props.BoolProperty(name="Sky Radiance", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_radiance_sky_type = EnumProperty(
-        items=[('Fake', 'Fake', 'Fake'), 
-               ('Hosek', 'Hosek', 'Hosek')],
-        name="", description="Prefiltered maps to be used for radiance", default='Hosek', update=assets.invalidate_envmap_data)
     bpy.types.World.arm_clouds_density = bpy.props.FloatProperty(name="Density", default=1.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_clouds_size = bpy.props.FloatProperty(name="Size", default=1.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_clouds_lower = bpy.props.FloatProperty(name="Lower", default=2.0, min=1.0, max=10.0, update=assets.invalidate_shader_cache)
