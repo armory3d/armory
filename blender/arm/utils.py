@@ -30,12 +30,12 @@ def write_image(image, path, file_format='JPEG'):
     ren = bpy.context.scene.render
     orig_quality = ren.image_settings.quality
     orig_file_format = ren.image_settings.file_format
-    
+
     ren.image_settings.quality = 90
     ren.image_settings.file_format = file_format
-    
+
     image.save_render(path, bpy.context.scene)
-    
+
     ren.image_settings.quality = orig_quality
     ren.image_settings.file_format = orig_file_format
 
@@ -176,28 +176,40 @@ def fetch_script_props(file):
         script_props[name] = []
         script_props_defaults[name] = []
         lines = f.read().splitlines()
-        readprop = False
+        read_prop = False
         for l in lines:
-            if not readprop:
-                readprop = '@prop' in l
-            if readprop and 'var ' in l:
+            if not read_prop:
+                read_prop = '@prop' in l
+            if read_prop and 'var ' in l:
                 p = l.split('var ')[1]
+
+                valid_prop = False
+                # Has type
                 if ':' in p:
-                    if '=' in p: # Fetch default value
+                    # Fetch default value
+                    if '=' in p:
                         s = p.split('=')
-                        v = s[1].split(';')[0].strip()
+                        ps = s[0].split(':')
+                        prop = (ps[0].strip(), ps[1].split(';')[0].strip())
+                        prop_value = s[1].split(';')[0].replace('\'', '').replace('"', '').strip()
+                        valid_prop = True
                     else:
-                        v = ''
-                    p = p.split(':')[0].strip()
-                    script_props[name].append(p)
-                    script_props_defaults[name].append(v)
+                        ps = p.split(':')
+                        prop = (ps[0].strip(), ps[1].split(';')[0].strip())
+                        prop_value = ''
+                        valid_prop = True
+                # Fetch default value
                 elif '=' in p:
                     s = p.split('=')
-                    p = s[0].strip()
-                    v = s[1].split(';')[0].strip()
-                    script_props[name].append(p)
-                    script_props_defaults[name].append(v)
-                readprop = False
+                    prop = (s[0].strip(), None)
+                    prop_value = s[1].split(';')[0].replace('\'', '').replace('"', '').strip()
+                    valid_prop = True
+                # Register prop
+                if valid_prop:
+                    script_props[name].append(prop)
+                    script_props_defaults[name].append(prop_value)
+
+                read_prop = False
 
 def fetch_script_names():
     if bpy.data.filepath == "":
@@ -232,20 +244,33 @@ def fetch_trait_props():
             # Remove old props
             for i in range(len(item.arm_traitpropslist) - 1, -1, -1):
                 ip = item.arm_traitpropslist[i]
-                if ip.name not in props:
+                # if ip.name not in props:
+                if ip.name.split('(')[0] not in [p[0] for p in props]:
                     item.arm_traitpropslist.remove(i)
             # Add new props
             for i in range(0, len(props)):
                 p = props[i]
                 found = False
                 for ip in item.arm_traitpropslist:
-                    if ip.name == p:
-                        found = True
+                    if ip.name.replace(')', '').split('(')[0] == p[0]:
+                        found = ip
                         break
+                # Not in list
                 if not found:
                     prop = item.arm_traitpropslist.add()
-                    prop.name = p
+                    prop.name = p[0] + ('(' + p[1] + ')' if p[1] else '')
                     prop.value = defaults[i]
+
+                if found:
+                    prop = item.arm_traitpropslist[found.name]
+                    f = found.name.replace(')', '').split('(')
+
+                    # Default value added and current value is blank (no override)
+                    if(not found.value and defaults[i]):
+                        prop.value = defaults[i]
+                    # Type has changed, update displayed name
+                    if(len(f) == 1 or (len(f) > 1 and f[1] != p[1])):
+                        prop.name = p[0] + ('(' + p[1] + ')' if p[1] else '')
 
 def to_hex(val):
     return '#%02x%02x%02x%02x' % (int(val[3] * 255), int(val[0] * 255), int(val[1] * 255), int(val[2] * 255))

@@ -5,7 +5,7 @@
 #  http://opengex.org/
 #  Export plugin for Blender by Eric Lengyel
 #  Copyright 2015, Terathon Software LLC
-# 
+#
 #  This software is licensed under the Creative Commons
 #  Attribution-ShareAlike 3.0 Unported License:
 #  http://creativecommons.org/licenses/by-sa/3.0/deed.en_US
@@ -350,7 +350,7 @@ class ArmoryExporter:
         deltaPos2 = v2 - v0
         deltaUV1 = uv1 - uv0
         deltaUV2 = uv2 - uv0
-        
+
         d = (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x)
         if d != 0:
             r = 1.0 / d
@@ -514,7 +514,7 @@ class ArmoryExporter:
         return export_vertex_array
 
     @staticmethod
-    def unify_vertices(export_vertex_array, indexTable):    
+    def unify_vertices(export_vertex_array, indexTable):
         # This function looks for identical vertices having exactly the same position, normal,
         # color, and texcoords. Duplicate vertices are unified, and a new index table is returned.
         bucketCount = len(export_vertex_array) >> 3
@@ -534,13 +534,13 @@ class ArmoryExporter:
         for i in range(len(export_vertex_array)):
             ev = export_vertex_array[i]
             bucket = ev.hash & (bucketCount - 1)
-            
+
             index = -1
             for b in hashTable[bucket]:
                 if export_vertex_array[b] == ev:
                     index = b
                     break
-            
+
             if index < 0:
                 indexTable.append(len(unifiedVA))
                 unifiedVA.append(ev)
@@ -558,13 +558,13 @@ class ArmoryExporter:
             o['type'] = structIdentifier[bobjectRef["objectType"]]
             o['name'] = bobjectRef["structName"]
             self.export_bone_transform(armature, bone, scene, o, action)
-        
+
         o['children'] = []
         for subbobject in bone.children:
             so = {}
             self.export_bone(armature, subbobject, scene, so, action)
             o['children'].append(so)
-        
+
         # Export any ordinary objects that are parented to this bone
         boneSubbobjectArray = self.boneParentArray.get(bone.name)
         if boneSubbobjectArray:
@@ -573,7 +573,7 @@ class ArmoryExporter:
                 poseBone = armature.pose.bones.get(bone.name)
             for subbobject in boneSubbobjectArray:
                 self.export_object(subbobject, scene, poseBone, o)
-        
+
     def export_object_sampled_animation(self, bobject, scene, o):
         # This function exports animation as full 4x4 matrices for each frame
         currentFrame = scene.frame_current
@@ -872,7 +872,7 @@ class ArmoryExporter:
 
             if not 'object_actions' in o:
                 o['object_actions'] = []
-            
+
             action = bobject.animation_data.action
             aname = arm.utils.safestr(arm.utils.asset_name(action))
             fp = self.get_meshes_file_path('action_' + aname, compressed=self.is_compress(bobject.data))
@@ -1111,7 +1111,7 @@ class ArmoryExporter:
                         oanim['tracks'].append(tracko)
                         oanim['has_delta'] = True
                         structFlag = True
-            
+
             if True: #action.arm_cached == False or not os.path.exists(fp):
                 print('Exporting object action ' + aname)
                 actionf = {}
@@ -1213,7 +1213,7 @@ class ArmoryExporter:
 
         if psys.settings.dupli_object == None or psys.settings.render_type != 'OBJECT':
              return
-        
+
         self.particleSystemArray[psys.settings] = {"structName" : psys.settings.name}
         pref = {}
         pref['name'] = psys.name
@@ -1357,7 +1357,7 @@ class ArmoryExporter:
                     o['data_ref'] = 'mesh_' + oid + ext + '/' + oid
                 else:
                     o['data_ref'] = oid
-                
+
                 o['material_refs'] = []
                 for i in range(len(bobject.material_slots)):
                     self.export_material_ref(bobject, bobject.material_slots[i].material, i, o)
@@ -1372,8 +1372,8 @@ class ArmoryExporter:
                     o['particle_refs'] = []
                     for i in range(0, num_psys):
                         self.export_particle_system_ref(bobject.particle_systems[i], i, o)
-                    
-                o['dimensions'] = [bobject.dimensions[0], bobject.dimensions[1], bobject.dimensions[2]] 
+
+                o['dimensions'] = [bobject.dimensions[0], bobject.dimensions[1], bobject.dimensions[2]]
                 # Origin not in geometry center
                 if hasattr(bobject.data, 'arm_aabb'):
                     dx = bobject.data.arm_aabb[0] * bobject.scale[0]
@@ -1675,9 +1675,9 @@ class ArmoryExporter:
             uv0 = Vector((uva[i0 * 2 + 0], uva[i0 * 2 + 1]))
             uv1 = Vector((uva[i1 * 2 + 0], uva[i1 * 2 + 1]))
             uv2 = Vector((uva[i2 * 2 + 0], uva[i2 * 2 + 1]))
-            
+
             tangent = ArmoryExporter.calc_tangent(v0, v1, v2, uv0, uv1, uv2)
-            
+
             tangents[i0 * 3 + 0] += tangent.x
             tangents[i0 * 3 + 1] += tangent.y
             tangents[i0 * 3 + 2] += tangent.z
@@ -1696,7 +1696,7 @@ class ArmoryExporter:
             # bitangents[i2 * 3 + 0] += bitangent.x
             # bitangents[i2 * 3 + 1] += bitangent.y
             # bitangents[i2 * 3 + 2] += bitangent.z
-        
+
         # Orthogonalize
         for i in range(0, vertex_count):
             # Slow
@@ -1773,7 +1773,7 @@ class ArmoryExporter:
         #     va_stride += 3
         #     va_name += '_tang'
         # vdata = [0] * num_verts * va_stride
-        
+
         # Make arrays
         for i, vtx in enumerate(vert_list):
             vtx.index = i
@@ -1799,23 +1799,23 @@ class ArmoryExporter:
         o['vertex_arrays'].append(pa)
         na = self.make_va('nor', 3, ndata)
         o['vertex_arrays'].append(na)
-        
+
         if has_tex:
             ta = self.make_va('tex', 2, t0data)
             o['vertex_arrays'].append(ta)
             if has_tex1:
                 ta1 = self.make_va('tex1', 2, t1data)
                 o['vertex_arrays'].append(ta1)
-        
+
         if has_col:
             ca = self.make_va('col', 3, cdata)
             o['vertex_arrays'].append(ca)
-        
+
         # Indices
         prims = {ma.name if ma else '': [] for ma in exportMesh.materials}
         if not prims:
             prims = {'': []}
-        
+
         vert_dict = {i : v for v in vert_list for i in v.loop_indices}
         for poly in exportMesh.polygons:
             first = poly.loop_start
@@ -1831,7 +1831,7 @@ class ArmoryExporter:
             elif poly.loop_total > 3:
                 for i in range(poly.loop_total-2):
                     prim += (indices[-1], indices[i], indices[i + 1])
-        
+
         # Write indices
         o['index_arrays'] = []
         for mat, prim in prims.items():
@@ -1850,7 +1850,7 @@ class ArmoryExporter:
                         ia['material'] = i
                         break
             o['index_arrays'].append(ia)
-        
+
         # Make tangents
         if has_tang:
             tanga_vals = self.calc_tangents(pa['values'], na['values'], ta['values'], o['index_arrays'][0]['values'])
@@ -2060,7 +2060,7 @@ class ArmoryExporter:
         o['vertex_arrays'] = []
         pa = self.make_va('pos', 3, self.write_va3d(unifiedVA, "position"))
         o['vertex_arrays'].append(pa)
-        
+
         # Write the normal array
         na = self.make_va('nor', 3, self.write_va3d(unifiedVA, "normal"))
         o['vertex_arrays'].append(na)
@@ -2162,11 +2162,11 @@ class ArmoryExporter:
                     ia['size'] = 3
                     ia['values'] = self.write_triangle_array(materialTriangleCount[m], materialIndexTable)
                     ia['material'] = m
-                    o['index_arrays'].append(ia)   
+                    o['index_arrays'].append(ia)
 
         # Export tangents
         if self.has_tangents(exportMesh):
-            tanga_vals = self.calc_tangents(pa['values'], na['values'], ta['values'], o['index_arrays'][0]['values'])  
+            tanga_vals = self.calc_tangents(pa['values'], na['values'], ta['values'], o['index_arrays'][0]['values'])
             tanga = self.make_va('tang', 3, tanga_vals)
             o['vertex_arrays'].append(tanga)
 
@@ -2297,7 +2297,7 @@ class ArmoryExporter:
             proj, is_persp = self.get_viewport_projection_matrix()
             if pw == 0 and is_persp:
                 self.extract_projection(o, proj, with_aspect=True)
-        
+
         if objref.type == 'PERSP':
             o['type'] = 'perspective'
         else:
@@ -2333,7 +2333,7 @@ class ArmoryExporter:
             # External
             else:
                 assets.add(arm.utils.asset_path(objref.sound.filepath)) # Link sound to assets
-            
+
             o['sound'] = arm.utils.extract_filename(objref.sound.filepath)
         else:
             o['sound'] = ''
@@ -2381,10 +2381,10 @@ class ArmoryExporter:
             # If the material is unlinked, material becomes None
             if material == None:
                 continue
-            
+
             o = {}
             o['name'] = materialRef[1]["structName"]
-            
+
             if material.arm_skip_context != '':
                 o['skip_context'] = material.arm_skip_context
 
@@ -2522,7 +2522,7 @@ class ArmoryExporter:
             # Field weights
             o['weight_gravity'] = psettings.effector_weights.gravity
             self.output['particle_datas'].append(o)
-            
+
     def export_tilesheets(self):
         wrd = bpy.data.worlds['Arm']
         if len(wrd.arm_tilesheetlist) > 0:
@@ -2552,11 +2552,11 @@ class ArmoryExporter:
             self.post_export_world(w, o)
             self.output['world_datas'].append(o)
 
-    def export_grease_pencils(self):        
+    def export_grease_pencils(self):
         gpRef = self.scene.grease_pencil
         if gpRef == None or self.scene.arm_gp_export == False:
             return
-        
+
         # ArmoryExporter.option_mesh_per_file # Currently always exports to separate file
         fp = self.get_greasepencils_file_path('greasepencil_' + gpRef.name, compressed=self.is_compress(gpRef))
         assets.add(fp)
@@ -2600,7 +2600,7 @@ class ArmoryExporter:
 
     def execute(self, context, filepath, scene=None, write_capture_info=False, play_area=None):
         profile_time = time.time()
-        
+
         self.output = {}
         self.filepath = filepath
         self.play_area = play_area
@@ -2741,7 +2741,7 @@ class ArmoryExporter:
                                 log.warn('Object ' + bobject.name + ' - unable to bind materials to vertex data, please separate object by material (select object - edit mode - P - By Material) or enable Deinterleaved Buffers in Armory Player')
                                 break
 
-            self.export_particle_systems()            
+            self.export_particle_systems()
             self.output['world_datas'] = []
             self.export_worlds()
             self.export_grease_pencils()
@@ -2756,7 +2756,7 @@ class ArmoryExporter:
                 self.output['gravity'] = [0.0, 0.0, 0.0]
 
         self.export_objects(self.scene)
-        
+
         if not self.camera_spawned:
             log.warn('No camera found in active scene layers')
 
@@ -2953,10 +2953,10 @@ class ArmoryExporter:
     def preprocess_object(self, bobject): # Returns false if object should not be exported
         export_object = True
 
-        # Disabled object   
+        # Disabled object
         if bobject.arm_export == False:
             return False
-        
+
         for m in bobject.modifiers:
             if m.type == 'OCEAN':
                 # Do not export ocean mesh, just take specified constants
@@ -3015,7 +3015,7 @@ class ArmoryExporter:
             x['parameters'].append(str(bobject.arm_rb_angular_factor[1]))
             x['parameters'].append(str(bobject.arm_rb_angular_factor[2]))
             o['traits'].append(x)
-        
+
         # Soft bodies modifier
         soft_type = -1
         soft_mod = None
@@ -3074,7 +3074,7 @@ class ArmoryExporter:
                 navigation_trait['class_name'] = 'armory.trait.WalkNavigation'
                 navigation_trait['parameters'] = [str(arm.utils.get_ease_viewport_camera()).lower()]
                 o['traits'].append(navigation_trait)
-        
+
         # Map objects to materials, can be used in later stages
         for i in range(len(bobject.material_slots)):
             mat = bobject.material_slots[i].material
@@ -3108,7 +3108,7 @@ class ArmoryExporter:
 
         for x in o['traits']:
             ArmoryExporter.import_traits.append(x['class_name'])
-    
+
     def export_traits(self, bobject, o):
         if hasattr(bobject, 'arm_traitlist'):
             for t in bobject.arm_traitlist:
@@ -3191,8 +3191,16 @@ class ArmoryExporter:
                     if len(t.arm_traitpropslist) > 0:
                         x['props'] = []
                         for pt in t.arm_traitpropslist: # Append props
-                            x['props'].append(pt.name)
-                            x['props'].append(pt.value)
+                            prop = pt.name.replace(')', '').split('(')
+                            x['props'].append(prop[0])
+                            if(len(prop) > 1):
+                                if prop[1] == 'String':
+                                    value = "'" + pt.value + "'"
+                                else:
+                                    value = pt.value
+                            else:
+                                value = pt.value
+                            x['props'].append(value)
                 o['traits'].append(x)
 
     def add_hook_trait(self, o, bobject, target_name, group_name):
@@ -3272,7 +3280,7 @@ class ArmoryExporter:
             po['turbidity'] = world.arm_envtex_turbidity
             po['ground_albedo'] = world.arm_envtex_ground_albedo
         o['probes'].append(po)
-    
+
     def post_export_grease_pencil(self, gp):
         o = {}
         o['name'] = gp.name
@@ -3330,7 +3338,7 @@ class ArmoryExporter:
                     colfilla.append(0.0)
                     colfilla.append(0.0)
                     colfilla.append(0.0)
-                    colfilla.append(0.0)        
+                    colfilla.append(0.0)
             for triangle in stroke.triangles:
                 indices.append(triangle.v1 + index_offset)
                 indices.append(triangle.v2 + index_offset)
