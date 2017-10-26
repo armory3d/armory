@@ -285,7 +285,6 @@ def make_ao(context_id):
     rpdat = arm.utils.get_rp()
     # frag.add_uniform('layout(r32ui) uimage3D voxels')
     frag.add_uniform('layout(r8) image3D voxels')
-    frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
 
     vert.add_include('../../Shaders/compiled.glsl')
     vert.add_uniform('mat4 W', '_worldMatrix')
@@ -299,26 +298,46 @@ def make_ao(context_id):
 
     # vert.write('gl_Position = vec4(0.0, 0.0, 0.0, 1.0);')
 
-    geom.add_out('vec3 voxposition')
-    geom.write('const vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
-    geom.write('const vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
-    geom.write('const vec3 p = abs(cross(p1, p2));')
-    geom.write('for (uint i = 0; i < 3; ++i) {')
-    geom.write('    voxposition = voxpositionGeom[i];')
-    geom.write('    if (p.z > p.x && p.z > p.y) {')
-    geom.write('        gl_Position = vec4(voxposition.x, voxposition.y, 0.0, 1.0);')
-    geom.write('    }')
-    geom.write('    else if (p.x > p.y && p.x > p.z) {')
-    geom.write('        gl_Position = vec4(voxposition.y, voxposition.z, 0.0, 1.0);')
-    geom.write('    }')
-    geom.write('    else {')
-    geom.write('        gl_Position = vec4(voxposition.x, voxposition.z, 0.0, 1.0);')
-    geom.write('    }')
-    geom.write('    EmitVertex();')
-    geom.write('}')
-    geom.write('EndPrimitive();')
+    if False: # Maxwell
+        # https://developer.nvidia.com/sites/default/files/akamai/opengl/specs/GL_NV_geometry_shader_passthrough.txt
+        # https://www.khronos.org/registry/OpenGL/extensions/NV/NV_viewport_swizzle.txt
+        vert.write('gl_Position = vec4(voxpositionGeom.x, voxpositionGeom.y, 0.0, 1.0);')
+        geom.write_header('#extension GL_NV_geometry_shader_passthrough : require')
+        geom.geom_passthrough = True
+        # geom.add_out('vec3 voxposition')
+        geom.write('const vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
+        geom.write('const vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
+        geom.write('const vec3 n = abs(cross(p1, p2));')
+        geom.write('gl_ViewportIndex = 1;')
+        geom.write_header('out int gl_ViewportIndex;')
+        # g4.setViewport():
+        #glViewportIndexedf(0, x, _renderTargetHeight - y - height, width, height);
+        #glViewportIndexedf(1, x, _renderTargetHeight - y - height, width, height);
+        #glViewportSwizzleNV(1, GL_VIEWPORT_SWIZZLE_POSITIVE_X_NV, GL_VIEWPORT_SWIZZLE_POSITIVE_Y_NV, GL_VIEWPORT_SWIZZLE_POSITIVE_Z_NV, GL_VIEWPORT_SWIZZLE_POSITIVE_W_NV);
+        frag.add_in('vec3 voxpositionGeom')
+        frag.write('if (abs(voxpositionGeom.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxpositionGeom.x) > 1 || abs(voxpositionGeom.y) > 1) return;')
+        frag.write('imageStore(voxels, ivec3(voxelgiResolution * (voxpositionGeom * 0.5 + 0.5)), vec4(1.0));')
+    else:
+        geom.add_out('vec3 voxposition')
+        geom.write('const vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
+        geom.write('const vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
+        geom.write('const vec3 p = abs(cross(p1, p2));')
+        geom.write('for (uint i = 0; i < 3; ++i) {')
+        geom.write('    voxposition = voxpositionGeom[i];')
+        geom.write('    if (p.z > p.x && p.z > p.y) {')
+        geom.write('        gl_Position = vec4(voxposition.x, voxposition.y, 0.0, 1.0);')
+        geom.write('    }')
+        geom.write('    else if (p.x > p.y && p.x > p.z) {')
+        geom.write('        gl_Position = vec4(voxposition.y, voxposition.z, 0.0, 1.0);')
+        geom.write('    }')
+        geom.write('    else {')
+        geom.write('        gl_Position = vec4(voxposition.x, voxposition.z, 0.0, 1.0);')
+        geom.write('    }')
+        geom.write('    EmitVertex();')
+        geom.write('}')
+        geom.write('EndPrimitive();')
 
-    frag.write('vec3 voxel = voxposition * 0.5 + vec3(0.5);')
-    frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(1.0));')
+        frag.write('if (abs(voxposition.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(voxposition.x) > 1 || abs(voxposition.y) > 1) return;')
+        frag.write('imageStore(voxels, ivec3(voxelgiResolution * (voxposition * 0.5 + 0.5)), vec4(1.0));')
 
     return con_voxel
