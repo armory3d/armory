@@ -20,6 +20,7 @@ class Shader:
         self.tab = 1
         self.vertex_structure_as_vsinput = True
         self.lock = False
+        self.geom_passthrough = False
 
     def add_include(self, s):
         self.includes.append(s)
@@ -117,14 +118,21 @@ class Shader:
         elif self.shader_type == 'geom':
             in_ext = '[]'
             s += 'layout(triangles) in;\n'
-            s += 'layout(triangle_strip, max_vertices = 3) out;\n'
+            if not self.geom_passthrough:
+                s += 'layout(triangle_strip) out;\n'
+                s += 'layout(max_vertices=3) out;\n'
 
         for a in self.includes:
             s += '#include "' + a + '"\n'
+        if self.geom_passthrough:
+            s += 'layout(passthrough) in gl_PerVertex { vec4 gl_Position; } gl_in[];\n'
         for a in self.ins:
+            if self.geom_passthrough:
+                s += 'layout(passthrough) '
             s += 'in {0}{1};\n'.format(a, in_ext)
         for a in self.outs:
-            s += 'out {0}{1};\n'.format(a, out_ext)
+            if not self.geom_passthrough:
+                s += 'out {0}{1};\n'.format(a, out_ext)
         for a in self.uniforms:
             s += 'uniform ' + a + ';\n'
         for f in self.functions:
