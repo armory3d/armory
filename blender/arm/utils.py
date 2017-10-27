@@ -380,7 +380,10 @@ def check_projectpath(self):
 def check_engine(self):
     if bpy.context == None or bpy.context.scene == None:
         return
-    engine = bpy.context.scene.render.engine
+    if bpy.app.version >= (2, 80, 1):
+        engine = bpy.context.scene.view_render.engine
+    else:
+        engine = bpy.context.scene.render.engine
     if engine != 'CYCLES' and engine != 'BLENDER_EEVEE':
         self.report({"ERROR"}, "Switch to Cycles or Eevee engine first")
         return False

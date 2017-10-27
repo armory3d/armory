@@ -2221,11 +2221,17 @@ class ArmoryExporter:
             o['shadowmap_cube'] = True
             o['shadows_bias'] *= 4.0
 
-        # Parse nodes
-        # Emission only for now
-        tree = objref.node_tree
-        if tree != None:
+        if bpy.app.version >= (2, 80, 1) and self.scene.view_render.engine == 'BLENDER_EEVEE':
+            o['color'] = [objref.color[0], objref.color[1], objref.color[2]]
+            o['strength'] = objref.energy
+            if o['type'] == 'point' or o['type'] == 'spot':
+                o['strength'] *= 1.5
+            elif o['type'] == 'sun':
+                o['strength'] *= 0.325
+        elif objref.node_tree != None:
+            tree = objref.node_tree
             for n in tree.nodes:
+                # Emission only for now
                 if n.type == 'EMISSION':
                     col = n.inputs[0].default_value
                     o['color'] = [col[0], col[1], col[2]]
