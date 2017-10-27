@@ -218,6 +218,10 @@ def write_main(resx, resy, is_play, in_viewport, is_publish):
     rpdat = arm.utils.get_rp()
     scene_name = arm.utils.get_project_scene_name()
     scene_ext = '.zip' if (bpy.data.scenes[scene_name].arm_compress and is_publish) else ''
+    winmode = str(wrd.arm_winmode)
+    # TODO: expose Krom.displayWidth() in barmory
+    if in_viewport:
+        winmode = 'Window'
     #if not os.path.isfile('Sources/Main.hx'):
     with open('Sources/Main.hx', 'w') as f:
         f.write(
@@ -227,7 +231,7 @@ class Main {
     public static inline var projectName = '""" + arm.utils.safestr(wrd.arm_project_name) + """';
     public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';
     public static inline var projectAssets = """ + str(len(assets.assets)) + """;
-    public static var projectWindowMode = kha.WindowMode.""" + str(wrd.arm_winmode) + """;
+    public static var projectWindowMode = kha.WindowMode.""" + winmode + """;
     public static inline var projectWindowResize = """ + ('true' if wrd.arm_winresize else 'false') + """;
     public static inline var projectWindowMaximize = """ + ('true' if wrd.arm_winmaximize else 'false') + """;
     public static inline var projectWindowMinimize = """ + ('true' if wrd.arm_winminimize else 'false') + """;
