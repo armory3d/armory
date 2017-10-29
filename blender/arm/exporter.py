@@ -1436,7 +1436,7 @@ class ArmoryExporter:
                         bone_translation[2] = t
                     else:
                         bone_translation = bone.head + Vector((0, bone.parent.length, 0))
-                    o['root_bone_tail'] = [bone_translation[0], bone_translation[1], bone_translation[2]]
+                    o['parent_bone_tail'] = [bone_translation[0], bone_translation[1], bone_translation[2]]
 
             # Viewport Camera - overwrite active camera matrix with viewport matrix
             if type == NodeTypeCamera and bpy.data.worlds['Arm'].arm_play_camera != 'Scene' and self.scene.camera != None and bobject.name == self.scene.camera.name:
