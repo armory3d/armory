@@ -565,15 +565,6 @@ class ArmoryExporter:
             self.export_bone(armature, subbobject, scene, so, action)
             o['children'].append(so)
 
-        # Export any ordinary objects that are parented to this bone
-        boneSubbobjectArray = self.boneParentArray.get(bone.name)
-        if boneSubbobjectArray:
-            poseBone = None
-            if not bone.use_relative_parent:
-                poseBone = armature.pose.bones.get(bone.name)
-            for subbobject in boneSubbobjectArray:
-                self.export_object(subbobject, scene, poseBone, o)
-
     def export_object_sampled_animation(self, bobject, scene, o):
         # This function exports animation as full 4x4 matrices for each frame
         currentFrame = scene.frame_current
@@ -1139,13 +1130,6 @@ class ArmoryExporter:
 
             self.bobjectArray[bobject] = {"objectType" : btype, "structName" : arm.utils.asset_name(bobject)}
 
-            if bobject.parent_type == "BONE":
-                boneSubbobjectArray = self.boneParentArray.get(bobject.parent_bone)
-                if boneSubbobjectArray:
-                    boneSubbobjectArray.append(bobject)
-                else:
-                    self.boneParentArray[bobject.parent_bone] = [bobject]
-
             if bobject.type == "ARMATURE":
                 skeleton = bobject.data
                 if skeleton:
@@ -1169,7 +1153,6 @@ class ArmoryExporter:
                             boneRef[1]["objectType"] = NodeTypeBone
 
     def export_bone_transform(self, armature, bone, scene, o, action):
-
         curveArray = self.collect_bone_animation(armature, bone.name)
         animation = ((len(curveArray) != 0) or ArmoryExporter.sample_animation_flag)
 
@@ -1271,7 +1254,7 @@ class ArmoryExporter:
                         return region.width
         return 0
 
-    def export_object(self, bobject, scene, poseBone = None, parento = None):
+    def export_object(self, bobject, scene, parento=None):
         # This function exports a single object in the scene and includes its name,
         # object reference, material references (for meshes), and transform.
         # Subobjects are then exported recursively.
@@ -1292,6 +1275,9 @@ class ArmoryExporter:
             o = self.objectToArmObjectDict[bobject]
             o['type'] = structIdentifier[type]
             o['name'] = bobjectRef["structName"]
+
+            if bobject.parent_type == "BONE":
+                o['parent_bone'] = bobject.parent_bone
 
             if bobject.hide_render:
                 o['visible'] = False
@@ -1416,11 +1402,6 @@ class ArmoryExporter:
                     self.speakerArray[objref]["objectTable"].append(bobject)
                 o['data_ref'] = self.speakerArray[objref]["structName"]
 
-            if poseBone:
-                # If the object is parented to a bone and is not relative, then undo the bone's transform
-                o['transform'] = {}
-                o['transform']['values'] = self.write_matrix(poseBone.matrix.inverted())
-
             # Export the transform. If object is animated, then animation tracks are exported here
             if bobject.type != 'ARMATURE' and bobject.animation_data and bobject.animation_data.action:
                 action = bobject.animation_data.action
@@ -1441,6 +1422,21 @@ class ArmoryExporter:
                 bobject.animation_data.action = orig_action
             else:
                 self.export_object_transform(bobject, scene, o)
+
+            # If the object is parented to a bone and is not relative, then undo the bone's transform
+            if bobject.parent_type == "BONE":
+                armature = bobject.parent.data
+                bone = armature.bones[bobject.parent_bone]
+                if not bone.use_relative_parent:
+                    if bone.parent == None:
+                        bone_translation = bone.tail - bone.head
+                        t = bone_translation[0]
+                        bone_translation[0] = bone_translation[1]
+                        bone_translation[1] = bone_translation[2]
+                        bone_translation[2] = t
+                    else:
+                        bone_translation = bone.head + Vector((0, bone.parent.length, 0))
+                    o['root_bone_tail'] = [bone_translation[0], bone_translation[1], bone_translation[2]]
 
             # Viewport Camera - overwrite active camera matrix with viewport matrix
             if type == NodeTypeCamera and bpy.data.worlds['Arm'].arm_play_camera != 'Scene' and self.scene.camera != None and bobject.name == self.scene.camera.name:
@@ -1522,8 +1518,7 @@ class ArmoryExporter:
 
         if bobject.type != 'MESH' or bobject.arm_instanced == False:
             for subbobject in bobject.children:
-                if subbobject.parent_type != "BONE":
-                    self.export_object(subbobject, scene, None, o)
+                self.export_object(subbobject, scene, o)
 
     def export_skin_quality(self, bobject, armature, export_vertex_array, o):
         # This function exports all skinning data, which includes the skeleton
