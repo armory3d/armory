@@ -29,6 +29,7 @@ class RigidBody extends Trait {
 	var angularFactorX:Float;
 	var angularFactorY:Float;
 	var angularFactorZ:Float;
+	public var group = 1;
 
 	public var body:BtRigidBodyPointer = null;
 	public var ready = false;
@@ -41,8 +42,8 @@ class RigidBody extends Trait {
 
 	public function new(mass = 1.0, shape = Shape.Box, friction = 0.5, restitution = 0.0, collisionMargin = 0.0,
 						linearDamping = 0.04, angularDamping = 0.1, passive = false,
-						linearFactorX = 1.0, linearFactorY = 1.0, linearFactorZ = 1.0,
-						angularFactorX = 1.0, angularFactorY = 1.0, angularFactorZ = 1.0) {
+						linearFactor:Array<Float> = null, angularFactor:Array<Float> = null,
+						group = 1) {
 		super();
 
 		this.mass = mass;
@@ -53,12 +54,13 @@ class RigidBody extends Trait {
 		this.linearDamping = linearDamping;
 		this.angularDamping = angularDamping;
 		this.passive = passive;
-		this.linearFactorX = linearFactorX;
-		this.linearFactorY = linearFactorY;
-		this.linearFactorZ = linearFactorZ;
-		this.angularFactorX = angularFactorX;
-		this.angularFactorY = angularFactorY;
-		this.angularFactorZ = angularFactorZ;
+		this.linearFactorX = linearFactor[0];
+		this.linearFactorY = linearFactor[1];
+		this.linearFactorZ = linearFactor[2];
+		this.angularFactorX = angularFactor[0];
+		this.angularFactorY = angularFactor[1];
+		this.angularFactorZ = angularFactor[2];
+		this.group = group;
 
 		notifyOnAdd(init);
 		notifyOnLateUpdate(lateUpdate);

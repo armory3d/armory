@@ -3009,12 +3009,14 @@ class ArmoryExporter:
             x['parameters'].append(str(rb.linear_damping))
             x['parameters'].append(str(rb.angular_damping))
             x['parameters'].append(str(rb.type == 'PASSIVE').lower())
-            x['parameters'].append(str(bobject.arm_rb_linear_factor[0]))
-            x['parameters'].append(str(bobject.arm_rb_linear_factor[1]))
-            x['parameters'].append(str(bobject.arm_rb_linear_factor[2]))
-            x['parameters'].append(str(bobject.arm_rb_angular_factor[0]))
-            x['parameters'].append(str(bobject.arm_rb_angular_factor[1]))
-            x['parameters'].append(str(bobject.arm_rb_angular_factor[2]))
+            lin_fac = '[{0}, {1}, {2}'.format(str(bobject.arm_rb_linear_factor[0]), str(bobject.arm_rb_linear_factor[1]), str(bobject.arm_rb_linear_factor[2]))
+            ang_fac = '[{0}, {1}, {2}'.format(str(bobject.arm_rb_angular_factor[0]), str(bobject.arm_rb_angular_factor[1]), str(bobject.arm_rb_angular_factor[2]))
+            x['parameters'].append(lin_fac)
+            x['parameters'].append(ang_fac)
+            col_group = ''
+            for b in rb.collision_groups:
+                col_group = ('1' if b else '0') + col_group
+            x['parameters'].append(str(int(col_group, 2)))
             o['traits'].append(x)
 
         # Soft bodies modifier

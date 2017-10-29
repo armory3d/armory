@@ -109,7 +109,7 @@ class PhysicsWorld extends Trait {
 	}
 
 	public function addRigidBody(body:RigidBody) {
-		world.addRigidBody(body.body);
+		world.addRigidBodyToGroup(body.body, body.group, body.group);
 		rbMap.set(body.id, body);
 	}
 
