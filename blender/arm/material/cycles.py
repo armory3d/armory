@@ -42,7 +42,6 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     global parse_opacity
     global basecol_only
     global parsing_basecol
-    global parse_teximage_vector
     global basecol_texname
     global emission_found
     global particle_info
@@ -56,7 +55,6 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     parse_opacity = _parse_opacity
     basecol_only = _basecol_only
     parsing_basecol = False
-    parse_teximage_vector = True
     basecol_texname = ''
     emission_found = False
     particle_info = {}
@@ -494,8 +492,11 @@ def parse_rgb(node, socket):
         tex_name = node_name(node.name)
         tex = c_state.make_texture(node, tex_name)
         if tex != None:
+            curshader.write_pre_header = True
             to_linear = parsing_basecol and not tex['file'].endswith('.hdr')
-            return '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear))
+            res = '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear))
+            curshader.write_pre_header = False
+            return res
         elif node.image == None: # Empty texture
             tex = {}
             tex['name'] = tex_name
@@ -707,13 +708,12 @@ def store_var_name(node):
     return node_name(node.name) + '_store'
 
 def texture_store(node, tex, tex_name, to_linear=False):
-    global parse_teximage_vector
     global parsing_basecol
     global basecol_texname
     c_state.mat_bind_texture(tex)
     con.add_elem('tex', 2)
     curshader.add_uniform('sampler2D {0}'.format(tex_name))
-    if node.inputs[0].is_linked and parse_teximage_vector:
+    if node.inputs[0].is_linked:
         uv_name = parse_vector_input(node.inputs[0])
     else:
         uv_name = 'texCoord'
@@ -892,7 +892,6 @@ def parse_vector(node, socket):
 
 def parse_normal_map_color_input(inp):
     global normal_parsed
-    global parse_teximage_vector
     if basecol_only:
         return
     if inp.is_linked == False:
@@ -901,7 +900,6 @@ def parse_normal_map_color_input(inp):
         return
     normal_parsed = True
     frag.write_pre_header = True
-    parse_teximage_vector = False # Force texCoord for normal map image vector
     defplus = c_state.get_rp_renderer() == 'Deferred Plus'
     if not c_state.get_arm_export_tangents() or defplus or c_state.mat_get_material().arm_decal: # Compute TBN matrix
         frag.write('vec3 texn = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
@@ -915,8 +913,6 @@ def parse_normal_map_color_input(inp):
         frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
         frag.write('n = normalize(TBN * n);')
         con.add_elem('tang', 3)
-
-    parse_teximage_vector = True
     frag.write_pre_header = False
 
 def parse_value_input(inp):
@@ -1077,7 +1073,10 @@ def parse_value(node, socket):
         tex_name = c_state.safesrc(node.name)
         tex = c_state.make_texture(node, tex_name)
         if tex != None:
-            return '{0}.a'.format(texture_store(node, tex, tex_name))
+            curshader.write_pre_header = True
+            res = '{0}.a'.format(texture_store(node, tex, tex_name))
+            curshader.write_pre_header = False
+            return res
         else:
             tex_store = store_var_name(node) # Pink color for missing texture
             curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0);'.format(tex_store))

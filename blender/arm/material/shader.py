@@ -69,10 +69,10 @@ class Shader:
     def write(self, s):
         if self.lock:
             return
-        if self.write_pre:
-            self.main_pre += '\t' * 1 + s + '\n'
-        elif self.write_pre_header:
+        if self.write_pre_header:
             self.main_header += '\t' * 1 + s + '\n'
+        elif self.write_pre:
+            self.main_pre += '\t' * 1 + s + '\n'
         else:
             self.main += '\t' * self.tab + s + '\n'
 
