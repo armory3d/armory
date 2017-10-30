@@ -536,6 +536,20 @@ def make_deferred(rpdat):
     if not rpdat.rp_ssr:
         relink('SSR', 'Draw Compositor')
 
+    if rpdat.rp_motionblur != 'None':
+        last_node = nodes['Draw Compositor'].inputs[0].links[0].from_node
+        if rpdat.rp_motionblur == 'Camera':
+            links.new(last_node.outputs[0], nodes['Motion Blur'].inputs[0])
+            links.new(nodes['Copy MB'].outputs[0], nodes['Draw Compositor'].inputs[0])
+        else: # Object
+            links.new(last_node.outputs[0], nodes['Motion Blur Velocity'].inputs[0])
+            links.new(nodes['Copy MBV'].outputs[0], nodes['Draw Compositor'].inputs[0])
+            # Velocity
+            links.new(nodes['gbuffer2'].outputs[0], nodes['GBuffer'].inputs[2])
+            # Clear velocity
+            relink('Set Target Mesh', 'Set Target Veloc')
+            links.new(nodes['Clear Target Veloc'].outputs[0], nodes['Set Target Mesh'].inputs[0])
+
     if rpdat.arm_ssr_half_res:
         links.new(nodes['ssra'].outputs[0], nodes['SSR'].inputs[2])
         links.new(nodes['ssrb'].outputs[0], nodes['SSR'].inputs[3])
@@ -558,8 +572,9 @@ def make_deferred(rpdat):
         links.new(nodes['gbuffer2'].outputs[0], nodes['GBuffer'].inputs[2])
         links.new(nodes['Reroute.014'].outputs[0], nodes['SMAA'].inputs[1])
         # Clear velocity
-        relink('Set Target Mesh', 'Set Target Veloc')
-        links.new(nodes['Clear Target Veloc'].outputs[0], nodes['Set Target Mesh'].inputs[0])
+        if rpdat.rp_motionblur != 'Object':
+            relink('Set Target Mesh', 'Set Target Veloc')
+            links.new(nodes['Clear Target Veloc'].outputs[0], nodes['Set Target Mesh'].inputs[0])
     elif rpdat.rp_antialiasing == 'FXAA':
         last_node = 'FXAA'
         relink('SMAA', 'FXAA')
