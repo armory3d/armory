@@ -1212,21 +1212,19 @@ class ArmoryExporter:
         return None
 
     def get_viewport_view_matrix(self):
-        area = self.play_area
-        if area == None:
-            area = self.get_view3d_area()
-        if area == None:
+        if self.play_area == None:
+            self.play_area = self.get_view3d_area()
+        if self.play_area == None:
             return None
-        for space in area.spaces:
+        for space in self.play_area.spaces:
             if space.type == 'VIEW_3D':
                 return space.region_3d.view_matrix
         return None
 
     def get_viewport_projection_matrix(self):
-        area = self.play_area
-        if area == None:
-            area = self.get_view3d_area()
-        if area == None:
+        if self.play_area == None:
+            self.play_area = self.get_view3d_area()
+        if self.play_area == None:
             return None, False
         for space in self.play_area.spaces:
             if space.type == 'VIEW_3D':
@@ -2285,11 +2283,10 @@ class ArmoryExporter:
         self.extract_projection(o, proj)
 
         wrd = bpy.data.worlds['Arm']
-        if wrd.arm_play_camera != 'Scene' and ArmoryExporter.in_viewport:
-            pw = self.get_viewport_panels_w()
-            # Tool shelf and properties hidden
+        if wrd.arm_play_camera != 'Scene':
+            pw = self.get_viewport_panels_w() # Tool shelf and properties hidden
             proj, is_persp = self.get_viewport_projection_matrix()
-            if pw == 0 and is_persp:
+            if (pw == 0 or ArmoryExporter.in_viewport) and is_persp:
                 self.extract_projection(o, proj, with_aspect=True)
 
         if objref.type == 'PERSP':
