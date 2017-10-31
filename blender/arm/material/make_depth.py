@@ -16,7 +16,12 @@ def make(context_id, rpasses, shadowmap=False):
     if is_disp:
         vs.append({'name': 'nor', 'size': 3})
 
-    con_depth = mat_state.data.add_context({ 'name': context_id, 'vertex_structure': vs, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False })
+    if not shadowmap or mat_state.material.arm_two_sided or mat_state.material.arm_cull_mode == 'none':
+        cull_mode = 'clockwise'
+    else:
+        cull_mode = 'counter_clockwise'
+
+    con_depth = mat_state.data.add_context({ 'name': context_id, 'vertex_structure': vs, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': cull_mode, 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False })
 
     vert = con_depth.make_vert()
     frag = con_depth.make_frag()
