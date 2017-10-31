@@ -2287,7 +2287,7 @@ class ArmoryExporter:
             pw = self.get_viewport_panels_w() # Tool shelf and properties hidden
             proj, is_persp = self.get_viewport_projection_matrix()
             if (pw == 0 or ArmoryExporter.in_viewport) and is_persp:
-                self.extract_projection(o, proj, with_aspect=True)
+                self.extract_projection(o, proj, with_aspect=ArmoryExporter.in_viewport)
 
         if objref.type == 'PERSP':
             o['type'] = 'perspective'
