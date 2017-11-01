@@ -4,6 +4,8 @@ import armory.object.Object;
 
 class SetParentNode extends LogicNode {
 
+	static inline var parentInverse = true;
+
 	public function new(tree:LogicTree) {
 		super(tree);
 	}
@@ -16,7 +18,7 @@ class SetParentNode extends LogicNode {
 		if (parent == null) parent = tree.object;
 
 		object.parent.children.remove(object);
-		parent.addChild(object);
+		parent.addChild(object, parentInverse);
 
 		super.run();
 	}
