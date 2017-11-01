@@ -17,9 +17,9 @@ class SetParentNode extends LogicNode {
 		if (isUnparent) parent = iron.Scene.active.root;
 		else parent = inputs[2].get();
 		
-		if (object == null || parent == null) return;
+		if (object == null || parent == null || object.parent == parent) return;
 
-		object.parent.children.remove(object);
+		object.parent.removeChild(object, isUnparent); // keepTransform
 		parent.addChild(object, !isUnparent); // applyInverse
 
 		super.run();
