@@ -534,7 +534,10 @@ def make_deferred(rpdat):
         relink('SSS', 'SSR')
 
     if not rpdat.rp_ssr:
-        relink('SSR', 'Draw Compositor')
+        relink('SSR', 'SSGI')
+
+    if not rpdat.rp_ssgi:
+        relink('SSGI', 'Draw Compositor')
 
     if rpdat.rp_motionblur != 'None':
         last_node = nodes['Draw Compositor'].inputs[0].links[0].from_node

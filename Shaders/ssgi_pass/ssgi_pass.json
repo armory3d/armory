@@ -1,0 +1,29 @@
+{
+	"contexts": [
+		{
+			"name": "ssgi_pass",
+			"depth_write": false,
+			"color_write_alpha": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "P",
+					"link": "_projectionMatrix"
+				},
+				{
+					"name": "tiV",
+					"link": "_transposeInverseViewMatrix"
+				},
+				{
+					"name": "invP",
+					"link": "_inverseProjectionMatrix"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "ssgi_pass.vert.glsl",
+			"vertex_shader_path": "../include/pass_viewray2.vert.glsl",
+			"fragment_shader": "ssgi_pass.frag.glsl"
+		}
+	]
+}

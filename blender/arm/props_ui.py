@@ -1004,10 +1004,11 @@ class ArmRenderPathPanel(bpy.types.Panel):
                 layout.prop(rpdat, "rp_compositornodes")
                 layout.prop(rpdat, "rp_volumetriclight")
                 layout.prop(rpdat, "rp_ssao")
+                # layout.prop(wrd, 'arm_ssao_half_res')
                 layout.prop(rpdat, "rp_ssr")
                 if rpdat.rp_ssr:
                     layout.prop(rpdat, 'arm_ssr_half_res')
-                # layout.prop(wrd, 'arm_ssao_half_res')
+                layout.prop(rpdat, "rp_ssgi")
                 # layout.prop(rpdat, "rp_dfao")
                 # layout.prop(rpdat, "rp_dfrs")
                 # layout.prop(rpdat, "rp_dfgi")

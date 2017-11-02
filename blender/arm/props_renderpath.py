@@ -103,6 +103,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_volumetriclight = bpy.props.BoolProperty(name="Volumetric Light", description="Use volumetric lighting", default=False, update=update_renderpath)
     rp_ssao = bpy.props.BoolProperty(name="SSAO", description="Screen space ambient occlusion", default=True, update=update_renderpath)
     rp_ssr = bpy.props.BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
+    rp_ssgi = bpy.props.BoolProperty(name="SSGI", description="Screen space global illumination", default=False, update=update_renderpath)
     rp_dfao = bpy.props.BoolProperty(name="DFAO", description="Distance field ambient occlusion", default=False)
     rp_dfrs = bpy.props.BoolProperty(name="DFRS", description="Distance field ray-traced shadows", default=False)
     rp_dfgi = bpy.props.BoolProperty(name="DFGI", description="Distance field global illumination", default=False)

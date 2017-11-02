@@ -374,6 +374,11 @@ def make_ssr_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=3, bind_target_indices=[2, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_x')
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_y3_blend')
 
+def make_ssgi_pass(stages, node_group, node):
+    make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[4, 5, 6], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='ssgi_pass/ssgi_pass/ssgi_pass')
+    make_quad_pass(stages, node_group, node, target_index=3, bind_target_indices=[2, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='ssgi_blur_pass/ssgi_blur_pass/ssgi_blur_pass_x')
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='ssgi_blur_pass/ssgi_blur_pass/ssgi_blur_pass_y_blend_add')
+
 def make_bloom_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[4], bind_target_constants=['tex'], shader_context='bloom_pass/bloom_pass/bloom_pass')
     make_quad_pass(stages, node_group, node, target_index=3, bind_target_indices=[2], bind_target_constants=['tex'], shader_context='blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_x')
@@ -665,6 +670,9 @@ def buildNode(stages, node, node_group):
     elif node.bl_idname == 'SSRPassNodeType':
         make_ssr_pass(stages, node_group, node)
         append_stage = False
+    elif node.bl_idname == 'SSGIPassNodeType':
+        make_ssgi_pass(stages, node_group, node)
+        append_stage = False
     elif node.bl_idname == 'BloomPassNodeType':
         make_bloom_pass(stages, node_group, node)
         append_stage = False
@@ -815,7 +823,7 @@ def traverse_renderpath(node, node_group, render_targets, depth_buffers):
         if node.inputs[1].is_linked:
             tnode = nodes.find_node_by_link(node_group, node, node.inputs[1])
             parse_render_target(tnode, node_group, render_targets, depth_buffers)
-    elif node.bl_idname == 'SSRPassNodeType' or node.bl_idname == 'ApplySSAOPassNodeType' or node.bl_idname == 'BloomPassNodeType' or node.bl_idname == 'SMAAPassNodeType':
+    elif node.bl_idname == 'SSRPassNodeType' or node.bl_idname == 'SSGIPassNodeType' or node.bl_idname == 'ApplySSAOPassNodeType' or node.bl_idname == 'BloomPassNodeType' or node.bl_idname == 'SMAAPassNodeType':
         for i in range(1, 4):
             if node.inputs[i].is_linked:
                 tnode = nodes.find_node_by_link(node_group, node, node.inputs[i])

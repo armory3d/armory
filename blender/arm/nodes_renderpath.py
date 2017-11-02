@@ -97,6 +97,23 @@ class SSRPassNode(Node, CGPipelineTreeNode):
 
         self.outputs.new('NodeSocketShader', "Stage")
 
+class SSGIPassNode(Node, CGPipelineTreeNode):
+    '''Screen-space global illumination node'''
+    bl_idname = 'SSGIPassNodeType'
+    bl_label = 'SSGI'
+    bl_icon = 'SOUND'
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketShader', "Stage")
+        self.inputs.new('NodeSocketShader', "Target")
+        self.inputs.new('NodeSocketShader', "A")
+        self.inputs.new('NodeSocketShader', "B")
+        self.inputs.new('NodeSocketShader', "Color")
+        self.inputs.new('NodeSocketShader', "GBufferD")
+        self.inputs.new('NodeSocketShader', "GBuffer0")
+
+        self.outputs.new('NodeSocketShader', "Stage")
+
 class BloomPassNode(Node, CGPipelineTreeNode):
     '''Bloom node'''
     bl_idname = 'BloomPassNodeType'
@@ -870,6 +887,7 @@ node_categories = [
         NodeItem("SSAOReprojectPassNodeType"),
         NodeItem("ApplySSAOPassNodeType"),
         NodeItem("SSRPassNodeType"),
+        NodeItem("SSGIPassNodeType"),
         NodeItem("BloomPassNodeType"),
         NodeItem("MotionBlurPassNodeType"),
         NodeItem("MotionBlurVelocityPassNodeType"),
@@ -937,6 +955,7 @@ def register():
     bpy.utils.register_class(SSAOReprojectPassNode)
     bpy.utils.register_class(ApplySSAOPassNode)
     bpy.utils.register_class(SSRPassNode)
+    bpy.utils.register_class(SSGIPassNode)
     bpy.utils.register_class(BloomPassNode)
     bpy.utils.register_class(MotionBlurPassNode)
     bpy.utils.register_class(MotionBlurVelocityPassNode)
@@ -1002,6 +1021,7 @@ def unregister():
     bpy.utils.unregister_class(SSAOReprojectPassNode)
     bpy.utils.unregister_class(ApplySSAOPassNode)
     bpy.utils.unregister_class(SSRPassNode)
+    bpy.utils.unregister_class(SSGIPassNode)
     bpy.utils.unregister_class(BloomPassNode)
     bpy.utils.unregister_class(MotionBlurPassNode)
     bpy.utils.unregister_class(MotionBlurVelocityPassNode)
