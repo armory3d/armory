@@ -13,4 +13,4 @@ class ArrayLengthNode(Node, ArmLogicTreeNode):
         self.inputs.new('NodeSocketShader', 'Array')
         self.outputs.new('NodeSocketInt', 'Length')
 
-add_node(ArrayGetNode, category='Array')
+add_node(ArrayLengthNode, category='Array')
