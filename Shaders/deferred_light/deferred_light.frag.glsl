@@ -148,11 +148,15 @@ void main() {
 	float visibility = 1.0;
 #ifndef _NoShadows
 	// TODO: merge..
+	// float cosAngle = max(1.0 - dotNL, 0.0);
+	// vec3 noff = n * shadowsBias * cosAngle;
 	if (lightShadow == 1) {
+		// vec4 lampPos = LWVP * vec4(p + noff, 1.0);
 		vec4 lampPos = LWVP * vec4(p, 1.0);
 		if (lampPos.w > 0.0) visibility = shadowTest(lampPos.xyz / lampPos.w);
 	}
 	else if (lightShadow == 2) { // Cube
+		// visibility = shadowTestCube(lp + noff, l);
 		visibility = shadowTestCube(lp, l);
 	}
 #endif

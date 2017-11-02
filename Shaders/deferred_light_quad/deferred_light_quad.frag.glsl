@@ -99,18 +99,18 @@ void main() {
 	
 	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
 	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
-	
+	float dotNL = dot(n, l);
+
 	float visibility = 1.0;
 #ifndef _NoShadows
 	if (lightShadow == 1) {
+		// float cosAngle = max(1.0 - dotNL, 0.0);
+		// vec3 noff = n * shadowsBias * cosAngle;
+		// vec4 lampPos = LWVP * vec4(p + noff, 1.0);
 		vec4 lampPos = LWVP * vec4(p, 1.0);
-		if (lampPos.w > 0.0) {
-			visibility = shadowTest(lampPos.xyz / lampPos.w);
-		}
+		if (lampPos.w > 0.0) visibility = shadowTest(lampPos.xyz / lampPos.w);
 	}
 #endif
-
-	float dotNL = dot(n, l);
 
 #ifdef _VoxelGIShadow // #else
 	#ifdef _VoxelGICam

@@ -16,7 +16,7 @@ except ImportError:
     pass
 
 # Armory version
-arm_version = '17.10'
+arm_version = '0.1.0'
 
 def update_preset(self, context):
     make_renderer.set_preset(self, context, self.rp_preset)
@@ -367,7 +367,7 @@ def init_properties():
     bpy.types.Lamp.arm_clip_start = bpy.props.FloatProperty(name="Clip Start", default=0.1)
     bpy.types.Lamp.arm_clip_end = bpy.props.FloatProperty(name="Clip End", default=50.0)
     bpy.types.Lamp.arm_fov = bpy.props.FloatProperty(name="Field of View", default=0.84)
-    bpy.types.Lamp.arm_shadows_bias = bpy.props.FloatProperty(name="Bias", description="Depth offset for shadow acne", default=0.0001)
+    bpy.types.Lamp.arm_shadows_bias = bpy.props.FloatProperty(name="Bias", description="Depth offset to fight shadow acne", default=1.0)
     bpy.types.Lamp.arm_omni_shadows = bpy.props.BoolProperty(name="Omni-Shadows", description="Draw shadows to all faces of the cube map", default=True)
     bpy.types.World.arm_pcfsize = bpy.props.FloatProperty(name="PCF Size", description="Filter size", default=0.001)
 
@@ -418,14 +418,9 @@ def init_properties_on_load():
     # Outdated project
     if bpy.data.filepath != '' and wrd.arm_version != arm_version: # Call on project load only
         print('Project updated to sdk v' + arm_version)
-        # TODO: deprecated - Cycles profile merged into Full
-        if arm_version == '17.10':
-            if len(wrd.arm_rplist) > 0:
-                rpdat = arm.utils.get_rp()
-                if rpdat.arm_material_model == 'Solid':
-                    rpdat.arm_material_model = 'Mobile'
-                else:
-                    rpdat.arm_material_model = 'Full'
+        if arm_version == '0.1.0':
+            for lamp in bpy.data.lamps:
+                lamp.arm_shadows_bias = 1.0
         wrd.arm_version = arm_version
         arm.make.clean_project()
     # Set url for embedded player

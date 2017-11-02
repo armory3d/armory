@@ -2186,7 +2186,7 @@ class ArmoryExporter:
         o['near_plane'] = objref.arm_clip_start
         o['far_plane'] = objref.arm_clip_end
         o['fov'] = objref.arm_fov
-        o['shadows_bias'] = objref.arm_shadows_bias
+        o['shadows_bias'] = objref.arm_shadows_bias * 0.0001
         rpdat = arm.utils.get_rp()
         if rpdat.rp_shadowmap == 'None':
             o['shadowmap_size'] = 0
@@ -2194,12 +2194,8 @@ class ArmoryExporter:
             o['shadowmap_size'] = int(rpdat.rp_shadowmap)
         if o['type'] == 'sun': # Scale bias for ortho light matrix
             o['shadows_bias'] *= 10.0
-        if (objtype == 'POINT' or objtype == 'SPOT') and objref.shadow_soft_size > 0.1: # No sun for now
-            lamp_size = objref.shadow_soft_size
-            # Slightly higher bias for high sizes
-            if lamp_size > 1:
-                o['shadows_bias'] += 0.00001 * lamp_size
-            o['lamp_size'] = lamp_size * 10 # Match to Cycles
+        if (objtype == 'POINT' or objtype == 'SPOT') and objref.shadow_soft_size > 0.1:
+            o['lamp_size'] = objref.shadow_soft_size * 10 # Match to Cycles
         gapi = arm.utils.get_gapi()
         mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
         if objtype == 'POINT' and objref.arm_omni_shadows and not gapi.startswith('direct3d') and not mobile_mat:
@@ -2256,17 +2252,16 @@ class ArmoryExporter:
         else:
             return [0.051, 0.051, 0.051, 1.0]
 
-    def extract_projection(self, o, proj, with_aspect=False):
+    def extract_projection(self, o, proj, with_planes=True):
         a = proj[0][0]
         b = proj[1][1]
         c = proj[2][2]
         d = proj[2][3]
         k = (c - 1.0) / (c + 1.0)
-        o['near_plane'] = (d * (1.0 - k)) / (2.0 * k)
-        o['far_plane'] = k * o['near_plane'];
         o['fov'] = 2.0 * math.atan(1.0 / b)
-        if with_aspect:
-            o['aspect'] = b / a
+        if with_planes:
+            o['near_plane'] = (d * (1.0 - k)) / (2.0 * k)
+            o['far_plane'] = k * o['near_plane'];
 
     def export_camera(self, objectRef):
         o = {}
@@ -2286,8 +2281,9 @@ class ArmoryExporter:
         if wrd.arm_play_camera != 'Scene':
             pw = self.get_viewport_panels_w() # Tool shelf and properties hidden
             proj, is_persp = self.get_viewport_projection_matrix()
-            if (pw == 0 or ArmoryExporter.in_viewport) and is_persp:
-                self.extract_projection(o, proj, with_aspect=ArmoryExporter.in_viewport)
+            windowed = not ArmoryExporter.in_viewport
+            if proj != None and is_persp and (pw == 0 or windowed):
+                self.extract_projection(o, proj, with_planes=False)
 
         if objref.type == 'PERSP':
             o['type'] = 'perspective'
@@ -2756,7 +2752,7 @@ class ArmoryExporter:
             o = {}
             o['name'] = 'DefaultCamera'
             o['near_plane'] = 0.1
-            o['far_plane'] = 200.0
+            o['far_plane'] = 100.0
             o['fov'] = 0.85
             # if ArmoryExporter.in_viewport: # Wrong P returned when no camera present?
             #     pw = self.get_viewport_panels_w()
@@ -2770,7 +2766,6 @@ class ArmoryExporter:
             #         o['near_plane'] = (d * (1.0 - k)) / (2.0 * k)
             #         o['far_plane'] = k * o['near_plane'];
             #         o['fov'] = 2.0 * math.atan(1.0 / b)
-            #         o['aspect'] = b / a
             o['type'] = 'perspective'
             o['frustum_culling'] = True
             o['render_path'] = 'armory_default/armory_default'
