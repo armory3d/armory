@@ -40,7 +40,7 @@ def get_rpasses(material):
             ar.append('voxel')
         if rpdat.rp_renderer == 'Deferred Plus':
             ar.append('rect')
-        if rpdat.rp_depthprepass:
+        if rpdat.rp_renderer == 'Forward' and rpdat.rp_depthprepass:
             ar.append('depth')
             
     shadows_enabled = False

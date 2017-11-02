@@ -961,10 +961,12 @@ def parse_value(node, socket):
     elif node.type == 'CAMERA':
         # View Z Depth
         if socket == node.outputs[1]:
-            return 'gl_FragCoord.z'
+            curshader.add_include('../../Shaders/std/math.glsl')
+            return 'linearize(gl_FragCoord.z)'
         # View Distance
         else:
-            return 'length(eyeDir)'
+            curshader.add_uniform('vec3 eye', link='_cameraPosition')
+            return 'distance(eye, wposition)'
 
     elif node.type == 'FRESNEL':
         ior = parse_value_input(node.inputs[0])
