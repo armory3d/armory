@@ -3,17 +3,15 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class ArrayRemoveNode(Node, ArmLogicTreeNode):
-    '''Array remove node'''
-    bl_idname = 'LNArrayRemoveNode'
-    bl_label = 'Array Remove'
+class ArrayGetNode(Node, ArmLogicTreeNode):
+    '''Array get node'''
+    bl_idname = 'LNArrayGetNode'
+    bl_label = 'Array Get'
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('NodeSocketShader', 'Array')
         self.inputs.new('NodeSocketInt', 'Index')
-        self.outputs.new('ArmNodeSocketAction', 'Out')
         self.outputs.new('NodeSocketShader', 'Value')
 
-add_node(ArrayRemoveNode, category='Action')
+add_node(ArrayGetNode, category='Array')

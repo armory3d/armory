@@ -25,4 +25,4 @@ class ColorArrayNode(Node, ArmLogicTreeNode):
         op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
 
-add_node(ColorArrayNode, category='Variable')
+add_node(ColorArrayNode, category='Array')

@@ -37,6 +37,7 @@ def register_nodes():
         LogicNodeCategory('LogicValueNodes', 'Value', items=arm_nodes.category_items['Value']),
         LogicNodeCategory('LogicVariableNodes', 'Variable', items=arm_nodes.category_items['Variable']),
         LogicNodeCategory('LogicInputNodes', 'Input', items=arm_nodes.category_items['Input']),
+        LogicNodeCategory('LogicArrayNodes', 'Array', items=arm_nodes.category_items['Array']),
         LogicNodeCategory('LogicAnimationNodes', 'Animation', items=arm_nodes.category_items['Animation']),
         LogicNodeCategory('LogicPhysicsNodes', 'Physics', items=arm_nodes.category_items['Physics']),
         LogicNodeCategory('LogicNavmeshNodes', 'Navmesh', items=arm_nodes.category_items['Navmesh']),

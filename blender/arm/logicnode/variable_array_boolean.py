@@ -25,4 +25,4 @@ class BooleanArrayNode(Node, ArmLogicTreeNode):
         op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
         op2.node_index = str(id(self))
 
-add_node(BooleanArrayNode, category='Variable')
+add_node(BooleanArrayNode, category='Array')
