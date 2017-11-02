@@ -30,6 +30,7 @@ class RigidBody extends Trait {
 	var angularFactorY:Float;
 	var angularFactorZ:Float;
 	public var group = 1;
+	public var ghost = false;
 
 	public var body:BtRigidBodyPointer = null;
 	public var ready = false;
@@ -43,7 +44,7 @@ class RigidBody extends Trait {
 	public function new(mass = 1.0, shape = Shape.Box, friction = 0.5, restitution = 0.0, collisionMargin = 0.0,
 						linearDamping = 0.04, angularDamping = 0.1, passive = false,
 						linearFactor:Array<Float> = null, angularFactor:Array<Float> = null,
-						group = 1) {
+						group = 1, ghost = false) {
 		super();
 
 		this.mass = mass;
@@ -61,6 +62,7 @@ class RigidBody extends Trait {
 		this.angularFactorY = angularFactor[1];
 		this.angularFactorZ = angularFactor[2];
 		this.group = group;
+		this.ghost = ghost;
 
 		notifyOnAdd(init);
 		notifyOnLateUpdate(lateUpdate);
@@ -175,6 +177,8 @@ class RigidBody extends Trait {
 		if (angularFactorX != 1.0 || angularFactorY != 1.0 || angularFactorZ != 1.0) {
 			setAngularFactor(angularFactorX, angularFactorY, angularFactorZ);
 		}
+
+		if (ghost) body.setCollisionFlags(body.getCollisionFlags() | BtCollisionObject.CF_NO_CONTACT_RESPONSE);
 
 		#if js
 		//body.setUserIndex(nextId);

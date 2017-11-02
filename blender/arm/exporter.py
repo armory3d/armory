@@ -3007,6 +3007,7 @@ class ArmoryExporter:
             for b in rb.collision_groups:
                 col_group = ('1' if b else '0') + col_group
             x['parameters'].append(str(int(col_group, 2)))
+            x['parameters'].append(str(bobject.arm_rb_ghost).lower())
             o['traits'].append(x)
 
         # Soft bodies modifier

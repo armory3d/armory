@@ -120,6 +120,7 @@ class PhysicsPropsPanel(bpy.types.Panel):
         layout.prop(obj, 'arm_rb_linear_factor')
         layout.prop(obj, 'arm_rb_angular_factor')
         layout.prop(obj, 'arm_soft_body_margin')
+        layout.prop(obj, 'arm_rb_ghost')
 
 # Menu in data region
 class DataPropsPanel(bpy.types.Panel):
