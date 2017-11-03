@@ -177,11 +177,14 @@ def on_scene_update_post(context):
     if hasattr(bpy.context, 'active_object'):
         obj = bpy.context.active_object
         if obj != None:
-            if obj.is_updated_data: # + data.is_updated
+            if obj.data != None and obj.data.is_updated:
                 recache(obj)
-            if obj.type == 'ARMATURE': # Newly parented objects needs to be recached
+            if len(ops) > 0 and ops[-1].bl_idname == 'OBJECT_OT_transform_apply':
+                recache(obj)
+            # New children need to be recached
+            if obj.type == 'ARMATURE':
                 for c in obj.children:
-                    if c.is_updated_data:
+                    if c.data != None and c.data.is_updated:
                         recache(c)
     if hasattr(bpy.context, 'sculpt_object') and bpy.context.sculpt_object != None:
         recache(bpy.context.sculpt_object)
@@ -204,9 +207,14 @@ def on_scene_update_post(context):
     if space != None:
         space.node_tree.is_cached = False
 
-def recache(edit_obj):
-    if hasattr(edit_obj.data, 'arm_cached'):
-        edit_obj.data.arm_cached = False
+def recache(obj):
+    # Moving keyframes triggers is_updated_data..
+    if state.compileproc != None:
+        return
+    if obj.data == None:
+        return
+    if hasattr(obj.data, 'arm_cached'):
+        obj.data.arm_cached = False
 
 def op_changed(op, obj):
     # Recache mesh data
@@ -215,7 +223,10 @@ def op_changed(op, obj):
        op.bl_idname == 'OBJECT_OT_transform_apply' or \
        op.bl_idname == 'OBJECT_OT_shade_smooth' or \
        op.bl_idname == 'OBJECT_OT_shade_flat':
-        obj.data.arm_cached = False
+        # recache(obj)
+        # Note: Blender reverts object data when manipulating
+        # OBJECT_OT_transform_apply operator.. recache object flag instead
+        obj.arm_cached = False
 
 appended_py_paths = []
 @persistent

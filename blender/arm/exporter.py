@@ -1708,6 +1708,7 @@ class ArmoryExporter:
             arm.utils.write_arm(fp, mesh_obj)
 
             bobject.data.arm_cached = True
+            bobject.arm_cached = True
             if bobject.type != 'FONT' and bobject.type != 'META':
                 bobject.data.arm_cached_verts = len(bobject.data.vertices)
                 bobject.data.arm_cached_edges = len(bobject.data.edges)
@@ -1863,7 +1864,7 @@ class ArmoryExporter:
             if hasattr(bobject.data, 'arm_sdfgen') and bobject.data.arm_sdfgen:
                 sdf_path = fp.replace('/mesh_', '/sdf_')
                 assets.add(sdf_path)
-            if self.object_is_cached(bobject) == True and os.path.exists(fp):
+            if self.is_mesh_cached(bobject) == True and os.path.exists(fp):
                 return
 
         print('Exporting mesh ' + arm.utils.asset_name(bobject.data))
@@ -1981,6 +1982,8 @@ class ArmoryExporter:
                 if hasattr(bobject.data, 'arm_aabb'):
                     bobject.data.arm_aabb = [abs(aabb_min[0]) + abs(aabb_max[0]), abs(aabb_min[1]) + abs(aabb_max[1]), abs(aabb_min[2]) + abs(aabb_max[2])]
                 break
+        # Not axis-aligned
+        # arm_aabb = [bobject.matrix_world * Vector(v) for v in bobject.bound_box]
 
         # Restore the morph state
         if shapeKeys:
@@ -2848,12 +2851,14 @@ class ArmoryExporter:
         return {'FINISHED'}
 
     # Callbacks
-    def object_is_cached(self, bobject):
+    def is_mesh_cached(self, bobject):
         if bobject.type == 'FONT' or bobject.type == 'META': # No verts
             return bobject.data.arm_cached
         if bobject.data.arm_cached_verts != len(bobject.data.vertices):
             return False
         if bobject.data.arm_cached_edges != len(bobject.data.edges):
+            return False
+        if not bobject.arm_cached:
             return False
         return bobject.data.arm_cached
 
