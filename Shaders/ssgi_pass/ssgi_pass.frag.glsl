@@ -11,7 +11,7 @@ precision mediump float;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0; // Normal
 #ifdef _RTGI
-uniform sampler2D gbuffer1; // Baecol
+uniform sampler2D gbuffer1; // Basecol
 #endif
 uniform mat4 P;
 uniform mat4 tiV;
