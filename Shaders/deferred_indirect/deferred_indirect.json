@@ -47,6 +47,11 @@
 					"ifdef": ["_Rad"]
 				},
 				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj",
+					"ifdef": ["_Rad"]
+				},
+				{
 					"name": "envmapStrength",
 					"link": "_envmapStrength"
 				},

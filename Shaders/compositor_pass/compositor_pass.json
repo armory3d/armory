@@ -70,6 +70,11 @@
 					"name": "lensTexture",
 					"link": "_lensTexture",
 					"ifdef": ["_CLensTex"]
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj",
+					"ifdef": ["_CFog", "_CDOF", "_CGlare"]
 				}
 			],
 			"texture_params": [],

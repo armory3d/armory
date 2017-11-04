@@ -16,6 +16,7 @@ uniform sampler2D tex;
 uniform mat4 prevVP;
 uniform vec3 eye;
 uniform vec3 eyeLook;
+uniform vec2 cameraProj;
 
 in vec2 texCoord;
 in vec3 viewRay;
@@ -26,7 +27,7 @@ out vec4 fragColor;
 
 vec2 getVelocity(vec2 coord, float depth) {
 	vec4 currentPos = vec4(coord.xy * 2.0 - 1.0, depth, 1.0);
-	vec4 worldPos = vec4(getPos(eye, eyeLook, viewRay, depth), 1.0);
+	vec4 worldPos = vec4(getPos(eye, eyeLook, viewRay, depth, cameraProj), 1.0);
 	vec4 previousPos = prevVP * worldPos;
 	previousPos /= previousPos.w;
 	vec2 velocity = (currentPos - previousPos).xy / 40.0;

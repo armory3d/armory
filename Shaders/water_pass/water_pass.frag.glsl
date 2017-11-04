@@ -31,6 +31,7 @@ uniform sampler2D snoise;
 uniform float time;
 uniform vec3 eye;
 uniform vec3 eyeLook;
+uniform vec2 cameraProj;
 // uniform vec3 lightPos;
 uniform vec3 ld;
 uniform float envmapStrength;
@@ -248,7 +249,7 @@ void main() {
 	}
 	
 	vec3 color = vec3(1.0);//colorOriginal.rgb;
-	vec3 position = getPos(eye, eyeLook, viewRay, gdepth);
+	vec3 position = getPos(eye, eyeLook, viewRay, gdepth, cameraProj);
 	
 	if (eye.z < seaLevel) {
 		// fragColor = colorOriginal;
@@ -286,7 +287,7 @@ void main() {
 	// vec2 texco = texCoord.xy;
 	// texco.x += sin((time) * 0.002 + 3.0 * abs(position.z)) * (refractionScale * min(depthZ, 1.0));
 	// vec3 refraction = texture(tex, texco).rgb;
-	// vec3 _p = getPos(eye, eyeLook, viewRay, 1.0 - texture(gbuffer0, texco).a);
+	// vec3 _p = getPos(eye, eyeLook, viewRay, 1.0 - texture(gbuffer0, texco).a, cameraProj);
 	// if (_p.z > seaLevel) {
 	//     refraction = colorOriginal.rgb;
 	// }

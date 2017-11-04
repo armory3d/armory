@@ -68,6 +68,10 @@
 					"name": "lightPos",
 					"link": "_lampPosition",
 					"ifdef": ["_Disabled"]
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
 				}
 			],
 			"texture_params": [],

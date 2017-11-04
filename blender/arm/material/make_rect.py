@@ -81,7 +81,8 @@ def make_rect(con_rect):
     frag.write('n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);')
     frag.write('n = normalize(n);')
     frag.write('vec2 texCoord = g0.zw;');
-    frag.write('vec3 wposition = getPos(eye, eyeLook, viewRay, depth);')
+    frag.add_uniform('vec2 cameraProj', link='_cameraPlaneProj')
+    frag.write('vec3 wposition = getPos(eye, eyeLook, viewRay, depth, cameraProj);')
     frag.write('vec3 vVec = normalize(eye - wposition);')
     frag.write_pre = False
 

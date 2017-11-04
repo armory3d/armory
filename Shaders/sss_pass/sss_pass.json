@@ -9,6 +9,10 @@
 				{
 					"name": "dir",
 					"link": "_vec2x"
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
 				}
 			],
 			"texture_params": [],
@@ -25,6 +29,10 @@
 				{
 					"name": "dir",
 					"link": "_vec2y"
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
 				}
 			],
 			"texture_params": [],

@@ -962,7 +962,8 @@ def parse_value(node, socket):
         # View Z Depth
         if socket == node.outputs[1]:
             curshader.add_include('../../Shaders/std/math.glsl')
-            return 'linearize(gl_FragCoord.z)'
+            curshader.add_uniform('vec2 cameraProj', link='_cameraPlaneProj')
+            return 'linearize(gl_FragCoord.z, cameraProj)'
         # View Distance
         else:
             curshader.add_uniform('vec3 eye', link='_cameraPosition')

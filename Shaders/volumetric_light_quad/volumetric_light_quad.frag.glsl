@@ -19,6 +19,7 @@ uniform sampler2D snoise;
 uniform mat4 LWVP;
 uniform vec3 eye;
 uniform vec3 eyeLook;
+uniform vec2 cameraProj;
 uniform vec3 lightPos;
 uniform vec3 lightColor;
 uniform float lightRadius;
@@ -71,7 +72,7 @@ void main() {
 	float pixelRayMarchNoise = texture(snoise, texCoord).r;
 
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	vec3 worldPos = getPos(eye, eyeLook, viewRay, depth);
+	vec3 worldPos = getPos(eye, eyeLook, viewRay, depth, cameraProj);
 
 	vec3 viewVec = worldPos - eye;
 	float worldPosDist = length(viewVec);

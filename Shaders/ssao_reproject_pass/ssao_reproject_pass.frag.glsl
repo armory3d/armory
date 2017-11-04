@@ -18,6 +18,7 @@ uniform vec3 eye;
 uniform vec3 eyeLook;
 uniform vec2 screenSize;
 uniform vec2 aspectRatio;
+uniform vec2 cameraProj;
 
 in vec2 texCoord;
 in vec3 viewRay;
@@ -29,7 +30,7 @@ float doAO(vec2 kernelVec, vec2 randomVec, mat2 rotMat, vec3 currentPos, vec3 n,
 	kernelVec.xy = ((rotMat * kernelVec.xy) / currentDistance) * radius;
 	vec2 coord = texCoord + kernelVec.xy;
 	float depth = texture(gbufferD, coord).r * 2.0 - 1.0;
-	vec3 pos = getPosNoEye(eyeLook, viewRay, depth) - currentPos;
+	vec3 pos = getPosNoEye(eyeLook, viewRay, depth, cameraProj) - currentPos;
 	
 	float angle = dot(pos, n);
 	// angle *= step(0.3, angle / length(pos)); // Fix intersect
@@ -88,7 +89,7 @@ void main() {
 	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
 	n = normalize(n);
 	
-	vec3 currentPos = getPosNoEye(eyeLook, viewRay, depth);
+	vec3 currentPos = getPosNoEye(eyeLook, viewRay, depth, cameraProj);
 	float currentDistance = length(currentPos);
 	
 	vec2 randomVec = texture(snoise, (texCoord * screenSize) / 8.0).xy;

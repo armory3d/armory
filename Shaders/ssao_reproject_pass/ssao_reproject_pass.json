@@ -32,6 +32,10 @@
 				{
 					"name": "aspectRatio",
 					"link": "_aspectRatio"
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
 				}
 			],
 			"texture_params": [],

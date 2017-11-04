@@ -79,6 +79,10 @@
 					"name": "VP",
 					"link": "_viewProjectionMatrix",
 					"ifdef": ["_SSRS"]
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
 				}
 			],
 			"vertex_shader": "deferred_light_quad.vert.glsl",

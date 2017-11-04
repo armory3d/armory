@@ -337,8 +337,6 @@ def write_indexhtml(w, h):
 """)
 
 def write_compiledglsl():
-    clip_start = bpy.data.cameras[0].clip_start if len(bpy.data.cameras) > 0 else 0.1 # Same clip values for all cameras for now
-    clip_end = bpy.data.cameras[0].clip_end if len(bpy.data.cameras) > 0 else 200.0
     wrd = bpy.data.worlds['Arm']
     shadowmap_size = wrd.arm_shadowmap_size_cache
     rpdat = arm.utils.get_rp()
@@ -348,7 +346,6 @@ def write_compiledglsl():
 #define _COMPILED_GLSL_
 const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;
-const vec2 cameraPlane = vec2(""" + str(round(clip_start * 100) / 100) + """, """ + str(round(clip_end * 100) / 100) + """);
 const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shadowmap_size) + """);
 const float shadowmapCubePcfSize = """ + str(round(wrd.arm_pcfsize * 10000) / 10000) + """;
 const int shadowmapCascades = """ + str(rpdat.rp_shadowmap_cascades) + """;

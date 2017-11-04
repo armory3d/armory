@@ -16,6 +16,10 @@ uniform sampler2D gbuffer1; // Basecol
 uniform mat4 P;
 uniform mat4 tiV;
 
+uniform vec3 eye;
+uniform vec3 eyeLook;
+uniform vec2 cameraProj;
+
 // const int ssgiStrength = 1.0;
 // const int ssgiMaxSteps = 16;
 // const int ssgiBinarySteps = 4;
@@ -25,9 +29,6 @@ const float searchDist = 5.0;
 in vec3 viewRay;
 in vec2 texCoord;
 out vec4 fragColor;
-
-uniform vec3 eye;
-uniform vec3 eyeLook;
 
 vec3 hitCoord;
 float depth;
@@ -48,7 +49,7 @@ vec2 getProjectedCoord(vec3 hitCoord) {
 
 float getDeltaDepth(vec3 hitCoord) {	
 	depth = texture(gbufferD, getProjectedCoord(hitCoord)).r * 2.0 - 1.0;
-	vec3 p = getPosView(viewRay, depth);
+	vec3 p = getPosView(viewRay, depth, cameraProj);
 	return p.z - hitCoord.z;
 }
 
@@ -92,7 +93,7 @@ void main() {
 	n = tiV * n;
 	n.xyz = normalize(n.xyz);
 
-	vec3 p = getPosView(viewRay, d);
+	vec3 p = getPosView(viewRay, d, cameraProj);
 	vec4 co;
 
 	hitCoord = p.xyz;

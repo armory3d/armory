@@ -44,6 +44,7 @@ uniform float envmapStrength;
 	uniform sampler2D senvmapRadiance;
 	uniform sampler2D senvmapBrdf;
 	uniform int envmapNumMipmaps;
+	uniform vec2 cameraProj;
 #endif
 #ifdef _EnvCol
 	uniform vec3 backgroundCol;
@@ -87,7 +88,7 @@ void main() {
 	// TODO: Firefox throws transform loop error even when no depth write is performed
 	float depth = (1.0 - g0.a) * 2.0 - 1.0;
 	#endif
-	vec3 p = getPos(eye, eyeLook, viewRay, depth);
+	vec3 p = getPos(eye, eyeLook, viewRay, depth, cameraProj);
 	vec3 v = normalize(eye - p.xyz);
 
 	float dotNV = max(dot(n, v), 0.0);

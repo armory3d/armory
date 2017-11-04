@@ -13,6 +13,7 @@ uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0; // Normal, roughness
 uniform mat4 P;
 uniform mat4 tiV;
+uniform vec2 cameraProj;
 
 // const int maxSteps = 20;
 // const int numBinarySearchSteps = 5;
@@ -42,7 +43,7 @@ vec2 getProjectedCoord(vec3 hitCoord) {
 float getDeltaDepth(vec3 hitCoord) {	
 	// depth = 1.0 - texture(gbuffer0, getProjectedCoord(hitCoord)).a;
 	depth = texture(gbufferD, getProjectedCoord(hitCoord)).r * 2.0 - 1.0;
-	vec3 viewPos = getPosView(viewRay, depth);
+	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
 	return viewPos.z - hitCoord.z;
 }
 
@@ -152,7 +153,7 @@ void main() {
 	
 	vec4 viewNormal = vec4(n, 1.0);
 	viewNormal = tiV * viewNormal;
-	vec3 viewPos = getPosView(viewRay, d);
+	vec3 viewPos = getPosView(viewRay, d, cameraProj);
 	
 	vec3 reflected = normalize(reflect((viewPos), normalize(viewNormal.xyz)));
 	hitCoord = viewPos.xyz;

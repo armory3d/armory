@@ -31,10 +31,10 @@ vec3 color(vec2 coords, const float blur, const sampler2D tex, const vec2 texSte
 	return col + mix(vec3(0.0), col, thresh * blur);
 }
 
-vec3 dof(const vec2 texCoord, const float gdepth, const sampler2D tex, const sampler2D gbufferD, const vec2 texStep) {
-	float depth = linearize(gdepth);
+vec3 dof(const vec2 texCoord, const float gdepth, const sampler2D tex, const sampler2D gbufferD, const vec2 texStep, const vec2 cameraProj) {
+	float depth = linearize(gdepth, cameraProj);
 	// const float fDepth = compoDOFDistance;
-	float fDepth = linearize(texture(gbufferD, focus).r * 2.0 - 1.0); // Autofocus
+	float fDepth = linearize(texture(gbufferD, focus).r * 2.0 - 1.0, cameraProj); // Autofocus
 	
 	const float f = compoDOFLength; // Focal length in mm
 	const float d = fDepth * 1000.0; // Focal plane in mm

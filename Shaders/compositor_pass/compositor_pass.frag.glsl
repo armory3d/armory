@@ -6,10 +6,7 @@ precision highp float;
 
 #include "../compiled.glsl"
 #include "../std/tonemap.glsl"
-// tonemapUncharted2()
-// tonemapFilmic()
 #include "../std/math.glsl"
-// linearize()
 #ifdef _CDOF
 #include "../std/dof.glsl"
 #endif
@@ -53,6 +50,16 @@ uniform float time;
 
 #ifdef _DynRes
 uniform float dynamicScale;
+#endif
+
+#ifdef _CFog
+uniform vec2 cameraProj;
+#endif
+#ifdef _CDOF
+uniform vec2 cameraProj;
+#endif
+#ifdef _CGlare
+uniform vec2 cameraProj;
 #endif
 
 in vec2 texCoord;
@@ -195,7 +202,7 @@ void main() {
 #else
 	
 	#ifdef _CDOF
-	fragColor.rgb = dof(texCo, depth, tex, gbufferD, texStep);
+	fragColor.rgb = dof(texCo, depth, tex, gbufferD, texStep, cameraProj);
 	#else
 	fragColor.rgb = texture(tex, texCo).rgb;
 	#endif
@@ -204,9 +211,9 @@ void main() {
 
 #ifdef _CFog
 	// if (depth < 1.0) {
-		// vec3 pos = getPos(depth);
+		// vec3 pos = getPos(depth, cameraProj);
 		// float dist = distance(pos, eye);
-		float dist = linearize(depth);
+		float dist = linearize(depth, cameraProj);
 		// vec3 eyedir = eyeLook;// normalize(eye + pos);
 		// fragColor.rgb = applyFog(fragColor.rgb, dist, eye, eyedir);
 		fragColor.rgb = applyFog(fragColor.rgb, dist);
@@ -218,7 +225,7 @@ void main() {
 		vec4 lndc = VP * vec4(light, 1.0);
 		lndc.xy /= lndc.w;
 		vec2 lss = lndc.xy * 0.5 + 0.5;
-		float lssdepth = linearize(texture(gbufferD, lss).r * 2.0 - 1.0);
+		float lssdepth = linearize(texture(gbufferD, lss).r * 2.0 - 1.0, cameraProj);
 		float lightDistance = distance(eye, light);
 		if (lightDistance <= lssdepth) {
 			vec2 lensuv = texCo * 2.0 - 1.0;

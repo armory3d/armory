@@ -18,6 +18,10 @@
 				{
 					"name": "invP",
 					"link": "_inverseProjectionMatrix"
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
 				}
 			],
 			"texture_params": [],

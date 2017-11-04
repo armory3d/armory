@@ -27,8 +27,8 @@ vec2 rand2(const vec2 coord) {
 	return vec2(noiseX, noiseY);
 }
 
-float linearize(const float depth) {
-	return -cameraPlane.y * cameraPlane.x / (depth * (cameraPlane.y - cameraPlane.x) - cameraPlane.y);
+float linearize(const float depth, vec2 cameraProj) {
+	return cameraProj.y / (depth - cameraProj.x);
 }
 
 float attenuate(const float dist) {

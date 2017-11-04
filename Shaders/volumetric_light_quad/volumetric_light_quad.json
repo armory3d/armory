@@ -47,6 +47,10 @@
 				{
 					"name": "eyeLook",
 					"link": "_cameraLook"
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
 				}
 			],
 			"texture_params": [],

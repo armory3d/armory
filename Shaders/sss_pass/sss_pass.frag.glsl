@@ -46,6 +46,7 @@ uniform sampler2D gbuffer1;
 uniform sampler2D tex;
 
 uniform vec2 dir;
+uniform vec2 cameraProj;
 
 in vec2 texCoord;
 out vec4 fragColor;
@@ -78,9 +79,7 @@ vec4 SSSSBlur() {
 
 	// Fetch linear depth of current pixel
 	float depth = texture(gbufferD, texCoord).r;
-	const float projectionA = cameraPlane.y / (cameraPlane.y - cameraPlane.x);
-	const float projectionB = (-cameraPlane.y * cameraPlane.x) / (cameraPlane.y - cameraPlane.x);
-	float depthM = projectionB / (depth - projectionA);
+	float depthM = cameraProj.y / (depth - cameraProj.x);
 
 	// Calculate the sssWidth scale (1.0 for a unit plane sitting on the projection window)
 	float distanceToProjectionWindow = 1.0 / tan(0.5 * radians(SSSS_FOVY));

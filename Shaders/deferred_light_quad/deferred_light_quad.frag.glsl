@@ -55,6 +55,7 @@ uniform int lightShadow;
 uniform float shadowsBias;
 uniform vec3 eye;
 uniform vec3 eyeLook;
+uniform vec2 cameraProj;
 #ifdef _SSRS
 	//!uniform mat4 VP;
 	uniform mat4 invVP;
@@ -91,7 +92,7 @@ void main() {
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
 	n = normalize(n);
 
-	vec3 p = getPos(eye, eyeLook, viewRay, depth);
+	vec3 p = getPos(eye, eyeLook, viewRay, depth, cameraProj);
 	vec2 metrough = unpackFloat(g0.b);
 	
 	vec3 v = normalize(eye - p);
