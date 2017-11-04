@@ -67,14 +67,11 @@ def make(base_name, json_data, fp, defs):
                     shader['tese'] = f.read().splitlines()
     
     for shader in shaders:
-        ext = ''
-        for s in defs:
-            ext += s
-        write_variant(path, shader['vert_name'] + ext + '.vert.glsl', defs, shader['vert'])
-        write_variant(path, shader['frag_name'] + ext + '.frag.glsl', defs, shader['frag'])
+        write_variant(path, shader['vert_name'] + '.vert.glsl', defs, shader['vert'])
+        write_variant(path, shader['frag_name'] + '.frag.glsl', defs, shader['frag'])
         if 'geom' in shader:
-            write_variant(path, shader['geom_name'] + ext + '.geom.glsl', defs, shader['geom'])
+            write_variant(path, shader['geom_name'] + '.geom.glsl', defs, shader['geom'])
         if 'tesc' in shader:
-            write_variant(path, shader['tesc_name'] + ext + '.tesc.glsl', defs, shader['tesc'])
+            write_variant(path, shader['tesc_name'] + '.tesc.glsl', defs, shader['tesc'])
         if 'tese' in shader:
-            write_variant(path, shader['tese_name'] + ext + '.tese.glsl', defs, shader['tese'])
+            write_variant(path, shader['tese_name'] + '.tese.glsl', defs, shader['tese'])

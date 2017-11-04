@@ -7,8 +7,6 @@ def write_data(res, defs, json_data, base_name):
     res['shader_datas'].append(sres)
 
     shader_id = base_name
-    for s in defs:
-        shader_id += s
 
     sres['name'] = shader_id
     sres['contexts'] = []
@@ -31,15 +29,6 @@ def write_data(res, defs, json_data, base_name):
             tesc_name = c['tesscontrol_shader'].split('.')[0]
         if 'tesseval_shader' in c:
             tese_name = c['tesseval_shader'].split('.')[0]
-        for d in defs:
-            vert_name += d
-            frag_name += d
-            if 'geometry_shader' in c:
-                geom_name += d
-            if 'tesscontrol_shader' in c:
-                tesc_name += d
-            if 'tesseval_shader' in c:
-                tese_name += d
 
         con['vertex_shader'] = vert_name + '.vert'
         con['fragment_shader'] = frag_name + '.frag'
@@ -264,14 +253,10 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
                             break
                     con['constants'].append(const)
 
-def save_data(path, base_name, subset, res):
-    res_name = base_name
-    for s in subset:
-        res_name += s
-
+def save_data(path, base_name, res):
     r = {}
     r['shader_datas'] = [res['shader_datas'][-1]]
-    arm.utils.write_arm(path + '/' + res_name + '.arm', r)
+    arm.utils.write_arm(path + '/' + base_name + '.arm', r)
 
 def make(base_name, json_data, fp, defs):
     
@@ -283,4 +268,4 @@ def make(base_name, json_data, fp, defs):
     res['shader_datas'] = []
 
     write_data(res, defs, json_data, base_name)
-    save_data(path, base_name, defs, res)
+    save_data(path, base_name, res)

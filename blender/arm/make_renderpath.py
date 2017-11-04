@@ -201,17 +201,14 @@ def make_draw_material_quad(stage, node_group, node, context_index=1):
 
 def make_draw_quad(stage, node_group, node, context_index=1, shader_context=None):
     stage['command'] = 'draw_shader_quad'
-    # Append world defs to get proper context
-    wrd = bpy.data.worlds['Arm']
-    world_defs = wrd.world_defs
     if shader_context == None:
         shader_context = node.inputs[context_index].default_value
     scon = shader_context.split('/')
-    stage['params'].append(scon[0] + world_defs + '/' + scon[1] + world_defs + '/' + scon[2])
+    stage['params'].append(scon[0] + '/' + scon[1] + '/' + scon[2])
     # Include data and shaders
     dir_name = scon[0]
     # Append world defs
-    data_name = scon[1] + world_defs
+    data_name = scon[1]
     assets.add_shader2(dir_name, data_name)
 
 def make_draw_world(stage, node_group, node, dome=True):
@@ -269,7 +266,7 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     wrd.compo_defs = compositor_defs
 
     defs = world_defs + compositor_defs
-    data_name = scon + defs
+    data_name = scon
     
     stage['command'] = 'draw_shader_quad'
     stage['params'].append(data_name + '/' + data_name + '/' + scon)

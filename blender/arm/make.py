@@ -143,17 +143,21 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
         modules.append('ui')
     print('Exported modules: ' + str(modules))
 
+    defs = make_utils.def_strings_to_array(wrd.world_defs)
+    print('Shader flags: ' + str(defs))
+
     # Write referenced shader variants
     for ref in assets.shader_datas:
         # Data does not exist yet
         if not os.path.isfile(fp + '/' + ref):
             shader_name = ref.split('/')[3] # Extract from 'build/compiled/...'
-            defs = make_utils.def_strings_to_array(wrd.world_defs)
             if shader_name.startswith('compositor_pass'):
-                defs += make_utils.def_strings_to_array(wrd.compo_defs)
+                cdefs = make_utils.def_strings_to_array(wrd.compo_defs)
+                compile_shader(raw_shaders_path, shader_name, defs + cdefs)
             elif shader_name.startswith('grease_pencil'):
-                defs = []
-            compile_shader(raw_shaders_path, shader_name, defs)
+                compile_shader(raw_shaders_path, shader_name, [])
+            else:
+                compile_shader(raw_shaders_path, shader_name, defs)
 
     # Reset path
     os.chdir(fp)

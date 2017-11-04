@@ -177,9 +177,7 @@ def build_node_tree(world):
 def write_output(output):
     # Add datas to khafile
     dir_name = 'world'
-    # Append world defs
-    wrd = bpy.data.worlds['Arm']
-    data_name = 'world' + wrd.world_defs
+    data_name = 'world'
     
     # Reference correct shader context
     dat = output['material_datas'][0]
