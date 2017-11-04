@@ -45,7 +45,7 @@ def set_preset(self, context, preset):
         rpdat.rp_antialiasing = 'None'
         rpdat.rp_compositornodes = False
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssao = False
+        rpdat.rp_ssgi = 'Off'
         rpdat.rp_ssr = False
         rpdat.rp_dfrs = False
         rpdat.rp_dfao = False
@@ -76,7 +76,7 @@ def set_preset(self, context, preset):
         rpdat.rp_antialiasing = 'SMAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssao = True
+        rpdat.rp_ssgi = 'SSAO'
         rpdat.rp_ssr = True
         rpdat.rp_dfrs = False
         rpdat.rp_dfao = False
@@ -107,7 +107,7 @@ def set_preset(self, context, preset):
         rpdat.rp_antialiasing = 'FXAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssao = True
+        rpdat.rp_ssgi = 'SSAO'
         rpdat.rp_ssr = False
         rpdat.rp_dfrs = False
         rpdat.rp_dfao = False
@@ -139,7 +139,7 @@ def set_preset(self, context, preset):
         rpdat.rp_antialiasing = 'TAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssao = True
+        rpdat.rp_ssgi = 'SSAO'
         rpdat.rp_ssr = True
         rpdat.rp_dfrs = False
         rpdat.rp_dfao = False
@@ -172,7 +172,7 @@ def set_preset(self, context, preset):
         rpdat.rp_antialiasing = 'TAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssao = True
+        rpdat.rp_ssgi = 'SSAO'
         rpdat.rp_ssr = True
         rpdat.rp_dfrs = False
         rpdat.rp_dfao = False
@@ -203,7 +203,7 @@ def set_preset(self, context, preset):
         rpdat.rp_antialiasing = 'None'
         rpdat.rp_compositornodes = False
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssao = False
+        rpdat.rp_ssgi = 'Off'
         rpdat.rp_ssr = False
         rpdat.rp_dfrs = False
         rpdat.rp_dfao = False
@@ -234,7 +234,7 @@ def set_preset(self, context, preset):
         rpdat.rp_antialiasing = 'None'
         rpdat.rp_compositornodes = False
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssao = False
+        rpdat.rp_ssgi = 'Off'
         rpdat.rp_ssr = False
         rpdat.rp_dfrs = False
         rpdat.rp_dfao = False
@@ -264,7 +264,7 @@ def set_preset(self, context, preset):
         rpdat.rp_antialiasing = 'None'
         rpdat.rp_compositornodes = False
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssao = False
+        rpdat.rp_ssgi = 'Off'
         rpdat.rp_ssr = False
         rpdat.rp_dfrs = False
         rpdat.rp_dfao = False
@@ -298,7 +298,7 @@ def set_preset(self, context, preset):
         rpdat.rp_antialiasing = 'TAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssao = True
+        rpdat.rp_ssgi = 'SSAO'
         rpdat.rp_ssr = True
         rpdat.rp_dfrs = False
         rpdat.rp_dfao = False
@@ -508,7 +508,13 @@ def make_deferred(rpdat):
     if not rpdat.rp_decals:
         relink('Set Target Decal', 'SSAO')
 
-    if not rpdat.rp_ssao:
+    if rpdat.rp_ssgi == 'RTAO' or rpdat.rp_ssgi == 'RTGI':
+        l = nodes['SSAO'].inputs[0].links[0]
+        last_node = l.from_node
+        links.remove(l)
+        links.new(last_node.outputs[0], nodes['SSGI'].inputs[0])
+        links.new(nodes['SSGI'].outputs[0], nodes['Deferred Indirect'].inputs[0])
+    elif rpdat.rp_ssgi != 'SSAO':
         relink('SSAO', 'Deferred Indirect')        
         l = nodes['Deferred Indirect'].inputs[3].links[0]
         links.remove(l)
@@ -534,10 +540,7 @@ def make_deferred(rpdat):
         relink('SSS', 'SSR')
 
     if not rpdat.rp_ssr:
-        relink('SSR', 'SSGI')
-
-    if not rpdat.rp_ssgi:
-        relink('SSGI', 'Draw Compositor')
+        relink('SSR', 'Draw Compositor')
 
     if rpdat.rp_motionblur != 'None':
         last_node = nodes['Draw Compositor'].inputs[0].links[0].from_node

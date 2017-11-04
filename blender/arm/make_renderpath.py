@@ -375,9 +375,9 @@ def make_ssr_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_y3_blend')
 
 def make_ssgi_pass(stages, node_group, node):
-    make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[4, 5, 6], bind_target_constants=['tex', 'gbufferD', 'gbuffer0'], shader_context='ssgi_pass/ssgi_pass/ssgi_pass')
-    make_quad_pass(stages, node_group, node, target_index=3, bind_target_indices=[2, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='ssgi_blur_pass/ssgi_blur_pass/ssgi_blur_pass_x')
-    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 6], bind_target_constants=['tex', 'gbuffer0'], shader_context='ssgi_blur_pass/ssgi_blur_pass/ssgi_blur_pass_y_blend_add')
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 4, 5], bind_target_constants=['gbufferD', 'gbuffer0', 'gbuffer1'], shader_context='ssgi_pass/ssgi_pass/ssgi_pass')
+    make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[1, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='ssgi_blur_pass/ssgi_blur_pass/ssgi_blur_pass_x')
+    make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[2, 4], bind_target_constants=['tex', 'gbuffer0'], shader_context='ssgi_blur_pass/ssgi_blur_pass/ssgi_blur_pass_y')
 
 def make_bloom_pass(stages, node_group, node):
     make_quad_pass(stages, node_group, node, target_index=2, bind_target_indices=[4], bind_target_constants=['tex'], shader_context='bloom_pass/bloom_pass/bloom_pass')
@@ -790,7 +790,8 @@ def traverse_renderpath(node, node_group, render_targets, depth_buffers):
     elif node.bl_idname == 'HistogramPassNodeType':
         wrd.world_defs += '_Hist'
 
-    elif node.bl_idname == 'SSAOPassNodeType' or node.bl_idname == 'ApplySSAOPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType':
+    elif node.bl_idname == 'SSAOPassNodeType' or node.bl_idname == 'ApplySSAOPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType' or \
+         node.bl_idname == 'SSGIPassNodeType':
         wrd.world_defs += '_SSAO'
 
     elif node.bl_idname == 'DrawStereoNodeType':

@@ -107,10 +107,9 @@ class SSGIPassNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Stage")
         self.inputs.new('NodeSocketShader', "Target")
         self.inputs.new('NodeSocketShader', "A")
-        self.inputs.new('NodeSocketShader', "B")
-        self.inputs.new('NodeSocketShader', "Color")
         self.inputs.new('NodeSocketShader', "GBufferD")
         self.inputs.new('NodeSocketShader', "GBuffer0")
+        self.inputs.new('NodeSocketShader', "GBuffer1")
 
         self.outputs.new('NodeSocketShader', "Stage")
 

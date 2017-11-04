@@ -376,21 +376,33 @@ const vec3 seaBaseColor = vec3(""" + str(round(wrd.arm_ocean_base_color[0] * 100
 const vec3 seaWaterColor = vec3(""" + str(round(wrd.arm_ocean_water_color[0] * 100) / 100) + """, """ + str(round(wrd.arm_ocean_water_color[1] * 100) / 100) + """, """ + str(round(wrd.arm_ocean_water_color[2] * 100) / 100) + """);
 const float seaFade = """ + str(round(wrd.arm_ocean_fade * 100) / 100) + """;
 """)
-        scale = 0.5 if rpdat.arm_ssao_half_res else 1.0
-        f.write(
+        if rpdat.rp_ssgi == 'SSAO':
+            scale = 0.5 if rpdat.arm_ssao_half_res else 1.0
+            f.write(
 """const float ssaoSize = """ + str(round(wrd.arm_ssao_size * 100) / 100) + """;
 const float ssaoStrength = """ + str(round(wrd.arm_ssao_strength * 100) / 100) + """;
 const float ssaoTextureScale = """ + str(scale) + """;
 """)
-        f.write(
+        if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
+            f.write(
+"""const int ssgiMaxSteps = """ + str(wrd.arm_ssgi_max_steps) + """;
+const int ssgiBinarySteps = """ + str(wrd.arm_ssgi_binary_steps) + """;
+const float ssgiRayStep = 0.005 * """ + str(round(wrd.arm_ssgi_step_size * 100) / 100) + """;
+const float ssgiStrength = """ + str(round(wrd.arm_ssgi_strength * 100) / 100) + """;
+""")
+
+        if rpdat.rp_bloom:
+            f.write(
 """const float bloomThreshold = """ + str(round(wrd.arm_bloom_threshold * 100) / 100) + """;
 const float bloomStrength = """ + str(round(wrd.arm_bloom_strength * 100) / 100) + """;
 const float bloomRadius = """ + str(round(wrd.arm_bloom_radius * 100) / 100) + """;
 """)
-        f.write(
+        if rpdat.rp_motionblur != 'None':
+            f.write(
 """const float motionBlurIntensity = """ + str(round(wrd.arm_motion_blur_intensity * 100) / 100) + """;
 """)
-        f.write(
+        if rpdat.rp_ssr:
+            f.write(
 """const float ssrRayStep = """ + str(round(wrd.arm_ssr_ray_step * 100) / 100) + """;
 const float ssrMinRayStep = """ + str(round(wrd.arm_ssr_min_ray_step * 100) / 100) + """;
 const float ssrSearchDist = """ + str(round(wrd.arm_ssr_search_dist * 100) / 100) + """;
@@ -403,7 +415,8 @@ const float ssrJitter = """ + str(round(wrd.arm_ssr_jitter * 100) / 100) + """;
 """const float ssrsRayStep = """ + str(round(wrd.arm_ssrs_ray_step * 100) / 100) + """;
 """)
 
-        f.write(
+        if rpdat.rp_volumetriclight:
+            f.write(
 """const float volumAirTurbidity = """ + str(round(wrd.arm_volumetric_light_air_turbidity * 100) / 100) + """;
 const vec3 volumAirColor = vec3(""" + str(round(wrd.arm_volumetric_light_air_color[0] * 100) / 100) + """, """ + str(round(wrd.arm_volumetric_light_air_color[1] * 100) / 100) + """, """ + str(round(wrd.arm_volumetric_light_air_color[2] * 100) / 100) + """);
 """)

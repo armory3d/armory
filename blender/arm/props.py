@@ -229,7 +229,12 @@ def init_properties():
         items=[('9', '9', '9'),
                ('5', '5', '5'),
                ],
-        name="Diffuse Cones", description="", default='9', update=assets.invalidate_shader_cache)
+        name="Diffuse Cones", description="Number of cones to trace for VXGI", default='9', update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_voxelgi_ao_cones = EnumProperty(
+        items=[('9', '9', '9'),
+               ('5', '5', '5'),
+               ],
+        name="AO Cones", description="Number of cones to trace for VXAO", default='5', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_voxelgi_spec = bpy.props.FloatProperty(name="Specular", description="", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_voxelgi_occ = bpy.props.FloatProperty(name="Occlussion", description="", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_voxelgi_env = bpy.props.FloatProperty(name="Env Map", description="Contribute light from environment map", default=0.0, update=assets.invalidate_shader_cache)
@@ -275,6 +280,15 @@ def init_properties():
     bpy.types.World.arm_ocean_fade = bpy.props.FloatProperty(name="Fade", default=1.8, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_ssao_size = bpy.props.FloatProperty(name="Size", default=0.12, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_ssao_strength = bpy.props.FloatProperty(name="Strength", default=0.1, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssgi_strength = bpy.props.FloatProperty(name="Strength", default=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssgi_step_size = bpy.props.FloatProperty(name="Step Size", default=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssgi_max_steps = bpy.props.IntProperty(name="Max Steps", default=16, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssgi_binary_steps = bpy.props.IntProperty(name="Binary Steps", default=4, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssgi_rays = EnumProperty(
+        items=[('9', '9', '9'),
+               ('5', '5', '5'),
+               ],
+        name="SSGI rays", description="Number of rays to trace for RTAO/RTGI", default='5', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_bloom_threshold = bpy.props.FloatProperty(name="Threshold", default=5.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_bloom_strength = bpy.props.FloatProperty(name="Strength", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_bloom_radius = bpy.props.FloatProperty(name="Radius", default=1.0, update=assets.invalidate_shader_cache)

@@ -8,26 +8,33 @@ precision mediump float;
 #include "../std/math.glsl"
 #include "../std/gbuffer.glsl"
 
-uniform sampler2D tex;
 uniform sampler2D gbufferD;
-uniform sampler2D gbuffer0; // Normal, roughness
+uniform sampler2D gbuffer0; // Normal
+#ifdef _RTGI
+uniform sampler2D gbuffer1; // Baecol
+#endif
 uniform mat4 P;
 uniform mat4 tiV;
 
-// const int maxSteps = 20;
-// const int numBinarySearchSteps = 5;
-// const float ssrRayStep = 0.04;
-// const float ssrMinRayStep = 0.05;
-// const float ssrSearchDist = 5.0;
-// const float ssrFalloffExp = 5.0;
-// const float ssrJitter = 0.6;
+// const int ssgiStrength = 1.0;
+// const int ssgiMaxSteps = 16;
+// const int ssgiBinarySteps = 4;
+// const float ssgiRayStep = 0.005;
+const float searchDist = 5.0;
 
 in vec3 viewRay;
 in vec2 texCoord;
 out vec4 fragColor;
 
+uniform vec3 eye;
+uniform vec3 eyeLook;
+
 vec3 hitCoord;
 float depth;
+float occ = 0.0;
+#ifdef _RTGI
+vec3 col = vec3(0.0);
+#endif
 
 vec2 getProjectedCoord(vec3 hitCoord) {
 	vec4 projectedCoord = P * vec4(hitCoord, 1.0);
@@ -40,142 +47,133 @@ vec2 getProjectedCoord(vec3 hitCoord) {
 }
 
 float getDeltaDepth(vec3 hitCoord) {	
-	// depth = 1.0 - texture(gbuffer0, getProjectedCoord(hitCoord)).a;
 	depth = texture(gbufferD, getProjectedCoord(hitCoord)).r * 2.0 - 1.0;
-	vec3 viewPos = getPosView(viewRay, depth);
-	return viewPos.z - hitCoord.z;
+	vec3 p = getPosView(viewRay, depth);
+	return p.z - hitCoord.z;
 }
 
 vec4 binarySearch(vec3 dir) {	
-	// for (int i = 0; i < numBinarySearchSteps; i++) {
+	for (int i = 0; i < ssgiBinarySteps; i++) {
 		dir *= 0.5;
 		hitCoord -= dir;
 		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		
-		dir *= 0.5;
-		hitCoord -= dir;
-		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		dir *= 0.5;
-		hitCoord -= dir;
-		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		dir *= 0.5;
-		hitCoord -= dir;
-		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		dir *= 0.5;
-		hitCoord -= dir;
-		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		dir *= 0.5;
-		hitCoord -= dir;
-		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		dir *= 0.5;
-		hitCoord -= dir;
-		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		
-		// Ugly discard of hits too far away
-		if (abs(getDeltaDepth(hitCoord)) > 0.01) {
-			return vec4(0.0);
-		}
-	// }
+	}
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
 vec4 rayCast(vec3 dir) {
-	dir *= ssrRayStep;
-	
-	// for (int i = 0; i < maxSteps; i++) {
+	dir *= ssgiRayStep;
+	for (int i = 0; i < ssgiMaxSteps; i++) {
 		hitCoord += dir;
 		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-	// }
+	}
 	return vec4(0.0);
+}
+
+vec3 tangent(const vec3 n) {
+	vec3 t1 = cross(n, vec3(0, 0, 1));
+	vec3 t2 = cross(n, vec3(0, 1, 0));
+	if (length(t1) > length(t2)) return normalize(t1);
+	else return normalize(t2);
 }
 
 void main() {
 	vec4 g0 = texture(gbuffer0, texCoord);
-	float roughness = unpackFloat(g0.b).y;
-
-	if (roughness == 1.0) {
-		fragColor.rgb = vec3(0.0);
-		return;
-	}
-	
 	float d = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	if (d == 1.0) {
-		fragColor.rgb = vec3(0.0);
-		return;
-	}
+	// if (d == 1.0) { fragColor.rgb = vec3(0.0); return; }
 
 	vec2 enc = g0.rg;
-	vec3 n;
+	vec4 n;
 	n.z = 1.0 - abs(enc.x) - abs(enc.y);
 	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
-	n = normalize(n);
+	n.xyz = normalize(n.xyz);
 	
-	if (n.z <= 0.9) { // Only up facing surfaces for now
-		fragColor.rgb = vec3(0.0);
-		return;
-	}
-	
-	vec4 viewNormal = vec4(n, 1.0);
-	viewNormal = tiV * viewNormal;
-	vec3 viewPos = getPosView(viewRay, d);
-	
-	vec3 reflected = normalize(reflect((viewPos), normalize(viewNormal.xyz)));
-	hitCoord = viewPos.xyz;
-	
-	vec3 dir = reflected * max(ssrMinRayStep, -viewPos.z) * (1.0 - rand(texCoord) * ssrJitter * roughness);
-	vec4 coords = rayCast(dir);
+	n.w = 1.0;
+	n = tiV * n;
+	n.xyz = normalize(n.xyz);
 
-	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
-	float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
+	vec3 p = getPosView(viewRay, d);
+	vec4 co;
 
-	float reflectivity = 1.0 - roughness;
-	float intensity = pow(reflectivity, ssrFalloffExp) *
-		screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) *
-		clamp((ssrSearchDist - length(viewPos.xyz - hitCoord)) * (1.0 / ssrSearchDist), 0.0, 1.0) * coords.w;
+	hitCoord = p.xyz;
+	co = rayCast(n.xyz);
+	occ += distance(p, hitCoord);
 
-	intensity = clamp(intensity, 0.0, 1.0);
+	#ifdef _RTGI
+	col += texture(gbuffer1, co.xy).rgb;
+	#endif
+
+	vec3 o1 = normalize(tangent(n.xyz));
+	vec3 o2 = normalize(cross(o1, n.xyz));
+	vec3 c1 = 0.5f * (o1 + o2);
+	vec3 c2 = 0.5f * (o1 - o2);
+	const float angleMix = 0.5f;
 	
-	if (intensity == 0.0) {
-		fragColor.rgb = vec3(0.0);
-		return;
-	}
+	hitCoord = p.xyz;
+	co = rayCast(mix(n.xyz, o1, angleMix));
+	#ifdef _RTGI
+	col += texture(gbuffer1, co.xy).rgb;
+	#endif
+	occ += distance(p, hitCoord);
 	
-	vec3 reflCol = texture(tex, coords.xy).rgb;
-	reflCol = clamp(reflCol, 0.0, 1.0);
-	fragColor.rgb = reflCol * intensity * 0.5; //
+	hitCoord = p.xyz;
+	co = rayCast(mix(n.xyz, o2, angleMix));
+	#ifdef _RTGI
+	col += texture(gbuffer1, co.xy).rgb;
+	#endif
+	occ += distance(p, hitCoord);
+	
+	hitCoord = p.xyz;
+	co = rayCast(mix(n.xyz, -c1, angleMix));
+	#ifdef _RTGI
+	col += texture(gbuffer1, co.xy).rgb;
+	#endif
+	occ += distance(p, hitCoord);
+	
+	hitCoord = p.xyz;
+	co = rayCast(mix(n.xyz, -c2, angleMix));
+	#ifdef _RTGI
+	col += texture(gbuffer1, co.xy).rgb;
+	#endif
+	occ += distance(p, hitCoord);
+
+	#ifdef _SSGICone9
+	
+	hitCoord = p.xyz;
+	co = rayCast(mix(n.xyz, -o1, angleMix));
+	#ifdef _RTGI
+	col += texture(gbuffer1, co.xy).rgb;
+	#endif
+	occ += distance(p, hitCoord);
+
+	hitCoord = p.xyz;
+	co = rayCast(mix(n.xyz, -o2, angleMix));
+	#ifdef _RTGI
+	col += texture(gbuffer1, co.xy).rgb;
+	#endif
+	occ += distance(p, hitCoord);
+	
+	hitCoord = p.xyz;
+	co = rayCast(mix(n.xyz, c1, angleMix));
+	#ifdef _RTGI
+	col += texture(gbuffer1, co.xy).rgb;
+	#endif
+	occ += distance(p, hitCoord);
+
+	hitCoord = p.xyz;
+	co = rayCast(mix(n.xyz, c2, angleMix));
+	#ifdef _RTGI
+	col += texture(gbuffer1, co.xy).rgb;
+	#endif
+	occ += distance(p, hitCoord);
+
+	#endif
+
+	const float strength = 2.0 * (1.0 / ssgiStrength);
+	
+	#ifdef _RTGI
+	fragColor.rgb = vec3(occ * (col / 9.0) * strength);
+	#else
+	fragColor.rgb = vec3(occ * strength);
+	#endif
 }

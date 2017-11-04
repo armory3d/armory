@@ -1,4 +1,3 @@
-// Exclusive to SSAO for now
 #version 450
 
 #ifdef GL_ES

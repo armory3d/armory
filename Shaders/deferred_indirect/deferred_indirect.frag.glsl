@@ -111,14 +111,8 @@ void main() {
 
 	// if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
 
-	#ifdef _SSAO
-	fragColor.rgb *= texture(ssaotex, texCoord).r * 0.5 + 0.5;
-	#endif
-
 	// float opacity = g1.a;
 	// if (opacity < 1.0) fragColor.rgb = mix(indirectRefractiveLight(-v, n, vec3(1.0), opacity, voxpos), fragColor.rgb, opacity);
-
-	// return;
 #endif
 
 	// Envmap
@@ -167,14 +161,6 @@ void main() {
 	envl.rgb = dfgi(p, n) * albedo;
 #endif
 
-#ifdef _SSAO
-	envl.rgb *= texture(ssaotex, texCoord).r;
-#endif
-
-#ifdef _DFAO
-	envl.rgb *= dfao(p, n);
-#endif
-
 #ifdef _VoxelAO
 
 	#ifdef _VoxelGICam
@@ -192,6 +178,18 @@ void main() {
 	fragColor.rgb = envl;
 #endif
 
+#ifdef _SSAO
+	#ifdef _RTGI
+	fragColor.rgb *= texture(ssaotex, texCoord).rgb;
+	#else
+	fragColor.rgb *= texture(ssaotex, texCoord).r;
+	#endif
+#endif
+
+#ifdef _DFAO
+	fragColor.rgb *= dfao(p, n);
+#endif
+
 	// Show voxels
 	// vec3 origin = vec3(texCoord * 2.0 - 1.0, 0.99);
 	// vec3 direction = vec3(0.0, 0.0, -1.0);
@@ -201,4 +199,7 @@ void main() {
 	// 	color += (1.0f - color.a) * textureLod(voxels, point * 0.5 + 0.5, 0);
 	// } 
 	// fragColor.rgb += color.rgb;
+
+	// Show SSAO
+	// fragColor.rgb = texture(ssaotex, texCoord).rrr;
 }

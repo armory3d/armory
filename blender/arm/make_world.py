@@ -129,6 +129,11 @@ def build_node_tree(world):
         assets.add_khafile_def('arm_sdf')
         wrd.world_defs += '_Rad' # Always do radiance for gi
         wrd.world_defs += '_Irr'
+    if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
+        if rpdat.rp_ssgi == 'RTGI':
+            wrd.world_defs += '_RTGI'
+        if wrd.arm_ssgi_rays == '9':
+            wrd.world_defs += '_SSGICone9'
 
     if voxelgi or voxelao:
         assets.add_khafile_def('arm_voxelgi')
@@ -136,8 +141,10 @@ def build_node_tree(world):
             assets.add_khafile_def('arm_voxelgi_revox')
             if rpdat.arm_voxelgi_camera:
                 wrd.world_defs += '_VoxelGICam'
-        if wrd.arm_voxelgi_diff_cones == '5':
+        if voxelgi and wrd.arm_voxelgi_diff_cones == '5':
             wrd.world_defs += '_VoxelGICone5'
+        if voxelao and wrd.arm_voxelgi_ao_cones == '9':
+            wrd.world_defs += '_VoxelAOCone9'
         wrd.world_defs += '_Rad' # Always do radiance for voxels
         wrd.world_defs += '_Irr'
 
