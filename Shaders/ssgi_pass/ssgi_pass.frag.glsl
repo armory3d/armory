@@ -25,17 +25,25 @@ uniform vec2 cameraProj;
 // const int ssgiBinarySteps = 4;
 // const float ssgiRayStep = 0.005;
 const float searchDist = 5.0;
+const float angleMix = 0.5f;
+#ifdef _SSGICone9
+const float strength = 2.0 * (1.0 / ssgiStrength);
+#else
+const float strength = 2.0 * (1.0 / ssgiStrength) * 1.8;
+#endif
 
 in vec3 viewRay;
 in vec2 texCoord;
 out vec4 fragColor;
 
 vec3 hitCoord;
+vec2 coord;
 float depth;
 float occ = 0.0;
 #ifdef _RTGI
 vec3 col = vec3(0.0);
 #endif
+vec3 vpos;
 
 vec2 getProjectedCoord(vec3 hitCoord) {
 	vec4 projectedCoord = P * vec4(hitCoord, 1.0);
@@ -47,28 +55,33 @@ vec2 getProjectedCoord(vec3 hitCoord) {
 	return projectedCoord.xy;
 }
 
-float getDeltaDepth(vec3 hitCoord) {	
-	depth = texture(gbufferD, getProjectedCoord(hitCoord)).r * 2.0 - 1.0;
+float getDeltaDepth(vec3 hitCoord) {
+	coord = getProjectedCoord(hitCoord);
+	depth = texture(gbufferD, coord).r * 2.0 - 1.0;
 	vec3 p = getPosView(viewRay, depth, cameraProj);
 	return p.z - hitCoord.z;
 }
 
-vec4 binarySearch(vec3 dir) {	
-	for (int i = 0; i < ssgiBinarySteps; i++) {
-		dir *= 0.5;
-		hitCoord -= dir;
-		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-	}
-	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
-}
+// void binarySearch(vec3 dir) {	
+// 	for (int i = 0; i < ssgiBinarySteps; i++) {
+// 		dir *= 0.5;
+// 		hitCoord -= dir;
+// 		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
+// 	}
+// }
 
-vec4 rayCast(vec3 dir) {
+void rayCast(vec3 dir) {
+	hitCoord = vpos;
 	dir *= ssgiRayStep;
 	for (int i = 0; i < ssgiMaxSteps; i++) {
 		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
+		if (getDeltaDepth(hitCoord) > 0.0) { /* binarySearch(dir); */ break; }
 	}
-	return vec4(0.0);
+	float dist = distance(vpos, hitCoord);
+	occ += dist;
+	#ifdef _RTGI
+	col += texture(gbuffer1, coord).rgb * ((ssgiRayStep * ssgiMaxSteps) - dist);
+	#endif
 }
 
 vec3 tangent(const vec3 n) {
@@ -88,93 +101,32 @@ void main() {
 	n.z = 1.0 - abs(enc.x) - abs(enc.y);
 	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
 	n.xyz = normalize(n.xyz);
-	
 	n.w = 1.0;
 	n = tiV * n;
 	n.xyz = normalize(n.xyz);
 
-	vec3 p = getPosView(viewRay, d, cameraProj);
-	vec4 co;
+	vpos = getPosView(viewRay, d, cameraProj);
 
-	hitCoord = p.xyz;
-	co = rayCast(n.xyz);
-	occ += distance(p, hitCoord);
-
-	#ifdef _RTGI
-	col += texture(gbuffer1, co.xy).rgb;
-	#endif
-
+	rayCast(n.xyz);
 	vec3 o1 = normalize(tangent(n.xyz));
 	vec3 o2 = normalize(cross(o1, n.xyz));
 	vec3 c1 = 0.5f * (o1 + o2);
 	vec3 c2 = 0.5f * (o1 - o2);
-	const float angleMix = 0.5f;
-	
-	hitCoord = p.xyz;
-	co = rayCast(mix(n.xyz, o1, angleMix));
-	#ifdef _RTGI
-	col += texture(gbuffer1, co.xy).rgb;
-	#endif
-	occ += distance(p, hitCoord);
-	
-	hitCoord = p.xyz;
-	co = rayCast(mix(n.xyz, o2, angleMix));
-	#ifdef _RTGI
-	col += texture(gbuffer1, co.xy).rgb;
-	#endif
-	occ += distance(p, hitCoord);
-	
-	hitCoord = p.xyz;
-	co = rayCast(mix(n.xyz, -c1, angleMix));
-	#ifdef _RTGI
-	col += texture(gbuffer1, co.xy).rgb;
-	#endif
-	occ += distance(p, hitCoord);
-	
-	hitCoord = p.xyz;
-	co = rayCast(mix(n.xyz, -c2, angleMix));
-	#ifdef _RTGI
-	col += texture(gbuffer1, co.xy).rgb;
-	#endif
-	occ += distance(p, hitCoord);
+	rayCast(mix(n.xyz, o1, angleMix));
+	rayCast(mix(n.xyz, o2, angleMix));
+	rayCast(mix(n.xyz, -c1, angleMix));
+	rayCast(mix(n.xyz, -c2, angleMix));
 
 	#ifdef _SSGICone9
-	
-	hitCoord = p.xyz;
-	co = rayCast(mix(n.xyz, -o1, angleMix));
-	#ifdef _RTGI
-	col += texture(gbuffer1, co.xy).rgb;
+	rayCast(mix(n.xyz, -o1, angleMix));
+	rayCast(mix(n.xyz, -o2, angleMix));
+	rayCast(mix(n.xyz, c1, angleMix));
+	rayCast(mix(n.xyz, c2, angleMix));
 	#endif
-	occ += distance(p, hitCoord);
-
-	hitCoord = p.xyz;
-	co = rayCast(mix(n.xyz, -o2, angleMix));
-	#ifdef _RTGI
-	col += texture(gbuffer1, co.xy).rgb;
-	#endif
-	occ += distance(p, hitCoord);
-	
-	hitCoord = p.xyz;
-	co = rayCast(mix(n.xyz, c1, angleMix));
-	#ifdef _RTGI
-	col += texture(gbuffer1, co.xy).rgb;
-	#endif
-	occ += distance(p, hitCoord);
-
-	hitCoord = p.xyz;
-	co = rayCast(mix(n.xyz, c2, angleMix));
-	#ifdef _RTGI
-	col += texture(gbuffer1, co.xy).rgb;
-	#endif
-	occ += distance(p, hitCoord);
-
-	#endif
-
-	const float strength = 2.0 * (1.0 / ssgiStrength);
 	
 	#ifdef _RTGI
-	fragColor.rgb = vec3(occ * (col / 9.0) * strength);
+	fragColor.rgb = vec3((occ + col * occ) * strength);
 	#else
-	fragColor.rgb = vec3(occ * strength);
+	fragColor.r = occ * strength;
 	#endif
 }

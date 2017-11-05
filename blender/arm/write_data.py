@@ -383,7 +383,6 @@ const float ssaoTextureScale = """ + str(scale) + """;
         if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
             f.write(
 """const int ssgiMaxSteps = """ + str(wrd.arm_ssgi_max_steps) + """;
-const int ssgiBinarySteps = """ + str(wrd.arm_ssgi_binary_steps) + """;
 const float ssgiRayStep = 0.005 * """ + str(round(wrd.arm_ssgi_step_size * 100) / 100) + """;
 const float ssgiStrength = """ + str(round(wrd.arm_ssgi_strength * 100) / 100) + """;
 """)

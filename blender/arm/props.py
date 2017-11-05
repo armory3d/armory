@@ -281,9 +281,8 @@ def init_properties():
     bpy.types.World.arm_ssao_size = bpy.props.FloatProperty(name="Size", default=0.12, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_ssao_strength = bpy.props.FloatProperty(name="Strength", default=0.1, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_ssgi_strength = bpy.props.FloatProperty(name="Strength", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ssgi_step_size = bpy.props.FloatProperty(name="Step Size", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ssgi_max_steps = bpy.props.IntProperty(name="Max Steps", default=16, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ssgi_binary_steps = bpy.props.IntProperty(name="Binary Steps", default=4, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssgi_step_size = bpy.props.FloatProperty(name="Step Size", default=2.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_ssgi_max_steps = bpy.props.IntProperty(name="Max Steps", default=8, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_ssgi_rays = EnumProperty(
         items=[('9', '9', '9'),
                ('5', '5', '5'),

@@ -1095,7 +1095,6 @@ class ArmRenderPropsPanel(bpy.types.Panel):
         row.prop(wrd, 'arm_ssgi_step_size')
         row = layout.row()
         row.prop(wrd, 'arm_ssgi_max_steps')
-        row.prop(wrd, 'arm_ssgi_binary_steps')
 
         layout.label('Bloom')
         row = layout.row()
