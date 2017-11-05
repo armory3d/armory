@@ -16,6 +16,7 @@
 #
 import arm.material.cycles_functions as c_functions
 import arm.material.cycles_state as c_state
+import math
 
 basecol_texname = ''
 emission_found = False
@@ -825,17 +826,24 @@ def parse_vector(node, socket):
 
     elif node.type == 'MAPPING':
         out = parse_vector_input(node.inputs[0])
+        # ZYX rotation, Z axis for now..
+        if node.rotation[2] != 0.0:
+            a = node.rotation[2]
+            out = 'vec2({0}.x * {1} - (1.0 - {0}.y) * {2}, 1.0 - ({0}.x * {2} + (1.0 - {0}.y) * {1}))'.format(out, math.cos(a), math.sin(a))
+        # if node.rotation[1] != 0.0:
+        #     a = node.rotation[1]
+        #     out = 'vec2({0}.x * {1} - {0}.z * {2}, {0}.x * {2} + {0}.z * {1})'.format(out, math.cos(a), math.sin(a))
+        # if node.rotation[0] != 0.0:
+        #     a = node.rotation[0]
+        #     out = 'vec2({0}.y * {1} - {0}.z * {2}, {0}.y * {2} + {0}.z * {1})'.format(out, math.cos(a), math.sin(a))
         if node.scale[0] != 1.0 or node.scale[1] != 1.0 or node.scale[2] != 1.0:
             out = '({0} * vec2({1}, {2}))'.format(out, node.scale[0], node.scale[1])
         if node.translation[0] != 0.0 or node.translation[1] != 0.0 or node.translation[2] != 0.0:
             out = '({0} + vec2({1}, {2}))'.format(out, node.translation[0], node.translation[1])
-        # if node.rotation[0] != 0.0 or node.rotation[1] != 0.0 or node.rotation[2] != 0.0:
-            # out.x = x * cos(rotation[0]) - y * sin(rotation[0])
-            # out.y = y * cos(rotation[0]) + x * sin(rotation[0])
-        # if node.use_min:
-            # out = max(out, vec2(min[0], min[1]))
-        # if node.use_max:
-            # out = min(out, vec2(max[0], max[1]))
+        if node.use_min:
+            out = 'max({0}, vec2({1}, {2}))'.format(out, node.min[0], node.min[1])
+        if node.use_max:
+             out = 'min({0}, vec2({1}, {2}))'.format(out, node.max[0], node.max[1])
         return out, 2
 
     elif node.type == 'NORMAL':
