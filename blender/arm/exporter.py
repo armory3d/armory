@@ -2999,8 +2999,8 @@ class ArmoryExporter:
             x['parameters'].append(str(rb.linear_damping))
             x['parameters'].append(str(rb.angular_damping))
             x['parameters'].append(str(rb.type == 'PASSIVE').lower())
-            lin_fac = '[{0}, {1}, {2}'.format(str(bobject.arm_rb_linear_factor[0]), str(bobject.arm_rb_linear_factor[1]), str(bobject.arm_rb_linear_factor[2]))
-            ang_fac = '[{0}, {1}, {2}'.format(str(bobject.arm_rb_angular_factor[0]), str(bobject.arm_rb_angular_factor[1]), str(bobject.arm_rb_angular_factor[2]))
+            lin_fac = '[{0}, {1}, {2}]'.format(str(bobject.arm_rb_linear_factor[0]), str(bobject.arm_rb_linear_factor[1]), str(bobject.arm_rb_linear_factor[2]))
+            ang_fac = '[{0}, {1}, {2}]'.format(str(bobject.arm_rb_angular_factor[0]), str(bobject.arm_rb_angular_factor[1]), str(bobject.arm_rb_angular_factor[2]))
             x['parameters'].append(lin_fac)
             x['parameters'].append(ang_fac)
             col_group = ''
@@ -3008,6 +3008,11 @@ class ArmoryExporter:
                 col_group = ('1' if b else '0') + col_group
             x['parameters'].append(str(int(col_group, 2)))
             x['parameters'].append(str(bobject.arm_rb_ghost).lower())
+            if rb.use_deactivation or bobject.arm_rb_force_deactivation:
+                deact_params = lin_fac = '[{0}, {1}, {2}]'.format(str(rb.deactivate_linear_velocity), str(rb.deactivate_angular_velocity), str(bobject.arm_rb_deactivation_time))
+                x['parameters'].append(deact_params)
+            else:
+                x['parameters'].append('null')
             o['traits'].append(x)
 
         # Soft bodies modifier

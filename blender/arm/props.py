@@ -172,6 +172,8 @@ def init_properties():
     bpy.types.Object.arm_rb_linear_factor = bpy.props.FloatVectorProperty(name="Linear Factor", size=3, description="Set to 0 to lock axis", default=[1,1,1])
     bpy.types.Object.arm_rb_angular_factor = bpy.props.FloatVectorProperty(name="Angular Factor", size=3, description="Set to 0 to lock axis", default=[1,1,1])
     bpy.types.Object.arm_rb_ghost = bpy.props.BoolProperty(name="Ghost", description="Disable contact response", default=False)
+    bpy.types.Object.arm_rb_force_deactivation = bpy.props.BoolProperty(name="Force Deactivation", description="Force deactivation on all rigid bodies for performance", default=True)
+    bpy.types.Object.arm_rb_deactivation_time = bpy.props.FloatProperty(name="Deactivation Time", description="Delay putting rigid body into sleep", default=0.0)
     bpy.types.Object.arm_animation_enabled = bpy.props.BoolProperty(name="Animation", description="Enable skinning & timeline animation", default=True)
     bpy.types.Object.arm_tilesheet = bpy.props.StringProperty(name="Tilesheet", description="Set tilesheet animation", default='')
     bpy.types.Object.arm_tilesheet_action = bpy.props.StringProperty(name="Tilesheet Action", description="Set startup action", default='')

@@ -23,12 +23,9 @@ class RigidBody extends Trait {
 	public var linearDamping:Float;
 	public var angularDamping:Float;
 	public var passive:Bool;
-	var linearFactorX:Float;
-	var linearFactorY:Float;
-	var linearFactorZ:Float;
-	var angularFactorX:Float;
-	var angularFactorY:Float;
-	var angularFactorZ:Float;
+	var linearFactors:Array<Float>;
+	var angularFactors:Array<Float>;
+	var deactivationParams:Array<Float>;
 	public var group = 1;
 	public var ghost = false;
 
@@ -43,8 +40,8 @@ class RigidBody extends Trait {
 
 	public function new(mass = 1.0, shape = Shape.Box, friction = 0.5, restitution = 0.0, collisionMargin = 0.0,
 						linearDamping = 0.04, angularDamping = 0.1, passive = false,
-						linearFactor:Array<Float> = null, angularFactor:Array<Float> = null,
-						group = 1, ghost = false) {
+						linearFactors:Array<Float> = null, angularFactors:Array<Float> = null,
+						group = 1, ghost = false, deactivationParams:Array<Float> = null) {
 		super();
 
 		this.mass = mass;
@@ -55,14 +52,11 @@ class RigidBody extends Trait {
 		this.linearDamping = linearDamping;
 		this.angularDamping = angularDamping;
 		this.passive = passive;
-		this.linearFactorX = linearFactor[0];
-		this.linearFactorY = linearFactor[1];
-		this.linearFactorZ = linearFactor[2];
-		this.angularFactorX = angularFactor[0];
-		this.angularFactorY = angularFactor[1];
-		this.angularFactorZ = angularFactor[2];
+		this.linearFactors = linearFactors;
+		this.angularFactors = angularFactors;
 		this.group = group;
 		this.ghost = ghost;
+		this.deactivationParams = deactivationParams;
 
 		notifyOnAdd(init);
 		notifyOnLateUpdate(lateUpdate);
@@ -163,22 +157,29 @@ class RigidBody extends Trait {
 		body.setRollingFriction(friction);
 		body.setRestitution(restitution);
 
-		id = nextId;
-		nextId++;
+		if (deactivationParams != null) {
+			setDeactivationParams(deactivationParams[0], deactivationParams[1], deactivationParams[2]);
+		}
+		else {
+			setActivationState(ActivationState.NoDeactivation);
+		}
 
 		if (linearDamping != 0.04 || angularDamping != 0.1) {
 			body.setDamping(linearDamping, angularDamping);
 		}
 
-		if (linearFactorX != 1.0 || linearFactorY != 1.0 || linearFactorZ != 1.0) {
-			setLinearFactor(linearFactorX, linearFactorY, linearFactorZ);
+		if (linearFactors != null) {
+			setLinearFactor(linearFactors[0], linearFactors[1], linearFactors[2]);
 		}
 
-		if (angularFactorX != 1.0 || angularFactorY != 1.0 || angularFactorZ != 1.0) {
-			setAngularFactor(angularFactorX, angularFactorY, angularFactorZ);
+		if (angularFactors != null) {
+			setAngularFactor(angularFactors[0], angularFactors[1], angularFactors[2]);
 		}
 
 		if (ghost) body.setCollisionFlags(body.getCollisionFlags() | BtCollisionObject.CF_NO_CONTACT_RESPONSE);
+
+		id = nextId;
+		nextId++;
 
 		#if js
 		//body.setUserIndex(nextId);
@@ -233,6 +234,11 @@ class RigidBody extends Trait {
 
 	public function setActivationState(newState:Int) {
 		body.setActivationState(newState);
+	}
+
+	public function setDeactivationParams(linearThreshold:Float, angularThreshold:Float, time:Float) {
+		body.setSleepingThresholds(linearThreshold, angularThreshold);
+		// body.setDeactivationTime(time); // not available in ammo
 	}
 
 	public function applyImpulse(impulse:Vec4, loc:Vec4 = null) {
@@ -313,7 +319,7 @@ class RigidBody extends Trait {
 	}
 }
 
-@:enum abstract Shape(Int) from Int {
+@:enum abstract Shape(Int) from Int to Int {
 	var Box = 0;
 	var Sphere = 1;
 	var ConvexHull = 2;
@@ -325,7 +331,7 @@ class RigidBody extends Trait {
 	var StaticMesh = 8;
 }
 
-@:enum abstract ActivationState(Int) from Int {
+@:enum abstract ActivationState(Int) from Int to Int {
 	var Active = 1;
 	var NoDeactivation = 4;
 	var NoSimulation = 5;

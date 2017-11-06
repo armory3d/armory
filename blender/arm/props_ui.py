@@ -117,10 +117,19 @@ class PhysicsPropsPanel(bpy.types.Panel):
         if obj == None:
             return
 
-        layout.prop(obj, 'arm_rb_linear_factor')
-        layout.prop(obj, 'arm_rb_angular_factor')
-        layout.prop(obj, 'arm_soft_body_margin')
-        layout.prop(obj, 'arm_rb_ghost')
+        if obj.rigid_body != None:
+            # use_deactivation = obj.rigid_body.use_deactivation
+            # layout.prop(obj.rigid_body, 'use_deactivation')
+            # row = layout.row()
+            # row.enabled = use_deactivation
+            # row.prop(obj, 'arm_rb_deactivation_time')
+            layout.prop(obj, 'arm_rb_linear_factor')
+            layout.prop(obj, 'arm_rb_angular_factor')
+            layout.prop(obj, 'arm_rb_ghost')
+            layout.prop(obj, 'arm_rb_force_deactivation')
+
+        if obj.soft_body != None:
+            layout.prop(obj, 'arm_soft_body_margin')
 
 # Menu in data region
 class DataPropsPanel(bpy.types.Panel):
