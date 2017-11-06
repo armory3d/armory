@@ -2700,7 +2700,7 @@ class ArmoryExporter:
                         if bobject.name not in scene_objects:
                             self.process_bobject(bobject)
                             self.export_object(bobject, self.scene)
-                            o['object_refs'].append(bobject.name + '_Lib')
+                            o['object_refs'].append(arm.utils.asset_name(bobject))
                         else:
                             o['object_refs'].append(bobject.name)
                 self.output['groups'].append(o)
