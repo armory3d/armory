@@ -2204,7 +2204,7 @@ class ArmoryExporter:
         if objtype == 'POINT' and objref.arm_omni_shadows and not gapi.startswith('direct3d') and not mobile_mat:
             o['fov'] = 1.5708 # 90 deg
             o['shadowmap_cube'] = True
-            o['shadows_bias'] *= 4.0
+            o['shadows_bias'] *= 2.0
 
         if bpy.app.version >= (2, 80, 1) and self.scene.view_render.engine == 'BLENDER_EEVEE':
             o['color'] = [objref.color[0], objref.color[1], objref.color[2]]
