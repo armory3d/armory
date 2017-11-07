@@ -276,6 +276,12 @@ class RigidBody extends Trait {
 		body.setAngularVelocity(BtVector3.create(x, y, z));
 	}
 
+	public function setFriction(f:Float) {
+		body.setFriction(f);
+		body.setRollingFriction(f);
+		this.friction = f;
+	}
+
 	public function syncTransform() {
 		var trans = BtTransform.create();
 		trans.setOrigin(BtVector3.create(transform.worldx(), transform.worldy(), transform.worldz()));
