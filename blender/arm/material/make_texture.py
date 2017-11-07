@@ -94,7 +94,9 @@ def make(image_node, tex_name, matname=None):
         interpolation = 'Linear'
     elif texfilter == 'Point':
         interpolation = 'Closest'
-    
+    # if image_node.color_space == NON_COLOR_DATA:
+        # interpolation = image_node.interpolation
+
     # TODO: Blender seems to load full images on size request, cache size instead
     powimage = is_pow(image.size[0]) and is_pow(image.size[1])
 

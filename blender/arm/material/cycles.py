@@ -46,6 +46,8 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     global basecol_texname
     global emission_found
     global particle_info
+    global sample_bump
+    global sample_bump_res
     con = _con
     vert = _vert
     frag = _frag
@@ -66,6 +68,8 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     particle_info['size'] = False
     particle_info['velocity'] = False
     particle_info['angular_velocity'] = False
+    sample_bump = False
+    sample_bump_res = ''
 
     # Surface
     if parse_surface or parse_opacity:
@@ -711,6 +715,8 @@ def store_var_name(node):
 def texture_store(node, tex, tex_name, to_linear=False):
     global parsing_basecol
     global basecol_texname
+    global sample_bump
+    global sample_bump_res
     c_state.mat_bind_texture(tex)
     con.add_elem('tex', 2)
     curshader.add_uniform('sampler2D {0}'.format(tex_name))
@@ -723,6 +729,14 @@ def texture_store(node, tex, tex_name, to_linear=False):
         curshader.write('vec4 {0} = textureGrad({1}, {2}.xy, g2.xy, g2.zw);'.format(tex_store, tex_name, uv_name))
     else:
         curshader.write('vec4 {0} = texture({1}, {2}.xy);'.format(tex_store, tex_name, uv_name))
+    if sample_bump:
+        sample_bump_res = tex_store
+        curshader.write('vec2 {0}_inv = vec2({0}.x, 1.0 - {0}.y);'.format(uv_name))
+        curshader.write('float {0}_1 = textureOffset({1}, {2}_inv, ivec2(-1, 0)).r;'.format(tex_store, tex_name, uv_name))
+        curshader.write('float {0}_2 = textureOffset({1}, {2}_inv, ivec2(1, 0)).r;'.format(tex_store, tex_name, uv_name))
+        curshader.write('float {0}_3 = textureOffset({1}, {2}_inv, ivec2(0, -1)).r;'.format(tex_store, tex_name, uv_name))
+        curshader.write('float {0}_4 = textureOffset({1}, {2}_inv, ivec2(0, 1)).r;'.format(tex_store, tex_name, uv_name))
+        sample_bump = False
     if to_linear:
         curshader.write('{0}.rgb = pow({0}.rgb, vec3(2.2));'.format(tex_store))
     if parsing_basecol:
@@ -731,6 +745,8 @@ def texture_store(node, tex, tex_name, to_linear=False):
 
 def parse_vector(node, socket):
     global particle_info
+    global sample_bump
+    global sample_bump_res
 
     if node.type == 'GROUP':
         return parse_group(node, socket)
@@ -816,13 +832,27 @@ def parse_vector(node, socket):
         return 'vec2(0.0)', 2
 
     elif node.type == 'BUMP':
-        #invert = node.invert
+        # Interpolation strength
         # strength = parse_value_input(node.inputs[0])
+        # Height multiplier
         # distance = parse_value_input(node.inputs[1])
-        # height = parse_value_input(node.inputs[2])
-        # nor = parse_vector_input(node.inputs[3])
-        # Sample height around the normal and compute normal
-        return 'n'
+        sample_bump = True
+        height = parse_value_input(node.inputs[2])
+        sample_bump = False
+        nor = parse_vector_input(node.inputs[3])
+        if sample_bump_res != '':
+            if node.invert:
+                ext = ['1', '2', '3', '4']
+            else:
+                ext = ['2', '1', '4', '3']
+            curshader.write('vec3 {0}_a = normalize(vec3(2.0, 0.0, {0}_{1} - {0}_{2}));'.format(sample_bump_res, ext[0], ext[1]))
+            curshader.write('vec3 {0}_b = normalize(vec3(0.0, 2.0, {0}_{1} - {0}_{2}));'.format(sample_bump_res, ext[2], ext[3]))
+            vc = 'cross({0}_a, {0}_b)'.format(sample_bump_res)
+            res = 'normalize(mat3({0}_a, {0}_b, {1}) * n)'.format(sample_bump_res, vc)
+            sample_bump_res = ''
+        else:
+            res = 'n'
+        return res
 
     elif node.type == 'MAPPING':
         out = parse_vector_input(node.inputs[0])
@@ -944,6 +974,7 @@ def parse_value_input(inp):
 
 def parse_value(node, socket):
     global particle_info
+    global sample_bump
 
     if node.type == 'GROUP':
         if node.node_tree.name.startswith('Armory PBR'):
@@ -1072,7 +1103,10 @@ def parse_value(node, socket):
         col1 = parse_vector_input(node.inputs[1])
         col2 = parse_vector_input(node.inputs[2])
         scale = parse_value_input(node.inputs[3])
-        return 'tex_checker({0}, {1}, {2}, {3}).r'.format(co, col1, col2, scale)
+        res = 'tex_checker({0}, {1}, {2}, {3}).r'.format(co, col1, col2, scale)
+        if sample_bump:
+            write_bump(node, res)
+        return res
 
     elif node.type == 'TEX_GRADIENT':
         return '0.0'
@@ -1117,7 +1151,10 @@ def parse_value(node, socket):
         scale = parse_value_input(node.inputs[1])
         # detail = parse_value_input(node.inputs[2])
         # distortion = parse_value_input(node.inputs[3])
-        return 'tex_noise({0} * {1})'.format(co, scale)
+        res = 'tex_noise({0} * {1})'.format(co, scale)
+        if sample_bump:
+            write_bump(node, res)
+        return res
 
     elif node.type == 'TEX_POINTDENSITY':
         return '0.0'
@@ -1234,6 +1271,26 @@ def parse_value(node, socket):
             return 'dot({0}, {1})'.format(vec1, vec2)
         else:
             return '0.0'
+
+def write_bump(node, res):
+    global sample_bump
+    global sample_bump_res
+    sample_bump_res = store_var_name(node) + '_bump'
+    # Testing.. get function parts..
+    ar = res.split('(', 1)
+    pre = ar[0] + '('
+    if ',' in ar[1]:
+        ar2 = ar[1].split(',', 1)
+        co = ar2[0]
+        post = ',' + ar2[1] 
+    else:
+        co = ar[1][:-1]
+        post = ')'
+    curshader.write('float {0}_1 = {1}{2} + vec2(-1, 0){3};'.format(sample_bump_res, pre, co, post))
+    curshader.write('float {0}_2 = {1}{2} + vec2(1, 0){3};'.format(sample_bump_res, pre, co, post))
+    curshader.write('float {0}_3 = {1}{2} + vec2(0, -1){3};'.format(sample_bump_res, pre, co, post))
+    curshader.write('float {0}_4 = {1}{2} + vec2(0, 1){3};'.format(sample_bump_res, pre, co, post))
+    sample_bump = False
 
 def tovec1(v):
     return str(v)
