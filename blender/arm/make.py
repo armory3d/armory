@@ -175,13 +175,15 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     write_data.write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce, in_viewport, ArmoryExporter.import_traits, import_logic)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
+    scene_name = arm.utils.get_project_scene_name()
     resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
     # Import all logic nodes for patching if logic is being edited
-    write_data.write_main(resx, resy, is_play, in_viewport, is_publish)
-    if resx != state.last_resx or resy != state.last_resy:
+    write_data.write_main(scene_name, resx, resy, is_play, in_viewport, is_publish)
+    if scene_name != state.last_scene or resx != state.last_resx or resy != state.last_resy:
         wrd.arm_recompile = True
         state.last_resx = resx
         state.last_resy = resy
+        state.last_scene = scene_name
 
 def compile_project(target_name=None, watch=False, patch=False, no_project_file=False):
     """

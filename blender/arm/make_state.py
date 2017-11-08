@@ -8,6 +8,7 @@ last_resx = 0
 last_resy = 0
 last_clip_start = 0
 last_clip_end = 0
+last_scene = ''
 playproc = None
 compileproc = None
 playproc_finished = False

@@ -213,10 +213,9 @@ project.addSources('Sources');
         f.write("\n\nresolve(project);\n")
 
 # Write Main.hx
-def write_main(resx, resy, is_play, in_viewport, is_publish):
+def write_main(scene_name, resx, resy, is_play, in_viewport, is_publish):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
-    scene_name = arm.utils.get_project_scene_name()
     scene_ext = '.zip' if (bpy.data.scenes[scene_name].arm_compress and is_publish) else ''
     winmode = str(wrd.arm_winmode)
     # TODO: expose Krom.displayWidth() in barmory
