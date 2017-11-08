@@ -38,10 +38,10 @@ class SidescrollerController extends CameraController {
 		body.setLinearVelocity(0.0, 0.0, btvec.z() - 1.0);
 
 		var arm = object.getChild("Ballie");
-		arm.animation.paused = true;
+		arm.animation.pause();
 
 		if (moveLeft || moveRight) {
-			arm.animation.paused = false;
+			arm.animation.resume();
 			dir.mult(-4 * 0.7);
 			body.activate();
 			body.setLinearVelocity(dir.x, dir.y, btvec.z() - 1.0);

@@ -89,7 +89,7 @@ class ThirdPersonController extends CameraController {
 				arm.animation.play(runAction, null, 0.2);
 				state = 1;		
 			}
-			arm.animation.paused = false;
+			arm.animation.resume();
 			dir.mult(-4 * 0.7);
 			body.activate();
 			body.setLinearVelocity(dir.x, dir.y, btvec.z() - 1.0);
