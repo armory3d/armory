@@ -732,10 +732,15 @@ def texture_store(node, tex, tex_name, to_linear=False):
     if sample_bump:
         sample_bump_res = tex_store
         curshader.write('vec2 {0}_inv = vec2({0}.x, 1.0 - {0}.y);'.format(uv_name))
-        curshader.write('float {0}_1 = textureOffset({1}, {2}_inv, ivec2(-1, 0)).r;'.format(tex_store, tex_name, uv_name))
-        curshader.write('float {0}_2 = textureOffset({1}, {2}_inv, ivec2(1, 0)).r;'.format(tex_store, tex_name, uv_name))
-        curshader.write('float {0}_3 = textureOffset({1}, {2}_inv, ivec2(0, -1)).r;'.format(tex_store, tex_name, uv_name))
-        curshader.write('float {0}_4 = textureOffset({1}, {2}_inv, ivec2(0, 1)).r;'.format(tex_store, tex_name, uv_name))
+        curshader.write('vec2 {0}_step = vec2(1.0) / textureSize({1}, 0).xy;'.format(uv_name, tex_name))
+        curshader.write('float {0}_1 = texture({1}, {2}_inv + {2}_step * vec2(-1, 0)).r;'.format(tex_store, tex_name, uv_name))
+        curshader.write('float {0}_2 = texture({1}, {2}_inv + {2}_step * vec2(1, 0)).r;'.format(tex_store, tex_name, uv_name))
+        curshader.write('float {0}_3 = texture({1}, {2}_inv + {2}_step * vec2(0, -1)).r;'.format(tex_store, tex_name, uv_name))
+        curshader.write('float {0}_4 = texture({1}, {2}_inv + {2}_step * vec2(0, 1)).r;'.format(tex_store, tex_name, uv_name))
+        # curshader.write('float {0}_1 = textureOffset({1}, {2}_inv, ivec2(-1, 0)).r;'.format(tex_store, tex_name, uv_name))
+        # curshader.write('float {0}_2 = textureOffset({1}, {2}_inv, ivec2(1, 0)).r;'.format(tex_store, tex_name, uv_name))
+        # curshader.write('float {0}_3 = textureOffset({1}, {2}_inv, ivec2(0, -1)).r;'.format(tex_store, tex_name, uv_name))
+        # curshader.write('float {0}_4 = textureOffset({1}, {2}_inv, ivec2(0, 1)).r;'.format(tex_store, tex_name, uv_name))
         sample_bump = False
     if to_linear:
         curshader.write('{0}.rgb = pow({0}.rgb, vec3(2.2));'.format(tex_store))
