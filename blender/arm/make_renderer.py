@@ -139,7 +139,7 @@ def set_preset(self, context, preset):
         rpdat.rp_antialiasing = 'TAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssgi = 'SSAO'
+        rpdat.rp_ssgi = 'RTGI'
         rpdat.rp_ssr = True
         rpdat.rp_dfrs = False
         rpdat.rp_dfao = False
@@ -290,28 +290,29 @@ def set_preset(self, context, preset):
         rpdat.rp_greasepencil = False
         rpdat.rp_gi = 'Voxel GI'
         rpdat.rp_voxelgi_resolution = '128'
-        rpdat.arm_voxelgi_revoxelize = True
-        rpdat.arm_voxelgi_camera = True
+        rpdat.arm_voxelgi_revoxelize = False
+        rpdat.arm_voxelgi_camera = False
         rpdat.rp_voxelgi_emission = False
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'TAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssgi = 'SSAO'
+        rpdat.rp_ssgi = 'RTGI'
+        rpdat.arm_ssrs = False
         rpdat.rp_ssr = True
         rpdat.rp_dfrs = False
         rpdat.rp_dfao = False
         rpdat.rp_dfgi = False
         rpdat.rp_bloom = False
         rpdat.rp_eyeadapt = False
-        rpdat.rp_rendercapture = True
+        rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'None'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_material_model = 'Full'
-        rpdat.arm_pcss_state = 'On'
+        rpdat.arm_pcss_state = 'Off'
         rpdat.arm_texture_filter = 'Anisotropic'
-        rpdat.arm_diffuse_model = 'OrenNayar'
+        rpdat.arm_diffuse_model = 'Lambert'
 
     updating_preset = False
     set_renderpath(self, context)

@@ -289,7 +289,7 @@ def init_properties():
         items=[('9', '9', '9'),
                ('5', '5', '5'),
                ],
-        name="SSGI rays", description="Number of rays to trace for RTAO/RTGI", default='5', update=assets.invalidate_shader_cache)
+        name="SSGI Rays", description="Number of rays to trace for RTAO/RTGI", default='5', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_bloom_threshold = bpy.props.FloatProperty(name="Threshold", default=5.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_bloom_strength = bpy.props.FloatProperty(name="Strength", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_bloom_radius = bpy.props.FloatProperty(name="Radius", default=1.0, update=assets.invalidate_shader_cache)
