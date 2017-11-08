@@ -487,16 +487,6 @@ class ArmVirtualInputPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
 
-class ArmGlobalVarsPanel(bpy.types.Panel):
-    bl_label = "Armory Global Variables"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "render"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        layout = self.layout
-
 class ArmNavigationPanel(bpy.types.Panel):
     bl_label = "Armory Navigation"
     bl_space_type = "PROPERTIES"
@@ -1395,7 +1385,6 @@ def register():
     bpy.utils.register_class(ArmRenderPathPanel)
     bpy.utils.register_class(ArmRenderPropsPanel)
     # bpy.utils.register_class(ArmVirtualInputPanel)
-    # bpy.utils.register_class(ArmGlobalVarsPanel)
     bpy.utils.register_class(ArmoryPlayButton)
     bpy.utils.register_class(ArmoryPlayInViewportButton)
     bpy.utils.register_class(ArmoryStopButton)
@@ -1448,7 +1437,6 @@ def unregister():
     bpy.utils.unregister_class(ArmRenderPathPanel)
     bpy.utils.unregister_class(ArmRenderPropsPanel)
     # bpy.utils.unregister_class(ArmVirtualInputPanel)
-    # bpy.utils.unregister_class(ArmGlobalVarsPanel)
     bpy.utils.unregister_class(ArmoryPlayButton)
     bpy.utils.unregister_class(ArmoryPlayInViewportButton)
     bpy.utils.unregister_class(ArmoryStopButton)
