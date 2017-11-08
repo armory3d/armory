@@ -238,7 +238,7 @@ def init_properties():
                ],
         name="AO Cones", description="Number of cones to trace for VXAO", default='5', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_voxelgi_spec = bpy.props.FloatProperty(name="Specular", description="", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_voxelgi_occ = bpy.props.FloatProperty(name="Occlussion", description="", default=1.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_voxelgi_occ = bpy.props.FloatProperty(name="Occlusion", description="", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_voxelgi_env = bpy.props.FloatProperty(name="Env Map", description="Contribute light from environment map", default=0.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_voxelgi_step = bpy.props.FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_voxelgi_offset_diff = bpy.props.FloatProperty(name="Diffuse Offset", description="Offset size", default=1.0, update=assets.invalidate_shader_cache)
