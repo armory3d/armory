@@ -156,6 +156,10 @@ class RigidBody extends Trait {
 	public function setAngularVelocity(x:Float, y:Float, z:Float) {
 	}
 
+	public function setFriction(f:Float) {
+	//TODO
+	}
+
 	public function syncTransform() {
 		body.position.x = transform.worldx();
 		body.position.y = transform.worldy();
