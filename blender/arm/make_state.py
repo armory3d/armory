@@ -9,6 +9,7 @@ last_resy = 0
 last_clip_start = 0
 last_clip_end = 0
 last_scene = ''
+last_world_defs = ''
 playproc = None
 compileproc = None
 playproc_finished = False

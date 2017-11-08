@@ -31,8 +31,8 @@ exporter = ArmoryExporter()
 scripts_mtime = 0 # Monitor source changes
 code_parsed = False
 
-def compile_shader(raw_shaders_path, shader_name, defs):
-    os.chdir(raw_shaders_path + './' + shader_name)
+def compile_shader_pass(raw_shaders_path, shader_name, defs):
+    os.chdir(raw_shaders_path + '/' + shader_name)
 
     # Open json file
     json_name = shader_name + '.json'
@@ -146,18 +146,22 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     defs = make_utils.def_strings_to_array(wrd.world_defs)
     print('Shader flags: ' + str(defs))
 
-    # Write referenced shader variants
+    # Write referenced shader passes
     for ref in assets.shader_datas:
         # Data does not exist yet
-        if not os.path.isfile(fp + '/' + ref):
+        if not os.path.isfile(fp + '/' + ref) or state.last_world_defs != wrd.world_defs:
             shader_name = ref.split('/')[3] # Extract from 'build/compiled/...'
+            # Shader pass exists
+            if not os.path.exists(raw_shaders_path + '/' + shader_name):
+                continue
             if shader_name.startswith('compositor_pass'):
                 cdefs = make_utils.def_strings_to_array(wrd.compo_defs)
-                compile_shader(raw_shaders_path, shader_name, defs + cdefs)
+                compile_shader_pass(raw_shaders_path, shader_name, defs + cdefs)
             elif shader_name.startswith('grease_pencil'):
-                compile_shader(raw_shaders_path, shader_name, [])
+                compile_shader_pass(raw_shaders_path, shader_name, [])
             else:
-                compile_shader(raw_shaders_path, shader_name, defs)
+                compile_shader_pass(raw_shaders_path, shader_name, defs)
+    state.last_world_defs = wrd.world_defs
 
     # Reset path
     os.chdir(fp)
