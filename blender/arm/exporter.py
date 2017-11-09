@@ -606,18 +606,20 @@ class ArmoryExporter:
 
             tracko['times'] = []
 
-            for i in range(self.beginFrame, self.endFrame):
-                tracko['times'].append(((i - self.beginFrame)))
+            begin_frame, end_frame = self.get_action_framerange(action)
 
-            tracko['times'].append((self.endFrame))
+            for i in range(begin_frame, end_frame):
+                tracko['times'].append(((i - begin_frame)))
+
+            tracko['times'].append((end_frame))
 
             tracko['values'] = []
 
-            for i in range(self.beginFrame, self.endFrame):
+            for i in range(begin_frame, end_frame):
                 scene.frame_set(i)
                 tracko['values'] += self.write_matrix(bobject.matrix_local) # Continuos array of matrix transforms
 
-            scene.frame_set(self.endFrame)
+            scene.frame_set(end_frame)
             tracko['values'] += self.write_matrix(bobject.matrix_local)
             oanim['tracks'] = [tracko]
 
@@ -637,10 +639,10 @@ class ArmoryExporter:
     def get_action_framerange(self, action):
         begin_frame = int(action.frame_range[0]) # Action frames
         end_frame = int(action.frame_range[1])
-        if self.beginFrame > begin_frame: # Cap frames to timeline bounds
-            begin_frame = self.beginFrame
-        if self.endFrame < end_frame:
-            end_frame = self.endFrame
+        # if self.beginFrame > begin_frame: # Cap frames to timeline bounds
+            # begin_frame = self.beginFrame
+        # if self.endFrame < end_frame:
+            # end_frame = self.endFrame
         return begin_frame, end_frame
 
     def export_bone_sampled_animation(self, poseBone, scene, o, action):
@@ -2603,7 +2605,7 @@ class ArmoryExporter:
         self.restoreFrame = False
 
         self.beginFrame = self.scene.frame_start
-        self.endFrame = self.scene.frame_end
+        # self.endFrame = self.scene.frame_end
         self.output['frame_time'] = 1.0 / (self.scene.render.fps / self.scene.render.fps_base)
 
         if write_capture_info:
