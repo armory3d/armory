@@ -3,21 +3,22 @@ package armory.logicnode;
 class CallGroupNode extends LogicNode {
 
 	public var property0:String;
-	var instance:LogicTree = null;
+	var instance:Dynamic = null;
 
 	public function new(tree:LogicTree) {
 		super(tree);
 	}
 
+	@:access(iron.Trait)
 	override function run() {
 
-		// Experimental only
-		if (instance != null) tree.object.removeTrait(instance);
+		if (instance == null) {
+			var classType = Type.resolveClass(property0);
+			instance = Type.createInstance(classType, []);
+			instance.add();
+		}
 
-		var classType = Type.resolveClass(property0);
-		instance = Type.createInstance(classType, []);
-
-		tree.object.addTrait(instance);
+		if (instance._init != null) instance._init[0]();
 
 		runOutputs(0);
 	}

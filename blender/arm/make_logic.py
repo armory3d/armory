@@ -2,6 +2,7 @@ import os
 import bpy
 import arm.utils
 import arm.log
+from arm.exporter import ArmoryExporter
 
 parsed_nodes = []
 parsed_labels = dict()
@@ -73,11 +74,14 @@ def build_node(node, f):
     # Create node
     node_type = node.bl_idname[2:] # Discard 'LN'TimeNode prefix
     f.write('\t\tvar ' + name + ' = new armory.logicnode.' + node_type + '(this);\n')
-    
+
     # Properties
     for i in range(0, 5):
         if hasattr(node, 'property' + str(i)):
-            f.write('\t\t' + name + '.property' + str(i) + ' = "' + getattr(node, 'property' + str(i)) + '";\n')
+            prop = getattr(node, 'property' + str(i))
+            f.write('\t\t' + name + '.property' + str(i) + ' = "' + prop + '";\n')
+            if node.bl_idname == 'LNCallGroupNode': # Import referenced node group
+                ArmoryExporter.import_traits.append(prop)
     
     # Create inputs
     for inp in node.inputs:
