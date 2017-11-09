@@ -430,6 +430,10 @@ def play_project(in_viewport, is_render=False, is_render_anim=False):
     state.last_target = state.target
     state.last_in_viewport = state.in_viewport
 
+    if state.in_viewport:
+        if arm.utils.get_rp().rp_gi != 'Off' and bpy.app.version < (2, 80, 1):
+            log.warn('Use Blender 2.8 to run Voxel GI in viewport')
+
     # Trait sources modified
     state.mod_scripts = []
     script_path = arm.utils.get_fp() + '/Sources/' + arm.utils.safestr(wrd.arm_project_package)
