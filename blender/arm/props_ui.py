@@ -390,6 +390,9 @@ class ArmoryExporterPanel(bpy.types.Panel):
             for i in wrd.arm_rplist:
                 wrd.arm_rpcache_list.add().name = i.name
             layout.prop_search(item, "arm_project_rp", wrd, "arm_rpcache_list", "Render Path")
+            if item.arm_project_scene == '':
+                item.arm_project_scene = bpy.data.scenes[0].name
+            layout.prop_search(item, 'arm_project_scene', bpy.data, 'scenes', 'Scene')
 
 class ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
@@ -431,16 +434,13 @@ class ArmoryProjectPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_batch_materials')
         col.prop(wrd, 'arm_sampled_animation')
         col.prop(wrd, 'arm_dce')
-        col.prop(wrd, 'arm_play_active_scene')
-        if not wrd.arm_play_active_scene:
-            col.prop_search(wrd, 'arm_project_scene', bpy.data, 'scenes', '')
+        col.prop(wrd, 'arm_asset_compression')
 
         col = row.column()
         col.prop(wrd, 'arm_minimize')
         col.prop(wrd, 'arm_optimize_mesh')
         col.prop(wrd, 'arm_deinterleaved_buffers')
         col.prop(wrd, 'arm_export_tangents')
-        col.prop(wrd, 'arm_asset_compression')
 
         layout.label('Window:')
         row = layout.row()

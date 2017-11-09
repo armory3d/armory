@@ -86,8 +86,6 @@ def init_properties():
     bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="", update=invalidate_compiler_cache)
     bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm", update=invalidate_compiler_cache)
     bpy.types.World.arm_project_root = StringProperty(name="Root", description="Set root folder for linked assets", default="", subtype="FILE_PATH", update=invalidate_compiler_cache)
-    bpy.types.World.arm_play_active_scene = BoolProperty(name="Play Active Scene", description="Load currently edited scene when launching player", default=True)
-    bpy.types.World.arm_project_scene = StringProperty(name="Scene", description="Scene to load when launching player")  
     bpy.types.World.arm_physics = EnumProperty(
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('Bullet', 'Bullet', 'Bullet'),
@@ -422,7 +420,6 @@ def init_properties_on_save():
     if wrd.arm_project_name == '':
         # Take blend file name
         wrd.arm_project_name = arm.utils.blend_name()
-        wrd.arm_project_scene = bpy.data.scenes[0].name
         init_properties_on_load()
 
 def init_properties_on_load():
