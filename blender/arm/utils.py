@@ -236,41 +236,46 @@ def fetch_script_names():
 
 def fetch_trait_props():
     for o in bpy.data.objects:
-        for item in o.arm_traitlist:
-            if item.name not in script_props:
-                continue
-            props = script_props[item.name]
-            defaults = script_props_defaults[item.name]
-            # Remove old props
-            for i in range(len(item.arm_traitpropslist) - 1, -1, -1):
-                ip = item.arm_traitpropslist[i]
-                # if ip.name not in props:
-                if ip.name.split('(')[0] not in [p[0] for p in props]:
-                    item.arm_traitpropslist.remove(i)
-            # Add new props
-            for i in range(0, len(props)):
-                p = props[i]
-                found = False
-                for ip in item.arm_traitpropslist:
-                    if ip.name.replace(')', '').split('(')[0] == p[0]:
-                        found = ip
-                        break
-                # Not in list
-                if not found:
-                    prop = item.arm_traitpropslist.add()
-                    prop.name = p[0] + ('(' + p[1] + ')' if p[1] else '')
+        fetch_prop(o)
+    for o in bpy.data.scenes:
+        fetch_prop(o)
+
+def fetch_prop(o):
+    for item in o.arm_traitlist:
+        if item.name not in script_props:
+            continue
+        props = script_props[item.name]
+        defaults = script_props_defaults[item.name]
+        # Remove old props
+        for i in range(len(item.arm_traitpropslist) - 1, -1, -1):
+            ip = item.arm_traitpropslist[i]
+            # if ip.name not in props:
+            if ip.name.split('(')[0] not in [p[0] for p in props]:
+                item.arm_traitpropslist.remove(i)
+        # Add new props
+        for i in range(0, len(props)):
+            p = props[i]
+            found = False
+            for ip in item.arm_traitpropslist:
+                if ip.name.replace(')', '').split('(')[0] == p[0]:
+                    found = ip
+                    break
+            # Not in list
+            if not found:
+                prop = item.arm_traitpropslist.add()
+                prop.name = p[0] + ('(' + p[1] + ')' if p[1] else '')
+                prop.value = defaults[i]
+
+            if found:
+                prop = item.arm_traitpropslist[found.name]
+                f = found.name.replace(')', '').split('(')
+
+                # Default value added and current value is blank (no override)
+                if(not found.value and defaults[i]):
                     prop.value = defaults[i]
-
-                if found:
-                    prop = item.arm_traitpropslist[found.name]
-                    f = found.name.replace(')', '').split('(')
-
-                    # Default value added and current value is blank (no override)
-                    if(not found.value and defaults[i]):
-                        prop.value = defaults[i]
-                    # Type has changed, update displayed name
-                    if(len(f) == 1 or (len(f) > 1 and f[1] != p[1])):
-                        prop.name = p[0] + ('(' + p[1] + ')' if p[1] else '')
+                # Type has changed, update displayed name
+                if(len(f) == 1 or (len(f) > 1 and f[1] != p[1])):
+                    prop.name = p[0] + ('(' + p[1] + ')' if p[1] else '')
 
 def to_hex(val):
     return '#%02x%02x%02x%02x' % (int(val[3] * 255), int(val[0] * 255), int(val[1] * 255), int(val[2] * 255))
