@@ -114,6 +114,11 @@ def get_save_on_build():
     addon_prefs = user_preferences.addons['armory'].preferences
     return True if not hasattr(addon_prefs, 'save_on_build') else addon_prefs.save_on_build
 
+def get_viewport_controls():
+    user_preferences = bpy.context.user_preferences
+    addon_prefs = user_preferences.addons['armory'].preferences
+    return 'qwerty' if not hasattr(addon_prefs, 'viewport_controls') else addon_prefs.viewport_controls
+
 def get_node_path():
     if get_os() == 'win':
         return get_sdk_path() + '/nodejs/node.exe'

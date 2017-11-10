@@ -45,15 +45,31 @@ class WalkNavigation extends Trait {
 		}
 	}
 
+	#if arm_azerty
+	static inline var keyUp = 'z';
+	static inline var keyDown = 's';
+	static inline var keyLeft = 'q';
+	static inline var keyRight = 'd';
+	static inline var keyStrafeUp = 'e';
+	static inline var keyStrafeDown = 'a';
+	#else
+	static inline var keyUp = 'w';
+	static inline var keyDown = 's';
+	static inline var keyLeft = 'a';
+	static inline var keyRight = 'd';
+	static inline var keyStrafeUp = 'e';
+	static inline var keyStrafeDown = 'q';
+	#end
+
 	function update() {
 		if (!enabled || Input.occupied) return;
 
-		var moveForward = keyboard.down("w") || keyboard.down("up");
-		var moveBackward = keyboard.down("s") || keyboard.down("down");
-		var strafeLeft = keyboard.down("a") || keyboard.down("left");
-		var strafeRight = keyboard.down("d") || keyboard.down("right");
-		var strafeUp = keyboard.down("e");
-		var strafeDown = keyboard.down("q");
+		var moveForward = keyboard.down(keyUp) || keyboard.down("up");
+		var moveBackward = keyboard.down(keyDown) || keyboard.down("down");
+		var strafeLeft = keyboard.down(keyLeft) || keyboard.down("left");
+		var strafeRight = keyboard.down(keyRight) || keyboard.down("right");
+		var strafeUp = keyboard.down(keyStrafeUp);
+		var strafeDown = keyboard.down(keyStrafeDown);
 		var fast = keyboard.down("shift") ? 2.0 : (keyboard.down("alt") ? 0.5 : 1.0);
 
 		if (gamepad != null) {

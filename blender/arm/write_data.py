@@ -199,6 +199,9 @@ project.addSources('Sources');
         elif wrd.arm_skin == 'GPU (Matrix)':
             assets.add_khafile_def('arm_skin_mat')
 
+        if arm.utils.get_viewport_controls() == 'azerty':
+            assets.add_khafile_def('arm_azerty')
+
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
 
