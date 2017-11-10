@@ -184,6 +184,9 @@ void main() {
 
 #ifdef _EnvCol
 	fragColor.rgb = backgroundCol;
+#ifdef _EnvTransp
+	return;
+#endif
 #ifdef _EnvClouds
 	vec3 n = normalize(normal);
 #endif

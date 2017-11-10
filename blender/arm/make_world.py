@@ -68,6 +68,11 @@ def build_node_tree(world):
         world.arm_envtex_irr_name = wname
         write_probes.write_color_irradiance(wname, world.arm_envtex_color)
 
+    # film_transparent
+    if bpy.context.scene != None and bpy.context.scene.cycles != None and bpy.context.scene.cycles.film_transparent:
+        wrd.world_defs += '_EnvTransp'
+        wrd.world_defs += '_EnvCol'
+
     # Clouds enabled
     if rpdat.arm_clouds:
         wrd.world_defs += '_EnvClouds'
