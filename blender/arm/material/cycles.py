@@ -497,10 +497,10 @@ def parse_rgb(node, socket):
         tex_name = node_name(node.name)
         tex = c_state.make_texture(node, tex_name)
         if tex != None:
-            curshader.write_pre_header = True
+            curshader.write_pre_header += 1
             to_linear = parsing_basecol and not tex['file'].endswith('.hdr')
             res = '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear))
-            curshader.write_pre_header = False
+            curshader.write_pre_header -= 1
             return res
         elif node.image == None: # Empty texture
             tex = {}
@@ -935,6 +935,7 @@ def parse_vector(node, socket):
 
 def parse_normal_map_color_input(inp):
     global normal_parsed
+    global frag
     if basecol_only:
         return
     if inp.is_linked == False:
@@ -942,7 +943,7 @@ def parse_normal_map_color_input(inp):
     if normal_parsed:
         return
     normal_parsed = True
-    frag.write_pre_header = True
+    frag.write_pre_header += 1
     defplus = c_state.get_rp_renderer() == 'Deferred Plus'
     if not c_state.get_arm_export_tangents() or defplus or c_state.mat_get_material().arm_decal: # Compute TBN matrix
         frag.write('vec3 texn = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
@@ -956,7 +957,7 @@ def parse_normal_map_color_input(inp):
         frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
         frag.write('n = normalize(TBN * n);')
         con.add_elem('tang', 3)
-    frag.write_pre_header = False
+    frag.write_pre_header -= 1
 
 def parse_value_input(inp):
     if inp.is_linked:
@@ -1123,9 +1124,9 @@ def parse_value(node, socket):
         tex_name = c_state.safesrc(node.name)
         tex = c_state.make_texture(node, tex_name)
         if tex != None:
-            curshader.write_pre_header = True
+            curshader.write_pre_header += 1
             res = '{0}.a'.format(texture_store(node, tex, tex_name))
-            curshader.write_pre_header = False
+            curshader.write_pre_header -= 1
             return res
         else:
             tex_store = store_var_name(node) # Pink color for missing texture

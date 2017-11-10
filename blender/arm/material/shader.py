@@ -16,7 +16,7 @@ class Shader:
         self.main_header = ''
         self.header = ''
         self.write_pre = False
-        self.write_pre_header = False
+        self.write_pre_header = 0
         self.tab = 1
         self.vertex_structure_as_vsinput = True
         self.lock = False
@@ -69,7 +69,7 @@ class Shader:
     def write(self, s):
         if self.lock:
             return
-        if self.write_pre_header:
+        if self.write_pre_header > 0:
             self.main_header += '\t' * 1 + s + '\n'
         elif self.write_pre:
             self.main_pre += '\t' * 1 + s + '\n'
