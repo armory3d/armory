@@ -28,6 +28,7 @@ def set_preset(self, context, preset):
 
     if preset == 'Low':
         rpdat.rp_renderer = 'Forward'
+        rpdat.rp_depthprepass = False
         rpdat.arm_material_model = 'Full'
         rpdat.rp_shadowmap = '1024'
         rpdat.rp_translucency_state = 'Off'
@@ -59,6 +60,7 @@ def set_preset(self, context, preset):
         rpdat.arm_diffuse_model = 'Lambert'
     elif preset == 'Forward':
         rpdat.rp_renderer = 'Forward'
+        rpdat.rp_depthprepass = True
         rpdat.arm_material_model = 'Full'
         rpdat.rp_shadowmap = '2048'
         rpdat.rp_translucency_state = 'Auto'
@@ -186,6 +188,7 @@ def set_preset(self, context, preset):
         rpdat.arm_diffuse_model = 'Lambert'
     elif preset == 'VR Low':
         rpdat.rp_renderer = 'Forward'
+        rpdat.rp_depthprepass = False
         rpdat.arm_material_model = 'Mobile'
         rpdat.rp_shadowmap = '1024'
         rpdat.rp_translucency_state = 'Off'
@@ -217,6 +220,7 @@ def set_preset(self, context, preset):
         rpdat.arm_diffuse_model = 'Lambert'
     elif preset == 'Mobile Low':
         rpdat.rp_renderer = 'Forward'
+        rpdat.rp_depthprepass = False
         rpdat.arm_material_model = 'Mobile'
         rpdat.rp_shadowmap = '1024'
         rpdat.rp_translucency_state = 'Off'
@@ -248,6 +252,7 @@ def set_preset(self, context, preset):
         rpdat.arm_diffuse_model = 'Lambert'
     elif preset == 'Grease Pencil':
         rpdat.rp_renderer = 'Forward'
+        rpdat.rp_depthprepass = False
         rpdat.arm_material_model = 'Solid'
         rpdat.rp_shadowmap = 'None'
         rpdat.rp_translucency_state = 'Off'
