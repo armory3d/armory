@@ -229,6 +229,7 @@ package ;
 class Main {
     public static inline var projectName = '""" + arm.utils.safestr(wrd.arm_project_name) + """';
     public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';
+    public static inline var projectPath = '""" + arm.utils.get_fp() + """';
     public static inline var projectAssets = """ + str(len(assets.assets)) + """;
     public static var projectWindowMode = kha.WindowMode.""" + winmode + """;
     public static inline var projectWindowResize = """ + ('true' if wrd.arm_winresize else 'false') + """;
