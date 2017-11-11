@@ -227,6 +227,9 @@ def op_changed(op, obj):
         # Note: Blender reverts object data when manipulating
         # OBJECT_OT_transform_apply operator.. recache object flag instead
         obj.arm_cached = False
+    if op.bl_idname.startswith('MARKER_OT_'):
+        # Marker changed, recache action
+        obj.data.arm_cached = False
 
 appended_py_paths = []
 @persistent
