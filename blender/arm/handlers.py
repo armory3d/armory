@@ -221,6 +221,7 @@ def op_changed(op, obj):
     if op.bl_idname == 'OBJECT_OT_modifier_add' or \
        op.bl_idname == 'OBJECT_OT_modifier_remove' or \
        op.bl_idname == 'OBJECT_OT_transform_apply' or \
+       op.bl_idname == 'APPLY_OT_transformlocrotscale' or \
        op.bl_idname == 'OBJECT_OT_shade_smooth' or \
        op.bl_idname == 'OBJECT_OT_shade_flat':
         # recache(obj)
