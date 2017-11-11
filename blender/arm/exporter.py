@@ -604,14 +604,14 @@ class ArmoryExporter:
             tracko = {}
             tracko['target'] = "transform"
 
-            tracko['times'] = []
+            tracko['frames'] = []
 
-            begin_frame, end_frame = self.get_action_framerange(action)
+            begin_frame, end_frame = int(action.frame_range[0]), int(action.frame_range[1])
 
             for i in range(begin_frame, end_frame):
-                tracko['times'].append(((i - begin_frame)))
+                tracko['frames'].append(((i - begin_frame)))
 
-            tracko['times'].append((end_frame))
+            tracko['frames'].append((end_frame))
 
             tracko['values'] = []
 
@@ -636,22 +636,13 @@ class ArmoryExporter:
 
         scene.frame_set(currentFrame, currentSubframe)
 
-    def get_action_framerange(self, action):
-        begin_frame = int(action.frame_range[0]) # Action frames
-        end_frame = int(action.frame_range[1])
-        # if self.beginFrame > begin_frame: # Cap frames to timeline bounds
-            # begin_frame = self.beginFrame
-        # if self.endFrame < end_frame:
-            # end_frame = self.endFrame
-        return begin_frame, end_frame
-
     def export_bone_sampled_animation(self, poseBone, scene, o, action):
         # This function exports bone animation as full 4x4 matrices for each frame.
         currentFrame = scene.frame_current
         currentSubframe = scene.frame_subframe
 
         # Frame range
-        begin_frame, end_frame = self.get_action_framerange(action)
+        begin_frame, end_frame = int(action.frame_range[0]), int(action.frame_range[1])
 
         animationFlag = False
         m1 = poseBone.matrix.copy()
@@ -667,12 +658,12 @@ class ArmoryExporter:
             o['anim'] = {}
             tracko = {}
             tracko['target'] = "transform"
-            tracko['times'] = []
+            tracko['frames'] = []
 
             for i in range(begin_frame, end_frame):
-                tracko['times'].append(((i - begin_frame)))
+                tracko['frames'].append(((i - begin_frame)))
 
-            tracko['times'].append((end_frame))
+            tracko['frames'].append((end_frame))
 
             tracko['values'] = []
 
@@ -690,15 +681,15 @@ class ArmoryExporter:
 
         scene.frame_set(currentFrame, currentSubframe)
 
-    def export_key_times(self, fcurve):
+    def export_key_frames(self, fcurve):
         keyo = []
         keyCount = len(fcurve.keyframe_points)
         for i in range(keyCount):
-            time = fcurve.keyframe_points[i].co[0] - self.beginFrame
-            keyo.append(time)
+            frame = fcurve.keyframe_points[i].co[0] - self.beginFrame
+            keyo.append(frame)
         return keyo
 
-    def export_key_time_control_points(self, fcurve):
+    def export_key_frame_control_points(self, fcurve):
         keyminuso = []
         keyCount = len(fcurve.keyframe_points)
         for i in range(keyCount):
@@ -735,16 +726,16 @@ class ArmoryExporter:
 
     def export_animation_track(self, fcurve, kind, target, newline):
         # This function exports a single animation track. The curve types for the
-        # Time and Value structures are given by the kind parameter.
+        # Frame and Value structures are given by the kind parameter.
         tracko = {}
         tracko['target'] = target
         if kind != AnimationTypeBezier:
-            tracko['times'] = self.export_key_times(fcurve)
+            tracko['frames'] = self.export_key_frames(fcurve)
             tracko['values'] = self.export_key_values(fcurve)
         else:
             tracko['curve'] = 'bezier'
-            tracko['times'] = self.export_key_times(fcurve)
-            tracko['times_control_plus'], tracko['times_control_minus'] = self.export_key_time_control_points(fcurve)
+            tracko['frames'] = self.export_key_frames(fcurve)
+            tracko['frames_control_plus'], tracko['frames_control_minus'] = self.export_key_frame_control_points(fcurve)
 
             tracko['values'] = self.export_key_values(fcurve)
             tracko['values_control_plus'], tracko['values_control_minus'] = self.export_key_value_control_points(fcurve)
