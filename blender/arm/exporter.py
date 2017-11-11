@@ -565,6 +565,15 @@ class ArmoryExporter:
             self.export_bone(armature, subbobject, scene, so, action)
             o['children'].append(so)
 
+    def export_pose_markers(self, oanim, action):
+        if action.pose_markers == None:
+            return
+        oanim['marker_frames'] = []
+        oanim['marker_names'] = []
+        for m in action.pose_markers:
+            oanim['marker_frames'].append(m.frame)
+            oanim['marker_names'].append(m.name)
+
     def export_object_sampled_animation(self, bobject, scene, o):
         # This function exports animation as full 4x4 matrices for each frame
         currentFrame = scene.frame_current
@@ -622,6 +631,7 @@ class ArmoryExporter:
             scene.frame_set(end_frame)
             tracko['values'] += self.write_matrix(bobject.matrix_local)
             oanim['tracks'] = [tracko]
+            self.export_pose_markers(oanim, action)
 
             if True: #action.arm_cached == False or not os.path.exists(fp):
                 print('Exporting object action ' + aname)
@@ -1050,6 +1060,7 @@ class ArmoryExporter:
             oanim['begin'] = (action.frame_range[0] - self.beginFrame)
             oanim['end'] = (action.frame_range[1] - self.beginFrame)
             oanim['tracks'] = []
+            self.export_pose_markers(oanim, action)
 
             if locationAnimated:
                 for i in range(3):
@@ -1481,6 +1492,8 @@ class ArmoryExporter:
                                 boneo = {}
                                 self.export_bone(bobject, bone, scene, boneo, action)
                                 bones.append(boneo)
+                        if len(bones) > 0 and 'anim' in bones[0]:
+                            self.export_pose_markers(bones[0]['anim'], action)
                         # Save action separately
                         action_obj = {}
                         action_obj['name'] = aname
