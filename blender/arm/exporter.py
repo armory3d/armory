@@ -2991,7 +2991,7 @@ class ArmoryExporter:
             elif rb.collision_shape == 'CAPSULE':
                 shape = 6
             body_mass = 0
-            if rb.enabled:
+            if rb.enabled and rb.type != 'PASSIVE':
                 body_mass = rb.mass
             x = {}
             x['type'] = 'Script'
