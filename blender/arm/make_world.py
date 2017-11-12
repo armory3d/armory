@@ -113,6 +113,8 @@ def build_node_tree(world):
 
     voxelgi = False
     voxelao = False
+    if rpdat.rp_renderer == 'Deferred':
+        assets.add_khafile_def('arm_deferred')
     if rpdat.rp_shadowmap == 'None':
         wrd.world_defs += '_NoShadows'
         assets.add_khafile_def('arm_no_shadows')

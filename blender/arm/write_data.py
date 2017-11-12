@@ -168,7 +168,8 @@ project.addSources('Sources');
             assets.add_khafile_def('arm_texcompress')
 
         if wrd.arm_play_console:
-            assets.add_khafile_def('arm_profile')
+            assets.add_khafile_def('arm_debug')
+            f.write("project.addShaders('" + sdk_path + "/armory/Shaders/debug_draw/**');\n")
 
         if export_ui:
             if not os.path.exists('Libraries/zui'):

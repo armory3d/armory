@@ -129,7 +129,7 @@ def init_properties():
                ('Viewport Shared', 'Viewport Shared', 'Viewport Shared')
                ],
         name="Camera", description="Viewport camera", default='Scene')
-    bpy.types.World.arm_play_console = BoolProperty(name="Debug Console", description="Show inspector in player", default=False)
+    bpy.types.World.arm_play_console = BoolProperty(name="Debug Console", description="Show inspector in player and enable debug draw", default=False)
     bpy.types.World.arm_play_runtime = EnumProperty(
         items=[('Browser', 'Browser', 'Browser'),
                ('Native', 'C++', 'Native'),

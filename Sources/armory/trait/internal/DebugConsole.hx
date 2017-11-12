@@ -1,7 +1,7 @@
 package armory.trait.internal;
 
 import iron.Trait;
-#if arm_profile
+#if arm_debug
 import kha.Scheduler;
 import iron.data.RenderPath;
 import iron.object.CameraObject;
@@ -13,12 +13,11 @@ import zui.Id;
 @:access(zui.Zui)
 class DebugConsole extends Trait {
 
-#if (!arm_profile)
+#if (!arm_debug)
 	public function new() { super(); }
 #else
 
 	var ui:Zui;
-	var path:RenderPath;
 
 	var lastTime = 0.0;
 	var frameTime = 0.0;
@@ -44,7 +43,6 @@ class DebugConsole extends Trait {
 			var theme = Reflect.copy(zui.Themes.dark);
 			theme.WINDOW_BG_COL = 0xee111111;
 			ui = new Zui({font: font, theme: theme});
-			notifyOnInit(init);
 			notifyOnRender2D(render2D);
 			notifyOnUpdate(update);
 			haxeTrace = haxe.Log.trace;
@@ -58,10 +56,6 @@ class DebugConsole extends Trait {
 		lastTrace = Std.string(v);
 		haxeTrace(v, inf);
     }
-
-	function init() {
-		path = iron.Scene.active.camera.renderPath;
-	}
 
 	static var lrow = [1/2, 1/2];
 	function render2D(g:kha.graphics2.Graphics) {
@@ -134,6 +128,7 @@ class DebugConsole extends Trait {
 				var total = iron.Scene.active.sceneStream.sceneTotal();
 				ui.text('streamed: $numObjects / $total');
 				#end
+				var path = iron.Scene.active.camera.renderPath;
 				var rts = path.data.pathdata.raw.render_targets;
 				ui.text('render targets: ' + (rts != null ? rts.length : 0));
 			}

@@ -24,7 +24,7 @@ class ContactPair {
 
 class PhysicsWorld extends Trait {
 
-	#if arm_profile
+	#if arm_debug
 	public static var physTime = 0.0;
 	#end
 
@@ -90,7 +90,7 @@ class PhysicsWorld extends Trait {
 	}
 
 	public function update() {
-		#if arm_profile
+		#if arm_debug
 		var startTime = kha.Scheduler.realTime();
 		#end
 
@@ -98,7 +98,7 @@ class PhysicsWorld extends Trait {
 
 		world.step(timeStep);
 
-		#if arm_profile
+		#if arm_debug
 		physTime = kha.Scheduler.realTime() - startTime;
 		#end
 	}
