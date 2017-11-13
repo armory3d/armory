@@ -449,7 +449,13 @@ def make_forward_mobile(con_mesh):
     # frag.write('direct += vec3(D_Approx(max(roughness, 0.3), dot(reflect(-vVec, n), lightDir)));')
     frag.write('direct *= attenuate(distance(wposition, lightPos));')
 
-    frag.write('fragColor = vec4(direct * visibility + basecol * 0.5 * envmapStrength, 1.0);')
+    if '_Irr' in wrd.world_defs:
+        frag.add_include('../../Shaders/std/shirr.glsl')
+        frag.add_uniform('vec4 shirr[7]', link='_envmapIrradiance', included=True)
+        env_str = 'shIrradiance(n)'
+    else:
+        env_str = '0.5'
+    frag.write('fragColor = vec4(direct * visibility + basecol * {0} * envmapStrength, 1.0);'.format(env_str))
 
     if '_LDR' in wrd.world_defs:
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
