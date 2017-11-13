@@ -31,6 +31,7 @@ def set_preset(self, context, preset):
         rpdat.rp_depthprepass = False
         rpdat.arm_material_model = 'Full'
         rpdat.rp_shadowmap = '1024'
+        rpdat.rp_shadowmap_cascades = '1'
         rpdat.rp_translucency_state = 'Off'
         rpdat.rp_overlays_state = 'Off'
         rpdat.rp_decals_state = 'Off'
@@ -63,6 +64,7 @@ def set_preset(self, context, preset):
         rpdat.rp_depthprepass = True
         rpdat.arm_material_model = 'Full'
         rpdat.rp_shadowmap = '2048'
+        rpdat.rp_shadowmap_cascades = '3'
         rpdat.rp_translucency_state = 'Auto'
         rpdat.rp_overlays_state = 'Auto'
         rpdat.rp_decals_state = 'Auto'
@@ -94,6 +96,7 @@ def set_preset(self, context, preset):
         rpdat.rp_renderer = 'Deferred'
         rpdat.arm_material_model = 'Full'
         rpdat.rp_shadowmap = '2048'
+        rpdat.rp_shadowmap_cascades = '3'
         rpdat.rp_translucency_state = 'Auto'
         rpdat.rp_overlays_state = 'Auto'
         rpdat.rp_decals_state = 'Auto'
@@ -124,6 +127,7 @@ def set_preset(self, context, preset):
     elif preset == 'Render Capture':
         rpdat.rp_renderer = 'Deferred'
         rpdat.rp_shadowmap = '8192'
+        rpdat.rp_shadowmap_cascades = '3'
         rpdat.rp_translucency_state = 'Auto'
         rpdat.rp_overlays_state = 'Auto'
         rpdat.rp_decals_state = 'Auto'
@@ -159,6 +163,7 @@ def set_preset(self, context, preset):
         rpdat.rp_renderer = 'Deferred Plus'
         rpdat.arm_material_model = 'Full'
         rpdat.rp_shadowmap = '4096'
+        rpdat.rp_shadowmap_cascades = '1'
         rpdat.rp_translucency_state = 'Auto'
         rpdat.rp_overlays_state = 'Auto'
         rpdat.rp_decals_state = 'Auto'
@@ -191,6 +196,7 @@ def set_preset(self, context, preset):
         rpdat.rp_depthprepass = False
         rpdat.arm_material_model = 'Mobile'
         rpdat.rp_shadowmap = '1024'
+        rpdat.rp_shadowmap_cascades = '1'
         rpdat.rp_translucency_state = 'Off'
         rpdat.rp_overlays_state = 'Off'
         rpdat.rp_decals_state = 'Off'
@@ -223,6 +229,7 @@ def set_preset(self, context, preset):
         rpdat.rp_depthprepass = False
         rpdat.arm_material_model = 'Mobile'
         rpdat.rp_shadowmap = '1024'
+        rpdat.rp_shadowmap_cascades = '1'
         rpdat.rp_translucency_state = 'Off'
         rpdat.rp_overlays_state = 'Off'
         rpdat.rp_decals_state = 'Off'
@@ -284,6 +291,7 @@ def set_preset(self, context, preset):
     elif preset == 'Max':
         rpdat.rp_renderer = 'Deferred'
         rpdat.rp_shadowmap = '8192'
+        rpdat.rp_shadowmap_cascades = '3'
         rpdat.rp_translucency_state = 'Auto'
         rpdat.rp_overlays_state = 'Auto'
         rpdat.rp_decals_state = 'Auto'

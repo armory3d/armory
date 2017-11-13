@@ -12,6 +12,10 @@ def update_renderpath(self, context):
         return
     make_renderer.set_renderpath(self, context)
 
+def udpate_shadowmap_cascades(self, context):
+    bpy.data.worlds['Arm'].arm_recompile = True
+    update_renderpath(self, context)
+
 def update_material_model(self, context):
     assets.invalidate_shader_cache(self, context)
     update_renderpath(self, context)
@@ -88,7 +92,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('2', '2', '2'),
                ('3', '3', '3'),
                ('4', '4', '4')],
-        name="Cascades", description="Shadow map cascades", default='3', update=update_renderpath)
+        name="Cascades", description="Shadow map cascades", default='3', update=udpate_shadowmap_cascades)
     rp_supersampling = EnumProperty(
         items=[('1', '1X', '1X'),
                ('2', '2X', '2X'),

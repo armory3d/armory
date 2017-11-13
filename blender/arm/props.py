@@ -118,7 +118,7 @@ def init_properties():
     bpy.types.World.arm_stream_scene = BoolProperty(name="Stream Scene", description="Stream scene content", default=False, update=invalidate_compiler_cache)
     bpy.types.World.arm_lod_gen_levels = IntProperty(name="Levels", description="Number of levels to generate", default=3, min=1)
     bpy.types.World.arm_lod_gen_ratio = FloatProperty(name="Decimate Ratio", description="Decimate ratio", default=0.8)
-    bpy.types.World.arm_cache_shaders = BoolProperty(name="Cache Shaders", description="Do not rebuild existing shaders", default=True, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_cache_shaders = BoolProperty(name="Cache Shaders", description="Do not rebuild existing shaders", default=True)
     bpy.types.World.arm_cache_compiler = BoolProperty(name="Cache Compiler", description="Only recompile sources when required", default=True)
     bpy.types.World.arm_gpu_processing = BoolProperty(name="GPU Processing", description="Utilize GPU for asset pre-processing at build time", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_play_live_patch = BoolProperty(name="Live Patch", description="Sync running player data to Blender", default=True)
@@ -129,7 +129,7 @@ def init_properties():
                ('Viewport Shared', 'Viewport Shared', 'Viewport Shared')
                ],
         name="Camera", description="Viewport camera", default='Scene')
-    bpy.types.World.arm_play_console = BoolProperty(name="Debug Console", description="Show inspector in player and enable debug draw", default=False)
+    bpy.types.World.arm_play_console = BoolProperty(name="Debug Console", description="Show inspector in player and enable debug draw", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_play_runtime = EnumProperty(
         items=[('Browser', 'Browser', 'Browser'),
                ('Native', 'C++', 'Native'),
