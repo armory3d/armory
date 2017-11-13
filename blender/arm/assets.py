@@ -76,10 +76,10 @@ def invalidate_shader_cache(self, context):
         shutil.rmtree(fp + '/compiled/Shaders', onerror=remove_readonly)
     if os.path.isdir(fp + '/compiled/ShaderRaws'):
         shutil.rmtree(fp + '/compiled/ShaderRaws', onerror=remove_readonly)
-    if os.path.isdir(fp + '/build/html5-resources'):
-        shutil.rmtree(fp + '/build/html5-resources', onerror=remove_readonly)
-    if os.path.isdir(fp + '/build/krom-resources'):
-        shutil.rmtree(fp + '/build/krom-resources', onerror=remove_readonly)
+    if os.path.isdir(fp + '/html5-resources'):
+        shutil.rmtree(fp + '/html5-resources', onerror=remove_readonly)
+    if os.path.isdir(fp + '/krom-resources'):
+        shutil.rmtree(fp + '/krom-resources', onerror=remove_readonly)
     if os.path.isdir(fp + '/windowed/krom-resources'):
         shutil.rmtree(fp + '/windowed/krom-resources', onerror=remove_readonly)
 
