@@ -22,7 +22,7 @@ class RigidBody extends Trait {
 	public var collisionMargin:Float;
 	public var linearDamping:Float;
 	public var angularDamping:Float;
-	public var passive:Bool;
+	public var animated:Bool;
 	var linearFactors:Array<Float>;
 	var angularFactors:Array<Float>;
 	var deactivationParams:Array<Float>;
@@ -39,7 +39,7 @@ class RigidBody extends Trait {
 	public var onReady:Void->Void = null;
 
 	public function new(mass = 1.0, shape = Shape.Box, friction = 0.5, restitution = 0.0, collisionMargin = 0.0,
-						linearDamping = 0.04, angularDamping = 0.1, passive = false,
+						linearDamping = 0.04, angularDamping = 0.1, animated = false,
 						linearFactors:Array<Float> = null, angularFactors:Array<Float> = null,
 						group = 1, ghost = false, deactivationParams:Array<Float> = null) {
 		super();
@@ -51,7 +51,7 @@ class RigidBody extends Trait {
 		this.collisionMargin = collisionMargin;
 		this.linearDamping = linearDamping;
 		this.angularDamping = angularDamping;
-		this.passive = passive;
+		this.animated = animated;
 		this.linearFactors = linearFactors;
 		this.angularFactors = angularFactors;
 		this.group = group;
@@ -195,7 +195,7 @@ class RigidBody extends Trait {
 
 	function lateUpdate() {
 		if (!ready) return;
-		if (object.animation != null || passive) {
+		if (object.animation != null || animated) {
 			syncTransform();
 		}
 		else {

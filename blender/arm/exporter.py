@@ -2990,9 +2990,9 @@ class ArmoryExporter:
                 shape = 5
             elif rb.collision_shape == 'CAPSULE':
                 shape = 6
-            body_mass = 0
-            if rb.enabled and rb.type != 'PASSIVE':
-                body_mass = rb.mass
+            body_mass = rb.mass
+            if not rb.enabled or (rb.type == 'PASSIVE' and not rb.kinematic):
+                body_mass = 0
             x = {}
             x['type'] = 'Script'
             pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics == 'Bullet' else 'oimo'
@@ -3004,7 +3004,7 @@ class ArmoryExporter:
                 x['parameters'].append('0.0')
             x['parameters'].append(str(rb.linear_damping))
             x['parameters'].append(str(rb.angular_damping))
-            x['parameters'].append(str(rb.type == 'PASSIVE').lower())
+            x['parameters'].append(str(rb.kinematic).lower())
             lin_fac = '[{0}, {1}, {2}]'.format(str(bobject.arm_rb_linear_factor[0]), str(bobject.arm_rb_linear_factor[1]), str(bobject.arm_rb_linear_factor[2]))
             ang_fac = '[{0}, {1}, {2}]'.format(str(bobject.arm_rb_angular_factor[0]), str(bobject.arm_rb_angular_factor[1]), str(bobject.arm_rb_angular_factor[2]))
             x['parameters'].append(lin_fac)
@@ -3247,8 +3247,8 @@ class ArmoryExporter:
 
         # Main probe
         rpdat = arm.utils.get_rp()
-        mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
-        arm_irradiance = wrd.arm_irradiance and not mobile_mat
+        solid_mat = rpdat.arm_material_model == 'Solid'
+        arm_irradiance = wrd.arm_irradiance and not solid_mat
         arm_radiance = False
         disable_hdr = world.arm_envtex_name.endswith('.jpg')
         radtex = world.arm_envtex_name.rsplit('.', 1)[0]
