@@ -59,12 +59,18 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     # Clean compiled variants if cache is disabled
     build_dir = arm.utils.build_dir()
     if wrd.arm_cache_shaders == False:
-        if os.path.isdir(build_dir + '/build/html5-resources'):
-            shutil.rmtree(build_dir + '/build/html5-resources', onerror=remove_readonly)
-        if os.path.isdir(build_dir + '/build/krom-resources'):
-            shutil.rmtree(build_dir + '/build/krom-resources', onerror=remove_readonly)
+        if os.path.isdir(build_dir + '/html5-resources'):
+            shutil.rmtree(build_dir + '/html5-resources', onerror=remove_readonly)
+        if os.path.isdir(build_dir + '/krom-resources'):
+            shutil.rmtree(build_dir + '/krom-resources', onerror=remove_readonly)
         if os.path.isdir(build_dir + '/windowed/krom-resources'):
             shutil.rmtree(build_dir + '/windowed/krom-resources', onerror=remove_readonly)
+        if os.path.isdir(build_dir + '/windows-resources'):
+            shutil.rmtree(build_dir + '/windows-resources', onerror=remove_readonly)
+        if os.path.isdir(build_dir + '/linux-resources'):
+            shutil.rmtree(build_dir + '/linux-resources', onerror=remove_readonly)
+        if os.path.isdir(build_dir + '/osx-resources'):
+            shutil.rmtree(build_dir + '/osx-resources', onerror=remove_readonly)
         if os.path.isdir(build_dir + '/compiled/Shaders'):
             shutil.rmtree(build_dir + '/compiled/Shaders', onerror=remove_readonly)
         if os.path.isdir(build_dir + '/compiled/ShaderRaws'):
@@ -112,7 +118,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     for scene in bpy.data.scenes:
         if scene.arm_export:
             ext = '.zip' if (scene.arm_compress and is_publish) else '.arm'
-            asset_path = arm.utils.build_dir() + '/compiled/Assets/' + arm.utils.safestr(scene.name) + ext
+            asset_path = build_dir + '/compiled/Assets/' + arm.utils.safestr(scene.name) + ext
             exporter.execute(bpy.context, asset_path, scene=scene, write_capture_info=state.is_render_anim, play_area=state.play_area)
             if ArmoryExporter.export_physics:
                 physics_found = True

@@ -82,6 +82,12 @@ def invalidate_shader_cache(self, context):
         shutil.rmtree(fp + '/krom-resources', onerror=remove_readonly)
     if os.path.isdir(fp + '/windowed/krom-resources'):
         shutil.rmtree(fp + '/windowed/krom-resources', onerror=remove_readonly)
+    if os.path.isdir(fp + '/windows-resources'):
+        shutil.rmtree(fp + '/windows-resources', onerror=remove_readonly)
+    if os.path.isdir(fp + '/linux-resources'):
+        shutil.rmtree(fp + '/linux-resources', onerror=remove_readonly)
+    if os.path.isdir(fp + '/osx-resources'):
+        shutil.rmtree(fp + '/osx-resources', onerror=remove_readonly)
 
 def invalidate_compiled_data(self, context):
     global invalidate_enabled
