@@ -66,7 +66,7 @@ uniform mat4 LWVP;
 uniform vec3 lightColor;
 uniform vec3 lightDir;
 uniform vec3 lightPos;
-uniform vec2 lightPlane;
+uniform vec2 lightProj;
 uniform int lightType;
 uniform int lightShadow;
 uniform float shadowsBias;
@@ -145,7 +145,7 @@ void main() {
 		}
 	}
 	else if (lightShadow == 2) { // Cube
-		visibility = PCFCube(lp, -l, shadowsBias, lightPlane);
+		visibility = PCFCube(lp, -l, shadowsBias, lightProj, n);
 	}
 #endif
 	

@@ -603,7 +603,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.add_uniform('bool receiveShadow')
         frag.add_uniform('float shadowsBias', '_lampShadowsBias')
         frag.add_uniform('int lightShadow', '_lampCastShadow')
-        frag.add_uniform('vec2 lightPlane', '_lampPlane')
+        frag.add_uniform('vec2 lightProj', '_lampPlaneProj')
 
         frag.write('if (receiveShadow) {')
         frag.write('    if (lightShadow == 1) {')
@@ -622,7 +622,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
         else:
             frag.write('    visibility *= PCF(lpos.xy, lpos.z - shadowsBias);')
         frag.write('    }')
-        frag.write('    else if (lightShadow == 2) visibility *= PCFCube(lp, -l, shadowsBias, lightPlane);')
+        frag.write('    else if (lightShadow == 2) visibility *= PCFCube(lp, -l, shadowsBias, lightProj, n);')
         frag.write('}')
 
     frag.write('if (lightType == 2) {')

@@ -61,7 +61,7 @@ def make_rect(con_rect):
     frag.add_uniform('vec3 lightPos', link='_lampPosition')
     frag.add_uniform('vec3 lightColor', link='_lampColor')
     frag.add_uniform('int lightShadow', link='_lampCastShadow')
-    frag.add_uniform('vec2 lightPlane', link='_lampPlane')
+    frag.add_uniform('vec2 lightProj', link='_lampPlaneProj')
     frag.add_uniform('float shadowsBias', link='_lampShadowsBias')
     # TODO: ifdef
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
@@ -114,7 +114,7 @@ def make_rect(con_rect):
     frag.write('    if (lPos.x > 0.0 && lPos.y > 0.0 && lPos.x < 1.0 && lPos.y < 1.0) visibility = PCF(lPos.xy, lPos.z - shadowsBias);;')
     frag.write('}')
     frag.write('else if (lightShadow == 2) {')
-    frag.write('    visibility = PCFCube(lp, -l, shadowsBias, lightPlane);')
+    frag.write('    visibility = PCFCube(lp, -l, shadowsBias, lightProj, n);')
     frag.write('}')
 
     frag.write('visibility *= attenuate(distance(wposition, lightPos));')

@@ -64,7 +64,7 @@ def make_gi(context_id):
         frag.add_uniform('sampler2D shadowMap', included=True)
         frag.add_uniform('samplerCube shadowMapCube', included=True)
         frag.add_uniform('int lightShadow', '_lampCastShadow')
-        frag.add_uniform('vec2 lightPlane', '_lampPlane')
+        frag.add_uniform('vec2 lightProj', '_lampPlaneProj')
         frag.add_uniform('float shadowsBias', '_lampShadowsBias')
         frag.write('if (lightShadow == 1 && lampPos.w > 0.0) {')
         frag.write('    vec3 lpos = lampPos.xyz / lampPos.w;')
@@ -73,7 +73,7 @@ def make_gi(context_id):
         frag.write('    if (texture(shadowMap, lpos.xy).r < lpos.z - shadowsBias) visibility = 0.0;')
         # frag.write('    visibility = PCF(lpos.xy, lpos.z - shadowsBias);')
         frag.write('}')
-        frag.write('else if (lightShadow == 2) visibility *= float(texture(shadowMapCube, -l).r + shadowsBias > lpToDepth(lp, lightPlane));')
+        frag.write('else if (lightShadow == 2) visibility *= float(texture(shadowMapCube, -l).r + shadowsBias > lpToDepth(lp, lightProj));')
 
     # frag.write('if (lightType == 2) {')
     # frag.write('    float spotEffect = dot(lightDir, l);')

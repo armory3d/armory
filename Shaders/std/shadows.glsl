@@ -52,22 +52,20 @@ float PCF(const vec2 uv, const float compare) {
 	return result / 9.0;
 }
 
-float lpToDepth(vec3 lp, const vec2 lightPlane) {
-	// TODO: pass uniforms
-	float a = lightPlane.y + lightPlane.x;
-	float b = lightPlane.y - lightPlane.x;
-	float c = 2.0 * lightPlane.y * lightPlane.x;
+float lpToDepth(vec3 lp, const vec2 lightProj) {
 	lp = abs(lp);
 	float zcomp = max(lp.x, max(lp.y, lp.z));
-	zcomp = a / b - c / b / zcomp;
+	zcomp = lightProj.x - lightProj.y / zcomp;
 	return zcomp * 0.5 + 0.5;
 }
 
-float PCFCube(const vec3 lp, const vec3 ml, const float bias, const vec2 lightPlane) {
-	// return float(texture(shadowMapCube, ml).r + bias > lpToDepth(lp, lightPlane));
-	float compare = lpToDepth(lp, lightPlane) - bias;
-	float result = step(compare, texture(shadowMapCube, ml).r);
+float PCFCube(const vec3 lp, vec3 ml, const float bias, const vec2 lightProj, const vec3 n) {
+	// return float(texture(shadowMapCube, ml).r + bias > lpToDepth(lp, lightProj));
 	const float s = shadowmapCubePcfSize; // 0.001 TODO: incorrect...
+	// float compare = lpToDepth(lp, lightProj) - bias;
+	float compare = lpToDepth(lp - n * 0.003, lightProj) - bias * 0.4;
+	ml = ml + n * 0.003;
+	float result = step(compare, texture(shadowMapCube, ml).r);
 	result += step(compare, texture(shadowMapCube, ml + vec3(s, s, s)).r);
 	result += step(compare, texture(shadowMapCube, ml + vec3(-s, s, s)).r);
 	result += step(compare, texture(shadowMapCube, ml + vec3(s, -s, s)).r);
@@ -79,8 +77,6 @@ float PCFCube(const vec3 lp, const vec3 ml, const float bias, const vec2 lightPl
 	result /= 9.0;
 	return result;
 }
-
-
 
 float shadowTest(const vec3 lPos, const float shadowsBias) {
 

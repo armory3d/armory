@@ -22,8 +22,8 @@
 					"link": "_lampPosition"
 				},
 				{
-					"name": "lightPlane",
-					"link": "_lampPlane"
+					"name": "lightProj",
+					"link": "_lampPlaneProj"
 				},
 				{
 					"name": "lightDir",
