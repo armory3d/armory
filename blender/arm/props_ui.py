@@ -1018,7 +1018,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
                 layout.prop(rpdat, 'arm_rp_resolution')
 
             layout.separator()
-            layout.prop(rpdat, 'arm_pcss_state')
+            # layout.prop(rpdat, 'arm_pcss_state')
             layout.prop(rpdat, 'arm_samples_per_pixel')
             layout.prop(rpdat, 'arm_texture_filter')
             layout.prop(rpdat, "arm_diffuse_model")

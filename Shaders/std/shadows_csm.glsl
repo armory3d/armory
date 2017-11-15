@@ -7,11 +7,11 @@ uniform samplerCube shadowMapCube;
 uniform vec4 casData[shadowmapCascades * 4 + 4];
 #endif
 
-// #ifdef _CSM
-// const vec2 smSize = shadowmapSize * vec2(shadowmapCascades, 1.0);
-// #else
+#ifdef _CSM
+const vec2 smSize = shadowmapSize * vec2(shadowmapCascades, 1.0);
+#else
 const vec2 smSize = shadowmapSize;
-// #endif
+#endif
 
 float shadowCompare(const vec2 uv, const float compare){
 	float depth = texture(shadowMap, uv).r;

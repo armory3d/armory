@@ -78,11 +78,11 @@ def build_node_tree(world):
         wrd.world_defs += '_EnvClouds'
 
     # Percentage closer soft shadows
-    if rpdat.arm_pcss_state == 'On':
-        wrd.world_defs += '_PCSS'
-        sdk_path = arm.utils.get_sdk_path()
-        assets.add(sdk_path + 'armory/Assets/noise64.png')
-        assets.add_embedded_data('noise64.png')
+    # if rpdat.arm_pcss_state == 'On':
+    #     wrd.world_defs += '_PCSS'
+    #     sdk_path = arm.utils.get_sdk_path()
+    #     assets.add(sdk_path + 'armory/Assets/noise64.png')
+    #     assets.add_embedded_data('noise64.png')
 
     # Screen-space ray-traced shadows
     if rpdat.arm_ssrs:
@@ -115,16 +115,19 @@ def build_node_tree(world):
     voxelao = False
     if rpdat.rp_renderer == 'Deferred':
         assets.add_khafile_def('arm_deferred')
+    # Shadows
+    if rpdat.rp_shadowmap_cascades != '1' and rpdat.rp_gi == 'Off':
+        wrd.world_defs += '_CSM'
+        assets.add_khafile_def('arm_csm')
     if rpdat.rp_shadowmap == 'None':
         wrd.world_defs += '_NoShadows'
         assets.add_khafile_def('arm_no_shadows')
-    if rpdat.rp_shadowmap_cascades != '1':
-        wrd.world_defs += '_CSM'
-        assets.add_khafile_def('arm_csm')
+    # GI
     if rpdat.rp_gi == 'Voxel GI':
         voxelgi = True
     elif rpdat.rp_gi == 'Voxel AO':
         voxelao = True
+    # SS
     if rpdat.rp_dfrs:
         wrd.world_defs += '_DFRS'
         assets.add_khafile_def('arm_sdf')

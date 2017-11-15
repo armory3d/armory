@@ -272,6 +272,12 @@ class Main {
         f.write("""
     public static function main() {
         iron.object.BoneAnimation.skinMaxBones = """ + str(wrd.arm_skin_max_bones) + """;
+""")
+        if rpdat.rp_shadowmap_cascades != '1':
+            f.write("""
+        iron.object.LampObject.shadowmapCascades = """ + str(rpdat.rp_shadowmap_cascades) + """;
+""")
+        f.write("""
         state = 1;
         #if (js && arm_bullet) state++; loadLibAmmo("ammo.js"); #end
         #if (js && arm_navigation) state++; loadLib("recast.js"); #end

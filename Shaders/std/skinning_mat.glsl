@@ -1,21 +1,10 @@
 uniform vec4 skinBones[skinMaxBones * 3];
 
 mat4 getBoneMat(const int boneIndex) {
-	vec4 v0 = vec4(skinBones[boneIndex * 3].x,
-				   skinBones[boneIndex * 3].y,
-				   skinBones[boneIndex * 3].z,
-				   skinBones[boneIndex * 3].w);
-	vec4 v1 = vec4(skinBones[boneIndex * 3 + 1].x,
-				   skinBones[boneIndex * 3 + 1].y,
-				   skinBones[boneIndex * 3 + 1].z,
-				   skinBones[boneIndex * 3 + 1].w);
-	vec4 v2 = vec4(skinBones[boneIndex * 3 + 2].x,
-				   skinBones[boneIndex * 3 + 2].y,
-				   skinBones[boneIndex * 3 + 2].z,
-				   skinBones[boneIndex * 3 + 2].w);
-	return mat4(v0.x, v0.y, v0.z, v0.w, 
-				v1.x, v1.y, v1.z, v1.w,
-				v2.x, v2.y, v2.z, v2.w,
+	int bonei = boneIndex * 3;
+	return mat4(skinBones[bonei], 
+				skinBones[bonei + 1],
+				skinBones[bonei + 2],
 				0.0, 0.0, 0.0, 1.0);
 }
 

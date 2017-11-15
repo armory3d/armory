@@ -63,7 +63,13 @@
 				},
 				{
 					"name": "LWVP",
-					"link": "_biasLampWorldViewProjectionMatrix"
+					"link": "_biasLampWorldViewProjectionMatrix",
+					"ifndef": ["_CSM"]
+				},
+				{
+					"name": "casData",
+					"link": "_cascadeData",
+					"ifdef": ["_CSM"]
 				},
 				{
 					"name": "snoise",

@@ -86,13 +86,13 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('4096', '4096', '4096'),
                ('8192', '8192', '8192'),
                ('16384', '16384', '16384'),],
-        name="Shadow Map", description="Shadow map resolution", default='2048', update=update_renderpath)
+        name="Shadow Map", description="Shadow map resolution", default='1024', update=update_renderpath)
     rp_shadowmap_cascades = EnumProperty(
         items=[('1', '1', '1'),
                ('2', '2', '2'),
-               ('3', '3', '3'),
+               # ('3', '3', '3'),
                ('4', '4', '4')],
-        name="Cascades", description="Shadow map cascades", default='3', update=udpate_shadowmap_cascades)
+        name="Cascades", description="Shadow map cascades", default='4', update=udpate_shadowmap_cascades)
     rp_supersampling = EnumProperty(
         items=[('1', '1X', '1X'),
                ('2', '2X', '2X'),

@@ -428,6 +428,7 @@ def make_forward_mobile(con_mesh):
         # frag.write('    visibility *= PCF(lpos.xy, lpos.z - shadowsBias);')
         frag.write('    const float texelSize = 1.0 / shadowmapSize.x;')
         frag.write('    visibility = 0.0;')
+        # TODO: CSM
         frag.write('    visibility += float(texture(shadowMap, lpos.xy).r + shadowsBias > lpos.z);')
         frag.write('    visibility += float(texture(shadowMap, lpos.xy + vec2(texelSize, 0.0)).r + shadowsBias > lpos.z) * 0.5;')
         frag.write('    visibility += float(texture(shadowMap, lpos.xy + vec2(-texelSize, 0.0)).r + shadowsBias > lpos.z) * 0.25;')
@@ -585,10 +586,11 @@ def make_forward_base(con_mesh, parse_opacity=False):
             tese.add_uniform('int lightShadow', '_lampCastShadow')
             tese.write('if (lightShadow == 1) lampPos = LVP * vec4(wposition, 1.0);')
         else:
-            vert.add_out('vec4 lampPos')
-            vert.add_uniform('mat4 LWVP', '_biasLampWorldViewProjectionMatrix')
-            vert.add_uniform('int lightShadow', '_lampCastShadow')
-            vert.write('if (lightShadow == 1) lampPos = LWVP * spos;')
+            if not '_CSM' in wrd.world_defs:
+                vert.add_out('vec4 lampPos')
+                vert.add_uniform('int lightShadow', '_lampCastShadow')
+                vert.add_uniform('mat4 LWVP', '_biasLampWorldViewProjectionMatrix')
+                vert.write('if (lightShadow == 1) lampPos = LWVP * spos;')
         
         if is_pcss:
             frag.add_include('../../Shaders/std/shadows_pcss.glsl')
@@ -604,7 +606,15 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.add_uniform('vec2 lightPlane', '_lampPlane')
 
         frag.write('if (receiveShadow) {')
-        frag.write('    if (lightShadow == 1 && lampPos.w > 0.0) {')
+        frag.write('    if (lightShadow == 1) {')
+        if '_CSM' in wrd.world_defs:
+            frag.add_include('../../Shaders/compiled.glsl')
+            frag.add_uniform('vec4 casData[shadowmapCascades * 4 + 4]', '_cascadeData', included=True)
+            frag.add_uniform('vec3 eye', '_cameraPosition')
+            frag.write('    int casi;')
+            frag.write('    int casindex;')
+            frag.write('    mat4 LWVP = getCascadeMat(distance(eye, wposition), casi, casindex);')
+            frag.write('    vec4 lampPos = LWVP * vec4(wposition, 1.0);')
         frag.write('    vec3 lpos = lampPos.xyz / lampPos.w;')
         # frag.write('float bias = clamp(shadowsBias * 1.0 * tan(acos(clamp(dotNL, 0.0, 1.0))), 0.0, 0.01);')
         if is_pcss:
@@ -696,4 +706,3 @@ def make_forward_base(con_mesh, parse_opacity=False):
             frag.write('vec3 indirectSpecular = traceSpecular(voxpos, n, vVec, roughness);')
             frag.write('indirectSpecular *= f0 * envBRDF.x + envBRDF.y;')
             frag.write('indirect = indirect * voxelgiEnv + vec3(indirectDiffuse.rgb * voxelgiDiff * basecol + indirectSpecular * voxelgiSpec);')
-            

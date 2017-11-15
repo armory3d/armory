@@ -165,6 +165,9 @@ class DebugConsole extends Trait {
 		}
 		frameTime = Scheduler.realTime() - lastTime;
 		lastTime = Scheduler.realTime();
+
+		// var rp = pathdata.renderTargets.get("shadowMap");
+		// g.drawScaledImage(rp.image, 0, 0, 256, 256);
 	}
 
 	function update() {

@@ -91,23 +91,6 @@ uniform vec3 eye;
 in vec4 wvpposition;
 out vec4 fragColor;
 
-#ifndef _NoShadows
-float shadowTest(const vec3 lPos) {
-	
-	// Out of bounds
-	if (lPos.x < 0.0 || lPos.y < 0.0 || lPos.x > 1.0 || lPos.y > 1.0) return 1.0;
-
-	#ifdef _PCSS
-	return PCSS(lPos.xy, lPos.z - shadowsBias);
-	#else
-	return PCF(lPos.xy, lPos.z - shadowsBias);
-	#endif
-}
-float shadowTestCube(const vec3 lp, const vec3 l) {
-	return PCFCube(lp, -l, shadowsBias, lightPlane);
-}
-#endif
-
 void main() {
 	vec2 texCoord = wvpposition.xy / wvpposition.w;
 	texCoord = texCoord * 0.5 + 0.5;
@@ -151,13 +134,18 @@ void main() {
 	// float cosAngle = max(1.0 - dotNL, 0.0);
 	// vec3 noff = n * shadowsBias * cosAngle;
 	if (lightShadow == 1) {
-		// vec4 lampPos = LWVP * vec4(p + noff, 1.0);
-		vec4 lampPos = LWVP * vec4(p, 1.0);
-		if (lampPos.w > 0.0) visibility = shadowTest(lampPos.xyz / lampPos.w);
+		// vec4 lPos = LWVP * vec4(p + noff, 1.0);
+		vec4 lPos = LWVP * vec4(p, 1.0);
+		if (lPos.w > 0.0) {
+			#ifdef _PCSS
+			visibility = PCSS(lPos.xy, lPos.z - shadowsBias);
+			#else
+			visibility = shadowTest(lPos.xyz / lPos.w, shadowsBias);
+			#endif
+		}
 	}
 	else if (lightShadow == 2) { // Cube
-		// visibility = shadowTestCube(lp + noff, l);
-		visibility = shadowTestCube(lp, l);
+		visibility = PCFCube(lp, -l, shadowsBias, lightPlane);
 	}
 #endif
 	

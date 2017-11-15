@@ -2202,7 +2202,7 @@ class ArmoryExporter:
         else:
             o['shadowmap_size'] = int(rpdat.rp_shadowmap)
         if o['type'] == 'sun': # Scale bias for ortho light matrix
-            o['shadows_bias'] *= 10.0
+            o['shadows_bias'] *= 25.0
         if (objtype == 'POINT' or objtype == 'SPOT') and objref.shadow_soft_size > 0.1:
             o['lamp_size'] = objref.shadow_soft_size * 10 # Match to Cycles
         gapi = arm.utils.get_gapi()

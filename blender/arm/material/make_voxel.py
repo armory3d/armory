@@ -166,7 +166,14 @@ def make_gi(context_id):
 
     if is_shadows:
         vert.add_out('vec4 lampPosGeom')
-        vert.add_uniform('mat4 LWVP', '_biasLampWorldViewProjectionMatrix')
+        if '_CSM' in wrd.world_defs:
+            vert.add_include('../../Shaders/compiled.glsl')
+            vert.add_include('../../Shaders/std/shadows.glsl')
+            vert.add_uniform('vec4 casData[shadowmapCascades * 4 + 4]', '_cascadeData', included=True)
+            # TODO: Using second cascade
+            vert.write('mat4 LWVP = mat4(casData[4 + 0], casData[4 + 1], casData[4 + 2], casData[4 + 3]);')
+        else:
+            vert.add_uniform('mat4 LWVP', '_biasLampWorldViewProjectionMatrix')
         vert.write('lampPosGeom = LWVP * vec4(pos, 1.0);')
 
     geom.add_out('vec3 voxposition')

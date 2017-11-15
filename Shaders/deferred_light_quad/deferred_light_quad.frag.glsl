@@ -11,11 +11,11 @@ precision mediump float;
 	#include "../std/conetrace.glsl"
 #endif
 #ifndef _NoShadows
-	#ifdef _PCSS
-	#include "../std/shadows_pcss.glsl"
-	#else
-	#include "../std/shadows.glsl"
-	#endif
+	// #ifdef _PCSS
+	// #include "../std/shadows_pcss.glsl"
+	// #else
+	#include "../std/shadows_csm.glsl"
+	// #endif
 #endif
 #ifdef _SSS
 #include "../std/sss.glsl"
@@ -38,9 +38,14 @@ uniform sampler2D gbuffer1;
 
 #ifndef _NoShadows
 	//!uniform sampler2D shadowMap;
-	#ifdef _PCSS
-	//!uniform sampler2D snoise;
-	//!uniform float lampSizeUV;
+	// #ifdef _PCSS
+	//-!uniform sampler2D snoise;
+	//-!uniform float lampSizeUV;
+	// #endif
+	#ifdef _CSM
+	//!uniform vec4 casData[shadowmapCascades * 4 + 4];
+	#else
+	uniform mat4 LWVP;
 	#endif
 #endif
 #ifdef _LampClouds
@@ -48,7 +53,6 @@ uniform sampler2D gbuffer1;
 	uniform float time;
 #endif
 
-uniform mat4 LWVP;
 uniform vec3 lightColor;
 uniform vec3 l; // lightDir
 uniform int lightShadow;
@@ -68,17 +72,6 @@ uniform vec2 cameraProj;
 in vec2 texCoord;
 in vec3 viewRay;
 out vec4 fragColor;
-
-#ifndef _NoShadows
-float shadowTest(const vec3 lPos) {
-
-	#ifdef _PCSS
-	return PCSS(lPos.xy, lPos.z - shadowsBias);
-	#else
-	return PCF(lPos.xy, lPos.z - shadowsBias);
-	#endif
-}
-#endif
 
 void main() {
 	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, occlusion
@@ -105,11 +98,12 @@ void main() {
 	float visibility = 1.0;
 #ifndef _NoShadows
 	if (lightShadow == 1) {
-		// float cosAngle = max(1.0 - dotNL, 0.0);
-		// vec3 noff = n * shadowsBias * cosAngle;
-		// vec4 lampPos = LWVP * vec4(p + noff, 1.0);
-		vec4 lampPos = LWVP * vec4(p, 1.0);
-		if (lampPos.w > 0.0) visibility = shadowTest(lampPos.xyz / lampPos.w);
+		#ifdef _CSM		
+		visibility = shadowTestCascade(eye, p, shadowsBias);
+		#else
+		vec4 lPos = LWVP * vec4(p, 1.0);
+		if (lPos.w > 0.0) visibility = shadowTest(lPos.xyz / lPos.w, shadowsBias);
+		#endif
 	}
 #endif
 
