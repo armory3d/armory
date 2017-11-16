@@ -19,8 +19,7 @@ out vec4 fragColor;
 const float weight[10] = float[] (0.132572, 0.125472, 0.106373, 0.08078, 0.05495, 0.033482, 0.018275, 0.008934, 0.003912, 0.001535);
 
 void main() {
-	vec2 step = (dir / screenSize.xy / 4) * bloomRadius * 2.0;
-	// vec2 step = (dir / 200) * bloomRadius;
+	vec2 step = (dir / screenSize.xy) * bloomRadius;
 	
 	fragColor.rgb = texture(tex, texCoord).rgb * weight[0];
 
@@ -43,5 +42,5 @@ void main() {
 	fragColor.rgb += texture(tex, texCoord + step * 9.5).rgb * weight[9];
 	fragColor.rgb += texture(tex, texCoord - step * 9.5).rgb * weight[9];
 
-	fragColor.rgb *= bloomStrength / 10;
+	fragColor.rgb *= bloomStrength / 5;
 }
