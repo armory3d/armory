@@ -54,8 +54,11 @@ def build_node_tree(world):
         envmap_strength_const['name'] = 'envmapStrength'
         envmap_strength_const['float'] = 1.0
         context['bind_constants'].append(envmap_strength_const)
-        world.arm_envtex_color = [0.051, 0.051, 0.051, 1.0]
+        # world.arm_envtex_color = [0.051, 0.051, 0.051, 1.0]
+        c = world.horizon_color
+        world.arm_envtex_color = [c[0], c[1], c[2], 1.0]
         world.arm_envtex_strength = envmap_strength_const['float']
+
     
     # Clear to color if no texture or sky is provided
     if '_EnvSky' not in wrd.world_defs and '_EnvTex' not in wrd.world_defs:
