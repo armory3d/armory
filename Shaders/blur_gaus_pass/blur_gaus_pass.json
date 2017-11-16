@@ -13,8 +13,28 @@
 				},
 				{
 					"name": "screenSize",
-					"link": "_screenSize",
-					"ifdef": ["_Disabled"]
+					"link": "_screenSize"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "blur_gaus_pass.vert.glsl",
+			"vertex_shader_path": "../include/pass.vert.glsl",
+			"fragment_shader": "blur_gaus_pass.frag.glsl"
+		},
+		{
+			"name": "blur_gaus_pass_y",
+			"color_write_alpha": false,
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "dir",
+					"link": "_vec2y"
+				},
+				{
+					"name": "screenSize",
+					"link": "_screenSize"
 				}
 			],
 			"texture_params": [],
@@ -38,8 +58,7 @@
 				},
 				{
 					"name": "screenSize",
-					"link": "_screenSize",
-					"ifdef": ["_Disabled"]
+					"link": "_screenSize"
 				}
 			],
 			"texture_params": [],
