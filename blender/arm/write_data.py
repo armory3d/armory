@@ -275,7 +275,8 @@ class Main {
 """)
         if rpdat.rp_shadowmap_cascades != '1':
             f.write("""
-        iron.object.LampObject.shadowmapCascades = """ + str(rpdat.rp_shadowmap_cascades) + """;
+        iron.object.LampObject.cascadeCount = """ + str(rpdat.rp_shadowmap_cascades) + """;
+        iron.object.LampObject.cascadeSplitFactor = """ + str(wrd.arm_shadowmap_split) + """;
 """)
         f.write("""
         state = 1;

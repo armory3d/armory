@@ -1047,8 +1047,11 @@ class ArmRenderPropsPanel(bpy.types.Panel):
             if not wrd.arm_skin_max_bones_auto:
                 layout.prop(wrd, 'arm_skin_max_bones')
 
-        layout.label('PCSS')
-        layout.prop(wrd, 'arm_pcss_rings')
+        layout.label('Shadows')
+        layout.prop(wrd, 'arm_shadowmap_split')
+
+        # layout.label('PCSS')
+        # layout.prop(wrd, 'arm_pcss_rings')
 
         layout.label('Clouds')
         row = layout.row()
