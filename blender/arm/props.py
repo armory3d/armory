@@ -289,8 +289,8 @@ def init_properties():
                ],
         name="SSGI Rays", description="Number of rays to trace for RTAO/RTGI", default='5', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_bloom_threshold = bpy.props.FloatProperty(name="Threshold", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_bloom_strength = bpy.props.FloatProperty(name="Strength", default=5.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_bloom_radius = bpy.props.FloatProperty(name="Radius", default=5.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_bloom_strength = bpy.props.FloatProperty(name="Strength", default=3.5, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_bloom_radius = bpy.props.FloatProperty(name="Radius", default=3.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_motion_blur_intensity = bpy.props.FloatProperty(name="Intensity", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_ssr_ray_step = bpy.props.FloatProperty(name="Ray Step", default=0.04, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_ssr_min_ray_step = bpy.props.FloatProperty(name="Ray Step Min", default=0.05, update=assets.invalidate_shader_cache)

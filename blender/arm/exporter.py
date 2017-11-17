@@ -2241,26 +2241,31 @@ class ArmoryExporter:
                             o['color_texture'] = color_node.image.name
                     break
         else:
-            o['color'] = [1.0, 1.0, 1.0]
+            # o['color'] = [1.0, 1.0, 1.0]
+            o['color'] = [objref.color[0], objref.color[1], objref.color[2]]
             o['strength'] = 100.0 * 0.026
             o['type'] = 'point'
 
         self.output['lamp_datas'].append(o)
 
     def get_camera_clear_color(self):
-        if self.scene.world != None and self.scene.world.node_tree != None and 'Background' in self.scene.world.node_tree.nodes: # TODO: parse node tree
-            background_node = self.scene.world.node_tree.nodes['Background']
-            col = background_node.inputs[0].default_value
-            strength = background_node.inputs[1].default_value
-            ar = [col[0] * strength, col[1] * strength, col[2] * strength, col[3]]
-            ar[0] = max(min(ar[0], 1.0), 0.0)
-            ar[1] = max(min(ar[1], 1.0), 0.0)
-            ar[2] = max(min(ar[2], 1.0), 0.0)
-            ar[3] = max(min(ar[3], 1.0), 0.0)
-            return ar
+        if self.scene.world != None and self.scene.world.node_tree != None:
+            if 'Background' in self.scene.world.node_tree.nodes: # TODO: parse node tree
+                background_node = self.scene.world.node_tree.nodes['Background']
+                col = background_node.inputs[0].default_value
+                strength = background_node.inputs[1].default_value
+                ar = [col[0] * strength, col[1] * strength, col[2] * strength, col[3]]
+                ar[0] = max(min(ar[0], 1.0), 0.0)
+                ar[1] = max(min(ar[1], 1.0), 0.0)
+                ar[2] = max(min(ar[2], 1.0), 0.0)
+                ar[3] = max(min(ar[3], 1.0), 0.0)
+                return ar
+            else:
+                return [0.051, 0.051, 0.051, 1.0]
         else:
-            return [0.051, 0.051, 0.051, 1.0]
-
+            c = self.scene.world.horizon_color
+            return [c[0], c[1], c[2], 1.0]
+            
     def extract_projection(self, o, proj, with_planes=True):
         a = proj[0][0]
         b = proj[1][1]
