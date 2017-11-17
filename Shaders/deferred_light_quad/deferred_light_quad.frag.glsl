@@ -36,6 +36,10 @@ uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
+#ifdef _SSS
+vec2 lightPlane;
+#endif
+
 #ifndef _NoShadows
 	//!uniform sampler2D shadowMap;
 	// #ifdef _PCSS
@@ -98,7 +102,7 @@ void main() {
 	float visibility = 1.0;
 #ifndef _NoShadows
 	if (lightShadow == 1) {
-		#ifdef _CSM		
+		#ifdef _CSM
 		visibility = shadowTestCascade(eye, p, shadowsBias);
 		#else
 		vec4 lPos = LWVP * vec4(p, 1.0);
@@ -147,7 +151,11 @@ void main() {
 	
 #ifdef _SSS
 	if (floor(g1.a) == 2) {
-		fragColor.rgb += fragColor.rgb * SSSSTransmittance(1.0, 0.005, p, n, l, shadowMap, LWVP);
+		#ifdef _CSM
+		int casi, casindex;
+		mat4 LWVP = getCascadeMat(distance(eye, p), casi, casindex);
+		#endif
+		fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVP, p, n, l, lightPlane.y, shadowMap);
 	}
 #endif
 

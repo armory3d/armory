@@ -62,6 +62,11 @@
 					"link": "_cameraLook"
 				},
 				{
+					"name": "lightPlane",
+					"link": "_lampPlane",
+					"ifdef": ["_SSS"]
+				},
+				{
 					"name": "LWVP",
 					"link": "_biasLampWorldViewProjectionMatrix",
 					"ifndef": ["_CSM"]

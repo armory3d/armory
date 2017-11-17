@@ -61,6 +61,10 @@ uniform sampler2D gbuffer1;
 	//!uniform sampler2D texIES;
 #endif
 
+#ifdef _SSS
+vec2 lightPlane;
+#endif
+
 uniform mat4 invVP;
 uniform mat4 LWVP;
 uniform vec3 lightColor;
@@ -235,8 +239,8 @@ void main() {
 	
 #ifdef _SSS
 	if (floor(g1.a) == 2) {
-		if (lightShadow == 1) fragColor.rgb += fragColor.rgb * SSSSTransmittance(1.0, 0.005, p, n, l, shadowMap, LWVP);
-		else fragColor.rgb += fragColor.rgb * SSSSTransmittanceCube(1.0, 0.005, p, n, l, shadowMapCube, LWVP);
+		if (lightShadow == 1) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVP, p, n, l, lightPlane.y, shadowMap);
+		// else fragColor.rgb += fragColor.rgb * SSSSTransmittanceCube();
 	}
 #endif
 

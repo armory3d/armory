@@ -1,12 +1,15 @@
+
+#include "../compiled.glsl"
+
 // Separable SSS Transmittance Function, ref to sss_pass
-vec3 SSSSTransmittance(float translucency, float sssWidth, vec3 worldPosition, vec3 worldNormal, vec3 lightDir, sampler2D shadowMap, mat4 LWVP) {
-	float scale = 8.25 * (1.0 - translucency) / sssWidth;
-	vec4 shrinkedPos = vec4(worldPosition - 0.005 * worldNormal, 1.0);
-	vec4 shadowPosition = LWVP * shrinkedPos;
-	float d1 = texture(shadowMap, shadowPosition.xy / shadowPosition.w).r; // 'd1' has a range of 0..1
-	float d2 = shadowPosition.z; // 'd2' has a range of 0..'lightFarPlane'
-	const float lightFarPlane = 50.0; // TODO
-	d1 *= lightFarPlane; // So we scale 'd1' accordingly:
+vec3 SSSSTransmittance(mat4 LWVP, vec3 p, vec3 n, vec3 l, float lightFar, sampler2D shadowMap) {
+	const float translucency = 1.0;
+	vec4 shrinkedPos = vec4(p - 0.005 * n, 1.0);
+	vec4 shadowPos = LWVP * shrinkedPos;
+	float scale = 8.25 * (1.0 - translucency) / (sssWidth / 10.0);
+	float d1 = texture(shadowMap, shadowPos.xy / shadowPos.w).r; // 'd1' has a range of 0..1
+	float d2 = shadowPos.z; // 'd2' has a range of 0..'lightFarPlane'
+	d1 *= lightFar; // So we scale 'd1' accordingly:
 	float d = scale * abs(d1 - d2);
 
 	float dd = -d * d;
@@ -16,10 +19,10 @@ vec3 SSSSTransmittance(float translucency, float sssWidth, vec3 worldPosition, v
 				   vec3(0.113, 0.007, 0.007) * exp(dd / 0.567) +
 				   vec3(0.358, 0.004, 0.0)   * exp(dd / 1.99) +
 				   vec3(0.078, 0.0,   0.0)   * exp(dd / 7.41);
-	return profile * clamp(0.3 + dot(lightDir, -worldNormal), 0.0, 1.0);
+	return profile * clamp(0.3 + dot(l, -n), 0.0, 1.0);
 }
 
-vec3 SSSSTransmittanceCube(float translucency, float sssWidth, vec3 worldPosition, vec3 worldNormal, vec3 lightDir, samplerCube shadowMapCube, mat4 LWVP) {
+vec3 SSSSTransmittanceCube(float translucency, vec4 shadowPos, vec3 n, vec3 l, float lightFar) {
 	// TODO
 	return vec3(0.2);
 }

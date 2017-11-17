@@ -52,6 +52,11 @@
 					"ifdef": ["_LampIES"]
 				},
 				{
+					"name": "lightPlane",
+					"link": "_lampPlane",
+					"ifdef": ["_SSS"]
+				},
+				{
 					"name": "shadowsBias",
 					"link": "_lampShadowsBias"
 				},
