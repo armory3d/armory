@@ -433,6 +433,11 @@ const vec3 volumAirColor = vec3(""" + str(round(wrd.arm_volumetric_light_air_col
 """const int pcssRings = """ + str(wrd.arm_pcss_rings) + """;
 """)
 
+        if rpdat.rp_autoexposure:
+            f.write(
+"""const float autoExposureStrength = """ + str(wrd.arm_autoexposure_strength) + """;
+""")
+
         # Compositor
         if wrd.arm_letterbox:
             f.write(

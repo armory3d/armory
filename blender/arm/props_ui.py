@@ -1002,6 +1002,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
                 layout.prop(rpdat, "rp_supersampling")
                 layout.prop(rpdat, "rp_antialiasing")
                 layout.prop(rpdat, "rp_compositornodes")
+                layout.prop(rpdat, "rp_autoexposure")
                 layout.prop(rpdat, "rp_volumetriclight")
                 layout.prop(rpdat, "rp_ssgi")
                 # layout.prop(wrd, 'arm_ssao_half_res')
@@ -1138,6 +1139,7 @@ class ArmRenderPropsPanel(bpy.types.Panel):
         row.prop(wrd, 'arm_fog_amountb')
         layout.prop(wrd, 'arm_fisheye')
         layout.prop(wrd, 'arm_vignette')
+        layout.prop(wrd, 'arm_autoexposure_strength')
         layout.prop(wrd, 'arm_lens_texture')
 
 class ArmGenLodButton(bpy.types.Operator):

@@ -117,12 +117,11 @@ def make_clear_image(stage, image_name, color_val):
 
 def make_generate_mipmaps(stage, node_group, node):
     stage['command'] = 'generate_mipmaps'
-
-    # TODO: support reroutes
     link = nodes.find_link(node_group, node, node.inputs[1])
-    targetNode = link.from_node
-
-    stage['params'].append(targetNode.inputs[0].default_value)
+    target_node = link.from_node
+    while target_node.bl_idname == 'NodeReroute': # Step through reroutes
+        target_node = nodes.find_node_by_link(node_group, target_node, target_node.inputs[0])
+    stage['params'].append(target_node.inputs[0].default_value)
 
 def make_draw_meshes(stage, node_group, node):
     stage['command'] = 'draw_meshes'
@@ -923,6 +922,8 @@ def make_render_target(n, scale, depth_buffer_id=None):
     target['format'] = n.inputs[4].default_value
     if n.inputs[5].default_value:
         target['ping_pong'] = True
+    if len(n.inputs) > 6 and n.inputs[6].default_value == True:
+        target['mipmaps'] = True
     if scale != 1.0:
         target['scale'] = scale    
     if depth_buffer_id != None:

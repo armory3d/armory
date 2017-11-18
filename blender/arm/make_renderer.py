@@ -578,6 +578,11 @@ def make_deferred(rpdat):
     if not rpdat.rp_compositornodes:
         pass
 
+    if rpdat.rp_compositornodes and rpdat.rp_autoexposure:
+        links.new(nodes[last_node].inputs[0].links[0].from_node.outputs[0], nodes['Generate Mipmaps Luminance'].inputs[0])
+        links.new(nodes['Generate Mipmaps Luminance'].outputs[0], nodes[last_node].inputs[0])
+        nodes['color'].inputs[6].default_value = True # Mipmaps
+
     if rpdat.rp_overlays:
         links.new(nodes[last_node].outputs[0], nodes['Clear Target Overlay'].inputs[0])
         last_node = 'Draw Meshes Overlay'

@@ -77,6 +77,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
              ('None', 'None', 'None'),
       ],
       name="Background", description="Background type", default='World', update=update_renderpath)    
+    rp_autoexposure = bpy.props.BoolProperty(name="Auto Exposure", description="Adjust exposure based on luminance", default=False, update=update_renderpath)
     rp_compositornodes = bpy.props.BoolProperty(name="Compositor", description="Draw compositor nodes", default=True, update=update_renderpath)
     rp_shadowmap = EnumProperty(
         items=[('None', 'None', 'None'),

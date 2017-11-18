@@ -147,6 +147,8 @@ def build_node_tree(world):
             wrd.world_defs += '_RTGI'
         if wrd.arm_ssgi_rays == '9':
             wrd.world_defs += '_SSGICone9'
+    if rpdat.rp_autoexposure:
+        wrd.world_defs += '_AutoExposure'
 
     if voxelgi or voxelao:
         assets.add_khafile_def('arm_voxelgi')

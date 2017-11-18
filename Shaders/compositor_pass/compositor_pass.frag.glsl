@@ -250,6 +250,10 @@ void main() {
 	fragColor.rgb *= compoExposureStrength;
 #endif
 
+#ifdef _AutoExposure
+	vec3 expo = textureLod(tex, vec2(0,0), 100).rgb;
+	fragColor.rgb *= vec3(1.0) - min(expo, vec3(autoExposureStrength));
+#endif
 #ifdef _Hist // Auto-exposure
 	if (texCoord.x < 0.1) fragColor.rgb = textureLod(histogram, vec2(0, 0), 9.0).rrr; // 512x512
 	// float minBrightness = 0.03f;

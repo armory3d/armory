@@ -301,6 +301,7 @@ def init_properties():
     bpy.types.World.arm_volumetric_light_air_color = bpy.props.FloatVectorProperty(name="Air Color", size=3, default=[1.0, 1.0, 1.0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_pcss_rings = bpy.props.IntProperty(name="Rings", description="", default=20, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_shadowmap_split = bpy.props.FloatProperty(name="Cascade Split", description="Split factor for cascaded shadow maps, higher factor favors detail on close surfaces", default=0.8, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_autoexposure_strength = bpy.props.FloatProperty(name="Auto Exposure Strength", default=0.7, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_ssrs_ray_step = bpy.props.FloatProperty(name="Ray Step", default=0.01, update=assets.invalidate_shader_cache)
     bpy.types.World.rp_rendercapture_format = EnumProperty(
         items=[('8bit', '8bit', '8bit'),

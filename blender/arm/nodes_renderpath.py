@@ -529,6 +529,7 @@ class TargetNode(Node, CGPipelineTreeNode):
         self.inputs.new('NodeSocketShader', "Depth Buffer")
         self.inputs.new('NodeSocketString', "Format")
         self.inputs.new('NodeSocketBool', "Ping Pong")
+        self.inputs.new('NodeSocketBool', "Mipmaps")
 
         self.outputs.new('NodeSocketShader', "Target")
 
