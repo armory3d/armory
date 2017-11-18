@@ -214,14 +214,12 @@ def init_properties():
     # Render path generator
     bpy.types.World.rp_preset = EnumProperty(
         items=[('Low', 'Low', 'Low'),
-               ('VR Low', 'VR Low', 'VR Low'),
-               ('Mobile Low', 'Mobile Low', 'Mobile Low'),
+               ('VR', 'VR', 'VR'),
+               ('Mobile', 'Mobile', 'Mobile'),
                ('Forward', 'Forward', 'Forward'),
                ('Deferred', 'Deferred', 'Deferred'),
-               ('Deferred Plus', 'Deferred Plus (experimental)', 'Deferred Plus'),
-               ('Grease Pencil', 'Grease Pencil', 'Grease Pencil'),
-               ('Render Capture', 'Render Capture', 'Render Capture'),
-               ('Max', 'Max', 'Max'),
+               ('Max (Game)', 'Max (Game)', 'Max (Game)'),
+               ('Max (Render)', 'Max (Render)', 'Max (Render)'),
                ],
         name="Preset", description="Render path preset", default='Deferred', update=update_preset)
     bpy.types.World.arm_voxelgi_diff = bpy.props.FloatProperty(name="Diffuse", description="", default=3.0, update=assets.invalidate_shader_cache)

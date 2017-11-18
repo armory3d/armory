@@ -124,7 +124,7 @@ def set_preset(self, context, preset):
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Anisotropic'
         rpdat.arm_diffuse_model = 'Lambert'
-    elif preset == 'Render Capture':
+    elif preset == 'Max (Render)':
         rpdat.rp_renderer = 'Deferred'
         rpdat.rp_shadowmap = '4096'
         rpdat.rp_shadowmap_cascades = '4'
@@ -159,39 +159,7 @@ def set_preset(self, context, preset):
         rpdat.arm_pcss_state = 'On'
         rpdat.arm_texture_filter = 'Anisotropic'
         rpdat.arm_diffuse_model = 'OrenNayar'
-    elif preset == 'Deferred Plus':
-        rpdat.rp_renderer = 'Deferred Plus'
-        rpdat.arm_material_model = 'Full'
-        rpdat.rp_shadowmap = '1024'
-        rpdat.rp_shadowmap_cascades = '1'
-        rpdat.rp_translucency_state = 'Auto'
-        rpdat.rp_overlays_state = 'Auto'
-        rpdat.rp_decals_state = 'Auto'
-        rpdat.rp_sss_state = 'Auto'
-        rpdat.rp_blending_state = 'Off'
-        rpdat.rp_hdr = True
-        rpdat.rp_background = 'World'
-        rpdat.rp_stereo = False
-        rpdat.rp_greasepencil = False
-        rpdat.rp_gi = 'Off'
-        rpdat.rp_render_to_texture = True
-        rpdat.rp_supersampling = '1'
-        rpdat.rp_antialiasing = 'TAA'
-        rpdat.rp_compositornodes = True
-        rpdat.rp_volumetriclight = False
-        rpdat.rp_ssgi = 'SSAO'
-        rpdat.rp_ssr = True
-        rpdat.rp_dfrs = False
-        rpdat.rp_dfao = False
-        rpdat.rp_dfgi = False
-        rpdat.rp_bloom = False
-        rpdat.rp_eyeadapt = False
-        rpdat.rp_rendercapture = False
-        rpdat.rp_motionblur = 'None'
-        rpdat.arm_rp_resolution = 'Display'
-        rpdat.arm_texture_filter = 'Anisotropic'
-        rpdat.arm_diffuse_model = 'Lambert'
-    elif preset == 'VR Low':
+    elif preset == 'VR':
         rpdat.rp_renderer = 'Forward'
         rpdat.rp_depthprepass = False
         rpdat.arm_material_model = 'Mobile'
@@ -224,7 +192,7 @@ def set_preset(self, context, preset):
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Point'
         rpdat.arm_diffuse_model = 'Lambert'
-    elif preset == 'Mobile Low':
+    elif preset == 'Mobile':
         rpdat.rp_renderer = 'Forward'
         rpdat.rp_depthprepass = False
         rpdat.arm_material_model = 'Mobile'
@@ -257,38 +225,7 @@ def set_preset(self, context, preset):
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Point'
         rpdat.arm_diffuse_model = 'Lambert'
-    elif preset == 'Grease Pencil':
-        rpdat.rp_renderer = 'Forward'
-        rpdat.rp_depthprepass = False
-        rpdat.arm_material_model = 'Solid'
-        rpdat.rp_shadowmap = 'None'
-        rpdat.rp_translucency_state = 'Off'
-        rpdat.rp_overlays_state = 'Off'
-        rpdat.rp_decals_state = 'Off'
-        rpdat.rp_sss_state = 'Off'
-        rpdat.rp_blending_state = 'Off'
-        rpdat.rp_hdr = False
-        rpdat.rp_background = 'World'
-        rpdat.rp_stereo = False
-        rpdat.rp_greasepencil = True
-        rpdat.rp_render_to_texture = False
-        rpdat.rp_supersampling = '1'
-        rpdat.rp_antialiasing = 'None'
-        rpdat.rp_compositornodes = False
-        rpdat.rp_volumetriclight = False
-        rpdat.rp_ssgi = 'Off'
-        rpdat.rp_ssr = False
-        rpdat.rp_dfrs = False
-        rpdat.rp_dfao = False
-        rpdat.rp_dfgi = False
-        rpdat.rp_bloom = False
-        rpdat.rp_eyeadapt = False
-        rpdat.rp_rendercapture = False
-        rpdat.rp_motionblur = 'None'
-        rpdat.arm_rp_resolution = 'Display'
-        rpdat.arm_texture_filter = 'Anisotropic'
-        rpdat.arm_diffuse_model = 'Lambert'
-    elif preset == 'Max':
+    elif preset == 'Max (Game)':
         rpdat.rp_renderer = 'Deferred'
         rpdat.rp_shadowmap = '4096'
         rpdat.rp_shadowmap_cascades = '4'
