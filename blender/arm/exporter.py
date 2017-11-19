@@ -576,23 +576,19 @@ class ArmoryExporter:
 
     def export_object_sampled_animation(self, bobject, scene, o):
         # This function exports animation as full 4x4 matrices for each frame
-        currentFrame = scene.frame_current
-        currentSubframe = scene.frame_subframe
-
-        animationFlag = False
-        m1 = bobject.matrix_local.copy()
-
+        animation_flag = False
+        # m1 = bobject.matrix_local.copy()
         # Font in
         # for i in range(self.beginFrame, self.endFrame):
         #     scene.frame_set(i)
         #     m2 = bobject.matrix_local
         #     if ArmoryExporter.matrices_different(m1, m2):
-        #         animationFlag = True
+        #         animation_flag = True
         #         break
-        animationFlag = bobject.animation_data != None and bobject.animation_data.action != None and bobject.type != 'ARMATURE'
+        animation_flag = bobject.animation_data != None and bobject.animation_data.action != None and bobject.type != 'ARMATURE'
 
         # Font out
-        if animationFlag:
+        if animation_flag:
 
             if not 'object_actions' in o:
                 o['object_actions'] = []
@@ -616,11 +612,12 @@ class ArmoryExporter:
             tracko['frames'] = []
 
             begin_frame, end_frame = int(action.frame_range[0]), int(action.frame_range[1])
+            end_frame += 1
 
             for i in range(begin_frame, end_frame):
-                tracko['frames'].append(((i - begin_frame)))
+                tracko['frames'].append(i - begin_frame)
 
-            tracko['frames'].append((end_frame))
+            tracko['frames'].append(end_frame)
 
             tracko['values'] = []
 
@@ -628,8 +625,6 @@ class ArmoryExporter:
                 scene.frame_set(i)
                 tracko['values'] += self.write_matrix(bobject.matrix_local) # Continuos array of matrix transforms
 
-            scene.frame_set(end_frame)
-            tracko['values'] += self.write_matrix(bobject.matrix_local)
             oanim['tracks'] = [tracko]
             self.export_pose_markers(oanim, action)
 
@@ -644,69 +639,22 @@ class ArmoryExporter:
                 oaction['transform'] = []
                 arm.utils.write_arm(fp, actionf)
 
-        scene.frame_set(currentFrame, currentSubframe)
-
-    def export_bone_sampled_animation(self, poseBone, scene, o, action):
-        # This function exports bone animation as full 4x4 matrices for each frame.
-        currentFrame = scene.frame_current
-        currentSubframe = scene.frame_subframe
-
-        # Frame range
-        begin_frame, end_frame = int(action.frame_range[0]), int(action.frame_range[1])
-
-        animationFlag = False
-        m1 = poseBone.matrix.copy()
-
-        for i in range(begin_frame, end_frame):
-            scene.frame_set(i)
-            m2 = poseBone.matrix
-            if ArmoryExporter.matrices_different(m1, m2):
-                animationFlag = True
-                break
-
-        if animationFlag:
-            o['anim'] = {}
-            tracko = {}
-            tracko['target'] = "transform"
-            tracko['frames'] = []
-
-            for i in range(begin_frame, end_frame):
-                tracko['frames'].append(((i - begin_frame)))
-
-            tracko['frames'].append((end_frame))
-
-            tracko['values'] = []
-
-            parent = poseBone.parent
-            # TODO: this gets slow :/
-            if parent:
-                for i in range(begin_frame, end_frame + 1):
-                    scene.frame_set(i)
-                    tracko['values'] += self.write_matrix(parent.matrix.inverted() * poseBone.matrix)
-            else:
-                for i in range(begin_frame, end_frame + 1):
-                    scene.frame_set(i)
-                    tracko['values'] += self.write_matrix(poseBone.matrix)
-            o['anim']['tracks'] = [tracko]
-
-        scene.frame_set(currentFrame, currentSubframe)
-
     def export_key_frames(self, fcurve):
         keyo = []
-        keyCount = len(fcurve.keyframe_points)
-        for i in range(keyCount):
+        key_count = len(fcurve.keyframe_points)
+        for i in range(key_count):
             frame = fcurve.keyframe_points[i].co[0] - self.beginFrame
             keyo.append(frame)
         return keyo
 
     def export_key_frame_control_points(self, fcurve):
         keyminuso = []
-        keyCount = len(fcurve.keyframe_points)
-        for i in range(keyCount):
+        key_count = len(fcurve.keyframe_points)
+        for i in range(key_count):
             ctrl = fcurve.keyframe_points[i].handle_left[0] - self.beginFrame
             keyminuso.append(ctrl)
         keypluso = []
-        for i in range(keyCount):
+        for i in range(key_count):
             ctrl = fcurve.keyframe_points[i].handle_right[0] - self.beginFrame
             keypluso.append(ctrl)
 
@@ -714,8 +662,8 @@ class ArmoryExporter:
 
     def export_key_values(self, fcurve):
         keyo = []
-        keyCount = len(fcurve.keyframe_points)
-        for i in range(keyCount):
+        key_count = len(fcurve.keyframe_points)
+        for i in range(key_count):
             value = fcurve.keyframe_points[i].co[1]
             keyo.append(value)
 
@@ -723,13 +671,13 @@ class ArmoryExporter:
 
     def export_key_value_control_points(self, fcurve):
         keyminuso = []
-        keyCount = len(fcurve.keyframe_points)
-        for i in range(keyCount):
+        key_count = len(fcurve.keyframe_points)
+        for i in range(key_count):
             ctrl = fcurve.keyframe_points[i].handle_left[1]
             keyminuso.append(ctrl)
 
         keypluso = []
-        for i in range(keyCount):
+        for i in range(key_count):
             ctrl = fcurve.keyframe_points[i].handle_right[1]
             keypluso.append(ctrl)
         return keypluso, keypluso
@@ -1157,26 +1105,47 @@ class ArmoryExporter:
                             boneRef[1]["objectType"] = NodeTypeBone
 
     def export_bone_transform(self, armature, bone, scene, o, action):
-        curveArray = self.collect_bone_animation(armature, bone.name)
-        animation = ((len(curveArray) != 0) or ArmoryExporter.sample_animation_flag)
+        curve_array = self.collect_bone_animation(armature, bone.name)
+        animation = len(curve_array) != 0 or ArmoryExporter.sample_animation_flag
 
         transform = bone.matrix_local.copy()
-        parentBone = bone.parent
-        if parentBone:
-            transform = parentBone.matrix_local.inverted() * transform
+        parent_bone = bone.parent
+        if parent_bone:
+            transform = parent_bone.matrix_local.inverted() * transform
 
-        poseBone = armature.pose.bones.get(bone.name)
-        if poseBone:
-            transform = poseBone.matrix.copy()
-            parentPoseBone = poseBone.parent
-            if parentPoseBone:
-                transform = parentPoseBone.matrix.inverted() * transform
+        pose_bone = armature.pose.bones.get(bone.name)
+        if pose_bone:
+            transform = pose_bone.matrix.copy()
+            parent_pose_bone = pose_bone.parent
+            if parent_pose_bone:
+                transform = parent_pose_bone.matrix.inverted() * transform
 
         o['transform'] = {}
         o['transform']['values'] = self.write_matrix(transform)
 
-        if animation and poseBone:
-            self.export_bone_sampled_animation(poseBone, scene, o, action)
+        if animation and pose_bone:
+            begin_frame, end_frame = int(action.frame_range[0]), int(action.frame_range[1])
+
+            # animation_flag = False
+            # m1 = pose_bone.matrix.copy()
+            # for i in range(begin_frame, end_frame):
+            #     scene.frame_set(i)
+            #     m2 = pose_bone.matrix
+            #     if ArmoryExporter.matrices_different(m1, m2):
+            #         animation_flag = True
+            #         break
+            # if animation_flag:
+
+            o['anim'] = {}
+            tracko = {}
+            o['anim']['tracks'] = [tracko]
+            tracko['target'] = "transform"
+            tracko['frames'] = []
+            for i in range(begin_frame, end_frame + 1):
+                tracko['frames'].append(i - begin_frame)
+
+            tracko['values'] = []
+            self.bone_tracks.append((tracko['values'], pose_bone))
 
     def use_default_material(self, bobject, o):
         if arm.utils.export_bone_data(bobject):
@@ -1255,6 +1224,19 @@ class ArmoryExporter:
                     if region.type == 'HEADER': # Use header to report full width, panels included
                         return region.width
         return 0
+
+    def write_bone_matrices(self, scene, action):
+        begin_frame, end_frame = int(action.frame_range[0]), int(action.frame_range[1])
+        if len(self.bone_tracks) > 0:
+            for i in range(begin_frame, end_frame + 1):
+                scene.frame_set(i)
+                for track in self.bone_tracks:
+                    values, pose_bone = track[0], track[1]
+                    parent = pose_bone.parent
+                    if parent:
+                        values += self.write_matrix(parent.matrix.inverted() * pose_bone.matrix)
+                    else:
+                        values += self.write_matrix(pose_bone.matrix)
 
     def export_object(self, bobject, scene, parento=None):
         # This function exports a single object in the scene and includes its name,
@@ -1487,11 +1469,13 @@ class ArmoryExporter:
                     if bdata.arm_cached == False or not os.path.exists(fp):
                         print('Exporting armature action ' + aname)
                         bones = []
+                        self.bone_tracks = []
                         for bone in bdata.bones:
                             if not bone.parent:
                                 boneo = {}
                                 self.export_bone(bobject, bone, scene, boneo, action)
                                 bones.append(boneo)
+                        self.write_bone_matrices(scene, action)
                         if len(bones) > 0 and 'anim' in bones[0]:
                             self.export_pose_markers(bones[0]['anim'], action)
                         # Save action separately
@@ -1517,7 +1501,7 @@ class ArmoryExporter:
             for subbobject in bobject.children:
                 self.export_object(subbobject, scene, o)
 
-    def export_skin_quality(self, bobject, armature, export_vertex_array, o):
+    def export_skin_quality(self, bobject, armature, vert_list, o):
         # This function exports all skinning data, which includes the skeleton
         # and per-vertex bone influence data
         oskin = {}
@@ -1556,7 +1540,6 @@ class ArmoryExporter:
 
         # Export the per-vertex bone influence data
         group_remap = []
-
         for group in bobject.vertex_groups:
             group_name = group.name
             for i in range(bone_count):
@@ -1571,14 +1554,14 @@ class ArmoryExporter:
         bone_weight_array = []
 
         warn_bones = False
-        mesh_vertex_array = bobject.data.vertices
-        for ev in export_vertex_array:
+        vertices = bobject.data.vertices
+        for v in vert_list:
             bone_count = 0
             total_weight = 0.0
             bone_values = []
-            for element in mesh_vertex_array[ev.vertex_index].groups:
-                bone_index = group_remap[element.group]
-                bone_weight = element.weight
+            for g in vertices[v.vertex_index].groups:
+                bone_index = group_remap[g.group]
+                bone_weight = g.weight
                 if bone_index >= 0 and bone_weight != 0.0:
                     bone_values.append((bone_weight, bone_index))
                     total_weight += bone_weight
@@ -2609,12 +2592,8 @@ class ArmoryExporter:
         self.scene = context.scene if scene == None else scene
         print('Exporting ' + arm.utils.asset_name(self.scene))
 
-        originalFrame = self.scene.frame_current
-        originalSubframe = self.scene.frame_subframe
-        self.restoreFrame = False
-
+        current_frame, current_subframe = scene.frame_current, scene.frame_subframe
         self.beginFrame = self.scene.frame_start
-        # self.endFrame = self.scene.frame_end
         self.output['frame_time'] = 1.0 / (self.scene.render.fps / self.scene.render.fps_base)
 
         if write_capture_info:
@@ -2639,6 +2618,7 @@ class ArmoryExporter:
         self.materialToArmObjectDict = dict()
         self.objectToArmObjectDict = dict()
         self.active_layers = []
+        self.bone_tracks = []
         for i in range(0, len(self.scene.layers)):
             if self.scene.layers[i] == True:
                 self.active_layers.append(i)
@@ -2806,9 +2786,6 @@ class ArmoryExporter:
             self.output['objects'].append(o)
             self.output['camera_ref'] = 'DefaultCamera'
 
-        if self.restoreFrame:
-            self.scene.frame_set(originalFrame, originalSubframe)
-
         # Scene root traits
         if wrd.arm_physics != 'Disabled' and ArmoryExporter.export_physics:
             if not 'traits' in self.output:
@@ -2857,6 +2834,10 @@ class ArmoryExporter:
             slot.material = bpy.data.materials[orig_mat]
         for mat in matvars:
             bpy.data.materials.remove(mat, do_unlink=True)
+
+        # Restore frame
+        if scene.frame_current != current_frame: 
+            scene.frame_set(current_frame, current_subframe)
 
         print('Scene built in ' + str(time.time() - profile_time))
         return {'FINISHED'}
@@ -3295,10 +3276,8 @@ class ArmoryExporter:
         o = {}
         o['name'] = gp.name
         o['layers'] = []
-        # originalFrame = self.scene.frame_current
         for layer in gp.layers:
             o['layers'].append(self.export_grease_pencil_layer(layer))
-        # self.scene.frame_set(originalFrame)
         # o['palettes'] = []
         # for palette in gp.palettes:
             # o['palettes'].append(self.export_grease_pencil_palette(palette))
