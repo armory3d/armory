@@ -6,10 +6,9 @@ import sys
 import json
 import platform
 import subprocess
-import arm.make_compositor as make_compositor
 import arm.assets as assets
 import arm.utils
-import arm.nodes as nodes
+import arm.node_utils as node_utils
 
 def build_node_trees(assets_path):
     fp = arm.utils.get_fp()
@@ -68,7 +67,7 @@ def make_set_target(stage, node_group, node, currentNode=None, target_index=1, v
     if len(stage['params']) == 0:
         stage['params'].append(str(viewport_scale))
 
-    currentNode = nodes.find_node_by_link(node_group, currentNode, currentNode.inputs[target_index])
+    currentNode = node_utils.find_node_by_link(node_group, currentNode, currentNode.inputs[target_index])
     
     if currentNode.bl_idname == 'TargetNodeType' or currentNode.bl_idname == 'ShadowMapNodeType':
         targetId = currentNode.inputs[0].default_value
@@ -117,10 +116,10 @@ def make_clear_image(stage, image_name, color_val):
 
 def make_generate_mipmaps(stage, node_group, node):
     stage['command'] = 'generate_mipmaps'
-    link = nodes.find_link(node_group, node, node.inputs[1])
+    link = node_utils.find_link(node_group, node, node.inputs[1])
     target_node = link.from_node
     while target_node.bl_idname == 'NodeReroute': # Step through reroutes
-        target_node = nodes.find_node_by_link(node_group, target_node, target_node.inputs[0])
+        target_node = node_utils.find_node_by_link(node_group, target_node, target_node.inputs[0])
     stage['params'].append(target_node.inputs[0].default_value)
 
 def make_draw_meshes(stage, node_group, node):
@@ -151,7 +150,7 @@ def make_bind_target(stage, node_group, node, constant_name, currentNode=None, t
         
     stage['command'] = 'bind_target'
     
-    link = nodes.find_link(node_group, currentNode, currentNode.inputs[target_index])
+    link = node_utils.find_link(node_group, currentNode, currentNode.inputs[target_index])
     currentNode = link.from_node
     
     if currentNode.bl_idname == 'NodeReroute':
@@ -160,11 +159,11 @@ def make_bind_target(stage, node_group, node, constant_name, currentNode=None, t
     elif currentNode.bl_idname == 'GBufferNodeType':
         for i in range(0, 5):
             if currentNode.inputs[i].is_linked:
-                targetNode = nodes.find_node_by_link(node_group, currentNode, currentNode.inputs[i])
+                targetNode = node_utils.find_node_by_link(node_group, currentNode, currentNode.inputs[i])
                 targetId = targetNode.inputs[0].default_value
                 # if i == 0 and targetNode.inputs[3].default_value == True: # Depth
                 if targetNode.inputs[3].is_linked: # Depth
-                    db_node = nodes.find_node_by_link(node_group, targetNode, targetNode.inputs[3])
+                    db_node = node_utils.find_node_by_link(node_group, targetNode, targetNode.inputs[3])
                     db_id = db_node.inputs[0].default_value
                     stage['params'].append('_' + db_id)
                     stage['params'].append(constant_name + 'D')
@@ -226,7 +225,7 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     scon = 'compositor_pass'
     wrd = bpy.data.worlds['Arm']
     world_defs = wrd.world_defs
-    compositor_defs = make_compositor.parse_defs(bpy.data.scenes[0].node_tree) # Thrown in scene 0 for now
+    compositor_defs = ''    
     compositor_defs += '_CTone' + wrd.arm_tonemap
     # Additional compositor flags
     compo_depth = False # Read depth
@@ -274,9 +273,6 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     stage['params'].append(data_name + '/' + data_name + '/' + scon)
     # Include data and shaders
     assets.add_shader2(scon, data_name)
-    # Link assets
-    # assets.add(build_node_trees.assets_path + 'noise256.png')
-    # assets.add_embedded_data('noise256.png')
 
 def make_draw_grease_pencil(stage, node_group, node):
     stage['command'] = 'draw_grease_pencil'
@@ -295,18 +291,18 @@ def process_call_function(stage, stages, node, node_group):
     # Step till merge node
     stage['returns_true'] = []
     if node.outputs[0].is_linked:
-        stageNode = nodes.find_node_by_link_from(node_group, node, node.outputs[0])
+        stageNode = node_utils.find_node_by_link_from(node_group, node, node.outputs[0])
         buildNode(stage['returns_true'], stageNode, node_group)
     
     stage['returns_false'] = []
     margeNode = None
     if node.outputs[1].is_linked:
-        stageNode = nodes.find_node_by_link_from(node_group, node, node.outputs[1])
+        stageNode = node_utils.find_node_by_link_from(node_group, node, node.outputs[1])
         margeNode = buildNode(stage['returns_false'], stageNode, node_group)
     
     # Continue using top level stages after merge node
     if margeNode != None:
-        afterMergeNode = nodes.find_node_by_link_from(node_group, margeNode, margeNode.outputs[0])
+        afterMergeNode = node_utils.find_node_by_link_from(node_group, margeNode, margeNode.outputs[0])
         buildNode(stages, afterMergeNode, node_group)
 
 def make_quad_pass(stages, node_group, node, target_index=1, bind_target_indices=[3, 5, 7], bind_target_constants=None, shader_context=None, viewport_scale=1.0, with_clear=False, with_draw_quad=True):
@@ -635,7 +631,7 @@ def buildNode(stages, node, node_group):
         if node.outputs[1].is_linked:
             count = node.inputs[2].default_value
             for i in range(0, count):
-                loopNode = nodes.find_node_by_link_from(node_group, node, node.outputs[1])
+                loopNode = node_utils.find_node_by_link_from(node_group, node, node.outputs[1])
                 buildNode(stages, loopNode, node_group)
     
     elif node.bl_idname == 'LoopLampsNodeType':
@@ -644,7 +640,7 @@ def buildNode(stages, node, node_group):
         stages.append(stage)
         stage['returns_true'] = []
         if node.outputs[1].is_linked:
-            loopNode = nodes.find_node_by_link_from(node_group, node, node.outputs[1])
+            loopNode = node_utils.find_node_by_link_from(node_group, node, node.outputs[1])
             buildNode(stage['returns_true'], loopNode, node_group)
     
     elif node.bl_idname == 'DrawStereoNodeType':
@@ -653,7 +649,7 @@ def buildNode(stages, node, node_group):
         stages.append(stage)
         stage['returns_true'] = []
         if node.outputs[1].is_linked:
-            loopNode = nodes.find_node_by_link_from(node_group, node, node.outputs[1])
+            loopNode = node_utils.find_node_by_link_from(node_group, node, node.outputs[1])
             buildNode(stage['returns_true'], loopNode, node_group)
 
     elif node.bl_idname == 'CallFunctionNodeType':
@@ -744,7 +740,7 @@ def buildNode(stages, node, node_group):
     
     # Build next stage
     if node.outputs[0].is_linked:
-        stageNode = nodes.find_node_by_link_from(node_group, node, node.outputs[0])
+        stageNode = node_utils.find_node_by_link_from(node_group, node, node.outputs[0])
         buildNode(stages, stageNode, node_group)
 
     return None
@@ -760,7 +756,7 @@ def get_root_node(node_group):
     rn = None
     for n in node_group.nodes:
         if n.bl_idname == 'BeginNodeType':
-            rn = nodes.find_node_by_link_from(node_group, n, n.outputs[0])
+            rn = node_utils.find_node_by_link_from(node_group, n, n.outputs[0])
             break
     return rn
 
@@ -815,39 +811,39 @@ def traverse_renderpath(node, node_group, render_targets, depth_buffers):
     # Collect render targets
     if node.bl_idname == 'SetTargetNodeType' or node.bl_idname == 'BindTargetNodeType' or node.bl_idname == 'QuadPassNodeType' or node.bl_idname == 'DrawCompositorNodeType' or node.bl_idname == 'DrawCompositorWithFXAANodeType':
         if node.inputs[1].is_linked:
-            tnode = nodes.find_node_by_link(node_group, node, node.inputs[1])
+            tnode = node_utils.find_node_by_link(node_group, node, node.inputs[1])
             parse_render_target(tnode, node_group, render_targets, depth_buffers)
 
     # Traverse loops
     elif node.bl_idname == 'LoopStagesNodeType' or node.bl_idname == 'LoopLampsNodeType' or node.bl_idname == 'DrawStereoNodeType':
         if node.outputs[1].is_linked:
-            loop_node = nodes.find_node_by_link_from(node_group, node, node.outputs[1])
+            loop_node = node_utils.find_node_by_link_from(node_group, node, node.outputs[1])
             traverse_renderpath(loop_node, node_group, render_targets, depth_buffers)
     
     # Prebuilt
     elif node.bl_idname == 'MotionBlurPassNodeType' or node.bl_idname == 'MotionBlurVelocityPassNodeType' or node.bl_idname == 'CopyPassNodeType' or node.bl_idname == 'MatIDToDepthNodeType' or node.bl_idname == 'BlendPassNodeType' or node.bl_idname == 'CombinePassNodeType' or node.bl_idname == 'HistogramPassNodeType' or node.bl_idname == 'DebugNormalsPassNodeType' or node.bl_idname == 'FXAAPassNodeType' or node.bl_idname == 'SSResolveNodeType' or node.bl_idname == 'TAAPassNodeType' or node.bl_idname == 'WaterPassNodeType' or node.bl_idname == 'DeferredLightPassNodeType' or node.bl_idname == 'DeferredIndirectPassNodeType' or node.bl_idname == 'VolumetricLightPassNodeType' or node.bl_idname == 'TranslucentResolvePassNodeType':
         if node.inputs[1].is_linked:
-            tnode = nodes.find_node_by_link(node_group, node, node.inputs[1])
+            tnode = node_utils.find_node_by_link(node_group, node, node.inputs[1])
             parse_render_target(tnode, node_group, render_targets, depth_buffers)
     elif node.bl_idname == 'SSRPassNodeType' or node.bl_idname == 'SSGIPassNodeType' or node.bl_idname == 'ApplySSAOPassNodeType' or node.bl_idname == 'BloomPassNodeType' or node.bl_idname == 'SMAAPassNodeType':
         for i in range(1, 4):
             if node.inputs[i].is_linked:
-                tnode = nodes.find_node_by_link(node_group, node, node.inputs[i])
+                tnode = node_utils.find_node_by_link(node_group, node, node.inputs[i])
                 parse_render_target(tnode, node_group, render_targets, depth_buffers)
     elif node.bl_idname == 'SSAOPassNodeType' or node.bl_idname == 'SSAOReprojectPassNodeType' or node.bl_idname == 'SSSPassNodeType' or node.bl_idname == 'BlurBasicPassNodeType':
         for i in range(1, 3):
             if node.inputs[i].is_linked:
-                tnode = nodes.find_node_by_link(node_group, node, node.inputs[i])
+                tnode = node_utils.find_node_by_link(node_group, node, node.inputs[i])
                 parse_render_target(tnode, node_group, render_targets, depth_buffers)
 
     # Next stage
     if node.outputs[0].is_linked:
-        stagenode = nodes.find_node_by_link_from(node_group, node, node.outputs[0])
+        stagenode = node_utils.find_node_by_link_from(node_group, node, node.outputs[0])
         traverse_renderpath(stagenode, node_group, render_targets, depth_buffers)
         
 def parse_render_target(node, node_group, render_targets, depth_buffers):
     if node.bl_idname == 'NodeReroute':
-        tnode = nodes.find_node_by_link(node_group, node, node.inputs[0])
+        tnode = node_utils.find_node_by_link(node_group, node, node.inputs[0])
         parse_render_target(tnode, node_group, render_targets, depth_buffers)
         
     elif node.bl_idname == 'TargetNodeType': # or node.bl_idname == 'ShadowMapNodeType': # Create SM dynamically instead
@@ -860,7 +856,7 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
         depth_buffer_id = None
         if node.bl_idname == 'TargetNodeType' and node.inputs[3].is_linked:
             # Find depth buffer
-            depth_node = nodes.find_node_by_link(node_group, node, node.inputs[3])
+            depth_node = node_utils.find_node_by_link(node_group, node, node.inputs[3])
             depth_buffer_id = depth_node.inputs[0].default_value
             # Append depth buffer
             found = False
@@ -877,9 +873,9 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
         # Get scale
         scale = 1.0
         if node.inputs[1].is_linked: # Assume Screen node
-            size_node = nodes.find_node_by_link(node_group, node, node.inputs[1])
+            size_node = node_utils.find_node_by_link(node_group, node, node.inputs[1])
             while size_node.bl_idname == 'NodeReroute': # Step through reroutes
-                size_node = nodes.find_node_by_link(node_group, size_node, size_node.inputs[0])
+                size_node = node_utils.find_node_by_link(node_group, size_node, size_node.inputs[0])
             scale = size_node.inputs[0].default_value
             
         # Append target
@@ -900,9 +896,9 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
         # Get scale
         scale = 1.0
         if node.inputs[1].is_linked: # Assume Screen node
-            size_node = nodes.find_node_by_link(node_group, node, node.inputs[1])
+            size_node = node_utils.find_node_by_link(node_group, node, node.inputs[1])
             while size_node.bl_idname == 'NodeReroute': # Step through reroutes
-                size_node = nodes.find_node_by_link(node_group, size_node, size_node.inputs[0])
+                size_node = node_utils.find_node_by_link(node_group, size_node, size_node.inputs[0])
             scale = size_node.inputs[0].default_value
 
         if node.bl_idname == 'ImageNodeType':
@@ -914,7 +910,7 @@ def parse_render_target(node, node_group, render_targets, depth_buffers):
     elif node.bl_idname == 'GBufferNodeType':
         for i in range(0, 5):
             if node.inputs[i].is_linked:
-                n = nodes.find_node_by_link(node_group, node, node.inputs[i])
+                n = node_utils.find_node_by_link(node_group, node, node.inputs[i])
                 parse_render_target(n, node_group, render_targets, depth_buffers)
 
 def make_render_target(n, scale, depth_buffer_id=None):

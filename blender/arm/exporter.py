@@ -23,7 +23,6 @@ import arm.assets as assets
 import arm.log as log
 import arm.material.make as make_material
 import arm.material.mat_batch as mat_batch
-import arm.nodes as nodes
 import arm.make_renderer as make_renderer
 import arm.make_renderpath as make_renderpath
 

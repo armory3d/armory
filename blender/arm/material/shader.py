@@ -1,5 +1,5 @@
 import bpy
-import arm.make_utils as make_utils
+import arm.utils
 
 class Shader:
 
@@ -87,7 +87,7 @@ class Shader:
 
         s += self.header
 
-        defs = make_utils.def_strings_to_array(bpy.data.worlds['Arm'].world_defs)
+        defs = arm.utils.def_strings_to_array(bpy.data.worlds['Arm'].world_defs)
         for a in defs:
             s += '#define {0}\n'.format(a)
 

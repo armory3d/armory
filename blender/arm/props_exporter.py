@@ -1,7 +1,7 @@
 import os
 import shutil
 import arm.assets as assets
-import arm.make_utils as make_utils
+import arm.utils
 import bpy
 import stat
 from bpy.types import Menu, Panel, UIList

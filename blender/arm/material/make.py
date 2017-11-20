@@ -1,18 +1,18 @@
 import bpy
 import arm.utils
-import arm.nodes
+import arm.node_utils
 import arm.material.make_shader as make_shader
 import arm.material.mat_batch as mat_batch
 import arm.material.mat_state as mat_state
 import arm.material.make_texture as make_texture
 
-def glsltype(t): # Merge with cycles
+def glsl_type(t): # Merge with cycles
     if t == 'RGB' or t == 'RGBA' or t == 'VECTOR':
         return 'vec3'
     else:
         return 'float'
 
-def glslvalue(val):
+def glsl_value(val):
     if str(type(val)) == "<class 'bpy_prop_array'>":
         res = []
         for v in val:
@@ -68,13 +68,13 @@ def parse(material, mat_data, mat_users, mat_armusers):
 
             if rpdat.rp_sss_state == 'On':
                 sss = False
-                sss_node = arm.nodes.get_node_by_type(material.node_tree, 'SUBSURFACE_SCATTERING')
+                sss_node = arm.node_utils.get_node_by_type(material.node_tree, 'SUBSURFACE_SCATTERING')
                 if sss_node != None and sss_node.outputs[0].is_linked: # Check linked node
                     sss = True
-                sss_node = arm.nodes.get_node_by_type(material.node_tree, 'BSDF_PRINCIPLED')
+                sss_node = arm.node_utils.get_node_by_type(material.node_tree, 'BSDF_PRINCIPLED')
                 if sss_node != None and sss_node.outputs[0].is_linked and (sss_node.inputs[1].is_linked or sss_node.inputs[1].default_value != 0.0):
                     sss = True
-                sss_node = arm.nodes.get_node_armorypbr(material.node_tree)
+                sss_node = arm.node_utils.get_node_armorypbr(material.node_tree)
                 if sss_node != None and sss_node.outputs[0].is_linked and (sss_node.inputs[8].is_linked or sss_node.inputs[8].default_value != 0.0):
                     sss = True
                 if sss:
@@ -105,7 +105,7 @@ def parse(material, mat_data, mat_users, mat_armusers):
                             uname = arm.utils.safesrc(inp.node.name) + arm.utils.safesrc(inp.name)  # Merge with cycles
                             const = {}
                             const['name'] = uname
-                            const[glsltype(inp.type)] = glslvalue(inp.default_value)
+                            const[glsl_type(inp.type)] = glsl_value(inp.default_value)
                             c['bind_constants'].append(const)
 
         elif rp == 'translucent':

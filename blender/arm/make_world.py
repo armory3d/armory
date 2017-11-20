@@ -6,7 +6,7 @@ import json
 import arm.write_probes as write_probes
 import arm.assets as assets
 import arm.utils
-import arm.nodes as nodes
+import arm.node_utils as node_utils
 import arm.log as log
 
 def build_node_trees(active_worlds):
@@ -42,7 +42,7 @@ def build_node_tree(world):
     # Traverse world node tree
     parsed = False
     if world.node_tree != None:
-        output_node = nodes.get_node_by_type(world.node_tree, 'OUTPUT_WORLD')
+        output_node = node_utils.get_node_by_type(world.node_tree, 'OUTPUT_WORLD')
         if output_node != None:
             parse_world_output(world, output_node, context)
             parsed = True
@@ -54,7 +54,6 @@ def build_node_tree(world):
         envmap_strength_const['name'] = 'envmapStrength'
         envmap_strength_const['float'] = 1.0
         context['bind_constants'].append(envmap_strength_const)
-        # world.arm_envtex_color = [0.051, 0.051, 0.051, 1.0]
         c = world.horizon_color
         world.arm_envtex_color = [c[0], c[1], c[2], 1.0]
         world.arm_envtex_strength = envmap_strength_const['float']
@@ -200,7 +199,7 @@ def write_output(output):
 
 def parse_world_output(world, node, context):
     if node.inputs[0].is_linked:
-        surface_node = nodes.find_node_by_link(world.node_tree, node, node.inputs[0])
+        surface_node = node_utils.find_node_by_link(world.node_tree, node, node.inputs[0])
         parse_surface(world, surface_node, context)
     
 def parse_surface(world, node, context):
@@ -223,7 +222,7 @@ def parse_surface(world, node, context):
         context['bind_constants'].append(envmap_strength_const)
         
         if node.inputs[0].is_linked:
-            color_node = nodes.find_node_by_link(world.node_tree, node, node.inputs[0])
+            color_node = node_utils.find_node_by_link(world.node_tree, node, node.inputs[0])
             parse_color(world, color_node, context, envmap_strength_const)
 
         # Cache results

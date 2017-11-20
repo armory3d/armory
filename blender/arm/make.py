@@ -14,7 +14,6 @@ import arm.write_data as write_data
 import arm.make_logic as make_logic
 import arm.make_renderpath as make_renderpath
 import arm.make_world as make_world
-import arm.make_utils as make_utils
 import arm.make_state as state
 import arm.assets as assets
 import arm.log as log
@@ -148,7 +147,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
         modules.append('ui')
     print('Exported modules: ' + str(modules))
 
-    defs = make_utils.def_strings_to_array(wrd.world_defs)
+    defs = arm.utils.def_strings_to_array(wrd.world_defs)
     print('Shader flags: ' + str(defs))
 
     # Write referenced shader passes
@@ -160,7 +159,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
             if not os.path.exists(raw_shaders_path + '/' + shader_name):
                 continue
             if shader_name.startswith('compositor_pass'):
-                cdefs = make_utils.def_strings_to_array(wrd.compo_defs)
+                cdefs = arm.utils.def_strings_to_array(wrd.compo_defs)
                 compile_shader_pass(raw_shaders_path, shader_name, defs + cdefs)
             elif shader_name.startswith('grease_pencil'):
                 compile_shader_pass(raw_shaders_path, shader_name, [])
@@ -212,7 +211,7 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
     node_path = arm.utils.get_node_path()
     khamake_path = arm.utils.get_khamake_path()
 
-    kha_target_name = make_utils.get_kha_target(target_name)
+    kha_target_name = arm.utils.get_kha_target(target_name)
     cmd = [node_path, khamake_path, kha_target_name]
 
     ffmpeg_path = arm.utils.get_ffmpeg_path() # Path to binary

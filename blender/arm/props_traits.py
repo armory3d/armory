@@ -7,7 +7,6 @@ from bpy.props import *
 from arm.props_traits_params import *
 from arm.props_traits_props import *
 import arm.utils
-import arm.make_utils as make_utils
 import arm.write_data as write_data
 
 def trigger_recompile(self, context):
@@ -238,7 +237,7 @@ class ArmEditScriptButton(bpy.types.Operator):
 
         sdk_path = arm.utils.get_sdk_path()
         if arm.utils.get_os() == 'win':
-            make_utils.kode_studio_mklink(sdk_path)
+            arm.utils.kode_studio_mklink(sdk_path)
             kode_path = sdk_path + '/win32/Kode Studio.exe'
             subprocess.Popen([kode_path, arm.utils.get_fp(), hx_path])
         elif arm.utils.get_os() == 'mac':

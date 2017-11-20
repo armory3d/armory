@@ -14,9 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import arm.material.cycles_functions as c_functions
-import arm.material.cycles_state as c_state
 import math
+import bpy
+import arm.assets
+import arm.utils
+import arm.make_state
+import arm.log
+import arm.material.make_texture
+import arm.material.mat_state as mat_state
+import arm.material.cycles_functions as c_functions
 
 basecol_texname = ''
 emission_found = False
@@ -92,7 +98,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     # parse_volume_input(node.inputs[1])
 
     # Displacement
-    if _parse_displacement and c_state.tess_enabled() and node.inputs[2].is_linked and tese != None:
+    if _parse_displacement and tess_enabled() and node.inputs[2].is_linked and tese != None:
         parsed = []
         parents = []
         normal_parsed = False
@@ -186,7 +192,7 @@ def parse_shader(node, socket):
                 out_metallic = parse_value_input(node.inputs[4])
                 # Normal
                 if node.inputs[5].is_linked and node.inputs[5].links[0].from_node.type == 'NORMAL_MAP':
-                    c_state.warn(c_state.mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
+                    warn(mat_name() + ' - Do not use Normal Map node with Armory PBR, connect Image Texture directly')
                 parse_normal_map_color_input(node.inputs[5])
                 # Emission
                 if node.inputs[6].is_linked or node.inputs[6].default_value != 0.0:
@@ -368,7 +374,7 @@ def parse_displacement_input(inp):
         return None
 
 def res_var_name(node, socket):
-    return node_name(node.name) + '_' + c_state.safesrc(socket.name) + '_res'
+    return node_name(node.name) + '_' + safesrc(socket.name) + '_res'
 
 def write_result(l):
     res_var = res_var_name(l.from_node, l.from_socket)
@@ -399,15 +405,15 @@ def write_result(l):
         return None
     return res_var
 
-def glsltype(t):
+def glsl_type(t):
     if t == 'RGB' or t == 'RGBA' or t == 'VECTOR':
         return 'vec3'
     else:
         return 'float'
 
-def touniform(inp):
-    uname = c_state.safesrc(inp.node.name) + c_state.safesrc(inp.name)
-    curshader.add_uniform(glsltype(inp.type) + ' ' + uname)
+def to_uniform(inp):
+    uname = safesrc(inp.node.name) + safesrc(inp.name)
+    curshader.add_uniform(glsl_type(inp.type) + ' ' + uname)
     return uname
 
 def parse_vector_input(inp):
@@ -425,12 +431,12 @@ def parse_vector_input(inp):
             return 'vec3({0})'.format(res_var)
     else:
         if inp.type == 'VALUE': # Unlinked reroute
-            return tovec3([0.0, 0.0, 0.0])
+            return to_vec3([0.0, 0.0, 0.0])
         else:
-            if c_state.mat_batch() and inp.is_uniform:
-                return touniform(inp)
+            if mat_batch() and inp.is_uniform:
+                return to_uniform(inp)
             else:
-                return tovec3(inp.default_value)
+                return to_vec3(inp.default_value)
 
 def parse_rgb(node, socket):
 
@@ -447,11 +453,11 @@ def parse_rgb(node, socket):
         return 'vcolor'
 
     elif node.type == 'RGB':
-        return tovec3(socket.default_value)
+        return to_vec3(socket.default_value)
 
     elif node.type == 'TEX_BRICK':
         # Pass through
-        return tovec3([0.0, 0.0, 0.0])
+        return to_vec3([0.0, 0.0, 0.0])
 
     elif node.type == 'TEX_CHECKER':
         curshader.add_function(c_functions.str_tex_checker)
@@ -466,7 +472,7 @@ def parse_rgb(node, socket):
 
     elif node.type == 'TEX_ENVIRONMENT':
         # Pass through
-        return tovec3([0.0, 0.0, 0.0])
+        return to_vec3([0.0, 0.0, 0.0])
 
     elif node.type == 'TEX_GRADIENT':
         if node.inputs[0].is_linked:
@@ -495,7 +501,7 @@ def parse_rgb(node, socket):
         if res_var_name(node, node.outputs[1]) in parsed:
             return '{0}.rgb'.format(store_var_name(node))
         tex_name = node_name(node.name)
-        tex = c_state.make_texture(node, tex_name)
+        tex = make_texture(node, tex_name)
         if tex != None:
             curshader.write_pre_header += 1
             to_linear = parsing_basecol and not tex['file'].endswith('.hdr')
@@ -514,7 +520,7 @@ def parse_rgb(node, socket):
 
     elif node.type == 'TEX_MAGIC':
         # Pass through
-        return tovec3([0.0, 0.0, 0.0])
+        return to_vec3([0.0, 0.0, 0.0])
 
     elif node.type == 'TEX_MUSGRAVE':
         # Fall back to noise
@@ -542,16 +548,16 @@ def parse_rgb(node, socket):
 
     elif node.type == 'TEX_POINTDENSITY':
         # Pass through
-        return tovec3([0.0, 0.0, 0.0])
+        return to_vec3([0.0, 0.0, 0.0])
 
     elif node.type == 'TEX_SKY':
         # Pass through
-        return tovec3([0.0, 0.0, 0.0])
+        return to_vec3([0.0, 0.0, 0.0])
 
     elif node.type == 'TEX_VORONOI':
         curshader.add_function(c_functions.str_tex_voronoi)
-        c_state.assets_add(c_state.get_sdk_path() + '/armory/Assets/' + 'noise64.png')
-        c_state.assets_add_embedded_data('noise64.png')
+        assets_add(get_sdk_path() + '/armory/Assets/' + 'noise64.png')
+        assets_add_embedded_data('noise64.png')
         curshader.add_uniform('sampler2D snoise', link='_noise64')
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
@@ -565,7 +571,7 @@ def parse_rgb(node, socket):
 
     elif node.type == 'TEX_WAVE':
         # Pass through
-        return tovec3([0.0, 0.0, 0.0])
+        return to_vec3([0.0, 0.0, 0.0])
 
     elif node.type == 'BRIGHTCONTRAST':
         out_col = parse_vector_input(node.inputs[0])
@@ -654,14 +660,14 @@ def parse_rgb(node, socket):
 
     elif node.type == 'BLACKBODY':
         # Pass constant
-        return tovec3([0.84, 0.38, 0.0])
+        return to_vec3([0.84, 0.38, 0.0])
 
     elif node.type == 'VALTORGB': # ColorRamp
         fac = parse_value_input(node.inputs[0])
         interp = node.color_ramp.interpolation
         elems = node.color_ramp.elements
         if len(elems) == 1:
-            return tovec3(elems[0].color)
+            return to_vec3(elems[0].color)
         if interp == 'CONSTANT':
             fac_var = node_name(node.name) + '_fac'
             curshader.write('float {0} = {1};'.format(fac_var, fac))
@@ -677,7 +683,7 @@ def parse_rgb(node, socket):
             return '{0}[{1}]'.format(cols_var, out_i)
         else: # Linear, .. - 2 elems only, end pos assumed to be 1
             # float f = clamp((pos - start) * (1.0 / (1.0 - start)), 0.0, 1.0);
-            return 'mix({0}, {1}, clamp(({2} - {3}) * (1.0 / (1.0 - {3})), 0.0, 1.0))'.format(tovec3(elems[0].color), tovec3(elems[1].color), fac, elems[0].position)
+            return 'mix({0}, {1}, clamp(({2} - {3}) * (1.0 / (1.0 - {3})), 0.0, 1.0))'.format(to_vec3(elems[0].color), to_vec3(elems[1].color), fac, elems[0].position)
 
     elif node.type == 'COMBHSV':
 # vec3 hsv2rgb(vec3 c) {
@@ -695,7 +701,7 @@ def parse_rgb(node, socket):
 #     return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
 # }
         # Pass constant
-        return tovec3([0.0, 0.0, 0.0])
+        return to_vec3([0.0, 0.0, 0.0])
 
     elif node.type == 'COMBRGB':
         r = parse_value_input(node.inputs[0])
@@ -717,7 +723,7 @@ def texture_store(node, tex, tex_name, to_linear=False):
     global basecol_texname
     global sample_bump
     global sample_bump_res
-    c_state.mat_bind_texture(tex)
+    mat_bind_texture(tex)
     con.add_elem('tex', 2)
     curshader.add_uniform('sampler2D {0}'.format(tex_name))
     if node.inputs[0].is_linked:
@@ -725,7 +731,7 @@ def texture_store(node, tex, tex_name, to_linear=False):
     else:
         uv_name = 'texCoord'
     tex_store = store_var_name(node)
-    if c_state.mat_texture_grad():
+    if mat_texture_grad():
         curshader.write('vec4 {0} = textureGrad({1}, {2}.xy, g2.xy, g2.zw);'.format(tex_store, tex_name, uv_name))
     else:
         curshader.write('vec4 {0} = texture({1}, {2}.xy);'.format(tex_store, tex_name, uv_name))
@@ -762,8 +768,8 @@ def parse_vector(node, socket):
     elif node.type == 'ATTRIBUTE':
         # UVMaps only for now
         con.add_elem('tex', 2)
-        mat = c_state.mat_get_material()
-        mat_users = c_state.mat_get_material_users()
+        mat = mat_get_material()
+        mat_users = mat_get_material_users()
         if mat_users != None and mat in mat_users:
             mat_user = mat_users[mat][0]
             if hasattr(mat_user.data, 'uv_layers'): # No uvlayers for Curve
@@ -801,10 +807,10 @@ def parse_vector(node, socket):
     elif node.type == 'PARTICLE_INFO':
         if socket == node.outputs[3]: # Location
             particle_info['location'] = True
-            return 'p_location' if c_state.mat_get_material().arm_particle == 'gpu' else 'vec3(0.0)'
+            return 'p_location' if mat_get_material().arm_particle == 'gpu' else 'vec3(0.0)'
         elif socket == node.outputs[5]: # Velocity
             particle_info['velocity'] = True
-            return 'p_velocity' if c_state.mat_get_material().arm_particle == 'gpu' else 'vec3(0.0)'
+            return 'p_velocity' if mat_get_material().arm_particle == 'gpu' else 'vec3(0.0)'
         elif socket == node.outputs[6]: # Angular Velocity
             particle_info['angular_velocity'] = True
             return 'vec3(0.0)'
@@ -883,10 +889,10 @@ def parse_vector(node, socket):
 
     elif node.type == 'NORMAL':
         if socket == node.outputs[0]:
-            return tovec3(node.outputs[0].default_value)
+            return to_vec3(node.outputs[0].default_value)
         elif socket == node.outputs[1]: # TODO: is parse_value path preferred?
             nor = parse_vector_input(node.inputs[0])
-            return 'vec3(dot({0}, {1}))'.format(tovec3(node.outputs[0].default_value), nor)
+            return 'vec3(dot({0}, {1}))'.format(to_vec3(node.outputs[0].default_value), nor)
 
     elif node.type == 'NORMAL_MAP':
         if curshader == tese:
@@ -944,8 +950,8 @@ def parse_normal_map_color_input(inp):
         return
     normal_parsed = True
     frag.write_pre_header += 1
-    defplus = c_state.get_rp_renderer() == 'Deferred Plus'
-    if not c_state.get_arm_export_tangents() or defplus or c_state.mat_get_material().arm_decal: # Compute TBN matrix
+    defplus = get_rp_renderer() == 'Deferred Plus'
+    if not get_arm_export_tangents() or defplus or mat_get_material().arm_decal: # Compute TBN matrix
         frag.write('vec3 texn = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
         frag.add_include('../../Shaders/std/normals.glsl')
         if defplus:
@@ -973,10 +979,10 @@ def parse_value_input(inp):
         else: # VALUE
             return res_var
     else:
-        if c_state.mat_batch() and inp.is_uniform:
-            return touniform(inp)
+        if mat_batch() and inp.is_uniform:
+            return to_uniform(inp)
         else:
-            return tovec1(inp.default_value)
+            return to_vec1(inp.default_value)
 
 def parse_value(node, socket):
     global particle_info
@@ -1077,19 +1083,19 @@ def parse_value(node, socket):
     elif node.type == 'PARTICLE_INFO':
         if socket == node.outputs[0]: # Index
             particle_info['index'] = True
-            return 'p_index' if c_state.mat_get_material().arm_particle == 'gpu' else '0.0'
+            return 'p_index' if mat_get_material().arm_particle == 'gpu' else '0.0'
         elif socket == node.outputs[1]: # Age
             particle_info['age'] = True
-            return 'p_age' if c_state.mat_get_material().arm_particle == 'gpu' else '0.0'
+            return 'p_age' if mat_get_material().arm_particle == 'gpu' else '0.0'
         elif socket == node.outputs[2]: # Lifetime
             particle_info['lifetime'] = True
-            return 'p_lifetime' if c_state.mat_get_material().arm_particle == 'gpu' else '0.0'
+            return 'p_lifetime' if mat_get_material().arm_particle == 'gpu' else '0.0'
         elif socket == node.outputs[4]: # Size
             particle_info['size'] = True
             return '1.0'
 
     elif node.type == 'VALUE':
-        return tovec1(node.outputs[0].default_value)
+        return to_vec1(node.outputs[0].default_value)
 
     elif node.type == 'WIREFRAME':
         #node.use_pixel_size
@@ -1121,8 +1127,8 @@ def parse_value(node, socket):
         # Already fetched
         if res_var_name(node, node.outputs[0]) in parsed:
             return '{0}.a'.format(store_var_name(node))
-        tex_name = c_state.safesrc(node.name)
-        tex = c_state.make_texture(node, tex_name)
+        tex_name = safesrc(node.name)
+        tex = make_texture(node, tex_name)
         if tex != None:
             curshader.write_pre_header += 1
             res = '{0}.a'.format(texture_store(node, tex, tex_name))
@@ -1167,8 +1173,8 @@ def parse_value(node, socket):
 
     elif node.type == 'TEX_VORONOI':
         curshader.add_function(c_functions.str_tex_voronoi)
-        c_state.assets_add(c_state.get_sdk_path() + '/armory/Assets/' + 'noise64.png')
-        c_state.assets_add_embedded_data('noise64.png')
+        assets_add(get_sdk_path() + '/armory/Assets/' + 'noise64.png')
+        assets_add_embedded_data('noise64.png')
         curshader.add_uniform('sampler2D snoise', link='_noise64')
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
@@ -1190,7 +1196,7 @@ def parse_value(node, socket):
 
     elif node.type == 'NORMAL':
         nor = parse_vector_input(node.inputs[0])
-        return 'dot({0}, {1})'.format(tovec3(node.outputs[0].default_value), nor)
+        return 'dot({0}, {1})'.format(to_vec3(node.outputs[0].default_value), nor)
 
     elif node.type == 'VALTORGB': # ColorRamp
         return '1.0'
@@ -1298,16 +1304,16 @@ def write_bump(node, res):
     curshader.write('float {0}_4 = {1}{2} + vec2(0, 1){3};'.format(sample_bump_res, pre, co, post))
     sample_bump = False
 
-def tovec1(v):
+def to_vec1(v):
     return str(v)
 
-def tovec2(v):
+def to_vec2(v):
     return 'vec2({0}, {1})'.format(v[0], v[1])
 
-def tovec3(v):
+def to_vec3(v):
     return 'vec3({0}, {1}, {2})'.format(v[0], v[1], v[2])
 
-def tovec4(v):
+def to_vec4(v):
     return 'vec4({0}, {1}, {2}, {3})'.format(v[0], v[1], v[2], v[3])
 
 def node_by_type(nodes, ntype):
@@ -1321,9 +1327,56 @@ def socket_index(node, socket):
             return i
 
 def node_name(s):
-    s = c_state.safesrc(s)
+    s = safesrc(s)
     if len(parents) > 0:
-        s = c_state.safesrc(parents[-1].name) + '_' + s
+        s = safesrc(parents[-1].name) + '_' + s
     if '__' in s: # Consecutive _ are reserved
         s = s.replace('_', '_x')
     return s
+
+##
+
+def get_rp_renderer():
+    return arm.utils.get_rp().rp_renderer
+
+def get_arm_export_tangents():
+    return bpy.data.worlds['Arm'].arm_export_tangents
+
+def safesrc(name):
+    return arm.utils.safesrc(name)
+
+def get_sdk_path():
+    return arm.utils.get_sdk_path()
+
+def tess_enabled():
+    return arm.utils.tess_enabled(arm.make_state.target)
+
+def warn(text):
+    arm.log.warn(text)
+
+def assets_add(path):
+    arm.assets.add(path)
+
+def assets_add_embedded_data(path):
+    arm.assets.add_embedded_data(path)
+
+def make_texture(node, name):
+    return arm.material.make_texture.make(node, name)
+
+def mat_name():
+    return mat_state.material.name
+
+def mat_batch():
+    return mat_state.batch
+
+def mat_bind_texture(tex):
+    mat_state.bind_textures.append(tex)
+
+def mat_texture_grad():
+    return mat_state.texture_grad
+
+def mat_get_material():
+    return mat_state.material
+
+def mat_get_material_users():
+    return mat_state.mat_users

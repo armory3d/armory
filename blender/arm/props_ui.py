@@ -5,7 +5,6 @@ from bpy.props import *
 import arm.utils
 import arm.make_renderer as make_renderer
 import arm.make as make
-import arm.make_utils as make_utils
 import arm.make_state as state
 import arm.assets as assets
 import arm.log as log
@@ -385,7 +384,7 @@ class ArmoryExporterPanel(bpy.types.Panel):
         if wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0:
             item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
             layout.prop(item, 'arm_project_target')
-            layout.prop(item, make_utils.target_to_gapi(item.arm_project_target))
+            layout.prop(item, arm.utils.target_to_gapi(item.arm_project_target))
             wrd.arm_rpcache_list.clear() # Make UIList work with prop_search()
             for i in wrd.arm_rplist:
                 wrd.arm_rpcache_list.add().name = i.name
@@ -760,7 +759,7 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
         state.is_export = False
         wrd.arm_rplist_index = rplist_index
         assets.invalidate_enabled = True
-        target_name = make_utils.get_kha_target(state.target)
+        target_name = arm.utils.get_kha_target(state.target)
         files_path = arm.utils.get_fp_build() + '/' + target_name
         if target_name == 'html5':
             print('HTML5 files are being exported to ' + files_path)
@@ -809,7 +808,7 @@ class ArmoryKodeStudioButton(bpy.types.Operator):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
 
-        make_utils.kode_studio()
+        arm.utils.kode_studio()
         return{'FINISHED'}
 
 class CleanMenu(bpy.types.Menu):
