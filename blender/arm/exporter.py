@@ -1850,9 +1850,9 @@ class ArmoryExporter:
         if ArmoryExporter.option_mesh_per_file:
             fp = self.get_meshes_file_path('mesh_' + oid, compressed=self.is_compress(bobject.data))
             assets.add(fp)
-            if hasattr(bobject.data, 'arm_sdfgen') and bobject.data.arm_sdfgen:
-                sdf_path = fp.replace('/mesh_', '/sdf_')
-                assets.add(sdf_path)
+            # if hasattr(bobject.data, 'arm_sdfgen') and bobject.data.arm_sdfgen:
+                # sdf_path = fp.replace('/mesh_', '/sdf_')
+                # assets.add(sdf_path)
             if self.is_mesh_cached(bobject) == True and os.path.exists(fp):
                 return
 
@@ -1992,38 +1992,38 @@ class ArmoryExporter:
         if bobject.data.arm_dynamic_usage:
             o['dynamic_usage'] = bobject.data.arm_dynamic_usage
 
-        if hasattr(bobject.data, 'arm_sdfgen') and bobject.data.arm_sdfgen:
-            o['sdf_ref'] = 'sdf_' + oid
+        # if hasattr(bobject.data, 'arm_sdfgen') and bobject.data.arm_sdfgen:
+            # o['sdf_ref'] = 'sdf_' + oid
 
         self.write_mesh(bobject, fp, o)
 
-        if hasattr(bobject.data, 'arm_sdfgen') and bobject.data.arm_sdfgen:
-            # Copy input
-            sdk_path = arm.utils.get_sdk_path()
-            sdfgen_path = sdk_path + '/armory/tools/sdfgen'
-            shutil.copy(fp, sdfgen_path + '/krom/mesh.arm')
-            # Extract basecolor
-            # Assume Armpry PBR with linked texture for now
-            # mat = bobject.material_slots[0].material
-            # img = None
-            # for n in mat.node_tree.nodes:
-                # if n.type == 'GROUP' and n.node_tree.name.startswith('Armory PBR') and n.inputs[0].is_linked:
-                    # img = n.inputs[0].links[0].from_node.image
-                    # fp_img = bpy.path.abspath(img.filepath)
-                    # shutil.copy(fp_img, sdfgen_path + '/krom/mesh.png')
-            # Run
-            krom_location, krom_path = arm.utils.krom_paths()
-            krom_dir = sdfgen_path + '/krom'
-            krom_res = sdfgen_path + '/krom'
-            subprocess.check_output([krom_path, krom_dir, krom_res, '--nosound', '--nowindow'])
-            # Copy output
-            sdf_path = fp.replace('/mesh_', '/sdf_')
-            shutil.copy('out.bin', sdf_path)
-            assets.add(sdf_path)
-            os.remove('out.bin')
-            os.remove(sdfgen_path + '/krom/mesh.arm')
-            # if img != None:
-                # os.remove(sdfgen_path + '/krom/mesh.png')
+        # if hasattr(bobject.data, 'arm_sdfgen') and bobject.data.arm_sdfgen:
+        #     # Copy input
+        #     sdk_path = arm.utils.get_sdk_path()
+        #     sdfgen_path = sdk_path + '/armory/tools/sdfgen'
+        #     shutil.copy(fp, sdfgen_path + '/krom/mesh.arm')
+        #     # Extract basecolor
+        #     # Assume Armpry PBR with linked texture for now
+        #     # mat = bobject.material_slots[0].material
+        #     # img = None
+        #     # for n in mat.node_tree.nodes:
+        #         # if n.type == 'GROUP' and n.node_tree.name.startswith('Armory PBR') and n.inputs[0].is_linked:
+        #             # img = n.inputs[0].links[0].from_node.image
+        #             # fp_img = bpy.path.abspath(img.filepath)
+        #             # shutil.copy(fp_img, sdfgen_path + '/krom/mesh.png')
+        #     # Run
+        #     krom_location, krom_path = arm.utils.krom_paths()
+        #     krom_dir = sdfgen_path + '/krom'
+        #     krom_res = sdfgen_path + '/krom'
+        #     subprocess.check_output([krom_path, krom_dir, krom_res, '--nosound', '--nowindow'])
+        #     # Copy output
+        #     sdf_path = fp.replace('/mesh_', '/sdf_')
+        #     shutil.copy('out.bin', sdf_path)
+        #     assets.add(sdf_path)
+        #     os.remove('out.bin')
+        #     os.remove(sdfgen_path + '/krom/mesh.arm')
+        #     # if img != None:
+        #         # os.remove(sdfgen_path + '/krom/mesh.png')
 
     def export_mesh_quality(self, exportMesh, bobject, fp, o):
         # Triangulate mesh and remap vertices to eliminate duplicates
@@ -3111,19 +3111,6 @@ class ArmoryExporter:
                     x['class_name'] = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + arm.utils.safesrc(t.nodes_name_prop)
                 elif t.type_prop == 'WebAssembly':
                     pass
-                    # basename = t.jsscript_prop.split('.')[0]
-                    # x['type'] = 'Script'
-                    # x['class_name'] = 'armory.trait.internal.JSScript'
-                    # x['parameters'] = ["'" + basename + "'"]
-                    # scriptspath = arm.utils.get_fp_build() + '/compiled/scripts/'
-                    # if not os.path.exists(scriptspath):
-                    #     os.makedirs(scriptspath)
-                    # # Write js to file
-                    # assetpath = arm.utils.build_dir() + '/compiled/scripts/' + t.jsscript_prop + '.js'
-                    # targetpath = arm.utils.get_fp() + '/' + assetpath
-                    # with open(targetpath, 'w') as f:
-                    #     f.write(bpy.data.texts[t.jsscript_prop].as_string())
-                    # assets.add(assetpath)
                 elif t.type_prop == 'UI Canvas':
                     ArmoryExporter.export_ui = True
                     x['type'] = 'Script'

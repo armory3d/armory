@@ -158,8 +158,8 @@ class DataPropsPanel(bpy.types.Panel):
             row = layout.row(align=True)
             row.prop(obj.data, 'arm_dynamic_usage')
             row.prop(obj.data, 'arm_compress')
-            if obj.type == 'MESH':
-                layout.prop(obj.data, 'arm_sdfgen')
+            # if obj.type == 'MESH':
+                # layout.prop(obj.data, 'arm_sdfgen')
             layout.operator("arm.invalidate_cache")
         elif obj.type == 'LAMP':
             row = layout.row(align=True)

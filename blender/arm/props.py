@@ -192,7 +192,7 @@ def init_properties():
     bpy.types.Mesh.arm_aabb = bpy.props.FloatVectorProperty(name="AABB", size=3, default=[0,0,0])
     bpy.types.Mesh.arm_dynamic_usage = bpy.props.BoolProperty(name="Dynamic Usage", description="Mesh data can change at runtime", default=False)
     bpy.types.Mesh.arm_compress = bpy.props.BoolProperty(name="Compress", description="Pack data into zip file", default=False)
-    bpy.types.Mesh.arm_sdfgen = bpy.props.BoolProperty(name="Generate SDF", description="Make signed distance field data", default=False, update=invalidate_mesh_cache)
+    # bpy.types.Mesh.arm_sdfgen = bpy.props.BoolProperty(name="Generate SDF", description="Make signed distance field data", default=False, update=invalidate_mesh_cache)
     bpy.types.Curve.arm_cached = bpy.props.BoolProperty(name="Mesh Cached", description="No need to reexport curve data", default=False)
     bpy.types.Curve.arm_compress = bpy.props.BoolProperty(name="Compress", description="Pack data into zip file", default=False)
     bpy.types.Curve.arm_dynamic_usage = bpy.props.BoolProperty(name="Dynamic Data Usage", description="Curve data can change at runtime", default=False)

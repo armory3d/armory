@@ -124,17 +124,17 @@ def build_node_tree(world):
     elif rpdat.rp_gi == 'Voxel AO':
         voxelao = True
     # SS
-    if rpdat.rp_dfrs:
-        wrd.world_defs += '_DFRS'
-        assets.add_khafile_def('arm_sdf')
-    if rpdat.rp_dfao:
-        wrd.world_defs += '_DFAO'
-        assets.add_khafile_def('arm_sdf')
-    if rpdat.rp_dfgi:
-        wrd.world_defs += '_DFGI'
-        assets.add_khafile_def('arm_sdf')
-        wrd.world_defs += '_Rad' # Always do radiance for gi
-        wrd.world_defs += '_Irr'
+    # if rpdat.rp_dfrs:
+    #     wrd.world_defs += '_DFRS'
+    #     assets.add_khafile_def('arm_sdf')
+    # if rpdat.rp_dfao:
+    #     wrd.world_defs += '_DFAO'
+    #     assets.add_khafile_def('arm_sdf')
+    # if rpdat.rp_dfgi:
+    #     wrd.world_defs += '_DFGI'
+    #     assets.add_khafile_def('arm_sdf')
+    #     wrd.world_defs += '_Rad' # Always do radiance for gi
+    #     wrd.world_defs += '_Irr'
     if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
         if rpdat.rp_ssgi == 'RTGI':
             wrd.world_defs += '_RTGI'
