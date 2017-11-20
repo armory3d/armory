@@ -200,8 +200,8 @@ def init_properties():
     bpy.types.MetaBall.arm_compress = bpy.props.BoolProperty(name="Compress", description="Pack data into zip file", default=False)
     bpy.types.MetaBall.arm_dynamic_usage = bpy.props.BoolProperty(name="Dynamic Data Usage", description="Metaball data can change at runtime", default=False)
     # For grease pencil
-    bpy.types.GreasePencil.arm_cached = bpy.props.BoolProperty(name="GP Cached", description="No need to reexport grease pencil data", default=False)
-    bpy.types.GreasePencil.arm_compress = bpy.props.BoolProperty(name="Compress", description="Pack data into zip file", default=True)
+    # bpy.types.GreasePencil.arm_cached = bpy.props.BoolProperty(name="GP Cached", description="No need to reexport grease pencil data", default=False)
+    # bpy.types.GreasePencil.arm_compress = bpy.props.BoolProperty(name="Compress", description="Pack data into zip file", default=True)
     # For armature
     bpy.types.Armature.arm_cached = bpy.props.BoolProperty(name="Armature Cached", description="No need to reexport armature data", default=False)
     bpy.types.Armature.arm_compress = bpy.props.BoolProperty(name="Compress", description="Pack data into zip file", default=False)
@@ -375,7 +375,7 @@ def init_properties():
     bpy.types.Material.arm_blending = bpy.props.BoolProperty(name="Blending", description="Enable additive blending", default=False)
     # For scene
     bpy.types.Scene.arm_export = bpy.props.BoolProperty(name="Export", description="Export scene data", default=True)
-    bpy.types.Scene.arm_gp_export = bpy.props.BoolProperty(name="Export GP", description="Export grease pencil data", default=True)
+    # bpy.types.Scene.arm_gp_export = bpy.props.BoolProperty(name="Export GP", description="Export grease pencil data", default=True)
     bpy.types.Scene.arm_compress = bpy.props.BoolProperty(name="Compress", description="Pack data into zip file", default=False)
     # For lamp
     bpy.types.Lamp.arm_clip_start = bpy.props.FloatProperty(name="Clip Start", default=0.1)

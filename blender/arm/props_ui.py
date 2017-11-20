@@ -195,13 +195,12 @@ class ScenePropsPanel(bpy.types.Panel):
             return
         row = layout.row()
         column = row.column()
-        column.prop(scene, 'arm_export')
-        column.prop(scene, 'arm_compress')
-        column = row.column()
-        column.prop(scene, 'arm_gp_export')
-        columnb = column.column()
-        columnb.enabled = scene.arm_gp_export
-        columnb.operator('arm.invalidate_gp_cache')
+        row.prop(scene, 'arm_export')
+        row.prop(scene, 'arm_compress')
+        # column.prop(scene, 'arm_gp_export')
+        # columnb = column.column()
+        # columnb.enabled = scene.arm_gp_export
+        # columnb.operator('arm.invalidate_gp_cache')
 
 class InvalidateCacheButton(bpy.types.Operator):
     '''Delete cached mesh data'''

@@ -90,45 +90,6 @@ class Vertex:
             other.loop_indices = indices
         return eq
 
-class ExportVertex:
-    __slots__ = ("hash", "vertex_index", "face_index", "position", "normal", "color", "texcoord0", "texcoord1")
-
-    def __init__(self):
-        self.color = [1.0, 1.0, 1.0]
-        self.texcoord0 = [0.0, 0.0]
-        self.texcoord1 = [0.0, 0.0]
-
-    def __eq__(self, v):
-        if self.hash != v.hash:
-            return False
-        if self.position != v.position:
-            return False
-        if self.normal != v.normal:
-            return False
-        if self.texcoord0 != v.texcoord0:
-            return False
-        if self.color != v.color:
-            return False
-        if self.texcoord1 != v.texcoord1:
-            return False
-        return True
-
-    def Hash(self):
-        h = hash(self.position[0])
-        h = h * 21737 + hash(self.position[1])
-        h = h * 21737 + hash(self.position[2])
-        h = h * 21737 + hash(self.normal[0])
-        h = h * 21737 + hash(self.normal[1])
-        h = h * 21737 + hash(self.normal[2])
-        h = h * 21737 + hash(self.color[0])
-        h = h * 21737 + hash(self.color[1])
-        h = h * 21737 + hash(self.color[2])
-        h = h * 21737 + hash(self.texcoord0[0])
-        h = h * 21737 + hash(self.texcoord0[1])
-        h = h * 21737 + hash(self.texcoord1[0])
-        h = h * 21737 + hash(self.texcoord1[1])
-        self.hash = h
-
 class ArmoryExporter:
     '''Export to Armory format'''
 
@@ -138,87 +99,8 @@ class ArmoryExporter:
                 matrix[2][0], matrix[2][1], matrix[2][2], matrix[2][3],
                 matrix[3][0], matrix[3][1], matrix[3][2], matrix[3][3]]
 
-    def write_vector2d(self, vector):
-        return [vector[0], vector[1]]
-
-    def write_vector3d(self, vector):
-        return [vector[0], vector[1], vector[2]]
-
-    def write_va2d(self, vertexArray, attrib):
-        va = []
-        count = len(vertexArray)
-        k = 0
-
-        lineCount = count >> 3
-        for i in range(lineCount):
-            for j in range(7):
-                va += self.write_vector2d(getattr(vertexArray[k], attrib))
-                k += 1
-
-            va += self.write_vector2d(getattr(vertexArray[k], attrib))
-            k += 1
-
-        count &= 7
-        if count != 0:
-            for j in range(count - 1):
-                va += self.write_vector2d(getattr(vertexArray[k], attrib))
-                k += 1
-
-            va += self.write_vector2d(getattr(vertexArray[k], attrib))
-
-        return va
-
-    def write_va3d(self, vertex_array, attrib):
-        va = []
-        count = len(vertex_array)
-        k = 0
-
-        lineCount = count >> 3
-        for i in range(lineCount):
-
-            for j in range(7):
-                va += self.write_vector3d(getattr(vertex_array[k], attrib))
-                k += 1
-
-            va += self.write_vector3d(getattr(vertex_array[k], attrib))
-            k += 1
-
-        count &= 7
-        if count != 0:
-            for j in range(count - 1):
-                va += self.write_vector3d(getattr(vertex_array[k], attrib))
-                k += 1
-
-            va += self.write_vector3d(getattr(vertex_array[k], attrib))
-
-        return va
-
-    def write_triangle(self, triangle_index, index_table):
-        i = triangle_index * 3
-        return [index_table[i], index_table[i + 1], index_table[i + 2]]
-
-    def write_triangle_array(self, count, index_table):
-        va = []
-        triangle_index = 0
-
-        line_count = count >> 4
-        for i in range(line_count):
-
-            for j in range(15):
-                va += self.write_triangle(triangle_index, index_table)
-                triangle_index += 1
-
-            va += self.write_triangle(triangle_index, index_table)
-            triangle_index += 1
-
-        count &= 15
-        if count != 0:
-            for j in range(count - 1):
-                va += self.write_triangle(triangle_index, index_table)
-                triangle_index += 1
-            va += self.write_triangle(triangle_index, index_table)
-
-        return va
+    # def write_vector3d(self, vector):
+        # return [vector[0], vector[1], vector[2]]
 
     def get_meshes_file_path(self, object_id, compressed=False):
         index = self.filepath.rfind('/')
@@ -227,14 +109,6 @@ class ArmoryExporter:
             os.makedirs(mesh_fp)
         ext = '.zip' if compressed else '.arm'
         return mesh_fp + object_id + ext
-
-    def get_greasepencils_file_path(self, object_id, compressed=False):
-        index = self.filepath.rfind('/')
-        gp_fp = self.filepath[:(index + 1)] + 'greasepencils/'
-        if not os.path.exists(gp_fp):
-            os.makedirs(gp_fp)
-        ext = '.zip' if compressed else '.arm'
-        return gp_fp + object_id + ext
 
     @staticmethod
     def get_bobject_type(bobject):
@@ -316,13 +190,13 @@ class ArmoryExporter:
     #                 return True
     #     return False
 
-    @staticmethod
-    def matrices_different(m1, m2):
-        for i in range(4):
-            for j in range(4):
-                if math.fabs(m1[i][j] - m2[i][j]) > ExportEpsilon:
-                    return True
-        return False
+    # @staticmethod
+    # def matrices_different(m1, m2):
+    #     for i in range(4):
+    #         for j in range(4):
+    #             if math.fabs(m1[i][j] - m2[i][j]) > ExportEpsilon:
+    #                 return True
+    #     return False
 
     @staticmethod
     def collect_bone_animation(armature, name):
@@ -358,197 +232,6 @@ class ArmoryExporter:
         tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r
         # bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r
         return tangent
-
-    @staticmethod
-    def deindex_mesh(mesh, material_table):
-        # This function deindexes all vertex positions, colors, and texcoords.
-        # Three separate ExportVertex structures are created for each triangle.
-        vertexArray = mesh.vertices
-        export_vertex_array = []
-        face_index = 0
-
-        for face in mesh.tessfaces:
-            k1 = face.vertices[0]
-            k2 = face.vertices[1]
-            k3 = face.vertices[2]
-
-            v1 = vertexArray[k1]
-            v2 = vertexArray[k2]
-            v3 = vertexArray[k3]
-
-            exportVertex = ExportVertex()
-            exportVertex.vertex_index = k1
-            exportVertex.face_index = face_index
-            exportVertex.position = v1.co
-            exportVertex.normal = v1.normal if (face.use_smooth) else face.normal
-            export_vertex_array.append(exportVertex)
-
-            exportVertex = ExportVertex()
-            exportVertex.vertex_index = k2
-            exportVertex.face_index = face_index
-            exportVertex.position = v2.co
-            exportVertex.normal = v2.normal if (face.use_smooth) else face.normal
-            export_vertex_array.append(exportVertex)
-
-            exportVertex = ExportVertex()
-            exportVertex.vertex_index = k3
-            exportVertex.face_index = face_index
-            exportVertex.position = v3.co
-            exportVertex.normal = v3.normal if (face.use_smooth) else face.normal
-            export_vertex_array.append(exportVertex)
-
-            material_table.append(face.material_index)
-
-            if len(face.vertices) == 4:
-                k1 = face.vertices[0]
-                k2 = face.vertices[2]
-                k3 = face.vertices[3]
-
-                v1 = vertexArray[k1]
-                v2 = vertexArray[k2]
-                v3 = vertexArray[k3]
-
-                exportVertex = ExportVertex()
-                exportVertex.vertex_index = k1
-                exportVertex.face_index = face_index
-                exportVertex.position = v1.co
-                exportVertex.normal = v1.normal if (face.use_smooth) else face.normal
-                export_vertex_array.append(exportVertex)
-
-                exportVertex = ExportVertex()
-                exportVertex.vertex_index = k2
-                exportVertex.face_index = face_index
-                exportVertex.position = v2.co
-                exportVertex.normal = v2.normal if (face.use_smooth) else face.normal
-                export_vertex_array.append(exportVertex)
-
-                exportVertex = ExportVertex()
-                exportVertex.vertex_index = k3
-                exportVertex.face_index = face_index
-                exportVertex.position = v3.co
-                exportVertex.normal = v3.normal if (face.use_smooth) else face.normal
-                export_vertex_array.append(exportVertex)
-
-                material_table.append(face.material_index)
-
-            face_index += 1
-
-        color_count = len(mesh.tessface_vertex_colors)
-        if color_count > 0:
-            colorFace = mesh.tessface_vertex_colors[0].data
-            vertex_index = 0
-            face_index = 0
-
-            for face in mesh.tessfaces:
-                cf = colorFace[face_index]
-                export_vertex_array[vertex_index].color = cf.color1
-                vertex_index += 1
-                export_vertex_array[vertex_index].color = cf.color2
-                vertex_index += 1
-                export_vertex_array[vertex_index].color = cf.color3
-                vertex_index += 1
-
-                if len(face.vertices) == 4:
-                    export_vertex_array[vertex_index].color = cf.color1
-                    vertex_index += 1
-                    export_vertex_array[vertex_index].color = cf.color3
-                    vertex_index += 1
-                    export_vertex_array[vertex_index].color = cf.color4
-                    vertex_index += 1
-
-                face_index += 1
-
-        texcoordCount = len(mesh.tessface_uv_textures)
-        if texcoordCount > 0:
-            texcoordFace = mesh.tessface_uv_textures[0].data
-            vertex_index = 0
-            face_index = 0
-
-            for face in mesh.tessfaces:
-                tf = texcoordFace[face_index]
-                export_vertex_array[vertex_index].texcoord0 = [tf.uv1[0], 1.0 - tf.uv1[1]] # Reverse TCY
-                vertex_index += 1
-                export_vertex_array[vertex_index].texcoord0 = [tf.uv2[0], 1.0 - tf.uv2[1]]
-                vertex_index += 1
-                export_vertex_array[vertex_index].texcoord0 = [tf.uv3[0], 1.0 - tf.uv3[1]]
-                vertex_index += 1
-
-                if len(face.vertices) == 4:
-                    export_vertex_array[vertex_index].texcoord0 = [tf.uv1[0], 1.0 - tf.uv1[1]]
-                    vertex_index += 1
-                    export_vertex_array[vertex_index].texcoord0 = [tf.uv3[0], 1.0 - tf.uv3[1]]
-                    vertex_index += 1
-                    export_vertex_array[vertex_index].texcoord0 = [tf.uv4[0], 1.0 - tf.uv4[1]]
-                    vertex_index += 1
-
-                face_index += 1
-
-            if texcoordCount > 1:
-                texcoordFace = mesh.tessface_uv_textures[1].data
-                vertex_index = 0
-                face_index = 0
-
-                for face in mesh.tessfaces:
-                    tf = texcoordFace[face_index]
-                    export_vertex_array[vertex_index].texcoord1 = [tf.uv1[0], 1.0 - tf.uv1[1]]
-                    vertex_index += 1
-                    export_vertex_array[vertex_index].texcoord1 = [tf.uv2[0], 1.0 - tf.uv2[1]]
-                    vertex_index += 1
-                    export_vertex_array[vertex_index].texcoord1 = [tf.uv3[0], 1.0 - tf.uv3[1]]
-                    vertex_index += 1
-
-                    if len(face.vertices) == 4:
-                        export_vertex_array[vertex_index].texcoord1 = [tf.uv1[0], 1.0 - tf.uv1[1]]
-                        vertex_index += 1
-                        export_vertex_array[vertex_index].texcoord1 = [tf.uv3[0], 1.0 - tf.uv3[1]]
-                        vertex_index += 1
-                        export_vertex_array[vertex_index].texcoord1 = [tf.uv4[0], 1.0 - tf.uv4[1]]
-                        vertex_index += 1
-
-                    face_index += 1
-
-        for ev in export_vertex_array:
-            ev.Hash()
-
-        return export_vertex_array
-
-    @staticmethod
-    def unify_vertices(export_vertex_array, indexTable):
-        # This function looks for identical vertices having exactly the same position, normal,
-        # color, and texcoords. Duplicate vertices are unified, and a new index table is returned.
-        bucketCount = len(export_vertex_array) >> 3
-        if bucketCount > 1:
-            # Round down to nearest power of two.
-            while True:
-                count = bucketCount & (bucketCount - 1)
-                if count == 0:
-                    break
-                bucketCount = count
-        else:
-            bucketCount = 1
-
-        hashTable = [[] for i in range(bucketCount)]
-        unifiedVA = []
-
-        for i in range(len(export_vertex_array)):
-            ev = export_vertex_array[i]
-            bucket = ev.hash & (bucketCount - 1)
-
-            index = -1
-            for b in hashTable[bucket]:
-                if export_vertex_array[b] == ev:
-                    index = b
-                    break
-
-            if index < 0:
-                indexTable.append(len(unifiedVA))
-                unifiedVA.append(ev)
-                hashTable[bucket].append(i)
-            else:
-                indexTable.append(indexTable[index])
-
-        return unifiedVA
-
 
     def export_bone(self, armature, bone, scene, o, action):
         bobjectRef = self.bobjectArray.get(bone)
@@ -588,7 +271,6 @@ class ArmoryExporter:
 
         # Font out
         if animation_flag:
-
             if not 'object_actions' in o:
                 o['object_actions'] = []
 
@@ -741,42 +423,36 @@ class ArmoryExporter:
                                 if (fcurve.array_index == i) and (not locAnimCurve[i]):
                                     locAnimCurve[i] = fcurve
                                     locAnimKind[i] = kind
-                                    # if ArmoryExporter.animation_present(fcurve, kind):
                                     locAnimated[i] = True
                         elif fcurve.data_path == "delta_location":
                             for i in range(3):
                                 if (fcurve.array_index == i) and (not deltaPosAnimCurve[i]):
                                     deltaPosAnimCurve[i] = fcurve
                                     deltaPosAnimKind[i] = kind
-                                    # if ArmoryExporter.animation_present(fcurve, kind):
                                     deltaPosAnimated[i] = True
                         elif fcurve.data_path == "rotation_euler":
                             for i in range(3):
                                 if (fcurve.array_index == i) and (not rotAnimCurve[i]):
                                     rotAnimCurve[i] = fcurve
                                     rotAnimKind[i] = kind
-                                    # if ArmoryExporter.animation_present(fcurve, kind):
                                     rotAnimated[i] = True
                         elif fcurve.data_path == "delta_rotation_euler":
                             for i in range(3):
                                 if (fcurve.array_index == i) and (not deltaRotAnimCurve[i]):
                                     deltaRotAnimCurve[i] = fcurve
                                     deltaRotAnimKind[i] = kind
-                                    # if ArmoryExporter.animation_present(fcurve, kind):
                                     deltaRotAnimated[i] = True
                         elif fcurve.data_path == "scale":
                             for i in range(3):
                                 if (fcurve.array_index == i) and (not sclAnimCurve[i]):
                                     sclAnimCurve[i] = fcurve
                                     sclAnimKind[i] = kind
-                                    # if ArmoryExporter.animation_present(fcurve, kind):
                                     sclAnimated[i] = True
                         elif fcurve.data_path == "delta_scale":
                             for i in range(3):
                                 if (fcurve.array_index == i) and (not deltaSclAnimCurve[i]):
                                     deltaSclAnimCurve[i] = fcurve
                                     deltaSclAnimKind[i] = kind
-                                    # if ArmoryExporter.animation_present(fcurve, kind):
                                     deltaSclAnimated[i] = True
                         elif (fcurve.data_path == "rotation_axis_angle") or (fcurve.data_path == "rotation_quaternion") or (fcurve.data_path == "delta_rotation_quaternion"):
                             sampledAnimation = True
@@ -823,183 +499,6 @@ class ArmoryExporter:
 
             oaction = {}
             oaction['name'] = action.name
-            # oaction['transforms'] = []
-
-            # deltaTranslation = bobject.delta_location
-            # if deltaPositionAnimated:
-            #     # When the delta location is animated, write the x, y, and z components separately
-            #     # so they can be targeted by different tracks having different sets of keys.
-            #     for i in range(3):
-            #         pos = deltaTranslation[i]
-            #         if (deltaPosAnimated[i]) or (math.fabs(pos) > ExportEpsilon):
-            #             animo = {}
-            #             oaction['transforms'].append(animo)
-            #             animo['type'] = 'translation_' + axisName[i]
-            #             animo['name'] = deltaSubtranslationName[i]
-            #             animo['value'] = pos
-            #             # self.IndentWrite(B"Translation %", 0, structFlag)
-            #             # self.Write(deltaSubtranslationName[i])
-            #             # self.Write(B" (kind = \"")
-            #             # self.Write(axisName[i])
-            #             # self.Write(B"\")\n")
-            #             # self.IndentWrite(B"{\n")
-            #             # self.IndentWrite(B"float {", 1)
-            #             # self.WriteFloat(pos)
-            #             # self.Write(B"}")
-            #             # self.IndentWrite(B"}\n", 0, True)
-            #             structFlag = True
-
-            # elif (math.fabs(deltaTranslation[0]) > ExportEpsilon) or (math.fabs(deltaTranslation[1]) > ExportEpsilon) or (math.fabs(deltaTranslation[2]) > ExportEpsilon):
-            #     animo = {}
-            #     oaction['transforms'].append(animo)
-            #     animo['type'] = 'translation'
-            #     animo['values'] = self.write_vector3d(deltaTranslation)
-            #     structFlag = True
-
-            # translation = bobject.location
-            # if locationAnimated:
-            #     # When the location is animated, write the x, y, and z components separately
-            #     # so they can be targeted by different tracks having different sets of keys.
-            #     for i in range(3):
-            #         pos = translation[i]
-            #         if (locAnimated[i]) or (math.fabs(pos) > ExportEpsilon):
-            #             animo = {}
-            #             oaction['transforms'].append(animo)
-            #             animo['type'] = 'translation_' + axisName[i]
-            #             animo['name'] = subtranslationName[i]
-            #             animo['value'] = pos
-            #             structFlag = True
-
-            # elif (math.fabs(translation[0]) > ExportEpsilon) or (math.fabs(translation[1]) > ExportEpsilon) or (math.fabs(translation[2]) > ExportEpsilon):
-            #     animo = {}
-            #     oaction['transforms'].append(animo)
-            #     animo['type'] = 'translation'
-            #     animo['values'] = self.write_vector3d(translation)
-            #     structFlag = True
-
-            # if deltaRotationAnimated:
-            #     # When the delta rotation is animated, write three separate Euler angle rotations
-            #     # so they can be targeted by different tracks having different sets of keys.
-            #     for i in range(3):
-            #         axis = ord(mode[2 - i]) - 0x58
-            #         angle = bobject.delta_rotation_euler[axis]
-            #         if (deltaRotAnimated[axis]) or (math.fabs(angle) > ExportEpsilon):
-            #             animo = {}
-            #             oaction['transforms'].append(animo)
-            #             animo['type'] = 'rotation_' + axisName[axis]
-            #             animo['name'] = deltaSubrotationName[axis]
-            #             animo['value'] = angle
-            #             structFlag = True
-
-            # else:
-            #     # When the delta rotation is not animated, write it in the representation given by
-            #     # the object's current rotation mode. (There is no axis-angle delta rotation.)
-            #     if mode == "QUATERNION":
-            #         quaternion = bobject.delta_rotation_quaternion
-            #         if (math.fabs(quaternion[0] - 1.0) > ExportEpsilon) or (math.fabs(quaternion[1]) > ExportEpsilon) or (math.fabs(quaternion[2]) > ExportEpsilon) or (math.fabs(quaternion[3]) > ExportEpsilon):
-            #             animo = {}
-            #             oaction['transforms'].append(animo)
-            #             animo['type'] = 'rotation_quaternion'
-            #             animo['values'] = self.WriteQuaternion(quaternion)
-            #             structFlag = True
-
-            #     else:
-            #         for i in range(3):
-            #             axis = ord(mode[2 - i]) - 0x58
-            #             angle = bobject.delta_rotation_euler[axis]
-            #             if math.fabs(angle) > ExportEpsilon:
-            #                 animo = {}
-            #                 oaction['transforms'].append(animo)
-            #                 animo['type'] = 'rotation_' + axisName[axis]
-            #                 animo['value'] = angle
-            #                 structFlag = True
-
-            # if rotationAnimated:
-            #     # When the rotation is animated, write three separate Euler angle rotations
-            #     # so they can be targeted by different tracks having different sets of keys.
-            #     for i in range(3):
-            #         axis = ord(mode[2 - i]) - 0x58
-            #         angle = bobject.rotation_euler[axis]
-            #         if (rotAnimated[axis]) or (math.fabs(angle) > ExportEpsilon):
-            #             animo = {}
-            #             oaction['transforms'].append(animo)
-            #             animo['type'] = 'rotation_' + axisName[axis]
-            #             animo['name'] = subrotationName[axis]
-            #             animo['value'] = angle
-            #             structFlag = True
-
-            # else:
-            #     # When the rotation is not animated, write it in the representation given by
-            #     # the object's current rotation mode.
-            #     if mode == "QUATERNION":
-            #         quaternion = bobject.rotation_quaternion
-            #         if (math.fabs(quaternion[0] - 1.0) > ExportEpsilon) or (math.fabs(quaternion[1]) > ExportEpsilon) or (math.fabs(quaternion[2]) > ExportEpsilon) or (math.fabs(quaternion[3]) > ExportEpsilon):
-            #             animo = {}
-            #             oaction['transforms'].append(animo)
-            #             animo['type'] = 'rotation_quaternion'
-            #             animo['values'] = self.WriteQuaternion(quaternion)
-            #             structFlag = True
-
-            #     elif mode == "AXIS_ANGLE":
-            #         if math.fabs(bobject.rotation_axis_angle[0]) > ExportEpsilon:
-            #             animo = {}
-            #             oaction['transforms'].append(animo)
-            #             animo['type'] = 'rotation_axis'
-            #             animo['values'] = self.WriteVector4D(bobject.rotation_axis_angle)
-            #             structFlag = True
-
-            #     else:
-            #         for i in range(3):
-            #             axis = ord(mode[2 - i]) - 0x58
-            #             angle = bobject.rotation_euler[axis]
-            #             if math.fabs(angle) > ExportEpsilon:
-            #                 animo = {}
-            #                 oaction['transforms'].append(animo)
-            #                 animo['type'] = 'rotation_' + axisName[axis]
-            #                 animo['value'] = angle
-            #                 structFlag = True
-
-            # deltaScale = bobject.delta_scale
-            # if deltaScaleAnimated:
-            #     # When the delta scale is animated, write the x, y, and z components separately
-            #     # so they can be targeted by different tracks having different sets of keys.
-            #     for i in range(3):
-            #         scl = deltaScale[i]
-            #         if (deltaSclAnimated[i]) or (math.fabs(scl) > ExportEpsilon):
-            #             animo = {}
-            #             oaction['transforms'].append(animo)
-            #             animo['type'] = 'scale_' + axisName[i]
-            #             animo['name'] = deltaSubscaleName[i]
-            #             animo['value'] = scl
-            #             structFlag = True
-
-            # elif (math.fabs(deltaScale[0] - 1.0) > ExportEpsilon) or (math.fabs(deltaScale[1] - 1.0) > ExportEpsilon) or (math.fabs(deltaScale[2] - 1.0) > ExportEpsilon):
-            #     animo = {}
-            #     oaction['transforms'].append(animo)
-            #     animo['type'] = 'scale'
-            #     animo['values'] = self.write_vector3d(deltaScale)
-            #     structFlag = True
-
-            # scale = bobject.scale
-            # if scaleAnimated:
-            #     # When the scale is animated, write the x, y, and z components separately
-            #     # so they can be targeted by different tracks having different sets of keys.
-            #     for i in range(3):
-            #         scl = scale[i]
-            #         if (sclAnimated[i]) or (math.fabs(scl) > ExportEpsilon):
-            #             animo = {}
-            #             oaction['transforms'].append(animo)
-            #             animo['type'] = 'scale_' + axisName[i]
-            #             animo['name'] = subscaleName[i]
-            #             animo['value'] = scl
-            #             structFlag = True
-
-            # elif (math.fabs(scale[0] - 1.0) > ExportEpsilon) or (math.fabs(scale[1] - 1.0) > ExportEpsilon) or (math.fabs(scale[2] - 1.0) > ExportEpsilon):
-            #     animo = {}
-            #     oaction['transforms'].append(animo)
-            #     animo['type'] = 'scale'
-            #     animo['values'] = self.write_vector3d(scale)
-            #     structFlag = True
 
             # Export the animation tracks
             oanim = {}
@@ -1358,7 +857,6 @@ class ArmoryExporter:
                 #shapeKeys = ArmoryExporter.get_shape_keys(objref)
                 #if shapeKeys:
                 #   self.ExportMorphWeights(bobject, shapeKeys, scene, o)
-                # TODO
 
             elif type == NodeTypeLamp:
                 if not objref in self.lampArray:
@@ -1500,7 +998,7 @@ class ArmoryExporter:
             for subbobject in bobject.children:
                 self.export_object(subbobject, scene, o)
 
-    def export_skin_quality(self, bobject, armature, vert_list, o):
+    def export_skin(self, bobject, armature, vert_list, o):
         # This function exports all skinning data, which includes the skeleton
         # and per-vertex bone influence data
         oskin = {}
@@ -1710,7 +1208,7 @@ class ArmoryExporter:
         va['values'] = values
         return va
 
-    def export_mesh_fast(self, exportMesh, bobject, fp, o):
+    def export_mesh(self, exportMesh, bobject, fp, o):
         # Much faster export but produces slightly less efficient data
         exportMesh.calc_normals_split()
         exportMesh.calc_tessface()
@@ -1927,15 +1425,9 @@ class ArmoryExporter:
             log.warn(oid + ' exceeds maximum of 2 UV Maps supported')
 
         # Process meshes
-        if ArmoryExporter.option_optimize_mesh:
-            vert_list = self.export_mesh_quality(exportMesh, bobject, fp, o)
-            if armature:
-                self.export_skin_quality(bobject, armature, vert_list, o)
-        else:
-            vert_list = self.export_mesh_fast(exportMesh, bobject, fp, o)
-            if armature:
-                self.export_skin_quality(bobject, armature, vert_list, o)
-                # self.export_skin_fast(bobject, armature, vert_list, o)
+        vert_list = self.export_mesh(exportMesh, bobject, fp, o)
+        if armature:
+            self.export_skin(bobject, armature, vert_list, o)
 
         # Save aabb
         for va in o['vertex_arrays']:
@@ -1991,165 +1483,7 @@ class ArmoryExporter:
         if bobject.data.arm_dynamic_usage:
             o['dynamic_usage'] = bobject.data.arm_dynamic_usage
 
-        # if hasattr(bobject.data, 'arm_sdfgen') and bobject.data.arm_sdfgen:
-            # o['sdf_ref'] = 'sdf_' + oid
-
         self.write_mesh(bobject, fp, o)
-
-        # if hasattr(bobject.data, 'arm_sdfgen') and bobject.data.arm_sdfgen:
-        #     # Copy input
-        #     sdk_path = arm.utils.get_sdk_path()
-        #     sdfgen_path = sdk_path + '/armory/tools/sdfgen'
-        #     shutil.copy(fp, sdfgen_path + '/krom/mesh.arm')
-        #     # Extract basecolor
-        #     # Assume Armpry PBR with linked texture for now
-        #     # mat = bobject.material_slots[0].material
-        #     # img = None
-        #     # for n in mat.node_tree.nodes:
-        #         # if n.type == 'GROUP' and n.node_tree.name.startswith('Armory PBR') and n.inputs[0].is_linked:
-        #             # img = n.inputs[0].links[0].from_node.image
-        #             # fp_img = bpy.path.abspath(img.filepath)
-        #             # shutil.copy(fp_img, sdfgen_path + '/krom/mesh.png')
-        #     # Run
-        #     krom_location, krom_path = arm.utils.krom_paths()
-        #     krom_dir = sdfgen_path + '/krom'
-        #     krom_res = sdfgen_path + '/krom'
-        #     subprocess.check_output([krom_path, krom_dir, krom_res, '--nosound', '--nowindow'])
-        #     # Copy output
-        #     sdf_path = fp.replace('/mesh_', '/sdf_')
-        #     shutil.copy('out.bin', sdf_path)
-        #     assets.add(sdf_path)
-        #     os.remove('out.bin')
-        #     os.remove(sdfgen_path + '/krom/mesh.arm')
-        #     # if img != None:
-        #         # os.remove(sdfgen_path + '/krom/mesh.png')
-
-    def export_mesh_quality(self, exportMesh, bobject, fp, o):
-        # Triangulate mesh and remap vertices to eliminate duplicates
-        material_table = []
-        export_vertex_array = ArmoryExporter.deindex_mesh(exportMesh, material_table)
-        triangleCount = len(material_table)
-
-        indexTable = []
-        unifiedVA = ArmoryExporter.unify_vertices(export_vertex_array, indexTable)
-
-        # Write the position array
-        o['vertex_arrays'] = []
-        pa = self.make_va('pos', 3, self.write_va3d(unifiedVA, "position"))
-        o['vertex_arrays'].append(pa)
-
-        # Write the normal array
-        na = self.make_va('nor', 3, self.write_va3d(unifiedVA, "normal"))
-        o['vertex_arrays'].append(na)
-
-        # Write the color array if it exists
-        color_count = len(exportMesh.tessface_vertex_colors)
-        if self.get_export_vcols(exportMesh) == True and color_count > 0:
-            ca = self.make_va('col', 3, self.write_va3d(unifiedVA, "color"))
-            for i in range(0, len(ca.values)):
-                ca.values[i] = pow(ca.values[i], 2.2)
-            o['vertex_arrays'].append(ca)
-
-        # Write the texcoord arrays
-        texcoordCount = len(exportMesh.tessface_uv_textures)
-        if self.get_export_uvs(exportMesh) == True and texcoordCount > 0:
-            ta = self.make_va('tex', 2, self.write_va2d(unifiedVA, "texcoord0"))
-            o['vertex_arrays'].append(ta)
-            if texcoordCount > 1:
-                ta2 = self.make_va('tex1', 2, self.write_va2d(unifiedVA, "texcoord1"))
-                o['vertex_arrays'].append(ta2)
-
-        # If there are multiple morph targets, export them here
-        # if shapeKeys:
-        #   shapeKeys.key_blocks[0].value = 0.0
-        #   for m in range(1, len(currentMorphValue)):
-        #       shapeKeys.key_blocks[m].value = 1.0
-        #       mesh.update()
-
-        #       bobject.active_shape_key_index = m
-        #       morphMesh = bobject.to_mesh(scene, apply_modifiers, "RENDER", True, False)
-
-        #       # Write the morph target position array.
-
-        #       self.IndentWrite(B"VertexArray (attrib = \"position\", morph = ", 0, True)
-        #       self.WriteInt(m)
-        #       self.Write(B")\n")
-        #       self.IndentWrite(B"{\n")
-        #       self.indentLevel += 1
-
-        #       self.IndentWrite(B"float[3]\t\t// ")
-        #       self.IndentWrite(B"{\n", 0, True)
-        #       self.WriteMorphPositionArray3D(unifiedVA, morphMesh.vertices)
-        #       self.IndentWrite(B"}\n")
-
-        #       self.indentLevel -= 1
-        #       self.IndentWrite(B"}\n\n")
-
-        #       # Write the morph target normal array.
-
-        #       self.IndentWrite(B"VertexArray (attrib = \"normal\", morph = ")
-        #       self.WriteInt(m)
-        #       self.Write(B")\n")
-        #       self.IndentWrite(B"{\n")
-        #       self.indentLevel += 1
-
-        #       self.IndentWrite(B"float[3]\t\t// ")
-        #       self.IndentWrite(B"{\n", 0, True)
-        #       self.WriteMorphNormalArray3D(unifiedVA, morphMesh.vertices, morphMesh.tessfaces)
-        #       self.IndentWrite(B"}\n")
-
-        #       self.indentLevel -= 1
-        #       self.IndentWrite(B"}\n")
-
-        #       bpy.data.meshes.remove(morphMesh)
-
-        # Write the index arrays
-        o['index_arrays'] = []
-
-        maxMaterialIndex = 0
-        for i in range(len(material_table)):
-            index = material_table[i]
-            if index > maxMaterialIndex:
-                maxMaterialIndex = index
-
-        if maxMaterialIndex == 0:
-            # There is only one material, so write a single index array.
-            ia = {}
-            ia['size'] = 3
-            ia['values'] = self.write_triangle_array(triangleCount, indexTable)
-            ia['material'] = 0
-            o['index_arrays'].append(ia)
-        else:
-            # If there are multiple material indexes, then write a separate index array for each one.
-            materialTriangleCount = [0 for i in range(maxMaterialIndex + 1)]
-            for i in range(len(material_table)):
-                materialTriangleCount[material_table[i]] += 1
-
-            for m in range(maxMaterialIndex + 1):
-                if materialTriangleCount[m] != 0:
-                    materialIndexTable = []
-                    for i in range(len(material_table)):
-                        if material_table[i] == m:
-                            k = i * 3
-                            materialIndexTable.append(indexTable[k])
-                            materialIndexTable.append(indexTable[k + 1])
-                            materialIndexTable.append(indexTable[k + 2])
-
-                    ia = {}
-                    ia['size'] = 3
-                    ia['values'] = self.write_triangle_array(materialTriangleCount[m], materialIndexTable)
-                    ia['material'] = m
-                    o['index_arrays'].append(ia)
-
-        # Export tangents
-        if self.has_tangents(exportMesh):
-            tanga_vals = self.calc_tangents(pa['values'], na['values'], ta['values'], o['index_arrays'][0]['values'])
-            tanga = self.make_va('tang', 3, tanga_vals)
-            o['vertex_arrays'].append(tanga)
-
-        # Delete the new mesh that we made earlier
-        bpy.data.meshes.remove(exportMesh)
-        return unifiedVA
 
     def export_lamp(self, objectRef):
         # This function exports a single lamp object
@@ -2538,34 +1872,6 @@ class ArmoryExporter:
             self.post_export_world(w, o)
             self.output['world_datas'].append(o)
 
-    def export_grease_pencils(self):
-        gpRef = self.scene.grease_pencil
-        if gpRef == None or self.scene.arm_gp_export == False:
-            return
-
-        # ArmoryExporter.option_mesh_per_file # Currently always exports to separate file
-        fp = self.get_greasepencils_file_path('greasepencil_' + gpRef.name, compressed=self.is_compress(gpRef))
-        assets.add(fp)
-        ext = ''
-        if self.is_compress(gpRef):
-            ext = '.zip'
-        self.output['grease_pencil_ref'] = 'greasepencil_' + gpRef.name + ext + '/' + gpRef.name
-
-        assets.add_shader_data(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil.arm')
-        assets.add_shader(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil.frag.glsl')
-        assets.add_shader(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil.vert.glsl')
-        assets.add_shader(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil_shadows.frag.glsl')
-        assets.add_shader(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil_shadows.vert.glsl')
-
-        if gpRef.arm_cached == True and os.path.exists(fp):
-            return
-
-        gpo = self.post_export_grease_pencil(gpRef)
-        gp_obj = {}
-        gp_obj['grease_pencil_datas'] = [gpo]
-        arm.utils.write_arm(fp, gp_obj)
-        gpRef.arm_cached = True
-
     def is_compress(self, obj):
         return ArmoryExporter.compress_enabled and obj.arm_compress
 
@@ -2727,7 +2033,6 @@ class ArmoryExporter:
             self.export_particle_systems()
             self.output['world_datas'] = []
             self.export_worlds()
-            self.export_grease_pencils()
             self.export_tilesheets()
 
             if self.scene.world != None:
@@ -2923,7 +2228,6 @@ class ArmoryExporter:
             ArmoryExporter.import_traits = [] # Referenced traits
         ArmoryExporter.option_mesh_only = False
         ArmoryExporter.option_mesh_per_file = True
-        ArmoryExporter.option_optimize_mesh = wrd.arm_optimize_mesh
         ArmoryExporter.option_minimize = wrd.arm_minimize
         ArmoryExporter.option_sample_animation = wrd.arm_sampled_animation
         ArmoryExporter.sample_animation_flag = ArmoryExporter.option_sample_animation
@@ -3260,104 +2564,3 @@ class ArmoryExporter:
             po['turbidity'] = world.arm_envtex_turbidity
             po['ground_albedo'] = world.arm_envtex_ground_albedo
         o['probes'].append(po)
-
-    def post_export_grease_pencil(self, gp):
-        o = {}
-        o['name'] = gp.name
-        o['layers'] = []
-        for layer in gp.layers:
-            o['layers'].append(self.export_grease_pencil_layer(layer))
-        # o['palettes'] = []
-        # for palette in gp.palettes:
-            # o['palettes'].append(self.export_grease_pencil_palette(palette))
-        o['shader'] = 'grease_pencil/grease_pencil'
-        return o
-
-    def export_grease_pencil_layer(self, layer):
-        lo = {}
-        lo['name'] = layer.info
-        lo['opacity'] = layer.opacity
-        lo['frames'] = []
-        for frame in layer.frames:
-            if frame.frame_number > self.scene.frame_end:
-                break
-            # TODO: load GP frame data
-            # self.scene.frame_set(frame.frame_number)
-            lo['frames'].append(self.export_grease_pencil_frame(frame))
-        return lo
-
-    def export_grease_pencil_frame(self, frame):
-        va = []
-        cola = []
-        colfilla = []
-        indices = []
-        num_stroke_points = []
-        index_offset = 0
-        for stroke in frame.strokes:
-            for point in stroke.points:
-                va.append(point.co[0])
-                va.append(point.co[1])
-                va.append(point.co[2])
-                # TODO: store index to color pallete only, this is extremely wasteful
-                if stroke.color != None:
-                    cola.append(stroke.color.color[0])
-                    cola.append(stroke.color.color[1])
-                    cola.append(stroke.color.color[2])
-                    cola.append(stroke.color.alpha)
-                    colfilla.append(stroke.color.fill_color[0])
-                    colfilla.append(stroke.color.fill_color[1])
-                    colfilla.append(stroke.color.fill_color[2])
-                    colfilla.append(stroke.color.fill_alpha)
-                else:
-                    cola.append(0.0)
-                    cola.append(0.0)
-                    cola.append(0.0)
-                    cola.append(0.0)
-                    colfilla.append(0.0)
-                    colfilla.append(0.0)
-                    colfilla.append(0.0)
-                    colfilla.append(0.0)
-            for triangle in stroke.triangles:
-                indices.append(triangle.v1 + index_offset)
-                indices.append(triangle.v2 + index_offset)
-                indices.append(triangle.v3 + index_offset)
-            num_stroke_points.append(len(stroke.points))
-            index_offset += len(stroke.points)
-        fo = {}
-        # TODO: merge into array of vertex arrays
-        fo['vertex_array'] = {}
-        fo['vertex_array']['attrib'] = 'pos'
-        fo['vertex_array']['size'] = 3
-        fo['vertex_array']['values'] = va
-        fo['col_array'] = {}
-        fo['col_array']['attrib'] = 'col'
-        fo['col_array']['size'] = 4
-        fo['col_array']['values'] = cola
-        fo['colfill_array'] = {}
-        fo['colfill_array']['attrib'] = 'colfill'
-        fo['colfill_array']['size'] = 4
-        fo['colfill_array']['values'] = colfilla
-        fo['index_array'] = {}
-        fo['index_array']['material'] = 0
-        fo['index_array']['size'] = 3
-        fo['index_array']['values'] = indices
-        fo['num_stroke_points'] = num_stroke_points
-        fo['frame_number'] = frame.frame_number
-        return fo
-
-    def export_grease_pencil_palette(self, palette):
-        po = {}
-        po['name'] = palette.info
-        po['colors'] = []
-        for color in palette.colors:
-            po['colors'].append(self.export_grease_pencil_palette_color(color))
-        return po
-
-    def export_grease_pencil_palette_color(self, color):
-        co = {}
-        co['name'] = color.name
-        co['color'] = [color.color[0], color.color[1], color.color[2]]
-        co['alpha'] = color.alpha
-        co['fill_color'] = [color.fill_color[0], color.fill_color[1], color.fill_color[2]]
-        co['fill_alpha'] = color.fill_alpha
-        return co
