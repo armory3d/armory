@@ -85,7 +85,6 @@ void main() {
 	#ifdef _InvY // D3D
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	#else
-	// TODO: Firefox throws transform loop error even when no depth write is performed
 	float depth = (1.0 - g0.a) * 2.0 - 1.0;
 	#endif
 	vec3 p = getPos(eye, eyeLook, viewRay, depth, cameraProj);

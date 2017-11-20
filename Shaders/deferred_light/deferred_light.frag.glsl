@@ -17,11 +17,7 @@ precision mediump float;
 	#include "../std/ltc.glsl"
 #endif
 #ifndef _NoShadows
-	#ifdef _PCSS
-	#include "../std/shadows_pcss.glsl"
-	#else
 	#include "../std/shadows.glsl"
-	#endif
 #endif
 #ifdef _DFRS
 #include "../std/sdf.glsl"
@@ -49,10 +45,6 @@ uniform sampler2D gbuffer1;
 #ifndef _NoShadows
 	//!uniform sampler2D shadowMap;
 	//!uniform samplerCube shadowMapCube;
-	#ifdef _PCSS
-	//!uniform sampler2D snoise;
-	//!uniform float lampSizeUV;
-	#endif
 #endif
 #ifdef _DFRS
 	//!uniform sampler3D sdftex;
@@ -141,11 +133,7 @@ void main() {
 		// vec4 lPos = LWVP * vec4(p + noff, 1.0);
 		vec4 lPos = LWVP * vec4(p, 1.0);
 		if (lPos.w > 0.0) {
-			#ifdef _PCSS
-			visibility = PCSS(lPos.xy, lPos.z - shadowsBias);
-			#else
-			visibility = shadowTest(lPos.xyz / lPos.w, shadowsBias);
-			#endif
+			visibility = shadowTest(lPos.xyz / lPos.w, shadowsBias, shadowmapSize);
 		}
 	}
 	else if (lightShadow == 2) { // Cube

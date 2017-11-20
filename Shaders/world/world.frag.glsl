@@ -143,22 +143,6 @@ vec2 traceCloud(vec3 pos, vec3 dir) {
 	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
 	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
 	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	
-	// shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	// shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	// shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	// shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	// shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	// shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	// shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	// shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	// shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	// shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	// shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	// shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	// shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	// shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	// shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
 	return shadeSum;
 }
 // GPU PRO 7 - Real-time Volumetric Cloudscapes
@@ -178,9 +162,6 @@ vec3 cloudsColor(vec3 R, vec3 pos, vec3 dir) {
 #endif
 
 void main() {
-	// if (texture(gbufferD, texCoord).r/* * 2.0 - 1.0*/ != 1.0) {
-		// discard;
-	// }
 
 #ifdef _EnvCol
 	fragColor.rgb = backgroundCol;

@@ -6,7 +6,6 @@ precision mediump float;
 
 #include "../compiled.glsl"
 #include "../std/gbuffer.glsl"
-// getNor()
 
 uniform sampler2D tex;
 

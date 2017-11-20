@@ -7,18 +7,12 @@ uniform samplerCube shadowMapCube;
 uniform vec4 casData[shadowmapCascades * 4 + 4];
 #endif
 
-// #ifdef _CSM
-// const vec2 smSize = shadowmapSize * vec2(shadowmapCascades, 1.0);
-// #else
-const vec2 smSize = shadowmapSize;
-// #endif
-
 float shadowCompare(const vec2 uv, const float compare){
 	float depth = texture(shadowMap, uv).r;
 	return step(compare, depth);
 }
 
-float shadowLerp(const vec2 uv, const float compare){
+float shadowLerp(const vec2 uv, const float compare, const vec2 smSize){
 	const vec2 texelSize = vec2(1.0) / smSize;
 	vec2 f = fract(uv * smSize + 0.5);
 	vec2 centroidUV = floor(uv * smSize + 0.5) / smSize;
@@ -32,23 +26,16 @@ float shadowLerp(const vec2 uv, const float compare){
 	return c;
 }
 
-float PCF(const vec2 uv, const float compare) {
-	// float result = 0.0;
-	// for (int x = -1; x <= 1; x++){
-		// for(int y = -1; y <= 1; y++){
-			// vec2 off = vec2(x, y) / smSize;
-			// result += shadowLerp(smSize, uv + off, compare);
-			float result = shadowLerp(uv + (vec2(-1.0, -1.0) / smSize), compare);
-			result += shadowLerp(uv + (vec2(-1.0, 0.0) / smSize), compare);
-			result += shadowLerp(uv + (vec2(-1.0, 1.0) / smSize), compare);
-			result += shadowLerp(uv + (vec2(0.0, -1.0) / smSize), compare);
-			result += shadowLerp(uv, compare);
-			result += shadowLerp(uv + (vec2(0.0, 1.0) / smSize), compare);
-			result += shadowLerp(uv + (vec2(1.0, -1.0) / smSize), compare);
-			result += shadowLerp(uv + (vec2(1.0, 0.0) / smSize), compare);
-			result += shadowLerp(uv + (vec2(1.0, 1.0) / smSize), compare);
-		// }
-	// }
+float PCF(const vec2 uv, const float compare, const vec2 smSize) {
+	float result = shadowLerp(uv + (vec2(-1.0, -1.0) / smSize), compare, smSize);
+	result += shadowLerp(uv + (vec2(-1.0, 0.0) / smSize), compare, smSize);
+	result += shadowLerp(uv + (vec2(-1.0, 1.0) / smSize), compare, smSize);
+	result += shadowLerp(uv + (vec2(0.0, -1.0) / smSize), compare, smSize);
+	result += shadowLerp(uv, compare, smSize);
+	result += shadowLerp(uv + (vec2(0.0, 1.0) / smSize), compare, smSize);
+	result += shadowLerp(uv + (vec2(1.0, -1.0) / smSize), compare, smSize);
+	result += shadowLerp(uv + (vec2(1.0, 0.0) / smSize), compare, smSize);
+	result += shadowLerp(uv + (vec2(1.0, 1.0) / smSize), compare, smSize);
 	return result / 9.0;
 }
 
@@ -78,7 +65,7 @@ float PCFCube(const vec3 lp, vec3 ml, const float bias, const vec2 lightProj, co
 	return result;
 }
 
-float shadowTest(const vec3 lPos, const float shadowsBias) {
+float shadowTest(const vec3 lPos, const float shadowsBias, const vec2 smSize) {
 
 	// float cosAngle = max(1.0 - dotNL, 0.0);
 	// vec3 noff = n * shadowsBias * cosAngle;
@@ -87,7 +74,7 @@ float shadowTest(const vec3 lPos, const float shadowsBias) {
 	// Out of bounds
 	if (lPos.x < 0.0 || lPos.y < 0.0 || lPos.x > 1.0 || lPos.y > 1.0) return 1.0;
 
-	return PCF(lPos.xy, lPos.z - shadowsBias);
+	return PCF(lPos.xy, lPos.z - shadowsBias, smSize);
 }
 
 #ifdef _CSM
@@ -119,7 +106,7 @@ mat4 getCascadeMat(const float d, out int casi, out int casIndex) {
 		casData[casIndex + 3]);
 }
 
-float shadowTestCascade(const vec3 eye, const vec3 p, const float shadowsBias) {
+float shadowTestCascade(const vec3 eye, const vec3 p, const float shadowsBias, const vec2 smSize) {
 	const int c = shadowmapCascades;
 	float d = distance(eye, p);
 
@@ -129,7 +116,7 @@ float shadowTestCascade(const vec3 eye, const vec3 p, const float shadowsBias) {
 
 	vec4 lPos = LWVP * vec4(p, 1.0);
 	float visibility = 1.0;
-	if (lPos.w > 0.0) visibility = shadowTest(lPos.xyz / lPos.w, shadowsBias);
+	if (lPos.w > 0.0) visibility = shadowTest(lPos.xyz / lPos.w, shadowsBias, smSize);
 
 	// Blend cascade
 	// https://github.com/TheRealMJP/Shadows
@@ -147,7 +134,7 @@ float shadowTestCascade(const vec3 eye, const vec3 p, const float shadowsBias) {
 
 		vec4 lPos2 = LWVP2 * vec4(p, 1.0);
 		float visibility2 = 1.0;
-		if (lPos2.w > 0.0) visibility2 = shadowTest(lPos2.xyz / lPos2.w, shadowsBias);
+		if (lPos2.w > 0.0) visibility2 = shadowTest(lPos2.xyz / lPos2.w, shadowsBias, smSize);
 
 		float lerpAmt = smoothstep(0.0, blendThres, splitDist);
 		return mix(visibility2, visibility, lerpAmt);

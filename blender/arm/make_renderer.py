@@ -156,7 +156,6 @@ def set_preset(self, context, preset):
         rpdat.rp_motionblur = 'None'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_material_model = 'Full'
-        rpdat.arm_pcss_state = 'On'
         rpdat.arm_texture_filter = 'Anisotropic'
         rpdat.arm_diffuse_model = 'OrenNayar'
     elif preset == 'VR':
@@ -260,7 +259,6 @@ def set_preset(self, context, preset):
         rpdat.rp_motionblur = 'None'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_material_model = 'Full'
-        rpdat.arm_pcss_state = 'Off'
         rpdat.arm_texture_filter = 'Anisotropic'
         rpdat.arm_diffuse_model = 'Lambert'
 

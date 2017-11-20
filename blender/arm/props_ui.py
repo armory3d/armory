@@ -1019,7 +1019,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
                 layout.prop(rpdat, 'arm_rp_resolution')
 
             layout.separator()
-            # layout.prop(rpdat, 'arm_pcss_state')
+            layout.prop(rpdat, 'arm_soft_shadows')
             layout.prop(rpdat, 'arm_samples_per_pixel')
             layout.prop(rpdat, 'arm_texture_filter')
             layout.prop(rpdat, "arm_diffuse_model")
@@ -1050,9 +1050,6 @@ class ArmRenderPropsPanel(bpy.types.Panel):
 
         layout.label('Shadows')
         layout.prop(wrd, 'arm_shadowmap_split')
-
-        # layout.label('PCSS')
-        # layout.prop(wrd, 'arm_pcss_rings')
 
         layout.label('Clouds')
         row = layout.row()
@@ -1139,6 +1136,7 @@ class ArmRenderPropsPanel(bpy.types.Panel):
         row.prop(wrd, 'arm_fog_amountb')
         layout.prop(wrd, 'arm_fisheye')
         layout.prop(wrd, 'arm_vignette')
+        layout.prop(wrd, 'arm_lensflare')
         layout.prop(wrd, 'arm_autoexposure_strength')
         layout.prop(wrd, 'arm_lens_texture')
 

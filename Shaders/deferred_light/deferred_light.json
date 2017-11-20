@@ -107,16 +107,6 @@
 					"link": "_biasLampWorldViewProjectionMatrix"
 				},
 				{
-					"name": "snoise",
-					"link": "_noise64",
-					"ifdef": ["_PCSS"]
-				},
-				{
-					"name": "lampSizeUV",
-					"link": "_lampSizeUV",
-					"ifdef": ["_PCSS"]
-				},
-				{
 					"name": "VP",
 					"link": "_viewProjectionMatrix",
 					"ifdef": ["_SSRS"]

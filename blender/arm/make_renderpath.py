@@ -262,6 +262,9 @@ def make_draw_compositor(stage, node_group, node, with_fxaa=False):
     if wrd.arm_vignette:
         compositor_defs += '_CVignette'
 
+    if wrd.arm_lensflare:
+        compositor_defs += '_CGlare'
+
     wrd.compo_defs = compositor_defs
 
     defs = world_defs + compositor_defs

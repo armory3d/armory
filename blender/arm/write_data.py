@@ -428,11 +428,6 @@ const float ssrJitter = """ + str(round(wrd.arm_ssr_jitter * 100) / 100) + """;
 const vec3 volumAirColor = vec3(""" + str(round(wrd.arm_volumetric_light_air_color[0] * 100) / 100) + """, """ + str(round(wrd.arm_volumetric_light_air_color[1] * 100) / 100) + """, """ + str(round(wrd.arm_volumetric_light_air_color[2] * 100) / 100) + """);
 """)
 
-        if rpdat.arm_pcss_state == 'On':
-            f.write(
-"""const int pcssRings = """ + str(wrd.arm_pcss_rings) + """;
-""")
-
         if rpdat.rp_autoexposure:
             f.write(
 """const float autoExposureStrength = """ + str(wrd.arm_autoexposure_strength) + """;

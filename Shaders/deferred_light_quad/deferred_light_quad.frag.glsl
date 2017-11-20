@@ -11,11 +11,7 @@ precision mediump float;
 	#include "../std/conetrace.glsl"
 #endif
 #ifndef _NoShadows
-	// #ifdef _PCSS
-	// #include "../std/shadows_pcss.glsl"
-	// #else
-	#include "../std/shadows_csm.glsl"
-	// #endif
+	#include "../std/shadows.glsl"
 #endif
 #ifdef _SSS
 #include "../std/sss.glsl"
@@ -42,10 +38,6 @@ vec2 lightPlane;
 
 #ifndef _NoShadows
 	//!uniform sampler2D shadowMap;
-	// #ifdef _PCSS
-	//-!uniform sampler2D snoise;
-	//-!uniform float lampSizeUV;
-	// #endif
 	#ifdef _CSM
 	//!uniform vec4 casData[shadowmapCascades * 4 + 4];
 	#else
@@ -103,10 +95,10 @@ void main() {
 #ifndef _NoShadows
 	if (lightShadow == 1) {
 		#ifdef _CSM
-		visibility = shadowTestCascade(eye, p, shadowsBias);
+		visibility = shadowTestCascade(eye, p, shadowsBias, shadowmapSize * vec2(shadowmapCascades, 1.0));
 		#else
 		vec4 lPos = LWVP * vec4(p, 1.0);
-		if (lPos.w > 0.0) visibility = shadowTest(lPos.xyz / lPos.w, shadowsBias);
+		if (lPos.w > 0.0) visibility = shadowTest(lPos.xyz / lPos.w, shadowsBias, shadowmapSize);
 		#endif
 	}
 #endif

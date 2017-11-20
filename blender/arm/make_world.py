@@ -80,13 +80,6 @@ def build_node_tree(world):
     if rpdat.arm_clouds:
         wrd.world_defs += '_EnvClouds'
 
-    # Percentage closer soft shadows
-    # if rpdat.arm_pcss_state == 'On':
-    #     wrd.world_defs += '_PCSS'
-    #     sdk_path = arm.utils.get_sdk_path()
-    #     assets.add(sdk_path + 'armory/Assets/noise64.png')
-    #     assets.add_embedded_data('noise64.png')
-
     # Screen-space ray-traced shadows
     if rpdat.arm_ssrs:
         wrd.world_defs += '_SSRS'
