@@ -8,7 +8,7 @@ class RemoveActiveSceneNode extends LogicNode {
 
 	override function run() {
 
-		armory.Scene.active.remove();
+		iron.Scene.active.remove();
 		runOutputs(0);
 	}
 }

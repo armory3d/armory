@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import armory.math.Vec4;
+import iron.math.Vec4;
 
 class SurfaceCoordsNode extends LogicNode {
 
@@ -11,7 +11,7 @@ class SurfaceCoordsNode extends LogicNode {
 	}
 
 	override function get(from:Int):Dynamic {
-		var surface = armory.system.Input.getSurface();
+		var surface = iron.system.Input.getSurface();
 		if (from == 0) {
 			coords.x = surface.x;
 			coords.y = surface.y;

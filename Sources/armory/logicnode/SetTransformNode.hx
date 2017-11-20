@@ -1,10 +1,8 @@
 package armory.logicnode;
 
-import armory.object.Object;
-import armory.math.Mat4;
-#if arm_physics
+import iron.object.Object;
+import iron.math.Mat4;
 import armory.trait.physics.RigidBody;
-#end
 
 class SetTransformNode extends LogicNode {
 

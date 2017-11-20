@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import armory.data.MeshData;
+import iron.data.MeshData;
 
 class MeshNode extends LogicNode {
 
@@ -10,13 +10,13 @@ class MeshNode extends LogicNode {
 	public function new(tree:LogicTree) {
 		super(tree);
 
-		armory.Scene.active.notifyOnInit(function() {
+		iron.Scene.active.notifyOnInit(function() {
 			get(0);
 		});
 	}
 
 	override function get(from:Int):Dynamic { 
-		armory.data.Data.getMesh("mesh_" + property0, property0, null, function(mesh:MeshData) {
+		iron.data.Data.getMesh("mesh_" + property0, property0, null, function(mesh:MeshData) {
 			value = mesh;
 		});
 

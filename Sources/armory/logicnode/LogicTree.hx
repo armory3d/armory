@@ -1,8 +1,6 @@
 package armory.logicnode;
 
-import armory.system.Cycles;
-
-class LogicTree extends armory.Trait {
+class LogicTree extends iron.Trait {
 
 	public var loopBreak = false; // Trigger break from loop nodes
 

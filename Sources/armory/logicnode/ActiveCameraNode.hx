@@ -6,5 +6,5 @@ class ActiveCameraNode extends LogicNode {
 		super(tree);
 	}
 
-	override function get(from:Int):Dynamic { return armory.Scene.active.camera; }
+	override function get(from:Int):Dynamic { return iron.Scene.active.camera; }
 }

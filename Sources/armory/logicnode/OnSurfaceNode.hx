@@ -11,7 +11,7 @@ class OnSurfaceNode extends LogicNode {
 	}
 
 	function update() {
-		var surface = armory.system.Input.getSurface();
+		var surface = iron.system.Input.getSurface();
 		var b = false;
 		switch (property0) {
 		case "Touched":

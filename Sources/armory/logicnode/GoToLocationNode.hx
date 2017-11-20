@@ -1,8 +1,8 @@
 package armory.logicnode;
 
 import armory.trait.navigation.Navigation;
-import armory.object.Object;
-import armory.math.Vec4;
+import iron.object.Object;
+import iron.math.Vec4;
 
 class GoToLocationNode extends LogicNode {
 

@@ -1,7 +1,7 @@
 package armory.logicnode;
 
-import armory.math.Vec4;
-import armory.math.Mat4;
+import iron.math.Vec4;
+import iron.math.Mat4;
 
 class ScreenToWorldSpaceNode extends LogicNode {
 
@@ -16,7 +16,7 @@ class ScreenToWorldSpaceNode extends LogicNode {
 	override function get(from:Int):Dynamic {
 		var v1:Vec4 = inputs[0].get();
 
-		var cam = armory.Scene.active.camera;
+		var cam = iron.Scene.active.camera;
 		v.setFrom(v1);
 		m.getInverse(cam.P);
 		v.applyproj(m);

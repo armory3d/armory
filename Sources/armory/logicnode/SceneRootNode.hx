@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import armory.Scene;
+import iron.Scene;
 
 class SceneRootNode extends LogicNode {
 

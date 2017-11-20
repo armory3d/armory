@@ -1,8 +1,6 @@
 package armory.logicnode;
 
-#if arm_physics
 import armory.trait.physics.PhysicsWorld;
-#end
 
 class OnInitNode extends LogicNode {
 

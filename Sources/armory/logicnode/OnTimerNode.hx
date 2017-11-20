@@ -18,7 +18,7 @@ class OnTimerNode extends LogicNode {
 			repeat = inputs[1].get();
 		}
 
-		duration -= armory.system.Time.delta;
+		duration -= iron.system.Time.delta;
 		if (duration <= 0.0) {
 			if (!repeat) tree.removeUpdate(update);
 			run();

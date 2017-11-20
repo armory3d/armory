@@ -10,7 +10,7 @@ class KeyboardNode extends LogicNode {
 	}
 
 	override function get(from:Int):Dynamic {
-		var keyboard = armory.system.Input.getKeyboard();
+		var keyboard = iron.system.Input.getKeyboard();
 		switch (property0) {
 		case "Down":
 			return keyboard.down(property1);

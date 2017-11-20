@@ -1,12 +1,10 @@
 package armory.logicnode;
 
-import armory.object.Object;
-import armory.math.Mat4;
-import armory.math.Quat;
-import armory.math.Vec4;
-#if arm_physics
+import iron.object.Object;
+import iron.math.Mat4;
+import iron.math.Quat;
+import iron.math.Vec4;
 import armory.trait.physics.RigidBody;
-#end
 
 class RotateObjectNode extends LogicNode {
 

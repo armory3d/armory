@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import armory.object.Object;
+import iron.object.Object;
 
 class SetSceneNode extends LogicNode {
 
@@ -13,7 +13,7 @@ class SetSceneNode extends LogicNode {
 	override function run() {
 		var sceneName:String = inputs[1].get();
 
-		Scene.setActive(sceneName, function(o:armory.object.Object) {
+		Scene.setActive(sceneName, function(o:iron.object.Object) {
 			root = o;
 			runOutputs(0);
 		});

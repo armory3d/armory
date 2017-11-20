@@ -12,7 +12,7 @@ class OnMouseNode extends LogicNode {
 	}
 
 	function update() {
-		var mouse = armory.system.Input.getMouse();
+		var mouse = iron.system.Input.getMouse();
 		var b = false;
 		switch (property0) {
 		case "Down":

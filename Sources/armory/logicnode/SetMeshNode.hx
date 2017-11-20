@@ -1,7 +1,7 @@
 package armory.logicnode;
 
-import armory.object.MeshObject;
-import armory.data.MeshData;
+import iron.object.MeshObject;
+import iron.data.MeshData;
 
 class SetMeshNode extends LogicNode {
 

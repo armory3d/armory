@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import armory.math.Mat4;
+import iron.math.Mat4;
 
 class VectorFromTransformNode extends LogicNode {
 

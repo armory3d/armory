@@ -12,7 +12,7 @@ class OnKeyboardNode extends LogicNode {
 	}
 
 	function update() {
-		var keyboard = armory.system.Input.getKeyboard();
+		var keyboard = iron.system.Input.getKeyboard();
 		var b = false;
 		switch (property0) {
 		case "Down":

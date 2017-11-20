@@ -1,7 +1,7 @@
 package armory.logicnode;
 
-import armory.object.Object;
-import armory.math.Mat4;
+import iron.object.Object;
+import iron.math.Mat4;
 #if arm_physics
 import armory.trait.physics.RigidBody;
 #end

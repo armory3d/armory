@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import armory.object.Object;
+import iron.object.Object;
 import armory.trait.physics.RigidBody;
 
 class HasContactNode extends LogicNode {

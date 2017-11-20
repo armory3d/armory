@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import armory.object.Object;
+import iron.object.Object;
 import armory.system.Event;
 
 class SendEventNode extends LogicNode {
@@ -15,7 +15,7 @@ class SendEventNode extends LogicNode {
 		var name:String = inputs[1].get();
 		
 		if (entries == null) {
-			var all = armory.system.Event.get(name);
+			var all = Event.get(name);
 			if (all != null) {
 				entries = [];
 				for (e in all) if (e.mask == tree.object.uid) entries.push(e);

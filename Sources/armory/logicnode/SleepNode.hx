@@ -8,7 +8,7 @@ class SleepNode extends LogicNode {
 
 	override function run() {
 		var time:Float = inputs[1].get();
-		armory.system.Tween.timer(time, done);
+		iron.system.Tween.timer(time, done);
 	}
 
 	function done() {

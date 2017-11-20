@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import armory.math.Vec4;
+import iron.math.Vec4;
 import armory.trait.navigation.Navigation;
 
 class NavigableLocationNode extends LogicNode {
@@ -10,7 +10,7 @@ class NavigableLocationNode extends LogicNode {
 	public function new(tree:LogicTree) {
 		super(tree);
 
-		armory.Scene.active.notifyOnInit(function() {
+		iron.Scene.active.notifyOnInit(function() {
 			get(0);
 		});
 	}

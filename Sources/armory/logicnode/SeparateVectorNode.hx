@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import armory.math.Vec4;
+import iron.math.Vec4;
 
 class SeparateVectorNode extends LogicNode {
 

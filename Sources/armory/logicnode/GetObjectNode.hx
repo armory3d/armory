@@ -9,6 +9,6 @@ class GetObjectNode extends LogicNode {
 	override function get(from:Int):Dynamic {
 		var objectName:String = inputs[0].get();
 
-		return armory.Scene.active.getChild(objectName);
+		return iron.Scene.active.getChild(objectName);
 	}
 }

@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import armory.math.Vec4;
+import iron.math.Vec4;
 
 class MouseCoordsNode extends LogicNode {
 
@@ -11,7 +11,7 @@ class MouseCoordsNode extends LogicNode {
 	}
 
 	override function get(from:Int):Dynamic {
-		var mouse = armory.system.Input.getMouse();
+		var mouse = iron.system.Input.getMouse();
 		if (from == 0) {
 			coords.x = mouse.x;
 			coords.y = mouse.y;

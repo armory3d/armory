@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import armory.object.Object;
+import iron.object.Object;
 
 class PlayActionNode extends LogicNode {
 

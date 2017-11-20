@@ -12,7 +12,7 @@ class OnVirtualButtonNode extends LogicNode {
 	}
 
 	function update() {
-		var vb = armory.system.Input.getVirtualButton(property1);
+		var vb = iron.system.Input.getVirtualButton(property1);
 		if (vb == null) return;
 		var b = false;
 		switch (property0) {

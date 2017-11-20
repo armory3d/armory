@@ -10,7 +10,7 @@ class VirtualButtonNode extends LogicNode {
 	}
 
 	override function get(from:Int):Dynamic {
-		var vb = armory.system.Input.getVirtualButton(property1);
+		var vb = iron.system.Input.getVirtualButton(property1);
 		if (vb == null) return false;
 		switch (property0) {
 		case "Down":

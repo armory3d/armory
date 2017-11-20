@@ -10,7 +10,7 @@ class MouseNode extends LogicNode {
 	}
 
 	override function get(from:Int):Dynamic {
-		var mouse = armory.system.Input.getMouse();
+		var mouse = iron.system.Input.getMouse();
 		switch (property0) {
 		case "Down":
 			return mouse.down(property1);

@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import armory.object.MeshObject;
+import iron.object.MeshObject;
 
 class ResumeTilesheetNode extends LogicNode {
 

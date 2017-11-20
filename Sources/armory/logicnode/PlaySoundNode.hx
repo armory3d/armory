@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import armory.object.SpeakerObject;
+import iron.object.SpeakerObject;
 
 class PlaySoundNode extends LogicNode {
 

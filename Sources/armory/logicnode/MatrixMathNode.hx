@@ -1,7 +1,7 @@
 package armory.logicnode;
 
-import armory.math.Vec4;
-import armory.math.Mat4;
+import iron.math.Vec4;
+import iron.math.Mat4;
 
 class MatrixMathNode extends LogicNode {
 

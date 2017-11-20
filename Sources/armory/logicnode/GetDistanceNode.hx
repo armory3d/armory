@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import armory.object.Object;
+import iron.object.Object;
 
 class GetDistanceNode extends LogicNode {
 
@@ -12,6 +12,6 @@ class GetDistanceNode extends LogicNode {
 		var object1:Object = inputs[0].get();
 		var object2:Object = inputs[1].get();
 
-		return armory.math.Vec4.distance3d(object1.transform.world.getLoc(), object2.transform.world.getLoc());
+		return iron.math.Vec4.distance3d(object1.transform.world.getLoc(), object2.transform.world.getLoc());
 	}
 }

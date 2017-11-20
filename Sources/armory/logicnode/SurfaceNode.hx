@@ -9,7 +9,7 @@ class SurfaceNode extends LogicNode {
 	}
 
 	override function get(from:Int):Dynamic {
-		var surface = armory.system.Input.getSurface();
+		var surface = iron.system.Input.getSurface();
 		switch (property0) {
 		case "Touched":
 			return surface.down;

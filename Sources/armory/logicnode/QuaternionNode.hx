@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import armory.math.Quat;
+import iron.math.Quat;
 
 class QuaternionNode extends LogicNode {
 

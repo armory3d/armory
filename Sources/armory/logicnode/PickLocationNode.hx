@@ -1,7 +1,7 @@
 package armory.logicnode;
 
-import armory.object.Object;
-import armory.math.Vec4;
+import iron.object.Object;
+import iron.math.Vec4;
 
 class PickLocationNode extends LogicNode {
 

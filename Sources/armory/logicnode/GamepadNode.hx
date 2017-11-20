@@ -11,7 +11,7 @@ class GamepadNode extends LogicNode {
 
 	override function get(from:Int):Dynamic {
 		var num:Int = inputs[0].get();
-		var gamepad = armory.system.Input.getGamepad(num);
+		var gamepad = iron.system.Input.getGamepad(num);
 		switch (property0) {
 		case "Down":
 			return gamepad.down(property1);

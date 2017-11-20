@@ -1,10 +1,8 @@
 package armory.logicnode;
 
-import armory.object.Object;
-import armory.math.Mat4;
-#if arm_physics
+import iron.object.Object;
+import iron.math.Mat4;
 import armory.trait.physics.RigidBody;
-#end
 
 class SpawnObjectNode extends LogicNode {
 
@@ -20,7 +18,7 @@ class SpawnObjectNode extends LogicNode {
 		var objectName:String = objectNode.objectName != "" ? objectNode.objectName : tree.object.name;
 		var matrix:Mat4 = inputs[2].get();
 
-		Scene.active.spawnObject(objectName, null, function(o:armory.object.Object) {
+		Scene.active.spawnObject(objectName, null, function(o:Object) {
 			object = o;
 			if (matrix != null) {
 				object.transform.setMatrix(matrix);

@@ -1,7 +1,7 @@
 package armory.logicnode;
 
-import armory.object.Object;
-import armory.math.Mat4;
+import iron.object.Object;
+import iron.math.Mat4;
 
 class SpawnSceneNode extends LogicNode {
 
@@ -16,7 +16,7 @@ class SpawnSceneNode extends LogicNode {
 		var sceneName:String = inputs[1].get();
 		var matrix:Mat4 = inputs[2].get();
 
-		Scene.active.addScene(sceneName, null, function(o:armory.object.Object) {
+		Scene.active.addScene(sceneName, null, function(o:Object) {
 			root = o;
 			if (matrix != null) root.transform.setMatrix(matrix);
 			runOutputs(0);
