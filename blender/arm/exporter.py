@@ -2231,22 +2231,25 @@ class ArmoryExporter:
         self.output['lamp_datas'].append(o)
 
     def get_camera_clear_color(self):
-        if self.scene.world != None and self.scene.world.node_tree != None:
-            if 'Background' in self.scene.world.node_tree.nodes: # TODO: parse node tree
-                background_node = self.scene.world.node_tree.nodes['Background']
-                col = background_node.inputs[0].default_value
-                strength = background_node.inputs[1].default_value
-                ar = [col[0] * strength, col[1] * strength, col[2] * strength, col[3]]
-                ar[0] = max(min(ar[0], 1.0), 0.0)
-                ar[1] = max(min(ar[1], 1.0), 0.0)
-                ar[2] = max(min(ar[2], 1.0), 0.0)
-                ar[3] = max(min(ar[3], 1.0), 0.0)
-                return ar
-            else:
-                return [0.051, 0.051, 0.051, 1.0]
-        else:
+        if self.scene.world == None:
+            return [0.051, 0.051, 0.051, 1.0]
+
+        if self.scene.world.node_tree == None:
             c = self.scene.world.horizon_color
             return [c[0], c[1], c[2], 1.0]
+
+        if 'Background' in self.scene.world.node_tree.nodes:
+            background_node = self.scene.world.node_tree.nodes['Background']
+            col = background_node.inputs[0].default_value
+            strength = background_node.inputs[1].default_value
+            ar = [col[0] * strength, col[1] * strength, col[2] * strength, col[3]]
+            ar[0] = max(min(ar[0], 1.0), 0.0)
+            ar[1] = max(min(ar[1], 1.0), 0.0)
+            ar[2] = max(min(ar[2], 1.0), 0.0)
+            ar[3] = max(min(ar[3], 1.0), 0.0)
+            return ar
+        else:
+            return [0.051, 0.051, 0.051, 1.0]
             
     def extract_projection(self, o, proj, with_planes=True):
         a = proj[0][0]
