@@ -818,7 +818,6 @@ class CleanMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        layout.operator("arm.clean_cache")
         layout.operator("arm.clean_project")
 
 class CleanButtonMenu(bpy.types.Operator):
@@ -829,18 +828,6 @@ class CleanButtonMenu(bpy.types.Operator):
     def execute(self, context):
         bpy.ops.wm.call_menu(name=CleanMenu.bl_idname)
         return {"FINISHED"}
-
-class ArmoryCleanCacheButton(bpy.types.Operator):
-    '''Delete all compiled data'''
-    bl_idname = 'arm.clean_cache'
-    bl_label = 'Clean Cache'
-
-    def execute(self, context):
-        if not arm.utils.check_saved(self):
-            return {"CANCELLED"}
-
-        make.clean_cache()
-        return{'FINISHED'}
 
 class ArmoryCleanProjectButton(bpy.types.Operator):
     '''Delete all cached project data'''
@@ -1399,7 +1386,6 @@ def register():
     bpy.utils.register_class(ArmoryKodeStudioButton)
     bpy.utils.register_class(CleanMenu)
     bpy.utils.register_class(CleanButtonMenu)
-    bpy.utils.register_class(ArmoryCleanCacheButton)
     bpy.utils.register_class(ArmoryCleanProjectButton)
     bpy.utils.register_class(ArmoryPublishProjectButton)
     bpy.utils.register_class(ArmoryRenderButton)
@@ -1451,7 +1437,6 @@ def unregister():
     bpy.utils.unregister_class(ArmoryKodeStudioButton)
     bpy.utils.unregister_class(CleanMenu)
     bpy.utils.unregister_class(CleanButtonMenu)
-    bpy.utils.unregister_class(ArmoryCleanCacheButton)
     bpy.utils.unregister_class(ArmoryCleanProjectButton)
     bpy.utils.unregister_class(ArmoryPublishProjectButton)
     bpy.utils.unregister_class(ArmoryRenderButton)

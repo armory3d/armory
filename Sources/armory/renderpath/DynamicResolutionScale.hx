@@ -13,7 +13,7 @@ class DynamicResolutionScale {
 
 	public static function run(path:RenderPath) {
 		if (firstFrame) {
-			App.notifyOnRender(render);
+			iron.App.notifyOnRender(render);
 			firstFrame = false;
 			return;
 		}
@@ -22,8 +22,8 @@ class DynamicResolutionScale {
 		if (frameTimeAvg > startScaleMs && frameTimeAvg < 100) {
 			var overTime = Math.min(scaleRangeMs, frameTimeAvg - startScaleMs);
 			var scale = 1.0 - (overTime / scaleRangeMs) * (1.0 - maxScale);
-			var w = Std.int(App.w() * scale);
-			var h = Std.int(App.h() * scale);
+			var w = Std.int(iron.App.w() * scale);
+			var h = Std.int(iron.App.h() * scale);
 			path.setCurrentViewport(w, h);
 			path.setCurrentScissor(w, h);
 			dynamicScale = scale;

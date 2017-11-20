@@ -18,7 +18,6 @@ except ImportError:
     pass
 
 last_time = time.time()
-# last_update_time = time.time()
 last_operator = None
 redraw_ui = False
 redraw_progress = False
@@ -27,7 +26,6 @@ first_update = True
 @persistent
 def on_scene_update_post(context):
     global last_time
-    # global last_update_time
     global last_operator
     global redraw_ui
     global redraw_progress
@@ -66,7 +64,6 @@ def on_scene_update_post(context):
         pass
     elif state.is_render:
         import numpy
-        # fp = arm.utils.get_fp_build()
         krom_location, krom_path = arm.utils.krom_paths()
         fp = krom_location
         resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
@@ -116,7 +113,6 @@ def on_scene_update_post(context):
         # Otherwise rebuild scene
         if bridge.send_operator(last_operator) == False:
             if state.compileproc == None:
-                # state.is_paused = True # Speeds up recompile
                 assets.invalidate_enabled = False
                 make.play_project(in_viewport=True)
                 assets.invalidate_enabled = True
@@ -224,9 +220,8 @@ def op_changed(op, obj):
        op.bl_idname == 'APPLY_OT_transformlocrotscale' or \
        op.bl_idname == 'OBJECT_OT_shade_smooth' or \
        op.bl_idname == 'OBJECT_OT_shade_flat':
-        # recache(obj)
         # Note: Blender reverts object data when manipulating
-        # OBJECT_OT_transform_apply operator.. recache object flag instead
+        # OBJECT_OT_transform_apply operator.. recaching object flag instead
         obj.arm_cached = False
     if op.bl_idname.startswith('MARKER_OT_'):
         # Marker changed, recache action

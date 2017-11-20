@@ -9,6 +9,6 @@ class LoadBar {
 		}
 
 		g.color = 0xffcf2b43;
-		g.fillRect(0, App.h() - 4, App.w() / Main.projectAssets * iron.data.Data.assetsLoaded, 4);
+		g.fillRect(0, iron.App.h() - 4, iron.App.w() / Main.projectAssets * iron.data.Data.assetsLoaded, 4);
 	}
 }

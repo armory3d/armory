@@ -96,7 +96,6 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     assets.reset()
 
     # Build node trees
-    # TODO: cache
     ArmoryExporter.import_traits = []
     make_logic.build_node_trees()
     active_worlds = set()
@@ -268,7 +267,6 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
     else:
         if no_project_file:
             cmd.append('--noproject')
-            #TODO [montonero] add option to copy assets w/o generating project file
         print("Running: ", cmd)
         return subprocess.Popen(cmd)
 
@@ -514,28 +512,6 @@ def on_compiled(mode): # build, play, play_viewport, publish
             state.playproc = subprocess.Popen(args, stderr=subprocess.PIPE)
             watch_play()
 
-def clean_cache():
-    os.chdir(arm.utils.get_fp())
-    wrd = bpy.data.worlds['Arm']
-
-    # Preserve envmaps
-    envmaps_path = arm.utils.build_dir() + '/compiled/Assets/envmaps'
-    if os.path.isdir(envmaps_path):
-        shutil.move(envmaps_path, '.')
-
-    # Remove compiled data
-    if os.path.isdir(arm.utils.build_dir() + '/compiled'):
-        shutil.rmtree(arm.utils.build_dir() + '/compiled', onerror=remove_readonly)
-
-    # Move envmaps back
-    if os.path.isdir('envmaps'):
-        os.makedirs(arm.utils.build_dir() + '/compiled/Assets')
-        shutil.move('envmaps', arm.utils.build_dir() + '/compiled/Assets')
-
-    # Temp: To recache signatures for batched materials
-    for mat in bpy.data.materials:
-        mat.signature = ''
-
 def clean_project():
     os.chdir(arm.utils.get_fp())
     wrd = bpy.data.worlds['Arm']
@@ -557,7 +533,7 @@ def clean_project():
     if os.path.isfile('Sources/Main.hx'):
         os.remove('Sources/Main.hx')
 
-    # Temp: To recache signatures for batched materials
+    # To recache signatures for batched materials
     for mat in bpy.data.materials:
         mat.signature = ''
         mat.is_cached = False
