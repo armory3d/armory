@@ -14,8 +14,11 @@ class SpawnObjectNode extends LogicNode {
 
 	override function run() {
 
+		var objectName = "";
 		var objectInput = inputs[1].get();
-		var objectName:String = objectInput != null ? objectInput.name : tree.object.name;
+		if (objectInput == null) objectName = cast(inputs[1].node, ObjectNode).objectName;
+		else objectName = objectInput.name;
+		if (objectName == "") objectName = tree.object.name;
 		var matrix:Mat4 = inputs[2].get();
 
 		Scene.active.spawnObject(objectName, null, function(o:Object) {
