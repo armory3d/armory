@@ -65,7 +65,7 @@ class DebugDraw {
 
 	public static function notifyOnRender(f:DebugDraw->Void) {
 		if (inst == null) inst = new DebugDraw();
-		iron.data.RenderPath.notifyOnContext("mesh", function(g4:kha.graphics4.Graphics, i:Int, len:Int) {
+		iron.RenderPath.notifyOnContext("mesh", function(g4:kha.graphics4.Graphics, i:Int, len:Int) {
 			g = g4;
 			if (i == 0) inst.begin();
 			f(inst);

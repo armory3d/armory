@@ -7,7 +7,6 @@ import arm.assets as assets
 import arm.log as log
 import arm.utils
 import arm.make
-import arm.make_renderer as make_renderer
 import arm.props_renderpath as props_renderpath
 import arm.proxy
 try:
@@ -17,9 +16,6 @@ except ImportError:
 
 # Armory version
 arm_version = '0.1.0'
-
-def update_preset(self, context):
-    make_renderer.set_preset(self, context, self.rp_preset)
 
 def invalidate_mesh_cache(self, context):
     if context.object == None or context.object.data == None:
@@ -221,7 +217,7 @@ def init_properties():
                ('Max (Game)', 'Max (Game)', 'Max (Game)'),
                ('Max (Render)', 'Max (Render)', 'Max (Render)'),
                ],
-        name="Preset", description="Render path preset", default='Deferred', update=update_preset)
+        name="Preset", description="Render path preset", default='Deferred', update=props_renderpath.update_preset)
     bpy.types.World.arm_voxelgi_diff = bpy.props.FloatProperty(name="Diffuse", description="", default=3.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_voxelgi_diff_cones = EnumProperty(
         items=[('9', '9', '9'),
@@ -315,7 +311,7 @@ def init_properties():
     bpy.types.World.arm_fog_amounta = bpy.props.FloatProperty(name="Amount A", default=0.25, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_fog_amountb = bpy.props.FloatProperty(name="Amount B", default=0.5, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_tonemap = EnumProperty(
-        items=[('None', 'None', 'None'),
+        items=[('Off', 'Off', 'Off'),
                ('Filmic', 'Filmic', 'Filmic'),
                ('Filmic2', 'Filmic2', 'Filmic2'),
                ('Reinhard', 'Reinhard', 'Reinhard'),
@@ -385,7 +381,6 @@ def init_properties():
     bpy.types.Lamp.arm_omni_shadows = bpy.props.BoolProperty(name="Omni-Shadows", description="Draw shadows to all faces of the cube map", default=True)
     bpy.types.World.arm_pcfsize = bpy.props.FloatProperty(name="PCF Size", description="Filter size", default=0.001)
 
-    bpy.types.World.arm_shadowmap_size_cache = bpy.props.IntProperty(name="Shadowmap Size", default=0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_rpcache_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.arm_scripts_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.arm_bundled_scripts_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)

@@ -141,20 +141,20 @@ class SpaceArmory extends Trait {
 
 	@:access(kha.Scheduler)
 	function renderCapture() {
-		App.pauseUpdates = true;
-		App.notifyOnRender(function(g:kha.graphics4.Graphics) {
+		iron.App.pauseUpdates = true;
+		iron.App.notifyOnRender(function(g:kha.graphics4.Graphics) {
 			if (captured) return;
 			kha.Scheduler.current = current;
 			frame++;
 			if (frame >= 2) { // Init TAA
-				App.pauseUpdates = false;
+				iron.App.pauseUpdates = false;
 				if (frame % 2 == 0) { // Alternate TAA
 					current += iron.system.Time.delta;
 					return;
 				}
 				var info = iron.Scene.active.raw.capture_info;
-				var pd = iron.Scene.active.cameras[0].data.pathdata;
-				var tex = pd.renderTargets.get("capture").image;
+				var path = iron.RenderPath.active;
+				var tex = path.renderTargets.get("capture").image;
 			
 				if (tex != null) {
 					var pixels = tex.getPixels();
@@ -187,12 +187,12 @@ class SpaceArmory extends Trait {
 	#else
 
 	function renderCapture() {
-		App.notifyOnRender(function(g:kha.graphics4.Graphics) {
+		iron.App.notifyOnRender(function(g:kha.graphics4.Graphics) {
 			if (captured) return;
 			frame++;
 			if (frame >= 3) {
-				var pd = iron.Scene.active.cameras[0].data.pathdata;
-				var tex = pd.renderTargets.get("capture").image;
+				var path = iron.RenderPath.active;
+				var tex = path.renderTargets.get("capture").image;
 				if (tex != null) {
 					var pixels = tex.getPixels();
 					Krom.fileSaveBytes("render.bin", pixels.getData());

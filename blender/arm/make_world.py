@@ -9,7 +9,7 @@ import arm.utils
 import arm.node_utils as node_utils
 import arm.log as log
 
-def build_node_trees(active_worlds):
+def build(active_worlds):
     fp = arm.utils.get_fp()
 
     # Make sure Assets dir exists
@@ -114,7 +114,7 @@ def build_node_tree(world):
     if rpdat.rp_shadowmap_cascades != '1' and rpdat.rp_gi == 'Off':
         wrd.world_defs += '_CSM'
         assets.add_khafile_def('arm_csm')
-    if rpdat.rp_shadowmap == 'None':
+    if rpdat.rp_shadowmap == 'Off':
         wrd.world_defs += '_NoShadows'
         assets.add_khafile_def('arm_no_shadows')
     # GI

@@ -44,7 +44,7 @@ def get_rpasses(material):
             ar.append('depth')
             
     shadows_enabled = False
-    if rpdat.rp_shadowmap != 'None':
+    if rpdat.rp_shadowmap != 'Off':
         shadows_enabled = True
 
     if material.arm_cast_shadow and shadows_enabled and ('mesh' in ar or 'translucent' in ar):
@@ -76,7 +76,6 @@ def is_transluc_type(node):
     if node.type == 'BSDF_GLASS' or \
        node.type == 'BSDF_TRANSPARENT' or \
        node.type == 'BSDF_TRANSLUCENT' or \
-       (node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR') and len(node.inputs) == 14 and (node.inputs[12].is_linked or node.inputs[12].default_value != 1.0)) or \
-       (node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR') and len(node.inputs) != 14 and (node.inputs[1].is_linked or node.inputs[1].default_value != 1.0)):
+       (node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR') and (node.inputs[1].is_linked or node.inputs[1].default_value != 1.0)):
        return True
     return False

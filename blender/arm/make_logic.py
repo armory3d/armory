@@ -8,7 +8,7 @@ parsed_nodes = []
 parsed_labels = dict()
 
 # Generating node sources
-def build_node_trees():
+def build():
     os.chdir(arm.utils.get_fp())
 
     # Make sure package dir exists

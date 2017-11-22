@@ -4,7 +4,6 @@
 package armory.renderpath;
 
 import kha.math.FastVector3;
-import iron.data.RenderPath;
 import iron.data.WorldData;
 
 class HosekWilkieRadianceData {

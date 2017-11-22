@@ -469,6 +469,12 @@ def target_to_gapi(arm_project_target):
     else:
         return 'arm_gapi_' + arm_project_target
 
+def check_default_rp():
+    wrd = bpy.data.worlds['Arm']
+    if len(wrd.arm_rplist) == 0:
+        wrd.arm_rplist.add()
+        wrd.arm_rplist_index = 0
+
 def register():
     global krom_found
     global glslver

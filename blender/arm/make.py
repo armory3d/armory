@@ -96,13 +96,13 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
 
     # Build node trees
     ArmoryExporter.import_traits = []
-    make_logic.build_node_trees()
+    make_logic.build()
     active_worlds = set()
     for scene in bpy.data.scenes:
         if scene.arm_export and scene.world != None:
             active_worlds.add(scene.world)
-    world_outputs = make_world.build_node_trees(active_worlds)
-    make_renderpath.build_node_trees(assets_path)
+    world_outputs = make_world.build(active_worlds)
+    make_renderpath.build()
     for wout in world_outputs:
         make_world.write_output(wout)
 
@@ -161,8 +161,8 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
             if shader_name.startswith('compositor_pass'):
                 cdefs = arm.utils.def_strings_to_array(wrd.compo_defs)
                 compile_shader_pass(raw_shaders_path, shader_name, defs + cdefs)
-            elif shader_name.startswith('grease_pencil'):
-                compile_shader_pass(raw_shaders_path, shader_name, [])
+            # elif shader_name.startswith('grease_pencil'):
+                # compile_shader_pass(raw_shaders_path, shader_name, [])
             else:
                 compile_shader_pass(raw_shaders_path, shader_name, defs)
     state.last_world_defs = wrd.world_defs

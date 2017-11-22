@@ -1,6 +1,6 @@
 package armory.renderpath;
 
-import iron.data.RenderPath;
+import iron.RenderPath;
 
 class DynamicResolutionScale {
 

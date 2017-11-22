@@ -23,7 +23,6 @@ import arm.assets as assets
 import arm.log as log
 import arm.material.make as make_material
 import arm.material.mat_batch as mat_batch
-import arm.make_renderer as make_renderer
 import arm.make_renderpath as make_renderpath
 
 NodeTypeNode = 0
@@ -1513,7 +1512,7 @@ class ArmoryExporter:
         o['fov'] = objref.arm_fov
         o['shadows_bias'] = objref.arm_shadows_bias * 0.0001
         rpdat = arm.utils.get_rp()
-        if rpdat.rp_shadowmap == 'None':
+        if rpdat.rp_shadowmap == 'Off':
             o['shadowmap_size'] = 0
         else:
             o['shadowmap_size'] = int(rpdat.rp_shadowmap)
@@ -1788,14 +1787,7 @@ class ArmoryExporter:
             # rpdat.rp_sss = sss_used
             # rebuild_rp = True
         if rebuild_rp:
-            self.rebuild_render_path(rpdat)
-
-    def rebuild_render_path(self, rpdat):
-        # No shader invalidate required?
-        make_renderer.make_renderer(rpdat)
-        # Rebuild modified path
-        assets_path = arm.utils.get_sdk_path() + 'armory/Assets/'
-        make_renderpath.build_node_trees(assets_path)
+            make_renderpath.build()
 
     def export_particle_systems(self):
         if len(self.particleSystemArray) > 0:

@@ -3,7 +3,6 @@ package armory.trait.internal;
 import iron.Trait;
 #if arm_debug
 import kha.Scheduler;
-import iron.data.RenderPath;
 import iron.object.CameraObject;
 import iron.object.MeshObject;
 import zui.Zui;
@@ -116,21 +115,22 @@ class DebugConsole extends Trait {
 				// ui.text('mem: ' + Std.int(getMem() / 1024 / 1024));
 				ui.unindent();
 
-				ui.text('draw calls: ' + RenderPath.drawCalls);
-				ui.text('tris mesh: ' + RenderPath.numTrisMesh);
-				ui.text('tris shadow: ' + RenderPath.numTrisShadow);
+				ui.text('draw calls: ' + iron.RenderPath.drawCalls);
+				ui.text('tris mesh: ' + iron.RenderPath.numTrisMesh);
+				ui.text('tris shadow: ' + iron.RenderPath.numTrisShadow);
 				#if arm_batch
-				ui.text('batch calls: ' + RenderPath.batchCalls);
-				ui.text('batch buckets: ' + RenderPath.batchBuckets);
+				ui.text('batch calls: ' + iron.RenderPath.batchCalls);
+				ui.text('batch buckets: ' + iron.RenderPath.batchBuckets);
 				#end
-				ui.text('culled: ' + RenderPath.culled + ' / ' + numObjects * 2); // Assumes shadow context for all meshes
+				ui.text('culled: ' + iron.RenderPath.culled + ' / ' + numObjects * 2); // Assumes shadow context for all meshes
 				#if arm_stream
 				var total = iron.Scene.active.sceneStream.sceneTotal();
 				ui.text('streamed: $numObjects / $total');
 				#end
-				var path = iron.Scene.active.camera.renderPath;
-				var rts = path.data.pathdata.raw.render_targets;
-				ui.text('render targets: ' + (rts != null ? rts.length : 0));
+				ui.text('render targets: ');
+				for (rt in iron.RenderPath.active.renderTargets) {
+					ui.text(rt.raw.name);
+				}
 			}
 			ui.separator();
 		}

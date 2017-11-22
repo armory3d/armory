@@ -2,15 +2,254 @@ import os
 import shutil
 import arm.assets as assets
 import arm.utils
-import arm.make_renderer as make_renderer
 import bpy
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
+def update_preset(self, context):
+    rpdat = arm.utils.get_rp()
+    if self.rp_preset == 'Low':
+        rpdat.rp_renderer = 'Forward'
+        rpdat.rp_depthprepass = False
+        rpdat.arm_material_model = 'Full'
+        rpdat.rp_shadowmap = '1024'
+        rpdat.rp_shadowmap_cascades = '1'
+        rpdat.rp_translucency_state = 'Off'
+        rpdat.rp_overlays_state = 'Off'
+        rpdat.rp_decals_state = 'Off'
+        rpdat.rp_sss_state = 'Off'
+        rpdat.rp_blending_state = 'Off'
+        rpdat.rp_hdr = False
+        rpdat.rp_background = 'World'
+        rpdat.rp_stereo = False
+        # rpdat.rp_greasepencil = False
+        rpdat.rp_gi = 'Off'
+        rpdat.rp_render_to_texture = False
+        rpdat.rp_supersampling = '1'
+        rpdat.rp_antialiasing = 'Off'
+        rpdat.rp_compositornodes = False
+        rpdat.rp_volumetriclight = False
+        rpdat.rp_ssgi = 'Off'
+        rpdat.rp_ssr = False
+        rpdat.rp_dfrs = False
+        rpdat.rp_dfao = False
+        rpdat.rp_dfgi = False
+        rpdat.rp_bloom = False
+        rpdat.rp_eyeadapt = False
+        rpdat.rp_rendercapture = False
+        rpdat.rp_motionblur = 'Off'
+        rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_texture_filter = 'Anisotropic'
+        rpdat.arm_diffuse_model = 'Lambert'
+    elif self.rp_preset == 'Forward':
+        rpdat.rp_renderer = 'Forward'
+        rpdat.rp_depthprepass = True
+        rpdat.arm_material_model = 'Full'
+        rpdat.rp_shadowmap = '1024'
+        rpdat.rp_shadowmap_cascades = '4'
+        rpdat.rp_translucency_state = 'Auto'
+        rpdat.rp_overlays_state = 'Auto'
+        rpdat.rp_decals_state = 'Auto'
+        rpdat.rp_sss_state = 'Auto'
+        rpdat.rp_blending_state = 'Off'
+        rpdat.rp_hdr = True
+        rpdat.rp_background = 'World'
+        rpdat.rp_stereo = False
+        # rpdat.rp_greasepencil = False
+        rpdat.rp_gi = 'Off'
+        rpdat.rp_render_to_texture = True
+        rpdat.rp_supersampling = '1'
+        rpdat.rp_antialiasing = 'SMAA'
+        rpdat.rp_compositornodes = True
+        rpdat.rp_volumetriclight = False
+        rpdat.rp_ssgi = 'SSAO'
+        rpdat.rp_ssr = True
+        rpdat.rp_dfrs = False
+        rpdat.rp_dfao = False
+        rpdat.rp_dfgi = False
+        rpdat.rp_bloom = False
+        rpdat.rp_eyeadapt = False
+        rpdat.rp_rendercapture = False
+        rpdat.rp_motionblur = 'Off'
+        rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_texture_filter = 'Anisotropic'
+        rpdat.arm_diffuse_model = 'Lambert'
+    elif self.rp_preset == 'Deferred':
+        rpdat.rp_renderer = 'Deferred'
+        rpdat.arm_material_model = 'Full'
+        rpdat.rp_shadowmap = '1024'
+        rpdat.rp_shadowmap_cascades = '4'
+        rpdat.rp_translucency_state = 'Auto'
+        rpdat.rp_overlays_state = 'Auto'
+        rpdat.rp_decals_state = 'Auto'
+        rpdat.rp_sss_state = 'Auto'
+        rpdat.rp_blending_state = 'Off'
+        rpdat.rp_hdr = True
+        rpdat.rp_background = 'World'
+        rpdat.rp_stereo = False
+        # rpdat.rp_greasepencil = False
+        rpdat.rp_gi = 'Off'
+        rpdat.rp_render_to_texture = True
+        rpdat.rp_supersampling = '1'
+        rpdat.rp_antialiasing = 'FXAA'
+        rpdat.rp_compositornodes = True
+        rpdat.rp_volumetriclight = False
+        rpdat.rp_ssgi = 'SSAO'
+        rpdat.rp_ssr = False
+        rpdat.rp_dfrs = False
+        rpdat.rp_dfao = False
+        rpdat.rp_dfgi = False
+        rpdat.rp_bloom = False
+        rpdat.rp_eyeadapt = False
+        rpdat.rp_rendercapture = False
+        rpdat.rp_motionblur = 'Off'
+        rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_texture_filter = 'Anisotropic'
+        rpdat.arm_diffuse_model = 'Lambert'
+    elif self.rp_preset == 'Max (Render)':
+        rpdat.rp_renderer = 'Deferred'
+        rpdat.rp_shadowmap = '4096'
+        rpdat.rp_shadowmap_cascades = '4'
+        rpdat.rp_translucency_state = 'Auto'
+        rpdat.rp_overlays_state = 'Auto'
+        rpdat.rp_decals_state = 'Auto'
+        rpdat.rp_sss_state = 'Auto'
+        rpdat.rp_blending_state = 'Off'
+        rpdat.rp_hdr = True
+        rpdat.rp_background = 'World'
+        rpdat.rp_stereo = False
+        # rpdat.rp_greasepencil = False
+        rpdat.rp_gi = 'Voxel GI'
+        rpdat.rp_voxelgi_resolution = '256'
+        rpdat.rp_voxelgi_emission = True
+        rpdat.rp_render_to_texture = True
+        rpdat.rp_supersampling = '2'
+        rpdat.rp_antialiasing = 'TAA'
+        rpdat.rp_compositornodes = True
+        rpdat.rp_volumetriclight = False
+        rpdat.rp_ssgi = 'RTGI'
+        rpdat.rp_ssr = True
+        rpdat.rp_dfrs = False
+        rpdat.rp_dfao = False
+        rpdat.rp_dfgi = False
+        rpdat.rp_bloom = False
+        rpdat.rp_eyeadapt = False
+        rpdat.rp_rendercapture = True
+        rpdat.rp_motionblur = 'Off'
+        rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_material_model = 'Full'
+        rpdat.arm_texture_filter = 'Anisotropic'
+        rpdat.arm_diffuse_model = 'OrenNayar'
+    elif self.rp_preset == 'VR':
+        rpdat.rp_renderer = 'Forward'
+        rpdat.rp_depthprepass = False
+        rpdat.arm_material_model = 'Mobile'
+        rpdat.rp_shadowmap = '1024'
+        rpdat.rp_shadowmap_cascades = '1'
+        rpdat.rp_translucency_state = 'Off'
+        rpdat.rp_overlays_state = 'Off'
+        rpdat.rp_decals_state = 'Off'
+        rpdat.rp_sss_state = 'Off'
+        rpdat.rp_blending_state = 'Off'
+        rpdat.rp_hdr = False
+        rpdat.rp_background = 'World'
+        rpdat.rp_stereo = True
+        # rpdat.rp_greasepencil = False
+        rpdat.rp_gi = 'Off'
+        rpdat.rp_render_to_texture = False
+        rpdat.rp_supersampling = '1'
+        rpdat.rp_antialiasing = 'Off'
+        rpdat.rp_compositornodes = False
+        rpdat.rp_volumetriclight = False
+        rpdat.rp_ssgi = 'Off'
+        rpdat.rp_ssr = False
+        rpdat.rp_dfrs = False
+        rpdat.rp_dfao = False
+        rpdat.rp_dfgi = False
+        rpdat.rp_bloom = False
+        rpdat.rp_eyeadapt = False
+        rpdat.rp_rendercapture = False
+        rpdat.rp_motionblur = 'Off'
+        rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_texture_filter = 'Point'
+        rpdat.arm_diffuse_model = 'Lambert'
+    elif self.rp_preset == 'Mobile':
+        rpdat.rp_renderer = 'Forward'
+        rpdat.rp_depthprepass = False
+        rpdat.arm_material_model = 'Mobile'
+        rpdat.rp_shadowmap = '1024'
+        rpdat.rp_shadowmap_cascades = '1'
+        rpdat.rp_translucency_state = 'Off'
+        rpdat.rp_overlays_state = 'Off'
+        rpdat.rp_decals_state = 'Off'
+        rpdat.rp_sss_state = 'Off'
+        rpdat.rp_blending_state = 'Off'
+        rpdat.rp_hdr = False
+        rpdat.rp_background = 'Clear'
+        rpdat.rp_stereo = False
+        # rpdat.rp_greasepencil = False
+        rpdat.rp_gi = 'Off'
+        rpdat.rp_render_to_texture = False
+        rpdat.rp_supersampling = '1'
+        rpdat.rp_antialiasing = 'Off'
+        rpdat.rp_compositornodes = False
+        rpdat.rp_volumetriclight = False
+        rpdat.rp_ssgi = 'Off'
+        rpdat.rp_ssr = False
+        rpdat.rp_dfrs = False
+        rpdat.rp_dfao = False
+        rpdat.rp_dfgi = False
+        rpdat.rp_bloom = False
+        rpdat.rp_eyeadapt = False
+        rpdat.rp_rendercapture = False
+        rpdat.rp_motionblur = 'Off'
+        rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_texture_filter = 'Point'
+        rpdat.arm_diffuse_model = 'Lambert'
+    elif self.rp_preset == 'Max (Game)':
+        rpdat.rp_renderer = 'Deferred'
+        rpdat.rp_shadowmap = '4096'
+        rpdat.rp_shadowmap_cascades = '4'
+        rpdat.rp_translucency_state = 'Auto'
+        rpdat.rp_overlays_state = 'Auto'
+        rpdat.rp_decals_state = 'Auto'
+        rpdat.rp_sss_state = 'Auto'
+        rpdat.rp_blending_state = 'Off'
+        rpdat.rp_hdr = True
+        rpdat.rp_background = 'World'
+        rpdat.rp_stereo = False
+        # rpdat.rp_greasepencil = False
+        rpdat.rp_gi = 'Voxel GI'
+        rpdat.rp_voxelgi_resolution = '128'
+        rpdat.arm_voxelgi_revoxelize = False
+        rpdat.arm_voxelgi_camera = False
+        rpdat.rp_voxelgi_emission = False
+        rpdat.rp_render_to_texture = True
+        rpdat.rp_supersampling = '1'
+        rpdat.rp_antialiasing = 'TAA'
+        rpdat.rp_compositornodes = True
+        rpdat.rp_volumetriclight = False
+        rpdat.rp_ssgi = 'RTGI'
+        rpdat.arm_ssrs = False
+        rpdat.rp_ssr = True
+        rpdat.rp_dfrs = False
+        rpdat.rp_dfao = False
+        rpdat.rp_dfgi = False
+        rpdat.rp_bloom = False
+        rpdat.rp_eyeadapt = False
+        rpdat.rp_rendercapture = False
+        rpdat.rp_motionblur = 'Off'
+        rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_material_model = 'Full'
+        rpdat.arm_texture_filter = 'Anisotropic'
+        rpdat.arm_diffuse_model = 'Lambert'
+    update_renderpath(self, context)
+
 def update_renderpath(self, context):
     if assets.invalidate_enabled == False:
         return
-    make_renderer.set_renderpath(self, context)
+    assets.invalidate_shader_cache(self, context)
+    bpy.data.worlds['Arm'].arm_recompile = True
 
 def udpate_shadowmap_cascades(self, context):
     bpy.data.worlds['Arm'].arm_recompile = True
@@ -65,7 +304,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_renderer = EnumProperty(
         items=[('Forward', 'Forward', 'Forward'),
                ('Deferred', 'Deferred', 'Deferred'),
-               ('Deferred Plus', 'Deferred Plus', 'Deferred Plus'),
+               # ('Deferred Plus', 'Deferred Plus', 'Deferred Plus'),
                ],
         name="Renderer", description="Renderer type", default='Deferred', update=update_renderpath)
     rp_depthprepass = bpy.props.BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=True, update=update_renderpath)
@@ -74,13 +313,13 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_background = EnumProperty(
       items=[('World', 'World', 'World'),
              ('Clear', 'Clear', 'Clear'),
-             ('None', 'None', 'None'),
+             ('Off', 'Off', 'Off'),
       ],
       name="Background", description="Background type", default='World', update=update_renderpath)    
     rp_autoexposure = bpy.props.BoolProperty(name="Auto Exposure", description="Adjust exposure based on luminance", default=False, update=update_renderpath)
     rp_compositornodes = bpy.props.BoolProperty(name="Compositor", description="Draw compositor nodes", default=True, update=update_renderpath)
     rp_shadowmap = EnumProperty(
-        items=[('None', 'None', 'None'),
+        items=[('Off', 'Off', 'Off'),
                ('512', '512', '512'),
                ('1024', '1024', '1024'),
                ('2048', '2048', '2048'),
@@ -95,12 +334,12 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('4', '4', '4')],
         name="Cascades", description="Shadow map cascades", default='4', update=udpate_shadowmap_cascades)
     rp_supersampling = EnumProperty(
-        items=[('1', '1X', '1X'),
-               ('2', '2X', '2X'),
-               ('4', '4X', '4X')],
+        items=[('1', '1', '1'),
+               ('2', '2', '2'),
+               ('4', '4', '4')],
         name="Super Sampling", description="Screen resolution multiplier", default='1', update=update_renderpath)
     rp_antialiasing = EnumProperty(
-        items=[('None', 'None', 'None'),
+        items=[('Off', 'Off', 'Off'),
                ('FXAA', 'FXAA', 'FXAA'),
                ('SMAA', 'SMAA', 'SMAA'),
                ('TAA', 'TAA', 'TAA')],
@@ -121,10 +360,10 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_eyeadapt = bpy.props.BoolProperty(name="Eye Adaptation", description="Auto-exposure based on histogram", default=False, update=update_renderpath)
     rp_rendercapture = bpy.props.BoolProperty(name="Render Capture", description="Save output as render result", default=False, update=update_renderpath)
     rp_motionblur = EnumProperty(
-        items=[('None', 'None', 'None'),
+        items=[('Off', 'Off', 'Off'),
                ('Camera', 'Camera', 'Camera'),
                ('Object', 'Object', 'Object')],
-        name="Motion Blur", description="Velocity buffer is used for object based motion blur", default='None', update=update_renderpath)
+        name="Motion Blur", description="Velocity buffer is used for object based motion blur", default='Off', update=update_renderpath)
     rp_translucency = bpy.props.BoolProperty(name="Translucency", description="Current render-path state", default=False)
     rp_translucency_state = bpy.props.EnumProperty(
         items=[('On', 'On', 'On'),
@@ -208,8 +447,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('1440', '1440p', '1440p'),
                ('2160', '2160p', '2160p')],
         name="Resolution", description="Render at specific resolution, regardless of display resolution", default='Display', update=update_renderpath)
+    rp_dynres = bpy.props.BoolProperty(name="Dynamic Resolution", description="Dynamic resolution scaling for performance", default=False, update=update_renderpath)
     arm_ssr_half_res = bpy.props.BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
-
     rp_voxelgi_hdr = bpy.props.BoolProperty(name="HDR Voxels", description="Store voxels in RGBA64 instead of RGBA32", default=False, update=update_renderpath)
     arm_voxelgi_dimensions = bpy.props.FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_shader_cache)
     arm_voxelgi_revoxelize = bpy.props.BoolProperty(name="Revoxelize", description="Revoxelize scene each frame", default=False, update=assets.invalidate_shader_cache)
@@ -220,11 +459,11 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_voxelgi_refraction = bpy.props.BoolProperty(name="Trace Refraction", description="Use voxels to render refraction", default=False, update=update_renderpath)
     arm_voxelgi_emission = bpy.props.BoolProperty(name="Emission Voxels", description="Encode emission into voxelized data", default=False, update=update_renderpath)
     arm_samples_per_pixel = EnumProperty(
-        items=[('1', '1X', '1X'),
-               ('2', '2X', '2X'),
-               ('4', '4X', '4X'),
-               ('8', '8X', '8X'),
-               ('16', '16X', '16X')],
+        items=[('1', '1', '1'),
+               ('2', '2', '2'),
+               ('4', '4', '4'),
+               ('8', '8', '8'),
+               ('16', '16', '16')],
         name="MSAA", description="Samples per pixel usable for render paths drawing directly to framebuffer", default='1')  
     arm_ssao_half_res = bpy.props.BoolProperty(name="Half Res", description="Trace in half resolution", default=False, update=assets.invalidate_shader_cache)
 

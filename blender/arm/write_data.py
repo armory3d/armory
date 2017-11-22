@@ -294,14 +294,22 @@ class Main {
             iron.App.init(function() {
 """)
         if is_publish and wrd.arm_loadbar:
-            f.write("""iron.App.notifyOnRender2D(armory.trait.internal.LoadBar.render);""")
+            f.write("""iron.App.notifyOnRender2D(armory.trait.internal.LoadBar.render);
+""")
 
         f.write("""
-                iron.Scene.setActive(projectScene, function(object:iron.object.Object) {""")
+                iron.Scene.setActive(projectScene, function(object:iron.object.Object) {
+""")
         # if arm.utils.with_krom() and in_viewport and is_play:
         if is_play or (state.target == 'html5' and not is_publish):
             f.write("""
-                    object.addTrait(new armory.trait.internal.SpaceArmory());""")
+                    object.addTrait(new armory.trait.internal.SpaceArmory());
+""")
+
+            f.write("""
+                    iron.RenderPath.setActive(armory.renderpath.RenderPathCreator.get());
+""")
+
         f.write("""
                 });
             });
@@ -351,8 +359,10 @@ def write_indexhtml(w, h):
 
 def write_compiledglsl():
     wrd = bpy.data.worlds['Arm']
-    shadowmap_size = wrd.arm_shadowmap_size_cache
     rpdat = arm.utils.get_rp()
+    shadowmap_size = 0
+    if rpdat.rp_shadowmap != 'Off':
+        shadowmap_size = int(rpdat.rp_shadowmap)
     with open(arm.utils.build_dir() + '/compiled/Shaders/compiled.glsl', 'w') as f:
         f.write(
 """#ifndef _COMPILED_GLSL_
@@ -406,7 +416,7 @@ const float ssgiStrength = """ + str(round(wrd.arm_ssgi_strength * 100) / 100) +
 const float bloomStrength = """ + str(round(wrd.arm_bloom_strength * 100) / 100) + """;
 const float bloomRadius = """ + str(round(wrd.arm_bloom_radius * 100) / 100) + """;
 """)
-        if rpdat.rp_motionblur != 'None':
+        if rpdat.rp_motionblur != 'Off':
             f.write(
 """const float motionBlurIntensity = """ + str(round(wrd.arm_motion_blur_intensity * 100) / 100) + """;
 """)

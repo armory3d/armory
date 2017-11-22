@@ -3,7 +3,6 @@ import webbrowser
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 import arm.utils
-import arm.make_renderer as make_renderer
 import arm.make as make
 import arm.make_state as state
 import arm.assets as assets
@@ -542,7 +541,7 @@ class ArmoryPlayButton(bpy.types.Operator):
         if not arm.utils.check_engine(self):
             return {"CANCELLED"}
 
-        make_renderer.check_default()
+        arm.utils.check_default_rp()
 
         rpdat = arm.utils.get_rp()
         if rpdat.rp_rendercapture == True:
@@ -575,7 +574,7 @@ class ArmoryPlayInViewportButton(bpy.types.Operator):
         if context.area == None:
             return {"CANCELLED"}
 
-        make_renderer.check_default()
+        arm.utils.check_default_rp()
 
         rpdat = arm.utils.get_rp()
         if rpdat.rp_rendercapture == True:
@@ -622,7 +621,7 @@ class ArmoryBuildButton(bpy.types.Operator):
         if not arm.utils.check_engine(self):
             return {"CANCELLED"}
 
-        make_renderer.check_default()
+        arm.utils.check_default_rp()
 
         state.target = make.runtime_to_target(in_viewport=False)
         state.is_export = False
@@ -649,7 +648,7 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
 
         arm.utils.check_projectpath(self)
 
-        make_renderer.check_default()
+        arm.utils.check_default_rp()
 
         wrd = bpy.data.worlds['Arm']
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
@@ -693,7 +692,7 @@ class ArmoryPatchProjectButton(bpy.types.Operator):
 
         arm.utils.check_projectpath(self)
 
-        make_renderer.check_default()
+        arm.utils.check_default_rp()
 
         wrd = bpy.data.worlds['Arm']
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
@@ -736,7 +735,7 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
 
         arm.utils.check_projectpath(self)
 
-        make_renderer.check_default()
+        arm.utils.check_default_rp()
 
         wrd = bpy.data.worlds['Arm']
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
@@ -854,7 +853,7 @@ class ArmoryRenderButton(bpy.types.Operator):
         if not arm.utils.check_engine(self):
             return {"CANCELLED"}
 
-        make_renderer.check_default()
+        arm.utils.check_default_rp()
 
         if state.playproc != None:
             make.stop_project()
@@ -885,7 +884,7 @@ class ArmoryRenderAnimButton(bpy.types.Operator):
         if not arm.utils.check_engine(self):
             return {"CANCELLED"}
 
-        make_renderer.check_default()
+        arm.utils.check_default_rp()
 
         if state.playproc != None:
             make.stop_project()
@@ -952,7 +951,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
                 layout.prop(rpdat, 'rp_depthprepass')
             layout.prop(rpdat, "arm_material_model")
             layout.prop(rpdat, "rp_shadowmap")
-            if rpdat.rp_shadowmap != 'None':
+            if rpdat.rp_shadowmap != 'Off':
                 layout.prop(rpdat, "rp_shadowmap_cascades")
             layout.prop(rpdat, "rp_translucency_state")
             layout.prop(rpdat, "rp_overlays_state")
@@ -979,7 +978,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
 
             layout.prop(rpdat, "rp_hdr")
             layout.prop(rpdat, "rp_stereo")
-            layout.prop(rpdat, "rp_greasepencil")
+            # layout.prop(rpdat, "rp_greasepencil")
 
             layout.separator()
             layout.prop(rpdat, "rp_render_to_texture")
@@ -1002,6 +1001,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
                 # layout.prop(rpdat, "rp_eyeadapt")
                 layout.prop(rpdat, "rp_motionblur")
                 layout.prop(rpdat, 'arm_rp_resolution')
+                layout.prop(rpdat, 'rp_dynres')
 
             layout.separator()
             layout.prop(rpdat, 'arm_soft_shadows')

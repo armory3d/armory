@@ -10,7 +10,6 @@ import arm.props as props
 import arm.make as make
 import arm.make_state as state
 import arm.space_armory as space_armory
-import arm.make_renderer as make_renderer
 import arm.assets as assets
 try:
     import barmory
@@ -236,7 +235,7 @@ def on_load_post(context):
     first_update = True
 
     props.init_properties_on_load()
-    make_renderer.reload_blend_data()
+    reload_blend_data()
 
     bpy.ops.arm.sync_proxy()
 
@@ -258,6 +257,26 @@ def on_load_post(context):
 def on_save_pre(context):
     props.init_properties_on_save()
 
+def reload_blend_data():
+    armory_pbr = bpy.data.node_groups.get('Armory PBR')
+    if armory_pbr == None:
+        load_library('Armory PBR')
+
+def load_library(asset_name):
+    if bpy.data.filepath.endswith('arm_data.blend'): # Prevent load in library itself
+        return
+    sdk_path = arm.utils.get_sdk_path()
+    data_path = sdk_path + '/armory/blender/data/arm_data.blend'
+    data_names = [asset_name]
+
+    # Import
+    data_refs = data_names.copy()
+    with bpy.data.libraries.load(data_path, link=False) as (data_from, data_to):
+        data_to.node_groups = data_refs
+
+    for ref in data_refs:
+        ref.use_fake_user = True
+
 def register():
     if hasattr(bpy.app.handlers, 'scene_update_post'):
         bpy.app.handlers.scene_update_post.append(on_scene_update_post)
@@ -266,6 +285,7 @@ def register():
     # On windows, on_load_post is not called when opening .blend file from explorer
     if arm.utils.get_os() == 'win' and arm.utils.get_fp() != '':
         on_load_post(None)
+    reload_blend_data()
 
 def unregister():
     if hasattr(bpy.app.handlers, 'scene_update_post'):
