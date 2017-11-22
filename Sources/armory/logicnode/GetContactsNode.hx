@@ -16,7 +16,7 @@ class GetContactsNode extends LogicNode {
 		var physics = armory.trait.physics.PhysicsWorld.active;
 		var rbs = physics.getContacts(object.getTrait(RigidBody));
 		var obs = [];
-		if (rbs != null) for (rb in rbs) obs.push(rb.object);
+		if (rbs != null) for (rb in rbs) if (rb != null) obs.push(rb.object);
 		return obs;
 #end
 		return null;
