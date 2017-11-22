@@ -79,10 +79,12 @@ class RenderPathCreator {
 		{
 			var faces = path.getLamp(path.currentLampIndex).data.raw.shadowmap_cube ? 6 : 1;
 			for (i in 0...faces) {
+				if (faces > 1) path.currentFace = i;
 				path.setTarget("shadowMap");
 				path.clearTarget(null, 1.0);
 				path.drawMeshes("shadowmap");
 			}
+			path.currentFace = -1;
 		}
 		#end
 
@@ -499,10 +501,12 @@ class RenderPathCreator {
 						var l = iron.Scene.active.lamps[0];
 						var faces = l.data.raw.shadowmap_cube ? 6 : 1;
 						for (i in 0...faces) {
+							if (faces > 1) path.currentFace = i;
 							path.setTarget("shadowMap");
 							path.clearTarget(null, 1.0);
 							path.drawMeshes("shadowmap");
 						}
+						path.currentFace = -1;
 					}
 				}
 				#end
@@ -622,10 +626,12 @@ class RenderPathCreator {
 				if (path.lampCastShadow()) {
 					var faces = l.data.raw.shadowmap_cube ? 6 : 1;
 					for (i in 0...faces) {
+						if (faces > 1) path.currentFace = i;
 						path.setTarget("shadowMap");
 						path.clearTarget(null, 1.0);
 						path.drawMeshes("shadowmap");
 					}
+					path.currentFace = -1;
 				}
 			}
 			#end
