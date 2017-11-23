@@ -1987,7 +1987,7 @@ class ArmoryExporter:
                 o['object_refs'] = []
                 # Add unparented objects only, then instantiate full object child tree
                 for bobject in group.objects:
-                    if bobject.parent == None:
+                    if bobject.parent == None and bobject.arm_export:
                         # Add external linked objects
                         if bobject.name not in scene_objects:
                             self.process_bobject(bobject)
