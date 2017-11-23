@@ -1057,9 +1057,9 @@ class RenderPathCreator {
 	static inline function getVoxelResZ():Float {
 		#if (rp_voxelgi_resolution_z == 1.0)
 		return 1.0;
-		#elseif (rp_voxelgi_resolution == 0.5)
+		#elseif (rp_voxelgi_resolution_z == 0.5)
 		return 0.5;
-		#elseif (rp_voxelgi_resolution == 0.25)
+		#elseif (rp_voxelgi_resolution_z == 0.25)
 		return 0.25;
 		#else
 		return 0.0;
