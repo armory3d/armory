@@ -777,7 +777,8 @@ class ArmoryExporter:
                 o['mobile'] = False
 
             if bobject.dupli_type == 'GROUP' and bobject.dupli_group != None:
-                o['group_ref'] = bobject.dupli_group.name
+                if len(bobject.dupli_group.objects) > 0:
+                    o['group_ref'] = bobject.dupli_group.name
 
             if bobject.arm_tilesheet != '':
                 o['tilesheet_ref'] = bobject.arm_tilesheet

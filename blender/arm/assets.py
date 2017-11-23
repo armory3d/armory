@@ -5,6 +5,7 @@ import bpy
 import arm.utils
 
 assets = []
+reserved_names = ['return.']
 khafile_defs = []
 khafile_defs_last = []
 embedded_data = []
@@ -32,6 +33,10 @@ def add(file):
     global assets
     if file not in assets:
         assets.append(file)
+        # Reserved file name
+        for s in reserved_names:
+            if s in file:
+                print('Armory Warning: File "{0}" contains reserved keyword, this will break C++ builds!'.format(file))
 
 def add_khafile_def(d):
     global khafile_defs
