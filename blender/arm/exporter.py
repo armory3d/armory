@@ -2255,7 +2255,7 @@ class ArmoryExporter:
         self.export_traits(bobject, o)
 
         # Rigid body trait
-        if bobject.rigid_body != None:
+        if bobject.rigid_body != None and bpy.data.worlds['Arm'].arm_physics != 'Disabled':
             ArmoryExporter.export_physics = True
             rb = bobject.rigid_body
             shape = 0 # BOX
@@ -2317,7 +2317,7 @@ class ArmoryExporter:
                 soft_type = 1 # Volume
                 soft_mod = m
                 break
-        if soft_type >= 0:
+        if soft_type >= 0 and bpy.data.worlds['Arm'].arm_physics != 'Disabled':
             ArmoryExporter.export_physics = True
             assets.add_khafile_def('arm_physics_soft')
             cloth_trait = {}
@@ -2334,7 +2334,7 @@ class ArmoryExporter:
                 self.add_hook_trait(o, bobject, '', soft_mod.settings.vertex_group_mass)
 
         # RB Constraint
-        if bobject.rigid_body_constraint != None:
+        if bobject.rigid_body_constraint != None and bpy.data.worlds['Arm'].arm_physics != 'Disabled':
             rbc = bobject.rigid_body_constraint
             target = rbc.object1 if rbc.object2.name == bobject.name else rbc.object2
             to = self.objectToArmObjectDict[target]
