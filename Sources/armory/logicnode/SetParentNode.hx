@@ -12,8 +12,11 @@ class SetParentNode extends LogicNode {
 		var object:Object = inputs[1].get();
 
 		var parent:Object;
-		var parentNode = cast(inputs[2].node, ObjectNode);
-		var isUnparent = parentNode.objectName == "";
+		var isUnparent = false;
+		if (Std.is(inputs[2].node, ObjectNode)) {
+			var parentNode = cast(inputs[2].node, ObjectNode);
+			isUnparent = parentNode.objectName == "";
+		}
 		if (isUnparent) parent = iron.Scene.active.root;
 		else parent = inputs[2].get();
 		
