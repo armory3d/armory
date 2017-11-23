@@ -102,7 +102,7 @@ class RenderPathCreator {
 				}
 				#end
 				path.drawMeshes("voxel");
-				path.generateMipmaps(["voxels"]);
+				path.generateMipmaps("voxels");
 			}
 		}
 		#end
@@ -363,7 +363,7 @@ class RenderPathCreator {
 		}
 		#end
 
-		#if ((!rp_compositornodes) || (rp_antialiasing == "TAA") || (rp_rendercapture) || (rp_motionblur == 'Camera') || (rp_motionblur == 'Object'))
+		#if ((!rp_compositornodes) || (rp_antialiasing == "TAA") || (rp_rendercapture) || (rp_motionblur == "Camera") || (rp_motionblur == "Object"))
 		{
 			path.loadShader("copy_pass/copy_pass/copy_pass");
 		}
@@ -494,22 +494,23 @@ class RenderPathCreator {
 
 		#if (rp_gi != "Off")
 		{
-			if (path.voxelize()) {
-				#if ((rp_shadowmap) && (rp_gi == "Voxel GI"))
-				{
-					if (path.lampCastShadow() && iron.Scene.active.lamps.length > 0) {
-						var l = iron.Scene.active.lamps[0];
-						var faces = l.data.raw.shadowmap_cube ? 6 : 1;
-						for (i in 0...faces) {
-							if (faces > 1) path.currentFace = i;
-							path.setTarget("shadowMap");
-							path.clearTarget(null, 1.0);
-							path.drawMeshes("shadowmap");
-						}
-						path.currentFace = -1;
+			#if ((rp_shadowmap) && (rp_gi == "Voxel GI"))
+			{
+				if (path.lampCastShadow() && iron.Scene.active.lamps.length > 0) {
+					var l = iron.Scene.active.lamps[0];
+					var faces = l.data.raw.shadowmap_cube ? 6 : 1;
+					for (i in 0...faces) {
+						if (faces > 1) path.currentFace = i;
+						path.setTarget("shadowMap");
+						path.clearTarget(null, 1.0);
+						path.drawMeshes("shadowmap");
 					}
+					path.currentFace = -1;
 				}
-				#end
+			}
+			#end
+			
+			if (path.voxelize()) {
 				path.clearImage("voxels", 0x00000000);
 				path.setTarget("");
 				var res = getVoxelRes();
@@ -521,7 +522,7 @@ class RenderPathCreator {
 				}
 				#end
 				path.drawMeshes("voxel");
-				path.generateMipmaps(["voxels"]);
+				path.generateMipmaps("voxels");
 			}
 		}
 		#end
@@ -554,7 +555,7 @@ class RenderPathCreator {
 		{
 			// path.setTarget("gbuffer0", ["gbuffer1"]);
 			path.bindTarget("_main", "gbufferD");
-			path.drawDecals(["decal"]);
+			path.drawDecals("decal");
 		}
 		#end
 
@@ -566,34 +567,34 @@ class RenderPathCreator {
 			#if ((rp_ssgi == "RTGI"))
 			path.bindTarget("gbuffer1", "gbuffer1");
 			#end
-			path.drawShader('ssgi_pass/ssgi_pass/ssgi_pass');
+			path.drawShader("ssgi_pass/ssgi_pass/ssgi_pass");
 
 			path.setTarget("bufb");
 			path.bindTarget("gbuffer0", "gbuffer0");
 			path.bindTarget("bufa", "tex");
-			path.drawShader('ssgi_blur_pass/ssgi_blur_pass/ssgi_blur_pass_x');
+			path.drawShader("ssgi_blur_pass/ssgi_blur_pass/ssgi_blur_pass_x");
 
 			path.setTarget("bufa");
 			path.bindTarget("gbuffer0", "gbuffer0");
 			path.bindTarget("bufb", "tex");
-			path.drawShader('ssgi_blur_pass/ssgi_blur_pass/ssgi_blur_pass_y');
+			path.drawShader("ssgi_blur_pass/ssgi_blur_pass/ssgi_blur_pass_y");
 		}	
 		#elseif (rp_ssgi == "SSAO")
 		{	
 			path.setTarget("bufa");
 			path.bindTarget("_main", "gbufferD");
 			path.bindTarget("gbuffer0", "gbuffer0");
-			path.drawShader('ssao_pass/ssao_pass/ssao_pass');
+			path.drawShader("ssao_pass/ssao_pass/ssao_pass");
 
 			path.setTarget("bufb");
 			path.bindTarget("bufa", "tex");
 			path.bindTarget("gbuffer0", "gbuffer0");
-			path.drawShader('blur_edge_pass/blur_edge_pass/blur_edge_pass_x');
+			path.drawShader("blur_edge_pass/blur_edge_pass/blur_edge_pass_x");
 
 			path.setTarget("bufa");
 			path.bindTarget("bufb", "tex");
 			path.bindTarget("gbuffer0", "gbuffer0");
-			path.drawShader('blur_edge_pass/blur_edge_pass/blur_edge_pass_y');
+			path.drawShader("blur_edge_pass/blur_edge_pass/blur_edge_pass_y");
 		}
 		#end
 
@@ -612,7 +613,7 @@ class RenderPathCreator {
 			path.bindTarget("voxels", "voxels");
 		}
 		#end
-		path.drawShader('deferred_indirect/deferred_indirect/deferred_indirect');
+		path.drawShader("deferred_indirect/deferred_indirect/deferred_indirect");
 
 		// Direct
 		var lamps = iron.Scene.active.lamps;
@@ -656,10 +657,10 @@ class RenderPathCreator {
 			#end
 
 			if (path.lampIsSun()) {
-				path.drawShader('deferred_light_quad/deferred_light_quad/deferred_light_quad');
+				path.drawShader("deferred_light_quad/deferred_light_quad/deferred_light_quad");
 			}
 			else {
-				path.drawLampVolume('deferred_light/deferred_light/deferred_light');
+				path.drawLampVolume("deferred_light/deferred_light/deferred_light");
 			}
 
 			#if rp_volumetriclight
@@ -668,20 +669,20 @@ class RenderPathCreator {
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("shadowMap", "shadowMap");
 				if (path.lampIsSun()) {
-					path.drawShader('volumetric_light_quad/volumetric_light_quad/volumetric_light_quad');
+					path.drawShader("volumetric_light_quad/volumetric_light_quad/volumetric_light_quad");
 				}
 				else {
-					path.drawLampVolume('volumetric_light/volumetric_light/volumetric_light');
+					path.drawLampVolume("volumetric_light/volumetric_light/volumetric_light");
 				}
 				path.setTarget("gbuffer1");
 				path.bindTarget("buf", "tex");
 				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader('blur_edge_pass/blur_edge_pass/blur_edge_pass_x');
+				path.drawShader("blur_edge_pass/blur_edge_pass/blur_edge_pass_x");
 
 				path.setTarget("tex");
 				path.bindTarget("gbuffer1", "tex");
 				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader('blur_edge_pass/blur_edge_pass/blur_edge_pass_y_blend_add');
+				path.drawShader("blur_edge_pass/blur_edge_pass/blur_edge_pass_y_blend_add");
 			}
 			#end
 		}
@@ -821,7 +822,7 @@ class RenderPathCreator {
 
 		#if rp_autoexposure
 		{
-			path.generateMipmaps(["tex"]);
+			path.generateMipmaps("tex");
 		}
 		#end
 
@@ -996,7 +997,7 @@ class RenderPathCreator {
 	static function initGI() {
 		var t = new RenderTargetRaw();
 		t.name = "voxels";
-		#if (rp_gi != "Voxel AO")
+		#if (rp_gi == "Voxel AO")
 		{
 			t.format = "R8";
 		}
