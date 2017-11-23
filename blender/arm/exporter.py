@@ -80,7 +80,8 @@ class Vertex:
         eq = (
             (self.co == other.co) and
             (self.normal == other.normal) and
-            (self.uvs == other.uvs)
+            (self.uvs == other.uvs) and
+            (self.col == other.col)
             )
 
         if eq:
