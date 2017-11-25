@@ -392,6 +392,7 @@ def init_properties():
     bpy.types.Material.export_tangents = bpy.props.BoolProperty(name="Export Tangents", default=False)
     bpy.types.Material.vertex_structure = bpy.props.StringProperty(name="Vertex Structure", default='')
     bpy.types.Material.arm_skip_context = bpy.props.StringProperty(name="Skip Context", default='')
+    bpy.types.Material.arm_material_id = bpy.props.IntProperty(name="ID", default=0)
     bpy.types.NodeSocket.is_uniform = bpy.props.BoolProperty(name="Is Uniform", description="Mark node sockets to be processed as material uniforms", default=False)
     bpy.types.NodeTree.is_cached = bpy.props.BoolProperty(name="Node Tree Cached", description="No need to reexport node tree", default=False)
     bpy.types.Material.signature = bpy.props.StringProperty(name="Signature", description="Unique string generated from material nodes", default="")

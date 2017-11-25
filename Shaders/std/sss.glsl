@@ -24,5 +24,5 @@ vec3 SSSSTransmittance(mat4 LWVP, vec3 p, vec3 n, vec3 l, float lightFar, sample
 
 vec3 SSSSTransmittanceCube(float translucency, vec4 shadowPos, vec3 n, vec3 l, float lightFar) {
 	// TODO
-	return vec3(0.2);
+	return vec3(0.0);
 }

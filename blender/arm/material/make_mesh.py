@@ -315,7 +315,7 @@ def make_deferred(con_mesh):
         frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - ((wvpposition.z / wvpposition.w) * 0.5 + 0.5));')
     else:
         frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - gl_FragCoord.z);')
-    if '_SSS' in wrd.world_defs:
+    if '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
         frag.add_uniform('int materialID')
         frag.write('fragColor[1] = vec4(basecol.rgb, materialID + clamp(occlusion, 0.0, 1.0 - 0.001));')
     elif rpdat.arm_voxelgi_refraction:

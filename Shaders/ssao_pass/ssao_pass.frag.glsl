@@ -72,26 +72,6 @@ void main() {
 	const vec2 kernel9 = vec2(0.0, -1.0);
 	const vec2 kernel10 = vec2(0.4999999, -0.8660254);
 	const vec2 kernel11 = vec2(0.8660254, -0.5);
-	// const vec2 kernel0 = vec2(1.0,0.0);
-	// const vec2 kernel1 = vec2(0.9510565,0.3090169);
-	// const vec2 kernel2 = vec2(0.8090169,0.5877852);
-	// const vec2 kernel3 = vec2(0.5877852,0.8090169);
-	// const vec2 kernel4 = vec2(0.3090169,0.9510565);
-	// const vec2 kernel5 = vec2(0.0,1.0);
-	// const vec2 kernel6 = vec2(-0.3090169,0.9510565);
-	// const vec2 kernel7 = vec2(-0.5877852,0.8090169);
-	// const vec2 kernel8 = vec2(-0.8090169,0.5877852);
-	// const vec2 kernel9 = vec2(-0.9510565,0.3090169);
-	// const vec2 kernel10 = vec2(-1,0);
-	// const vec2 kernel11 = vec2(-0.9510565,-0.3090169);
-	// const vec2 kernel12 = vec2(-0.8090169,-0.5877852);
-	// const vec2 kernel13 = vec2(-0.5877852,-0.8090169);
-	// const vec2 kernel14 = vec2(-0.3090169,-0.9510565);
-	// const vec2 kernel15 = vec2(0.0,-1.0);
-	// const vec2 kernel16 = vec2(0.3090169,-0.9510565);
-	// const vec2 kernel17 = vec2(0.5877852,-0.8090169);
-	// const vec2 kernel18 = vec2(0.8090169,-0.5877852);
-	// const vec2 kernel19 = vec2(0.9510565,-0.3090169);
 
 	vec2 enc = texture(gbuffer0, texCoord).rg;      
 	vec3 n;
@@ -107,28 +87,18 @@ void main() {
 	mat2 rotMat = mat2(vec2(cos(randomVec.x * PI), -sin(randomVec.x * PI)),
 					   vec2(sin(randomVec.x * PI), cos(randomVec.x * PI)));
 	
-	// for (int i = 0; i < kernelSize; i++) {
-		fragColor.r = doAO(kernel0, randomVec, rotMat, currentPos, n, currentDistance);
-		fragColor.r += doAO(kernel1, randomVec, rotMat, currentPos, n, currentDistance);
-		fragColor.r += doAO(kernel2, randomVec, rotMat, currentPos, n, currentDistance);
-		fragColor.r += doAO(kernel3, randomVec, rotMat, currentPos, n, currentDistance);
-		fragColor.r += doAO(kernel4, randomVec, rotMat, currentPos, n, currentDistance);
-		fragColor.r += doAO(kernel5, randomVec, rotMat, currentPos, n, currentDistance);
-		fragColor.r += doAO(kernel6, randomVec, rotMat, currentPos, n, currentDistance);
-		fragColor.r += doAO(kernel7, randomVec, rotMat, currentPos, n, currentDistance);
-		fragColor.r += doAO(kernel8, randomVec, rotMat, currentPos, n, currentDistance);
-		fragColor.r += doAO(kernel9, randomVec, rotMat, currentPos, n, currentDistance);
-		fragColor.r += doAO(kernel10, randomVec, rotMat, currentPos, n, currentDistance);
-		fragColor.r += doAO(kernel11, randomVec, rotMat, currentPos, n, currentDistance);
-		// fragColor.r += doAO(kernel12, randomVec, rotMat, currentPos, n, currentDistance);
-		// fragColor.r += doAO(kernel13, randomVec, rotMat, currentPos, n, currentDistance);
-		// fragColor.r += doAO(kernel14, randomVec, rotMat, currentPos, n, currentDistance);
-		// fragColor.r += doAO(kernel15, randomVec, rotMat, currentPos, n, currentDistance);
-		// fragColor.r += doAO(kernel16, randomVec, rotMat, currentPos, n, currentDistance);
-		// fragColor.r += doAO(kernel17, randomVec, rotMat, currentPos, n, currentDistance);
-		// fragColor.r += doAO(kernel18, randomVec, rotMat, currentPos, n, currentDistance);
-		// fragColor.r += doAO(kernel19, randomVec, rotMat, currentPos, n, currentDistance);
-	// }
+	fragColor.r = doAO(kernel0, randomVec, rotMat, currentPos, n, currentDistance);
+	fragColor.r += doAO(kernel1, randomVec, rotMat, currentPos, n, currentDistance);
+	fragColor.r += doAO(kernel2, randomVec, rotMat, currentPos, n, currentDistance);
+	fragColor.r += doAO(kernel3, randomVec, rotMat, currentPos, n, currentDistance);
+	fragColor.r += doAO(kernel4, randomVec, rotMat, currentPos, n, currentDistance);
+	fragColor.r += doAO(kernel5, randomVec, rotMat, currentPos, n, currentDistance);
+	fragColor.r += doAO(kernel6, randomVec, rotMat, currentPos, n, currentDistance);
+	fragColor.r += doAO(kernel7, randomVec, rotMat, currentPos, n, currentDistance);
+	fragColor.r += doAO(kernel8, randomVec, rotMat, currentPos, n, currentDistance);
+	fragColor.r += doAO(kernel9, randomVec, rotMat, currentPos, n, currentDistance);
+	fragColor.r += doAO(kernel10, randomVec, rotMat, currentPos, n, currentDistance);
+	fragColor.r += doAO(kernel11, randomVec, rotMat, currentPos, n, currentDistance);
 	
 	fragColor.r *= ssaoStrength / kernelSize;
 	fragColor.r = max(0.0, 1.0 - fragColor.r);

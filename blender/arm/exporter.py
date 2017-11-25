@@ -2002,7 +2002,7 @@ class ArmoryExporter:
                 self.output['camera_ref'] = self.scene.camera.name
             else:
                 if self.scene.name == arm.utils.get_project_scene_name():
-                    log.warn('Armory Warning: No camera found in active scene')
+                    log.warn('No camera found in active scene')
 
             self.output['material_datas'] = []
             self.export_materials()

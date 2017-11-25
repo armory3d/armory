@@ -66,7 +66,14 @@ def parse(material, mat_data, mat_users, mat_armusers):
             const['bool'] = material.arm_receive_shadow
             c['bind_constants'].append(const)
 
-            if rpdat.rp_sss_state == 'On':
+            if material.arm_material_id != 0:
+                const = {}
+                const['name'] = 'materialID'
+                const['int'] = material.arm_material_id
+                c['bind_constants'].append(const)
+                if material.arm_material_id == 2:
+                    wrd.world_defs += '_Hair'
+            elif rpdat.rp_sss_state == 'On':
                 sss = False
                 sss_node = arm.node_utils.get_node_by_type(material.node_tree, 'SUBSURFACE_SCATTERING')
                 if sss_node != None and sss_node.outputs[0].is_linked: # Check linked node

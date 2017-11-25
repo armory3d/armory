@@ -280,6 +280,7 @@ class MaterialPropsPanel(bpy.types.Panel):
 
         layout.prop(mat, 'arm_custom_material')
         layout.prop(mat, 'arm_skip_context')
+        layout.prop(mat, 'arm_material_id')
         layout.prop(mat, 'arm_billboard')
         layout.prop(mat, 'arm_particle')
         if mat.arm_particle == 'gpu':

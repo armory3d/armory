@@ -196,6 +196,16 @@ void main() {
 	else {
 #endif
 
+#ifdef _Hair // Aniso
+	if (floor(g1.a) == 2) {
+		const float shinyParallel = metrough.y;
+		const float shinyPerpendicular = 0.1;
+		const vec3 v = vec3(0.99146, 0.11664, 0.05832);
+		vec3 T = abs(dot(n, v)) > 0.99999 ? cross(n, vec3(0.0, 1.0, 0.0)) : cross(n, v);
+		fragColor.rgb = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + wardSpecular(n, h, dotNL, dotNV, dotNH, T, shinyParallel, shinyPerpendicular);
+	}
+	else fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
+#else
 #ifdef _OrenNayar
 	// Diff/glossy
 	float rough = pow(metrough.y, 0.5);
@@ -205,18 +215,15 @@ void main() {
 #else
 	fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
 #endif
+#endif
 
 #ifdef _PolyLight
 	}
 #endif
 	
-	// Aniso spec
-	// #ifdef _Aniso
-	// float shinyParallel = metrough.y;
-	// float shinyPerpendicular = 0.08;
-	// vec3 fiberDirection = vec3(0.0, 1.0, 8.0);
-	// fragColor.rgb = diffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH, dotLV) + wardSpecular(n, h, dotNL, dotNV, dotNH, fiberDirection, shinyParallel, shinyPerpendicular);
-	// #endif
+#ifdef _Hair // Aniso
+	
+#endif
 
 	fragColor.rgb *= lightColor;
 

@@ -24,7 +24,6 @@ uniform vec2 cameraProj;
 // const int ssgiMaxSteps = 16;
 // const int ssgiBinarySteps = 4;
 // const float ssgiRayStep = 0.005;
-const float searchDist = 5.0;
 const float angleMix = 0.5f;
 #ifdef _SSGICone9
 const float strength = 2.0 * (1.0 / ssgiStrength);
@@ -73,11 +72,18 @@ float getDeltaDepth(vec3 hitCoord) {
 void rayCast(vec3 dir) {
 	hitCoord = vpos;
 	dir *= ssgiRayStep;
+	#ifdef _SSGICone9
+	float dist = 1.0 / 9.0;
+	#else
+	float dist = 1.0 / 5.0;
+	#endif
 	for (int i = 0; i < ssgiMaxSteps; i++) {
 		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) { /* binarySearch(dir); */ break; }
+		if (getDeltaDepth(hitCoord) > 0.0) {
+			dist = distance(vpos, hitCoord);
+			/* binarySearch(dir); */ break;
+		}
 	}
-	float dist = distance(vpos, hitCoord);
 	occ += dist;
 	#ifdef _RTGI
 	col += texture(gbuffer1, coord).rgb * ((ssgiRayStep * ssgiMaxSteps) - dist);
