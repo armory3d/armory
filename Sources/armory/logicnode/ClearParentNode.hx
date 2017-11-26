@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import iron.object.Object;
 
-class UnparentNode extends LogicNode {
+class ClearParentNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);

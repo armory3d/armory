@@ -3,10 +3,10 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class UnparentNode(Node, ArmLogicTreeNode):
-    '''Unparent node'''
-    bl_idname = 'LNUnparentNode'
-    bl_label = 'Unparent'
+class ClearParentNode(Node, ArmLogicTreeNode):
+    '''Clear parent node'''
+    bl_idname = 'LNClearParentNode'
+    bl_label = 'Clear Parent'
     bl_icon = 'GAME'
 
     def init(self, context):
@@ -16,4 +16,4 @@ class UnparentNode(Node, ArmLogicTreeNode):
         self.inputs[-1].default_value = True
         self.outputs.new('ArmNodeSocketAction', 'Out')
 
-add_node(UnparentNode, category='Action')
+add_node(ClearParentNode, category='Action')
