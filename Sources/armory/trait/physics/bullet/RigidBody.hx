@@ -86,12 +86,12 @@ class RigidBody extends Trait {
 
 		if (shape == Shape.Box) {
 			_shape = BtBoxShape.create(BtVector3.create(
-				withMargin(transform.size.x / 2),
-				withMargin(transform.size.y / 2),
-				withMargin(transform.size.z / 2)));
+				withMargin(transform.dim.x / 2),
+				withMargin(transform.dim.y / 2),
+				withMargin(transform.dim.z / 2)));
 		}
 		else if (shape == Shape.Sphere) {
-			_shape = BtSphereShape.create(withMargin(transform.size.x / 2));
+			_shape = BtSphereShape.create(withMargin(transform.dim.x / 2));
 		}
 		else if (shape == Shape.ConvexHull || shape == Shape.Mesh) { // Use convex hull for mesh for now
 			_shapeConvex = BtConvexHullShape.create();
@@ -100,20 +100,20 @@ class RigidBody extends Trait {
 		}
 		else if (shape == Shape.Cone) {
 			_shape = BtConeShapeZ.create(
-				withMargin(transform.size.x / 2), // Radius
-				withMargin(transform.size.z));	  // Height
+				withMargin(transform.dim.x / 2), // Radius
+				withMargin(transform.dim.z));	  // Height
 		}
 		else if (shape == Shape.Cylinder) {
 			_shape = BtCylinderShapeZ.create(BtVector3.create(
-				withMargin(transform.size.x / 2),
-				withMargin(transform.size.y / 2),
-				withMargin(transform.size.z / 2)));
+				withMargin(transform.dim.x / 2),
+				withMargin(transform.dim.y / 2),
+				withMargin(transform.dim.z / 2)));
 		}
 		else if (shape == Shape.Capsule) {
-			var r = transform.size.x / 2;
+			var r = transform.dim.x / 2;
 			_shape = BtCapsuleShapeZ.create(
 				withMargin(r), // Radius
-				withMargin(transform.size.z - r * 2)); // Height between 2 sphere centers
+				withMargin(transform.dim.z - r * 2)); // Height between 2 sphere centers
 		}
 		//else if (shape == SHAPE_TERRAIN) {
 			// var data:Array<Dynamic> = [];

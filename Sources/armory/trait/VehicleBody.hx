@@ -63,9 +63,9 @@ class VehicleBody extends Trait {
 		var wheelAxleCS = BtVector3.create(1, 0, 0);
 
 		var chassisShape = BtBoxShape.create(BtVector3.create(
-				transform.size.x / 2,
-				transform.size.y / 2,
-				transform.size.z / 2));
+				transform.dim.x / 2,
+				transform.dim.y / 2,
+				transform.dim.z / 2));
 
 		var compound = BtCompoundShape.create();
 		
@@ -238,12 +238,12 @@ class VehicleWheel {
 	var locZ:Float;
 
 	public function new(id:Int, transform:Transform, vehicleTransform:Transform) {
-		wheelRadius = transform.size.z / 2;
-		wheelWidth = transform.size.x > transform.size.y ? transform.size.y : transform.size.x;
+		wheelRadius = transform.dim.z / 2;
+		wheelWidth = transform.dim.x > transform.dim.y ? transform.dim.y : transform.dim.x;
 
 		locX = transform.loc.x;
 		locY = transform.loc.y;
-		locZ = vehicleTransform.size.z / 2 + transform.loc.z;
+		locZ = vehicleTransform.dim.z / 2 + transform.loc.z;
 	}
 
 	public function getConnectionPoint():BtVector3 {

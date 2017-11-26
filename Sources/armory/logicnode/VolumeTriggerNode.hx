@@ -26,12 +26,12 @@ class VolumeTriggerNode extends LogicNode {
 		var t2 = volume.transform;
 		l1.set(t1.worldx(), t1.worldy(), t1.worldz());
 		l2.set(t2.worldx(), t2.worldy(), t2.worldz());
-		var s1 = t1.size;
-		var s2 = t2.size;
+		var d1 = t1.dim;
+		var d2 = t2.dim;
 
-		var overlap = l1.x + s1.x / 2 > l2.x - s2.x / 2 && l1.x - s1.x / 2 < l2.x + s2.x / 2 &&
-				  	  l1.y + s1.y / 2 > l2.y - s2.y / 2 && l1.y - s1.y / 2 < l2.y + s2.y / 2 &&
-				  	  l1.z + s1.z / 2 > l2.z - s2.z / 2 && l1.z - s1.z / 2 < l2.z + s2.z / 2;
+		var overlap = l1.x + d1.x / 2 > l2.x - d2.x / 2 && l1.x - d1.x / 2 < l2.x + d2.x / 2 &&
+				  	  l1.y + d1.y / 2 > l2.y - d2.y / 2 && l1.y - d1.y / 2 < l2.y + d2.y / 2 &&
+				  	  l1.z + d1.z / 2 > l2.z - d2.z / 2 && l1.z - d1.z / 2 < l2.z + d2.z / 2;
 
 		var b = false;
 		switch (property0) {

@@ -78,24 +78,24 @@ class DebugDraw {
 		var x = t.worldx();
 		var y = t.worldy();
 		var z = t.worldz();
-		var sx = t.size.x / 2;
-		var sy = t.size.y / 2;
-		var sz = t.size.z / 2;
+		var dx = t.dim.x / 2;
+		var dy = t.dim.y / 2;
+		var dz = t.dim.z / 2;
 		
-		line(x - sx, y - sy, z - sz, x + sx, y - sy, z - sz);
-		line(x - sx, y + sy, z - sz, x + sx, y + sy, z - sz);
-		line(x - sx, y - sy, z + sz, x + sx, y - sy, z + sz);
-		line(x - sx, y + sy, z + sz, x + sx, y + sy, z + sz);
+		line(x - dx, y - dy, z - dz, x + dx, y - dy, z - dz);
+		line(x - dx, y + dy, z - dz, x + dx, y + dy, z - dz);
+		line(x - dx, y - dy, z + dz, x + dx, y - dy, z + dz);
+		line(x - dx, y + dy, z + dz, x + dx, y + dy, z + dz);
 
-		line(x - sx, y - sy, z - sz, x - sx, y + sy, z - sz);
-		line(x - sx, y - sy, z + sz, x - sx, y + sy, z + sz);
-		line(x + sx, y - sy, z - sz, x + sx, y + sy, z - sz);
-		line(x + sx, y - sy, z + sz, x + sx, y + sy, z + sz);
+		line(x - dx, y - dy, z - dz, x - dx, y + dy, z - dz);
+		line(x - dx, y - dy, z + dz, x - dx, y + dy, z + dz);
+		line(x + dx, y - dy, z - dz, x + dx, y + dy, z - dz);
+		line(x + dx, y - dy, z + dz, x + dx, y + dy, z + dz);
 
-		line(x - sx, y - sy, z - sz, x - sx, y - sy, z + sz);
-		line(x - sx, y + sy, z - sz, x - sx, y + sy, z + sz);
-		line(x + sx, y - sy, z - sz, x + sx, y - sy, z + sz);
-		line(x + sx, y + sy, z - sz, x + sx, y + sy, z + sz);
+		line(x - dx, y - dy, z - dz, x - dx, y - dy, z + dz);
+		line(x - dx, y + dy, z - dz, x - dx, y + dy, z + dz);
+		line(x + dx, y - dy, z - dz, x + dx, y - dy, z + dz);
+		line(x + dx, y + dy, z - dz, x + dx, y + dy, z + dz);
 	}
 
 	public function line(x1:Float, y1:Float, z1:Float, x2:Float, y2:Float, z2:Float) {
