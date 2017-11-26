@@ -392,9 +392,9 @@ def check_engine(self):
         return False
     return True
 
-def tess_enabled(target):
+def disp_enabled(target):
     rpdat = get_rp()
-    return (target == 'krom' or target == 'native') and rpdat.arm_tessellation
+    return (target == 'krom' or target == 'native') and rpdat.arm_displacement
 
 def is_object_animation_enabled(bobject):
     # Checks if animation is present and enabled

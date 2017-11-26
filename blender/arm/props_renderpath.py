@@ -438,7 +438,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('OrenNayar', 'OrenNayar', 'OrenNayar'),
                ],
         name="Diffuse", description="Diffuse model", default='Lambert', update=assets.invalidate_shader_cache)
-    arm_tessellation = bpy.props.BoolProperty(name="Tessellation", description="Enable tessellation for height maps on supported targets", default=True, update=assets.invalidate_shader_cache)
+    arm_displacement = bpy.props.BoolProperty(name="Displacement", description="Enable tessellated displacement for height maps", default=True, update=assets.invalidate_shader_cache)
     arm_rp_resolution = EnumProperty(
         items=[('Display', 'Display', 'Display'),
                ('480', '480p', '480p'), 

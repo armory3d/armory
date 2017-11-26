@@ -1010,7 +1010,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
             layout.prop(rpdat, 'arm_texture_filter')
             layout.prop(rpdat, "arm_diffuse_model")
             layout.prop(rpdat, 'arm_ssrs')
-            layout.prop(rpdat, 'arm_tessellation')
+            layout.prop(rpdat, 'arm_displacement')
             layout.prop(rpdat, 'arm_clouds')
 
 class ArmRenderPropsPanel(bpy.types.Panel):

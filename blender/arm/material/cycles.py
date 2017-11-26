@@ -98,7 +98,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     # parse_volume_input(node.inputs[1])
 
     # Displacement
-    if _parse_displacement and tess_enabled() and node.inputs[2].is_linked and tese != None:
+    if _parse_displacement and disp_enabled() and node.inputs[2].is_linked and tese != None:
         parsed = []
         parents = []
         normal_parsed = False
@@ -1348,8 +1348,8 @@ def safesrc(name):
 def get_sdk_path():
     return arm.utils.get_sdk_path()
 
-def tess_enabled():
-    return arm.utils.tess_enabled(arm.make_state.target)
+def disp_enabled():
+    return arm.utils.disp_enabled(arm.make_state.target)
 
 def warn(text):
     arm.log.warn(text)
