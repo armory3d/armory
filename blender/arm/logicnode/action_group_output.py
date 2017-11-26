@@ -6,7 +6,7 @@ from arm.logicnode.arm_nodes import *
 class GroupOutputNode(Node, ArmLogicTreeNode):
     '''Group output node'''
     bl_idname = 'LNGroupOutputNode'
-    bl_label = 'Group Output'
+    bl_label = 'Node Group Output'
     bl_icon = 'GAME'
 
     def init(self, context):

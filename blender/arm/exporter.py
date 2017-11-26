@@ -779,6 +779,11 @@ class ArmoryExporter:
             if bobject.dupli_type == 'GROUP' and bobject.dupli_group != None:
                 o['group_ref'] = bobject.dupli_group.name
 
+            if bobject.users_group != None and len(bobject.users_group) > 0:
+                o['groups'] = []
+                for g in bobject.users_group:
+                    o['groups'].append(g.name)
+
             if bobject.arm_tilesheet != '':
                 o['tilesheet_ref'] = bobject.arm_tilesheet
                 o['tilesheet_action_ref'] = bobject.arm_tilesheet_action

@@ -7,7 +7,7 @@ import arm.utils
 class CallGroupNode(Node, ArmLogicTreeNode):
     '''Call group node'''
     bl_idname = 'LNCallGroupNode'
-    bl_label = 'Call Group'
+    bl_label = 'Call Node Group'
     bl_icon = 'GAME'
 
     @property
