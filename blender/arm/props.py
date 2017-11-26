@@ -346,7 +346,7 @@ def init_properties():
                ('clockwise', 'Front', 'Clockwise'),
                ('counter_clockwise', 'Back', 'Counter-Clockwise')],
         name="", default='clockwise', description="Draw geometry faces")
-    bpy.types.Material.arm_discard = bpy.props.BoolProperty(name="Discard", default=False)
+    bpy.types.Material.arm_discard = bpy.props.BoolProperty(name="Discard", default=False, description="Do not render fragments below specified opacity threshold")
     bpy.types.Material.arm_discard_opacity = bpy.props.FloatProperty(name="Mesh Opacity", default=0.2, min=0, max=1)
     bpy.types.Material.arm_discard_opacity_shadows = bpy.props.FloatProperty(name="Shadows Opacity", default=0.1, min=0, max=1)
     bpy.types.Material.arm_tess = bpy.props.BoolProperty(name="Tess Displacement", description="Use tessellation shaders to subdivide and displace surface", default=True)
