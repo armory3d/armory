@@ -1208,7 +1208,7 @@ class ArmoryExporter:
         va['values'] = values
         return va
 
-    def export_mesh(self, exportMesh, bobject, fp, o):
+    def export_mesh_data(self, exportMesh, bobject, fp, o):
         # Much faster export but produces slightly less efficient data
         exportMesh.calc_normals_split()
         exportMesh.calc_tessface()
@@ -1335,13 +1335,11 @@ class ArmoryExporter:
     def has_tangents(self, exportMesh):
         return self.get_export_uvs(exportMesh) == True and self.get_export_tangents(exportMesh) == True and len(exportMesh.uv_layers) > 0
 
-    def do_export_mesh(self, objectRef, scene):
+    def export_mesh(self, objectRef, scene):
         # This function exports a single mesh object
-        bobject = objectRef[1]["objectTable"][0]
+        table = objectRef[1]["objectTable"]
+        bobject = table[0]
         oid = arm.utils.safestr(objectRef[1]["structName"])
-
-        # Check if mesh is using instanced rendering
-        is_instanced, instance_offsets = self.object_process_instancing(bobject, objectRef[1]["objectTable"])
 
         # No export necessary
         if ArmoryExporter.option_mesh_per_file:
@@ -1352,6 +1350,15 @@ class ArmoryExporter:
                 # assets.add(sdf_path)
             if self.is_mesh_cached(bobject) == True and os.path.exists(fp):
                 return
+
+        # Check if mesh is using instanced rendering
+        is_instanced, instance_offsets = self.object_process_instancing(bobject, objectRef[1]["objectTable"])
+
+        # Mesh users have different modifier stack
+        for i in range(1, len(table)):
+            if not self.mod_equal_stack(bobject, table[i]):
+                log.warn('{0} users {1} and {2} differ in modifier stack - use Make Single User(U) - Object & Data for now'.format(oid, bobject.name, table[i].name))
+                break
 
         print('Exporting mesh ' + arm.utils.asset_name(bobject.data))
 
@@ -1425,7 +1432,7 @@ class ArmoryExporter:
             log.warn(oid + ' exceeds maximum of 2 UV Maps supported')
 
         # Process meshes
-        vert_list = self.export_mesh(exportMesh, bobject, fp, o)
+        vert_list = self.export_mesh_data(exportMesh, bobject, fp, o)
         if armature:
             self.export_skin(bobject, armature, vert_list, o)
 
@@ -1881,7 +1888,7 @@ class ArmoryExporter:
                 self.export_speaker(objectRef)
         for objectRef in self.meshArray.items():
             self.output['mesh_datas'] = [];
-            self.do_export_mesh(objectRef, scene)
+            self.export_mesh(objectRef, scene)
 
     def execute(self, context, filepath, scene=None, write_capture_info=False, play_area=None):
         profile_time = time.time()
@@ -2557,3 +2564,14 @@ class ArmoryExporter:
             po['turbidity'] = world.arm_envtex_turbidity
             po['ground_albedo'] = world.arm_envtex_ground_albedo
         o['probes'].append(po)
+
+    # https://blender.stackexchange.com/questions/70629
+    def mod_equal(self, mod1, mod2):
+        return all([getattr(mod1, prop, True) == getattr(mod2, prop, False) for prop in mod1.bl_rna.properties.keys()])
+
+    def mod_equal_stack(self, obj1, obj2):
+        if len(obj1.modifiers) == 0 and len(obj2.modifiers) == 0:
+            return True
+        if len(obj1.modifiers) == 0 or len(obj2.modifiers) == 0:
+            return False
+        return all([self.mod_equal(m, obj2.modifiers[i]) for i,m in enumerate(obj1.modifiers)])
