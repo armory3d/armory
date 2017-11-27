@@ -127,15 +127,9 @@ class RigidBody extends Trait {
 
 		var _transform = BtTransform.create();
 		_transform.setIdentity();
-		_transform.setOrigin(BtVector3.create(
-			transform.worldx(),
-			transform.worldy(),
-			transform.worldz()));
-		_transform.setRotation(BtQuaternion.create(
-			transform.rot.x,
-			transform.rot.y,
-			transform.rot.z,
-			transform.rot.w));
+		_transform.setOrigin(BtVector3.create(transform.worldx(), transform.worldy(), transform.worldz()));
+		var rot = transform.world.getQuat();
+		_transform.setRotation(BtQuaternion.create(rot.x, rot.y, rot.z, rot.w));
 
 		var _centerOfMassOffset = BtTransform.create();
 		_centerOfMassOffset.setIdentity();
@@ -285,7 +279,8 @@ class RigidBody extends Trait {
 	public function syncTransform() {
 		var trans = BtTransform.create();
 		trans.setOrigin(BtVector3.create(transform.worldx(), transform.worldy(), transform.worldz()));
-		trans.setRotation(BtQuaternion.create(transform.rot.x, transform.rot.y, transform.rot.z, transform.rot.w));
+		var rot = transform.world.getQuat();
+		trans.setRotation(BtQuaternion.create(rot.x, rot.y, rot.z, rot.w));
 		body.setCenterOfMassTransform(trans);
 		// _motionState.getWorldTransform(trans);
 		// trans.setOrigin(BtVector3.create(transform.loc.x, transform.loc.y, transform.loc.z));
