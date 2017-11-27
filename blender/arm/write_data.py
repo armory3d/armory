@@ -224,6 +224,7 @@ def write_main(scene_name, resx, resy, is_play, in_viewport, is_publish):
     rpdat = arm.utils.get_rp()
     scene_ext = '.zip' if (bpy.data.scenes[scene_name].arm_compress and is_publish) else ''
     winmode = str(wrd.arm_winmode)
+    asset_references = list(set(assets.assets))
     # TODO: expose Krom.displayWidth() in barmory
     if in_viewport:
         winmode = 'Window'
@@ -236,7 +237,7 @@ class Main {
     public static inline var projectName = '""" + arm.utils.safestr(wrd.arm_project_name) + """';
     public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';
     public static inline var projectPath = '""" + arm.utils.get_fp().replace('\\', '\\\\') + """';
-    public static inline var projectAssets = """ + str(len(assets.assets)) + """;
+    public static inline var projectAssets = """ + str(len(asset_references)) + """;
     public static var projectWindowMode = kha.WindowMode.""" + winmode + """;
     public static inline var projectWindowResize = """ + ('true' if wrd.arm_winresize else 'false') + """;
     public static inline var projectWindowMaximize = """ + ('true' if wrd.arm_winmaximize else 'false') + """;
@@ -294,7 +295,8 @@ class Main {
             iron.App.init(function() {
 """)
         if is_publish and wrd.arm_loadbar:
-            f.write("""iron.App.notifyOnRender2D(armory.trait.internal.LoadBar.render);
+            f.write("""
+                iron.App.notifyOnRender2D(armory.trait.internal.LoadBar.render);
 """)
 
         f.write("""
@@ -306,7 +308,7 @@ class Main {
                     object.addTrait(new armory.trait.internal.SpaceArmory());
 """)
 
-            f.write("""
+        f.write("""
                     iron.RenderPath.setActive(armory.renderpath.RenderPathCreator.get());
 """)
 
