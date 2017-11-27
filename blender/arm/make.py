@@ -58,12 +58,12 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     # Clean compiled variants if cache is disabled
     build_dir = arm.utils.build_dir()
     if wrd.arm_cache_shaders == False:
-        if os.path.isdir(build_dir + '/html5-resources'):
-            shutil.rmtree(build_dir + '/html5-resources', onerror=remove_readonly)
+        if os.path.isdir(build_dir + '/debug/html5-resources'):
+            shutil.rmtree(build_dir + '/debug/html5-resources', onerror=remove_readonly)
         if os.path.isdir(build_dir + '/krom-resources'):
             shutil.rmtree(build_dir + '/krom-resources', onerror=remove_readonly)
-        if os.path.isdir(build_dir + '/windowed/krom-resources'):
-            shutil.rmtree(build_dir + '/windowed/krom-resources', onerror=remove_readonly)
+        if os.path.isdir(build_dir + '/debug/krom-resources'):
+            shutil.rmtree(build_dir + '/debug/krom-resources', onerror=remove_readonly)
         if os.path.isdir(build_dir + '/windows-resources'):
             shutil.rmtree(build_dir + '/windows-resources', onerror=remove_readonly)
         if os.path.isdir(build_dir + '/linux-resources'):
@@ -234,8 +234,8 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
         cmd.append(arm.utils.get_gapi())
 
     cmd.append('--to')
-    if kha_target_name == 'krom' and not state.in_viewport:
-        cmd.append(arm.utils.build_dir() + '/windowed')
+    if (kha_target_name == 'krom' and not state.in_viewport) or (kha_target_name == 'html5' and not state.is_publish):
+        cmd.append(arm.utils.build_dir() + '/debug')
     else:
         cmd.append(arm.utils.build_dir())
 
@@ -274,6 +274,7 @@ def build_project(is_play=False, is_publish=False, is_render=False, is_render_an
 
     state.is_render = is_render
     state.is_render_anim = is_render_anim
+    state.is_publish = is_publish
 
     # Clear flag
     state.in_viewport = False
@@ -332,11 +333,12 @@ def build_project(is_play=False, is_publish=False, is_render=False, is_render_an
 
     if state.target == 'html5':
         w, h = arm.utils.get_render_resolution(arm.utils.get_active_scene())
-        write_data.write_indexhtml(w, h)
+        write_data.write_indexhtml(w, h, is_publish)
         # Bundle files from include dir
         if os.path.isdir('include'):
+            dest  = '/html5/' if is_publish else '/debug/html5/'
             for fn in glob.iglob(os.path.join('include', '**'), recursive=False):
-                shutil.copy(fn, arm.utils.build_dir() + '/html5/' + os.path.basename(fn))
+                shutil.copy(fn, arm.utils.build_dir() + dest + os.path.basename(fn))
 
     if state.playproc == None:
         log.print_progress(50)
@@ -400,9 +402,9 @@ def get_khajs_path(in_viewport, target):
     if in_viewport:
         return arm.utils.build_dir() + '/krom/krom.js'
     elif target == 'krom':
-        return arm.utils.build_dir() + '/windowed/krom/krom.js'
+        return arm.utils.build_dir() + '/debug/krom/krom.js'
     else: # Browser
-        return arm.utils.build_dir() + '/html5/kha.js'
+        return arm.utils.build_dir() + '/debug/html5/kha.js'
 
 def play_project(in_viewport, is_render=False, is_render_anim=False):
     global scripts_mtime
@@ -497,12 +499,12 @@ def on_compiled(mode): # build, play, play_viewport, publish
             t = threading.Thread(name='localserver', target=arm.lib.server.run)
             t.daemon = True
             t.start()
-            html5_app_path = 'http://localhost:8040/' + arm.utils.build_dir() + '/html5'
+            html5_app_path = 'http://localhost:8040/' + arm.utils.build_dir() + '/debug/html5'
             webbrowser.open(html5_app_path)
         elif wrd.arm_play_runtime == 'Krom':
             krom_location, krom_path = arm.utils.krom_paths()
             os.chdir(krom_location)
-            args = [krom_path, arm.utils.get_fp_build() + '/windowed/krom', arm.utils.get_fp_build() + '/windowed/krom-resources']
+            args = [krom_path, arm.utils.get_fp_build() + '/debug/krom', arm.utils.get_fp_build() + '/debug/krom-resources']
             # TODO: Krom sound freezes on MacOS
             if arm.utils.get_os() == 'mac':
                 args.append('--nosound')

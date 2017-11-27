@@ -319,11 +319,12 @@ class Main {
 """)
 
 # Write index.html
-def write_indexhtml(w, h):
+def write_indexhtml(w, h, is_publish):
     rpdat = arm.utils.get_rp()
-    if not os.path.exists(arm.utils.build_dir() + '/html5'):
-        os.makedirs(arm.utils.build_dir() + '/html5')
-    with open(arm.utils.build_dir() + '/html5/index.html', 'w') as f:
+    dest = '/html5' if is_publish else '/debug/html5'
+    if not os.path.exists(arm.utils.build_dir() + dest):
+        os.makedirs(arm.utils.build_dir() + dest)
+    with open(arm.utils.build_dir() + dest + '/index.html', 'w') as f:
         f.write(
 """<!DOCTYPE html>
 <html>
