@@ -16,6 +16,7 @@ except ImportError:
 
 # Armory version
 arm_version = '0.1.0'
+arm_commit = '$Id$'
 
 def invalidate_mesh_cache(self, context):
     if context.object == None or context.object.data == None:
@@ -79,6 +80,7 @@ def init_properties():
     bpy.types.World.arm_recompile = bpy.props.BoolProperty(name="Recompile", description="Recompile sources on next play", default=True)
     bpy.types.World.arm_progress = bpy.props.FloatProperty(name="Building", description="Current build progress", default=100.0, min=0.0, max=100.0, soft_min=0.0, soft_max=100.0, subtype='PERCENTAGE', get=log.get_progress)
     bpy.types.World.arm_version = StringProperty(name="Version", description="Armory SDK version", default="")
+    bpy.types.World.arm_commit = StringProperty(name="Version Commit", description="Armory SDK version", default="")
     bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="", update=invalidate_compiler_cache)
     bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm", update=invalidate_compiler_cache)
     bpy.types.World.arm_project_root = StringProperty(name="Root", description="Set root folder for linked assets", default="", subtype="FILE_PATH", update=invalidate_compiler_cache)
@@ -410,6 +412,7 @@ def create_wrd():
         wrd = bpy.data.worlds.new('Arm')
         wrd.use_fake_user = True # Store data world object, add fake user to keep it alive
         wrd.arm_version = arm_version
+        wrd.arm_commit = arm_commit
 
 def init_properties_on_save():
     wrd = bpy.data.worlds['Arm']
@@ -425,12 +428,14 @@ def init_properties_on_load():
     arm.utils.fetch_script_names()
     wrd = bpy.data.worlds['Arm']
     # Outdated project
-    if bpy.data.filepath != '' and wrd.arm_version != arm_version: # Call on project load only
+    if bpy.data.filepath != '' and (wrd.arm_version != arm_version or wrd.arm_commit != arm_commit): # Call on project load only
         print('Project updated to sdk v' + arm_version)
         if arm_version == '0.1.0':
+            # TODO: Deprecated
             for lamp in bpy.data.lamps:
                 lamp.arm_shadows_bias = 1.0
         wrd.arm_version = arm_version
+        wrd.arm_commit = arm_commit
         arm.make.clean_project()
     # Set url for embedded player
     if arm.utils.with_krom():
