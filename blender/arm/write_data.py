@@ -399,7 +399,7 @@ const vec3 seaBaseColor = vec3(""" + str(round(wrd.arm_ocean_base_color[0] * 100
 const vec3 seaWaterColor = vec3(""" + str(round(wrd.arm_ocean_water_color[0] * 100) / 100) + """, """ + str(round(wrd.arm_ocean_water_color[1] * 100) / 100) + """, """ + str(round(wrd.arm_ocean_water_color[2] * 100) / 100) + """);
 const float seaFade = """ + str(round(wrd.arm_ocean_fade * 100) / 100) + """;
 """)
-        if rpdat.rp_ssgi == 'SSAO':
+        if rpdat.rp_ssgi == 'SSAO' or rpdat.rp_volumetriclight:
             scale = 0.5 if rpdat.arm_ssao_half_res else 1.0
             f.write(
 """const float ssaoSize = """ + str(round(wrd.arm_ssao_size * 100) / 100) + """;
