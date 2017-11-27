@@ -19,6 +19,7 @@ class Uniforms {
 		else if (tulink == "_smaaArea") {
 			return Scene.active.embedded.get('smaa_area.png');
 		}
+		#if arm_ltc
 		else if (tulink == "_ltcMat") {
 			if (armory.data.ConstData.ltcMatTex == null) armory.data.ConstData.initLTC();
 			return armory.data.ConstData.ltcMatTex;
@@ -27,6 +28,7 @@ class Uniforms {
 			if (armory.data.ConstData.ltcMagTex == null) armory.data.ConstData.initLTC();
 			return armory.data.ConstData.ltcMagTex;
 		}
+		#end
 		else if (tulink == "_lensTexture") {
 			return Scene.active.embedded.get('lenstexture.jpg');
 		}
@@ -38,6 +40,7 @@ class Uniforms {
 
 	public static function externalVec3Link(clink:String):iron.math.Vec4 {
 		var v:Vec4 = null;
+		#if arm_hosek
 		if (clink == "_hosekA") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
@@ -128,6 +131,7 @@ class Uniforms {
 			v.y = armory.renderpath.HosekWilkie.data.Z.y;
 			v.z = armory.renderpath.HosekWilkie.data.Z.z;
 		}
+		#end
 		return v;
 	}
 

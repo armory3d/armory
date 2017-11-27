@@ -67,32 +67,32 @@
 				{
 					"name": "lampArea0",
 					"link": "_lampArea0",
-					"ifdef": ["_PolyLight"]
+					"ifdef": ["_LTC"]
 				},
 				{
 					"name": "lampArea1",
 					"link": "_lampArea1",
-					"ifdef": ["_PolyLight"]
+					"ifdef": ["_LTC"]
 				},
 				{
 					"name": "lampArea2",
 					"link": "_lampArea2",
-					"ifdef": ["_PolyLight"]
+					"ifdef": ["_LTC"]
 				},
 				{
 					"name": "lampArea3",
 					"link": "_lampArea3",
-					"ifdef": ["_PolyLight"]
+					"ifdef": ["_LTC"]
 				},
 				{
 					"name": "sltcMat",
 					"link": "_ltcMat",
-					"ifdef": ["_PolyLight"]
+					"ifdef": ["_LTC"]
 				},
 				{
 					"name": "sltcMag",
 					"link": "_ltcMag",
-					"ifdef": ["_PolyLight"]
+					"ifdef": ["_LTC"]
 				},
 				{
 					"name": "eye",

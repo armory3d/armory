@@ -175,7 +175,8 @@ def build_node_tree(world):
     # Area lamps
     for lamp in bpy.data.lamps:
         if lamp.type == 'AREA':
-            wrd.world_defs += '_PolyLight'
+            wrd.world_defs += '_LTC'
+            assets.add_khafile_def('arm_ltc')
             break
 
     # Data will be written after render path has been processed to gather all defines
@@ -354,6 +355,7 @@ def parse_color(world, node, context, envmap_strength_const):
         envmap_strength_const['float'] *= 0.1
         
         wrd.world_defs += '_EnvSky'
+        assets.add_khafile_def('arm_hosek')
         # Append sky properties to material
         const = {}
         const['name'] = 'sunDirection'

@@ -13,7 +13,7 @@ precision mediump float;
 #ifdef _VoxelGIDirect
 	#include "../std/conetrace.glsl"
 #endif
-#ifdef _PolyLight
+#ifdef _LTC
 	#include "../std/ltc.glsl"
 #endif
 #ifndef _NoShadows
@@ -67,7 +67,7 @@ uniform int lightType;
 uniform int lightShadow;
 uniform float shadowsBias;
 uniform vec2 spotlightData;
-#ifdef _PolyLight
+#ifdef _LTC
 	uniform vec3 lampArea0;
 	uniform vec3 lampArea1;
 	uniform vec3 lampArea2;
@@ -173,7 +173,7 @@ void main() {
 	float facspec = min(metrough.x * 3.0, 1.0);
 #endif
 
-#ifdef _PolyLight
+#ifdef _LTC
 	if (lightType == 3) { // Area
 		float theta = acos(dotNV);
 		vec2 tuv = vec2(metrough.y, theta / (0.5 * PI));
@@ -217,7 +217,7 @@ void main() {
 #endif
 #endif
 
-#ifdef _PolyLight
+#ifdef _LTC
 	}
 #endif
 	

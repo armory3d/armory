@@ -645,7 +645,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
     frag.write('vec3 f0 = surfaceF0(basecol, metallic);')
     frag.write('vec3 direct;')
 
-    if '_PolyLight' in wrd.world_defs:
+    if '_LTC' in wrd.world_defs:
         frag.add_include('../../Shaders/std/ltc.glsl')
         frag.add_uniform('sampler2D sltcMat', link='_ltcMat')
         frag.add_uniform('sampler2D sltcMag', link='_ltcMag')
@@ -670,7 +670,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
     frag.write('direct = lambertDiffuseBRDF(albedo, dotNL);')
     frag.write('direct += specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);')
 
-    if '_PolyLight' in wrd.world_defs:
+    if '_LTC' in wrd.world_defs:
         frag.write('}')
         frag.tab -= 1
 

@@ -82,7 +82,7 @@ def make_gi(context_id):
     # frag.write('    }')
     # frag.write('}')
 
-    # if '_PolyLight' in wrd.world_defs:
+    # if '_LTC' in wrd.world_defs:
     #     frag.add_include('../../Shaders/std/ltc.glsl')
     #     frag.add_uniform('sampler2D sltcMat', link='_ltcMat')
     #     frag.add_uniform('sampler2D sltcMag', link='_ltcMag')
