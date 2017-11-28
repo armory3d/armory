@@ -17,7 +17,7 @@ class ThirdPersonController extends CameraController {
 	var animObject:String;
 	var idleAction:String;
 	var runAction:String;
-	var state = 0; // Idle, run
+	var currentAction:String;
 	var arm:Object;
 
 	public function new(animObject = "", idle = "idle", run = "run") {
@@ -26,6 +26,7 @@ class ThirdPersonController extends CameraController {
 		this.animObject = animObject;
 		this.idleAction = idle;
 		this.runAction = run;
+		currentAction = idleAction;
 
 		iron.Scene.active.notifyOnInit(init);
 	}
@@ -85,19 +86,18 @@ class ThirdPersonController extends CameraController {
 		body.setLinearVelocity(0.0, 0.0, btvec.z() - 1.0);
 
 		if (moveForward || moveBackward || moveLeft || moveRight) {
-			if (state != 1) {
+			if (currentAction != runAction) {
 				arm.animation.play(runAction, null, 0.2);
-				state = 1;		
+				currentAction = runAction;	
 			}
-			arm.animation.resume();
 			dir.mult(-4 * 0.7);
 			body.activate();
 			body.setLinearVelocity(dir.x, dir.y, btvec.z() - 1.0);
 		}
 		else {
-			if (state != 0) {
+			if (currentAction != idleAction) {
 				arm.animation.play(idleAction, null, 0.2);
-				state = 0;
+				currentAction = idleAction;
 			}
 		}
 
