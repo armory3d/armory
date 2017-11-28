@@ -52,7 +52,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     global exporter
     wrd = bpy.data.worlds['Arm']
 
-    print('\nArmory v' + wrd.arm_version)
+    print('\nArmory v{0} ({1})'.format(wrd.arm_version, wrd.arm_commit))
     print('OS: ' + arm.utils.get_os() + ', Target: ' + state.target + ', GAPI: ' + arm.utils.get_gapi())
 
     # Clean compiled variants if cache is disabled
