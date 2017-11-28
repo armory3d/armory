@@ -118,6 +118,7 @@ project.addSources('Sources');
             f.write("project.addParameter('-dce full');\n")
 
         if in_viewport:
+            assets.add_khafile_def('arm_viewport')
             import_traits.append('armory.trait.internal.Bridge')
 
         import_traits = list(set(import_traits))
