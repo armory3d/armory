@@ -277,6 +277,7 @@ class RigidBody extends Trait {
 	}
 
 	public function syncTransform() {
+		transform.buildMatrix();
 		var trans = BtTransform.create();
 		trans.setOrigin(BtVector3.create(transform.worldx(), transform.worldy(), transform.worldz()));
 		var rot = transform.world.getQuat();
