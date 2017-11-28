@@ -22,7 +22,7 @@ def krom_trace(text):
     if len(txt) > 1 and txt[1].startswith('__arm'):
         bridge.parse_operator(txt[1])
     else:
-        print_info(text)
+        print(text)
 
 def print_info(text):
     global tag_redraw

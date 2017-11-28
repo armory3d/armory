@@ -24,6 +24,19 @@ class SpaceArmory extends Trait {
 		super();
 		
 		notifyOnInit(init);
+
+		#if (sys_krom && !arm_viewport)
+		// TODO: On Windows Krom does not output to stdout, redirect to stderr..
+		if (Krom.systemId() == "Windows") {
+			var haxeTrace = haxe.Log.trace;
+			function kromTrace(v:Dynamic, ?inf:haxe.PosInfos) {
+				var str = Std.string(v);
+				Krom.sysCommand('>&2 echo "$str"');
+				haxeTrace(v, inf);
+			}
+			haxe.Log.trace = kromTrace;
+		}
+		#end
 	}
 
 	function init() {
