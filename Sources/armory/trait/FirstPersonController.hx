@@ -3,6 +3,7 @@ package armory.trait;
 import iron.math.Vec4;
 import iron.system.Input;
 import iron.object.Object;
+import iron.object.CameraObject;
 import armory.trait.physics.PhysicsWorld;
 import armory.trait.internal.CameraController;
 
@@ -23,7 +24,7 @@ class FirstPersonController extends CameraController {
 	}
 	
 	function init() {
-		head = object.getChild("Head");
+		head = object.getChildOfType(CameraObject);
 
 		PhysicsWorld.active.notifyOnPreUpdate(preUpdate);
 		notifyOnUpdate(update);
