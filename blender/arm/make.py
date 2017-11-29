@@ -233,6 +233,11 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
         cmd.append('-g')
         cmd.append(arm.utils.get_gapi())
 
+    # Kha defaults to 110
+    if arm.utils.get_os() == 'linux' and (kha_target_name == 'krom' or kha_target_name == '') and state.in_viewport == False:
+        cmd.append('--shaderversion')
+        cmd.append('330')
+
     cmd.append('--to')
     if (kha_target_name == 'krom' and not state.in_viewport) or (kha_target_name == 'html5' and not state.is_publish):
         cmd.append(arm.utils.build_dir() + '/debug')
