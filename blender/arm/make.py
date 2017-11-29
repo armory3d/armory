@@ -52,7 +52,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     global exporter
     wrd = bpy.data.worlds['Arm']
 
-    print('\nArmory v' + wrd.arm_version)
+    print('\nArmory v{0} ({1})'.format(wrd.arm_version, wrd.arm_commit))
     print('OS: ' + arm.utils.get_os() + ', Target: ' + state.target + ', GAPI: ' + arm.utils.get_gapi())
 
     # Clean compiled variants if cache is disabled
@@ -232,6 +232,11 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
     else:
         cmd.append('-g')
         cmd.append(arm.utils.get_gapi())
+
+    # Kha defaults to 110
+    if arm.utils.get_os() == 'linux' and (kha_target_name == 'krom' or kha_target_name == '') and state.in_viewport == False:
+        cmd.append('--shaderversion')
+        cmd.append('330')
 
     cmd.append('--to')
     if (kha_target_name == 'krom' and not state.in_viewport) or (kha_target_name == 'html5' and not state.is_publish):
