@@ -309,8 +309,13 @@ class Main {
                     object.addTrait(new armory.trait.internal.SpaceArmory());
 """)
 
+        # Detect custom render path
+        pathpack = 'armory'
+        if os.path.isfile(arm.utils.get_fp() + '/Sources/' + wrd.arm_project_package + '/renderpath/RenderPathCreator.hx'):
+            pathpack = wrd.arm_project_package
+
         f.write("""
-                    iron.RenderPath.setActive(armory.renderpath.RenderPathCreator.get());
+                    iron.RenderPath.setActive(""" + pathpack + """.renderpath.RenderPathCreator.get());
 """)
 
         f.write("""
