@@ -1,3 +1,7 @@
+import os
+
+from . import arm.utils
+
 def export_grease_pencils(self):
     gpRef = self.scene.grease_pencil
     if gpRef == None or self.scene.arm_gp_export == False:
