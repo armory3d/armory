@@ -1,6 +1,6 @@
 import os
 
-from . import arm.utils
+from .arm.utils import build_dir, write_arm
 
 def export_grease_pencils(self):
     gpRef = self.scene.grease_pencil
@@ -15,11 +15,12 @@ def export_grease_pencils(self):
         ext = '.zip'
     self.output['grease_pencil_ref'] = 'greasepencil_' + gpRef.name + ext + '/' + gpRef.name
 
-    assets.add_shader_data(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil.arm')
-    assets.add_shader(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil.frag.glsl')
-    assets.add_shader(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil.vert.glsl')
-    assets.add_shader(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil_shadows.frag.glsl')
-    assets.add_shader(arm.utils.build_dir() + '/compiled/Shaders/grease_pencil/grease_pencil_shadows.vert.glsl')
+    grease_pencil_dir = build_dir() + '/compiled/Shaders/grease_pencil/
+    assets.add_shader_data(grease_pencil_dir + 'grease_pencil.arm')
+    assets.add_shader(grease_pencil_dir + 'grease_pencil.frag.glsl')
+    assets.add_shader(grease_pencil_dir + 'grease_pencil.vert.glsl')
+    assets.add_shader(grease_pencil_dir + 'grease_pencil_shadows.frag.glsl')
+    assets.add_shader(grease_pencil_dir + 'grease_pencil_shadows.vert.glsl')
 
     if gpRef.arm_cached == True and os.path.exists(fp):
         return
@@ -27,7 +28,7 @@ def export_grease_pencils(self):
     gpo = self.post_export_grease_pencil(gpRef)
     gp_obj = {}
     gp_obj['grease_pencil_datas'] = [gpo]
-    arm.utils.write_arm(fp, gp_obj)
+    write_arm(fp, gp_obj)
     gpRef.arm_cached = True
 
 def get_greasepencils_file_path(self, object_id, compressed=False):
