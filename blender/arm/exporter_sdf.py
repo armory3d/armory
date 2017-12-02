@@ -1,3 +1,7 @@
+import os
+import shutil
+import subprocess
+
 def export_sdf():
     # if hasattr(bobject.data, 'arm_sdfgen') and bobject.data.arm_sdfgen:
         # o['sdf_ref'] = 'sdf_' + oid
