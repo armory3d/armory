@@ -15,7 +15,7 @@ def export_grease_pencils(self):
         ext = '.zip'
     self.output['grease_pencil_ref'] = 'greasepencil_' + gpRef.name + ext + '/' + gpRef.name
 
-    grease_pencil_dir = build_dir() + '/compiled/Shaders/grease_pencil/
+    grease_pencil_dir = build_dir() + '/compiled/Shaders/grease_pencil/'
     assets.add_shader_data(grease_pencil_dir + 'grease_pencil.arm')
     assets.add_shader(grease_pencil_dir + 'grease_pencil.frag.glsl')
     assets.add_shader(grease_pencil_dir + 'grease_pencil.vert.glsl')
