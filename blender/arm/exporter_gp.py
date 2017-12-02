@@ -1,5 +1,6 @@
 import os
 
+from .arm import assets
 from .arm.utils import build_dir, write_arm
 
 def export_grease_pencils(self):
