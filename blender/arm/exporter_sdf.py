@@ -5,7 +5,7 @@ import subprocess
 from .arm import assets
 from .arm.utils import get_sdk_path, krom_paths
 
-def export_sdf():
+def export_sdf(bobject, fp):
     # if hasattr(bobject.data, 'arm_sdfgen') and bobject.data.arm_sdfgen:
         # o['sdf_ref'] = 'sdf_' + oid
 
