@@ -1355,6 +1355,16 @@ class ArmSyncProxyButton(bpy.types.Operator):
             print('Armory: Proxy objects synchronized')
         return{'FINISHED'}
 
+class ArmPrintTraitsButton(bpy.types.Operator):
+    bl_idname = 'arm.print_traits'
+    bl_label = 'Print Traits'
+    def execute(self, context):
+        for o in bpy.data.objects:
+            for t in o.arm_traitlist:
+                tname = t.nodes_name_prop if t.type_prop == 'Logic Nodes' else t.class_name_prop
+                print('Object {0} - {1}'.format(o.name, tname))
+        return{'FINISHED'}
+
 def register():
     bpy.utils.register_class(ObjectPropsPanel)
     bpy.utils.register_class(ModifiersPropsPanel)
@@ -1399,6 +1409,7 @@ def register():
     bpy.utils.register_class(ArmProxyToggleAllButton)
     bpy.utils.register_class(ArmProxyApplyAllButton)
     bpy.utils.register_class(ArmSyncProxyButton)
+    bpy.utils.register_class(ArmPrintTraitsButton)
 
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
     bpy.types.INFO_HT_header.prepend(draw_info_header)
@@ -1450,3 +1461,4 @@ def unregister():
     bpy.utils.unregister_class(ArmProxyToggleAllButton)
     bpy.utils.unregister_class(ArmProxyApplyAllButton)
     bpy.utils.unregister_class(ArmSyncProxyButton)
+    bpy.utils.unregister_class(ArmPrintTraitsButton)
