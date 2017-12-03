@@ -2008,7 +2008,7 @@ class ArmoryExporter:
                 for bobject in group.objects:
                     if bobject.parent == None and bobject.arm_export:
                         # Add external linked objects
-                        if bobject.name not in scene_objects:
+                        if bobject.name not in scene_objects: # and bobject.ls_linked
                             self.process_bobject(bobject)
                             self.export_object(bobject, self.scene)
                             o['object_refs'].append(arm.utils.asset_name(bobject))
