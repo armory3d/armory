@@ -846,7 +846,10 @@ class ArmoryExporter:
                     for i in range(0, num_psys):
                         self.export_particle_system_ref(bobject.particle_systems[i], i, o)
 
-                o['dimensions'] = [bobject.dimensions[0] / bobject.scale[0], bobject.dimensions[1] / bobject.scale[1], bobject.dimensions[2] / bobject.scale[2]]
+                o['dimensions'] = [0, 0, 0]
+                for i in range(0, 3):
+                    if bobject.scale[i] != 0:
+                        o['dimensions'][i] = bobject.dimensions[i] / bobject.scale[i]
                 # Origin not in geometry center
                 if hasattr(bobject.data, 'arm_aabb'):
                     dx = bobject.data.arm_aabb[0]
