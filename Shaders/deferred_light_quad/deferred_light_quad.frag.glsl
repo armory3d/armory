@@ -44,6 +44,9 @@ vec2 lightPlane;
 	uniform mat4 LWVP;
 	#endif
 #endif
+#ifdef _SoftShadows
+	uniform sampler2D svisibility;
+#endif
 #ifdef _LampClouds
 	uniform sampler2D texClouds;
 	uniform float time;
@@ -93,6 +96,13 @@ void main() {
 
 	float visibility = 1.0;
 #ifndef _NoShadows
+
+	#ifdef _SoftShadows
+
+	visibility = texture(svisibility, texCoord).r;
+
+	#else
+
 	if (lightShadow == 1) {
 		#ifdef _CSM
 		visibility = shadowTestCascade(eye, p, shadowsBias, shadowmapSize * vec2(shadowmapCascades, 1.0));
@@ -101,6 +111,7 @@ void main() {
 		if (lPos.w > 0.0) visibility = shadowTest(lPos.xyz / lPos.w, shadowsBias, shadowmapSize);
 		#endif
 	}
+	#endif
 #endif
 
 #ifdef _VoxelGIShadow // #else

@@ -46,6 +46,9 @@ uniform sampler2D gbuffer1;
 	//!uniform sampler2D shadowMap;
 	//!uniform samplerCube shadowMapCube;
 #endif
+#ifdef _SoftShadows
+	uniform sampler2D svisibility;
+#endif
 #ifdef _DFRS
 	//!uniform sampler3D sdftex;
 #endif
@@ -125,7 +128,15 @@ void main() {
 	float dotNL = dot(n, l);
 
 	float visibility = 1.0;
+
 #ifndef _NoShadows
+
+	#ifdef _SoftShadows
+
+	visibility = texture(svisibility, texCoord).r;
+
+	#else
+
 	// TODO: merge..
 	// float cosAngle = max(1.0 - dotNL, 0.0);
 	// vec3 noff = n * shadowsBias * cosAngle;
@@ -139,7 +150,10 @@ void main() {
 	else if (lightShadow == 2) { // Cube
 		visibility = PCFCube(lp, -l, shadowsBias, lightProj, n);
 	}
+	#endif
+
 #endif
+
 	
 #ifdef _VoxelGIShadow // #else
 	#ifdef _VoxelGICam

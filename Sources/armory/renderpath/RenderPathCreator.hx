@@ -482,6 +482,40 @@ class RenderPathCreator {
 			#end
 		}
 		#end
+
+		#if rp_soft_shadows
+		{
+			path.loadShader("dilate_pass/dilate_pass/dilate_pass_x");
+			path.loadShader("dilate_pass/dilate_pass/dilate_pass_y");
+			path.loadShader("visibility_pass/visibility_pass/visibility_pass");
+			path.loadShader("blur_shadow_pass/blur_shadow_pass/blur_shadow_pass_x");
+			path.loadShader("blur_shadow_pass/blur_shadow_pass/blur_shadow_pass_y");
+			{
+				var t = new RenderTargetRaw();
+				t.name = "visa";
+				t.width = 0;
+				t.height = 0;
+				t.format = 'R16';
+				path.createRenderTarget(t);
+			}
+			{
+				var t = new RenderTargetRaw();
+				t.name = "visb";
+				t.width = 0;
+				t.height = 0;
+				t.format = 'R16';
+				path.createRenderTarget(t);
+			}
+			{
+				var t = new RenderTargetRaw();
+				t.name = "dist";
+				t.width = 0;
+				t.height = 0;
+				t.format = 'R16';
+				path.createRenderTarget(t);
+			}
+		}
+		#end
 	}
 
 	static function commands() {
@@ -626,13 +660,46 @@ class RenderPathCreator {
 			{
 				if (path.lampCastShadow()) {
 					var faces = l.data.raw.shadowmap_cube ? 6 : 1;
-					for (i in 0...faces) {
-						if (faces > 1) path.currentFace = i;
+					for (j in 0...faces) {
+						if (faces > 1) path.currentFace = j;
 						path.setTarget("shadowMap");
 						path.clearTarget(null, 1.0);
 						path.drawMeshes("shadowmap");
 					}
 					path.currentFace = -1;
+
+					// One lamp at a time for now, precompute all lamps for tiled
+					#if rp_soft_shadows
+
+					path.setTarget("visa"); // Merge using min blend
+					path.bindTarget("shadowMap", "shadowMap");
+					path.drawShader("dilate_pass/dilate_pass/dilate_pass_x");
+
+					path.setTarget("visb");
+					path.bindTarget("visa", "shadowMap");
+					path.drawShader("dilate_pass/dilate_pass/dilate_pass_y");
+
+					path.setTarget("visa", ["dist"]);
+					//if (i == 0) path.clearTarget(0x00000000);
+					path.bindTarget("visb", "dilate");
+					path.bindTarget("shadowMap", "shadowMap");
+					//path.bindTarget("_main", "gbufferD");
+					path.bindTarget("gbuffer0", "gbuffer0");
+					path.drawShader("visibility_pass/visibility_pass/visibility_pass");
+					
+
+					path.setTarget("visb");
+					path.bindTarget("visa", "tex");
+					path.bindTarget("gbuffer0", "gbuffer0");
+					path.bindTarget("dist", "dist");
+					path.drawShader("blur_shadow_pass/blur_shadow_pass/blur_shadow_pass_x");
+
+					path.setTarget("visa");
+					path.bindTarget("visb", "tex");
+					path.bindTarget("gbuffer0", "gbuffer0");
+					path.bindTarget("dist", "dist");
+					path.drawShader("blur_shadow_pass/blur_shadow_pass/blur_shadow_pass_y");
+					#end
 				}
 			}
 			#end
@@ -645,7 +712,11 @@ class RenderPathCreator {
 			#if rp_shadowmap
 			{
 				if (path.lampCastShadow()) {
+					#if rp_soft_shadows
+					path.bindTarget("visa", "svisibility");
+					#else
 					path.bindTarget("shadowMap", "shadowMap");
+					#end
 				}
 			}
 			#end

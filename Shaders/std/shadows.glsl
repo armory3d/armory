@@ -99,11 +99,15 @@ mat4 getCascadeMat(const float d, out int casi, out int casIndex) {
 
 	// Get cascade mat
 	casIndex = casi * 4;
+
 	return mat4(
 		casData[casIndex + 0],
 		casData[casIndex + 1],
 		casData[casIndex + 2],
 		casData[casIndex + 3]);
+
+	// if (casIndex == 0) return mat4(casData[0], casData[1], casData[2], casData[3]);
+	// ..
 }
 
 float shadowTestCascade(const vec3 eye, const vec3 p, const float shadowsBias, const vec2 smSize) {

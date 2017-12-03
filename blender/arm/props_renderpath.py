@@ -419,7 +419,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off'), 
                ('Auto', 'Auto', 'Auto')],
-        name="Soft Shadows", description="Percentage Closer Soft Shadows", default='Off', update=assets.invalidate_shader_cache)
+        name="Soft Shadows", description="Soft shadows with variable penumbra (spot and non-cascaded sun lamp supported)", default='Off', update=assets.invalidate_shader_cache)
     arm_ssrs = bpy.props.BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
     arm_texture_filter = EnumProperty(
         items=[('Anisotropic', 'Anisotropic', 'Anisotropic'),

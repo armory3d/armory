@@ -189,3 +189,10 @@ def build():
 
     if rpdat.rp_dynres:
         assets.add_khafile_def('rp_dynres')
+
+    if rpdat.arm_soft_shadows == 'On':
+        assets.add_shader2('dilate_pass', 'dilate_pass')
+        assets.add_shader2('visibility_pass', 'visibility_pass')
+        assets.add_shader2('blur_shadow_pass', 'blur_shadow_pass')
+        assets.add_khafile_def('rp_soft_shadows')
+        wrd.world_defs += '_SoftShadows'

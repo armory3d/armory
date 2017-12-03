@@ -1,0 +1,43 @@
+{
+	"contexts": [
+		{
+			"name": "visibility_pass",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"name": "eyeLook",
+					"link": "_cameraLook"
+				},
+				{
+					"name": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
+				},
+				{
+					"name": "shadowsBias",
+					"link": "_lampShadowsBias"
+				},
+				{
+					"name": "LWVP",
+					"link": "_biasLampWorldViewProjectionMatrix"
+				},
+				{
+					"name": "lightType",
+					"link": "_lampType",
+					"ifdef": ["_Disabled"]
+				}
+			],
+			"vertex_shader": "visibility_pass.vert.glsl",
+			"fragment_shader": "visibility_pass.frag.glsl"
+		}
+	]
+}
