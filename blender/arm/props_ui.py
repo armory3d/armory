@@ -1359,10 +1359,12 @@ class ArmPrintTraitsButton(bpy.types.Operator):
     bl_idname = 'arm.print_traits'
     bl_label = 'Print Traits'
     def execute(self, context):
-        for o in bpy.data.objects:
-            for t in o.arm_traitlist:
-                tname = t.nodes_name_prop if t.type_prop == 'Logic Nodes' else t.class_name_prop
-                print('Object {0} - {1}'.format(o.name, tname))
+        for s in bpy.data.scenes:
+            print(s.name)
+            for o in s.objects:
+                for t in o.arm_traitlist:
+                    tname = t.nodes_name_prop if t.type_prop == 'Logic Nodes' else t.class_name_prop
+                    print('Object {0} - {1}'.format(o.name, tname))
         return{'FINISHED'}
 
 def register():
