@@ -37,5 +37,5 @@ def get_output_node(node_group, from_node, output_index):
     for link in node_group.links:
         if link.from_node == from_node and link.from_socket == from_node.outputs[output_index]:
             if link.to_node.bl_idname == 'NodeReroute': # Step through reroutes
-                return find_node_by_linkFrom(node_group, link.to_node, link.to_node.inputs[0])
+                return find_node_by_link_from(node_group, link.to_node, link.to_node.inputs[0])
             return link.to_node
