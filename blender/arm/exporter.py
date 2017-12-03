@@ -1997,6 +1997,10 @@ class ArmoryExporter:
         if len(bpy.data.groups) > 0:
             self.output['groups'] = []
             for group in bpy.data.groups:
+                # Blender automatically stores physics objects in this group,
+                # can cause stuck unused objects, skip for now
+                if group.name.startswith('RigidBodyWorld'):
+                    continue
                 o = {}
                 o['name'] = group.name
                 o['object_refs'] = []
