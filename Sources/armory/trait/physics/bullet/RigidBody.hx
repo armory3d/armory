@@ -31,7 +31,6 @@ class RigidBody extends Trait {
 
 	public var body:BtRigidBodyPointer = null;
 	public var ready = false;
-	public var shapeConvexCreated:Bool;
 
 	static var nextId = 0;
 	public var id = 0;
@@ -81,8 +80,7 @@ class RigidBody extends Trait {
 
 		var _shape:BtCollisionShapePointer = null;
 		var _shapeConvex:BtConvexHullShapePointer = null;
-		shapeConvexCreated = false;
-		var _inertia = BtVector3.create(0, 0, 0);
+		var isConvex = false;
 
 		if (shape == Shape.Box) {
 			_shape = BtBoxShape.create(BtVector3.create(
@@ -93,9 +91,9 @@ class RigidBody extends Trait {
 		else if (shape == Shape.Sphere) {
 			_shape = BtSphereShape.create(withMargin(transform.dim.x / 2));
 		}
-		else if (shape == Shape.ConvexHull || shape == Shape.Mesh) { // Use convex hull for mesh for now
+		else if (shape == Shape.ConvexHull || (shape == Shape.Mesh && mass > 0)) {
 			_shapeConvex = BtConvexHullShape.create();
-			shapeConvexCreated = true;
+			isConvex = true;
 			addPointsToConvexHull(_shapeConvex, transform.scale, collisionMargin);
 		}
 		else if (shape == Shape.Cone) {
@@ -115,15 +113,15 @@ class RigidBody extends Trait {
 				withMargin(r), // Radius
 				withMargin(transform.dim.z - r * 2)); // Height between 2 sphere centers
 		}
-		//else if (shape == SHAPE_TERRAIN) {
-			// var data:Array<Dynamic> = [];
-			// _shape = BtHeightfieldTerrainShape.create(3, 3, data, 1, -10, 10, 2, 0, true);
-		//}
-		else if (shape == Shape.StaticMesh || shape == Shape.Terrain) {
+		else if (shape == Shape.Mesh) {
 			var meshInterface = BtTriangleMesh.create(true, true);
 			fillTriangleMesh(meshInterface, transform.scale);
 			_shape = BtBvhTriangleMeshShape.create(meshInterface, true, true);
 		}
+		//else if (shape == SHAPE_TERRAIN) {
+			// var data:Array<Dynamic> = [];
+			// _shape = BtHeightfieldTerrainShape.create(3, 3, data, 1, -10, 10, 2, 0, true);
+		//}
 
 		var _transform = BtTransform.create();
 		_transform.setIdentity();
@@ -135,15 +133,14 @@ class RigidBody extends Trait {
 		_centerOfMassOffset.setIdentity();
 		_motionState = BtDefaultMotionState.create(_transform, _centerOfMassOffset);
 
-		if (!shapeConvexCreated) {
-			if (shape != Shape.StaticMesh && shape != Shape.Terrain) {
-				_shape.calculateLocalInertia(mass, _inertia);
-			}
+		var _inertia = BtVector3.create(0, 0, 0);
+		if (!isConvex) {
+			if (mass > 0) _shape.calculateLocalInertia(mass, _inertia);
 			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shape, _inertia);
 			body = BtRigidBody.create(_bodyCI);
 		}
 		else {
-			_shapeConvex.calculateLocalInertia(mass, _inertia);
+			if (mass > 0) _shapeConvex.calculateLocalInertia(mass, _inertia);
 			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shapeConvex, _inertia);
 			body = BtRigidBody.create(_bodyCI);
 		}
@@ -330,7 +327,6 @@ class RigidBody extends Trait {
 	var Cylinder = 5;
 	var Capsule = 6;
 	var Terrain = 7;
-	var StaticMesh = 8;
 }
 
 @:enum abstract ActivationState(Int) from Int to Int {

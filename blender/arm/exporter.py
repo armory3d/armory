@@ -2285,18 +2285,18 @@ class ArmoryExporter:
             elif rb.collision_shape == 'CONVEX_HULL':
                 shape = 2
             elif rb.collision_shape == 'MESH':
-                if rb.enabled:
-                    shape = 3 # Mesh
-                else:
-                    shape = 8 # Static Mesh
+                shape = 3
             elif rb.collision_shape == 'CONE':
                 shape = 4
             elif rb.collision_shape == 'CYLINDER':
                 shape = 5
             elif rb.collision_shape == 'CAPSULE':
                 shape = 6
+            #elif rb.collision_shape_terrain:
+            #   shape = 7
             body_mass = rb.mass
-            if not rb.enabled or (rb.type == 'PASSIVE' and not rb.kinematic):
+            is_static = not rb.enabled or (rb.type == 'PASSIVE' and not rb.kinematic)
+            if is_static:
                 body_mass = 0
             x = {}
             x['type'] = 'Script'
