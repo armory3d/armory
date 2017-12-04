@@ -11,7 +11,10 @@ class ArrayGetNode extends LogicNode {
 		var i:Int = inputs[1].get();
 		if (i < 0) i = ar.length + i;
 		if (i < 0 || i > ar.length - 1) {
-			trace("Error: Array Get - index out of range");
+			var className = Type.getClassName(Type.getClass(tree));
+			var traitName = className.substring(className.lastIndexOf(".") + 1);
+			var objectName = tree.object.name;
+			trace('Logic error (object $objectName, trait: $traitName): Array Get - index out of range');
 			return null;
 		}
 		return ar[i];
