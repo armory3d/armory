@@ -10,8 +10,6 @@ out float fragColor;
 
 uniform vec2 step;
 
-const int penumbraScale = 1;
-
 void main() {
 	fragColor = 1.0;
 	const vec2 smStep = 1.0 / shadowmapSize;

@@ -443,6 +443,12 @@ const float ssrJitter = """ + str(round(wrd.arm_ssr_jitter * 100) / 100) + """;
 """const float ssrsRayStep = """ + str(round(wrd.arm_ssrs_ray_step * 100) / 100) + """;
 """)
 
+        if rpdat.arm_soft_shadows == 'On':
+            f.write(
+"""const int penumbraScale = """ + str(rpdat.arm_soft_shadows_penumbra) + """;
+const float penumbraDistance = """ + str(rpdat.arm_soft_shadows_distance) + """;
+""")
+
         if rpdat.rp_volumetriclight:
             f.write(
 """const float volumAirTurbidity = """ + str(round(wrd.arm_volumetric_light_air_turbidity * 100) / 100) + """;

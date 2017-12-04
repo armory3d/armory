@@ -547,7 +547,6 @@ class RenderPathCreator {
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.drawShader("visibility_pass/visibility_pass/visibility_pass");
 		
-
 		path.setTarget("visb");
 		path.bindTarget("visa", "tex");
 		path.bindTarget("gbuffer0", "gbuffer0");

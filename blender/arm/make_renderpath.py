@@ -196,3 +196,5 @@ def build():
         assets.add_shader2('blur_shadow_pass', 'blur_shadow_pass')
         assets.add_khafile_def('rp_soft_shadows')
         wrd.world_defs += '_SoftShadows'
+        if rpdat.arm_soft_shadows_penumbra != 1:
+            wrd.world_defs += '_PenumbraScale'

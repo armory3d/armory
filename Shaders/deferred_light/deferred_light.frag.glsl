@@ -43,11 +43,12 @@ uniform sampler2D gbuffer1;
 
 // TODO: separate shaders
 #ifndef _NoShadows
-	//!uniform sampler2D shadowMap;
-	//!uniform samplerCube shadowMapCube;
-#endif
-#ifdef _SoftShadows
-	uniform sampler2D svisibility;
+	#ifdef _SoftShadows
+		uniform sampler2D svisibility;
+	#else
+		//!uniform sampler2D shadowMap;
+		//!uniform samplerCube shadowMapCube;
+	#endif
 #endif
 #ifdef _DFRS
 	//!uniform sampler3D sdftex;

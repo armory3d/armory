@@ -45,7 +45,7 @@ void main() {
     // Distance
     float d = texture(dilate, lPos.xy).r;
     fragColor[1] = max((lPos.z - d), 0.0);
-    fragColor[1] *= 200;
+    fragColor[1] *= 100 * penumbraDistance;
 
     // Mask non-occluded pixels
     // fragColor.b = mask;

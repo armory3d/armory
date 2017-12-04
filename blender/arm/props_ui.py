@@ -1006,6 +1006,9 @@ class ArmRenderPathPanel(bpy.types.Panel):
 
             layout.separator()
             layout.prop(rpdat, 'arm_soft_shadows')
+            if rpdat.arm_soft_shadows != 'Off':
+                layout.prop(rpdat, 'arm_soft_shadows_penumbra')
+                layout.prop(rpdat, 'arm_soft_shadows_distance')
             layout.prop(rpdat, 'arm_samples_per_pixel')
             layout.prop(rpdat, 'arm_texture_filter')
             layout.prop(rpdat, "arm_diffuse_model")

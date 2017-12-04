@@ -37,15 +37,16 @@ vec2 lightPlane;
 #endif
 
 #ifndef _NoShadows
-	//!uniform sampler2D shadowMap;
-	#ifdef _CSM
-	//!uniform vec4 casData[shadowmapCascades * 4 + 4];
+	#ifdef _SoftShadows
+		uniform sampler2D svisibility;
 	#else
-	uniform mat4 LWVP;
+		//!uniform sampler2D shadowMap;
+		#ifdef _CSM
+		//!uniform vec4 casData[shadowmapCascades * 4 + 4];
+		#else
+		uniform mat4 LWVP;
+		#endif
 	#endif
-#endif
-#ifdef _SoftShadows
-	uniform sampler2D svisibility;
 #endif
 #ifdef _LampClouds
 	uniform sampler2D texClouds;
