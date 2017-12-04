@@ -108,8 +108,8 @@ def update_preset(self, context):
         rpdat.arm_diffuse_model = 'Lambert'
     elif self.rp_preset == 'Max (Render)':
         rpdat.rp_renderer = 'Deferred'
-        rpdat.rp_shadowmap = '4096'
-        rpdat.rp_shadowmap_cascades = '4'
+        rpdat.rp_shadowmap = '8192'
+        rpdat.rp_shadowmap_cascades = '1'
         rpdat.rp_translucency_state = 'Auto'
         rpdat.rp_overlays_state = 'Auto'
         rpdat.rp_decals_state = 'Auto'

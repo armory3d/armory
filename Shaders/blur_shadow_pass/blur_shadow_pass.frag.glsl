@@ -40,7 +40,7 @@ void main() {
 	fragColor = sm * blurWeights[0];
 	float weight = blurWeights[0];
 	float d = texture(dist, texCoord).r;
-	int numTaps = min(int(d * 10 * penumbraScale), 10 * penumbraScale);
+	int numTaps = clamp(int(d * 10 * penumbraScale), 2, 10 * penumbraScale);
 	#ifdef _PenumbraScale
 	for (int i = 1; i < numTaps; ++i) weight += doBlur(blurWeights[int(i / penumbraScale)], i, nor, texCoord);
 	#else
