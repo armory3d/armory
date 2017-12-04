@@ -136,8 +136,8 @@ class ArmoryExporter:
             return shape_keys
         return None
 
-    def find_node(self, name):
-        for bobject_ref in self.bobjectArray.items():
+    def find_bone(self, name):
+        for bobject_ref in self.bobjectBoneArray.items():
             if bobject_ref[0].name == name:
                 return bobject_ref
         return None
@@ -234,7 +234,7 @@ class ArmoryExporter:
         return tangent
 
     def export_bone(self, armature, bone, scene, o, action):
-        bobjectRef = self.bobjectArray.get(bone)
+        bobjectRef = self.bobjectBoneArray.get(bone)
 
         if bobjectRef:
             o['type'] = structIdentifier[bobjectRef["objectType"]]
@@ -566,7 +566,7 @@ class ArmoryExporter:
 
     def process_bone(self, bone):
         if ArmoryExporter.export_all_flag or bone.select:
-            self.bobjectArray[bone] = {"objectType" : NodeTypeBone, "structName" : bone.name}
+            self.bobjectBoneArray[bone] = {"objectType" : NodeTypeBone, "structName" : bone.name}
 
         for subbobject in bone.children:
             self.process_bone(subbobject)
@@ -597,7 +597,7 @@ class ArmoryExporter:
                 armature = bobjectRef[0].find_armature()
                 if armature:
                     for bone in armature.data.bones:
-                        boneRef = self.find_node(bone.name)
+                        boneRef = self.find_bone(bone.name)
                         if boneRef:
                             # If an object is used as a bone, then we force its type to be a bone
                             boneRef[1]["objectType"] = NodeTypeBone
@@ -1032,7 +1032,7 @@ class ArmoryExporter:
             log.warn(bobject.name + ' - ' + str(bone_count) + ' bones found, exceeds maximum of ' + str(max_bones) + ' bones defined - raise the value in Camera Data - Armory Render Props - Max Bones')
 
         for i in range(bone_count):
-            boneRef = self.find_node(bone_array[i].name)
+            boneRef = self.find_bone(bone_array[i].name)
             if boneRef:
                 oskel['bone_ref_array'].append(boneRef[1]["structName"])
             else:
@@ -1118,7 +1118,7 @@ class ArmoryExporter:
     #     bone_array = armature.data.bones
     #     bone_count = len(bone_array)
     #     for i in range(bone_count):
-    #         boneRef = self.find_node(bone_array[i].name)
+    #         boneRef = self.find_bone(bone_array[i].name)
     #         if boneRef:
     #             oskel['bone_ref_array'].append(boneRef[1]["structName"])
     #         else:
@@ -1919,6 +1919,7 @@ class ArmoryExporter:
             self.output['capture_info']['frame_end'] = self.scene.frame_end
 
         self.bobjectArray = {}
+        self.bobjectBoneArray = {}
         self.meshArray = {}
         self.lampArray = {}
         self.cameraArray = {}
