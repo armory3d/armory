@@ -518,46 +518,55 @@ class RenderPathCreator {
 		#end
 	}
 
+	static function drawShadowMap(l:iron.object.LampObject) {
+		var faces = l.data.raw.shadowmap_cube ? 6 : 1;
+		for (j in 0...faces) {
+			if (faces > 1) path.currentFace = j;
+			path.setTarget("shadowMap");
+			path.clearTarget(null, 1.0);
+			path.drawMeshes("shadowmap");
+		}
+		path.currentFace = -1;
+
+		// One lamp at a time for now, precompute all lamps for tiled
+		#if rp_soft_shadows
+
+		path.setTarget("visa"); // Merge using min blend
+		path.bindTarget("shadowMap", "shadowMap");
+		path.drawShader("dilate_pass/dilate_pass/dilate_pass_x");
+
+		path.setTarget("visb");
+		path.bindTarget("visa", "shadowMap");
+		path.drawShader("dilate_pass/dilate_pass/dilate_pass_y");
+
+		path.setTarget("visa", ["dist"]);
+		//if (i == 0) path.clearTarget(0x00000000);
+		path.bindTarget("visb", "dilate");
+		path.bindTarget("shadowMap", "shadowMap");
+		//path.bindTarget("_main", "gbufferD");
+		path.bindTarget("gbuffer0", "gbuffer0");
+		path.drawShader("visibility_pass/visibility_pass/visibility_pass");
+		
+
+		path.setTarget("visb");
+		path.bindTarget("visa", "tex");
+		path.bindTarget("gbuffer0", "gbuffer0");
+		path.bindTarget("dist", "dist");
+		path.drawShader("blur_shadow_pass/blur_shadow_pass/blur_shadow_pass_x");
+
+		path.setTarget("visa");
+		path.bindTarget("visb", "tex");
+		path.bindTarget("gbuffer0", "gbuffer0");
+		path.bindTarget("dist", "dist");
+		path.drawShader("blur_shadow_pass/blur_shadow_pass/blur_shadow_pass_y");
+		#end
+	}
+
 	static function commands() {
 
 		#if rp_dynres
 		{
 			DynamicResolutionScale.run(path);
-		}
-		#end
-
-		#if (rp_gi != "Off")
-		{
-			#if ((rp_shadowmap) && (rp_gi == "Voxel GI"))
-			{
-				if (path.lampCastShadow() && iron.Scene.active.lamps.length > 0) {
-					var l = iron.Scene.active.lamps[0];
-					var faces = l.data.raw.shadowmap_cube ? 6 : 1;
-					for (i in 0...faces) {
-						if (faces > 1) path.currentFace = i;
-						path.setTarget("shadowMap");
-						path.clearTarget(null, 1.0);
-						path.drawMeshes("shadowmap");
-					}
-					path.currentFace = -1;
-				}
-			}
-			#end
-			
-			if (path.voxelize()) {
-				path.clearImage("voxels", 0x00000000);
-				path.setTarget("");
-				var res = getVoxelRes();
-				path.setViewport(res, res);
-				path.bindTarget("voxels", "voxels");
-				#if ((rp_shadowmap) && (rp_gi == "Voxel GI"))
-				{
-					path.bindTarget("shadowMap", "shadowMap");
-				}
-				#end
-				path.drawMeshes("voxel");
-				path.generateMipmaps("voxels");
-			}
 		}
 		#end
 
@@ -632,6 +641,34 @@ class RenderPathCreator {
 		}
 		#end
 
+		// Voxels
+		#if (rp_gi != "Off")
+		{
+			#if ((rp_shadowmap) && (rp_gi == "Voxel GI"))
+			{
+				if (path.lampCastShadow() && iron.Scene.active.lamps.length > 0) {
+					drawShadowMap(iron.Scene.active.lamps[0]);
+				}
+			}
+			#end
+			
+			if (path.voxelize()) {
+				path.clearImage("voxels", 0x00000000);
+				path.setTarget("");
+				var res = getVoxelRes();
+				path.setViewport(res, res);
+				path.bindTarget("voxels", "voxels");
+				#if ((rp_shadowmap) && (rp_gi == "Voxel GI"))
+				{
+					path.bindTarget("shadowMap", "shadowMap");
+				}
+				#end
+				path.drawMeshes("voxel");
+				path.generateMipmaps("voxels");
+			}
+		}
+		#end
+
 		// Indirect
 		path.setTarget("tex");
 		path.bindTarget("_main", "gbufferD");
@@ -659,47 +696,7 @@ class RenderPathCreator {
 			#if ((rp_shadowmap) && (rp_gi != "Voxel GI"))
 			{
 				if (path.lampCastShadow()) {
-					var faces = l.data.raw.shadowmap_cube ? 6 : 1;
-					for (j in 0...faces) {
-						if (faces > 1) path.currentFace = j;
-						path.setTarget("shadowMap");
-						path.clearTarget(null, 1.0);
-						path.drawMeshes("shadowmap");
-					}
-					path.currentFace = -1;
-
-					// One lamp at a time for now, precompute all lamps for tiled
-					#if rp_soft_shadows
-
-					path.setTarget("visa"); // Merge using min blend
-					path.bindTarget("shadowMap", "shadowMap");
-					path.drawShader("dilate_pass/dilate_pass/dilate_pass_x");
-
-					path.setTarget("visb");
-					path.bindTarget("visa", "shadowMap");
-					path.drawShader("dilate_pass/dilate_pass/dilate_pass_y");
-
-					path.setTarget("visa", ["dist"]);
-					//if (i == 0) path.clearTarget(0x00000000);
-					path.bindTarget("visb", "dilate");
-					path.bindTarget("shadowMap", "shadowMap");
-					//path.bindTarget("_main", "gbufferD");
-					path.bindTarget("gbuffer0", "gbuffer0");
-					path.drawShader("visibility_pass/visibility_pass/visibility_pass");
-					
-
-					path.setTarget("visb");
-					path.bindTarget("visa", "tex");
-					path.bindTarget("gbuffer0", "gbuffer0");
-					path.bindTarget("dist", "dist");
-					path.drawShader("blur_shadow_pass/blur_shadow_pass/blur_shadow_pass_x");
-
-					path.setTarget("visa");
-					path.bindTarget("visb", "tex");
-					path.bindTarget("gbuffer0", "gbuffer0");
-					path.bindTarget("dist", "dist");
-					path.drawShader("blur_shadow_pass/blur_shadow_pass/blur_shadow_pass_y");
-					#end
+					drawShadowMap(l);
 				}
 			}
 			#end
