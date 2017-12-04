@@ -892,22 +892,22 @@ class ArmoryExporter:
                 o['data_ref'] = self.speakerArray[objref]["structName"]
 
             # Export the transform. If object is animated, then animation tracks are exported here
-            if bobject.type != 'ARMATURE' and bobject.animation_data and bobject.animation_data.action:
+            if bobject.type != 'ARMATURE' and bobject.animation_data != None:
                 action = bobject.animation_data.action
                 export_actions = [action]
                 for track in bobject.animation_data.nla_tracks:
                     if track.strips == None:
                         continue
                     for strip in track.strips:
-                        if strip.action == None:
-                            continue
-                        if strip.action.name == action.name:
+                        if strip.action == None or strip.action in export_actions:
                             continue
                         export_actions.append(strip.action)
                 orig_action = action
                 for a in export_actions:
                     bobject.animation_data.action = a
                     self.export_object_transform(bobject, scene, o)
+                if len(export_actions) >= 2 and export_actions[0] == None: # No action assigned
+                    o['object_actions'].insert(0, 'null')
                 bobject.animation_data.action = orig_action
             else:
                 self.export_object_transform(bobject, scene, o)
