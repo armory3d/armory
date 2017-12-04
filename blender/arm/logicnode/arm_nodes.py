@@ -1,6 +1,7 @@
 import bpy.types
 from bpy.props import *
 from nodeitems_utils import NodeItem
+import arm.utils
 
 nodes = []
 category_items = {}
@@ -40,6 +41,11 @@ class ArmObjectSocket(bpy.types.NodeSocket):
     bl_label = 'Object Socket'
     default_value = StringProperty(name='Object', default='')
 
+    def get_default_value(self):
+        if self.default_value == '':
+            return ''
+        return arm.utils.asset_name(bpy.data.objects[self.default_value])
+
     def __init__(self):
         global object_sockets
         # Buckle up..
@@ -77,6 +83,10 @@ class ArmAnimActionSocket(bpy.types.NodeSocket):
     bl_idname = 'ArmNodeSocketAnimAction'
     bl_label = 'Action Socket'
     default_value = StringProperty(name='Action', default='')
+
+    def get_default_value(self):
+        name = arm.utils.asset_name(bpy.data.actions[self.default_value])
+        return arm.utils.safestr(name)
 
     def draw(self, context, layout, node, text):
         if self.is_output:
