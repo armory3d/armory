@@ -33,12 +33,28 @@ class CameraController extends Trait {
 
 		notifyOnUpdate(function() {
 			var keyboard = Input.getKeyboard();
-			moveForward = keyboard.down("w");
-			moveRight = keyboard.down("d");
-			moveBackward = keyboard.down("s");
-			moveLeft = keyboard.down("a");
+			moveForward = keyboard.down(keyUp);
+			moveRight = keyboard.down(keyRight);
+			moveBackward = keyboard.down(keyDown);
+			moveLeft = keyboard.down(keyLeft);
 			jump = keyboard.started("space");
 		});
 	}
+
+	#if arm_azerty
+	static inline var keyUp = 'z';
+	static inline var keyDown = 's';
+	static inline var keyLeft = 'q';
+	static inline var keyRight = 'd';
+	static inline var keyStrafeUp = 'e';
+	static inline var keyStrafeDown = 'a';
+	#else
+	static inline var keyUp = 'w';
+	static inline var keyDown = 's';
+	static inline var keyLeft = 'a';
+	static inline var keyRight = 'd';
+	static inline var keyStrafeUp = 'e';
+	static inline var keyStrafeDown = 'q';
+	#end
 #end
 }

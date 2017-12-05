@@ -123,10 +123,10 @@ class VehicleBody extends Trait {
 		if (vehicle == null) return;
 
 		var keyboard = armory.system.Input.getKeyboard();
-		var forward = keyboard.down("w");
-		var backward = keyboard.down("s");
-		var left = keyboard.down("a");
-		var right = keyboard.down("d");
+		var forward = keyboard.down(keyUp);
+		var backward = keyboard.down(keyDown);
+		var left = keyboard.down(keyLeft);
+		var right = keyboard.down(keyRight);
 		var brake = keyboard.down("space");
 
 		if (forward) {
@@ -220,6 +220,22 @@ class VehicleBody extends Trait {
 
 		return body;
 	}
+
+	#if arm_azerty
+	static inline var keyUp = 'z';
+	static inline var keyDown = 's';
+	static inline var keyLeft = 'q';
+	static inline var keyRight = 'd';
+	static inline var keyStrafeUp = 'e';
+	static inline var keyStrafeDown = 'a';
+	#else
+	static inline var keyUp = 'w';
+	static inline var keyDown = 's';
+	static inline var keyLeft = 'a';
+	static inline var keyRight = 'd';
+	static inline var keyStrafeUp = 'e';
+	static inline var keyStrafeDown = 'q';
+	#end
 #end
 }
 

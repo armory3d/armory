@@ -45,22 +45,6 @@ class WalkNavigation extends Trait {
 		}
 	}
 
-	#if arm_azerty
-	static inline var keyUp = 'z';
-	static inline var keyDown = 's';
-	static inline var keyLeft = 'q';
-	static inline var keyRight = 'd';
-	static inline var keyStrafeUp = 'e';
-	static inline var keyStrafeDown = 'a';
-	#else
-	static inline var keyUp = 'w';
-	static inline var keyDown = 's';
-	static inline var keyLeft = 'a';
-	static inline var keyRight = 'd';
-	static inline var keyStrafeUp = 'e';
-	static inline var keyStrafeDown = 'q';
-	#end
-
 	function update() {
 		if (!enabled || Input.occupied) return;
 
@@ -138,4 +122,20 @@ class WalkNavigation extends Trait {
 			camera.rotate(camera.right(), -mouse.movementY / 200);
 		}
 	}
+
+	#if arm_azerty
+	static inline var keyUp = 'z';
+	static inline var keyDown = 's';
+	static inline var keyLeft = 'q';
+	static inline var keyRight = 'd';
+	static inline var keyStrafeUp = 'e';
+	static inline var keyStrafeDown = 'a';
+	#else
+	static inline var keyUp = 'w';
+	static inline var keyDown = 's';
+	static inline var keyLeft = 'a';
+	static inline var keyRight = 'd';
+	static inline var keyStrafeUp = 'e';
+	static inline var keyStrafeDown = 'q';
+	#end
 }
