@@ -79,7 +79,8 @@ void rayCast(vec3 dir) {
 	#endif
 	for (int i = 0; i < ssgiMaxSteps; i++) {
 		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) {
+		float delta = getDeltaDepth(hitCoord);
+		if (delta > 0.0 && delta < 0.2) {
 			dist = distance(vpos, hitCoord);
 			/* binarySearch(dir); */ break;
 		}
