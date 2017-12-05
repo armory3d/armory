@@ -1,6 +1,7 @@
 import bpy
 import arm.assets as assets
 import arm.utils
+import arm.log as log
 
 def build():
     assets_path = arm.utils.get_sdk_path() + 'armory/Assets/'
@@ -191,10 +192,13 @@ def build():
         assets.add_khafile_def('rp_dynres')
 
     if rpdat.arm_soft_shadows == 'On':
-        assets.add_shader2('dilate_pass', 'dilate_pass')
-        assets.add_shader2('visibility_pass', 'visibility_pass')
-        assets.add_shader2('blur_shadow_pass', 'blur_shadow_pass')
-        assets.add_khafile_def('rp_soft_shadows')
-        wrd.world_defs += '_SoftShadows'
-        if rpdat.arm_soft_shadows_penumbra != 1:
-            wrd.world_defs += '_PenumbraScale'
+        if rpdat.rp_shadowmap_cascades == '1':
+            assets.add_shader2('dilate_pass', 'dilate_pass')
+            assets.add_shader2('visibility_pass', 'visibility_pass')
+            assets.add_shader2('blur_shadow_pass', 'blur_shadow_pass')
+            assets.add_khafile_def('rp_soft_shadows')
+            wrd.world_defs += '_SoftShadows'
+            if rpdat.arm_soft_shadows_penumbra != 1:
+                wrd.world_defs += '_PenumbraScale'
+        else:
+            log.warn('To enable soft shadows set "Armory Render Path - Cascades" to 1 for now')
