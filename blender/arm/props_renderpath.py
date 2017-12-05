@@ -421,7 +421,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Auto', 'Auto', 'Auto')],
         name="Soft Shadows", description="Soft shadows with variable penumbra (spot and non-cascaded sun lamp supported)", default='Off', update=assets.invalidate_shader_cache)
     arm_soft_shadows_penumbra = bpy.props.IntProperty(name="Penumbra", description="Variable penumbra scale", default=1, min=0, max=10, update=assets.invalidate_shader_cache)
-    arm_soft_shadows_distance = bpy.props.FloatProperty(name="Distance", description="Variable penumbra distance", default=2.0, min=0, max=10, update=assets.invalidate_shader_cache)
+    arm_soft_shadows_distance = bpy.props.FloatProperty(name="Distance", description="Variable penumbra distance", default=1.0, min=0, max=10, update=assets.invalidate_shader_cache)
     arm_ssrs = bpy.props.BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
     arm_texture_filter = EnumProperty(
         items=[('Anisotropic', 'Anisotropic', 'Anisotropic'),
