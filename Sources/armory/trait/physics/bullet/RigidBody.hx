@@ -113,12 +113,12 @@ class RigidBody extends Trait {
 				withMargin(r), // Radius
 				withMargin(transform.dim.z - r * 2)); // Height between 2 sphere centers
 		}
-		else if (shape == Shape.Mesh) {
+		else if (shape == Shape.Mesh || shape == Shape.Terrain) { // Static
 			var meshInterface = BtTriangleMesh.create(true, true);
 			fillTriangleMesh(meshInterface, transform.scale);
 			_shape = BtBvhTriangleMeshShape.create(meshInterface, true, true);
 		}
-		//else if (shape == SHAPE_TERRAIN) {
+		//else if (shape == Shape.Terrain) {
 			// var data:Array<Dynamic> = [];
 			// _shape = BtHeightfieldTerrainShape.create(3, 3, data, 1, -10, 10, 2, 0, true);
 		//}

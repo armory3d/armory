@@ -2282,7 +2282,9 @@ class ArmoryExporter:
             ArmoryExporter.export_physics = True
             rb = bobject.rigid_body
             shape = 0 # BOX
-            if rb.collision_shape == 'SPHERE':
+            if bobject.arm_rb_terrain: # Override selected shape as terrain..
+                shape = 7
+            elif rb.collision_shape == 'SPHERE':
                 shape = 1
             elif rb.collision_shape == 'CONVEX_HULL':
                 shape = 2
@@ -2294,8 +2296,6 @@ class ArmoryExporter:
                 shape = 5
             elif rb.collision_shape == 'CAPSULE':
                 shape = 6
-            #elif rb.collision_shape_terrain:
-            #   shape = 7
             body_mass = rb.mass
             is_static = not rb.enabled or (rb.type == 'PASSIVE' and not rb.kinematic)
             if is_static:

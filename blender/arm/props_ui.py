@@ -124,6 +124,7 @@ class PhysicsPropsPanel(bpy.types.Panel):
             layout.prop(obj, 'arm_rb_linear_factor')
             layout.prop(obj, 'arm_rb_angular_factor')
             layout.prop(obj, 'arm_rb_ghost')
+            layout.prop(obj, 'arm_rb_terrain')
             layout.prop(obj, 'arm_rb_force_deactivation')
 
         if obj.soft_body != None:
