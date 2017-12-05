@@ -6,7 +6,7 @@ bl_info = {
     "location": "Properties -> Render -> Armory Player",
     "description": "3D game engine for Blender",
     "author": "Armory3D.org",
-    "version": (11, 4, 0),
+    "version": (11, 4, 1),
     "blender": (2, 79, 0),
     "wiki_url": "http://armory3d.org/manual",
     "tracker_url": "https://github.com/armory3d/armory/issues"
@@ -182,7 +182,7 @@ class ArmAddonUpdateButton(bpy.types.Operator):
         if p == "":
             self.report({"ERROR"}, "Configure SDK path first")
             return {"CANCELLED"}
-        self.report({'INFO'}, 'Updating, check console for details.')
+        self.report({'INFO'}, 'Updating, check console for details. Please restart Blender after successful SDK update.')
         print('Armory: Cloning [armory, iron, haxebullet, haxerecast, zui] repositories')
         os.chdir(p)
         update_repo(p, 'armory')
