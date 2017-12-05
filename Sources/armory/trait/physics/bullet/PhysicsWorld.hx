@@ -83,29 +83,26 @@ class PhysicsWorld extends Trait {
 		dispatcher = BtCollisionDispatcher.create(collisionConfiguration);
 		var solver = BtSequentialImpulseConstraintSolver.create();
 
-		var gravity = iron.Scene.active.raw.gravity == null ? gravityArray() : iron.Scene.active.raw.gravity;
+		var g = iron.Scene.active.raw.gravity;
+		var gravity = g == null ? new Vec4(0, 0, -9.81) : new Vec4(g[0], g[1], g[2]);
 
 #if arm_physics_soft
 		var softSolver = BtDefaultSoftBodySolver.create();
 		world = BtSoftRigidDynamicsWorld.create(dispatcher, broadphase, solver, collisionConfiguration, softSolver);
 		#if js
-		world.getWorldInfo().set_m_gravity(BtVector3.create(gravity[0], gravity[1], gravity[2]));
+		world.getWorldInfo().set_m_gravity(BtVector3.create(gravity.x, gravity.y, gravity.z));
 		#elseif cpp
-		world.getWorldInfo().m_gravity = BtVector3.create(gravity[0], gravity[1], gravity[2]);
+		world.getWorldInfo().m_gravity = BtVector3.create(gravity.x, gravity.y, gravity.z);
 		#end
 #else
 		world = BtDiscreteDynamicsWorld.create(dispatcher, broadphase, solver, collisionConfiguration);
 #end
 
-		world.setGravity(BtVector3.create(gravity[0], gravity[1], gravity[2]));
+		setGravity(gravity);
 	}
 
-	function gravityArray():TFloat32Array {
-		var ar = new TFloat32Array(3);
-		ar[0] = 0.0;
-		ar[1] = 0.0;
-		ar[2] = -9.81;
-		return ar;
+	public function setGravity(v:Vec4) {
+		world.setGravity(BtVector3.create(v.x, v.y, v.z));
 	}
 
 	public function addRigidBody(body:RigidBody) {
