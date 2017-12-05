@@ -280,9 +280,7 @@ def build_project(is_play=False, is_publish=False, is_render=False, is_render_an
     state.is_render = is_render
     state.is_render_anim = is_render_anim
     state.is_publish = is_publish
-
-    # Clear flag
-    state.in_viewport = False
+    state.in_viewport = in_viewport
 
     # Save blend
     if arm.utils.get_save_on_build() and not state.krom_running:
@@ -426,7 +424,6 @@ def play_project(in_viewport, is_render=False, is_render_anim=False):
 
     # Build data
     build_project(is_play=True, is_render=is_render, is_render_anim=is_render_anim, in_viewport=in_viewport)
-    state.in_viewport = in_viewport
 
     khajs_path = get_khajs_path(in_viewport, state.target)
     if not wrd.arm_cache_compiler or \

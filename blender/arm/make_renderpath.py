@@ -2,6 +2,7 @@ import bpy
 import arm.assets as assets
 import arm.utils
 import arm.log as log
+import arm.make_state as state
 
 def build():
     assets_path = arm.utils.get_sdk_path() + 'armory/Assets/'
@@ -107,17 +108,24 @@ def build():
         assets.add(assets_path + 'vr.png')
         assets.add_embedded_data('vr.png')
 
-    assets.add_khafile_def('rp_gi={0}'.format(rpdat.rp_gi))
+    rp_gi = rpdat.rp_gi
+    has_voxels = state.in_viewport == False or bpy.app.version >= (2, 80, 1)
+    if not has_voxels:
+        rp_gi = 'Off'
+    assets.add_khafile_def('rp_gi={0}'.format(rp_gi))
     if rpdat.rp_gi != 'Off':
-        assets.add_khafile_def('rp_gi={0}'.format(rpdat.rp_gi))        
-        assets.add_khafile_def('rp_voxelgi_resolution={0}'.format(rpdat.rp_voxelgi_resolution))
-        assets.add_khafile_def('rp_voxelgi_resolution_z={0}'.format(rpdat.rp_voxelgi_resolution_z))
-        if rpdat.rp_voxelgi_hdr:
-            assets.add_khafile_def('rp_voxelgi_hdr')
-        if rpdat.arm_voxelgi_shadows:
-            assets.add_khafile_def('rp_voxelgi_shadows')
-        if rpdat.arm_voxelgi_refraction:
-            assets.add_khafile_def('rp_voxelgi_refraction')
+        if has_voxels:
+            assets.add_khafile_def('rp_gi={0}'.format(rpdat.rp_gi))        
+            assets.add_khafile_def('rp_voxelgi_resolution={0}'.format(rpdat.rp_voxelgi_resolution))
+            assets.add_khafile_def('rp_voxelgi_resolution_z={0}'.format(rpdat.rp_voxelgi_resolution_z))
+            if rpdat.rp_voxelgi_hdr:
+                assets.add_khafile_def('rp_voxelgi_hdr')
+            if rpdat.arm_voxelgi_shadows:
+                assets.add_khafile_def('rp_voxelgi_shadows')
+            if rpdat.arm_voxelgi_refraction:
+                assets.add_khafile_def('rp_voxelgi_refraction')
+        else:
+            log.warn('Disabling Voxel GI - Blender 2.8 is required for voxels in viewport')
 
     if rpdat.arm_rp_resolution != 'Display':
         assets.add_khafile_def('rp_resolution={0}'.format(rpdat.arm_rp_resolution))
@@ -201,4 +209,4 @@ def build():
             if rpdat.arm_soft_shadows_penumbra != 1:
                 wrd.world_defs += '_PenumbraScale'
         else:
-            log.warn('To enable soft shadows set "Armory Render Path - Cascades" to 1 for now')
+            log.warn('Disabling soft shadows - "Armory Render Path - Cascades" requires to be set to 1 for now')

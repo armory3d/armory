@@ -8,6 +8,7 @@ import arm.assets as assets
 import arm.utils
 import arm.node_utils as node_utils
 import arm.log as log
+import arm.make_state as state
 
 def build(active_worlds):
     fp = arm.utils.get_fp()
@@ -118,10 +119,12 @@ def build_node_tree(world):
         wrd.world_defs += '_NoShadows'
         assets.add_khafile_def('arm_no_shadows')
     # GI
-    if rpdat.rp_gi == 'Voxel GI':
-        voxelgi = True
-    elif rpdat.rp_gi == 'Voxel AO':
-        voxelao = True
+    has_voxels = state.in_viewport == False or bpy.app.version >= (2, 80, 1)
+    if has_voxels:
+        if rpdat.rp_gi == 'Voxel GI':
+            voxelgi = True
+        elif rpdat.rp_gi == 'Voxel AO':
+            voxelao = True
     # SS
     # if rpdat.rp_dfrs:
     #     wrd.world_defs += '_DFRS'
