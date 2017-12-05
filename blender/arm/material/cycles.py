@@ -49,6 +49,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     global parse_opacity
     global basecol_only
     global parsing_basecol
+    global parsing_nor
     global basecol_texname
     global emission_found
     global particle_info
@@ -64,6 +65,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     parse_opacity = _parse_opacity
     basecol_only = _basecol_only
     parsing_basecol = False
+    parsing_nor = False
     basecol_texname = ''
     emission_found = False
     particle_info = {}
@@ -79,7 +81,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
 
     # Surface
     if parse_surface or parse_opacity:
-        parsed = []
+        parsed = {}
         parents = []
         normal_written = False
         normal_parsed = False
@@ -99,7 +101,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
 
     # Displacement
     if _parse_displacement and disp_enabled() and node.inputs[2].is_linked and tese != None:
-        parsed = []
+        parsed = {}
         parents = []
         normal_parsed = False
         normal_written = False
@@ -156,19 +158,20 @@ def parse_shader_input(inp):
         return out_basecol, out_roughness, out_metallic, out_occlusion, out_opacity
 
 def write_normal(inp):
+    global parsing_nor
     if inp.is_linked:
+        parsing_nor = True
         normal_res = parse_vector_input(inp)
         if normal_res != None:
             curshader.write('n = {0};'.format(normal_res))
             normal_written = True
+        parsing_nor = False
 
 def parsing_basecolor(b):
     global parsing_basecol
-    global curshader
     parsing_basecol = b
 
-def parse_shader(node, socket):   
-    global parsing_basecol
+def parse_shader(node, socket):
     global emission_found
     out_basecol = 'vec3(0.8)'
     out_roughness = '0.0'
@@ -380,7 +383,7 @@ def write_result(l):
     res_var = res_var_name(l.from_node, l.from_socket)
     st = l.from_socket.type
     if res_var not in parsed:
-        parsed.append(res_var)
+        parsed[res_var] = 0
         if st == 'RGB' or st == 'RGBA':
             res = parse_rgb(l.from_node, l.from_socket)
             if res == None:
@@ -393,6 +396,7 @@ def write_result(l):
             size = 3
             if isinstance(res, tuple):
                 size = res[1]
+                parsed[res_var] = size
                 res = res[0]
             curshader.write('vec{2} {0} = {1};'.format(res_var, res, size))
         elif st == 'VALUE':
@@ -416,16 +420,19 @@ def to_uniform(inp):
     curshader.add_uniform(glsl_type(inp.type) + ' ' + uname)
     return uname
 
-def parse_vector_input(inp):
+def parse_vector_input(inp, vec_size=None):
     if inp.is_linked:
         l = inp.links[0]
 
         if l.from_node.type == 'REROUTE':
-            return parse_vector_input(l.from_node.inputs[0])
+            return parse_vector_input(l.from_node.inputs[0], vec_size=vec_size)
 
         res_var = write_result(l)
         st = l.from_socket.type        
         if st == 'RGB' or st == 'RGBA' or st == 'VECTOR':
+            # Convert
+            if vec_size == 3 and parsed[res_var] == 2:
+                res_var = 'vec3({0}.xy, 0.0)'.format(res_var)
             return res_var
         else: # VALUE
             return 'vec3({0})'.format(res_var)
@@ -503,10 +510,13 @@ def parse_rgb(node, socket):
         tex_name = node_name(node.name)
         tex = make_texture(node, tex_name)
         if tex != None:
-            curshader.write_pre_header += 1
+            is_nor = parsing_nor
+            if is_nor:
+                curshader.write_pre_header += 1
             to_linear = parsing_basecol and not tex['file'].endswith('.hdr')
             res = '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear))
-            curshader.write_pre_header -= 1
+            if is_nor:
+                curshader.write_pre_header -= 1
             return res
         elif node.image == None: # Empty texture
             tex = {}
@@ -609,8 +619,8 @@ def parse_rgb(node, socket):
         fac = parse_value_input(node.inputs[0])
         fac_var = node_name(node.name) + '_fac'
         curshader.write('float {0} = {1};'.format(fac_var, fac))
-        col1 = parse_vector_input(node.inputs[1])
-        col2 = parse_vector_input(node.inputs[2])
+        col1 = parse_vector_input(node.inputs[1], vec_size=3)
+        col2 = parse_vector_input(node.inputs[2], vec_size=3)
         blend = node.blend_type
         if blend == 'MIX':
             out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var)
