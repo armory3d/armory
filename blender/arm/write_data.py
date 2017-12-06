@@ -75,6 +75,9 @@ project.addSources('Sources');
                 if os.path.isdir('Libraries/' + lib):
                     f.write('project.addLibrary("{0}");\n'.format(lib))
         
+        if wrd.arm_audio == 'Disabled':
+            assets.add_khafile_def('arm_no_audio')
+
         if export_physics:
             assets.add_khafile_def('arm_physics')
             if wrd.arm_physics == 'Bullet':

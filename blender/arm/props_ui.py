@@ -461,6 +461,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
 
         layout.separator()
         layout.label('Modules:')
+        layout.prop(wrd, 'arm_audio')
         layout.prop(wrd, 'arm_physics')
         layout.prop(wrd, 'arm_navigation')
         layout.prop(wrd, 'arm_ui')

@@ -102,6 +102,10 @@ def init_properties():
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('Enabled', 'Enabled', 'Enabled')],
         name = "Hscript", default='Disabled', description="Include Hscript library")
+    bpy.types.World.arm_audio = EnumProperty(
+        items = [('Disabled', 'Disabled', 'Disabled'), 
+                 ('Enabled', 'Enabled', 'Enabled')],
+        name = "Audio", default='Enabled')
     bpy.types.World.arm_khafile = StringProperty(name="Khafile", description="Source appended to khafile.js", update=invalidate_compiler_cache)
     bpy.types.World.arm_khamake = StringProperty(name="Khamake", description="Command line params appended to khamake", update=invalidate_compiler_cache)
     bpy.types.World.arm_texture_quality = bpy.props.FloatProperty(name="Texture Quality", default=1.0, min=0.0, max=1.0, subtype='FACTOR', update=invalidate_compiler_cache)
