@@ -44,6 +44,8 @@ class ArmObjectSocket(bpy.types.NodeSocket):
     def get_default_value(self):
         if self.default_value == '':
             return ''
+        if self.default_value not in bpy.data.objects:
+            return self.default_value
         return arm.utils.asset_name(bpy.data.objects[self.default_value])
 
     def __init__(self):
@@ -85,6 +87,10 @@ class ArmAnimActionSocket(bpy.types.NodeSocket):
     default_value = StringProperty(name='Action', default='')
 
     def get_default_value(self):
+        if self.default_value == '':
+            return ''
+        if self.default_value not in bpy.data.actions:
+            return self.default_value
         name = arm.utils.asset_name(bpy.data.actions[self.default_value])
         return arm.utils.safestr(name)
 
