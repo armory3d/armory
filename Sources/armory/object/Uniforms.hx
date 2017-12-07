@@ -32,6 +32,9 @@ class Uniforms {
 		else if (tulink == "_lensTexture") {
 			return Scene.active.embedded.get('lenstexture.jpg');
 		}
+		else if (tulink == "_lutTexture") {
+			return Scene.active.embedded.get('luttexture.jpg');
+		}
 		else if (tulink == "_cloudsTexture") {
 			return Scene.active.embedded.get('cloudstexture.png');
 		}
