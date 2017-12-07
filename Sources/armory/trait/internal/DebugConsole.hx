@@ -65,8 +65,7 @@ class DebugConsole extends Trait {
 
 			var htab = Id.handle({position: 0});
 			if (ui.tab(htab, '')) {}
-			if (ui.tab(htab, 'Inspector')) {
-				ui.text('Console: ' + lastTrace);
+			if (ui.tab(htab, lastTrace == '' ? 'Inspector' : lastTrace.substr(0, 20))) {
 				var i = 0;
 				function drawList(h:Handle, o:iron.object.Object) {
 					ui.row(lrow);
