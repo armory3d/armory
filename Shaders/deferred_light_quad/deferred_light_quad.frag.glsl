@@ -76,9 +76,10 @@ out vec4 fragColor;
 void main() {
 	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, occlusion
 	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, 
-	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0; // 0 - 1 => -1 - 1
+	// float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0; // 0 - 1 => -1 - 1
 	// TODO: store_depth
-	// float depth = (1.0 - g0.a) * 2.0 - 1.0;
+	// TODO: Firefox throws feedback loop detected error, read depth from gbuffer0
+	float depth = (1.0 - g0.a) * 2.0 - 1.0;
 
 	vec3 n;
 	n.z = 1.0 - abs(g0.x) - abs(g0.y);
