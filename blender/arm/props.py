@@ -331,6 +331,8 @@ def init_properties():
     bpy.types.World.arm_fisheye = bpy.props.BoolProperty(name="Fish Eye", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_vignette = bpy.props.BoolProperty(name="Vignette", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_lensflare = bpy.props.BoolProperty(name="Lens Flare", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_lut = bpy.props.BoolProperty(name="LUT Lookup Table", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_lut_texture = bpy.props.StringProperty(name="LUT Texture", default="", update=assets.invalidate_shader_cache)
     # Skin
     bpy.types.World.arm_skin = EnumProperty(
         items=[('GPU (Dual-Quat)', 'GPU (Dual-Quat)', 'GPU (Dual-Quat)'),

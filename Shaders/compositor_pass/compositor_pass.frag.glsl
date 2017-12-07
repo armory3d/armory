@@ -20,6 +20,10 @@ uniform sampler2D gbuffer1;
 uniform sampler2D lensTexture;
 #endif
 
+#ifdef _CLUT
+uniform sampler2D lutTexture;
+#endif
+
 #ifdef _Hist
 uniform sampler2D histogram;
 #endif
@@ -85,6 +89,38 @@ vec3 applyFog(vec3 rgb, float distance) {
 	return mix(rgb, compoFogColor, fogAmount);
 }
 #endif
+
+vec4 LUTlookup(in vec4 textureColor, in sampler2D lookupTable) {
+
+    //Clamp to prevent weird results
+    textureColor = clamp(textureColor, 0.0, 1.0);
+
+    mediump float blueColor = textureColor.b * 63.0;
+    mediump vec2 quad1;
+
+    quad1.y = floor(floor(blueColor) / 8.0);
+    quad1.x = floor(blueColor) - (quad1.y * 8.0);
+
+    mediump vec2 quad2;
+    quad2.y = floor(ceil(blueColor) / 8.0);
+    quad2.x = ceil(blueColor) - (quad2.y * 8.0);
+
+    highp vec2 texelPosition1;
+    texelPosition1.x = (quad1.x * 0.125) + 0.5/512.0 + ((0.125 - 1.0/512.0) * textureColor.r);
+    texelPosition1.y = (quad1.y * 0.125) + 0.5/512.0 + ((0.125 - 1.0/512.0) * textureColor.g);
+
+    highp vec2 texelPosition2;
+    texelPosition2.x = (quad2.x * 0.125) + 0.5/512.0 + ((0.125 - 1.0/512.0) * textureColor.r);
+    texelPosition2.y = (quad2.y * 0.125) + 0.5/512.0 + ((0.125 - 1.0/512.0) * textureColor.g);
+
+    lowp vec4 newColor1 = texture(lookupTable, texelPosition1);
+    lowp vec4 newColor2 = texture(lookupTable, texelPosition2);
+
+    lowp vec4 colorGradedResult = mix(newColor1, newColor2, fract(blueColor));
+
+    return colorGradedResult;
+
+}
 
 float vignette() {
 	// vignetting from iq
@@ -323,4 +359,15 @@ void main() {
 	// const float compoLetterboxSize = 0.1;
 	fragColor.rgb *= 1.0 - step(0.5 - compoLetterboxSize, abs(0.5 - texCo.y));
 #endif
+
+//3D LUT Implementation from GPUGems 2 by Nvidia
+//https://developer.nvidia.com/gpugems/GPUGems2/gpugems2_chapter24.html
+
+#ifdef _CLUT
+	fragColor = LUTlookup(fragColor, lutTexture);
+#endif
+
 }
+
+
+

@@ -1130,6 +1130,8 @@ class ArmRenderPropsPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_lensflare')
         layout.prop(wrd, 'arm_autoexposure_strength')
         layout.prop(wrd, 'arm_lens_texture')
+        layout.prop(wrd, 'arm_lut')
+        layout.prop(wrd, 'arm_lut_texture')
 
 class ArmGenLodButton(bpy.types.Operator):
     '''Automatically generate LoD levels'''

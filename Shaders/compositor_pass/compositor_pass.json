@@ -75,6 +75,11 @@
 					"name": "cameraProj",
 					"link": "_cameraPlaneProj",
 					"ifdef": ["_CFog", "_CDOF", "_CGlare"]
+				},
+				{
+					"name": "lutTexture",
+					"link": "_lutTexture",
+					"ifdef": ["_CLUT"]
 				}
 			],
 			"texture_params": [],
