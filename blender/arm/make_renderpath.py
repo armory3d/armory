@@ -65,6 +65,8 @@ def build():
                 wrd.compo_defs += '_CVignette'
             if wrd.arm_lensflare:
                 wrd.compo_defs += '_CGlare'
+            if wrd.arm_lut:
+                wrd.compo_defs += '_CLUT'
             assets.add_shader2('compositor_pass', 'compositor_pass')
         else:
             assets.add_shader2('copy_pass', 'copy_pass')
