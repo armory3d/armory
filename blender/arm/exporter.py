@@ -1039,9 +1039,16 @@ class ArmoryExporter:
                 oskel['bone_ref_array'].append("null")
 
         # Write the bind pose transform array
-        oskel['transforms'] = []
-        for i in range(bone_count):
-            oskel['transforms'].append(self.write_matrix(armature.matrix_world * bone_array[i].matrix_local))
+        oskel['transformsI'] = []
+        if bpy.data.worlds['Arm'].arm_skin == 'CPU':
+            for i in range(bone_count):
+                skeletonI = (armature.matrix_world * bone_array[i].matrix_local).inverted()
+                oskel['transformsI'].append(self.write_matrix(skeletonI))
+        else:
+            for i in range(bone_count):
+                skeletonI = (armature.matrix_world * bone_array[i].matrix_local).inverted()
+                skeletonI = skeletonI * bobject.matrix_world
+                oskel['transformsI'].append(self.write_matrix(skeletonI))
 
         # Export the per-vertex bone influence data
         group_remap = []
