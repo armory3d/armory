@@ -150,7 +150,7 @@ def init_properties():
         items = [('Multi', 'Multi', 'Multi'),
                  ('Portrait', 'Portrait', 'Portrait'),
                  ('Landscape', 'Landscape', 'Landscape')],
-        name="Orientation", default='Multi', description='Set screen orientation on mobile devices')
+        name="Orientation", default='Landscape', description='Set screen orientation on mobile devices')
     bpy.types.World.arm_winresize = BoolProperty(name="Resizable", description="Allow window resize", default=False, update=invalidate_compiler_cache)
     bpy.types.World.arm_winmaximize = BoolProperty(name="Maximizable", description="Allow window maximize", default=False, update=invalidate_compiler_cache)
     bpy.types.World.arm_winminimize = BoolProperty(name="Minimizable", description="Allow window minimize", default=True, update=invalidate_compiler_cache)
