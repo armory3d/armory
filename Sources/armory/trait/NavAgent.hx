@@ -41,7 +41,7 @@ class NavAgent extends Trait {
 		if (path == null || index >= path.length) return;
 
 		var p = path[index];
-		var dist = Vec4.distance3d(object.transform.loc, p);
+		var dist = Vec4.distance(object.transform.loc, p);
 		var speed = 0.2;
 
 		orient.subvecs(p, object.transform.loc).normalize;

@@ -54,7 +54,7 @@ class Character extends Trait {
 		if (lastLoc == null) lastLoc = new Vec4(loc.x, loc.y, loc.z);
 
 		// Check if character moved compared from last position
-		speed = Vec4.distance3d(loc, lastLoc);
+		speed = Vec4.distance(loc, lastLoc);
 
 		// Update previous position to current position
 		// in preparation for next check

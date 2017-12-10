@@ -12,6 +12,6 @@ class GetDistanceNode extends LogicNode {
 		var object1:Object = inputs[0].get();
 		var object2:Object = inputs[1].get();
 
-		return iron.math.Vec4.distance3d(object1.transform.world.getLoc(), object2.transform.world.getLoc());
+		return iron.math.Vec4.distance(object1.transform.world.getLoc(), object2.transform.world.getLoc());
 	}
 }
