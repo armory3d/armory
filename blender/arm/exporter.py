@@ -2009,7 +2009,7 @@ class ArmoryExporter:
             for group in bpy.data.groups:
                 # Blender automatically stores physics objects in this group,
                 # can cause stuck unused objects, skip for now
-                if group.name.startswith('RigidBodyWorld'):
+                if group.name.startswith('RigidBodyWorld') or group.name.startswith('Trait|'):
                     continue
                 o = {}
                 o['name'] = group.name

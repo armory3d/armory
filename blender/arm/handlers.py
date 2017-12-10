@@ -253,6 +253,8 @@ def on_load_post(context):
                     import blender
                     blender.register()
 
+    arm.utils.update_trait_groups()
+
 @persistent
 def on_save_pre(context):
     props.init_properties_on_save()

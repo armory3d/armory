@@ -276,11 +276,23 @@ def fetch_prop(o):
                 f = found.name.replace(')', '').split('(')
 
                 # Default value added and current value is blank (no override)
-                if(not found.value and defaults[i]):
+                if (not found.value and defaults[i]):
                     prop.value = defaults[i]
                 # Type has changed, update displayed name
-                if(len(f) == 1 or (len(f) > 1 and f[1] != p[1])):
+                if (len(f) == 1 or (len(f) > 1 and f[1] != p[1])):
                     prop.name = p[0] + ('(' + p[1] + ')' if p[1] else '')
+
+def update_trait_groups():
+    for g in bpy.data.groups:
+        if g.name.startswith('Trait|'):
+            bpy.data.groups.remove(g)
+    for o in bpy.data.objects:
+        for t in o.arm_traitlist:
+            if 'Trait|' + t.name not in bpy.data.groups:
+                g = bpy.data.groups.new('Trait|' + t.name)
+            else:
+                g = bpy.data.groups['Trait|' + t.name]
+            g.objects.link(o)
 
 def to_hex(val):
     return '#%02x%02x%02x%02x' % (int(val[3] * 255), int(val[0] * 255), int(val[1] * 255), int(val[2] * 255))

@@ -13,19 +13,36 @@ def trigger_recompile(self, context):
     wrd = bpy.data.worlds['Arm']
     wrd.arm_recompile = True
 
-class ArmTraitListItem(bpy.types.PropertyGroup):
-    # Group of properties representing an item in the list
-    name = bpy.props.StringProperty(
-           name="Name",
-           description="A name for this item",
-           default="")
-           
-    enabled_prop = bpy.props.BoolProperty(
-           name="",
-           description="A name for this item",
-           default=True,
-           update=trigger_recompile)
+def update_trait_group(self, context):
+    o = context.object
+    if o == None:
+        return
+    i = o.arm_traitlist_index
+    if i >= 0 and i < len(o.arm_traitlist):
+        t = o.arm_traitlist[i]
+        if t.type_prop == 'Haxe Script' or t.type_prop == 'Bundled Prop':
+            t.name = t.class_name_prop
+        elif t.type_prop == 'WebAssembly':
+            t.name = t.webassembly_prop
+        elif t.type_prop == 'UI Canvas':
+            t.name = t.canvas_name_prop
+        elif t.type_prop == 'Logic Nodes':
+            t.name = t.nodes_name_prop
+    # Clean
+    for g in bpy.data.groups:
+        if g.name.startswith('Trait|') and o.name in g.objects:
+            g.objects.unlink(o)
+    # Readd
+    for t in o.arm_traitlist:
+        if 'Trait|' + t.name not in bpy.data.groups:
+            g = bpy.data.groups.new('Trait|' + t.name)
+        else:
+            g = bpy.data.groups['Trait|' + t.name]
+        g.objects.link(o)
 
+class ArmTraitListItem(bpy.types.PropertyGroup):
+    name = bpy.props.StringProperty(name="Name", description="A name for this item", default="")
+    enabled_prop = bpy.props.BoolProperty(name="", description="A name for this item", default=True, update=trigger_recompile)
     type_prop = bpy.props.EnumProperty(
         items = [('Haxe Script', 'Haxe Script', 'Haxe Script'),
                  ('WebAssembly', 'WebAssembly', 'WebAssembly'),
@@ -34,30 +51,13 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
                  ('Logic Nodes', 'Logic Nodes', 'Logic Nodes')
                  ],
         name = "Type")
-
-    class_name_prop = bpy.props.StringProperty(
-           name="Class",
-           description="A name for this item",
-           default="")
-
-    canvas_name_prop = bpy.props.StringProperty(
-           name="Canvas",
-           description="A name for this item",
-           default="")
-
-    webassembly_prop = bpy.props.StringProperty(
-           name="Text",
-           description="A name for this item",
-           default="")
-
-    nodes_name_prop = bpy.props.StringProperty(
-           name="Nodes",
-           description="A name for this item",
-           default="")
+    class_name_prop = bpy.props.StringProperty(name="Class", description="A name for this item", default="", update=update_trait_group)
+    canvas_name_prop = bpy.props.StringProperty(name="Canvas", description="A name for this item", default="", update=update_trait_group)
+    webassembly_prop = bpy.props.StringProperty(name="Text", description="A name for this item", default="", update=update_trait_group)
+    nodes_name_prop = bpy.props.StringProperty(name="Nodes", description="A name for this item", default="", update=update_trait_group)
 
     arm_traitparamslist = bpy.props.CollectionProperty(type=ArmTraitParamListItem)
     arm_traitparamslist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
-
     arm_traitpropslist = bpy.props.CollectionProperty(type=ArmTraitPropListItem)
     arm_traitpropslist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
 
@@ -117,6 +117,7 @@ class ArmTraitListDeleteItem(bpy.types.Operator):
             return{'FINISHED'}
 
         lst.remove(index)
+        update_trait_group(self, context)
 
         if index > 0:
             index = index - 1
@@ -547,9 +548,9 @@ def register():
     bpy.utils.register_class(ArmTraitsPanel)
     bpy.utils.register_class(ArmSceneTraitsPanel)
     bpy.types.Object.arm_traitlist = bpy.props.CollectionProperty(type=ArmTraitListItem)
-    bpy.types.Object.arm_traitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
+    bpy.types.Object.arm_traitlist_index = bpy.props.IntProperty(name="Index for arm_traitlist", default=0)
     bpy.types.Scene.arm_traitlist = bpy.props.CollectionProperty(type=ArmTraitListItem)
-    bpy.types.Scene.arm_traitlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
+    bpy.types.Scene.arm_traitlist_index = bpy.props.IntProperty(name="Index for arm_traitlist", default=0)
 
 def unregister():
     bpy.utils.unregister_class(ArmTraitListItem)

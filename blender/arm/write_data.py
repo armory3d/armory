@@ -533,7 +533,7 @@ def write_traithx(class_name):
         f.write(
 """package """ + arm.utils.safestr(wrd.arm_project_package) + """;
 
-class """ + class_name + """ extends armory.Trait {
+class """ + class_name + """ extends iron.Trait {
 \tpublic function new() {
 \t\tsuper();
 
