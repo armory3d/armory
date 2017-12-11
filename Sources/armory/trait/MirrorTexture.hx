@@ -11,7 +11,7 @@ class MirrorTexture extends Trait {
 		super();
 
 		this.cameraName = cameraName;
-		notifyOnInit(init);
+		iron.Scene.active.notifyOnInit(init);
 	}
 
 	function init() {
