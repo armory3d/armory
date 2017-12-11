@@ -242,8 +242,8 @@ def fetch_script_names():
 def fetch_trait_props():
     for o in bpy.data.objects:
         fetch_prop(o)
-    for o in bpy.data.scenes:
-        fetch_prop(o)
+    for s in bpy.data.scenes:
+        fetch_prop(s)
 
 def fetch_prop(o):
     for item in o.arm_traitlist:
@@ -281,6 +281,16 @@ def fetch_prop(o):
                 # Type has changed, update displayed name
                 if (len(f) == 1 or (len(f) > 1 and f[1] != p[1])):
                     prop.name = p[0] + ('(' + p[1] + ')' if p[1] else '')
+
+def fetch_bundled_trait_props():
+    # Bundled script props
+    for o in bpy.data.objects:
+        for t in o.arm_traitlist:
+            if t.type_prop == 'Bundled Script':
+                file_path = get_sdk_path() + '/armory/Sources/armory/trait/' + t.name + '.hx'
+                if os.path.exists(file_path):
+                    fetch_script_props(file_path)
+                    fetch_prop(o)
 
 def update_trait_groups():
     for g in bpy.data.groups:

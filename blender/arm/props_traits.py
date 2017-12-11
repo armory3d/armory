@@ -20,7 +20,7 @@ def update_trait_group(self, context):
     i = o.arm_traitlist_index
     if i >= 0 and i < len(o.arm_traitlist):
         t = o.arm_traitlist[i]
-        if t.type_prop == 'Haxe Script' or t.type_prop == 'Bundled Prop':
+        if t.type_prop == 'Haxe Script' or t.type_prop == 'Bundled Script':
             t.name = t.class_name_prop
         elif t.type_prop == 'WebAssembly':
             t.name = t.webassembly_prop
@@ -28,6 +28,12 @@ def update_trait_group(self, context):
             t.name = t.canvas_name_prop
         elif t.type_prop == 'Logic Nodes':
             t.name = t.nodes_name_prop
+        # Fetch props
+        if t.type_prop == 'Bundled Script' and t.name != '':
+            file_path = arm.utils.get_sdk_path() + '/armory/Sources/armory/trait/' + t.name + '.hx'
+            if os.path.exists(file_path):
+                arm.utils.fetch_script_props(file_path)
+                arm.utils.fetch_prop(o)
     # Clean
     for g in bpy.data.groups:
         if g.name.startswith('Trait|') and o.name in g.objects:
@@ -371,6 +377,7 @@ class ArmRefreshScriptsButton(bpy.types.Operator):
  
     def execute(self, context):
         arm.utils.fetch_bundled_script_names()
+        arm.utils.fetch_bundled_trait_props()
         arm.utils.fetch_script_names()
         arm.utils.fetch_trait_props()
         return{'FINISHED'}
@@ -500,8 +507,13 @@ def draw_traits(layout, obj, is_object):
                 op.is_object = is_object
                 op = row.operator("arm.refresh_scripts")
             else: # Bundled
-                op = layout.operator("arm.edit_bundled_script")
+                row = layout.row(align=True)
+                row.alignment = 'EXPAND'
+                column = row.column(align=True)
+                column.alignment = 'EXPAND'
+                op = column.operator("arm.edit_bundled_script")
                 op.is_object = is_object
+                op = row.operator("arm.refresh_scripts")
         
         elif item.type_prop == 'WebAssembly':
             pass
