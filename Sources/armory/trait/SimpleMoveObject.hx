@@ -59,10 +59,12 @@ class SimpleMoveObject extends iron.Trait {
 
 	function moveObject(vec:Vec4){
 		if(rb != null){
+			#if arm_physics
 			rb.setLinearVelocity(0, 0, 0);
 			rb.setAngularVelocity(0, 0, 0);
 			rb.transform.translate(vec.x, vec.y, vec.z);
 			rb.syncTransform();
+			#end
 		} else {
 			object.transform.translate(vec.x, vec.y, vec.z);
 		}
