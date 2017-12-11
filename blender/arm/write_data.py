@@ -332,6 +332,7 @@ class Main {
 
 # Write index.html
 def write_indexhtml(w, h, is_publish):
+    wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     dest = '/html5' if is_publish else '/debug/html5'
     if not os.path.exists(arm.utils.build_dir() + dest):
@@ -342,7 +343,7 @@ def write_indexhtml(w, h, is_publish):
 <html>
 <head>
     <meta charset="utf-8"/>""")
-        if rpdat.rp_stereo:
+        if rpdat.rp_stereo or wrd.arm_winmode == 'Fullscreen':
             f.write("""
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <style>
@@ -356,7 +357,7 @@ def write_indexhtml(w, h, is_publish):
 </head>
 <body style="margin: 0; padding: 0;">
 """)
-        if rpdat.rp_stereo:
+        if rpdat.rp_stereo or wrd.arm_winmode == 'Fullscreen':
             f.write("""
     <canvas style="width: 100vw; height: 100vh; display: block;" id='khanvas'></canvas>
 """)
