@@ -28,6 +28,7 @@ def build():
 
     assets.add_khafile_def('rp_background={0}'.format(rpdat.rp_background))
     if rpdat.rp_background == 'World':
+        assets.add_shader2('world', 'world')
         if '_EnvClouds' in wrd.world_defs:
             assets.add(assets_path + 'noise256.png')
             assets.add_embedded_data('noise256.png')

@@ -66,6 +66,11 @@
 					"ifdef": ["_EnvSky"]
 				},
 				{
+					"name": "sunDirection",
+					"link": "_sunDirection",
+					"ifdef": ["_EnvSky"]
+				},
+				{
 					"name": "time",
 					"link": "_time",
 					"ifdef": ["_EnvClouds"]
@@ -84,6 +89,15 @@
 					"name": "screenSize",
 					"link": "_screenSize",
 					"ifdef": ["_EnvImg"]
+				},
+				{
+					"name": "envmap",
+					"link": "_envmap",
+					"ifdef": ["_EnvTex", "_EnvImg"]
+				},
+				{
+					"name": "envmapStrength",
+					"link": "_envmapStrength"
 				}
 			],
 			"texture_params": [],

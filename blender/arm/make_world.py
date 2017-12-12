@@ -1,8 +1,7 @@
 import bpy
+import os
 from bpy.types import NodeTree, Node, NodeSocket
 from bpy.props import *
-import os
-import json
 import arm.write_probes as write_probes
 import arm.assets as assets
 import arm.utils
@@ -10,32 +9,15 @@ import arm.node_utils as node_utils
 import arm.log as log
 import arm.make_state as state
 
-def build(active_worlds):
-    fp = arm.utils.get_fp()
-
-    # Make sure Assets dir exists
-    if not os.path.exists(arm.utils.build_dir() + '/compiled/Assets/materials'):
-        os.makedirs(arm.utils.build_dir() + '/compiled/Assets/materials')
-    
-    # Export world nodes
-    world_outputs = []
-    for world in active_worlds:
-        output = build_node_tree(world)
-        world_outputs.append(output)
-    return world_outputs
+def build():
+    worlds = []
+    for scene in bpy.data.scenes:
+        if scene.arm_export and scene.world != None and scene.world not in worlds:
+            worlds.append(scene.world)
+            build_node_tree(scene.world)
 
 def build_node_tree(world):
-    output = {}
-    dat = {}
-    output['material_datas'] = [dat]
     wname = arm.utils.safestr(world.name)
-    dat['name'] = wname + '_material'
-    context = {}
-    dat['contexts'] = [context]
-    context['name'] = 'world'
-    context['bind_constants'] = []
-    context['bind_textures'] = []
-    
     wrd = bpy.data.worlds['Arm']
     wrd.world_defs = ''
     rpdat = arm.utils.get_rp()
@@ -45,27 +27,20 @@ def build_node_tree(world):
     if world.node_tree != None:
         output_node = node_utils.get_node_by_type(world.node_tree, 'OUTPUT_WORLD')
         if output_node != None:
-            parse_world_output(world, output_node, context)
+            parse_world_output(world, output_node)
             parsed = True
     if parsed == False:
         solid_mat = rpdat.arm_material_model == 'Solid'
         if wrd.arm_irradiance and not solid_mat:
             wrd.world_defs += '_Irr'
-        envmap_strength_const = {}
-        envmap_strength_const['name'] = 'envmapStrength'
-        envmap_strength_const['float'] = 1.0
-        context['bind_constants'].append(envmap_strength_const)
         c = world.horizon_color
         world.arm_envtex_color = [c[0], c[1], c[2], 1.0]
-        world.arm_envtex_strength = envmap_strength_const['float']
-
+        world.arm_envtex_strength = 1.0
     
     # Clear to color if no texture or sky is provided
     if '_EnvSky' not in wrd.world_defs and '_EnvTex' not in wrd.world_defs:
-        
         if '_EnvImg' not in wrd.world_defs:
             wrd.world_defs += '_EnvCol'
-        
         # Irradiance json file name
         world.arm_envtex_name = wname
         world.arm_envtex_irr_name = wname
@@ -181,31 +156,12 @@ def build_node_tree(world):
             assets.add_khafile_def('arm_ltc')
             break
 
-    # Data will be written after render path has been processed to gather all defines
-    return output
-
-def write_output(output):
-    # Add datas to khafile
-    dir_name = 'world'
-    data_name = 'world'
-    
-    # Reference correct shader context
-    dat = output['material_datas'][0]
-    dat['shader'] = data_name + '/' + data_name
-    assets.add_shader2(dir_name, data_name)
-
-    # Write material json
-    path = arm.utils.build_dir() + '/compiled/Assets/materials/'
-    asset_path = path + dat['name'] + '.arm'
-    arm.utils.write_arm(asset_path, output)
-    assets.add(asset_path)
-
-def parse_world_output(world, node, context):
+def parse_world_output(world, node):
     if node.inputs[0].is_linked:
         surface_node = node_utils.find_node_by_link(world.node_tree, node, node.inputs[0])
-        parse_surface(world, surface_node, context)
+        parse_surface(world, surface_node)
     
-def parse_surface(world, node, context):
+def parse_surface(world, node):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     solid_mat = rpdat.arm_material_model == 'Solid'
@@ -217,22 +173,15 @@ def parse_surface(world, node, context):
         if wrd.arm_irradiance and not solid_mat:
             wrd.world_defs += '_Irr'
 
+        world.arm_envtex_color = node.inputs[0].default_value
+        world.arm_envtex_strength = node.inputs[1].default_value
+
         # Strength
-        envmap_strength_const = {}
-        envmap_strength_const['name'] = 'envmapStrength'
-        envmap_strength_const['float'] = node.inputs[1].default_value
-        # Always append for now, even though envmapStrength is not always needed
-        context['bind_constants'].append(envmap_strength_const)
-        
         if node.inputs[0].is_linked:
             color_node = node_utils.find_node_by_link(world.node_tree, node, node.inputs[0])
-            parse_color(world, color_node, context, envmap_strength_const)
+            parse_color(world, color_node)
 
-        # Cache results
-        world.arm_envtex_color = node.inputs[0].default_value
-        world.arm_envtex_strength = envmap_strength_const['float']
-
-def parse_color(world, node, context, envmap_strength_const):       
+def parse_color(world, node):       
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
@@ -247,15 +196,9 @@ def parse_color(world, node, context, envmap_strength_const):
             log.warn(world.name + ' - unable to open ' + image.filepath)
             return
 
-        tex = {}
-        context['bind_textures'].append(tex)
-        tex['name'] = 'envmap'
-        tex['u_addressing'] = 'clamp'
-        tex['v_addressing'] = 'clamp'
-
         # Reference image name
-        tex['file'] = arm.utils.extract_filename(image.filepath)
-        base = tex['file'].rsplit('.', 1)
+        tex_file = arm.utils.extract_filename(image.filepath)
+        base = tex_file.rsplit('.', 1)
         ext = base[1].lower()
 
         if ext == 'hdr':
@@ -265,10 +208,10 @@ def parse_color(world, node, context, envmap_strength_const):
         do_convert = ext != 'hdr' and ext != 'jpg'
         if do_convert:
             if ext == 'exr':
-                tex['file'] = base[0] + '.hdr'
+                tex_file = base[0] + '.hdr'
                 target_format = 'HDR'
             else:
-                tex['file'] = base[0] + '.jpg'
+                tex_file = base[0] + '.jpg'
                 target_format = 'JPEG'
 
         if image.packed_file != None:
@@ -276,7 +219,7 @@ def parse_color(world, node, context, envmap_strength_const):
             unpack_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked'
             if not os.path.exists(unpack_path):
                 os.makedirs(unpack_path)
-            unpack_filepath = unpack_path + '/' + tex['file']
+            unpack_filepath = unpack_path + '/' + tex_file
             filepath = unpack_filepath
 
             if do_convert:
@@ -290,7 +233,7 @@ def parse_color(world, node, context, envmap_strength_const):
             assets.add(unpack_filepath)
         else:
             if do_convert:
-                converted_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked/' + tex['file']
+                converted_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked/' + tex_file
                 filepath = converted_path
                 # TODO: delete cache when file changes
                 if not os.path.isfile(converted_path):
@@ -301,8 +244,8 @@ def parse_color(world, node, context, envmap_strength_const):
                 assets.add(arm.utils.asset_path(image.filepath))
 
         # Generate prefiltered envmaps
-        world.arm_envtex_name = tex['file']
-        world.arm_envtex_irr_name = tex['file'].rsplit('.', 1)[0]
+        world.arm_envtex_name = tex_file
+        world.arm_envtex_irr_name = tex_file.rsplit('.', 1)[0]
         disable_hdr = target_format == 'JPEG'
         
         mip_count = world.arm_envtex_num_mips
@@ -320,15 +263,7 @@ def parse_color(world, node, context, envmap_strength_const):
             wrd.world_defs += '_Rad'
 
     # Static image background
-    elif node.type == 'TEX_IMAGE':
-        wrd.world_defs += '_EnvImg'
-        tex = {}
-        context['bind_textures'].append(tex)
-        tex['name'] = 'envmap'
-        # No repeat for now
-        tex['u_addressing'] = 'clamp'
-        tex['v_addressing'] = 'clamp'
-        
+    elif node.type == 'TEX_IMAGE':        
         image = node.image
         filepath = image.filepath
 
@@ -348,25 +283,18 @@ def parse_color(world, node, context, envmap_strength_const):
             assets.add(arm.utils.asset_path(image.filepath))
 
         # Reference image name
-        tex['file'] = arm.utils.extract_filename(image.filepath)
-
+        tex_file = arm.utils.extract_filename(image.filepath)
+        world.arm_envtex_name = tex_file
 
     # Append sky define
     elif node.type == 'TEX_SKY':
         # Match to cycles
-        envmap_strength_const['float'] *= 0.1
+        world.arm_envtex_strength *= 0.1
         
         wrd.world_defs += '_EnvSky'
         assets.add_khafile_def('arm_hosek')
-        # Append sky properties to material
-        const = {}
-        const['name'] = 'sunDirection'
-        sun_direction = [node.sun_direction[0], node.sun_direction[1], node.sun_direction[2]]
-        sun_direction[1] *= -1 # Fix Y orientation
-        const['vec3'] = list(sun_direction)
-        context['bind_constants'].append(const)
-        
-        world.arm_envtex_sun_direction = sun_direction
+                
+        world.arm_envtex_sun_direction = [node.sun_direction[0], node.sun_direction[1], node.sun_direction[2]]
         world.arm_envtex_turbidity = node.turbidity
         world.arm_envtex_ground_albedo = node.ground_albedo
         

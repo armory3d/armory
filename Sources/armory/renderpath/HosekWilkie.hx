@@ -116,9 +116,8 @@ class HosekWilkie {
 	}
 
 	public static function init(world:WorldData) {
-		var probe = world.getGlobalProbe();
-		var dir = probe.raw.sun_direction;
-		sunDirection = new FastVector3(dir[0], dir[1], dir[2]);
+		var dir = world.raw.sun_direction;
+		sunDirection = new FastVector3(dir[0], -dir[1], dir[2]);
 
 		// Extract direction from lamp
 		// var mat = iron.data.Data.getMaterial("World_material", "World_material").data;
@@ -134,8 +133,8 @@ class HosekWilkie {
 		// sunDirection = new FastVector3(lf.x, lf.y, lf.z);
 
 		var sunPositionX = Math.acos(sunDirection.z);
-		var turbidity = probe.raw.turbidity;
-		var albedo = probe.raw.ground_albedo;
+		var turbidity = world.raw.turbidity;
+		var albedo = world.raw.ground_albedo;
 		HosekWilkie.recompute(sunPositionX, turbidity, albedo, 1.15);
 	}
 }

@@ -30,7 +30,7 @@ class RenderPathCreator {
 
 		#if (rp_background == "World")
 		{
-			path.loadMaterial("_worldMaterial");
+			path.loadShader("world/world/world");
 		}
 		#end
 
@@ -150,7 +150,7 @@ class RenderPathCreator {
 			path.drawMeshes("mesh");
 			#if (rp_background == "World")
 			{
-				path.drawSkydome("_worldMaterial");
+				path.drawSkydome("world/world/world");
 			}
 			#end
 
@@ -205,7 +205,7 @@ class RenderPathCreator {
 	static function init() {
 		#if (rp_background == "World")
 		{
-			path.loadMaterial("_worldMaterial");
+			path.loadShader("world/world/world");
 		}
 		#end
 
@@ -758,7 +758,7 @@ class RenderPathCreator {
 
 		#if (rp_background == "World")
 		{
-			path.drawSkydome("_worldMaterial");
+			path.drawSkydome("world/world/world");
 		}
 		#end
 

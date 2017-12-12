@@ -2542,8 +2542,20 @@ class ArmoryExporter:
                 bgcol[i] = pow(bgcol[i], 1.0 / 2.2)
         o['background_color'] = arm.utils.color_to_int(bgcol)
 
-        wmat_name = arm.utils.safestr(world.name) + '_material'
-        o['material_ref'] = wmat_name + '/' + wmat_name + '/world'
+        if '_EnvSky' in wrd.world_defs:
+            # Sky data for probe
+            o['sun_direction'] =  list(world.arm_envtex_sun_direction)
+            o['turbidity'] = world.arm_envtex_turbidity
+            o['ground_albedo'] = world.arm_envtex_ground_albedo
+
+        disable_hdr = world.arm_envtex_name.endswith('.jpg')
+        if '_EnvTex' in wrd.world_defs or '_EnvImg' in wrd.world_defs:
+            o['envmap'] = world.arm_envtex_name.rsplit('.', 1)[0]
+            if disable_hdr:
+                o['envmap'] += '.jpg'
+            else:
+                o['envmap'] += '.hdr'
+
         o['probes'] = []
 
         # Main probe
@@ -2551,7 +2563,6 @@ class ArmoryExporter:
         solid_mat = rpdat.arm_material_model == 'Solid'
         arm_irradiance = wrd.arm_irradiance and not solid_mat
         arm_radiance = False
-        disable_hdr = world.arm_envtex_name.endswith('.jpg')
         radtex = world.arm_envtex_name.rsplit('.', 1)[0]
         irrsharmonics = world.arm_envtex_irr_name
         # Radiance
@@ -2580,11 +2591,6 @@ class ArmoryExporter:
         po['blending'] = 1.0
         po['volume'] = [0, 0, 0]
         po['volume_center'] = [0, 0, 0]
-        if '_EnvSky' in wrd.world_defs:
-            # Sky data for probe
-            po['sun_direction'] =  list(world.arm_envtex_sun_direction)
-            po['turbidity'] = world.arm_envtex_turbidity
-            po['ground_albedo'] = world.arm_envtex_ground_albedo
         o['probes'].append(po)
 
     # https://blender.stackexchange.com/questions/70629

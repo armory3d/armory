@@ -41,7 +41,7 @@ precision mediump float;
 #endif
 
 // uniform sampler2D gbufferD;
-uniform float envmapStrength; // From world material
+uniform float envmapStrength;
 
 // in vec2 texCoord;
 in vec3 normal;
@@ -191,12 +191,11 @@ void main() {
 
 #ifdef _EnvSky
 	vec3 n = normalize(normal);
-	vec3 sunDir = vec3(sunDirection.x, -sunDirection.y, sunDirection.z);	
 	float phi = acos(n.z);
 	float theta = atan(-n.y, n.x) + PI;
 	
 	float cos_theta = clamp(n.z, 0.0, 1.0);
-	float cos_gamma = dot(n, sunDir);
+	float cos_gamma = dot(n, sunDirection);
 	float gamma_val = acos(cos_gamma);
 
 	fragColor.rgb = Z * hosekWilkie(cos_theta, gamma_val, cos_gamma) * envmapStrength;

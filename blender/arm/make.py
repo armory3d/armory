@@ -97,14 +97,8 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     # Build node trees
     ArmoryExporter.import_traits = []
     make_logic.build()
-    active_worlds = set()
-    for scene in bpy.data.scenes:
-        if scene.arm_export and scene.world != None:
-            active_worlds.add(scene.world)
-    world_outputs = make_world.build(active_worlds)
+    make_world.build()
     make_renderpath.build()
-    for wout in world_outputs:
-        make_world.write_output(wout)
 
     # Export scene data
     assets.embedded_data = sorted(list(set(assets.embedded_data)))
