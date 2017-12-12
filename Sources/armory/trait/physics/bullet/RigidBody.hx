@@ -12,6 +12,9 @@ class RigidBody extends Trait {
 
 	var shape:Shape;
 	var _motionState:BtMotionStatePointer;
+	var _shape:BtCollisionShapePointer;
+	var _shapeConvex:BtConvexHullShapePointer;
+	var isConvex = false;
 
 	public var physics:PhysicsWorld;
 	public var transform:Transform = null;
@@ -28,6 +31,12 @@ class RigidBody extends Trait {
 	var deactivationParams:Array<Float>;
 	public var group = 1;
 	public var ghost = false;
+	var bodyScaleX:Float; // Transform scale at creation time
+	var bodyScaleY:Float;
+	var bodyScaleZ:Float;
+	var currentScaleX:Float;
+	var currentScaleY:Float;
+	var currentScaleZ:Float;
 
 	public var body:BtRigidBodyPointer = null;
 	public var ready = false;
@@ -78,9 +87,9 @@ class RigidBody extends Trait {
 		transform = object.transform;
 		physics = armory.trait.physics.PhysicsWorld.active;
 
-		var _shape:BtCollisionShapePointer = null;
-		var _shapeConvex:BtConvexHullShapePointer = null;
-		var isConvex = false;
+		_shape = null;
+		_shapeConvex = null;
+		isConvex = false;
 
 		if (shape == Shape.Box) {
 			_shape = BtBoxShape.create(BtVector3.create(
@@ -168,6 +177,10 @@ class RigidBody extends Trait {
 		}
 
 		if (ghost) body.setCollisionFlags(body.getCollisionFlags() | BtCollisionObject.CF_NO_CONTACT_RESPONSE);
+
+		bodyScaleX = currentScaleX = transform.scale.x;
+		bodyScaleY = currentScaleY = transform.scale.y;
+		bodyScaleZ = currentScaleZ = transform.scale.z;
 
 		id = nextId;
 		nextId++;
@@ -274,16 +287,26 @@ class RigidBody extends Trait {
 	}
 
 	public function syncTransform() {
-		transform.buildMatrix();
+		var t = transform;
+		t.buildMatrix();
 		var trans = BtTransform.create();
-		trans.setOrigin(BtVector3.create(transform.worldx(), transform.worldy(), transform.worldz()));
-		var rot = transform.world.getQuat();
+		trans.setOrigin(BtVector3.create(t.worldx(), t.worldy(), t.worldz()));
+		var rot = t.world.getQuat();
 		trans.setRotation(BtQuaternion.create(rot.x, rot.y, rot.z, rot.w));
 		body.setCenterOfMassTransform(trans);
 		// _motionState.getWorldTransform(trans);
-		// trans.setOrigin(BtVector3.create(transform.loc.x, transform.loc.y, transform.loc.z));
+		// trans.setOrigin(BtVector3.create(t.loc.x, t.loc.y, t.loc.z));
 		// _motionState.setWorldTransform(trans);
+		if (currentScaleX != t.scale.x || currentScaleY != t.scale.y || currentScaleZ != t.scale.z) setScale(t.scale);
 		activate();
+	}
+
+	function setScale(v:Vec4) {
+		currentScaleX = v.x;
+		currentScaleY = v.y;
+		currentScaleZ = v.z;
+		if (!isConvex) _shape.setLocalScaling(BtVector3.create(bodyScaleX * v.x, bodyScaleY * v.y, bodyScaleZ * v.z));
+		// physics.activate.world.updateSingleAabb(body);
 	}
 
 	function addPointsToConvexHull(shape:BtConvexHullShapePointer, scale:Vec4, margin:Float) {
