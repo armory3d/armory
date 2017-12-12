@@ -59,9 +59,11 @@ class SimpleRotateObject extends iron.Trait {
 
 	function rotateObject(vec:Vec4){
 		if(rb != null){
+			#if arm_physics
 			rb.setAngularVelocity(0, 0, 0);
 			rb.transform.rotate(vec, speed);
 			rb.syncTransform();
+			#end
 		} else {
 			object.transform.rotate(vec, speed);
 		}
