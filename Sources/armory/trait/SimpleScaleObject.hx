@@ -70,10 +70,12 @@ class SimpleScaleObject extends iron.Trait {
 	function scaleObject(vec:Vec4){
 		var s = object.transform.scale;
 		if(rb != null){
-			rb.transform.scale = new Vec4(s.x + vec.x, s.y + vec.y, s.z + vec.z);
+			#if arm_physics
+			rb.transform.scale.set(s.x + vec.x, s.y + vec.y, s.z + vec.z);
 			rb.syncTransform();
+			#end
 		} else {
-			object.transform.scale = new Vec4(s.x + vec.x, s.y + vec.y, s.z + vec.z);
+			object.transform.scale.set(s.x + vec.x, s.y + vec.y, s.z + vec.z);
 			object.transform.buildMatrix();
 		}
 	}
