@@ -437,10 +437,9 @@ def init_properties_on_load():
     # Outdated project
     if bpy.data.filepath != '' and (wrd.arm_version != arm_version or wrd.arm_commit != arm_commit): # Call on project load only
         print('Project updated to sdk v' + arm_version)
-        if arm_version == '0.1.0':
-            # TODO: Deprecated
-            for lamp in bpy.data.lamps:
-                lamp.arm_shadows_bias = 1.0
+        if arm_version == '0.1.0' and wrd.arm_version != arm_version:
+            # Migrate deprecated props here
+            pass
         wrd.arm_version = arm_version
         wrd.arm_commit = arm_commit
         arm.make.clean_project()
