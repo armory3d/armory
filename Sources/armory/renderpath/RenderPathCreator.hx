@@ -1,3 +1,4 @@
+// Reference: https://github.com/armory3d/armory_docs/blob/master/dev/renderpath.md
 package armory.renderpath;
 
 import iron.RenderPath;
@@ -887,6 +888,13 @@ class RenderPathCreator {
 		}
 		#end
 
+		// We are just about to enter compositing, add more custom passes here
+		// #if rp_custom_pass
+		// {
+		// }
+		// #end
+
+		// Begin compositor
 		#if rp_autoexposure
 		{
 			path.generateMipmaps("tex");
@@ -919,6 +927,7 @@ class RenderPathCreator {
 			path.drawShader("copy_pass/copy_pass/copy_pass");
 		}
 		#end
+		// End compositor
 
 		#if rp_overlays
 		{
