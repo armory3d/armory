@@ -15,7 +15,7 @@ except ImportError:
     pass
 
 # Armory version
-arm_version = '0.1.0'
+arm_version = '0.2.0'
 arm_commit = '$Id$'
 
 def invalidate_mesh_cache(self, context):
@@ -171,7 +171,7 @@ def init_properties():
     bpy.types.Object.arm_soft_body_margin = bpy.props.FloatProperty(name="Soft Body Margin", description="Collision margin", default=0.04)
     bpy.types.Object.arm_rb_linear_factor = bpy.props.FloatVectorProperty(name="Linear Factor", size=3, description="Set to 0 to lock axis", default=[1,1,1])
     bpy.types.Object.arm_rb_angular_factor = bpy.props.FloatVectorProperty(name="Angular Factor", size=3, description="Set to 0 to lock axis", default=[1,1,1])
-    bpy.types.Object.arm_rb_ghost = bpy.props.BoolProperty(name="Ghost", description="Disable contact response", default=False)
+    bpy.types.Object.arm_rb_trigger = bpy.props.BoolProperty(name="Trigger", description="Disable contact response", default=False)
     bpy.types.Object.arm_rb_terrain = bpy.props.BoolProperty(name="Terrain", description="Set rigid body collision shape to terrain", default=False)
     bpy.types.Object.arm_rb_force_deactivation = bpy.props.BoolProperty(name="Force Deactivation", description="Force deactivation on all rigid bodies for performance", default=True)
     bpy.types.Object.arm_rb_deactivation_time = bpy.props.FloatProperty(name="Deactivation Time", description="Delay putting rigid body into sleep", default=0.0)
@@ -437,8 +437,11 @@ def init_properties_on_load():
     # Outdated project
     if bpy.data.filepath != '' and (wrd.arm_version != arm_version or wrd.arm_commit != arm_commit): # Call on project load only
         print('Project updated to sdk v' + arm_version)
-        if arm_version == '0.1.0' and wrd.arm_version != arm_version:
+        if arm_version == '0.2.0' and wrd.arm_version == '0.1.0':
             # Migrate deprecated props here
+            for o in bpy.data.objects:
+                if hasattr(o, 'arm_rb_ghost'):
+                    o.arm_rb_trigger = o.arm_rb_ghost
             pass
         wrd.arm_version = arm_version
         wrd.arm_commit = arm_commit

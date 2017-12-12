@@ -30,7 +30,7 @@ class RigidBody extends Trait {
 	var angularFactors:Array<Float>;
 	var deactivationParams:Array<Float>;
 	public var group = 1;
-	public var ghost = false;
+	public var trigger = false;
 	var bodyScaleX:Float; // Transform scale at creation time
 	var bodyScaleY:Float;
 	var bodyScaleZ:Float;
@@ -49,7 +49,7 @@ class RigidBody extends Trait {
 	public function new(mass = 1.0, shape = Shape.Box, friction = 0.5, restitution = 0.0, collisionMargin = 0.0,
 						linearDamping = 0.04, angularDamping = 0.1, animated = false,
 						linearFactors:Array<Float> = null, angularFactors:Array<Float> = null,
-						group = 1, ghost = false, deactivationParams:Array<Float> = null) {
+						group = 1, trigger = false, deactivationParams:Array<Float> = null) {
 		super();
 
 		this.mass = mass;
@@ -63,7 +63,7 @@ class RigidBody extends Trait {
 		this.linearFactors = linearFactors;
 		this.angularFactors = angularFactors;
 		this.group = group;
-		this.ghost = ghost;
+		this.trigger = trigger;
 		this.deactivationParams = deactivationParams;
 
 		notifyOnAdd(init);
@@ -176,7 +176,7 @@ class RigidBody extends Trait {
 			setAngularFactor(angularFactors[0], angularFactors[1], angularFactors[2]);
 		}
 
-		if (ghost) body.setCollisionFlags(body.getCollisionFlags() | BtCollisionObject.CF_NO_CONTACT_RESPONSE);
+		if (trigger) body.setCollisionFlags(body.getCollisionFlags() | BtCollisionObject.CF_NO_CONTACT_RESPONSE);
 
 		bodyScaleX = currentScaleX = transform.scale.x;
 		bodyScaleY = currentScaleY = transform.scale.y;
