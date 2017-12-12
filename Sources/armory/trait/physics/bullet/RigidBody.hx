@@ -306,7 +306,7 @@ class RigidBody extends Trait {
 		currentScaleY = v.y;
 		currentScaleZ = v.z;
 		if (!isConvex) _shape.setLocalScaling(BtVector3.create(bodyScaleX * v.x, bodyScaleY * v.y, bodyScaleZ * v.z));
-		// physics.activate.world.updateSingleAabb(body);
+		physics.world.updateSingleAabb(body);
 	}
 
 	function addPointsToConvexHull(shape:BtConvexHullShapePointer, scale:Vec4, margin:Float) {
