@@ -5,8 +5,8 @@ import iron.system.Input;
 import armory.trait.physics.RigidBody;
 
 /**
-    Simple script to scale an object around using the keyboard.
-	All axis can be scaled at once using . (dot) and , (comma).
+	Simple script to scale an object around using the keyboard.
+	All axis can be scaled at once using the up and down arrows.
 	Individual axis can be scaled using YU(x), HJ(y), NM(z).
 	Can be used for testing and debuging.
 **/
@@ -53,13 +53,11 @@ class SimpleScaleObject extends iron.Trait {
 				scale.z -= speed;
 			}
 
-			if(keyboard.down(",")){
-				trace("test1");
+			if(keyboard.down("up")){
 				scale.set(speed, speed, speed);
 			}
 
-			if(keyboard.down(".")){
-				trace("test2");
+			if(keyboard.down("down")){
 				scale.set(-speed, -speed, -speed);
 			}
 
@@ -78,6 +76,5 @@ class SimpleScaleObject extends iron.Trait {
 			object.transform.scale = new Vec4(s.x + vec.x, s.y + vec.y, s.z + vec.z);
 			object.transform.buildMatrix();
 		}
-		
 	}
 }
