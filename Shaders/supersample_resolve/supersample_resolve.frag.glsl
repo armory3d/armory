@@ -4,7 +4,7 @@
 precision mediump float;
 #endif
 
-#include "../std/filters.glsl"
+#include "std/filters.glsl"
 
 uniform sampler2D tex;
 uniform vec2 screenSizeInv;

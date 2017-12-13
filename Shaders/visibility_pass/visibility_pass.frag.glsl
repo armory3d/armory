@@ -1,8 +1,8 @@
 #version 450
 
-#include "../compiled.glsl"
-#include "../std/gbuffer.glsl"
-#include "../std/math.glsl"
+#include "compiled.glsl"
+#include "std/gbuffer.glsl"
+#include "std/math.glsl"
 
 uniform sampler2D shadowMap;
 uniform sampler2D dilate;

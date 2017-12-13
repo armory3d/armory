@@ -5,7 +5,7 @@
 precision mediump float;
 #endif
 
-#include "../compiled.glsl"
+#include "compiled.glsl"
 
 uniform sampler2D tex;
 uniform vec2 dir;

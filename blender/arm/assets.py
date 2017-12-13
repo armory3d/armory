@@ -12,6 +12,7 @@ embedded_data = []
 shaders = []
 shaders_last = []
 shader_datas = []
+shader_passes = []
 
 def reset():
     global assets
@@ -28,6 +29,7 @@ def reset():
     shaders_last = shaders
     shaders = []
     shader_datas = []
+    shader_passes = []
 
 def add(file):
     global assets
@@ -59,9 +61,13 @@ def add_shader_data(file):
     if file not in shader_datas:
         shader_datas.append(file)
 
-def add_shader2(dir_name, data_name):
-    add_shader_data(arm.utils.build_dir() + '/compiled/Shaders/' + dir_name + '/' + data_name + '.arm')
-    full_name = arm.utils.build_dir() + '/compiled/Shaders/' + dir_name + '/' + data_name
+def add_shader_pass(data_name):
+    global shader_passes
+    # Shader data for passes are written into single shader_datas.arm file
+    add_shader_data(arm.utils.build_dir() + '/compiled/Shaders/shader_datas.arm')
+    if data_name not in shader_passes:
+        shader_passes.append(data_name)
+    full_name = arm.utils.build_dir() + '/compiled/Shaders/' + data_name
     add_shader(full_name + '.vert.glsl')
     add_shader(full_name + '.frag.glsl')
 

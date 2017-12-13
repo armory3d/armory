@@ -4,9 +4,9 @@
 precision mediump float;
 #endif
 
-#include "../compiled.glsl"
+#include "compiled.glsl"
 #ifdef _EnvTex
-#include "../std/math.glsl"
+#include "std/math.glsl"
 #endif
 
 #ifdef _EnvCol

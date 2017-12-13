@@ -30,7 +30,7 @@ exporter = ArmoryExporter()
 scripts_mtime = 0 # Monitor source changes
 code_parsed = False
 
-def compile_shader_pass(raw_shaders_path, shader_name, defs):
+def compile_shader_pass(res, raw_shaders_path, shader_name, defs):
     os.chdir(raw_shaders_path + '/' + shader_name)
 
     # Open json file
@@ -41,7 +41,7 @@ def compile_shader_pass(raw_shaders_path, shader_name, defs):
     json_data = json.loads(json_file)
 
     fp = arm.utils.get_fp_build()
-    arm.lib.make_datas.make(base_name, json_data, fp, defs)
+    arm.lib.make_datas.make(res, base_name, json_data, fp, defs)
     arm.lib.make_variants.make(base_name, json_data, fp, defs)
 
 def remove_readonly(func, path, excinfo):
@@ -56,7 +56,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     print('OS: ' + arm.utils.get_os() + ', Target: ' + state.target + ', GAPI: ' + arm.utils.get_gapi())
 
     # Clean compiled variants if cache is disabled
-    build_dir = arm.utils.build_dir()
+    build_dir = arm.utils.get_fp_build()
     if wrd.arm_cache_shaders == False:
         if os.path.isdir(build_dir + '/debug/html5-resources'):
             shutil.rmtree(build_dir + '/debug/html5-resources', onerror=remove_readonly)
@@ -145,28 +145,32 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     print('Shader flags: ' + str(defs))
 
     # Write referenced shader passes
-    for ref in assets.shader_datas:
-        # Data does not exist yet
-        if not os.path.isfile(fp + '/' + ref) or state.last_world_defs != wrd.world_defs:
-            shader_name = ref.split('/')[3] # Extract from 'build/compiled/...'
-            # Shader pass exists
-            if not os.path.exists(raw_shaders_path + '/' + shader_name):
+    if not os.path.isfile(build_dir + '/compiled/Shaders/shader_datas.arm') or state.last_world_defs != wrd.world_defs:
+        path = build_dir + '/compiled/Shaders'
+        if not os.path.exists(path):
+            os.makedirs(path)
+        res = {}
+        res['shader_datas'] = []
+        for ref in assets.shader_passes:
+            # Ensure shader pass source exists
+            if not os.path.exists(raw_shaders_path + '/' + ref):
                 continue
-            if shader_name.startswith('compositor_pass'):
+            if ref.startswith('compositor_pass'):
                 cdefs = arm.utils.def_strings_to_array(wrd.compo_defs)
-                compile_shader_pass(raw_shaders_path, shader_name, defs + cdefs)
-            # elif shader_name.startswith('grease_pencil'):
-                # compile_shader_pass(raw_shaders_path, shader_name, [])
+                compile_shader_pass(res, raw_shaders_path, ref, defs + cdefs)
+            # elif ref.startswith('grease_pencil'):
+                # compile_shader_pass(res, raw_shaders_path, ref, [])
             else:
-                compile_shader_pass(raw_shaders_path, shader_name, defs)
+                compile_shader_pass(res, raw_shaders_path, ref, defs)
+        arm.utils.write_arm(path + '/shader_datas.arm', res)
     state.last_world_defs = wrd.world_defs
 
     # Reset path
     os.chdir(fp)
 
     # Copy std shaders
-    if not os.path.isdir(arm.utils.build_dir() + '/compiled/Shaders/std'):
-        shutil.copytree(raw_shaders_path + 'std', arm.utils.build_dir() + '/compiled/Shaders/std')
+    if not os.path.isdir(build_dir + '/compiled/Shaders/std'):
+        shutil.copytree(raw_shaders_path + 'std', build_dir + '/compiled/Shaders/std')
 
     # Write compiled.glsl
     write_data.write_compiledglsl()

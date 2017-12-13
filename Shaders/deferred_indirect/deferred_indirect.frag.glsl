@@ -4,21 +4,21 @@
 precision mediump float;
 #endif
 
-#include "../compiled.glsl"
-#include "../std/gbuffer.glsl"
-#include "../std/math.glsl"
-#include "../std/brdf.glsl"
+#include "compiled.glsl"
+#include "std/gbuffer.glsl"
+#include "std/math.glsl"
+#include "std/brdf.glsl"
 #ifdef _Irr
-	#include "../std/shirr.glsl"
+	#include "std/shirr.glsl"
 #endif
 #ifdef _VoxelGI
-	#include "../std/conetrace.glsl"
+	#include "std/conetrace.glsl"
 #endif
 #ifdef _VoxelAO
-	#include "../std/conetrace.glsl"
+	#include "std/conetrace.glsl"
 #endif
 #ifdef _DFAO
-#include "../std/sdf.glsl"
+#include "std/sdf.glsl"
 #endif
 
 uniform sampler2D gbufferD;

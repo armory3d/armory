@@ -1,7 +1,7 @@
 #version 450
 
-#include "../compiled.glsl"
-#include "../std/gbuffer.glsl"
+#include "compiled.glsl"
+#include "std/gbuffer.glsl"
 
 uniform sampler2D tex;
 uniform sampler2D gbuffer0;

@@ -28,7 +28,7 @@ def build():
 
     assets.add_khafile_def('rp_background={0}'.format(rpdat.rp_background))
     if rpdat.rp_background == 'World':
-        assets.add_shader2('world', 'world')
+        assets.add_shader_pass('world')
         if '_EnvClouds' in wrd.world_defs:
             assets.add(assets_path + 'noise256.png')
             assets.add_embedded_data('noise256.png')
@@ -69,24 +69,24 @@ def build():
             if wrd.arm_lut:
                 wrd.compo_defs += '_CLUT'
                 assets.add_embedded_data('luttexture.jpg')
-            assets.add_shader2('compositor_pass', 'compositor_pass')
+            assets.add_shader_pass('compositor_pass')
         else:
-            assets.add_shader2('copy_pass', 'copy_pass')
+            assets.add_shader_pass('copy_pass')
 
         assets.add_khafile_def('rp_antialiasing={0}'.format(rpdat.rp_antialiasing))
 
         if rpdat.rp_antialiasing == 'SMAA' or rpdat.rp_antialiasing == 'TAA':
-            assets.add_shader2('smaa_edge_detect', 'smaa_edge_detect')
-            assets.add_shader2('smaa_blend_weight', 'smaa_blend_weight')
-            assets.add_shader2('smaa_neighborhood_blend', 'smaa_neighborhood_blend')
+            assets.add_shader_pass('smaa_edge_detect')
+            assets.add_shader_pass('smaa_blend_weight')
+            assets.add_shader_pass('smaa_neighborhood_blend')
             assets.add(assets_path + 'smaa_area.png')
             assets.add(assets_path + 'smaa_search.png')
             assets.add_embedded_data('smaa_area.png')
             assets.add_embedded_data('smaa_search.png')
             wrd.world_defs += '_SMAA'
             if rpdat.rp_antialiasing == 'TAA':
-                assets.add_shader2('taa_pass', 'taa_pass')
-                assets.add_shader2('copy_pass', 'copy_pass')
+                assets.add_shader_pass('taa_pass')
+                assets.add_shader_pass('copy_pass')
 
         if rpdat.rp_antialiasing == 'TAA' or rpdat.rp_motionblur == 'Object':
             assets.add_khafile_def('arm_veloc')
@@ -96,14 +96,14 @@ def build():
 
         assets.add_khafile_def('rp_supersampling={0}'.format(rpdat.rp_supersampling))        
         if rpdat.rp_supersampling == '4':
-            assets.add_shader2('supersample_resolve', 'supersample_resolve')
+            assets.add_shader_pass('supersample_resolve')
 
     if rpdat.rp_overlays:
         assets.add_khafile_def('rp_overlays')
 
     if rpdat.rp_translucency:
         assets.add_khafile_def('rp_translucency')
-        assets.add_shader2('translucent_resolve', 'translucent_resolve')
+        assets.add_shader_pass('translucent_resolve')
 
     if rpdat.rp_stereo:
         assets.add_khafile_def('rp_stereo')
@@ -138,64 +138,64 @@ def build():
     if rpdat.rp_ssgi != 'Off':
         wrd.world_defs += '_SSAO'
         if rpdat.rp_ssgi == 'SSAO':
-            assets.add_shader2('ssao_pass', 'ssao_pass')
-            assets.add_shader2('blur_edge_pass', 'blur_edge_pass')
+            assets.add_shader_pass('ssao_pass')
+            assets.add_shader_pass('blur_edge_pass')
             assets.add(assets_path + 'noise8.png')
             assets.add_embedded_data('noise8.png')
         else:
-            assets.add_shader2('ssgi_pass', 'ssgi_pass')
-            assets.add_shader2('ssgi_blur_pass', 'ssgi_blur_pass')
+            assets.add_shader_pass('ssgi_pass')
+            assets.add_shader_pass('ssgi_blur_pass')
 
     if rpdat.rp_renderer == 'Deferred':
-        assets.add_shader2('deferred_indirect', 'deferred_indirect')
-        assets.add_shader2('deferred_light', 'deferred_light')
-        assets.add_shader2('deferred_light_quad', 'deferred_light_quad')
+        assets.add_shader_pass('deferred_indirect')
+        assets.add_shader_pass('deferred_light')
+        assets.add_shader_pass('deferred_light_quad')
 
     if rpdat.rp_rendercapture:
         assets.add_khafile_def('rp_rendercapture')
         assets.add_khafile_def('rp_rendercapture_format={0}'.format(wrd.rp_rendercapture_format))
-        assets.add_shader2('copy_pass', 'copy_pass')
+        assets.add_shader_pass('copy_pass')
         
     if rpdat.rp_volumetriclight:
         assets.add_khafile_def('rp_volumetriclight')
-        assets.add_shader2('volumetric_light_quad', 'volumetric_light_quad')
-        assets.add_shader2('volumetric_light', 'volumetric_light')
-        assets.add_shader2('blur_edge_pass', 'blur_edge_pass')
+        assets.add_shader_pass('volumetric_light_quad')
+        assets.add_shader_pass('volumetric_light')
+        assets.add_shader_pass('blur_edge_pass')
 
     if rpdat.rp_decals:
         assets.add_khafile_def('rp_decals')
 
     if rpdat.rp_ocean:
         assets.add_khafile_def('rp_ocean')
-        assets.add_shader2('water_pass', 'water_pass')
+        assets.add_shader_pass('water_pass', 'water_pass')
 
     if rpdat.rp_blending_state != 'Off':
         assets.add_khafile_def('rp_blending')
 
     if rpdat.rp_bloom:
         assets.add_khafile_def('rp_bloom')
-        assets.add_shader2('bloom_pass', 'bloom_pass')
-        assets.add_shader2('blur_gaus_pass', 'blur_gaus_pass')
+        assets.add_shader_pass('bloom_pass')
+        assets.add_shader_pass('blur_gaus_pass')
 
     if rpdat.rp_sss:
         assets.add_khafile_def('rp_sss')
         wrd.world_defs += '_SSS'
-        assets.add_shader2('sss_pass', 'sss_pass')
+        assets.add_shader_pass('sss_pass')
 
     if rpdat.rp_ssr:
         assets.add_khafile_def('rp_ssr')
-        assets.add_shader2('ssr_pass', 'ssr_pass')
-        assets.add_shader2('blur_adaptive_pass', 'blur_adaptive_pass')
+        assets.add_shader_pass('ssr_pass')
+        assets.add_shader_pass('blur_adaptive_pass')
         if rpdat.arm_ssr_half_res:
             assets.add_khafile_def('rp_ssr_half')
 
     if rpdat.rp_motionblur != 'Off':
         assets.add_khafile_def('rp_motionblur={0}'.format(rpdat.rp_motionblur))
-        assets.add_shader2('copy_pass', 'copy_pass')
+        assets.add_shader_pass('copy_pass')
         if rpdat.rp_motionblur == 'Camera':
-            assets.add_shader2('motion_blur_pass', 'motion_blur_pass')
+            assets.add_shader_pass('motion_blur_pass')
         else:
-            assets.add_shader2('motion_blur_veloc_pass', 'motion_blur_veloc_pass')
+            assets.add_shader_pass('motion_blur_veloc_pass')
 
     if rpdat.rp_compositornodes and rpdat.rp_autoexposure:
         assets.add_khafile_def('rp_autoexposure')
@@ -205,9 +205,9 @@ def build():
 
     if rpdat.arm_soft_shadows == 'On':
         if rpdat.rp_shadowmap_cascades == '1':
-            assets.add_shader2('dilate_pass', 'dilate_pass')
-            assets.add_shader2('visibility_pass', 'visibility_pass')
-            assets.add_shader2('blur_shadow_pass', 'blur_shadow_pass')
+            assets.add_shader_pass('dilate_pass')
+            assets.add_shader_pass('visibility_pass')
+            assets.add_shader_pass('blur_shadow_pass')
             assets.add_khafile_def('rp_soft_shadows')
             wrd.world_defs += '_SoftShadows'
             if rpdat.arm_soft_shadows_penumbra != 1:

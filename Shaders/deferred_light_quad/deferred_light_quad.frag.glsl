@@ -4,22 +4,22 @@
 precision mediump float;
 #endif
 
-#include "../compiled.glsl"
-#include "../std/brdf.glsl"
-#include "../std/math.glsl"
+#include "compiled.glsl"
+#include "std/brdf.glsl"
+#include "std/math.glsl"
 #ifdef _VoxelGIDirect
-	#include "../std/conetrace.glsl"
+	#include "std/conetrace.glsl"
 #endif
 #ifndef _NoShadows
-	#include "../std/shadows.glsl"
+	#include "std/shadows.glsl"
 #endif
 #ifdef _SSS
-#include "../std/sss.glsl"
+#include "std/sss.glsl"
 #endif
 #ifdef _SSRS
-#include "../std/ssrs.glsl"
+#include "std/ssrs.glsl"
 #endif
-#include "../std/gbuffer.glsl"
+#include "std/gbuffer.glsl"
 
 #ifdef _VoxelGIDirect
 	//!uniform sampler3D voxels;

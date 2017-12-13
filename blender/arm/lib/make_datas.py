@@ -97,12 +97,6 @@ def write_data(res, defs, json_data, base_name):
                     tese = f.read().splitlines()
             parse_shader(sres, c, con, defs, tese, False)
 
-def find_def(defs, s):
-    for d in defs:
-        if d == s:
-            return True
-    return False
-
 def parse_shader(sres, c, con, defs, lines, parse_attributes):
     skip_till_endif = 0
     skip_else = False
@@ -120,7 +114,7 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
         # Preprocessor
         if line.startswith('#ifdef') or line.startswith('#ifndef'):
             s = line.split(' ')[1]
-            found = find_def(defs, s)
+            found = s in defs
             if line.startswith('#ifndef'):
                 found = not found
             if found == False:
@@ -253,19 +247,5 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
                             break
                     con['constants'].append(const)
 
-def save_data(path, base_name, res):
-    r = {}
-    r['shader_datas'] = [res['shader_datas'][-1]]
-    arm.utils.write_arm(path + '/' + base_name + '.arm', r)
-
-def make(base_name, json_data, fp, defs):
-    
-    path = fp + '/compiled/Shaders/' + base_name
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-    res = {}
-    res['shader_datas'] = []
-
+def make(res, base_name, json_data, fp, defs):
     write_data(res, defs, json_data, base_name)
-    save_data(path, base_name, res)

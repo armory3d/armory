@@ -4,9 +4,9 @@
 precision mediump float;
 #endif
 
-#include "../compiled.glsl"
-#include "../std/math.glsl"
-#include "../std/gbuffer.glsl"
+#include "compiled.glsl"
+#include "std/math.glsl"
+#include "std/gbuffer.glsl"
 
 uniform sampler2D tex;
 uniform sampler2D gbufferD;

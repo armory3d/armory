@@ -4,11 +4,11 @@
 precision highp float;
 #endif
 
-#include "../compiled.glsl"
-#include "../std/tonemap.glsl"
-#include "../std/math.glsl"
+#include "compiled.glsl"
+#include "std/tonemap.glsl"
+#include "std/math.glsl"
 #ifdef _CDOF
-#include "../std/dof.glsl"
+#include "std/dof.glsl"
 #endif
 
 uniform sampler2D tex;

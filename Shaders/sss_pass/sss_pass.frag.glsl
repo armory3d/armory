@@ -39,7 +39,7 @@
 precision mediump float;
 #endif
 
-#include "../compiled.glsl"
+#include "compiled.glsl"
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer1;

@@ -13,10 +13,7 @@ def write_variant(path, name, defs, lines):
 
 def make(base_name, json_data, fp, defs):
     shaders = []
-    
-    path = fp + '/compiled/Shaders/' + base_name
-    if not os.path.exists(path):
-        os.makedirs(path)
+    path = fp + '/compiled/Shaders'
 
     # Go through every context shaders and gather ifdefs
     for c in json_data['contexts']:

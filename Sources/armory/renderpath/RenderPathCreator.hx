@@ -30,7 +30,7 @@ class RenderPathCreator {
 
 		#if (rp_background == "World")
 		{
-			path.loadShader("world/world/world");
+			path.loadShader("shader_datas/world/world");
 		}
 		#end
 
@@ -51,11 +51,11 @@ class RenderPathCreator {
 
 			#if rp_compositornodes
 			{
-				path.loadShader("compositor_pass/compositor_pass/compositor_pass");
+				path.loadShader("shader_datas/compositor_pass/compositor_pass");
 			}
 			#else
 			{
-				path.loadShader("copy_pass/copy_pass/copy_pass");
+				path.loadShader("shader_datas/copy_pass/copy_pass");
 			}
 			#end
 		}
@@ -150,7 +150,7 @@ class RenderPathCreator {
 			path.drawMeshes("mesh");
 			#if (rp_background == "World")
 			{
-				path.drawSkydome("world/world/world");
+				path.drawSkydome("shader_datas/world/world");
 			}
 			#end
 
@@ -178,11 +178,11 @@ class RenderPathCreator {
 
 			#if rp_compositornodes
 			{
-				path.drawShader("compositor_pass/compositor_pass/compositor_pass");
+				path.drawShader("shader_datas/compositor_pass/compositor_pass");
 			}
 			#else
 			{
-				path.drawShader("copy_pass/copy_pass/copy_pass");
+				path.drawShader("shader_datas/copy_pass/copy_pass");
 			}
 			#end
 		}
@@ -205,7 +205,7 @@ class RenderPathCreator {
 	static function init() {
 		#if (rp_background == "World")
 		{
-			path.loadShader("world/world/world");
+			path.loadShader("shader_datas/world/world");
 		}
 		#end
 
@@ -304,21 +304,21 @@ class RenderPathCreator {
 		}
 		#end
 
-		path.loadShader("deferred_indirect/deferred_indirect/deferred_indirect");
-		path.loadShader("deferred_light/deferred_light/deferred_light");
-		path.loadShader("deferred_light_quad/deferred_light_quad/deferred_light_quad");
+		path.loadShader("shader_datas/deferred_indirect/deferred_indirect");
+		path.loadShader("shader_datas/deferred_light/deferred_light");
+		path.loadShader("shader_datas/deferred_light_quad/deferred_light_quad");
 
 		#if ((rp_ssgi == "RTGI") || (rp_ssgi == "RTAO"))
 		{
-			path.loadShader("ssgi_pass/ssgi_pass/ssgi_pass");
-			path.loadShader("ssgi_blur_pass/ssgi_blur_pass/ssgi_blur_pass_x");
-			path.loadShader("ssgi_blur_pass/ssgi_blur_pass/ssgi_blur_pass_y");
+			path.loadShader("shader_datas/ssgi_pass/ssgi_pass");
+			path.loadShader("shader_datas/ssgi_blur_pass/ssgi_blur_pass_x");
+			path.loadShader("shader_datas/ssgi_blur_pass/ssgi_blur_pass_y");
 		}
 		#elseif (rp_ssgi == "SSAO")
 		{
-			path.loadShader("ssao_pass/ssao_pass/ssao_pass");
-			path.loadShader("blur_edge_pass/blur_edge_pass/blur_edge_pass_x");
-			path.loadShader("blur_edge_pass/blur_edge_pass/blur_edge_pass_y");
+			path.loadShader("shader_datas/ssao_pass/ssao_pass");
+			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
+			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 		}
 		#end
 
@@ -360,25 +360,25 @@ class RenderPathCreator {
 
 		#if rp_compositornodes
 		{
-			path.loadShader("compositor_pass/compositor_pass/compositor_pass");
+			path.loadShader("shader_datas/compositor_pass/compositor_pass");
 		}
 		#end
 
 		#if ((!rp_compositornodes) || (rp_antialiasing == "TAA") || (rp_rendercapture) || (rp_motionblur == "Camera") || (rp_motionblur == "Object"))
 		{
-			path.loadShader("copy_pass/copy_pass/copy_pass");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
 
 		#if ((rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA"))
 		{
-			path.loadShader("smaa_edge_detect/smaa_edge_detect/smaa_edge_detect");
-			path.loadShader("smaa_blend_weight/smaa_blend_weight/smaa_blend_weight");
-			path.loadShader("smaa_neighborhood_blend/smaa_neighborhood_blend/smaa_neighborhood_blend");
+			path.loadShader("shader_datas/smaa_edge_detect/smaa_edge_detect");
+			path.loadShader("shader_datas/smaa_blend_weight/smaa_blend_weight");
+			path.loadShader("shader_datas/smaa_neighborhood_blend/smaa_neighborhood_blend");
 
 			#if (rp_antialiasing == "TAA")
 			{
-				path.loadShader("taa_pass/taa_pass/taa_pass");
+				path.loadShader("shader_datas/taa_pass/taa_pass");
 			}
 			#end
 		}
@@ -386,22 +386,22 @@ class RenderPathCreator {
 
 		#if (rp_supersampling == 4)
 		{
-			path.loadShader("supersample_resolve/supersample_resolve/supersample_resolve");
+			path.loadShader("shader_datas/supersample_resolve/supersample_resolve");
 		}
 		#end
 
 		#if rp_volumetriclight
 		{
-			path.loadShader("volumetric_light_quad/volumetric_light_quad/volumetric_light_quad");
-			path.loadShader("volumetric_light/volumetric_light/volumetric_light");
-			path.loadShader("blur_edge_pass/blur_edge_pass/blur_edge_pass_x");
-			path.loadShader("blur_edge_pass/blur_edge_pass/blur_edge_pass_y_blend_add");
+			path.loadShader("shader_datas/volumetric_light_quad/volumetric_light_quad");
+			path.loadShader("shader_datas/volumetric_light/volumetric_light");
+			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
+			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y_blend_add");
 		}
 		#end
 
 		#if rp_ocean
 		{
-			path.loadShader("water_pass/water_pass/water_pass");
+			path.loadShader("shader_datas/water_pass/water_pass");
 		}
 		#end
 
@@ -427,25 +427,25 @@ class RenderPathCreator {
 		}
 
 		{
-			path.loadShader("bloom_pass/bloom_pass/bloom_pass");
-			path.loadShader("blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_x");
-			path.loadShader("blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_y");
-			path.loadShader("blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_y_blend");
+			path.loadShader("shader_datas/bloom_pass/bloom_pass");
+			path.loadShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
+			path.loadShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
+			path.loadShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y_blend");
 		}
 		#end
 
 		#if rp_sss
 		{
-			path.loadShader("sss_pass/sss_pass/sss_pass_x");
-			path.loadShader("sss_pass/sss_pass/sss_pass_y");
+			path.loadShader("shader_datas/sss_pass/sss_pass_x");
+			path.loadShader("shader_datas/sss_pass/sss_pass_y");
 		}
 		#end
 
 		#if rp_ssr
 		{
-			path.loadShader("ssr_pass/ssr_pass/ssr_pass");
-			path.loadShader("blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_x");
-			path.loadShader("blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
+			path.loadShader("shader_datas/ssr_pass/ssr_pass");
+			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
+			path.loadShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
 			
 			#if rp_ssr_half
 			{
@@ -474,11 +474,11 @@ class RenderPathCreator {
 		{
 			#if (rp_motionblur == "Camera")
 			{
-				path.loadShader("motion_blur_pass/motion_blur_pass/motion_blur_pass");
+				path.loadShader("shader_datas/motion_blur_pass/motion_blur_pass");
 			}
 			#else
 			{
-				path.loadShader("motion_blur_veloc_pass/motion_blur_veloc_pass/motion_blur_veloc_pass");
+				path.loadShader("shader_datas/motion_blur_veloc_pass/motion_blur_veloc_pass");
 			}
 			#end
 		}
@@ -486,11 +486,11 @@ class RenderPathCreator {
 
 		#if rp_soft_shadows
 		{
-			path.loadShader("dilate_pass/dilate_pass/dilate_pass_x");
-			path.loadShader("dilate_pass/dilate_pass/dilate_pass_y");
-			path.loadShader("visibility_pass/visibility_pass/visibility_pass");
-			path.loadShader("blur_shadow_pass/blur_shadow_pass/blur_shadow_pass_x");
-			path.loadShader("blur_shadow_pass/blur_shadow_pass/blur_shadow_pass_y");
+			path.loadShader("shader_datas/dilate_pass/dilate_pass_x");
+			path.loadShader("shader_datas/dilate_pass/dilate_pass_y");
+			path.loadShader("shader_datas/visibility_pass/visibility_pass");
+			path.loadShader("shader_datas/blur_shadow_pass/blur_shadow_pass_x");
+			path.loadShader("shader_datas/blur_shadow_pass/blur_shadow_pass_y");
 			{
 				var t = new RenderTargetRaw();
 				t.name = "visa";
@@ -534,11 +534,11 @@ class RenderPathCreator {
 
 		path.setTarget("visa"); // Merge using min blend
 		path.bindTarget("shadowMap", "shadowMap");
-		path.drawShader("dilate_pass/dilate_pass/dilate_pass_x");
+		path.drawShader("shader_datas/dilate_pass/dilate_pass_x");
 
 		path.setTarget("visb");
 		path.bindTarget("visa", "shadowMap");
-		path.drawShader("dilate_pass/dilate_pass/dilate_pass_y");
+		path.drawShader("shader_datas/dilate_pass/dilate_pass_y");
 
 		path.setTarget("visa", ["dist"]);
 		//if (i == 0) path.clearTarget(0x00000000);
@@ -546,19 +546,19 @@ class RenderPathCreator {
 		path.bindTarget("shadowMap", "shadowMap");
 		//path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
-		path.drawShader("visibility_pass/visibility_pass/visibility_pass");
+		path.drawShader("shader_datas/visibility_pass/visibility_pass");
 		
 		path.setTarget("visb");
 		path.bindTarget("visa", "tex");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("dist", "dist");
-		path.drawShader("blur_shadow_pass/blur_shadow_pass/blur_shadow_pass_x");
+		path.drawShader("shader_datas/blur_shadow_pass/blur_shadow_pass_x");
 
 		path.setTarget("visa");
 		path.bindTarget("visb", "tex");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("dist", "dist");
-		path.drawShader("blur_shadow_pass/blur_shadow_pass/blur_shadow_pass_y");
+		path.drawShader("shader_datas/blur_shadow_pass/blur_shadow_pass_y");
 		#end
 	}
 
@@ -610,34 +610,34 @@ class RenderPathCreator {
 			#if ((rp_ssgi == "RTGI"))
 			path.bindTarget("gbuffer1", "gbuffer1");
 			#end
-			path.drawShader("ssgi_pass/ssgi_pass/ssgi_pass");
+			path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
 
 			path.setTarget("bufb");
 			path.bindTarget("gbuffer0", "gbuffer0");
 			path.bindTarget("bufa", "tex");
-			path.drawShader("ssgi_blur_pass/ssgi_blur_pass/ssgi_blur_pass_x");
+			path.drawShader("shader_datas/ssgi_blur_pass/ssgi_blur_pass_x");
 
 			path.setTarget("bufa");
 			path.bindTarget("gbuffer0", "gbuffer0");
 			path.bindTarget("bufb", "tex");
-			path.drawShader("ssgi_blur_pass/ssgi_blur_pass/ssgi_blur_pass_y");
+			path.drawShader("shader_datas/ssgi_blur_pass/ssgi_blur_pass_y");
 		}	
 		#elseif (rp_ssgi == "SSAO")
 		{	
 			path.setTarget("bufa");
 			path.bindTarget("_main", "gbufferD");
 			path.bindTarget("gbuffer0", "gbuffer0");
-			path.drawShader("ssao_pass/ssao_pass/ssao_pass");
+			path.drawShader("shader_datas/ssao_pass/ssao_pass");
 
 			path.setTarget("bufb");
 			path.bindTarget("bufa", "tex");
 			path.bindTarget("gbuffer0", "gbuffer0");
-			path.drawShader("blur_edge_pass/blur_edge_pass/blur_edge_pass_x");
+			path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
 
 			path.setTarget("bufa");
 			path.bindTarget("bufb", "tex");
 			path.bindTarget("gbuffer0", "gbuffer0");
-			path.drawShader("blur_edge_pass/blur_edge_pass/blur_edge_pass_y");
+			path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 		}
 		#end
 
@@ -684,7 +684,7 @@ class RenderPathCreator {
 			path.bindTarget("voxels", "voxels");
 		}
 		#end
-		path.drawShader("deferred_indirect/deferred_indirect/deferred_indirect");
+		path.drawShader("shader_datas/deferred_indirect/deferred_indirect");
 
 		// Direct
 		var lamps = iron.Scene.active.lamps;
@@ -725,10 +725,10 @@ class RenderPathCreator {
 			#end
 
 			if (path.lampIsSun()) {
-				path.drawShader("deferred_light_quad/deferred_light_quad/deferred_light_quad");
+				path.drawShader("shader_datas/deferred_light_quad/deferred_light_quad");
 			}
 			else {
-				path.drawLampVolume("deferred_light/deferred_light/deferred_light");
+				path.drawLampVolume("shader_datas/deferred_light/deferred_light");
 			}
 
 			#if rp_volumetriclight
@@ -737,20 +737,20 @@ class RenderPathCreator {
 				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("shadowMap", "shadowMap");
 				if (path.lampIsSun()) {
-					path.drawShader("volumetric_light_quad/volumetric_light_quad/volumetric_light_quad");
+					path.drawShader("shader_datas/volumetric_light_quad/volumetric_light_quad");
 				}
 				else {
-					path.drawLampVolume("volumetric_light/volumetric_light/volumetric_light");
+					path.drawLampVolume("shader_datas/volumetric_light/volumetric_light");
 				}
 				path.setTarget("gbuffer1");
 				path.bindTarget("buf", "tex");
 				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("blur_edge_pass/blur_edge_pass/blur_edge_pass_x");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
 
 				path.setTarget("tex");
 				path.bindTarget("gbuffer1", "tex");
 				path.bindTarget("gbuffer0", "gbuffer0");
-				path.drawShader("blur_edge_pass/blur_edge_pass/blur_edge_pass_y_blend_add");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y_blend_add");
 			}
 			#end
 		}
@@ -758,7 +758,7 @@ class RenderPathCreator {
 
 		#if (rp_background == "World")
 		{
-			path.drawSkydome("world/world/world");
+			path.drawSkydome("shader_datas/world/world");
 		}
 		#end
 
@@ -766,7 +766,7 @@ class RenderPathCreator {
 		{
 			path.setTarget("tex");
 			path.bindTarget("_main", "gbufferD");
-			path.drawShader("water_pass/water_pass/water_pass");
+			path.drawShader("shader_datas/water_pass/water_pass");
 		}
 		#end
 
@@ -786,39 +786,39 @@ class RenderPathCreator {
 		{
 			path.setTarget("bloomtex");
 			path.bindTarget("tex", "tex");
-			path.drawShader("bloom_pass/bloom_pass/bloom_pass");
+			path.drawShader("shader_datas/bloom_pass/bloom_pass");
 
 			path.setTarget("bloomtex2");
 			path.bindTarget("bloomtex", "tex");
-			path.drawShader("blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_x");
+			path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
 
 			path.setTarget("bloomtex");
 			path.bindTarget("bloomtex2", "tex");
-			path.drawShader("blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_y");
+			path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
 
 			path.setTarget("bloomtex2");
 			path.bindTarget("bloomtex", "tex");
-			path.drawShader("blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_x");
+			path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
 
 			path.setTarget("bloomtex");
 			path.bindTarget("bloomtex2", "tex");
-			path.drawShader("blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_y");
+			path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
 
 			path.setTarget("bloomtex2");
 			path.bindTarget("bloomtex", "tex");
-			path.drawShader("blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_x");
+			path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
 
 			path.setTarget("bloomtex");
 			path.bindTarget("bloomtex2", "tex");
-			path.drawShader("blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_y");
+			path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
 
 			path.setTarget("bloomtex2");
 			path.bindTarget("bloomtex", "tex");
-			path.drawShader("blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_x");
+			path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
 
 			path.setTarget("tex");
 			path.bindTarget("bloomtex2", "tex");
-			path.drawShader("blur_gaus_pass/blur_gaus_pass/blur_gaus_pass_y_blend");
+			path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y_blend");
 		}
 		#end
 
@@ -828,14 +828,14 @@ class RenderPathCreator {
 			path.bindTarget("tex", "tex");
 			path.bindTarget("_main", "gbufferD");
 			path.bindTarget("gbuffer1", "gbuffer1");
-			path.drawShader("sss_pass/sss_pass/sss_pass_x");
+			path.drawShader("shader_datas/sss_pass/sss_pass_x");
 
 			path.setTarget("tex");
 			// TODO: can not bind tex
 			path.bindTarget("tex", "tex");
 			path.bindTarget("_main", "gbufferD");
 			path.bindTarget("gbuffer1", "gbuffer1");
-			path.drawShader("sss_pass/sss_pass/sss_pass_y");
+			path.drawShader("shader_datas/sss_pass/sss_pass_y");
 		}
 		#end
 
@@ -852,17 +852,17 @@ class RenderPathCreator {
 			path.bindTarget("tex", "tex");
 			path.bindTarget("_main", "gbufferD");
 			path.bindTarget("gbuffer0", "gbuffer0");
-			path.drawShader("ssr_pass/ssr_pass/ssr_pass");
+			path.drawShader("shader_datas/ssr_pass/ssr_pass");
 
 			path.setTarget(targetb);
 			path.bindTarget(targeta, "tex");
 			path.bindTarget("gbuffer0", "gbuffer0");
-			path.drawShader("blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_x");
+			path.drawShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
 
 			path.setTarget("tex");
 			path.bindTarget(targetb, "tex");
 			path.bindTarget("gbuffer0", "gbuffer0");
-			path.drawShader("blur_adaptive_pass/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
+			path.drawShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
 		}
 		#end
 
@@ -874,17 +874,17 @@ class RenderPathCreator {
 			#if (rp_motionblur == "Camera")
 			{
 				path.bindTarget("_main", "gbufferD");
-				path.drawShader("motion_blur_pass/motion_blur_pass/motion_blur_pass");
+				path.drawShader("shader_datas/motion_blur_pass/motion_blur_pass");
 			}
 			#else
 			{
 				path.bindTarget("gbuffer2", "sveloc");
-				path.drawShader("motion_blur_veloc_pass/motion_blur_veloc_pass/motion_blur_veloc_pass");
+				path.drawShader("shader_datas/motion_blur_veloc_pass/motion_blur_veloc_pass");
 			}
 			#end
 			path.setTarget("tex");
 			path.bindTarget("buf", "tex");
-			path.drawShader("copy_pass/copy_pass/copy_pass");
+			path.drawShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
 
@@ -920,11 +920,11 @@ class RenderPathCreator {
 
 		#if rp_compositornodes
 		{
-			path.drawShader("compositor_pass/compositor_pass/compositor_pass");
+			path.drawShader("shader_datas/compositor_pass/compositor_pass");
 		}
 		#else
 		{
-			path.drawShader("copy_pass/copy_pass/copy_pass");
+			path.drawShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
 		// End compositor
@@ -941,12 +941,12 @@ class RenderPathCreator {
 			path.setTarget("bufa");
 			path.clearTarget(0x00000000);
 			path.bindTarget("buf", "colorTex");
-			path.drawShader("smaa_edge_detect/smaa_edge_detect/smaa_edge_detect");
+			path.drawShader("shader_datas/smaa_edge_detect/smaa_edge_detect");
 
 			path.setTarget("bufb");
 			path.clearTarget(0x00000000);
 			path.bindTarget("bufa", "edgesTex");
-			path.drawShader("smaa_blend_weight/smaa_blend_weight/smaa_blend_weight");
+			path.drawShader("shader_datas/smaa_blend_weight/smaa_blend_weight");
 
 			#if (rp_antialiasing == "TAA")
 			path.setTarget("bufa");
@@ -955,7 +955,7 @@ class RenderPathCreator {
 			#end
 			path.bindTarget("buf", "colorTex");
 			path.bindTarget("bufb", "blendTex");
-			path.drawShader("smaa_neighborhood_blend/smaa_neighborhood_blend/smaa_neighborhood_blend");
+			path.drawShader("shader_datas/smaa_neighborhood_blend/smaa_neighborhood_blend");
 
 			#if (rp_antialiasing == "TAA")
 			{
@@ -963,11 +963,11 @@ class RenderPathCreator {
 				path.bindTarget("bufa", "tex");
 				path.bindTarget("taa", "tex2");
 				path.bindTarget("gbuffer2", "sveloc");
-				path.drawShader("taa_pass/taa_pass/taa_pass");
+				path.drawShader("shader_datas/taa_pass/taa_pass");
 
 				path.setTarget("taa");
 				path.bindTarget("bufa", "tex");
-				path.drawShader("copy_pass/copy_pass/copy_pass");
+				path.drawShader("shader_datas/copy_pass/copy_pass");
 			}
 			#end
 		}
@@ -983,13 +983,13 @@ class RenderPathCreator {
 			#end
 			path.setTarget(final);
 			path.bindTarget(framebuffer, "tex");
-			path.drawShader("supersample_resolve/supersample_resolve/supersample_resolve");
+			path.drawShader("shader_datas/supersample_resolve/supersample_resolve");
 		}
 		#elseif (rp_rendercapture)
 		{
 			path.setTarget("capture");
 			path.bindTarget(framebuffer, "tex");
-			path.drawShader("copy_pass/copy_pass/copy_pass");
+			path.drawShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
 	}
@@ -1039,7 +1039,7 @@ class RenderPathCreator {
 		t.depth_buffer = "main";
 		path.createRenderTarget(t);
 
-		path.loadShader("translucent_resolve/translucent_resolve/translucent_resolve");
+		path.loadShader("shader_datas/translucent_resolve/translucent_resolve");
 	}
 
 	static function drawTranslucency(target:String) {
@@ -1065,7 +1065,7 @@ class RenderPathCreator {
 		#end
 		path.bindTarget("accum", "gbuffer0");
 		path.bindTarget("revealage", "gbuffer1");
-		path.drawShader("translucent_resolve/translucent_resolve/translucent_resolve");
+		path.drawShader("shader_datas/translucent_resolve/translucent_resolve");
 	}
 	#end
 
