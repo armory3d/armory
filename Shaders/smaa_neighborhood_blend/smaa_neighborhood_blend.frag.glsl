@@ -1,9 +1,5 @@
 #version 450
 
-#ifdef GL_ES
-precision mediump float;
-#endif
-
 uniform sampler2D colorTex;
 uniform sampler2D blendTex;
 #ifdef _Veloc

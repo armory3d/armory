@@ -1,9 +1,5 @@
 #version 450
 
-#ifdef GL_ES
-precision highp float;
-#endif
-
 // #ifdef _CPos
 	// uniform mat4 invVP;
 	// uniform vec3 eye;

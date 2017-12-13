@@ -1,9 +1,5 @@
 #version 450
 
-#ifdef GL_ES
-precision mediump float;
-#endif
-
 #include "compiled.glsl"
 #ifdef _EnvTex
 #include "std/math.glsl"

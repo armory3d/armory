@@ -1,10 +1,6 @@
 // http://sebastien.hillaire.free.fr/index.php?option=com_content&view=article&id=72&Itemid=106
 #version 450
 
-#ifdef GL_ES
-precision mediump float;
-#endif
-
 #include "compiled.glsl"
 #include "std/gbuffer.glsl"
 #include "std/shadows.glsl"

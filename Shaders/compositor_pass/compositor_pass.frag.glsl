@@ -1,9 +1,5 @@
 #version 450
 
-#ifdef GL_ES
-precision highp float;
-#endif
-
 #include "compiled.glsl"
 #include "std/tonemap.glsl"
 #include "std/math.glsl"

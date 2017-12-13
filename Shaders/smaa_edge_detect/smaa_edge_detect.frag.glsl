@@ -41,10 +41,6 @@
  */
 #version 450
 
-#ifdef GL_ES
-precision mediump float;
-#endif
-
 #define SMAA_THRESHOLD 0.1
 #define SMAA_DEPTH_THRESHOLD (0.1 * SMAA_THRESHOLD) // For depth edge detection, depends on the depth range of the scene
 #define SMAA_LOCAL_CONTRAST_ADAPTATION_FACTOR 2.0

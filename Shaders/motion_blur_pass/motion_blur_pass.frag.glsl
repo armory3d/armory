@@ -2,10 +2,6 @@
 // http://http.developer.nvidia.com/GPUGems3/gpugems3_ch27.html
 #version 450
 
-#ifdef GL_ES
-precision mediump float;
-#endif
-
 #include "compiled.glsl"
 #include "std/gbuffer.glsl"
 

@@ -13,10 +13,6 @@
 // }
 #version 450
 
-#ifdef GL_ES
-precision mediump float;
-#endif
-
 #include "compiled.glsl"
 #include "std/gbuffer.glsl"
 

@@ -1,10 +1,6 @@
 // Weighted blended OIT by McGuire and Bavoil
 #version 450
 
-#ifdef GL_ES
-precision mediump float;
-#endif
-
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0; // saccum
 uniform sampler2D gbuffer1; // srevealage

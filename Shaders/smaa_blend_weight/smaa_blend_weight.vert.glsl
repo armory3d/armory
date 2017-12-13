@@ -1,9 +1,5 @@
 #version 450
 
-#ifdef GL_ES
-precision highp float;
-#endif
-
 in vec2 pos;
 
 uniform vec2 screenSize;

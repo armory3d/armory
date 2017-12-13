@@ -2,10 +2,6 @@
 // http://john-chapman-graphics.blogspot.com/2013/01/per-object-motion-blur.html
 #version 450
 
-#ifdef GL_ES
-precision mediump float;
-#endif
-
 #include "compiled.glsl"
 
 uniform sampler2D gbuffer0;

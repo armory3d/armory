@@ -1,9 +1,5 @@
 #version 450
 
-#ifdef GL_ES
-precision highp float;
-#endif
-
 uniform mat4 invP;
 
 in vec2 pos;

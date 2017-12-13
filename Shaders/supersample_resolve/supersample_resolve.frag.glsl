@@ -1,9 +1,5 @@
 #version 450
 
-#ifdef GL_ES
-precision mediump float;
-#endif
-
 #include "std/filters.glsl"
 
 uniform sampler2D tex;
