@@ -44,11 +44,13 @@ class SpaceArmory extends Trait {
 
 	function update() {
 
+		#if arm_viewport
 		var keyboard = Input.getKeyboard();
 		if (keyboard.started("esc")) {
 			var viewStr = iron.Scene.active.camera != null ? '|' + iron.Scene.active.camera.V.toArray() : '';
 			trace('__arm|quit' + viewStr);
 		}
+		#end
 
 		// var mouse = Input.getMouse();
 		// if (mouse.started("right")) {
