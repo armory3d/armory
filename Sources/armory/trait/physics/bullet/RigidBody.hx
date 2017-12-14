@@ -227,14 +227,16 @@ class RigidBody extends Trait {
 	}
 
 	public function disableGravity() {
-		// TODO: use setGravity instead
-		setLinearFactor(0, 0, 0);
-		setAngularFactor(0, 0, 0);
+		body.setGravity(BtVector3.create(0, 0, 0));
 	}
 
-	/*public function setGravity(v:Vec4) {
+	public function enableGravity() {
+		body.setGravity(physics.world.getGravity());
+	}
+
+	public function setGravity(v:Vec4) {
 		body.setGravity(BtVector3.create(v.x, v.y, v.z));
-	}*/
+	}
 
 	public function setActivationState(newState:Int) {
 		body.setActivationState(newState);
