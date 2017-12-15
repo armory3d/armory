@@ -39,7 +39,7 @@ def update_preset(self, context):
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
-        rpdat.arm_texture_filter = 'Anisotropic'
+        rpdat.arm_texture_filter = 'Linear'
         rpdat.arm_diffuse_model = 'Lambert'
     elif self.rp_preset == 'Forward':
         rpdat.rp_renderer = 'Forward'
@@ -204,7 +204,7 @@ def update_preset(self, context):
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
-        rpdat.arm_texture_filter = 'Point'
+        rpdat.arm_texture_filter = 'Linear'
         rpdat.arm_diffuse_model = 'Lambert'
     elif self.rp_preset == 'Max (Game)':
         rpdat.rp_renderer = 'Deferred'
