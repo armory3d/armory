@@ -41,7 +41,7 @@ def build():
             compo_depth = False
             if wrd.arm_tonemap != 'Off':
                 wrd.compo_defs = '_CTone' + wrd.arm_tonemap
-            if rpdat.rp_antialiasing != 'Off':
+            if rpdat.rp_antialiasing == 'FXAA':
                 wrd.compo_defs += '_CFXAA'
             if wrd.arm_letterbox:
                 wrd.compo_defs += '_CLetterbox'

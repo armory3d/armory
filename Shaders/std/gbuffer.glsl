@@ -1,8 +1,6 @@
 #ifndef _GBUFFER_GLSL_
 #define _GBUFFER_GLSL_
 
-#include "../compiled.glsl"
-
 vec2 octahedronWrap(const vec2 v) {
 	return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
 }

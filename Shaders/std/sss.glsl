@@ -1,6 +1,4 @@
 
-#include "../compiled.glsl"
-
 // Separable SSS Transmittance Function, ref to sss_pass
 vec3 SSSSTransmittance(mat4 LWVP, vec3 p, vec3 n, vec3 l, float lightFar, sampler2D shadowMap) {
 	const float translucency = 1.0;
