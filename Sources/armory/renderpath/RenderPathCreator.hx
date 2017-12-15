@@ -955,6 +955,11 @@ class RenderPathCreator {
 			#end
 			path.bindTarget("buf", "colorTex");
 			path.bindTarget("bufb", "blendTex");
+			#if (rp_antialiasing == "TAA")
+			{
+				path.bindTarget("gbuffer2", "sveloc");
+			}
+			#end
 			path.drawShader("shader_datas/smaa_neighborhood_blend/smaa_neighborhood_blend");
 
 			#if (rp_antialiasing == "TAA")
