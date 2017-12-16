@@ -13,6 +13,7 @@ class SetCameraFovNode(Node, ArmLogicTreeNode):
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'Object')
         self.inputs.new('NodeSocketFloat', 'FOV')
+        self.inputs[-1].default_value = 0.85
         self.outputs.new('ArmNodeSocketAction', 'Out')
 
 add_node(SetCameraFovNode, category='Action')
