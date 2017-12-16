@@ -450,7 +450,9 @@ class ArmoryProjectPanel(bpy.types.Panel):
 
         col = row.column()
         col.prop(wrd, 'arm_winresize')
-        col.prop(wrd, 'arm_winmaximize')
+        row = col.row()
+        row.enabled = wrd.arm_winresize
+        row.prop(wrd, 'arm_winmaximize')
         col.prop(wrd, 'arm_winminimize')
 
         layout.prop(wrd, 'arm_winorient')
