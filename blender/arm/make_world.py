@@ -87,7 +87,7 @@ def build_node_tree(world):
     if rpdat.rp_renderer == 'Deferred':
         assets.add_khafile_def('arm_deferred')
     # Shadows
-    if rpdat.rp_shadowmap_cascades != '1' and rpdat.rp_gi == 'Off':
+    if rpdat.rp_shadowmap_cascades != '1':
         wrd.world_defs += '_CSM'
         assets.add_khafile_def('arm_csm')
     if rpdat.rp_shadowmap == 'Off':
