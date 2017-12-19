@@ -21,6 +21,7 @@ import arm.lib.make_datas
 import arm.lib.make_variants
 import arm.lib.server
 from arm.exporter import ArmoryExporter
+import time
 try:
     import barmory
 except ImportError:
@@ -29,6 +30,7 @@ except ImportError:
 exporter = ArmoryExporter()
 scripts_mtime = 0 # Monitor source changes
 code_parsed = False
+profile_time = 0
 
 def compile_shader_pass(res, raw_shaders_path, shader_name, defs):
     os.chdir(raw_shaders_path + '/' + shader_name)
@@ -273,6 +275,9 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
         return subprocess.Popen(cmd)
 
 def build_project(is_play=False, is_publish=False, is_render=False, is_render_anim=False, in_viewport=False):
+    global profile_time
+    profile_time = time.time()
+
     wrd = bpy.data.worlds['Arm']
 
     state.is_render = is_render
@@ -379,6 +384,7 @@ def watch_compile(mode):
         bpy.data.worlds['Arm'].arm_recompile = False
         state.compileproc_success = True
         on_compiled(mode)
+        print('Project built in ' + str(time.time() - profile_time))
     else:
         state.compileproc_success = False
         log.print_info('Build failed, check console')
