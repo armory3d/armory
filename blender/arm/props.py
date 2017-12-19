@@ -226,16 +226,13 @@ def init_properties():
                ],
         name="Preset", description="Render path preset", default='Deferred', update=props_renderpath.update_preset)
     bpy.types.World.arm_voxelgi_diff = bpy.props.FloatProperty(name="Diffuse", description="", default=3.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_voxelgi_diff_cones = EnumProperty(
+    bpy.types.World.arm_voxelgi_cones = EnumProperty(
         items=[('9', '9', '9'),
                ('5', '5', '5'),
+               ('3', '3', '3'),
+               ('1', '1', '1'),
                ],
-        name="Diffuse Cones", description="Number of cones to trace for VXGI", default='9', update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_voxelgi_ao_cones = EnumProperty(
-        items=[('9', '9', '9'),
-               ('5', '5', '5'),
-               ],
-        name="AO Cones", description="Number of cones to trace for VXAO", default='5', update=assets.invalidate_shader_cache)
+        name="Cones", description="Number of cones to trace", default='5', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_voxelgi_spec = bpy.props.FloatProperty(name="Specular", description="", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_voxelgi_occ = bpy.props.FloatProperty(name="Occlusion", description="", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_voxelgi_env = bpy.props.FloatProperty(name="Env Map", description="Contribute light from environment map", default=0.0, update=assets.invalidate_shader_cache)

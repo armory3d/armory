@@ -23,10 +23,13 @@ uniform sampler2D gbuffer1;
 
 #ifdef _VoxelGI
 	//!uniform sampler3D voxels;
-	
 #endif
 #ifdef _VoxelAO
 	//!uniform sampler3D voxels;
+#endif
+#ifdef _VoxelGITemporal
+	//!uniform sampler3D voxelsLast;
+	uniform float voxelBlend;
 #endif
 #ifdef _VoxelGICam
 	uniform vec3 eyeSnap;
@@ -98,7 +101,11 @@ void main() {
 	vec3 voxpos = p / voxelgiHalfExtents;
 	#endif
 
-	vec4 indirectDiffuse = traceDiffuse(voxpos, n);
+	#ifdef _VoxelGITemporal
+	vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels) * voxelBlend + traceDiffuse(voxpos, n, voxelsLast) * (1.0 - voxelBlend);
+	#else
+	vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels);
+	#endif
 		
 	vec3 indirectSpecular = traceSpecular(voxpos, n, v, metrough.y);
 	indirectSpecular *= f0 * envBRDF.x + envBRDF.y;
@@ -165,7 +172,12 @@ void main() {
 	vec3 voxpos = p / voxelgiHalfExtents;
 	#endif
 	
-	envl.rgb *= 1.0 - traceAO(voxpos, n);
+	#ifdef _VoxelGITemporal
+	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend + traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
+	#else
+	envl.rgb *= 1.0 - traceAO(voxpos, n, voxels);
+	#endif
+	
 #endif
 
 #ifdef _VoxelGI

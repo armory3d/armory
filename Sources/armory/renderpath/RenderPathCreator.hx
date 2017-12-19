@@ -14,6 +14,13 @@ class RenderPathCreator {
 		return path;
 	}
 
+	#if (rp_gi != "Off")
+	static var voxels = "voxels";
+	static var voxelsLast = "voxels";
+	public static var voxelFrame = 0;
+	public static var voxelFreq = 6; // Revoxelizing frequency
+	#end
+
 	#if (rp_renderer == "Forward")
 	static function init() {
 		// #if rp_shadowmap // Auto-created
@@ -70,6 +77,11 @@ class RenderPathCreator {
 		#if (rp_gi != "Off")
 		{
 			initGI();
+			#if arm_voxelgi_temporal
+			{
+				initGI("voxelsB");
+			}
+			#end
 		}
 		#end
 	}
@@ -91,19 +103,30 @@ class RenderPathCreator {
 
 		#if (rp_gi != "Off")
 		{
-			if (path.voxelize()) {
-				path.clearImage("voxels", 0x00000000);
+			var voxelize = path.voxelize();
+
+			#if arm_voxelgi_temporal
+			voxelize = ++voxelFrame % voxelFreq == 0;
+
+			if (voxelize) {
+				voxels = voxels == "voxels" ? "voxelsB" : "voxels";
+				voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
+			}
+			#end
+
+			if (voxelize) {
+				path.clearImage(voxels, 0x00000000);
 				path.setTarget("");
 				var res = getVoxelRes();
 				path.setViewport(res, res);
-				path.bindTarget("voxels", "voxels");
+				path.bindTarget(voxels, "voxels");
 				#if rp_shadowmap
 				{
 					path.bindTarget("shadowMap", "shadowMap");
 				}
 				#end
 				path.drawMeshes("voxel");
-				path.generateMipmaps("voxels");
+				path.generateMipmaps(voxels);
 			}
 		}
 		#end
@@ -142,7 +165,12 @@ class RenderPathCreator {
 
 		#if (rp_gi != "Off")
 		{
-			path.bindTarget("voxels", "voxels");
+			path.bindTarget(voxels, "voxels");
+			#if arm_voxelgi_temporal
+			{
+				path.bindTarget(voxelsLast, "voxelsLast");
+			}
+			#end
 		}
 		#end
 
@@ -218,6 +246,11 @@ class RenderPathCreator {
 		#if (rp_gi != "Off")
 		{
 			initGI();
+			#if arm_voxelgi_temporal
+			{
+				initGI("voxelsB");
+			}
+			#end
 		}
 		#end
 
@@ -652,19 +685,30 @@ class RenderPathCreator {
 			}
 			#end
 			
-			if (path.voxelize()) {
-				path.clearImage("voxels", 0x00000000);
+			var voxelize = path.voxelize();
+
+			#if arm_voxelgi_temporal
+			voxelize = ++voxelFrame % voxelFreq == 0;
+
+			if (voxelize) {
+				voxels = voxels == "voxels" ? "voxelsB" : "voxels";
+				voxelsLast = voxels == "voxels" ? "voxelsB" : "voxels";
+			}
+			#end
+
+			if (voxelize) {
+				path.clearImage(voxels, 0x00000000);
 				path.setTarget("");
 				var res = getVoxelRes();
 				path.setViewport(res, res);
-				path.bindTarget("voxels", "voxels");
+				path.bindTarget(voxels, "voxels");
 				#if ((rp_shadowmap) && (rp_gi == "Voxel GI"))
 				{
 					path.bindTarget("shadowMap", "shadowMap");
 				}
 				#end
 				path.drawMeshes("voxel");
-				path.generateMipmaps("voxels");
+				path.generateMipmaps(voxels);
 			}
 		}
 		#end
@@ -681,7 +725,12 @@ class RenderPathCreator {
 		#end
 		#if (rp_gi != "Off")
 		{
-			path.bindTarget("voxels", "voxels");
+			path.bindTarget(voxels, "voxels");
+			#if arm_voxelgi_temporal
+			{
+				path.bindTarget(voxelsLast, "voxelsLast");
+			}
+			#end
 		}
 		#end
 		path.drawShader("shader_datas/deferred_indirect/deferred_indirect");
@@ -720,7 +769,7 @@ class RenderPathCreator {
 
 			#if ((rp_voxelgi_shadows) || (rp_voxelgi_refraction))
 			{
-				path.bindTarget("voxels", "voxels");
+				path.bindTarget(voxels, "voxels");
 			}
 			#end
 
@@ -1075,9 +1124,9 @@ class RenderPathCreator {
 	#end
 
 	#if (rp_gi != "Off")
-	static function initGI() {
+	static function initGI(tname = "voxels") {
 		var t = new RenderTargetRaw();
-		t.name = "voxels";
+		t.name = tname;
 		#if (rp_gi == "Voxel AO")
 		{
 			t.format = "R8";
@@ -1097,6 +1146,7 @@ class RenderPathCreator {
 		t.height = res;
 		t.depth = Std.int(res * resZ);
 		t.is_image = true;
+		t.mipmaps = true;
 		path.createRenderTarget(t);
 	}
 	#end

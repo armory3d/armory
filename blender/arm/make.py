@@ -383,8 +383,8 @@ def watch_compile(mode):
     if result == 0:
         bpy.data.worlds['Arm'].arm_recompile = False
         state.compileproc_success = True
+        print('Finished in ' + str(time.time() - profile_time))
         on_compiled(mode)
-        print('Project built in ' + str(time.time() - profile_time))
     else:
         state.compileproc_success = False
         log.print_info('Build failed, check console')

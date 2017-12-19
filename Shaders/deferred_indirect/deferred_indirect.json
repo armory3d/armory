@@ -18,6 +18,11 @@
 					"ifdef": ["_VoxelGICam"]
 				},
 				{
+					"name": "voxelBlend",
+					"link": "_voxelBlend",
+					"ifdef": ["_VoxelGITemporal"]
+				},
+				{
 					"name": "eyeLook",
 					"link": "_cameraLook",
 					"ifdef": ["_Rad"]

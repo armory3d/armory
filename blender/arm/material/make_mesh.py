@@ -700,10 +700,10 @@ def make_forward_base(con_mesh, parse_opacity=False):
         else:
             frag.write('vec3 voxpos = wposition / voxelgiHalfExtents;')
         if '_VoxelAO' in wrd.world_defs:
-            frag.write('indirect *= vec3(1.0 - traceAO(voxpos, n));')
-            # frag.write('indirect = vec3(1.0 - traceAO(voxpos, n));') # AO view
+            frag.write('indirect *= vec3(1.0 - traceAO(voxpos, n, voxels));')
+            # frag.write('indirect = vec3(1.0 - traceAO(voxpos, n, voxels));') # AO view
         else:
-            frag.write('vec4 indirectDiffuse = traceDiffuse(voxpos, n);')
+            frag.write('vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels);')
             frag.write('vec3 indirectSpecular = traceSpecular(voxpos, n, vVec, roughness);')
             frag.write('indirectSpecular *= f0 * envBRDF.x + envBRDF.y;')
             frag.write('indirect = indirect * voxelgiEnv + vec3(indirectDiffuse.rgb * voxelgiDiff * basecol + indirectSpecular * voxelgiSpec);')

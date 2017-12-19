@@ -515,7 +515,7 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
 
         # TODO: build tilecache here
 
-        # Navmesh trait
+    # Navmesh trait
         obj.arm_traitlist.add()
         obj.arm_traitlist[-1].type_prop = 'Bundled Script'
         obj.arm_traitlist[-1].class_name_prop = 'NavMesh'
@@ -972,8 +972,9 @@ class ArmRenderPathPanel(bpy.types.Panel):
                 layout.prop(rpdat, 'arm_voxelgi_revoxelize')
                 if rpdat.arm_voxelgi_revoxelize:
                     layout.prop(rpdat, 'arm_voxelgi_camera')
+                    layout.prop(rpdat, 'arm_voxelgi_temporal')
                 # layout.prop(rpdat, 'arm_voxelgi_anisotropic')
-                layout.prop(rpdat, 'arm_voxelgi_shadows')
+                # layout.prop(rpdat, 'arm_voxelgi_shadows')
                 if rpdat.rp_gi == 'Voxel GI':
                     layout.prop(rpdat, 'arm_voxelgi_refraction')
                     layout.prop(rpdat, 'arm_voxelgi_emission')
@@ -1073,8 +1074,7 @@ class ArmRenderPropsPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(wrd, 'arm_voxelgi_offset_shadow')
         row.prop(wrd, 'arm_voxelgi_offset_refract')
-        layout.prop(wrd, 'arm_voxelgi_diff_cones')
-        layout.prop(wrd, 'arm_voxelgi_ao_cones')
+        layout.prop(wrd, 'arm_voxelgi_cones')
 
         layout.label('SSAO')
         row = layout.row()
