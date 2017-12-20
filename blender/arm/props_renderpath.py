@@ -335,6 +335,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name="Cascades", description="Shadow map cascades", default='4', update=udpate_shadowmap_cascades)
     rp_supersampling = EnumProperty(
         items=[('1', '1', '1'),
+               ('1.5', '1.5', '1.5'),
                ('2', '2', '2'),
                ('4', '4', '4')],
         name="Super Sampling", description="Screen resolution multiplier", default='1', update=update_renderpath)

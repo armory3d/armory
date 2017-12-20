@@ -9,8 +9,6 @@
 
 uniform sampler2D tex;
 uniform sampler2D gbufferD;
-uniform sampler2D gbuffer0;
-uniform sampler2D gbuffer1;
 
 #ifdef _CLensTex
 uniform sampler2D lensTexture;
@@ -81,7 +79,7 @@ out vec4 fragColor;
 // }
 vec3 applyFog(vec3 rgb, float distance) {
 	// float fogAmount = 1.0 - exp(-distance * compoFogAmountA);
-	float fogAmount = 1.0 - exp(-distance * 0.0055);
+	float fogAmount = 1.0 - exp(-distance * (compoFogAmountA / 100));
 	return mix(rgb, compoFogColor, fogAmount);
 }
 #endif

@@ -67,10 +67,6 @@ float PCFCube(const vec3 lp, vec3 ml, const float bias, const vec2 lightProj, co
 
 float shadowTest(const vec3 lPos, const float shadowsBias, const vec2 smSize) {
 
-	// float cosAngle = max(1.0 - dotNL, 0.0);
-	// vec3 noff = n * shadowsBias * cosAngle;
-	// vec4 lPos = LWVP * vec4(p + noff, 1.0);
-
 	// Out of bounds
 	if (lPos.x < 0.0 || lPos.y < 0.0 || lPos.x > 1.0 || lPos.y > 1.0) return 1.0;
 
@@ -110,6 +106,7 @@ mat4 getCascadeMat(const float d, out int casi, out int casIndex) {
 	// ..
 }
 
+// float shadowTestCascade(float dotNL, vec3 n, const vec3 eye, const vec3 p, const float shadowsBias, const vec2 smSize) {
 float shadowTestCascade(const vec3 eye, const vec3 p, const float shadowsBias, const vec2 smSize) {
 	const int c = shadowmapCascades;
 	float d = distance(eye, p);
@@ -118,7 +115,12 @@ float shadowTestCascade(const vec3 eye, const vec3 p, const float shadowsBias, c
 	int casIndex;
 	mat4 LWVP = getCascadeMat(d, casi, casIndex);
 
+	// float cosAngle = max(1.0 - dotNL, 0.0);
+	// vec3 noff = n * shadowsBias * cosAngle;
+	// vec4 lPos = LWVP * vec4(p + noff, 1.0);
+	
 	vec4 lPos = LWVP * vec4(p, 1.0);
+
 	float visibility = 1.0;
 	if (lPos.w > 0.0) visibility = shadowTest(lPos.xyz / lPos.w, shadowsBias, smSize);
 

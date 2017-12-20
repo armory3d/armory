@@ -97,7 +97,8 @@
 				},
 				{
 					"name": "envmapStrength",
-					"link": "_envmapStrength"
+					"link": "_envmapStrength",
+					"ifdef": ["_EnvStr"]
 				}
 			],
 			"texture_params": [],

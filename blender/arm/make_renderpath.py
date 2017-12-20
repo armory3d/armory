@@ -4,10 +4,117 @@ import arm.utils
 import arm.log as log
 import arm.make_state as state
 
+def add_world_defs():
+    wrd = bpy.data.worlds['Arm']
+    rpdat = arm.utils.get_rp()
+
+    # Screen-space ray-traced shadows
+    if rpdat.arm_ssrs:
+        wrd.world_defs += '_SSRS'
+
+    if wrd.arm_two_sided_area_lamp:
+        wrd.world_defs += '_TwoSidedAreaLamp'
+
+    # Store contexts
+    if rpdat.rp_hdr == False:
+        wrd.world_defs += '_LDR'
+
+    # Alternative models
+    if rpdat.arm_diffuse_model == 'OrenNayar':
+        wrd.world_defs += '_OrenNayar'
+
+    # TODO: Lamp texture test..
+    if wrd.arm_lamp_texture != '':
+        wrd.world_defs += '_LampColTex'
+
+    if wrd.arm_lamp_ies_texture != '':
+        wrd.world_defs += '_LampIES'
+        assets.add_embedded_data('iestexture.png')
+
+    if wrd.arm_lamp_clouds_texture != '':
+        wrd.world_defs += '_LampClouds'
+        assets.add_embedded_data('cloudstexture.png')
+
+    voxelgi = False
+    voxelao = False
+    if rpdat.rp_renderer == 'Deferred':
+        assets.add_khafile_def('arm_deferred')
+    # Shadows
+    if rpdat.rp_shadowmap_cascades != '1':
+        wrd.world_defs += '_CSM'
+        assets.add_khafile_def('arm_csm')
+    if rpdat.rp_shadowmap == 'Off':
+        wrd.world_defs += '_NoShadows'
+        assets.add_khafile_def('arm_no_shadows')
+    # GI
+    has_voxels = state.in_viewport == False or bpy.app.version >= (2, 80, 1)
+    if has_voxels:
+        if rpdat.rp_gi == 'Voxel GI':
+            voxelgi = True
+        elif rpdat.rp_gi == 'Voxel AO':
+            voxelao = True
+    # SS
+    # if rpdat.rp_dfrs:
+    #     wrd.world_defs += '_DFRS'
+    #     assets.add_khafile_def('arm_sdf')
+    # if rpdat.rp_dfao:
+    #     wrd.world_defs += '_DFAO'
+    #     assets.add_khafile_def('arm_sdf')
+    # if rpdat.rp_dfgi:
+    #     wrd.world_defs += '_DFGI'
+    #     assets.add_khafile_def('arm_sdf')
+    #     wrd.world_defs += '_Rad' # Always do radiance for gi
+    #     wrd.world_defs += '_Irr'
+    if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
+        if rpdat.rp_ssgi == 'RTGI':
+            wrd.world_defs += '_RTGI'
+        if wrd.arm_ssgi_rays == '9':
+            wrd.world_defs += '_SSGICone9'
+    if rpdat.rp_autoexposure:
+        wrd.world_defs += '_AutoExposure'
+
+    if voxelgi or voxelao:
+        assets.add_khafile_def('arm_voxelgi')
+        wrd.world_defs += '_VoxelCones' + wrd.arm_voxelgi_cones
+        if rpdat.arm_voxelgi_revoxelize:
+            assets.add_khafile_def('arm_voxelgi_revox')
+            if rpdat.arm_voxelgi_camera:
+                wrd.world_defs += '_VoxelGICam'
+            if rpdat.arm_voxelgi_temporal:
+                assets.add_khafile_def('arm_voxelgi_temporal')
+                wrd.world_defs += '_VoxelGITemporal'
+        wrd.world_defs += '_Rad' # Always do radiance for voxels
+        wrd.world_defs += '_Irr'
+
+        if voxelgi:
+            wrd.world_defs += '_VoxelGI'
+            if rpdat.arm_voxelgi_shadows:
+                wrd.world_defs += '_VoxelGIDirect'
+                wrd.world_defs += '_VoxelGIShadow'
+            if rpdat.arm_voxelgi_refraction:
+                wrd.world_defs += '_VoxelGIDirect'
+                wrd.world_defs += '_VoxelGIRefract'
+            if rpdat.arm_voxelgi_emission:
+                wrd.world_defs += '_VoxelGIEmission'
+        elif voxelao:
+            wrd.world_defs += '_VoxelAO'
+
+    if arm.utils.get_gapi().startswith('direct3d'): # Flip Y axis in drawQuad command
+        wrd.world_defs += '_InvY'
+
+    # Area lamps
+    for lamp in bpy.data.lamps:
+        if lamp.type == 'AREA':
+            wrd.world_defs += '_LTC'
+            assets.add_khafile_def('arm_ltc')
+            break
+
 def build():
     assets_path = arm.utils.get_sdk_path() + 'armory/Assets/'
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
+
+    add_world_defs()
 
     mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
     if not mobile_mat:
@@ -57,6 +164,7 @@ def build():
                 compo_depth = True
             if compo_depth:
                 wrd.compo_defs += '_CDepth'
+                assets.add_khafile_def('rp_compositordepth')
             if wrd.arm_lens_texture != '':
                 wrd.compo_defs += '_CLensTex'
                 assets.add_embedded_data('lenstexture.jpg')
@@ -66,7 +174,7 @@ def build():
                 wrd.compo_defs += '_CVignette'
             if wrd.arm_lensflare:
                 wrd.compo_defs += '_CGlare'
-            if wrd.arm_lut:
+            if wrd.arm_lut_texture != '':
                 wrd.compo_defs += '_CLUT'
                 assets.add_embedded_data('luttexture.jpg')
             assets.add_shader_pass('compositor_pass')

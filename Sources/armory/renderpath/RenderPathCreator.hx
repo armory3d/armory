@@ -965,7 +965,13 @@ class RenderPathCreator {
 			path.setTarget("buf");
 		}
 		#end
+		
 		path.bindTarget("tex", "tex");
+		#if rp_compositordepth
+		{
+			path.bindTarget("_main", "gbufferD");
+		}
+		#end
 
 		#if rp_compositornodes
 		{
@@ -1197,8 +1203,10 @@ class RenderPathCreator {
 		#end
 	}
 
-	static inline function getSuperSampling():Int {
-		#if (rp_supersampling == 2)
+	static inline function getSuperSampling():Float {
+		#if (rp_supersampling == 1.5)
+		return 1.5;
+		#elseif (rp_supersampling == 2)
 		return 2;
 		#elseif (rp_supersampling == 4)
 		return 4;

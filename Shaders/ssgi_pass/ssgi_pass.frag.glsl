@@ -12,8 +12,6 @@ uniform sampler2D gbuffer1; // Basecol
 uniform mat4 P;
 uniform mat4 tiV;
 
-uniform vec3 eye;
-uniform vec3 eyeLook;
 uniform vec2 cameraProj;
 
 // const int ssgiStrength = 1.0;

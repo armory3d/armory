@@ -36,8 +36,9 @@
 	uniform sampler2D envmap;
 #endif
 
-// uniform sampler2D gbufferD;
+#ifdef _EnvStr
 uniform float envmapStrength;
+#endif
 
 // in vec2 texCoord;
 in vec3 normal;
@@ -94,51 +95,10 @@ vec2 traceCloud(vec3 pos, vec3 dir) {
 	vec3 add = dir * ((end - beg) / steps);
 
 	vec2 shadeSum = vec2(0.0);
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
-	shadeSum = doCloudTrace(add, shadeSum); if (shadeSum.y >= 1.0) return shadeSum;
+	for (int i = 0; i < 45; i++) {
+		shadeSum = doCloudTrace(add, shadeSum);
+		if (shadeSum.y >= 1.0) return shadeSum;
+	}
 	return shadeSum;
 }
 // GPU PRO 7 - Real-time Volumetric Cloudscapes

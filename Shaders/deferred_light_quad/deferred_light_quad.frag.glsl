@@ -173,7 +173,6 @@ void main() {
 #endif
 
 #ifdef _LampClouds
-
 	visibility *= texture(texClouds, vec2(p.xy / 100.0 + time / 80.0)).r * dot(n, vec3(0,0,1));
 #endif
 

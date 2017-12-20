@@ -3,7 +3,6 @@
 #include "compiled.glsl"
 
 uniform sampler2D tex;
-uniform vec2 texStep;
 
 in vec2 texCoord;
 out vec4 fragColor;
