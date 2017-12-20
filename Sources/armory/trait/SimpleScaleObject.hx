@@ -3,10 +3,11 @@ package armory.trait;
 import iron.math.Vec4;
 import iron.system.Input;
 import armory.trait.physics.RigidBody;
+import armory.trait.physics.KinematicCharacterController;
 
 /**
 	Simple script to scale an object around using the keyboard.
-	All axis can be scaled at once using the up and down arrows.
+	All axis can be scaled at once using the Z and X keys.
 	Individual axis can be scaled using YU(x), HJ(y), NM(z).
 	Can be used for testing and debuging.
 **/
@@ -17,12 +18,14 @@ class SimpleScaleObject extends iron.Trait {
 
 	var keyboard:Keyboard;
 	var rb:RigidBody;
+	var character:KinematicCharacterController;
 
 	public function new() {
 		super();
 
 		notifyOnInit(function() {
 			rb = object.getTrait(RigidBody);
+			character = object.getTrait(KinematicCharacterController);
 			keyboard = Input.getKeyboard();
 		});
 
@@ -53,11 +56,11 @@ class SimpleScaleObject extends iron.Trait {
 				scale.z -= speed;
 			}
 
-			if(keyboard.down("up")){
+			if(keyboard.down("z")){
 				scale.set(speed, speed, speed);
 			}
 
-			if(keyboard.down("down")){
+			if(keyboard.down("x")){
 				scale.set(-speed, -speed, -speed);
 			}
 
@@ -73,6 +76,11 @@ class SimpleScaleObject extends iron.Trait {
 			#if arm_physics
 			rb.transform.scale.set(s.x + vec.x, s.y + vec.y, s.z + vec.z);
 			rb.syncTransform();
+			#end
+		} else if(character != null){
+			#if arm_physics
+			character.transform.scale.set(s.x + vec.x, s.y + vec.y, s.z + vec.z);
+			character.syncTransform();
 			#end
 		} else {
 			object.transform.scale.set(s.x + vec.x, s.y + vec.y, s.z + vec.z);
