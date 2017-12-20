@@ -46,6 +46,8 @@ class PhysicsWorld extends Trait {
 
 	public var hitPointWorld = new Vec4();
 
+	var pairCache:Bool = false;
+
 	public function new() {
 		super();
 
@@ -119,6 +121,31 @@ class PhysicsWorld extends Trait {
 		#end
 
 		rbMap.remove(body.id);
+	}
+
+	public function addKinematicCharacterController(controller:KinematicCharacterController) {
+		if(!pairCache){ // only create PairCache if needed
+			world.getPairCache().setInternalGhostPairCallback(BtGhostPairCallbackPointer.create());
+			pairCache = true;
+		}
+		world.addAction(controller.character);
+		world.addCollisionObjectToGroup(controller.body, controller.group, controller.group);
+	}
+
+	public function removeKinematicCharacterController(controller:KinematicCharacterController) {
+		
+		/* Enable once ammo.js is updated with removeCollisionObject function
+		
+		if (world != null){
+			world.removeCollisionObject(controller.body);
+			world.removeAction(controller.character);
+		}
+		#if js
+		Ammo.destroy(controller.body);
+		#elseif cpp
+		// controller.body.destroy(); // delete body;
+		#end
+		*/
 	}
 
 	public function getContacts(body:RigidBody):Array<RigidBody> {
