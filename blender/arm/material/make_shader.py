@@ -30,7 +30,7 @@ def build(material, mat_users, mat_armusers):
     wrd = bpy.data.worlds['Arm']
     rpasses = mat_utils.get_rpasses(material)
     matname = arm.utils.safesrc(arm.utils.asset_name(material))
-    rel_path = arm.utils.build_dir() + '/compiled/ShaderRaws/' + matname
+    rel_path = arm.utils.build_dir() + '/compiled/Shaders/'
     full_path = arm.utils.get_fp() + '/' + rel_path
     if not os.path.exists(full_path):
         os.makedirs(full_path)
@@ -91,7 +91,7 @@ def build(material, mat_users, mat_armusers):
 
     arm.utils.write_arm(full_path + '/' + matname + '_data.arm', mat_state.data.get())
     shader_data_name = matname + '_data'
-    shader_data_path = arm.utils.build_dir() + '/compiled/ShaderRaws/' + matname + '/' + shader_data_name + '.arm'
+    shader_data_path = arm.utils.build_dir() + '/compiled/Shaders/' + shader_data_name + '.arm'
     assets.add_shader_data(shader_data_path)
 
     return rpasses, mat_state.data, shader_data_name, bind_constants, bind_textures

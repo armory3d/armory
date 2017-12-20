@@ -139,7 +139,7 @@ def make_base(con_mesh, parse_opacity):
         if write_vertex_attribs != None:
             vattr_written = write_vertex_attribs(vert)
 
-    frag.add_include('../../Shaders/compiled.glsl')
+    frag.add_include('compiled.glsl')
 
     written = False
     if write_material_attribs != None:
@@ -302,7 +302,7 @@ def make_deferred(con_mesh):
         frag.add_out('vec4[2] fragColor')
 
     # Pack gbuffer
-    frag.add_include('../../Shaders/std/gbuffer.glsl')
+    frag.add_include('std/gbuffer.glsl')
 
     if mat_state.material.arm_two_sided:
         frag.add_uniform('vec3 v', link='_cameraLook')
@@ -343,7 +343,7 @@ def make_deferred_plus(con_mesh):
     vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
     vert.write('gl_Position = WVP * spos;')
 
-    frag.add_include('../../Shaders/compiled.glsl')
+    frag.add_include('compiled.glsl')
 
     vert.add_out('vec2 texCoord')
 
@@ -360,7 +360,7 @@ def make_deferred_plus(con_mesh):
     frag.add_uniform('float materialID', link='_objectInfoMaterialIndex')
 
     # Pack gbuffer
-    frag.add_include('../../Shaders/std/gbuffer.glsl')
+    frag.add_include('std/gbuffer.glsl')
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
     frag.write('fragColor[0] = vec4(n.xy, fract(texCoord));')
@@ -385,7 +385,7 @@ def make_forward_mobile(con_mesh):
     vert.write('wposition = vec4(W * spos).xyz;')
     vert.write('gl_Position = WVP * spos;')
 
-    frag.add_include('../../Shaders/compiled.glsl')
+    frag.add_include('compiled.glsl')
     frag.write('vec3 basecol;')
     frag.write('float roughness;')
     frag.write('float metallic;')
@@ -404,8 +404,8 @@ def make_forward_mobile(con_mesh):
     write_norpos(con_mesh, vert)
     frag.prepend_header('vec3 n = normalize(wnormal);')
 
-    frag.add_include('../../Shaders/std/math.glsl')
-    frag.add_include('../../Shaders/std/brdf.glsl')
+    frag.add_include('std/math.glsl')
+    frag.add_include('std/brdf.glsl')
     frag.add_uniform('vec3 lightColor', '_lampColor')
     frag.add_uniform('vec3 lightDir', '_lampDirection')
     frag.add_uniform('vec3 lightPos', '_lampPosition')
@@ -420,7 +420,7 @@ def make_forward_mobile(con_mesh):
         vert.add_out('vec4 lampPos')
         vert.add_uniform('mat4 LWVP', '_biasLampWorldViewProjectionMatrix')
         vert.write('lampPos = LWVP * spos;')
-        frag.add_include('../../Shaders/std/shadows.glsl')
+        frag.add_include('std/shadows.glsl')
         frag.add_uniform('sampler2D shadowMap', included=True)
         frag.add_uniform('float shadowsBias', '_lampShadowsBias')
         frag.write('    if (lampPos.w > 0.0) {')
@@ -450,7 +450,7 @@ def make_forward_mobile(con_mesh):
     frag.write('direct *= attenuate(distance(wposition, lightPos));')
 
     if '_Irr' in wrd.world_defs:
-        frag.add_include('../../Shaders/std/shirr.glsl')
+        frag.add_include('std/shirr.glsl')
         frag.add_uniform('vec4 shirr[7]', link='_envmapIrradiance', included=True)
         env_str = 'shIrradiance(n)'
     else:
@@ -473,7 +473,7 @@ def make_forward_solid(con_mesh):
     vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
     vert.write('gl_Position = WVP * spos;')
 
-    frag.add_include('../../Shaders/compiled.glsl')
+    frag.add_include('compiled.glsl')
     frag.write('vec3 basecol;')
     frag.write('float roughness;')
     frag.write('float metallic;')
@@ -509,7 +509,7 @@ def make_forward(con_mesh):
         # frag.write('fragColor = vec4(indirect, 1.0);') # AO view
     
         if '_LDR' in wrd.world_defs:
-            frag.add_include('../../Shaders/std/tonemap.glsl')
+            frag.add_include('std/tonemap.glsl')
             frag.write('fragColor.rgb = tonemapFilmic(fragColor.rgb);')
             # frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
 
@@ -548,8 +548,8 @@ def make_forward_base(con_mesh, parse_opacity=False):
         vert.add_uniform('vec3 eye', '_cameraPosition')
         vert.write('eyeDir = eye - wposition;')
 
-    frag.add_include('../../Shaders/std/brdf.glsl')
-    frag.add_include('../../Shaders/std/math.glsl')
+    frag.add_include('std/brdf.glsl')
+    frag.add_include('std/math.glsl')
     frag.add_uniform('vec3 lightColor', '_lampColor')
     frag.add_uniform('vec3 lightDir', '_lampDirection')
     frag.add_uniform('vec3 lightPos', '_lampPosition')
@@ -558,7 +558,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
 
     if '_Irr' in wrd.world_defs:
-        frag.add_include('../../Shaders/std/shirr.glsl')
+        frag.add_include('std/shirr.glsl')
         frag.add_uniform('vec4 shirr[7]', link='_envmapIrradiance', included=True)
         if '_Rad' in wrd.world_defs:
             frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance')
@@ -589,7 +589,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
             vert.add_uniform('mat4 LWVP', '_biasLampWorldViewProjectionMatrix')
             vert.write('if (lightShadow == 1) lampPos = LWVP * spos;')
         
-        frag.add_include('../../Shaders/std/shadows.glsl')
+        frag.add_include('std/shadows.glsl')
         frag.add_uniform('sampler2D shadowMap', included=True)
         frag.add_uniform('samplerCube shadowMapCube', included=True)
         frag.add_uniform('bool receiveShadow')
@@ -600,7 +600,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.write('if (receiveShadow) {')
         frag.write('    if (lightShadow == 1) {')
         if '_CSM' in wrd.world_defs:
-            frag.add_include('../../Shaders/compiled.glsl')
+            frag.add_include('compiled.glsl')
             frag.add_uniform('vec4 casData[shadowmapCascades * 4 + 4]', '_cascadeData', included=True)
             frag.add_uniform('vec3 eye', '_cameraPosition')
             frag.write('vec2 smSize;')
@@ -646,7 +646,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
     frag.write('vec3 direct;')
 
     if '_LTC' in wrd.world_defs:
-        frag.add_include('../../Shaders/std/ltc.glsl')
+        frag.add_include('std/ltc.glsl')
         frag.add_uniform('sampler2D sltcMat', link='_ltcMat')
         frag.add_uniform('sampler2D sltcMag', link='_ltcMag')
         frag.add_uniform('vec3 lampArea0', link='_lampArea0')
@@ -692,7 +692,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.write('vec3 indirect = albedo;')
 
     if '_VoxelGI' in wrd.world_defs or '_VoxelAO' in wrd.world_defs:
-        frag.add_include('../../Shaders/std/conetrace.glsl')
+        frag.add_include('std/conetrace.glsl')
         frag.add_uniform('sampler3D voxels', included=True)
         if '_VoxelGICam' in wrd.world_defs:
             frag.add_uniform('vec3 eyeSnap', link='_cameraPositionSnap')

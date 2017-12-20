@@ -74,8 +74,6 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
             shutil.rmtree(build_dir + '/osx-resources', onerror=remove_readonly)
         if os.path.isdir(build_dir + '/compiled/Shaders'):
             shutil.rmtree(build_dir + '/compiled/Shaders', onerror=remove_readonly)
-        if os.path.isdir(build_dir + '/compiled/ShaderRaws'):
-            shutil.rmtree(build_dir + '/compiled/ShaderRaws', onerror=remove_readonly)
 
     # Detect camera plane changes
     if len(bpy.data.cameras) > 0:
@@ -375,6 +373,7 @@ def watch_play():
 def watch_compile(mode):
     state.compileproc.wait()
     log.print_progress(100)
+    print('Finished in ' + str(time.time() - profile_time))
     if state.compileproc == None: ##
         return
     result = state.compileproc.poll()
@@ -383,7 +382,6 @@ def watch_compile(mode):
     if result == 0:
         bpy.data.worlds['Arm'].arm_recompile = False
         state.compileproc_success = True
-        print('Finished in ' + str(time.time() - profile_time))
         on_compiled(mode)
     else:
         state.compileproc_success = False

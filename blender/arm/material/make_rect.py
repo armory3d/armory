@@ -41,12 +41,12 @@ def make_rect(con_rect):
 
     frag.ins = vert.outs
     frag.add_out('vec4 fragColor')
-    frag.add_include('../../Shaders/compiled.glsl')
-    frag.add_include('../../Shaders/std/brdf.glsl')
-    frag.add_include('../../Shaders/std/math.glsl')
-    frag.add_include('../../Shaders/std/gbuffer.glsl')
-    frag.add_include('../../Shaders/std/shirr.glsl')
-    frag.add_include('../../Shaders/std/shadows.glsl')
+    frag.add_include('compiled.glsl')
+    frag.add_include('std/brdf.glsl')
+    frag.add_include('std/math.glsl')
+    frag.add_include('std/gbuffer.glsl')
+    frag.add_include('std/shirr.glsl')
+    frag.add_include('std/shadows.glsl')
 
     frag.add_uniform('sampler2D gbuffer0')
     frag.add_uniform('sampler2D gbuffer1')

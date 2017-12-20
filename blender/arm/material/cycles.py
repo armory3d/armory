@@ -963,7 +963,7 @@ def parse_normal_map_color_input(inp):
     defplus = get_rp_renderer() == 'Deferred Plus'
     if not get_arm_export_tangents() or defplus or mat_get_material().arm_decal: # Compute TBN matrix
         frag.write('vec3 texn = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
-        frag.add_include('../../Shaders/std/normals.glsl')
+        frag.add_include('std/normals.glsl')
         if defplus:
             frag.write('mat3 TBN = cotangentFrame(n, -vVec, g2.xy, g2.zw);')
         else:
@@ -1022,7 +1022,7 @@ def parse_value(node, socket):
     elif node.type == 'CAMERA':
         # View Z Depth
         if socket == node.outputs[1]:
-            curshader.add_include('../../Shaders/std/math.glsl')
+            curshader.add_include('std/math.glsl')
             curshader.add_uniform('vec2 cameraProj', link='_cameraPlaneProj')
             return 'linearize(gl_FragCoord.z, cameraProj)'
         # View Distance

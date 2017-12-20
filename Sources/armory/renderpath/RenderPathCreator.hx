@@ -37,7 +37,7 @@ class RenderPathCreator {
 
 		#if (rp_background == "World")
 		{
-			path.loadShader("shader_datas/world/world");
+			path.loadShader("shader_datas/world_pass/world_pass");
 		}
 		#end
 
@@ -178,7 +178,7 @@ class RenderPathCreator {
 			path.drawMeshes("mesh");
 			#if (rp_background == "World")
 			{
-				path.drawSkydome("shader_datas/world/world");
+				path.drawSkydome("shader_datas/world_pass/world_pass");
 			}
 			#end
 
@@ -233,7 +233,7 @@ class RenderPathCreator {
 	static function init() {
 		#if (rp_background == "World")
 		{
-			path.loadShader("shader_datas/world/world");
+			path.loadShader("shader_datas/world_pass/world_pass");
 		}
 		#end
 
@@ -807,7 +807,7 @@ class RenderPathCreator {
 
 		#if (rp_background == "World")
 		{
-			path.drawSkydome("shader_datas/world/world");
+			path.drawSkydome("shader_datas/world_pass/world_pass");
 		}
 		#end
 

@@ -2,16 +2,16 @@ import bpy
 
 def skin_pos(vert):
 
-    vert.add_include('../../Shaders/compiled.glsl')
+    vert.add_include('compiled.glsl')
 
     if bpy.data.worlds['Arm'].arm_skin == 'GPU (Matrix)':
-        vert.add_include('../../Shaders/std/skinning_mat.glsl')
+        vert.add_include('std/skinning_mat.glsl')
         vert.add_uniform('vec4 skinBones[skinMaxBones * 3]', link='_skinBones', included=True)
         vert.write('mat4 skinningMat = getSkinningMat(ivec4(bone), weight);')
         vert.write('spos *= skinningMat;')
     
     else: # Dual Quat
-        vert.add_include('../../Shaders/std/skinning.glsl')
+        vert.add_include('std/skinning.glsl')
         vert.add_uniform('vec4 skinBones[skinMaxBones * 2]', link='_skinBones', included=True)
         vert.write('vec4 skinA;')
         vert.write('vec4 skinB;')

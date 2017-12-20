@@ -27,9 +27,9 @@ def make_gi(context_id):
     geom.ins = vert.outs
     frag.ins = geom.outs
 
-    frag.add_include('../../Shaders/compiled.glsl')
-    frag.add_include('../../Shaders/std/math.glsl')
-    frag.add_include('../../Shaders/std/imageatomic.glsl')
+    frag.add_include('compiled.glsl')
+    frag.add_include('std/math.glsl')
+    frag.add_include('std/imageatomic.glsl')
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
 
     rpdat = arm.utils.get_rp()
@@ -60,7 +60,7 @@ def make_gi(context_id):
     frag.write('if (dotNL == 0.0) return;')
 
     if is_shadows:
-        frag.add_include('../../Shaders/std/shadows.glsl')
+        frag.add_include('std/shadows.glsl')
         frag.add_uniform('sampler2D shadowMap', included=True)
         frag.add_uniform('samplerCube shadowMapCube', included=True)
         frag.add_uniform('int lightShadow', '_lampCastShadow')
@@ -83,7 +83,7 @@ def make_gi(context_id):
     # frag.write('}')
 
     # if '_LTC' in wrd.world_defs:
-    #     frag.add_include('../../Shaders/std/ltc.glsl')
+    #     frag.add_include('std/ltc.glsl')
     #     frag.add_uniform('sampler2D sltcMat', link='_ltcMat')
     #     frag.add_uniform('sampler2D sltcMag', link='_ltcMag')
     #     frag.add_uniform('vec3 lampArea0', link='_lampArea0')
@@ -146,7 +146,7 @@ def make_gi(context_id):
     vert.add_out('vec3 voxpositionGeom')
     vert.add_out('vec3 wnormalGeom')
 
-    vert.add_include('../../Shaders/compiled.glsl')
+    vert.add_include('compiled.glsl')
 
     if con_voxel.is_elem('col'):
         vert.add_out('vec3 vcolorGeom')
@@ -167,8 +167,8 @@ def make_gi(context_id):
     if is_shadows:
         vert.add_out('vec4 lampPosGeom')
         if '_CSM' in wrd.world_defs:
-            vert.add_include('../../Shaders/compiled.glsl')
-            vert.add_include('../../Shaders/std/shadows.glsl')
+            vert.add_include('compiled.glsl')
+            vert.add_include('std/shadows.glsl')
             vert.add_uniform('vec4 casData[shadowmapCascades * 4 + 4]', '_cascadeData', included=True)
             # TODO: Using second cascade
             vert.write('mat4 LWVP = mat4(casData[4 + 0], casData[4 + 1], casData[4 + 2], casData[4 + 3]);')
@@ -284,16 +284,16 @@ def make_ao(context_id):
     geom.ins = vert.outs
     frag.ins = geom.outs
 
-    frag.add_include('../../Shaders/compiled.glsl')
-    frag.add_include('../../Shaders/std/math.glsl')
-    frag.add_include('../../Shaders/std/imageatomic.glsl')
+    frag.add_include('compiled.glsl')
+    frag.add_include('std/math.glsl')
+    frag.add_include('std/imageatomic.glsl')
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
 
     rpdat = arm.utils.get_rp()
     # frag.add_uniform('layout(r32ui) uimage3D voxels')
     frag.add_uniform('layout(r8) image3D voxels')
 
-    vert.add_include('../../Shaders/compiled.glsl')
+    vert.add_include('compiled.glsl')
     vert.add_uniform('mat4 W', '_worldMatrix')
     vert.add_out('vec3 voxpositionGeom')
 

@@ -1,7 +1,7 @@
 {
 	"contexts": [
 		{
-			"name": "world",
+			"name": "world_pass",
 			"depth_write": false,
 			"compare_mode": "less",
 			"cull_mode": "clockwise",
@@ -101,8 +101,8 @@
 				}
 			],
 			"texture_params": [],
-			"vertex_shader": "world.vert.glsl",
-			"fragment_shader": "world.frag.glsl"
+			"vertex_shader": "world_pass.vert.glsl",
+			"fragment_shader": "world_pass.frag.glsl"
 		}
 	]
 }

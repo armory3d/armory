@@ -85,8 +85,6 @@ def invalidate_shader_cache(self, context):
     fp = arm.utils.get_fp_build()
     if os.path.isdir(fp + '/compiled/Shaders'):
         shutil.rmtree(fp + '/compiled/Shaders', onerror=remove_readonly)
-    if os.path.isdir(fp + '/compiled/ShaderRaws'):
-        shutil.rmtree(fp + '/compiled/ShaderRaws', onerror=remove_readonly)
     if os.path.isdir(fp + '/debug/html5-resources'):
         shutil.rmtree(fp + '/debug/html5-resources', onerror=remove_readonly)
     if os.path.isdir(fp + '/krom-resources'):
@@ -105,12 +103,8 @@ def invalidate_compiled_data(self, context):
     if invalidate_enabled == False:
         return
     fp = arm.utils.get_fp_build()
-    if os.path.isdir(fp + '/compiled/Assets'):
-        shutil.rmtree(fp + '/compiled/Assets', onerror=remove_readonly)
-    if os.path.isdir(fp + '/compiled/Shaders'):
-        shutil.rmtree(fp + '/compiled/Shaders', onerror=remove_readonly)
-    if os.path.isdir(fp + '/compiled/ShaderRaws'):
-        shutil.rmtree(fp + '/compiled/ShaderRaws', onerror=remove_readonly)
+    if os.path.isdir(fp + '/compiled'):
+        shutil.rmtree(fp + '/compiled', onerror=remove_readonly)
 
 def invalidate_mesh_data(self, context):
     fp = arm.utils.get_fp_build()

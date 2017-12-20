@@ -26,8 +26,8 @@ def make(context_id):
     vert.write('wvpposition = WVP * vec4(pos, 1.0);')
     vert.write('gl_Position = wvpposition;')
     
-    frag.add_include('../../Shaders/compiled.glsl')
-    frag.add_include('../../Shaders/std/gbuffer.glsl')
+    frag.add_include('compiled.glsl')
+    frag.add_include('std/gbuffer.glsl')
     frag.ins = vert.outs
     frag.add_uniform('sampler2D gbufferD')
     frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
