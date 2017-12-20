@@ -21,7 +21,7 @@ def make_rect(con_rect):
     vert = con_rect.make_vert()
     frag = con_rect.make_frag()
 
-    vert.vertex_structure_as_vsinput = False # Rect structure is used instead
+    vert.vstruct_as_vsin = False # Rect structure is used instead
 
     vert.add_in('vec2 pos')
     vert.add_out('vec2 texCoordRect')

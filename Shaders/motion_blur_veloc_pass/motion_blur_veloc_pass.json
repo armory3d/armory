@@ -14,8 +14,7 @@
 				}
 			],
 			"texture_params": [],
-			"vertex_shader": "motion_blur_veloc_pass.vert.glsl",
-			"vertex_shader_path": "../include/pass.vert.glsl",
+			"vertex_shader": "../include/pass.vert.glsl",
 			"fragment_shader": "motion_blur_veloc_pass.frag.glsl"
 		}
 	]

@@ -80,7 +80,6 @@ class ArmExporterListItem(bpy.types.PropertyGroup):
         items = [('opengl', 'Auto', 'opengl'),
                  ('opengl', 'OpenGL', 'opengl'),
                  ('vulkan', 'Vulkan', 'vulkan'),
-                 ('direct3d9', 'Direct3D9', 'direct3d9'),
                  ('direct3d11', 'Direct3D11', 'direct3d11'),
                  ('direct3d12', 'Direct3D12', 'direct3d12')],
         name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_win)

@@ -8,8 +8,7 @@
 			"cull_mode": "none",
 			"links": [],
 			"texture_params": [],
-			"vertex_shader": "combine_pass.vert.glsl",
-			"vertex_shader_path": "../include/pass.vert.glsl",
+			"vertex_shader": "../include/pass.vert.glsl",
 			"fragment_shader": "combine_pass.frag.glsl"
 		}
 	]

@@ -1,5 +1,5 @@
 import bpy
-import arm.make_state as state
+import arm.assets as assets
 import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
 import arm.material.cycles as cycles
@@ -48,6 +48,8 @@ def make(context_id):
         make_deferred(con_mesh)
     elif rid == 'Deferred Plus':
         make_deferred_plus(con_mesh)
+
+    assets.vs_equal(con_mesh, assets.shader_cons['mesh_vert'])
 
     make_finalize(con_mesh)
 

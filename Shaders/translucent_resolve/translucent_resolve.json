@@ -12,8 +12,7 @@
 			"alpha_blend_destination": "inverse_source_alpha",
 			"alpha_blend_operation": "add",
 			"links": [],
-			"vertex_shader": "translucent_resolve.vert.glsl",
-			"vertex_shader_path": "../include/pass.vert.glsl",
+			"vertex_shader": "../include/pass.vert.glsl",
 			"fragment_shader": "translucent_resolve.frag.glsl"
 		}
 	]

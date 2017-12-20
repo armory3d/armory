@@ -1,5 +1,6 @@
 import os
 import arm.utils
+import arm.assets as assets
 
 def write_data(res, defs, json_data, base_name):
     # Define
@@ -11,6 +12,8 @@ def write_data(res, defs, json_data, base_name):
     sres['name'] = shader_id
     sres['contexts'] = []
 
+    asset = assets.shader_passes_assets[base_name]
+
     # Parse
     for c in json_data['contexts']:
         con = {}
@@ -21,23 +24,28 @@ def write_data(res, defs, json_data, base_name):
         con['vertex_structure'] = []
 
         # Names
-        vert_name = c['vertex_shader'].split('.')[0]
-        frag_name = c['fragment_shader'].split('.')[0]
-        if 'geometry_shader' in c:
-            geom_name = c['geometry_shader'].split('.')[0]
-        if 'tesscontrol_shader' in c:
-            tesc_name = c['tesscontrol_shader'].split('.')[0]
-        if 'tesseval_shader' in c:
-            tese_name = c['tesseval_shader'].split('.')[0]
+        con['vertex_shader'] = c['vertex_shader'].rsplit('.', 1)[0].split('/')[-1]
+        if con['vertex_shader'] not in asset:
+            asset.append(con['vertex_shader'])
 
-        con['vertex_shader'] = vert_name + '.vert'
-        con['fragment_shader'] = frag_name + '.frag'
+        con['fragment_shader'] = c['fragment_shader'].rsplit('.', 1)[0].split('/')[-1]
+        if con['fragment_shader'] not in asset:
+            asset.append(con['fragment_shader'])
+
         if 'geometry_shader' in c:
-            con['geometry_shader'] = geom_name + '.geom'
+            con['geometry_shader'] = c['geometry_shader'].rsplit('.', 1)[0].split('/')[-1]
+            if con['geometry_shader'] not in asset:
+                asset.append(con['geometry_shader'])
+
         if 'tesscontrol_shader' in c:
-            con['tesscontrol_shader'] = tesc_name + '.tesc'
+            con['tesscontrol_shader'] = c['tesscontrol_shader'].rsplit('.', 1)[0].split('/')[-1]
+            if con['tesscontrol_shader'] not in asset:
+                asset.append(con['tesscontrol_shader'])
+
         if 'tesseval_shader' in c:
-            con['tesseval_shader'] = tese_name + '.tese'
+            con['tesseval_shader'] = c['tesseval_shader'].rsplit('.', 1)[0].split('/')[-1]
+            if con['tesseval_shader'] not in asset:
+                asset.append(con['tesseval_shader'])
 
         # Params
         params = ['depth_write', 'compare_mode', 'stencil_mode', \
@@ -53,48 +61,28 @@ def write_data(res, defs, json_data, base_name):
                 con[p] = c[p]
 
         # Parse shaders
-        if 'vertex_shader_path' in c:
-            with open(c['vertex_shader_path']) as f:
-                vert = f.read().splitlines()
-        else:
-            with open(c['vertex_shader']) as f:
-                vert = f.read().splitlines()
+        with open(c['vertex_shader']) as f:
+            vert = f.read().splitlines()
 
-        if 'fragment_shader_path' in  c:
-            with open(c['fragment_shader_path']) as f:
-                frag = f.read().splitlines()
-        else:
-            with open(c['fragment_shader']) as f:
-                frag = f.read().splitlines()
+        with open(c['fragment_shader']) as f:
+            frag = f.read().splitlines()
         
         parse_shader(sres, c, con, defs, vert, True) # Parse attribs for vertex shader
         parse_shader(sres, c, con, defs, frag, False)
 
         if 'geometry_shader' in c:
-            if 'geometry_shader_path' in c:
-                with open(c['geometry_shader_path']) as f:
-                    geom = f.read().splitlines()
-            else:
-                with open(c['geometry_shader']) as f:
-                    geom = f.read().splitlines()
+            with open(c['geometry_shader']) as f:
+                geom = f.read().splitlines()
             parse_shader(sres, c, con, defs, geom, False)
 
         if 'tesscontrol_shader' in c:
-            if 'tesscontrol_shader_path' in c:
-                with open(c['tesscontrol_shader_path']) as f:
-                    tesc = f.read().splitlines()
-            else:
-                with open(c['tesscontrol_shader']) as f:
-                    tesc = f.read().splitlines()
+            with open(c['tesscontrol_shader']) as f:
+                tesc = f.read().splitlines()
             parse_shader(sres, c, con, defs, tesc, False)
         
         if 'tesseval_shader' in c:
-            if 'tesseval_shader_path' in c:
-                with open(c['tesseval_shader_path']) as f:
-                    tese = f.read().splitlines()
-            else:
-                with open(c['tesseval_shader']) as f:
-                    tese = f.read().splitlines()
+            with open(c['tesseval_shader']) as f:
+                tese = f.read().splitlines()
             parse_shader(sres, c, con, defs, tese, False)
 
 def parse_shader(sres, c, con, defs, lines, parse_attributes):

@@ -18,9 +18,10 @@ class Shader:
         self.write_pre = False
         self.write_pre_header = 0
         self.tab = 1
-        self.vertex_structure_as_vsinput = True
+        self.vstruct_as_vsin = True
         self.lock = False
         self.geom_passthrough = False
+        self.is_linked = False # Use already generated shader
 
     def add_include(self, s):
         self.includes.append(s)
@@ -82,6 +83,20 @@ class Shader:
     def write_main_header(self, s):
         self.main_header += s + '\n'
 
+    def is_equal(self, sh):
+        self.vstruct_to_vsin()
+        return self.ins == sh.ins and \
+               self.main == sh.main and \
+               self.main_header == sh.main_header and \
+               self.main_pre == sh.main_pre
+
+    def vstruct_to_vsin(self):
+        if self.shader_type != 'vert' or self.ins != [] or not self.vstruct_as_vsin: # Vertex structure as vertex shader input
+            return
+        vs = self.context.data['vertex_structure']
+        for e in vs:
+            self.add_in('vec' + str(e['size']) + ' ' + e['name'])
+
     def get(self):
         s = '#version 450\n'
 
@@ -94,11 +109,9 @@ class Shader:
         in_ext = ''
         out_ext = ''
 
-        if self.shader_type == 'vert' and self.vertex_structure_as_vsinput: # Vertex structure as vertex shader input
-            vs = self.context.data['vertex_structure']
-            for e in vs:
-                self.add_in('vec' + str(e['size']) + ' ' + e['name'])
-
+        if self.shader_type == 'vert':
+            self.vstruct_to_vsin()
+        
         elif self.shader_type == 'tesc':
             in_ext = '[]'
             out_ext = '[]'

@@ -13,8 +13,7 @@
 				}
 			],
 			"texture_params": [],
-			"vertex_shader": "supersample_resolve.vert.glsl",
-			"vertex_shader_path": "../include/pass.vert.glsl",
+			"vertex_shader": "../include/pass.vert.glsl",
 			"fragment_shader": "supersample_resolve.frag.glsl"
 		}
 	]

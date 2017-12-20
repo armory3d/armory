@@ -1,5 +1,6 @@
 import bpy
 import arm.utils
+import arm.assets as assets
 import arm.material.cycles as cycles
 import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
@@ -8,9 +9,15 @@ import arm.material.make_particle as make_particle
 def make(context_id):
     rpdat = arm.utils.get_rp()
     if rpdat.rp_gi == 'Voxel GI':
-        return make_gi(context_id)
+        con = make_gi(context_id)
     else:
-        return make_ao(context_id)
+        con = make_ao(context_id)
+
+    assets.vs_equal(con, assets.shader_cons['voxel_vert'])
+    assets.gs_equal(con, assets.shader_cons['voxel_frag'])
+    assets.fs_equal(con, assets.shader_cons['voxel_geom'])
+
+    return con
 
 def make_gi(context_id):
     con_voxel = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'always', 'cull_mode': 'none', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False, 'conservative_raster': True })

@@ -117,8 +117,7 @@
 					"ifdef": ["_DFRS"]
 				}
 			],
-			"vertex_shader": "deferred_light.vert.glsl",
-			"vertex_shader_path": "../include/lamp_volume.vert.glsl",
+			"vertex_shader": "../include/pass_lamp_volume.vert.glsl",
 			"fragment_shader": "deferred_light.frag.glsl"
 		}
 	]

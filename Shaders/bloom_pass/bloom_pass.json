@@ -13,8 +13,7 @@
 				}
 			],
 			"texture_params": [],
-			"vertex_shader": "bloom_pass.vert.glsl",
-			"vertex_shader_path": "../include/pass.vert.glsl",
+			"vertex_shader": "../include/pass.vert.glsl",
 			"fragment_shader": "bloom_pass.frag.glsl"
 		}
 	]

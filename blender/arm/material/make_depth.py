@@ -6,6 +6,7 @@ import arm.material.make_skin as make_skin
 import arm.material.make_tess as make_tess
 import arm.material.make_particle as make_particle
 import arm.material.make_mesh as make_mesh
+import arm.assets as assets
 import arm.utils
 
 def make(context_id, rpasses, shadowmap=False):
@@ -24,9 +25,6 @@ def make(context_id, rpasses, shadowmap=False):
     tesc = None
     tese = None
 
-    gapi = arm.utils.get_gapi()
-    if gapi == 'direct3d9':
-        frag.add_out('vec4 fragColor') # Definition requred for d3d9 - pixel shader must minimally write all four components of COLOR0
     vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
 
     parse_opacity = 'translucent' in rpasses or mat_state.material.arm_discard
@@ -148,6 +146,7 @@ def make(context_id, rpasses, shadowmap=False):
                 con_depth.add_elem('tang', 4)
 
     # TODO: pass vbuf with proper struct
+    gapi = arm.utils.get_gapi()
     if gapi.startswith('direct3d') and bpy.data.worlds['Arm'].arm_deinterleaved_buffers == False:
         vert.write('vec3 t1 = nor; // TODO: Temp for d3d')
         if con_depth.is_elem('tex'):
@@ -157,9 +156,9 @@ def make(context_id, rpasses, shadowmap=False):
         opac = mat_state.material.arm_discard_opacity_shadows
         frag.write('if (opacity < {0}) discard;'.format(opac))
 
-    # frag.write('fragColor = vec4(0.0);')
+    assets.vs_equal(con_depth, assets.shader_cons['depth_vert'])
+    assets.fs_equal(con_depth, assets.shader_cons['depth_frag'])
 
     make_mesh.make_finalize(con_depth)
 
     return con_depth
-

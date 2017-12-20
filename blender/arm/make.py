@@ -37,14 +37,13 @@ def compile_shader_pass(res, raw_shaders_path, shader_name, defs):
 
     # Open json file
     json_name = shader_name + '.json'
-    base_name = json_name.split('.', 1)[0]
     with open(json_name) as f:
         json_file = f.read()
     json_data = json.loads(json_file)
 
     fp = arm.utils.get_fp_build()
-    arm.lib.make_datas.make(res, base_name, json_data, fp, defs)
-    arm.lib.make_variants.make(base_name, json_data, fp, defs)
+    arm.lib.make_datas.make(res, shader_name, json_data, fp, defs)
+    arm.lib.make_variants.make(shader_name, json_data, fp, defs)
 
 def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
@@ -145,6 +144,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     print('Shader flags: ' + str(defs))
 
     # Write referenced shader passes
+    path = build_dir + '/compiled/Shaders'
     if not os.path.isfile(build_dir + '/compiled/Shaders/shader_datas.arm') or state.last_world_defs != wrd.world_defs:
         path = build_dir + '/compiled/Shaders'
         if not os.path.exists(path):
@@ -155,6 +155,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
             # Ensure shader pass source exists
             if not os.path.exists(raw_shaders_path + '/' + ref):
                 continue
+            assets.shader_passes_assets[ref] = []
             if ref.startswith('compositor_pass'):
                 cdefs = arm.utils.def_strings_to_array(wrd.compo_defs)
                 compile_shader_pass(res, raw_shaders_path, ref, defs + cdefs)
@@ -163,6 +164,9 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
             else:
                 compile_shader_pass(res, raw_shaders_path, ref, defs)
         arm.utils.write_arm(path + '/shader_datas.arm', res)
+    for ref in assets.shader_passes:
+        for s in assets.shader_passes_assets[ref]:
+            assets.add_shader(path + '/' + s + '.glsl')
     state.last_world_defs = wrd.world_defs
 
     # Reset path

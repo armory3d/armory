@@ -13,6 +13,8 @@ shaders = []
 shaders_last = []
 shader_datas = []
 shader_passes = []
+shader_passes_assets = {}
+shader_cons = {}
 
 def reset():
     global assets
@@ -22,6 +24,7 @@ def reset():
     global shaders
     global shaders_last
     global shader_datas
+    global shader_cons
     assets = []
     khafile_defs_last = khafile_defs
     khafile_defs = []
@@ -30,6 +33,13 @@ def reset():
     shaders = []
     shader_datas = []
     shader_passes = []
+    shader_cons = {}
+    shader_cons['mesh_vert'] = []
+    shader_cons['depth_vert'] = []
+    shader_cons['depth_frag'] = []
+    shader_cons['voxel_vert'] = []
+    shader_cons['voxel_frag'] = []
+    shader_cons['voxel_geom'] = []
 
 def add(file):
     global assets
@@ -67,9 +77,6 @@ def add_shader_pass(data_name):
     add_shader_data(arm.utils.build_dir() + '/compiled/Shaders/shader_datas.arm')
     if data_name not in shader_passes:
         shader_passes.append(data_name)
-    full_name = arm.utils.build_dir() + '/compiled/Shaders/' + data_name
-    add_shader(full_name + '.vert.glsl')
-    add_shader(full_name + '.frag.glsl')
 
 invalidate_enabled = True # Disable invalidating during build process
 
@@ -115,3 +122,27 @@ def invalidate_envmap_data(self, context):
     fp = arm.utils.get_fp_build()
     if os.path.isdir(fp + '/compiled/Assets/envmaps'):
         shutil.rmtree(fp + '/compiled/Assets/envmaps', onerror=remove_readonly)
+
+def shader_equal(sh, ar, shtype):
+    # Merge equal shaders
+    for e in ar:
+        if sh.is_equal(e):
+            sh.context.data[shtype] = e.context.data[shtype]
+            sh.is_linked = True
+            return
+    ar.append(sh)
+
+def vs_equal(c, ar):
+    shader_equal(c.vert, ar, 'vertex_shader')
+
+def fs_equal(c, ar):
+    shader_equal(c.frag, ar, 'fragment_shader')
+
+def gs_equal(c, ar):
+    shader_equal(c.geom, ar, 'geometry_shader')
+
+def tcs_equal(c, ar):
+    shader_equal(c.tesc, ar, 'tesscontrol_shader')
+
+def tes_equal(c, ar):
+    shader_equal(c.tese, ar, 'tesseval_shader')

@@ -11,10 +11,8 @@
 			"color_write_alpha": false,
 			"links": [],
 			"texture_params": [],
-			"vertex_shader": "blend_pass.vert.glsl",
-			"vertex_shader_path": "../include/pass.vert.glsl",
-			"fragment_shader": "blend_pass.frag.glsl",
-			"fragment_shader_path": "../include/pass.frag.glsl"
+			"vertex_shader": "../include/pass.vert.glsl",
+			"fragment_shader": "../include/pass_copy.frag.glsl"
 		}
 	]
 }

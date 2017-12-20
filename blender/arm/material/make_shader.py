@@ -105,7 +105,7 @@ def write_shaders(rel_path, con, rpass, matname):
     write_shader(rel_path, con.tese, 'tese', rpass, matname, keep_cache=keep_cache)
 
 def write_shader(rel_path, shader, ext, rpass, matname, keep_cache=True):
-    if shader == None:
+    if shader == None or shader.is_linked:
         return
 
     # TODO: blend context
