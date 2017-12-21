@@ -133,9 +133,6 @@ class PhysicsWorld extends Trait {
 	}
 
 	public function removeKinematicCharacterController(controller:KinematicCharacterController) {
-		
-		/* Enable once ammo.js is updated with removeCollisionObject function
-		
 		if (world != null){
 			world.removeCollisionObject(controller.body);
 			world.removeAction(controller.character);
@@ -145,7 +142,6 @@ class PhysicsWorld extends Trait {
 		#elseif cpp
 		// controller.body.destroy(); // delete body;
 		#end
-		*/
 	}
 
 	public function getContacts(body:RigidBody):Array<RigidBody> {
