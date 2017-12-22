@@ -59,16 +59,16 @@ class KinematicCharacterController extends Trait {
 		notifyOnRemove(removeFromWorld);
 	}
 	
-	inline function withMargin(f:Float) {
+	inline function withMargin(f:Float):Float {
 		return f - f * collisionMargin;
 	}
 
-	public function notifyOnReady(f:Void->Void) {
+	public function notifyOnReady(f:Void->Void):Void {
 		onReady = f;
 		if (ready) onReady();
 	}
 
-	public function init() {
+	public function init():Void {
 		if (ready) return;
 		ready = true;
 		
@@ -155,7 +155,7 @@ class KinematicCharacterController extends Trait {
 		if (onReady != null) onReady();
 	}
 
-	function lateUpdate() {
+	function lateUpdate():Void {
 		if (!ready) return;
 		if (object.animation != null || animated) {
 			syncTransform();
@@ -213,24 +213,24 @@ class KinematicCharacterController extends Trait {
 	}
 
 	#if js
-	public function jump(){
+	public function jump():Void{
 		character.jump();
 	}
 	#elseif cpp
-	public function jump(v:Vec4){
+	public function jump(v:Vec4):Void{
 		character.jump(BtVector3.create(v.x, v.y, v.z));
 	}
 	#end
 
-	public function removeFromWorld() {
+	public function removeFromWorld():Void {
 		if (physics != null) physics.removeKinematicCharacterController(this);
 	}
 
-	public function activate() {
+	public function activate():Void {
 		body.activate(false);
 	}
 
-	public function disableGravity() {
+	public function disableGravity():Void {
 		#if js
 		character.setGravity(0.0);
 		#elseif cpp
@@ -238,7 +238,7 @@ class KinematicCharacterController extends Trait {
 		#end
 	}
 
-	public function enableGravity() {
+	public function enableGravity():Void {
 		#if js
 		character.setGravity(Math.abs(physics.world.getGravity().z()) * 3.0); // 9.8 * 3.0 in cpp source code
 		#elseif cpp
@@ -247,26 +247,26 @@ class KinematicCharacterController extends Trait {
 	}
 
 	#if js
-	public function setGravity(f:Float) {
+	public function setGravity(f:Float):Void {
 		character.setGravity(f);
 	}
 	#elseif cpp
-	public function setGravity(v:Vec4) {
+	public function setGravity(v:Vec4):Void {
 		character.setGravity(BtVector3.create(v.x, v.y, v.z));
 	}
 	#end
 
-	public function setActivationState(newState:Int) {
+	public function setActivationState(newState:Int):Void {
 		body.setActivationState(newState);
 	}
 
-	public function setFriction(f:Float) {
+	public function setFriction(f:Float):Void {
 		body.setFriction(f);
 		body.setRollingFriction(f);
 		this.friction = f;
 	}
 
-	public function syncTransform() {
+	public function syncTransform():Void {
 		var t = transform;
 		t.buildMatrix();
 		var trans = BtTransform.create();
@@ -277,7 +277,7 @@ class KinematicCharacterController extends Trait {
 		activate();
 	}
 
-	function setScale(v:Vec4) {
+	function setScale(v:Vec4):Void {
 		currentScaleX = v.x;
 		currentScaleY = v.y;
 		currentScaleZ = v.z;
@@ -286,8 +286,7 @@ class KinematicCharacterController extends Trait {
 		physics.world.updateSingleAabb(body);
 	}
 
-	function addPointsToConvexHull(shape:BtConvexHullShapePointer, scale:Vec4, margin:Float) {
-		trace("addPointsToConvexHull");
+	function addPointsToConvexHull(shape:BtConvexHullShapePointer, scale:Vec4, margin:Float):Void {
 		var positions = cast(object, MeshObject).data.geom.positions;
 
 		var sx = scale.x * (1.0 - margin);
