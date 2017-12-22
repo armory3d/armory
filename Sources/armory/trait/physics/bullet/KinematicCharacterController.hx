@@ -208,6 +208,10 @@ class KinematicCharacterController extends Trait {
 		character.setWalkDirection(BtVector3.create(walkDirection.x, walkDirection.y, walkDirection.z));
 	}
 
+	public function setUpInterpolate(value:Bool):Void {
+		character.setUpInterpolate(value);
+	}
+
 	#if js
 	public function jump(){
 		character.jump();
