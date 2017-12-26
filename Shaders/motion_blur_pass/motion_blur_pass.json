@@ -26,6 +26,10 @@
 				{
 					"name": "cameraProj",
 					"link": "_cameraPlaneProj"
+				},
+				{
+					"name": "frameScale",
+					"link": "_frameScale"
 				}
 			],
 			"texture_params": [],

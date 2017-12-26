@@ -8,6 +8,10 @@
 			"cull_mode": "none",
 			"links": [
 				{
+					"name": "frameScale",
+					"link": "_frameScale"
+				},
+				{
 					"name": "texStep",
 					"link": "_screenSizeInv",
 					"ifdef": ["_Disabled"]
