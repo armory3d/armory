@@ -13,13 +13,11 @@ uniform mat4 prevVP;
 uniform vec3 eye;
 uniform vec3 eyeLook;
 uniform vec2 cameraProj;
+uniform float frameScale;
 
 in vec2 texCoord;
 in vec3 viewRay;
 out vec4 fragColor;
-
-// const float motionBlurIntensity = 1.0;
-// const int samples = 8;
 
 vec2 getVelocity(vec2 coord, float depth) {
 	vec4 currentPos = vec4(coord.xy * 2.0 - 1.0, depth, 1.0);
@@ -43,8 +41,7 @@ void main() {
 		return;
 	}
 
-	float blurScale = 1.0 * motionBlurIntensity; //currentFps / targeFps;
-	// blurScale *= -1.0;
+	float blurScale = motionBlurIntensity * frameScale;
 	vec2 velocity = getVelocity(texCoord, depth) * blurScale;
 	
 	vec2 offset = texCoord;

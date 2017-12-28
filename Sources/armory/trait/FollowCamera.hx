@@ -16,6 +16,9 @@ class FollowCamera extends iron.Trait {
 	var target:String;
 
 	@prop
+	var lerp:Bool = true;
+
+	@prop
 	var lerpSpeed:Float = 0.1;
 
 	var targetObj:Object;
@@ -40,8 +43,12 @@ class FollowCamera extends iron.Trait {
 		notifyOnUpdate(function() {
 			if(!disabled){
 				if(targetObj != null) {
-					var vec = Vec4.lerp(targetObj.transform.world.getLoc(), object.transform.world.getLoc(), lerpSpeed);
-					object.transform.loc = vec;
+					if(lerp){
+						var vec = Vec4.lerp(targetObj.transform.world.getLoc(), object.transform.world.getLoc(), lerpSpeed);
+						object.transform.loc = vec;
+					} else {
+						object.transform.loc = targetObj.transform.world.getLoc();
+					}
 					object.transform.buildMatrix();
 				} else {
 					targetObj = Scene.active.getChild(target);

@@ -8,13 +8,13 @@ uniform sampler2D gbuffer0;
 uniform sampler2D sveloc;
 uniform sampler2D tex;
 // uniform vec2 texStep;
+uniform float frameScale;
 
 in vec2 texCoord;
 out vec4 fragColor;
 
 void main() {
-	vec2 velocity = texture(sveloc, texCoord).rg;
-	velocity *= motionBlurIntensity; // * (currentFps / targetFps);
+	vec2 velocity = texture(sveloc, texCoord).rg * motionBlurIntensity * frameScale;
 	
 	fragColor.rgb = texture(tex, texCoord).rgb;
 
