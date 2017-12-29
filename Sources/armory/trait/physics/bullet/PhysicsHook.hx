@@ -18,6 +18,7 @@ class PhysicsHook extends Trait {
 	var targetName:String;
 	var targetTransform:Transform;
 	var verts:Array<Float>;
+	var hook_rb:BtRigidBody;
 
 	public function new(targetName:String, verts:Array<Float>) {
 		super();
@@ -62,7 +63,7 @@ class PhysicsHook extends Trait {
 			var mass = 0.0;
 			_shape.calculateLocalInertia(mass, _inertia);
 			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shape, _inertia);
-			var rb = BtRigidBody.create(_bodyCI);
+			hook_rb = BtRigidBody.create(_bodyCI);
 
 			#if js
 			var nodes = sb.body.get_m_nodes();
@@ -89,7 +90,7 @@ class PhysicsHook extends Trait {
 
 					// Anchor node to rigid body
 					if (Math.abs(nodePos.x() - x) < 0.01 && Math.abs(nodePos.y() - y) < 0.01 && Math.abs(nodePos.z() - z) < 0.01) {
-						sb.body.appendAnchor(i, rb, false, 1.0 / numVerts);
+						sb.body.appendAnchor(i, hook_rb, false, 1.0 / numVerts);
 					}
 				}
 			}
