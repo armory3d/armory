@@ -14,7 +14,9 @@ import haxebullet.Bullet;
 
 class PhysicsHook extends Trait {
 
+	var target:Object;
 	var targetName:String;
+	var targetTransform:Transform;
 	var verts:Array<Float>;
 
 	public function new(targetName:String, verts:Array<Float>) {
@@ -29,10 +31,9 @@ class PhysicsHook extends Trait {
 	}
 
 	function init() {
-		
 		// Hook to empty axes
-		var target = targetName != "" ? iron.Scene.active.getChild(targetName) : null;
-		var targetTransform = target != null ? target.transform : object.transform;
+		target = targetName != "" ? iron.Scene.active.getChild(targetName) : null;
+		targetTransform = target != null ? target.transform : object.transform;
 
 		var physics = PhysicsWorld.active;
 
