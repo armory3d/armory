@@ -28,6 +28,7 @@ class PhysicsHook extends Trait {
 
 		Scene.active.notifyOnInit(function() {
 			notifyOnInit(init);
+			notifyOnUpdate(update);
 		});
 	}
 
@@ -48,15 +49,15 @@ class PhysicsHook extends Trait {
 			var _shape = BtSphereShape.create(0.01);
 			var _transform = BtTransform.create();
 			_transform.setIdentity();
-			// _transform.setOrigin(BtVector3.create(
-				// targetTransform.loc.x,
-				// targetTransform.loc.y,
-				// targetTransform.loc.z));
-			// _transform.setRotation(BtQuaternion.create(
-				// targetTransform.rot.x,
-				// targetTransform.rot.y,
-				// targetTransform.rot.z,
-				// targetTransform.rot.w));
+			_transform.setOrigin(BtVector3.create(
+				targetTransform.loc.x,
+				targetTransform.loc.y,
+				targetTransform.loc.z));
+			_transform.setRotation(BtQuaternion.create(
+				targetTransform.rot.x,
+				targetTransform.rot.y,
+				targetTransform.rot.z,
+				targetTransform.rot.w));
 			var _centerOfMassOffset = BtTransform.create();
 			_centerOfMassOffset.setIdentity();
 			var _motionState = BtDefaultMotionState.create(_transform, _centerOfMassOffset);
@@ -121,6 +122,22 @@ class PhysicsHook extends Trait {
 		// Rigid body or soft body not initialized yet
 		notifyOnInit(init);
 	}
+
+	function update() {
+		var _transform = BtTransform.create();
+		_transform.setIdentity();
+		_transform.setOrigin(BtVector3.create(
+			targetTransform.world.getLoc().x,
+			targetTransform.world.getLoc().y,
+			targetTransform.world.getLoc().z));
+		_transform.setRotation(BtQuaternion.create(
+			targetTransform.world.getQuat().x,
+			targetTransform.world.getQuat().y,
+			targetTransform.world.getQuat().z,
+			targetTransform.world.getQuat().w));
+		hook_rb.setWorldTransform(_transform);
+	}
+
 }
 
 #end
