@@ -1,5 +1,6 @@
 package armory.trait.internal;
 
+import iron.math.Math;
 import iron.Trait;
 #if arm_debug
 import kha.Scheduler;
@@ -78,7 +79,7 @@ class DebugConsole extends Trait {
 						ui.text(o.name);
 						ui._x -= 18;
 					}
-					ui.text('(' + Std.int(o.transform.worldx() * 10) / 10 + ', ' + Std.int(o.transform.worldy() * 10) / 10 + ', ' + Std.int(o.transform.worldz() * 10) / 10 + ')', Align.Right);
+					ui.text('(' + Math.roundfp(o.transform.worldx()) + ', ' + Math.roundfp(o.transform.worldy()) + ', ' + Math.roundfp(o.transform.worldz()) + ')', Align.Right);
 					i++;
 					if (b) {
 						for (c in o.children) {
