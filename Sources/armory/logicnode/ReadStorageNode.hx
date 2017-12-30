@@ -10,6 +10,8 @@ class ReadStorageNode extends LogicNode {
 		var key:String = inputs[0].get();
 
 		var data:Dynamic = iron.system.Storage.data;
+		if (data == null) return null;
+		
 		var value:Dynamic = Reflect.field(data, key);
 
 		if (value == null) {

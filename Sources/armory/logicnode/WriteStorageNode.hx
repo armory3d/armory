@@ -11,6 +11,8 @@ class WriteStorageNode extends LogicNode {
 		var value:Dynamic = inputs[2].get();
 
 		var data = iron.system.Storage.data;
+		if (data == null) return;
+
 		Reflect.setField(data, key, value);
 		iron.system.Storage.save();
 
