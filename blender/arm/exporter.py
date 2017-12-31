@@ -2340,11 +2340,11 @@ class ArmoryExporter:
         soft_mod = None
         for m in bobject.modifiers:
             if m.type == 'CLOTH':
-                soft_type = 0
+                soft_type = 0 # SoftShape.Cloth
                 soft_mod = m
                 break
             elif m.type == 'SOFT_BODY':
-                soft_type = 1 # Volume
+                soft_type = 1 # SoftShape.Volume
                 soft_mod = m
                 break
         if soft_type >= 0 and bpy.data.worlds['Arm'].arm_physics != 'Disabled':
@@ -2374,15 +2374,12 @@ class ArmoryExporter:
                 self.add_hook_trait(to, target, bobject.name, '')
 
         # Hook modifier
-        # hook_mod = None
-        # for m in bobject.modifiers:
-            # if m.type == 'HOOK':
-                # hook_mod = m
-                # break
-        # if hook_mod != None:
-            # group_name = hook_mod.vertex_group
-            # target_name = hook_mod.object.name
-            # self.add_hook_trait(o, bobject, target_name, group_name)
+        hook_mod = None
+        for m in bobject.modifiers:
+            if m.type == 'HOOK':
+                group_name = m.vertex_group
+                target_name = m.object.name
+                self.add_hook_trait(o, bobject, target_name, group_name)
 
         # Camera traits
         if type == NodeTypeCamera:
