@@ -5,7 +5,9 @@ package armory.trait.physics.bullet;
 import iron.math.Vec4;
 import iron.math.Mat4;
 import iron.Trait;
+import iron.object.Object;
 import iron.object.MeshObject;
+import iron.object.Transform;
 import iron.data.MeshData;
 import iron.data.SceneFormat;
 import armory.trait.physics.RigidBody;
@@ -13,7 +15,6 @@ import armory.trait.physics.PhysicsWorld;
 import haxebullet.Bullet;
 
 class PhysicsHook extends Trait {
-
 	var target:Object;
 	var targetName:String;
 	var targetTransform:Transform;
