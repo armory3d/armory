@@ -25,6 +25,7 @@ class PhysicsHook extends Trait {
 
 		this.targetName = targetName;
 		this.verts = verts;
+		hook_rb = null;
 
 		Scene.active.notifyOnInit(function() {
 			notifyOnInit(init);
@@ -124,6 +125,9 @@ class PhysicsHook extends Trait {
 	}
 
 	function update() {
+		if(hook_rb == null) {
+			return;
+		}
 		var _transform = BtTransform.create();
 		_transform.setIdentity();
 		_transform.setOrigin(BtVector3.create(
