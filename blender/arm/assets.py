@@ -24,6 +24,7 @@ def reset():
     global shaders
     global shaders_last
     global shader_datas
+    global shader_passes
     global shader_cons
     assets = []
     khafile_defs_last = khafile_defs
