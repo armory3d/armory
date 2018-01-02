@@ -1687,6 +1687,7 @@ class ArmoryExporter:
         o['volume'] = objref.volume
         o['pitch'] = objref.pitch
         o['attenuation'] = objref.attenuation
+        o['play_on_start'] = objref.arm_play_on_start
         self.output['speaker_datas'].append(o)
 
     def make_default_mat(self, mat_name, mat_objs):
