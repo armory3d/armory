@@ -186,6 +186,7 @@ def init_properties():
     bpy.types.Object.arm_proxy_sync_traits = bpy.props.BoolProperty(name="Traits", description="Keep traits synchronized with proxy object", default=True, update=proxy_sync_traits)
     bpy.types.Object.arm_cached = bpy.props.BoolProperty(name="Object Cached", description="No need to reexport object data", default=True)
     # For speakers
+    bpy.types.Speaker.arm_play_on_start = bpy.props.BoolProperty(name="Play on start", description="Play this sound automatically", default=False)
     bpy.types.Speaker.arm_loop = bpy.props.BoolProperty(name="Loop", description="Loop this sound", default=False)
     bpy.types.Speaker.arm_stream = bpy.props.BoolProperty(name="Stream", description="Stream this sound", default=False)
     # For mesh
