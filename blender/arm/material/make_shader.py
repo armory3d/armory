@@ -15,6 +15,7 @@ import arm.material.make_decal as make_decal
 import arm.material.make_voxel as make_voxel
 
 rpass_hook = None
+make_rpass = None
 
 def build(material, mat_users, mat_armusers):
     mat_state.mat_users = mat_users
@@ -60,7 +61,15 @@ def build(material, mat_users, mat_armusers):
         bind_textures[rp] = tar
         mat_state.bind_textures = tar
 
-        if rp == 'mesh':
+        con = None
+
+        if make_rpass != None:
+            con = make_rpass(rp)
+
+        if con != None:
+            pass
+            
+        elif rp == 'mesh':
             con = make_mesh.make(rp)
 
         elif rp == 'rect':

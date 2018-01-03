@@ -319,6 +319,8 @@ class Main {
         pathpack = 'armory'
         if os.path.isfile(arm.utils.get_fp() + '/Sources/' + wrd.arm_project_package + '/renderpath/RenderPathCreator.hx'):
             pathpack = wrd.arm_project_package
+        elif rpdat.rp_driver != 'Armory':
+            pathpack = rpdat.rp_driver.lower()
 
         f.write("""
                     iron.RenderPath.setActive(""" + pathpack + """.renderpath.RenderPathCreator.get());

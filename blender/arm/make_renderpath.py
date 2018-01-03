@@ -4,6 +4,8 @@ import arm.utils
 import arm.log as log
 import arm.make_state as state
 
+make_hook = None
+
 def add_world_defs():
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
@@ -110,6 +112,10 @@ def add_world_defs():
             break
 
 def build():
+    if make_hook != None:
+        make_hook()
+        return
+
     assets_path = arm.utils.get_sdk_path() + 'armory/Assets/'
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()

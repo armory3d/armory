@@ -6,6 +6,15 @@ import bpy
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
+drivers = ['Armory']
+driver_props = dict()
+
+def add_driver(d, draw_props):
+    global drivers
+    if d not in drivers:
+        drivers.append(d)
+        driver_props[d] = draw_props
+
 def update_preset(self, context):
     rpdat = arm.utils.get_rp()
     if self.rp_preset == 'Low':
@@ -301,6 +310,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
            description="A name for this item",
            default="Path")
 
+    rp_driver_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
+    rp_driver = bpy.props.StringProperty(name="Driver", default="Armory")
     rp_renderer = EnumProperty(
         items=[('Forward', 'Forward', 'Forward'),
                ('Deferred', 'Deferred', 'Deferred'),
