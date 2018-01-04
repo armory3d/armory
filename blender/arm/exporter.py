@@ -248,7 +248,7 @@ class ArmoryExporter:
             o['children'].append(so)
 
     def export_pose_markers(self, oanim, action):
-        if action.pose_markers == None:
+        if action.pose_markers == None or len(action.pose_markers) == 0:
             return
         oanim['marker_frames'] = []
         oanim['marker_names'] = []
