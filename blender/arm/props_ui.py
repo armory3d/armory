@@ -8,7 +8,7 @@ import arm.make_state as state
 import arm.assets as assets
 import arm.log as log
 import arm.proxy
-import arm.props_renderpath
+import arm.api
 
 # Menu in object region
 class ObjectPropsPanel(bpy.types.Panel):
@@ -951,15 +951,15 @@ class ArmRenderPathPanel(bpy.types.Panel):
 
         if wrd.arm_rplist_index >= 0 and len(wrd.arm_rplist) > 0:
             rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
-            drivers = arm.props_renderpath.drivers
-            if len(drivers) > 1:
+            if len(arm.api.drivers) > 0:
                 if len(rpdat.rp_driver_list) == 0:
-                    for s in drivers:
-                        rpdat.rp_driver_list.add().name = s
+                    rpdat.rp_driver_list.add().name = 'Armory'
+                    for d in arm.api.drivers:
+                        rpdat.rp_driver_list.add().name = d['driver_name']
                 layout.prop_search(rpdat, "rp_driver", rpdat, "rp_driver_list", "Driver")
                 layout.separator()
-                if rpdat.rp_driver != 'Armory':
-                    arm.props_renderpath.driver_props[rpdat.rp_driver](layout)
+                if rpdat.rp_driver != 'Armory' and arm.api.drivers[rpdat.rp_driver]['draw_props'] != None:
+                    arm.api.drivers[rpdat.rp_driver]['draw_props'](layout)
                     return
             layout.prop(wrd, "rp_preset")
             layout.separator()
