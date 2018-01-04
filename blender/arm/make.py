@@ -235,6 +235,10 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
         cmd.append('-g')
         cmd.append(arm.utils.get_gapi())
 
+    if '_VR' in wrd.world_defs:
+        cmd.append('--vr')
+        cmd.append('webvr')
+
     # Kha defaults to 110
     if arm.utils.get_os() == 'linux' and (kha_target_name == 'krom' or kha_target_name == '') and state.in_viewport == False:
         cmd.append('--shaderversion')
