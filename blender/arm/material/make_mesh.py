@@ -49,9 +49,9 @@ def make(context_id):
     elif rid == 'Deferred Plus':
         make_deferred_plus(con_mesh)
 
-    assets.vs_equal(con_mesh, assets.shader_cons['mesh_vert'])
-
     make_finalize(con_mesh)
+
+    assets.vs_equal(con_mesh, assets.shader_cons['mesh_vert'])
 
     return con_mesh
 

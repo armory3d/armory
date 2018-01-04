@@ -156,9 +156,9 @@ def make(context_id, rpasses, shadowmap=False):
         opac = mat_state.material.arm_discard_opacity_shadows
         frag.write('if (opacity < {0}) discard;'.format(opac))
 
+    make_mesh.make_finalize(con_depth)
+
     assets.vs_equal(con_depth, assets.shader_cons['depth_vert'])
     assets.fs_equal(con_depth, assets.shader_cons['depth_frag'])
-
-    make_mesh.make_finalize(con_depth)
 
     return con_depth
