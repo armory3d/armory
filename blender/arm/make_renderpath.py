@@ -273,7 +273,7 @@ def build():
         assets.add_khafile_def('rp_volumetriclight')
         assets.add_shader_pass('volumetric_light_quad')
         assets.add_shader_pass('volumetric_light')
-        assets.add_shader_pass('blur_edge_pass')
+        assets.add_shader_pass('blur_bilat_pass')
 
     if rpdat.rp_decals:
         assets.add_khafile_def('rp_decals')

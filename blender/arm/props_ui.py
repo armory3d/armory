@@ -952,10 +952,10 @@ class ArmRenderPathPanel(bpy.types.Panel):
         if wrd.arm_rplist_index >= 0 and len(wrd.arm_rplist) > 0:
             rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
             if len(arm.api.drivers) > 0:
-                if len(rpdat.rp_driver_list) == 0:
-                    rpdat.rp_driver_list.add().name = 'Armory'
-                    for d in arm.api.drivers:
-                        rpdat.rp_driver_list.add().name = d['driver_name']
+                rpdat.rp_driver_list.clear()
+                rpdat.rp_driver_list.add().name = 'Armory'
+                for d in arm.api.drivers:
+                    rpdat.rp_driver_list.add().name = arm.api.drivers[d]['driver_name']
                 layout.prop_search(rpdat, "rp_driver", rpdat, "rp_driver_list", "Driver")
                 layout.separator()
                 if rpdat.rp_driver != 'Armory' and arm.api.drivers[rpdat.rp_driver]['draw_props'] != None:
