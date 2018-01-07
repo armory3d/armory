@@ -347,7 +347,7 @@ def init_properties():
     bpy.types.Material.arm_receive_shadow = bpy.props.BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.arm_overlay = bpy.props.BoolProperty(name="Overlay", default=False)
     bpy.types.Material.arm_decal = bpy.props.BoolProperty(name="Decal", default=False)
-    bpy.types.Material.arm_two_sided = bpy.props.BoolProperty(name="Two-Sided", default=False)
+    bpy.types.Material.arm_two_sided = bpy.props.BoolProperty(name="Two-Sided", description="Flip normal when drawing back-face", default=False)
     bpy.types.Material.arm_cull_mode = EnumProperty(
         items=[('none', 'Both', 'None'),
                ('clockwise', 'Front', 'Clockwise'),
