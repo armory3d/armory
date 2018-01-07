@@ -26,7 +26,7 @@
 	uniform float time;
 	// uniform vec3 eye;
 	const float difference = cloudsUpper - cloudsLower;
-	const float steps = 45.0;
+	const float steps = 25.0;
 #endif
 #ifdef _EnvTex
 	uniform sampler2D envmap;
@@ -95,7 +95,7 @@ vec2 traceCloud(vec3 pos, vec3 dir) {
 	vec3 add = dir * ((end - beg) / steps);
 
 	vec2 shadeSum = vec2(0.0);
-	for (int i = 0; i < 45; i++) {
+	for (int i = 0; i < steps; i++) {
 		shadeSum = doCloudTrace(add, shadeSum);
 		if (shadeSum.y >= 1.0) return shadeSum;
 	}

@@ -44,8 +44,7 @@
 				},
 				{
 					"name": "snoise",
-					"link": "_noise8",
-					"ifdef": ["_Disabled"]
+					"link": "_noise8"
 				},
 				{
 					"name": "lightPlane",

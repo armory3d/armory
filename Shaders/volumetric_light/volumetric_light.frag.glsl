@@ -26,10 +26,10 @@ uniform vec2 lightPlane;
 in vec4 wvpposition;
 out vec4 fragColor;
 
-const float tScat = 0.04;
+const float tScat = 0.08;
 const float tAbs = 0.0;
 const float tExt = tScat + tAbs;
-const float stepLen = 1.0 / 20.0;
+const float stepLen = 1.0 / volumSteps;
 
 const float lighting = 0.4;
 // float lighting(vec3 p) {
@@ -67,8 +67,8 @@ void main() {
 	vec2 texCoord = screenPosition * 0.5 + 0.5;
 	// texCoord += vec2(0.5 / screenSize); // Half pixel offset
 
-	// float pixelRayMarchNoise = texture(snoise, texCoord).r * 2.0 - 1.0;
-	// pixelRayMarchNoise *= 0.2;
+	float pixelRayMarchNoise = texture(snoise, texCoord).r * 2.0 - 1.0;
+	pixelRayMarchNoise *= 0.2;
 
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	vec3 worldPos = getPos2(invVP, depth, texCoord);
@@ -87,7 +87,7 @@ void main() {
 	float curOpticalDepth = exp(-tExt * stepLenWorld);
 	float scatteredLightAmount = 0.0;
 
-	curPos += stepLenWorld * viewVecNorm;// * pixelRayMarchNoise;
+	curPos += stepLenWorld * viewVecNorm * pixelRayMarchNoise;
 
 	for (float l = stepLen; l < 0.99999; l += stepLen) { // Do not do the first and last steps
 		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);

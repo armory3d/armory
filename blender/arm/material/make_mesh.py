@@ -158,30 +158,7 @@ def make_base(con_mesh, parse_opacity):
         write_material_attribs_post(con_mesh, frag)
 
     if not is_displacement and not vattr_written:
-        billboard = mat_state.material.arm_billboard
-        particle = mat_state.material.arm_particle
-        wrd = bpy.data.worlds['Arm']
-        # Particles
-        if particle != 'off':
-            if particle == 'gpu':
-                make_particle.write(vert, particle_info=cycles.particle_info)
-            # Billboards
-            if billboard == 'spherical':
-                vert.add_uniform('mat4 WV', '_worldViewMatrix')
-                vert.add_uniform('mat4 P', '_projectionMatrix')
-                vert.write('gl_Position = P * (WV * vec4(0.0, 0.0, spos.z, 1.0) + vec4(spos.x, spos.y, 0.0, 0.0));')
-            else:
-                vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
-                vert.write('gl_Position = WVP * spos;')
-        else:
-            # Billboards
-            if billboard == 'spherical':
-                vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrixSphere')
-            elif billboard == 'cylindrical':
-                vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrixCylinder')
-            else: # off
-                vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
-            vert.write('gl_Position = WVP * spos;')
+        write_vertpos(vert)
 
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
@@ -242,6 +219,31 @@ def make_base(con_mesh, parse_opacity):
         # TODO: Sample disp at neightbour points to calc normal
         tese.write('wposition += wnormal * disp * 0.2;')
         tese.write('gl_Position = VP * vec4(wposition, 1.0);')
+
+def write_vertpos(vert):
+    billboard = mat_state.material.arm_billboard
+    particle = mat_state.material.arm_particle
+    # Particles
+    if particle != 'off':
+        if particle == 'gpu':
+            make_particle.write(vert, particle_info=cycles.particle_info)
+        # Billboards
+        if billboard == 'spherical':
+            vert.add_uniform('mat4 WV', '_worldViewMatrix')
+            vert.add_uniform('mat4 P', '_projectionMatrix')
+            vert.write('gl_Position = P * (WV * vec4(0.0, 0.0, spos.z, 1.0) + vec4(spos.x, spos.y, 0.0, 0.0));')
+        else:
+            vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
+            vert.write('gl_Position = WVP * spos;')
+    else:
+        # Billboards
+        if billboard == 'spherical':
+            vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrixSphere')
+        elif billboard == 'cylindrical':
+            vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrixCylinder')
+        else: # off
+            vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
+        vert.write('gl_Position = WVP * spos;')
 
 def write_norpos(con_mesh, vert, declare=False, write_nor=True):
     prep = ''
