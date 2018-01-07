@@ -7,6 +7,10 @@
 			"cull_mode": "none",
 			"links": [
 				{
+					"name": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				},
+				{
 					"name": "LWVP",
 					"link": "_biasLampWorldViewProjectionMatrix"
 				},
@@ -16,11 +20,13 @@
 				},
 				{
 					"name": "lightPos",
-					"link": "_lampPosition"
+					"link": "_lampPosition",
+					"ifdef": ["_Disabled"]
 				},
 				{
 					"name": "lightRadius",
-					"link": "_lampRadius"
+					"link": "_lampRadius",
+					"ifdef": ["_Disabled"]
 				},
 				{
 					"name": "lightColor",
@@ -28,7 +34,78 @@
 				},
 				{
 					"name": "snoise",
-					"link": "_noise8"
+					"link": "_noise8",
+					"ifdef": ["_Disabled"]
+				},
+				{
+					"name": "lightPlane",
+					"link": "_lampPlane",
+					"ifdef": ["_Disabled"]
+				},
+				{
+					"name": "lightShadow",
+					"link": "_lampCastShadow",
+					"ifdef": ["_Disabled"]
+				},
+				{
+					"name": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"name": "eyeLook",
+					"link": "_cameraLook"
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
+				}
+			],
+			"texture_params": [],
+			"vertex_shader": "../include/pass_viewray.vert.glsl",
+			"fragment_shader": "volumetric_light_quad.frag.glsl"
+		},
+		{
+			"name": "volumetric_light_quad_blend",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"blend_source": "blend_one",
+			"blend_destination": "blend_one",
+			"blend_operation": "add",
+			"alpha_blend_source": "blend_one",
+			"alpha_blend_destination": "blend_one",
+			"alpha_blend_operation": "add",
+			"links": [
+				{
+					"name": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				},
+				{
+					"name": "LWVP",
+					"link": "_biasLampWorldViewProjectionMatrix"
+				},
+				{
+					"name": "shadowsBias",
+					"link": "_lampShadowsBias"
+				},
+				{
+					"name": "lightPos",
+					"link": "_lampPosition",
+					"ifdef": ["_Disabled"]
+				},
+				{
+					"name": "lightRadius",
+					"link": "_lampRadius",
+					"ifdef": ["_Disabled"]
+				},
+				{
+					"name": "lightColor",
+					"link": "_lampColor"
+				},
+				{
+					"name": "snoise",
+					"link": "_noise8",
+					"ifdef": ["_Disabled"]
 				},
 				{
 					"name": "lightPlane",

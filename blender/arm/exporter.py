@@ -248,7 +248,7 @@ class ArmoryExporter:
             o['children'].append(so)
 
     def export_pose_markers(self, oanim, action):
-        if action.pose_markers == None:
+        if action.pose_markers == None or len(action.pose_markers) == 0:
             return
         oanim['marker_frames'] = []
         oanim['marker_names'] = []
@@ -1687,6 +1687,7 @@ class ArmoryExporter:
         o['volume'] = objref.volume
         o['pitch'] = objref.pitch
         o['attenuation'] = objref.attenuation
+        o['play_on_start'] = objref.arm_play_on_start
         self.output['speaker_datas'].append(o)
 
     def make_default_mat(self, mat_name, mat_objs):
@@ -2434,6 +2435,8 @@ class ArmoryExporter:
                 if t.type_prop == 'Logic Nodes' and t.nodes_name_prop != '':
                     x['type'] = 'Script'
                     x['class_name'] = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + arm.utils.safesrc(t.nodes_name_prop)
+                    if len(t.nodes_name_prop) > 0 and not t.nodes_name_prop[0].isupper():
+                        log.warn('Logic tree name "' + t.nodes_name_prop + '" must start with upper-case letter')
                 elif t.type_prop == 'WebAssembly':
                     pass
                 elif t.type_prop == 'UI Canvas':

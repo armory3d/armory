@@ -10,16 +10,16 @@ uniform sampler2D gbufferD;
 	//!uniform sampler2D shadowMap;
 	//!uniform samplerCube shadowMapCube;
 #endif
-uniform sampler2D snoise;
+// uniform sampler2D snoise;
 
 uniform mat4 LWVP;
+uniform float shadowsBias;
+// uniform vec3 lightPos;
+uniform vec3 lightColor;
 uniform vec3 eye;
 uniform vec3 eyeLook;
 uniform vec2 cameraProj;
-uniform vec3 lightPos;
-uniform vec3 lightColor;
-uniform float lightRadius;
-uniform float shadowsBias;
+// uniform float lightRadius;
 // uniform int lightShadow;
 // uniform vec2 lightPlane;
 
@@ -29,28 +29,26 @@ out vec4 fragColor;
 
 const float tScat = 0.08;
 const float tAbs = 0.0;
-const float tExt = 0.0; //tScat + tAbs;
-// const float stepLen = 1.0 / 11.0;
-const float stepLen = 1.0 / 80; // Temporary..
+const float tExt = tScat + tAbs;
+const float stepLen = 1.0 / 20.0;
 
-// const float lighting = 0.4;
-float lighting(vec3 p) {
-	vec3 L = lightPos.xyz - p.xyz;
-	float Ldist = length(lightPos.xyz - p.xyz);
-	vec3 Lnorm = L / Ldist;
+const float lighting = 0.4;
+// float lighting(vec3 p) {
+	// vec3 L = lightPos.xyz - p.xyz;
+	// float Ldist = length(lightPos.xyz - p.xyz);
+	// vec3 Lnorm = L / Ldist;
 
-	float linearAtenuation = min(1.0, max(0.0, (lightRadius - Ldist) / lightRadius));
-	return linearAtenuation; //* min(1.0, 1.0 / (Ldist * Ldist));
-}
+	// float linearAtenuation = min(1.0, max(0.0, (lightRadius - Ldist) / lightRadius));
+	// return linearAtenuation; //* min(1.0, 1.0 / (Ldist * Ldist));
+// }
 
 void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatteredLightAmount, float stepLenWorld, vec3 viewVecNorm) {
 	curPos += stepLenWorld * viewVecNorm;
-	float density = 1.0;
+	const float density = 1.0;
 	
-	float l1 = lighting(curPos) * stepLenWorld * tScat * density;
+	// float l1 = lighting(curPos) * stepLenWorld * tScat * density;
+	float l1 = lighting * stepLenWorld * tScat * density;
 	curOpticalDepth *= exp(-tExt * stepLenWorld * density);
-	// vec3 lightDir = (lightPos - curPos);
-	// vec3 lightDirNorm = -normalize(lightDir);
 
 	float visibility = 1.0;
 	vec4 lampPos = LWVP * vec4(curPos, 1.0);
@@ -58,14 +56,11 @@ void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatter
 		lampPos.xyz /= lampPos.w;
 		visibility = float(texture(shadowMap, lampPos.xy).r > lampPos.z - shadowsBias);
 	}
-	// Cubemap
-	// visibility = float(texture(shadowMapCube, -l).r + shadowsBias > lpToDepth(lp, lightPlane));
 
 	scatteredLightAmount += curOpticalDepth * l1 * visibility;
 }
 
 void main() {
-	float pixelRayMarchNoise = texture(snoise, texCoord).r;
 
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	vec3 worldPos = getPos(eye, eyeLook, viewRay, depth, cameraProj);
@@ -84,102 +79,11 @@ void main() {
 	float curOpticalDepth = exp(-tExt * stepLenWorld);
 	float scatteredLightAmount = 0.0;
 
-	curPos += stepLenWorld * viewVecNorm * (2.0 * pixelRayMarchNoise - 1.0);
+	curPos += stepLenWorld * viewVecNorm;
 
-	// for(float l = stepLen; l < 0.99999; l += stepLen) {// Do not do the first and last steps
-		// Raw steps for now..
+	for (float l = stepLen; l < 0.99999; l += stepLen) { // Do not do the first and last steps
 		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
+	}
 
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-
-
-
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-
-
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
-	// }
-
-	// curOpticalDepth
-	fragColor = vec4(vec3(scatteredLightAmount * volumAirColor * normalize(lightColor.rgb) * volumAirTurbidity), 1.0); // * ((1.0 - depth) * 10.0)
+	fragColor = vec4(vec3(scatteredLightAmount * volumAirColor * normalize(lightColor.rgb) * volumAirTurbidity), 1.0);
 }

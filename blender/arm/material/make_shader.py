@@ -13,6 +13,7 @@ import arm.material.make_overlay as make_overlay
 import arm.material.make_depth as make_depth
 import arm.material.make_decal as make_decal
 import arm.material.make_voxel as make_voxel
+import arm.api
 
 rpass_hook = None
 
@@ -28,6 +29,7 @@ def build(material, mat_users, mat_armusers):
         mat_state.output_node = mat_state.nodes.new('ShaderNodeOutputMaterial')
 
     wrd = bpy.data.worlds['Arm']
+    rpdat = arm.utils.get_rp()
     rpasses = mat_utils.get_rpasses(material)
     matname = arm.utils.safesrc(arm.utils.asset_name(material))
     rel_path = arm.utils.build_dir() + '/compiled/Shaders/'
@@ -60,7 +62,15 @@ def build(material, mat_users, mat_armusers):
         bind_textures[rp] = tar
         mat_state.bind_textures = tar
 
-        if rp == 'mesh':
+        con = None
+
+        if rpdat.rp_driver != 'Armory' and arm.api.drivers[rpdat.rp_driver]['make_rpass'] != None:
+            con = arm.api.drivers[rpdat.rp_driver]['make_rpass'](rp)
+
+        if con != None:
+            pass
+            
+        elif rp == 'mesh':
             con = make_mesh.make(rp)
 
         elif rp == 'rect':

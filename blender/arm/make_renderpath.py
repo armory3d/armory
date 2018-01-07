@@ -3,6 +3,7 @@ import arm.assets as assets
 import arm.utils
 import arm.log as log
 import arm.make_state as state
+import arm.api
 
 def add_world_defs():
     wrd = bpy.data.worlds['Arm']
@@ -110,9 +111,13 @@ def add_world_defs():
             break
 
 def build():
+    rpdat = arm.utils.get_rp()
+    if rpdat.rp_driver != 'Armory' and arm.api.drivers[rpdat.rp_driver]['make_rpath'] != None:
+        arm.api.drivers[rpdat.rp_driver]['make_rpath']()
+        return
+
     assets_path = arm.utils.get_sdk_path() + 'armory/Assets/'
     wrd = bpy.data.worlds['Arm']
-    rpdat = arm.utils.get_rp()
 
     add_world_defs()
 
@@ -268,7 +273,7 @@ def build():
         assets.add_khafile_def('rp_volumetriclight')
         assets.add_shader_pass('volumetric_light_quad')
         assets.add_shader_pass('volumetric_light')
-        assets.add_shader_pass('blur_edge_pass')
+        assets.add_shader_pass('blur_bilat_pass')
 
     if rpdat.rp_decals:
         assets.add_khafile_def('rp_decals')

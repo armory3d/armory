@@ -3,6 +3,9 @@
 uniform sampler2D shadowMap;
 uniform samplerCube shadowMapCube;
 
+// uniform sampler2DShadow shadowMap;
+// uniform samplerCubeShadow shadowMapCube;
+
 #ifdef _CSM
 uniform vec4 casData[shadowmapCascades * 4 + 4];
 #endif

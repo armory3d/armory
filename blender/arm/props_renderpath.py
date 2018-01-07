@@ -301,6 +301,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
            description="A name for this item",
            default="Path")
 
+    rp_driver_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
+    rp_driver = bpy.props.StringProperty(name="Driver", default="Armory", update=assets.invalidate_compiled_data)
     rp_renderer = EnumProperty(
         items=[('Forward', 'Forward', 'Forward'),
                ('Deferred', 'Deferred', 'Deferred'),
