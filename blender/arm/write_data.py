@@ -462,6 +462,7 @@ const float penumbraDistance = """ + str(rpdat.arm_soft_shadows_distance) + """;
             f.write(
 """const float volumAirTurbidity = """ + str(round(wrd.arm_volumetric_light_air_turbidity * 100) / 100) + """;
 const vec3 volumAirColor = vec3(""" + str(round(wrd.arm_volumetric_light_air_color[0] * 100) / 100) + """, """ + str(round(wrd.arm_volumetric_light_air_color[1] * 100) / 100) + """, """ + str(round(wrd.arm_volumetric_light_air_color[2] * 100) / 100) + """);
+const int volumSteps = """ + str(wrd.arm_volumetric_light_steps) + """;
 """)
 
         if rpdat.rp_autoexposure:

@@ -328,18 +328,20 @@ class RigidBody extends Trait {
 		var positions = cast(object, MeshObject).data.geom.positions;
 		var indices = cast(object, MeshObject).data.geom.indices;
 
-		for (i in 0...Std.int(indices[0].length / 3)) {
-			triangleMesh.addTriangle(
-				BtVector3.create(positions[indices[0][i * 3 + 0] * 3 + 0] * scale.x,
-							  	 positions[indices[0][i * 3 + 0] * 3 + 1] * scale.y,
-							  	 positions[indices[0][i * 3 + 0] * 3 + 2] * scale.z),
-				BtVector3.create(positions[indices[0][i * 3 + 1] * 3 + 0] * scale.x,
-							  	 positions[indices[0][i * 3 + 1] * 3 + 1] * scale.y,
-							  	 positions[indices[0][i * 3 + 1] * 3 + 2] * scale.z),
-				BtVector3.create(positions[indices[0][i * 3 + 2] * 3 + 0] * scale.x,
-							  	 positions[indices[0][i * 3 + 2] * 3 + 1] * scale.y,
-							  	 positions[indices[0][i * 3 + 2] * 3 + 2] * scale.z)
-			);
+		for (ar in indices) {
+			for (i in 0...Std.int(ar.length / 3)) {
+				triangleMesh.addTriangle(
+					BtVector3.create(positions[ar[i * 3 + 0] * 3 + 0] * scale.x,
+								  	 positions[ar[i * 3 + 0] * 3 + 1] * scale.y,
+								  	 positions[ar[i * 3 + 0] * 3 + 2] * scale.z),
+					BtVector3.create(positions[ar[i * 3 + 1] * 3 + 0] * scale.x,
+								  	 positions[ar[i * 3 + 1] * 3 + 1] * scale.y,
+								  	 positions[ar[i * 3 + 1] * 3 + 2] * scale.z),
+					BtVector3.create(positions[ar[i * 3 + 2] * 3 + 0] * scale.x,
+								  	 positions[ar[i * 3 + 2] * 3 + 1] * scale.y,
+								  	 positions[ar[i * 3 + 2] * 3 + 2] * scale.z)
+				);
+			}
 		}
 	}
 }

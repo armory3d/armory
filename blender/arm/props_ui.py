@@ -1128,6 +1128,7 @@ class ArmRenderPropsPanel(bpy.types.Panel):
         layout.label('Volumetric Light')
         layout.prop(wrd, 'arm_volumetric_light_air_turbidity')
         layout.prop(wrd, 'arm_volumetric_light_air_color')
+        layout.prop(wrd, 'arm_volumetric_light_steps')
 
         layout.label('Compositor')
         layout.prop(wrd, 'arm_letterbox')

@@ -24,7 +24,7 @@ class RenderPathCreator {
 	#if (rp_renderer == "Forward")
 	static function init() {
 
-		#if kha_webgl
+		#if (rp_shadowmap && kha_webgl)
 		initEmpty();
 		#end
 		
@@ -142,8 +142,8 @@ class RenderPathCreator {
 				t.height = 0;
 				t.displayp = getDisplayp();
 				t.format = "R8";
-				// var ss = getSuperSampling();
-				t.scale = 0.5;
+				var ss = getSuperSampling();
+				if (ss != 1) t.scale = ss;
 				path.createRenderTarget(t);
 			}
 			{
@@ -153,8 +153,8 @@ class RenderPathCreator {
 				t.height = 0;
 				t.displayp = getDisplayp();
 				t.format = "R8";
-				// var ss = getSuperSampling();
-				t.scale = 0.5;
+				var ss = getSuperSampling();
+				if (ss != 1) t.scale = ss;
 				path.createRenderTarget(t);
 			}
 		}
@@ -470,7 +470,7 @@ class RenderPathCreator {
 	#if (rp_renderer == "Deferred")
 	static function init() {
 
-		#if kha_webgl
+		#if (rp_shadowmap && kha_webgl)
 		initEmpty();
 		#end
 
@@ -1386,7 +1386,7 @@ class RenderPathCreator {
 		return target;
 	}
 
-	#if kha_webgl
+	#if (rp_shadowmap && kha_webgl)
 	static function initEmpty() {
 		// Bind empty when requested target is not found
 		var tempty = new RenderTargetRaw();
