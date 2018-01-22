@@ -302,9 +302,16 @@ class Main {
         kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel, vSync: projectVSync, windowMode: projectWindowMode, resizable: projectWindowResize, maximizable: projectWindowMaximize, minimizable: projectWindowMinimize}, function() {
             iron.App.init(function() {
 """)
-        if is_publish and wrd.arm_loadbar:
+        if is_publish and wrd.arm_loadscreen:
+            loadscreen_class = 'armory.trait.internal.LoadingScreen'
+            if os.path.isfile(arm.utils.get_fp() + '/Sources/' + wrd.arm_project_package + '/LoadingScreen.hx'):
+                loadscreen_class = wrd.arm_project_package + '.LoadingScreen'
             f.write("""
-                iron.App.notifyOnRender2D(armory.trait.internal.LoadBar.render);
+                function drawLoading(g:kha.graphics2.Graphics) {
+                    if (iron.Scene.active != null && iron.Scene.active.ready) iron.App.removeRender2D(drawLoading);
+                    else """ + loadscreen_class + """.render(g, iron.data.Data.assetsLoaded, Main.projectAssets);
+                }
+                iron.App.notifyOnRender2D(drawLoading);
 """)
 
         f.write("""

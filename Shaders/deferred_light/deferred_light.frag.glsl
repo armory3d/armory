@@ -135,8 +135,7 @@ void main() {
 	#else
 
 	// TODO: merge..
-	// float cosAngle = max(1.0 - dotNL, 0.0);
-	// vec3 noff = n * shadowsBias * cosAngle;
+	// vec3 noff = n * 0.003;
 	if (lightShadow == 1) {
 		// vec4 lPos = LWVP * vec4(p + noff, 1.0);
 		vec4 lPos = LWVP * vec4(p, 1.0);

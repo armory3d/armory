@@ -447,7 +447,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
         row = layout.row()
         col = row.column()
         col.prop(wrd, 'arm_vsync')
-        col.prop(wrd, 'arm_loadbar')
+        col.prop(wrd, 'arm_loadscreen')
         col.prop(wrd, 'arm_winmode')
 
         col = row.column()
