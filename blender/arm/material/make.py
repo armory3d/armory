@@ -121,6 +121,10 @@ def parse(material, mat_data, mat_users, mat_armusers):
             const['bool'] = material.arm_receive_shadow
             c['bind_constants'].append(const)
     
-    mat_data['shader'] = shader_data_name + '/' + shader_data_name
+    shader_file_name = shader_data_name
+    if material.arm_custom_material != '':
+        shader_file_name += '.json'
+
+    mat_data['shader'] = shader_file_name + '/' + shader_data_name
 
     return sd, rpasses
