@@ -1642,10 +1642,10 @@ class ArmoryExporter:
             if proj != None and is_persp and (pw == 0 or windowed):
                 self.extract_projection(o, proj, with_planes=False)
 
-        if objref.type == 'PERSP':
-            o['type'] = 'perspective'
-        else:
-            o['type'] = 'orthographic'
+        if objref.type != 'PERSP':
+            o['ortho_scale'] = objref.ortho_scale / (7.31429 / 2)
+            o['near_plane'] = objref.clip_start
+            o['far_plane'] = objref.clip_end
 
         if objref.arm_render_to_texture:
             o['render_to_texture'] = True

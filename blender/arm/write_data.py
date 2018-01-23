@@ -298,7 +298,12 @@ class Main {
         if (state > 0) return;
         armory.object.Uniforms.register();
         if (projectWindowMode == kha.WindowMode.Fullscreen) { projectWindowMode = kha.WindowMode.BorderlessWindow; projectWidth = kha.Display.width(0); projectHeight = kha.Display.height(0); }
+""")
+        if not in_viewport:
+            f.write("""
         else { projectWidth = Std.int(Math.min(projectWidth, kha.Display.width(0))); projectHeight = Std.int(Math.min(projectHeight, kha.Display.height(0))); }
+""")
+        f.write("""
         kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel, vSync: projectVSync, windowMode: projectWindowMode, resizable: projectWindowResize, maximizable: projectWindowMaximize, minimizable: projectWindowMinimize}, function() {
             iron.App.init(function() {
 """)
