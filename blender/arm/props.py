@@ -83,6 +83,7 @@ def init_properties():
     bpy.types.World.arm_commit = StringProperty(name="Version Commit", description="Armory SDK version", default="")
     bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="", update=invalidate_compiler_cache)
     bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm", update=invalidate_compiler_cache)
+    bpy.types.World.arm_project_version = StringProperty(name="Version", description="Exported project version", default="1.0", update=invalidate_compiler_cache)
     bpy.types.World.arm_project_root = StringProperty(name="Root", description="Set root folder for linked assets", default="", subtype="FILE_PATH", update=invalidate_compiler_cache)
     bpy.types.World.arm_physics = EnumProperty(
         items = [('Disabled', 'Disabled', 'Disabled'), 
