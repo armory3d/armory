@@ -134,11 +134,8 @@ void main() {
 
 	#else
 
-	// TODO: merge..
-	// vec3 noff = n * 0.003;
 	if (lightShadow == 1) {
-		// vec4 lPos = LWVP * vec4(p + noff, 1.0);
-		vec4 lPos = LWVP * vec4(p, 1.0);
+		vec4 lPos = LWVP * vec4(p + n * shadowsBias * 10, 1.0);
 		if (lPos.w > 0.0) {
 			visibility = shadowTest(lPos.xyz / lPos.w, shadowsBias, shadowmapSize);
 		}

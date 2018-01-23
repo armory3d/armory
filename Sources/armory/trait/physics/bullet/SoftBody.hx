@@ -63,7 +63,6 @@ class SoftBody extends Trait {
 
 		if (physics == null) physics = armory.trait.physics.PhysicsWorld.active;
 
-		var softBodyHelpers = BtSoftBodyHelpers.create();
 		var mo = cast(object, MeshObject);
 		mo.frustumCulling = false;
 		var geom = mo.data.geom;
@@ -98,9 +97,10 @@ class SoftBody extends Trait {
 		var vecind = fromU32(geom.indices[0]);
 		var numtri = Std.int(geom.indices[0].length / 3);
 #if js
+		var softBodyHelpers = BtSoftBodyHelpers.create();
 		body = softBodyHelpers.CreateFromTriMesh(wrdinfo, positions, vecind, numtri);
 #elseif cpp
-		untyped __cpp__("body = softBodyHelpers.CreateFromTriMesh(wrdinfo, positions->Pointer(), vecind->Pointer(), numtri);");
+		untyped __cpp__("body = btSoftBodyHelpers::CreateFromTriMesh(wrdinfo, positions->Pointer(), vecind->Pointer(), numtri);");
 #end
 
 		// body.generateClusters(4);
