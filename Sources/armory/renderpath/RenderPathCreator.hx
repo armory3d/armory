@@ -59,7 +59,7 @@ class RenderPathCreator {
 			}
 			#end
 
-			#if (rp_supersampling == 4)
+			#if ((rp_supersampling == 4) || (rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA"))
 			{
 				var t = new RenderTargetRaw();
 				t.name = "buf";
@@ -71,7 +71,11 @@ class RenderPathCreator {
 				if (ss != 1) t.scale = ss;
 				t.depth_buffer = "main";
 				path.createRenderTarget(t);
+			}
+			#end
 
+			#if (rp_supersampling == 4)
+			{
 				path.loadShader("shader_datas/supersample_resolve/supersample_resolve");
 			}
 			#end
@@ -405,7 +409,7 @@ class RenderPathCreator {
 			{
 				path.setTarget("bufa");
 				path.clearTarget(0x00000000);
-				path.bindTarget("lbuf", "colorTex");
+				path.bindTarget("buf", "colorTex");
 				path.drawShader("shader_datas/smaa_edge_detect/smaa_edge_detect");
 
 				path.setTarget("bufb");
@@ -418,7 +422,7 @@ class RenderPathCreator {
 				// #else
 				path.setTarget(framebuffer);
 				// #end
-				path.bindTarget("lbuf", "colorTex");
+				path.bindTarget("buf", "colorTex");
 				path.bindTarget("bufb", "blendTex");
 				// #if (rp_antialiasing == "TAA")
 				// {
