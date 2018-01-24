@@ -2578,6 +2578,10 @@ class ArmoryExporter:
         num_mips = world.arm_envtex_num_mips
         strength = world.arm_envtex_strength
 
+        mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
+        if mobile_mat:
+            arm_radiance = False
+
         po = {}
         po['name'] = world.name
         if arm_irradiance:
