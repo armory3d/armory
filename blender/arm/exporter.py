@@ -2321,8 +2321,26 @@ class ArmoryExporter:
             x['parameters'].append(str(rb.linear_damping))
             x['parameters'].append(str(rb.angular_damping))
             x['parameters'].append(str(rb.kinematic).lower())
-            lin_fac = '[{0}, {1}, {2}]'.format(str(bobject.arm_rb_linear_factor[0]), str(bobject.arm_rb_linear_factor[1]), str(bobject.arm_rb_linear_factor[2]))
-            ang_fac = '[{0}, {1}, {2}]'.format(str(bobject.arm_rb_angular_factor[0]), str(bobject.arm_rb_angular_factor[1]), str(bobject.arm_rb_angular_factor[2]))
+            lx = bobject.arm_rb_linear_factor[0]
+            ly = bobject.arm_rb_linear_factor[1]
+            lz = bobject.arm_rb_linear_factor[2]
+            ax = bobject.arm_rb_angular_factor[0]
+            ay = bobject.arm_rb_angular_factor[1]
+            az = bobject.arm_rb_angular_factor[2]
+            if bobject.lock_location[0]:
+                lx = 0
+            if bobject.lock_location[1]:
+                ly = 0
+            if bobject.lock_location[2]:
+                lz = 0
+            if bobject.lock_rotation[0]:
+                ax = 0
+            if bobject.lock_rotation[1]:
+                ay = 0
+            if bobject.lock_rotation[2]:
+                az = 0
+            lin_fac = '[{0}, {1}, {2}]'.format(str(lx), str(ly), str(lz))
+            ang_fac = '[{0}, {1}, {2}]'.format(str(ax), str(ay), str(az))
             x['parameters'].append(lin_fac)
             x['parameters'].append(ang_fac)
             col_group = ''
