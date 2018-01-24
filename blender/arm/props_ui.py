@@ -474,6 +474,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_navigation')
         layout.prop(wrd, 'arm_ui')
         layout.prop(wrd, 'arm_hscript')
+        layout.prop(wrd, 'arm_formatlib')
 
         layout.separator()
         layout.prop_search(wrd, 'arm_khafile', bpy.data, 'texts', 'Khafile')

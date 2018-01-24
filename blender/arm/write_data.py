@@ -189,6 +189,10 @@ project.addSources('Sources');
                 f.write(add_armory_library(sdk_path, 'lib/hscript'))
             assets.add_khafile_def('arm_hscript')
 
+        if wrd.arm_formatlib == 'Enabled':
+            if not os.path.exists('Libraries/iron_format'):
+                f.write(add_armory_library(sdk_path, 'lib/iron_format'))
+
         if wrd.arm_minimize == False:
             assets.add_khafile_def('arm_json')
         

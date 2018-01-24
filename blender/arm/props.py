@@ -103,6 +103,10 @@ def init_properties():
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('Enabled', 'Enabled', 'Enabled')],
         name = "Hscript", default='Disabled', description="Include Hscript library")
+    bpy.types.World.arm_formatlib = EnumProperty(
+        items = [('Disabled', 'Disabled', 'Disabled'), 
+                 ('Enabled', 'Enabled', 'Enabled')],
+        name = "Format", default='Disabled', description="Include Format library")
     bpy.types.World.arm_audio = EnumProperty(
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('Enabled', 'Enabled', 'Enabled')],
