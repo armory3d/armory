@@ -56,7 +56,7 @@ class SpaceArmory extends Trait {
 		// if (mouse.started("right")) {
 		// 	var transforms:Array<Transform> = [];
 		// 	for (o in iron.Scene.active.meshes) transforms.push(o.transform);
-		// 	var hit = RayCaster.getClosestBoxIntersect(transforms, mouse.x, mouse.y, iron.Scene.active.camera);
+		// 	var hit = RayCaster.closestBoxIntersect(transforms, mouse.x, mouse.y, iron.Scene.active.camera);
 		// 	if (hit != null) {
 		// 		var loc = hit.loc;
 		// 		// gizmo.transform.loc.set(loc.x, loc.y, loc.z);
@@ -71,7 +71,7 @@ class SpaceArmory extends Trait {
 
 		// 		var transforms = [arrowX.transform, arrowY.transform, arrowZ.transform];
 
-		// 		var hit = RayCaster.getClosestBoxIntersect(transforms, mouse.x, mouse.y, iron.Scene.active.camera);
+		// 		var hit = RayCaster.closestBoxIntersect(transforms, mouse.x, mouse.y, iron.Scene.active.camera);
 		// 		if (hit != null) {
 		// 			if (hit.object.name == 'ArrowX') moveX = true;
 		// 			else if (hit.object.name == 'ArrowY') moveY = true;
