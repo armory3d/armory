@@ -20,7 +20,7 @@ uniform vec3 lightPos;
 uniform float lightRadius;
 uniform float shadowsBias;
 uniform int lightShadow;
-uniform vec2 lightPlane;
+uniform vec2 lightProj;
 
 in vec4 wvpposition;
 out float fragColor;
@@ -48,14 +48,19 @@ void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatter
 	curOpticalDepth *= exp(-tExt * stepLenWorld * density);
 
 	float visibility = 1.0;
-	vec4 lampPos = LWVP * vec4(curPos, 1.0);
-	if (lampPos.w > 0.0) {
-		lampPos.xyz /= lampPos.w;
-		visibility = float(texture(shadowMap, lampPos.xy).r > lampPos.z - shadowsBias);
+
+	if (lightShadow == 1) {
+		vec4 lampPos = LWVP * vec4(curPos, 1.0);
+		if (lampPos.w > 0.0) {
+			lampPos.xyz /= lampPos.w;
+			visibility = float(texture(shadowMap, lampPos.xy).r > lampPos.z - shadowsBias);
+		}
 	}
-	
-	// Cubemap
-	// visibility = float(texture(shadowMapCube, -l).r + shadowsBias > lpToDepth(lp, lightPlane));
+	else { // Cubemap
+		vec3 lp = lightPos - curPos;
+		vec3 l = normalize(lp);
+		visibility = float(texture(shadowMapCube, -l).r + shadowsBias > lpToDepth(lp, lightProj));
+	}
 
 	scatteredLightAmount += curOpticalDepth * l1 * visibility;
 }

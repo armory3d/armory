@@ -43,8 +43,8 @@
 					"link": "_blueNoise64"
 				},
 				{
-					"name": "lightPlane",
-					"link": "_lampPlane"
+					"name": "lightProj",
+					"link": "_lampPlaneProj"
 				},
 				{
 					"name": "lightShadow",
