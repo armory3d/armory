@@ -39,10 +39,6 @@
 					"link": "_lampRadius"
 				},
 				{
-					"name": "lightColor",
-					"link": "_lampColor"
-				},
-				{
 					"name": "snoise",
 					"link": "_noise8"
 				},

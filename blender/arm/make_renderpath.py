@@ -274,6 +274,8 @@ def build():
         assets.add_shader_pass('volumetric_light_quad')
         assets.add_shader_pass('volumetric_light')
         assets.add_shader_pass('blur_bilat_pass')
+        assets.add_shader_pass('blur_bilat_blend_pass')
+        assets.add_embedded_data('noise8.png')
 
     if rpdat.rp_decals:
         assets.add_khafile_def('rp_decals')
