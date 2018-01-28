@@ -41,7 +41,7 @@ def add_world_defs():
     # GI
     voxelgi = False
     voxelao = False
-    has_voxels = state.in_viewport == False or bpy.app.version >= (2, 80, 1)
+    has_voxels = arm.utils.voxel_support()
     if has_voxels:
         if rpdat.rp_gi == 'Voxel GI':
             voxelgi = True
@@ -229,7 +229,7 @@ def build():
         assets.add_embedded_data('vr.png')
 
     rp_gi = rpdat.rp_gi
-    has_voxels = state.in_viewport == False or bpy.app.version >= (2, 80, 1)
+    has_voxels = arm.utils.voxel_support()
     if not has_voxels:
         rp_gi = 'Off'
     assets.add_khafile_def('rp_gi={0}'.format(rp_gi))
@@ -245,7 +245,7 @@ def build():
             if rpdat.arm_voxelgi_refraction:
                 assets.add_khafile_def('rp_voxelgi_refraction')
         else:
-            log.warn('Disabling Voxel GI - Blender 2.8 is required for voxels in viewport')
+            log.warn('Disabling Voxel GI - unsupported target - use Krom instead')
 
     if rpdat.arm_rp_resolution != 'Display':
         assets.add_khafile_def('rp_resolution={0}'.format(rpdat.arm_rp_resolution))
