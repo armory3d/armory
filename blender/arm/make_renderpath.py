@@ -36,24 +36,27 @@ def add_world_defs():
         wrd.world_defs += '_LampClouds'
         assets.add_embedded_data('cloudstexture.png')
 
-    voxelgi = False
-    voxelao = False
     if rpdat.rp_renderer == 'Deferred':
         assets.add_khafile_def('arm_deferred')
-    # Shadows
-    if rpdat.rp_shadowmap_cascades != '1':
-        wrd.world_defs += '_CSM'
-        assets.add_khafile_def('arm_csm')
-    if rpdat.rp_shadowmap == 'Off':
-        wrd.world_defs += '_NoShadows'
-        assets.add_khafile_def('arm_no_shadows')
     # GI
+    voxelgi = False
+    voxelao = False
     has_voxels = state.in_viewport == False or bpy.app.version >= (2, 80, 1)
     if has_voxels:
         if rpdat.rp_gi == 'Voxel GI':
             voxelgi = True
         elif rpdat.rp_gi == 'Voxel AO':
             voxelao = True
+    # Shadows
+    if rpdat.rp_shadowmap_cascades != '1':
+        if voxelgi:
+            log.warn('Disabling shadow cascades - Voxel GI does not support cascades yet')
+        else:
+            wrd.world_defs += '_CSM'
+            assets.add_khafile_def('arm_csm')
+    if rpdat.rp_shadowmap == 'Off':
+        wrd.world_defs += '_NoShadows'
+        assets.add_khafile_def('arm_no_shadows')
     # SS
     # if rpdat.rp_dfrs:
     #     wrd.world_defs += '_DFRS'
