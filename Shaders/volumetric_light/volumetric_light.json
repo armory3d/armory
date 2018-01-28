@@ -39,16 +39,12 @@
 					"link": "_lampRadius"
 				},
 				{
-					"name": "lightColor",
-					"link": "_lampColor"
-				},
-				{
 					"name": "snoise",
-					"link": "_noise8"
+					"link": "_blueNoise64"
 				},
 				{
-					"name": "lightPlane",
-					"link": "_lampPlane"
+					"name": "lightProj",
+					"link": "_lampPlaneProj"
 				},
 				{
 					"name": "lightShadow",

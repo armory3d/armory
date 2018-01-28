@@ -394,6 +394,10 @@ class ArmoryExporterPanel(bpy.types.Panel):
             if item.arm_project_scene == '':
                 item.arm_project_scene = bpy.data.scenes[0].name
             layout.prop_search(item, 'arm_project_scene', bpy.data, 'scenes', 'Scene')
+            layout.separator()
+        layout.prop(wrd, 'arm_project_name')
+        layout.prop(wrd, 'arm_project_package')
+        layout.prop(wrd, 'arm_project_version')
 
 class ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
@@ -447,7 +451,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
         row = layout.row()
         col = row.column()
         col.prop(wrd, 'arm_vsync')
-        col.prop(wrd, 'arm_loadbar')
+        col.prop(wrd, 'arm_loadscreen')
         col.prop(wrd, 'arm_winmode')
 
         col = row.column()
@@ -470,11 +474,9 @@ class ArmoryProjectPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_navigation')
         layout.prop(wrd, 'arm_ui')
         layout.prop(wrd, 'arm_hscript')
+        layout.prop(wrd, 'arm_formatlib')
 
         layout.separator()
-        layout.label('Project:')
-        layout.prop(wrd, 'arm_project_name')
-        layout.prop(wrd, 'arm_project_package')
         layout.prop_search(wrd, 'arm_khafile', bpy.data, 'texts', 'Khafile')
         layout.prop_search(wrd, 'arm_khamake', bpy.data, 'texts', 'Khamake')
         layout.prop(wrd, 'arm_project_root')

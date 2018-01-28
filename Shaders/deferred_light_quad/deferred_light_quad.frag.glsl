@@ -103,9 +103,9 @@ void main() {
 
 	if (lightShadow == 1) {
 		#ifdef _CSM
-		visibility = shadowTestCascade(eye, p, shadowsBias, shadowmapSize * vec2(shadowmapCascades, 1.0));
+		visibility = shadowTestCascade(eye, p + n * shadowsBias * 10, shadowsBias, shadowmapSize * vec2(shadowmapCascades, 1.0));
 		#else
-		vec4 lPos = LWVP * vec4(p, 1.0);
+		vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100, 1.0);
 		if (lPos.w > 0.0) visibility = shadowTest(lPos.xyz / lPos.w, shadowsBias, shadowmapSize);
 		#endif
 	}

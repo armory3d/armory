@@ -189,6 +189,10 @@ project.addSources('Sources');
                 f.write(add_armory_library(sdk_path, 'lib/hscript'))
             assets.add_khafile_def('arm_hscript')
 
+        if wrd.arm_formatlib == 'Enabled':
+            if not os.path.exists('Libraries/iron_format'):
+                f.write(add_armory_library(sdk_path, 'lib/iron_format'))
+
         if wrd.arm_minimize == False:
             assets.add_khafile_def('arm_json')
         
@@ -298,13 +302,25 @@ class Main {
         if (state > 0) return;
         armory.object.Uniforms.register();
         if (projectWindowMode == kha.WindowMode.Fullscreen) { projectWindowMode = kha.WindowMode.BorderlessWindow; projectWidth = kha.Display.width(0); projectHeight = kha.Display.height(0); }
+""")
+        if not in_viewport:
+            f.write("""
         else { projectWidth = Std.int(Math.min(projectWidth, kha.Display.width(0))); projectHeight = Std.int(Math.min(projectHeight, kha.Display.height(0))); }
+""")
+        f.write("""
         kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel, vSync: projectVSync, windowMode: projectWindowMode, resizable: projectWindowResize, maximizable: projectWindowMaximize, minimizable: projectWindowMinimize}, function() {
             iron.App.init(function() {
 """)
-        if is_publish and wrd.arm_loadbar:
+        if is_publish and wrd.arm_loadscreen:
+            loadscreen_class = 'armory.trait.internal.LoadingScreen'
+            if os.path.isfile(arm.utils.get_fp() + '/Sources/' + wrd.arm_project_package + '/LoadingScreen.hx'):
+                loadscreen_class = wrd.arm_project_package + '.LoadingScreen'
             f.write("""
-                iron.App.notifyOnRender2D(armory.trait.internal.LoadBar.render);
+                function drawLoading(g:kha.graphics2.Graphics) {
+                    if (iron.Scene.active != null && iron.Scene.active.ready) iron.App.removeRender2D(drawLoading);
+                    else """ + loadscreen_class + """.render(g, iron.data.Data.assetsLoaded, Main.projectAssets);
+                }
+                iron.App.notifyOnRender2D(drawLoading);
 """)
 
         f.write("""

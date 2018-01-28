@@ -12,7 +12,8 @@
 				},
 				{
 					"name": "LWVP",
-					"link": "_biasLampWorldViewProjectionMatrix"
+					"link": "_biasLampWorldViewProjectionMatrix",
+					"ifndef": ["_CSM"]
 				},
 				{
 					"name": "shadowsBias",
@@ -29,12 +30,8 @@
 					"ifdef": ["_Disabled"]
 				},
 				{
-					"name": "lightColor",
-					"link": "_lampColor"
-				},
-				{
 					"name": "snoise",
-					"link": "_noise8"
+					"link": "_blueNoise64"
 				},
 				{
 					"name": "lightPlane",
@@ -57,6 +54,11 @@
 				{
 					"name": "cameraProj",
 					"link": "_cameraPlaneProj"
+				},
+				{
+					"name": "casData",
+					"link": "_cascadeData",
+					"ifdef": ["_CSM"]
 				}
 			],
 			"texture_params": [],
@@ -127,6 +129,11 @@
 				{
 					"name": "cameraProj",
 					"link": "_cameraPlaneProj"
+				},
+				{
+					"name": "casData",
+					"link": "_cascadeData",
+					"ifdef": ["_CSM"]
 				}
 			],
 			"texture_params": [],

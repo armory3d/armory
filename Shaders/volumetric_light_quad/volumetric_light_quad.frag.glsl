@@ -12,7 +12,11 @@ uniform sampler2D gbufferD;
 #endif
 uniform sampler2D snoise;
 
-uniform mat4 LWVP;
+#ifdef _CSM
+	//!uniform vec4 casData[shadowmapCascades * 4 + 4];
+#else
+	uniform mat4 LWVP;
+#endif
 uniform float shadowsBias;
 // uniform vec3 lightPos;
 uniform vec3 lightColor;
@@ -25,13 +29,12 @@ uniform vec2 cameraProj;
 
 in vec2 texCoord;
 in vec3 viewRay;
-out vec4 fragColor;
+out float fragColor;
 
 const float tScat = 0.08;
 const float tAbs = 0.0;
 const float tExt = tScat + tAbs;
 const float stepLen = 1.0 / volumSteps;
-
 const float lighting = 0.4;
 // float lighting(vec3 p) {
 	// vec3 L = lightPos.xyz - p.xyz;
@@ -51,6 +54,9 @@ void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatter
 	curOpticalDepth *= exp(-tExt * stepLenWorld * density);
 
 	float visibility = 1.0;
+	#ifdef _CSM
+    mat4 LWVP = mat4(casData[4 + 0], casData[4 + 1], casData[4 + 2], casData[4 + 3]);
+	#endif
 	vec4 lampPos = LWVP * vec4(curPos, 1.0);
 	if (lampPos.w > 0.0) {
 		lampPos.xyz /= lampPos.w;
@@ -62,8 +68,7 @@ void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatter
 
 void main() {
 
-	float pixelRayMarchNoise = texture(snoise, texCoord).r * 2.0 - 1.0;
-	pixelRayMarchNoise *= 0.2;
+	float pixelRayMarchNoise = texture(snoise, texCoord * 100).r * 2.0 - 1.0;
 
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	vec3 worldPos = getPos(eye, eyeLook, viewRay, depth, cameraProj);
@@ -88,5 +93,5 @@ void main() {
 		rayStep(curPos, curOpticalDepth, scatteredLightAmount, stepLenWorld, viewVecNorm);
 	}
 
-	fragColor = vec4(vec3(scatteredLightAmount * volumAirColor * normalize(lightColor.rgb) * volumAirTurbidity), 1.0);
+	fragColor = scatteredLightAmount * volumAirTurbidity;
 }

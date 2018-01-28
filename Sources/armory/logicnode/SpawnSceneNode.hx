@@ -18,7 +18,10 @@ class SpawnSceneNode extends LogicNode {
 
 		Scene.active.addScene(sceneName, null, function(o:Object) {
 			root = o;
-			if (matrix != null) root.transform.setMatrix(matrix);
+			if (matrix != null) {
+				root.transform.setMatrix(matrix);
+				root.transform.buildMatrix();
+			}
 			runOutputs(0);
 		});
 	}

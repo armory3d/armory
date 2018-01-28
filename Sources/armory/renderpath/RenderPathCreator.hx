@@ -59,7 +59,7 @@ class RenderPathCreator {
 			}
 			#end
 
-			#if (rp_supersampling == 4)
+			#if ((rp_supersampling == 4) || (rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA"))
 			{
 				var t = new RenderTargetRaw();
 				t.name = "buf";
@@ -71,7 +71,11 @@ class RenderPathCreator {
 				if (ss != 1) t.scale = ss;
 				t.depth_buffer = "main";
 				path.createRenderTarget(t);
+			}
+			#end
 
+			#if (rp_supersampling == 4)
+			{
 				path.loadShader("shader_datas/supersample_resolve/supersample_resolve");
 			}
 			#end
@@ -134,7 +138,7 @@ class RenderPathCreator {
 			path.loadShader("shader_datas/volumetric_light_quad/volumetric_light_quad");
 			path.loadShader("shader_datas/volumetric_light/volumetric_light");
 			path.loadShader("shader_datas/blur_bilat_pass/blur_bilat_pass_x");
-			path.loadShader("shader_datas/blur_bilat_pass/blur_bilat_pass_y_blend");
+			path.loadShader("shader_datas/blur_bilat_blend_pass/blur_bilat_blend_pass_y");
 			{
 				var t = new RenderTargetRaw();
 				t.name = "bufvola";
@@ -323,7 +327,7 @@ class RenderPathCreator {
 
 				path.setTarget("lbuf");
 				path.bindTarget("bufvolb", "tex");
-				path.drawShader("shader_datas/blur_bilat_pass/blur_bilat_pass_y_blend");
+				path.drawShader("shader_datas/blur_bilat_blend_pass/blur_bilat_blend_pass_y");
 			}
 			#end
 			
@@ -405,7 +409,7 @@ class RenderPathCreator {
 			{
 				path.setTarget("bufa");
 				path.clearTarget(0x00000000);
-				path.bindTarget("lbuf", "colorTex");
+				path.bindTarget("buf", "colorTex");
 				path.drawShader("shader_datas/smaa_edge_detect/smaa_edge_detect");
 
 				path.setTarget("bufb");
@@ -418,7 +422,7 @@ class RenderPathCreator {
 				// #else
 				path.setTarget(framebuffer);
 				// #end
-				path.bindTarget("lbuf", "colorTex");
+				path.bindTarget("buf", "colorTex");
 				path.bindTarget("bufb", "blendTex");
 				// #if (rp_antialiasing == "TAA")
 				// {
@@ -671,7 +675,7 @@ class RenderPathCreator {
 			path.loadShader("shader_datas/volumetric_light_quad/volumetric_light_quad");
 			path.loadShader("shader_datas/volumetric_light/volumetric_light");
 			path.loadShader("shader_datas/blur_bilat_pass/blur_bilat_pass_x");
-			path.loadShader("shader_datas/blur_bilat_pass/blur_bilat_pass_y_blend");
+			path.loadShader("shader_datas/blur_bilat_blend_pass/blur_bilat_blend_pass_y");
 			{
 				var t = new RenderTargetRaw();
 				t.name = "bufvola";
@@ -679,8 +683,9 @@ class RenderPathCreator {
 				t.height = 0;
 				t.displayp = getDisplayp();
 				t.format = "R8";
-				// var ss = getSuperSampling();
-				t.scale = 0.5;
+				var ss = getSuperSampling();
+				if (ss != 1) t.scale = ss;
+				// t.scale = 0.5;
 				path.createRenderTarget(t);
 			}
 			{
@@ -690,8 +695,9 @@ class RenderPathCreator {
 				t.height = 0;
 				t.displayp = getDisplayp();
 				t.format = "R8";
-				// var ss = getSuperSampling();
-				t.scale = 0.5;
+				var ss = getSuperSampling();
+				if (ss != 1) t.scale = ss;
+				// t.scale = 0.5;
 				path.createRenderTarget(t);
 			}
 		}
@@ -1063,7 +1069,7 @@ class RenderPathCreator {
 
 				path.setTarget("tex");
 				path.bindTarget("bufvolb", "tex");
-				path.drawShader("shader_datas/blur_bilat_pass/blur_bilat_pass_y_blend");
+				path.drawShader("shader_datas/blur_bilat_blend_pass/blur_bilat_blend_pass_y");
 			}
 			#end
 		}

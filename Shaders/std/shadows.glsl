@@ -109,7 +109,6 @@ mat4 getCascadeMat(const float d, out int casi, out int casIndex) {
 	// ..
 }
 
-// float shadowTestCascade(float dotNL, vec3 n, const vec3 eye, const vec3 p, const float shadowsBias, const vec2 smSize) {
 float shadowTestCascade(const vec3 eye, const vec3 p, const float shadowsBias, const vec2 smSize) {
 	const int c = shadowmapCascades;
 	float d = distance(eye, p);
@@ -117,10 +116,6 @@ float shadowTestCascade(const vec3 eye, const vec3 p, const float shadowsBias, c
 	int casi;
 	int casIndex;
 	mat4 LWVP = getCascadeMat(d, casi, casIndex);
-
-	// float cosAngle = max(1.0 - dotNL, 0.0);
-	// vec3 noff = n * shadowsBias * cosAngle;
-	// vec4 lPos = LWVP * vec4(p + noff, 1.0);
 	
 	vec4 lPos = LWVP * vec4(p, 1.0);
 

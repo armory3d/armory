@@ -73,29 +73,65 @@ class DebugDraw {
 		});
 	}
 
+	static var v:Vec4;
+	static var vx = new Vec4();
+	static var vy = new Vec4();
+	static var vz = new Vec4();
 	public function bounds(t:iron.object.Transform) {
-		// corner1-8.applymat4(t.world);
-		var x = t.worldx();
-		var y = t.worldy();
-		var z = t.worldz();
+		v = t.world.getLoc();
 		var dx = t.dim.x / 2;
 		var dy = t.dim.y / 2;
 		var dz = t.dim.z / 2;
 		
-		line(x - dx, y - dy, z - dz, x + dx, y - dy, z - dz);
-		line(x - dx, y + dy, z - dz, x + dx, y + dy, z - dz);
-		line(x - dx, y - dy, z + dz, x + dx, y - dy, z + dz);
-		line(x - dx, y + dy, z + dz, x + dx, y + dy, z + dz);
+		var up = t.world.up();
+		var look = t.world.look();
+		var right = t.world.right();
+		up.normalize();
+		look.normalize();
+		right.normalize();
 
-		line(x - dx, y - dy, z - dz, x - dx, y + dy, z - dz);
-		line(x - dx, y - dy, z + dz, x - dx, y + dy, z + dz);
-		line(x + dx, y - dy, z - dz, x + dx, y + dy, z - dz);
-		line(x + dx, y - dy, z + dz, x + dx, y + dy, z + dz);
+		vx.setFrom(right);
+		vx.mult(dx);
+		vy.setFrom(look);
+		vy.mult(dy);
+		vz.setFrom(up);
+		vz.mult(dz);
+		
+		lineb(-1, -1, -1,  1, -1, -1);
+		lineb(-1,  1, -1,  1,  1, -1);
+		lineb(-1, -1,  1,  1, -1,  1);
+		lineb(-1,  1,  1,  1,  1,  1);
 
-		line(x - dx, y - dy, z - dz, x - dx, y - dy, z + dz);
-		line(x - dx, y + dy, z - dz, x - dx, y + dy, z + dz);
-		line(x + dx, y - dy, z - dz, x + dx, y - dy, z + dz);
-		line(x + dx, y + dy, z - dz, x + dx, y + dy, z + dz);
+		lineb(-1, -1, -1, -1,  1, -1);
+		lineb(-1, -1,  1, -1,  1,  1);
+		lineb( 1, -1, -1,  1,  1, -1);
+		lineb( 1, -1,  1,  1,  1,  1);
+
+		lineb(-1, -1, -1, -1, -1,  1);
+		lineb(-1,  1, -1, -1,  1,  1);
+		lineb( 1, -1, -1,  1, -1,  1);
+		lineb( 1,  1, -1,  1,  1,  1);
+	}
+
+	static var v1 = new Vec4();
+	static var v2 = new Vec4();
+	static var t = new Vec4();
+	function lineb(a:Int, b:Int, c:Int, d:Int, e:Int, f:Int) {
+		v1.setFrom(v);
+		t.setFrom(vx); t.mult(a); v1.add(t);
+		t.setFrom(vy); t.mult(b); v1.add(t);
+		t.setFrom(vz); t.mult(c); v1.add(t);
+
+		v2.setFrom(v);
+		t.setFrom(vx); t.mult(d); v2.add(t);
+		t.setFrom(vy); t.mult(e); v2.add(t);
+		t.setFrom(vz); t.mult(f); v2.add(t);
+
+		linev(v1, v2);
+	}
+
+	public inline function linev(v1:Vec4, v2:Vec4) {
+		line(v1.x, v1.y, v1.z, v2.x, v2.y, v2.z);
 	}
 
 	public function line(x1:Float, y1:Float, z1:Float, x2:Float, y2:Float, z2:Float) {

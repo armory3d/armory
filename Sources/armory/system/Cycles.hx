@@ -1813,20 +1813,32 @@ class Cycles {
 	}
 
 	static function tovec1(v:Float):String {
+		#if kha_webgl
+		return 'float(' + v + ')';
+		#else
 		return v + '';
+		#end
 	}
 
 	static function tovec2(v:Array<Float>):String {
 		var v0 = v[0];
 		var v1 = v[1];
+		#if kha_webgl
+		return 'vec2(float($v0), float($v1))';
+		#else
 		return 'vec2($v0, $v1)';
+		#end
 	}
 
 	static function tovec3(v:Array<Float>):String {
 		var v0 = v[0];
 		var v1 = v[1];
 		var v2 = v[2];
+		#if kha_webgl
+		return 'vec3(float($v0), float($v1), float($v2))';
+		#else
 		return 'vec3($v0, $v1, $v2)';
+		#end
 	}
 
 	static function tovec4(v:Array<Float>):String {
@@ -1834,7 +1846,11 @@ class Cycles {
 		var v1 = v[1];
 		var v2 = v[2];
 		var v3 = v[3];
+		#if kha_webgl
+		return 'vec4(float($v0), float($v1), float($v2), float($v3))';
+		#else
 		return 'vec4($v0, $v1, $v2, $v3)';
+		#end
 	}
 
 	static function node_by_type(nodes:Array<TNode>, ntype:String):TNode {
