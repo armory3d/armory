@@ -24,7 +24,7 @@ def get_rpasses(material):
     ar = []
 
     rpdat = arm.utils.get_rp()
-    has_voxels = make_state.in_viewport == False or bpy.app.version >= (2, 80, 1)
+    has_voxels = arm.utils.voxel_support()
     vgirefract = rpdat.rp_gi == 'Voxel GI' and rpdat.arm_voxelgi_refraction and has_voxels
 
     if material.arm_decal:

@@ -361,6 +361,12 @@ def logic_editor_space():
                             return space
     return None
 
+def voxel_support():
+    b = state.in_viewport == False or bpy.app.version >= (2, 80, 1)
+    if state.target == 'html5':
+        b = False
+    return b
+
 krom_found = False
 def with_krom():
     global krom_found
