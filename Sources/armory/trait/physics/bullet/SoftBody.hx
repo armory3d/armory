@@ -51,12 +51,21 @@ class SoftBody extends Trait {
 		return vals;
 	}
 
-	function fromU32(ar:TUint32Array):haxe.ds.Vector<Int> {
-		var vals = new haxe.ds.Vector<Int>(ar.length);
-		for (i in 0...vals.length) vals[i] = ar[i];
+	function fromU32(ars:Array<TUint32Array>):haxe.ds.Vector<Int> {
+		var len = 0;
+		for (ar in ars) len += ar.length;
+		var vals = new haxe.ds.Vector<Int>(len);
+		var i = 0;
+		for (ar in ars) {
+			for (j in 0...ar.length) {
+				vals[i] = ar[j];
+				i++;
+			}
+		}
 		return vals;
 	}
 
+	var v = new Vec4();
 	function init() {
 		if (ready) return;
 		ready = true;
@@ -76,14 +85,17 @@ class SoftBody extends Trait {
 			object.transform.buildMatrix();
 		}
 
-		var positions:haxe.ds.Vector<kha.FastFloat> = fromF32(geom.positions);
+		var positions = fromF32(geom.positions);
 		for (i in 0...Std.int(positions.length / 3)) {
-			positions[i * 3] *= object.transform.scale.x;
-			positions[i * 3 + 1] *= object.transform.scale.y;
-			positions[i * 3 + 2] *= object.transform.scale.z;
-			positions[i * 3] += object.transform.worldx();
-			positions[i * 3 + 1] += object.transform.worldy();
-			positions[i * 3 + 2] += object.transform.worldz();
+			v.set(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
+			v.applyQuat(object.transform.rot);
+			v.x *= object.transform.scale.x;
+			v.y *= object.transform.scale.y;
+			v.z *= object.transform.scale.z;
+			v.addf(object.transform.worldx(), object.transform.worldy(), object.transform.worldz());
+			positions[i * 3] = v.x;
+			positions[i * 3 + 1] = v.y;
+			positions[i * 3 + 2] = v.z;
 		}
 		vertOffsetX = object.transform.worldx();
 		vertOffsetY = object.transform.worldy();
@@ -91,11 +103,14 @@ class SoftBody extends Trait {
 
 		object.transform.scale.set(1, 1, 1);
 		object.transform.loc.set(0, 0, 0);
+		object.transform.rot.set(0, 0, 0, 1);
 		object.transform.buildMatrix();
 
 		var wrdinfo = physics.world.getWorldInfo();
-		var vecind = fromU32(geom.indices[0]);
-		var numtri = Std.int(geom.indices[0].length / 3);
+		var vecind = fromU32(geom.indices);
+		var numtri = 0;
+		for (ar in geom.indices) numtri += Std.int(ar.length / 3);
+
 #if js
 		var softBodyHelpers = BtSoftBodyHelpers.create();
 		body = softBodyHelpers.CreateFromTriMesh(wrdinfo, positions, vecind, numtri);
