@@ -2628,4 +2628,6 @@ class ArmoryExporter:
             return True
         if len(obj1.modifiers) == 0 or len(obj2.modifiers) == 0:
             return False
+        if len(obj1.modifiers) != len(obj2.modifiers):
+            return False
         return all([self.mod_equal(m, obj2.modifiers[i]) for i,m in enumerate(obj1.modifiers)])
