@@ -104,6 +104,14 @@ def make_finalize(con_mesh):
         vert.write_pre = True
         vert.write('mposition = spos.xyz;')
         vert.write_pre = False
+    
+    if tese != None:
+       if tese.contains('mposition') and not tese.contains('vec3 mposition'):
+            vert.add_out('vec3 mposition')
+            vert.write_pre = True
+            vert.write('mposition = spos.xyz;')
+            vert.write_pre = False
+            make_tess.interpolate(tese, 'mposition', 3, declare_out=False)
 
 def make_base(con_mesh, parse_opacity):
     global is_displacement
