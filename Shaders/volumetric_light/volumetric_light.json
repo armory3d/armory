@@ -40,7 +40,7 @@
 				},
 				{
 					"name": "snoise",
-					"link": "_noise8"
+					"link": "_blueNoise64"
 				},
 				{
 					"name": "lightPlane",
