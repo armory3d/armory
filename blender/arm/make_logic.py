@@ -34,6 +34,12 @@ def build_node_tree(node_group):
     group_name = arm.utils.safesrc(node_group.name)
     file = path + group_name + '.hx'
 
+    # Import referenced node group
+    for node in node_group.nodes:
+        if node.bl_idname == 'LNCallGroupNode':
+            prop = getattr(node, 'property0')
+            ArmoryExporter.import_traits.append(prop)
+
     if node_group.is_cached and os.path.isfile(file):
         return
 
@@ -79,8 +85,6 @@ def build_node(node, f):
         if hasattr(node, 'property' + str(i)):
             prop = getattr(node, 'property' + str(i))
             f.write('\t\t' + name + '.property' + str(i) + ' = "' + prop + '";\n')
-            if node.bl_idname == 'LNCallGroupNode': # Import referenced node group
-                ArmoryExporter.import_traits.append(prop)
     
     # Create inputs
     for inp in node.inputs:
