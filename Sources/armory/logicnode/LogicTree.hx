@@ -7,4 +7,6 @@ class LogicTree extends iron.Trait {
 	public function new() {
 		super();
 	}
+
+	public function add() {}
 }
