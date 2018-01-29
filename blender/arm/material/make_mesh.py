@@ -99,14 +99,17 @@ def make_finalize(con_mesh):
         vert.write('vec3 wposition = vec4(W * spos).xyz;')
         vert.write_pre = False
 
-    if frag.contains('mposition') and not frag.contains('vec3 mposition'):
+    frag_mpos = frag.contains('mposition') and not frag.contains('vec3 mposition')
+    if frag_mpos:
         vert.add_out('vec3 mposition')
         vert.write_pre = True
         vert.write('mposition = spos.xyz;')
         vert.write_pre = False
     
     if tese != None:
-       if tese.contains('mposition') and not tese.contains('vec3 mposition'):
+        if frag_mpos:
+            make_tess.interpolate(tese, 'mposition', 3, declare_out=True)
+        elif tese.contains('mposition') and not tese.contains('vec3 mposition'):
             vert.add_out('vec3 mposition')
             vert.write_pre = True
             vert.write('mposition = spos.xyz;')
