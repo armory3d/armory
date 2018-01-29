@@ -11,8 +11,8 @@ const float MAX_DISTANCE = 1.73205080757 * voxelgiRange;
 const float VOXEL_SIZE = (2.0 / voxelgiResolution.x) * voxelgiStep;
 const float blendFac = (1.0 / max(voxelgiOcc, 0.1));
 
-uniform sampler3D voxels;
-uniform sampler3D voxelsLast;
+// uniform sampler3D voxels;
+// uniform sampler3D voxelsLast;
 
 vec3 orthogonal(const vec3 u) {
 	// Pass normalized u
@@ -116,12 +116,12 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	return vec4(0.0);
 }
 
-float traceShadow(const vec3 origin, const vec3 dir, const float aperture, const float targetDistance) {
+float traceShadow(sampler3D voxels, const vec3 origin, const vec3 dir, const float aperture, const float targetDistance) {
 	const float offset = 2 * VOXEL_SIZE * voxelgiOffsetShadow;
 	return traceCone(voxels, origin, dir, aperture, targetDistance, offset).a;
 }
 
-vec3 traceSpecular(const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {
+vec3 traceSpecular(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {
 	float rough = max(roughness, 0.15);
 	float specularAperture = clamp(tan((3.14159265 / 2) * rough * 0.75), 0.0174533, 3.14159265);
 	vec3 specularDir = normalize(reflect(-viewDir, normal));
@@ -130,7 +130,7 @@ vec3 traceSpecular(const vec3 pos, const vec3 normal, const vec3 viewDir, const 
 	return traceCone(voxels, pos, specularDir, specularAperture, MAX_DISTANCE, offset).xyz;
 }
 
-vec3 traceRefraction(const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {
+vec3 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {
 	const float ior = 1.440;
 	const float transmittance = 1.0;
 	vec3 refraction = refract(viewDir, normal, 1.0 / ior);

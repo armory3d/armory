@@ -986,7 +986,7 @@ class RenderPathCreator {
 
 		// Indirect
 		path.setTarget("tex");
-		path.bindTarget("_main", "gbufferD");
+		// path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbuffer1", "gbuffer1");
 		#if (rp_ssgi != "Off")
@@ -1022,7 +1022,7 @@ class RenderPathCreator {
 			#end
 
 			path.setTarget("tex");
-			path.bindTarget("_main", "gbufferD");
+			// path.bindTarget("_main", "gbufferD");
 			path.bindTarget("gbuffer0", "gbuffer0");
 			path.bindTarget("gbuffer1", "gbuffer1");
 
@@ -1349,7 +1349,7 @@ class RenderPathCreator {
 		else {
 			#if kha_webgl
 			// Bind empty map to cubemap sampler
-			path.bindTarget("arm_empty_cube", "shadowMapCube");
+			if (!path.lampIsSun()) path.bindTarget("arm_empty_cube", "shadowMapCube");
 			#end
 			path.bindTarget("shadowMap", "shadowMap");
 		}

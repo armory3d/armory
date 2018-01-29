@@ -68,8 +68,8 @@ def make_gi(context_id):
 
     if is_shadows:
         frag.add_include('std/shadows.glsl')
-        frag.add_uniform('sampler2D shadowMap', included=True)
-        frag.add_uniform('samplerCube shadowMapCube', included=True)
+        frag.add_uniform('sampler2D shadowMap')
+        frag.add_uniform('samplerCube shadowMapCube')
         frag.add_uniform('int lightShadow', '_lampCastShadow')
         frag.add_uniform('vec2 lightProj', '_lampPlaneProj')
         frag.add_uniform('float shadowsBias', '_lampShadowsBias')
@@ -78,7 +78,7 @@ def make_gi(context_id):
         # frag.write('    if (lpos.x < 0.0 || lpos.y < 0.0 || lpos.x > 1.0 || lpos.y > 1.0) return;')
         # Note: shadowmap bound for sun lamp is tight behind the camera - can cause darkening no close surfaces
         frag.write('    if (texture(shadowMap, lpos.xy).r < lpos.z - shadowsBias) visibility = 0.0;')
-        # frag.write('    visibility = PCF(lpos.xy, lpos.z - shadowsBias);')
+        # frag.write('    visibility = PCF(shadowMap, lpos.xy, lpos.z - shadowsBias);')
         frag.write('}')
         frag.write('else if (lightShadow == 2) visibility *= float(texture(shadowMapCube, -l).r + shadowsBias > lpToDepth(lp, lightProj));')
 
@@ -194,9 +194,9 @@ def make_gi(context_id):
     if export_mpos:
         geom.add_out('vec3 mposition')
 
-    geom.write('const vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
-    geom.write('const vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
-    geom.write('const vec3 p = abs(cross(p1, p2));')
+    geom.write('vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
+    geom.write('vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
+    geom.write('vec3 p = abs(cross(p1, p2));')
     geom.write('for (uint i = 0; i < 3; ++i) {')
     geom.write('    voxposition = voxpositionGeom[i];')
     geom.write('    wnormal = wnormalGeom[i];')
@@ -319,9 +319,9 @@ def make_ao(context_id):
         geom.write_header('#extension GL_NV_geometry_shader_passthrough : require')
         geom.geom_passthrough = True
         # geom.add_out('vec3 voxposition')
-        geom.write('const vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
-        geom.write('const vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
-        geom.write('const vec3 n = abs(cross(p1, p2));')
+        geom.write('vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
+        geom.write('vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
+        geom.write('vec3 n = abs(cross(p1, p2));')
         geom.write('gl_ViewportIndex = 1;')
         geom.write_header('out int gl_ViewportIndex;')
         # g4.setViewport():
@@ -333,9 +333,9 @@ def make_ao(context_id):
         frag.write('imageStore(voxels, ivec3(voxelgiResolution * (voxpositionGeom * 0.5 + 0.5)), vec4(1.0));')
     else:
         geom.add_out('vec3 voxposition')
-        geom.write('const vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
-        geom.write('const vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
-        geom.write('const vec3 p = abs(cross(p1, p2));')
+        geom.write('vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
+        geom.write('vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
+        geom.write('vec3 p = abs(cross(p1, p2));')
         geom.write('for (uint i = 0; i < 3; ++i) {')
         geom.write('    voxposition = voxpositionGeom[i];')
         geom.write('    if (p.z > p.x && p.z > p.y) {')

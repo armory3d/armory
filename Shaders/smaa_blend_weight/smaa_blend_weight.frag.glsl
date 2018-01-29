@@ -18,7 +18,7 @@
 #define saturate(a) clamp(a, 0.0, 1.0)
 #define round(a) floor(a + 0.5)
 
-uniform sampler2D colorTex;
+// uniform sampler2D colorTex;
 uniform sampler2D edgesTex;
 
 uniform sampler2D areaTex;

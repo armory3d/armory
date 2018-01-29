@@ -435,7 +435,7 @@ def make_forward_mobile(con_mesh):
         vert.add_uniform('mat4 LWVP', '_biasLampWorldViewProjectionMatrix')
         vert.write('lampPos = LWVP * spos;')
         frag.add_include('std/shadows.glsl')
-        frag.add_uniform('sampler2D shadowMap', included=True)
+        frag.add_uniform('sampler2D shadowMap')
         frag.add_uniform('float shadowsBias', '_lampShadowsBias')
         frag.write('    if (lampPos.w > 0.0) {')
         frag.write('    vec3 lPos = lampPos.xyz / lampPos.w;')
@@ -605,8 +605,8 @@ def make_forward_base(con_mesh, parse_opacity=False):
             vert.write('if (lightShadow == 1) lampPos = LWVP * spos;')
         
         frag.add_include('std/shadows.glsl')
-        frag.add_uniform('sampler2D shadowMap', included=True)
-        frag.add_uniform('samplerCube shadowMapCube', included=True)
+        frag.add_uniform('sampler2D shadowMap')
+        frag.add_uniform('samplerCube shadowMapCube')
         frag.add_uniform('bool receiveShadow')
         frag.add_uniform('float shadowsBias', '_lampShadowsBias')
         frag.add_uniform('int lightShadow', '_lampCastShadow')
@@ -636,9 +636,9 @@ def make_forward_base(con_mesh, parse_opacity=False):
             frag.write('    vec3 lPos = lampPos.xyz / lampPos.w;')
             frag.write('    const vec2 smSize = shadowmapSize;')
         # frag.write('float bias = clamp(shadowsBias * 1.0 * tan(acos(clamp(dotNL, 0.0, 1.0))), 0.0, 0.01);')
-        frag.write('    visibility *= PCF(lPos.xy, lPos.z - shadowsBias, smSize);')
+        frag.write('    visibility *= PCF(shadowMap, lPos.xy, lPos.z - shadowsBias, smSize);')
         frag.write('    }')
-        frag.write('    else if (lightShadow == 2) visibility *= PCFCube(lp, -l, shadowsBias, lightProj, n);')
+        frag.write('    else if (lightShadow == 2) visibility *= PCFCube(shadowMapCube, lp, -l, shadowsBias, lightProj, n);')
         frag.write('}')
 
     frag.write('if (lightType == 2) {')
@@ -710,7 +710,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
 
     if '_VoxelGI' in wrd.world_defs or '_VoxelAO' in wrd.world_defs:
         frag.add_include('std/conetrace.glsl')
-        frag.add_uniform('sampler3D voxels', included=True)
+        frag.add_uniform('sampler3D voxels')
         if '_VoxelGICam' in wrd.world_defs:
             frag.add_uniform('vec3 eyeSnap', link='_cameraPositionSnap')
             frag.write('vec3 voxpos = (wposition - eyeSnap) / voxelgiHalfExtents;')
@@ -721,6 +721,6 @@ def make_forward_base(con_mesh, parse_opacity=False):
             # frag.write('indirect = vec3(1.0 - traceAO(voxpos, n, voxels));') # AO view
         else:
             frag.write('vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels);')
-            frag.write('vec3 indirectSpecular = traceSpecular(voxpos, n, vVec, roughness);')
+            frag.write('vec3 indirectSpecular = traceSpecular(voxels, voxpos, n, vVec, roughness);')
             frag.write('indirectSpecular *= f0 * envBRDF.x + envBRDF.y;')
             frag.write('indirect = indirect * voxelgiEnv + vec3(indirectDiffuse.rgb * voxelgiDiff * basecol + indirectSpecular * voxelgiSpec);')

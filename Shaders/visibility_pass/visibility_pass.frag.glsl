@@ -39,7 +39,7 @@ void main() {
     	fragColor[0] = float(sm + shadowsBias > lPos.z);
 	// }
 	// else if (lightShadow == 2) { // Cube
-		// visibility = PCFCube(lp, -l, shadowsBias, lightProj, n);
+		// visibility = PCFCube(shadowMapCube, lp, -l, shadowsBias, lightProj, n);
 	// }
     
     // Distance

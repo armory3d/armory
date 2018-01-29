@@ -17,18 +17,18 @@
 #include "std/sdf.glsl"
 #endif
 
-uniform sampler2D gbufferD;
+// uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
 #ifdef _VoxelGI
-	//!uniform sampler3D voxels;
+	uniform sampler3D voxels;
 #endif
 #ifdef _VoxelAO
-	//!uniform sampler3D voxels;
+	uniform sampler3D voxels;
 #endif
 #ifdef _VoxelGITemporal
-	//!uniform sampler3D voxelsLast;
+	uniform sampler3D voxelsLast;
 	uniform float voxelBlend;
 #endif
 #ifdef _VoxelGICam
@@ -83,11 +83,11 @@ void main() {
 	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
 
 #ifdef _IndPos
-	#ifdef _InvY // D3D
-	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	#else
+	// #ifdef _InvY // D3D
+	// float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+	// #else
 	float depth = (1.0 - g0.a) * 2.0 - 1.0;
-	#endif
+	// #endif
 	vec3 p = getPos(eye, eyeLook, viewRay, depth, cameraProj);
 #endif
 #ifdef _Brdf
@@ -110,7 +110,7 @@ void main() {
 	vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels);
 	#endif
 		
-	vec3 indirectSpecular = traceSpecular(voxpos, n, v, metrough.y);
+	vec3 indirectSpecular = traceSpecular(voxels, voxpos, n, v, metrough.y);
 	indirectSpecular *= f0 * envBRDF.x + envBRDF.y;
 
 	fragColor.rgb = indirectDiffuse.rgb * voxelgiDiff * g1.rgb + indirectSpecular * voxelgiSpec;

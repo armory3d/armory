@@ -229,10 +229,10 @@ vec3 getSeaColor(vec3 p, vec3 n, vec3 l, vec3 eye, vec3 dist) {
 
 // #ifndef _NoShadows
 // float shadowTest(const vec3 lPos) {
-// 	return PCF(lPos.xy, lPos.z - shadowsBias);
+// 	return PCF(shadowMap, lPos.xy, lPos.z - shadowsBias);
 // }
 // float shadowTestCube(const vec3 lp, const vec3 l) {
-// 	return PCFCube(lp, -l, shadowsBias, lightPlane);
+// 	return PCFCube(shadowMapCube, lp, -l, shadowsBias, lightPlane);
 // }
 // #endif
 

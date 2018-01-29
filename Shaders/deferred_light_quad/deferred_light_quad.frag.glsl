@@ -24,7 +24,7 @@
 	uniform vec3 eyeSnap;
 #endif
 
-uniform sampler2D gbufferD;
+// uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
@@ -36,7 +36,7 @@ vec2 lightPlane;
 	#ifdef _SoftShadows
 		uniform sampler2D svisibility;
 	#else
-		//!uniform sampler2D shadowMap;
+		uniform sampler2D shadowMap;
 		#ifdef _CSM
 		//!uniform vec4 casData[shadowmapCascades * 4 + 4];
 		#else
@@ -103,10 +103,10 @@ void main() {
 
 	if (lightShadow == 1) {
 		#ifdef _CSM
-		visibility = shadowTestCascade(eye, p + n * shadowsBias * 10, shadowsBias, shadowmapSize * vec2(shadowmapCascades, 1.0));
+		visibility = shadowTestCascade(shadowMap, eye, p + n * shadowsBias * 10, shadowsBias, shadowmapSize * vec2(shadowmapCascades, 1.0));
 		#else
 		vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100, 1.0);
-		if (lPos.w > 0.0) visibility = shadowTest(lPos.xyz / lPos.w, shadowsBias, shadowmapSize);
+		if (lPos.w > 0.0) visibility = shadowTest(shadowMap, lPos.xyz / lPos.w, shadowsBias, shadowmapSize);
 		#endif
 	}
 	#endif
@@ -118,7 +118,7 @@ void main() {
 	#else
 	vec3 voxpos = p / voxelgiHalfExtents;
 	#endif
-	if (dotNL > 0.0) visibility = max(0, 1.0 - traceShadow(voxpos, l, 0.1, 10.0));
+	if (dotNL > 0.0) visibility = max(0, 1.0 - traceShadow(voxels, voxpos, l, 0.1, 10.0));
 #endif
 
 	// Per-light
@@ -184,6 +184,6 @@ void main() {
 	#else
 	vec3 voxposr = p / voxelgiHalfExtents;
 	#endif
-	fragColor.rgb = mix(traceRefraction(voxposr, n, -v, metrough.y), fragColor.rgb, g1.a);
+	fragColor.rgb = mix(traceRefraction(voxels, voxposr, n, -v, metrough.y), fragColor.rgb, g1.a);
 #endif
 }

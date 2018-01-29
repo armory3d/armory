@@ -27,13 +27,13 @@
 #include "std/gbuffer.glsl"
 
 #ifdef _VoxelGIDirect
-	//!uniform sampler3D voxels;
+	uniform sampler3D voxels;
 #endif
 #ifdef _VoxelGICam
 	uniform vec3 eyeSnap;
 #endif
 
-uniform sampler2D gbufferD;
+// uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
@@ -42,8 +42,8 @@ uniform sampler2D gbuffer1;
 	#ifdef _SoftShadows
 		uniform sampler2D svisibility;
 	#else
-		//!uniform sampler2D shadowMap;
-		//!uniform samplerCube shadowMapCube;
+		uniform sampler2D shadowMap;
+		uniform samplerCube shadowMapCube;
 	#endif
 #endif
 #ifdef _DFRS
@@ -137,11 +137,11 @@ void main() {
 	if (lightShadow == 1) {
 		vec4 lPos = LWVP * vec4(p + n * shadowsBias * 10, 1.0);
 		if (lPos.w > 0.0) {
-			visibility = shadowTest(lPos.xyz / lPos.w, shadowsBias, shadowmapSize);
+			visibility = shadowTest(shadowMap, lPos.xyz / lPos.w, shadowsBias, shadowmapSize);
 		}
 	}
 	else if (lightShadow == 2) { // Cube
-		visibility = PCFCube(lp, -l, shadowsBias, lightProj, n);
+		visibility = PCFCube(shadowMapCube, lp, -l, shadowsBias, lightProj, n);
 	}
 	#endif
 
@@ -154,7 +154,7 @@ void main() {
 	#else
 	vec3 voxpos = p / voxelgiHalfExtents;
 	#endif
-	if (dotNL > 0.0) visibility = max(0, 1.0 - traceShadow(voxpos, l, 0.1, length(lp)));
+	if (dotNL > 0.0) visibility = max(0, 1.0 - traceShadow(voxels, voxpos, l, 0.1, length(lp)));
 #endif
 
 
@@ -263,6 +263,6 @@ void main() {
 	#else
 	vec3 voxposr = p / voxelgiHalfExtents;
 	#endif
-	fragColor.rgb = mix(traceRefraction(voxposr, n, -v, metrough.y), fragColor.rgb, g1.a);
+	fragColor.rgb = mix(traceRefraction(voxels, voxposr, n, -v, metrough.y), fragColor.rgb, g1.a);
 #endif
 }

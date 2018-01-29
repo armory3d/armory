@@ -7,8 +7,8 @@
 
 uniform sampler2D gbufferD;
 #ifndef _NoShadows
-	//!uniform sampler2D shadowMap;
-	//!uniform samplerCube shadowMapCube;
+uniform sampler2D shadowMap;
+uniform samplerCube shadowMapCube;
 #endif
 uniform sampler2D snoise;
 
