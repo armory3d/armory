@@ -19,14 +19,14 @@ class PhysicsHook extends Trait {
 	var targetName:String;
 	var targetTransform:Transform;
 	var verts:Array<Float>;
-	var hook_rb:BtRigidBody;
+	var hookRB:BtRigidBodyPointer;
 
 	public function new(targetName:String, verts:Array<Float>) {
 		super();
 
 		this.targetName = targetName;
 		this.verts = verts;
-		hook_rb = null;
+		hookRB = null;
 
 		Scene.active.notifyOnInit(function() {
 			notifyOnInit(init);
@@ -66,7 +66,7 @@ class PhysicsHook extends Trait {
 			var mass = 0.0;
 			_shape.calculateLocalInertia(mass, _inertia);
 			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shape, _inertia);
-			hook_rb = BtRigidBody.create(_bodyCI);
+			hookRB = BtRigidBody.create(_bodyCI);
 
 			#if js
 			var nodes = sb.body.get_m_nodes();
@@ -93,7 +93,7 @@ class PhysicsHook extends Trait {
 
 					// Anchor node to rigid body
 					if (Math.abs(nodePos.x() - x) < 0.01 && Math.abs(nodePos.y() - y) < 0.01 && Math.abs(nodePos.z() - z) < 0.01) {
-						sb.body.appendAnchor(i, hook_rb, false, 1.0 / numVerts);
+						sb.body.appendAnchor(i, hookRB, false, 1.0 / numVerts);
 					}
 				}
 			}
@@ -126,9 +126,7 @@ class PhysicsHook extends Trait {
 	}
 
 	function update() {
-		if(hook_rb == null) {
-			return;
-		}
+		if(hookRB == null) return;
 		var _transform = BtTransform.create();
 		_transform.setIdentity();
 		_transform.setOrigin(BtVector3.create(
@@ -140,7 +138,7 @@ class PhysicsHook extends Trait {
 			targetTransform.world.getQuat().y,
 			targetTransform.world.getQuat().z,
 			targetTransform.world.getQuat().w));
-		hook_rb.setWorldTransform(_transform);
+		hookRB.setWorldTransform(_transform);
 	}
 
 }
