@@ -5,7 +5,9 @@ package armory.trait.physics.bullet;
 import iron.math.Vec4;
 import iron.math.Mat4;
 import iron.Trait;
+import iron.object.Object;
 import iron.object.MeshObject;
+import iron.object.Transform;
 import iron.data.MeshData;
 import iron.data.SceneFormat;
 import armory.trait.physics.RigidBody;
@@ -13,26 +15,29 @@ import armory.trait.physics.PhysicsWorld;
 import haxebullet.Bullet;
 
 class PhysicsHook extends Trait {
-
+	var target:Object;
 	var targetName:String;
+	var targetTransform:Transform;
 	var verts:Array<Float>;
+	var hook_rb:BtRigidBody;
 
 	public function new(targetName:String, verts:Array<Float>) {
 		super();
 
 		this.targetName = targetName;
 		this.verts = verts;
+		hook_rb = null;
 
 		Scene.active.notifyOnInit(function() {
 			notifyOnInit(init);
+			notifyOnUpdate(update);
 		});
 	}
 
 	function init() {
-		
 		// Hook to empty axes
-		var target = targetName != "" ? iron.Scene.active.getChild(targetName) : null;
-		var targetTransform = target != null ? target.transform : object.transform;
+		target = targetName != "" ? iron.Scene.active.getChild(targetName) : null;
+		targetTransform = target != null ? target.transform : object.transform;
 
 		var physics = PhysicsWorld.active;
 
@@ -46,22 +51,22 @@ class PhysicsHook extends Trait {
 			var _shape = BtSphereShape.create(0.01);
 			var _transform = BtTransform.create();
 			_transform.setIdentity();
-			// _transform.setOrigin(BtVector3.create(
-				// targetTransform.loc.x,
-				// targetTransform.loc.y,
-				// targetTransform.loc.z));
-			// _transform.setRotation(BtQuaternion.create(
-				// targetTransform.rot.x,
-				// targetTransform.rot.y,
-				// targetTransform.rot.z,
-				// targetTransform.rot.w));
+			_transform.setOrigin(BtVector3.create(
+				targetTransform.loc.x,
+				targetTransform.loc.y,
+				targetTransform.loc.z));
+			_transform.setRotation(BtQuaternion.create(
+				targetTransform.rot.x,
+				targetTransform.rot.y,
+				targetTransform.rot.z,
+				targetTransform.rot.w));
 			var _centerOfMassOffset = BtTransform.create();
 			_centerOfMassOffset.setIdentity();
 			var _motionState = BtDefaultMotionState.create(_transform, _centerOfMassOffset);
 			var mass = 0.0;
 			_shape.calculateLocalInertia(mass, _inertia);
 			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shape, _inertia);
-			var rb = BtRigidBody.create(_bodyCI);
+			hook_rb = BtRigidBody.create(_bodyCI);
 
 			#if js
 			var nodes = sb.body.get_m_nodes();
@@ -88,7 +93,7 @@ class PhysicsHook extends Trait {
 
 					// Anchor node to rigid body
 					if (Math.abs(nodePos.x() - x) < 0.01 && Math.abs(nodePos.y() - y) < 0.01 && Math.abs(nodePos.z() - z) < 0.01) {
-						sb.body.appendAnchor(i, rb, false, 1.0 / numVerts);
+						sb.body.appendAnchor(i, hook_rb, false, 1.0 / numVerts);
 					}
 				}
 			}
@@ -119,6 +124,25 @@ class PhysicsHook extends Trait {
 		// Rigid body or soft body not initialized yet
 		notifyOnInit(init);
 	}
+
+	function update() {
+		if(hook_rb == null) {
+			return;
+		}
+		var _transform = BtTransform.create();
+		_transform.setIdentity();
+		_transform.setOrigin(BtVector3.create(
+			targetTransform.world.getLoc().x,
+			targetTransform.world.getLoc().y,
+			targetTransform.world.getLoc().z));
+		_transform.setRotation(BtQuaternion.create(
+			targetTransform.world.getQuat().x,
+			targetTransform.world.getQuat().y,
+			targetTransform.world.getQuat().z,
+			targetTransform.world.getQuat().w));
+		hook_rb.setWorldTransform(_transform);
+	}
+
 }
 
 #end
