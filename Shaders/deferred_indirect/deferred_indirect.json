@@ -10,7 +10,7 @@
 				{
 					"name": "eye",
 					"link": "_cameraPosition",
-					"ifdef": ["_Rad"]
+					"ifdef": ["_IndPos"]
 				},
 				{
 					"name": "eyeSnap",
@@ -25,11 +25,12 @@
 				{
 					"name": "eyeLook",
 					"link": "_cameraLook",
-					"ifdef": ["_Rad"]
+					"ifdef": ["_IndPos"]
 				},
 				{
 					"name": "invVP",
-					"link": "_inverseViewProjectionMatrix"
+					"link": "_inverseViewProjectionMatrix",
+					"ifdef": ["_IndPos"]
 				},
 				{
 					"name": "shirr",
@@ -49,12 +50,12 @@
 				{
 					"name": "senvmapBrdf",
 					"link": "_envmapBrdf",
-					"ifdef": ["_Rad"]
+					"ifdef": ["_Brdf"]
 				},
 				{
 					"name": "cameraProj",
 					"link": "_cameraPlaneProj",
-					"ifdef": ["_Rad"]
+					"ifdef": ["_IndPos"]
 				},
 				{
 					"name": "envmapStrength",

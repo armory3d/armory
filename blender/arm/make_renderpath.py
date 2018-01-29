@@ -67,8 +67,6 @@ def add_world_defs():
     # if rpdat.rp_dfgi:
     #     wrd.world_defs += '_DFGI'
     #     assets.add_khafile_def('arm_sdf')
-    #     wrd.world_defs += '_Rad' # Always do radiance for gi
-    #     wrd.world_defs += '_Irr'
     if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
         if rpdat.rp_ssgi == 'RTGI':
             wrd.world_defs += '_RTGI'
@@ -87,8 +85,6 @@ def add_world_defs():
             if rpdat.arm_voxelgi_temporal:
                 assets.add_khafile_def('arm_voxelgi_temporal')
                 wrd.world_defs += '_VoxelGITemporal'
-        wrd.world_defs += '_Rad' # Always do radiance for voxels
-        wrd.world_defs += '_Irr'
 
         if voxelgi:
             wrd.world_defs += '_VoxelGI'
@@ -112,6 +108,11 @@ def add_world_defs():
             wrd.world_defs += '_LTC'
             assets.add_khafile_def('arm_ltc')
             break
+
+    if '_Rad' in wrd.world_defs or '_VoxelGI' in wrd.world_defs:
+        wrd.world_defs += '_Brdf'
+    if '_Brdf' in wrd.world_defs or '_VoxelAO' in wrd.world_defs:
+        wrd.world_defs += '_IndPos'
 
 def build():
     rpdat = arm.utils.get_rp()

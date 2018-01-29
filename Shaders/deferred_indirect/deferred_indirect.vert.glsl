@@ -1,6 +1,6 @@
 #version 450
 
-#ifdef _Rad
+#ifdef _IndPos
 	uniform mat4 invVP;
 	uniform vec3 eye;
 #endif
@@ -8,7 +8,7 @@
 in vec2 pos;
 
 out vec2 texCoord;
-#ifdef _Rad
+#ifdef _IndPos
 	out vec3 viewRay;
 #endif
 
@@ -22,7 +22,7 @@ void main() {
 
 	gl_Position = vec4(pos.xy, 0.0, 1.0);
 
-#ifdef _Rad
+#ifdef _IndPos
 	// NDC (at the back of cube)
 	vec4 v = vec4(pos.x, pos.y, 1.0, 1.0);	
 	v = vec4(invVP * v);

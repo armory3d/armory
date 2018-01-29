@@ -39,11 +39,12 @@ uniform float envmapStrength;
 #ifdef _Irr
 	//!uniform vec4 shirr[7];
 #endif
+#ifdef _Brdf
+	uniform sampler2D senvmapBrdf;
+#endif
 #ifdef _Rad
 	uniform sampler2D senvmapRadiance;
-	uniform sampler2D senvmapBrdf;
 	uniform int envmapNumMipmaps;
-	uniform vec2 cameraProj;
 #endif
 #ifdef _EnvCol
 	uniform vec3 backgroundCol;
@@ -53,7 +54,8 @@ uniform float envmapStrength;
 	uniform sampler2D ssaotex;
 #endif
 
-#ifdef _Rad
+#ifdef _IndPos
+	uniform vec2 cameraProj;
 	uniform vec3 eye;
 	uniform vec3 eyeLook;
 #endif
@@ -62,7 +64,7 @@ uniform float envmapStrength;
 #endif
 
 in vec2 texCoord;
-#ifdef _Rad
+#ifdef _IndPos
 	in vec3 viewRay;
 #endif
 out vec4 fragColor;
@@ -80,15 +82,16 @@ void main() {
 	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, 
 	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
 
-#ifdef _Rad
+#ifdef _IndPos
 	#ifdef _InvY // D3D
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	#else
 	float depth = (1.0 - g0.a) * 2.0 - 1.0;
 	#endif
 	vec3 p = getPos(eye, eyeLook, viewRay, depth, cameraProj);
+#endif
+#ifdef _Brdf
 	vec3 v = normalize(eye - p.xyz);
-
 	float dotNV = max(dot(n, v), 0.0);
 	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
 	vec2 envBRDF = texture(senvmapBrdf, vec2(metrough.y, 1.0 - dotNV)).xy;

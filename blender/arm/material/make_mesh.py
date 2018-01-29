@@ -571,12 +571,13 @@ def make_forward_base(con_mesh, parse_opacity=False):
     frag.add_uniform('vec2 spotlightData', '_spotlampData') # cutoff, cutoff - exponent
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
 
+    if '_Brdf' in wrd.world_defs:
+        frag.add_uniform('sampler2D senvmapBrdf', link='_envmapBrdf')
     if '_Irr' in wrd.world_defs:
         frag.add_include('std/shirr.glsl')
         frag.add_uniform('vec4 shirr[7]', link='_envmapIrradiance', included=True)
         if '_Rad' in wrd.world_defs:
             frag.add_uniform('sampler2D senvmapRadiance', link='_envmapRadiance')
-            frag.add_uniform('sampler2D senvmapBrdf', link='_envmapBrdf')
             frag.add_uniform('int envmapNumMipmaps', link='_envmapNumMipmaps')
 
     is_shadows = not '_NoShadows' in wrd.world_defs
@@ -688,6 +689,9 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.write('}')
         frag.tab -= 1
 
+    if '_Brdf' in wrd.world_defs:
+        frag.write('vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;')
+
     if '_Irr' in wrd.world_defs:
         frag.write('vec3 indirect = shIrradiance(n);')
         if '_EnvTex' in wrd.world_defs:
@@ -700,7 +704,6 @@ def make_forward_base(con_mesh, parse_opacity=False):
             frag.write('vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;')
             if '_EnvLDR' in wrd.world_defs:
                 frag.write('prefilteredColor = pow(prefilteredColor, vec3(2.2));')
-            frag.write('vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;')
             frag.write('indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5;')
     else:
         frag.write('vec3 indirect = albedo;')
