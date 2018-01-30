@@ -43,6 +43,7 @@ def register_nodes():
         LogicNodeCategory('LogicNavmeshNodes', 'Navmesh', items=arm_nodes.category_items['Navmesh']),
         LogicNodeCategory('LogicSoundNodes', 'Sound', items=arm_nodes.category_items['Sound']),
         LogicNodeCategory('LogicNativeNodes', 'Native', items=arm_nodes.category_items['Native']),
+        LogicNodeCategory('LogicCanvasNodes', 'Canvas', items=arm_nodes.category_items['Canvas']),
     ]
 
     nodeitems_utils.register_node_categories('ArmLogicNodes', node_categories)

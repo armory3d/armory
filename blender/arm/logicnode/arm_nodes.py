@@ -17,6 +17,7 @@ category_items['Physics'] = []
 category_items['Navmesh'] = []
 category_items['Sound'] = []
 category_items['Native'] = []
+category_items['Canvas'] = []
 
 object_sockets = dict()
 array_nodes = dict()
