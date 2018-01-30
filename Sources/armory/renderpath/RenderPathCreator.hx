@@ -911,7 +911,7 @@ class RenderPathCreator {
 			path.setTarget("bufa");
 			path.bindTarget("_main", "gbufferD");
 			path.bindTarget("gbuffer0", "gbuffer0");
-			#if ((rp_ssgi == "RTGI"))
+			#if (rp_ssgi == "RTGI")
 			path.bindTarget("gbuffer1", "gbuffer1");
 			#end
 			path.drawShader("shader_datas/ssgi_pass/ssgi_pass");

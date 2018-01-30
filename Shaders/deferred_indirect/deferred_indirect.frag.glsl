@@ -150,8 +150,7 @@ void main() {
 	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5;
 #else
 	#ifdef _EnvCol
-	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
-	envl.rgb += backgroundCol * f0;
+	envl.rgb += backgroundCol * surfaceF0(g1.rgb, metrough.x); // f0
 	#endif
 #endif
 
