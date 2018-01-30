@@ -13,6 +13,9 @@ class CanvasScript extends Trait {
 	var cui: Zui;
 	var canvas:TCanvas = null;
 
+	public var ready(get, null):Bool;
+	function get_ready():Bool { return canvas != null; }
+
 	public function new(canvasName:String) {
 		super();
 
