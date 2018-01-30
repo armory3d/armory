@@ -132,7 +132,7 @@ def get_kha_path():
         return 'Kha'
 
     if get_os() == 'win':
-        return get_sdk_path() + '/win32/Kha' # Using symlink on Windows
+        return get_sdk_path() + '/Kha' # Using symlink on Windows
     elif get_os() == 'mac':
         return get_sdk_path() + '/Kode Studio.app/Contents/Resources/app/extensions/kha/Kha'
     else:
@@ -152,7 +152,7 @@ def get_khamake_path():
 def krom_paths():
     sdk_path = get_sdk_path()
     if arm.utils.get_os() == 'win':
-        krom_location = sdk_path + '/win32/Krom/win32' # Using symlink on Windows
+        krom_location = sdk_path + '/Krom/win32' # Using symlink on Windows
         krom_path = krom_location + '/Krom.exe'
     elif arm.utils.get_os() == 'mac':
         krom_location = sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/krom/Krom/macos/Krom.app/Contents/MacOS'
@@ -448,11 +448,11 @@ def kode_studio_mklink(sdk_path):
     # Fight long-path issues on Windows
     if not os.path.exists(sdk_path + '/win32/resources/app/extensions/kha/Kha'):
         source = sdk_path + '/win32/resources/app/extensions/kha/Kha'
-        target = sdk_path + '/win32/Kha'
+        target = sdk_path + '/Kha'
         subprocess.check_call('mklink /J "%s" "%s"' % (source, target), shell=True)
     if not os.path.exists(sdk_path + '/win32/resources/app/extensions/krom/Krom'):
         source = sdk_path + '/win32/resources/app/extensions/krom/Krom'
-        target = sdk_path + '/win32/Krom'
+        target = sdk_path + '/Krom'
         subprocess.check_call('mklink /J "%s" "%s"' % (source, target), shell=True)
 
 def kode_studio():

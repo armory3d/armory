@@ -312,7 +312,7 @@ class ArmEditCanvasButton(bpy.types.Operator):
         write_data.write_canvasprefs(canvas_path)
 
         sdk_path = arm.utils.get_sdk_path()
-        armorui_path = sdk_path + '/armory/tools/armorui/krom'
+        armorui_path = sdk_path + '/lib/armory_tools/armorui/krom'
         krom_location, krom_path = arm.utils.krom_paths()
         os.chdir(krom_location)
         subprocess.Popen([krom_path, armorui_path, armorui_path, '--nosound'])

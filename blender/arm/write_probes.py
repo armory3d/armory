@@ -44,13 +44,13 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
     kha_path = arm.utils.get_kha_path()
 
     if arm.utils.get_os() == 'win':
-        cmft_path = sdk_path + '/armory/tools/cmft/cmft.exe'
+        cmft_path = sdk_path + '/lib/armory_tools/cmft/cmft.exe'
         kraffiti_path = kha_path + '/Kore/Tools/kraffiti/kraffiti.exe'
     elif arm.utils.get_os() == 'mac':
-        cmft_path = '"' + sdk_path + '/armory/tools/cmft/cmft-osx"'
+        cmft_path = '"' + sdk_path + '/lib/armory_tools/cmft/cmft-osx"'
         kraffiti_path = '"' + kha_path + '/Kore/Tools/kraffiti/kraffiti-osx"'
     else:
-        cmft_path = '"' + sdk_path + '/armory/tools/cmft/cmft-linux64"'
+        cmft_path = '"' + sdk_path + '/lib/armory_tools/cmft/cmft-linux64"'
         kraffiti_path = '"' + kha_path + '/Kore/Tools/kraffiti/kraffiti-linux64"'
     
     output_gama_numerator = '2.2' if disable_hdr else '1.0'
