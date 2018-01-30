@@ -448,7 +448,7 @@ def make_forward_mobile(con_mesh):
         frag.write('    visibility += float(texture(shadowMap, lPos.xy + vec2(0.0, texelSize)).r + shadowsBias > lPos.z) * 0.5;')
         frag.write('    visibility += float(texture(shadowMap, lPos.xy + vec2(0.0, -texelSize)).r + shadowsBias > lPos.z) * 0.25;')
         frag.write('    visibility /= 2.5;')
-        frag.write('    visibility = max(visibility, 0.5);')
+        frag.write('    visibility = max(visibility, 0.2);')
         # frag.write('    visibility = max(float(texture(shadowMap, lPos.xy).r + shadowsBias > lPos.z), 0.5);')
         frag.write('    }')
 
