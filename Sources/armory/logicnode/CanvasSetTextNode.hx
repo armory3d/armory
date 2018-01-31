@@ -13,6 +13,7 @@ class CanvasSetTextNode extends LogicNode {
 		super(tree);
 	}
 
+#if arm_ui
 	function update() {
 		if (!canvas.ready) return;
 		tree.removeUpdate(update);
@@ -29,4 +30,5 @@ class CanvasSetTextNode extends LogicNode {
 		tree.notifyOnUpdate(update);
 		update();
 	}
+#end
 }
