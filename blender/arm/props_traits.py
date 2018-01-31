@@ -244,13 +244,15 @@ class ArmEditScriptButton(bpy.types.Operator):
 
         sdk_path = arm.utils.get_sdk_path()
         if arm.utils.get_os() == 'win':
-            arm.utils.kode_studio_mklink(sdk_path)
+            arm.utils.kode_studio_mklink_win(sdk_path)
             kode_path = sdk_path + '/win32/Kode Studio.exe'
             subprocess.Popen([kode_path, arm.utils.get_fp(), hx_path])
         elif arm.utils.get_os() == 'mac':
+            arm.utils.kode_studio_mklink_mac(sdk_path)
             kode_path = '"' + sdk_path + '/Kode Studio.app/Contents/MacOS/Electron"'
             subprocess.Popen([kode_path + ' "' + arm.utils.get_fp() + '" "' + hx_path + '"'], shell=True)
         else:
+            arm.utils.kode_studio_mklink_linux(sdk_path)
             kode_path = sdk_path + '/linux64/kodestudio'
             subprocess.Popen([kode_path, arm.utils.get_fp(), hx_path])
         

@@ -130,13 +130,7 @@ def get_node_path():
 def get_kha_path():
     if os.path.exists('Kha'):
         return 'Kha'
-
-    if get_os() == 'win':
-        return get_sdk_path() + '/Kha' # Using symlink on Windows
-    elif get_os() == 'mac':
-        return get_sdk_path() + '/Kode Studio.app/Contents/Resources/app/extensions/kha/Kha'
-    else:
-        return get_sdk_path() + '/linux64/resources/app/extensions/kha/Kha'
+    return get_sdk_path() + '/Kha'
 
 def get_haxe_path():
     if get_os() == 'win':
@@ -155,10 +149,10 @@ def krom_paths():
         krom_location = sdk_path + '/Krom/win32' # Using symlink on Windows
         krom_path = krom_location + '/Krom.exe'
     elif arm.utils.get_os() == 'mac':
-        krom_location = sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/krom/Krom/macos/Krom.app/Contents/MacOS'
+        krom_location = sdk_path + '/Krom/macos/Krom.app/Contents/MacOS'
         krom_path = krom_location + '/Krom'
     else:
-        krom_location = sdk_path + '/linux64/resources/app/extensions/krom/Krom/linux'
+        krom_location = sdk_path + '/Krom/linux'
         krom_path = krom_location + '/Krom'
     return krom_location, krom_path
 
@@ -444,7 +438,7 @@ def is_bone_animation_enabled(bobject):
 def export_bone_data(bobject):
     return bobject.find_armature() and is_bone_animation_enabled(bobject) and bpy.data.worlds['Arm'].arm_skin.startswith('GPU')
 
-def kode_studio_mklink(sdk_path):
+def kode_studio_mklink_win(sdk_path):
     # Fight long-path issues on Windows
     if not os.path.exists(sdk_path + '/win32/resources/app/extensions/kha/Kha'):
         source = sdk_path + '/win32/resources/app/extensions/kha/Kha'
@@ -455,17 +449,39 @@ def kode_studio_mklink(sdk_path):
         target = sdk_path + '/Krom'
         subprocess.check_call('mklink /J "%s" "%s"' % (source, target), shell=True)
 
+def kode_studio_mklink_linux(sdk_path):
+    if not os.path.exists(sdk_path + '/linux64/resources/app/extensions/kha/Kha'):
+        source = sdk_path + '/linux64/resources/app/extensions/kha/Kha'
+        target = sdk_path + '/Kha'
+        subprocess.check_call('ln -s "%s" "%s"' % (target, source), shell=True)
+    if not os.path.exists(sdk_path + '/linux64/resources/app/extensions/krom/Krom'):
+        source = sdk_path + '/linux64/resources/app/extensions/krom/Krom'
+        target = sdk_path + '/Krom'
+        subprocess.check_call('ln -s "%s" "%s"' % (target, source), shell=True)
+
+def kode_studio_mklink_mac(sdk_path):
+    if not os.path.exists(sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/kha/Kha'):
+        source = sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/kha/Kha'
+        target = sdk_path + '/Kha'
+        subprocess.check_call('ln -s "%s" "%s"' % (target, source), shell=True)
+    if not os.path.exists(sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/krom/Krom'):
+        source = sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/krom/Krom'
+        target = sdk_path + '/Krom'
+        subprocess.check_call('ln -s "%s" "%s"' % (target, source), shell=True)
+
 def kode_studio():
     sdk_path = arm.utils.get_sdk_path()
     project_path = arm.utils.get_fp()
     if arm.utils.get_os() == 'win':
-        kode_studio_mklink(sdk_path)
+        kode_studio_mklink_win(sdk_path)
         kode_path = sdk_path + '/win32/Kode Studio.exe'
         subprocess.Popen([kode_path, arm.utils.get_fp()])
     elif arm.utils.get_os() == 'mac':
+        kode_studio_mklink_macos(sdk_path)
         kode_path = '"' + sdk_path + '/Kode Studio.app/Contents/MacOS/Electron"'
         subprocess.Popen([kode_path + ' "' + arm.utils.get_fp() + '"'], shell=True)
     else:
+        kode_studio_mklink_linux(sdk_path)
         kode_path = sdk_path + '/linux64/kodestudio'
         subprocess.Popen([kode_path, arm.utils.get_fp()])
 
