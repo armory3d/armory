@@ -477,7 +477,7 @@ def kode_studio():
         kode_path = sdk_path + '/win32/Kode Studio.exe'
         subprocess.Popen([kode_path, arm.utils.get_fp()])
     elif arm.utils.get_os() == 'mac':
-        kode_studio_mklink_macos(sdk_path)
+        kode_studio_mklink_mac(sdk_path)
         kode_path = '"' + sdk_path + '/Kode Studio.app/Contents/MacOS/Electron"'
         subprocess.Popen([kode_path + ' "' + arm.utils.get_fp() + '"'], shell=True)
     else:
