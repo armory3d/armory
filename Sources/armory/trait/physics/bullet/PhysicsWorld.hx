@@ -42,7 +42,6 @@ class PhysicsWorld extends Trait {
 	public var rbMap:Map<Int, RigidBody>;
 
 	static inline var timeStep = 1 / 60;
-	static inline var fixedStep = 1 / 60;
 
 	public var hitPointWorld = new Vec4();
 
@@ -183,7 +182,7 @@ class PhysicsWorld extends Trait {
 
 		if (preUpdates != null) for (f in preUpdates) f();
 
-		world.stepSimulation(timeStep, 1, fixedStep);
+		world.stepSimulation(timeStep, 1, Time.delta);
 		updateContacts();
 
 #if arm_debug
