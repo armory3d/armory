@@ -15,7 +15,7 @@ except ImportError:
     pass
 
 # Armory version
-arm_version = '0.2.0'
+arm_version = '0.3.0'
 arm_commit = '$Id$'
 
 def invalidate_mesh_cache(self, context):
