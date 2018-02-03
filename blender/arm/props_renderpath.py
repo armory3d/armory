@@ -296,30 +296,30 @@ def update_sss_state(self, context):
     update_renderpath(self, context)
 
 class ArmRPListItem(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty(
+    name = StringProperty(
            name="Name",
            description="A name for this item",
            default="Path")
 
-    rp_driver_list = bpy.props.CollectionProperty(type=bpy.types.PropertyGroup)
-    rp_driver = bpy.props.StringProperty(name="Driver", default="Armory", update=assets.invalidate_compiled_data)
+    rp_driver_list = CollectionProperty(type=bpy.types.PropertyGroup)
+    rp_driver = StringProperty(name="Driver", default="Armory", update=assets.invalidate_compiled_data)
     rp_renderer = EnumProperty(
         items=[('Forward', 'Forward', 'Forward'),
                ('Deferred', 'Deferred', 'Deferred'),
                # ('Deferred Plus', 'Deferred Plus', 'Deferred Plus'),
                ],
         name="Renderer", description="Renderer type", default='Deferred', update=update_renderpath)
-    rp_depthprepass = bpy.props.BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=True, update=update_renderpath)
-    rp_hdr = bpy.props.BoolProperty(name="HDR", description="Render in HDR Space", default=True, update=update_renderpath)
-    rp_render_to_texture = bpy.props.BoolProperty(name="Post Process", description="Render scene to texture for further processing", default=True, update=update_renderpath)
+    rp_depthprepass = BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=True, update=update_renderpath)
+    rp_hdr = BoolProperty(name="HDR", description="Render in HDR Space", default=True, update=update_renderpath)
+    rp_render_to_texture = BoolProperty(name="Post Process", description="Render scene to texture for further processing", default=True, update=update_renderpath)
     rp_background = EnumProperty(
       items=[('World', 'World', 'World'),
              ('Clear', 'Clear', 'Clear'),
              ('Off', 'Off', 'Off'),
       ],
       name="Background", description="Background type", default='World', update=update_renderpath)    
-    rp_autoexposure = bpy.props.BoolProperty(name="Auto Exposure", description="Adjust exposure based on luminance", default=False, update=update_renderpath)
-    rp_compositornodes = bpy.props.BoolProperty(name="Compositor", description="Draw compositor nodes", default=True, update=update_renderpath)
+    rp_autoexposure = BoolProperty(name="Auto Exposure", description="Adjust exposure based on luminance", default=False, update=update_renderpath)
+    rp_compositornodes = BoolProperty(name="Compositor", description="Draw compositor nodes", default=True, update=update_renderpath)
     rp_shadowmap = EnumProperty(
         items=[('Off', 'Off', 'Off'),
                ('512', '512', '512'),
@@ -347,85 +347,85 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('SMAA', 'SMAA', 'SMAA'),
                ('TAA', 'TAA', 'TAA')],
         name="Anti Aliasing", description="Post-process anti aliasing technique", default='SMAA', update=update_renderpath)
-    rp_volumetriclight = bpy.props.BoolProperty(name="Volumetric Light", description="Use volumetric lighting", default=False, update=update_renderpath)
-    rp_ssr = bpy.props.BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
-    rp_ssgi = bpy.props.EnumProperty(
+    rp_volumetriclight = BoolProperty(name="Volumetric Light", description="Use volumetric lighting", default=False, update=update_renderpath)
+    rp_ssr = BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
+    rp_ssgi = EnumProperty(
         items=[('Off', 'Off', 'Off'),
                ('SSAO', 'SSAO', 'Screen space ambient occlusion'),
                ('RTAO', 'Ray-traced AO', 'Ray-traced ambient occlusion'),
                ('RTGI', 'Ray-traced GI', 'Ray-traced global illumination')
                ],
         name="SSGI", description="Screen space global illumination", default='SSAO', update=update_renderpath)
-    rp_dfao = bpy.props.BoolProperty(name="DFAO", description="Distance field ambient occlusion", default=False)
-    rp_dfrs = bpy.props.BoolProperty(name="DFRS", description="Distance field ray-traced shadows", default=False)
-    rp_dfgi = bpy.props.BoolProperty(name="DFGI", description="Distance field global illumination", default=False)
-    rp_bloom = bpy.props.BoolProperty(name="Bloom", description="Bloom processing", default=False, update=update_renderpath)
-    rp_eyeadapt = bpy.props.BoolProperty(name="Eye Adaptation", description="Auto-exposure based on histogram", default=False, update=update_renderpath)
-    rp_rendercapture = bpy.props.BoolProperty(name="Render Capture", description="Save output as render result", default=False, update=update_renderpath)
+    rp_dfao = BoolProperty(name="DFAO", description="Distance field ambient occlusion", default=False)
+    rp_dfrs = BoolProperty(name="DFRS", description="Distance field ray-traced shadows", default=False)
+    rp_dfgi = BoolProperty(name="DFGI", description="Distance field global illumination", default=False)
+    rp_bloom = BoolProperty(name="Bloom", description="Bloom processing", default=False, update=update_renderpath)
+    rp_eyeadapt = BoolProperty(name="Eye Adaptation", description="Auto-exposure based on histogram", default=False, update=update_renderpath)
+    rp_rendercapture = BoolProperty(name="Render Capture", description="Save output as render result", default=False, update=update_renderpath)
     rp_motionblur = EnumProperty(
         items=[('Off', 'Off', 'Off'),
                ('Camera', 'Camera', 'Camera'),
                ('Object', 'Object', 'Object')],
         name="Motion Blur", description="Velocity buffer is used for object based motion blur", default='Off', update=update_renderpath)
-    rp_translucency = bpy.props.BoolProperty(name="Translucency", description="Current render-path state", default=False)
-    rp_translucency_state = bpy.props.EnumProperty(
+    rp_translucency = BoolProperty(name="Translucency", description="Current render-path state", default=False)
+    rp_translucency_state = EnumProperty(
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off'), 
                ('Auto', 'Auto', 'Auto')],
         name="Translucency", description="Order independent translucency", default='Auto', update=update_translucency_state)
-    rp_decals = bpy.props.BoolProperty(name="Decals", description="Current render-path state", default=False)
-    rp_decals_state = bpy.props.EnumProperty(
+    rp_decals = BoolProperty(name="Decals", description="Current render-path state", default=False)
+    rp_decals_state = EnumProperty(
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off'), 
                ('Auto', 'Auto', 'Auto')],
         name="Decals", description="Decals pass", default='Auto', update=update_decals_state)
-    rp_overlays = bpy.props.BoolProperty(name="Overlays", description="Current render-path state", default=False)
-    rp_overlays_state = bpy.props.EnumProperty(
+    rp_overlays = BoolProperty(name="Overlays", description="Current render-path state", default=False)
+    rp_overlays_state = EnumProperty(
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off'), 
                ('Auto', 'Auto', 'Auto')],
         name="Overlays", description="X-Ray pass", default='Auto', update=update_overlays_state)
-    rp_sss = bpy.props.BoolProperty(name="SSS", description="Current render-path state", default=False)
-    rp_sss_state = bpy.props.EnumProperty(
+    rp_sss = BoolProperty(name="SSS", description="Current render-path state", default=False)
+    rp_sss_state = EnumProperty(
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off'),
                ('Auto', 'Auto', 'Auto')],
         name="SSS", description="Sub-surface scattering pass", default='Auto', update=update_sss_state)
-    rp_blending_state = bpy.props.EnumProperty(
+    rp_blending_state = EnumProperty(
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off')],
         name="Blending", description="Additive blending pass", default='Off', update=update_renderpath)
-    rp_stereo = bpy.props.BoolProperty(name="Stereo", description="Stereo rendering", default=False, update=update_renderpath)
-    rp_greasepencil = bpy.props.BoolProperty(name="Grease Pencil", description="Render Grease Pencil data", default=False, update=update_renderpath)
-    rp_ocean = bpy.props.BoolProperty(name="Ocean", description="Ocean pass", default=False, update=update_renderpath)
+    rp_stereo = BoolProperty(name="Stereo", description="Stereo rendering", default=False, update=update_renderpath)
+    rp_greasepencil = BoolProperty(name="Grease Pencil", description="Render Grease Pencil data", default=False, update=update_renderpath)
+    rp_ocean = BoolProperty(name="Ocean", description="Ocean pass", default=False, update=update_renderpath)
     
-    rp_gi = bpy.props.EnumProperty(
+    rp_gi = EnumProperty(
         items=[('Off', 'Off', 'Off'),
                ('Voxel GI', 'Voxel GI', 'Voxel GI'),
                ('Voxel AO', 'Voxel AO', 'Voxel AO')
                ],
         name="Global Illumination", description="Dynamic global illumination", default='Off', update=update_renderpath)
-    rp_voxelgi_resolution = bpy.props.EnumProperty(
+    rp_voxelgi_resolution = EnumProperty(
         items=[('32', '32', '32'),
                ('64', '64', '64'),
                ('128', '128', '128'),
                ('256', '256', '256'),
                ('512', '512', '512')],
         name="Resolution", description="3D texture resolution", default='128', update=update_renderpath)
-    rp_voxelgi_resolution_z = bpy.props.EnumProperty(
+    rp_voxelgi_resolution_z = EnumProperty(
         items=[('1.0', '1.0', '1.0'),
                ('0.5', '0.5', '0.5'),
                ('0.25', '0.25', '0.25')],
         name="Resolution Z", description="3D texture z resolution multiplier", default='1.0', update=update_renderpath)
-    arm_clouds = bpy.props.BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
+    arm_clouds = BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
     arm_soft_shadows = EnumProperty(
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off'), 
                ('Auto', 'Auto', 'Auto')],
         name="Soft Shadows", description="Soft shadows with variable penumbra (spot and non-cascaded sun lamp supported)", default='Off', update=assets.invalidate_shader_cache)
-    arm_soft_shadows_penumbra = bpy.props.IntProperty(name="Penumbra", description="Variable penumbra scale", default=1, min=0, max=10, update=assets.invalidate_shader_cache)
-    arm_soft_shadows_distance = bpy.props.FloatProperty(name="Distance", description="Variable penumbra distance", default=1.0, min=0, max=10, update=assets.invalidate_shader_cache)
-    arm_ssrs = bpy.props.BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
+    arm_soft_shadows_penumbra = IntProperty(name="Penumbra", description="Variable penumbra scale", default=1, min=0, max=10, update=assets.invalidate_shader_cache)
+    arm_soft_shadows_distance = FloatProperty(name="Distance", description="Variable penumbra distance", default=1.0, min=0, max=10, update=assets.invalidate_shader_cache)
+    arm_ssrs = BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
     arm_texture_filter = EnumProperty(
         items=[('Anisotropic', 'Anisotropic', 'Anisotropic'),
                ('Linear', 'Linear', 'Linear'), 
@@ -443,7 +443,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('OrenNayar', 'OrenNayar', 'OrenNayar'),
                ],
         name="Diffuse", description="Diffuse model", default='Lambert', update=assets.invalidate_shader_cache)
-    arm_displacement = bpy.props.BoolProperty(name="Displacement", description="Enable tessellated displacement for height maps", default=True, update=assets.invalidate_shader_cache)
+    arm_displacement = BoolProperty(name="Displacement", description="Enable tessellated displacement for height maps", default=True, update=assets.invalidate_shader_cache)
     arm_rp_resolution = EnumProperty(
         items=[('Display', 'Display', 'Display'),
                ('480', '480p', '480p'), 
@@ -452,18 +452,18 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('1440', '1440p', '1440p'),
                ('2160', '2160p', '2160p')],
         name="Resolution", description="Render at specific resolution, regardless of display resolution", default='Display', update=update_renderpath)
-    rp_dynres = bpy.props.BoolProperty(name="Dynamic Resolution", description="Dynamic resolution scaling for performance", default=False, update=update_renderpath)
-    arm_ssr_half_res = bpy.props.BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
-    rp_voxelgi_hdr = bpy.props.BoolProperty(name="HDR Voxels", description="Store voxels in RGBA64 instead of RGBA32", default=False, update=update_renderpath)
-    arm_voxelgi_dimensions = bpy.props.FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_shader_cache)
-    arm_voxelgi_revoxelize = bpy.props.BoolProperty(name="Revoxelize", description="Revoxelize scene each frame", default=False, update=assets.invalidate_shader_cache)
-    arm_voxelgi_temporal = bpy.props.BoolProperty(name="Temporal Filter", description="Use temporal filtering to stabilize voxels", default=True, update=assets.invalidate_shader_cache)
-    # arm_voxelgi_multibounce = bpy.props.BoolProperty(name="Multi-bounce", description="Accumulate multiple light bounces", default=False, update=assets.invalidate_shader_cache)
-    arm_voxelgi_camera = bpy.props.BoolProperty(name="Dynamic Camera", description="Use camera as voxelization origin", default=False, update=assets.invalidate_shader_cache)
-    # arm_voxelgi_anisotropic = bpy.props.BoolProperty(name="Anisotropic", description="Use anisotropic voxels", default=False, update=update_renderpath)
-    arm_voxelgi_shadows = bpy.props.BoolProperty(name="Trace Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
-    arm_voxelgi_refraction = bpy.props.BoolProperty(name="Trace Refraction", description="Use voxels to render refraction", default=False, update=update_renderpath)
-    arm_voxelgi_emission = bpy.props.BoolProperty(name="Emission Voxels", description="Encode emission into voxelized data", default=False, update=update_renderpath)
+    rp_dynres = BoolProperty(name="Dynamic Resolution", description="Dynamic resolution scaling for performance", default=False, update=update_renderpath)
+    arm_ssr_half_res = BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
+    rp_voxelgi_hdr = BoolProperty(name="HDR Voxels", description="Store voxels in RGBA64 instead of RGBA32", default=False, update=update_renderpath)
+    arm_voxelgi_dimensions = FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_shader_cache)
+    arm_voxelgi_revoxelize = BoolProperty(name="Revoxelize", description="Revoxelize scene each frame", default=False, update=assets.invalidate_shader_cache)
+    arm_voxelgi_temporal = BoolProperty(name="Temporal Filter", description="Use temporal filtering to stabilize voxels", default=True, update=assets.invalidate_shader_cache)
+    # arm_voxelgi_multibounce = BoolProperty(name="Multi-bounce", description="Accumulate multiple light bounces", default=False, update=assets.invalidate_shader_cache)
+    arm_voxelgi_camera = BoolProperty(name="Dynamic Camera", description="Use camera as voxelization origin", default=False, update=assets.invalidate_shader_cache)
+    # arm_voxelgi_anisotropic = BoolProperty(name="Anisotropic", description="Use anisotropic voxels", default=False, update=update_renderpath)
+    arm_voxelgi_shadows = BoolProperty(name="Trace Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
+    arm_voxelgi_refraction = BoolProperty(name="Trace Refraction", description="Use voxels to render refraction", default=False, update=update_renderpath)
+    arm_voxelgi_emission = BoolProperty(name="Emission Voxels", description="Encode emission into voxelized data", default=False, update=update_renderpath)
     arm_samples_per_pixel = EnumProperty(
         items=[('1', '1', '1'),
                ('2', '2', '2'),
@@ -471,7 +471,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('8', '8', '8'),
                ('16', '16', '16')],
         name="MSAA", description="Samples per pixel usable for render paths drawing directly to framebuffer", default='1')  
-    arm_ssao_half_res = bpy.props.BoolProperty(name="Half Res", description="Trace in half resolution", default=False, update=assets.invalidate_shader_cache)
+    arm_ssao_half_res = BoolProperty(name="Half Res", description="Trace in half resolution", default=False, update=assets.invalidate_shader_cache)
 
 class ArmRPList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -527,8 +527,8 @@ def register():
     bpy.utils.register_class(ArmRPListNewItem)
     bpy.utils.register_class(ArmRPListDeleteItem)
 
-    bpy.types.World.arm_rplist = bpy.props.CollectionProperty(type=ArmRPListItem)
-    bpy.types.World.arm_rplist_index = bpy.props.IntProperty(name="Index for my_list", default=0, update=update_renderpath)
+    bpy.types.World.arm_rplist = CollectionProperty(type=ArmRPListItem)
+    bpy.types.World.arm_rplist_index = IntProperty(name="Index for my_list", default=0, update=update_renderpath)
 
 def unregister():
     bpy.utils.unregister_class(ArmRPListItem)
