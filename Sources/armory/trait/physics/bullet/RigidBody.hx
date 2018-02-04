@@ -67,8 +67,6 @@ class RigidBody extends Trait {
 		this.deactivationParams = deactivationParams;
 
 		notifyOnAdd(init);
-		notifyOnLateUpdate(lateUpdate);
-		notifyOnRemove(removeFromWorld);
 	}
 	
 	inline function withMargin(f:Float) {
@@ -83,7 +81,11 @@ class RigidBody extends Trait {
 	public function init() {
 		if (ready) return;
 		ready = true;
-		
+
+		if (!Std.is(object, MeshObject)) return; // No mesh data
+		notifyOnLateUpdate(lateUpdate);
+		notifyOnRemove(removeFromWorld);
+
 		transform = object.transform;
 		physics = armory.trait.physics.PhysicsWorld.active;
 
