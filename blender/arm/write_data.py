@@ -303,7 +303,8 @@ class Main {
         armory.object.Uniforms.register();
         if (projectWindowMode == kha.WindowMode.Fullscreen) { projectWindowMode = kha.WindowMode.BorderlessWindow; projectWidth = kha.Display.width(0); projectHeight = kha.Display.height(0); }
 """)
-        if not in_viewport:
+        # Cap window size to desktop resolution, otherwise the window may not get opened
+        if not in_viewport and not state.is_render:
             f.write("""
         else { projectWidth = Std.int(Math.min(projectWidth, kha.Display.width(0))); projectHeight = Std.int(Math.min(projectHeight, kha.Display.height(0))); }
 """)
