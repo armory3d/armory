@@ -1239,6 +1239,16 @@ class ArmoryExporter:
         vdata = [0] * num_verts * 3
         ndata = [0] * num_verts * 3
         if has_tex:
+            # Get active uvmap
+            t0map = 0
+            uv_textures = exportMesh.uv_textures
+            if uv_textures != None:
+                for i in range(0, len(uv_textures)):
+                    if uv_textures[i].active_render:
+                        t0map = i
+                        break
+            t1map = 1 if t0map == 0 else 0
+            # Alloc data
             t0data = [0] * num_verts * 2
             if has_tex1:
                 t1data = [0] * num_verts * 2
@@ -1271,11 +1281,11 @@ class ArmoryExporter:
                 vdata[(i * 3) + j] = co[j]
                 ndata[(i * 3) + j] = normal[j]
             if has_tex:
-                t0data[i * 2] = vtx.uvs[0][0]
-                t0data[i * 2 + 1] = 1.0 - vtx.uvs[0][1] # Reverse TCY
+                t0data[i * 2] = vtx.uvs[t0map][0]
+                t0data[i * 2 + 1] = 1.0 - vtx.uvs[t0map][1] # Reverse TCY
                 if has_tex1:
-                    t1data[i * 2] = vtx.uvs[1][0]
-                    t1data[i * 2 + 1] = 1.0 - vtx.uvs[1][1]
+                    t1data[i * 2] = vtx.uvs[t1map][0]
+                    t1data[i * 2 + 1] = 1.0 - vtx.uvs[t1map][1]
             if has_col > 0:
                 cdata[i * 3] = pow(vtx.col[0], 2.2)
                 cdata[i * 3 + 1] = pow(vtx.col[1], 2.2)
