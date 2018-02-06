@@ -517,6 +517,10 @@ class RenderPathCreator {
 			t.mipmaps = true;
 			#end
 			path.createRenderTarget(t);
+			#if rp_autoexposure
+			// Texture lod is fetched manually, prevent mipmap filtering
+			t.mipmaps = false;
+			#end
 		}
 
 		{
