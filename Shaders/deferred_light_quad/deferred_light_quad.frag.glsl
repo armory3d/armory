@@ -18,7 +18,7 @@
 #include "std/gbuffer.glsl"
 
 #ifdef _VoxelGIDirect
-	//!uniform sampler3D voxels;
+	uniform sampler3D voxels;
 #endif
 #ifdef _VoxelGICam
 	uniform vec3 eyeSnap;
