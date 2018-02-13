@@ -285,7 +285,7 @@ class RenderPathForward {
 
 			#if rp_translucency
 			{
-				drawTranslucency("lbuf");
+				Inc.drawTranslucency("lbuf");
 			}
 			#end
 		}

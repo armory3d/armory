@@ -644,7 +644,7 @@ class RenderPathDeferred {
 
 		#if rp_translucency
 		{
-			drawTranslucency("tex");
+			Inc.drawTranslucency("tex");
 		}
 		#end
 
