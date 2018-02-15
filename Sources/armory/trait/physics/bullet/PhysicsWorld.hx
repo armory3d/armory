@@ -50,22 +50,19 @@ class PhysicsWorld extends Trait {
 	public function new() {
 		super();
 
-		if (active == null) {
-			createPhysics();
-		}
-		else {
-			for (rb in active.rbMap) removeRigidBody(rb);
-			this.dispatcher = active.dispatcher;
-			this.world = active.world;
-		}
+		if (active != null) return;
 
+		createPhysics();
 		contacts = [];
 		rbMap = new Map();
 		active = this;
 
-		Scene.active.notifyOnInit(function() {
-			notifyOnUpdate(update);
-		});
+		notifyOnUpdate(update);
+		iron.Scene.active.notifyOnRemove(reset);
+	}
+
+	public function reset() {
+		for (rb in active.rbMap) removeRigidBody(rb);
 	}
 
 	function createPhysics() {
