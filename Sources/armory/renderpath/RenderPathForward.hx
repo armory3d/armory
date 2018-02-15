@@ -18,7 +18,7 @@ class RenderPathForward {
 		path = _path;
 
 		#if (rp_shadowmap && kha_webgl)
-		initEmpty();
+		Inc.initEmpty();
 		#end
 		
 		#if (rp_background == "World")
@@ -189,16 +189,20 @@ class RenderPathForward {
 
 	public static function commands() {
 
+		var hasLamp = iron.Scene.active.lamps.length > 0;
+
 		#if rp_shadowmap
 		{
-			var faces = path.getLamp(path.currentLampIndex).data.raw.shadowmap_cube ? 6 : 1;
-			for (i in 0...faces) {
-				if (faces > 1) path.currentFace = i;
-				path.setTarget(Inc.getShadowMap());
-				path.clearTarget(null, 1.0);
-				path.drawMeshes("shadowmap");
+			if (hasLamp) {
+				var faces = path.getLamp(path.currentLampIndex).data.raw.shadowmap_cube ? 6 : 1;
+				for (i in 0...faces) {
+					if (faces > 1) path.currentFace = i;
+					path.setTarget(Inc.getShadowMap());
+					path.clearTarget(null, 1.0);
+					path.drawMeshes("shadowmap");
+				}
+				path.currentFace = -1;
 			}
-			path.currentFace = -1;
 		}
 		#end
 
@@ -260,7 +264,7 @@ class RenderPathForward {
 
 		#if rp_shadowmap
 		{
-			Inc.bindShadowMap();
+			if (hasLamp) Inc.bindShadowMap();
 		}
 		#end
 
@@ -285,7 +289,7 @@ class RenderPathForward {
 
 			#if rp_translucency
 			{
-				Inc.drawTranslucency("lbuf");
+				if (hasLamp) Inc.drawTranslucency("lbuf");
 			}
 			#end
 		}
