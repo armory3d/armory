@@ -38,7 +38,7 @@ def build(material, mat_users, mat_armusers):
         os.makedirs(full_path)
 
     global_elems = []
-    if mat_users != None:
+    if mat_users != None and material in mat_users:
         for bo in mat_users[material]:
             # GPU Skinning
             if arm.utils.export_bone_data(bo):

@@ -1726,6 +1726,11 @@ class ArmoryExporter:
             mat_armusers = self.materialToArmObjectDict
             mat_batch.build(self.materialArray, mat_users, mat_armusers)
 
+        # Keep materials with fake user
+        for m in bpy.data.materials:
+            if m.use_fake_user and m not in self.materialArray:
+                self.materialArray[m] = {"structName" : arm.utils.asset_name(m)}
+
         transluc_used = False
         overlays_used = False
         decals_used = False
