@@ -129,10 +129,11 @@ def update_preset(self, context):
         rpdat.rp_volumetriclight = False
         rpdat.rp_ssgi = 'RTGI'
         rpdat.rp_ssr = True
+        rpdat.arm_ssr_half_res = False
         rpdat.rp_dfrs = False
         rpdat.rp_dfao = False
         rpdat.rp_dfgi = False
-        rpdat.rp_bloom = False
+        rpdat.rp_bloom = True
         rpdat.rp_eyeadapt = False
         rpdat.rp_rendercapture = True
         rpdat.rp_motionblur = 'Off'
@@ -235,7 +236,7 @@ def update_preset(self, context):
         rpdat.rp_dfrs = False
         rpdat.rp_dfao = False
         rpdat.rp_dfgi = False
-        rpdat.rp_bloom = False
+        rpdat.rp_bloom = True
         rpdat.rp_eyeadapt = False
         rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'Off'
@@ -446,8 +447,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_displacement = BoolProperty(name="Displacement", description="Enable tessellated displacement for height maps", default=True, update=assets.invalidate_shader_cache)
     arm_rp_resolution = EnumProperty(
         items=[('Display', 'Display', 'Display'),
-               ('480', '480p', '480p'), 
-               ('720', '720p', '720p'), 
+               ('480', '480p', '480p'),
+               ('720', '720p', '720p'),
                ('1080', '1080p', '1080p'),
                ('1440', '1440p', '1440p'),
                ('2160', '2160p', '2160p')],
@@ -457,8 +458,11 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_voxelgi_hdr = BoolProperty(name="HDR Voxels", description="Store voxels in RGBA64 instead of RGBA32", default=False, update=update_renderpath)
     arm_voxelgi_dimensions = FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_shader_cache)
     arm_voxelgi_revoxelize = BoolProperty(name="Revoxelize", description="Revoxelize scene each frame", default=False, update=assets.invalidate_shader_cache)
-    arm_voxelgi_temporal = BoolProperty(name="Temporal Filter", description="Use temporal filtering to stabilize voxels", default=True, update=assets.invalidate_shader_cache)
-    # arm_voxelgi_multibounce = BoolProperty(name="Multi-bounce", description="Accumulate multiple light bounces", default=False, update=assets.invalidate_shader_cache)
+    arm_voxelgi_temporal = BoolProperty(name="Temporal Filter", description="Use temporal filtering to stabilize voxels", default=False, update=assets.invalidate_shader_cache)
+    arm_voxelgi_bounces = EnumProperty(
+        items=[('1', '1', '1'),
+               ('2', '2', '2')],
+        name="Bounces", description="Trace multiple light bounces", default='1', update=update_renderpath)
     arm_voxelgi_camera = BoolProperty(name="Dynamic Camera", description="Use camera as voxelization origin", default=False, update=assets.invalidate_shader_cache)
     # arm_voxelgi_anisotropic = BoolProperty(name="Anisotropic", description="Use anisotropic voxels", default=False, update=update_renderpath)
     arm_voxelgi_shadows = BoolProperty(name="Trace Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)

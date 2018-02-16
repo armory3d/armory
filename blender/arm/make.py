@@ -167,6 +167,11 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     for ref in assets.shader_passes:
         for s in assets.shader_passes_assets[ref]:
             assets.add_shader(path + '/' + s + '.glsl')
+    for file in assets.shaders_external:
+        name = file.split('/')[-1].split('\\')[-1]
+        target = build_dir + '/compiled/Shaders/' + name
+        if not os.path.exists(target):
+            shutil.copy(file, target)
     state.last_world_defs = wrd.world_defs
 
     # Reset path

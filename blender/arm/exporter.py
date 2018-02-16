@@ -1224,9 +1224,8 @@ class ArmoryExporter:
         return va
 
     def export_mesh_data(self, exportMesh, bobject, fp, o):
-        # Much faster export but produces slightly less efficient data
         exportMesh.calc_normals_split()
-        exportMesh.calc_tessface()
+        exportMesh.calc_tessface() # free_mpoly=True
         vert_list = { Vertex(exportMesh, loop) : 0 for loop in exportMesh.loops}.keys()
         num_verts = len(vert_list)
         num_uv_layers = len(exportMesh.uv_layers)

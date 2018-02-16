@@ -6,6 +6,31 @@ class Inc {
 
 	static var path:RenderPath;
 
+	#if (rp_gi == "Voxel GI")
+	static var voxel_sh:kha.compute.Shader = null;
+	static var voxel_ta:kha.compute.TextureUnit;
+	static var voxel_tb:kha.compute.TextureUnit;
+	static var voxel_tc:kha.compute.TextureUnit;
+	static var voxel_td:kha.compute.TextureUnit;
+	static var voxel_te:kha.compute.TextureUnit;
+	static var voxel_ca:kha.compute.ConstantLocation;
+	static var voxel_cb:kha.compute.ConstantLocation;
+	static var voxel_cc:kha.compute.ConstantLocation;
+	static var voxel_cd:kha.compute.ConstantLocation;
+	static var voxel_ce:kha.compute.ConstantLocation;
+	static var voxel_cf:kha.compute.ConstantLocation;
+	static var voxel_cg:kha.compute.ConstantLocation;
+	static var voxel_ch:kha.compute.ConstantLocation;
+	static var voxel_ci:kha.compute.ConstantLocation;
+	static var m = iron.math.Mat4.identity();
+	#end
+	#if (rp_gi_bounces)
+	static var bounce_sh:kha.compute.Shader = null;
+	static var bounce_ta:kha.compute.TextureUnit;
+	static var bounce_tb:kha.compute.TextureUnit;
+	static var bounce_tc:kha.compute.TextureUnit;
+	#end
+
 	public static function init(_path:RenderPath) {
 		path = _path;
 	}
@@ -148,10 +173,6 @@ class Inc {
 		{
 			t.format = "R8";
 		}
-		#elseif (rp_voxelgi_hdr)
-		{
-			t.format = "RGBA64";
-		}
 		#else
 		{
 			t.format = "RGBA32";
@@ -261,4 +282,188 @@ class Inc {
 		return "RGBA32";
 		#end
 	}
+
+	#if cpp
+	#if (rp_gi == "Voxel GI")
+	public static function computeVoxels() {
+		if (voxel_sh == null) {
+			voxel_sh = path.getComputeShader("voxel_light");
+			voxel_ta = voxel_sh.getTextureUnit("voxelsOpac");
+			voxel_tb = voxel_sh.getTextureUnit("voxelsNor");
+			voxel_tc = voxel_sh.getTextureUnit("voxels");
+			voxel_td = voxel_sh.getTextureUnit("shadowMap");
+			voxel_te = voxel_sh.getTextureUnit("shadowMapCube");
+			
+			voxel_ca = voxel_sh.getConstantLocation("lightPos");
+			voxel_cb = voxel_sh.getConstantLocation("lightColor");
+			voxel_cc = voxel_sh.getConstantLocation("lightType");
+			voxel_cd = voxel_sh.getConstantLocation("lightDir");
+			voxel_ce = voxel_sh.getConstantLocation("lightShadow");
+			voxel_cf = voxel_sh.getConstantLocation("lightProj");
+			voxel_cg = voxel_sh.getConstantLocation("LVP");
+			voxel_ch = voxel_sh.getConstantLocation("shadowsBias");
+			voxel_ci = voxel_sh.getConstantLocation("spotData");
+		}
+
+		var rts = path.renderTargets;
+		var res = Inc.getVoxelRes();
+
+		path.clearImage("voxels", 0x00000000);
+
+		var lamps = iron.Scene.active.lamps;
+		for (i in 0...lamps.length) {
+			var l = lamps[i];
+			if (!l.visible) continue;
+			path.currentLampIndex = i;
+
+			#if ((rp_shadowmap))
+			{
+				// TODO: merge with direct, drawing shadowmaps twice!
+				if (path.lampCastShadow()) {
+					drawShadowMap(l);
+				}
+			}
+			#end
+
+			kha.compute.Compute.setShader(voxel_sh);
+			kha.compute.Compute.setTexture(voxel_ta, rts.get("voxelsOpac").image, kha.compute.Access.Read);
+			kha.compute.Compute.setTexture(voxel_tb, rts.get("voxelsNor").image, kha.compute.Access.Read);
+			// kha.compute.Compute.setTexture(voxel_tc, rts.get("voxels").image, kha.compute.Access.Write);
+			kha.compute.Compute.setTexture(voxel_tc, rts.get("voxels").image, kha.compute.Access.Write);
+
+			#if (rp_shadowmap)
+			if (Inc.shadowMapName() == "shadowMapCube") {
+				// shadowMapCube
+				kha.compute.Compute.setSampledCubeMap(voxel_te, rts.get("shadowMapCube").cubeMap);
+			}
+			else {
+				// shadowMap
+				kha.compute.Compute.setSampledTexture(voxel_td, rts.get("shadowMap").image);
+			}
+			#end
+
+			// lightPos
+			kha.compute.Compute.setFloat3(voxel_ca, l.transform.worldx(), l.transform.worldy(), l.transform.worldz());
+			// lightCol
+			var f = l.data.raw.strength;
+			kha.compute.Compute.setFloat3(voxel_cb, l.data.raw.color[0] * f, l.data.raw.color[1] * f, l.data.raw.color[2] * f);
+			// lightType
+			kha.compute.Compute.setInt(voxel_cc, iron.data.LampData.typeToInt(l.data.raw.type));
+			// lightDir
+			var v = l.look();
+			kha.compute.Compute.setFloat3(voxel_cd, v.x, v.y, v.z);
+			// lightShadow
+			var i = l.data.raw.shadowmap_cube ? 2 : 1;
+			kha.compute.Compute.setInt(voxel_ce, i);
+			// lightProj
+			var near = l.data.raw.near_plane;
+			var far = l.data.raw.far_plane;
+			var a = far + near;
+			var b = far - near;
+			var c = 2.0 * far * near;
+			var vx = a / b;
+			var vy = c / b;
+			kha.compute.Compute.setFloat2(voxel_cf, vx, vy);
+			// LVP
+			m.setFrom(l.VP);
+			m.multmat2(iron.object.Uniforms.biasMat);
+			kha.compute.Compute.setMatrix(voxel_cg, m.self);
+			// shadowsBias
+			kha.compute.Compute.setFloat(voxel_ch, l.data.raw.shadows_bias);
+			// spotData
+			if (l.data.raw.type == "spot") {
+				var vx = l.data.raw.spot_size;
+				var vy = vx - l.data.raw.spot_blend;
+				kha.compute.Compute.setFloat2(voxel_ci, vx, vy);
+			}
+
+			kha.compute.Compute.compute(res, res, res);
+		}
+		path.currentLampIndex = 0;
+
+		path.generateMipmaps("voxels");
+
+		#if (rp_gi_bounces)
+		if (bounce_sh == null) {
+			bounce_sh = path.getComputeShader("voxel_bounce");
+			bounce_ta = bounce_sh.getTextureUnit("voxelsNor");
+			bounce_tb = bounce_sh.getTextureUnit("voxelsFrom");
+			bounce_tc = bounce_sh.getTextureUnit("voxelsTo");
+		}
+		// path.clearImage("voxelsOpac", 0x00000000);
+		// path.currentG;
+		kha.compute.Compute.setShader(bounce_sh);
+		kha.compute.Compute.setTexture(bounce_ta, rts.get("voxelsNor").image, kha.compute.Access.Read);
+		kha.compute.Compute.setTexture3DParameters(bounce_tb, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureFilter.LinearFilter, kha.graphics4.TextureFilter.PointFilter, kha.graphics4.MipMapFilter.LinearMipFilter);
+		kha.compute.Compute.setSampledTexture(bounce_tb, rts.get("voxels").image);
+		kha.compute.Compute.setTexture(bounce_tc, rts.get("voxelsOpac").image, kha.compute.Access.Write);
+		kha.compute.Compute.compute(res, res, res);
+		path.generateMipmaps("voxelsOpac");
+		#end
+	}
+	#end
+	#end // cpp
+
+	#if (rp_renderer == "Forward")
+	public static function drawShadowMap(l:iron.object.LampObject) {
+		#if (rp_shadowmap)
+		var faces = path.getLamp(path.currentLampIndex).data.raw.shadowmap_cube ? 6 : 1;
+		for (i in 0...faces) {
+			if (faces > 1) path.currentFace = i;
+			path.setTarget(Inc.getShadowMap());
+			path.clearTarget(null, 1.0);
+			path.drawMeshes("shadowmap");
+		}
+		path.currentFace = -1;
+		#end
+	}
+	#else
+	public static function drawShadowMap(l:iron.object.LampObject) {
+		#if (rp_shadowmap)
+		var faces = l.data.raw.shadowmap_cube ? 6 : 1;
+		for (j in 0...faces) {
+			if (faces > 1) path.currentFace = j;
+			path.setTarget(Inc.getShadowMap());
+			path.clearTarget(null, 1.0);
+			path.drawMeshes("shadowmap");
+		}
+		path.currentFace = -1;
+
+		// One lamp at a time for now, precompute all lamps for tiled
+		#if rp_soft_shadows
+
+		if (l.raw.type != "point") {
+			path.setTarget("visa"); // Merge using min blend
+			Inc.bindShadowMap();
+			path.drawShader("shader_datas/dilate_pass/dilate_pass_x");
+
+			path.setTarget("visb");
+			path.bindTarget("visa", "shadowMap");
+			path.drawShader("shader_datas/dilate_pass/dilate_pass_y");
+		}
+
+		path.setTarget("visa", ["dist"]);
+		//if (i == 0) path.clearTarget(0x00000000);
+		if (l.raw.type != "point") path.bindTarget("visb", "dilate");
+		Inc.bindShadowMap();
+		//path.bindTarget("_main", "gbufferD");
+		path.bindTarget("gbuffer0", "gbuffer0");
+		path.drawShader("shader_datas/visibility_pass/visibility_pass");
+		
+		path.setTarget("visb");
+		path.bindTarget("visa", "tex");
+		path.bindTarget("gbuffer0", "gbuffer0");
+		path.bindTarget("dist", "dist");
+		path.drawShader("shader_datas/blur_shadow_pass/blur_shadow_pass_x");
+
+		path.setTarget("visa");
+		path.bindTarget("visb", "tex");
+		path.bindTarget("gbuffer0", "gbuffer0");
+		path.bindTarget("dist", "dist");
+		path.drawShader("shader_datas/blur_shadow_pass/blur_shadow_pass_y");
+		#end
+
+		#end
+	}
+	#end
 }

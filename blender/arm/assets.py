@@ -11,6 +11,7 @@ khafile_defs_last = []
 embedded_data = []
 shaders = []
 shaders_last = []
+shaders_external = []
 shader_datas = []
 shader_passes = []
 shader_passes_assets = {}
@@ -23,6 +24,7 @@ def reset():
     global embedded_data
     global shaders
     global shaders_last
+    global shaders_external
     global shader_datas
     global shader_passes
     global shader_cons
@@ -32,6 +34,7 @@ def reset():
     embedded_data = []
     shaders_last = shaders
     shaders = []
+    shaders_external = []
     shader_datas = []
     shader_passes = []
     shader_cons = {}
@@ -78,6 +81,12 @@ def add_shader_pass(data_name):
     add_shader_data(arm.utils.build_dir() + '/compiled/Shaders/shader_datas.arm')
     if data_name not in shader_passes:
         shader_passes.append(data_name)
+
+def add_shader_external(file):
+    global shaders_external
+    shaders_external.append(file)
+    name = file.split('/')[-1].split('\\')[-1]
+    add_shader(arm.utils.build_dir() + '/compiled/Shaders/' + name)
 
 invalidate_enabled = True # Disable invalidating during build process
 

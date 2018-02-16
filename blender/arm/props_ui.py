@@ -989,11 +989,11 @@ class ArmRenderPathPanel(bpy.types.Panel):
                     layout.prop(rpdat, 'arm_voxelgi_temporal')
                 if rpdat.rp_gi == 'Voxel GI':
                     layout.prop(rpdat, 'arm_voxelgi_refraction')
-                    layout.prop(rpdat, 'arm_voxelgi_emission')
+                    # layout.prop(rpdat, 'arm_voxelgi_emission')
                     # layout.prop(rpdat, 'arm_voxelgi_anisotropic')
                     layout.prop(rpdat, 'arm_voxelgi_shadows')
                     layout.prop(rpdat, 'rp_voxelgi_hdr')
-                    # layout.prop(rpdat, 'arm_voxelgi_multibounce')
+                    layout.prop(rpdat, 'arm_voxelgi_bounces')
                 layout.separator()
 
             layout.prop(rpdat, "rp_hdr")

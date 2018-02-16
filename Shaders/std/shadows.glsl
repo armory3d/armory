@@ -67,6 +67,22 @@ float PCFCube(samplerCube shadowMapCube, const vec3 lp, vec3 ml, const float bia
 	return result;
 }
 
+float PCFCube2(samplerCube shadowMapCube, const vec3 lp, vec3 ml, const float bias, const vec2 lightProj) {
+	const float s = shadowmapCubePcfSize;
+	float compare = lpToDepth(lp, lightProj) - bias * 0.4;
+	float result = step(compare, texture(shadowMapCube, ml).r);
+	result += step(compare, texture(shadowMapCube, ml + vec3(s, s, s)).r);
+	result += step(compare, texture(shadowMapCube, ml + vec3(-s, s, s)).r);
+	result += step(compare, texture(shadowMapCube, ml + vec3(s, -s, s)).r);
+	result += step(compare, texture(shadowMapCube, ml + vec3(s, s, -s)).r);
+	result += step(compare, texture(shadowMapCube, ml + vec3(-s, -s, s)).r);
+	result += step(compare, texture(shadowMapCube, ml + vec3(s, -s, -s)).r);
+	result += step(compare, texture(shadowMapCube, ml + vec3(-s, s, -s)).r);
+	result += step(compare, texture(shadowMapCube, ml + vec3(-s, -s, -s)).r);
+	result /= 9.0;
+	return result;
+}
+
 float shadowTest(sampler2D shadowMap, const vec3 lPos, const float shadowsBias, const vec2 smSize) {
 
 	// Out of bounds

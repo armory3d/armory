@@ -89,6 +89,14 @@ class RenderPathForward {
 				Inc.initGI("voxelsB");
 			}
 			#end
+			#if cpp
+			#if (rp_gi == "Voxel GI")
+			{
+				Inc.initGI("voxelsOpac");
+				Inc.initGI("voxelsNor");
+			}
+			#end
+			#end //cpp
 		}
 		#end
 
@@ -194,14 +202,7 @@ class RenderPathForward {
 		#if rp_shadowmap
 		{
 			if (hasLamp) {
-				var faces = path.getLamp(path.currentLampIndex).data.raw.shadowmap_cube ? 6 : 1;
-				for (i in 0...faces) {
-					if (faces > 1) path.currentFace = i;
-					path.setTarget(Inc.getShadowMap());
-					path.clearTarget(null, 1.0);
-					path.drawMeshes("shadowmap");
-				}
-				path.currentFace = -1;
+				Inc.drawShadowMap(iron.Scene.active.lamps[0]);
 			}
 		}
 		#end
@@ -219,13 +220,39 @@ class RenderPathForward {
 			}
 			#end
 
+			#if cpp
+			if (voxelize) {
+				var res = Inc.getVoxelRes();
+
+				#if (rp_gi == "Voxel GI")
+				var voxtex = "voxelsOpac";
+				#else
+				var voxtex = voxels;
+				#end
+
+				path.clearImage(voxtex, 0x00000000);
+				path.setTarget("");
+				path.setViewport(res, res);
+				path.bindTarget(voxtex, "voxels");
+				path.drawMeshes("voxel");
+
+				#if (rp_gi == "Voxel GI")
+				Inc.computeVoxels();
+					#if (rp_gi_bounces)
+					voxels = "voxelsOpac";
+					#end
+				#else
+				path.generateMipmaps(voxels);
+				#end
+			}
+			#else
 			if (voxelize) {
 				path.clearImage(voxels, 0x00000000);
 				path.setTarget("");
 				var res = Inc.getVoxelRes();
 				path.setViewport(res, res);
 				path.bindTarget(voxels, "voxels");
-				#if rp_shadowmap
+				#if ((rp_shadowmap) && (rp_gi == "Voxel GI"))
 				{
 					Inc.bindShadowMap();
 				}
@@ -233,6 +260,7 @@ class RenderPathForward {
 				path.drawMeshes("voxel");
 				path.generateMipmaps(voxels);
 			}
+			#end // cpp
 		}
 		#end
 

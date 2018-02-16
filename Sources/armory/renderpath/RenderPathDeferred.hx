@@ -41,6 +41,14 @@ class RenderPathDeferred {
 				Inc.initGI("voxelsB");
 			}
 			#end
+			#if cpp
+			#if (rp_gi == "Voxel GI")
+			{
+				Inc.initGI("voxelsOpac");
+				Inc.initGI("voxelsNor");
+			}
+			#end
+			#end //cpp
 		}
 		#end
 
@@ -370,49 +378,7 @@ class RenderPathDeferred {
 		#end
 	}
 
-	static function drawShadowMap(l:iron.object.LampObject) {
-		var faces = l.data.raw.shadowmap_cube ? 6 : 1;
-		for (j in 0...faces) {
-			if (faces > 1) path.currentFace = j;
-			path.setTarget(Inc.getShadowMap());
-			path.clearTarget(null, 1.0);
-			path.drawMeshes("shadowmap");
-		}
-		path.currentFace = -1;
-
-		// One lamp at a time for now, precompute all lamps for tiled
-		#if rp_soft_shadows
-
-		path.setTarget("visa"); // Merge using min blend
-		Inc.bindShadowMap();
-		path.drawShader("shader_datas/dilate_pass/dilate_pass_x");
-
-		path.setTarget("visb");
-		path.bindTarget("visa", "shadowMap");
-		path.drawShader("shader_datas/dilate_pass/dilate_pass_y");
-
-		path.setTarget("visa", ["dist"]);
-		//if (i == 0) path.clearTarget(0x00000000);
-		path.bindTarget("visb", "dilate");
-		Inc.bindShadowMap();
-		//path.bindTarget("_main", "gbufferD");
-		path.bindTarget("gbuffer0", "gbuffer0");
-		path.drawShader("shader_datas/visibility_pass/visibility_pass");
-		
-		path.setTarget("visb");
-		path.bindTarget("visa", "tex");
-		path.bindTarget("gbuffer0", "gbuffer0");
-		path.bindTarget("dist", "dist");
-		path.drawShader("shader_datas/blur_shadow_pass/blur_shadow_pass_x");
-
-		path.setTarget("visa");
-		path.bindTarget("visb", "tex");
-		path.bindTarget("gbuffer0", "gbuffer0");
-		path.bindTarget("dist", "dist");
-		path.drawShader("shader_datas/blur_shadow_pass/blur_shadow_pass_y");
-		#end
-	}
-
+	@:access(iron.RenderPath)
 	public static function commands() {
 
 		#if rp_dynres
@@ -495,14 +461,6 @@ class RenderPathDeferred {
 		// Voxels
 		#if (rp_gi != "Off")
 		{
-			#if ((rp_shadowmap) && (rp_gi == "Voxel GI"))
-			{
-				if (path.lampCastShadow() && iron.Scene.active.lamps.length > 0) {
-					drawShadowMap(iron.Scene.active.lamps[0]);
-				}
-			}
-			#end
-			
 			var voxelize = path.voxelize();
 
 			#if arm_voxelgi_temporal
@@ -514,6 +472,33 @@ class RenderPathDeferred {
 			}
 			#end
 
+			#if cpp
+			if (voxelize) {
+
+				var res = Inc.getVoxelRes();
+
+				#if (rp_gi == "Voxel GI")
+				var voxtex = "voxelsOpac";
+				#else
+				var voxtex = voxels;
+				#end
+
+				path.clearImage(voxtex, 0x00000000);
+				path.setTarget("");
+				path.setViewport(res, res);
+				path.bindTarget(voxtex, "voxels");
+				path.drawMeshes("voxel");
+
+				#if (rp_gi == "Voxel GI")
+				Inc.computeVoxels();
+					#if (rp_gi_bounces)
+					voxels = "voxelsOpac";
+					#end
+				#else
+				path.generateMipmaps(voxels);
+				#end
+			}
+			#else
 			if (voxelize) {
 				path.clearImage(voxels, 0x00000000);
 				path.setTarget("");
@@ -528,6 +513,7 @@ class RenderPathDeferred {
 				path.drawMeshes("voxel");
 				path.generateMipmaps(voxels);
 			}
+			#end //cpp
 		}
 		#end
 
@@ -560,10 +546,10 @@ class RenderPathDeferred {
 			if (!l.visible) continue;
 			path.currentLampIndex = i;
 
-			#if ((rp_shadowmap) && (rp_gi != "Voxel GI"))
+			#if (rp_shadowmap)
 			{
 				if (path.lampCastShadow()) {
-					drawShadowMap(l);
+					Inc.drawShadowMap(l);
 				}
 			}
 			#end

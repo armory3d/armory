@@ -19,14 +19,18 @@ class PhysicsHook extends Trait {
 	var targetName:String;
 	var targetTransform:Transform;
 	var verts:Array<Float>;
-	var hookRB:BtRigidBodyPointer;
+
+	var constraint:BtGeneric6DofConstraintPointer = null;
+
+	#if arm_physics_soft
+	var hookRB:BtRigidBodyPointer = null;
+	#end
 
 	public function new(targetName:String, verts:Array<Float>) {
 		super();
 
 		this.targetName = targetName;
 		this.verts = verts;
-		hookRB = null;
 
 		Scene.active.notifyOnInit(function() {
 			notifyOnInit(init);
@@ -111,7 +115,7 @@ class PhysicsHook extends Trait {
 			var dy = targetTransform.worldy() - object.transform.worldy();
 			var dz = targetTransform.worldz() - object.transform.worldz();
 			btrans.setOrigin(BtVector3.create(dx, dy, dz));
-			var constraint = BtGeneric6DofConstraint.create(rb1.body, btrans, false); // cpp - fix rb1.body pass
+			constraint = BtGeneric6DofConstraint.create(rb1.body, btrans, false); // cpp - fix rb1.body pass
 			constraint.setLinearLowerLimit(BtVector3.create(0, 0, 0));
 			constraint.setLinearUpperLimit(BtVector3.create(0, 0, 0));
 			constraint.setAngularLowerLimit(BtVector3.create(-10, -10, -10));
@@ -126,19 +130,34 @@ class PhysicsHook extends Trait {
 	}
 
 	function update() {
-		if(hookRB == null) return;
-		var _transform = BtTransform.create();
-		_transform.setIdentity();
-		_transform.setOrigin(BtVector3.create(
-			targetTransform.world.getLoc().x,
-			targetTransform.world.getLoc().y,
-			targetTransform.world.getLoc().z));
-		_transform.setRotation(BtQuaternion.create(
-			targetTransform.world.getQuat().x,
-			targetTransform.world.getQuat().y,
-			targetTransform.world.getQuat().z,
-			targetTransform.world.getQuat().w));
-		hookRB.setWorldTransform(_transform);
+		#if arm_physics_soft
+		if (hookRB != null) {
+			var _transform = BtTransform.create();
+			_transform.setIdentity();
+			_transform.setOrigin(BtVector3.create(
+				targetTransform.world.getLoc().x,
+				targetTransform.world.getLoc().y,
+				targetTransform.world.getLoc().z));
+			_transform.setRotation(BtQuaternion.create(
+				targetTransform.world.getQuat().x,
+				targetTransform.world.getQuat().y,
+				targetTransform.world.getQuat().z,
+				targetTransform.world.getQuat().w));
+			hookRB.setWorldTransform(_transform);
+		}
+		#end
+
+		// if (constraint != null) {
+		// 	var dx = targetTransform.worldx() - object.transform.worldx();
+		// 	var dy = targetTransform.worldy() - object.transform.worldy();
+		// 	var dz = targetTransform.worldz() - object.transform.worldz();
+		// 	var pivot = BtVector3.create(dx, dy, dz);
+		// 	#if js
+		// 	constraint.getFrameOffsetA().setOrigin(pivot);
+		// 	#elseif cpp
+		// 	constraint.setFrameOffsetAOrigin(pivot);
+		// 	#end
+		// }
 	}
 
 }
