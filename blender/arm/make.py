@@ -240,14 +240,16 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
         cmd.append('-g')
         cmd.append(arm.utils.get_gapi())
 
+    # Kha defaults to 110 on Linux
+    is_linux = arm.utils.get_os() == 'linux'
+    is_native = kha_target_name == 'krom' or kha_target_name == ''
+    if is_linux and is_native and not state.in_viewport and not arm.utils.get_legacy_shaders():
+        cmd.append('--shaderversion')
+        cmd.append('330')
+
     if '_VR' in wrd.world_defs:
         cmd.append('--vr')
         cmd.append('webvr')
-
-    # Kha defaults to 110
-    if arm.utils.get_os() == 'linux' and (kha_target_name == 'krom' or kha_target_name == '') and state.in_viewport == False:
-        cmd.append('--shaderversion')
-        cmd.append('330')
 
     cmd.append('--to')
     if (kha_target_name == 'krom' and not state.in_viewport) or (kha_target_name == 'html5' and not state.is_publish):

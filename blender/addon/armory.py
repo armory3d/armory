@@ -6,7 +6,7 @@ bl_info = {
     "location": "Properties -> Render -> Armory Player",
     "description": "3D game engine for Blender",
     "author": "Armory3D.org",
-    "version": (11, 5, 0),
+    "version": (11, 6, 0),
     "blender": (2, 79, 0),
     "wiki_url": "http://armory3d.org/manual",
     "tracker_url": "https://github.com/armory3d/armory/issues"
@@ -52,6 +52,7 @@ class ArmoryAddonPreferences(AddonPreferences):
     renderdoc_path = StringProperty(name="RenderDoc Path", subtype="FILE_PATH", update=renderdoc_path_update, default="")
     ffmpeg_path = StringProperty(name="FFMPEG Path", subtype="FILE_PATH", update=ffmpeg_path_update, default="")
     save_on_build = BoolProperty(name="Save on Build", default=True)
+    legacy_shaders = BoolProperty(name="Legacy Shaders", default=False)
     viewport_controls = EnumProperty(
         items=[('qwerty', 'qwerty', 'qwerty'),
                ('azerty', 'azerty', 'azerty')],
@@ -75,6 +76,7 @@ class ArmoryAddonPreferences(AddonPreferences):
             layout.prop(self, "ffmpeg_path")
             layout.prop(self, "viewport_controls")
             layout.prop(self, "save_on_build")
+            layout.prop(self, "legacy_shaders")
             
             layout.separator()
             layout.label("Armory Updater")

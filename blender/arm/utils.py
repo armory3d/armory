@@ -119,6 +119,11 @@ def get_viewport_controls():
     addon_prefs = user_preferences.addons['armory'].preferences
     return 'qwerty' if not hasattr(addon_prefs, 'viewport_controls') else addon_prefs.viewport_controls
 
+def get_legacy_shaders():
+    user_preferences = bpy.context.user_preferences
+    addon_prefs = user_preferences.addons['armory'].preferences
+    return False if not hasattr(addon_prefs, 'legacy_shaders') else addon_prefs.legacy_shaders
+
 def get_node_path():
     if get_os() == 'win':
         return get_sdk_path() + '/nodejs/node.exe'
