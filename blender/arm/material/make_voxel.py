@@ -297,7 +297,7 @@ def make_gi_legacy(context_id):
         frag.add_uniform('layout(r32ui) uimage3D voxels')
 
     frag.add_uniform('vec3 lightPos', '_lampPosition')
-    frag.add_uniform('vec3 lightColor', '_lampColorVoxel')
+    frag.add_uniform('vec3 lightColor', '_lampColor')
     frag.add_uniform('int lightType', '_lampType')
     frag.add_uniform('vec3 lightDir', '_lampDirection')
 
