@@ -88,6 +88,7 @@ project.addSources('Sources');
                     ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
                     ammojs_path = ammojs_path.replace('\\', '/')
                     f.write(add_assets(ammojs_path))
+                    # haxe.macro.Compiler.includeFile(ammojs_path)
             elif wrd.arm_physics == 'Oimo':
                 assets.add_khafile_def('arm_oimo')
                 if not os.path.exists('Libraries/oimo'):
@@ -393,7 +394,7 @@ def write_indexhtml(w, h, is_publish):
 </html>
 """)
 
-def write_compiledglsl():
+def write_compiledglsl(defs):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     shadowmap_size = 0
@@ -403,7 +404,10 @@ def write_compiledglsl():
         f.write(
 """#ifndef _COMPILED_GLSL_
 #define _COMPILED_GLSL_
-const float PI = 3.1415926535;
+""")
+        for d in defs:
+            f.write("#define " + d + "\n")
+        f.write("""const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;
 const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shadowmap_size) + """);
 const float shadowmapCubePcfSize = """ + str(round(wrd.arm_pcfsize * 10000) / 10000) + """;

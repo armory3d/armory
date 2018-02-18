@@ -1,5 +1,7 @@
 #version 450
 
+#include "compiled.glsl"
+
 in vec2 pos;
 
 uniform vec2 screenSizeInv;

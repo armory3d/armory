@@ -1,5 +1,7 @@
 #version 450
 
+#include "compiled.glsl"
+
 in vec2 pos;
 
 out vec2 texCoord;

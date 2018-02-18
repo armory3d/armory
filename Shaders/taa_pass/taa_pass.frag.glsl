@@ -1,5 +1,7 @@
 #version 450
 
+#include "compiled.glsl"
+
 uniform sampler2D tex;
 uniform sampler2D tex2;
 #ifdef _Veloc

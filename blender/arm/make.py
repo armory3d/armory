@@ -18,7 +18,6 @@ import arm.make_state as state
 import arm.assets as assets
 import arm.log as log
 import arm.lib.make_datas
-import arm.lib.make_variants
 import arm.lib.server
 from arm.exporter import ArmoryExporter
 import time
@@ -43,7 +42,12 @@ def compile_shader_pass(res, raw_shaders_path, shader_name, defs):
 
     fp = arm.utils.get_fp_build()
     arm.lib.make_datas.make(res, shader_name, json_data, fp, defs)
-    arm.lib.make_variants.make(shader_name, json_data, fp, defs)
+
+    path = fp + '/compiled/Shaders'
+    c = json_data['contexts'][0]
+    for s in ['vertex_shader', 'fragment_shader', 'geometry_shader', 'tesscontrol_shader', 'tesseval_shader']:
+        if s in c:
+            shutil.copy(c[s], path + '/' + c[s].split('/')[-1])
 
 def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
@@ -141,7 +145,11 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     print('Exported modules: ' + str(modules))
 
     defs = arm.utils.def_strings_to_array(wrd.world_defs)
+    cdefs = arm.utils.def_strings_to_array(wrd.compo_defs)
     print('Shader flags: ' + str(defs))
+
+     # Write compiled.glsl
+    write_data.write_compiledglsl(defs + cdefs)
 
     # Write referenced shader passes
     path = build_dir + '/compiled/Shaders'
@@ -157,7 +165,6 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
                 continue
             assets.shader_passes_assets[ref] = []
             if ref.startswith('compositor_pass'):
-                cdefs = arm.utils.def_strings_to_array(wrd.compo_defs)
                 compile_shader_pass(res, raw_shaders_path, ref, defs + cdefs)
             # elif ref.startswith('grease_pencil'):
                 # compile_shader_pass(res, raw_shaders_path, ref, [])
@@ -180,9 +187,6 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     # Copy std shaders
     if not os.path.isdir(build_dir + '/compiled/Shaders/std'):
         shutil.copytree(raw_shaders_path + 'std', build_dir + '/compiled/Shaders/std')
-
-    # Write compiled.glsl
-    write_data.write_compiledglsl()
 
     # Write khafile.js
     enable_dce = is_publish and wrd.arm_dce

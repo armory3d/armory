@@ -1,5 +1,7 @@
 #version 450
 
+#include "compiled.glsl"
+
 uniform mat4 invP;
 
 in vec2 pos;

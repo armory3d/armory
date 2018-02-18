@@ -1,5 +1,7 @@
 #version 450
 
+#include "compiled.glsl"
+
 // #ifdef _CPos
 	// uniform mat4 invVP;
 	// uniform vec3 eye;

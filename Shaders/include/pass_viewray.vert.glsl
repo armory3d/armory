@@ -1,5 +1,7 @@
 #version 450
 
+#include "compiled.glsl"
+
 uniform mat4 invVP;
 uniform vec3 eye;
 
