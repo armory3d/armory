@@ -18,6 +18,7 @@ class DebugConsole extends Trait {
 #else
 
 	var ui:Zui;
+	var show = true;
 
 	var lastTime = 0.0;
 	var frameTime = 0.0;
@@ -47,6 +48,10 @@ class DebugConsole extends Trait {
 			notifyOnUpdate(update);
 			haxeTrace = haxe.Log.trace;
 			haxe.Log.trace = consoleTrace;
+			// Toggle console
+			kha.input.Keyboard.get().notify(null, null, function(char: String) {
+				if (char == "~") show = !show;
+			});
 		});
 	}
 
@@ -59,6 +64,7 @@ class DebugConsole extends Trait {
 
 	static var lrow = [1/2, 1/2];
 	function render2D(g:kha.graphics2.Graphics) {
+		if (!show) return;
 		g.end();
 		ui.begin(g);
 		var hwin = Id.handle();
