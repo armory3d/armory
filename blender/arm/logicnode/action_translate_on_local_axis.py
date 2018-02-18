@@ -19,4 +19,4 @@ class TranslateOnLocalAxisNode(Node, ArmLogicTreeNode):
         self.inputs.new('NodeSocketBool', 'Inverse')
         self.outputs.new('ArmNodeSocketAction', 'Out')
 
- add_node(TranslateOnLocalAxisNode, category='Action')
+add_node(TranslateOnLocalAxisNode, category='Action')
