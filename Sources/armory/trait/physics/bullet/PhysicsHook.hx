@@ -108,20 +108,18 @@ class PhysicsHook extends Trait {
 		// Rigid body hook
 		var rb1:RigidBody = object.getTrait(RigidBody);
 		if (rb1 != null && rb1.ready) {
-			#if js // TODO
 			var btrans = BtTransform.create();
 			btrans.setIdentity();
 			var dx = targetTransform.worldx() - object.transform.worldx();
 			var dy = targetTransform.worldy() - object.transform.worldy();
 			var dz = targetTransform.worldz() - object.transform.worldz();
 			btrans.setOrigin(BtVector3.create(dx, dy, dz));
-			constraint = BtGeneric6DofConstraint.create(rb1.body, btrans, false); // cpp - fix rb1.body pass
+			constraint = BtGeneric6DofConstraint.create(rb1.body, btrans, false);
 			constraint.setLinearLowerLimit(BtVector3.create(0, 0, 0));
 			constraint.setLinearUpperLimit(BtVector3.create(0, 0, 0));
 			constraint.setAngularLowerLimit(BtVector3.create(-10, -10, -10));
 			constraint.setAngularUpperLimit(BtVector3.create(10, 10, 10));
 			physics.world.addConstraint(constraint, false);
-			#end
 			return;
 		}
 

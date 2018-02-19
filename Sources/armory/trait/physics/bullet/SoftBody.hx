@@ -111,11 +111,11 @@ class SoftBody extends Trait {
 		var numtri = 0;
 		for (ar in geom.indices) numtri += Std.int(ar.length / 3);
 
-#if js
 		var softBodyHelpers = BtSoftBodyHelpers.create();
+#if js
 		body = softBodyHelpers.CreateFromTriMesh(wrdinfo, positions, vecind, numtri);
 #elseif cpp
-		untyped __cpp__("body = btSoftBodyHelpers::CreateFromTriMesh(wrdinfo, positions->Pointer(), vecind->Pointer(), numtri);");
+		untyped __cpp__("body = softBodyHelpers.CreateFromTriMesh(wrdinfo, positions->Pointer(), vecind->Pointer(), numtri);");
 #end
 
 		// body.generateClusters(4);

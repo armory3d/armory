@@ -2137,8 +2137,8 @@ class ArmoryExporter:
                 self.output['traits'] = []
             x = {}
             x['type'] = 'Script'
-            pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics == 'Bullet' else 'oimo'
-            x['class_name'] = 'armory.trait.physics.' + pkg + '.PhysicsWorld'
+            phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics == 'Bullet' else 'oimo'
+            x['class_name'] = 'armory.trait.physics.' + phys_pkg + '.PhysicsWorld'
             self.output['traits'].append(x)
         if wrd.arm_navigation != 'Disabled' and ArmoryExporter.export_navigation:
             if not 'traits' in self.output:
@@ -2300,8 +2300,12 @@ class ArmoryExporter:
         # Export traits
         self.export_traits(bobject, o)
 
+        wrd = bpy.data.worlds['Arm']
+        phys_enabled = wrd.arm_physics != 'Disabled'
+        phys_pkg = 'bullet' if wrd.arm_physics == 'Bullet' else 'oimo'
+
         # Rigid body trait
-        if bobject.rigid_body != None and bpy.data.worlds['Arm'].arm_physics != 'Disabled':
+        if bobject.rigid_body != None and phys_enabled:
             ArmoryExporter.export_physics = True
             rb = bobject.rigid_body
             shape = 0 # BOX
@@ -2325,8 +2329,7 @@ class ArmoryExporter:
                 body_mass = 0
             x = {}
             x['type'] = 'Script'
-            pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics == 'Bullet' else 'oimo'
-            x['class_name'] = 'armory.trait.physics.' + pkg + '.RigidBody'
+            x['class_name'] = 'armory.trait.physics.' + phys_pkg + '.RigidBody'
             x['parameters'] = [str(body_mass), str(shape), str(rb.friction), str(rb.restitution)]
             if rb.use_margin:
                 x['parameters'].append(str(rb.collision_margin))
@@ -2369,51 +2372,19 @@ class ArmoryExporter:
                 x['parameters'].append('null')
             o['traits'].append(x)
 
-        # Soft bodies modifier
-        soft_type = -1
-        soft_mod = None
-        for m in bobject.modifiers:
-            if m.type == 'CLOTH':
-                soft_type = 0 # SoftShape.Cloth
-                soft_mod = m
-                break
-            elif m.type == 'SOFT_BODY':
-                soft_type = 1 # SoftShape.Volume
-                soft_mod = m
-                break
-        if soft_type >= 0 and bpy.data.worlds['Arm'].arm_physics != 'Disabled':
-            ArmoryExporter.export_physics = True
-            assets.add_khafile_def('arm_physics_soft')
-            cloth_trait = {}
-            cloth_trait['type'] = 'Script'
-            pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics == 'Bullet' else 'oimo'
-            cloth_trait['class_name'] = 'armory.trait.physics.' + pkg + '.SoftBody'
-            if soft_type == 0:
-                bend = soft_mod.settings.bending_stiffness
-            elif soft_type == 1:
-                bend = (soft_mod.settings.bend + 1.0) * 10
-            cloth_trait['parameters'] = [str(soft_type), str(bend), str(soft_mod.settings.mass), str(bobject.arm_soft_body_margin)]
-            o['traits'].append(cloth_trait)
-            if soft_type == 0 and soft_mod.settings.use_pin_cloth:
-                self.add_hook_trait(o, bobject, '', soft_mod.settings.vertex_group_mass)
-
-        # RB Constraint
-        if bobject.rigid_body_constraint != None and bpy.data.worlds['Arm'].arm_physics != 'Disabled':
+        # Phys traits
+        if phys_enabled:
+            for m in bobject.modifiers:
+                if m.type == 'CLOTH':
+                    self.add_softbody_mod(o, bobject, m, 0) # SoftShape.Cloth
+                elif m.type == 'SOFT_BODY':
+                    self.add_softbody_mod(o, bobject, m, 1) # SoftShape.Volume
+                elif m.type == 'HOOK':
+                    self.add_hook_mod(o, bobject, m.object.name, m.vertex_group)
+            # Rigid body constraint
             rbc = bobject.rigid_body_constraint
-            target = rbc.object1 if rbc.object2.name == bobject.name else rbc.object2
-            to = self.objectToArmObjectDict[target]
-            if rbc.type == 'HINGE':
-                self.add_constraint_trait(o, rbc.object1, rbc.object2)
-            else:
-                self.add_hook_trait(to, target, bobject.name, '')
-
-        # Hook modifier
-        hook_mod = None
-        for m in bobject.modifiers:
-            if m.type == 'HOOK':
-                group_name = m.vertex_group
-                target_name = m.object.name
-                self.add_hook_trait(o, bobject, target_name, group_name)
+            if rbc != None and rbc.enabled:
+                self.add_rigidbody_constraint(o, rbc)
 
         # Camera traits
         if type == NodeTypeCamera:
@@ -2542,11 +2513,28 @@ class ArmoryExporter:
                             x['props'].append(value)
                 o['traits'].append(x)
 
-    def add_hook_trait(self, o, bobject, target_name, group_name):
-        hook_trait = {}
-        hook_trait['type'] = 'Script'
-        pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics == 'Bullet' else 'oimo'
-        hook_trait['class_name'] = 'armory.trait.physics.' + pkg + '.PhysicsHook'
+    def add_softbody_mod(self, o, bobject, soft_mod, soft_type):
+        ArmoryExporter.export_physics = True
+        phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics == 'Bullet' else 'oimo'
+        assets.add_khafile_def('arm_physics_soft')
+        trait = {}
+        trait['type'] = 'Script'
+        trait['class_name'] = 'armory.trait.physics.' + phys_pkg + '.SoftBody'
+        if soft_type == 0:
+            bend = soft_mod.settings.bending_stiffness
+        elif soft_type == 1:
+            bend = (soft_mod.settings.bend + 1.0) * 10
+        trait['parameters'] = [str(soft_type), str(bend), str(soft_mod.settings.mass), str(bobject.arm_soft_body_margin)]
+        o['traits'].append(trait)
+        if soft_type == 0 and soft_mod.settings.use_pin_cloth:
+            self.add_hook_mod(o, bobject, '', soft_mod.settings.vertex_group_mass)
+
+    def add_hook_mod(self, o, bobject, target_name, group_name):
+        ArmoryExporter.export_physics = True
+        phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics == 'Bullet' else 'oimo'
+        trait = {}
+        trait['type'] = 'Script'
+        trait['class_name'] = 'armory.trait.physics.' + phys_pkg + '.PhysicsHook'
         verts = []
         if group_name != '':
             group = bobject.vertex_groups[group_name].index
@@ -2556,16 +2544,46 @@ class ArmoryExporter:
                         verts.append(v.co.x)
                         verts.append(v.co.y)
                         verts.append(v.co.z)
-        hook_trait['parameters'] = ["'" + target_name + "'", str(verts)]
-        o['traits'].append(hook_trait)
+        trait['parameters'] = ["'" + target_name + "'", str(verts)]
+        o['traits'].append(trait)
 
-    def add_constraint_trait(self, o, rb1, rb2):
-        constr_trait = {}
-        constr_trait['type'] = 'Script'
-        pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics == 'Bullet' else 'oimo'
-        constr_trait['class_name'] = 'armory.trait.physics.' + pkg + '.PhysicsConstraint'
-        constr_trait['parameters'] = ["'" + rb1.name + "'", "'" + rb2.name + "'"]
-        o['traits'].append(constr_trait)
+    def add_rigidbody_constraint(self, o, rbc):
+        rb1 = rbc.object1
+        rb2 = rbc.object2
+        ArmoryExporter.export_physics = True
+        phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics == 'Bullet' else 'oimo'
+        breaking_threshold = rbc.breaking_threshold if rbc.use_breaking else 0
+        trait = {}
+        trait['type'] = 'Script'
+        trait['class_name'] = 'armory.trait.physics.' + phys_pkg + '.PhysicsConstraint'
+        trait['parameters'] = [\
+            "'" + rb1.name + "'", \
+            "'" + rb2.name + "'", \
+            "'" + rbc.type + "'", \
+            str(rbc.disable_collisions).lower(), \
+            str(breaking_threshold)]
+        if rbc.type == "GENERIC":
+            limits = []
+            limits.append(1 if rbc.use_limit_lin_x else 0)
+            limits.append(rbc.limit_lin_x_lower)
+            limits.append(rbc.limit_lin_x_upper)
+            limits.append(1 if rbc.use_limit_lin_y else 0)
+            limits.append(rbc.limit_lin_y_lower)
+            limits.append(rbc.limit_lin_y_upper)
+            limits.append(1 if rbc.use_limit_lin_z else 0)
+            limits.append(rbc.limit_lin_z_lower)
+            limits.append(rbc.limit_lin_z_upper)
+            limits.append(1 if rbc.use_limit_ang_x else 0)
+            limits.append(rbc.limit_ang_x_lower)
+            limits.append(rbc.limit_ang_x_upper)
+            limits.append(1 if rbc.use_limit_ang_y else 0)
+            limits.append(rbc.limit_ang_y_lower)
+            limits.append(rbc.limit_ang_y_upper)
+            limits.append(1 if rbc.use_limit_ang_z else 0)
+            limits.append(rbc.limit_ang_z_lower)
+            limits.append(rbc.limit_ang_z_upper)
+            trait['parameters'].append(str(limits))
+        o['traits'].append(trait)
 
     def post_export_world(self, world, o):
         wrd = bpy.data.worlds['Arm']
