@@ -1,7 +1,5 @@
 #version 450
 
-#define _VoxelCones9
-
 #include "compiled.glsl"
 #include "std/conetrace.glsl"
 #include "std/gbuffer.glsl"
