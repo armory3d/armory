@@ -1017,13 +1017,8 @@ class ArmoryExporter:
         oskin['transform'] = otrans
         otrans['values'] = self.write_matrix(bobject.matrix_world)
 
-        # Export the skeleton, which includes an array of bone object references
-        # and and array of per-bone bind pose transforms
-        oskel = {}
-        oskin['skeleton'] = oskel
-
         # Write the bone object reference array
-        oskel['bone_ref_array'] = []
+        oskin['bone_ref_array'] = []
 
         bone_array = armature.data.bones
         bone_count = len(bone_array)
@@ -1034,21 +1029,21 @@ class ArmoryExporter:
         for i in range(bone_count):
             boneRef = self.find_bone(bone_array[i].name)
             if boneRef:
-                oskel['bone_ref_array'].append(boneRef[1]["structName"])
+                oskin['bone_ref_array'].append(boneRef[1]["structName"])
             else:
-                oskel['bone_ref_array'].append("null")
+                oskin['bone_ref_array'].append("null")
 
         # Write the bind pose transform array
-        oskel['transformsI'] = []
+        oskin['transformsI'] = []
         if bpy.data.worlds['Arm'].arm_skin == 'CPU':
             for i in range(bone_count):
                 skeletonI = (armature.matrix_world * bone_array[i].matrix_local).inverted()
-                oskel['transformsI'].append(self.write_matrix(skeletonI))
+                oskin['transformsI'].append(self.write_matrix(skeletonI))
         else:
             for i in range(bone_count):
                 skeletonI = (armature.matrix_world * bone_array[i].matrix_local).inverted()
                 skeletonI = skeletonI * bobject.matrix_world
-                oskel['transformsI'].append(self.write_matrix(skeletonI))
+                oskin['transformsI'].append(self.write_matrix(skeletonI))
 
         # Export the per-vertex bone influence data
         group_remap = []
@@ -1110,6 +1105,13 @@ class ArmoryExporter:
         # Write the bone weight array. The number of entries is the sum of the bone counts for all vertices.
         oskin['bone_weight_array'] = bone_weight_array
 
+        # Bone constraints
+        for bone in armature.pose.bones:
+            if len(bone.constraints) > 0:
+                if 'constraints' not in oskin:
+                    oskin['constraints'] = []
+                self.add_constraints(bone, oskin, bone=True)
+
     # def export_skin_fast(self, bobject, armature, vert_list, o):
     #     oskin = {}
     #     o['skin'] = oskin
@@ -1118,22 +1120,20 @@ class ArmoryExporter:
     #     oskin['transform'] = otrans
     #     otrans['values'] = self.write_matrix(bobject.matrix_world)
 
-    #     oskel = {}
-    #     oskin['skeleton'] = oskel
-    #     oskel['bone_ref_array'] = []
+    #     oskin['bone_ref_array'] = []
 
     #     bone_array = armature.data.bones
     #     bone_count = len(bone_array)
     #     for i in range(bone_count):
     #         boneRef = self.find_bone(bone_array[i].name)
     #         if boneRef:
-    #             oskel['bone_ref_array'].append(boneRef[1]["structName"])
+    #             oskin['bone_ref_array'].append(boneRef[1]["structName"])
     #         else:
-    #             oskel['bone_ref_array'].append("null")
+    #             oskin['bone_ref_array'].append("null")
 
-    #     oskel['transforms'] = []
+    #     oskin['transforms'] = []
     #     for i in range(bone_count):
-    #         oskel['transforms'].append(self.write_matrix(armature.matrix_world * bone_array[i].matrix_local))
+    #         oskin['transforms'].append(self.write_matrix(armature.matrix_world * bone_array[i].matrix_local))
 
     #     bone_count_array = []
     #     bone_index_array = []
@@ -2409,26 +2409,34 @@ class ArmoryExporter:
         # Export constraints
         if len(bobject.constraints) > 0:
             o['constraints'] = []
-            for constr in bobject.constraints:
-                if constr.mute:
-                    continue
-                co = {}
-                co['name'] = constr.name
-                co['type'] = constr.type
-                if constr.type == 'COPY_LOCATION':
-                    co['target'] = constr.target.name
-                    co['use_x'] = constr.use_x
-                    co['use_y'] = constr.use_y
-                    co['use_z'] = constr.use_z
-                    co['invert_x'] = constr.invert_x
-                    co['invert_y'] = constr.invert_y
-                    co['invert_z'] = constr.invert_z
-                    co['use_offset'] = constr.use_offset
-                    co['influence'] = constr.influence
-                o['constraints'].append(co)
+            self.add_constraints(bobject, o)
 
         for x in o['traits']:
             ArmoryExporter.import_traits.append(x['class_name'])
+
+    def add_constraints(self, bobject, o, bone=False):
+        for con in bobject.constraints:
+            if con.mute:
+                continue
+            co = {}
+            co['name'] = con.name
+            co['type'] = con.type
+            if bone:
+                co['bone'] = bobject.name
+            if con.type == 'COPY_LOCATION':
+                co['target'] = con.target.name
+                co['use_x'] = con.use_x
+                co['use_y'] = con.use_y
+                co['use_z'] = con.use_z
+                co['invert_x'] = con.invert_x
+                co['invert_y'] = con.invert_y
+                co['invert_z'] = con.invert_z
+                co['use_offset'] = con.use_offset
+                co['influence'] = con.influence
+            elif con.type == 'CHILD_OF':
+                co['target'] = con.target.name
+                co['influence'] = con.influence
+            o['constraints'].append(co)
 
     def export_traits(self, bobject, o):
         if hasattr(bobject, 'arm_traitlist'):
