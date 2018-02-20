@@ -36,7 +36,8 @@ class WalkNavigation extends Trait {
 
 		try {
 			camera = cast(object, CameraObject);
-		} catch(msg:String){
+		}
+		catch(msg:String) {
 			trace("Error occurred: " + msg + "\nWalkNavigation trait should be used with a camera object.");
 		}
 

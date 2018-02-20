@@ -1,14 +1,13 @@
 package armory.logicnode;
 
 import iron.object.Object;
-import iron.math.Mat4;
 import iron.math.Vec4;
 import armory.trait.physics.RigidBody;
 
 class TranslateOnLocalAxisNode extends LogicNode {
 
-var loc = new Vec4();
-var vec = new Vec4();
+	var loc = new Vec4();
+	var vec = new Vec4();
 
 	public function new(tree:LogicTree) {
 		super(tree);
@@ -22,25 +21,19 @@ var vec = new Vec4();
 
 		if (object == null) return;
 
-		if (l==1){
-		loc.setFrom(object.transform.world.look());
-		}
-		if (l==2){
-		loc.setFrom(object.transform.world.up());
-		}
-		if (l==3){
-		loc.setFrom(object.transform.world.right());
-		}
+		if (l == 1) loc.setFrom(object.transform.world.look());
+		else if (l == 2) loc.setFrom(object.transform.world.up());
+		else if (l == 3) loc.setFrom(object.transform.world.right());
 			
-		if (ini){
-			loc.x=-loc.x;
-			loc.y=-loc.y;
-			loc.z=-loc.z;
+		if (ini) {
+			loc.x = -loc.x;
+			loc.y = -loc.y;
+			loc.z = -loc.z;
 		}	
 						
-		vec.x=loc.x*sp;
-		vec.y=loc.y*sp;
-		vec.z=loc.z*sp;
+		vec.x = loc.x * sp;
+		vec.y = loc.y * sp;
+		vec.z = loc.z * sp;
 		
 		object.transform.loc.add(vec);
 		object.transform.buildMatrix();
