@@ -148,15 +148,14 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     cdefs = arm.utils.def_strings_to_array(wrd.compo_defs)
     print('Shader flags: ' + str(defs))
 
-     # Write compiled.glsl
+    # Write compiled.glsl
+    shaders_path = build_dir + '/compiled/Shaders'
+    if not os.path.exists(shaders_path):
+        os.makedirs(shaders_path)
     write_data.write_compiledglsl(defs + cdefs)
 
     # Write referenced shader passes
-    path = build_dir + '/compiled/Shaders'
     if not os.path.isfile(build_dir + '/compiled/Shaders/shader_datas.arm') or state.last_world_defs != wrd.world_defs:
-        path = build_dir + '/compiled/Shaders'
-        if not os.path.exists(path):
-            os.makedirs(path)
         res = {}
         res['shader_datas'] = []
         for ref in assets.shader_passes:
@@ -170,10 +169,10 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
                 # compile_shader_pass(res, raw_shaders_path, ref, [])
             else:
                 compile_shader_pass(res, raw_shaders_path, ref, defs)
-        arm.utils.write_arm(path + '/shader_datas.arm', res)
+        arm.utils.write_arm(shaders_path + '/shader_datas.arm', res)
     for ref in assets.shader_passes:
         for s in assets.shader_passes_assets[ref]:
-            assets.add_shader(path + '/' + s + '.glsl')
+            assets.add_shader(shaders_path + '/' + s + '.glsl')
     for file in assets.shaders_external:
         name = file.split('/')[-1].split('\\')[-1]
         target = build_dir + '/compiled/Shaders/' + name
