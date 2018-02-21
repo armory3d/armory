@@ -603,11 +603,11 @@ class Plane {
 		var v1 = new Vec4();
 		var v2 = new Vec4();
 		var normal = v1.subvecs(c, b).cross(v2.subvecs(a, b)).normalize();
-		setFromNormalAndCoplanarPoint(normal, a);
+		set(normal, a);
 		return this;
 	}
 
-	public function setFromNormalAndCoplanarPoint(normal:Vec4, point:Vec4):Plane {
+	public function set(normal:Vec4, point:Vec4):Plane {
 		this.normal.setFrom(normal);
 		constant = -point.dot(this.normal);
 		return this;

@@ -3,7 +3,7 @@ package armory.trait;
 import iron.Trait;
 import iron.object.MeshObject;
 
-class MirrorTexture extends Trait {
+class CameraTexture extends Trait {
 
 	var cameraName:String;
 
@@ -15,7 +15,7 @@ class MirrorTexture extends Trait {
 	}
 
 	function init() {
-		var image = iron.Scene.active.getCamera(cameraName).data.mirror;
+		var image = iron.Scene.active.getCamera(cameraName).data.renderTarget;
 		
 		var o = cast(object, iron.object.MeshObject);
 		o.materials[0].contexts[0].textures[0] = image; // Override diffuse texture
