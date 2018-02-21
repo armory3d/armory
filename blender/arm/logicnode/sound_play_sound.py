@@ -5,13 +5,17 @@ from arm.logicnode.arm_nodes import *
 
 class PlaySoundNode(Node, ArmLogicTreeNode):
     '''Play sound node'''
-    bl_idname = 'LNPlaySoundNode'
+    bl_idname = 'LNPlaySoundRawNode'
     bl_label = 'Play Sound'
     bl_icon = 'GAME'
 
+    property0 = StringProperty(name='', default='')
+
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Speaker')
         self.outputs.new('ArmNodeSocketAction', 'Out')
+
+    def draw_buttons(self, context, layout):
+        layout.prop_search(self, 'property0', bpy.data, 'sounds', icon='NONE', text='')
 
 add_node(PlaySoundNode, category='Sound')
