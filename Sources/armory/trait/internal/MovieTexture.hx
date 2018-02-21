@@ -36,7 +36,6 @@ class MovieTexture extends Trait {
 		if (!created) {
 			created = true;
 			notifyOnInit(init);
-			notifyOnRender2D(render);
 		}
 	}
 
@@ -50,12 +49,11 @@ class MovieTexture extends Trait {
 			
 			var o = cast(object, iron.object.MeshObject);
 			o.materials[0].contexts[0].textures[0] = image; // Override diffuse texture
+			notifyOnRender2D(render);
 		});
 	}
 	
 	function render(g:kha.graphics2.Graphics) {
-		if (video == null) return;
-
 		g.end();
 		
 		var g2 = image.g2;

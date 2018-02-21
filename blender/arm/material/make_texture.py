@@ -128,7 +128,7 @@ def make(image_node, tex_name, matname=None):
         movie_trait = {}
         movie_trait['type'] = 'Script'
         movie_trait['class_name'] = 'armory.trait.internal.MovieTexture'
-        movie_trait['parameters'] = [tex['file']]
+        movie_trait['parameters'] = ['"' + tex['file'] + '"']
         for o in mat_state.mat_armusers[mat_state.material]:
             o['traits'].append(movie_trait)
         tex['source'] = 'movie'

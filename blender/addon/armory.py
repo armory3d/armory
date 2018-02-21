@@ -49,9 +49,9 @@ class ArmoryAddonPreferences(AddonPreferences):
     sdk_bundled = BoolProperty(name="Bundled SDK", default=True)
     sdk_path = StringProperty(name="SDK Path", subtype="FILE_PATH", update=sdk_path_update, default="")
     show_advanced = BoolProperty(name="Show Advanced", default=False)
-    renderdoc_path = StringProperty(name="RenderDoc Path", subtype="FILE_PATH", update=renderdoc_path_update, default="")
-    ffmpeg_path = StringProperty(name="FFMPEG Path", subtype="FILE_PATH", update=ffmpeg_path_update, default="")
-    save_on_build = BoolProperty(name="Save on Build", default=True)
+    renderdoc_path = StringProperty(name="RenderDoc Path", description="Binary path", subtype="FILE_PATH", update=renderdoc_path_update, default="")
+    ffmpeg_path = StringProperty(name="FFMPEG Path", description="Binary path", subtype="FILE_PATH", update=ffmpeg_path_update, default="")
+    save_on_build = BoolProperty(name="Save on Build", description="Save .blend", default=True)
     legacy_shaders = BoolProperty(name="Legacy Shaders", default=False)
     viewport_controls = EnumProperty(
         items=[('qwerty', 'qwerty', 'qwerty'),
