@@ -468,11 +468,11 @@ def kode_studio_mklink_mac(sdk_path):
     if not os.path.exists(sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/kha/Kha'):
         source = sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/kha/Kha'
         target = sdk_path + '/Kha'
-        subprocess.check_call('ln -s "%s" "%s"' % (target, source), shell=True)
+        subprocess.check_call('ln -fs "%s" "%s"' % (target, source), shell=True)
     if not os.path.exists(sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/krom/Krom'):
         source = sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/krom/Krom'
         target = sdk_path + '/Krom'
-        subprocess.check_call('ln -s "%s" "%s"' % (target, source), shell=True)
+        subprocess.check_call('ln -fs "%s" "%s"' % (target, source), shell=True)
 
 def kode_studio():
     sdk_path = arm.utils.get_sdk_path()
