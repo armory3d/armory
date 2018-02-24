@@ -238,6 +238,16 @@ void main() {
 	#endif
 
 #endif
+	
+#ifdef _CSharpen
+	vec3 col1 = texture(tex, texCo + vec2(-texStep.x, -texStep.y) * 1.5).rgb;
+	vec3 col2 = texture(tex, texCo + vec2(texStep.x, -texStep.y) * 1.5).rgb;
+	vec3 col3 = texture(tex, texCo + vec2(-texStep.x, texStep.y) * 1.5).rgb;
+	vec3 col4 = texture(tex, texCo + vec2(texStep.x, texStep.y) * 1.5).rgb;
+	vec3 colavg = (col1 + col2 + col3 + col4) * 0.25;
+	// const float sharpness = 0.5;
+	fragColor.rgb += (fragColor.rgb - colavg) * sharpness;
+#endif
 
 #ifdef _CFog
 	// if (depth < 1.0) {
@@ -360,5 +370,4 @@ void main() {
 #ifdef _CLUT
 	fragColor = LUTlookup(fragColor, lutTexture);
 #endif
-
 }

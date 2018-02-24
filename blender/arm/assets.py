@@ -47,12 +47,18 @@ def reset():
 
 def add(file):
     global assets
-    if file not in assets:
-        assets.append(file)
-        # Reserved file name
-        for s in reserved_names:
-            if s in file:
-                print('Armory Warning: File "{0}" contains reserved keyword, this will break C++ builds!'.format(file))
+    if file in assets:
+        return
+    base = os.path.basename(file)
+    for f in assets:
+        if f.endswith(base):
+            print('Armory Warning: Asset name "{0}" already exists, skipping'.format(base))
+            return
+    assets.append(file)
+    # Reserved file name
+    for f in reserved_names:
+        if f in file:
+            print('Armory Warning: File "{0}" contains reserved keyword, this will break C++ builds!'.format(file))
 
 def add_khafile_def(d):
     global khafile_defs
