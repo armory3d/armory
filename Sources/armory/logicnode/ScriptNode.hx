@@ -27,6 +27,7 @@ class ScriptNode extends LogicNode {
 			ast = parser.parseString(property0);
 			interp = new hscript.Interp();
 			interp.variables.set("Math", Math);
+			interp.variables.set("Std", Std);
 		}
 		interp.variables.set("input", v);
 		result = interp.execute(ast);
