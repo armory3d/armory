@@ -1,10 +1,11 @@
 import bpy
 import os
 import shutil
+import glob
+import json
 import arm.utils
 import arm.assets as assets
 import arm.make_state as state
-import glob
 
 check_dot_path = False
 
@@ -217,9 +218,9 @@ project.addSources('Sources');
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
 
-        config_text = wrd.arm_khafile
-        if config_text != '':
-            f.write(bpy.data.texts[config_text].as_string())
+        khafile_text = wrd.arm_khafile
+        if khafile_text != '':
+            f.write(bpy.data.texts[khafile_text].as_string())
 
         if state.target == 'android-native':
             f.write("project.targetOptions.android_native.package = 'org.armory3d.{0}';\n".format(arm.utils.safestr(wrd.arm_project_package)))
@@ -230,17 +231,41 @@ project.addSources('Sources');
 
         f.write("\n\nresolve(project);\n")
 
+def get_winmode(arm_winmode):
+    if arm_winmode == 'Window':
+        return 0
+    elif arm_winmode == 'BorderlessWindow':
+        return 1
+    else:
+        return 2
+
+def write_config(resx, resy):
+    wrd = bpy.data.worlds['Arm']
+    p = arm.utils.get_fp() + '/Bundled'
+    if not os.path.exists(p):
+        os.makedirs(p)
+    output = {}
+    output['window_mode'] = get_winmode(wrd.arm_winmode)
+    output['window_resizable'] = wrd.arm_winresize
+    output['window_minimizable'] = wrd.arm_winminimize
+    output['window_maximizable'] = wrd.arm_winmaximize
+    output['window_w'] = str(resx)
+    output['window_h'] = str(resy)
+    rpdat = arm.utils.get_rp()
+    output['window_msaa'] = rpdat.arm_samples_per_pixel
+    output['window_vsync'] = wrd.arm_vsync
+    with open(p + '/config.arm', 'w') as f:
+        f.write(json.dumps(output, sort_keys=True, indent=4))
+
 # Write Main.hx
 def write_main(scene_name, resx, resy, is_play, in_viewport, is_publish):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     scene_ext = '.zip' if (bpy.data.scenes[scene_name].arm_compress and is_publish) else ''
-    winmode = str(wrd.arm_winmode)
-    asset_references = list(set(assets.assets))
-    # TODO: expose Krom.displayWidth() in barmory
+    winmode = get_winmode(wrd.arm_winmode)
     if in_viewport:
-        winmode = 'Window'
-    #if not os.path.isfile('Sources/Main.hx'):
+        winmode = 0
+    has_config = os.path.exists(arm.utils.get_fp() + '/Bundled/config.arm')
     with open('Sources/Main.hx', 'w') as f:
         f.write(
 """// Auto-generated
@@ -248,17 +273,7 @@ package ;
 class Main {
     public static inline var projectName = '""" + arm.utils.safestr(wrd.arm_project_name) + """';
     public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';
-    public static inline var projectPath = '""" + arm.utils.get_fp().replace('\\', '\\\\') + """';
-    public static inline var projectAssets = """ + str(len(asset_references)) + """;
-    public static var projectWindowMode = kha.WindowMode.""" + winmode + """;
-    public static inline var projectWindowResize = """ + ('true' if wrd.arm_winresize else 'false') + """;
-    public static inline var projectWindowMaximize = """ + ('true' if wrd.arm_winmaximize else 'false') + """;
-    public static inline var projectWindowMinimize = """ + ('true' if wrd.arm_winminimize else 'false') + """;
-    public static var projectWidth = """ + str(resx) + """;
-    public static var projectHeight = """ + str(resy) + """;
-    static inline var projectSamplesPerPixel = """ + str(int(rpdat.arm_samples_per_pixel)) + """;
-    static inline var projectVSync = """ + ('true' if wrd.arm_vsync else 'false') + """;
-    static inline var projectScene = '""" + arm.utils.safestr(scene_name) + scene_ext + """';
+    public static inline var projectPath = '""" + arm.utils.get_fp().replace('\\', '\\\\') + """'; 
     static var state:Int;
     #if js
     static function loadLib(name:String) {
@@ -271,7 +286,7 @@ class Main {
     static function loadLibAmmo(name:String) {
         kha.LoaderImpl.loadBlobFromDescription({ files: [name] }, function(b:kha.Blob) {
             var print = function(s:String) { trace(s); };
-            var loaded = function() { state--; start(); }
+            var loaded = function() { state--; start(); };
             untyped __js__("(1, eval)({0})", b.toString());
             untyped __js__("Ammo({print:print}).then(loaded)");
         });
@@ -297,36 +312,54 @@ class Main {
         state = 1;
         #if (js && arm_bullet) state++; loadLibAmmo("ammo.js"); #end
         #if (js && arm_navigation) state++; loadLib("recast.js"); #end
+""")
+        if has_config:
+            f.write("""
+        state++; armory.data.Config.load(function() { state--; start(); });
+""")
+        f.write("""
         state--; start();
     }
     static function start() {
         if (state > 0) return;
+        if (armory.data.Config.raw == null) armory.data.Config.raw = { };
+        var config = armory.data.Config.raw;
+        if (config.window_mode == null) config.window_mode = """ + str(winmode) + """;
+        if (config.window_resizable == null) config.window_resizable = """ + ('true' if wrd.arm_winresize else 'false') + """;
+        if (config.window_minimizable == null) config.window_minimizable = """ + ('true' if wrd.arm_winminimize else 'false') + """;
+        if (config.window_maximizable == null) config.window_maximizable = """ + ('true' if wrd.arm_winmaximize else 'false') + """;
+        if (config.window_w == null) config.window_w = """ + str(resx) + """;
+        if (config.window_h == null) config.window_h = """ + str(resy) + """;
+        if (config.window_msaa == null) config.window_msaa = """ + str(int(rpdat.arm_samples_per_pixel)) + """;
+        if (config.window_vsync == null) config.window_vsync = """ + (('true' if wrd.arm_vsync else 'false')) + """;
         armory.object.Uniforms.register();
-        if (projectWindowMode == kha.WindowMode.Fullscreen) { projectWindowMode = kha.WindowMode.BorderlessWindow; projectWidth = kha.Display.width(0); projectHeight = kha.Display.height(0); }
+        var windowMode = config.window_mode == 0 ? kha.WindowMode.Window : (config.window_mode == 1 ? kha.WindowMode.BorderlessWindow : kha.WindowMode.Fullscreen);
+        if (windowMode == kha.WindowMode.Fullscreen) { windowMode = kha.WindowMode.BorderlessWindow; config.window_w = kha.Display.width(0); config.window_h = kha.Display.height(0); }
 """)
         # Cap window size to desktop resolution, otherwise the window may not get opened
         if not in_viewport and not state.is_render:
             f.write("""
-        else { projectWidth = Std.int(Math.min(projectWidth, kha.Display.width(0))); projectHeight = Std.int(Math.min(projectHeight, kha.Display.height(0))); }
+        else { config.window_w = Std.int(Math.min(config.window_w, kha.Display.width(0))); config.window_h = Std.int(Math.min(config.window_h, kha.Display.height(0))); }
 """)
         f.write("""
-        kha.System.init({title: projectName, width: projectWidth, height: projectHeight, samplesPerPixel: projectSamplesPerPixel, vSync: projectVSync, windowMode: projectWindowMode, resizable: projectWindowResize, maximizable: projectWindowMaximize, minimizable: projectWindowMinimize}, function() {
+        kha.System.init({title: projectName, width: config.window_w, height: config.window_h, samplesPerPixel: config.window_msaa, vSync: config.window_vsync, windowMode: windowMode, resizable: config.window_resizable, maximizable: config.window_maximizable, minimizable: config.window_minimizable}, function() {
             iron.App.init(function() {
 """)
         if is_publish and wrd.arm_loadscreen:
+            asset_references = list(set(assets.assets))
             loadscreen_class = 'armory.trait.internal.LoadingScreen'
             if os.path.isfile(arm.utils.get_fp() + '/Sources/' + wrd.arm_project_package + '/LoadingScreen.hx'):
                 loadscreen_class = wrd.arm_project_package + '.LoadingScreen'
             f.write("""
                 function drawLoading(g:kha.graphics2.Graphics) {
                     if (iron.Scene.active != null && iron.Scene.active.ready) iron.App.removeRender2D(drawLoading);
-                    else """ + loadscreen_class + """.render(g, iron.data.Data.assetsLoaded, Main.projectAssets);
+                    else """ + loadscreen_class + """.render(g, iron.data.Data.assetsLoaded, """ + str(len(asset_references)) + """);
                 }
                 iron.App.notifyOnRender2D(drawLoading);
 """)
 
         f.write("""
-                iron.Scene.setActive(projectScene, function(object:iron.object.Object) {
+                iron.Scene.setActive('""" + arm.utils.safestr(scene_name) + scene_ext + """', function(object:iron.object.Object) {
 """)
         # if arm.utils.with_krom() and in_viewport and is_play:
         if is_play or (state.target == 'html5' and not is_publish):

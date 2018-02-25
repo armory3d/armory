@@ -134,6 +134,19 @@ class Uniforms {
 			v.y = armory.renderpath.HosekWilkie.data.Z.y;
 			v.z = armory.renderpath.HosekWilkie.data.Z.z;
 		}
+		else if (clink == "_cameraPositionSnap") {
+			#if arm_voxelgi
+			v = iron.object.Uniforms.helpVec;
+			var camera = iron.Scene.active.camera;
+			v.set(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
+			var l = camera.lookWorld();
+			var e = Main.voxelgiHalfExtents;
+			v.x += l.x * e * 0.9;
+			v.y += l.y * e * 0.9;
+			var f = Main.voxelgiVoxelSize * 8; // Snaps to 3 mip-maps range
+			v.set(Math.floor(v.x / f) * f, Math.floor(v.y / f) * f, Math.floor(v.z / f) * f);
+			#end
+		}
 		#end
 		return v;
 	}

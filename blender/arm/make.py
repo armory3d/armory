@@ -196,6 +196,8 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     scene_name = arm.utils.get_project_scene_name()
     resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
     # Import all logic nodes for patching if logic is being edited
+    if wrd.arm_write_config:
+        write_data.write_config(resx, resy)
     write_data.write_main(scene_name, resx, resy, is_play, in_viewport, is_publish)
     if scene_name != state.last_scene or resx != state.last_resx or resy != state.last_resy:
         wrd.arm_recompile = True

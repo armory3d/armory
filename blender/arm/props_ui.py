@@ -446,6 +446,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_optimize_mesh')
         col.prop(wrd, 'arm_deinterleaved_buffers')
         col.prop(wrd, 'arm_export_tangents')
+        col.prop(wrd, 'arm_write_config')
 
         layout.label('Window:')
         row = layout.row()
