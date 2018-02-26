@@ -127,8 +127,10 @@ class ArmNodeRemoveInputButton(bpy.types.Operator):
 
     def execute(self, context):
         global array_nodes
-        inps = array_nodes[self.node_index].inputs
-        if len(inps) > 0:
+        node = array_nodes[self.node_index]
+        inps = node.inputs
+        min_inps = 0 if not hasattr(node, 'min_inputs') else node.min_inputs
+        if len(inps) > min_inps:
             inps.remove(inps.values()[-1])
         return{'FINISHED'}
 
