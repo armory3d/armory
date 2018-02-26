@@ -28,9 +28,20 @@ class GateNode extends LogicNode {
 		case "Less Equal":
 			cond = v1 <= v2;
 		case "Or":
-			cond = v1 || v2;
+			for (i in 1...inputs.length) {
+				if (inputs[i].get()) {
+					cond = true;
+					break;
+				}
+			}
 		case "And":
-			cond = v1 && v2;
+			cond = true;
+			for (i in 1...inputs.length) {
+				if (!inputs[i].get()) {
+					cond = false;
+					break;
+				}
+			}
 		}
 
 		if (cond) super.run();
