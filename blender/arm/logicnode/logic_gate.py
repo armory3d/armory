@@ -44,7 +44,7 @@ class GateNode(Node, ArmLogicTreeNode):
             row = layout.row(align=True)
             op = row.operator('arm.node_add_input', text='New', icon='PLUS', emboss=True)
             op.node_index = str(id(self))
-            op.socket_type = 'ArmNodeSocketAction'
+            op.socket_type = 'NodeSocketShader'
             op2 = row.operator('arm.node_remove_input', text='', icon='X', emboss=True)
             op2.node_index = str(id(self))
 
