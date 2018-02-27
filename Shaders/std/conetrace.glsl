@@ -71,10 +71,10 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	const float TAN_22_5 = 0.55785173935;
 	const float angleMix = 0.5f;
 	const float aperture = TAN_22_5;
-	const vec3 o1 = normalize(tangent(normal));
-	const vec3 o2 = normalize(cross(o1, normal));
-	const vec3 c1 = 0.5f * (o1 + o2);
-	const vec3 c2 = 0.5f * (o1 - o2);
+	vec3 o1 = normalize(tangent(normal));
+	vec3 o2 = normalize(cross(o1, normal));
+	vec3 c1 = 0.5f * (o1 + o2);
+	vec3 c2 = 0.5f * (o1 - o2);
 	const float offset = 1.5 * VOXEL_SIZE * voxelgiOffsetDiff;
 	
 	#ifdef _VoxelCones1
@@ -161,10 +161,10 @@ float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	const float TAN_22_5 = 0.55785173935;
 	const float angleMix = 0.5f;
 	const float aperture = TAN_22_5;
-	const vec3 o1 = normalize(tangent(normal));
-	const vec3 o2 = normalize(cross(o1, normal));
-	const vec3 c1 = 0.5f * (o1 + o2);
-	const vec3 c2 = 0.5f * (o1 - o2);
+	vec3 o1 = normalize(tangent(normal));
+	vec3 o2 = normalize(cross(o1, normal));
+	vec3 c1 = 0.5f * (o1 + o2);
+	vec3 c2 = 0.5f * (o1 - o2);
 	const float offset = 1.5 * VOXEL_SIZE * voxelgiOffsetDiff;
 	
 	#ifdef _VoxelCones1

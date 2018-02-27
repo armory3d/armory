@@ -244,12 +244,15 @@ class Logic {
 			v = createClassInstance('StringNode', [tree, inp.default_value]);
 		}
 		else if (inp.type == 'VECTOR') {
+			if (inp.default_value == null) inp.default_value = [0, 0, 0]; // TODO
 			v = createClassInstance('VectorNode', [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2]]);
 		}
 		else if (inp.type == 'RGBA') {
+			if (inp.default_value == null) inp.default_value = [0, 0, 0]; // TODO
 			v = createClassInstance('ColorNode', [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2], inp.default_value[3]]);
 		}
 		else if (inp.type == 'RGB') {
+			if (inp.default_value == null) inp.default_value = [0, 0, 0]; // TODO
 			v = createClassInstance('ColorNode', [tree, inp.default_value[0], inp.default_value[1], inp.default_value[2]]);
 		}
 		else if (inp.type == 'VALUE') { 

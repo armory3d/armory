@@ -12,11 +12,11 @@ class Config {
 	}
 
 	public static function save() {
-		var data = haxe.io.Bytes.ofString(haxe.Json.stringify(raw)).getData();
+		var bytes = haxe.io.Bytes.ofString(haxe.Json.stringify(raw));
 		#if kha_krom
-		Krom.fileSaveBytes("./config.arm", data);
+		Krom.fileSaveBytes("./config.arm", bytes.getData());
 		#elseif kha_kore
-		File.saveBytes("./config.arm", data);
+		sys.io.File.saveBytes("./config.arm", bytes);
 		#end
 	}
 

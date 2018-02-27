@@ -251,6 +251,7 @@ def write_config(resx, resy):
     output['window_maximizable'] = wrd.arm_winmaximize
     output['window_w'] = str(resx)
     output['window_h'] = str(resy)
+    output['window_scale'] = 1.0
     rpdat = arm.utils.get_rp()
     output['window_msaa'] = rpdat.arm_samples_per_pixel
     output['window_vsync'] = wrd.arm_vsync
@@ -427,6 +428,7 @@ def write_indexhtml(w, h, is_publish):
 </html>
 """)
 
+add_compiledglsl = ''
 def write_compiledglsl(defs):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
@@ -582,6 +584,8 @@ const float voxelgiOffsetRefract = """ + str(round(wrd.arm_voxelgi_offset_refrac
             f.write(
 """const int skinMaxBones = """ + str(wrd.arm_skin_max_bones) + """;
 """)
+
+        f.write(add_compiledglsl + '\n') # External defined constants
 
         f.write("""#endif // _COMPILED_GLSL_
 """)
