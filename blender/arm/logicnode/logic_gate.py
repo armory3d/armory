@@ -4,11 +4,9 @@ from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
 def remove_extra_inputs(self, context):
-    # if not any(p == self.property0 for p in ['Or', 'And']):
-    #     if len(self.inputs) > self.min_inputs:
-    #         #FIXME: str(id(self)) gives us a key error here
-    #         bpy.ops.arm.node_remove_input('EXEC_DEFAULT', node_index=str(id(self)))
-    pass
+    if not any(p == self.property0 for p in ['Or', 'And']):
+        while len(self.inputs) > self.min_inputs:
+            self.inputs.remove(self.inputs[-1])
 
 class GateNode(Node, ArmLogicTreeNode):
     '''Gate node'''
