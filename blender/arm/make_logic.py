@@ -31,7 +31,7 @@ def build_node_tree(node_group):
 
     pack_path = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
     path = 'Sources/' + pack_path.replace('.', '/') + '/node/'
-    group_name = arm.utils.safesrc(node_group.name)
+    group_name = arm.utils.safesrc(node_group.name.capitalize())
     file = path + group_name + '.hx'
 
     # Import referenced node group

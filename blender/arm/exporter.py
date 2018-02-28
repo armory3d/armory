@@ -2446,9 +2446,7 @@ class ArmoryExporter:
                 x = {}
                 if t.type_prop == 'Logic Nodes' and t.nodes_name_prop != '':
                     x['type'] = 'Script'
-                    x['class_name'] = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + arm.utils.safesrc(t.nodes_name_prop)
-                    if len(t.nodes_name_prop) > 0 and not t.nodes_name_prop[0].isupper():
-                        log.warn('Logic tree name "' + t.nodes_name_prop + '" must start with upper-case letter')
+                    x['class_name'] = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + arm.utils.safesrc(t.nodes_name_prop.capitalize())
                 elif t.type_prop == 'WebAssembly':
                     pass
                 elif t.type_prop == 'UI Canvas':
