@@ -540,7 +540,6 @@ class ConvexBreaker {
 
 		var indices:TIndexArray = {
 			material: 0,
-			size: 3,
 			values: inda
 		};
 

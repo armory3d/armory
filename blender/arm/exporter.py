@@ -1335,8 +1335,9 @@ class ArmoryExporter:
             idata = [0] * len(prim)
             for i, v in enumerate(prim):
                 idata[i] = v
+            if len(idata) == 0: # No face assigned
+                continue
             ia = {}
-            ia['size'] = 3
             ia['values'] = idata
             ia['material'] = 0
             # Find material index for multi-mat mesh
@@ -1347,6 +1348,8 @@ class ArmoryExporter:
                         ia['material'] = i
                         break
             o['index_arrays'].append(ia)
+        # Sort by material index
+        # o['index_arrays'] = sorted(o['index_arrays'], key=lambda k: k['material']) 
 
         # Make tangents
         if has_tang:
@@ -1662,7 +1665,6 @@ class ArmoryExporter:
             o['texture_resolution_y'] = int(objref.arm_texture_resolution_y)
 
         o['frustum_culling'] = objref.arm_frustum_culling
-        o['render_path'] = 'armory_default/armory_default'
         o['clear_color'] = self.get_camera_clear_color()
 
         self.output['camera_datas'].append(o)
@@ -2107,7 +2109,6 @@ class ArmoryExporter:
             #         o['fov'] = 2.0 * math.atan(1.0 / b)
             o['type'] = 'perspective'
             o['frustum_culling'] = True
-            o['render_path'] = 'armory_default/armory_default'
             o['clear_color'] = self.get_camera_clear_color()
             self.output['camera_datas'].append(o)
             o = {}
