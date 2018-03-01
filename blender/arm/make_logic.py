@@ -7,20 +7,26 @@ from arm.exporter import ArmoryExporter
 parsed_nodes = []
 parsed_labels = dict()
 
+def get_logic_trees():
+    ar = []
+    for node_group in bpy.data.node_groups:
+        if node_group.bl_idname == 'ArmLogicTreeType':
+            node_group.use_fake_user = True # Keep fake references for now
+            ar.append(node_group)
+    return ar
+
 # Generating node sources
 def build():
     os.chdir(arm.utils.get_fp())
-
-    # Make sure package dir exists
-    nodes_path = 'Sources/' + arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package).replace(".", "/") + "/node"
-    if not os.path.exists(nodes_path):
-        os.makedirs(nodes_path)
-    
-    # Export node scripts
-    for node_group in bpy.data.node_groups:
-        if node_group.bl_idname == 'ArmLogicTreeType': # Build only logic trees
-            node_group.use_fake_user = True # Keep fake references for now
-            build_node_tree(node_group)
+    trees = get_logic_trees()
+    if len(trees) > 0:
+        # Make sure package dir exists
+        nodes_path = 'Sources/' + arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package).replace(".", "/") + "/node"
+        if not os.path.exists(nodes_path):
+            os.makedirs(nodes_path)
+        # Export node scripts
+        for tree in trees:
+            build_node_tree(tree)
 
 def build_node_tree(node_group):
     global parsed_nodes
@@ -31,7 +37,7 @@ def build_node_tree(node_group):
 
     pack_path = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
     path = 'Sources/' + pack_path.replace('.', '/') + '/node/'
-    group_name = arm.utils.safesrc(node_group.name.capitalize())
+    group_name = arm.utils.safesrc(node_group.name[0].upper() + node_group.name[1:])
     file = path + group_name + '.hx'
 
     # Import referenced node group

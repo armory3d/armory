@@ -616,7 +616,7 @@ class ArmoryExporter:
             transform = pose_bone.matrix.copy()
             parent_pose_bone = pose_bone.parent
             if parent_pose_bone:
-                transform = parent_pose_bone.matrix.inverted() * transform
+                transform = parent_pose_bone.matrix.inverted_safe() * transform
 
         o['transform'] = {}
         o['transform']['values'] = self.write_matrix(transform)
@@ -732,7 +732,7 @@ class ArmoryExporter:
                     values, pose_bone = track[0], track[1]
                     parent = pose_bone.parent
                     if parent:
-                        values += self.write_matrix(parent.matrix.inverted() * pose_bone.matrix)
+                        values += self.write_matrix(parent.matrix.inverted_safe() * pose_bone.matrix)
                     else:
                         values += self.write_matrix(pose_bone.matrix)
 
@@ -1207,12 +1207,11 @@ class ArmoryExporter:
             mesh_obj = {}
             mesh_obj['mesh_datas'] = [o]
             arm.utils.write_arm(fp, mesh_obj)
-
             bobject.data.arm_cached = True
             bobject.arm_cached = True
-            if bobject.type != 'FONT' and bobject.type != 'META':
-                bobject.data.arm_cached_verts = len(bobject.data.vertices)
-                bobject.data.arm_cached_edges = len(bobject.data.edges)
+            # if bobject.type != 'FONT' and bobject.type != 'META':
+                # bobject.data.arm_cached_verts = len(bobject.data.vertices)
+                # bobject.data.arm_cached_edges = len(bobject.data.edges)
         else:
             self.output['mesh_datas'].append(o)
 
@@ -2176,8 +2175,11 @@ class ArmoryExporter:
 
         # Remove created material variants
         for slot in matslots: # Set back to original material
-            orig_mat = slot.material.name[:-len('_armskin')]
-            slot.material = bpy.data.materials[orig_mat]
+            orig_mat = bpy.data.materials[slot.material.name[:-len('_armskin')]]
+            orig_mat.export_uvs = slot.material.export_uvs
+            orig_mat.export_vcols = slot.material.export_vcols
+            orig_mat.export_tangents = slot.material.export_tangents
+            slot.material = orig_mat
         for mat in matvars:
             bpy.data.materials.remove(mat, do_unlink=True)
 
@@ -2192,10 +2194,10 @@ class ArmoryExporter:
     def is_mesh_cached(self, bobject):
         if bobject.type == 'FONT' or bobject.type == 'META': # No verts
             return bobject.data.arm_cached
-        if bobject.data.arm_cached_verts != len(bobject.data.vertices):
-            return False
-        if bobject.data.arm_cached_edges != len(bobject.data.edges):
-            return False
+        # if bobject.data.arm_cached_verts != len(bobject.data.vertices):
+            # return False
+        # if bobject.data.arm_cached_edges != len(bobject.data.edges):
+            # return False
         if not bobject.arm_cached:
             return False
         return bobject.data.arm_cached
@@ -2447,7 +2449,8 @@ class ArmoryExporter:
                 x = {}
                 if t.type_prop == 'Logic Nodes' and t.nodes_name_prop != '':
                     x['type'] = 'Script'
-                    x['class_name'] = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + arm.utils.safesrc(t.nodes_name_prop.capitalize())
+                    group_name = arm.utils.safesrc(t.nodes_name_prop[0].upper() + t.nodes_name_prop[1:])
+                    x['class_name'] = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + group_name
                 elif t.type_prop == 'WebAssembly':
                     pass
                 elif t.type_prop == 'UI Canvas':

@@ -197,8 +197,8 @@ def init_properties():
     bpy.types.Speaker.arm_stream = BoolProperty(name="Stream", description="Stream this sound", default=False)
     # For mesh
     bpy.types.Mesh.arm_cached = BoolProperty(name="Mesh Cached", description="No need to reexport mesh data", default=False)
-    bpy.types.Mesh.arm_cached_verts = IntProperty(name="Last Verts", description="Number of vertices in last export", default=0)
-    bpy.types.Mesh.arm_cached_edges = IntProperty(name="Last Edges", description="Number of edges in last export", default=0)
+    # bpy.types.Mesh.arm_cached_verts = IntProperty(name="Last Verts", description="Number of vertices in last export", default=0)
+    # bpy.types.Mesh.arm_cached_edges = IntProperty(name="Last Edges", description="Number of edges in last export", default=0)
     bpy.types.Mesh.arm_aabb = FloatVectorProperty(name="AABB", size=3, default=[0,0,0])
     bpy.types.Mesh.arm_dynamic_usage = BoolProperty(name="Dynamic Usage", description="Mesh data can change at runtime", default=False)
     bpy.types.Mesh.arm_compress = BoolProperty(name="Compress", description="Pack data into zip file", default=False)
