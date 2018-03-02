@@ -318,6 +318,8 @@ def init_properties():
     bpy.types.World.arm_letterbox_size = FloatProperty(name="Size", default=0.1, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_grain = BoolProperty(name="Film Grain", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_grain_strength = FloatProperty(name="Strength", default=2.0, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_sharpen = BoolProperty(name="Sharpen", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_sharpen_strength = FloatProperty(name="Strength", default=0.25, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_fog = BoolProperty(name="Volumetric Fog", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_fog_color = FloatVectorProperty(name="Color", size=3, subtype='COLOR', default=[0.5, 0.6, 0.7], min=0, max=1, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_fog_amounta = FloatProperty(name="Amount A", default=0.25, update=assets.invalidate_shader_cache)

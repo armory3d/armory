@@ -46,16 +46,12 @@
 					"name": "time",
 					"link": "_time",
 					"ifdef": ["_CGrain"]
-				},
-
-				
+				},				
 				{
 					"name": "texStep",
 					"link": "_screenSizeInv",
-					"ifdef": ["_CFXAA", "_CDOF"]
+					"ifdef": ["_CTexStep"]
 				},
-
-
 				{
 					"name": "dynamicScale",
 					"link": "_dynamicScale",

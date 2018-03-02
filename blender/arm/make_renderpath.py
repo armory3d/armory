@@ -168,6 +168,8 @@ def build():
                 wrd.compo_defs += '_CLetterbox'
             if wrd.arm_grain:
                 wrd.compo_defs += '_CGrain'
+            if wrd.arm_sharpen:
+                wrd.compo_defs += '_CSharpen'
             if bpy.data.scenes[0].cycles.film_exposure != 1.0:
                 wrd.compo_defs += '_CExposure'
             if wrd.arm_fog:
@@ -191,6 +193,8 @@ def build():
             if wrd.arm_lut_texture != '':
                 wrd.compo_defs += '_CLUT'
                 assets.add_embedded_data('luttexture.jpg')
+            if '_CDOF' in wrd.compo_defs or '_CFXAA' in wrd.compo_defs or '_CSharpen' in wrd.compo_defs:
+                wrd.compo_defs += '_CTexStep'
             assets.add_shader_pass('compositor_pass')
         else:
             assets.add_shader_pass('copy_pass')

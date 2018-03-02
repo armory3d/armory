@@ -35,10 +35,7 @@ uniform vec3 eyeLook;
 uniform float aspectRatio;
 #endif
 
-#ifdef _CFXAA
-uniform vec2 texStep;
-#endif
-#ifdef _CDOF // TODO: redefinition
+#ifdef _CTexStep
 uniform vec2 texStep;
 #endif
 
@@ -245,8 +242,7 @@ void main() {
 	vec3 col3 = texture(tex, texCo + vec2(-texStep.x, texStep.y) * 1.5).rgb;
 	vec3 col4 = texture(tex, texCo + vec2(texStep.x, texStep.y) * 1.5).rgb;
 	vec3 colavg = (col1 + col2 + col3 + col4) * 0.25;
-	// const float sharpness = 0.5;
-	fragColor.rgb += (fragColor.rgb - colavg) * sharpness;
+	fragColor.rgb += (fragColor.rgb - colavg) * compoSharpenStrength;
 #endif
 
 #ifdef _CFog

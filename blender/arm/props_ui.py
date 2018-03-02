@@ -1138,6 +1138,8 @@ class ArmRenderPropsPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_letterbox_size')
         layout.prop(wrd, 'arm_grain')
         layout.prop(wrd, 'arm_grain_strength')
+        layout.prop(wrd, 'arm_sharpen')
+        layout.prop(wrd, 'arm_sharpen_strength')
         layout.prop(wrd, 'arm_fog')
         layout.prop(wrd, 'arm_fog_color')
         row = layout.row()

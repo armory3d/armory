@@ -538,6 +538,11 @@ const int volumSteps = """ + str(wrd.arm_volumetric_light_steps) + """;
 """const float compoGrainStrength = """ + str(round(wrd.arm_grain_strength * 100) / 100) + """;
 """)
 
+        if wrd.arm_sharpen:
+            f.write(
+"""const float compoSharpenStrength = """ + str(round(wrd.arm_sharpen_strength * 100) / 100) + """;
+""")
+
         if bpy.data.scenes[0].cycles.film_exposure != 1.0:
             f.write(
 """const float compoExposureStrength = """ + str(round(bpy.data.scenes[0].cycles.film_exposure * 100) / 100) + """;
