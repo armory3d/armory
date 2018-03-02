@@ -459,6 +459,7 @@ class ConvexBreaker {
 			object1 = new MeshObject(data1, object.materials);
 			object1.transform.loc.setFrom(tempCM1);
 			object1.transform.rot.setFrom(object.transform.rot);
+			object1.transform.buildMatrix();
 			initBreakableObject(object1, newMass, userData.velocity, userData.angularVelocity, 2 * radius1 > minSizeForBreak);
 			numObjects++;
 		}
@@ -468,6 +469,7 @@ class ConvexBreaker {
 			object2 = new MeshObject(data2, object.materials);
 			object2.transform.loc.setFrom(tempCM2);
 			object2.transform.rot.setFrom(object.transform.rot);
+			object2.transform.buildMatrix();
 			initBreakableObject(object2, newMass, userData.velocity, userData.angularVelocity, 2 * radius2 > minSizeForBreak);
 			numObjects++;
 		}
