@@ -105,6 +105,8 @@ def invalidate_shader_cache(self, context):
     global invalidate_enabled
     if invalidate_enabled == False:
         return
+    # import traceback
+    # traceback.print_stack()
     fp = arm.utils.get_fp_build()
     if os.path.isdir(fp + '/compiled/Shaders'):
         shutil.rmtree(fp + '/compiled/Shaders', onerror=remove_readonly)

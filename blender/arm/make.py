@@ -271,7 +271,7 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
         if state.compileproc == None:
             cmd.append('--nohaxe')
             cmd.append('--noproject')
-            # cmd.append('--noshaders')
+            print("Running: ", cmd)
             state.compileproc = subprocess.Popen(cmd, stderr=subprocess.PIPE)
             if state.playproc == None:
                 if state.in_viewport:
@@ -283,6 +283,7 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
             threading.Timer(0.1, watch_patch, [mode]).start()
             return state.compileproc
     elif watch:
+        print("Running: ", cmd)
         state.compileproc = subprocess.Popen(cmd)
         threading.Timer(0.1, watch_compile, ['build']).start()
         return state.compileproc

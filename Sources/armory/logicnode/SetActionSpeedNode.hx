@@ -13,11 +13,10 @@ class SetActionSpeedNode extends LogicNode {
 		var speed:Float = inputs[2].get();
 		
 		if (object == null) return;
+		var animation = object.animation;
+		if (animation == null) animation = object.getParentArmature(object.name);
 
-		// Try first child if we are running from armature
-		if (object.animation == null) object = object.children[0];
-
-		object.animation.speed = speed;
+		animation.speed = speed;
 
 		super.run();
 	}

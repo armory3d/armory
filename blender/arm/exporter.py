@@ -658,8 +658,8 @@ class ArmoryExporter:
             self.use_default_material(bobject, o)
             return
         if not material in self.materialArray:
-            self.materialArray[material] = {"structName" : arm.utils.asset_name(material)}
-        o['material_refs'].append(self.materialArray[material]["structName"])
+            self.materialArray.append(material)
+        o['material_refs'].append(arm.utils.asset_name(material))
 
     def export_particle_system_ref(self, psys, index, o):
         if psys.settings in self.particleSystemArray: # or not modifier.show_render:
@@ -1704,6 +1704,8 @@ class ArmoryExporter:
         if mat_name in bpy.data.materials:
             return
         mat = bpy.data.materials.new(name=mat_name)
+        # if default_exists:
+            # mat.is_cached = True
         mat.use_nodes = True
         o = {}
         o['name'] = mat.name
@@ -1730,20 +1732,22 @@ class ArmoryExporter:
         # Keep materials with fake user
         for m in bpy.data.materials:
             if m.use_fake_user and m not in self.materialArray:
-                self.materialArray[m] = {"structName" : arm.utils.asset_name(m)}
+                self.materialArray.append(m)
 
         transluc_used = False
         overlays_used = False
         decals_used = False
         # sss_used = False
-        for materialRef in self.materialArray.items():
-            material = materialRef[0]
+
+        self.materialArray.sort(key=lambda x: x.name) # Ensure the same order for merging materials
+
+        for material in self.materialArray:
             # If the material is unlinked, material becomes None
             if material == None:
                 continue
 
             o = {}
-            o['name'] = materialRef[1]["structName"]
+            o['name'] = arm.utils.asset_name(material)
 
             if material.arm_skip_context != '':
                 o['skip_context'] = material.arm_skip_context
@@ -1951,7 +1955,7 @@ class ArmoryExporter:
         self.cameraArray = {}
         self.camera_spawned = False
         self.speakerArray = {}
-        self.materialArray = {}
+        self.materialArray = []
         self.particleSystemArray = {}
         self.worldArray = {} # Export all worlds
         self.boneParentArray = {}
@@ -2179,6 +2183,7 @@ class ArmoryExporter:
             orig_mat.export_uvs = slot.material.export_uvs
             orig_mat.export_vcols = slot.material.export_vcols
             orig_mat.export_tangents = slot.material.export_tangents
+            orig_mat.is_cached = slot.material.is_cached
             slot.material = orig_mat
         for mat in matvars:
             bpy.data.materials.remove(mat, do_unlink=True)

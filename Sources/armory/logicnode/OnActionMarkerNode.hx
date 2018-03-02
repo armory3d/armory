@@ -7,7 +7,7 @@ class OnActionMarkerNode extends LogicNode {
 	public function new(tree:LogicTree) {
 		super(tree);
 
-		iron.Scene.active.notifyOnInit(init);
+		tree.notifyOnInit(init);
 	}
 
 	function init() {
@@ -15,9 +15,9 @@ class OnActionMarkerNode extends LogicNode {
 		var marker:String = inputs[1].get();
 		
 		if (object == null) return;
-		// Try first child if we are running from armature
-		if (object.animation == null) object = object.children[0];
+		var animation = object.animation;
+		if (animation == null) animation = object.getParentArmature(object.name);
 		
-		object.animation.notifyOnMarker(marker, run);
+		animation.notifyOnMarker(marker, run);
 	}
 }

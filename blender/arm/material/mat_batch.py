@@ -79,8 +79,7 @@ def build(materialArray, mat_users, mat_armusers):
     signatureDict = dict() # Stores materials for given signature
 
     # Update signatures
-    for ref in materialArray.items():
-        mat = ref[0]
+    for mat in materialArray:
         if mat.signature == '' or not mat.is_cached:
             mat.signature = get_signature(mat)
         # Group signatures

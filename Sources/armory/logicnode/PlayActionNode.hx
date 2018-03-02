@@ -15,11 +15,10 @@ class PlayActionNode extends LogicNode {
 		var blendTime:Float = inputs.length > 3 ? inputs[3].get() : 0.2;
 		
 		if (object == null) return;
+		var animation = object.animation;
+		if (animation == null) animation = object.getParentArmature(object.name);
 
-		// Try first child if we are running from armature
-		if (object.animation == null) object = object.children[0];
-
-		object.animation.play(action, function() {
+		animation.play(action, function() {
 			runOutputs(1);
 		}, blendTime);
 

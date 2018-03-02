@@ -12,11 +12,10 @@ class PauseActionNode extends LogicNode {
 		var object:Object = inputs[1].get();
 		
 		if (object == null) return;
+		var animation = object.animation;
+		if (animation == null) animation = object.getParentArmature(object.name);
 
-		// Try first child if we are running from armature
-		if (object.animation == null) object = object.children[0];
-
-		object.animation.pause();
+		animation.pause();
 
 		super.run();
 	}
