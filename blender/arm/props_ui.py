@@ -1139,6 +1139,72 @@ class ArmRenderPropsPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_lens_texture')
         layout.prop(wrd, 'arm_lut_texture')
 
+class ArmBakePanel(bpy.types.Panel):
+    bl_label = "Armory Bake"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        rows = 2
+        scn = context.scene
+        if len(scn.arm_bakelist) > 1:
+            rows = 4
+        row = layout.row()
+        row.template_list("ArmBakeList", "The_List", scn, "arm_bakelist", scn, "arm_bakelist_index", rows=rows)
+        col = row.column(align=True)
+        col.operator("arm_bakelist.new_item", icon='ZOOMIN', text="")
+        col.operator("arm_bakelist.delete_item", icon='ZOOMOUT', text="")
+
+        if scn.arm_bakelist_index >= 0 and len(scn.arm_bakelist) > 0:
+            item = scn.arm_bakelist[scn.arm_bakelist_index]
+            layout.prop_search(item, "object_name", scn, "objects", "Object")
+
+        layout.operator("arm.bake_textures", icon="RENDER_STILL")
+
+class ArmBakeButton(bpy.types.Operator):
+    '''Bake textures for listed objects'''
+    bl_idname = 'arm.bake_textures'
+    bl_label = 'Bake'
+
+    def execute(self, context):
+        scn = context.scene
+        if len(scn.arm_bakelist) == 0:
+            return{'FINISHED'}
+        # Images for baking
+        for o in scn.arm_bakelist:
+            ob = scn.objects[o.object_name]
+            for slot in ob.material_slots:
+                mat = slot.material
+                img_name = "bake_" + mat.name
+                # Get image
+                if img_name in bpy.data.images:
+                    img = bpy.data.images[img_name]
+                else:
+                    img = bpy.data.images.new("bake_" + mat.name, 2048, 2048)
+                # Set image node
+                mat.use_nodes = True
+                nodes = mat.node_tree.nodes
+                if 'Baked Image' in nodes:
+                    img_node = nodes['Baked Image']
+                else:
+                    img_node = nodes.new('ShaderNodeTexImage')
+                    img_node.name = 'Baked Image'
+                    img_node.location = (100, 100)
+                    img_node.image = img
+                img_node.select = True
+                nodes.active = img_node
+        # Bake
+        bpy.ops.object.select_all(action='DESELECT')
+        for o in scn.arm_bakelist:
+            scn.objects[o.object_name].select = True
+        scn.objects.active = scn.objects[scn.arm_bakelist[0].object_name]
+        bpy.ops.object.bake(type='COMBINED')
+        bpy.ops.object.select_all(action='DESELECT')
+        return{'FINISHED'}
+
 class ArmGenLodButton(bpy.types.Operator):
     '''Automatically generate LoD levels'''
     bl_idname = 'arm.generate_lod'
@@ -1400,6 +1466,7 @@ def register():
     bpy.utils.register_class(ArmoryProjectPanel)
     bpy.utils.register_class(ArmRenderPathPanel)
     bpy.utils.register_class(ArmRenderPropsPanel)
+    bpy.utils.register_class(ArmBakePanel)
     # bpy.utils.register_class(ArmVirtualInputPanel)
     bpy.utils.register_class(ArmoryPlayButton)
     bpy.utils.register_class(ArmoryPlayInViewportButton)
@@ -1418,6 +1485,7 @@ def register():
     bpy.utils.register_class(ArmoryRenderAnimButton)
     bpy.utils.register_class(ArmoryGenerateNavmeshButton)
     bpy.utils.register_class(ArmNavigationPanel)
+    bpy.utils.register_class(ArmBakeButton)
     bpy.utils.register_class(ArmGenLodButton)
     bpy.utils.register_class(ArmLodPanel)
     bpy.utils.register_class(ArmTilesheetPanel)
@@ -1452,6 +1520,7 @@ def unregister():
     bpy.utils.unregister_class(ArmoryProjectPanel)
     bpy.utils.unregister_class(ArmRenderPathPanel)
     bpy.utils.unregister_class(ArmRenderPropsPanel)
+    bpy.utils.unregister_class(ArmBakePanel)
     # bpy.utils.unregister_class(ArmVirtualInputPanel)
     bpy.utils.unregister_class(ArmoryPlayButton)
     bpy.utils.unregister_class(ArmoryPlayInViewportButton)
@@ -1470,6 +1539,7 @@ def unregister():
     bpy.utils.unregister_class(ArmoryRenderAnimButton)
     bpy.utils.unregister_class(ArmoryGenerateNavmeshButton)
     bpy.utils.unregister_class(ArmNavigationPanel)
+    bpy.utils.unregister_class(ArmBakeButton)
     bpy.utils.unregister_class(ArmGenLodButton)
     bpy.utils.unregister_class(ArmLodPanel)
     bpy.utils.unregister_class(ArmTilesheetPanel)
