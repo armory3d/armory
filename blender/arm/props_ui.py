@@ -440,6 +440,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_sampled_animation')
         col.prop(wrd, 'arm_dce')
         col.prop(wrd, 'arm_asset_compression')
+        col.prop(wrd, 'arm_minify_js')
 
         col = row.column()
         col.prop(wrd, 'arm_minimize')
@@ -767,20 +768,6 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
         state.is_export = False
         wrd.arm_rplist_index = rplist_index
         assets.invalidate_enabled = True
-        target_name = arm.utils.get_kha_target(state.target)
-        files_path = arm.utils.get_fp_build() + '/' + target_name
-        if target_name == 'html5':
-            print('HTML5 files are being exported to ' + files_path)
-        elif target_name == 'ios' or target_name == 'osx': # TODO: to macos
-            print('XCode project files are being exported to ' + files_path + '-build')
-        elif target_name == 'windows':
-            print('VisualStudio 2017 project files are being exported to ' + files_path + '-build')
-        elif target_name == 'windowsapp':
-            print('VisualStudio 2017 project files are being exported to ' + files_path + '-build')
-        elif target_name == 'android-native':
-            print('Android Studio project files are being exported to ' + files_path + '-build/' + arm.utils.safestr(wrd.arm_project_name))
-        else:
-            print('Makefiles are being exported to ' + files_path + '-build')
         return{'FINISHED'}
 
 class ArmoryPatchButton(bpy.types.Operator):

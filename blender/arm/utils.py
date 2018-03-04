@@ -151,7 +151,7 @@ def get_khamake_path():
 def krom_paths():
     sdk_path = get_sdk_path()
     if arm.utils.get_os() == 'win':
-        krom_location = sdk_path + '/Krom/win32' # Using symlink on Windows
+        krom_location = sdk_path + '/Krom/win32'
         krom_path = krom_location + '/Krom.exe'
     elif arm.utils.get_os() == 'mac':
         krom_location = sdk_path + '/Krom/macos/Krom.app/Contents/MacOS'
@@ -499,12 +499,24 @@ def def_strings_to_array(strdefs):
 def get_kha_target(target_name): # TODO: remove
     if target_name == 'macos':
         return 'osx'
+    elif target_name == 'krom-windows':
+        return 'krom'
+    elif target_name == 'krom-linux':
+        return 'krom'
+    elif target_name == 'krom-macos':
+        return 'krom'
     return target_name
 
 def target_to_gapi(arm_project_target):
     # TODO: align target names
     if arm_project_target == 'krom':
         return 'arm_gapi_' + arm.utils.get_os()
+    elif arm_project_target == 'krom-windows':
+        return 'arm_gapi_win'
+    elif arm_project_target == 'krom-linux':
+        return 'arm_gapi_linux'
+    elif arm_project_target == 'krom-macos':
+        return 'arm_gapi_mac'
     elif arm_project_target == 'macos':
         return 'arm_gapi_mac'
     elif arm_project_target == 'windows':

@@ -257,7 +257,7 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
         cmd.append('webvr')
 
     cmd.append('--to')
-    if (kha_target_name == 'krom' and not state.in_viewport) or (kha_target_name == 'html5' and not state.is_publish):
+    if (kha_target_name == 'krom' and not state.in_viewport and not state.is_publish) or (kha_target_name == 'html5' and not state.is_publish):
         cmd.append(arm.utils.build_dir() + '/debug')
     else:
         cmd.append(arm.utils.build_dir())
@@ -285,7 +285,8 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
     elif watch:
         print("Running: ", cmd)
         state.compileproc = subprocess.Popen(cmd)
-        threading.Timer(0.1, watch_compile, ['build']).start()
+        mode = 'publish' if state.is_publish else 'build'
+        threading.Timer(0.1, watch_compile, [mode]).start()
         return state.compileproc
     else:
         if no_project_file:
@@ -513,11 +514,10 @@ def play_project(in_viewport, is_render=False, is_render_anim=False):
 
 def on_compiled(mode): # build, play, play_viewport, publish
     log.clear()
-    sdk_path = arm.utils.get_sdk_path()
     wrd = bpy.data.worlds['Arm']
 
     # Launch project in new window
-    if mode =='play':
+    if mode == 'play':
         if wrd.arm_play_runtime == 'Browser':
             # Start server
             os.chdir(arm.utils.get_fp())
@@ -537,6 +537,71 @@ def on_compiled(mode): # build, play, play_viewport, publish
                 args.append('--nowindow')
             state.playproc = subprocess.Popen(args, stderr=subprocess.PIPE)
             watch_play()
+    elif mode == 'publish':
+        sdk_path = arm.utils.get_sdk_path()
+        target_name = arm.utils.get_kha_target(state.target)
+        files_path = arm.utils.get_fp_build() + '/' + target_name
+
+        if (target_name == 'html5' or target_name == 'krom') and wrd.arm_minify_js:
+            # Minify JS
+            minifier_path = sdk_path + '/lib/armory_tools/uglifyjs/bin/uglifyjs'
+            if target_name == 'html5':
+                jsfile = files_path + '/kha.js'
+            else:
+                jsfile = files_path + '/krom.js'
+            args = [arm.utils.get_node_path(), minifier_path, jsfile, '-o', jsfile]
+            proc = subprocess.Popen(args)
+            proc.wait()
+
+        if target_name == 'krom':
+            # Clean up
+            mapfile = files_path + '/krom.js.temp.map'
+            if os.path.exists(mapfile):
+                os.remove(mapfile)
+            # Copy Krom binaries
+            if state.target == 'krom-windows':
+                krom_location = sdk_path + '/Krom/win32/'
+            elif state.target == 'krom-linux':
+                krom_location = sdk_path + '/Krom/linux/'
+            else:
+                krom_location = sdk_path + '/Krom/macos/Krom.app'
+            if state.target == 'krom-macos':
+                shutil.copytree(krom_location, files_path + '/Krom.app')
+                game_files = os.listdir(files_path)
+                for f in game_files:
+                    f = files_path + '/' + f
+                    if os.path.isfile(f):
+                        shutil.move(f, files_path + '/Krom.app/Contents/MacOS')
+            else:
+                krom_files = os.listdir(krom_location)
+                for f in krom_files:
+                    f = krom_location + '/' + f
+                    if os.path.isfile(f):
+                        shutil.copy(f, files_path)
+            if state.target == 'krom-windows':
+                os.rename(files_path + '/Krom.exe', files_path + '/' + arm.utils.safestr(wrd.arm_project_name) + '.exe')
+            elif state.target == 'krom-linux':
+                os.rename(files_path + '/Krom', files_path + '/' + arm.utils.safestr(wrd.arm_project_name))
+            else:
+                os.rename(files_path + '/Krom.app', files_path + '/' + arm.utils.safestr(wrd.arm_project_name) + '.app')
+            # Rename
+            ext = state.target.split('-')[-1] # krom-windows
+            new_files_path = files_path + '-' + ext
+            os.rename(files_path, new_files_path)
+            files_path = new_files_path
+        
+        if target_name == 'html5':
+            print('Exported HTML5 package to ' + files_path)
+        elif target_name == 'ios' or target_name == 'osx': # TODO: to macos
+            print('Exported XCode project to ' + files_path + '-build')
+        elif target_name == 'windows' or target_name == 'windowsapp':
+            print('Exported Visual Studio 2017 project to ' + files_path + '-build')
+        elif target_name == 'android-native':
+            print('Exported Android Studio project to ' + files_path + '-build/' + arm.utils.safestr(wrd.arm_project_name))
+        elif target_name == 'krom':
+            print('Exported Krom package to ' + files_path)
+        else:
+            print('Exported makefiles to ' + files_path + '-build')
 
 def clean_project():
     os.chdir(arm.utils.get_fp())

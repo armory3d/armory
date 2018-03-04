@@ -66,15 +66,17 @@ class ArmExporterListItem(bpy.types.PropertyGroup):
 
     arm_project_target = EnumProperty(
         items = [('html5', 'HTML5', 'html5'),
-                 ('windows', 'Windows', 'windows'),
-                 ('windowsapp', 'WindowsApp', 'windowsapp'),
-                 ('macos', 'MacOS', 'macos'),
-                 ('linux', 'Linux', 'linux'),
+                 ('windows', 'Windows (C++)', 'windows'),
+                 ('krom-windows', 'Windows (Krom)', 'krom-windows'),
+                 ('windowsapp', 'Windows App', 'windowsapp'),
+                 ('macos', 'MacOS (C++)', 'macos'),
+                 ('krom-macos', 'MacOS (Krom)', 'krom-macos'),
+                 ('linux', 'Linux (C++)', 'linux'),
+                 ('krom-linux', 'Linux (Krom)', 'krom-linux'),
                  ('ios', 'iOS', 'ios'),
                  ('android-native', 'Android', 'android-native'),
-                 ('krom', 'Krom', 'krom'),
                  ('node', 'Node', 'node')],
-        name="Target", default='html5', description='Build paltform')
+        name="Target", default='html5', description='Build platform')
 
     arm_gapi_win = EnumProperty(
         items = [('opengl', 'Auto', 'opengl'),

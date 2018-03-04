@@ -152,9 +152,11 @@ class Uniforms {
 	}
 
 	public static function externalFloatLink(clink:String):Float {
+		#if rp_dynres
 		if (clink == "_dynamicScale") {
 			return armory.renderpath.DynamicResolutionScale.dynamicScale;
 		}
+		#end
 		return 0.0;
 	}
 }
