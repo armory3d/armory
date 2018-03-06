@@ -1201,7 +1201,8 @@ class ArmBakeButton(bpy.types.Operator):
         for o in scn.arm_bakelist:
             scn.objects[o.object_name].select = True
         scn.objects.active = scn.objects[scn.arm_bakelist[0].object_name]
-        bpy.ops.object.bake(type='COMBINED')
+        # bpy.ops.uv.lightmap_pack("EXEC_SCREEN")
+        bpy.ops.object.bake('INVOKE_DEFAULT', type='COMBINED') # INVOKE_SCREEN
         bpy.ops.object.select_all(action='DESELECT')
         return{'FINISHED'}
 

@@ -60,7 +60,7 @@ class DebugConsole extends Trait {
 	static function consoleTrace(v:Dynamic, ?inf:haxe.PosInfos) {
 		lastTrace = Std.string(v);
 		haxeTrace(v, inf);
-    }
+	}
 
 	static var lrow = [1/2, 1/2];
 	function render2D(g:kha.graphics2.Graphics) {

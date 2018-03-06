@@ -15,7 +15,8 @@ def disp_linked(output_node):
         if l.from_node.type == 'GROUP' and l.from_node.node_tree.name.startswith('Armory PBR') and \
             ((len(l.from_node.inputs) == 14 and l.from_node.inputs[10].is_linked == False) or (len(l.from_node.inputs) != 14 and l.from_node.inputs[7].is_linked == False)):
             return False
-    if linked and not disp_enabled:
+    rpdat = arm.utils.get_rp()
+    if linked and not disp_enabled and rpdat.arm_displacement:
         log.warn('Tessellation not available on ' + make_state.target)
     return disp_enabled and linked
 
