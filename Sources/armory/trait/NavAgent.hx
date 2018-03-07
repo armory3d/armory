@@ -7,6 +7,9 @@ import iron.system.Tween;
 
 class NavAgent extends Trait {
 
+	@prop
+	var speed:Float = 0.2;
+
 	var path:Array<Vec4> = null;
 	var index = 0;
 
@@ -42,7 +45,6 @@ class NavAgent extends Trait {
 
 		var p = path[index];
 		var dist = Vec4.distance(object.transform.loc, p);
-		var speed = 0.2;
 
 		orient.subvecs(p, object.transform.loc).normalize;
 		var targetAngle = Math.atan2(orient.y, orient.x) + Math.PI / 2;
