@@ -5,6 +5,8 @@ import arm.log as log
 import arm.make_state as state
 import arm.api
 
+callback = None
+
 def add_world_defs():
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
@@ -343,3 +345,6 @@ def build():
                 wrd.world_defs += '_PenumbraScale'
         else:
             log.warn('Disabling soft shadows - "Armory Render Path - Cascades" requires to be set to 1 for now')
+
+    if callback != None:
+        callback()

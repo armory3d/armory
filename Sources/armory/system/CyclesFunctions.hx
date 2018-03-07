@@ -210,4 +210,34 @@ class CyclesFunctions {
 		return col / (9.0 * blendFac);
 	}
 	";
+
+	public static var str_cotangentFrame = "
+	mat3 cotangentFrame(const vec3 n, const vec3 p, const vec2 duv1, const vec2 duv2) {
+		vec3 dp1 = dFdx(p);
+		vec3 dp2 = dFdy(p);
+		vec3 dp2perp = cross(dp2, n);
+		vec3 dp1perp = cross(n, dp1);
+		vec3 t = dp2perp * duv1.x + dp1perp * duv2.x;
+		vec3 b = dp2perp * duv1.y + dp1perp * duv2.y;
+		float invmax = inversesqrt(max(dot(t, t), dot(b, b)));
+		return mat3(t * invmax, b * invmax, n);
+	}
+	mat3 cotangentFrame(const vec3 n, const vec3 p, const vec2 texCoord) {
+		return cotangentFrame(n, p, dFdx(texCoord), dFdy(texCoord));
+	}
+	";
+
+	public static var str_octahedronWrap = "
+	vec2 octahedronWrap(const vec2 v) {
+		return (1.0 - abs(v.yx)) * (vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0));
+	}
+	";
+
+	public static var str_packFloat = "
+	float packFloat(const float f1, const float f2) {
+		float index = floor(f1 * 100.0); // Temporary
+		float alpha = clamp(f2, 0.0, 1.0 - 0.001);
+		return index + alpha;
+	}
+	";
 }
