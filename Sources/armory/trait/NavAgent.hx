@@ -8,7 +8,7 @@ import iron.system.Tween;
 class NavAgent extends Trait {
 
 	@prop
-	var speed:Float = 0.2;
+	var speed:Float = 5;
 
 	var path:Array<Vec4> = null;
 	var index = 0;
@@ -49,7 +49,7 @@ class NavAgent extends Trait {
 		orient.subvecs(p, object.transform.loc).normalize;
 		var targetAngle = Math.atan2(orient.y, orient.x) + Math.PI / 2;
 
-		locAnim = Tween.to({ target: object.transform.loc, props: { x: p.x, y: p.y /*, z: p.z*/ }, duration: dist * speed, done: function() {
+		locAnim = Tween.to({ target: object.transform.loc, props: { x: p.x, y: p.y /*, z: p.z*/ }, duration: dist / speed, done: function() {
 			index++;
 			if (index < path.length) go();
 			else removeUpdate(update);
