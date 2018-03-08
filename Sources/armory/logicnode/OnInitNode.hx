@@ -6,18 +6,21 @@ class OnInitNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);
-
-		#if arm_physics
-		PhysicsWorld.active.notifyOnPreUpdate(init);
-		#else
 		tree.notifyOnInit(init);
-		#end
 	}
 
 	function init() {
 		#if arm_physics
-		PhysicsWorld.active.removePreUpdate(init);
+		PhysicsWorld.active == null ? run() : PhysicsWorld.active.notifyOnPreUpdate(physics_init);
+		#else
+		run();
 		#end
+	}
+
+	#if arm_physics
+	function physics_init() {
+		PhysicsWorld.active.removePreUpdate(physics_init);
 		run();
 	}
+	#end
 }
