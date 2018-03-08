@@ -183,7 +183,7 @@ def fetch_script_props(file):
         read_prop = False
         for l in lines:
             if not read_prop:
-                read_prop = '@prop' in l
+                read_prop = l.lstrip().startswith('@prop')
             if read_prop and 'var ' in l:
                 p = l.split('var ')[1]
 
