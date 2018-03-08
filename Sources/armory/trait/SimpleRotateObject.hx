@@ -27,44 +27,45 @@ class SimpleRotateObject extends iron.Trait {
 		notifyOnUpdate(function() {
 			var rotate = Vec4.zero();
 
-			if(keyboard.down("r")){
+			if (keyboard.down("r")) {
 				rotate.x += 1;
 			}
 
-			if(keyboard.down("t")){
+			if (keyboard.down("t")) {
 				rotate.x -= 1;
 			}
 
-			if(keyboard.down("f")){
+			if (keyboard.down("f")) {
 				rotate.y += 1;
 			}
 
-			if(keyboard.down("g")){
+			if (keyboard.down("g")) {
 				rotate.y -= 1;
 			}
 
-			if(keyboard.down("v")){
+			if (keyboard.down("v")) {
 				rotate.z += 1;
 			}
 
-			if(keyboard.down("b")){
+			if (keyboard.down("b")) {
 				rotate.z -= 1;
 			}
 
-			if(!rotate.equals(Vec4.zero())){
+			if (!rotate.equals(Vec4.zero())) {
 				rotateObject(rotate);
 			}
 		});
 	}
 
 	function rotateObject(vec:Vec4){
-		if(rb != null){
+		if (rb != null) {
 			#if arm_physics
 			rb.setAngularVelocity(0, 0, 0);
 			rb.transform.rotate(vec, speed);
 			rb.syncTransform();
 			#end
-		} else {
+		}
+		else {
 			object.transform.rotate(vec, speed);
 		}
 	}

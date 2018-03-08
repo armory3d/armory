@@ -27,45 +27,46 @@ class SimpleMoveObject extends iron.Trait {
 		notifyOnUpdate(function() {
 			var move = Vec4.zero();
 
-			if(keyboard.down("d")){
+			if (keyboard.down("d")) {
 				move.x += speed;
 			}
 
-			if(keyboard.down("a")){
+			if (keyboard.down("a")) {
 				move.x -= speed;
 			}
 
-			if(keyboard.down("w")){
+			if (keyboard.down("w")) {
 				move.y += speed;
 			}
 
-			if(keyboard.down("s")){
+			if (keyboard.down("s")) {
 				move.y -= speed;
 			}
 
-			if(keyboard.down("q")){
+			if (keyboard.down("q")) {
 				move.z += speed;
 			}
 
-			if(keyboard.down("e")){
+			if (keyboard.down("e")) {
 				move.z -= speed;
 			}
 
-			if(!move.equals(Vec4.zero())){
+			if (!move.equals(Vec4.zero())) {
 				moveObject(move);
 			}
 		});
 	}
 
 	function moveObject(vec:Vec4){
-		if(rb != null){
+		if (rb != null) {
 			#if arm_physics
 			rb.setLinearVelocity(0, 0, 0);
 			rb.setAngularVelocity(0, 0, 0);
 			rb.transform.translate(vec.x, vec.y, vec.z);
 			rb.syncTransform();
 			#end
-		} else {
+		}
+		else {
 			object.transform.translate(vec.x, vec.y, vec.z);
 		}
 	}

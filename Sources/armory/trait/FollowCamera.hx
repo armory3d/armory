@@ -29,28 +29,30 @@ class FollowCamera extends iron.Trait {
 
 		notifyOnInit(function() {
 			targetObj = Scene.active.getChild(target);
-			if(targetObj == null){
+			if (targetObj == null) {
 				disabled = true;
 				trace("FollowCamera error, unable to set target object");
 			}
 
-			if(Type.getClass(object) == iron.object.CameraObject){
+			if (Std.is(object, iron.object.CameraObject)) {
 			 	disabled = true;
 				trace("FollowCamera error, this trait should not be placed directly on a camera objet. It should be placed on another object such as an Empty. The camera should be placed as a child to the Empty object with offset, creating a camera boom.");
 			}
 		});
 
 		notifyOnLateUpdate(function() {
-			if(!disabled){
-				if(targetObj != null) {
-					if(lerp){
+			if (!disabled) {
+				if (targetObj != null) {
+					if (lerp) {
 						var vec = Vec4.lerp(targetObj.transform.world.getLoc(), object.transform.world.getLoc(), lerpSpeed);
 						object.transform.loc = vec;
-					} else {
+					}
+					else {
 						object.transform.loc = targetObj.transform.world.getLoc();
 					}
 					object.transform.buildMatrix();
-				} else {
+				}
+				else {
 					targetObj = Scene.active.getChild(target);
 				}
 			}

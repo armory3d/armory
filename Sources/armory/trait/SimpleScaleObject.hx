@@ -32,39 +32,39 @@ class SimpleScaleObject extends iron.Trait {
 		notifyOnUpdate(function() {
 			var scale = Vec4.zero();
 
-			if(keyboard.down("y")){
+			if (keyboard.down("y")) {
 				scale.x += speed;
 			}
 
-			if(keyboard.down("u")){
+			if (keyboard.down("u")) {
 				scale.x -= speed;
 			}
 
-			if(keyboard.down("h")){
+			if (keyboard.down("h")) {
 				scale.y += speed;
 			}
 
-			if(keyboard.down("j")){
+			if (keyboard.down("j")) {
 				scale.y -= speed;
 			}
 
-			if(keyboard.down("n")){
+			if (keyboard.down("n")) {
 				scale.z += speed;
 			}
 
-			if(keyboard.down("m")){
+			if (keyboard.down("m")) {
 				scale.z -= speed;
 			}
 
-			if(keyboard.down("z")){
+			if (keyboard.down("z")) {
 				scale.set(speed, speed, speed);
 			}
 
-			if(keyboard.down("x")){
+			if (keyboard.down("x")) {
 				scale.set(-speed, -speed, -speed);
 			}
 
-			if(!scale.equals(Vec4.zero())){
+			if (!scale.equals(Vec4.zero())) {
 				scaleObject(scale);
 			}
 		});
@@ -72,17 +72,19 @@ class SimpleScaleObject extends iron.Trait {
 
 	function scaleObject(vec:Vec4){
 		var s = object.transform.scale;
-		if(rb != null){
+		if (rb != null) {
 			#if arm_physics
 			rb.transform.scale.set(s.x + vec.x, s.y + vec.y, s.z + vec.z);
 			rb.syncTransform();
 			#end
-		} else if(character != null){
+		}
+		else if (character != null) {
 			#if arm_physics
 			character.transform.scale.set(s.x + vec.x, s.y + vec.y, s.z + vec.z);
 			character.syncTransform();
 			#end
-		} else {
+		}
+		else {
 			object.transform.scale.set(s.x + vec.x, s.y + vec.y, s.z + vec.z);
 			object.transform.buildMatrix();
 		}
