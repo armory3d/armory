@@ -40,7 +40,7 @@ class FollowCamera extends iron.Trait {
 			}
 		});
 
-		notifyOnUpdate(function() {
+		notifyOnLateUpdate(function() {
 			if(!disabled){
 				if(targetObj != null) {
 					if(lerp){
