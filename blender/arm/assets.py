@@ -141,6 +141,11 @@ def invalidate_envmap_data(self, context):
     if os.path.isdir(fp + '/compiled/Assets/envmaps'):
         shutil.rmtree(fp + '/compiled/Assets/envmaps', onerror=remove_readonly)
 
+def invalidate_unpacked_data(self, context):
+    fp = arm.utils.get_fp_build()
+    if os.path.isdir(fp + '/compiled/Assets/unpacked'):
+        shutil.rmtree(fp + '/compiled/Assets/unpacked', onerror=remove_readonly)
+
 def shader_equal(sh, ar, shtype):
     # Merge equal shaders
     for e in ar:

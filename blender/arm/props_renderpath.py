@@ -244,6 +244,39 @@ def update_preset(self, context):
         rpdat.arm_material_model = 'Full'
         rpdat.arm_texture_filter = 'Anisotropic'
         rpdat.arm_diffuse_model = 'Lambert'
+    elif self.rp_preset == 'Lightmap':
+        rpdat.rp_renderer = 'Forward'
+        rpdat.rp_depthprepass = False
+        rpdat.arm_material_model = 'Solid'
+        rpdat.rp_shadowmap = 'Off'
+        rpdat.rp_shadowmap_cascades = '1'
+        rpdat.rp_translucency_state = 'Off'
+        rpdat.rp_overlays_state = 'Off'
+        rpdat.rp_decals_state = 'Off'
+        rpdat.rp_sss_state = 'Off'
+        rpdat.rp_blending_state = 'Off'
+        rpdat.rp_hdr = False
+        rpdat.rp_background = 'World'
+        rpdat.rp_stereo = False
+        # rpdat.rp_greasepencil = False
+        rpdat.rp_gi = 'Off'
+        rpdat.rp_render_to_texture = False
+        rpdat.rp_supersampling = '1'
+        rpdat.rp_antialiasing = 'Off'
+        rpdat.rp_compositornodes = False
+        rpdat.rp_volumetriclight = False
+        rpdat.rp_ssgi = 'Off'
+        rpdat.rp_ssr = False
+        rpdat.rp_dfrs = False
+        rpdat.rp_dfao = False
+        rpdat.rp_dfgi = False
+        rpdat.rp_bloom = False
+        rpdat.rp_eyeadapt = False
+        rpdat.rp_rendercapture = False
+        rpdat.rp_motionblur = 'Off'
+        rpdat.arm_rp_resolution = 'Display'
+        rpdat.arm_texture_filter = 'Linear'
+        rpdat.arm_diffuse_model = 'Lambert'
     update_renderpath(self, context)
 
 def update_renderpath(self, context):

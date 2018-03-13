@@ -1148,8 +1148,15 @@ class ArmBakePanel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        rows = 2
         scn = context.scene
+
+        row = layout.row(align=True)
+        row.alignment = 'EXPAND'
+        row.operator("arm.bake_textures", icon="RENDER_STILL")
+        row.operator("arm.bake_apply")
+        layout.prop(scn, 'arm_bakelist_scale')
+
+        rows = 2
         if len(scn.arm_bakelist) > 1:
             rows = 4
         row = layout.row()
@@ -1157,54 +1164,16 @@ class ArmBakePanel(bpy.types.Panel):
         col = row.column(align=True)
         col.operator("arm_bakelist.new_item", icon='ZOOMIN', text="")
         col.operator("arm_bakelist.delete_item", icon='ZOOMOUT', text="")
+        col.menu("arm_bakelist_specials", icon='DOWNARROW_HLT', text="")
 
         if scn.arm_bakelist_index >= 0 and len(scn.arm_bakelist) > 0:
             item = scn.arm_bakelist[scn.arm_bakelist_index]
-            layout.prop_search(item, "object_name", scn, "objects", "Object")
-
-        layout.operator("arm.bake_textures", icon="RENDER_STILL")
-
-class ArmBakeButton(bpy.types.Operator):
-    '''Bake textures for listed objects'''
-    bl_idname = 'arm.bake_textures'
-    bl_label = 'Bake'
-
-    def execute(self, context):
-        scn = context.scene
-        if len(scn.arm_bakelist) == 0:
-            return{'FINISHED'}
-        # Images for baking
-        for o in scn.arm_bakelist:
-            ob = scn.objects[o.object_name]
-            for slot in ob.material_slots:
-                mat = slot.material
-                img_name = "bake_" + mat.name
-                # Get image
-                if img_name in bpy.data.images:
-                    img = bpy.data.images[img_name]
-                else:
-                    img = bpy.data.images.new("bake_" + mat.name, 2048, 2048)
-                # Set image node
-                mat.use_nodes = True
-                nodes = mat.node_tree.nodes
-                if 'Baked Image' in nodes:
-                    img_node = nodes['Baked Image']
-                else:
-                    img_node = nodes.new('ShaderNodeTexImage')
-                    img_node.name = 'Baked Image'
-                    img_node.location = (100, 100)
-                    img_node.image = img
-                img_node.select = True
-                nodes.active = img_node
-        # Bake
-        bpy.ops.object.select_all(action='DESELECT')
-        for o in scn.arm_bakelist:
-            scn.objects[o.object_name].select = True
-        scn.objects.active = scn.objects[scn.arm_bakelist[0].object_name]
-        # bpy.ops.uv.lightmap_pack("EXEC_SCREEN")
-        bpy.ops.object.bake('INVOKE_DEFAULT', type='COMBINED') # INVOKE_SCREEN
-        bpy.ops.object.select_all(action='DESELECT')
-        return{'FINISHED'}
+            row = layout.row()
+            row.prop_search(item, "object_name", scn, "objects", "Object")
+            col = row.column(align=True)
+            col.alignment = 'EXPAND'
+            col.prop(item, "res_x")
+            col.prop(item, "res_y")
 
 class ArmGenLodButton(bpy.types.Operator):
     '''Automatically generate LoD levels'''
@@ -1486,7 +1455,6 @@ def register():
     bpy.utils.register_class(ArmoryRenderAnimButton)
     bpy.utils.register_class(ArmoryGenerateNavmeshButton)
     bpy.utils.register_class(ArmNavigationPanel)
-    bpy.utils.register_class(ArmBakeButton)
     bpy.utils.register_class(ArmGenLodButton)
     bpy.utils.register_class(ArmLodPanel)
     bpy.utils.register_class(ArmTilesheetPanel)
@@ -1540,7 +1508,6 @@ def unregister():
     bpy.utils.unregister_class(ArmoryRenderAnimButton)
     bpy.utils.unregister_class(ArmoryGenerateNavmeshButton)
     bpy.utils.unregister_class(ArmNavigationPanel)
-    bpy.utils.unregister_class(ArmBakeButton)
     bpy.utils.unregister_class(ArmGenLodButton)
     bpy.utils.unregister_class(ArmLodPanel)
     bpy.utils.unregister_class(ArmTilesheetPanel)

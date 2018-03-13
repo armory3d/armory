@@ -17,13 +17,21 @@ def make(image_node, tex_name, matname=None):
     if image == None:
         return None
 
-    if image.filepath == '':
-        log.warn(matname + '/' + image.name + ' - file path not found')
-        return None
+    # Get filepath
+    filepath = image.filepath
+    if filepath == '':
+        if image.packed_file != None:
+            filepath = './' + image.name
+            has_ext = filepath.endswith('.jpg') or filepath.endswith('.png') or filepath.endswith('.hdr')
+            if not has_ext:
+                filepath += '.png'
+        else:
+            log.warn(matname + '/' + image.name + ' - invalid file path')
+            return None
 
     # Reference image name
-    texpath = arm.utils.asset_path(image.filepath)
-    texfile = arm.utils.extract_filename(image.filepath)
+    texpath = arm.utils.asset_path(filepath)
+    texfile = arm.utils.extract_filename(filepath)
     tex['file'] = arm.utils.safestr(texfile)
     s = tex['file'].rsplit('.', 1)
     
@@ -35,7 +43,6 @@ def make(image_node, tex_name, matname=None):
     do_convert = ext != 'jpg' and ext != 'png' and ext != 'hdr' and ext != 'mp4' # Convert image
     if do_convert:
         tex['file'] = tex['file'].rsplit('.', 1)[0] + '.jpg'
-        # log.warn(matname + '/' + image.name + ' - image format is not (jpg/png/hdr), converting to jpg.')
 
     if image.packed_file != None or not is_ascii(texfile):
         # Extract packed data / copy non-ascii texture
@@ -62,8 +69,8 @@ def make(image_node, tex_name, matname=None):
         assets.add(unpack_filepath)
 
     else:
-        if not os.path.isfile(arm.utils.asset_path(image.filepath)):
-            log.warn('Material ' + matname + '/' + image.name + ' - file not found(' + image.filepath + ')')
+        if not os.path.isfile(arm.utils.asset_path(filepath)):
+            log.warn('Material ' + matname + '/' + image.name + ' - file not found(' + filepath + ')')
             return None
 
         if do_convert:
@@ -76,10 +83,10 @@ def make(image_node, tex_name, matname=None):
             # Link image path to assets
             # TODO: Khamake converts .PNG to .jpg? Convert ext to lowercase on windows
             if arm.utils.get_os() == 'win':
-                s = image.filepath.rsplit('.', 1)
+                s = filepath.rsplit('.', 1)
                 assets.add(arm.utils.asset_path(s[0] + '.' + s[1].lower()))
             else:
-                assets.add(arm.utils.asset_path(image.filepath))
+                assets.add(arm.utils.asset_path(filepath))
 
 
     # if image_format != 'RGBA32':

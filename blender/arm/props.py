@@ -231,6 +231,7 @@ def init_properties():
                ('Deferred', 'Deferred', 'Deferred'),
                ('Max (Game)', 'Max (Game)', 'Max (Game)'),
                ('Max (Render)', 'Max (Render)', 'Max (Render)'),
+               ('Lightmap', 'Lightmap', 'Lightmap'),
                ],
         name="Preset", description="Render path preset", default='Deferred', update=props_renderpath.update_preset)
     bpy.types.World.arm_voxelgi_diff = FloatProperty(name="Diffuse", description="", default=3.0, update=assets.invalidate_shader_cache)

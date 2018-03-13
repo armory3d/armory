@@ -736,6 +736,22 @@ class ArmoryExporter:
                     else:
                         values += self.write_matrix(pose_bone.matrix)
 
+    def has_baked_material(self, bobject, materials):
+        for mat in materials:
+            baked_mat = mat.name + '_' + bobject.name + '_baked'
+            if baked_mat in bpy.data.materials:
+                return True
+        return False
+
+    def slot_to_material(self, bobject, slot):
+        mat = slot.material
+        # Pick up backed material if present
+        if mat != None:
+            baked_mat = mat.name + '_' + bobject.name + '_baked'
+            if baked_mat in bpy.data.materials:
+                mat = bpy.data.materials[baked_mat]
+        return mat
+
     def export_object(self, bobject, scene, parento=None):
         # This function exports a single object in the scene and includes its name,
         # object reference, material references (for meshes), and transform.
@@ -833,8 +849,11 @@ class ArmoryExporter:
 
                 o['material_refs'] = []
                 for i in range(len(bobject.material_slots)):
-                    self.export_material_ref(bobject, bobject.material_slots[i].material, i, o)
-                    if bobject.material_slots[i].material != None and bobject.material_slots[i].material.arm_decal:
+                    mat = self.slot_to_material(bobject, bobject.material_slots[i])
+                    # Export ref
+                    self.export_material_ref(bobject, mat, i, o)
+                    # Decal flag
+                    if mat != None and mat.arm_decal:
                         o['type'] = 'decal_object'
                 # No material, mimic cycles and assign default
                 if len(o['material_refs']) == 0:
@@ -1229,6 +1248,8 @@ class ArmoryExporter:
         num_verts = len(vert_list)
         num_uv_layers = len(exportMesh.uv_layers)
         has_tex = self.get_export_uvs(exportMesh) == True and num_uv_layers > 0
+        if self.has_baked_material(bobject, exportMesh.materials):
+            has_tex = True
         has_tex1 = has_tex == True and num_uv_layers > 1
         num_colors = len(exportMesh.vertex_colors)
         has_col = self.get_export_vcols(exportMesh) == True and num_colors > 0
@@ -2061,12 +2082,12 @@ class ArmoryExporter:
             if not wrd.arm_deinterleaved_buffers:
                 for bobject in scene_objects:
                     if len(bobject.material_slots) > 1:
-                        mat = bobject.material_slots[0].material
+                        mat = self.slot_to_material(bobject, bobject.material_slots[0])
                         if mat == None:
                             continue
                         vs = mat.vertex_structure
-                        for i in range(len(bobject.material_slots)):
-                            nmat = bobject.material_slots[i].material
+                        for i in range(1, len(bobject.material_slots)):
+                            nmat = self.slot_to_material(bobject, bobject.material_slots[i])
                             if nmat == None:
                                 continue
                             if vs != nmat.vertex_structure:
@@ -2406,7 +2427,7 @@ class ArmoryExporter:
 
         # Map objects to materials, can be used in later stages
         for i in range(len(bobject.material_slots)):
-            mat = bobject.material_slots[i].material
+            mat = self.slot_to_material(bobject, bobject.material_slots[i])
             if mat in self.materialToObjectDict:
                 self.materialToObjectDict[mat].append(bobject)
                 self.materialToArmObjectDict[mat].append(o)
