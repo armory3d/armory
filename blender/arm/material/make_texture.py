@@ -24,7 +24,8 @@ def make(image_node, tex_name, matname=None):
             filepath = './' + image.name
             has_ext = filepath.endswith('.jpg') or filepath.endswith('.png') or filepath.endswith('.hdr')
             if not has_ext:
-                filepath += '.png'
+                # Raw bytes, write converted .jpg to /unpacked
+                filepath += '.raw'
         else:
             log.warn(matname + '/' + image.name + ' - invalid file path')
             return None
