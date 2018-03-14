@@ -91,18 +91,19 @@ class ArmBakeButton(bpy.types.Operator):
         # Images for baking
         for o in scn.arm_bakelist:
             ob = scn.objects[o.object_name]
+            img_name = ob.name + '_baked'
+            sc = scn.arm_bakelist_scale / 100
+            rx = o.res_x * sc
+            ry = o.res_y * sc
+            # Get image
+            if img_name not in bpy.data.images or bpy.data.images[img_name].size[0] != rx or bpy.data.images[img_name].size[1] != ry:
+                img = bpy.data.images.new(img_name, rx, ry)
+                img.name = img_name # Force img_name (in case Blender picked img_name.001)
+            else:
+                img = bpy.data.images[img_name]
             for slot in ob.material_slots:
-                mat = slot.material
-                img_name = mat.name[:-5] + '_baked'
-                sc = scn.arm_bakelist_scale / 100
-                rx = o.res_x * sc
-                ry = o.res_y * sc
-                # Get image
-                if img_name not in bpy.data.images:# or bpy.data.images[img_name].size[0] != rx or bpy.data.images[img_name].size[1] != ry:
-                    img = bpy.data.images.new(img_name, rx, ry)
-                else:
-                    img = bpy.data.images[img_name]
                 # Add image nodes
+                mat = slot.material
                 mat.use_nodes = True
                 nodes = mat.node_tree.nodes
                 if 'Baked Image' in nodes:
@@ -121,13 +122,21 @@ class ArmBakeButton(bpy.types.Operator):
             ob = scn.objects[o.object_name]
             if len(ob.data.uv_textures) == 0:
                 bpy.context.scene.objects.active = ob
-                bpy.ops.uv.lightmap_pack("EXEC_SCREEN", PREF_CONTEXT="ALL_FACES")
-                ob.data.uv_textures[0].name += "_baked"
+                # bpy.ops.uv.lightmap_pack('EXEC_SCREEN', PREF_CONTEXT='ALL_FACES')
+                bpy.ops.object.select_all(action='DESELECT')
+                ob.select = True
+                bpy.ops.object.mode_set(mode='EDIT')
+                bpy.ops.mesh.select_all(action='DESELECT')
+                bpy.ops.object.mode_set(mode='OBJECT')
+                bpy.ops.uv.smart_project('EXEC_SCREEN')
+                ob.data.uv_textures[0].name += '_baked'
         bpy.context.scene.objects.active = active
 
         # Materials for runtime
+        # TODO: use single mat per object
         for o in scn.arm_bakelist:
             ob = scn.objects[o.object_name]
+            img_name = ob.name + '_baked'
             for slot in ob.material_slots:
                 n = slot.material.name[:-5] + '_baked'
                 if not n in bpy.data.materials:
@@ -138,8 +147,12 @@ class ArmBakeButton(bpy.types.Operator):
                     img_node = nodes.new('ShaderNodeTexImage')
                     img_node.name = 'Baked Image'
                     img_node.location = (100, 100)
-                    img_node.image = bpy.data.images[n]
+                    img_node.image = bpy.data.images[img_name]
                     mat.node_tree.links.new(img_node.outputs[0], nodes['Diffuse BSDF'].inputs[0])
+                else:
+                    mat = bpy.data.materials[n]
+                    nodes = mat.node_tree.nodes
+                    nodes['Baked Image'].image = bpy.data.images[img_name]
 
         # Bake
         bpy.ops.object.select_all(action='DESELECT')
@@ -163,15 +176,14 @@ class ArmBakeApplyButton(bpy.types.Operator):
         arm.assets.invalidate_unpacked_data(None, None)
         for o in scn.arm_bakelist:
             ob = scn.objects[o.object_name]
+            img_name = ob.name + '_baked'
+            # Save images
+            bpy.data.images[img_name].pack(as_png=True)
+            bpy.data.images[img_name].save()
             for slot in ob.material_slots:
                 mat = slot.material
-                # Temp material exists
+                # Remove temp material
                 if mat.name.endswith('_temp'):
-                    # Save images
-                    img_name = mat.name[:-5] + '_baked'
-                    bpy.data.images[img_name].pack(as_png=True)
-                    bpy.data.images[img_name].save()
-                    # Remove temp materials
                     old = slot.material
                     slot.material = bpy.data.materials[old.name.split('_' + ob.name)[0]]
                     bpy.data.materials.remove(old, True)

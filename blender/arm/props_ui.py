@@ -1154,7 +1154,15 @@ class ArmBakePanel(bpy.types.Panel):
         row.alignment = 'EXPAND'
         row.operator("arm.bake_textures", icon="RENDER_STILL")
         row.operator("arm.bake_apply")
-        layout.prop(scn, 'arm_bakelist_scale')
+
+        row = layout.row()
+        col = row.column()
+        col.label('Lightmaps:')
+        col.prop(scn, 'arm_bakelist_scale')
+
+        col = row.column()
+        col.label(text="Samples:")
+        col.prop(scn.cycles, "samples", text="Render")
 
         rows = 2
         if len(scn.arm_bakelist) > 1:

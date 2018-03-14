@@ -1824,9 +1824,11 @@ class ArmoryExporter:
                 material.export_uvs = uv_export
                 material.export_vcols = vcol_export
                 material.export_tangents = tang_export
-                mat_users = self.materialToObjectDict[material]
-                for ob in mat_users:
-                    ob.data.arm_cached = False
+
+                if material in self.materialToObjectDict:
+                    mat_users = self.materialToObjectDict[material]
+                    for ob in mat_users:
+                        ob.data.arm_cached = False
 
             self.output['material_datas'].append(o)
             material.is_cached = True
