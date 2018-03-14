@@ -76,6 +76,17 @@ class ArmBakeButton(bpy.types.Operator):
         if len(scn.arm_bakelist) == 0:
             return{'FINISHED'}
 
+        # At least one material required for now..
+        for o in scn.arm_bakelist:
+            ob = scn.objects[o.object_name]
+            if len(ob.material_slots) == 0:
+                if not 'MaterialDefault' in bpy.data.materials:
+                    mat = bpy.data.materials.new(name='MaterialDefault')
+                    mat.use_nodes = True
+                else:
+                    mat = bpy.data.materials['MaterialDefault']
+                ob.data.materials.append(mat)
+
         # Single user materials
         for o in scn.arm_bakelist:
             ob = scn.objects[o.object_name]
@@ -173,6 +184,17 @@ class ArmBakeApplyButton(bpy.types.Operator):
         scn = context.scene
         if len(scn.arm_bakelist) == 0:
             return{'FINISHED'}
+        # Remove leftover _baked materials for removed objects
+        for mat in bpy.data.materials:
+            if mat.name.endswith('_baked'):
+                has_user = False
+                for ob in bpy.data.objects:
+                    if ob.type == 'MESH' and mat.name.endswith('_' + ob.name + '_baked'):
+                        has_user = True
+                        break
+                if not has_user:
+                    bpy.data.materials.remove(mat, True)
+        # Recache lightmaps
         arm.assets.invalidate_unpacked_data(None, None)
         for o in scn.arm_bakelist:
             ob = scn.objects[o.object_name]
@@ -197,6 +219,8 @@ class ArmBakeSpecialsMenu(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         layout.operator("arm.bake_add_all")
+        layout.operator("arm.bake_add_selected")
+        layout.operator("arm.bake_clear_all")
 
 class ArmBakeAddAllButton(bpy.types.Operator):
     '''Fill the list with scene objects'''
@@ -211,6 +235,34 @@ class ArmBakeAddAllButton(bpy.types.Operator):
                 scn.arm_bakelist.add().object_name = ob.name
         return{'FINISHED'}
 
+class ArmBakeAddSelectedButton(bpy.types.Operator):
+    '''Add selected objects to the list'''
+    bl_idname = 'arm.bake_add_selected'
+    bl_label = 'Add Selected'
+
+    def contains(self, scn, ob):
+        for o in scn.arm_bakelist:
+            if o.object_name == ob.name:
+                return True
+        return False
+
+    def execute(self, context):
+        scn = context.scene
+        for ob in context.selected_objects:
+            if ob.type == 'MESH' and not self.contains(scn, ob):
+                scn.arm_bakelist.add().object_name = ob.name
+        return{'FINISHED'}
+
+class ArmBakeClearAllButton(bpy.types.Operator):
+    '''Clear the list'''
+    bl_idname = 'arm.bake_clear_all'
+    bl_label = 'Clear'
+
+    def execute(self, context):
+        scn = context.scene
+        scn.arm_bakelist.clear()
+        return{'FINISHED'}
+
 def register():
     bpy.utils.register_class(ArmBakeListItem)
     bpy.utils.register_class(ArmBakeList)
@@ -220,6 +272,8 @@ def register():
     bpy.utils.register_class(ArmBakeApplyButton)
     bpy.utils.register_class(ArmBakeSpecialsMenu)
     bpy.utils.register_class(ArmBakeAddAllButton)
+    bpy.utils.register_class(ArmBakeAddSelectedButton)
+    bpy.utils.register_class(ArmBakeClearAllButton)
     bpy.types.Scene.arm_bakelist_scale = FloatProperty(name="Resolution", description="Resolution scale", default=100.0, min=1, max=1000, soft_min=1, soft_max=100.0, subtype='PERCENTAGE')
     bpy.types.Scene.arm_bakelist = bpy.props.CollectionProperty(type=ArmBakeListItem)
     bpy.types.Scene.arm_bakelist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
@@ -233,3 +287,5 @@ def unregister():
     bpy.utils.unregister_class(ArmBakeApplyButton)
     bpy.utils.unregister_class(ArmBakeSpecialsMenu)
     bpy.utils.unregister_class(ArmBakeAddAllButton)
+    bpy.utils.unregister_class(ArmBakeAddSelectedButton)
+    bpy.utils.unregister_class(ArmBakeClearAllButton)
