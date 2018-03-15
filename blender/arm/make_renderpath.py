@@ -15,7 +15,7 @@ def add_world_defs():
     if rpdat.arm_ssrs:
         wrd.world_defs += '_SSRS'
 
-    if wrd.arm_two_sided_area_lamp:
+    if rpdat.arm_two_sided_area_lamp:
         wrd.world_defs += '_TwoSidedAreaLamp'
 
     # Store contexts
@@ -72,14 +72,14 @@ def add_world_defs():
     if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
         if rpdat.rp_ssgi == 'RTGI':
             wrd.world_defs += '_RTGI'
-        if wrd.arm_ssgi_rays == '9':
+        if rpdat.arm_ssgi_rays == '9':
             wrd.world_defs += '_SSGICone9'
     if rpdat.rp_autoexposure:
         wrd.world_defs += '_AutoExposure'
 
     if voxelgi or voxelao:
         assets.add_khafile_def('arm_voxelgi')
-        wrd.world_defs += '_VoxelCones' + wrd.arm_voxelgi_cones
+        wrd.world_defs += '_VoxelCones' + rpdat.arm_voxelgi_cones
         if rpdat.arm_voxelgi_revoxelize:
             assets.add_khafile_def('arm_voxelgi_revox')
             if rpdat.arm_voxelgi_camera:
@@ -162,19 +162,19 @@ def build():
         if rpdat.rp_compositornodes:
             assets.add_khafile_def('rp_compositornodes')
             compo_depth = False
-            if wrd.arm_tonemap != 'Off':
-                wrd.compo_defs = '_CTone' + wrd.arm_tonemap
+            if rpdat.arm_tonemap != 'Off':
+                wrd.compo_defs = '_CTone' + rpdat.arm_tonemap
             if rpdat.rp_antialiasing == 'FXAA':
                 wrd.compo_defs += '_CFXAA'
-            if wrd.arm_letterbox:
+            if rpdat.arm_letterbox:
                 wrd.compo_defs += '_CLetterbox'
-            if wrd.arm_grain:
+            if rpdat.arm_grain:
                 wrd.compo_defs += '_CGrain'
-            if wrd.arm_sharpen:
+            if rpdat.arm_sharpen:
                 wrd.compo_defs += '_CSharpen'
             if bpy.data.scenes[0].cycles.film_exposure != 1.0:
                 wrd.compo_defs += '_CExposure'
-            if wrd.arm_fog:
+            if rpdat.arm_fog:
                 wrd.compo_defs += '_CFog'
                 compo_depth = True
             if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].dof_distance > 0.0:
@@ -183,16 +183,16 @@ def build():
             if compo_depth:
                 wrd.compo_defs += '_CDepth'
                 assets.add_khafile_def('rp_compositordepth')
-            if wrd.arm_lens_texture != '':
+            if rpdat.arm_lens_texture != '':
                 wrd.compo_defs += '_CLensTex'
                 assets.add_embedded_data('lenstexture.jpg')
-            if wrd.arm_fisheye:
+            if rpdat.arm_fisheye:
                 wrd.compo_defs += '_CFishEye'
-            if wrd.arm_vignette:
+            if rpdat.arm_vignette:
                 wrd.compo_defs += '_CVignette'
-            if wrd.arm_lensflare:
+            if rpdat.arm_lensflare:
                 wrd.compo_defs += '_CGlare'
-            if wrd.arm_lut_texture != '':
+            if rpdat.arm_lut_texture != '':
                 wrd.compo_defs += '_CLUT'
                 assets.add_embedded_data('luttexture.jpg')
             if '_CDOF' in wrd.compo_defs or '_CFXAA' in wrd.compo_defs or '_CSharpen' in wrd.compo_defs:

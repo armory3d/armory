@@ -1041,7 +1041,8 @@ class ArmoryExporter:
 
         bone_array = armature.data.bones
         bone_count = len(bone_array)
-        max_bones = bpy.data.worlds['Arm'].arm_skin_max_bones
+        rpdat = arm.utils.get_rp()
+        max_bones = rpdat.arm_skin_max_bones
         if bone_count > max_bones:
             log.warn(bobject.name + ' - ' + str(bone_count) + ' bones found, exceeds maximum of ' + str(max_bones) + ' bones defined - raise the value in Camera Data - Armory Render Props - Max Bones')
 
@@ -1054,7 +1055,7 @@ class ArmoryExporter:
 
         # Write the bind pose transform array
         oskin['transformsI'] = []
-        if bpy.data.worlds['Arm'].arm_skin == 'CPU':
+        if rpdat.arm_skin == 'CPU':
             for i in range(bone_count):
                 skeletonI = (armature.matrix_world * bone_array[i].matrix_local).inverted()
                 oskin['transformsI'].append(self.write_matrix(skeletonI))
@@ -1738,7 +1739,8 @@ class ArmoryExporter:
         make_material.parse(mat, o, mat_users, mat_armusers)
         self.output['material_datas'].append(o)
         bpy.data.materials.remove(mat)
-        if bpy.data.worlds['Arm'].arm_culling == False:
+        rpdat = arm.utils.get_rp()
+        if rpdat.arm_culling == False:
             o['override_context'] = {}
             o['override_context']['cull_mode'] = 'none'
 
@@ -1773,7 +1775,8 @@ class ArmoryExporter:
             if material.arm_skip_context != '':
                 o['skip_context'] = material.arm_skip_context
 
-            if material.arm_two_sided or wrd.arm_culling == False:
+            rpdat = arm.utils.get_rp()
+            if material.arm_two_sided or rpdat.arm_culling == False:
                 o['override_context'] = {}
                 o['override_context']['cull_mode'] = 'none'
             elif material.arm_cull_mode != 'clockwise':
@@ -2036,12 +2039,13 @@ class ArmoryExporter:
 
         # Auto-bones
         wrd = bpy.data.worlds['Arm']
-        if wrd.arm_skin_max_bones_auto:
+        rpdat = arm.utils.get_rp()
+        if rpdat.arm_skin_max_bones_auto:
             max_bones = 8
             for armature in bpy.data.armatures:
                 if max_bones < len(armature.bones):
                     max_bones = len(armature.bones)
-            wrd.arm_skin_max_bones = max_bones
+            rpdat.arm_skin_max_bones = max_bones
 
         self.output['objects'] = []
         for bo in scene_objects:
@@ -2319,11 +2323,6 @@ class ArmoryExporter:
             if m.type == 'OCEAN':
                 # Do not export ocean mesh, just take specified constants
                 export_object = False
-                rdpat = arm.utils.get_rp()
-                wrd = bpy.data.worlds['Arm']
-                rdpat.rp_ocean = True
-                # Take position and bounds
-                wrd.arm_ocean_level = 0.0#bobject.location.z
 
         return export_object
 

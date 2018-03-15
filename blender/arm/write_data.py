@@ -207,9 +207,10 @@ project.addSources('Sources');
         if wrd.arm_stream_scene:
             assets.add_khafile_def('arm_stream')
 
-        if wrd.arm_skin == 'CPU':
+        rpdat = arm.utils.get_rp()
+        if rpdat.arm_skin == 'CPU':
             assets.add_khafile_def('arm_skin_cpu')
-        elif wrd.arm_skin == 'GPU (Matrix)':
+        elif rpdat.arm_skin == 'GPU (Matrix)':
             assets.add_khafile_def('arm_skin_mat')
 
         if arm.utils.get_viewport_controls() == 'azerty':
@@ -302,12 +303,12 @@ class Main {
 
         f.write("""
     public static function main() {
-        iron.object.BoneAnimation.skinMaxBones = """ + str(wrd.arm_skin_max_bones) + """;
+        iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;
 """)
         if rpdat.rp_shadowmap_cascades != '1':
             f.write("""
         iron.object.LampObject.cascadeCount = """ + str(rpdat.rp_shadowmap_cascades) + """;
-        iron.object.LampObject.cascadeSplitFactor = """ + str(wrd.arm_shadowmap_split) + """;
+        iron.object.LampObject.cascadeSplitFactor = """ + str(rpdat.arm_shadowmap_split) + """;
 """)
         f.write("""
         state = 1;
@@ -430,7 +431,6 @@ def write_indexhtml(w, h, is_publish):
 
 add_compiledglsl = ''
 def write_compiledglsl(defs):
-    wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     shadowmap_size = 0
     if rpdat.rp_shadowmap != 'Off':
@@ -445,68 +445,68 @@ def write_compiledglsl(defs):
         f.write("""const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;
 const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shadowmap_size) + """);
-const float shadowmapCubePcfSize = """ + str(round(wrd.arm_pcfsize * 10000) / 10000) + """;
+const float shadowmapCubePcfSize = """ + str((round(rpdat.arm_pcfsize * 100) / 100) / 1000) + """;
 const int shadowmapCascades = """ + str(rpdat.rp_shadowmap_cascades) + """;
 """)
         if rpdat.arm_clouds:
             f.write(
-"""const float cloudsDensity = """ + str(round(wrd.arm_clouds_density * 100) / 100) + """;
-const float cloudsSize = """ + str(round(wrd.arm_clouds_size * 100) / 100) + """;
-const float cloudsLower = """ + str(round(wrd.arm_clouds_lower * 1000)) + """;
-const float cloudsUpper = """ + str(round(wrd.arm_clouds_upper * 1000)) + """;
-const vec2 cloudsWind = vec2(""" + str(round(wrd.arm_clouds_wind[0] * 1000) / 1000) + """, """ + str(round(wrd.arm_clouds_wind[1] * 1000) / 1000) + """);
-const float cloudsSecondary = """ + str(round(wrd.arm_clouds_secondary * 100) / 100) + """;
-const float cloudsPrecipitation = """ + str(round(wrd.arm_clouds_precipitation * 100) / 100) + """;
-const float cloudsEccentricity = """ + str(round(wrd.arm_clouds_eccentricity * 100) / 100) + """;
+"""const float cloudsDensity = """ + str(round(rpdat.arm_clouds_density * 100) / 100) + """;
+const float cloudsSize = """ + str(round(rpdat.arm_clouds_size * 100) / 100) + """;
+const float cloudsLower = """ + str(round(rpdat.arm_clouds_lower * 1000)) + """;
+const float cloudsUpper = """ + str(round(rpdat.arm_clouds_upper * 1000)) + """;
+const vec2 cloudsWind = vec2(""" + str(round(rpdat.arm_clouds_wind[0] * 1000) / 1000) + """, """ + str(round(rpdat.arm_clouds_wind[1] * 1000) / 1000) + """);
+const float cloudsSecondary = """ + str(round(rpdat.arm_clouds_secondary * 100) / 100) + """;
+const float cloudsPrecipitation = """ + str(round(rpdat.arm_clouds_precipitation * 100) / 100) + """;
+const float cloudsEccentricity = """ + str(round(rpdat.arm_clouds_eccentricity * 100) / 100) + """;
 """)
         if rpdat.rp_ocean:
             f.write(
-"""const float seaLevel = """ + str(round(wrd.arm_ocean_level * 100) / 100) + """;
-const float seaMaxAmplitude = """ + str(round(wrd.arm_ocean_amplitude * 100) / 100) + """;
-const float seaHeight = """ + str(round(wrd.arm_ocean_height * 100) / 100) + """;
-const float seaChoppy = """ + str(round(wrd.arm_ocean_choppy * 100) / 100) + """;
-const float seaSpeed = """ + str(round(wrd.arm_ocean_speed * 100) / 100) + """;
-const float seaFreq = """ + str(round(wrd.arm_ocean_freq * 100) / 100) + """;
-const vec3 seaBaseColor = vec3(""" + str(round(wrd.arm_ocean_base_color[0] * 100) / 100) + """, """ + str(round(wrd.arm_ocean_base_color[1] * 100) / 100) + """, """ + str(round(wrd.arm_ocean_base_color[2] * 100) / 100) + """);
-const vec3 seaWaterColor = vec3(""" + str(round(wrd.arm_ocean_water_color[0] * 100) / 100) + """, """ + str(round(wrd.arm_ocean_water_color[1] * 100) / 100) + """, """ + str(round(wrd.arm_ocean_water_color[2] * 100) / 100) + """);
-const float seaFade = """ + str(round(wrd.arm_ocean_fade * 100) / 100) + """;
+"""const float seaLevel = """ + str(round(rpdat.arm_ocean_level * 100) / 100) + """;
+const float seaMaxAmplitude = """ + str(round(rpdat.arm_ocean_amplitude * 100) / 100) + """;
+const float seaHeight = """ + str(round(rpdat.arm_ocean_height * 100) / 100) + """;
+const float seaChoppy = """ + str(round(rpdat.arm_ocean_choppy * 100) / 100) + """;
+const float seaSpeed = """ + str(round(rpdat.arm_ocean_speed * 100) / 100) + """;
+const float seaFreq = """ + str(round(rpdat.arm_ocean_freq * 100) / 100) + """;
+const vec3 seaBaseColor = vec3(""" + str(round(rpdat.arm_ocean_base_color[0] * 100) / 100) + """, """ + str(round(rpdat.arm_ocean_base_color[1] * 100) / 100) + """, """ + str(round(rpdat.arm_ocean_base_color[2] * 100) / 100) + """);
+const vec3 seaWaterColor = vec3(""" + str(round(rpdat.arm_ocean_water_color[0] * 100) / 100) + """, """ + str(round(rpdat.arm_ocean_water_color[1] * 100) / 100) + """, """ + str(round(rpdat.arm_ocean_water_color[2] * 100) / 100) + """);
+const float seaFade = """ + str(round(rpdat.arm_ocean_fade * 100) / 100) + """;
 """)
         if rpdat.rp_ssgi == 'SSAO' or rpdat.rp_volumetriclight:
             scale = 0.5 if rpdat.arm_ssao_half_res else 1.0
             f.write(
-"""const float ssaoSize = """ + str(round(wrd.arm_ssao_size * 100) / 100) + """;
-const float ssaoStrength = """ + str(round(wrd.arm_ssao_strength * 100) / 100) + """;
+"""const float ssaoSize = """ + str(round((rpdat.arm_ssgi_step / 16) * 100) / 100) + """;
+const float ssaoStrength = """ + str(round((rpdat.arm_ssgi_strength / 10) * 100) / 100) + """;
 const float ssaoTextureScale = """ + str(scale) + """;
 """)
         if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
             f.write(
-"""const int ssgiMaxSteps = """ + str(wrd.arm_ssgi_max_steps) + """;
-const float ssgiRayStep = 0.005 * """ + str(round(wrd.arm_ssgi_step_size * 100) / 100) + """;
-const float ssgiStrength = """ + str(round(wrd.arm_ssgi_strength * 100) / 100) + """;
+"""const int ssgiMaxSteps = """ + str(rpdat.arm_ssgi_max_steps) + """;
+const float ssgiRayStep = 0.005 * """ + str(round(rpdat.arm_ssgi_step * 100) / 100) + """;
+const float ssgiStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100) + """;
 """)
 
         if rpdat.rp_bloom:
             f.write(
-"""const float bloomThreshold = """ + str(round(wrd.arm_bloom_threshold * 100) / 100) + """;
-const float bloomStrength = """ + str(round(wrd.arm_bloom_strength * 100) / 100) + """;
-const float bloomRadius = """ + str(round(wrd.arm_bloom_radius * 100) / 100) + """;
+"""const float bloomThreshold = """ + str(round(rpdat.arm_bloom_threshold * 100) / 100) + """;
+const float bloomStrength = """ + str(round(rpdat.arm_bloom_strength * 100) / 100) + """;
+const float bloomRadius = """ + str(round(rpdat.arm_bloom_radius * 100) / 100) + """;
 """)
         if rpdat.rp_motionblur != 'Off':
             f.write(
-"""const float motionBlurIntensity = """ + str(round(wrd.arm_motion_blur_intensity * 100) / 100) + """;
+"""const float motionBlurIntensity = """ + str(round(rpdat.arm_motion_blur_intensity * 100) / 100) + """;
 """)
         if rpdat.rp_ssr:
             f.write(
-"""const float ssrRayStep = """ + str(round(wrd.arm_ssr_ray_step * 100) / 100) + """;
-const float ssrMinRayStep = """ + str(round(wrd.arm_ssr_min_ray_step * 100) / 100) + """;
-const float ssrSearchDist = """ + str(round(wrd.arm_ssr_search_dist * 100) / 100) + """;
-const float ssrFalloffExp = """ + str(round(wrd.arm_ssr_falloff_exp * 100) / 100) + """;
-const float ssrJitter = """ + str(round(wrd.arm_ssr_jitter * 100) / 100) + """;
+"""const float ssrRayStep = """ + str(round(rpdat.arm_ssr_ray_step * 100) / 100) + """;
+const float ssrMinRayStep = """ + str(round(rpdat.arm_ssr_min_ray_step * 100) / 100) + """;
+const float ssrSearchDist = """ + str(round(rpdat.arm_ssr_search_dist * 100) / 100) + """;
+const float ssrFalloffExp = """ + str(round(rpdat.arm_ssr_falloff_exp * 100) / 100) + """;
+const float ssrJitter = """ + str(round(rpdat.arm_ssr_jitter * 100) / 100) + """;
 """)
 
         if rpdat.arm_ssrs:
             f.write(
-"""const float ssrsRayStep = """ + str(round(wrd.arm_ssrs_ray_step * 100) / 100) + """;
+"""const float ssrsRayStep = """ + str(round(rpdat.arm_ssrs_ray_step * 100) / 100) + """;
 """)
 
         if rpdat.arm_soft_shadows == 'On':
@@ -517,30 +517,30 @@ const float penumbraDistance = """ + str(rpdat.arm_soft_shadows_distance) + """;
 
         if rpdat.rp_volumetriclight:
             f.write(
-"""const float volumAirTurbidity = """ + str(round(wrd.arm_volumetric_light_air_turbidity * 100) / 100) + """;
-const vec3 volumAirColor = vec3(""" + str(round(wrd.arm_volumetric_light_air_color[0] * 100) / 100) + """, """ + str(round(wrd.arm_volumetric_light_air_color[1] * 100) / 100) + """, """ + str(round(wrd.arm_volumetric_light_air_color[2] * 100) / 100) + """);
-const int volumSteps = """ + str(wrd.arm_volumetric_light_steps) + """;
+"""const float volumAirTurbidity = """ + str(round(rpdat.arm_volumetric_light_air_turbidity * 100) / 100) + """;
+const vec3 volumAirColor = vec3(""" + str(round(rpdat.arm_volumetric_light_air_color[0] * 100) / 100) + """, """ + str(round(rpdat.arm_volumetric_light_air_color[1] * 100) / 100) + """, """ + str(round(rpdat.arm_volumetric_light_air_color[2] * 100) / 100) + """);
+const int volumSteps = """ + str(rpdat.arm_volumetric_light_steps) + """;
 """)
 
         if rpdat.rp_autoexposure:
             f.write(
-"""const float autoExposureStrength = """ + str(wrd.arm_autoexposure_strength) + """;
+"""const float autoExposureStrength = """ + str(rpdat.arm_autoexposure_strength) + """;
 """)
 
         # Compositor
-        if wrd.arm_letterbox:
+        if rpdat.arm_letterbox:
             f.write(
-"""const float compoLetterboxSize = """ + str(round(wrd.arm_letterbox_size * 100) / 100) + """;
+"""const float compoLetterboxSize = """ + str(round(rpdat.arm_letterbox_size * 100) / 100) + """;
 """)
 
-        if wrd.arm_grain:
+        if rpdat.arm_grain:
             f.write(
-"""const float compoGrainStrength = """ + str(round(wrd.arm_grain_strength * 100) / 100) + """;
+"""const float compoGrainStrength = """ + str(round(rpdat.arm_grain_strength * 100) / 100) + """;
 """)
 
-        if wrd.arm_sharpen:
+        if rpdat.arm_sharpen:
             f.write(
-"""const float compoSharpenStrength = """ + str(round(wrd.arm_sharpen_strength * 100) / 100) + """;
+"""const float compoSharpenStrength = """ + str(round(rpdat.arm_sharpen_strength * 100) / 100) + """;
 """)
 
         if bpy.data.scenes[0].cycles.film_exposure != 1.0:
@@ -548,11 +548,11 @@ const int volumSteps = """ + str(wrd.arm_volumetric_light_steps) + """;
 """const float compoExposureStrength = """ + str(round(bpy.data.scenes[0].cycles.film_exposure * 100) / 100) + """;
 """)
 
-        if wrd.arm_fog:
+        if rpdat.arm_fog:
             f.write(
-"""const float compoFogAmountA = """ + str(round(wrd.arm_fog_amounta * 100) / 100) + """;
-const float compoFogAmountB = """ + str(round(wrd.arm_fog_amountb * 100) / 100) + """;
-const vec3 compoFogColor = vec3(""" + str(round(wrd.arm_fog_color[0] * 100) / 100) + """, """ + str(round(wrd.arm_fog_color[1] * 100) / 100) + """, """ + str(round(wrd.arm_fog_color[2] * 100) / 100) + """);
+"""const float compoFogAmountA = """ + str(round(rpdat.arm_fog_amounta * 100) / 100) + """;
+const float compoFogAmountB = """ + str(round(rpdat.arm_fog_amountb * 100) / 100) + """;
+const vec3 compoFogColor = vec3(""" + str(round(rpdat.arm_fog_color[0] * 100) / 100) + """, """ + str(round(rpdat.arm_fog_color[1] * 100) / 100) + """, """ + str(round(rpdat.arm_fog_color[2] * 100) / 100) + """);
 """)
 
         if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].dof_distance > 0.0:
@@ -567,27 +567,27 @@ const float compoDOFLength = 160.0;
             f.write(
 """const ivec3 voxelgiResolution = ivec3(""" + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """, """ + str(int(int(rpdat.rp_voxelgi_resolution) * float(rpdat.rp_voxelgi_resolution_z))) + """);
 const vec3 voxelgiHalfExtents = vec3(""" + str(halfext) + """, """ + str(halfext) + """, """ + str(round(halfext * float(rpdat.rp_voxelgi_resolution_z))) + """);
-const float voxelgiDiff = """ + str(round(wrd.arm_voxelgi_diff * 100) / 100) + """;
-const float voxelgiSpec = """ + str(round(wrd.arm_voxelgi_spec * 100) / 100) + """;
-const float voxelgiOcc = """ + str(round(wrd.arm_voxelgi_occ * 100) / 100) + """;
-const float voxelgiEnv = """ + str(round(wrd.arm_voxelgi_env * 100) / 100) + """ / 10.0;
-const float voxelgiStep = """ + str(round(wrd.arm_voxelgi_step * 100) / 100) + """;
-const float voxelgiRange = """ + str(round(wrd.arm_voxelgi_range * 100) / 100) + """;
-const float voxelgiOffsetDiff = """ + str(round(wrd.arm_voxelgi_offset_diff * 100) / 100) + """;
-const float voxelgiOffsetSpec = """ + str(round(wrd.arm_voxelgi_offset_spec * 100) / 100) + """;
-const float voxelgiOffsetShadow = """ + str(round(wrd.arm_voxelgi_offset_shadow * 100) / 100) + """;
-const float voxelgiOffsetRefract = """ + str(round(wrd.arm_voxelgi_offset_refract * 100) / 100) + """;
+const float voxelgiDiff = """ + str(round(rpdat.arm_voxelgi_diff * 100) / 100) + """;
+const float voxelgiSpec = """ + str(round(rpdat.arm_voxelgi_spec * 100) / 100) + """;
+const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_occ * 100) / 100) + """;
+const float voxelgiEnv = """ + str(round(rpdat.arm_voxelgi_env * 100) / 100) + """ / 10.0;
+const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 100) / 100) + """;
+const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
+const float voxelgiOffsetDiff = """ + str(round(rpdat.arm_voxelgi_offset_diff * 100) / 100) + """;
+const float voxelgiOffsetSpec = """ + str(round(rpdat.arm_voxelgi_offset_spec * 100) / 100) + """;
+const float voxelgiOffsetShadow = """ + str(round(rpdat.arm_voxelgi_offset_shadow * 100) / 100) + """;
+const float voxelgiOffsetRefract = """ + str(round(rpdat.arm_voxelgi_offset_refract * 100) / 100) + """;
 """)
 
         if rpdat.rp_sss_state == 'On':
             f.write(
-"""const float sssWidth = """ + str(wrd.arm_sss_width / 10.0) + """;
+"""const float sssWidth = """ + str(rpdat.arm_sss_width / 10.0) + """;
 """)
 
         # Skinning
-        if wrd.arm_skin.startswith('GPU'):
+        if rpdat.arm_skin.startswith('GPU'):
             f.write(
-"""const int skinMaxBones = """ + str(wrd.arm_skin_max_bones) + """;
+"""const int skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;
 """)
 
         f.write(add_compiledglsl + '\n') # External defined constants

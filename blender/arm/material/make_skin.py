@@ -1,10 +1,11 @@
-import bpy
+import arm.utils
 
 def skin_pos(vert):
 
     vert.add_include('compiled.glsl')
 
-    if bpy.data.worlds['Arm'].arm_skin == 'GPU (Matrix)':
+    rpdat = arm.utils.get_rp()
+    if rpdat.arm_skin == 'GPU (Matrix)':
         vert.add_include('std/skinning_mat.glsl')
         vert.add_uniform('vec4 skinBones[skinMaxBones * 3]', link='_skinBones', included=True)
         vert.write('mat4 skinningMat = getSkinningMat(ivec4(bone), weight);')
@@ -20,7 +21,8 @@ def skin_pos(vert):
         vert.write('spos.xyz += 2.0 * (skinA.w * skinB.xyz - skinB.w * skinA.xyz + cross(skinA.xyz, skinB.xyz)); // Translate')
 
 def skin_nor(vert, prep):
-    if bpy.data.worlds['Arm'].arm_skin == 'GPU (Matrix)':
+    rpdat = arm.utils.get_rp()
+    if rpdat.arm_skin == 'GPU (Matrix)':
         vert.write('mat3 skinningMatVec = getSkinningMatVec(skinningMat);')
         vert.write(prep + 'wnormal = normalize(N * (nor * skinningMatVec));')
 

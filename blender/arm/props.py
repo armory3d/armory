@@ -223,6 +223,7 @@ def init_properties():
     bpy.types.Camera.arm_texture_resolution_y = FloatProperty(name="Y", default=256.0)
 
     # Render path generator
+    bpy.types.World.rp_search = StringProperty(name="Search", default='')
     bpy.types.World.rp_preset = EnumProperty(
         items=[('Low', 'Low', 'Low'),
                ('VR', 'VR', 'VR'),
@@ -234,24 +235,6 @@ def init_properties():
                ('Lightmap', 'Lightmap', 'Lightmap'),
                ],
         name="Preset", description="Render path preset", default='Deferred', update=props_renderpath.update_preset)
-    bpy.types.World.arm_voxelgi_diff = FloatProperty(name="Diffuse", description="", default=3.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_voxelgi_cones = EnumProperty(
-        items=[('9', '9', '9'),
-               ('5', '5', '5'),
-               ('3', '3', '3'),
-               ('1', '1', '1'),
-               ],
-        name="Cones", description="Number of cones to trace", default='5', update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_voxelgi_spec = FloatProperty(name="Specular", description="", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_voxelgi_occ = FloatProperty(name="Occlusion", description="", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_voxelgi_env = FloatProperty(name="Env Map", description="Contribute light from environment map", default=0.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_voxelgi_step = FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_voxelgi_offset_diff = FloatProperty(name="Diffuse Offset", description="Offset size", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_voxelgi_offset_spec = FloatProperty(name="Specular Offset", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_voxelgi_offset_shadow = FloatProperty(name="Shadow Offset", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_voxelgi_offset_refract = FloatProperty(name="Refract Offset", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_voxelgi_range = FloatProperty(name="Range", description="Maximum range", default=0.5, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_sss_width = FloatProperty(name="SSS Width", description="SSS blur strength", default=1.0, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_envtex_name = StringProperty(name="Environment Texture", default='')
     bpy.types.World.arm_envtex_irr_name = StringProperty(name="Environment Irradiance", default='')
     bpy.types.World.arm_envtex_num_mips = IntProperty(name="Number of mips", default=0)
@@ -268,90 +251,11 @@ def init_properties():
                ('2048', '2048', '2048')],
         name="", description="Prefiltered map size", default='1024', update=assets.invalidate_envmap_data)
     bpy.types.World.arm_radiance_sky = BoolProperty(name="Sky Radiance", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_clouds_density = FloatProperty(name="Density", default=1.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_clouds_size = FloatProperty(name="Size", default=1.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_clouds_lower = FloatProperty(name="Lower", default=2.0, min=1.0, max=10.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_clouds_upper = FloatProperty(name="Upper", default=3.5, min=1.0, max=10.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_clouds_wind = FloatVectorProperty(name="Wind", default=[0.2, 0.06], size=2, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_clouds_secondary = FloatProperty(name="Secondary", default=0.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_clouds_precipitation = FloatProperty(name="Precipitation", default=1.0, min=0.0, max=2.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_clouds_eccentricity = FloatProperty(name="Eccentricity", default=0.6, min=0.0, max=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ocean_base_color = FloatVectorProperty(name="Base Color", size=3, default=[0.1, 0.19, 0.37], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ocean_water_color = FloatVectorProperty(name="Water Color", size=3, default=[0.6, 0.7, 0.9], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ocean_level = FloatProperty(name="Level", default=0.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ocean_amplitude = FloatProperty(name="Amplitude", default=2.5, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ocean_height = FloatProperty(name="Height", default=0.6, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ocean_choppy = FloatProperty(name="Choppy", default=4.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ocean_speed = FloatProperty(name="Speed", default=1.5, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ocean_freq = FloatProperty(name="Freq", default=0.16, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ocean_fade = FloatProperty(name="Fade", default=1.8, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ssao_size = FloatProperty(name="Size", default=0.12, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ssao_strength = FloatProperty(name="Strength", default=0.1, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ssgi_strength = FloatProperty(name="Strength", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ssgi_step_size = FloatProperty(name="Step Size", default=2.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ssgi_max_steps = IntProperty(name="Max Steps", default=8, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ssgi_rays = EnumProperty(
-        items=[('9', '9', '9'),
-               ('5', '5', '5'),
-               ],
-        name="SSGI Rays", description="Number of rays to trace for RTAO/RTGI", default='5', update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_bloom_threshold = FloatProperty(name="Threshold", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_bloom_strength = FloatProperty(name="Strength", default=3.5, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_bloom_radius = FloatProperty(name="Radius", default=3.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_motion_blur_intensity = FloatProperty(name="Intensity", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ssr_ray_step = FloatProperty(name="Ray Step", default=0.04, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ssr_min_ray_step = FloatProperty(name="Ray Step Min", default=0.05, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ssr_search_dist = FloatProperty(name="Search Dist", default=5.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ssr_falloff_exp = FloatProperty(name="Falloff Exp", default=5.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ssr_jitter = FloatProperty(name="Jitter", default=0.6, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_volumetric_light_air_turbidity = FloatProperty(name="Air Turbidity", default=1.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_volumetric_light_air_color = FloatVectorProperty(name="Air Color", size=3, default=[1.0, 1.0, 1.0], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_volumetric_light_steps = IntProperty(name="Steps", default=20, min=0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_shadowmap_split = FloatProperty(name="Cascade Split", description="Split factor for cascaded shadow maps, higher factor favors detail on close surfaces", default=0.8, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_autoexposure_strength = FloatProperty(name="Auto Exposure Strength", default=0.7, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_ssrs_ray_step = FloatProperty(name="Ray Step", default=0.01, update=assets.invalidate_shader_cache)
     bpy.types.World.rp_rendercapture_format = EnumProperty(
         items=[('8bit', '8bit', '8bit'),
                ('16bit', '16bit', '16bit'),
                ('32bit', '32bit', '32bit')],
         name="Capture Format", description="Bits per color channel", default='8bit', update=props_renderpath.update_renderpath)
-    # Compositor
-    bpy.types.World.arm_letterbox = BoolProperty(name="Letterbox", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_letterbox_size = FloatProperty(name="Size", default=0.1, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_grain = BoolProperty(name="Film Grain", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_grain_strength = FloatProperty(name="Strength", default=2.0, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_sharpen = BoolProperty(name="Sharpen", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_sharpen_strength = FloatProperty(name="Strength", default=0.25, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_fog = BoolProperty(name="Volumetric Fog", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_fog_color = FloatVectorProperty(name="Color", size=3, subtype='COLOR', default=[0.5, 0.6, 0.7], min=0, max=1, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_fog_amounta = FloatProperty(name="Amount A", default=0.25, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_fog_amountb = FloatProperty(name="Amount B", default=0.5, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_tonemap = EnumProperty(
-        items=[('Off', 'Off', 'Off'),
-               ('Filmic', 'Filmic', 'Filmic'),
-               ('Filmic2', 'Filmic2', 'Filmic2'),
-               ('Reinhard', 'Reinhard', 'Reinhard'),
-               ('Uncharted', 'Uncharted', 'Uncharted')],
-        name='Tonemap', description='Tonemapping operator', default='Filmic', update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_lamp_texture = StringProperty(name="Mask Texture", default="")
-    bpy.types.World.arm_lamp_ies_texture = StringProperty(name="IES Texture", default="")
-    bpy.types.World.arm_lamp_clouds_texture = StringProperty(name="Clouds Texture", default="")
-    bpy.types.World.arm_lens_texture = StringProperty(name="Lens Texture", default="")
-    bpy.types.World.arm_fisheye = BoolProperty(name="Fish Eye", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_vignette = BoolProperty(name="Vignette", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_lensflare = BoolProperty(name="Lens Flare", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_lut_texture = StringProperty(name="LUT Texture", description="Color Grading", default="", update=assets.invalidate_shader_cache)
-    # Skin
-    bpy.types.World.arm_skin = EnumProperty(
-        items=[('GPU (Dual-Quat)', 'GPU (Dual-Quat)', 'GPU (Dual-Quat)'),
-               ('GPU (Matrix)', 'GPU (Matrix)', 'GPU (Matrix)'),
-               ('CPU', 'CPU', 'CPU')],
-        name='Skinning', description='Skinning method', default='GPU (Dual-Quat)', update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_skin_max_bones_auto = BoolProperty(name="Auto Bones", description="Calculate amount of maximum bones based on armatures", default=True, update=assets.invalidate_compiled_data)
-    bpy.types.World.arm_skin_max_bones = IntProperty(name="Max Bones", default=50, min=1, max=3000, update=assets.invalidate_shader_cache)
-    # Material override flags
-    bpy.types.World.arm_culling = BoolProperty(name="Culling", default=True)
-    bpy.types.World.arm_two_sided_area_lamp = BoolProperty(name="Two-Sided Area Lamps", description="Emit light from both faces of area lamp", default=False, update=assets.invalidate_shader_cache)
     # For material
     bpy.types.Material.arm_cast_shadow = BoolProperty(name="Cast Shadow", default=True)
     bpy.types.Material.arm_receive_shadow = BoolProperty(name="Receive Shadow", default=True)
@@ -396,7 +300,9 @@ def init_properties():
     bpy.types.Lamp.arm_fov = FloatProperty(name="Field of View", default=0.84)
     bpy.types.Lamp.arm_shadows_bias = FloatProperty(name="Bias", description="Depth offset to fight shadow acne", default=1.0)
     bpy.types.Lamp.arm_omni_shadows = BoolProperty(name="Omni-Shadows", description="Draw shadows to all faces of the cube map", default=True)
-    bpy.types.World.arm_pcfsize = FloatProperty(name="PCF Size", description="Filter size", default=0.001)
+    bpy.types.World.arm_lamp_texture = StringProperty(name="Mask Texture", default="")
+    bpy.types.World.arm_lamp_ies_texture = StringProperty(name="IES Texture", default="")
+    bpy.types.World.arm_lamp_clouds_texture = StringProperty(name="Clouds Texture", default="")
 
     bpy.types.World.arm_rpcache_list = CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.arm_scripts_list = CollectionProperty(type=bpy.types.PropertyGroup)
