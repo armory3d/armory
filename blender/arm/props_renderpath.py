@@ -352,6 +352,14 @@ class ArmRPListItem(bpy.types.PropertyGroup):
              ('Off', 'Off', 'Off'),
       ],
       name="Background", description="Background type", default='World', update=update_renderpath)    
+    arm_irradiance = BoolProperty(name="Irradiance", description="Generate spherical harmonics", default=True, update=assets.invalidate_shader_cache)
+    arm_radiance = BoolProperty(name="Radiance", description="Generate radiance textures", default=True, update=assets.invalidate_shader_cache)
+    arm_radiance_size = EnumProperty(
+        items=[('512', '512', '512'),
+               ('1024', '1024', '1024'), 
+               ('2048', '2048', '2048')],
+        name="", description="Prefiltered map size", default='1024', update=assets.invalidate_envmap_data)
+    arm_radiance_sky = BoolProperty(name="Sky Radiance", default=True, update=assets.invalidate_shader_cache)
     rp_autoexposure = BoolProperty(name="Auto Exposure", description="Adjust exposure based on luminance", default=False, update=update_renderpath)
     rp_compositornodes = BoolProperty(name="Compositor", description="Draw compositor nodes", default=True, update=update_renderpath)
     rp_shadowmap = EnumProperty(
@@ -387,8 +395,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_ssgi = EnumProperty(
         items=[('Off', 'Off', 'Off'),
                ('SSAO', 'SSAO', 'Screen space ambient occlusion'),
-               ('RTAO', 'Ray-traced AO', 'Ray-traced ambient occlusion'),
-               ('RTGI', 'Ray-traced GI', 'Ray-traced global illumination')
+               ('RTAO', 'RTAO', 'Ray-traced ambient occlusion'),
+               ('RTGI', 'RTGI', 'Ray-traced global illumination')
                ],
         name="SSGI", description="Screen space global illumination", default='SSAO', update=update_renderpath)
     rp_dfao = BoolProperty(name="DFAO", description="Distance field ambient occlusion", default=False)
@@ -528,7 +536,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_voxelgi_offset_shadow = FloatProperty(name="Shadow Offset", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_offset_refract = FloatProperty(name="Refract Offset", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_range = FloatProperty(name="Range", description="Maximum range", default=0.5, update=assets.invalidate_shader_cache)
-    arm_sss_width = FloatProperty(name="SSS Width", description="SSS blur strength", default=1.0, update=assets.invalidate_shader_cache)
+    arm_sss_width = FloatProperty(name="Width", description="SSS blur strength", default=1.0, update=assets.invalidate_shader_cache)
     arm_clouds_density = FloatProperty(name="Density", default=1.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
     arm_clouds_size = FloatProperty(name="Size", default=1.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
     arm_clouds_lower = FloatProperty(name="Lower", default=2.0, min=1.0, max=10.0, update=assets.invalidate_shader_cache)

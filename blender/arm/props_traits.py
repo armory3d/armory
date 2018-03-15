@@ -50,11 +50,11 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
     name = bpy.props.StringProperty(name="Name", description="A name for this item", default="")
     enabled_prop = bpy.props.BoolProperty(name="", description="A name for this item", default=True, update=trigger_recompile)
     type_prop = bpy.props.EnumProperty(
-        items = [('Haxe Script', 'Haxe Script', 'Haxe Script'),
-                 ('WebAssembly', 'WebAssembly', 'WebAssembly'),
-                 ('UI Canvas', 'UI Canvas', 'UI Canvas'),
-                 ('Bundled Script', 'Bundled Script', 'Bundled Script'),
-                 ('Logic Nodes', 'Logic Nodes', 'Logic Nodes')
+        items = [('Haxe Script', 'Haxe', 'Haxe Script'),
+                 ('WebAssembly', 'WASM', 'WebAssembly'),
+                 ('UI Canvas', 'UI', 'UI Canvas'),
+                 ('Bundled Script', 'Bundled', 'Bundled Script'),
+                 ('Logic Nodes', 'Nodes', 'Logic Nodes')
                  ],
         name = "Type")
     class_name_prop = bpy.props.StringProperty(name="Class", description="A name for this item", default="", update=update_trait_group)
@@ -445,7 +445,7 @@ def draw_traits(layout, obj, is_object):
         item = obj.arm_traitlist[obj.arm_traitlist_index]
         # Default props
         row = layout.row()
-        row.prop(item, "type_prop")
+        row.prop(item, "type_prop", expand=True)
 
         if item.type_prop == 'Haxe Script' or item.type_prop == 'Bundled Script':
             item.name = item.class_name_prop
@@ -503,7 +503,7 @@ def draw_traits(layout, obj, is_object):
                 column.alignment = 'EXPAND'
                 if item.class_name_prop == '':
                     column.enabled = False
-                op = column.operator("arm.edit_script")
+                op = column.operator("arm.edit_script", icon="FILE_SCRIPT")
                 op.is_object = is_object
                 op = row.operator("arm.new_script")
                 op.is_object = is_object
@@ -513,7 +513,7 @@ def draw_traits(layout, obj, is_object):
                 row.alignment = 'EXPAND'
                 column = row.column(align=True)
                 column.alignment = 'EXPAND'
-                op = column.operator("arm.edit_bundled_script")
+                op = column.operator("arm.edit_bundled_script", icon="FILE_SCRIPT")
                 op.is_object = is_object
                 op = row.operator("arm.refresh_scripts")
         
@@ -534,7 +534,7 @@ def draw_traits(layout, obj, is_object):
             column.alignment = 'EXPAND'
             if item.canvas_name_prop == '':
                 column.enabled = False
-            op = column.operator("arm.edit_canvas")
+            op = column.operator("arm.edit_canvas", icon="FILE_SCRIPT")
             op.is_object = is_object
             op = row.operator("arm.new_canvas")
             op.is_object = is_object

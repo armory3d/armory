@@ -134,7 +134,7 @@ def init_properties():
     bpy.types.World.arm_play_camera = EnumProperty(
         items=[('Scene', 'Scene', 'Scene'),
                ('Viewport', 'Viewport', 'Viewport'),
-               ('Viewport Shared', 'Viewport Shared', 'Viewport Shared')
+               ('Viewport Shared', 'Shared', 'Viewport Shared')
                ],
         name="Camera", description="Viewport camera", default='Scene')
     bpy.types.World.arm_play_console = BoolProperty(name="Debug Console", description="Show inspector in player and enable debug draw", default=False, update=assets.invalidate_shader_cache)
@@ -152,7 +152,7 @@ def init_properties():
         items = [('Window', 'Window', 'Window'),
                  ('BorderlessWindow', 'Borderless', 'BorderlessWindow'),
                  ('Fullscreen', 'Fullscreen', 'Fullscreen')],
-        name="", default='Window', description='Window mode to start in', update=invalidate_compiler_cache)
+        name="Mode", default='Window', description='Window mode to start in', update=invalidate_compiler_cache)
     bpy.types.World.arm_winorient = EnumProperty(
         items = [('Multi', 'Multi', 'Multi'),
                  ('Portrait', 'Portrait', 'Portrait'),
@@ -243,14 +243,6 @@ def init_properties():
     bpy.types.World.arm_envtex_sun_direction = FloatVectorProperty(name="Sun Direction", size=3, default=[0,0,0])
     bpy.types.World.arm_envtex_turbidity = FloatProperty(name="Turbidity", default=1.0)
     bpy.types.World.arm_envtex_ground_albedo = FloatProperty(name="Ground Albedo", default=0.0)
-    bpy.types.World.arm_irradiance = BoolProperty(name="Irradiance", description="Generate spherical harmonics", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_radiance = BoolProperty(name="Radiance", description="Generate radiance textures", default=True, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_radiance_size = EnumProperty(
-        items=[('512', '512', '512'),
-               ('1024', '1024', '1024'), 
-               ('2048', '2048', '2048')],
-        name="", description="Prefiltered map size", default='1024', update=assets.invalidate_envmap_data)
-    bpy.types.World.arm_radiance_sky = BoolProperty(name="Sky Radiance", default=True, update=assets.invalidate_shader_cache)
     bpy.types.World.rp_rendercapture_format = EnumProperty(
         items=[('8bit', '8bit', '8bit'),
                ('16bit', '16bit', '16bit'),

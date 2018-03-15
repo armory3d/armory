@@ -57,8 +57,8 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
     input_file = arm.utils.asset_path(image_filepath)
     
     # Scale map
-    wrd = bpy.data.worlds['Arm']
-    target_w = int(wrd.arm_radiance_size)
+    rpdat = arm.utils.get_rp()
+    target_w = int(rpdat.arm_radiance_size)
     target_h = int(target_w / 2)
     scaled_file = output_file_rad + '.' + rad_format
 

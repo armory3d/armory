@@ -31,7 +31,7 @@ def build_node_tree(world):
             parsed = True
     if parsed == False:
         solid_mat = rpdat.arm_material_model == 'Solid'
-        if wrd.arm_irradiance and not solid_mat:
+        if rpdat.arm_irradiance and not solid_mat:
             wrd.world_defs += '_Irr'
         c = world.horizon_color
         world.arm_envtex_color = [c[0], c[1], c[2], 1.0]
@@ -72,7 +72,7 @@ def parse_surface(world, node):
     if node.type == 'BACKGROUND':
         
         # Append irradiance define
-        if wrd.arm_irradiance and not solid_mat:
+        if rpdat.arm_irradiance and not solid_mat:
             wrd.world_defs += '_Irr'
 
         world.arm_envtex_color = node.inputs[0].default_value
@@ -151,7 +151,7 @@ def parse_color(world, node):
         disable_hdr = target_format == 'JPEG'
         
         mip_count = world.arm_envtex_num_mips
-        mip_count = write_probes.write_probes(filepath, disable_hdr, mip_count, arm_radiance=wrd.arm_radiance)
+        mip_count = write_probes.write_probes(filepath, disable_hdr, mip_count, arm_radiance=rpdat.arm_radiance)
         
         world.arm_envtex_num_mips = mip_count
         
@@ -161,7 +161,7 @@ def parse_color(world, node):
         if disable_hdr:
             wrd.world_defs += '_EnvLDR'
         # Append radiance define
-        if wrd.arm_irradiance and wrd.arm_radiance and not mobile_mat:
+        if rpdat.arm_irradiance and rpdat.arm_radiance and not mobile_mat:
             wrd.world_defs += '_Rad'
 
     # Static image background
@@ -206,7 +206,7 @@ def parse_color(world, node):
         write_probes.write_sky_irradiance(wname)
 
         # Radiance
-        if wrd.arm_radiance_sky and wrd.arm_radiance and wrd.arm_irradiance and not mobile_mat:
+        if rpdat.arm_radiance_sky and rpdat.arm_radiance and rpdat.arm_irradiance and not mobile_mat:
             wrd.world_defs += '_Rad'
             hosek_path = 'armory/Assets/hosek/'
             sdk_path = arm.utils.get_sdk_path()

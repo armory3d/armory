@@ -2649,15 +2649,15 @@ class ArmoryExporter:
         # Main probe
         rpdat = arm.utils.get_rp()
         solid_mat = rpdat.arm_material_model == 'Solid'
-        arm_irradiance = wrd.arm_irradiance and not solid_mat
+        arm_irradiance = rpdat.arm_irradiance and not solid_mat
         arm_radiance = False
         radtex = world.arm_envtex_name.rsplit('.', 1)[0]
         irrsharmonics = world.arm_envtex_irr_name
         # Radiance
         if '_EnvTex' in wrd.world_defs:
-            arm_radiance = bpy.data.worlds['Arm'].arm_radiance
-        elif '_EnvSky' in wrd.world_defs and bpy.data.worlds['Arm'].arm_radiance_sky:
-            arm_radiance = bpy.data.worlds['Arm'].arm_radiance
+            arm_radiance = rpdat.arm_radiance
+        elif '_EnvSky' in wrd.world_defs and rpdat.arm_radiance_sky:
+            arm_radiance = rpdat.arm_radiance
             radtex = 'hosek'
         num_mips = world.arm_envtex_num_mips
         strength = world.arm_envtex_strength
