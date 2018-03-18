@@ -1038,6 +1038,7 @@ class ArmoryExporter:
 
         # Write the bone object reference array
         oskin['bone_ref_array'] = []
+        oskin['bone_len_array'] = []
 
         bone_array = armature.data.bones
         bone_count = len(bone_array)
@@ -1050,8 +1051,10 @@ class ArmoryExporter:
             boneRef = self.find_bone(bone_array[i].name)
             if boneRef:
                 oskin['bone_ref_array'].append(boneRef[1]["structName"])
+                oskin['bone_len_array'].append(bone_array[i].length)
             else:
                 oskin['bone_ref_array'].append("null")
+                oskin['bone_len_array'].append(0.0)
 
         # Write the bind pose transform array
         oskin['transformsI'] = []
