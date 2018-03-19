@@ -27,17 +27,9 @@ def write_arm(filepath, output):
 def write_image(image, path, file_format='JPEG'):
     # Convert image to compatible format
     print('Armory Info: Writing ' + path)
-    ren = bpy.context.scene.render
-    orig_quality = ren.image_settings.quality
-    orig_file_format = ren.image_settings.file_format
-
-    ren.image_settings.quality = 90
-    ren.image_settings.file_format = file_format
-
-    image.save_render(path, bpy.context.scene)
-
-    ren.image_settings.quality = orig_quality
-    ren.image_settings.file_format = orig_file_format
+    image.filepath_raw = path
+    image.file_format = file_format
+    image.save()
 
 def blend_name():
     return bpy.path.basename(bpy.context.blend_data.filepath).rsplit('.')[0]
