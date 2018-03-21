@@ -50,9 +50,15 @@ class PhysicsWorld extends Trait {
 	public function new() {
 		super();
 
-		if (active != null) return;
+		if (active == null) {
+			createPhysics();
+		}
+		else {
+			for (rb in active.rbMap) removeRigidBody(rb);
+			world = active.world;
+			dispatcher = active.dispatcher;
+		}
 
-		createPhysics();
 		contacts = [];
 		rbMap = new Map();
 		active = this;
@@ -111,7 +117,7 @@ class PhysicsWorld extends Trait {
 	public function removeRigidBody(body:RigidBody) {
 		if (world != null) world.removeRigidBody(body.body);
 		#if js
-		Ammo.destroy(body.body);
+		// Ammo.destroy(body.body);
 		#elseif cpp
 		// body.body.destroy(); // delete body;
 		#end

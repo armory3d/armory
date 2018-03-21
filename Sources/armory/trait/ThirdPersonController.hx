@@ -56,7 +56,6 @@ class ThirdPersonController extends CameraController {
 		
 		var mouse = Input.getMouse();
 		if (mouse.down()) {
-			// kha.SystemImpl.lockMouse();
 			camera.transform.rotate(xVec, mouse.movementY / 250 * rotationSpeed);
 			transform.rotate(zVec, -mouse.movementX / 250 * rotationSpeed);
 			camera.buildMatrix();

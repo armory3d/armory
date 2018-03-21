@@ -45,16 +45,16 @@ class SoftBody extends Trait {
 		});
 	}
 
-	function fromF32(ar:TFloat32Array):haxe.ds.Vector<kha.FastFloat> {
-		var vals = new haxe.ds.Vector<kha.FastFloat>(ar.length);
+	function fromF32(ar:kha.arrays.Float32Array):kha.arrays.Float32Array {
+		var vals = new kha.arrays.Float32Array(ar.length);
 		for (i in 0...vals.length) vals[i] = ar[i];
 		return vals;
 	}
 
-	function fromU32(ars:Array<TUint32Array>):haxe.ds.Vector<Int> {
+	function fromU32(ars:Array<kha.arrays.Uint32Array>):kha.arrays.Uint32Array {
 		var len = 0;
 		for (ar in ars) len += ar.length;
-		var vals = new haxe.ds.Vector<Int>(len);
+		var vals = new kha.arrays.Uint32Array(len);
 		var i = 0;
 		for (ar in ars) {
 			for (j in 0...ar.length) {
@@ -113,9 +113,9 @@ class SoftBody extends Trait {
 
 		var softBodyHelpers = BtSoftBodyHelpers.create();
 #if js
-		body = softBodyHelpers.CreateFromTriMesh(wrdinfo, positions, vecind, numtri);
+		body = softBodyHelpers.CreateFromTriMesh(wrdinfo, cast positions, cast vecind, numtri);
 #elseif cpp
-		untyped __cpp__("body = softBodyHelpers.CreateFromTriMesh(wrdinfo, positions->Pointer(), vecind->Pointer(), numtri);");
+		untyped __cpp__("body = softBodyHelpers.CreateFromTriMesh(wrdinfo, positions->self.data, vecind->self.data, numtri);");
 #end
 
 		// body.generateClusters(4);

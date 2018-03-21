@@ -9,12 +9,12 @@
 uniform vec4 casData[shadowmapCascades * 4 + 4];
 #endif
 
-float shadowCompare(sampler2D shadowMap, const vec2 uv, const float compare){
+float shadowCompare(sampler2D shadowMap, const vec2 uv, const float compare) {
 	float depth = texture(shadowMap, uv).r;
 	return step(compare, depth);
 }
 
-float shadowLerp(sampler2D shadowMap, const vec2 uv, const float compare, const vec2 smSize){
+float shadowLerp(sampler2D shadowMap, const vec2 uv, const float compare, const vec2 smSize) {
 	const vec2 texelSize = vec2(1.0) / smSize;
 	vec2 f = fract(uv * smSize + 0.5);
 	vec2 centroidUV = floor(uv * smSize + 0.5) / smSize;

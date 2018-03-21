@@ -56,7 +56,7 @@ class Vertex:
         self.co = mesh.vertices[self.vertex_index].co[:]
         self.normal = loop.normal[:]
         self.uvs = tuple(layer.data[loop_idx].uv[:] for layer in mesh.uv_layers)
-        self.col = [0, 0, 0]
+        self.col = [0.0, 0.0, 0.0]
         if len(mesh.vertex_colors) > 0:
             self.col = mesh.vertex_colors[0].data[loop_idx].color[:]
         # self.colors = tuple(layer.data[loop_idx].color[:] for layer in mesh.vertex_colors)
@@ -865,7 +865,7 @@ class ArmoryExporter:
                     for i in range(0, num_psys):
                         self.export_particle_system_ref(bobject.particle_systems[i], i, o)
 
-                o['dimensions'] = [0, 0, 0]
+                o['dimensions'] = [0.0, 0.0, 0.0]
                 for i in range(0, 3):
                     if bobject.scale[i] != 0:
                         o['dimensions'][i] = bobject.dimensions[i] / bobject.scale[i]
@@ -1583,7 +1583,7 @@ class ArmoryExporter:
             o['lamp_size'] = objref.shadow_soft_size * 10 # Match to Cycles
         gapi = arm.utils.get_gapi()
         mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
-        if objtype == 'POINT' and objref.arm_omni_shadows and not gapi.startswith('direct3d') and not mobile_mat:
+        if objtype == 'POINT' and objref.arm_omni_shadows and not mobile_mat:
             o['fov'] = 1.5708 # 90 deg
             o['shadowmap_cube'] = True
             o['shadows_bias'] *= 2.0
@@ -2684,8 +2684,8 @@ class ArmoryExporter:
             po['irradiance'] = '' # No irradiance data, fallback to default at runtime
         po['strength'] = strength
         po['blending'] = 1.0
-        po['volume'] = [0, 0, 0]
-        po['volume_center'] = [0, 0, 0]
+        po['volume'] = [0.0, 0.0, 0.0]
+        po['volume_center'] = [0.0, 0.0, 0.0]
         o['probes'].append(po)
 
     # https://blender.stackexchange.com/questions/70629

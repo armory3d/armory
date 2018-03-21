@@ -305,6 +305,13 @@ class Main {
     public static function main() {
         iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;
 """)
+        # TODO: deprecated
+        if in_viewport:
+            f.write("""
+        untyped __js__("Krom.setPenDownCallback = function() { };");
+        untyped __js__("Krom.setPenUpCallback = function() { };");
+        untyped __js__("Krom.setPenMoveCallback = function() { };");
+""")
         if rpdat.rp_shadowmap_cascades != '1':
             f.write("""
         iron.object.LampObject.cascadeCount = """ + str(rpdat.rp_shadowmap_cascades) + """;

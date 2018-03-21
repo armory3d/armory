@@ -283,7 +283,6 @@ class Inc {
 		#end
 	}
 
-	#if cpp
 	#if (rp_gi == "Voxel GI")
 	public static function computeVoxels() {
 		if (voxel_sh == null) {
@@ -402,7 +401,6 @@ class Inc {
 		#end
 	}
 	#end
-	#end // cpp
 
 	#if (rp_renderer == "Forward")
 	public static function drawShadowMap(l:iron.object.LampObject) {

@@ -16,7 +16,7 @@ class MeshNode extends LogicNode {
 	}
 
 	override function get(from:Int):Dynamic { 
-		iron.data.Data.getMesh("mesh_" + property0, property0, null, function(mesh:MeshData) {
+		iron.data.Data.getMesh("mesh_" + property0, property0, function(mesh:MeshData) {
 			value = mesh;
 		});
 

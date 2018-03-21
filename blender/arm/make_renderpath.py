@@ -90,11 +90,10 @@ def add_world_defs():
 
         if voxelgi:
             wrd.world_defs += '_VoxelGI'
-            if state.target == "native": # TODO: temp Kha compatibily fix
-                assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_light/voxel_light.comp.glsl')
-                if rpdat.arm_voxelgi_bounces != "1":
-                    assets.add_khafile_def('rp_gi_bounces={0}'.format(rpdat.arm_voxelgi_bounces))
-                    assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_bounce/voxel_bounce.comp.glsl')
+            assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_light/voxel_light.comp.glsl')
+            if rpdat.arm_voxelgi_bounces != "1":
+                assets.add_khafile_def('rp_gi_bounces={0}'.format(rpdat.arm_voxelgi_bounces))
+                assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_bounce/voxel_bounce.comp.glsl')
             if rpdat.arm_voxelgi_shadows:
                 wrd.world_defs += '_VoxelGIDirect'
                 wrd.world_defs += '_VoxelGIShadow'

@@ -41,14 +41,12 @@ class RenderPathDeferred {
 				Inc.initGI("voxelsB");
 			}
 			#end
-			#if cpp
 			#if (rp_gi == "Voxel GI")
 			{
 				Inc.initGI("voxelsOpac");
 				Inc.initGI("voxelsNor");
 			}
 			#end
-			#end //cpp
 		}
 		#end
 
@@ -472,7 +470,6 @@ class RenderPathDeferred {
 			}
 			#end
 
-			#if cpp
 			if (voxelize) {
 
 				var res = Inc.getVoxelRes();
@@ -498,22 +495,6 @@ class RenderPathDeferred {
 				path.generateMipmaps(voxels);
 				#end
 			}
-			#else
-			if (voxelize) {
-				path.clearImage(voxels, 0x00000000);
-				path.setTarget("");
-				var res = Inc.getVoxelRes();
-				path.setViewport(res, res);
-				path.bindTarget(voxels, "voxels");
-				#if ((rp_shadowmap) && (rp_gi == "Voxel GI"))
-				{
-					Inc.bindShadowMap();
-				}
-				#end
-				path.drawMeshes("voxel");
-				path.generateMipmaps(voxels);
-			}
-			#end //cpp
 		}
 		#end
 

@@ -976,19 +976,20 @@ class ArmRenderPathPanel(bpy.types.Panel):
         layout.label('Shadows')
         box = layout.box().column()
         box.prop(rpdat, 'rp_shadowmap')
-        box.enabled = rpdat.rp_shadowmap != 'Off'
-        box.prop(rpdat, 'rp_shadowmap_cascades')
         col = box.column()
-        col.enabled = rpdat.rp_shadowmap_cascades != '1'
-        col.prop(rpdat, 'arm_shadowmap_split')
-        box.prop(rpdat, 'arm_soft_shadows')
-        col = box.column()
-        col.enabled = rpdat.arm_soft_shadows != 'Off'
-        row = col.row(align=True)
+        col.enabled = rpdat.rp_shadowmap != 'Off'
+        col.prop(rpdat, 'rp_shadowmap_cascades')
+        col2 = col.column()
+        col2.enabled = rpdat.rp_shadowmap_cascades != '1'
+        col2.prop(rpdat, 'arm_shadowmap_split')
+        col.prop(rpdat, 'arm_soft_shadows')
+        col2 = col.column()
+        col2.enabled = rpdat.arm_soft_shadows != 'Off'
+        row = col2.row(align=True)
         row.alignment = 'EXPAND'
         row.prop(rpdat, 'arm_soft_shadows_penumbra')
         row.prop(rpdat, 'arm_soft_shadows_distance')
-        box.prop(rpdat, 'arm_pcfsize')
+        col.prop(rpdat, 'arm_pcfsize')
 
 
         layout.label('Global Illumination')
