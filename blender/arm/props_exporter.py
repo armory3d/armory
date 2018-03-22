@@ -4,6 +4,7 @@ import arm.assets as assets
 import arm.utils
 import bpy
 import stat
+import subprocess
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
@@ -167,11 +168,45 @@ class ArmExporterListDeleteItem(bpy.types.Operator):
         mdata.arm_exporterlist_index = index
         return{'FINISHED'}
 
+class ArmExporterSpecialsMenu(bpy.types.Menu):
+    bl_label = "More"
+    bl_idname = "arm_exporterlist_specials"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator("arm.exporter_gpuprofile")
+
+class ArmExporterGpuProfileButton(bpy.types.Operator):
+    '''GPU profile'''
+    bl_idname = 'arm.exporter_gpuprofile'
+    bl_label = 'Open in RenderDoc'
+
+    def execute(self, context):
+        p = arm.utils.get_renderdoc_path()
+        if p == '':
+            self.report({'ERROR'}, 'Configure RenderDoc path in Armory add-on preferences')
+            return {'CANCELLED'}
+        pbin = ''
+        base = arm.utils.get_fp_build()
+        ext1 =  '/krom-windows/' + arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_name) + '.exe'
+        ext2 =  '/krom-linux/' + arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_name)
+        if os.path.exists(base + ext1):
+            pbin = base + ext1
+        elif os.path.exists(base + ext2):
+            pbin = base + ext2
+        if pbin == '':
+            self.report({'ERROR'}, 'Publish project using Krom target first')
+            return {'CANCELLED'}
+        subprocess.Popen([p, pbin])
+        return{'FINISHED'}
+
 def register():
     bpy.utils.register_class(ArmExporterListItem)
     bpy.utils.register_class(ArmExporterList)
     bpy.utils.register_class(ArmExporterListNewItem)
     bpy.utils.register_class(ArmExporterListDeleteItem)
+    bpy.utils.register_class(ArmExporterSpecialsMenu)
+    bpy.utils.register_class(ArmExporterGpuProfileButton)
 
     bpy.types.World.arm_exporterlist = bpy.props.CollectionProperty(type=ArmExporterListItem)
     bpy.types.World.arm_exporterlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
@@ -181,3 +216,5 @@ def unregister():
     bpy.utils.unregister_class(ArmExporterList)
     bpy.utils.unregister_class(ArmExporterListNewItem)
     bpy.utils.unregister_class(ArmExporterListDeleteItem)
+    bpy.utils.unregister_class(ArmExporterSpecialsMenu)
+    bpy.utils.unregister_class(ArmExporterGpuProfileButton)

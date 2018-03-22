@@ -364,6 +364,7 @@ class ArmoryExporterPanel(bpy.types.Panel):
         col = row.column(align=True)
         col.operator("arm_exporterlist.new_item", icon='ZOOMIN', text="")
         col.operator("arm_exporterlist.delete_item", icon='ZOOMOUT', text="")
+        col.menu("arm_exporterlist_specials", icon='DOWNARROW_HLT', text="")
 
         if wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0:
             item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
@@ -1412,7 +1413,7 @@ class ArmMakeProxyButton(bpy.types.Operator):
         if obj == None:
             return{'CANCELLED'}
         if obj.library == None:
-            self.report({'ERROR'}, 'Select linked object.')
+            self.report({'ERROR'}, 'Select linked object')
         arm.proxy.make(obj)
         return{'FINISHED'}
 

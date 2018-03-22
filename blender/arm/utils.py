@@ -98,6 +98,16 @@ def get_ffmpeg_path():
     addon_prefs = user_preferences.addons['armory'].preferences
     return addon_prefs.ffmpeg_path
 
+def get_renderdoc_path():
+    user_preferences = bpy.context.user_preferences
+    addon_prefs = user_preferences.addons['armory'].preferences
+    p = addon_prefs.renderdoc_path
+    if p == '' and get_os() == 'win':
+        pdefault = 'C:\\Program Files\\RenderDoc\\qrenderdoc.exe'
+        if os.path.exists(pdefault):
+            p = pdefault
+    return p
+
 def get_ease_viewport_camera():
     return True
 
