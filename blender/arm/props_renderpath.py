@@ -349,7 +349,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_background = EnumProperty(
       items=[('World', 'World', 'World'),
              ('Clear', 'Clear', 'Clear'),
-             ('Off', 'Off', 'Off'),
+             ('Off', 'No Clear', 'Off'),
       ],
       name="Background", description="Background type", default='World', update=update_renderpath)    
     arm_irradiance = BoolProperty(name="Irradiance", description="Generate spherical harmonics", default=True, update=assets.invalidate_shader_cache)
@@ -385,7 +385,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('4', '4', '4')],
         name="Super Sampling", description="Screen resolution multiplier", default='1', update=update_renderpath)
     rp_antialiasing = EnumProperty(
-        items=[('Off', 'Off', 'Off'),
+        items=[('Off', 'No AA', 'Off'),
                ('FXAA', 'FXAA', 'FXAA'),
                ('SMAA', 'SMAA', 'SMAA'),
                ('TAA', 'TAA', 'TAA')],
@@ -393,7 +393,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_volumetriclight = BoolProperty(name="Volumetric Light", description="Use volumetric lighting", default=False, update=update_renderpath)
     rp_ssr = BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
     rp_ssgi = EnumProperty(
-        items=[('Off', 'Off', 'Off'),
+        items=[('Off', 'No AO', 'Off'),
                ('SSAO', 'SSAO', 'Screen space ambient occlusion'),
                ('RTAO', 'RTAO', 'Ray-traced ambient occlusion'),
                ('RTGI', 'RTGI', 'Ray-traced global illumination')
