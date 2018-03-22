@@ -85,7 +85,7 @@ project.addSources('Sources');
                 assets.add_khafile_def('arm_bullet')
                 if not os.path.exists('Libraries/haxebullet'):
                     f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
-                if state.target == 'krom' or state.target == 'html5' or state.target == 'node':
+                if state.target.startswith('krom') or state.target == 'html5' or state.target == 'node':
                     ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
                     ammojs_path = ammojs_path.replace('\\', '/')
                     f.write(add_assets(ammojs_path))
@@ -99,7 +99,7 @@ project.addSources('Sources');
             assets.add_khafile_def('arm_navigation')
             if not os.path.exists('Libraries/haxerecast'):
                 f.write(add_armory_library(sdk_path + '/lib/', 'haxerecast'))
-            if state.target == 'krom' or state.target == 'html5':
+            if state.target.startswith('krom') or state.target == 'html5':
                 recastjs_path = sdk_path + '/lib/haxerecast/js/recast/recast.js'
                 recastjs_path = recastjs_path.replace('\\', '/')
                 f.write(add_assets(recastjs_path))
