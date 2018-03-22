@@ -3,6 +3,7 @@ target = 'krom'
 last_target = 'krom'
 in_viewport = False
 is_export = False
+export_gapi = ''
 last_in_viewport = False
 last_resx = 0
 last_resy = 0

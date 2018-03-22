@@ -232,8 +232,10 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
         cmd.append(ffmpeg_path) # '"' + ffmpeg_path + '"'
 
     if kha_target_name == 'krom':
-        cmd.append('-g')
-        cmd.append('opengl')
+        if state.is_export:
+            state.export_gapi = arm.utils.get_gapi()
+        else:
+            state.export_gapi = 'opengl'
         if state.in_viewport:
             if arm.utils.glsl_version() >= 330:
                 cmd.append('--shaderversion')
@@ -242,8 +244,9 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
                 cmd.append('--shaderversion')
                 cmd.append('110')
     else:
-        cmd.append('-g')
-        cmd.append(arm.utils.get_gapi())
+        state.export_gapi = arm.utils.get_gapi()
+    cmd.append('-g')
+    cmd.append(state.export_gapi)
 
     # Kha defaults to 110 on Linux
     is_linux = arm.utils.get_os() == 'linux'
@@ -579,7 +582,14 @@ def on_compiled(mode): # build, play, play_viewport, publish
                     if os.path.isfile(f):
                         shutil.copy(f, files_path)
             if state.target == 'krom-windows':
-                os.rename(files_path + '/Krom.exe', files_path + '/' + arm.utils.safestr(wrd.arm_project_name) + '.exe')
+                gapi = state.export_gapi
+                ext = '' if gapi == 'opengl' else '_' + gapi
+                bin_path = files_path + '/Krom' + ext + '.exe'
+                os.rename(bin_path, files_path + '/' + arm.utils.safestr(wrd.arm_project_name) + '.exe')
+                if gapi != 'opengl' and os.path.exists(files_path + '/Krom.exe'):
+                    os.remove(files_path + '/Krom.exe')
+                if gapi != 'direct3d11' and os.path.exists(files_path + '/Krom_direct3d11.exe'):
+                    os.remove(files_path + '/Krom_direct3d11.exe')
             elif state.target == 'krom-linux':
                 os.rename(files_path + '/Krom', files_path + '/' + arm.utils.safestr(wrd.arm_project_name))
             else:
