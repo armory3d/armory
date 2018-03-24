@@ -139,6 +139,8 @@ project.addSources('Sources');
                     f.write(add_armory_library(sdk_path + '/lib/', 'iron_format'))
 
         shaderload = state.target == 'krom' or state.target == 'html5'
+        if arm.utils.get_player_gapi() != 'opengl': # TODO: shader from source for d3d11
+            shaderload = False
         if wrd.arm_cache_compiler and shaderload and not is_publish:
             # Load shaders manually
             assets.add_khafile_def('arm_shaderload')

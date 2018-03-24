@@ -4,9 +4,9 @@ bl_info = {
     "name": "Armory",
     "category": "Render",
     "location": "Properties -> Render -> Armory Player",
-    "description": "3D game engine for Blender",
+    "description": "3D Game Engine for Blender",
     "author": "Armory3D.org",
-    "version": (11, 6, 0),
+    "version": (13, 0, 0),
     "blender": (2, 79, 0),
     "wiki_url": "http://armory3d.org/manual",
     "tracker_url": "https://github.com/armory3d/armory/issues"
@@ -19,11 +19,21 @@ import shutil
 import webbrowser
 import subprocess
 import bpy
+import platform
 from bpy.types import Operator, AddonPreferences
 from bpy.props import *
 from bpy.app.handlers import persistent
 
 with_krom = False
+
+def get_os():
+    s = platform.system()
+    if s == 'Windows':
+        return 'win'
+    elif s == 'Darwin':
+        return 'mac'
+    else:
+        return 'linux'
 
 class ArmoryAddonPreferences(AddonPreferences):
     bl_idname = __name__
@@ -49,10 +59,23 @@ class ArmoryAddonPreferences(AddonPreferences):
     sdk_bundled = BoolProperty(name="Bundled SDK", default=True)
     sdk_path = StringProperty(name="SDK Path", subtype="FILE_PATH", update=sdk_path_update, default="")
     show_advanced = BoolProperty(name="Show Advanced", default=False)
+    player_gapi_win = EnumProperty(
+        items = [('opengl', 'Auto', 'opengl'),
+                 ('opengl', 'OpenGL', 'opengl'),
+                 ('direct3d11', 'Direct3D11', 'direct3d11')],
+        name="Player Graphics API", default='opengl', description='Use this graphics API when launching the game in Krom player(F5)')
+    player_gapi_linux = EnumProperty(
+        items = [('opengl', 'Auto', 'opengl'),
+                 ('opengl', 'OpenGL', 'opengl')],
+        name="Player Graphics API", default='opengl', description='Use this graphics API when launching the game in Krom player(F5)')
+    player_gapi_mac = EnumProperty(
+        items = [('opengl', 'Auto', 'opengl'),
+                 ('opengl', 'OpenGL', 'opengl')],
+        name="Player Graphics API", default='opengl', description='Use this graphics API when launching the game in Krom player(F5)')
     renderdoc_path = StringProperty(name="RenderDoc Path", description="Binary path", subtype="FILE_PATH", update=renderdoc_path_update, default="")
     ffmpeg_path = StringProperty(name="FFMPEG Path", description="Binary path", subtype="FILE_PATH", update=ffmpeg_path_update, default="")
     save_on_build = BoolProperty(name="Save on Build", description="Save .blend", default=True)
-    legacy_shaders = BoolProperty(name="Legacy Shaders", default=False)
+    legacy_shaders = BoolProperty(name="Legacy Shaders", description="Attempt to compile shaders runnable on older hardware", default=False)
     viewport_controls = EnumProperty(
         items=[('qwerty', 'qwerty', 'qwerty'),
                ('azerty', 'azerty', 'azerty')],
@@ -72,31 +95,23 @@ class ArmoryAddonPreferences(AddonPreferences):
             layout.prop(self, "sdk_path")
         layout.prop(self, "show_advanced")
         if self.show_advanced:
-            layout.prop(self, "renderdoc_path")
-            layout.prop(self, "ffmpeg_path")
-            layout.prop(self, "viewport_controls")
-            layout.prop(self, "save_on_build")
-            layout.prop(self, "legacy_shaders")
+            box = layout.box().column()
+            box.prop(self, "player_gapi_" + get_os())
+            box.prop(self, "renderdoc_path")
+            box.prop(self, "ffmpeg_path")
+            box.prop(self, "viewport_controls")
+            box.prop(self, "save_on_build")
+            box.prop(self, "legacy_shaders")
             
-            layout.separator()
-            layout.label("Armory Updater")
-            layout.label("Note: Development version may run unstable!")
-            row = layout.row(align=True)
+            box = layout.box().column()
+            box.label("Armory Updater")
+            box.label("Note: Development version may run unstable!")
+            row = box.row(align=True)
             row.alignment = 'EXPAND'
             row.operator("arm_addon.install_git", icon="URL")
             row.operator("arm_addon.update", icon="FILE_REFRESH")
             row.operator("arm_addon.restore")
-            layout.label("Please restart Blender after successful SDK update.")
-
-def get_os():
-    import platform
-    s = platform.system()
-    if s == 'Windows':
-        return 'win'
-    elif s == 'Darwin':
-        return 'mac'
-    else:
-        return 'linux'
+            box.label("Please restart Blender after successful SDK update.")
 
 def get_sdk_path(context):
     global with_krom

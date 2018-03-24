@@ -60,14 +60,14 @@ def get_os():
 
 def get_gapi():
     wrd = bpy.data.worlds['Arm']
+    if state.in_viewport:
+        return 'opengl'
     if state.is_export:
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
         return getattr(item, target_to_gapi(item.arm_project_target))
-    else:
-        if wrd.arm_play_runtime == 'Browser':
-            return 'webgl'
-        else:
-            return 'opengl'
+    if wrd.arm_play_runtime == 'Browser':
+        return 'webgl'
+    return arm.utils.get_player_gapi()
 
 def get_rp():
     wrd = bpy.data.worlds['Arm']
@@ -107,6 +107,11 @@ def get_renderdoc_path():
         if os.path.exists(pdefault):
             p = pdefault
     return p
+
+def get_player_gapi():
+    user_preferences = bpy.context.user_preferences
+    addon_prefs = user_preferences.addons['armory'].preferences
+    return 'opengl' if not hasattr(addon_prefs, 'player_gapi_' + get_os()) else getattr(addon_prefs, 'player_gapi_' + get_os())
 
 def get_ease_viewport_camera():
     return True
@@ -150,17 +155,17 @@ def get_haxe_path():
 def get_khamake_path():
     return get_kha_path() + '/make'
 
-def krom_paths():
+def krom_paths(bin_ext=''):
     sdk_path = get_sdk_path()
     if arm.utils.get_os() == 'win':
         krom_location = sdk_path + '/Krom/win32'
-        krom_path = krom_location + '/Krom.exe'
+        krom_path = krom_location + '/Krom' + bin_ext + '.exe'
     elif arm.utils.get_os() == 'mac':
         krom_location = sdk_path + '/Krom/macos/Krom.app/Contents/MacOS'
-        krom_path = krom_location + '/Krom'
+        krom_path = krom_location + '/Krom' + bin_ext
     else:
         krom_location = sdk_path + '/Krom/linux'
-        krom_path = krom_location + '/Krom'
+        krom_path = krom_location + '/Krom' + bin_ext
     return krom_location, krom_path
 
 def fetch_bundled_script_names():

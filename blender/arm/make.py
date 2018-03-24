@@ -231,22 +231,16 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
         cmd.append('--ffmpeg')
         cmd.append(ffmpeg_path) # '"' + ffmpeg_path + '"'
 
-    if kha_target_name == 'krom':
-        if state.is_export:
-            state.export_gapi = arm.utils.get_gapi()
-        else:
-            state.export_gapi = 'opengl'
-        if state.in_viewport:
-            if arm.utils.glsl_version() >= 330:
-                cmd.append('--shaderversion')
-                cmd.append('330')
-            else:
-                cmd.append('--shaderversion')
-                cmd.append('110')
-    else:
-        state.export_gapi = arm.utils.get_gapi()
+    state.export_gapi = arm.utils.get_gapi()
     cmd.append('-g')
     cmd.append(state.export_gapi)
+    if state.in_viewport:
+        if arm.utils.glsl_version() >= 330:
+            cmd.append('--shaderversion')
+            cmd.append('330')
+        else:
+            cmd.append('--shaderversion')
+            cmd.append('110')
 
     # Kha defaults to 110 on Linux
     is_linux = arm.utils.get_os() == 'linux'
@@ -530,11 +524,12 @@ def on_compiled(mode): # build, play, play_viewport, publish
             html5_app_path = 'http://localhost:8040/' + arm.utils.build_dir() + '/debug/html5'
             webbrowser.open(html5_app_path)
         elif wrd.arm_play_runtime == 'Krom':
-            krom_location, krom_path = arm.utils.krom_paths()
+            bin_ext = '' if state.export_gapi == 'opengl' else '_' + state.export_gapi
+            krom_location, krom_path = arm.utils.krom_paths(bin_ext=bin_ext)
             os.chdir(krom_location)
             args = [krom_path, arm.utils.get_fp_build() + '/debug/krom', arm.utils.get_fp_build() + '/debug/krom-resources']
-            # TODO: Krom sound freezes on MacOS
-            if arm.utils.get_os() == 'mac':
+            
+            if arm.utils.get_os() == 'mac': # TODO: Krom sound freezes on MacOS
                 args.append('--nosound')
             if state.is_render:
                 args.append('--nowindow')
