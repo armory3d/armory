@@ -5,6 +5,7 @@ import arm.utils
 import bpy
 import stat
 import subprocess
+import webbrowser
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
@@ -174,7 +175,21 @@ class ArmExporterSpecialsMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
+        layout.operator("arm.exporter_open_folder")
         layout.operator("arm.exporter_gpuprofile")
+
+class ArmoryExporterOpenFolderButton(bpy.types.Operator):
+    '''Open published folder'''
+    bl_idname = 'arm.exporter_open_folder'
+    bl_label = 'Open Folder'
+
+    def execute(self, context):
+        wrd = bpy.data.worlds['Arm']
+        item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+        p = os.path.join(arm.utils.get_fp_build(), item.arm_project_target)
+        if os.path.exists(p):
+            webbrowser.open('file://' + p)
+        return{'FINISHED'}
 
 class ArmExporterGpuProfileButton(bpy.types.Operator):
     '''GPU profile'''
@@ -207,6 +222,7 @@ def register():
     bpy.utils.register_class(ArmExporterListDeleteItem)
     bpy.utils.register_class(ArmExporterSpecialsMenu)
     bpy.utils.register_class(ArmExporterGpuProfileButton)
+    bpy.utils.register_class(ArmoryExporterOpenFolderButton)
 
     bpy.types.World.arm_exporterlist = bpy.props.CollectionProperty(type=ArmExporterListItem)
     bpy.types.World.arm_exporterlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
@@ -218,3 +234,4 @@ def unregister():
     bpy.utils.unregister_class(ArmExporterListDeleteItem)
     bpy.utils.unregister_class(ArmExporterSpecialsMenu)
     bpy.utils.unregister_class(ArmExporterGpuProfileButton)
+    bpy.utils.unregister_class(ArmoryExporterOpenFolderButton)
