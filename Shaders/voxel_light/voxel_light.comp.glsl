@@ -35,9 +35,9 @@ void main() {
     vec3 wposition = ((gl_GlobalInvocationID.xyz - hres) / hres) * voxelgiHalfExtents;
 
     uint unor = imageLoad(voxelsNor, ivec3(gl_GlobalInvocationID.xyz)).r;
-    vec3 wnormal = decNor(unor);
+    vec3 wnormal = decNor(unor); // todo: normalize here
 
-    wposition -= wnormal * 0.01; // Offset
+    wposition -= normalize(wnormal) * 0.01; // Offset
 
     float visibility;
     vec3 lp = lightPos - wposition;
