@@ -642,4 +642,4 @@ def write_canvasprefs(canvas_path):
     prefs_path = sdk_path + 'lib/armory_tools/armorui/krom/prefs.json'
     with open(prefs_path, 'w') as f:
         f.write(
-'{ "path": "' + canvas_path.replace('\\', '/') + '" }')
+'{ "path": "' + canvas_path.replace('\\', '/') + '", "scaleFactor": ' + str(arm.utils.get_ui_scale()) + ' }')

@@ -119,6 +119,11 @@ def get_code_editor():
     addon_prefs = user_preferences.addons['armory'].preferences
     return 'kodestudio' if not hasattr(addon_prefs, 'code_editor') else addon_prefs.code_editor
 
+def get_ui_scale():
+    user_preferences = bpy.context.user_preferences
+    addon_prefs = user_preferences.addons['armory'].preferences
+    return 1.0 if not hasattr(addon_prefs, 'ui_scale') else addon_prefs.ui_scale
+
 def get_ease_viewport_camera():
     return True
 
