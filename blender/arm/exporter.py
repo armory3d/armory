@@ -253,7 +253,7 @@ class ArmoryExporter:
         oanim['marker_frames'] = []
         oanim['marker_names'] = []
         for m in action.pose_markers:
-            oanim['marker_frames'].append(m.frame)
+            oanim['marker_frames'].append(int(m.frame))
             oanim['marker_names'].append(m.name)
 
     def export_object_sampled_animation(self, bobject, scene, o):
@@ -296,9 +296,9 @@ class ArmoryExporter:
             end_frame += 1
 
             for i in range(begin_frame, end_frame):
-                tracko['frames'].append(i - begin_frame)
+                tracko['frames'].append(int(i - begin_frame))
 
-            tracko['frames'].append(end_frame)
+            tracko['frames'].append(int(end_frame))
 
             tracko['values'] = []
 
@@ -325,7 +325,7 @@ class ArmoryExporter:
         key_count = len(fcurve.keyframe_points)
         for i in range(key_count):
             frame = fcurve.keyframe_points[i].co[0] - self.beginFrame
-            keyo.append(frame)
+            keyo.append(int(frame))
         return keyo
 
     def export_key_frame_control_points(self, fcurve):
@@ -503,8 +503,8 @@ class ArmoryExporter:
             # Export the animation tracks
             oanim = {}
             oaction['anim'] = oanim
-            oanim['begin'] = (action.frame_range[0] - self.beginFrame)
-            oanim['end'] = (action.frame_range[1] - self.beginFrame)
+            oanim['begin'] = int(action.frame_range[0] - self.beginFrame)
+            oanim['end'] = int(action.frame_range[1] - self.beginFrame)
             oanim['tracks'] = []
             self.export_pose_markers(oanim, action)
 
@@ -1886,8 +1886,8 @@ class ArmoryExporter:
             o['render_emitter'] = psettings.use_render_emitter
             # Emission
             o['count'] = psettings.count * psettings.arm_count_mult
-            o['frame_start'] = psettings.frame_start
-            o['frame_end'] = psettings.frame_end
+            o['frame_start'] = int(psettings.frame_start)
+            o['frame_end'] = int(psettings.frame_end)
             o['lifetime'] = psettings.lifetime
             o['lifetime_random'] = psettings.lifetime_random
             o['emit_from'] = 1 if psettings.emit_from == 'VOLUME' else 0 # VERT, FACE
@@ -1974,8 +1974,8 @@ class ArmoryExporter:
         if write_capture_info:
             self.output['capture_info'] = {}
             self.output['capture_info']['path'] = bpy.path.abspath(self.scene.render.filepath)
-            self.output['capture_info']['frame_start'] = self.scene.frame_start
-            self.output['capture_info']['frame_end'] = self.scene.frame_end
+            self.output['capture_info']['frame_start'] = int(self.scene.frame_start)
+            self.output['capture_info']['frame_end'] = int(self.scene.frame_end)
 
         self.bobjectArray = {}
         self.bobjectBoneArray = {}
