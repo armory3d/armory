@@ -6,6 +6,7 @@ import platform
 import zipfile
 import re
 import subprocess
+import webbrowser
 import arm.lib.armpack
 import arm.make_state as state
 
@@ -112,6 +113,11 @@ def get_player_gapi():
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
     return 'opengl' if not hasattr(addon_prefs, 'player_gapi_' + get_os()) else getattr(addon_prefs, 'player_gapi_' + get_os())
+
+def get_code_editor():
+    user_preferences = bpy.context.user_preferences
+    addon_prefs = user_preferences.addons['armory'].preferences
+    return 'kodestudio' if not hasattr(addon_prefs, 'code_editor') else addon_prefs.code_editor
 
 def get_ease_viewport_camera():
     return True
@@ -485,17 +491,26 @@ def kode_studio():
     sdk_path = arm.utils.get_sdk_path()
     project_path = arm.utils.get_fp()
     if arm.utils.get_os() == 'win':
-        kode_studio_mklink_win(sdk_path)
         kode_path = sdk_path + '/win32/Kode Studio.exe'
-        subprocess.Popen([kode_path, arm.utils.get_fp()])
+        if os.path.exists(kode_path):
+            kode_studio_mklink_win(sdk_path)
+            subprocess.Popen([kode_path, arm.utils.get_fp()])
+        else:
+            webbrowser.open('file://' + arm.utils.get_fp())
     elif arm.utils.get_os() == 'mac':
-        kode_studio_mklink_mac(sdk_path)
         kode_path = '"' + sdk_path + '/Kode Studio.app/Contents/MacOS/Electron"'
-        subprocess.Popen([kode_path + ' "' + arm.utils.get_fp() + '"'], shell=True)
+        if os.path.exists(kode_path):
+            kode_studio_mklink_mac(sdk_path)
+            subprocess.Popen([kode_path + ' "' + arm.utils.get_fp() + '"'], shell=True)
+        else:
+            webbrowser.open('file://' + arm.utils.get_fp())
     else:
-        kode_studio_mklink_linux(sdk_path)
         kode_path = sdk_path + '/linux64/kodestudio'
-        subprocess.Popen([kode_path, arm.utils.get_fp()])
+        if os.path.exists(kode_path):
+            kode_studio_mklink_linux(sdk_path)
+            subprocess.Popen([kode_path, arm.utils.get_fp()])
+        else:
+            webbrowser.open('file://' + arm.utils.get_fp())
 
 def def_strings_to_array(strdefs):
     defs = strdefs.split('_')

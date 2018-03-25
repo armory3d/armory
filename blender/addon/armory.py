@@ -72,6 +72,10 @@ class ArmoryAddonPreferences(AddonPreferences):
         items = [('opengl', 'Auto', 'opengl'),
                  ('opengl', 'OpenGL', 'opengl')],
         name="Player Graphics API", default='opengl', description='Use this graphics API when launching the game in Krom player(F5)')
+    code_editor = EnumProperty(
+        items = [('kodestudio', 'Kode Studio', 'kodestudio'),
+                 ('default', 'System Default', 'default')],
+        name="Code Editor", default='kodestudio', description='Use this editor for editing scripts')
     renderdoc_path = StringProperty(name="RenderDoc Path", description="Binary path", subtype="FILE_PATH", update=renderdoc_path_update, default="")
     ffmpeg_path = StringProperty(name="FFMPEG Path", description="Binary path", subtype="FILE_PATH", update=ffmpeg_path_update, default="")
     save_on_build = BoolProperty(name="Save on Build", description="Save .blend", default=True)
@@ -97,6 +101,7 @@ class ArmoryAddonPreferences(AddonPreferences):
         if self.show_advanced:
             box = layout.box().column()
             box.prop(self, "player_gapi_" + get_os())
+            box.prop(self, "code_editor")
             box.prop(self, "renderdoc_path")
             box.prop(self, "ffmpeg_path")
             box.prop(self, "viewport_controls")

@@ -2,6 +2,7 @@ import shutil
 import bpy
 import subprocess
 import os
+import webbrowser
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 from arm.props_traits_params import *
@@ -244,17 +245,26 @@ class ArmEditScriptButton(bpy.types.Operator):
 
         sdk_path = arm.utils.get_sdk_path()
         if arm.utils.get_os() == 'win':
-            arm.utils.kode_studio_mklink_win(sdk_path)
             kode_path = sdk_path + '/win32/Kode Studio.exe'
-            subprocess.Popen([kode_path, arm.utils.get_fp(), hx_path])
+            if os.path.exists(kode_path) and arm.utils.get_code_editor() == 'kodestudio':
+                arm.utils.kode_studio_mklink_win(sdk_path)
+                subprocess.Popen([kode_path, arm.utils.get_fp(), hx_path])
+            else:
+                webbrowser.open('file://' + hx_path)
         elif arm.utils.get_os() == 'mac':
-            arm.utils.kode_studio_mklink_mac(sdk_path)
             kode_path = '"' + sdk_path + '/Kode Studio.app/Contents/MacOS/Electron"'
-            subprocess.Popen([kode_path + ' "' + arm.utils.get_fp() + '" "' + hx_path + '"'], shell=True)
+            if os.path.exists(kode_path) and arm.utils.get_code_editor() == 'kodestudio':
+                arm.utils.kode_studio_mklink_mac(sdk_path)
+                subprocess.Popen([kode_path + ' "' + arm.utils.get_fp() + '" "' + hx_path + '"'], shell=True)
+            else:
+                webbrowser.open('file://' + hx_path)
         else:
-            arm.utils.kode_studio_mklink_linux(sdk_path)
             kode_path = sdk_path + '/linux64/kodestudio'
-            subprocess.Popen([kode_path, arm.utils.get_fp(), hx_path])
+            if os.path.exists(kode_path) and arm.utils.get_code_editor() == 'kodestudio':
+                arm.utils.kode_studio_mklink_linux(sdk_path)
+                subprocess.Popen([kode_path, arm.utils.get_fp(), hx_path])
+            else:
+                webbrowser.open('file://' + hx_path)
         
         return{'FINISHED'}
 
