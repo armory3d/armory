@@ -76,6 +76,8 @@ class ArmBakeButton(bpy.types.Operator):
         if len(scn.arm_bakelist) == 0:
             return{'FINISHED'}
 
+        self.report({'INFO'}, "Once baked, hit 'Armory Bake - Apply' to pack lightmaps")
+
         # At least one material required for now..
         for o in scn.arm_bakelist:
             ob = scn.objects[o.object_name]

@@ -231,7 +231,7 @@ class ArmAddonRestoreButton(bpy.types.Operator):
         restore_repo(p, 'lib/haxebullet')
         restore_repo(p, 'lib/haxerecast')
         restore_repo(p, 'lib/zui')
-        self.report({'INFO'}, 'Restored stable version.')
+        self.report({'INFO'}, 'Restored stable version')
         return {"FINISHED"}
 
 class ArmAddonInstallGitButton(bpy.types.Operator):
