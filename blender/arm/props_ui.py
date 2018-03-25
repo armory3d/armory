@@ -1029,16 +1029,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
         row.alignment = 'EXPAND'
         row.prop(rpdat, 'arm_voxelgi_step')
         row.prop(rpdat, 'arm_voxelgi_range')
-        col.label("Offset")
-        row = col.row(align=True)
-        row.alignment = 'EXPAND'
-        row.prop(rpdat, 'arm_voxelgi_offset_diff', text="Diffuse")
-        row.prop(rpdat, 'arm_voxelgi_offset_spec', text="Specular")
-        row = col.row(align=True)
-        row.alignment = 'EXPAND'
-        row.prop(rpdat, 'arm_voxelgi_offset_shadow', "Shadow")
-        row.prop(rpdat, 'arm_voxelgi_offset_refract', "Refracr")
-        
+        col.prop(rpdat, 'arm_voxelgi_offset');
 
         layout.label('World')
         box = layout.box().column()

@@ -582,10 +582,7 @@ const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_occ * 100) / 100) + "
 const float voxelgiEnv = """ + str(round(rpdat.arm_voxelgi_env * 100) / 100) + """ / 10.0;
 const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 100) / 100) + """;
 const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
-const float voxelgiOffsetDiff = """ + str(round(rpdat.arm_voxelgi_offset_diff * 100) / 100) + """;
-const float voxelgiOffsetSpec = """ + str(round(rpdat.arm_voxelgi_offset_spec * 100) / 100) + """;
-const float voxelgiOffsetShadow = """ + str(round(rpdat.arm_voxelgi_offset_shadow * 100) / 100) + """;
-const float voxelgiOffsetRefract = """ + str(round(rpdat.arm_voxelgi_offset_refract * 100) / 100) + """;
+const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 100) / 100) + """;
 """)
 
         if rpdat.rp_sss_state == 'On':

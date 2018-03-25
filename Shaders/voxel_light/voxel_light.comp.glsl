@@ -34,14 +34,16 @@ void main() {
     const vec3 hres = voxelgiResolution / 2;
     vec3 wposition = ((gl_GlobalInvocationID.xyz - hres) / hres) * voxelgiHalfExtents;
 
+    uint unor = imageLoad(voxelsNor, ivec3(gl_GlobalInvocationID.xyz)).r;
+    vec3 wnormal = decNor(unor);
+
+    wposition -= wnormal * 0.01; // Offset
+
     float visibility;
     vec3 lp = lightPos - wposition;
     vec3 l;
     if (lightType == 0) { l = lightDir; visibility = 1.0; }
     else { l = normalize(lp); visibility = attenuate(distance(wposition, lightPos)); }
-
-    uint unor = imageLoad(voxelsNor, ivec3(gl_GlobalInvocationID.xyz)).r;
-    vec3 wnormal = decNor(unor);
 
     float dotNL = max(dot(wnormal, l), 0.0);
     if (dotNL == 0.0) return;
