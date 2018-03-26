@@ -573,7 +573,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_volumetric_light_steps = IntProperty(name="Steps", default=20, min=0, update=assets.invalidate_shader_cache)
     arm_shadowmap_split = FloatProperty(name="Cascade Split", description="Split factor for cascaded shadow maps, higher factor favors detail on close surfaces", default=0.8, update=assets.invalidate_shader_cache)
     arm_autoexposure_strength = FloatProperty(name="Auto Exposure Strength", default=0.7, update=assets.invalidate_shader_cache)
-    arm_ssrs_ray_step = FloatProperty(name="Ray Step", default=0.01, update=assets.invalidate_shader_cache)
+    arm_ssrs_ray_step = FloatProperty(name="Step", default=0.01, update=assets.invalidate_shader_cache)
     # Compositor
     arm_letterbox = BoolProperty(name="Letterbox", default=False, update=assets.invalidate_shader_cache)
     arm_letterbox_size = FloatProperty(name="Size", default=0.1, update=assets.invalidate_shader_cache)
