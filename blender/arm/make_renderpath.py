@@ -318,6 +318,8 @@ def build():
         assets.add_shader_pass('blur_adaptive_pass')
         if rpdat.arm_ssr_half_res:
             assets.add_khafile_def('rp_ssr_half')
+        if rpdat.rp_ssr_z_only:
+            wrd.world_defs += '_SSRZOnly'
 
     if rpdat.rp_motionblur != 'Off':
         assets.add_khafile_def('rp_motionblur={0}'.format(rpdat.rp_motionblur))

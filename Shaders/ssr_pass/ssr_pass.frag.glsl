@@ -142,10 +142,12 @@ void main() {
 	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
 	n = normalize(n);
 	
-	if (n.z <= 0.9) { // Only up facing surfaces for now
+	#ifdef _SSRZOnly
+	if (n.z <= 0.9) {
 		fragColor.rgb = vec3(0.0);
 		return;
 	}
+	#endif
 	
 	vec4 viewNormal = vec4(n, 1.0);
 	viewNormal = tiV * viewNormal;
