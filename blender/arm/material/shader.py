@@ -14,9 +14,11 @@ class Shader:
         self.main = ''
         self.main_pre = ''
         self.main_header = ''
+        self.main_textures = ''
         self.header = ''
         self.write_pre = False
-        self.write_pre_header = 0
+        self.write_normal = 0
+        self.write_textures = 0
         self.tab = 1
         self.vstruct_as_vsin = True
         self.lock = False
@@ -70,7 +72,9 @@ class Shader:
     def write(self, s):
         if self.lock:
             return
-        if self.write_pre_header > 0:
+        if self.write_textures > 0:
+            self.main_textures += '\t' * 1 + s + '\n'
+        elif self.write_normal > 0:
             self.main_header += '\t' * 1 + s + '\n'
         elif self.write_pre:
             self.main_pre += '\t' * 1 + s + '\n'
@@ -151,6 +155,7 @@ class Shader:
         for f in self.functions:
             s += self.functions[f]
         s += 'void main() {\n'
+        s += self.main_textures
         s += self.main_header
         s += self.main_pre
         s += self.main

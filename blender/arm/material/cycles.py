@@ -36,7 +36,6 @@ def parse(nodes, con, vert, frag, geom, tesc, tese, parse_surface=True, parse_op
 def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse_opacity, _parse_displacement, _basecol_only):
     global parsed # Compute nodes only once
     global parents
-    global normal_written # Normal socket is linked on shader node - overwrite fs normal
     global normal_parsed
     global curshader # Active shader - frag for surface / tese for displacement
     global con
@@ -49,7 +48,6 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     global parse_opacity
     global basecol_only
     global parsing_basecol
-    global parsing_nor
     global basecol_texname
     global emission_found
     global particle_info
@@ -65,7 +63,6 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     parse_opacity = _parse_opacity
     basecol_only = _basecol_only
     parsing_basecol = False
-    parsing_nor = False
     basecol_texname = ''
     emission_found = False
     particle_info = {}
@@ -83,7 +80,6 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     if parse_surface or parse_opacity:
         parsed = {}
         parents = []
-        normal_written = False
         normal_parsed = False
         curshader = frag
         
@@ -104,7 +100,6 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
         parsed = {}
         parents = []
         normal_parsed = False
-        normal_written = False
         curshader = tese
 
         out_disp = parse_displacement_input(node.inputs[2])
@@ -158,14 +153,10 @@ def parse_shader_input(inp):
         return out_basecol, out_roughness, out_metallic, out_occlusion, out_opacity
 
 def write_normal(inp):
-    global parsing_nor
     if inp.is_linked:
-        parsing_nor = True
         normal_res = parse_vector_input(inp)
         if normal_res != None:
             curshader.write('n = {0};'.format(normal_res))
-            normal_written = True
-        parsing_nor = False
 
 def parsing_basecolor(b):
     global parsing_basecol
@@ -510,13 +501,10 @@ def parse_rgb(node, socket):
         tex_name = node_name(node.name)
         tex = make_texture(node, tex_name)
         if tex != None:
-            is_nor = parsing_nor
-            if is_nor:
-                curshader.write_pre_header += 1
+            curshader.write_textures += 1
             to_linear = parsing_basecol and not tex['file'].endswith('.hdr')
             res = '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear))
-            if is_nor:
-                curshader.write_pre_header -= 1
+            curshader.write_textures -= 1
             return res
         elif node.image == None: # Empty texture
             tex = {}
@@ -959,7 +947,7 @@ def parse_normal_map_color_input(inp):
     if normal_parsed:
         return
     normal_parsed = True
-    frag.write_pre_header += 1
+    frag.write_normal += 1
     defplus = get_rp_renderer() == 'Deferred Plus'
     if not get_arm_export_tangents() or defplus or mat_get_material().arm_decal: # Compute TBN matrix
         frag.write('vec3 texn = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
@@ -973,7 +961,7 @@ def parse_normal_map_color_input(inp):
         frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
         frag.write('n = normalize(TBN * n);')
         con.add_elem('tang', 3)
-    frag.write_pre_header -= 1
+    frag.write_normal -= 1
 
 def parse_value_input(inp):
     if inp.is_linked:
@@ -1140,9 +1128,9 @@ def parse_value(node, socket):
         tex_name = safesrc(node.name)
         tex = make_texture(node, tex_name)
         if tex != None:
-            curshader.write_pre_header += 1
+            curshader.write_textures += 1
             res = '{0}.a'.format(texture_store(node, tex, tex_name))
-            curshader.write_pre_header -= 1
+            curshader.write_textures -= 1
             return res
         else:
             tex_store = store_var_name(node) # Pink color for missing texture
