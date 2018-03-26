@@ -126,7 +126,7 @@ def parse_color(world, node):
 
             if do_convert:
                 if not os.path.isfile(unpack_filepath):
-                    arm.utils.write_image(image, unpack_filepath, file_format=target_format)
+                    arm.utils.unpack_image(image, unpack_filepath, file_format=target_format)
 
             elif os.path.isfile(unpack_filepath) == False or os.path.getsize(unpack_filepath) != image.packed_file.size:
                 with open(unpack_filepath, 'wb') as f:
@@ -135,11 +135,14 @@ def parse_color(world, node):
             assets.add(unpack_filepath)
         else:
             if do_convert:
-                converted_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked/' + tex_file
+                unpack_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked'
+                if not os.path.exists(unpack_path):
+                    os.makedirs(unpack_path)
+                converted_path = unpack_path + '/' + tex_file
                 filepath = converted_path
                 # TODO: delete cache when file changes
                 if not os.path.isfile(converted_path):
-                    arm.utils.write_image(image, converted_path, file_format=target_format)
+                    arm.utils.convert_image(image, converted_path, file_format=target_format)
                 assets.add(converted_path)
             else:
                 # Link image path to assets

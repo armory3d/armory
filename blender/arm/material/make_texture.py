@@ -54,7 +54,7 @@ def make(image_node, tex_name, matname=None):
         
         if do_convert:
             if not os.path.isfile(unpack_filepath):
-                arm.utils.write_image(image, unpack_filepath)
+                arm.utils.unpack_image(image, unpack_filepath)
         else:
 
             # Write bytes if size is different or file does not exist yet
@@ -75,10 +75,13 @@ def make(image_node, tex_name, matname=None):
             return None
 
         if do_convert:
-            converted_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked/' + tex['file']
+            unpack_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked'
+            if not os.path.exists(unpack_path):
+                os.makedirs(unpack_path)
+            converted_path = unpack_path + '/' + tex['file']
             # TODO: delete cache when file changes
             if not os.path.isfile(converted_path):
-                arm.utils.write_image(image, converted_path)
+                arm.utils.convert_image(image, converted_path)
             assets.add(converted_path)
         else:
             # Link image path to assets
