@@ -15,6 +15,7 @@ class Shader:
         self.main_pre = ''
         self.main_header = ''
         self.main_textures = ''
+        self.main_attribs = ''
         self.header = ''
         self.write_pre = False
         self.write_normal = 0
@@ -84,15 +85,17 @@ class Shader:
     def write_header(self, s):
         self.header += s + '\n'
 
-    def write_main_header(self, s):
-        self.main_header += s + '\n'
+    def write_attrib(self, s):
+        self.main_attribs += s + '\n'
 
     def is_equal(self, sh):
         self.vstruct_to_vsin()
         return self.ins == sh.ins and \
                self.main == sh.main and \
                self.main_header == sh.main_header and \
-               self.main_pre == sh.main_pre
+               self.main_pre == sh.main_pre and \
+               self.main_textures == sh.main_textures and \
+               self.main_attribs == sh.main_attribs
 
     def vstruct_to_vsin(self):
         if self.shader_type != 'vert' or self.ins != [] or not self.vstruct_as_vsin: # Vertex structure as vertex shader input
@@ -155,6 +158,7 @@ class Shader:
         for f in self.functions:
             s += self.functions[f]
         s += 'void main() {\n'
+        s += self.main_attribs
         s += self.main_textures
         s += self.main_header
         s += self.main_pre

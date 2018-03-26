@@ -129,7 +129,7 @@ def make_base(con_mesh, parse_opacity):
     tese = None
 
     vert.add_uniform('mat3 N', '_normalMatrix')
-    vert.write_main_header('    vec4 spos = vec4(pos, 1.0);')
+    vert.write_attrib('    vec4 spos = vec4(pos, 1.0);')
 
     vattr_written = False
     is_displacement = mat_utils.disp_linked(mat_state.output_node)
@@ -351,7 +351,7 @@ def make_deferred_plus(con_mesh):
     frag.add_out('vec4[3] fragColor')
 
     vert.add_uniform('mat3 N', '_normalMatrix')
-    vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
+    vert.write_attrib('vec4 spos = vec4(pos, 1.0);')
 
     frag.ins = vert.outs
     vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
@@ -391,7 +391,7 @@ def make_forward_mobile(con_mesh):
     tese = None
 
     vert.add_uniform('mat3 N', '_normalMatrix')
-    vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
+    vert.write_attrib('vec4 spos = vec4(pos, 1.0);')
     frag.ins = vert.outs
     vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
     vert.add_uniform('mat4 W', '_worldMatrix')
@@ -482,7 +482,7 @@ def make_forward_solid(con_mesh):
     tesc = None
     tese = None
 
-    vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
+    vert.write_attrib('vec4 spos = vec4(pos, 1.0);')
     frag.ins = vert.outs
     vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
     vert.write('gl_Position = WVP * spos;')

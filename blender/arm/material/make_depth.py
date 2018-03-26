@@ -25,7 +25,7 @@ def make(context_id, rpasses, shadowmap=False):
     tesc = None
     tese = None
 
-    vert.write_main_header('vec4 spos = vec4(pos, 1.0);')
+    vert.write_attrib('vec4 spos = vec4(pos, 1.0);')
 
     parse_opacity = 'translucent' in rpasses or mat_state.material.arm_discard
     if parse_opacity:

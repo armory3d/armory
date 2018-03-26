@@ -35,20 +35,20 @@ def make(context_id):
     frag.add_uniform('vec3 eye', '_cameraPosition')
     frag.add_out('vec4[2] fragColor')
 
-    frag.write_main_header('    vec3 n = normalize(wnormal);')
+    frag.write_attrib('    vec3 n = normalize(wnormal);')
 
-    frag.write_main_header('    vec2 screenPosition = wvpposition.xy / wvpposition.w;')
-    frag.write_main_header('    vec2 depthCoord = screenPosition * 0.5 + 0.5;')
-    frag.write_main_header('    float depth = texture(gbufferD, depthCoord).r * 2.0 - 1.0;')
+    frag.write_attrib('    vec2 screenPosition = wvpposition.xy / wvpposition.w;')
+    frag.write_attrib('    vec2 depthCoord = screenPosition * 0.5 + 0.5;')
+    frag.write_attrib('    float depth = texture(gbufferD, depthCoord).r * 2.0 - 1.0;')
     
-    frag.write_main_header('    vec3 wpos = getPos2(invVP, depth, depthCoord);')
-    frag.write_main_header('    vec4 mpos = invW * vec4(wpos, 1.0);')
-    frag.write_main_header('    if (abs(mpos.x) > 1.0) discard;')
-    frag.write_main_header('    if (abs(mpos.y) > 1.0) discard;')
-    frag.write_main_header('    if (abs(mpos.z) > 1.0) discard;')
+    frag.write_attrib('    vec3 wpos = getPos2(invVP, depth, depthCoord);')
+    frag.write_attrib('    vec4 mpos = invW * vec4(wpos, 1.0);')
+    frag.write_attrib('    if (abs(mpos.x) > 1.0) discard;')
+    frag.write_attrib('    if (abs(mpos.y) > 1.0) discard;')
+    frag.write_attrib('    if (abs(mpos.z) > 1.0) discard;')
     
-    frag.write_main_header('    vec3 vVec = normalize(eye - wpos);')
-    frag.write_main_header('    vec2 texCoord = mpos.xy * 0.5 + 0.5;')
+    frag.write_attrib('    vec3 vVec = normalize(eye - wpos);')
+    frag.write_attrib('    vec2 texCoord = mpos.xy * 0.5 + 0.5;')
 
     frag.write('vec3 basecol;')
     frag.write('float roughness;')
