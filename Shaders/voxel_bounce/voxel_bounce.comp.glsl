@@ -23,9 +23,10 @@ void main() {
     vec3 wposition = ((gl_GlobalInvocationID.xyz - hres) / hres) * voxelgiHalfExtents;
 
     uint unor = imageLoad(voxelsNor, ivec3(gl_GlobalInvocationID.xyz)).r;
-    vec3 wnormal = decNor(unor);
+    vec3 wnormal = normalize(decNor(unor));
 
-    col.rgb += traceDiffuse(((gl_GlobalInvocationID.xyz - hres) / hres), wnormal, voxelsFrom).rgb * voxelgiDiff;
+    col.rgb += traceDiffuse(((gl_GlobalInvocationID.xyz - hres) / hres), wnormal, voxelsFrom).rgb * voxelgiDiff * 0.5;
+    col = clamp(col, vec4(0.0), vec4(1.0));
 
     imageStore(voxelsTo, ivec3(gl_GlobalInvocationID.xyz), col);
 }
