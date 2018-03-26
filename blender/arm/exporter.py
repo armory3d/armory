@@ -738,6 +738,8 @@ class ArmoryExporter:
 
     def has_baked_material(self, bobject, materials):
         for mat in materials:
+            if mat == None:
+                continue
             baked_mat = mat.name + '_' + bobject.name + '_baked'
             if baked_mat in bpy.data.materials:
                 return True
