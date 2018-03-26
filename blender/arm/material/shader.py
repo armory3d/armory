@@ -62,7 +62,12 @@ class Shader:
         self.functions[fname] = s
 
     def contains(self, s):
-        return (s in self.main or s in self.main_pre or s in self.main_header or s in self.ins)
+        return s in self.main or \
+               s in self.main_pre or \
+               s in self.main_header or \
+               s in self.ins or \
+               s in self.main_textures or \
+               s in self.main_attribs
 
     def prepend(self, s):
         self.main_pre = s + '\n' + self.main_pre
