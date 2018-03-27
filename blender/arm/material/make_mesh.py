@@ -545,10 +545,10 @@ def make_forward_base(con_mesh, parse_opacity=False):
         opac = mat_state.material.arm_discard_opacity
         frag.write('if (opacity < {0}) discard;'.format(opac))
 
-    frag.main_pre += """
+    frag.write_init("""
     vec3 vVec = normalize(eyeDir);
     float dotNV = max(dot(n, vVec), 0.0);
-"""
+""")
 
     if is_displacement:
         tese.add_out('vec3 eyeDir')
