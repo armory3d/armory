@@ -48,91 +48,111 @@ class Uniforms {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
-			v = iron.object.Uniforms.helpVec;
-			v.x = armory.renderpath.HosekWilkie.data.A.x;
-			v.y = armory.renderpath.HosekWilkie.data.A.y;
-			v.z = armory.renderpath.HosekWilkie.data.A.z;
+			if (armory.renderpath.HosekWilkie.data != null) {
+				v = iron.object.Uniforms.helpVec;
+				v.x = armory.renderpath.HosekWilkie.data.A.x;
+				v.y = armory.renderpath.HosekWilkie.data.A.y;
+				v.z = armory.renderpath.HosekWilkie.data.A.z;
+			}
 		}
 		else if (clink == "_hosekB") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
-			v = iron.object.Uniforms.helpVec;
-			v.x = armory.renderpath.HosekWilkie.data.B.x;
-			v.y = armory.renderpath.HosekWilkie.data.B.y;
-			v.z = armory.renderpath.HosekWilkie.data.B.z;
+			if (armory.renderpath.HosekWilkie.data != null) {
+				v = iron.object.Uniforms.helpVec;
+				v.x = armory.renderpath.HosekWilkie.data.B.x;
+				v.y = armory.renderpath.HosekWilkie.data.B.y;
+				v.z = armory.renderpath.HosekWilkie.data.B.z;
+			}
 		}
 		else if (clink == "_hosekC") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
-			v = iron.object.Uniforms.helpVec;
-			v.x = armory.renderpath.HosekWilkie.data.C.x;
-			v.y = armory.renderpath.HosekWilkie.data.C.y;
-			v.z = armory.renderpath.HosekWilkie.data.C.z;
+			if (armory.renderpath.HosekWilkie.data != null) {
+				v = iron.object.Uniforms.helpVec;
+				v.x = armory.renderpath.HosekWilkie.data.C.x;
+				v.y = armory.renderpath.HosekWilkie.data.C.y;
+				v.z = armory.renderpath.HosekWilkie.data.C.z;
+			}
 		}
 		else if (clink == "_hosekD") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
-			v = iron.object.Uniforms.helpVec;
-			v.x = armory.renderpath.HosekWilkie.data.D.x;
-			v.y = armory.renderpath.HosekWilkie.data.D.y;
-			v.z = armory.renderpath.HosekWilkie.data.D.z;
+			if (armory.renderpath.HosekWilkie.data != null) {
+				v = iron.object.Uniforms.helpVec;
+				v.x = armory.renderpath.HosekWilkie.data.D.x;
+				v.y = armory.renderpath.HosekWilkie.data.D.y;
+				v.z = armory.renderpath.HosekWilkie.data.D.z;
+			}
 		}
 		else if (clink == "_hosekE") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
-			v = iron.object.Uniforms.helpVec;
-			v.x = armory.renderpath.HosekWilkie.data.E.x;
-			v.y = armory.renderpath.HosekWilkie.data.E.y;
-			v.z = armory.renderpath.HosekWilkie.data.E.z;
+			if (armory.renderpath.HosekWilkie.data != null) {
+				v = iron.object.Uniforms.helpVec;
+				v.x = armory.renderpath.HosekWilkie.data.E.x;
+				v.y = armory.renderpath.HosekWilkie.data.E.y;
+				v.z = armory.renderpath.HosekWilkie.data.E.z;
+			}
 		}
 		else if (clink == "_hosekF") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
-			v = iron.object.Uniforms.helpVec;
-			v.x = armory.renderpath.HosekWilkie.data.F.x;
-			v.y = armory.renderpath.HosekWilkie.data.F.y;
-			v.z = armory.renderpath.HosekWilkie.data.F.z;
+			if (armory.renderpath.HosekWilkie.data != null) {
+				v = iron.object.Uniforms.helpVec;
+				v.x = armory.renderpath.HosekWilkie.data.F.x;
+				v.y = armory.renderpath.HosekWilkie.data.F.y;
+				v.z = armory.renderpath.HosekWilkie.data.F.z;
+			}
 		}
 		else if (clink == "_hosekG") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
-			v = iron.object.Uniforms.helpVec;
-			v.x = armory.renderpath.HosekWilkie.data.G.x;
-			v.y = armory.renderpath.HosekWilkie.data.G.y;
-			v.z = armory.renderpath.HosekWilkie.data.G.z;
+			if (armory.renderpath.HosekWilkie.data != null) {
+				v = iron.object.Uniforms.helpVec;
+				v.x = armory.renderpath.HosekWilkie.data.G.x;
+				v.y = armory.renderpath.HosekWilkie.data.G.y;
+				v.z = armory.renderpath.HosekWilkie.data.G.z;
+			}
 		}
 		else if (clink == "_hosekH") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
-			v = iron.object.Uniforms.helpVec;
-			v.x = armory.renderpath.HosekWilkie.data.H.x;
-			v.y = armory.renderpath.HosekWilkie.data.H.y;
-			v.z = armory.renderpath.HosekWilkie.data.H.z;
+			if (armory.renderpath.HosekWilkie.data != null) {
+				v = iron.object.Uniforms.helpVec;
+				v.x = armory.renderpath.HosekWilkie.data.H.x;
+				v.y = armory.renderpath.HosekWilkie.data.H.y;
+				v.z = armory.renderpath.HosekWilkie.data.H.z;
+			}
 		}
 		else if (clink == "_hosekI") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
-			v = iron.object.Uniforms.helpVec;
-			v.x = armory.renderpath.HosekWilkie.data.I.x;
-			v.y = armory.renderpath.HosekWilkie.data.I.y;
-			v.z = armory.renderpath.HosekWilkie.data.I.z;
+			if (armory.renderpath.HosekWilkie.data != null) {
+				v = iron.object.Uniforms.helpVec;
+				v.x = armory.renderpath.HosekWilkie.data.I.x;
+				v.y = armory.renderpath.HosekWilkie.data.I.y;
+				v.z = armory.renderpath.HosekWilkie.data.I.z;
+			}
 		}
 		else if (clink == "_hosekZ") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
-			v = iron.object.Uniforms.helpVec;
-			v.x = armory.renderpath.HosekWilkie.data.Z.x;
-			v.y = armory.renderpath.HosekWilkie.data.Z.y;
-			v.z = armory.renderpath.HosekWilkie.data.Z.z;
+			if (armory.renderpath.HosekWilkie.data != null) {
+				v = iron.object.Uniforms.helpVec;
+				v.x = armory.renderpath.HosekWilkie.data.Z.x;
+				v.y = armory.renderpath.HosekWilkie.data.Z.y;
+				v.z = armory.renderpath.HosekWilkie.data.Z.z;
+			}
 		}
 		else if (clink == "_cameraPositionSnap") {
 			#if arm_voxelgi

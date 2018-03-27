@@ -100,8 +100,6 @@ def add_world_defs():
             if rpdat.arm_voxelgi_refraction:
                 wrd.world_defs += '_VoxelGIDirect'
                 wrd.world_defs += '_VoxelGIRefract'
-            if rpdat.arm_voxelgi_emission:
-                wrd.world_defs += '_VoxelGIEmission'
             if rpdat.rp_voxelgi_relight:
                 assets.add_khafile_def('rp_voxelgi_relight')
         elif voxelao:

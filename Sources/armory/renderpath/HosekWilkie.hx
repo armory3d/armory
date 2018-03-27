@@ -116,6 +116,7 @@ class HosekWilkie {
 	}
 
 	public static function init(world:WorldData) {
+		if (world == null || world.raw.sun_direction == null) return;
 		var dir = world.raw.sun_direction;
 		sunDirection = new FastVector3(dir[0], -dir[1], dir[2]);
 
