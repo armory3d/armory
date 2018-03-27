@@ -388,15 +388,14 @@ class Inc {
 			bounce_tb = bounce_sh.getTextureUnit("voxelsFrom");
 			bounce_tc = bounce_sh.getTextureUnit("voxelsTo");
 		}
-		// path.clearImage("voxelsOpac", 0x00000000);
-		// path.currentG;
+		// path.clearImage("voxelsBounce", 0x00000000);
 		kha.compute.Compute.setShader(bounce_sh);
 		kha.compute.Compute.setTexture(bounce_ta, rts.get("voxelsNor").image, kha.compute.Access.Read);
 		kha.compute.Compute.setTexture3DParameters(bounce_tb, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureFilter.LinearFilter, kha.graphics4.TextureFilter.PointFilter, kha.graphics4.MipMapFilter.LinearMipFilter);
 		kha.compute.Compute.setSampledTexture(bounce_tb, rts.get("voxels").image);
-		kha.compute.Compute.setTexture(bounce_tc, rts.get("voxelsOpac").image, kha.compute.Access.Write);
+		kha.compute.Compute.setTexture(bounce_tc, rts.get("voxelsBounce").image, kha.compute.Access.Write);
 		kha.compute.Compute.compute(res, res, res);
-		path.generateMipmaps("voxelsOpac");
+		path.generateMipmaps("voxelsBounce");
 		#end
 	}
 	#end

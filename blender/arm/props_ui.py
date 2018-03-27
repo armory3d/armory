@@ -1003,9 +1003,11 @@ class ArmRenderPathPanel(bpy.types.Panel):
         col2.enabled = rpdat.rp_gi == 'Voxel GI'
         col2.prop(rpdat, 'arm_voxelgi_bounces')
         row2 = col2.row()
+        row2.prop(rpdat, 'rp_voxelgi_relight')
+        row2.prop(rpdat, 'rp_voxelgi_hdr', text='HDR')
+        row2 = col2.row()
         row2.prop(rpdat, 'arm_voxelgi_refraction', text='Refraction')
         row2.prop(rpdat, 'arm_voxelgi_shadows', text='Shadows')
-        row2.prop(rpdat, 'rp_voxelgi_hdr', text='HDR')
         col.prop(rpdat, 'arm_voxelgi_cones')
         col.prop(rpdat, 'rp_voxelgi_resolution')
         col.prop(rpdat, 'rp_voxelgi_resolution_z')
@@ -1018,6 +1020,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
         col.label("Light")
         row = col.row(align=True)
         row.alignment = 'EXPAND'
+        row.enabled = rpdat.rp_gi == 'Voxel GI'
         row.prop(rpdat, 'arm_voxelgi_diff')
         row.prop(rpdat, 'arm_voxelgi_spec')
         row = col.row(align=True)

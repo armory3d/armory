@@ -93,6 +93,9 @@ class RenderPathForward {
 			{
 				Inc.initGI("voxelsOpac");
 				Inc.initGI("voxelsNor");
+				#if (rp_gi_bounces)
+				Inc.initGI("voxelsBounce");
+				#end
 			}
 			#end
 		}
@@ -218,6 +221,7 @@ class RenderPathForward {
 			}
 			#end
 
+			var relight = false;
 			if (voxelize) {
 				var res = Inc.getVoxelRes();
 
@@ -233,13 +237,24 @@ class RenderPathForward {
 				path.bindTarget(voxtex, "voxels");
 				path.drawMeshes("voxel");
 
+				relight = true;
+			}
+
+			#if ((rp_gi == "Voxel GI") && (rp_voxelgi_relight))
+			// Relight if lamp was moved
+			for (lamp in iron.Scene.active.lamps) {
+				if (lamp.transform.diff()) { relight = true; break; }
+			}
+			#end
+
+			if (relight) {
 				#if (rp_gi == "Voxel GI")
 				Inc.computeVoxels();
 					#if (rp_gi_bounces)
-					voxels = "voxelsOpac";
+					voxels = "voxelsBounce";
 					#end
 				#else
-				path.generateMipmaps(voxels);
+				path.generateMipmaps(voxels); // AO
 				#end
 			}
 		}
