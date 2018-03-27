@@ -519,8 +519,7 @@ def make_forward(con_mesh):
     blend = mat_state.material.arm_blending
     if not blend:
         frag.add_out('vec4 fragColor')
-        frag.write('fragColor = vec4(direct * lightColor * visibility + indirect * occlusion * envmapStrength, 1.0);')
-        # frag.write('fragColor = vec4(indirect, 1.0);') # AO view
+        frag.write('fragColor = vec4(direct * lightColor * visibility + indirect * occlusion, 1.0);')
     
         if '_LDR' in wrd.world_defs:
             frag.add_include('std/tonemap.glsl')
@@ -707,6 +706,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
             frag.write('indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5;')
     else:
         frag.write('vec3 indirect = albedo;')
+    frag.write('indirect *= envmapStrength;')
 
     if '_VoxelGI' in wrd.world_defs or '_VoxelAO' in wrd.world_defs:
         frag.add_include('std/conetrace.glsl')

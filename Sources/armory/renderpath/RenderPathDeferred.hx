@@ -471,7 +471,6 @@ class RenderPathDeferred {
 			#end
 
 			if (voxelize) {
-
 				var res = Inc.getVoxelRes();
 
 				#if (rp_gi == "Voxel GI")
