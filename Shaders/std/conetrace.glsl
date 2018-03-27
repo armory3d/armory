@@ -112,7 +112,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels) {
 }
 
 float traceShadow(sampler3D voxels, const vec3 origin, const vec3 dir, const float aperture, const float targetDistance, const vec3 normal) {
-	return traceCone(voxels, origin, dir, aperture, targetDistance, normal).a;
+	return traceCone(voxels, origin + normal * 0.04 * voxelgiOffset, dir, aperture, targetDistance, normal).a;
 }
 
 vec3 traceSpecular(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {

@@ -297,11 +297,13 @@ class Inc {
 			voxel_cb = voxel_sh.getConstantLocation("lightColor");
 			voxel_cc = voxel_sh.getConstantLocation("lightType");
 			voxel_cd = voxel_sh.getConstantLocation("lightDir");
+			voxel_ci = voxel_sh.getConstantLocation("spotData");
+			#if (rp_shadowmap)
 			voxel_ce = voxel_sh.getConstantLocation("lightShadow");
 			voxel_cf = voxel_sh.getConstantLocation("lightProj");
 			voxel_cg = voxel_sh.getConstantLocation("LVP");
 			voxel_ch = voxel_sh.getConstantLocation("shadowsBias");
-			voxel_ci = voxel_sh.getConstantLocation("spotData");
+			#end
 		}
 
 		var rts = path.renderTargets;
@@ -315,7 +317,7 @@ class Inc {
 			if (!l.visible) continue;
 			path.currentLampIndex = i;
 
-			#if ((rp_shadowmap))
+			#if (rp_shadowmap)
 			{
 				// TODO: merge with direct, drawing shadowmaps twice!
 				if (path.lampCastShadow()) {
@@ -338,18 +340,6 @@ class Inc {
 				// shadowMap
 				kha.compute.Compute.setSampledTexture(voxel_td, rts.get("shadowMap").image);
 			}
-			#end
-
-			// lightPos
-			kha.compute.Compute.setFloat3(voxel_ca, l.transform.worldx(), l.transform.worldy(), l.transform.worldz());
-			// lightCol
-			var f = l.data.raw.strength;
-			kha.compute.Compute.setFloat3(voxel_cb, l.data.raw.color[0] * f, l.data.raw.color[1] * f, l.data.raw.color[2] * f);
-			// lightType
-			kha.compute.Compute.setInt(voxel_cc, iron.data.LampData.typeToInt(l.data.raw.type));
-			// lightDir
-			var v = l.look();
-			kha.compute.Compute.setFloat3(voxel_cd, v.x, v.y, v.z);
 			// lightShadow
 			var i = l.data.raw.shadowmap_cube ? 2 : 1;
 			kha.compute.Compute.setInt(voxel_ce, i);
@@ -368,6 +358,18 @@ class Inc {
 			kha.compute.Compute.setMatrix(voxel_cg, m.self);
 			// shadowsBias
 			kha.compute.Compute.setFloat(voxel_ch, l.data.raw.shadows_bias);
+			#end
+
+			// lightPos
+			kha.compute.Compute.setFloat3(voxel_ca, l.transform.worldx(), l.transform.worldy(), l.transform.worldz());
+			// lightCol
+			var f = l.data.raw.strength;
+			kha.compute.Compute.setFloat3(voxel_cb, l.data.raw.color[0] * f, l.data.raw.color[1] * f, l.data.raw.color[2] * f);
+			// lightType
+			kha.compute.Compute.setInt(voxel_cc, iron.data.LampData.typeToInt(l.data.raw.type));
+			// lightDir
+			var v = l.look();
+			kha.compute.Compute.setFloat3(voxel_cd, v.x, v.y, v.z);
 			// spotData
 			if (l.data.raw.type == "spot") {
 				var vx = l.data.raw.spot_size;
