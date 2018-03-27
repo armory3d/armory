@@ -65,7 +65,7 @@ def make_finalize(con_mesh):
     # Additional values referenced in cycles
     # TODO: enable from cycles.py
     if frag.contains('dotNV') and not frag.contains('float dotNV'):
-        frag.prepend('float dotNV = max(dot(n, vVec), 0.0);')
+        frag.write_init('float dotNV = max(dot(n, vVec), 0.0);')
     
     write_wpos = False
     if frag.contains('vVec') and not frag.contains('vec3 vVec'):
@@ -80,7 +80,7 @@ def make_finalize(con_mesh):
             vert.add_out('vec3 eyeDir')
             vert.add_uniform('vec3 eye', '_cameraPosition')
             vert.write('eyeDir = eye - wposition;')
-        frag.prepend_header('vec3 vVec = normalize(eyeDir);')
+        frag.write_attrib('vec3 vVec = normalize(eyeDir);')
     
     export_wpos = False
     if frag.contains('wposition') and not frag.contains('vec3 wposition'):
@@ -223,7 +223,7 @@ def make_base(con_mesh, parse_opacity):
     else:
         vert.add_out('vec3 wnormal')
         write_norpos(con_mesh, vert)
-        frag.prepend_header('vec3 n = normalize(wnormal);')
+        frag.write_attrib('vec3 n = normalize(wnormal);')
 
     if tese != None:
         tese.add_uniform('mat4 VP', '_viewProjectionMatrix')
@@ -369,7 +369,7 @@ def make_deferred_plus(con_mesh):
 
     vert.add_out('vec3 wnormal')
     write_norpos(con_mesh, vert)
-    frag.prepend_header('vec3 n = normalize(wnormal);')
+    frag.write_attrib('vec3 n = normalize(wnormal);')
 
     frag.add_uniform('float materialID', link='_objectInfoMaterialIndex')
 
@@ -416,7 +416,7 @@ def make_forward_mobile(con_mesh):
 
     vert.add_out('vec3 wnormal')
     write_norpos(con_mesh, vert)
-    frag.prepend_header('vec3 n = normalize(wnormal);')
+    frag.write_attrib('vec3 n = normalize(wnormal);')
 
     frag.add_include('std/math.glsl')
     frag.add_include('std/brdf.glsl')

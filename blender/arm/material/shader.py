@@ -12,8 +12,8 @@ class Shader:
         self.uniforms = []
         self.functions = {}
         self.main = ''
-        self.main_pre = ''
-        self.main_header = ''
+        self.main_init = ''
+        self.main_normal = ''
         self.main_textures = ''
         self.main_attribs = ''
         self.header = ''
@@ -63,17 +63,14 @@ class Shader:
 
     def contains(self, s):
         return s in self.main or \
-               s in self.main_pre or \
-               s in self.main_header or \
+               s in self.main_init or \
+               s in self.main_normal or \
                s in self.ins or \
                s in self.main_textures or \
                s in self.main_attribs
 
-    def prepend(self, s):
-        self.main_pre = s + '\n' + self.main_pre
-
-    def prepend_header(self, s):
-        self.main_header = s + '\n' + self.main_header
+    def write_init(self, s):
+        self.main_init = s + '\n' + self.main_init
 
     def write(self, s):
         if self.lock:
@@ -81,9 +78,9 @@ class Shader:
         if self.write_textures > 0:
             self.main_textures += '\t' * 1 + s + '\n'
         elif self.write_normal > 0:
-            self.main_header += '\t' * 1 + s + '\n'
+            self.main_normal += '\t' * 1 + s + '\n'
         elif self.write_pre:
-            self.main_pre += '\t' * 1 + s + '\n'
+            self.main_init += '\t' * 1 + s + '\n'
         else:
             self.main += '\t' * self.tab + s + '\n'
 
@@ -97,8 +94,8 @@ class Shader:
         self.vstruct_to_vsin()
         return self.ins == sh.ins and \
                self.main == sh.main and \
-               self.main_header == sh.main_header and \
-               self.main_pre == sh.main_pre and \
+               self.main_normal == sh.main_normal and \
+               self.main_init == sh.main_init and \
                self.main_textures == sh.main_textures and \
                self.main_attribs == sh.main_attribs
 
@@ -165,8 +162,8 @@ class Shader:
         s += 'void main() {\n'
         s += self.main_attribs
         s += self.main_textures
-        s += self.main_header
-        s += self.main_pre
+        s += self.main_normal
+        s += self.main_init
         s += self.main
         s += '}\n'
         return s

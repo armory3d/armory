@@ -27,4 +27,4 @@ def interpolate(tese, var, size, normalize=False, declare_out=False):
     else:
         s += '{0}{1} = {1}_0 + {1}_1 + {1}_2;\n'.format(prep, var)
 
-    tese.prepend_header(s)
+    tese.write_attrib(s)
