@@ -1752,23 +1752,22 @@ class ArmoryExporter:
     def export_materials(self):
         wrd = bpy.data.worlds['Arm']
 
+        # Keep materials with fake user
+        for m in bpy.data.materials:
+            if m.use_fake_user and m not in self.materialArray:
+                self.materialArray.append(m)
+        # Ensure the same order for merging materials
+        self.materialArray.sort(key=lambda x: x.name)
+
         if wrd.arm_batch_materials:
             mat_users = self.materialToObjectDict
             mat_armusers = self.materialToArmObjectDict
             mat_batch.build(self.materialArray, mat_users, mat_armusers)
 
-        # Keep materials with fake user
-        for m in bpy.data.materials:
-            if m.use_fake_user and m not in self.materialArray:
-                self.materialArray.append(m)
-
         transluc_used = False
         overlays_used = False
         decals_used = False
         # sss_used = False
-
-        self.materialArray.sort(key=lambda x: x.name) # Ensure the same order for merging materials
-
         for material in self.materialArray:
             # If the material is unlinked, material becomes None
             if material == None:

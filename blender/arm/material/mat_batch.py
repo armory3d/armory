@@ -97,13 +97,9 @@ def build(materialArray, mat_users, mat_armusers):
     mat_state.batch = True
 
     # Build unique shaders
-    for ref in materialArray.items():
-        mat = ref[0]
-        
-        for ref2 in materialArray.items():
-            mat2 = ref2[0]
-
-            # Signature not found  - build it
+    for mat in materialArray:
+        for mat2 in materialArray:
+            # Signature not found - build it
             if mat == mat2:
                 batchDict[mat] = make_shader.build(mat, mat_users, mat_armusers)
                 break
