@@ -119,8 +119,7 @@ float traceShadow(sampler3D voxels, const vec3 origin, const vec3 dir, const flo
 }
 
 vec3 traceSpecular(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {
-	float rough = max(roughness, 0.02);
-	float specularAperture = clamp(tan((3.14159265 / 2) * rough * 0.75), 0.0174533, 3.14159265);
+	float specularAperture = clamp(tan((3.14159265 / 2) * roughness * 0.75), 0.0174533 * 3.0, 3.14159265);
 	vec3 specularDir = normalize(reflect(-viewDir, normal));
 	return traceCone(voxels, pos, specularDir, specularAperture, MAX_DISTANCE, normal).xyz;
 }
@@ -129,8 +128,7 @@ vec3 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const 
 	const float ior = 1.440;
 	const float transmittance = 1.0;
 	vec3 refraction = refract(viewDir, normal, 1.0 / ior);
-	float rough = max(roughness, 0.03);
-	float specularAperture = clamp(tan((3.14159265 / 2) * rough), 0.0174533, 3.14159265);
+	float specularAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
 	return transmittance * traceCone(voxels, pos, refraction, specularAperture, MAX_DISTANCE, normal).xyz;
 }
 
