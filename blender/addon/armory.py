@@ -214,6 +214,8 @@ class ArmAddonUpdateButton(bpy.types.Operator):
         update_repo(p, 'lib/haxebullet', 'haxebullet')
         update_repo(p, 'lib/haxerecast', 'haxerecast')
         update_repo(p, 'lib/zui', 'zui')
+        update_repo(p, 'lib/armory_tools', 'armory_tools')
+        update_repo(p, 'lib/iron_format', 'iron_format')
         return {"FINISHED"}
 
 class ArmAddonRestoreButton(bpy.types.Operator):
@@ -233,6 +235,8 @@ class ArmAddonRestoreButton(bpy.types.Operator):
         restore_repo(p, 'lib/haxebullet')
         restore_repo(p, 'lib/haxerecast')
         restore_repo(p, 'lib/zui')
+        restore_repo(p, 'lib/armory_tools')
+        restore_repo(p, 'lib/iron_format')
         self.report({'INFO'}, 'Restored stable version')
         return {"FINISHED"}
 
