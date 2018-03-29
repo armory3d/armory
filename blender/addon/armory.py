@@ -98,6 +98,15 @@ class ArmoryAddonPreferences(AddonPreferences):
                 layout.prop(self, "sdk_path")
         else:
             layout.prop(self, "sdk_path")
+        box = layout.box().column()
+        box.label("Armory Updater")
+        box.label("Note: Development version may run unstable!")
+        row = box.row(align=True)
+        row.alignment = 'EXPAND'
+        row.operator("arm_addon.install_git", icon="URL")
+        row.operator("arm_addon.update", icon="FILE_REFRESH")
+        row.operator("arm_addon.restore")
+        box.label("Please restart Blender after successful SDK update.")
         layout.prop(self, "show_advanced")
         if self.show_advanced:
             box = layout.box().column()
@@ -109,16 +118,6 @@ class ArmoryAddonPreferences(AddonPreferences):
             box.prop(self, "ui_scale")
             box.prop(self, "save_on_build")
             box.prop(self, "legacy_shaders")
-            
-            box = layout.box().column()
-            box.label("Armory Updater")
-            box.label("Note: Development version may run unstable!")
-            row = box.row(align=True)
-            row.alignment = 'EXPAND'
-            row.operator("arm_addon.install_git", icon="URL")
-            row.operator("arm_addon.update", icon="FILE_REFRESH")
-            row.operator("arm_addon.restore")
-            box.label("Please restart Blender after successful SDK update.")
 
 def get_sdk_path(context):
     global with_krom
