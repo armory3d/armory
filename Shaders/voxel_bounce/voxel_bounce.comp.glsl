@@ -15,17 +15,19 @@ void main() {
 
     vec4 col = texelFetch(voxelsFrom, ivec3(gl_GlobalInvocationID.xyz), 0);
     if (col.a == 0.0) {
-    	imageStore(voxelsTo, ivec3(gl_GlobalInvocationID.xyz), col);
+        // imageStore(voxelsTo, ivec3(gl_GlobalInvocationID.xyz), col);
+    	imageStore(voxelsTo, ivec3(gl_GlobalInvocationID.xyz), vec4(0.0));
     	return;
     }
 
     const vec3 hres = voxelgiResolution / 2;
-    vec3 wposition = ((gl_GlobalInvocationID.xyz - hres) / hres) * voxelgiHalfExtents;
+    vec3 voxpos = (gl_GlobalInvocationID.xyz - hres) / hres;
+    vec3 wposition = voxpos * voxelgiHalfExtents;
 
     uint unor = imageLoad(voxelsNor, ivec3(gl_GlobalInvocationID.xyz)).r;
     vec3 wnormal = normalize(decNor(unor));
 
-    col.rgb += traceDiffuse(((gl_GlobalInvocationID.xyz - hres) / hres), wnormal, voxelsFrom).rgb * voxelgiDiff * 0.5;
+    col.rgb += traceDiffuse(voxpos, wnormal, voxelsFrom).rgb * voxelgiDiff * 0.5;
     col = clamp(col, vec4(0.0), vec4(1.0));
 
     imageStore(voxelsTo, ivec3(gl_GlobalInvocationID.xyz), col);
