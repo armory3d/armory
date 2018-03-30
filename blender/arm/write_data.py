@@ -23,10 +23,11 @@ def add_assets(path, quality=1.0):
             shutil.copy(path, localpath)
         path = localpath
 
-    s = 'project.addAssets("' + path + '"';
+    notinlist = not path.endswith('.ttf') # TODO
+    s = 'project.addAssets("' + path + '", { notinlist: ' + str(notinlist).lower() + ' ';
     if quality < 1.0:
-        s += ', { quality: ' + str(quality) + ' }'
-    s += ');\n'
+        s += ', quality: ' + str(quality)
+    s += '});\n'
     return s
 
 # Write khafile.js
@@ -281,14 +282,14 @@ class Main {
     static var state:Int;
     #if js
     static function loadLib(name:String) {
-        kha.LoaderImpl.loadBlobFromDescription({ files: [name] }, function(b:kha.Blob) {
+        kha.Assets.loadBlobFromPath(name, function(b:kha.Blob) {
             untyped __js__("(1, eval)({0})", b.toString());
             state--;
             start();
         });
     }
     static function loadLibAmmo(name:String) {
-        kha.LoaderImpl.loadBlobFromDescription({ files: [name] }, function(b:kha.Blob) {
+        kha.Assets.loadBlobFromPath(name, function(b:kha.Blob) {
             var print = function(s:String) { trace(s); };
             var loaded = function() { state--; start(); };
             untyped __js__("(1, eval)({0})", b.toString());
