@@ -63,7 +63,7 @@ class PhysicsWorld extends Trait {
 		rbMap = new Map();
 		active = this;
 
-		notifyOnUpdate(update);
+		notifyOnLateUpdate(lateUpdate);
 		iron.Scene.active.notifyOnRemove(reset);
 	}
 
@@ -178,7 +178,7 @@ class PhysicsWorld extends Trait {
 		return res;
 	}
 
-	public function update() {
+	public function lateUpdate() {
 #if arm_debug
 		var startTime = kha.Scheduler.realTime();
 #end
