@@ -291,7 +291,6 @@ def init_properties():
     bpy.types.Lamp.arm_clip_end = FloatProperty(name="Clip End", default=50.0)
     bpy.types.Lamp.arm_fov = FloatProperty(name="Field of View", default=0.84)
     bpy.types.Lamp.arm_shadows_bias = FloatProperty(name="Bias", description="Depth offset to fight shadow acne", default=1.0)
-    bpy.types.Lamp.arm_omni_shadows = BoolProperty(name="Omni-Shadows", description="Draw shadows to all faces of the cube map", default=True)
     bpy.types.World.arm_lamp_texture = StringProperty(name="Mask Texture", default="")
     bpy.types.World.arm_lamp_ies_texture = StringProperty(name="IES Texture", default="")
     bpy.types.World.arm_lamp_clouds_texture = StringProperty(name="Clouds Texture", default="")
