@@ -1113,8 +1113,9 @@ class ArmRenderPathPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_ssgi_max_steps')
         box.separator()
         box.prop(rpdat, "rp_ssr")
-        row = box.row()
-        row.enabled = rpdat.rp_ssr
+        col = box.column()
+        col.enabled = rpdat.rp_ssr
+        row = col.row(align=True)
         row.prop(rpdat, 'arm_ssr_half_res')
         row.prop(rpdat, 'rp_ssr_z_only')
         row = col.row(align=True)
