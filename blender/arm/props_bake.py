@@ -144,6 +144,11 @@ class ArmBakeButton(bpy.types.Operator):
                 bpy.ops.mesh.select_all(action='DESELECT')
                 bpy.ops.object.mode_set(mode='OBJECT')
                 bpy.ops.uv.smart_project('EXEC_SCREEN')
+            else:
+                for i in range(0, len(ob.data.uv_textures)):
+                    if ob.data.uv_textures[i].name == 'UVMap_baked':
+                        ob.data.uv_textures.active_index = i
+                        break
         bpy.context.scene.objects.active = active
 
         # Materials for runtime
