@@ -1268,10 +1268,16 @@ class ArmoryExporter:
             t0map = 0
             uv_textures = exportMesh.uv_textures
             if uv_textures != None:
-                for i in range(0, len(uv_textures)):
-                    if uv_textures[i].active_render:
-                        t0map = i
-                        break
+                if 'UVMap_baked' in uv_textures:
+                    for i in range(0, len(uv_textures)):
+                        if uv_textures[i].name == 'UVMap_baked':
+                            t0map = i
+                            break
+                else:
+                    for i in range(0, len(uv_textures)):
+                        if uv_textures[i].active_render:
+                            t0map = i
+                            break
             t1map = 1 if t0map == 0 else 0
             # Alloc data
             t0data = [0] * num_verts * 2

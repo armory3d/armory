@@ -133,7 +133,9 @@ class ArmBakeButton(bpy.types.Operator):
         active = bpy.context.scene.objects.active
         for o in scn.arm_bakelist:
             ob = scn.objects[o.object_name]
-            if len(ob.data.uv_textures) == 0:
+            if not 'UVMap_baked' in ob.data.uv_textures:
+                uvmap = ob.data.uv_textures.new(name='UVMap_baked')
+                ob.data.uv_textures.active_index = len(ob.data.uv_textures) - 1
                 bpy.context.scene.objects.active = ob
                 # bpy.ops.uv.lightmap_pack('EXEC_SCREEN', PREF_CONTEXT='ALL_FACES')
                 bpy.ops.object.select_all(action='DESELECT')
@@ -142,7 +144,6 @@ class ArmBakeButton(bpy.types.Operator):
                 bpy.ops.mesh.select_all(action='DESELECT')
                 bpy.ops.object.mode_set(mode='OBJECT')
                 bpy.ops.uv.smart_project('EXEC_SCREEN')
-                ob.data.uv_textures[0].name += '_baked'
         bpy.context.scene.objects.active = active
 
         # Materials for runtime
@@ -211,6 +212,10 @@ class ArmBakeApplyButton(bpy.types.Operator):
                     old = slot.material
                     slot.material = bpy.data.materials[old.name.split('_' + ob.name)[0]]
                     bpy.data.materials.remove(old, True)
+        # Restore uv slots
+        for o in scn.arm_bakelist:
+            ob = scn.objects[o.object_name]
+            ob.data.uv_textures.active_index = 0
 
         return{'FINISHED'}
 
