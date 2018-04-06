@@ -77,7 +77,8 @@ class ArmExporterListItem(bpy.types.PropertyGroup):
                  ('krom-linux', 'Linux (Krom)', 'krom-linux'),
                  ('ios', 'iOS', 'ios'),
                  ('android-native', 'Android', 'android-native'),
-                 ('node', 'Node', 'node')],
+                 ('node', 'Node', 'node'),
+                 ('windows-hl', 'Windows (HashLink)', 'windows-hl'),],
         name="Target", default='html5', description='Build platform')
 
     arm_gapi_win = EnumProperty(
