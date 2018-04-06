@@ -470,8 +470,8 @@ class RenderPathForward {
 
 			#if (rp_supersampling == 4)
 			{
-				var final = "";
-				path.setTarget(final);
+				var finalTarget = "";
+				path.setTarget(finalTarget);
 				path.bindTarget(framebuffer, "tex");
 				path.drawShader("shader_datas/supersample_resolve/supersample_resolve");
 			}

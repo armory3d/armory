@@ -836,11 +836,11 @@ class RenderPathDeferred {
 		{
 			#if rp_rendercapture
 			// TODO: ss4 + capture broken
-			var final = "capture";
+			var finalTarget = "capture";
 			#else
-			var final = "";
+			var finalTarget = "";
 			#end
-			path.setTarget(final);
+			path.setTarget(finalTarget);
 			path.bindTarget(framebuffer, "tex");
 			path.drawShader("shader_datas/supersample_resolve/supersample_resolve");
 		}
