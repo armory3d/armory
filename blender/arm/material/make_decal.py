@@ -1,6 +1,7 @@
 import arm.material.cycles as cycles
 import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
+import arm.material.make_mesh as make_mesh
 import arm.utils
 
 def make(context_id):
@@ -32,7 +33,6 @@ def make(context_id):
     frag.add_uniform('sampler2D gbufferD')
     frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
     frag.add_uniform('mat4 invW', '_inverseWorldMatrix')
-    frag.add_uniform('vec3 eye', '_cameraPosition')
     frag.add_out('vec4[2] fragColor')
 
     frag.write_attrib('    vec3 n = normalize(wnormal);')
@@ -46,8 +46,6 @@ def make(context_id):
     frag.write_attrib('    if (abs(mpos.x) > 1.0) discard;')
     frag.write_attrib('    if (abs(mpos.y) > 1.0) discard;')
     frag.write_attrib('    if (abs(mpos.z) > 1.0) discard;')
-    
-    frag.write_attrib('    vec3 vVec = normalize(eye - wpos);')
     frag.write_attrib('    vec2 texCoord = mpos.xy * 0.5 + 0.5;')
 
     frag.write('vec3 basecol;')
@@ -66,5 +64,7 @@ def make(context_id):
 
     frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), alpha);')
     frag.write('fragColor[1] = vec4(basecol.rgb, alpha);')
+
+    make_mesh.make_finalize(con_decal)
 
     return con_decal
