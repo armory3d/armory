@@ -171,7 +171,7 @@ class Uniforms {
 		return v;
 	}
 
-	public static function externalFloatLink(clink:String):Float {
+	public static function externalFloatLink(clink:String):kha.FastFloat {
 		#if rp_dynres
 		if (clink == "_dynamicScale") {
 			return armory.renderpath.DynamicResolutionScale.dynamicScale;

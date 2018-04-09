@@ -74,7 +74,7 @@ class HosekWilkieRadianceData {
 		index == 0 ? v.x = f : index == 1 ? v.y = f : v.z = f;
 	}
 	
-	public function new(sunTheta:Float, turbidity:Float, albedo:Float, normalizedSunY:Float) {
+	public function new(sunTheta:Float, turbidity:kha.FastFloat, albedo:kha.FastFloat, normalizedSunY:Float) {
 		for (i in 0...3) {
 			setVector(A, i, evaluate(HosekWilkieData.datasetsRGB[i], 0, 9, turbidity, albedo, sunTheta));
 			setVector(B, i, evaluate(HosekWilkieData.datasetsRGB[i], 1, 9, turbidity, albedo, sunTheta));
@@ -111,7 +111,7 @@ class HosekWilkie {
 	public static var data:HosekWilkieRadianceData = null;
 	public static var sunDirection:FastVector3;
 
-	public static function recompute(sunPositionX:Float, turbidity:Float, albedo:Float, normalizedSunY:Float) {
+	public static function recompute(sunPositionX:Float, turbidity:kha.FastFloat, albedo:kha.FastFloat, normalizedSunY:Float) {
 		data = new HosekWilkieRadianceData(sunPositionX, turbidity, albedo, normalizedSunY);
 	}
 
