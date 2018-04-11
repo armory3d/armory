@@ -346,11 +346,12 @@ class Inc {
 			// lightProj
 			var near = l.data.raw.near_plane;
 			var far = l.data.raw.far_plane;
-			var a = far + near;
-			var b = far - near;
-			var c = 2.0 * far * near;
-			var vx = a / b;
-			var vy = c / b;
+			var a:kha.FastFloat = far + near;
+			var b:kha.FastFloat = far - near;
+			var f2:kha.FastFloat = 2.0;
+			var c:kha.FastFloat = f2 * far * near;
+			var vx:kha.FastFloat = a / b;
+			var vy:kha.FastFloat = c / b;
 			kha.compute.Compute.setFloat2(voxel_cf, vx, vy);
 			// LVP
 			m.setFrom(l.VP);
