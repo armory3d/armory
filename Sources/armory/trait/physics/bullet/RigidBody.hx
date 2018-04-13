@@ -269,16 +269,16 @@ class RigidBody extends Trait {
 	}
 
 	public function getLinearVelocity():BtVector3 {
-		return body.getLinearVelocity(); // Unable to compile in cpp
+		return body.getLinearVelocity(); // Seem to be able to comile now?
 	}
 
 	public function setLinearVelocity(x:Float, y:Float, z:Float) {
 		body.setLinearVelocity(BtVector3.create(x, y, z));
 	}
 
-	// public function getAngularVelocity():BtVector3 {
-	// 	return body.getAngularVelocity();
-	// }
+	public function getAngularVelocity():BtVector3 {
+		return body.getAngularVelocity();
+	}
 
 	public function setAngularVelocity(x:Float, y:Float, z:Float) {
 		body.setAngularVelocity(BtVector3.create(x, y, z));
