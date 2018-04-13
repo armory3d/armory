@@ -16,6 +16,7 @@ class VectorMathNode(Node, ArmLogicTreeNode):
                  ('Subtract', 'Subtract', 'Subtract'),
                  ('Average', 'Average', 'Average'),
                  ('Cross Product', 'Cross Product', 'Cross Product'),
+                 ('Length', 'Length', 'Length'),
                  ],
         name='', default='Add')
     
