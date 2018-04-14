@@ -4,7 +4,7 @@ import iron.object.Object;
 import iron.math.Vec4;
 import armory.trait.physics.RigidBody;
 
-class ApplyImpulseNodeAtLocation extends LogicNode {
+class ApplyImpulseAtLocationNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);
@@ -19,7 +19,7 @@ class ApplyImpulseNodeAtLocation extends LogicNode {
 
 #if arm_physics
 		var rb:RigidBody = object.getTrait(RigidBody);
-		rb.applyImpulse(impulse,location);
+		rb.applyImpulse(impulse, location);
 #end
 
 		super.run();

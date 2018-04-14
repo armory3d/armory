@@ -70,12 +70,12 @@ class FirstPersonController extends CameraController {
 
 		// Push down
 		var btvec = body.getLinearVelocity();
-		body.setLinearVelocity(0.0, 0.0, btvec.z() - 1.0);
+		body.setLinearVelocity(0.0, 0.0, btvec.z - 1.0);
 
 		if (moveForward || moveBackward || moveLeft || moveRight) {			
 			dir.mult(6);
 			body.activate();
-			body.setLinearVelocity(dir.x, dir.y, btvec.z() - 1.0);
+			body.setLinearVelocity(dir.x, dir.y, btvec.z - 1.0);
 		}
 
 		// Keep vertical

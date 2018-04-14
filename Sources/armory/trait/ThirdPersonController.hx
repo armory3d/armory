@@ -82,7 +82,7 @@ class ThirdPersonController extends CameraController {
 
 		// Push down
 		var btvec = body.getLinearVelocity();
-		body.setLinearVelocity(0.0, 0.0, btvec.z() - 1.0);
+		body.setLinearVelocity(0.0, 0.0, btvec.z - 1.0);
 
 		if (moveForward || moveBackward || moveLeft || moveRight) {
 			if (currentAction != runAction) {
@@ -91,7 +91,7 @@ class ThirdPersonController extends CameraController {
 			}
 			dir.mult(-4 * 0.7);
 			body.activate();
-			body.setLinearVelocity(dir.x, dir.y, btvec.z() - 1.0);
+			body.setLinearVelocity(dir.x, dir.y, btvec.z - 1.0);
 		}
 		else {
 			if (currentAction != idleAction) {
