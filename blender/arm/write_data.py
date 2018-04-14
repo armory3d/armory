@@ -215,6 +215,8 @@ project.addSources('Sources');
             assets.add_khafile_def('arm_skin_cpu')
         elif rpdat.arm_skin == 'GPU (Matrix)':
             assets.add_khafile_def('arm_skin_mat')
+        elif rpdat.arm_skin == 'GPU Off':
+            assets.add_khafile_def('arm_skin_off')
 
         if arm.utils.get_viewport_controls() == 'azerty':
             assets.add_khafile_def('arm_azerty')

@@ -602,7 +602,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_skin = EnumProperty(
         items=[('GPU (Dual-Quat)', 'GPU (Dual-Quat)', 'GPU (Dual-Quat)'),
                ('GPU (Matrix)', 'GPU (Matrix)', 'GPU (Matrix)'),
-               ('CPU', 'CPU', 'CPU')],
+               ('CPU', 'CPU', 'CPU'),
+               ('GPU Off', 'Off', 'Off')],
         name='Skinning', description='Skinning method', default='GPU (Dual-Quat)', update=assets.invalidate_shader_cache)
     arm_skin_max_bones_auto = BoolProperty(name="Auto Bones", description="Calculate amount of maximum bones based on armatures", default=True, update=assets.invalidate_compiled_data)
     arm_skin_max_bones = IntProperty(name="Max Bones", default=50, min=1, max=3000, update=assets.invalidate_shader_cache)
