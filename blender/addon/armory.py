@@ -76,6 +76,10 @@ class ArmoryAddonPreferences(AddonPreferences):
         items = [('kodestudio', 'Kode Studio', 'kodestudio'),
                  ('default', 'System Default', 'default')],
         name="Code Editor", default='kodestudio', description='Use this editor for editing scripts')
+    # kha_version = EnumProperty(
+        # items = [('bundled', 'Bundled', 'bundled'),
+                 # ('git', 'Git', 'git')],
+        # name="Kha", default='bundled', description='Select Git if you cloned Kha manually')
     ui_scale = FloatProperty(name='UI Scale', description='Adjust UI scale for Armory tools', default=1.0, min=1.0, max=4.0)
     renderdoc_path = StringProperty(name="RenderDoc Path", description="Binary path", subtype="FILE_PATH", update=renderdoc_path_update, default="")
     ffmpeg_path = StringProperty(name="FFMPEG Path", description="Binary path", subtype="FILE_PATH", update=ffmpeg_path_update, default="")
@@ -112,6 +116,7 @@ class ArmoryAddonPreferences(AddonPreferences):
             box = layout.box().column()
             box.prop(self, "player_gapi_" + get_os())
             box.prop(self, "code_editor")
+            # box.prop(self, "kha_version")
             box.prop(self, "renderdoc_path")
             box.prop(self, "ffmpeg_path")
             box.prop(self, "viewport_controls")

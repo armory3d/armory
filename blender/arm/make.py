@@ -533,6 +533,8 @@ def on_compiled(mode): # build, play, play_viewport, publish
                 args.append('--nosound')
             if state.is_render:
                 args.append('--nowindow')
+            args.append('--stdout')
+            args.append(arm.utils.get_fp_build() + '/krom.txt')
             state.playproc = subprocess.Popen(args, stderr=subprocess.PIPE)
             watch_play()
     elif mode == 'publish':

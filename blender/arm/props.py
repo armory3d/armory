@@ -15,7 +15,7 @@ except ImportError:
     pass
 
 # Armory version
-arm_version = '0.4.0'
+arm_version = '0.4'
 arm_commit = '$Id$'
 
 def invalidate_mesh_cache(self, context):
@@ -342,12 +342,6 @@ def init_properties_on_load():
     # Outdated project
     if bpy.data.filepath != '' and (wrd.arm_version != arm_version or wrd.arm_commit != arm_commit): # Call on project load only
         print('Project updated to sdk v' + arm_version)
-        if arm_version == '0.2.0' and wrd.arm_version == '0.1.0':
-            # Migrate deprecated props here
-            for o in bpy.data.objects:
-                if hasattr(o, 'arm_rb_ghost'):
-                    o.arm_rb_trigger = o.arm_rb_ghost
-            pass
         wrd.arm_version = arm_version
         wrd.arm_commit = arm_commit
         arm.make.clean_project()

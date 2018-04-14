@@ -842,9 +842,9 @@ class ArmoryExporter:
 
                 oid = arm.utils.safestr(self.meshArray[objref]["structName"])
                 if ArmoryExporter.option_mesh_per_file:
-                    ext = ''
-                    if self.is_compress(objref):
-                        ext = '.zip'
+                    ext = '' if not self.is_compress(objref) else '.zip'
+                    if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
+                        ext = '.json'
                     o['data_ref'] = 'mesh_' + oid + ext + '/' + oid
                 else:
                     o['data_ref'] = oid
@@ -2026,6 +2026,8 @@ class ArmoryExporter:
         self.output['name'] = arm.utils.safestr(self.scene.name)
         if self.filepath.endswith('.zip'):
             self.output['name'] += '.zip'
+        elif not bpy.data.worlds['Arm'].arm_minimize:
+            self.output['name'] += '.json'
 
         # Fix material variants
         # Skinned and non-skined objects can not share material
@@ -2311,9 +2313,7 @@ class ArmoryExporter:
             ArmoryExporter.import_traits = [] # Referenced traits
         ArmoryExporter.option_mesh_only = False
         ArmoryExporter.option_mesh_per_file = True
-        ArmoryExporter.option_minimize = wrd.arm_minimize
-        ArmoryExporter.option_sample_animation = wrd.arm_sampled_animation
-        ArmoryExporter.sample_animation_flag = ArmoryExporter.option_sample_animation
+        ArmoryExporter.sample_animation_flag = wrd.arm_sampled_animation
 
         # Used for material shader export and khafile
         ArmoryExporter.mesh_context = 'mesh'
@@ -2679,7 +2679,8 @@ class ArmoryExporter:
         po = {}
         po['name'] = world.name
         if arm_irradiance:
-            po['irradiance'] = irrsharmonics + '_irradiance'
+            ext = '' if wrd.arm_minimize else '.json'
+            po['irradiance'] = irrsharmonics + '_irradiance' + ext
             if arm_radiance:
                 po['radiance'] = radtex + '_radiance'
                 if disable_hdr:

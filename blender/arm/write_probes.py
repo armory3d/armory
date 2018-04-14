@@ -244,7 +244,8 @@ def sh_to_json(sh_file):
     
     sh_json = {}
     sh_json['irradiance'] = irradiance_floats
-    arm.utils.write_arm(sh_file + '.arm', sh_json)
+    ext = '.arm' if bpy.data.worlds['Arm'].arm_minimize else '.json'
+    arm.utils.write_arm(sh_file + ext, sh_json)
     
     # Clean up .c
     os.remove(sh_file + '.c')

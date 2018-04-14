@@ -23,6 +23,9 @@ def add_assets(path, quality=1.0):
             shutil.copy(path, localpath)
         path = localpath
 
+    if not bpy.data.worlds['Arm'].arm_minimize and path.endswith('.arm'):
+        path = path[:-4] + '.json'
+
     notinlist = not path.endswith('.ttf') # TODO
     s = 'project.addAssets("' + path + '", { notinlist: ' + str(notinlist).lower() + ' ';
     if quality < 1.0:
@@ -197,10 +200,10 @@ project.addSources('Sources');
         if wrd.arm_formatlib == 'Enabled':
             if not os.path.exists('Libraries/iron_format'):
                 f.write(add_armory_library(sdk_path, 'lib/iron_format'))
-
+        
         if wrd.arm_minimize == False:
             assets.add_khafile_def('arm_json')
-        
+
         if wrd.arm_deinterleaved_buffers == True:
             assets.add_khafile_def('arm_deinterleaved')
 
@@ -220,6 +223,9 @@ project.addSources('Sources');
 
         if arm.utils.get_viewport_controls() == 'azerty':
             assets.add_khafile_def('arm_azerty')
+
+        assets.add_khafile_def('arm_fast')
+        # assets.add_khafile_def('arm_kha_' + arm.utils.get_kha_version())
 
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
@@ -269,6 +275,8 @@ def write_main(scene_name, resx, resy, is_play, in_viewport, is_publish):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     scene_ext = '.zip' if (bpy.data.scenes[scene_name].arm_compress and is_publish) else ''
+    if scene_ext == '' and not wrd.arm_minimize:
+        scene_ext = '.json'
     winmode = get_winmode(wrd.arm_winmode)
     if in_viewport:
         winmode = 0
@@ -280,7 +288,6 @@ package ;
 class Main {
     public static inline var projectName = '""" + arm.utils.safestr(wrd.arm_project_name) + """';
     public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';
-    public static inline var projectPath = '""" + arm.utils.get_fp().replace('\\', '\\\\') + """'; 
     static var state:Int;
     #if js
     static function loadLib(name:String) {

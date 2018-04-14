@@ -16,13 +16,14 @@ def write_arm(filepath, output):
             if bpy.data.worlds['Arm'].arm_minimize:
                 zip_file.writestr('data.arm', arm.lib.armpack.packb(output))
             else:
-                zip_file.writestr('data.arm', json.dumps(output, sort_keys=True, indent=4))
+                zip_file.writestr('data.json', json.dumps(output, sort_keys=True, indent=4))
     else:
         if bpy.data.worlds['Arm'].arm_minimize:
             with open(filepath, 'wb') as f:
                 f.write(arm.lib.armpack.packb(output))
         else:
-            with open(filepath, 'w') as f:
+            filepath_json = filepath.split('.arm')[0] + '.json'
+            with open(filepath_json, 'w') as f:
                 f.write(json.dumps(output, sort_keys=True, indent=4))
 
 def unpack_image(image, path, file_format='JPEG'):
@@ -129,6 +130,11 @@ def get_code_editor():
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
     return 'kodestudio' if not hasattr(addon_prefs, 'code_editor') else addon_prefs.code_editor
+
+# def get_kha_version():
+    # user_preferences = bpy.context.user_preferences
+    # addon_prefs = user_preferences.addons['armory'].preferences
+    # return 'bundled' if not hasattr(addon_prefs, 'kha_version') else addon_prefs.kha_version
 
 def get_ui_scale():
     user_preferences = bpy.context.user_preferences
