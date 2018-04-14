@@ -37,6 +37,8 @@ class VectorMathNode extends LogicNode {
 			v.x *= v2.x;
 			v.y *= v2.y;
 			v.z *= v2.z;
+		case "Length":
+			f = v.length();
 		}
 
 		if (from == 0) return v;
