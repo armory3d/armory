@@ -65,7 +65,15 @@ def build_node(node, f):
     global parsed_labels
 
     if node.type == 'REROUTE':
-        return build_node(node.inputs[0].links[0].from_node, f)
+    	empty = True
+    	if len(node.inputs) > 0:
+    		if len(node.inputs[0].links) > 0:
+    			empty = False
+
+    	if not empty:
+    		return build_node(node.inputs[0].links[0].from_node, f)
+    	if empty:
+    		return None
 
     # Get node name
     name = '_' + arm.utils.safesrc(node.name)
