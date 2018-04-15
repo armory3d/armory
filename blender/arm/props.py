@@ -299,6 +299,7 @@ def init_properties():
     bpy.types.World.arm_scripts_list = CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.arm_bundled_scripts_list = CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.arm_canvas_list = CollectionProperty(type=bpy.types.PropertyGroup)
+    bpy.types.World.arm_wasm_list = CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.world_defs = StringProperty(name="World Shader Defs", default='')
     bpy.types.World.compo_defs = StringProperty(name="Compositor Shader Defs", default='')
     bpy.types.Material.export_uvs = BoolProperty(name="Export UVs", default=False)

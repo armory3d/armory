@@ -273,6 +273,20 @@ def fetch_script_names():
             wrd.arm_canvas_list.add().name = file.rsplit('.')[0]
     os.chdir(get_fp())
 
+def fetch_wasm_names():
+    if bpy.data.filepath == "":
+        return
+    wrd = bpy.data.worlds['Arm']
+    # WASM modules
+    wrd.arm_wasm_list.clear()
+    sources_path = get_fp() + '/Bundled'
+    if os.path.isdir(sources_path):
+        os.chdir(sources_path)
+        for file in glob.glob('*.wasm'):
+            name = file.rsplit('.')[0]
+            wrd.arm_wasm_list.add().name = name
+    os.chdir(get_fp())
+
 def fetch_trait_props():
     for o in bpy.data.objects:
         fetch_prop(o)

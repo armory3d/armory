@@ -60,7 +60,7 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
         name = "Type")
     class_name_prop = bpy.props.StringProperty(name="Class", description="A name for this item", default="", update=update_trait_group)
     canvas_name_prop = bpy.props.StringProperty(name="Canvas", description="A name for this item", default="", update=update_trait_group)
-    webassembly_prop = bpy.props.StringProperty(name="Text", description="A name for this item", default="", update=update_trait_group)
+    webassembly_prop = bpy.props.StringProperty(name="Module", description="A name for this item", default="", update=update_trait_group)
     nodes_name_prop = bpy.props.StringProperty(name="Nodes", description="A name for this item", default="", update=update_trait_group)
 
     arm_traitparamslist = bpy.props.CollectionProperty(type=ArmTraitParamListItem)
@@ -382,6 +382,15 @@ class ArmNewCanvasDialog(bpy.types.Operator):
         self.canvas_name = 'MyCanvas'
         return context.window_manager.invoke_props_dialog(self)
 
+class ArmNewWasmButton(bpy.types.Operator):
+    '''Create new WebAssembly module'''
+    bl_idname = 'arm.new_wasm'
+    bl_label = 'New Module'
+ 
+    def execute(self, context):
+        webbrowser.open('https://webassembly.studio/')
+        return{'FINISHED'}
+
 class ArmRefreshScriptsButton(bpy.types.Operator):
     '''Fetch all script names'''
     bl_idname = 'arm.refresh_scripts'
@@ -392,6 +401,7 @@ class ArmRefreshScriptsButton(bpy.types.Operator):
         arm.utils.fetch_bundled_trait_props()
         arm.utils.fetch_script_names()
         arm.utils.fetch_trait_props()
+        arm.utils.fetch_wasm_names()
         return{'FINISHED'}
 
 class ArmRefreshCanvasListButton(bpy.types.Operator):
@@ -528,10 +538,20 @@ def draw_traits(layout, obj, is_object):
                 op = row.operator("arm.refresh_scripts")
         
         elif item.type_prop == 'WebAssembly':
-            pass
-            # item.name = item.webassembly_prop
-            # row = layout.row()
-            # row.prop_search(item, "webassembly_prop", bpy.data, "texts", "Text")
+            item.name = item.webassembly_prop
+            row = layout.row()
+            row.prop_search(item, "webassembly_prop", bpy.data.worlds['Arm'], "arm_wasm_list", "Module")
+            row = layout.row(align=True)
+            row.alignment = 'EXPAND'
+            column = row.column(align=True)
+            column.alignment = 'EXPAND'
+            if item.class_name_prop == '':
+                column.enabled = False
+            # op = column.operator("arm.edit_script", icon="FILE_SCRIPT")
+            # op.is_object = is_object
+            op = row.operator("arm.new_wasm")
+            # op.is_object = is_object
+            op = row.operator("arm.refresh_scripts")
 
         elif item.type_prop == 'UI Canvas':
             item.name = item.canvas_name_prop
@@ -567,6 +587,7 @@ def register():
     bpy.utils.register_class(ArmEditCanvasButton)
     bpy.utils.register_class(ArmNewScriptDialog)
     bpy.utils.register_class(ArmNewCanvasDialog)
+    bpy.utils.register_class(ArmNewWasmButton)
     bpy.utils.register_class(ArmRefreshScriptsButton)
     bpy.utils.register_class(ArmRefreshCanvasListButton)
     bpy.utils.register_class(ArmTraitsPanel)
@@ -588,6 +609,7 @@ def unregister():
     bpy.utils.unregister_class(ArmEditCanvasButton)
     bpy.utils.unregister_class(ArmNewScriptDialog)
     bpy.utils.unregister_class(ArmNewCanvasDialog)
+    bpy.utils.unregister_class(ArmNewWasmButton)
     bpy.utils.unregister_class(ArmRefreshScriptsButton)
     bpy.utils.unregister_class(ArmRefreshCanvasListButton)
     bpy.utils.unregister_class(ArmTraitsPanel)

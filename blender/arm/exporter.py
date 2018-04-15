@@ -2489,7 +2489,9 @@ class ArmoryExporter:
                     group_name = arm.utils.safesrc(t.nodes_name_prop[0].upper() + t.nodes_name_prop[1:])
                     x['class_name'] = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + group_name
                 elif t.type_prop == 'WebAssembly':
-                    pass
+                    x['type'] = 'Script'
+                    x['class_name'] = 'armory.trait.internal.WasmScript'
+                    x['parameters'] = ["'" + t.webassembly_prop + "'"]
                 elif t.type_prop == 'UI Canvas':
                     ArmoryExporter.export_ui = True
                     x['type'] = 'Script'
