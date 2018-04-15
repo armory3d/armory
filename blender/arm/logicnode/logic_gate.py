@@ -34,6 +34,7 @@ class GateNode(Node, ArmLogicTreeNode):
         self.inputs.new('NodeSocketShader', 'Value')
         self.inputs.new('NodeSocketShader', 'Value')
         self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.outputs.new('ArmNodeSocketAction', 'Else')
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
