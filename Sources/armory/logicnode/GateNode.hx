@@ -44,6 +44,6 @@ class GateNode extends LogicNode {
 			}
 		}
 
-		if (cond) super.run();
+		cond ? runOutputs(0) : runOutputs(1);
 	}
 }
