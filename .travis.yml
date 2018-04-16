@@ -18,4 +18,7 @@ before_script:
   - flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 script: 
   - cd armory_ci/test1
+  - nodejs_bin/node Kha/make.js
   - nodejs_bin/node Kha/make.js krom
+  - nodejs_bin/node Kha/make.js html5
+  - nodejs_bin/node Kha/make.js android
