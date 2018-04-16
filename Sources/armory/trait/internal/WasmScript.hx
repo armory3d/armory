@@ -1,5 +1,7 @@
 package armory.trait.internal;
 
+#if js
+
 import iron.data.Data;
 import iron.data.Wasm;
 
@@ -25,3 +27,5 @@ class WasmScript extends iron.Trait {
 		});
 	}
 }
+
+#end
