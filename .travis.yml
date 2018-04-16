@@ -21,4 +21,4 @@ script:
   - nodejs_bin/node Kha/make.js
   - nodejs_bin/node Kha/make.js krom
   - nodejs_bin/node Kha/make.js html5
-  - nodejs_bin/node Kha/make.js android
+#  - nodejs_bin/node Kha/make.js android
