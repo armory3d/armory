@@ -52,7 +52,7 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
     enabled_prop = bpy.props.BoolProperty(name="", description="A name for this item", default=True, update=trigger_recompile)
     type_prop = bpy.props.EnumProperty(
         items = [('Haxe Script', 'Haxe', 'Haxe Script'),
-                 ('WebAssembly', 'WASM', 'WebAssembly'),
+                 ('WebAssembly', 'Wasm', 'WebAssembly'),
                  ('UI Canvas', 'UI', 'UI Canvas'),
                  ('Bundled Script', 'Bundled', 'Bundled Script'),
                  ('Logic Nodes', 'Nodes', 'Logic Nodes')
