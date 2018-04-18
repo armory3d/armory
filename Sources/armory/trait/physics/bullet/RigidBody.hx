@@ -249,6 +249,16 @@ class RigidBody extends Trait {
 		// body.setDeactivationTime(time); // not available in ammo
 	}
 
+	public function applyForce(force:Vec4, loc:Vec4 = null) {
+		activate();
+		if (loc == null) {
+			body.applyCentralForce(BtVector3.create(force.x, force.y, force.z));
+		}
+		else {
+			body.applyForce(BtVector3.create(force.x, force.y, force.z), BtVector3.create(loc.x, loc.y, loc.z));
+		}
+	}
+
 	public function applyImpulse(impulse:Vec4, loc:Vec4 = null) {
 		activate();
 		if (loc == null) {
