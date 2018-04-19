@@ -1958,6 +1958,10 @@ class ArmoryExporter:
                 self.export_lamp(objectRef)
             for objectRef in self.cameraArray.items():
                 self.export_camera(objectRef)
+            # Keep sounds with fake user
+            for sound in bpy.data.sounds:
+                if sound.use_fake_user:
+                    assets.add(arm.utils.asset_path(sound.filepath))
             for objectRef in self.speakerArray.items():
                 self.export_speaker(objectRef)
         for objectRef in self.meshArray.items():
