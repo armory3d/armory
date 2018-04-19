@@ -313,6 +313,11 @@ class Main {
     public static inline var voxelgiHalfExtents = """ + str(round(rpdat.arm_voxelgi_dimensions / 2.0)) + """;
 """)
 
+        if rpdat.arm_rp_resolution == 'Custom':
+            f.write("""
+    public static inline var resolutionSize = """ + str(rpdat.arm_rp_resolution_size) + """;
+""")
+
         f.write("""
     public static function main() {
         iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;

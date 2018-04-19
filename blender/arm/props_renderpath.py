@@ -489,12 +489,13 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_displacement = BoolProperty(name="Displacement", description="Enable tessellated displacement for height maps", default=True, update=assets.invalidate_shader_cache)
     arm_rp_resolution = EnumProperty(
         items=[('Display', 'Display', 'Display'),
-               ('480', '480p', '480p'),
-               ('720', '720p', '720p'),
-               ('1080', '1080p', '1080p'),
-               ('1440', '1440p', '1440p'),
-               ('2160', '2160p', '2160p')],
+               ('Custom', 'Custom', 'Custom')],
         name="Resolution", description="Render at specific resolution, regardless of display resolution", default='Display', update=update_renderpath)
+    arm_rp_resolution_size = IntProperty(name="Size", description="720p/..", default=720, min=0, update=update_renderpath)
+    arm_rp_resolution_filter = EnumProperty(
+        items=[('Linear', 'Linear', 'Linear'), 
+               ('Point', 'Closest', 'Point')],
+        name="Filter", description="Scaling filter", default='Linear')
     rp_dynres = BoolProperty(name="Dynamic Resolution", description="Dynamic resolution scaling for performance", default=False, update=update_renderpath)
     arm_ssr_half_res = BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
     rp_ssr_z_only = BoolProperty(name="Z Only", description="Trace in Z axis only", default=False, update=update_renderpath)

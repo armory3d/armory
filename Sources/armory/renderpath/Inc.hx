@@ -256,16 +256,8 @@ class Inc {
 	}
 
 	public static inline function getDisplayp():Null<Int> {
-		#if (rp_resolution == 480)
-		return 480;
-		#elseif (rp_resolution == 720)
-		return 720;
-		#elseif (rp_resolution == 1080)
-		return 1080;
-		#elseif (rp_resolution == 1440)
-		return 1440;
-		#elseif (rp_resolution == 2160)
-		return 2160;
+		#if rp_resolution_filter // Custom resolution set
+		return Main.resolutionSize;
 		#else
 		return null;
 		#end

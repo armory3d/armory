@@ -258,8 +258,8 @@ def build():
         else:
             log.warn('Disabling Voxel GI - unsupported target - use Krom instead')
 
-    if rpdat.arm_rp_resolution != 'Display':
-        assets.add_khafile_def('rp_resolution={0}'.format(rpdat.arm_rp_resolution))
+    if rpdat.arm_rp_resolution == 'Custom':
+        assets.add_khafile_def('rp_resolution_filter={0}'.format(rpdat.arm_rp_resolution_filter))
 
     assets.add_khafile_def('rp_ssgi={0}'.format(rpdat.rp_ssgi))
     if rpdat.rp_ssgi != 'Off':

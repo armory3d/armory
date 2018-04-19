@@ -1095,6 +1095,9 @@ class ArmRenderPathPanel(bpy.types.Panel):
         row.prop(rpdat, "rp_antialiasing", expand=True)
         box.prop(rpdat, "rp_supersampling")
         box.prop(rpdat, 'arm_rp_resolution')
+        if rpdat.arm_rp_resolution == 'Custom':
+            box.prop(rpdat, 'arm_rp_resolution_size')
+            box.prop(rpdat, 'arm_rp_resolution_filter')
         box.prop(rpdat, 'rp_dynres')
         box.separator()
         row = box.row()
