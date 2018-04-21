@@ -15,10 +15,12 @@ class MaterialNode extends LogicNode {
 		});
 	}
 
-	override function get(from:Int):Dynamic { 
-		iron.data.Data.getMaterial(iron.Scene.active.raw.name, property0, function(mat:MaterialData) {
-			value = mat;
-		});
+	override function get(from:Int):Dynamic {
+		if (property0 != null) {
+			iron.data.Data.getMaterial(iron.Scene.active.raw.name, property0, function(mat:MaterialData) {
+				value = mat;
+			});
+		}
 
 		return value;
 	}
