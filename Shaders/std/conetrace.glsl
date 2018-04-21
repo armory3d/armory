@@ -73,14 +73,14 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	vec3 c2 = 0.5f * (o1 - o2);
 	
 	#ifdef _VoxelCones1
-	return traceCone(voxels, origin, normal, aperture, MAX_DISTANCE, normal);
+	return traceCone(voxels, origin, normal, aperture, MAX_DISTANCE, normal) * voxelgiOcc;
 	#endif
 
 	#ifdef _VoxelCones3
 	vec4 col = traceCone(voxels, origin, normal, aperture, MAX_DISTANCE, normal);
 	col += traceCone(voxels, origin, mix(normal, -o1, angleMix), aperture, MAX_DISTANCE, normal);
 	col += traceCone(voxels, origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE, normal);
-	return col / (3.0 * voxelgiOcc);
+	return (col / 3.0) * voxelgiOcc;
 	#endif
 
 	#ifdef _VoxelCones5
@@ -89,7 +89,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	col += traceCone(voxels, origin, mix(normal, -o2, angleMix), aperture, MAX_DISTANCE, normal);
 	col += traceCone(voxels, origin, mix(normal, c1, angleMix), aperture, MAX_DISTANCE, normal);
 	col += traceCone(voxels, origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE, normal);
-	return col / (5.0 * voxelgiOcc);
+	return (col / 5.0) * voxelgiOcc;
 	#endif
 	
 	#ifdef _VoxelCones9
@@ -105,7 +105,7 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	col += traceCone(voxels, origin, mix(normal, -c1, angleMix), aperture, MAX_DISTANCE, normal);
 	col += traceCone(voxels, origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE, normal);
 	col += traceCone(voxels, origin, mix(normal, -c2, angleMix), aperture, MAX_DISTANCE, normal);
-	return col / (9.0 * voxelgiOcc);
+	return (col / 9.0) * voxelgiOcc;
 	#endif
 
 	return vec4(0.0);
@@ -155,14 +155,14 @@ float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	vec3 c2 = 0.5f * (o1 - o2);
 	
 	#ifdef _VoxelCones1
-	return traceConeAO(voxels, origin, normal, aperture, MAX_DISTANCE);
+	return traceConeAO(voxels, origin, normal, aperture, MAX_DISTANCE) * voxelgiOcc;
 	#endif
 
 	#ifdef _VoxelCones3
 	float col = traceConeAO(voxels, origin, normal, aperture, MAX_DISTANCE);
 	col += traceConeAO(voxels, origin, mix(normal, o1, angleMix), aperture, MAX_DISTANCE);
 	col += traceConeAO(voxels, origin, mix(normal, -c2, angleMix), aperture, MAX_DISTANCE);
-	return col / (3.0 * voxelgiOcc);
+	return (col / 3.0) * voxelgiOcc;
 	#endif
 
 	#ifdef _VoxelCones5
@@ -171,7 +171,7 @@ float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	col += traceConeAO(voxels, origin, mix(normal, o2, angleMix), aperture, MAX_DISTANCE);
 	col += traceConeAO(voxels, origin, mix(normal, -c1, angleMix), aperture, MAX_DISTANCE);
 	col += traceConeAO(voxels, origin, mix(normal, -c2, angleMix), aperture, MAX_DISTANCE);
-	return col / (5.0 * voxelgiOcc);
+	return (col / 5.0) * voxelgiOcc;
 	#endif
 	
 	#ifdef _VoxelCones9
@@ -185,7 +185,7 @@ float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	col += traceConeAO(voxels, origin, mix(normal, -o2, angleMix), aperture, MAX_DISTANCE);
 	col += traceConeAO(voxels, origin, mix(normal, c1, angleMix), aperture, MAX_DISTANCE);
 	col += traceConeAO(voxels, origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE);
-	return col / (9.0 * voxelgiOcc);
+	return (col / 9.0) * voxelgiOcc;
 	#endif
 
 	return 0.0;
