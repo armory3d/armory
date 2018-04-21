@@ -2,6 +2,7 @@ package armory.logicnode;
 
 class TraitNode extends LogicNode {
 
+	public var property0:String;
 	public var value:Dynamic = null;
 
 	public function new(tree:LogicTree) {
