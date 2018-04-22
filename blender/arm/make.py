@@ -621,7 +621,8 @@ def clean_project():
         shutil.rmtree(arm.utils.get_fp() + '/build', onerror=remove_readonly)
 
     # Remove compiled nodes
-    nodes_path = 'Sources/' + arm.utils.safestr(wrd.arm_project_package).replace('.', '/') + '/node/'
+    pkg_dir = arm.utils.safestr(wrd.arm_project_package).replace('.', '/')
+    nodes_path = 'Sources/' + pkg_dir + '/node/'
     if os.path.isdir(nodes_path):
         shutil.rmtree(nodes_path, onerror=remove_readonly)
 
@@ -632,6 +633,12 @@ def clean_project():
         os.remove('korefile.js')
     if os.path.isfile('Sources/Main.hx'):
         os.remove('Sources/Main.hx')
+
+    # Remove Sources/ dir if empty
+    if os.listdir('Sources/' + pkg_dir) == []:
+        shutil.rmtree('Sources/' + pkg_dir, onerror=remove_readonly)
+        if os.listdir('Sources') == []:
+            shutil.rmtree('Sources/', onerror=remove_readonly)
 
     # To recache signatures for batched materials
     for mat in bpy.data.materials:
