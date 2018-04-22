@@ -490,8 +490,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_rp_resolution = EnumProperty(
         items=[('Display', 'Display', 'Display'),
                ('Custom', 'Custom', 'Custom')],
-        name="Resolution", description="Render at specific resolution, regardless of display resolution", default='Display', update=update_renderpath)
-    arm_rp_resolution_size = IntProperty(name="Size", description="720p/..", default=720, min=0, update=update_renderpath)
+        name="Resolution", description="Resolution to perform rendering at", default='Display', update=update_renderpath)
+    arm_rp_resolution_size = IntProperty(name="Size", description="Resolution height in pixels(for example 720p), width is auto-fit to preserve aspect ratio", default=720, min=0, update=update_renderpath)
     arm_rp_resolution_filter = EnumProperty(
         items=[('Linear', 'Linear', 'Linear'), 
                ('Point', 'Closest', 'Point')],
