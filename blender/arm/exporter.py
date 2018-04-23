@@ -2186,6 +2186,9 @@ class ArmoryExporter:
             x['type'] = 'Script'
             phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics == 'Bullet' else 'oimo'
             x['class_name'] = 'armory.trait.physics.' + phys_pkg + '.PhysicsWorld'
+            rbw = self.scene.rigidbody_world
+            if rbw != None and rbw.enabled:
+                x['parameters'] = [str(rbw.time_scale), str(1 / rbw.steps_per_second)]
             self.output['traits'].append(x)
         if wrd.arm_navigation != 'Disabled' and ArmoryExporter.export_navigation:
             if not 'traits' in self.output:

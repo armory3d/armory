@@ -41,14 +41,20 @@ class PhysicsWorld extends Trait {
 	var preUpdates:Array<Void->Void> = null;
 	public var rbMap:Map<Int, RigidBody>;
 
-	static inline var timeStep = 1 / 60;
+	var timeScale = 1.0;
+	var timeStep = 1 / 60;
+	var maxSteps = 1;
 
 	public var hitPointWorld = new Vec4();
 
 	var pairCache:Bool = false;
 
-	public function new() {
+	public function new(timeScale = 1.0, timeStep = 1 / 60) {
 		super();
+
+		this.timeScale = timeScale;
+		this.timeStep = timeStep;
+		maxSteps = timeStep < 1 / 60 ? 10 : 1;
 
 		if (active == null) {
 			createPhysics();
@@ -185,7 +191,7 @@ class PhysicsWorld extends Trait {
 
 		if (preUpdates != null) for (f in preUpdates) f();
 
-		world.stepSimulation(timeStep, 1, Time.delta);
+		world.stepSimulation(timeStep, maxSteps, Time.delta * timeScale);
 		updateContacts();
 
 #if arm_debug
