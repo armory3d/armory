@@ -189,7 +189,7 @@ class RenderPathDeferred {
 			t.name = "capture";
 			t.width = 0;
 			t.height = 0;
-			t.format = getRenderCaptureFormat();
+			t.format = Inc.getRenderCaptureFormat();
 			path.createRenderTarget(t);
 		}
 		#end
