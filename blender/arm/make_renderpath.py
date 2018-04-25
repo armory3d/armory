@@ -40,6 +40,8 @@ def add_world_defs():
 
     if rpdat.rp_renderer == 'Deferred':
         assets.add_khafile_def('arm_deferred')
+        wrd.world_defs += '_Deferred'
+
     # GI
     voxelgi = False
     voxelao = False

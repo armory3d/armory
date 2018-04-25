@@ -63,9 +63,13 @@ project.addSources('Sources');
                     assets.add(file)
 
         if os.path.exists('Shaders'):
-            for file in glob.glob("Shaders/**", recursive=True):
-                if os.path.isfile(file):
-                    assets.add_shader(file)
+            # Copy to enable includes
+            # if not os.path.exists(arm.utils.build_dir() + '/compiled/Shaders/Project'):
+            shutil.copytree('Shaders', arm.utils.build_dir() + '/compiled/Shaders/Project')
+            f.write("project.addShaders('" + arm.utils.build_dir() + "/compiled/Shaders/Project/**');\n")
+            # for file in glob.glob("Shaders/**", recursive=True):
+                # if os.path.isfile(file):
+                    # assets.add_shader(file)
 
         if not os.path.exists('Libraries/armory'):
             f.write(add_armory_library(sdk_path, 'armory'))
