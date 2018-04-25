@@ -635,9 +635,9 @@ def clean_project():
         os.remove('Sources/Main.hx')
 
     # Remove Sources/ dir if empty
-    if os.listdir('Sources/' + pkg_dir) == []:
+    if os.path.exists('Sources/' + pkg_dir) and os.listdir('Sources/' + pkg_dir) == []:
         shutil.rmtree('Sources/' + pkg_dir, onerror=remove_readonly)
-        if os.listdir('Sources') == []:
+        if os.path.exists('Sources') and os.listdir('Sources') == []:
             shutil.rmtree('Sources/', onerror=remove_readonly)
 
     # To recache signatures for batched materials
