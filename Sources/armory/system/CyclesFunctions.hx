@@ -191,7 +191,7 @@ class CyclesFunctions {
 		vec3 c1 = 0.5f * (o1 + o2);
 		vec3 c2 = 0.5f * (o1 - o2);
 		const float voxelgiOffset = 2.5;
-		const float voxelgiRange = 1.0;
+		const float voxelgiRange = 2.0;
 		const float MAX_DISTANCE = 1.73205080757 * voxelgiRange;
 		const ivec3 voxelgiResolution = ivec3(256, 256, 256);
 		const float voxelgiStep = 1.0;
