@@ -3,6 +3,7 @@ import os
 import shutil
 import glob
 import json
+import stat
 import arm.utils
 import arm.assets as assets
 import arm.make_state as state
@@ -32,6 +33,10 @@ def add_assets(path, quality=1.0):
         s += ', quality: ' + str(quality)
     s += '});\n'
     return s
+
+def remove_readonly(func, path, excinfo):
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
 
 # Write khafile.js
 def write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce, in_viewport, import_traits, import_logicnodes):
@@ -64,7 +69,8 @@ project.addSources('Sources');
 
         if os.path.exists('Shaders'):
             # Copy to enable includes
-            # if not os.path.exists(arm.utils.build_dir() + '/compiled/Shaders/Project'):
+            if os.path.exists(arm.utils.build_dir() + '/compiled/Shaders/Project'):
+                shutil.rmtree(arm.utils.build_dir() + '/compiled/Shaders/Project', onerror=remove_readonly)
             shutil.copytree('Shaders', arm.utils.build_dir() + '/compiled/Shaders/Project')
             f.write("project.addShaders('" + arm.utils.build_dir() + "/compiled/Shaders/Project/**');\n")
             # for file in glob.glob("Shaders/**", recursive=True):
