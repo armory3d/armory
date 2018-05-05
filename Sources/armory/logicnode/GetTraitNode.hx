@@ -4,6 +4,8 @@ import iron.object.Object;
 
 class GetTraitNode extends LogicNode {
 
+	var cname:Class<iron.Trait> = null;
+
 	public function new(tree:LogicTree) {
 		super(tree);
 	}
@@ -14,6 +16,8 @@ class GetTraitNode extends LogicNode {
 
 		if (object == null) return null;
 
-		return null; // TODO
+		if (cname == null) cname = cast Type.resolveClass(Main.projectPackage + "." + name);
+		if (cname == null) cname = cast Type.resolveClass(Main.projectPackage + ".node." + name);
+		return object.getTrait(cname);
 	}
 }

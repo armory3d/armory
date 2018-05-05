@@ -10,7 +10,11 @@ class TraitNode extends LogicNode {
 	}
 
 	override function get(from:Int):Dynamic { 
-		// if (value == null) value = new Trait(); // TODO
+		if (value != null) return value;
+		
+		var cname = Type.resolveClass(Main.projectPackage + "." + property0);
+		if (cname == null) cname = Type.resolveClass(Main.projectPackage + ".node." + property0);
+		value = Type.createInstance(cname, []);
 		return value;
 	}
 
