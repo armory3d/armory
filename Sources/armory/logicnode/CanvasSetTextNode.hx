@@ -26,6 +26,7 @@ class CanvasSetTextNode extends LogicNode {
 		element = inputs[1].get();
 		text = inputs[2].get();
 		canvas = Scene.active.getTrait(CanvasScript);
+		if (canvas == null) canvas = Scene.active.camera.getTrait(CanvasScript);
 
 		tree.notifyOnUpdate(update);
 		update();
