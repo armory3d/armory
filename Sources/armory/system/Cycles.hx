@@ -407,6 +407,7 @@ typedef TShaderOut = {
 	var out_metallic:String;
 	var out_occlusion:String;
 	var out_opacity:String;
+	var out_height:String;
 }
 
 // This module builds upon Cycles nodes work licensed as
@@ -576,7 +577,8 @@ class Cycles {
 				out_roughness: '0.0',
 				out_metallic: '0.0',
 				out_occlusion: '1.0',
-				out_opacity: '1.0'
+				out_opacity: '1.0',
+				out_height: '0.0'
 			}
 			return sout;
 		}
@@ -599,7 +601,8 @@ class Cycles {
 			out_roughness: '0.0',
 			out_metallic: '0.0',
 			out_occlusion: '1.0',
-			out_opacity: '1.0'
+			out_opacity: '1.0',
+			out_height: '0.0'
 		}
 
 		// if (node.type == 'GROUP') {
@@ -624,6 +627,11 @@ class Cycles {
 			
 			// if parse_opacity
 			sout.out_opacity = parse_value_input(node.inputs[1]);
+
+			// Displacement / Height
+			if (node.inputs.length > 7) {
+				sout.out_height = parse_value_input(node.inputs[7]);
+			}
 		}
 			// else:
 				// return parse_group(node, socket)
