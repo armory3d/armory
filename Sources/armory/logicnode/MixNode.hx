@@ -1,6 +1,7 @@
 package armory.logicnode;
 
 import iron.system.Tween;
+import iron.math.Math;
 
 class MixNode extends LogicNode {
 
@@ -41,11 +42,12 @@ class MixNode extends LogicNode {
 
 	override function get(from:Int):Dynamic {
 		if (ease == null) init();
-		var k:Float = inputs[0].get();
+		var k:Float = inputs[0].get(); //Factor
 		var v1:Float = inputs[1].get();
 		var v2:Float = inputs[2].get();
 		var f = v1 + (v2 - v1) * ease(k);
-		if (property1 == "true") f = f < 0.0 ? 0.0 : (f > 1.0 ? 1.0 : f);
+	
+		if (property2 == "true") f = Math.clamp(f, 0, 1);
 		return f;
 	}
 }

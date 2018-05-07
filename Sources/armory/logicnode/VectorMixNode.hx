@@ -2,6 +2,7 @@ package armory.logicnode;
 
 import iron.system.Tween;
 import iron.math.Vec4;
+import iron.math.Math;
 
 class VectorMixNode extends LogicNode {
 
@@ -44,18 +45,15 @@ class VectorMixNode extends LogicNode {
 
 	override function get(from:Int):Dynamic {
 		if (ease == null) init();
-		var k:Float = inputs[0].get();
+		var k:Float = inputs[0].get(); //Factor
 		var v1:Vec4 = inputs[1].get();
 		var v2:Vec4 = inputs[2].get();
 		var f = ease(k);
 		v.x = v1.x + (v2.x - v1.x) * f;
 		v.y = v1.y + (v2.y - v1.y) * f;
 		v.z = v1.z + (v2.z - v1.z) * f;
-		if (property1 == "true") {
-			v.x = v.x < 0.0 ? 0.0 : (v.x > 1.0 ? 1.0 : v.x);
-			v.y = v.y < 0.0 ? 0.0 : (v.y > 1.0 ? 1.0 : v.y);
-			v.z = v.z < 0.0 ? 0.0 : (v.z > 1.0 ? 1.0 : v.z);
-		}
+
+		if (property2 == "true") v.clamp(0,1);
 		return v;
 	}
 }
