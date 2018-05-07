@@ -96,14 +96,17 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     # parse_volume_input(node.inputs[1])
 
     # Displacement
-    if _parse_displacement and disp_enabled() and node.inputs[2].is_linked and tese != None:
+    if _parse_displacement and disp_enabled() and node.inputs[2].is_linked:
         parsed = {}
         parents = []
         normal_parsed = False
-        curshader = tese
-
+        rpdat = arm.utils.get_rp()
+        if rpdat.arm_rp_displacement == 'Tessellation' and tese != None:
+            curshader = tese
+        else:
+            curshader = vert
         out_disp = parse_displacement_input(node.inputs[2])
-        tese.write('float disp = {0};'.format(out_disp))
+        curshader.write('float disp = {0};'.format(out_disp))
 
 def parse_group(node, socket): # Entering group
     index = socket_index(node, socket)

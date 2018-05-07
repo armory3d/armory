@@ -249,24 +249,6 @@ class MaterialPropsPanel(bpy.types.Panel):
         columnb.prop(mat, 'arm_discard_opacity')
         columnb.prop(mat, 'arm_discard_opacity_shadows')
 
-        layout.separator()
-        row = layout.row()
-        column = row.column()
-        column.prop(mat, 'arm_tess')
-        columnb = column.column(align=True)
-        columnb.enabled = mat.arm_tess
-        columnb.enabled = mat.arm_tess
-        columnb.prop(mat, 'arm_tess_inner')
-        columnb.prop(mat, 'arm_tess_outer')
-
-        column = row.column()
-        column.prop(mat, 'arm_tess_shadows')
-        columnb = column.column(align=True)
-        columnb.enabled = mat.arm_tess_shadows
-        columnb.enabled = mat.arm_tess
-        columnb.prop(mat, 'arm_tess_shadows_inner')
-        columnb.prop(mat, 'arm_tess_shadows_outer')
-
         row = layout.row()
         col = row.column()
         col.label('Custom Material:')
@@ -955,6 +937,21 @@ class ArmRenderPathPanel(bpy.types.Panel):
         col = box.column()
         col.enabled = rpdat.rp_sss_state != 'Off'
         col.prop(rpdat, 'arm_sss_width')
+        box.prop(rpdat, 'arm_rp_displacement')
+        if rpdat.arm_rp_displacement == 'Tessellation':
+            row = box.row()
+            column = row.column()
+            column.label('Mesh')
+            columnb = column.column(align=True)
+            columnb.prop(rpdat, 'arm_tess_mesh_inner')
+            columnb.prop(rpdat, 'arm_tess_mesh_outer')
+
+            column = row.column()
+            column.label('Shadow')
+            columnb = column.column(align=True)
+            columnb.prop(rpdat, 'arm_tess_shadows_inner')
+            columnb.prop(rpdat, 'arm_tess_shadows_outer')  
+
         box.prop(rpdat, 'arm_skin')
         row = box.row()
         row.enabled = rpdat.arm_skin.startswith('GPU')
@@ -965,8 +962,6 @@ class ArmRenderPathPanel(bpy.types.Panel):
         row = box.row()
         row.prop(rpdat, "rp_hdr")
         row.prop(rpdat, "rp_stereo")
-        row = box.row()
-        row.prop(rpdat, 'arm_displacement')
         row.prop(rpdat, 'arm_culling')
         
 

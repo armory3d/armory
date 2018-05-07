@@ -470,7 +470,9 @@ def check_engine(self):
 
 def disp_enabled(target):
     rpdat = get_rp()
-    return (target == 'krom' or target == 'native') and rpdat.arm_displacement
+    if rpdat.arm_rp_displacement == 'Tessellation':
+        return target == 'krom' or target == 'native'
+    return rpdat.arm_rp_displacement != 'Off'
 
 def is_object_animation_enabled(bobject):
     # Checks if animation is present and enabled

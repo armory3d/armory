@@ -7,18 +7,19 @@ import arm.log as log
 add_mesh_contexts = []
 
 def disp_linked(output_node):
-    # Armory PBR with unlinked height socket
     linked = output_node.inputs[2].is_linked
+    if not linked:
+        return False
+    # Armory PBR with unlinked height socket
+    l = output_node.inputs[2].links[0]
+    if l.from_node.type == 'GROUP' and l.from_node.node_tree.name.startswith('Armory PBR') and \
+        l.from_node.inputs[7].is_linked == False:
+        return False
     disp_enabled = arm.utils.disp_enabled(make_state.target)
-    if linked:
-        l = output_node.inputs[2].links[0]
-        if l.from_node.type == 'GROUP' and l.from_node.node_tree.name.startswith('Armory PBR') and \
-            ((len(l.from_node.inputs) == 14 and l.from_node.inputs[10].is_linked == False) or (len(l.from_node.inputs) != 14 and l.from_node.inputs[7].is_linked == False)):
-            return False
     rpdat = arm.utils.get_rp()
-    if linked and not disp_enabled and rpdat.arm_displacement:
+    if not disp_enabled and rpdat.arm_rp_displacement == 'Tessellation':
         log.warn('Tessellation not available on ' + make_state.target)
-    return disp_enabled and linked
+    return disp_enabled
 
 def get_rpasses(material):
 

@@ -69,7 +69,7 @@ def make_finalize(con_mesh):
     
     write_wpos = False
     if frag.contains('vVec') and not frag.contains('vec3 vVec'):
-        if is_displacement:
+        if tese != None:
             tese.add_out('vec3 eyeDir')
             tese.add_uniform('vec3 eye', '_cameraPosition')
             tese.write('eyeDir = eye - wposition;')
@@ -91,12 +91,12 @@ def make_finalize(con_mesh):
         vert.add_uniform('mat4 W', '_worldMatrix')
         vert.add_out('vec3 wposition')
         vert.write_pre = True
-        vert.write('wposition = vec4(W * spos).xyz;')
+        vert.write_attrib('wposition = vec4(W * spos).xyz;')
         vert.write_pre = False
     elif write_wpos:
         vert.add_uniform('mat4 W', '_worldMatrix')
         vert.write_pre = True
-        vert.write('vec3 wposition = vec4(W * spos).xyz;')
+        vert.write_attrib('vec3 wposition = vec4(W * spos).xyz;')
         vert.write_pre = False
 
     frag_mpos = frag.contains('mposition') and not frag.contains('vec3 mposition')
@@ -132,20 +132,28 @@ def make_base(con_mesh, parse_opacity):
     vert.write_attrib('    vec4 spos = vec4(pos, 1.0);')
 
     vattr_written = False
+    rpdat = arm.utils.get_rp()
     is_displacement = mat_utils.disp_linked(mat_state.output_node)
     if is_displacement:
-        tesc = con_mesh.make_tesc()
-        tese = con_mesh.make_tese()
-        tesc.ins = vert.outs
-        tese.ins = tesc.outs
-        frag.ins = tese.outs
-
-        vert.add_uniform('mat4 W', '_worldMatrix')
-        vert.add_out('vec3 wposition')
-        vert.write('wposition = vec4(W * spos).xyz;')
-        make_tess.tesc_levels(tesc, mat_state.material.arm_tess_inner, mat_state.material.arm_tess_outer)
-        make_tess.interpolate(tese, 'wposition', 3, declare_out=True)
-        make_tess.interpolate(tese, 'wnormal', 3, declare_out=True, normalize=True)
+        if rpdat.arm_rp_displacement == 'Vertex':
+            frag.ins = vert.outs
+            rid = rpdat.rp_renderer
+            if rid == 'Deferred':
+                vert.add_uniform('mat4 W', '_worldMatrix')
+                vert.add_out('vec3 wposition')
+                vert.write_attrib('wposition = vec4(W * spos).xyz;')
+        else: # Tessellation
+            tesc = con_mesh.make_tesc()
+            tese = con_mesh.make_tese()
+            tesc.ins = vert.outs
+            tese.ins = tesc.outs
+            frag.ins = tese.outs
+            vert.add_uniform('mat4 W', '_worldMatrix')
+            vert.add_out('vec3 wposition')
+            vert.write_attrib('wposition = vec4(W * spos).xyz;')
+            make_tess.tesc_levels(tesc, rpdat.arm_tess_mesh_inner, rpdat.arm_tess_mesh_outer)
+            make_tess.interpolate(tese, 'wposition', 3, declare_out=True)
+            make_tess.interpolate(tese, 'wnormal', 3, declare_out=True, normalize=True)
     # No displacement
     else:
         frag.ins = vert.outs
@@ -178,12 +186,11 @@ def make_base(con_mesh, parse_opacity):
                 make_particle.write_tilesheet(vert)
             else:
                 vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
-                vert.write('texCoord = tex + tilesheetOffset;')
+                vert.write_attrib('texCoord = tex + tilesheetOffset;')
         else:
-            vert.write('texCoord = tex;')
+            vert.write_attrib('texCoord = tex;')
 
         if tese != None:
-            # TODO: also includes texCoord1
             tese.write_pre = True
             make_tess.interpolate(tese, 'texCoord', 2, declare_out=frag.contains('texCoord'))
             tese.write_pre = False
@@ -225,11 +232,14 @@ def make_base(con_mesh, parse_opacity):
         write_norpos(con_mesh, vert)
         frag.write_attrib('vec3 n = normalize(wnormal);')
 
-    if tese != None:
-        tese.add_uniform('mat4 VP', '_viewProjectionMatrix')
-        # TODO: Sample disp at neightbour points to calc normal
-        tese.write('wposition += wnormal * disp * 0.2;')
-        tese.write('gl_Position = VP * vec4(wposition, 1.0);')
+    if is_displacement:
+        if rpdat.arm_rp_displacement == 'Vertex':
+            sh = vert
+        else:
+            sh = tese
+        sh.add_uniform('mat4 VP', '_viewProjectionMatrix')
+        sh.write('wposition += wnormal * disp * 0.2;')
+        sh.write('gl_Position = VP * vec4(wposition, 1.0);')
 
 def write_vertpos(vert):
     billboard = mat_state.material.arm_billboard
@@ -363,9 +373,9 @@ def make_deferred_plus(con_mesh):
 
     con_mesh.add_elem('tex', 2) #### Add using cycles.py
     if con_mesh.is_elem('tex'):
-        vert.write('texCoord = tex;')
+        vert.write_attrib('texCoord = tex;')
     else:
-        vert.write('texCoord = vec2(0.0);')
+        vert.write_attrib('texCoord = vec2(0.0);')
 
     vert.add_out('vec3 wnormal')
     write_norpos(con_mesh, vert)
@@ -396,7 +406,7 @@ def make_forward_mobile(con_mesh):
     vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
     vert.add_uniform('mat4 W', '_worldMatrix')
     vert.add_out('vec3 wposition')
-    vert.write('wposition = vec4(W * spos).xyz;')
+    vert.write_attrib('wposition = vec4(W * spos).xyz;')
     vert.write('gl_Position = WVP * spos;')
 
     frag.add_include('compiled.glsl')
@@ -408,7 +418,7 @@ def make_forward_mobile(con_mesh):
 
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
-        vert.write('texCoord = tex;')
+        vert.write_attrib('texCoord = tex;')
 
     if con_mesh.is_elem('col'):
         vert.add_out('vec3 vcolor')
@@ -496,7 +506,7 @@ def make_forward_solid(con_mesh):
 
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
-        vert.write('texCoord = tex;')
+        vert.write_attrib('texCoord = tex;')
 
     if con_mesh.is_elem('col'):
         vert.add_out('vec3 vcolor')
@@ -549,14 +559,14 @@ def make_forward_base(con_mesh, parse_opacity=False):
     float dotNV = max(dot(n, vVec), 0.0);
 """)
 
-    if is_displacement:
+    if tese != None:
         tese.add_out('vec3 eyeDir')
         tese.add_uniform('vec3 eye', '_cameraPosition')
         tese.write('eyeDir = eye - wposition;')
     else:
         vert.add_out('vec3 wposition')
         vert.add_uniform('mat4 W', '_worldMatrix')
-        vert.write('wposition = vec4(W * spos).xyz;')
+        vert.write_attrib('wposition = vec4(W * spos).xyz;')
         vert.add_out('vec3 eyeDir')
         vert.add_uniform('vec3 eye', '_cameraPosition')
         vert.write('eyeDir = eye - wposition;')

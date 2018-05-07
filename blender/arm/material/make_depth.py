@@ -11,7 +11,7 @@ import arm.utils
 
 def make(context_id, rpasses, shadowmap=False):
 
-    is_disp = mat_utils.disp_linked(mat_state.output_node) and mat_state.material.arm_tess_shadows
+    is_disp = mat_utils.disp_linked(mat_state.output_node)
 
     vs = [{'name': 'pos', 'size': 3}]
     if is_disp:
@@ -44,54 +44,73 @@ def make(context_id, rpasses, shadowmap=False):
         make_particle.write(vert)
 
     if is_disp:
-        tesc = con_depth.make_tesc()
-        tese = con_depth.make_tese()
-        tesc.ins = vert.outs
-        tese.ins = tesc.outs
-        frag.ins = tese.outs
+        rpdat = arm.utils.get_rp()
+        if rpdat.arm_rp_displacement == 'Vertex':
+            vert.add_uniform('mat4 W', '_worldMatrix')
+            vert.add_uniform('mat3 N', '_normalMatrix')
+            vert.write('vec3 wnormal = normalize(N * nor);')
+            vert.write('vec3 wposition = vec4(W * spos).xyz;')
+            cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=parse_opacity)
+            if con_depth.is_elem('tex'):
+                vert.add_out('vec2 texCoord') ## vs only, remove out
+                vert.write_attrib('texCoord = tex;')
+            vert.write('wposition += wnormal * disp * 0.2;')
+            if shadowmap:
+                vert.add_uniform('mat4 LVP', '_lampViewProjectionMatrix')
+                vert.write('gl_Position = LVP * vec4(wposition, 1.0);')
+            else:
+                vert.add_uniform('mat4 VP', '_viewProjectionMatrix')
+                vert.write('gl_Position = VP * vec4(wposition, 1.0);')
 
-        vert.add_out('vec3 wposition')
-        vert.add_out('vec3 wnormal')
-        vert.add_uniform('mat4 W', '_worldMatrix')
-        vert.add_uniform('mat3 N', '_normalMatrix')
-        vert.write('wnormal = normalize(N * nor);')
-        vert.write('wposition = vec4(W * spos).xyz;')
-        
-        make_tess.tesc_levels(tesc, mat_state.material.arm_tess_shadows_inner, mat_state.material.arm_tess_shadows_outer)
-        make_tess.interpolate(tese, 'wposition', 3)
-        make_tess.interpolate(tese, 'wnormal', 3, normalize=True)
+        else: # Tessellation
+            tesc = con_depth.make_tesc()
+            tese = con_depth.make_tese()
+            tesc.ins = vert.outs
+            tese.ins = tesc.outs
+            frag.ins = tese.outs
 
-        cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=parse_opacity)
+            vert.add_out('vec3 wposition')
+            vert.add_out('vec3 wnormal')
+            vert.add_uniform('mat4 W', '_worldMatrix')
+            vert.add_uniform('mat3 N', '_normalMatrix')
+            vert.write('wnormal = normalize(N * nor);')
+            vert.write('wposition = vec4(W * spos).xyz;')
+            
+            make_tess.tesc_levels(tesc, rpdat.arm_tess_shadows_inner, rpdat.arm_tess_shadows_outer)
+            make_tess.interpolate(tese, 'wposition', 3)
+            make_tess.interpolate(tese, 'wnormal', 3, normalize=True)
 
-        if con_depth.is_elem('tex'):
-            vert.add_out('vec2 texCoord')
-            vert.write('texCoord = tex;')
-            tese.write_pre = True
-            make_tess.interpolate(tese, 'texCoord', 2, declare_out=frag.contains('texCoord'))
-            tese.write_pre = False
+            cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=parse_opacity)
 
-        if con_depth.is_elem('tex1'):
-            vert.add_out('vec2 texCoord1')
-            vert.write('texCoord1 = tex1;')
-            tese.write_pre = True
-            make_tess.interpolate(tese, 'texCoord1', 2, declare_out=frag.contains('texCoord1'))
-            tese.write_pre = False
+            if con_depth.is_elem('tex'):
+                vert.add_out('vec2 texCoord')
+                vert.write('texCoord = tex;')
+                tese.write_pre = True
+                make_tess.interpolate(tese, 'texCoord', 2, declare_out=frag.contains('texCoord'))
+                tese.write_pre = False
 
-        if con_depth.is_elem('col'):
-            vert.add_out('vec3 vcolor')
-            vert.write('vcolor = col;')
-            tese.write_pre = True
-            make_tess.interpolate(tese, 'vcolor', 3, declare_out=frag.contains('vcolor'))
-            tese.write_pre = False
+            if con_depth.is_elem('tex1'):
+                vert.add_out('vec2 texCoord1')
+                vert.write('texCoord1 = tex1;')
+                tese.write_pre = True
+                make_tess.interpolate(tese, 'texCoord1', 2, declare_out=frag.contains('texCoord1'))
+                tese.write_pre = False
 
-        if shadowmap:
-            tese.add_uniform('mat4 LVP', '_lampViewProjectionMatrix')
-            tese.write('wposition += wnormal * disp * 0.2;')
-            tese.write('gl_Position = LVP * vec4(wposition, 1.0);')
-        else:
-            tese.add_uniform('mat4 VP', '_viewProjectionMatrix')
-            tese.write('wposition += wnormal * disp * 0.2;')
-            tese.write('gl_Position = VP * vec4(wposition, 1.0);')
+            if con_depth.is_elem('col'):
+                vert.add_out('vec3 vcolor')
+                vert.write('vcolor = col;')
+                tese.write_pre = True
+                make_tess.interpolate(tese, 'vcolor', 3, declare_out=frag.contains('vcolor'))
+                tese.write_pre = False
+
+            if shadowmap:
+                tese.add_uniform('mat4 LVP', '_lampViewProjectionMatrix')
+                tese.write('wposition += wnormal * disp * 0.2;')
+                tese.write('gl_Position = LVP * vec4(wposition, 1.0);')
+            else:
+                tese.add_uniform('mat4 VP', '_viewProjectionMatrix')
+                tese.write('wposition += wnormal * disp * 0.2;')
+                tese.write('gl_Position = VP * vec4(wposition, 1.0);')
     # No displacement
     else:
         frag.ins = vert.outs

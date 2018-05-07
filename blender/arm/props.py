@@ -262,12 +262,6 @@ def init_properties():
     bpy.types.Material.arm_discard = BoolProperty(name="Discard", default=False, description="Do not render fragments below specified opacity threshold")
     bpy.types.Material.arm_discard_opacity = FloatProperty(name="Mesh Opacity", default=0.2, min=0, max=1)
     bpy.types.Material.arm_discard_opacity_shadows = FloatProperty(name="Shadows Opacity", default=0.1, min=0, max=1)
-    bpy.types.Material.arm_tess = BoolProperty(name="Tess Displacement", description="Use tessellation shaders to subdivide and displace surface", default=True)
-    bpy.types.Material.arm_tess_inner = IntProperty(name="Inner", description="Inner tessellation level for mesh", default=14)
-    bpy.types.Material.arm_tess_outer = IntProperty(name="Outer", description="Outer tessellation level for mesh", default=14)
-    bpy.types.Material.arm_tess_shadows = BoolProperty(name="Tess Shadows", description="Use tessellation shaders when rendering shadow maps", default=True)
-    bpy.types.Material.arm_tess_shadows_inner = IntProperty(name="Inner", description="Inner tessellation level for shadows", default=7)
-    bpy.types.Material.arm_tess_shadows_outer = IntProperty(name="Outer", description="Outer tessellation level for shadows", default=7)
     bpy.types.Material.arm_custom_material = StringProperty(name="Custom Material", description="Write custom material", default='')
     bpy.types.Material.arm_billboard = EnumProperty(
         items=[('off', 'Off', 'Off'),
