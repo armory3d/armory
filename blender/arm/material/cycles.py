@@ -735,16 +735,10 @@ def texture_store(node, tex, tex_name, to_linear=False):
         curshader.write('vec4 {0} = texture({1}, {2}.xy);'.format(tex_store, tex_name, uv_name))
     if sample_bump:
         sample_bump_res = tex_store
-        curshader.write('vec2 {0}_inv = vec2({0}.x, 1.0 - {0}.y);'.format(uv_name))
-        curshader.write('vec2 {0}_step = vec2(1.0) / textureSize({1}, 0).xy;'.format(uv_name, tex_name))
-        curshader.write('float {0}_1 = texture({1}, {2}_inv + {2}_step * 2.0 * vec2(-1, 0)).r;'.format(tex_store, tex_name, uv_name))
-        curshader.write('float {0}_2 = texture({1}, {2}_inv + {2}_step * 2.0 * vec2(1, 0)).r;'.format(tex_store, tex_name, uv_name))
-        curshader.write('float {0}_3 = texture({1}, {2}_inv + {2}_step * 2.0 * vec2(0, -1)).r;'.format(tex_store, tex_name, uv_name))
-        curshader.write('float {0}_4 = texture({1}, {2}_inv + {2}_step * 2.0 * vec2(0, 1)).r;'.format(tex_store, tex_name, uv_name))
-        # curshader.write('float {0}_1 = textureOffset({1}, {2}_inv, ivec2(-1, 0)).r;'.format(tex_store, tex_name, uv_name))
-        # curshader.write('float {0}_2 = textureOffset({1}, {2}_inv, ivec2(1, 0)).r;'.format(tex_store, tex_name, uv_name))
-        # curshader.write('float {0}_3 = textureOffset({1}, {2}_inv, ivec2(0, -1)).r;'.format(tex_store, tex_name, uv_name))
-        # curshader.write('float {0}_4 = textureOffset({1}, {2}_inv, ivec2(0, 1)).r;'.format(tex_store, tex_name, uv_name))
+        curshader.write('float {0}_1 = textureOffset({1}, {2}, ivec2(-2, 0)).r;'.format(tex_store, tex_name, uv_name))
+        curshader.write('float {0}_2 = textureOffset({1}, {2}, ivec2(2, 0)).r;'.format(tex_store, tex_name, uv_name))
+        curshader.write('float {0}_3 = textureOffset({1}, {2}, ivec2(0, -2)).r;'.format(tex_store, tex_name, uv_name))
+        curshader.write('float {0}_4 = textureOffset({1}, {2}, ivec2(0, 2)).r;'.format(tex_store, tex_name, uv_name))
         sample_bump = False
     if to_linear:
         curshader.write('{0}.rgb = pow({0}.rgb, vec3(2.2));'.format(tex_store))
@@ -842,7 +836,7 @@ def parse_vector(node, socket):
 
     elif node.type == 'BUMP':
         # Interpolation strength
-        # strength = parse_value_input(node.inputs[0])
+        strength = parse_value_input(node.inputs[0])
         # Height multiplier
         # distance = parse_value_input(node.inputs[1])
         sample_bump = True
@@ -854,10 +848,11 @@ def parse_vector(node, socket):
                 ext = ['1', '2', '3', '4']
             else:
                 ext = ['2', '1', '4', '3']
-            curshader.write('vec3 {0}_a = normalize(vec3(2.0, 0.0, {0}_{1} - {0}_{2}));'.format(sample_bump_res, ext[0], ext[1]))
-            curshader.write('vec3 {0}_b = normalize(vec3(0.0, 2.0, {0}_{1} - {0}_{2}));'.format(sample_bump_res, ext[2], ext[3]))
-            vc = 'cross({0}_a, {0}_b)'.format(sample_bump_res)
-            res = 'normalize(mat3({0}_a, {0}_b, {1}) * n)'.format(sample_bump_res, vc)
+            curshader.write('float {0}_fh1 = {0}_{1} - {0}_{2}; float {0}_fh2 = {0}_{3} - {0}_{4};'.format(sample_bump_res, ext[0], ext[1], ext[2], ext[3]))
+            curshader.write('{0}_fh1 *= ({1}) * 3.0; {0}_fh2 *= ({1}) * 3.0;'.format(sample_bump_res, strength))
+            curshader.write('vec3 {0}_a = normalize(vec3(2.0, 0.0, {0}_fh1));'.format(sample_bump_res))
+            curshader.write('vec3 {0}_b = normalize(vec3(0.0, 2.0, {0}_fh2));'.format(sample_bump_res))
+            res = 'normalize(mat3({0}_a, {0}_b, normalize(vec3({0}_fh1, {0}_fh2, 2.0))) * n)'.format(sample_bump_res)
             sample_bump_res = ''
         else:
             res = 'n'
@@ -898,8 +893,9 @@ def parse_vector(node, socket):
         else:
             #space = node.space
             #map = node.uv_map
-            # strength = parse_value_input(node.inputs[0])
-            parse_normal_map_color_input(node.inputs[1]) # Color
+            strength = parse_value_input(node.inputs[0])
+            # Color
+            parse_normal_map_color_input(node.inputs[1], strength)
             return None
 
     elif node.type == 'CURVE_VEC':
@@ -937,7 +933,7 @@ def parse_vector(node, socket):
         elif op == 'NORMALIZE':
             return 'normalize({0})'.format(vec1)
 
-def parse_normal_map_color_input(inp):
+def parse_normal_map_color_input(inp, strength=1.0):
     global normal_parsed
     global frag
     if basecol_only:
@@ -959,6 +955,7 @@ def parse_normal_map_color_input(inp):
         frag.write('n = TBN * normalize(texn);')
     else:
         frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
+        frag.write('n.xy *= {0};'.format(strength))
         frag.write('n = normalize(TBN * n);')
         con.add_elem('tang', 3)
     frag.write_normal -= 1
@@ -1292,14 +1289,14 @@ def write_bump(node, res):
     if ',' in ar[1]:
         ar2 = ar[1].split(',', 1)
         co = ar2[0]
-        post = ',' + ar2[1] 
+        post = ',' + ar2[1]
     else:
         co = ar[1][:-1]
         post = ')'
-    curshader.write('float {0}_1 = {1}{2} + vec2(-1, 0){3};'.format(sample_bump_res, pre, co, post))
-    curshader.write('float {0}_2 = {1}{2} + vec2(1, 0){3};'.format(sample_bump_res, pre, co, post))
-    curshader.write('float {0}_3 = {1}{2} + vec2(0, -1){3};'.format(sample_bump_res, pre, co, post))
-    curshader.write('float {0}_4 = {1}{2} + vec2(0, 1){3};'.format(sample_bump_res, pre, co, post))
+    curshader.write('float {0}_1 = {1}{2} + vec2(-2, 0){3};'.format(sample_bump_res, pre, co, post))
+    curshader.write('float {0}_2 = {1}{2} + vec2(2, 0){3};'.format(sample_bump_res, pre, co, post))
+    curshader.write('float {0}_3 = {1}{2} + vec2(0, -2){3};'.format(sample_bump_res, pre, co, post))
+    curshader.write('float {0}_4 = {1}{2} + vec2(0, 2){3};'.format(sample_bump_res, pre, co, post))
     sample_bump = False
 
 def to_vec1(v):
