@@ -54,7 +54,7 @@ def make(context_id, rpasses, shadowmap=False):
             if con_depth.is_elem('tex'):
                 vert.add_out('vec2 texCoord') ## vs only, remove out
                 vert.write_attrib('texCoord = tex;')
-            vert.write('wposition += wnormal * disp * 0.2;')
+            vert.write('wposition += wnormal * disp * 0.1;')
             if shadowmap:
                 vert.add_uniform('mat4 LVP', '_lampViewProjectionMatrix')
                 vert.write('gl_Position = LVP * vec4(wposition, 1.0);')
@@ -105,11 +105,11 @@ def make(context_id, rpasses, shadowmap=False):
 
             if shadowmap:
                 tese.add_uniform('mat4 LVP', '_lampViewProjectionMatrix')
-                tese.write('wposition += wnormal * disp * 0.2;')
+                tese.write('wposition += wnormal * disp * 0.1;')
                 tese.write('gl_Position = LVP * vec4(wposition, 1.0);')
             else:
                 tese.add_uniform('mat4 VP', '_viewProjectionMatrix')
-                tese.write('wposition += wnormal * disp * 0.2;')
+                tese.write('wposition += wnormal * disp * 0.1;')
                 tese.write('gl_Position = VP * vec4(wposition, 1.0);')
     # No displacement
     else:
