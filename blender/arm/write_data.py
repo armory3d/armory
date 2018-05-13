@@ -91,11 +91,11 @@ project.addSources('Sources');
                     f.write('project.addLibrary("{0}");\n'.format(lib))
         
         # Subprojects, merge this with libraries
-        if os.path.exists('Projects'):
-            libs = os.listdir('Projects')
+        if os.path.exists('Subprojects'):
+            libs = os.listdir('Subprojects')
             for lib in libs:
-                if os.path.isdir('Projects/' + lib):
-                    f.write('await project.addProject("Projects/{0}");\n'.format(lib))
+                if os.path.isdir('Subprojects/' + lib):
+                    f.write('await project.addProject("Subprojects/{0}");\n'.format(lib))
 
         if wrd.arm_audio == 'Disabled':
             assets.add_khafile_def('arm_no_audio')
