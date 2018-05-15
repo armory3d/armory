@@ -21,14 +21,23 @@ class NavAgent extends Trait {
 	}
 
 	public function setPath(path:Array<Vec4>) {
-		if (rotAnim != null) Tween.stop(rotAnim);
-		if (locAnim != null) Tween.stop(locAnim);
+		stopTween();
 
 		this.path = path;
 		index = 1;
 		notifyOnUpdate(update);
 
 		go();
+	}
+
+	function stopTween() {
+		if (rotAnim != null) Tween.stop(rotAnim);
+		if (locAnim != null) Tween.stop(locAnim);
+	}
+
+	public function stop() {
+		stopTween();
+		path = null;
 	}
 
 	function shortAngle(from:Float, to:Float) {
