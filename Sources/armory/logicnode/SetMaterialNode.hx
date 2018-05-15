@@ -15,7 +15,9 @@ class SetMaterialNode extends LogicNode {
 		
 		if (object == null) return;
 
-		object.materials[0] = mat;
+		for (i in 0...object.materials.length) {
+			object.materials[i] = mat;
+		}
 
 		super.run();
 	}
