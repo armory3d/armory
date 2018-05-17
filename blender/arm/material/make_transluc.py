@@ -15,23 +15,18 @@ def make(context_id):
 
 	frag.add_out('vec4[2] fragColor')
 
-	if tese != None:
-		tese.add_out('vec4 wvpposition')
-		tese.write('wvpposition = gl_Position;')
-	else:
-		vert.add_out('vec4 wvpposition')
-		vert.write('wvpposition = gl_Position;')
+	sh = tese if tese != None else vert
+	sh.add_out('vec4 wvpposition')
+	sh.write('wvpposition = gl_Position;')
 
 	# Remove fragColor = ...;
 	frag.main = frag.main[:frag.main.rfind('fragColor')]
 
 	frag.write('\n')
-	frag.write('vec4 premultipliedReflect = vec4(vec3(direct * visibility + indirect * occlusion), opacity);')
+	frag.write('vec4 premultipliedReflect = vec4(vec3(direct * lightColor * visibility + indirect * occlusion) * opacity, opacity);')
 	
 	frag.write('float fragZ = wvpposition.z / wvpposition.w;')
-	frag.write('float a = min(1.0, premultipliedReflect.a) * 8.0 + 0.01;')
-	frag.write('float b = -fragZ * 0.95 + 1.0;')
-	frag.write('float w = clamp(a * a * a * 1e8 * b * b * b, 1e-2, 3e2);')
+	frag.write('float w = clamp(pow(min(1.0, premultipliedReflect.a * 10.0) + 0.01, 3.0) * 1e8 * pow(1.0 - fragZ * 0.9, 3.0), 1e-2, 3e3);')
 	frag.write('fragColor[0] = vec4(premultipliedReflect.rgb * w, premultipliedReflect.a);')
 	frag.write('fragColor[1] = vec4(premultipliedReflect.a * w, 0.0, 0.0, 1.0);')
 

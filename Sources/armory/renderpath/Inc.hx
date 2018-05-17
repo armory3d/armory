@@ -129,7 +129,7 @@ class Inc {
 		t.width = 0;
 		t.height = 0;
 		t.displayp = getDisplayp();
-		t.format = "RGBA64";
+		t.format = "R16";
 		var ss = getSuperSampling();
 		if (ss != 1) t.scale = ss;
 		t.depth_buffer = "main";

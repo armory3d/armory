@@ -2113,7 +2113,7 @@ class ArmoryExporter:
                             if nmat == None:
                                 continue
                             if vs != nmat.vertex_structure:
-                                log.warn('Object ' + bobject.name + ' - unable to bind materials to vertex data, please separate object by material (select object - edit mode - P - By Material) or enable Deinterleaved Buffers in Armory Player')
+                                log.warn('Object ' + bobject.name + ' - unable to bind materials to vertex data, please separate object by material (select object - edit mode - P - By Material) or enable Deinterleaved Buffers in Armory Project - Flags')
                                 break
 
             self.export_particle_systems()
