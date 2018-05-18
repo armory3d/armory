@@ -263,7 +263,9 @@ class RenderPathForward {
 
 			if (relight) {
 				#if (rp_gi == "Voxel GI")
-				Inc.computeVoxels();
+					Inc.computeVoxelsBegin();
+					Inc.computeVoxels(0);
+					Inc.computeVoxelsEnd();
 					#if (rp_gi_bounces)
 					voxels = "voxelsBounce";
 					#end

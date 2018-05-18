@@ -461,6 +461,7 @@ class RenderPathDeferred {
 
 		// Voxels
 		#if (rp_gi != "Off")
+		var relight = false;
 		{
 			var voxelize = path.voxelize();
 
@@ -473,7 +474,6 @@ class RenderPathDeferred {
 			}
 			#end
 
-			var relight = false;
 			if (voxelize) {
 				var res = Inc.getVoxelRes();
 
@@ -501,7 +501,9 @@ class RenderPathDeferred {
 
 			if (relight) {
 				#if (rp_gi == "Voxel GI")
-				Inc.computeVoxels();
+					// Inc.computeVoxelsBegin();
+					// for (i in 0...lamps.length) Inc.computeVoxels(i); // Redraws SM
+					// Inc.computeVoxelsEnd();
 					#if (rp_gi_bounces)
 					voxels = "voxelsBounce";
 					#end
@@ -536,6 +538,9 @@ class RenderPathDeferred {
 
 		// Direct
 		var lamps = iron.Scene.active.lamps;
+		#if (rp_gi == "Voxel GI")
+		if (relight) Inc.computeVoxelsBegin();
+		#end
 		for (i in 0...lamps.length) {
 			var l = lamps[i];
 			if (!l.visible) continue;
@@ -547,6 +552,10 @@ class RenderPathDeferred {
 					Inc.drawShadowMap(l);
 				}
 			}
+			#end
+
+			#if (rp_gi == "Voxel GI")
+			if (relight) Inc.computeVoxels(i);
 			#end
 
 			path.setTarget("tex");
@@ -602,6 +611,9 @@ class RenderPathDeferred {
 			#end
 		}
 		path.currentLampIndex = 0;
+		#if (rp_gi == "Voxel GI")
+		if (relight) Inc.computeVoxelsEnd();
+		#end
 
 		#if (rp_background == "World")
 		{

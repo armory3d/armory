@@ -276,7 +276,7 @@ class Inc {
 	}
 
 	#if (rp_gi == "Voxel GI")
-	public static function computeVoxels() {
+	public static function computeVoxelsBegin() {
 		if (voxel_sh == null) {
 			voxel_sh = path.getComputeShader("voxel_light");
 			voxel_ta = voxel_sh.getTextureUnit("voxelsOpac");
@@ -297,26 +297,25 @@ class Inc {
 			voxel_ch = voxel_sh.getConstantLocation("shadowsBias");
 			#end
 		}
-
+		path.clearImage("voxels", 0x00000000);
+	}
+	public static function computeVoxels(i:Int) {
 		var rts = path.renderTargets;
 		var res = Inc.getVoxelRes();
-
-		path.clearImage("voxels", 0x00000000);
-
 		var lamps = iron.Scene.active.lamps;
-		for (i in 0...lamps.length) {
+		// for (i in 0...lamps.length) {
 			var l = lamps[i];
-			if (!l.visible) continue;
-			path.currentLampIndex = i;
+			// if (!l.visible) continue;
+			// path.currentLampIndex = i;
 
-			#if (rp_shadowmap)
-			{
+			// #if (rp_shadowmap)
+			// {
 				// TODO: merge with direct, drawing shadowmaps twice!
-				if (path.lampCastShadow()) {
-					drawShadowMap(l);
-				}
-			}
-			#end
+				// if (path.lampCastShadow()) {
+					// drawShadowMap(l);
+				// }
+			// }
+			// #end
 
 			kha.compute.Compute.setShader(voxel_sh);
 			kha.compute.Compute.setTexture(voxel_ta, rts.get("voxelsOpac").image, kha.compute.Access.Read);
@@ -371,9 +370,12 @@ class Inc {
 			}
 
 			kha.compute.Compute.compute(res, res, res);
-		}
-		path.currentLampIndex = 0;
-
+		// }
+		// path.currentLampIndex = 0;
+	}
+	public static function computeVoxelsEnd() {
+		var rts = path.renderTargets;
+		var res = Inc.getVoxelRes();
 		path.generateMipmaps("voxels");
 
 		#if (rp_gi_bounces)
