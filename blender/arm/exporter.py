@@ -279,6 +279,8 @@ class ArmoryExporter:
             fp = self.get_meshes_file_path('action_' + aname, compressed=self.is_compress(bobject.data))
             assets.add(fp)
             ext = '.zip' if self.is_compress(bobject.data) else ''
+            if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
+                ext = '.json'
             o['object_actions'].append('action_' + aname + ext)
 
             oaction = {}
@@ -495,6 +497,8 @@ class ArmoryExporter:
             fp = self.get_meshes_file_path('action_' + aname, compressed=self.is_compress(bobject.data))
             assets.add(fp)
             ext = '.zip' if self.is_compress(bobject.data) else ''
+            if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
+                ext = '.json'
             o['object_actions'].append('action_' + aname + ext)
 
             oaction = {}
@@ -800,6 +804,8 @@ class ArmoryExporter:
             if bobject.users_group != None and len(bobject.users_group) > 0:
                 o['groups'] = []
                 for g in bobject.users_group:
+                    if g.name.startswith('RigidBodyWorld') or g.name.startswith('Trait|'):
+                        continue
                     o['groups'].append(g.name)
 
             if bobject.arm_tilesheet != '':
@@ -981,6 +987,8 @@ class ArmoryExporter:
 
                 armatureid = arm.utils.safestr(arm.utils.asset_name(bdata))
                 ext = '.zip' if self.is_compress(bdata) else ''
+                if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
+                    ext = '.json'
                 o['bone_actions'] = []
                 for action in export_actions:
                     aname = arm.utils.safestr(arm.utils.asset_name(action))

@@ -487,7 +487,22 @@ def is_bone_animation_enabled(bobject):
     if bobject.parent and bobject.parent.type == 'ARMATURE':
         if bobject.parent.arm_animation_enabled == False:
             return False
-        if bobject.parent.animation_data and bobject.parent.animation_data.action:
+        # Check for present actions
+        adata = bobject.parent.animation_data
+        has_actions = adata != None and adata.action != None
+        if not has_actions and adata != None:
+            if hasattr(adata, 'nla_tracks') and adata.nla_tracks != None:
+                for track in adata.nla_tracks:
+                    if track.strips == None:
+                        continue
+                    for strip in track.strips:
+                        if strip.action == None:
+                            continue
+                        has_actions = True
+                        break
+                    if has_actions:
+                        break
+        if adata != None and has_actions:
             return True
     return False
 
