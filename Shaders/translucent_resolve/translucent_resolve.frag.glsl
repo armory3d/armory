@@ -19,9 +19,8 @@ void main() {
 	float revealage = 1.0 - accum.a;
 
 	// Save the blending and color texture fetch cost
-	if (revealage >= 1.0) {
-		// discard;
-		fragColor = vec4(accum.rgb, 1.0);
+	if (revealage == 0.0) {
+		discard;
 		return;
 	}
 
@@ -30,6 +29,5 @@ void main() {
     }
 	
 	float f = texelFetch(gbuffer1, ivec2(texCoord * texSize), 0).r;
-
 	fragColor = vec4(accum.rgb / clamp(f, 1e-4, 5e4), revealage);
 }

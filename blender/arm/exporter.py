@@ -1835,8 +1835,6 @@ class ArmoryExporter:
             for con in o['contexts']: # TODO: blend context
                 if con['name'] == 'mesh' and material.arm_blending:
                     con['name'] = 'blend'
-            # TODO: use array and remove duplis to ensure correctness
-            material.vertex_structure = vs_str
 
             if (material.export_tangents != tang_export) or \
                (material.export_uvs != uv_export) or \
@@ -2107,23 +2105,6 @@ class ArmoryExporter:
 
             self.output['material_datas'] = []
             self.export_materials()
-
-            # Ensure same vertex structure for object materials
-            if not wrd.arm_deinterleaved_buffers:
-                for bobject in scene_objects:
-                    if len(bobject.material_slots) > 1:
-                        mat = self.slot_to_material(bobject, bobject.material_slots[0])
-                        if mat == None:
-                            continue
-                        vs = mat.vertex_structure
-                        for i in range(1, len(bobject.material_slots)):
-                            nmat = self.slot_to_material(bobject, bobject.material_slots[i])
-                            if nmat == None:
-                                continue
-                            if vs != nmat.vertex_structure:
-                                log.warn('Object ' + bobject.name + ' - unable to bind materials to vertex data, please separate object by material (select object - edit mode - P - By Material) or enable Deinterleaved Buffers in Armory Project - Flags')
-                                break
-
             self.export_particle_systems()
             self.output['world_datas'] = []
             self.export_worlds()

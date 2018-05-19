@@ -150,26 +150,6 @@ def make(context_id, rpasses, shadowmap=False):
             if con_depth.is_elem('col'):
                 vert.add_out('vec3 vcolor')
                 vert.write('vcolor = col;')
-    
-    # TODO: interleaved buffer has to match vertex structure of mesh context
-    if not bpy.data.worlds['Arm'].arm_deinterleaved_buffers:
-        con_depth.add_elem('nor', 3)
-        if mat_state.con_mesh != None:
-            if mat_state.con_mesh.is_elem('tex'):
-                con_depth.add_elem('tex', 2)
-            if mat_state.con_mesh.is_elem('tex1'):
-                con_depth.add_elem('tex1', 2)
-            if mat_state.con_mesh.is_elem('col'):
-                con_depth.add_elem('col', 3)
-            if mat_state.con_mesh.is_elem('tang'):
-                con_depth.add_elem('tang', 4)
-
-    # TODO: pass vbuf with proper struct
-    gapi = arm.utils.get_gapi()
-    if gapi.startswith('direct3d') and bpy.data.worlds['Arm'].arm_deinterleaved_buffers == False:
-        vert.write('vec3 t1 = nor; // TODO: Temp for d3d')
-        if con_depth.is_elem('tex'):
-            vert.write('vec2 t2 = tex; // TODO: Temp for d3d')
 
     if parse_opacity:
         opac = mat_state.material.arm_discard_opacity_shadows
