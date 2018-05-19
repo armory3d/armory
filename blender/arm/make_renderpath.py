@@ -349,5 +349,14 @@ def build():
         else:
             log.warn('Disabling soft shadows - "Armory Render Path - Cascades" requires to be set to 1 for now')
 
+    gbuffer2_direct = '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs or rpdat.arm_voxelgi_refraction
+    gbuffer2 = '_Veloc' in wrd.world_defs or gbuffer2_direct
+    if gbuffer2:
+        assets.add_khafile_def('rp_gbuffer2')
+        wrd.world_defs += '_gbuffer2'
+        if gbuffer2_direct:
+            assets.add_khafile_def('rp_gbuffer2_direct')
+            wrd.world_defs += '_gbuffer2direct'
+
     if callback != None:
         callback()

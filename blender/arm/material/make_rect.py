@@ -99,6 +99,7 @@ def make_rect(con_rect):
     frag.write('float roughness;')
     frag.write('float metallic;')
     frag.write('float occlusion;')
+    frag.write('float specular;')
 
     mat_state.texture_grad = True
     cycles.parse(mat_state.nodes, con_rect, vert, frag, None, None, None, parse_opacity=False, parse_displacement=False)
@@ -119,7 +120,7 @@ def make_rect(con_rect):
 
     frag.write('visibility *= attenuate(distance(wposition, lightPos));')
 
-    frag.write('fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);')
+    frag.write('fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH) * specular;')
     frag.write('fragColor.rgb *= lightColor;')
     frag.write('fragColor.rgb *= visibility;')
 

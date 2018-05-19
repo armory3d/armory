@@ -79,7 +79,7 @@ void main() {
 
 	vec2 metrough = unpackFloat(g0.b);
 
-	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, 
+	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, spec/occ
 	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
 
 #ifdef _IndPos
@@ -117,7 +117,7 @@ void main() {
 
 	// if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
 
-	// float opacity = g1.a;
+	// float opacity = g2.b;
 	// if (opacity < 1.0) fragColor.rgb = mix(indirectRefractiveLight(-v, n, vec3(1.0), opacity, voxpos), fragColor.rgb, opacity);
 #endif
 
@@ -158,7 +158,7 @@ void main() {
 	envl.rgb *= envmapStrength * fract(g1.a);
 #else
 	#ifndef _VoxelGIRefract
-	envl.rgb *= envmapStrength * g1.a; // Occlusion
+	envl.rgb *= envmapStrength * fract(g1.a); // Occlusion
 	#endif
 #endif
 

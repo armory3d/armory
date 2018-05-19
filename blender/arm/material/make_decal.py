@@ -52,6 +52,7 @@ def make(context_id):
     frag.write('float roughness;')
     frag.write('float metallic;')
     frag.write('float occlusion;')
+    frag.write('float specular;')
     cycles.parse(mat_state.nodes, con_decal, vert, frag, geom, tesc, tese, parse_opacity=False)
 
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')

@@ -170,6 +170,7 @@ def make_base(con_mesh, parse_opacity):
         frag.write('float roughness;')
         frag.write('float metallic;')
         frag.write('float occlusion;')
+        frag.write('float specular;')
         if parse_opacity:
             frag.write('float opacity;')
         cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity)
@@ -301,24 +302,25 @@ def make_deferred(con_mesh):
         frag.write('if (opacity < {0}) discard;'.format(opac))
 
     gapi = arm.utils.get_gapi()
-    if '_Veloc' in wrd.world_defs:
+    if '_gbuffer2' in wrd.world_defs:
         frag.add_out('vec4[3] fragColor')
-        if tese == None:
-            vert.add_uniform('mat4 prevWVP', link='_prevWorldViewProjectionMatrix')
-            vert.add_out('vec4 wvpposition')
-            vert.add_out('vec4 prevwvpposition')
-            vert.write('wvpposition = gl_Position;')
-            vert.write('prevwvpposition = prevWVP * spos;')
-        else:
-            vert.add_uniform('mat4 prevW', link='_prevWorldMatrix')
-            vert.add_out('vec3 prevwposition')
-            vert.write('prevwposition = vec4(prevW * spos).xyz;')
-            tese.add_out('vec4 wvpposition')
-            tese.add_out('vec4 prevwvpposition')
-            tese.add_uniform('mat4 prevVP', '_prevViewProjectionMatrix')
-            tese.write('wvpposition = gl_Position;')
-            make_tess.interpolate(tese, 'prevwposition', 3)
-            tese.write('prevwvpposition = prevVP * vec4(prevwposition, 1.0);')
+        if '_Veloc' in wrd.world_defs:
+            if tese == None:
+                vert.add_uniform('mat4 prevWVP', link='_prevWorldViewProjectionMatrix')
+                vert.add_out('vec4 wvpposition')
+                vert.add_out('vec4 prevwvpposition')
+                vert.write('wvpposition = gl_Position;')
+                vert.write('prevwvpposition = prevWVP * spos;')
+            else:
+                vert.add_uniform('mat4 prevW', link='_prevWorldMatrix')
+                vert.add_out('vec3 prevwposition')
+                vert.write('prevwposition = vec4(prevW * spos).xyz;')
+                tese.add_out('vec4 wvpposition')
+                tese.add_out('vec4 prevwvpposition')
+                tese.add_uniform('mat4 prevVP', '_prevViewProjectionMatrix')
+                tese.write('wvpposition = gl_Position;')
+                make_tess.interpolate(tese, 'prevwposition', 3)
+                tese.write('prevwvpposition = prevVP * vec4(prevwposition, 1.0);')
     elif gapi.startswith('direct3d'):
         vert.add_out('vec4 wvpposition')
         vert.write('wvpposition = gl_Position;')
@@ -339,18 +341,18 @@ def make_deferred(con_mesh):
         frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - ((wvpposition.z / wvpposition.w) * 0.5 + 0.5));')
     else:
         frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - gl_FragCoord.z);')
-    if '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
-        frag.add_uniform('int materialID')
-        frag.write('fragColor[1] = vec4(basecol.rgb, materialID + clamp(occlusion, 0.0, 1.0 - 0.001));')
-    elif rpdat.arm_voxelgi_refraction:
-        frag.write('fragColor[1] = vec4(basecol.rgb, opacity);')
-    else:
-        frag.write('fragColor[1] = vec4(basecol.rgb, occlusion);')
+    frag.write('fragColor[1] = vec4(basecol.rgb, packFloat(specular, occlusion));')
 
-    if '_Veloc' in wrd.world_defs:
-        frag.write('vec2 posa = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
-        frag.write('vec2 posb = (prevwvpposition.xy / prevwvpposition.w) * 0.5 + 0.5;')
-        frag.write('fragColor[2].rg = vec2(posa - posb);')
+    if '_gbuffer2' in wrd.world_defs:
+        if '_Veloc' in wrd.world_defs:
+            frag.write('vec2 posa = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
+            frag.write('vec2 posb = (prevwvpposition.xy / prevwvpposition.w) * 0.5 + 0.5;')
+            frag.write('fragColor[2].rg = vec2(posa - posb);')
+        if rpdat.arm_voxelgi_refraction:
+            frag.write('fragColor[2].b = opacity;')
+        if '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
+            frag.add_uniform('int materialID')
+            frag.write('fragColor[2].a = materialID;')
 
     return con_mesh
 
@@ -414,6 +416,7 @@ def make_forward_mobile(con_mesh):
     frag.write('float roughness;')
     frag.write('float metallic;')
     frag.write('float occlusion;')
+    frag.write('float specular;')
     cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False)
 
     if con_mesh.is_elem('tex'):
@@ -502,6 +505,7 @@ def make_forward_solid(con_mesh):
     frag.write('float roughness;')
     frag.write('float metallic;')
     frag.write('float occlusion;')
+    frag.write('float specular;')
     cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False)
 
     if con_mesh.is_elem('tex'):
@@ -686,13 +690,13 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.write('    float ltcspec = ltcEvaluate(n, vVec, dotNV, wposition, invM, lampArea0, lampArea1, lampArea2, lampArea3);')
         frag.write('    ltcspec *= texture(sltcMag, tuv).a;')
         frag.write('    float ltcdiff = ltcEvaluate(n, vVec, dotNV, wposition, mat3(1.0), lampArea0, lampArea1, lampArea2, lampArea3);')
-        frag.write('    direct = albedo * ltcdiff + ltcspec;')
+        frag.write('    direct = albedo * ltcdiff + ltcspec * specular;')
         frag.write('}')
         frag.write('else {')
         frag.tab += 1
 
     frag.write('direct = lambertDiffuseBRDF(albedo, dotNL);')
-    frag.write('direct += specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH);')
+    frag.write('direct += specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH) * specular;')
 
     if '_LTC' in wrd.world_defs:
         frag.write('}')
@@ -714,6 +718,9 @@ def make_forward_base(con_mesh, parse_opacity=False):
             if '_EnvLDR' in wrd.world_defs:
                 frag.write('prefilteredColor = pow(prefilteredColor, vec3(2.2));')
             frag.write('indirect += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5;')
+        elif '_EnvCol' in wrd.world_defs:
+            frag.add_uniform('vec3 backgroundCol', link='_backgroundCol')
+            frag.write('indirect += backgroundCol * f0;')
     else:
         frag.write('vec3 indirect = albedo;')
     frag.write('indirect *= envmapStrength;')

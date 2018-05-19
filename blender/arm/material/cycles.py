@@ -83,12 +83,13 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
         normal_parsed = False
         curshader = frag
         
-        out_basecol, out_roughness, out_metallic, out_occlusion, out_opacity = parse_shader_input(node.inputs[0])
+        out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity = parse_shader_input(node.inputs[0])
         if parse_surface:
             frag.write('basecol = {0};'.format(out_basecol))
             frag.write('roughness = {0};'.format(out_roughness))
             frag.write('metallic = {0};'.format(out_metallic))
             frag.write('occlusion = {0};'.format(out_occlusion))
+            frag.write('specular = {0};'.format(out_specular))
         if parse_opacity:
             frag.write('opacity = {0};'.format(out_opacity))
 
@@ -152,8 +153,9 @@ def parse_shader_input(inp):
         out_roughness = '0.0'
         out_metallic = '0.0'
         out_occlusion = '1.0'
+        out_specular = '1.0'
         out_opacity = '1.0'
-        return out_basecol, out_roughness, out_metallic, out_occlusion, out_opacity
+        return out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity
 
 def write_normal(inp):
     if inp.is_linked:
@@ -171,6 +173,7 @@ def parse_shader(node, socket):
     out_roughness = '0.0'
     out_metallic = '0.0'
     out_occlusion = '1.0'
+    out_specular = '1.0'
     out_opacity = '1.0'
 
     if node.type == 'GROUP':
@@ -213,8 +216,8 @@ def parse_shader(node, socket):
         fac_inv_var = node_name(node.name) + '_fac_inv'
         curshader.write('{0}float {1} = {2};'.format(prefix, fac_var, fac))
         curshader.write('{0}float {1} = 1.0 - {2};'.format(prefix, fac_inv_var, fac_var))
-        bc1, rough1, met1, occ1, opac1 = parse_shader_input(node.inputs[1])
-        bc2, rough2, met2, occ2, opac2 = parse_shader_input(node.inputs[2])
+        bc1, rough1, met1, occ1, spec1, opac1 = parse_shader_input(node.inputs[1])
+        bc2, rough2, met2, occ2, spec2, opac2 = parse_shader_input(node.inputs[2])
         if parse_surface:
             parsing_basecolor(True)
             out_basecol = '({0} * {3} + {1} * {2})'.format(bc1, bc2, fac_var, fac_inv_var)
@@ -222,12 +225,13 @@ def parse_shader(node, socket):
             out_roughness = '({0} * {3} + {1} * {2})'.format(rough1, rough2, fac_var, fac_inv_var)
             out_metallic = '({0} * {3} + {1} * {2})'.format(met1, met2, fac_var, fac_inv_var)
             out_occlusion = '({0} * {3} + {1} * {2})'.format(occ1, occ2, fac_var, fac_inv_var)
+            out_specular = '({0} * {3} + {1} * {2})'.format(spec1, spec2, fac_var, fac_inv_var)
         if parse_opacity:
             out_opacity = '({0} * {3} + {1} * {2})'.format(opac1, opac2, fac_var, fac_inv_var)
 
     elif node.type == 'ADD_SHADER':
-        bc1, rough1, met1, occ1, opac1 = parse_shader_input(node.inputs[0])
-        bc2, rough2, met2, occ2, opac2 = parse_shader_input(node.inputs[1])
+        bc1, rough1, met1, occ1, spec1, opac1 = parse_shader_input(node.inputs[0])
+        bc2, rough2, met2, occ2, spec2, opac2 = parse_shader_input(node.inputs[1])
         if parse_surface:
             parsing_basecolor(True)
             out_basecol = '({0} + {1})'.format(bc1, bc2)
@@ -235,6 +239,7 @@ def parse_shader(node, socket):
             out_roughness = '({0} * 0.5 + {1} * 0.5)'.format(rough1, rough2)
             out_metallic = '({0} * 0.5 + {1} * 0.5)'.format(met1, met2)
             out_occlusion = '({0} * 0.5 + {1} * 0.5)'.format(occ1, occ2)
+            out_specular = '({0} * 0.5 + {1} * 0.5)'.format(spec1, spec2)
         if parse_opacity:
             out_opacity = '({0} * 0.5 + {1} * 0.5)'.format(opac1, opac2)
 
@@ -267,6 +272,7 @@ def parse_shader(node, socket):
             out_basecol = parse_vector_input(node.inputs[0])
             parsing_basecolor(False)
             out_roughness = parse_value_input(node.inputs[1])
+            out_specular = '0.0'
 
     elif node.type == 'BSDF_GLOSSY':
         if parse_surface:
@@ -357,7 +363,7 @@ def parse_shader(node, socket):
     elif node.type == 'VOLUME_SCATTER':
         pass
 
-    return out_basecol, out_roughness, out_metallic, out_occlusion, out_opacity
+    return out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity
 
 def parse_displacement_input(inp):
     if inp.is_linked:

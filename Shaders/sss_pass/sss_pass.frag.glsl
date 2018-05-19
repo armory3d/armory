@@ -38,7 +38,7 @@
 #include "compiled.glsl"
 
 uniform sampler2D gbufferD;
-uniform sampler2D gbuffer1;
+uniform sampler2D gbuffer2;
 uniform sampler2D tex;
 
 uniform vec2 dir;
@@ -148,7 +148,7 @@ vec4 SSSSBlur() {
 
 void main() {
 	// SSS only masked objects
-	if (floor(texture(gbuffer1, texCoord).a) == 2) {
+	if (texture(gbuffer2, texCoord).a == 2) {
 		fragColor = clamp(SSSSBlur(), 0.0, 1.0);
 	}
 	else {

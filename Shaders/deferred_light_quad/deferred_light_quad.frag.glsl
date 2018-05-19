@@ -27,6 +27,9 @@
 // uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
+#ifdef _gbuffer2direct
+uniform sampler2D gbuffer2;
+#endif
 
 #ifdef _SSS
 vec2 lightPlane;
@@ -70,8 +73,8 @@ in vec3 viewRay;
 out vec4 fragColor;
 
 void main() {
-	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, occlusion
-	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, 
+	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, depth
+	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, spec/occ
 	// float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0; // 0 - 1 => -1 - 1
 	// TODO: store_depth
 	// TODO: Firefox throws feedback loop detected error, read depth from gbuffer0
@@ -128,7 +131,7 @@ void main() {
 	float dotVH = dot(v, h);
 
 #ifdef _Hair // Aniso
-	if (floor(g1.a) == 2) {
+	if (texture(gbuffer2, texCoord).a == 2) {
 		const float shinyParallel = metrough.y;
 		const float shinyPerpendicular = 0.1;
 		const vec3 v = vec3(0.99146, 0.11664, 0.05832);
@@ -138,9 +141,7 @@ void main() {
 	else fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
 #else
 #ifdef _OrenNayar
-	float facdif = min((1.0 - metrough.x) * 3.0, 1.0);
-	float facspec = min(metrough.x * 3.0, 1.0);
-	fragColor.rgb = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) * facdif + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH) * facspec;
+	fragColor.rgb = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
 #else
 	fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
 #endif
@@ -154,7 +155,7 @@ void main() {
 #endif
 	
 #ifdef _SSS
-	if (floor(g1.a) == 2) {
+	if (texture(gbuffer2, texCoord).a == 2) {
 		#ifdef _CSM
 		int casi, casindex;
 		mat4 LWVP = getCascadeMat(distance(eye, p), casi, casindex);
@@ -184,6 +185,7 @@ void main() {
 	#else
 	vec3 voxposr = p / voxelgiHalfExtents;
 	#endif
-	fragColor.rgb = mix(traceRefraction(voxels, voxposr, n, -v, metrough.y), fragColor.rgb, g1.a);
+	float opac = texture(gbuffer2, texCoord).b;
+	fragColor.rgb = mix(traceRefraction(voxels, voxposr, n, -v, metrough.y), fragColor.rgb, opac);
 #endif
 }

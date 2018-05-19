@@ -36,6 +36,9 @@
 // uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
+#ifdef _gbuffer2direct
+uniform sampler2D gbuffer2;
+#endif
 
 // TODO: separate shaders
 #ifndef _NoShadows
@@ -94,8 +97,9 @@ void main() {
 	texCoord.y = 1.0 - texCoord.y;
 	#endif
 
-	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, occlusion
-	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, 
+	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, depth
+	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, spec/occ
+	float spec = floor(g1.a) / 100.0;
 	// #ifdef _InvY // D3D
 	// float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0; // 0 - 1 => -1 - 1
 	// #else
@@ -175,11 +179,6 @@ void main() {
 		}
 	}
 
-#ifdef _OrenNayar
-	float facdif = min((1.0 - metrough.x) * 3.0, 1.0);
-	float facspec = min(metrough.x * 3.0, 1.0);
-#endif
-
 #ifdef _LTC
 	if (lightType == 3) { // Area
 		float theta = acos(dotNV);
@@ -194,33 +193,25 @@ void main() {
 		float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lampArea0, lampArea1, lampArea2, lampArea3);
 		ltcspec *= texture(sltcMag, tuv).a;
 		float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lampArea0, lampArea1, lampArea2, lampArea3);
-	#ifdef _OrenNayar
-		fragColor.rgb = albedo * ltcdiff * facdif + ltcspec * facspec;
-	#else
-		fragColor.rgb = albedo * ltcdiff + ltcspec;
-	#endif
+		fragColor.rgb = albedo * ltcdiff + ltcspec * spec;
 	}
 	else {
 #endif
 
 #ifdef _Hair // Aniso
-	if (floor(g1.a) == 2) {
+	if (texture(gbuffer2, texCoord).a == 2) {
 		const float shinyParallel = metrough.y;
 		const float shinyPerpendicular = 0.1;
 		const vec3 v = vec3(0.99146, 0.11664, 0.05832);
 		vec3 T = abs(dot(n, v)) > 0.99999 ? cross(n, vec3(0.0, 1.0, 0.0)) : cross(n, v);
 		fragColor.rgb = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + wardSpecular(n, h, dotNL, dotNV, dotNH, T, shinyParallel, shinyPerpendicular);
 	}
-	else fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
+	else fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH) * spec;
 #else
 #ifdef _OrenNayar
-	// Diff/glossy
-	float rough = pow(metrough.y, 0.5);
-	fragColor.rgb = orenNayarDiffuseBRDF(albedo, rough, dotNV, dotNL, dotVH) * max(1.0 - metrough.y, 0.88) * facdif + specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) * 3.5 * facspec;
-	// Metallic
-	// fragColor.rgb = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
+	fragColor.rgb = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH) * spec;
 #else
-	fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH);
+	fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH) * spec;
 #endif
 #endif
 
@@ -240,7 +231,7 @@ void main() {
 #endif
 	
 #ifdef _SSS
-	if (floor(g1.a) == 2) {
+	if (texture(gbuffer2, texCoord).a == 2) {
 		if (lightShadow == 1) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVP, p, n, l, lightPlane.y, shadowMap);
 		// else fragColor.rgb += fragColor.rgb * SSSSTransmittanceCube();
 	}
@@ -263,6 +254,7 @@ void main() {
 	#else
 	vec3 voxposr = p / voxelgiHalfExtents;
 	#endif
-	fragColor.rgb = mix(traceRefraction(voxels, voxposr, n, -v, metrough.y), fragColor.rgb, g1.a);
+	float opac = texture(gbuffer2, texCoord).b;
+	fragColor.rgb = mix(traceRefraction(voxels, voxposr, n, -v, metrough.y), fragColor.rgb, opac);
 #endif
 }

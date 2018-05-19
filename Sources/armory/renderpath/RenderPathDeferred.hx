@@ -114,7 +114,7 @@ class RenderPathDeferred {
 			path.createRenderTarget(t);
 		}
 
-		#if arm_veloc
+		#if rp_gbuffer2
 		{
 			var t = new RenderTargetRaw();
 			t.name = "gbuffer2";
@@ -388,7 +388,7 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if arm_veloc
+		#if rp_gbuffer2
 		{
 			path.setTarget("gbuffer2");
 			path.clearTarget(0xff000000);
@@ -562,6 +562,9 @@ class RenderPathDeferred {
 			// path.bindTarget("_main", "gbufferD");
 			path.bindTarget("gbuffer0", "gbuffer0");
 			path.bindTarget("gbuffer1", "gbuffer1");
+			#if rp_gbuffer2_direct
+			path.bindTarget("gbuffer2", "gbuffer2");
+			#end
 
 			#if rp_shadowmap
 			{
@@ -687,14 +690,14 @@ class RenderPathDeferred {
 			path.setTarget("buf");
 			path.bindTarget("tex", "tex");
 			path.bindTarget("_main", "gbufferD");
-			path.bindTarget("gbuffer1", "gbuffer1");
+			path.bindTarget("gbuffer2", "gbuffer2");
 			path.drawShader("shader_datas/sss_pass/sss_pass_x");
 
 			path.setTarget("tex");
 			// TODO: can not bind tex
 			path.bindTarget("tex", "tex");
 			path.bindTarget("_main", "gbufferD");
-			path.bindTarget("gbuffer1", "gbuffer1");
+			path.bindTarget("gbuffer2", "gbuffer2");
 			path.drawShader("shader_datas/sss_pass/sss_pass_y");
 		}
 		#end
