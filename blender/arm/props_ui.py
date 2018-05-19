@@ -1520,7 +1520,7 @@ def register():
     bpy.utils.register_class(ArmPrintTraitsButton)
 
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
-    bpy.types.INFO_HT_header.prepend(draw_info_header)
+    bpy.types.INFO_HT_header.append(draw_info_header)
 
 def unregister():
     bpy.types.VIEW3D_HT_header.remove(draw_view3d_header)
