@@ -572,9 +572,9 @@ def parse_rgb(node, socket):
             co = 'mposition'
         scale = parse_value_input(node.inputs[1])
         if node.coloring == 'INTENSITY':
-            return 'vec3(tex_voronoi({0} / {1}).a)'.format(co, scale)
+            return 'vec3(tex_voronoi({0} / (1.0 / {1})).a)'.format(co, scale)
         else: # CELLS
-            return 'tex_voronoi({0} / {1}).rgb'.format(co, scale)
+            return 'tex_voronoi({0} / (1.0 / {1})).rgb'.format(co, scale)
 
     elif node.type == 'TEX_WAVE':
         # Pass through
@@ -1186,9 +1186,9 @@ def parse_value(node, socket):
             co = 'mposition'
         scale = parse_value_input(node.inputs[1])
         if node.coloring == 'INTENSITY':
-            return 'tex_voronoi({0} * {1}).a'.format(co, scale)
+            return 'tex_voronoi({0} * (1.0 / {1})).a'.format(co, scale)
         else: # CELLS
-            return 'tex_voronoi({0} * {1}).r'.format(co, scale)
+            return 'tex_voronoi({0} * (1.0 / {1})).r'.format(co, scale)
 
     elif node.type == 'TEX_WAVE':
         return '0.0'
