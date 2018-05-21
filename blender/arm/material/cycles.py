@@ -143,10 +143,8 @@ def parse_input(inp):
 def parse_shader_input(inp):
     if inp.is_linked:
         l = inp.links[0]
-
         if l.from_node.type == 'REROUTE':
             return parse_shader_input(l.from_node.inputs[0])
-
         return parse_shader(l.from_node, l.from_socket)
     else:
         out_basecol = 'vec3(0.8)'
@@ -156,16 +154,6 @@ def parse_shader_input(inp):
         out_specular = '1.0'
         out_opacity = '1.0'
         return out_basecol, out_roughness, out_metallic, out_occlusion, out_specular, out_opacity
-
-def write_normal(inp):
-    if inp.is_linked:
-        normal_res = parse_vector_input(inp)
-        if normal_res != None:
-            curshader.write('n = {0};'.format(normal_res))
-
-def parsing_basecolor(b):
-    global parsing_basecol
-    parsing_basecol = b
 
 def parse_shader(node, socket):
     global emission_found
@@ -177,8 +165,7 @@ def parse_shader(node, socket):
     out_opacity = '1.0'
 
     if node.type == 'GROUP':
-        if node.node_tree.name.startswith('Armory PBR'):
-            
+        if node.node_tree.name.startswith('Armory PBR'):     
             if parse_surface:
                 # Base color
                 parsing_basecolor(True)
@@ -199,10 +186,8 @@ def parse_shader(node, socket):
                     out_emission = parse_value_input(node.inputs[6])
                     emission_found = True
                     out_basecol = '({0} + vec3({1} * 100.0))'.format(out_basecol, out_emission)            
-            
             if parse_opacity:
                 out_opacity = parse_value_input(node.inputs[1])
-        
         else:
             return parse_group(node, socket)
 
@@ -254,7 +239,7 @@ def parse_shader(node, socket):
             # subsurface = parse_vector_input(node.inputs[1])
             # subsurface_radius = parse_vector_input(node.inputs[2])
             # subsurface_color = parse_vector_input(node.inputs[3])
-            # specular = parse_vector_input(node.inputs[5])
+            out_specular = parse_value_input(node.inputs[5])
             # specular_tint = parse_vector_input(node.inputs[6])
             # aniso = parse_vector_input(node.inputs[8])
             # aniso_rot = parse_vector_input(node.inputs[9])
@@ -368,71 +353,20 @@ def parse_shader(node, socket):
 def parse_displacement_input(inp):
     if inp.is_linked:
         l = inp.links[0]
-
         if l.from_node.type == 'REROUTE':
             return parse_displacement_input(l.from_node.inputs[0])
-
         return parse_value_input(inp)
     else:
         return None
 
-def res_var_name(node, socket):
-    return node_name(node.name) + '_' + safesrc(socket.name) + '_res'
-
-def write_result(l):
-    res_var = res_var_name(l.from_node, l.from_socket)
-    st = l.from_socket.type
-    if res_var not in parsed:
-        parsed[res_var] = 0
-        if st == 'RGB' or st == 'RGBA':
-            res = parse_rgb(l.from_node, l.from_socket)
-            if res == None:
-                return None
-            curshader.write('vec3 {0} = {1};'.format(res_var, res))
-        elif st == 'VECTOR':
-            res = parse_vector(l.from_node, l.from_socket)
-            if res == None:
-                return None
-            size = 3
-            if isinstance(res, tuple):
-                size = res[1]
-                parsed[res_var] = size
-                res = res[0]
-            curshader.write('vec{2} {0} = {1};'.format(res_var, res, size))
-        elif st == 'VALUE':
-            res = parse_value(l.from_node, l.from_socket)
-            if res == None:
-                return None
-            curshader.write('float {0} = {1};'.format(res_var, res))
-    # Normal map already parsed, return
-    elif l.from_node.type == 'NORMAL_MAP':
-        return None
-    return res_var
-
-def glsl_type(t):
-    if t == 'RGB' or t == 'RGBA' or t == 'VECTOR':
-        return 'vec3'
-    else:
-        return 'float'
-
-def to_uniform(inp):
-    uname = safesrc(inp.node.name) + safesrc(inp.name)
-    curshader.add_uniform(glsl_type(inp.type) + ' ' + uname)
-    return uname
-
-def parse_vector_input(inp, vec_size=None):
+def parse_vector_input(inp):
     if inp.is_linked:
         l = inp.links[0]
-
         if l.from_node.type == 'REROUTE':
-            return parse_vector_input(l.from_node.inputs[0], vec_size=vec_size)
-
+            return parse_vector_input(l.from_node.inputs[0])
         res_var = write_result(l)
         st = l.from_socket.type        
         if st == 'RGB' or st == 'RGBA' or st == 'VECTOR':
-            # Convert
-            if vec_size == 3 and parsed[res_var] == 2:
-                res_var = 'vec3({0}.xy, 0.0)'.format(res_var)
             return res_var
         else: # VALUE
             return 'vec3({0})'.format(res_var)
@@ -463,15 +397,23 @@ def parse_rgb(node, socket):
         return to_vec3(socket.default_value)
 
     elif node.type == 'TEX_BRICK':
-        # Pass through
-        return to_vec3([0.0, 0.0, 0.0])
+        curshader.add_function(c_functions.str_tex_brick)
+        if node.inputs[0].is_linked:
+            co = parse_vector_input(node.inputs[0])
+        else:
+            co = 'bposition'
+        col1 = parse_vector_input(node.inputs[1])
+        col2 = parse_vector_input(node.inputs[2])
+        col3 = parse_vector_input(node.inputs[3])
+        scale = parse_value_input(node.inputs[4])
+        return 'tex_brick({0} * {4}, {1}, {2}, {3})'.format(co, col1, col2, col3, scale)
 
     elif node.type == 'TEX_CHECKER':
         curshader.add_function(c_functions.str_tex_checker)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
-            co = 'mposition'
+            co = 'bposition'
         col1 = parse_vector_input(node.inputs[1])
         col2 = parse_vector_input(node.inputs[2])
         scale = parse_value_input(node.inputs[3])
@@ -485,7 +427,7 @@ def parse_rgb(node, socket):
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
-            co = 'mposition'
+            co = 'bposition'
         grad = node.gradient_type
         if grad == 'LINEAR':
             f = '{0}.x'.format(co)
@@ -526,27 +468,35 @@ def parse_rgb(node, socket):
             return '{0}.rgb'.format(tex_store)
 
     elif node.type == 'TEX_MAGIC':
-        # Pass through
-        return to_vec3([0.0, 0.0, 0.0])
-
-    elif node.type == 'TEX_MUSGRAVE':
-        # Fall back to noise
-        curshader.add_function(c_functions.str_tex_noise)
+        curshader.add_function(c_functions.str_tex_magic)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
-            co = 'mposition'
+            co = 'bposition'
+        scale = parse_value_input(node.inputs[1])
+        return 'vec3(tex_magic({0} * {1} * 4.0))'.format(co, scale)
+
+    elif node.type == 'TEX_MUSGRAVE':
+        curshader.add_function(c_functions.str_tex_musgrave)
+        if node.inputs[0].is_linked:
+            co = parse_vector_input(node.inputs[0])
+        else:
+            co = 'bposition'
         scale = parse_value_input(node.inputs[1])
         # detail = parse_value_input(node.inputs[2])
         # distortion = parse_value_input(node.inputs[3])
-        return 'vec3(tex_noise_f({0} * {1}))'.format(co, scale)
+        return 'vec3(tex_musgrave_f({0} * {1} * 0.5))'.format(co, scale)
 
     elif node.type == 'TEX_NOISE':
+        curshader.add_function(c_functions.str_tex_noise)
+        assets_add(get_sdk_path() + '/armory/Assets/' + 'noise256.png')
+        assets_add_embedded_data('noise256.png')
+        curshader.add_uniform('sampler2D snoise256', link='_noise256')
         curshader.add_function(c_functions.str_tex_noise)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
-            co = 'mposition'
+            co = 'bposition'
         scale = parse_value_input(node.inputs[1])
         # detail = parse_value_input(node.inputs[2])
         # distortion = parse_value_input(node.inputs[3])
@@ -563,34 +513,33 @@ def parse_rgb(node, socket):
 
     elif node.type == 'TEX_VORONOI':
         curshader.add_function(c_functions.str_tex_voronoi)
-        assets_add(get_sdk_path() + '/armory/Assets/' + 'noise64.png')
-        assets_add_embedded_data('noise64.png')
-        curshader.add_uniform('sampler2D snoise', link='_noise64')
+        assets_add(get_sdk_path() + '/armory/Assets/' + 'noise256.png')
+        assets_add_embedded_data('noise256.png')
+        curshader.add_uniform('sampler2D snoise256', link='_noise256')
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
-            co = 'mposition'
+            co = 'bposition'
         scale = parse_value_input(node.inputs[1])
         if node.coloring == 'INTENSITY':
-            return 'vec3(tex_voronoi({0} / (1.0 / {1})).a)'.format(co, scale)
+            return 'vec3(tex_voronoi({0} * {1}).a)'.format(co, scale)
         else: # CELLS
-            return 'tex_voronoi({0} / (1.0 / {1})).rgb'.format(co, scale)
+            return 'tex_voronoi({0} * {1}).rgb'.format(co, scale)
 
     elif node.type == 'TEX_WAVE':
-        # Pass through
-        return to_vec3([0.0, 0.0, 0.0])
+        curshader.add_function(c_functions.str_tex_wave)
+        if node.inputs[0].is_linked:
+            co = parse_vector_input(node.inputs[0])
+        else:
+            co = 'bposition'
+        scale = parse_value_input(node.inputs[1])
+        return 'vec3(tex_wave_f({0} * {1}))'.format(co, scale)
 
     elif node.type == 'BRIGHTCONTRAST':
         out_col = parse_vector_input(node.inputs[0])
         bright = parse_value_input(node.inputs[1])
         contr = parse_value_input(node.inputs[2])
-        curshader.add_function(\
-"""vec3 brightcontrast(const vec3 col, const float bright, const float contr) {
-    float a = 1.0 + contr;
-    float b = bright - contr * 0.5;
-    return max(a * col + b, 0.0);
-}
-""")
+        curshader.add_function(c_functions.str_brightcontrast)
         return 'brightcontrast({0}, {1}, {2})'.format(out_col, bright, contr)
 
     elif node.type == 'GAMMA':
@@ -616,8 +565,8 @@ def parse_rgb(node, socket):
         fac = parse_value_input(node.inputs[0])
         fac_var = node_name(node.name) + '_fac'
         curshader.write('float {0} = {1};'.format(fac_var, fac))
-        col1 = parse_vector_input(node.inputs[1], vec_size=3)
-        col2 = parse_vector_input(node.inputs[2], vec_size=3)
+        col1 = parse_vector_input(node.inputs[1])
+        col2 = parse_vector_input(node.inputs[2])
         blend = node.blend_type
         if blend == 'MIX':
             out_col = 'mix({0}, {1}, {2})'.format(col1, col2, fac_var)
@@ -693,20 +642,6 @@ def parse_rgb(node, socket):
             return 'mix({0}, {1}, clamp(({2} - {3}) * (1.0 / (1.0 - {3})), 0.0, 1.0))'.format(to_vec3(elems[0].color), to_vec3(elems[1].color), fac, elems[0].position)
 
     elif node.type == 'COMBHSV':
-# vec3 hsv2rgb(vec3 c) {
-#     vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-#     vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-#     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-# }
-# vec3 rgb2hsv(vec3 c) {
-#     vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
-#     vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
-#     vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
-
-#     float d = q.x - min(q.w, q.y);
-#     float e = 1.0e-10;
-#     return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
-# }
         # Pass constant
         return to_vec3([0.0, 0.0, 0.0])
 
@@ -721,39 +656,6 @@ def parse_rgb(node, socket):
         wl = parse_value_input(node.inputs[0])
         # Roughly map to cycles - 450 to 600 nanometers
         return 'wavelength_to_rgb(({0} - 450.0) / 150.0)'.format(wl)
-
-def store_var_name(node):
-    return node_name(node.name) + '_store'
-
-def texture_store(node, tex, tex_name, to_linear=False):
-    global parsing_basecol
-    global basecol_texname
-    global sample_bump
-    global sample_bump_res
-    mat_bind_texture(tex)
-    con.add_elem('tex', 2)
-    curshader.add_uniform('sampler2D {0}'.format(tex_name))
-    if node.inputs[0].is_linked:
-        uv_name = parse_vector_input(node.inputs[0])
-    else:
-        uv_name = 'texCoord'
-    tex_store = store_var_name(node)
-    if mat_texture_grad():
-        curshader.write('vec4 {0} = textureGrad({1}, {2}.xy, g2.xy, g2.zw);'.format(tex_store, tex_name, uv_name))
-    else:
-        curshader.write('vec4 {0} = texture({1}, {2}.xy);'.format(tex_store, tex_name, uv_name))
-    if sample_bump:
-        sample_bump_res = tex_store
-        curshader.write('float {0}_1 = textureOffset({1}, {2}, ivec2(-2, 0)).r;'.format(tex_store, tex_name, uv_name))
-        curshader.write('float {0}_2 = textureOffset({1}, {2}, ivec2(2, 0)).r;'.format(tex_store, tex_name, uv_name))
-        curshader.write('float {0}_3 = textureOffset({1}, {2}, ivec2(0, -2)).r;'.format(tex_store, tex_name, uv_name))
-        curshader.write('float {0}_4 = textureOffset({1}, {2}, ivec2(0, 2)).r;'.format(tex_store, tex_name, uv_name))
-        sample_bump = False
-    if to_linear:
-        curshader.write('{0}.rgb = pow({0}.rgb, vec3(2.2));'.format(tex_store))
-    if parsing_basecol:
-        basecol_texname = tex_store
-    return tex_store
 
 def parse_vector(node, socket):
     global particle_info
@@ -778,8 +680,8 @@ def parse_vector(node, socket):
                 # Second uvmap referenced
                 if len(lays) > 1 and node.attribute_name == lays[1].name:
                     con.add_elem('tex1', 2)
-                    return 'texCoord1', 2
-        return 'texCoord', 2
+                    return 'vec3(texCoord1.xy, 0.0)'
+        return 'vec3(texCoord.xy, 0.0)'
 
     elif node.type == 'CAMERA':
         # View Vector
@@ -822,26 +724,26 @@ def parse_vector(node, socket):
     elif node.type == 'TEX_COORD':
         #obj = node.object
         #dupli = node.from_dupli
-        if socket == node.outputs[0]: # Generated
-            return 'vec2(0.0)', 2
+        if socket == node.outputs[0]: # Generated - bounds
+            return 'bposition'
         elif socket == node.outputs[1]: # Normal
-            return 'vec2(0.0)', 2
+            return 'n'
         elif socket == node.outputs[2]: # UV
             con.add_elem('tex', 2)
-            return 'texCoord', 2
+            return 'vec3(texCoord.x, 1.0 - texCoord.y, 0.0)'
         elif socket == node.outputs[3]: # Object
-            return 'vec2(0.0)', 2
+            return 'mposition'
         elif socket == node.outputs[4]: # Camera
-            return 'vec2(0.0)', 2
+            return 'vec3(0.0)' # 'vposition'
         elif socket == node.outputs[5]: # Window
-            return 'vec2(0.0)', 2
+            return 'vec3(0.0)' # 'wvpposition'
         elif socket == node.outputs[6]: # Reflection
-            return 'vec2(0.0)', 2
+            return 'vec3(0.0)'
 
     elif node.type == 'UVMAP':
         #map = node.uv_map
         #dupli = node.from_dupli
-        return 'vec2(0.0)', 2
+        return 'vec3(0.0)'
 
     elif node.type == 'BUMP':
         # Interpolation strength
@@ -872,22 +774,22 @@ def parse_vector(node, socket):
         # ZYX rotation, Z axis for now..
         if node.rotation[2] != 0.0:
             a = node.rotation[2]
-            out = 'vec2({0}.x * {1} - (1.0 - {0}.y) * {2}, 1.0 - ({0}.x * {2} + (1.0 - {0}.y) * {1}))'.format(out, math.cos(a), math.sin(a))
+            out = 'vec3({0}.x * {1} - (1.0 - {0}.y) * {2}, 1.0 - ({0}.x * {2} + (1.0 - {0}.y) * {1}), 0.0)'.format(out, math.cos(a), math.sin(a))
         # if node.rotation[1] != 0.0:
         #     a = node.rotation[1]
-        #     out = 'vec2({0}.x * {1} - {0}.z * {2}, {0}.x * {2} + {0}.z * {1})'.format(out, math.cos(a), math.sin(a))
+        #     out = 'vec3({0}.x * {1} - {0}.z * {2}, {0}.x * {2} + {0}.z * {1}, 0.0)'.format(out, math.cos(a), math.sin(a))
         # if node.rotation[0] != 0.0:
         #     a = node.rotation[0]
-        #     out = 'vec2({0}.y * {1} - {0}.z * {2}, {0}.y * {2} + {0}.z * {1})'.format(out, math.cos(a), math.sin(a))
+        #     out = 'vec3({0}.y * {1} - {0}.z * {2}, {0}.y * {2} + {0}.z * {1}, 0.0)'.format(out, math.cos(a), math.sin(a))
         if node.scale[0] != 1.0 or node.scale[1] != 1.0 or node.scale[2] != 1.0:
-            out = '({0} * vec2({1}, {2}))'.format(out, node.scale[0], node.scale[1])
+            out = '({0} * vec3({1}, {2}, {3}))'.format(out, node.scale[0], node.scale[1], node.scale[2])
         if node.translation[0] != 0.0 or node.translation[1] != 0.0 or node.translation[2] != 0.0:
-            out = '({0} + vec2({1}, {2}))'.format(out, node.translation[0], node.translation[1])
+            out = '({0} + vec3({1}, {2}, {3}))'.format(out, node.translation[0], node.translation[1], node.translation[2])
         if node.use_min:
-            out = 'max({0}, vec2({1}, {2}))'.format(out, node.min[0], node.min[1])
+            out = 'max({0}, vec3({1}, {2}, {3}))'.format(out, node.min[0], node.min[1])
         if node.use_max:
-             out = 'min({0}, vec2({1}, {2}))'.format(out, node.max[0], node.max[1])
-        return out, 2
+             out = 'min({0}, vec3({1}, {2}, {3}))'.format(out, node.max[0], node.max[1])
+        return out
 
     elif node.type == 'NORMAL':
         if socket == node.outputs[0]:
@@ -1107,25 +1009,47 @@ def parse_value(node, socket):
         return '0.0'
 
     elif node.type == 'TEX_BRICK':
-        return '0.0'
+        curshader.add_function(c_functions.str_tex_brick)
+        if node.inputs[0].is_linked:
+            co = parse_vector_input(node.inputs[0])
+        else:
+            co = 'bposition'
+        scale = parse_value_input(node.inputs[4])
+        return 'tex_brick_f({0} * {1})'.format(co, scale)
 
     elif node.type == 'TEX_CHECKER':
-        # TODO: do not recompute when color socket is also connected
         curshader.add_function(c_functions.str_tex_checker)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
-            co = 'mposition'
-        col1 = parse_vector_input(node.inputs[1])
-        col2 = parse_vector_input(node.inputs[2])
+            co = 'bposition'
         scale = parse_value_input(node.inputs[3])
-        res = 'tex_checker({0}, {1}, {2}, {3}).r'.format(co, col1, col2, scale)
+        res = 'tex_checker_f({0}, {1}).r'.format(co, scale)
         if sample_bump:
             write_bump(node, res)
         return res
 
     elif node.type == 'TEX_GRADIENT':
-        return '0.0'
+        if node.inputs[0].is_linked:
+            co = parse_vector_input(node.inputs[0])
+        else:
+            co = 'bposition'
+        grad = node.gradient_type
+        if grad == 'LINEAR':
+            f = '{0}.x'.format(co)
+        elif grad == 'QUADRATIC':
+            f = '0.0'
+        elif grad == 'EASING':
+            f = '0.0'
+        elif grad == 'DIAGONAL':
+            f = '({0}.x + {0}.y) * 0.5'.format(co)
+        elif grad == 'RADIAL':
+            f = 'atan({0}.y, {0}.x) / PI2 + 0.5'.format(co)
+        elif grad == 'QUADRATIC_SPHERE':
+            f = '0.0'
+        elif grad == 'SPHERICAL':
+            f = 'max(1.0 - sqrt({0}.x * {0}.x + {0}.y * {0}.y + {0}.z * {0}.z), 0.0)'.format(co)
+        return '(clamp({0}, 0.0, 1.0))'.format(f)
 
     elif node.type == 'TEX_IMAGE':
         # Already fetched
@@ -1144,26 +1068,35 @@ def parse_value(node, socket):
             return '{0}.a'.format(tex_store)
 
     elif node.type == 'TEX_MAGIC':
-        return '0.0'
+        curshader.add_function(c_functions.str_tex_magic)
+        if node.inputs[0].is_linked:
+            co = parse_vector_input(node.inputs[0])
+        else:
+            co = 'bposition'
+        scale = parse_value_input(node.inputs[1])
+        return 'tex_magic_f({0} * {1} * 4.0)'.format(co, scale)
 
     elif node.type == 'TEX_MUSGRAVE':
         # Fall back to noise
-        curshader.add_function(c_functions.str_tex_noise)
+        curshader.add_function(c_functions.str_tex_musgrave)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
-            co = 'mposition'
+            co = 'bposition'
         scale = parse_value_input(node.inputs[1])
         # detail = parse_value_input(node.inputs[2])
         # distortion = parse_value_input(node.inputs[3])
-        return 'tex_noise_f({0} * {1})'.format(co, scale)
+        return 'tex_musgrave_f({0} * {1} * 0.5)'.format(co, scale)
 
     elif node.type == 'TEX_NOISE':
         curshader.add_function(c_functions.str_tex_noise)
+        assets_add(get_sdk_path() + '/armory/Assets/' + 'noise256.png')
+        assets_add_embedded_data('noise256.png')
+        curshader.add_uniform('sampler2D snoise256', link='_noise256')
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
-            co = 'mposition'
+            co = 'bposition'
         scale = parse_value_input(node.inputs[1])
         # detail = parse_value_input(node.inputs[2])
         # distortion = parse_value_input(node.inputs[3])
@@ -1177,21 +1110,27 @@ def parse_value(node, socket):
 
     elif node.type == 'TEX_VORONOI':
         curshader.add_function(c_functions.str_tex_voronoi)
-        assets_add(get_sdk_path() + '/armory/Assets/' + 'noise64.png')
-        assets_add_embedded_data('noise64.png')
-        curshader.add_uniform('sampler2D snoise', link='_noise64')
+        assets_add(get_sdk_path() + '/armory/Assets/' + 'noise256.png')
+        assets_add_embedded_data('noise256.png')
+        curshader.add_uniform('sampler2D snoise256', link='_noise256')
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
-            co = 'mposition'
+            co = 'bposition'
         scale = parse_value_input(node.inputs[1])
         if node.coloring == 'INTENSITY':
-            return 'tex_voronoi({0} * (1.0 / {1})).a'.format(co, scale)
+            return 'tex_voronoi({0} * {1}).a'.format(co, scale)
         else: # CELLS
-            return 'tex_voronoi({0} * (1.0 / {1})).r'.format(co, scale)
+            return 'tex_voronoi({0} * {1}).r'.format(co, scale)
 
     elif node.type == 'TEX_WAVE':
-        return '0.0'
+        curshader.add_function(c_functions.str_tex_wave)
+        if node.inputs[0].is_linked:
+            co = parse_vector_input(node.inputs[0])
+        else:
+            co = 'bposition'
+        scale = parse_value_input(node.inputs[1])
+        return 'tex_wave_f({0} * {1})'.format(co, scale)
 
     elif node.type == 'LIGHT_FALLOFF':
         # Constant, linear, quadratic
@@ -1288,6 +1227,90 @@ def parse_value(node, socket):
         else:
             return '0.0'
 
+##
+
+def write_normal(inp):
+    if inp.is_linked:
+        normal_res = parse_vector_input(inp)
+        if normal_res != None:
+            curshader.write('n = {0};'.format(normal_res))
+
+def parsing_basecolor(b):
+    global parsing_basecol
+    parsing_basecol = b
+    
+def res_var_name(node, socket):
+    return node_name(node.name) + '_' + safesrc(socket.name) + '_res'
+
+def write_result(l):
+    res_var = res_var_name(l.from_node, l.from_socket)
+    st = l.from_socket.type
+    if res_var not in parsed:
+        parsed[res_var] = True
+        if st == 'RGB' or st == 'RGBA':
+            res = parse_rgb(l.from_node, l.from_socket)
+            if res == None:
+                return None
+            curshader.write('vec3 {0} = {1};'.format(res_var, res))
+        elif st == 'VECTOR':
+            res = parse_vector(l.from_node, l.from_socket)
+            if res == None:
+                return None
+            curshader.write('vec3 {0} = {1};'.format(res_var, res))
+        elif st == 'VALUE':
+            res = parse_value(l.from_node, l.from_socket)
+            if res == None:
+                return None
+            curshader.write('float {0} = {1};'.format(res_var, res))
+    # Normal map already parsed, return
+    elif l.from_node.type == 'NORMAL_MAP':
+        return None
+    return res_var
+
+def glsl_type(t):
+    if t == 'RGB' or t == 'RGBA' or t == 'VECTOR':
+        return 'vec3'
+    else:
+        return 'float'
+
+def to_uniform(inp):
+    uname = safesrc(inp.node.name) + safesrc(inp.name)
+    curshader.add_uniform(glsl_type(inp.type) + ' ' + uname)
+    return uname
+
+def store_var_name(node):
+    return node_name(node.name) + '_store'
+
+def texture_store(node, tex, tex_name, to_linear=False):
+    global parsing_basecol
+    global basecol_texname
+    global sample_bump
+    global sample_bump_res
+    mat_bind_texture(tex)
+    con.add_elem('tex', 2)
+    curshader.add_uniform('sampler2D {0}'.format(tex_name))
+    if node.inputs[0].is_linked:
+        uv_name = parse_vector_input(node.inputs[0])
+    else:
+        uv_name = 'texCoord'
+    tex_store = store_var_name(node)
+    if mat_texture_grad():
+        curshader.write('vec4 {0} = textureGrad({1}, {2}.xy, g2.xy, g2.zw);'.format(tex_store, tex_name, uv_name))
+    else:
+        curshader.write('vec4 {0} = texture({1}, {2}.xy);'.format(tex_store, tex_name, uv_name))
+    if sample_bump:
+        sample_bump_res = tex_store
+        curshader.write('float {0}_1 = textureOffset({1}, {2}.xy, ivec2(-2, 0)).r;'.format(tex_store, tex_name, uv_name))
+        curshader.write('float {0}_2 = textureOffset({1}, {2}.xy, ivec2(2, 0)).r;'.format(tex_store, tex_name, uv_name))
+        curshader.write('float {0}_3 = textureOffset({1}, {2}.xy, ivec2(0, -2)).r;'.format(tex_store, tex_name, uv_name))
+        curshader.write('float {0}_4 = textureOffset({1}, {2}.xy, ivec2(0, 2)).r;'.format(tex_store, tex_name, uv_name))
+        sample_bump = False
+    if to_linear:
+        curshader.write('{0}.rgb = pow({0}.rgb, vec3(2.2));'.format(tex_store))
+    if parsing_basecol:
+        basecol_texname = tex_store
+    return tex_store
+
 def write_bump(node, res):
     global sample_bump
     global sample_bump_res
@@ -1311,14 +1334,8 @@ def write_bump(node, res):
 def to_vec1(v):
     return str(v)
 
-def to_vec2(v):
-    return 'vec2({0}, {1})'.format(v[0], v[1])
-
 def to_vec3(v):
     return 'vec3({0}, {1}, {2})'.format(v[0], v[1], v[2])
-
-def to_vec4(v):
-    return 'vec4({0}, {1}, {2}, {3})'.format(v[0], v[1], v[2], v[3])
 
 def node_by_type(nodes, ntype):
     for n in nodes:

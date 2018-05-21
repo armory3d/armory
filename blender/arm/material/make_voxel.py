@@ -85,6 +85,15 @@ def make_gi(context_id):
         vert.write('mpositionGeom = pos;')
         vert.write_pre = False
 
+    export_bpos = frag.contains('bposition') and not frag.contains('vec3 bposition')
+    if export_bpos:
+        vert.add_out('vec3 bpositionGeom')
+        vert.add_uniform('vec3 dim', link='_dim')
+        vert.add_uniform('vec3 hdim', link='_halfDim')
+        vert.write_pre = True
+        vert.write('bpositionGeom = (pos.xyz + hdim) / dim;')
+        vert.write_pre = False
+
     vert.add_uniform('mat4 W', '_worldMatrix')
     vert.add_uniform('mat3 N', '_normalMatrix')
 
@@ -117,6 +126,8 @@ def make_gi(context_id):
         geom.add_out('vec2 texCoord')
     if export_mpos:
         geom.add_out('vec3 mposition')
+    if export_bpos:
+        geom.add_out('vec3 bposition')
 
     geom.write('vec3 p1 = voxpositionGeom[1] - voxpositionGeom[0];')
     geom.write('vec3 p2 = voxpositionGeom[2] - voxpositionGeom[0];')
@@ -130,6 +141,8 @@ def make_gi(context_id):
         geom.write('    texCoord = texCoordGeom[i];')
     if export_mpos:
         geom.write('    mposition = mpositionGeom[i];')
+    if export_bpos:
+        geom.write('    bposition = bpositionGeom[i];')
     geom.write('    if (p.z > p.x && p.z > p.y) {')
     geom.write('        gl_Position = vec4(voxposition.x, voxposition.y, 0.0, 1.0);')
     geom.write('    }')

@@ -1,5 +1,5 @@
 str_tex_checker = """vec3 tex_checker(const vec3 co, const vec3 col1, const vec3 col2, const float scale) {
-    vec3 p = co * scale;
+    vec3 p = (co) * scale;
     // Prevent precision issues on unit coordinates
     //p.x = (p.x + 0.000001) * 0.999999;
     //p.y = (p.y + 0.000001) * 0.999999;
@@ -10,20 +10,18 @@ str_tex_checker = """vec3 tex_checker(const vec3 co, const vec3 col1, const vec3
     bool check = ((mod(xi, 2.0) == mod(yi, 2.0)) == bool(mod(zi, 2.0)));
     return check ? col1 : col2;
 }
-vec3 tex_checker(const vec2 co, const vec3 col1, const vec3 col2, const float scale) {
-    return tex_checker(vec3(co.x, co.y, 1.0), col1, col2, scale);
+float tex_checker_f(const vec3 co, const float scale) {
+    vec3 p = (co) * scale;
+    float xi = abs(floor(p.x));
+    float yi = abs(floor(p.y));
+    float zi = abs(floor(p.z));
+    return float((mod(xi, 2.0) == mod(yi, 2.0)) == bool(mod(zi, 2.0)));
 }
 """
 
 # Created by inigo quilez - iq/2013
 # License Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
-str_tex_voronoi = """//vec3 hash(vec3 x) {
-    //return texture(snoise, (x.xy + vec2(3.0, 1.0) * x.z + 0.5) / 64.0, -100.0).xyz;
-    //x = vec3(dot(x, vec3(127.1, 311.7, 74.7)),
-    //         dot(x, vec3(269.5, 183.3, 246.1)),
-    //         dot(x, vec3(113.5, 271.9, 124.6)));
-    //return fract(sin(x) * 43758.5453123);
-//}
+str_tex_voronoi = """
 vec4 tex_voronoi(const vec3 x) {
     vec3 p = floor(x);
     vec3 f = fract(x);
@@ -34,9 +32,7 @@ vec4 tex_voronoi(const vec3 x) {
     for (int i = -1; i <= 1; i++) {
         vec3 b = vec3(float(i), float(j), float(k));
         vec3 pb = p + b;
-        //vec3 r = vec3(b) - f + texture(snoise, (pb.xy + vec2(3.0, 1.0) * pb.z + 0.5) / 64.0, -100.0).xyz; // No bias in tese
-        vec3 r = vec3(b) - f + texture(snoise, (pb.xy + vec2(3.0, 1.0) * pb.z + 0.5) / 64.0).xyz;
-        //vec3 r = vec3(b) - f + hash(p + b);
+        vec3 r = vec3(b) - f + texture(snoise256, (pb.xy + vec2(3.0, 1.0) * pb.z + 0.5) / 256.0).xyz;
         float d = dot(r, r);
         if (d < res) {
             id = dot(p + b, vec3(1.0, 57.0, 113.0));
@@ -46,36 +42,34 @@ vec4 tex_voronoi(const vec3 x) {
     vec3 col = 0.5 + 0.5 * cos(id * 0.35 + vec3(0.0, 1.0, 2.0));
     return vec4(col, sqrt(res));
 }
-vec4 tex_voronoi(const vec2 x) {
-    return tex_voronoi(vec3(x.x, x.y, 1.0));
+"""
+
+# Based on https://www.shadertoy.com/view/4sfGzS
+# Copyright © 2013 Inigo Quilez
+# The MIT License - Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+str_tex_noise = """
+float tex_noise_f(const vec3 x) {   
+    vec3 p = floor(x);
+    vec3 f = fract(x);
+    f = f * f * (3.0 - 2.0 * f);
+    vec2 uv = (p.xy + vec2(37.0, 17.0) * p.z) + f.xy;
+    vec2 rg = texture(snoise256, (uv + 0.5) / 256.0).yx;
+    return mix(rg.x, rg.y, f.z);
+}
+float tex_noise(vec3 p) {
+    p *= 1.25;
+    float f  = 0.5 * tex_noise_f(p); p *= 2.01;
+    f += 0.25 * tex_noise_f(p); p *= 2.02;
+    f += 0.125 * tex_noise_f(p); p *= 2.03;
+    f += 0.0625 * tex_noise_f(p); p *= 2.01;
+    return 1.0 - f;
 }
 """
 
-# str_tex_noise = """
-# float tex_noise_f(const vec3 x) {
-#     vec3 p = floor(x);
-#     vec3 f = fract(x);
-#     f = f * f * (3.0 - 2.0 * f);
-#     vec2 uv = (p.xy + vec2(37.0, 17.0) * p.z) + f.xy;
-#     vec2 rg = texture(snoisea, (uv + 0.5) / 64.0, -100.0).yx;
-#     return mix(rg.x, rg.y, f.z);
-# }
-# float tex_noise(vec3 q) {
-#     //return fract(sin(dot(q.xy, vec2(12.9898,78.233))) * 43758.5453);
-#     q *= 2.0; // Match to Cycles
-#     const mat3 m = mat3(0.00, 0.80, 0.60, -0.80, 0.36, -0.48, -0.60, -0.48, 0.64);
-#     float f = 0.5000 * tex_noise_f(q); q = m * q * 2.01;
-#     f += 0.2500 * tex_noise_f(q); q = m * q * 2.02;
-#     f += 0.1250 * tex_noise_f(q); q = m * q * 2.03;
-#     f += 0.0625 * tex_noise_f(q); q = m * q * 2.01;
-#     return pow(f, 3.0);
-# }
-# """
-# Created by Nikita Miropolskiy, nikat/2013
+# Based on noise created by Nikita Miropolskiy, nikat/2013
 # Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
-str_tex_noise = """
+str_tex_musgrave = """
 vec3 random3(const vec3 c) {
-    // Might not be precise on lowp floats
     float j = 4096.0 * sin(dot(c, vec3(17.0, 59.4, 15.0)));
     vec3 r;
     r.z = fract(512.0 * j);
@@ -85,7 +79,7 @@ vec3 random3(const vec3 c) {
     r.y = fract(512.0 * j);
     return r - 0.5;
 }
-float tex_noise_f(const vec3 p) {
+float tex_musgrave_f(const vec3 p) {
     const float F3 = 0.3333333;
     const float G3 = 0.1666667;
     vec3 s = floor(p + dot(p, vec3(F3)));
@@ -110,15 +104,6 @@ float tex_noise_f(const vec3 p) {
     w *= w;
     d *= w;
     return clamp(dot(d, vec4(52.0)), 0.0, 1.0);
-}
-float tex_noise(const vec3 p) {
-    return 0.5333333 * tex_noise_f(0.5 * p)
-        + 0.2666667 * tex_noise_f(p)
-        + 0.1333333 * tex_noise_f(2.0 * p)
-        + 0.0666667 * tex_noise_f(4.0 * p);
-}
-float tex_noise(const vec2 p) {
-    return tex_noise(vec3(p.x, p.y, 1.0));
 }
 """
 
@@ -147,5 +132,49 @@ str_wavelength_to_rgb = """
 vec3 wavelength_to_rgb(const float t) {
     vec3 r = t * 2.1 - vec3(1.8, 1.14, 0.3);
     return 1.0 - r * r;
+}
+"""
+
+str_tex_magic = """
+vec3 tex_magic(const vec3 p) {
+    float a = 1.0 - (sin(p.x) + sin(p.y));
+    float b = 1.0 - sin(p.x - p.y);
+    float c = 1.0 - sin(p.x + p.y);
+    return vec3(a, b, c);
+}
+float tex_magic_f(const vec3 p) {
+    vec3 c = tex_magic(p);
+    return (c.x + c.y + c.z) / 3.0;
+}
+"""
+
+str_tex_brick = """
+vec3 tex_brick(vec3 p, const vec3 c1, const vec3 c2, const vec3 c3) {
+    p /= vec3(0.9, 0.49, 0.49) / 2;
+    if (fract(p.y * 0.5) > 0.5) p.x += 0.5;   
+    p = fract(p);
+    vec3 b = step(p, vec3(0.95, 0.9, 0.9));
+    return mix(c3, c1, b.x * b.y * b.z);
+}
+float tex_brick_f(vec3 p) {
+    p /= vec3(0.9, 0.49, 0.49) / 2;
+    if (fract(p.y * 0.5) > 0.5) p.x += 0.5;   
+    p = fract(p);
+    vec3 b = step(p, vec3(0.95, 0.9, 0.9));
+    return mix(1.0, 0.0, b.x * b.y * b.z);
+}
+"""
+
+str_tex_wave = """
+float tex_wave_f(const vec3 p) {
+    return 1.0 - sin((p.x + p.y) * 10.0);
+}
+"""
+
+str_brightcontrast = """
+vec3 brightcontrast(const vec3 col, const float bright, const float contr) {
+    float a = 1.0 + contr;
+    float b = bright - contr * 0.5;
+    return max(a * col + b, 0.0);
 }
 """

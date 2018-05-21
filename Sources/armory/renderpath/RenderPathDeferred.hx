@@ -715,6 +715,7 @@ class RenderPathDeferred {
 			path.bindTarget("tex", "tex");
 			path.bindTarget("_main", "gbufferD");
 			path.bindTarget("gbuffer0", "gbuffer0");
+			path.bindTarget("gbuffer1", "gbuffer1");
 			path.drawShader("shader_datas/ssr_pass/ssr_pass");
 
 			path.setTarget(targetb);

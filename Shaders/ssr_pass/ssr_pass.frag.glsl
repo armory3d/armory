@@ -7,6 +7,7 @@
 uniform sampler2D tex;
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0; // Normal, roughness
+uniform sampler2D gbuffer1; // basecol, spec
 uniform mat4 P;
 uniform mat4 tiV;
 uniform vec2 cameraProj;
@@ -126,6 +127,12 @@ void main() {
 	float roughness = unpackFloat(g0.b).y;
 
 	if (roughness == 1.0) {
+		fragColor.rgb = vec3(0.0);
+		return;
+	}
+
+	float spec = floor(texture(gbuffer1, texCoord).a) / 100.0;
+	if (spec == 0.0) {
 		fragColor.rgb = vec3(0.0);
 		return;
 	}

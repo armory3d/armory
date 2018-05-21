@@ -90,21 +90,15 @@ def make_finalize(con_mesh):
     if export_wpos:
         vert.add_uniform('mat4 W', '_worldMatrix')
         vert.add_out('vec3 wposition')
-        vert.write_pre = True
         vert.write_attrib('wposition = vec4(W * spos).xyz;')
-        vert.write_pre = False
     elif write_wpos:
         vert.add_uniform('mat4 W', '_worldMatrix')
-        vert.write_pre = True
         vert.write_attrib('vec3 wposition = vec4(W * spos).xyz;')
-        vert.write_pre = False
 
-    frag_mpos = frag.contains('mposition') and not frag.contains('vec3 mposition')
+    frag_mpos = frag.contains('mposition') and not frag.contains('vec3 mposition') or vert.contains('mposition')
     if frag_mpos:
         vert.add_out('vec3 mposition')
-        vert.write_pre = True
-        vert.write('mposition = spos.xyz;')
-        vert.write_pre = False
+        vert.write_attrib('mposition = spos.xyz;')
     
     if tese != None:
         if frag_mpos:
@@ -115,6 +109,25 @@ def make_finalize(con_mesh):
             vert.write('mposition = spos.xyz;')
             vert.write_pre = False
             make_tess.interpolate(tese, 'mposition', 3, declare_out=False)
+
+    frag_bpos = frag.contains('bposition') and not frag.contains('vec3 bposition') or vert.contains('bposition')
+    if frag_bpos:
+        vert.add_out('vec3 bposition')
+        vert.add_uniform('vec3 dim', link='_dim')
+        vert.add_uniform('vec3 hdim', link='_halfDim')
+        vert.write_pre = True
+        vert.write('bposition = (spos.xyz + hdim) / dim;')
+        vert.write_pre = False
+    
+    if tese != None:
+        if frag_bpos:
+            make_tess.interpolate(tese, 'bposition', 3, declare_out=True)
+        elif tese.contains('bposition') and not tese.contains('vec3 bposition'):
+            vert.add_out('vec3 bposition')
+            vert.write_pre = True
+            vert.write('bposition = spos.xyz;')
+            vert.write_pre = False
+            make_tess.interpolate(tese, 'bposition', 3, declare_out=False)
 
 def make_base(con_mesh, parse_opacity):
     global is_displacement
@@ -738,6 +751,9 @@ def make_forward_base(con_mesh, parse_opacity=False):
             # frag.write('indirect = vec3(1.0 - traceAO(voxpos, n, voxels));') # AO view
         else:
             frag.write('vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels);')
+            frag.write('indirect = indirect * voxelgiEnv + vec3(indirectDiffuse.rgb * voxelgiDiff * basecol);')
+            frag.write('if (specular > 0.0) {')
             frag.write('vec3 indirectSpecular = traceSpecular(voxels, voxpos, n, vVec, roughness);')
             frag.write('indirectSpecular *= f0 * envBRDF.x + envBRDF.y;')
-            frag.write('indirect = indirect * voxelgiEnv + vec3(indirectDiffuse.rgb * voxelgiDiff * basecol + indirectSpecular * voxelgiSpec);')
+            frag.write('indirect += indirectSpecular * voxelgiSpec * specular;')
+            frag.write('}')

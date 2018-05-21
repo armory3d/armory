@@ -80,6 +80,7 @@ void main() {
 	vec2 metrough = unpackFloat(g0.b);
 
 	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, spec/occ
+	float spec = floor(g1.a) / 100.0;
 	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
 
 #ifdef _IndPos
@@ -109,11 +110,14 @@ void main() {
 	#else
 	vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels);
 	#endif
-		
-	vec3 indirectSpecular = traceSpecular(voxels, voxpos, n, v, metrough.y);
-	indirectSpecular *= f0 * envBRDF.x + envBRDF.y;
 
-	fragColor.rgb = indirectDiffuse.rgb * voxelgiDiff * g1.rgb + indirectSpecular * voxelgiSpec;
+	fragColor.rgb = indirectDiffuse.rgb * voxelgiDiff * g1.rgb;
+
+	if (spec > 0.0) {
+		vec3 indirectSpecular = traceSpecular(voxels, voxpos, n, v, metrough.y);
+		indirectSpecular *= f0 * envBRDF.x + envBRDF.y;
+		fragColor.rgb += indirectSpecular * voxelgiSpec * spec;
+	}
 
 	// if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
 
@@ -147,7 +151,7 @@ void main() {
 	envl.rgb *= albedo;
 	
 #ifdef _Rad // Indirect specular
-	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5;
+	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5 * spec;
 #else
 	#ifdef _EnvCol
 	envl.rgb += backgroundCol * surfaceF0(g1.rgb, metrough.x); // f0
