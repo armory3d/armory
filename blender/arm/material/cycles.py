@@ -1230,7 +1230,7 @@ def parse_value(node, socket):
 ##
 
 def write_normal(inp):
-    if inp.is_linked:
+    if inp.is_linked and inp.links[0].from_node.type != 'GROUP_INPUT':
         normal_res = parse_vector_input(inp)
         if normal_res != None:
             curshader.write('n = {0};'.format(normal_res))
@@ -1348,11 +1348,11 @@ def socket_index(node, socket):
             return i
 
 def node_name(s):
-    s = safesrc(s)
-    if len(parents) > 0:
-        s = safesrc(parents[-1].name) + '_' + s
+    for p in parents:
+        s = p.name + '_' + s
     if '__' in s: # Consecutive _ are reserved
         s = s.replace('_', '_x')
+    s = safesrc(s)
     return s
 
 ##
