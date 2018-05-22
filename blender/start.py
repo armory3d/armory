@@ -10,7 +10,7 @@ import arm.props_renderpath
 import arm.props
 import arm.props_ui
 import arm.handlers
-import arm.space_armory
+# import arm.space_armory
 import arm.utils
 import arm.keymap
 

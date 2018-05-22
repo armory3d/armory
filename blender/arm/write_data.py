@@ -166,10 +166,10 @@ project.addSources('Sources');
             # Load shaders manually
             assets.add_khafile_def('arm_shaderload')
 
-        sceneload = state.target == 'krom'
-        if wrd.arm_play_live_patch and is_play and in_viewport and sceneload:
+        # sceneload = state.target == 'krom'
+        # if wrd.arm_play_live_patch and is_play and in_viewport and sceneload:
             # Scene patch
-            assets.add_khafile_def('arm_sceneload')
+            # assets.add_khafile_def('arm_sceneload')
 
         shader_references = sorted(list(set(assets.shaders)))
         for ref in shader_references:
@@ -405,10 +405,10 @@ class Main {
                 iron.Scene.setActive('""" + arm.utils.safestr(scene_name) + scene_ext + """', function(object:iron.object.Object) {
 """)
         # if arm.utils.with_krom() and in_viewport and is_play:
-        if is_play or (state.target == 'html5' and not is_publish):
-            f.write("""
-                    object.addTrait(new armory.trait.internal.SpaceArmory());
-""")
+        # if is_play or (state.target == 'html5' and not is_publish):
+            # f.write("""
+                    # object.addTrait(new armory.trait.internal.SpaceArmory());
+# """)
 
         # Detect custom render path
         pathpack = 'armory'

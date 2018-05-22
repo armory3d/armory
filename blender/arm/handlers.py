@@ -53,45 +53,46 @@ def on_scene_update_post(context):
     if len(ops) > 0 and last_operator != ops[-1]:
         last_operator = ops[-1]
         operators_changed = True
+
     # Undo was performed - Blender clears the complete operator stack, undo last known operator atleast
     # if len(ops) == 0 and last_operator != None:
         # if hasattr(bpy.context, 'object'):
             # op_changed(last_operator, bpy.context.object)
         # last_operator = None
 
-    if state.is_render_anim:
-        pass
-    elif state.is_render:
-        import numpy
-        krom_location, krom_path = arm.utils.krom_paths()
-        fp = krom_location
-        resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
-        wrd = bpy.data.worlds['Arm']
-        cformat = wrd.rp_rendercapture_format
-        if cformat == '8bit':
-            cbits = 4
-            ctype = numpy.uint8
-        elif cformat == '16bit':
-            cbits = 8
-            ctype = numpy.float16
-        elif cformat == '32bit':
-            cbits = 16
-            ctype = numpy.float32
-        if os.path.isfile(fp + '/render.bin') and os.path.getsize(fp + '/render.bin') == resx * resy * cbits:
-            data = numpy.fromfile(fp + '/render.bin', dtype=ctype)
-            data = data.astype(float)
-            if cformat == '8bit':
-                data = numpy.divide(data, 255)
-            n = "Render Result"
-            if n in bpy.data.images and bpy.data.images[n].size[0] == resx and bpy.data.images[n].size[1] == resy:
-                bpy.data.images[n].pixels = data
-            else:
-                float_buffer = cformat != '8bit'
-                image = bpy.data.images.new("Render Result", width=resx, height=resy, float_buffer=float_buffer)
-                image.pixels = data
-            state.is_render = False
-            os.remove(fp + '/render.bin')
-            print('Output image captured into Blender - UV/Image Editor - Render Result')
+    # if state.is_render_anim:
+    #     pass
+    # elif state.is_render:
+    #     import numpy
+    #     krom_location, krom_path = arm.utils.krom_paths()
+    #     fp = krom_location
+    #     resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
+    #     wrd = bpy.data.worlds['Arm']
+    #     cformat = wrd.rp_rendercapture_format
+    #     if cformat == '8bit':
+    #         cbits = 4
+    #         ctype = numpy.uint8
+    #     elif cformat == '16bit':
+    #         cbits = 8
+    #         ctype = numpy.float16
+    #     elif cformat == '32bit':
+    #         cbits = 16
+    #         ctype = numpy.float32
+    #     if os.path.isfile(fp + '/render.bin') and os.path.getsize(fp + '/render.bin') == resx * resy * cbits:
+    #         data = numpy.fromfile(fp + '/render.bin', dtype=ctype)
+    #         data = data.astype(float)
+    #         if cformat == '8bit':
+    #             data = numpy.divide(data, 255)
+    #         n = "Render Result"
+    #         if n in bpy.data.images and bpy.data.images[n].size[0] == resx and bpy.data.images[n].size[1] == resy:
+    #             bpy.data.images[n].pixels = data
+    #         else:
+    #             float_buffer = cformat != '8bit'
+    #             image = bpy.data.images.new("Render Result", width=resx, height=resy, float_buffer=float_buffer)
+    #             image.pixels = data
+    #         state.is_render = False
+    #         os.remove(fp + '/render.bin')
+    #         print('Output image captured into Blender - UV/Image Editor - Render Result')
 
     # Player running
     state.krom_running = False
@@ -102,19 +103,19 @@ def on_scene_update_post(context):
                 break
 
     # Auto patch on every operator change
-    if not 'Arm' in bpy.data.worlds:
-        props.create_wrd()
-    wrd = bpy.data.worlds['Arm']
-    if state.krom_running and \
-       wrd.arm_play_live_patch and \
-       wrd.arm_play_auto_build and \
-       operators_changed:
-        # Otherwise rebuild scene
-        if bridge.send_operator(last_operator) == False:
-            if state.compileproc == None:
-                assets.invalidate_enabled = False
-                make.play_project(in_viewport=True)
-                assets.invalidate_enabled = True
+    # if not 'Arm' in bpy.data.worlds:
+    #     props.create_wrd()
+    # wrd = bpy.data.worlds['Arm']
+    # if state.krom_running and \
+    #    wrd.arm_play_live_patch and \
+    #    wrd.arm_play_auto_build and \
+    #    operators_changed:
+    #     # Otherwise rebuild scene
+    #     if bridge.send_operator(last_operator) == False:
+    #         if state.compileproc == None:
+    #             assets.invalidate_enabled = False
+    #             make.play_project(in_viewport=True)
+    #             assets.invalidate_enabled = True
 
     # Update at 60 fps
     fps_mult = 2.0 if (state.krom_running and arm.utils.get_os() == 'win') else 1.0 # Handlers called less frequently on Windows?
@@ -124,11 +125,11 @@ def on_scene_update_post(context):
 
         if state.krom_running:
             # Read krom console
-            if barmory.get_console_updated() == 1:
-                log.print_player(barmory.get_console())
+            # if barmory.get_console_updated() == 1:
+                # log.print_player(barmory.get_console())
             # Read operator console
-            if barmory.get_operator_updated() == 1:
-                bridge.parse_operator(barmory.get_operator())
+            # if barmory.get_operator_updated() == 1:
+                # bridge.parse_operator(barmory.get_operator())
             # Tag redraw
             if bpy.context.screen != None:
                 for area in bpy.context.screen.areas:
@@ -153,20 +154,21 @@ def on_scene_update_post(context):
             # Compilation succesfull
             if state.compileproc_success:
                 # Notify embedded player
-                if state.krom_running:
-                    if state.recompiled and wrd.arm_play_live_patch:
-                        # state.is_paused = False
-                        barmory.parse_code()
-                        for s in state.mod_scripts:
-                            barmory.call_js('armory.Scene.patchTrait("' + s + '");')
-                    else:
-                        barmory.call_js('armory.Scene.patch();')
+                # if state.krom_running:
+                #     if state.recompiled and wrd.arm_play_live_patch:
+                #         # state.is_paused = False
+                #         barmory.parse_code()
+                #         for s in state.mod_scripts:
+                #             barmory.call_js('armory.Scene.patchTrait("' + s + '");')
+                #     else:
+                #         barmory.call_js('armory.Scene.patch();')
                 # Or switch to armory space
-                elif arm.utils.with_krom() and state.in_viewport:
+                # elif arm.utils.with_krom() and state.in_viewport:
+                if arm.utils.with_krom() and state.in_viewport:
                     state.play_area.type = 'VIEW_ARMORY'
                     # Prevent immediate operator patch
-                    if len(ops) > 0:
-                        last_operator = ops[-1]
+                    # if len(ops) > 0:
+                        # last_operator = ops[-1]
 
     # No attribute when using multiple windows?
     if hasattr(bpy.context, 'active_object'):
