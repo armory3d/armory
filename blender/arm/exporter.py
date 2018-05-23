@@ -801,7 +801,7 @@ class ArmoryExporter:
             if bobject.dupli_type == 'GROUP' and bobject.dupli_group != None:
                 o['group_ref'] = bobject.dupli_group.name
 
-            if bobject.users_group != None and len(bobject.users_group) > 0:
+            if hasattr(bobject, 'users_group') and bobject.users_group != None and len(bobject.users_group) > 0:
                 o['groups'] = []
                 for g in bobject.users_group:
                     if g.name.startswith('RigidBodyWorld') or g.name.startswith('Trait|'):
@@ -813,12 +813,13 @@ class ArmoryExporter:
                 o['tilesheet_action_ref'] = bobject.arm_tilesheet_action
 
             layer_found = False
-            for l in self.active_layers:
-                if bobject.layers[l] == True:
-                    layer_found = True
-                    break
-            if bpy.app.version >= (2, 80, 1): # 2.8 Spawn all layers for now
+            if bpy.app.version >= (2, 80, 1):
                 layer_found = True
+            else:
+                for l in self.active_layers:
+                    if bobject.layers[l] == True:
+                        layer_found = True
+                        break
             if layer_found == False:
                 o['spawn'] = False
 
@@ -1486,8 +1487,8 @@ class ArmoryExporter:
         apply_modifiers = not armature
 
         # Apply all modifiers to create a new mesh with tessfaces
-        if bpy.app.version >= (2, 80, 1): # 2.8
-            exportMesh = bobject.to_mesh(scene, bpy.context.workspace.render_layer, apply_modifiers, "RENDER", True, False)
+        if bpy.app.version >= (2, 80, 1):
+            exportMesh = bobject.to_mesh(bpy.context.depsgraph, apply_modifiers, True, False)
         else:
             exportMesh = bobject.to_mesh(scene, apply_modifiers, "RENDER", True, False)
 
@@ -1604,7 +1605,7 @@ class ArmoryExporter:
             o['shadowmap_cube'] = True
             o['shadows_bias'] *= 2.0
 
-        if bpy.app.version >= (2, 80, 1) and self.scene.view_render.engine == 'BLENDER_EEVEE':
+        if bpy.app.version >= (2, 80, 1) and self.scene.render.engine == 'BLENDER_EEVEE':
             o['color'] = [objref.color[0], objref.color[1], objref.color[2]]
             o['strength'] = objref.energy
             if o['type'] == 'point' or o['type'] == 'spot':
@@ -2018,8 +2019,8 @@ class ArmoryExporter:
 
         self.preprocess()
 
-        if bpy.app.version >= (2, 80, 1): # 2.8
-            scene_objects = self.scene.master_collection.collections[0].objects
+        if bpy.app.version >= (2, 80, 1):
+            scene_objects = self.scene.collection.all_objects
         else:
             scene_objects = self.scene.objects
         for bobject in scene_objects:
@@ -2074,7 +2075,7 @@ class ArmoryExporter:
             if not bo.parent:
                 self.export_object(bo, self.scene)
 
-        if len(bpy.data.groups) > 0:
+        if hasattr(bpy.data, 'groups') and len(bpy.data.groups) > 0:
             self.output['groups'] = []
             for group in bpy.data.groups:
                 # Blender automatically stores physics objects in this group,
