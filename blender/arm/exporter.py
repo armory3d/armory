@@ -782,7 +782,7 @@ class ArmoryExporter:
             if bobject.parent_type == "BONE":
                 o['parent_bone'] = bobject.parent_bone
 
-            if bobject.hide_render:
+            if bobject.hide_render or bobject.arm_visible == False:
                 o['visible'] = False
 
             if not bobject.cycles_visibility.camera:

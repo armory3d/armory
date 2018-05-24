@@ -33,6 +33,9 @@ class ObjectPropsPanel(bpy.types.Panel):
         row.prop(obj, 'arm_mobile')
         row.prop(obj, 'arm_animation_enabled')
 
+        if bpy.app.version >= (2, 80, 1):
+            layout.prop(obj, 'arm_visible')
+
         if obj.type == 'MESH':
             layout.prop(obj, 'arm_instanced')
             if obj.arm_instanced:
