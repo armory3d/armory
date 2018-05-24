@@ -1811,6 +1811,9 @@ class ArmoryExporter:
             if material == None:
                 continue
 
+            if not material.use_nodes:
+                material.use_nodes = True
+
             # Recache material
             signature = self.get_signature(material)
             if signature != material.signature:
@@ -1832,9 +1835,6 @@ class ArmoryExporter:
                 o['override_context']['cull_mode'] = material.arm_cull_mode
 
             o['contexts'] = []
-
-            if not material.use_nodes:
-                material.use_nodes = True
 
             mat_users = self.materialToObjectDict
             mat_armusers = self.materialToArmObjectDict
