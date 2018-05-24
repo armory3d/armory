@@ -263,17 +263,17 @@ class Inc {
 		#end
 	}
 
-	public static inline function getRenderCaptureFormat():String {
-		#if (rp_rendercapture_format == "8bit")
-		return "RGBA32";
-		#elseif (rp_rendercapture_format == "16bit")
-		return "RGBA64";
-		#elseif (rp_rendercapture_format == "32bit")
-		return "RGBA128";
-		#else
-		return "RGBA32";
-		#end
-	}
+	// public static inline function getRenderCaptureFormat():String {
+	// 	#if (rp_rendercapture_format == "8bit")
+	// 	return "RGBA32";
+	// 	#elseif (rp_rendercapture_format == "16bit")
+	// 	return "RGBA64";
+	// 	#elseif (rp_rendercapture_format == "32bit")
+	// 	return "RGBA128";
+	// 	#else
+	// 	return "RGBA32";
+	// 	#end
+	// }
 
 	#if (rp_gi == "Voxel GI")
 	public static function computeVoxelsBegin() {

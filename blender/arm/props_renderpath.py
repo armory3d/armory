@@ -36,7 +36,6 @@ def update_preset(self, context):
         rpdat.rp_dfgi = False
         rpdat.rp_bloom = False
         rpdat.rp_eyeadapt = False
-        rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Linear'
@@ -69,7 +68,6 @@ def update_preset(self, context):
         rpdat.rp_dfgi = False
         rpdat.rp_bloom = False
         rpdat.rp_eyeadapt = False
-        rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Anisotropic'
@@ -101,7 +99,6 @@ def update_preset(self, context):
         rpdat.rp_dfgi = False
         rpdat.rp_bloom = False
         rpdat.rp_eyeadapt = False
-        rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Anisotropic'
@@ -135,7 +132,6 @@ def update_preset(self, context):
         rpdat.rp_dfgi = False
         rpdat.rp_bloom = True
         rpdat.rp_eyeadapt = False
-        rpdat.rp_rendercapture = True
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_material_model = 'Full'
@@ -169,7 +165,6 @@ def update_preset(self, context):
         rpdat.rp_dfgi = False
         rpdat.rp_bloom = False
         rpdat.rp_eyeadapt = False
-        rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Point'
@@ -202,7 +197,6 @@ def update_preset(self, context):
         rpdat.rp_dfgi = False
         rpdat.rp_bloom = False
         rpdat.rp_eyeadapt = False
-        rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Linear'
@@ -238,7 +232,6 @@ def update_preset(self, context):
         rpdat.rp_dfgi = False
         rpdat.rp_bloom = True
         rpdat.rp_eyeadapt = False
-        rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_material_model = 'Full'
@@ -272,7 +265,6 @@ def update_preset(self, context):
         rpdat.rp_dfgi = False
         rpdat.rp_bloom = False
         rpdat.rp_eyeadapt = False
-        rpdat.rp_rendercapture = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Linear'
@@ -404,7 +396,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_dfgi = BoolProperty(name="DFGI", description="Distance field global illumination", default=False)
     rp_bloom = BoolProperty(name="Bloom", description="Bloom processing", default=False, update=update_renderpath)
     rp_eyeadapt = BoolProperty(name="Eye Adaptation", description="Auto-exposure based on histogram", default=False, update=update_renderpath)
-    rp_rendercapture = BoolProperty(name="Render Capture", description="Save output as render result", default=False, update=update_renderpath)
     rp_motionblur = EnumProperty(
         items=[('Off', 'Off', 'Off'),
                ('Camera', 'Camera', 'Camera'),

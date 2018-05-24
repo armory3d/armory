@@ -9,10 +9,6 @@ import arm.utils
 import arm.make
 import arm.props_renderpath as props_renderpath
 import arm.proxy
-try:
-    import barmory
-except ImportError:
-    pass
 
 # Armory version
 arm_version = '0.4'
@@ -78,7 +74,6 @@ def proxy_sync_traits(self, context):
 def init_properties():
     global arm_version
     bpy.types.World.arm_recompile = BoolProperty(name="Recompile", description="Recompile sources on next play", default=True)
-    bpy.types.World.arm_progress = FloatProperty(name="Building", description="Current build progress", default=100.0, min=0.0, max=100.0, soft_min=0.0, soft_max=100.0, subtype='PERCENTAGE', get=log.get_progress)
     bpy.types.World.arm_version = StringProperty(name="Version", description="Armory SDK version", default="")
     bpy.types.World.arm_commit = StringProperty(name="Version Commit", description="Armory SDK version", default="")
     bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="", update=invalidate_compiler_cache)
@@ -129,8 +124,6 @@ def init_properties():
     bpy.types.World.arm_cache_shaders = BoolProperty(name="Cache Shaders", description="Do not rebuild existing shaders", default=True)
     bpy.types.World.arm_cache_compiler = BoolProperty(name="Cache Compiler", description="Only recompile sources when required", default=True)
     bpy.types.World.arm_gpu_processing = BoolProperty(name="GPU Processing", description="Utilize GPU for asset pre-processing at build time", default=True, update=assets.invalidate_compiled_data)
-    # bpy.types.World.arm_play_live_patch = BoolProperty(name="Live Patch", description="Sync running player data to Blender", default=True)
-    # bpy.types.World.arm_play_auto_build = BoolProperty(name="Auto Build", description="Rebuild scene on operator changes", default=True)
     bpy.types.World.arm_play_camera = EnumProperty(
         items=[('Scene', 'Scene', 'Scene'),
                ('Viewport', 'Viewport', 'Viewport'),
@@ -198,8 +191,6 @@ def init_properties():
     bpy.types.Speaker.arm_stream = BoolProperty(name="Stream", description="Stream this sound", default=False)
     # For mesh
     bpy.types.Mesh.arm_cached = BoolProperty(name="Mesh Cached", description="No need to reexport mesh data", default=False)
-    # bpy.types.Mesh.arm_cached_verts = IntProperty(name="Last Verts", description="Number of vertices in last export", default=0)
-    # bpy.types.Mesh.arm_cached_edges = IntProperty(name="Last Edges", description="Number of edges in last export", default=0)
     bpy.types.Mesh.arm_aabb = FloatVectorProperty(name="AABB", size=3, default=[0,0,0])
     bpy.types.Mesh.arm_dynamic_usage = BoolProperty(name="Dynamic Usage", description="Mesh data can change at runtime", default=False)
     bpy.types.Mesh.arm_compress = BoolProperty(name="Compress", description="Pack data into zip file", default=False)
@@ -243,12 +234,6 @@ def init_properties():
     bpy.types.World.arm_envtex_sun_direction = FloatVectorProperty(name="Sun Direction", size=3, default=[0,0,0])
     bpy.types.World.arm_envtex_turbidity = FloatProperty(name="Turbidity", default=1.0)
     bpy.types.World.arm_envtex_ground_albedo = FloatProperty(name="Ground Albedo", default=0.0)
-    bpy.types.World.rp_rendercapture_format = EnumProperty(
-        items=[('8bit', '8bit', '8bit'),
-               ('16bit', '16bit', '16bit'),
-               ('32bit', '32bit', '32bit')],
-        name="Capture Format", description="Bits per color channel", default='8bit', update=props_renderpath.update_renderpath)
-    # For material
     bpy.types.Material.arm_cast_shadow = BoolProperty(name="Cast Shadow", default=True)
     bpy.types.Material.arm_receive_shadow = BoolProperty(name="Receive Shadow", default=True)
     bpy.types.Material.arm_overlay = BoolProperty(name="Overlay", default=False)
@@ -338,10 +323,7 @@ def init_properties_on_load():
         print('Project updated to sdk v' + arm_version)
         wrd.arm_version = arm_version
         wrd.arm_commit = arm_commit
-        arm.make.clean_project()
-    # Set url for embedded player
-    if arm.utils.with_krom():
-        barmory.set_files_location(arm.utils.get_fp_build() + '/krom')
+        arm.make.clean()
 
 def register():
     init_properties()

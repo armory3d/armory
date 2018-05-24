@@ -20,11 +20,6 @@ import arm.log as log
 import arm.lib.make_datas
 import arm.lib.server
 from arm.exporter import ArmoryExporter
-import time
-try:
-    import barmory
-except ImportError:
-    pass
 
 exporter = ArmoryExporter()
 scripts_mtime = 0 # Monitor source changes
@@ -58,7 +53,7 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     wrd = bpy.data.worlds['Arm']
 
     print('\nArmory v{0} ({1})'.format(wrd.arm_version, wrd.arm_commit))
-    print('OS: ' + arm.utils.get_os() + ', Target: ' + state.target + ', GAPI: ' + arm.utils.get_gapi())
+    print('OS: ' + arm.utils.get_os() + ', Target: ' + state.target + ', GAPI: ' + arm.utils.get_gapi() + ', Blender: ' + bpy.app.version_string)
 
     # Clean compiled variants if cache is disabled
     build_dir = arm.utils.get_fp_build()
@@ -109,12 +104,11 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     navigation_found = False
     ui_found = False
     ArmoryExporter.compress_enabled = is_publish and wrd.arm_asset_compression
-    ArmoryExporter.in_viewport = in_viewport
     for scene in bpy.data.scenes:
         if scene.arm_export:
             ext = '.zip' if (scene.arm_compress and is_publish) else '.arm'
             asset_path = build_dir + '/compiled/Assets/' + arm.utils.safestr(scene.name) + ext
-            exporter.execute(bpy.context, asset_path, scene=scene, write_capture_info=state.is_render_anim, play_area=state.play_area)
+            exporter.execute(bpy.context, asset_path, scene=scene)
             if ArmoryExporter.export_physics:
                 physics_found = True
             if ArmoryExporter.export_navigation:
@@ -205,12 +199,8 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
         state.last_resy = resy
         state.last_scene = scene_name
 
-def compile_project(target_name=None, watch=False, patch=False, no_project_file=False):
-    """
-    :param no_project_file: Pass '--noproject' to kha make. In the future assets will be copied.
-    """
+def compile(target_name=None, watch=False, patch=False):
     wrd = bpy.data.worlds['Arm']
-
     fp = arm.utils.get_fp()
     os.chdir(fp)
 
@@ -234,18 +224,11 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
     state.export_gapi = arm.utils.get_gapi()
     cmd.append('-g')
     cmd.append(state.export_gapi)
-    if state.in_viewport:
-        if arm.utils.glsl_version() >= 330:
-            cmd.append('--shaderversion')
-            cmd.append('330')
-        else:
-            cmd.append('--shaderversion')
-            cmd.append('110')
 
-    # Kha defaults to 110 on Linux
-    is_linux = arm.utils.get_os() == 'linux'
-    is_native = kha_target_name == 'krom' or kha_target_name == ''
-    if is_linux and is_native and not state.in_viewport and not arm.utils.get_legacy_shaders():
+    if arm.utils.get_legacy_shaders() and not state.in_viewport:
+        cmd.append('--shaderversion')
+        cmd.append('110')
+    else:
         cmd.append('--shaderversion')
         cmd.append('330')
 
@@ -271,10 +254,7 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
             print("Running: ", cmd)
             state.compileproc = subprocess.Popen(cmd, stderr=subprocess.PIPE)
             if state.playproc == None:
-                if state.in_viewport:
-                    mode = 'play_viewport'
-                else:
-                    mode = 'play'
+                mode = 'play_viewport' if state.in_viewport else 'play'
             else:
                 mode = 'build'
             threading.Timer(0.1, watch_patch, [mode]).start()
@@ -286,24 +266,38 @@ def compile_project(target_name=None, watch=False, patch=False, no_project_file=
         threading.Timer(0.1, watch_compile, [mode]).start()
         return state.compileproc
     else:
-        if no_project_file:
-            cmd.append('--noproject')
         print("Running: ", cmd)
         return subprocess.Popen(cmd)
 
-def build_project(is_play=False, is_publish=False, is_render=False, is_render_anim=False, in_viewport=False):
+def build_viewport():
+    if state.compileproc != None:
+        return
+
+    if not arm.utils.check_saved(None):
+        return
+
+    if not arm.utils.check_sdkpath(None):
+        return
+
+    if not arm.utils.check_engine(None):
+        return
+
+    arm.utils.check_default_rp()
+
+    state.is_export = False
+    assets.invalidate_enabled = False
+    play(in_viewport=True)
+    assets.invalidate_enabled = True
+
+def build(is_play=False, is_publish=False, in_viewport=False):
     global profile_time
     profile_time = time.time()
 
-    wrd = bpy.data.worlds['Arm']
-
-    state.is_render = is_render
-    state.is_render_anim = is_render_anim
     state.is_publish = is_publish
     state.in_viewport = in_viewport
 
     # Save blend
-    if arm.utils.get_save_on_build() and not state.krom_running:
+    if arm.utils.get_save_on_build() and not state.in_viewport:
         bpy.ops.wm.save_mainfile()
 
     log.clear()
@@ -325,6 +319,7 @@ def build_project(is_play=False, is_publish=False, is_render=False, is_render_an
     os.chdir(fp)
 
     # Create directories
+    wrd = bpy.data.worlds['Arm']
     sources_path = 'Sources/' + arm.utils.safestr(wrd.arm_project_package)
     if not os.path.exists(sources_path):
         os.makedirs(sources_path)
@@ -363,9 +358,6 @@ def build_project(is_play=False, is_publish=False, is_render=False, is_render_an
             for fn in glob.iglob(os.path.join('include', '**'), recursive=False):
                 shutil.copy(fn, arm.utils.build_dir() + dest + os.path.basename(fn))
 
-    if state.playproc == None:
-        log.print_progress(50)
-
 def stop_project():
     if state.playproc != None:
         state.playproc.terminate()
@@ -386,31 +378,24 @@ def watch_play():
         else:
             line += char
     state.playproc = None
-    state.playproc_finished = True
     log.clear()
 
 def watch_compile(mode):
     state.compileproc.wait()
-    log.print_progress(100)
     print('Finished in ' + str(time.time() - profile_time))
     if state.compileproc == None: ##
         return
     result = state.compileproc.poll()
     state.compileproc = None
-    state.compileproc_finished = True
     if result == 0:
         bpy.data.worlds['Arm'].arm_recompile = False
-        state.compileproc_success = True
         on_compiled(mode)
     else:
-        state.compileproc_success = False
         log.print_info('Build failed, check console')
 
 def watch_patch(mode):
     state.compileproc.wait()
-    log.print_progress(100)
     state.compileproc = None
-    state.compileproc_finished = True
     on_compiled(mode)
 
 def runtime_to_target(in_viewport):
@@ -430,21 +415,17 @@ def get_khajs_path(in_viewport, target):
     else: # Browser
         return arm.utils.build_dir() + '/debug/html5/kha.js'
 
-def play_project(in_viewport, is_render=False, is_render_anim=False):
+def play(in_viewport):
     global scripts_mtime
     global code_parsed
     wrd = bpy.data.worlds['Arm']
 
     log.clear()
 
-    # Store area
-    if arm.utils.with_krom() and in_viewport and bpy.context.area != None and bpy.context.area.type == 'VIEW_3D':
-        state.play_area = bpy.context.area
-
     state.target = runtime_to_target(in_viewport)
 
     # Build data
-    build_project(is_play=True, is_render=is_render, is_render_anim=is_render_anim, in_viewport=in_viewport)
+    build(is_play=True, in_viewport=in_viewport)
 
     khajs_path = get_khajs_path(in_viewport, state.target)
     if not wrd.arm_cache_compiler or \
@@ -484,37 +465,26 @@ def play_project(in_viewport, is_render=False, is_render_anim=False):
 
     # New compile requred - traits changed
     if wrd.arm_recompile:
-        state.recompiled = True
-        if state.krom_running:
-            # TODO: Unable to live-patch, stop player
-            bpy.ops.arm.space_stop('EXEC_DEFAULT')
-            return
-            if not code_parsed:
-                code_parsed = True
-                barmory.parse_code()
-        else:
-            code_parsed = False
-
         mode = 'play'
         if state.target == 'native':
-            state.compileproc = compile_project(target_name='--run')
+            state.compileproc = compile(target_name='--run')
         elif state.target == 'krom':
             if in_viewport:
                 mode = 'play_viewport'
-            state.compileproc = compile_project(target_name='krom')
+            state.compileproc = compile(target_name='krom')
         else: # Browser
-            state.compileproc = compile_project(target_name='html5')
+            state.compileproc = compile(target_name='html5')
         threading.Timer(0.1, watch_compile, [mode]).start()
     else: # kha.js up to date
-        state.recompiled = False
-        compile_project(patch=True)
+        compile(patch=True)
 
 def on_compiled(mode): # build, play, play_viewport, publish
     log.clear()
     wrd = bpy.data.worlds['Arm']
 
-    # Launch project in new window
-    if mode == 'play':
+    if mode == 'play_viewport':
+        open(arm.utils.get_fp_build() + '/krom/krom.lock', 'w').close()
+    elif mode == 'play':
         if wrd.arm_play_runtime == 'Browser':
             # Start server
             os.chdir(arm.utils.get_fp())
@@ -531,8 +501,6 @@ def on_compiled(mode): # build, play, play_viewport, publish
             
             if arm.utils.get_os() == 'mac': # TODO: Krom sound freezes on MacOS
                 args.append('--nosound')
-            if state.is_render:
-                args.append('--nowindow')
             args.append('--stdout')
             args.append(arm.utils.get_fp_build() + '/krom.txt')
             state.playproc = subprocess.Popen(args, stderr=subprocess.PIPE)
@@ -610,7 +578,7 @@ def on_compiled(mode): # build, play, play_viewport, publish
         else:
             print('Exported makefiles to ' + files_path + '-build')
 
-def clean_project():
+def clean():
     os.chdir(arm.utils.get_fp())
     wrd = bpy.data.worlds['Arm']
 
@@ -646,11 +614,3 @@ def clean_project():
         mat.is_cached = False
 
     print('Project cleaned')
-
-def get_render_result():
-    play_project(False, is_render=True)
-
-def get_render_anim_result():
-    if bpy.context.scene != None:
-        print('Capturing animation frames into ' + bpy.context.scene.render.filepath)
-    play_project(False, is_render=True, is_render_anim=True)

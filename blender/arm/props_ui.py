@@ -202,6 +202,7 @@ class InvalidateMaterialCacheButton(bpy.types.Operator):
 
     def execute(self, context):
         context.material.is_cached = False
+        context.material.signature = ''
         return{'FINISHED'}
 
 class InvalidateGPCacheButton(bpy.types.Operator):
@@ -289,33 +290,12 @@ class ArmoryPlayerPanel(bpy.types.Panel):
             row.operator("arm.play", icon="PLAY")
         else:
             row.operator("arm.stop", icon="MESH_PLANE")
-        if state.playproc == None and state.krom_running == False:
-            row.operator("arm.build")
-        else:
-            row.operator("arm.patch")
+        row.operator("arm.build")
         row.operator("arm.clean_menu")
 
         row = layout.row()
         row.prop(wrd, 'arm_play_runtime', text="")
         row.prop(wrd, 'arm_play_camera', text="")
-
-class ArmoryRenderPanel(bpy.types.Panel):
-    bl_label = "Armory Render"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "render"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw(self, context):
-        layout = self.layout
-        row = layout.row(align=True)
-        row.alignment = 'EXPAND'
-        row.operator("arm.render", icon="RENDER_STILL")
-        row.operator("arm.render_anim", icon="RENDER_ANIMATION")
-        col = layout.column()
-        col.prop(bpy.data.worlds['Arm'], "rp_rendercapture_format")
-        if bpy.context.scene != None:
-            col.prop(bpy.context.scene.render, "filepath")
 
 class ArmoryExporterPanel(bpy.types.Panel):
     bl_label = "Armory Exporter"
@@ -330,7 +310,7 @@ class ArmoryExporterPanel(bpy.types.Panel):
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
         row.operator("arm.build_project")
-        row.operator("arm.patch_project")
+        # row.operator("arm.patch_project")
         row.operator("arm.publish_project", icon="EXPORT")
         row.enabled = wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0
 
@@ -385,11 +365,6 @@ class ArmoryProjectPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_play_console')
         col.prop(wrd, 'arm_dce')
         col.prop(wrd, 'arm_minify_js')
-        # if arm.utils.with_krom():
-            # col.prop(wrd, 'arm_play_live_patch')
-            # colb = col.column()
-            # colb.enabled = wrd.arm_play_live_patch
-            # colb.prop(wrd, 'arm_play_auto_build')
         col = row.column()
         col.prop(wrd, 'arm_cache_shaders')
         col.prop(wrd, 'arm_cache_compiler')
@@ -515,57 +490,9 @@ class ArmoryPlayButton(bpy.types.Operator):
 
         arm.utils.check_default_rp()
 
-        rpdat = arm.utils.get_rp()
-        if rpdat.rp_rendercapture == True:
-            rpdat.rp_rendercapture = False
-
         state.is_export = False
         assets.invalidate_enabled = False
-        make.play_project(False)
-        assets.invalidate_enabled = True
-        return{'FINISHED'}
-
-class ArmoryPlayInViewportButton(bpy.types.Operator):
-    '''Launch player in 3D viewport'''
-    bl_idname = 'arm.play_in_viewport'
-    bl_label = 'Play in Viewport'
-
-    def execute(self, context):
-        if state.compileproc != None:
-            return {"CANCELLED"}
-
-        if not arm.utils.check_saved(self):
-            return {"CANCELLED"}
-
-        if not arm.utils.check_sdkpath(self):
-            return {"CANCELLED"}
-
-        if not arm.utils.check_engine(self):
-            return {"CANCELLED"}
-
-        if context.area == None:
-            return {"CANCELLED"}
-
-        arm.utils.check_default_rp()
-
-        rpdat = arm.utils.get_rp()
-        if rpdat.rp_rendercapture == True:
-            rpdat.rp_rendercapture = False
-
-        state.is_export = False
-        assets.invalidate_enabled = False
-        if state.playproc == None and state.krom_running == False:
-            if context.area.type != 'VIEW_3D':
-                return {"CANCELLED"}
-            # Cancel viewport render
-            for space in context.area.spaces:
-                if space.type == 'VIEW_3D':
-                    if space.viewport_shade == 'RENDERED':
-                        space.viewport_shade = 'SOLID'
-                    break
-            make.play_project(True)
-        else:
-            make.play_project(True)
+        make.play(in_viewport=False)
         assets.invalidate_enabled = True
         return{'FINISHED'}
 
@@ -598,8 +525,8 @@ class ArmoryBuildButton(bpy.types.Operator):
         state.target = make.runtime_to_target(in_viewport=False)
         state.is_export = False
         assets.invalidate_enabled = False
-        make.build_project()
-        make.compile_project(watch=True)
+        make.build()
+        make.compile(watch=True)
         assets.invalidate_enabled = True
         return{'FINISHED'}
 
@@ -636,53 +563,8 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
         state.is_export = True
         assets.invalidate_shader_cache(None, None)
         assets.invalidate_enabled = False
-        make.build_project()
-        make.compile_project(watch=True)
-        state.is_export = False
-        wrd.arm_rplist_index = rplist_index
-        assets.invalidate_enabled = True
-        return{'FINISHED'}
-
-class ArmoryPatchProjectButton(bpy.types.Operator):
-    '''
-    Build/compile project without generating project files.
-    This allows iterating faster on native platforms since project file is not reloaded.
-    '''
-    bl_idname = 'arm.patch_project'
-    bl_label = 'Patch'
-    def execute(self, context):
-        if not arm.utils.check_saved(self):
-            return {"CANCELLED"}
-
-        if not arm.utils.check_sdkpath(self):
-            return {"CANCELLED"}
-
-        if not arm.utils.check_engine(self):
-            return {"CANCELLED"}
-
-        self.report({'INFO'}, 'Patching project, check console for details.')
-
-        arm.utils.check_projectpath(self)
-
-        arm.utils.check_default_rp()
-
-        wrd = bpy.data.worlds['Arm']
-        item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-        if item.arm_project_rp == '':
-            item.arm_project_rp = wrd.arm_rplist[wrd.arm_rplist_index].name
-        # Assume unique rp names
-        rplist_index = wrd.arm_rplist_index
-        for i in range(0, len(wrd.arm_rplist)):
-            if wrd.arm_rplist[i].name == item.arm_project_rp:
-                wrd.arm_rplist_index = i
-                break
-
-        #make.clean_project()
-        state.target = item.arm_project_target
-        state.is_export = True
-        assets.invalidate_enabled = False
-        make.build_project(is_publish=True)
-        make.compile_project(no_project_file=True)
+        make.build()
+        make.compile(watch=True)
         state.is_export = False
         wrd.arm_rplist_index = rplist_index
         assets.invalidate_enabled = True
@@ -720,25 +602,14 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
                 wrd.arm_rplist_index = i
                 break
 
-        make.clean_project()
+        make.clean()
         state.target = item.arm_project_target
         state.is_export = True
         assets.invalidate_enabled = False
-        make.build_project(is_publish=True)
-        make.compile_project(watch=True)
+        make.build(is_publish=True)
+        make.compile(watch=True)
         state.is_export = False
         wrd.arm_rplist_index = rplist_index
-        assets.invalidate_enabled = True
-        return{'FINISHED'}
-
-class ArmoryPatchButton(bpy.types.Operator):
-    '''Update currently running player instance'''
-    bl_idname = 'arm.patch'
-    bl_label = 'Patch'
-
-    def execute(self, context):
-        assets.invalidate_enabled = False
-        make.play_project(True)
         assets.invalidate_enabled = True
         return{'FINISHED'}
 
@@ -793,92 +664,14 @@ class ArmoryCleanProjectButton(bpy.types.Operator):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
 
-        make.clean_project()
+        make.clean()
         return{'FINISHED'}
 
-class ArmoryRenderButton(bpy.types.Operator):
-    '''Capture Armory output as render result'''
-    bl_idname = 'arm.render'
-    bl_label = 'Render'
-
-    def execute(self, context):
-        if not arm.utils.check_saved(self):
-            return {"CANCELLED"}
-
-        if not arm.utils.check_sdkpath(self):
-            return {"CANCELLED"}
-
-        if not arm.utils.check_engine(self):
-            return {"CANCELLED"}
-
-        arm.utils.check_default_rp()
-
-        if state.playproc != None:
-            make.stop_project()
-        if bpy.data.worlds['Arm'].arm_play_runtime != 'Krom':
-            bpy.data.worlds['Arm'].arm_play_runtime = 'Krom'
-        rpdat = arm.utils.get_rp()
-        if rpdat.rp_rendercapture == False:
-            rpdat.rp_rendercapture = True
-        if rpdat.rp_antialiasing != 'TAA':
-            rpdat.rp_antialiasing = 'TAA'
-        assets.invalidate_enabled = False
-        make.get_render_result()
-        assets.invalidate_enabled = True
-        return{'FINISHED'}
-
-class ArmoryRenderAnimButton(bpy.types.Operator):
-    '''Capture Armory output as render result'''
-    bl_idname = 'arm.render_anim'
-    bl_label = 'Animation'
-
-    def execute(self, context):
-        if not arm.utils.check_saved(self):
-            return {"CANCELLED"}
-
-        if not arm.utils.check_sdkpath(self):
-            return {"CANCELLED"}
-
-        if not arm.utils.check_engine(self):
-            return {"CANCELLED"}
-
-        arm.utils.check_default_rp()
-
-        if state.playproc != None:
-            make.stop_project()
-        if bpy.data.worlds['Arm'].arm_play_runtime != 'Krom':
-            bpy.data.worlds['Arm'].arm_play_runtime = 'Krom'
-        rpdat = arm.utils.get_rp()
-        if rpdat.rp_rendercapture == False:
-            rpdat.rp_rendercapture = True
-        if rpdat.rp_antialiasing != 'TAA':
-            rpdat.rp_antialiasing = 'TAA'
-        assets.invalidate_enabled = False
-        make.get_render_anim_result()
-        assets.invalidate_enabled = True
-        return{'FINISHED'}
-
-# Play button in 3D View panel
 def draw_view3d_header(self, context):
-    layout = self.layout
-    if state.playproc == None and state.compileproc == None:
-        if arm.utils.with_krom():
-            layout.operator("arm.play_in_viewport", icon="PLAY")
-        else:
-            layout.operator("arm.play", icon="PLAY")
-    else:
-        layout.operator("arm.stop", icon="MESH_PLANE")
-
-# Info panel in header
-def draw_info_header(self, context):
-    layout = self.layout
-    if 'Arm' not in bpy.data.worlds:
-        return
-    wrd = bpy.data.worlds['Arm']
-    if wrd.arm_progress < 100:
-        layout.prop(wrd, 'arm_progress')
-    if log.info_text != '':
-        layout.label(log.info_text)
+    if state.compileproc != None:
+        self.layout.label('Compiling..')
+    elif log.info_text != '':
+        self.layout.label(log.info_text)
 
 class ArmRenderPathPanel(bpy.types.Panel):
     bl_label = "Armory Render Path"
@@ -1486,27 +1279,21 @@ def register():
     bpy.utils.register_class(InvalidateGPCacheButton)
     bpy.utils.register_class(MaterialPropsPanel)
     bpy.utils.register_class(ArmoryPlayerPanel)
-    bpy.utils.register_class(ArmoryRenderPanel)
     bpy.utils.register_class(ArmoryExporterPanel)
     bpy.utils.register_class(ArmoryProjectPanel)
     bpy.utils.register_class(ArmRenderPathPanel)
     bpy.utils.register_class(ArmBakePanel)
     # bpy.utils.register_class(ArmVirtualInputPanel)
     bpy.utils.register_class(ArmoryPlayButton)
-    bpy.utils.register_class(ArmoryPlayInViewportButton)
     bpy.utils.register_class(ArmoryStopButton)
     bpy.utils.register_class(ArmoryBuildButton)
     bpy.utils.register_class(ArmoryBuildProjectButton)
-    bpy.utils.register_class(ArmoryPatchProjectButton)
-    bpy.utils.register_class(ArmoryPatchButton)
     bpy.utils.register_class(ArmoryOpenProjectFolderButton)
     bpy.utils.register_class(ArmoryKodeStudioButton)
     bpy.utils.register_class(CleanMenu)
     bpy.utils.register_class(CleanButtonMenu)
     bpy.utils.register_class(ArmoryCleanProjectButton)
     bpy.utils.register_class(ArmoryPublishProjectButton)
-    bpy.utils.register_class(ArmoryRenderButton)
-    bpy.utils.register_class(ArmoryRenderAnimButton)
     bpy.utils.register_class(ArmoryGenerateNavmeshButton)
     bpy.utils.register_class(ArmNavigationPanel)
     bpy.utils.register_class(ArmGenLodButton)
@@ -1518,14 +1305,10 @@ def register():
     bpy.utils.register_class(ArmProxyApplyAllButton)
     bpy.utils.register_class(ArmSyncProxyButton)
     bpy.utils.register_class(ArmPrintTraitsButton)
-
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
-    bpy.types.INFO_HT_header.append(draw_info_header)
 
 def unregister():
     bpy.types.VIEW3D_HT_header.remove(draw_view3d_header)
-    bpy.types.INFO_HT_header.remove(draw_info_header)
-
     bpy.utils.unregister_class(ObjectPropsPanel)
     bpy.utils.unregister_class(ModifiersPropsPanel)
     bpy.utils.unregister_class(ParticlesPropsPanel)
@@ -1537,27 +1320,21 @@ def unregister():
     bpy.utils.unregister_class(InvalidateGPCacheButton)
     bpy.utils.unregister_class(MaterialPropsPanel)
     bpy.utils.unregister_class(ArmoryPlayerPanel)
-    bpy.utils.unregister_class(ArmoryRenderPanel)
     bpy.utils.unregister_class(ArmoryExporterPanel)
     bpy.utils.unregister_class(ArmoryProjectPanel)
     bpy.utils.unregister_class(ArmRenderPathPanel)
     bpy.utils.unregister_class(ArmBakePanel)
     # bpy.utils.unregister_class(ArmVirtualInputPanel)
     bpy.utils.unregister_class(ArmoryPlayButton)
-    bpy.utils.unregister_class(ArmoryPlayInViewportButton)
     bpy.utils.unregister_class(ArmoryStopButton)
     bpy.utils.unregister_class(ArmoryBuildButton)
     bpy.utils.unregister_class(ArmoryBuildProjectButton)
-    bpy.utils.unregister_class(ArmoryPatchProjectButton)
-    bpy.utils.unregister_class(ArmoryPatchButton)
     bpy.utils.unregister_class(ArmoryOpenProjectFolderButton)
     bpy.utils.unregister_class(ArmoryKodeStudioButton)
     bpy.utils.unregister_class(CleanMenu)
     bpy.utils.unregister_class(CleanButtonMenu)
     bpy.utils.unregister_class(ArmoryCleanProjectButton)
     bpy.utils.unregister_class(ArmoryPublishProjectButton)
-    bpy.utils.unregister_class(ArmoryRenderButton)
-    bpy.utils.unregister_class(ArmoryRenderAnimButton)
     bpy.utils.unregister_class(ArmoryGenerateNavmeshButton)
     bpy.utils.unregister_class(ArmNavigationPanel)
     bpy.utils.unregister_class(ArmGenLodButton)

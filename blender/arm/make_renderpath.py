@@ -279,11 +279,6 @@ def build():
         assets.add_shader_pass('deferred_indirect')
         assets.add_shader_pass('deferred_light')
         assets.add_shader_pass('deferred_light_quad')
-
-    if rpdat.rp_rendercapture:
-        assets.add_khafile_def('rp_rendercapture')
-        assets.add_khafile_def('rp_rendercapture_format={0}'.format(wrd.rp_rendercapture_format))
-        assets.add_shader_pass('copy_pass')
         
     if rpdat.rp_volumetriclight:
         assets.add_khafile_def('rp_volumetriclight')

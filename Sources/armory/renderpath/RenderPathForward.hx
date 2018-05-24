@@ -52,19 +52,19 @@ class RenderPathForward {
 			}
 			#end
 
-			#if rp_rendercapture
-			{
-				var t = new RenderTargetRaw();
-				t.name = "capture";
-				t.width = 0;
-				t.height = 0;
-				t.format = Inc.getRenderCaptureFormat();
-				path.createRenderTarget(t);
-				#if rp_compositornodes
-				path.loadShader("shader_datas/copy_pass/copy_pass");
-				#end
-			}
-			#end
+			// #if rp_rendercapture
+			// {
+			// 	var t = new RenderTargetRaw();
+			// 	t.name = "capture";
+			// 	t.width = 0;
+			// 	t.height = 0;
+			// 	t.format = Inc.getRenderCaptureFormat();
+			// 	path.createRenderTarget(t);
+			// 	#if rp_compositornodes
+			// 	path.loadShader("shader_datas/copy_pass/copy_pass");
+			// 	#end
+			// }
+			// #end
 
 			#if ((rp_supersampling == 4) || (rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA"))
 			{
@@ -488,21 +488,21 @@ class RenderPathForward {
 
 			#if (rp_supersampling == 4)
 			{
-				#if rp_rendercapture
-				var finalTarget = "capture";
-				#else
+				// #if rp_rendercapture
+				// var finalTarget = "capture";
+				// #else
 				var finalTarget = "";
-				#end
+				// #end
 				path.setTarget(finalTarget);
 				path.bindTarget(framebuffer, "tex");
 				path.drawShader("shader_datas/supersample_resolve/supersample_resolve");
 			}
-			#elseif (rp_rendercapture)
-			{
-				path.setTarget("capture");
-				path.bindTarget(framebuffer, "tex");
-				path.drawShader("shader_datas/copy_pass/copy_pass");
-			}
+			// #elseif (rp_rendercapture)
+			// {
+			// 	path.setTarget("capture");
+			// 	path.bindTarget(framebuffer, "tex");
+			// 	path.drawShader("shader_datas/copy_pass/copy_pass");
+			// }
 			#end
 		}
 		#end

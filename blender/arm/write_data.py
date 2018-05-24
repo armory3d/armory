@@ -144,7 +144,6 @@ project.addSources('Sources');
             f.write("project.addParameter('-dce full');\n")
 
         if in_viewport:
-            assets.add_khafile_def('arm_viewport')
             import_traits.append('armory.trait.internal.Bridge')
 
         import_traits = list(set(import_traits))
@@ -152,24 +151,12 @@ project.addSources('Sources');
             f.write("project.addParameter('" + import_traits[i] + "');\n")
             f.write("""project.addParameter("--macro keep('""" + import_traits[i] + """')");\n""")
 
-        if state.is_render:
-            assets.add_khafile_def('arm_render')
-            if state.is_render_anim:
-                assets.add_khafile_def('arm_render_anim')
-                if not os.path.exists('Libraries/iron_format'):
-                    f.write(add_armory_library(sdk_path + '/lib/', 'iron_format'))
-
         shaderload = state.target == 'krom' or state.target == 'html5'
         if arm.utils.get_player_gapi() != 'opengl': # TODO: shader from source for d3d11
             shaderload = False
         if wrd.arm_cache_compiler and shaderload and not is_publish:
             # Load shaders manually
             assets.add_khafile_def('arm_shaderload')
-
-        # sceneload = state.target == 'krom'
-        # if wrd.arm_play_live_patch and is_play and in_viewport and sceneload:
-            # Scene patch
-            # assets.add_khafile_def('arm_sceneload')
 
         shader_references = sorted(list(set(assets.shaders)))
         for ref in shader_references:
@@ -339,13 +326,6 @@ class Main {
     public static function main() {
         iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;
 """)
-        # TODO: deprecated
-        if in_viewport:
-            f.write("""
-        untyped __js__("Krom.setPenDownCallback = function() { };");
-        untyped __js__("Krom.setPenUpCallback = function() { };");
-        untyped __js__("Krom.setPenMoveCallback = function() { };");
-""")
         if rpdat.rp_shadowmap_cascades != '1':
             f.write("""
         iron.object.LampObject.cascadeCount = """ + str(rpdat.rp_shadowmap_cascades) + """;
@@ -380,7 +360,7 @@ class Main {
         if (windowMode == kha.WindowMode.Fullscreen) { windowMode = kha.WindowMode.BorderlessWindow; config.window_w = kha.Display.width(0); config.window_h = kha.Display.height(0); }
 """)
         # Cap window size to desktop resolution, otherwise the window may not get opened
-        if not in_viewport and not state.is_render:
+        if not in_viewport:
             f.write("""
         else { config.window_w = Std.int(Math.min(config.window_w, kha.Display.width(0))); config.window_h = Std.int(Math.min(config.window_h, kha.Display.height(0))); }
 """)
@@ -404,11 +384,6 @@ class Main {
         f.write("""
                 iron.Scene.setActive('""" + arm.utils.safestr(scene_name) + scene_ext + """', function(object:iron.object.Object) {
 """)
-        # if arm.utils.with_krom() and in_viewport and is_play:
-        # if is_play or (state.target == 'html5' and not is_publish):
-            # f.write("""
-                    # object.addTrait(new armory.trait.internal.SpaceArmory());
-# """)
 
         # Detect custom render path
         pathpack = 'armory'

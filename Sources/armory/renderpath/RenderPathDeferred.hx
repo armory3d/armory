@@ -183,16 +183,16 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if rp_rendercapture
-		{
-			var t = new RenderTargetRaw();
-			t.name = "capture";
-			t.width = 0;
-			t.height = 0;
-			t.format = Inc.getRenderCaptureFormat();
-			path.createRenderTarget(t);
-		}
-		#end
+		// #if rp_rendercapture
+		// {
+		// 	var t = new RenderTargetRaw();
+		// 	t.name = "capture";
+		// 	t.width = 0;
+		// 	t.height = 0;
+		// 	t.format = Inc.getRenderCaptureFormat();
+		// 	path.createRenderTarget(t);
+		// }
+		// #end
 
 		#if rp_compositornodes
 		{
@@ -852,22 +852,22 @@ class RenderPathDeferred {
 
 		#if (rp_supersampling == 4)
 		{
-			#if rp_rendercapture
+			// #if rp_rendercapture
 			// TODO: ss4 + capture broken
-			var finalTarget = "capture";
-			#else
+			// var finalTarget = "capture";
+			// #else
 			var finalTarget = "";
-			#end
+			// #end
 			path.setTarget(finalTarget);
 			path.bindTarget(framebuffer, "tex");
 			path.drawShader("shader_datas/supersample_resolve/supersample_resolve");
 		}
-		#elseif (rp_rendercapture)
-		{
-			path.setTarget("capture");
-			path.bindTarget(framebuffer, "tex");
-			path.drawShader("shader_datas/copy_pass/copy_pass");
-		}
+		// #elseif (rp_rendercapture)
+		// {
+			// path.setTarget("capture");
+			// path.bindTarget(framebuffer, "tex");
+			// path.drawShader("shader_datas/copy_pass/copy_pass");
+		// }
 		#end
 	}
 	#end

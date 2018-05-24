@@ -9,6 +9,7 @@ import subprocess
 import webbrowser
 import arm.lib.armpack
 import arm.make_state as state
+import arm.log as log
 
 def write_arm(filepath, output):
     if filepath.endswith('.zip'):
@@ -86,23 +87,27 @@ def get_rp():
     wrd = bpy.data.worlds['Arm']
     return wrd.arm_rplist[wrd.arm_rplist_index]
 
+def bundled_sdk_path():
+    if get_os() == 'mac':
+        # SDK on MacOS is located in .app folder due to security
+        p = bpy.app.binary_path
+        if p.endswith('Contents/MacOS/blender'):
+            return p[:-len('Contents/MacOS/blender')] + '/armsdk/'
+        else:
+            return p[:-len('Contents/MacOS/./blender')] + '/armsdk/'
+    elif get_os() == 'linux':
+        # /blender
+        return bpy.app.binary_path.rsplit('/', 1)[0] + '/armsdk/'
+    else:
+        # /blender.exe
+        return bpy.app.binary_path.replace('\\', '/').rsplit('/', 1)[0] + '/armsdk/'
+
 def get_sdk_path():
     user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
-    if with_krom() and addon_prefs.sdk_bundled:
-        if get_os() == 'mac':
-            # SDK on MacOS is located in .app folder due to security
-            p = bpy.app.binary_path
-            if p.endswith('Contents/MacOS/blender'):
-                return p[:-len('Contents/MacOS/blender')] + '/armsdk/'
-            else:
-                return p[:-len('Contents/MacOS/./blender')] + '/armsdk/'
-        elif get_os() == 'linux':
-            # /blender
-            return bpy.app.binary_path.rsplit('/', 1)[0] + '/armsdk/'
-        else:
-            # /blender.exe
-            return bpy.app.binary_path.replace('\\', '/').rsplit('/', 1)[0] + '/armsdk/'
+    addon_prefs = user_preferences.addons["armory"].preferences
+    p = bundled_sdk_path()
+    if os.path.exists(p) and addon_prefs.sdk_bundled:
+        return p
     else:
         return addon_prefs.sdk_path
 
@@ -131,18 +136,10 @@ def get_code_editor():
     addon_prefs = user_preferences.addons['armory'].preferences
     return 'kodestudio' if not hasattr(addon_prefs, 'code_editor') else addon_prefs.code_editor
 
-# def get_kha_version():
-    # user_preferences = bpy.context.user_preferences
-    # addon_prefs = user_preferences.addons['armory'].preferences
-    # return 'bundled' if not hasattr(addon_prefs, 'kha_version') else addon_prefs.kha_version
-
 def get_ui_scale():
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences
     return 1.0 if not hasattr(addon_prefs, 'ui_scale') else addon_prefs.ui_scale
-
-def get_ease_viewport_camera():
-    return True
 
 def get_save_on_build():
     user_preferences = bpy.context.user_preferences
@@ -341,6 +338,8 @@ def fetch_bundled_trait_props():
                     fetch_prop(o)
 
 def update_trait_groups():
+    if not hasattr(bpy.data, 'groups'):
+        return
     for g in bpy.data.groups:
         if g.name.startswith('Trait|'):
             bpy.data.groups.remove(g)
@@ -410,24 +409,17 @@ def logic_editor_space():
     return None
 
 def voxel_support():
-    b = state.in_viewport == False or bpy.app.version >= (2, 80, 1)
-    if state.target == 'html5':
-        b = False
-    return b
+    return state.target != 'html5'
 
-krom_found = False
-def with_krom():
-    global krom_found
-    return krom_found
-
-glslver = 110
-def glsl_version():
-    global glslver
-    return glslver
+v8_found = False
+def with_v8():
+    global v8_found
+    return v8_found
 
 def check_saved(self):
     if bpy.data.filepath == "":
-        self.report({"ERROR"}, "Save blend file first")
+        msg = "Save blend file first"
+        self.report({"ERROR"}, msg) if self != None else log.print_info(msg)
         return False
     return True
 
@@ -443,7 +435,8 @@ def check_path(s):
 def check_sdkpath(self):
     s = get_sdk_path()
     if check_path(s) == False:
-        self.report({"ERROR"}, "SDK path '{0}' contains special characters. Please move SDK to different path for now.".format(s))
+        msg = "SDK path '{0}' contains special characters. Please move SDK to different path for now.".format(s)
+        self.report({"ERROR"}, msg) if self != None else log.print_info(msg)
         return False
     else:
         return True
@@ -451,20 +444,19 @@ def check_sdkpath(self):
 def check_projectpath(self):
     s = get_fp()
     if check_path(s) == False:
-        self.report({"WARNING"}, "Project path '{0}' contains special characters, build process may fail.".format(s))
+        msg = "Project path '{0}' contains special characters, build process may fail.".format(s)
+        self.report({"ERROR"}, msg) if self != None else log.print_info(msg)
         return False
     else:
         return True
 
 def check_engine(self):
     if bpy.context == None or bpy.context.scene == None:
-        return
-    if bpy.app.version >= (2, 80, 1):
-        engine = bpy.context.scene.view_render.engine
-    else:
-        engine = bpy.context.scene.render.engine
-    if engine != 'CYCLES' and engine != 'BLENDER_EEVEE':
-        self.report({"ERROR"}, "Switch to Cycles or Eevee engine first")
+        return False
+    engine = bpy.context.scene.render.engine
+    if engine != 'CYCLES' and engine != 'BLENDER_EEVEE' and engine != 'ARMORY':
+        msg = "Switch to Armory, Cycles or Eevee engine first"
+        self.report({"ERROR"}, msg) if self != None else log.print_info(msg)
         return False
     return True
 
@@ -618,13 +610,14 @@ def check_default_rp():
         wrd.arm_rplist_index = 0
 
 def register():
-    global krom_found
-    global glslver
-    import importlib.util
-    if importlib.util.find_spec('barmory') != None:
-        krom_found = True
-        import bgl
-        glslver = int(bgl.glGetString(bgl.GL_SHADING_LANGUAGE_VERSION).split(' ', 1)[0].replace('.', ''))
+    global v8_found
+    try:
+        engine = bpy.context.scene.render.engine
+        bpy.context.scene.render.engine = 'ARMORY'
+        bpy.context.scene.render.engine = engine
+        v8_found = True
+    except:
+        pass
 
 def unregister():
     pass

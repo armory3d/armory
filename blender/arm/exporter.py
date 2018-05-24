@@ -24,6 +24,7 @@ import arm.log as log
 import arm.material.make as make_material
 import arm.material.mat_batch as mat_batch
 import arm.make_renderpath as make_renderpath
+import arm.material.cycles as cycles
 
 NodeTypeNode = 0
 NodeTypeBone = 1
@@ -687,21 +688,19 @@ class ArmoryExporter:
         return None
 
     def get_viewport_view_matrix(self):
-        if self.play_area == None:
-            self.play_area = self.get_view3d_area()
-        if self.play_area == None:
+        play_area = self.get_view3d_area()
+        if play_area == None:
             return None
-        for space in self.play_area.spaces:
+        for space in play_area.spaces:
             if space.type == 'VIEW_3D':
                 return space.region_3d.view_matrix
         return None
 
     def get_viewport_projection_matrix(self):
-        if self.play_area == None:
-            self.play_area = self.get_view3d_area()
-        if self.play_area == None:
+        play_area = self.get_view3d_area()
+        if play_area == None:
             return None, False
-        for space in self.play_area.spaces:
+        for space in play_area.spaces:
             if space.type == 'VIEW_3D':
                 # return space.region_3d.perspective_matrix # pesp = window * view
                 return space.region_3d.window_matrix, space.region_3d.is_perspective
@@ -1275,16 +1274,16 @@ class ArmoryExporter:
         if has_tex:
             # Get active uvmap
             t0map = 0
-            uv_textures = exportMesh.uv_textures
-            if uv_textures != None:
-                if 'UVMap_baked' in uv_textures:
-                    for i in range(0, len(uv_textures)):
-                        if uv_textures[i].name == 'UVMap_baked':
+            uv_layers = exportMesh.uv_layers
+            if uv_layers != None:
+                if 'UVMap_baked' in uv_layers:
+                    for i in range(0, len(uv_layers)):
+                        if uv_layers[i].name == 'UVMap_baked':
                             t0map = i
                             break
                 else:
-                    for i in range(0, len(uv_textures)):
-                        if uv_textures[i].active_render:
+                    for i in range(0, len(uv_layers)):
+                        if uv_layers[i].active_render:
                             t0map = i
                             break
             t1map = 1 if t0map == 0 else 0
@@ -1605,7 +1604,7 @@ class ArmoryExporter:
             o['shadowmap_cube'] = True
             o['shadows_bias'] *= 2.0
 
-        if bpy.app.version >= (2, 80, 1) and self.scene.render.engine == 'BLENDER_EEVEE':
+        if bpy.app.version >= (2, 80, 1) and (self.scene.render.engine == 'BLENDER_EEVEE' or self.scene.render.engine == 'ARMORY'):
             o['color'] = [objref.color[0], objref.color[1], objref.color[2]]
             o['strength'] = objref.energy
             if o['type'] == 'point' or o['type'] == 'spot':
@@ -1689,10 +1688,8 @@ class ArmoryExporter:
 
         wrd = bpy.data.worlds['Arm']
         if wrd.arm_play_camera != 'Scene':
-            pw = self.get_viewport_panels_w() # Tool shelf and properties hidden
             proj, is_persp = self.get_viewport_projection_matrix()
-            windowed = not ArmoryExporter.in_viewport
-            if proj != None and is_persp and (pw == 0 or windowed):
+            if proj != None and is_persp:
                 self.extract_projection(o, proj, with_planes=False)
 
         if objref.type != 'PERSP':
@@ -1764,6 +1761,32 @@ class ArmoryExporter:
             o['override_context'] = {}
             o['override_context']['cull_mode'] = 'none'
 
+    def signature_traverse(self, node, sign):
+        sign += node.type + '-'
+        if node.type == 'TEX_IMAGE' and node.image != None:
+            sign += node.image.filepath + '-'
+        for inp in node.inputs:
+            if inp.is_linked:
+                sign = self.signature_traverse(inp.links[0].from_node, sign)
+            else:
+                # Unconnected socket
+                if not hasattr(inp, 'default_value'):
+                    sign += 'o'
+                elif inp.type == 'RGB' or inp.type == 'RGBA' or inp.type == 'VECTOR':
+                    sign += str(inp.default_value[0])
+                    sign += str(inp.default_value[1])
+                    sign += str(inp.default_value[2])
+                else:
+                    sign += str(inp.default_value)
+        return sign
+
+    def get_signature(self, mat):
+        nodes = mat.node_tree.nodes
+        output_node = cycles.node_by_type(nodes, 'OUTPUT_MATERIAL')
+        if output_node != None:
+            sign = self.signature_traverse(output_node, '')
+            return sign
+
     def export_materials(self):
         wrd = bpy.data.worlds['Arm']
 
@@ -1787,6 +1810,12 @@ class ArmoryExporter:
             # If the material is unlinked, material becomes None
             if material == None:
                 continue
+
+            # Recache material
+            signature = self.get_signature(material)
+            if signature != material.signature:
+                material.is_cached = False
+            material.signature = signature
 
             o = {}
             o['name'] = arm.utils.asset_name(material)
@@ -1975,12 +2004,11 @@ class ArmoryExporter:
             self.output['mesh_datas'] = [];
             self.export_mesh(objectRef, scene)
 
-    def execute(self, context, filepath, scene=None, write_capture_info=False, play_area=None):
+    def execute(self, context, filepath, scene=None):
         profile_time = time.time()
 
         self.output = {}
         self.filepath = filepath
-        self.play_area = play_area
 
         self.scene = context.scene if scene == None else scene
         print('Exporting ' + arm.utils.asset_name(self.scene))
@@ -1988,12 +2016,6 @@ class ArmoryExporter:
         current_frame, current_subframe = scene.frame_current, scene.frame_subframe
         self.beginFrame = self.scene.frame_start
         self.output['frame_time'] = 1.0 / (self.scene.render.fps / self.scene.render.fps_base)
-
-        if write_capture_info:
-            self.output['capture_info'] = {}
-            self.output['capture_info']['path'] = bpy.path.abspath(self.scene.render.filepath)
-            self.output['capture_info']['frame_start'] = int(self.scene.frame_start)
-            self.output['capture_info']['frame_end'] = int(self.scene.frame_end)
 
         self.bobjectArray = {}
         self.bobjectBoneArray = {}
@@ -2020,7 +2042,11 @@ class ArmoryExporter:
         self.preprocess()
 
         if bpy.app.version >= (2, 80, 1):
-            scene_objects = self.scene.collection.all_objects
+            # scene_objects = self.scene.objects
+            # scene_objects = self.scene.collection.all_objects # crash
+            scene_objects = []
+            for lay in self.scene.view_layers:
+                scene_objects += lay.depsgraph.objects
         else:
             scene_objects = self.scene.objects
         for bobject in scene_objects:
@@ -2131,18 +2157,6 @@ class ArmoryExporter:
             o['near_plane'] = 0.1
             o['far_plane'] = 100.0
             o['fov'] = 0.85
-            # if ArmoryExporter.in_viewport: # Wrong P returned when no camera present?
-            #     pw = self.get_viewport_panels_w()
-            #     proj, is_persp = self.get_viewport_projection_matrix()
-            #     if pw == 0 and is_persp:
-            #         a = proj[0][0]
-            #         b = proj[1][1]
-            #         c = proj[2][2]
-            #         d = proj[2][3]
-            #         k = (c - 1.0) / (c + 1.0)
-            #         o['near_plane'] = (d * (1.0 - k)) / (2.0 * k)
-            #         o['far_plane'] = k * o['near_plane'];
-            #         o['fov'] = 2.0 * math.atan(1.0 / b)
             o['type'] = 'perspective'
             o['frustum_culling'] = True
             o['clear_color'] = self.get_camera_clear_color()
@@ -2163,7 +2177,7 @@ class ArmoryExporter:
             navigation_trait = {}
             navigation_trait['type'] = 'Script'
             navigation_trait['class_name'] = 'armory.trait.WalkNavigation'
-            navigation_trait['parameters'] = [str(arm.utils.get_ease_viewport_camera()).lower()]
+            navigation_trait['parameters'] = ['true'] # ease
             o['traits'].append(navigation_trait)
             self.output['objects'].append(o)
             self.output['camera_ref'] = 'DefaultCamera'
@@ -2304,8 +2318,6 @@ class ArmoryExporter:
         ArmoryExporter.export_ui = False
         if not hasattr(ArmoryExporter, 'compress_enabled'):
             ArmoryExporter.compress_enabled = False
-        if not hasattr(ArmoryExporter, 'in_viewport'):
-            ArmoryExporter.in_viewport = False
         if not hasattr(ArmoryExporter, 'import_traits'):
             ArmoryExporter.import_traits = [] # Referenced traits
         ArmoryExporter.option_mesh_only = False
@@ -2430,7 +2442,7 @@ class ArmoryExporter:
                 navigation_trait = {}
                 navigation_trait['type'] = 'Script'
                 navigation_trait['class_name'] = 'armory.trait.WalkNavigation'
-                navigation_trait['parameters'] = [str(arm.utils.get_ease_viewport_camera()).lower()]
+                navigation_trait['parameters'] = ['true'] # ease
                 o['traits'].append(navigation_trait)
 
         # Map objects to materials, can be used in later stages

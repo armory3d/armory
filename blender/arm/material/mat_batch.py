@@ -28,8 +28,6 @@ def get_signature(mat):
         sign += '1' if mat.arm_cast_shadow else '0'
         sign += '1' if mat.arm_overlay else '0'
         sign += '1' if mat.arm_cull_mode == 'Clockwise' else '0'
-        sign += '1' if mat.arm_tess else '0'
-        sign += '1' if mat.arm_tess_shadows else '0'
         return sign
 
 def traverse_tree2(node, ar):

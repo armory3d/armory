@@ -10,7 +10,6 @@ import arm.props_renderpath
 import arm.props
 import arm.props_ui
 import arm.handlers
-import arm.space_armory
 import arm.utils
 import arm.keymap
 
@@ -31,7 +30,6 @@ def register():
     arm.props.register()
     arm.props_ui.register()
     arm.nodes_logic.register()
-    arm.space_armory.register()
     arm.keymap.register()
     arm.handlers.register()
 
@@ -52,4 +50,3 @@ def unregister():
     arm.props_exporter.unregister()
     arm.props_bake.unregister()
     arm.props_renderpath.unregister()
-    arm.space_armory.unregister()
