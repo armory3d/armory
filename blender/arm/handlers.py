@@ -85,7 +85,6 @@ def on_scene_update_pre(context):
         space.node_tree.is_cached = False
 
 def recache(obj):
-    print('recacheee')
     # Moving keyframes triggers is_updated_data..
     if state.compileproc != None:
         return
