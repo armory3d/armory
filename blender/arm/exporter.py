@@ -1608,10 +1608,10 @@ class ArmoryExporter:
             o['color'] = [objref.color[0], objref.color[1], objref.color[2]]
             o['strength'] = objref.energy
             if o['type'] == 'point' or o['type'] == 'spot':
-                o['strength'] *= 1.5
+                o['strength'] *= 2.6
             elif o['type'] == 'sun':
                 o['strength'] *= 0.325
-        elif objref.node_tree != None:
+        elif objref.node_tree != None: # Cycles
             tree = objref.node_tree
             for n in tree.nodes:
                 # Emission only for now
@@ -1633,9 +1633,8 @@ class ArmoryExporter:
                             o['color_texture'] = color_node.image.name
                     break
         else:
-            # o['color'] = [1.0, 1.0, 1.0]
             o['color'] = [objref.color[0], objref.color[1], objref.color[2]]
-            o['strength'] = 100.0 * 0.026
+            o['strength'] = 1000.0 * 0.026
             o['type'] = 'point'
 
         self.output['lamp_datas'].append(o)
