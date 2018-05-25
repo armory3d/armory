@@ -1274,7 +1274,10 @@ class ArmoryExporter:
         if has_tex:
             # Get active uvmap
             t0map = 0
-            uv_layers = exportMesh.uv_layers
+            if bpy.app.version >= (2, 80, 1):
+                uv_layers = exportMesh.uv_layers
+            else:
+                uv_layers = exportMesh.uv_textures
             if uv_layers != None:
                 if 'UVMap_baked' in uv_layers:
                     for i in range(0, len(uv_layers)):
