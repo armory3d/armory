@@ -8,7 +8,7 @@ str_tex_checker = """vec3 tex_checker(const vec3 co, const vec3 col1, const vec3
     return check ? col1 : col2;
 }
 float tex_checker_f(const vec3 co, const float scale) {
-    vec3 p = (co) * scale;
+    vec3 p = (co + 0.000001 * 0.999999) * scale;
     float xi = abs(floor(p.x));
     float yi = abs(floor(p.y));
     float zi = abs(floor(p.z));
