@@ -71,13 +71,20 @@ vec3 getPos2NoEye(const vec3 eye, const mat4 invVP, const float depth, const vec
 }
 
 float packFloat(const float f1, const float f2) {
-	float index = floor(f1 * 100.0); // Temporary
-	float alpha = clamp(f2, 0.0, 1.0 - 0.001);
-	return index + alpha;
+	return floor(f1 * 100.0) + min(f2, 1.0 - 1.0 / 100.0);
 }
 
 vec2 unpackFloat(const float f) {
 	return vec2(floor(f) / 100.0, fract(f));
+}
+
+float packFloat2(const float f1, const float f2) {
+	// Higher f1 = less precise f2
+	return floor(f1 * 255.0) + min(f2, 1.0 - 1.0 / 100.0);
+}
+
+vec2 unpackFloat2(const float f) {
+	return vec2(floor(f) / 255.0, fract(f));
 }
 
 vec4 encodeRGBM(const vec3 rgb) {

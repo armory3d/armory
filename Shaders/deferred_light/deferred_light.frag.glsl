@@ -99,7 +99,7 @@ void main() {
 
 	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, depth
 	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, spec/occ
-	float spec = floor(g1.a) / 100.0;
+	float spec = unpackFloat2(g1.a).g;
 	// #ifdef _InvY // D3D
 	// float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0; // 0 - 1 => -1 - 1
 	// #else

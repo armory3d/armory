@@ -131,7 +131,7 @@ void main() {
 		return;
 	}
 
-	float spec = floor(texture(gbuffer1, texCoord).a) / 100.0;
+	float spec = fract(texture(gbuffer1, texCoord).a);
 	if (spec == 0.0) {
 		fragColor.rgb = vec3(0.0);
 		return;

@@ -354,7 +354,7 @@ def make_deferred(con_mesh):
         frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - ((wvpposition.z / wvpposition.w) * 0.5 + 0.5));')
     else:
         frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - gl_FragCoord.z);')
-    frag.write('fragColor[1] = vec4(basecol.rgb, packFloat(specular, occlusion));')
+    frag.write('fragColor[1] = vec4(basecol.rgb, packFloat2(occlusion, specular));')
 
     if '_gbuffer2' in wrd.world_defs:
         if '_Veloc' in wrd.world_defs:
