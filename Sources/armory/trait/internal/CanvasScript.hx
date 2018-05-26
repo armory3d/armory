@@ -19,28 +19,25 @@ class CanvasScript extends Trait {
 	public function new(canvasName:String) {
 		super();
 
-		notifyOnInit(function() {
+		iron.data.Data.getBlob(canvasName + '.json', function(blob:kha.Blob) {
 
-			iron.data.Data.getBlob(canvasName + '.json', function(blob:kha.Blob) {
+			kha.Assets.loadFont("droid_sans", function(f:kha.Font) {
 
-				kha.Assets.loadFont("droid_sans", function(f:kha.Font) {
-
-					cui = new Zui({font: f});			
-					var c:TCanvas = haxe.Json.parse(blob.toString());
-					
-					if (c.assets == null || c.assets.length == 0) canvas = c;
-					// Load canvas assets
-					else {
-						var loaded = 0;
-						for (asset in c.assets) {
-							var file = asset.name;
-							iron.data.Data.getImage(file, function(image:kha.Image) {
-								Canvas.assetMap.set(asset.id, image);
-								if (++loaded >= c.assets.length) canvas = c;
-							});
-						}
+				cui = new Zui({font: f});			
+				var c:TCanvas = haxe.Json.parse(blob.toString());
+				
+				if (c.assets == null || c.assets.length == 0) canvas = c;
+				// Load canvas assets
+				else {
+					var loaded = 0;
+					for (asset in c.assets) {
+						var file = asset.name;
+						iron.data.Data.getImage(file, function(image:kha.Image) {
+							Canvas.assetMap.set(asset.id, image);
+							if (++loaded >= c.assets.length) canvas = c;
+						});
 					}
-				});
+				}
 			});
 		});
 
