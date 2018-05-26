@@ -10,13 +10,8 @@ class ConcatenateStringNode extends LogicNode {
 	}
 
 	override function get(from:Int):Dynamic {
-		if (inputs.length > 0) {
-			value = "";
-            for (i in 0...inputs.length) {
-				value += inputs[i].get();
-			}
-			return value;
-		}
+		value = "";
+		for (inp in inputs) value += inp.get();
 		return value;
 	}
 }
