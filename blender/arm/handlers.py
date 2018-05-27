@@ -1,4 +1,3 @@
-import time
 import os
 import sys
 import bpy
@@ -8,7 +7,6 @@ import arm.props as props
 import arm.make as make
 import arm.make_state as state
 
-last_time = time.time()
 last_operator = None
 first_update = True
 v8_started = False
@@ -16,7 +14,6 @@ v8_started = False
 @persistent
 def on_scene_update_pre(context):
     # TODO: get rid of this function as soon as there is a proper way to detect object data updates
-    global last_time
     global last_operator
     global first_update
     global v8_started
@@ -38,9 +35,6 @@ def on_scene_update_pre(context):
             if not v8_started:
                 v8_started = True
                 make.build_viewport()
-            if time.time() - last_time >= 1 / 60:
-                last_time = time.time()
-                play_area.tag_redraw()
         else:
             v8_started = False
 
