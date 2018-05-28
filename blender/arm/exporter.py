@@ -1681,11 +1681,19 @@ class ArmoryExporter:
 
         camera = objectRef[1]["objectTable"][0]
         render = self.scene.render
-        proj = camera.calc_matrix_camera(
-            render.resolution_x,
-            render.resolution_y,
-            render.pixel_aspect_x,
-            render.pixel_aspect_y)
+        if bpy.app.version >= (2, 80, 1):
+            proj = camera.calc_matrix_camera(
+                self.scene.view_layers[0].depsgraph,
+                render.resolution_x,
+                render.resolution_y,
+                render.pixel_aspect_x,
+                render.pixel_aspect_y)
+        else:
+                proj = camera.calc_matrix_camera(
+                render.resolution_x,
+                render.resolution_y,
+                render.pixel_aspect_x,
+                render.pixel_aspect_y)
         self.extract_projection(o, proj)
 
         wrd = bpy.data.worlds['Arm']
@@ -2048,7 +2056,6 @@ class ArmoryExporter:
 
         if bpy.app.version >= (2, 80, 1):
             # scene_objects = self.scene.objects
-            # scene_objects = self.scene.collection.all_objects # crash
             scene_objects = []
             for lay in self.scene.view_layers:
                 scene_objects += lay.depsgraph.objects
@@ -2244,7 +2251,7 @@ class ArmoryExporter:
             bpy.data.materials.remove(mat, do_unlink=True)
 
         # Restore frame
-        if scene.frame_current != current_frame: 
+        if scene.frame_current != current_frame:
             scene.frame_set(current_frame, current_subframe)
 
         print('Scene built in ' + str(time.time() - profile_time))
