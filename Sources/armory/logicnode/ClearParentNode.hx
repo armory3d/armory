@@ -15,6 +15,7 @@ class ClearParentNode extends LogicNode {
 		if (object == null || object.parent == null) return;
 
 		object.parent.removeChild(object, keepTransform);
+		iron.Scene.active.root.addChild(object, false);
 
 		super.run();
 	}
