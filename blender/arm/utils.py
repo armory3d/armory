@@ -543,8 +543,9 @@ def kode_studio():
         else:
             webbrowser.open('file://' + arm.utils.get_fp())
     elif arm.utils.get_os() == 'mac':
-        kode_path = '"' + sdk_path + '/Kode Studio.app/Contents/MacOS/Electron"'
+        kode_path = sdk_path + '/Kode Studio.app/Contents/MacOS/Electron'
         if os.path.exists(kode_path):
+            kode_path = '"' + kode_path + '"'
             kode_studio_mklink_mac(sdk_path)
             subprocess.Popen([kode_path + ' "' + arm.utils.get_fp() + '"'], shell=True)
         else:

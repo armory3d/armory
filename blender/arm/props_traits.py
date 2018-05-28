@@ -253,8 +253,9 @@ class ArmEditScriptButton(bpy.types.Operator):
             else:
                 webbrowser.open('file://' + hx_path)
         elif arm.utils.get_os() == 'mac':
-            kode_path = '"' + sdk_path + '/Kode Studio.app/Contents/MacOS/Electron"'
+            kode_path = sdk_path + '/Kode Studio.app/Contents/MacOS/Electron'
             if os.path.exists(kode_path) and arm.utils.get_code_editor() == 'kodestudio':
+                kode_path = '"' + kode_path + '"'
                 arm.utils.kode_studio_mklink_mac(sdk_path)
                 subprocess.Popen([kode_path + ' "' + arm.utils.get_fp() + '" "' + hx_path + '"'], shell=True)
             else:
