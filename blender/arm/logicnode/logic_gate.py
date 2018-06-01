@@ -15,7 +15,7 @@ class GateNode(Node, ArmLogicTreeNode):
     bl_icon = 'CURVE_PATH'
     property0 = EnumProperty(
         items = [('Equal', 'Equal', 'Equal'),
-                 ('Not Equal', 'Not Equal', 'Not Equal'),
+                 ('Almost Equal', 'Almost Equal', 'Almost Equal'),
                  ('Greater', 'Greater', 'Greater'),
                  ('Greater Equal', 'Greater Equal', 'Greater Equal'),
                  ('Less', 'Less', 'Less'),
@@ -25,6 +25,7 @@ class GateNode(Node, ArmLogicTreeNode):
         name='', default='Equal',
         update=remove_extra_inputs)
     min_inputs = 3
+    property1 = FloatProperty(name='Tolerance', description='Precision for float compare', default=0.0001)
     
     def __init__(self):
         array_nodes[str(id(self))] = self
@@ -38,6 +39,9 @@ class GateNode(Node, ArmLogicTreeNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property0')
+
+        if self.property0 == 'Almost Equal':
+            layout.prop(self, 'property1')
 
         if any(p == self.property0 for p in ['Or', 'And']):
             row = layout.row(align=True)

@@ -3,6 +3,7 @@ package armory.logicnode;
 class GateNode extends LogicNode {
 
 	public var property0:String;
+	public var property1:Float;
 
 	public function new(tree:LogicTree) {
 		super(tree);
@@ -17,8 +18,8 @@ class GateNode extends LogicNode {
 		switch (property0) {
 		case "Equal":
 			cond = v1 == v2;
-		case "Not Equal":
-			cond = v1 != v2;
+		case "Almost Equal":
+			cond = Math.abs(v1 - v2) < property1;
 		case "Greater":
 			cond = v1 > v2;
 		case "Greater Equal":

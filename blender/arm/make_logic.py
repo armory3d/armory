@@ -93,7 +93,8 @@ def build_node(node, f):
     for i in range(0, 5):
         if hasattr(node, 'property' + str(i)):
             prop = getattr(node, 'property' + str(i))
-            f.write('\t\t' + name + '.property' + str(i) + ' = "' + prop + '";\n')
+            prop = '"' + str(prop) + '"' if isinstance(prop, str) else str(prop)
+            f.write('\t\t' + name + '.property' + str(i) + ' = ' + prop + ';\n')
     
     # Create inputs
     for inp in node.inputs:
