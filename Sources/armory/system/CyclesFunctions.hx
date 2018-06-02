@@ -235,9 +235,13 @@ class CyclesFunctions {
 
 	public static var str_packFloat = "
 	float packFloat(const float f1, const float f2) {
-		float index = floor(f1 * 100.0); // Temporary
-		float alpha = clamp(f2, 0.0, 1.0 - 0.001);
-		return index + alpha;
+		return floor(f1 * 100.0) + min(f2, 1.0 - 1.0 / 100.0);
+	}
+	";
+
+	public static var str_packFloat2 = "
+	float packFloat2(const float f1, const float f2) {
+		return floor(f1 * 255.0) + min(f2, 1.0 - 1.0 / 100.0);
 	}
 	";
 }
