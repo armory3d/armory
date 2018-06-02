@@ -129,27 +129,39 @@ class ArmBakeButton(bpy.types.Operator):
                 img_node.select = True
                 nodes.active = img_node
         
+        if bpy.app.version >= (2, 80, 1):
+            obs = bpy.context.view_layer.objects
+        else:
+            obs = bpy.context.scene.objects
+
         # Unwrap
-        active = bpy.context.scene.objects.active
+        active = obs.active
         for o in scn.arm_bakelist:
             ob = scn.objects[o.object_name]
-            if not 'UVMap_baked' in ob.data.uv_textures:
-                uvmap = ob.data.uv_textures.new(name='UVMap_baked')
-                ob.data.uv_textures.active_index = len(ob.data.uv_textures) - 1
-                bpy.context.scene.objects.active = ob
+            if bpy.app.version >= (2, 80, 1):
+                uv_layers = ob.data.uv_layers
+            else:
+                uv_layers = ob.data.uv_textures
+            if not 'UVMap_baked' in uv_layers:
+                uvmap = uv_layers.new(name='UVMap_baked')
+                uv_layers.active_index = len(uv_layers) - 1
+                obs.active = ob
                 # bpy.ops.uv.lightmap_pack('EXEC_SCREEN', PREF_CONTEXT='ALL_FACES')
                 bpy.ops.object.select_all(action='DESELECT')
-                ob.select = True
+                if bpy.app.version >= (2, 80, 1):
+                    ob.select_set(action='SELECT')
+                else:
+                    ob.select = True
                 bpy.ops.object.mode_set(mode='EDIT')
                 bpy.ops.mesh.select_all(action='DESELECT')
                 bpy.ops.object.mode_set(mode='OBJECT')
                 bpy.ops.uv.smart_project('EXEC_SCREEN')
             else:
-                for i in range(0, len(ob.data.uv_textures)):
-                    if ob.data.uv_textures[i].name == 'UVMap_baked':
-                        ob.data.uv_textures.active_index = i
+                for i in range(0, len(uv_layers)):
+                    if uv_layers[i].name == 'UVMap_baked':
+                        uv_layers.active_index = i
                         break
-        bpy.context.scene.objects.active = active
+        obs.active = active
 
         # Materials for runtime
         # TODO: use single mat per object
@@ -167,7 +179,10 @@ class ArmBakeButton(bpy.types.Operator):
                     img_node.name = 'Baked Image'
                     img_node.location = (100, 100)
                     img_node.image = bpy.data.images[img_name]
-                    mat.node_tree.links.new(img_node.outputs[0], nodes['Diffuse BSDF'].inputs[0])
+                    if bpy.app.version >= (2, 80, 1):
+                        mat.node_tree.links.new(img_node.outputs[0], nodes['Principled BSDF'].inputs[0])
+                    else:
+                        mat.node_tree.links.new(img_node.outputs[0], nodes['Diffuse BSDF'].inputs[0])
                 else:
                     mat = bpy.data.materials[n]
                     nodes = mat.node_tree.nodes
@@ -176,8 +191,11 @@ class ArmBakeButton(bpy.types.Operator):
         # Bake
         bpy.ops.object.select_all(action='DESELECT')
         for o in scn.arm_bakelist:
-            scn.objects[o.object_name].select = True
-        scn.objects.active = scn.objects[scn.arm_bakelist[0].object_name]
+            if bpy.app.version >= (2, 80, 1):
+                scn.objects[o.object_name].select_set(action='SELECT')
+            else:
+                scn.objects[o.object_name].select = True
+        obs.active = scn.objects[scn.arm_bakelist[0].object_name]
         bpy.ops.object.bake('INVOKE_DEFAULT', type='COMBINED')
         bpy.ops.object.select_all(action='DESELECT')
 
@@ -220,7 +238,11 @@ class ArmBakeApplyButton(bpy.types.Operator):
         # Restore uv slots
         for o in scn.arm_bakelist:
             ob = scn.objects[o.object_name]
-            ob.data.uv_textures.active_index = 0
+            if bpy.app.version >= (2, 80, 1):
+                uv_layers = ob.data.uv_layers
+            else:
+                uv_layers = ob.data.uv_textures
+            uv_layers.active_index = 0
 
         return{'FINISHED'}
 
