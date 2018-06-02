@@ -2058,6 +2058,8 @@ class ArmoryExporter:
             # scene_objects = self.scene.objects
             scene_objects = []
             for lay in self.scene.view_layers:
+                if lay.depsgraph == None:
+                    continue
                 scene_objects += lay.depsgraph.objects
         else:
             scene_objects = self.scene.objects

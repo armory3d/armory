@@ -46,8 +46,10 @@ class DebugConsole extends Trait {
 			ui = new Zui({font: font, theme: theme});
 			notifyOnRender2D(render2D);
 			notifyOnUpdate(update);
-			haxeTrace = haxe.Log.trace;
-			haxe.Log.trace = consoleTrace;
+			if (haxeTrace == null) {
+				haxeTrace = haxe.Log.trace;
+				haxe.Log.trace = consoleTrace;
+			}
 			// Toggle console
 			kha.input.Keyboard.get().notify(null, null, function(char: String) {
 				if (char == "~") show = !show;
@@ -55,7 +57,7 @@ class DebugConsole extends Trait {
 		});
 	}
 
-	static var haxeTrace:Dynamic->haxe.PosInfos->Void;
+	static var haxeTrace:Dynamic->haxe.PosInfos->Void = null;
 	static var lastTrace = '';
 	static function consoleTrace(v:Dynamic, ?inf:haxe.PosInfos) {
 		lastTrace = Std.string(v);

@@ -2,6 +2,7 @@ package armory.logicnode;
 
 import armory.trait.physics.PhysicsWorld;
 
+@:access(iron.Trait)
 class OnInitNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
@@ -11,7 +12,8 @@ class OnInitNode extends LogicNode {
 
 	function init() {
 		#if arm_physics
-		PhysicsWorld.active == null ? run() : PhysicsWorld.active.notifyOnPreUpdate(physics_init);
+		var noPhysics = PhysicsWorld.active == null || PhysicsWorld.active._lateUpdate == null;
+		noPhysics ? run() : PhysicsWorld.active.notifyOnPreUpdate(physics_init);
 		#else
 		run();
 		#end
