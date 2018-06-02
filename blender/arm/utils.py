@@ -409,7 +409,8 @@ def logic_editor_space():
     return None
 
 def voxel_support():
-    return state.target != 'html5'
+    # macos does not support opengl 4.5, needs metal
+    return state.target != 'html5' and get_os() != 'mac'
 
 v8_found = False
 def with_v8():
