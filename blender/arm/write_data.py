@@ -8,22 +8,10 @@ import arm.utils
 import arm.assets as assets
 import arm.make_state as state
 
-check_dot_path = False
-
 def add_armory_library(sdk_path, name):
     return ('project.addLibrary("' + sdk_path + '/' + name + '");\n').replace('\\', '/')
 
 def add_assets(path, quality=1.0):
-    global check_dot_path
-    if check_dot_path and '/.' in path: # Redirect path to local copy
-        armpath = arm.utils.build_dir() + '/compiled/ArmoryAssets/'
-        if not os.path.exists(armpath):
-            os.makedirs(armpath)
-        localpath = armpath + path.rsplit('/')[-1]
-        if not os.path.isfile(localpath):
-            shutil.copy(path, localpath)
-        path = localpath
-
     if not bpy.data.worlds['Arm'].arm_minimize and path.endswith('.arm'):
         path = path[:-4] + '.json'
 
@@ -40,7 +28,6 @@ def remove_readonly(func, path, excinfo):
 
 # Write khafile.js
 def write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce, in_viewport, import_traits, import_logicnodes):
-    global check_dot_path
     sdk_path = arm.utils.get_sdk_path()
     wrd = bpy.data.worlds['Arm']
 
@@ -51,15 +38,6 @@ let project = new Project('""" + arm.utils.safestr(wrd.arm_project_name) + """')
 
 project.addSources('Sources');
 """)
-
-        # TODO: Khamake bug workaround - assets & shaders located in folder starting with '.' get discarded - copy them to project
-        check_dot_path = False
-        if '/.' in sdk_path:
-            check_dot_path = True
-            if not os.path.exists(arm.utils.build_dir() + '/compiled/KhaShaders'):
-                kha_shaders_path = arm.utils.get_kha_path() + '/Sources/Shaders'
-                shutil.copytree(kha_shaders_path, arm.utils.build_dir() + '/compiled/KhaShaders')
-            f.write("project.addShaders('" + arm.utils.build_dir() + "/compiled/KhaShaders/**');\n")
 
         # Auto-add assets located in Bundled directory
         if os.path.exists('Bundled'):
