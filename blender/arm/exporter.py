@@ -614,7 +614,7 @@ class ArmoryExporter:
         transform = bone.matrix_local.copy()
         parent_bone = bone.parent
         if parent_bone:
-            transform = parent_bone.matrix_local.inverted() * transform
+            transform = parent_bone.matrix_local.inverted_safe() * transform
 
         pose_bone = armature.pose.bones.get(bone.name)
         if pose_bone:
@@ -951,7 +951,7 @@ class ArmoryExporter:
             if type == NodeTypeCamera and bpy.data.worlds['Arm'].arm_play_camera != 'Scene' and self.scene.camera != None and bobject.name == self.scene.camera.name:
                 viewport_matrix = self.get_viewport_view_matrix()
                 if viewport_matrix != None:
-                    o['transform']['values'] = self.write_matrix(viewport_matrix.inverted())
+                    o['transform']['values'] = self.write_matrix(viewport_matrix.inverted_safe())
                     # Do not apply parent matrix
                     o['local_transform_only'] = True
 
@@ -1070,11 +1070,11 @@ class ArmoryExporter:
         oskin['transformsI'] = []
         if rpdat.arm_skin == 'CPU':
             for i in range(bone_count):
-                skeletonI = (armature.matrix_world * bone_array[i].matrix_local).inverted()
+                skeletonI = (armature.matrix_world * bone_array[i].matrix_local).inverted_safe()
                 oskin['transformsI'].append(self.write_matrix(skeletonI))
         else:
             for i in range(bone_count):
-                skeletonI = (armature.matrix_world * bone_array[i].matrix_local).inverted()
+                skeletonI = (armature.matrix_world * bone_array[i].matrix_local).inverted_safe()
                 skeletonI = skeletonI * bobject.matrix_world
                 oskin['transformsI'].append(self.write_matrix(skeletonI))
 
@@ -2185,7 +2185,7 @@ class ArmoryExporter:
             o['transform'] = {}
             viewport_matrix = self.get_viewport_view_matrix()
             if viewport_matrix != None:
-                o['transform']['values'] = self.write_matrix(viewport_matrix.inverted())
+                o['transform']['values'] = self.write_matrix(viewport_matrix.inverted_safe())
                 o['local_transform_only'] = True
             else:
                 o['transform']['values'] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
