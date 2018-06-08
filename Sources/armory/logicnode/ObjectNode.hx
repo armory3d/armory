@@ -5,7 +5,7 @@ import iron.object.Object;
 class ObjectNode extends LogicNode {
 
 	public var objectName:String;
-	public var value:Object;
+	public var value:Object = null;
 
 	public function new(tree:LogicTree, objectName:String = "") {
 		this.objectName = objectName;
@@ -14,7 +14,7 @@ class ObjectNode extends LogicNode {
 
 	override function get(from:Int):Dynamic {
 		if (inputs.length > 0) return inputs[0].get();
-		value = objectName != "" ? iron.Scene.active.getChild(objectName) : tree.object;
+		if (value == null) value = objectName != "" ? iron.Scene.active.getChild(objectName) : tree.object;
 		return value;
 	}
 
