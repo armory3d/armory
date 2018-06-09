@@ -2,13 +2,9 @@ package armory.system;
 
 class CyclesFunctions {
 
-	// Prevent precision issues on unit coordinates
-	//p.x = (p.x + 0.000001) * 0.999999;
-	//p.y = (p.y + 0.000001) * 0.999999;
-	//p.z = (p.z + 0.000001) * 0.999999;
 	public static var str_tex_checker = "
 	vec3 tex_checker(const vec3 co, const vec3 col1, const vec3 col2, const float scale) {
-		vec3 p = co * scale;
+		vec3 p = (co + 0.000001 * 0.999999) * scale;
 		float xi = abs(floor(p.x));
 		float yi = abs(floor(p.y));
 		float zi = abs(floor(p.z));
