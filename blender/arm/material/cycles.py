@@ -865,6 +865,7 @@ def parse_normal_map_color_input(inp, strength=1.0):
     defplus = get_rp_renderer() == 'Deferred Plus'
     if not get_arm_export_tangents() or defplus or mat_get_material().arm_decal: # Compute TBN matrix
         frag.write('vec3 texn = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
+        frag.write('texn.y = -texn.y;')
         frag.add_include('std/normals.glsl')
         if defplus:
             frag.write('mat3 TBN = cotangentFrame(n, -vVec, g2.xy, g2.zw);')

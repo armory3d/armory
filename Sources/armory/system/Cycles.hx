@@ -249,6 +249,7 @@ class Shader {
 
 	public var main = '';
 	public var main_pre = '';
+	public var main_attribs = '';
 	var header = '';
 	var main_header = '';
 	public var write_pre = false;
@@ -329,6 +330,10 @@ class Shader {
 		header += s + '\n';
 	}
 
+	public function write_attrib(s:String) {
+		main_attribs += s + '\n';
+	}
+
 	public function write_main_header(s:String) {
 		main_header += s + '\n';
 	}
@@ -393,6 +398,7 @@ class Shader {
 		for (f in functions)
 			s += f + '\n';
 		s += 'void main() {\n';
+		s += main_attribs;
 		s += main_header;
 		s += main_pre;
 		s += main;
@@ -439,11 +445,15 @@ class Cycles {
 	static var nodes:Array<TNode>;
 	static var links:Array<TNodeLink>;
 
+	static var parsing_disp:Bool;
 	static var parsing_basecol:Bool;
 	static var parse_teximage_vector:Bool;
 	static var normal_written:Bool; // Normal socket is linked on shader node - overwrite fs normal
 	static var cotangentFrameWritten:Bool;
 	
+
+	public static var parse_surface = true;
+	public static var parse_opacity = true;
 
 	public static var arm_export_tangents = true;
 	public static var out_normaltan:String; // Raw tangent space normal parsed from normal map
@@ -484,7 +494,7 @@ class Cycles {
 		return ls;
 	}
 
-	public static function parse(canvas:TNodeCanvas, _con:ShaderContext, _vert:Shader, _frag:Shader, _geom:Shader, _tesc:Shader, _tese:Shader, _matcon:TMaterialContext):TShaderOut {
+	public static function parse(canvas:TNodeCanvas, _con:ShaderContext, _vert:Shader, _frag:Shader, _geom:Shader, _tesc:Shader, _tese:Shader, _matcon:TMaterialContext, _parse_displacement = false):TShaderOut {
 
 		nodes = canvas.nodes;
 		links = canvas.links;
@@ -500,6 +510,7 @@ class Cycles {
 		matcon = _matcon;
 
 		parsing_basecol = false;
+		parsing_disp = false;
 		parse_teximage_vector = true;
 		normal_written = false;
 		cotangentFrameWritten = false;
@@ -518,14 +529,18 @@ class Cycles {
 	}
 
 	static function parse_output(node:TNode):TShaderOut {
-		// if parse_surface or parse_opacity:
-		return parse_shader_input(node.inputs[0]);
+		if (parse_surface || parse_opacity) {
+			return parse_shader_input(node.inputs[0]);
+		}
+		return null;
 		// Parse volume, displacement..
 	}
 
 	static function parse_output_pbr(node:TNode):TShaderOut {
-		// if parse_surface or parse_opacity:
-		return parse_shader(node, null);
+		if (parse_surface || parse_opacity) {
+			return parse_shader(node, null);
+		}
+		return null;
 		// Parse volume, displacement..
 	}
 
@@ -607,30 +622,34 @@ class Cycles {
 
 		// if (node.type == 'GROUP') {
 		if (node.type == 'Armory PBR' || node.type == 'OUTPUT_MATERIAL_PBR') {
-			// if parse_surface:
-			// Base color
-			parsing_basecol = true;
-			sout.out_basecol = parse_vector_input(node.inputs[0]);
-			parsing_basecol = false;
-			// Occlusion
-			sout.out_occlusion = parse_value_input(node.inputs[2]);
-			// # Roughness
-			sout.out_roughness = parse_value_input(node.inputs[3]);
-			// # Metallic
-			sout.out_metallic = parse_value_input(node.inputs[4]);
-			// # Normal
-			parse_normal_map_color_input(node.inputs[5]);
-			// # Emission
-			// if (isInputLinked(node.inputs[6]) || node.inputs[6].default_value != 0.0):
-				// out_emission = parse_value_input(node.inputs[8])
-				// out_basecol = '({0} + {1})'.format(out_basecol, out_emission)
+			if (parse_surface) {
+				// Base color
+				parsing_basecol = true;
+				sout.out_basecol = parse_vector_input(node.inputs[0]);
+				parsing_basecol = false;
+				// Occlusion
+				sout.out_occlusion = parse_value_input(node.inputs[2]);
+				// # Roughness
+				sout.out_roughness = parse_value_input(node.inputs[3]);
+				// # Metallic
+				sout.out_metallic = parse_value_input(node.inputs[4]);
+				// # Normal
+				parse_normal_map_color_input(node.inputs[5]);
+				// # Emission
+				// if (isInputLinked(node.inputs[6]) || node.inputs[6].default_value != 0.0):
+					// out_emission = parse_value_input(node.inputs[8])
+					// out_basecol = '({0} + {1})'.format(out_basecol, out_emission)
+			}
 			
-			// if parse_opacity
-			sout.out_opacity = parse_value_input(node.inputs[1]);
+			if (parse_opacity) {
+				sout.out_opacity = parse_value_input(node.inputs[1]);
+			}
 
 			// Displacement / Height
 			if (node.inputs.length > 7) {
+				curshader = vert;
 				sout.out_height = parse_value_input(node.inputs[7]);
+				curshader = frag;
 			}
 		}
 			// else:
@@ -657,15 +676,17 @@ class Cycles {
 			var met2 = sout2.out_metallic;
 			var occ1 = sout1.out_occlusion;
 			var occ2 = sout2.out_occlusion;
-			// if parse_surface:
+			if (parse_surface) {
 				parsing_basecol = true;
 				sout.out_basecol = '($bc1 * $fac_inv_var + $bc2 * $fac_var)';
 				parsing_basecol = false;
 				sout.out_roughness = '($rough1 * $fac_inv_var + $rough2 * $fac_var)';
 				sout.out_metallic = '($met1 * $fac_inv_var + $met2 * $fac_var)';
 				sout.out_occlusion = '($occ1 * $fac_inv_var + $occ2 * $fac_var)';
-			// if parse_opacity:
+			}
+			if (parse_opacity) {
 				// out_opacity = '({0} * {3} + {1} * {2})'.format(opac1, opac2, fac_var, fac_inv_var)
+			}
 		}
 
 		// elif node.type == 'ADD_SHADER':
@@ -1417,6 +1438,7 @@ class Cycles {
 		if (!arm_export_tangents) {
 
 			frag.write('vec3 texn = ($out_normaltan) * 2.0 - 1.0;');
+			frag.write('texn.y = -texn.y;');
 		//     frag.add_include('../../Shaders/std/normals.glsl')
 
 		//     if defplus:
@@ -1424,7 +1446,7 @@ class Cycles {
 		//     else:
 			if (!cotangentFrameWritten) {
 				cotangentFrameWritten = true;
-				frag.write_header('mat3 cotangentFrame(const vec3 n, const vec3 p, const vec2 duv1, const vec2 duv2) {vec3 dp1 = dFdx(p);vec3 dp2 = dFdy(p);vec3 dp2perp = cross(dp2, n);vec3 dp1perp = cross(n, dp1);vec3 t = dp2perp * duv1.x + dp1perp * duv2.x;vec3 b = dp2perp * duv1.y + dp1perp * duv2.y;float invmax = inversesqrt(max(dot(t, t), dot(b, b)));return mat3(t * invmax, b * invmax, n);}');
+				frag.add_function(CyclesFunctions.str_cotangentFrame);
 			}
 			// frag.write('mat3 TBN = cotangentFrame(n, -vVec, texCoord);')
 			frag.write('mat3 TBN = cotangentFrame(n, -vVec, dFdx(texCoord), dFdy(texCoord));');
@@ -1999,6 +2021,8 @@ class Cycles {
 			// log.warn(matname + '/' + image.name + ' - power of 2 texture required for ' + image_node.interpolation + ' interpolation')
 		// }
 
+		tex.u_addressing = 'repeat';
+		tex.v_addressing = 'repeat';
 		// if (image_node.extension != 'REPEAT') { // Extend or clip
 			// tex.u_addressing = 'clamp';
 			// tex.v_addressing = 'clamp';
