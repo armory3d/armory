@@ -394,7 +394,12 @@ def parse_rgb(node, socket):
         return 'vcolor'
 
     elif node.type == 'RGB':
-        return to_vec3(socket.default_value)
+        if node.arm_material_param:
+            nn = node_name(node.name)
+            curshader.add_uniform('vec3 param_{0}'.format(nn), link='{0}'.format(nn))
+            return 'param_' + nn
+        else:
+            return to_vec3(socket.default_value)
 
     elif node.type == 'TEX_BRICK':
         curshader.add_function(c_functions.str_tex_brick)
@@ -451,17 +456,18 @@ def parse_rgb(node, socket):
             return '{0}.rgb'.format(store_var_name(node))
         tex_name = node_name(node.name)
         tex = make_texture(node, tex_name)
+        tex_link = tex_name if node.arm_material_param else None
         if tex != None:
             curshader.write_textures += 1
             to_linear = parsing_basecol and not tex['file'].endswith('.hdr')
-            res = '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear))
+            res = '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear, tex_link=tex_link))
             curshader.write_textures -= 1
             return res
         elif node.image == None: # Empty texture
             tex = {}
             tex['name'] = tex_name
             tex['file'] = ''
-            return '{0}.rgb'.format(texture_store(node, tex, tex_name, True))
+            return '{0}.rgb'.format(texture_store(node, tex, tex_name, True, tex_link=tex_link))
         else:
             tex_store = store_var_name(node) # Pink color for missing texture
             curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0);'.format(tex_store))
@@ -1009,7 +1015,12 @@ def parse_value(node, socket):
             return '1.0'
 
     elif node.type == 'VALUE':
-        return to_vec1(node.outputs[0].default_value)
+        if node.arm_material_param:
+            nn = node_name(node.name)
+            curshader.add_uniform('float param_{0}'.format(nn), link='{0}'.format(nn))
+            return 'param_' + nn
+        else:
+            return to_vec1(node.outputs[0].default_value)
 
     elif node.type == 'WIREFRAME':
         #node.use_pixel_size
@@ -1065,9 +1076,10 @@ def parse_value(node, socket):
             return '{0}.a'.format(store_var_name(node))
         tex_name = safesrc(node.name)
         tex = make_texture(node, tex_name)
+        tex_link = tex_name if node.arm_material_param else None
         if tex != None:
             curshader.write_textures += 1
-            res = '{0}.a'.format(texture_store(node, tex, tex_name))
+            res = '{0}.a'.format(texture_store(node, tex, tex_name, tex_link=tex_link))
             curshader.write_textures -= 1
             return res
         else:
@@ -1289,14 +1301,14 @@ def to_uniform(inp):
 def store_var_name(node):
     return node_name(node.name) + '_store'
 
-def texture_store(node, tex, tex_name, to_linear=False):
+def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
     global parsing_basecol
     global basecol_texname
     global sample_bump
     global sample_bump_res
     mat_bind_texture(tex)
     con.add_elem('tex', 2)
-    curshader.add_uniform('sampler2D {0}'.format(tex_name))
+    curshader.add_uniform('sampler2D {0}'.format(tex_name), link=tex_link)
     if node.inputs[0].is_linked:
         uv_name = parse_vector_input(node.inputs[0])
     else:

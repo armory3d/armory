@@ -1272,6 +1272,18 @@ class ArmPrintTraitsButton(bpy.types.Operator):
                     print('Object {0} - {1}'.format(o.name, tname))
         return{'FINISHED'}
 
+class ArmMaterialNodePanel(bpy.types.Panel):
+    bl_label = 'Armory Material Node'
+    bl_idname = 'ArmMaterialNodePanel'
+    bl_space_type = 'NODE_EDITOR'
+    bl_region_type = 'UI'
+
+    def draw(self, context):
+        layout = self.layout
+        n = context.active_node
+        if n != None and (n.bl_idname == 'ShaderNodeRGB' or n.bl_idname == 'ShaderNodeValue' or n.bl_idname == 'ShaderNodeTexImage'):
+            layout.prop(context.active_node, 'arm_material_param')
+
 def register():
     bpy.utils.register_class(ObjectPropsPanel)
     bpy.utils.register_class(ModifiersPropsPanel)
@@ -1310,6 +1322,7 @@ def register():
     bpy.utils.register_class(ArmProxyApplyAllButton)
     bpy.utils.register_class(ArmSyncProxyButton)
     bpy.utils.register_class(ArmPrintTraitsButton)
+    bpy.utils.register_class(ArmMaterialNodePanel)
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
 
 def unregister():
@@ -1351,3 +1364,4 @@ def unregister():
     bpy.utils.unregister_class(ArmProxyApplyAllButton)
     bpy.utils.unregister_class(ArmSyncProxyButton)
     bpy.utils.unregister_class(ArmPrintTraitsButton)
+    bpy.utils.unregister_class(ArmMaterialNodePanel)

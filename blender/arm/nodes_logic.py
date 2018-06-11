@@ -56,7 +56,7 @@ def unregister_nodes():
     nodeitems_utils.unregister_node_categories('ArmLogicNodes')
 
 class ArmLogicNodePanel(bpy.types.Panel):
-    bl_label = 'Armory Logic Nodes'
+    bl_label = 'Armory Logic Node'
     bl_idname = 'ArmLogicNodePanel'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
