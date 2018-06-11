@@ -146,16 +146,18 @@ class ArmBakeButton(bpy.types.Operator):
                 uvmap = uv_layers.new(name='UVMap_baked')
                 uv_layers.active_index = len(uv_layers) - 1
                 obs.active = ob
-                # bpy.ops.uv.lightmap_pack('EXEC_SCREEN', PREF_CONTEXT='ALL_FACES')
-                bpy.ops.object.select_all(action='DESELECT')
-                if bpy.app.version >= (2, 80, 1):
-                    ob.select_set(action='SELECT')
+                if scn.arm_bakelist_unwrap == 'Lightmap Pack':
+                    bpy.ops.uv.lightmap_pack('EXEC_SCREEN', PREF_CONTEXT='ALL_FACES')
                 else:
-                    ob.select = True
-                bpy.ops.object.mode_set(mode='EDIT')
-                bpy.ops.mesh.select_all(action='DESELECT')
-                bpy.ops.object.mode_set(mode='OBJECT')
-                bpy.ops.uv.smart_project('EXEC_SCREEN')
+                    bpy.ops.object.select_all(action='DESELECT')
+                    if bpy.app.version >= (2, 80, 1):
+                        ob.select_set(action='SELECT')
+                    else:
+                        ob.select = True
+                    bpy.ops.object.mode_set(mode='EDIT')
+                    bpy.ops.mesh.select_all(action='DESELECT')
+                    bpy.ops.object.mode_set(mode='OBJECT')
+                    bpy.ops.uv.smart_project('EXEC_SCREEN')
             else:
                 for i in range(0, len(uv_layers)):
                     if uv_layers[i].name == 'UVMap_baked':
@@ -311,6 +313,10 @@ def register():
     bpy.types.Scene.arm_bakelist_scale = FloatProperty(name="Resolution", description="Resolution scale", default=100.0, min=1, max=1000, soft_min=1, soft_max=100.0, subtype='PERCENTAGE')
     bpy.types.Scene.arm_bakelist = bpy.props.CollectionProperty(type=ArmBakeListItem)
     bpy.types.Scene.arm_bakelist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
+    bpy.types.Scene.arm_bakelist_unwrap = EnumProperty(
+        items = [('Lightmap Pack', 'Lightmap Pack', 'Lightmap Pack'),
+                 ('Smart UV Project', 'Smart UV Project', 'Smart UV Project')],
+        name = "UV Unwrap", default='Smart UV Project')
 
 def unregister():
     bpy.utils.unregister_class(ArmBakeListItem)

@@ -1007,6 +1007,8 @@ class ArmBakePanel(bpy.types.Panel):
         col.label(text="Samples:")
         col.prop(scn.cycles, "samples", text="Render")
 
+        layout.prop(scn, 'arm_bakelist_unwrap')
+
         rows = 2
         if len(scn.arm_bakelist) > 1:
             rows = 4
