@@ -11,7 +11,7 @@ import arm.props_renderpath as props_renderpath
 import arm.proxy
 
 # Armory version
-arm_version = '0.4'
+arm_version = '0.5'
 arm_commit = '$Id$'
 
 def invalidate_mesh_cache(self, context):
