@@ -395,9 +395,9 @@ def parse_rgb(node, socket):
 
     elif node.type == 'RGB':
         if node.arm_material_param:
-            nn = node_name(node.name)
-            curshader.add_uniform('vec3 param_{0}'.format(nn), link='{0}'.format(nn))
-            return 'param_' + nn
+            nn = 'param_' + node_name(node.name)
+            curshader.add_uniform('vec3 {0}'.format(nn), link='{0}'.format(node.name))
+            return nn
         else:
             return to_vec3(socket.default_value)
 
@@ -456,7 +456,7 @@ def parse_rgb(node, socket):
             return '{0}.rgb'.format(store_var_name(node))
         tex_name = node_name(node.name)
         tex = make_texture(node, tex_name)
-        tex_link = tex_name if node.arm_material_param else None
+        tex_link = node.name if node.arm_material_param else None
         if tex != None:
             curshader.write_textures += 1
             to_linear = parsing_basecol and not tex['file'].endswith('.hdr')
@@ -1016,9 +1016,9 @@ def parse_value(node, socket):
 
     elif node.type == 'VALUE':
         if node.arm_material_param:
-            nn = node_name(node.name)
-            curshader.add_uniform('float param_{0}'.format(nn), link='{0}'.format(nn))
-            return 'param_' + nn
+            nn = 'param_' + node_name(node.name)
+            curshader.add_uniform('float {0}'.format(nn), link='{0}'.format(node.name))
+            return nn
         else:
             return to_vec1(node.outputs[0].default_value)
 
@@ -1076,7 +1076,7 @@ def parse_value(node, socket):
             return '{0}.a'.format(store_var_name(node))
         tex_name = safesrc(node.name)
         tex = make_texture(node, tex_name)
-        tex_link = tex_name if node.arm_material_param else None
+        tex_link = node.name if node.arm_material_param else None
         if tex != None:
             curshader.write_textures += 1
             res = '{0}.a'.format(texture_store(node, tex, tex_name, tex_link=tex_link))

@@ -139,10 +139,14 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
             # uniform layout(RGBA8) image3D myname;
             if s[1].startswith('layout'):
                 ctype = s[2]
-                cid = s[3][:-1]
+                cid = s[3]
+                if cid[-1] == ';':
+                    cid = cid[:-1]
             else:
                 ctype = s[1]
-                cid = s[2][:-1]
+                cid = s[2]
+                if cid[-1] == ';':
+                    cid = cid[:-1]
 
             found = False # Unique check
             if ctype == 'sampler2D' or ctype == 'sampler2DShadow' or ctype == 'sampler3D' or ctype == 'samplerCube' or ctype == 'image2D' or ctype == 'uimage2D' or ctype == 'image3D' or ctype == 'uimage3D': # Texture unit

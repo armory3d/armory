@@ -1,6 +1,8 @@
 package armory.object;
 
 import iron.Scene;
+import iron.object.Object;
+import iron.data.MaterialData;
 import iron.math.Vec4;
 
 // Structure for setting shader uniforms
@@ -12,7 +14,7 @@ class Uniforms {
 		iron.object.Uniforms.externalFloatLinks = [floatLink];
 	}
 
-	public static function textureLink(link:String):kha.Image {
+	public static function textureLink(object:Object, mat:MaterialData, link:String):kha.Image {
 		if (link == "_smaaSearch") {
 			return Scene.active.embedded.get('smaa_search.png');
 		}
@@ -41,7 +43,7 @@ class Uniforms {
 		return null;
 	}
 
-	public static function vec3Link(link:String):iron.math.Vec4 {
+	public static function vec3Link(object:Object, mat:MaterialData, link:String):iron.math.Vec4 {
 		var v:Vec4 = null;
 		#if arm_hosek
 		if (link == "_hosekA") {
@@ -171,7 +173,7 @@ class Uniforms {
 		return v;
 	}
 
-	public static function floatLink(link:String):Null<kha.FastFloat> {
+	public static function floatLink(object:Object, mat:MaterialData, link:String):Null<kha.FastFloat> {
 		#if rp_dynres
 		if (link == "_dynamicScale") {
 			return armory.renderpath.DynamicResolutionScale.dynamicScale;
