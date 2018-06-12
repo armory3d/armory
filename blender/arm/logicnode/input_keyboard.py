@@ -6,7 +6,7 @@ from arm.logicnode.arm_nodes import *
 class KeyboardNode(Node, ArmLogicTreeNode):
     '''Keyboard node'''
     bl_idname = 'LNKeyboardNode'
-    bl_label = 'Keyboard'
+    bl_label = 'Keyboard State'
     bl_icon = 'CURVE_PATH'
     
     property0 = EnumProperty(

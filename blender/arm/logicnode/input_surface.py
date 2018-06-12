@@ -6,7 +6,7 @@ from arm.logicnode.arm_nodes import *
 class SurfaceNode(Node, ArmLogicTreeNode):
     '''Surface node'''
     bl_idname = 'LNSurfaceNode'
-    bl_label = 'Surface'
+    bl_label = 'Surface State'
     bl_icon = 'CURVE_PATH'
     property0 = EnumProperty(
         items = [('Touched', 'Touched', 'Touched'),

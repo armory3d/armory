@@ -6,7 +6,7 @@ from arm.logicnode.arm_nodes import *
 class MouseNode(Node, ArmLogicTreeNode):
     '''Mouse node'''
     bl_idname = 'LNMouseNode'
-    bl_label = 'Mouse'
+    bl_label = 'Mouse State'
     bl_icon = 'CURVE_PATH'
     property0 = EnumProperty(
         items = [('Down', 'Down', 'Down'),
