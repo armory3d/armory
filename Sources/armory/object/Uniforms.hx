@@ -7,44 +7,44 @@ import iron.math.Vec4;
 class Uniforms {
 
 	public static function register() {
-		iron.object.Uniforms.externalTextureLinks = [externalTextureLink];
-		iron.object.Uniforms.externalVec3Links = [externalVec3Link];
-		iron.object.Uniforms.externalFloatLinks = [externalFloatLink];
+		iron.object.Uniforms.externalTextureLinks = [textureLink];
+		iron.object.Uniforms.externalVec3Links = [vec3Link];
+		iron.object.Uniforms.externalFloatLinks = [floatLink];
 	}
 
-	public static function externalTextureLink(tulink:String):kha.Image {
-		if (tulink == "_smaaSearch") {
+	public static function textureLink(link:String):kha.Image {
+		if (link == "_smaaSearch") {
 			return Scene.active.embedded.get('smaa_search.png');
 		}
-		else if (tulink == "_smaaArea") {
+		else if (link == "_smaaArea") {
 			return Scene.active.embedded.get('smaa_area.png');
 		}
 		#if arm_ltc
-		else if (tulink == "_ltcMat") {
+		else if (link == "_ltcMat") {
 			if (armory.data.ConstData.ltcMatTex == null) armory.data.ConstData.initLTC();
 			return armory.data.ConstData.ltcMatTex;
 		}
-		else if (tulink == "_ltcMag") {
+		else if (link == "_ltcMag") {
 			if (armory.data.ConstData.ltcMagTex == null) armory.data.ConstData.initLTC();
 			return armory.data.ConstData.ltcMagTex;
 		}
 		#end
-		else if (tulink == "_lensTexture") {
+		else if (link == "_lensTexture") {
 			return Scene.active.embedded.get('lenstexture.jpg');
 		}
-		else if (tulink == "_lutTexture") {
+		else if (link == "_lutTexture") {
 			return Scene.active.embedded.get('luttexture.jpg');
 		}
-		else if (tulink == "_cloudsTexture") {
+		else if (link == "_cloudsTexture") {
 			return Scene.active.embedded.get('cloudstexture.png');
 		}
 		return null;
 	}
 
-	public static function externalVec3Link(clink:String):iron.math.Vec4 {
+	public static function vec3Link(link:String):iron.math.Vec4 {
 		var v:Vec4 = null;
 		#if arm_hosek
-		if (clink == "_hosekA") {
+		if (link == "_hosekA") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
@@ -55,7 +55,7 @@ class Uniforms {
 				v.z = armory.renderpath.HosekWilkie.data.A.z;
 			}
 		}
-		else if (clink == "_hosekB") {
+		else if (link == "_hosekB") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
@@ -66,7 +66,7 @@ class Uniforms {
 				v.z = armory.renderpath.HosekWilkie.data.B.z;
 			}
 		}
-		else if (clink == "_hosekC") {
+		else if (link == "_hosekC") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
@@ -77,7 +77,7 @@ class Uniforms {
 				v.z = armory.renderpath.HosekWilkie.data.C.z;
 			}
 		}
-		else if (clink == "_hosekD") {
+		else if (link == "_hosekD") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
@@ -88,7 +88,7 @@ class Uniforms {
 				v.z = armory.renderpath.HosekWilkie.data.D.z;
 			}
 		}
-		else if (clink == "_hosekE") {
+		else if (link == "_hosekE") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
@@ -99,7 +99,7 @@ class Uniforms {
 				v.z = armory.renderpath.HosekWilkie.data.E.z;
 			}
 		}
-		else if (clink == "_hosekF") {
+		else if (link == "_hosekF") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
@@ -110,7 +110,7 @@ class Uniforms {
 				v.z = armory.renderpath.HosekWilkie.data.F.z;
 			}
 		}
-		else if (clink == "_hosekG") {
+		else if (link == "_hosekG") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
@@ -121,7 +121,7 @@ class Uniforms {
 				v.z = armory.renderpath.HosekWilkie.data.G.z;
 			}
 		}
-		else if (clink == "_hosekH") {
+		else if (link == "_hosekH") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
@@ -132,7 +132,7 @@ class Uniforms {
 				v.z = armory.renderpath.HosekWilkie.data.H.z;
 			}
 		}
-		else if (clink == "_hosekI") {
+		else if (link == "_hosekI") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
@@ -143,7 +143,7 @@ class Uniforms {
 				v.z = armory.renderpath.HosekWilkie.data.I.z;
 			}
 		}
-		else if (clink == "_hosekZ") {
+		else if (link == "_hosekZ") {
 			if (armory.renderpath.HosekWilkie.data == null) {
 				armory.renderpath.HosekWilkie.init(Scene.active.world);
 			}
@@ -154,7 +154,7 @@ class Uniforms {
 				v.z = armory.renderpath.HosekWilkie.data.Z.z;
 			}
 		}
-		else if (clink == "_cameraPositionSnap") {
+		else if (link == "_cameraPositionSnap") {
 			#if arm_voxelgi
 			v = iron.object.Uniforms.helpVec;
 			var camera = iron.Scene.active.camera;
@@ -171,12 +171,12 @@ class Uniforms {
 		return v;
 	}
 
-	public static function externalFloatLink(clink:String):kha.FastFloat {
+	public static function floatLink(link:String):Null<kha.FastFloat> {
 		#if rp_dynres
-		if (clink == "_dynamicScale") {
+		if (link == "_dynamicScale") {
 			return armory.renderpath.DynamicResolutionScale.dynamicScale;
 		}
 		#end
-		return 0.0;
+		return null;
 	}
 }
