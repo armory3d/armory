@@ -2486,19 +2486,20 @@ class ArmoryExporter:
             co['type'] = con.type
             if bone:
                 co['bone'] = bobject.name
-            if con.type == 'COPY_LOCATION':
-                co['target'] = con.target.name
-                co['use_x'] = con.use_x
-                co['use_y'] = con.use_y
-                co['use_z'] = con.use_z
-                co['invert_x'] = con.invert_x
-                co['invert_y'] = con.invert_y
-                co['invert_z'] = con.invert_z
-                co['use_offset'] = con.use_offset
-                co['influence'] = con.influence
-            elif con.type == 'CHILD_OF':
-                co['target'] = con.target.name
-                co['influence'] = con.influence
+            if con.target != None:
+                if con.type == 'COPY_LOCATION':
+                    co['target'] = con.target.name
+                    co['use_x'] = con.use_x
+                    co['use_y'] = con.use_y
+                    co['use_z'] = con.use_z
+                    co['invert_x'] = con.invert_x
+                    co['invert_y'] = con.invert_y
+                    co['invert_z'] = con.invert_z
+                    co['use_offset'] = con.use_offset
+                    co['influence'] = con.influence
+                elif con.type == 'CHILD_OF':
+                    co['target'] = con.target.name
+                    co['influence'] = con.influence
             o['constraints'].append(co)
 
     def export_traits(self, bobject, o):
