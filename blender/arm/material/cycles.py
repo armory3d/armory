@@ -1311,6 +1311,7 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
     curshader.add_uniform('sampler2D {0}'.format(tex_name), link=tex_link)
     if node.inputs[0].is_linked:
         uv_name = parse_vector_input(node.inputs[0])
+        uv_name = 'vec2({0}.x, 1.0 - {0}.y)'.format(uv_name)
     else:
         uv_name = 'texCoord'
     tex_store = store_var_name(node)
