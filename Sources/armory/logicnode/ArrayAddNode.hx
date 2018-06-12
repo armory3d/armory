@@ -8,8 +8,13 @@ class ArrayAddNode extends LogicNode {
 
 	override function run() {
 		var ar:Array<Dynamic> = inputs[1].get();
-		var value:Dynamic = inputs[2].get();
-		ar.push(value);
+
+		if (inputs.length > 2) {
+			for (i in 2...inputs.length) {
+				var value:Dynamic = inputs[i].get();
+				ar.push(value);
+			}
+		}
 
 		super.run();
 	}

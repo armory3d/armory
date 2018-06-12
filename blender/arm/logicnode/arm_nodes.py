@@ -129,6 +129,19 @@ class ArmNodeAddInputButton(bpy.types.Operator):
         inps.new(self.socket_type, 'Input ' + str(len(inps)))
         return{'FINISHED'}
 
+class ArmNodeAddInputValueButton(bpy.types.Operator):
+    '''Add new input'''
+    bl_idname = 'arm.node_add_input_value'
+    bl_label = 'Add Input'
+    node_index = StringProperty(name='Node Index', default='')
+    socket_type = StringProperty(name='Socket Type', default='NodeSocketShader')
+
+    def execute(self, context):
+        global array_nodes
+        inps = array_nodes[self.node_index].inputs
+        inps.new(self.socket_type, 'Value')
+        return{'FINISHED'}
+
 class ArmNodeRemoveInputButton(bpy.types.Operator):
     '''Remove last input'''
     bl_idname = 'arm.node_remove_input'
@@ -141,6 +154,21 @@ class ArmNodeRemoveInputButton(bpy.types.Operator):
         inps = node.inputs
         min_inps = 0 if not hasattr(node, 'min_inputs') else node.min_inputs
         if len(inps) > min_inps:
+            inps.remove(inps.values()[-1])
+        return{'FINISHED'}
+
+class ArmNodeRemoveInputValueButton(bpy.types.Operator):
+    '''Remove last input'''
+    bl_idname = 'arm.node_remove_input_value'
+    bl_label = 'Remove Input'
+    node_index = StringProperty(name='Node Index', default='')
+
+    def execute(self, context):
+        global array_nodes
+        node = array_nodes[self.node_index]
+        inps = node.inputs
+        min_inps = 0 if not hasattr(node, 'min_inputs') else node.min_inputs
+        if len(inps) > min_inps and inps[-1].name == 'Value':
             inps.remove(inps.values()[-1])
         return{'FINISHED'}
 
@@ -181,6 +209,8 @@ bpy.utils.register_class(ArmObjectSocket)
 bpy.utils.register_class(ArmNodeEyedropButton)
 bpy.utils.register_class(ArmAnimActionSocket)
 bpy.utils.register_class(ArmNodeAddInputButton)
+bpy.utils.register_class(ArmNodeAddInputValueButton)
 bpy.utils.register_class(ArmNodeRemoveInputButton)
+bpy.utils.register_class(ArmNodeRemoveInputValueButton)
 bpy.utils.register_class(ArmNodeAddOutputButton)
 bpy.utils.register_class(ArmNodeRemoveOutputButton)
