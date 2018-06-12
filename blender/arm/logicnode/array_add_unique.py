@@ -11,7 +11,7 @@ class ArrayAddUniqueNode(Node, ArmLogicTreeNode):
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketShader', 'Array')
+        self.inputs.new('ArmNodeSocketArray', 'Array')
         self.inputs.new('NodeSocketShader', 'Value')
         self.outputs.new('ArmNodeSocketAction', 'Out')
 

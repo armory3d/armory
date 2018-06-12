@@ -10,7 +10,7 @@ class ArrayLengthNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', 'Array')
+        self.inputs.new('ArmNodeSocketArray', 'Array')
         self.outputs.new('NodeSocketInt', 'Length')
 
 add_node(ArrayLengthNode, category='Array')

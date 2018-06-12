@@ -12,7 +12,7 @@ class GroupNode(Node, ArmLogicTreeNode):
     property0 = StringProperty(name='', default='')
     
     def init(self, context):
-        self.outputs.new('NodeSocketShader', 'Array')
+        self.outputs.new('ArmNodeSocketArray', 'Array')
 
     def draw_buttons(self, context, layout):
         layout.prop_search(self, 'property0', bpy.data, 'groups', icon='NONE', text='')

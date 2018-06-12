@@ -10,7 +10,7 @@ class ArrayGetNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('NodeSocketShader', 'Array')
+        self.inputs.new('ArmNodeSocketArray', 'Array')
         self.inputs.new('NodeSocketInt', 'Index')
         self.outputs.new('NodeSocketShader', 'Value')
 

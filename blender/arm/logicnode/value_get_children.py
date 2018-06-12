@@ -11,6 +11,6 @@ class GetChildrenNode(Node, ArmLogicTreeNode):
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.outputs.new('NodeSocketShader', 'Array')
+        self.outputs.new('ArmNodeSocketArray', 'Array')
 
 add_node(GetChildrenNode, category='Value')

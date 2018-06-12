@@ -11,6 +11,6 @@ class GetGroupNode(Node, ArmLogicTreeNode):
 
     def init(self, context):
         self.inputs.new('NodeSocketString', 'Name')
-        self.outputs.new('NodeSocketShader', 'Array')
+        self.outputs.new('ArmNodeSocketArray', 'Array')
 
 add_node(GetGroupNode, category='Value')

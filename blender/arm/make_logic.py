@@ -154,7 +154,7 @@ def get_root_nodes(node_group):
 
 def build_default_node(inp):
     inp_name = 'new armory.logicnode.NullNode(this)'
-    if inp.bl_idname == 'ArmNodeSocketAction':
+    if inp.bl_idname == 'ArmNodeSocketAction' or inp.bl_idname == 'ArmNodeSocketArray':
         return inp_name
     if inp.bl_idname == 'ArmNodeSocketObject':
         inp_name = 'new armory.logicnode.ObjectNode(this, "' + str(inp.get_default_value()) + '")'

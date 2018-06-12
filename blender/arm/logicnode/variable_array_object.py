@@ -13,7 +13,7 @@ class ObjectArrayNode(Node, ArmLogicTreeNode):
         array_nodes[str(id(self))] = self
     
     def init(self, context):
-        self.outputs.new('NodeSocketShader', 'Array')
+        self.outputs.new('ArmNodeSocketArray', 'Array')
         self.outputs.new('NodeSocketInt', 'Length')
 
     def draw_buttons(self, context, layout):
