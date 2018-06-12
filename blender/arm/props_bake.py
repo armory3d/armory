@@ -257,6 +257,7 @@ class ArmBakeSpecialsMenu(bpy.types.Menu):
         layout.operator("arm.bake_add_all")
         layout.operator("arm.bake_add_selected")
         layout.operator("arm.bake_clear_all")
+        layout.operator("arm.bake_remove_baked_materials")
 
 class ArmBakeAddAllButton(bpy.types.Operator):
     '''Fill the list with scene objects'''
@@ -299,6 +300,17 @@ class ArmBakeClearAllButton(bpy.types.Operator):
         scn.arm_bakelist.clear()
         return{'FINISHED'}
 
+class ArmBakeRemoveBakedMaterialsButton(bpy.types.Operator):
+    '''Clear the list'''
+    bl_idname = 'arm.bake_remove_baked_materials'
+    bl_label = 'Remove Baked Materials'
+
+    def execute(self, context):
+        for mat in bpy.data.materials:
+            if mat.name.endswith('_baked'):
+                bpy.data.materials.remove(mat, True)
+        return{'FINISHED'}
+
 def register():
     bpy.utils.register_class(ArmBakeListItem)
     bpy.utils.register_class(ArmBakeList)
@@ -310,6 +322,7 @@ def register():
     bpy.utils.register_class(ArmBakeAddAllButton)
     bpy.utils.register_class(ArmBakeAddSelectedButton)
     bpy.utils.register_class(ArmBakeClearAllButton)
+    bpy.utils.register_class(ArmBakeRemoveBakedMaterialsButton)
     bpy.types.Scene.arm_bakelist_scale = FloatProperty(name="Resolution", description="Resolution scale", default=100.0, min=1, max=1000, soft_min=1, soft_max=100.0, subtype='PERCENTAGE')
     bpy.types.Scene.arm_bakelist = bpy.props.CollectionProperty(type=ArmBakeListItem)
     bpy.types.Scene.arm_bakelist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
@@ -329,3 +342,4 @@ def unregister():
     bpy.utils.unregister_class(ArmBakeAddAllButton)
     bpy.utils.unregister_class(ArmBakeAddSelectedButton)
     bpy.utils.unregister_class(ArmBakeClearAllButton)
+    bpy.utils.unregister_class(ArmBakeRemoveBakedMaterialsButton)
