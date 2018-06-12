@@ -6,6 +6,7 @@ from arm.exporter import ArmoryExporter
 
 parsed_nodes = []
 parsed_labels = dict()
+group_name = ''
 
 def get_logic_trees():
     ar = []
@@ -31,6 +32,7 @@ def build():
 def build_node_tree(node_group):
     global parsed_nodes
     global parsed_labels
+    global group_name
     parsed_nodes = []
     parsed_labels = dict()
     root_nodes = get_root_nodes(node_group)
@@ -102,6 +104,8 @@ def build_node(node, f):
         if inp.is_linked:
             n = inp.links[0].from_node
             socket = inp.links[0].from_socket
+            if inp.bl_idname == 'ArmNodeSocketAction' and socket.bl_idname != 'ArmNodeSocketAction':
+                print('Armory Error: Wrong connection in logic node tree "{0}" - node "{1}" - socket "{2}"'.format(group_name, node.name, inp.name))
             inp_name = build_node(n, f)
             for i in range(0, len(n.outputs)):
                 if n.outputs[i] == socket:
