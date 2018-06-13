@@ -345,6 +345,8 @@ class ArmoryExporterPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_project_name')
         col.prop(wrd, 'arm_project_package')
         col.prop(wrd, 'arm_project_version')
+        col.prop(wrd, 'arm_project_bundle')
+        col.prop(wrd, 'arm_project_icon')
 
 class ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
