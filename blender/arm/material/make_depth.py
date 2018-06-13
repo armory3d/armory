@@ -52,6 +52,9 @@ def make(context_id, rpasses, shadowmap=False):
             if con_depth.is_elem('tex'):
                 vert.add_out('vec2 texCoord') ## vs only, remove out
                 vert.write_attrib('texCoord = tex;')
+            if con_depth.is_elem('tex1'):
+                vert.add_out('vec2 texCoord1') ## vs only, remove out
+                vert.write_attrib('texCoord1 = tex1;')
             vert.write('wposition += wnormal * disp * 0.1;')
             if shadowmap:
                 vert.add_uniform('mat4 LVP', '_lampViewProjectionMatrix')
