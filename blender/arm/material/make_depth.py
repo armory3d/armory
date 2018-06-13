@@ -46,10 +46,8 @@ def make(context_id, rpasses, shadowmap=False):
     if is_disp:
         rpdat = arm.utils.get_rp()
         if rpdat.arm_rp_displacement == 'Vertex':
-            vert.add_uniform('mat4 W', '_worldMatrix')
             vert.add_uniform('mat3 N', '_normalMatrix')
             vert.write('vec3 wnormal = normalize(N * nor);')
-            vert.write('vec3 wposition = vec4(W * spos).xyz;')
             cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=parse_opacity)
             if con_depth.is_elem('tex'):
                 vert.add_out('vec2 texCoord') ## vs only, remove out
@@ -69,12 +67,9 @@ def make(context_id, rpasses, shadowmap=False):
             tese.ins = tesc.outs
             frag.ins = tese.outs
 
-            vert.add_out('vec3 wposition')
             vert.add_out('vec3 wnormal')
-            vert.add_uniform('mat4 W', '_worldMatrix')
             vert.add_uniform('mat3 N', '_normalMatrix')
             vert.write('wnormal = normalize(N * nor);')
-            vert.write('wposition = vec4(W * spos).xyz;')
             
             make_tess.tesc_levels(tesc, rpdat.arm_tess_shadows_inner, rpdat.arm_tess_shadows_outer)
             make_tess.interpolate(tese, 'wposition', 3)

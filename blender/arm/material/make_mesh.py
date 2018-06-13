@@ -84,8 +84,11 @@ def make_finalize(con_mesh):
     
     export_wpos = False
     if frag.contains('wposition') and not frag.contains('vec3 wposition'):
-        if not is_displacement: # Displacement always outputs wposition
-            export_wpos = True
+        export_wpos = True
+    if tese != None:
+        export_wpos = True
+    if vert.contains('wposition'):
+        write_wpos = True
     
     if export_wpos:
         vert.add_uniform('mat4 W', '_worldMatrix')
@@ -150,20 +153,12 @@ def make_base(con_mesh, parse_opacity):
     if is_displacement:
         if rpdat.arm_rp_displacement == 'Vertex':
             frag.ins = vert.outs
-            rid = rpdat.rp_renderer
-            if rid == 'Deferred':
-                vert.add_uniform('mat4 W', '_worldMatrix')
-                vert.add_out('vec3 wposition')
-                vert.write_attrib('wposition = vec4(W * spos).xyz;')
         else: # Tessellation
             tesc = con_mesh.make_tesc()
             tese = con_mesh.make_tese()
             tesc.ins = vert.outs
             tese.ins = tesc.outs
             frag.ins = tese.outs
-            vert.add_uniform('mat4 W', '_worldMatrix')
-            vert.add_out('vec3 wposition')
-            vert.write_attrib('wposition = vec4(W * spos).xyz;')
             make_tess.tesc_levels(tesc, rpdat.arm_tess_mesh_inner, rpdat.arm_tess_mesh_outer)
             make_tess.interpolate(tese, 'wposition', 3, declare_out=True)
             make_tess.interpolate(tese, 'wnormal', 3, declare_out=True, normalize=True)
@@ -558,6 +553,7 @@ def make_forward(con_mesh):
         frag.write('fragColor.rgb *= p_fade;')
 
 def make_forward_base(con_mesh, parse_opacity=False):
+    global is_displacement
     wrd = bpy.data.worlds['Arm']
 
     arm_discard = mat_state.material.arm_discard
@@ -618,10 +614,16 @@ def make_forward_base(con_mesh, parse_opacity=False):
             tese.add_uniform('int lightShadow', '_lampCastShadow')
             tese.write('if (lightShadow == 1) lampPos = LVP * vec4(wposition, 1.0);')
         else:
-            vert.add_out('vec4 lampPos')
-            vert.add_uniform('int lightShadow', '_lampCastShadow')
-            vert.add_uniform('mat4 LWVP', '_biasLampWorldViewProjectionMatrix')
-            vert.write('if (lightShadow == 1) lampPos = LWVP * spos;')
+            if is_displacement:
+                vert.add_out('vec4 lampPos')
+                vert.add_uniform('mat4 LVP', '_biasLampViewProjectionMatrix')
+                vert.add_uniform('int lightShadow', '_lampCastShadow')
+                vert.write('if (lightShadow == 1) lampPos = LVP * vec4(wposition, 1.0);')
+            else:
+                vert.add_out('vec4 lampPos')
+                vert.add_uniform('int lightShadow', '_lampCastShadow')
+                vert.add_uniform('mat4 LWVP', '_biasLampWorldViewProjectionMatrix')
+                vert.write('if (lightShadow == 1) lampPos = LWVP * spos;')
         
         frag.add_include('std/shadows.glsl')
         frag.add_uniform('sampler2D shadowMap')
