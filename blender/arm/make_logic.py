@@ -5,7 +5,7 @@ import arm.log
 from arm.exporter import ArmoryExporter
 
 parsed_nodes = []
-parsed_labels = dict()
+parsed_ids = dict() # Sharing node data
 group_name = ''
 
 def get_logic_trees():
@@ -31,10 +31,10 @@ def build():
 
 def build_node_tree(node_group):
     global parsed_nodes
-    global parsed_labels
+    global parsed_ids
     global group_name
     parsed_nodes = []
-    parsed_labels = dict()
+    parsed_ids = dict()
     root_nodes = get_root_nodes(node_group)
 
     pack_path = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
@@ -64,7 +64,7 @@ def build_node_tree(node_group):
 
 def build_node(node, f):
     global parsed_nodes
-    global parsed_labels
+    global parsed_ids
 
     if node.type == 'REROUTE':
         if len(node.inputs) > 0 and len(node.inputs[0].links) > 0:
@@ -75,11 +75,11 @@ def build_node(node, f):
     # Get node name
     name = '_' + arm.utils.safesrc(node.name)
 
-    # Link nodes using labels
-    if node.label != '':
-        if node.label in parsed_labels:
-            return parsed_labels[node.label]
-        parsed_labels[node.label] = name
+    # Link nodes using IDs
+    if node.arm_logic_id != '':
+        if node.arm_logic_id in parsed_ids:
+            return parsed_ids[node.arm_logic_id]
+        parsed_ids[node.arm_logic_id] = name
 
     # Check if node already exists
     if name in parsed_nodes:
