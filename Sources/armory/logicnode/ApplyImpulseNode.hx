@@ -14,7 +14,7 @@ class ApplyImpulseNode extends LogicNode {
 		var object:Object = inputs[1].get();
 		var impulse:Vec4 = inputs[2].get();
 		
-		if (object == null) return;
+		if (object == null || impulse == null) return;
 
 #if arm_physics
 		var rb:RigidBody = object.getTrait(RigidBody);

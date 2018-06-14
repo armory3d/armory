@@ -10,6 +10,8 @@ class ArrayRemoveNode extends LogicNode {
 
 	override function run() {
 		var ar:Array<Dynamic> = inputs[1].get();
+		if (ar == null) return;
+
 		var i:Int = inputs[2].get();
 		if (i < 0) i = ar.length + i;
 

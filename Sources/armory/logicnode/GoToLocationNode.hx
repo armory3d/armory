@@ -14,8 +14,7 @@ class GoToLocationNode extends LogicNode {
 		var object:Object = inputs[1].get();
 		var location:Vec4 = inputs[2].get();
 		
-		if (location == null) return;
-		if (object == null) return;
+		if (object == null || location == null) return;
 
 #if arm_navigation
 		// Assume navmesh exists..

@@ -13,6 +13,8 @@ class VectorFromTransformNode extends LogicNode {
 	override function get(from:Int):Dynamic {
 		var m:Mat4 = inputs[0].get();
 
+		if (m == null) return null;
+
 		switch (property0) {
 		case "Up":
 			return m.up();

@@ -8,6 +8,8 @@ class ArrayPopNode extends LogicNode {
 
 	override function get(from:Int):Dynamic {
 		var ar:Array<Dynamic> = inputs[0].get();
+		if (ar == null) return null;
+		
 		return ar.pop();
 	}
 }

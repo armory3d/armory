@@ -8,6 +8,8 @@ class ArraySetNode extends LogicNode {
 
 	override function run() {
 		var ar:Array<Dynamic> = inputs[1].get();
+		if (ar == null) return;
+
 		var i:Int = inputs[2].get();
 		var value:Dynamic = inputs[3].get();
 

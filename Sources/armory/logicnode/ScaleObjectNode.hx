@@ -15,7 +15,7 @@ class ScaleObjectNode extends LogicNode {
 		var object:Object = inputs[1].get();
 		var vec:Vec4 = inputs[2].get();
 
-		if (object == null) return;
+		if (object == null || vec == null) return;
 
 		object.transform.scale.add(vec);
 		object.transform.buildMatrix();

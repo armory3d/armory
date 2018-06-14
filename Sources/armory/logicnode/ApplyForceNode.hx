@@ -14,7 +14,7 @@ class ApplyForceNode extends LogicNode {
 		var object:Object = inputs[1].get();
 		var force:Vec4 = inputs[2].get();
 		
-		if (object == null) return;
+		if (object == null || force == null) return;
 
 #if arm_physics
 		var rb:RigidBody = object.getTrait(RigidBody);

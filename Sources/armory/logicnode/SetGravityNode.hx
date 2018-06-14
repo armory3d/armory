@@ -12,6 +12,8 @@ class SetGravityNode extends LogicNode {
 
 	override function run() {
 		var gravity:Vec4 = inputs[1].get();
+
+		if (gravity == null) return;
 		
 #if arm_physics
         var physics = armory.trait.physics.PhysicsWorld.active;

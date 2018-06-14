@@ -10,6 +10,7 @@ class PlaySoundNode extends LogicNode {
 
 	override function run() {
 		var object:SpeakerObject = cast(inputs[1].get(), SpeakerObject);
+		if (object == null) return;
 		object.play();
 		super.run();
 	}

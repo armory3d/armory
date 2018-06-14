@@ -10,6 +10,8 @@ class ArrayLoopNode extends LogicNode {
 
 	override function run() {
 		var ar:Array<Dynamic> = inputs[1].get();
+		if (ar == null) return;
+
 		for (val in ar) {
 			value = val;
 			runOutputs(0);

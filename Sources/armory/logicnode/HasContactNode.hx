@@ -13,6 +13,8 @@ class HasContactNode extends LogicNode {
 		var object1:Object = inputs[0].get();
 		var object2:Object = inputs[1].get();
 
+		if (object1 == null || object2 == null) return false;
+
 #if arm_physics
 		var physics = armory.trait.physics.PhysicsWorld.active;
 		var rb2 = object2.getTrait(RigidBody);

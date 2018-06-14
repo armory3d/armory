@@ -13,6 +13,7 @@ class WorldToScreenSpaceNode extends LogicNode {
 
 	override function get(from:Int):Dynamic {
 		var v1:Vec4 = inputs[0].get();
+		if (v1 == null) return null;
 
 		var cam = iron.Scene.active.camera;
 		v.setFrom(v1);

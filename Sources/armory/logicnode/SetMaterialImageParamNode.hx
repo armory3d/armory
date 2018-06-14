@@ -22,6 +22,8 @@ class SetMaterialImageParamNode extends LogicNode {
 	override function run() {
 		mat = inputs[1].get();
 		node = inputs[2].get();
+		if (mat == null || node == null) return;
+		
 		var name = inputs[3].get();
 		iron.data.Data.getImage(name, function(img:kha.Image) {
 			image = img;

@@ -10,6 +10,7 @@ class RemoveTraitNode extends LogicNode {
 
 	override function run() {
 		var trait:Dynamic = inputs[1].get();
+		if (trait == null) return;
 		trait.remove();
 
 		super.run();

@@ -8,6 +8,8 @@ class ArrayGetNode extends LogicNode {
 
 	override function get(from:Int):Dynamic {
 		var ar:Array<Dynamic> = inputs[0].get();
+		if (ar == null) return null;
+		
 		var i:Int = inputs[1].get();
 		if (i < 0) i = ar.length + i;
 		if (i < 0 || i > ar.length - 1) {

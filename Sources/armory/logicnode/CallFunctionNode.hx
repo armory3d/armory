@@ -11,8 +11,9 @@ class CallFunctionNode extends LogicNode {
 	}
 
 	override function run() {
-		
 		var object:Object = inputs[1].get();
+		if (object == null) return;
+		
 		var funName:String = inputs[2].get();
 		
 		result = Reflect.callMethod(object, Reflect.field(object, funName), null);

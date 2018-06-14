@@ -17,7 +17,7 @@ class SetVelocityNode extends LogicNode {
 		var angular:Vec4 = inputs[4].get();
 		var angularFactor:Vec4 = inputs[5].get();
 		
-		if (object == null) return;
+		if (object == null || linear == null || linearFactor == null || angular == null || angularFactor == null) return;
 
 #if arm_physics
 		var rb:RigidBody = object.getTrait(RigidBody);

@@ -12,7 +12,7 @@ class AddTraitNode extends LogicNode {
 		var object:Object = inputs[1].get();
 		var trait:Dynamic = inputs[2].get();
 		
-		if (object == null) return;
+		if (object == null || trait == null) return;
 
 		object.addTrait(trait);
 

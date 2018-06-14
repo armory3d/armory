@@ -18,8 +18,9 @@ class TransformNode extends LogicNode {
 	override function get(from:Int):Dynamic {
 		var loc:Vec4 = inputs[0].get();
 		var rot:Vec4 = inputs[1].get();
-		q.fromEuler(rot.x, rot.y, rot.z);
 		var scale:Vec4 = inputs[2].get();
+		if (loc == null || rot == null || scale == null) return null;
+		q.fromEuler(rot.x, rot.y, rot.z);
 		value.compose(loc, q, scale);
 		return value;
 	}

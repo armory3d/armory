@@ -12,6 +12,7 @@ class SeparateTransformNode extends LogicNode {
 
 	override function get(from:Int):Dynamic {
 		var matrix:Mat4 = inputs[0].get();
+		if (matrix == null) return null;
 
 		var loc = new Vec4();
 		var rot = new Quat();

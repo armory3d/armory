@@ -14,7 +14,7 @@ class SetTransformNode extends LogicNode {
 		var object:Object = inputs[1].get();
 		var matrix:Mat4 = inputs[2].get();
 
-		if (object == null) return;
+		if (object == null || matrix == null) return;
 
 		object.transform.setMatrix(matrix);
 
