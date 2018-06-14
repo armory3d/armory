@@ -1,12 +1,13 @@
 package armory.logicnode;
 
 import iron.math.Vec4;
+import iron.math.Quat;
 
 class LookAtNode extends LogicNode {
 
 	var v1 = new Vec4();
 	var v2 = new Vec4();
-	var q = new iron.math.Quat();
+	var q = new Quat();
 
 	public function new(tree:LogicTree) {
 		super(tree);

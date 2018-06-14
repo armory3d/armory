@@ -37,6 +37,8 @@ class DebugConsole extends Trait {
 	var physTime = 0.0;
 	var physTimeAvg = 0.0;
 
+	public static var f = 1.0;
+
 	public function new() {
 		super();
 
@@ -53,6 +55,8 @@ class DebugConsole extends Trait {
 			// Toggle console
 			kha.input.Keyboard.get().notify(null, null, function(char: String) {
 				if (char == "~") show = !show;
+				else if (char == "[") f -= 0.1;
+				else if (char == "]") f += 0.1;
 			});
 		});
 	}

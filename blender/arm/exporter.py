@@ -944,7 +944,7 @@ class ArmoryExporter:
                 armature = bobject.parent.data
                 bone = armature.bones[bobject.parent_bone]
                 if not bone.use_relative_parent:
-                    bone_translation = Vector((0, bone.length, 0)) + bone.head
+                    bone_translation = bone.tail - bone.head
                     o['parent_bone_tail'] = [bone_translation[0], bone_translation[1], bone_translation[2]]
 
             # Viewport Camera - overwrite active camera matrix with viewport matrix
