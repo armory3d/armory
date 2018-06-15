@@ -228,6 +228,8 @@ def compile(target_name=None, watch=False, patch=False):
     if arm.utils.get_legacy_shaders() and not state.in_viewport:
         cmd.append('--shaderversion')
         cmd.append('110')
+    elif 'android' in state.target or 'ios' in state.target:
+        pass # Use defaults
     else:
         cmd.append('--shaderversion')
         cmd.append('330')
