@@ -206,6 +206,9 @@ project.addSources('Sources');
         if arm.utils.get_viewport_controls() == 'azerty':
             assets.add_khafile_def('arm_azerty')
 
+        # if bpy.data.scenes[0].unit_settings.system_rotation == 'DEGREES':
+            # assets.add_khafile_def('arm_degrees')
+
         assets.add_khafile_def('arm_fast')
         # assets.add_khafile_def('arm_kha_' + arm.utils.get_kha_version())
 

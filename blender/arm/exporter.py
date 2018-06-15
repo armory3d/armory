@@ -2513,10 +2513,18 @@ class ArmoryExporter:
                     group_name = arm.utils.safesrc(t.nodes_name_prop[0].upper() + t.nodes_name_prop[1:])
                     x['class_name'] = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + group_name
                 elif t.type_prop == 'WebAssembly':
+                    wpath = arm.utils.get_fp() + '/Bundled/' + t.webassembly_prop + '.wasm'
+                    if not os.path.exists(wpath):
+                        log.warn('Wasm "' + t.webassembly_prop + '" not found, skipping')
+                        continue
                     x['type'] = 'Script'
                     x['class_name'] = 'armory.trait.internal.WasmScript'
                     x['parameters'] = ["'" + t.webassembly_prop + "'"]
                 elif t.type_prop == 'UI Canvas':
+                    cpath = arm.utils.get_fp() + '/Bundled/canvas/' + t.canvas_name_prop + '.json'
+                    if not os.path.exists(cpath):
+                        log.warn('Canvas "' + t.canvas_name_prop + '" not found, skipping')
+                        continue
                     ArmoryExporter.export_ui = True
                     x['type'] = 'Script'
                     x['class_name'] = 'armory.trait.internal.CanvasScript'
