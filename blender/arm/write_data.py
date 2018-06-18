@@ -126,8 +126,8 @@ project.addSources('Sources');
         if enable_dce:
             f.write("project.addParameter('-dce full');\n")
 
-        # if in_viewport:
-            # import_traits.append('armory.trait.internal.Bridge')
+        if in_viewport:
+            import_traits.append('armory.trait.internal.Bridge')
 
         import_traits = list(set(import_traits))
         for i in range(0, len(import_traits)):

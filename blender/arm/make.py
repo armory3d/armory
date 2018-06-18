@@ -366,21 +366,9 @@ def stop_project():
         state.playproc = None
 
 def watch_play():
-    if state.playproc == None:
-        return
-    # line = b''
-    while state.playproc != None and state.playproc.poll() == None:
-        pass
-    #     char = state.playproc.stderr.read(1) # Read immediately one by one
-    #     if char == b'\n':
-    #         msg = str(line).split('"', 1) # Extract message
-    #         if len(msg) > 1:
-    #             trace = msg[1].rsplit('"', 1)[0]
-    #             print(trace)
-    #         line = b''
-    #     else:
-    #         line += char
-    state.playproc = None
+    if state.playproc != None:
+        state.playproc.wait()
+        state.playproc = None
     log.clear()
 
 def watch_compile(mode):
@@ -501,11 +489,13 @@ def on_compiled(mode): # build, play, play_viewport, publish
             krom_location, krom_path = arm.utils.krom_paths(bin_ext=bin_ext)
             os.chdir(krom_location)
             args = [krom_path, arm.utils.get_fp_build() + '/debug/krom', arm.utils.get_fp_build() + '/debug/krom-resources']
-            
-            if arm.utils.get_os() == 'mac': # TODO: Krom sound freezes on MacOS
+            if arm.utils.get_os() == 'win':
+                args.append('--consolepid')
+                args.append(str(os.getpid()))
+            elif arm.utils.get_os() == 'mac': # TODO: Krom sound freezes on MacOS
                 args.append('--nosound')
-            args.append('--stdout')
-            args.append(arm.utils.get_fp_build() + '/krom.txt')
+            # args.append('--stdout')
+            # args.append(arm.utils.get_fp_build() + '/krom.txt')
             state.playproc = subprocess.Popen(args, stderr=subprocess.PIPE)
             watch_play()
         elif wrd.arm_play_runtime == 'Native':
