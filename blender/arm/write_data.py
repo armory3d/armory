@@ -11,7 +11,7 @@ import arm.make_state as state
 def add_armory_library(sdk_path, name):
     return ('project.addLibrary("' + sdk_path + '/' + name + '");\n').replace('\\', '/')
 
-def add_assets(path, quality=1.0):
+def add_assets(path, quality=1.0, is_publish=False):
     if not bpy.data.worlds['Arm'].arm_minimize and path.endswith('.arm'):
         path = path[:-4] + '.json'
 
@@ -19,6 +19,8 @@ def add_assets(path, quality=1.0):
     s = 'project.addAssets("' + path + '", { notinlist: ' + str(notinlist).lower() + ' ';
     if quality < 1.0:
         s += ', quality: ' + str(quality)
+    if is_publish:
+        s += ', destination: "data/{name}"'
     s += '});\n'
     return s
 
@@ -103,26 +105,29 @@ project.addSources('Sources');
                 recastjs_path = recastjs_path.replace('\\', '/')
                 f.write(add_assets(recastjs_path))
 
-        if not is_publish:
-            f.write("""project.addParameter("--macro include('armory.trait')");\n""")
-            f.write("""project.addParameter("--macro include('armory.trait.internal')");\n""")
-            if export_physics:
-                f.write("""project.addParameter("--macro include('armory.trait.physics')");\n""")
-                if wrd.arm_physics == 'Bullet':
-                    f.write("""project.addParameter("--macro include('armory.trait.physics.bullet')");\n""")
-                else:
-                    f.write("""project.addParameter("--macro include('armory.trait.physics.oimo')");\n""")
-            if export_navigation:
-                f.write("""project.addParameter("--macro include('armory.trait.navigation')");\n""")
+        if is_publish:
+            assets.add_khafile_def('arm_published')
+        else:
+            pass
+            # f.write("""project.addParameter("--macro include('armory.trait')");\n""")
+            # f.write("""project.addParameter("--macro include('armory.trait.internal')");\n""")
+            # if export_physics:
+            #     f.write("""project.addParameter("--macro include('armory.trait.physics')");\n""")
+            #     if wrd.arm_physics == 'Bullet':
+            #         f.write("""project.addParameter("--macro include('armory.trait.physics.bullet')");\n""")
+            #     else:
+            #         f.write("""project.addParameter("--macro include('armory.trait.physics.oimo')");\n""")
+            # if export_navigation:
+            #     f.write("""project.addParameter("--macro include('armory.trait.navigation')");\n""")
 
-        if import_logicnodes: # Live patching for logic nodes
-            f.write("""project.addParameter("--macro include('armory.logicnode')");\n""")
+        # if import_logicnodes: # Live patching for logic nodes
+            # f.write("""project.addParameter("--macro include('armory.logicnode')");\n""")
 
         if enable_dce:
             f.write("project.addParameter('-dce full');\n")
 
-        if in_viewport:
-            import_traits.append('armory.trait.internal.Bridge')
+        # if in_viewport:
+            # import_traits.append('armory.trait.internal.Bridge')
 
         import_traits = list(set(import_traits))
         for i in range(0, len(import_traits)):
@@ -144,7 +149,7 @@ project.addSources('Sources');
         shader_data_references = sorted(list(set(assets.shader_datas)))
         for ref in shader_data_references:
             ref = ref.replace('\\', '/')
-            f.write(add_assets(ref))
+            f.write(add_assets(ref, is_publish=is_publish))
 
         asset_references = sorted(list(set(assets.assets)))
         for ref in asset_references:
@@ -155,7 +160,7 @@ project.addSources('Sources');
                 quality = wrd.arm_sound_quality
             elif s.endswith('.png') or s.endswith('.jpg'):
                 quality = wrd.arm_texture_quality
-            f.write(add_assets(ref, quality=quality))
+            f.write(add_assets(ref, quality=quality, is_publish=is_publish))
 
         if wrd.arm_sound_quality < 1.0 or state.target == 'html5':
             assets.add_khafile_def('arm_soundcompress')
@@ -171,7 +176,7 @@ project.addSources('Sources');
             if not os.path.exists('Libraries/zui'):
                 f.write(add_armory_library(sdk_path, 'lib/zui'))
             p = sdk_path + '/armory/Assets/droid_sans.ttf'
-            f.write(add_assets(p.replace('\\', '/')))
+            f.write(add_assets(p.replace('\\', '/'), is_publish=is_publish))
             assets.add_khafile_def('arm_ui')
 
         if wrd.arm_hscript == 'Enabled':

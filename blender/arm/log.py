@@ -6,10 +6,7 @@ def clear():
     info_text = ''
 
 def format_text(text):
-    return (text[:80] + '..') if len(text) > 80 else text # Limit str size
-
-def krom_trace(text):
-    print(text)
+    return (text[:80] + '..') if len(text) > 80 else text # Limit str size    
 
 def print_info(text):
     global info_text
