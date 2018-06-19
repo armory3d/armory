@@ -104,8 +104,13 @@ class WalkNavigation extends Trait {
 			if (moveBackward) dir.addf(-camera.look().x, -camera.look().y, -camera.look().z);
 			if (strafeRight) dir.addf(camera.right().x, camera.right().y, camera.right().z);
 			if (strafeLeft) dir.addf(-camera.right().x, -camera.right().y, -camera.right().z);
+			#if arm_yaxisup
+			if (strafeUp) dir.addf(0, 1, 0);
+			if (strafeDown) dir.addf(0, -1, 0);
+			#else
 			if (strafeUp) dir.addf(0, 0, 1);
 			if (strafeDown) dir.addf(0, 0, -1);
+			#end
 		}
 		else {
 			if (easing) {
@@ -119,7 +124,11 @@ class WalkNavigation extends Trait {
 		if (d > 0.0) camera.move(dir, d);
 
 		if (mouse.down()) {
+			#if arm_yaxisup
+			camera.rotate(Vec4.yAxis(), -mouse.movementX / 200);
+			#else
 			camera.rotate(Vec4.zAxis(), -mouse.movementX / 200);
+			#end
 			camera.rotate(camera.right(), -mouse.movementY / 200);
 		}
 	}
