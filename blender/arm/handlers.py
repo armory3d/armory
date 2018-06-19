@@ -22,7 +22,7 @@ def on_scene_update_pre(context):
         first_update = False
         return
 
-    # Redraw player
+    # Viewport player
     with_armory = bpy.context.scene.render.engine == 'ARMORY'
     if with_armory:
         play_area = None
@@ -37,6 +37,12 @@ def on_scene_update_pre(context):
                 make.build_viewport()
         else:
             v8_started = False
+
+    if state.redraw_ui and bpy.context.screen != None:
+        for area in bpy.context.screen.areas:
+            if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
+                area.tag_redraw()
+        state.redraw_ui = False
 
     # Recache edited data
     ops = bpy.context.window_manager.operators
@@ -80,7 +86,7 @@ def on_scene_update_pre(context):
 
 def recache(obj):
     # Moving keyframes triggers is_updated_data..
-    if state.compileproc != None:
+    if state.proc_build != None:
         return
     if obj.data == None:
         return

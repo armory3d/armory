@@ -286,19 +286,15 @@ class ArmoryPlayerPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds['Arm']
-
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
-        if state.playproc == None and state.compileproc == None:
+        if state.proc_play == None and state.proc_build == None:
             row.operator("arm.play", icon="PLAY")
         else:
             row.operator("arm.stop", icon="MESH_PLANE")
-        row.operator("arm.build")
         row.operator("arm.clean_menu")
-
-        row = layout.row()
-        row.prop(wrd, 'arm_play_runtime', text="")
-        row.prop(wrd, 'arm_play_camera', text="")
+        layout.prop(wrd, 'arm_play_runtime')
+        layout.prop(wrd, 'arm_play_camera')
 
 class ArmoryExporterPanel(bpy.types.Panel):
     bl_label = "Armory Exporter"
@@ -481,7 +477,7 @@ class ArmoryPlayButton(bpy.types.Operator):
     bl_label = 'Play'
 
     def execute(self, context):
-        if state.compileproc != None:
+        if state.proc_build != None:
             return {"CANCELLED"}
 
         if not arm.utils.check_saved(self):
@@ -495,9 +491,8 @@ class ArmoryPlayButton(bpy.types.Operator):
 
         arm.utils.check_default_rp()
 
-        state.is_export = False
         assets.invalidate_enabled = False
-        make.play(in_viewport=False)
+        make.play(is_viewport=False)
         assets.invalidate_enabled = True
         return{'FINISHED'}
 
@@ -507,32 +502,12 @@ class ArmoryStopButton(bpy.types.Operator):
     bl_label = 'Stop'
 
     def execute(self, context):
-        make.stop_project()
-        return{'FINISHED'}
-
-class ArmoryBuildButton(bpy.types.Operator):
-    '''Build and compile project'''
-    bl_idname = 'arm.build'
-    bl_label = 'Build'
-
-    def execute(self, context):
-        if not arm.utils.check_saved(self):
-            return {"CANCELLED"}
-
-        if not arm.utils.check_sdkpath(self):
-            return {"CANCELLED"}
-
-        if not arm.utils.check_engine(self):
-            return {"CANCELLED"}
-
-        arm.utils.check_default_rp()
-
-        state.target = make.runtime_to_target(in_viewport=False)
-        state.is_export = False
-        assets.invalidate_enabled = False
-        make.build()
-        make.compile(watch=True)
-        assets.invalidate_enabled = True
+        if state.proc_play != None:
+            state.proc_play.terminate()
+            state.proc_play = None
+        elif state.proc_build != None:
+            state.proc_build.terminate()
+            state.proc_build = None
         return{'FINISHED'}
 
 class ArmoryBuildProjectButton(bpy.types.Operator):
@@ -564,13 +539,10 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
             if wrd.arm_rplist[i].name == item.arm_project_rp:
                 wrd.arm_rplist_index = i
                 break
-        state.target = item.arm_project_target
-        state.is_export = True
         assets.invalidate_shader_cache(None, None)
         assets.invalidate_enabled = False
-        make.build()
-        make.compile(watch=True)
-        state.is_export = False
+        make.build(item.arm_project_target, is_export=True)
+        make.compile()
         wrd.arm_rplist_index = rplist_index
         assets.invalidate_enabled = True
         return{'FINISHED'}
@@ -608,12 +580,9 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
                 break
 
         make.clean()
-        state.target = item.arm_project_target
-        state.is_export = True
         assets.invalidate_enabled = False
-        make.build(is_publish=True)
-        make.compile(watch=True)
-        state.is_export = False
+        make.build(item.arm_project_target, is_publish=True, is_export=True)
+        make.compile()
         wrd.arm_rplist_index = rplist_index
         assets.invalidate_enabled = True
         return{'FINISHED'}
@@ -673,7 +642,7 @@ class ArmoryCleanProjectButton(bpy.types.Operator):
         return{'FINISHED'}
 
 def draw_view3d_header(self, context):
-    if state.compileproc != None:
+    if state.proc_build != None:
         self.layout.label('Compiling..')
     elif log.info_text != '':
         self.layout.label(log.info_text)
@@ -1305,7 +1274,6 @@ def register():
     # bpy.utils.register_class(ArmVirtualInputPanel)
     bpy.utils.register_class(ArmoryPlayButton)
     bpy.utils.register_class(ArmoryStopButton)
-    bpy.utils.register_class(ArmoryBuildButton)
     bpy.utils.register_class(ArmoryBuildProjectButton)
     bpy.utils.register_class(ArmoryOpenProjectFolderButton)
     bpy.utils.register_class(ArmoryKodeStudioButton)
@@ -1347,7 +1315,6 @@ def unregister():
     # bpy.utils.unregister_class(ArmVirtualInputPanel)
     bpy.utils.unregister_class(ArmoryPlayButton)
     bpy.utils.unregister_class(ArmoryStopButton)
-    bpy.utils.unregister_class(ArmoryBuildButton)
     bpy.utils.unregister_class(ArmoryBuildProjectButton)
     bpy.utils.unregister_class(ArmoryOpenProjectFolderButton)
     bpy.utils.unregister_class(ArmoryKodeStudioButton)

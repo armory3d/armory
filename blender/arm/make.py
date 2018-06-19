@@ -23,8 +23,16 @@ from arm.exporter import ArmoryExporter
 
 exporter = ArmoryExporter()
 scripts_mtime = 0 # Monitor source changes
-code_parsed = False
 profile_time = 0
+
+def run_proc(cmd, done):
+    def fn(p, done):
+        p.wait()
+        if done != None:
+            done()
+    p = subprocess.Popen(cmd)
+    threading.Thread(target=fn, args=(p, done)).start()
+    return p
 
 def compile_shader_pass(res, raw_shaders_path, shader_name, defs):
     os.chdir(raw_shaders_path + '/' + shader_name)
@@ -48,7 +56,7 @@ def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
     func(path)
 
-def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False):
+def export_data(fp, sdk_path):
     global exporter
     wrd = bpy.data.worlds['Arm']
 
@@ -73,18 +81,6 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
         if os.path.isdir(build_dir + '/compiled/Shaders'):
             shutil.rmtree(build_dir + '/compiled/Shaders', onerror=remove_readonly)
 
-    # Detect camera plane changes
-    if len(bpy.data.cameras) > 0:
-        cam = bpy.data.cameras[0]
-        if state.last_clip_start == 0:
-            state.last_clip_start = cam.clip_start
-            state.last_clip_end = cam.clip_end
-        elif cam.clip_start != state.last_clip_start or cam.clip_end != state.last_clip_end:
-            if os.path.isdir(build_dir + '/compiled/Shaders'):
-                shutil.rmtree(build_dir + '/compiled/Shaders', onerror=remove_readonly)
-            state.last_clip_start = cam.clip_start
-            state.last_clip_end = cam.clip_end
-
     raw_shaders_path = sdk_path + 'armory/Shaders/'
     assets_path = sdk_path + 'armory/Assets/'
     export_physics = bpy.data.worlds['Arm'].arm_physics != 'Disabled'
@@ -103,10 +99,10 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
     physics_found = False
     navigation_found = False
     ui_found = False
-    ArmoryExporter.compress_enabled = is_publish and wrd.arm_asset_compression
+    ArmoryExporter.compress_enabled = state.is_publish and wrd.arm_asset_compression
     for scene in bpy.data.scenes:
         if scene.arm_export:
-            ext = '.zip' if (scene.arm_compress and is_publish) else '.arm'
+            ext = '.zip' if (scene.arm_compress and state.is_publish) else '.arm'
             asset_path = build_dir + '/compiled/Assets/' + arm.utils.safestr(scene.name) + ext
             exporter.execute(bpy.context, asset_path, scene=scene)
             if ArmoryExporter.export_physics:
@@ -182,33 +178,31 @@ def export_data(fp, sdk_path, is_play=False, is_publish=False, in_viewport=False
         shutil.copytree(raw_shaders_path + 'std', build_dir + '/compiled/Shaders/std')
 
     # Write khafile.js
-    enable_dce = is_publish and wrd.arm_dce
-    import_logic = not is_publish and arm.utils.logic_editor_space() != None
-    write_data.write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce, in_viewport, ArmoryExporter.import_traits, import_logic)
+    enable_dce = state.is_publish and wrd.arm_dce
+    import_logic = not state.is_publish and arm.utils.logic_editor_space() != None
+    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, state.is_publish, enable_dce, state.is_viewport, ArmoryExporter.import_traits, import_logic)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     scene_name = arm.utils.get_project_scene_name()
     resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
-    # Import all logic nodes for patching if logic is being edited
     if wrd.arm_write_config:
         write_data.write_config(resx, resy)
-    write_data.write_main(scene_name, resx, resy, is_play, in_viewport, is_publish)
+    write_data.write_main(scene_name, resx, resy, state.is_play, state.is_viewport, state.is_publish)
     if scene_name != state.last_scene or resx != state.last_resx or resy != state.last_resy:
         wrd.arm_recompile = True
         state.last_resx = resx
         state.last_resy = resy
         state.last_scene = scene_name
 
-def compile(target_name=None, watch=False, patch=False):
+def compile(assets_only=False):
     wrd = bpy.data.worlds['Arm']
     fp = arm.utils.get_fp()
     os.chdir(fp)
 
     # Set build command
-    if target_name == None:
-        target_name = state.target
+    target_name = state.target
     if target_name == 'native':
-        target_name = ''
+        target_name = '--compile'
 
     node_path = arm.utils.get_node_path()
     khamake_path = arm.utils.get_khamake_path()
@@ -225,7 +219,7 @@ def compile(target_name=None, watch=False, patch=False):
     cmd.append('-g')
     cmd.append(state.export_gapi)
 
-    if arm.utils.get_legacy_shaders() and not state.in_viewport:
+    if arm.utils.get_legacy_shaders() and not state.is_viewport:
         cmd.append('--shaderversion')
         cmd.append('110')
     elif 'android' in state.target or 'ios' in state.target:
@@ -239,7 +233,7 @@ def compile(target_name=None, watch=False, patch=False):
         cmd.append('webvr')
 
     cmd.append('--to')
-    if (kha_target_name == 'krom' and not state.in_viewport and not state.is_publish) or (kha_target_name == 'html5' and not state.is_publish):
+    if (kha_target_name == 'krom' and not state.is_viewport and not state.is_publish) or (kha_target_name == 'html5' and not state.is_publish):
         cmd.append(arm.utils.build_dir() + '/debug')
     else:
         cmd.append(arm.utils.build_dir())
@@ -249,30 +243,15 @@ def compile(target_name=None, watch=False, patch=False):
         for s in bpy.data.texts[wrd.arm_khamake].as_string().split(' '):
             cmd.append(s)
 
-    if patch:
-        if state.compileproc == None:
-            cmd.append('--nohaxe')
-            cmd.append('--noproject')
-            print("Running: ", cmd)
-            state.compileproc = subprocess.Popen(cmd, stderr=subprocess.PIPE)
-            if state.playproc == None:
-                mode = 'play_viewport' if state.in_viewport else 'play'
-            else:
-                mode = 'build'
-            threading.Timer(0.1, watch_patch, [mode]).start()
-            return state.compileproc
-    elif watch:
-        print("Running: ", cmd)
-        state.compileproc = subprocess.Popen(cmd)
-        mode = 'publish' if state.is_publish else 'build'
-        threading.Timer(0.1, watch_compile, [mode]).start()
-        return state.compileproc
-    else:
-        print("Running: ", cmd)
-        return subprocess.Popen(cmd)
+    if assets_only:
+        cmd.append('--nohaxe')
+        cmd.append('--noproject')
+
+    print("Running: ", cmd)
+    state.proc_build = run_proc(cmd, build_done)
 
 def build_viewport():
-    if state.compileproc != None:
+    if state.proc_build != None:
         return
 
     if not arm.utils.check_saved(None):
@@ -286,20 +265,22 @@ def build_viewport():
 
     arm.utils.check_default_rp()
 
-    state.is_export = False
     assets.invalidate_enabled = False
-    play(in_viewport=True)
+    play(is_viewport=True)
     assets.invalidate_enabled = True
 
-def build(is_play=False, is_publish=False, in_viewport=False):
+def build(target, is_play=False, is_publish=False, is_viewport=False, is_export=False):
     global profile_time
     profile_time = time.time()
 
+    state.target = target
+    state.is_play = is_play
     state.is_publish = is_publish
-    state.in_viewport = in_viewport
+    state.is_viewport = is_viewport
+    state.is_export = is_export
 
     # Save blend
-    if arm.utils.get_save_on_build() and not state.in_viewport:
+    if arm.utils.get_save_on_build() and not state.is_viewport:
         bpy.ops.wm.save_mainfile()
 
     log.clear()
@@ -349,7 +330,7 @@ def build(is_play=False, is_publish=False, in_viewport=False):
                 f.write(text.as_string())
 
     # Export data
-    export_data(fp, sdk_path, is_play=is_play, is_publish=is_publish, in_viewport=in_viewport)
+    export_data(fp, sdk_path)
 
     if state.target == 'html5':
         w, h = arm.utils.get_render_resolution(arm.utils.get_active_scene())
@@ -360,79 +341,61 @@ def build(is_play=False, is_publish=False, in_viewport=False):
             for fn in glob.iglob(os.path.join('include', '**'), recursive=False):
                 shutil.copy(fn, arm.utils.build_dir() + dest + os.path.basename(fn))
 
-def stop_project():
-    if state.playproc != None:
-        state.playproc.terminate()
-        state.playproc = None
-
-def watch_play():
-    if state.playproc != None:
-        state.playproc.wait()
-        state.playproc = None
+def play_done():
+    state.proc_play = None
+    state.redraw_ui = True
     log.clear()
 
-def watch_compile(mode):
-    state.compileproc.wait()
+def build_done():
     print('Finished in ' + str(time.time() - profile_time))
-    if state.compileproc == None: ##
+    if state.proc_build == None:
         return
-    result = state.compileproc.poll()
-    state.compileproc = None
+    result = state.proc_build.poll()
+    state.proc_build = None
+    state.redraw_ui = True
     if result == 0:
         bpy.data.worlds['Arm'].arm_recompile = False
-        on_compiled(mode)
+        build_success()
     else:
         log.print_info('Build failed, check console')
 
-def watch_patch(mode):
-    state.compileproc.wait()
-    state.compileproc = None
-    on_compiled(mode)
-
-def runtime_to_target(in_viewport):
+def runtime_to_target(is_viewport):
     wrd = bpy.data.worlds['Arm']
-    if in_viewport or wrd.arm_play_runtime == 'Krom':
+    if is_viewport or wrd.arm_play_runtime == 'Krom':
         return 'krom'
     elif wrd.arm_play_runtime == 'Native':
         return 'native'
     else:
         return 'html5'
 
-def get_khajs_path(in_viewport, target):
-    if in_viewport:
+def get_khajs_path(is_viewport, target):
+    if is_viewport:
         return arm.utils.build_dir() + '/krom/krom.js'
     elif target == 'krom':
         return arm.utils.build_dir() + '/debug/krom/krom.js'
     else: # Browser
         return arm.utils.build_dir() + '/debug/html5/kha.js'
 
-def play(in_viewport):
+def play(is_viewport):
     global scripts_mtime
     global code_parsed
     wrd = bpy.data.worlds['Arm']
 
     log.clear()
 
-    state.target = runtime_to_target(in_viewport)
+    build(target=runtime_to_target(is_viewport), is_play=True, is_viewport=is_viewport)
 
-    # Build data
-    build(is_play=True, in_viewport=in_viewport)
-
-    khajs_path = get_khajs_path(in_viewport, state.target)
+    khajs_path = get_khajs_path(is_viewport, state.target)
     if not wrd.arm_cache_compiler or \
        not os.path.isfile(khajs_path) or \
        assets.khafile_defs_last != assets.khafile_defs or \
        state.last_target != state.target or \
-       state.last_in_viewport != state.in_viewport or \
+       state.last_is_viewport != state.is_viewport or \
        state.target == 'native':
         wrd.arm_recompile = True
 
     state.last_target = state.target
-    state.last_in_viewport = state.in_viewport
-
-    if state.in_viewport:
-        if arm.utils.get_rp().rp_gi != 'Off' and bpy.app.version < (2, 80, 1):
-            log.warn('Use Blender 2.8 to run Voxel GI in viewport')
+    state.last_is_viewport = state.is_viewport
 
     # Trait sources modified
     state.mod_scripts = []
@@ -454,28 +417,15 @@ def play(in_viewport):
         if len(state.mod_scripts) > 0: # Trait props
             arm.utils.fetch_trait_props()
 
-    # New compile requred - traits changed
-    if wrd.arm_recompile:
-        mode = 'play'
-        if state.target == 'native':
-            state.compileproc = compile(target_name='--compile')
-        elif state.target == 'krom':
-            if in_viewport:
-                mode = 'play_viewport'
-            state.compileproc = compile(target_name='krom')
-        else: # Browser
-            state.compileproc = compile(target_name='html5')
-        threading.Timer(0.1, watch_compile, [mode]).start()
-    else: # kha.js up to date
-        compile(patch=True)
+    compile(assets_only=(not wrd.arm_recompile))
 
-def on_compiled(mode): # build, play, play_viewport, publish
+def build_success():
     log.clear()
     wrd = bpy.data.worlds['Arm']
 
-    if mode == 'play_viewport':
+    if state.is_play and state.is_viewport:
         open(arm.utils.get_fp_build() + '/krom/krom.lock', 'w').close()
-    elif mode == 'play':
+    elif state.is_play:
         if wrd.arm_play_runtime == 'Browser':
             # Start server
             os.chdir(arm.utils.get_fp())
@@ -488,16 +438,15 @@ def on_compiled(mode): # build, play, play_viewport, publish
             bin_ext = '' if state.export_gapi == 'opengl' else '_' + state.export_gapi
             krom_location, krom_path = arm.utils.krom_paths(bin_ext=bin_ext)
             os.chdir(krom_location)
-            args = [krom_path, arm.utils.get_fp_build() + '/debug/krom', arm.utils.get_fp_build() + '/debug/krom-resources']
+            cmd = [krom_path, arm.utils.get_fp_build() + '/debug/krom', arm.utils.get_fp_build() + '/debug/krom-resources']
             if arm.utils.get_os() == 'win':
-                args.append('--consolepid')
-                args.append(str(os.getpid()))
+                cmd.append('--consolepid')
+                cmd.append(str(os.getpid()))
             elif arm.utils.get_os() == 'mac': # TODO: Krom sound freezes on MacOS
-                args.append('--nosound')
-            # args.append('--stdout')
-            # args.append(arm.utils.get_fp_build() + '/krom.txt')
-            state.playproc = subprocess.Popen(args, stderr=subprocess.PIPE)
-            watch_play()
+                cmd.append('--nosound')
+            # cmd.append('--stdout')
+            # cmd.append(arm.utils.get_fp_build() + '/krom.txt')
+            state.proc_play = run_proc(cmd, play_done)
         elif wrd.arm_play_runtime == 'Native':
             if arm.utils.get_os() == 'win':
                 bin_location = arm.utils.get_fp_build() + '/windows'
@@ -507,14 +456,14 @@ def on_compiled(mode): # build, play, play_viewport, publish
                 bin_location = arm.utils.get_fp_build() + '/osx'
             os.chdir(bin_location)
             if arm.utils.get_os() == 'win':
-                state.playproc = subprocess.Popen(bin_location + '/' + arm.utils.safestr(wrd.arm_project_name) + '.exe', stderr=subprocess.PIPE)
+                p = bin_location + '/' + arm.utils.safestr(wrd.arm_project_name) + '.exe'
             elif arm.utils.get_os() == 'linux':
-                state.playproc = subprocess.Popen(bin_location + '/' + arm.utils.safestr(wrd.arm_project_name), stderr=subprocess.PIPE)
+                p = bin_location + '/' + arm.utils.safestr(wrd.arm_project_name)
             else:
-                state.playproc = subprocess.Popen(bin_location + '/' + arm.utils.safestr(wrd.arm_project_name) + '.app/Contents/MacOS/' + arm.utils.safestr(wrd.arm_project_name), stderr=subprocess.PIPE)
-            watch_play()
+                p = bin_location + '/' + arm.utils.safestr(wrd.arm_project_name) + '.app/Contents/MacOS/' + arm.utils.safestr(wrd.arm_project_name)
+            state.proc_play = run_proc(p, play_done)
 
-    elif mode == 'publish':
+    elif state.is_publish:
         sdk_path = arm.utils.get_sdk_path()
         target_name = arm.utils.get_kha_target(state.target)
         files_path = arm.utils.get_fp_build() + '/' + target_name

@@ -166,7 +166,6 @@ class ArmAddonStartButton(bpy.types.Operator):
     bl_idname = "arm_addon.start"
     bl_label = "Start"
     running = False
-    play_in_viewport = False
 
     def execute(self, context):
         if bpy.app.version >= (2, 80, 1):

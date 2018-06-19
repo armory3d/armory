@@ -29,7 +29,7 @@ def remove_readonly(func, path, excinfo):
     func(path)
 
 # Write khafile.js
-def write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce, in_viewport, import_traits, import_logicnodes):
+def write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce, is_viewport, import_traits, import_logicnodes):
     sdk_path = arm.utils.get_sdk_path()
     wrd = bpy.data.worlds['Arm']
 
@@ -126,7 +126,7 @@ project.addSources('Sources');
         if enable_dce:
             f.write("project.addParameter('-dce full');\n")
 
-        if in_viewport:
+        if is_viewport:
             import_traits.append('armory.trait.internal.Bridge')
 
         import_traits = list(set(import_traits))
@@ -266,14 +266,14 @@ def write_config(resx, resy):
         f.write(json.dumps(output, sort_keys=True, indent=4))
 
 # Write Main.hx
-def write_main(scene_name, resx, resy, is_play, in_viewport, is_publish):
+def write_main(scene_name, resx, resy, is_play, is_viewport, is_publish):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     scene_ext = '.zip' if (bpy.data.scenes[scene_name].arm_compress and is_publish) else ''
     if scene_ext == '' and not wrd.arm_minimize:
         scene_ext = '.json'
     winmode = get_winmode(wrd.arm_winmode)
-    if in_viewport:
+    if is_viewport:
         winmode = 0
     has_config = os.path.exists(arm.utils.get_fp() + '/Bundled/config.arm')
     with open('Sources/Main.hx', 'w') as f:
@@ -351,7 +351,7 @@ class Main {
         if (windowMode == kha.WindowMode.Fullscreen) { windowMode = kha.WindowMode.BorderlessWindow; config.window_w = kha.Display.width(0); config.window_h = kha.Display.height(0); }
 """)
         # Cap window size to desktop resolution, otherwise the window may not get opened
-        if not in_viewport:
+        if not is_viewport:
             f.write("""
         else { config.window_w = Std.int(Math.min(config.window_w, kha.Display.width(0))); config.window_h = Std.int(Math.min(config.window_h, kha.Display.height(0))); }
 """)

@@ -74,7 +74,7 @@ def get_os():
 
 def get_gapi():
     wrd = bpy.data.worlds['Arm']
-    if state.in_viewport:
+    if state.is_viewport:
         return 'opengl'
     if state.is_export:
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
