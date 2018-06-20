@@ -321,6 +321,7 @@ class Main {
             f.write("""
         iron.object.LampObject.cascadeCount = """ + str(rpdat.rp_shadowmap_cascades) + """;
         iron.object.LampObject.cascadeSplitFactor = """ + str(rpdat.arm_shadowmap_split) + """;
+        iron.object.LampObject.cascadeBounds = """ + str(rpdat.arm_shadowmap_bounds) + """;
 """)
         f.write("""
         state = 1;

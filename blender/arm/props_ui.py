@@ -740,7 +740,10 @@ class ArmRenderPathPanel(bpy.types.Panel):
         col.prop(rpdat, 'rp_shadowmap_cascades')
         col2 = col.column()
         col2.enabled = rpdat.rp_shadowmap_cascades != '1'
-        col2.prop(rpdat, 'arm_shadowmap_split')
+        row = col2.row(align=True)
+        row.alignment = 'EXPAND'
+        row.prop(rpdat, 'arm_shadowmap_split')
+        row.prop(rpdat, 'arm_shadowmap_bounds')
         col.prop(rpdat, 'arm_soft_shadows')
         col2 = col.column()
         col2.enabled = rpdat.arm_soft_shadows != 'Off'
