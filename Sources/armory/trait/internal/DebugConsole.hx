@@ -36,6 +36,14 @@ class DebugConsole extends Trait {
 	var animTimeAvg = 0.0;
 	var physTime = 0.0;
 	var physTimeAvg = 0.0;
+	var graph:kha.Image = null;
+	var graphA:kha.Image = null;
+	var graphB:kha.Image = null;
+
+	var selectedObject:iron.object.Object;
+	var selectedType = "";
+	static var lrow = [1/2, 1/2];
+	static var row4 = [1/4, 1/4, 1/4, 1/4];
 
 	public static var f = 1.0;
 
@@ -61,94 +69,352 @@ class DebugConsole extends Trait {
 		});
 	}
 
+	var debugDrawSet = false;
+
+	function selectObject(o:iron.object.Object) {
+		selectedObject = o;
+
+		if (!debugDrawSet) {
+			debugDrawSet = true;
+			armory.trait.internal.DebugDraw.notifyOnRender(function(draw:armory.trait.internal.DebugDraw) {
+				if (selectedObject != null) draw.bounds(selectedObject.transform);
+			});
+		}
+	}
+
+	function updateGraph() {
+		if (graph == null) {
+			graphA = kha.Image.createRenderTarget(280, 33);
+			graphB = kha.Image.createRenderTarget(280, 33);
+			graph = graphA;
+		}
+		else graph = graph == graphA ? graphB : graphA;
+		var graphPrev = graph == graphA ? graphB : graphA;
+
+		graph.g2.begin(true, 0x00000000);
+		graph.g2.color = 0xffffffff;
+		graph.g2.drawImage(graphPrev, -3, 0);
+
+		var avg = Math.round(frameTimeAvg * 1000);
+		var miss = avg > 16.7 ? (avg - 16.7) / 16.7 : 0.0;
+		graph.g2.color = kha.Color.fromFloats(miss, 1 - miss, 0, 1.0);
+		graph.g2.fillRect(280 - 3, 33 - avg, 3, avg);
+
+		graph.g2.color = 0xff000000;
+		graph.g2.fillRect(280 - 3, 33 - 17, 3, 1);
+		
+		graph.g2.end();
+	}
+
 	static var haxeTrace:Dynamic->haxe.PosInfos->Void = null;
-	static var lastTrace = '';
+	static var lastTraces:Array<String> = [''];
 	static function consoleTrace(v:Dynamic, ?inf:haxe.PosInfos) {
-		lastTrace = Std.string(v);
+		lastTraces.unshift(Std.string(v));
+		if (lastTraces.length > 10) lastTraces.pop();
 		haxeTrace(v, inf);
 	}
 
-	static var lrow = [1/2, 1/2];
 	function render2D(g:kha.graphics2.Graphics) {
 		if (!show) return;
 		g.end();
 		ui.begin(g);
 		var hwin = Id.handle();
-		if (ui.window(hwin, 0, 0, 280, iron.App.h(), true)) {
+		var htab = Id.handle({position: 0});
+		if (ui.window(hwin, iron.App.w() - 280, 0, 280, iron.App.h(), true)) {
 
-			var htab = Id.handle({position: 0});
 			if (ui.tab(htab, '')) {}
-			if (ui.tab(htab, lastTrace == '' ? 'Inspector' : lastTrace.substr(0, 20))) {
-				var i = 0;
-				function drawList(h:Handle, o:iron.object.Object) {
-					ui.row(lrow);
-					var b = false;
-					if (o.children.length > 0) {
-						b = ui.panel(h.nest(i, {selected: true}), o.name, 0, true);
-					}
-					else {
-						ui._x += 18; // Sign offset
-						ui.text(o.name);
-						ui._x -= 18;
-					}
-					ui.text('(' + Math.roundfp(o.transform.worldx()) + ', ' + Math.roundfp(o.transform.worldy()) + ', ' + Math.roundfp(o.transform.worldz()) + ')', Align.Right);
-					i++;
-					if (b) {
-						for (c in o.children) {
-							ui.indent();
-							drawList(h, c);
-							ui.unindent();
+
+			if (ui.tab(htab, 'Scene')) {
+
+				if (ui.panel(Id.handle({selected: true}), "Outliner")) {
+					ui.indent();
+					
+					var i = 0;
+					function drawList(h:zui.Zui.Handle, o:iron.object.Object) {
+						if (o.name.charAt(0) == '.') return; // Hidden
+						var b = false;
+						if (selectedObject == o) {
+							ui.g.color = 0xff205d9c;
+							ui.g.fillRect(0, ui._y, ui._windowW, ui.t.ELEMENT_H);
+							ui.g.color = 0xffffffff;
+						}
+						if (o.children.length > 0) {
+							b = ui.panel(h.nest(i, {selected: true}), o.name, 0, true);
+						}
+						else {
+							ui._x += 18; // Sign offset
+							ui.text(o.name);
+							ui._x -= 18;
+						}
+						if (ui.isReleased) {
+							selectObject(o);
+						}
+						i++;
+						if (b) {
+							for (c in o.children) {
+								ui.indent();
+								drawList(h, c);
+								ui.unindent();
+							}
 						}
 					}
+					for (c in iron.Scene.active.root.children) {
+						drawList(Id.handle(), c);
+					}
+
+					ui.unindent();
 				}
-				for (c in iron.Scene.active.root.children) {
-					drawList(Id.handle(), c);
+				
+				if (selectedObject == null) selectedType = "";
+
+				if (ui.panel(Id.handle({selected: true}), 'Properties $selectedType')) {
+					ui.indent();
+					
+					if (selectedObject != null) {
+
+						var h = Id.handle();
+						h.selected = selectedObject.visible;
+						selectedObject.visible = ui.check(h, "Visible");
+
+						var loc = selectedObject.transform.loc;
+						var scale = selectedObject.transform.scale;
+						var rot = selectedObject.transform.rot.getEuler();
+						rot.mult(180 / 3.141592);
+						var f = 0.0;
+
+						ui.row(row4);
+						ui.text("Location");
+
+						h = Id.handle();
+						h.text = Math.roundfp(loc.x) + "";
+						f = Std.parseFloat(ui.textInput(h, "X"));
+						if (ui.changed) loc.x = f;
+
+						h = Id.handle();
+						h.text = Math.roundfp(loc.y) + "";
+						f = Std.parseFloat(ui.textInput(h, "Y"));
+						if (ui.changed) loc.y = f;
+
+						h = Id.handle();
+						h.text = Math.roundfp(loc.z) + "";
+						f = Std.parseFloat(ui.textInput(h, "Z"));
+						if (ui.changed) loc.z = f;
+
+						ui.row(row4);
+						ui.text("Rotation");
+						
+						h = Id.handle();
+						h.text = Math.roundfp(rot.x) + "";
+						f = Std.parseFloat(ui.textInput(h, "X"));
+						var changed = false;
+						if (ui.changed) { changed = true; rot.x = f; }
+
+						h = Id.handle();
+						h.text = Math.roundfp(rot.y) + "";
+						f = Std.parseFloat(ui.textInput(h, "Y"));
+						if (ui.changed) { changed = true; rot.y = f; }
+
+						h = Id.handle();
+						h.text = Math.roundfp(rot.z) + "";
+						f = Std.parseFloat(ui.textInput(h, "Z"));
+						if (ui.changed) { changed = true; rot.z = f; }
+
+						if (changed && selectedObject.name != "Scene") {
+							rot.mult(3.141592 / 180);
+							selectedObject.transform.rot.fromEuler(rot.x, rot.y, rot.z);
+							selectedObject.transform.buildMatrix();
+							var rb = selectedObject.getTrait(armory.trait.physics.RigidBody);
+							if (rb != null) rb.syncTransform();
+						}
+
+						ui.row(row4);
+						ui.text("Scale");
+						
+						h = Id.handle();
+						h.text = Math.roundfp(scale.x) + "";
+						f = Std.parseFloat(ui.textInput(h, "X"));
+						if (ui.changed) scale.x = f;
+
+						h = Id.handle();
+						h.text = Math.roundfp(scale.y) + "";
+						f = Std.parseFloat(ui.textInput(h, "Y"));
+						if (ui.changed) scale.y = f;
+
+						h = Id.handle();
+						h.text = Math.roundfp(scale.z) + "";
+						f = Std.parseFloat(ui.textInput(h, "Z"));
+						if (ui.changed) scale.z = f;
+
+						selectedObject.transform.dirty = true;
+
+						if (selectedObject.name == "Scene") {
+							selectedType = "(Scene)";
+							var p = iron.Scene.active.world.getGlobalProbe();
+							p.raw.strength = ui.slider(Id.handle({value: p.raw.strength}), "Env Strength", 0.0, 5.0, true);
+						}
+						else if (Std.is(selectedObject, iron.object.LampObject)) {
+							selectedType = "(Lamp)";
+							var lamp = cast(selectedObject, iron.object.LampObject);
+							lamp.data.raw.strength = ui.slider(Id.handle({value: lamp.data.raw.strength / 10}), "Strength", 0.0, 5.0, true) * 10;
+						}
+						else if (Std.is(selectedObject, iron.object.CameraObject)) {
+							selectedType = "(Camera)";
+							var scene = iron.Scene.active;
+							var cam = scene.cameras[0];
+							var fovHandle = Id.handle({value: Std.int(cam.data.raw.fov * 100) / 100});
+							cam.data.raw.fov = ui.slider(fovHandle, "FoV", 0.3, 2.0, true);
+							if (ui.changed) {
+								cam.buildProjection();
+							}
+						}
+						else {
+							selectedType = "(Object)";
+							
+						}
+					}
+
+					ui.unindent();
 				}
 			}
 
 			var avg = Math.round(frameTimeAvg * 10000) / 10;
 			var fpsAvg = avg > 0 ? Math.round(1000 / avg) : 0;
 			if (ui.tab(htab, '$avg ms')) {
-				// ui.check(Id.handle(), "Show empties");
-				ui.text('$fpsAvg fps');
-				var numObjects = iron.Scene.active.meshes.length;
-				ui.text("meshes: " + numObjects);
-				var avgMin = Math.round(frameTimeAvgMin * 10000) / 10;
-				var avgMax = Math.round(frameTimeAvgMax * 10000) / 10;
-				ui.text('frame (min/max): $avgMin/$avgMax');
-				var fpsAvgMin = avgMin > 0 ? Math.round(1000 / avgMin) : 0;
-				var fpsAvgMax = avgMax > 0 ? Math.round(1000 / avgMax) : 0;
-				ui.text('fps (min/max): $fpsAvgMin/$fpsAvgMax');
-				ui.text('rpath: ' + Math.round(renderPathTimeAvg * 10000) / 10);
-				ui.text('update: ' + Math.round(updateTimeAvg * 10000) / 10);
-				ui.indent();
-				ui.text('- phys: ' + Math.round(physTimeAvg * 10000) / 10);
-				ui.text('- anim: ' + Math.round(animTimeAvg * 10000) / 10);
-				// ui.text('mem: ' + Std.int(getMem() / 1024 / 1024));
-				ui.unindent();
 
-				ui.text('draw calls: ' + iron.RenderPath.drawCalls);
-				ui.text('tris mesh: ' + iron.RenderPath.numTrisMesh);
-				ui.text('tris shadow: ' + iron.RenderPath.numTrisShadow);
-				#if arm_batch
-				ui.text('batch calls: ' + iron.RenderPath.batchCalls);
-				ui.text('batch buckets: ' + iron.RenderPath.batchBuckets);
+				if (ui.panel(Id.handle({selected: true}), 'Performance')) {
+					if (graph != null) ui.image(graph);
+					ui.indent();
+
+					ui.row(lrow);
+					ui.text('Frame');
+					ui.text('$avg ms / $fpsAvg fps', Align.Right);
+					
+					ui.row(lrow);
+					ui.text('Render-path');
+					ui.text(Math.round(renderPathTimeAvg * 10000) / 10 + " ms", Align.Right);
+
+					ui.row(lrow);
+					ui.text('Script');
+					ui.text(Math.round((updateTimeAvg - physTimeAvg - animTimeAvg) * 10000) / 10 + " ms", Align.Right);
+
+					ui.row(lrow);
+					ui.text('Animation');
+					ui.text(Math.round(animTimeAvg * 10000) / 10 + " ms", Align.Right);
+
+					ui.row(lrow);
+					ui.text('Physics');
+					ui.text(Math.round(physTimeAvg * 10000) / 10 + " ms", Align.Right);
+
+					ui.unindent();
+				}
+
+				if (ui.panel(Id.handle({selected: false}), 'Draw')) {
+					ui.indent();
+
+					ui.row(lrow);
+					var numMeshes = iron.Scene.active.meshes.length;
+					ui.text("Meshes");
+					ui.text(numMeshes + "", Align.Right);
+
+					ui.row(lrow);
+					ui.text('Draw calls');
+					ui.text(iron.RenderPath.drawCalls + "", Align.Right);
+
+					ui.row(lrow);
+					ui.text('Tris mesh');
+					ui.text(iron.RenderPath.numTrisMesh + "", Align.Right);
+
+					ui.row(lrow);
+					ui.text('Tris shadow');
+					ui.text(iron.RenderPath.numTrisShadow + "", Align.Right);
+
+					#if arm_batch
+					ui.row(lrow);
+					ui.text('Batch calls');
+					ui.text(iron.RenderPath.batchCalls + "", Align.Right);
+
+					ui.row(lrow);
+					ui.text('Batch buckets');
+					ui.text(iron.RenderPath.batchBuckets + "", Align.Right);
+					#end
+
+					ui.row(lrow);
+					ui.text('Culled'); // Assumes shadow context for all meshes
+					ui.text(iron.RenderPath.culled + ' / ' + numMeshes * 2, Align.Right);
+					
+					#if arm_stream
+					ui.row(lrow);
+					var total = iron.Scene.active.sceneStream.sceneTotal();
+					ui.text('Streamed');
+					ui.text('$numMeshes / $total', Align.Right);
+					#end
+
+					ui.unindent();
+				}
+
+				if (ui.panel(Id.handle({selected: false}), 'Render Targets')) {
+					ui.indent();
+					ui.imageInvertY = true;
+					for (rt in iron.RenderPath.active.renderTargets) {
+						ui.text(rt.raw.name);
+						if (rt.image != null && !rt.is3D) {
+							ui.image(rt.image);
+						}
+					}
+					ui.imageInvertY = false;
+					ui.unindent();
+				}
+
+				if (ui.panel(Id.handle({selected: false}), 'Cached Materials')) {
+					ui.indent();
+					for (c in iron.data.Data.cachedMaterials) {
+						ui.text(c.name);
+					}
+					ui.unindent();
+				}
+
+				if (ui.panel(Id.handle({selected: false}), 'Cached Shaders')) {
+					ui.indent();
+					for (c in iron.data.Data.cachedShaders) {
+						ui.text(c.name);
+					}
+					ui.unindent();
+				}
+
+				// if (ui.panel(Id.handle({selected: false}), 'Cached Textures')) {
+				// 	ui.indent();
+				// 	for (c in iron.data.Data.cachedImages) {
+				// 		ui.image(c);
+				// 	}
+				// 	ui.unindent();
+				// }
+			}
+			if (ui.tab(htab, lastTraces[0] == '' ? 'Console' : lastTraces[0].substr(0, 20))) {
+				#if js
+				if (ui.panel(Id.handle({selected: false}), 'Script')) {
+					ui.indent();
+					var t = ui.textInput(Id.handle());
+					if (ui.button("Run")) {
+						try { js.Lib.eval(t); }
+						catch(e:Dynamic) { trace(e); }
+					}
+					ui.unindent();
+				}
 				#end
-				ui.text('culled: ' + iron.RenderPath.culled + ' / ' + numObjects * 2); // Assumes shadow context for all meshes
-				#if arm_stream
-				var total = iron.Scene.active.sceneStream.sceneTotal();
-				ui.text('streamed: $numObjects / $total');
-				#end
-				ui.text('render targets: ');
-				for (rt in iron.RenderPath.active.renderTargets) {
-					ui.text(rt.raw.name);
+				if (ui.panel(Id.handle({selected: true}), 'Log')) {
+					ui.indent();
+					if (ui.button("Clear")) {
+						lastTraces[0] = '';
+						lastTraces.splice(1, lastTraces.length - 1);
+					}
+					for (t in lastTraces) ui.text(t);
+					ui.unindent();
 				}
 			}
+
 			ui.separator();
 		}
 		ui.end();
-
-		g.begin(false);
 
 		totalTime += frameTime;
 		renderPathTime += iron.App.renderPathTime;
@@ -174,12 +440,13 @@ class DebugConsole extends Trait {
 			animTime = 0;
 			physTime = 0;
 			frames = 0;
+
+			if (htab.position == 2) updateGraph(); // Profile tab selected
 		}
 		frameTime = Scheduler.realTime() - lastTime;
 		lastTime = Scheduler.realTime();
 
-		// var rp = pathdata.renderTargets.get("shadowMap");
-		// g.drawScaledImage(rp.image, 0, 0, 256, 256);
+		g.begin(false);
 	}
 
 	function update() {
@@ -190,22 +457,5 @@ class DebugConsole extends Trait {
 		physTime += armory.trait.physics.PhysicsWorld.physTime;
 	#end
 	}
-
-	// function getMem():Int {
-	// 	#if cpp
-	// 	return untyped __global__.__hxcpp_gc_used_bytes();
-	// 	#elseif kha_webgl
-	// 	return untyped __js__("(window.performance && window.performance.memory) ? window.performance.memory.usedJSHeapSize : 0");
-	// 	#else
-	// 	return 0;
-	// 	#end
-	// }
-
-	// function rungc() {
-	// 	#if cpp
-	// 	return cpp.vm.Gc.run(true);	
-	// 	#end
-	// }
-
 #end
 }

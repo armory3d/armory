@@ -126,7 +126,7 @@ project.addSources('Sources');
         if enable_dce:
             f.write("project.addParameter('-dce full');\n")
 
-        if is_viewport:
+        if is_viewport or wrd.arm_play_console:
             import_traits.append('armory.trait.internal.Bridge')
 
         import_traits = list(set(import_traits))
