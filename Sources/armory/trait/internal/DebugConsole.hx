@@ -223,8 +223,10 @@ class DebugConsole extends Trait {
 							rot.mult(3.141592 / 180);
 							selectedObject.transform.rot.fromEuler(rot.x, rot.y, rot.z);
 							selectedObject.transform.buildMatrix();
+							#if arm_physics
 							var rb = selectedObject.getTrait(armory.trait.physics.RigidBody);
 							if (rb != null) rb.syncTransform();
+							#end
 						}
 
 						ui.row(row4);
