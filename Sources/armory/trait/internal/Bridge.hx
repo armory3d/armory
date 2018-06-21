@@ -10,6 +10,7 @@ class Bridge {
 	public static var Time = iron.system.Time;
 	public static var Object = iron.object.Object;
 	public static var Data = iron.data.Data;
+	public static function log(s:String) { trace(s); };
 }
 
 #end
