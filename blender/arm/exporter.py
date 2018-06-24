@@ -2204,7 +2204,7 @@ class ArmoryExporter:
                 self.output['traits'] = []
             x = {}
             x['type'] = 'Script'
-            phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics == 'Bullet' else 'oimo'
+            phys_pkg = 'bullet' if wrd.arm_physics_engine == 'Bullet' else 'oimo'
             x['class_name'] = 'armory.trait.physics.' + phys_pkg + '.PhysicsWorld'
             rbw = self.scene.rigidbody_world
             if rbw != None and rbw.enabled:
@@ -2330,7 +2330,11 @@ class ArmoryExporter:
         wrd = bpy.data.worlds['Arm']
         ArmoryExporter.export_all_flag = True
         ArmoryExporter.export_physics = False # Indicates whether rigid body is exported
+        if wrd.arm_physics == 'Enabled':
+            ArmoryExporter.export_physics = True
         ArmoryExporter.export_navigation = False
+        if wrd.arm_navigation == 'Enabled':
+            ArmoryExporter.export_navigation = True
         ArmoryExporter.export_ui = False
         if not hasattr(ArmoryExporter, 'compress_enabled'):
             ArmoryExporter.compress_enabled = False
@@ -2367,7 +2371,7 @@ class ArmoryExporter:
 
         wrd = bpy.data.worlds['Arm']
         phys_enabled = wrd.arm_physics != 'Disabled'
-        phys_pkg = 'bullet' if wrd.arm_physics == 'Bullet' else 'oimo'
+        phys_pkg = 'bullet' if wrd.arm_physics_engine == 'Bullet' else 'oimo'
 
         # Rigid body trait
         if bobject.rigid_body != None and phys_enabled:
@@ -2598,7 +2602,7 @@ class ArmoryExporter:
 
     def add_softbody_mod(self, o, bobject, soft_mod, soft_type):
         ArmoryExporter.export_physics = True
-        phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics == 'Bullet' else 'oimo'
+        phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics_engine == 'Bullet' else 'oimo'
         assets.add_khafile_def('arm_physics_soft')
         trait = {}
         trait['type'] = 'Script'
@@ -2614,7 +2618,7 @@ class ArmoryExporter:
 
     def add_hook_mod(self, o, bobject, target_name, group_name):
         ArmoryExporter.export_physics = True
-        phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics == 'Bullet' else 'oimo'
+        phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics_engine == 'Bullet' else 'oimo'
         trait = {}
         trait['type'] = 'Script'
         trait['class_name'] = 'armory.trait.physics.' + phys_pkg + '.PhysicsHook'
@@ -2636,7 +2640,7 @@ class ArmoryExporter:
         if rb1 == None or rb2 == None:
             return
         ArmoryExporter.export_physics = True
-        phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics == 'Bullet' else 'oimo'
+        phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics_engine == 'Bullet' else 'oimo'
         breaking_threshold = rbc.breaking_threshold if rbc.use_breaking else 0
         trait = {}
         trait['type'] = 'Script'

@@ -84,13 +84,21 @@ def init_properties():
     bpy.types.World.arm_project_root = StringProperty(name="Root", description="Set root folder for linked assets", default="", subtype="FILE_PATH", update=invalidate_compiler_cache)
     bpy.types.World.arm_physics = EnumProperty(
         items = [('Disabled', 'Disabled', 'Disabled'), 
-                 ('Bullet', 'Bullet', 'Bullet'),
+                 ('Auto', 'Auto', 'Auto'),
+                 ('Enabled', 'Enabled', 'Enabled')],
+        name = "Physics", default='Auto')
+    bpy.types.World.arm_physics_engine = EnumProperty(
+        items = [('Bullet', 'Bullet', 'Bullet'),
                  ('Oimo', 'Oimo', 'Oimo')],
-        name = "Physics", default='Bullet')
+        name = "Physics Engine", default='Bullet')
     bpy.types.World.arm_navigation = EnumProperty(
         items = [('Disabled', 'Disabled', 'Disabled'), 
-                 ('Recast', 'Recast', 'Recast')],
-        name = "Navigation", default='Recast')
+                 ('Auto', 'Auto', 'Auto'),
+                 ('Enabled', 'Enabled', 'Enabled')],
+        name = "Navigation", default='Auto')
+    bpy.types.World.arm_navigation_engine = EnumProperty(
+        items = [('Recast', 'Recast', 'Recast')],
+        name = "Navigation Engine", default='Recast')
     bpy.types.World.arm_ui = EnumProperty(
         items = [('Disabled', 'Disabled', 'Disabled'), 
                  ('Enabled', 'Enabled', 'Enabled'),

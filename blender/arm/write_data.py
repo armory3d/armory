@@ -82,7 +82,7 @@ project.addSources('Sources');
 
         if export_physics:
             assets.add_khafile_def('arm_physics')
-            if wrd.arm_physics == 'Bullet':
+            if wrd.arm_physics_engine == 'Bullet':
                 assets.add_khafile_def('arm_bullet')
                 if not os.path.exists('Libraries/haxebullet'):
                     f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
@@ -91,7 +91,7 @@ project.addSources('Sources');
                     ammojs_path = ammojs_path.replace('\\', '/')
                     f.write(add_assets(ammojs_path))
                     # haxe.macro.Compiler.includeFile(ammojs_path)
-            elif wrd.arm_physics == 'Oimo':
+            elif wrd.arm_physics_engine == 'Oimo':
                 assets.add_khafile_def('arm_oimo')
                 if not os.path.exists('Libraries/oimo'):
                     f.write(add_armory_library(sdk_path + '/lib/', 'oimo'))
@@ -113,7 +113,7 @@ project.addSources('Sources');
             # f.write("""project.addParameter("--macro include('armory.trait.internal')");\n""")
             # if export_physics:
             #     f.write("""project.addParameter("--macro include('armory.trait.physics')");\n""")
-            #     if wrd.arm_physics == 'Bullet':
+            #     if wrd.arm_physics_engine == 'Bullet':
             #         f.write("""project.addParameter("--macro include('armory.trait.physics.bullet')");\n""")
             #     else:
             #         f.write("""project.addParameter("--macro include('armory.trait.physics.oimo')");\n""")

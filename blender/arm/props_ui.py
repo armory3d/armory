@@ -412,7 +412,11 @@ class ArmoryProjectPanel(bpy.types.Panel):
         box = layout.box().column()
         box.prop(wrd, 'arm_audio')
         box.prop(wrd, 'arm_physics')
+        if wrd.arm_physics != 'Disabled':
+            box.prop(wrd, 'arm_physics_engine')
         box.prop(wrd, 'arm_navigation')
+        if wrd.arm_navigation != 'Disabled':
+            box.prop(wrd, 'arm_navigation_engine')
         box.prop(wrd, 'arm_ui')
         box.prop(wrd, 'arm_hscript')
         box.prop(wrd, 'arm_formatlib')
