@@ -1371,9 +1371,9 @@ def socket_index(node, socket):
 def node_name(s):
     for p in parents:
         s = p.name + '_' + s
+    s = safesrc(s)
     if '__' in s: # Consecutive _ are reserved
         s = s.replace('_', '_x')
-    s = safesrc(s)
     return s
 
 ##
