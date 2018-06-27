@@ -23,7 +23,7 @@ class CanvasScript extends Trait {
 
 			kha.Assets.loadFont("droid_sans", function(f:kha.Font) {
 
-				cui = new Zui({font: f});			
+				cui = new Zui({font: f, theme: zui.Themes.light});			
 				var c:TCanvas = haxe.Json.parse(blob.toString());
 				
 				if (c.assets == null || c.assets.length == 0) canvas = c;
