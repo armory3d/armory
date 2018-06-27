@@ -139,7 +139,7 @@ def init_properties():
                ('Viewport', 'Viewport', 'Viewport'),
                # ('Viewport Shared', 'Shared', 'Viewport Shared')
                ],
-        name="Camera", description="Viewport camera", default='Scene')
+        name="Camera", description="Viewport camera", default='Scene', update=invalidate_compiler_cache)
     bpy.types.World.arm_play_console = BoolProperty(name="Debug Console", description="Show inspector in player and enable debug draw", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_play_runtime = EnumProperty(
         items=[('Browser', 'Browser', 'Browser'),
