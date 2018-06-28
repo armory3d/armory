@@ -29,6 +29,7 @@ class PhysicsWorld extends Trait {
 #end
 
 	public static var active:PhysicsWorld = null;
+	static var sceneRemoved = false;
 
 #if arm_physics_soft
 	public var world:BtSoftRigidDynamicsWorldPointer;
@@ -52,13 +53,19 @@ class PhysicsWorld extends Trait {
 	public function new(timeScale = 1.0, timeStep = 1 / 60) {
 		super();
 
+		// Scene spawn
+		if (active != null && !sceneRemoved) return;
+		sceneRemoved = false;
+
 		this.timeScale = timeScale;
 		this.timeStep = timeStep;
 		maxSteps = timeStep < 1 / 60 ? 10 : 1;
 
+		// First scene
 		if (active == null) {
 			createPhysics();
 		}
+		// Scene switch
 		else {
 			for (rb in active.rbMap) removeRigidBody(rb);
 			world = active.world;
@@ -70,7 +77,12 @@ class PhysicsWorld extends Trait {
 		active = this;
 
 		notifyOnLateUpdate(lateUpdate);
-		iron.Scene.active.notifyOnRemove(reset);
+		iron.Scene.active.notifyOnRemove(resetWorld);
+	}
+
+	function resetWorld() {
+		reset();
+		sceneRemoved = true;
 	}
 
 	public function reset() {
