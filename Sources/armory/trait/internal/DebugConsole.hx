@@ -10,7 +10,10 @@ import zui.Zui;
 import zui.Id;
 #end
 
+#if arm_debug
 @:access(zui.Zui)
+@:access(armory.logicnode.LogicNode)
+#end
 class DebugConsole extends Trait {
 
 #if (!arm_debug)
@@ -46,6 +49,7 @@ class DebugConsole extends Trait {
 	static var row4 = [1/4, 1/4, 1/4, 1/4];
 
 	public static var f = 1.0;
+	public static var watchNodes:Array<armory.logicnode.LogicNode> = [];
 
 	public function new() {
 		super();
@@ -423,7 +427,11 @@ class DebugConsole extends Trait {
 				}
 			}
 
-			// if (ui.tab(htab, "Watch")) {}
+			if (watchNodes.length > 0 && ui.tab(htab, "Watch")) {
+				for (n in watchNodes) {
+					ui.text(n.tree.object.name + ': ' +  n.name + ' = ' + n.get(0));
+				}
+			}
 
 			ui.separator();
 		}

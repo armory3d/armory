@@ -91,6 +91,11 @@ def build_node(node, f):
     node_type = node.bl_idname[2:] # Discard 'LN'TimeNode prefix
     f.write('\t\tvar ' + name + ' = new armory.logicnode.' + node_type + '(this);\n')
 
+    # Watch in debug console
+    if node.arm_watch and bpy.data.worlds['Arm'].arm_play_console:
+        f.write('\t\t' + name + '.name = "' + name[1:] + '";\n')
+        f.write('\t\t' + name + '.watch(true);\n')
+
     # Properties
     for i in range(0, 5):
         if hasattr(node, 'property' + str(i)):

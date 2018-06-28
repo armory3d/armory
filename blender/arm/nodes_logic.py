@@ -65,6 +65,7 @@ class ArmLogicNodePanel(bpy.types.Panel):
         layout = self.layout
         if context.active_node != None and context.active_node.bl_idname.startswith('LN'):
             layout.prop(context.active_node, 'arm_logic_id')
+            layout.prop(context.active_node, 'arm_watch')
             layout.operator('arm.open_node_source')
 
 class ArmOpenNodeSource(bpy.types.Operator):
