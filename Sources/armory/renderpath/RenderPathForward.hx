@@ -13,6 +13,22 @@ class RenderPathForward {
 	static var voxelsLast = "voxels";
 	#end
 
+	public static function drawMeshes() {
+		path.drawMeshes("mesh");
+		#if (rp_background == "World")
+		{
+			path.drawSkydome("shader_datas/world_pass/world_pass");
+		}
+		#end
+
+		#if rp_translucency
+		{
+			var hasLamp = iron.Scene.active.lamps.length > 0;
+			if (hasLamp) Inc.drawTranslucency("lbuf");
+		}
+		#end
+	}
+
 	public static function init(_path:RenderPath) {
 
 		path = _path;
@@ -319,28 +335,13 @@ class RenderPathForward {
 		}
 		#end
 
-		function drawMeshes() {
-			path.drawMeshes("mesh");
-			#if (rp_background == "World")
-			{
-				path.drawSkydome("shader_datas/world_pass/world_pass");
-			}
-			#end
-
-			#if rp_translucency
-			{
-				if (hasLamp) Inc.drawTranslucency("lbuf");
-			}
-			#end
-		}
-
 		#if rp_stereo
 		{
 			path.drawStereo(drawMeshes);
 		}
 		#else
 		{
-			drawMeshes();
+			RenderPathCreator.drawMeshes();
 		}
 		#end
 

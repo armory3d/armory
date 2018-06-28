@@ -5,7 +5,13 @@ import iron.RenderPath;
 
 class RenderPathCreator {
 
-	static var path:RenderPath;
+	public static var path:RenderPath;
+
+	#if (rp_renderer == "Forward")
+	public static var drawMeshes:Void->Void = RenderPathForward.drawMeshes;
+	#else
+	public static var drawMeshes:Void->Void = RenderPathDeferred.drawMeshes;
+	#end
 
 	public static function get():RenderPath {
 		path = new RenderPath();

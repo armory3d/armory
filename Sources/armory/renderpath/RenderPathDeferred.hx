@@ -13,6 +13,10 @@ class RenderPathDeferred {
 	static var voxelsLast = "voxels";
 	#end
 
+	public static function drawMeshes() {
+		path.drawMeshes("mesh");
+	}
+
 	public static function init(_path:RenderPath) {
 
 		path = _path;
@@ -410,7 +414,15 @@ class RenderPathDeferred {
 		}
 		#end
 
-		path.drawMeshes("mesh");
+		#if rp_stereo
+		{
+			path.drawStereo(drawMeshes);
+		}
+		#else
+		{
+			RenderPathCreator.drawMeshes();
+		}
+		#end
 
 		#if rp_decals
 		{
