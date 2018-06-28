@@ -139,7 +139,9 @@ class DebugConsole extends Trait {
 							ui.g.color = 0xffffffff;
 						}
 						if (o.children.length > 0) {
-							b = ui.panel(h.nest(i, {selected: true}), o.name, 0, true);
+							ui.row([1/13, 12/13]);
+							b = ui.panel(h.nest(i, {selected: true}), "", 0, true);
+							ui.text(o.name);
 						}
 						else {
 							ui._x += 18; // Sign offset
@@ -248,6 +250,13 @@ class DebugConsole extends Trait {
 						if (ui.changed) scale.z = f;
 
 						selectedObject.transform.dirty = true;
+
+						if (selectedObject.traits.length > 0) {
+							ui.text("Traits:");
+							for (t in selectedObject.traits) {
+								ui.text(Type.getClassName(Type.getClass(t)));
+							}
+						}
 
 						if (selectedObject.name == "Scene") {
 							selectedType = "(Scene)";
@@ -397,7 +406,7 @@ class DebugConsole extends Trait {
 					ui.indent();
 					var t = ui.textInput(Id.handle());
 					if (ui.button("Run")) {
-						try { js.Lib.eval(t); }
+						try { trace("> " + t); js.Lib.eval(t); }
 						catch(e:Dynamic) { trace(e); }
 					}
 					ui.unindent();
@@ -413,6 +422,8 @@ class DebugConsole extends Trait {
 					ui.unindent();
 				}
 			}
+
+			// if (ui.tab(htab, "Watch")) {}
 
 			ui.separator();
 		}
