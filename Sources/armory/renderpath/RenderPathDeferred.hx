@@ -771,15 +771,15 @@ class RenderPathDeferred {
 		var framebuffer = "";
 		#end
 
-		#if ((rp_antialiasing == "Off") || (rp_antialiasing == "FXAA"))
+		#if ((rp_antialiasing == "Off") || (rp_antialiasing == "FXAA") || (!rp_render_to_texture))
 		{
 			RenderPathCreator.finalTarget = path.currentTarget;
 			path.setTarget(framebuffer);
 		}
 		#else
 		{
-			path.setTarget("buf");
 			RenderPathCreator.finalTarget = path.currentTarget;
+			path.setTarget("buf");
 		}
 		#end
 		

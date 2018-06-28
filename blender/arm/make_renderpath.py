@@ -52,15 +52,16 @@ def add_world_defs():
         elif rpdat.rp_gi == 'Voxel AO':
             voxelao = True
     # Shadows
-    if rpdat.rp_shadowmap_cascades != '1':
-        if voxelgi:
-            log.warn('Disabling shadow cascades - Voxel GI does not support cascades yet')
-        else:
-            wrd.world_defs += '_CSM'
-            assets.add_khafile_def('arm_csm')
     if rpdat.rp_shadowmap == 'Off':
         wrd.world_defs += '_NoShadows'
         assets.add_khafile_def('arm_no_shadows')
+    else:
+        if rpdat.rp_shadowmap_cascades != '1':
+            if voxelgi:
+                log.warn('Disabling shadow cascades - Voxel GI does not support cascades yet')
+            else:
+                wrd.world_defs += '_CSM'
+                assets.add_khafile_def('arm_csm')
     # SS
     # if rpdat.rp_dfrs:
     #     wrd.world_defs += '_DFRS'
@@ -110,6 +111,9 @@ def add_world_defs():
     if arm.utils.get_gapi().startswith('direct3d'): # Flip Y axis in drawQuad command
         wrd.world_defs += '_InvY'
 
+    if arm.utils.get_legacy_shaders() and not state.is_viewport:
+        wrd.world_defs += '_Legacy'
+
     # Area lamps
     for lamp in bpy.data.lamps:
         if lamp.type == 'AREA':
@@ -157,6 +161,9 @@ def build():
             assets.add(assets_path + 'noise256.png')
             assets.add_embedded_data('noise256.png')
 
+    if not rpdat.rp_render_to_texture or not rpdat.rp_compositornodes:
+        assets.add_shader_pass('copy_pass')
+
     if rpdat.rp_render_to_texture:
         assets.add_khafile_def('rp_render_to_texture')
 
@@ -199,8 +206,6 @@ def build():
             if '_CDOF' in wrd.compo_defs or '_CFXAA' in wrd.compo_defs or '_CSharpen' in wrd.compo_defs:
                 wrd.compo_defs += '_CTexStep'
             assets.add_shader_pass('compositor_pass')
-        else:
-            assets.add_shader_pass('copy_pass')
 
         assets.add_khafile_def('rp_antialiasing={0}'.format(rpdat.rp_antialiasing))
 
