@@ -14,13 +14,14 @@ class SendEventNode extends LogicNode {
 	override function run() {
 		var name:String = inputs[1].get();
 		
-		if (entries == null) {
+		// if (entries == null) {
 			var all = Event.get(name);
 			if (all != null) {
 				entries = [];
 				for (e in all) if (e.mask == tree.object.uid) entries.push(e);
 			}
-		}
+		// }
+		if (entries == null) return;
 		for (e in entries) e.onEvent();
 
 		super.run();

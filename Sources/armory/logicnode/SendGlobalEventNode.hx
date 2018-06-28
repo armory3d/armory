@@ -14,7 +14,9 @@ class SendGlobalEventNode extends LogicNode {
 	override function run() {
 		var name:String = inputs[1].get();
 		
-		if (entries == null) entries = Event.get(name);
+		// if (entries == null) {
+			entries = Event.get(name);
+		// }
 		if (entries == null) return; // Event does not exist
 		for (e in entries) e.onEvent();
 
