@@ -54,7 +54,10 @@ def build_node_tree(node_group):
     with open(file, 'w') as f:
         f.write('package ' + pack_path + '.node;\n\n')
         f.write('@:keep class ' + group_name + ' extends armory.logicnode.LogicTree {\n\n')
-        f.write('\tpublic function new() { super(); notifyOnAdd(add); }\n\n')
+        f.write('\tpublic function new() { super();')
+        if bpy.data.worlds['Arm'].arm_play_console:
+            f.write(' name = "' + group_name + '";')
+        f.write(' notifyOnAdd(add); }\n\n')
         f.write('\toverride public function add() {\n')
         for node in root_nodes:
             build_node(node, f)

@@ -429,7 +429,7 @@ class DebugConsole extends Trait {
 
 			if (watchNodes.length > 0 && ui.tab(htab, "Watch")) {
 				for (n in watchNodes) {
-					ui.text(n.tree.object.name + ': ' +  n.name + ' = ' + n.get(0));
+					ui.text(n.tree.object.name + '.' + n.tree.name + '.' + n.name + ' = ' + n.get(0));
 				}
 			}
 
