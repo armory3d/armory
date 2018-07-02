@@ -323,13 +323,14 @@ class ArmEditCanvasButton(bpy.types.Operator):
         project_path = arm.utils.get_fp()
         item = obj.arm_traitlist[obj.arm_traitlist_index]
         canvas_path = project_path + '/Bundled/canvas/' + item.canvas_name_prop + '.json'
-        write_data.write_canvasprefs(canvas_path)
-
+        
         sdk_path = arm.utils.get_sdk_path()
         armory2d_path = sdk_path + '/lib/armory_tools/armory2d/krom'
         krom_location, krom_path = arm.utils.krom_paths()
         os.chdir(krom_location)
-        subprocess.Popen([krom_path, armory2d_path, armory2d_path, '--nosound'])
+        cpath = canvas_path.replace('\\', '/')
+        uiscale = str(arm.utils.get_ui_scale())
+        subprocess.Popen([krom_path, armory2d_path, armory2d_path, '--nosound', cpath, uiscale])
         return{'FINISHED'}
 
 class ArmNewScriptDialog(bpy.types.Operator):

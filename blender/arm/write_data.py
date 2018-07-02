@@ -631,11 +631,4 @@ def write_canvasjson(canvas_name):
         os.makedirs(canvas_path)
     with open(canvas_path + '/' + canvas_name + '.json', 'w') as f:
         f.write(
-"""{ "name": "untitled", "x": 0.0, "y": 0.0, "width": 960, "height": 540, "elements": [], "assets": [] }""")
-
-def write_canvasprefs(canvas_path):
-    sdk_path = arm.utils.get_sdk_path()
-    prefs_path = sdk_path + 'lib/armory_tools/armory2d/krom/prefs.json'
-    with open(prefs_path, 'w') as f:
-        f.write(
-'{ "path": "' + canvas_path.replace('\\', '/') + '", "scaleFactor": ' + str(arm.utils.get_ui_scale()) + ' }')
+"""{ "name": "untitled", "x": 0.0, "y": 0.0, "width": 1280, "height": 720, "elements": [], "assets": [] }""")
