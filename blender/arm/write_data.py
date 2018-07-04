@@ -11,7 +11,7 @@ import arm.make_state as state
 def add_armory_library(sdk_path, name):
     return ('project.addLibrary("' + sdk_path + '/' + name + '");\n').replace('\\', '/')
 
-def add_assets(path, quality=1.0, is_publish=False):
+def add_assets(path, quality=1.0, use_data_dir=False):
     if not bpy.data.worlds['Arm'].arm_minimize and path.endswith('.arm'):
         path = path[:-4] + '.json'
 
@@ -19,7 +19,7 @@ def add_assets(path, quality=1.0, is_publish=False):
     s = 'project.addAssets("' + path + '", { notinlist: ' + str(notinlist).lower() + ' ';
     if quality < 1.0:
         s += ', quality: ' + str(quality)
-    if is_publish:
+    if use_data_dir:
         s += ', destination: "data/{name}"'
     s += '});\n'
     return s
@@ -144,12 +144,21 @@ project.addSources('Sources');
         shader_references = sorted(list(set(assets.shaders)))
         for ref in shader_references:
             ref = ref.replace('\\', '/')
-            f.write("project.addShaders('" + ref + "');\n")
+            f.write("project.addShaders('" + ref + "'")
+            # noprocessing for passthrough geom shader
+            # if ref.endswith('voxel.geom.glsl'):
+                # f.write(', { noprocessing: true }')
+            f.write(");\n")
+
+        # Move assets for published game to /data folder
+        use_data_dir = is_publish and (state.target.startswith('krom') or state.target == 'windows' or state.target == 'linux')
+        if use_data_dir:
+            assets.add_khafile_def('arm_data_dir')
 
         shader_data_references = sorted(list(set(assets.shader_datas)))
         for ref in shader_data_references:
             ref = ref.replace('\\', '/')
-            f.write(add_assets(ref, is_publish=is_publish))
+            f.write(add_assets(ref, use_data_dir=use_data_dir))
 
         asset_references = sorted(list(set(assets.assets)))
         for ref in asset_references:
@@ -160,7 +169,7 @@ project.addSources('Sources');
                 quality = wrd.arm_sound_quality
             elif s.endswith('.png') or s.endswith('.jpg'):
                 quality = wrd.arm_texture_quality
-            f.write(add_assets(ref, quality=quality, is_publish=is_publish))
+            f.write(add_assets(ref, quality=quality, use_data_dir=use_data_dir))
 
         if wrd.arm_sound_quality < 1.0 or state.target == 'html5':
             assets.add_khafile_def('arm_soundcompress')
@@ -176,7 +185,7 @@ project.addSources('Sources');
             if not os.path.exists('Libraries/zui'):
                 f.write(add_armory_library(sdk_path, 'lib/zui'))
             p = sdk_path + '/armory/Assets/droid_sans.ttf'
-            f.write(add_assets(p.replace('\\', '/'), is_publish=is_publish))
+            f.write(add_assets(p.replace('\\', '/'), use_data_dir=use_data_dir))
             assets.add_khafile_def('arm_ui')
 
         if wrd.arm_hscript == 'Enabled':
@@ -321,6 +330,9 @@ class Main {
             f.write("""
         iron.object.LampObject.cascadeCount = """ + str(rpdat.rp_shadowmap_cascades) + """;
         iron.object.LampObject.cascadeSplitFactor = """ + str(rpdat.arm_shadowmap_split) + """;
+""")
+        if rpdat.arm_shadowmap_bounds != 1.0:
+            f.write("""
         iron.object.LampObject.cascadeBounds = """ + str(rpdat.arm_shadowmap_bounds) + """;
 """)
         f.write("""
