@@ -454,6 +454,7 @@ class Cycles {
 
 	public static var parse_surface = true;
 	public static var parse_opacity = true;
+	public static var parse_height_as_channel = false;
 
 	public static var arm_export_tangents = true;
 	public static var out_normaltan:String; // Raw tangent space normal parsed from normal map
@@ -647,9 +648,9 @@ class Cycles {
 
 			// Displacement / Height
 			if (node.inputs.length > 7) {
-				curshader = vert;
+				if (!parse_height_as_channel) curshader = vert;
 				sout.out_height = parse_value_input(node.inputs[7]);
-				curshader = frag;
+				if (!parse_height_as_channel) curshader = frag;
 			}
 		}
 			// else:
