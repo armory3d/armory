@@ -360,6 +360,9 @@ class Main {
         if (config.window_msaa == null) config.window_msaa = """ + str(int(rpdat.arm_samples_per_pixel)) + """;
         if (config.window_vsync == null) config.window_vsync = """ + (('true' if wrd.arm_vsync else 'false')) + """;
         armory.object.Uniforms.register();
+        #if (kha_version >= 1807)
+        var windowMode = kha.WindowMode.Window;
+        #else
         var windowMode = config.window_mode == 0 ? kha.WindowMode.Window : (config.window_mode == 1 ? kha.WindowMode.BorderlessWindow : kha.WindowMode.Fullscreen);
         if (windowMode == kha.WindowMode.Fullscreen) { windowMode = kha.WindowMode.BorderlessWindow; config.window_w = kha.Display.width(0); config.window_h = kha.Display.height(0); }
 """)
@@ -369,6 +372,7 @@ class Main {
         else { config.window_w = Std.int(Math.min(config.window_w, kha.Display.width(0))); config.window_h = Std.int(Math.min(config.window_h, kha.Display.height(0))); }
 """)
         f.write("""
+        #end // kha_version
         kha.System.init({title: projectName, width: config.window_w, height: config.window_h, samplesPerPixel: config.window_msaa, vSync: config.window_vsync, windowMode: windowMode, resizable: config.window_resizable, maximizable: config.window_maximizable, minimizable: config.window_minimizable}, function() {
             iron.App.init(function() {
 """)
