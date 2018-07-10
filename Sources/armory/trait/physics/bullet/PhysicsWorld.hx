@@ -42,7 +42,7 @@ class PhysicsWorld extends Trait {
 	var preUpdates:Array<Void->Void> = null;
 	public var rbMap:Map<Int, RigidBody>;
 
-	var timeScale = 1.0;
+	public var timeScale = 1.0;
 	var timeStep = 1 / 60;
 	var maxSteps = 1;
 
@@ -197,13 +197,17 @@ class PhysicsWorld extends Trait {
 	}
 
 	public function lateUpdate() {
+
+		var t = Time.delta * timeScale;
+		if (t == 0.0) return; // Simulation paused
+
 #if arm_debug
 		var startTime = kha.Scheduler.realTime();
 #end
 
 		if (preUpdates != null) for (f in preUpdates) f();
 
-		world.stepSimulation(timeStep, maxSteps, Time.delta * timeScale);
+		world.stepSimulation(timeStep, maxSteps, t);
 		updateContacts();
 
 #if arm_debug
