@@ -101,8 +101,13 @@ def build_node(node, f):
 
     # Properties
     for i in range(0, 5):
-        if hasattr(node, 'property' + str(i)):
-            prop = getattr(node, 'property' + str(i))
+        prop_name = 'property' + str(i) + '_get'
+        prop_found = hasattr(node, prop_name)
+        if not prop_found:
+            prop_name = 'property' + str(i)
+            prop_found = hasattr(node, prop_name)
+        if prop_found:
+            prop = getattr(node, prop_name)
             prop = '"' + str(prop) + '"' if isinstance(prop, str) else str(prop)
             f.write('\t\t' + name + '.property' + str(i) + ' = ' + prop + ';\n')
     
