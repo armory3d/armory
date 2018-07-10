@@ -151,7 +151,7 @@ project.addSources('Sources');
             f.write(");\n")
 
         # Move assets for published game to /data folder
-        use_data_dir = is_publish and (state.target.startswith('krom') or state.target == 'windows' or state.target == 'linux')
+        use_data_dir = is_publish and (state.target == 'krom-windows' or state.target == 'krom-linux' or state.target == 'windows' or state.target == 'linux')
         if use_data_dir:
             assets.add_khafile_def('arm_data_dir')
 
