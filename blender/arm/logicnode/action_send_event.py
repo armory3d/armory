@@ -12,6 +12,7 @@ class SendEventNode(Node, ArmLogicTreeNode):
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('NodeSocketString', 'Event')
+        self.inputs.new('ArmNodeSocketObject', 'Object')
         self.outputs.new('ArmNodeSocketAction', 'Out')
 
 add_node(SendEventNode, category='Action')
