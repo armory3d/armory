@@ -2190,11 +2190,12 @@ class ArmoryExporter:
             else:
                 o['transform']['values'] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
             o['traits'] = []
-            navigation_trait = {}
-            navigation_trait['type'] = 'Script'
-            navigation_trait['class_name'] = 'armory.trait.WalkNavigation'
-            navigation_trait['parameters'] = ['true'] # ease
-            o['traits'].append(navigation_trait)
+            trait = {}
+            trait['type'] = 'Script'
+            trait['class_name'] = 'armory.trait.WalkNavigation'
+            trait['parameters'] = ['true'] # ease
+            o['traits'].append(trait)
+            ArmoryExporter.import_traits.append(trait['class_name'])
             self.output['objects'].append(o)
             self.output['camera_ref'] = 'DefaultCamera'
 
