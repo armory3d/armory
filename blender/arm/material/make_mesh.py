@@ -532,6 +532,10 @@ def make_forward_solid(con_mesh):
     if '_LDR' in wrd.world_defs:
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
 
+    if arm.utils.get_gapi().startswith('direct3d'):
+        vert.add_out('vec3 normal') # Prevent discard
+        vert.write('normal = nor;')
+
 def make_forward(con_mesh):
     wrd = bpy.data.worlds['Arm']
     make_forward_base(con_mesh)

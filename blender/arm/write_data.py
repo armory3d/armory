@@ -225,7 +225,6 @@ project.addSources('Sources');
             # assets.add_khafile_def('arm_degrees')
 
         assets.add_khafile_def('arm_fast')
-        # assets.add_khafile_def('arm_kha_' + arm.utils.get_kha_version())
 
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
@@ -251,10 +250,8 @@ project.addSources('Sources');
 def get_winmode(arm_winmode):
     if arm_winmode == 'Window':
         return 0
-    elif arm_winmode == 'BorderlessWindow':
+    else: # Fullscreen
         return 1
-    else:
-        return 2
 
 def write_config(resx, resy):
     wrd = bpy.data.worlds['Arm']
@@ -361,19 +358,10 @@ class Main {
         if (config.window_msaa == null) config.window_msaa = """ + str(int(rpdat.arm_samples_per_pixel)) + """;
         if (config.window_vsync == null) config.window_vsync = """ + (('true' if wrd.arm_vsync else 'false')) + """;
         armory.object.Uniforms.register();
-        #if (kha_version >= 1807)
-        var windowMode = kha.WindowMode.Window;
-        #else
-        var windowMode = config.window_mode == 0 ? kha.WindowMode.Window : (config.window_mode == 1 ? kha.WindowMode.BorderlessWindow : kha.WindowMode.Fullscreen);
+        var windowMode = config.window_mode == 0 ? kha.WindowMode.Window : kha.WindowMode.Fullscreen;
+        #if (kha_version < 1807) // TODO: deprecated
         if (windowMode == kha.WindowMode.Fullscreen) { windowMode = kha.WindowMode.BorderlessWindow; config.window_w = kha.Display.width(0); config.window_h = kha.Display.height(0); }
-""")
-        # Cap window size to desktop resolution, otherwise the window may not get opened
-        if not is_viewport:
-            f.write("""
-        else { config.window_w = Std.int(Math.min(config.window_w, kha.Display.width(0))); config.window_h = Std.int(Math.min(config.window_h, kha.Display.height(0))); }
-""")
-        f.write("""
-        #end // kha_version
+        #end
         kha.System.init({title: projectName, width: config.window_w, height: config.window_h, samplesPerPixel: config.window_msaa, vSync: config.window_vsync, windowMode: windowMode, resizable: config.window_resizable, maximizable: config.window_maximizable, minimizable: config.window_minimizable}, function() {
             iron.App.init(function() {
 """)
