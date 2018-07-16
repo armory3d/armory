@@ -27,13 +27,17 @@ class GateNode(Node, ArmLogicTreeNode):
     min_inputs = 3
     property1 = FloatProperty(name='Tolerance', description='Precision for float compare', default=0.0001)
     
+    @property
+    def input_label(self):
+        return 'Value {0}'.format(len(self.inputs)-1)
+    
     def __init__(self):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketShader', 'Value')
-        self.inputs.new('NodeSocketShader', 'Value')
+        self.inputs.new('NodeSocketShader', 'Value 0')
+        self.inputs.new('NodeSocketShader', 'Value 1')
         self.outputs.new('ArmNodeSocketAction', 'True')
         self.outputs.new('ArmNodeSocketAction', 'False')
 

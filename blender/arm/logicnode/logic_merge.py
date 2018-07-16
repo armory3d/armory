@@ -8,6 +8,7 @@ class MergeNode(Node, ArmLogicTreeNode):
     bl_idname = 'LNMergeNode'
     bl_label = 'Merge'
     bl_icon = 'GAME'
+    input_label = 'In {0}'
 
     def __init__(self):
         array_nodes[str(id(self))] = self

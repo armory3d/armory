@@ -8,6 +8,7 @@ class StringArrayNode(Node, ArmLogicTreeNode):
     bl_idname = 'LNArrayStringNode'
     bl_label = 'Array (String)'
     bl_icon = 'GAME'
+    input_label = 'String[{0}]'
 
     def __init__(self):
         array_nodes[str(id(self))] = self

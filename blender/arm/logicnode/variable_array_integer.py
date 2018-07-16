@@ -8,6 +8,7 @@ class IntegerArrayNode(Node, ArmLogicTreeNode):
     bl_idname = 'LNArrayIntegerNode'
     bl_label = 'Array (Integer)'
     bl_icon = 'GAME'
+    input_label = 'Integer[{0}]'
 
     def __init__(self):
         array_nodes[str(id(self))] = self

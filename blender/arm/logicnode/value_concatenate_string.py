@@ -8,12 +8,13 @@ class ConcatenateStringNode(Node, ArmLogicTreeNode):
     bl_idname = 'LNConcatenateStringNode'
     bl_label = 'Concatenate String'
     bl_icon = 'CURVE_PATH'
+    input_label = 'String {0}'
     
     def __init__(self):
         array_nodes[str(id(self))] = self
 
     def init(self, context):
-        self.inputs.new('NodeSocketString', 'Input 0')
+        self.inputs.new('NodeSocketString', 'String 0')
         self.outputs.new('NodeSocketString', 'String')
 
     def draw_buttons(self, context, layout):

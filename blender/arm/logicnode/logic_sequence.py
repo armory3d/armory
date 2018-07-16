@@ -8,6 +8,7 @@ class SequenceNode(Node, ArmLogicTreeNode):
     bl_idname = 'LNSequenceNode'
     bl_label = 'Sequence'
     bl_icon = 'GAME'
+    output_label = 'Out {0}'
 
     def __init__(self):
         array_nodes[str(id(self))] = self
