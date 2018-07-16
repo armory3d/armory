@@ -8,7 +8,7 @@ class SetNativePropertyNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 		var object:Object = inputs[1].get();
 		var property:String = inputs[2].get();
 		var value:Dynamic = inputs[3].get();
@@ -17,6 +17,6 @@ class SetNativePropertyNode extends LogicNode {
 
 		Reflect.setProperty(object, property, value);
 
-		super.run();
+		super.run(this);
 	}
 }

@@ -10,7 +10,7 @@ class CallGroupNode extends LogicNode {
 	}
 
 	@:access(iron.Trait)
-	override function run() {
+	override function run(node:LogicNode) {
 
 		if (callTree == null) {
 			var classType = Type.resolveClass(property0);

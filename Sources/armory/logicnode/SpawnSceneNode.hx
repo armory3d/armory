@@ -11,7 +11,7 @@ class SpawnSceneNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 
 		var sceneName:String = inputs[1].get();
 		var matrix:Mat4 = inputs[2].get();

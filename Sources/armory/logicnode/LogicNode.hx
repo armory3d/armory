@@ -26,9 +26,9 @@ class LogicNode {
 		outputs.push(nodes);
 	}
 
-	function run() { for (ar in outputs) for (o in ar) o.run(); }
+	function run(node:LogicNode) { for (ar in outputs) for (o in ar) o.run(this);}
 
-	function runOutputs(i:Int) { for (o in outputs[i]) o.run(); }
+	function runOutputs(i:Int,?node:LogicNode) { for (o in outputs[i]) o.run(this);}
 
 	@:allow(armory.logicnode.LogicNodeInput)
 	function get(from:Int):Dynamic { return this; }

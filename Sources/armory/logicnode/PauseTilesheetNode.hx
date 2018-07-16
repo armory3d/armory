@@ -8,13 +8,13 @@ class PauseTilesheetNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 		var object:MeshObject = inputs[1].get();
 		
 		if (object == null) return;
 
 		object.tilesheet.pause();
 
-		super.run();
+		super.run(this);
 	}
 }

@@ -8,7 +8,7 @@ class SetActionSpeedNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 		var object:Object = inputs[1].get();
 		var speed:Float = inputs[2].get();
 		
@@ -18,6 +18,6 @@ class SetActionSpeedNode extends LogicNode {
 
 		animation.speed = speed;
 
-		super.run();
+		super.run(this);
 	}
 }

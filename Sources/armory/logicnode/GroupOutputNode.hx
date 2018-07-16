@@ -6,8 +6,8 @@ class GroupOutputNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 
-		super.run();
+		super.run(this);
 	}
 }

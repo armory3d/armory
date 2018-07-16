@@ -19,12 +19,12 @@ class SetMaterialValueParamNode extends LogicNode {
 		}
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 		mat = inputs[1].get();
 		node = inputs[2].get();
 		value = inputs[3].get();
 
-		super.run();
+		super.run(this);
 	}
 
 	static function floatLink(object:Object, mat:MaterialData, link:String):Null<kha.FastFloat> {

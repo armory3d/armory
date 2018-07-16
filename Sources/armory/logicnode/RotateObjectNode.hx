@@ -14,7 +14,7 @@ class RotateObjectNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 		var object:Object = inputs[1].get();
 		var vec:Vec4 = inputs[2].get();
 
@@ -30,6 +30,6 @@ class RotateObjectNode extends LogicNode {
 		if (rigidBody != null) rigidBody.syncTransform();
 		#end
 
-		super.run();
+		super.run(this);
 	}
 }

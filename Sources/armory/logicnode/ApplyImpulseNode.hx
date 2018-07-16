@@ -10,7 +10,7 @@ class ApplyImpulseNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 		var object:Object = inputs[1].get();
 		var impulse:Vec4 = inputs[2].get();
 		
@@ -21,6 +21,6 @@ class ApplyImpulseNode extends LogicNode {
 		rb.applyImpulse(impulse);
 #end
 
-		super.run();
+		super.run(this);
 	}
 }

@@ -8,7 +8,7 @@ class PlayTilesheetNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 		var object:MeshObject = inputs[1].get();
 		var action:String = inputs[2].get();
 		

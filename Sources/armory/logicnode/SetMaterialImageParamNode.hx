@@ -19,7 +19,7 @@ class SetMaterialImageParamNode extends LogicNode {
 		}
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 		mat = inputs[1].get();
 		node = inputs[2].get();
 		if (mat == null || node == null) return;
@@ -29,7 +29,7 @@ class SetMaterialImageParamNode extends LogicNode {
 			image = img;
 		});
 
-		super.run();
+		super.run(this);
 	}
 
 	static function textureLink(object:Object, mat:MaterialData, link:String):kha.Image {

@@ -8,7 +8,7 @@ class CallStaticFunctionNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 		
 		var path:String = inputs[1].get();
 		if (path != '') {

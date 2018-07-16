@@ -9,12 +9,12 @@ class InverseNode extends LogicNode {
 		tree.notifyOnUpdate(update);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 		c = true;
 	}
 
 	function update() {
-		if (!c) super.run();
+		if (!c) super.run(this);
 		c = false;
 	}
 }

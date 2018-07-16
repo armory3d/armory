@@ -8,7 +8,7 @@ class ResumeActionNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 		var object:Object = inputs[1].get();
 		
 		if (object == null) return;
@@ -17,6 +17,6 @@ class ResumeActionNode extends LogicNode {
 
 		animation.resume();
 
-		super.run();
+		super.run(this);
 	}
 }

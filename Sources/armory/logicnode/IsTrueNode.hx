@@ -6,9 +6,9 @@ class IsTrueNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 
 		var v1:Bool = inputs[1].get();
-		if (v1) super.run();
+		if (v1) super.run(this);
 	}
 }

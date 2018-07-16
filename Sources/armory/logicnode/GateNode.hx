@@ -11,7 +11,7 @@ class GateNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 
 		var v1:Dynamic = inputs[1].get();
 		var v2:Dynamic = inputs[2].get();

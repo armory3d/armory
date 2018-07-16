@@ -9,7 +9,7 @@ class ExpressionNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 
 		#if arm_hscript
 		var expr = property0;

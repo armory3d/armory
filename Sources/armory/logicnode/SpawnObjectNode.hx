@@ -12,7 +12,7 @@ class SpawnObjectNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 
 		var objectName = "";
 		var objectInput = inputs[1].get();

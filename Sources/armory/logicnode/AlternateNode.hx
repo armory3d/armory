@@ -8,7 +8,7 @@ class AlternateNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 		b ? runOutputs(0) : runOutputs(1);
 		b = !b;
 	}

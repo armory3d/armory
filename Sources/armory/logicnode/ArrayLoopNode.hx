@@ -8,7 +8,7 @@ class ArrayLoopNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 		var ar:Array<Dynamic> = inputs[1].get();
 		if (ar == null) return;
 

@@ -23,7 +23,7 @@ class OnEventNode extends LogicNode {
 	}
 
 	function onEvent() {
-		run();
+		run(this);
 	}
 
 	function onRemove() {

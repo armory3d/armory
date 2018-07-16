@@ -6,7 +6,7 @@ class WhileNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 		var b:Bool = inputs[1].get();
 		while (b) {
 			runOutputs(0);

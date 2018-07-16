@@ -6,11 +6,11 @@ class PrintNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(node:LogicNode) {
 		var value:Dynamic = inputs[1].get();
 	
 		trace(value);
 
-		super.run();
+		super.run(this);
 	}
 }
