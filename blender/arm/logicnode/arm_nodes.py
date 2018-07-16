@@ -125,8 +125,10 @@ class ArmNodeAddInputButton(bpy.types.Operator):
 
     def execute(self, context):
         global array_nodes
-        inps = array_nodes[self.node_index].inputs
-        inps.new(self.socket_type, 'Input ' + str(len(inps)))
+        node = array_nodes[self.node_index]
+        inps = node.inputs
+        label_format = getattr(node, 'input_label', 'Input {0}')
+        inps.new(self.socket_type, label_format.format(len(inps)))
         return{'FINISHED'}
 
 class ArmNodeAddInputValueButton(bpy.types.Operator):
@@ -181,8 +183,10 @@ class ArmNodeAddOutputButton(bpy.types.Operator):
 
     def execute(self, context):
         global array_nodes
-        outs = array_nodes[self.node_index].outputs
-        outs.new(self.socket_type, 'Output ' + str(len(outs)))
+        node = array_nodes[self.node_index]
+        outs = node.outputs
+        label_format = getattr(node, 'output_label', 'Output {0}')
+        outs.new(self.socket_type, label_format.format(len(outs)))
         return{'FINISHED'}
 
 class ArmNodeRemoveOutputButton(bpy.types.Operator):
