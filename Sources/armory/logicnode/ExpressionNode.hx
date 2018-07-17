@@ -10,12 +10,13 @@ class ExpressionNode extends LogicNode {
 	}
 
 	override function run(node:LogicNode) {
-
+		var values : Array<Dynamic> = [for (i in inputs.slice(2)) i.get()];
 		#if arm_hscript
-		var expr = property0;
+		var expr = inputs[1].get();
 		var parser = new hscript.Parser();
 		var ast = parser.parseString(expr);
 		var interp = new hscript.Interp();
+		for (i in 0...values)	interp.variables.set("v"+i,value[i]);
 		result = interp.execute(ast);
 		#end
 
