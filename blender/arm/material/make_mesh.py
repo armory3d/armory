@@ -414,9 +414,10 @@ def make_forward_mobile(con_mesh):
     vert.write_attrib('vec4 spos = vec4(pos, 1.0);')
     frag.ins = vert.outs
     vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
-    vert.add_uniform('mat4 W', '_worldMatrix')
-    vert.add_out('vec3 wposition')
-    vert.write_attrib('wposition = vec4(W * spos).xyz;')
+    # Written in finalizer
+    # vert.add_uniform('mat4 W', '_worldMatrix')
+    # vert.add_out('vec3 wposition')
+    # vert.write_attrib('wposition = vec4(W * spos).xyz;')
     vert.write('gl_Position = WVP * spos;')
 
     frag.add_include('compiled.glsl')
