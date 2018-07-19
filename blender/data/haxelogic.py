@@ -2,6 +2,7 @@
 
 import json
 import glob
+import sys
 
 def socket_type(s):
 	if s == 'ArmNodeSocketAction':
@@ -10,6 +11,8 @@ def socket_type(s):
 		return 'OBJECT'
 	elif s == 'ArmNodeSocketAnimAction':
 		return 'ANIMACTION'
+	elif s == 'ArmNodeSocketArray':
+		return 'ARRAY'
 	elif s == 'NodeSocketShader':
 		return 'SHADER'
 	elif s == 'NodeSocketInt':
@@ -27,7 +30,8 @@ def socket_type(s):
 	else:
 		return s
 
-path = '/Users/lubos/Documents/GitHub/blender-build/build/bin/Release/blender.app/armsdk/armory/blender/arm/logicnode'
+# path = '/Users/lubos/Downloads/Armory/armsdk/armory/blender/arm/logicnode'
+path = sys.argv[1]
 modules = glob.glob(path + "/*.py")
 out = {}
 out['categories'] = []
@@ -46,11 +50,13 @@ for m in modules:
 		lines = f.read().splitlines()
 		for l in lines:
 			l = l.strip()
+			if l == '' or l == '],':
+				continue
 
 			# if l.startswith('property'):
 			if 'EnumProperty' in l: # TODO: enum only for now
 				but = {}
-				but['name'] = 'property' + l[8]
+				but['name'] = 'property' + l[-1]
 				but['type'] = 'ENUM'
 				but['default_value'] = 0
 				but['data'] = []
