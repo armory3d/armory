@@ -7,6 +7,10 @@ class ShutdownNode extends LogicNode {
 	}
 
 	override function run() {
+#if (kha_version < 1807) // TODO: deprecated
 		kha.System.requestShutdown();
+#else
+		kha.System.stop();
+#end
 	}
 }
