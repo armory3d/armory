@@ -25,12 +25,18 @@ exporter = ArmoryExporter()
 scripts_mtime = 0 # Monitor source changes
 profile_time = 0
 
+def mac_activate_proc(pid):
+    subprocess.call(["/usr/bin/python",
+        arm.utils.get_sdk_path() + "/armory/blender/arm/mac_activate_proc.py", str(pid)])
+
 def run_proc(cmd, done):
     def fn(p, done):
         p.wait()
         if done != None:
             done()
     p = subprocess.Popen(cmd)
+    if arm.utils.get_os() == 'mac':
+        mac_activate_proc(p.pid)
     threading.Thread(target=fn, args=(p, done)).start()
     return p
 
