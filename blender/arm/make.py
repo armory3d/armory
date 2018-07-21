@@ -126,12 +126,18 @@ def export_data(fp, sdk_path):
         export_ui = True
 
     modules = []
+    if wrd.arm_audio == 'Enabled':
+        modules.append('audio')
     if export_physics:
         modules.append('physics')
     if export_navigation:
         modules.append('navigation')
     if export_ui:
         modules.append('ui')
+    if wrd.arm_hscript == 'Enabled':
+        modules.append('hscript')
+    if wrd.arm_formatlib == 'Enabled':
+        modules.append('format')
     print('Exported modules: ' + str(modules))
 
     defs = arm.utils.def_strings_to_array(wrd.world_defs)
