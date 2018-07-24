@@ -25,7 +25,7 @@ class CameraController extends Trait {
 	public function new() {
 		super();
 
-		Scene.active.notifyOnInit(function() {
+		iron.Scene.active.notifyOnInit(function() {
 			transform = object.transform;
 			body = object.getTrait(RigidBody);
 			camera = cast(object.getChildOfType(CameraObject), CameraObject);

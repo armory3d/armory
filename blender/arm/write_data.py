@@ -107,6 +107,8 @@ project.addSources('Sources');
 
         if is_publish:
             assets.add_khafile_def('arm_published')
+            if wrd.arm_asset_compression:
+                assets.add_khafile_def('arm_compress')
         else:
             pass
             # f.write("""project.addParameter("--macro include('armory.trait')");\n""")
@@ -215,8 +217,8 @@ project.addSources('Sources');
             assets.add_khafile_def('arm_skin_cpu')
         elif rpdat.arm_skin == 'GPU (Matrix)':
             assets.add_khafile_def('arm_skin_mat')
-        elif rpdat.arm_skin == 'GPU Off':
-            assets.add_khafile_def('arm_skin_off')
+        if rpdat.arm_skin != 'Off':
+            assets.add_khafile_def('arm_skin')
 
         if arm.utils.get_viewport_controls() == 'azerty':
             assets.add_khafile_def('arm_azerty')
@@ -322,6 +324,9 @@ class Main {
 
         f.write("""
     public static function main() {
+""")
+        if rpdat.arm_skin != 'Off':
+            f.write("""
         iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;
 """)
         if rpdat.rp_shadowmap_cascades != '1':

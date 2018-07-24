@@ -3,12 +3,11 @@ package armory.trait.physics.bullet;
 #if arm_bullet
 
 import haxebullet.Bullet;
-import iron.Trait;
 import iron.math.Vec4;
 import iron.object.Transform;
 import iron.object.MeshObject;
 
-class RigidBody extends Trait {
+class RigidBody extends iron.Trait {
 
 	var shape:Shape;
 	var _motionState:BtMotionStatePointer;

@@ -2,7 +2,7 @@ package armory.trait.physics;
 
 #if (!arm_physics)
 
-class RigidBody extends Trait { public function new() { super(); } }
+class RigidBody extends iron.Trait { public function new() { super(); } }
 
 #else
 

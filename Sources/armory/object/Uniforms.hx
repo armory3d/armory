@@ -156,8 +156,9 @@ class Uniforms {
 				v.z = armory.renderpath.HosekWilkie.data.Z.z;
 			}
 		}
-		else if (link == "_cameraPositionSnap") {
-			#if arm_voxelgi
+		#end
+		#if arm_voxelgi
+		if (link == "_cameraPositionSnap") {
 			v = iron.object.Uniforms.helpVec;
 			var camera = iron.Scene.active.camera;
 			v.set(camera.transform.worldx(), camera.transform.worldy(), camera.transform.worldz());
@@ -167,9 +168,9 @@ class Uniforms {
 			v.y += l.y * e * 0.9;
 			var f = Main.voxelgiVoxelSize * 8; // Snaps to 3 mip-maps range
 			v.set(Math.floor(v.x / f) * f, Math.floor(v.y / f) * f, Math.floor(v.z / f) * f);
-			#end
 		}
 		#end
+		
 		return v;
 	}
 

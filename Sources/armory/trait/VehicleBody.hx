@@ -122,7 +122,7 @@ class VehicleBody extends Trait {
 	function update() {
 		if (vehicle == null) return;
 
-		var keyboard = armory.system.Input.getKeyboard();
+		var keyboard = iron.system.Input.getKeyboard();
 		var forward = keyboard.down(keyUp);
 		var backward = keyboard.down(keyDown);
 		var left = keyboard.down(keyLeft);
