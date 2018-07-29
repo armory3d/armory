@@ -9,8 +9,10 @@ class RenderPathCreator {
 
 	#if (rp_renderer == "Forward")
 	public static var drawMeshes:Void->Void = RenderPathForward.drawMeshes;
-	#else
+	#elseif (rp_renderer == "Deferred")
 	public static var drawMeshes:Void->Void = RenderPathDeferred.drawMeshes;
+	#else
+	public static var drawMeshes:Void->Void = function() {};
 	#end
 
 	public static function get():RenderPath {
@@ -19,9 +21,12 @@ class RenderPathCreator {
 		#if (rp_renderer == "Forward")
 		RenderPathForward.init(path);
 		path.commands = RenderPathForward.commands;
-		#else
+		#elseif (rp_renderer == "Deferred")
 		RenderPathDeferred.init(path);
 		path.commands = RenderPathDeferred.commands;
+		#elseif (rp_renderer == "Pathtracer")
+		RenderPathPathtracer.init(path);
+		path.commands = RenderPathPathtracer.commands;
 		#end
 		return path;
 	}

@@ -238,6 +238,14 @@ def compile(assets_only=False):
         cmd.append('--vr')
         cmd.append('webvr')
 
+    if arm.utils.get_rp().rp_renderer == 'Pathtracer':
+        cmd.append('--raytrace')
+        cmd.append('dxr')
+        dxc_path = fp + '/HlslShaders/fxc.exe'
+        subprocess.Popen([dxc_path, '-Zpr', '-Fo', fp + '/Bundled/pt_raygeneration.o', '-T', 'lib_6_1', fp + '/HlslShaders/pt_raygeneration.hlsl'])
+        subprocess.Popen([dxc_path, '-Zpr', '-Fo', fp + '/Bundled/pt_closesthit.o', '-T', 'lib_6_1', fp + '/HlslShaders/pt_closesthit.hlsl'])
+        subprocess.Popen([dxc_path, '-Zpr', '-Fo', fp + '/Bundled/pt_miss.o', '-T', 'lib_6_1', fp + '/HlslShaders/pt_miss.hlsl'])
+
     cmd.append('--to')
     if (kha_target_name == 'krom' and not state.is_viewport and not state.is_publish) or (kha_target_name == 'html5' and not state.is_publish):
         cmd.append(arm.utils.build_dir() + '/debug')
