@@ -13,7 +13,7 @@ class SetSceneNode extends LogicNode {
 	override function run() {
 		var sceneName:String = inputs[1].get();
 
-		Scene.setActive(sceneName, function(o:iron.object.Object) {
+		iron.Scene.setActive(sceneName, function(o:iron.object.Object) {
 			root = o;
 			runOutputs(0);
 		});

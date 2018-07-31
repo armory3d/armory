@@ -21,7 +21,7 @@ class SpawnObjectNode extends LogicNode {
 		if (objectName == "") objectName = tree.object.name;
 		var matrix:Mat4 = inputs[2].get();
 
-		Scene.active.spawnObject(objectName, null, function(o:Object) {
+		iron.Scene.active.spawnObject(objectName, null, function(o:Object) {
 			object = o;
 			if (matrix != null) {
 				object.transform.setMatrix(matrix);

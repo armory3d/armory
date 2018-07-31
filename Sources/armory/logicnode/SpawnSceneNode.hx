@@ -16,7 +16,7 @@ class SpawnSceneNode extends LogicNode {
 		var sceneName:String = inputs[1].get();
 		var matrix:Mat4 = inputs[2].get();
 
-		Scene.active.addScene(sceneName, null, function(o:Object) {
+		iron.Scene.active.addScene(sceneName, null, function(o:Object) {
 			root = o;
 			if (matrix != null) {
 				root.transform.setMatrix(matrix);
