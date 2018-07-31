@@ -2493,7 +2493,7 @@ class ArmoryExporter:
             co['type'] = con.type
             if bone:
                 co['bone'] = bobject.name
-            if con.target != None:
+            if hasattr(con, 'target') and con.target != None:
                 if con.type == 'COPY_LOCATION':
                     co['target'] = con.target.name
                     co['use_x'] = con.use_x
