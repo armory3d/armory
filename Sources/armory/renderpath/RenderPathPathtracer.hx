@@ -31,6 +31,7 @@ class RenderPathPathtracer {
 	static var target: RayTraceTarget;
 	static var pipeline: RayTracePipeline;
 	static var accel: AccelerationStructure;
+	static var frame = 0.0;
 
 	@:access(iron.data.Geometry)
 	public static function init(_path:RenderPath) {
@@ -51,41 +52,8 @@ class RenderPathPathtracer {
 						}
 						commandList.end(); // TODO: Otherwise "Reset fails because the command list was not closed"
 
-						var cam = iron.Scene.active.camera;
-						var ct = cam.transform;
-
-						var helpMat = iron.math.Mat4.identity();
-						helpMat.setFrom(cam.V);
-						helpMat.multmat2(cam.P);
-						helpMat.getInverse(helpMat);
-
 						// Pipeline
-						constantBuffer = new ConstantBuffer(20 * 4);
-						constantBuffer.lock();
-						constantBuffer.setFloat(0, ct.worldx());
-						constantBuffer.setFloat(4, ct.worldy());
-						constantBuffer.setFloat(8, ct.worldz());
-						constantBuffer.setFloat(12, 1);
-						
-						constantBuffer.setFloat(16, helpMat._00);
-						constantBuffer.setFloat(20, helpMat._01);
-						constantBuffer.setFloat(24, helpMat._02);
-						constantBuffer.setFloat(28, helpMat._03);
-						constantBuffer.setFloat(32, helpMat._10);
-						constantBuffer.setFloat(36, helpMat._11);
-						constantBuffer.setFloat(40, helpMat._12);
-						constantBuffer.setFloat(44, helpMat._13);
-						constantBuffer.setFloat(48, helpMat._20);
-						constantBuffer.setFloat(52, helpMat._21);
-						constantBuffer.setFloat(56, helpMat._22);
-						constantBuffer.setFloat(60, helpMat._23);
-						constantBuffer.setFloat(64, helpMat._30);
-						constantBuffer.setFloat(68, helpMat._31);
-						constantBuffer.setFloat(72, helpMat._32);
-						constantBuffer.setFloat(76, helpMat._33);
-
-						constantBuffer.unlock();
-
+						constantBuffer = new ConstantBuffer(21 * 4);
 						pipeline = new RayTracePipeline(commandList, rayShader, hitShader, missShader, constantBuffer);
 
 						// Acceleration structure
@@ -109,11 +77,7 @@ class RenderPathPathtracer {
 
 						// Output
 						target = new RayTraceTarget(iron.App.w(), iron.App.h());
-
-
 					});
-
-					
 				});
 			});
 		});
@@ -124,6 +88,40 @@ class RenderPathPathtracer {
 
 		var g = iron.App.framebuffer.g5;
 		currentBuffer = (currentBuffer + 1) % bufferCount;
+
+		constantBuffer.lock();
+
+		var cam = iron.Scene.active.camera;
+		var ct = cam.transform;
+		var helpMat = iron.math.Mat4.identity();
+		helpMat.setFrom(cam.V);
+		helpMat.multmat2(cam.P);
+		helpMat.getInverse(helpMat);
+		constantBuffer.setFloat(0, ct.worldx());
+		constantBuffer.setFloat(4, ct.worldy());
+		constantBuffer.setFloat(8, ct.worldz());
+		constantBuffer.setFloat(12, 1);
+		
+		constantBuffer.setFloat(16, helpMat._00);
+		constantBuffer.setFloat(20, helpMat._01);
+		constantBuffer.setFloat(24, helpMat._02);
+		constantBuffer.setFloat(28, helpMat._03);
+		constantBuffer.setFloat(32, helpMat._10);
+		constantBuffer.setFloat(36, helpMat._11);
+		constantBuffer.setFloat(40, helpMat._12);
+		constantBuffer.setFloat(44, helpMat._13);
+		constantBuffer.setFloat(48, helpMat._20);
+		constantBuffer.setFloat(52, helpMat._21);
+		constantBuffer.setFloat(56, helpMat._22);
+		constantBuffer.setFloat(60, helpMat._23);
+		constantBuffer.setFloat(64, helpMat._30);
+		constantBuffer.setFloat(68, helpMat._31);
+		constantBuffer.setFloat(72, helpMat._32);
+		constantBuffer.setFloat(76, helpMat._33);
+		
+		constantBuffer.setFloat(80, frame);
+		frame += 1.0;
+		constantBuffer.unlock();
 
 		g.begin(framebuffers[currentBuffer]);
 
