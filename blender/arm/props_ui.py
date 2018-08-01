@@ -1085,6 +1085,8 @@ class ArmLodPanel(bpy.types.Panel):
             row = layout.row()
             row.prop(item, "screen_size_prop")
 
+        layout.prop(mdata, "arm_lod_material")
+
         # Auto lod for meshes
         if obj.type == 'MESH':
             layout.separator()
@@ -1094,7 +1096,7 @@ class ArmLodPanel(bpy.types.Panel):
             row.prop(wrd, 'arm_lod_gen_levels')
             row.prop(wrd, 'arm_lod_gen_ratio')
 
-        layout.prop(mdata, "arm_lod_material")
+        
 
 class ArmTilesheetPanel(bpy.types.Panel):
     bl_label = "Armory Tilesheet"

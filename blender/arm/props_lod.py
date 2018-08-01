@@ -78,10 +78,15 @@ class ArmLodListDeleteItem(bpy.types.Operator):
 
     def execute(self, context):
         mdata = bpy.context.object.data
-        list = mdata.arm_lodlist
+        lodlist = mdata.arm_lodlist
         index = mdata.arm_lodlist_index
 
-        list.remove(index)
+        n = lodlist[index].name
+        if n in context.scene.objects:
+            obj = bpy.data.objects[n]
+            context.scene.objects.unlink(obj)
+
+        lodlist.remove(index)
 
         if index > 0:
             index = index - 1
