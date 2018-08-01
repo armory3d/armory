@@ -446,9 +446,16 @@ def make_forward_mobile(con_mesh):
         vert.add_out('vec3 vcolor')
         vert.write('vcolor = col;')
 
-    vert.add_out('vec3 wnormal')
-    write_norpos(con_mesh, vert)
-    frag.write_attrib('vec3 n = normalize(wnormal);')
+    if con_mesh.is_elem('tang'):
+        vert.add_out('mat3 TBN')
+        write_norpos(con_mesh, vert, declare=True)
+        vert.write('vec3 tangent = normalize(N * tang);')
+        vert.write('vec3 bitangent = normalize(cross(wnormal, tangent));')
+        vert.write('TBN = mat3(tangent, bitangent, wnormal);')
+    else:
+        vert.add_out('vec3 wnormal')
+        write_norpos(con_mesh, vert)
+        frag.write_attrib('vec3 n = normalize(wnormal);')
 
     frag.add_include('std/math.glsl')
     frag.add_include('std/brdf.glsl')
