@@ -2130,6 +2130,14 @@ class ArmoryExporter:
                 # Add unparented objects only, then instantiate full object child tree
                 for bobject in group.objects:
                     if bobject.parent == None and bobject.arm_export:
+                        # This object is controlled by proxy
+                        has_proxy_user = False
+                        for bo in bpy.data.objects:
+                            if bo.proxy == bobject:
+                                has_proxy_user = True
+                                break
+                        if has_proxy_user:
+                            continue
                         # Add external linked objects
                         if bobject.name not in scene_objects: # and bobject.ls_linked
                             self.process_bobject(bobject)
@@ -2358,11 +2366,6 @@ class ArmoryExporter:
         # Disabled object
         if bobject.arm_export == False:
             return False
-
-        for m in bobject.modifiers:
-            if m.type == 'OCEAN':
-                # Do not export ocean mesh, just take specified constants
-                export_object = False
 
         return export_object
 
