@@ -228,7 +228,7 @@ def compile(assets_only=False):
     if arm.utils.get_legacy_shaders() and not state.is_viewport:
         cmd.append('--shaderversion')
         cmd.append('110')
-    elif 'android' in state.target or 'ios' in state.target:
+    elif 'android' in state.target or 'ios' in state.target or 'html5' in state.target:
         pass # Use defaults
     else:
         cmd.append('--shaderversion')
