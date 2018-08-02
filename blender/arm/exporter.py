@@ -364,7 +364,7 @@ class ArmoryExporter:
         for i in range(key_count):
             ctrl = fcurve.keyframe_points[i].handle_right[1]
             keypluso.append(ctrl)
-        return keypluso, keypluso
+        return keyminuso, keypluso
 
     def export_animation_track(self, fcurve, kind, target, newline):
         # This function exports a single animation track. The curve types for the
@@ -377,10 +377,9 @@ class ArmoryExporter:
         else:
             tracko['curve'] = 'bezier'
             tracko['frames'] = self.export_key_frames(fcurve)
-            tracko['frames_control_plus'], tracko['frames_control_minus'] = self.export_key_frame_control_points(fcurve)
-
             tracko['values'] = self.export_key_values(fcurve)
-            tracko['values_control_plus'], tracko['values_control_minus'] = self.export_key_value_control_points(fcurve)
+            tracko['frames_control_minus'], tracko['frames_control_plus'] = self.export_key_frame_control_points(fcurve)
+            tracko['values_control_minus'], tracko['values_control_plus'] = self.export_key_value_control_points(fcurve)
         return tracko
 
     def export_object_transform(self, bobject, scene, o):
