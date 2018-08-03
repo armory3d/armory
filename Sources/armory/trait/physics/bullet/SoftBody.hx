@@ -40,7 +40,7 @@ class SoftBody extends Trait {
 		this.mass = mass;
 		this.margin = margin;
 
-		Scene.active.notifyOnInit(function() {
+		iron.Scene.active.notifyOnInit(function() {
 			notifyOnInit(init);
 		});
 	}

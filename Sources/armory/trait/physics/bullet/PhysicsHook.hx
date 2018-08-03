@@ -32,7 +32,7 @@ class PhysicsHook extends Trait {
 		this.targetName = targetName;
 		this.verts = verts;
 
-		Scene.active.notifyOnInit(function() {
+		iron.Scene.active.notifyOnInit(function() {
 			notifyOnInit(init);
 			notifyOnUpdate(update);
 		});
