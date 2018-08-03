@@ -41,7 +41,7 @@ def make(context_id, rpasses, shadowmap=False):
 
     wrd = bpy.data.worlds['Arm']
     if mat_state.material.arm_particle == 'gpu':
-        make_particle.write(vert)
+        make_particle.write(vert, shadowmap=shadowmap)
 
     if is_disp:
         rpdat = arm.utils.get_rp()

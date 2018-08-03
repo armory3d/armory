@@ -1,7 +1,7 @@
 
 import arm.material.mat_state as mat_state
 
-def write(vert, particle_info=None):
+def write(vert, particle_info=None, shadowmap=False):
 
     # Outs
     out_index = True if particle_info != None and particle_info['index'] else False
@@ -14,7 +14,7 @@ def write(vert, particle_info=None):
 
     vert.add_uniform('mat4 pd', '_particleData')
 
-    str_tex_hash = "    float fhash(float n) { return fract(sin(n) * 43758.5453); }"
+    str_tex_hash = "float fhash(float n) { return fract(sin(n) * 43758.5453); }\n"
     vert.add_function(str_tex_hash)
     
     prep = 'float '
@@ -38,9 +38,16 @@ def write(vert, particle_info=None):
         vert.add_out('float p_lifetime')
     vert.write(prep + 'p_lifetime = pd[0][2];')
     # todo: properly discard
-    vert.write('if (p_age < 0 || p_age > p_lifetime) { spos.x = spos.y = spos.z = -99999; }')
+    vert.write('if (p_age < 0 || p_age > p_lifetime) {')
+    vert.write('    spos.x = spos.y = spos.z = -99999;')
+    if shadowmap:
+        vert.write('    gl_Position = LWVP * spos;')
+    else:
+        vert.write('    gl_Position = WVP * spos;')
+    vert.write('    return;')
+    vert.write('}')
 
-    vert.write('p_age /= 2;') # Match
+    # vert.write('p_age /= 2;') # Match
     
     # object_align_factor / 2 + gxyz
     prep = 'vec3 '
