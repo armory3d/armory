@@ -26,9 +26,8 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
     
     # Assets to be generated
     output_file_irr = envpath + '/' + base_name + '_irradiance'
-    if arm_radiance:
-        output_file_rad = envpath + '/' + base_name + '_radiance'
-        rad_format = 'jpg' if disable_hdr else 'hdr'
+    output_file_rad = envpath + '/' + base_name + '_radiance'
+    rad_format = 'jpg' if disable_hdr else 'hdr'
 
     # Radiance & irradiance exists, keep cache
     basep = envpath + '/' + base_name
