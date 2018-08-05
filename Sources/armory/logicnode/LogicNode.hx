@@ -28,7 +28,7 @@ class LogicNode {
 
 	function run() { for (ar in outputs) for (o in ar) o.run(); }
 
-	function runOutputs(i:Int) { for (o in outputs[i]) o.run(); }
+	function runOutputs(i:Int) { if (i < outputs.length) for (o in outputs[i]) o.run(); }
 
 	@:allow(armory.logicnode.LogicNodeInput)
 	function get(from:Int):Dynamic { return this; }
