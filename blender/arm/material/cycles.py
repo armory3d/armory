@@ -777,18 +777,21 @@ def parse_vector(node, socket):
 
     elif node.type == 'MAPPING':
         out = parse_vector_input(node.inputs[0])
-        # ZYX rotation, Z axis for now..
+        if node.scale[0] != 1.0 or node.scale[1] != 1.0 or node.scale[2] != 1.0:
+            out = '({0} * vec3({1}, {2}, {3}))'.format(out, node.scale[0], node.scale[1], node.scale[2])
         if node.rotation[2] != 0.0:
+            # ZYX rotation, Z axis for now..
             a = node.rotation[2]
-            out = 'vec3({0}.x * {1} - (1.0 - {0}.y) * {2}, 1.0 - ({0}.x * {2} + (1.0 - {0}.y) * {1}), 0.0)'.format(out, math.cos(a), math.sin(a))
+            # x * cos(theta) - y * sin(theta)
+            # x * sin(theta) + y * cos(theta)
+            out = 'vec3({0}.x * {1} - ({0}.y) * {2}, {0}.x * {2} + ({0}.y) * {1}, 0.0)'.format(out, math.cos(a), math.sin(a))
         # if node.rotation[1] != 0.0:
         #     a = node.rotation[1]
         #     out = 'vec3({0}.x * {1} - {0}.z * {2}, {0}.x * {2} + {0}.z * {1}, 0.0)'.format(out, math.cos(a), math.sin(a))
         # if node.rotation[0] != 0.0:
         #     a = node.rotation[0]
         #     out = 'vec3({0}.y * {1} - {0}.z * {2}, {0}.y * {2} + {0}.z * {1}, 0.0)'.format(out, math.cos(a), math.sin(a))
-        if node.scale[0] != 1.0 or node.scale[1] != 1.0 or node.scale[2] != 1.0:
-            out = '({0} * vec3({1}, {2}, {3}))'.format(out, node.scale[0], node.scale[1], node.scale[2])
+        
         if node.translation[0] != 0.0 or node.translation[1] != 0.0 or node.translation[2] != 0.0:
             out = '({0} + vec3({1}, {2}, {3}))'.format(out, node.translation[0], node.translation[1], node.translation[2])
         if node.use_min:
