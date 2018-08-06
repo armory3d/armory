@@ -607,23 +607,22 @@ class ArmoryExporter:
                             boneRef[1]["objectType"] = NodeTypeBone
 
     def export_bone_transform(self, armature, bone, scene, o, action):
-        curve_array = self.collect_bone_animation(armature, bone.name)
-        animation = len(curve_array) != 0 or ArmoryExporter.sample_animation_flag
-
-        transform = bone.matrix_local.copy()
-        parent_bone = bone.parent
-        if parent_bone:
-            transform = parent_bone.matrix_local.inverted_safe() * transform
-
+        
         pose_bone = armature.pose.bones.get(bone.name)
-        if pose_bone:
-            transform = pose_bone.matrix.copy()
-            parent_pose_bone = pose_bone.parent
-            if parent_pose_bone:
-                transform = parent_pose_bone.matrix.inverted_safe() * transform
+        # if pose_bone != None:
+        #     transform = pose_bone.matrix.copy()
+        #     if pose_bone.parent != None:
+        #         transform = pose_bone.parent.matrix.inverted_safe() * transform
+        # else:
+        transform = bone.matrix_local.copy()
+        if bone.parent != None:
+            transform = bone.parent.matrix_local.inverted_safe() * transform
 
         o['transform'] = {}
         o['transform']['values'] = self.write_matrix(transform)
+
+        curve_array = self.collect_bone_animation(armature, bone.name)
+        animation = len(curve_array) != 0 or ArmoryExporter.sample_animation_flag
 
         if animation and pose_bone:
             begin_frame, end_frame = int(action.frame_range[0]), int(action.frame_range[1])
@@ -942,11 +941,17 @@ class ArmoryExporter:
             if bobject.parent_type == "BONE":
                 armature = bobject.parent.data
                 bone = armature.bones[bobject.parent_bone]
-                if not bone.use_relative_parent:
+                # if not bone.use_relative_parent:
+                o['parent_bone_connected'] = bone.use_connect
+                if bone.use_connect:
+                    bone_translation = Vector((0, bone.length, 0)) + bone.head
+                    o['parent_bone_tail'] = [bone_translation[0], bone_translation[1], bone_translation[2]]
+                else:
                     bone_translation = bone.tail - bone.head
                     o['parent_bone_tail'] = [bone_translation[0], bone_translation[1], bone_translation[2]]
-                    bone_translation_y = Vector((0, bone.length, 0)) + bone.head
-                    o['parent_bone_tail_y'] = [bone_translation_y[0], bone_translation_y[1], bone_translation_y[2]]
+                    pose_bone = bobject.parent.pose.bones[bobject.parent_bone]
+                    bone_translation_pose = pose_bone.tail - pose_bone.head
+                    o['parent_bone_tail_pose'] = [bone_translation_pose[0], bone_translation_pose[1], bone_translation_pose[2]]
 
             # Viewport Camera - overwrite active camera matrix with viewport matrix
             if type == NodeTypeCamera and bpy.data.worlds['Arm'].arm_play_camera != 'Scene' and self.scene.camera != None and bobject.name == self.scene.camera.name:
@@ -954,7 +959,7 @@ class ArmoryExporter:
                 if viewport_matrix != None:
                     o['transform']['values'] = self.write_matrix(viewport_matrix.inverted_safe())
                     # Do not apply parent matrix
-                    o['local_transform_only'] = True
+                    o['connected'] = False
 
             if bobject.type == 'ARMATURE' and bobject.data != None:
                 bdata = bobject.data # Armature data
@@ -2193,7 +2198,7 @@ class ArmoryExporter:
             viewport_matrix = self.get_viewport_view_matrix()
             if viewport_matrix != None:
                 o['transform']['values'] = self.write_matrix(viewport_matrix.inverted_safe())
-                o['local_transform_only'] = True
+                o['connected'] = False
             else:
                 o['transform']['values'] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
             o['traits'] = []
