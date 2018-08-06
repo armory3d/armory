@@ -262,6 +262,7 @@ def compile(assets_only=False):
         cmd.append('--noproject')
 
     print("Running: ", cmd)
+    print("Using project from " + arm.utils.get_fp())
     state.proc_build = run_proc(cmd, build_done)
 
 def build_viewport():
