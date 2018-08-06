@@ -560,7 +560,7 @@ def parse_rgb(node, socket):
         val = parse_value_input(node.inputs[2])
         # fac = parse_value_input(node.inputs[3])
         # col = parse_vector_input(node.inputs[4])
-        return 'hsv_to_rgb(vec3({0}, {1}, {2}))'.format(hue, sat, val)
+        return 'hsv_to_rgb(vec3({0} - 0.5, {1}, {2}))'.format(hue, sat, val)
 
     elif node.type == 'INVERT':
         fac = parse_value_input(node.inputs[0])
