@@ -959,7 +959,7 @@ class ArmoryExporter:
                 if viewport_matrix != None:
                     o['transform']['values'] = self.write_matrix(viewport_matrix.inverted_safe())
                     # Do not apply parent matrix
-                    o['connected'] = False
+                    o['local_only'] = True
 
             if bobject.type == 'ARMATURE' and bobject.data != None:
                 bdata = bobject.data # Armature data
@@ -2198,7 +2198,7 @@ class ArmoryExporter:
             viewport_matrix = self.get_viewport_view_matrix()
             if viewport_matrix != None:
                 o['transform']['values'] = self.write_matrix(viewport_matrix.inverted_safe())
-                o['connected'] = False
+                o['local_only'] = True
             else:
                 o['transform']['values'] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
             o['traits'] = []
