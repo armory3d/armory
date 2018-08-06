@@ -41,8 +41,10 @@ def write(vert, particle_info=None, shadowmap=False):
     vert.write('if (p_age < 0 || p_age > p_lifetime) {')
     vert.write('    spos.x = spos.y = spos.z = -99999;')
     if shadowmap:
+        vert.add_uniform('mat4 LWVP', '_biasLampWorldViewProjectionMatrix')
         vert.write('    gl_Position = LWVP * spos;')
     else:
+        vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
         vert.write('    gl_Position = WVP * spos;')
     vert.write('    return;')
     vert.write('}')
