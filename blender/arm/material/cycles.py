@@ -230,17 +230,17 @@ def parse_shader(node, socket):
 
     elif node.type == 'BSDF_PRINCIPLED':
         if parse_surface:
-            write_normal(node.inputs[16])
+            write_normal(node.inputs[17])
             parsing_basecolor(True)
             out_basecol = parse_vector_input(node.inputs[0])
             parsing_basecolor(False)
-            out_roughness = parse_value_input(node.inputs[7])
-            out_metallic = parse_value_input(node.inputs[4])
             # subsurface = parse_vector_input(node.inputs[1])
             # subsurface_radius = parse_vector_input(node.inputs[2])
             # subsurface_color = parse_vector_input(node.inputs[3])
+            out_metallic = parse_value_input(node.inputs[4])
             out_specular = parse_value_input(node.inputs[5])
             # specular_tint = parse_vector_input(node.inputs[6])
+            out_roughness = parse_value_input(node.inputs[7])
             # aniso = parse_vector_input(node.inputs[8])
             # aniso_rot = parse_vector_input(node.inputs[9])
             # sheen = parse_vector_input(node.inputs[10])
@@ -249,6 +249,7 @@ def parse_shader(node, socket):
             # clearcoat_rough = parse_vector_input(node.inputs[13])
             # ior = parse_vector_input(node.inputs[14])
             # transmission = parse_vector_input(node.inputs[15])
+            # transmission_roughness = parse_vector_input(node.inputs[16]) # Hidden socket
 
     elif node.type == 'BSDF_DIFFUSE':
         if parse_surface:
@@ -379,8 +380,12 @@ def parse_vector_input(inp):
             else:
                 return to_vec3(inp.default_value)
 
-def parse_rgb(node, socket):
+def parse_vector(node, socket):
+    global particle_info
+    global sample_bump
+    global sample_bump_res
 
+    # RGB
     if node.type == 'GROUP':
         return parse_group(node, socket)
 
@@ -388,10 +393,22 @@ def parse_rgb(node, socket):
         return parse_group_input(node, socket)
 
     elif node.type == 'ATTRIBUTE':
-        # Vcols only for now
-        # node.attribute_name
-        con.add_elem('col', 3)
-        return 'vcolor'
+        if socket == node.outputs[0]: # Color
+            con.add_elem('col', 3) # Vcols only for now
+            return 'vcolor'
+        else: # Vector
+            con.add_elem('tex', 2) # UVMaps only for now
+            mat = mat_get_material()
+            mat_users = mat_get_material_users()
+            if mat_users != None and mat in mat_users:
+                mat_user = mat_users[mat][0]
+                if hasattr(mat_user.data, 'uv_layers'): # No uvlayers for Curve
+                    lays = mat_user.data.uv_layers
+                    # Second uvmap referenced
+                    if len(lays) > 1 and node.attribute_name == lays[1].name:
+                        con.add_elem('tex1', 2)
+                        return 'vec3(texCoord1.xy, 0.0)'
+            return 'vec3(texCoord.xy, 0.0)'
 
     elif node.type == 'RGB':
         if node.arm_material_param:
@@ -469,8 +486,8 @@ def parse_rgb(node, socket):
             tex['file'] = ''
             return '{0}.rgb'.format(texture_store(node, tex, tex_name, True, tex_link=tex_link))
         else:
-            tex_store = store_var_name(node) # Pink color for missing texture
-            curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0);'.format(tex_store))
+            tex_store = store_var_name(node)
+            curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0); // Pink color for missing texture'.format(tex_store))
             return '{0}.rgb'.format(tex_store)
 
     elif node.type == 'TEX_MAGIC':
@@ -663,31 +680,7 @@ def parse_rgb(node, socket):
         # Roughly map to cycles - 450 to 600 nanometers
         return 'wavelength_to_rgb(({0} - 450.0) / 150.0)'.format(wl)
 
-def parse_vector(node, socket):
-    global particle_info
-    global sample_bump
-    global sample_bump_res
-
-    if node.type == 'GROUP':
-        return parse_group(node, socket)
-
-    elif node.type == 'GROUP_INPUT':
-        return parse_group_input(node, socket)
-
-    elif node.type == 'ATTRIBUTE':
-        # UVMaps only for now
-        con.add_elem('tex', 2)
-        mat = mat_get_material()
-        mat_users = mat_get_material_users()
-        if mat_users != None and mat in mat_users:
-            mat_user = mat_users[mat][0]
-            if hasattr(mat_user.data, 'uv_layers'): # No uvlayers for Curve
-                lays = mat_user.data.uv_layers
-                # Second uvmap referenced
-                if len(lays) > 1 and node.attribute_name == lays[1].name:
-                    con.add_elem('tex1', 2)
-                    return 'vec3(texCoord1.xy, 0.0)'
-        return 'vec3(texCoord.xy, 0.0)'
+    # Vector
 
     elif node.type == 'CAMERA':
         # View Vector
@@ -883,7 +876,8 @@ def parse_normal_map_color_input(inp, strength=1.0):
         frag.write('n = TBN * normalize(texn);')
     else:
         frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
-        frag.write('n.xy *= {0};'.format(strength))
+        if strength != 1.0:
+            frag.write('n.xy *= {0};'.format(strength))
         frag.write('n = normalize(TBN * n);')
         con.add_elem('tang', 3)
     frag.write_normal -= 1
@@ -1087,7 +1081,7 @@ def parse_value(node, socket):
             return res
         else:
             tex_store = store_var_name(node) # Pink color for missing texture
-            curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0);'.format(tex_store))
+            curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0); // Pink color for missing texture'.format(tex_store))
             return '{0}.a'.format(tex_store)
 
     elif node.type == 'TEX_MAGIC':
@@ -1270,12 +1264,7 @@ def write_result(l):
     st = l.from_socket.type
     if res_var not in parsed:
         parsed[res_var] = True
-        if st == 'RGB' or st == 'RGBA':
-            res = parse_rgb(l.from_node, l.from_socket)
-            if res == None:
-                return None
-            curshader.write('vec3 {0} = {1};'.format(res_var, res))
-        elif st == 'VECTOR':
+        if st == 'RGB' or st == 'RGBA' or st == 'VECTOR':
             res = parse_vector(l.from_node, l.from_socket)
             if res == None:
                 return None
