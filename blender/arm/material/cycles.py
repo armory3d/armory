@@ -647,22 +647,31 @@ def parse_vector(node, socket):
         elems = node.color_ramp.elements
         if len(elems) == 1:
             return to_vec3(elems[0].color)
+        # Write cols array
+        cols_var = node_name(node.name) + '_cols'
+        curshader.write('vec3 {0}[{1}];'.format(cols_var, len(elems))) # TODO: Make const
+        for i in range(0, len(elems)):
+            curshader.write('{0}[{1}] = vec3({2}, {3}, {4});'.format(cols_var, i, elems[i].color[0], elems[i].color[1], elems[i].color[2]))
+        # Get index
+        fac_var = node_name(node.name) + '_fac'
+        curshader.write('float {0} = {1};'.format(fac_var, fac))
+        index = '0'
+        for i in  range(1, len(elems)):
+            index += ' + ({0} > {1} ? 1 : 0)'.format(fac_var, elems[i].position)
+        # Write index
+        index_var = node_name(node.name) + '_i'
+        curshader.write('int {0} = {1};'.format(index_var, index))
         if interp == 'CONSTANT':
-            fac_var = node_name(node.name) + '_fac'
-            curshader.write('float {0} = {1};'.format(fac_var, fac))
-            # Get index
-            out_i = '0'
-            for i in  range(1, len(elems)):
-                out_i += ' + ({0} > {1} ? 1 : 0)'.format(fac_var, elems[i].position)
-            # Write cols array
-            cols_var = node_name(node.name) + '_cols'
-            curshader.write('vec3 {0}[{1}];'.format(cols_var, len(elems)))
+            return '{0}[{1}]'.format(cols_var, index_var)
+        else: # Linear
+            # Write facs array
+            facs_var = node_name(node.name) + '_facs'
+            curshader.write('float {0}[{1}];'.format(facs_var, len(elems))) # TODO: Make const
             for i in range(0, len(elems)):
-                curshader.write('{0}[{1}] = vec3({2}, {3}, {4});'.format(cols_var, i, elems[i].color[0], elems[i].color[1], elems[i].color[2]))
-            return '{0}[{1}]'.format(cols_var, out_i)
-        else: # Linear, .. - 2 elems only, end pos assumed to be 1
-            # float f = clamp((pos - start) * (1.0 / (1.0 - start)), 0.0, 1.0);
-            return 'mix({0}, {1}, clamp(({2} - {3}) * (1.0 / (1.0 - {3})), 0.0, 1.0))'.format(to_vec3(elems[0].color), to_vec3(elems[1].color), fac, elems[0].position)
+                curshader.write('{0}[{1}] = {2};'.format(facs_var, i, elems[i].position))
+            # Mix color
+            # float f = (pos - start) * (1.0 / (finish - start))
+            return 'mix({0}[{1}], {0}[{1} + 1], ({2} - {3}[{1}]) * (1.0 / ({3}[{1} + 1] - {3}[{1}]) ))'.format(cols_var, index_var, fac_var, facs_var)
 
     elif node.type == 'COMBHSV':
         # Pass constant

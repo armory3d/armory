@@ -137,6 +137,7 @@ def make_finalize(con_mesh):
     frag_wtan = (frag.contains('wtangent') and not frag.contains('vec3 wtangent')) or vert.contains('wtangent')
     if frag_wtan:
         # Indicate we want tang attrib in finalizer to prevent TBN generation
+        con_mesh.add_elem('tex', 2)
         con_mesh.add_elem('tang', 3)
         vert.add_out('vec3 wtangent')
         vert.write_pre = True
