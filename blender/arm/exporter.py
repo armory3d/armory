@@ -755,6 +755,87 @@ class ArmoryExporter:
                 mat = bpy.data.materials[baked_mat]
         return mat
 
+    # def ExportMorphWeights(self, node, shapeKeys, scene):
+        # action = None
+        # curveArray = []
+        # indexArray = []
+
+        # if (shapeKeys.animation_data):
+        #     action = shapeKeys.animation_data.action
+        #     if (action):
+        #         for fcurve in action.fcurves:
+        #             if ((fcurve.data_path.startswith("key_blocks[")) and (fcurve.data_path.endswith("].value"))):
+        #                 keyName = fcurve.data_path.strip("abcdehklopstuvy[]_.")
+        #                 if ((keyName[0] == "\"") or (keyName[0] == "'")):
+        #                     index = shapeKeys.key_blocks.find(keyName.strip("\"'"))
+        #                     if (index >= 0):
+        #                         curveArray.append(fcurve)
+        #                         indexArray.append(index)
+        #                 else:
+        #                     curveArray.append(fcurve)
+        #                     indexArray.append(int(keyName))
+
+        # if ((not action) and (node.animation_data)):
+        #     action = node.animation_data.action
+        #     if (action):
+        #         for fcurve in action.fcurves:
+        #             if ((fcurve.data_path.startswith("data.shape_keys.key_blocks[")) and (fcurve.data_path.endswith("].value"))):
+        #                 keyName = fcurve.data_path.strip("abcdehklopstuvy[]_.")
+        #                 if ((keyName[0] == "\"") or (keyName[0] == "'")):
+        #                     index = shapeKeys.key_blocks.find(keyName.strip("\"'"))
+        #                     if (index >= 0):
+        #                         curveArray.append(fcurve)
+        #                         indexArray.append(index)
+        #                 else:
+        #                     curveArray.append(fcurve)
+        #                     indexArray.append(int(keyName))
+
+        # animated = (len(curveArray) != 0)
+        # referenceName = shapeKeys.reference_key.name if (shapeKeys.use_relative) else ""
+
+        # for k in range(len(shapeKeys.key_blocks)):
+        #     self.IndentWrite(B"MorphWeight", 0, (k == 0))
+
+        #     if (animated):
+        #         self.Write(B" %mw")
+        #         self.WriteInt(k)
+
+        #     self.Write(B" (index = ")
+        #     self.WriteInt(k)
+        #     self.Write(B") {float {")
+
+        #     block = shapeKeys.key_blocks[k]
+        #     self.WriteFloat(block.value if (block.name != referenceName) else 1.0)
+
+        #     self.Write(B"}}\n")
+
+        # if (animated):
+        #     self.IndentWrite(B"Animation (begin = ", 0, True)
+        #     self.WriteFloat((action.frame_range[0] - self.beginFrame) * self.frameTime)
+        #     self.Write(B", end = ")
+        #     self.WriteFloat((action.frame_range[1] - self.beginFrame) * self.frameTime)
+        #     self.Write(B")\n")
+        #     self.IndentWrite(B"{\n")
+        #     self.indentLevel += 1
+
+        #     structFlag = False
+
+        #     for a in range(len(curveArray)):
+        #         k = indexArray[a]
+        #         target = bytes("mw" + str(k), "UTF-8")
+
+        #         fcurve = curveArray[a]
+        #         kind = OpenGexExporter.ClassifyAnimationCurve(fcurve)
+        #         if ((kind != kAnimationSampled) and (not self.sampleAnimationFlag)):
+        #             self.ExportAnimationTrack(fcurve, kind, target, structFlag)
+        #         else:
+        #             self.ExportMorphWeightSampledAnimationTrack(shapeKeys.key_blocks[k], target, scene, structFlag)
+
+        #         structFlag = True
+
+        #     self.indentLevel -= 1
+        #     self.IndentWrite(B"}\n")
+
     def export_object(self, bobject, scene, parento=None):
         # This function exports a single object in the scene and includes its name,
         # object reference, material references (for meshes), and transform.
@@ -1379,6 +1460,52 @@ class ArmoryExporter:
             elif poly.loop_total > 3:
                 for i in range(poly.loop_total-2):
                     prim += (indices[-1], indices[i], indices[i + 1])
+
+        # If there are multiple morph targets, export them here.
+        # if (shapeKeys):
+        #     shapeKeys.key_blocks[0].value = 0.0
+        #     for m in range(1, len(currentMorphValue)):
+        #         shapeKeys.key_blocks[m].value = 1.0
+        #         mesh.update()
+
+        #         node.active_shape_key_index = m
+        #         morphMesh = node.to_mesh(scene, applyModifiers, "RENDER", True, False)
+
+        #         # Write the morph target position array.
+
+        #         self.IndentWrite(B"VertexArray (attrib = \"position\", morph = ", 0, True)
+        #         self.WriteInt(m)
+        #         self.Write(B")\n")
+        #         self.IndentWrite(B"{\n")
+        #         self.indentLevel += 1
+
+        #         self.IndentWrite(B"float[3]\t\t// ")
+        #         self.WriteInt(vertexCount)
+        #         self.IndentWrite(B"{\n", 0, True)
+        #         self.WriteMorphPositionArray3D(unifiedVertexArray, morphMesh.vertices)
+        #         self.IndentWrite(B"}\n")
+
+        #         self.indentLevel -= 1
+        #         self.IndentWrite(B"}\n\n")
+
+        #         # Write the morph target normal array.
+
+        #         self.IndentWrite(B"VertexArray (attrib = \"normal\", morph = ")
+        #         self.WriteInt(m)
+        #         self.Write(B")\n")
+        #         self.IndentWrite(B"{\n")
+        #         self.indentLevel += 1
+
+        #         self.IndentWrite(B"float[3]\t\t// ")
+        #         self.WriteInt(vertexCount)
+        #         self.IndentWrite(B"{\n", 0, True)
+        #         self.WriteMorphNormalArray3D(unifiedVertexArray, morphMesh.vertices, morphMesh.tessfaces)
+        #         self.IndentWrite(B"}\n")
+
+        #         self.indentLevel -= 1
+        #         self.IndentWrite(B"}\n")
+
+        #         bpy.data.meshes.remove(morphMesh)
 
         # Write indices
         o['index_arrays'] = []
