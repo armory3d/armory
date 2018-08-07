@@ -1931,6 +1931,7 @@ class ArmoryExporter:
         if output_node != None:
             sign = self.signature_traverse(output_node, '')
             return sign
+        return None
 
     def export_materials(self):
         wrd = bpy.data.worlds['Arm']
@@ -1963,7 +1964,8 @@ class ArmoryExporter:
             signature = self.get_signature(material)
             if signature != material.signature:
                 material.is_cached = False
-            material.signature = signature
+            if signature != None:
+           		material.signature = signature
 
             o = {}
             o['name'] = arm.utils.asset_name(material)
