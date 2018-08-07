@@ -533,31 +533,39 @@ def kode_studio_mklink_mac(sdk_path):
         target = sdk_path + '/Krom'
         subprocess.check_call('ln -fs "%s" "%s"' % (target, source), shell=True)
 
-def kode_studio():
-    sdk_path = arm.utils.get_sdk_path()
-    project_path = arm.utils.get_fp()
-    if arm.utils.get_os() == 'win':
-        kode_path = sdk_path + '/win32/Kode Studio.exe'
-        if os.path.exists(kode_path):
-            kode_studio_mklink_win(sdk_path)
-            subprocess.Popen([kode_path, arm.utils.get_fp()])
-        else:
-            webbrowser.open('file://' + arm.utils.get_fp())
-    elif arm.utils.get_os() == 'mac':
-        kode_path = sdk_path + '/Kode Studio.app/Contents/MacOS/Electron'
-        if os.path.exists(kode_path):
-            kode_path = '"' + kode_path + '"'
-            kode_studio_mklink_mac(sdk_path)
-            subprocess.Popen([kode_path + ' "' + arm.utils.get_fp() + '"'], shell=True)
-        else:
-            webbrowser.open('file://' + arm.utils.get_fp())
+def get_kode_path():
+    if get_os() == 'win':
+        return get_sdk_path() + '/win32/Kode Studio.exe'
+    elif get_os() == 'mac':
+        return get_sdk_path() + '/Kode Studio.app/Contents/MacOS/Electron'
     else:
-        kode_path = sdk_path + '/linux64/kodestudio'
-        if os.path.exists(kode_path):
-            kode_studio_mklink_linux(sdk_path)
-            subprocess.Popen([kode_path, arm.utils.get_fp()])
+        return get_sdk_path() + '/linux64/kodestudio'
+
+def kode_studio(hx_path=None):
+    project_path = arm.utils.get_fp()
+    kode_path = get_kode_path()
+    if os.path.exists(kode_path) and get_code_editor() == 'kodestudio':
+        if arm.utils.get_os() == 'win':
+            kode_studio_mklink_win(get_sdk_path())
+            args = [kode_path, arm.utils.get_fp()]
+            if hx_path != None:
+                args.append(hx_path)
+            subprocess.Popen(args)
+        elif arm.utils.get_os() == 'mac':
+            kode_studio_mklink_mac(get_sdk_path())
+            args = ['"' + kode_path + '"' + ' "' + arm.utils.get_fp() + '"']
+            if hx_path != None:
+                args[0] += ' "' + hx_path + '"'
+            subprocess.Popen(args, shell=True)
         else:
-            webbrowser.open('file://' + arm.utils.get_fp())
+            kode_studio_mklink_linux(get_sdk_path())
+            args = [kode_path, arm.utils.get_fp()]
+            if hx_path != None:
+                args.append(hx_path)
+            subprocess.Popen(args)
+    else:
+        fp = hx_path if hx_path != None else arm.utils.get_fp()
+        webbrowser.open('file://' + fp)
 
 def def_strings_to_array(strdefs):
     defs = strdefs.split('_')

@@ -143,6 +143,7 @@ def export_data(fp, sdk_path):
     defs = arm.utils.def_strings_to_array(wrd.world_defs)
     cdefs = arm.utils.def_strings_to_array(wrd.compo_defs)
     print('Shader flags: ' + str(defs))
+    # print('Khafile flags: ' + str(assets.khafile_defs))
 
     # Write compiled.glsl
     shaders_path = build_dir + '/compiled/Shaders'

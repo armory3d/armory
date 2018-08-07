@@ -9,6 +9,7 @@ from arm.props_traits_params import *
 from arm.props_traits_props import *
 import arm.utils
 import arm.write_data as write_data
+import arm.make as make
 
 def trigger_recompile(self, context):
     wrd = bpy.data.worlds['Arm']
@@ -235,39 +236,19 @@ class ArmEditScriptButton(bpy.types.Operator):
     is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
  
     def execute(self, context):
+
+        if bpy.data.worlds['Arm'].arm_play_runtime != 'Browser' or not os.path.exists(arm.utils.get_fp() + "/khafile.js"):
+            print('Generating HTML5 project for Kode Studio')
+            make.build('html5')
+
         if self.is_object:
             obj = bpy.context.object
         else:
             obj = bpy.context.scene
-        project_path = arm.utils.get_fp()
         item = obj.arm_traitlist[obj.arm_traitlist_index]
         pkg = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
-        hx_path = project_path + '/Sources/' + pkg + '/' + item.class_name_prop + '.hx'
-
-        sdk_path = arm.utils.get_sdk_path()
-        if arm.utils.get_os() == 'win':
-            kode_path = sdk_path + '/win32/Kode Studio.exe'
-            if os.path.exists(kode_path) and arm.utils.get_code_editor() == 'kodestudio':
-                arm.utils.kode_studio_mklink_win(sdk_path)
-                subprocess.Popen([kode_path, arm.utils.get_fp(), hx_path])
-            else:
-                webbrowser.open('file://' + hx_path)
-        elif arm.utils.get_os() == 'mac':
-            kode_path = sdk_path + '/Kode Studio.app/Contents/MacOS/Electron'
-            if os.path.exists(kode_path) and arm.utils.get_code_editor() == 'kodestudio':
-                kode_path = '"' + kode_path + '"'
-                arm.utils.kode_studio_mklink_mac(sdk_path)
-                subprocess.Popen([kode_path + ' "' + arm.utils.get_fp() + '" "' + hx_path + '"'], shell=True)
-            else:
-                webbrowser.open('file://' + hx_path)
-        else:
-            kode_path = sdk_path + '/linux64/kodestudio'
-            if os.path.exists(kode_path) and arm.utils.get_code_editor() == 'kodestudio':
-                arm.utils.kode_studio_mklink_linux(sdk_path)
-                subprocess.Popen([kode_path, arm.utils.get_fp(), hx_path])
-            else:
-                webbrowser.open('file://' + hx_path)
-        
+        hx_path = arm.utils.get_fp() + '/Sources/' + pkg + '/' + item.class_name_prop + '.hx'
+        arm.utils.kode_studio(hx_path)
         return{'FINISHED'}
 
 class ArmEditBundledScriptButton(bpy.types.Operator):
@@ -278,6 +259,9 @@ class ArmEditBundledScriptButton(bpy.types.Operator):
     is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
  
     def execute(self, context):
+        if not arm.utils.check_saved(self):
+            return {'CANCELLED'}
+        
         if self.is_object:
             obj = bpy.context.object
         else:

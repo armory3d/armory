@@ -1,5 +1,6 @@
 import bpy
 import webbrowser
+import os
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 import arm.utils
@@ -615,6 +616,10 @@ class ArmoryKodeStudioButton(bpy.types.Operator):
     def execute(self, context):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
+
+        if bpy.data.worlds['Arm'].arm_play_runtime != 'Browser' or not os.path.exists(arm.utils.get_fp() + "/khafile.js"):
+            print('Generating HTML5 project for Kode Studio')
+            make.build('html5')
 
         arm.utils.kode_studio()
         return{'FINISHED'}
