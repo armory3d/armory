@@ -683,8 +683,8 @@ def parse_vector(node, socket):
     # Vector
 
     elif node.type == 'CAMERA':
-        # View Vector
-        return 'vVec'
+        # View Vector in camera space
+        return 'vVecCam'
 
     elif node.type == 'NEW_GEOMETRY':
         if socket == node.outputs[0]: # Position
@@ -692,7 +692,7 @@ def parse_vector(node, socket):
         elif socket == node.outputs[1]: # Normal
             return 'n'
         elif socket == node.outputs[2]: # Tangent
-            return 'vec3(0.0)'
+            return 'wtangent'
         elif socket == node.outputs[3]: # True Normal
             return 'n'
         elif socket == node.outputs[4]: # Incoming
@@ -718,7 +718,7 @@ def parse_vector(node, socket):
             return 'vec3(0.0)'
 
     elif node.type == 'TANGENT':
-        return 'vec3(0.0)'
+        return 'wtangent'
 
     elif node.type == 'TEX_COORD':
         #obj = node.object

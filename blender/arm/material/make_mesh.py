@@ -100,7 +100,7 @@ def make_finalize(con_mesh):
         vert.add_uniform('mat4 W', '_worldMatrix')
         vert.write_attrib('vec3 wposition = vec4(W * spos).xyz;')
 
-    frag_mpos = frag.contains('mposition') and not frag.contains('vec3 mposition') or vert.contains('mposition')
+    frag_mpos = (frag.contains('mposition') and not frag.contains('vec3 mposition')) or vert.contains('mposition')
     if frag_mpos:
         vert.add_out('vec3 mposition')
         vert.write_attrib('mposition = spos.xyz;')
@@ -115,7 +115,7 @@ def make_finalize(con_mesh):
             vert.write_pre = False
             make_tess.interpolate(tese, 'mposition', 3, declare_out=False)
 
-    frag_bpos = frag.contains('bposition') and not frag.contains('vec3 bposition') or vert.contains('bposition')
+    frag_bpos = (frag.contains('bposition') and not frag.contains('vec3 bposition')) or vert.contains('bposition')
     if frag_bpos:
         vert.add_out('vec3 bposition')
         vert.add_uniform('vec3 dim', link='_dim')
@@ -133,6 +133,31 @@ def make_finalize(con_mesh):
             vert.write('bposition = spos.xyz;')
             vert.write_pre = False
             make_tess.interpolate(tese, 'bposition', 3, declare_out=False)
+
+    frag_wtan = (frag.contains('wtangent') and not frag.contains('vec3 wtangent')) or vert.contains('wtangent')
+    if frag_wtan:
+        # Indicate we want tang attrib in finalizer to prevent TBN generation
+        con_mesh.add_elem('tang', 3)
+        vert.add_out('vec3 wtangent')
+        vert.write_pre = True
+        vert.write('wtangent = normalize(N * tang);')
+        vert.write_pre = False
+
+    if tese != None:
+        if frag_wtan:
+            make_tess.interpolate(tese, 'wtangent', 3, declare_out=True)
+        elif tese.contains('wtangent') and not tese.contains('vec3 wtangent'):
+            vert.add_out('vec3 wtangent')
+            vert.write_pre = True
+            vert.write('wtangent = normalize(N * tang);')
+            vert.write_pre = False
+            make_tess.interpolate(tese, 'wtangent', 3, declare_out=False)
+
+    if frag.contains('vVecCam'):
+        vert.add_out('vec3 eyeDirCam')
+        vert.add_uniform('mat4 WV', '_worldViewMatrix')
+        vert.write('eyeDirCam = vec4(WV * spos).xyz; eyeDirCam.z *= -1;')
+        frag.write_attrib('vec3 vVecCam = normalize(eyeDirCam);')
 
 def make_base(con_mesh, parse_opacity):
     global is_displacement
