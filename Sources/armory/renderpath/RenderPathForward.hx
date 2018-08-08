@@ -15,6 +15,13 @@ class RenderPathForward {
 
 	public static function drawMeshes() {
 		path.drawMeshes("mesh");
+
+		#if rp_blending
+		{
+			path.drawMeshes("blend");
+		}
+		#end
+		
 		#if (rp_background == "World")
 		{
 			path.drawSkydome("shader_datas/world_pass/world_pass");
