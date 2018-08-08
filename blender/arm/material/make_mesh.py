@@ -251,11 +251,8 @@ def make_base(con_mesh, parse_opacity):
     if con_mesh.is_elem('tang'):
         if tese != None:
             vert.add_out('vec3 wnormal')
-            vert.add_out('vec3 wtangent')
             write_norpos(con_mesh, vert)
-            vert.write('wtangent = normalize(N * tang);')
             tese.add_out('mat3 TBN')
-            make_tess.interpolate(tese, 'wtangent', 3, normalize=True)
             tese.write('vec3 wbitangent = normalize(cross(wnormal, wtangent));')
             tese.write('TBN = mat3(wtangent, wbitangent, wnormal);')
         else:
