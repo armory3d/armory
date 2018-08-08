@@ -536,7 +536,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_voxelgi_offset = FloatProperty(name="Offset", description="Ray offset", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_range = FloatProperty(name="Range", description="Maximum range", default=2.0, update=assets.invalidate_shader_cache)
     arm_sss_width = FloatProperty(name="Width", description="SSS blur strength", default=1.0, update=assets.invalidate_shader_cache)
-    arm_clouds_density = FloatProperty(name="Density", default=1.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
+    arm_clouds_density = FloatProperty(name="Density", default=1.0, min=0.0, max=1.0, update=assets.invalidate_shader_cache)
     arm_clouds_size = FloatProperty(name="Size", default=1.0, min=0.0, max=10.0, update=assets.invalidate_shader_cache)
     arm_clouds_lower = FloatProperty(name="Lower", default=2.0, min=1.0, max=10.0, update=assets.invalidate_shader_cache)
     arm_clouds_upper = FloatProperty(name="Upper", default=3.5, min=1.0, max=10.0, update=assets.invalidate_shader_cache)
