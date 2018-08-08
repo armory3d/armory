@@ -366,8 +366,14 @@ class Main {
         var windowMode = config.window_mode == 0 ? kha.WindowMode.Window : kha.WindowMode.Fullscreen;
         #if (kha_version < 1807) // TODO: deprecated
         if (windowMode == kha.WindowMode.Fullscreen) { windowMode = kha.WindowMode.BorderlessWindow; config.window_w = kha.Display.width(0); config.window_h = kha.Display.height(0); }
-        #end
         kha.System.init({title: projectName, width: config.window_w, height: config.window_h, samplesPerPixel: config.window_msaa, vSync: config.window_vsync, windowMode: windowMode, resizable: config.window_resizable, maximizable: config.window_maximizable, minimizable: config.window_minimizable}, function() {
+        #else
+        var windowFeatures = 0;
+        if (config.window_resizable) windowFeatures |= kha.WindowOptions.FeatureResizable;
+        if (config.window_maximizable) windowFeatures |= kha.WindowOptions.FeatureMaximizable;
+        if (config.window_minimizable) windowFeatures |= kha.WindowOptions.FeatureMinimizable;
+        kha.System.start({title: projectName, width: config.window_w, height: config.window_h, window: {mode: windowMode, windowFeatures: windowFeatures}, framebuffer: {samplesPerPixel: config.window_msaa, verticalSync: config.window_vsync}}, function(window:kha.Window) {
+        #end
             iron.App.init(function() {
 """)
         if is_publish and wrd.arm_loadscreen:
