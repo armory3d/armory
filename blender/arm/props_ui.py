@@ -234,7 +234,10 @@ class MaterialPropsPanel(bpy.types.Panel):
         row = layout.row()
         column = row.column()
         column.prop(mat, 'arm_cast_shadow')
-        column.prop(mat, 'arm_blending')
+        columnb = column.column()
+        wrd = bpy.data.worlds['Arm']
+        columnb.enabled = len(wrd.arm_rplist) > 0 and arm.utils.get_rp().rp_renderer == 'Forward'
+        columnb.prop(mat, 'arm_receive_shadow')
         column.separator()
         column.prop(mat, 'arm_two_sided')
         columnb = column.column()
@@ -274,10 +277,15 @@ class MaterialPropsPanel(bpy.types.Panel):
         col.prop(mat, 'arm_billboard', text="")
         col.prop(mat, 'arm_tilesheet_mat')
 
-        wrd = bpy.data.worlds['Arm']
-        if len(wrd.arm_rplist) > 0 and arm.utils.get_rp().rp_renderer == 'Forward':
-            layout.label('Forward')
-            layout.prop(mat, 'arm_receive_shadow')
+        layout.prop(mat, 'arm_blending')
+        col = layout.column()
+        col.enabled = mat.arm_blending
+        col.prop(mat, 'arm_blending_source')
+        col.prop(mat, 'arm_blending_destination')
+        col.prop(mat, 'arm_blending_operation')
+        col.prop(mat, 'arm_blending_source_alpha')
+        col.prop(mat, 'arm_blending_destination_alpha')
+        col.prop(mat, 'arm_blending_operation_alpha')
 
         layout.operator("arm.invalidate_material_cache")
 

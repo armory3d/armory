@@ -33,7 +33,7 @@ def get_rpasses(material):
         ar.append('decal')
     elif material.arm_overlay:
         ar.append('overlay')
-    elif is_transluc(material) and not material.arm_discard and not vgirefract and rpdat.rp_translucency_state != 'Off':
+    elif is_transluc(material) and not material.arm_discard and not vgirefract and rpdat.rp_translucency_state != 'Off' and not material.arm_blending:
         ar.append('translucent')
     else:
         ar.append('mesh')

@@ -245,7 +245,7 @@ def init_properties():
     bpy.types.World.arm_envtex_turbidity = FloatProperty(name="Turbidity", default=1.0)
     bpy.types.World.arm_envtex_ground_albedo = FloatProperty(name="Ground Albedo", default=0.0)
     bpy.types.Material.arm_cast_shadow = BoolProperty(name="Cast Shadow", default=True)
-    bpy.types.Material.arm_receive_shadow = BoolProperty(name="Receive Shadow", default=True)
+    bpy.types.Material.arm_receive_shadow = BoolProperty(name="Receive Shadow", description="Requires forward render path", default=True)
     bpy.types.Material.arm_overlay = BoolProperty(name="Overlay", default=False)
     bpy.types.Material.arm_decal = BoolProperty(name="Decal", default=False)
     bpy.types.Material.arm_two_sided = BoolProperty(name="Two-Sided", description="Flip normal when drawing back-face", default=False)
@@ -271,6 +271,68 @@ def init_properties():
     bpy.types.Material.arm_particle_fade = BoolProperty(name="Particle Fade", description="Fade particles in and out", default=False)
     bpy.types.Material.arm_tilesheet_mat = BoolProperty(name="Tilesheet", description="Generate tilesheet shaders", default=False)
     bpy.types.Material.arm_blending = BoolProperty(name="Blending", description="Enable additive blending", default=False)
+    bpy.types.Material.arm_blending_source = EnumProperty(
+        items=[('blend_one', 'One', 'One'),
+               ('blend_zero', 'Zero', 'Zero'),
+               ('source_alpha', 'Source Alpha', 'Source Alpha'),
+               ('destination_alpha', 'Destination Alpha', 'Destination Alpha'),
+               ('inverse_source_alpha', 'Inverse Source Alpha', 'Inverse Source Alpha'),
+               ('inverse_destination_alpha', 'Inverse Destination Alpha', 'Inverse Destination Alpha'),
+               ('source_color', 'Source Color', 'Source Color'),
+               ('destination_color', 'Destination Color', 'Destination Color'),
+               ('inverse_source_color', 'Inverse Source Color', 'Inverse Source Color'),
+               ('inverse_destination_color', 'Inverse Destination Color', 'Inverse Destination Color')],
+        name='Source', default='blend_one', description='Blending factor', update=assets.invalidate_shader_cache)
+    bpy.types.Material.arm_blending_destination = EnumProperty(
+        items=[('blend_one', 'One', 'One'),
+               ('blend_zero', 'Zero', 'Zero'),
+               ('source_alpha', 'Source Alpha', 'Source Alpha'),
+               ('destination_alpha', 'Destination Alpha', 'Destination Alpha'),
+               ('inverse_source_alpha', 'Inverse Source Alpha', 'Inverse Source Alpha'),
+               ('inverse_destination_alpha', 'Inverse Destination Alpha', 'Inverse Destination Alpha'),
+               ('source_color', 'Source Color', 'Source Color'),
+               ('destination_color', 'Destination Color', 'Destination Color'),
+               ('inverse_source_color', 'Inverse Source Color', 'Inverse Source Color'),
+               ('inverse_destination_color', 'Inverse Destination Color', 'Inverse Destination Color')],
+        name='Destination', default='blend_one', description='Blending factor', update=assets.invalidate_shader_cache)
+    bpy.types.Material.arm_blending_operation = EnumProperty(
+        items=[('add', 'Add', 'Add'),
+               ('subtract', 'Subtract', 'Subtract'),
+               ('reverse_subtract', 'Reverse Subtract', 'Reverse Subtract'),
+               ('min', 'Min', 'Min'),
+               ('max', 'Max', 'Max')],
+        name='Operation', default='add', description='Blending operation', update=assets.invalidate_shader_cache)
+    bpy.types.Material.arm_blending_source_alpha = EnumProperty(
+        items=[('blend_one', 'One', 'One'),
+               ('blend_zero', 'Zero', 'Zero'),
+               ('source_alpha', 'Source Alpha', 'Source Alpha'),
+               ('destination_alpha', 'Destination Alpha', 'Destination Alpha'),
+               ('inverse_source_alpha', 'Inverse Source Alpha', 'Inverse Source Alpha'),
+               ('inverse_destination_alpha', 'Inverse Destination Alpha', 'Inverse Destination Alpha'),
+               ('source_color', 'Source Color', 'Source Color'),
+               ('destination_color', 'Destination Color', 'Destination Color'),
+               ('inverse_source_color', 'Inverse Source Color', 'Inverse Source Color'),
+               ('inverse_destination_color', 'Inverse Destination Color', 'Inverse Destination Color')],
+        name='Source', default='blend_one', description='Blending factor', update=assets.invalidate_shader_cache)
+    bpy.types.Material.arm_blending_destination_alpha = EnumProperty(
+        items=[('blend_one', 'One', 'One'),
+               ('blend_zero', 'Zero', 'Zero'),
+               ('source_alpha', 'Source Alpha', 'Source Alpha'),
+               ('destination_alpha', 'Destination Alpha', 'Destination Alpha'),
+               ('inverse_source_alpha', 'Inverse Source Alpha', 'Inverse Source Alpha'),
+               ('inverse_destination_alpha', 'Inverse Destination Alpha', 'Inverse Destination Alpha'),
+               ('source_color', 'Source Color', 'Source Color'),
+               ('destination_color', 'Destination Color', 'Destination Color'),
+               ('inverse_source_color', 'Inverse Source Color', 'Inverse Source Color'),
+               ('inverse_destination_color', 'Inverse Destination Color', 'Inverse Destination Color')],
+        name='Destination', default='blend_one', description='Blending factor', update=assets.invalidate_shader_cache)
+    bpy.types.Material.arm_blending_operation_alpha = EnumProperty(
+        items=[('add', 'Add', 'Add'),
+               ('subtract', 'Subtract', 'Subtract'),
+               ('reverse_subtract', 'Reverse Subtract', 'Reverse Subtract'),
+               ('min', 'Min', 'Min'),
+               ('max', 'Max', 'Max')],
+        name='Operation', default='add', description='Blending operation', update=assets.invalidate_shader_cache)
     # For scene
     bpy.types.Scene.arm_export = BoolProperty(name="Export", description="Export scene data", default=True)
     # bpy.types.Scene.arm_gp_export = BoolProperty(name="Export GP", description="Export grease pencil data", default=True)

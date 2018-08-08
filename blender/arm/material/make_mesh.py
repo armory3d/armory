@@ -19,14 +19,20 @@ def make(context_id):
 
     con = { 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' }
     
-    # TODO: blend context
-    blend = mat_state.material.arm_blending
+    # Blend context
+    mat = mat_state.material
+    blend = mat.arm_blending
     if blend:
         con['name'] = 'blend'
-        con['blend_source'] = 'blend_one'
-        con['blend_destination'] = 'blend_one'
-        con['blend_operation'] = 'add'
+        con['blend_source'] = mat.arm_blending_source
+        con['blend_destination'] = mat.arm_blending_destination
+        con['blend_operation'] = mat.arm_blending_operation
+        con['alpha_blend_source'] = mat.arm_blending_source_alpha
+        con['alpha_blend_destination'] = mat.arm_blending_destination_alpha
+        con['alpha_blend_operation'] = mat.arm_blending_operation_alpha
         con['depth_write'] = False
+
+    # Depth prepass was performed
     dprepass = rid == 'Forward' and rpdat.rp_depthprepass
     if dprepass:
         con['depth_write'] = False
@@ -579,11 +585,13 @@ def make_forward_solid(con_mesh):
 
 def make_forward(con_mesh):
     wrd = bpy.data.worlds['Arm']
-    make_forward_base(con_mesh)
+    blend = mat_state.material.arm_blending
+    parse_opacity = blend and mat_utils.is_transluc(mat_state.material)
+    
+    make_forward_base(con_mesh, parse_opacity=parse_opacity)
 
     frag = con_mesh.frag
 
-    blend = mat_state.material.arm_blending
     if not blend:
         frag.add_out('vec4 fragColor')
         frag.write('fragColor = vec4(direct * lightColor * visibility + indirect * occlusion, 1.0);')
@@ -717,8 +725,11 @@ def make_forward_base(con_mesh, parse_opacity=False):
     blend = mat_state.material.arm_blending
     if blend:
         frag.add_out('vec4 fragColor')
-        # frag.write('fragColor = vec4(basecol * lightColor * visibility, 1.0);')
-        frag.write('fragColor = vec4(basecol, 1.0);')
+        if parse_opacity:
+            frag.write('fragColor = vec4(basecol, opacity);')
+        else:
+            # frag.write('fragColor = vec4(basecol * lightColor * visibility, 1.0);')
+            frag.write('fragColor = vec4(basecol, 1.0);')
         # TODO: Fade out fragments near depth buffer here
         return
 
