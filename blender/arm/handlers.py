@@ -6,6 +6,7 @@ import arm.utils
 import arm.props as props
 import arm.make as make
 import arm.make_state as state
+import arm.api
 
 last_operator = None
 first_update = True
@@ -123,7 +124,9 @@ def on_load_post(context):
 
     wrd = bpy.data.worlds['Arm']
     wrd.arm_recompile = True
+    arm.api.drivers = dict()
 
+    # Load libraries
     if os.path.exists(arm.utils.get_fp() + '/Libraries'):
         libs = os.listdir(arm.utils.get_fp() + '/Libraries')
         for lib in libs:
