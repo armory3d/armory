@@ -6,7 +6,7 @@ bl_info = {
     "location": "Properties -> Render -> Armory",
     "description": "3D Game Engine for Blender",
     "author": "Armory3D.org",
-    "version": (14, 0, 0),
+    "version": (15, 0, 0),
     "blender": (2, 79, 0),
     "wiki_url": "http://armory3d.org/manual",
     "tracker_url": "https://github.com/armory3d/armory/issues"
@@ -18,6 +18,7 @@ import stat
 import shutil
 import webbrowser
 import subprocess
+import threading
 import bpy
 import platform
 from bpy.types import Operator, AddonPreferences
@@ -146,14 +147,23 @@ def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
     func(path)
 
-def update_repo(p, n, gitn = ''):
+def run_proc(cmd, done):
+    def fn(p, done):
+        p.wait()
+        if done != None:
+            done()
+    p = subprocess.Popen(cmd)
+    threading.Thread(target=fn, args=(p, done)).start()
+    return p
+
+def update_repo(done, p, n, gitn = ''):
     if gitn == '':
         gitn = n
     if not os.path.exists(p + '/' + n + '_backup'):
         os.rename(p + '/' + n, p + '/' + n + '_backup')
     if os.path.exists(p + '/' + n):
         shutil.rmtree(p + '/' + n, onerror=remove_readonly)
-    subprocess.Popen(['git', 'clone', 'https://github.com/armory3d/' + gitn, p + '/' + n, '--depth=1'])
+    run_proc(['git', 'clone', 'https://github.com/armory3d/' + gitn, p + '/' + n, '--depth=1'], done)
 
 def restore_repo(p, n):
     if os.path.exists(p + '/' + n + '_backup'):
@@ -353,7 +363,7 @@ class ArmAddonUpdateButton(bpy.types.Operator):
     bl_idname = "arm_addon.update"
     bl_label = "Update SDK"
     bl_description = "Update to the latest development version"
- 
+
     def execute(self, context):
         p = get_sdk_path(context)
         if p == "":
@@ -362,13 +372,23 @@ class ArmAddonUpdateButton(bpy.types.Operator):
         self.report({'INFO'}, 'Updating, check console for details. Please restart Blender after successful SDK update.')
         print('Armory (add-on v' + str(bl_info['version']) + '): Cloning [armory, iron, haxebullet, haxerecast, zui] repositories')
         os.chdir(p)
-        update_repo(p, 'armory')
-        update_repo(p, 'iron')
-        update_repo(p, 'lib/haxebullet', 'haxebullet')
-        update_repo(p, 'lib/haxerecast', 'haxerecast')
-        update_repo(p, 'lib/zui', 'zui')
-        update_repo(p, 'lib/armory_tools', 'armory_tools')
-        update_repo(p, 'lib/iron_format', 'iron_format')
+        global repos_updated
+        global repos_total
+        repos_updated = 0
+        repos_total = 7
+        def done():
+            global repos_updated
+            global repos_total
+            repos_updated += 1
+            if repos_updated == repos_total:
+                print('Armory SDK updated, please restart Blender')
+        update_repo(done, p, 'armory')
+        update_repo(done, p, 'iron')
+        update_repo(done, p, 'lib/haxebullet', 'haxebullet')
+        update_repo(done, p, 'lib/haxerecast', 'haxerecast')
+        update_repo(done, p, 'lib/zui', 'zui')
+        update_repo(done, p, 'lib/armory_tools', 'armory_tools')
+        update_repo(done, p, 'lib/iron_format', 'iron_format')
         return {"FINISHED"}
 
 class ArmAddonRestoreButton(bpy.types.Operator):
