@@ -349,11 +349,19 @@ def make_deferred(con_mesh):
                 vert.add_out('vec4 wvpposition')
                 vert.add_out('vec4 prevwvpposition')
                 vert.write('wvpposition = gl_Position;')
-                vert.write('prevwvpposition = prevWVP * spos;')
+                if is_displacement:
+                    vert.add_uniform('mat4 invW', link='_inverseWorldMatrix')
+                    vert.write('prevwvpposition = prevWVP * (invW * wposition);')
+                else:
+                    vert.write('prevwvpposition = prevWVP * spos;')
             else:
                 vert.add_uniform('mat4 prevW', link='_prevWorldMatrix')
                 vert.add_out('vec3 prevwposition')
-                vert.write('prevwposition = vec4(prevW * spos).xyz;')
+                if is_displacement:
+                    vert.add_uniform('mat4 invW', link='_inverseWorldMatrix')
+                    vert.write('prevwposition = vec4(prevW * (invW * wposition)).xyz;')
+                else:
+                    vert.write('prevwposition = vec4(prevW * spos).xyz;')
                 tese.add_out('vec4 wvpposition')
                 tese.add_out('vec4 prevwvpposition')
                 tese.add_uniform('mat4 prevVP', '_prevViewProjectionMatrix')
