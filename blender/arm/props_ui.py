@@ -378,6 +378,17 @@ class ArmoryProjectPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_cache_compiler')
         col.prop(wrd, 'arm_gpu_processing')
 
+        layout.label('Modding')
+        box = layout.box().column()
+        row = box.row()
+        row.prop(wrd, 'arm_modding_mode', expand=True)
+        col = box.column()
+        if wrd.arm_modding_mode == 'Game':
+            pass
+        if wrd.arm_modding_mode == 'Mod':
+            col2 = col.column()
+            col2.prop(wrd, 'arm_modding_parent_project_dir')
+
         layout.label("Flags")
         box = layout.box().column()
         row = box.row()

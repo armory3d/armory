@@ -930,7 +930,7 @@ class ArmoryExporter:
                     ext = '' if not self.is_compress(objref) else '.zip'
                     if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
                         ext = '.json'
-                    o['data_ref'] = 'mesh_' + oid + ext + '/' + oid
+                    o['data_ref'] = 'mesh_' + oid + ext + ':' + oid
                 else:
                     o['data_ref'] = oid
 
