@@ -193,8 +193,49 @@ class ArmNodeRemoveOutputButton(bpy.types.Operator):
 
     def execute(self, context):
         global array_nodes
-        outs = array_nodes[self.node_index].outputs
-        if len(outs) > 0:
+        node = array_nodes[self.node_index]
+        outs = node.outputs
+        min_outs = 0 if not hasattr(node, 'min_outputs') else node.min_outputs
+        if len(outs) > min_outs:
+            outs.remove(outs.values()[-1])
+        return{'FINISHED'}
+
+class ArmNodeAddInputOutputButton(bpy.types.Operator):
+    '''Add new input and output'''
+    bl_idname = 'arm.node_add_input_output'
+    bl_label = 'Add Input Output'
+    node_index = StringProperty(name='Node Index', default='')
+    in_socket_type = StringProperty(name='In Socket Type', default='NodeSocketShader')
+    out_socket_type = StringProperty(name='Out Socket Type', default='NodeSocketShader')
+    in_name_format = StringProperty(name='In Name Format', default='Input {0}')
+    out_name_format = StringProperty(name='Out Name Format', default='Output {0}')
+    in_index_name_offset = IntProperty(name='Index Name Offset', default=0)
+
+    def execute(self, context):
+        global array_nodes
+        node = array_nodes[self.node_index]
+        inps = node.inputs
+        outs = node.outputs
+        inps.new(self.in_socket_type, self.in_name_format.format(str(len(inps) + self.in_index_name_offset)))
+        outs.new(self.out_socket_type, self.out_name_format.format(str(len(outs))))
+        return{'FINISHED'}
+
+class ArmNodeRemoveInputOutputButton(bpy.types.Operator):
+    '''Remove last input and output'''
+    bl_idname = 'arm.node_remove_input_output'
+    bl_label = 'Remove Input Output'
+    node_index = StringProperty(name='Node Index', default='')
+
+    def execute(self, context):
+        global array_nodes
+        node = array_nodes[self.node_index]
+        inps = node.inputs
+        outs = node.outputs
+        min_inps = 0 if not hasattr(node, 'min_inputs') else node.min_inputs
+        min_outs = 0 if not hasattr(node, 'min_outputs') else node.min_outputs
+        if len(inps) > min_inps:
+            inps.remove(inps.values()[-1])
+        if len(outs) > min_outs:
             outs.remove(outs.values()[-1])
         return{'FINISHED'}
 
@@ -214,3 +255,5 @@ bpy.utils.register_class(ArmNodeRemoveInputButton)
 bpy.utils.register_class(ArmNodeRemoveInputValueButton)
 bpy.utils.register_class(ArmNodeAddOutputButton)
 bpy.utils.register_class(ArmNodeRemoveOutputButton)
+bpy.utils.register_class(ArmNodeAddInputOutputButton)
+bpy.utils.register_class(ArmNodeRemoveInputOutputButton)
