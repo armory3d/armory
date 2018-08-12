@@ -571,13 +571,16 @@ def parse_vector(node, socket):
         return 'pow({0}, vec3({1}))'.format(out_col, gamma)
 
     elif node.type == 'HUE_SAT':
+        curshader.add_function(c_functions.str_rgb_to_hsv)
         curshader.add_function(c_functions.str_hsv_to_rgb)
+        curshader.add_function(c_functions.str_hue_sat)
         hue = parse_value_input(node.inputs[0])
         sat = parse_value_input(node.inputs[1])
         val = parse_value_input(node.inputs[2])
-        # fac = parse_value_input(node.inputs[3])
-        # col = parse_vector_input(node.inputs[4])
-        return 'hsv_to_rgb(vec3({0} - 0.5, {1}, {2}))'.format(hue, sat, val)
+        fac = parse_value_input(node.inputs[3])
+        col = parse_vector_input(node.inputs[4])
+        # return 'hsv_to_rgb(vec3({0} - 0.5, {1}, {2}))'.format(hue, sat, val)
+        return 'hue_sat({0}, vec4({1}-0.5, {2}, {3}, 1-{4}))'.format(col, hue, sat, val, fac)
 
     elif node.type == 'INVERT':
         fac = parse_value_input(node.inputs[0])
