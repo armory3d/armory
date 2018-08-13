@@ -124,6 +124,24 @@ vec3 rgb_to_hsv(const vec3 c) {
 }
 """
 
+# col: the incoming color
+# shift: a vector containing the hue shift, the saturation modificator, the value modificator and the mix factor in this order
+# this does the following:
+# make rgb col to hsv
+# apply hue shift through addition, sat/val through multiplication
+# return an rgb color, mixed with the original one
+str_hue_sat = """
+vec3 hue_sat(const vec3 col, const vec4 shift) {
+    vec3 hsv = rgb_to_hsv(col);
+    
+    hsv.x += shift.x;
+    hsv.y *= shift.y;
+    hsv.z *= shift.z;
+    
+    return mix(hsv_to_rgb(hsv), col, shift.w);
+}
+"""
+
 # https://twitter.com/Donzanoid/status/903424376707657730
 str_wavelength_to_rgb = """
 vec3 wavelength_to_rgb(const float t) {
