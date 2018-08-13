@@ -407,8 +407,8 @@ def parse_vector(node, socket):
                     # Second uvmap referenced
                     if len(lays) > 1 and node.attribute_name == lays[1].name:
                         con.add_elem('tex1', 2)
-                        return 'vec3(texCoord1.xy, 0.0)'
-            return 'vec3(texCoord.xy, 0.0)'
+                        return 'vec3(texCoord1.x, 1.0 - texCoord1.y, 0.0)'
+            return 'vec3(texCoord.x, 1.0 - texCoord.y, 0.0)'
 
     elif node.type == 'RGB':
         if node.arm_material_param:
@@ -752,9 +752,19 @@ def parse_vector(node, socket):
             return 'vec3(0.0)'
 
     elif node.type == 'UVMAP':
-        #map = node.uv_map
         #dupli = node.from_dupli
-        return 'vec3(0.0)'
+        con.add_elem('tex', 2)
+        mat = mat_get_material()
+        mat_users = mat_get_material_users()
+        if mat_users != None and mat in mat_users:
+            mat_user = mat_users[mat][0]
+            if hasattr(mat_user.data, 'uv_layers'):
+                lays = mat_user.data.uv_layers
+                # Second uvmap referenced
+                if len(lays) > 1 and node.uv_map == lays[1].name:
+                    con.add_elem('tex1', 2)
+                    return 'vec3(texCoord1.x, 1.0 - texCoord1.y, 0.0)'
+        return 'vec3(texCoord.x, 1.0 - texCoord.y, 0.0)'
 
     elif node.type == 'BUMP':
         # Interpolation strength
