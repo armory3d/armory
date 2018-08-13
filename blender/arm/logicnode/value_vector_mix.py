@@ -45,6 +45,7 @@ class VectorMixNode(Node, ArmLogicTreeNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, 'property2_')
         layout.prop(self, 'property0')
-        layout.prop(self, 'property1')
+        if self.property0 != 'Linear':
+            layout.prop(self, 'property1')
 
 add_node(VectorMixNode, category='Value')
