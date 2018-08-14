@@ -7,7 +7,7 @@ bl_info = {
     "description": "3D Game Engine for Blender",
     "author": "Armory3D.org",
     "version": (15, 0, 0),
-    "blender": (2, 79, 0),
+    "blender": (2, 80, 0),
     "wiki_url": "http://armory3d.org/manual",
     "tracker_url": "https://github.com/armory3d/armory/issues"
 }
@@ -196,7 +196,6 @@ class ArmAddonStartButton(bpy.types.Operator):
             properties_object.OBJECT_PT_custom_props.COMPAT_ENGINES.add('ARMORY')
             from bl_ui import properties_particle
             properties_particle.PARTICLE_MT_specials.COMPAT_ENGINES.add('ARMORY')
-            properties_particle.PARTICLE_MT_hair_dynamics_presets.COMPAT_ENGINES.add('ARMORY')
             properties_particle.PARTICLE_PT_context_particles.COMPAT_ENGINES.add('ARMORY')
             properties_particle.PARTICLE_PT_emission.COMPAT_ENGINES.add('ARMORY')
             properties_particle.PARTICLE_PT_hair_dynamics.COMPAT_ENGINES.add('ARMORY')
@@ -251,8 +250,6 @@ class ArmAddonStartButton(bpy.types.Operator):
             from bl_ui import properties_data_bone
             properties_data_bone.BONE_PT_custom_props.COMPAT_ENGINES.add('ARMORY')
             from bl_ui import properties_data_camera
-            properties_data_camera.CAMERA_MT_presets.COMPAT_ENGINES.add('ARMORY')
-            properties_data_camera.SAFE_AREAS_MT_presets.COMPAT_ENGINES.add('ARMORY')
             properties_data_camera.DATA_PT_context_camera.COMPAT_ENGINES.add('ARMORY')
             properties_data_camera.DATA_PT_lens.COMPAT_ENGINES.add('ARMORY')
             properties_data_camera.DATA_PT_camera_stereoscopy.COMPAT_ENGINES.add('ARMORY')
@@ -265,17 +262,16 @@ class ArmAddonStartButton(bpy.types.Operator):
             from bl_ui import properties_data_curve
             properties_data_curve.DATA_PT_curve_texture_space.COMPAT_ENGINES.add('ARMORY')
             properties_data_curve.DATA_PT_custom_props_curve.COMPAT_ENGINES.add('ARMORY')
-            from bl_ui import properties_data_lamp
-            properties_data_lamp.LAMP_MT_sunsky_presets.COMPAT_ENGINES.add('ARMORY')
-            properties_data_lamp.DATA_PT_context_lamp.COMPAT_ENGINES.add('ARMORY')
-            properties_data_lamp.DATA_PT_preview.COMPAT_ENGINES.add('ARMORY')
-            # properties_data_lamp.DATA_PT_lamp.COMPAT_ENGINES.add('ARMORY')
-            properties_data_lamp.DATA_PT_EEVEE_lamp.COMPAT_ENGINES.add('ARMORY')
-            properties_data_lamp.DATA_PT_EEVEE_shadow.COMPAT_ENGINES.add('ARMORY')
-            properties_data_lamp.DATA_PT_area.COMPAT_ENGINES.add('ARMORY')
-            properties_data_lamp.DATA_PT_spot.COMPAT_ENGINES.add('ARMORY')
-            properties_data_lamp.DATA_PT_falloff_curve.COMPAT_ENGINES.add('ARMORY')
-            properties_data_lamp.DATA_PT_custom_props_lamp.COMPAT_ENGINES.add('ARMORY')
+            from bl_ui import properties_data_light
+            properties_data_light.DATA_PT_context_light.COMPAT_ENGINES.add('ARMORY')
+            properties_data_light.DATA_PT_preview.COMPAT_ENGINES.add('ARMORY')
+            # properties_data_light.DATA_PT_light.COMPAT_ENGINES.add('ARMORY')
+            properties_data_light.DATA_PT_EEVEE_light.COMPAT_ENGINES.add('ARMORY')
+            properties_data_light.DATA_PT_EEVEE_shadow.COMPAT_ENGINES.add('ARMORY')
+            properties_data_light.DATA_PT_area.COMPAT_ENGINES.add('ARMORY')
+            properties_data_light.DATA_PT_spot.COMPAT_ENGINES.add('ARMORY')
+            properties_data_light.DATA_PT_falloff_curve.COMPAT_ENGINES.add('ARMORY')
+            properties_data_light.DATA_PT_custom_props_light.COMPAT_ENGINES.add('ARMORY')
             from bl_ui import properties_data_lattice
             properties_data_lattice.DATA_PT_custom_props_lattice.COMPAT_ENGINES.add('ARMORY')
             from bl_ui import properties_data_lightprobe
@@ -284,8 +280,6 @@ class ArmAddonStartButton(bpy.types.Operator):
             properties_data_lightprobe.DATA_PT_lightprobe_parallax.COMPAT_ENGINES.add('ARMORY')
             properties_data_lightprobe.DATA_PT_lightprobe_display.COMPAT_ENGINES.add('ARMORY')
             from bl_ui import properties_data_mesh
-            properties_data_mesh.MESH_MT_vertex_group_specials.COMPAT_ENGINES.add('ARMORY')
-            properties_data_mesh.MESH_MT_shape_key_specials.COMPAT_ENGINES.add('ARMORY')
             properties_data_mesh.DATA_PT_context_mesh.COMPAT_ENGINES.add('ARMORY')
             properties_data_mesh.DATA_PT_normals.COMPAT_ENGINES.add('ARMORY')
             properties_data_mesh.DATA_PT_texture_space.COMPAT_ENGINES.add('ARMORY')
@@ -434,7 +428,12 @@ def draw_view3d_header(self, context):
     layout.operator("arm_addon.start")
 
 def register():
-    bpy.utils.register_module(__name__)
+    bpy.utils.register_class(ArmoryAddonPreferences)
+    bpy.utils.register_class(ArmAddonStartButton)
+    bpy.utils.register_class(ArmAddonStopButton)
+    bpy.utils.register_class(ArmAddonUpdateButton)
+    bpy.utils.register_class(ArmAddonRestoreButton)
+    bpy.utils.register_class(ArmAddonInstallGitButton)
     if hasattr(bpy.app.handlers, 'scene_update_post'):
         bpy.app.handlers.scene_update_post.append(on_scene_update_post)
     else:
@@ -442,7 +441,12 @@ def register():
 
 def unregister():
     bpy.ops.arm_addon.stop()
-    bpy.utils.unregister_module(__name__)
+    bpy.utils.unregister_class(ArmoryAddonPreferences)
+    bpy.utils.unregister_class(ArmAddonStartButton)
+    bpy.utils.unregister_class(ArmAddonStopButton)
+    bpy.utils.unregister_class(ArmAddonUpdateButton)
+    bpy.utils.unregister_class(ArmAddonRestoreButton)
+    bpy.utils.unregister_class(ArmAddonInstallGitButton)
 
 if __name__ == "__main__":
     register()
