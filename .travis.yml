@@ -2,7 +2,6 @@ os:
   - linux
 language: python
 python:
-    - 2.7
     - 3.6
 install:
   - git clone https://github.com/armory3d/armory_ci
