@@ -616,7 +616,7 @@ class ArmoryExporter:
         # else:
         transform = bone.matrix_local.copy()
         if bone.parent != None:
-            transform = bone.parent.matrix_local.inverted_safe() * transform
+            transform = self.mulmat(bone.parent.matrix_local.inverted_safe(), transform)
 
         o['transform'] = {}
         o['transform']['values'] = self.write_matrix(transform)
@@ -733,7 +733,7 @@ class ArmoryExporter:
                     values, pose_bone = track[0], track[1]
                     parent = pose_bone.parent
                     if parent:
-                        values += self.write_matrix(parent.matrix.inverted_safe() * pose_bone.matrix)
+                        values += self.write_matrix(self.mulmat(parent.matrix.inverted_safe(), pose_bone.matrix))
                     else:
                         values += self.write_matrix(pose_bone.matrix)
 
@@ -1157,12 +1157,12 @@ class ArmoryExporter:
         oskin['transformsI'] = []
         if rpdat.arm_skin == 'CPU':
             for i in range(bone_count):
-                skeletonI = (armature.matrix_world * bone_array[i].matrix_local).inverted_safe()
+                skeletonI = self.mulmat(armature.matrix_world, bone_array[i].matrix_local).inverted_safe()
                 oskin['transformsI'].append(self.write_matrix(skeletonI))
         else:
             for i in range(bone_count):
-                skeletonI = (armature.matrix_world * bone_array[i].matrix_local).inverted_safe()
-                skeletonI = skeletonI * bobject.matrix_world
+                skeletonI = self.mulmat(armature.matrix_world, bone_array[i].matrix_local).inverted_safe()
+                skeletonI = self.mulmat(skeletonI, bobject.matrix_world)
                 oskin['transformsI'].append(self.write_matrix(skeletonI))
 
         # Export the per-vertex bone influence data
@@ -2190,6 +2190,15 @@ class ArmoryExporter:
                 self.active_layers.append(i)
 
         self.preprocess()
+
+        if bpy.app.version >= (2, 80, 1):
+            def mulmat(a, b):
+                return a @ b
+            self.mulmat = mulmat
+        else:
+            def mulmat(a, b):
+                return a * b
+            self.mulmat = mulmat
 
         if bpy.app.version >= (2, 80, 1):
             # scene_objects = self.scene.objects
