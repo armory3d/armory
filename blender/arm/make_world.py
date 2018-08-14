@@ -33,7 +33,7 @@ def build_node_tree(world):
         solid_mat = rpdat.arm_material_model == 'Solid'
         if rpdat.arm_irradiance and not solid_mat:
             wrd.world_defs += '_Irr'
-        c = world.horizon_color
+        c = world.color if bpy.app.version >= (2, 80, 1) else world.horizon_color
         world.arm_envtex_color = [c[0], c[1], c[2], 1.0]
         world.arm_envtex_strength = 1.0
     

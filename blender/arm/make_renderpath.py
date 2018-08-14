@@ -115,7 +115,8 @@ def add_world_defs():
         wrd.world_defs += '_Legacy'
 
     # Area lamps
-    for lamp in bpy.data.lamps:
+    lamps = bpy.data.lights if bpy.app.version >= (2, 80, 1) else bpy.data.lamps
+    for lamp in lamps:
         if lamp.type == 'AREA':
             wrd.world_defs += '_LTC'
             assets.add_khafile_def('arm_ltc')

@@ -152,7 +152,7 @@ class DataPropsPanel(bpy.types.Panel):
             # if obj.type == 'MESH':
                 # layout.prop(obj.data, 'arm_sdfgen')
             layout.operator("arm.invalidate_cache")
-        elif obj.type == 'LAMP':
+        elif obj.type == 'LIGHT' or obj.type == 'LAMP': # TODO: LAMP is deprecated
             row = layout.row(align=True)
             col = row.column()
             col.prop(obj.data, 'arm_clip_start')

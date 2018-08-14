@@ -29,7 +29,7 @@ import arm.material.cycles as cycles
 NodeTypeNode = 0
 NodeTypeBone = 1
 NodeTypeMesh = 2
-NodeTypeLamp = 3
+NodeTypeLight = 3
 NodeTypeCamera = 4
 NodeTypeSpeaker = 5
 NodeTypeDecal = 6
@@ -120,8 +120,8 @@ class ArmoryExporter:
             return NodeTypeMesh
         elif bobject.type == "META": # Metaball
             return NodeTypeMesh
-        elif bobject.type == "LAMP":
-            return NodeTypeLamp
+        elif bobject.type == "LIGHT" or bobject.type == "LAMP": # TODO: LAMP is deprecated
+            return NodeTypeLight
         elif bobject.type == "CAMERA":
             return NodeTypeCamera
         elif bobject.type == "SPEAKER":
@@ -972,12 +972,12 @@ class ArmoryExporter:
                 #if shapeKeys:
                 #   self.ExportMorphWeights(bobject, shapeKeys, scene, o)
 
-            elif type == NodeTypeLamp:
-                if not objref in self.lampArray:
-                    self.lampArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
+            elif type == NodeTypeLight:
+                if not objref in self.lightArray:
+                    self.lightArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
-                    self.lampArray[objref]["objectTable"].append(bobject)
-                o['data_ref'] = self.lampArray[objref]["structName"]
+                    self.lightArray[objref]["objectTable"].append(bobject)
+                o['data_ref'] = self.lightArray[objref]["structName"]
 
             elif type == NodeTypeCamera:
                 if 'spawn' in o and o['spawn'] == False:
@@ -1697,8 +1697,8 @@ class ArmoryExporter:
 
         self.write_mesh(bobject, fp, o)
 
-    def export_lamp(self, objectRef):
-        # This function exports a single lamp object
+    def export_light(self, objectRef):
+        # This function exports a single light object
         o = {}
         o['name'] = objectRef[1]["structName"]
         objref = objectRef[0]
@@ -1757,14 +1757,14 @@ class ArmoryExporter:
                     col = n.inputs[0].default_value
                     o['color'] = [col[0], col[1], col[2]]
                     o['strength'] = n.inputs[1].default_value
-                    # Normalize lamp strength
+                    # Normalize light strength
                     if o['type'] == 'point' or o['type'] == 'spot':
                         o['strength'] *= 0.026
                     elif o['type'] == 'area':
                         o['strength'] *= 0.26
                     elif o['type'] == 'sun':
                         o['strength'] *= 0.325
-                    # TODO: Lamp texture test..
+                    # TODO: Light texture test..
                     if n.inputs[0].is_linked:
                         color_node = n.inputs[0].links[0].from_node
                         if color_node.type == 'TEX_IMAGE':
@@ -1782,7 +1782,7 @@ class ArmoryExporter:
             return [0.051, 0.051, 0.051, 1.0]
 
         if self.scene.world.node_tree == None:
-            c = self.scene.world.horizon_color
+            c = self.scene.world.color if bpy.app.version >= (2, 80, 1) else self.scene.world.horizon_color
             return [c[0], c[1], c[2], 1.0]
 
         if 'Background' in self.scene.world.node_tree.nodes:
@@ -2140,8 +2140,8 @@ class ArmoryExporter:
             self.output['lamp_datas'] = []
             self.output['camera_datas'] = []
             self.output['speaker_datas'] = []
-            for objectRef in self.lampArray.items():
-                self.export_lamp(objectRef)
+            for objectRef in self.lightArray.items():
+                self.export_light(objectRef)
             for objectRef in self.cameraArray.items():
                 self.export_camera(objectRef)
             # Keep sounds with fake user
@@ -2170,7 +2170,7 @@ class ArmoryExporter:
         self.bobjectArray = {}
         self.bobjectBoneArray = {}
         self.meshArray = {}
-        self.lampArray = {}
+        self.lightArray = {}
         self.cameraArray = {}
         self.camera_spawned = False
         self.speakerArray = {}
