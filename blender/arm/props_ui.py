@@ -505,7 +505,7 @@ class ArmoryPlayButton(bpy.types.Operator):
         if not arm.utils.check_engine(self):
             return {"CANCELLED"}
 
-        arm.utils.check_default_rp()
+        arm.utils.check_default_props()
 
         assets.invalidate_enabled = False
         make.play(is_viewport=False)
@@ -543,7 +543,7 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
 
         arm.utils.check_projectpath(self)
 
-        arm.utils.check_default_rp()
+        arm.utils.check_default_props()
 
         wrd = bpy.data.worlds['Arm']
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
@@ -582,7 +582,7 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
 
         arm.utils.check_projectpath(self)
 
-        arm.utils.check_default_rp()
+        arm.utils.check_default_props()
 
         wrd = bpy.data.worlds['Arm']
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]

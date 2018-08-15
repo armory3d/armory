@@ -386,13 +386,6 @@ def create_wrd():
         wrd.arm_version = arm_version
         wrd.arm_commit = arm_commit
 
-def init_properties_on_save():
-    wrd = bpy.data.worlds['Arm']
-    if wrd.arm_project_name == '':
-        # Take blend file name
-        wrd.arm_project_name = arm.utils.blend_name()
-        init_properties_on_load()
-
 def init_properties_on_load():
     global arm_version    
     if not 'Arm' in bpy.data.worlds:

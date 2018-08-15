@@ -279,7 +279,7 @@ def build_viewport():
     if not arm.utils.check_engine(None):
         return
 
-    arm.utils.check_default_rp()
+    arm.utils.check_default_props()
 
     assets.invalidate_enabled = False
     play(is_viewport=True)
