@@ -53,6 +53,16 @@ class MathNode extends LogicNode {
 			f = v1 > v2 ? 1.0 : 0.0;
 		case "Modulo":
 			f = v1 % v2;
+		case "Arctan2":
+			f = Math.atan2(v1, v2);
+		case "Floor":
+			f = Math.floor(v1);
+		case "Ceil":
+			f = Math.ceil(v1);
+		case "Fract":
+			f = iron.math.Math.fract(v1);
+		case "Square Root":
+			f = Math.sqrt(v1);
 		}
 
 		if (property1 == "true") f = f < 0.0 ? 0.0 : (f > 1.0 ? 1.0 : f);

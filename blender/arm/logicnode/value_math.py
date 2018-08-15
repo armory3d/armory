@@ -29,6 +29,11 @@ class MathNode(Node, ArmLogicTreeNode):
                  ('Less Than', 'Less Than', 'Less Than'),
                  ('Greater Than', 'Greater Than', 'Greater Than'),
                  ('Modulo', 'Modulo', 'Modulo'),
+                 ('Arctan2', 'Arctan2', 'Arctan2'),
+                 ('Floor', 'Floor', 'Floor'),
+                 ('Ceil', 'Ceil', 'Ceil'),
+                 ('Fract', 'Fract', 'Fract'),
+                 ('Square Root', 'Square Root', 'Square Root'),
                  ],
         name='', default='Add')
     
