@@ -380,6 +380,30 @@ def parse_vector_input(inp):
             else:
                 return to_vec3(inp.default_value)
 
+def vector_curve(name, fac, points):
+    # Write Ys array
+    ys_var = name + '_ys'
+    curshader.write('float {0}[{1}];'.format(ys_var, len(points))) # TODO: Make const
+    for i in range(0, len(points)):
+        curshader.write('{0}[{1}] = {2};'.format(ys_var, i, points[i].location[1]))
+    # Get index
+    fac_var = name + '_fac'
+    curshader.write('float {0} = {1};'.format(fac_var, fac))
+    index = '0'
+    for i in  range(1, len(points)):
+        index += ' + ({0} > {1} ? 1 : 0)'.format(fac_var, points[i].location[0])
+    # Write index
+    index_var = name + '_i'
+    curshader.write('int {0} = {1};'.format(index_var, index))
+    # Linear
+    # Write Xs array
+    facs_var = name + '_xs'
+    curshader.write('float {0}[{1}];'.format(facs_var, len(points))) # TODO: Make const
+    for i in range(0, len(points)):
+        curshader.write('{0}[{1}] = {2};'.format(facs_var, i, points[i].location[0]))
+    # Map vector
+    return 'mix({0}[{1}], {0}[{1} + 1], ({2} - {3}[{1}]) * (1.0 / ({3}[{1} + 1] - {3}[{1}]) ))'.format(ys_var, index_var, fac_var, facs_var)
+
 def parse_vector(node, socket):
     global particle_info
     global sample_bump
@@ -636,10 +660,6 @@ def parse_vector(node, socket):
         else:
             return out_col
 
-    elif node.type == 'CURVE_RGB':
-        # Pass throuh
-        return parse_vector_input(node.inputs[1])
-
     elif node.type == 'BLACKBODY':
         # Pass constant
         return to_vec3([0.84, 0.38, 0.0])
@@ -675,6 +695,25 @@ def parse_vector(node, socket):
             # Mix color
             # float f = (pos - start) * (1.0 / (finish - start))
             return 'mix({0}[{1}], {0}[{1} + 1], ({2} - {3}[{1}]) * (1.0 / ({3}[{1} + 1] - {3}[{1}]) ))'.format(cols_var, index_var, fac_var, facs_var)
+
+    elif node.type == 'CURVE_VEC': # Vector Curves
+        fac = parse_value_input(node.inputs[0])
+        vec = parse_vector_input(node.inputs[1])
+        curves = node.mapping.curves
+        name = node_name(node.name)
+        # mapping.curves[0].points[0].handle_type # bezier curve
+        return '(vec3({0}, {1}, {2}) * {3})'.format(\
+            vector_curve(name + '0', vec + '.x', curves[0].points), vector_curve(name + '1', vec + '.y', curves[1].points), vector_curve(name + '2', vec + '.z', curves[2].points), fac)
+
+    elif node.type == 'CURVE_RGB': # RGB Curves
+        fac = parse_value_input(node.inputs[0])
+        vec = parse_vector_input(node.inputs[1])
+        curves = node.mapping.curves
+        name = node_name(node.name)
+        # mapping.curves[0].points[0].handle_type
+        return '(sqrt(vec3({0}, {1}, {2}) * vec3({4}, {5}, {6})) * {3})'.format(\
+            vector_curve(name + '0', vec + '.x', curves[0].points), vector_curve(name + '1', vec + '.y', curves[1].points), vector_curve(name + '2', vec + '.z', curves[2].points), fac,\
+            vector_curve(name + '3a', vec + '.x', curves[3].points), vector_curve(name + '3b', vec + '.y', curves[3].points), vector_curve(name + '3c', vec + '.z', curves[3].points))
 
     elif node.type == 'COMBHSV':
         # Pass constant
@@ -832,11 +871,6 @@ def parse_vector(node, socket):
             # Color
             parse_normal_map_color_input(node.inputs[1], strength)
             return None
-
-    elif node.type == 'CURVE_VEC':
-        # fac = parse_value_input(node.inputs[0])
-        # Pass throuh
-        return parse_vector_input(node.inputs[1])
 
     elif node.type == 'VECT_TRANSFORM':
         #type = node.vector_type
