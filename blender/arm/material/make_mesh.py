@@ -351,7 +351,7 @@ def make_deferred(con_mesh):
                 vert.write('wvpposition = gl_Position;')
                 if is_displacement:
                     vert.add_uniform('mat4 invW', link='_inverseWorldMatrix')
-                    vert.write('prevwvpposition = prevWVP * (invW * wposition);')
+                    vert.write('prevwvpposition = prevWVP * (invW * vec4(wposition, 1.0));')
                 else:
                     vert.write('prevwvpposition = prevWVP * spos;')
             else:
@@ -359,7 +359,7 @@ def make_deferred(con_mesh):
                 vert.add_out('vec3 prevwposition')
                 if is_displacement:
                     vert.add_uniform('mat4 invW', link='_inverseWorldMatrix')
-                    vert.write('prevwposition = vec4(prevW * (invW * wposition)).xyz;')
+                    vert.write('prevwposition = vec4(prevW * (invW * vec4(wposition, 1.0))).xyz;')
                 else:
                     vert.write('prevwposition = vec4(prevW * spos).xyz;')
                 tese.add_out('vec4 wvpposition')
