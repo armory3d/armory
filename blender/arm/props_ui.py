@@ -383,11 +383,10 @@ class ArmoryProjectPanel(bpy.types.Panel):
         row = box.row()
         row.prop(wrd, 'arm_modding_mode', expand=True)
         col = box.column()
-        if wrd.arm_modding_mode == 'Game':
-            pass
         if wrd.arm_modding_mode == 'Mod':
             col2 = col.column()
-            col2.prop(wrd, 'arm_modding_parent_project_dir')
+            col2.prop(wrd, 'arm_modding_game_blend')
+            col2.prop(wrd, 'arm_modding_folder')
 
         layout.label("Flags")
         box = layout.box().column()
