@@ -35,6 +35,7 @@ def parse(nodes, con, vert, frag, geom, tesc, tese, parse_surface=True, parse_op
 
 def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse_opacity, _parse_displacement, _basecol_only):
     global parsed # Compute nodes only once
+    global parsed_wt
     global parents
     global normal_parsed
     global curshader # Active shader - frag for surface / tese for displacement
@@ -79,6 +80,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     # Surface
     if parse_surface or parse_opacity:
         parsed = {}
+        parsed_wt = {}
         parents = []
         normal_parsed = False
         curshader = frag
@@ -99,6 +101,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     # Displacement
     if _parse_displacement and disp_enabled() and node.inputs[2].is_linked:
         parsed = {}
+        parsed_wt
         parents = []
         normal_parsed = False
         rpdat = arm.utils.get_rp()
@@ -1316,10 +1319,20 @@ def res_var_name(node, socket):
     return node_name(node.name) + '_' + safesrc(socket.name) + '_res'
 
 def write_result(l):
+    global parsed
+    global parsed_wt
     res_var = res_var_name(l.from_node, l.from_socket)
-    st = l.from_socket.type
+    # Texture reads are processed first
+    if res_var + '_wt' in parsed_wt:
+        return res_var + '_wt'
+    if curshader.write_textures > 0:
+        res_var += '_wt'
+    # Unparsed node
     if res_var not in parsed:
         parsed[res_var] = True
+        if curshader.write_textures > 0:
+            parsed_wt[res_var] = True
+        st = l.from_socket.type
         if st == 'RGB' or st == 'RGBA' or st == 'VECTOR':
             res = parse_vector(l.from_node, l.from_socket)
             if res == None:
