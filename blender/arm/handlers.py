@@ -140,10 +140,6 @@ def on_load_post(context):
 
     arm.utils.update_trait_groups()
 
-@persistent
-def on_save_pre(context):
-    props.init_properties_on_save()
-
 def reload_blend_data():
     armory_pbr = bpy.data.node_groups.get('Armory PBR')
     if armory_pbr == None:
@@ -167,7 +163,6 @@ def load_library(asset_name):
 def register():
     if hasattr(bpy.app.handlers, 'scene_update_pre'):
         bpy.app.handlers.scene_update_pre.append(on_scene_update_pre)
-    bpy.app.handlers.save_pre.append(on_save_pre)
     bpy.app.handlers.load_post.append(on_load_post)
     # On windows, on_load_post is not called when opening .blend file from explorer
     if arm.utils.get_os() == 'win' and arm.utils.get_fp() != '':
@@ -177,5 +172,4 @@ def register():
 def unregister():
     if hasattr(bpy.app.handlers, 'scene_update_pre'):
         bpy.app.handlers.scene_update_pre.remove(on_scene_update_pre)
-    bpy.app.handlers.save_pre.remove(on_save_pre)
     bpy.app.handlers.load_post.remove(on_load_post)
