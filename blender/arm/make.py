@@ -81,8 +81,8 @@ def export_data(fp, sdk_path):
         if os.path.isdir(build_dir + '/compiled/Shaders'):
             shutil.rmtree(build_dir + '/compiled/Shaders', onerror=remove_readonly)
 
-    raw_shaders_path = sdk_path + 'armory/Shaders/'
-    assets_path = sdk_path + 'armory/Assets/'
+    raw_shaders_path = sdk_path + '/armory/Shaders/'
+    assets_path = sdk_path + '/armory/Assets/'
     export_physics = bpy.data.worlds['Arm'].arm_physics != 'Disabled'
     export_navigation = bpy.data.worlds['Arm'].arm_navigation != 'Disabled'
     export_ui = bpy.data.worlds['Arm'].arm_ui != 'Disabled'

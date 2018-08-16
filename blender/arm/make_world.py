@@ -214,9 +214,9 @@ def parse_color(world, node):
             hosek_path = 'armory/Assets/hosek/'
             sdk_path = arm.utils.get_sdk_path()
             # Use fake maps for now
-            assets.add(sdk_path + hosek_path + 'hosek_radiance.hdr')
+            assets.add(sdk_path + '/' + hosek_path + 'hosek_radiance.hdr')
             for i in range(0, 8):
-                assets.add(sdk_path + hosek_path + 'hosek_radiance_' + str(i) + '.hdr')
+                assets.add(sdk_path + '/' + hosek_path + 'hosek_radiance_' + str(i) + '.hdr')
             
             world.arm_envtex_name = 'hosek'
             world.arm_envtex_num_mips = 8

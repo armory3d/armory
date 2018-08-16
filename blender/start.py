@@ -15,10 +15,10 @@ import arm.keymap
 
 registered = False
 
-def register():
+def register(local_sdk=False):
     global registered
     registered = True
-    arm.utils.register()
+    arm.utils.register(local_sdk=local_sdk)
     arm.props_traits_params.register()
     arm.props_traits_props.register()
     arm.props_traits.register()

@@ -102,11 +102,15 @@ def bundled_sdk_path():
         # /blender.exe
         return bpy.app.binary_path.replace('\\', '/').rsplit('/', 1)[0] + '/armsdk/'
 
+# Passed by load_post handler when armsdk is found in project folder
+use_local_sdk = False
 def get_sdk_path():
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons["armory"].preferences
     p = bundled_sdk_path()
-    if os.path.exists(p) and addon_prefs.sdk_bundled:
+    if use_local_sdk:
+        return get_fp() + '/armsdk/'
+    elif os.path.exists(p) and addon_prefs.sdk_bundled:
         return p
     else:
         return addon_prefs.sdk_path
@@ -629,8 +633,9 @@ def check_default_props():
         # Take blend file name
         wrd.arm_project_name = arm.utils.blend_name()
 
-def register():
+def register(local_sdk=False):
     global v8_found
+    global use_local_sdk
     try:
         engine = bpy.context.scene.render.engine
         bpy.context.scene.render.engine = 'ARMORY'
@@ -638,6 +643,7 @@ def register():
         v8_found = True
     except:
         pass
+    use_local_sdk = local_sdk
 
 def unregister():
     pass

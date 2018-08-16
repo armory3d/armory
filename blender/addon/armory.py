@@ -136,11 +136,20 @@ def bundled_sdk_path():
         # /blender.exe
         return bpy.app.binary_path.replace('\\', '/').rsplit('/', 1)[0] + '/armsdk/'
 
+def get_fp():
+    if bpy.data.filepath == '':
+        return ''
+    s = bpy.data.filepath.split(os.path.sep)
+    s.pop()
+    return os.path.sep.join(s)
+
 def get_sdk_path(context):
     user_preferences = context.user_preferences
     addon_prefs = user_preferences.addons["armory"].preferences
     p = bundled_sdk_path()
-    if os.path.exists(p) and addon_prefs.sdk_bundled:
+    if os.path.exists(get_fp() + '/armsdk'):
+        return get_fp() + '/armsdk'
+    elif os.path.exists(p) and addon_prefs.sdk_bundled:
         return p
     else:
         return addon_prefs.sdk_path
@@ -329,17 +338,15 @@ class ArmAddonStartButton(bpy.types.Operator):
 
         sdk_path = get_sdk_path(context)
         if sdk_path == "":
-            self.report({"ERROR"}, "Configure SDK path first")
+            print("Configure Armory SDK path first")
             return {"CANCELLED"}
 
         scripts_path = sdk_path + "/armory/blender/"
         sys.path.append(scripts_path)
+        local_sdk = os.path.exists(get_fp() + '/armsdk')
         import start
-        start.register()
+        start.register(local_sdk=local_sdk)
         ArmAddonStartButton.running = True
-
-        if not hasattr(bpy.app.handlers, 'scene_update_post'):
-            bpy.types.VIEW3D_HT_header.remove(draw_view3d_header)
 
         return {"FINISHED"}
 
@@ -363,7 +370,7 @@ class ArmAddonUpdateButton(bpy.types.Operator):
     def execute(self, context):
         p = get_sdk_path(context)
         if p == "":
-            self.report({"ERROR"}, "Configure SDK path first")
+            self.report({"ERROR"}, "Configure Armory SDK path first")
             return {"CANCELLED"}
         self.report({'INFO'}, 'Updating, check console for details. Please restart Blender after successful SDK update.')
         print('Armory (add-on v' + str(bl_info['version']) + '): Cloning [armory, iron, haxebullet, haxerecast, zui] repositories')
@@ -396,7 +403,7 @@ class ArmAddonRestoreButton(bpy.types.Operator):
     def execute(self, context):
         p = get_sdk_path(context)
         if p == "":
-            self.report({"ERROR"}, "Configure SDK path first")
+            self.report({"ERROR"}, "Configure Armory SDK path first")
             return {"CANCELLED"}
         os.chdir(p)
         restore_repo(p, 'armory')
@@ -420,14 +427,14 @@ class ArmAddonInstallGitButton(bpy.types.Operator):
         return {"FINISHED"}
 
 @persistent
-def on_scene_update_post(scene):
-    if hasattr(bpy.app.handlers, 'scene_update_post'):
-        bpy.app.handlers.scene_update_post.remove(on_scene_update_post)
+def on_load_post(context):
+    # Detect local armsdk
+    # if os.path.exists(get_fp() + '/armsdk'):
+        # if ArmAddonStartButton.running:
+            # bpy.ops.arm_addon.stop()
+    if ArmAddonStartButton.running:
+        return
     bpy.ops.arm_addon.start()
-
-def draw_view3d_header(self, context):
-    layout = self.layout
-    layout.operator("arm_addon.start")
 
 def register():
     bpy.utils.register_class(ArmoryAddonPreferences)
@@ -436,10 +443,7 @@ def register():
     bpy.utils.register_class(ArmAddonUpdateButton)
     bpy.utils.register_class(ArmAddonRestoreButton)
     bpy.utils.register_class(ArmAddonInstallGitButton)
-    if hasattr(bpy.app.handlers, 'scene_update_post'):
-        bpy.app.handlers.scene_update_post.append(on_scene_update_post)
-    else:
-        bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
+    bpy.app.handlers.load_post.append(on_load_post)
 
 def unregister():
     bpy.ops.arm_addon.stop()
@@ -449,6 +453,7 @@ def unregister():
     bpy.utils.unregister_class(ArmAddonUpdateButton)
     bpy.utils.unregister_class(ArmAddonRestoreButton)
     bpy.utils.unregister_class(ArmAddonInstallGitButton)
+    bpy.app.handlers.load_post.remove(on_load_post)
 
 if __name__ == "__main__":
     register()
