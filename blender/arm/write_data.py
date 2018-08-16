@@ -8,12 +8,17 @@ import arm.utils
 import arm.assets as assets
 import arm.make_state as state
 
-def add_armory_library(sdk_path, name):
+def add_armory_library(sdk_path, name, rel_path=False):
+    if rel_path:
+        sdk_path = '../' + os.path.relpath(sdk_path, arm.utils.get_fp()).replace('\\', '/')
     return ('project.addLibrary("' + sdk_path + '/' + name + '");\n').replace('\\', '/').replace('//', '/')
 
-def add_assets(path, quality=1.0, use_data_dir=False):
+def add_assets(path, quality=1.0, use_data_dir=False, rel_path=False):
     if not bpy.data.worlds['Arm'].arm_minimize and path.endswith('.arm'):
         path = path[:-4] + '.json'
+
+    if rel_path:
+        path = os.path.relpath(path, arm.utils.get_fp()).replace('\\', '/')
 
     notinlist = not path.endswith('.ttf') # TODO
     s = 'project.addAssets("' + path + '", { notinlist: ' + str(notinlist).lower() + ' '
@@ -24,6 +29,11 @@ def add_assets(path, quality=1.0, use_data_dir=False):
     s += '});\n'
     return s
 
+def add_shaders(path, rel_path=False):
+    if rel_path:
+        path = os.path.relpath(path, arm.utils.get_fp()).replace('\\', '/')
+    return 'project.addShaders("' + path + '");\n'
+
 def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
     func(path)
@@ -31,6 +41,7 @@ def remove_readonly(func, path, excinfo):
 # Write khafile.js
 def write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce, is_viewport, import_traits, import_logicnodes):
     sdk_path = arm.utils.get_sdk_path()
+    rel_path = arm.utils.get_relative_paths() # Convert absolute paths to relative
     wrd = bpy.data.worlds['Arm']
 
     with open('khafile.js', 'w') as f:
@@ -58,10 +69,10 @@ project.addSources('Sources');
                     # assets.add_shader(file)
 
         if not os.path.exists('Libraries/armory'):
-            f.write(add_armory_library(sdk_path, 'armory'))
+            f.write(add_armory_library(sdk_path, 'armory', rel_path=rel_path))
 
         if not os.path.exists('Libraries/iron'):
-            f.write(add_armory_library(sdk_path, 'iron'))
+            f.write(add_armory_library(sdk_path, 'iron', rel_path=rel_path))
 
         # Project libraries
         if os.path.exists('Libraries'):
@@ -85,25 +96,25 @@ project.addSources('Sources');
             if wrd.arm_physics_engine == 'Bullet':
                 assets.add_khafile_def('arm_bullet')
                 if not os.path.exists('Libraries/haxebullet'):
-                    f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet'))
+                    f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet', rel_path=rel_path))
                 if state.target.startswith('krom') or state.target == 'html5' or state.target == 'node':
                     ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
                     ammojs_path = ammojs_path.replace('\\', '/').replace('//', '/')
-                    f.write(add_assets(ammojs_path))
+                    f.write(add_assets(ammojs_path, rel_path=rel_path))
                     # haxe.macro.Compiler.includeFile(ammojs_path)
             elif wrd.arm_physics_engine == 'Oimo':
                 assets.add_khafile_def('arm_oimo')
                 if not os.path.exists('Libraries/oimo'):
-                    f.write(add_armory_library(sdk_path + '/lib/', 'oimo'))
+                    f.write(add_armory_library(sdk_path + '/lib/', 'oimo', rel_path=rel_path))
 
         if export_navigation:
             assets.add_khafile_def('arm_navigation')
             if not os.path.exists('Libraries/haxerecast'):
-                f.write(add_armory_library(sdk_path + '/lib/', 'haxerecast'))
+                f.write(add_armory_library(sdk_path + '/lib/', 'haxerecast', rel_path=rel_path))
             if state.target.startswith('krom') or state.target == 'html5':
                 recastjs_path = sdk_path + '/lib/haxerecast/js/recast/recast.js'
                 recastjs_path = recastjs_path.replace('\\', '/').replace('//', '/')
-                f.write(add_assets(recastjs_path))
+                f.write(add_assets(recastjs_path, rel_path=rel_path))
 
         if is_publish:
             assets.add_khafile_def('arm_published')
@@ -146,11 +157,10 @@ project.addSources('Sources');
         shader_references = sorted(list(set(assets.shaders)))
         for ref in shader_references:
             ref = ref.replace('\\', '/').replace('//', '/')
-            f.write("project.addShaders('" + ref + "'")
+            f.write(add_shaders(ref, rel_path=rel_path))
             # noprocessing for passthrough geom shader
             # if ref.endswith('voxel.geom.glsl'):
                 # f.write(', { noprocessing: true }')
-            f.write(");\n")
 
         # Move assets for published game to /data folder
         use_data_dir = is_publish and (state.target == 'krom-windows' or state.target == 'krom-linux' or state.target == 'windows' or state.target == 'linux')
@@ -160,7 +170,7 @@ project.addSources('Sources');
         shader_data_references = sorted(list(set(assets.shader_datas)))
         for ref in shader_data_references:
             ref = ref.replace('\\', '/').replace('//', '/')
-            f.write(add_assets(ref, use_data_dir=use_data_dir))
+            f.write(add_assets(ref, use_data_dir=use_data_dir, rel_path=rel_path))
 
         asset_references = sorted(list(set(assets.assets)))
         for ref in asset_references:
@@ -171,7 +181,7 @@ project.addSources('Sources');
                 quality = wrd.arm_sound_quality
             elif s.endswith('.png') or s.endswith('.jpg'):
                 quality = wrd.arm_texture_quality
-            f.write(add_assets(ref, quality=quality, use_data_dir=use_data_dir))
+            f.write(add_assets(ref, quality=quality, use_data_dir=use_data_dir, rel_path=rel_path))
 
         if wrd.arm_sound_quality < 1.0 or state.target == 'html5':
             assets.add_khafile_def('arm_soundcompress')
@@ -181,24 +191,24 @@ project.addSources('Sources');
 
         if wrd.arm_play_console:
             assets.add_khafile_def('arm_debug')
-            f.write("project.addShaders('" + sdk_path + "/armory/Shaders/debug_draw/**');\n")
+            f.write(add_shaders(sdk_path + "/armory/Shaders/debug_draw/**", rel_path=rel_path))
 
         if export_ui:
             if not os.path.exists('Libraries/zui'):
-                f.write(add_armory_library(sdk_path, 'lib/zui'))
+                f.write(add_armory_library(sdk_path, 'lib/zui', rel_path=rel_path))
             p = sdk_path + '/armory/Assets/droid_sans.ttf'
             p = p.replace('//', '/')
-            f.write(add_assets(p.replace('\\', '/'), use_data_dir=use_data_dir))
+            f.write(add_assets(p.replace('\\', '/'), use_data_dir=use_data_dir, rel_path=rel_path))
             assets.add_khafile_def('arm_ui')
 
         if wrd.arm_hscript == 'Enabled':
             if not os.path.exists('Libraries/hscript'):
-                f.write(add_armory_library(sdk_path, 'lib/hscript'))
+                f.write(add_armory_library(sdk_path, 'lib/hscript', rel_path=rel_path))
             assets.add_khafile_def('arm_hscript')
 
         if wrd.arm_formatlib == 'Enabled':
             if not os.path.exists('Libraries/iron_format'):
-                f.write(add_armory_library(sdk_path, 'lib/iron_format'))
+                f.write(add_armory_library(sdk_path, 'lib/iron_format', rel_path=rel_path))
         
         if wrd.arm_minimize == False:
             assets.add_khafile_def('arm_json')

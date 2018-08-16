@@ -156,6 +156,12 @@ def get_legacy_shaders():
     addon_prefs = user_preferences.addons['armory'].preferences
     return False if not hasattr(addon_prefs, 'legacy_shaders') else addon_prefs.legacy_shaders
 
+def get_relative_paths():
+    # Convert absolute paths to relative
+    user_preferences = bpy.context.user_preferences
+    addon_prefs = user_preferences.addons['armory'].preferences
+    return False if not hasattr(addon_prefs, 'relative_paths') else addon_prefs.relative_paths
+
 def get_node_path():
     if get_os() == 'win':
         return get_sdk_path() + '/nodejs/node.exe'

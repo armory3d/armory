@@ -101,7 +101,7 @@ def build(material, mat_users, mat_armusers):
 
     arm.utils.write_arm(full_path + '/' + matname + '_data.arm', mat_state.data.get())
     shader_data_name = matname + '_data'
-    shader_data_path = arm.utils.build_dir() + '/compiled/Shaders/' + shader_data_name + '.arm'
+    shader_data_path = arm.utils.get_fp_build() + '/compiled/Shaders/' + shader_data_name + '.arm'
     assets.add_shader_data(shader_data_path)
 
     return rpasses, mat_state.data, shader_data_name, bind_constants, bind_textures
@@ -124,7 +124,7 @@ def write_shader(rel_path, shader, ext, rpass, matname, keep_cache=True):
 
     shader_rel_path = rel_path + '/' + matname + '_' + rpass + '.' + ext + '.glsl'
     shader_path = arm.utils.get_fp() + '/' + shader_rel_path
-    assets.add_shader(shader_rel_path)
+    assets.add_shader(shader_path)
     if not os.path.isfile(shader_path) or not keep_cache:
         with open(shader_path, 'w') as f:
             f.write(shader.get())

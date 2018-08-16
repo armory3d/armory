@@ -80,6 +80,7 @@ class ArmoryAddonPreferences(AddonPreferences):
     ffmpeg_path = StringProperty(name="FFMPEG Path", description="Binary path", subtype="FILE_PATH", update=ffmpeg_path_update, default="")
     save_on_build = BoolProperty(name="Save on Build", description="Save .blend", default=False)
     legacy_shaders = BoolProperty(name="Legacy Shaders", description="Attempt to compile shaders runnable on older hardware", default=False)
+    relative_paths = BoolProperty(name="Generate Relative Paths", description="Write relative paths in khafile", default=False)
     viewport_controls = EnumProperty(
         items=[('qwerty', 'qwerty', 'qwerty'),
                ('azerty', 'azerty', 'azerty')],
@@ -118,6 +119,7 @@ class ArmoryAddonPreferences(AddonPreferences):
             box.prop(self, "ui_scale")
             box.prop(self, "save_on_build")
             box.prop(self, "legacy_shaders")
+            box.prop(self, "relative_paths")
 
 def bundled_sdk_path():
     if get_os() == 'mac':

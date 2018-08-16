@@ -84,7 +84,7 @@ def add_shader_data(file):
 def add_shader_pass(data_name):
     global shader_passes
     # Shader data for passes are written into single shader_datas.arm file
-    add_shader_data(arm.utils.build_dir() + '/compiled/Shaders/shader_datas.arm')
+    add_shader_data(arm.utils.get_fp_build() + '/compiled/Shaders/shader_datas.arm')
     if data_name not in shader_passes:
         shader_passes.append(data_name)
 
@@ -92,7 +92,7 @@ def add_shader_external(file):
     global shaders_external
     shaders_external.append(file)
     name = file.split('/')[-1].split('\\')[-1]
-    add_shader(arm.utils.build_dir() + '/compiled/Shaders/' + name)
+    add_shader(arm.utils.get_fp_build() + '/compiled/Shaders/' + name)
 
 invalidate_enabled = True # Disable invalidating during build process
 
