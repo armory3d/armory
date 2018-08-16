@@ -261,7 +261,7 @@ def write_sky_irradiance(base_name):
     for i in range(0, len(irradiance_floats)):
         irradiance_floats[i] /= 2
 
-    envpath = arm.utils.arm.utils.get_fp_build() + '/compiled/Assets/envmaps'
+    envpath = arm.utils.get_fp_build() + '/compiled/Assets/envmaps'
     if not os.path.exists(envpath):
         os.makedirs(envpath)
     
@@ -279,7 +279,7 @@ def write_color_irradiance(base_name, col):
     for i in range(0, 24):
         irradiance_floats.append(0.0)
     
-    envpath = arm.utils.arm.utils.get_fp_build() + '/compiled/Assets/envmaps'
+    envpath = arm.utils.get_fp_build() + '/compiled/Assets/envmaps'
     if not os.path.exists(envpath):
         os.makedirs(envpath)
     
