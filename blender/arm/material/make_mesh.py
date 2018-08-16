@@ -355,19 +355,21 @@ def make_deferred(con_mesh):
                 else:
                     vert.write('prevwvpposition = prevWVP * spos;')
             else:
-                vert.add_uniform('mat4 prevW', link='_prevWorldMatrix')
-                vert.add_out('vec3 prevwposition')
-                if is_displacement:
-                    vert.add_uniform('mat4 invW', link='_inverseWorldMatrix')
-                    vert.write('prevwposition = vec4(prevW * (invW * vec4(wposition, 1.0))).xyz;')
-                else:
-                    vert.write('prevwposition = vec4(prevW * spos).xyz;')
                 tese.add_out('vec4 wvpposition')
                 tese.add_out('vec4 prevwvpposition')
-                tese.add_uniform('mat4 prevVP', '_prevViewProjectionMatrix')
                 tese.write('wvpposition = gl_Position;')
-                make_tess.interpolate(tese, 'prevwposition', 3)
-                tese.write('prevwvpposition = prevVP * vec4(prevwposition, 1.0);')
+                if is_displacement:
+                    tese.add_uniform('mat4 invW', link='_inverseWorldMatrix')
+                    tese.add_uniform('mat4 prevWVP', '_prevWorldViewProjectionMatrix')
+                    tese.write('prevwvpposition = prevWVP * (invW * vec4(wposition, 1.0));')
+                else:
+                    vert.add_uniform('mat4 prevW', link='_prevWorldMatrix')
+                    vert.add_out('vec3 prevwposition')
+                    vert.write('prevwposition = vec4(prevW * spos).xyz;')
+                    tese.add_uniform('mat4 prevVP', '_prevViewProjectionMatrix')
+                    make_tess.interpolate(tese, 'prevwposition', 3)
+                    tese.write('prevwvpposition = prevVP * vec4(prevwposition, 1.0);')
+                
     elif gapi.startswith('direct3d'):
         vert.add_out('vec4 wvpposition')
         vert.write('wvpposition = gl_Position;')
