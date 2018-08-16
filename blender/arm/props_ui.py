@@ -709,10 +709,10 @@ class ArmRenderPathPanel(bpy.types.Panel):
         box = layout.box().column()
         row = box.row()
         row.prop(rpdat, "rp_renderer", expand=True)
-        row = box.row()
-        row.enabled = rpdat.rp_renderer == 'Forward'
-        row.prop(rpdat, 'rp_depthprepass')
-        box.prop(rpdat, "arm_material_model")
+        col = box.column()
+        col.enabled = rpdat.rp_renderer == 'Forward'
+        col.prop(rpdat, 'rp_depthprepass')
+        col.prop(rpdat, "arm_material_model")
         box.prop(rpdat, "rp_translucency_state")
         box.prop(rpdat, "rp_overlays_state")
         box.prop(rpdat, "rp_decals_state")
@@ -811,7 +811,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
         row.alignment = 'EXPAND'
         row.prop(rpdat, 'arm_voxelgi_step')
         row.prop(rpdat, 'arm_voxelgi_range')
-        col.prop(rpdat, 'arm_voxelgi_offset');
+        col.prop(rpdat, 'arm_voxelgi_offset')
 
         layout.label('World')
         box = layout.box().column()

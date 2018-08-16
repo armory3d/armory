@@ -16,7 +16,7 @@ def add_assets(path, quality=1.0, use_data_dir=False):
         path = path[:-4] + '.json'
 
     notinlist = not path.endswith('.ttf') # TODO
-    s = 'project.addAssets("' + path + '", { notinlist: ' + str(notinlist).lower() + ' ';
+    s = 'project.addAssets("' + path + '", { notinlist: ' + str(notinlist).lower() + ' '
     if quality < 1.0:
         s += ', quality: ' + str(quality)
     if use_data_dir:

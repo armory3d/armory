@@ -1196,7 +1196,7 @@ class ArmoryExporter:
 
             # Take highest weights
             bone_values.sort()
-            bone_values.reverse();
+            bone_values.reverse()
 
             if bone_count > 4: # Four bones max
                 bone_count = 4
@@ -1570,7 +1570,7 @@ class ArmoryExporter:
         o = {}
         o['name'] = oid
         mesh = objectRef[0]
-        structFlag = False;
+        structFlag = False
 
         # Save the morph state if necessary
         activeShapeKeyIndex = bobject.active_shape_key_index
@@ -1659,18 +1659,18 @@ class ArmoryExporter:
                 i = 0
                 while i < len(positions):
                     if positions[i] > aabb_max[0]:
-                        aabb_max[0] = positions[i];
+                        aabb_max[0] = positions[i]
                     if positions[i + 1] > aabb_max[1]:
-                        aabb_max[1] = positions[i + 1];
+                        aabb_max[1] = positions[i + 1]
                     if positions[i + 2] > aabb_max[2]:
-                        aabb_max[2] = positions[i + 2];
+                        aabb_max[2] = positions[i + 2]
                     if positions[i] < aabb_min[0]:
-                        aabb_min[0] = positions[i];
+                        aabb_min[0] = positions[i]
                     if positions[i + 1] < aabb_min[1]:
-                        aabb_min[1] = positions[i + 1];
+                        aabb_min[1] = positions[i + 1]
                     if positions[i + 2] < aabb_min[2]:
-                        aabb_min[2] = positions[i + 2];
-                    i += stride;
+                        aabb_min[2] = positions[i + 2]
+                    i += stride
                 if hasattr(bobject.data, 'arm_aabb'):
                     bobject.data.arm_aabb = [abs(aabb_min[0]) + abs(aabb_max[0]), abs(aabb_min[1]) + abs(aabb_max[1]), abs(aabb_min[2]) + abs(aabb_max[2])]
                 break
@@ -1807,7 +1807,7 @@ class ArmoryExporter:
         o['fov'] = 2.0 * math.atan(1.0 / b)
         if with_planes:
             o['near_plane'] = (d * (1.0 - k)) / (2.0 * k)
-            o['far_plane'] = k * o['near_plane'];
+            o['far_plane'] = k * o['near_plane']
 
     def export_camera(self, objectRef):
         o = {}
@@ -2085,11 +2085,11 @@ class ArmoryExporter:
             o['lifetime_random'] = psettings.lifetime_random
             o['emit_from'] = 1 if psettings.emit_from == 'VOLUME' else 0 # VERT, FACE
             # Velocity
-            # o['normal_factor'] = psettings.normal_factor;
-            # o['tangent_factor'] = psettings.tangent_factor;
-            # o['tangent_phase'] = psettings.tangent_phase;
+            # o['normal_factor'] = psettings.normal_factor
+            # o['tangent_factor'] = psettings.tangent_factor
+            # o['tangent_phase'] = psettings.tangent_phase
             o['object_align_factor'] = [psettings.object_align_factor[0], psettings.object_align_factor[1], psettings.object_align_factor[2]]
-            # o['object_factor'] = psettings.object_factor;
+            # o['object_factor'] = psettings.object_factor
             o['factor_random'] = psettings.factor_random
             # Physics
             o['physics_type'] = 1 if psettings.physics_type == 'NEWTON' else 0
@@ -2151,7 +2151,7 @@ class ArmoryExporter:
             for objectRef in self.speakerArray.items():
                 self.export_speaker(objectRef)
         for objectRef in self.meshArray.items():
-            self.output['mesh_datas'] = [];
+            self.output['mesh_datas'] = []
             self.export_mesh(objectRef, scene)
 
     def execute(self, context, filepath, scene=None):

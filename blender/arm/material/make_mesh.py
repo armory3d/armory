@@ -22,6 +22,8 @@ def make(context_id):
     # Blend context
     mat = mat_state.material
     blend = mat.arm_blending
+    particle = mat_state.material.arm_particle
+    dprepass = rid == 'Forward' and rpdat.rp_depthprepass
     if blend:
         con['name'] = 'blend'
         con['blend_source'] = mat.arm_blending_source
@@ -31,10 +33,10 @@ def make(context_id):
         con['alpha_blend_destination'] = mat.arm_blending_destination_alpha
         con['alpha_blend_operation'] = mat.arm_blending_operation_alpha
         con['depth_write'] = False
-
-    # Depth prepass was performed
-    dprepass = rid == 'Forward' and rpdat.rp_depthprepass
-    if dprepass:
+        con['compare_mode'] = 'less'
+    elif particle != 'off':
+        pass
+    elif dprepass: # Depth prepass was performed
         con['depth_write'] = False
         con['compare_mode'] = 'equal'
 
@@ -49,8 +51,6 @@ def make(context_id):
         else:
             make_forward(con_mesh)
     elif rid == 'Deferred':
-        if rpdat.arm_material_model != 'Full': # TODO: hide material enum
-            print('Armory Warning: Deferred renderer only supports Full materials')
         make_deferred(con_mesh)
     # elif rid == 'Deferred Plus':
         # make_deferred_plus(con_mesh)
