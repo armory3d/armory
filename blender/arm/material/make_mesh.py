@@ -22,7 +22,7 @@ def make(context_id):
     # Blend context
     mat = mat_state.material
     blend = mat.arm_blending
-    particle = mat_state.material.arm_particle
+    particle = mat_state.material.arm_particle_flag
     dprepass = rid == 'Forward' and rpdat.rp_depthprepass
     if blend:
         con['name'] = 'blend'
@@ -34,7 +34,7 @@ def make(context_id):
         con['alpha_blend_operation'] = mat.arm_blending_operation_alpha
         con['depth_write'] = False
         con['compare_mode'] = 'less'
-    elif particle != 'off':
+    elif particle:
         pass
     elif dprepass: # Depth prepass was performed
         con['depth_write'] = False
@@ -225,7 +225,7 @@ def make_base(con_mesh, parse_opacity):
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
         if mat_state.material.arm_tilesheet_mat:
-            if mat_state.material.arm_particle == 'gpu':
+            if mat_state.material.arm_particle_flag and rpdat.arm_particles == 'GPU':
                 make_particle.write_tilesheet(vert)
             else:
                 vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
@@ -283,10 +283,10 @@ def make_base(con_mesh, parse_opacity):
 
 def write_vertpos(vert):
     billboard = mat_state.material.arm_billboard
-    particle = mat_state.material.arm_particle
+    particle = mat_state.material.arm_particle_flag
     # Particles
-    if particle != 'off':
-        if particle == 'gpu':
+    if particle:
+        if arm.utils.get_rp().arm_particles == 'GPU':
             make_particle.write(vert, particle_info=cycles.particle_info)
         # Billboards
         if billboard == 'spherical':
@@ -612,7 +612,7 @@ def make_forward(con_mesh):
             # frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
 
     # Particle opacity
-    if mat_state.material.arm_particle == 'gpu' and mat_state.material.arm_particle_fade:
+    if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'GPU' and mat_state.material.arm_particle_fade:
         frag.write('fragColor.rgb *= p_fade;')
 
 def make_forward_base(con_mesh, parse_opacity=False):

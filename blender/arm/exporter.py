@@ -2047,6 +2047,9 @@ class ArmoryExporter:
         if rpdat.rp_overlays_state == 'Auto' and rpdat.rp_overlays != overlays_used:
             rpdat.rp_overlays = overlays_used
             rebuild_rp = True
+        if rpdat.rp_blending_state == 'On' and rpdat.rp_blending == False: # TODO: deprecated
+            rpdat.rp_blending = True
+            rebuild_rp = True
         if rpdat.rp_blending_state == 'Auto' and rpdat.rp_blending != blending_used:
             rpdat.rp_blending = blending_used
             rebuild_rp = True
@@ -2073,10 +2076,6 @@ class ArmoryExporter:
                 continue
 
             o['name'] = particleRef[1]["structName"]
-
-            if psettings.arm_gpu_sim:
-                o['gpu_sim'] = True
-
             o['type'] = 0 if psettings.type == 'EMITTER' else 1 # HAIR
             o['loop'] = psettings.arm_loop
             if bpy.app.version >= (2, 80, 1):
@@ -2249,6 +2248,25 @@ class ArmoryExporter:
                         mat.name = mat_name
                         matvars.append(mat)
                     slot.material = mat
+        # Particle and non-particle objects can not share material
+        for psys in bpy.data.particles:
+            bo = psys.dupli_object
+            if bo == None or psys.render_type != 'OBJECT':
+                continue
+            for slot in bo.material_slots:
+                if slot.material == None:
+                    continue
+                if slot.material.name.endswith('_armpsys'):
+                    continue
+                matslots.append(slot)
+                mat_name = slot.material.name + '_armpsys'
+                mat = bpy.data.materials.get(mat_name)
+                if mat == None:
+                    mat = slot.material.copy()
+                    mat.name = mat_name
+                    mat.arm_particle_flag = True
+                    matvars.append(mat)
+                slot.material = mat
 
         # Auto-bones
         wrd = bpy.data.worlds['Arm']
@@ -2402,7 +2420,7 @@ class ArmoryExporter:
 
         # Remove created material variants
         for slot in matslots: # Set back to original material
-            orig_mat = bpy.data.materials[slot.material.name[:-len('_armskin')]]
+            orig_mat = bpy.data.materials[slot.material.name[:-8]] # _armskin or _armpsys
             orig_mat.export_uvs = slot.material.export_uvs
             orig_mat.export_vcols = slot.material.export_vcols
             orig_mat.export_tangents = slot.material.export_tangents

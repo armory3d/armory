@@ -39,12 +39,11 @@ def make(context_id, rpasses, shadowmap=False):
     if con_depth.is_elem('off'):
         vert.write('spos.xyz += off;')
 
-    wrd = bpy.data.worlds['Arm']
-    if mat_state.material.arm_particle == 'gpu':
+    rpdat = arm.utils.get_rp()
+    if mat_state.material.arm_particle_flag and rpdat.arm_particles == 'GPU':
         make_particle.write(vert, shadowmap=shadowmap)
 
     if is_disp:
-        rpdat = arm.utils.get_rp()
         if rpdat.arm_rp_displacement == 'Vertex':
             vert.add_uniform('mat3 N', '_normalMatrix')
             vert.write('vec3 wnormal = normalize(N * nor);')

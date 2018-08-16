@@ -263,11 +263,7 @@ def init_properties():
                ('spherical', 'Spherical', 'Spherical'),
                ('cylindrical', 'Cylindrical', 'Cylindrical')],
         name="Billboard", default='off', description="Track camera", update=assets.invalidate_shader_cache)
-    bpy.types.Material.arm_particle = EnumProperty(
-        items=[('off', 'Off', 'Off'),
-               ('gpu', 'GPU', 'GPU'),
-               ('cpu', 'CPU', 'CPU')],
-        name="Particle", default='off', description="Use this material for particle system rendering", update=assets.invalidate_shader_cache)
+    bpy.types.Material.arm_particle_flag = BoolProperty(name="Particle Flag", description="This material is used for particles", default=False)
     bpy.types.Material.arm_particle_fade = BoolProperty(name="Particle Fade", description="Fade particles in and out", default=False)
     bpy.types.Material.arm_tilesheet_mat = BoolProperty(name="Tilesheet", description="Generate tilesheet shaders", default=False)
     bpy.types.Material.arm_blending = BoolProperty(name="Blending", description="Enable additive blending", default=False)
@@ -373,7 +369,6 @@ def init_properties():
     bpy.types.Node.arm_logic_id = StringProperty(name="ID", description="Nodes with equal identifier will share data", default='')
     bpy.types.Node.arm_watch = BoolProperty(name="Watch", description="Watch value of this node in debug console", default=False)
     # Particles
-    bpy.types.ParticleSettings.arm_gpu_sim = BoolProperty(name="GPU Simulation", description="Calculate particle simulation on GPU", default=False, update=assets.invalidate_shader_cache)
     bpy.types.ParticleSettings.arm_count_mult = FloatProperty(name="Multiply Count", description="Multiply particle count when rendering in Armory", default=1.0)
     bpy.types.ParticleSettings.arm_loop = BoolProperty(name="Loop", description="Loop this particle system", default=False)
 

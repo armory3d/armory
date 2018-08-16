@@ -220,6 +220,11 @@ project.addSources('Sources');
         if rpdat.arm_skin != 'Off':
             assets.add_khafile_def('arm_skin')
 
+        if rpdat.arm_particles == 'GPU':
+            assets.add_khafile_def('arm_particles_gpu')
+        if rpdat.arm_particles != 'Off':
+            assets.add_khafile_def('arm_particles')
+
         if arm.utils.get_viewport_controls() == 'azerty':
             assets.add_khafile_def('arm_azerty')
 

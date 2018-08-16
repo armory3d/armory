@@ -611,7 +611,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_vignette = BoolProperty(name="Vignette", default=False, update=assets.invalidate_shader_cache)
     arm_lensflare = BoolProperty(name="Lens Flare", default=False, update=assets.invalidate_shader_cache)
     arm_lut_texture = StringProperty(name="LUT Texture", description="Color Grading", default="", update=assets.invalidate_shader_cache)
-    # Skin
     arm_skin = EnumProperty(
         items=[('GPU (Dual-Quat)', 'GPU (Dual-Quat)', 'GPU (Dual-Quat)'),
                ('GPU (Matrix)', 'GPU (Matrix)', 'GPU (Matrix)'),
@@ -620,6 +619,11 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name='Skinning', description='Skinning method', default='GPU (Dual-Quat)', update=assets.invalidate_shader_cache)
     arm_skin_max_bones_auto = BoolProperty(name="Auto Bones", description="Calculate amount of maximum bones based on armatures", default=True, update=assets.invalidate_compiled_data)
     arm_skin_max_bones = IntProperty(name="Max Bones", default=50, min=1, max=3000, update=assets.invalidate_shader_cache)
+    arm_particles = EnumProperty(
+        items=[('GPU', 'GPU', 'GPU'),
+               ('CPU', 'CPU', 'CPU'),
+               ('Off', 'Off', 'Off')],
+        name='Particles', description='Simulation method', default='GPU', update=assets.invalidate_shader_cache)
     # Material override flags
     arm_culling = BoolProperty(name="Culling", default=True)
     arm_two_sided_area_lamp = BoolProperty(name="Two-Sided Area Lamps", description="Emit light from both faces of area lamp", default=False, update=assets.invalidate_shader_cache)

@@ -92,7 +92,6 @@ class ParticlesPropsPanel(bpy.types.Panel):
             return
 
         layout.prop(obj.settings, 'arm_loop')
-        layout.prop(obj.settings, 'arm_gpu_sim')
         layout.prop(obj.settings, 'arm_count_mult')
 
 class PhysicsPropsPanel(bpy.types.Panel):
@@ -267,15 +266,11 @@ class MaterialPropsPanel(bpy.types.Panel):
 
         row = layout.row()
         col = row.column()
-        col.label('Particle')
-        col.prop(mat, 'arm_particle', text="")
-        colb = col.column()
-        colb.enabled = mat.arm_particle == 'gpu'
-        colb.prop(mat, 'arm_particle_fade')
+        col.prop(mat, 'arm_particle_fade')
+        col.prop(mat, 'arm_tilesheet_mat')
         col = row.column()
         col.label('Billboard')
         col.prop(mat, 'arm_billboard', text="")
-        col.prop(mat, 'arm_tilesheet_mat')
 
         layout.prop(mat, 'arm_blending')
         col = layout.column()
@@ -739,6 +734,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
             columnb.prop(rpdat, 'arm_tess_shadows_inner')
             columnb.prop(rpdat, 'arm_tess_shadows_outer')  
 
+        box.prop(rpdat, 'arm_particles')
         box.prop(rpdat, 'arm_skin')
         row = box.row()
         row.enabled = rpdat.arm_skin.startswith('GPU')

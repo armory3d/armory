@@ -60,8 +60,8 @@ def make_gi(context_id):
     cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False, basecol_only=True)
 
     # Voxelized particles
-    particle = mat_state.material.arm_particle
-    if particle == 'gpu':
+    particle = mat_state.material.arm_particle_flag
+    if particle and rpdat.arm_particles == 'GPU':
         # make_particle.write(vert, particle_info=cycles.particle_info)
         frag.write_pre = True
         frag.write('const float p_index = 0;')

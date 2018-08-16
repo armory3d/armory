@@ -9,6 +9,7 @@ class SetParticleSpeedNode extends LogicNode {
 	}
 
 	override function run() {
+		#if arm_particles
 		var object:Object = inputs[1].get();
 		var speed:Float = inputs[2].get();
 		
@@ -21,5 +22,6 @@ class SetParticleSpeedNode extends LogicNode {
 		psys.speed = speed;
 
 		super.run();
+		#end
 	}
 }

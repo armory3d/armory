@@ -1,4 +1,5 @@
 
+import arm.utils
 import arm.material.mat_state as mat_state
 
 def write(vert, particle_info=None, shadowmap=False):
@@ -80,7 +81,7 @@ def write(vert, particle_info=None, shadowmap=False):
     vert.write('spos.xyz += p_location;')
 
     # Particle fade
-    if mat_state.material.arm_particle == 'gpu' and mat_state.material.arm_particle_fade:
+    if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'GPU' and mat_state.material.arm_particle_fade:
         vert.add_out('float p_fade')
         vert.write('p_fade = sin(min((p_age / 2) * 3.141592, 3.141592));')
 
