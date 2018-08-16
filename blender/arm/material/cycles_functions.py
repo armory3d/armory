@@ -104,15 +104,18 @@ float tex_musgrave_f(const vec3 p) {
 }
 """
 
-str_hsv_to_rgb = """
+# col: the incoming color
+# shift: a vector containing the hue shift, the saturation modificator, the value modificator and the mix factor in this order
+# this does the following:
+# make rgb col to hsv
+# apply hue shift through addition, sat/val through multiplication
+# return an rgb color, mixed with the original one
+str_hue_sat = """
 vec3 hsv_to_rgb(const vec3 c) {
   const vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
   vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
   return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
-"""
-
-str_rgb_to_hsv = """
 vec3 rgb_to_hsv(const vec3 c) {
     const vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
     vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
@@ -122,22 +125,11 @@ vec3 rgb_to_hsv(const vec3 c) {
     float e = 1.0e-10;
     return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
 }
-"""
-
-# col: the incoming color
-# shift: a vector containing the hue shift, the saturation modificator, the value modificator and the mix factor in this order
-# this does the following:
-# make rgb col to hsv
-# apply hue shift through addition, sat/val through multiplication
-# return an rgb color, mixed with the original one
-str_hue_sat = """
 vec3 hue_sat(const vec3 col, const vec4 shift) {
     vec3 hsv = rgb_to_hsv(col);
-    
     hsv.x += shift.x;
     hsv.y *= shift.y;
     hsv.z *= shift.z;
-    
     return mix(hsv_to_rgb(hsv), col, shift.w);
 }
 """

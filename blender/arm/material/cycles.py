@@ -598,8 +598,6 @@ def parse_vector(node, socket):
         return 'pow({0}, vec3({1}))'.format(out_col, gamma)
 
     elif node.type == 'HUE_SAT':
-        curshader.add_function(c_functions.str_rgb_to_hsv)
-        curshader.add_function(c_functions.str_hsv_to_rgb)
         curshader.add_function(c_functions.str_hue_sat)
         hue = parse_value_input(node.inputs[0])
         sat = parse_value_input(node.inputs[1])
