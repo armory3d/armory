@@ -304,7 +304,7 @@ def build():
         assets.add_khafile_def('rp_ocean')
         assets.add_shader_pass('water_pass')
 
-    if rpdat.rp_blending_state != 'Off':
+    if rpdat.rp_blending:
         assets.add_khafile_def('rp_blending')
 
     if rpdat.rp_bloom:

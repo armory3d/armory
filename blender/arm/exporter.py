@@ -1950,6 +1950,7 @@ class ArmoryExporter:
 
         transluc_used = False
         overlays_used = False
+        blending_used = False
         decals_used = False
         # sss_used = False
         for material in self.materialArray:
@@ -1991,6 +1992,8 @@ class ArmoryExporter:
                 transluc_used = True
             if 'overlay' in rpasses:
                 overlays_used = True
+            if 'mesh' in rpasses and material.arm_blending:
+                blending_used = True
             if 'decal' in rpasses:
                 decals_used = True
 
@@ -2043,6 +2046,9 @@ class ArmoryExporter:
             rebuild_rp = True
         if rpdat.rp_overlays_state == 'Auto' and rpdat.rp_overlays != overlays_used:
             rpdat.rp_overlays = overlays_used
+            rebuild_rp = True
+        if rpdat.rp_blending_state == 'Auto' and rpdat.rp_blending != blending_used:
+            rpdat.rp_blending = blending_used
             rebuild_rp = True
         if rpdat.rp_decals_state == 'Auto' and rpdat.rp_decals != decals_used:
             rpdat.rp_decals = decals_used

@@ -50,7 +50,7 @@ def update_preset(self, context):
         rpdat.rp_overlays_state = 'Auto'
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
-        rpdat.rp_blending_state = 'Off'
+        rpdat.rp_blending_state = 'Auto'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
@@ -81,7 +81,7 @@ def update_preset(self, context):
         rpdat.rp_overlays_state = 'Auto'
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
-        rpdat.rp_blending_state = 'Off'
+        rpdat.rp_blending_state = 'Auto'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
@@ -111,7 +111,7 @@ def update_preset(self, context):
         rpdat.rp_overlays_state = 'Auto'
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
-        rpdat.rp_blending_state = 'Off'
+        rpdat.rp_blending_state = 'Auto'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
@@ -209,7 +209,7 @@ def update_preset(self, context):
         rpdat.rp_overlays_state = 'Auto'
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
-        rpdat.rp_blending_state = 'Off'
+        rpdat.rp_blending_state = 'Auto'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
@@ -309,6 +309,15 @@ def update_overlays_state(self, context):
     elif self.rp_overlays_state == 'Off':
         self.rp_overlays = False
     else: # Auto - updates rp at build time if x-ray mat is used
+        return
+    update_renderpath(self, context)
+
+def update_blending_state(self, context):
+    if self.rp_blending_state == 'On':
+        self.rp_blending = True
+    elif self.rp_blending_state == 'Off':
+        self.rp_blending = False
+    else: # Auto - updates rp at build time if blending mat is used
         return
     update_renderpath(self, context)
 
@@ -426,10 +435,12 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Off', 'Off', 'Off'),
                ('Auto', 'Auto', 'Auto')],
         name="SSS", description="Sub-surface scattering pass", default='Auto', update=update_sss_state)
+    rp_blending = BoolProperty(name="Blending", description="Current render-path state", default=False)
     rp_blending_state = EnumProperty(
         items=[('On', 'On', 'On'),
-               ('Off', 'Off', 'Off')],
-        name="Blending", description="Additive blending pass", default='Off', update=update_renderpath)
+               ('Off', 'Off', 'Off'),
+               ('Auto', 'Auto', 'Auto')],
+        name="Blending", description="Blending pass", default='Auto', update=update_blending_state)
     rp_stereo = BoolProperty(name="Stereo", description="Stereo rendering", default=False, update=update_renderpath)
     rp_greasepencil = BoolProperty(name="Grease Pencil", description="Render Grease Pencil data", default=False, update=update_renderpath)
     rp_ocean = BoolProperty(name="Ocean", description="Ocean pass", default=False, update=update_renderpath)
