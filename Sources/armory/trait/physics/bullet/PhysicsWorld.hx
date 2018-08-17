@@ -38,6 +38,7 @@ class PhysicsWorld extends Trait {
 #end
 
 	var dispatcher:BtCollisionDispatcherPointer;
+	var gimpactRegistered = false;
 	var contacts:Array<ContactPair>;
 	var preUpdates:Array<Void->Void> = null;
 	public var rbMap:Map<Int, RigidBody>;
@@ -70,6 +71,7 @@ class PhysicsWorld extends Trait {
 			for (rb in active.rbMap) removeRigidBody(rb);
 			world = active.world;
 			dispatcher = active.dispatcher;
+			gimpactRegistered = active.gimpactRegistered;
 		}
 
 		contacts = [];
