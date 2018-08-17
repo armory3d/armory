@@ -44,6 +44,7 @@ class RigidBody extends iron.Trait {
 	public var id = 0;
 
 	public var onReady:Void->Void = null;
+	public var onContact:Array<RigidBody->Void> = null;
 
 	public function new(mass = 1.0, shape = Shape.Box, friction = 0.5, restitution = 0.0, collisionMargin = 0.0,
 						linearDamping = 0.04, angularDamping = 0.1, animated = false,
@@ -221,6 +222,11 @@ class RigidBody extends iron.Trait {
 			}
 			transform.buildMatrix();
 		}
+
+		if (onContact != null) {
+			var rbs = physics.getContacts(this);
+			if (rbs != null) for (rb in rbs) for (f in onContact) f(rb);
+		}
 	}
 
 	public function removeFromWorld() {
@@ -303,6 +309,15 @@ class RigidBody extends iron.Trait {
 		body.setFriction(f);
 		body.setRollingFriction(f);
 		this.friction = f;
+	}
+
+	public function notifyOnContact(f:RigidBody->Void) {
+		if (onContact == null) onContact = [];
+		onContact.push(f);
+	}
+
+	public function removeContact(f:RigidBody->Void) {
+		onContact.remove(f);
 	}
 
 	public function syncTransform() {
