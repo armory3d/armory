@@ -7,13 +7,12 @@ import iron.math.Vec4;
 import iron.object.Transform;
 import iron.object.MeshObject;
 
+@:access(armory.trait.physics.bullet.PhysicsWorld)
 class RigidBody extends iron.Trait {
 
 	var shape:Shape;
 	var _motionState:BtMotionStatePointer;
 	var _shape:BtCollisionShapePointer;
-	var _shapeConvex:BtConvexHullShapePointer;
-	var isConvex = false;
 
 	public var physics:PhysicsWorld;
 	public var transform:Transform = null;
@@ -90,9 +89,6 @@ class RigidBody extends iron.Trait {
 		physics = armory.trait.physics.PhysicsWorld.active;
 
 		_shape = null;
-		_shapeConvex = null;
-		isConvex = false;
-
 		if (shape == Shape.Box) {
 			_shape = BtBoxShape.create(BtVector3.create(
 				withMargin(transform.dim.x / 2),
@@ -102,13 +98,17 @@ class RigidBody extends iron.Trait {
 		else if (shape == Shape.Sphere) {
 			_shape = BtSphereShape.create(withMargin(transform.dim.x / 2));
 		}
+		#if cpp
+		else if (shape == Shape.ConvexHull) {
+		#else // TODO: recompile ammojs first
 		else if (shape == Shape.ConvexHull || (shape == Shape.Mesh && mass > 0)) {
 			if (shape == Shape.Mesh && mass > 0) {
 				trace("Armory Warning: object " + object.name + " - dynamic mesh shape not yet implemented, using convex hull instead");
 			}
-			_shapeConvex = BtConvexHullShape.create();
-			isConvex = true;
+		#end
+			var _shapeConvex = BtConvexHullShape.create();
 			fillConvexHull(_shapeConvex, transform.scale, collisionMargin);
+			_shape = _shapeConvex;
 		}
 		else if (shape == Shape.Cone) {
 			_shape = BtConeShapeZ.create(
@@ -127,11 +127,25 @@ class RigidBody extends iron.Trait {
 				withMargin(r), // Radius
 				withMargin(transform.dim.z - r * 2)); // Height between 2 sphere centers
 		}
-		else if (shape == Shape.Mesh || shape == Shape.Terrain) { // Static
-			// mass > 0 ? btGImpactMeshShape
+		else if (shape == Shape.Mesh || shape == Shape.Terrain) {
 			var meshInterface = BtTriangleMesh.create(true, true);
 			fillTriangleMesh(meshInterface, transform.scale);
+			#if cpp
+			if (mass > 0) {
+				var _shapeGImpact = BtGImpactMeshShape.create(meshInterface);
+				_shapeGImpact.updateBound();
+				_shape = _shapeGImpact;
+				if (!physics.gimpactRegistered) {
+					BtGImpactCollisionAlgorithm.registerAlgorithm(physics.dispatcher);
+					physics.gimpactRegistered = true;
+				}
+			}
+			else {
+				_shape = BtBvhTriangleMeshShape.create(meshInterface, true, true);
+			}
+			#else // TODO: recompile ammojs first
 			_shape = BtBvhTriangleMeshShape.create(meshInterface, true, true);
+			#end
 		}
 		//else if (shape == Shape.Terrain) {
 			// var data:Array<Dynamic> = [];
@@ -149,16 +163,9 @@ class RigidBody extends iron.Trait {
 		_motionState = BtDefaultMotionState.create(_transform, _centerOfMassOffset);
 
 		var _inertia = BtVector3.create(0, 0, 0);
-		if (!isConvex) {
-			if (mass > 0) _shape.calculateLocalInertia(mass, _inertia);
-			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shape, _inertia);
-			body = BtRigidBody.create(_bodyCI);
-		}
-		else {
-			if (mass > 0) _shapeConvex.calculateLocalInertia(mass, _inertia);
-			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shapeConvex, _inertia);
-			body = BtRigidBody.create(_bodyCI);
-		}
+		if (mass > 0) _shape.calculateLocalInertia(mass, _inertia);
+		var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shape, _inertia);
+		body = BtRigidBody.create(_bodyCI);
 		body.setFriction(friction);
 		body.setRollingFriction(friction);
 		body.setRestitution(restitution);
@@ -339,8 +346,7 @@ class RigidBody extends iron.Trait {
 		currentScaleX = v.x;
 		currentScaleY = v.y;
 		currentScaleZ = v.z;
-		if (isConvex) _shapeConvex.setLocalScaling(BtVector3.create(bodyScaleX * v.x, bodyScaleY * v.y, bodyScaleZ * v.z));
-		else _shape.setLocalScaling(BtVector3.create(bodyScaleX * v.x, bodyScaleY * v.y, bodyScaleZ * v.z));
+		_shape.setLocalScaling(BtVector3.create(bodyScaleX * v.x, bodyScaleY * v.y, bodyScaleZ * v.z));
 		physics.world.updateSingleAabb(body);
 	}
 
