@@ -7,6 +7,11 @@ import iron.math.Vec4;
 import iron.object.Transform;
 import iron.object.MeshObject;
 
+	/**
+	 * RigidBody is used to allow objects to interact with Physics in your game including collisions and gravity.
+	 * RigidBody can also be used with the getContacts method to detect collisions and run appropriate code.
+	 * The Bullet physics engine is used for these calculations.
+	 */
 @:access(armory.trait.physics.bullet.PhysicsWorld)
 class RigidBody extends iron.Trait {
 
