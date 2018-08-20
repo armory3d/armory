@@ -164,6 +164,9 @@ def register():
     if hasattr(bpy.app.handlers, 'scene_update_pre'):
         bpy.app.handlers.scene_update_pre.append(on_scene_update_pre)
     bpy.app.handlers.load_post.append(on_load_post)
+    # TODO: On windows, on_load_post is not called when opening .blend file from explorer
+    if arm.utils.get_os() == 'win' and arm.utils.get_fp() != '':
+        on_load_post(None)
     reload_blend_data()
 
 def unregister():
