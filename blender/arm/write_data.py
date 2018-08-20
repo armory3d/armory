@@ -280,11 +280,11 @@ def write_config(resx, resy):
     output['window_resizable'] = wrd.arm_winresize
     output['window_minimizable'] = wrd.arm_winminimize
     output['window_maximizable'] = wrd.arm_winmaximize
-    output['window_w'] = str(resx)
-    output['window_h'] = str(resy)
+    output['window_w'] = int(resx)
+    output['window_h'] = int(resy)
     output['window_scale'] = 1.0
     rpdat = arm.utils.get_rp()
-    output['window_msaa'] = rpdat.arm_samples_per_pixel
+    output['window_msaa'] = int(rpdat.arm_samples_per_pixel)
     output['window_vsync'] = wrd.arm_vsync
     with open(p + '/config.arm', 'w') as f:
         f.write(json.dumps(output, sort_keys=True, indent=4))
