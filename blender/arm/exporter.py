@@ -2236,7 +2236,7 @@ class ArmoryExporter:
         for bo in scene_objects:
             if arm.utils.export_bone_data(bo):
                 for slot in bo.material_slots:
-                    if slot.material == None:
+                    if slot.material == None or slot.material.library != None:
                         continue
                     if slot.material.name.endswith('_armskin'):
                         continue
@@ -2254,7 +2254,7 @@ class ArmoryExporter:
             if bo == None or psys.render_type != 'OBJECT':
                 continue
             for slot in bo.material_slots:
-                if slot.material == None:
+                if slot.material == None or slot.material.library != None:
                     continue
                 if slot.material.name.endswith('_armpsys'):
                     continue
