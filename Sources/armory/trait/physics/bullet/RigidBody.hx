@@ -103,14 +103,7 @@ class RigidBody extends iron.Trait {
 		else if (shape == Shape.Sphere) {
 			_shape = BtSphereShape.create(withMargin(transform.dim.x / 2));
 		}
-		#if cpp
 		else if (shape == Shape.ConvexHull) {
-		#else // TODO: recompile ammojs first
-		else if (shape == Shape.ConvexHull || (shape == Shape.Mesh && mass > 0)) {
-			if (shape == Shape.Mesh && mass > 0) {
-				trace("Armory Warning: object " + object.name + " - dynamic mesh shape not yet implemented, using convex hull instead");
-			}
-		#end
 			var _shapeConvex = BtConvexHullShape.create();
 			fillConvexHull(_shapeConvex, transform.scale, collisionMargin);
 			_shape = _shapeConvex;
@@ -135,22 +128,22 @@ class RigidBody extends iron.Trait {
 		else if (shape == Shape.Mesh || shape == Shape.Terrain) {
 			var meshInterface = BtTriangleMesh.create(true, true);
 			fillTriangleMesh(meshInterface, transform.scale);
-			#if cpp
 			if (mass > 0) {
 				var _shapeGImpact = BtGImpactMeshShape.create(meshInterface);
 				_shapeGImpact.updateBound();
 				_shape = _shapeGImpact;
 				if (!physics.gimpactRegistered) {
+					#if js
+					GImpactCollisionAlgorithm.create().registerAlgorithm(physics.dispatcher);
+					#else
 					BtGImpactCollisionAlgorithm.registerAlgorithm(physics.dispatcher);
+					#end
 					physics.gimpactRegistered = true;
 				}
 			}
 			else {
 				_shape = BtBvhTriangleMeshShape.create(meshInterface, true, true);
 			}
-			#else // TODO: recompile ammojs first
-			_shape = BtBvhTriangleMeshShape.create(meshInterface, true, true);
-			#end
 		}
 		//else if (shape == Shape.Terrain) {
 			// var data:Array<Dynamic> = [];
