@@ -136,6 +136,9 @@ project.addSources('Sources');
         # if import_logicnodes: # Live patching for logic nodes
             # f.write("""project.addParameter("--macro include('armory.logicnode')");\n""")
 
+        if not wrd.arm_compiler_inline:
+            f.write("project.addParameter('--no-inline');\n")
+
         if enable_dce:
             f.write("project.addParameter('-dce full');\n")
 

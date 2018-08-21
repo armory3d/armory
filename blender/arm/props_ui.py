@@ -387,12 +387,14 @@ class ArmoryProjectPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_batch_materials')
         col.prop(wrd, 'arm_sampled_animation')
         col.prop(wrd, 'arm_asset_compression')
+        col.prop(wrd, 'arm_compiler_inline')
         col = row.column()
         col.prop(wrd, 'arm_minimize')
         col.prop(wrd, 'arm_optimize_mesh')
         col.prop(wrd, 'arm_deinterleaved_buffers')
         col.prop(wrd, 'arm_export_tangents')
         col.prop(wrd, 'arm_write_config')
+        col.prop(wrd, 'arm_loadscreen')
         row = box.row(align=True)
         row.alignment = 'EXPAND'
         row.prop(wrd, 'arm_texture_quality')
@@ -410,10 +412,10 @@ class ArmoryProjectPanel(bpy.types.Panel):
         col2 = col.column()
         col2.enabled = wrd.arm_winresize
         col2.prop(wrd, 'arm_winmaximize')
-        col.prop(wrd, 'arm_winminimize')
         col = row.column()
+        col.prop(wrd, 'arm_winminimize')
         col.prop(wrd, 'arm_vsync')
-        col.prop(wrd, 'arm_loadscreen')
+        
 
         layout.label('Modules')
         box = layout.box().column()
