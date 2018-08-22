@@ -42,6 +42,9 @@ class DebugConsole extends Trait {
 	var graph:kha.Image = null;
 	var graphA:kha.Image = null;
 	var graphB:kha.Image = null;
+	var benchmark = false;
+	var benchFrames = 0;
+	var benchTime = 0.0;
 
 	var selectedObject:iron.object.Object;
 	var selectedType = "";
@@ -120,11 +123,18 @@ class DebugConsole extends Trait {
 
 	function render2D(g:kha.graphics2.Graphics) {
 		if (!show) return;
-		g.end();
-		ui.begin(g);
 		var hwin = Id.handle();
 		var htab = Id.handle({position: 0});
-		if (ui.window(hwin, iron.App.w() - 280, 0, 280, iron.App.h(), true)) {
+		var wx = iron.App.w() - 280;
+		var wy = 0;
+		var ww = 280;
+		var wh = iron.App.h();
+
+		var bindG = ui.windowDirty(hwin, wx, wy, ww, wh) || hwin.redraws > 0;
+		if (bindG) g.end();
+		
+		ui.begin(g);
+		if (ui.window(hwin, wx, wy, ww, wh, true)) {
 
 			if (ui.tab(htab, '')) {}
 
@@ -435,7 +445,9 @@ class DebugConsole extends Trait {
 
 			ui.separator();
 		}
-		ui.end();
+
+		ui.end(bindG);
+		if (bindG) g.begin(false);
 
 		totalTime += frameTime;
 		renderPathTime += iron.App.renderPathTime;
@@ -450,6 +462,13 @@ class DebugConsole extends Trait {
 			}
 
 			frameTimeAvg = t;
+
+			if (benchmark) {
+				benchFrames++;
+				if (benchFrames > 10) benchTime += t;
+				if (benchFrames == 20) trace(Std.int((benchTime / 10) * 1000000) / 1000); // ms
+			}
+			
 			renderPathTimeAvg = renderPathTime / frames;
 			updateTimeAvg = updateTime / frames;
 			animTimeAvg = animTime / frames;
@@ -466,8 +485,6 @@ class DebugConsole extends Trait {
 		}
 		frameTime = Scheduler.realTime() - lastTime;
 		lastTime = Scheduler.realTime();
-
-		g.begin(false);
 	}
 
 	function update() {
