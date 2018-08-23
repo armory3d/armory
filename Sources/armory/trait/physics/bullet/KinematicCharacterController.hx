@@ -11,13 +11,12 @@ import iron.object.MeshObject;
 class KinematicCharacterController extends Trait {
 
 	var shape:ControllerShape;
-	var _shapeConvex:BtConvexShapePointer;
-	var _shapeConvexHull:BtConvexHullShapePointer;
+	var shapeConvex:BtConvexShapePointer;
+	var shapeConvexHull:BtConvexHullShapePointer;
 	var isConvexHull = false;
 
 	public var physics:PhysicsWorld;
 	public var transform:Transform = null;
-
 	public var mass:Float;
 	public var friction:Float;
 	public var restitution:Float;
@@ -35,15 +34,25 @@ class KinematicCharacterController extends Trait {
 	public var body:BtPairCachingGhostObjectPointer = null;
 	public var character:BtKinematicCharacterControllerPointer = null;
 	public var ready = false;
-
 	static var nextId = 0;
 	public var id = 0;
-
 	public var onReady:Void->Void = null;
+
+	static var nullvec = true;
+	static var vec1:BtVector3 ;
+	static var quat1:BtQuaternion ;
+	static var trans1:BtTransform ;
 
 	public function new(mass = 1.0, shape = ControllerShape.Capsule, jumpSpeed = 8.0, friction = 0.5, restitution = 0.0,
 						collisionMargin = 0.0, animated = false, group = 1) {
 		super();
+
+		if (nullvec) {
+			nullvec = false;
+			vec1 = BtVector3.create(0, 0, 0);
+			quat1 = BtQuaternion.create(0, 0, 0, 0);
+			trans1 = BtTransform.create();
+		} 
 
 		this.mass = mass;
 		this.jumpSpeed = jumpSpeed;
@@ -63,74 +72,80 @@ class KinematicCharacterController extends Trait {
 		return f - f * collisionMargin;
 	}
 
-	public function notifyOnReady(f:Void->Void):Void {
+	public function notifyOnReady(f:Void->Void) {
 		onReady = f;
 		if (ready) onReady();
 	}
 
-	public function init():Void {
+	public function init() {
 		if (ready) return;
 		ready = true;
 		
 		transform = object.transform;
 		physics = armory.trait.physics.PhysicsWorld.active;
 
-		_shapeConvex = null;
-		_shapeConvexHull = null;
+		shapeConvex = null;
+		shapeConvexHull = null;
 		isConvexHull = false;
 
 		if (shape == ControllerShape.Box) {
-			_shapeConvex = BtBoxShape.create(BtVector3.create(
-				withMargin(transform.dim.x / 2),
-				withMargin(transform.dim.y / 2),
-				withMargin(transform.dim.z / 2)));
+			vec1.setX(withMargin(transform.dim.x / 2));
+			vec1.setY(withMargin(transform.dim.y / 2));
+			vec1.setZ(withMargin(transform.dim.z / 2));
+			shapeConvex = BtBoxShape.create(vec1);
 		}
 		else if (shape == ControllerShape.Sphere) {
 			var width = transform.dim.x;
 			if(transform.dim.y > width) width = transform.dim.y;
 			if(transform.dim.z > width) width = transform.dim.z;
-			_shapeConvex = BtSphereShape.create(withMargin(width / 2));
+			shapeConvex = BtSphereShape.create(withMargin(width / 2));
 		}
 		else if (shape == ControllerShape.ConvexHull && mass > 0) {
-			_shapeConvexHull = BtConvexHullShape.create();
+			shapeConvexHull = BtConvexHullShape.create();
 			isConvexHull = true;
-			addPointsToConvexHull(_shapeConvexHull, transform.scale, collisionMargin);
+			addPointsToConvexHull(shapeConvexHull, transform.scale, collisionMargin);
 		}
 		else if (shape == ControllerShape.Cone) {
-			_shapeConvex = BtConeShapeZ.create(
+			shapeConvex = BtConeShapeZ.create(
 				withMargin(transform.dim.x / 2), // Radius
 				withMargin(transform.dim.z));	 // Height
 		}
 		else if (shape == ControllerShape.Cylinder) {
-			_shapeConvex = BtCylinderShapeZ.create(BtVector3.create(
-				withMargin(transform.dim.x / 2),
-				withMargin(transform.dim.y / 2),
-				withMargin(transform.dim.z / 2)));
+			vec1.setX(withMargin(transform.dim.x / 2));
+			vec1.setY(withMargin(transform.dim.y / 2));
+			vec1.setZ(withMargin(transform.dim.z / 2));
+			shapeConvex = BtCylinderShapeZ.create(vec1);
 		}
 		else if (shape == ControllerShape.Capsule) {
 			var r = transform.dim.x / 2;
-			_shapeConvex = BtCapsuleShapeZ.create(
+			shapeConvex = BtCapsuleShapeZ.create(
 				withMargin(r), // Radius
 				withMargin(transform.dim.z - r * 2)); // Height between 2 sphere centers
 		}
 
-		var _transform = BtTransform.create();
-		_transform.setIdentity();
-		_transform.setOrigin(BtVector3.create(transform.worldx(), transform.worldy(), transform.worldz()));
+		trans1.setIdentity();
+		vec1.setX(transform.worldx());
+		vec1.setY(transform.worldy());
+		vec1.setZ(transform.worldz());
+		trans1.setOrigin(vec1);
 		var rot = transform.world.getQuat();
-		_transform.setRotation(BtQuaternion.create(rot.x, rot.y, rot.z, rot.w));
+		quat1.setX(rot.x);
+		quat1.setY(rot.y);
+		quat1.setZ(rot.z);
+		quat1.setW(rot.w);
+		trans1.setRotation(quat1);
 
 		body = BtPairCachingGhostObject.create();
-		body.setCollisionShape(isConvexHull ? _shapeConvexHull : _shapeConvex);
+		body.setCollisionShape(isConvexHull ? shapeConvexHull : shapeConvex);
 		body.setCollisionFlags(BtCollisionObject.CF_CHARACTER_OBJECT);
-		body.setWorldTransform(_transform);
+		body.setWorldTransform(trans1);
 		body.setFriction(friction);
 		body.setRollingFriction(friction);
 		body.setRestitution(restitution);
 		#if js
-		character = BtKinematicCharacterController.create(body, isConvexHull ? _shapeConvexHull : _shapeConvex, 0.5, 2);
+		character = BtKinematicCharacterController.create(body, isConvexHull ? shapeConvexHull : shapeConvex, 0.5, 2);
 		#elseif cpp
-		character = BtKinematicCharacterController.create(body, isConvexHull ? _shapeConvexHull : _shapeConvex, 0.5, BtVector3.create(0.0, 0.0, 1.0));
+		character = BtKinematicCharacterController.create(body, isConvexHull ? shapeConvexHull : shapeConvex, 0.5, BtVector3.create(0.0, 0.0, 1.0));
 		#end
 		character.setJumpSpeed(jumpSpeed);
 		character.setUseGhostSweepTest(true);
@@ -155,7 +170,7 @@ class KinematicCharacterController extends Trait {
 		if (onReady != null) onReady();
 	}
 
-	function lateUpdate():Void {
+	function lateUpdate() {
 		if (!ready) return;
 		if (object.animation != null || animated) {
 			syncTransform();
@@ -184,15 +199,15 @@ class KinematicCharacterController extends Trait {
 		return character.onGround();
 	}
 
-	public function setJumpSpeed(jumpSpeed:Float):Void {
+	public function setJumpSpeed(jumpSpeed:Float) {
 		character.setJumpSpeed(jumpSpeed);
 	}
 
-	public function setFallSpeed(fallSpeed:Float):Void {
+	public function setFallSpeed(fallSpeed:Float) {
 		character.setFallSpeed(fallSpeed);
 	}
 
-	public function setMaxSlope(slopeRadians:Float):Void {
+	public function setMaxSlope(slopeRadians:Float) {
 		return character.setMaxSlope(slopeRadians);
 	}
 
@@ -200,15 +215,18 @@ class KinematicCharacterController extends Trait {
 		return character.getMaxSlope();
 	}
 
-	public function setMaxJumpHeight(maxJumpHeight:Float):Void {
+	public function setMaxJumpHeight(maxJumpHeight:Float) {
 		character.setMaxJumpHeight(maxJumpHeight);
 	}
 
-	public function setWalkDirection(walkDirection:Vec4):Void {
-		character.setWalkDirection(BtVector3.create(walkDirection.x, walkDirection.y, walkDirection.z));
+	public function setWalkDirection(walkDirection:Vec4) {
+		vec1.setX(walkDirection.x);
+		vec1.setY(walkDirection.y);
+		vec1.setZ(walkDirection.z);
+		character.setWalkDirection(vec1);
 	}
 
-	public function setUpInterpolate(value:Bool):Void {
+	public function setUpInterpolate(value:Bool) {
 		character.setUpInterpolate(value);
 	}
 
@@ -218,75 +236,97 @@ class KinematicCharacterController extends Trait {
 	}
 	#elseif cpp
 	public function jump(v:Vec4):Void{
-		character.jump(BtVector3.create(v.x, v.y, v.z));
+		vec1.setX(v.x);
+		vec1.setY(v.y);
+		vec1.setZ(v.z);
+		character.jump(vec1);
 	}
 	#end
 
-	public function removeFromWorld():Void {
+	public function removeFromWorld() {
 		if (physics != null) physics.removeKinematicCharacterController(this);
 	}
 
-	public function activate():Void {
+	public function activate() {
 		body.activate(false);
 	}
 
-	public function disableGravity():Void {
+	public function disableGravity() {
 		#if js
 		character.setGravity(0.0);
 		#elseif cpp
-		character.setGravity(BtVector3.create(0.0, 0.0, 0.0));
+		vec1.setX(0);
+		vec1.setY(0);
+		vec1.setZ(0);
+		character.setGravity(vec1);
 		#end
 	}
 
-	public function enableGravity():Void {
+	public function enableGravity() {
 		#if js
 		character.setGravity(Math.abs(physics.world.getGravity().z()) * 3.0); // 9.8 * 3.0 in cpp source code
 		#elseif cpp
-		character.setGravity(BtVector3.create(physics.world.getGravity().x() * 3.0, physics.world.getGravity().y() * 3.0, physics.world.getGravity().z() * 3.0));
+		vec1.setX(physics.world.getGravity().x() * 3.0);
+		vec1.setY(physics.world.getGravity().y() * 3.0);
+		vec1.setZ(physics.world.getGravity().z() * 3.0);
+		character.setGravity(vec1);
 		#end
 	}
 
 	#if js
-	public function setGravity(f:Float):Void {
+	public function setGravity(f:Float) {
 		character.setGravity(f);
 	}
 	#elseif cpp
-	public function setGravity(v:Vec4):Void {
-		character.setGravity(BtVector3.create(v.x, v.y, v.z));
+	public function setGravity(v:Vec4) {
+		vec1.setX(v.x);
+		vec1.setY(v.y);
+		vec1.setZ(v.z);
+		character.setGravity(vec1);
 	}
 	#end
 
-	public function setActivationState(newState:Int):Void {
+	public function setActivationState(newState:Int) {
 		body.setActivationState(newState);
 	}
 
-	public function setFriction(f:Float):Void {
+	public function setFriction(f:Float) {
 		body.setFriction(f);
 		body.setRollingFriction(f);
 		this.friction = f;
 	}
 
-	public function syncTransform():Void {
+	public function syncTransform() {
 		var t = transform;
 		t.buildMatrix();
-		var trans = BtTransform.create();
-		trans.setOrigin(BtVector3.create(t.worldx(), t.worldy(), t.worldz()));
+		vec1.setX(t.worldx());
+		vec1.setY(t.worldy());
+		vec1.setZ(t.worldz());
+		trans1.setOrigin(vec1);
 		var rot = t.world.getQuat();
-		trans.setRotation(BtQuaternion.create(rot.x, rot.y, rot.z, rot.w));
+		quat1.setX(rot.x);
+		quat1.setY(rot.y);
+		quat1.setZ(rot.z);
+		quat1.setW(rot.w);
+		trans1.setRotation(quat1);
+		//body.setCenterOfMassTransform(trans); // ?
 		if (currentScaleX != t.scale.x || currentScaleY != t.scale.y || currentScaleZ != t.scale.z) setScale(t.scale);
 		activate();
 	}
 
-	function setScale(v:Vec4):Void {
+	function setScale(v:Vec4) {
 		currentScaleX = v.x;
 		currentScaleY = v.y;
 		currentScaleZ = v.z;
-		if (isConvexHull) _shapeConvexHull.setLocalScaling(BtVector3.create(bodyScaleX * v.x, bodyScaleY * v.y, bodyScaleZ * v.z));
-		else _shapeConvex.setLocalScaling(BtVector3.create(bodyScaleX * v.x, bodyScaleY * v.y, bodyScaleZ * v.z));
+		vec1.setX(bodyScaleX * v.x);
+		vec1.setY(bodyScaleY * v.y);
+		vec1.setZ(bodyScaleZ * v.z);
+		if (isConvexHull) shapeConvexHull.setLocalScaling(vec1);
+		else shapeConvex.setLocalScaling(vec1);
 		physics.world.updateSingleAabb(body);
 	}
 
-	function addPointsToConvexHull(shape:BtConvexHullShapePointer, scale:Vec4, margin:Float):Void {
+	function addPointsToConvexHull(shape:BtConvexHullShapePointer, scale:Vec4, margin:Float) {
 		var positions = cast(object, MeshObject).data.geom.positions;
 
 		var sx = scale.x * (1.0 - margin);
@@ -294,7 +334,10 @@ class KinematicCharacterController extends Trait {
 		var sz = scale.z * (1.0 - margin);
 
 		for (i in 0...Std.int(positions.length / 3)) {
-			shape.addPoint(BtVector3.create(positions[i * 3] * sx, positions[i * 3 + 1] * sy, positions[i * 3 + 2] * sz), true);
+			vec1.setX(positions[i * 3] * sx);
+			vec1.setY(positions[i * 3 + 1] * sy);
+			vec1.setZ(positions[i * 3 + 2] * sz);
+			shape.addPoint(vec1, true);
 		}
 	}
 }

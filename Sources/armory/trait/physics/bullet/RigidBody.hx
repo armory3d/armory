@@ -7,21 +7,17 @@ import iron.math.Vec4;
 import iron.object.Transform;
 import iron.object.MeshObject;
 
-	/**
-	 * RigidBody is used to allow objects to interact with Physics in your game including collisions and gravity.
-	 * RigidBody can also be used with the getContacts method to detect collisions and run appropriate code.
-	 * The Bullet physics engine is used for these calculations.
-	 */
+/**
+ * RigidBody is used to allow objects to interact with Physics in your game including collisions and gravity.
+ * RigidBody can also be used with the getContacts method to detect collisions and run appropriate code.
+ * The Bullet physics engine is used for these calculations.
+ */
 @:access(armory.trait.physics.bullet.PhysicsWorld)
 class RigidBody extends iron.Trait {
 
 	var shape:Shape;
-	var _motionState:BtMotionStatePointer;
-	var _shape:BtCollisionShapePointer;
-
 	public var physics:PhysicsWorld;
 	public var transform:Transform = null;
-
 	public var mass:Float;
 	public var friction:Float;
 	public var restitution:Float;
@@ -42,19 +38,37 @@ class RigidBody extends iron.Trait {
 	var currentScaleZ:Float;
 
 	public var body:BtRigidBodyPointer = null;
+	public var motionState:BtMotionStatePointer;
+	public var btshape:BtCollisionShapePointer;
 	public var ready = false;
-
 	static var nextId = 0;
 	public var id = 0;
-
 	public var onReady:Void->Void = null;
 	public var onContact:Array<RigidBody->Void> = null;
+
+	static var nullvec = true;
+	static var vec1:BtVector3;
+	static var vec2:BtVector3;
+	static var vec3:BtVector3;
+	static var quat1:BtQuaternion;
+	static var trans1:BtTransform;
+	static var trans2:BtTransform;
 
 	public function new(mass = 1.0, shape = Shape.Box, friction = 0.5, restitution = 0.0, collisionMargin = 0.0,
 						linearDamping = 0.04, angularDamping = 0.1, animated = false,
 						linearFactors:Array<Float> = null, angularFactors:Array<Float> = null,
 						group = 1, trigger = false, deactivationParams:Array<Float> = null) {
 		super();
+
+		if (nullvec) {
+			nullvec = false;
+			vec1 = BtVector3.create(0, 0, 0);
+			vec2 = BtVector3.create(0, 0, 0);
+			vec3 = BtVector3.create(0, 0, 0);
+			quat1 = BtQuaternion.create(0, 0, 0, 0);
+			trans1 = BtTransform.create();
+			trans2 = BtTransform.create();
+		} 
 
 		this.mass = mass;
 		this.shape = shape;
@@ -93,35 +107,34 @@ class RigidBody extends iron.Trait {
 		transform = object.transform;
 		physics = armory.trait.physics.PhysicsWorld.active;
 
-		_shape = null;
 		if (shape == Shape.Box) {
-			_shape = BtBoxShape.create(BtVector3.create(
-				withMargin(transform.dim.x / 2),
-				withMargin(transform.dim.y / 2),
-				withMargin(transform.dim.z / 2)));
+			vec1.setX(withMargin(transform.dim.x / 2));
+			vec1.setY(withMargin(transform.dim.y / 2));
+			vec1.setZ(withMargin(transform.dim.z / 2));
+			btshape = BtBoxShape.create(vec1);
 		}
 		else if (shape == Shape.Sphere) {
-			_shape = BtSphereShape.create(withMargin(transform.dim.x / 2));
+			btshape = BtSphereShape.create(withMargin(transform.dim.x / 2));
 		}
 		else if (shape == Shape.ConvexHull) {
-			var _shapeConvex = BtConvexHullShape.create();
-			fillConvexHull(_shapeConvex, transform.scale, collisionMargin);
-			_shape = _shapeConvex;
+			var shapeConvex = BtConvexHullShape.create();
+			fillConvexHull(shapeConvex, transform.scale, collisionMargin);
+			btshape = shapeConvex;
 		}
 		else if (shape == Shape.Cone) {
-			_shape = BtConeShapeZ.create(
+			btshape = BtConeShapeZ.create(
 				withMargin(transform.dim.x / 2), // Radius
 				withMargin(transform.dim.z));	  // Height
 		}
 		else if (shape == Shape.Cylinder) {
-			_shape = BtCylinderShapeZ.create(BtVector3.create(
-				withMargin(transform.dim.x / 2),
-				withMargin(transform.dim.y / 2),
-				withMargin(transform.dim.z / 2)));
+			vec1.setX(withMargin(transform.dim.x / 2));
+			vec1.setY(withMargin(transform.dim.y / 2));
+			vec1.setZ(withMargin(transform.dim.z / 2));
+			btshape = BtCylinderShapeZ.create(vec1);
 		}
 		else if (shape == Shape.Capsule) {
 			var r = transform.dim.x / 2;
-			_shape = BtCapsuleShapeZ.create(
+			btshape = BtCapsuleShapeZ.create(
 				withMargin(r), // Radius
 				withMargin(transform.dim.z - r * 2)); // Height between 2 sphere centers
 		}
@@ -129,9 +142,9 @@ class RigidBody extends iron.Trait {
 			var meshInterface = BtTriangleMesh.create(true, true);
 			fillTriangleMesh(meshInterface, transform.scale);
 			if (mass > 0) {
-				var _shapeGImpact = BtGImpactMeshShape.create(meshInterface);
-				_shapeGImpact.updateBound();
-				_shape = _shapeGImpact;
+				var shapeGImpact = BtGImpactMeshShape.create(meshInterface);
+				shapeGImpact.updateBound();
+				btshape = shapeGImpact;
 				if (!physics.gimpactRegistered) {
 					#if js
 					GImpactCollisionAlgorithm.create().registerAlgorithm(physics.dispatcher);
@@ -142,28 +155,37 @@ class RigidBody extends iron.Trait {
 				}
 			}
 			else {
-				_shape = BtBvhTriangleMeshShape.create(meshInterface, true, true);
+				btshape = BtBvhTriangleMeshShape.create(meshInterface, true, true);
 			}
 		}
 		//else if (shape == Shape.Terrain) {
 			// var data:Array<Dynamic> = [];
-			// _shape = BtHeightfieldTerrainShape.create(3, 3, data, 1, -10, 10, 2, 0, true);
+			// btshape = BtHeightfieldTerrainShape.create(3, 3, data, 1, -10, 10, 2, 0, true);
 		//}
 
-		var _transform = BtTransform.create();
-		_transform.setIdentity();
-		_transform.setOrigin(BtVector3.create(transform.worldx(), transform.worldy(), transform.worldz()));
+		trans1.setIdentity();
+		vec1.setX(transform.worldx());
+		vec1.setY(transform.worldy());
+		vec1.setZ(transform.worldz());
+		trans1.setOrigin(vec1);
 		var rot = transform.world.getQuat();
-		_transform.setRotation(BtQuaternion.create(rot.x, rot.y, rot.z, rot.w));
+		quat1.setX(rot.x);
+		quat1.setY(rot.y);
+		quat1.setZ(rot.z);
+		quat1.setW(rot.w);
+		trans1.setRotation(quat1);
 
-		var _centerOfMassOffset = BtTransform.create();
-		_centerOfMassOffset.setIdentity();
-		_motionState = BtDefaultMotionState.create(_transform, _centerOfMassOffset);
+		var centerOfMassOffset = trans2;
+		centerOfMassOffset.setIdentity();
+		motionState = BtDefaultMotionState.create(trans1, centerOfMassOffset);
 
-		var _inertia = BtVector3.create(0, 0, 0);
-		if (mass > 0) _shape.calculateLocalInertia(mass, _inertia);
-		var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shape, _inertia);
-		body = BtRigidBody.create(_bodyCI);
+		vec1.setX(0);
+		vec1.setY(0);
+		vec1.setZ(0);
+		var inertia = vec1;
+		if (mass > 0) btshape.calculateLocalInertia(mass, inertia);
+		var bodyCI = BtRigidBodyConstructionInfo.create(mass, motionState, btshape, inertia);
+		body = BtRigidBody.create(bodyCI);
 		body.setFriction(friction);
 		body.setRollingFriction(friction);
 		body.setRestitution(restitution);
@@ -206,6 +228,10 @@ class RigidBody extends iron.Trait {
 		physics.addRigidBody(this);
 
 		if (onReady != null) onReady();
+
+		#if js
+		Ammo.destroy(bodyCI);
+		#end
 	}
 
 	function lateUpdate() {
@@ -243,7 +269,10 @@ class RigidBody extends iron.Trait {
 	}
 
 	public function disableGravity() {
-		body.setGravity(BtVector3.create(0, 0, 0));
+		vec1.setX(0);
+		vec1.setY(0);
+		vec1.setZ(0);
+		body.setGravity(vec1);
 	}
 
 	public function enableGravity() {
@@ -251,7 +280,10 @@ class RigidBody extends iron.Trait {
 	}
 
 	public function setGravity(v:Vec4) {
-		body.setGravity(BtVector3.create(v.x, v.y, v.z));
+		vec1.setX(v.x);
+		vec1.setY(v.y);
+		vec1.setZ(v.z);
+		body.setGravity(vec1);
 	}
 
 	public function setActivationState(newState:Int) {
@@ -265,31 +297,48 @@ class RigidBody extends iron.Trait {
 
 	public function applyForce(force:Vec4, loc:Vec4 = null) {
 		activate();
+		vec1.setX(force.x);
+		vec1.setY(force.y);
+		vec1.setZ(force.z);
 		if (loc == null) {
-			body.applyCentralForce(BtVector3.create(force.x, force.y, force.z));
+			body.applyCentralForce(vec1);
 		}
 		else {
-			body.applyForce(BtVector3.create(force.x, force.y, force.z), BtVector3.create(loc.x, loc.y, loc.z));
+			vec2.setX(loc.x);
+			vec2.setY(loc.y);
+			vec2.setZ(loc.z);
+			body.applyForce(vec1, vec2);
 		}
 	}
 
 	public function applyImpulse(impulse:Vec4, loc:Vec4 = null) {
 		activate();
+		vec1.setX(impulse.x);
+		vec1.setY(impulse.y);
+		vec1.setZ(impulse.z);
 		if (loc == null) {
-			body.applyCentralImpulse(BtVector3.create(impulse.x, impulse.y, impulse.z));
+			body.applyCentralImpulse(vec1);
 		}
 		else {
-			body.applyImpulse(BtVector3.create(impulse.x, impulse.y, impulse.z),
-								  BtVector3.create(loc.x, loc.y, loc.z));
+			vec2.setX(loc.x);
+			vec2.setY(loc.y);
+			vec2.setZ(loc.z);
+			body.applyImpulse(vec1, vec2);
 		}
 	}
 
 	public function setLinearFactor(x:Float, y:Float, z:Float) {
-		body.setLinearFactor(BtVector3.create(x, y, z));
+		vec1.setX(x);
+		vec1.setY(y);
+		vec1.setZ(z);
+		body.setLinearFactor(vec1);
 	}
 
 	public function setAngularFactor(x:Float, y:Float, z:Float) {
-		body.setAngularFactor(BtVector3.create(x, y, z));
+		vec1.setX(x);
+		vec1.setY(y);
+		vec1.setZ(z);
+		body.setAngularFactor(vec1);
 	}
 
 	public function getLinearVelocity():Vec4 {
@@ -298,7 +347,10 @@ class RigidBody extends iron.Trait {
 	}
 
 	public function setLinearVelocity(x:Float, y:Float, z:Float) {
-		body.setLinearVelocity(BtVector3.create(x, y, z));
+		vec1.setX(x);
+		vec1.setY(y);
+		vec1.setZ(z);
+		body.setLinearVelocity(vec1);
 	}
 
 	public function getAngularVelocity():Vec4 {
@@ -307,7 +359,10 @@ class RigidBody extends iron.Trait {
 	}
 
 	public function setAngularVelocity(x:Float, y:Float, z:Float) {
-		body.setAngularVelocity(BtVector3.create(x, y, z));
+		vec1.setX(x);
+		vec1.setY(y);
+		vec1.setZ(z);
+		body.setAngularVelocity(vec1);
 	}
 
 	public function setFriction(f:Float) {
@@ -328,14 +383,17 @@ class RigidBody extends iron.Trait {
 	public function syncTransform() {
 		var t = transform;
 		t.buildMatrix();
-		var trans = BtTransform.create();
-		trans.setOrigin(BtVector3.create(t.worldx(), t.worldy(), t.worldz()));
+		vec1.setX(t.worldx());
+		vec1.setY(t.worldy());
+		vec1.setZ(t.worldz());
+		trans1.setOrigin(vec1);
 		var rot = t.world.getQuat();
-		trans.setRotation(BtQuaternion.create(rot.x, rot.y, rot.z, rot.w));
-		body.setCenterOfMassTransform(trans);
-		// _motionState.getWorldTransform(trans);
-		// trans.setOrigin(BtVector3.create(t.loc.x, t.loc.y, t.loc.z));
-		// _motionState.setWorldTransform(trans);
+		quat1.setX(rot.x);
+		quat1.setY(rot.y);
+		quat1.setZ(rot.z);
+		quat1.setW(rot.w);
+		trans1.setRotation(quat1);
+		body.setCenterOfMassTransform(trans1);
 		if (currentScaleX != t.scale.x || currentScaleY != t.scale.y || currentScaleZ != t.scale.z) setScale(t.scale);
 		activate();
 	}
@@ -344,7 +402,10 @@ class RigidBody extends iron.Trait {
 		currentScaleX = v.x;
 		currentScaleY = v.y;
 		currentScaleZ = v.z;
-		_shape.setLocalScaling(BtVector3.create(bodyScaleX * v.x, bodyScaleY * v.y, bodyScaleZ * v.z));
+		vec1.setX(bodyScaleX * v.x);
+		vec1.setY(bodyScaleY * v.y);
+		vec1.setZ(bodyScaleZ * v.z);
+		btshape.setLocalScaling(vec1);
 		physics.world.updateSingleAabb(body);
 	}
 
@@ -356,7 +417,10 @@ class RigidBody extends iron.Trait {
 		var sz = scale.z * (1.0 - margin);
 
 		for (i in 0...Std.int(positions.length / 3)) {
-			shape.addPoint(BtVector3.create(positions[i * 3] * sx, positions[i * 3 + 1] * sy, positions[i * 3 + 2] * sz), true);
+			vec1.setX(positions[i * 3] * sx);
+			vec1.setY(positions[i * 3 + 1] * sy);
+			vec1.setZ(positions[i * 3 + 2] * sz);
+			shape.addPoint(vec1, true);
 		}
 	}
 
@@ -366,17 +430,16 @@ class RigidBody extends iron.Trait {
 
 		for (ar in indices) {
 			for (i in 0...Std.int(ar.length / 3)) {
-				triangleMesh.addTriangle(
-					BtVector3.create(positions[ar[i * 3 + 0] * 3 + 0] * scale.x,
-								  	 positions[ar[i * 3 + 0] * 3 + 1] * scale.y,
-								  	 positions[ar[i * 3 + 0] * 3 + 2] * scale.z),
-					BtVector3.create(positions[ar[i * 3 + 1] * 3 + 0] * scale.x,
-								  	 positions[ar[i * 3 + 1] * 3 + 1] * scale.y,
-								  	 positions[ar[i * 3 + 1] * 3 + 2] * scale.z),
-					BtVector3.create(positions[ar[i * 3 + 2] * 3 + 0] * scale.x,
-								  	 positions[ar[i * 3 + 2] * 3 + 1] * scale.y,
-								  	 positions[ar[i * 3 + 2] * 3 + 2] * scale.z)
-				);
+				vec1.setX(positions[ar[i * 3 + 0] * 3 + 0] * scale.x);
+				vec1.setY(positions[ar[i * 3 + 0] * 3 + 1] * scale.y);
+				vec1.setZ(positions[ar[i * 3 + 0] * 3 + 2] * scale.z);
+				vec2.setX(positions[ar[i * 3 + 1] * 3 + 0] * scale.x);
+				vec2.setY(positions[ar[i * 3 + 1] * 3 + 1] * scale.y);
+				vec2.setZ(positions[ar[i * 3 + 1] * 3 + 2] * scale.z);
+				vec3.setX(positions[ar[i * 3 + 2] * 3 + 0] * scale.x);
+				vec3.setY(positions[ar[i * 3 + 2] * 3 + 1] * scale.y);
+				vec3.setZ(positions[ar[i * 3 + 2] * 3 + 2] * scale.z);
+				triangleMesh.addTriangle(vec1, vec2, vec3);
 			}
 		}
 	}

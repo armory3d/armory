@@ -33,6 +33,8 @@ class SoftBody extends Trait {
 
 	public var body:BtSoftBodyPointer;
 
+	static var helpers:BtSoftBodyHelpers = null;
+
 	public function new(shape = SoftShape.Cloth, bend = 0.5, mass = 1.0, margin = 0.04) {
 		super();
 		this.shape = shape;
@@ -111,40 +113,41 @@ class SoftBody extends Trait {
 		var numtri = 0;
 		for (ar in geom.indices) numtri += Std.int(ar.length / 3);
 
-		var softBodyHelpers = BtSoftBodyHelpers.create();
-#if js
-		body = softBodyHelpers.CreateFromTriMesh(wrdinfo, cast positions, cast vecind, numtri);
-#elseif cpp
-		untyped __cpp__("body = softBodyHelpers.CreateFromTriMesh(wrdinfo, positions->self.data, vecind->self.data, numtri);");
-#end
+		if (helpers == null) helpers = BtSoftBodyHelpers.create();
+		#if js
+		body = helpers.CreateFromTriMesh(wrdinfo, cast positions, cast vecind, numtri);
+		#elseif cpp
+		untyped __cpp__("body = helpers.CreateFromTriMesh(wrdinfo, positions->self.data, vecind->self.data, numtri);");
+		#end
 
 		// body.generateClusters(4);
-#if js
+		
+		#if js
 		var cfg = body.get_m_cfg();
 		cfg.set_viterations(10);
 		cfg.set_piterations(10);
 		// cfg.set_collisions(0x0001 + 0x0020 + 0x0040); // self collision
 		// cfg.set_collisions(0x11); // Soft-rigid, soft-soft
-
 		if (shape == SoftShape.Volume) {
 			cfg.set_kDF(0.1);
 			cfg.set_kDP(0.01);
 			cfg.set_kPR(bend);
 		}
-#elseif cpp
+		
+		#elseif cpp
+		
 		var cfg = body.m_cfg;
 		cfg.viterations = 10;
 		cfg.piterations = 10;
 		// cfg.collisions = 0x0001 + 0x0020 + 0x0040;
-
 		if (shape == SoftShape.Volume) {
 			cfg.kDF = 0.1;
 			cfg.kDP = 0.01;
 			cfg.kPR = bend;
 		}
-#end
+		#end
+
 		body.setTotalMass(mass, false);
-		
 		body.getCollisionShape().setMargin(margin);
 
 		physics.world.addSoftBody(body, 1, -1);
@@ -171,11 +174,11 @@ class SoftBody extends Trait {
 		#end
 		var numVerts = Std.int(v.length / l);
 
-#if js
+		#if js
 		var nodes = body.get_m_nodes();
-#elseif cpp
+		#elseif cpp
 		var nodes = body.m_nodes;
-#end
+		#end
 
 		for (i in 0...numVerts) {
 			var node = nodes.at(i);

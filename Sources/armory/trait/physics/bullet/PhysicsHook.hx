@@ -26,8 +26,22 @@ class PhysicsHook extends Trait {
 	var hookRB:BtRigidBodyPointer = null;
 	#end
 
+	static var nullvec = true;
+	static var vec1:BtVector3;
+	static var quat1:BtQuaternion;
+	static var trans1:BtTransform;
+	static var trans2:BtTransform;
+
 	public function new(targetName:String, verts:Array<Float>) {
 		super();
+
+		if (nullvec) {
+			nullvec = false;
+			vec1 = BtVector3.create(0, 0, 0);
+			quat1 = BtQuaternion.create(0, 0, 0, 0);
+			trans1 = BtTransform.create();
+			trans2 = BtTransform.create();
+		}
 
 		this.targetName = targetName;
 		this.verts = verts;
@@ -51,26 +65,28 @@ class PhysicsHook extends Trait {
 		if (sb != null && sb.ready) {
 
 			// Place static rigid body at target location
-			var _inertia = BtVector3.create(0, 0, 0);
-			var _shape = BtSphereShape.create(0.01);
-			var _transform = BtTransform.create();
-			_transform.setIdentity();
-			_transform.setOrigin(BtVector3.create(
-				targetTransform.loc.x,
-				targetTransform.loc.y,
-				targetTransform.loc.z));
-			_transform.setRotation(BtQuaternion.create(
-				targetTransform.rot.x,
-				targetTransform.rot.y,
-				targetTransform.rot.z,
-				targetTransform.rot.w));
-			var _centerOfMassOffset = BtTransform.create();
-			_centerOfMassOffset.setIdentity();
-			var _motionState = BtDefaultMotionState.create(_transform, _centerOfMassOffset);
+			trans1.setIdentity();
+			vec1.setX(targetTransform.loc.x);
+			vec1.setY(targetTransform.loc.y);
+			vec1.setZ(targetTransform.loc.z);
+			trans1.setOrigin(vec1);
+			quat1.setX(targetTransform.rot.x);
+			quat1.setY(targetTransform.rot.y);
+			quat1.setZ(targetTransform.rot.z);
+			quat1.setW(targetTransform.rot.w);
+			trans1.setRotation(quat1);
+			var centerOfMassOffset = trans2;
+			centerOfMassOffset.setIdentity();
 			var mass = 0.0;
-			_shape.calculateLocalInertia(mass, _inertia);
-			var _bodyCI = BtRigidBodyConstructionInfo.create(mass, _motionState, _shape, _inertia);
-			hookRB = BtRigidBody.create(_bodyCI);
+			var motionState = BtDefaultMotionState.create(trans1, centerOfMassOffset);
+			var inertia = vec1;
+			inertia.setX(0);
+			inertia.setY(0);
+			inertia.setZ(0);
+			var shape = BtSphereShape.create(0.01);
+			shape.calculateLocalInertia(mass, inertia);
+			var bodyCI = BtRigidBodyConstructionInfo.create(mass, motionState, shape, inertia);
+			hookRB = BtRigidBody.create(bodyCI);
 
 			#if js
 			var nodes = sb.body.get_m_nodes();
@@ -108,17 +124,25 @@ class PhysicsHook extends Trait {
 		// Rigid body hook
 		var rb1:RigidBody = object.getTrait(RigidBody);
 		if (rb1 != null && rb1.ready) {
-			var btrans = BtTransform.create();
-			btrans.setIdentity();
-			var dx = targetTransform.worldx() - object.transform.worldx();
-			var dy = targetTransform.worldy() - object.transform.worldy();
-			var dz = targetTransform.worldz() - object.transform.worldz();
-			btrans.setOrigin(BtVector3.create(dx, dy, dz));
-			constraint = BtGeneric6DofConstraint.create(rb1.body, btrans, false);
-			constraint.setLinearLowerLimit(BtVector3.create(0, 0, 0));
-			constraint.setLinearUpperLimit(BtVector3.create(0, 0, 0));
-			constraint.setAngularLowerLimit(BtVector3.create(-10, -10, -10));
-			constraint.setAngularUpperLimit(BtVector3.create(10, 10, 10));
+			trans1.setIdentity();
+			vec1.setX(targetTransform.worldx() - object.transform.worldx());
+			vec1.setY(targetTransform.worldy() - object.transform.worldy());
+			vec1.setZ(targetTransform.worldz() - object.transform.worldz());
+			trans1.setOrigin(vec1);
+			constraint = BtGeneric6DofConstraint.create(rb1.body, trans1, false);
+			vec1.setX(0);
+			vec1.setY(0);
+			vec1.setZ(0);
+			constraint.setLinearLowerLimit(vec1);
+			constraint.setLinearUpperLimit(vec1);
+			vec1.setX(-10);
+			vec1.setY(-10);
+			vec1.setZ(-10);
+			constraint.setAngularLowerLimit(vec1);
+			vec1.setX(10);
+			vec1.setY(10);
+			vec1.setZ(10);
+			constraint.setAngularUpperLimit(vec1);
 			physics.world.addConstraint(constraint, false);
 			return;
 		}
@@ -130,26 +154,25 @@ class PhysicsHook extends Trait {
 	function update() {
 		#if arm_physics_soft
 		if (hookRB != null) {
-			var _transform = BtTransform.create();
-			_transform.setIdentity();
-			_transform.setOrigin(BtVector3.create(
-				targetTransform.world.getLoc().x,
-				targetTransform.world.getLoc().y,
-				targetTransform.world.getLoc().z));
-			_transform.setRotation(BtQuaternion.create(
-				targetTransform.world.getQuat().x,
-				targetTransform.world.getQuat().y,
-				targetTransform.world.getQuat().z,
-				targetTransform.world.getQuat().w));
-			hookRB.setWorldTransform(_transform);
+			trans1.setIdentity();
+			vec1.setX(targetTransform.world.getLoc().x);
+			vec1.setY(targetTransform.world.getLoc().y);
+			vec1.setZ(targetTransform.world.getLoc().z);
+			trans1.setOrigin(vec1);
+			quat1.setX(targetTransform.world.getQuat().x);
+			quat1.setY(targetTransform.world.getQuat().y);
+			quat1.setZ(targetTransform.world.getQuat().z);
+			quat1.setW(targetTransform.world.getQuat().w);
+			trans1.setRotation(quat1);
+			hookRB.setWorldTransform(trans1);
 		}
 		#end
 
 		// if (constraint != null) {
-		// 	var dx = targetTransform.worldx() - object.transform.worldx();
-		// 	var dy = targetTransform.worldy() - object.transform.worldy();
-		// 	var dz = targetTransform.worldz() - object.transform.worldz();
-		// 	var pivot = BtVector3.create(dx, dy, dz);
+		// 	vec1.setX(targetTransform.worldx() - object.transform.worldx());
+		// 	vec1.setY(targetTransform.worldy() - object.transform.worldy());
+		// 	vec1.setZ(targetTransform.worldz() - object.transform.worldz());
+		// 	var pivot = vec1;
 		// 	#if js
 		// 	constraint.getFrameOffsetA().setOrigin(pivot);
 		// 	#elseif cpp

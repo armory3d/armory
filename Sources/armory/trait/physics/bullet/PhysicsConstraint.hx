@@ -16,8 +16,25 @@ class PhysicsConstraint extends iron.Trait {
 	var limits:Array<Float>;
 	var con:BtTypedConstraintPointer = null;
 
+	static var nullvec = true;
+	static var vec1:BtVector3;
+	static var vec2:BtVector3;
+	static var vec3:BtVector3;
+	static var trans1:BtTransform;
+	static var trans2:BtTransform;
+
 	public function new(body1:String, body2:String, type:String, disableCollisions:Bool, breakingThreshold:Float, limits:Array<Float> = null) {
 		super();
+
+		if (nullvec) {
+			nullvec = false;
+			vec1 = BtVector3.create(0, 0, 0);
+			vec2 = BtVector3.create(0, 0, 0);
+			vec3 = BtVector3.create(0, 0, 0);
+			trans1 = BtTransform.create();
+			trans2 = BtTransform.create();
+		}
+		
 		this.body1 = body1;
 		this.body2 = body2;
 		this.type = type;
@@ -41,40 +58,62 @@ class PhysicsConstraint extends iron.Trait {
 			var t = object.transform;
 			var t1 = target1.transform;
 			var t2 = target2.transform;
-			var p1 = BtVector3.create(t.worldx() - t1.worldx(), t.worldy() - t1.worldy(), t.worldz() - t1.worldz());
-			var p2 = BtVector3.create(t.worldx() - t2.worldx(), t.worldy() - t2.worldy(), t.worldz() - t2.worldz());
-			var tr1 = BtTransform.create();
-			tr1.setIdentity();
-			tr1.setOrigin(p1);
-			var tr2 = BtTransform.create();
-			tr2.setIdentity();
-			tr2.setOrigin(p2);
-
+			trans1.setIdentity();
+			vec1.setX(t.worldx() - t1.worldx());
+			vec1.setY(t.worldy() - t1.worldy());
+			vec1.setZ(t.worldz() - t1.worldz());
+			trans1.setOrigin(vec1);
+			trans2.setIdentity();
+			vec2.setX(t.worldx() - t2.worldx());
+			vec2.setY(t.worldy() - t2.worldy());
+			vec2.setZ(t.worldz() - t2.worldz());
+			trans2.setOrigin(vec2);
 			
 			if (type == "GENERIC" || type == "FIXED" || type == "POINT") {
-				var c = BtGeneric6DofConstraint.create2(rb1.body, rb2.body, tr1, tr2, false);
+				var c = BtGeneric6DofConstraint.create2(rb1.body, rb2.body, trans1, trans2, false);
 				if (type == "POINT") {
-					c.setLinearLowerLimit(BtVector3.create(0, 0, 0));
-					c.setLinearUpperLimit(BtVector3.create(0, 0, 0));
+					vec1.setX(0);
+					vec1.setY(0);
+					vec1.setZ(0);
+					c.setLinearLowerLimit(vec1);
+					c.setLinearUpperLimit(vec1);
 				}
 				else if (type == "FIXED") {
-					c.setLinearLowerLimit(BtVector3.create(0, 0, 0));
-					c.setLinearUpperLimit(BtVector3.create(0, 0, 0));
-					c.setAngularLowerLimit(BtVector3.create(0, 0, 0));
-					c.setAngularUpperLimit(BtVector3.create(0, 0, 0));
+					vec1.setX(0);
+					vec1.setY(0);
+					vec1.setZ(0);
+					c.setLinearLowerLimit(vec1);
+					c.setLinearUpperLimit(vec1);
+					c.setAngularLowerLimit(vec1);
+					c.setAngularUpperLimit(vec1);
 				}
 				else { // GENERIC
 					// limit_x:Bool = limits[0] > 0.0;
-					c.setLinearLowerLimit(BtVector3.create(limits[1], limits[4], limits[7]));
-					c.setLinearUpperLimit(BtVector3.create(limits[2], limits[5], limits[8]));
-					c.setAngularLowerLimit(BtVector3.create(limits[10], limits[13], limits[16]));
-					c.setAngularUpperLimit(BtVector3.create(limits[11], limits[14], limits[17]));
+					vec1.setX(limits[1]);
+					vec1.setY(limits[4]);
+					vec1.setZ(limits[7]);
+					c.setLinearLowerLimit(vec1);
+					vec1.setX(limits[2]);
+					vec1.setY(limits[5]);
+					vec1.setZ(limits[8]);
+					c.setLinearUpperLimit(vec1);
+					vec1.setX(limits[10]);
+					vec1.setY(limits[13]);
+					vec1.setZ(limits[16]);
+					c.setAngularLowerLimit(vec1);
+					vec1.setX(limits[11]);
+					vec1.setY(limits[14]);
+					vec1.setZ(limits[17]);
+					c.setAngularUpperLimit(vec1);
 				}
 				con = cast c;
 			}
 			else if (type == "HINGE") {
-				var axis = BtVector3.create(0, 0, 1.0);
-				var c = BtHingeConstraint.create(rb1.body, rb2.body, p2, p1, axis, axis);
+				var axis = vec3;
+				axis.setX(0);
+				axis.setY(0);
+				axis.setZ(1);
+				var c = BtHingeConstraint.create(rb1.body, rb2.body, vec2, vec1, axis, axis);
 				con = cast c;
 			}
 			// else if (type == "SLIDER") {}
@@ -85,6 +124,12 @@ class PhysicsConstraint extends iron.Trait {
 			physics.world.addConstraint(con, disableCollisions);
 		}
 		else notifyOnInit(init); // Rigid body not initialized yet
+	}
+
+	public function removeFromWorld() {
+		#if js
+		Ammo.destroy(con);
+		#end
 	}
 }
 
