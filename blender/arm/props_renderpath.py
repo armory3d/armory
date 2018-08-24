@@ -40,6 +40,8 @@ def update_preset(self, context):
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Linear'
         rpdat.arm_diffuse_model = 'Lambert'
+        rpdat.arm_radiance = False
+        rpdat.arm_radiance_sky = False
     elif self.rp_preset == 'Forward':
         rpdat.rp_renderer = 'Forward'
         rpdat.rp_depthprepass = True
@@ -72,6 +74,8 @@ def update_preset(self, context):
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Anisotropic'
         rpdat.arm_diffuse_model = 'Lambert'
+        rpdat.arm_radiance = True
+        rpdat.arm_radiance_sky = True
     elif self.rp_preset == 'Deferred':
         rpdat.rp_renderer = 'Deferred'
         rpdat.arm_material_model = 'Full'
@@ -103,6 +107,8 @@ def update_preset(self, context):
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Anisotropic'
         rpdat.arm_diffuse_model = 'Lambert'
+        rpdat.arm_radiance = True
+        rpdat.arm_radiance_sky = True
     elif self.rp_preset == 'Max (Render)':
         rpdat.rp_renderer = 'Deferred'
         rpdat.rp_shadowmap = '8192'
@@ -137,6 +143,8 @@ def update_preset(self, context):
         rpdat.arm_material_model = 'Full'
         rpdat.arm_texture_filter = 'Anisotropic'
         rpdat.arm_diffuse_model = 'OrenNayar'
+        rpdat.arm_radiance = True
+        rpdat.arm_radiance_sky = True
     elif self.rp_preset == 'VR':
         rpdat.rp_renderer = 'Forward'
         rpdat.rp_depthprepass = False
@@ -169,6 +177,8 @@ def update_preset(self, context):
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Point'
         rpdat.arm_diffuse_model = 'Lambert'
+        rpdat.arm_radiance = True
+        rpdat.arm_radiance_sky = True
     elif self.rp_preset == 'Mobile':
         rpdat.rp_renderer = 'Forward'
         rpdat.rp_depthprepass = False
@@ -201,6 +211,8 @@ def update_preset(self, context):
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Linear'
         rpdat.arm_diffuse_model = 'Lambert'
+        rpdat.arm_radiance = False
+        rpdat.arm_radiance_sky = False
     elif self.rp_preset == 'Max (Game)':
         rpdat.rp_renderer = 'Deferred'
         rpdat.rp_shadowmap = '4096'
@@ -237,6 +249,8 @@ def update_preset(self, context):
         rpdat.arm_material_model = 'Full'
         rpdat.arm_texture_filter = 'Anisotropic'
         rpdat.arm_diffuse_model = 'Lambert'
+        rpdat.arm_radiance = True
+        rpdat.arm_radiance_sky = True
     elif self.rp_preset == 'Lightmap':
         rpdat.rp_renderer = 'Forward'
         rpdat.rp_depthprepass = False
@@ -269,6 +283,8 @@ def update_preset(self, context):
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Linear'
         rpdat.arm_diffuse_model = 'Lambert'
+        rpdat.arm_radiance = False
+        rpdat.arm_radiance_sky = False
     update_renderpath(self, context)
 
 def update_renderpath(self, context):

@@ -14,4 +14,4 @@ class PauseTraitNode(Node, ArmLogicTreeNode):
         self.inputs.new('NodeSocketShader', 'Trait')
         self.outputs.new('ArmNodeSocketAction', 'Out')
 
-add_node(PauseTraitNode, category='Animation')
+add_node(PauseTraitNode, category='Action')

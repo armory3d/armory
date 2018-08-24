@@ -14,4 +14,4 @@ class ResumeTraitNode(Node, ArmLogicTreeNode):
         self.inputs.new('NodeSocketShader', 'Trait')
         self.outputs.new('ArmNodeSocketAction', 'Out')
 
-add_node(ResumeTraitNode, category='Animation')
+add_node(ResumeTraitNode, category='Action')
