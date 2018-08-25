@@ -930,7 +930,7 @@ class ArmoryExporter:
                     ext = '' if not self.is_compress(objref) else '.zip'
                     if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
                         ext = '.json'
-                    o['data_ref'] = 'mesh_' + oid + ext + '/' + oid
+                    o['data_ref'] = 'mesh_' + oid + ext + ':' + oid
                 else:
                     o['data_ref'] = oid
 
@@ -2160,6 +2160,7 @@ class ArmoryExporter:
             self.export_mesh(objectRef, scene)
 
     def execute(self, context, filepath, scene=None):
+        wrd = bpy.data.worlds['Arm']
         profile_time = time.time()
 
         self.output = {}
@@ -2223,7 +2224,11 @@ class ArmoryExporter:
 
         self.process_skinned_meshes()
 
-        self.output['name'] = arm.utils.safestr(self.scene.name)
+        scene_subpath = ''
+        if wrd.arm_modding_mode == 'Mod':
+            scene_subpath = wrd.arm_modding_folder + '/' + wrd.arm_project_package + '/'
+
+        self.output['name'] = scene_subpath + arm.utils.safestr(self.scene.name)
         if self.filepath.endswith('.zip'):
             self.output['name'] += '.zip'
         elif not bpy.data.worlds['Arm'].arm_minimize:

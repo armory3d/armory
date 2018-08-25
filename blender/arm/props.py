@@ -152,6 +152,15 @@ def init_properties():
     bpy.types.World.arm_asset_compression = BoolProperty(name="Asset Compression", description="Enable scene data compression", default=False, update=invalidate_compiler_cache)
     bpy.types.World.arm_write_config = BoolProperty(name="Write Config", description="Allow this project to be configured at runtime via a JSON file", default=False, update=invalidate_compiler_cache)
     bpy.types.World.arm_compiler_inline = BoolProperty(name="Compiler Inline", description="Favor speed over size", default=True, update=invalidate_compiler_cache)
+    bpy.types.World.arm_modding_mode = EnumProperty(
+        items = [('None', 'None', 'None'),
+                 ('Game', 'Game', 'Game'),
+                 ('Mod', 'Mod', 'Mod')],
+        name="Modding Mode", default='None', description='The modding mode')
+    bpy.types.World.arm_modding_game_blend = StringProperty(name="Game Blend", description="The .blend file for the parent game", default="", subtype="FILE_PATH")
+    bpy.types.World.arm_modding_folder = StringProperty(name="Modding Folder", description="The name of the folder that mods will be put in", default="Mods")
+    bpy.types.World.arm_modding_expose_classes = StringProperty(name="Expose Classes", description="Regular expression for classes that should exposed to mods. Matches against full class path including package name.", default="(kha|iron|armory)")
+    bpy.types.World.arm_modding_include_packages = StringProperty(name="Include Packages", description="Comma separated list of packages to include in game. Use to ensure packages requried by mods don't get excluded from compilation.", default="armory.logicnode")
     bpy.types.World.arm_winmode = EnumProperty(
         items = [('Window', 'Window', 'Window'),
                  ('Fullscreen', 'Fullscreen', 'Fullscreen')],
