@@ -38,7 +38,6 @@ def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
     func(path)
 
-# Write khafile.js
 def write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce, is_viewport, import_traits, import_logicnodes):
     sdk_path = arm.utils.get_sdk_path()
     rel_path = arm.utils.get_relative_paths() # Convert absolute paths to relative
@@ -241,6 +240,12 @@ project.addSources('Sources');
         if arm.utils.get_viewport_controls() == 'azerty':
             assets.add_khafile_def('arm_azerty')
 
+        if os.path.exists(arm.utils.get_fp() + '/Bundled/config.arm'):
+            assets.add_khafile_def('arm_config')
+
+        if is_publish and wrd.arm_loadscreen:
+            assets.add_khafile_def('arm_loadscreen')
+
         # if bpy.data.scenes[0].unit_settings.system_rotation == 'DEGREES':
             # assets.add_khafile_def('arm_degrees')
 
@@ -292,8 +297,7 @@ def write_config(resx, resy):
     with open(p + '/config.arm', 'w') as f:
         f.write(json.dumps(output, sort_keys=True, indent=4))
 
-# Write Main.hx
-def write_main(scene_name, resx, resy, is_play, is_viewport, is_publish):
+def write_mainhx(scene_name, resx, resy, is_play, is_viewport, is_publish):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     scene_ext = '.zip' if (bpy.data.scenes[scene_name].arm_compress and is_publish) else ''
@@ -302,135 +306,67 @@ def write_main(scene_name, resx, resy, is_play, is_viewport, is_publish):
     winmode = get_winmode(wrd.arm_winmode)
     if is_viewport:
         winmode = 0
-    has_config = os.path.exists(arm.utils.get_fp() + '/Bundled/config.arm')
+    # Detect custom render path
+    pathpack = 'armory'
+    if os.path.isfile(arm.utils.get_fp() + '/Sources/' + wrd.arm_project_package + '/renderpath/RenderPathCreator.hx'):
+        pathpack = wrd.arm_project_package
+    elif rpdat.rp_driver != 'Armory':
+        pathpack = rpdat.rp_driver.lower()
+
     with open('Sources/Main.hx', 'w') as f:
         f.write(
 """// Auto-generated
 package ;
 class Main {
     public static inline var projectName = '""" + arm.utils.safestr(wrd.arm_project_name) + """';
-    public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';
-    static var state:Int;
-    #if js
-    static function loadLib(name:String) {
-        kha.Assets.loadBlobFromPath(name, function(b:kha.Blob) {
-            untyped __js__("(1, eval)({0})", b.toString());
-            state--;
-            start();
-        });
-    }
-    static function loadLibAmmo(name:String) {
-        kha.Assets.loadBlobFromPath(name, function(b:kha.Blob) {
-            var print = function(s:String) { trace(s); };
-            var loaded = function() { state--; start(); };
-            untyped __js__("(1, eval)({0})", b.toString());
-            untyped __js__("Ammo({print:print}).then(loaded)");
-        });
-    }
-    #end""")
+    public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';""")
 
         if rpdat.rp_gi == 'Voxel GI' or rpdat.rp_gi == 'Voxel AO':
             f.write("""
     public static inline var voxelgiVoxelSize = """ + str(rpdat.arm_voxelgi_dimensions) + " / " + str(rpdat.rp_voxelgi_resolution) + """;
-    public static inline var voxelgiHalfExtents = """ + str(round(rpdat.arm_voxelgi_dimensions / 2.0)) + """;
-""")
+    public static inline var voxelgiHalfExtents = """ + str(round(rpdat.arm_voxelgi_dimensions / 2.0)) + """;""")
 
         if rpdat.arm_rp_resolution == 'Custom':
             f.write("""
-    public static inline var resolutionSize = """ + str(rpdat.arm_rp_resolution_size) + """;
-""")
+    public static inline var resolutionSize = """ + str(rpdat.arm_rp_resolution_size) + """;""")
 
         f.write("""
-    public static function main() {
-""")
+    public static function main() {""")
         if rpdat.arm_skin != 'Off':
             f.write("""
-        iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;
-""")
+        iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;""")
         if rpdat.rp_shadowmap_cascades != '1':
             f.write("""
         iron.object.LampObject.cascadeCount = """ + str(rpdat.rp_shadowmap_cascades) + """;
-        iron.object.LampObject.cascadeSplitFactor = """ + str(rpdat.arm_shadowmap_split) + """;
-""")
+        iron.object.LampObject.cascadeSplitFactor = """ + str(rpdat.arm_shadowmap_split) + """;""")
         if rpdat.arm_shadowmap_bounds != 1.0:
             f.write("""
-        iron.object.LampObject.cascadeBounds = """ + str(rpdat.arm_shadowmap_bounds) + """;
-""")
-        f.write("""
-        state = 1;
-        #if (js && arm_bullet) state++; loadLibAmmo("ammo.js"); #end
-        #if (js && arm_navigation) state++; loadLib("recast.js"); #end
-""")
-        if has_config:
-            f.write("""
-        state++; armory.data.Config.load(function() { state--; start(); });
-""")
-        f.write("""
-        state--; start();
-    }
-    static function start() {
-        if (state > 0) return;
-        if (armory.data.Config.raw == null) armory.data.Config.raw = { };
-        var config = armory.data.Config.raw;
-        if (config.window_mode == null) config.window_mode = """ + str(winmode) + """;
-        if (config.window_resizable == null) config.window_resizable = """ + ('true' if wrd.arm_winresize else 'false') + """;
-        if (config.window_minimizable == null) config.window_minimizable = """ + ('true' if wrd.arm_winminimize else 'false') + """;
-        if (config.window_maximizable == null) config.window_maximizable = """ + ('true' if wrd.arm_winmaximize else 'false') + """;
-        if (config.window_w == null) config.window_w = """ + str(resx) + """;
-        if (config.window_h == null) config.window_h = """ + str(resy) + """;
-        if (config.window_msaa == null) config.window_msaa = """ + str(int(rpdat.arm_samples_per_pixel)) + """;
-        if (config.window_vsync == null) config.window_vsync = """ + (('true' if wrd.arm_vsync else 'false')) + """;
-        armory.object.Uniforms.register();
-        var windowMode = config.window_mode == 0 ? kha.WindowMode.Window : kha.WindowMode.Fullscreen;
-        #if (kha_version < 1807) // TODO: deprecated
-        if (windowMode == kha.WindowMode.Fullscreen) { windowMode = kha.WindowMode.BorderlessWindow; config.window_w = kha.Display.width(0); config.window_h = kha.Display.height(0); }
-        kha.System.init({title: projectName, width: config.window_w, height: config.window_h, samplesPerPixel: config.window_msaa, vSync: config.window_vsync, windowMode: windowMode, resizable: config.window_resizable, maximizable: config.window_maximizable, minimizable: config.window_minimizable}, function() {
-        #else
-        var windowFeatures = 0;
-        if (config.window_resizable) windowFeatures |= kha.WindowOptions.FeatureResizable;
-        if (config.window_maximizable) windowFeatures |= kha.WindowOptions.FeatureMaximizable;
-        if (config.window_minimizable) windowFeatures |= kha.WindowOptions.FeatureMinimizable;
-        kha.System.start({title: projectName, width: config.window_w, height: config.window_h, window: {mode: windowMode, windowFeatures: windowFeatures}, framebuffer: {samplesPerPixel: config.window_msaa, verticalSync: config.window_vsync}}, function(window:kha.Window) {
-        #end
-            iron.App.init(function() {
-""")
+        iron.object.LampObject.cascadeBounds = """ + str(rpdat.arm_shadowmap_bounds) + """;""")
         if is_publish and wrd.arm_loadscreen:
             asset_references = list(set(assets.assets))
             loadscreen_class = 'armory.trait.internal.LoadingScreen'
             if os.path.isfile(arm.utils.get_fp() + '/Sources/' + wrd.arm_project_package + '/LoadingScreen.hx'):
                 loadscreen_class = wrd.arm_project_package + '.LoadingScreen'
             f.write("""
-                function drawLoading(g:kha.graphics2.Graphics) {
-                    if (iron.Scene.active != null && iron.Scene.active.ready) iron.App.removeRender2D(drawLoading);
-                    else """ + loadscreen_class + """.render(g, iron.data.Data.assetsLoaded, """ + str(len(asset_references)) + """);
-                }
-                iron.App.notifyOnRender2D(drawLoading);
-""")
-
+        armory.system.Starter.numAssets = """ + str(len(asset_references)) + """;
+        armory.system.Starter.drawLoading = """ + loadscreen_class + """.render;""")
         f.write("""
-                iron.Scene.setActive('""" + arm.utils.safestr(scene_name) + scene_ext + """', function(object:iron.object.Object) {
-""")
-
-        # Detect custom render path
-        pathpack = 'armory'
-        if os.path.isfile(arm.utils.get_fp() + '/Sources/' + wrd.arm_project_package + '/renderpath/RenderPathCreator.hx'):
-            pathpack = wrd.arm_project_package
-        elif rpdat.rp_driver != 'Armory':
-            pathpack = rpdat.rp_driver.lower()
-
-        f.write("""
-                    iron.RenderPath.setActive(""" + pathpack + """.renderpath.RenderPathCreator.get());
-""")
-
-        f.write("""
-                });
-            });
-        });
+        armory.system.Starter.main(
+            '""" + arm.utils.safestr(scene_name) + scene_ext + """',
+            """ + str(winmode) + """,
+            """ + ('true' if wrd.arm_winresize else 'false') + """,
+            """ + ('true' if wrd.arm_winminimize else 'false') + """,
+            """ + ('true' if wrd.arm_winmaximize else 'false') + """,
+            """ + str(resx) + """,
+            """ + str(resy) + """,
+            """ + str(int(rpdat.arm_samples_per_pixel)) + """,
+            """ + ('true' if wrd.arm_vsync else 'false') + """,
+            """ + pathpack + """.renderpath.RenderPathCreator.get
+        );
     }
 }
 """)
 
-# Write index.html
 def write_indexhtml(w, h, is_publish):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()

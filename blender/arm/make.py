@@ -185,6 +185,11 @@ def export_data(fp, sdk_path):
     if not os.path.isdir(build_dir + '/compiled/Shaders/std'):
         shutil.copytree(raw_shaders_path + 'std', build_dir + '/compiled/Shaders/std')
 
+    # Write config.arm
+    resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
+    if wrd.arm_write_config:
+        write_data.write_config(resx, resy)
+
     # Write khafile.js
     enable_dce = state.is_publish and wrd.arm_dce
     import_logic = not state.is_publish and arm.utils.logic_editor_space() != None
@@ -192,10 +197,7 @@ def export_data(fp, sdk_path):
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     scene_name = arm.utils.get_project_scene_name()
-    resx, resy = arm.utils.get_render_resolution(arm.utils.get_active_scene())
-    if wrd.arm_write_config:
-        write_data.write_config(resx, resy)
-    write_data.write_main(scene_name, resx, resy, state.is_play, state.is_viewport, state.is_publish)
+    write_data.write_mainhx(scene_name, resx, resy, state.is_play, state.is_viewport, state.is_publish)
     if scene_name != state.last_scene or resx != state.last_resx or resy != state.last_resy:
         wrd.arm_recompile = True
         state.last_resx = resx

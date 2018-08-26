@@ -457,7 +457,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Off', 'Off', 'Off'),
                ('Auto', 'Auto', 'Auto')],
         name="Blending", description="Blending pass", default='Auto', update=update_blending_state)
-    rp_stereo = BoolProperty(name="Stereo", description="Stereo rendering", default=False, update=update_renderpath)
+    rp_stereo = BoolProperty(name="VR", description="Stereo rendering", default=False, update=update_renderpath)
     rp_greasepencil = BoolProperty(name="Grease Pencil", description="Render Grease Pencil data", default=False, update=update_renderpath)
     rp_ocean = BoolProperty(name="Ocean", description="Ocean pass", default=False, update=update_renderpath)
     

@@ -39,7 +39,7 @@ class Inc {
 		var target = shadowMapName();
 		if (target == "shadowMapCube") {
 			#if kha_webgl
-			// Bind empty map to non-cubemap sampler to keep webgl happy
+			// Bind empty map to non-cubemap sampler
 			path.bindTarget("arm_empty", "shadowMap");
 			#end
 			path.bindTarget("shadowMapCube", "shadowMapCube");
@@ -47,7 +47,7 @@ class Inc {
 		else {
 			#if kha_webgl
 			// Bind empty map to cubemap sampler
-			if (!path.lampIsSun()) path.bindTarget("arm_empty_cube", "shadowMapCube");
+			path.bindTarget("arm_empty_cube", "shadowMapCube");
 			#end
 			path.bindTarget("shadowMap", "shadowMap");
 		}
