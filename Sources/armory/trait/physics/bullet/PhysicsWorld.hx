@@ -75,7 +75,6 @@ class PhysicsWorld extends Trait {
 		}
 		// Scene switch
 		else {
-			for (rb in active.rbMap) removeRigidBody(rb);
 			world = active.world;
 			dispatcher = active.dispatcher;
 			gimpactRegistered = active.gimpactRegistered;
@@ -86,7 +85,6 @@ class PhysicsWorld extends Trait {
 		active = this;
 
 		notifyOnLateUpdate(lateUpdate);
-		iron.Scene.active.notifyOnRemove(resetWorld);
 	}
 
 	function resetWorld() {
@@ -147,9 +145,9 @@ class PhysicsWorld extends Trait {
 		if (world != null) world.removeRigidBody(body.body);
 		rbMap.remove(body.id);
 		#if js
-		Ammo.destroy(body.body);
 		Ammo.destroy(body.motionState);
 		Ammo.destroy(body.btshape);
+		Ammo.destroy(body.body);
 		#elseif cpp
 		var cbody = body.body;
 		untyped __cpp__("delete cbody");
