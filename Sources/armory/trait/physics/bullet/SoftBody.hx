@@ -33,7 +33,9 @@ class SoftBody extends Trait {
 
 	public var body:BtSoftBodyPointer;
 
-	static var helpers:BtSoftBodyHelpers = null;
+	static var helpers:BtSoftBodyHelpers;
+	static var helpersCreated = false;
+	static var worldInfo:BtSoftBodyWorldInfo;
 
 	public function new(shape = SoftShape.Cloth, bend = 0.5, mass = 1.0, margin = 0.04) {
 		super();
@@ -108,16 +110,19 @@ class SoftBody extends Trait {
 		object.transform.rot.set(0, 0, 0, 1);
 		object.transform.buildMatrix();
 
-		var wrdinfo = physics.world.getWorldInfo();
 		var vecind = fromU32(geom.indices);
 		var numtri = 0;
 		for (ar in geom.indices) numtri += Std.int(ar.length / 3);
 
-		if (helpers == null) helpers = BtSoftBodyHelpers.create();
+		if (!helpersCreated) {
+			helpers = BtSoftBodyHelpers.create();
+			worldInfo = physics.world.getWorldInfo();
+			helpersCreated = true;
+		}
 		#if js
-		body = helpers.CreateFromTriMesh(wrdinfo, cast positions, cast vecind, numtri);
+		body = helpers.CreateFromTriMesh(worldInfo, cast positions, cast vecind, numtri);
 		#elseif cpp
-		untyped __cpp__("body = helpers.CreateFromTriMesh(wrdinfo, positions->self.data, vecind->self.data, numtri);");
+		untyped __cpp__("body = helpers.CreateFromTriMesh(worldInfo, positions->self.data, (int*)vecind->self.data, numtri);");
 		#end
 
 		// body.generateClusters(4);
@@ -135,15 +140,13 @@ class SoftBody extends Trait {
 		}
 		
 		#elseif cpp
-		
-		var cfg = body.m_cfg;
-		cfg.viterations = 10;
-		cfg.piterations = 10;
-		// cfg.collisions = 0x0001 + 0x0020 + 0x0040;
+		body.m_cfg.viterations = 10;
+		body.m_cfg.piterations = 10;
+		// body.m_cfg.collisions = 0x0001 + 0x0020 + 0x0040;
 		if (shape == SoftShape.Volume) {
-			cfg.kDF = 0.1;
-			cfg.kDP = 0.01;
-			cfg.kPR = bend;
+			body.m_cfg.kDF = 0.1;
+			body.m_cfg.kDP = 0.01;
+			body.m_cfg.kPR = bend;
 		}
 		#end
 
