@@ -85,11 +85,9 @@ class PhysicsWorld extends Trait {
 		active = this;
 
 		notifyOnLateUpdate(lateUpdate);
-	}
-
-	function resetWorld() {
-		reset();
-		sceneRemoved = true;
+		iron.Scene.active.notifyOnRemove(function() {
+			sceneRemoved = true;
+		});
 	}
 
 	public function reset() {
@@ -142,6 +140,8 @@ class PhysicsWorld extends Trait {
 	}
 
 	public function removeRigidBody(body:RigidBody) {
+		if (body.destroyed) return;
+		body.destroyed = true;
 		if (world != null) world.removeRigidBody(body.body);
 		rbMap.remove(body.id);
 		#if js

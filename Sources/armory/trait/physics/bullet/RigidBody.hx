@@ -25,6 +25,7 @@ class RigidBody extends iron.Trait {
 	public var linearDamping:Float;
 	public var angularDamping:Float;
 	public var animated:Bool;
+	public var destroyed = false;
 	var linearFactors:Array<Float>;
 	var angularFactors:Array<Float>;
 	var deactivationParams:Array<Float>;
