@@ -47,7 +47,7 @@ vec2 lightPlane;
 		#endif
 	#endif
 #endif
-#ifdef _LampClouds
+#ifdef _LightClouds
 	uniform sampler2D texClouds;
 	uniform float time;
 #endif
@@ -64,8 +64,8 @@ uniform vec2 cameraProj;
 	uniform mat4 invVP;
 #endif
 
-#ifdef _LampColTex
-	uniform sampler2D texlampcolor;
+#ifdef _LightColTex
+	uniform sampler2D texlightcolor;
 #endif
 
 in vec2 texCoord;
@@ -150,9 +150,9 @@ void main() {
 
 	fragColor.rgb *= lightColor;
 
-#ifdef _LampColTex
-	// fragColor.rgb *= texture(texlampcolor, envMapEquirect(l)).rgb;
-	fragColor.rgb *= pow(texture(texlampcolor, l.xy).rgb, vec3(2.2));
+#ifdef _LightColTex
+	// fragColor.rgb *= texture(texlightcolor, envMapEquirect(l)).rgb;
+	fragColor.rgb *= pow(texture(texlightcolor, l.xy).rgb, vec3(2.2));
 #endif
 	
 #ifdef _SSS
@@ -174,7 +174,7 @@ void main() {
 	visibility *= tvis;
 #endif
 
-#ifdef _LampClouds
+#ifdef _LightClouds
 	visibility *= texture(texClouds, vec2(p.xy / 100.0 + time / 80.0)).r * dot(n, vec3(0,0,1));
 #endif
 

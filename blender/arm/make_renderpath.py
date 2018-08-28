@@ -15,8 +15,8 @@ def add_world_defs():
     if rpdat.arm_ssrs:
         wrd.world_defs += '_SSRS'
 
-    if rpdat.arm_two_sided_area_lamp:
-        wrd.world_defs += '_TwoSidedAreaLamp'
+    if rpdat.arm_two_sided_area_light:
+        wrd.world_defs += '_TwoSidedAreaLight'
 
     # Store contexts
     if rpdat.rp_hdr == False:
@@ -26,16 +26,16 @@ def add_world_defs():
     if rpdat.arm_diffuse_model == 'OrenNayar':
         wrd.world_defs += '_OrenNayar'
 
-    # TODO: Lamp texture test..
-    if wrd.arm_lamp_texture != '':
-        wrd.world_defs += '_LampColTex'
+    # TODO: Light texture test..
+    if wrd.arm_light_texture != '':
+        wrd.world_defs += '_LightColTex'
 
-    if wrd.arm_lamp_ies_texture != '':
-        wrd.world_defs += '_LampIES'
+    if wrd.arm_light_ies_texture != '':
+        wrd.world_defs += '_LightIES'
         assets.add_embedded_data('iestexture.png')
 
-    if wrd.arm_lamp_clouds_texture != '':
-        wrd.world_defs += '_LampClouds'
+    if wrd.arm_light_clouds_texture != '':
+        wrd.world_defs += '_LightClouds'
         assets.add_embedded_data('cloudstexture.png')
 
     if rpdat.rp_renderer == 'Deferred':
@@ -114,10 +114,10 @@ def add_world_defs():
     if arm.utils.get_legacy_shaders() and not state.is_viewport:
         wrd.world_defs += '_Legacy'
 
-    # Area lamps
-    lamps = bpy.data.lights if bpy.app.version >= (2, 80, 1) else bpy.data.lamps
-    for lamp in lamps:
-        if lamp.type == 'AREA':
+    # Area lights
+    lights = bpy.data.lights if bpy.app.version >= (2, 80, 1) else bpy.data.lamps
+    for light in lights:
+        if light.type == 'AREA':
             wrd.world_defs += '_LTC'
             assets.add_khafile_def('arm_ltc')
             break

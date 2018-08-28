@@ -484,7 +484,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         items=[('On', 'On', 'On'),
                ('Off', 'Off', 'Off'), 
                ('Auto', 'Auto', 'Auto')],
-        name="Soft Shadows", description="Soft shadows with variable penumbra (spot and non-cascaded sun lamp supported)", default='Off', update=assets.invalidate_shader_cache)
+        name="Soft Shadows", description="Soft shadows with variable penumbra (spot and non-cascaded sun light supported)", default='Off', update=assets.invalidate_shader_cache)
     arm_soft_shadows_penumbra = IntProperty(name="Penumbra", description="Variable penumbra scale", default=1, min=0, max=10, update=assets.invalidate_shader_cache)
     arm_soft_shadows_distance = FloatProperty(name="Distance", description="Variable penumbra distance", default=1.0, min=0, max=10, update=assets.invalidate_shader_cache)
     arm_ssrs = BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
@@ -527,7 +527,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_ssr_half_res = BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
     rp_ssr_z_only = BoolProperty(name="Z Only", description="Trace in Z axis only", default=False, update=update_renderpath)
     rp_voxelgi_hdr = BoolProperty(name="HDR Voxels", description="Store voxels in RGBA64 instead of RGBA32", default=False, update=update_renderpath)
-    rp_voxelgi_relight = BoolProperty(name="Relight", description="Relight voxels when lamp is moved", default=True, update=update_renderpath)
+    rp_voxelgi_relight = BoolProperty(name="Relight", description="Relight voxels when light is moved", default=True, update=update_renderpath)
     arm_voxelgi_dimensions = FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_shader_cache)
     arm_voxelgi_revoxelize = BoolProperty(name="Revoxelize", description="Revoxelize scene each frame", default=False, update=assets.invalidate_shader_cache)
     arm_voxelgi_temporal = BoolProperty(name="Temporal Filter", description="Use temporal filtering to stabilize voxels", default=False, update=assets.invalidate_shader_cache)
@@ -642,7 +642,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name='Particles', description='Simulation method', default='GPU', update=assets.invalidate_shader_cache)
     # Material override flags
     arm_culling = BoolProperty(name="Culling", default=True)
-    arm_two_sided_area_lamp = BoolProperty(name="Two-Sided Area Lamps", description="Emit light from both faces of area lamp", default=False, update=assets.invalidate_shader_cache)
+    arm_two_sided_area_light = BoolProperty(name="Two-Sided Area Light", description="Emit light from both faces of area plane", default=False, update=assets.invalidate_shader_cache)
 
 class ArmRPList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):

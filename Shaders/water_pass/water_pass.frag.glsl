@@ -329,8 +329,8 @@ void main() {
 
 	// #ifndef _NoShadows
 	// if (lightShadow == 1) {
-	// 	vec4 lampPos = LWVP * vec4(surfacePoint.xyz, 1.0);
-	// 	if (lampPos.w > 0.0) fragColor.rgb *= shadowTest(lampPos.xyz / lampPos.w);
+	// 	vec4 lightPosition = LWVP * vec4(surfacePoint.xyz, 1.0);
+	// 	if (lightPosition.w > 0.0) fragColor.rgb *= shadowTest(lightPosition.xyz / lightPosition.w);
 	// }
 	// else if (lightShadow == 2) { // Cube
 	// 	vec3 lp = lightPos - surfacePoint.xyz;

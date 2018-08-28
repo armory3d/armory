@@ -24,28 +24,28 @@
 				},
 				{
 					"name": "shadowsBias",
-					"link": "_lampShadowsBias"
+					"link": "_lightShadowsBias"
 				},
 				{
 					"name": "LWVP",
-					"link": "_biasLampWorldViewProjectionMatrix"
+					"link": "_biasLightWorldViewProjectionMatrix"
 				},
 				{
 					"name": "lightType",
-					"link": "_lampType",
+					"link": "_lightType",
 					"ifdef": ["_Disabled"]
 				},
 				{
 					"name": "lightShadow",
-					"link": "_lampCastShadow"
+					"link": "_lightCastShadow"
 				},
 				{
 					"name": "lightProj",
-					"link": "_lampPlaneProj"
+					"link": "_lightPlaneProj"
 				},
 				{
 					"name": "lightPos",
-					"link": "_lampPosition"
+					"link": "_lightPosition"
 				}
 			],
 			"vertex_shader": "visibility_pass.vert.glsl",

@@ -29,7 +29,7 @@
 			"links": [
 				{
 					"name": "LWVP",
-					"link": "_biasLampWorldViewProjectionMatrix"
+					"link": "_biasLightWorldViewProjectionMatrix"
 				}
 			],
 			"texture_params": [],

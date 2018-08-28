@@ -34,7 +34,7 @@
 				},
 				{
 					"name": "light",
-					"link": "_lampPosition",
+					"link": "_lightPosition",
 					"ifdef": ["_CGlare"]
 				},
 				{

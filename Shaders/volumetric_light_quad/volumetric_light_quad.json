@@ -12,21 +12,21 @@
 				},
 				{
 					"name": "LWVP",
-					"link": "_biasLampWorldViewProjectionMatrix",
+					"link": "_biasLightWorldViewProjectionMatrix",
 					"ifndef": ["_CSM"]
 				},
 				{
 					"name": "shadowsBias",
-					"link": "_lampShadowsBias"
+					"link": "_lightShadowsBias"
 				},
 				{
 					"name": "lightPos",
-					"link": "_lampPosition",
+					"link": "_lightPosition",
 					"ifdef": ["_Disabled"]
 				},
 				{
 					"name": "lightRadius",
-					"link": "_lampRadius",
+					"link": "_lightRadius",
 					"ifdef": ["_Disabled"]
 				},
 				{
@@ -35,12 +35,12 @@
 				},
 				{
 					"name": "lightPlane",
-					"link": "_lampPlane",
+					"link": "_lightPlane",
 					"ifdef": ["_Disabled"]
 				},
 				{
 					"name": "lightShadow",
-					"link": "_lampCastShadow",
+					"link": "_lightCastShadow",
 					"ifdef": ["_Disabled"]
 				},
 				{
@@ -83,25 +83,25 @@
 				},
 				{
 					"name": "LWVP",
-					"link": "_biasLampWorldViewProjectionMatrix"
+					"link": "_biasLightWorldViewProjectionMatrix"
 				},
 				{
 					"name": "shadowsBias",
-					"link": "_lampShadowsBias"
+					"link": "_lightShadowsBias"
 				},
 				{
 					"name": "lightPos",
-					"link": "_lampPosition",
+					"link": "_lightPosition",
 					"ifdef": ["_Disabled"]
 				},
 				{
 					"name": "lightRadius",
-					"link": "_lampRadius",
+					"link": "_lightRadius",
 					"ifdef": ["_Disabled"]
 				},
 				{
 					"name": "lightColor",
-					"link": "_lampColor"
+					"link": "_lightColor"
 				},
 				{
 					"name": "snoise",
@@ -110,12 +110,12 @@
 				},
 				{
 					"name": "lightPlane",
-					"link": "_lampPlane",
+					"link": "_lightPlane",
 					"ifdef": ["_Disabled"]
 				},
 				{
 					"name": "lightShadow",
-					"link": "_lampCastShadow",
+					"link": "_lightCastShadow",
 					"ifdef": ["_Disabled"]
 				},
 				{

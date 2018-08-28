@@ -334,7 +334,7 @@ def init_properties():
     bpy.types.Scene.arm_export = BoolProperty(name="Export", description="Export scene data", default=True)
     # bpy.types.Scene.arm_gp_export = BoolProperty(name="Export GP", description="Export grease pencil data", default=True)
     bpy.types.Scene.arm_compress = BoolProperty(name="Compress", description="Pack data into zip file", default=False)
-    # For lamp
+    # For light
     if bpy.app.version >= (2, 80, 1):
         bpy.types.Light.arm_clip_start = FloatProperty(name="Clip Start", default=0.1)
         bpy.types.Light.arm_clip_end = FloatProperty(name="Clip End", default=50.0)
@@ -345,9 +345,9 @@ def init_properties():
         bpy.types.Lamp.arm_clip_end = FloatProperty(name="Clip End", default=50.0)
         bpy.types.Lamp.arm_fov = FloatProperty(name="Field of View", default=0.84)
         bpy.types.Lamp.arm_shadows_bias = FloatProperty(name="Bias", description="Depth offset to fight shadow acne", default=1.0)
-    bpy.types.World.arm_lamp_texture = StringProperty(name="Mask Texture", default="")
-    bpy.types.World.arm_lamp_ies_texture = StringProperty(name="IES Texture", default="")
-    bpy.types.World.arm_lamp_clouds_texture = StringProperty(name="Clouds Texture", default="")
+    bpy.types.World.arm_light_texture = StringProperty(name="Mask Texture", default="")
+    bpy.types.World.arm_light_ies_texture = StringProperty(name="IES Texture", default="")
+    bpy.types.World.arm_light_clouds_texture = StringProperty(name="Clouds Texture", default="")
 
     bpy.types.World.arm_rpcache_list = CollectionProperty(type=bpy.types.PropertyGroup)
     bpy.types.World.arm_scripts_list = CollectionProperty(type=bpy.types.PropertyGroup)

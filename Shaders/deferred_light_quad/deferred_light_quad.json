@@ -19,34 +19,34 @@
 				},
 				{
 					"name": "l",
-					"link": "_lampDirection"
+					"link": "_lightDirection"
 				},
 				{
 					"name": "lightColor",
-					"link": "_lampColor"
+					"link": "_lightColor"
 				},
 				{
 					"name": "lightShadow",
-					"link": "_lampCastShadow"
+					"link": "_lightCastShadow"
 				},
 				{
-					"name": "texlampcolor",
-					"link": "_lampColorTexture",
-					"ifdef": ["_LampColTex"]
+					"name": "texlightcolor",
+					"link": "_lightColorTexture",
+					"ifdef": ["_LightColTex"]
 				},
 				{
 					"name": "texClouds",
 					"link": "_cloudsTexture",
-					"ifdef": ["_LampClouds"]
+					"ifdef": ["_LightClouds"]
 				},
 				{
 					"name": "time",
 					"link": "_time",
-					"ifdef": ["_LampClouds"]
+					"ifdef": ["_LightClouds"]
 				},
 				{
 					"name": "shadowsBias",
-					"link": "_lampShadowsBias"
+					"link": "_lightShadowsBias"
 				},
 				{
 					"name": "eye",
@@ -63,12 +63,12 @@
 				},
 				{
 					"name": "lightPlane",
-					"link": "_lampPlane",
+					"link": "_lightPlane",
 					"ifdef": ["_SSS"]
 				},
 				{
 					"name": "LWVP",
-					"link": "_biasLampWorldViewProjectionMatrix",
+					"link": "_biasLightWorldViewProjectionMatrix",
 					"ifndef": ["_CSM"]
 				},
 				{

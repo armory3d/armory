@@ -30,7 +30,7 @@
 				},
 				{
 					"name": "ld",
-					"link": "_lampDirection"
+					"link": "_lightDirection"
 				},
 				{
 					"name": "invVP",
@@ -46,27 +46,27 @@
 				},
 				{
 					"name": "LWVP",
-					"link": "_biasLampWorldViewProjectionMatrix",
+					"link": "_biasLightWorldViewProjectionMatrix",
 					"ifdef": ["_Disabled"]
 				},
 				{
 					"name": "shadowsBias",
-					"link": "_lampShadowsBias",
+					"link": "_lightShadowsBias",
 					"ifdef": ["_Disabled"]
 				},
 				{
 					"name": "lightPlane",
-					"link": "_lampPlane",
+					"link": "_lightPlane",
 					"ifdef": ["_Disabled"]
 				},
 				{
 					"name": "lightShadow",
-					"link": "_lampCastShadow",
+					"link": "_lightCastShadow",
 					"ifdef": ["_Disabled"]
 				},
 				{
 					"name": "lightPos",
-					"link": "_lampPosition",
+					"link": "_lightPosition",
 					"ifdef": ["_Disabled"]
 				},
 				{

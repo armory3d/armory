@@ -3,7 +3,7 @@
 #include "compiled.glsl"
 #include "std/brdf.glsl"
 #include "std/math.glsl"
-#ifdef _LampIES
+#ifdef _LightIES
 #include "std/ies.glsl"
 #endif
 #ifdef _VoxelGIDirect
@@ -52,7 +52,7 @@ uniform sampler2D gbuffer2;
 #ifdef _DFRS
 	//!uniform sampler3D sdftex;
 #endif
-#ifdef _LampIES
+#ifdef _LightIES
 	//!uniform sampler2D texIES;
 #endif
 
@@ -71,10 +71,10 @@ uniform int lightShadow;
 uniform float shadowsBias;
 uniform vec2 spotlightData;
 #ifdef _LTC
-	uniform vec3 lampArea0;
-	uniform vec3 lampArea1;
-	uniform vec3 lampArea2;
-	uniform vec3 lampArea3;
+	uniform vec3 lightArea0;
+	uniform vec3 lightArea1;
+	uniform vec3 lightArea2;
+	uniform vec3 lightArea3;
 	uniform sampler2D sltcMat;
 	uniform sampler2D sltcMag;
 #endif
@@ -83,8 +83,8 @@ uniform vec3 eye;
 	//!uniform mat4 VP;
 #endif
 
-#ifdef _LampColTex
-	uniform sampler2D texlampcolor;
+#ifdef _LightColTex
+	uniform sampler2D texlightcolor;
 #endif
 
 in vec4 wvpposition;
@@ -168,7 +168,7 @@ void main() {
 
 	visibility *= attenuate(distance(p, lightPos));
 
-#ifdef _LampIES
+#ifdef _LightIES
 	visibility *= iesAttenuation(-l);
 #endif
 	if (lightType == 2) { // Spot
@@ -190,9 +190,9 @@ void main() {
 			vec3(0.0, t.z, 0.0),
 			vec3(t.w, 0.0, t.x));
 
-		float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lampArea0, lampArea1, lampArea2, lampArea3);
+		float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lightArea0, lightArea1, lightArea2, lightArea3);
 		ltcspec *= texture(sltcMag, tuv).a;
-		float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lampArea0, lampArea1, lampArea2, lampArea3);
+		float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3);
 		fragColor.rgb = albedo * ltcdiff + ltcspec * spec;
 	}
 	else {
@@ -225,9 +225,9 @@ void main() {
 
 	fragColor.rgb *= lightColor;
 
-#ifdef _LampColTex
-	// fragColor.rgb *= texture(texlampcolor, envMapEquirect(l)).rgb;
-	fragColor.rgb *= pow(texture(texlampcolor, l.xy).rgb, vec3(2.2));
+#ifdef _LightColTex
+	// fragColor.rgb *= texture(texlightcolor, envMapEquirect(l)).rgb;
+	fragColor.rgb *= pow(texture(texlightcolor, l.xy).rgb, vec3(2.2));
 #endif
 	
 #ifdef _SSS

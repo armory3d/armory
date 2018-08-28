@@ -158,7 +158,7 @@ float ltcEvaluate(vec3 N, vec3 V, float dotNV, vec3 P, mat3 Minv, vec3 points0, 
 	if (n >= 4) sum += integrateEdge(L3, L4);
 	if (n == 5) sum += integrateEdge(L4, L0);
 
-#ifdef _TwoSidedAreaLamp
+#ifdef _TwoSidedAreaLight
 	return abs(sum);
 #else
 	return max(0.0, -sum);

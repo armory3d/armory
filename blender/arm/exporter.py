@@ -38,7 +38,7 @@ AnimationTypeLinear = 1
 AnimationTypeBezier = 2
 ExportEpsilon = 1.0e-6
 
-structIdentifier = ["object", "bone_object", "mesh_object", "lamp_object", "camera_object", "speaker_object", "decal_object"]
+structIdentifier = ["object", "bone_object", "mesh_object", "light_object", "camera_object", "speaker_object", "decal_object"]
 
 subtranslationName = ["xloc", "yloc", "zloc"]
 subrotationName = ["xrot", "yrot", "zrot"]
@@ -1734,7 +1734,7 @@ class ArmoryExporter:
             if o['shadowmap_size'] > 1024:
                 o['shadows_bias'] *= 1 / (o['shadowmap_size'] / 1024) # Less bias for bigger maps
         if (objtype == 'POINT' or objtype == 'SPOT') and objref.shadow_soft_size > 0.1:
-            o['lamp_size'] = objref.shadow_soft_size * 10 # Match to Cycles
+            o['light_size'] = objref.shadow_soft_size * 10 # Match to Cycles
         gapi = arm.utils.get_gapi()
         mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
         if objtype == 'POINT' and not mobile_mat:
@@ -1775,7 +1775,7 @@ class ArmoryExporter:
             o['strength'] = 1000.0 * 0.026
             o['type'] = 'point'
 
-        self.output['lamp_datas'].append(o)
+        self.output['light_datas'].append(o)
 
     def get_camera_clear_color(self):
         if self.scene.world == None:
@@ -2142,7 +2142,7 @@ class ArmoryExporter:
 
     def export_objects(self, scene):
         if not ArmoryExporter.option_mesh_only:
-            self.output['lamp_datas'] = []
+            self.output['light_datas'] = []
             self.output['camera_datas'] = []
             self.output['speaker_datas'] = []
             for objectRef in self.lightArray.items():

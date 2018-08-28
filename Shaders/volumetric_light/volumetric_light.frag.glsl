@@ -50,10 +50,10 @@ void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatter
 	float visibility = 1.0;
 
 	if (lightShadow == 1) {
-		vec4 lampPos = LWVP * vec4(curPos, 1.0);
-		if (lampPos.w > 0.0) {
-			lampPos.xyz /= lampPos.w;
-			visibility = float(texture(shadowMap, lampPos.xy).r > lampPos.z - shadowsBias);
+		vec4 lightPosition = LWVP * vec4(curPos, 1.0);
+		if (lightPosition.w > 0.0) {
+			lightPosition.xyz /= lightPosition.w;
+			visibility = float(texture(shadowMap, lightPosition.xy).r > lightPosition.z - shadowsBias);
 		}
 	}
 	else { // Cubemap

@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import iron.object.LampObject;
+import iron.object.LightObject;
 
 class SetLightColorNode extends LogicNode {
 
@@ -9,7 +9,7 @@ class SetLightColorNode extends LogicNode {
 	}
 
 	override function run() {
-		var light:LampObject = inputs[1].get();
+		var light:LightObject = inputs[1].get();
 		var color:iron.math.Vec4 = inputs[2].get();
 		
 		if (light == null) return;

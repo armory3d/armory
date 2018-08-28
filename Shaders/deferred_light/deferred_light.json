@@ -15,73 +15,73 @@
 			"links": [
 				{
 					"name": "LVWVP",
-					"link": "_lampVolumeWorldViewProjectionMatrix"
+					"link": "_lightVolumeWorldViewProjectionMatrix"
 				},
 				{
 					"name": "lightPos",
-					"link": "_lampPosition"
+					"link": "_lightPosition"
 				},
 				{
 					"name": "lightProj",
-					"link": "_lampPlaneProj"
+					"link": "_lightPlaneProj"
 				},
 				{
 					"name": "lightDir",
-					"link": "_lampDirection"
+					"link": "_lightDirection"
 				},
 				{
 					"name": "lightType",
-					"link": "_lampType"
+					"link": "_lightType"
 				},
 				{
 					"name": "lightColor",
-					"link": "_lampColor"
+					"link": "_lightColor"
 				},
 				{
 					"name": "lightShadow",
-					"link": "_lampCastShadow"
+					"link": "_lightCastShadow"
 				},
 				{
-					"name": "texlampcolor",
-					"link": "_lampColorTexture",
-					"ifdef": ["_LampColTex"]
+					"name": "texlightcolor",
+					"link": "_lightColorTexture",
+					"ifdef": ["_LightColTex"]
 				},
 				{
 					"name": "texIES",
 					"link": "_iesTexture",
-					"ifdef": ["_LampIES"]
+					"ifdef": ["_LightIES"]
 				},
 				{
 					"name": "lightPlane",
-					"link": "_lampPlane",
+					"link": "_lightPlane",
 					"ifdef": ["_SSS"]
 				},
 				{
 					"name": "shadowsBias",
-					"link": "_lampShadowsBias"
+					"link": "_lightShadowsBias"
 				},
 				{
 					"name": "spotlightData",
-					"link": "_spotlampData"
+					"link": "_spotlightData"
 				},
 				{
-					"name": "lampArea0",
-					"link": "_lampArea0",
+					"name": "lightArea0",
+					"link": "_lightArea0",
 					"ifdef": ["_LTC"]
 				},
 				{
-					"name": "lampArea1",
-					"link": "_lampArea1",
+					"name": "lightArea1",
+					"link": "_lightArea1",
 					"ifdef": ["_LTC"]
 				},
 				{
-					"name": "lampArea2",
-					"link": "_lampArea2",
+					"name": "lightArea2",
+					"link": "_lightArea2",
 					"ifdef": ["_LTC"]
 				},
 				{
-					"name": "lampArea3",
-					"link": "_lampArea3",
+					"name": "lightArea3",
+					"link": "_lightArea3",
 					"ifdef": ["_LTC"]
 				},
 				{
@@ -104,7 +104,7 @@
 				},
 				{
 					"name": "LWVP",
-					"link": "_biasLampWorldViewProjectionMatrix"
+					"link": "_biasLightWorldViewProjectionMatrix"
 				},
 				{
 					"name": "VP",
@@ -117,7 +117,7 @@
 					"ifdef": ["_DFRS"]
 				}
 			],
-			"vertex_shader": "../include/pass_lamp_volume.vert.glsl",
+			"vertex_shader": "../include/pass_light_volume.vert.glsl",
 			"fragment_shader": "deferred_light.frag.glsl"
 		}
 	]

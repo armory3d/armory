@@ -59,7 +59,7 @@ def make(context_id, rpasses, shadowmap=False):
                 vert.write_attrib('vcolor = col;')
             vert.write('wposition += wnormal * disp * 0.1;')
             if shadowmap:
-                vert.add_uniform('mat4 LVP', '_lampViewProjectionMatrix')
+                vert.add_uniform('mat4 LVP', '_lightViewProjectionMatrix')
                 vert.write('gl_Position = LVP * vec4(wposition, 1.0);')
             else:
                 vert.add_uniform('mat4 VP', '_viewProjectionMatrix')
@@ -104,7 +104,7 @@ def make(context_id, rpasses, shadowmap=False):
                 tese.write_pre = False
 
             if shadowmap:
-                tese.add_uniform('mat4 LVP', '_lampViewProjectionMatrix')
+                tese.add_uniform('mat4 LVP', '_lightViewProjectionMatrix')
                 tese.write('wposition += wnormal * disp * 0.1;')
                 tese.write('gl_Position = LVP * vec4(wposition, 1.0);')
             else:
@@ -117,11 +117,11 @@ def make(context_id, rpasses, shadowmap=False):
         billboard = mat_state.material.arm_billboard
         if shadowmap:
             if billboard == 'spherical':
-                vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrixSphere')
+                vert.add_uniform('mat4 LWVP', '_lightWorldViewProjectionMatrixSphere')
             elif billboard == 'cylindrical':
-                vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrixCylinder')
+                vert.add_uniform('mat4 LWVP', '_lightWorldViewProjectionMatrixCylinder')
             else: # off
-                vert.add_uniform('mat4 LWVP', '_lampWorldViewProjectionMatrix')
+                vert.add_uniform('mat4 LWVP', '_lightWorldViewProjectionMatrix')
             vert.write('gl_Position = LWVP * spos;')
         else:
             if billboard == 'spherical':

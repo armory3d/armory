@@ -8,7 +8,7 @@
 			"links": [
 				{
 					"name": "LVWVP",
-					"link": "_lampVolumeWorldViewProjectionMatrix"
+					"link": "_lightVolumeWorldViewProjectionMatrix"
 				},
 				{
 					"name": "invVP",
@@ -16,11 +16,11 @@
 				},
 				{
 					"name": "LWVP",
-					"link": "_biasLampWorldViewProjectionMatrix"
+					"link": "_biasLightWorldViewProjectionMatrix"
 				},
 				{
 					"name": "shadowsBias",
-					"link": "_lampShadowsBias"
+					"link": "_lightShadowsBias"
 				},
 				{
 					"name": "screenSize",
@@ -32,11 +32,11 @@
 				},
 				{
 					"name": "lightPos",
-					"link": "_lampPosition"
+					"link": "_lightPosition"
 				},
 				{
 					"name": "lightRadius",
-					"link": "_lampRadius"
+					"link": "_lightRadius"
 				},
 				{
 					"name": "snoise",
@@ -44,15 +44,15 @@
 				},
 				{
 					"name": "lightProj",
-					"link": "_lampPlaneProj"
+					"link": "_lightPlaneProj"
 				},
 				{
 					"name": "lightShadow",
-					"link": "_lampCastShadow"
+					"link": "_lightCastShadow"
 				}
 			],
 			"texture_params": [],
-			"vertex_shader": "../include/pass_lamp_volume.vert.glsl",
+			"vertex_shader": "../include/pass_light_volume.vert.glsl",
 			"fragment_shader": "volumetric_light.frag.glsl"
 		}
 	]

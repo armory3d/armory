@@ -54,9 +54,9 @@ void main() {
 
 #ifndef _NoShadows
     if (lightShadow == 1) {
-        vec4 lampPos = LVP * vec4(wposition, 1.0);
-        vec3 lPos = lampPos.xyz / lampPos.w;
-        // if (lampPos.w > 0.0)
+        vec4 lightPosition = LVP * vec4(wposition, 1.0);
+        vec3 lPos = lightPosition.xyz / lightPosition.w;
+        // if (lightPosition.w > 0.0)
         if (texture(shadowMap, lPos.xy).r < lPos.z - shadowsBias) visibility = 0.0;
         // visibility = shadowTest(shadowMap, lPos, shadowsBias, shadowmapSize);
     }

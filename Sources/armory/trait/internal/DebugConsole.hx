@@ -277,10 +277,10 @@ class DebugConsole extends Trait {
 							var p = iron.Scene.active.world.getGlobalProbe();
 							p.raw.strength = ui.slider(Id.handle({value: p.raw.strength}), "Env Strength", 0.0, 5.0, true);
 						}
-						else if (Std.is(selectedObject, iron.object.LampObject)) {
-							selectedType = "(Lamp)";
-							var lamp = cast(selectedObject, iron.object.LampObject);
-							lamp.data.raw.strength = ui.slider(Id.handle({value: lamp.data.raw.strength / 10}), "Strength", 0.0, 5.0, true) * 10;
+						else if (Std.is(selectedObject, iron.object.LightObject)) {
+							selectedType = "(Light)";
+							var light = cast(selectedObject, iron.object.LightObject);
+							light.data.raw.strength = ui.slider(Id.handle({value: light.data.raw.strength / 10}), "Strength", 0.0, 5.0, true) * 10;
 						}
 						else if (Std.is(selectedObject, iron.object.CameraObject)) {
 							selectedType = "(Camera)";

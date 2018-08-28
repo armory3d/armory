@@ -30,8 +30,8 @@ class RenderPathForward {
 
 		#if rp_translucency
 		{
-			var hasLamp = iron.Scene.active.lamps.length > 0;
-			if (hasLamp) Inc.drawTranslucency("lbuf");
+			var hasLight = iron.Scene.active.lights.length > 0;
+			if (hasLight) Inc.drawTranslucency("lbuf");
 		}
 		#end
 	}
@@ -235,12 +235,12 @@ class RenderPathForward {
 
 	public static function commands() {
 
-		var hasLamp = iron.Scene.active.lamps.length > 0;
+		var hasLight = iron.Scene.active.lights.length > 0;
 
 		#if rp_shadowmap
 		{
-			if (hasLamp) {
-				Inc.drawShadowMap(iron.Scene.active.lamps[0]);
+			if (hasLight) {
+				Inc.drawShadowMap(iron.Scene.active.lights[0]);
 			}
 		}
 		#end
@@ -278,9 +278,9 @@ class RenderPathForward {
 			}
 
 			#if ((rp_gi == "Voxel GI") && (rp_voxelgi_relight))
-			// Relight if lamp was moved
-			for (lamp in iron.Scene.active.lamps) {
-				if (lamp.transform.diff()) { relight = true; break; }
+			// Relight if light was moved
+			for (light in iron.Scene.active.lights) {
+				if (light.transform.diff()) { relight = true; break; }
 			}
 			#end
 
@@ -327,7 +327,7 @@ class RenderPathForward {
 
 		#if rp_shadowmap
 		{
-			if (hasLamp) Inc.bindShadowMap();
+			if (hasLight) Inc.bindShadowMap();
 		}
 		#end
 
@@ -359,11 +359,11 @@ class RenderPathForward {
 				path.setTarget("bufvola");
 				path.bindTarget("_main", "gbufferD");
 				Inc.bindShadowMap();
-				if (path.lampIsSun()) {
+				if (path.lightIsSun()) {
 					path.drawShader("shader_datas/volumetric_light_quad/volumetric_light_quad");
 				}
 				else {
-					path.drawLampVolume("shader_datas/volumetric_light/volumetric_light");
+					path.drawLightVolume("shader_datas/volumetric_light/volumetric_light");
 				}
 
 				path.setTarget("bufvolb");

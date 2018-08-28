@@ -34,8 +34,8 @@ void main() {
 	// #endif
 	vec3 p = getPos(eye, eyeLook, viewRay, depth, cameraProj);
 	
-	vec4 lampPos = LWVP * vec4(p, 1.0);
-	vec3 lPos = lampPos.xyz / lampPos.w;
+	vec4 lightPosition = LWVP * vec4(p, 1.0);
+	vec3 lPos = lightPosition.xyz / lightPosition.w;
 
 	// Visibility
 	if (lightShadow == 1) {

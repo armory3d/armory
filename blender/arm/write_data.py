@@ -337,11 +337,11 @@ class Main {
         iron.object.BoneAnimation.skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;""")
         if rpdat.rp_shadowmap_cascades != '1':
             f.write("""
-        iron.object.LampObject.cascadeCount = """ + str(rpdat.rp_shadowmap_cascades) + """;
-        iron.object.LampObject.cascadeSplitFactor = """ + str(rpdat.arm_shadowmap_split) + """;""")
+        iron.object.LightObject.cascadeCount = """ + str(rpdat.rp_shadowmap_cascades) + """;
+        iron.object.LightObject.cascadeSplitFactor = """ + str(rpdat.arm_shadowmap_split) + """;""")
         if rpdat.arm_shadowmap_bounds != 1.0:
             f.write("""
-        iron.object.LampObject.cascadeBounds = """ + str(rpdat.arm_shadowmap_bounds) + """;""")
+        iron.object.LightObject.cascadeBounds = """ + str(rpdat.arm_shadowmap_bounds) + """;""")
         if is_publish and wrd.arm_loadscreen:
             asset_references = list(set(assets.assets))
             loadscreen_class = 'armory.trait.internal.LoadingScreen'
