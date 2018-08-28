@@ -346,7 +346,7 @@ class Inc {
 			kha.compute.Compute.setFloat2(voxel_cf, vx, vy);
 			// LVP
 			m.setFrom(l.VP);
-			m.multmat2(iron.object.Uniforms.biasMat);
+			m.multmat(iron.object.Uniforms.biasMat);
 			kha.compute.Compute.setMatrix(voxel_cg, m.self);
 			// shadowsBias
 			kha.compute.Compute.setFloat(voxel_ch, l.data.raw.shadows_bias);

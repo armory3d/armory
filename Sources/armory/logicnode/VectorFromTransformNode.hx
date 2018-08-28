@@ -1,5 +1,6 @@
 package armory.logicnode;
 
+import iron.math.Quat;
 import iron.math.Mat4;
 
 class VectorFromTransformNode extends LogicNode {
@@ -23,7 +24,8 @@ class VectorFromTransformNode extends LogicNode {
 		case "Look":
 			return m.look();
 		case "Quaternion":
-			return m.getQuat();
+			var q = new Quat();
+			return q.fromMat(m);
 		}
 
 		return null;

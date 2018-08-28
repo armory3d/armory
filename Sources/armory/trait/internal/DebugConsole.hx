@@ -42,7 +42,7 @@ class DebugConsole extends Trait {
 	var graph:kha.Image = null;
 	var graphA:kha.Image = null;
 	var graphB:kha.Image = null;
-	var benchmark = false;
+	var benchmark = true;
 	var benchFrames = 0;
 	var benchTime = 0.0;
 

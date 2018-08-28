@@ -30,7 +30,7 @@ class SimpleScaleObject extends iron.Trait {
 		});
 
 		notifyOnUpdate(function() {
-			var scale = Vec4.zero();
+			var scale = new Vec4(0, 0, 0);
 
 			if (keyboard.down("y")) {
 				scale.x += speed;
@@ -64,7 +64,7 @@ class SimpleScaleObject extends iron.Trait {
 				scale.set(-speed, -speed, -speed);
 			}
 
-			if (!scale.equals(Vec4.zero())) {
+			if (!scale.equals(new Vec4(0, 0, 0))) {
 				scaleObject(scale);
 			}
 		});

@@ -5,6 +5,7 @@ package armory.trait.physics.bullet;
 import haxebullet.Bullet;
 import iron.Trait;
 import iron.math.Vec4;
+import iron.math.Quat;
 import iron.object.Transform;
 import iron.object.MeshObject;
 
@@ -39,9 +40,10 @@ class KinematicCharacterController extends Trait {
 	public var onReady:Void->Void = null;
 
 	static var nullvec = true;
-	static var vec1:BtVector3 ;
-	static var quat1:BtQuaternion ;
-	static var trans1:BtTransform ;
+	static var vec1:BtVector3;
+	static var quat1:BtQuaternion;
+	static var trans1:BtTransform;
+	static var quat = new Quat();
 
 	public function new(mass = 1.0, shape = ControllerShape.Capsule, jumpSpeed = 8.0, friction = 0.5, restitution = 0.0,
 						collisionMargin = 0.0, animated = false, group = 1) {
@@ -128,11 +130,12 @@ class KinematicCharacterController extends Trait {
 		vec1.setY(transform.worldy());
 		vec1.setZ(transform.worldz());
 		trans1.setOrigin(vec1);
-		var rot = transform.world.getQuat();
-		quat1.setX(rot.x);
-		quat1.setY(rot.y);
-		quat1.setZ(rot.z);
-		quat1.setW(rot.w);
+		
+		quat.fromMat(transform.world);
+		quat1.setX(quat.x);
+		quat1.setY(quat.y);
+		quat1.setZ(quat.z);
+		quat1.setW(quat.w);
 		trans1.setRotation(quat1);
 
 		body = BtPairCachingGhostObject.create();
@@ -303,11 +306,11 @@ class KinematicCharacterController extends Trait {
 		vec1.setY(t.worldy());
 		vec1.setZ(t.worldz());
 		trans1.setOrigin(vec1);
-		var rot = t.world.getQuat();
-		quat1.setX(rot.x);
-		quat1.setY(rot.y);
-		quat1.setZ(rot.z);
-		quat1.setW(rot.w);
+		quat.fromMat(t.world);
+		quat1.setX(quat.x);
+		quat1.setY(quat.y);
+		quat1.setZ(quat.z);
+		quat1.setW(quat.w);
 		trans1.setRotation(quat1);
 		//body.setCenterOfMassTransform(trans); // ?
 		if (currentScaleX != t.scale.x || currentScaleY != t.scale.y || currentScaleZ != t.scale.z) setScale(t.scale);

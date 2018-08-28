@@ -197,7 +197,7 @@ class DebugDraw {
 		g.setPipeline(pipeline);
 		var camera = iron.Scene.active.camera;
 		vp.setFrom(camera.V);
-		vp.multmat2(camera.P);
+		vp.multmat(camera.P);
 		g.setMatrix(vpID, vp.self);
 		g.drawIndexedVertices(0, lines * 6);
 	}

@@ -44,8 +44,7 @@ class FollowCamera extends iron.Trait {
 			if (!disabled) {
 				if (targetObj != null) {
 					if (lerp) {
-						var vec = Vec4.lerp(targetObj.transform.world.getLoc(), object.transform.world.getLoc(), lerpSpeed);
-						object.transform.loc = vec;
+						object.transform.loc.lerp(object.transform.world.getLoc(), targetObj.transform.world.getLoc(), lerpSpeed);
 					}
 					else {
 						object.transform.loc = targetObj.transform.world.getLoc();

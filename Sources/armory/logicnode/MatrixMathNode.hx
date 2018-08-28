@@ -21,7 +21,7 @@ class MatrixMathNode extends LogicNode {
 		m.setFrom(m1);
 		switch (property0) {
 		case "Multiply":
-			m.multmat2(m2);
+			m.multmat(m2);
 		}
 
 		return m;

@@ -4,6 +4,7 @@ package armory.trait.physics.bullet;
 
 import iron.math.Vec4;
 import iron.math.Mat4;
+import iron.math.Quat;
 import iron.Trait;
 import iron.object.Object;
 import iron.object.MeshObject;
@@ -31,6 +32,7 @@ class PhysicsHook extends Trait {
 	static var quat1:BtQuaternion;
 	static var trans1:BtTransform;
 	static var trans2:BtTransform;
+	static var quat = new Quat();
 
 	public function new(targetName:String, verts:Array<Float>) {
 		super();
@@ -159,10 +161,11 @@ class PhysicsHook extends Trait {
 			vec1.setY(targetTransform.world.getLoc().y);
 			vec1.setZ(targetTransform.world.getLoc().z);
 			trans1.setOrigin(vec1);
-			quat1.setX(targetTransform.world.getQuat().x);
-			quat1.setY(targetTransform.world.getQuat().y);
-			quat1.setZ(targetTransform.world.getQuat().z);
-			quat1.setW(targetTransform.world.getQuat().w);
+			quat.fromMat(targetTransform.world);
+			quat1.setX(quat.x);
+			quat1.setY(quat.y);
+			quat1.setZ(quat.z);
+			quat1.setW(quat.w);
 			trans1.setRotation(quat1);
 			hookRB.setWorldTransform(trans1);
 		}

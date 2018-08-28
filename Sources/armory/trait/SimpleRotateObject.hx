@@ -25,7 +25,7 @@ class SimpleRotateObject extends iron.Trait {
 		});
 
 		notifyOnUpdate(function() {
-			var rotate = Vec4.zero();
+			var rotate = new Vec4(0, 0, 0);
 
 			if (keyboard.down("r")) {
 				rotate.x += 1;
@@ -51,7 +51,7 @@ class SimpleRotateObject extends iron.Trait {
 				rotate.z -= 1;
 			}
 
-			if (!rotate.equals(Vec4.zero())) {
+			if (!rotate.equals(new Vec4(0, 0, 0))) {
 				rotateObject(rotate);
 			}
 		});

@@ -25,7 +25,7 @@ class SimpleMoveObject extends iron.Trait {
 		});
 
 		notifyOnUpdate(function() {
-			var move = Vec4.zero();
+			var move = new Vec4(0, 0, 0);
 
 			if (keyboard.down("d")) {
 				move.x += speed;
@@ -51,7 +51,7 @@ class SimpleMoveObject extends iron.Trait {
 				move.z -= speed;
 			}
 
-			if (!move.equals(Vec4.zero())) {
+			if (!move.equals(new Vec4(0, 0, 0))) {
 				moveObject(move);
 			}
 		});

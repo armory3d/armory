@@ -95,7 +95,7 @@ class RenderPathPathtracer {
 		var ct = cam.transform;
 		var helpMat = iron.math.Mat4.identity();
 		helpMat.setFrom(cam.V);
-		helpMat.multmat2(cam.P);
+		helpMat.multmat(cam.P);
 		helpMat.getInverse(helpMat);
 		constantBuffer.setFloat(0, ct.worldx());
 		constantBuffer.setFloat(4, ct.worldy());
