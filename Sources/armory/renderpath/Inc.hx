@@ -90,6 +90,25 @@ class Inc {
 		return target;
 	}
 
+	
+	public static function applyConfig() {
+		#if arm_config
+		// Resize shadow map
+		var l = path.getLight(path.currentLightIndex);
+		l.data.raw.shadowmap_size = armory.data.Config.raw.rp_shadowmap;
+		var rt = path.renderTargets.get("shadowmap");
+		if (rt != null) {
+			rt.unload();
+			path.renderTargets.remove("shadowmap");
+		}
+		rt = path.renderTargets.get("shadowmapCube");
+		if (rt != null) {
+			rt.unload();
+			path.renderTargets.remove("shadowmapCube");
+		}
+		#end
+	}
+
 	#if (rp_shadowmap && kha_webgl)
 	public static function initEmpty() {
 		// Bind empty when requested target is not found

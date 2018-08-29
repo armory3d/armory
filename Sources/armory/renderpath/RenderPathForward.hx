@@ -36,6 +36,10 @@ class RenderPathForward {
 		#end
 	}
 
+	public static function applyConfig() {
+		Inc.applyConfig();
+	}
+
 	public static function init(_path:RenderPath) {
 
 		path = _path;
@@ -378,41 +382,43 @@ class RenderPathForward {
 			
 			#if rp_bloom
 			{
-				path.setTarget("bloomtex");
-				path.bindTarget("lbuf", "tex");
-				path.drawShader("shader_datas/bloom_pass/bloom_pass");
+				if (armory.data.Config.raw.rp_ssr != false) {
+					path.setTarget("bloomtex");
+					path.bindTarget("lbuf", "tex");
+					path.drawShader("shader_datas/bloom_pass/bloom_pass");
 
-				path.setTarget("bloomtex2");
-				path.bindTarget("bloomtex", "tex");
-				path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
+					path.setTarget("bloomtex2");
+					path.bindTarget("bloomtex", "tex");
+					path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
 
-				path.setTarget("bloomtex");
-				path.bindTarget("bloomtex2", "tex");
-				path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
+					path.setTarget("bloomtex");
+					path.bindTarget("bloomtex2", "tex");
+					path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
 
-				path.setTarget("bloomtex2");
-				path.bindTarget("bloomtex", "tex");
-				path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
+					path.setTarget("bloomtex2");
+					path.bindTarget("bloomtex", "tex");
+					path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
 
-				path.setTarget("bloomtex");
-				path.bindTarget("bloomtex2", "tex");
-				path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
+					path.setTarget("bloomtex");
+					path.bindTarget("bloomtex2", "tex");
+					path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
 
-				path.setTarget("bloomtex2");
-				path.bindTarget("bloomtex", "tex");
-				path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
+					path.setTarget("bloomtex2");
+					path.bindTarget("bloomtex", "tex");
+					path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
 
-				path.setTarget("bloomtex");
-				path.bindTarget("bloomtex2", "tex");
-				path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
+					path.setTarget("bloomtex");
+					path.bindTarget("bloomtex2", "tex");
+					path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
 
-				path.setTarget("bloomtex2");
-				path.bindTarget("bloomtex", "tex");
-				path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
+					path.setTarget("bloomtex2");
+					path.bindTarget("bloomtex", "tex");
+					path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
 
-				path.setTarget("lbuf");
-				path.bindTarget("bloomtex2", "tex");
-				path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y_blend");
+					path.setTarget("lbuf");
+					path.bindTarget("bloomtex2", "tex");
+					path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y_blend");
+				}
 			}
 			#end
 

@@ -50,12 +50,28 @@ class CanvasScript extends Trait {
 				var all = armory.system.Event.get(e);
 				if (all != null) for (entry in all) entry.onEvent();
 			}
+
+			if (onReady != null) { onReady(); onReady = null; }
 		});
 	}
 
+	var onReady:Void->Void = null;
+	public function notifyOnReady(f:Void->Void) {
+		onReady = f;
+	}
+
+	// Defines layout
 	public function getElement(name:String):TElement {
 		for (e in canvas.elements) if (e.name == name) return e;
 		return null;
+	}
+
+	// Contains data
+	@:access(zui.Canvas)
+	@:access(zui.Handle)
+	public function getHandle(name:String):Handle {
+		// Consider this a temporary solution
+		return Canvas.h.children[getElement(name).id];
 	}
 
 #else

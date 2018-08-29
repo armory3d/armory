@@ -14,28 +14,29 @@ class Starter {
 			if (tasks > 0) return;
 			
 			if (armory.data.Config.raw == null) armory.data.Config.raw = {};
-			var config = armory.data.Config.raw;
-			if (config.window_mode == null) config.window_mode = mode;
-			if (config.window_resizable == null) config.window_resizable = resize;
-			if (config.window_minimizable == null) config.window_minimizable = min;
-			if (config.window_maximizable == null) config.window_maximizable = max;
-			if (config.window_w == null) config.window_w = w;
-			if (config.window_h == null) config.window_h = h;
-			if (config.window_msaa == null) config.window_msaa = msaa;
-			if (config.window_vsync == null) config.window_vsync = vsync;
+			var c = armory.data.Config.raw;
+
+			if (c.window_mode == null) c.window_mode = mode;
+			if (c.window_resizable == null) c.window_resizable = resize;
+			if (c.window_minimizable == null) c.window_minimizable = min;
+			if (c.window_maximizable == null) c.window_maximizable = max;
+			if (c.window_w == null) c.window_w = w;
+			if (c.window_h == null) c.window_h = h;
+			if (c.window_msaa == null) c.window_msaa = msaa;
+			if (c.window_vsync == null) c.window_vsync = vsync;
 			
 			armory.object.Uniforms.register();
 			
-			var windowMode = config.window_mode == 0 ? kha.WindowMode.Window : kha.WindowMode.Fullscreen;
+			var windowMode = c.window_mode == 0 ? kha.WindowMode.Window : kha.WindowMode.Fullscreen;
 			#if (kha_version < 1807) // TODO: deprecated
-			if (windowMode == kha.WindowMode.Fullscreen) { windowMode = kha.WindowMode.BorderlessWindow; config.window_w = kha.Display.width(0); config.window_h = kha.Display.height(0); }
-			kha.System.init({title: Main.projectName, width: config.window_w, height: config.window_h, samplesPerPixel: config.window_msaa, vSync: config.window_vsync, windowMode: windowMode, resizable: config.window_resizable, maximizable: config.window_maximizable, minimizable: config.window_minimizable}, function() {
+			if (windowMode == kha.WindowMode.Fullscreen) { windowMode = kha.WindowMode.BorderlessWindow; c.window_w = kha.Display.width(0); c.window_h = kha.Display.height(0); }
+			kha.System.init({title: Main.projectName, width: c.window_w, height: c.window_h, samplesPerPixel: c.window_msaa, vSync: c.window_vsync, windowMode: windowMode, resizable: c.window_resizable, maximizable: c.window_maximizable, minimizable: c.window_minimizable}, function() {
 			#else
 			var windowFeatures = 0;
-			if (config.window_resizable) windowFeatures |= kha.WindowOptions.FeatureResizable;
-			if (config.window_maximizable) windowFeatures |= kha.WindowOptions.FeatureMaximizable;
-			if (config.window_minimizable) windowFeatures |= kha.WindowOptions.FeatureMinimizable;
-			kha.System.start({title: Main.projectName, width: config.window_w, height: config.window_h, window: {mode: windowMode, windowFeatures: windowFeatures}, framebuffer: {samplesPerPixel: config.window_msaa, verticalSync: config.window_vsync}}, function(window:kha.Window) {
+			if (c.window_resizable) windowFeatures |= kha.WindowOptions.FeatureResizable;
+			if (c.window_maximizable) windowFeatures |= kha.WindowOptions.FeatureMaximizable;
+			if (c.window_minimizable) windowFeatures |= kha.WindowOptions.FeatureMinimizable;
+			kha.System.start({title: Main.projectName, width: c.window_w, height: c.window_h, window: {mode: windowMode, windowFeatures: windowFeatures}, framebuffer: {samplesPerPixel: c.window_msaa, verticalSync: c.window_vsync}}, function(window:kha.Window) {
 			#end
 				iron.App.init(function() {
 					#if arm_loadscreen

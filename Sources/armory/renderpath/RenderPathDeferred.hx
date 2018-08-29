@@ -17,6 +17,10 @@ class RenderPathDeferred {
 		path.drawMeshes("mesh");
 	}
 
+	public static function applyConfig() {
+		Inc.applyConfig();
+	}
+
 	public static function init(_path:RenderPath) {
 
 		path = _path;
@@ -381,6 +385,21 @@ class RenderPathDeferred {
 			}
 		}
 		#end
+
+		#if arm_config
+		{
+			var t = new RenderTargetRaw();
+			t.name = "empty_white";
+			t.width = 1;
+			t.height = 1;
+			t.format = 'R8';
+			var rt = new RenderTarget(t);
+			var b = haxe.io.Bytes.alloc(1);
+			b.set(0, 255);
+			rt.image = kha.Image.fromBytes(b, t.width, t.height, kha.graphics4.TextureFormat.L8);
+			path.renderTargets.set(t.name, rt);
+		}
+		#end
 	}
 
 	@:access(iron.RenderPath)
@@ -434,40 +453,44 @@ class RenderPathDeferred {
 
 		#if ((rp_ssgi == "RTGI") || (rp_ssgi == "RTAO"))
 		{
-			path.setTarget("bufa");
-			path.bindTarget("_main", "gbufferD");
-			path.bindTarget("gbuffer0", "gbuffer0");
-			#if (rp_ssgi == "RTGI")
-			path.bindTarget("gbuffer1", "gbuffer1");
-			#end
-			path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
+			if (armory.data.Config.raw.rp_ssgi != false) {
+				path.setTarget("bufa");
+				path.bindTarget("_main", "gbufferD");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				#if (rp_ssgi == "RTGI")
+				path.bindTarget("gbuffer1", "gbuffer1");
+				#end
+				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
 
-			path.setTarget("bufb");
-			path.bindTarget("gbuffer0", "gbuffer0");
-			path.bindTarget("bufa", "tex");
-			path.drawShader("shader_datas/ssgi_blur_pass/ssgi_blur_pass_x");
+				path.setTarget("bufb");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("bufa", "tex");
+				path.drawShader("shader_datas/ssgi_blur_pass/ssgi_blur_pass_x");
 
-			path.setTarget("bufa");
-			path.bindTarget("gbuffer0", "gbuffer0");
-			path.bindTarget("bufb", "tex");
-			path.drawShader("shader_datas/ssgi_blur_pass/ssgi_blur_pass_y");
+				path.setTarget("bufa");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("bufb", "tex");
+				path.drawShader("shader_datas/ssgi_blur_pass/ssgi_blur_pass_y");
+			}
 		}	
 		#elseif (rp_ssgi == "SSAO")
-		{	
-			path.setTarget("bufa");
-			path.bindTarget("_main", "gbufferD");
-			path.bindTarget("gbuffer0", "gbuffer0");
-			path.drawShader("shader_datas/ssao_pass/ssao_pass");
+		{
+			if (armory.data.Config.raw.rp_ssgi != false) {
+				path.setTarget("bufa");
+				path.bindTarget("_main", "gbufferD");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/ssao_pass/ssao_pass");
 
-			path.setTarget("bufb");
-			path.bindTarget("bufa", "tex");
-			path.bindTarget("gbuffer0", "gbuffer0");
-			path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
+				path.setTarget("bufb");
+				path.bindTarget("bufa", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
 
-			path.setTarget("bufa");
-			path.bindTarget("bufb", "tex");
-			path.bindTarget("gbuffer0", "gbuffer0");
-			path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
+				path.setTarget("bufa");
+				path.bindTarget("bufb", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
+			}
 		}
 		#end
 
@@ -533,7 +556,12 @@ class RenderPathDeferred {
 		path.bindTarget("gbuffer1", "gbuffer1");
 		#if (rp_ssgi != "Off")
 		{
-			path.bindTarget("bufa", "ssaotex");
+			if (armory.data.Config.raw.rp_ssgi != false) {
+				path.bindTarget("bufa", "ssaotex");
+			}
+			else {
+				path.bindTarget("empty_white", "ssaotex");
+			}
 		}
 		#end
 		#if (rp_gi != "Off")
@@ -659,41 +687,43 @@ class RenderPathDeferred {
 
 		#if rp_bloom
 		{
-			path.setTarget("bloomtex");
-			path.bindTarget("tex", "tex");
-			path.drawShader("shader_datas/bloom_pass/bloom_pass");
+			if (armory.data.Config.raw.rp_ssr != false) {
+				path.setTarget("bloomtex");
+				path.bindTarget("tex", "tex");
+				path.drawShader("shader_datas/bloom_pass/bloom_pass");
 
-			path.setTarget("bloomtex2");
-			path.bindTarget("bloomtex", "tex");
-			path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
+				path.setTarget("bloomtex2");
+				path.bindTarget("bloomtex", "tex");
+				path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
 
-			path.setTarget("bloomtex");
-			path.bindTarget("bloomtex2", "tex");
-			path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
+				path.setTarget("bloomtex");
+				path.bindTarget("bloomtex2", "tex");
+				path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
 
-			path.setTarget("bloomtex2");
-			path.bindTarget("bloomtex", "tex");
-			path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
+				path.setTarget("bloomtex2");
+				path.bindTarget("bloomtex", "tex");
+				path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
 
-			path.setTarget("bloomtex");
-			path.bindTarget("bloomtex2", "tex");
-			path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
+				path.setTarget("bloomtex");
+				path.bindTarget("bloomtex2", "tex");
+				path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
 
-			path.setTarget("bloomtex2");
-			path.bindTarget("bloomtex", "tex");
-			path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
+				path.setTarget("bloomtex2");
+				path.bindTarget("bloomtex", "tex");
+				path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
 
-			path.setTarget("bloomtex");
-			path.bindTarget("bloomtex2", "tex");
-			path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
+				path.setTarget("bloomtex");
+				path.bindTarget("bloomtex2", "tex");
+				path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
 
-			path.setTarget("bloomtex2");
-			path.bindTarget("bloomtex", "tex");
-			path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
+				path.setTarget("bloomtex2");
+				path.bindTarget("bloomtex", "tex");
+				path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
 
-			path.setTarget("tex");
-			path.bindTarget("bloomtex2", "tex");
-			path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y_blend");
+				path.setTarget("tex");
+				path.bindTarget("bloomtex2", "tex");
+				path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y_blend");
+			}
 		}
 		#end
 
@@ -716,51 +746,55 @@ class RenderPathDeferred {
 
 		#if rp_ssr
 		{
-			#if rp_ssr_half
-			var targeta = "ssra";
-			var targetb = "ssrb";
-			#else
-			var targeta = "buf";
-			var targetb = "gbuffer1";
-			#end
-			path.setTarget(targeta);
-			path.bindTarget("tex", "tex");
-			path.bindTarget("_main", "gbufferD");
-			path.bindTarget("gbuffer0", "gbuffer0");
-			path.bindTarget("gbuffer1", "gbuffer1");
-			path.drawShader("shader_datas/ssr_pass/ssr_pass");
+			if (armory.data.Config.raw.rp_ssr != false) {
+				#if rp_ssr_half
+				var targeta = "ssra";
+				var targetb = "ssrb";
+				#else
+				var targeta = "buf";
+				var targetb = "gbuffer1";
+				#end
+				path.setTarget(targeta);
+				path.bindTarget("tex", "tex");
+				path.bindTarget("_main", "gbufferD");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("gbuffer1", "gbuffer1");
+				path.drawShader("shader_datas/ssr_pass/ssr_pass");
 
-			path.setTarget(targetb);
-			path.bindTarget(targeta, "tex");
-			path.bindTarget("gbuffer0", "gbuffer0");
-			path.drawShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
+				path.setTarget(targetb);
+				path.bindTarget(targeta, "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_x");
 
-			path.setTarget("tex");
-			path.bindTarget(targetb, "tex");
-			path.bindTarget("gbuffer0", "gbuffer0");
-			path.drawShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
+				path.setTarget("tex");
+				path.bindTarget(targetb, "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_adaptive_pass/blur_adaptive_pass_y3_blend");
+			}
 		}
 		#end
 
 		#if ((rp_motionblur == "Camera") || (rp_motionblur == "Object"))
 		{
-			path.setTarget("buf");
-			path.bindTarget("tex", "tex");
-			path.bindTarget("gbuffer0", "gbuffer0");
-			#if (rp_motionblur == "Camera")
-			{
-				path.bindTarget("_main", "gbufferD");
-				path.drawShader("shader_datas/motion_blur_pass/motion_blur_pass");
+			if (armory.data.Config.raw.rp_motionblur != false) {
+				path.setTarget("buf");
+				path.bindTarget("tex", "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				#if (rp_motionblur == "Camera")
+				{
+					path.bindTarget("_main", "gbufferD");
+					path.drawShader("shader_datas/motion_blur_pass/motion_blur_pass");
+				}
+				#else
+				{
+					path.bindTarget("gbuffer2", "sveloc");
+					path.drawShader("shader_datas/motion_blur_veloc_pass/motion_blur_veloc_pass");
+				}
+				#end
+				path.setTarget("tex");
+				path.bindTarget("buf", "tex");
+				path.drawShader("shader_datas/copy_pass/copy_pass");
 			}
-			#else
-			{
-				path.bindTarget("gbuffer2", "sveloc");
-				path.drawShader("shader_datas/motion_blur_veloc_pass/motion_blur_veloc_pass");
-			}
-			#end
-			path.setTarget("tex");
-			path.bindTarget("buf", "tex");
-			path.drawShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
 
