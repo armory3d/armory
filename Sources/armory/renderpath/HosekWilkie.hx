@@ -74,7 +74,9 @@ class HosekWilkieRadianceData {
 		index == 0 ? v.x = f : index == 1 ? v.y = f : v.z = f;
 	}
 	
-	public function new(sunTheta:Float, turbidity:kha.FastFloat, albedo:kha.FastFloat, normalizedSunY:Float) {
+	public function new() {}
+
+	public function recompute(sunTheta:Float, turbidity:kha.FastFloat, albedo:kha.FastFloat, normalizedSunY:Float) {
 		for (i in 0...3) {
 			setVector(A, i, evaluate(HosekWilkieData.datasetsRGB[i], 0, 9, turbidity, albedo, sunTheta));
 			setVector(B, i, evaluate(HosekWilkieData.datasetsRGB[i], 1, 9, turbidity, albedo, sunTheta));
@@ -106,36 +108,13 @@ class HosekWilkieRadianceData {
 }
 
 class HosekWilkie {
-
-	static var firstFrame = true;
 	public static var data:HosekWilkieRadianceData = null;
-	public static var sunDirection:FastVector3;
 
-	public static function recompute(sunPositionX:Float, turbidity:kha.FastFloat, albedo:kha.FastFloat, normalizedSunY:Float) {
-		data = new HosekWilkieRadianceData(sunPositionX, turbidity, albedo, normalizedSunY);
-	}
-
-	public static function init(world:WorldData) {
+	public static function recompute(world:WorldData) {
 		if (world == null || world.raw.sun_direction == null) return;
-		var dir = world.raw.sun_direction;
-		sunDirection = new FastVector3(dir[0], -dir[1], dir[2]);
-
-		// Extract direction from light
-		// var mat = iron.data.Data.getMaterial("World_material", "World_material").data;
-		// var light = iron.Scene.active.lights[0];
-		// var ltr = light.transform;
-		// var lf = ltr.world.look2();
-		// light.data.data.strength = 3.3 - Math.abs(ltr.worldy()) / 45;
-		// probe.strength = 1.2 - Math.abs(ltr.worldy()) / 45;
-		// mat.contexts[0].bind_constants[0].float = probe.strength + 0.5;
-		// mat.contexts[0].bind_constants[1].vec3[0] = lf.x;
-		// mat.contexts[0].bind_constants[1].vec3[1] = lf.y;
-		// mat.contexts[0].bind_constants[1].vec3[2] = lf.z;
-		// sunDirection = new FastVector3(lf.x, lf.y, lf.z);
-
-		var sunPositionX = Math.acos(sunDirection.z);
-		var turbidity = world.raw.turbidity;
-		var albedo = world.raw.ground_albedo;
-		HosekWilkie.recompute(sunPositionX, turbidity, albedo, 1.15);
+		if (data == null) data = new HosekWilkieRadianceData();
+		var sunPositionX = Math.acos(world.raw.sun_direction[2]);
+		var normalizedSunY:kha.FastFloat = 1.15;
+		data.recompute(sunPositionX, world.raw.turbidity, world.raw.ground_albedo, normalizedSunY);
 	}
 }
