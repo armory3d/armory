@@ -165,16 +165,13 @@ def init_properties():
     bpy.types.World.arm_winmaximize = BoolProperty(name="Maximizable", description="Allow window maximize", default=False, update=invalidate_compiler_cache)
     bpy.types.World.arm_winminimize = BoolProperty(name="Minimizable", description="Allow window minimize", default=True, update=invalidate_compiler_cache)
     # For object
-    bpy.types.Object.arm_instanced = BoolProperty(name="Instanced Children", description="Use instaced rendering", default=False, update=invalidate_instance_cache)
-    bpy.types.Object.arm_instanced_loc_x = BoolProperty(name="X", default=True)
-    bpy.types.Object.arm_instanced_loc_y = BoolProperty(name="Y", default=True)
-    bpy.types.Object.arm_instanced_loc_z = BoolProperty(name="Z", default=True)
-    # bpy.types.Object.arm_instanced_rot_x = BoolProperty(name="X", default=False)
-    # bpy.types.Object.arm_instanced_rot_y = BoolProperty(name="Y", default=False)
-    # bpy.types.Object.arm_instanced_rot_z = BoolProperty(name="Z", default=False)
-    # bpy.types.Object.arm_instanced_scale_x = BoolProperty(name="X", default=False)
-    # bpy.types.Object.arm_instanced_scale_y = BoolProperty(name="Y", default=False)
-    # bpy.types.Object.arm_instanced_scale_z = BoolProperty(name="Z", default=False)
+    bpy.types.Object.arm_instanced = EnumProperty(
+        items = [('Off', 'Off', 'Off'),
+                 ('Loc', 'Loc', 'Loc'),
+                 ('Loc + Rot', 'Loc + Rot', 'Loc + Rot'),
+                 ('Loc + Scale', 'Loc + Scale', 'Loc + Scale'),
+                 ('Loc + Rot + Scale', 'Loc + Rot + Scale', 'Loc + Rot + Scale')],
+        name="Instanced Children", default='Off', description='Use instacing to draw children', update=invalidate_instance_cache)
     bpy.types.Object.arm_export = BoolProperty(name="Export", description="Export object data", default=True)
     bpy.types.Object.arm_spawn = BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True)
     bpy.types.Object.arm_mobile = BoolProperty(name="Mobile", description="Object moves during gameplay", default=False)

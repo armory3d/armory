@@ -4,6 +4,7 @@ import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
 import arm.material.cycles as cycles
 import arm.material.make_skin as make_skin
+import arm.material.make_inst as make_inst
 import arm.material.make_tess as make_tess
 import arm.material.make_particle as make_particle
 import arm.utils
@@ -319,8 +320,8 @@ def write_norpos(con_mesh, vert, declare=False, write_nor=True):
             make_skin.skin_nor(vert, prep)
         else:
             vert.write(prep + 'wnormal = normalize(N * nor);')
-    if con_mesh.is_elem('off'):
-        vert.write('spos.xyz += off;')
+    if con_mesh.is_elem('ipos'):
+        make_inst.inst_pos(con_mesh, vert)
     vert.write_pre = False
 
 def make_deferred(con_mesh):

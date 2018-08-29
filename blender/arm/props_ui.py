@@ -39,23 +39,6 @@ class ObjectPropsPanel(bpy.types.Panel):
 
         if obj.type == 'MESH':
             layout.prop(obj, 'arm_instanced')
-            if obj.arm_instanced:
-                layout.label('Location')
-                column = layout.column()
-                column.prop(obj, 'arm_instanced_loc_x')
-                column.prop(obj, 'arm_instanced_loc_y')
-                column.prop(obj, 'arm_instanced_loc_z')
-                # layout.label('Rotation')
-                # row = layout.row()
-                # row.prop(obj, 'arm_instanced')
-                # row.prop(obj, 'arm_instanced')
-                # row.prop(obj, 'arm_instanced')
-                # layout.label('Scale')
-                # row = layout.row()
-                # row.prop(obj, 'arm_instanced')
-                # row.prop(obj, 'arm_instanced')
-                # row.prop(obj, 'arm_instanced')
-
             wrd = bpy.data.worlds['Arm']
             layout.prop_search(obj, "arm_tilesheet", wrd, "arm_tilesheetlist", "Tilesheet")
             if obj.arm_tilesheet != '':

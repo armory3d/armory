@@ -45,8 +45,12 @@ def build(material, mat_users, mat_armusers):
                 global_elems.append({'name': 'bone', 'size': 4})
                 global_elems.append({'name': 'weight', 'size': 4})
             # Instancing
-            if bo.arm_instanced or material.arm_particle_flag:
-                global_elems.append({'name': 'off', 'size': 3})
+            if bo.arm_instanced != 'Off' or material.arm_particle_flag:
+                global_elems.append({'name': 'ipos', 'size': 3})
+                if bo.arm_instanced == 'Loc + Rot' or bo.arm_instanced == 'Loc + Rot + Scale':
+                    global_elems.append({'name': 'irot', 'size': 3})
+                if bo.arm_instanced == 'Loc + Scale' or bo.arm_instanced == 'Loc + Rot + Scale':
+                    global_elems.append({'name': 'iscl', 'size': 3})
                 
     mat_state.data.global_elems = global_elems
 

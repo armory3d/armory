@@ -591,7 +591,7 @@ class ArmoryExporter:
                         if not bone.parent:
                             self.process_bone(bone)
 
-        if bobject.type != 'MESH' or bobject.arm_instanced == False:
+        if bobject.type != 'MESH' or bobject.arm_instanced == 'Off':
             for subbobject in bobject.children:
                 self.process_bobject(subbobject)
 
@@ -1118,7 +1118,7 @@ class ArmoryExporter:
             if not hasattr(o, 'children') and len(bobject.children) > 0:
                 o['children'] = []
 
-        if bobject.type != 'MESH' or bobject.arm_instanced == False:
+        if bobject.type != 'MESH' or bobject.arm_instanced == 'Off':
             for subbobject in bobject.children:
                 self.export_object(subbobject, scene, o)
 
@@ -1557,7 +1557,7 @@ class ArmoryExporter:
                 return
 
         # Check if mesh is using instanced rendering
-        is_instanced, instance_offsets = self.object_process_instancing(bobject, objectRef[1]["objectTable"])
+        instanced_type, instanced_data = self.object_process_instancing(table)
 
         # Mesh users have different modifier stack
         for i in range(1, len(table)):
@@ -1688,8 +1688,9 @@ class ArmoryExporter:
             mesh.update()
 
         # Save offset data for instanced rendering
-        if is_instanced == True:
-            o['instance_offsets'] = instance_offsets
+        if instanced_type > 0:
+            o['instanced_data'] = instanced_data
+            o['instanced_type'] = instanced_type
 
         # Export usage
         if bobject.data.arm_dynamic_usage:
@@ -2466,40 +2467,57 @@ class ArmoryExporter:
                 return True
         return False
 
-    def object_process_instancing(self, bobject, refs):
-        is_instanced = False
-        instance_offsets = None
-        for n in refs:
-            if n.arm_instanced == True:
-                is_instanced = True
-                # Save offset data
-                instance_offsets = [0.0, 0.0, 0.0] # Include parent
-                for sn in n.children:
-                    # Child hidden
-                    if sn.arm_export == False:
+    def object_process_instancing(self, refs):
+        instanced_type = 0
+        instanced_data = None
+        for bobject in refs:
+            inst = bobject.arm_instanced
+            if inst != 'Off':
+                if inst == 'Loc':
+                    instanced_type = 1
+                    instanced_data = [0.0, 0.0, 0.0] # Include parent
+                elif inst == 'Loc + Rot':
+                    instanced_type = 2
+                    instanced_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+                elif inst == 'Loc + Scale':
+                    instanced_type = 3
+                    instanced_data = [0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
+                elif inst == 'Loc + Rot + Scale':
+                    instanced_type = 4
+                    instanced_data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
+
+                for child in bobject.children:
+                    if child.arm_export == False or child.hide_render:
                         continue
-                    # Do not take parent matrix into account
-                    loc = sn.matrix_local.to_translation()
-                    instance_offsets.append(loc.x)
-                    instance_offsets.append(loc.y)
-                    instance_offsets.append(loc.z)
-                    # m = sn.matrix_local
-                    # instance_offsets.append(m[0][3]) #* m[0][0]) # Scale
-                    # instance_offsets.append(m[1][3]) #* m[1][1])
-                    # instance_offsets.append(m[2][3]) #* m[2][2])
+                    if 'Loc' in inst:
+                        loc = child.matrix_local.to_translation() # Without parent matrix
+                        instanced_data.append(loc.x)
+                        instanced_data.append(loc.y)
+                        instanced_data.append(loc.z)
+                    if 'Rot' in inst:
+                        rot = child.matrix_local.to_euler()
+                        instanced_data.append(rot.x)
+                        instanced_data.append(rot.y)
+                        instanced_data.append(rot.z)
+                    if 'Scale'in inst:
+                        scale = child.matrix_local.to_scale()
+                        instanced_data.append(scale.x)
+                        instanced_data.append(scale.y)
+                        instanced_data.append(scale.z)
                 break
+            
             # Instance render groups with same children?
-            # elif n.dupli_type == 'GROUP' and n.dupli_group != None:
-            #     is_instanced = True
-            #     instance_offsets = []
-            #     for sn in bpy.data.groups[n.dupli_group].objects:
-            #         loc = sn.matrix_local.to_translation()
-            #         instance_offsets.append(loc.x)
-            #         instance_offsets.append(loc.y)
-            #         instance_offsets.append(loc.z)
+            # elif bobject.dupli_type == 'GROUP' and bobject.dupli_group != None:
+            #     instanced_type = 1
+            #     instanced_data = []
+            #     for child in bpy.data.groups[bobject.dupli_group].objects:
+            #         loc = child.matrix_local.to_translation()
+            #         instanced_data.append(loc.x)
+            #         instanced_data.append(loc.y)
+            #         instanced_data.append(loc.z)
             #     break
 
-        return is_instanced, instance_offsets
+        return instanced_type, instanced_data
 
     def preprocess(self):
         wrd = bpy.data.worlds['Arm']

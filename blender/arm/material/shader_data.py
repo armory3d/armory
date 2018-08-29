@@ -6,7 +6,7 @@ class ShaderData:
     def __init__(self, material):
         self.material = material
         self.contexts = []
-        self.global_elems = [] # bone, weight, off
+        self.global_elems = [] # bone, weight, ipos, irot, iscl
         self.sd = {}
         self.data = {}
         self.data['shader_datas'] = [self.sd]
@@ -80,7 +80,7 @@ class ShaderContext:
     def sort_vs(self):
         # TODO: sort vertex data
         vs = []
-        ar = ['pos', 'nor', 'tex', 'tex1', 'col', 'tang', 'bone', 'weight', 'off']
+        ar = ['pos', 'nor', 'tex', 'tex1', 'col', 'tang', 'bone', 'weight', 'ipos', 'irot', 'iscl']
         for ename in ar:  
             elem = self.get_elem(ename)
             if elem != None:

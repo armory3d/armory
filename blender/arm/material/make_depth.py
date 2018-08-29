@@ -3,6 +3,7 @@ import arm.material.cycles as cycles
 import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
 import arm.material.make_skin as make_skin
+import arm.material.make_inst as make_inst
 import arm.material.make_tess as make_tess
 import arm.material.make_particle as make_particle
 import arm.material.make_mesh as make_mesh
@@ -36,8 +37,8 @@ def make(context_id, rpasses, shadowmap=False):
     if con_depth.is_elem('bone'):
         make_skin.skin_pos(vert)
 
-    if con_depth.is_elem('off'):
-        vert.write('spos.xyz += off;')
+    if con_depth.is_elem('ipos'):
+        make_inst.inst_pos(con_depth, vert)
 
     rpdat = arm.utils.get_rp()
     if mat_state.material.arm_particle_flag and rpdat.arm_particles == 'GPU':
