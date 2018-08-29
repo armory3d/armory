@@ -2717,7 +2717,7 @@ class ArmoryExporter:
                 elif t.type_prop == 'UI Canvas':
                     cpath = arm.utils.get_fp() + '/Bundled/canvas/' + t.canvas_name_prop + '.json'
                     if not os.path.exists(cpath):
-                        log.warn('Canvas "' + t.canvas_name_prop + '" not found, skipping')
+                        log.warn('Scene "' + self.scene.name + '" - Object "' + bobject.name + '" - Referenced canvas "' + t.canvas_name_prop + '" not found, skipping')
                         continue
                     ArmoryExporter.export_ui = True
                     x['type'] = 'Script'
@@ -2766,8 +2766,13 @@ class ArmoryExporter:
                                     for i in reversed(p.vertices): # Flipped normals
                                         f.write(" %d" % (i + 1))
                                     f.write("\n")
-                    else:
+                    else: # Haxe
                         trait_prefix = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.'
+                        hxfile = (trait_prefix + t.class_name_prop).replace('.', '/') + '.hx'
+                        if not os.path.exists(hxfile):
+                            # TODO: Halt build here once this check is tested
+                            print('Armory Error: Scene "' + self.scene.name + '" - Object "' + bobject.name + '" : Referenced trait file "Sources/' + hxfile + '" not found')
+
                     x['class_name'] = trait_prefix + t.class_name_prop
                     if len(t.arm_traitparamslist) > 0:
                         x['parameters'] = []
