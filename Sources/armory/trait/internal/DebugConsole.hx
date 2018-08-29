@@ -21,6 +21,7 @@ class DebugConsole extends Trait {
 #else
 
 	var ui:Zui;
+	var scaleFactor = 1.0;
 	var show = true;
 
 	var lastTime = 0.0;
@@ -54,13 +55,15 @@ class DebugConsole extends Trait {
 	public static var f = 1.0;
 	public static var watchNodes:Array<armory.logicnode.LogicNode> = [];
 
-	public function new() {
+	public function new(scaleFactor = 1.0) {
 		super();
+
+		this.scaleFactor = scaleFactor;
 
 		iron.data.Data.getFont('droid_sans.ttf', function(font:kha.Font) {
 			var theme = Reflect.copy(zui.Themes.dark);
 			theme.WINDOW_BG_COL = 0xee111111;
-			ui = new Zui({font: font, theme: theme});
+			ui = new Zui({scaleFactor: scaleFactor, font: font, theme: theme});
 			notifyOnRender2D(render2D);
 			notifyOnUpdate(update);
 			if (haxeTrace == null) {
@@ -125,9 +128,9 @@ class DebugConsole extends Trait {
 		if (!show) return;
 		var hwin = Id.handle();
 		var htab = Id.handle({position: 0});
-		var wx = iron.App.w() - 280;
+		var ww = Std.int(280 * scaleFactor);
+		var wx = iron.App.w() - ww;
 		var wy = 0;
-		var ww = 280;
 		var wh = iron.App.h();
 
 		var bindG = ui.windowDirty(hwin, wx, wy, ww, wh) || hwin.redraws > 0;
@@ -149,7 +152,7 @@ class DebugConsole extends Trait {
 						var b = false;
 						if (selectedObject == o) {
 							ui.g.color = 0xff205d9c;
-							ui.g.fillRect(0, ui._y, ui._windowW, ui.t.ELEMENT_H);
+							ui.g.fillRect(0, ui._y, ui._windowW, ui.ELEMENT_H());
 							ui.g.color = 0xffffffff;
 						}
 						if (o.children.length > 0) {

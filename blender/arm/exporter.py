@@ -2400,7 +2400,7 @@ class ArmoryExporter:
             x = {}
             x['type'] = 'Script'
             x['class_name'] = 'armory.trait.internal.DebugConsole'
-            x['parameters'] = []
+            x['parameters'] = [str(arm.utils.get_ui_scale())]
             self.output['traits'].append(x)
         if len(self.scene.arm_traitlist) > 0:
             if not 'traits' in self.output:
