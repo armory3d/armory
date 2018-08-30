@@ -146,7 +146,7 @@ def export_data(fp, sdk_path):
     if wrd.arm_play_console:
         print('Khafile flags: ' + str(assets.khafile_defs))
 
-    # Write compiled.glsl
+    # Write compiled.inc
     shaders_path = build_dir + '/compiled/Shaders'
     if not os.path.exists(shaders_path):
         os.makedirs(shaders_path)
@@ -249,6 +249,10 @@ def compile(assets_only=False):
         subprocess.Popen([dxc_path, '-Zpr', '-Fo', fp + '/Bundled/pt_raygeneration.o', '-T', 'lib_6_1', fp + '/HlslShaders/pt_raygeneration.hlsl'])
         subprocess.Popen([dxc_path, '-Zpr', '-Fo', fp + '/Bundled/pt_closesthit.o', '-T', 'lib_6_1', fp + '/HlslShaders/pt_closesthit.hlsl'])
         subprocess.Popen([dxc_path, '-Zpr', '-Fo', fp + '/Bundled/pt_miss.o', '-T', 'lib_6_1', fp + '/HlslShaders/pt_miss.hlsl'])
+
+    if arm.utils.get_khamake_threads() > 1:
+        cmd.append('--parallelAssetConversion')
+        cmd.append(str(arm.utils.get_khamake_threads()))
 
     cmd.append('--to')
     if (kha_target_name == 'krom' and not state.is_viewport and not state.is_publish) or (kha_target_name == 'html5' and not state.is_publish):

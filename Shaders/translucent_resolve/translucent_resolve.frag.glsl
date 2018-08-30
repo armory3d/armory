@@ -1,7 +1,7 @@
 // Weighted blended OIT by McGuire and Bavoil
 #version 450
 
-#include "compiled.glsl"
+#include "compiled.inc"
 
 // uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0; // saccum

@@ -101,7 +101,7 @@ def remove_readonly(func, path, excinfo):
     func(path)
 
 def invalidate_shader_cache(self, context):
-    # compiled.glsl changed, recompile all shaders next time
+    # compiled.inc changed, recompile all shaders next time
     global invalidate_enabled
     if invalidate_enabled == False:
         return

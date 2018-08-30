@@ -1,7 +1,7 @@
 // http://sebastien.hillaire.free.fr/index.php?option=com_content&view=article&id=72&Itemid=106
 #version 450
 
-#include "compiled.glsl"
+#include "compiled.inc"
 #include "std/gbuffer.glsl"
 #include "std/shadows.glsl"
 

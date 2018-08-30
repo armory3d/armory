@@ -1,6 +1,6 @@
 #version 450
 
-#include "compiled.glsl"
+#include "compiled.inc"
 #include "std/math.glsl"
 #include "std/gbuffer.glsl"
 

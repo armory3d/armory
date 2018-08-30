@@ -1,6 +1,6 @@
 #version 450
 
-#include "compiled.glsl"
+#include "compiled.inc"
 
 in vec3 color;
 // #ifdef _InvY

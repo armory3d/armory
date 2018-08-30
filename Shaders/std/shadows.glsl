@@ -1,4 +1,4 @@
-#include "compiled.glsl"
+#include "compiled.inc"
 
 // uniform sampler2D shadowMap;
 // uniform samplerCube shadowMapCube;

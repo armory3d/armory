@@ -2,7 +2,7 @@
 // http://john-chapman-graphics.blogspot.com/2013/01/per-object-motion-blur.html
 #version 450
 
-#include "compiled.glsl"
+#include "compiled.inc"
 
 uniform sampler2D gbuffer0;
 uniform sampler2D sveloc;

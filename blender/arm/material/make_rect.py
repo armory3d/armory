@@ -41,7 +41,7 @@ def make_rect(con_rect):
 
     frag.ins = vert.outs
     frag.add_out('vec4 fragColor')
-    frag.add_include('compiled.glsl')
+    frag.add_include('compiled.inc')
     frag.add_include('std/brdf.glsl')
     frag.add_include('std/math.glsl')
     frag.add_include('std/gbuffer.glsl')

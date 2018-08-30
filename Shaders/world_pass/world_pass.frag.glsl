@@ -1,6 +1,6 @@
 #version 450
 
-#include "compiled.glsl"
+#include "compiled.inc"
 #ifdef _EnvTex
 #include "std/math.glsl"
 #endif

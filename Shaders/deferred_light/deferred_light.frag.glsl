@@ -1,6 +1,6 @@
 #version 450
 
-#include "compiled.glsl"
+#include "compiled.inc"
 #include "std/brdf.glsl"
 #include "std/math.glsl"
 #ifdef _LightIES

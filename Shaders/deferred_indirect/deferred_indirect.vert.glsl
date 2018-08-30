@@ -1,6 +1,6 @@
 #version 450
 
-#include "compiled.glsl"
+#include "compiled.inc"
 
 #ifdef _IndPos
 	uniform mat4 invVP;

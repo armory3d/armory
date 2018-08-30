@@ -1,6 +1,6 @@
 #version 450
 
-#include "compiled.glsl"
+#include "compiled.inc"
 #include "std/conetrace.glsl"
 #include "std/gbuffer.glsl"
 

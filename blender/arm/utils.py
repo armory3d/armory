@@ -145,6 +145,11 @@ def get_ui_scale():
     addon_prefs = user_preferences.addons['armory'].preferences
     return 1.0 if not hasattr(addon_prefs, 'ui_scale') else addon_prefs.ui_scale
 
+def get_khamake_threads():
+    user_preferences = bpy.context.user_preferences
+    addon_prefs = user_preferences.addons['armory'].preferences
+    return 1 if not hasattr(addon_prefs, 'khamake_threads') else addon_prefs.khamake_threads
+
 def get_save_on_build():
     user_preferences = bpy.context.user_preferences
     addon_prefs = user_preferences.addons['armory'].preferences

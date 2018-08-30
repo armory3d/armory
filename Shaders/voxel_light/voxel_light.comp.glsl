@@ -3,7 +3,7 @@
 // layout (local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
 layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 
-#include "compiled.glsl"
+#include "compiled.inc"
 #include "std/math.glsl"
 #include "std/gbuffer.glsl"
 #include "std/shadows.glsl"

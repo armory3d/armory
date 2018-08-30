@@ -27,7 +27,7 @@ def make(context_id):
     vert.write('wvpposition = WVP * vec4(pos, 1.0);')
     vert.write('gl_Position = wvpposition;')
     
-    frag.add_include('compiled.glsl')
+    frag.add_include('compiled.inc')
     frag.add_include('std/gbuffer.glsl')
     frag.ins = vert.outs
     frag.add_uniform('sampler2D gbufferD')

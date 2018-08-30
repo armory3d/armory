@@ -203,7 +203,7 @@ def make_base(con_mesh, parse_opacity):
         if write_vertex_attribs != None:
             vattr_written = write_vertex_attribs(vert)
 
-    frag.add_include('compiled.glsl')
+    frag.add_include('compiled.inc')
 
     written = False
     if write_material_attribs != None:
@@ -419,7 +419,7 @@ def make_deferred(con_mesh):
 #     vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
 #     vert.write('gl_Position = WVP * spos;')
 
-#     frag.add_include('compiled.glsl')
+#     frag.add_include('compiled.inc')
 
 #     vert.add_out('vec2 texCoord')
 
@@ -470,7 +470,7 @@ def make_forward_mobile(con_mesh):
     # vert.write_attrib('wposition = vec4(W * spos).xyz;')
     vert.write('gl_Position = WVP * spos;')
 
-    frag.add_include('compiled.glsl')
+    frag.add_include('compiled.inc')
     frag.write('vec3 basecol;')
     frag.write('float roughness;')
     frag.write('float metallic;')
@@ -566,7 +566,7 @@ def make_forward_solid(con_mesh):
     vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
     vert.write('gl_Position = WVP * spos;')
 
-    frag.add_include('compiled.glsl')
+    frag.add_include('compiled.inc')
     frag.write('vec3 basecol;')
     frag.write('float roughness;')
     frag.write('float metallic;')
@@ -700,7 +700,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.write('if (receiveShadow) {')
         frag.write('    if (lightShadow == 1) {')
         if '_CSM' in wrd.world_defs:
-            frag.add_include('compiled.glsl')
+            frag.add_include('compiled.inc')
             frag.add_uniform('vec4 casData[shadowmapCascades * 4 + 4]', '_cascadeData', included=True)
             frag.add_uniform('vec3 eye', '_cameraPosition')
             frag.write('vec2 smSize;')

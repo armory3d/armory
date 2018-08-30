@@ -2,7 +2,7 @@
 // http://http.developer.nvidia.com/GPUGems3/gpugems3_ch27.html
 #version 450
 
-#include "compiled.glsl"
+#include "compiled.inc"
 #include "std/gbuffer.glsl"
 
 uniform sampler2D gbufferD;

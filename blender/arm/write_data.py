@@ -156,27 +156,49 @@ project.addSources('Sources');
             # Load shaders manually
             assets.add_khafile_def('arm_shaderload')
 
-        shader_references = sorted(list(set(assets.shaders)))
-        for ref in shader_references:
-            ref = ref.replace('\\', '/').replace('//', '/')
-            f.write(add_shaders(ref, rel_path=rel_path))
-            # noprocessing for passthrough geom shader
-            # if ref.endswith('voxel.geom.glsl'):
-                # f.write(', { noprocessing: true }')
+        # Add compiled shaders all at once when threaded
+        threaded = arm.utils.get_khamake_threads() > 1
+        if threaded:
+            shaders_path = arm.utils.build_dir() + '/compiled/Shaders/*.glsl'
+            if rel_path:
+                shaders_path = os.path.relpath(shaders_path, arm.utils.get_fp()).replace('\\', '/')
+            f.write('project.addShaders("' + shaders_path + '");\n')
+        else:
+            shader_references = sorted(list(set(assets.shaders)))
+            for ref in shader_references:
+                ref = ref.replace('\\', '/').replace('//', '/')
+                f.write(add_shaders(ref, rel_path=rel_path))
+                # noprocessing for passthrough geom shader
+                # if ref.endswith('voxel.geom.glsl'):
+                    # f.write(', { noprocessing: true }')
 
         # Move assets for published game to /data folder
         use_data_dir = is_publish and (state.target == 'krom-windows' or state.target == 'krom-linux' or state.target == 'windows' or state.target == 'linux')
         if use_data_dir:
             assets.add_khafile_def('arm_data_dir')
 
+        # Add compiled assets all at once when threaded
+        if threaded:
+            assets_path = arm.utils.build_dir() + '/compiled/Assets/**'
+            assets_path_sh = arm.utils.build_dir() + '/compiled/Shaders/*.arm'
+            if rel_path:
+                assets_path = os.path.relpath(assets_path, arm.utils.get_fp()).replace('\\', '/')
+                assets_path_sh = os.path.relpath(assets_path_sh, arm.utils.get_fp()).replace('\\', '/')
+            f.write('project.addAssets("' + assets_path + '");\n')
+            f.write('project.addAssets("' + assets_path_sh + '");\n')
+        
         shader_data_references = sorted(list(set(assets.shader_datas)))
         for ref in shader_data_references:
             ref = ref.replace('\\', '/').replace('//', '/')
+            if threaded and '/compiled/' in ref: # Asset already included
+                continue
             f.write(add_assets(ref, use_data_dir=use_data_dir, rel_path=rel_path))
 
         asset_references = sorted(list(set(assets.assets)))
         for ref in asset_references:
             ref = ref.replace('\\', '/').replace('//', '/')
+            if threaded and '/compiled/' in ref: # Asset already included
+                continue
             quality = 1.0
             s = ref.lower()
             if s.endswith('.wav'):
@@ -421,7 +443,7 @@ def write_compiledglsl(defs):
     shadowmap_size = 0
     if rpdat.rp_shadowmap != 'Off':
         shadowmap_size = int(rpdat.rp_shadowmap)
-    with open(arm.utils.build_dir() + '/compiled/Shaders/compiled.glsl', 'w') as f:
+    with open(arm.utils.build_dir() + '/compiled/Shaders/compiled.inc', 'w') as f:
         f.write(
 """#ifndef _COMPILED_GLSL_
 #define _COMPILED_GLSL_

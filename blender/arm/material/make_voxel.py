@@ -32,7 +32,7 @@ def make_gi(context_id):
     geom.ins = vert.outs
     frag.ins = geom.outs
 
-    frag.add_include('compiled.glsl')
+    frag.add_include('compiled.inc')
     frag.add_include('std/math.glsl')
     frag.add_include('std/imageatomic.glsl')
     frag.add_include('std/gbuffer.glsl')
@@ -100,7 +100,7 @@ def make_gi(context_id):
     vert.add_out('vec3 voxpositionGeom')
     vert.add_out('vec3 wnormalGeom')
 
-    vert.add_include('compiled.glsl')
+    vert.add_include('compiled.inc')
 
     if con_voxel.is_elem('col'):
         vert.add_out('vec3 vcolorGeom')
@@ -216,7 +216,7 @@ def make_ao(context_id):
     geom.ins = vert.outs
     frag.ins = geom.outs
 
-    frag.add_include('compiled.glsl')
+    frag.add_include('compiled.inc')
     frag.add_include('std/math.glsl')
     frag.add_include('std/imageatomic.glsl')
     frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
@@ -225,7 +225,7 @@ def make_ao(context_id):
     # frag.add_uniform('layout(r32ui) uimage3D voxels')
     frag.add_uniform('layout(r8) writeonly image3D voxels')
 
-    vert.add_include('compiled.glsl')
+    vert.add_include('compiled.inc')
     vert.add_uniform('mat4 W', '_worldMatrix')
     vert.add_out('vec3 voxpositionGeom')
 

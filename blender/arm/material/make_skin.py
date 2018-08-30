@@ -2,7 +2,7 @@ import arm.utils
 
 def skin_pos(vert):
 
-    vert.add_include('compiled.glsl')
+    vert.add_include('compiled.inc')
 
     rpdat = arm.utils.get_rp()
     if rpdat.arm_skin == 'GPU (Matrix)':
