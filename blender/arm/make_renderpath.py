@@ -208,6 +208,8 @@ def build():
                 assets.add_embedded_data('luttexture.jpg')
             if '_CDOF' in wrd.compo_defs or '_CFXAA' in wrd.compo_defs or '_CSharpen' in wrd.compo_defs:
                 wrd.compo_defs += '_CTexStep'
+            if '_CDOF' in wrd.compo_defs or '_CFog' in wrd.compo_defs or '_CGlare' in wrd.compo_defs:
+                wrd.compo_defs += '_CCameraProj'
             assets.add_shader_pass('compositor_pass')
 
         assets.add_khafile_def('rp_antialiasing={0}'.format(rpdat.rp_antialiasing))
