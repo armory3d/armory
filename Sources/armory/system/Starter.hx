@@ -27,17 +27,12 @@ class Starter {
 			
 			armory.object.Uniforms.register();
 			
-			var windowMode = c.window_mode == 0 ? kha.WindowMode.Window : kha.WindowMode.Fullscreen;
-			#if (kha_version < 1807) // TODO: deprecated
-			if (windowMode == kha.WindowMode.Fullscreen) { windowMode = kha.WindowMode.BorderlessWindow; c.window_w = kha.Display.width(0); c.window_h = kha.Display.height(0); }
-			kha.System.init({title: Main.projectName, width: c.window_w, height: c.window_h, samplesPerPixel: c.window_msaa, vSync: c.window_vsync, windowMode: windowMode, resizable: c.window_resizable, maximizable: c.window_maximizable, minimizable: c.window_minimizable}, function() {
-			#else
+			var windowMode = c.window_mode == 0 ? kha.WindowMode.Windowed : kha.WindowMode.Fullscreen;
 			var windowFeatures = 0;
 			if (c.window_resizable) windowFeatures |= kha.WindowOptions.FeatureResizable;
 			if (c.window_maximizable) windowFeatures |= kha.WindowOptions.FeatureMaximizable;
 			if (c.window_minimizable) windowFeatures |= kha.WindowOptions.FeatureMinimizable;
 			kha.System.start({title: Main.projectName, width: c.window_w, height: c.window_h, window: {mode: windowMode, windowFeatures: windowFeatures}, framebuffer: {samplesPerPixel: c.window_msaa, verticalSync: c.window_vsync}}, function(window:kha.Window) {
-			#end
 				iron.App.init(function() {
 					#if arm_loadscreen
 					function load(g:kha.graphics2.Graphics) {

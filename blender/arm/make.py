@@ -465,10 +465,8 @@ def build_success():
             if arm.utils.get_os() == 'win':
                 cmd.append('--consolepid')
                 cmd.append(str(os.getpid()))
-            elif arm.utils.get_os() == 'mac': # TODO: Krom sound freezes on MacOS
+            elif arm.utils.get_os() == 'mac' or arm.utils.get_os() == 'linux': # TODO: Wait for new Krom audio
                 cmd.append('--nosound')
-            # cmd.append('--stdout')
-            # cmd.append(arm.utils.get_fp_build() + '/krom.txt')
             state.proc_play = run_proc(cmd, play_done)
         elif wrd.arm_play_runtime == 'Native':
             if arm.utils.get_os() == 'win':
@@ -476,7 +474,7 @@ def build_success():
             elif arm.utils.get_os() == 'linux':
                 bin_location = arm.utils.get_fp_build() + '/linux'
             else:
-                bin_location = arm.utils.get_fp_build() + '/osx'
+                bin_location = arm.utils.get_fp_build() + '/osx-build/build/Release'
             os.chdir(bin_location)
             if arm.utils.get_os() == 'win':
                 p = bin_location + '/' + arm.utils.safestr(wrd.arm_project_name) + '.exe'
@@ -509,36 +507,23 @@ def build_success():
                 os.remove(mapfile)
             # Copy Krom binaries
             if state.target == 'krom-windows':
-                krom_location = sdk_path + '/Krom/win32/'
+                gapi = state.export_gapi
+                ext = '' if gapi == 'opengl' else '_' + gapi
+                krom_location = sdk_path + '/Krom/Krom' + ext + '.exe'
+                shutil.copy(krom_location, files_path + '/Krom.exe')
+                os.rename(files_path + '/Krom.exe', files_path + '/' + arm.utils.safestr(wrd.arm_project_name) + '.exe')
             elif state.target == 'krom-linux':
-                krom_location = sdk_path + '/Krom/linux/'
+                krom_location = sdk_path + '/Krom/Krom'
+                shutil.copy(krom_location, files_path)
+                os.rename(files_path + '/Krom', files_path + '/' + arm.utils.safestr(wrd.arm_project_name))
             else:
-                krom_location = sdk_path + '/Krom/macos/Krom.app'
-            if state.target == 'krom-macos':
+                krom_location = sdk_path + '/Krom/Krom.app'
                 shutil.copytree(krom_location, files_path + '/Krom.app')
                 game_files = os.listdir(files_path)
                 for f in game_files:
                     f = files_path + '/' + f
                     if os.path.isfile(f):
                         shutil.move(f, files_path + '/Krom.app/Contents/MacOS')
-            else:
-                krom_files = os.listdir(krom_location)
-                for f in krom_files:
-                    f = krom_location + '/' + f
-                    if os.path.isfile(f):
-                        shutil.copy(f, files_path)
-            if state.target == 'krom-windows':
-                gapi = state.export_gapi
-                ext = '' if gapi == 'opengl' else '_' + gapi
-                bin_path = files_path + '/Krom' + ext + '.exe'
-                os.rename(bin_path, files_path + '/' + arm.utils.safestr(wrd.arm_project_name) + '.exe')
-                if gapi != 'opengl' and os.path.exists(files_path + '/Krom.exe'):
-                    os.remove(files_path + '/Krom.exe')
-                if gapi != 'direct3d11' and os.path.exists(files_path + '/Krom_direct3d11.exe'):
-                    os.remove(files_path + '/Krom_direct3d11.exe')
-            elif state.target == 'krom-linux':
-                os.rename(files_path + '/Krom', files_path + '/' + arm.utils.safestr(wrd.arm_project_name))
-            else:
                 os.rename(files_path + '/Krom.app', files_path + '/' + arm.utils.safestr(wrd.arm_project_name) + '.app')
             # Rename
             ext = state.target.split('-')[-1] # krom-windows

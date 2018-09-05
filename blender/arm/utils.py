@@ -198,13 +198,13 @@ def get_khamake_path():
 def krom_paths(bin_ext=''):
     sdk_path = get_sdk_path()
     if arm.utils.get_os() == 'win':
-        krom_location = sdk_path + '/Krom/win32'
+        krom_location = sdk_path + '/Krom'
         krom_path = krom_location + '/Krom' + bin_ext + '.exe'
     elif arm.utils.get_os() == 'mac':
-        krom_location = sdk_path + '/Krom/macos/Krom.app/Contents/MacOS'
+        krom_location = sdk_path + '/Krom/Krom.app/Contents/MacOS'
         krom_path = krom_location + '/Krom' + bin_ext
     else:
-        krom_location = sdk_path + '/Krom/linux'
+        krom_location = sdk_path + '/Krom'
         krom_path = krom_location + '/Krom' + bin_ext
     return krom_location, krom_path
 

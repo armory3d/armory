@@ -239,6 +239,7 @@ class ArmEditScriptButton(bpy.types.Operator):
 
         if bpy.data.worlds['Arm'].arm_play_runtime != 'Browser' or not os.path.exists(arm.utils.get_fp() + "/khafile.js"):
             print('Generating HTML5 project for Kode Studio')
+            arm.utils.check_default_props()
             make.build('html5')
 
         if self.is_object:
@@ -309,7 +310,7 @@ class ArmEditCanvasButton(bpy.types.Operator):
         canvas_path = project_path + '/Bundled/canvas/' + item.canvas_name_prop + '.json'
         
         sdk_path = arm.utils.get_sdk_path()
-        armory2d_path = sdk_path + '/lib/armory_tools/armory2d/krom'
+        armory2d_path = sdk_path + '/lib/armory_tools/armory2d'
         krom_location, krom_path = arm.utils.krom_paths()
         os.chdir(krom_location)
         cpath = canvas_path.replace('\\', '/')

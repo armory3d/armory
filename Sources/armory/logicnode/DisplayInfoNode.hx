@@ -9,12 +9,7 @@ class DisplayInfoNode extends LogicNode {
 	}
 
 	override function get(from:Int):Dynamic {
-#if (kha_version < 1807) // TODO: deprecated
-		if (from == 0) return kha.Display.width(displayIndex);
-		else return kha.Display.height(displayIndex);
-#else
 		if (from == 0) return kha.Display.all[displayIndex].width;
 		else return kha.Display.all[displayIndex].height;
-#end
 	}
 }
