@@ -26,13 +26,13 @@ class ArmTraitPropList(bpy.types.UIList):
         # Make sure your code supports all 3 layout types
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             #layout.prop(item, "enabled_prop")
-            #layout.label(item.name, icon = custom_icon)
-            # layout.label(item.name)
+            #layout.label(text=item.name, icon = custom_icon)
+            # layout.label(text=item.name)
             layout.prop(item, "value", text=item.name, emboss=False, icon=custom_icon)
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
-            layout.label("", icon = custom_icon)
+            layout.label(text="", icon = custom_icon)
 
 def register():
     bpy.utils.register_class(ArmTraitPropListItem)

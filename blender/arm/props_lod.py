@@ -44,14 +44,14 @@ class ArmLodList(bpy.types.UIList):
             if name == '':
                 name = 'None'
             row = layout.row()
-            row.label(name, icon=custom_icon)
+            row.label(text=name, icon=custom_icon)
             col = row.column()
             col.alignment = 'RIGHT'
-            col.label("{:.2f}".format(item.screen_size_prop))
+            col.label(text="{:.2f}".format(item.screen_size_prop))
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
-            layout.label("", icon = custom_icon)
+            layout.label(text="", icon = custom_icon)
 
 class ArmLodListNewItem(bpy.types.Operator):
     # Add a new item to the list

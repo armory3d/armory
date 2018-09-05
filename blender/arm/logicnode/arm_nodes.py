@@ -32,7 +32,7 @@ class ArmActionSocket(bpy.types.NodeSocket):
     bl_label = 'Action Socket'
 
     def draw(self, context, layout, node, text):
-        layout.label(self.name)
+        layout.label(text=self.name)
 
     def draw_color(self, context, node):
         return (0.8, 0.3, 0.3, 1)
@@ -42,7 +42,7 @@ class ArmArraySocket(bpy.types.NodeSocket):
     bl_label = 'Array Socket'
 
     def draw(self, context, layout, node, text):
-        layout.label(self.name)
+        layout.label(text=self.name)
 
     def draw_color(self, context, node):
         return (0.8, 0.8, 0.3, 1)
@@ -67,9 +67,9 @@ class ArmObjectSocket(bpy.types.NodeSocket):
 
     def draw(self, context, layout, node, text):
         if self.is_output:
-            layout.label(self.name)
+            layout.label(text=self.name)
         elif self.is_linked:
-            layout.label(self.name)
+            layout.label(text=self.name)
         else:
             row = layout.row(align=True)
             row.prop_search(self, 'default_value', bpy.context.scene, 'objects', icon='NONE', text='')
@@ -107,9 +107,9 @@ class ArmAnimActionSocket(bpy.types.NodeSocket):
 
     def draw(self, context, layout, node, text):
         if self.is_output:
-            layout.label(self.name)
+            layout.label(text=self.name)
         elif self.is_linked:
-            layout.label(self.name)
+            layout.label(text=self.name)
         else:
             layout.prop_search(self, 'default_value', bpy.data, 'actions', icon='NONE', text='')
 

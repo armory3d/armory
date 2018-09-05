@@ -78,11 +78,11 @@ class ArmTraitList(bpy.types.UIList):
         # Make sure your code supports all 3 layout types
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             layout.prop(item, "enabled_prop")
-            layout.label(item.name, icon=custom_icon)
+            layout.label(text=item.name, icon=custom_icon)
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
-            layout.label("", icon = custom_icon)
+            layout.label(text="", icon = custom_icon)
 
 class ArmTraitListNewItem(bpy.types.Operator):
     # Add a new item to the list
@@ -460,12 +460,12 @@ def draw_traits(layout, obj, is_object):
             row = layout.row()
             # row.prop(item, "class_name_prop")
             if item.type_prop == 'Haxe Script':
-                row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_scripts_list", "Class")
+                row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_scripts_list", text="Class")
             else:
                 # Bundled scripts not yet fetched
                 if len(bpy.data.worlds['Arm'].arm_bundled_scripts_list) == 0:
                     arm.utils.fetch_bundled_script_names()
-                row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_bundled_scripts_list", "Class")
+                row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_bundled_scripts_list", text="Class")
             
             # Props
             if len(item.arm_traitpropslist) > 0:
@@ -477,7 +477,7 @@ def draw_traits(layout, obj, is_object):
                 row.template_list("ArmTraitPropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows)
             
             # Params
-            layout.label("Parameters")
+            layout.label(text="Parameters")
             paramsrow = layout.row()
             paramsrows = 2
             if len(item.arm_traitparamslist) > 1:
@@ -528,7 +528,7 @@ def draw_traits(layout, obj, is_object):
         elif item.type_prop == 'WebAssembly':
             item.name = item.webassembly_prop
             row = layout.row()
-            row.prop_search(item, "webassembly_prop", bpy.data.worlds['Arm'], "arm_wasm_list", "Module")
+            row.prop_search(item, "webassembly_prop", bpy.data.worlds['Arm'], "arm_wasm_list", text="Module")
             row = layout.row(align=True)
             row.alignment = 'EXPAND'
             column = row.column(align=True)
@@ -544,7 +544,7 @@ def draw_traits(layout, obj, is_object):
         elif item.type_prop == 'UI Canvas':
             item.name = item.canvas_name_prop
             row = layout.row()
-            row.prop_search(item, "canvas_name_prop", bpy.data.worlds['Arm'], "arm_canvas_list", "Canvas")
+            row.prop_search(item, "canvas_name_prop", bpy.data.worlds['Arm'], "arm_canvas_list", text="Canvas")
             
             row = layout.row(align=True)
             row.alignment = 'EXPAND'
@@ -561,7 +561,7 @@ def draw_traits(layout, obj, is_object):
         elif item.type_prop == 'Logic Nodes':
             item.name = item.nodes_name_prop
             row = layout.row()
-            row.prop_search(item, "nodes_name_prop", bpy.data, "node_groups", "Tree")
+            row.prop_search(item, "nodes_name_prop", bpy.data, "node_groups", text="Tree")
 
 def register():  
     bpy.utils.register_class(ArmTraitListItem)

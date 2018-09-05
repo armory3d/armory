@@ -100,14 +100,14 @@ class ArmoryAddonPreferences(AddonPreferences):
         else:
             layout.prop(self, "sdk_path")
         box = layout.box().column()
-        box.label("Armory Updater")
-        box.label("Note: Development version may run unstable!")
+        box.label(text="Armory Updater")
+        box.label(text="Note: Development version may run unstable!")
         row = box.row(align=True)
         row.alignment = 'EXPAND'
         row.operator("arm_addon.install_git", icon="URL")
         row.operator("arm_addon.update", icon="FILE_REFRESH")
         row.operator("arm_addon.restore")
-        box.label("Please restart Blender after successful SDK update.")
+        box.label(text="Please restart Blender after successful SDK update.")
         layout.prop(self, "show_advanced")
         if self.show_advanced:
             box = layout.box().column()

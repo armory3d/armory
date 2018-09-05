@@ -130,11 +130,11 @@ class ArmExporterList(bpy.types.UIList):
             row.prop(item, "name", text="", emboss=False, icon=custom_icon)
             col = row.column()
             col.alignment = 'RIGHT'
-            col.label(item.arm_project_target)
+            col.label(text=item.arm_project_target)
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
-            layout.label("", icon = custom_icon)
+            layout.label(text="", icon = custom_icon)
 
 class ArmExporterListNewItem(bpy.types.Operator):
     # Add a new item to the list

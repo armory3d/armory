@@ -24,11 +24,11 @@ class ArmBakeList(bpy.types.UIList):
             row.prop(item, "object_name", text="", emboss=False, icon=custom_icon)
             col = row.column()
             col.alignment = 'RIGHT'
-            col.label(str(item.res_x) + 'x' + str(item.res_y))
+            col.label(text=str(item.res_x) + 'x' + str(item.res_y))
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
-            layout.label("", icon=custom_icon)
+            layout.label(text="", icon=custom_icon)
 
 class ArmBakeListNewItem(bpy.types.Operator):
     # Add a new item to the list

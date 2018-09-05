@@ -1625,7 +1625,7 @@ class ArmoryExporter:
 
         # Apply all modifiers to create a new mesh with tessfaces
         if bpy.app.version >= (2, 80, 1):
-            exportMesh = bobject.to_mesh(bpy.context.depsgraph, apply_modifiers, True, False)
+            exportMesh = bobject.to_mesh(bpy.context.depsgraph, apply_modifiers, calc_tessface=True, calc_undeformed=False)
         else:
             exportMesh = bobject.to_mesh(scene, apply_modifiers, "RENDER", True, False)
 
@@ -1820,12 +1820,12 @@ class ArmoryExporter:
         if bpy.app.version >= (2, 80, 1):
             proj = camera.calc_matrix_camera(
                 self.scene.view_layers[0].depsgraph,
-                render.resolution_x,
-                render.resolution_y,
-                render.pixel_aspect_x,
-                render.pixel_aspect_y)
+                x=render.resolution_x,
+                y=render.resolution_y,
+                scale_x=render.pixel_aspect_x,
+                scale_y=render.pixel_aspect_y)
         else:
-                proj = camera.calc_matrix_camera(
+            proj = camera.calc_matrix_camera(
                 render.resolution_x,
                 render.resolution_y,
                 render.pixel_aspect_x,

@@ -654,7 +654,7 @@ class ArmRPList(bpy.types.UIList):
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
-            layout.label("", icon = custom_icon)
+            layout.label(text="", icon = custom_icon)
 
 class ArmRPListNewItem(bpy.types.Operator):
     # Add a new item to the list
