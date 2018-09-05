@@ -2432,7 +2432,7 @@ class ArmoryExporter:
 
         # Restore frame
         if scene.frame_current != current_frame:
-            scene.frame_set(current_frame, current_subframe)
+            scene.frame_set(current_frame, subframe=current_subframe)
 
         print('Scene built in ' + str(time.time() - profile_time))
         return {'FINISHED'}
