@@ -19,6 +19,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
         rpdat.rp_blending_state = 'Off'
+        rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = False
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
@@ -53,6 +54,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
         rpdat.rp_blending_state = 'Auto'
+        rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
@@ -86,6 +88,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
         rpdat.rp_blending_state = 'Auto'
+        rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
@@ -118,6 +121,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
         rpdat.rp_blending_state = 'Auto'
+        rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
@@ -156,6 +160,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
         rpdat.rp_blending_state = 'Off'
+        rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = False
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = True
@@ -190,6 +195,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
         rpdat.rp_blending_state = 'Off'
+        rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = False
         rpdat.rp_background = 'Clear'
         rpdat.rp_stereo = False
@@ -222,6 +228,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Auto'
         rpdat.rp_sss_state = 'Auto'
         rpdat.rp_blending_state = 'Auto'
+        rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
@@ -262,6 +269,7 @@ def update_preset(self, context):
         rpdat.rp_decals_state = 'Off'
         rpdat.rp_sss_state = 'Off'
         rpdat.rp_blending_state = 'Off'
+        rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = False
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
@@ -457,6 +465,11 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Off', 'Off', 'Off'),
                ('Auto', 'Auto', 'Auto')],
         name="Blending", description="Blending pass", default='Auto', update=update_blending_state)
+    rp_draw_order = EnumProperty(
+        items=[('Auto', 'Auto', 'Auto'),
+               ('Distance', 'Distance', 'Distance'),
+               ('Shader', 'Shader', 'Shader')],
+        name='Draw Order', description='Sort objects', default='Auto', update=assets.invalidate_compiled_data)
     rp_stereo = BoolProperty(name="VR", description="Stereo rendering", default=False, update=update_renderpath)
     rp_greasepencil = BoolProperty(name="Grease Pencil", description="Render Grease Pencil data", default=False, update=update_renderpath)
     rp_ocean = BoolProperty(name="Ocean", description="Ocean pass", default=False, update=update_renderpath)

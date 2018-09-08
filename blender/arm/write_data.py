@@ -259,6 +259,9 @@ project.addSources('Sources');
         if rpdat.arm_particles != 'Off':
             assets.add_khafile_def('arm_particles')
 
+        if rpdat.rp_draw_order == 'Distance':
+            assets.add_khafile_def('arm_draworder_dist')
+
         if arm.utils.get_viewport_controls() == 'azerty':
             assets.add_khafile_def('arm_azerty')
 

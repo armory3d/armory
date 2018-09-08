@@ -697,6 +697,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
         box.prop(rpdat, "rp_overlays_state")
         box.prop(rpdat, "rp_decals_state")
         box.prop(rpdat, "rp_blending_state")
+        box.prop(rpdat, "rp_draw_order")
         box.prop(rpdat, 'arm_samples_per_pixel')
         box.prop(rpdat, 'arm_texture_filter')
         box.prop(rpdat, "arm_diffuse_model")
