@@ -9,7 +9,7 @@ import armory.trait.internal.CameraController;
 
 class FirstPersonController extends CameraController {
 
-#if (!arm_bullet)
+#if (!arm_physics)
 	public function new() { super(); }
 #else
 

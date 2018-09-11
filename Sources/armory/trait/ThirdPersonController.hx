@@ -8,7 +8,7 @@ import armory.trait.internal.CameraController;
 
 class ThirdPersonController extends CameraController {
 
-#if (!arm_bullet)
+#if (!arm_physics)
 	public function new() { super(); }
 #else
 
