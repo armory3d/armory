@@ -188,6 +188,8 @@ class ArmoryExporterOpenFolderButton(bpy.types.Operator):
 
     def execute(self, context):
         wrd = bpy.data.worlds['Arm']
+        if len(wrd.arm_exporterlist) == 0:
+            return {'CANCELLED'}
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
         p = os.path.join(arm.utils.get_fp_build(), item.arm_project_target)
         if os.path.exists(p):
