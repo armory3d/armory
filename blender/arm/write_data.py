@@ -184,8 +184,11 @@ project.addSources('Sources');
             if rel_path:
                 assets_path = os.path.relpath(assets_path, arm.utils.get_fp()).replace('\\', '/')
                 assets_path_sh = os.path.relpath(assets_path_sh, arm.utils.get_fp()).replace('\\', '/')
-            f.write('project.addAssets("' + assets_path + '");\n')
-            f.write('project.addAssets("' + assets_path_sh + '");\n')
+            dest = ''
+            if use_data_dir:
+                dest += ', { destination: "data/{name}" }'
+            f.write('project.addAssets("' + assets_path + '"' + dest + ');\n')
+            f.write('project.addAssets("' + assets_path_sh + '"' + dest + ');\n')
         
         shader_data_references = sorted(list(set(assets.shader_datas)))
         for ref in shader_data_references:
