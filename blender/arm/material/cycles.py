@@ -1001,7 +1001,7 @@ def parse_value(node, socket):
 
     elif node.type == 'NEW_GEOMETRY':
         if socket == node.outputs[6]: # Backfacing
-            return '0.0'
+            return '(1.0 - float(gl_FrontFacing))'
         elif socket == node.outputs[7]: # Pointiness
             return '0.0'
 
