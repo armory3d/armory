@@ -371,15 +371,16 @@ class ArmoryExporter:
         # Frame and Value structures are given by the kind parameter.
         tracko = {}
         tracko['target'] = target
-        if kind != AnimationTypeBezier:
-            tracko['frames'] = self.export_key_frames(fcurve)
-            tracko['values'] = self.export_key_values(fcurve)
-        else:
+        if kind == AnimationTypeBezier:
             tracko['curve'] = 'bezier'
             tracko['frames'] = self.export_key_frames(fcurve)
             tracko['values'] = self.export_key_values(fcurve)
             tracko['frames_control_minus'], tracko['frames_control_plus'] = self.export_key_frame_control_points(fcurve)
             tracko['values_control_minus'], tracko['values_control_plus'] = self.export_key_value_control_points(fcurve)
+        else:
+            tracko['curve'] = 'linear'
+            tracko['frames'] = self.export_key_frames(fcurve)
+            tracko['values'] = self.export_key_values(fcurve)
         return tracko
 
     def export_object_transform(self, bobject, scene, o):
