@@ -1,6 +1,7 @@
 import os
 import sys
 import bpy
+import importlib
 from bpy.app.handlers import persistent
 import arm.utils
 import arm.props as props
@@ -133,10 +134,12 @@ def on_load_post(context):
             if os.path.isdir(arm.utils.get_fp() + '/Libraries/' + lib):
                 fp = arm.utils.get_fp() + '/Libraries/' + lib
                 if fp not in appended_py_paths and os.path.exists(fp + '/blender.py'):
-                    sys.path.append(fp)
                     appended_py_paths.append(fp)
+                    sys.path.append(fp)
                     import blender
+                    importlib.reload(blender)
                     blender.register()
+                    sys.path.remove(fp)
 
     arm.utils.update_trait_groups()
 
