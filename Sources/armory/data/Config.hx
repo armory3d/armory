@@ -41,5 +41,5 @@ typedef TConfig = {
 	@:optional var rp_ssr:Null<Bool>;
 	@:optional var rp_bloom:Null<Bool>;
 	@:optional var rp_motionblur:Null<Bool>;
-	// @:optional var rp_gi:Null<Bool>;
+	@:optional var rp_gi:Null<Bool>;
 }

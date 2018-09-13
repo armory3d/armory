@@ -106,7 +106,7 @@ def add_world_defs():
             if rpdat.rp_voxelgi_relight:
                 assets.add_khafile_def('rp_voxelgi_relight')
         elif voxelao:
-            wrd.world_defs += '_VoxelAO'
+            wrd.world_defs += '_VoxelAOvar' # Write a shader variant
 
     if arm.utils.get_gapi().startswith('direct3d'): # Flip Y axis in drawQuad command
         wrd.world_defs += '_InvY'
