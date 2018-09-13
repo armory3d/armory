@@ -54,16 +54,18 @@ class ArmTraitParamListDeleteItem(bpy.types.Operator):
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list """
-        if self.is_object:
-            obj = bpy.context.object
-        else:
-            obj = bpy.context.scene
-        if obj == None:
-            return False
-        if len(obj.arm_traitlist) == 0:
-            return False
-        trait = obj.arm_traitlist[obj.arm_traitlist_index]
-        return len(trait.arm_traitparamslist) > 0
+        # if self.is_object:
+        #     obj = bpy.context.object
+        # else:
+        #     obj = bpy.context.scene
+        # if obj == None:
+        #     return False
+        # if len(obj.arm_traitlist) == 0:
+        #     return False
+        # trait = obj.arm_traitlist[obj.arm_traitlist_index]
+        # return len(trait.arm_traitparamslist) > 0
+        # Unable to retrieve is_object in poll
+        return True
 
     def execute(self, context):
         if self.is_object:
@@ -99,17 +101,18 @@ class ArmTraitParamListMoveItem(bpy.types.Operator):
     @classmethod
     def poll(self, context):
         """ Enable if there's something in the list. """
-        if self.is_object:
-            obj = bpy.context.object
-        else:
-            obj = bpy.context.scene
-        if obj == None:
-            return False
-        if len(obj.arm_traitlist) == 0:
-            return False
-        trait = obj.arm_traitlist[obj.arm_traitlist_index]
-        return len(trait.arm_traitparamslist) > 0
-
+        # if self.is_object:
+            # obj = bpy.context.object
+        # else:
+            # obj = bpy.context.scene
+        # if obj == None:
+            # return False
+        # if len(obj.arm_traitlist) == 0:
+            # return False
+        # trait = obj.arm_traitlist[obj.arm_traitlist_index]
+        # return len(trait.arm_traitparamslist) > 0
+        # Unable to retrieve is_object in poll
+        return True
 
     def move_index(self):
         # Move index of an item render queue while clamping it
