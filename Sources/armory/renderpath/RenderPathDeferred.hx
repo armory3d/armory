@@ -702,7 +702,7 @@ class RenderPathDeferred {
 
 		#if rp_bloom
 		{
-			if (armory.data.Config.raw.rp_ssr != false) {
+			if (armory.data.Config.raw.rp_bloom != false) {
 				path.setTarget("bloomtex");
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/bloom_pass/bloom_pass");
