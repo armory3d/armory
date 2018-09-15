@@ -551,7 +551,8 @@ class ConvexBreaker {
 			index_arrays: [indices]
 		};
 
-		var md = MeshData.newSync(rawmesh);
+		// Synchronous on Krom
+		var md = new MeshData(rawmesh, function(d:MeshData) {});
 		md.geom.calculateAABB();
 		return md;
 	}
