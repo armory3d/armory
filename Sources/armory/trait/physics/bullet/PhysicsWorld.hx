@@ -84,7 +84,10 @@ class PhysicsWorld extends Trait {
 		rbMap = new Map();
 		active = this;
 
-		notifyOnLateUpdate(lateUpdate);
+		// Ensure physics are updated first in the lateUpdate list
+		_lateUpdate = [lateUpdate];
+		@:privateAccess iron.App.traitLateUpdates.insert(0, lateUpdate);
+		
 		iron.Scene.active.notifyOnRemove(function() {
 			sceneRemoved = true;
 		});
@@ -234,6 +237,8 @@ class PhysicsWorld extends Trait {
 
 		world.stepSimulation(timeStep, maxSteps, t);
 		updateContacts();
+
+		for (rb in rbMap) @:privateAccess rb.physicsUpdate();
 
 		#if arm_debug
 		physTime = kha.Scheduler.realTime() - startTime;

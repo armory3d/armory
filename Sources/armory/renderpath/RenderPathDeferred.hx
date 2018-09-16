@@ -58,6 +58,9 @@ class RenderPathDeferred {
 				#end
 			}
 			#end
+			#if (rp_gi == "Voxel AO")
+			path.loadShader("shader_datas/deferred_indirect/deferred_indirect_VoxelAOvar");
+			#end
 		}
 		#end
 
@@ -497,6 +500,7 @@ class RenderPathDeferred {
 		// Voxels
 		#if (rp_gi != "Off")
 		var relight = false;
+		if (armory.data.Config.raw.rp_gi != false)
 		{
 			var voxelize = path.voxelize();
 
@@ -564,8 +568,13 @@ class RenderPathDeferred {
 			}
 		}
 		#end
+		var voxelao_pass = false;
 		#if (rp_gi != "Off")
+		if (armory.data.Config.raw.rp_gi != false)
 		{
+			#if (rp_gi == "Voxel AO")
+			voxelao_pass = true;
+			#end
 			path.bindTarget(voxels, "voxels");
 			#if arm_voxelgi_temporal
 			{
@@ -574,7 +583,13 @@ class RenderPathDeferred {
 			#end
 		}
 		#end
-		path.drawShader("shader_datas/deferred_indirect/deferred_indirect");
+		
+		if (voxelao_pass) {
+			path.drawShader("shader_datas/deferred_indirect/deferred_indirect_VoxelAOvar");
+		}
+		else {
+			path.drawShader("shader_datas/deferred_indirect/deferred_indirect");
+		}
 
 		// Direct
 		var lights = iron.Scene.active.lights;
@@ -687,7 +702,7 @@ class RenderPathDeferred {
 
 		#if rp_bloom
 		{
-			if (armory.data.Config.raw.rp_ssr != false) {
+			if (armory.data.Config.raw.rp_bloom != false) {
 				path.setTarget("bloomtex");
 				path.bindTarget("tex", "tex");
 				path.drawShader("shader_datas/bloom_pass/bloom_pass");

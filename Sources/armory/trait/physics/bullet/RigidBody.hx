@@ -104,8 +104,6 @@ class RigidBody extends iron.Trait {
 		ready = true;
 
 		if (!Std.is(object, MeshObject)) return; // No mesh data
-		notifyOnLateUpdate(lateUpdate);
-		notifyOnRemove(removeFromWorld);
 
 		transform = object.transform;
 		physics = armory.trait.physics.PhysicsWorld.active;
@@ -229,6 +227,7 @@ class RigidBody extends iron.Trait {
 		#end
 
 		physics.addRigidBody(this);
+		notifyOnRemove(removeFromWorld);
 
 		if (onReady != null) onReady();
 
@@ -237,7 +236,7 @@ class RigidBody extends iron.Trait {
 		#end
 	}
 
-	function lateUpdate() {
+	function physicsUpdate() {
 		if (!ready) return;
 		if (object.animation != null || animated) {
 			syncTransform();

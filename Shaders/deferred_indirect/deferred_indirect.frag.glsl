@@ -10,7 +10,7 @@
 #ifdef _VoxelGI
 	#include "std/conetrace.glsl"
 #endif
-#ifdef _VoxelAO
+#ifdef _VoxelAOvar
 	#include "std/conetrace.glsl"
 #endif
 #ifdef _DFAO
@@ -24,7 +24,7 @@ uniform sampler2D gbuffer1;
 #ifdef _VoxelGI
 	uniform sampler3D voxels;
 #endif
-#ifdef _VoxelAO
+#ifdef _VoxelAOvar
 	uniform sampler3D voxels;
 #endif
 #ifdef _VoxelGITemporal
@@ -170,7 +170,7 @@ void main() {
 	envl.rgb = dfgi(p, n) * albedo;
 #endif
 
-#ifdef _VoxelAO
+#ifdef _VoxelAOvar
 
 	#ifdef _VoxelGICam
 	vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;

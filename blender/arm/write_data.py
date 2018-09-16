@@ -179,8 +179,9 @@ project.addSources('Sources');
 
         # Add compiled assets all at once when threaded
         if threaded:
+            ext = 'arm' if wrd.arm_minimize else 'json'
             assets_path = arm.utils.build_dir() + '/compiled/Assets/**'
-            assets_path_sh = arm.utils.build_dir() + '/compiled/Shaders/*.arm'
+            assets_path_sh = arm.utils.build_dir() + '/compiled/Shaders/*.' + ext
             if rel_path:
                 assets_path = os.path.relpath(assets_path, arm.utils.get_fp()).replace('\\', '/')
                 assets_path_sh = os.path.relpath(assets_path_sh, arm.utils.get_fp()).replace('\\', '/')
@@ -455,6 +456,8 @@ def write_compiledglsl(defs):
 #define _COMPILED_GLSL_
 """)
         for d in defs:
+            if d.endswith('var'):
+                continue # Write a shader variant instead
             f.write("#define " + d + "\n")
         f.write("""const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;

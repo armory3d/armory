@@ -1,4 +1,5 @@
 {
+	"variants": ["_VoxelAOvar"],
 	"contexts": [
 		{
 			"name": "deferred_indirect",

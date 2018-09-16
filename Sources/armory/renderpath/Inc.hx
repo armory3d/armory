@@ -96,15 +96,15 @@ class Inc {
 		// Resize shadow map
 		var l = path.getLight(path.currentLightIndex);
 		l.data.raw.shadowmap_size = armory.data.Config.raw.rp_shadowmap;
-		var rt = path.renderTargets.get("shadowmap");
+		var rt = path.renderTargets.get("shadowMap");
 		if (rt != null) {
 			rt.unload();
-			path.renderTargets.remove("shadowmap");
+			path.renderTargets.remove("shadowMap");
 		}
-		rt = path.renderTargets.get("shadowmapCube");
+		rt = path.renderTargets.get("shadowMapCube");
 		if (rt != null) {
 			rt.unload();
-			path.renderTargets.remove("shadowmapCube");
+			path.renderTargets.remove("shadowMapCube");
 		}
 		#end
 	}
