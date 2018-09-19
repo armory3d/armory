@@ -11,7 +11,7 @@ void remove_update(func_update f);
 
 int get_object(const char* name);
 void set_transform(int object, float x, float y, float z, float rx, float ry, float rz, float sx, float sy, float sz);
-void set location(float x, float y, float z);
+void set_location(float x, float y, float z);
 void set_scale(float x, float y, float z);
 void set_rotation(float x, float y, float z);
 
