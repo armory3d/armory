@@ -1345,7 +1345,7 @@ class ArmoryExporter:
         va['values'] = values
         return va
 
-    def export_mesh_data(self, exportMesh, bobject, fp, o):
+    def export_mesh_data(self, exportMesh, bobject, o):
         exportMesh.calc_normals_split()
         exportMesh.calc_tessface() # free_mpoly=True
         vert_list = { Vertex(exportMesh, loop) : 0 for loop in exportMesh.loops}.keys()
@@ -1556,6 +1556,8 @@ class ArmoryExporter:
                 # assets.add(sdf_path)
             if self.is_mesh_cached(bobject) == True and os.path.exists(fp):
                 return
+        else:
+            fp = None
 
         # Check if mesh is using instanced rendering
         instanced_type, instanced_data = self.object_process_instancing(table)
@@ -1638,7 +1640,7 @@ class ArmoryExporter:
             log.warn(oid + ' exceeds maximum of 2 UV Maps supported')
 
         # Process meshes
-        vert_list = self.export_mesh_data(exportMesh, bobject, fp, o)
+        vert_list = self.export_mesh_data(exportMesh, bobject, o)
         if armature:
             self.export_skin(bobject, armature, vert_list, o)
 
@@ -2157,8 +2159,8 @@ class ArmoryExporter:
                     assets.add(arm.utils.asset_path(sound.filepath))
             for objectRef in self.speakerArray.items():
                 self.export_speaker(objectRef)
+        self.output['mesh_datas'] = []
         for objectRef in self.meshArray.items():
-            self.output['mesh_datas'] = []
             self.export_mesh(objectRef, scene)
 
     def execute(self, context, filepath, scene=None):
