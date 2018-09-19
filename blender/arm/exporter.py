@@ -327,7 +327,7 @@ class ArmoryExporter:
         keyo = []
         key_count = len(fcurve.keyframe_points)
         for i in range(key_count):
-            frame = fcurve.keyframe_points[i].co[0] - self.beginFrame
+            frame = fcurve.keyframe_points[i].co[0]
             keyo.append(int(frame))
         return keyo
 
@@ -335,11 +335,11 @@ class ArmoryExporter:
         keyminuso = []
         key_count = len(fcurve.keyframe_points)
         for i in range(key_count):
-            ctrl = fcurve.keyframe_points[i].handle_left[0] - self.beginFrame
+            ctrl = fcurve.keyframe_points[i].handle_left[0]
             keyminuso.append(ctrl)
         keypluso = []
         for i in range(key_count):
-            ctrl = fcurve.keyframe_points[i].handle_right[0] - self.beginFrame
+            ctrl = fcurve.keyframe_points[i].handle_right[0]
             keypluso.append(ctrl)
 
         return keyminuso, keypluso
@@ -508,8 +508,8 @@ class ArmoryExporter:
             # Export the animation tracks
             oanim = {}
             oaction['anim'] = oanim
-            oanim['begin'] = int(action.frame_range[0] - self.beginFrame)
-            oanim['end'] = int(action.frame_range[1] - self.beginFrame)
+            oanim['begin'] = int(action.frame_range[0])
+            oanim['end'] = int(action.frame_range[1])
             oanim['tracks'] = []
             self.export_pose_markers(oanim, action)
 
@@ -812,9 +812,9 @@ class ArmoryExporter:
 
         # if (animated):
         #     self.IndentWrite(B"Animation (begin = ", 0, True)
-        #     self.WriteFloat((action.frame_range[0] - self.beginFrame) * self.frameTime)
+        #     self.WriteFloat((action.frame_range[0]) * self.frameTime)
         #     self.Write(B", end = ")
-        #     self.WriteFloat((action.frame_range[1] - self.beginFrame) * self.frameTime)
+        #     self.WriteFloat((action.frame_range[1]) * self.frameTime)
         #     self.Write(B")\n")
         #     self.IndentWrite(B"{\n")
         #     self.indentLevel += 1
@@ -2173,7 +2173,6 @@ class ArmoryExporter:
         print('Exporting ' + arm.utils.asset_name(self.scene))
 
         current_frame, current_subframe = scene.frame_current, scene.frame_subframe
-        self.beginFrame = self.scene.frame_start
         self.output['frame_time'] = 1.0 / (self.scene.render.fps / self.scene.render.fps_base)
 
         self.bobjectArray = {}
