@@ -40,7 +40,7 @@ class WasmScript extends iron.Trait {
 					t.scale.set(sx, sy, sz);
 					t.setRotation(rx, ry, rz);
 				},
-				set_Location: function(object:Int, x:Float, y:Float, z:Float)
+				set_location: function(object:Int, x:Float, y:Float, z:Float)
 				 {
 					var o = objectMap.get(object);
 					if (o == null) return;
