@@ -2386,7 +2386,7 @@ class ArmoryExporter:
             x['class_name'] = 'armory.trait.physics.' + phys_pkg + '.PhysicsWorld'
             rbw = self.scene.rigidbody_world
             if rbw != None and rbw.enabled:
-                x['parameters'] = [str(rbw.time_scale), str(1 / rbw.steps_per_second)]
+                x['parameters'] = [str(rbw.time_scale), str(1 / rbw.steps_per_second), str(rbw.solver_iterations)]
             self.output['traits'].append(x)
         if wrd.arm_navigation != 'Disabled' and ArmoryExporter.export_navigation:
             if not 'traits' in self.output:
