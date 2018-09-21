@@ -605,9 +605,9 @@ class ArmoryKodeStudioButton(bpy.types.Operator):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
 
-        if bpy.data.worlds['Arm'].arm_play_runtime != 'Browser' or not os.path.exists(arm.utils.get_fp() + "/khafile.js"):
-            print('Generating HTML5 project for Kode Studio')
-            make.build('html5')
+        if not os.path.exists(arm.utils.get_fp() + "/khafile.js"):
+            print('Generating Krom project for Kode Studio')
+            make.build('krom')
 
         arm.utils.kode_studio()
         return{'FINISHED'}

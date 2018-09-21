@@ -519,32 +519,32 @@ def export_bone_data(bobject):
 
 def kode_studio_mklink_win(sdk_path):
     # Fight long-path issues on Windows
-    if not os.path.exists(sdk_path + '/win32/resources/app/extensions/kha/Kha'):
-        source = sdk_path + '/win32/resources/app/extensions/kha/Kha'
+    if not os.path.exists(sdk_path + '/win32/resources/app/kodeExtensions/kha/Kha'):
+        source = sdk_path + '/win32/resources/app/kodeExtensions/kha/Kha'
         target = sdk_path + '/Kha'
         subprocess.check_call('mklink /J "%s" "%s"' % (source, target), shell=True)
-    if not os.path.exists(sdk_path + '/win32/resources/app/extensions/krom/Krom'):
-        source = sdk_path + '/win32/resources/app/extensions/krom/Krom'
+    if not os.path.exists(sdk_path + '/win32/resources/app/kodeExtensions/krom/Krom'):
+        source = sdk_path + '/win32/resources/app/kodeExtensions/krom/Krom'
         target = sdk_path + '/Krom'
         subprocess.check_call('mklink /J "%s" "%s"' % (source, target), shell=True)
 
 def kode_studio_mklink_linux(sdk_path):
-    if not os.path.exists(sdk_path + '/linux64/resources/app/extensions/kha/Kha'):
-        source = sdk_path + '/linux64/resources/app/extensions/kha/Kha'
+    if not os.path.exists(sdk_path + '/linux64/resources/app/kodeExtensions/kha/Kha'):
+        source = sdk_path + '/linux64/resources/app/kodeExtensions/kha/Kha'
         target = sdk_path + '/Kha'
         subprocess.check_call('ln -s "%s" "%s"' % (target, source), shell=True)
-    if not os.path.exists(sdk_path + '/linux64/resources/app/extensions/krom/Krom'):
-        source = sdk_path + '/linux64/resources/app/extensions/krom/Krom'
+    if not os.path.exists(sdk_path + '/linux64/resources/app/kodeExtensions/krom/Krom'):
+        source = sdk_path + '/linux64/resources/app/kodeExtensions/krom/Krom'
         target = sdk_path + '/Krom'
         subprocess.check_call('ln -s "%s" "%s"' % (target, source), shell=True)
 
 def kode_studio_mklink_mac(sdk_path):
-    if not os.path.exists(sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/kha/Kha'):
-        source = sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/kha/Kha'
+    if not os.path.exists(sdk_path + '/KodeStudio.app/Contents/Resources/app/kodeExtensions/kha/Kha'):
+        source = sdk_path + '/KodeStudio.app/Contents/Resources/app/kodeExtensions/kha/Kha'
         target = sdk_path + '/Kha'
         subprocess.check_call('ln -fs "%s" "%s"' % (target, source), shell=True)
-    if not os.path.exists(sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/krom/Krom'):
-        source = sdk_path + '/Kode Studio.app/Contents/Resources/app/extensions/krom/Krom'
+    if not os.path.exists(sdk_path + '/KodeStudio.app/Contents/Resources/app/kodeExtensions/krom/Krom'):
+        source = sdk_path + '/KodeStudio.app/Contents/Resources/app/kodeExtensions/krom/Krom'
         target = sdk_path + '/Krom'
         subprocess.check_call('ln -fs "%s" "%s"' % (target, source), shell=True)
 
@@ -552,7 +552,7 @@ def get_kode_path():
     if get_os() == 'win':
         return get_sdk_path() + '/win32/Kode Studio.exe'
     elif get_os() == 'mac':
-        return get_sdk_path() + '/Kode Studio.app/Contents/MacOS/Electron'
+        return get_sdk_path() + '/KodeStudio.app/Contents/MacOS/Electron'
     else:
         return get_sdk_path() + '/linux64/kodestudio'
 
