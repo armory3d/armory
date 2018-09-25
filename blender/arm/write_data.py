@@ -89,6 +89,7 @@ project.addSources('Sources');
 
         if wrd.arm_audio == 'Disabled':
             assets.add_khafile_def('arm_no_audio')
+            assets.add_khafile_def('kha_no_ogg')
 
         if export_physics:
             assets.add_khafile_def('arm_physics')
