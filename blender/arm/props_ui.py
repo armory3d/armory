@@ -605,6 +605,8 @@ class ArmoryKodeStudioButton(bpy.types.Operator):
         if not arm.utils.check_saved(self):
             return {"CANCELLED"}
 
+        arm.utils.check_default_props()
+
         if not os.path.exists(arm.utils.get_fp() + "/khafile.js"):
             print('Generating Krom project for Kode Studio')
             make.build('krom')
