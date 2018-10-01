@@ -2180,9 +2180,8 @@ class ArmoryExporter:
                     assets.add(arm.utils.asset_path(sound.filepath))
             for o in self.speakerArray.items():
                 self.export_speaker(o)
-            if bpy.app.version >= (2, 80, 1):
+            if bpy.app.version >= (2, 80, 1) and len(bpy.data.lightprobes) > 0:
                 self.output['probe_datas'] = []
-                assets.add_khafile_def('rp_probes')
                 for o in self.probeArray.items():
                     self.export_probe(o)
         self.output['mesh_datas'] = []

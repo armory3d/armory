@@ -155,6 +155,10 @@ class RenderPathDeferred {
 		path.loadShader("shader_datas/deferred_light/deferred_light");
 		path.loadShader("shader_datas/deferred_light_quad/deferred_light_quad");
 
+		#if rp_probes
+		path.loadShader("shader_datas/probe_planar/probe_planar");
+		#end
+
 		#if ((rp_ssgi == "RTGI") || (rp_ssgi == "RTAO"))
 		{
 			path.loadShader("shader_datas/ssgi_pass/ssgi_pass");
@@ -590,6 +594,25 @@ class RenderPathDeferred {
 		else {
 			path.drawShader("shader_datas/deferred_indirect/deferred_indirect");
 		}
+
+		#if rp_probes
+		if (iron.Scene.active.camera.renderTarget == null) {
+			
+			// path.bindTarget("_main", "gbufferD");
+			// path.bindTarget("gbuffer0", "gbuffer0");
+			// path.bindTarget("gbuffer1", "gbuffer1");
+			// #if rp_gbuffer2_direct
+			// path.bindTarget("gbuffer2", "gbuffer2");
+			// #end
+
+			// TODO: cull
+			for (p in iron.Scene.active.probes) {
+				path.setTarget("tex");
+				path.bindTarget(p.raw.name, "tex");
+				path.drawVolume(p, "shader_datas/probe_planar/probe_planar");
+			}
+		}
+		#end
 
 		// Direct
 		var lights = iron.Scene.active.lights;
