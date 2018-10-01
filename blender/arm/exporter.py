@@ -956,10 +956,13 @@ class ArmoryExporter:
                     for i in range(0, num_psys):
                         self.export_particle_system_ref(bobject.particle_systems[i], i, o)
 
-                o['dimensions'] = [0.0, 0.0, 0.0]
-                for i in range(0, 3):
-                    if bobject.scale[i] != 0:
-                        o['dimensions'][i] = bobject.dimensions[i] / bobject.scale[i]
+                if bobject.type == 'LIGHT_PROBE':
+                    o['dimensions'] = [1.0, 1.0, bobject.data.influence_distance]
+                else:
+                    o['dimensions'] = [0.0, 0.0, 0.0]
+                    for i in range(0, 3):
+                        if bobject.scale[i] != 0:
+                            o['dimensions'][i] = bobject.dimensions[i] / bobject.scale[i]
                 # Origin not in geometry center
                 if hasattr(bobject.data, 'arm_aabb'):
                     dx = bobject.data.arm_aabb[0]
@@ -1869,11 +1872,6 @@ class ArmoryExporter:
             o['ortho_scale'] = objref.ortho_scale / (7.31429 / 2)
             o['near_plane'] = objref.clip_start
             o['far_plane'] = objref.clip_end
-
-        if objref.arm_render_to_texture:
-            o['render_to_texture'] = True
-            o['texture_resolution_x'] = int(objref.arm_texture_resolution_x)
-            o['texture_resolution_y'] = int(objref.arm_texture_resolution_y)
 
         o['frustum_culling'] = objref.arm_frustum_culling
         o['clear_color'] = self.get_camera_clear_color()

@@ -217,9 +217,6 @@ def init_properties():
     bpy.types.Armature.arm_compress = BoolProperty(name="Compress", description="Pack data into zip file", default=False)
     # For camera
     bpy.types.Camera.arm_frustum_culling = BoolProperty(name="Frustum Culling", description="Perform frustum culling for this camera", default=True)
-    bpy.types.Camera.arm_render_to_texture = BoolProperty(name="Render to Texture", description="Render this camera into texture", default=False)
-    bpy.types.Camera.arm_texture_resolution_x = FloatProperty(name="X", default=512.0)
-    bpy.types.Camera.arm_texture_resolution_y = FloatProperty(name="Y", default=256.0)
 
     # Render path generator
     bpy.types.World.rp_search = StringProperty(name="Search", default='')

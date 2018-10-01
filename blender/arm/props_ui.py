@@ -120,13 +120,6 @@ class DataPropsPanel(bpy.types.Panel):
         wrd = bpy.data.worlds['Arm']
         if obj.type == 'CAMERA':
             layout.prop(obj.data, 'arm_frustum_culling')
-            layout.prop(obj.data, 'arm_render_to_texture')
-            col = layout.column()
-            col.enabled = obj.data.arm_render_to_texture
-            row = col.row(align=True)
-            row.label(text='Resolution')
-            row.prop(obj.data, 'arm_texture_resolution_x')
-            row.prop(obj.data, 'arm_texture_resolution_y')
         elif obj.type == 'MESH' or obj.type == 'FONT' or obj.type == 'META':
             row = layout.row(align=True)
             row.prop(obj.data, 'arm_dynamic_usage')
