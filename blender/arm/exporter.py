@@ -33,12 +33,13 @@ NodeTypeLight = 3
 NodeTypeCamera = 4
 NodeTypeSpeaker = 5
 NodeTypeDecal = 6
+NodeTypeProbe = 7
 AnimationTypeSampled = 0
 AnimationTypeLinear = 1
 AnimationTypeBezier = 2
 ExportEpsilon = 1.0e-6
 
-structIdentifier = ["object", "bone_object", "mesh_object", "light_object", "camera_object", "speaker_object", "decal_object"]
+structIdentifier = ["object", "bone_object", "mesh_object", "light_object", "camera_object", "speaker_object", "decal_object", "probe_object"]
 
 subtranslationName = ["xloc", "yloc", "zloc"]
 subrotationName = ["xrot", "yrot", "zrot"]
@@ -126,6 +127,8 @@ class ArmoryExporter:
             return NodeTypeCamera
         elif bobject.type == "SPEAKER":
             return NodeTypeSpeaker
+        elif bobject.type == "LIGHT_PROBE":
+            return NodeTypeProbe
         return NodeTypeNode
 
     @staticmethod
@@ -980,6 +983,13 @@ class ArmoryExporter:
                     self.lightArray[objref]["objectTable"].append(bobject)
                 o['data_ref'] = self.lightArray[objref]["structName"]
 
+            elif type == NodeTypeProbe:
+                if not objref in self.probeArray:
+                    self.probeArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
+                else:
+                    self.probeArray[objref]["objectTable"].append(bobject)
+                o['data_ref'] = self.probeArray[objref]["structName"]
+
             elif type == NodeTypeCamera:
                 if 'spawn' in o and o['spawn'] == False:
                     self.camera_spawned = False
@@ -1781,6 +1791,20 @@ class ArmoryExporter:
 
         self.output['light_datas'].append(o)
 
+    def export_probe(self, objectRef):
+        o = {}
+        o['name'] = objectRef[1]["structName"]
+        bo = objectRef[0]
+
+        if bo.type == 'GRID':
+            o['type'] = 'grid'
+        elif bo.type == 'PLANAR':
+            o['type'] = 'planar'
+        else: # CUBEMAP
+            o['type'] = 'cubemap'
+
+        self.output['probe_datas'].append(o)
+
     def get_camera_clear_color(self):
         if self.scene.world == None:
             return [0.051, 0.051, 0.051, 1.0]
@@ -2149,19 +2173,23 @@ class ArmoryExporter:
             self.output['light_datas'] = []
             self.output['camera_datas'] = []
             self.output['speaker_datas'] = []
-            for objectRef in self.lightArray.items():
-                self.export_light(objectRef)
-            for objectRef in self.cameraArray.items():
-                self.export_camera(objectRef)
-            # Keep sounds with fake user
-            for sound in bpy.data.sounds:
+            for o in self.lightArray.items():
+                self.export_light(o)
+            for o in self.cameraArray.items():
+                self.export_camera(o)
+            for sound in bpy.data.sounds: # Keep sounds with fake user
                 if sound.use_fake_user:
                     assets.add(arm.utils.asset_path(sound.filepath))
-            for objectRef in self.speakerArray.items():
-                self.export_speaker(objectRef)
+            for o in self.speakerArray.items():
+                self.export_speaker(o)
+            if bpy.app.version >= (2, 80, 1):
+                self.output['probe_datas'] = []
+                assets.add_khafile_def('rp_probes')
+                for o in self.probeArray.items():
+                    self.export_probe(o)
         self.output['mesh_datas'] = []
-        for objectRef in self.meshArray.items():
-            self.export_mesh(objectRef, scene)
+        for o in self.meshArray.items():
+            self.export_mesh(o, scene)
 
     def execute(self, context, filepath, scene=None):
         profile_time = time.time()
@@ -2179,6 +2207,7 @@ class ArmoryExporter:
         self.bobjectBoneArray = {}
         self.meshArray = {}
         self.lightArray = {}
+        self.probeArray = {}
         self.cameraArray = {}
         self.camera_spawned = False
         self.speakerArray = {}
@@ -2891,8 +2920,6 @@ class ArmoryExporter:
             else:
                 o['envmap'] += '.hdr'
 
-        o['probes'] = []
-
         # Main probe
         rpdat = arm.utils.get_rp()
         solid_mat = rpdat.arm_material_model == 'Solid'
@@ -2920,18 +2947,10 @@ class ArmoryExporter:
             po['irradiance'] = irrsharmonics + '_irradiance' + ext
             if arm_radiance:
                 po['radiance'] = radtex + '_radiance'
-                if disable_hdr:
-                    po['radiance'] += '.jpg'
-                else:
-                    po['radiance'] += '.hdr'
+                po['radiance'] += '.jpg' if disable_hdr else '.hdr'
                 po['radiance_mipmaps'] = num_mips
-        else:
-            po['irradiance'] = '' # No irradiance data, fallback to default at runtime
         po['strength'] = strength
-        po['blending'] = 1.0
-        po['volume'] = [0.0, 0.0, 0.0]
-        po['volume_center'] = [0.0, 0.0, 0.0]
-        o['probes'].append(po)
+        o['probe'] = po
 
     # https://blender.stackexchange.com/questions/70629
     def mod_equal(self, mod1, mod2):

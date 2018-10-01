@@ -277,7 +277,7 @@ class DebugConsole extends Trait {
 
 						if (selectedObject.name == "Scene") {
 							selectedType = "(Scene)";
-							var p = iron.Scene.active.world.getGlobalProbe();
+							var p = iron.Scene.active.world.probe;
 							p.raw.strength = ui.slider(Id.handle({value: p.raw.strength}), "Env Strength", 0.0, 5.0, true);
 						}
 						else if (Std.is(selectedObject, iron.object.LightObject)) {
