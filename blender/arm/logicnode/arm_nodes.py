@@ -45,7 +45,7 @@ class ArmArraySocket(bpy.types.NodeSocket):
         layout.label(text=self.name)
 
     def draw_color(self, context, node):
-        return (0.8, 0.8, 0.3, 1)
+        return (0.8, 0.4, 0.0, 1)
 
 class ArmObjectSocket(bpy.types.NodeSocket):
     bl_idname = 'ArmNodeSocketObject'
