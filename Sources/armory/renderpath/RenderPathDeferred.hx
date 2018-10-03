@@ -595,20 +595,20 @@ class RenderPathDeferred {
 			path.drawShader("shader_datas/deferred_indirect/deferred_indirect");
 		}
 
+		var isProbe = iron.Scene.active.camera.renderTarget != null;
 		#if rp_probes
-		if (iron.Scene.active.camera.renderTarget == null) {
-			
-			// path.bindTarget("_main", "gbufferD");
-			// path.bindTarget("gbuffer0", "gbuffer0");
-			// path.bindTarget("gbuffer1", "gbuffer1");
-			// #if rp_gbuffer2_direct
-			// path.bindTarget("gbuffer2", "gbuffer2");
-			// #end
-
+		if (!isProbe) {
 			// TODO: cull
-			for (p in iron.Scene.active.probes) {
+			var probes = iron.Scene.active.probes;
+			for (i in 0...probes.length) {
+				var p = probes[i];
+				if (!p.visible) continue;
+				path.currentProbeIndex = i;
+
 				path.setTarget("tex");
-				path.bindTarget(p.raw.name, "tex");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.bindTarget("gbuffer1", "gbuffer1");
+				path.bindTarget(p.raw.name, "planeTex");
 				path.drawVolume(p, "shader_datas/probe_planar/probe_planar");
 			}
 		}
@@ -905,7 +905,7 @@ class RenderPathDeferred {
 			path.drawShader("shader_datas/smaa_blend_weight/smaa_blend_weight");
 
 			#if (rp_antialiasing == "TAA")
-			path.setTarget("bufa");
+			isProbe ? path.setTarget(framebuffer) : path.setTarget("bufa");
 			#else
 			path.setTarget(framebuffer);
 			#end
@@ -920,15 +920,17 @@ class RenderPathDeferred {
 
 			#if (rp_antialiasing == "TAA")
 			{
-				path.setTarget(framebuffer);
-				path.bindTarget("bufa", "tex");
-				path.bindTarget("taa", "tex2");
-				path.bindTarget("gbuffer2", "sveloc");
-				path.drawShader("shader_datas/taa_pass/taa_pass");
+				if (!isProbe) { // No last frame for probe
+					path.setTarget(framebuffer);
+					path.bindTarget("bufa", "tex");
+					path.bindTarget("taa", "tex2");
+					path.bindTarget("gbuffer2", "sveloc");
+					path.drawShader("shader_datas/taa_pass/taa_pass");
 
-				path.setTarget("taa");
-				path.bindTarget("bufa", "tex");
-				path.drawShader("shader_datas/copy_pass/copy_pass");
+					path.setTarget("taa");
+					path.bindTarget("bufa", "tex");
+					path.drawShader("shader_datas/copy_pass/copy_pass");
+				}
 			}
 			#end
 		}

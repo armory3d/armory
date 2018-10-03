@@ -14,19 +14,23 @@
 			"alpha_blend_operation": "add",
 			"links": [
 				{
-					"name": "LVWVP",
+					"name": "VWVP",
 					"link": "_worldViewProjectionMatrix"
-				},
-				{
-					"name": "eye",
-					"link": "_cameraPosition"
 				},
 				{
 					"name": "invVP",
 					"link": "_inverseViewProjectionMatrix"
+				},
+				{
+					"name": "probeVP",
+					"link": "_probeViewProjectionMatrix"
+				},
+				{
+					"name": "proben",
+					"link": "_probeNormal"
 				}
 			],
-			"vertex_shader": "../include/pass_light_volume.vert.glsl",
+			"vertex_shader": "../include/pass_volume.vert.glsl",
 			"fragment_shader": "probe_planar.frag.glsl"
 		}
 	]

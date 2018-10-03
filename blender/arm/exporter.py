@@ -956,13 +956,10 @@ class ArmoryExporter:
                     for i in range(0, num_psys):
                         self.export_particle_system_ref(bobject.particle_systems[i], i, o)
 
-                if bobject.type == 'LIGHT_PROBE':
-                    o['dimensions'] = [1.0, 1.0, bobject.data.influence_distance]
-                else:
-                    o['dimensions'] = [0.0, 0.0, 0.0]
-                    for i in range(0, 3):
-                        if bobject.scale[i] != 0:
-                            o['dimensions'][i] = bobject.dimensions[i] / bobject.scale[i]
+                o['dimensions'] = [0.0, 0.0, 0.0]
+                for i in range(0, 3):
+                    if bobject.scale[i] != 0:
+                        o['dimensions'][i] = bobject.dimensions[i] / bobject.scale[i]
                 # Origin not in geometry center
                 if hasattr(bobject.data, 'arm_aabb'):
                     dx = bobject.data.arm_aabb[0]
@@ -991,6 +988,7 @@ class ArmoryExporter:
                     self.probeArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
                     self.probeArray[objref]["objectTable"].append(bobject)
+                o['dimensions'] = [1.0, 1.0, bobject.data.influence_distance]
                 o['data_ref'] = self.probeArray[objref]["structName"]
 
             elif type == NodeTypeCamera:

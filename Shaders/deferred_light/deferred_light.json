@@ -14,7 +14,7 @@
 			"alpha_blend_operation": "add",
 			"links": [
 				{
-					"name": "LVWVP",
+					"name": "VWVP",
 					"link": "_lightVolumeWorldViewProjectionMatrix"
 				},
 				{
@@ -117,7 +117,7 @@
 					"ifdef": ["_DFRS"]
 				}
 			],
-			"vertex_shader": "../include/pass_light_volume.vert.glsl",
+			"vertex_shader": "../include/pass_volume.vert.glsl",
 			"fragment_shader": "deferred_light.frag.glsl"
 		}
 	]

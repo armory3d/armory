@@ -7,7 +7,7 @@
 			"cull_mode": "counter_clockwise",
 			"links": [
 				{
-					"name": "LVWVP",
+					"name": "VWVP",
 					"link": "_lightVolumeWorldViewProjectionMatrix"
 				},
 				{
@@ -52,7 +52,7 @@
 				}
 			],
 			"texture_params": [],
-			"vertex_shader": "../include/pass_light_volume.vert.glsl",
+			"vertex_shader": "../include/pass_volume.vert.glsl",
 			"fragment_shader": "volumetric_light.frag.glsl"
 		}
 	]
