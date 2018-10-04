@@ -989,7 +989,10 @@ class ArmoryExporter:
                 else:
                     self.probeArray[objref]["objectTable"].append(bobject)
                 dist = bobject.data.influence_distance
-                o['dimensions'] = [dist, dist, dist]
+                if objref.type == "PLANAR":
+                    o['dimensions'] = [1.0, 1.0, dist]
+                else: # GRID, CUBEMAP
+                    o['dimensions'] = [dist, dist, dist]
                 o['data_ref'] = self.probeArray[objref]["structName"]
 
             elif type == NodeTypeCamera:
