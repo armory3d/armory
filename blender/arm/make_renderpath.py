@@ -291,8 +291,11 @@ def build():
         assets.add_shader_pass('deferred_light_quad')
     
     if bpy.app.version >= (2, 80, 1) and len(bpy.data.lightprobes) > 0:
+        wrd.world_defs += '_Probes'
         assets.add_khafile_def('rp_probes')
         assets.add_shader_pass('probe_planar')
+        assets.add_shader_pass('probe_cubemap')
+        assets.add_shader_pass('copy_pass')
 
     if rpdat.rp_volumetriclight:
         assets.add_khafile_def('rp_volumetriclight')

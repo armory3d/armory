@@ -157,6 +157,8 @@ class RenderPathDeferred {
 
 		#if rp_probes
 		path.loadShader("shader_datas/probe_planar/probe_planar");
+		path.loadShader("shader_datas/probe_cubemap/probe_cubemap");
+		path.loadShader("shader_datas/copy_pass/copy_pass");
 		#end
 
 		#if ((rp_ssgi == "RTGI") || (rp_ssgi == "RTAO"))
@@ -595,21 +597,25 @@ class RenderPathDeferred {
 			path.drawShader("shader_datas/deferred_indirect/deferred_indirect");
 		}
 
-		var isProbe = iron.Scene.active.camera.renderTarget != null;
+		
 		#if rp_probes
-		if (!isProbe) {
+		if (!path.isProbe) {
 			// TODO: cull
 			var probes = iron.Scene.active.probes;
 			for (i in 0...probes.length) {
 				var p = probes[i];
 				if (!p.visible) continue;
 				path.currentProbeIndex = i;
-
 				path.setTarget("tex");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer1", "gbuffer1");
-				path.bindTarget(p.raw.name, "planeTex");
-				path.drawVolume(p, "shader_datas/probe_planar/probe_planar");
+				path.bindTarget(p.raw.name, "probeTex");
+				if (p.data.raw.type == "planar") {
+					path.drawVolume(p, "shader_datas/probe_planar/probe_planar");
+				}
+				else if (p.data.raw.type == "cubemap") {
+					path.drawVolume(p, "shader_datas/probe_cubemap/probe_cubemap");
+				}
 			}
 		}
 		#end
@@ -876,7 +882,8 @@ class RenderPathDeferred {
 
 		#if rp_compositornodes
 		{
-			path.drawShader("shader_datas/compositor_pass/compositor_pass");
+			if (!path.isProbe) path.drawShader("shader_datas/compositor_pass/compositor_pass");
+			else path.drawShader("shader_datas/copy_pass/copy_pass");
 		}
 		#else
 		{
@@ -905,7 +912,7 @@ class RenderPathDeferred {
 			path.drawShader("shader_datas/smaa_blend_weight/smaa_blend_weight");
 
 			#if (rp_antialiasing == "TAA")
-			isProbe ? path.setTarget(framebuffer) : path.setTarget("bufa");
+			path.isProbe ? path.setTarget(framebuffer) : path.setTarget("bufa");
 			#else
 			path.setTarget(framebuffer);
 			#end
@@ -920,7 +927,7 @@ class RenderPathDeferred {
 
 			#if (rp_antialiasing == "TAA")
 			{
-				if (!isProbe) { // No last frame for probe
+				if (!path.isProbe) { // No last frame for probe
 					path.setTarget(framebuffer);
 					path.bindTarget("bufa", "tex");
 					path.bindTarget("taa", "tex2");
