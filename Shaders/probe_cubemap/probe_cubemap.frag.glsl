@@ -7,7 +7,7 @@ uniform samplerCube probeTex;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 uniform mat4 invVP;
-// uniform vec3 probep;
+uniform vec3 probep;
 uniform vec3 eye;
 
 in vec4 wvpposition;
@@ -45,7 +45,6 @@ void main() {
 
 	vec3 v = wp - eye;
 
-	// float intensity = clamp((1.0 - roughness) * dot(n, proben), 0.0, 1.0);
-	float intensity = 1.0 - roughness;
+	float intensity = clamp((1.0 - roughness) * dot(wp - probep, n), 0.0, 1.0);
 	fragColor.rgb = texture(probeTex, reflect(v, n)).rgb * intensity;
 }
