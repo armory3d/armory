@@ -600,11 +600,10 @@ class RenderPathDeferred {
 		
 		#if rp_probes
 		if (!path.isProbe) {
-			// TODO: cull
 			var probes = iron.Scene.active.probes;
 			for (i in 0...probes.length) {
 				var p = probes[i];
-				if (!p.visible) continue;
+				if (!p.visible || p.culled) continue;
 				path.currentProbeIndex = i;
 				path.setTarget("tex");
 				path.bindTarget("gbuffer0", "gbuffer0");
