@@ -677,8 +677,11 @@ def parse_vector(node, socket):
             return 'mix({0}[{1}], {0}[{1} + 1], ({2} - {3}[{1}]) * (1.0 / ({3}[{1} + 1] - {3}[{1}]) ))'.format(cols_var, index_var, fac_var, facs_var)
 
     elif node.type == 'COMBHSV':
-        # Pass constant
-        return to_vec3([0.0, 0.0, 0.0])
+        curshader.add_function(c_functions.str_hue_sat)
+        h = parse_value_input(node.inputs[0])
+        s = parse_value_input(node.inputs[1])
+        v = parse_value_input(node.inputs[2])
+        return 'hsv_to_rgb(vec3({0}, {1}, {2}))'.format(h,s,v)
 
     elif node.type == 'COMBRGB':
         r = parse_value_input(node.inputs[0])
