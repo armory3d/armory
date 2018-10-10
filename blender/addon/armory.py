@@ -356,7 +356,7 @@ class ArmAddonStopButton(bpy.types.Operator):
     '''Stop Armory integration'''
     bl_idname = "arm_addon.stop"
     bl_label = "Stop"
- 
+
     def execute(self, context):
         import start
         start.unregister()
@@ -403,7 +403,7 @@ class ArmAddonRestoreButton(bpy.types.Operator):
     bl_idname = "arm_addon.restore"
     bl_label = "Restore SDK"
     bl_description = "Restore stable version"
- 
+
     def execute(self, context):
         p = get_sdk_path(context)
         if p == "":
@@ -427,19 +427,24 @@ class ArmAddonInstallGitButton(bpy.types.Operator):
     bl_idname = "arm_addon.install_git"
     bl_label = "Install Git"
     bl_description = "Git is required for Armory Updater to work"
- 
+
     def execute(self, context):
         webbrowser.open('https://git-scm.com')
         return {"FINISHED"}
 
 @persistent
-def on_load_post(context):
+def on_scene_update_post(context):
+    # Remove handler
+    bpy.app.handlers.scene_update_post.remove(on_scene_update_post)
+
     # Detect local armsdk
     # if os.path.exists(get_fp() + '/armsdk'):
         # if ArmAddonStartButton.running:
             # bpy.ops.arm_addon.stop()
     if ArmAddonStartButton.running:
         return
+
+    # Start Armory addon
     bpy.ops.arm_addon.start()
 
 def register():
@@ -449,7 +454,7 @@ def register():
     bpy.utils.register_class(ArmAddonUpdateButton)
     bpy.utils.register_class(ArmAddonRestoreButton)
     bpy.utils.register_class(ArmAddonInstallGitButton)
-    bpy.app.handlers.load_post.append(on_load_post)
+    bpy.app.handlers.scene_update_post.append(on_scene_update_post)
 
 def unregister():
     bpy.ops.arm_addon.stop()
@@ -459,7 +464,11 @@ def unregister():
     bpy.utils.unregister_class(ArmAddonUpdateButton)
     bpy.utils.unregister_class(ArmAddonRestoreButton)
     bpy.utils.unregister_class(ArmAddonInstallGitButton)
-    bpy.app.handlers.load_post.remove(on_load_post)
+
+    try:
+        bpy.app.handlers.scene_update_post.remove(on_scene_update_post)
+    except:
+        print("Armory Warning: 'scene_update_post' handler already removed")
 
 if __name__ == "__main__":
     register()
