@@ -88,7 +88,7 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
         line = line.lstrip()
 
         # Preprocessor
-        if line.startswith('#ifdef') or line.startswith('#ifndef'):
+        if line.startswith('#if'): # if, ifdef, ifndef
             s = line.split(' ')[1]
             found = s in defs
             if line.startswith('#ifndef'):

@@ -419,7 +419,7 @@ class Inc {
 	#if (rp_renderer == "Forward")
 	public static function drawShadowMap(l:iron.object.LightObject) {
 		#if (rp_shadowmap)
-		var faces = path.getLight(path.currentLightIndex).data.raw.shadowmap_cube ? 6 : 1;
+		var faces = l.data.raw.shadowmap_cube ? 6 : 1;
 		for (i in 0...faces) {
 			if (faces > 1) path.currentFace = i;
 			path.setTarget(Inc.getShadowMap());
@@ -433,8 +433,8 @@ class Inc {
 	public static function drawShadowMap(l:iron.object.LightObject) {
 		#if (rp_shadowmap)
 		var faces = l.data.raw.shadowmap_cube ? 6 : 1;
-		for (j in 0...faces) {
-			if (faces > 1) path.currentFace = j;
+		for (i in 0...faces) {
+			if (faces > 1) path.currentFace = i;
 			path.setTarget(Inc.getShadowMap());
 			path.clearTarget(null, 1.0);
 			path.drawMeshes("shadowmap");

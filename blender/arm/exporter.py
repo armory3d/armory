@@ -988,7 +988,11 @@ class ArmoryExporter:
                     self.probeArray[objref] = {"structName" : objname, "objectTable" : [bobject]}
                 else:
                     self.probeArray[objref]["objectTable"].append(bobject)
-                o['dimensions'] = [1.0, 1.0, bobject.data.influence_distance]
+                dist = bobject.data.influence_distance
+                if objref.type == "PLANAR":
+                    o['dimensions'] = [1.0, 1.0, dist]
+                else: # GRID, CUBEMAP
+                    o['dimensions'] = [dist, dist, dist]
                 o['data_ref'] = self.probeArray[objref]["structName"]
 
             elif type == NodeTypeCamera:
@@ -1753,7 +1757,7 @@ class ArmoryExporter:
         gapi = arm.utils.get_gapi()
         mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
         if objtype == 'POINT' and not mobile_mat:
-            o['fov'] = 1.5708 # 90 deg
+            o['fov'] = 1.5708 # pi/2
             o['shadowmap_cube'] = True
             o['shadows_bias'] *= 2.0
 

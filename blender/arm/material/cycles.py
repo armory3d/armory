@@ -717,8 +717,11 @@ def parse_vector(node, socket):
             vector_curve(name + '3a', vec + '.x', curves[3].points), vector_curve(name + '3b', vec + '.y', curves[3].points), vector_curve(name + '3c', vec + '.z', curves[3].points))
 
     elif node.type == 'COMBHSV':
-        # Pass constant
-        return to_vec3([0.0, 0.0, 0.0])
+        curshader.add_function(c_functions.str_hue_sat)
+        h = parse_value_input(node.inputs[0])
+        s = parse_value_input(node.inputs[1])
+        v = parse_value_input(node.inputs[2])
+        return 'hsv_to_rgb(vec3({0}, {1}, {2}))'.format(h,s,v)
 
     elif node.type == 'COMBRGB':
         r = parse_value_input(node.inputs[0])
