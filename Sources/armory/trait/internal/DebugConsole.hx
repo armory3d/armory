@@ -20,9 +20,9 @@ class DebugConsole extends Trait {
 	public function new() { super(); }
 #else
 
+	public var visible = true;
 	var ui:Zui;
 	var scaleFactor = 1.0;
-	var show = true;
 
 	var lastTime = 0.0;
 	var frameTime = 0.0;
@@ -72,7 +72,7 @@ class DebugConsole extends Trait {
 			}
 			// Toggle console
 			kha.input.Keyboard.get().notify(null, null, function(char: String) {
-				if (char == "~") show = !show;
+				if (char == "~") visible = !visible;
 				else if (char == "[") f -= 0.1;
 				else if (char == "]") f += 0.1;
 			});
@@ -125,7 +125,7 @@ class DebugConsole extends Trait {
 	}
 
 	function render2D(g:kha.graphics2.Graphics) {
-		if (!show) return;
+		if (!visible) return;
 		var hwin = Id.handle();
 		var htab = Id.handle({position: 0});
 		var ww = Std.int(280 * scaleFactor);
