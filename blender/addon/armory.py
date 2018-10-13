@@ -6,7 +6,7 @@ bl_info = {
     "location": "Properties -> Render -> Armory",
     "description": "3D Game Engine for Blender",
     "author": "Armory3D.org",
-    "version": (15, 0, 0),
+    "version": (0, 6, 0),
     "blender": (2, 80, 0),
     "wiki_url": "http://armory3d.org/manual",
     "tracker_url": "https://github.com/armory3d/armory/issues"
@@ -395,7 +395,7 @@ class ArmAddonUpdateButton(bpy.types.Operator):
         update_repo(done, p, 'lib/armory_tools', 'armory_tools')
         update_repo(done, p, 'lib/iron_format', 'iron_format')
         # update_repo(done, p, 'Kha', recursive=True)
-        update_repo(done, p, 'Krom', 'Krom_bin')
+        # update_repo(done, p, 'Krom', 'Krom_bin')
         return {"FINISHED"}
 
 class ArmAddonRestoreButton(bpy.types.Operator):
@@ -418,7 +418,7 @@ class ArmAddonRestoreButton(bpy.types.Operator):
         restore_repo(p, 'lib/armory_tools')
         restore_repo(p, 'lib/iron_format')
         # restore_repo(p, 'Kha')
-        restore_repo(p, 'Krom')
+        # restore_repo(p, 'Krom')
         self.report({'INFO'}, 'Restored stable version')
         return {"FINISHED"}
 
