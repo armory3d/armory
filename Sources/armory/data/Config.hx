@@ -35,7 +35,7 @@ typedef TConfig = {
 	@:optional var window_vsync:Null<Bool>;
 	@:optional var window_msaa:Null<Int>;
 	@:optional var window_scale:Null<Float>;
-	// @:optional var rp_supersample:Null<Float>;
+	@:optional var rp_supersample:Null<Float>;
 	@:optional var rp_shadowmap:Null<Int>; // size
 	@:optional var rp_ssgi:Null<Bool>;
 	@:optional var rp_ssr:Null<Bool>;
