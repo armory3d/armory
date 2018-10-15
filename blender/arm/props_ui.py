@@ -327,6 +327,28 @@ class ArmoryProjectPanel(bpy.types.Panel):
         row.operator("arm.kode_studio")
         row.operator("arm.open_project_folder", icon="FILE_FOLDER")
 
+class ArmProjectModdingPanel(bpy.types.Panel):
+    bl_label = "Modding"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_parent_id = "ArmoryProjectPanel"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
+        box = layout.box().column()
+        row = box.row()
+        row.prop(wrd, 'arm_modding_mode', expand=True)
+        col = box.column()
+        if wrd.arm_modding_mode == 'Game':
+            pass
+        if wrd.arm_modding_mode == 'Mod':
+            col2 = col.column()
+            col2.prop(wrd, 'arm_modding_parent_project_dir')
+
 class ArmProjectFlagsPanel(bpy.types.Panel):
     bl_label = "Flags"
     bl_space_type = "PROPERTIES"
@@ -1421,6 +1443,7 @@ def register():
     bpy.utils.register_class(ArmoryPlayerPanel)
     bpy.utils.register_class(ArmoryExporterPanel)
     bpy.utils.register_class(ArmoryProjectPanel)
+    bpy.utils.register_class(ArmProjectModdingPanel)
     bpy.utils.register_class(ArmProjectFlagsPanel)
     bpy.utils.register_class(ArmProjectWindowPanel)
     bpy.utils.register_class(ArmProjectModulesPanel)
@@ -1472,6 +1495,7 @@ def unregister():
     bpy.utils.unregister_class(ArmoryPlayerPanel)
     bpy.utils.unregister_class(ArmoryExporterPanel)
     bpy.utils.unregister_class(ArmoryProjectPanel)
+    bpy.utils.unregister_class(ArmProjectModdingPanel)
     bpy.utils.unregister_class(ArmProjectFlagsPanel)
     bpy.utils.unregister_class(ArmProjectWindowPanel)
     bpy.utils.unregister_class(ArmProjectModulesPanel)

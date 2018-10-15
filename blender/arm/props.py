@@ -90,6 +90,12 @@ def init_properties():
     bpy.types.World.arm_asset_compression = BoolProperty(name="Asset Compression", description="Enable scene data compression", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_write_config = BoolProperty(name="Write Config", description="Allow this project to be configured at runtime via a JSON file", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_compiler_inline = BoolProperty(name="Compiler Inline", description="Favor speed over size", default=True, update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_modding_mode = EnumProperty(
+        items = [('None', 'None', 'None'),
+                 ('Game', 'Game', 'Game'),
+                 ('Mod', 'Mod', 'Mod')],
+        name="Modding Mode", default='None', description='The modding mode')
+    bpy.types.World.arm_modding_parent_project_dir = StringProperty(name="Parent Project Dir", description="The base dir of the parent project source.", default="", subtype="FILE_PATH")
     bpy.types.World.arm_winmode = EnumProperty(
         items = [('Window', 'Window', 'Window'),
                  ('Fullscreen', 'Fullscreen', 'Fullscreen')],
