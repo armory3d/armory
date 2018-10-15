@@ -124,6 +124,6 @@ def parse(material, mat_data, mat_users, mat_armusers):
             c['bind_constants'].append(const)
 
     ext = '' if wrd.arm_minimize else '.json'
-    mat_data['shader'] = shader_data_name + ext + '/' + shader_data_name
+    mat_data['shader'] = shader_data_name + ext + ':' + shader_data_name
 
     return sd, rpasses
