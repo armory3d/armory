@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class CallStaticFunctionNode extends LogicNode {
+class CallHaxeStaticNode extends LogicNode {
 
 	var result:Dynamic;
 
