@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import iron.object.Object;
 
-class CallFunctionNode extends LogicNode {
+class CallHaxeNode extends LogicNode {
 
 	var result:Dynamic;
 

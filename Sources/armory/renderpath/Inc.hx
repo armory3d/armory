@@ -30,6 +30,7 @@ class Inc {
 	static var bounce_tb:kha.compute.TextureUnit;
 	static var bounce_tc:kha.compute.TextureUnit;
 	#end
+	public static var superSample = 1.0;
 
 	public static function init(_path:RenderPath) {
 		path = _path;
@@ -89,22 +90,33 @@ class Inc {
 		}
 		return target;
 	}
-
 	
 	public static function applyConfig() {
 		#if arm_config
+		var config = armory.data.Config.raw;
 		// Resize shadow map
 		var l = path.getLight(path.currentLightIndex);
-		l.data.raw.shadowmap_size = armory.data.Config.raw.rp_shadowmap;
-		var rt = path.renderTargets.get("shadowMap");
-		if (rt != null) {
-			rt.unload();
-			path.renderTargets.remove("shadowMap");
+		if (l.data.raw.shadowmap_size != config.rp_shadowmap) {
+			l.data.raw.shadowmap_size = config.rp_shadowmap;
+			var rt = path.renderTargets.get("shadowMap");
+			if (rt != null) {
+				rt.unload();
+				path.renderTargets.remove("shadowMap");
+			}
+			rt = path.renderTargets.get("shadowMapCube");
+			if (rt != null) {
+				rt.unload();
+				path.renderTargets.remove("shadowMapCube");
+			}
 		}
-		rt = path.renderTargets.get("shadowMapCube");
-		if (rt != null) {
-			rt.unload();
-			path.renderTargets.remove("shadowMapCube");
+		if (superSample != config.rp_supersample) {
+			superSample = config.rp_supersample;
+			for (rt in path.renderTargets) {
+				if (rt.raw.width == 0 && rt.raw.scale != null) {
+					rt.raw.scale = getSuperSampling();
+				}
+			}
+			path.resize();
 		}
 		#end
 	}
@@ -138,8 +150,7 @@ class Inc {
 		t.height = 0;
 		t.displayp = getDisplayp();
 		t.format = "RGBA64";
-		var ss = getSuperSampling();
-		if (ss != 1) t.scale = ss;
+		t.scale = getSuperSampling();
 		t.depth_buffer = "main";
 		path.createRenderTarget(t);
 
@@ -149,8 +160,7 @@ class Inc {
 		t.height = 0;
 		t.displayp = getDisplayp();
 		t.format = "R16";
-		var ss = getSuperSampling();
-		if (ss != 1) t.scale = ss;
+		t.scale = getSuperSampling();
 		t.depth_buffer = "main";
 		path.createRenderTarget(t);
 
@@ -258,11 +268,11 @@ class Inc {
 		#if (rp_supersampling == 1.5)
 		return 1.5;
 		#elseif (rp_supersampling == 2)
-		return 2;
+		return 2.0;
 		#elseif (rp_supersampling == 4)
-		return 4;
+		return 4.0;
 		#else
-		return 1;
+		return superSample;
 		#end
 	}
 

@@ -144,6 +144,15 @@ class ShaderContext {
 		if (props.color_write_alpha != null)
 			data.color_write_alpha = props.color_write_alpha;
 
+		if (props.color_writes_red != null)
+			data.color_writes_red = props.color_writes_red;
+		if (props.color_writes_green != null)
+			data.color_writes_green = props.color_writes_green;
+		if (props.color_writes_blue != null)
+			data.color_writes_blue = props.color_writes_blue;
+		if (props.color_writes_alpha != null)
+			data.color_writes_alpha = props.color_writes_alpha;
+
 		data.texture_units = [];
 		tunits = data.texture_units;
 		data.constants = [];

@@ -31,8 +31,8 @@ def add_assets(path, quality=1.0, use_data_dir=False, rel_path=False):
 
 def add_shaders(path, rel_path=False):
     if rel_path:
-        path = os.path.relpath(path, arm.utils.get_fp()).replace('\\', '/')
-    return 'project.addShaders("' + path + '");\n'
+        path = os.path.relpath(path, arm.utils.get_fp())
+    return 'project.addShaders("' + path.replace('\\', '/').replace('//', '/') + '");\n'
 
 def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
@@ -167,7 +167,6 @@ project.addSources('Sources');
         else:
             shader_references = sorted(list(set(assets.shaders)))
             for ref in shader_references:
-                ref = ref.replace('\\', '/').replace('//', '/')
                 f.write(add_shaders(ref, rel_path=rel_path))
                 # noprocessing for passthrough geom shader
                 # if ref.endswith('voxel.geom.glsl'):
@@ -220,7 +219,7 @@ project.addSources('Sources');
 
         if wrd.arm_play_console:
             assets.add_khafile_def('arm_debug')
-            f.write(add_shaders(sdk_path.replace('\\', '/') + "/armory/Shaders/debug_draw/**", rel_path=rel_path))
+            f.write(add_shaders(sdk_path + "/armory/Shaders/debug_draw/**", rel_path=rel_path))
 
         if export_ui:
             if not os.path.exists('Libraries/zui'):

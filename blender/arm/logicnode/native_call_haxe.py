@@ -3,10 +3,10 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class CallFunctionNode(Node, ArmLogicTreeNode):
+class CallHaxeNode(Node, ArmLogicTreeNode):
     '''Call Haxe function node'''
-    bl_idname = 'LNCallFunctionNode'
-    bl_label = 'Call Function'
+    bl_idname = 'LNCallHaxeNode'
+    bl_label = 'Call Haxe'
     bl_icon = 'GAME'
 
     def init(self, context):
@@ -16,4 +16,4 @@ class CallFunctionNode(Node, ArmLogicTreeNode):
         self.outputs.new('ArmNodeSocketAction', 'Out')
         self.outputs.new('NodeSocketShader', 'Result')
 
-add_node(CallFunctionNode, category='Native')
+add_node(CallHaxeNode, category='Native')

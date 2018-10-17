@@ -73,8 +73,7 @@ class RenderPathDeferred {
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			t.format = Inc.getHdrFormat();
-			var ss = Inc.getSuperSampling();
-			if (ss != 1) t.scale = ss;
+			t.scale = Inc.getSuperSampling();
 			t.depth_buffer = "main";
 			#if rp_autoexposure
 			t.mipmaps = true;
@@ -93,8 +92,7 @@ class RenderPathDeferred {
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			t.format = Inc.getHdrFormat();
-			var ss = Inc.getSuperSampling();
-			if (ss != 1) t.scale = ss;
+			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
 
@@ -107,8 +105,7 @@ class RenderPathDeferred {
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			t.format = "RGBA64";
-			var ss = Inc.getSuperSampling();
-			if (ss != 1) t.scale = ss;
+			t.scale = Inc.getSuperSampling();
 			t.depth_buffer = "main";
 			path.createRenderTarget(t);
 		}
@@ -120,8 +117,7 @@ class RenderPathDeferred {
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			t.format = "RGBA64";
-			var ss = Inc.getSuperSampling();
-			if (ss != 1) t.scale = ss;
+			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
 
@@ -133,8 +129,7 @@ class RenderPathDeferred {
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			t.format = "RGBA64";
-			var ss = Inc.getSuperSampling();
-			if (ss != 1) t.scale = ss;
+			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
 
@@ -145,8 +140,7 @@ class RenderPathDeferred {
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			t.format = "RGBA32";
-			var ss = Inc.getSuperSampling();
-			if (ss != 1) t.scale = ss;
+			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
 		#end
@@ -183,8 +177,7 @@ class RenderPathDeferred {
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			t.format = "RGBA32";
-			var ss = Inc.getSuperSampling();
-			if (ss != 1) t.scale = ss;
+			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
 		{
@@ -194,8 +187,7 @@ class RenderPathDeferred {
 			t.height = 0;
 			t.displayp = Inc.getDisplayp();
 			t.format = "RGBA32";
-			var ss = Inc.getSuperSampling();
-			if (ss != 1) t.scale = ss;
+			t.scale = Inc.getSuperSampling();
 			path.createRenderTarget(t);
 		}
 		#end
@@ -256,8 +248,7 @@ class RenderPathDeferred {
 				t.height = 0;
 				t.displayp = Inc.getDisplayp();
 				t.format = "R8";
-				var ss = Inc.getSuperSampling();
-				if (ss != 1) t.scale = ss;
+				t.scale = Inc.getSuperSampling();
 				// t.scale = 0.5;
 				path.createRenderTarget(t);
 			}
@@ -268,8 +259,7 @@ class RenderPathDeferred {
 				t.height = 0;
 				t.displayp = Inc.getDisplayp();
 				t.format = "R8";
-				var ss = Inc.getSuperSampling();
-				if (ss != 1) t.scale = ss;
+				t.scale = Inc.getSuperSampling();
 				// t.scale = 0.5;
 				path.createRenderTarget(t);
 			}
