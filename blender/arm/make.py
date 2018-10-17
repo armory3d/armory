@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import glob
 import time
 import shutil
@@ -154,29 +155,30 @@ def export_data(fp, sdk_path):
     write_data.write_compiledglsl(defs + cdefs)
 
     # Write referenced shader passes
-    if not os.path.isfile(build_dir + '/compiled/Shaders/shader_datas.arm') or state.last_world_defs != wrd.world_defs:
-        res = {}
-        res['shader_datas'] = []
+    if wrd.arm_modding_mode != "Mod":
+        if not os.path.isfile(build_dir + '/compiled/Shaders/shader_datas.arm') or state.last_world_defs != wrd.world_defs:
+            res = {}
+            res['shader_datas'] = []
+            for ref in assets.shader_passes:
+                # Ensure shader pass source exists
+                if not os.path.exists(raw_shaders_path + '/' + ref):
+                    continue
+                assets.shader_passes_assets[ref] = []
+                if ref.startswith('compositor_pass'):
+                    compile_shader_pass(res, raw_shaders_path, ref, defs + cdefs)
+                # elif ref.startswith('grease_pencil'):
+                    # compile_shader_pass(res, raw_shaders_path, ref, [])
+                else:
+                    compile_shader_pass(res, raw_shaders_path, ref, defs)
+            arm.utils.write_arm(shaders_path + '/shader_datas.arm', res)
         for ref in assets.shader_passes:
-            # Ensure shader pass source exists
-            if not os.path.exists(raw_shaders_path + '/' + ref):
-                continue
-            assets.shader_passes_assets[ref] = []
-            if ref.startswith('compositor_pass'):
-                compile_shader_pass(res, raw_shaders_path, ref, defs + cdefs)
-            # elif ref.startswith('grease_pencil'):
-                # compile_shader_pass(res, raw_shaders_path, ref, [])
-            else:
-                compile_shader_pass(res, raw_shaders_path, ref, defs)
-        arm.utils.write_arm(shaders_path + '/shader_datas.arm', res)
-    for ref in assets.shader_passes:
-        for s in assets.shader_passes_assets[ref]:
-            assets.add_shader(shaders_path + '/' + s + '.glsl')
-    for file in assets.shaders_external:
-        name = file.split('/')[-1].split('\\')[-1]
-        target = build_dir + '/compiled/Shaders/' + name
-        if not os.path.exists(target):
-            shutil.copy(file, target)
+            for s in assets.shader_passes_assets[ref]:
+                assets.add_shader(shaders_path + '/' + s + '.glsl')
+        for file in assets.shaders_external:
+            name = file.split('/')[-1].split('\\')[-1]
+            target = build_dir + '/compiled/Shaders/' + name
+            if not os.path.exists(target):
+                shutil.copy(file, target)
     state.last_world_defs = wrd.world_defs
 
     # Reset path
@@ -443,6 +445,26 @@ def play(is_viewport):
 def build_success():
     log.clear()
     wrd = bpy.data.worlds['Arm']
+
+    if wrd.arm_modding_mode != 'None':
+        # Copy built shaders to the Krom dir
+        src_dir = os.path.join(arm.utils.get_fp_build(), 'debug/krom-resources')
+        target_dir = os.path.join(arm.utils.get_fp_build(), 'debug/krom/shaders')
+        shutil.rmtree(target_dir, ignore_errors=True)
+        os.rename(src_dir, target_dir)
+
+        if wrd.arm_modding_mode == "Mod" and not state.is_publish and wrd.arm_play_runtime == 'Krom':
+            # Copy the mod dir to parent game mod dir
+            src_dir = os.path.join(arm.utils.get_fp_build(), 'debug/krom')
+            game_blend_path = Path(wrd.arm_modding_game_blend.replace('//', ''))
+            game_build_dir = 'build_' + arm.utils.safestr(game_blend_path.stem)
+            mod_dir = os.path.join(str(game_blend_path.parent), game_build_dir, 'debug/krom/', wrd.arm_modding_folder)
+            os.makedirs(mod_dir, exist_ok=True)
+            target_dir = os.path.join(mod_dir, wrd.arm_project_package)
+            shutil.rmtree(target_dir, ignore_errors=True)
+            shutil.copytree(src_dir, target_dir)
+            print('Mod was built and installed at: "', target_dir, '"')
+            return
 
     if state.is_play:
         if wrd.arm_runtime == 'Browser':

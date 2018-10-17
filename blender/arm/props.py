@@ -95,7 +95,8 @@ def init_properties():
                  ('Game', 'Game', 'Game'),
                  ('Mod', 'Mod', 'Mod')],
         name="Modding Mode", default='None', description='The modding mode')
-    bpy.types.World.arm_modding_parent_project_dir = StringProperty(name="Parent Project Dir", description="The base dir of the parent project source.", default="", subtype="FILE_PATH")
+    bpy.types.World.arm_modding_game_blend = StringProperty(name="Game Blend", description="The .blend file for the parent game", default="", subtype="FILE_PATH")
+    bpy.types.World.arm_modding_folder = StringProperty(name="Modding Folder", description="The name of the folder that mods will be put in", default="Mods")
     bpy.types.World.arm_winmode = EnumProperty(
         items = [('Window', 'Window', 'Window'),
                  ('Fullscreen', 'Fullscreen', 'Fullscreen')],

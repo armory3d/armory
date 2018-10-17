@@ -271,6 +271,14 @@ project.addSources('Sources');
         # if bpy.data.scenes[0].unit_settings.system_rotation == 'DEGREES':
             # assets.add_khafile_def('arm_degrees')
 
+        if wrd.arm_modding_mode != "None":
+            assets.add_khafile_def('arm_modding')
+            assets.add_khafile_def('arm_shaderload')
+        if wrd.arm_modding_mode == "Game":
+            assets.add_khafile_def('arm_modding_game')
+        elif wrd.arm_modding_mode == "Mod":
+            assets.add_khafile_def('arm_modding_mod')
+
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
 
