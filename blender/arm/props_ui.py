@@ -344,8 +344,10 @@ class ArmProjectModdingPanel(bpy.types.Panel):
         row.prop(wrd, 'arm_modding_mode', expand=True)
         col = box.column()
         if wrd.arm_modding_mode == 'Game':
-            pass
-        if wrd.arm_modding_mode == 'Mod':
+            col2 = col.column()
+            col2.prop(wrd, 'arm_modding_expose_classes')
+            col2.prop(wrd, 'arm_modding_include_packages')
+        elif wrd.arm_modding_mode == 'Mod':
             col2 = col.column()
             col2.prop(wrd, 'arm_modding_game_blend')
             col2.prop(wrd, 'arm_modding_folder')

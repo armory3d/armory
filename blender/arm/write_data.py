@@ -274,10 +274,20 @@ project.addSources('Sources');
         if wrd.arm_modding_mode != "None":
             assets.add_khafile_def('arm_modding')
             assets.add_khafile_def('arm_shaderload')
+
         if wrd.arm_modding_mode == "Game":
             assets.add_khafile_def('arm_modding_game')
+            # Expose selected game classes to mods
+            f.write('project.addParameter("--macro armory.system.Modding.exposeClasses(\'' + wrd.arm_modding_expose_classes + '\')");\n')
+            for package in wrd.arm_modding_include_packages.split(','):
+                f.write('project.addParameter("--macro include(\'' + package + '\')");\n')
         elif wrd.arm_modding_mode == "Mod":
             assets.add_khafile_def('arm_modding_mod')
+            # Expose mod classes to other mods
+            f.write('project.addParameter("--macro armory.system.Modding.exposeClasses(\'' + wrd.arm_project_package + '\')");\n')
+            # Generate only the mod's code ( i.e. not iron, Kha, and the rest of the game)
+            f.write('project.addParameter("--macro armory.system.Modding.generateOnlyClasses(\'(' + wrd.arm_project_package + ')\')");\n')
+            f.write('project.addParameter("-main ' + wrd.arm_project_package + '.Main");\n')
 
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
@@ -350,7 +360,28 @@ def write_mainhx(scene_name, resx, resy, is_play, is_viewport, is_publish):
         pathpack = wrd.arm_project_package
     elif rpdat.rp_driver != 'Armory':
         pathpack = rpdat.rp_driver.lower()
+    
+    # Generate Main.hx for Mod
+    if wrd.arm_modding_mode == 'Mod':
+        main_file = 'Sources/' + wrd.arm_project_package + '/Main.hx'
+        if os.path.exists(main_file): return # Don't overwrite custom main file
+        with open(main_file, 'w') as f:
+            f.write(
+"""// Auto-generated
+package """ + wrd.arm_project_package + """;
+class Main {
+    public static function main() {
+        // DO NOT REMOVE FOLLOWING HACK!!!!
+        // Hack class resolution of mod traits
+		@:keep var hack = Type.resolveClass("Std");
 
+        // Any startup logic
+    }
+}
+""")
+        return
+
+    # Generate Main.hx for game
     with open('Sources/Main.hx', 'w') as f:
         f.write(
 """// Auto-generated
