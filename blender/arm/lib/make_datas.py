@@ -40,8 +40,9 @@ def parse_context(c, sres, asset, defs, vert=None, frag=None):
         'stencil_read_mask', 'stencil_write_mask', 'cull_mode', \
         'blend_source', 'blend_destination', 'blend_operation', \
         'alpha_blend_source', 'alpha_blend_destination', 'alpha_blend_operation' \
-        'color_write_red', 'color_write_green', 'color_write_blue', \
-        'color_write_alpha', 'conservative_raster']
+        'color_write_red', 'color_write_green', 'color_write_blue', 'color_write_alpha', \
+        'color_writes_red', 'color_writes_green', 'color_writes_blue', 'color_writes_alpha', \
+        'conservative_raster']
 
     for p in params:
         if p in c:
