@@ -2,6 +2,8 @@ package armory.trait.physics;
 
 #if (!arm_physics)
 
+import iron.Trait;
+
 class PhysicsConstraint extends Trait { public function new() { super(); } }
 
 #else

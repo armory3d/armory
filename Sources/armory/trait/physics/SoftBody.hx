@@ -2,6 +2,8 @@ package armory.trait.physics;
 
 #if (!arm_physics_soft)
 
+import iron.Trait;
+
 class SoftBody extends Trait { public function new() { super(); } }
 
 #else
