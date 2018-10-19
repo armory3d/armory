@@ -97,8 +97,6 @@ class RenderPathDeferred {
 		}
 
 		{
-			path.createDepthBuffer("main", "DEPTH24");
-
 			var t = new RenderTargetRaw();
 			t.name = "gbuffer0";
 			t.width = 0;

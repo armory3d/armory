@@ -65,6 +65,14 @@ class ShaderContext:
             self.data['color_write_blue'] = props['color_write_blue']
         if 'color_write_alpha' in props:
             self.data['color_write_alpha'] = props['color_write_alpha']
+        if 'color_writes_red' in props:
+            self.data['color_writes_red'] = props['color_writes_red']
+        if 'color_writes_green' in props:
+            self.data['color_writes_green'] = props['color_writes_green']
+        if 'color_writes_blue' in props:
+            self.data['color_writes_blue'] = props['color_writes_blue']
+        if 'color_writes_alpha' in props:
+            self.data['color_writes_alpha'] = props['color_writes_alpha']
 
         self.data['texture_units'] = []
         self.tunits = self.data['texture_units']
