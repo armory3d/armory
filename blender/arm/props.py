@@ -98,7 +98,11 @@ def init_properties():
     bpy.types.World.arm_modding_game_blend = StringProperty(name="Game Blend", description="The .blend file for the parent game", default="", subtype="FILE_PATH")
     bpy.types.World.arm_modding_folder = StringProperty(name="Modding Folder", description="The name of the folder that mods will be put in", default="Mods")
     bpy.types.World.arm_modding_expose_classes = StringProperty(name="Expose Classes", description="Regular expression for classes that should exposed to mods. Matches against full class path including package name.", default="(kha|iron|armory)")
-    bpy.types.World.arm_modding_include_packages = StringProperty(name="Include Packages", description="Comma separated list of packages to include in game. Use to ensure packages requried by mods don't get excluded from compilation.", default="armory.logicnode")
+    bpy.types.World.arm_modding_expose_kha = BoolProperty(name="Kha", description="Expose Kha library to mods", default=True)
+    bpy.types.World.arm_modding_expose_iron = BoolProperty(name="Iron", description="Expose Iron library to mods", default=True)
+    bpy.types.World.arm_modding_expose_armory = BoolProperty(name="Armory", description="Expose Armory library to mods", default=True)
+    bpy.types.World.arm_modding_expose_game = BoolProperty(name="Game", description="Expose the Game package ( default 'arm' ) to mods", default=True)
+    bpy.types.World.arm_modding_extra_packages = StringProperty(name="Extra Packages", description="Comma separated list of extra packages to expose to mods.", default="")
     bpy.types.World.arm_winmode = EnumProperty(
         items = [('Window', 'Window', 'Window'),
                  ('Fullscreen', 'Fullscreen', 'Fullscreen')],

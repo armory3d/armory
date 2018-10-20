@@ -37,17 +37,19 @@ class Modding {
     }
 #elseif macro
 	/**
-		Expose classes and methods to the modding languages.
-	**/
-	static public function exposeClasses(patternStr:String) {
-        var pattern = new EReg(patternStr, "g");
+	 * Expose a package to modding languages. This allows mods to reference
+	 * functions and classes in that package and all subpackages.
+	 * 
+	 * @param package The name of the package to be exposed.
+	 */
+	static public function exposePack(pack:String) {
 		Context.onAfterTyping(function (types:Array<ModuleType>) {
 			for (module in types) {
 				var moduleRef:Ref<ModuleType> = module.getParameters()[0];
 				var className = moduleRef.toString();
 				var baseModule:BaseType = cast moduleRef.get();
 
-                if (pattern.match(className)) {
+                if (StringTools.startsWith(className, pack)) {
                     // Expose classes to Javascript
                     if (Context.defined('js')) {
                         baseModule.meta.add(":expose", [], baseModule.pos);
@@ -63,8 +65,8 @@ class Modding {
 	//
 
 	/**
-		Generate only the classes that match the given regex pattern.
-	**/
+	 * Generate only the classes that match the given regex pattern.
+	 */
 	static public function generateOnlyClasses( patternStr : String ) {
 		var pattern = new EReg(patternStr, "g");
 		Context.onGenerate(function(types) {
@@ -89,8 +91,8 @@ class Modding {
 	}
 
 	/**
-		Exclude a class or an enum without changing it to `@:nativeGen`.
-	**/
+	 * Exclude a class or an enum without changing it to `@:nativeGen`.
+	 */
 	static private function excludeBaseType( baseType : BaseType ) : Void {
 		if (!baseType.isExtern) {
 			var meta = baseType.meta;

@@ -342,15 +342,23 @@ class ArmProjectModdingPanel(bpy.types.Panel):
         box = layout.box().column()
         row = box.row()
         row.prop(wrd, 'arm_modding_mode', expand=True)
-        col = box.column()
         if wrd.arm_modding_mode == 'Game':
-            col2 = col.column()
-            col2.prop(wrd, 'arm_modding_expose_classes')
-            col2.prop(wrd, 'arm_modding_include_packages')
+            row = box.row()
+            row.label(text="Exposed Packages:")
+            row = box.row()
+            col = row.column()
+            col.prop(wrd, 'arm_modding_expose_game')
+            col.prop(wrd, 'arm_modding_expose_kha')
+            col = row.column()
+            col.prop(wrd, 'arm_modding_expose_armory')
+            col.prop(wrd, 'arm_modding_expose_iron')
+            row = box.row()
+            row.prop(wrd, 'arm_modding_extra_packages', text="Extra")
         elif wrd.arm_modding_mode == 'Mod':
-            col2 = col.column()
-            col2.prop(wrd, 'arm_modding_game_blend')
-            col2.prop(wrd, 'arm_modding_folder')
+            row = box.row()
+            col = row.column()
+            col.prop(wrd, 'arm_modding_game_blend')
+            col.prop(wrd, 'arm_modding_folder')
 
 class ArmProjectFlagsPanel(bpy.types.Panel):
     bl_label = "Flags"
