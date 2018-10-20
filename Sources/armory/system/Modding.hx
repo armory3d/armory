@@ -18,8 +18,9 @@ class Modding {
      * 
      * @param modListFile The path to the file containing the mod list
      * @param done Callback for when mods are finished
+	 * @param onload Callback called for each mod loaded
      */
-    static public function loadModsFromListFile(modListFile:String, done:() -> Void) {
+    static public function loadModsFromListFile(modListFile:String, done:() -> Void, onLoad:(modName:String) -> Void = null) {
 		iron.data.Data.getBlob(modListFile, (blob:kha.Blob) -> {
 			var modList = blob.toString().split("\n");
 			for (mod in modList) {
@@ -30,6 +31,7 @@ class Modding {
 				iron.data.Data.getBlob('Mods/$mod/krom.js', (b:kha.Blob) -> {
 					var code = b.toString();
 					untyped __js__("(1, eval)({0})", code);
+					if (onLoad != null) onLoad(mod);
 				});
 			}
 		});
