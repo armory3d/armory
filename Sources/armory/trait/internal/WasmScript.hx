@@ -17,7 +17,7 @@ class WasmScript extends iron.Trait {
 
 		// Armory API exposed to WebAssembly
 		// TODO: static
-		static var imports = {
+		/*static*/ var imports = {
 			env: {
 				trace: function(i:Int) { trace(wasm.getString(i)); },
 				tracef: function(f:Float) { trace(f); },
@@ -40,27 +40,24 @@ class WasmScript extends iron.Trait {
 					t.scale.set(sx, sy, sz);
 					t.setRotation(rx, ry, rz);
 				},
-				set_location: function(object:Int, x:Float, y:Float, z:Float)
-				 {
+				set_location: function(object:Int, x:Float, y:Float, z:Float) {
 					var o = objectMap.get(object);
 					if (o == null) return;
 					var t = o.transform;
-					t.loc.set(x,y,z);
-				 },
-				set_scale: function(object:Int, x:Float, y:Float, z:Float)
-				 {
+					t.loc.set(x, y, z);
+				},
+				set_scale: function(object:Int, x:Float, y:Float, z:Float) {
 					var o = objectMap.get(object);
 					if (o == null) return;
 					var t = o.transform;
-					t.scale.set(x,y,z)
-				 },
-				set_rotation: function(object:Int, x:Float, y:Float, z:Float)
-				 {
+					t.scale.set(x, y, z);
+				},
+				set_rotation: function(object:Int, x:Float, y:Float, z:Float) {
 					var o = objectMap.get(object);
 					if (o == null) return;
 					var t = o.transform;
-					t.setRotation(x,y,z);
-				 },
+					t.setRotation(x, y, z);
+				},
 
 				mouse_x: function() { return Input.getMouse().x; },
 				mouse_y: function() { return Input.getMouse().y; },
