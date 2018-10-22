@@ -8,10 +8,10 @@ class PlaySoundRawNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		iron.data.Data.getSound(property0, function(sound:kha.Sound) {
 			iron.system.Audio.play(sound, false);
 		});
-		super.run();
+		runOutput(0);
 	}
 }

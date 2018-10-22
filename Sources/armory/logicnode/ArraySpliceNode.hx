@@ -6,7 +6,7 @@ class ArraySpliceNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var ar:Array<Dynamic> = inputs[1].get();
 		if (ar == null) return;
 
@@ -15,6 +15,6 @@ class ArraySpliceNode extends LogicNode {
 
         ar.splice(i, len);
 
-		super.run();
+		runOutput(0);
 	}
 }

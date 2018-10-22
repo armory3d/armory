@@ -8,7 +8,7 @@ class SetParentNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var object:Object = inputs[1].get();
 
 		var parent:Object;
@@ -25,6 +25,6 @@ class SetParentNode extends LogicNode {
 		object.parent.removeChild(object, isUnparent); // keepTransform
 		parent.addChild(object, !isUnparent); // applyInverse
 
-		super.run();
+		runOutput(0);
 	}
 }

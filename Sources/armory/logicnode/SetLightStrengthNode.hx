@@ -8,7 +8,7 @@ class SetLightStrengthNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var light:LightObject = inputs[1].get();
 		var strength:Float = inputs[2].get();
 		
@@ -16,6 +16,6 @@ class SetLightStrengthNode extends LogicNode {
 
 		light.data.raw.strength = light.data.raw.type == "sun" ? strength * 0.325 : strength * 0.026;
 
-		super.run();
+		runOutput(0);
 	}
 }

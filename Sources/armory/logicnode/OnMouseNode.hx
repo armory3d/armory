@@ -24,6 +24,6 @@ class OnMouseNode extends LogicNode {
 		case "Moved":
 			b = mouse.moved;
 		}
-		if (b) run();
+		if (b) runOutput(0);
 	}
 }

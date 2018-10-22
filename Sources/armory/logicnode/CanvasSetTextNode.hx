@@ -19,10 +19,10 @@ class CanvasSetTextNode extends LogicNode {
 		tree.removeUpdate(update);
 
 		canvas.getElement(element).text = Std.string(text);
-		super.run();
+		runOutput(0);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		element = inputs[1].get();
 		text = inputs[2].get();
 		canvas = Scene.active.getTrait(CanvasScript);

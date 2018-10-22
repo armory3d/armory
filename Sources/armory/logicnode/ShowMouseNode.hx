@@ -6,10 +6,10 @@ class ShowMouseNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var show:Bool = inputs[1].get();
 		var mouse = iron.system.Input.getMouse();
 		show ? mouse.show() : mouse.hide();
-		super.run();
+		runOutput(0);
 	}
 }

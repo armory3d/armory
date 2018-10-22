@@ -8,7 +8,7 @@ class ArrayRemoveValueNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var ar:Array<Dynamic> = inputs[1].get();
 		if (ar == null) return;
 
@@ -17,7 +17,7 @@ class ArrayRemoveValueNode extends LogicNode {
 		removedValue = val;
 		ar.remove(val);
 
-		runOutputs(0);
+		runOutput(0);
 	}
 
 	override function get(from:Int):Dynamic {

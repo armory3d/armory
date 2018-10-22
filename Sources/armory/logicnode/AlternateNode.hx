@@ -8,8 +8,8 @@ class AlternateNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
-		b ? runOutputs(0) : runOutputs(1);
+	override function run(from:Int) {
+		b ? runOutput(0) : runOutput(1);
 		b = !b;
 	}
 }

@@ -9,6 +9,6 @@ class OnUpdateNode extends LogicNode {
 	}
 
 	function update() {
-		run();
+		runOutput(0);
 	}
 }

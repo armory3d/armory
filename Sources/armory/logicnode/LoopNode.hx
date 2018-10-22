@@ -8,20 +8,20 @@ class LoopNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		index = 0;
 		var from:Int = inputs[1].get();
 		var to:Int = inputs[2].get();
 		for (i in from...to) {
 			index = i;
-			runOutputs(0);
+			runOutput(0);
 
 			if (tree.loopBreak) {
 				tree.loopBreak = false;
 				break;
 			}
 		}
-		runOutputs(2);
+		runOutput(2);
 	}
 
 	override function get(from:Int):Dynamic {

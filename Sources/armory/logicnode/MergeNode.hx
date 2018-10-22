@@ -6,7 +6,7 @@ class MergeNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
-		super.run();
+	override function run(from:Int) {
+		runOutput(0);
 	}
 }

@@ -6,7 +6,7 @@ class ShutdownNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		kha.System.stop();
 	}
 }

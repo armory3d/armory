@@ -52,6 +52,6 @@ class OnContactNode extends LogicNode {
 
 		lastContact = contact;
 
-		if (b) run();
+		if (b) runOutput(0);
 	}
 }

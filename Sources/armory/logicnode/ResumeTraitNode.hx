@@ -6,12 +6,12 @@ class ResumeTraitNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var trait:Dynamic = inputs[1].get();
 		if (trait == null || !Std.is(trait, LogicTree)) return;
 
 		cast(trait, LogicTree).resume();
 
-		super.run();
+		runOutput(0);
 	}
 }

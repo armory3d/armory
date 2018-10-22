@@ -8,7 +8,7 @@ class SetVisibleNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var object:Object = inputs[1].get();
 		var visible:Bool = inputs[2].get();
 		
@@ -16,6 +16,6 @@ class SetVisibleNode extends LogicNode {
 
 		object.visible = visible;
 
-		super.run();
+		runOutput(0);
 	}
 }

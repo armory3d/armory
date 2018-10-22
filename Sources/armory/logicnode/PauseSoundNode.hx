@@ -8,10 +8,10 @@ class PauseSoundNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var object:SpeakerObject = cast(inputs[1].get(), SpeakerObject);
 		if (object == null) return;
 		object.pause();
-		super.run();
+		runOutput(0);
 	}
 }

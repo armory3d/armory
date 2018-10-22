@@ -10,7 +10,7 @@ class SetVelocityNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var object:Object = inputs[1].get();
 		var linear:Vec4 = inputs[2].get();
 		var linearFactor:Vec4 = inputs[3].get();
@@ -28,6 +28,6 @@ class SetVelocityNode extends LogicNode {
 		rb.setAngularFactor(angularFactor.x, angularFactor.y, angularFactor.z);
 #end
 
-		super.run();
+		runOutput(0);
 	}
 }

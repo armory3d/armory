@@ -9,7 +9,7 @@ class ExpressionNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 
 		#if arm_hscript
 		var expr = property0;
@@ -19,7 +19,7 @@ class ExpressionNode extends LogicNode {
 		result = interp.execute(ast);
 		#end
 
-		runOutputs(0);
+		runOutput(0);
 	}
 
 	override function get(from:Int):Dynamic {

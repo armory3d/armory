@@ -8,15 +8,15 @@ class ArrayLoopNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var ar:Array<Dynamic> = inputs[1].get();
 		if (ar == null) return;
 
 		for (val in ar) {
 			value = val;
-			runOutputs(0);
+			runOutput(0);
 		}
-		runOutputs(2);
+		runOutput(2);
 	}
 
 	override function get(from:Int):Dynamic {

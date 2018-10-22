@@ -8,11 +8,11 @@ class RemoveTraitNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var trait:Dynamic = inputs[1].get();
 		if (trait == null) return;
 		trait.remove();
 
-		super.run();
+		runOutput(0);
 	}
 }

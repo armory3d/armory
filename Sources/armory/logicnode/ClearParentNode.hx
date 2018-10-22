@@ -8,7 +8,7 @@ class ClearParentNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var object:Object = inputs[1].get();
 		var keepTransform:Bool = inputs[2].get();
 		
@@ -17,6 +17,6 @@ class ClearParentNode extends LogicNode {
 		object.parent.removeChild(object, keepTransform);
 		iron.Scene.active.root.addChild(object, false);
 
-		super.run();
+		runOutput(0);
 	}
 }

@@ -6,7 +6,7 @@ class ArrayAddNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var ar:Array<Dynamic> = inputs[1].get();
 		if (ar == null) return;
 
@@ -17,6 +17,6 @@ class ArrayAddNode extends LogicNode {
 			}
 		}
 
-		super.run();
+		runOutput(0);
 	}
 }

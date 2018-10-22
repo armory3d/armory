@@ -11,7 +11,7 @@ class SpawnSceneNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 
 		var sceneName:String = inputs[1].get();
 		var matrix:Mat4 = inputs[2].get();
@@ -24,7 +24,7 @@ class SpawnSceneNode extends LogicNode {
 		}
 
 		iron.Scene.active.addScene(sceneName, root, function(o:Object) {
-			runOutputs(0);
+			runOutput(0);
 		});
 	}
 

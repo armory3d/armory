@@ -6,10 +6,10 @@ class WhileNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var b:Bool = inputs[1].get();
 		while (b) {
-			runOutputs(0);
+			runOutput(0);
 			b = inputs[1].get();
 
 			if (tree.loopBreak) {
@@ -17,6 +17,6 @@ class WhileNode extends LogicNode {
 				break;
 			}
 		}
-		runOutputs(1);
+		runOutput(1);
 	}
 }

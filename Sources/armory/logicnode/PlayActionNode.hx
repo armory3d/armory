@@ -8,7 +8,7 @@ class PlayActionNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var object:Object = inputs[1].get();
 		var action:String = inputs[2].get();
 		// TODO: assume input exists
@@ -19,9 +19,9 @@ class PlayActionNode extends LogicNode {
 		if (animation == null) animation = object.getParentArmature(object.name);
 
 		animation.play(action, function() {
-			runOutputs(1);
+			runOutput(1);
 		}, blendTime);
 
-		runOutputs(0);
+		runOutput(0);
 	}
 }

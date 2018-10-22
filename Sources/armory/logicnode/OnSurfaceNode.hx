@@ -23,6 +23,6 @@ class OnSurfaceNode extends LogicNode {
 		case "Moved":
 			b = surface.moved;
 		}
-		if (b) run();
+		if (b) runOutput(0);
 	}
 }

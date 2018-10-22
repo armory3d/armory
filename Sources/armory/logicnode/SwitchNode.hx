@@ -6,17 +6,17 @@ class SwitchNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var v1:Dynamic = inputs[1].get();
 		if (inputs.length > 2) {
 			for(i in 2...inputs.length) {
 				if (inputs[i].get() == v1) {
-					runOutputs(i - 1);
+					runOutput(i - 1);
 					return;
 				}
 			}
 		}
 
-		runOutputs(0);
+		runOutput(0);
 	}
 }

@@ -8,7 +8,7 @@ class CallHaxeStaticNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		
 		var path:String = inputs[1].get();
 		if (path != '') {
@@ -19,7 +19,7 @@ class CallHaxeStaticNode extends LogicNode {
 			result = Reflect.callMethod(classType, Reflect.field(classType, funName), [tree]);
 		}
 
-		runOutputs(0);
+		runOutput(0);
 	}
 
 	override function get(from:Int):Dynamic {

@@ -11,7 +11,7 @@ class SendGlobalEventNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var name:String = inputs[1].get();
 		
 		// if (entries == null) {
@@ -20,6 +20,6 @@ class SendGlobalEventNode extends LogicNode {
 		if (entries == null) return; // Event does not exist
 		for (e in entries) e.onEvent();
 
-		super.run();
+		runOutput(0);
 	}
 }

@@ -12,7 +12,7 @@ class AppendTransformNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var object:Object = inputs[1].get();
 		var matrix:Mat4 = inputs[2].get();
 
@@ -25,6 +25,6 @@ class AppendTransformNode extends LogicNode {
 		if (rigidBody != null) rigidBody.syncTransform();
 		#end
 
-		super.run();
+		runOutput(0);
 	}
 }

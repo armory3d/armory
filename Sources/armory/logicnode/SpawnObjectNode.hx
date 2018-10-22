@@ -12,7 +12,7 @@ class SpawnObjectNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 
 		var objectName = "";
 		var objectInput = inputs[1].get();
@@ -35,7 +35,7 @@ class SpawnObjectNode extends LogicNode {
 				#end
 			}
 			object.visible = true;
-			runOutputs(0);
+			runOutput(0);
 		}, spawnChildren);
 	}
 

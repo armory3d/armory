@@ -9,7 +9,7 @@ class SetMeshNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var object:MeshObject = inputs[1].get();
 		var mesh:MeshData = inputs[2].get();
 		
@@ -17,6 +17,6 @@ class SetMeshNode extends LogicNode {
 
 		object.data = mesh;
 
-		super.run();
+		runOutput(0);
 	}
 }

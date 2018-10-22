@@ -22,6 +22,6 @@ class OnKeyboardNode extends LogicNode {
 		case "Released":
 			b = keyboard.released(property1);
 		}
-		if (b) run();
+		if (b) runOutput(0);
 	}
 }

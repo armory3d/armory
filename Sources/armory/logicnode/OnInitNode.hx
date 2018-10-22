@@ -13,16 +13,16 @@ class OnInitNode extends LogicNode {
 	function init() {
 		#if arm_physics
 		var noPhysics = PhysicsWorld.active == null || PhysicsWorld.active._lateUpdate == null;
-		noPhysics ? run() : PhysicsWorld.active.notifyOnPreUpdate(physics_init);
+		noPhysics ? runOutput(0) : PhysicsWorld.active.notifyOnPreUpdate(physics_init);
 		#else
-		run();
+		runOutput(0);
 		#end
 	}
 
 	#if arm_physics
 	function physics_init() {
 		PhysicsWorld.active.removePreUpdate(physics_init);
-		run();
+		runOutput(0);
 	}
 	#end
 }

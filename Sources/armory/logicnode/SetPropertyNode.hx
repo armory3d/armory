@@ -8,7 +8,7 @@ class SetPropertyNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var object:Object = inputs[1].get();
 		var property:String = inputs[2].get();
 		var value:Dynamic = inputs[3].get();
@@ -17,6 +17,6 @@ class SetPropertyNode extends LogicNode {
 		if (object.properties == null) object.properties = new Map();
 		object.properties.set(property, value);
 
-		super.run();
+		runOutput(0);
 	}
 }

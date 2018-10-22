@@ -8,7 +8,7 @@ class BlendActionNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var object:Object = inputs[1].get();
 		var action1:String = inputs[2].get();
 		var action2:String = inputs[3].get();
@@ -20,6 +20,6 @@ class BlendActionNode extends LogicNode {
 
 		animation.blend(action1, action2, blendFactor);
 
-		runOutputs(0);
+		runOutput(0);
 	}
 }

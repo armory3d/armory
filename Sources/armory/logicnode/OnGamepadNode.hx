@@ -28,6 +28,6 @@ class OnGamepadNode extends LogicNode {
 		// case "Moved Right":
 			// b = gamepad.rightStick.movementX != 0 || gamepad.rightStick.movementY != 0;
 		}
-		if (b) run();
+		if (b) runOutput(0);
 	}
 }

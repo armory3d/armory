@@ -10,7 +10,7 @@ class SetGravityNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var gravity:Vec4 = inputs[1].get();
 
 		if (gravity == null) return;
@@ -20,6 +20,6 @@ class SetGravityNode extends LogicNode {
 		physics.setGravity(gravity);
 #end
 
-		super.run();
+		runOutput(0);
 	}
 }

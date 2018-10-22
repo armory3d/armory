@@ -6,7 +6,7 @@ class LoopBreakNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		tree.loopBreak = true;
 	}
 }

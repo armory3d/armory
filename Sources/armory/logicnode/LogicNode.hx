@@ -26,9 +26,28 @@ class LogicNode {
 		outputs.push(nodes);
 	}
 
-	function run() { for (ar in outputs) for (o in ar) o.run(); }
+	/**
+	 * Called when this node is activated.
+	 * @param from impulse index
+	 */
+	function run(from:Int) {}
 
-	function runOutputs(i:Int) { if (i < outputs.length) for (o in outputs[i]) o.run(); }
+	/**
+	 * Call to activate node connected to the output.
+	 * @param i output index
+	 */
+	function runOutput(i:Int) {
+		if (i >= outputs.length) return;
+		for (o in outputs[i]) {
+			// Check which input activated the node
+			for (j in 0...o.inputs.length) {
+				if (o.inputs[j].node == this) {
+					o.run(j);
+					break;
+				}
+			}
+		}
+	}
 
 	@:allow(armory.logicnode.LogicNodeInput)
 	function get(from:Int):Dynamic { return this; }

@@ -8,7 +8,7 @@ class SetNameNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var object:Object = inputs[1].get();
 		var name:String = inputs[2].get();
 		
@@ -16,6 +16,6 @@ class SetNameNode extends LogicNode {
 
 		object.name = name;
 
-		super.run();
+		runOutput(0);
 	}
 }

@@ -6,11 +6,11 @@ class RemoveGroupNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var groupName:String = inputs[1].get();
 		
 		iron.Scene.active.groups.remove(groupName);
 
-		super.run();
+		runOutput(0);
 	}
 }

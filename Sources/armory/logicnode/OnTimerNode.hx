@@ -21,7 +21,7 @@ class OnTimerNode extends LogicNode {
 		duration -= iron.system.Time.delta;
 		if (duration <= 0.0) {
 			if (!repeat) tree.removeUpdate(update);
-			run();
+			runOutput(0);
 		}
 	}
 }

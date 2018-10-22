@@ -23,6 +23,6 @@ class OnVirtualButtonNode extends LogicNode {
 		case "Released":
 			b = vb.released;
 		}
-		if (b) run();
+		if (b) runOutput(0);
 	}
 }

@@ -6,7 +6,7 @@ class WriteStorageNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var key:String = inputs[1].get();
 		var value:Dynamic = inputs[2].get();
 
@@ -16,6 +16,6 @@ class WriteStorageNode extends LogicNode {
 		Reflect.setField(data, key, value);
 		iron.system.Storage.save();
 
-		super.run();
+		runOutput(0);
 	}
 }

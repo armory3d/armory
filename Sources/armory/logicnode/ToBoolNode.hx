@@ -9,7 +9,7 @@ class ToBoolNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		b = true;
 	}
 

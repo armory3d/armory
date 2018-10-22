@@ -6,7 +6,7 @@ class SetStaticPropertyNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var className:String = inputs[1].get();
 		var property:String = inputs[2].get();
 		var value:Dynamic = inputs[3].get();
@@ -15,6 +15,6 @@ class SetStaticPropertyNode extends LogicNode {
 		if (cl == null) return;
         Reflect.setField(cl, property, value);
 
-		super.run();
+		runOutput(0);
 	}
 }

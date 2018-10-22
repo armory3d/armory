@@ -19,12 +19,12 @@ class SetMaterialRgbParamNode extends LogicNode {
 		}
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		mat = inputs[1].get();
 		node = inputs[2].get();
 		col = inputs[3].get();
 
-		super.run();
+		runOutput(0);
 	}
 
 	static function vec3Link(object:Object, mat:MaterialData, link:String):iron.math.Vec4 {

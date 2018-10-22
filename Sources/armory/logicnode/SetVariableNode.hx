@@ -6,12 +6,12 @@ class SetVariableNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var variable = inputs[1];
 		var value:Dynamic = inputs[2].get();
 
 		variable.set(value);
 
-		super.run();
+		runOutput(0);
 	}
 }

@@ -8,7 +8,7 @@ class SetParentBoneNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var object:Object = inputs[1].get();
 		var parent:Object = inputs[2].get();
 		var bone:String = inputs[3].get();
@@ -23,6 +23,6 @@ class SetParentBoneNode extends LogicNode {
 		var banim = object.getParentArmature(object.parent.name);
 		banim.addBoneChild(bone, object);
 
-		super.run();
+		runOutput(0);
 	}
 }

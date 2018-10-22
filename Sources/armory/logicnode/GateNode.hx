@@ -11,7 +11,7 @@ class GateNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 
 		var v1:Dynamic = inputs[1].get();
 		var v2:Dynamic = inputs[2].get();
@@ -47,6 +47,6 @@ class GateNode extends LogicNode {
 			}
 		}
 
-		cond ? runOutputs(0) : runOutputs(1);
+		cond ? runOutput(0) : runOutput(1);
 	}
 }

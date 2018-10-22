@@ -15,7 +15,7 @@ class BoneFKNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var object:Object = inputs[1].get();
 		var boneName:String = inputs[2].get();
 		var transform:Mat4 = inputs[3].get();
@@ -44,6 +44,6 @@ class BoneFKNode extends LogicNode {
 			notified = true;
 		}
 
-		runOutputs(0);
+		runOutput(0);
 	}
 }

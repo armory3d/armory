@@ -47,6 +47,6 @@ class OnVolumeTriggerNode extends LogicNode {
 
 		lastOverlap = overlap;
 
-		if (b) run();
+		if (b) runOutput(0);
 	}
 }

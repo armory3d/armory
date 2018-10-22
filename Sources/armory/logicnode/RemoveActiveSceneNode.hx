@@ -6,9 +6,9 @@ class RemoveActiveSceneNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 
 		iron.Scene.active.remove();
-		runOutputs(0);
+		runOutput(0);
 	}
 }

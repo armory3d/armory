@@ -9,7 +9,7 @@ class SetMaterialNode extends LogicNode {
 		super(tree);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		var object:MeshObject = inputs[1].get();
 		var mat:MaterialData = inputs[2].get();
 		
@@ -19,6 +19,6 @@ class SetMaterialNode extends LogicNode {
 			object.materials[i] = mat;
 		}
 
-		super.run();
+		runOutput(0);
 	}
 }
