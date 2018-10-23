@@ -2779,7 +2779,7 @@ class ArmoryExporter:
                             assets.add(nav_filepath)
                             # TODO: Implement cache
                             #if os.path.isfile(nav_filepath) == False:
-                            override = {'selected_objects': [bobject]}
+                            # override = {'selected_objects': [bobject]}
                             # bobject.scale.y *= -1
                             # mesh = obj.data
                             # for face in mesh.faces:

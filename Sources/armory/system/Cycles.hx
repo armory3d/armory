@@ -120,7 +120,7 @@ class ShaderContext {
 			alpha_blend_operation: props.alpha_blend_operation,
 			fragment_shader: '',
 			vertex_shader: '',
-			vertex_structure: Reflect.hasField(props, 'vertex_structure') ? props.vertex_structure : [ {"name": "pos", "size": 3}, {"name": "nor", "size": 3}]
+			vertex_structure: Reflect.hasField(props, 'vertex_structure') ? props.vertex_structure : [ {name: "pos", size: 3}, {name: "nor", size: 3}]
 		};
 
   //       if 'blend_source' in props:
@@ -188,9 +188,15 @@ class ShaderContext {
 	}
 
 	public function get_elem(name:String):TVertexData {
-		for (elem in data.vertex_structure)
+		for (elem in data.vertex_structure) {
+			#if cpp
+			if (Reflect.field(elem, "name") == name)
+			#else
 			if (elem.name == name)
+			#end {
 				return elem;
+			}
+		}
 		return null;
 	}
 
