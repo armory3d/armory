@@ -899,7 +899,7 @@ class ArmoryExporter:
                 layer_found = True
             else:
                 for l in self.active_layers:
-                    if bobject.layers[l] == True:
+                    if bobject.view_layers[l] == True:
                         layer_found = True
                         break
             if layer_found == False:
@@ -2221,8 +2221,8 @@ class ArmoryExporter:
         self.objectToArmObjectDict = dict()
         self.active_layers = []
         self.bone_tracks = []
-        for i in range(0, len(self.scene.layers)):
-            if self.scene.layers[i] == True:
+        for i in range(0, len(self.scene.view_layers)):
+            if self.scene.view_layers[i] == True:
                 self.active_layers.append(i)
 
         self.preprocess()

@@ -302,8 +302,8 @@ class ArmoryExporterPanel(bpy.types.Panel):
         row = layout.row()
         row.template_list("ArmExporterList", "The_List", wrd, "arm_exporterlist", wrd, "arm_exporterlist_index", rows=rows)
         col = row.column(align=True)
-        col.operator("arm_exporterlist.new_item", icon='ZOOMIN', text="")
-        col.operator("arm_exporterlist.delete_item", icon='ZOOMOUT', text="")
+        col.operator("arm_exporterlist.new_item", icon='ADD', text="")
+        col.operator("arm_exporterlist.delete_item", icon='REMOVE', text="")
         col.menu("arm_exporterlist_specials", icon='DOWNARROW_HLT', text="")
 
         if wrd.arm_exporterlist_index >= 0 and len(wrd.arm_exporterlist) > 0:
@@ -662,8 +662,8 @@ class ArmRenderPathPanel(bpy.types.Panel):
         row = layout.row()
         row.template_list("ArmRPList", "The_List", wrd, "arm_rplist", wrd, "arm_rplist_index", rows=rows)
         col = row.column(align=True)
-        col.operator("arm_rplist.new_item", icon='ZOOMIN', text="")
-        col.operator("arm_rplist.delete_item", icon='ZOOMOUT', text="")
+        col.operator("arm_rplist.new_item", icon='ADD', text="")
+        col.operator("arm_rplist.delete_item", icon='REMOVE', text="")
 
         if wrd.arm_rplist_index < 0 or len(wrd.arm_rplist) == 0:
             return
@@ -987,8 +987,8 @@ class ArmBakePanel(bpy.types.Panel):
         row = layout.row()
         row.template_list("ArmBakeList", "The_List", scn, "arm_bakelist", scn, "arm_bakelist_index", rows=rows)
         col = row.column(align=True)
-        col.operator("arm_bakelist.new_item", icon='ZOOMIN', text="")
-        col.operator("arm_bakelist.delete_item", icon='ZOOMOUT', text="")
+        col.operator("arm_bakelist.new_item", icon='ADD', text="")
+        col.operator("arm_bakelist.delete_item", icon='REMOVE', text="")
         col.menu("arm_bakelist_specials", icon='DOWNARROW_HLT', text="")
 
         if scn.arm_bakelist_index >= 0 and len(scn.arm_bakelist) > 0:
@@ -1071,8 +1071,8 @@ class ArmLodPanel(bpy.types.Panel):
         row = layout.row()
         row.template_list("ArmLodList", "The_List", mdata, "arm_lodlist", mdata, "arm_lodlist_index", rows=rows)
         col = row.column(align=True)
-        col.operator("arm_lodlist.new_item", icon='ZOOMIN', text="")
-        col.operator("arm_lodlist.delete_item", icon='ZOOMOUT', text="")
+        col.operator("arm_lodlist.new_item", icon='ADD', text="")
+        col.operator("arm_lodlist.delete_item", icon='REMOVE', text="")
 
         if mdata.arm_lodlist_index >= 0 and len(mdata.arm_lodlist) > 0:
             item = mdata.arm_lodlist[mdata.arm_lodlist_index]
@@ -1111,8 +1111,8 @@ class ArmTilesheetPanel(bpy.types.Panel):
         row = layout.row()
         row.template_list("ArmTilesheetList", "The_List", wrd, "arm_tilesheetlist", wrd, "arm_tilesheetlist_index", rows=rows)
         col = row.column(align=True)
-        col.operator("arm_tilesheetlist.new_item", icon='ZOOMIN', text="")
-        col.operator("arm_tilesheetlist.delete_item", icon='ZOOMOUT', text="")
+        col.operator("arm_tilesheetlist.new_item", icon='ADD', text="")
+        col.operator("arm_tilesheetlist.delete_item", icon='REMOVE', text="")
 
         if wrd.arm_tilesheetlist_index >= 0 and len(wrd.arm_tilesheetlist) > 0:
             dat = wrd.arm_tilesheetlist[wrd.arm_tilesheetlist_index]
@@ -1128,8 +1128,8 @@ class ArmTilesheetPanel(bpy.types.Panel):
             row = layout.row()
             row.template_list("ArmTilesheetList", "The_List", dat, "arm_tilesheetactionlist", dat, "arm_tilesheetactionlist_index", rows=rows)
             col = row.column(align=True)
-            col.operator("arm_tilesheetactionlist.new_item", icon='ZOOMIN', text="")
-            col.operator("arm_tilesheetactionlist.delete_item", icon='ZOOMOUT', text="")
+            col.operator("arm_tilesheetactionlist.new_item", icon='ADD', text="")
+            col.operator("arm_tilesheetactionlist.delete_item", icon='REMOVE', text="")
 
             if dat.arm_tilesheetactionlist_index >= 0 and len(dat.arm_tilesheetactionlist) > 0:
                 adat = dat.arm_tilesheetactionlist[dat.arm_tilesheetactionlist_index]

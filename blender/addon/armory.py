@@ -6,7 +6,7 @@ bl_info = {
     "location": "Properties -> Render -> Armory",
     "description": "3D Game Engine for Blender",
     "author": "Armory3D.org",
-    "version": (0, 6, 0),
+    "version": (15, 0, 0),
     "blender": (2, 80, 0),
     "wiki_url": "http://armory3d.org/manual",
     "tracker_url": "https://github.com/armory3d/armory/issues"
@@ -317,7 +317,7 @@ class ArmAddonStartButton(bpy.types.Operator):
             properties_physics_cloth.PHYSICS_PT_cloth_cache.COMPAT_ENGINES.add('ARMORY')
             properties_physics_cloth.PHYSICS_PT_cloth_collision.COMPAT_ENGINES.add('ARMORY')
             properties_physics_cloth.PHYSICS_PT_cloth_stiffness.COMPAT_ENGINES.add('ARMORY')
-            properties_physics_cloth.PHYSICS_PT_cloth_sewing.COMPAT_ENGINES.add('ARMORY')
+#            properties_physics_cloth.PHYSICS_PT_cloth_sewing.COMPAT_ENGINES.add('ARMORY')
             properties_physics_cloth.PHYSICS_PT_cloth_field_weights.COMPAT_ENGINES.add('ARMORY')
             from bl_ui import properties_physics_common
             properties_physics_common.PHYSICS_PT_add.COMPAT_ENGINES.add('ARMORY')

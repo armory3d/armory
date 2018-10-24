@@ -432,12 +432,12 @@ def draw_traits(layout, obj, is_object):
     row.template_list("ArmTraitList", "The_List", obj, "arm_traitlist", obj, "arm_traitlist_index", rows=rows)
     
     col = row.column(align=True)
-    op = col.operator("arm_traitlist.new_item", icon='ZOOMIN', text="")
+    op = col.operator("arm_traitlist.new_item", icon='ADD', text="")
     op.is_object = is_object
     if is_object:
-        op = col.operator("arm_traitlist.delete_item", icon='ZOOMOUT', text="")#.all = False
+        op = col.operator("arm_traitlist.delete_item", icon='REMOVE', text="")#.all = False
     else:
-        op = col.operator("arm_traitlist.delete_item_scene", icon='ZOOMOUT', text="")#.all = False
+        op = col.operator("arm_traitlist.delete_item_scene", icon='REMOVE', text="")#.all = False
     op.is_object = is_object
 
     if len(obj.arm_traitlist) > 1:
@@ -487,9 +487,9 @@ def draw_traits(layout, obj, is_object):
             row.template_list("ArmTraitParamList", "The_List", item, "arm_traitparamslist", item, "arm_traitparamslist_index", rows=paramsrows)
 
             col = row.column(align=True)
-            op = col.operator("arm_traitparamslist.new_item", icon='ZOOMIN', text="")
+            op = col.operator("arm_traitparamslist.new_item", icon='ADD', text="")
             op.is_object = is_object
-            op = col.operator("arm_traitparamslist.delete_item", icon='ZOOMOUT', text="")
+            op = col.operator("arm_traitparamslist.delete_item", icon='REMOVE', text="")
             op.is_object = is_object
 
             if len(item.arm_traitparamslist) > 1:
