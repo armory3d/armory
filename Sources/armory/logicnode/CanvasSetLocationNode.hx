@@ -21,16 +21,17 @@ class CanvasSetLocationNode extends LogicNode {
 
 		canvas.getElement(element).x = newX;
 		canvas.getElement(element).y = newY;
-		super.run();
+		runOutput(0);
 	}
 
-	override function run() {
+	override function run(from:Int) {
 		element = inputs[1].get();
 		newX = inputs[2].get();
 		newY = inputs[3].get();
 		canvas = Scene.active.getTrait(CanvasScript);
 		if (canvas == null) canvas = Scene.active.camera.getTrait(CanvasScript);
 
+		// Ensure canvas is ready
 		tree.notifyOnUpdate(update);
 		update();
 	}
