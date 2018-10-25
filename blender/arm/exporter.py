@@ -1362,7 +1362,7 @@ class ArmoryExporter:
 
     def export_mesh_data(self, exportMesh, bobject, o):
         exportMesh.calc_normals_split()
-        exportMesh.calc_tessface() # free_mpoly=True
+#        exportMesh.calc_tessface() # free_mpoly=True
         vert_list = { Vertex(exportMesh, loop) : 0 for loop in exportMesh.loops}.keys()
         num_verts = len(vert_list)
         num_uv_layers = len(exportMesh.uv_layers)
@@ -1643,7 +1643,7 @@ class ArmoryExporter:
 
         # Apply all modifiers to create a new mesh with tessfaces
         if bpy.app.version >= (2, 80, 1):
-            exportMesh = bobject.to_mesh(bpy.context.depsgraph, apply_modifiers, calc_tessface=True, calc_undeformed=False)
+            exportMesh = bobject.to_mesh(bpy.context.depsgraph, apply_modifiers, calc_undeformed=False)
         else:
             exportMesh = bobject.to_mesh(scene, apply_modifiers, "RENDER", True, False)
 
