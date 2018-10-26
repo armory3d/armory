@@ -1,4 +1,5 @@
-str_tex_checker = """vec3 tex_checker(const vec3 co, const vec3 col1, const vec3 col2, const float scale) {
+str_tex_checker = """
+vec3 tex_checker(const vec3 co, const vec3 col1, const vec3 col2, const float scale) {
     // Prevent precision issues on unit coordinates
     vec3 p = (co + 0.000001 * 0.999999) * scale;
     float xi = abs(floor(p.x));

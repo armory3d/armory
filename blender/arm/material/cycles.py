@@ -16,13 +16,14 @@
 #
 import math
 import bpy
+import os
 import arm.assets
 import arm.utils
 import arm.make_state
 import arm.log
-import arm.material.make_texture
 import arm.material.mat_state as mat_state
 import arm.material.cycles_functions as c_functions
+import shutil
 
 basecol_texname = ''
 emission_found = False
@@ -383,30 +384,6 @@ def parse_vector_input(inp):
             else:
                 return to_vec3(inp.default_value)
 
-def vector_curve(name, fac, points):
-    # Write Ys array
-    ys_var = name + '_ys'
-    curshader.write('float {0}[{1}];'.format(ys_var, len(points))) # TODO: Make const
-    for i in range(0, len(points)):
-        curshader.write('{0}[{1}] = {2};'.format(ys_var, i, points[i].location[1]))
-    # Get index
-    fac_var = name + '_fac'
-    curshader.write('float {0} = {1};'.format(fac_var, fac))
-    index = '0'
-    for i in  range(1, len(points)):
-        index += ' + ({0} > {1} ? 1 : 0)'.format(fac_var, points[i].location[0])
-    # Write index
-    index_var = name + '_i'
-    curshader.write('int {0} = {1};'.format(index_var, index))
-    # Linear
-    # Write Xs array
-    facs_var = name + '_xs'
-    curshader.write('float {0}[{1}];'.format(facs_var, len(points))) # TODO: Make const
-    for i in range(0, len(points)):
-        curshader.write('{0}[{1}] = {2};'.format(facs_var, i, points[i].location[0]))
-    # Map vector
-    return 'mix({0}[{1}], {0}[{1} + 1], ({2} - {3}[{1}]) * (1.0 / ({3}[{1} + 1] - {3}[{1}]) ))'.format(ys_var, index_var, fac_var, facs_var)
-
 def parse_vector(node, socket):
     global particle_info
     global sample_bump
@@ -524,7 +501,7 @@ def parse_vector(node, socket):
         else:
             co = 'bposition'
         scale = parse_value_input(node.inputs[1])
-        return 'vec3(tex_magic({0} * {1} * 4.0))'.format(co, scale)
+        return 'tex_magic({0} * {1} * 4.0)'.format(co, scale)
 
     elif node.type == 'TEX_MUSGRAVE':
         curshader.add_function(c_functions.str_tex_musgrave)
@@ -604,8 +581,7 @@ def parse_vector(node, socket):
         val = parse_value_input(node.inputs[2])
         fac = parse_value_input(node.inputs[3])
         col = parse_vector_input(node.inputs[4])
-        # return 'hsv_to_rgb(vec3({0} - 0.5, {1}, {2}))'.format(hue, sat, val)
-        return 'hue_sat({0}, vec4({1}-0.5, {2}, {3}, 1-{4}))'.format(col, hue, sat, val, fac)
+        return 'hue_sat({0}, vec4({1}-0.5, {2}, {3}, 1.0-{4}))'.format(col, hue, sat, val, fac)
 
     elif node.type == 'INVERT':
         fac = parse_value_input(node.inputs[0])
@@ -680,7 +656,7 @@ def parse_vector(node, socket):
         fac_var = node_name(node.name) + '_fac'
         curshader.write('float {0} = {1};'.format(fac_var, fac))
         index = '0'
-        for i in  range(1, len(elems)):
+        for i in range(1, len(elems)):
             index += ' + ({0} > {1} ? 1 : 0)'.format(fac_var, elems[i].position)
         # Write index
         index_var = node_name(node.name) + '_i'
@@ -913,7 +889,7 @@ def parse_vector(node, socket):
         nor = parse_vector_input(node.inputs[3])
         return 'vec3({0})'.format(height)
 
-def parse_normal_map_color_input(inp, strength=1.0):
+def parse_normal_map_color_input(inp, strength='1.0'):
     global normal_parsed
     global frag
     if basecol_only:
@@ -936,7 +912,7 @@ def parse_normal_map_color_input(inp, strength=1.0):
         frag.write('n = TBN * normalize(texn);')
     else:
         frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
-        if strength != 1.0:
+        if strength != '1.0':
             frag.write('n.xy *= {0};'.format(strength))
         frag.write('n = normalize(TBN * n);')
         con.add_elem('tang', 3)
@@ -1100,7 +1076,7 @@ def parse_value(node, socket):
         else:
             co = 'bposition'
         scale = parse_value_input(node.inputs[3])
-        res = 'tex_checker_f({0}, {1}).r'.format(co, scale)
+        res = 'tex_checker_f({0}, {1})'.format(co, scale)
         if sample_bump:
             write_bump(node, res)
         return res
@@ -1306,6 +1282,30 @@ def parse_value(node, socket):
 
 ##
 
+def vector_curve(name, fac, points):
+    # Write Ys array
+    ys_var = name + '_ys'
+    curshader.write('float {0}[{1}];'.format(ys_var, len(points))) # TODO: Make const
+    for i in range(0, len(points)):
+        curshader.write('{0}[{1}] = {2};'.format(ys_var, i, points[i].location[1]))
+    # Get index
+    fac_var = name + '_fac'
+    curshader.write('float {0} = {1};'.format(fac_var, fac))
+    index = '0'
+    for i in range(1, len(points)):
+        index += ' + ({0} > {1} ? 1 : 0)'.format(fac_var, points[i].location[0])
+    # Write index
+    index_var = name + '_i'
+    curshader.write('int {0} = {1};'.format(index_var, index))
+    # Linear
+    # Write Xs array
+    facs_var = name + '_xs'
+    curshader.write('float {0}[{1}];'.format(facs_var, len(points))) # TODO: Make const
+    for i in range(0, len(points)):
+        curshader.write('{0}[{1}] = {2};'.format(facs_var, i, points[i].location[0]))
+    # Map vector
+    return 'mix({0}[{1}], {0}[{1} + 1], ({2} - {3}[{1}]) * (1.0 / ({3}[{1} + 1] - {3}[{1}]) ))'.format(ys_var, index_var, fac_var, facs_var)
+
 def write_normal(inp):
     if inp.is_linked and inp.links[0].from_node.type != 'GROUP_INPUT':
         normal_res = parse_vector_input(inp)
@@ -1408,10 +1408,10 @@ def write_bump(node, res):
     else:
         co = ar[1][:-1]
         post = ')'
-    curshader.write('float {0}_1 = {1}{2} + vec2(-2, 0){3};'.format(sample_bump_res, pre, co, post))
-    curshader.write('float {0}_2 = {1}{2} + vec2(2, 0){3};'.format(sample_bump_res, pre, co, post))
-    curshader.write('float {0}_3 = {1}{2} + vec2(0, -2){3};'.format(sample_bump_res, pre, co, post))
-    curshader.write('float {0}_4 = {1}{2} + vec2(0, 2){3};'.format(sample_bump_res, pre, co, post))
+    curshader.write('float {0}_1 = {1}{2} + vec3(-2, 0, 1){3};'.format(sample_bump_res, pre, co, post))
+    curshader.write('float {0}_2 = {1}{2} + vec3(2, 0, -1){3};'.format(sample_bump_res, pre, co, post))
+    curshader.write('float {0}_3 = {1}{2} + vec3(0, -2, 1){3};'.format(sample_bump_res, pre, co, post))
+    curshader.write('float {0}_4 = {1}{2} + vec3(0, 2, -1){3};'.format(sample_bump_res, pre, co, post))
     sample_bump = False
 
 def to_vec1(v):
@@ -1440,6 +1440,154 @@ def node_name(s):
 
 ##
 
+def make_texture(image_node, tex_name, matname=None):
+    tex = {}
+    tex['name'] = tex_name
+    image = image_node.image
+    if matname == None:
+        matname = mat_state.material.name
+
+    if image == None:
+        return None
+
+    # Get filepath
+    filepath = image.filepath
+    if filepath == '':
+        if image.packed_file != None:
+            filepath = './' + image.name
+            has_ext = filepath.endswith('.jpg') or filepath.endswith('.png') or filepath.endswith('.hdr')
+            if not has_ext:
+                # Raw bytes, write converted .jpg to /unpacked
+                filepath += '.raw'
+        else:
+            arm.log.warn(matname + '/' + image.name + ' - invalid file path')
+            return None
+
+    # Reference image name
+    texpath = arm.utils.asset_path(filepath)
+    texfile = arm.utils.extract_filename(filepath)
+    tex['file'] = arm.utils.safestr(texfile)
+    s = tex['file'].rsplit('.', 1)
+    
+    if len(s) == 1:
+        arm.log.warn(matname + '/' + image.name + ' - file extension required for image name')
+        return None
+
+    ext = s[1].lower()
+    do_convert = ext != 'jpg' and ext != 'png' and ext != 'hdr' and ext != 'mp4' # Convert image
+    if do_convert:
+        tex['file'] = tex['file'].rsplit('.', 1)[0] + '.jpg'
+
+    if image.packed_file != None or not is_ascii(texfile):
+        # Extract packed data / copy non-ascii texture
+        unpack_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked'
+        if not os.path.exists(unpack_path):
+            os.makedirs(unpack_path)
+        unpack_filepath = unpack_path + '/' + tex['file']
+        
+        if do_convert:
+            if not os.path.isfile(unpack_filepath):
+                arm.utils.unpack_image(image, unpack_filepath)
+        else:
+
+            # Write bytes if size is different or file does not exist yet
+            if image.packed_file != None:
+                if not os.path.isfile(unpack_filepath) or os.path.getsize(unpack_filepath) != image.packed_file.size:
+                    with open(unpack_filepath, 'wb') as f:
+                        f.write(image.packed_file.data)
+            # Copy non-ascii texture
+            else:
+                if not os.path.isfile(unpack_filepath) or os.path.getsize(unpack_filepath) != os.path.getsize(texpath):
+                    shutil.copy(texpath, unpack_filepath)
+
+        arm.assets.add(unpack_filepath)
+
+    else:
+        if not os.path.isfile(arm.utils.asset_path(filepath)):
+            arm.log.warn('Material ' + matname + '/' + image.name + ' - file not found(' + filepath + ')')
+            return None
+
+        if do_convert:
+            unpack_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked'
+            if not os.path.exists(unpack_path):
+                os.makedirs(unpack_path)
+            converted_path = unpack_path + '/' + tex['file']
+            # TODO: delete cache when file changes
+            if not os.path.isfile(converted_path):
+                arm.utils.convert_image(image, converted_path)
+            arm.assets.add(converted_path)
+        else:
+            # Link image path to assets
+            # TODO: Khamake converts .PNG to .jpg? Convert ext to lowercase on windows
+            if arm.utils.get_os() == 'win':
+                s = filepath.rsplit('.', 1)
+                arm.assets.add(arm.utils.asset_path(s[0] + '.' + s[1].lower()))
+            else:
+                arm.assets.add(arm.utils.asset_path(filepath))
+
+
+    # if image_format != 'RGBA32':
+        # tex['format'] = image_format
+    
+    interpolation = image_node.interpolation
+    rpdat = arm.utils.get_rp()
+    texfilter = rpdat.arm_texture_filter
+    if texfilter == 'Anisotropic':
+        interpolation = 'Smart'
+    elif texfilter == 'Linear':
+        interpolation = 'Linear'
+    elif texfilter == 'Point':
+        interpolation = 'Closest'
+    # if image_node.color_space == NON_COLOR_DATA:
+        # interpolation = image_node.interpolation
+
+    # TODO: Blender seems to load full images on size request, cache size instead
+    powimage = is_pow(image.size[0]) and is_pow(image.size[1])
+
+    if arm.make_state.target == 'html5' and powimage == False and (image_node.interpolation == 'Cubic' or image_node.interpolation == 'Smart'):
+        arm.log.warn(matname + '/' + image.name + ' - non power of 2 texture using ' + image_node.interpolation + ' interpolation requires WebGL2')
+
+    if interpolation == 'Cubic': # Mipmap linear
+        tex['mipmap_filter'] = 'linear'
+        tex['generate_mipmaps'] = True
+    elif interpolation == 'Smart': # Mipmap anisotropic
+        tex['min_filter'] = 'anisotropic'
+        tex['mipmap_filter'] = 'linear'
+        tex['generate_mipmaps'] = True
+    elif interpolation == 'Closest':
+        tex['min_filter'] = 'point'
+        tex['mag_filter'] = 'point'
+    # else defaults to linear
+
+    if image_node.extension != 'REPEAT': # Extend or clip
+        tex['u_addressing'] = 'clamp'
+        tex['v_addressing'] = 'clamp'
+    else:
+        if arm.make_state.target == 'html5' and powimage == False:
+            arm.log.warn(matname + '/' + image.name + ' - non power of 2 texture using repeat mode requires WebGL2')
+            # tex['u_addressing'] = 'clamp'
+            # tex['v_addressing'] = 'clamp'
+    
+    if image.source == 'MOVIE': # Just append movie texture trait for now
+        movie_trait = {}
+        movie_trait['type'] = 'Script'
+        movie_trait['class_name'] = 'armory.trait.internal.MovieTexture'
+        movie_trait['parameters'] = ['"' + tex['file'] + '"']
+        for o in mat_state.mat_armusers[mat_state.material]:
+            o['traits'].append(movie_trait)
+        tex['source'] = 'movie'
+        tex['file'] = '' # MovieTexture will load the video
+
+    return tex
+
+def is_pow(num):
+    return ((num & (num - 1)) == 0) and num != 0
+
+def is_ascii(s):
+    return len(s) == len(s.encode())
+
+##
+
 def get_rp_renderer():
     return arm.utils.get_rp().rp_renderer
 
@@ -1463,9 +1611,6 @@ def assets_add(path):
 
 def assets_add_embedded_data(path):
     arm.assets.add_embedded_data(path)
-
-def make_texture(node, name):
-    return arm.material.make_texture.make(node, name)
 
 def mat_name():
     return mat_state.material.name

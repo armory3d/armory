@@ -4,7 +4,7 @@ import arm.utils
 import arm.assets as assets
 import arm.material.mat_utils as mat_utils
 import arm.material.mat_state as mat_state
-from arm.material.shader_data import ShaderData
+from arm.material.shader import ShaderData
 import arm.material.cycles as cycles
 import arm.material.make_mesh as make_mesh
 import arm.material.make_rect as make_rect

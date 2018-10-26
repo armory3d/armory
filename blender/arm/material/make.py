@@ -4,7 +4,7 @@ import arm.node_utils
 import arm.material.make_shader as make_shader
 import arm.material.mat_batch as mat_batch
 import arm.material.mat_state as mat_state
-import arm.material.make_texture as make_texture
+import arm.material.cycles as cycles
 
 def glsl_type(t): # Merge with cycles
     if t == 'RGB' or t == 'RGBA' or t == 'VECTOR':
@@ -100,7 +100,7 @@ def parse(material, mat_data, mat_users, mat_armusers):
                     for node in material.node_tree.nodes:
                         if node.type == 'TEX_IMAGE':
                             tex_name = arm.utils.safesrc(node.name)
-                            tex = make_texture.make(node, tex_name)
+                            tex = cycles.make_texture(node, tex_name)
                             if tex == None: # Empty texture
                                 tex = {}
                                 tex['name'] = tex_name

@@ -1,7 +1,7 @@
 package armory.system;
 
 import armory.logicnode.*;
-import armory.system.Cycles;
+import armory.system.CyclesFormat;
 
 // typedef TNodeCanvas = {
 // 	var nodes: Array<TNode>;
