@@ -49,21 +49,35 @@ vec4 tex_voronoi(const vec3 x) {
 	// Based on https://www.shadertoy.com/view/4sfGzS
 	// Copyright © 2013 Inigo Quilez
 	// The MIT License - Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+	// float tex_noise_f(const vec3 x) {
+	// vec3 p = floor(x);
+	// vec3 f = fract(x);
+	// f = f * f * (3.0 - 2.0 * f);
+	// vec2 uv = (p.xy + vec2(37.0, 17.0) * p.z) + f.xy;
+	// vec2 rg = texture(snoise256, (uv + 0.5) / 256.0).yx;
+	// return mix(rg.x, rg.y, f.z);
+	// }
+	// By Morgan McGuire @morgan3d, http://graphicscodex.com Reuse permitted under the BSD license.
+	// https://www.shadertoy.com/view/4dS3Wd
 	public static var str_tex_noise = "
-float tex_noise_f(const vec3 x) {   
-	vec3 p = floor(x);
-	vec3 f = fract(x);
-	f = f * f * (3.0 - 2.0 * f);
-	vec2 uv = (p.xy + vec2(37.0, 17.0) * p.z) + f.xy;
-	vec2 rg = texture(snoise256, (uv + 0.5) / 256.0).yx;
-	return mix(rg.x, rg.y, f.z);
+float hash(float n) { return fract(sin(n) * 1e4); }
+float tex_noise_f(vec3 x) {
+    const vec3 step = vec3(110, 241, 171);
+    vec3 i = floor(x);
+    vec3 f = fract(x);
+    float n = dot(i, step);
+    vec3 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(mix(hash(n + dot(step, vec3(0, 0, 0))), hash(n + dot(step, vec3(1, 0, 0))), u.x),
+                   mix(hash(n + dot(step, vec3(0, 1, 0))), hash(n + dot(step, vec3(1, 1, 0))), u.x), u.y),
+               mix(mix(hash(n + dot(step, vec3(0, 0, 1))), hash(n + dot(step, vec3(1, 0, 1))), u.x),
+                   mix(hash(n + dot(step, vec3(0, 1, 1))), hash(n + dot(step, vec3(1, 1, 1))), u.x), u.y), u.z);
 }
 float tex_noise(vec3 p) {
 	p *= 1.25;
-	float f  = 0.5 * tex_noise_f(p); p *= 2.01;
+	float f = 0.5 * tex_noise_f(p); p *= 2.01;
 	f += 0.25 * tex_noise_f(p); p *= 2.02;
 	f += 0.125 * tex_noise_f(p); p *= 2.03;
-	f += 0.0625 * tex_noise_f(p); p *= 2.01;
+	f += 0.0625 * tex_noise_f(p);
 	return 1.0 - f;
 }
 ";
@@ -116,20 +130,20 @@ vec3 hsv_to_rgb(const vec3 c) {
   return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 vec3 rgb_to_hsv(const vec3 c) {
-    const vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
-    vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
-    vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+	const vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+	vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+	vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
 
-    float d = q.x - min(q.w, q.y);
-    float e = 1.0e-10;
-    return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+	float d = q.x - min(q.w, q.y);
+	float e = 1.0e-10;
+	return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
 }
 vec3 hue_sat(const vec3 col, const vec4 shift) {
-    vec3 hsv = rgb_to_hsv(col);
-    hsv.x += shift.x;
-    hsv.y *= shift.y;
-    hsv.z *= shift.z;
-    return mix(hsv_to_rgb(hsv), col, shift.w);
+	vec3 hsv = rgb_to_hsv(col);
+	hsv.x += shift.x;
+	hsv.y *= shift.y;
+	hsv.z *= shift.z;
+	return mix(hsv_to_rgb(hsv), col, shift.w);
 }
 ";
 
@@ -143,45 +157,45 @@ vec3 wavelength_to_rgb(const float t) {
 
 	public static var str_tex_magic = "
 vec3 tex_magic(const vec3 p) {
-    float a = 1.0 - (sin(p.x) + sin(p.y));
-    float b = 1.0 - sin(p.x - p.y);
-    float c = 1.0 - sin(p.x + p.y);
-    return vec3(a, b, c);
+	float a = 1.0 - (sin(p.x) + sin(p.y));
+	float b = 1.0 - sin(p.x - p.y);
+	float c = 1.0 - sin(p.x + p.y);
+	return vec3(a, b, c);
 }
 float tex_magic_f(const vec3 p) {
-    vec3 c = tex_magic(p);
-    return (c.x + c.y + c.z) / 3.0;
+	vec3 c = tex_magic(p);
+	return (c.x + c.y + c.z) / 3.0;
 }
 ";
 
 	public static var str_tex_brick = "
 vec3 tex_brick(vec3 p, const vec3 c1, const vec3 c2, const vec3 c3) {
-    p /= vec3(0.9, 0.49, 0.49) / 2;
-    if (fract(p.y * 0.5) > 0.5) p.x += 0.5;   
-    p = fract(p);
-    vec3 b = step(p, vec3(0.95, 0.9, 0.9));
-    return mix(c3, c1, b.x * b.y * b.z);
+	p /= vec3(0.9, 0.49, 0.49) / 2;
+	if (fract(p.y * 0.5) > 0.5) p.x += 0.5;   
+	p = fract(p);
+	vec3 b = step(p, vec3(0.95, 0.9, 0.9));
+	return mix(c3, c1, b.x * b.y * b.z);
 }
 float tex_brick_f(vec3 p) {
-    p /= vec3(0.9, 0.49, 0.49) / 2;
-    if (fract(p.y * 0.5) > 0.5) p.x += 0.5;   
-    p = fract(p);
-    vec3 b = step(p, vec3(0.95, 0.9, 0.9));
-    return mix(1.0, 0.0, b.x * b.y * b.z);
+	p /= vec3(0.9, 0.49, 0.49) / 2;
+	if (fract(p.y * 0.5) > 0.5) p.x += 0.5;   
+	p = fract(p);
+	vec3 b = step(p, vec3(0.95, 0.9, 0.9));
+	return mix(1.0, 0.0, b.x * b.y * b.z);
 }
 ";
 
 	public static var str_tex_wave = "
 float tex_wave_f(const vec3 p) {
-    return 1.0 - sin((p.x + p.y) * 10.0);
+	return 1.0 - sin((p.x + p.y) * 10.0);
 }
 ";
 
 	public static var str_brightcontrast = "
 vec3 brightcontrast(const vec3 col, const float bright, const float contr) {
-    float a = 1.0 + contr;
-    float b = bright - contr * 0.5;
-    return max(a * col + b, 0.0);
+	float a = 1.0 + contr;
+	float b = bright - contr * 0.5;
+	return max(a * col + b, 0.0);
 }
 ";
 
@@ -213,7 +227,7 @@ vec3 tangent(const vec3 n) {
 	if (length(t1) > length(t2)) return normalize(t1);
 	else return normalize(t2);
 }
-float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels) {
+float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels, float vrange, float voffset) {
 	const float TAN_22_5 = 0.55785173935;
 	const float angleMix = 0.5f;
 	const float aperture = TAN_22_5;
@@ -221,13 +235,11 @@ float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	vec3 o2 = normalize(cross(o1, normal));
 	vec3 c1 = 0.5f * (o1 + o2);
 	vec3 c2 = 0.5f * (o1 - o2);
-	const float voxelgiOffset = 2.5;
-	const float voxelgiRange = 2.0;
-	const float MAX_DISTANCE = 1.73205080757 * voxelgiRange;
+	float MAX_DISTANCE = 1.73205080757 * 2.0 * vrange;
 	const ivec3 voxelgiResolution = ivec3(256, 256, 256);
 	const float voxelgiStep = 1.0;
 	const float VOXEL_SIZE = (2.0 / voxelgiResolution.x) * voxelgiStep;
-	const float offset = 1.5 * VOXEL_SIZE * voxelgiOffset;
+	float offset = 1.5 * VOXEL_SIZE * 2.5 * voffset;
 	float col = traceConeAO(voxels, origin, normal, aperture, MAX_DISTANCE, offset);
 	col += traceConeAO(voxels, origin, mix(normal, o1, angleMix), aperture, MAX_DISTANCE, offset);
 	col += traceConeAO(voxels, origin, mix(normal, o2, angleMix), aperture, MAX_DISTANCE, offset);
@@ -240,6 +252,9 @@ float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	const float blendFac = 1.0;
 	return col / (9.0 * blendFac);
 }
+// float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels) {
+	// traceAO(origin, normal, voxels, 1.0, 1.0);
+// }
 ";
 
 	public static var str_cotangentFrame = "
