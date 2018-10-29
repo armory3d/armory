@@ -30,21 +30,12 @@ def register_nodes():
         registered_nodes.append(n)
         bpy.utils.register_class(n)
 
-    node_categories = [
-        LogicNodeCategory('LogicLogicNodes', 'Logic', items=arm_nodes.category_items['Logic']),
-        LogicNodeCategory('LogicEventNodes', 'Event', items=arm_nodes.category_items['Event']),
-        LogicNodeCategory('LogicActionNodes', 'Action', items=arm_nodes.category_items['Action']),
-        LogicNodeCategory('LogicValueNodes', 'Value', items=arm_nodes.category_items['Value']),
-        LogicNodeCategory('LogicVariableNodes', 'Variable', items=arm_nodes.category_items['Variable']),
-        LogicNodeCategory('LogicInputNodes', 'Input', items=arm_nodes.category_items['Input']),
-        LogicNodeCategory('LogicArrayNodes', 'Array', items=arm_nodes.category_items['Array']),
-        LogicNodeCategory('LogicAnimationNodes', 'Animation', items=arm_nodes.category_items['Animation']),
-        LogicNodeCategory('LogicPhysicsNodes', 'Physics', items=arm_nodes.category_items['Physics']),
-        LogicNodeCategory('LogicNavmeshNodes', 'Navmesh', items=arm_nodes.category_items['Navmesh']),
-        LogicNodeCategory('LogicSoundNodes', 'Sound', items=arm_nodes.category_items['Sound']),
-        LogicNodeCategory('LogicNativeNodes', 'Native', items=arm_nodes.category_items['Native']),
-        LogicNodeCategory('LogicCanvasNodes', 'Canvas', items=arm_nodes.category_items['Canvas']),
-    ]
+    node_categories = []
+
+    for category in sorted(arm_nodes.category_items):
+        node_categories.append(
+            LogicNodeCategory('Logic' + category + 'Nodes', category, items=arm_nodes.category_items[category])
+        )
 
     nodeitems_utils.register_node_categories('ArmLogicNodes', node_categories)
 
