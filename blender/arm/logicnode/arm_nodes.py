@@ -5,19 +5,6 @@ import arm.utils
 
 nodes = []
 category_items = {}
-category_items['Logic'] = []
-category_items['Event'] = []
-category_items['Action'] = []
-category_items['Value'] = []
-category_items['Variable'] = []
-category_items['Input'] = []
-category_items['Array'] = []
-category_items['Animation'] = []
-category_items['Physics'] = []
-category_items['Navmesh'] = []
-category_items['Sound'] = []
-category_items['Native'] = []
-category_items['Canvas'] = []
 
 object_sockets = dict()
 array_nodes = dict()
@@ -242,6 +229,8 @@ class ArmNodeRemoveInputOutputButton(bpy.types.Operator):
 def add_node(node_class, category):
     global nodes
     nodes.append(node_class)
+    if category_items.get(category) == None:
+        category_items[category] = []
     category_items[category].append(NodeItem(node_class.bl_idname))
 
 bpy.utils.register_class(ArmActionSocket)
