@@ -33,8 +33,9 @@ def register_nodes():
     node_categories = []
 
     for category in sorted(arm_nodes.category_items):
+        sorted_items=sorted(arm_nodes.category_items[category], key=lambda item: item.nodetype)
         node_categories.append(
-            LogicNodeCategory('Logic' + category + 'Nodes', category, items=arm_nodes.category_items[category])
+            LogicNodeCategory('Logic' + category + 'Nodes', category, items=sorted_items)
         )
 
     nodeitems_utils.register_node_categories('ArmLogicNodes', node_categories)
