@@ -2657,6 +2657,7 @@ class ArmoryExporter:
                 x['parameters'].append(deact_params)
             else:
                 x['parameters'].append('null')
+            x['parameters'].append(str(bobject.arm_rb_ccd).lower())
             o['traits'].append(x)
 
         # Phys traits

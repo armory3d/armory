@@ -183,6 +183,7 @@ def init_properties():
     bpy.types.Object.arm_rb_terrain = BoolProperty(name="Terrain", description="Set rigid body collision shape to terrain", default=False)
     bpy.types.Object.arm_rb_force_deactivation = BoolProperty(name="Force Deactivation", description="Force deactivation on all rigid bodies for performance", default=True)
     bpy.types.Object.arm_rb_deactivation_time = FloatProperty(name="Deactivation Time", description="Delay putting rigid body into sleep", default=0.0)
+    bpy.types.Object.arm_rb_ccd = BoolProperty(name="Continuous Collision Detection", description="Improve collision for fast moving objects", default=False)
     bpy.types.Object.arm_animation_enabled = BoolProperty(name="Animation", description="Enable skinning & timeline animation", default=True)
     bpy.types.Object.arm_tilesheet = StringProperty(name="Tilesheet", description="Set tilesheet animation", default='')
     bpy.types.Object.arm_tilesheet_action = StringProperty(name="Tilesheet Action", description="Set startup action", default='')

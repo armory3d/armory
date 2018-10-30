@@ -100,6 +100,7 @@ class PhysicsPropsPanel(bpy.types.Panel):
             layout.prop(obj, 'arm_rb_trigger')
             layout.prop(obj, 'arm_rb_terrain')
             layout.prop(obj, 'arm_rb_force_deactivation')
+            layout.prop(obj, 'arm_rb_ccd')
 
         if obj.soft_body != None:
             layout.prop(obj, 'arm_soft_body_margin')

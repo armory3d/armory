@@ -30,6 +30,7 @@ class RigidBody extends iron.Trait {
 	var linearFactors:Array<Float>;
 	var angularFactors:Array<Float>;
 	var deactivationParams:Array<Float>;
+	var ccd = false; // Continuous collision detection
 	public var group = 1;
 	public var trigger = false;
 	var bodyScaleX:Float; // Transform scale at creation time
@@ -60,7 +61,7 @@ class RigidBody extends iron.Trait {
 	public function new(mass = 1.0, shape = Shape.Box, friction = 0.5, restitution = 0.0, collisionMargin = 0.0,
 						linearDamping = 0.04, angularDamping = 0.1, animated = false,
 						linearFactors:Array<Float> = null, angularFactors:Array<Float> = null,
-						group = 1, trigger = false, deactivationParams:Array<Float> = null) {
+						group = 1, trigger = false, deactivationParams:Array<Float> = null, ccd = false) {
 		super();
 
 		if (nullvec) {
@@ -86,6 +87,7 @@ class RigidBody extends iron.Trait {
 		this.group = group;
 		this.trigger = trigger;
 		this.deactivationParams = deactivationParams;
+		this.ccd = ccd;
 
 		notifyOnAdd(init);
 	}
@@ -211,6 +213,8 @@ class RigidBody extends iron.Trait {
 		}
 
 		if (trigger) body.setCollisionFlags(body.getCollisionFlags() | BtCollisionObject.CF_NO_CONTACT_RESPONSE);
+
+		if (ccd) setCcd(transform.radius);
 
 		bodyScaleX = currentScaleX = transform.scale.x;
 		bodyScaleY = currentScaleY = transform.scale.y;
@@ -398,6 +402,12 @@ class RigidBody extends iron.Trait {
 		body.setCenterOfMassTransform(trans1);
 		if (currentScaleX != t.scale.x || currentScaleY != t.scale.y || currentScaleZ != t.scale.z) setScale(t.scale);
 		activate();
+	}
+
+	// Continuous collision detection
+	public function setCcd(sphereRadius:Float, motionThreshold = 1e-7) {
+		body.setCcdSweptSphereRadius(sphereRadius);
+		body.setCcdMotionThreshold(motionThreshold);
 	}
 
 	function setScale(v:Vec4) {
