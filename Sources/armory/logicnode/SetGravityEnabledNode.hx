@@ -10,26 +10,27 @@ import armory.trait.physics.RigidBody;
  */
 class SetGravityEnabledNode extends LogicNode {
 
-    public function new(tree:LogicTree) {
-        super(tree);
-    }
+	public function new(tree:LogicTree) {
+		super(tree);
+	}
 
-    override function run(from:Int) {
-        var object:Object = inputs[1].get();
-        var gravityEnabled:Bool = inputs[2].get();
-        if (object == null) return;
+	override function run(from:Int) {
+		var object:Object = inputs[1].get();
+		var gravityEnabled:Bool = inputs[2].get();
+		if (object == null) return;
 
-        #if arm_physics
-        var body = object.getTrait(RigidBody);
-        if (body != null) {
-            if (gravityEnabled == true) {
-                body.enableGravity();
-            } else {
-                body.disableGravity();
-            }
-        }
-        #end
+		#if arm_physics
+		var body = object.getTrait(RigidBody);
+		if (body != null) {
+			if (gravityEnabled) {
+				body.enableGravity();
+			}
+			else {
+				body.disableGravity();
+			}
+		}
+		#end
 
-        runOutput(0);
-    }
+		runOutput(0);
+	}
 }
