@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import iron.object.Object;
 
-class GetNativePropertyNode extends LogicNode {
+class GetHaxePropertyNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
 		super(tree);
