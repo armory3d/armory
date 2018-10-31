@@ -136,6 +136,8 @@ class DataPropsPanel(bpy.types.Panel):
             col = row.column()
             col.prop(obj.data, 'arm_fov')
             col.prop(obj.data, 'arm_shadows_bias')
+            if obj.data.type == 'POINT':
+                layout.prop(obj.data, 'arm_shadows_cubemap')
             layout.prop(wrd, 'arm_light_texture')
             layout.prop(wrd, 'arm_light_ies_texture')
             layout.prop(wrd, 'arm_light_clouds_texture')

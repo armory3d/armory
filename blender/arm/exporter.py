@@ -1756,7 +1756,7 @@ class ArmoryExporter:
             o['light_size'] = objref.shadow_soft_size * 10 # Match to Cycles
         gapi = arm.utils.get_gapi()
         mobile_mat = rpdat.arm_material_model == 'Mobile' or rpdat.arm_material_model == 'Solid'
-        if objtype == 'POINT' and not mobile_mat:
+        if objtype == 'POINT' and not mobile_mat and objref.arm_shadows_cubemap:
             o['fov'] = 1.5708 # pi/2
             o['shadowmap_cube'] = True
             o['shadows_bias'] *= 2.0
