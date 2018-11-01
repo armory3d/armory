@@ -34,7 +34,7 @@ class VRNavigation extends Trait {
 			var vr = kha.vr.VrInterface.instance;
 			var V = (vr != null && vr.IsPresenting()) ? camera.leftV : camera.V;
 			look.set(-V._02, -V._12, -V._22);
-			camera.move(look, Time.delta * speed);
+			camera.transform.move(look, Time.delta * speed);
 		}
 	}
 

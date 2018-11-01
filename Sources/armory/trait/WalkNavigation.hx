@@ -82,13 +82,13 @@ class WalkNavigation extends Trait {
 				if (l1) dir.addf(0, 0, -1);
 
 				var d = Time.delta * speed * fast;
-				camera.move(dir, d);
+				camera.transform.move(dir, d);
 
 				if (rightStickX) {
-					camera.rotate(Vec4.zAxis(), -gamepad.rightStick.x / 15.0);
+					camera.transform.rotate(Vec4.zAxis(), -gamepad.rightStick.x / 15.0);
 				}
 				if (rightStickY) {
-					camera.rotate(camera.right(), gamepad.rightStick.y / 15.0);
+					camera.transform.rotate(camera.right(), gamepad.rightStick.y / 15.0);
 				}
 			}
 		}
@@ -121,15 +121,15 @@ class WalkNavigation extends Trait {
 		}
 
 		var d = Time.delta * speed * fast * ease;
-		if (d > 0.0) camera.move(dir, d);
+		if (d > 0.0) camera.transform.move(dir, d);
 
 		if (mouse.down()) {
 			#if arm_yaxisup
-			camera.rotate(Vec4.yAxis(), -mouse.movementX / 200);
+			camera.transform.rotate(Vec4.yAxis(), -mouse.movementX / 200);
 			#else
-			camera.rotate(Vec4.zAxis(), -mouse.movementX / 200);
+			camera.transform.rotate(Vec4.zAxis(), -mouse.movementX / 200);
 			#end
-			camera.rotate(camera.right(), -mouse.movementY / 200);
+			camera.transform.rotate(camera.right(), -mouse.movementY / 200);
 		}
 	}
 
