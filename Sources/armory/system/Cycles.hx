@@ -565,7 +565,7 @@ class Cycles {
 			var tex_name = node_name(node);
 			var tex = make_texture(node, tex_name);
 			if (tex != null) {
-				var to_linear = parsing_basecol;// && !tex['file'].endswith('.hdr');
+				var to_linear = node.buttons[1].default_value == 1; // srgb to linear
 				var texstore = texture_store(node, tex, tex_name, to_linear);
 				return '$texstore.rgb';
 			}
@@ -1391,7 +1391,7 @@ class Cycles {
 			var tex_name = node_name(node);
 			var tex = make_texture(node, tex_name);
 			if (tex != null) {
-				var to_linear = parsing_basecol;// && !tex['file'].endswith('.hdr');
+				var to_linear = node.buttons[1].default_value == 1; // srgb to linear
 				var texstore = texture_store(node, tex, tex_name, to_linear);
 				return '$texstore.a';
 			}
@@ -1850,7 +1850,7 @@ class Cycles {
 			// return null;
 		// }
 
-		var filepath = image_node.outputs[image_node.buttons[0].output].default_value;
+		var filepath = image_node.buttons[0].data;
 
 		if (filepath == '') {
 			// log.warn(matname + '/' + image.name + ' - file path not found')
