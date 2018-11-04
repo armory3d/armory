@@ -109,11 +109,13 @@ class ArmNodeAddInputButton(bpy.types.Operator):
     bl_label = 'Add Input'
     node_index = StringProperty(name='Node Index', default='')
     socket_type = StringProperty(name='Socket Type', default='NodeSocketShader')
+    name_format = StringProperty(name='Name Format', default='Input {0}')
+    index_name_offset = IntProperty(name='Index Name Offset', default=0)
 
     def execute(self, context):
         global array_nodes
         inps = array_nodes[self.node_index].inputs
-        inps.new(self.socket_type, 'Input ' + str(len(inps)))
+        inps.new(self.socket_type, self.name_format.format(str(len(inps) + self.index_name_offset)))
         return{'FINISHED'}
 
 class ArmNodeAddInputValueButton(bpy.types.Operator):
@@ -165,11 +167,13 @@ class ArmNodeAddOutputButton(bpy.types.Operator):
     bl_label = 'Add Output'
     node_index = StringProperty(name='Node Index', default='')
     socket_type = StringProperty(name='Socket Type', default='NodeSocketShader')
+    name_format = StringProperty(name='Name Format', default='Output {0}')
+    index_name_offset = IntProperty(name='Index Name Offset', default=0)
 
     def execute(self, context):
         global array_nodes
         outs = array_nodes[self.node_index].outputs
-        outs.new(self.socket_type, 'Output ' + str(len(outs)))
+        outs.new(self.socket_type, self.name_format.format(str(len(outs) + self.index_name_offset)))
         return{'FINISHED'}
 
 class ArmNodeRemoveOutputButton(bpy.types.Operator):
