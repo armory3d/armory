@@ -224,7 +224,7 @@ project.addSources('Sources');
         if export_ui:
             if not os.path.exists('Libraries/zui'):
                 f.write(add_armory_library(sdk_path, 'lib/zui', rel_path=rel_path))
-            p = sdk_path + '/armory/Assets/droid_sans.ttf'
+            p = sdk_path + '/armory/Assets/font_default.ttf'
             p = p.replace('//', '/')
             f.write(add_assets(p.replace('\\', '/'), use_data_dir=use_data_dir, rel_path=rel_path))
             assets.add_khafile_def('arm_ui')

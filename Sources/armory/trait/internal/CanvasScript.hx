@@ -21,7 +21,7 @@ class CanvasScript extends Trait {
 
 		iron.data.Data.getBlob(canvasName + '.json', function(blob:kha.Blob) {
 
-			kha.Assets.loadFont("droid_sans", function(f:kha.Font) {
+			iron.data.Data.getFont("font_default.ttf", function(f:kha.Font) {
 
 				cui = new Zui({font: f, theme: zui.Themes.light});			
 				var c:TCanvas = haxe.Json.parse(blob.toString());
