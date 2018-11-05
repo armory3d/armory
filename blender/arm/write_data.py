@@ -277,6 +277,10 @@ project.addSources('Sources');
 
         if wrd.arm_modding_mode == "Game":
             assets.add_khafile_def('arm_modding_game')
+            # Expose Haxe API to mods
+            f.write("""project.addParameter("--macro armory.system.Modding.exposePack('haxe')");""")
+            f.write("""project.addParameter("--macro include('haxe', ['haxe.macro.*'])");""")
+
             # Expose selected game classes to mods.
             # Kha, Iron, and Armory require certain exclusions in order to
             # compile without errors.
@@ -284,14 +288,14 @@ project.addSources('Sources');
                 f.write('project.addParameter("--macro armory.system.Modding.exposePack(\'' + wrd.arm_project_package + '\')");\n')
             if (wrd.arm_modding_expose_kha):
                 f.write("""project.addParameter("--macro armory.system.Modding.exposePack('kha')");""" + '\n')
-                f.write("""project.addParameter("--macro include('kha', ['kha.graphics4.hxsl.*', 'kha.network.NodeProcessClient', 'kha.HaxelibRunner', 'kha.internal.*'])");""" + '\n')
+                f.write("""project.addParameter("--macro include('kha', ['kha.graphics4.hxsl.*', 'kha.netsync.NodeProcessClient', 'kha.netsync.Example', 'kha.HaxelibRunner', 'kha.internal.*'])");""" + '\n')
             if (wrd.arm_modding_expose_iron):
                 f.write("""project.addParameter("--macro armory.system.Modding.exposePack('iron')");""" + '\n')
                 f.write("""project.addParameter("--macro include('iron', ['iron.data.GreasePencilData'])");""" + '\n')
             if (wrd.arm_modding_expose_armory):
                 f.write("""project.addParameter("--macro armory.system.Modding.exposePack('armory')");""" + '\n')
                 f.write("""project.addParameter("--macro include('armory', ['armory.system.*'])");""" + '\n')
-            for package in wrd.arm_modding_extra_packages.split(','):
+            for package in wrd.arm_modding_expose_packages.split(','):
                 if package == '': break;
                 f.write('project.addParameter("--macro include(\'' + package + '\')");\n')
                 f.write('project.addParameter("--macro armory.system.Modding.exposePack(\'' + package + '\')");\n')
@@ -299,8 +303,17 @@ project.addSources('Sources');
             assets.add_khafile_def('arm_modding_mod')
             # Expose mod classes to other mods
             f.write('project.addParameter("--macro armory.system.Modding.exposePack(\'' + wrd.arm_project_package + '\')");\n')
-            # Generate only the mod's code ( i.e. not iron, Kha, and the rest of the game)
-            f.write('project.addParameter("--macro armory.system.Modding.generateOnlyClasses(\'(' + wrd.arm_project_package + ')\')");\n')
+
+            extra_packs = '|'.join(wrd.arm_modding_extra_packages.split(','))
+            if extra_packs == '':
+                generate_only_classes = wrd.arm_project_package
+            else:
+                # Build package inclusion regex
+                generate_only_classes = '(' + extra_packs + '|' + wrd.arm_project_package + ')'
+            print(extra_packs)
+
+            # Generate only the mod's code and mod libraries ( i.e. not iron, Kha, and the rest of the game)
+            f.write('project.addParameter("--macro armory.system.Modding.generateOnlyClasses(\'' + generate_only_classes + '\')");\n')
             f.write('project.addParameter("-main ' + wrd.arm_project_package + '.Main");\n')
 
         for d in assets.khafile_defs:

@@ -68,6 +68,9 @@ class Modding {
 
 	/**
 	 * Generate only the classes that match the given regex pattern.
+	 * 
+	 * @param patternStr The regular expression a class must match to be
+	 * included in compliation.
 	 */
 	static public function generateOnlyClasses( patternStr : String ) {
 		var pattern = new EReg(patternStr, "g");
