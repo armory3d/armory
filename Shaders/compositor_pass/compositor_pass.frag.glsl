@@ -108,8 +108,6 @@ vec4 LUTlookup(in vec4 textureColor, in sampler2D lookupTable) {
 }
 
 float vignette() {
-	// vignetting from iq
-	// return 0.4 + 0.6 * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
 	return 0.3 + 0.7 * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
 }
 
@@ -272,6 +270,11 @@ void main() {
 	fragColor.rgb += vec3(mod((mod(x, 13.0) + 1.0) * (mod(x, 123.0) + 1.0), 0.01) - 0.005) * compoGrainStrength;
 #endif
 	
+#ifdef _CGrainStatic
+	float x = (texCo.x + 4.0) * (texCo.y + 4.0) * 10.0;
+	fragColor.rgb += vec3(mod((mod(x, 13.0) + 1.0) * (mod(x, 123.0) + 1.0), 0.01) - 0.005) * 0.09;
+#endif
+
 #ifdef _CVignette
 	fragColor.rgb *= vignette();
 #endif

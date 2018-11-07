@@ -55,6 +55,9 @@ uniform sampler2D gbuffer2;
 #ifdef _LightIES
 	//!uniform sampler2D texIES;
 #endif
+#ifdef _SMSizeUniform
+uniform vec2 smSizeUniform;
+#endif
 
 #ifdef _SSS
 vec2 lightPlane;
@@ -141,7 +144,11 @@ void main() {
 	if (lightShadow == 1) {
 		vec4 lPos = LWVP * vec4(p + n * shadowsBias * 10, 1.0);
 		if (lPos.w > 0.0) {
+			#ifdef _SMSizeUniform
+			visibility = shadowTest(shadowMap, lPos.xyz / lPos.w, shadowsBias, smSizeUniform);
+			#else
 			visibility = shadowTest(shadowMap, lPos.xyz / lPos.w, shadowsBias, shadowmapSize);
+			#endif
 		}
 	}
 	else if (lightShadow == 2) { // Cube
