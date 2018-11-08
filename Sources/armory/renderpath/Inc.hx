@@ -34,6 +34,12 @@ class Inc {
 
 	public static function init(_path:RenderPath) {
 		path = _path;
+
+		#if arm_config
+		var config = armory.data.Config.raw;
+		for (l in iron.Scene.active.lights) l.data.raw.shadowmap_size = config.rp_shadowmap;
+		superSample = config.rp_supersample;
+		#end
 	}
 
 	public static function bindShadowMap() {
