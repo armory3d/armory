@@ -117,8 +117,9 @@ def build_node(node, f):
         if inp.is_linked:
             n = inp.links[0].from_node
             socket = inp.links[0].from_socket
-            if inp.bl_idname == 'ArmNodeSocketAction' and socket.bl_idname != 'ArmNodeSocketAction':
-                print('Armory Error: Wrong connection in logic node tree "{0}" - node "{1}" - socket "{2}"'.format(group_name, node.name, inp.name))
+            if (inp.bl_idname == 'ArmNodeSocketAction' and socket.bl_idname != 'ArmNodeSocketAction') or \
+                (socket.bl_idname == 'ArmNodeSocketAction' and inp.bl_idname != 'ArmNodeSocketAction'):
+                print('Armory Error: Sockets do not match in logic node tree "{0}" - node "{1}" - socket "{2}"'.format(group_name, node.name, inp.name))
             inp_name = build_node(n, f)
             for i in range(0, len(n.outputs)):
                 if n.outputs[i] == socket:
