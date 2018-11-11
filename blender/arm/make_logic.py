@@ -6,6 +6,8 @@ from arm.exporter import ArmoryExporter
 
 parsed_nodes = []
 parsed_ids = dict() # Sharing node data
+function_nodes = dict()
+function_node_outputs = dict()
 group_name = ''
 
 def get_logic_trees():
@@ -32,9 +34,13 @@ def build():
 def build_node_tree(node_group):
     global parsed_nodes
     global parsed_ids
+    global function_nodes
+    global function_node_outputs
     global group_name
     parsed_nodes = []
     parsed_ids = dict()
+    function_nodes = dict()
+    function_node_outputs = dict()
     root_nodes = get_root_nodes(node_group)
 
     pack_path = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
@@ -54,15 +60,39 @@ def build_node_tree(node_group):
     with open(file, 'w') as f:
         f.write('package ' + pack_path + '.node;\n\n')
         f.write('@:keep class ' + group_name + ' extends armory.logicnode.LogicTree {\n\n')
-        f.write('\tpublic function new() { super();')
+        f.write('\tvar functionNodes:Map<String, armory.logicnode.FunctionNode>;\n\n')
+        f.write('\tvar functionOutputNodes:Map<String, armory.logicnode.FunctionOutputNode>;\n\n')
+        f.write('\tpublic function new() {\n')
+        f.write('\t\tsuper();\n')
         if bpy.data.worlds['Arm'].arm_play_console:
-            f.write(' name = "' + group_name + '";')
-        f.write(' notifyOnAdd(add); }\n\n')
+            f.write('\t\tname = "' + group_name + '";\n')
+        f.write('\t\tthis.functionNodes = new Map();\n')
+        f.write('\t\tthis.functionOutputNodes = new Map();\n')
+        f.write('\t\tnotifyOnAdd(add);\n')
+        f.write('\t}\n\n')
         f.write('\toverride public function add() {\n')
         for node in root_nodes:
             build_node(node, f)
         f.write('\t}\n')
-        f.write('}\n')
+        
+        # Create node functions
+        for node_name in function_nodes:
+            node = function_nodes[node_name]
+            function_name = node.function_name
+            f.write('\n\tpublic function ' + function_name + '(')
+            for i in range(0, len(node.outputs) - 1):
+                if i != 0: f.write(', ')
+                f.write('arg' + str(i) + ':Dynamic')
+            f.write(') {\n')
+            f.write('\t\tvar functionNode = this.functionNodes["' + node_name + '"];\n')
+            f.write('\t\tfunctionNode.args = [];\n')
+            for i in range(0, len(node.outputs) - 1):
+                f.write('\t\tfunctionNode.args.push(arg' + str(i) + ');\n')
+            f.write('\t\tfunctionNode.run(0);\n')
+            if function_node_outputs.get(function_name) != None:
+                f.write('\t\treturn this.functionOutputNodes["' + function_node_outputs[function_name] + '"].result;\n')
+            f.write('\t}\n\n')
+        f.write('}')
     node_group.is_cached = True
 
 def build_node(node, f):
@@ -93,6 +123,15 @@ def build_node(node, f):
     # Create node
     node_type = node.bl_idname[2:] # Discard 'LN'TimeNode prefix
     f.write('\t\tvar ' + name + ' = new armory.logicnode.' + node_type + '(this);\n')
+
+    # Handle Function Nodes
+    if node_type == 'FunctionNode':
+        f.write('\t\tthis.functionNodes.set("' + name + '", ' + name + ');\n')
+        function_nodes[name] = node
+    elif node_type == 'FunctionOutputNode':
+        f.write('\t\tthis.functionOutputNodes.set("' + name + '", ' + name + ');\n')
+        # Index function output name by corresponding function name
+        function_node_outputs[node.function_name] = name
 
     # Watch in debug console
     if node.arm_watch and bpy.data.worlds['Arm'].arm_play_console:

@@ -2,7 +2,7 @@ package armory.logicnode;
 
 import iron.object.Object;
 
-class CallHaxeNode extends LogicNode {
+class CallFunctionNode extends LogicNode {
 
 	var result:Dynamic;
 
@@ -15,8 +15,15 @@ class CallHaxeNode extends LogicNode {
 		if (object == null) return;
 		
 		var funName:String = inputs[2].get();
+		var args:Array<Dynamic> = [];
+
+		for (i in 3...inputs.length) {
+			args.push(inputs[i].get());
+		}
 		
-		result = Reflect.callMethod(object, Reflect.field(object, funName), null);
+		var func = Reflect.field(object, funName);
+		if (func != null)
+			result = Reflect.callMethod(object, func, args);
 
 		runOutput(0);
 	}
