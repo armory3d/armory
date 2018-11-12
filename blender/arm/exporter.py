@@ -660,6 +660,19 @@ class ArmoryExporter:
             o['material_refs'].append('armdefault')
             self.defaultMaterialObjects.append(bobject)
 
+    def use_default_material_part(self):
+        # Particle object with no material assigned
+        for ps in bpy.data.particles:
+            if ps.render_type != 'OBJECT' or ps.dupli_object == None:
+                continue
+            po = ps.dupli_object
+            if po not in self.objectToArmObjectDict:
+                continue
+            o = self.objectToArmObjectDict[po]
+            if po not in self.defaultPartMaterialObjects:
+                self.defaultPartMaterialObjects.append(po)
+                o['material_refs'] = ['armdefaultpart'] # Replace armdefault
+
     def export_material_ref(self, bobject, material, index, o):
         if material == None: # Use default for empty mat slots
             self.use_default_material(bobject, o)
@@ -1912,12 +1925,14 @@ class ArmoryExporter:
         o['play_on_start'] = objref.arm_play_on_start
         self.output['speaker_datas'].append(o)
 
-    def make_default_mat(self, mat_name, mat_objs):
+    def make_default_mat(self, mat_name, mat_objs, is_particle=False):
         if mat_name in bpy.data.materials:
             return
         mat = bpy.data.materials.new(name=mat_name)
         # if default_exists:
             # mat.is_cached = True
+        if is_particle:
+            mat.arm_particle_flag = True
         mat.use_nodes = True
         o = {}
         o['name'] = mat.name
@@ -2059,12 +2074,6 @@ class ArmoryExporter:
 
             self.output['material_datas'].append(o)
             material.is_cached = True
-
-        # Object with no material assigned in the scene
-        if len(self.defaultMaterialObjects) > 0:
-            self.make_default_mat('armdefault', self.defaultMaterialObjects)
-        if len(self.defaultSkinMaterialObjects) > 0:
-            self.make_default_mat('armdefaultskin', self.defaultSkinMaterialObjects)
 
         # Auto-enable render-path featues
         rebuild_rp = False
@@ -2215,8 +2224,9 @@ class ArmoryExporter:
         self.worldArray = {} # Export all worlds
         self.boneParentArray = {}
         self.materialToObjectDict = dict()
-        self.defaultMaterialObjects = [] # If no material is assigned, provide default to mimick cycles
+        self.defaultMaterialObjects = [] # If no material is assigned, provide default to mimic cycles
         self.defaultSkinMaterialObjects = []
+        self.defaultPartMaterialObjects = []
         self.materialToArmObjectDict = dict()
         self.objectToArmObjectDict = dict()
         self.active_layers = []
@@ -2287,10 +2297,10 @@ class ArmoryExporter:
             for slot in bo.material_slots:
                 if slot.material == None or slot.material.library != None:
                     continue
-                if slot.material.name.endswith('_armpsys'):
+                if slot.material.name.endswith('_armpart'):
                     continue
                 matslots.append(slot)
-                mat_name = slot.material.name + '_armpsys'
+                mat_name = slot.material.name + '_armpart'
                 mat = bpy.data.materials.get(mat_name)
                 if mat == None:
                     mat = slot.material.copy()
@@ -2352,6 +2362,17 @@ class ArmoryExporter:
                     log.warn('No camera found in active scene')
 
             self.output['material_datas'] = []
+
+            # Object with no material assigned in the scene
+            if len(self.defaultMaterialObjects) > 0:
+                self.make_default_mat('armdefault', self.defaultMaterialObjects)
+            if len(self.defaultSkinMaterialObjects) > 0:
+                self.make_default_mat('armdefaultskin', self.defaultSkinMaterialObjects)
+            if len(bpy.data.particles) > 0:
+                self.use_default_material_part()
+            if len(self.defaultPartMaterialObjects) > 0:
+                self.make_default_mat('armdefaultpart', self.defaultPartMaterialObjects, is_particle=True)
+
             self.export_materials()
             self.export_particle_systems()
             self.output['world_datas'] = []
@@ -2451,7 +2472,7 @@ class ArmoryExporter:
 
         # Remove created material variants
         for slot in matslots: # Set back to original material
-            orig_mat = bpy.data.materials[slot.material.name[:-8]] # _armskin or _armpsys
+            orig_mat = bpy.data.materials[slot.material.name[:-8]] # _armskin or _armpart
             orig_mat.export_uvs = slot.material.export_uvs
             orig_mat.export_vcols = slot.material.export_vcols
             orig_mat.export_tangents = slot.material.export_tangents
