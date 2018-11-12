@@ -412,8 +412,6 @@ class ArmoryProjectPanel(bpy.types.Panel):
         box.prop_search(wrd, 'arm_khamake', bpy.data, 'texts', text='Khamake')
         box.prop(wrd, 'arm_project_root')
 
-        layout.label(text='Armory v' + wrd.arm_version)
-
 class ArmVirtualInputPanel(bpy.types.Panel):
     bl_label = "Armory Virtual Input"
     bl_space_type = "PROPERTIES"
