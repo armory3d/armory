@@ -336,6 +336,22 @@ class RigidBody extends iron.Trait {
 		}
 	}
 
+	public function applyTorque(torque:Vec4) {
+		activate();
+		vec1.setX(torque.x);
+		vec1.setY(torque.y);
+		vec1.setZ(torque.z);
+		body.applyTorque(vec1);
+	}
+
+	public function applyTorqueImpulse(torque:Vec4) {
+		activate();
+		vec1.setX(torque.x);
+		vec1.setY(torque.y);
+		vec1.setZ(torque.z);
+		body.applyTorqueImpulse(vec1);
+	}
+
 	public function setLinearFactor(x:Float, y:Float, z:Float) {
 		vec1.setX(x);
 		vec1.setY(y);
