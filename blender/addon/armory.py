@@ -104,7 +104,7 @@ class ArmoryAddonPreferences(AddonPreferences):
         box.label(text="Note: Development version may run unstable!")
         row = box.row(align=True)
         row.alignment = 'EXPAND'
-        row.operator("arm_addon.install_git", icon="URL")
+        row.operator("arm_addon.help", icon="URL")
         row.operator("arm_addon.update", icon="FILE_REFRESH")
         row.operator("arm_addon.restore")
         box.label(text="Please restart Blender after successful SDK update.")
@@ -422,14 +422,14 @@ class ArmAddonRestoreButton(bpy.types.Operator):
         self.report({'INFO'}, 'Restored stable version')
         return {"FINISHED"}
 
-class ArmAddonInstallGitButton(bpy.types.Operator):
-    '''Install Git'''
-    bl_idname = "arm_addon.install_git"
-    bl_label = "Install Git"
+class ArmAddonHelpButton(bpy.types.Operator):
+    '''Updater help'''
+    bl_idname = "arm_addon.help"
+    bl_label = "Help"
     bl_description = "Git is required for Armory Updater to work"
  
     def execute(self, context):
-        webbrowser.open('https://git-scm.com')
+        webbrowser.open('https://armory3d.org/manual/#/dev/gitversion')
         return {"FINISHED"}
 
 @persistent
@@ -448,7 +448,7 @@ def register():
     bpy.utils.register_class(ArmAddonStopButton)
     bpy.utils.register_class(ArmAddonUpdateButton)
     bpy.utils.register_class(ArmAddonRestoreButton)
-    bpy.utils.register_class(ArmAddonInstallGitButton)
+    bpy.utils.register_class(ArmAddonHelpButton)
     bpy.app.handlers.load_post.append(on_load_post)
 
 def unregister():
@@ -458,7 +458,7 @@ def unregister():
     bpy.utils.unregister_class(ArmAddonStopButton)
     bpy.utils.unregister_class(ArmAddonUpdateButton)
     bpy.utils.unregister_class(ArmAddonRestoreButton)
-    bpy.utils.unregister_class(ArmAddonInstallGitButton)
+    bpy.utils.unregister_class(ArmAddonHelpButton)
     bpy.app.handlers.load_post.remove(on_load_post)
 
 if __name__ == "__main__":
