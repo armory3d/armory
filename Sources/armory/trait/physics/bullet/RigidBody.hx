@@ -190,7 +190,10 @@ class RigidBody extends iron.Trait {
 		var bodyCI = BtRigidBodyConstructionInfo.create(mass, motionState, btshape, inertia);
 		body = BtRigidBody.create(bodyCI);
 		body.setFriction(friction);
-		body.setRollingFriction(friction);
+		// body.setRollingFriction(friction); // This causes bodies to get stuck, apply angular damping instead
+		if (shape == Shape.Sphere || shape == Shape.Cylinder || shape == Shape.Cone || shape == Shape.Capsule) {
+			angularDamping += friction;
+		}
 		body.setRestitution(restitution);
 
 		if (deactivationParams != null) {
