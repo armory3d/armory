@@ -890,8 +890,7 @@ class ArmoryExporter:
             if bobject.arm_spawn == False:
                 o['spawn'] = False
 
-            if bobject.arm_mobile == False:
-                o['mobile'] = False
+            o['mobile'] = bobject.arm_mobile
 
             if bobject.dupli_type == 'GROUP' and bobject.dupli_group != None:
                 o['group_ref'] = bobject.dupli_group.name
