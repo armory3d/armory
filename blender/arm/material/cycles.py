@@ -1476,7 +1476,8 @@ def make_texture(image_node, tex_name, matname=None):
     ext = s[1].lower()
     do_convert = ext != 'jpg' and ext != 'png' and ext != 'hdr' and ext != 'mp4' # Convert image
     if do_convert:
-        tex['file'] = tex['file'].rsplit('.', 1)[0] + '.jpg'
+        new_ext = 'png' if ext == 'tga' else 'jpg'
+        tex['file'] = tex['file'].rsplit('.', 1)[0] + '.' + new_ext
 
     if image.packed_file != None or not is_ascii(texfile):
         # Extract packed data / copy non-ascii texture
@@ -1487,7 +1488,8 @@ def make_texture(image_node, tex_name, matname=None):
         
         if do_convert:
             if not os.path.isfile(unpack_filepath):
-                arm.utils.unpack_image(image, unpack_filepath)
+                fmt = 'PNG' if new_ext == 'png' else 'JPEG'
+                arm.utils.unpack_image(image, unpack_filepath, file_format=fmt)
         else:
 
             # Write bytes if size is different or file does not exist yet
@@ -1514,7 +1516,8 @@ def make_texture(image_node, tex_name, matname=None):
             converted_path = unpack_path + '/' + tex['file']
             # TODO: delete cache when file changes
             if not os.path.isfile(converted_path):
-                arm.utils.convert_image(image, converted_path)
+                fmt = 'PNG' if new_ext == 'png' else 'JPEG'
+                arm.utils.convert_image(image, converted_path, file_format=fmt)
             arm.assets.add(converted_path)
         else:
             # Link image path to assets

@@ -39,11 +39,15 @@ def convert_image(image, path, file_format='JPEG'):
     ren = bpy.context.scene.render
     orig_quality = ren.image_settings.quality
     orig_file_format = ren.image_settings.file_format
+    orig_color_mode = ren.image_settings.color_mode
     ren.image_settings.quality = 90
     ren.image_settings.file_format = file_format
+    if file_format == 'PNG':
+        ren.image_settings.color_mode = 'RGBA'
     image.save_render(path, bpy.context.scene)
     ren.image_settings.quality = orig_quality
     ren.image_settings.file_format = orig_file_format
+    ren.image_settings.color_mode = orig_color_mode
 
 def blend_name():
     return bpy.path.basename(bpy.context.blend_data.filepath).rsplit('.')[0]
