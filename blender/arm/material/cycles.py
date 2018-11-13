@@ -718,11 +718,11 @@ def parse_vector(node, socket):
         if socket == node.outputs[0]: # Position
             return 'wposition'
         elif socket == node.outputs[1]: # Normal
-            return 'n'
+            return 'n' if curshader.shader_type == 'frag' else 'wnormal'
         elif socket == node.outputs[2]: # Tangent
             return 'wtangent'
         elif socket == node.outputs[3]: # True Normal
-            return 'n'
+            return 'n' if curshader.shader_type == 'frag' else 'wnormal'
         elif socket == node.outputs[4]: # Incoming
             return 'vVec'
         elif socket == node.outputs[5]: # Parametric
