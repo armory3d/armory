@@ -211,8 +211,6 @@ def compile(assets_only=False):
 
     # Set build command
     target_name = state.target
-    if target_name == 'native':
-        target_name = '--compile'
 
     node_path = arm.utils.get_node_path()
     khamake_path = arm.utils.get_khamake_path()
@@ -386,8 +384,6 @@ def runtime_to_target(is_viewport):
     wrd = bpy.data.worlds['Arm']
     if is_viewport or wrd.arm_play_runtime == 'Krom':
         return 'krom'
-    elif wrd.arm_play_runtime == 'Native':
-        return 'native'
     else:
         return 'html5'
 
@@ -413,8 +409,7 @@ def play(is_viewport):
        not os.path.isfile(khajs_path) or \
        assets.khafile_defs_last != assets.khafile_defs or \
        state.last_target != state.target or \
-       state.last_is_viewport != state.is_viewport or \
-       state.target == 'native':
+       state.last_is_viewport != state.is_viewport:
         wrd.arm_recompile = True
 
     state.last_target = state.target
@@ -468,21 +463,6 @@ def build_success():
             elif arm.utils.get_os() == 'mac' or arm.utils.get_os() == 'linux': # TODO: Wait for new Krom audio
                 cmd.append('--nosound')
             state.proc_play = run_proc(cmd, play_done)
-        elif wrd.arm_play_runtime == 'Native':
-            if arm.utils.get_os() == 'win':
-                bin_location = arm.utils.get_fp_build() + '/windows'
-            elif arm.utils.get_os() == 'linux':
-                bin_location = arm.utils.get_fp_build() + '/linux'
-            else:
-                bin_location = arm.utils.get_fp_build() + '/osx-build/build/Release'
-            os.chdir(bin_location)
-            if arm.utils.get_os() == 'win':
-                p = bin_location + '/' + arm.utils.safestr(wrd.arm_project_name) + '.exe'
-            elif arm.utils.get_os() == 'linux':
-                p = bin_location + '/' + arm.utils.safestr(wrd.arm_project_name)
-            else:
-                p = bin_location + '/' + arm.utils.safestr(wrd.arm_project_name) + '.app/Contents/MacOS/' + arm.utils.safestr(wrd.arm_project_name)
-            state.proc_play = run_proc(p, play_done)
 
     elif state.is_publish:
         sdk_path = arm.utils.get_sdk_path()

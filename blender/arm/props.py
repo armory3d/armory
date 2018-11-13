@@ -143,7 +143,6 @@ def init_properties():
     bpy.types.World.arm_play_console = BoolProperty(name="Debug Console", description="Show inspector in player and enable debug draw", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_play_runtime = EnumProperty(
         items=[('Browser', 'Browser', 'Browser'),
-               ('Native', 'C++', 'Native'),
                ('Krom', 'Krom', 'Krom')],
         name="Runtime", description="Player runtime used when launching in new window", default='Krom', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_loadscreen = BoolProperty(name="Loading Screen", description="Show asset loading progress on published builds", default=True)
