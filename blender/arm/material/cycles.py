@@ -844,9 +844,8 @@ def parse_vector(node, socket):
         else:
             #space = node.space
             #map = node.uv_map
-            strength = parse_value_input(node.inputs[0])
             # Color
-            parse_normal_map_color_input(node.inputs[1], strength)
+            parse_normal_map_color_input(node.inputs[1], node.inputs[0])
             return None
 
     elif node.type == 'VECT_TRANSFORM':
@@ -886,7 +885,7 @@ def parse_vector(node, socket):
         nor = parse_vector_input(node.inputs[3])
         return 'vec3({0})'.format(height)
 
-def parse_normal_map_color_input(inp, strength='1.0'):
+def parse_normal_map_color_input(inp, strength_input=None):
     global normal_parsed
     global frag
     if basecol_only:
@@ -909,8 +908,10 @@ def parse_normal_map_color_input(inp, strength='1.0'):
         frag.write('n = TBN * normalize(texn);')
     else:
         frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(parse_vector_input(inp)))
-        if strength != '1.0':
-            frag.write('n.xy *= {0};'.format(strength))
+        if strength_input != None:
+            strength = parse_value_input(strength_input)
+            if strength != '1.0':
+                frag.write('n.xy *= {0};'.format(strength))
         frag.write('n = normalize(TBN * n);')
         con.add_elem('tang', 3)
     frag.write_normal -= 1
