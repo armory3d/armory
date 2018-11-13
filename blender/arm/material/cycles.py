@@ -25,7 +25,6 @@ import arm.material.mat_state as mat_state
 import arm.material.cycles_functions as c_functions
 import shutil
 
-basecol_texname = ''
 emission_found = False
 particle_info = None # Particle info export
 
@@ -48,8 +47,6 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     global parse_surface
     global parse_opacity
     global basecol_only
-    global parsing_basecol
-    global basecol_texname
     global emission_found
     global particle_info
     global sample_bump
@@ -63,8 +60,6 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     parse_surface = _parse_surface
     parse_opacity = _parse_opacity
     basecol_only = _basecol_only
-    parsing_basecol = False
-    basecol_texname = ''
     emission_found = False
     particle_info = {}
     particle_info['index'] = False
@@ -169,9 +164,7 @@ def parse_shader(node, socket):
         if node.node_tree.name.startswith('Armory PBR'):     
             if parse_surface:
                 # Base color
-                parsing_basecolor(True)
                 out_basecol = parse_vector_input(node.inputs[0])
-                parsing_basecolor(False)
                 # Occlusion
                 out_occlusion = parse_value_input(node.inputs[2])
                 # Roughness
@@ -205,9 +198,7 @@ def parse_shader(node, socket):
         bc1, rough1, met1, occ1, spec1, opac1 = parse_shader_input(node.inputs[1])
         bc2, rough2, met2, occ2, spec2, opac2 = parse_shader_input(node.inputs[2])
         if parse_surface:
-            parsing_basecolor(True)
             out_basecol = '({0} * {3} + {1} * {2})'.format(bc1, bc2, fac_var, fac_inv_var)
-            parsing_basecolor(False)
             out_roughness = '({0} * {3} + {1} * {2})'.format(rough1, rough2, fac_var, fac_inv_var)
             out_metallic = '({0} * {3} + {1} * {2})'.format(met1, met2, fac_var, fac_inv_var)
             out_occlusion = '({0} * {3} + {1} * {2})'.format(occ1, occ2, fac_var, fac_inv_var)
@@ -219,9 +210,7 @@ def parse_shader(node, socket):
         bc1, rough1, met1, occ1, spec1, opac1 = parse_shader_input(node.inputs[0])
         bc2, rough2, met2, occ2, spec2, opac2 = parse_shader_input(node.inputs[1])
         if parse_surface:
-            parsing_basecolor(True)
             out_basecol = '({0} + {1})'.format(bc1, bc2)
-            parsing_basecolor(False)
             out_roughness = '({0} * 0.5 + {1} * 0.5)'.format(rough1, rough2)
             out_metallic = '({0} * 0.5 + {1} * 0.5)'.format(met1, met2)
             out_occlusion = '({0} * 0.5 + {1} * 0.5)'.format(occ1, occ2)
@@ -232,9 +221,7 @@ def parse_shader(node, socket):
     elif node.type == 'BSDF_PRINCIPLED':
         if parse_surface:
             write_normal(node.inputs[17])
-            parsing_basecolor(True)
             out_basecol = parse_vector_input(node.inputs[0])
-            parsing_basecolor(False)
             # subsurface = parse_vector_input(node.inputs[1])
             # subsurface_radius = parse_vector_input(node.inputs[2])
             # subsurface_color = parse_vector_input(node.inputs[3])
@@ -255,18 +242,14 @@ def parse_shader(node, socket):
     elif node.type == 'BSDF_DIFFUSE':
         if parse_surface:
             write_normal(node.inputs[2])
-            parsing_basecolor(True)
             out_basecol = parse_vector_input(node.inputs[0])
-            parsing_basecolor(False)
             out_roughness = parse_value_input(node.inputs[1])
             out_specular = '0.0'
 
     elif node.type == 'BSDF_GLOSSY':
         if parse_surface:
             write_normal(node.inputs[2])
-            parsing_basecolor(True)
             out_basecol = parse_vector_input(node.inputs[0])
-            parsing_basecolor(False)
             out_roughness = parse_value_input(node.inputs[1])
             out_metallic = '1.0'
 
@@ -279,18 +262,14 @@ def parse_shader(node, socket):
         if parse_surface:
             write_normal(node.inputs[4])
             # Revert to glossy
-            parsing_basecolor(True)
             out_basecol = parse_vector_input(node.inputs[0])
-            parsing_basecolor(False)
             out_roughness = parse_value_input(node.inputs[1])
             out_metallic = '1.0'
 
     elif node.type == 'EMISSION':
         if parse_surface:
             # Multiply basecol
-            parsing_basecolor(True)
             out_basecol = parse_vector_input(node.inputs[0])
-            parsing_basecolor(False)
             emission_found = True
             strength = parse_value_input(node.inputs[1])
             out_basecol = '({0} * ({1} * 100.0))'.format(out_basecol, strength)
@@ -317,9 +296,7 @@ def parse_shader(node, socket):
     elif node.type == 'SUBSURFACE_SCATTERING':
         if parse_surface:
             write_normal(node.inputs[4])
-            parsing_basecolor(True)
             out_basecol = parse_vector_input(node.inputs[0])
-            parsing_basecolor(False)
 
     elif node.type == 'BSDF_TOON':
         # write_normal(node.inputs[3])
@@ -338,9 +315,7 @@ def parse_shader(node, socket):
     elif node.type == 'BSDF_VELVET':
         if parse_surface:
             write_normal(node.inputs[2])
-            parsing_basecolor(True)
             out_basecol = parse_vector_input(node.inputs[0])
-            parsing_basecolor(False)
             out_roughness = '1.0'
             out_metallic = '1.0'
 
@@ -479,14 +454,14 @@ def parse_vector(node, socket):
 
     elif node.type == 'TEX_IMAGE':
         # Already fetched
-        if is_parsed(res_var_name(node, node.outputs[1])):
+        if is_parsed(store_var_name(node)):
             return '{0}.rgb'.format(store_var_name(node))
         tex_name = node_name(node.name)
         tex = make_texture(node, tex_name)
         tex_link = node.name if node.arm_material_param else None
         if tex != None:
             curshader.write_textures += 1
-            to_linear = parsing_basecol and not tex['file'].endswith('.hdr')
+            to_linear = node.color_space == 'COLOR'
             res = '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear, tex_link=tex_link))
             curshader.write_textures -= 1
             return res
@@ -1133,7 +1108,7 @@ def parse_value(node, socket):
 
     elif node.type == 'TEX_IMAGE':
         # Already fetched
-        if is_parsed(res_var_name(node, node.outputs[0])):
+        if is_parsed(store_var_name(node)):
             return '{0}.a'.format(store_var_name(node))
         tex_name = safesrc(node.name)
         tex = make_texture(node, tex_name)
@@ -1357,10 +1332,6 @@ def write_normal(inp):
         if normal_res != None:
             curshader.write('n = {0};'.format(normal_res))
 
-def parsing_basecolor(b):
-    global parsing_basecol
-    parsing_basecol = b
-
 def is_parsed(s):
     global parsed
     return s in parsed
@@ -1405,8 +1376,6 @@ def store_var_name(node):
     return node_name(node.name) + '_store'
 
 def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
-    global parsing_basecol
-    global basecol_texname
     global sample_bump
     global sample_bump_res
     global parsed
@@ -1435,8 +1404,6 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
         sample_bump = False
     if to_linear:
         curshader.write('{0}.rgb = pow({0}.rgb, vec3(2.2));'.format(tex_store))
-    if parsing_basecol:
-        basecol_texname = tex_store
     return tex_store
 
 def write_bump(node, res, scl=0.001):

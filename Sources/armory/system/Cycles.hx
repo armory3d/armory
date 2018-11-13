@@ -37,7 +37,6 @@ class Cycles {
 	static var links:Array<TNodeLink>;
 
 	static var parsing_disp:Bool;
-	static var parsing_basecol:Bool;
 	static var parse_teximage_vector:Bool;
 	static var normal_written:Bool; // Normal socket is linked on shader node - overwrite fs normal
 	static var cotangentFrameWritten:Bool;
@@ -101,7 +100,6 @@ class Cycles {
 		curshader = frag;
 		matcon = _matcon;
 
-		parsing_basecol = false;
 		parsing_disp = false;
 		parse_teximage_vector = true;
 		normal_written = false;
@@ -285,9 +283,7 @@ class Cycles {
 		if (node.type == 'Armory PBR' || node.type == 'OUTPUT_MATERIAL_PBR') {
 			if (parse_surface) {
 				// Base color
-				parsing_basecol = true;
 				sout.out_basecol = parse_vector_input(node.inputs[0]);
-				parsing_basecol = false;
 				// Occlusion
 				sout.out_occlusion = parse_value_input(node.inputs[2]);
 				// Roughness
@@ -340,9 +336,7 @@ class Cycles {
 			var occ1 = sout1.out_occlusion;
 			var occ2 = sout2.out_occlusion;
 			if (parse_surface) {
-				parsing_basecol = true;
 				sout.out_basecol = '($bc1 * $fac_inv_var + $bc2 * $fac_var)';
-				parsing_basecol = false;
 				sout.out_roughness = '($rough1 * $fac_inv_var + $rough2 * $fac_var)';
 				sout.out_metallic = '($met1 * $fac_inv_var + $met2 * $fac_var)';
 				sout.out_occlusion = '($occ1 * $fac_inv_var + $occ2 * $fac_var)';
@@ -356,9 +350,7 @@ class Cycles {
 		//     bc1, rough1, met1, occ1, opac1 = parse_shader_input(node.inputs[0])
 		//     bc2, rough2, met2, occ2, opac2 = parse_shader_input(node.inputs[1])
 		//     if parse_surface:
-		//         parsing_basecol = True
 		//         out_basecol = '({0} + {1})'.format(bc1, bc2)
-		//         parsing_basecol = False
 		//         out_roughness = '({0} * 0.5 + {1} * 0.5)'.format(rough1, rough2)
 		//         out_metallic = '({0} * 0.5 + {1} * 0.5)'.format(met1, met2)
 		//         out_occlusion = '({0} * 0.5 + {1} * 0.5)'.format(occ1, occ2)
@@ -369,9 +361,7 @@ class Cycles {
 		else if (node.type == 'BSDF_PRINCIPLED') {
 			//if parse_surface:
 			write_normal(node.inputs[16]);
-			parsing_basecol = true;
 			sout.out_basecol = parse_vector_input(node.inputs[0]);
-			parsing_basecol = false;
 			// subsurface = parse_vector_input(node.inputs[1])
 			// subsurface_radius = parse_vector_input(node.inputs[2])
 			// subsurface_color = parse_vector_input(node.inputs[3])
@@ -392,18 +382,14 @@ class Cycles {
 		else if (node.type == 'BSDF_DIFFUSE') {
 			//if parse_surface:
 			write_normal(node.inputs[2]);
-			parsing_basecol = true;
 			sout.out_basecol = parse_vector_input(node.inputs[0]);
-			parsing_basecol = false;
 			sout.out_roughness = parse_value_input(node.inputs[1]);
 		}
 
 		else if (node.type == 'BSDF_GLOSSY') {
 			// if parse_surface:
 			write_normal(node.inputs[2]);
-			parsing_basecol = true;
 			sout.out_basecol = parse_vector_input(node.inputs[0]);
-			parsing_basecol = false;
 			sout.out_roughness = parse_value_input(node.inputs[1]);
 			sout.out_metallic = '1.0';
 		}

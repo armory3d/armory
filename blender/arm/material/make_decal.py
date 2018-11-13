@@ -53,18 +53,13 @@ def make(context_id):
     frag.write('float metallic;')
     frag.write('float occlusion;')
     frag.write('float specular;')
-    cycles.parse(mat_state.nodes, con_decal, vert, frag, geom, tesc, tese, parse_opacity=False)
+    frag.write('float opacity;')
+    cycles.parse(mat_state.nodes, con_decal, vert, frag, geom, tesc, tese)
 
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
-    
-    if cycles.basecol_texname == '':
-        frag.write('const float alpha = 1.0;')
-    else:
-        frag.write('const float alpha = {0}.a;'.format(cycles.basecol_texname))
-
-    frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), alpha);')
-    frag.write('fragColor[1] = vec4(basecol.rgb, alpha);')
+    frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), opacity);')
+    frag.write('fragColor[1] = vec4(basecol.rgb, opacity);')
 
     make_mesh.make_finalize(con_decal)
 
