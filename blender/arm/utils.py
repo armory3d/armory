@@ -83,7 +83,7 @@ def get_gapi():
     if state.is_export:
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
         return getattr(item, target_to_gapi(item.arm_project_target))
-    if wrd.arm_play_runtime == 'Browser':
+    if wrd.arm_runtime == 'Browser':
         return 'webgl'
     return arm.utils.get_player_gapi()
 

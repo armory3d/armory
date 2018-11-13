@@ -142,7 +142,7 @@ project.addSources('Sources');
         if enable_dce:
             f.write("project.addParameter('-dce full');\n")
 
-        if is_viewport or wrd.arm_play_console:
+        if is_viewport or wrd.arm_debug_console:
             import_traits.append('armory.trait.internal.Bridge')
 
         import_traits = list(set(import_traits))
@@ -217,7 +217,7 @@ project.addSources('Sources');
         if wrd.arm_texture_quality < 1.0:
             assets.add_khafile_def('arm_texcompress')
 
-        if wrd.arm_play_console:
+        if wrd.arm_debug_console:
             assets.add_khafile_def('arm_debug')
             f.write(add_shaders(sdk_path + "/armory/Shaders/debug_draw/**", rel_path=rel_path))
 

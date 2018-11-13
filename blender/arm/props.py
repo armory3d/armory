@@ -140,11 +140,11 @@ def init_properties():
                # ('Viewport Shared', 'Shared', 'Viewport Shared')
                ],
         name="Camera", description="Viewport camera", default='Scene', update=invalidate_compiler_cache)
-    bpy.types.World.arm_play_console = BoolProperty(name="Debug Console", description="Show inspector in player and enable debug draw", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_play_runtime = EnumProperty(
-        items=[('Browser', 'Browser', 'Browser'),
-               ('Krom', 'Krom', 'Krom')],
-        name="Runtime", description="Player runtime used when launching in new window", default='Krom', update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_debug_console = BoolProperty(name="Debug Console", description="Show inspector in player and enable debug draw", default=False, update=assets.invalidate_shader_cache)
+    bpy.types.World.arm_runtime = EnumProperty(
+        items=[('Krom', 'Krom', 'Krom'),
+               ('Browser', 'Browser', 'Browser')],
+        name="Runtime", description="Runtime to use when launching the game", default='Krom', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_loadscreen = BoolProperty(name="Loading Screen", description="Show asset loading progress on published builds", default=True)
     bpy.types.World.arm_vsync = BoolProperty(name="VSync", description="Vertical Synchronization", default=True, update=invalidate_compiler_cache)
     bpy.types.World.arm_dce = BoolProperty(name="DCE", description="Enable dead code elimination for publish builds", default=True, update=invalidate_compiler_cache)

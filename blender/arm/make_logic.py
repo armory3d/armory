@@ -64,7 +64,7 @@ def build_node_tree(node_group):
         f.write('\tvar functionOutputNodes:Map<String, armory.logicnode.FunctionOutputNode>;\n\n')
         f.write('\tpublic function new() {\n')
         f.write('\t\tsuper();\n')
-        if bpy.data.worlds['Arm'].arm_play_console:
+        if bpy.data.worlds['Arm'].arm_debug_console:
             f.write('\t\tname = "' + group_name + '";\n')
         f.write('\t\tthis.functionNodes = new Map();\n')
         f.write('\t\tthis.functionOutputNodes = new Map();\n')
@@ -134,7 +134,7 @@ def build_node(node, f):
         function_node_outputs[node.function_name] = name
 
     # Watch in debug console
-    if node.arm_watch and bpy.data.worlds['Arm'].arm_play_console:
+    if node.arm_watch and bpy.data.worlds['Arm'].arm_debug_console:
         f.write('\t\t' + name + '.name = "' + name[1:] + '";\n')
         f.write('\t\t' + name + '.watch(true);\n')
 

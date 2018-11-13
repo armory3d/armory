@@ -5,7 +5,6 @@ import os
 import webbrowser
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
-from arm.props_traits_params import *
 from arm.props_traits_props import *
 import arm.utils
 import arm.write_data as write_data
@@ -65,8 +64,6 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
     webassembly_prop = bpy.props.StringProperty(name="Module", description="A name for this item", default="", update=update_trait_group)
     nodes_name_prop = bpy.props.StringProperty(name="Nodes", description="A name for this item", default="", update=update_trait_group)
 
-    arm_traitparamslist = bpy.props.CollectionProperty(type=ArmTraitParamListItem)
-    arm_traitparamslist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
     arm_traitpropslist = bpy.props.CollectionProperty(type=ArmTraitPropListItem)
     arm_traitpropslist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
 
@@ -237,7 +234,7 @@ class ArmEditScriptButton(bpy.types.Operator):
  
     def execute(self, context):
 
-        if bpy.data.worlds['Arm'].arm_play_runtime != 'Browser' or not os.path.exists(arm.utils.get_fp() + "/khafile.js"):
+        if bpy.data.worlds['Arm'].arm_runtime != 'Browser' or not os.path.exists(arm.utils.get_fp() + "/khafile.js"):
             print('Generating HTML5 project for Kode Studio')
             arm.utils.check_default_props()
             make.build('html5')
@@ -458,7 +455,6 @@ def draw_traits(layout, obj, is_object):
         if item.type_prop == 'Haxe Script' or item.type_prop == 'Bundled Script':
             item.name = item.class_name_prop
             row = layout.row()
-            # row.prop(item, "class_name_prop")
             if item.type_prop == 'Haxe Script':
                 row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_scripts_list", text="Class")
             else:
@@ -474,35 +470,7 @@ def draw_traits(layout, obj, is_object):
                 if len(item.arm_traitpropslist) > 2:
                     propsrows = 4
                 row = layout.row()
-                row.template_list("ArmTraitPropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows)
-            
-            # Params
-            layout.label(text="Parameters")
-            paramsrow = layout.row()
-            paramsrows = 2
-            if len(item.arm_traitparamslist) > 1:
-                paramsrows = 4
-            
-            row = layout.row()
-            row.template_list("ArmTraitParamList", "The_List", item, "arm_traitparamslist", item, "arm_traitparamslist_index", rows=paramsrows)
-
-            col = row.column(align=True)
-            op = col.operator("arm_traitparamslist.new_item", icon='ZOOMIN', text="")
-            op.is_object = is_object
-            op = col.operator("arm_traitparamslist.delete_item", icon='ZOOMOUT', text="")
-            op.is_object = is_object
-
-            if len(item.arm_traitparamslist) > 1:
-                col.separator()
-                op = col.operator("arm_traitparamslist.move_item", icon='TRIA_UP', text="")
-                op.direction = 'UP'
-                op.is_object = is_object
-                op = col.operator("arm_traitparamslist.move_item", icon='TRIA_DOWN', text="")
-                op.direction = 'DOWN'
-                op.is_object = is_object
-
-            if item.arm_traitparamslist_index >= 0 and len(item.arm_traitparamslist) > 0:
-                paramitem = item.arm_traitparamslist[item.arm_traitparamslist_index]   
+                row.template_list("ArmTraitPropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows) 
 
             if item.type_prop == 'Haxe Script':
                 row = layout.row(align=True)

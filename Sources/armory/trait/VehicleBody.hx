@@ -16,14 +16,16 @@ class VehicleBody extends Trait {
 	public function new() { super(); }
 #else
 
+	@prop var wheel0Name:String = "Wheel0";
+	@prop var wheel1Name:String = "Wheel1";
+	@prop var wheel2Name:String = "Wheel2";
+	@prop var wheel3Name:String = "Wheel3";
+
 	var physics:PhysicsWorld;
 	var transform:Transform;
 	var camera:CameraObject;
 
-	// Wheels
 	var wheels:Array<Object> = [];
-	var wheelNames:Array<String>;
-
 	var vehicle:BtRaycastVehiclePointer = null;
 	var carChassis:BtRigidBodyPointer;
 
@@ -42,11 +44,8 @@ class VehicleBody extends Trait {
 	var breakingForce = 0.0;
 	var vehicleSteering = 0.0;
 
-	public function new(wheelName1:String, wheelName2:String, wheelName3:String, wheelName4:String) {
+	public function new() {
 		super();
-
-		wheelNames = [wheelName1, wheelName2, wheelName3, wheelName4];
-
 		iron.Scene.active.notifyOnInit(init);
 	}
 
@@ -55,7 +54,7 @@ class VehicleBody extends Trait {
 		transform = object.transform;
 		camera = iron.Scene.active.camera;
 
-		for (n in wheelNames) {
+		for (n in [wheel0Name, wheel1Name, wheel2Name, wheel3Name]) {
 			wheels.push(iron.Scene.active.root.getChild(n));
 		}
 

@@ -19,7 +19,7 @@ class Character extends Trait {
 	var lastLoc:Vec4 = null;
 	var framesIdle = 0; // Number of frames character did not move
 
-	public function new(actionIdle:String, actionMove:String) {
+	public function new(actionIdle = "idle", actionMove = "run") {
 		super();
 
 		if(actionIdle != null && actionMove != null){

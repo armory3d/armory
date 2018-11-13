@@ -1,5 +1,4 @@
 import arm.nodes_logic
-import arm.props_traits_params
 import arm.props_traits_props
 import arm.props_traits
 import arm.props_lod
@@ -19,7 +18,6 @@ def register(local_sdk=False):
     global registered
     registered = True
     arm.utils.register(local_sdk=local_sdk)
-    arm.props_traits_params.register()
     arm.props_traits_props.register()
     arm.props_traits.register()
     arm.props_lod.register()
@@ -42,7 +40,6 @@ def unregister():
     arm.handlers.unregister()
     arm.props_ui.unregister()
     arm.props.unregister()
-    arm.props_traits_params.unregister()
     arm.props_traits_props.unregister()
     arm.props_traits.unregister()
     arm.props_lod.unregister()

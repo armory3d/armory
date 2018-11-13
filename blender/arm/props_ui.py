@@ -279,7 +279,7 @@ class ArmoryPlayerPanel(bpy.types.Panel):
         else:
             row.operator("arm.stop", icon="MESH_PLANE")
         row.operator("arm.clean_menu")
-        layout.prop(wrd, 'arm_play_runtime')
+        layout.prop(wrd, 'arm_runtime')
         layout.prop(wrd, 'arm_play_camera')
 
 class ArmoryExporterPanel(bpy.types.Panel):
@@ -349,7 +349,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
         box = layout.box().column()
         row = box.row()
         col = row.column()
-        col.prop(wrd, 'arm_play_console')
+        col.prop(wrd, 'arm_debug_console')
         col.prop(wrd, 'arm_dce')
         col.prop(wrd, 'arm_minify_js')
         col = row.column()

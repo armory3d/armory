@@ -75,7 +75,6 @@ def sync_collection(cSrc, cDst):
 def sync_traits(obj):
     sync_collection(obj.proxy.arm_traitlist, obj.arm_traitlist)
     for i in range(0, len(obj.arm_traitlist)):
-        sync_collection(obj.proxy.arm_traitlist[i].arm_traitparamslist, obj.arm_traitlist[i].arm_traitparamslist)
         sync_collection(obj.proxy.arm_traitlist[i].arm_traitpropslist, obj.arm_traitlist[i].arm_traitpropslist)
 
 def sync_materials(obj):

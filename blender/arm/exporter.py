@@ -2418,7 +2418,6 @@ class ArmoryExporter:
             trait = {}
             trait['type'] = 'Script'
             trait['class_name'] = 'armory.trait.WalkNavigation'
-            trait['parameters'] = ['true'] # ease
             o['traits'].append(trait)
             ArmoryExporter.import_traits.append(trait['class_name'])
             self.output['objects'].append(o)
@@ -2443,7 +2442,7 @@ class ArmoryExporter:
             x['type'] = 'Script'
             x['class_name'] = 'armory.trait.navigation.Navigation'
             self.output['traits'].append(x)
-        if wrd.arm_play_console:
+        if wrd.arm_debug_console:
             if not 'traits' in self.output:
                 self.output['traits'] = []
             ArmoryExporter.export_ui = True
@@ -2701,7 +2700,6 @@ class ArmoryExporter:
                 navigation_trait = {}
                 navigation_trait['type'] = 'Script'
                 navigation_trait['class_name'] = 'armory.trait.WalkNavigation'
-                navigation_trait['parameters'] = ['true'] # ease
                 o['traits'].append(navigation_trait)
 
         # Map objects to materials, can be used in later stages
@@ -2825,10 +2823,6 @@ class ArmoryExporter:
                             print('Armory Error: Scene "' + self.scene.name + '" - Object "' + bobject.name + '" : Referenced trait file "' + hxfile + '" not found')
 
                     x['class_name'] = trait_prefix + t.class_name_prop
-                    if len(t.arm_traitparamslist) > 0:
-                        x['parameters'] = []
-                        for pt in t.arm_traitparamslist: # Append parameters
-                            x['parameters'].append(pt.name)
                     if len(t.arm_traitpropslist) > 0:
                         x['props'] = []
                         for pt in t.arm_traitpropslist: # Append props

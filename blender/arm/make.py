@@ -143,7 +143,7 @@ def export_data(fp, sdk_path):
     defs = arm.utils.def_strings_to_array(wrd.world_defs)
     cdefs = arm.utils.def_strings_to_array(wrd.compo_defs)
     print('Shader flags: ' + str(defs))
-    if wrd.arm_play_console:
+    if wrd.arm_debug_console:
         print('Khafile flags: ' + str(assets.khafile_defs))
 
     # Write compiled.inc
@@ -382,7 +382,7 @@ def build_done():
 
 def runtime_to_target(is_viewport):
     wrd = bpy.data.worlds['Arm']
-    if is_viewport or wrd.arm_play_runtime == 'Krom':
+    if is_viewport or wrd.arm_runtime == 'Krom':
         return 'krom'
     else:
         return 'html5'
@@ -444,7 +444,7 @@ def build_success():
     if state.is_play and state.is_viewport:
         open(arm.utils.get_fp_build() + '/krom/krom.lock', 'w').close()
     elif state.is_play:
-        if wrd.arm_play_runtime == 'Browser':
+        if wrd.arm_runtime == 'Browser':
             # Start server
             os.chdir(arm.utils.get_fp())
             t = threading.Thread(name='localserver', target=arm.lib.server.run)
@@ -452,7 +452,7 @@ def build_success():
             t.start()
             html5_app_path = 'http://localhost:8040/' + arm.utils.build_dir() + '/debug/html5'
             webbrowser.open(html5_app_path)
-        elif wrd.arm_play_runtime == 'Krom':
+        elif wrd.arm_runtime == 'Krom':
             bin_ext = '' if state.export_gapi == 'opengl' else '_' + state.export_gapi
             krom_location, krom_path = arm.utils.krom_paths(bin_ext=bin_ext)
             os.chdir(krom_location)
