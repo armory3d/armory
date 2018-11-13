@@ -36,7 +36,6 @@ def parse(nodes, con, vert, frag, geom, tesc, tese, parse_surface=True, parse_op
 
 def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, _parse_opacity, _parse_displacement, _basecol_only):
     global parsed # Compute nodes only once
-    global parsed_wt
     global parents
     global normal_parsed
     global curshader # Active shader - frag for surface / tese for displacement
@@ -81,7 +80,6 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     # Surface
     if parse_surface or parse_opacity:
         parsed = {}
-        parsed_wt = {}
         parents = []
         normal_parsed = False
         curshader = frag
@@ -102,7 +100,6 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
     # Displacement
     if _parse_displacement and disp_enabled() and node.inputs[2].is_linked:
         parsed = {}
-        parsed_wt
         parents = []
         normal_parsed = False
         rpdat = arm.utils.get_rp()
@@ -473,7 +470,7 @@ def parse_vector(node, socket):
 
     elif node.type == 'TEX_IMAGE':
         # Already fetched
-        if res_var_name(node, node.outputs[1]) in parsed:
+        if is_parsed(res_var_name(node, node.outputs[1])):
             return '{0}.rgb'.format(store_var_name(node))
         tex_name = node_name(node.name)
         tex = make_texture(node, tex_name)
@@ -490,8 +487,8 @@ def parse_vector(node, socket):
             tex['file'] = ''
             return '{0}.rgb'.format(texture_store(node, tex, tex_name, True, tex_link=tex_link))
         else:
-            tex_store = store_var_name(node)
-            curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0); // Pink color for missing texture'.format(tex_store))
+            tex_store = store_var_name(node) # Pink color for missing texture
+            curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0);'.format(tex_store))
             return '{0}.rgb'.format(tex_store)
 
     elif node.type == 'TEX_MAGIC':
@@ -1105,7 +1102,7 @@ def parse_value(node, socket):
 
     elif node.type == 'TEX_IMAGE':
         # Already fetched
-        if res_var_name(node, node.outputs[0]) in parsed:
+        if is_parsed(res_var_name(node, node.outputs[0])):
             return '{0}.a'.format(store_var_name(node))
         tex_name = safesrc(node.name)
         tex = make_texture(node, tex_name)
@@ -1115,9 +1112,14 @@ def parse_value(node, socket):
             res = '{0}.a'.format(texture_store(node, tex, tex_name, tex_link=tex_link))
             curshader.write_textures -= 1
             return res
+        elif node.image == None: # Empty texture
+            tex = {}
+            tex['name'] = tex_name
+            tex['file'] = ''
+            return '{0}.a'.format(texture_store(node, tex, tex_name, True, tex_link=tex_link))
         else:
             tex_store = store_var_name(node) # Pink color for missing texture
-            curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0); // Pink color for missing texture'.format(tex_store))
+            curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0);'.format(tex_store))
             return '{0}.a'.format(tex_store)
 
     elif node.type == 'TEX_MAGIC':
@@ -1315,24 +1317,20 @@ def write_normal(inp):
 def parsing_basecolor(b):
     global parsing_basecol
     parsing_basecol = b
-    
+
+def is_parsed(s):
+    global parsed
+    return s in parsed
+
 def res_var_name(node, socket):
     return node_name(node.name) + '_' + safesrc(socket.name) + '_res'
 
 def write_result(l):
     global parsed
-    global parsed_wt
     res_var = res_var_name(l.from_node, l.from_socket)
-    # Texture reads are processed first
-    if res_var + '_wt' in parsed_wt:
-        return res_var + '_wt'
-    if curshader.write_textures > 0:
-        res_var += '_wt'
     # Unparsed node
-    if res_var not in parsed:
+    if not is_parsed(res_var):
         parsed[res_var] = True
-        if curshader.write_textures > 0:
-            parsed_wt[res_var] = True
         st = l.from_socket.type
         if st == 'RGB' or st == 'RGBA' or st == 'VECTOR':
             res = parse_vector(l.from_node, l.from_socket)
@@ -1368,6 +1366,11 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
     global basecol_texname
     global sample_bump
     global sample_bump_res
+    global parsed
+    tex_store = store_var_name(node)
+    if is_parsed(tex_store):
+        return tex_store
+    parsed[tex_store] = True
     mat_bind_texture(tex)
     con.add_elem('tex', 2)
     curshader.add_uniform('sampler2D {0}'.format(tex_name), link=tex_link)
@@ -1376,7 +1379,6 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
         uv_name = 'vec2({0}.x, 1.0 - {0}.y)'.format(uv_name)
     else:
         uv_name = 'texCoord'
-    tex_store = store_var_name(node)
     if mat_texture_grad():
         curshader.write('vec4 {0} = textureGrad({1}, {2}.xy, g2.xy, g2.zw);'.format(tex_store, tex_name, uv_name))
     else:
@@ -1433,6 +1435,8 @@ def socket_index(node, socket):
 def node_name(s):
     for p in parents:
         s = p.name + '_' + s
+    if curshader.write_textures > 0:
+        s += '_texread'
     s = safesrc(s)
     if '__' in s: # Consecutive _ are reserved
         s = s.replace('_', '_x')
