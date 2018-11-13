@@ -20,8 +20,8 @@ class SpawnObjectNode extends LogicNode {
 		if (objectInput == null) objectName = cast(inputs[1].node, ObjectNode).objectName;
 		else objectName = objectInput.name;
 		if (objectName == "") objectName = tree.object.name;
-		matrices.push(inputs[2].get().clone());
-		
+		var m:Mat4 = inputs[2].get();
+		matrices.push(m != null ? m.clone() : null);
 		var spawnChildren:Bool = inputs.length > 3 ? inputs[3].get() : true; // TODO
 
 		iron.Scene.active.spawnObject(objectName, null, function(o:Object) {
