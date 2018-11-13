@@ -1785,9 +1785,9 @@ class Cycles {
 			post = ')';
 		}
 		curshader.write('float ${sample_bump_res}_1 = $pre$co + vec3(-0.1, 0.0, 0.0)$post;');
-		curshader.write('float ${sample_bump_res}_2 = $pre$co + vec3(0.1, 0.0,  0.0)$post;');
+		curshader.write('float ${sample_bump_res}_2 = $pre$co + vec3(0.1, 0.0,  0.1)$post;');
 		curshader.write('float ${sample_bump_res}_3 = $pre$co + vec3(0.0, -0.1, 0.0)$post;');
-		curshader.write('float ${sample_bump_res}_4 = $pre$co + vec3(0.0, 0.1,  0.0)$post;');
+		curshader.write('float ${sample_bump_res}_4 = $pre$co + vec3(0.0, 0.1,  -0.1)$post;');
 		sample_bump = false;
 	}
 

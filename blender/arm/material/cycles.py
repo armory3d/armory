@@ -429,7 +429,10 @@ def parse_vector(node, socket):
         col2 = parse_vector_input(node.inputs[2])
         col3 = parse_vector_input(node.inputs[3])
         scale = parse_value_input(node.inputs[4])
-        return 'tex_brick({0} * {4}, {1}, {2}, {3})'.format(co, col1, col2, col3, scale)
+        res = 'tex_brick({0} * {4}, {1}, {2}, {3})'.format(co, col1, col2, col3, scale)
+        if sample_bump:
+            write_bump(node, res)
+        return res
 
     elif node.type == 'TEX_CHECKER':
         curshader.add_function(c_functions.str_tex_checker)
@@ -440,7 +443,10 @@ def parse_vector(node, socket):
         col1 = parse_vector_input(node.inputs[1])
         col2 = parse_vector_input(node.inputs[2])
         scale = parse_value_input(node.inputs[3])
-        return 'tex_checker({0}, {1}, {2}, {3})'.format(co, col1, col2, scale)
+        res = 'tex_checker({0}, {1}, {2}, {3})'.format(co, col1, col2, scale)
+        if sample_bump:
+            write_bump(node, res)
+        return res
 
     elif node.type == 'TEX_ENVIRONMENT':
         # Pass through
@@ -466,7 +472,10 @@ def parse_vector(node, socket):
             f = '0.0'
         elif grad == 'SPHERICAL':
             f = 'max(1.0 - sqrt({0}.x * {0}.x + {0}.y * {0}.y + {0}.z * {0}.z), 0.0)'.format(co)
-        return 'vec3(clamp({0}, 0.0, 1.0))'.format(f)
+        res = 'vec3(clamp({0}, 0.0, 1.0))'.format(f)
+        if sample_bump:
+            write_bump(node, res)
+        return res
 
     elif node.type == 'TEX_IMAGE':
         # Already fetched
@@ -498,7 +507,10 @@ def parse_vector(node, socket):
         else:
             co = 'bposition'
         scale = parse_value_input(node.inputs[1])
-        return 'tex_magic({0} * {1} * 4.0)'.format(co, scale)
+        res = 'tex_magic({0} * {1} * 4.0)'.format(co, scale)
+        if sample_bump:
+            write_bump(node, res, 0.1)
+        return res
 
     elif node.type == 'TEX_MUSGRAVE':
         curshader.add_function(c_functions.str_tex_musgrave)
@@ -509,7 +521,10 @@ def parse_vector(node, socket):
         scale = parse_value_input(node.inputs[1])
         # detail = parse_value_input(node.inputs[2])
         # distortion = parse_value_input(node.inputs[3])
-        return 'vec3(tex_musgrave_f({0} * {1} * 0.5))'.format(co, scale)
+        res = 'vec3(tex_musgrave_f({0} * {1} * 0.5))'.format(co, scale)
+        if sample_bump:
+            write_bump(node, res)
+        return res
 
     elif node.type == 'TEX_NOISE':
         curshader.add_function(c_functions.str_tex_noise)
@@ -525,7 +540,10 @@ def parse_vector(node, socket):
         # detail = parse_value_input(node.inputs[2])
         # distortion = parse_value_input(node.inputs[3])
         # Slow..
-        return 'vec3(tex_noise({0} * {1}), tex_noise({0} * {1} + 0.33), tex_noise({0} * {1} + 0.66))'.format(co, scale)
+        res = 'vec3(tex_noise({0} * {1}), tex_noise({0} * {1} + 0.33), tex_noise({0} * {1} + 0.66))'.format(co, scale)
+        if sample_bump:
+            write_bump(node, res, 0.1)
+        return res
 
     elif node.type == 'TEX_POINTDENSITY':
         # Pass through
@@ -546,9 +564,12 @@ def parse_vector(node, socket):
             co = 'bposition'
         scale = parse_value_input(node.inputs[1])
         if node.coloring == 'INTENSITY':
-            return 'vec3(tex_voronoi({0} * {1}).a)'.format(co, scale)
+            res = 'vec3(tex_voronoi({0} * {1}).a)'.format(co, scale)
         else: # CELLS
-            return 'tex_voronoi({0} * {1}).rgb'.format(co, scale)
+            res = 'tex_voronoi({0} * {1}).rgb'.format(co, scale)
+        if sample_bump:
+            write_bump(node, res)
+        return res
 
     elif node.type == 'TEX_WAVE':
         curshader.add_function(c_functions.str_tex_wave)
@@ -557,7 +578,10 @@ def parse_vector(node, socket):
         else:
             co = 'bposition'
         scale = parse_value_input(node.inputs[1])
-        return 'vec3(tex_wave_f({0} * {1}))'.format(co, scale)
+        res = 'vec3(tex_wave_f({0} * {1}))'.format(co, scale)
+        if sample_bump:
+            write_bump(node, res)
+        return res
 
     elif node.type == 'BRIGHTCONTRAST':
         out_col = parse_vector_input(node.inputs[0])
@@ -1065,7 +1089,10 @@ def parse_value(node, socket):
         else:
             co = 'bposition'
         scale = parse_value_input(node.inputs[4])
-        return 'tex_brick_f({0} * {1})'.format(co, scale)
+        res = 'tex_brick_f({0} * {1})'.format(co, scale)
+        if sample_bump:
+            write_bump(node, res)
+        return res
 
     elif node.type == 'TEX_CHECKER':
         curshader.add_function(c_functions.str_tex_checker)
@@ -1099,7 +1126,10 @@ def parse_value(node, socket):
             f = '0.0'
         elif grad == 'SPHERICAL':
             f = 'max(1.0 - sqrt({0}.x * {0}.x + {0}.y * {0}.y + {0}.z * {0}.z), 0.0)'.format(co)
-        return '(clamp({0}, 0.0, 1.0))'.format(f)
+        res = '(clamp({0}, 0.0, 1.0))'.format(f)
+        if sample_bump:
+            write_bump(node, res)
+        return res
 
     elif node.type == 'TEX_IMAGE':
         # Already fetched
@@ -1130,7 +1160,10 @@ def parse_value(node, socket):
         else:
             co = 'bposition'
         scale = parse_value_input(node.inputs[1])
-        return 'tex_magic_f({0} * {1} * 4.0)'.format(co, scale)
+        res = 'tex_magic_f({0} * {1} * 4.0)'.format(co, scale)
+        if sample_bump:
+            write_bump(node, res, 0.1)
+        return res
 
     elif node.type == 'TEX_MUSGRAVE':
         # Fall back to noise
@@ -1142,7 +1175,10 @@ def parse_value(node, socket):
         scale = parse_value_input(node.inputs[1])
         # detail = parse_value_input(node.inputs[2])
         # distortion = parse_value_input(node.inputs[3])
-        return 'tex_musgrave_f({0} * {1} * 0.5)'.format(co, scale)
+        res = 'tex_musgrave_f({0} * {1} * 0.5)'.format(co, scale)
+        if sample_bump:
+            write_bump(node, res)
+        return res
 
     elif node.type == 'TEX_NOISE':
         curshader.add_function(c_functions.str_tex_noise)
@@ -1158,7 +1194,7 @@ def parse_value(node, socket):
         # distortion = parse_value_input(node.inputs[3])
         res = 'tex_noise({0} * {1})'.format(co, scale)
         if sample_bump:
-            write_bump(node, res)
+            write_bump(node, res, 0.1)
         return res
 
     elif node.type == 'TEX_POINTDENSITY':
@@ -1175,9 +1211,12 @@ def parse_value(node, socket):
             co = 'bposition'
         scale = parse_value_input(node.inputs[1])
         if node.coloring == 'INTENSITY':
-            return 'tex_voronoi({0} * {1}).a'.format(co, scale)
+            res = 'tex_voronoi({0} * {1}).a'.format(co, scale)
         else: # CELLS
-            return 'tex_voronoi({0} * {1}).r'.format(co, scale)
+            res = 'tex_voronoi({0} * {1}).r'.format(co, scale)
+        if sample_bump:
+            write_bump(node, res)
+        return res
 
     elif node.type == 'TEX_WAVE':
         curshader.add_function(c_functions.str_tex_wave)
@@ -1186,7 +1225,10 @@ def parse_value(node, socket):
         else:
             co = 'bposition'
         scale = parse_value_input(node.inputs[1])
-        return 'tex_wave_f({0} * {1})'.format(co, scale)
+        res = 'tex_wave_f({0} * {1})'.format(co, scale)
+        if sample_bump:
+            write_bump(node, res)
+        return res
 
     elif node.type == 'LIGHT_FALLOFF':
         # Constant, linear, quadratic
@@ -1397,7 +1439,7 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
         basecol_texname = tex_store
     return tex_store
 
-def write_bump(node, res):
+def write_bump(node, res, scl=0.001):
     global sample_bump
     global sample_bump_res
     sample_bump_res = store_var_name(node) + '_bump'
@@ -1411,10 +1453,10 @@ def write_bump(node, res):
     else:
         co = ar[1][:-1]
         post = ')'
-    curshader.write('float {0}_1 = {1}{2} + vec3(-2, 0, 1){3};'.format(sample_bump_res, pre, co, post))
-    curshader.write('float {0}_2 = {1}{2} + vec3(2, 0, -1){3};'.format(sample_bump_res, pre, co, post))
-    curshader.write('float {0}_3 = {1}{2} + vec3(0, -2, 1){3};'.format(sample_bump_res, pre, co, post))
-    curshader.write('float {0}_4 = {1}{2} + vec3(0, 2, -1){3};'.format(sample_bump_res, pre, co, post))
+    curshader.write('float {0}_1 = {1}{2} + vec3(-{4}, 0.0, 0.0){3};'.format(sample_bump_res, pre, co, post, scl))
+    curshader.write('float {0}_2 = {1}{2} + vec3({4},  0.0, {4}){3};'.format(sample_bump_res, pre, co, post, scl))
+    curshader.write('float {0}_3 = {1}{2} + vec3(0.0, -{4}, 0.0){3};'.format(sample_bump_res, pre, co, post, scl))
+    curshader.write('float {0}_4 = {1}{2} + vec3(0.0, {4}, -{4}){3};'.format(sample_bump_res, pre, co, post, scl))
     sample_bump = False
 
 def to_vec1(v):
