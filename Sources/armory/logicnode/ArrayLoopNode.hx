@@ -15,6 +15,11 @@ class ArrayLoopNode extends LogicNode {
 		for (val in ar) {
 			value = val;
 			runOutput(0);
+
+			if (tree.loopBreak) {
+				tree.loopBreak = false;
+				break;
+			}
 		}
 		runOutput(2);
 	}

@@ -7,6 +7,7 @@ import armory.trait.physics.RigidBody;
 class SpawnObjectNode extends LogicNode {
 
 	var object:Object;
+	var matrices:Array<Mat4> = [];
 
 	public function new(tree:LogicTree) {
 		super(tree);
@@ -19,11 +20,13 @@ class SpawnObjectNode extends LogicNode {
 		if (objectInput == null) objectName = cast(inputs[1].node, ObjectNode).objectName;
 		else objectName = objectInput.name;
 		if (objectName == "") objectName = tree.object.name;
-		var matrix:Mat4 = inputs[2].get();
+		matrices.push(inputs[2].get().clone());
+		
 		var spawnChildren:Bool = inputs.length > 3 ? inputs[3].get() : true; // TODO
 
 		iron.Scene.active.spawnObject(objectName, null, function(o:Object) {
 			object = o;
+			var matrix = matrices.pop(); // Async spawn in a loop, order is non-stable
 			if (matrix != null) {
 				object.transform.setMatrix(matrix);
 				#if arm_physics
