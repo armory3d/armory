@@ -8,6 +8,8 @@ class SetMaterialRgbParamNode extends LogicNode {
 
 	static var registered = false;
 	static var mat:MaterialData = null;
+	static var map = new Map<String, Vec4>();
+
 	static var node = "";
 	static var col:Vec4 = null;
 
@@ -21,16 +23,12 @@ class SetMaterialRgbParamNode extends LogicNode {
 
 	override function run(from:Int) {
 		mat = inputs[1].get();
-		node = inputs[2].get();
-		col = inputs[3].get();
-
+		if (mat == null) return;
+		map.set(inputs[2].get(), inputs[3].get());
 		runOutput(0);
 	}
 
 	static function vec3Link(object:Object, mat:MaterialData, link:String):iron.math.Vec4 {
-		if (link == node) {
-			return col;
-		}
-		return null;
+		return map.get(link);
 	}
 }

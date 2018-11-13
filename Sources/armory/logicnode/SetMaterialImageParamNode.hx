@@ -8,8 +8,7 @@ class SetMaterialImageParamNode extends LogicNode {
 
 	static var registered = false;
 	static var mat:MaterialData = null;
-	static var node = "";
-	static var image:kha.Image = null;
+	static var map = new Map<String, kha.Image>();
 
 	public function new(tree:LogicTree) {
 		super(tree);
@@ -21,21 +20,16 @@ class SetMaterialImageParamNode extends LogicNode {
 
 	override function run(from:Int) {
 		mat = inputs[1].get();
-		node = inputs[2].get();
-		if (mat == null || node == null) return;
+		if (mat == null) return;
 		
-		var name = inputs[3].get();
-		iron.data.Data.getImage(name, function(img:kha.Image) {
-			image = img;
+		iron.data.Data.getImage(inputs[3].get(), function(image:kha.Image) {
+			map.set(inputs[2].get(), image);
 		});
 
 		runOutput(0);
 	}
 
 	static function textureLink(object:Object, mat:MaterialData, link:String):kha.Image {
-		if (link == node) {
-			return image;
-		}
-		return null;
+		return map.get(link);
 	}
 }
