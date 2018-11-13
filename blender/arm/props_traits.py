@@ -3,6 +3,7 @@ import bpy
 import subprocess
 import os
 import webbrowser
+import bpy.utils.previews
 from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 from arm.props_traits_props import *
@@ -69,24 +70,50 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
 
 class ArmTraitList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        # We could write some code to decide which icon to use here...
-        custom_icon = 'OBJECT_DATAMODE'
+        custom_icon = "NONE"
+        custom_icon_value = 0
+        if item.type_prop == "Haxe Script":
+            custom_icon_value = icons_dict["haxe"].icon_id
+        elif item.type_prop == "WebAssembly":
+            custom_icon_value = icons_dict["wasm"].icon_id
+        elif item.type_prop == "UI Canvas":
+            custom_icon = "UI"
+        elif item.type_prop == "Bundled Script":
+            custom_icon = 'OBJECT_DATAMODE'
+        elif item.type_prop == "Logic Nodes":
+            custom_icon = 'NODETREE'
 
         # Make sure your code supports all 3 layout types
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             layout.prop(item, "enabled_prop")
-            layout.label(text=item.name, icon=custom_icon)
+            layout.label(text=item.name, icon=custom_icon, icon_value=custom_icon_value)
 
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
-            layout.label(text="", icon = custom_icon)
+            layout.label(text="", icon=custom_icon, icon_value=custom_icon_value)
 
 class ArmTraitListNewItem(bpy.types.Operator):
     # Add a new item to the list
     bl_idname = "arm_traitlist.new_item"
-    bl_label = "Add a new item"
+    bl_label = "New"
 
     is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
+    type_prop = bpy.props.EnumProperty(
+        items = [('Haxe Script', 'Haxe', 'Haxe Script'),
+                 ('WebAssembly', 'Wasm', 'WebAssembly'),
+                 ('UI Canvas', 'UI', 'UI Canvas'),
+                 ('Bundled Script', 'Bundled', 'Bundled Script'),
+                 ('Logic Nodes', 'Nodes', 'Logic Nodes')
+                 ],
+        name = "Type")
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def draw(self,context):
+        layout = self.layout
+        layout.prop(self, "type_prop", expand=True)
 
     def execute(self, context):
         if self.is_object:
@@ -94,10 +121,10 @@ class ArmTraitListNewItem(bpy.types.Operator):
         else:
             obj = bpy.context.scene
         trait = obj.arm_traitlist.add()
+        trait.type_prop = self.type_prop
         obj.arm_traitlist_index = len(obj.arm_traitlist) - 1
         trigger_recompile(None, None)
         return{'FINISHED'}
-
 
 class ArmTraitListDeleteItem(bpy.types.Operator):
     # Delete the selected item from the list
@@ -449,9 +476,6 @@ def draw_traits(layout, obj, is_object):
     if obj.arm_traitlist_index >= 0 and len(obj.arm_traitlist) > 0:
         item = obj.arm_traitlist[obj.arm_traitlist_index]
         # Default props
-        row = layout.row()
-        row.prop(item, "type_prop", expand=True)
-
         if item.type_prop == 'Haxe Script' or item.type_prop == 'Bundled Script':
             item.name = item.class_name_prop
             row = layout.row()
@@ -531,7 +555,8 @@ def draw_traits(layout, obj, is_object):
             row = layout.row()
             row.prop_search(item, "nodes_name_prop", bpy.data, "node_groups", text="Tree")
 
-def register():  
+def register():
+    global icons_dict
     bpy.utils.register_class(ArmTraitListItem)
     bpy.utils.register_class(ArmTraitList)
     bpy.utils.register_class(ArmTraitListNewItem)
@@ -552,8 +577,13 @@ def register():
     bpy.types.Object.arm_traitlist_index = bpy.props.IntProperty(name="Index for arm_traitlist", default=0)
     bpy.types.Scene.arm_traitlist = bpy.props.CollectionProperty(type=ArmTraitListItem)
     bpy.types.Scene.arm_traitlist_index = bpy.props.IntProperty(name="Index for arm_traitlist", default=0)
+    icons_dict = bpy.utils.previews.new()
+    icons_dir = os.path.join(os.path.dirname(__file__), "custom_icons")
+    icons_dict.load("haxe", os.path.join(icons_dir, "haxe.png"), 'IMAGE')
+    icons_dict.load("wasm", os.path.join(icons_dir, "wasm.png"), 'IMAGE')
 
 def unregister():
+    global icons_dict
     bpy.utils.unregister_class(ArmTraitListItem)
     bpy.utils.unregister_class(ArmTraitList)
     bpy.utils.unregister_class(ArmTraitListNewItem)
@@ -570,3 +600,4 @@ def unregister():
     bpy.utils.unregister_class(ArmRefreshCanvasListButton)
     bpy.utils.unregister_class(ArmTraitsPanel)
     bpy.utils.unregister_class(ArmSceneTraitsPanel)
+    bpy.utils.previews.remove(icons_dict)
