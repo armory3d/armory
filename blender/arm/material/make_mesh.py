@@ -572,7 +572,19 @@ def make_forward_solid(con_mesh):
     frag.write('float metallic;')
     frag.write('float occlusion;')
     frag.write('float specular;')
-    cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False, basecol_only=True)
+
+    arm_discard = mat_state.material.arm_discard
+    blend = mat_state.material.arm_blending
+    is_transluc = mat_utils.is_transluc(mat_state.material)
+    parse_opacity = (blend and is_transluc) or arm_discard
+    if parse_opacity:
+        frag.write('float opacity;')
+    
+    cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False, basecol_only=True)
+
+    if arm_discard:
+        opac = mat_state.material.arm_discard_opacity
+        frag.write('if (opacity < {0}) discard;'.format(opac))
 
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
@@ -585,7 +597,10 @@ def make_forward_solid(con_mesh):
     write_norpos(con_mesh, vert, write_nor=False)
 
     frag.add_out('vec4 fragColor')
-    frag.write('fragColor = vec4(basecol, 1.0);')
+    if blend and parse_opacity:
+        frag.write('fragColor = vec4(basecol, opacity);')
+    else:
+        frag.write('fragColor = vec4(basecol, 1.0);')
 
     if '_LDR' in wrd.world_defs:
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')

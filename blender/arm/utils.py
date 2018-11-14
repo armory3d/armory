@@ -563,7 +563,7 @@ def get_kode_path():
 def kode_studio(hx_path=None):
     project_path = arm.utils.get_fp()
     kode_path = get_kode_path()
-    if os.path.exists(kode_path) and get_code_editor() == 'kodestudio':
+    if os.path.exists(kode_path):
         if arm.utils.get_os() == 'win':
             kode_studio_mklink_win(get_sdk_path())
             args = [kode_path, arm.utils.get_fp()]
