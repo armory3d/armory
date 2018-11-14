@@ -971,9 +971,13 @@ def parse_value(node, socket):
             return 'distance(eye, wposition)'
 
     elif node.type == 'FRESNEL':
+        curshader.add_function(c_functions.str_fresnel)
         ior = parse_value_input(node.inputs[0])
-        #nor = parse_vectorZ_input(node.inputs[1])
-        return 'pow(1.0 - dotNV, 7.25 / {0})'.format(ior) # max(dotNV, 0.0)
+        if node.inputs[1].is_linked:
+            dotnv = 'dot({0}, vVec)'.format(parse_vector_input(node.inputs[1]))
+        else:
+            dotnv = 'dotNV'
+        return 'fresnel({0}, {1})'.format(ior, dotnv)
 
     elif node.type == 'NEW_GEOMETRY':
         if socket == node.outputs[6]: # Backfacing
@@ -989,11 +993,15 @@ def parse_value(node, socket):
 
     elif node.type == 'LAYER_WEIGHT':
         blend = parse_value_input(node.inputs[0])
-        # nor = parse_vector_input(node.inputs[1])
+        if node.inputs[1].is_linked:
+            dotnv = 'dot({0}, vVec)'.format(parse_vector_input(node.inputs[1]))
+        else:
+            dotnv = 'dotNV'
         if socket == node.outputs[0]: # Fresnel
-            return 'clamp(pow(1.0 - dotNV, (1.0 - {0}) * 10.0), 0.0, 1.0)'.format(blend)
+            curshader.add_function(c_functions.str_fresnel)
+            return 'fresnel(1.0 / (1.0 - {0}), {1})'.format(blend, dotnv)
         elif socket == node.outputs[1]: # Facing
-            return '((1.0 - dotNV) * {0})'.format(blend)
+            return '(1.0 - pow({0}, ({1} < 0.5) ? 2.0 * {1} : 0.5 / (1.0 - {1})))'.format(dotnv, blend)
 
     elif node.type == 'LIGHT_PATH':
         if socket == node.outputs[0]: # Is Camera Ray

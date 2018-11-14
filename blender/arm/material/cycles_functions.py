@@ -200,3 +200,17 @@ vec3 brightcontrast(const vec3 col, const float bright, const float contr) {
     return max(a * col + b, 0.0);
 }
 """
+
+# https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
+# dielectric-dielectric
+# approx pow(1.0 - dotNV, 7.25 / ior)
+str_fresnel = """
+float fresnel(float eta, float c) {
+    float g = eta * eta - 1.0 + c * c;
+    if (g < 0.0) return 1.0;
+    g = sqrt(g);
+    float a = (g - c) / (g + c);
+    float b = ((g + c) * c - 1.0) / ((g - c) * c + 1.0);
+    return 0.5 * a * a * (1.0 + b * b);
+}
+"""
