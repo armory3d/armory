@@ -1,7 +1,5 @@
 package armory.logicnode;
 
-import iron.object.Object;
-
 class SetHaxePropertyNode extends LogicNode {
 
 	public function new(tree:LogicTree) {
@@ -9,7 +7,7 @@ class SetHaxePropertyNode extends LogicNode {
 	}
 
 	override function run(from:Int) {
-		var object:Object = inputs[1].get();
+		var object:Dynamic = inputs[1].get();
 		var property:String = inputs[2].get();
 		var value:Dynamic = inputs[3].get();
 		

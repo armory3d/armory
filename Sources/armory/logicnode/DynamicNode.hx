@@ -6,7 +6,7 @@ class DynamicNode extends LogicNode {
 
 	public function new(tree:LogicTree, value:Dynamic = null) {
 		super(tree);
-		this.value = value;
+		this.value = value == null ? {} : value;
 	}
 
 	override function get(from:Int):Dynamic {

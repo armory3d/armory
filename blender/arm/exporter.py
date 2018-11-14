@@ -479,13 +479,10 @@ class ArmoryExporter:
             # If there's no keyframe animation at all, then write the object transform as a single 4x4 matrix.
             # We might still be exporting sampled animation below.
             o['transform'] = {}
-
-            if sampledAnimation:
-                o['transform']['target'] = "transform"
-
             o['transform']['values'] = self.write_matrix(bobject.matrix_local)
 
             if sampledAnimation:
+                o['transform']['target'] = "transform"
                 self.export_object_sampled_animation(bobject, scene, o)
         else: # Animated
             structFlag = False

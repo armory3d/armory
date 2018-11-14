@@ -10,7 +10,7 @@ class GetHaxePropertyNode(Node, ArmLogicTreeNode):
     bl_icon = 'GAME'
 
     def init(self, context):
-        self.inputs.new('ArmNodeSocketObject', 'Object')
+        self.inputs.new('NodeSocketShader', 'Dynamic')
         self.inputs.new('NodeSocketString', 'Property')
         self.outputs.new('NodeSocketShader', 'Value')
 

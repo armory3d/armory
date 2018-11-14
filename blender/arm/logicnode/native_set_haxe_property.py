@@ -11,7 +11,7 @@ class SetHaxePropertyNode(Node, ArmLogicTreeNode):
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('ArmNodeSocketObject', 'Object')
+        self.inputs.new('NodeSocketShader', 'Dynamic')
         self.inputs.new('NodeSocketString', 'Property')
         self.inputs.new('NodeSocketShader', 'Value')
         self.outputs.new('ArmNodeSocketAction', 'Out')
