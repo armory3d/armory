@@ -472,11 +472,27 @@ def make_forward_mobile(con_mesh):
     frag.write('float metallic;')
     frag.write('float occlusion;')
     frag.write('float specular;')
-    cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False)
+
+    arm_discard = mat_state.material.arm_discard
+    blend = mat_state.material.arm_blending
+    is_transluc = mat_utils.is_transluc(mat_state.material)
+    parse_opacity = (blend and is_transluc) or arm_discard
+    if parse_opacity:
+        frag.write('float opacity;')
+
+    cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False)
+
+    if arm_discard:
+        opac = mat_state.material.arm_discard_opacity
+        frag.write('if (opacity < {0}) discard;'.format(opac))
 
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
-        vert.write_attrib('texCoord = tex;')
+        if mat_state.material.arm_tilesheet_mat:
+            vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
+            vert.write('texCoord = tex + tilesheetOffset;')
+        else:
+            vert.write('texCoord = tex;')
 
     if con_mesh.is_elem('col'):
         vert.add_out('vec3 vcolor')
@@ -530,8 +546,10 @@ def make_forward_mobile(con_mesh):
     frag.add_out('vec4 fragColor')
     blend = mat_state.material.arm_blending
     if blend:
-        # frag.write('fragColor = vec4(basecol * visibility, 1.0);')
-        frag.write('fragColor = vec4(basecol, 1.0);')
+        if parse_opacity:
+            frag.write('fragColor = vec4(basecol, opacity);')
+        else:
+            frag.write('fragColor = vec4(basecol, 1.0);')
         return
 
     frag.write('vec3 direct = basecol * dotNL * lightColor;')
@@ -584,7 +602,11 @@ def make_forward_solid(con_mesh):
 
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
-        vert.write_attrib('texCoord = tex;')
+        if mat_state.material.arm_tilesheet_mat:
+            vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
+            vert.write('texCoord = tex + tilesheetOffset;')
+        else:
+            vert.write('texCoord = tex;')
 
     if con_mesh.is_elem('col'):
         vert.add_out('vec3 vcolor')
