@@ -17,13 +17,11 @@ class SendEventNode extends LogicNode {
 
 		if (object == null) return null;
 		
-		// if (entries == null) {
-			var all = Event.get(name);
-			if (all != null) {
-				entries = [];
-				for (e in all) if (e.mask == object.uid) entries.push(e);
-			}
-		// }
+		var all = Event.get(name);
+		if (all != null) {
+			entries = [];
+			for (e in all) if (e.mask == object.uid) entries.push(e);
+		}
 		if (entries == null) return;
 		for (e in entries) e.onEvent();
 
