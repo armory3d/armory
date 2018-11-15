@@ -1851,6 +1851,17 @@ class ArmoryExporter:
             o['near_plane'] = (d * (1.0 - k)) / (2.0 * k)
             o['far_plane'] = k * o['near_plane']
 
+    def extract_ortho(self, o, proj):
+        # left, right, bottom, top
+        o['ortho'] = [-(1 + proj[3][0]) / proj[0][0], \
+                       (1 - proj[3][0]) / proj[0][0], \
+                      -(1 + proj[3][1]) / proj[1][1], \
+                       (1 - proj[3][1]) / proj[1][1]]
+        o['near_plane'] = (1 + proj[3][2]) / proj[2][2]
+        o['far_plane'] = -(1 - proj[3][2]) / proj[2][2]
+        o['near_plane'] *= 2
+        o['far_plane'] *= 2
+
     def export_camera(self, objectRef):
         o = {}
         o['name'] = objectRef[1]["structName"]
@@ -1871,18 +1882,23 @@ class ArmoryExporter:
                 render.resolution_y,
                 render.pixel_aspect_x,
                 render.pixel_aspect_y)
-        self.extract_projection(o, proj)
+
+        if objref.type == 'PERSP':
+            self.extract_projection(o, proj)
+        else:
+            # o['ortho_scale'] = objref.ortho_scale / (7.31429 / 2)
+            # o['near_plane'] = objref.clip_start
+            # o['far_plane'] = objref.clip_end
+            self.extract_ortho(o, proj)
 
         wrd = bpy.data.worlds['Arm']
         if wrd.arm_play_camera != 'Scene':
             proj, is_persp = self.get_viewport_projection_matrix()
-            if proj != None and is_persp:
-                self.extract_projection(o, proj, with_planes=False)
-
-        if objref.type != 'PERSP':
-            o['ortho_scale'] = objref.ortho_scale / (7.31429 / 2)
-            o['near_plane'] = objref.clip_start
-            o['far_plane'] = objref.clip_end
+            if proj != None:
+                if is_persp:
+                    self.extract_projection(o, proj, with_planes=False)
+                else:
+                    self.extract_ortho(o, proj)
 
         o['frustum_culling'] = objref.arm_frustum_culling
         o['clear_color'] = self.get_camera_clear_color()
