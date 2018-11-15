@@ -453,7 +453,7 @@ def build_success():
         shutil.rmtree(target_dir, ignore_errors=True)
         os.rename(src_dir, target_dir)
 
-        if wrd.arm_modding_mode == "Mod" and not state.is_publish and wrd.arm_play_runtime == 'Krom':
+        if wrd.arm_modding_mode == "Mod" and not state.is_publish and wrd.arm_runtime == 'Krom':
             # Copy the mod dir to parent game mod dir
             src_dir = os.path.join(arm.utils.get_fp_build(), 'debug/krom')
             game_blend_path = Path(wrd.arm_modding_game_blend.replace('//', ''))
