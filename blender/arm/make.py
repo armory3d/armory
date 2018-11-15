@@ -65,7 +65,7 @@ def export_data(fp, sdk_path):
 
     # Clean compiled variants if cache is disabled
     build_dir = arm.utils.get_fp_build()
-    if wrd.arm_cache_shaders == False:
+    if wrd.arm_cache_build == False:
         if os.path.isdir(build_dir + '/debug/html5-resources'):
             shutil.rmtree(build_dir + '/debug/html5-resources', onerror=remove_readonly)
         if os.path.isdir(build_dir + '/krom-resources'):
@@ -405,7 +405,7 @@ def play(is_viewport):
     build(target=runtime_to_target(is_viewport), is_play=True, is_viewport=is_viewport)
 
     khajs_path = get_khajs_path(is_viewport, state.target)
-    if not wrd.arm_cache_compiler or \
+    if not wrd.arm_cache_build or \
        not os.path.isfile(khajs_path) or \
        assets.khafile_defs_last != assets.khafile_defs or \
        state.last_target != state.target or \

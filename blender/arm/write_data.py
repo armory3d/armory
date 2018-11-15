@@ -153,7 +153,7 @@ project.addSources('Sources');
         shaderload = state.target == 'krom' or state.target == 'html5'
         if arm.utils.get_player_gapi() != 'opengl': # TODO: shader from source for d3d11
             shaderload = False
-        if wrd.arm_cache_compiler and shaderload and not is_publish:
+        if wrd.arm_cache_build and shaderload and not is_publish:
             # Load shaders manually
             assets.add_khafile_def('arm_shaderload')
 
