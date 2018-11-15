@@ -8,44 +8,8 @@ from bpy.props import *
 
 def update_preset(self, context):
     rpdat = arm.utils.get_rp()
-    if self.rp_preset == 'Low':
-        rpdat.rp_renderer = 'Forward'
-        rpdat.rp_depthprepass = False
-        rpdat.arm_material_model = 'Full'
-        rpdat.rp_shadowmap = '1024'
-        rpdat.rp_shadowmap_cascades = '1'
-        rpdat.rp_translucency_state = 'Off'
-        rpdat.rp_overlays_state = 'Off'
-        rpdat.rp_decals_state = 'Off'
-        rpdat.rp_sss_state = 'Off'
-        rpdat.rp_blending_state = 'Off'
-        rpdat.rp_draw_order = 'Auto'
-        rpdat.rp_hdr = False
-        rpdat.rp_background = 'World'
-        rpdat.rp_stereo = False
-        # rpdat.rp_greasepencil = False
-        rpdat.rp_gi = 'Off'
-        rpdat.rp_render_to_texture = False
-        rpdat.rp_supersampling = '1'
-        rpdat.rp_antialiasing = 'Off'
-        rpdat.rp_compositornodes = False
-        rpdat.rp_volumetriclight = False
-        rpdat.rp_ssgi = 'Off'
-        rpdat.rp_ssr = False
-        rpdat.rp_dfrs = False
-        rpdat.rp_dfao = False
-        rpdat.rp_dfgi = False
-        rpdat.rp_bloom = False
-        rpdat.rp_eyeadapt = False
-        rpdat.rp_motionblur = 'Off'
-        rpdat.arm_rp_resolution = 'Display'
-        rpdat.arm_texture_filter = 'Linear'
-        rpdat.arm_diffuse_model = 'Lambert'
-        rpdat.arm_radiance = False
-        rpdat.arm_radiance_sky = False
-    elif self.rp_preset == 'Forward':
-        rpdat.rp_renderer = 'Forward'
-        rpdat.rp_depthprepass = True
+    if self.rp_preset == 'Desktop':
+        rpdat.rp_renderer = 'Deferred'
         rpdat.arm_material_model = 'Full'
         rpdat.rp_shadowmap = '1024'
         rpdat.rp_shadowmap_cascades = '4'
@@ -66,40 +30,6 @@ def update_preset(self, context):
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
         rpdat.rp_ssgi = 'SSAO'
-        rpdat.rp_ssr = True
-        rpdat.rp_dfrs = False
-        rpdat.rp_dfao = False
-        rpdat.rp_dfgi = False
-        rpdat.rp_bloom = False
-        rpdat.rp_eyeadapt = False
-        rpdat.rp_motionblur = 'Off'
-        rpdat.arm_rp_resolution = 'Display'
-        rpdat.arm_texture_filter = 'Anisotropic'
-        rpdat.arm_diffuse_model = 'Lambert'
-        rpdat.arm_radiance = True
-        rpdat.arm_radiance_sky = True
-    elif self.rp_preset == 'Deferred':
-        rpdat.rp_renderer = 'Deferred'
-        rpdat.arm_material_model = 'Full'
-        rpdat.rp_shadowmap = '1024'
-        rpdat.rp_shadowmap_cascades = '4'
-        rpdat.rp_translucency_state = 'Auto'
-        rpdat.rp_overlays_state = 'Auto'
-        rpdat.rp_decals_state = 'Auto'
-        rpdat.rp_sss_state = 'Auto'
-        rpdat.rp_blending_state = 'Auto'
-        rpdat.rp_draw_order = 'Auto'
-        rpdat.rp_hdr = True
-        rpdat.rp_background = 'World'
-        rpdat.rp_stereo = False
-        # rpdat.rp_greasepencil = False
-        rpdat.rp_gi = 'Off'
-        rpdat.rp_render_to_texture = True
-        rpdat.rp_supersampling = '1'
-        rpdat.rp_antialiasing = 'FXAA'
-        rpdat.rp_compositornodes = True
-        rpdat.rp_volumetriclight = False
-        rpdat.rp_ssgi = 'SSAO'
         rpdat.rp_ssr = False
         rpdat.rp_dfrs = False
         rpdat.rp_dfao = False
@@ -110,43 +40,6 @@ def update_preset(self, context):
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Anisotropic'
         rpdat.arm_diffuse_model = 'Lambert'
-        rpdat.arm_radiance = True
-        rpdat.arm_radiance_sky = True
-    elif self.rp_preset == 'Max (Render)':
-        rpdat.rp_renderer = 'Deferred'
-        rpdat.rp_shadowmap = '8192'
-        rpdat.rp_shadowmap_cascades = '1'
-        rpdat.rp_translucency_state = 'Auto'
-        rpdat.rp_overlays_state = 'Auto'
-        rpdat.rp_decals_state = 'Auto'
-        rpdat.rp_sss_state = 'Auto'
-        rpdat.rp_blending_state = 'Auto'
-        rpdat.rp_draw_order = 'Auto'
-        rpdat.rp_hdr = True
-        rpdat.rp_background = 'World'
-        rpdat.rp_stereo = False
-        # rpdat.rp_greasepencil = False
-        rpdat.rp_gi = 'Voxel GI'
-        rpdat.rp_voxelgi_resolution = '256'
-        rpdat.rp_voxelgi_emission = True
-        rpdat.rp_render_to_texture = True
-        rpdat.rp_supersampling = '2'
-        rpdat.rp_antialiasing = 'TAA'
-        rpdat.rp_compositornodes = True
-        rpdat.rp_volumetriclight = False
-        rpdat.rp_ssgi = 'RTGI'
-        rpdat.rp_ssr = True
-        rpdat.arm_ssr_half_res = False
-        rpdat.rp_dfrs = False
-        rpdat.rp_dfao = False
-        rpdat.rp_dfgi = False
-        rpdat.rp_bloom = True
-        rpdat.rp_eyeadapt = False
-        rpdat.rp_motionblur = 'Off'
-        rpdat.arm_rp_resolution = 'Display'
-        rpdat.arm_material_model = 'Full'
-        rpdat.arm_texture_filter = 'Anisotropic'
-        rpdat.arm_diffuse_model = 'OrenNayar'
         rpdat.arm_radiance = True
         rpdat.arm_radiance_sky = True
     elif self.rp_preset == 'VR':
@@ -219,9 +112,9 @@ def update_preset(self, context):
         rpdat.arm_diffuse_model = 'Lambert'
         rpdat.arm_radiance = False
         rpdat.arm_radiance_sky = False
-    elif self.rp_preset == 'Max (Game)':
+    elif self.rp_preset == 'Max':
         rpdat.rp_renderer = 'Deferred'
-        rpdat.rp_shadowmap = '4096'
+        rpdat.rp_shadowmap = '8192'
         rpdat.rp_shadowmap_cascades = '4'
         rpdat.rp_translucency_state = 'Auto'
         rpdat.rp_overlays_state = 'Auto'
@@ -258,7 +151,7 @@ def update_preset(self, context):
         rpdat.arm_diffuse_model = 'Lambert'
         rpdat.arm_radiance = True
         rpdat.arm_radiance_sky = True
-    elif self.rp_preset == 'Lightmap':
+    elif self.rp_preset == '2D/Baked':
         rpdat.rp_renderer = 'Forward'
         rpdat.rp_depthprepass = False
         rpdat.arm_material_model = 'Solid'
@@ -672,14 +565,22 @@ class ArmRPList(bpy.types.UIList):
 class ArmRPListNewItem(bpy.types.Operator):
     # Add a new item to the list
     bl_idname = "arm_rplist.new_item"
-    bl_label = "Add a new item"
+    bl_label = "New"
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def draw(self,context):
+        layout = self.layout
+        layout.prop(bpy.data.worlds['Arm'], 'rp_preset')
 
     def execute(self, context):
-        mdata = bpy.data.worlds['Arm']
-        mdata.arm_rplist.add()
-        mdata.arm_rplist_index = len(mdata.arm_rplist) - 1
+        wrd = bpy.data.worlds['Arm']
+        wrd.arm_rplist.add()
+        wrd.arm_rplist_index = len(wrd.arm_rplist) - 1
+        update_preset(wrd, context)
         return{'FINISHED'}
-
 
 class ArmRPListDeleteItem(bpy.types.Operator):
     # Delete the selected item from the list

@@ -221,16 +221,13 @@ def init_properties():
     # Render path generator
     bpy.types.World.rp_search = StringProperty(name="Search", default='')
     bpy.types.World.rp_preset = EnumProperty(
-        items=[('Low', 'Low', 'Low'),
-               ('VR', 'VR', 'VR'),
+        items=[('Desktop', 'Desktop', 'Desktop'),
                ('Mobile', 'Mobile', 'Mobile'),
-               ('Forward', 'Forward', 'Forward'),
-               ('Deferred', 'Deferred', 'Deferred'),
-               ('Max (Game)', 'Max (Game)', 'Max (Game)'),
-               ('Max (Render)', 'Max (Render)', 'Max (Render)'),
-               ('Lightmap', 'Lightmap', 'Lightmap'),
+               ('VR', 'VR', 'VR'),
+               ('Max', 'Max', 'Max'),
+               ('2D/Baked', '2D/Baked', '2D/Baked'),
                ],
-        name="Preset", description="Render path preset", default='Deferred', update=props_renderpath.update_preset)
+        name="Preset", description="Render path preset", default='Desktop')
     bpy.types.World.arm_envtex_name = StringProperty(name="Environment Texture", default='')
     bpy.types.World.arm_envtex_irr_name = StringProperty(name="Environment Irradiance", default='')
     bpy.types.World.arm_envtex_num_mips = IntProperty(name="Number of mips", default=0)
