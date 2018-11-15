@@ -653,6 +653,53 @@ class ArmRenderPathPanel(bpy.types.Panel):
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
 
+    def prop(self, layout, rpdat, p, expand=False, text=None):
+        wrd = bpy.data.worlds['Arm']
+        if wrd.rp_search == '' or wrd.rp_search.lower() in p.lower():
+            if text != None:
+                layout.prop(rpdat, p, expand=expand, text=text)
+            else:
+                layout.prop(rpdat, p, expand=expand)
+
+    def label(self, layout, text=''):
+        wrd = bpy.data.worlds['Arm']
+        if wrd.rp_search == '' or wrd.rp_search.lower() in text.lower():
+            layout.label(text)
+
+    def box(self, layout, enabled=True):
+        wrd = bpy.data.worlds['Arm']
+        if wrd.rp_search == '':
+            box = layout.box().column()
+            box.enabled = enabled
+            return box
+        else:
+            return layout
+
+    def row(self, layout, align=False, enabled=True, alignment=None):
+        wrd = bpy.data.worlds['Arm']
+        if wrd.rp_search == '':
+            row = layout.row(align=align)
+            row.enabled = enabled
+            if alignment != None:
+                row.alignment = alignment
+            return row
+        else:
+            return layout
+
+    def column(self, layout, align=False, enabled=True):
+        wrd = bpy.data.worlds['Arm']
+        if wrd.rp_search == '':
+            col = layout.column(align=align)
+            col.enabled = enabled
+            return col
+        else:
+            return layout
+
+    def separator(self, layout):
+        wrd = bpy.data.worlds['Arm']
+        if wrd.rp_search == '':
+            layout.separator()
+
     def draw(self, context):
         layout = self.layout
         wrd = bpy.data.worlds['Arm']
@@ -681,279 +728,233 @@ class ArmRenderPathPanel(bpy.types.Panel):
                 arm.api.drivers[rpdat.rp_driver]['draw_props'](layout)
                 return
         
-        layout.prop(wrd, "rp_preset")
-        # layout.prop(wrd, "rp_search", icon="VIEWZOOM")
+        layout.prop(wrd, 'rp_search', icon='VIEWZOOM')
 
-        layout.label(text='Renderer')
-        box = layout.box().column()
-        row = box.row()
-        row.prop(rpdat, "rp_renderer", expand=True)
-        col = box.column()
-        col.enabled = rpdat.rp_renderer == 'Forward'
-        col.prop(rpdat, 'rp_depthprepass')
-        col.prop(rpdat, "arm_material_model")
-        box.prop(rpdat, "rp_translucency_state")
-        box.prop(rpdat, "rp_overlays_state")
-        box.prop(rpdat, "rp_decals_state")
-        box.prop(rpdat, "rp_blending_state")
-        box.prop(rpdat, "rp_draw_order")
-        box.prop(rpdat, 'arm_samples_per_pixel')
-        box.prop(rpdat, 'arm_texture_filter')
-        box.prop(rpdat, "arm_diffuse_model")
-        box.prop(rpdat, "rp_sss_state")
-        col = box.column()
-        col.enabled = rpdat.rp_sss_state != 'Off'
-        col.prop(rpdat, 'arm_sss_width')
-        box.prop(rpdat, 'arm_rp_displacement')
+        self.label(layout, text='Renderer')
+        box = self.box(layout)
+        row = self.row(box)
+        self.prop(row, rpdat, 'rp_renderer', expand=True)
+        col = self.column(box, enabled=(rpdat.rp_renderer == 'Forward'))
+        self.prop(col, rpdat, 'rp_depthprepass')
+        self.prop(col, rpdat, 'arm_material_model')
+        self.prop(box, rpdat, 'rp_translucency_state')
+        self.prop(box, rpdat, 'rp_overlays_state')
+        self.prop(box, rpdat, 'rp_decals_state')
+        self.prop(box, rpdat, 'rp_blending_state')
+        self.prop(box, rpdat, 'rp_draw_order')
+        self.prop(box, rpdat, 'arm_samples_per_pixel')
+        self.prop(box, rpdat, 'arm_texture_filter')
+        self.prop(box, rpdat, 'arm_diffuse_model')
+        self.prop(box, rpdat, 'rp_sss_state')
+        col = self.column(box, enabled=(rpdat.rp_sss_state != 'Off'))
+        self.prop(col, rpdat, 'arm_sss_width')
+        self.prop(box, rpdat, 'arm_rp_displacement')
         if rpdat.arm_rp_displacement == 'Tessellation':
-            row = box.row()
-            column = row.column()
-            column.label(text='Mesh')
-            columnb = column.column(align=True)
-            columnb.prop(rpdat, 'arm_tess_mesh_inner')
-            columnb.prop(rpdat, 'arm_tess_mesh_outer')
+            row = self.row(box)
+            column = self.column(row)
+            self.label(column, text='Mesh')
+            columnb = self.column(column, align=True)
+            self.prop(columnb, rpdat, 'arm_tess_mesh_inner')
+            self.prop(columnb, rpdat, 'arm_tess_mesh_outer')
 
-            column = row.column()
-            column.label(text='Shadow')
-            columnb = column.column(align=True)
-            columnb.prop(rpdat, 'arm_tess_shadows_inner')
-            columnb.prop(rpdat, 'arm_tess_shadows_outer')  
+            column = self.column(row)
+            self.label(column, text='Shadow')
+            columnb = self.column(column, align=True)
+            self.prop(columnb, rpdat, 'arm_tess_shadows_inner')
+            self.prop(columnb, rpdat, 'arm_tess_shadows_outer')  
 
-        box.prop(rpdat, 'arm_particles')
-        box.prop(rpdat, 'arm_skin')
-        row = box.row()
-        row.enabled = rpdat.arm_skin.startswith('GPU')
-        row.prop(rpdat, 'arm_skin_max_bones_auto')
-        row = box.row()
-        row.enabled = not rpdat.arm_skin_max_bones_auto
-        row.prop(rpdat, 'arm_skin_max_bones')
-        row = box.row()
-        row.prop(rpdat, "rp_hdr")
-        row.prop(rpdat, "rp_stereo")
-        row.prop(rpdat, 'arm_culling')
+        self.prop(box, rpdat, 'arm_particles')
+        self.prop(box, rpdat, 'arm_skin')
+        row = self.row(box, enabled=(rpdat.arm_skin.startswith('GPU')))
+        self.prop(row, rpdat, 'arm_skin_max_bones_auto')
+        row = self.row(box, enabled=(not rpdat.arm_skin_max_bones_auto))
+        self.prop(row, rpdat, 'arm_skin_max_bones')
+        row = self.row(box)
+        self.prop(row, rpdat, "rp_hdr")
+        self.prop(row, rpdat, "rp_stereo")
+        self.prop(row, rpdat, 'arm_culling')
         
 
-        layout.label(text='Shadows')
-        box = layout.box().column()
-        box.prop(rpdat, 'rp_shadowmap')
-        col = box.column()
-        col.enabled = rpdat.rp_shadowmap != 'Off'
-        col.prop(rpdat, 'rp_shadowmap_cascades')
-        col2 = col.column()
-        col2.enabled = rpdat.rp_shadowmap_cascades != '1'
-        col2.prop(rpdat, 'arm_shadowmap_split')
-        col.prop(rpdat, 'arm_shadowmap_bounds')
-        col.prop(rpdat, 'arm_soft_shadows')
-        col2 = col.column()
-        col2.enabled = rpdat.arm_soft_shadows != 'Off'
-        row = col2.row(align=True)
-        row.alignment = 'EXPAND'
-        row.prop(rpdat, 'arm_soft_shadows_penumbra')
-        row.prop(rpdat, 'arm_soft_shadows_distance')
-        col.prop(rpdat, 'arm_pcfsize')
+        self.label(layout, text='Shadows')
+        box = self.box(layout)
+        self.prop(box, rpdat, 'rp_shadowmap')
+        col = self.column(box, enabled=(rpdat.rp_shadowmap != 'Off'))
+        self.prop(col, rpdat, 'rp_shadowmap_cascades')
+        col2 = self.column(col, enabled=(rpdat.rp_shadowmap_cascades != '1'))
+        self.prop(col2, rpdat, 'arm_shadowmap_split')
+        self.prop(col, rpdat, 'arm_shadowmap_bounds')
+        self.prop(col, rpdat, 'arm_soft_shadows')
+        col2 = self.column(col, enabled=(rpdat.arm_soft_shadows != 'Off'))
+        row = self.row(col2, align=True, alignment='EXPAND')
+        self.prop(row, rpdat, 'arm_soft_shadows_penumbra')
+        self.prop(row, rpdat, 'arm_soft_shadows_distance')
+        self.prop(col, rpdat, 'arm_pcfsize')
 
 
-        layout.label(text='Global Illumination')
-        box = layout.box().column()
-        row = box.row()
-        row.prop(rpdat, 'rp_gi', expand=True)
-        col = box.column()
-        col.enabled = rpdat.rp_gi != 'Off'
-        col2 = col.column()
-        col2.enabled = rpdat.rp_gi == 'Voxel GI'
-        col2.prop(rpdat, 'arm_voxelgi_bounces')
-        row2 = col2.row()
-        row2.prop(rpdat, 'rp_voxelgi_relight')
-        row2.prop(rpdat, 'rp_voxelgi_hdr', text='HDR')
-        row2 = col2.row()
-        row2.prop(rpdat, 'arm_voxelgi_refraction', text='Refraction')
-        row2.prop(rpdat, 'arm_voxelgi_shadows', text='Shadows')
-        col.prop(rpdat, 'arm_voxelgi_cones')
-        col.prop(rpdat, 'rp_voxelgi_resolution')
-        col.prop(rpdat, 'rp_voxelgi_resolution_z')
-        col.prop(rpdat, 'arm_voxelgi_dimensions')
-        col.prop(rpdat, 'arm_voxelgi_revoxelize')
-        row2 = col.row()
-        row2.enabled = rpdat.arm_voxelgi_revoxelize
-        row2.prop(rpdat, 'arm_voxelgi_camera')
-        row2.prop(rpdat, 'arm_voxelgi_temporal')
-        col.label(text="Light")
-        row = col.row(align=True)
-        row.alignment = 'EXPAND'
-        row.enabled = rpdat.rp_gi == 'Voxel GI'
-        row.prop(rpdat, 'arm_voxelgi_diff')
-        row.prop(rpdat, 'arm_voxelgi_spec')
-        row = col.row(align=True)
-        row.alignment = 'EXPAND'
-        row.prop(rpdat, 'arm_voxelgi_occ')
-        row.prop(rpdat, 'arm_voxelgi_env')
-        col.label(text="Ray")
-        row = col.row(align=True)
-        row.alignment = 'EXPAND'
-        row.prop(rpdat, 'arm_voxelgi_step')
-        row.prop(rpdat, 'arm_voxelgi_range')
-        col.prop(rpdat, 'arm_voxelgi_offset')
+        self.label(layout, text='Global Illumination')
+        box = self.box(layout)
+        row = self.row(box)
+        self.prop(row, rpdat, 'rp_gi', expand=True)
+        col = self.column(box, enabled=(rpdat.rp_gi != 'Off'))
+        col2 = self.column(col, enabled=(rpdat.rp_gi == 'Voxel GI'))
+        self.prop(col2, rpdat, 'arm_voxelgi_bounces')
+        row2 = self.row(col2)
+        self.prop(row2, rpdat, 'rp_voxelgi_relight')
+        self.prop(row2, rpdat, 'rp_voxelgi_hdr', text='HDR')
+        row2 = self.row(col2)
+        self.prop(row2, rpdat, 'arm_voxelgi_refraction', text='Refraction')
+        self.prop(row2, rpdat, 'arm_voxelgi_shadows', text='Shadows')
+        self.prop(col, rpdat, 'arm_voxelgi_cones')
+        self.prop(col, rpdat, 'rp_voxelgi_resolution')
+        self.prop(col, rpdat, 'rp_voxelgi_resolution_z')
+        self.prop(col, rpdat, 'arm_voxelgi_dimensions')
+        self.prop(col, rpdat, 'arm_voxelgi_revoxelize')
+        row2 = self.row(col, enabled=(rpdat.arm_voxelgi_revoxelize))
+        self.prop(row2, rpdat, 'arm_voxelgi_camera')
+        self.prop(row2, rpdat, 'arm_voxelgi_temporal')
+        self.label(col, text="Light")
+        row = self.row(col, align=True, enabled=(rpdat.rp_gi == 'Voxel GI'), alignment='EXPAND')
+        self.prop(row, rpdat, 'arm_voxelgi_diff')
+        self.prop(row, rpdat, 'arm_voxelgi_spec')
+        row = self.row(col, align=True, alignment='EXPAND')
+        self.prop(row, rpdat, 'arm_voxelgi_occ')
+        self.prop(row, rpdat, 'arm_voxelgi_env')
+        self.label(col, text="Ray")
+        row = self.row(col, align=True, alignment='EXPAND')
+        self.prop(row, rpdat, 'arm_voxelgi_step')
+        self.prop(row, rpdat, 'arm_voxelgi_range')
+        self.prop(col, rpdat, 'arm_voxelgi_offset')
 
-        layout.label(text='World')
-        box = layout.box().column()
-        row = box.row()
-        row.prop(rpdat, "rp_background", expand=True)
-        row = box.row()
-        row.prop(rpdat, 'arm_irradiance')
-        col = row.column()
-        col.enabled = rpdat.arm_irradiance
-        col.prop(rpdat, 'arm_radiance')
-        row = box.row()
-        row.enabled = rpdat.arm_irradiance
-        col = row.column()
-        col.prop(rpdat, 'arm_radiance_sky')
-        colb = row.column()
-        colb.enabled = rpdat.arm_radiance
-        colb.prop(rpdat, 'arm_radiance_size')
-        box.prop(rpdat, 'arm_clouds')
-        col = box.column()
-        col.enabled = rpdat.arm_clouds
-        row = col.row(align=True)
-        row.alignment = 'EXPAND'
-        row.prop(rpdat, 'arm_clouds_density')
-        row.prop(rpdat, 'arm_clouds_size')
-        row = col.row(align=True)
-        row.alignment = 'EXPAND'
-        row.prop(rpdat, 'arm_clouds_lower')
-        row.prop(rpdat, 'arm_clouds_upper')
-        row = col.row(align=True)
-        row.alignment = 'EXPAND'
-        row.prop(rpdat, 'arm_clouds_precipitation')
-        row.prop(rpdat, 'arm_clouds_eccentricity')
-        col.prop(rpdat, 'arm_clouds_secondary')
-        row = col.row()
-        row.prop(rpdat, 'arm_clouds_wind')
-        box.prop(rpdat, "rp_ocean")
-        col = box.column()
-        col.enabled = rpdat.rp_ocean
-        col.prop(rpdat, 'arm_ocean_level')
-        row = col.row(align=True)
-        row.alignment = 'EXPAND'
-        row.prop(rpdat, 'arm_ocean_fade')
-        row.prop(rpdat, 'arm_ocean_amplitude')
-        row = col.row(align=True)
-        row.alignment = 'EXPAND'
-        row.prop(rpdat, 'arm_ocean_height')
-        row.prop(rpdat, 'arm_ocean_choppy')
-        row = col.row(align=True)
-        row.alignment = 'EXPAND'
-        row.prop(rpdat, 'arm_ocean_speed')
-        row.prop(rpdat, 'arm_ocean_freq')
-        row = col.row()
-        col2 = row.column()
-        col2.prop(rpdat, 'arm_ocean_base_color')
-        col2 = row.column()
-        col2.prop(rpdat, 'arm_ocean_water_color')
+        self.label(layout, text='World')
+        box = self.box(layout)
+        row = self.row(box)
+        self.prop(row, rpdat, "rp_background", expand=True)
+        row = self.row(box)
+        self.prop(row, rpdat, 'arm_irradiance')
+        col = self.column(row, enabled=(rpdat.arm_irradiance))
+        self.prop(col, rpdat, 'arm_radiance')
+        row = self.row(box, enabled=(rpdat.arm_irradiance))
+        col = self.column(row)
+        self.prop(col, rpdat, 'arm_radiance_sky')
+        colb = self.column(row, enabled=(rpdat.arm_radiance))
+        self.prop(colb, rpdat, 'arm_radiance_size')
+        self.prop(box, rpdat, 'arm_clouds')
+        col = self.column(box, enabled=(rpdat.arm_clouds))
+        row = self.row(col, align=True, alignment='EXPAND')
+        self.prop(row, rpdat, 'arm_clouds_density')
+        self.prop(row, rpdat, 'arm_clouds_size')
+        row = self.row(col, align=True, alignment='EXPAND')
+        self.prop(row, rpdat, 'arm_clouds_lower')
+        self.prop(row, rpdat, 'arm_clouds_upper')
+        row = self.row(col, align=True, alignment='EXPAND')
+        self.prop(row, rpdat, 'arm_clouds_precipitation')
+        self.prop(row, rpdat, 'arm_clouds_eccentricity')
+        self.prop(col, rpdat, 'arm_clouds_secondary')
+        row = self.row(col)
+        self.prop(row, rpdat, 'arm_clouds_wind')
+        self.prop(box, rpdat, "rp_ocean")
+        col = self.column(box, enabled=(rpdat.rp_ocean))
+        self.prop(col, rpdat, 'arm_ocean_level')
+        row = self.row(col, align=True, alignment='EXPAND')
+        self.prop(row, rpdat, 'arm_ocean_fade')
+        self.prop(row, rpdat, 'arm_ocean_amplitude')
+        row = self.row(col, align=True, alignment='EXPAND')
+        self.prop(row, rpdat, 'arm_ocean_height')
+        self.prop(row, rpdat, 'arm_ocean_choppy')
+        row = self.row(col, align=True, alignment='EXPAND')
+        self.prop(row, rpdat, 'arm_ocean_speed')
+        self.prop(row, rpdat, 'arm_ocean_freq')
+        row = self.row(col)
+        col2 = self.column(row)
+        self.prop(col2, rpdat, 'arm_ocean_base_color')
+        col2 = self.column(row)
+        self.prop(col2, rpdat, 'arm_ocean_water_color')
 
 
-        layout.separator()
-        layout.prop(rpdat, "rp_render_to_texture")
-        box = layout.box().column()
-        box.enabled = rpdat.rp_render_to_texture
-        row = box.row()
-        row.prop(rpdat, "rp_antialiasing", expand=True)
-        box.prop(rpdat, "rp_supersampling")
-        box.prop(rpdat, 'arm_rp_resolution')
+        self.separator(layout)
+        self.prop(layout, rpdat, "rp_render_to_texture")
+        box = self.box(layout, enabled=(rpdat.rp_render_to_texture))
+        row = self.row(box)
+        self.prop(row, rpdat, "rp_antialiasing", expand=True)
+        self.prop(box, rpdat, "rp_supersampling")
+        self.prop(box, rpdat, 'arm_rp_resolution')
         if rpdat.arm_rp_resolution == 'Custom':
-            box.prop(rpdat, 'arm_rp_resolution_size')
-            box.prop(rpdat, 'arm_rp_resolution_filter')
-        box.prop(rpdat, 'rp_dynres')
-        box.separator()
-        row = box.row()
-        row.prop(rpdat, "rp_ssgi", expand=True)
-        col = box.column()
-        col.enabled = rpdat.rp_ssgi != 'Off'
-        col.prop(rpdat, 'arm_ssgi_rays')
-        row = col.row(align=True)
-        row.alignment = 'EXPAND'
-        row.prop(rpdat, 'arm_ssgi_step')
-        row.prop(rpdat, 'arm_ssgi_strength')
-        col.prop(rpdat, 'arm_ssgi_max_steps')
-        box.separator()
-        box.prop(rpdat, "rp_ssr")
-        col = box.column()
-        col.enabled = rpdat.rp_ssr
-        row = col.row(align=True)
-        row.prop(rpdat, 'arm_ssr_half_res')
-        row.prop(rpdat, 'rp_ssr_z_only')
-        row = col.row(align=True)
-        row.alignment = 'EXPAND'
-        row.prop(rpdat, 'arm_ssr_ray_step')
-        row.prop(rpdat, 'arm_ssr_min_ray_step')
-        row = col.row(align=True)
-        row.alignment = 'EXPAND'
-        row.prop(rpdat, 'arm_ssr_search_dist')
-        row.prop(rpdat, 'arm_ssr_falloff_exp')
-        col.prop(rpdat, 'arm_ssr_jitter')
-        box.separator()
-        box.prop(rpdat, 'arm_ssrs')
-        col = box.column()
-        col.enabled = rpdat.arm_ssrs
-        col.prop(rpdat, 'arm_ssrs_ray_step')
-        box.separator()
-        box.prop(rpdat, "rp_bloom")
-        col = box.column()
-        col.enabled = rpdat.rp_bloom
-        row = col.row(align=True)
-        row.alignment = 'EXPAND'
-        row.prop(rpdat, 'arm_bloom_threshold')
-        row.prop(rpdat, 'arm_bloom_strength')
-        col.prop(rpdat, 'arm_bloom_radius')
-        box.separator()
-        box.prop(rpdat, "rp_motionblur")
-        col = box.column()
-        col.enabled = rpdat.rp_motionblur != 'Off'
-        col.prop(rpdat, 'arm_motion_blur_intensity')
-        box.separator()
-        box.prop(rpdat, "rp_volumetriclight")
-        row = box.row(align=True)
-        row.alignment = 'EXPAND'
-        row.enabled = rpdat.rp_volumetriclight
-        row.prop(rpdat, 'arm_volumetric_light_air_color', text="")
-        row.prop(rpdat, 'arm_volumetric_light_air_turbidity', text="Turbidity")
-        row.prop(rpdat, 'arm_volumetric_light_steps', text="Steps")
+            self.prop(box, rpdat, 'arm_rp_resolution_size')
+            self.prop(box, rpdat, 'arm_rp_resolution_filter')
+        self.prop(box, rpdat, 'rp_dynres')
+        self.separator(box)
+        row = self.row(box)
+        self.prop(row, rpdat, "rp_ssgi", expand=True)
+        col = self.column(box, enabled=(rpdat.rp_ssgi != 'Off'))
+        self.prop(col, rpdat, 'arm_ssgi_rays')
+        row = self.row(col, align=True, alignment='EXPAND')
+        self.prop(row, rpdat, 'arm_ssgi_step')
+        self.prop(row, rpdat, 'arm_ssgi_strength')
+        self.prop(col, rpdat, 'arm_ssgi_max_steps')
+        self.separator(box)
+        self.prop(box, rpdat, "rp_ssr")
+        col = self.column(box, enabled=(rpdat.rp_ssr))
+        row = self.row(col, align=True)
+        self.prop(row, rpdat, 'arm_ssr_half_res')
+        self.prop(row, rpdat, 'rp_ssr_z_only')
+        row = self.row(col, align=True, alignment='EXPAND')
+        self.prop(row, rpdat, 'arm_ssr_ray_step')
+        self.prop(row, rpdat, 'arm_ssr_min_ray_step')
+        row = self.row(col, align=True, alignment='EXPAND')
+        self.prop(row, rpdat, 'arm_ssr_search_dist')
+        self.prop(row, rpdat, 'arm_ssr_falloff_exp')
+        self.prop(col, rpdat, 'arm_ssr_jitter')
+        self.separator(box)
+        self.prop(box, rpdat, 'arm_ssrs')
+        col = self.column(box, enabled=(rpdat.arm_ssrs))
+        self.prop(col, rpdat, 'arm_ssrs_ray_step')
+        self.separator(box)
+        self.prop(box, rpdat, "rp_bloom")
+        col = self.column(box, enabled=(rpdat.rp_bloom))
+        row = self.row(col, align=True, alignment='EXPAND')
+        self.prop(row, rpdat, 'arm_bloom_threshold')
+        self.prop(row, rpdat, 'arm_bloom_strength')
+        self.prop(col, rpdat, 'arm_bloom_radius')
+        self.separator(box)
+        self.prop(box, rpdat, "rp_motionblur")
+        col = self.column(box, enabled=(rpdat.rp_motionblur != 'Off'))
+        self.prop(col, rpdat, 'arm_motion_blur_intensity')
+        self.separator(box)
+        self.prop(box, rpdat, "rp_volumetriclight")
+        row = self.row(box, align=True, alignment='EXPAND', enabled=(rpdat.rp_volumetriclight))
+        self.prop(row, rpdat, 'arm_volumetric_light_air_color', text="")
+        self.prop(row, rpdat, 'arm_volumetric_light_air_turbidity', text="Turbidity")
+        self.prop(row, rpdat, 'arm_volumetric_light_steps', text="Steps")
 
 
-        layout.separator()
-        layout.prop(rpdat, "rp_compositornodes")
-        box = layout.box().column()
-        box.enabled = rpdat.rp_compositornodes
-        box.prop(rpdat, 'arm_tonemap')
-        box.prop(rpdat, 'arm_letterbox')
-        col = box.column()
-        col.enabled = rpdat.arm_letterbox
-        col.prop(rpdat, 'arm_letterbox_size')
-        box.prop(rpdat, 'arm_sharpen')
-        col = box.column()
-        col.enabled = rpdat.arm_sharpen
-        col.prop(rpdat, 'arm_sharpen_strength')
-        box.prop(rpdat, 'arm_fisheye')
-        box.prop(rpdat, 'arm_vignette')
-        box.prop(rpdat, 'arm_lensflare')
-        box.prop(rpdat, 'arm_grain')
-        col = box.column()
-        col.enabled = rpdat.arm_grain
-        col.prop(rpdat, 'arm_grain_strength')
-        box.prop(rpdat, 'arm_fog')
-        col = box.column()
-        col.enabled = rpdat.arm_fog
-        row = col.row(align=True)
-        row.alignment = 'EXPAND'
-        row.prop(rpdat, 'arm_fog_color', text="")
-        row.prop(rpdat, 'arm_fog_amounta', text="A")
-        row.prop(rpdat, 'arm_fog_amountb', text="B")
-        box.separator()
-        box.prop(rpdat, "rp_autoexposure")
-        col = box.column()
-        col.enabled = rpdat.rp_autoexposure
-        col.prop(rpdat, 'arm_autoexposure_strength', text='Strength')
-        box.prop(rpdat, 'arm_lens_texture')
-        box.prop(rpdat, 'arm_lut_texture')
+        self.separator(layout)
+        self.prop(layout, rpdat, "rp_compositornodes")
+        box = self.box(layout, enabled=(rpdat.rp_compositornodes))
+        self.prop(box, rpdat, 'arm_tonemap')
+        self.prop(box, rpdat, 'arm_letterbox')
+        col = self.column(box, enabled=(rpdat.arm_letterbox))
+        self.prop(col, rpdat, 'arm_letterbox_size')
+        self.prop(box, rpdat, 'arm_sharpen')
+        col = self.column(box, enabled=(rpdat.arm_sharpen))
+        self.prop(col, rpdat, 'arm_sharpen_strength')
+        self.prop(box, rpdat, 'arm_fisheye')
+        self.prop(box, rpdat, 'arm_vignette')
+        self.prop(box, rpdat, 'arm_lensflare')
+        self.prop(box, rpdat, 'arm_grain')
+        col = self.column(box, enabled=(rpdat.arm_grain))
+        self.prop(col, rpdat, 'arm_grain_strength')
+        self.prop(box, rpdat, 'arm_fog')
+        col = self.column(box, enabled=(rpdat.arm_fog))
+        row = self.row(col, align=True, alignment='EXPAND')
+        self.prop(row, rpdat, 'arm_fog_color', text="")
+        self.prop(row, rpdat, 'arm_fog_amounta', text="A")
+        self.prop(row, rpdat, 'arm_fog_amountb', text="B")
+        self.separator(box)
+        self.prop(box, rpdat, "rp_autoexposure")
+        col = self.column(box, enabled=(rpdat.rp_autoexposure))
+        self.prop(col, rpdat, 'arm_autoexposure_strength', text='Strength')
+        self.prop(box, rpdat, 'arm_lens_texture')
+        self.prop(box, rpdat, 'arm_lut_texture')
 
 class ArmBakePanel(bpy.types.Panel):
     bl_label = "Armory Bake"
