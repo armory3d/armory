@@ -11,7 +11,7 @@ import armory.trait.physics.RigidBody;
 class SimpleRotateObject extends iron.Trait {
 
 	@prop
-	var speed:Float = 0.1;
+	var speed:Float = 0.01;
 
 	var keyboard:Keyboard;
 	var rb:RigidBody;

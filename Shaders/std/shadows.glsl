@@ -50,10 +50,9 @@ float lpToDepth(vec3 lp, const vec2 lightProj) {
 
 float PCFCube(samplerCube shadowMapCube, const vec3 lp, vec3 ml, const float bias, const vec2 lightProj, const vec3 n) {
 	// return float(texture(shadowMapCube, ml).r + bias > lpToDepth(lp, lightProj));
-	const float s = shadowmapCubePcfSize; // 0.001 TODO: incorrect...
-	// float compare = lpToDepth(lp, lightProj) - bias;
-	float compare = lpToDepth(lp - n * 0.003, lightProj) - bias * 0.4;
-	ml = ml + n * 0.003;
+	const float s = shadowmapCubePcfSize; // TODO: incorrect...
+	float compare = lpToDepth(lp - n * bias * 80, lightProj);
+	ml = ml + n * bias * 80;
 	float result = step(compare, texture(shadowMapCube, ml).r);
 	result += step(compare, texture(shadowMapCube, ml + vec3(s, s, s)).r);
 	result += step(compare, texture(shadowMapCube, ml + vec3(-s, s, s)).r);
