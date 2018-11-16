@@ -107,7 +107,7 @@ class ArmoryAddonPreferences(AddonPreferences):
         row.operator("arm_addon.help", icon="URL")
         row.operator("arm_addon.update", icon="FILE_REFRESH")
         row.operator("arm_addon.restore")
-        box.label(text="Please restart Blender after successful SDK update.")
+        box.label(text="Check console for download progress. Please restart Blender after successful SDK update.")
         layout.prop(self, "show_advanced")
         if self.show_advanced:
             box = layout.box().column()
@@ -169,14 +169,15 @@ def run_proc(cmd, done):
     threading.Thread(target=fn, args=(p, done)).start()
     return p
 
-def update_repo(done, p, n, gitn = ''):
-    if gitn == '':
-        gitn = n
+def git_clone(done, p, gitn, n, recursive=False):
     if not os.path.exists(p + '/' + n + '_backup'):
         os.rename(p + '/' + n, p + '/' + n + '_backup')
     if os.path.exists(p + '/' + n):
         shutil.rmtree(p + '/' + n, onerror=remove_readonly)
-    run_proc(['git', 'clone', 'https://github.com/armory3d/' + gitn, p + '/' + n, '--depth=1'], done)
+    if recursive:
+    	run_proc(['git', 'clone', '--recursive', 'https://github.com/' + gitn, p + '/' + n, '--depth', '1', '--shallow-submodules', '--jobs', '4'], done)
+    else:
+    	run_proc(['git', 'clone', 'https://github.com/' + gitn, p + '/' + n, '--depth', '1'], done)
 
 def restore_repo(p, n):
     if os.path.exists(p + '/' + n + '_backup'):
@@ -370,32 +371,32 @@ class ArmAddonUpdateButton(bpy.types.Operator):
     bl_description = "Update to the latest development version"
 
     def execute(self, context):
-        p = get_sdk_path(context)
-        if p == "":
+        sdk_path = get_sdk_path(context)
+        if sdk_path == "":
             self.report({"ERROR"}, "Configure Armory SDK path first")
             return {"CANCELLED"}
-        self.report({'INFO'}, 'Updating, check console for details. Please restart Blender after successful SDK update.')
+        self.report({'INFO'}, 'Updating Armory SDK, check console for details.')
         print('Armory (add-on v' + str(bl_info['version']) + '): Cloning [armory, iron, haxebullet, haxerecast, zui] repositories')
-        os.chdir(p)
+        os.chdir(sdk_path)
         global repos_updated
         global repos_total
         repos_updated = 0
-        repos_total = 7
+        repos_total = 9
         def done():
             global repos_updated
             global repos_total
             repos_updated += 1
             if repos_updated == repos_total:
                 print('Armory SDK updated, please restart Blender')
-        update_repo(done, p, 'armory')
-        update_repo(done, p, 'iron')
-        update_repo(done, p, 'lib/haxebullet', 'haxebullet')
-        update_repo(done, p, 'lib/haxerecast', 'haxerecast')
-        update_repo(done, p, 'lib/zui', 'zui')
-        update_repo(done, p, 'lib/armory_tools', 'armory_tools')
-        update_repo(done, p, 'lib/iron_format', 'iron_format')
-        # update_repo(done, p, 'Kha', recursive=True)
-        # update_repo(done, p, 'Krom', 'Krom_bin')
+        git_clone(done, sdk_path, 'armory3d/armory', 'armory')
+        git_clone(done, sdk_path, 'armory3d/iron', 'iron')
+        git_clone(done, sdk_path, 'armory3d/haxebullet', 'lib/haxebullet')
+        git_clone(done, sdk_path, 'armory3d/haxerecast', 'lib/haxerecast')
+        git_clone(done, sdk_path, 'armory3d/zui', 'lib/zui')
+        git_clone(done, sdk_path, 'armory3d/armory_tools', 'lib/armory_tools')
+        git_clone(done, sdk_path, 'armory3d/iron_format', 'lib/iron_format')
+        git_clone(done, sdk_path, 'Kode/Krom_bin', 'Krom')
+        git_clone(done, sdk_path, 'Kode/Kha', 'Kha', recursive=True)
         return {"FINISHED"}
 
 class ArmAddonRestoreButton(bpy.types.Operator):
@@ -405,20 +406,20 @@ class ArmAddonRestoreButton(bpy.types.Operator):
     bl_description = "Restore stable version"
  
     def execute(self, context):
-        p = get_sdk_path(context)
-        if p == "":
+        sdk_path = get_sdk_path(context)
+        if sdk_path == "":
             self.report({"ERROR"}, "Configure Armory SDK path first")
             return {"CANCELLED"}
-        os.chdir(p)
-        restore_repo(p, 'armory')
-        restore_repo(p, 'iron')
-        restore_repo(p, 'lib/haxebullet')
-        restore_repo(p, 'lib/haxerecast')
-        restore_repo(p, 'lib/zui')
-        restore_repo(p, 'lib/armory_tools')
-        restore_repo(p, 'lib/iron_format')
-        # restore_repo(p, 'Kha')
-        # restore_repo(p, 'Krom')
+        os.chdir(sdk_path)
+        restore_repo(sdk_path, 'armory')
+        restore_repo(sdk_path, 'iron')
+        restore_repo(sdk_path, 'lib/haxebullet')
+        restore_repo(sdk_path, 'lib/haxerecast')
+        restore_repo(sdk_path, 'lib/zui')
+        restore_repo(sdk_path, 'lib/armory_tools')
+        restore_repo(sdk_path, 'lib/iron_format')
+        restore_repo(sdk_path, 'Kha')
+        restore_repo(sdk_path, 'Krom')
         self.report({'INFO'}, 'Restored stable version')
         return {"FINISHED"}
 
