@@ -164,7 +164,7 @@ def update_preset(self, context):
         rpdat.rp_blending_state = 'Off'
         rpdat.rp_draw_order = 'Auto'
         rpdat.rp_hdr = False
-        rpdat.rp_background = 'World'
+        rpdat.rp_background = 'Clear'
         rpdat.rp_stereo = False
         # rpdat.rp_greasepencil = False
         rpdat.rp_gi = 'Off'
