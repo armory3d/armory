@@ -9,6 +9,8 @@ class SetParentBoneNode extends LogicNode {
 	}
 
 	override function run(from:Int) {
+		#if arm_skin
+
 		var object:Object = inputs[1].get();
 		var parent:Object = inputs[2].get();
 		var bone:String = inputs[3].get();
@@ -24,5 +26,7 @@ class SetParentBoneNode extends LogicNode {
 		banim.addBoneChild(bone, object);
 
 		runOutput(0);
+
+		#end
 	}
 }

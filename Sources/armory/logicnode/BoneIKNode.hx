@@ -14,6 +14,8 @@ class BoneIKNode extends LogicNode {
 	}
 
 	override function run(from:Int) {
+		#if arm_skin
+
 		var object:Object = inputs[1].get();
 		var boneName:String = inputs[2].get();
 		goal = inputs[3].get();
@@ -37,5 +39,7 @@ class BoneIKNode extends LogicNode {
 		}
 
 		runOutput(0);
+
+		#end
 	}
 }
