@@ -103,7 +103,7 @@ def init_properties():
     bpy.types.World.arm_modding_expose_armory = BoolProperty(name="Armory", description="Expose Armory library to mods", default=True)
     bpy.types.World.arm_modding_expose_game = BoolProperty(name="Game", description="Expose the Game package ( default 'arm' ) to mods", default=True)
     bpy.types.World.arm_modding_expose_packages = StringProperty(name="Extra Packages", description="Comma separated list of extra packages to expose to mods.", default="")
-    bpy.types.World.arm_modding_extra_packages = StringProperty(name="Add Packages", description="Comma separated list of extra packages to add to the mod build. Add one for every extra Haxe package you mod depends on that is not included in the parent game.")
+    bpy.types.World.arm_modding_extra_packages = StringProperty(name="Add Packages", description="Comma separated list of extra packages to add to the mod build. Add one for every extra Haxe package your mod depends on that is not included in the parent game.")
     bpy.types.World.arm_winmode = EnumProperty(
         items = [('Window', 'Window', 'Window'),
                  ('Fullscreen', 'Fullscreen', 'Fullscreen')],
