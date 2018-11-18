@@ -15,6 +15,7 @@ class SpawnObjectNode(Node, ArmLogicTreeNode):
         self.inputs.new('NodeSocketShader', 'Transform')
         self.inputs.new('NodeSocketBool', 'Children')
         self.inputs[-1].default_value = True
+        self.inputs.new('NodeSocketShader', 'From Scene')
         self.outputs.new('ArmNodeSocketAction', 'Out')
         self.outputs.new('ArmNodeSocketObject', 'Object')
 

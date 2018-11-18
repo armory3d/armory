@@ -23,6 +23,7 @@ class SpawnObjectNode extends LogicNode {
 		var m:Mat4 = inputs[2].get();
 		matrices.push(m != null ? m.clone() : null);
 		var spawnChildren:Bool = inputs.length > 3 ? inputs[3].get() : true; // TODO
+		var sceneName:String = inputs[4].get();
 
 		iron.Scene.active.spawnObject(objectName, null, function(o:Object) {
 			object = o;
@@ -39,7 +40,7 @@ class SpawnObjectNode extends LogicNode {
 			}
 			object.visible = true;
 			runOutput(0);
-		}, spawnChildren);
+		}, spawnChildren, sceneName);
 	}
 
 	override function get(from:Int):Dynamic {
