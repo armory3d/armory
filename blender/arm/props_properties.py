@@ -33,10 +33,10 @@ class ArmPropertyListNewItem(bpy.types.Operator):
     bl_label = "New"
 
     type_prop = bpy.props.EnumProperty(
-        items = [('String', 'String', 'String'),
-                 ('Integer', 'Integer', 'Integer'),
-                 ('Float', 'Float', 'Float'),
-                 ('Boolean', 'Boolean', 'Boolean'),
+        items = [('string', 'String', 'String'),
+                 ('integer', 'Integer', 'Integer'),
+                 ('float', 'Float', 'Float'),
+                 ('boolean', 'Boolean', 'Boolean'),
                  ],
         name = "Type")
 
