@@ -1,3 +1,6 @@
+import bpy
+
+img = bpy.data.images.new(name="img", width=256, height=256)
 for x in range(256):
     for y in range(256):
         x2 = (x - 37) & 255
