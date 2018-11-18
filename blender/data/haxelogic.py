@@ -56,7 +56,7 @@ for m in modules:
 			# if l.startswith('property'):
 			if 'EnumProperty' in l: # TODO: enum only for now
 				but = {}
-				but['name'] = 'property' + l[-1]
+				but['name'] = 'property' + l.split(' = ', 1)[0][-1]
 				but['type'] = 'ENUM'
 				but['default_value'] = 0
 				but['data'] = []

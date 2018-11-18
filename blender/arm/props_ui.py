@@ -10,6 +10,7 @@ import arm.assets as assets
 import arm.log as log
 import arm.proxy
 import arm.api
+import arm.props_properties
 
 # Menu in object region
 class ObjectPropsPanel(bpy.types.Panel):
@@ -48,6 +49,9 @@ class ObjectPropsPanel(bpy.types.Panel):
                         selected_ts = ts
                         break
                 layout.prop_search(obj, "arm_tilesheet_action", selected_ts, "arm_tilesheetactionlist", text="Action")
+
+        # Properties list
+        arm.props_properties.draw_properties(layout, obj)
 
 class ModifiersPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"

@@ -903,6 +903,14 @@ class ArmoryExporter:
                 o['tilesheet_ref'] = bobject.arm_tilesheet
                 o['tilesheet_action_ref'] = bobject.arm_tilesheet_action
 
+            if len(bobject.arm_propertylist) > 0:
+                o['properties'] = []
+                for p in bobject.arm_propertylist:
+                    po = {}
+                    po['name'] = p.name_prop
+                    po['value'] = getattr(p, p.type_prop + '_prop')
+                    o['properties'].append(po)
+
             layer_found = False
             if bpy.app.version >= (2, 80, 1):
                 layer_found = True

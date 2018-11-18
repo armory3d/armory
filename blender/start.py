@@ -6,6 +6,7 @@ import arm.props_tilesheet
 import arm.props_exporter
 import arm.props_bake
 import arm.props_renderpath
+import arm.props_properties
 import arm.props
 import arm.props_ui
 import arm.handlers
@@ -25,6 +26,7 @@ def register(local_sdk=False):
     arm.props_exporter.register()
     arm.props_bake.register()
     arm.props_renderpath.register()
+    arm.props_properties.register()
     arm.props.register()
     arm.props_ui.register()
     arm.nodes_logic.register()
@@ -47,3 +49,4 @@ def unregister():
     arm.props_exporter.unregister()
     arm.props_bake.unregister()
     arm.props_renderpath.unregister()
+    arm.props_properties.unregister()
