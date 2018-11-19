@@ -63,11 +63,6 @@
 					"link": "_envmapStrength"
 				},
 				{
-					"name": "sdftex",
-					"link": "_sdfTexture",
-					"ifdef": ["_DFAO"]
-				},
-				{
 					"name": "backgroundCol",
 					"link": "_backgroundCol",
 					"ifdef": ["_EnvCol"]

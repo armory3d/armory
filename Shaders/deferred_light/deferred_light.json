@@ -112,11 +112,6 @@
 					"ifdef": ["_SSRS"]
 				},
 				{
-					"name": "sdftex",
-					"link": "_sdfTexture",
-					"ifdef": ["_DFRS"]
-				},
-				{
 					"name": "smSizeUniform",
 					"link": "_shadowMapSize",
 					"ifdef": ["_SMSizeUniform"]

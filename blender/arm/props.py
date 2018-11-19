@@ -123,7 +123,6 @@ def init_properties():
     bpy.types.World.arm_minimize = BoolProperty(name="Minimize Data", description="Export scene data in binary", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_minify_js = BoolProperty(name="Minify JS", description="Minimize JavaScript output when publishing", default=True)
     bpy.types.World.arm_optimize_mesh = BoolProperty(name="Optimize Meshes", description="Export more efficient geometry indices, can prolong build times", default=False, update=assets.invalidate_mesh_data)
-    bpy.types.World.arm_sampled_animation = BoolProperty(name="Sampled Animation", description="Export object animation as raw matrices", default=False, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_deinterleaved_buffers = BoolProperty(name="Deinterleaved Buffers", description="Use deinterleaved vertex buffers", default=False, update=invalidate_compiler_cache)
     bpy.types.World.arm_export_tangents = BoolProperty(name="Export Tangents", description="Precompute tangents for normal mapping, otherwise computed in shader", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_batch_meshes = BoolProperty(name="Batch Meshes", description="Group meshes by materials to speed up rendering", default=False, update=invalidate_compiler_cache)
@@ -132,7 +131,6 @@ def init_properties():
     bpy.types.World.arm_lod_gen_levels = IntProperty(name="Levels", description="Number of levels to generate", default=3, min=1)
     bpy.types.World.arm_lod_gen_ratio = FloatProperty(name="Decimate Ratio", description="Decimate ratio", default=0.8)
     bpy.types.World.arm_cache_build = BoolProperty(name="Cache Build", description="Cache build files to speed up compilation", default=True)
-    bpy.types.World.arm_gpu_processing = BoolProperty(name="GPU Processing", description="Utilize GPU for asset pre-processing at build time", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_play_camera = EnumProperty(
         items=[('Scene', 'Scene', 'Scene'),
                ('Viewport', 'Viewport', 'Viewport'),
@@ -201,7 +199,6 @@ def init_properties():
     bpy.types.Mesh.arm_aabb = FloatVectorProperty(name="AABB", size=3, default=[0,0,0])
     bpy.types.Mesh.arm_dynamic_usage = BoolProperty(name="Dynamic Usage", description="Mesh data can change at runtime", default=False)
     bpy.types.Mesh.arm_compress = BoolProperty(name="Compress", description="Pack data into zip file", default=False)
-    # bpy.types.Mesh.arm_sdfgen = BoolProperty(name="Generate SDF", description="Make signed distance field data", default=False, update=invalidate_mesh_cache)
     bpy.types.Curve.arm_cached = BoolProperty(name="Mesh Cached", description="No need to reexport curve data", default=False)
     bpy.types.Curve.arm_compress = BoolProperty(name="Compress", description="Pack data into zip file", default=False)
     bpy.types.Curve.arm_dynamic_usage = BoolProperty(name="Dynamic Data Usage", description="Curve data can change at runtime", default=False)

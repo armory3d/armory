@@ -31,9 +31,6 @@ def update_preset(self, context):
         rpdat.rp_volumetriclight = False
         rpdat.rp_ssgi = 'SSAO'
         rpdat.rp_ssr = False
-        rpdat.rp_dfrs = False
-        rpdat.rp_dfao = False
-        rpdat.rp_dfgi = False
         rpdat.rp_bloom = False
         rpdat.rp_eyeadapt = False
         rpdat.rp_motionblur = 'Off'
@@ -66,9 +63,6 @@ def update_preset(self, context):
         rpdat.rp_volumetriclight = False
         rpdat.rp_ssgi = 'Off'
         rpdat.rp_ssr = False
-        rpdat.rp_dfrs = False
-        rpdat.rp_dfao = False
-        rpdat.rp_dfgi = False
         rpdat.rp_bloom = False
         rpdat.rp_eyeadapt = False
         rpdat.rp_motionblur = 'Off'
@@ -101,9 +95,6 @@ def update_preset(self, context):
         rpdat.rp_volumetriclight = False
         rpdat.rp_ssgi = 'Off'
         rpdat.rp_ssr = False
-        rpdat.rp_dfrs = False
-        rpdat.rp_dfao = False
-        rpdat.rp_dfgi = False
         rpdat.rp_bloom = False
         rpdat.rp_eyeadapt = False
         rpdat.rp_motionblur = 'Off'
@@ -139,9 +130,6 @@ def update_preset(self, context):
         rpdat.rp_ssgi = 'RTGI'
         rpdat.arm_ssrs = False
         rpdat.rp_ssr = True
-        rpdat.rp_dfrs = False
-        rpdat.rp_dfao = False
-        rpdat.rp_dfgi = False
         rpdat.rp_bloom = True
         rpdat.rp_eyeadapt = False
         rpdat.rp_motionblur = 'Off'
@@ -175,9 +163,6 @@ def update_preset(self, context):
         rpdat.rp_volumetriclight = False
         rpdat.rp_ssgi = 'Off'
         rpdat.rp_ssr = False
-        rpdat.rp_dfrs = False
-        rpdat.rp_dfao = False
-        rpdat.rp_dfgi = False
         rpdat.rp_bloom = False
         rpdat.rp_eyeadapt = False
         rpdat.rp_motionblur = 'Off'
@@ -317,9 +302,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('RTGI', 'RTGI', 'Ray-traced global illumination')
                ],
         name="SSGI", description="Screen space global illumination", default='SSAO', update=update_renderpath)
-    rp_dfao = BoolProperty(name="DFAO", description="Distance field ambient occlusion", default=False)
-    rp_dfrs = BoolProperty(name="DFRS", description="Distance field ray-traced shadows", default=False)
-    rp_dfgi = BoolProperty(name="DFGI", description="Distance field global illumination", default=False)
     rp_bloom = BoolProperty(name="Bloom", description="Bloom processing", default=False, update=update_renderpath)
     rp_eyeadapt = BoolProperty(name="Eye Adaptation", description="Auto-exposure based on histogram", default=False, update=update_renderpath)
     rp_motionblur = EnumProperty(

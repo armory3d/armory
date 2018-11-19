@@ -13,9 +13,6 @@
 #ifdef _VoxelAOvar
 	#include "std/conetrace.glsl"
 #endif
-#ifdef _DFAO
-#include "std/sdf.glsl"
-#endif
 
 // uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
@@ -58,9 +55,6 @@ uniform float envmapStrength;
 	uniform vec2 cameraProj;
 	uniform vec3 eye;
 	uniform vec3 eyeLook;
-#endif
-#ifdef _DFAO
-	//!uniform sampler3D sdftex;
 #endif
 
 in vec2 texCoord;
@@ -166,10 +160,6 @@ void main() {
 	#endif
 #endif
 
-#ifdef _DFGI
-	envl.rgb = dfgi(p, n) * albedo;
-#endif
-
 #ifdef _VoxelAOvar
 
 	#ifdef _VoxelGICam
@@ -198,10 +188,6 @@ void main() {
 	#else
 	fragColor.rgb *= texture(ssaotex, texCoord).r;
 	#endif
-#endif
-
-#ifdef _DFAO
-	fragColor.rgb *= dfao(p, n);
 #endif
 
 	// Show voxels

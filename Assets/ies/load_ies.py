@@ -1,3 +1,4 @@
+# Using IES profiles from http://www.derekjenson.com/3d-blog/ies-light-profiles
 # IES parser based on:
 # https://github.com/tobspr/RenderPipeline
 # Copyright (c) 2014-2016 tobspr <tobias.springer1@gmail.com>

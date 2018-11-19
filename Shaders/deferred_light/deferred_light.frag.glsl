@@ -15,9 +15,6 @@
 #ifndef _NoShadows
 	#include "std/shadows.glsl"
 #endif
-#ifdef _DFRS
-#include "std/sdf.glsl"
-#endif
 #ifdef _SSS
 #include "std/sss.glsl"
 #endif
@@ -48,9 +45,6 @@ uniform sampler2D gbuffer2;
 		uniform sampler2D shadowMap;
 		uniform samplerCube shadowMapCube;
 	#endif
-#endif
-#ifdef _DFRS
-	//!uniform sampler3D sdftex;
 #endif
 #ifdef _LightIES
 	//!uniform sampler2D texIES;
@@ -166,11 +160,6 @@ void main() {
 	vec3 voxpos = p / voxelgiHalfExtents;
 	#endif
 	if (dotNL > 0.0) visibility = max(0, 1.0 - traceShadow(voxels, voxpos, l, 0.1, length(lp), n));
-#endif
-
-
-#ifdef _DFRS
-	visibility = dfrs(p, l, lightPos);
 #endif
 
 	visibility *= attenuate(distance(p, lightPos));

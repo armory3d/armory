@@ -416,7 +416,7 @@ class ArmoryExporter:
         deltaSclAnimated = [False, False, False]
 
         mode = bobject.rotation_mode
-        sampledAnimation = ArmoryExporter.sample_animation_flag or mode == "QUATERNION" or mode == "AXIS_ANGLE"
+        sampledAnimation = mode == "QUATERNION" or mode == "AXIS_ANGLE"
 
         if not sampledAnimation and bobject.animation_data and bobject.type != 'ARMATURE':
             action = bobject.animation_data.action
@@ -623,7 +623,7 @@ class ArmoryExporter:
         o['transform']['values'] = self.write_matrix(transform)
 
         curve_array = self.collect_bone_animation(armature, bone.name)
-        animation = len(curve_array) != 0 or ArmoryExporter.sample_animation_flag
+        animation = len(curve_array) != 0
 
         if animation and pose_bone:
             begin_frame, end_frame = int(action.frame_range[0]), int(action.frame_range[1])
@@ -1583,9 +1583,6 @@ class ArmoryExporter:
         if ArmoryExporter.option_mesh_per_file:
             fp = self.get_meshes_file_path('mesh_' + oid, compressed=self.is_compress(bobject.data))
             assets.add(fp)
-            # if hasattr(bobject.data, 'arm_sdfgen') and bobject.data.arm_sdfgen:
-                # sdf_path = fp.replace('/mesh_', '/sdf_')
-                # assets.add(sdf_path)
             if self.is_mesh_cached(bobject) == True and os.path.exists(fp):
                 return
         else:
@@ -2605,7 +2602,6 @@ class ArmoryExporter:
             ArmoryExporter.import_traits = [] # Referenced traits
         ArmoryExporter.option_mesh_only = False
         ArmoryExporter.option_mesh_per_file = True
-        ArmoryExporter.sample_animation_flag = wrd.arm_sampled_animation
 
         # Used for material shader export and khafile
         ArmoryExporter.mesh_context = 'mesh'

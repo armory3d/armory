@@ -113,7 +113,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
         mip_count = 7
     
     wrd = bpy.data.worlds['Arm']
-    use_opencl = 'true' if wrd.arm_gpu_processing else 'false'
+    use_opencl = 'true'
 
     if arm.utils.get_os() == 'win':
         subprocess.call([ \
