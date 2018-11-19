@@ -64,10 +64,6 @@ uniform vec2 cameraProj;
 	uniform mat4 invVP;
 #endif
 
-#ifdef _LightColTex
-	uniform sampler2D texlightcolor;
-#endif
-
 in vec2 texCoord;
 in vec3 viewRay;
 out vec4 fragColor;
@@ -141,19 +137,10 @@ void main() {
 	}
 	else fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH) * spec;
 #else
-#ifdef _OrenNayar
-	fragColor.rgb = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH) * spec;
-#else
 	fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH) * spec;
-#endif
 #endif
 
 	fragColor.rgb *= lightColor;
-
-#ifdef _LightColTex
-	// fragColor.rgb *= texture(texlightcolor, envMapEquirect(l)).rgb;
-	fragColor.rgb *= pow(texture(texlightcolor, l.xy).rgb, vec3(2.2));
-#endif
 	
 #ifdef _SSS
 	if (texture(gbuffer2, texCoord).a == 2) {
@@ -179,14 +166,4 @@ void main() {
 #endif
 
 	fragColor.rgb *= visibility;
-
-#ifdef _VoxelGIRefract
-	#ifdef _VoxelGICam
-	vec3 voxposr = (p - eyeSnap) / voxelgiHalfExtents;
-	#else
-	vec3 voxposr = p / voxelgiHalfExtents;
-	#endif
-	float opac = texture(gbuffer2, texCoord).b;
-	fragColor.rgb = mix(traceRefraction(voxels, voxposr, n, -v, metrough.y), fragColor.rgb, opac);
-#endif
 }

@@ -638,7 +638,7 @@ class RenderPathDeferred {
 			}
 			#end
 
-			#if ((rp_voxelgi_shadows) || (rp_voxelgi_refraction))
+			#if (rp_voxelgi_shadows)
 			{
 				path.bindTarget(voxels, "voxels");
 			}

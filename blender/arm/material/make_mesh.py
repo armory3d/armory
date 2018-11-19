@@ -327,7 +327,7 @@ def make_deferred(con_mesh):
     rpdat = arm.utils.get_rp()
 
     arm_discard = mat_state.material.arm_discard
-    parse_opacity = arm_discard or rpdat.arm_voxelgi_refraction
+    parse_opacity = arm_discard
 
     make_base(con_mesh, parse_opacity=parse_opacity)
 
@@ -396,8 +396,6 @@ def make_deferred(con_mesh):
             frag.write('vec2 posa = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
             frag.write('vec2 posb = (prevwvpposition.xy / prevwvpposition.w) * 0.5 + 0.5;')
             frag.write('fragColor[2].rg = vec2(posa - posb);')
-        if rpdat.arm_voxelgi_refraction:
-            frag.write('fragColor[2].b = opacity;')
         if '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
             frag.add_uniform('int materialID')
             frag.write('fragColor[2].a = materialID;')

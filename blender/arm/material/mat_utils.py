@@ -27,13 +27,12 @@ def get_rpasses(material):
 
     rpdat = arm.utils.get_rp()
     has_voxels = arm.utils.voxel_support()
-    vgirefract = rpdat.rp_gi == 'Voxel GI' and rpdat.arm_voxelgi_refraction and has_voxels
 
     if material.arm_decal:
         ar.append('decal')
     elif material.arm_overlay:
         ar.append('overlay')
-    elif is_transluc(material) and not material.arm_discard and not vgirefract and rpdat.rp_translucency_state != 'Off' and not material.arm_blending:
+    elif is_transluc(material) and not material.arm_discard and rpdat.rp_translucency_state != 'Off' and not material.arm_blending:
         ar.append('translucent')
     else:
         ar.append('mesh')

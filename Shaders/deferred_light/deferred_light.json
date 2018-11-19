@@ -42,11 +42,6 @@
 					"link": "_lightCastShadow"
 				},
 				{
-					"name": "texlightcolor",
-					"link": "_lightColorTexture",
-					"ifdef": ["_LightColTex"]
-				},
-				{
 					"name": "texIES",
 					"link": "_iesTexture",
 					"ifdef": ["_LightIES"]

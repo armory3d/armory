@@ -121,13 +121,13 @@ vec3 traceSpecular(sampler3D voxels, const vec3 pos, const vec3 normal, const ve
 	return traceCone(voxels, pos, specularDir, specularAperture, MAX_DISTANCE, normal).xyz;
 }
 
-vec3 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {
-	const float ior = 1.440;
-	const float transmittance = 1.0;
-	vec3 refraction = refract(viewDir, normal, 1.0 / ior);
-	float specularAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
-	return transmittance * traceCone(voxels, pos, refraction, specularAperture, MAX_DISTANCE, normal).xyz;
-}
+// vec3 traceRefraction(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {
+// 	const float ior = 1.440;
+// 	const float transmittance = 1.0;
+// 	vec3 refraction = refract(viewDir, normal, 1.0 / ior);
+// 	float specularAperture = clamp(tan((3.14159265 / 2) * roughness), 0.0174533 * 3.0, 3.14159265);
+// 	return transmittance * traceCone(voxels, pos, refraction, specularAperture, MAX_DISTANCE, normal).xyz;
+// }
 
 float traceConeAO(sampler3D voxels, const vec3 origin, vec3 dir, const float aperture, const float maxDist) {
 	dir = normalize(dir);

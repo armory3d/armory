@@ -114,9 +114,6 @@ void main() {
 	}
 
 	// if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
-
-	// float opacity = g2.b;
-	// if (opacity < 1.0) fragColor.rgb = mix(indirectRefractiveLight(-v, n, vec3(1.0), opacity, voxpos), fragColor.rgb, opacity);
 #endif
 
 	// Envmap
@@ -155,9 +152,7 @@ void main() {
 #ifdef _SSS
 	envl.rgb *= envmapStrength * occspec.x;
 #else
-	#ifndef _VoxelGIRefract
 	envl.rgb *= envmapStrength * occspec.x; // Occlusion
-	#endif
 #endif
 
 #ifdef _VoxelAOvar

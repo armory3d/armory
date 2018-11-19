@@ -140,7 +140,6 @@ class DataPropsPanel(bpy.types.Panel):
             col.prop(obj.data, 'arm_shadows_bias')
             if obj.data.type == 'POINT':
                 layout.prop(obj.data, 'arm_shadows_cubemap')
-            layout.prop(wrd, 'arm_light_texture')
             layout.prop(wrd, 'arm_light_ies_texture')
             layout.prop(wrd, 'arm_light_clouds_texture')
         elif obj.type == 'SPEAKER':
@@ -741,7 +740,6 @@ class ArmRenderPathPanel(bpy.types.Panel):
         self.prop(box, rpdat, 'rp_draw_order')
         self.prop(box, rpdat, 'arm_samples_per_pixel')
         self.prop(box, rpdat, 'arm_texture_filter')
-        self.prop(box, rpdat, 'arm_diffuse_model')
         self.prop(box, rpdat, 'rp_sss_state')
         col = self.column(box, enabled=(rpdat.rp_sss_state != 'Off'))
         self.prop(col, rpdat, 'arm_sss_width')
@@ -788,7 +786,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
         self.prop(col, rpdat, 'arm_pcfsize')
 
 
-        self.label(layout, text='Global Illumination')
+        self.label(layout, text='Voxels')
         box = self.box(layout)
         row = self.row(box)
         self.prop(row, rpdat, 'rp_gi', expand=True)
@@ -797,9 +795,6 @@ class ArmRenderPathPanel(bpy.types.Panel):
         self.prop(col2, rpdat, 'arm_voxelgi_bounces')
         row2 = self.row(col2)
         self.prop(row2, rpdat, 'rp_voxelgi_relight')
-        self.prop(row2, rpdat, 'rp_voxelgi_hdr', text='HDR')
-        row2 = self.row(col2)
-        self.prop(row2, rpdat, 'arm_voxelgi_refraction', text='Refraction')
         self.prop(row2, rpdat, 'arm_voxelgi_shadows', text='Shadows')
         self.prop(col, rpdat, 'arm_voxelgi_cones')
         self.prop(col, rpdat, 'rp_voxelgi_resolution')

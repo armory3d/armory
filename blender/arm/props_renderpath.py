@@ -36,7 +36,6 @@ def update_preset(self, context):
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Anisotropic'
-        rpdat.arm_diffuse_model = 'Lambert'
         rpdat.arm_radiance = True
         rpdat.arm_radiance_sky = True
     elif self.rp_preset == 'VR':
@@ -68,7 +67,6 @@ def update_preset(self, context):
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Point'
-        rpdat.arm_diffuse_model = 'Lambert'
         rpdat.arm_radiance = True
         rpdat.arm_radiance_sky = True
     elif self.rp_preset == 'Mobile':
@@ -100,7 +98,6 @@ def update_preset(self, context):
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Linear'
-        rpdat.arm_diffuse_model = 'Lambert'
         rpdat.arm_radiance = False
         rpdat.arm_radiance_sky = False
     elif self.rp_preset == 'Max':
@@ -136,7 +133,6 @@ def update_preset(self, context):
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_material_model = 'Full'
         rpdat.arm_texture_filter = 'Anisotropic'
-        rpdat.arm_diffuse_model = 'Lambert'
         rpdat.arm_radiance = True
         rpdat.arm_radiance_sky = True
     elif self.rp_preset == '2D/Baked':
@@ -168,7 +164,6 @@ def update_preset(self, context):
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Linear'
-        rpdat.arm_diffuse_model = 'Lambert'
         rpdat.arm_radiance = False
         rpdat.arm_radiance_sky = False
     update_renderpath(self, context)
@@ -387,11 +382,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Solid', 'Solid', 'Solid'),
                ],
         name="Materials", description="Material builder", default='Full', update=update_material_model)
-    arm_diffuse_model = EnumProperty(
-        items=[('Lambert', 'Lambert', 'Lambert'),
-               ('OrenNayar', 'OrenNayar', 'OrenNayar'),
-               ],
-        name="Diffuse", description="Diffuse model", default='Lambert', update=assets.invalidate_shader_cache)
     arm_rp_displacement = EnumProperty(
         items=[('Off', 'Off', 'Off'),
                ('Vertex', 'Vertex', 'Vertex'),
@@ -413,7 +403,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_dynres = BoolProperty(name="Dynamic Resolution", description="Dynamic resolution scaling for performance", default=False, update=update_renderpath)
     arm_ssr_half_res = BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
     rp_ssr_z_only = BoolProperty(name="Z Only", description="Trace in Z axis only", default=False, update=update_renderpath)
-    rp_voxelgi_hdr = BoolProperty(name="HDR Voxels", description="Store voxels in RGBA64 instead of RGBA32", default=False, update=update_renderpath)
     rp_voxelgi_relight = BoolProperty(name="Relight", description="Relight voxels when light is moved", default=True, update=update_renderpath)
     arm_voxelgi_dimensions = FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_shader_cache)
     arm_voxelgi_revoxelize = BoolProperty(name="Revoxelize", description="Revoxelize scene each frame", default=False, update=assets.invalidate_shader_cache)
@@ -425,7 +414,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_voxelgi_camera = BoolProperty(name="Dynamic Camera", description="Use camera as voxelization origin", default=False, update=assets.invalidate_shader_cache)
     # arm_voxelgi_anisotropic = BoolProperty(name="Anisotropic", description="Use anisotropic voxels", default=False, update=update_renderpath)
     arm_voxelgi_shadows = BoolProperty(name="Trace Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
-    arm_voxelgi_refraction = BoolProperty(name="Trace Refraction", description="Use voxels to render refraction", default=False, update=update_renderpath)
     arm_samples_per_pixel = EnumProperty(
         items=[('1', '1', '1'),
                ('2', '2', '2'),

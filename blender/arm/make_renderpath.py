@@ -22,14 +22,6 @@ def add_world_defs():
     if rpdat.rp_hdr == False:
         wrd.world_defs += '_LDR'
 
-    # Alternative models
-    if rpdat.arm_diffuse_model == 'OrenNayar':
-        wrd.world_defs += '_OrenNayar'
-
-    # TODO: Light texture test..
-    if wrd.arm_light_texture != '':
-        wrd.world_defs += '_LightColTex'
-
     if wrd.arm_light_ies_texture != '':
         wrd.world_defs += '_LightIES'
         assets.add_embedded_data('iestexture.png')
@@ -91,9 +83,6 @@ def add_world_defs():
             if rpdat.arm_voxelgi_shadows:
                 wrd.world_defs += '_VoxelGIDirect'
                 wrd.world_defs += '_VoxelGIShadow'
-            if rpdat.arm_voxelgi_refraction:
-                wrd.world_defs += '_VoxelGIDirect'
-                wrd.world_defs += '_VoxelGIRefract'
             if rpdat.rp_voxelgi_relight:
                 assets.add_khafile_def('rp_voxelgi_relight')
         elif voxelao:
@@ -252,12 +241,8 @@ def build():
             assets.add_khafile_def('rp_gi={0}'.format(rpdat.rp_gi))        
             assets.add_khafile_def('rp_voxelgi_resolution={0}'.format(rpdat.rp_voxelgi_resolution))
             assets.add_khafile_def('rp_voxelgi_resolution_z={0}'.format(rpdat.rp_voxelgi_resolution_z))
-            if rpdat.rp_voxelgi_hdr:
-                assets.add_khafile_def('rp_voxelgi_hdr')
             if rpdat.arm_voxelgi_shadows:
                 assets.add_khafile_def('rp_voxelgi_shadows')
-            if rpdat.arm_voxelgi_refraction:
-                assets.add_khafile_def('rp_voxelgi_refraction')
         else:
             log.warn('Disabling Voxel GI - unsupported target - use Krom instead')
 
@@ -352,7 +337,7 @@ def build():
         else:
             log.warn('Disabling soft shadows - "Armory Render Path - Cascades" requires to be set to 1 for now')
 
-    gbuffer2_direct = '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs or rpdat.arm_voxelgi_refraction
+    gbuffer2_direct = '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs
     gbuffer2 = '_Veloc' in wrd.world_defs or gbuffer2_direct
     if gbuffer2:
         assets.add_khafile_def('rp_gbuffer2')

@@ -53,11 +53,8 @@ def make_gi(context_id):
     frag.write('float metallic;') #
     frag.write('float occlusion;') #
     frag.write('float specular;') #
-    parse_opacity = rpdat.arm_voxelgi_refraction
-    if parse_opacity:
-        frag.write('float opacity;')
     frag.write('float dotNV = 0.0;')
-    cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity, parse_displacement=False, basecol_only=True)
+    cycles.parse(mat_state.nodes, con_voxel, vert, frag, geom, tesc, tese, parse_opacity=False, parse_displacement=False, basecol_only=True)
 
     # Voxelized particles
     particle = mat_state.material.arm_particle_flag
