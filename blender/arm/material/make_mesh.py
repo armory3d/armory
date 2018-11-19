@@ -53,10 +53,8 @@ def make(context_id):
             make_forward(con_mesh)
     elif rid == 'Deferred':
         make_deferred(con_mesh)
-    # elif rid == 'Deferred Plus':
-        # make_deferred_plus(con_mesh)
-    elif rid == 'Pathtracer':
-        make_pathtracer(con_mesh)
+    elif rid == 'Raytracer':
+        make_raytracer(con_mesh)
 
     make_finalize(con_mesh)
 
@@ -406,45 +404,7 @@ def make_deferred(con_mesh):
 
     return con_mesh
 
-# def make_deferred_plus(con_mesh):
-#     vert = con_mesh.make_vert()
-#     frag = con_mesh.make_frag()
-
-#     frag.add_out('vec4[3] fragColor')
-
-#     vert.add_uniform('mat3 N', '_normalMatrix')
-#     vert.write_attrib('vec4 spos = vec4(pos, 1.0);')
-
-#     frag.ins = vert.outs
-#     vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
-#     vert.write('gl_Position = WVP * spos;')
-
-#     frag.add_include('compiled.inc')
-
-#     vert.add_out('vec2 texCoord')
-
-#     con_mesh.add_elem('tex', 2) #### Add using cycles.py
-#     if con_mesh.is_elem('tex'):
-#         vert.write_attrib('texCoord = tex;')
-#     else:
-#         vert.write_attrib('texCoord = vec2(0.0);')
-
-#     vert.add_out('vec3 wnormal')
-#     write_norpos(con_mesh, vert)
-#     frag.write_attrib('vec3 n = normalize(wnormal);')
-
-#     frag.add_uniform('float materialID', link='_objectInfoMaterialIndex')
-
-#     # Pack gbuffer
-#     frag.add_include('std/gbuffer.glsl')
-#     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
-#     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
-#     frag.write('fragColor[0] = vec4(n.xy, fract(texCoord));')
-#     frag.write('fragColor[1] = vec4(materialID, 0.0, 0.0, 0.0);')
-#     frag.write('fragColor[2] = vec4(dFdx(texCoord), dFdy(texCoord));')
-#     # + tangent space
-
-def make_pathtracer(con_mesh):
+def make_raytracer(con_mesh):
     wrd = bpy.data.worlds['Arm']
     vert = con_mesh.make_vert()
     frag = con_mesh.make_frag()

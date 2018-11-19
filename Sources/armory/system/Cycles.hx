@@ -1111,17 +1111,9 @@ class Cycles {
 		frag.write_normal++;
 		parse_teximage_vector = false; // Force texCoord for normal map image vector
 		out_normaltan = parse_vector_input(inp);
-		// defplus = c_state.get_rp_renderer() == 'Deferred Plus'
-		// if not c_state.get_arm_export_tangents() or defplus: # Compute TBN matrix
 		if (!arm_export_tangents) {
-
 			frag.write('vec3 texn = ($out_normaltan) * 2.0 - 1.0;');
 			frag.write('texn.y = -texn.y;');
-		//     frag.add_include('../../Shaders/std/normals.glsl')
-
-		//     if defplus:
-		//         frag.write('mat3 TBN = cotangentFrame(n, -vVec, g2.xy, g2.zw);')
-		//     else:
 			if (!cotangentFrameWritten) {
 				cotangentFrameWritten = true;
 				frag.add_function(CyclesFunctions.str_cotangentFrame);

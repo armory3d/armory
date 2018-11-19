@@ -41,8 +41,6 @@ def get_rpasses(material):
             ar.append(con)
         if (rpdat.rp_gi == 'Voxel GI' or rpdat.rp_gi == 'Voxel AO') and has_voxels:
             ar.append('voxel')
-        if rpdat.rp_renderer == 'Deferred Plus':
-            ar.append('rect')
         if rpdat.rp_renderer == 'Forward' and rpdat.rp_depthprepass and not material.arm_blending and not material.arm_particle_flag:
             ar.append('depth')
             

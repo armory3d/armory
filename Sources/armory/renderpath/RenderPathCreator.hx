@@ -27,9 +27,9 @@ class RenderPathCreator {
 		#elseif (rp_renderer == "Deferred")
 		RenderPathDeferred.init(path);
 		path.commands = RenderPathDeferred.commands;
-		#elseif (rp_renderer == "Pathtracer")
-		RenderPathPathtracer.init(path);
-		path.commands = RenderPathPathtracer.commands;
+		#elseif (rp_renderer == "Raytracer")
+		RenderPathRaytracer.init(path);
+		path.commands = RenderPathRaytracer.commands;
 		#end
 		return path;
 	}

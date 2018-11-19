@@ -732,7 +732,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
         self.label(layout, text='Renderer')
         box = self.box(layout)
         row = self.row(box)
-        self.prop(row, rpdat, 'rp_renderer', expand=True)
+        self.prop(row, rpdat, 'rp_renderer')
         col = self.column(box, enabled=(rpdat.rp_renderer == 'Forward'))
         self.prop(col, rpdat, 'rp_depthprepass')
         self.prop(col, rpdat, 'arm_material_model')

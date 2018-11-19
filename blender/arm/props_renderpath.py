@@ -258,8 +258,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_renderer = EnumProperty(
         items=[('Forward', 'Forward', 'Forward'),
                ('Deferred', 'Deferred', 'Deferred'),
-               # ('Deferred Plus', 'Deferred Plus', 'Deferred Plus'),
-               # ('Pathtracer', 'Pathtracer', 'Pathtracer'),
+               # ('Raytracer', 'Raytracer', 'Raytracer'),
                ],
         name="Renderer", description="Renderer type", default='Deferred', update=update_renderpath)
     rp_depthprepass = BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=True, update=update_renderpath)

@@ -16,9 +16,9 @@ import kha.graphics5.TextureFormat;
 
 import iron.RenderPath;
 
-class RenderPathPathtracer {
+class RenderPathRaytracer {
 
-	#if (rp_renderer == "Pathtracer")
+	#if (rp_renderer == "Raytracer")
 
 	static var path:RenderPath;
 	static var ready = false;
