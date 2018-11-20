@@ -228,7 +228,9 @@ class ArmTraitListMoveItem(bpy.types.Operator):
             new_index = index + 1
 
         new_index = max(0, min(new_index, list_length))
-        index = new_index
+        
+        obj.arm_traitlist.move(index, new_index)
+        obj.arm_traitlist_index = new_index
 
 
     def execute(self, context):
