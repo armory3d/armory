@@ -106,8 +106,6 @@ uniform vec4 lightsArray[maxLights * 2];
 	#endif
 uniform sampler2D clustersData;
 uniform vec2 cameraPlane;
-const float clusterNear = 3.0;
-const vec3 clusterSlices = vec3(16, 16, 16);
 #ifdef _ShadowMap
 	#ifdef _ShadowMapCube
 	uniform vec2 lightProj;
@@ -362,15 +360,7 @@ void main() {
 #ifdef _Clusters
 
 	float depthl = linearize(depth * 0.5 + 0.5, cameraProj);
-	int sliceZ = 0;
-	if (depthl >= clusterNear) {
-		float z = log(depthl - clusterNear + 1.0) / log(cameraPlane.y - clusterNear + 1.0);
-		sliceZ = int(z * (clusterSlices.z - 1)) + 1;
-	}
-	int clusterI = int(texCoord.x * clusterSlices.x) +
-				   int(int(texCoord.y * clusterSlices.y) * clusterSlices.x) +
-				   int(sliceZ * clusterSlices.x * clusterSlices.y);
-
+	int clusterI = getClusterI(texCoord, depthl, cameraPlane);
 	int numLights = int(texelFetch(clustersData, ivec2(clusterI, 0), 0).r * 255);
 
 	#ifdef _Spot
@@ -381,12 +371,9 @@ void main() {
 	for (int i = 0; i < numLights; i++) {
 		int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);
 
-		// pos
-		// lightsArray[li * 2    ]
-		// color
-		// lightsArray[li * 2 + 1]
-		// spot - dir
-		// lightsArraySpot[li]
+		// lightsArray[li * 2    ] - pos
+		// lightsArray[li * 2 + 1] - color
+		// lightsArraySpot[li] - (spot)dir
 
 		vec3 lp = lightsArray[li * 2].xyz;
 		vec3 ld = lp - p;
@@ -441,7 +428,7 @@ void main() {
 			#ifdef _ShadowMapCube
 			visibility *= PCFCube(shadowMap0, ld, -l, bias, lightProj, n);
 			#else
-			vec4 lPos = LWVP0 * vec4(p + n * shadowsBias * 10, 1.0);
+			vec4 lPos = LWVP0 * vec4(p + n * bias * 10, 1.0);
 			if (lPos.w > 0.0) {
 				#ifdef _SMSizeUniform
 				visibility *= shadowTest(shadowMap0, lPos.xyz / lPos.w, bias, smSizeUniform);
