@@ -66,6 +66,47 @@ class ArmBakeListDeleteItem(bpy.types.Operator):
         scn.arm_bakelist_index = index
         return{'FINISHED'}
 
+class ArmBakeListMoveItem(bpy.types.Operator):
+    # Move an item in the list
+    bl_idname = "arm_bakelist.move_item"
+    bl_label = "Move an item in the list"
+    direction = bpy.props.EnumProperty(
+                items=(
+                    ('UP', 'Up', ""),
+                    ('DOWN', 'Down', ""),))
+
+    def move_index(self):
+        # Move index of an item render queue while clamping it
+        obj = bpy.context.scene
+        index = obj.arm_bakelist_index
+        list_length = len(obj.arm_bakelist) - 1
+        new_index = 0
+
+        if self.direction == 'UP':
+            new_index = index - 1
+        elif self.direction == 'DOWN':
+            new_index = index + 1
+
+        new_index = max(0, min(new_index, list_length))
+        obj.arm_bakelist.move(index, new_index)
+        obj.arm_bakelist_index = new_index
+
+    def execute(self, context):
+        obj = bpy.context.scene
+        list = obj.arm_bakelist
+        index = obj.arm_bakelist_index
+
+        if self.direction == 'DOWN':
+            neighbor = index + 1
+            self.move_index()
+
+        elif self.direction == 'UP':
+            neighbor = index - 1
+            self.move_index()
+        else:
+            return{'CANCELLED'}
+        return{'FINISHED'}
+
 class ArmBakeButton(bpy.types.Operator):
     '''Bake textures for listed objects'''
     bl_idname = 'arm.bake_textures'
@@ -316,6 +357,7 @@ def register():
     bpy.utils.register_class(ArmBakeList)
     bpy.utils.register_class(ArmBakeListNewItem)
     bpy.utils.register_class(ArmBakeListDeleteItem)
+    bpy.utils.register_class(ArmBakeListMoveItem)
     bpy.utils.register_class(ArmBakeButton)
     bpy.utils.register_class(ArmBakeApplyButton)
     bpy.utils.register_class(ArmBakeSpecialsMenu)
@@ -336,6 +378,7 @@ def unregister():
     bpy.utils.unregister_class(ArmBakeList)
     bpy.utils.unregister_class(ArmBakeListNewItem)
     bpy.utils.unregister_class(ArmBakeListDeleteItem)
+    bpy.utils.unregister_class(ArmBakeListMoveItem)
     bpy.utils.unregister_class(ArmBakeButton)
     bpy.utils.unregister_class(ArmBakeApplyButton)
     bpy.utils.unregister_class(ArmBakeSpecialsMenu)

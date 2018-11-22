@@ -548,7 +548,7 @@ class ArmRPListNewItem(bpy.types.Operator):
 
     def draw(self,context):
         layout = self.layout
-        layout.prop(bpy.data.worlds['Arm'], 'rp_preset')
+        layout.prop(bpy.data.worlds['Arm'], 'rp_preset', expand=True)
 
     def execute(self, context):
         wrd = bpy.data.worlds['Arm']
@@ -581,11 +581,53 @@ class ArmRPListDeleteItem(bpy.types.Operator):
         mdata.arm_rplist_index = index
         return{'FINISHED'}
 
+class ArmRPListMoveItem(bpy.types.Operator):
+    # Move an item in the list
+    bl_idname = "arm_rplist.move_item"
+    bl_label = "Move an item in the list"
+    direction = bpy.props.EnumProperty(
+                items=(
+                    ('UP', 'Up', ""),
+                    ('DOWN', 'Down', ""),))
+
+    def move_index(self):
+        # Move index of an item render queue while clamping it
+        mdata = bpy.data.worlds['Arm']
+        index = mdata.arm_rplist_index
+        list_length = len(mdata.arm_rplist) - 1
+        new_index = 0
+
+        if self.direction == 'UP':
+            new_index = index - 1
+        elif self.direction == 'DOWN':
+            new_index = index + 1
+
+        new_index = max(0, min(new_index, list_length))
+        mdata.arm_rplist.move(index, new_index)
+        mdata.arm_rplist_index = new_index
+
+    def execute(self, context):
+        mdata = bpy.data.worlds['Arm']
+        list = mdata.arm_rplist
+        index = mdata.arm_rplist_index
+
+        if self.direction == 'DOWN':
+            neighbor = index + 1
+            self.move_index()
+
+        elif self.direction == 'UP':
+            neighbor = index - 1
+            self.move_index()
+        else:
+            return{'CANCELLED'}
+        return{'FINISHED'}
+
 def register():
     bpy.utils.register_class(ArmRPListItem)
     bpy.utils.register_class(ArmRPList)
     bpy.utils.register_class(ArmRPListNewItem)
     bpy.utils.register_class(ArmRPListDeleteItem)
+    bpy.utils.register_class(ArmRPListMoveItem)
 
     bpy.types.World.arm_rplist = CollectionProperty(type=ArmRPListItem)
     bpy.types.World.arm_rplist_index = IntProperty(name="Index for my_list", default=0, update=update_renderpath)
@@ -595,3 +637,4 @@ def unregister():
     bpy.utils.unregister_class(ArmRPList)
     bpy.utils.unregister_class(ArmRPListNewItem)
     bpy.utils.unregister_class(ArmRPListDeleteItem)
+    bpy.utils.unregister_class(ArmRPListMoveItem)

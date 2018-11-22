@@ -200,18 +200,6 @@ class ArmTraitListMoveItem(bpy.types.Operator):
 
     is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
 
-    # @classmethod
-    # def poll(self, context):
-    #     if self.is_object:
-    #         obj = bpy.context.object
-    #     else:
-    #         obj = bpy.context.scene
-    #     if obj == None:
-    #         return False
-    #     """ Enable if there's something in the list. """
-    #     return len(obj.arm_traitlist) > 0
-
-
     def move_index(self):
         # Move index of an item render queue while clamping it
         if self.is_object:
@@ -228,10 +216,8 @@ class ArmTraitListMoveItem(bpy.types.Operator):
             new_index = index + 1
 
         new_index = max(0, min(new_index, list_length))
-        
         obj.arm_traitlist.move(index, new_index)
         obj.arm_traitlist_index = new_index
-
 
     def execute(self, context):
         if self.is_object:
@@ -243,12 +229,10 @@ class ArmTraitListMoveItem(bpy.types.Operator):
 
         if self.direction == 'DOWN':
             neighbor = index + 1
-            #queue.move(index,neighbor)
             self.move_index()
 
         elif self.direction == 'UP':
             neighbor = index - 1
-            #queue.move(neighbor, index)
             self.move_index()
         else:
             return{'CANCELLED'}

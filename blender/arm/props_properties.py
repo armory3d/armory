@@ -93,19 +93,7 @@ class ArmPropertyListMoveItem(bpy.types.Operator):
                     ('UP', 'Up', ""),
                     ('DOWN', 'Down', ""),))
 
-    # @classmethod
-    # def poll(self, context):
-    #     if self.is_object:
-    #         obj = bpy.context.object
-    #     else:
-    #         obj = bpy.context.scene
-    #     if obj == None:
-    #         return False
-    #     """ Enable if there's something in the list. """
-    #     return len(obj.arm_propertylist) > 0
-
     def move_index(self):
-        # Move index of an item render queue while clamping it
         obj = bpy.context.object
         index = obj.arm_propertylist_index
         list_length = len(obj.arm_propertylist) - 1
@@ -117,7 +105,8 @@ class ArmPropertyListMoveItem(bpy.types.Operator):
             new_index = index + 1
 
         new_index = max(0, min(new_index, list_length))
-        index = new_index
+        obj.arm_propertylist.move(index, new_index)
+        obj.arm_propertylist_index = new_index
 
     def execute(self, context):
         obj = bpy.context.object
@@ -126,12 +115,10 @@ class ArmPropertyListMoveItem(bpy.types.Operator):
 
         if self.direction == 'DOWN':
             neighbor = index + 1
-            #queue.move(index,neighbor)
             self.move_index()
 
         elif self.direction == 'UP':
             neighbor = index - 1
-            #queue.move(neighbor, index)
             self.move_index()
         else:
             return{'CANCELLED'}

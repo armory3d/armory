@@ -147,7 +147,6 @@ class ArmExporterListNewItem(bpy.types.Operator):
         mdata.arm_exporterlist_index = len(mdata.arm_exporterlist) - 1
         return{'FINISHED'}
 
-
 class ArmExporterListDeleteItem(bpy.types.Operator):
     # Delete the selected item from the list
     bl_idname = "arm_exporterlist.delete_item"
@@ -170,6 +169,47 @@ class ArmExporterListDeleteItem(bpy.types.Operator):
             index = index - 1
 
         mdata.arm_exporterlist_index = index
+        return{'FINISHED'}
+
+class ArmExporterListMoveItem(bpy.types.Operator):
+    # Move an item in the list
+    bl_idname = "arm_exporterlist.move_item"
+    bl_label = "Move an item in the list"
+    direction = bpy.props.EnumProperty(
+                items=(
+                    ('UP', 'Up', ""),
+                    ('DOWN', 'Down', ""),))
+
+    def move_index(self):
+        # Move index of an item render queue while clamping it
+        mdata = bpy.data.worlds['Arm']
+        index = mdata.arm_exporterlist_index
+        list_length = len(mdata.arm_exporterlist) - 1
+        new_index = 0
+
+        if self.direction == 'UP':
+            new_index = index - 1
+        elif self.direction == 'DOWN':
+            new_index = index + 1
+
+        new_index = max(0, min(new_index, list_length))
+        mdata.arm_exporterlist.move(index, new_index)
+        mdata.arm_exporterlist_index = new_index
+
+    def execute(self, context):
+        mdata = bpy.data.worlds['Arm']
+        list = mdata.arm_exporterlist
+        index = mdata.arm_exporterlist_index
+
+        if self.direction == 'DOWN':
+            neighbor = index + 1
+            self.move_index()
+
+        elif self.direction == 'UP':
+            neighbor = index - 1
+            self.move_index()
+        else:
+            return{'CANCELLED'}
         return{'FINISHED'}
 
 class ArmExporterSpecialsMenu(bpy.types.Menu):
@@ -225,6 +265,7 @@ def register():
     bpy.utils.register_class(ArmExporterList)
     bpy.utils.register_class(ArmExporterListNewItem)
     bpy.utils.register_class(ArmExporterListDeleteItem)
+    bpy.utils.register_class(ArmExporterListMoveItem)
     bpy.utils.register_class(ArmExporterSpecialsMenu)
     bpy.utils.register_class(ArmExporterGpuProfileButton)
     bpy.utils.register_class(ArmoryExporterOpenFolderButton)
@@ -237,6 +278,7 @@ def unregister():
     bpy.utils.unregister_class(ArmExporterList)
     bpy.utils.unregister_class(ArmExporterListNewItem)
     bpy.utils.unregister_class(ArmExporterListDeleteItem)
+    bpy.utils.unregister_class(ArmExporterListMoveItem)
     bpy.utils.unregister_class(ArmExporterSpecialsMenu)
     bpy.utils.unregister_class(ArmExporterGpuProfileButton)
     bpy.utils.unregister_class(ArmoryExporterOpenFolderButton)

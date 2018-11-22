@@ -94,11 +94,53 @@ class ArmLodListDeleteItem(bpy.types.Operator):
         mdata.arm_lodlist_index = index
         return{'FINISHED'}
 
+class ArmLodListMoveItem(bpy.types.Operator):
+    # Move an item in the list
+    bl_idname = "arm_lodlist.move_item"
+    bl_label = "Move an item in the list"
+    direction = bpy.props.EnumProperty(
+                items=(
+                    ('UP', 'Up', ""),
+                    ('DOWN', 'Down', ""),))
+
+    def move_index(self):
+        # Move index of an item render queue while clamping it
+        mdata = bpy.context.object.data
+        index = mdata.arm_lodlist_index
+        list_length = len(mdata.arm_lodlist) - 1
+        new_index = 0
+
+        if self.direction == 'UP':
+            new_index = index - 1
+        elif self.direction == 'DOWN':
+            new_index = index + 1
+
+        new_index = max(0, min(new_index, list_length))
+        mdata.arm_lodlist.move(index, new_index)
+        mdata.arm_lodlist_index = new_index
+
+    def execute(self, context):
+        mdata = bpy.context.object.data
+        list = mdata.arm_lodlist
+        index = mdata.arm_lodlist_index
+
+        if self.direction == 'DOWN':
+            neighbor = index + 1
+            self.move_index()
+
+        elif self.direction == 'UP':
+            neighbor = index - 1
+            self.move_index()
+        else:
+            return{'CANCELLED'}
+        return{'FINISHED'}
+
 def register():
     bpy.utils.register_class(ArmLodListItem)
     bpy.utils.register_class(ArmLodList)
     bpy.utils.register_class(ArmLodListNewItem)
     bpy.utils.register_class(ArmLodListDeleteItem)
+    bpy.utils.register_class(ArmLodListMoveItem)
 
     bpy.types.Mesh.arm_lodlist = bpy.props.CollectionProperty(type=ArmLodListItem)
     bpy.types.Mesh.arm_lodlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
@@ -109,3 +151,4 @@ def unregister():
     bpy.utils.unregister_class(ArmLodList)
     bpy.utils.unregister_class(ArmLodListNewItem)
     bpy.utils.unregister_class(ArmLodListDeleteItem)
+    bpy.utils.unregister_class(ArmLodListMoveItem)

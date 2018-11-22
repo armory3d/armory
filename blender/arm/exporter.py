@@ -2389,8 +2389,7 @@ class ArmoryExporter:
 
         # Create Viewport camera
         if bpy.data.worlds['Arm'].arm_play_camera != 'Scene':
-            log.warn('Creating viewport camera')
-            self.create_default_camera("ARMViewportCamera", is_viewport_camera=True)
+            self.create_default_camera(is_viewport_camera=True)
             self.camera_spawned = True
 
         # No camera found
@@ -2399,8 +2398,7 @@ class ArmoryExporter:
 
         # No camera found, create a default one
         if (len(self.output['camera_datas']) == 0 and len(bpy.data.cameras) == 0) or not self.camera_spawned:
-            log.warn('Creating default camera')
-            self.create_default_camera("DefaultCamera")
+            self.create_default_camera()
 
         # Scene root traits
         if wrd.arm_physics != 'Disabled' and ArmoryExporter.export_physics:
@@ -2465,7 +2463,7 @@ class ArmoryExporter:
         print('Scene built in ' + str(time.time() - profile_time))
         return {'FINISHED'}
 
-    def create_default_camera(self, camera_name="DefaultCamera", is_viewport_camera=False):
+    def create_default_camera(self, is_viewport_camera=False):
         o = {}
         o['name'] = 'DefaultCamera'
         o['near_plane'] = 0.1

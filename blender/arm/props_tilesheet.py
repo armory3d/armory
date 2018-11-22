@@ -93,7 +93,6 @@ class ArmTilesheetActionListMoveItem(bpy.types.Operator):
         trait = wrd.arm_tilesheetlist[wrd.arm_tilesheetlist_index]
         return len(trait.arm_tilesheetactionlist) > 0
 
-
     def move_index(self):
         # Move index of an item render queue while clamping it
         wrd = bpy.data.worlds['Arm']
@@ -108,8 +107,8 @@ class ArmTilesheetActionListMoveItem(bpy.types.Operator):
             new_index = index + 1
 
         new_index = max(0, min(new_index, list_length))
-        index = new_index
-
+        trait.arm_tilesheetactionlist.move(index, new_index)
+        trait.arm_tilesheetactionlist_index = new_index
 
     def execute(self, context):
         wrd = bpy.data.worlds['Arm']
@@ -119,12 +118,10 @@ class ArmTilesheetActionListMoveItem(bpy.types.Operator):
 
         if self.direction == 'DOWN':
             neighbor = index + 1
-            #queue.move(index,neighbor)
             self.move_index()
 
         elif self.direction == 'UP':
             neighbor = index - 1
-            #queue.move(neighbor, index)
             self.move_index()
         else:
             return{'CANCELLED'}
@@ -230,7 +227,8 @@ class ArmTilesheetListMoveItem(bpy.types.Operator):
             new_index = index + 1
 
         new_index = max(0, min(new_index, list_length))
-        index = new_index
+        wrd.arm_tilesheetlist.move(index, new_index)
+        wrd.arm_tilesheetlist_index = new_index
 
     def execute(self, context):
         wrd = bpy.data.worlds['Arm']
@@ -239,12 +237,10 @@ class ArmTilesheetListMoveItem(bpy.types.Operator):
 
         if self.direction == 'DOWN':
             neighbor = index + 1
-            #queue.move(index,neighbor)
             self.move_index()
 
         elif self.direction == 'UP':
             neighbor = index - 1
-            #queue.move(neighbor, index)
             self.move_index()
         else:
             return{'CANCELLED'}
