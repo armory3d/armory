@@ -608,7 +608,7 @@ class ArmoryExporter:
                             boneRef[1]["objectType"] = NodeTypeBone
 
     def export_bone_transform(self, armature, bone, scene, o, action):
-        
+
         pose_bone = armature.pose.bones.get(bone.name)
         # if pose_bone != None:
         #     transform = pose_bone.matrix.copy()
@@ -1066,14 +1066,6 @@ class ArmoryExporter:
                     pose_bone = bobject.parent.pose.bones[bobject.parent_bone]
                     bone_translation_pose = pose_bone.tail - pose_bone.head
                     o['parent_bone_tail_pose'] = [bone_translation_pose[0], bone_translation_pose[1], bone_translation_pose[2]]
-
-            # Viewport Camera - overwrite active camera matrix with viewport matrix
-            if type == NodeTypeCamera and bpy.data.worlds['Arm'].arm_play_camera != 'Scene' and self.scene.camera != None and bobject.name == self.scene.camera.name:
-                viewport_matrix = self.get_viewport_view_matrix()
-                if viewport_matrix != None:
-                    o['transform']['values'] = self.write_matrix(viewport_matrix.inverted_safe())
-                    # Do not apply parent matrix
-                    o['local_only'] = True
 
             if bobject.type == 'ARMATURE' and bobject.data != None:
                 bdata = bobject.data # Armature data
@@ -1560,7 +1552,7 @@ class ArmoryExporter:
                         break
             o['index_arrays'].append(ia)
         # Sort by material index
-        # o['index_arrays'] = sorted(o['index_arrays'], key=lambda k: k['material']) 
+        # o['index_arrays'] = sorted(o['index_arrays'], key=lambda k: k['material'])
 
         # Make tangents
         if has_tang:
@@ -1842,7 +1834,7 @@ class ArmoryExporter:
             return ar
         else:
             return [0.051, 0.051, 0.051, 1.0]
-            
+
     def extract_projection(self, o, proj, with_planes=True):
         a = proj[0][0]
         b = proj[1][1]
@@ -1893,15 +1885,6 @@ class ArmoryExporter:
             # o['near_plane'] = objref.clip_start
             # o['far_plane'] = objref.clip_end
             self.extract_ortho(o, proj)
-
-        wrd = bpy.data.worlds['Arm']
-        if wrd.arm_play_camera != 'Scene':
-            proj, is_persp = self.get_viewport_projection_matrix()
-            if proj != None:
-                if is_persp:
-                    self.extract_projection(o, proj, with_planes=False)
-                else:
-                    self.extract_ortho(o, proj)
 
         o['frustum_culling'] = objref.arm_frustum_culling
         o['clear_color'] = self.get_camera_clear_color()
@@ -2404,40 +2387,20 @@ class ArmoryExporter:
 
         self.export_objects(self.scene)
 
+        # Create Viewport camera
+        if bpy.data.worlds['Arm'].arm_play_camera != 'Scene':
+            log.warn('Creating viewport camera')
+            self.create_default_camera("ARMViewportCamera", is_viewport_camera=True)
+            self.camera_spawned = True
+
+        # No camera found
         if not self.camera_spawned:
             log.warn('No camera found in active scene layers')
 
+        # No camera found, create a default one
         if (len(self.output['camera_datas']) == 0 and len(bpy.data.cameras) == 0) or not self.camera_spawned:
             log.warn('Creating default camera')
-            o = {}
-            o['name'] = 'DefaultCamera'
-            o['near_plane'] = 0.1
-            o['far_plane'] = 100.0
-            o['fov'] = 0.85
-            o['type'] = 'perspective'
-            o['frustum_culling'] = True
-            o['clear_color'] = self.get_camera_clear_color()
-            self.output['camera_datas'].append(o)
-            o = {}
-            o['name'] = 'DefaultCamera'
-            o['type'] = 'camera_object'
-            o['data_ref'] = 'DefaultCamera'
-            o['material_refs'] = []
-            o['transform'] = {}
-            viewport_matrix = self.get_viewport_view_matrix()
-            if viewport_matrix != None:
-                o['transform']['values'] = self.write_matrix(viewport_matrix.inverted_safe())
-                o['local_only'] = True
-            else:
-                o['transform']['values'] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-            o['traits'] = []
-            trait = {}
-            trait['type'] = 'Script'
-            trait['class_name'] = 'armory.trait.WalkNavigation'
-            o['traits'].append(trait)
-            ArmoryExporter.import_traits.append(trait['class_name'])
-            self.output['objects'].append(o)
-            self.output['camera_ref'] = 'DefaultCamera'
+            self.create_default_camera("DefaultCamera")
 
         # Scene root traits
         if wrd.arm_physics != 'Disabled' and ArmoryExporter.export_physics:
@@ -2501,6 +2464,47 @@ class ArmoryExporter:
 
         print('Scene built in ' + str(time.time() - profile_time))
         return {'FINISHED'}
+
+    def create_default_camera(self, camera_name="DefaultCamera", is_viewport_camera=False):
+        o = {}
+        o['name'] = 'DefaultCamera'
+        o['near_plane'] = 0.1
+        o['far_plane'] = 100.0
+        o['fov'] = 0.85
+        o['type'] = 'perspective'
+        o['frustum_culling'] = True
+        o['clear_color'] = self.get_camera_clear_color()
+
+        # Set viewport camera projection
+        if is_viewport_camera:
+            proj, is_persp = self.get_viewport_projection_matrix()
+            if proj != None:
+                if is_persp:
+                    self.extract_projection(o, proj, with_planes=False)
+                else:
+                    self.extract_ortho(o, proj)
+
+        self.output['camera_datas'].append(o)
+        o = {}
+        o['name'] = 'DefaultCamera'
+        o['type'] = 'camera_object'
+        o['data_ref'] = 'DefaultCamera'
+        o['material_refs'] = []
+        o['transform'] = {}
+        viewport_matrix = self.get_viewport_view_matrix()
+        if viewport_matrix != None:
+            o['transform']['values'] = self.write_matrix(viewport_matrix.inverted_safe())
+            o['local_only'] = True
+        else:
+            o['transform']['values'] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+        o['traits'] = []
+        trait = {}
+        trait['type'] = 'Script'
+        trait['class_name'] = 'armory.trait.WalkNavigation'
+        o['traits'].append(trait)
+        ArmoryExporter.import_traits.append(trait['class_name'])
+        self.output['objects'].append(o)
+        self.output['camera_ref'] = 'DefaultCamera'
 
     # Callbacks
     def is_mesh_cached(self, bobject):
@@ -2570,7 +2574,7 @@ class ArmoryExporter:
                         instanced_data.append(scale.y)
                         instanced_data.append(scale.z)
                 break
-            
+
             # Instance render groups with same children?
             # elif bobject.dupli_type == 'GROUP' and bobject.dupli_group != None:
             #     instanced_type = 1
