@@ -81,7 +81,7 @@ def init_properties():
     bpy.types.World.arm_project_version = StringProperty(name="Version", description="Exported project version", default="1.0", update=invalidate_compiler_cache)
     bpy.types.World.arm_project_bundle = StringProperty(name="Bundle", description="Exported project bundle", default="", update=invalidate_compiler_cache)
     bpy.types.World.arm_project_icon = StringProperty(name="Icon (PNG)", description="Exported project icon, must be a PNG image", default="", subtype="FILE_PATH", update=invalidate_compiler_cache)
-    bpy.types.World.arm_project_root = StringProperty(name="Root", description="Set root folder for linked assets", default="", subtype="FILE_PATH", update=invalidate_compiler_cache)
+    bpy.types.World.arm_project_root = StringProperty(name="Root", description="Set root folder for linked assets", default="", subtype="DIR_PATH", update=invalidate_compiler_cache)
     bpy.types.World.arm_physics = EnumProperty(
         items=[('Disabled', 'Disabled', 'Disabled'),
                ('Auto', 'Auto', 'Auto'),
@@ -369,7 +369,7 @@ def create_wrd():
         wrd.arm_commit = arm_commit
 
 def init_properties_on_load():
-    global arm_version    
+    global arm_version
     if not 'Arm' in bpy.data.worlds:
         init_properties()
     arm.utils.fetch_script_names()
