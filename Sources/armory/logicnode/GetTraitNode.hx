@@ -16,8 +16,12 @@ class GetTraitNode extends LogicNode {
 
 		if (object == null) return null;
 
+		if (cname == null) cname = cast Type.resolveClass(name);
+		// When building mods the Main class doesn't exist
+		#if !arm_modding_mod
 		if (cname == null) cname = cast Type.resolveClass(Main.projectPackage + "." + name);
 		if (cname == null) cname = cast Type.resolveClass(Main.projectPackage + ".node." + name);
+		#end
 		return object.getTrait(cname);
 	}
 }
