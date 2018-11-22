@@ -31,11 +31,6 @@
 					"link": "_biasLightWorldViewProjectionMatrix"
 				},
 				{
-					"name": "lightType",
-					"link": "_lightType",
-					"ifdef": ["_Disabled"]
-				},
-				{
 					"name": "lightShadow",
 					"link": "_lightCastShadow"
 				},

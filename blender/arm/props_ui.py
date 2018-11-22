@@ -138,8 +138,6 @@ class DataPropsPanel(bpy.types.Panel):
             col = row.column()
             col.prop(obj.data, 'arm_fov')
             col.prop(obj.data, 'arm_shadows_bias')
-            if obj.data.type == 'POINT':
-                layout.prop(obj.data, 'arm_shadows_cubemap')
             layout.prop(wrd, 'arm_light_ies_texture')
             layout.prop(wrd, 'arm_light_clouds_texture')
         elif obj.type == 'SPEAKER':
@@ -783,6 +781,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
         row = self.row(col2, align=True, alignment='EXPAND')
         self.prop(row, rpdat, 'arm_soft_shadows_penumbra')
         self.prop(row, rpdat, 'arm_soft_shadows_distance')
+        self.prop(col, rpdat, 'arm_shadows_cubemap')
         self.prop(col, rpdat, 'arm_pcfsize')
 
 

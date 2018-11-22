@@ -38,6 +38,7 @@ def update_preset(self, context):
         rpdat.arm_texture_filter = 'Anisotropic'
         rpdat.arm_radiance = True
         rpdat.arm_radiance_sky = True
+        rpdat.arm_shadows_cubemap = True
     elif self.rp_preset == 'VR':
         rpdat.rp_renderer = 'Forward'
         rpdat.rp_depthprepass = False
@@ -69,6 +70,7 @@ def update_preset(self, context):
         rpdat.arm_texture_filter = 'Point'
         rpdat.arm_radiance = True
         rpdat.arm_radiance_sky = True
+        rpdat.arm_shadows_cubemap = True
     elif self.rp_preset == 'Mobile':
         rpdat.rp_renderer = 'Forward'
         rpdat.rp_depthprepass = False
@@ -100,6 +102,7 @@ def update_preset(self, context):
         rpdat.arm_texture_filter = 'Linear'
         rpdat.arm_radiance = False
         rpdat.arm_radiance_sky = False
+        rpdat.arm_shadows_cubemap = False
     elif self.rp_preset == 'Max':
         rpdat.rp_renderer = 'Deferred'
         rpdat.rp_shadowmap = '8192'
@@ -135,6 +138,7 @@ def update_preset(self, context):
         rpdat.arm_texture_filter = 'Anisotropic'
         rpdat.arm_radiance = True
         rpdat.arm_radiance_sky = True
+        rpdat.arm_shadows_cubemap = True
     elif self.rp_preset == '2D/Baked':
         rpdat.rp_renderer = 'Forward'
         rpdat.rp_depthprepass = False
@@ -166,6 +170,7 @@ def update_preset(self, context):
         rpdat.arm_texture_filter = 'Linear'
         rpdat.arm_radiance = False
         rpdat.arm_radiance_sky = False
+        rpdat.arm_shadows_cubemap = False
     update_renderpath(self, context)
 
 def update_renderpath(self, context):
@@ -236,8 +241,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_driver_list = CollectionProperty(type=bpy.types.PropertyGroup)
     rp_driver = StringProperty(name="Driver", default="Armory", update=assets.invalidate_compiled_data)
     rp_renderer = EnumProperty(
-        items=[('Forward', 'Forward', 'Forward'),
-               ('Deferred', 'Deferred', 'Deferred'),
+        items=[('Forward', 'Forward Clustered', 'Forward'),
+               ('Deferred', 'Deferred Clustered', 'Deferred'),
                # ('Raytracer', 'Raytracer', 'Raytracer'),
                ],
         name="Renderer", description="Renderer type", default='Deferred', update=update_renderpath)
@@ -369,6 +374,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name="Soft Shadows", description="Soft shadows with variable penumbra (spot and non-cascaded sun light supported)", default='Off', update=assets.invalidate_shader_cache)
     arm_soft_shadows_penumbra = IntProperty(name="Penumbra", description="Variable penumbra scale", default=1, min=0, max=10, update=assets.invalidate_shader_cache)
     arm_soft_shadows_distance = FloatProperty(name="Distance", description="Variable penumbra distance", default=1.0, min=0, max=10, update=assets.invalidate_shader_cache)
+    arm_shadows_cubemap = BoolProperty(name="Cubemap", description="Use cubemap to capture point light shadows", default=True)
     arm_ssrs = BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
     arm_texture_filter = EnumProperty(
         items=[('Anisotropic', 'Anisotropic', 'Anisotropic'),

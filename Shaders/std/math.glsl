@@ -35,7 +35,7 @@ float attenuate(const float dist) {
 // float attenuate(float dist, float constant, float linear, float quadratic) {
 	return 1.0 / (dist * dist);
 	// 1.0 / (constant * 1.0)
-	// 1.0 / (lienar * dist)
+	// 1.0 / (linear * dist)
 	// 1.0 / (quadratic * dist * dist);
 }
 

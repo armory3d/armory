@@ -43,35 +43,47 @@ class Inc {
 	}
 
 	public static function bindShadowMap() {
-		var target = shadowMapName();
-		if (target == "shadowMapCube") {
-			#if kha_webgl
-			// Bind empty map to non-cubemap sampler
-			path.bindTarget("arm_empty", "shadowMap");
-			#end
-			path.bindTarget("shadowMapCube", "shadowMapCube");
-		}
-		else {
-			#if kha_webgl
-			// Bind empty map to cubemap sampler
-			path.bindTarget("arm_empty_cube", "shadowMapCube");
-			#end
+		if (path.sun != null && path.sun.data.raw.cast_shadow) {
 			path.bindTarget("shadowMap", "shadowMap");
 		}
+
+		for (l in iron.Scene.active.lights) {
+			if (!l.visible || !l.data.raw.cast_shadow) continue;
+			var n = shadowMapName(l);
+			path.bindTarget(n, n);
+		}
+
+		// var target = shadowMapName(l);
+		// if (target == "shadowMapCube") {
+		// 	#if kha_webgl
+		// 	// Bind empty map to non-cubemap sampler
+		// 	path.bindTarget("arm_empty", "shadowMap");
+		// 	#end
+		// 	path.bindTarget("shadowMapCube", "shadowMapCube");
+		// }
+		// else {
+		// 	#if kha_webgl
+		// 	// Bind empty map to cubemap sampler
+		// 	path.bindTarget("arm_empty_cube", "shadowMapCube");
+		// 	#end
+		// 	path.bindTarget("shadowMap", "shadowMap");
+		// }
 	}
 
-	public static function shadowMapName():String {
-		return path.getLight(path.currentLightIndex).data.raw.shadowmap_cube ? "shadowMapCube" : "shadowMap";
+	static function shadowMapName(l:iron.object.LightObject):String {
+		if (l.data.raw.type == "sun") return "shadowMap";
+		if (l.data.raw.type == "point") return "shadowMap0"; 
+		else return "shadowMapSpot0"; 
 	}
 
-	public static function getShadowMap():String {
-		var target = shadowMapName();
+	static function getShadowMap(l:iron.object.LightObject):String {
+		var target = shadowMapName(l);
 		var rt = path.renderTargets.get(target);
 		// Create shadowmap on the fly
 		if (rt == null) {
-			if (path.getLight(path.currentLightIndex).data.raw.shadowmap_cube) {
+			if (path.light.data.raw.shadowmap_cube) {
 				// Cubemap size
-				var size = Std.int(path.getLight(path.currentLightIndex).data.raw.shadowmap_size);
+				var size = Std.int(path.light.data.raw.shadowmap_size);
 				var t = new RenderTargetRaw();
 				t.name = target;
 				t.width = size;
@@ -81,7 +93,7 @@ class Inc {
 				rt = path.createRenderTarget(t);
 			}
 			else { // Non-cube sm
-				var sizew = path.getLight(path.currentLightIndex).data.raw.shadowmap_size;
+				var sizew = path.light.data.raw.shadowmap_size;
 				var sizeh = sizew;
 				#if arm_csm // Cascades - atlas on x axis
 				sizew = sizeh * iron.object.LightObject.cascadeCount;
@@ -96,12 +108,66 @@ class Inc {
 		}
 		return target;
 	}
+
+	public static function drawShadowMap() {
+		#if (rp_shadowmap)
+		
+		for (l in iron.Scene.active.lights) {
+			if (!l.visible || !l.data.raw.cast_shadow) continue;
+			path.light = l;
+
+			var faces = l.data.raw.shadowmap_cube ? 6 : 1;
+			for (i in 0...faces) {
+				if (faces > 1) path.currentFace = i;
+				path.setTarget(Inc.getShadowMap(l));
+				path.clearTarget(null, 1.0);
+				path.drawMeshes("shadowmap");
+			}
+			path.currentFace = -1;
+		}
+
+		// One light at a time for now, precompute all lights for tiled
+		// #if rp_soft_shadows
+
+		// if (l.raw.type != "point") {
+		// 	path.setTarget("visa"); // Merge using min blend
+		// 	Inc.bindShadowMap();
+		// 	path.drawShader("shader_datas/dilate_pass/dilate_pass_x");
+
+		// 	path.setTarget("visb");
+		// 	path.bindTarget("visa", "shadowMap");
+		// 	path.drawShader("shader_datas/dilate_pass/dilate_pass_y");
+		// }
+
+		// path.setTarget("visa", ["dist"]);
+		// //if (i == 0) path.clearTarget(0x00000000);
+		// if (l.raw.type != "point") path.bindTarget("visb", "dilate");
+		// Inc.bindShadowMap();
+		// //path.bindTarget("_main", "gbufferD");
+		// path.bindTarget("gbuffer0", "gbuffer0");
+		// path.drawShader("shader_datas/visibility_pass/visibility_pass");
+		
+		// path.setTarget("visb");
+		// path.bindTarget("visa", "tex");
+		// path.bindTarget("gbuffer0", "gbuffer0");
+		// path.bindTarget("dist", "dist");
+		// path.drawShader("shader_datas/blur_shadow_pass/blur_shadow_pass_x");
+
+		// path.setTarget("visa");
+		// path.bindTarget("visb", "tex");
+		// path.bindTarget("gbuffer0", "gbuffer0");
+		// path.bindTarget("dist", "dist");
+		// path.drawShader("shader_datas/blur_shadow_pass/blur_shadow_pass_y");
+		// #end
+
+		#end // rp_shadowmap
+	}
 	
 	public static function applyConfig() {
 		#if arm_config
 		var config = armory.data.Config.raw;
 		// Resize shadow map
-		var l = path.getLight(path.currentLightIndex);
+		var l = path.light;
 		if (l.data.raw.shadowmap_size != config.rp_shadowmap) {
 			l.data.raw.shadowmap_size = config.rp_shadowmap;
 			var rt = path.renderTargets.get("shadowMap");
@@ -331,22 +397,13 @@ class Inc {
 			// if (!l.visible) continue;
 			// path.currentLightIndex = i;
 
-			// #if (rp_shadowmap)
-			// {
-				// TODO: merge with direct, drawing shadowmaps twice!
-				// if (path.lightCastShadow()) {
-					// drawShadowMap(l);
-				// }
-			// }
-			// #end
-
 			kha.compute.Compute.setShader(voxel_sh);
 			kha.compute.Compute.setTexture(voxel_ta, rts.get("voxelsOpac").image, kha.compute.Access.Read);
 			kha.compute.Compute.setTexture(voxel_tb, rts.get("voxelsNor").image, kha.compute.Access.Read);
 			kha.compute.Compute.setTexture(voxel_tc, rts.get("voxels").image, kha.compute.Access.Write);
 
 			#if (rp_shadowmap)
-			if (Inc.shadowMapName() == "shadowMapCube") {
+			if (Inc.shadowMapName(l) == "shadowMapCube") {
 				// shadowMapCube
 				kha.compute.Compute.setSampledCubeMap(voxel_te, rts.get("shadowMapCube").cubeMap);
 			}
@@ -394,7 +451,6 @@ class Inc {
 
 			kha.compute.Compute.compute(res, res, res);
 		// }
-		// path.currentLightIndex = 0;
 	}
 	public static function computeVoxelsEnd() {
 		var rts = path.renderTargets;
@@ -416,69 +472,6 @@ class Inc {
 		kha.compute.Compute.setTexture(bounce_tc, rts.get("voxelsBounce").image, kha.compute.Access.Write);
 		kha.compute.Compute.compute(res, res, res);
 		path.generateMipmaps("voxelsBounce");
-		#end
-	}
-	#end
-
-	#if (rp_renderer == "Forward")
-	public static function drawShadowMap(l:iron.object.LightObject) {
-		#if (rp_shadowmap)
-		var faces = l.data.raw.shadowmap_cube ? 6 : 1;
-		for (i in 0...faces) {
-			if (faces > 1) path.currentFace = i;
-			path.setTarget(Inc.getShadowMap());
-			path.clearTarget(null, 1.0);
-			path.drawMeshes("shadowmap");
-		}
-		path.currentFace = -1;
-		#end
-	}
-	#else
-	public static function drawShadowMap(l:iron.object.LightObject) {
-		#if (rp_shadowmap)
-		var faces = l.data.raw.shadowmap_cube ? 6 : 1;
-		for (i in 0...faces) {
-			if (faces > 1) path.currentFace = i;
-			path.setTarget(Inc.getShadowMap());
-			path.clearTarget(null, 1.0);
-			path.drawMeshes("shadowmap");
-		}
-		path.currentFace = -1;
-
-		// One light at a time for now, precompute all lights for tiled
-		#if rp_soft_shadows
-
-		if (l.raw.type != "point") {
-			path.setTarget("visa"); // Merge using min blend
-			Inc.bindShadowMap();
-			path.drawShader("shader_datas/dilate_pass/dilate_pass_x");
-
-			path.setTarget("visb");
-			path.bindTarget("visa", "shadowMap");
-			path.drawShader("shader_datas/dilate_pass/dilate_pass_y");
-		}
-
-		path.setTarget("visa", ["dist"]);
-		//if (i == 0) path.clearTarget(0x00000000);
-		if (l.raw.type != "point") path.bindTarget("visb", "dilate");
-		Inc.bindShadowMap();
-		//path.bindTarget("_main", "gbufferD");
-		path.bindTarget("gbuffer0", "gbuffer0");
-		path.drawShader("shader_datas/visibility_pass/visibility_pass");
-		
-		path.setTarget("visb");
-		path.bindTarget("visa", "tex");
-		path.bindTarget("gbuffer0", "gbuffer0");
-		path.bindTarget("dist", "dist");
-		path.drawShader("shader_datas/blur_shadow_pass/blur_shadow_pass_x");
-
-		path.setTarget("visa");
-		path.bindTarget("visb", "tex");
-		path.bindTarget("gbuffer0", "gbuffer0");
-		path.bindTarget("dist", "dist");
-		path.drawShader("shader_datas/blur_shadow_pass/blur_shadow_pass_y");
-		#end
-
 		#end
 	}
 	#end

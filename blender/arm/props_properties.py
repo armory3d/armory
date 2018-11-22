@@ -20,9 +20,9 @@ class ArmPropertyList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # Make sure your code supports all 3 layout types
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
-            split = layout.row()
-            split.prop(item, "name_prop", text="", emboss=False, icon="OBJECT_DATAMODE")
-            split.prop(item, item.type_prop + "_prop", text="", emboss=(item.type_prop == 'boolean'))
+            row = layout.row()
+            row.prop(item, "name_prop", text="", emboss=False, icon="OBJECT_DATAMODE")
+            row.prop(item, item.type_prop + "_prop", text="", emboss=(item.type_prop == 'boolean'))
         elif self.layout_type in {'GRID'}:
             layout.alignment = 'CENTER'
             layout.label(text="", icon="OBJECT_DATAMODE")

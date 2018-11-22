@@ -19,7 +19,7 @@
 	uniform vec3 H;
 	uniform vec3 I;
 	uniform vec3 Z;
-	uniform vec3 sunDirection;
+	uniform vec3 hosekSunDirection;
 #endif
 #ifdef _EnvClouds
 	uniform sampler2D snoise;
@@ -108,7 +108,7 @@ vec3 cloudsColor(vec3 R, vec3 pos, vec3 dir) {
 	float d = traced.x / 200.0 * traced.y + traced.x / 1500.0 * cloudsSecondary;
 	const float g = cloudsEccentricity;
 #ifdef _EnvSky
-	float cosAngle = dot(sunDirection, dir);
+	float cosAngle = dot(hosekSunDirection, dir);
 #else // Predefined sun direction
 	float cosAngle = dot(vec3(0.0, -1.0, 0.0), dir);
 #endif
@@ -151,7 +151,7 @@ void main() {
 	float theta = atan(-n.y, n.x) + PI;
 	
 	float cos_theta = clamp(n.z, 0.0, 1.0);
-	float cos_gamma = dot(n, sunDirection);
+	float cos_gamma = dot(n, hosekSunDirection);
 	float gamma_val = acos(cos_gamma);
 
 	fragColor.rgb = Z * hosekWilkie(cos_theta, gamma_val, cos_gamma) * envmapStrength;

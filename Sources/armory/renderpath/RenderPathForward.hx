@@ -219,13 +219,9 @@ class RenderPathForward {
 
 	public static function commands() {
 
-		var hasLight = iron.Scene.active.lights.length > 0;
-
 		#if rp_shadowmap
 		{
-			if (hasLight) {
-				Inc.drawShadowMap(iron.Scene.active.lights[0]);
-			}
+			Inc.drawShadowMap();
 		}
 		#end
 
@@ -311,7 +307,7 @@ class RenderPathForward {
 
 		#if rp_shadowmap
 		{
-			if (hasLight) Inc.bindShadowMap();
+			Inc.bindShadowMap();
 		}
 		#end
 
@@ -338,27 +334,27 @@ class RenderPathForward {
 
 		#if rp_render_to_texture
 		{
-			#if rp_volumetriclight
-			{
-				path.setTarget("bufvola");
-				path.bindTarget("_main", "gbufferD");
-				Inc.bindShadowMap();
-				if (path.lightIsSun()) {
-					path.drawShader("shader_datas/volumetric_light_quad/volumetric_light_quad");
-				}
-				else {
-					path.drawLightVolume("shader_datas/volumetric_light/volumetric_light");
-				}
+			// #if rp_volumetriclight
+			// {
+			// 	path.setTarget("bufvola");
+			// 	path.bindTarget("_main", "gbufferD");
+			// 	Inc.bindShadowMap();
+			// 	if (path.lightIsSun()) {
+			// 		path.drawShader("shader_datas/volumetric_light_quad/volumetric_light_quad");
+			// 	}
+			// 	else {
+			// 		path.drawLightVolume("shader_datas/volumetric_light/volumetric_light");
+			// 	}
 
-				path.setTarget("bufvolb");
-				path.bindTarget("bufvola", "tex");
-				path.drawShader("shader_datas/blur_bilat_pass/blur_bilat_pass_x");
+			// 	path.setTarget("bufvolb");
+			// 	path.bindTarget("bufvola", "tex");
+			// 	path.drawShader("shader_datas/blur_bilat_pass/blur_bilat_pass_x");
 
-				path.setTarget("lbuf");
-				path.bindTarget("bufvolb", "tex");
-				path.drawShader("shader_datas/blur_bilat_blend_pass/blur_bilat_blend_pass_y");
-			}
-			#end
+			// 	path.setTarget("lbuf");
+			// 	path.bindTarget("bufvolb", "tex");
+			// 	path.drawShader("shader_datas/blur_bilat_blend_pass/blur_bilat_blend_pass_y");
+			// }
+			// #end
 			
 			#if rp_bloom
 			{
@@ -423,6 +419,12 @@ class RenderPathForward {
 			#if rp_compositordepth
 			{
 				path.bindTarget("_main", "gbufferD");
+			}
+			#end
+
+			#if rp_compositornodes
+			{
+				path.bindTarget("lbuf", "tex");
 				path.drawShader("shader_datas/compositor_pass/compositor_pass");
 			}
 			#else

@@ -66,8 +66,8 @@
 					"ifdef": ["_EnvSky"]
 				},
 				{
-					"name": "sunDirection",
-					"link": "_sunDirection",
+					"name": "hosekSunDirection",
+					"link": "_hosekSunDirection",
 					"ifdef": ["_EnvSky"]
 				},
 				{

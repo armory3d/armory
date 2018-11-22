@@ -45,31 +45,6 @@
 					"link": "_envmapStrength"
 				},
 				{
-					"name": "LWVP",
-					"link": "_biasLightWorldViewProjectionMatrix",
-					"ifdef": ["_Disabled"]
-				},
-				{
-					"name": "shadowsBias",
-					"link": "_lightShadowsBias",
-					"ifdef": ["_Disabled"]
-				},
-				{
-					"name": "lightPlane",
-					"link": "_lightPlane",
-					"ifdef": ["_Disabled"]
-				},
-				{
-					"name": "lightShadow",
-					"link": "_lightCastShadow",
-					"ifdef": ["_Disabled"]
-				},
-				{
-					"name": "lightPos",
-					"link": "_lightPosition",
-					"ifdef": ["_Disabled"]
-				},
-				{
 					"name": "cameraProj",
 					"link": "_cameraPlaneProj"
 				}

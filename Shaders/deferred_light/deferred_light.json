@@ -1,50 +1,113 @@
 {
+	"variants": ["_VoxelAOvar"],
 	"contexts": [
 		{
 			"name": "deferred_light",
 			"depth_write": false,
 			"color_write_alpha": false,
-			"compare_mode": "greater",
-			"cull_mode": "counter_clockwise",
-			"blend_source": "blend_one",
-			"blend_destination": "blend_one",
-			"blend_operation": "add",
-			"alpha_blend_source": "blend_one",
-			"alpha_blend_destination": "blend_one",
-			"alpha_blend_operation": "add",
+			"compare_mode": "always",
+			"cull_mode": "none",
 			"links": [
 				{
-					"name": "VWVP",
-					"link": "_lightVolumeWorldViewProjectionMatrix"
+					"name": "eye",
+					"link": "_cameraPosition"
 				},
 				{
-					"name": "lightPos",
-					"link": "_lightPosition"
+					"name": "eyeSnap",
+					"link": "_cameraPositionSnap",
+					"ifdef": ["_VoxelGICam"]
 				},
 				{
-					"name": "lightProj",
-					"link": "_lightPlaneProj"
+					"name": "voxelBlend",
+					"link": "_voxelBlend",
+					"ifdef": ["_VoxelGITemporal"]
 				},
 				{
-					"name": "lightDir",
-					"link": "_lightDirection"
+					"name": "eyeLook",
+					"link": "_cameraLook"
 				},
 				{
-					"name": "lightType",
-					"link": "_lightType"
+					"name": "invVP",
+					"link": "_inverseViewProjectionMatrix"
 				},
 				{
-					"name": "lightColor",
-					"link": "_lightColor"
+					"name": "shirr",
+					"link": "_envmapIrradiance",
+					"ifdef": ["_Irr"]
 				},
 				{
-					"name": "lightShadow",
-					"link": "_lightCastShadow"
+					"name": "senvmapRadiance",
+					"link": "_envmapRadiance",
+					"ifdef": ["_Rad"]
 				},
 				{
-					"name": "texIES",
-					"link": "_iesTexture",
-					"ifdef": ["_LightIES"]
+					"name": "envmapNumMipmaps",
+					"link": "_envmapNumMipmaps",
+					"ifdef": ["_Rad"]
+				},
+				{
+					"name": "senvmapBrdf",
+					"link": "_envmapBrdf",
+					"ifdef": ["_Brdf"]
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
+				},
+				{
+					"name": "envmapStrength",
+					"link": "_envmapStrength"
+				},
+				{
+					"name": "backgroundCol",
+					"link": "_backgroundCol",
+					"ifdef": ["_EnvCol"]
+				},
+				{
+					"name": "lightsArray",
+					"link": "_lightsArray",
+					"ifdef": ["_Clusters"]
+				},
+				{
+					"name": "lightsArraySpot",
+					"link": "_lightsArraySpot",
+					"ifdef": ["_Spot"]
+				},
+				{
+					"name": "clustersData",
+					"link": "_clustersData",
+					"ifdef": ["_Clusters"]
+				},
+				{
+					"name": "cameraPlane",
+					"link": "_cameraPlane",
+					"ifdef": ["_Clusters"]
+				},
+				{
+					"name": "sunDir",
+					"link": "_sunDirection",
+					"ifdef": ["_Sun"]
+				},
+				{
+					"name": "sunCol",
+					"link": "_sunColor",
+					"ifdef": ["_Sun"]
+				},
+				{
+					"name": "shadowsBias",
+					"link": "_sunShadowsBias",
+					"ifdef": ["_Sun", "_ShadowMap"]
+				},
+				{
+					"name": "LWVP",
+					"link": "_biasLightWorldViewProjectionMatrix",
+					"ifndef": ["_CSM"],
+					"ifdef": ["_Sun", "_ShadowMap"]
+				},
+				{
+					"name": "casData",
+					"link": "_cascadeData",
+					"ifdef": ["_Sun", "_ShadowMap", "_CSM"]
 				},
 				{
 					"name": "lightPlane",
@@ -52,12 +115,24 @@
 					"ifdef": ["_SSS"]
 				},
 				{
-					"name": "shadowsBias",
-					"link": "_lightShadowsBias"
+					"name": "VP",
+					"link": "_viewProjectionMatrix",
+					"ifdef": ["_SSRS"]
 				},
 				{
-					"name": "spotlightData",
-					"link": "_spotlightData"
+					"name": "texClouds",
+					"link": "_cloudsTexture",
+					"ifdef": ["_LightClouds"]
+				},
+				{
+					"name": "time",
+					"link": "_time",
+					"ifdef": ["_LightClouds"]
+				},
+				{
+					"name": "texIES",
+					"link": "_iesTexture",
+					"ifdef": ["_LightIES"]
 				},
 				{
 					"name": "lightArea0",
@@ -90,29 +165,17 @@
 					"ifdef": ["_LTC"]
 				},
 				{
-					"name": "eye",
-					"link": "_cameraPosition"
-				},
-				{
-					"name": "invVP",
-					"link": "_inverseViewProjectionMatrix"
-				},
-				{
-					"name": "LWVP",
-					"link": "_biasLightWorldViewProjectionMatrix"
-				},
-				{
-					"name": "VP",
-					"link": "_viewProjectionMatrix",
-					"ifdef": ["_SSRS"]
-				},
-				{
 					"name": "smSizeUniform",
 					"link": "_shadowMapSize",
 					"ifdef": ["_SMSizeUniform"]
+				},
+				{
+					"name": "lightProj",
+					"link": "_lightPlaneProj",
+					"ifdef": ["_ShadowMapCube"]
 				}
 			],
-			"vertex_shader": "../include/pass_volume.vert.glsl",
+			"vertex_shader": "deferred_light.vert.glsl",
 			"fragment_shader": "deferred_light.frag.glsl"
 		}
 	]

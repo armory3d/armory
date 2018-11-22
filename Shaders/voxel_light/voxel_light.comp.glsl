@@ -14,7 +14,7 @@ uniform vec3 lightColor;
 uniform int lightType;
 uniform vec3 lightDir;
 uniform vec2 spotData;
-#ifndef _NoShadows
+#ifdef _ShadowMap
 uniform int lightShadow;
 uniform vec2 lightProj;
 uniform float shadowsBias;
@@ -25,7 +25,7 @@ uniform layout(binding = 0, rgba8) readonly image3D voxelsOpac;
 uniform layout(binding = 1, r32ui) readonly uimage3D voxelsNor;
 // uniform layout(binding = 2, rgba8) writeonly image3D voxels;
 uniform layout(binding = 2, r32ui) uimage3D voxels;
-#ifndef _NoShadows
+#ifdef _ShadowMap
 uniform layout(binding = 3) sampler2D shadowMap;
 uniform layout(binding = 4) samplerCube shadowMapCube;
 #endif
@@ -52,7 +52,7 @@ void main() {
     float dotNL = max(dot(wnormal, l), 0.0);
     if (dotNL == 0.0) return;
 
-#ifndef _NoShadows
+#ifdef _ShadowMap
     if (lightShadow == 1) {
         vec4 lightPosition = LVP * vec4(wposition, 1.0);
         vec3 lPos = lightPosition.xyz / lightPosition.w;
