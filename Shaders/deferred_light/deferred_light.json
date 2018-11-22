@@ -4,7 +4,6 @@
 		{
 			"name": "deferred_light",
 			"depth_write": false,
-			"color_write_alpha": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
 			"links": [
@@ -172,7 +171,7 @@
 				{
 					"name": "lightProj",
 					"link": "_lightPlaneProj",
-					"ifdef": ["_ShadowMapCube"]
+					"ifdef": ["_Clusters", "_ShadowMapCube"]
 				}
 			],
 			"vertex_shader": "deferred_light.vert.glsl",

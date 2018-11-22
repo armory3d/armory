@@ -108,7 +108,12 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
             stack.pop()
             continue
 
-        if len(stack) > 0 and stack[-1] == 0:
+        skip = False
+        for i in stack:
+            if i == 0:
+                skip = True
+                break
+        if skip:
             continue
 
         if vertex_structure_parsed == False and line.startswith('in '):

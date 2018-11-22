@@ -8,7 +8,9 @@
 #endif
 
 uniform sampler2D tex;
+#ifdef _CDepth
 uniform sampler2D gbufferD;
+#endif
 
 #ifdef _CLensTex
 uniform sampler2D lensTexture;

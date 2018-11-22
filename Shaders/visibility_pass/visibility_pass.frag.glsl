@@ -8,9 +8,7 @@
 uniform sampler2D shadowMap;
 uniform samplerCube shadowMapCube;
 uniform sampler2D dilate;
-// uniform sampler2D gbufferD;
-uniform sampler2D gbuffer0;
-// uniform sampler2D gbuffer1;
+uniform sampler2D gbufferD;
 uniform vec2 cameraProj;
 uniform float shadowsBias;
 uniform vec3 eye;
@@ -26,12 +24,7 @@ in vec3 viewRay;
 out float fragColor[2];
 
 void main() {
-	vec4 g0 = texture(gbuffer0, texCoord);
-	// #ifdef _InvY // D3D
-	// float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	// #else
-	float depth = (1.0 - g0.a) * 2.0 - 1.0;
-	// #endif
+	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	vec3 p = getPos(eye, eyeLook, viewRay, depth, cameraProj);
 	
 	vec4 lightPosition = LWVP * vec4(p, 1.0);

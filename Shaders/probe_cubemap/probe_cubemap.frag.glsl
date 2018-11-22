@@ -6,6 +6,7 @@
 uniform samplerCube probeTex;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
+uniform sampler2D gbufferD;
 uniform mat4 invVP;
 uniform vec3 probep;
 uniform vec3 eye;
@@ -34,7 +35,7 @@ void main() {
 		return;
 	}
 
-	float depth = (1.0 - g0.a) * 2.0 - 1.0;
+	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	vec3 wp = getPos2(invVP, depth, texCoord);
 
 	vec2 enc = g0.rg;

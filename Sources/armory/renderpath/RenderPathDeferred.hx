@@ -68,6 +68,18 @@ class RenderPathDeferred {
 			path.createDepthBuffer("main", "DEPTH24");
 
 			var t = new RenderTargetRaw();
+			t.name = "gbuffer0";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "RGBA64";
+			t.scale = Inc.getSuperSampling();
+			t.depth_buffer = "main";
+			path.createRenderTarget(t);
+		}
+
+		{
+			var t = new RenderTargetRaw();
 			t.name = "tex";
 			t.width = 0;
 			t.height = 0;
@@ -93,18 +105,6 @@ class RenderPathDeferred {
 			t.displayp = Inc.getDisplayp();
 			t.format = Inc.getHdrFormat();
 			t.scale = Inc.getSuperSampling();
-			path.createRenderTarget(t);
-		}
-
-		{
-			var t = new RenderTargetRaw();
-			t.name = "gbuffer0";
-			t.width = 0;
-			t.height = 0;
-			t.displayp = Inc.getDisplayp();
-			t.format = "RGBA64";
-			t.scale = Inc.getSuperSampling();
-			t.depth_buffer = "main";
 			path.createRenderTarget(t);
 		}
 
@@ -554,7 +554,7 @@ class RenderPathDeferred {
 		#end
 
 		path.setTarget("tex");
-		// path.bindTarget("_main", "gbufferD");
+		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbuffer1", "gbuffer1");
 		// 	#if rp_gbuffer2_direct
@@ -597,10 +597,18 @@ class RenderPathDeferred {
 			// }
 		}
 		#end
+
+		#if kha_webgl
+		path.setDepthFrom("tex", "gbuffer1"); // Even with depth_write set to false, depth can not be attached..
+		#end
 		
 		voxelao_pass ?
 			path.drawShader("shader_datas/deferred_light/deferred_light_VoxelAOvar") :
 			path.drawShader("shader_datas/deferred_light/deferred_light");
+
+		#if kha_webgl
+		path.setDepthFrom("tex", "gbuffer0");
+		#end
 
 		#if rp_probes
 		if (!path.isProbe) {

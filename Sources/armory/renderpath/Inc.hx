@@ -43,10 +43,6 @@ class Inc {
 	}
 
 	public static function bindShadowMap() {
-		if (path.sun != null && path.sun.data.raw.cast_shadow) {
-			path.bindTarget("shadowMap", "shadowMap");
-		}
-
 		for (l in iron.Scene.active.lights) {
 			if (!l.visible || !l.data.raw.cast_shadow) continue;
 			var n = shadowMapName(l);

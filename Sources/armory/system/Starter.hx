@@ -43,6 +43,11 @@ class Starter {
 			#end
 			
 			kha.System.start({title: Main.projectName, width: c.window_w, height: c.window_h, window: {mode: windowMode, windowFeatures: windowFeatures}, framebuffer: {samplesPerPixel: c.window_msaa, verticalSync: c.window_vsync}}, function(window:kha.Window) {
+
+				#if kha_webgl
+				if (!kha.SystemImpl.gl2) trace("WebGL 2 is not supported on this browser");
+				#end
+
 				iron.App.init(function() {
 					#if arm_loadscreen
 					function load(g:kha.graphics2.Graphics) {

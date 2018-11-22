@@ -32,7 +32,7 @@
 #include "std/ltc.glsl"
 #endif
 
-// uniform sampler2D gbufferD;
+uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
@@ -135,8 +135,8 @@ const vec3 clusterSlices = vec3(16, 16, 16);
 	// uniform mat4 LWVPSpot2;
 	// uniform mat4 LWVPSpot3;
 	#endif
-#endif
-#endif
+#endif // _ShadowMap
+#endif // _Clusters
 
 #ifdef _Sun
 uniform vec3 sunDir;
@@ -178,11 +178,7 @@ void main() {
 	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
 	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
 
-	// #ifdef _InvY // D3D
-	// float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	// #else
-	float depth = (1.0 - g0.a) * 2.0 - 1.0;
-	// #endif
+	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	vec3 p = getPos(eye, eyeLook, viewRay, depth, cameraProj);
 	vec3 v = normalize(eye - p);
 	float dotNV = max(dot(n, v), 0.0);
@@ -306,6 +302,7 @@ void main() {
 	// svisibility = texture(svisibility, texCoord).r;
 	// #endif
 
+	#ifdef _ShadowMap
 	// if (lightShadow == 1) {
 		#ifdef _CSM
 		svisibility = shadowTestCascade(shadowMap, eye, p + n * shadowsBias * 10, shadowsBias, shadowmapSize * vec2(shadowmapCascades, 1.0));
@@ -314,6 +311,7 @@ void main() {
 		if (lPos.w > 0.0) svisibility = shadowTest(shadowMap, lPos.xyz / lPos.w, shadowsBias, shadowmapSize);
 		#endif
 	// }
+	#endif
 
 	#ifdef _VoxelGIShadow // #else
 		#ifdef _VoxelGICam
@@ -353,7 +351,7 @@ void main() {
 #endif
 
 #ifdef _SSRS
-	float tvis = traceShadowSS(-l, p, gbuffer0, invVP, eye);
+	float tvis = traceShadowSS(-l, p, gbufferD, invVP, eye);
 	// vec2 coords = getProjectedCoord(hitCoord);
 	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	// float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);

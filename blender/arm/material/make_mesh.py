@@ -384,11 +384,7 @@ def make_deferred(con_mesh):
 
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
-    # TODO: store_depth
-    if gapi.startswith('direct3d'):
-        frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - ((wvpposition.z / wvpposition.w) * 0.5 + 0.5));')
-    else:
-        frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0 - gl_FragCoord.z);')
+    frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0);')
     frag.write('fragColor[1] = vec4(basecol.rgb, packFloat2(occlusion, specular));')
 
     if '_gbuffer2' in wrd.world_defs:
@@ -731,7 +727,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.write('direct += specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular;')
         # sun
 
-    if '_Clusters' in wrd.world_defs and '_Sun' not in wrd.world_defs:
+    if '_Clusters' in wrd.world_defs:
         frag.add_uniform('vec3 lightCol', '_lightColor')
         frag.add_uniform('vec3 lightPos', '_lightPosition')
         frag.write('float visibility = 1.0;')
@@ -765,6 +761,9 @@ def make_forward_base(con_mesh, parse_opacity=False):
             frag.write('visibility *= PCFCube(shadowMap0, ld, -l, shadowsBias, lightProj, n);')
             frag.write('}')
 
+        frag.write('direct += lambertDiffuseBRDF(albedo, dotNL);')
+        frag.write('direct += specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH) * specular;')
+
         # frag.write('if (lightType == 2) {')
         # frag.write('    float spotEffect = dot(lightDir, l);')
         # frag.write('    if (spotEffect < spotlightData.x) {')
@@ -791,9 +790,6 @@ def make_forward_base(con_mesh, parse_opacity=False):
         #     frag.write('    float ltcdiff = ltcEvaluate(n, vVec, dotNV, wposition, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3);')
         #     frag.write('    direct = albedo * ltcdiff + ltcspec * specular;')
         #     frag.write('}')
-
-        frag.write('direct += lambertDiffuseBRDF(albedo, dotNL);')
-        frag.write('direct += specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH) * specular;')
 
     if '_Brdf' in wrd.world_defs:
         frag.add_uniform('sampler2D senvmapBrdf', link='_envmapBrdf')

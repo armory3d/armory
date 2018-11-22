@@ -4,6 +4,7 @@
 #include "std/gbuffer.glsl"
 
 uniform sampler2D probeTex;
+uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 uniform mat4 probeVP;
@@ -34,7 +35,7 @@ void main() {
 		return;
 	}
 
-	float depth = (1.0 - g0.a) * 2.0 - 1.0;
+	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
 	vec3 wp = getPos2(invVP, depth, texCoord);
 	vec4 pp = probeVP * vec4(wp.xyz, 1.0);
 	vec2 tc = (pp.xy / pp.w) * 0.5 + 0.5;
