@@ -320,6 +320,15 @@ void main() {
 		if (dotNL > 0.0) svisibility = max(0, 1.0 - traceShadow(voxels, voxpos, l, 0.1, 10.0, n));
 	#endif
 
+	#ifdef _SSRS
+	float tvis = traceShadowSS(-sunDir, p, gbufferD, invVP, eye);
+	// vec2 coords = getProjectedCoord(hitCoord);
+	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
+	// float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
+	// tvis *= screenEdgeFactor;
+	svisibility *= tvis;
+	#endif
+
 	fragColor.rgb += sdirect * svisibility * sunCol;
 #endif
 
@@ -346,15 +355,6 @@ void main() {
 		#endif
 		fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVP, p, n, l, lightPlane.y, shadowMap);
 	}
-#endif
-
-#ifdef _SSRS
-	float tvis = traceShadowSS(-l, p, gbufferD, invVP, eye);
-	// vec2 coords = getProjectedCoord(hitCoord);
-	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
-	// float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
-	// tvis *= screenEdgeFactor;
-	visibility *= tvis;
 #endif
 
 #ifdef _Clusters
