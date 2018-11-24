@@ -557,6 +557,11 @@ def make_forward_solid(con_mesh):
     tesc = None
     tese = None
 
+    for e in con_mesh.data['vertex_structure']:
+        if e['name'] == 'nor':
+            con_mesh.data['vertex_structure'].remove(e)
+            break
+
     vert.write_attrib('vec4 spos = vec4(pos, 1.0);')
     frag.ins = vert.outs
 
@@ -604,10 +609,6 @@ def make_forward_solid(con_mesh):
 
     if '_LDR' in wrd.world_defs:
         frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
-
-    if arm.utils.get_gapi().startswith('direct3d'):
-        vert.add_out('vec3 normal') # Prevent discard
-        vert.write('normal = nor;')
 
 def make_forward(con_mesh):
     wrd = bpy.data.worlds['Arm']
