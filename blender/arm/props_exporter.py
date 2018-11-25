@@ -145,6 +145,8 @@ class ArmExporterListNewItem(bpy.types.Operator):
         mdata = bpy.data.worlds['Arm']
         mdata.arm_exporterlist.add()
         mdata.arm_exporterlist_index = len(mdata.arm_exporterlist) - 1
+        if len(mdata.arm_rplist) > mdata.arm_exporterlist_index:
+            mdata.arm_exporterlist[-1].arm_project_rp = mdata.arm_rplist[mdata.arm_rplist_index].name
         return{'FINISHED'}
 
 class ArmExporterListDeleteItem(bpy.types.Operator):
