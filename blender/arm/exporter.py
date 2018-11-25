@@ -2469,7 +2469,6 @@ class ArmoryExporter:
         o['near_plane'] = 0.1
         o['far_plane'] = 100.0
         o['fov'] = 0.85
-        o['type'] = 'perspective'
         o['frustum_culling'] = True
         o['clear_color'] = self.get_camera_clear_color()
 
