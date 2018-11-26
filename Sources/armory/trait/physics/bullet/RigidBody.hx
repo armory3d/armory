@@ -31,6 +31,7 @@ class RigidBody extends iron.Trait {
 	var angularFactors:Array<Float>;
 	var deactivationParams:Array<Float>;
 	var ccd = false; // Continuous collision detection
+	var alternatePhysicUpdate = false;
 	public var group = 1;
 	public var trigger = false;
 	var bodyScaleX:Float; // Transform scale at creation time
@@ -61,7 +62,8 @@ class RigidBody extends iron.Trait {
 	public function new(mass = 1.0, shape = Shape.Box, friction = 0.5, restitution = 0.0, collisionMargin = 0.0,
 						linearDamping = 0.04, angularDamping = 0.1, animated = false,
 						linearFactors:Array<Float> = null, angularFactors:Array<Float> = null,
-						group = 1, trigger = false, deactivationParams:Array<Float> = null, ccd = false) {
+						group = 1, trigger = false, deactivationParams:Array<Float> = null, ccd = false,
+						alternatePhysicUpdate = false, body:BtRigidBodyPointer = null) {
 		super();
 
 		if (nullvec) {
@@ -88,6 +90,8 @@ class RigidBody extends iron.Trait {
 		this.trigger = trigger;
 		this.deactivationParams = deactivationParams;
 		this.ccd = ccd;
+		this.body = body;
+		this.alternatePhysicUpdate = alternatePhysicUpdate;
 
 		notifyOnAdd(init);
 	}
@@ -107,121 +111,131 @@ class RigidBody extends iron.Trait {
 
 		if (!Std.is(object, MeshObject)) return; // No mesh data
 
-		transform = object.transform;
 		physics = armory.trait.physics.PhysicsWorld.active;
+        var bodyCI = null;
 
-		if (shape == Shape.Box) {
-			vec1.setX(withMargin(transform.dim.x / 2));
-			vec1.setY(withMargin(transform.dim.y / 2));
-			vec1.setZ(withMargin(transform.dim.z / 2));
-			btshape = BtBoxShape.create(vec1);
-		}
-		else if (shape == Shape.Sphere) {
-			btshape = BtSphereShape.create(withMargin(transform.dim.x / 2));
-		}
-		else if (shape == Shape.ConvexHull) {
-			var shapeConvex = BtConvexHullShape.create();
-			fillConvexHull(shapeConvex, transform.scale, collisionMargin);
-			btshape = shapeConvex;
-		}
-		else if (shape == Shape.Cone) {
-			btshape = BtConeShapeZ.create(
-				withMargin(transform.dim.x / 2), // Radius
-				withMargin(transform.dim.z));	  // Height
-		}
-		else if (shape == Shape.Cylinder) {
-			vec1.setX(withMargin(transform.dim.x / 2));
-			vec1.setY(withMargin(transform.dim.y / 2));
-			vec1.setZ(withMargin(transform.dim.z / 2));
-			btshape = BtCylinderShapeZ.create(vec1);
-		}
-		else if (shape == Shape.Capsule) {
-			var r = transform.dim.x / 2;
-			btshape = BtCapsuleShapeZ.create(
-				withMargin(r), // Radius
-				withMargin(transform.dim.z - r * 2)); // Height between 2 sphere centers
-		}
-		else if (shape == Shape.Mesh || shape == Shape.Terrain) {
-			var meshInterface = BtTriangleMesh.create(true, true);
-			fillTriangleMesh(meshInterface, transform.scale);
-			if (mass > 0) {
-				var shapeGImpact = BtGImpactMeshShape.create(meshInterface);
-				shapeGImpact.updateBound();
-				btshape = shapeGImpact;
-				if (!physics.gimpactRegistered) {
-					#if js
-					GImpactCollisionAlgorithm.create().registerAlgorithm(physics.dispatcher);
-					#else
-					BtGImpactCollisionAlgorithm.registerAlgorithm(physics.dispatcher);
-					#end
-					physics.gimpactRegistered = true;
-				}
-			}
-			else {
-				btshape = BtBvhTriangleMeshShape.create(meshInterface, true, true);
-			}
-		}
-		//else if (shape == Shape.Terrain) {
-			// var data:Array<Dynamic> = [];
-			// btshape = BtHeightfieldTerrainShape.create(3, 3, data, 1, -10, 10, 2, 0, true);
-		//}
+		if(body == null)
+		{
+            transform = object.transform;
 
-		trans1.setIdentity();
-		vec1.setX(transform.worldx());
-		vec1.setY(transform.worldy());
-		vec1.setZ(transform.worldz());
-		trans1.setOrigin(vec1);
-		quat.fromMat(transform.world);
-		quat1.setX(quat.x);
-		quat1.setY(quat.y);
-		quat1.setZ(quat.z);
-		quat1.setW(quat.w);
-		trans1.setRotation(quat1);
+            if (shape == Shape.Box) {
+                vec1.setX(withMargin(transform.dim.x / 2));
+                vec1.setY(withMargin(transform.dim.y / 2));
+                vec1.setZ(withMargin(transform.dim.z / 2));
+                btshape = BtBoxShape.create(vec1);
+            }
+            else if (shape == Shape.Sphere) {
+                btshape = BtSphereShape.create(withMargin(transform.dim.x / 2));
+            }
+            else if (shape == Shape.ConvexHull) {
+                var shapeConvex = BtConvexHullShape.create();
+                fillConvexHull(shapeConvex, transform.scale, collisionMargin);
+                btshape = shapeConvex;
+            }
+            else if (shape == Shape.Cone) {
+                btshape = BtConeShapeZ.create(
+                    withMargin(transform.dim.x / 2), // Radius
+                    withMargin(transform.dim.z));	  // Height
+            }
+            else if (shape == Shape.Cylinder) {
+                vec1.setX(withMargin(transform.dim.x / 2));
+                vec1.setY(withMargin(transform.dim.y / 2));
+                vec1.setZ(withMargin(transform.dim.z / 2));
+                btshape = BtCylinderShapeZ.create(vec1);
+            }
+            else if (shape == Shape.Capsule) {
+                var r = transform.dim.x / 2;
+                btshape = BtCapsuleShapeZ.create(
+                    withMargin(r), // Radius
+                    withMargin(transform.dim.z - r * 2)); // Height between 2 sphere centers
+            }
+            else if (shape == Shape.Mesh || shape == Shape.Terrain) {
+                var meshInterface = BtTriangleMesh.create(true, true);
+                fillTriangleMesh(meshInterface, transform.scale);
+                if (mass > 0) {
+                    var shapeGImpact = BtGImpactMeshShape.create(meshInterface);
+                    shapeGImpact.updateBound();
+                    btshape = shapeGImpact;
+                    if (!physics.gimpactRegistered) {
+                        #if js
+                        GImpactCollisionAlgorithm.create().registerAlgorithm(physics.dispatcher);
+                        #else
+                        BtGImpactCollisionAlgorithm.registerAlgorithm(physics.dispatcher);
+                        #end
+                        physics.gimpactRegistered = true;
+                    }
+                }
+                else {
+                    btshape = BtBvhTriangleMeshShape.create(meshInterface, true, true);
+                }
+            }
+            //else if (shape == Shape.Terrain) {
+                // var data:Array<Dynamic> = [];
+                // btshape = BtHeightfieldTerrainShape.create(3, 3, data, 1, -10, 10, 2, 0, true);
+            //}
 
-		var centerOfMassOffset = trans2;
-		centerOfMassOffset.setIdentity();
-		motionState = BtDefaultMotionState.create(trans1, centerOfMassOffset);
+            trans1.setIdentity();
+            vec1.setX(transform.worldx());
+            vec1.setY(transform.worldy());
+            vec1.setZ(transform.worldz());
+            trans1.setOrigin(vec1);
+            quat.fromMat(transform.world);
+            quat1.setX(quat.x);
+            quat1.setY(quat.y);
+            quat1.setZ(quat.z);
+            quat1.setW(quat.w);
+            trans1.setRotation(quat1);
 
-		vec1.setX(0);
-		vec1.setY(0);
-		vec1.setZ(0);
-		var inertia = vec1;
-		if (mass > 0) btshape.calculateLocalInertia(mass, inertia);
-		var bodyCI = BtRigidBodyConstructionInfo.create(mass, motionState, btshape, inertia);
-		body = BtRigidBody.create(bodyCI);
-		body.setFriction(friction);
-		// body.setRollingFriction(friction); // This causes bodies to get stuck, apply angular damping instead
-		if (shape == Shape.Sphere || shape == Shape.Cylinder || shape == Shape.Cone || shape == Shape.Capsule) {
-			angularDamping += friction;
-		}
-		body.setRestitution(restitution);
+            var centerOfMassOffset = trans2;
+            centerOfMassOffset.setIdentity();
+            motionState = BtDefaultMotionState.create(trans1, centerOfMassOffset);
 
-		if (deactivationParams != null) {
-			setDeactivationParams(deactivationParams[0], deactivationParams[1], deactivationParams[2]);
-		}
-		else {
-			setActivationState(ActivationState.NoDeactivation);
-		}
+            vec1.setX(0);
+            vec1.setY(0);
+            vec1.setZ(0);
+            var inertia = vec1;
+            if (mass > 0) btshape.calculateLocalInertia(mass, inertia);
+            var bodyCI = BtRigidBodyConstructionInfo.create(mass, motionState, btshape, inertia);
+            body = BtRigidBody.create(bodyCI);
+            body.setFriction(friction);
+            // body.setRollingFriction(friction); // This causes bodies to get stuck, apply angular damping instead
+            if (shape == Shape.Sphere || shape == Shape.Cylinder || shape == Shape.Cone || shape == Shape.Capsule) {
+                angularDamping += friction;
+            }
+            body.setRestitution(restitution);
 
-		if (linearDamping != 0.04 || angularDamping != 0.1) {
-			body.setDamping(linearDamping, angularDamping);
-		}
+            if (deactivationParams != null) {
+                setDeactivationParams(deactivationParams[0], deactivationParams[1], deactivationParams[2]);
+            }
+            else {
+                setActivationState(ActivationState.NoDeactivation);
+            }
 
-		if (linearFactors != null) {
-			setLinearFactor(linearFactors[0], linearFactors[1], linearFactors[2]);
-		}
+            if (linearDamping != 0.04 || angularDamping != 0.1) {
+                body.setDamping(linearDamping, angularDamping);
+            }
 
-		if (angularFactors != null) {
-			setAngularFactor(angularFactors[0], angularFactors[1], angularFactors[2]);
-		}
+            if (linearFactors != null) {
+                setLinearFactor(linearFactors[0], linearFactors[1], linearFactors[2]);
+            }
 
-		if (trigger) body.setCollisionFlags(body.getCollisionFlags() | BtCollisionObject.CF_NO_CONTACT_RESPONSE);
+            if (angularFactors != null) {
+                setAngularFactor(angularFactors[0], angularFactors[1], angularFactors[2]);
+            }
 
-		if (ccd) setCcd(transform.radius);
+            if (trigger) body.setCollisionFlags(body.getCollisionFlags() | BtCollisionObject.CF_NO_CONTACT_RESPONSE);
 
-		bodyScaleX = currentScaleX = transform.scale.x;
-		bodyScaleY = currentScaleY = transform.scale.y;
-		bodyScaleZ = currentScaleZ = transform.scale.z;
+            if (ccd) setCcd(transform.radius);
+
+            bodyScaleX = currentScaleX = transform.scale.x;
+            bodyScaleY = currentScaleY = transform.scale.y;
+            bodyScaleZ = currentScaleZ = transform.scale.z;
+        }
+        else
+        {
+        	motionState = body.getMotionState();
+        	btshape = body.getCollisionShape();
+        }
 
 		id = nextId;
 		nextId++;
@@ -239,12 +253,13 @@ class RigidBody extends iron.Trait {
 		if (onReady != null) onReady();
 
 		#if js
-		Ammo.destroy(bodyCI);
+		if (bodyCI != null) Ammo.destroy(bodyCI);
 		#end
 	}
 
 	function physicsUpdate() {
 		if (!ready) return;
+		if (alternatePhysicUpdate) return;
 		if (object.animation != null || animated) {
 			syncTransform();
 		}
