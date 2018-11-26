@@ -666,7 +666,7 @@ class ArmoryExporter:
             if po not in self.objectToArmObjectDict:
                 continue
             o = self.objectToArmObjectDict[po]
-            if po not in self.defaultPartMaterialObjects:
+            if len(o['material_refs']) > 0 and o['material_refs'][0] == 'armdefault' and po not in self.defaultPartMaterialObjects:
                 self.defaultPartMaterialObjects.append(po)
                 o['material_refs'] = ['armdefaultpart'] # Replace armdefault
 
@@ -2397,7 +2397,7 @@ class ArmoryExporter:
             log.warn('No camera found in active scene layers')
 
         # No camera found, create a default one
-        if (len(self.output['camera_datas']) == 0 and len(bpy.data.cameras) == 0) or not self.camera_spawned:
+        if (len(self.output['camera_datas']) == 0 or len(bpy.data.cameras) == 0) or not self.camera_spawned:
             self.create_default_camera()
 
         # Scene root traits
@@ -2471,7 +2471,6 @@ class ArmoryExporter:
         o['fov'] = 0.85
         o['frustum_culling'] = True
         o['clear_color'] = self.get_camera_clear_color()
-
         # Set viewport camera projection
         if is_viewport_camera:
             proj, is_persp = self.get_viewport_projection_matrix()
@@ -2480,8 +2479,8 @@ class ArmoryExporter:
                     self.extract_projection(o, proj, with_planes=False)
                 else:
                     self.extract_ortho(o, proj)
-
         self.output['camera_datas'].append(o)
+
         o = {}
         o['name'] = 'DefaultCamera'
         o['type'] = 'camera_object'
