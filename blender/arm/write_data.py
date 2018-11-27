@@ -432,11 +432,11 @@ def write_indexhtml(w, h, is_publish):
 """)
         if rpdat.rp_stereo or wrd.arm_winmode == 'Fullscreen':
             f.write("""
-    <canvas style="width: 100vw; height: 100vh; display: block;" id='khanvas'></canvas>
+    <canvas style="width: 100vw; height: 100vh; display: block;" id='khanvas' tabindex='-1'></canvas>
 """)
         else:
             f.write("""
-    <p align="center"><canvas align="center" style="outline: none;" id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """'></canvas></p>
+    <p align="center"><canvas align="center" style="outline: none;" id='khanvas' width='""" + str(w) + """' height='""" + str(h) + """' tabindex='-1'></canvas></p>
 """)
         f.write("""
     <script src='kha.js'></script>
