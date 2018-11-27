@@ -87,9 +87,6 @@ def add_world_defs():
         elif voxelao:
             wrd.world_defs += '_VoxelAOvar' # Write a shader variant
 
-    if arm.utils.get_gapi().startswith('direct3d'): # Flip Y axis in drawQuad command
-        wrd.world_defs += '_InvY'
-
     if arm.utils.get_legacy_shaders() and not state.is_viewport:
         wrd.world_defs += '_Legacy'
 

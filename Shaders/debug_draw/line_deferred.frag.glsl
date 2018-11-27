@@ -3,13 +3,13 @@
 #include "compiled.inc"
 
 in vec3 color;
-// #ifdef _InvY
+// #ifdef HLSL
 vec4 wvpposition;
 // #endif
 out vec4[2] fragColor;
 
 void main() {
-	// #ifdef _InvY // D3D
+	// #ifdef HLSL // D3D
 	fragColor[0] = vec4(1.0, 1.0, 0.0, 1.0 - ((wvpposition.z / wvpposition.w) * 0.5 + 0.5));
 	// #else
 	// fragColor[0] = vec4(1.0, 1.0, 0.0, 1.0 - gl_FragCoord.z);

@@ -17,7 +17,7 @@ out vec4 fragColor;
 void main() {
 	vec2 texCoord = wvpposition.xy / wvpposition.w;
 	texCoord = texCoord * 0.5 + 0.5;
-	#ifdef _InvY
+	#ifdef HLSL
 	texCoord.y = 1.0 - texCoord.y;
 	#endif
 
