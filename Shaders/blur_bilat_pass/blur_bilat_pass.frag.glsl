@@ -28,96 +28,22 @@ void main() {
 	float sumfactor = 0.0;
 	float factor;
 	float f = 1.0 / normpdf(0.0, 1.0);
+	fragColor = 0.0;
 
-	col = texture(tex, texCoord + step).r;
-	factor = normpdf3(col - colf, 1.0) * f * weight[1];
-	sumfactor += factor;
-	fragColor = factor * col;
+	for (int i = 1; i < 10; i++) {
+		float fw = f * weight[i];
+		vec2 s = step * (float(i) + 0.5);
 
-	col = texture(tex, texCoord - step * 1.5).r;
-	factor = normpdf3(col - colf, 1.0) * f * weight[1];
-	sumfactor += factor;
-	fragColor += factor * col;
+		col = texture(tex, texCoord + s).r;
+		factor = normpdf3(col - colf, 1.0) * fw;
+		sumfactor += factor;
+		fragColor += factor * col;
 
-	col = texture(tex, texCoord + step * 1.5).r;
-	factor = normpdf3(col - colf, 1.0) * f * weight[2];
-	sumfactor += factor;
-	fragColor += factor * col;
-
-	col = texture(tex, texCoord - step * 1.5).r;
-	factor = normpdf3(col - colf, 1.0) * f * weight[2];
-	sumfactor += factor;
-	fragColor += factor * col;
-
-	col = texture(tex, texCoord + step * 1.5).r;
-	factor = normpdf3(col - colf, 1.0) * f * weight[3];
-	sumfactor += factor;
-	fragColor += factor * col;
-
-	col = texture(tex, texCoord - step * 1.5).r;
-	factor = normpdf3(col - colf, 1.0) * f * weight[3];
-	sumfactor += factor;
-	fragColor += factor * col;
-
-	col = texture(tex, texCoord + step * 1.5).r;
-	factor = normpdf3(col - colf, 1.0) * f * weight[4];
-	sumfactor += factor;
-	fragColor += factor * col;
-
-	col = texture(tex, texCoord - step * 1.5).r;
-	factor = normpdf3(col - colf, 1.0) * f * weight[4];
-	sumfactor += factor;
-	fragColor += factor * col;
-
-	col = texture(tex, texCoord + step * 1.5).r;
-	factor = normpdf3(col - colf, 1.0) * f * weight[5];
-	sumfactor += factor;
-	fragColor += factor * col;
-
-	col = texture(tex, texCoord - step * 1.5).r;
-	factor = normpdf3(col - colf, 1.0) * f * weight[5];
-	sumfactor += factor;
-	fragColor += factor * col;
-
-	col = texture(tex, texCoord + step * 1.5).r;
-	factor = normpdf3(col - colf, 1.0) * f * weight[6];
-	sumfactor += factor;
-	fragColor += factor * col;
-
-	col = texture(tex, texCoord - step * 1.5).r;
-	factor = normpdf3(col - colf, 1.0) * f * weight[6];
-	sumfactor += factor;
-	fragColor += factor * col;
-
-	col = texture(tex, texCoord + step * 1.5).r;
-	factor = normpdf3(col - colf, 1.0) * f * weight[7];
-	sumfactor += factor;
-	fragColor += factor * col;
-
-	col = texture(tex, texCoord - step * 1.5).r;
-	factor = normpdf3(col - colf, 1.0) * f * weight[7];
-	sumfactor += factor;
-	fragColor += factor * col;
-
-	col = texture(tex, texCoord + step * 1.5).r;
-	factor = normpdf3(col - colf, 1.0) * f * weight[8];
-	sumfactor += factor;
-	fragColor += factor * col;
-
-	col = texture(tex, texCoord - step * 1.5).r;
-	factor = normpdf3(col - colf, 1.0) * f * weight[8];
-	sumfactor += factor;
-	fragColor += factor * col;
-
-	col = texture(tex, texCoord + step * 1.5).r;
-	factor = normpdf3(col - colf, 1.0) * f * weight[9];
-	sumfactor += factor;
-	fragColor += factor * col;
-
-	col = texture(tex, texCoord - step * 1.5).r;
-	factor = normpdf3(col - colf, 1.0) * f * weight[9];
-	sumfactor += factor;
-	fragColor += factor * col;
+		col = texture(tex, texCoord - s).r;
+		factor = normpdf3(col - colf, 1.0) * fw;
+		sumfactor += factor;
+		fragColor += factor * col;
+	}
 
 	fragColor /= sumfactor;
 }

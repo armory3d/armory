@@ -46,55 +46,12 @@ void main() {
 	
 	vec2 offset = texCoord;
 	int processed = 1;
-	// for(int i = 1; i < samples; ++i) {
+	for(int i = 0; i < 8; ++i) {
 		offset += velocity;
 		if (texture(gbuffer0, offset).a != 1.0) {
 			fragColor.rgb += texture(tex, offset).rgb;
 			processed++;
 		}
-
-		offset += velocity;
-		if (texture(gbuffer0, offset).a != 1.0) {
-			fragColor.rgb += texture(tex, offset).rgb;
-			processed++;
-		}
-		
-		offset += velocity;
-		if (texture(gbuffer0, offset).a != 1.0) {
-			fragColor.rgb += texture(tex, offset).rgb;
-			processed++;
-		}
-		
-		offset += velocity;
-		if (texture(gbuffer0, offset).a != 1.0) {
-			fragColor.rgb += texture(tex, offset).rgb;
-			processed++;
-		}
-		
-		offset += velocity;
-		if (texture(gbuffer0, offset).a != 1.0) {
-			fragColor.rgb += texture(tex, offset).rgb;
-			processed++;
-		}
-		
-		offset += velocity;
-		if (texture(gbuffer0, offset).a != 1.0) {
-			fragColor.rgb += texture(tex, offset).rgb;
-			processed++;
-		}
-		
-		offset += velocity;
-		if (texture(gbuffer0, offset).a != 1.0) {
-			fragColor.rgb += texture(tex, offset).rgb;
-			processed++;
-		}
-		
-		offset += velocity;
-		if (texture(gbuffer0, offset).a != 1.0) {
-			fragColor.rgb += texture(tex, offset).rgb;
-			processed++;
-		}
-	// }
-	
+	}
 	fragColor.rgb /= processed;
 }

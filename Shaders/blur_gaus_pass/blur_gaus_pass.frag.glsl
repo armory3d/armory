@@ -14,27 +14,12 @@ const float weight[10] = float[] (0.132572, 0.125472, 0.106373, 0.08078, 0.05495
 
 void main() {
 	vec2 step = (dir / screenSize.xy) * bloomRadius;
-	
 	fragColor.rgb = texture(tex, texCoord).rgb * weight[0];
-
-	fragColor.rgb += texture(tex, texCoord + step * 1.5).rgb * weight[1];
-	fragColor.rgb += texture(tex, texCoord - step * 1.5).rgb * weight[1];
-	fragColor.rgb += texture(tex, texCoord + step * 2.5).rgb * weight[2];
-	fragColor.rgb += texture(tex, texCoord - step * 2.5).rgb * weight[2];
-	fragColor.rgb += texture(tex, texCoord + step * 3.5).rgb * weight[3];
-	fragColor.rgb += texture(tex, texCoord - step * 3.5).rgb * weight[3];
-	fragColor.rgb += texture(tex, texCoord + step * 4.5).rgb * weight[4];
-	fragColor.rgb += texture(tex, texCoord - step * 4.5).rgb * weight[4];
-	fragColor.rgb += texture(tex, texCoord + step * 5.5).rgb * weight[5];
-	fragColor.rgb += texture(tex, texCoord - step * 5.5).rgb * weight[5];
-	fragColor.rgb += texture(tex, texCoord + step * 6.5).rgb * weight[6];
-	fragColor.rgb += texture(tex, texCoord - step * 6.5).rgb * weight[6];
-	fragColor.rgb += texture(tex, texCoord + step * 7.5).rgb * weight[7];
-	fragColor.rgb += texture(tex, texCoord - step * 7.5).rgb * weight[7];
-	fragColor.rgb += texture(tex, texCoord + step * 8.5).rgb * weight[8];
-	fragColor.rgb += texture(tex, texCoord - step * 8.5).rgb * weight[8];
-	fragColor.rgb += texture(tex, texCoord + step * 9.5).rgb * weight[9];
-	fragColor.rgb += texture(tex, texCoord - step * 9.5).rgb * weight[9];
-
+	for (int i = 1; i < 10; i++) {
+		vec2 s = step * (float(i) + 0.5);
+		fragColor.rgb += texture(tex, texCoord + s).rgb * weight[i];
+		fragColor.rgb += texture(tex, texCoord - s).rgb * weight[i];
+	}
+	
 	fragColor.rgb *= bloomStrength / 5;
 }

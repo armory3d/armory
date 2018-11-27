@@ -91,9 +91,9 @@ vec4 SSSSBlur() {
 	colorBlurred.rgb *= kernel[0].rgb;
 
 	// Accumulate the other samples
-	// for (int i = 1; i < SSSS_N_SAMPLES; i++) {
+	for (int i = 1; i < SSSS_N_SAMPLES; i++) {
 		// Fetch color and depth for current sample
-		vec2 offset = texCoord + kernel[1].a * finalStep;
+		vec2 offset = texCoord + kernel[i].a * finalStep;
 		vec4 color = texture(tex, offset);
 		// #if SSSS_FOLLOW_SURFACE == 1
 		// If the difference in depth is huge, we lerp color back to "colorM":
@@ -103,45 +103,8 @@ vec4 SSSSBlur() {
 		// color.rgb = SSSSLerp(color.rgb, colorM.rgb, s);
 		// #endif
 		// Accumulate
-		colorBlurred.rgb += kernel[1].rgb * color.rgb;
-		
-		
-		offset = texCoord + kernel[2].a * finalStep;
-		color = texture(tex, offset);
-		colorBlurred.rgb += kernel[2].rgb * color.rgb;
-		
-		offset = texCoord + kernel[3].a * finalStep;
-		color = texture(tex, offset);
-		colorBlurred.rgb += kernel[3].rgb * color.rgb;
-		
-		offset = texCoord + kernel[4].a * finalStep;
-		color = texture(tex, offset);
-		colorBlurred.rgb += kernel[4].rgb * color.rgb;
-		
-		offset = texCoord + kernel[5].a * finalStep;
-		color = texture(tex, offset);
-		colorBlurred.rgb += kernel[5].rgb * color.rgb;
-		
-		offset = texCoord + kernel[6].a * finalStep;
-		color = texture(tex, offset);
-		colorBlurred.rgb += kernel[6].rgb * color.rgb;
-		
-		offset = texCoord + kernel[7].a * finalStep;
-		color = texture(tex, offset);
-		colorBlurred.rgb += kernel[7].rgb * color.rgb;
-		
-		offset = texCoord + kernel[8].a * finalStep;
-		color = texture(tex, offset);
-		colorBlurred.rgb += kernel[8].rgb * color.rgb;
-		
-		offset = texCoord + kernel[9].a * finalStep;
-		color = texture(tex, offset);
-		colorBlurred.rgb += kernel[9].rgb * color.rgb;
-		
-		offset = texCoord + kernel[10].a * finalStep;
-		color = texture(tex, offset);
-		colorBlurred.rgb += kernel[10].rgb * color.rgb;
-	// }
+		colorBlurred.rgb += kernel[i].rgb * color.rgb;
+	}
 
 	return colorBlurred;
 }

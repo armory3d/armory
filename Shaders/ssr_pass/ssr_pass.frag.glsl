@@ -12,20 +12,15 @@ uniform mat4 P;
 uniform mat4 tiV;
 uniform vec2 cameraProj;
 
-// const int maxSteps = 20;
-// const int numBinarySearchSteps = 5;
-// const float ssrRayStep = 0.04;
-// const float ssrMinRayStep = 0.05;
-// const float ssrSearchDist = 5.0;
-// const float ssrFalloffExp = 5.0;
-// const float ssrJitter = 0.6;
-
 in vec3 viewRay;
 in vec2 texCoord;
 out vec4 fragColor;
 
 vec3 hitCoord;
 float depth;
+
+const int numBinarySearchSteps = 7;
+const int maxSteps = 18;
 
 vec2 getProjectedCoord(vec3 hitCoord) {
 	vec4 projectedCoord = P * vec4(hitCoord, 1.0);
@@ -38,87 +33,30 @@ vec2 getProjectedCoord(vec3 hitCoord) {
 }
 
 float getDeltaDepth(vec3 hitCoord) {	
-	// depth = 1.0 - texture(gbuffer0, getProjectedCoord(hitCoord)).a;
 	depth = texture(gbufferD, getProjectedCoord(hitCoord)).r * 2.0 - 1.0;
 	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
 	return viewPos.z - hitCoord.z;
 }
 
 vec4 binarySearch(vec3 dir) {	
-	// for (int i = 0; i < numBinarySearchSteps; i++) {
+	for (int i = 0; i < numBinarySearchSteps; i++) {
 		dir *= 0.5;
 		hitCoord -= dir;
 		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		
-		dir *= 0.5;
-		hitCoord -= dir;
-		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		dir *= 0.5;
-		hitCoord -= dir;
-		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		dir *= 0.5;
-		hitCoord -= dir;
-		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		dir *= 0.5;
-		hitCoord -= dir;
-		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		dir *= 0.5;
-		hitCoord -= dir;
-		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		dir *= 0.5;
-		hitCoord -= dir;
-		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
-		
-		// Ugly discard of hits too far away
-		if (abs(getDeltaDepth(hitCoord)) > 0.01) {
-			return vec4(0.0);
-		}
-	// }
+	}
+	// Ugly discard of hits too far away
+	if (abs(getDeltaDepth(hitCoord)) > 0.01) {
+		return vec4(0.0);
+	}
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
 vec4 rayCast(vec3 dir) {
 	dir *= ssrRayStep;
-	
-	// for (int i = 0; i < maxSteps; i++) {
+	for (int i = 0; i < maxSteps; i++) {
 		hitCoord += dir;
 		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord) > 0.0) return binarySearch(dir);
-	// }
+	}
 	return vec4(0.0);
 }
 
@@ -183,5 +121,5 @@ void main() {
 	
 	vec3 reflCol = texture(tex, coords.xy).rgb;
 	reflCol = clamp(reflCol, 0.0, 1.0);
-	fragColor.rgb = reflCol * intensity * 0.5; //
+	fragColor.rgb = reflCol * intensity * 0.5;
 }

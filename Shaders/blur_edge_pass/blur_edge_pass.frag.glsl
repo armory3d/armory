@@ -39,10 +39,9 @@ void main() {
 	
 	fragColor.r = texture(tex, tc).r * blurWeights[0];
 	float weight = blurWeights[0];
-	weight += doBlur(blurWeights[1], 1, nor, tc);
-	weight += doBlur(blurWeights[2], 2, nor, tc);
-	weight += doBlur(blurWeights[3], 3, nor, tc);
-	weight += doBlur(blurWeights[4], 4, nor, tc);
+	for (int i = 1; i < 5; i++) {
+		weight += doBlur(blurWeights[i], i, nor, tc);
+	}
 
 	fragColor = vec4(fragColor.r / weight); // SSAO only
 }

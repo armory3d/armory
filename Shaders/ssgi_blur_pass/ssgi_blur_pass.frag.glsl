@@ -38,17 +38,9 @@ void main() {
 	
 	fragColor = texture(tex, texCoord) * blurWeights[0];
 	float weight = blurWeights[0];
-	// for (int i = 1; i < 10; i++) {
-		weight += doBlur(blurWeights[1], 1, nor, texCoord);
-		weight += doBlur(blurWeights[2], 2, nor, texCoord);
-		weight += doBlur(blurWeights[3], 3, nor, texCoord);
-		weight += doBlur(blurWeights[4], 4, nor, texCoord);
-		// weight += doBlur(blurWeights[5], 5, nor, texCoord);
-		// weight += doBlur(blurWeights[6], 6, nor, texCoord);
-		// weight += doBlur(blurWeights[7], 7, nor, texCoord);
-		// weight += doBlur(blurWeights[8], 8, nor, texCoord);
-		// weight += doBlur(blurWeights[9], 9, nor, texCoord);
-	// }
+	for (int i = 1; i < 5; i++) {
+		weight += doBlur(blurWeights[i], i, nor, texCoord);
+	}
 
 	fragColor = vec4(fragColor / weight);
 }

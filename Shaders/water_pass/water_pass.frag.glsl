@@ -127,7 +127,7 @@ vec3 heightMapTracing(vec3 ori, vec3 dir) {
 	if(hx > 0.0) return p;   
 	float hm = mapDetailed(ori + dir * tm);    
 	float tmid = 0.0;
-	// for(int i = 0; i < 5; i++) {
+	for(int i = 0; i < 5; i++) {
 		tmid = mix(tm, tx, hm / (hm - hx));                
 		p = ori + dir * tmid;
 		float hmid = mapDetailed(p);
@@ -139,52 +139,7 @@ vec3 heightMapTracing(vec3 ori, vec3 dir) {
 			tm = tmid;
 			hm = hmid;
 		}
-		//
-		tmid = mix(tm, tx, hm / (hm - hx));                   
-		p = ori + dir * tmid;                   
-		hmid = mapDetailed(p);
-		if (hmid < 0.0) {
-			tx = tmid;
-			hx = hmid;
-		}
-		else {
-			tm = tmid;
-			hm = hmid;
-		}
-		tmid = mix(tm, tx, hm / (hm - hx));                   
-		p = ori + dir * tmid;                   
-		hmid = mapDetailed(p);
-		if (hmid < 0.0) {
-			tx = tmid;
-			hx = hmid;
-		}
-		else {
-			tm = tmid;
-			hm = hmid;
-		}
-		tmid = mix(tm, tx, hm / (hm - hx));                   
-		p = ori + dir * tmid;                   
-		hmid = mapDetailed(p);
-		if (hmid < 0.0) {
-			tx = tmid;
-			hx = hmid;
-		}
-		else {
-			tm = tmid;
-			hm = hmid;
-		}
-		tmid = mix(tm, tx, hm / (hm - hx));                   
-		p = ori + dir * tmid;                   
-		hmid = mapDetailed(p);
-		if (hmid < 0.0) {
-			tx = tmid;
-			hx = hmid;
-		}
-		else {
-			tm = tmid;
-			hm = hmid;
-		}
-	// }
+	}
 	return p;
 }
 vec3 getSkyColor(vec3 e) {

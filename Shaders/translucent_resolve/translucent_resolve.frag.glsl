@@ -17,12 +17,7 @@ float maxComponent(vec4 v) {
 }
 
 void main() {
-
-	// #if (GLSL >= 130)
-	// vec4 accum = texelFetch(gbuffer0, ivec2(texCoord * texSize), 0);
-	// #else
-	vec4 accum = texture(gbuffer0, texCoord);
-	// #endif
+	vec4 accum = texelFetch(gbuffer0, ivec2(texCoord * texSize), 0);
 	float revealage = 1.0 - accum.a;
 
 	// Save the blending and color texture fetch cost
@@ -35,11 +30,6 @@ void main() {
 		accum.rgb = vec3(revealage);
 	}
 	
-	// #if (GLSL >= 130)
-	// float f = texelFetch(gbuffer1, ivec2(texCoord * texSize), 0).r;
-	// #else
-	float f = texture(gbuffer1, texCoord).r;
-	// #endif
-	
+	float f = texelFetch(gbuffer1, ivec2(texCoord * texSize), 0).r;
 	fragColor = vec4(accum.rgb / clamp(f, 1e-4, 5e4), revealage);
 }
