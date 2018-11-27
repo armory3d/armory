@@ -231,7 +231,8 @@ def compile(assets_only=False):
         cmd.append('--shaderversion')
         cmd.append('110')
     elif 'android' in state.target or 'ios' in state.target or 'html5' in state.target:
-        pass # Use defaults
+        cmd.append('--shaderversion')
+        cmd.append('300')
     else:
         cmd.append('--shaderversion')
         cmd.append('330')
