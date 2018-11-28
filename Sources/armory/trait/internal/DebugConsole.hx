@@ -382,14 +382,18 @@ class DebugConsole extends Trait {
 
 				if (ui.panel(Id.handle({selected: false}), 'Render Targets')) {
 					ui.indent();
+					#if (kha_opengl || kha_webgl)
 					ui.imageInvertY = true;
+					#end
 					for (rt in iron.RenderPath.active.renderTargets) {
 						ui.text(rt.raw.name);
 						if (rt.image != null && !rt.is3D) {
 							ui.image(rt.image);
 						}
 					}
+					#if (kha_opengl || kha_webgl)
 					ui.imageInvertY = false;
+					#end
 					ui.unindent();
 				}
 

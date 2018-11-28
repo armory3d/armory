@@ -368,7 +368,7 @@ void main() {
 	int numPoints = numLights - numSpots;
 	#endif
 
-	for (int i = 0; i < numLights; i++) {
+	for (int i = 0; i < min(numLights, maxLightsCluster); i++) {
 		int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);
 
 		// lightsArray[li * 2    ] - pos

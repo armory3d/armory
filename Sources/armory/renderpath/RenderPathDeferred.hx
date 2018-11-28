@@ -25,9 +25,9 @@ class RenderPathDeferred {
 
 		path = _path;
 
-		#if (rp_shadowmap && kha_webgl)
-		Inc.initEmpty();
-		#end
+		// #if (rp_shadowmap && kha_webgl)
+		// Inc.initEmpty();
+		// #end
 
 		#if (rp_background == "World")
 		{
@@ -553,6 +553,7 @@ class RenderPathDeferred {
 		Inc.drawShadowMap();
 		#end
 
+		path.setDepthFrom("tex", "gbuffer1"); // Unbind depth form tex so we can read it
 		path.setTarget("tex");
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
@@ -597,18 +598,11 @@ class RenderPathDeferred {
 			// }
 		}
 		#end
-
-		#if kha_webgl
-		path.setDepthFrom("tex", "gbuffer1"); // Even with depth_write set to false, depth can not be attached..
-		#end
 		
 		voxelao_pass ?
 			path.drawShader("shader_datas/deferred_light/deferred_light_VoxelAOvar") :
 			path.drawShader("shader_datas/deferred_light/deferred_light");
-
-		#if kha_webgl
-		path.setDepthFrom("tex", "gbuffer0");
-		#end
+		path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
 
 		#if rp_probes
 		if (!path.isProbe) {
@@ -655,6 +649,7 @@ class RenderPathDeferred {
 
 		#if (rp_background == "World")
 		{
+			path.setTarget("tex"); // Re-binds depth
 			path.drawSkydome("shader_datas/world_pass/world_pass");
 		}
 		#end

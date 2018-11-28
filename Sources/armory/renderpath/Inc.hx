@@ -189,24 +189,24 @@ class Inc {
 		#end
 	}
 
-	#if (rp_shadowmap && kha_webgl)
-	public static function initEmpty() {
-		// Bind empty when requested target is not found
-		var tempty = new RenderTargetRaw();
-		tempty.name = "arm_empty";
-		tempty.width = 1;
-		tempty.height = 1;
-		tempty.format = "DEPTH16";
-		path.createRenderTarget(tempty);
-		var temptyCube = new RenderTargetRaw();
-		temptyCube.name = "arm_empty_cube";
-		temptyCube.width = 1;
-		temptyCube.height = 1;
-		temptyCube.format = "DEPTH16";
-		temptyCube.is_cubemap = true;
-		path.createRenderTarget(temptyCube);
-	}
-	#end
+	// #if (rp_shadowmap && kha_webgl)
+	// public static function initEmpty() {
+	// 	// Bind empty when requested target is not found
+	// 	var tempty = new RenderTargetRaw();
+	// 	tempty.name = "arm_empty";
+	// 	tempty.width = 1;
+	// 	tempty.height = 1;
+	// 	tempty.format = "DEPTH16";
+	// 	path.createRenderTarget(tempty);
+	// 	var temptyCube = new RenderTargetRaw();
+	// 	temptyCube.name = "arm_empty_cube";
+	// 	temptyCube.width = 1;
+	// 	temptyCube.height = 1;
+	// 	temptyCube.format = "DEPTH16";
+	// 	temptyCube.is_cubemap = true;
+	// 	path.createRenderTarget(temptyCube);
+	// }
+	// #end
 
 	#if (rp_translucency)
 	public static function initTranslucency() {
