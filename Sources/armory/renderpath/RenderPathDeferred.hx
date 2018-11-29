@@ -429,9 +429,19 @@ class RenderPathDeferred {
 
 		#if rp_decals
 		{
-			// path.setTarget("gbuffer0", ["gbuffer1"]);
+			#if arm_dev
+			path.setDepthFrom("gbuffer0", "gbuffer1"); // Unbind depth so we can read it
+			path.depthToRenderTarget.set("main", path.renderTargets.get("tex"));
+			path.setTarget("gbuffer0", ["gbuffer1"]);
+			#end
+			
 			path.bindTarget("_main", "gbufferD");
 			path.drawDecals("decal");
+			
+			#if arm_dev
+			path.setDepthFrom("gbuffer0", "tex"); // Re-bind depth
+			path.depthToRenderTarget.set("main", path.renderTargets.get("gbuffer0"));
+			#end
 		}
 		#end
 
@@ -553,7 +563,7 @@ class RenderPathDeferred {
 		Inc.drawShadowMap();
 		#end
 
-		path.setDepthFrom("tex", "gbuffer1"); // Unbind depth form tex so we can read it
+		path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
 		path.setTarget("tex");
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");

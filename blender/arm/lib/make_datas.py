@@ -142,7 +142,7 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
                     cid = cid[:-1]
 
             found = False # Unique check
-            if ctype == 'sampler2D' or ctype == 'sampler2DShadow' or ctype == 'sampler3D' or ctype == 'samplerCube' or ctype == 'image2D' or ctype == 'uimage2D' or ctype == 'image3D' or ctype == 'uimage3D': # Texture unit
+            if ctype.startswith('sampler') or ctype.startswith('image') or ctype.startswith('uimage'): # Texture unit
                 for tu in con['texture_units']: # Texture already present
                     if tu['name'] == cid:
                         found = True
@@ -151,7 +151,7 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
                     tu = {}
                     tu['name'] = cid
                     # sampler2D / image2D
-                    if ctype == 'image2D' or ctype == 'uimage2D' or ctype == 'image3D' or ctype == 'uimage3D':
+                    if ctype.startswith('image') or ctype.startswith('uimage'):
                         tu['is_image'] = True
                     # Check for link
                     for l in c['links']:

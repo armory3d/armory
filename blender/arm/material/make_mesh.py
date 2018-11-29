@@ -736,10 +736,13 @@ def make_forward_base(con_mesh, parse_opacity=False):
         vert.write('wvpposition = gl_Position;')
         # wvpposition.z / wvpposition.w
         frag.write('float depthl = linearize(gl_FragCoord.z, cameraProj);')
+        frag.write('#ifdef HLSL')
+        frag.write('depthl += texture(clustersData, vec2(0.0)).r * 1e-9;') # TODO: krafix bug, needs to generate sampler
+        frag.write('#endif')
         frag.write('int clusterI = getClusterI((wvpposition.xy / wvpposition.w) * 0.5 + 0.5, depthl, cameraPlane);')
         frag.write('int numLights = int(texelFetch(clustersData, ivec2(clusterI, 0), 0).r * 255);')
 
-        frag.write('for (int i = 0; i < numLights; i++) {')
+        frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
         frag.write('int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
         frag.write('vec3 lp = lightsArray[li * 2].xyz;')
         frag.write('vec3 ld = lp - wposition;')

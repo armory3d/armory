@@ -5,7 +5,8 @@ import arm.material.make_mesh as make_mesh
 import arm.utils
 
 def make(context_id):
-    con_decal = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'less', 'cull_mode': 'clockwise',
+    # 'compare_mode': 'less' needs read-only depth view
+    con_decal = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'always', 'cull_mode': 'clockwise',
         'blend_source': 'source_alpha',
         'blend_destination': 'inverse_source_alpha',
         'blend_operation': 'add',
@@ -39,6 +40,9 @@ def make(context_id):
 
     frag.write_attrib('    vec2 screenPosition = wvpposition.xy / wvpposition.w;')
     frag.write_attrib('    vec2 depthCoord = screenPosition * 0.5 + 0.5;')
+    frag.write_attrib('#ifdef HLSL')
+    frag.write_attrib('    depthCoord.y = 1.0 - depthCoord.y;')
+    frag.write_attrib('#endif')
     frag.write_attrib('    float depth = texture(gbufferD, depthCoord).r * 2.0 - 1.0;')
     
     frag.write_attrib('    vec3 wpos = getPos2(invVP, depth, depthCoord);')

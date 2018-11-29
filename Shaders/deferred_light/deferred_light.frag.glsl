@@ -109,6 +109,7 @@ uniform vec2 cameraPlane;
 #ifdef _ShadowMap
 	#ifdef _ShadowMapCube
 	uniform vec2 lightProj;
+	// uniform samplerCubeShadow shadowMap0; //arm_dev
 	uniform samplerCube shadowMap0;
 	// uniform samplerCube shadowMap1;
 	// uniform samplerCube shadowMap2;
@@ -140,6 +141,7 @@ uniform vec2 cameraPlane;
 uniform vec3 sunDir;
 uniform vec3 sunCol;
 	#ifdef _ShadowMap
+	// uniform sampler2DShadow shadowMap; // arm_dev
 	uniform sampler2D shadowMap;
 	uniform float shadowsBias;
 	#ifdef _CSM
@@ -360,6 +362,9 @@ void main() {
 #ifdef _Clusters
 
 	float depthl = linearize(depth * 0.5 + 0.5, cameraProj);
+	#ifdef HLSL
+	depthl += texture(clustersData, vec2(0.0)).r * 1e-9; // TODO: krafix bug, needs to generate sampler
+	#endif
 	int clusterI = getClusterI(texCoord, depthl, cameraPlane);
 	int numLights = int(texelFetch(clustersData, ivec2(clusterI, 0), 0).r * 255);
 
