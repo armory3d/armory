@@ -74,7 +74,7 @@ out vec4 fragColor;
 // Luma Edge Detection
 // IMPORTANT NOTICE: luma edge detection requires gamma-corrected colors, and
 // thus 'colorTex' should be a non-sRGB texture.
-vec2 SMAALumaEdgeDetectionPS(vec2 texcoord/*, vec4 offset[3], sampler2D colorTex*/
+vec2 SMAALumaEdgeDetectionPS(vec2 texcoord
 							   //#if SMAA_PREDICATION
 							   //, sampler2D predicationTex
 							   //#endif
@@ -128,7 +128,7 @@ vec2 SMAALumaEdgeDetectionPS(vec2 texcoord/*, vec4 offset[3], sampler2D colorTex
 // Color Edge Detection
 // IMPORTANT NOTICE: color edge detection requires gamma-corrected colors, and
 // thus 'colorTex' should be a non-sRGB texture.
-vec2 SMAAColorEdgeDetectionPS(vec2 texcoord/*, vec4 offset[3], sampler2D colorTex*/
+vec2 SMAAColorEdgeDetectionPS(vec2 texcoord
 								//#if SMAA_PREDICATION
 								//, sampler2D predicationTex
 								//#endif
@@ -203,6 +203,5 @@ vec2 SMAAColorEdgeDetectionPS(vec2 texcoord/*, vec4 offset[3], sampler2D colorTe
 // }
 
 void main() {
-	// fragColor.rg = SMAALumaEdgeDetectionPS(texCoord/*, offset, colorTex*/);
-	fragColor.rg = SMAAColorEdgeDetectionPS(texCoord/*, offset, colorTex*/);
+	fragColor.rg = SMAAColorEdgeDetectionPS(texCoord);
 }
