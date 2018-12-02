@@ -43,6 +43,7 @@ class PhysicsWorld extends Trait {
 	var maxSteps = 1;
 	public var solverIterations = 10;
 	public var hitPointWorld = new Vec4();
+	public var hitNormalWorld = new Vec4();
 	var pairCache:Bool = false;
 
 	static var nullvec = true;
@@ -316,10 +317,14 @@ class PhysicsWorld extends Trait {
 			var body = untyped Ammo.btRigidBody.prototype.upcast(co);
 			var hit = rayCallback.get_m_hitPointWorld();
 			hitPointWorld.set(hit.x(), hit.y(), hit.z());
+			var norm = rayCallback.get_m_hitNormalWorld();
+			hitNormalWorld.set(norm.x(), norm.y(), norm.z());
 			rb = rbMap.get(untyped body.userIndex);
 			#elseif cpp
 			var hit = rayCallback.m_hitPointWorld;
 			hitPointWorld.set(hit.x(), hit.y(), hit.z());
+			var norm = rayCallback.m_hitNormalWorld;
+			hitNormalWorld.set(norm.x(), norm.y(), norm.z());
 			rb = rbMap.get(rayCallback.m_collisionObject.getUserIndex());
 			#end
 		}

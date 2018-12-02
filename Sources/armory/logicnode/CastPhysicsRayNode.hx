@@ -27,9 +27,13 @@ class CastPhysicsRayNode extends LogicNode {
 		if (from == 0) { // Object
 			if (rb != null) return rb.object;
 		}
-		else { // Hit
+		else if (from == 1) { // Hit
 			var hitPointWorld:Vec4 = rb != null ? physics.hitPointWorld : null;
-			v.set(hitPointWorld.x, hitPointWorld.y, hitPointWorld.z);
+			v.set(hitPointWorld.x, hitPointWorld.y, hitPointWorld.z, 1);
+			return v;
+		} else { // Normal
+			var hitNormalWorld:Vec4 = rb != null ? physics.hitNormalWorld : null;
+			v.set(hitNormalWorld.x, hitNormalWorld.y, hitNormalWorld.z, 0);
 			return v;
 		}
 #end

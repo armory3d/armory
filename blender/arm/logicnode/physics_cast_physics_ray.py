@@ -14,5 +14,6 @@ class CastPhysicsRayNode(Node, ArmLogicTreeNode):
         self.inputs.new('NodeSocketVector', 'To')
         self.outputs.new('ArmNodeSocketObject', 'Object')
         self.outputs.new('NodeSocketVector', 'Hit')
+        self.outputs.new('NodeSocketVector', 'Normal')
 
 add_node(CastPhysicsRayNode, category='Physics')
