@@ -181,6 +181,7 @@ class Shader:
         self.lock = False
         self.geom_passthrough = False
         self.is_linked = False # Use already generated shader
+        self.noprocessing = False
 
     def add_include(self, s):
         self.includes.append(s)
@@ -263,6 +264,9 @@ class Shader:
             self.add_in('vec' + str(e['size']) + ' ' + e['name'])
 
     def get(self):
+        if self.noprocessing:
+            return self.main
+
         s = '#version 450\n'
 
         s += self.header

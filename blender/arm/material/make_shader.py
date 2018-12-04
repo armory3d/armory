@@ -1,5 +1,6 @@
 import os
 import bpy
+import subprocess
 import arm.utils
 import arm.assets as assets
 import arm.material.mat_utils as mat_utils
@@ -122,9 +123,31 @@ def write_shader(rel_path, shader, ext, rpass, matname, keep_cache=True):
     if mat_state.material.arm_blending and rpass == 'mesh':
         rpass = 'blend'
 
-    shader_rel_path = rel_path + '/' + matname + '_' + rpass + '.' + ext + '.glsl'
-    shader_path = arm.utils.get_fp() + '/' + shader_rel_path
+    file_ext = '.glsl'
+    if shader.noprocessing:
+        # Use hlsl directly
+        hlsl_dir = arm.utils.build_dir() + '/compiled/Hlsl/'
+        if not os.path.exists(hlsl_dir):
+            os.makedirs(hlsl_dir)
+        file_ext = '.hlsl'
+        rel_path = rel_path.replace('/compiled/Shaders/', '/compiled/Hlsl/')
+
+    shader_file = matname + '_' + rpass + '.' + ext + file_ext
+    shader_path = arm.utils.get_fp() + '/' + rel_path + '/' + shader_file
     assets.add_shader(shader_path)
     if not os.path.isfile(shader_path) or not keep_cache:
         with open(shader_path, 'w') as f:
             f.write(shader.get())
+
+        if shader.noprocessing:
+            cwd = os.getcwd()
+            os.chdir(arm.utils.get_fp() + '/' + rel_path)
+            hlslbin_path = arm.utils.get_sdk_path() + '/lib/armory_tools/hlslbin/hlslbin.exe'
+            prof = 'vs_5_0' if ext == 'vert' else 'ps_5_0' if ext == 'frag' else 'gs_5_0'
+            # noprocessing flag - gets renamed to .d3d11
+            args = [hlslbin_path.replace('/', '\\').replace('\\\\', '\\'), shader_file, shader_file[:-4] + 'glsl', prof]
+            if ext == 'vert':
+                args.append('-i')
+                args.append('pos')
+            proc = subprocess.call(args)
+            os.chdir(cwd)

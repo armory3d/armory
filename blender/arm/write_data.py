@@ -164,12 +164,18 @@ project.addSources('Sources');
             if rel_path:
                 shaders_path = os.path.relpath(shaders_path, arm.utils.get_fp()).replace('\\', '/')
             f.write('project.addShaders("' + shaders_path + '");\n')
+
+            if arm.utils.get_gapi() == 'direct3d11':
+                # noprocessing flag - gets renamed to .d3d11
+                shaders_path = arm.utils.build_dir() + '/compiled/Hlsl/*.glsl'
+                if rel_path:
+                    shaders_path = os.path.relpath(shaders_path, arm.utils.get_fp()).replace('\\', '/')
+                f.write('project.addShaders("' + shaders_path + '", { noprocessing: true });\n')
         else:
             shader_references = sorted(list(set(assets.shaders)))
             for ref in shader_references:
                 f.write(add_shaders(ref, rel_path=rel_path))
-                # noprocessing for passthrough geom shader
-                # if ref.endswith('voxel.geom.glsl'):
+                # if ref.endswith('voxel.geom.glsl'): # passthrough geom shader
                     # f.write(', { noprocessing: true }')
 
         # Move assets for published game to /data folder

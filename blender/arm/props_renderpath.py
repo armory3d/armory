@@ -36,6 +36,7 @@ def update_preset(self, context):
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Anisotropic'
+        rpdat.arm_irradiance = True
         rpdat.arm_radiance = True
         rpdat.arm_radiance_sky = True
         rpdat.arm_shadows_cubemap = True
@@ -68,6 +69,7 @@ def update_preset(self, context):
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Point'
+        rpdat.arm_irradiance = True
         rpdat.arm_radiance = True
         rpdat.arm_radiance_sky = True
         rpdat.arm_shadows_cubemap = True
@@ -100,6 +102,7 @@ def update_preset(self, context):
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Linear'
+        rpdat.arm_irradiance = True
         rpdat.arm_radiance = False
         rpdat.arm_radiance_sky = False
         rpdat.arm_shadows_cubemap = False
@@ -136,6 +139,7 @@ def update_preset(self, context):
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_material_model = 'Full'
         rpdat.arm_texture_filter = 'Anisotropic'
+        rpdat.arm_irradiance = True
         rpdat.arm_radiance = True
         rpdat.arm_radiance_sky = True
         rpdat.arm_shadows_cubemap = True
@@ -168,6 +172,7 @@ def update_preset(self, context):
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Linear'
+        rpdat.arm_irradiance = False
         rpdat.arm_radiance = False
         rpdat.arm_radiance_sky = False
         rpdat.arm_shadows_cubemap = False
