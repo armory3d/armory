@@ -530,10 +530,13 @@ def clean():
     wrd = bpy.data.worlds['Arm']
 
     # Remove build and compiled data
-    if os.path.isdir(arm.utils.build_dir()):
-        shutil.rmtree(arm.utils.build_dir(), onerror=remove_readonly)
-    if os.path.isdir(arm.utils.get_fp() + '/build'): # Kode Studio build dir
-        shutil.rmtree(arm.utils.get_fp() + '/build', onerror=remove_readonly)
+    try:
+        if os.path.isdir(arm.utils.build_dir()):
+            shutil.rmtree(arm.utils.build_dir(), onerror=remove_readonly)
+        if os.path.isdir(arm.utils.get_fp() + '/build'): # Kode Studio build dir
+            shutil.rmtree(arm.utils.get_fp() + '/build', onerror=remove_readonly)
+    except:
+        print('Armory Warning: Some files in the build folder are locked')
 
     # Remove compiled nodes
     pkg_dir = arm.utils.safestr(wrd.arm_project_package).replace('.', '/')
