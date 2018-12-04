@@ -157,57 +157,46 @@ project.addSources('Sources');
             # Load shaders manually
             assets.add_khafile_def('arm_shaderload')
 
-        # Add compiled shaders all at once when threaded
-        threaded = arm.utils.get_khamake_threads() > 1
-        if threaded:
-            shaders_path = arm.utils.build_dir() + '/compiled/Shaders/*.glsl'
+        shaders_path = arm.utils.build_dir() + '/compiled/Shaders/*.glsl'
+        if rel_path:
+            shaders_path = os.path.relpath(shaders_path, arm.utils.get_fp()).replace('\\', '/')
+        f.write('project.addShaders("' + shaders_path + '");\n')
+
+        if arm.utils.get_gapi() == 'direct3d11':
+            # noprocessing flag - gets renamed to .d3d11
+            shaders_path = arm.utils.build_dir() + '/compiled/Hlsl/*.glsl'
             if rel_path:
                 shaders_path = os.path.relpath(shaders_path, arm.utils.get_fp()).replace('\\', '/')
-            f.write('project.addShaders("' + shaders_path + '");\n')
-
-            if arm.utils.get_gapi() == 'direct3d11':
-                # noprocessing flag - gets renamed to .d3d11
-                shaders_path = arm.utils.build_dir() + '/compiled/Hlsl/*.glsl'
-                if rel_path:
-                    shaders_path = os.path.relpath(shaders_path, arm.utils.get_fp()).replace('\\', '/')
-                f.write('project.addShaders("' + shaders_path + '", { noprocessing: true });\n')
-        else:
-            shader_references = sorted(list(set(assets.shaders)))
-            for ref in shader_references:
-                f.write(add_shaders(ref, rel_path=rel_path))
-                # if ref.endswith('voxel.geom.glsl'): # passthrough geom shader
-                    # f.write(', { noprocessing: true }')
+            f.write('project.addShaders("' + shaders_path + '", { noprocessing: true });\n')
 
         # Move assets for published game to /data folder
         use_data_dir = is_publish and (state.target == 'krom-windows' or state.target == 'krom-linux' or state.target == 'windows' or state.target == 'linux')
         if use_data_dir:
             assets.add_khafile_def('arm_data_dir')
 
-        # Add compiled assets all at once when threaded
-        if threaded:
-            ext = 'arm' if wrd.arm_minimize else 'json'
-            assets_path = arm.utils.build_dir() + '/compiled/Assets/**'
-            assets_path_sh = arm.utils.build_dir() + '/compiled/Shaders/*.' + ext
-            if rel_path:
-                assets_path = os.path.relpath(assets_path, arm.utils.get_fp()).replace('\\', '/')
-                assets_path_sh = os.path.relpath(assets_path_sh, arm.utils.get_fp()).replace('\\', '/')
-            dest = ''
-            if use_data_dir:
-                dest += ', destination: "data/{name}"'
-            f.write('project.addAssets("' + assets_path + '", { notinlist: true ' + dest + '});\n')
-            f.write('project.addAssets("' + assets_path_sh + '", { notinlist: true ' + dest + '});\n')
+        ext = 'arm' if wrd.arm_minimize else 'json'
+        assets_path = arm.utils.build_dir() + '/compiled/Assets/**'
+        assets_path_sh = arm.utils.build_dir() + '/compiled/Shaders/*.' + ext
+        if rel_path:
+            assets_path = os.path.relpath(assets_path, arm.utils.get_fp()).replace('\\', '/')
+            assets_path_sh = os.path.relpath(assets_path_sh, arm.utils.get_fp()).replace('\\', '/')
+        dest = ''
+        if use_data_dir:
+            dest += ', destination: "data/{name}"'
+        f.write('project.addAssets("' + assets_path + '", { notinlist: true ' + dest + '});\n')
+        f.write('project.addAssets("' + assets_path_sh + '", { notinlist: true ' + dest + '});\n')
         
         shader_data_references = sorted(list(set(assets.shader_datas)))
         for ref in shader_data_references:
             ref = ref.replace('\\', '/').replace('//', '/')
-            if threaded and '/compiled/' in ref: # Asset already included
+            if '/compiled/' in ref: # Asset already included
                 continue
             f.write(add_assets(ref, use_data_dir=use_data_dir, rel_path=rel_path))
 
         asset_references = sorted(list(set(assets.assets)))
         for ref in asset_references:
             ref = ref.replace('\\', '/').replace('//', '/')
-            if threaded and '/compiled/' in ref: # Asset already included
+            if '/compiled/' in ref: # Asset already included
                 continue
             quality = 1.0
             s = ref.lower()
