@@ -323,7 +323,7 @@ class ArmoryExporter:
                 oaction['type'] = 'object'
                 oaction['name'] = aname
                 oaction['data_ref'] = ''
-                oaction['transform'] = []
+                oaction['transform'] = None
                 arm.utils.write_arm(fp, actionf)
 
     def export_key_frames(self, fcurve):
@@ -566,7 +566,7 @@ class ArmoryExporter:
                 oaction['type'] = 'object'
                 oaction['name'] = aname
                 oaction['data_ref'] = ''
-                oaction['transform'] = []
+                oaction['transform'] = None
                 arm.utils.write_arm(fp, actionf)
 
     def process_bone(self, bone):
