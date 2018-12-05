@@ -593,14 +593,12 @@ def def_strings_to_array(strdefs):
     return defs
 
 def get_kha_target(target_name): # TODO: remove
-    if target_name == 'macos':
-        return 'osx'
-    elif target_name == 'krom-windows':
+    if target_name == 'macos-hl':
+        return 'osx-hl'
+    elif target_name.startswith('krom'): # krom-windows
         return 'krom'
-    elif target_name == 'krom-linux':
-        return 'krom'
-    elif target_name == 'krom-macos':
-        return 'krom'
+    elif target_name == 'custom':
+        return ''
     return target_name
 
 def target_to_gapi(arm_project_target):
@@ -619,17 +617,13 @@ def target_to_gapi(arm_project_target):
         return 'arm_gapi_mac'
     elif arm_project_target == 'macos-hl':
         return 'arm_gapi_mac'
-    elif arm_project_target == 'macos':
-        return 'arm_gapi_mac'
-    elif arm_project_target == 'windows':
-        return 'arm_gapi_win'
-    elif arm_project_target == 'windowsapp':
-        return 'arm_gapi_winapp'
-    elif arm_project_target == 'android-native':
+    elif arm_project_target == 'android-native-hl':
         return 'arm_gapi_android'
+    elif arm_project_target == 'ios-hl':
+        return 'arm_gapi_ios'
     elif arm_project_target == 'node':
         return 'arm_gapi_html5'
-    else:
+    else: # html5, custom
         return 'arm_gapi_' + arm_project_target
 
 def check_default_props():

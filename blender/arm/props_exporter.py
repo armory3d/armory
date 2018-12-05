@@ -13,15 +13,13 @@ def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
     func(path)
 
-def update_gapi_win(self, context):
-    if os.path.isdir(arm.utils.get_fp_build() + '/windows-build'):
-        shutil.rmtree(arm.utils.get_fp_build() + '/windows-build', onerror=remove_readonly)
+def update_gapi_custom(self, context):
     bpy.data.worlds['Arm'].arm_recompile = True
     assets.invalidate_compiled_data(self, context)
 
-def update_gapi_winapp(self, context):
-    if os.path.isdir(arm.utils.get_fp_build() + '/windowsapp-build'):
-        shutil.rmtree(arm.utils.get_fp_build() + '/windowsapp-build', onerror=remove_readonly)
+def update_gapi_win(self, context):
+    if os.path.isdir(arm.utils.get_fp_build() + '/windows-build'):
+        shutil.rmtree(arm.utils.get_fp_build() + '/windows-build', onerror=remove_readonly)
     bpy.data.worlds['Arm'].arm_recompile = True
     assets.invalidate_compiled_data(self, context)
 
@@ -64,25 +62,31 @@ class ArmExporterListItem(bpy.types.PropertyGroup):
            description="A name for this item",
            default="Path")
 
-    arm_project_scene = StringProperty(name="Scene", description="Scene to load when launching")    
+    arm_project_scene = StringProperty(name="Scene", description="Scene to load when launching")
 
     arm_project_target = EnumProperty(
-        items = [('html5', 'HTML5', 'html5'),
-                 ('windows', 'Windows (C++)', 'windows'),
+        items = [('html5', 'HTML5 (JS)', 'html5'),
+                 ('windows-hl', 'Windows (C)', 'windows-hl'),
                  ('krom-windows', 'Windows (Krom)', 'krom-windows'),
-                 ('windowsapp', 'Windows App', 'windowsapp'),
-                 ('macos', 'MacOS (C++)', 'macos'),
-                 ('krom-macos', 'MacOS (Krom)', 'krom-macos'),
-                 ('linux', 'Linux (C++)', 'linux'),
+                 ('macos-hl', 'macOS (C)', 'macos-hl'),
+                 ('krom-macos', 'macOS (Krom)', 'krom-macos'),
+                 ('linux-hl', 'Linux (C)', 'linux-hl'),
                  ('krom-linux', 'Linux (Krom)', 'krom-linux'),
-                 ('ios', 'iOS', 'ios'),
-                 ('android-native', 'Android', 'android-native'),
-                 ('node', 'Node', 'node'),
-                 ('windows-hl', 'Windows (HashLink)', 'windows-hl'),
-                 ('linux-hl', 'Linux (HashLink)', 'linux-hl'),
-                 ('macos-hl', 'MacOS (HashLink)', 'macos-hl'),],
+                 ('ios-hl', 'iOS (C)', 'ios-hl'),
+                 ('android-native-hl', 'Android (C)', 'android-native-hl'),
+                 ('node', 'Node (JS)', 'node'),
+                 ('custom', 'Custom', 'custom'),],
         name="Target", default='html5', description='Build platform')
 
+    arm_project_khamake = StringProperty(name="Khamake", description="Specify arguments for the 'node Kha/make' call")
+
+    arm_gapi_custom = EnumProperty(
+        items = [('opengl', 'OpenGL', 'opengl'),
+                 ('vulkan', 'Vulkan', 'vulkan'),
+                 ('direct3d11', 'Direct3D11', 'direct3d11'),
+                 ('direct3d12', 'Direct3D12', 'direct3d12'),
+                 ('metal', 'Metal', 'metal')],
+        name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_custom)
     arm_gapi_win = EnumProperty(
         items = [('opengl', 'Auto', 'opengl'),
                  ('opengl', 'OpenGL', 'opengl'),
@@ -90,10 +94,6 @@ class ArmExporterListItem(bpy.types.PropertyGroup):
                  ('direct3d11', 'Direct3D11', 'direct3d11'),
                  ('direct3d12', 'Direct3D12', 'direct3d12')],
         name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_win)
-    arm_gapi_winapp = EnumProperty(
-        items = [('direct3d11', 'Auto', 'direct3d11'),
-                 ('direct3d11', 'Direct3D11', 'direct3d11')],
-        name="Graphics API", default='direct3d11', description='Based on currently selected target', update=update_gapi_winapp)
     arm_gapi_linux = EnumProperty(
         items = [('opengl', 'Auto', 'opengl'),
                  ('opengl', 'OpenGL', 'opengl'),
@@ -116,7 +116,7 @@ class ArmExporterListItem(bpy.types.PropertyGroup):
         name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_ios)
     arm_gapi_html5 = EnumProperty(
         items = [('webgl', 'Auto', 'webgl'),
-                 ('webgl', 'WebGL', 'webgl')],
+                 ('webgl', 'WebGL2', 'webgl')],
         name="Graphics API", default='webgl', description='Based on currently selected target', update=update_gapi_html5)
 
 class ArmExporterList(bpy.types.UIList):

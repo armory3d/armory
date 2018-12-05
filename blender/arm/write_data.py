@@ -282,12 +282,12 @@ project.addSources('Sources');
         if khafile_text != '':
             f.write(bpy.data.texts[khafile_text].as_string())
 
-        if state.target == 'android-native':
+        if state.target.startswith('android-native'):
             bundle = 'org.armory3d.' + wrd.arm_project_package if wrd.arm_project_bundle == '' else wrd.arm_project_bundle
             f.write("project.targetOptions.android_native.package = '{0}';\n".format(arm.utils.safestr(bundle)))
             if wrd.arm_winorient != 'Multi':
                 f.write("project.targetOptions.android_native.screenOrientation = '{0}';\n".format(wrd.arm_winorient.lower()))
-        elif state.target == 'ios':
+        elif state.target.startswith('ios'):
             bundle = 'org.armory3d.' + wrd.arm_project_package if wrd.arm_project_bundle == '' else wrd.arm_project_bundle
             f.write("project.targetOptions.ios.bundle = '{0}';\n".format(arm.utils.safestr(bundle)))
 

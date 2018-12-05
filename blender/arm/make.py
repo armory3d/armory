@@ -214,9 +214,18 @@ def compile(assets_only=False):
 
     node_path = arm.utils.get_node_path()
     khamake_path = arm.utils.get_khamake_path()
+    cmd = [node_path, khamake_path]
 
     kha_target_name = arm.utils.get_kha_target(target_name)
-    cmd = [node_path, khamake_path, kha_target_name]
+    if kha_target_name != '':
+        cmd.append(kha_target_name)
+
+    # Custom exporter
+    if state.is_export:
+        item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
+        if item.arm_project_target == 'custom' and item.arm_project_khamake != '':
+            for s in item.arm_project_khamake.split(' '):
+                cmd.append(s)
 
     ffmpeg_path = arm.utils.get_ffmpeg_path() # Path to binary
     if ffmpeg_path != '':
@@ -258,11 +267,6 @@ def compile(assets_only=False):
         cmd.append(arm.utils.build_dir() + '/debug')
     else:
         cmd.append(arm.utils.build_dir())
-
-    # User defined commands
-    if wrd.arm_khamake != '':
-        for s in bpy.data.texts[wrd.arm_khamake].as_string().split(' '):
-            cmd.append(s)
 
     if assets_only:
         cmd.append('--nohaxe')
@@ -514,13 +518,13 @@ def build_success():
         
         if target_name == 'html5':
             print('Exported HTML5 package to ' + files_path)
-        elif target_name == 'ios' or target_name == 'osx': # TODO: to macos
+        elif target_name.startswith('ios') or target_name.startswith('osx'): # TODO: to macos
             print('Exported XCode project to ' + files_path + '-build')
-        elif target_name == 'windows' or target_name == 'windowsapp':
+        elif target_name.startswith('windows'):
             print('Exported Visual Studio 2017 project to ' + files_path + '-build')
-        elif target_name == 'android-native':
+        elif target_name.startswith('android-native'):
             print('Exported Android Studio project to ' + files_path + '-build/' + arm.utils.safestr(wrd.arm_project_name))
-        elif target_name == 'krom':
+        elif target_name.startswith('krom'):
             print('Exported Krom package to ' + files_path)
         else:
             print('Exported makefiles to ' + files_path + '-build')

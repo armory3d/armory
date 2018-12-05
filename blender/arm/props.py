@@ -117,7 +117,6 @@ def init_properties():
                ('Enabled', 'Enabled', 'Enabled')],
         name="Audio", default='Enabled', update=invalidate_compiler_cache)
     bpy.types.World.arm_khafile = StringProperty(name="Khafile", description="Source appended to khafile.js", update=invalidate_compiler_cache)
-    bpy.types.World.arm_khamake = StringProperty(name="Khamake", description="Command line params appended to khamake", update=invalidate_compiler_cache)
     bpy.types.World.arm_texture_quality = FloatProperty(name="Texture Quality", default=1.0, min=0.0, max=1.0, subtype='FACTOR', update=invalidate_compiler_cache)
     bpy.types.World.arm_sound_quality = FloatProperty(name="Sound Quality", default=0.9, min=0.0, max=1.0, subtype='FACTOR', update=invalidate_compiler_cache)
     bpy.types.World.arm_minimize = BoolProperty(name="Minimize Data", description="Export scene data in binary", default=True, update=assets.invalidate_compiled_data)
