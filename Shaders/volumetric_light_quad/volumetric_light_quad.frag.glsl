@@ -70,7 +70,7 @@ void main() {
 	float pixelRayMarchNoise = texture(snoise, texCoord * 100).r * 2.0 - 1.0;
 
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	vec3 worldPos = getPos(eye, eyeLook, viewRay, depth, cameraProj);
+	vec3 worldPos = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
 
 	vec3 viewVec = worldPos - eye;
 	float worldPosDist = length(viewVec);

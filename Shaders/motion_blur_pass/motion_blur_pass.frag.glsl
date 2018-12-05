@@ -21,7 +21,7 @@ out vec4 fragColor;
 
 vec2 getVelocity(vec2 coord, float depth) {
 	vec4 currentPos = vec4(coord.xy * 2.0 - 1.0, depth, 1.0);
-	vec4 worldPos = vec4(getPos(eye, eyeLook, viewRay, depth, cameraProj), 1.0);
+	vec4 worldPos = vec4(getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj), 1.0);
 	vec4 previousPos = prevVP * worldPos;
 	previousPos /= previousPos.w;
 	vec2 velocity = (currentPos - previousPos).xy / 40.0;

@@ -2,7 +2,6 @@
 	"contexts": [
 		{
 			"name": "blur_edge_pass_x",
-			"color_write_alpha": false,
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
@@ -18,7 +17,6 @@
 		},
 		{
 			"name": "blur_edge_pass_y",
-			"color_write_alpha": false,
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
@@ -34,7 +32,6 @@
 		},
 		{
 			"name": "blur_edge_pass_y_blend",
-			"color_write_alpha": false,
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
@@ -54,7 +51,6 @@
 
 		{
 			"name": "blur_edge_pass_y_blend_add",
-			"color_write_alpha": false,
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",

@@ -179,7 +179,7 @@ void main() {
 	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
 
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	vec3 p = getPos(eye, eyeLook, viewRay, depth, cameraProj);
+	vec3 p = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
 	vec3 v = normalize(eye - p);
 	float dotNV = max(dot(n, v), 0.0);
 

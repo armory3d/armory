@@ -301,6 +301,17 @@ class RenderPathDeferred {
 			
 			#if rp_ssr_half
 			{
+				path.loadShader("shader_datas/downsample_depth/downsample_depth");
+				var t = new RenderTargetRaw();
+				t.name = "half";
+				t.width = 0;
+				t.height = 0;
+				t.scale = 0.5;
+				t.format = "DEPTH16";
+				path.createRenderTarget(t);
+			}
+			
+			{
 				var t = new RenderTargetRaw();
 				t.name = "ssra";
 				t.width = 0;
@@ -750,13 +761,19 @@ class RenderPathDeferred {
 				#if rp_ssr_half
 				var targeta = "ssra";
 				var targetb = "ssrb";
+
+				path.setTarget("half");
+				path.bindTarget("_main", "texdepth");
+				path.drawShader("shader_datas/downsample_depth/downsample_depth");
+				var targetdepth = "_half";
 				#else
 				var targeta = "buf";
 				var targetb = "gbuffer1";
+				var targetdepth = "_main";
 				#end
 				path.setTarget(targeta);
 				path.bindTarget("tex", "tex");
-				path.bindTarget("_main", "gbufferD");
+				path.bindTarget(targetdepth, "gbufferD");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer1", "gbuffer1");
 				path.drawShader("shader_datas/ssr_pass/ssr_pass");

@@ -25,7 +25,7 @@ out float fragColor[2];
 
 void main() {
 	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	vec3 p = getPos(eye, eyeLook, viewRay, depth, cameraProj);
+	vec3 p = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
 	
 	vec4 lightPosition = LWVP * vec4(p, 1.0);
 	vec3 lPos = lightPosition.xyz / lightPosition.w;

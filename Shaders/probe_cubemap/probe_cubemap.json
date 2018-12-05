@@ -3,7 +3,6 @@
 		{
 			"name": "probe_cubemap",
 			"depth_write": false,
-			"color_write_alpha": false,
 			"compare_mode": "less",
 			"cull_mode": "clockwise",
 			"blend_source": "blend_one",

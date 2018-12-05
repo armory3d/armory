@@ -2,7 +2,6 @@
 	"contexts": [
 		{
 			"name": "blur_adaptive_pass_x",
-			"color_write_alpha": false,
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
@@ -18,7 +17,6 @@
 		},
 		{
 			"name": "blur_adaptive_pass_y",
-			"color_write_alpha": false,
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
@@ -36,7 +34,6 @@
 		
 		{
 			"name": "blur_adaptive_pass_x2",
-			"color_write_alpha": false,
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
@@ -52,7 +49,6 @@
 		},
 		{
 			"name": "blur_adaptive_pass_y3",
-			"color_write_alpha": false,
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
@@ -68,7 +64,6 @@
 		},
 		{
 			"name": "blur_adaptive_pass_y3_blend",
-			"color_write_alpha": false,
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",

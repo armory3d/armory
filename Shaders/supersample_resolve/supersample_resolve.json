@@ -3,7 +3,6 @@
 		{
 			"name": "supersample_resolve",
 			"depth_write": false,
-			"color_write_alpha": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
 			"links": [

@@ -486,8 +486,8 @@ const float seaFade = """ + str(round(rpdat.arm_ocean_fade * 100) / 100) + """;
         if rpdat.rp_ssgi == 'SSAO' or rpdat.rp_volumetriclight:
             scale = 0.5 if rpdat.arm_ssao_half_res else 1.0
             f.write(
-"""const float ssaoSize = """ + str(round((rpdat.arm_ssgi_step / 16) * 100) / 100) + """;
-const float ssaoStrength = """ + str(round((rpdat.arm_ssgi_strength / 10) * 100) / 100) + """;
+"""const float ssaoSize = """ + str(round((rpdat.arm_ssgi_step / 32) * 100) / 100) + """;
+const float ssaoStrength = """ + str(round((rpdat.arm_ssgi_strength / 2) * 100) / 100) + """;
 const float ssaoTextureScale = """ + str(scale) + """;
 """)
         if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':

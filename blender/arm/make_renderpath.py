@@ -308,6 +308,7 @@ def build():
         assets.add_shader_pass('blur_adaptive_pass')
         if rpdat.arm_ssr_half_res:
             assets.add_khafile_def('rp_ssr_half')
+            assets.add_shader_pass('downsample_depth')
         if rpdat.rp_ssr_z_only:
             wrd.world_defs += '_SSRZOnly'
 

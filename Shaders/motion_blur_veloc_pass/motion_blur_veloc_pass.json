@@ -3,7 +3,6 @@
 		{
 			"name": "motion_blur_veloc_pass",
 			"depth_write": false,
-			"color_write_alpha": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
 			"links": [

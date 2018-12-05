@@ -8,7 +8,6 @@
 			"blend_source": "blend_one",
 			"blend_destination": "blend_one",
 			"blend_operation": "add",
-			"color_write_alpha": false,
 			"links": [],
 			"texture_params": [],
 			"vertex_shader": "../include/pass.vert.glsl",

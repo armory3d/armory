@@ -174,7 +174,7 @@
 					"ifdef": ["_Clusters", "_ShadowMapCube"]
 				}
 			],
-			"vertex_shader": "deferred_light.vert.glsl",
+			"vertex_shader": "../include/pass_viewray.vert.glsl",
 			"fragment_shader": "deferred_light.frag.glsl"
 		}
 	]

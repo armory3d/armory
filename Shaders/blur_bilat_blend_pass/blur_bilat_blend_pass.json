@@ -2,7 +2,6 @@
 	"contexts": [
 		{
 			"name": "blur_bilat_blend_pass_y",
-			"color_write_alpha": false,
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",

@@ -22,8 +22,8 @@ float depth;
 const int numBinarySearchSteps = 7;
 const int maxSteps = 18;
 
-vec2 getProjectedCoord(vec3 hitCoord) {
-	vec4 projectedCoord = P * vec4(hitCoord, 1.0);
+vec2 getProjectedCoord(const vec3 hit) {
+	vec4 projectedCoord = P * vec4(hit, 1.0);
 	projectedCoord.xy /= projectedCoord.w;
 	projectedCoord.xy = projectedCoord.xy * 0.5 + 0.5;
 	#ifdef HLSL
@@ -32,22 +32,22 @@ vec2 getProjectedCoord(vec3 hitCoord) {
 	return projectedCoord.xy;
 }
 
-float getDeltaDepth(vec3 hitCoord) {	
-	depth = texture(gbufferD, getProjectedCoord(hitCoord)).r * 2.0 - 1.0;
+float getDeltaDepth(const vec3 hit) {	
+	depth = textureLod(gbufferD, getProjectedCoord(hit), 0.0).r * 2.0 - 1.0;
 	vec3 viewPos = getPosView(viewRay, depth, cameraProj);
-	return viewPos.z - hitCoord.z;
+	return viewPos.z - hit.z;
 }
 
-vec4 binarySearch(vec3 dir) {	
+vec4 binarySearch(vec3 dir) {
+	float ddepth;
 	for (int i = 0; i < numBinarySearchSteps; i++) {
 		dir *= 0.5;
 		hitCoord -= dir;
-		if (getDeltaDepth(hitCoord) < 0.0) hitCoord += dir;
+		ddepth = getDeltaDepth(hitCoord);
+		if (ddepth < 0.0) hitCoord += dir;
 	}
 	// Ugly discard of hits too far away
-	if (abs(getDeltaDepth(hitCoord)) > 0.01) {
-		return vec4(0.0);
-	}
+	if (abs(ddepth) > 0.01) return vec4(0.0);
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
@@ -61,25 +61,15 @@ vec4 rayCast(vec3 dir) {
 }
 
 void main() {
-	vec4 g0 = texture(gbuffer0, texCoord);
+	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
 	float roughness = unpackFloat(g0.b).y;
+	if (roughness == 1.0) { fragColor.rgb = vec3(0.0); return; }
 
-	if (roughness == 1.0) {
-		fragColor.rgb = vec3(0.0);
-		return;
-	}
-
-	float spec = fract(texture(gbuffer1, texCoord).a);
-	if (spec == 0.0) {
-		fragColor.rgb = vec3(0.0);
-		return;
-	}
+	float spec = fract(textureLod(gbuffer1, texCoord, 0.0).a);
+	if (spec == 0.0) { fragColor.rgb = vec3(0.0); return; }
 	
-	float d = texture(gbufferD, texCoord).r * 2.0 - 1.0;
-	if (d == 1.0) {
-		fragColor.rgb = vec3(0.0);
-		return;
-	}
+	float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
+	if (d == 1.0) { fragColor.rgb = vec3(0.0); return; }
 
 	vec2 enc = g0.rg;
 	vec3 n;
@@ -88,17 +78,13 @@ void main() {
 	n = normalize(n);
 	
 	#ifdef _SSRZOnly
-	if (n.z <= 0.9) {
-		fragColor.rgb = vec3(0.0);
-		return;
-	}
+	if (n.z <= 0.9) { fragColor.rgb = vec3(0.0); return; }
 	#endif
 	
-	vec4 viewNormal = vec4(n, 1.0);
-	viewNormal = tiV * viewNormal;
+	vec4 viewNormal = tiV * vec4(n, 1.0);
 	vec3 viewPos = getPosView(viewRay, d, cameraProj);
 	
-	vec3 reflected = normalize(reflect((viewPos), normalize(viewNormal.xyz)));
+	vec3 reflected = normalize(reflect(viewPos, viewNormal.xyz));
 	hitCoord = viewPos.xyz;
 	
 	vec3 dir = reflected * max(ssrMinRayStep, -viewPos.z) * (1.0 - rand(texCoord) * ssrJitter * roughness);
@@ -109,17 +95,14 @@ void main() {
 
 	float reflectivity = 1.0 - roughness;
 	float intensity = pow(reflectivity, ssrFalloffExp) *
-		screenEdgeFactor * clamp(-reflected.z, 0.0, 1.0) *
-		clamp((ssrSearchDist - length(viewPos.xyz - hitCoord)) * (1.0 / ssrSearchDist), 0.0, 1.0) * coords.w;
+		screenEdgeFactor *
+		clamp(-reflected.z, 0.0, 1.0) *
+		clamp((ssrSearchDist - length(viewPos.xyz - hitCoord)) *
+		(1.0 / ssrSearchDist), 0.0, 1.0) *
+		coords.w;
 
 	intensity = clamp(intensity, 0.0, 1.0);
-	
-	if (intensity == 0.0) {
-		fragColor.rgb = vec3(0.0);
-		return;
-	}
-	
-	vec3 reflCol = texture(tex, coords.xy).rgb;
+	vec3 reflCol = textureLod(tex, coords.xy, 0.0).rgb;
 	reflCol = clamp(reflCol, 0.0, 1.0);
 	fragColor.rgb = reflCol * intensity * 0.5;
 }

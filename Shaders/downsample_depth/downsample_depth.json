@@ -1,14 +1,14 @@
 {
 	"contexts": [
 		{
-			"name": "bloom_pass",
-			"depth_write": false,
+			"name": "downsample_depth",
+			"depth_write": true,
 			"compare_mode": "always",
 			"cull_mode": "none",
 			"links": [],
 			"texture_params": [],
 			"vertex_shader": "../include/pass.vert.glsl",
-			"fragment_shader": "bloom_pass.frag.glsl"
+			"fragment_shader": "downsample_depth.frag.glsl"
 		}
 	]
 }
