@@ -44,9 +44,9 @@ class RenderPathForward {
 
 		path = _path;
 
-		#if (rp_shadowmap && kha_webgl)
-		Inc.initEmpty();
-		#end
+		// #if (rp_shadowmap && kha_webgl)
+		// Inc.initEmpty();
+		// #end
 		
 		#if (rp_background == "World")
 		{
