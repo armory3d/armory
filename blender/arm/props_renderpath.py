@@ -26,7 +26,7 @@ def update_preset(self, context):
         rpdat.rp_gi = 'Off'
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '1'
-        rpdat.rp_antialiasing = 'SMAA'
+        rpdat.rp_antialiasing = 'FXAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
         rpdat.rp_ssgi = 'SSAO'
@@ -297,7 +297,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('FXAA', 'FXAA', 'FXAA'),
                ('SMAA', 'SMAA', 'SMAA'),
                ('TAA', 'TAA', 'TAA')],
-        name="Anti Aliasing", description="Post-process anti aliasing technique", default='SMAA', update=update_renderpath)
+        name="Anti Aliasing", description="Post-process anti aliasing technique", default='FXAA', update=update_renderpath)
     rp_volumetriclight = BoolProperty(name="Volumetric Light", description="Use volumetric lighting", default=False, update=update_renderpath)
     rp_ssr = BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
     rp_ssgi = EnumProperty(

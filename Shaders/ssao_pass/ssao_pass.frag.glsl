@@ -16,21 +16,31 @@
 #include "compiled.inc"
 #include "std/gbuffer.glsl"
 
-const int kernelSize = 12;
-const vec2 kernel[12] = vec2[] (
+const int kernelSize = 8;
+const vec2 kernel[8] = vec2[] (
 	vec2(1.0, 0.0),
-	vec2(0.8660254, 0.4999999),
-	vec2(0.5, 0.8660254),
+	vec2(0.7071067,0.7071067),
 	vec2(0.0, 1.0),
-	vec2(-0.4999999, 0.8660254),
-	vec2(-0.8660254, 0.5),
+	vec2(-0.7071067,0.7071067),
 	vec2(-1.0, 0.0),
-	vec2(-0.8660254, -0.4999999),
-	vec2(-0.5, -0.8660254),
+	vec2(-0.7071067,-0.7071067),
 	vec2(0.0, -1.0),
-	vec2(0.4999999, -0.8660254),
-	vec2(0.8660254, -0.5)
+	vec2(-0.7071067,-0.7071067)
 );
+// const vec2 kernel[12] = vec2[] (
+// 	vec2(1.0, 0.0),
+// 	vec2(0.8660254, 0.4999999),
+// 	vec2(0.5, 0.8660254),
+// 	vec2(0.0, 1.0),
+// 	vec2(-0.4999999, 0.8660254),
+// 	vec2(-0.8660254, 0.5),
+// 	vec2(-1.0, 0.0),
+// 	vec2(-0.8660254, -0.4999999),
+// 	vec2(-0.5, -0.8660254),
+// 	vec2(0.0, -1.0),
+// 	vec2(0.4999999, -0.8660254),
+// 	vec2(0.8660254, -0.5)
+// );
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
@@ -66,7 +76,7 @@ void main() {
 	float radius = ssaoSize * randomVec.y;
 
 	fragColor = 0;
-	for (int i = 0; i < 12; ++i) {
+	for (int i = 0; i < kernelSize; ++i) {
 		vec2 k = ((rotMat * kernel[i] * aspectRatio) / currentDistance) * radius;
 		depth = textureLod(gbufferD, texCoord + k, 0.0).r * 2.0 - 1.0;
 		vec3 pos = getPosNoEye(eyeLook, vray, depth, cameraProj) - currentPos;

@@ -439,6 +439,17 @@ class RenderPathDeferred {
 		}
 		#end
 
+		path.setTarget("gbuffer0"); // Only clear gbuffer0
+		#if (rp_background == "Clear")
+		{
+			path.clearTarget(-1, 1.0);
+		}
+		#else
+		{
+			path.clearTarget(null, 1.0);
+		}
+		#end
+
 		#if rp_gbuffer2
 		{
 			path.setTarget("gbuffer2");
@@ -448,16 +459,6 @@ class RenderPathDeferred {
 		#else
 		{
 			path.setTarget("gbuffer0", ["gbuffer1"]);
-		}
-		#end
-
-		#if (rp_background == "Clear")
-		{
-			path.clearTarget(-1, 1.0);
-		}
-		#else
-		{
-			path.clearTarget(null, 1.0);
 		}
 		#end
 
