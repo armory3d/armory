@@ -11,8 +11,8 @@
 					"link": "_projectionMatrix"
 				},
 				{
-					"name": "tiV",
-					"link": "_transposeInverseViewMatrix"
+					"name": "V3",
+					"link": "_viewMatrix3"
 				},
 				{
 					"name": "invP",

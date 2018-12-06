@@ -13,5 +13,5 @@ uniform vec2 step;
 void main() {
 	fragColor = 1.0;
 	const vec2 smStep = 1.0 / shadowmapSize;
-	for (int i = -20 * penumbraScale; i < 20 * penumbraScale; i++) fragColor = min(fragColor, texture(shadowMap, texCoord.xy + step * smStep * i).r);
+	for (int i = -20 * penumbraScale; i < 20 * penumbraScale; i++) fragColor = min(fragColor, textureLod(shadowMap, texCoord.xy + step * smStep * i, 0.0).r);
 }

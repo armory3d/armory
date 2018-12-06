@@ -22,7 +22,7 @@ float normpdf3(vec3 v, float sigma) {
 
 void main() {
 	vec2 step = (dir / screenSize.xy);
-	vec3 colf = texture(tex, texCoord).rgb * weight[0];
+	vec3 colf = textureLod(tex, texCoord, 0.0).rgb * weight[0];
 
 	float col;
 	float res = 0.0;
@@ -34,13 +34,13 @@ void main() {
 		float fw = f * weight[i];
 		vec2 s = step * (float(i) + 0.5);
 
-		col = texture(tex, texCoord + s).r;
+		col = textureLod(tex, texCoord + s, 0.0).r;
 		factor = normpdf3(col - colf, 1.0) * fw;
 		sumfactor += factor;
 		res += factor * col;
 
-		col = texture(tex, texCoord - s).r;
-		factor = normpdf3(col - colf, 1.0) * fw;
+		col = textureLod(tex, texCoord - s).r;
+		factor = normpdf3(col - colf, 1.0, 0.0) * fw;
 		sumfactor += factor;
 		res += factor * col;
 	}

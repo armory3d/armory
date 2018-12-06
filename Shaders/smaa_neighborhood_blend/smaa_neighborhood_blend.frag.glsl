@@ -27,9 +27,9 @@ vec4 textureLodA(sampler2D tex, vec2 coords, float lod) {
 vec4 SMAANeighborhoodBlendingPS(vec2 texcoord, vec4 offset) {
 	// Fetch the blending weights for current pixel:
 	vec4 a;
-	a.x = texture(blendTex, offset.xy).a; // Right
-	a.y = texture(blendTex, offset.zw).g; // Top
-	a.wz = texture(blendTex, texcoord).xz; // Bottom / Left
+	a.x = textureLod(blendTex, offset.xy, 0.0).a; // Right
+	a.y = textureLod(blendTex, offset.zw, 0.0).g; // Top
+	a.wz = textureLod(blendTex, texcoord, 0.0).xz; // Bottom / Left
 
 	// Is there any blending weight with a value greater than 0.0?
 	//SMAA_BRANCH

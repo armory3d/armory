@@ -14,14 +14,14 @@ out vec4 fragColor;
 const float SMAA_REPROJECTION_WEIGHT_SCALE = 30.0;
 
 void main() {
-	vec4 current = texture(tex, texCoord);
+	vec4 current = textureLod(tex, texCoord, 0.0);
 	
 #ifdef _Veloc
 	// Velocity is assumed to be calculated for motion blur, so we need to inverse it for reprojection
 	vec2 velocity = -textureLod(sveloc, texCoord, 0.0).rg;
 
 	// Reproject current coordinates and fetch previous pixel
-	vec4 previous = texture(tex2, texCoord + velocity);
+	vec4 previous = textureLod(tex2, texCoord + velocity, 0.0);
 
 	// Attenuate the previous pixel if the velocity is different
 	#ifdef _SMAA
@@ -34,7 +34,7 @@ void main() {
 	// Blend the pixels according to the calculated weight:
 	fragColor = vec4(mix(current.rgb, previous.rgb, weight), 1.0);
 #else
-	vec4 previous = texture(tex2, texCoord);
+	vec4 previous = textureLod(tex2, texCoord, 0.0);
 	fragColor = vec4(mix(current.rgb, previous.rgb, 0.5), 1.0);
 #endif
 }

@@ -24,7 +24,7 @@ in vec3 viewRay;
 out float fragColor[2];
 
 void main() {
-	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+	float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 	vec3 p = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
 	
 	vec4 lightPosition = LWVP * vec4(p, 1.0);
@@ -36,7 +36,7 @@ void main() {
 		fragColor[0] = float(sm + shadowsBias > lPos.z);
 
 		// Distance
-		float d = texture(dilate, lPos.xy).r;
+		float d = textureLod(dilate, lPos.xy, 0.0).r;
 		fragColor[1] = max((lPos.z - d), 0.0);
 		fragColor[1] *= 100 * penumbraDistance;
 	}

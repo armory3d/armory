@@ -42,11 +42,11 @@ uniform vec2 aspectRatio;
 
 in vec2 texCoord;
 in vec3 viewRay;
-out vec4 fragColor;
+out float fragColor;
 
 void main() {
 	float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
-	if (depth == 1.0) { fragColor.r = 1.0; return; }
+	if (depth == 1.0) { fragColor = 1.0; return; }
 
 	vec2 enc = textureLod(gbuffer0, texCoord, 0.0).rg;      
 	vec3 n;
@@ -65,7 +65,7 @@ void main() {
 					   vec2(sin(randomVec.x * PI), cos(randomVec.x * PI)));
 	float radius = ssaoSize * randomVec.y;
 
-	fragColor.r = 0;
+	fragColor = 0;
 	for (int i = 0; i < 12; ++i) {
 		vec2 k = ((rotMat * kernel[i] * aspectRatio) / currentDistance) * radius;
 		depth = textureLod(gbufferD, texCoord + k, 0.0).r * 2.0 - 1.0;
@@ -76,9 +76,9 @@ void main() {
 		angle -= currentDistanceA;
 		angle = max(0.0, angle);
 		angle /= dot(pos, pos) / currentDistanceB + 0.015; // Fix darkening
-		fragColor.r += angle;
+		fragColor += angle;
 	}
 	
-	fragColor.r *= ssaoStrength / kernelSize;
-	fragColor.r = 1.0 - fragColor.r;
+	fragColor *= ssaoStrength / kernelSize;
+	fragColor = 1.0 - fragColor;
 }

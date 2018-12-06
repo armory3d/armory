@@ -69,9 +69,9 @@ void main() {
 	vec2 screenPosition = wvpposition.xy / wvpposition.w;
 	vec2 texCoord = screenPosition * 0.5 + 0.5;
 
-	float pixelRayMarchNoise = texture(snoise, texCoord * 100).r * 2.0 - 1.0;
+	float pixelRayMarchNoise = textureLod(snoise, texCoord * 100, 0.0).r * 2.0 - 1.0;
 
-	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+	float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 	vec3 worldPos = getPos2(invVP, depth, texCoord);
 
 	vec3 viewVec = worldPos - eye;

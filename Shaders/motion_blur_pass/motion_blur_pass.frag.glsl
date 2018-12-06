@@ -29,14 +29,14 @@ vec2 getVelocity(vec2 coord, float depth) {
 }
 
 void main() {
-	fragColor.rgb = texture(tex, texCoord).rgb;
+	fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
 	
 	// Do not blur masked objects
-	if (texture(gbuffer0, texCoord).a == 1.0) {
+	if (textureLod(gbuffer0, texCoord, 0.0).a == 1.0) {
 		return;
 	}
 	
-	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+	float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 	if (depth == 1.0) {
 		return;
 	}
@@ -48,8 +48,8 @@ void main() {
 	int processed = 1;
 	for(int i = 0; i < 8; ++i) {
 		offset += velocity;
-		if (texture(gbuffer0, offset).a != 1.0) {
-			fragColor.rgb += texture(tex, offset).rgb;
+		if (textureLod(gbuffer0, offset, 0.0).a != 1.0) {
+			fragColor.rgb += textureLod(tex, offset, 0.0).rgb;
 			processed++;
 		}
 	}

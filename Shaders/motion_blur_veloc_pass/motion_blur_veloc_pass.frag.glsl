@@ -14,12 +14,12 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 void main() {
-	vec2 velocity = texture(sveloc, texCoord).rg * motionBlurIntensity * frameScale;
+	vec2 velocity = textureLod(sveloc, texCoord, 0.0).rg * motionBlurIntensity * frameScale;
 	
-	fragColor.rgb = texture(tex, texCoord).rgb;
+	fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
 
 	// Do not blur masked objects
-	if (texture(gbuffer0, texCoord).a == 1.0) {
+	if (textureLod(gbuffer0, texCoord, 0.0).a == 1.0) {
 		return;
 	}
 
@@ -29,7 +29,7 @@ void main() {
 	const int samples = 8;
 	for (int i = 0; i < samples; ++i) {
 		vec2 offset = velocity * (float(i) / float(samples - 1) - 0.5);
-		fragColor.rgb += texture(tex, texCoord + offset).rgb;
+		fragColor.rgb += textureLod(tex, texCoord + offset, 0.0).rgb;
 	}
 	fragColor.rgb /= float(samples + 1);
 }

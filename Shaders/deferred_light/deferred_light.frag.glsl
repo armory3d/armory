@@ -165,7 +165,7 @@ in vec3 viewRay;
 out vec4 fragColor;
 
 void main() {
-	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, depth
+	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0); // Normal.xy, metallic/roughness, depth
 	
 	vec3 n;
 	n.z = 1.0 - abs(g0.x) - abs(g0.y);
@@ -173,18 +173,18 @@ void main() {
 	n = normalize(n);
 
 	vec2 metrough = unpackFloat(g0.b);
-	vec4 g1 = texture(gbuffer1, texCoord); // Basecolor.rgb, spec/occ
+	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ
 	vec2 occspec = unpackFloat2(g1.a);
 	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
 	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
 
-	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+	float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 	vec3 p = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
 	vec3 v = normalize(eye - p);
 	float dotNV = max(dot(n, v), 0.0);
 
 #ifdef _Brdf
-	vec2 envBRDF = texture(senvmapBrdf, vec2(metrough.y, 1.0 - dotNV)).xy;
+	vec2 envBRDF = textureLod(senvmapBrdf, vec2(metrough.y, 1.0 - dotNV), 0.0).xy;
 #endif
 
 #ifdef _VoxelGI
@@ -270,9 +270,9 @@ void main() {
 
 #ifdef _SSAO
 	#ifdef _RTGI
-	fragColor.rgb *= texture(ssaotex, texCoord).rgb;
+	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).rgb;
 	#else
-	fragColor.rgb *= texture(ssaotex, texCoord).r;
+	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	#endif
 #endif
 
@@ -299,7 +299,7 @@ void main() {
 				   specularBRDF(f0, metrough.y, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
 
 	// #ifdef _SoftShadows
-	// svisibility = texture(svisibility, texCoord).r;
+	// svisibility = textureLod(svisibility, texCoord, 0.0).r;
 	// #endif
 
 	#ifdef _ShadowMap
@@ -335,7 +335,7 @@ void main() {
 #endif
 
 // #ifdef _Hair // Aniso
-// 	if (texture(gbuffer2, texCoord).a == 2) {
+// 	if (textureLod(gbuffer2, texCoord, 0.0).a == 2) {
 // 		const float shinyParallel = metrough.y;
 // 		const float shinyPerpendicular = 0.1;
 // 		const vec3 v = vec3(0.99146, 0.11664, 0.05832);
@@ -346,11 +346,11 @@ void main() {
 // #endif
 
 #ifdef _LightClouds
-	visibility *= texture(texClouds, vec2(p.xy / 100.0 + time / 80.0)).r * dot(n, vec3(0,0,1));
+	visibility *= textureLod(texClouds, vec2(p.xy / 100.0 + time / 80.0), 0.0).r * dot(n, vec3(0,0,1));
 #endif
 
 #ifdef _SSS
-	if (texture(gbuffer2, texCoord).a == 2) {
+	if (textureLod(gbuffer2, texCoord, 0.0).a == 2) {
 		#ifdef _CSM
 		int casi, casindex;
 		mat4 LWVP = getCascadeMat(distance(eye, p), casi, casindex);
@@ -363,7 +363,7 @@ void main() {
 
 	float depthl = linearize(depth * 0.5 + 0.5, cameraProj);
 	#ifdef HLSL
-	depthl += texture(clustersData, vec2(0.0)).r * 1e-9; // TODO: krafix bug, needs to generate sampler
+	depthl += textureLod(clustersData, vec2(0.0), 0.0).r * 1e-9; // TODO: krafix bug, needs to generate sampler
 	#endif
 	int clusterI = getClusterI(texCoord, depthl, cameraPlane);
 	int numLights = int(texelFetch(clustersData, ivec2(clusterI, 0), 0).r * 255);
@@ -414,14 +414,14 @@ void main() {
 		// 	float theta = acos(dotNV);
 		// 	vec2 tuv = vec2(metrough.y, theta / (0.5 * PI));
 		// 	tuv = tuv * LUT_SCALE + LUT_BIAS;
-		// 	vec4 t = texture(sltcMat, tuv);
+		// 	vec4 t = textureLod(sltcMat, tuv, 0.0);
 		// 	mat3 invM = mat3(
 		// 		vec3(1.0, 0.0, t.y),
 		// 		vec3(0.0, t.z, 0.0),
 		// 		vec3(t.w, 0.0, t.x));
 
 		// 	float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lightArea0, lightArea1, lightArea2, lightArea3);
-		// 	ltcspec *= texture(sltcMag, tuv).a;
+		// 	ltcspec *= textureLod(sltcMag, tuv, 0.0).a;
 		// 	float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3);
 		// 	fragColor.rgb = albedo * ltcdiff + ltcspec * spec;
 		// }

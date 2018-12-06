@@ -130,7 +130,7 @@ def update_preset(self, context):
         rpdat.rp_antialiasing = 'TAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
-        rpdat.rp_ssgi = 'RTGI'
+        rpdat.rp_ssgi = 'RTAO'
         rpdat.arm_ssrs = False
         rpdat.rp_ssr = True
         rpdat.rp_bloom = True
@@ -303,8 +303,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_ssgi = EnumProperty(
         items=[('Off', 'No AO', 'Off'),
                ('SSAO', 'SSAO', 'Screen space ambient occlusion'),
-               ('RTAO', 'RTAO', 'Ray-traced ambient occlusion'),
-               ('RTGI', 'RTGI', 'Ray-traced global illumination')
+               ('RTAO', 'RTAO', 'Ray-traced ambient occlusion')
+               # ('RTGI', 'RTGI', 'Ray-traced global illumination')
                ],
         name="SSGI", description="Screen space global illumination", default='SSAO', update=update_renderpath)
     rp_bloom = BoolProperty(name="Bloom", description="Bloom processing", default=False, update=update_renderpath)
@@ -413,7 +413,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name="Filter", description="Scaling filter", default='Linear')
     rp_dynres = BoolProperty(name="Dynamic Resolution", description="Dynamic resolution scaling for performance", default=False, update=update_renderpath)
     arm_ssr_half_res = BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
-    rp_ssr_z_only = BoolProperty(name="Z Only", description="Trace in Z axis only", default=False, update=update_renderpath)
     rp_voxelgi_relight = BoolProperty(name="Relight", description="Relight voxels when light is moved", default=True, update=update_renderpath)
     arm_voxelgi_dimensions = FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_shader_cache)
     arm_voxelgi_revoxelize = BoolProperty(name="Revoxelize", description="Revoxelize scene each frame", default=False, update=assets.invalidate_shader_cache)
@@ -432,7 +431,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('8', '8', '8'),
                ('16', '16', '16')],
         name="MSAA", description="Samples per pixel usable for render paths drawing directly to framebuffer", default='1')  
-    arm_ssao_half_res = BoolProperty(name="Half Res", description="Trace in half resolution", default=False, update=assets.invalidate_shader_cache)
 
     arm_voxelgi_diff = FloatProperty(name="Diffuse", description="", default=3.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_cones = EnumProperty(
@@ -473,7 +471,8 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         items=[('9', '9', '9'),
                ('5', '5', '5'),
                ],
-        name="Rays", description="Number of rays to trace for RTAO/RTGI", default='5', update=assets.invalidate_shader_cache)
+        name="Rays", description="Number of rays to trace for RTAO", default='5', update=assets.invalidate_shader_cache)
+    arm_ssgi_half_res = BoolProperty(name="Half Res", description="Trace in half resolution", default=False, update=assets.invalidate_shader_cache)
     arm_bloom_threshold = FloatProperty(name="Threshold", default=1.0, update=assets.invalidate_shader_cache)
     arm_bloom_strength = FloatProperty(name="Strength", default=3.5, update=assets.invalidate_shader_cache)
     arm_bloom_radius = FloatProperty(name="Radius", default=3.0, update=assets.invalidate_shader_cache)

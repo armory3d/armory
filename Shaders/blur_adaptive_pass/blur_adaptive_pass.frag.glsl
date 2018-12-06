@@ -13,20 +13,20 @@ in vec2 texCoord;
 out vec4 fragColor;
 
 void main() {
-	float roughness = unpackFloat(texture(gbuffer0, texCoord).b).y;
+	float roughness = unpackFloat(textureLod(gbuffer0, texCoord, 0.0).b).y;
 	// if (roughness == 0.0) { // Always blur for now, non blured output can produce noise
-		// fragColor.rgb = texture(tex, texCoord).rgb;
+		// fragColor.rgb = textureLod(tex, texCoord).rgb;
 		// return;
 	// }
 	if (roughness >= 0.8) { // No reflections
-		fragColor.rgb = texture(tex, texCoord).rgb;
+		fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
 		return;
 	}
 	
-	fragColor.rgb = texture(tex, texCoord + dirInv * 2.5).rgb;
-	fragColor.rgb += texture(tex, texCoord + dirInv * 1.5).rgb;
-	fragColor.rgb += texture(tex, texCoord).rgb;
-	fragColor.rgb += texture(tex, texCoord - dirInv * 1.5).rgb;
-	fragColor.rgb += texture(tex, texCoord - dirInv * 2.5).rgb;
+	fragColor.rgb = textureLod(tex, texCoord + dirInv * 2.5, 0.0).rgb;
+	fragColor.rgb += textureLod(tex, texCoord + dirInv * 1.5, 0.0).rgb;
+	fragColor.rgb += textureLod(tex, texCoord, 0.0).rgb;
+	fragColor.rgb += textureLod(tex, texCoord - dirInv * 1.5, 0.0).rgb;
+	fragColor.rgb += textureLod(tex, texCoord - dirInv * 2.5, 0.0).rgb;
 	fragColor.rgb /= vec3(5.0);
 }

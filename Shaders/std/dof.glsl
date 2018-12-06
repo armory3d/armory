@@ -21,9 +21,9 @@ const float namount = 0.0001; // Dither amount
 
 vec3 color(vec2 coords, const float blur, const sampler2D tex, const vec2 texStep) {
 	vec3 col = vec3(0.0);
-	col.r = texture(tex, coords + vec2(0.0, 1.0) * texStep * fringe * blur).r;
-	col.g = texture(tex, coords + vec2(-0.866, -0.5) * texStep * fringe * blur).g;
-	col.b = texture(tex, coords + vec2(0.866, -0.5) * texStep * fringe * blur).b;
+	col.r = textureLod(tex, coords + vec2(0.0, 1.0) * texStep * fringe * blur, 0.0).r;
+	col.g = textureLod(tex, coords + vec2(-0.866, -0.5) * texStep * fringe * blur, 0.0).g;
+	col.b = textureLod(tex, coords + vec2(0.866, -0.5) * texStep * fringe * blur, 0.0).b;
 	
 	const vec3 lumcoeff = vec3(0.299, 0.587, 0.114);
 	float lum = dot(col.rgb, lumcoeff);
@@ -34,7 +34,7 @@ vec3 color(vec2 coords, const float blur, const sampler2D tex, const vec2 texSte
 vec3 dof(const vec2 texCoord, const float gdepth, const sampler2D tex, const sampler2D gbufferD, const vec2 texStep, const vec2 cameraProj) {
 	float depth = linearize(gdepth, cameraProj);
 	// const float fDepth = compoDOFDistance;
-	float fDepth = linearize(texture(gbufferD, focus).r * 2.0 - 1.0, cameraProj); // Autofocus
+	float fDepth = linearize(textureLod(gbufferD, focus, 0.0).r * 2.0 - 1.0, cameraProj); // Autofocus
 	
 	const float f = compoDOFLength; // Focal length in mm
 	const float d = fDepth * 1000.0; // Focal plane in mm
@@ -50,10 +50,10 @@ vec3 dof(const vec2 texCoord, const float gdepth, const sampler2D tex, const sam
 	float h = (texStep.y) * blur * maxblur + noise.y;
 	vec3 col = vec3(0.0);
 	if (blur < 0.05) {
-		col = texture(tex, texCoord).rgb;
+		col = textureLod(tex, texCoord, 0.0).rgb;
 	}
 	else {
-		col = texture(tex, texCoord).rgb;
+		col = textureLod(tex, texCoord, 0.0).rgb;
 		float s = 1.0;
 		int ringsamples;
 		

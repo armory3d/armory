@@ -165,7 +165,36 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if ((rp_ssgi != "Off") || (rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA"))
+		#if (rp_ssgi != "Off")
+		{
+			var t = new RenderTargetRaw();
+			t.name = "singlea";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R8";
+			t.scale = Inc.getSuperSampling();
+			#if rp_ssgi_half
+			t.scale *= 0.5;
+			#end
+			path.createRenderTarget(t);
+		}
+		{
+			var t = new RenderTargetRaw();
+			t.name = "singleb";
+			t.width = 0;
+			t.height = 0;
+			t.displayp = Inc.getDisplayp();
+			t.format = "R8";
+			t.scale = Inc.getSuperSampling();
+			#if rp_ssgi_half
+			t.scale *= 0.5;
+			#end
+			path.createRenderTarget(t);
+		}
+		#end
+
+		#if ((rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA"))
 		{
 			var t = new RenderTargetRaw();
 			t.name = "bufa";
@@ -234,7 +263,7 @@ class RenderPathDeferred {
 				t.displayp = Inc.getDisplayp();
 				t.format = "R8";
 				t.scale = Inc.getSuperSampling();
-				// t.scale = 0.5;
+				// t.scale = Inc.getSuperSampling() * 0.5;
 				path.createRenderTarget(t);
 			}
 			{
@@ -245,7 +274,7 @@ class RenderPathDeferred {
 				t.displayp = Inc.getDisplayp();
 				t.format = "R8";
 				t.scale = Inc.getSuperSampling();
-				// t.scale = 0.5;
+				// t.scale = Inc.getSuperSampling() * 0.5;
 				path.createRenderTarget(t);
 			}
 		}
@@ -293,6 +322,21 @@ class RenderPathDeferred {
 		}
 		#end
 
+		#if (rp_ssr || (rp_ssgi != "Off"))
+		{
+			{
+				path.loadShader("shader_datas/downsample_depth/downsample_depth");
+				var t = new RenderTargetRaw();
+				t.name = "half";
+				t.width = 0;
+				t.height = 0;
+				t.scale = Inc.getSuperSampling() * 0.5;
+				t.format = "R32"; // R16
+				path.createRenderTarget(t);
+			}
+		}
+		#end
+
 		#if rp_ssr
 		{
 			path.loadShader("shader_datas/ssr_pass/ssr_pass");
@@ -301,22 +345,11 @@ class RenderPathDeferred {
 			
 			#if rp_ssr_half
 			{
-				path.loadShader("shader_datas/downsample_depth/downsample_depth");
-				var t = new RenderTargetRaw();
-				t.name = "half";
-				t.width = 0;
-				t.height = 0;
-				t.scale = 0.5;
-				t.format = "DEPTH16";
-				path.createRenderTarget(t);
-			}
-			
-			{
 				var t = new RenderTargetRaw();
 				t.name = "ssra";
 				t.width = 0;
 				t.height = 0;
-				t.scale = 0.5;
+				t.scale = Inc.getSuperSampling() * 0.5;
 				t.format = Inc.getHdrFormat();
 				path.createRenderTarget(t);
 			}
@@ -325,7 +358,7 @@ class RenderPathDeferred {
 				t.name = "ssrb";
 				t.width = 0;
 				t.height = 0;
-				t.scale = 0.5;
+				t.scale = Inc.getSuperSampling() * 0.5;
 				t.format = Inc.getHdrFormat();
 				path.createRenderTarget(t);
 			}
@@ -456,43 +489,49 @@ class RenderPathDeferred {
 		}
 		#end
 
+		#if (rp_ssr || (rp_ssgi != "Off"))
+		path.setTarget("half");
+		path.bindTarget("_main", "texdepth");
+		path.drawShader("shader_datas/downsample_depth/downsample_depth");
+		#end
+
 		#if ((rp_ssgi == "RTGI") || (rp_ssgi == "RTAO"))
 		{
 			if (armory.data.Config.raw.rp_ssgi != false) {
-				path.setTarget("bufa");
-				path.bindTarget("_main", "gbufferD");
+				path.setTarget("singlea");
+				path.bindTarget("half", "gbufferD");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				#if (rp_ssgi == "RTGI")
 				path.bindTarget("gbuffer1", "gbuffer1");
 				#end
 				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
 
-				path.setTarget("bufb");
+				path.setTarget("singleb");
 				path.bindTarget("gbuffer0", "gbuffer0");
-				path.bindTarget("bufa", "tex");
+				path.bindTarget("singlea", "tex");
 				path.drawShader("shader_datas/ssgi_blur_pass/ssgi_blur_pass_x");
 
-				path.setTarget("bufa");
+				path.setTarget("singlea");
 				path.bindTarget("gbuffer0", "gbuffer0");
-				path.bindTarget("bufb", "tex");
+				path.bindTarget("singleb", "tex");
 				path.drawShader("shader_datas/ssgi_blur_pass/ssgi_blur_pass_y");
 			}
 		}	
 		#elseif (rp_ssgi == "SSAO")
 		{
 			if (armory.data.Config.raw.rp_ssgi != false) {
-				path.setTarget("bufa");
-				path.bindTarget("_main", "gbufferD");
+				path.setTarget("singlea");
+				path.bindTarget("half", "gbufferD");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.drawShader("shader_datas/ssao_pass/ssao_pass");
 
-				path.setTarget("bufb");
-				path.bindTarget("bufa", "tex");
+				path.setTarget("singleb");
+				path.bindTarget("singlea", "tex");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
 
-				path.setTarget("bufa");
-				path.bindTarget("bufb", "tex");
+				path.setTarget("singlea");
+				path.bindTarget("singleb", "tex");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 			}
@@ -585,7 +624,7 @@ class RenderPathDeferred {
 		#if (rp_ssgi != "Off")
 		{
 			if (armory.data.Config.raw.rp_ssgi != false) {
-				path.bindTarget("bufa", "ssaotex");
+				path.bindTarget("singlea", "ssaotex");
 			}
 			else {
 				path.bindTarget("empty_white", "ssaotex");
@@ -761,19 +800,14 @@ class RenderPathDeferred {
 				#if rp_ssr_half
 				var targeta = "ssra";
 				var targetb = "ssrb";
-
-				path.setTarget("half");
-				path.bindTarget("_main", "texdepth");
-				path.drawShader("shader_datas/downsample_depth/downsample_depth");
-				var targetdepth = "_half";
 				#else
 				var targeta = "buf";
 				var targetb = "gbuffer1";
-				var targetdepth = "_main";
 				#end
+
 				path.setTarget(targeta);
 				path.bindTarget("tex", "tex");
-				path.bindTarget(targetdepth, "gbufferD");
+				path.bindTarget("half", "gbufferD");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer1", "gbuffer1");
 				path.drawShader("shader_datas/ssr_pass/ssr_pass");

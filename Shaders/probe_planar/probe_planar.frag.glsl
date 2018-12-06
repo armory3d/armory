@@ -21,7 +21,7 @@ void main() {
 	texCoord.y = 1.0 - texCoord.y;
 	#endif
 
-	vec4 g0 = texture(gbuffer0, texCoord); // Normal.xy, metallic/roughness, depth
+	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0); // Normal.xy, metallic/roughness, depth
 
 	float roughness = unpackFloat(g0.b).y;
 	if (roughness > 0.95) {
@@ -29,13 +29,13 @@ void main() {
 		return;
 	}
 
-	float spec = fract(texture(gbuffer1, texCoord).a);
+	float spec = fract(textureLod(gbuffer1, texCoord, 0.0).a);
 	if (spec == 0.0) {
 		fragColor.rgb = vec3(0.0);
 		return;
 	}
 
-	float depth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+	float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 	vec3 wp = getPos2(invVP, depth, texCoord);
 	vec4 pp = probeVP * vec4(wp.xyz, 1.0);
 	vec2 tc = (pp.xy / pp.w) * 0.5 + 0.5;

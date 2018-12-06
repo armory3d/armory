@@ -17,11 +17,11 @@ void main() {
 	vec2 tcrgbSE = (texCoord + vec2(1.0, 1.0) * screenSizeInv);
 	vec2 tcrgbM = vec2(texCoord);
 	
-	vec3 rgbNW = texture(tex, tcrgbNW).rgb;
-	vec3 rgbNE = texture(tex, tcrgbNE).rgb;
-	vec3 rgbSW = texture(tex, tcrgbSW).rgb;
-	vec3 rgbSE = texture(tex, tcrgbSE).rgb;
-	vec4 texColor = texture(tex, tcrgbM);
+	vec3 rgbNW = textureLod(tex, tcrgbNW, 0.0).rgb;
+	vec3 rgbNE = textureLod(tex, tcrgbNE, 0.0).rgb;
+	vec3 rgbSW = textureLod(tex, tcrgbSW, 0.0).rgb;
+	vec3 rgbSE = textureLod(tex, tcrgbSE, 0.0).rgb;
+	vec4 texColor = textureLod(tex, tcrgbM, 0.0);
 	vec3 rgbM  = texColor.rgb;
 	vec3 luma = vec3(0.299, 0.587, 0.114);
 	float lumaNW = dot(rgbNW, luma);
@@ -45,11 +45,11 @@ void main() {
 			  dir * rcpDirMin)) * screenSizeInv;
 			  
 	vec3 rgbA = 0.5 * (
-		texture(tex, texCoord + dir * (1.0 / 3.0 - 0.5)).rgb +
-		texture(tex, texCoord + dir * (2.0 / 3.0 - 0.5)).rgb);
+		textureLod(tex, texCoord + dir * (1.0 / 3.0 - 0.5), 0.0).rgb +
+		textureLod(tex, texCoord + dir * (2.0 / 3.0 - 0.5), 0.0).rgb);
 	fragColor.rgb = rgbA * 0.5 + 0.25 * ( // vec3 rgbB
-		texture(tex, texCoord + dir * -0.5).rgb +
-		texture(tex, texCoord + dir * 0.5).rgb);
+		textureLod(tex, texCoord + dir * -0.5, 0.0).rgb +
+		textureLod(tex, texCoord + dir * 0.5, 0.0).rgb);
 		
 	// float lumaB = dot(rgbB, luma);
 	float lumaB = dot(fragColor.rgb, luma);

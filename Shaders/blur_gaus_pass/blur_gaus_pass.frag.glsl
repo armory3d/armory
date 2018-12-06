@@ -14,11 +14,11 @@ const float weight[10] = float[] (0.132572, 0.125472, 0.106373, 0.08078, 0.05495
 
 void main() {
 	vec2 step = (dir / screenSize.xy) * bloomRadius;
-	fragColor.rgb = texture(tex, texCoord).rgb * weight[0];
+	fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb * weight[0];
 	for (int i = 1; i < 10; i++) {
 		vec2 s = step * (float(i) + 0.5);
-		fragColor.rgb += texture(tex, texCoord + s).rgb * weight[i];
-		fragColor.rgb += texture(tex, texCoord - s).rgb * weight[i];
+		fragColor.rgb += textureLod(tex, texCoord + s, 0.0).rgb * weight[i];
+		fragColor.rgb += textureLod(tex, texCoord - s, 0.0).rgb * weight[i];
 	}
 	
 	fragColor.rgb *= bloomStrength / 5;

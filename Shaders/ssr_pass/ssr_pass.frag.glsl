@@ -9,7 +9,7 @@ uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0; // Normal, roughness
 uniform sampler2D gbuffer1; // basecol, spec
 uniform mat4 P;
-uniform mat4 tiV;
+uniform mat3 V3;
 uniform vec2 cameraProj;
 
 in vec3 viewRay;
@@ -40,6 +40,7 @@ float getDeltaDepth(const vec3 hit) {
 
 vec4 binarySearch(vec3 dir) {
 	float ddepth;
+	vec3 start = hitCoord;
 	for (int i = 0; i < numBinarySearchSteps; i++) {
 		dir *= 0.5;
 		hitCoord -= dir;
@@ -47,7 +48,7 @@ vec4 binarySearch(vec3 dir) {
 		if (ddepth < 0.0) hitCoord += dir;
 	}
 	// Ugly discard of hits too far away
-	if (abs(ddepth) > 0.01) return vec4(0.0);
+	if (abs(ddepth) > ssrSearchDist / 50) return vec4(0.0);
 	return vec4(getProjectedCoord(hitCoord), 0.0, 1.0);
 }
 
@@ -77,17 +78,13 @@ void main() {
 	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
 	n = normalize(n);
 	
-	#ifdef _SSRZOnly
-	if (n.z <= 0.9) { fragColor.rgb = vec3(0.0); return; }
-	#endif
-	
-	vec4 viewNormal = tiV * vec4(n, 1.0);
+	vec3 viewNormal = V3 * n;
 	vec3 viewPos = getPosView(viewRay, d, cameraProj);
+	vec3 reflected = normalize(reflect(viewPos, viewNormal));
+	hitCoord = viewPos;
 	
-	vec3 reflected = normalize(reflect(viewPos, viewNormal.xyz));
-	hitCoord = viewPos.xyz;
-	
-	vec3 dir = reflected * max(ssrMinRayStep, -viewPos.z) * (1.0 - rand(texCoord) * ssrJitter * roughness);
+	vec3 dir = reflected * (1.0 - rand(texCoord) * ssrJitter * roughness) * 2.0;
+	// * max(ssrMinRayStep, -viewPos.z)
 	vec4 coords = rayCast(dir);
 
 	vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
@@ -97,7 +94,7 @@ void main() {
 	float intensity = pow(reflectivity, ssrFalloffExp) *
 		screenEdgeFactor *
 		clamp(-reflected.z, 0.0, 1.0) *
-		clamp((ssrSearchDist - length(viewPos.xyz - hitCoord)) *
+		clamp((ssrSearchDist - length(viewPos - hitCoord)) *
 		(1.0 / ssrSearchDist), 0.0, 1.0) *
 		coords.w;
 

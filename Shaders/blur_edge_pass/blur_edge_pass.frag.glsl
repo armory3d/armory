@@ -10,38 +10,35 @@ uniform sampler2D gbuffer0;
 uniform vec2 dirInv; // texStep
 
 in vec2 texCoord;
-out vec4 fragColor;
+out float fragColor;
 
 const float blurWeights[5] = float[] (0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
 const float discardThreshold = 0.95;
 
-float doBlur(const float blurWeight, const int pos, const vec3 nor, const vec2 texCoord) {
-	const float posadd = pos + 0.5;
-
-	vec3 nor2 = getNor(texture(gbuffer0, texCoord + pos * dirInv).rg);
-	float influenceFactor = step(discardThreshold, dot(nor2, nor));
-	float col = texture(tex, texCoord + posadd * dirInv).r;
-	fragColor.r += col * blurWeight * influenceFactor;
-	float weight = blurWeight * influenceFactor;
-	
-	nor2 = getNor(texture(gbuffer0, texCoord - pos * dirInv).rg);
-	influenceFactor = step(discardThreshold, dot(nor2, nor));
-	col = texture(tex, texCoord - posadd * dirInv).r;
-	fragColor.r += col * blurWeight * influenceFactor;
-	weight += blurWeight * influenceFactor;
-	
-	return weight;
-}
-
 void main() {
-	vec2 tc = texCoord * ssaoTextureScale;
-	vec3 nor = getNor(texture(gbuffer0, texCoord).rg);
+	vec2 tc = texCoord;
+	vec3 nor = getNor(textureLod(gbuffer0, texCoord, 0.0).rg);
 	
-	fragColor.r = texture(tex, tc).r * blurWeights[0];
+	fragColor = textureLod(tex, tc, 0.0).r * blurWeights[0];
 	float weight = blurWeights[0];
-	for (int i = 1; i < 5; i++) {
-		weight += doBlur(blurWeights[i], i, nor, tc);
+
+	for (int i = 1; i < 5; ++i) {
+		float posadd = i + 0.5;
+
+		vec3 nor2 = getNor(textureLod(gbuffer0, tc + i * dirInv, 0.0).rg);
+		float influenceFactor = step(discardThreshold, dot(nor2, nor));
+		float col = textureLod(tex, tc + posadd * dirInv, 0.0).r;
+		float w = blurWeights[i] * influenceFactor;
+		fragColor += col * w;
+		weight += w;
+		
+		nor2 = getNor(textureLod(gbuffer0, tc - i * dirInv, 0.0).rg);
+		influenceFactor = step(discardThreshold, dot(nor2, nor));
+		col = textureLod(tex, tc - posadd * dirInv, 0.0).r;
+		w = blurWeights[i] * influenceFactor;
+		fragColor += col * w;
+		weight += w;
 	}
 
-	fragColor = vec4(fragColor.r / weight); // SSAO only
+	fragColor = fragColor / weight;
 }

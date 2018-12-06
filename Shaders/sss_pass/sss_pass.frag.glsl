@@ -67,14 +67,14 @@ vec4 SSSSBlur() {
 	kernel[9] = vec4(0.0192831, 0.00282018, 0.00084214, 1.28);
 	kernel[10] = vec4(0.00471691, 0.000184771, 5.07565e-005, 2);
 	
-	vec4 colorM = texture(tex, texCoord);
+	vec4 colorM = textureLod(tex, texCoord, 0.0);
 
 	// Initialize the stencil buffer in case it was not already available:
 	// if (initStencil) // (Checked in compile time, it's optimized away)
 		// if (SSSS_STREGTH_SOURCE == 0.0) discard;
 
 	// Fetch linear depth of current pixel
-	float depth = texture(gbufferD, texCoord).r;
+	float depth = textureLod(gbufferD, texCoord, 0.0).r;
 	float depthM = cameraProj.y / (depth - cameraProj.x);
 
 	// Calculate the sssWidth scale (1.0 for a unit plane sitting on the projection window)
@@ -94,10 +94,10 @@ vec4 SSSSBlur() {
 	for (int i = 1; i < SSSS_N_SAMPLES; i++) {
 		// Fetch color and depth for current sample
 		vec2 offset = texCoord + kernel[i].a * finalStep;
-		vec4 color = texture(tex, offset);
+		vec4 color = textureLod(tex, offset, 0.0);
 		// #if SSSS_FOLLOW_SURFACE == 1
 		// If the difference in depth is huge, we lerp color back to "colorM":
-		// float depth = texture(depthTex, offset).r;
+		// float depth = textureLod(depthTex, offset, 0.0).r;
 		// float s = SSSSSaturate(300.0f * distanceToProjectionWindow *
 							//    sssWidth * abs(depthM - depth));
 		// color.rgb = SSSSLerp(color.rgb, colorM.rgb, s);
@@ -111,10 +111,10 @@ vec4 SSSSBlur() {
 
 void main() {
 	// SSS only masked objects
-	if (texture(gbuffer2, texCoord).a == 2) {
+	if (textureLod(gbuffer2, texCoord, 0.0).a == 2) {
 		fragColor = clamp(SSSSBlur(), 0.0, 1.0);
 	}
 	else {
-		fragColor = texture(tex, texCoord);
+		fragColor = textureLod(tex, texCoord, 0.0);
 	}
 }

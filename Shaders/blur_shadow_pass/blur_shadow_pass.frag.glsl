@@ -18,17 +18,17 @@ const float discardThreshold = 0.95;
 float doBlur(const float blurWeight, const int pos, const vec3 nor, const float depth, const vec2 texCoord) {
 	const float posadd = pos + 0.5;
 
-	vec4 g0 = texture(gbuffer0, texCoord + pos * dirInv);
+	vec4 g0 = textureLod(gbuffer0, texCoord + pos * dirInv, 0.0);
 	vec3 nor2 = getNor(g0.rg);
 	float influenceFactor = step(discardThreshold, dot(nor2, nor)) * step(abs(depth - g0.a), 0.001);
-	float col = texture(tex, texCoord + posadd * dirInv).r;
+	float col = textureLod(tex, texCoord + posadd * dirInv, 0.0).r;
 	fragColor += col * blurWeight * influenceFactor;
 	float weight = blurWeight * influenceFactor;
 	
-	g0 = texture(gbuffer0, texCoord - pos * dirInv);
+	g0 = textureLod(gbuffer0, texCoord - pos * dirInv, 0.0);
 	nor2 = getNor(g0.rg);
 	influenceFactor = step(discardThreshold, dot(nor2, nor)) * step(abs(depth - g0.a), 0.001);
-	col = texture(tex, texCoord - posadd * dirInv).r;
+	col = textureLod(tex, texCoord - posadd * dirInv, 0.0).r;
 	fragColor += col * blurWeight * influenceFactor;
 	weight += blurWeight * influenceFactor;
 	
@@ -36,19 +36,23 @@ float doBlur(const float blurWeight, const int pos, const vec3 nor, const float 
 }
 
 void main() {
-	vec4 g0 = texture(gbuffer0, texCoord);
+	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
 	vec3 nor = getNor(g0.rg);
 	float depth = g0.a;
 	
-	float sm = texture(tex, texCoord).r;
+	float sm = textureLod(tex, texCoord, 0.0).r;
 	fragColor = sm * blurWeights[0];
 	float weight = blurWeights[0];
-	float d = texture(dist, texCoord).r;
+	float d = textureLod(dist, texCoord, 0.0).r;
 	int numTaps = clamp(int(d * 10 * penumbraScale), 2, 10 * penumbraScale);
 	#ifdef _PenumbraScale
-	for (int i = 1; i < numTaps; ++i) weight += doBlur(blurWeights[int(i / penumbraScale)], i, nor, depth, texCoord);
+	for (int i = 1; i < numTaps; ++i) {
+		weight += doBlur(blurWeights[int(i / penumbraScale)], i, nor, depth, texCoord);
+	}
 	#else
-	for (int i = 1; i < numTaps; ++i) weight += doBlur(blurWeights[i - 1], i, nor, depth, texCoord);
+	for (int i = 1; i < numTaps; ++i){
+		weight += doBlur(blurWeights[i - 1], i, nor, depth, texCoord);
+	}
 	#endif
 	fragColor /= weight;
 }

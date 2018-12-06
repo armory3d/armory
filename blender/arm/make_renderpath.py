@@ -262,6 +262,8 @@ def build():
         else:
             assets.add_shader_pass('ssgi_pass')
             assets.add_shader_pass('ssgi_blur_pass')
+        if rpdat.arm_ssgi_half_res:
+            assets.add_khafile_def('rp_ssgi_half')
 
     if rpdat.rp_renderer == 'Deferred':
         assets.add_shader_pass('deferred_light')
@@ -308,9 +310,9 @@ def build():
         assets.add_shader_pass('blur_adaptive_pass')
         if rpdat.arm_ssr_half_res:
             assets.add_khafile_def('rp_ssr_half')
-            assets.add_shader_pass('downsample_depth')
-        if rpdat.rp_ssr_z_only:
-            wrd.world_defs += '_SSRZOnly'
+
+    if rpdat.rp_ssr or rpdat.rp_ssgi != 'Off':
+        assets.add_shader_pass('downsample_depth')
 
     if rpdat.rp_motionblur != 'Off':
         assets.add_khafile_def('rp_motionblur={0}'.format(rpdat.rp_motionblur))

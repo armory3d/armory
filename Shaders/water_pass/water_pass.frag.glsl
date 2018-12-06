@@ -171,7 +171,7 @@ vec3 getSeaColor(vec3 p, vec3 n, vec3 l, vec3 eye, vec3 dist) {
 }
 
 void main() {
-	float gdepth = texture(gbufferD, texCoord).r * 2.0 - 1.0;
+	float gdepth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 	// vec4 colorOriginal = vec4(1.0);//texture(tex, texCoord);
 	if (gdepth == 1.0) {
 		fragColor = vec4(0.0);

@@ -56,9 +56,9 @@ out vec4 fragColor;
 // Misc functions
 // Gathers current pixel, and the top-left neighbors.
 // vec3 SMAAGatherNeighbours(vec2 texcoord/*, vec4 offset[3], sampler2D tex*/) {
-	// float P = texture(tex, texcoord).r;
-	// float Pleft = texture(tex, offset0.xy).r;
-	// float Ptop  = texture(tex, offset0.zw).r;
+	// float P = textureLod(tex, texcoord, 0.0).r;
+	// float Pleft = textureLod(tex, offset0.xy, 0.0).r;
+	// float Ptop  = textureLod(tex, offset0.zw, 0.0).r;
 	// return vec3(P, Pleft, Ptop);
 // }
 
@@ -88,10 +88,10 @@ vec2 SMAALumaEdgeDetectionPS(vec2 texcoord
 
 	// Calculate lumas:
 	vec3 weights = vec3(0.2126, 0.7152, 0.0722);
-	float L = dot(texture(colorTex, texcoord).rgb, weights);
+	float L = dot(textureLod(colorTex, texcoord, 0.0).rgb, weights);
 
-	float Lleft = dot(texture(colorTex, offset0.xy).rgb, weights);
-	float Ltop  = dot(texture(colorTex, offset0.zw).rgb, weights);
+	float Lleft = dot(textureLod(colorTex, offset0.xy, 0.0).rgb, weights);
+	float Ltop  = dot(textureLod(colorTex, offset0.zw, 0.0).rgb, weights);
 
 	// We do the usual threshold:
 	vec4 delta;
@@ -103,16 +103,16 @@ vec2 SMAALumaEdgeDetectionPS(vec2 texcoord
 		discard;
 
 	// Calculate right and bottom deltas:
-	float Lright = dot(texture(colorTex, offset1.xy).rgb, weights);
-	float Lbottom  = dot(texture(colorTex, offset1.zw).rgb, weights);
+	float Lright = dot(textureLod(colorTex, offset1.xy, 0.0).rgb, weights);
+	float Lbottom  = dot(textureLod(colorTex, offset1.zw, 0.0).rgb, weights);
 	delta.zw = abs(L - vec2(Lright, Lbottom));
 
 	// Calculate the maximum delta in the direct neighborhood:
 	vec2 maxDelta = max(delta.xy, delta.zw);
 
 	// Calculate left-left and top-top deltas:
-	float Lleftleft = dot(texture(colorTex, offset2.xy).rgb, weights);
-	float Ltoptop = dot(texture(colorTex, offset2.zw).rgb, weights);
+	float Lleftleft = dot(textureLod(colorTex, offset2.xy, 0.0).rgb, weights);
+	float Ltoptop = dot(textureLod(colorTex, offset2.zw, 0.0).rgb, weights);
 	delta.zw = abs(vec2(Lleft, Ltop) - vec2(Lleftleft, Ltoptop));
 
 	// Calculate the final maximum delta:
@@ -142,13 +142,13 @@ vec2 SMAAColorEdgeDetectionPS(vec2 texcoord
 
 	// Calculate color deltas:
 	vec4 delta;
-	vec3 C = texture(colorTex, texcoord).rgb;
+	vec3 C = textureLod(colorTex, texcoord, 0.0).rgb;
 
-	vec3 Cleft = texture(colorTex, offset0.xy).rgb;
+	vec3 Cleft = textureLod(colorTex, offset0.xy, 0.0).rgb;
 	vec3 t = abs(C - Cleft);
 	delta.x = max(max(t.r, t.g), t.b);
 
-	vec3 Ctop  = texture(colorTex, offset0.zw).rgb;
+	vec3 Ctop  = textureLod(colorTex, offset0.zw, 0.0).rgb;
 	t = abs(C - Ctop);
 	delta.y = max(max(t.r, t.g), t.b);
 
@@ -160,11 +160,11 @@ vec2 SMAAColorEdgeDetectionPS(vec2 texcoord
 		discard;
 
 	// Calculate right and bottom deltas:
-	vec3 Cright = texture(colorTex, offset1.xy).rgb;
+	vec3 Cright = textureLod(colorTex, offset1.xy, 0.0).rgb;
 	t = abs(C - Cright);
 	delta.z = max(max(t.r, t.g), t.b);
 
-	vec3 Cbottom  = texture(colorTex, offset1.zw).rgb;
+	vec3 Cbottom  = textureLod(colorTex, offset1.zw, 0.0).rgb;
 	t = abs(C - Cbottom);
 	delta.w = max(max(t.r, t.g), t.b);
 
@@ -172,11 +172,11 @@ vec2 SMAAColorEdgeDetectionPS(vec2 texcoord
 	vec2 maxDelta = max(delta.xy, delta.zw);
 
 	// Calculate left-left and top-top deltas:
-	vec3 Cleftleft  = texture(colorTex, offset2.xy).rgb;
+	vec3 Cleftleft  = textureLod(colorTex, offset2.xy, 0.0).rgb;
 	t = abs(C - Cleftleft);
 	delta.z = max(max(t.r, t.g), t.b);
 
-	vec3 Ctoptop = texture(colorTex, offset2.zw).rgb;
+	vec3 Ctoptop = textureLod(colorTex, offset2.zw, 0.0).rgb;
 	t = abs(C - Ctoptop);
 	delta.w = max(max(t.r, t.g), t.b);
 
