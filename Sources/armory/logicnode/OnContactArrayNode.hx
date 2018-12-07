@@ -3,7 +3,7 @@ package armory.logicnode;
 import iron.object.Object;
 import armory.trait.physics.RigidBody;
 
-class OnContactNode extends LogicNode {
+class OnContactArrayNode extends LogicNode {
 
 	public var property0:String;
 	var lastContact = false;
@@ -16,10 +16,10 @@ class OnContactNode extends LogicNode {
 
 	function update() {
 		var object1:Object = inputs[0].get();
-		var object2:Object = inputs[1].get();
+		var objects:Array<Object> = inputs[1].get();
 
 		if (object1 == null) object1 = tree.object;
-		if (object2 == null) object2 = tree.object;
+		if (objects == null)return;
 
 		var contact = false;
 
@@ -28,12 +28,15 @@ class OnContactNode extends LogicNode {
 		var rb1 = object1.getTrait(RigidBody);
 		var rbs = physics.getContacts(rb1);
 		if (rb1 != null && rbs != null) {
-			var rb2 = object2.getTrait(RigidBody);
-			for (rb in rbs) {
-				if (rb == rb2) {
-					contact = true;
-					break;
+			for (object2 in objects) {
+				var rb2 = object2.getTrait(RigidBody);
+				for (rb in rbs) {
+					if (rb == rb2) {
+						contact = true;
+						break;
+					}
 				}
+				if (contact) break;
 			}
 		}
 #end
