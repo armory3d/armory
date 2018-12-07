@@ -896,7 +896,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
         self.prop(row, rpdat, 'arm_ssgi_half_res')
         self.prop(col, rpdat, 'arm_ssgi_rays')
         row = self.row(col, align=True, alignment='EXPAND')
-        self.prop(row, rpdat, 'arm_ssgi_step')
+        self.prop(row, rpdat, 'arm_ssgi_radius')
         self.prop(row, rpdat, 'arm_ssgi_strength')
         self.prop(col, rpdat, 'arm_ssgi_max_steps')
         self.separator(box)

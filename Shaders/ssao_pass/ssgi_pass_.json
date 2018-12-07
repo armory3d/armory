@@ -1,7 +1,7 @@
 {
 	"contexts": [
 		{
-			"name": "ssao_pass",
+			"name": "ssgi_pass",
 			"depth_write": false,
 			"compare_mode": "always",
 			"cull_mode": "none",
@@ -29,7 +29,7 @@
 			],
 			"texture_params": [],
 			"vertex_shader": "../include/pass_viewray.vert.glsl",
-			"fragment_shader": "ssao_pass.frag.glsl"
+			"fragment_shader": "ssgi_pass.frag.glsl"
 		}
 	]
 }

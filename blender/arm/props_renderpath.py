@@ -465,6 +465,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_ocean_freq = FloatProperty(name="Freq", default=0.16, update=assets.invalidate_shader_cache)
     arm_ocean_fade = FloatProperty(name="Fade", default=1.8, update=assets.invalidate_shader_cache)
     arm_ssgi_strength = FloatProperty(name="Strength", default=1.0, update=assets.invalidate_shader_cache)
+    arm_ssgi_radius = FloatProperty(name="Radius", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssgi_step = FloatProperty(name="Step", default=2.0, update=assets.invalidate_shader_cache)
     arm_ssgi_max_steps = IntProperty(name="Max Steps", default=8, update=assets.invalidate_shader_cache)
     arm_ssgi_rays = EnumProperty(

@@ -201,7 +201,7 @@ def make_gi(context_id):
     return con_voxel
 
 def make_ao(context_id):
-    con_voxel = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'always', 'cull_mode': 'none', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False, 'conservative_raster': True })
+    con_voxel = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'always', 'cull_mode': 'none', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False, 'conservative_raster': False })
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
 
@@ -267,7 +267,7 @@ def make_ao(context_id):
         frag.write('struct SPIRV_Cross_Input { float3 wpos : TEXCOORD0; };')
         frag.write('struct SPIRV_Cross_Output { float4 FragColor : SV_TARGET0; };')
         frag.write('void main(SPIRV_Cross_Input stage_input) {')
-        frag.write('  if (abs(stage_input.wpos.x) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(stage_input.wpos.y) > 1 || abs(stage_input.wpos.z) > 1) return;')
+        frag.write('  if (abs(stage_input.wpos.z) > ' + rpdat.rp_voxelgi_resolution_z + ' || abs(stage_input.wpos.x) > 1 || abs(stage_input.wpos.y) > 1) return;')
         voxRes = str(rpdat.rp_voxelgi_resolution)
         voxResZ = str(int(int(rpdat.rp_voxelgi_resolution) * float(rpdat.rp_voxelgi_resolution_z)))
         frag.write('  voxels[int3(' + voxRes + ', ' + voxRes + ', ' + voxResZ + ') * (stage_input.wpos * 0.5 + 0.5)] = 1.0;')

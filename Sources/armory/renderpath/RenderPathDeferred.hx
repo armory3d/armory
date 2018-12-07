@@ -154,8 +154,8 @@ class RenderPathDeferred {
 		#if ((rp_ssgi == "RTGI") || (rp_ssgi == "RTAO"))
 		{
 			path.loadShader("shader_datas/ssgi_pass/ssgi_pass");
-			path.loadShader("shader_datas/ssgi_blur_pass/ssgi_blur_pass_x");
-			path.loadShader("shader_datas/ssgi_blur_pass/ssgi_blur_pass_y");
+			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
+			path.loadShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 		}
 		#elseif (rp_ssgi == "SSAO")
 		{
@@ -490,7 +490,7 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if (rp_ssr || (rp_ssgi != "Off"))
+		#if (rp_ssr_half || rp_ssgi_half)
 		path.setTarget("half");
 		path.bindTarget("_main", "texdepth");
 		path.drawShader("shader_datas/downsample_depth/downsample_depth");
@@ -500,29 +500,33 @@ class RenderPathDeferred {
 		{
 			if (armory.data.Config.raw.rp_ssgi != false) {
 				path.setTarget("singlea");
+				#if rp_ssgi_half
 				path.bindTarget("half", "gbufferD");
-				path.bindTarget("gbuffer0", "gbuffer0");
-				#if (rp_ssgi == "RTGI")
-				path.bindTarget("gbuffer1", "gbuffer1");
+				#else
+				path.bindTarget("_main", "gbufferD");
 				#end
+				path.bindTarget("gbuffer0", "gbuffer0");
+				// #if (rp_ssgi == "RTGI")
+				// path.bindTarget("gbuffer1", "gbuffer1");
+				// #end
 				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
 
 				path.setTarget("singleb");
-				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("singlea", "tex");
-				path.drawShader("shader_datas/ssgi_blur_pass/ssgi_blur_pass_x");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_x");
 
 				path.setTarget("singlea");
-				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("singleb", "tex");
-				path.drawShader("shader_datas/ssgi_blur_pass/ssgi_blur_pass_y");
+				path.bindTarget("gbuffer0", "gbuffer0");
+				path.drawShader("shader_datas/blur_edge_pass/blur_edge_pass_y");
 			}
 		}	
 		#elseif (rp_ssgi == "SSAO")
 		{
 			if (armory.data.Config.raw.rp_ssgi != false) {
 				path.setTarget("singlea");
-				path.bindTarget("half", "gbufferD");
+				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.drawShader("shader_datas/ssao_pass/ssao_pass");
 
@@ -808,7 +812,11 @@ class RenderPathDeferred {
 
 				path.setTarget(targeta);
 				path.bindTarget("tex", "tex");
+				#if rp_ssr_half
 				path.bindTarget("half", "gbufferD");
+				#else
+				path.bindTarget("_main", "gbufferD");
+				#end
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer1", "gbuffer1");
 				path.drawShader("shader_datas/ssr_pass/ssr_pass");

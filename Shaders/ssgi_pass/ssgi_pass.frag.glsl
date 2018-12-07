@@ -6,11 +6,11 @@
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0; // Normal
-#ifdef _RTGI
-uniform sampler2D gbuffer1; // Basecol
-#endif
+// #ifdef _RTGI
+// uniform sampler2D gbuffer1; // Basecol
+// #endif
 uniform mat4 P;
-uniform mat4 tiV;
+uniform mat3 V3;
 
 uniform vec2 cameraProj;
 
@@ -28,7 +28,6 @@ out float fragColor;
 vec3 hitCoord;
 vec2 coord;
 float depth;
-float occ = 0.0;
 // #ifdef _RTGI
 // vec3 col = vec3(0.0);
 // #endif
@@ -53,17 +52,18 @@ float getDeltaDepth(vec3 hitCoord) {
 
 void rayCast(vec3 dir) {
 	hitCoord = vpos;
-	dir *= ssgiRayStep;
+	dir *= ssgiRayStep * 2;
 	float dist = 0.1;
 	for (int i = 0; i < ssgiMaxSteps; i++) {
 		hitCoord += dir;
 		float delta = getDeltaDepth(hitCoord);
-		if (delta > 0.0 && delta < 0.2) {
+		// if (delta > 0.0 && delta < 0.2) {
+		if (delta > 0.0) {
 			dist = distance(vpos, hitCoord);
 			break;
 		}
 	}
-	occ += dist;
+	fragColor += dist;
 	// #ifdef _RTGI
 	// col += textureLod(gbuffer1, coord, 0.0).rgb * ((ssgiRayStep * ssgiMaxSteps) - dist);
 	// #endif
@@ -77,39 +77,32 @@ vec3 tangent(const vec3 n) {
 }
 
 void main() {
+	fragColor = 0;
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0);
 	float d = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 
 	vec2 enc = g0.rg;
-	vec4 n;
+	vec3 n;
 	n.z = 1.0 - abs(enc.x) - abs(enc.y);
 	n.xy = n.z >= 0.0 ? enc.xy : octahedronWrap(enc.xy);
-	n.w = 1.0;
-	n = tiV * n;
-	n.xyz = normalize(n.xyz);
+	n = normalize(V3 * n);
 
 	vpos = getPosView(viewRay, d, cameraProj);
 
-	rayCast(n.xyz);
-	vec3 o1 = normalize(tangent(n.xyz));
-	vec3 o2 = normalize(cross(o1, n.xyz));
+	rayCast(n);
+	vec3 o1 = normalize(tangent(n));
+	vec3 o2 = (cross(o1, n));
 	vec3 c1 = 0.5f * (o1 + o2);
 	vec3 c2 = 0.5f * (o1 - o2);
-	rayCast(mix(n.xyz, o1, angleMix));
-	rayCast(mix(n.xyz, o2, angleMix));
-	rayCast(mix(n.xyz, -c1, angleMix));
-	rayCast(mix(n.xyz, -c2, angleMix));
+	rayCast(mix(n, o1, angleMix));
+	rayCast(mix(n, o2, angleMix));
+	rayCast(mix(n, -c1, angleMix));
+	rayCast(mix(n, -c2, angleMix));
 
 	#ifdef _SSGICone9
-	rayCast(mix(n.xyz, -o1, angleMix));
-	rayCast(mix(n.xyz, -o2, angleMix));
-	rayCast(mix(n.xyz, c1, angleMix));
-	rayCast(mix(n.xyz, c2, angleMix));
+	rayCast(mix(n, -o1, angleMix));
+	rayCast(mix(n, -o2, angleMix));
+	rayCast(mix(n, c1, angleMix));
+	rayCast(mix(n, c2, angleMix));
 	#endif
-	
-	// #ifdef _RTGI
-	// fragColor.rgb = vec3((occ + col * occ) * strength);
-	// #else
-	fragColor = occ * strength;
-	// #endif
 }

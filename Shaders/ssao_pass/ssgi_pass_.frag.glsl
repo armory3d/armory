@@ -32,6 +32,7 @@ void main() {
 	float currentDistance = length(currentPos);
 	float currentDistanceA = currentDistance * ssaoScale * (1.0 / ssaoRadius);
 	float currentDistanceB = currentDistance * 0.0005;
+	float currentDistanceC = currentDistance * 5.0;
 	ivec2 px = ivec2(texCoord * screenSize);
 	float phi = (3 * px.x ^ px.y + px.x * px.y) * 10;
 
@@ -44,9 +45,17 @@ void main() {
 		depth = textureLod(gbufferD, texCoord + k, 0.0).r * 2.0 - 1.0;
 		// vec3 pos = getPosNoEye(eyeLook, vray, depth, cameraProj) - currentPos;
 		vec3 pos = getPos2NoEye(eye, invVP, depth, texCoord + k) - currentPos;
-		fragColor += max(0, dot(pos, n) - currentDistanceB) / (dot(pos, pos) + 0.015);
+		fragColor += (max(0, dot(pos, n) - currentDistanceB) / (dot(pos, pos) + 0.015));
+	}
+
+	for (int i = 0; i < samples; ++i) {
+		float theta = samplesInv * (i + 0.5) + phi;
+		vec2 k = vec2(cos(theta), sin(theta)) / currentDistanceC;
+		depth = textureLod(gbufferD, texCoord + k, 0.0).r * 2.0 - 1.0;
+		vec3 pos = getPos2NoEye(eye, invVP, depth, texCoord + k) - currentPos;
+		fragColor += (max(0, dot(pos, n) - currentDistanceB) / (dot(pos, pos) + 0.015));
 	}
 	
-	fragColor *= (ssaoStrength * 0.3) / samples;
+	fragColor *= (ssaoStrength * 0.4) / samples;
 	fragColor = 1.0 - fragColor;
 }

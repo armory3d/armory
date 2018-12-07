@@ -483,11 +483,13 @@ const vec3 seaBaseColor = vec3(""" + str(round(rpdat.arm_ocean_base_color[0] * 1
 const vec3 seaWaterColor = vec3(""" + str(round(rpdat.arm_ocean_water_color[0] * 100) / 100) + """, """ + str(round(rpdat.arm_ocean_water_color[1] * 100) / 100) + """, """ + str(round(rpdat.arm_ocean_water_color[2] * 100) / 100) + """);
 const float seaFade = """ + str(round(rpdat.arm_ocean_fade * 100) / 100) + """;
 """)
-        if rpdat.rp_ssgi == 'SSAO' or rpdat.rp_volumetriclight:
+        if rpdat.rp_ssgi == 'SSAO' or rpdat.rp_ssgi == 'RTAO' or rpdat.rp_volumetriclight:
             f.write(
-"""const float ssaoSize = """ + str(round((rpdat.arm_ssgi_step / 32) * 100) / 100) + """;
-const float ssaoStrength = """ + str(round((rpdat.arm_ssgi_strength / 2) * 100) / 100) + """;
+"""const float ssaoRadius = """ + str(round(rpdat.arm_ssgi_radius * 100) / 100) + """;
+const float ssaoStrength = """ + str(round(rpdat.arm_ssgi_strength * 100) / 100) + """;
+const float ssaoScale = """ + ("2.0" if rpdat.arm_ssgi_half_res else "20.0") + """;
 """)
+
         if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
             f.write(
 """const int ssgiMaxSteps = """ + str(rpdat.arm_ssgi_max_steps) + """;

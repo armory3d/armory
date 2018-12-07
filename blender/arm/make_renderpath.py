@@ -257,11 +257,9 @@ def build():
         if rpdat.rp_ssgi == 'SSAO':
             assets.add_shader_pass('ssao_pass')
             assets.add_shader_pass('blur_edge_pass')
-            assets.add(assets_path + 'noise8.png')
-            assets.add_embedded_data('noise8.png')
         else:
             assets.add_shader_pass('ssgi_pass')
-            assets.add_shader_pass('ssgi_blur_pass')
+            assets.add_shader_pass('blur_edge_pass')
         if rpdat.arm_ssgi_half_res:
             assets.add_khafile_def('rp_ssgi_half')
 
