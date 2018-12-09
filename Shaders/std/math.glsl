@@ -28,6 +28,7 @@ vec2 rand2(const vec2 coord) {
 }
 
 float linearize(const float depth, vec2 cameraProj) {
+	// to viewz
 	return cameraProj.y / (depth - cameraProj.x);
 }
 

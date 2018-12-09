@@ -361,13 +361,13 @@ void main() {
 #endif
 
 #ifdef _Clusters
-
-	float depthl = linearize(depth * 0.5 + 0.5, cameraProj);
-	#ifdef HLSL
-	depthl += textureLod(clustersData, vec2(0.0), 0.0).r * 1e-9; // TODO: krafix bug, needs to generate sampler
-	#endif
-	int clusterI = getClusterI(texCoord, depthl, cameraPlane);
+	float viewz = linearize(depth * 0.5 + 0.5, cameraProj);
+	int clusterI = getClusterI(texCoord, viewz, cameraPlane);
 	int numLights = int(texelFetch(clustersData, ivec2(clusterI, 0), 0).r * 255);
+
+	#ifdef HLSL
+	viewz += textureLod(clustersData, vec2(0.0), 0.0).r * 1e-9; // TODO: krafix bug, needs to generate sampler
+	#endif
 
 	#ifdef _Spot
 	int numSpots = int(texelFetch(clustersData, ivec2(clusterI, 1 + maxLightsCluster), 0).r * 255);
