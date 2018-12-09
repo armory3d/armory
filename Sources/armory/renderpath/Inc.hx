@@ -37,7 +37,11 @@ class Inc {
 
 		#if arm_config
 		var config = armory.data.Config.raw;
-		for (l in iron.Scene.active.lights) l.data.raw.shadowmap_size = config.rp_shadowmap;
+		for (l in iron.Scene.active.lights) {
+			l.data.raw.shadowmap_size = l.data.raw.type == "sun" ?
+				config.rp_shadowmap_cascade :
+				config.rp_shadowmap_cube;
+		}
 		superSample = config.rp_supersample;
 		#end
 	}
@@ -92,7 +96,7 @@ class Inc {
 				var sizew = path.light.data.raw.shadowmap_size;
 				var sizeh = sizew;
 				#if arm_csm // Cascades - atlas on x axis
-				sizew = sizeh * iron.object.LightObject.cascadeCount;
+				sizew = sizew * iron.object.LightObject.cascadeCount;
 				#end
 				var t = new RenderTargetRaw();
 				t.name = target;
@@ -164,13 +168,15 @@ class Inc {
 		var config = armory.data.Config.raw;
 		// Resize shadow map
 		var l = path.light;
-		if (l.data.raw.shadowmap_size != config.rp_shadowmap) {
+		if (l.data.raw.type == "sun" && l.data.raw.shadowmap_size != config.rp_shadowmap_cascade) {
 			l.data.raw.shadowmap_size = config.rp_shadowmap;
 			var rt = path.renderTargets.get("shadowMap");
 			if (rt != null) {
 				rt.unload();
 				path.renderTargets.remove("shadowMap");
 			}
+		}
+		else if (l.data.raw.shadowmap_size != config.rp_shadowmap_cube) {
 			rt = path.renderTargets.get("shadowMapCube");
 			if (rt != null) {
 				rt.unload();
@@ -286,19 +292,33 @@ class Inc {
 	}
 	#end
 
-	public static inline function getShadowmapSize():Int {
-		#if (rp_shadowmap_size == 512)
+	public static inline function getCubeSize():Int {
+		#if (rp_shadowmap_cube == 256)
+		return 256;
+		#elseif (rp_shadowmap_cube == 512)
 		return 512;
-		#elseif (rp_shadowmap_size == 1024)
+		#elseif (rp_shadowmap_cube == 1024)
 		return 1024;
-		#elseif (rp_shadowmap_size == 2048)
+		#elseif (rp_shadowmap_cube == 2048)
 		return 2048;
-		#elseif (rp_shadowmap_size == 4096)
+		#elseif (rp_shadowmap_cube == 4096)
 		return 4096;
-		#elseif (rp_shadowmap_size == 8192)
-		return 8192;
-		#elseif (rp_shadowmap_size == 16384)
-		return 16384;
+		#else
+		return 0;
+		#end
+	}
+
+	public static inline function getCascadeSize():Int {
+		#if (rp_shadowmap_cascade == 256)
+		return 256;
+		#elseif (rp_shadowmap_cascade == 512)
+		return 512;
+		#elseif (rp_shadowmap_cascade == 1024)
+		return 1024;
+		#elseif (rp_shadowmap_cascade == 2048)
+		return 2048;
+		#elseif (rp_shadowmap_cascade == 4096)
+		return 4096;
 		#else
 		return 0;
 		#end

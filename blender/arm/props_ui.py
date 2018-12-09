@@ -783,11 +783,13 @@ class ArmRenderPathPanel(bpy.types.Panel):
         self.prop(row, rpdat, 'arm_culling')
         
 
-        self.label(layout, text='Shadows')
-        box = self.box(layout)
-        self.prop(box, rpdat, 'rp_shadowmap')
-        col = self.column(box, enabled=(rpdat.rp_shadowmap != 'Off'))
-        self.prop(col, rpdat, 'rp_shadowmap_cascades')
+        layout.separator()
+        self.prop(layout, rpdat, "rp_shadows")
+        box = self.box(layout, enabled=(rpdat.rp_shadows))
+        self.prop(box, rpdat, 'rp_shadowmap_cube')
+        self.prop(box, rpdat, 'rp_shadowmap_cascade')
+        self.prop(box, rpdat, 'rp_shadowmap_cascades')
+        col = box.column()
         col2 = self.column(col, enabled=(rpdat.rp_shadowmap_cascades != '1'))
         self.prop(col2, rpdat, 'arm_shadowmap_split')
         self.prop(col, rpdat, 'arm_shadowmap_bounds')

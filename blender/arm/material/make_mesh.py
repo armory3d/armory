@@ -522,7 +522,7 @@ def make_forward_mobile(con_mesh):
             frag.add_uniform('float shadowsBias', '_lightShadowsBias')
             frag.write('if (lightPosition.w > 0.0) {')
             frag.write('    vec3 lPos = lightPosition.xyz / lightPosition.w;')
-            frag.write('    const float texelSize = 1.0 / shadowmapSize.x;')
+            frag.write('    const float texelSize = 1.0 / shadowmapSizeCube.x;')
             frag.write('    visibility = 0.0;')
             frag.write('    visibility += float(texture(shadowMap0, lPos.xy).r + shadowsBias > lPos.z);')
             frag.write('    visibility += float(texture(shadowMap0, lPos.xy + vec2(texelSize, 0.0)).r + shadowsBias > lPos.z) * 0.5;')

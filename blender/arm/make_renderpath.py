@@ -44,7 +44,7 @@ def add_world_defs():
         elif rpdat.rp_gi == 'Voxel AO':
             voxelao = True
     # Shadows
-    if rpdat.rp_shadowmap != 'Off':
+    if rpdat.rp_shadows:
         wrd.world_defs += '_ShadowMap'
         if rpdat.rp_shadowmap_cascades != '1':
             if voxelgi:
@@ -133,9 +133,10 @@ def build():
     if rpdat.rp_depthprepass:
         assets.add_khafile_def('rp_depthprepass')
 
-    if rpdat.rp_shadowmap != 'Off':
+    if rpdat.rp_shadows:
         assets.add_khafile_def('rp_shadowmap')
-        assets.add_khafile_def('rp_shadowmap_size={0}'.format(rpdat.rp_shadowmap))
+        assets.add_khafile_def('rp_shadowmap_cascade={0}'.format(rpdat.rp_shadowmap_cascade))
+        assets.add_khafile_def('rp_shadowmap_cube={0}'.format(rpdat.rp_shadowmap_cube))
 
     assets.add_khafile_def('rp_background={0}'.format(rpdat.rp_background))
     if rpdat.rp_background == 'World':

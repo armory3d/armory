@@ -11,7 +11,9 @@ def update_preset(self, context):
     if self.rp_preset == 'Desktop':
         rpdat.rp_renderer = 'Deferred'
         rpdat.arm_material_model = 'Full'
-        rpdat.rp_shadowmap = '1024'
+        rpdat.rp_shadows = True
+        rpdat.rp_shadowmap_cube = '512'
+        rpdat.rp_shadowmap_cascade = '1024'
         rpdat.rp_shadowmap_cascades = '4'
         rpdat.rp_translucency_state = 'Auto'
         rpdat.rp_overlays_state = 'Auto'
@@ -44,7 +46,9 @@ def update_preset(self, context):
         rpdat.rp_renderer = 'Forward'
         rpdat.rp_depthprepass = False
         rpdat.arm_material_model = 'Mobile'
-        rpdat.rp_shadowmap = '1024'
+        rpdat.rp_shadows = True
+        rpdat.rp_shadowmap_cube = '256'
+        rpdat.rp_shadowmap_cascade = '1024'
         rpdat.rp_shadowmap_cascades = '1'
         rpdat.rp_translucency_state = 'Off'
         rpdat.rp_overlays_state = 'Off'
@@ -77,7 +81,9 @@ def update_preset(self, context):
         rpdat.rp_renderer = 'Forward'
         rpdat.rp_depthprepass = False
         rpdat.arm_material_model = 'Mobile'
-        rpdat.rp_shadowmap = '1024'
+        rpdat.rp_shadows = True
+        rpdat.rp_shadowmap_cube = '256'
+        rpdat.rp_shadowmap_cascade = '1024'
         rpdat.rp_shadowmap_cascades = '1'
         rpdat.rp_translucency_state = 'Off'
         rpdat.rp_overlays_state = 'Off'
@@ -108,7 +114,9 @@ def update_preset(self, context):
         rpdat.arm_shadows_cubemap = False
     elif self.rp_preset == 'Max':
         rpdat.rp_renderer = 'Deferred'
-        rpdat.rp_shadowmap = '8192'
+        rpdat.rp_shadows = True
+        rpdat.rp_shadowmap_cube = '2048'
+        rpdat.rp_shadowmap_cascade = '4096'
         rpdat.rp_shadowmap_cascades = '4'
         rpdat.rp_translucency_state = 'Auto'
         rpdat.rp_overlays_state = 'Auto'
@@ -147,7 +155,9 @@ def update_preset(self, context):
         rpdat.rp_renderer = 'Forward'
         rpdat.rp_depthprepass = False
         rpdat.arm_material_model = 'Solid'
-        rpdat.rp_shadowmap = 'Off'
+        rpdat.rp_shadows = False
+        rpdat.rp_shadowmap_cube = '512'
+        rpdat.rp_shadowmap_cascade = '1024'
         rpdat.rp_shadowmap_cascades = '1'
         rpdat.rp_translucency_state = 'Off'
         rpdat.rp_overlays_state = 'Off'
@@ -270,19 +280,24 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_radiance_sky = BoolProperty(name="Sky Radiance", default=True, update=assets.invalidate_shader_cache)
     rp_autoexposure = BoolProperty(name="Auto Exposure", description="Adjust exposure based on luminance", default=False, update=update_renderpath)
     rp_compositornodes = BoolProperty(name="Compositor", description="Draw compositor nodes", default=True, update=update_renderpath)
-    rp_shadowmap = EnumProperty(
-        items=[('Off', 'Off', 'Off'),
+    rp_shadows = BoolProperty(name="Shadows", description="Enable shadow casting", default=True, update=update_renderpath)
+    rp_shadowmap_cube = EnumProperty(
+        items=[('256', '256', '256'),
                ('512', '512', '512'),
                ('1024', '1024', '1024'),
                ('2048', '2048', '2048'),
-               ('4096', '4096', '4096'),
-               ('8192', '8192', '8192'),
-               ('16384', '16384', '16384'),],
-        name="Shadow Map", description="Shadow map resolution", default='1024', update=update_renderpath)
+               ('4096', '4096', '4096'),],
+        name="Cube Size", description="Cube map resolution", default='512', update=update_renderpath)
+    rp_shadowmap_cascade = EnumProperty(
+        items=[('256', '256', '256'),
+               ('512', '512', '512'),
+               ('1024', '1024', '1024'),
+               ('2048', '2048', '2048'),
+               ('4096', '4096', '4096'),],
+        name="Cascade Size", description="Shadow map resolution", default='1024', update=update_renderpath)
     rp_shadowmap_cascades = EnumProperty(
         items=[('1', '1', '1'),
                ('2', '2', '2'),
-               # ('3', '3', '3'),
                ('4', '4', '4')],
         name="Cascades", description="Shadow map cascades", default='4', update=udpate_shadowmap_cascades)
     arm_pcfsize = FloatProperty(name="PCF Size", description="Filter size", default=1.0)

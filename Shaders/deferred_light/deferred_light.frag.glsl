@@ -439,7 +439,7 @@ void main() {
 				#ifdef _SMSizeUniform
 				visibility *= shadowTest(shadowMap0, lPos.xyz / lPos.w, bias, smSizeUniform);
 				#else
-				visibility *= shadowTest(shadowMap0, lPos.xyz / lPos.w, bias, shadowmapSize);
+				visibility *= shadowTest(shadowMap0, lPos.xyz / lPos.w, bias, shadowmapSizeCube);
 				#endif
 			}
 			#endif

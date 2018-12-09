@@ -319,8 +319,10 @@ def write_config(resx, resy):
     output['window_msaa'] = int(rpdat.arm_samples_per_pixel)
     output['window_scale'] = 1.0
     output['rp_supersample'] = float(rpdat.rp_supersampling)
-    rp_shadowmap = 0 if rpdat.rp_shadowmap == 'Off' else int(rpdat.rp_shadowmap)
-    output['rp_shadowmap'] = rp_shadowmap
+    rp_shadowmap_cube = int(rpdat.rp_shadowmap_cube) if rpdat.rp_shadows else 0
+    output['rp_shadowmap_cube'] = rp_shadowmap_cube
+    rp_shadowmap_cascade = int(rpdat.rp_shadowmap_cascade) if rpdat.rp_shadows else 0
+    output['rp_shadowmap_cascade'] = rp_shadowmap_cascade
     output['rp_ssgi'] = rpdat.rp_ssgi != 'Off'
     output['rp_ssr'] = rpdat.rp_ssr != 'Off'
     output['rp_bloom'] = rpdat.rp_bloom != 'Off'
@@ -442,9 +444,8 @@ def write_indexhtml(w, h, is_publish):
 add_compiledglsl = ''
 def write_compiledglsl(defs):
     rpdat = arm.utils.get_rp()
-    shadowmap_size = 0
-    if rpdat.rp_shadowmap != 'Off':
-        shadowmap_size = int(rpdat.rp_shadowmap)
+    shadowmap_size = int(rpdat.rp_shadowmap_cascade) if rpdat.rp_shadows else 0
+    shadowmap_size_cube = int(rpdat.rp_shadowmap_cube) if rpdat.rp_shadows else 0
     with open(arm.utils.build_dir() + '/compiled/Shaders/compiled.inc', 'w') as f:
         f.write(
 """#ifndef _COMPILED_GLSL_
@@ -457,6 +458,7 @@ def write_compiledglsl(defs):
         f.write("""const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;
 const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shadowmap_size) + """);
+const vec2 shadowmapSizeCube = vec2(""" + str(shadowmap_size_cube) + """, """ + str(shadowmap_size_cube) + """);
 const float shadowmapCubePcfSize = """ + str((round(rpdat.arm_pcfsize * 100) / 100) / 1000) + """;
 const int shadowmapCascades = """ + str(rpdat.rp_shadowmap_cascades) + """;
 """)
