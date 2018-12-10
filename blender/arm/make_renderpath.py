@@ -38,7 +38,7 @@ def add_world_defs():
     voxelgi = False
     voxelao = False
     has_voxels = arm.utils.voxel_support()
-    if has_voxels:
+    if has_voxels and rpdat.arm_material_model == 'Full':
         if rpdat.rp_gi == 'Voxel GI':
             voxelgi = True
         elif rpdat.rp_gi == 'Voxel AO':
@@ -236,12 +236,12 @@ def build():
 
     rp_gi = rpdat.rp_gi
     has_voxels = arm.utils.voxel_support()
-    if not has_voxels:
+    if not has_voxels or rpdat.arm_material_model != 'Full':
         rp_gi = 'Off'
     assets.add_khafile_def('rp_gi={0}'.format(rp_gi))
-    if rpdat.rp_gi != 'Off':
+    if rp_gi != 'Off':
         if has_voxels:
-            assets.add_khafile_def('rp_gi={0}'.format(rpdat.rp_gi))        
+            assets.add_khafile_def('rp_gi={0}'.format(rp_gi))        
             assets.add_khafile_def('rp_voxelgi_resolution={0}'.format(rpdat.rp_voxelgi_resolution))
             assets.add_khafile_def('rp_voxelgi_resolution_z={0}'.format(rpdat.rp_voxelgi_resolution_z))
             if rpdat.arm_voxelgi_shadows:
@@ -265,7 +265,11 @@ def build():
             assets.add_khafile_def('rp_ssgi_half')
 
     if rpdat.rp_renderer == 'Deferred':
-        assets.add_shader_pass('deferred_light')
+        if rpdat.arm_material_model == 'Full':
+            assets.add_shader_pass('deferred_light')
+        else: # mobile, solid
+            assets.add_shader_pass('deferred_light_' + rpdat.arm_material_model.lower())
+            assets.add_khafile_def('rp_material_' + rpdat.arm_material_model.lower())
     
     if bpy.app.version >= (2, 80, 1) and len(bpy.data.lightprobes) > 0:
         wrd.world_defs += '_Probes'

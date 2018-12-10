@@ -143,7 +143,13 @@ class RenderPathDeferred {
 		}
 		#end
 
+		#if rp_material_solid
+		path.loadShader("shader_datas/deferred_light_solid/deferred_light");
+		#elseif rp_material_mobile
+		path.loadShader("shader_datas/deferred_light_mobile/deferred_light");
+		#else
 		path.loadShader("shader_datas/deferred_light/deferred_light");
+		#end
 
 		#if rp_probes
 		path.loadShader("shader_datas/probe_planar/probe_planar");
@@ -664,9 +670,15 @@ class RenderPathDeferred {
 		}
 		#end
 		
+		#if rp_material_solid
+		path.drawShader("shader_datas/deferred_light_solid/deferred_light");
+		#elseif rp_material_mobile
+		path.drawShader("shader_datas/deferred_light_mobile/deferred_light");
+		#else
 		voxelao_pass ?
 			path.drawShader("shader_datas/deferred_light/deferred_light_VoxelAOvar") :
 			path.drawShader("shader_datas/deferred_light/deferred_light");
+		#end
 		path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
 
 		#if rp_probes

@@ -1,0 +1,110 @@
+{
+	"contexts": [
+		{
+			"name": "deferred_light",
+			"depth_write": false,
+			"compare_mode": "always",
+			"cull_mode": "none",
+			"links": [
+				{
+					"name": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"name": "eyeLook",
+					"link": "_cameraLook"
+				},
+				{
+					"name": "invVP",
+					"link": "_inverseViewProjectionMatrix"
+				},
+				{
+					"name": "shirr",
+					"link": "_envmapIrradiance",
+					"ifdef": ["_Irr"]
+				},
+				{
+					"name": "senvmapRadiance",
+					"link": "_envmapRadiance",
+					"ifdef": ["_Rad"]
+				},
+				{
+					"name": "envmapNumMipmaps",
+					"link": "_envmapNumMipmaps",
+					"ifdef": ["_Rad"]
+				},
+				{
+					"name": "senvmapBrdf",
+					"link": "_envmapBrdf",
+					"ifdef": ["_Brdf"]
+				},
+				{
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
+				},
+				{
+					"name": "envmapStrength",
+					"link": "_envmapStrength"
+				},
+				{
+					"name": "backgroundCol",
+					"link": "_backgroundCol",
+					"ifdef": ["_EnvCol"]
+				},
+				{
+					"name": "lightsArray",
+					"link": "_lightsArray",
+					"ifdef": ["_Clusters"]
+				},
+				{
+					"name": "lightsArraySpot",
+					"link": "_lightsArraySpot",
+					"ifdef": ["_Spot"]
+				},
+				{
+					"name": "clustersData",
+					"link": "_clustersData",
+					"ifdef": ["_Clusters"]
+				},
+				{
+					"name": "cameraPlane",
+					"link": "_cameraPlane",
+					"ifdef": ["_Clusters"]
+				},
+				{
+					"name": "sunDir",
+					"link": "_sunDirection",
+					"ifdef": ["_Sun"]
+				},
+				{
+					"name": "sunCol",
+					"link": "_sunColor",
+					"ifdef": ["_Sun"]
+				},
+				{
+					"name": "shadowsBias",
+					"link": "_sunShadowsBias",
+					"ifdef": ["_Sun", "_ShadowMap"]
+				},
+				{
+					"name": "LWVP",
+					"link": "_biasLightWorldViewProjectionMatrix",
+					"ifndef": ["_CSM"],
+					"ifdef": ["_Sun", "_ShadowMap"]
+				},
+				{
+					"name": "casData",
+					"link": "_cascadeData",
+					"ifdef": ["_Sun", "_ShadowMap", "_CSM"]
+				},
+				{
+					"name": "lightProj",
+					"link": "_lightPlaneProj",
+					"ifdef": ["_Clusters", "_ShadowMapCube"]
+				}
+			],
+			"vertex_shader": "../include/pass_viewray.vert.glsl",
+			"fragment_shader": "deferred_light.frag.glsl"
+		}
+	]
+}

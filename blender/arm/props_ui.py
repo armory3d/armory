@@ -739,13 +739,13 @@ class ArmRenderPathPanel(bpy.types.Panel):
         
         layout.prop(wrd, 'rp_search', icon='VIEWZOOM')
 
-        self.label(layout, text='Renderer')
+        layout.separator()
         box = self.box(layout)
         row = self.row(box)
         self.prop(row, rpdat, 'rp_renderer')
-        col = self.column(box, enabled=(rpdat.rp_renderer == 'Forward'))
-        self.prop(col, rpdat, 'rp_depthprepass')
-        self.prop(col, rpdat, 'arm_material_model')
+        if rpdat.rp_renderer == 'Forward':
+            self.prop(box, rpdat, 'rp_depthprepass')
+        self.prop(box, rpdat, 'arm_material_model')
         self.prop(box, rpdat, 'rp_translucency_state')
         self.prop(box, rpdat, 'rp_overlays_state')
         self.prop(box, rpdat, 'rp_decals_state')
