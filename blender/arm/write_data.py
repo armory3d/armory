@@ -443,7 +443,6 @@ add_compiledglsl = ''
 def write_compiledglsl(defs):
     rpdat = arm.utils.get_rp()
     shadowmap_size = int(rpdat.rp_shadowmap_cascade) if rpdat.rp_shadows else 0
-    shadowmap_size_cube = int(rpdat.rp_shadowmap_cube) if rpdat.rp_shadows else 0
     with open(arm.utils.build_dir() + '/compiled/Shaders/compiled.inc', 'w') as f:
         f.write(
 """#ifndef _COMPILED_GLSL_
@@ -456,7 +455,6 @@ def write_compiledglsl(defs):
         f.write("""const float PI = 3.1415926535;
 const float PI2 = PI * 2.0;
 const vec2 shadowmapSize = vec2(""" + str(shadowmap_size) + """, """ + str(shadowmap_size) + """);
-const vec2 shadowmapSizeCube = vec2(""" + str(shadowmap_size_cube) + """, """ + str(shadowmap_size_cube) + """);
 const float shadowmapCubePcfSize = """ + str((round(rpdat.arm_pcfsize * 100) / 100) / 1000) + """;
 const int shadowmapCascades = """ + str(rpdat.rp_shadowmap_cascades) + """;
 """)

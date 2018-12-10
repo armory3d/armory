@@ -70,7 +70,7 @@
 				{
 					"name": "lightsArraySpot",
 					"link": "_lightsArraySpot",
-					"ifdef": ["_Spot"]
+					"ifdef": ["_Clusters", "_Spot"]
 				},
 				{
 					"name": "clustersData",
@@ -171,7 +171,32 @@
 				{
 					"name": "lightProj",
 					"link": "_lightPlaneProj",
-					"ifdef": ["_Clusters", "_ShadowMapCube"]
+					"ifdef": ["_ShadowMapCube"]
+				},
+				{
+					"name": "pointPos",
+					"link": "_pointPosition",
+					"ifdef": ["_SinglePoint"]
+				},
+				{
+					"name": "pointCol",
+					"link": "_pointColor",
+					"ifdef": ["_SinglePoint"]
+				},
+				{
+					"name": "pointBias",
+					"link": "_pointShadowsBias",
+					"ifdef": ["_SinglePoint"]
+				},
+				{
+					"name": "spotDir",
+					"link": "_spotDirection",
+					"ifdef": ["_SinglePoint", "_Spot"]
+				},
+				{
+					"name": "spotData",
+					"link": "_spotData",
+					"ifdef": ["_SinglePoint", "_Spot"]
 				}
 			],
 			"vertex_shader": "../include/pass_viewray.vert.glsl",

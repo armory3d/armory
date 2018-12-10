@@ -328,7 +328,7 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if (rp_ssr || (rp_ssgi != "Off"))
+		#if (rp_ssr_half || rp_ssgi_half)
 		{
 			{
 				path.loadShader("shader_datas/downsample_depth/downsample_depth");

@@ -92,19 +92,26 @@ def add_world_defs():
 
     # Light defines
     lights = bpy.data.lights if bpy.app.version >= (2, 80, 1) else bpy.data.lamps
-    for light in lights:
-        if light.type == 'AREA' and '_LTC' not in wrd.world_defs:
-            wrd.world_defs += '_LTC'
-            assets.add_khafile_def('arm_ltc')
-        if light.type == 'SUN' and '_Sun' not in wrd.world_defs:
-            wrd.world_defs += '_Sun'
-        if light.type == 'POINT' or light.type == 'SPOT':
-            if '_Clusters' not in wrd.world_defs:
-                wrd.world_defs += '_Clusters'
-                assets.add_khafile_def('arm_clusters')
-            if light.type == 'SPOT' and '_Spot' not in wrd.world_defs:
-                wrd.world_defs += '_Spot'
-                assets.add_khafile_def('arm_spot')
+    point_lights = 0
+    for bo in bpy.data.objects: # TODO: temp
+        if bo.type == 'LIGHT' or bo.type == 'LAMP':
+            light = bo.data
+            if light.type == 'AREA' and '_LTC' not in wrd.world_defs:
+                wrd.world_defs += '_LTC'
+                assets.add_khafile_def('arm_ltc')
+            if light.type == 'SUN' and '_Sun' not in wrd.world_defs:
+                wrd.world_defs += '_Sun'
+            if light.type == 'POINT' or light.type == 'SPOT':
+                point_lights += 1
+                if light.type == 'SPOT' and '_Spot' not in wrd.world_defs:
+                    wrd.world_defs += '_Spot'
+                    assets.add_khafile_def('arm_spot')
+
+    if point_lights == 1:
+        wrd.world_defs += '_SinglePoint'
+    elif point_lights > 1:
+        wrd.world_defs += '_Clusters'
+        assets.add_khafile_def('arm_clusters')
 
     if '_Rad' in wrd.world_defs or '_VoxelGI' in wrd.world_defs:
         wrd.world_defs += '_Brdf'
@@ -314,7 +321,7 @@ def build():
         if rpdat.arm_ssr_half_res:
             assets.add_khafile_def('rp_ssr_half')
 
-    if rpdat.rp_ssr or rpdat.rp_ssgi != 'Off':
+    if (rpdat.rp_ssr and rpdat.arm_ssr_half_res) or (rpdat.rp_ssgi != 'Off' and rpdat.arm_ssgi_half_res):
         assets.add_shader_pass('downsample_depth')
 
     if rpdat.rp_motionblur != 'Off':

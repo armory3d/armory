@@ -1,3 +1,6 @@
+#ifndef _BRDF_GLSL_
+#define _BRDF_GLSL_
+
 // http://xlgames-inc.github.io/posts/improvedibl/
 // http://blog.selfshadow.com/publications/s2013-shading-course/
 vec3 f_schlick(const vec3 f0, const float vh) {
@@ -116,3 +119,5 @@ float D_Approx(const float Roughness, const float RoL) {
 	float c = 0.72134752 * rcp_a2 + 0.39674113;
 	return rcp_a2 * exp2( c * RoL - c );
 }
+
+#endif

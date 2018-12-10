@@ -3,12 +3,9 @@
 #include "compiled.inc"
 #include "std/gbuffer.glsl"
 #include "std/math.glsl"
-#include "std/brdf.glsl"
+#include "std/light_mobile.glsl"
 #ifdef _Clusters
 #include "std/clusters.glsl"
-#endif
-#ifdef _ShadowMap
-#include "std/shadows.glsl"
 #endif
 #ifdef _Irr
 #include "std/shirr.glsl"
@@ -44,36 +41,23 @@ uniform vec4 lightsArray[maxLights * 2];
 	#endif
 uniform sampler2D clustersData;
 uniform vec2 cameraPlane;
+#endif
+
 #ifdef _ShadowMap
 	#ifdef _ShadowMapCube
-	uniform vec2 lightProj;
+	//!uniform vec2 lightProj;
 	// uniform samplerCubeShadow shadowMap0; //arm_dev
-	uniform samplerCube shadowMap0;
-	// uniform samplerCube shadowMap1;
-	// uniform samplerCube shadowMap2;
-	// uniform samplerCube shadowMap3;
+	//!uniform samplerCube shadowMap0;
 	#else
-	uniform sampler2D shadowMap0;
-	// uniform sampler2D shadowMap1;
-	// uniform sampler2D shadowMap2;
-	// uniform sampler2D shadowMap3;
-	uniform mat4 LWVP0;
-	// uniform mat4 LWVP1;
-	// uniform mat4 LWVP2;
-	// uniform mat4 LWVP3;
+	// uniform sampler2DShadow shadowMap0; //arm_dev
+	//!uniform sampler2D shadowMap0;
+	//!uniform mat4 LWVP0;
 	#endif
 	#ifdef _Spot
-	uniform sampler2D shadowMapSpot0;
-	// uniform sampler2D shadowMapSpot1;
-	// uniform sampler2D shadowMapSpot2;
-	// uniform sampler2D shadowMapSpot3;
-	uniform mat4 LWVPSpot0;
-	// uniform mat4 LWVPSpot1;
-	// uniform mat4 LWVPSpot2;
-	// uniform mat4 LWVPSpot3;
+	//!uniform sampler2D shadowMapSpot0;
+	//!uniform mat4 LWVPSpot0;
 	#endif
-#endif // _ShadowMap
-#endif // _Clusters
+#endif
 
 #ifdef _Sun
 uniform vec3 sunDir;
@@ -91,6 +75,16 @@ uniform vec3 sunCol;
 	// uniform sampler2D svisibility;
 	// #else
 	#endif // _ShadowMap
+#endif
+
+#ifdef _SinglePoint // Fast path for single light
+uniform vec3 pointPos;
+uniform vec3 pointCol;
+uniform float pointBias;
+	#ifdef _Spot
+	uniform vec3 spotDir;
+	uniform vec2 spotData;
+	#endif
 #endif
 
 in vec2 texCoord;
@@ -154,7 +148,6 @@ void main() {
 #endif
 
 	envl.rgb *= envmapStrength * occspec.x;
-
 	fragColor.rgb = envl;
 
 #ifdef _Sun
@@ -163,21 +156,31 @@ void main() {
 	float sdotVH = dot(v, sh);
 	float sdotNL = dot(n, sunDir);
 	float svisibility = 1.0;
-	vec3 sdirect = albedo * max(sdotNL, 0.0) +
+	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) +
 				   specularBRDF(f0, metrough.y, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
 
 	#ifdef _ShadowMap
-	// if (lightShadow == 1) {
 		#ifdef _CSM
 		svisibility = shadowTestCascade(shadowMap, eye, p + n * shadowsBias * 10, shadowsBias, shadowmapSize * vec2(shadowmapCascades, 1.0));
 		#else
 		vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100, 1.0);
 		if (lPos.w > 0.0) svisibility = shadowTest(shadowMap, lPos.xyz / lPos.w, shadowsBias, shadowmapSize);
 		#endif
-	// }
 	#endif
 
 	fragColor.rgb += sdirect * svisibility * sunCol;
+#endif
+
+#ifdef _SinglePoint
+	fragColor.rgb += sampleLight(
+		p, n, v, dotNV, pointPos, pointCol, albedo, metrough.y, occspec.y, f0
+		#ifdef _ShadowMap
+			, pointBias
+		#endif
+		#ifdef _Spot
+		, true, spotData.x, spotData.y, spotDir
+		#endif
+	);
 #endif
 
 #ifdef _Clusters
@@ -196,60 +199,27 @@ void main() {
 
 	for (int i = 0; i < min(numLights, maxLightsCluster); i++) {
 		int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);
-
-		// lightsArray[li * 2    ] - pos
-		// lightsArray[li * 2 + 1] - color
-		// lightsArraySpot[li] - (spot)dir
-
-		vec3 lp = lightsArray[li * 2].xyz;
-		vec3 ld = lp - p;
-		vec3 l = normalize(ld);
-		vec3 h = normalize(v + l);
-		float dotNH = dot(n, h);
-		float dotVH = dot(v, h);
-		float dotNL = dot(n, l);
-
-		vec3 direct = albedo * max(dotNL, 0.0) +
-					  specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH) * occspec.y;
-
-		direct *= lightsArray[li * 2 + 1].xyz;
-
-		float visibility = attenuate(distance(p, lp));
-
-		#ifdef _Spot
-		if (i > numPoints - 1) {
-			float spotEffect = dot(lightsArraySpot[li].xyz, l); // lightDir
-			// x - cutoff, y - cutoff - exponent
-			if (spotEffect < lightsArray[li * 2 + 1].w) {
-				visibility *= smoothstep(lightsArraySpot[li].w, lightsArray[li * 2 + 1].w, spotEffect);
-			}
-		}
-		#endif
-
-		#ifdef _LightIES
-		visibility *= iesAttenuation(-l);
-		#endif
-
-		#ifdef _ShadowMap
-		// if (lightShadow == 1) {
-			float bias = lightsArray[li * 2].w;
-			#ifdef _ShadowMapCube
-			visibility *= PCFCube(shadowMap0, ld, -l, bias, lightProj, n);
-			#else
-			vec4 lPos = LWVP0 * vec4(p + n * bias * 10, 1.0);
-			if (lPos.w > 0.0) {
-				#ifdef _SMSizeUniform
-				visibility *= shadowTest(shadowMap0, lPos.xyz / lPos.w, bias, smSizeUniform);
-				#else
-				visibility *= shadowTest(shadowMap0, lPos.xyz / lPos.w, bias, shadowmapSizeCube);
-				#endif
-			}
+		fragColor.rgb += sampleLight(
+			p,
+			n,
+			v,
+			dotNV,
+			lightsArray[li * 2].xyz, // lp
+			lightsArray[li * 2 + 1].xyz, // lightCol
+			albedo,
+			metrough.y,
+			occspec.y,
+			f0
+			#ifdef _ShadowMap
+				, lightsArray[li * 2].w // bias
 			#endif
-		// }
-		#endif // _ShadowMap
-
-		fragColor.rgb += direct * visibility;
+			#ifdef _Spot
+			, i > numPoints - 1
+			, lightsArray[li * 2 + 1].w // cutoff
+			, lightsArraySpot[li].w // cutoff - exponent
+			, lightsArraySpot[li].xyz // spotDit
+			#endif
+		);
 	}
-
-#endif
+#endif // _Clusters
 }
