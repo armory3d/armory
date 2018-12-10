@@ -12,6 +12,9 @@ def write(vert, frag):
     if is_shadows:
         frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
         frag.add_uniform('samplerCube shadowMap0', included=True)
+        frag.add_uniform('samplerCube shadowMap1', included=True)
+        frag.add_uniform('samplerCube shadowMap2', included=True)
+        frag.add_uniform('samplerCube shadowMap3', included=True)
     vert.add_out('vec4 wvpposition')
     vert.write('wvpposition = gl_Position;')
     # wvpposition.z / wvpposition.w
@@ -42,9 +45,9 @@ def write(vert, frag):
     frag.write('    specular,')
     frag.write('    f0')
     if is_shadows:
-        frag.write('    , lightsArray[li * 2].w') # bias
+        frag.write('    , li, lightsArray[li * 2].w') # bias
     if '_Spot' in wrd.world_defs:
-        frag.write('    , i > numPoints - 1')
+        frag.write('    , li > numPoints - 1')
         frag.write('    , lightsArray[li * 2 + 1].w') # cutoff
         frag.write('    , lightsArraySpot[li].w') # cutoff - exponent
         frag.write('    , lightsArraySpot[li].xyz') # spotDir

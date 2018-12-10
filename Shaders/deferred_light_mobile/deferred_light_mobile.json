@@ -110,7 +110,7 @@
 				{
 					"name": "lightProj",
 					"link": "_lightPlaneProj",
-					"ifdef": ["_ShadowMapCube"]
+					"ifdef": ["_ShadowMap"]
 				},
 				{
 					"name": "pointPos",

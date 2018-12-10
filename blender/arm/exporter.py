@@ -1760,7 +1760,7 @@ class ArmoryExporter:
                 o['shadows_bias'] *= 1 / (o['shadowmap_size'] / 1024) # Less bias for bigger maps
         if (objtype == 'POINT' or objtype == 'SPOT') and objref.shadow_soft_size > 0.1:
             o['light_size'] = objref.shadow_soft_size * 10 # Match to Cycles
-        if objtype == 'POINT' and rpdat.arm_shadows_cubemap:
+        if objtype == 'POINT':
             o['fov'] = 1.5708 # pi/2
             o['shadowmap_cube'] = True
             o['shadows_bias'] *= 2.0

@@ -798,7 +798,6 @@ class ArmRenderPathPanel(bpy.types.Panel):
         row = self.row(col2, align=True, alignment='EXPAND')
         self.prop(row, rpdat, 'arm_soft_shadows_penumbra')
         self.prop(row, rpdat, 'arm_soft_shadows_distance')
-        self.prop(col, rpdat, 'arm_shadows_cubemap')
         self.prop(col, rpdat, 'arm_pcfsize')
 
 

@@ -44,18 +44,21 @@ uniform vec2 cameraPlane;
 #endif
 
 #ifdef _ShadowMap
-	#ifdef _ShadowMapCube
 	//!uniform vec2 lightProj;
 	// uniform samplerCubeShadow shadowMap0; //arm_dev
 	//!uniform samplerCube shadowMap0;
-	#else
-	// uniform sampler2DShadow shadowMap0; //arm_dev
-	//!uniform sampler2D shadowMap0;
-	//!uniform mat4 LWVP0;
-	#endif
+	//!uniform samplerCube shadowMap1;
+	//!uniform samplerCube shadowMap2;
+	//!uniform samplerCube shadowMap3;
 	#ifdef _Spot
 	//!uniform sampler2D shadowMapSpot0;
+	//!uniform sampler2D shadowMapSpot1;
+	//!uniform sampler2D shadowMapSpot2;
+	//!uniform sampler2D shadowMapSpot3;
 	//!uniform mat4 LWVPSpot0;
+	//!uniform mat4 LWVPSpot1;
+	//!uniform mat4 LWVPSpot2;
+	//!uniform mat4 LWVPSpot3;
 	#endif
 #endif
 
@@ -175,7 +178,7 @@ void main() {
 	fragColor.rgb += sampleLight(
 		p, n, v, dotNV, pointPos, pointCol, albedo, metrough.y, occspec.y, f0
 		#ifdef _ShadowMap
-			, pointBias
+			, 0, pointBias
 		#endif
 		#ifdef _Spot
 		, true, spotData.x, spotData.y, spotDir
@@ -211,10 +214,10 @@ void main() {
 			occspec.y,
 			f0
 			#ifdef _ShadowMap
-				, lightsArray[li * 2].w // bias
+				, li, lightsArray[li * 2].w // bias
 			#endif
 			#ifdef _Spot
-			, i > numPoints - 1
+			, li > numPoints - 1
 			, lightsArray[li * 2 + 1].w // cutoff
 			, lightsArraySpot[li].w // cutoff - exponent
 			, lightsArraySpot[li].xyz // spotDir

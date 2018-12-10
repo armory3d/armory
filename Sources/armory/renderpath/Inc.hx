@@ -32,6 +32,9 @@ class Inc {
 	#end
 	public static var superSample = 1.0;
 
+	static var pointIndex = 0;
+	static var spotIndex = 0;
+
 	public static function init(_path:RenderPath) {
 		path = _path;
 
@@ -48,8 +51,17 @@ class Inc {
 
 	public static function bindShadowMap() {
 		for (l in iron.Scene.active.lights) {
-			if (!l.visible || !l.data.raw.cast_shadow) continue;
-			var n = shadowMapName(l);
+			if (!l.visible || !l.data.raw.cast_shadow || l.data.raw.type != "sun") continue;
+			var n = "shadowMap";
+			path.bindTarget(n, n);
+			break;
+		}
+		for (i in 0...pointIndex) {
+			var n = "shadowMap" + i;
+			path.bindTarget(n, n);
+		}
+		for (i in 0...spotIndex) {
+			var n = "shadowMapSpot" + i;
 			path.bindTarget(n, n);
 		}
 
@@ -72,8 +84,8 @@ class Inc {
 
 	static function shadowMapName(l:iron.object.LightObject):String {
 		if (l.data.raw.type == "sun") return "shadowMap";
-		if (l.data.raw.type == "point") return "shadowMap0"; 
-		else return "shadowMapSpot0"; 
+		if (l.data.raw.type == "point") return "shadowMap" + pointIndex; 
+		else return "shadowMapSpot" + spotIndex; 
 	}
 
 	static function getShadowMap(l:iron.object.LightObject):String {
@@ -112,18 +124,24 @@ class Inc {
 	public static function drawShadowMap() {
 		#if (rp_shadowmap)
 		
+		pointIndex = 0;
+		spotIndex = 0;
 		for (l in iron.Scene.active.lights) {
 			if (!l.visible || !l.data.raw.cast_shadow) continue;
 			path.light = l;
 
+			var shadowmap = Inc.getShadowMap(l);
 			var faces = l.data.raw.shadowmap_cube ? 6 : 1;
 			for (i in 0...faces) {
 				if (faces > 1) path.currentFace = i;
-				path.setTarget(Inc.getShadowMap(l));
+				path.setTarget(shadowmap);
 				path.clearTarget(null, 1.0);
 				path.drawMeshes("shadowmap");
 			}
 			path.currentFace = -1;
+
+			if (l.data.raw.type == "point") pointIndex++;
+			else if (l.data.raw.type == "spot") spotIndex++;
 		}
 
 		// One light at a time for now, precompute all lights for tiled

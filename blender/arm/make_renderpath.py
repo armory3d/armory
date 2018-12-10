@@ -52,8 +52,6 @@ def add_world_defs():
             else:
                 wrd.world_defs += '_CSM'
                 assets.add_khafile_def('arm_csm')
-        if rpdat.arm_shadows_cubemap:
-            wrd.world_defs += '_ShadowMapCube'
     # SS
     if rpdat.rp_ssgi == 'RTGI' or rpdat.rp_ssgi == 'RTAO':
         if rpdat.rp_ssgi == 'RTGI':
