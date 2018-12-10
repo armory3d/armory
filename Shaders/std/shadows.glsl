@@ -1,3 +1,6 @@
+#ifndef _SHADOWS_GLSL_
+#define _SHADOWS_GLSL_
+
 #include "compiled.inc"
 
 #ifdef _CSM
@@ -215,4 +218,6 @@ float shadowTestCascade(sampler2DShadow shadowMap, const vec3 eye, const vec3 p,
 	// if (ci == 8) albedo.rgb = vec3(0.0, 0.0, 1.0);
 	// if (ci == 12) albedo.rgb = vec3(1.0, 1.0, 0.0);
 }
+#endif
+
 #endif

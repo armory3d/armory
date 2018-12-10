@@ -7,6 +7,7 @@ import arm.material.make_skin as make_skin
 import arm.material.make_inst as make_inst
 import arm.material.make_tess as make_tess
 import arm.material.make_particle as make_particle
+import arm.material.make_cluster as make_cluster
 import arm.utils
 
 is_displacement = False
@@ -476,9 +477,6 @@ def make_forward_mobile(con_mesh):
         return
 
     is_shadows = '_ShadowMap' in wrd.world_defs
-    if is_shadows:
-        frag.add_include('std/shadows.glsl')
-
     frag.write('vec3 direct = vec3(0.0);')
 
     if '_Sun' in wrd.world_defs:
@@ -508,7 +506,6 @@ def make_forward_mobile(con_mesh):
         frag.write('direct += basecol * sdotNL * sunCol * svisibility;')
 
     if '_SinglePoint' in wrd.world_defs:
-        frag.add_include('std/clusters.glsl')
         frag.add_uniform('vec3 pointPos', '_pointPosition')
         frag.add_uniform('vec3 pointCol', '_pointColor')
         frag.write('float visibility = 1.0;')
@@ -533,33 +530,11 @@ def make_forward_mobile(con_mesh):
             frag.write('}')
         frag.write('direct += basecol * dotNL * pointCol * attenuate(distance(wposition, pointPos)) * visibility;')
 
-    # if '_Clusters' in wrd.world_defs:
-    #     frag.add_include('std/clusters.glsl')
-    #     frag.add_uniform('vec3 pointPos', '_pointPosition')
-    #     frag.add_uniform('vec3 pointCol', '_pointColor')
-    #     frag.write('float visibility = 1.0;')
-    #     frag.write('float dotNL = max(dot(n, pointPos - wposition), 0.0);')
-    #     if is_shadows:
-    #         vert.add_out('vec4 lightPosition')
-    #         vert.add_uniform('mat4 LWVP', '_biasLightWorldViewProjectionMatrix')
-    #         vert.write('lightPosition = LWVP * spos;')            
-    #         frag.add_uniform('sampler2D shadowMap0')
-    #         frag.add_uniform('float shadowsBias', '_lightShadowsBias')
-    #         frag.write('if (lightPosition.w > 0.0) {')
-    #         frag.write('    vec3 lPos = lightPosition.xyz / lightPosition.w;')
-    #         frag.write('    const float texelSize = 1.0 / shadowmapSize.x;')
-    #         frag.write('    visibility = 0.0;')
-    #         frag.write('    visibility += float(texture(shadowMap0, lPos.xy).r + shadowsBias > lPos.z);')
-    #         frag.write('    visibility += float(texture(shadowMap0, lPos.xy + vec2(texelSize, 0.0)).r + shadowsBias > lPos.z) * 0.5;')
-    #         frag.write('    visibility += float(texture(shadowMap0, lPos.xy + vec2(-texelSize, 0.0)).r + shadowsBias > lPos.z) * 0.25;')
-    #         frag.write('    visibility += float(texture(shadowMap0, lPos.xy + vec2(0.0, texelSize)).r + shadowsBias > lPos.z) * 0.5;')
-    #         frag.write('    visibility += float(texture(shadowMap0, lPos.xy + vec2(0.0, -texelSize)).r + shadowsBias > lPos.z) * 0.25;')
-    #         frag.write('    visibility /= 2.5;')
-    #         frag.write('    visibility = max(visibility, 0.2);')
-    #         # frag.write('    visibility = max(float(texture(shadowMap0, lPos.xy).r + shadowsBias > lPos.z), 0.5);')
-    #         frag.write('}')
-    #     frag.write('direct += basecol * dotNL * pointCol * attenuate(distance(wposition, pointPos)) * visibility;')
-    #     # frag.write('direct += vec3(D_Approx(max(roughness, 0.3), dot(reflect(-vVec, n), lightDir)));')
+    if '_Clusters' in wrd.world_defs:
+        frag.add_include('std/light_mobile.glsl')
+        frag.write('vec3 albedo = basecol;')
+        frag.write('vec3 f0 = surfaceF0(basecol, metallic);')
+        make_cluster.write(vert, frag)
 
     if '_Irr' in wrd.world_defs:
         frag.add_include('std/shirr.glsl')
@@ -766,58 +741,8 @@ def make_forward_base(con_mesh, parse_opacity=False):
             frag.write('  , true, spotData.x, spotData.y, spotDir')
         frag.write(');')
 
-    # if '_Clusters' in wrd.world_defs:
-    #     frag.add_include('std/light.glsl')
-    #     frag.add_include('std/clusters.glsl')
-    #     frag.add_uniform('vec2 cameraProj', link='_cameraPlaneProj')
-    #     frag.add_uniform('vec2 cameraPlane', link='_cameraPlane')
-    #     frag.add_uniform('vec4 lightsArray[maxLights * 2]', link='_lightsArray')
-    #     frag.add_uniform('sampler2D clustersData', link='_clustersData')
-    #     vert.add_out('vec4 wvpposition')
-    #     vert.write('wvpposition = gl_Position;')
-    #     # wvpposition.z / wvpposition.w
-    #     frag.write('float viewz = linearize(gl_FragCoord.z, cameraProj);')
-    #     frag.write('int clusterI = getClusterI((wvpposition.xy / wvpposition.w) * 0.5 + 0.5, viewz, cameraPlane);')
-    #     frag.write('int numLights = int(texelFetch(clustersData, ivec2(clusterI, 0), 0).r * 255);')
-
-    #     frag.write('#ifdef HLSL')
-    #     frag.write('viewz += texture(clustersData, vec2(0.0)).r * 1e-9;') # TODO: krafix bug, needs to generate sampler
-    #     frag.write('#endif')
-
-    #     frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
-    #     frag.write('int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')
-    #     frag.write('vec3 lp = lightsArray[li * 2].xyz;')
-    #     frag.write('vec3 ld = lp - wposition;')
-    #     frag.write('vec3 l = normalize(ld);')
-    #     frag.write('vec3 h = normalize(vVec + l);')
-    #     frag.write('float dotNH = dot(n, h);')
-    #     frag.write('float dotVH = dot(vVec, h);')
-    #     frag.write('float dotNL = dot(n, l);')
-    #     frag.write('float visibility = attenuate(distance(wposition, lp));')
-
-    #     if is_shadows:
-    #         frag.write('float bias = lightsArray[li * 2].w;')
-    #         if '_ShadowMapCube' in wrd.world_defs:
-    #             frag.add_uniform('vec2 lightProj', '_lightPlaneProj')
-    #             frag.add_uniform('samplerCube shadowMap0')
-    #             frag.write('visibility *= PCFCube(shadowMap0, ld, -l, bias, lightProj, n);')
-    #         else:
-    #             frag.add_uniform('sampler2D shadowMap0')
-    #             # frag.add_uniform('mat4 LWVP0;', link='_')
-    #             frag.write('vec4 lPos = LWVP0 * vec4(wposition + n * bias * 10, 1.0);')
-    #             frag.write('if (lPos.w > 0.0) {')
-    #             #ifdef _SMSizeUniform
-    #             #visibility *= shadowTest(shadowMap0, lPos.xyz / lPos.w, bias, smSizeUniform);
-    #             #else
-    #             frag.write('visibility *= shadowTest(shadowMap0, lPos.xyz / lPos.w, bias, shadowmapSize);')
-    #             #endif
-    #             frag.write('}')
-
-    #     frag.write('direct += (lambertDiffuseBRDF(albedo, dotNL) +')
-    #     frag.write('    specularBRDF(f0, roughness, dotNL, dotNH, dotNV, dotVH) * specular) *')
-    #     frag.write('    visibility * lightsArray[li * 2 + 1].xyz;')
-
-    #     frag.write('}') # numLights
+    if '_Clusters' in wrd.world_defs:
+        make_cluster.write(vert, frag)
 
     if '_Brdf' in wrd.world_defs:
         frag.add_uniform('sampler2D senvmapBrdf', link='_envmapBrdf')

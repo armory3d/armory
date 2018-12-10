@@ -217,7 +217,7 @@ void main() {
 			, i > numPoints - 1
 			, lightsArray[li * 2 + 1].w // cutoff
 			, lightsArraySpot[li].w // cutoff - exponent
-			, lightsArraySpot[li].xyz // spotDit
+			, lightsArraySpot[li].xyz // spotDir
 			#endif
 		);
 	}
