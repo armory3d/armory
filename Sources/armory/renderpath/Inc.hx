@@ -57,35 +57,19 @@ class Inc {
 			break;
 		}
 		for (i in 0...pointIndex) {
-			var n = "shadowMap" + i;
+			var n = "shadowMapPoint[" + i + "]";
 			path.bindTarget(n, n);
 		}
 		for (i in 0...spotIndex) {
-			var n = "shadowMapSpot" + i;
+			var n = "shadowMapSpot[" + i + "]";
 			path.bindTarget(n, n);
 		}
-
-		// var target = shadowMapName(l);
-		// if (target == "shadowMapCube") {
-		// 	#if kha_webgl
-		// 	// Bind empty map to non-cubemap sampler
-		// 	path.bindTarget("arm_empty", "shadowMap");
-		// 	#end
-		// 	path.bindTarget("shadowMapCube", "shadowMapCube");
-		// }
-		// else {
-		// 	#if kha_webgl
-		// 	// Bind empty map to cubemap sampler
-		// 	path.bindTarget("arm_empty_cube", "shadowMapCube");
-		// 	#end
-		// 	path.bindTarget("shadowMap", "shadowMap");
-		// }
 	}
 
 	static function shadowMapName(l:iron.object.LightObject):String {
 		if (l.data.raw.type == "sun") return "shadowMap";
-		if (l.data.raw.type == "point") return "shadowMap" + pointIndex; 
-		else return "shadowMapSpot" + spotIndex; 
+		if (l.data.raw.type == "point") return "shadowMapPoint[" + pointIndex + "]";
+		else return "shadowMapSpot[" + spotIndex + "]"; 
 	}
 
 	static function getShadowMap(l:iron.object.LightObject):String {
@@ -108,7 +92,9 @@ class Inc {
 				var sizew = path.light.data.raw.shadowmap_size;
 				var sizeh = sizew;
 				#if arm_csm // Cascades - atlas on x axis
-				sizew = sizew * iron.object.LightObject.cascadeCount;
+				if (l.data.raw.type == "sun") {
+					sizew = sizew * iron.object.LightObject.cascadeCount;
+				}
 				#end
 				var t = new RenderTargetRaw();
 				t.name = target;
@@ -129,7 +115,6 @@ class Inc {
 		for (l in iron.Scene.active.lights) {
 			if (!l.visible || !l.data.raw.cast_shadow) continue;
 			path.light = l;
-
 			var shadowmap = Inc.getShadowMap(l);
 			var faces = l.data.raw.shadowmap_cube ? 6 : 1;
 			for (i in 0...faces) {

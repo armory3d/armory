@@ -199,7 +199,13 @@ class Shader:
         uname = ar[-1]
         if utype.startswith('sampler') or utype.startswith('image') or utype.startswith('uimage'):
             is_image = True if (utype.startswith('image') or utype.startswith('uimage')) else None
-            self.context.add_texture_unit(utype, uname, link=link, is_image=is_image)
+            if uname[-1] == ']': # Array of samplers - sampler2D mySamplers[2]
+                # Add individual units - mySamplers[0], mySamplers[1]
+                for i in range(int(uname[-2])):
+                    uname_array = uname[:-2] + str(i) + ']'
+                    self.context.add_texture_unit(utype, uname_array, link=link, is_image=is_image)
+            else:
+                self.context.add_texture_unit(utype, uname, link=link, is_image=is_image)
         else:
             # Prefer vec4[] for d3d to avoid padding
             if ar[0] == 'float' and '[' in ar[1]:

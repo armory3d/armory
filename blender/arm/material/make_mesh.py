@@ -512,19 +512,28 @@ def make_forward_mobile(con_mesh):
         frag.write('vec3 ld = pointPos - wposition;')
         frag.write('vec3 l = normalize(ld);')
         frag.write('float dotNL = max(dot(n, l), 0.0);')
-        # if '_Spot' in wrd.world_defs:
-        #     frag.add_uniform('vec3 spotDir', link='_spotDirection')
-        #     frag.add_uniform('vec2 spotData', link='_spotData')
-        #     if is_shadows:
-        #         frag.add_uniform('sampler2D shadowMapSpot0', included=True)
-        if is_shadows:
+        if '_Spot' in wrd.world_defs:
+            frag.add_uniform('vec3 spotDir', link='_spotDirection')
+            frag.add_uniform('vec2 spotData', link='_spotData')
+            if is_shadows:
+                vert.add_out('vec4 spotPosition')
+                vert.add_uniform('mat4 LWVPSpot0', '_biasLightWorldViewProjectionMatrixSpot0')
+                vert.write('spotPosition = LWVPSpot0 * spos;')  
+                frag.add_uniform('float pointBias', link='_pointShadowsBias')
+                frag.add_uniform('sampler2D shadowMapSpot[1]')
+                frag.write('if (spotPosition.w > 0.0) {')
+                frag.write('    vec3 lPos = spotPosition.xyz / spotPosition.w;')
+                frag.write('    const float texelSize = 1.0 / shadowmapSize.x;')
+                frag.write('    visibility = float(texture(shadowMap, lPos.xy).r + pointBias > lPos.z);')
+                frag.write('}')
+        elif is_shadows:
             frag.add_include('std/shadows.glsl')
             frag.add_uniform('vec2 lightProj', link='_lightPlaneProj')
-            frag.add_uniform('samplerCube shadowMap0')
+            frag.add_uniform('samplerCube shadowMapPoint[1]')
             frag.add_uniform('float pointBias', link='_pointShadowsBias')
             frag.write('const float s = shadowmapCubePcfSize;') # TODO: incorrect...
             frag.write('float compare = lpToDepth(ld - n * pointBias * 80, lightProj);')
-            frag.write('visibility = step(compare, texture(shadowMap0, -l + n * pointBias * 80).r);')
+            frag.write('visibility = step(compare, texture(shadowMapPoint[0], -l + n * pointBias * 80).r);')
 
         frag.write('direct += basecol * dotNL * pointCol * attenuate(distance(wposition, pointPos)) * visibility;')
 
@@ -724,13 +733,17 @@ def make_forward_base(con_mesh, parse_opacity=False):
         frag.add_uniform('vec3 pointCol', link='_pointColor')
         if is_shadows:
             frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
-            frag.add_uniform('samplerCube shadowMap0', included=True)
+            frag.add_uniform('samplerCube shadowMapPoint[1]', included=True)
             frag.add_uniform('float pointBias', link='_pointShadowsBias')
         if '_Spot' in wrd.world_defs:
             frag.add_uniform('vec3 spotDir', link='_spotDirection')
             frag.add_uniform('vec2 spotData', link='_spotData')
             if is_shadows:
-                frag.add_uniform('sampler2D shadowMapSpot0', included=True)
+                frag.add_uniform('mat4 LWVPSpot0', '_biasLightWorldViewProjectionMatrixSpot0', included=True)
+                frag.add_uniform('mat4 LWVPSpot1', '_biasLightWorldViewProjectionMatrixSpot1', included=True)
+                frag.add_uniform('mat4 LWVPSpot2', '_biasLightWorldViewProjectionMatrixSpot2', included=True)
+                frag.add_uniform('mat4 LWVPSpot3', '_biasLightWorldViewProjectionMatrixSpot3', included=True)
+                frag.add_uniform('sampler2D shadowMapSpot[4]', included=True)
         frag.write('direct += sampleLight(')
         frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0')
         if is_shadows:
@@ -782,7 +795,6 @@ def make_forward_base(con_mesh, parse_opacity=False):
             frag.write('vec3 voxpos = wposition / voxelgiHalfExtents;')
         if '_VoxelAO' in wrd.world_defs:
             frag.write('indirect *= vec3(1.0 - traceAO(voxpos, n, voxels));')
-            # frag.write('indirect = vec3(1.0 - traceAO(voxpos, n, voxels));') # AO view
         else:
             frag.write('vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels);')
             frag.write('indirect = indirect * voxelgiEnv + vec3(indirectDiffuse.rgb * voxelgiDiff * basecol);')

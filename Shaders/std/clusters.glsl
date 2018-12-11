@@ -1,6 +1,6 @@
 
 const int maxLights = 16;
-const int maxLightsCluster = 8;
+const int maxLightsCluster = 4; // Ensure fast loop unroll before going higher
 const float clusterNear = 3.0;
 const vec3 clusterSlices = vec3(16, 16, 16);
 

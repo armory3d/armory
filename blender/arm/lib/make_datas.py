@@ -148,44 +148,50 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
                         found = True
                         break
                 if found == False:
-                    tu = {}
-                    tu['name'] = cid
-                    # sampler2D / image2D
-                    if ctype.startswith('image') or ctype.startswith('uimage'):
-                        tu['is_image'] = True
-                    # Check for link
-                    for l in c['links']:
-                        if l['name'] == cid:
-                            valid_link = True
+                    if cid[-1] == ']': # Array of samplers - sampler2D mySamplers[2]
+                        # Add individual units - mySamplers[0], mySamplers[1]
+                        for i in range(int(cid[-2])):
+                            tu = {}
+                            con['texture_units'].append(tu)
+                            tu['name'] = cid[:-2] + str(i) + ']'
+                    else:
+                        tu = {}
+                        con['texture_units'].append(tu)
+                        tu['name'] = cid
+                        if ctype.startswith('image') or ctype.startswith('uimage'):
+                            tu['is_image'] = True
+                        # Check for link
+                        for l in c['links']:
+                            if l['name'] == cid:
+                                valid_link = True
 
-                            if 'ifdef' in l:
-                                def_found = False
-                                for d in defs:
-                                    for link_def in l['ifdef']:
-                                        if d == link_def:
-                                            def_found = True
+                                if 'ifdef' in l:
+                                    def_found = False
+                                    for d in defs:
+                                        for link_def in l['ifdef']:
+                                            if d == link_def:
+                                                def_found = True
+                                                break
+                                        if def_found:
+                                            break
+                                    if not def_found:
+                                        valid_link = False
+
+                                if 'ifndef' in l:
+                                    def_found = False
+                                    for d in defs:
+                                        for link_def in l['ifndef']:
+                                            if d == link_def:
+                                                def_found = True
+                                                break
+                                        if def_found:
                                             break
                                     if def_found:
-                                        break
-                                if not def_found:
-                                    valid_link = False
+                                        valid_link = False
 
-                            if 'ifndef' in l:
-                                def_found = False
-                                for d in defs:
-                                    for link_def in l['ifndef']:
-                                        if d == link_def:
-                                            def_found = True
-                                            break
-                                    if def_found:
-                                        break
-                                if def_found:
-                                    valid_link = False
-
-                            if valid_link:
-                                tu['link'] = l['link']
-                            break
-                    con['texture_units'].append(tu)
+                                if valid_link:
+                                    tu['link'] = l['link']
+                                break
             else: # Constant
                 if cid.find('[') != -1: # Float arrays
                     cid = cid.split('[')[0]
@@ -196,6 +202,7 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
                         break
                 if found == False:
                     const = {}
+                    con['constants'].append(const)
                     const['type'] = ctype
                     const['name'] = cid
                     # Check for link
@@ -230,7 +237,6 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
                             if valid_link:
                                 const['link'] = l['link']
                             break
-                    con['constants'].append(const)
 
 def make(res, base_name, json_data, fp, defs):
     sres = {}
