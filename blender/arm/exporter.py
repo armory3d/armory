@@ -25,6 +25,7 @@ import arm.material.make as make_material
 import arm.material.mat_batch as mat_batch
 import arm.make_renderpath as make_renderpath
 import arm.material.cycles as cycles
+import numpy as np
 
 NodeTypeNode = 0
 NodeTypeBone = 1
@@ -1362,10 +1363,9 @@ class ArmoryExporter:
         else:
             self.output['mesh_datas'].append(o)
 
-    def make_va(self, attrib, size, values):
+    def make_va(self, attrib, values):
         va = {}
         va['attrib'] = attrib
-        va['size'] = size
         va['values'] = values
         return va
 
@@ -1383,8 +1383,8 @@ class ArmoryExporter:
         has_col = self.get_export_vcols(exportMesh) == True and num_colors > 0
         has_tang = self.has_tangents(exportMesh)
 
-        vdata = [0] * num_verts * 3
-        ndata = [0] * num_verts * 3
+        vdata = [0.0] * num_verts * 3
+        ndata = [0.0] * num_verts * 3
         if has_tex:
             # Get active uvmap
             t0map = 0
@@ -1405,28 +1405,28 @@ class ArmoryExporter:
                             break
             t1map = 1 if t0map == 0 else 0
             # Alloc data
-            t0data = [0] * num_verts * 2
+            t0data = np.empty([num_verts * 2], dtype=np.int16)
             if has_tex1:
-                t1data = [0] * num_verts * 2
+                t1data = np.empty([num_verts * 2], dtype=np.int16)
         if has_col:
-            cdata = [0] * num_verts * 3
+            cdata = np.empty([num_verts * 3], dtype=np.int16)
 
-
-        # va_stride = 3 + 3 # pos + nor
-        # va_name = 'pos_nor'
-        # if has_tex:
-        #     va_stride += 2
-        #     va_name += '_tex'
-        #     if has_tex1:
-        #         va_stride += 2
-        #         va_name += '_tex1'
-        # if has_col > 0:
-        #     va_stride += 3
-        #     va_name += '_col'
-        # if has_tang:
-        #     va_stride += 3
-        #     va_name += '_tang'
-        # vdata = [0] * num_verts * va_stride
+        if has_tex:
+            xmax = 1.0
+            ymax = 1.0
+            for vtx in vert_list:
+                if abs(vtx.uvs[t0map][0]) > xmax:
+                    xmax = abs(vtx.uvs[t0map][0])
+                if abs(vtx.uvs[t0map][1]) > ymax:
+                    ymax = abs(vtx.uvs[t0map][1])
+            # Scale for packed coords
+            maxdim = max(xmax, ymax)
+            if maxdim > 1:
+                o['scale_tex'] = maxdim
+                invscale = 1 / o['scale_tex']
+            else:
+                invscale = 1
+            # TODO: handle t1map
 
         # Make arrays
         for i, vtx in enumerate(vert_list):
@@ -1437,32 +1437,72 @@ class ArmoryExporter:
                 vdata[(i * 3) + j] = co[j]
                 ndata[(i * 3) + j] = normal[j]
             if has_tex:
-                t0data[i * 2] = vtx.uvs[t0map][0]
-                t0data[i * 2 + 1] = 1.0 - vtx.uvs[t0map][1] # Reverse TCY
+                t0data[i * 2    ] = np.int16((vtx.uvs[t0map][0] * invscale) * 32767) 
+                t0data[i * 2 + 1] = np.int16(((1.0 - vtx.uvs[t0map][1]) * invscale) * 32767) # Reverse Y
                 if has_tex1:
-                    t1data[i * 2] = vtx.uvs[t1map][0]
-                    t1data[i * 2 + 1] = 1.0 - vtx.uvs[t1map][1]
+                    t1data[i * 2    ] = np.int16((vtx.uvs[t1map][0] * invscale) * 32767) 
+                    t1data[i * 2 + 1] = np.int16(((1.0 - vtx.uvs[t1map][1]) * invscale) * 32767)
             if has_col > 0:
-                cdata[i * 3] = pow(vtx.col[0], 2.2)
-                cdata[i * 3 + 1] = pow(vtx.col[1], 2.2)
-                cdata[i * 3 + 2] = pow(vtx.col[2], 2.2)
+                cdata[i * 4    ] = np.int16(pow(vtx.col[0], 2.2) * 32767)
+                cdata[i * 4 + 1] = np.int16(pow(vtx.col[1], 2.2) * 32767)
+                cdata[i * 4 + 2] = np.int16(pow(vtx.col[2], 2.2) * 32767)
+
+        # Save aabb
+        aabb_min = [-0.01, -0.01, -0.01]
+        aabb_max = [0.01, 0.01, 0.01]
+        i = 0
+        while i < len(vdata):
+            if vdata[i] > aabb_max[0]:
+                aabb_max[0] = vdata[i]
+            if vdata[i + 1] > aabb_max[1]:
+                aabb_max[1] = vdata[i + 1]
+            if vdata[i + 2] > aabb_max[2]:
+                aabb_max[2] = vdata[i + 2]
+            if vdata[i] < aabb_min[0]:
+                aabb_min[0] = vdata[i]
+            if vdata[i + 1] < aabb_min[1]:
+                aabb_min[1] = vdata[i + 1]
+            if vdata[i + 2] < aabb_min[2]:
+                aabb_min[2] = vdata[i + 2]
+            i += 3
+        bobject.data.arm_aabb = [abs(aabb_min[0]) + abs(aabb_max[0]), abs(aabb_min[1]) + abs(aabb_max[1]), abs(aabb_min[2]) + abs(aabb_max[2])]
+        # Not axis-aligned
+        # arm_aabb = [bobject.matrix_world * Vector(v) for v in bobject.bound_box]
+
+        # Scale for packed coords
+        maxdim = max(bobject.data.arm_aabb[0], max(bobject.data.arm_aabb[1], bobject.data.arm_aabb[2]))
+        o['scale_pos'] = maxdim / 2
+        invscale = 1 / o['scale_pos']
 
         # Output
         o['vertex_arrays'] = []
-        pa = self.make_va('pos', 3, vdata)
+        half = np.empty([num_verts * 4], dtype=np.int16)
+        for i in range(num_verts):
+            half[i * 4    ] = np.int16((vdata[i * 3    ] * invscale) * 32767) # p.x
+            half[i * 4 + 1] = np.int16((vdata[i * 3 + 1] * invscale) * 32767) # p.y
+            half[i * 4 + 2] = np.int16((vdata[i * 3 + 2] * invscale) * 32767) # p.z
+            half[i * 4 + 3] = np.int16( ndata[i * 3 + 2] * 32767) # n.z
+        
+        pa = self.make_va('pos', half)
         o['vertex_arrays'].append(pa)
-        na = self.make_va('nor', 3, ndata)
+
+        half = np.empty([num_verts * 2], dtype=np.int16)
+        for i in range(num_verts):
+            half[i * 2    ] = np.int16(ndata[i * 3    ] * 32767) # n.x
+            half[i * 2 + 1] = np.int16(ndata[i * 3 + 1] * 32767) # n.y
+
+        na = self.make_va('nor', half)
         o['vertex_arrays'].append(na)
 
         if has_tex:
-            ta = self.make_va('tex', 2, t0data)
+            ta = self.make_va('tex', t0data)
             o['vertex_arrays'].append(ta)
             if has_tex1:
-                ta1 = self.make_va('tex1', 2, t1data)
+                ta1 = self.make_va('tex1', t1data)
                 o['vertex_arrays'].append(ta1)
 
         if has_col:
-            ca = self.make_va('col', 3, cdata)
+            ca = self.make_va('col', cdata)
             o['vertex_arrays'].append(ca)
 
         # Indices
@@ -1557,7 +1597,7 @@ class ArmoryExporter:
         # Make tangents
         if has_tang:
             tanga_vals = self.calc_tangents(pa['values'], na['values'], ta['values'], o['index_arrays'])
-            tanga = self.make_va('tang', 3, tanga_vals)
+            tanga = self.make_va('tang', tanga_vals)
             o['vertex_arrays'].append(tanga)
 
         return vert_list
@@ -1664,42 +1704,6 @@ class ArmoryExporter:
         vert_list = self.export_mesh_data(exportMesh, bobject, o)
         if armature:
             self.export_skin(bobject, armature, vert_list, o)
-
-        # Save aabb
-        for va in o['vertex_arrays']:
-            if va['attrib'].startswith('pos'):
-                positions = va['values']
-                stride = 0
-                ar = va['attrib'].split('_')
-                for a in ar:
-                    if a == 'pos' or a == 'nor' or a == 'col' or a == 'tang':
-                        stride += 3
-                    elif a == 'tex' or a == 'tex1':
-                        stride += 2
-                    elif a == 'bone' or a == 'weight':
-                        stride += 4
-                aabb_min = [-0.01, -0.01, -0.01]
-                aabb_max = [0.01, 0.01, 0.01]
-                i = 0
-                while i < len(positions):
-                    if positions[i] > aabb_max[0]:
-                        aabb_max[0] = positions[i]
-                    if positions[i + 1] > aabb_max[1]:
-                        aabb_max[1] = positions[i + 1]
-                    if positions[i + 2] > aabb_max[2]:
-                        aabb_max[2] = positions[i + 2]
-                    if positions[i] < aabb_min[0]:
-                        aabb_min[0] = positions[i]
-                    if positions[i + 1] < aabb_min[1]:
-                        aabb_min[1] = positions[i + 1]
-                    if positions[i + 2] < aabb_min[2]:
-                        aabb_min[2] = positions[i + 2]
-                    i += stride
-                if hasattr(bobject.data, 'arm_aabb'):
-                    bobject.data.arm_aabb = [abs(aabb_min[0]) + abs(aabb_max[0]), abs(aabb_min[1]) + abs(aabb_max[1]), abs(aabb_min[2]) + abs(aabb_max[2])]
-                break
-        # Not axis-aligned
-        # arm_aabb = [bobject.matrix_world * Vector(v) for v in bobject.bound_box]
 
         # Restore the morph state
         if shapeKeys:
@@ -2043,7 +2047,7 @@ class ArmoryExporter:
             vcol_export = False
             vs_str = ''
             for con in sd['contexts']:
-                for elem in con['vertex_structure']:
+                for elem in con['vertex_elements']:
                     if len(vs_str) > 0:
                         vs_str += ','
                     vs_str += elem['name']

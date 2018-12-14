@@ -1,6 +1,7 @@
 import arm.material.cycles as cycles
 import arm.material.mat_state as mat_state
 import arm.material.make_mesh as make_mesh
+import arm.material.make_finalize as make_finalize
 import arm.assets as assets
 
 def make(context_id):
@@ -31,7 +32,7 @@ def make(context_id):
 	frag.write('fragColor[0] = vec4(premultipliedReflect.rgb * w, premultipliedReflect.a);')
 	frag.write('fragColor[1] = vec4(premultipliedReflect.a * w, 0.0, 0.0, 1.0);')
 
-	make_mesh.make_finalize(con_transluc)
+	make_finalize.make(con_transluc)
 
 	# assets.vs_equal(con_transluc, assets.shader_cons['transluc_vert']) # shader_cons has no transluc yet
     # assets.fs_equal(con_transluc, assets.shader_cons['transluc_frag'])

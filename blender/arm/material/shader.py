@@ -18,7 +18,7 @@ class ShaderData:
         con = ShaderContext(self.material, self.sd, props)
         if con not in self.sd['contexts']:
             for elem in self.global_elems:
-                con.add_elem(elem['name'], elem['size'])
+                con.add_elem(elem['name'], elem['data'])
             self.sd['contexts'].append(con.get())
         return con
 
@@ -41,10 +41,10 @@ class ShaderContext:
         self.data['depth_write'] = props['depth_write']
         self.data['compare_mode'] = props['compare_mode']
         self.data['cull_mode'] = props['cull_mode']
-        if 'vertex_structure' in props:
-            self.data['vertex_structure'] = props['vertex_structure']
+        if 'vertex_elements' in props:
+            self.data['vertex_elements'] = props['vertex_elements']
         else:
-            self.data['vertex_structure'] = [{'name': 'pos', 'size': 3}, {'name': 'nor', 'size': 3}]
+            self.data['vertex_elements'] = [{'name': 'pos', 'data': 'short4norm'}, {'name': 'nor', 'data': 'short2norm'}] # (p.xyz, n.z), (n.xy)
         if 'blend_source' in props:
             self.data['blend_source'] = props['blend_source']
         if 'blend_destination' in props:
@@ -79,10 +79,10 @@ class ShaderContext:
         self.data['constants'] = []
         self.constants = self.data['constants']
 
-    def add_elem(self, name, size):
-        elem = { 'name': name, 'size': size }
-        if elem not in self.data['vertex_structure']:
-            self.data['vertex_structure'].append(elem)
+    def add_elem(self, name, data):
+        elem = { 'name': name, 'data': data }
+        if elem not in self.data['vertex_elements']:
+            self.data['vertex_elements'].append(elem)
             self.sort_vs()
 
     def sort_vs(self):
@@ -93,16 +93,16 @@ class ShaderContext:
             elem = self.get_elem(ename)
             if elem != None:
                 vs.append(elem)
-        self.data['vertex_structure'] = vs
+        self.data['vertex_elements'] = vs
 
     def is_elem(self, name):
-        for elem in self.data['vertex_structure']:
+        for elem in self.data['vertex_elements']:
             if elem['name'] == name:
                 return True
         return False
 
     def get_elem(self, name):
-        for elem in self.data['vertex_structure']:
+        for elem in self.data['vertex_elements']:
             if elem['name'] == name:
                 return elem
         return None
@@ -262,12 +262,26 @@ class Shader:
                self.main_textures == sh.main_textures and \
                self.main_attribs == sh.main_attribs
 
+    def data_size(self, data):
+        if data == 'float1':
+            return '1'
+        elif data == 'float2':
+            return '2'
+        elif data == 'float3':
+            return '3'
+        elif data == 'float4':
+            return '4'
+        elif data == 'short2norm':
+            return '2'
+        elif data == 'short4norm':
+            return '4'
+
     def vstruct_to_vsin(self):
         if self.shader_type != 'vert' or self.ins != [] or not self.vstruct_as_vsin: # Vertex structure as vertex shader input
             return
-        vs = self.context.data['vertex_structure']
+        vs = self.context.data['vertex_elements']
         for e in vs:
-            self.add_in('vec' + str(e['size']) + ' ' + e['name'])
+            self.add_in('vec' + self.data_size(e['data']) + ' ' + e['name'])
 
     def get(self):
         if self.noprocessing:

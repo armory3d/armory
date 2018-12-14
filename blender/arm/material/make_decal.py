@@ -1,7 +1,7 @@
 import arm.material.cycles as cycles
 import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
-import arm.material.make_mesh as make_mesh
+import arm.material.make_finalize as make_finalize
 import arm.utils
 
 def make(context_id):
@@ -25,7 +25,7 @@ def make(context_id):
     vert.add_out('vec3 wnormal')
 
     vert.write('wnormal = N * vec3(0.0, 0.0, 1.0);')
-    vert.write('wvpposition = WVP * vec4(pos, 1.0);')
+    vert.write('wvpposition = WVP * vec4(pos.xyz, 1.0);')
     vert.write('gl_Position = wvpposition;')
     
     frag.add_include('compiled.inc')
@@ -65,6 +65,6 @@ def make(context_id):
     frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), opacity);')
     frag.write('fragColor[1] = vec4(basecol.rgb, opacity);')
 
-    make_mesh.make_finalize(con_decal)
+    make_finalize.make(con_decal)
 
     return con_decal

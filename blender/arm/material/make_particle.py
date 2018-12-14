@@ -95,5 +95,5 @@ def write_tilesheet(vert):
     vert.write('int tx = frame % int(pd[3][0]);')
     vert.write('int ty = int(frame / pd[3][0]);')
     vert.write('vec2 tilesheetOffset = vec2(tx * (1 / pd[3][0]), ty * (1 / pd[3][1]));')
-    vert.write('texCoord = tex + tilesheetOffset;')
+    vert.write('texCoord = tex * texUnpack + tilesheetOffset;')
     # vert.write('texCoord = tex;')

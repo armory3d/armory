@@ -31,15 +31,15 @@ def parse(material, mat_data, mat_users, mat_armusers):
         sd = {}
         sd['contexts'] = []
         con = {}
-        con['vertex_structure'] = []
+        con['vertex_elements'] = []
         elem = {}
         elem['name'] = 'pos'
-        elem['size'] = 3
-        con['vertex_structure'].append(elem)
+        elem['data'] = 'short4norm'
+        con['vertex_elements'].append(elem)
         elem = {}
         elem['name'] = 'nor'
-        elem['size'] = 3
-        con['vertex_structure'].append(elem)
+        elem['data'] = 'short2norm'
+        con['vertex_elements'].append(elem)
         sd['contexts'].append(con)
         shader_data_name = material.arm_custom_material
         bind_constants = {}

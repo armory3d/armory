@@ -97,7 +97,7 @@ class PhysicsHook extends Trait {
 			#end
 
 			var geom = cast(object, MeshObject).data.geom;
-			var numNodes = Std.int(geom.positions.length / 3);
+			var numNodes = Std.int(geom.positions.length / 4);
 			for (i in 0...numNodes) {
 				var node = nodes.at(i);
 				#if js

@@ -336,7 +336,7 @@ class KinematicCharacterController extends Trait {
 		var sy = scale.y * (1.0 - margin);
 		var sz = scale.z * (1.0 - margin);
 
-		for (i in 0...Std.int(positions.length / 3)) {
+		for (i in 0...Std.int(positions.length / 4)) {
 			vec1.setX(positions[i * 3] * sx);
 			vec1.setY(positions[i * 3 + 1] * sy);
 			vec1.setZ(positions[i * 3 + 2] * sz);

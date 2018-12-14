@@ -42,15 +42,15 @@ def build(material, mat_users, mat_armusers):
         for bo in mat_users[material]:
             # GPU Skinning
             if arm.utils.export_bone_data(bo):
-                global_elems.append({'name': 'bone', 'size': 4})
-                global_elems.append({'name': 'weight', 'size': 4})
+                global_elems.append({'name': 'bone', 'data': 'short4norm'})
+                global_elems.append({'name': 'weight', 'data': 'short4norm'})
             # Instancing
             if bo.arm_instanced != 'Off' or material.arm_particle_flag:
-                global_elems.append({'name': 'ipos', 'size': 3})
+                global_elems.append({'name': 'ipos', 'data': 'float3'})
                 if bo.arm_instanced == 'Loc + Rot' or bo.arm_instanced == 'Loc + Rot + Scale':
-                    global_elems.append({'name': 'irot', 'size': 3})
+                    global_elems.append({'name': 'irot', 'data': 'float3'})
                 if bo.arm_instanced == 'Loc + Scale' or bo.arm_instanced == 'Loc + Rot + Scale':
-                    global_elems.append({'name': 'iscl', 'size': 3})
+                    global_elems.append({'name': 'iscl', 'data': 'float3'})
                 
     mat_state.data.global_elems = global_elems
 

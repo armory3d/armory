@@ -41,7 +41,7 @@ class CyclesShaderContext {
 			alpha_blend_operation: props.alpha_blend_operation,
 			fragment_shader: '',
 			vertex_shader: '',
-			vertex_structure: Reflect.hasField(props, 'vertex_structure') ? props.vertex_structure : [ {name: "pos", size: 3}, {name: "nor", size: 3}]
+			vertex_elements: Reflect.hasField(props, 'vertex_elements') ? props.vertex_elements : [ {name: "pos", data: 'short4norm'}, {name: "nor", data: 'short2norm'}]
 		};
 
 		if (props.color_write_red != null)
@@ -65,23 +65,23 @@ class CyclesShaderContext {
 		constants = data.constants = [];
 	}
 
-	public function add_elem(name:String, size:Int) {
-		for (e in data.vertex_structure) {
+	public function add_elem(name:String, data:String) {
+		for (e in data.vertex_elements) {
 			if (e.name == name) return;
 		}
-		var elem:TVertexData = { name: name, size: size };
-		data.vertex_structure.push(elem);
+		var elem:TVertexElement = { name: name, data: data };
+		data.vertex_elements.push(elem);
 	}
 
 	public function is_elem(name:String) {
-		for (elem in data.vertex_structure)
+		for (elem in data.vertex_elements)
 			if (elem.name == name)
 				return true;
 		return false;
 	}
 
-	public function get_elem(name:String):TVertexData {
-		for (elem in data.vertex_structure) {
+	public function get_elem(name:String):TVertexElement {
+		for (elem in data.vertex_elements) {
 			#if cpp
 			if (Reflect.field(elem, "name") == name)
 			#else
@@ -259,7 +259,7 @@ class CyclesShader {
 	function vstruct_to_vsin() {
         // if self.shader_type != 'vert' or self.ins != [] or not self.vstruct_as_vsin: # Vertex structure as vertex shader input
             // return
-        var vs = context.data.vertex_structure;
+        var vs = context.data.vertex_elements;
 		for (e in vs) {
 			add_in('vec' + e.size + ' ' + e.name);
 		}

@@ -9,11 +9,16 @@
 #endif
 
 #ifdef _ShadowMap
+#ifdef _SinglePoint
+const int shadowMapCount = 1;
+#else
+const int shadowMapCount = 4;
+#endif
 	uniform vec2 lightProj;
-	// uniform samplerCubeShadow shadowMapPoint[4]; //arm_dev
-	uniform samplerCube shadowMapPoint[4];
+	// uniform samplerCubeShadow shadowMapPoint[shadowMapCount]; //arm_dev
+	uniform samplerCube shadowMapPoint[shadowMapCount];
 	#ifdef _Spot
-	uniform sampler2D shadowMapSpot[4];
+	uniform sampler2D shadowMapSpot[shadowMapCount];
 	uniform mat4 LWVPSpot0;
 	uniform mat4 LWVPSpot1;
 	uniform mat4 LWVPSpot2;
@@ -51,6 +56,10 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 			direct *= smoothstep(spotB, spotA, spotEffect);
 		}
 		#ifdef _ShadowMap
+		#ifdef _SinglePoint
+		vec4 lPos = LWVPSpot0 * vec4(p + n * bias * 10, 1.0);
+		direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias, shadowmapSize);
+		#else
 		if (index == 0) {
 			vec4 lPos = LWVPSpot0 * vec4(p + n * bias * 10, 1.0);
 			direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias, shadowmapSize);
@@ -67,6 +76,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 			vec4 lPos = LWVPSpot3 * vec4(p + n * bias * 10, 1.0);
 			direct *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias, shadowmapSize);
 		}
+		#endif
 		#endif
 		return direct;
 	}
@@ -95,11 +105,14 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	// #endif
 
 	#ifdef _ShadowMap
-	// Oh well..
+	#ifdef _SinglePoint
+	direct *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
+	#else
 	if (index == 0) direct *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
 	else if (index == 1) direct *= PCFCube(shadowMapPoint[1], ld, -l, bias, lightProj, n);
 	else if (index == 2) direct *= PCFCube(shadowMapPoint[2], ld, -l, bias, lightProj, n);
 	else if (index == 3) direct *= PCFCube(shadowMapPoint[3], ld, -l, bias, lightProj, n);
+	#endif
 	#endif
 
 	return direct;

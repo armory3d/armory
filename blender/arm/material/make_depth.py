@@ -6,7 +6,7 @@ import arm.material.make_skin as make_skin
 import arm.material.make_inst as make_inst
 import arm.material.make_tess as make_tess
 import arm.material.make_particle as make_particle
-import arm.material.make_mesh as make_mesh
+import arm.material.make_finalize as make_finalize
 import arm.assets as assets
 import arm.utils
 
@@ -14,9 +14,9 @@ def make(context_id, rpasses, shadowmap=False):
 
     is_disp = mat_utils.disp_linked(mat_state.output_node)
 
-    vs = [{'name': 'pos', 'size': 3}]
+    vs = [{'name': 'pos', 'data': 'short4norm'}]
     if is_disp:
-        vs.append({'name': 'nor', 'size': 3})
+        vs.append({'name': 'nor', 'data': 'short2norm'})
 
     con_depth = mat_state.data.add_context({ 'name': context_id, 'vertex_structure': vs, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False })
 
@@ -26,7 +26,7 @@ def make(context_id, rpasses, shadowmap=False):
     tesc = None
     tese = None
 
-    vert.write_attrib('vec4 spos = vec4(pos, 1.0);')
+    vert.write_attrib('vec4 spos = vec4(pos.xyz, 1.0);')
 
     parse_opacity = 'translucent' in rpasses or mat_state.material.arm_discard
     if parse_opacity:
@@ -51,10 +51,12 @@ def make(context_id, rpasses, shadowmap=False):
             cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=parse_opacity)
             if con_depth.is_elem('tex'):
                 vert.add_out('vec2 texCoord') ## vs only, remove out
-                vert.write_attrib('texCoord = tex;')
+                vert.add_uniform('float texUnpack', link='_texUnpack')
+                vert.write_attrib('texCoord = tex * texUnpack;')
             if con_depth.is_elem('tex1'):
                 vert.add_out('vec2 texCoord1') ## vs only, remove out
-                vert.write_attrib('texCoord1 = tex1;')
+                vert.add_uniform('float texUnpack', link='_texUnpack')
+                vert.write_attrib('texCoord1 = tex1 * texUnpack;')
             if con_depth.is_elem('col'):
                 vert.add_out('vec3 vcolor')
                 vert.write_attrib('vcolor = col;')
@@ -75,7 +77,7 @@ def make(context_id, rpasses, shadowmap=False):
 
             vert.add_out('vec3 wnormal')
             vert.add_uniform('mat3 N', '_normalMatrix')
-            vert.write('wnormal = normalize(N * nor);')
+            vert.write('wnormal = normalize(N * vec3(nor.xy, pos.w));')
             
             make_tess.tesc_levels(tesc, rpdat.arm_tess_shadows_inner, rpdat.arm_tess_shadows_outer)
             make_tess.interpolate(tese, 'wposition', 3)
@@ -85,7 +87,8 @@ def make(context_id, rpasses, shadowmap=False):
 
             if con_depth.is_elem('tex'):
                 vert.add_out('vec2 texCoord')
-                vert.write('texCoord = tex;')
+                vert.add_uniform('float texUnpack', link='_texUnpack')
+                vert.write('texCoord = tex * texUnpack;')
                 tese.write_pre = True
                 make_tess.interpolate(tese, 'texCoord', 2, declare_out=frag.contains('texCoord'))
                 tese.write_pre = False
@@ -138,11 +141,12 @@ def make(context_id, rpasses, shadowmap=False):
 
             if con_depth.is_elem('tex'):
                 vert.add_out('vec2 texCoord')
+                vert.add_uniform('float texUnpack', link='_texUnpack')
                 if mat_state.material.arm_tilesheet_mat:
                     vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
-                    vert.write('texCoord = tex + tilesheetOffset;')
+                    vert.write('texCoord = tex * texUnpack + tilesheetOffset;')
                 else:
-                    vert.write('texCoord = tex;')
+                    vert.write('texCoord = tex * texUnpack;')
 
             if con_depth.is_elem('tex1'):
                 vert.add_out('vec2 texCoord1')
@@ -156,7 +160,7 @@ def make(context_id, rpasses, shadowmap=False):
         opac = mat_state.material.arm_discard_opacity_shadows
         frag.write('if (opacity < {0}) discard;'.format(opac))
 
-    make_mesh.make_finalize(con_depth)
+    make_finalize.make(con_depth)
 
     assets.vs_equal(con_depth, assets.shader_cons['depth_vert'])
     assets.fs_equal(con_depth, assets.shader_cons['depth_frag'])

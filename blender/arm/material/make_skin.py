@@ -24,7 +24,7 @@ def skin_nor(vert, prep):
     rpdat = arm.utils.get_rp()
     if rpdat.arm_skin == 'GPU (Matrix)':
         vert.write('mat3 skinningMatVec = getSkinningMatVec(skinningMat);')
-        vert.write(prep + 'wnormal = normalize(N * (nor * skinningMatVec));')
+        vert.write(prep + 'wnormal = normalize(N * (vec3(nor.xy, pos.w) * skinningMatVec));')
 
     else: # Dual Quat
-        vert.write(prep + 'wnormal = normalize(N * (nor + 2.0 * cross(skinA.xyz, cross(skinA.xyz, nor) + skinA.w * nor)));')
+        vert.write(prep + 'wnormal = normalize(N * (vec3(nor.xy, pos.w) + 2.0 * cross(skinA.xyz, cross(skinA.xyz, vec3(nor.xy, pos.w)) + skinA.w * vec3(nor.xy, pos.w))));')

@@ -22,6 +22,7 @@
 #
 import struct
 import io
+import numpy as np
 
 def _pack_integer(obj, fp):
     if obj < 0:
@@ -105,6 +106,11 @@ def _pack_array(obj, fp):
         fp.write(b"\xd2")
         for e in obj:
             fp.write(struct.pack(">i", e))
+    # Int16
+    elif len(obj) > 0 and isinstance(obj[0], np.int16):
+        fp.write(b"\xd1")
+        for e in obj:
+            fp.write(struct.pack(">h", e))
     # Regular
     else:
         for e in obj:
@@ -137,7 +143,7 @@ def pack(obj, fp):
         _pack_string(obj, fp)
     elif isinstance(obj, bytes):
         _pack_binary(obj, fp)
-    elif isinstance(obj, list) or isinstance(obj, tuple):
+    elif isinstance(obj, list) or isinstance(obj, tuple) or isinstance(obj, np.ndarray):
         _pack_array(obj, fp)
     elif isinstance(obj, dict):
         _pack_map(obj, fp)

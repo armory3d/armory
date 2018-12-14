@@ -141,16 +141,16 @@ class Cycles {
 		if (frag.wposition) {
 			vert.add_uniform('mat4 W', '_worldMatrix');
 			vert.add_out('vec3 wposition');
-			vert.write_attrib('wposition = vec4(W * vec4(pos, 1.0)).xyz;');
+			vert.write_attrib('wposition = vec4(W * vec4(pos.xyz, 1.0)).xyz;');
 		}
 		else if (vert.wposition) {
 			vert.add_uniform('mat4 W', '_worldMatrix');
-			vert.write_attrib('vec3 wposition = vec4(W * vec4(pos, 1.0)).xyz;');
+			vert.write_attrib('vec3 wposition = vec4(W * vec4(pos.xyz, 1.0)).xyz;');
 		}
 		if (frag.vposition) {
 			vert.add_uniform('mat4 WV', '_worldViewMatrix');
 			vert.add_out('vec3 vposition');
-			vert.write_attrib('vposition = vec4(WV * vec4(pos, 1.0)).xyz;');
+			vert.write_attrib('vposition = vec4(WV * vec4(pos.xyz, 1.0)).xyz;');
 		}
 		if (frag.mposition) {
 			vert.add_out('vec3 mposition');
@@ -162,7 +162,7 @@ class Cycles {
 			}
 		}
 		if (frag.wtangent) {
-			con.add_elem('tang', 3);
+			con.add_elem('tang', 'short4norm');
 			vert.add_uniform('mat3 N', '_normalMatrix');
 			vert.add_out('vec3 wtangent');
 			vert.write_attrib('wtangent = normalize(N * tang);');
@@ -170,7 +170,7 @@ class Cycles {
 		if (frag.vVecCam) {
 			vert.add_uniform('mat4 WV', '_worldViewMatrix');
 			vert.add_out('vec3 eyeDirCam');
-			vert.write_attrib('eyeDirCam = vec4(WV * vec4(pos, 1.0)).xyz; eyeDirCam.z *= -1.0;');
+			vert.write_attrib('eyeDirCam = vec4(WV * vec4(pos.xyz, 1.0)).xyz; eyeDirCam.z *= -1.0;');
 			frag.write_attrib('vec3 vVecCam = normalize(eyeDirCam);');
 		}
 		if (frag.vVec) {
@@ -437,12 +437,12 @@ class Cycles {
 
 		if (node.type == 'ATTRIBUTE') {
 			if (socket == node.outputs[0]) { // Color
-				curshader.context.add_elem('col', 3); // Vcols only for now
+				curshader.context.add_elem('col', 'short4norm'); // Vcols only for now
 				// return 'vcolor';
 				return 'vec3(0.0)';
 			}
 			else { // Vector
-				curshader.context.add_elem('tex', 2); // UVMaps only for now
+				curshader.context.add_elem('tex', 'short2norm'); // UVMaps only for now
 				// mat = mat_get_material()
 				// mat_users = mat_get_material_users()
 				// if mat_users != None and mat in mat_users:
@@ -451,7 +451,7 @@ class Cycles {
 						// lays = mat_user.data.uv_layers
 						// # Second uvmap referenced
 						// if len(lays) > 1 and node.attribute_name == lays[1].name:
-							// con.add_elem('tex1', 2)
+							// con.add_elem('tex1', 'short2norm')
 							// return 'vec3(texCoord1.x, 1.0 - texCoord1.y, 0.0)'
 				return 'vec3(texCoord.x, 1.0 - texCoord.y, 0.0)';
 			}
@@ -932,7 +932,7 @@ class Cycles {
 				return 'n';
 			}
 			else if (socket == node.outputs[2]) {// UV
-				curshader.context.add_elem('tex', 2);
+				curshader.context.add_elem('tex', 'short2norm');
 				return 'vec3(texCoord.x, 1.0 - texCoord.y, 0.0)';
 			}
 			else if (socket == node.outputs[3]) { // Object
@@ -954,7 +954,7 @@ class Cycles {
 
 		else if (node.type == 'UVMAP') {
 			//dupli = node.from_dupli
-			curshader.context.add_elem('tex', 2);
+			curshader.context.add_elem('tex', 'short2norm');
 			return 'vec3(texCoord.x, 1.0 - texCoord.y, 0.0)';
 		}
 
@@ -1127,7 +1127,7 @@ class Cycles {
 		//     if (strength != '1.0') frag.write('n.xy *= $strength;');
 		//     # frag.write('n = normalize(TBN * normalize(n));')
 		//     frag.write('n = TBN * normalize(n);')
-		//     con.add_elem('tang', 3)
+		//     con.add_elem('tang', 'short4norm')
 
 		parse_teximage_vector = true;
 		frag.write_normal--;
@@ -1716,7 +1716,7 @@ class Cycles {
 	public static var texCoordName = 'texCoord';
 	static function texture_store(node:TNode, tex:TBindTexture, tex_name:String, to_linear = false):String {		
 		matcon.bind_textures.push(tex);
-		curshader.context.add_elem('tex', 2);
+		curshader.context.add_elem('tex', 'short2norm');
 		curshader.add_uniform('sampler2D $tex_name');
 		var uv_name = '';
 		if (getInputLink(node.inputs[0]) != null && parse_teximage_vector) {

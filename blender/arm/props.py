@@ -199,9 +199,11 @@ def init_properties():
     bpy.types.Mesh.arm_dynamic_usage = BoolProperty(name="Dynamic Usage", description="Mesh data can change at runtime", default=False)
     bpy.types.Mesh.arm_compress = BoolProperty(name="Compress", description="Pack data into zip file", default=False)
     bpy.types.Curve.arm_cached = BoolProperty(name="Mesh Cached", description="No need to reexport curve data", default=False)
+    bpy.types.Curve.arm_aabb = FloatVectorProperty(name="AABB", size=3, default=[0,0,0])
     bpy.types.Curve.arm_compress = BoolProperty(name="Compress", description="Pack data into zip file", default=False)
     bpy.types.Curve.arm_dynamic_usage = BoolProperty(name="Dynamic Data Usage", description="Curve data can change at runtime", default=False)
     bpy.types.MetaBall.arm_cached = BoolProperty(name="Mesh Cached", description="No need to reexport metaball data", default=False)
+    bpy.types.MetaBall.arm_aabb = FloatVectorProperty(name="AABB", size=3, default=[0,0,0])
     bpy.types.MetaBall.arm_compress = BoolProperty(name="Compress", description="Pack data into zip file", default=False)
     bpy.types.MetaBall.arm_dynamic_usage = BoolProperty(name="Dynamic Data Usage", description="Metaball data can change at runtime", default=False)
     # For grease pencil
@@ -241,7 +243,7 @@ def init_properties():
                ('clockwise', 'Front', 'Clockwise'),
                ('counter_clockwise', 'Back', 'Counter-Clockwise')],
         name="", default='clockwise', description="Draw geometry faces")
-    bpy.types.Material.arm_discard = BoolProperty(name="Discard", default=False, description="Do not render fragments below specified opacity threshold")
+    bpy.types.Material.arm_discard = BoolProperty(name="Discard", default=False, description="Alpha test - do not render fragments below specified opacity threshold")
     bpy.types.Material.arm_discard_opacity = FloatProperty(name="Mesh Opacity", default=0.2, min=0, max=1)
     bpy.types.Material.arm_discard_opacity_shadows = FloatProperty(name="Shadows Opacity", default=0.1, min=0, max=1)
     bpy.types.Material.arm_custom_material = StringProperty(name="Custom Material", description="Write custom material", default='')

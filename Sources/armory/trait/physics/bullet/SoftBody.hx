@@ -90,7 +90,7 @@ class SoftBody extends Trait {
 		}
 
 		var positions = fromF32(geom.positions);
-		for (i in 0...Std.int(positions.length / 3)) {
+		for (i in 0...Std.int(positions.length / 4)) {
 			v.set(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
 			v.applyQuat(object.transform.rot);
 			v.x *= object.transform.scale.x;

@@ -504,7 +504,7 @@ class ConvexBreaker {
 				na.push(normal.x);
 				na.push(normal.y);
 				na.push(normal.z);
-				ind.push(Std.int(pa.length / 3 - 1));
+				ind.push(Std.int(pa.length / 4 - 1));
 			}
 			else {
 				na[fi * 3] = normal.x;
