@@ -30,17 +30,10 @@ class Starter {
 			armory.object.Uniforms.register();
 			
 			var windowMode = c.window_mode == 0 ? kha.WindowMode.Windowed : kha.WindowMode.Fullscreen;
-			#if arm_dev
 			var windowFeatures = None;
 			if (c.window_resizable) windowFeatures |= FeatureResizable;
 			if (c.window_maximizable) windowFeatures |= FeatureMaximizable;
 			if (c.window_minimizable) windowFeatures |= FeatureMinimizable;
-			#else
-			var windowFeatures = 0;
-			if (c.window_resizable) windowFeatures |= WindowOptions.FeatureResizable;
-			if (c.window_maximizable) windowFeatures |= WindowOptions.FeatureMaximizable;
-			if (c.window_minimizable) windowFeatures |= WindowOptions.FeatureMinimizable;
-			#end
 			
 			kha.System.start({title: Main.projectName, width: c.window_w, height: c.window_h, window: {mode: windowMode, windowFeatures: windowFeatures}, framebuffer: {samplesPerPixel: c.window_msaa, verticalSync: c.window_vsync}}, function(window:kha.Window) {
 

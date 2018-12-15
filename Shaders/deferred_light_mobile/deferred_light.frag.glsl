@@ -45,10 +45,9 @@ uniform vec2 cameraPlane;
 
 #ifdef _ShadowMap
 	//!uniform vec2 lightProj;
-	// uniform samplerCubeShadow shadowMapPoint[4]; //arm_dev
-	//!uniform samplerCube shadowMapPoint[4];
+	//!uniform samplerCubeShadow shadowMapPoint[4];
 	#ifdef _Spot
-	//!uniform sampler2D shadowMapSpot[4];
+	//!uniform sampler2DShadow shadowMapSpot[4];
 	//!uniform mat4 LWVPSpot0;
 	//!uniform mat4 LWVPSpot1;
 	//!uniform mat4 LWVPSpot2;
@@ -60,8 +59,7 @@ uniform vec2 cameraPlane;
 uniform vec3 sunDir;
 uniform vec3 sunCol;
 	#ifdef _ShadowMap
-	// uniform sampler2DShadow shadowMap; // arm_dev
-	uniform sampler2D shadowMap;
+	uniform sampler2DShadow shadowMap;
 	uniform float shadowsBias;
 	#ifdef _CSM
 	//!uniform vec4 casData[shadowmapCascades * 4 + 4];

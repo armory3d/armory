@@ -15,10 +15,9 @@ const int shadowMapCount = 1;
 const int shadowMapCount = 4;
 #endif
 	uniform vec2 lightProj;
-	// uniform samplerCubeShadow shadowMapPoint[shadowMapCount]; //arm_dev
-	uniform samplerCube shadowMapPoint[shadowMapCount];
+	uniform samplerCubeShadow shadowMapPoint[shadowMapCount];
 	#ifdef _Spot
-	uniform sampler2D shadowMapSpot[shadowMapCount];
+	uniform sampler2DShadow shadowMapSpot[shadowMapCount];
 	uniform mat4 LWVPSpot0;
 	uniform mat4 LWVPSpot1;
 	uniform mat4 LWVPSpot2;

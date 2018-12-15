@@ -9,10 +9,9 @@
 
 #ifdef _ShadowMap
 	uniform vec2 lightProj;
-	// uniform samplerCubeShadow shadowMapPoint[4]; //arm_dev
-	uniform samplerCube shadowMapPoint[4];
+	uniform samplerCubeShadow shadowMapPoint[4];
 	#ifdef _Spot
-	uniform sampler2D shadowMapSpot[4];
+	uniform sampler2DShadow shadowMapSpot[4];
 	uniform mat4 LWVPSpot0;
 	uniform mat4 LWVPSpot1;
 	uniform mat4 LWVPSpot2;
