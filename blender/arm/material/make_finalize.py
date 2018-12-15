@@ -1,3 +1,4 @@
+import arm.material.make_tess as make_tess
 
 def make(con_mesh):
     vert = con_mesh.vert

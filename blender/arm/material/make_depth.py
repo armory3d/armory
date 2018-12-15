@@ -18,7 +18,7 @@ def make(context_id, rpasses, shadowmap=False):
     if is_disp:
         vs.append({'name': 'nor', 'data': 'short2norm'})
 
-    con_depth = mat_state.data.add_context({ 'name': context_id, 'vertex_structure': vs, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False })
+    con_depth = mat_state.data.add_context({ 'name': context_id, 'vertex_elements': vs, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise', 'color_write_red': False, 'color_write_green': False, 'color_write_blue': False, 'color_write_alpha': False })
 
     vert = con_depth.make_vert()
     frag = con_depth.make_frag()

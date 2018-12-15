@@ -458,15 +458,19 @@ def build_success():
             html5_app_path = 'http://localhost:8040/' + arm.utils.build_dir() + '/debug/html5'
             webbrowser.open(html5_app_path)
         elif wrd.arm_runtime == 'Krom':
-            bin_ext = '' if state.export_gapi == 'opengl' else '_' + state.export_gapi
+            if arm.utils.get_os() == 'win':
+                bin_ext = '' if state.export_gapi == 'direct3d11' else '_' + state.export_gapi
+            else:
+                bin_ext = '' if state.export_gapi == 'opengl' else '_' + state.export_gapi
             krom_location, krom_path = arm.utils.krom_paths(bin_ext=bin_ext)
             os.chdir(krom_location)
             cmd = [krom_path, arm.utils.get_fp_build() + '/debug/krom', arm.utils.get_fp_build() + '/debug/krom-resources']
             if arm.utils.get_os() == 'win':
                 cmd.append('--consolepid')
                 cmd.append(str(os.getpid()))
+                cmd.append('--sound')
             elif arm.utils.get_os() == 'mac' or arm.utils.get_os() == 'linux': # TODO: Wait for new Krom audio
-                cmd.append('--nosound')
+                pass
             state.proc_play = run_proc(cmd, play_done)
 
     elif state.is_publish:
@@ -493,7 +497,7 @@ def build_success():
             # Copy Krom binaries
             if state.target == 'krom-windows':
                 gapi = state.export_gapi
-                ext = '' if gapi == 'opengl' else '_' + gapi
+                ext = '' if gapi == 'direct3d11' else '_' + gapi
                 krom_location = sdk_path + '/Krom/Krom' + ext + '.exe'
                 shutil.copy(krom_location, files_path + '/Krom.exe')
                 os.rename(files_path + '/Krom.exe', files_path + '/' + arm.utils.safestr(wrd.arm_project_name) + '.exe')

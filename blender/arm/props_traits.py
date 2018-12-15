@@ -325,7 +325,7 @@ class ArmEditCanvasButton(bpy.types.Operator):
         os.chdir(krom_location)
         cpath = canvas_path.replace('\\', '/')
         uiscale = str(arm.utils.get_ui_scale())
-        subprocess.Popen([krom_path, armory2d_path, armory2d_path, '--nosound', cpath, uiscale])
+        subprocess.Popen([krom_path, armory2d_path, armory2d_path, cpath, uiscale])
         return{'FINISHED'}
 
 class ArmNewScriptDialog(bpy.types.Operator):

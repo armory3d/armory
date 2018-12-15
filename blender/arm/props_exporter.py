@@ -88,12 +88,12 @@ class ArmExporterListItem(bpy.types.PropertyGroup):
                  ('metal', 'Metal', 'metal')],
         name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_custom)
     arm_gapi_win = EnumProperty(
-        items = [('opengl', 'Auto', 'opengl'),
+        items = [('direct3d11', 'Auto', 'direct3d11'),
                  ('opengl', 'OpenGL', 'opengl'),
                  ('vulkan', 'Vulkan', 'vulkan'),
                  ('direct3d11', 'Direct3D11', 'direct3d11'),
                  ('direct3d12', 'Direct3D12', 'direct3d12')],
-        name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_win)
+        name="Graphics API", default='direct3d11', description='Based on currently selected target', update=update_gapi_win)
     arm_gapi_linux = EnumProperty(
         items = [('opengl', 'Auto', 'opengl'),
                  ('opengl', 'OpenGL', 'opengl'),
