@@ -44,8 +44,18 @@ uniform vec2 cameraPlane;
 #endif
 
 #ifdef _ShadowMap
+#ifdef _SinglePoint
+	#ifdef _Spot
+	//!uniform sampler2DShadow shadowMapSpot[1];
+	//!uniform mat4 LWVPSpot0;
+	#else
+	//!uniform samplerCubeShadow shadowMapPoint[1];
 	//!uniform vec2 lightProj;
+	#endif
+#endif
+#ifdef _Clusters
 	//!uniform samplerCubeShadow shadowMapPoint[4];
+	//!uniform vec2 lightProj;
 	#ifdef _Spot
 	//!uniform sampler2DShadow shadowMapSpot[4];
 	//!uniform mat4 LWVPSpot0;
@@ -53,6 +63,7 @@ uniform vec2 cameraPlane;
 	//!uniform mat4 LWVPSpot2;
 	//!uniform mat4 LWVPSpot3;
 	#endif
+#endif
 #endif
 
 #ifdef _Sun

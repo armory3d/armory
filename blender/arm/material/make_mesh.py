@@ -348,10 +348,16 @@ def make_forward_mobile(con_mesh):
             vert.write('lightPosition = LWVP * spos;')            
             frag.add_uniform('sampler2DShadow shadowMap')
             frag.add_uniform('float shadowsBias', '_sunShadowsBias')
-            frag.write('if (lightPosition.w > 0.0) {')
-            frag.write('    vec3 lPos = lightPosition.xyz / lightPosition.w;')
-            frag.write('    svisibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;')
-            frag.write('}')
+            if '_CSM' in wrd.world_defs:
+                frag.add_include('std/shadows.glsl')
+                frag.add_uniform('vec4 casData[shadowmapCascades * 4 + 4]', '_cascadeData', included=True)
+                frag.add_uniform('vec3 eye', '_cameraPosition')
+                frag.write('svisibility = shadowTestCascade(shadowMap, eye, wposition + n * shadowsBias * 10, shadowsBias, shadowmapSize * vec2(shadowmapCascades, 1.0));')
+            else:
+                frag.write('if (lightPosition.w > 0.0) {')
+                frag.write('    vec3 lPos = lightPosition.xyz / lightPosition.w;')
+                frag.write('    svisibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;')
+                frag.write('}')
         frag.write('direct += basecol * sdotNL * sunCol * svisibility;')
 
     if '_SinglePoint' in wrd.world_defs:
@@ -545,16 +551,10 @@ def make_forward_base(con_mesh, parse_opacity=False):
             frag.add_uniform('float shadowsBias', '_sunShadowsBias')
             frag.write('if (receiveShadow) {')
             if '_CSM' in wrd.world_defs:
+                frag.add_include('std/shadows.glsl')
                 frag.add_uniform('vec4 casData[shadowmapCascades * 4 + 4]', '_cascadeData', included=True)
                 frag.add_uniform('vec3 eye', '_cameraPosition')
-                frag.write('vec2 smSize;')
-                frag.write('vec3 lPos;')
-                frag.write('int casi;')
-                frag.write('int casindex;')
-                frag.write('mat4 LWVP = getCascadeMat(distance(eye, wposition), casi, casindex);')
-                frag.write('vec4 lightPosition = LWVP * vec4(wposition, 1.0);')
-                frag.write('lPos = lightPosition.xyz / lightPosition.w;')
-                frag.write('smSize = shadowmapSize * vec2(shadowmapCascades, 1.0);')
+                frag.write('svisibility = shadowTestCascade(shadowMap, eye, wposition + n * shadowsBias * 10, shadowsBias, shadowmapSize * vec2(shadowmapCascades, 1.0));')
             else:
                 if tese != None:
                     tese.add_out('vec4 lightPosition')
@@ -571,7 +571,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
                         vert.write('lightPosition = LWVP * spos;')
                 frag.write('vec3 lPos = lightPosition.xyz / lightPosition.w;')
                 frag.write('const vec2 smSize = shadowmapSize;')
-            frag.write('svisibility = PCF(shadowMap, lPos.xy, lPos.z - shadowsBias, smSize);')
+                frag.write('svisibility = PCF(shadowMap, lPos.xy, lPos.z - shadowsBias, smSize);')
             frag.write('}') # receiveShadow
         # is_shadows
         frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')

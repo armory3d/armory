@@ -337,6 +337,10 @@ class ArmoryExporterPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_project_version')
         col.prop(wrd, 'arm_project_bundle')
         col.prop(wrd, 'arm_project_icon')
+        col.prop(wrd, 'arm_dce')
+        col.prop(wrd, 'arm_compiler_inline')
+        col.prop(wrd, 'arm_minify_js')
+        col.prop(wrd, 'arm_optimize_data')
 
 class ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
@@ -359,21 +363,18 @@ class ArmoryProjectPanel(bpy.types.Panel):
         row = box.row()
         col = row.column()
         col.prop(wrd, 'arm_debug_console')
-        col.prop(wrd, 'arm_dce')
+        
         col = row.column()
-        col.prop(wrd, 'arm_cache_build')
-        col.prop(wrd, 'arm_minify_js')
+        col.prop(wrd, 'arm_cache_build')     
 
         row = box.row()
         col = row.column()
         col.prop(wrd, 'arm_stream_scene')
         col.prop(wrd, 'arm_batch_meshes')
         col.prop(wrd, 'arm_batch_materials')
-        col.prop(wrd, 'arm_compiler_inline')
         col.prop(wrd, 'arm_write_config')
         col = row.column()
         col.prop(wrd, 'arm_minimize')
-        col.prop(wrd, 'arm_optimize_mesh')
         col.prop(wrd, 'arm_deinterleaved_buffers')
         col.prop(wrd, 'arm_export_tangents')
         col.prop(wrd, 'arm_loadscreen')
