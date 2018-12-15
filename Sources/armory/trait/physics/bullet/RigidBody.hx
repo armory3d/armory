@@ -441,39 +441,53 @@ class RigidBody extends iron.Trait {
 	}
 
 	function fillConvexHull(shape:BtConvexHullShapePointer, scale:Vec4, margin:Float) {
-		var positions = cast(object, MeshObject).data.geom.positions;
+		var data = cast(object, MeshObject).data;
+		var positions = data.geom.positions;
 
 		var sx = scale.x * (1.0 - margin) * (1 / 32767);
 		var sy = scale.y * (1.0 - margin) * (1 / 32767);
 		var sz = scale.z * (1.0 - margin) * (1 / 32767);
 
+		if (data.raw.scale_pos != null) {
+			sx *= data.raw.scale_pos;
+			sy *= data.raw.scale_pos;
+			sz *= data.raw.scale_pos;
+		}
+
 		for (i in 0...Std.int(positions.length / 4)) {
-			vec1.setX(positions[i * 3] * sx);
-			vec1.setY(positions[i * 3 + 1] * sy);
-			vec1.setZ(positions[i * 3 + 2] * sz);
+			vec1.setX(positions[i * 4    ] * sx);
+			vec1.setY(positions[i * 4 + 1] * sy);
+			vec1.setZ(positions[i * 4 + 2] * sz);
 			shape.addPoint(vec1, true);
 		}
 	}
 
 	function fillTriangleMesh(triangleMesh:BtTriangleMeshPointer, scale:Vec4) {
-		var positions = cast(object, MeshObject).data.geom.positions;
-		var indices = cast(object, MeshObject).data.geom.indices;
+		var data = cast(object, MeshObject).data;
+		var positions = data.geom.positions;
+		var indices = data.geom.indices;
 
 		var sx = scale.x * (1 / 32767);
 		var sy = scale.y * (1 / 32767);
 		var sz = scale.z * (1 / 32767);
 
+		if (data.raw.scale_pos != null) {
+			sx *= data.raw.scale_pos;
+			sy *= data.raw.scale_pos;
+			sz *= data.raw.scale_pos;
+		}
+
 		for (ar in indices) {
 			for (i in 0...Std.int(ar.length / 3)) {
-				vec1.setX(positions[ar[i * 3 + 0] * 3 + 0] * sx);
-				vec1.setY(positions[ar[i * 3 + 0] * 3 + 1] * sy);
-				vec1.setZ(positions[ar[i * 3 + 0] * 3 + 2] * sz);
-				vec2.setX(positions[ar[i * 3 + 1] * 3 + 0] * sx);
-				vec2.setY(positions[ar[i * 3 + 1] * 3 + 1] * sy);
-				vec2.setZ(positions[ar[i * 3 + 1] * 3 + 2] * sz);
-				vec3.setX(positions[ar[i * 3 + 2] * 3 + 0] * sx);
-				vec3.setY(positions[ar[i * 3 + 2] * 3 + 1] * sy);
-				vec3.setZ(positions[ar[i * 3 + 2] * 3 + 2] * sz);
+				vec1.setX(positions[ar[i * 3 + 0] * 4 + 0] * sx);
+				vec1.setY(positions[ar[i * 3 + 0] * 4 + 1] * sy);
+				vec1.setZ(positions[ar[i * 3 + 0] * 4 + 2] * sz);
+				vec2.setX(positions[ar[i * 3 + 1] * 4 + 0] * sx);
+				vec2.setY(positions[ar[i * 3 + 1] * 4 + 1] * sy);
+				vec2.setZ(positions[ar[i * 3 + 1] * 4 + 2] * sz);
+				vec3.setX(positions[ar[i * 3 + 2] * 4 + 0] * sx);
+				vec3.setY(positions[ar[i * 3 + 2] * 4 + 1] * sy);
+				vec3.setZ(positions[ar[i * 3 + 2] * 4 + 2] * sz);
 				triangleMesh.addTriangle(vec1, vec2, vec3);
 			}
 		}

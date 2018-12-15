@@ -1448,26 +1448,13 @@ class ArmoryExporter:
                 cdata[i * 4 + 2] = np.int16(pow(vtx.col[2], 2.2) * 32767)
 
         # Save aabb
-        aabb_min = [-0.01, -0.01, -0.01]
-        aabb_max = [0.01, 0.01, 0.01]
-        i = 0
-        while i < len(vdata):
-            if vdata[i] > aabb_max[0]:
-                aabb_max[0] = vdata[i]
-            if vdata[i + 1] > aabb_max[1]:
-                aabb_max[1] = vdata[i + 1]
-            if vdata[i + 2] > aabb_max[2]:
-                aabb_max[2] = vdata[i + 2]
-            if vdata[i] < aabb_min[0]:
-                aabb_min[0] = vdata[i]
-            if vdata[i + 1] < aabb_min[1]:
-                aabb_min[1] = vdata[i + 1]
-            if vdata[i + 2] < aabb_min[2]:
-                aabb_min[2] = vdata[i + 2]
-            i += 3
-        bobject.data.arm_aabb = [abs(aabb_min[0]) + abs(aabb_max[0]), abs(aabb_min[1]) + abs(aabb_max[1]), abs(aabb_min[2]) + abs(aabb_max[2])]
-        # Not axis-aligned
-        # arm_aabb = [bobject.matrix_world * Vector(v) for v in bobject.bound_box]
+        aabb_center = 0.125 * sum((Vector(b) for b in bobject.bound_box), Vector())
+        bobject.data.arm_aabb = [bobject.dimensions[0] / bobject.scale[0], \
+                                 bobject.dimensions[1] / bobject.scale[1], \
+                                 bobject.dimensions[2] / bobject.scale[2]]
+        bobject.data.arm_aabb[0] += abs(aabb_center[0]) * 2
+        bobject.data.arm_aabb[1] += abs(aabb_center[1]) * 2
+        bobject.data.arm_aabb[2] += abs(aabb_center[2]) * 2
 
         # Scale for packed coords
         maxdim = max(bobject.data.arm_aabb[0], max(bobject.data.arm_aabb[1], bobject.data.arm_aabb[2]))
