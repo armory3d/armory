@@ -974,21 +974,7 @@ class ArmoryExporter:
                     for i in range(0, num_psys):
                         self.export_particle_system_ref(bobject.particle_systems[i], i, o)
 
-                o['dimensions'] = [0.0, 0.0, 0.0]
-                for i in range(0, 3):
-                    if bobject.scale[i] != 0:
-                        o['dimensions'][i] = bobject.dimensions[i] / bobject.scale[i]
-                # Origin not in geometry center
-                if hasattr(bobject.data, 'arm_aabb'):
-                    dx = bobject.data.arm_aabb[0]
-                    dy = bobject.data.arm_aabb[1]
-                    dz = bobject.data.arm_aabb[2]
-                    if dx > o['dimensions'][0]:
-                        o['dimensions'][0] = dx
-                    if dy > o['dimensions'][1]:
-                        o['dimensions'][1] = dy
-                    if dz > o['dimensions'][2]:
-                        o['dimensions'][2] = dz
+                o['dimensions'] = [bobject.data.arm_aabb[0], bobject.data.arm_aabb[1], bobject.data.arm_aabb[2]]
 
                 #shapeKeys = ArmoryExporter.get_shape_keys(objref)
                 #if shapeKeys:
@@ -1243,13 +1229,22 @@ class ArmoryExporter:
             log.warn(bobject.name + ' - more than 4 bones influence single vertex - taking highest weights')
 
         # Write the bone count array. There is one entry per vertex.
-        oskin['bone_count_array'] = bone_count_array
+        bonec = np.empty([len(bone_count_array)], dtype=np.int16)
+        for i in range(len(bonec)):
+            bonec[i] = np.int16(bone_count_array[i])
+        oskin['bone_count_array'] = bonec
 
         # Write the bone index array. The number of entries is the sum of the bone counts for all vertices.
-        oskin['bone_index_array'] = bone_index_array
+        bonei = np.empty([len(bone_index_array)], dtype=np.int16)
+        for i in range(len(bonei)):
+            bonei[i] = np.int16(bone_index_array[i])
+        oskin['bone_index_array'] = bonei
 
         # Write the bone weight array. The number of entries is the sum of the bone counts for all vertices.
-        oskin['bone_weight_array'] = bone_weight_array
+        bonew = np.empty([len(bone_weight_array)], dtype=np.int16)
+        for i in range(len(bonew)):
+            bonew[i] = np.int16(bone_weight_array[i] * 32767)
+        oskin['bone_weight_array'] = bonew
 
         # Bone constraints
         for bone in armature.pose.bones:
@@ -1344,7 +1339,7 @@ class ArmoryExporter:
             # cnv = n.cross(v)
             # if cnv.dot(b) < 0.0:
                 # v = v * -1.0
-            tangents[i * 3] = v.x
+            tangents[i * 3    ] = v.x
             tangents[i * 3 + 1] = v.y
             tangents[i * 3 + 2] = v.z
         return tangents
@@ -1369,7 +1364,7 @@ class ArmoryExporter:
         va['values'] = values
         return va
 
-    def export_mesh_data(self, exportMesh, bobject, o):
+    def export_mesh_data(self, exportMesh, bobject, o, has_armature=False):
         exportMesh.calc_normals_split()
         exportMesh.calc_tessface() # free_mpoly=True
         vert_list = { Vertex(exportMesh, loop) : 0 for loop in exportMesh.loops}.keys()
@@ -1449,16 +1444,18 @@ class ArmoryExporter:
 
         # Save aabb
         aabb_center = 0.125 * sum((Vector(b) for b in bobject.bound_box), Vector())
-        bobject.data.arm_aabb = [bobject.dimensions[0] / bobject.scale[0], \
-                                 bobject.dimensions[1] / bobject.scale[1], \
-                                 bobject.dimensions[2] / bobject.scale[2]]
-        bobject.data.arm_aabb[0] += abs(aabb_center[0]) * 2
-        bobject.data.arm_aabb[1] += abs(aabb_center[1]) * 2
-        bobject.data.arm_aabb[2] += abs(aabb_center[2]) * 2
+        bobject.data.arm_aabb = [ \
+            abs((bobject.bound_box[6][0] - bobject.bound_box[0][0]) / 2 + abs(aabb_center[0])) * 2, \
+            abs((bobject.bound_box[6][1] - bobject.bound_box[0][1]) / 2 + abs(aabb_center[1])) * 2, \
+            abs((bobject.bound_box[6][2] - bobject.bound_box[0][2]) / 2 + abs(aabb_center[2])) * 2  \
+        ]
 
         # Scale for packed coords
         maxdim = max(bobject.data.arm_aabb[0], max(bobject.data.arm_aabb[1], bobject.data.arm_aabb[2]))
         o['scale_pos'] = maxdim / 2
+        if has_armature:
+            # Allow up to 2x bigger bounds for skinned mesh
+            o['scale_pos'] *= 2.0
         invscale = 1 / o['scale_pos']
 
         # Output
@@ -1583,7 +1580,7 @@ class ArmoryExporter:
 
         # Make tangents
         if has_tang:
-            tanga_vals = self.calc_tangents(pa['values'], na['values'], ta['values'], o['index_arrays'])
+            tanga_vals = self.calc_tangents(vdata, ndata, ta['values'], o['index_arrays'])
             tanga = self.make_va('tang', tanga_vals)
             o['vertex_arrays'].append(tanga)
 
@@ -1688,7 +1685,7 @@ class ArmoryExporter:
             log.warn(oid + ' exceeds maximum of 2 UV Maps supported')
 
         # Process meshes
-        vert_list = self.export_mesh_data(exportMesh, bobject, o)
+        vert_list = self.export_mesh_data(exportMesh, bobject, o, has_armature=armature != None)
         if armature:
             self.export_skin(bobject, armature, vert_list, o)
 

@@ -112,7 +112,9 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 
 	#ifdef _ShadowMap
 		#ifdef _SinglePoint
+		#ifndef _Spot
 		direct *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
+		#endif
 		#endif
 		#ifdef _Clusters
 		if (index == 0) direct *= PCFCube(shadowMapPoint[0], ld, -l, bias, lightProj, n);
