@@ -35,9 +35,6 @@ class ObjectPropsPanel(bpy.types.Panel):
         row.prop(obj, 'arm_mobile')
         row.prop(obj, 'arm_animation_enabled')
 
-        if bpy.app.version >= (2, 80, 1):
-            layout.prop(obj, 'arm_visible')
-
         if obj.type == 'MESH':
             layout.prop(obj, 'arm_instanced')
             wrd = bpy.data.worlds['Arm']
@@ -288,8 +285,8 @@ class ArmoryExporterPanel(bpy.types.Panel):
         row = layout.row()
         row.template_list("ArmExporterList", "The_List", wrd, "arm_exporterlist", wrd, "arm_exporterlist_index", rows=rows)
         col = row.column(align=True)
-        col.operator("arm_exporterlist.new_item", icon='ZOOMIN', text="")
-        col.operator("arm_exporterlist.delete_item", icon='ZOOMOUT', text="")
+        col.operator("arm_exporterlist.new_item", icon='ADD', text="")
+        col.operator("arm_exporterlist.delete_item", icon='REMOVE', text="")
         col.menu("arm_exporterlist_specials", icon='DOWNARROW_HLT', text="")
 
         if len(wrd.arm_exporterlist) > 1:
@@ -442,13 +439,11 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         obj.arm_traitlist[-1].class_name_prop = 'NavMesh'
 
         # For visualization
-        if bpy.app.version >= (2, 80, 1):
-            pass # TODO
-        else:
-            bpy.ops.mesh.navmesh_make('EXEC_DEFAULT')
-            obj = context.active_object
-            obj.hide_render = True
-            obj.arm_export = False
+        # TODO
+        # bpy.ops.mesh.navmesh_make('EXEC_DEFAULT')
+        # obj = context.active_object
+        # obj.hide_render = True
+        # obj.arm_export = False
 
         return{'FINISHED'}
 
@@ -465,9 +460,6 @@ class ArmoryPlayButton(bpy.types.Operator):
             return {"CANCELLED"}
 
         if not arm.utils.check_sdkpath(self):
-            return {"CANCELLED"}
-
-        if not arm.utils.check_engine(self):
             return {"CANCELLED"}
 
         arm.utils.check_default_props()
@@ -503,9 +495,6 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
         if not arm.utils.check_sdkpath(self):
             return {"CANCELLED"}
 
-        if not arm.utils.check_engine(self):
-            return {"CANCELLED"}
-
         arm.utils.check_projectpath(self)
 
         arm.utils.check_default_props()
@@ -538,9 +527,6 @@ class ArmoryPublishProjectButton(bpy.types.Operator):
             return {"CANCELLED"}
 
         if not arm.utils.check_sdkpath(self):
-            return {"CANCELLED"}
-
-        if not arm.utils.check_engine(self):
             return {"CANCELLED"}
 
         self.report({'INFO'}, 'Publishing project, check console for details.')
@@ -698,8 +684,8 @@ class ArmRenderPathPanel(bpy.types.Panel):
         row = layout.row()
         row.template_list("ArmRPList", "The_List", wrd, "arm_rplist", wrd, "arm_rplist_index", rows=rows)
         col = row.column(align=True)
-        col.operator("arm_rplist.new_item", icon='ZOOMIN', text="")
-        col.operator("arm_rplist.delete_item", icon='ZOOMOUT', text="")
+        col.operator("arm_rplist.new_item", icon='ADD', text="")
+        col.operator("arm_rplist.delete_item", icon='REMOVE', text="")
 
         if len(wrd.arm_rplist) > 1:
             col.separator()
@@ -983,8 +969,8 @@ class ArmBakePanel(bpy.types.Panel):
         row = layout.row()
         row.template_list("ArmBakeList", "The_List", scn, "arm_bakelist", scn, "arm_bakelist_index", rows=rows)
         col = row.column(align=True)
-        col.operator("arm_bakelist.new_item", icon='ZOOMIN', text="")
-        col.operator("arm_bakelist.delete_item", icon='ZOOMOUT', text="")
+        col.operator("arm_bakelist.new_item", icon='ADD', text="")
+        col.operator("arm_bakelist.delete_item", icon='REMOVE', text="")
         col.menu("arm_bakelist_specials", icon='DOWNARROW_HLT', text="")
 
         if len(scn.arm_bakelist) > 1:
@@ -1074,8 +1060,8 @@ class ArmLodPanel(bpy.types.Panel):
         row = layout.row()
         row.template_list("ArmLodList", "The_List", mdata, "arm_lodlist", mdata, "arm_lodlist_index", rows=rows)
         col = row.column(align=True)
-        col.operator("arm_lodlist.new_item", icon='ZOOMIN', text="")
-        col.operator("arm_lodlist.delete_item", icon='ZOOMOUT', text="")
+        col.operator("arm_lodlist.new_item", icon='ADD', text="")
+        col.operator("arm_lodlist.delete_item", icon='REMOVE', text="")
 
         if len(mdata.arm_lodlist) > 1:
             col.separator()
@@ -1121,8 +1107,8 @@ class ArmTilesheetPanel(bpy.types.Panel):
         row = layout.row()
         row.template_list("ArmTilesheetList", "The_List", wrd, "arm_tilesheetlist", wrd, "arm_tilesheetlist_index", rows=rows)
         col = row.column(align=True)
-        col.operator("arm_tilesheetlist.new_item", icon='ZOOMIN', text="")
-        col.operator("arm_tilesheetlist.delete_item", icon='ZOOMOUT', text="")
+        col.operator("arm_tilesheetlist.new_item", icon='ADD', text="")
+        col.operator("arm_tilesheetlist.delete_item", icon='REMOVE', text="")
 
         if len(wrd.arm_tilesheetlist) > 1:
             col.separator()
@@ -1145,8 +1131,8 @@ class ArmTilesheetPanel(bpy.types.Panel):
             row = layout.row()
             row.template_list("ArmTilesheetList", "The_List", dat, "arm_tilesheetactionlist", dat, "arm_tilesheetactionlist_index", rows=rows)
             col = row.column(align=True)
-            col.operator("arm_tilesheetactionlist.new_item", icon='ZOOMIN', text="")
-            col.operator("arm_tilesheetactionlist.delete_item", icon='ZOOMOUT', text="")
+            col.operator("arm_tilesheetactionlist.new_item", icon='ADD', text="")
+            col.operator("arm_tilesheetactionlist.delete_item", icon='REMOVE', text="")
 
             if len(dat.arm_tilesheetactionlist) > 1:
                 col.separator()

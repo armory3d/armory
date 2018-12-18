@@ -7,7 +7,7 @@ class LookAtNode(Node, ArmLogicTreeNode):
     '''Look at node'''
     bl_idname = 'LNLookAtNode'
     bl_label = 'Look At'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('NodeSocketVector', 'From Location')

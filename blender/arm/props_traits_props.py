@@ -8,12 +8,12 @@ from arm.utils import to_hex
 
 class ArmTraitPropListItem(bpy.types.PropertyGroup):
     # Group of properties representing an item in the list
-    name = bpy.props.StringProperty(
+    name: StringProperty(
            name="Name",
            description="A name for this item",
            default="Untitled")
 
-    value = bpy.props.StringProperty(
+    value: StringProperty(
            name="Value",
            description="A name for this item",
            default="")

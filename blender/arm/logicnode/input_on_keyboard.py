@@ -9,13 +9,13 @@ class OnKeyboardNode(Node, ArmLogicTreeNode):
     bl_label = 'On Keyboard'
     bl_icon = 'CURVE_PATH'
 
-    property0 = EnumProperty(
+    property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),
                  ('Released', 'Released', 'Released')],
         name='', default='Started')
     
-    property1 = EnumProperty(
+    property1: EnumProperty(
         items = [('a', 'a', 'a'),
                  ('b', 'b', 'b'),
                  ('c', 'c', 'c'),

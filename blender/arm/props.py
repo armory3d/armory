@@ -316,16 +316,10 @@ def init_properties():
     # For scene
     bpy.types.Scene.arm_export = BoolProperty(name="Export", description="Export scene data", default=True)
     # For light
-    if bpy.app.version >= (2, 80, 1):
-        bpy.types.Light.arm_clip_start = FloatProperty(name="Clip Start", default=0.1)
-        bpy.types.Light.arm_clip_end = FloatProperty(name="Clip End", default=50.0)
-        bpy.types.Light.arm_fov = FloatProperty(name="Field of View", default=0.84)
-        bpy.types.Light.arm_shadows_bias = FloatProperty(name="Bias", description="Depth offset to fight shadow acne", default=1.0)
-    else:
-        bpy.types.Lamp.arm_clip_start = FloatProperty(name="Clip Start", default=0.1)
-        bpy.types.Lamp.arm_clip_end = FloatProperty(name="Clip End", default=50.0)
-        bpy.types.Lamp.arm_fov = FloatProperty(name="Field of View", default=0.84)
-        bpy.types.Lamp.arm_shadows_bias = FloatProperty(name="Bias", description="Depth offset to fight shadow acne", default=1.0)
+    bpy.types.Light.arm_clip_start = FloatProperty(name="Clip Start", default=0.1)
+    bpy.types.Light.arm_clip_end = FloatProperty(name="Clip End", default=50.0)
+    bpy.types.Light.arm_fov = FloatProperty(name="Field of View", default=0.84)
+    bpy.types.Light.arm_shadows_bias = FloatProperty(name="Bias", description="Depth offset to fight shadow acne", default=1.0)
     bpy.types.World.arm_light_ies_texture = StringProperty(name="IES Texture", default="")
     bpy.types.World.arm_light_clouds_texture = StringProperty(name="Clouds Texture", default="")
 

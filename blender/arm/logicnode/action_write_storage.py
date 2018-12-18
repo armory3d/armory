@@ -7,7 +7,7 @@ class WriteStorageNode(Node, ArmLogicTreeNode):
     '''WriteStorage node'''
     bl_idname = 'LNWriteStorageNode'
     bl_label = 'Write Storage'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

@@ -7,9 +7,9 @@ class GroupNode(Node, ArmLogicTreeNode):
     '''Group node'''
     bl_idname = 'LNGroupNode'
     bl_label = 'Group'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
-    property0 = StringProperty(name='', default='')
+    property0: StringProperty(name='', default='')
     
     def init(self, context):
         self.outputs.new('ArmNodeSocketArray', 'Array')

@@ -505,7 +505,7 @@ class ArmoryExporter:
         # else:
         transform = bone.matrix_local.copy()
         if bone.parent != None:
-            transform = self.mulmat(bone.parent.matrix_local.inverted_safe(), transform)
+            transform = (bone.parent.matrix_local.inverted_safe() @ transform)
 
         o['transform'] = {}
         o['transform']['values'] = self.write_matrix(transform)
@@ -538,9 +538,9 @@ class ArmoryExporter:
     def use_default_material_part(self):
         # Particle object with no material assigned
         for ps in bpy.data.particles:
-            if ps.render_type != 'OBJECT' or ps.dupli_object == None:
+            if ps.render_type != 'OBJECT' or ps.instance_object == None:
                 continue
-            po = ps.dupli_object
+            po = ps.instance_object
             if po not in self.objectToArmObjectDict:
                 continue
             o = self.objectToArmObjectDict[po]
@@ -560,7 +560,7 @@ class ArmoryExporter:
         if psys.settings in self.particleSystemArray: # or not modifier.show_render:
             return
 
-        if psys.settings.dupli_object == None or psys.settings.render_type != 'OBJECT':
+        if psys.settings.instance_object == None or psys.settings.render_type != 'OBJECT':
              return
 
         self.particleSystemArray[psys.settings] = {"structName" : psys.settings.name}
@@ -606,7 +606,7 @@ class ArmoryExporter:
                     values, pose_bone = track[0], track[1]
                     parent = pose_bone.parent
                     if parent:
-                        values += self.write_matrix(self.mulmat(parent.matrix.inverted_safe(), pose_bone.matrix))
+                        values += self.write_matrix((parent.matrix.inverted_safe() @ pose_bone.matrix))
                     else:
                         values += self.write_matrix(pose_bone.matrix)
         # print('Bone matrices exported in ' + str(time.time() - profile_time))
@@ -749,8 +749,8 @@ class ArmoryExporter:
 
             o['mobile'] = bobject.arm_mobile
 
-            if bobject.dupli_type == 'GROUP' and bobject.dupli_group != None:
-                o['group_ref'] = bobject.dupli_group.name
+            if bobject.instance_type == 'COLLECTION' and bobject.instance_group != None:
+                o['group_ref'] = bobject.instance_group.name
 
             if hasattr(bobject, 'users_group') and bobject.users_group != None and len(bobject.users_group) > 0:
                 o['groups'] = []
@@ -771,14 +771,8 @@ class ArmoryExporter:
                     po['value'] = getattr(p, p.type_prop + '_prop')
                     o['properties'].append(po)
 
-            layer_found = False
-            if bpy.app.version >= (2, 80, 1):
-                layer_found = True
-            else:
-                for l in self.active_layers:
-                    if bobject.layers[l] == True:
-                        layer_found = True
-                        break
+            # TODO:
+            layer_found = True
             if layer_found == False:
                 o['spawn'] = False
 
@@ -1028,12 +1022,12 @@ class ArmoryExporter:
         oskin['transformsI'] = []
         if rpdat.arm_skin == 'CPU':
             for i in range(bone_count):
-                skeletonI = self.mulmat(armature.matrix_world, bone_array[i].matrix_local).inverted_safe()
+                skeletonI = (armature.matrix_world @ bone_array[i].matrix_local).inverted_safe()
                 oskin['transformsI'].append(self.write_matrix(skeletonI))
         else:
             for i in range(bone_count):
-                skeletonI = self.mulmat(armature.matrix_world, bone_array[i].matrix_local).inverted_safe()
-                skeletonI = self.mulmat(skeletonI, bobject.matrix_world)
+                skeletonI = (armature.matrix_world @ bone_array[i].matrix_local).inverted_safe()
+                skeletonI = (skeletonI @ bobject.matrix_world)
                 oskin['transformsI'].append(self.write_matrix(skeletonI))
 
         # Export the per-vertex bone influence data
@@ -1173,7 +1167,7 @@ class ArmoryExporter:
 
     def export_mesh_data(self, exportMesh, bobject, o, has_armature=False):
         exportMesh.calc_normals_split()
-        exportMesh.calc_tessface()
+        exportMesh.calc_loop_triangles()
 
         loops = exportMesh.loops
         num_verts = len(loops)
@@ -1190,10 +1184,7 @@ class ArmoryExporter:
         if has_tex:
             t0map = 0 # Get active uvmap
             t0data = np.empty(num_verts * 2, dtype='<f4')
-            if bpy.app.version >= (2, 80, 1):
-                uv_layers = exportMesh.uv_layers
-            else:
-                uv_layers = exportMesh.uv_textures
+            uv_layers = exportMesh.uv_layers
             if uv_layers != None:
                 if 'UVMap_baked' in uv_layers:
                     for i in range(0, len(uv_layers)):
@@ -1481,12 +1472,7 @@ class ArmoryExporter:
 
         armature = bobject.find_armature()
         apply_modifiers = not armature
-
-        # Apply all modifiers to create a new mesh with tessfaces
-        if bpy.app.version >= (2, 80, 1):
-            exportMesh = bobject.to_mesh(bpy.context.depsgraph, apply_modifiers, calc_tessface=True, calc_undeformed=False)
-        else:
-            exportMesh = bobject.to_mesh(scene, apply_modifiers, "RENDER", True, False)
+        exportMesh = bobject.to_mesh(bpy.context.depsgraph, apply_modifiers, calc_undeformed=False)
 
         if exportMesh == None:
             log.warn(oid + ' was not exported')
@@ -1570,39 +1556,13 @@ class ArmoryExporter:
             o['shadowmap_cube'] = True
             o['shadows_bias'] *= 2.0
 
-        if bpy.app.version >= (2, 80, 1) and (self.scene.render.engine == 'BLENDER_EEVEE' or self.scene.render.engine == 'ARMORY'):
-            o['color'] = [objref.color[0], objref.color[1], objref.color[2]]
-            o['strength'] = objref.energy
-            if o['type'] == 'point' or o['type'] == 'spot':
-                o['strength'] *= 2.6
-            elif o['type'] == 'sun':
-                o['strength'] *= 0.325
-        elif objref.node_tree != None: # Cycles
-            tree = objref.node_tree
-            for n in tree.nodes:
-                # Emission only for now
-                if n.type == 'EMISSION':
-                    col = n.inputs[0].default_value
-                    o['color'] = [col[0], col[1], col[2]]
-                    o['strength'] = n.inputs[1].default_value
-                    # Normalize light strength
-                    if o['type'] == 'point' or o['type'] == 'spot':
-                        o['strength'] *= 0.026
-                    elif o['type'] == 'area':
-                        o['strength'] *= 0.26
-                    elif o['type'] == 'sun':
-                        o['strength'] *= 0.325
-                    # TODO: Light texture test..
-                    if n.inputs[0].is_linked:
-                        color_node = n.inputs[0].links[0].from_node
-                        if color_node.type == 'TEX_IMAGE':
-                            o['color_texture'] = color_node.image.name
-                    break
-        else:
-            o['color'] = [objref.color[0], objref.color[1], objref.color[2]]
-            o['strength'] = 100.0 * 0.026
-            o['type'] = 'point'
-
+        o['color'] = [objref.color[0], objref.color[1], objref.color[2]]
+        o['strength'] = objref.energy
+        if o['type'] == 'point' or o['type'] == 'spot':
+            o['strength'] *= 2.6
+        elif o['type'] == 'sun':
+            o['strength'] *= 0.325
+        
         self.output['light_datas'].append(o)
 
     def export_probe(self, objectRef):
@@ -1624,7 +1584,7 @@ class ArmoryExporter:
             return [0.051, 0.051, 0.051, 1.0]
 
         if self.scene.world.node_tree == None:
-            c = self.scene.world.color if bpy.app.version >= (2, 80, 1) else self.scene.world.horizon_color
+            c = self.scene.world.color
             return [c[0], c[1], c[2], 1.0]
 
         if 'Background' in self.scene.world.node_tree.nodes:
@@ -1669,20 +1629,12 @@ class ArmoryExporter:
 
         camera = objectRef[1]["objectTable"][0]
         render = self.scene.render
-        if bpy.app.version >= (2, 80, 1):
-            proj = camera.calc_matrix_camera(
-                self.scene.view_layers[0].depsgraph,
-                x=render.resolution_x,
-                y=render.resolution_y,
-                scale_x=render.pixel_aspect_x,
-                scale_y=render.pixel_aspect_y)
-        else:
-            proj = camera.calc_matrix_camera(
-                render.resolution_x,
-                render.resolution_y,
-                render.pixel_aspect_x,
-                render.pixel_aspect_y)
-
+        proj = camera.calc_matrix_camera(
+            self.scene.view_layers[0].depsgraph,
+            x=render.resolution_x,
+            y=render.resolution_y,
+            scale_x=render.pixel_aspect_x,
+            scale_y=render.pixel_aspect_y)
         if objref.type == 'PERSP':
             self.extract_projection(o, proj)
         else:
@@ -1908,16 +1860,13 @@ class ArmoryExporter:
             if psettings == None:
                 continue
 
-            if psettings.dupli_object == None or psettings.render_type != 'OBJECT':
+            if psettings.instance_object == None or psettings.render_type != 'OBJECT':
                 continue
 
             o['name'] = particleRef[1]["structName"]
             o['type'] = 0 if psettings.type == 'EMITTER' else 1 # HAIR
             o['loop'] = psettings.arm_loop
-            if bpy.app.version >= (2, 80, 1):
-                o['render_emitter'] = False
-            else:
-                o['render_emitter'] = psettings.use_render_emitter
+            o['render_emitter'] = False # TODO
             # Emission
             o['count'] = psettings.count * psettings.arm_count_mult
             o['frame_start'] = int(psettings.frame_start)
@@ -1938,8 +1887,8 @@ class ArmoryExporter:
             o['size_random'] = psettings.size_random
             o['mass'] = psettings.mass
             # Render
-            o['dupli_object'] = psettings.dupli_object.name
-            self.objectToArmObjectDict[psettings.dupli_object]['is_particle'] = True
+            o['dupli_object'] = psettings.instance_object.name
+            self.objectToArmObjectDict[psettings.instance_object]['is_particle'] = True
             # Field weights
             o['weight_gravity'] = psettings.effector_weights.gravity
             self.output['particle_datas'].append(o)
@@ -1990,7 +1939,7 @@ class ArmoryExporter:
                     assets.add(arm.utils.asset_path(sound.filepath))
             for o in self.speakerArray.items():
                 self.export_speaker(o)
-            if bpy.app.version >= (2, 80, 1) and len(bpy.data.lightprobes) > 0:
+            if len(bpy.data.lightprobes) > 0:
                 self.output['probe_datas'] = []
                 for o in self.probeArray.items():
                     self.export_probe(o)
@@ -2030,28 +1979,16 @@ class ArmoryExporter:
         self.objectToArmObjectDict = dict()
         self.active_layers = []
         self.bone_tracks = []
-        for i in range(0, len(self.scene.layers)):
-            if self.scene.layers[i] == True:
+        for i in range(0, len(self.scene.view_layers)):
+            if self.scene.view_layers[i] == True:
                 self.active_layers.append(i)
 
         self.preprocess()
 
-        if bpy.app.version >= (2, 80, 1):
-            def mulmat(a, b):
-                return a @ b
-            self.mulmat = mulmat
-        else:
-            def mulmat(a, b):
-                return a * b
-            self.mulmat = mulmat
-
-        if bpy.app.version >= (2, 80, 1):
-            # scene_objects = self.scene.objects
-            scene_objects = []
-            for lay in self.scene.view_layers:
-                scene_objects += lay.objects
-        else:
-            scene_objects = self.scene.objects
+        scene_objects = []
+        for lay in self.scene.view_layers:
+            scene_objects += lay.objects
+        
         for bobject in scene_objects:
             # Map objects to game objects
             o = {}
@@ -2090,7 +2027,7 @@ class ArmoryExporter:
                     slot.material = mat
         # Particle and non-particle objects can not share material
         for psys in bpy.data.particles:
-            bo = psys.dupli_object
+            bo = psys.instance_object
             if bo == None or psys.render_type != 'OBJECT':
                 continue
             for slot in bo.material_slots:
@@ -2369,10 +2306,10 @@ class ArmoryExporter:
                 break
 
             # Instance render groups with same children?
-            # elif bobject.dupli_type == 'GROUP' and bobject.dupli_group != None:
+            # elif bobject.instance_type == 'GROUP' and bobject.instance_group != None:
             #     instanced_type = 1
             #     instanced_data = []
-            #     for child in bpy.data.groups[bobject.dupli_group].objects:
+            #     for child in bpy.data.groups[bobject.instance_group].objects:
             #         loc = child.matrix_local.to_translation()
             #         instanced_data.append(loc.x)
             #         instanced_data.append(loc.y)
@@ -2474,7 +2411,7 @@ class ArmoryExporter:
             x['parameters'].append(lin_fac)
             x['parameters'].append(ang_fac)
             col_group = ''
-            for b in rb.collision_groups:
+            for b in rb.collision_collections:
                 col_group = ('1' if b else '0') + col_group
             x['parameters'].append(str(int(col_group, 2)))
             x['parameters'].append(str(bobject.arm_rb_trigger).lower())

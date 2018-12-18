@@ -7,7 +7,7 @@ class AnimActionNode(Node, ArmLogicTreeNode):
     '''Anim action node'''
     bl_idname = 'LNAnimActionNode'
     bl_label = 'Action'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketAnimAction', 'Action')

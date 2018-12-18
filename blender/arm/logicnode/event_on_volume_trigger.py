@@ -8,7 +8,7 @@ class OnVolumeTriggerNode(Node, ArmLogicTreeNode):
     bl_idname = 'LNOnVolumeTriggerNode'
     bl_label = 'On Volume Trigger'
     bl_icon = 'CURVE_PATH'
-    property0 = EnumProperty(
+    property0: EnumProperty(
         items = [('Enter', 'Enter', 'Enter'),
                  ('Leave', 'Leave', 'Leave'),
                  ('Overlap', 'Overlap', 'Overlap')],

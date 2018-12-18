@@ -8,12 +8,12 @@ class VirtualButtonNode(Node, ArmLogicTreeNode):
     bl_idname = 'LNVirtualButtonNode'
     bl_label = 'Virtual Button'
     bl_icon = 'CURVE_PATH'
-    property0 = EnumProperty(
+    property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),
                  ('Released', 'Released', 'Released')],
         name='', default='Started')
-    property1 = StringProperty(name='', default='button')
+    property1: StringProperty(name='', default='button')
     
     def init(self, context):
         self.outputs.new('NodeSocketBool', 'State')

@@ -55,10 +55,7 @@ def export_mesh_data(self, exportMesh, bobject, o, has_armature=False):
     if has_tex:
         # Get active uvmap
         t0map = 0
-        if bpy.app.version >= (2, 80, 1):
-            uv_layers = exportMesh.uv_layers
-        else:
-            uv_layers = exportMesh.uv_textures
+        uv_layers = exportMesh.uv_layers
         if uv_layers != None:
             if 'UVMap_baked' in uv_layers:
                 for i in range(0, len(uv_layers)):

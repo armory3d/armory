@@ -7,7 +7,7 @@ class SceneRootNode(Node, ArmLogicTreeNode):
     '''Scene root node'''
     bl_idname = 'LNSceneRootNode'
     bl_label = 'Scene Root'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
     
     def init(self, context):
         self.outputs.new('ArmNodeSocketObject', 'Object')

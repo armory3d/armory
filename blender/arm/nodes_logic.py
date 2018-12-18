@@ -12,7 +12,7 @@ class ArmLogicTree(NodeTree):
     '''Logic nodes'''
     bl_idname = 'ArmLogicTreeType'
     bl_label = 'Logic Node Tree'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
 class LogicNodeCategory(NodeCategory):
     @classmethod

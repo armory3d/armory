@@ -7,7 +7,7 @@ class HasContactNode(Node, ArmLogicTreeNode):
     '''Has contact node'''
     bl_idname = 'LNHasContactNode'
     bl_label = 'Has Contact'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object 1')

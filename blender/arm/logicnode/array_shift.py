@@ -7,7 +7,7 @@ class ArrayShiftNode(Node, ArmLogicTreeNode):
     '''Array shift node'''
     bl_idname = 'LNArrayShiftNode'
     bl_label = 'Array Shift'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketArray', 'Array')

@@ -7,7 +7,7 @@ class TranslateObjectNode(Node, ArmLogicTreeNode):
     '''Translate object node'''
     bl_idname = 'LNTranslateObjectNode'
     bl_label = 'Translate Object'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

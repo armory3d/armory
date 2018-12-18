@@ -10,35 +10,11 @@ import arm.make_state as state
 import arm.api
 
 last_operator = None
-first_update = True
-v8_started = False
 
 @persistent
 def on_scene_update_pre(context):
     # TODO: get rid of this function as soon as there is a proper way to detect object data updates
     global last_operator
-    global first_update
-    global v8_started
-
-    if first_update == True: # Skip first one, object reports is_update_data
-        first_update = False
-        return
-
-    # Viewport player
-    with_armory = bpy.context.scene.render.engine == 'ARMORY'
-    if with_armory:
-        play_area = None
-        if bpy.context.screen != None:
-            for area in bpy.context.screen.areas:
-                if area.type == 'VIEW_3D':
-                    play_area = area
-                    break
-        if play_area != None and play_area.spaces[0].shading.type == 'MATERIAL':
-            if not v8_started:
-                v8_started = True
-                make.build_viewport()
-        else:
-            v8_started = False
 
     if state.redraw_ui and bpy.context.screen != None:
         for area in bpy.context.screen.areas:
@@ -114,9 +90,6 @@ appended_py_paths = []
 @persistent
 def on_load_post(context):
     global appended_py_paths
-    global first_update
-
-    first_update = True
 
     props.init_properties_on_load()
     reload_blend_data()
@@ -164,8 +137,6 @@ def load_library(asset_name):
         ref.use_fake_user = True
 
 def register():
-    if hasattr(bpy.app.handlers, 'scene_update_pre'):
-        bpy.app.handlers.scene_update_pre.append(on_scene_update_pre)
     bpy.app.handlers.load_post.append(on_load_post)
     # TODO: On windows, on_load_post is not called when opening .blend file from explorer
     if arm.utils.get_os() == 'win' and arm.utils.get_fp() != '':
@@ -173,6 +144,4 @@ def register():
     reload_blend_data()
 
 def unregister():
-    if hasattr(bpy.app.handlers, 'scene_update_pre'):
-        bpy.app.handlers.scene_update_pre.remove(on_scene_update_pre)
     bpy.app.handlers.load_post.remove(on_load_post)

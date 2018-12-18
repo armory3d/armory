@@ -749,7 +749,7 @@ def parse_vector(node, socket):
 
     elif node.type == 'TEX_COORD':
         #obj = node.object
-        #dupli = node.from_dupli
+        #instance = node.from_instance
         if socket == node.outputs[0]: # Generated - bounds
             return 'bposition'
         elif socket == node.outputs[1]: # Normal
@@ -767,7 +767,7 @@ def parse_vector(node, socket):
             return 'vec3(0.0)'
 
     elif node.type == 'UVMAP':
-        #dupli = node.from_dupli
+        #instance = node.from_instance
         con.add_elem('tex', 'short2norm')
         mat = mat_get_material()
         mat_users = mat_get_material_users()

@@ -7,7 +7,7 @@ class ObjectNode(Node, ArmLogicTreeNode):
     '''Object node'''
     bl_idname = 'LNObjectNode'
     bl_label = 'Object'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')

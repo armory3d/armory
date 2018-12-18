@@ -7,7 +7,7 @@ class BlendActionNode(Node, ArmLogicTreeNode):
     '''Blend action node'''
     bl_idname = 'LNBlendActionNode'
     bl_label = 'Blend Action'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

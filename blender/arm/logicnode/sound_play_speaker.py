@@ -7,7 +7,7 @@ class PlaySpeakerNode(Node, ArmLogicTreeNode):
     '''Play speaker node'''
     bl_idname = 'LNPlaySoundNode'
     bl_label = 'Play Speaker'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

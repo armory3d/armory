@@ -7,7 +7,7 @@ class GetTraitNode(Node, ArmLogicTreeNode):
     '''Get trait node'''
     bl_idname = 'LNGetTraitNode'
     bl_label = 'Get Trait'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')

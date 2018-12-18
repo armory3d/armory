@@ -7,7 +7,7 @@ class InverseNode(Node, ArmLogicTreeNode):
     '''Inverse node'''
     bl_idname = 'LNInverseNode'
     bl_label = 'Inverse'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

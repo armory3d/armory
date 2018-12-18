@@ -13,7 +13,7 @@ class GateNode(Node, ArmLogicTreeNode):
     bl_idname = 'LNGateNode'
     bl_label = 'Gate'
     bl_icon = 'CURVE_PATH'
-    property0 = EnumProperty(
+    property0: EnumProperty(
         items = [('Equal', 'Equal', 'Equal'),
                  ('Almost Equal', 'Almost Equal', 'Almost Equal'),
                  ('Greater', 'Greater', 'Greater'),
@@ -25,7 +25,7 @@ class GateNode(Node, ArmLogicTreeNode):
         name='', default='Equal',
         update=remove_extra_inputs)
     min_inputs = 3
-    property1 = FloatProperty(name='Tolerance', description='Precision for float compare', default=0.0001)
+    property1: FloatProperty(name='Tolerance', description='Precision for float compare', default=0.0001)
     
     def __init__(self):
         array_nodes[str(id(self))] = self

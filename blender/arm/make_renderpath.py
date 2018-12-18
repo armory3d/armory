@@ -89,7 +89,6 @@ def add_world_defs():
         wrd.world_defs += '_Legacy'
 
     # Light defines
-    lights = bpy.data.lights if bpy.app.version >= (2, 80, 1) else bpy.data.lamps
     point_lights = 0
     for bo in bpy.data.objects: # TODO: temp
         if bo.type == 'LIGHT' or bo.type == 'LAMP':

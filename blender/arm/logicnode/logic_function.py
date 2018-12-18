@@ -16,7 +16,7 @@ class FunctionNode(Node, ArmLogicTreeNode):
     def init(self, context):
         self.outputs.new('ArmNodeSocketAction', 'Out')
 
-    function_name = StringProperty(name="Name")
+    function_name: StringProperty(name="Name")
 
     def draw_buttons(self, context, layout):
         row = layout.row(align=True)

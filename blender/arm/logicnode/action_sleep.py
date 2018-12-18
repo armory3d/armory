@@ -7,7 +7,7 @@ class SleepNode(Node, ArmLogicTreeNode):
     '''Sleep node'''
     bl_idname = 'LNSleepNode'
     bl_label = 'Sleep'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

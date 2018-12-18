@@ -7,9 +7,9 @@ class SceneNode(Node, ArmLogicTreeNode):
     '''Scene node'''
     bl_idname = 'LNSceneNode'
     bl_label = 'Scene'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
-    property0 = StringProperty(name='', default='')
+    property0: StringProperty(name='', default='')
     
     def init(self, context):
         self.outputs.new('NodeSocketShader', 'Scene')

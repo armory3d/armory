@@ -7,9 +7,9 @@ class ExpressionNode(Node, ArmLogicTreeNode):
     '''Expression node'''
     bl_idname = 'LNExpressionNode'
     bl_label = 'Expression'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
-    property0 = StringProperty(name='', default='')
+    property0: StringProperty(name='', default='')
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

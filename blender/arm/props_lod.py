@@ -14,17 +14,17 @@ def update_size_prop(self, context):
 
 class ArmLodListItem(bpy.types.PropertyGroup):
     # Group of properties representing an item in the list
-    name = bpy.props.StringProperty(
+    name: StringProperty(
            name="Name",
            description="A name for this item",
            default="")
            
-    enabled_prop = bpy.props.BoolProperty(
+    enabled_prop: BoolProperty(
            name="",
            description="A name for this item",
            default=True)
 
-    screen_size_prop = bpy.props.FloatProperty(
+    screen_size_prop: FloatProperty(
            name="Screen Size",
            description="A name for this item",
            min=0.0,
@@ -98,7 +98,7 @@ class ArmLodListMoveItem(bpy.types.Operator):
     # Move an item in the list
     bl_idname = "arm_lodlist.move_item"
     bl_label = "Move an item in the list"
-    direction = bpy.props.EnumProperty(
+    direction: EnumProperty(
                 items=(
                     ('UP', 'Up', ""),
                     ('DOWN', 'Down', ""),))
@@ -142,9 +142,9 @@ def register():
     bpy.utils.register_class(ArmLodListDeleteItem)
     bpy.utils.register_class(ArmLodListMoveItem)
 
-    bpy.types.Mesh.arm_lodlist = bpy.props.CollectionProperty(type=ArmLodListItem)
-    bpy.types.Mesh.arm_lodlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
-    bpy.types.Mesh.arm_lod_material = bpy.props.BoolProperty(name="Material Lod", description="Use materials of lod objects", default=False)
+    bpy.types.Mesh.arm_lodlist = CollectionProperty(type=ArmLodListItem)
+    bpy.types.Mesh.arm_lodlist_index = IntProperty(name="Index for my_list", default=0)
+    bpy.types.Mesh.arm_lod_material = BoolProperty(name="Material Lod", description="Use materials of lod objects", default=False)
 
 def unregister():
     bpy.utils.unregister_class(ArmLodListItem)

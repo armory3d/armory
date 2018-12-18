@@ -7,7 +7,7 @@ class SetTimeScaleNode(Node, ArmLogicTreeNode):
     '''Set time scale node'''
     bl_idname = 'LNSetTimeScaleNode'
     bl_label = 'Set Time Scale'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

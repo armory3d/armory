@@ -7,7 +7,7 @@ class OnActionMarkerNode(Node, ArmLogicTreeNode):
     '''On action marker node'''
     bl_idname = 'LNOnActionMarkerNode'
     bl_label = 'On Action Marker'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')

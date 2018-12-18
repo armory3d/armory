@@ -287,9 +287,6 @@ def build_viewport():
     if not arm.utils.check_sdkpath(None):
         return
 
-    if not arm.utils.check_engine(None):
-        return
-
     arm.utils.check_default_props()
 
     assets.invalidate_enabled = False
@@ -307,7 +304,7 @@ def build(target, is_play=False, is_publish=False, is_viewport=False, is_export=
     state.is_export = is_export
 
     # Save blend
-    if arm.utils.get_save_on_build() and not state.is_viewport:
+    if arm.utils.get_save_on_build():
         bpy.ops.wm.save_mainfile()
 
     log.clear()
@@ -447,9 +444,7 @@ def build_success():
     log.clear()
     wrd = bpy.data.worlds['Arm']
 
-    if state.is_play and state.is_viewport:
-        open(arm.utils.get_fp_build() + '/krom/krom.lock', 'w').close()
-    elif state.is_play:
+    if state.is_play:
         if wrd.arm_runtime == 'Browser':
             # Start server
             os.chdir(arm.utils.get_fp())

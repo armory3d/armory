@@ -7,7 +7,7 @@ class SetNameNode(Node, ArmLogicTreeNode):
     '''Set name node'''
     bl_idname = 'LNSetNameNode'
     bl_label = 'Set Name'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

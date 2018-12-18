@@ -7,14 +7,14 @@ class ScriptNode(Node, ArmLogicTreeNode):
     '''Script node'''
     bl_idname = 'LNScriptNode'
     bl_label = 'Script'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     @property
     def property0(self):
         return bpy.data.texts[self.property0_].as_string() if self.property0_ in bpy.data.texts else ''
 
 
-    property0_ = StringProperty(name='Text', default='')
+    property0_: StringProperty(name='Text', default='')
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

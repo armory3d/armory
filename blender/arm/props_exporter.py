@@ -52,19 +52,19 @@ def update_gapi_html5(self, context):
     assets.invalidate_compiled_data(self, context)
 
 class ArmExporterListItem(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty(
+    name: StringProperty(
            name="Name",
            description="A name for this item",
            default="Preset")
 
-    arm_project_rp = bpy.props.StringProperty(
+    arm_project_rp: StringProperty(
            name="Render Path",
            description="A name for this item",
            default="Path")
 
-    arm_project_scene = StringProperty(name="Scene", description="Scene to load when launching")
+    arm_project_scene: StringProperty(name="Scene", description="Scene to load when launching")
 
-    arm_project_target = EnumProperty(
+    arm_project_target: EnumProperty(
         items = [('html5', 'HTML5 (JS)', 'html5'),
                  ('windows-hl', 'Windows (C)', 'windows-hl'),
                  ('krom-windows', 'Windows (Krom)', 'krom-windows'),
@@ -78,43 +78,43 @@ class ArmExporterListItem(bpy.types.PropertyGroup):
                  ('custom', 'Custom', 'custom'),],
         name="Target", default='html5', description='Build platform')
 
-    arm_project_khamake = StringProperty(name="Khamake", description="Specify arguments for the 'node Kha/make' call")
+    arm_project_khamake: StringProperty(name="Khamake", description="Specify arguments for the 'node Kha/make' call")
 
-    arm_gapi_custom = EnumProperty(
+    arm_gapi_custom: EnumProperty(
         items = [('opengl', 'OpenGL', 'opengl'),
                  ('vulkan', 'Vulkan', 'vulkan'),
                  ('direct3d11', 'Direct3D11', 'direct3d11'),
                  ('direct3d12', 'Direct3D12', 'direct3d12'),
                  ('metal', 'Metal', 'metal')],
         name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_custom)
-    arm_gapi_win = EnumProperty(
+    arm_gapi_win: EnumProperty(
         items = [('direct3d11', 'Auto', 'direct3d11'),
                  ('opengl', 'OpenGL', 'opengl'),
                  ('vulkan', 'Vulkan', 'vulkan'),
                  ('direct3d11', 'Direct3D11', 'direct3d11'),
                  ('direct3d12', 'Direct3D12', 'direct3d12')],
         name="Graphics API", default='direct3d11', description='Based on currently selected target', update=update_gapi_win)
-    arm_gapi_linux = EnumProperty(
+    arm_gapi_linux: EnumProperty(
         items = [('opengl', 'Auto', 'opengl'),
                  ('opengl', 'OpenGL', 'opengl'),
                  ('vulkan', 'Vulkan', 'vulkan')],
         name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_linux)
-    arm_gapi_android = EnumProperty(
+    arm_gapi_android: EnumProperty(
         items = [('opengl', 'Auto', 'opengl'),
                  ('opengl', 'OpenGL', 'opengl'),
                  ('vulkan', 'Vulkan', 'vulkan')],
         name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_android)
-    arm_gapi_mac = EnumProperty(
+    arm_gapi_mac: EnumProperty(
         items = [('opengl', 'Auto', 'opengl'),
                  ('opengl', 'OpenGL', 'opengl'),
                  ('metal', 'Metal', 'metal')],
         name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_mac)
-    arm_gapi_ios = EnumProperty(
+    arm_gapi_ios: EnumProperty(
         items = [('opengl', 'Auto', 'opengl'),
                  ('opengl', 'OpenGL', 'opengl'),
                  ('metal', 'Metal', 'metal')],
         name="Graphics API", default='opengl', description='Based on currently selected target', update=update_gapi_ios)
-    arm_gapi_html5 = EnumProperty(
+    arm_gapi_html5: EnumProperty(
         items = [('webgl', 'Auto', 'webgl'),
                  ('webgl', 'WebGL2', 'webgl')],
         name="Graphics API", default='webgl', description='Based on currently selected target', update=update_gapi_html5)
@@ -177,7 +177,7 @@ class ArmExporterListMoveItem(bpy.types.Operator):
     # Move an item in the list
     bl_idname = "arm_exporterlist.move_item"
     bl_label = "Move an item in the list"
-    direction = bpy.props.EnumProperty(
+    direction: EnumProperty(
                 items=(
                     ('UP', 'Up', ""),
                     ('DOWN', 'Down', ""),))
@@ -272,8 +272,8 @@ def register():
     bpy.utils.register_class(ArmExporterGpuProfileButton)
     bpy.utils.register_class(ArmoryExporterOpenFolderButton)
 
-    bpy.types.World.arm_exporterlist = bpy.props.CollectionProperty(type=ArmExporterListItem)
-    bpy.types.World.arm_exporterlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
+    bpy.types.World.arm_exporterlist = CollectionProperty(type=ArmExporterListItem)
+    bpy.types.World.arm_exporterlist_index = IntProperty(name="Index for my_list", default=0)
 
 def unregister():
     bpy.utils.unregister_class(ArmExporterListItem)

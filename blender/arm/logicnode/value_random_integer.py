@@ -7,7 +7,7 @@ class RandomIntegerNode(Node, ArmLogicTreeNode):
     '''Random integer node'''
     bl_idname = 'LNRandomIntegerNode'
     bl_label = 'Random (Integer)'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('NodeSocketInt', 'Min')

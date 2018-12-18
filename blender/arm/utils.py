@@ -431,11 +431,6 @@ def voxel_support():
     # macos does not support opengl 4.5, needs metal
     return state.target != 'html5' and get_os() != 'mac'
 
-v8_found = False
-def with_v8():
-    global v8_found
-    return v8_found
-
 def check_saved(self):
     if bpy.data.filepath == "":
         msg = "Save blend file first"
@@ -469,16 +464,6 @@ def check_projectpath(self):
         return False
     else:
         return True
-
-def check_engine(self):
-    if bpy.context == None or bpy.context.scene == None:
-        return False
-    engine = bpy.context.scene.render.engine
-    if engine != 'CYCLES' and engine != 'BLENDER_EEVEE' and engine != 'ARMORY':
-        msg = "Switch to Armory, Cycles or Eevee engine first"
-        self.report({"ERROR"}, msg) if self != None else log.print_info(msg)
-        return False
-    return True
 
 def disp_enabled(target):
     rpdat = get_rp()
@@ -637,15 +622,7 @@ def check_default_props():
         wrd.arm_project_name = arm.utils.blend_name()
 
 def register(local_sdk=False):
-    global v8_found
     global use_local_sdk
-    try:
-        engine = bpy.context.scene.render.engine
-        bpy.context.scene.render.engine = 'ARMORY'
-        bpy.context.scene.render.engine = engine
-        v8_found = True
-    except:
-        pass
     use_local_sdk = local_sdk
 
 def unregister():

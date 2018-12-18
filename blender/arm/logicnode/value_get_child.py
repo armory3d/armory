@@ -7,8 +7,8 @@ class GetChildNode(Node, ArmLogicTreeNode):
     '''Get child node'''
     bl_idname = 'LNGetChildNode'
     bl_label = 'Get Child'
-    bl_icon = 'GAME'
-    property0 = EnumProperty(
+    bl_icon = 'QUESTION'
+    property0: EnumProperty(
         items = [('By Name', 'By Name', 'By Name'),
                  ('Contains', 'Contains', 'Contains'),
                  ('Starts With', 'Starts With', 'Starts With'),

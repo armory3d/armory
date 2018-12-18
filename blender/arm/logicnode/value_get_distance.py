@@ -7,7 +7,7 @@ class GetDistanceNode(Node, ArmLogicTreeNode):
     '''Get distance node'''
     bl_idname = 'LNGetDistanceNode'
     bl_label = 'Get Distance'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')

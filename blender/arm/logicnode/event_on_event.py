@@ -8,7 +8,7 @@ class OnEventNode(Node, ArmLogicTreeNode):
     bl_idname = 'LNOnEventNode'
     bl_label = 'On Event'
     bl_icon = 'CURVE_PATH'
-    property0 = StringProperty(name='', default='')
+    property0: StringProperty(name='', default='')
     
     def init(self, context):
         self.outputs.new('ArmNodeSocketAction', 'Out')

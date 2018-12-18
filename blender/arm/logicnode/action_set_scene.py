@@ -7,7 +7,7 @@ class SetSceneNode(Node, ArmLogicTreeNode):
     '''Set scene node'''
     bl_idname = 'LNSetSceneNode'
     bl_label = 'Set Scene'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

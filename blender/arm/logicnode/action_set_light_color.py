@@ -7,7 +7,7 @@ class SetLightColorNode(Node, ArmLogicTreeNode):
     '''Set light color node'''
     bl_idname = 'LNSetLightColorNode'
     bl_label = 'Set Light Color'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

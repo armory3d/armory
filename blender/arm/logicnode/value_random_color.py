@@ -7,7 +7,7 @@ class RandomColorNode(Node, ArmLogicTreeNode):
     '''Random color node'''
     bl_idname = 'LNRandomColorNode'
     bl_label = 'Random (Color)'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.outputs.new('NodeSocketColor', 'Color')

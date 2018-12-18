@@ -7,7 +7,7 @@ class StopSpeakerNode(Node, ArmLogicTreeNode):
     '''Stop speaker node'''
     bl_idname = 'LNStopSoundNode'
     bl_label = 'Stop Speaker'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

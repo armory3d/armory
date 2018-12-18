@@ -7,7 +7,7 @@ class ResumeActionNode(Node, ArmLogicTreeNode):
     '''Resume action node'''
     bl_idname = 'LNResumeActionNode'
     bl_label = 'Resume Action'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

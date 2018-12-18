@@ -7,7 +7,7 @@ class ApplyForceAtLocationNode(Node, ArmLogicTreeNode):
     '''Apply force at location node'''
     bl_idname = 'LNApplyForceAtLocationNode'
     bl_label = 'Apply Force At Location'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

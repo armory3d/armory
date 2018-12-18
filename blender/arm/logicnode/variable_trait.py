@@ -7,9 +7,9 @@ class TraitNode(Node, ArmLogicTreeNode):
     '''Trait node'''
     bl_idname = 'LNTraitNode'
     bl_label = 'Trait'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
-    property0 = StringProperty(name='', default='')
+    property0: StringProperty(name='', default='')
     
     def init(self, context):
         self.outputs.new('NodeSocketShader', 'Trait')

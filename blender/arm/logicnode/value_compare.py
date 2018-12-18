@@ -7,8 +7,8 @@ class CompareNode(Node, ArmLogicTreeNode):
     '''Compare node'''
     bl_idname = 'LNCompareNode'
     bl_label = 'Compare'
-    bl_icon = 'GAME'
-    property0 = EnumProperty(
+    bl_icon = 'QUESTION'
+    property0: EnumProperty(
         items = [('Equal', 'Equal', 'Equal'),
                  ('Not Equal', 'Not Equal', 'Not Equal'),
                  ('Less Than', 'Less Than', 'Less Than'),
