@@ -128,7 +128,6 @@ class DataPropsPanel(bpy.types.Panel):
         elif obj.type == 'MESH' or obj.type == 'FONT' or obj.type == 'META':
             row = layout.row(align=True)
             row.prop(obj.data, 'arm_dynamic_usage')
-            row.prop(obj.data, 'arm_compress')
             layout.operator("arm.invalidate_cache")
         elif obj.type == 'LIGHT' or obj.type == 'LAMP': # TODO: LAMP is deprecated
             row = layout.row(align=True)
@@ -145,7 +144,7 @@ class DataPropsPanel(bpy.types.Panel):
             layout.prop(obj.data, 'arm_loop')
             layout.prop(obj.data, 'arm_stream')
         elif obj.type == 'ARMATURE':
-            layout.prop(obj.data, 'arm_compress')
+            pass
 
 class ScenePropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
@@ -161,11 +160,6 @@ class ScenePropsPanel(bpy.types.Panel):
         row = layout.row()
         column = row.column()
         row.prop(scene, 'arm_export')
-        row.prop(scene, 'arm_compress')
-        # column.prop(scene, 'arm_gp_export')
-        # columnb = column.column()
-        # columnb.enabled = scene.arm_gp_export
-        # columnb.operator('arm.invalidate_gp_cache')
 
 class InvalidateCacheButton(bpy.types.Operator):
     '''Delete cached mesh data'''
@@ -184,16 +178,6 @@ class InvalidateMaterialCacheButton(bpy.types.Operator):
     def execute(self, context):
         context.material.is_cached = False
         context.material.signature = ''
-        return{'FINISHED'}
-
-class InvalidateGPCacheButton(bpy.types.Operator):
-    '''Delete cached grease pencil data'''
-    bl_idname = "arm.invalidate_gp_cache"
-    bl_label = "Invalidate GP Cache"
-
-    def execute(self, context):
-        if context.scene.grease_pencil != None:
-            context.scene.grease_pencil.arm_cached = False
         return{'FINISHED'}
 
 class MaterialPropsPanel(bpy.types.Panel):
@@ -341,6 +325,7 @@ class ArmoryExporterPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_compiler_inline')
         col.prop(wrd, 'arm_minify_js')
         col.prop(wrd, 'arm_optimize_data')
+        col.prop(wrd, 'arm_asset_compression')
 
 class ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
@@ -1306,7 +1291,6 @@ def register():
     bpy.utils.register_class(ScenePropsPanel)
     bpy.utils.register_class(InvalidateCacheButton)
     bpy.utils.register_class(InvalidateMaterialCacheButton)
-    bpy.utils.register_class(InvalidateGPCacheButton)
     bpy.utils.register_class(MaterialPropsPanel)
     bpy.utils.register_class(ArmoryPlayerPanel)
     bpy.utils.register_class(ArmoryExporterPanel)
@@ -1347,7 +1331,6 @@ def unregister():
     bpy.utils.unregister_class(ScenePropsPanel)
     bpy.utils.unregister_class(InvalidateCacheButton)
     bpy.utils.unregister_class(InvalidateMaterialCacheButton)
-    bpy.utils.unregister_class(InvalidateGPCacheButton)
     bpy.utils.unregister_class(MaterialPropsPanel)
     bpy.utils.unregister_class(ArmoryPlayerPanel)
     bpy.utils.unregister_class(ArmoryExporterPanel)

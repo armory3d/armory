@@ -100,9 +100,10 @@ def export_data(fp, sdk_path):
     navigation_found = False
     ui_found = False
     ArmoryExporter.compress_enabled = state.is_publish and wrd.arm_asset_compression
+    ArmoryExporter.optimize_enabled = state.is_publish and wrd.arm_optimize_data
     for scene in bpy.data.scenes:
         if scene.arm_export:
-            ext = '.zip' if (scene.arm_compress and state.is_publish) else '.arm'
+            ext = '.zip' if ArmoryExporter.compress_enabled else '.arm'
             asset_path = build_dir + '/compiled/Assets/' + arm.utils.safestr(scene.name) + ext
             exporter.execute(bpy.context, asset_path, scene=scene)
             if ArmoryExporter.export_physics:
