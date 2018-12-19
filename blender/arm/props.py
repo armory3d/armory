@@ -211,7 +211,6 @@ def init_properties():
     bpy.types.Camera.arm_frustum_culling = BoolProperty(name="Frustum Culling", description="Perform frustum culling for this camera", default=True)
 
     # Render path generator
-    bpy.types.World.rp_search = StringProperty(name="Search", default='')
     bpy.types.World.rp_preset = EnumProperty(
         items=[('Desktop', 'Desktop', 'Desktop'),
                ('Mobile', 'Mobile', 'Mobile'),
@@ -237,8 +236,8 @@ def init_properties():
         items=[('none', 'Both', 'None'),
                ('clockwise', 'Front', 'Clockwise'),
                ('counter_clockwise', 'Back', 'Counter-Clockwise')],
-        name="", default='clockwise', description="Draw geometry faces")
-    bpy.types.Material.arm_discard = BoolProperty(name="Discard", default=False, description="Alpha test - do not render fragments below specified opacity threshold")
+        name="Cull Mode", default='clockwise', description="Draw geometry faces")
+    bpy.types.Material.arm_discard = BoolProperty(name="Alpha Test", default=False, description="Do not render fragments below specified opacity threshold")
     bpy.types.Material.arm_discard_opacity = FloatProperty(name="Mesh Opacity", default=0.2, min=0, max=1)
     bpy.types.Material.arm_discard_opacity_shadows = FloatProperty(name="Shadows Opacity", default=0.1, min=0, max=1)
     bpy.types.Material.arm_custom_material = StringProperty(name="Custom Material", description="Write custom material", default='')

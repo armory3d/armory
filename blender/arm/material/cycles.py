@@ -332,7 +332,7 @@ def parse_displacement_input(inp):
         l = inp.links[0]
         if l.from_node.type == 'REROUTE':
             return parse_displacement_input(l.from_node.inputs[0])
-        return parse_value_input(inp) # TODO: displacement is a vector now
+        return parse_vector_input(inp)
     else:
         return None
 
@@ -877,7 +877,7 @@ def parse_vector(node, socket):
         elif op == 'NORMALIZE':
             return 'normalize({0})'.format(vec1)
 
-    elif node.type == 'DISPLACEMENT': # TODO: displacement is a vector now
+    elif node.type == 'DISPLACEMENT':
         height = parse_value_input(node.inputs[0])
         midlevel = parse_value_input(node.inputs[1])
         scale = parse_value_input(node.inputs[2])

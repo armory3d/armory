@@ -40,7 +40,6 @@ def update_preset(self, context):
         rpdat.arm_texture_filter = 'Anisotropic'
         rpdat.arm_irradiance = True
         rpdat.arm_radiance = True
-        rpdat.arm_radiance_sky = True
     elif self.rp_preset == 'VR':
         rpdat.rp_renderer = 'Forward'
         rpdat.rp_depthprepass = False
@@ -74,7 +73,6 @@ def update_preset(self, context):
         rpdat.arm_texture_filter = 'Point'
         rpdat.arm_irradiance = True
         rpdat.arm_radiance = True
-        rpdat.arm_radiance_sky = True
     elif self.rp_preset == 'Mobile':
         rpdat.rp_renderer = 'Forward'
         rpdat.rp_depthprepass = False
@@ -108,7 +106,6 @@ def update_preset(self, context):
         rpdat.arm_texture_filter = 'Linear'
         rpdat.arm_irradiance = True
         rpdat.arm_radiance = False
-        rpdat.arm_radiance_sky = False
     elif self.rp_preset == 'Max':
         rpdat.rp_renderer = 'Deferred'
         rpdat.rp_shadows = True
@@ -146,7 +143,6 @@ def update_preset(self, context):
         rpdat.arm_texture_filter = 'Anisotropic'
         rpdat.arm_irradiance = True
         rpdat.arm_radiance = True
-        rpdat.arm_radiance_sky = True
     elif self.rp_preset == '2D/Baked':
         rpdat.rp_renderer = 'Forward'
         rpdat.rp_depthprepass = False
@@ -180,7 +176,6 @@ def update_preset(self, context):
         rpdat.arm_texture_filter = 'Linear'
         rpdat.arm_irradiance = False
         rpdat.arm_radiance = False
-        rpdat.arm_radiance_sky = False
     update_renderpath(self, context)
 
 def update_renderpath(self, context):
@@ -271,8 +266,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         items=[('512', '512', '512'),
                ('1024', '1024', '1024'), 
                ('2048', '2048', '2048')],
-        name="", description="Prefiltered map size", default='1024', update=assets.invalidate_envmap_data)
-    arm_radiance_sky: BoolProperty(name="Sky Radiance", default=True, update=assets.invalidate_shader_cache)
+        name="Map Size", description="Prefiltered map size", default='1024', update=assets.invalidate_envmap_data)
     rp_autoexposure: BoolProperty(name="Auto Exposure", description="Adjust exposure based on luminance", default=False, update=update_renderpath)
     rp_compositornodes: BoolProperty(name="Compositor", description="Draw compositor nodes", default=True, update=update_renderpath)
     rp_shadows: BoolProperty(name="Shadows", description="Enable shadow casting", default=True, update=update_renderpath)

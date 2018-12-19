@@ -77,7 +77,7 @@ class ArmTraitList(bpy.types.UIList):
         elif item.type_prop == "WebAssembly":
             custom_icon_value = icons_dict["wasm"].icon_id
         elif item.type_prop == "UI Canvas":
-            custom_icon = "UI"
+            custom_icon = "OBJECT_DATAMODE"
         elif item.type_prop == "Bundled Script":
             custom_icon = 'OBJECT_DATAMODE'
         elif item.type_prop == "Logic Nodes":
@@ -419,6 +419,7 @@ class ArmTraitsPanel(bpy.types.Panel):
  
     def draw(self, context):
         layout = self.layout
+        layout.use_property_split = True
         obj = bpy.context.object
         draw_traits(layout, obj, is_object=True)
 
@@ -429,7 +430,8 @@ class ArmSceneTraitsPanel(bpy.types.Panel):
     bl_context = "scene"
  
     def draw(self, context):
-        layout = self.layout        
+        layout = self.layout
+        layout.use_property_split = True
         obj = bpy.context.scene
         draw_traits(layout, obj, is_object=False)
 

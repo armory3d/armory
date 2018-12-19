@@ -209,7 +209,7 @@ def parse_color(world, node):
         write_probes.write_sky_irradiance(wname)
 
         # Radiance
-        if rpdat.arm_radiance_sky and rpdat.arm_radiance and rpdat.arm_irradiance and not mobile_mat:
+        if rpdat.arm_radiance and rpdat.arm_irradiance and not mobile_mat:
             wrd.world_defs += '_Rad'
             hosek_path = 'armory/Assets/hosek/'
             sdk_path = arm.utils.get_sdk_path()

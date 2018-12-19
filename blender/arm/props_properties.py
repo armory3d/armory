@@ -125,7 +125,7 @@ class ArmPropertyListMoveItem(bpy.types.Operator):
         return{'FINISHED'}
 
 def draw_properties(layout, obj):
-    layout.label("Properties")
+    layout.label(text="Properties")
     rows = 2
     if len(obj.arm_traitlist) > 1:
         rows = 4

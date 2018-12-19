@@ -62,7 +62,10 @@ class ArmExporterListItem(bpy.types.PropertyGroup):
            description="A name for this item",
            default="Path")
 
-    arm_project_scene: StringProperty(name="Scene", description="Scene to load when launching")
+    arm_project_scene: StringProperty(
+            name="Scene",
+            description="Scene to load when launching",
+            default="Scene")
 
     arm_project_target: EnumProperty(
         items = [('html5', 'HTML5 (JS)', 'html5'),

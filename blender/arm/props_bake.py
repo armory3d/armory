@@ -347,10 +347,10 @@ def register():
     bpy.utils.register_class(ArmBakeAddSelectedButton)
     bpy.utils.register_class(ArmBakeClearAllButton)
     bpy.utils.register_class(ArmBakeRemoveBakedMaterialsButton)
-    bpy.types.Scene.arm_bakelist_scale: FloatProperty(name="Resolution", description="Resolution scale", default=100.0, min=1, max=1000, soft_min=1, soft_max=100.0, subtype='PERCENTAGE')
-    bpy.types.Scene.arm_bakelist: CollectionProperty(type=ArmBakeListItem)
-    bpy.types.Scene.arm_bakelist_index: IntProperty(name="Index for my_list", default=0)
-    bpy.types.Scene.arm_bakelist_unwrap: EnumProperty(
+    bpy.types.Scene.arm_bakelist_scale = FloatProperty(name="Resolution", description="Resolution scale", default=100.0, min=1, max=1000, soft_min=1, soft_max=100.0, subtype='PERCENTAGE')
+    bpy.types.Scene.arm_bakelist = CollectionProperty(type=ArmBakeListItem)
+    bpy.types.Scene.arm_bakelist_index = IntProperty(name="Index for my_list", default=0)
+    bpy.types.Scene.arm_bakelist_unwrap = EnumProperty(
         items = [('Lightmap Pack', 'Lightmap Pack', 'Lightmap Pack'),
                  ('Smart UV Project', 'Smart UV Project', 'Smart UV Project')],
         name = "UV Unwrap", default='Smart UV Project')

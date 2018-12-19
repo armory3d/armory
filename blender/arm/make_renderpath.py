@@ -91,7 +91,7 @@ def add_world_defs():
     # Light defines
     point_lights = 0
     for bo in bpy.data.objects: # TODO: temp
-        if bo.type == 'LIGHT' or bo.type == 'LAMP':
+        if bo.type == 'LIGHT':
             light = bo.data
             if light.type == 'AREA' and '_LTC' not in wrd.world_defs:
                 wrd.world_defs += '_LTC'

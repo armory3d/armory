@@ -86,7 +86,6 @@ class ShaderContext:
             self.sort_vs()
 
     def sort_vs(self):
-        # TODO: sort vertex data
         vs = []
         ar = ['pos', 'nor', 'tex', 'tex1', 'col', 'tang', 'bone', 'weight', 'ipos', 'irot', 'iscl']
         for ename in ar:  

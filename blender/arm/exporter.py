@@ -74,7 +74,7 @@ class ArmoryExporter:
             return NodeTypeMesh
         elif bobject.type == "META":
             return NodeTypeMesh
-        elif bobject.type == "LIGHT" or bobject.type == "LAMP": # TODO: LAMP is deprecated
+        elif bobject.type == "LIGHT":
             return NodeTypeLight
         elif bobject.type == "CAMERA":
             return NodeTypeCamera
@@ -1167,7 +1167,8 @@ class ArmoryExporter:
 
     def export_mesh_data(self, exportMesh, bobject, o, has_armature=False):
         exportMesh.calc_normals_split()
-        exportMesh.calc_loop_triangles()
+        # exportMesh.calc_loop_triangles()
+        # exportMesh.calc_tangents()
 
         loops = exportMesh.loops
         num_verts = len(loops)
@@ -1834,9 +1835,6 @@ class ArmoryExporter:
             rebuild_rp = True
         if rpdat.rp_overlays_state == 'Auto' and rpdat.rp_overlays != overlays_used:
             rpdat.rp_overlays = overlays_used
-            rebuild_rp = True
-        if rpdat.rp_blending_state == 'On' and rpdat.rp_blending == False: # TODO: deprecated
-            rpdat.rp_blending = True
             rebuild_rp = True
         if rpdat.rp_blending_state == 'Auto' and rpdat.rp_blending != blending_used:
             rpdat.rp_blending = blending_used
@@ -2688,7 +2686,7 @@ class ArmoryExporter:
         # Radiance
         if '_EnvTex' in wrd.world_defs:
             arm_radiance = rpdat.arm_radiance
-        elif '_EnvSky' in wrd.world_defs and rpdat.arm_radiance_sky:
+        elif '_EnvSky' in wrd.world_defs:
             arm_radiance = rpdat.arm_radiance
             radtex = 'hosek'
         num_mips = world.arm_envtex_num_mips

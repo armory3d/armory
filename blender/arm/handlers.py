@@ -13,7 +13,6 @@ last_operator = None
 
 @persistent
 def on_scene_update_pre(context):
-    # TODO: get rid of this function as soon as there is a proper way to detect object data updates
     global last_operator
 
     if state.redraw_ui and bpy.context.screen != None:

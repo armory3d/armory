@@ -55,6 +55,7 @@ class ArmLogicNodePanel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        layout.use_property_split = True
         if context.active_node != None and context.active_node.bl_idname.startswith('LN'):
             layout.prop(context.active_node, 'arm_logic_id')
             layout.prop(context.active_node, 'arm_watch')
