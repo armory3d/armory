@@ -1246,6 +1246,7 @@ class ArmMaterialNodePanel(bpy.types.Panel):
     bl_idname = 'ArmMaterialNodePanel'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
+    bl_category = 'Node'
 
     def draw(self, context):
         layout = self.layout
