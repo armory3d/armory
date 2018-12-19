@@ -24,16 +24,10 @@ def invalidate_instance_cache(self, context):
         return
     invalidate_mesh_cache(self, context)
     for slot in context.object.material_slots:
-        slot.material.is_cached = False
+        slot.material.arm_cached = False
 
 def invalidate_compiler_cache(self, context):
     bpy.data.worlds['Arm'].arm_recompile = True
-
-def update_mat_cache(self, context):
-    if self.is_cached == True:
-        self.lock_cache = True
-    else:
-        pass
 
 def proxy_sync_loc(self, context):
     if context.object == None or context.object.proxy == None:
@@ -188,7 +182,6 @@ def init_properties():
     bpy.types.Object.arm_proxy_sync_materials = BoolProperty(name="Materials", description="Keep materials synchronized with proxy object", default=True, update=proxy_sync_materials)
     bpy.types.Object.arm_proxy_sync_modifiers = BoolProperty(name="Modifiers", description="Keep modifiers synchronized with proxy object", default=True, update=proxy_sync_modifiers)
     bpy.types.Object.arm_proxy_sync_traits = BoolProperty(name="Traits", description="Keep traits synchronized with proxy object", default=True, update=proxy_sync_traits)
-    bpy.types.Object.arm_cached = BoolProperty(name="Object Cached", description="No need to reexport object data", default=True)
     # For speakers
     bpy.types.Speaker.arm_play_on_start = BoolProperty(name="Play on Start", description="Play this sound automatically", default=False)
     bpy.types.Speaker.arm_loop = BoolProperty(name="Loop", description="Loop this sound", default=False)
@@ -335,10 +328,9 @@ def init_properties():
     bpy.types.Material.arm_skip_context = StringProperty(name="Skip Context", default='')
     bpy.types.Material.arm_material_id = IntProperty(name="ID", default=0)
     bpy.types.NodeSocket.is_uniform = BoolProperty(name="Is Uniform", description="Mark node sockets to be processed as material uniforms", default=False)
-    bpy.types.NodeTree.is_cached = BoolProperty(name="Node Tree Cached", description="No need to reexport node tree", default=False)
+    bpy.types.NodeTree.arm_cached = BoolProperty(name="Node Tree Cached", description="No need to reexport node tree", default=False)
     bpy.types.Material.signature = StringProperty(name="Signature", description="Unique string generated from material nodes", default="")
-    bpy.types.Material.is_cached = BoolProperty(name="Material Cached", description="No need to reexport material data", default=False, update=update_mat_cache)
-    bpy.types.Material.lock_cache = BoolProperty(name="Lock Material Cache", description="Prevent is_cached from updating", default=False)
+    bpy.types.Material.arm_cached = BoolProperty(name="Material Cached", description="No need to reexport material data", default=False)
     bpy.types.Node.arm_material_param = BoolProperty(name="Parameter", description="Control this node from script", default=False)
     bpy.types.Node.arm_logic_id = StringProperty(name="ID", description="Nodes with equal identifier will share data", default='')
     bpy.types.Node.arm_watch = BoolProperty(name="Watch", description="Watch value of this node in debug console", default=False)

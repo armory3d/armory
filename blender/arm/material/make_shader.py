@@ -108,7 +108,7 @@ def build(material, mat_users, mat_armusers):
     return rpasses, mat_state.data, shader_data_name, bind_constants, bind_textures
 
 def write_shaders(rel_path, con, rpass, matname):
-    keep_cache = mat_state.material.is_cached
+    keep_cache = mat_state.material.arm_cached
     write_shader(rel_path, con.vert, 'vert', rpass, matname, keep_cache=keep_cache)
     write_shader(rel_path, con.frag, 'frag', rpass, matname, keep_cache=keep_cache)
     write_shader(rel_path, con.geom, 'geom', rpass, matname, keep_cache=keep_cache)

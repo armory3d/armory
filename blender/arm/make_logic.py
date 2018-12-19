@@ -54,7 +54,7 @@ def build_node_tree(node_group):
             prop = getattr(node, 'property0')
             ArmoryExporter.import_traits.append(prop)
 
-    if node_group.is_cached and os.path.isfile(file):
+    if node_group.arm_cached and os.path.isfile(file):
         return
 
     with open(file, 'w') as f:
@@ -93,7 +93,7 @@ def build_node_tree(node_group):
                 f.write('\t\treturn this.functionOutputNodes["' + function_node_outputs[function_name] + '"].result;\n')
             f.write('\t}\n\n')
         f.write('}')
-    node_group.is_cached = True
+    node_group.arm_cached = True
 
 def build_node(node, f):
     global parsed_nodes

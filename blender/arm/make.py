@@ -565,6 +565,6 @@ def clean():
     # To recache signatures for batched materials
     for mat in bpy.data.materials:
         mat.signature = ''
-        mat.is_cached = False
+        mat.arm_cached = False
 
     print('Project cleaned')

@@ -78,7 +78,7 @@ def build(materialArray, mat_users, mat_armusers):
 
     # Update signatures
     for mat in materialArray:
-        if mat.signature == '' or not mat.is_cached:
+        if mat.signature == '' or not mat.arm_cached:
             mat.signature = get_signature(mat)
         # Group signatures
         if mat.signature in signatureDict:

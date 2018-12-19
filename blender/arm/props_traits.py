@@ -420,6 +420,7 @@ class ArmTraitsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         obj = bpy.context.object
         draw_traits(layout, obj, is_object=True)
 
@@ -432,6 +433,7 @@ class ArmSceneTraitsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         obj = bpy.context.scene
         draw_traits(layout, obj, is_object=False)
 

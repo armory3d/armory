@@ -22,6 +22,8 @@ class ObjectPropsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
+
         obj = bpy.context.object
         if obj == None:
             return
@@ -58,6 +60,7 @@ class ModifiersPropsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         obj = bpy.context.object
         if obj == None:
             return
@@ -73,6 +76,7 @@ class ParticlesPropsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         obj = bpy.context.particle_system
         if obj == None:
             return
@@ -89,6 +93,7 @@ class PhysicsPropsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         obj = bpy.context.object
         if obj == None:
             return
@@ -115,6 +120,7 @@ class DataPropsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         obj = bpy.context.object
         if obj == None:
             return
@@ -149,6 +155,7 @@ class ScenePropsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         scene = bpy.context.scene
         if scene == None:
             return
@@ -171,7 +178,7 @@ class InvalidateMaterialCacheButton(bpy.types.Operator):
     bl_label = "Invalidate Cache"
 
     def execute(self, context):
-        context.material.is_cached = False
+        context.material.arm_cached = False
         context.material.signature = ''
         return{'FINISHED'}
 
@@ -184,6 +191,7 @@ class MaterialPropsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         mat = bpy.context.material
         if mat == None:
             return
@@ -231,6 +239,7 @@ class ArmoryPlayerPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
@@ -252,6 +261,7 @@ class ArmoryExporterPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
@@ -313,6 +323,7 @@ class ArmoryProjectPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
 
         row = layout.row(align=True)
@@ -368,6 +379,7 @@ class ArmVirtualInputPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
 
 class ArmNavigationPanel(bpy.types.Panel):
     bl_label = "Armory Navigation"
@@ -378,6 +390,7 @@ class ArmNavigationPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         scene = bpy.context.scene
         if scene == None:
             return
@@ -593,6 +606,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
 
         rows = 2
@@ -637,6 +651,7 @@ class ArmRenderPathRendererPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
 
@@ -694,6 +709,7 @@ class ArmRenderPathShadowsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
         if len(wrd.arm_rplist) <= wrd.arm_rplist_index:
             return
@@ -726,6 +742,7 @@ class ArmRenderPathVoxelsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
         if len(wrd.arm_rplist) <= wrd.arm_rplist_index:
             return
@@ -771,6 +788,7 @@ class ArmRenderPathWorldPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
         if len(wrd.arm_rplist) <= wrd.arm_rplist_index:
             return
@@ -826,6 +844,7 @@ class ArmRenderPathPostProcessPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
         if len(wrd.arm_rplist) <= wrd.arm_rplist_index:
             return
@@ -903,6 +922,7 @@ class ArmRenderPathCompositorPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
         if len(wrd.arm_rplist) <= wrd.arm_rplist_index:
             return
@@ -949,6 +969,7 @@ class ArmBakePanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         scn = context.scene
 
         row = layout.row(align=True)
@@ -1041,6 +1062,7 @@ class ArmLodPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         obj = bpy.context.object
 
         # Mesh only for now
@@ -1090,6 +1112,7 @@ class ArmTilesheetPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
 
         rows = 2
@@ -1147,6 +1170,7 @@ class ArmProxyPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         layout.operator("arm.make_proxy")
         obj = bpy.context.object
         if obj != None and obj.proxy != None:
@@ -1251,6 +1275,7 @@ class ArmMaterialNodePanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
+        layout.use_property_decorate = False
         n = context.active_node
         if n != None and (n.bl_idname == 'ShaderNodeRGB' or n.bl_idname == 'ShaderNodeValue' or n.bl_idname == 'ShaderNodeTexImage'):
             layout.prop(context.active_node, 'arm_material_param')

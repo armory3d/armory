@@ -5,90 +5,49 @@ import importlib
 from bpy.app.handlers import persistent
 import arm.utils
 import arm.props as props
-import arm.make as make
 import arm.make_state as state
 import arm.api
 
-last_operator = None
-
 @persistent
-def on_scene_update_pre(context):
-    global last_operator
+def on_depsgraph_update_post(self):
+    if state.proc_build != None:
+        return
 
-    if state.redraw_ui and bpy.context.screen != None:
-        for area in bpy.context.screen.areas:
+    depsgraph = bpy.context.depsgraph
+    for update in depsgraph.updates:
+        uid = update.id
+        if hasattr(uid, 'arm_cached'):
+            # uid.arm_cached = False # TODO: does not trigger update
+            if isinstance(uid, bpy.types.Mesh):
+                bpy.data.meshes[uid.name].arm_cached = False
+            elif isinstance(uid, bpy.types.Curve):
+                bpy.data.curves[uid.name].arm_cached = False
+            elif isinstance(uid, bpy.types.MetaBall):
+                bpy.data.metaballs[uid.name].arm_cached = False
+            elif isinstance(uid, bpy.types.Armature):
+                bpy.data.armatures[uid.name].arm_cached = False
+            elif isinstance(uid, bpy.types.NodeTree):
+                bpy.data.node_groups[uid.name].arm_cached = False
+            elif isinstance(uid, bpy.types.Material):
+                bpy.data.materials[uid.name].arm_cached = False
+
+def always():
+    if state.redraw_ui and context_screen != None:
+        for area in context_screen.areas:
             if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
                 area.tag_redraw()
         state.redraw_ui = False
-
-    # Recache edited data
-    ops = bpy.context.window_manager.operators
-    operators_changed = False
-    if len(ops) > 0 and last_operator != ops[-1]:
-        last_operator = ops[-1]
-        operators_changed = True
-
-    if hasattr(bpy.context, 'active_object'):
-        obj = bpy.context.active_object
-        if obj != None:
-            if obj.data != None and obj.data.is_updated:
-                recache(obj)
-            if len(ops) > 0 and ops[-1].bl_idname == 'OBJECT_OT_transform_apply':
-                recache(obj)
-            # New children
-            if obj.type == 'ARMATURE':
-                for c in obj.children:
-                    if c.data != None and c.data.is_updated:
-                        recache(c)
-    if hasattr(bpy.context, 'sculpt_object') and bpy.context.sculpt_object != None:
-        recache(bpy.context.sculpt_object)
-    if hasattr(bpy.context, 'active_pose_bone') and bpy.context.active_pose_bone != None:
-        recache(bpy.context.active_object)
-
-    if hasattr(bpy.context, 'object'):
-        obj = bpy.context.object
-        if obj != None:
-            if operators_changed:
-                op_changed(ops[-1], obj)
-            if obj.active_material != None and obj.active_material.is_updated:
-                if obj.active_material.lock_cache == True: # is_cached was set to true, resulting in a is_updated call
-                    obj.active_material.lock_cache = False
-                else:
-                    obj.active_material.is_cached = False
-
-    # Invalidate logic node tree cache if it is being edited..
-    space = arm.utils.logic_editor_space()
-    if space != None:
-        space.node_tree.is_cached = False
-
-def recache(obj):
-    # Moving keyframes triggers is_updated_data..
-    if state.proc_build != None:
-        return
-    if obj.data == None:
-        return
-    if hasattr(obj.data, 'arm_cached'):
-        obj.data.arm_cached = False
-
-def op_changed(op, obj):
-    # Recache mesh data
-    if op.bl_idname == 'OBJECT_OT_modifier_add' or \
-       op.bl_idname == 'OBJECT_OT_modifier_remove' or \
-       op.bl_idname == 'OBJECT_OT_transform_apply' or \
-       op.bl_idname == 'APPLY_OT_transformlocrotscale' or \
-       op.bl_idname == 'OBJECT_OT_shade_smooth' or \
-       op.bl_idname == 'OBJECT_OT_shade_flat':
-        # Note: Blender reverts object data when manipulating
-        # OBJECT_OT_transform_apply operator.. recaching object flag instead
-        obj.arm_cached = False
-    if op.bl_idname.startswith('MARKER_OT_'):
-        # Marker changed, recache action
-        obj.data.arm_cached = False
+    return 0.5
 
 appended_py_paths = []
+context_screen = None
+
 @persistent
 def on_load_post(context):
     global appended_py_paths
+
+    global context_screen
+    context_screen = bpy.context.screen
 
     props.init_properties_on_load()
     reload_blend_data()
@@ -137,6 +96,10 @@ def load_library(asset_name):
 
 def register():
     bpy.app.handlers.load_post.append(on_load_post)
+    bpy.app.handlers.depsgraph_update_post.append(on_depsgraph_update_post)
+    # bpy.app.handlers.undo_post.append(on_undo_post)
+    bpy.app.timers.register(always, persistent=True)
+
     # TODO: On windows, on_load_post is not called when opening .blend file from explorer
     if arm.utils.get_os() == 'win' and arm.utils.get_fp() != '':
         on_load_post(None)
@@ -144,3 +107,5 @@ def register():
 
 def unregister():
     bpy.app.handlers.load_post.remove(on_load_post)
+    bpy.app.handlers.depsgraph_update_post.remove(on_depsgraph_update_post)
+    # bpy.app.handlers.undo_post.remove(on_undo_post)

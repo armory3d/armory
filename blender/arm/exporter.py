@@ -1161,7 +1161,6 @@ class ArmoryExporter:
             mesh_obj['mesh_datas'] = [o]
             arm.utils.write_arm(fp, mesh_obj)
             bobject.data.arm_cached = True
-            bobject.arm_cached = True
         else:
             self.output['mesh_datas'].append(o)
 
@@ -1402,7 +1401,7 @@ class ArmoryExporter:
         if ArmoryExporter.option_mesh_per_file:
             fp = self.get_meshes_file_path('mesh_' + oid, compressed=self.is_compress())
             assets.add(fp)
-            if self.is_mesh_cached(bobject) == True and os.path.exists(fp):
+            if bobject.data.arm_cached and os.path.exists(fp):
                 return
         else:
             fp = None
@@ -1682,7 +1681,7 @@ class ArmoryExporter:
             return
         mat = bpy.data.materials.new(name=mat_name)
         # if default_exists:
-            # mat.is_cached = True
+            # mat.arm_cached = True
         if is_particle:
             mat.arm_particle_flag = True
         mat.use_nodes = True
@@ -1759,7 +1758,7 @@ class ArmoryExporter:
             # Recache material
             signature = self.get_signature(material)
             if signature != material.signature:
-                material.is_cached = False
+                material.arm_cached = False
             if signature != None:
            		material.signature = signature
 
@@ -1825,7 +1824,7 @@ class ArmoryExporter:
                         ob.data.arm_cached = False
 
             self.output['material_datas'].append(o)
-            material.is_cached = True
+            material.arm_cached = True
 
         # Auto-enable render-path featues
         rebuild_rp = False
@@ -2187,7 +2186,7 @@ class ArmoryExporter:
             orig_mat.export_uvs = slot.material.export_uvs
             orig_mat.export_vcols = slot.material.export_vcols
             orig_mat.export_tangents = slot.material.export_tangents
-            orig_mat.is_cached = slot.material.is_cached
+            orig_mat.arm_cached = slot.material.arm_cached
             slot.material = orig_mat
         for mat in matvars:
             bpy.data.materials.remove(mat, do_unlink=True)
@@ -2237,14 +2236,6 @@ class ArmoryExporter:
         ArmoryExporter.import_traits.append(trait['class_name'])
         self.output['objects'].append(o)
         self.output['camera_ref'] = 'DefaultCamera'
-
-    # Callbacks
-    def is_mesh_cached(self, bobject):
-        if bobject.type == 'FONT' or bobject.type == 'META': # No verts
-            return bobject.data.arm_cached
-        if not bobject.arm_cached:
-            return False
-        return bobject.data.arm_cached
 
     def get_export_tangents(self, mesh):
         for m in mesh.materials:
