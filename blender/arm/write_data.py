@@ -98,7 +98,7 @@ project.addSources('Sources');
                 if not os.path.exists('Libraries/haxebullet'):
                     f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet', rel_path=rel_path))
                 if state.target.startswith('krom') or state.target == 'html5' or state.target == 'node':
-                    ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
+                    ammojs_path = sdk_path + '/lib/haxebullet/ammo/ammo.js'
                     ammojs_path = ammojs_path.replace('\\', '/').replace('//', '/')
                     f.write(add_assets(ammojs_path, rel_path=rel_path))
                     # haxe.macro.Compiler.includeFile(ammojs_path)

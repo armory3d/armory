@@ -2369,14 +2369,10 @@ class ArmoryExporter:
             x = {}
             x['type'] = 'Script'
             x['class_name'] = 'armory.trait.physics.' + phys_pkg + '.RigidBody'
-            x['parameters'] = [str(body_mass), str(shape), str(rb.friction), str(rb.restitution)]
-            if rb.use_margin:
-                x['parameters'].append(str(rb.collision_margin))
-            else:
-                x['parameters'].append('0.0')
-            x['parameters'].append(str(rb.linear_damping))
-            x['parameters'].append(str(rb.angular_damping))
-            x['parameters'].append(str(rb.kinematic).lower())
+            col_group = ''
+            for b in rb.collision_collections:
+                col_group = ('1' if b else '0') + col_group
+            x['parameters'] = [str(shape), str(body_mass), str(rb.friction), str(rb.restitution), str(int(col_group, 2))]
             lx = bobject.arm_rb_linear_factor[0]
             ly = bobject.arm_rb_linear_factor[1]
             lz = bobject.arm_rb_linear_factor[2]
@@ -2395,21 +2391,30 @@ class ArmoryExporter:
                 ay = 0
             if bobject.lock_rotation[2]:
                 az = 0
-            lin_fac = '[{0}, {1}, {2}]'.format(str(lx), str(ly), str(lz))
-            ang_fac = '[{0}, {1}, {2}]'.format(str(ax), str(ay), str(az))
-            x['parameters'].append(lin_fac)
-            x['parameters'].append(ang_fac)
-            col_group = ''
-            for b in rb.collision_collections:
-                col_group = ('1' if b else '0') + col_group
-            x['parameters'].append(str(int(col_group, 2)))
-            x['parameters'].append(str(bobject.arm_rb_trigger).lower())
+            col_margin = str(rb.collision_margin) if rb.use_margin else '0.0'
             if rb.use_deactivation or bobject.arm_rb_force_deactivation:
-                deact_params = lin_fac = '[{0}, {1}, {2}]'.format(str(rb.deactivate_linear_velocity), str(rb.deactivate_angular_velocity), str(bobject.arm_rb_deactivation_time))
-                x['parameters'].append(deact_params)
+                deact_lv = str(rb.deactivate_linear_velocity)
+                deact_av = str(rb.deactivate_angular_velocity)
+                deact_time = str(bobject.arm_rb_deactivation_time)
             else:
-                x['parameters'].append('null')
-            x['parameters'].append(str(bobject.arm_rb_ccd).lower())
+                deact_lv = '0.0'
+                deact_av = '0.0'
+                deact_time = '0.0'
+            body_params = '[{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}]'.format(
+                str(rb.linear_damping),
+                str(rb.angular_damping),
+                str(lx), str(ly), str(lz),
+                str(ax), str(ay), str(az),
+                col_margin,
+                deact_lv, deact_av, deact_time
+            )
+            body_flags = '[{0}, {1}, {2}]'.format(
+                str(rb.kinematic).lower(),
+                str(bobject.arm_rb_trigger).lower(),
+                str(bobject.arm_rb_ccd).lower()
+            )
+            x['parameters'].append(body_params)
+            x['parameters'].append(body_flags)
             o['traits'].append(x)
 
         # Phys traits
