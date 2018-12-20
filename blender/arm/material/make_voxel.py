@@ -225,13 +225,15 @@ def make_ao(context_id):
 
         vert.add_uniform('mat4 W', '_worldMatrix')
         vert.write('uniform float4x4 W;')
+        if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
+            vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
+            vert.write('uniform float3 eyeSnap;')
         vert.write('struct SPIRV_Cross_Input { float4 pos : TEXCOORD0; };')
         vert.write('struct SPIRV_Cross_Output { float4 svpos : SV_POSITION; };')
         vert.write('SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input) {')
         vert.write('  SPIRV_Cross_Output stage_output;')
         voxHalfExt = str(round(rpdat.arm_voxelgi_dimensions / 2.0))
         if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
-            vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
             vert.write('  stage_output.svpos.xyz = (mul(float4(stage_input.pos.xyz, 1.0), W).xyz- eyeSnap) / float3(' + voxHalfExt + ', ' + voxHalfExt + ', ' + voxHalfExt + ');')
         else:
             vert.write('  stage_output.svpos.xyz = mul(float4(stage_input.pos.xyz, 1.0), W).xyz / float3(' + voxHalfExt + ', ' + voxHalfExt + ', ' + voxHalfExt + ');')

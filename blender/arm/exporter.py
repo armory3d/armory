@@ -827,7 +827,10 @@ class ArmoryExporter:
                     for i in range(0, num_psys):
                         self.export_particle_system_ref(bobject.particle_systems[i], i, o)
 
-                o['dimensions'] = [bobject.data.arm_aabb[0], bobject.data.arm_aabb[1], bobject.data.arm_aabb[2]]
+                aabb = bobject.data.arm_aabb
+                if aabb[0] == 0 and aabb[1] == 0 and aabb[2] == 0:
+                    self.calc_aabb(bobject)
+                o['dimensions'] = [aabb[0], aabb[1], aabb[2]]
 
                 #shapeKeys = ArmoryExporter.get_shape_keys(objref)
                 #if shapeKeys:
@@ -1164,6 +1167,14 @@ class ArmoryExporter:
         else:
             self.output['mesh_datas'].append(o)
 
+    def calc_aabb(self, bobject):
+        aabb_center = 0.125 * sum((Vector(b) for b in bobject.bound_box), Vector())
+        bobject.data.arm_aabb = [ \
+            abs((bobject.bound_box[6][0] - bobject.bound_box[0][0]) / 2 + abs(aabb_center[0])) * 2, \
+            abs((bobject.bound_box[6][1] - bobject.bound_box[0][1]) / 2 + abs(aabb_center[1])) * 2, \
+            abs((bobject.bound_box[6][2] - bobject.bound_box[0][2]) / 2 + abs(aabb_center[2])) * 2  \
+        ]
+
     def export_mesh_data(self, exportMesh, bobject, o, has_armature=False):
         exportMesh.calc_normals_split()
         # exportMesh.calc_loop_triangles()
@@ -1215,14 +1226,6 @@ class ArmoryExporter:
             # TODO: handle t1map
         if has_col:
             cdata = np.empty(num_verts * 3, dtype='<f4')
-
-        # Save aabb
-        aabb_center = 0.125 * sum((Vector(b) for b in bobject.bound_box), Vector())
-        bobject.data.arm_aabb = [ \
-            abs((bobject.bound_box[6][0] - bobject.bound_box[0][0]) / 2 + abs(aabb_center[0])) * 2, \
-            abs((bobject.bound_box[6][1] - bobject.bound_box[0][1]) / 2 + abs(aabb_center[1])) * 2, \
-            abs((bobject.bound_box[6][2] - bobject.bound_box[0][2]) / 2 + abs(aabb_center[2])) * 2  \
-        ]
 
         # Scale for packed coords
         maxdim = max(bobject.data.arm_aabb[0], max(bobject.data.arm_aabb[1], bobject.data.arm_aabb[2]))
@@ -1481,6 +1484,10 @@ class ArmoryExporter:
         if len(exportMesh.uv_layers) > 2:
             log.warn(oid + ' exceeds maximum of 2 UV Maps supported')
 
+        # Update aabb
+        self.calc_aabb(bobject)
+        o['dimensions'] = [bobject.data.arm_aabb[0], bobject.data.arm_aabb[1], bobject.data.arm_aabb[2]]
+
         # Process meshes
         if ArmoryExporter.optimize_enabled:
             vert_list = exporter_opt.export_mesh_data(self, exportMesh, bobject, o, has_armature=armature != None)
@@ -1546,7 +1553,7 @@ class ArmoryExporter:
         else:
             o['shadowmap_size'] = 0
         if o['type'] == 'sun': # Scale bias for ortho light matrix
-            o['shadows_bias'] *= 25.0
+            o['shadows_bias'] *= 20.0
             if o['shadowmap_size'] > 1024:
                 o['shadows_bias'] *= 1 / (o['shadowmap_size'] / 1024) # Less bias for bigger maps
         if (objtype == 'POINT' or objtype == 'SPOT') and objref.shadow_soft_size > 0.1:

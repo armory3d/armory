@@ -38,7 +38,7 @@ class Vertex:
 
 def export_mesh_data(self, exportMesh, bobject, o, has_armature=False):
     exportMesh.calc_normals_split()
-    exportMesh.calc_tessface() # free_mpoly=True
+    # exportMesh.calc_loop_triangles()
     vert_list = { Vertex(exportMesh, loop) : 0 for loop in exportMesh.loops}.keys()
     num_verts = len(vert_list)
     num_uv_layers = len(exportMesh.uv_layers)
@@ -245,12 +245,12 @@ def export_skin(self, bobject, armature, vert_list, o):
     oskin['transformsI'] = []
     if rpdat.arm_skin == 'CPU':
         for i in range(bone_count):
-            skeletonI = self.mulmat(armature.matrix_world, bone_array[i].matrix_local).inverted_safe()
+            skeletonI = (armature.matrix_world @ bone_array[i].matrix_local).inverted_safe()
             oskin['transformsI'].append(self.write_matrix(skeletonI))
     else:
         for i in range(bone_count):
-            skeletonI = self.mulmat(armature.matrix_world, bone_array[i].matrix_local).inverted_safe()
-            skeletonI = self.mulmat(skeletonI, bobject.matrix_world)
+            skeletonI = (armature.matrix_world @ bone_array[i].matrix_local).inverted_safe()
+            skeletonI = (skeletonI @ bobject.matrix_world)
             oskin['transformsI'].append(self.write_matrix(skeletonI))
 
     # Export the per-vertex bone influence data
