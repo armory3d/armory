@@ -2,10 +2,6 @@ package armory.logicnode;
 
 import iron.math.Vec4;
 
-#if arm_physics
-import haxebullet.Bullet;
-#end
-
 class CastPhysicsRayNode extends LogicNode {
 
 	var v = new Vec4();
