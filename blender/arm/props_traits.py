@@ -321,7 +321,8 @@ class ArmEditCanvasButton(bpy.types.Operator):
         
         sdk_path = arm.utils.get_sdk_path()
         armory2d_path = sdk_path + '/lib/armory_tools/armory2d'
-        krom_location, krom_path = arm.utils.krom_paths()
+        bin_ext = '_opengl' if arm.utils.get_os() == 'win' else ''
+        krom_location, krom_path = arm.utils.krom_paths(bin_ext=bin_ext)
         os.chdir(krom_location)
         cpath = canvas_path.replace('\\', '/')
         uiscale = str(arm.utils.get_ui_scale())
