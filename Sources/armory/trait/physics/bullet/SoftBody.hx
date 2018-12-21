@@ -11,7 +11,6 @@ import iron.data.SceneFormat;
 #if arm_physics_soft
 import armory.trait.physics.RigidBody;
 import armory.trait.physics.PhysicsWorld;
-import haxebullet.Bullet;
 #end
 
 class SoftBody extends Trait {
@@ -31,11 +30,11 @@ class SoftBody extends Trait {
 	public var vertOffsetY = 0.0;
 	public var vertOffsetZ = 0.0;
 
-	public var body:BtSoftBodyPointer;
+	public var body:bullet.Bt.SoftBody;
 
-	static var helpers:BtSoftBodyHelpers;
+	static var helpers:bullet.Bt.SoftBodyHelpers;
 	static var helpersCreated = false;
-	static var worldInfo:BtSoftBodyWorldInfo;
+	static var worldInfo:bullet.Bt.SoftBodyWorldInfo;
 
 	public function new(shape = SoftShape.Cloth, bend = 0.5, mass = 1.0, margin = 0.04) {
 		super();
@@ -115,7 +114,7 @@ class SoftBody extends Trait {
 		for (ar in geom.indices) numtri += Std.int(ar.length / 3);
 
 		if (!helpersCreated) {
-			helpers = BtSoftBodyHelpers.create();
+			helpers = new bullet.Bt.SoftBodyHelpers();
 			worldInfo = physics.world.getWorldInfo();
 			helpersCreated = true;
 		}
