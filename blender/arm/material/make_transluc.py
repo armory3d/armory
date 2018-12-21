@@ -25,6 +25,8 @@ def make(context_id):
 	frag.main = frag.main[:frag.main.rfind('fragColor')]
 
 	frag.write('\n')
+	frag.add_uniform('vec3 lightColor', link='_lightColor')
+	frag.write('float visibility = 1.0;')
 	frag.write('vec4 premultipliedReflect = vec4(vec3(direct * lightColor * visibility + indirect * occlusion) * opacity, opacity);')
 	
 	frag.write('float fragZ = wvpposition.z / wvpposition.w;')

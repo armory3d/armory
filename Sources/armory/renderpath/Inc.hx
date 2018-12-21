@@ -172,7 +172,7 @@ class Inc {
 		// Resize shadow map
 		var l = path.light;
 		if (l.data.raw.type == "sun" && l.data.raw.shadowmap_size != config.rp_shadowmap_cascade) {
-			l.data.raw.shadowmap_size = config.rp_shadowmap;
+			l.data.raw.shadowmap_size = config.rp_shadowmap_cascade;
 			var rt = path.renderTargets.get("shadowMap");
 			if (rt != null) {
 				rt.unload();
@@ -180,7 +180,8 @@ class Inc {
 			}
 		}
 		else if (l.data.raw.shadowmap_size != config.rp_shadowmap_cube) {
-			rt = path.renderTargets.get("shadowMapCube");
+			l.data.raw.shadowmap_size = config.rp_shadowmap_cube;
+			var rt = path.renderTargets.get("shadowMapCube");
 			if (rt != null) {
 				rt.unload();
 				path.renderTargets.remove("shadowMapCube");

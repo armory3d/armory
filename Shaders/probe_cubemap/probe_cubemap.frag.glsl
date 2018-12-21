@@ -4,9 +4,9 @@
 #include "std/gbuffer.glsl"
 
 uniform samplerCube probeTex;
+uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
-uniform sampler2D gbufferD;
 uniform mat4 invVP;
 uniform vec3 probep;
 uniform vec3 eye;
