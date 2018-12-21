@@ -4,7 +4,7 @@ import subprocess
 import os
 import webbrowser
 import bpy.utils.previews
-from bpy.types import Menu, Panel, UIList
+from bpy.types import Menu, Panel, UIList, NodeTree
 from bpy.props import *
 from arm.props_traits_props import *
 import arm.utils
@@ -29,7 +29,7 @@ def update_trait_group(self, context):
         elif t.type_prop == 'UI Canvas':
             t.name = t.canvas_name_prop
         elif t.type_prop == 'Logic Nodes':
-            t.name = t.nodes_name_prop
+            t.name = t.node_tree_prop.name
         # Fetch props
         if t.type_prop == 'Bundled Script' and t.name != '':
             file_path = arm.utils.get_sdk_path() + '/armory/Sources/armory/trait/' + t.name + '.hx'
@@ -63,8 +63,7 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
     class_name_prop: StringProperty(name="Class", description="A name for this item", default="", update=update_trait_group)
     canvas_name_prop: StringProperty(name="Canvas", description="A name for this item", default="", update=update_trait_group)
     webassembly_prop: StringProperty(name="Module", description="A name for this item", default="", update=update_trait_group)
-    nodes_name_prop: StringProperty(name="Nodes", description="A name for this item", default="", update=update_trait_group)
-
+    node_tree_prop: PointerProperty(type=NodeTree)
     arm_traitpropslist: CollectionProperty(type=ArmTraitPropListItem)
     arm_traitpropslist_index: IntProperty(name="Index for my_list", default=0)
 
@@ -542,9 +541,17 @@ def draw_traits(layout, obj, is_object):
             op = row.operator("arm.refresh_canvas_list")
 
         elif item.type_prop == 'Logic Nodes':
-            item.name = item.nodes_name_prop
             row = layout.row()
-            row.prop_search(item, "nodes_name_prop", bpy.data, "node_groups", text="Tree")
+            row.prop_search(item, "node_tree_prop", bpy.data, "node_groups", text="Tree")
+            if item.node_tree_prop != None:
+                item.name = item.node_tree_prop.name
+            else:
+                # This allows for seamless migration from ealier versions of
+                # Armory that have don't have `item.node_tree_prop` set
+                if item.name != "" and bpy.data.node_groups[item.name] != None:
+                    item.node_tree_prop = bpy.data.node_groups[item.name]
+                else:
+                    item.name = ""
 
 def register():
     global icons_dict

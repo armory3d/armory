@@ -1261,7 +1261,7 @@ class ArmPrintTraitsButton(bpy.types.Operator):
                 for t in o.arm_traitlist:
                     if not t.enabled_prop:
                         continue
-                    tname = t.nodes_name_prop if t.type_prop == 'Logic Nodes' else t.class_name_prop
+                    tname = t.node_tree_prop.name if t.type_prop == 'Logic Nodes' else t.class_name_prop
                     print('Object {0} - {1}'.format(o.name, tname))
         return{'FINISHED'}
 

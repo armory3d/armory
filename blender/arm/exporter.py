@@ -2496,9 +2496,9 @@ class ArmoryExporter:
                 if t.enabled_prop == False:
                     continue
                 x = {}
-                if t.type_prop == 'Logic Nodes' and t.nodes_name_prop != '':
+                if t.type_prop == 'Logic Nodes' and t.node_tree_prop != None and t.node_tree_prop.name != '':
                     x['type'] = 'Script'
-                    group_name = arm.utils.safesrc(t.nodes_name_prop[0].upper() + t.nodes_name_prop[1:])
+                    group_name = arm.utils.safesrc(t.node_tree_prop.name[0].upper() + t.node_tree_prop.name[1:])
                     x['class_name'] = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + group_name
                 elif t.type_prop == 'WebAssembly':
                     wpath = arm.utils.get_fp() + '/Bundled/' + t.webassembly_prop + '.wasm'
