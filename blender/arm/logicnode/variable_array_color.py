@@ -7,7 +7,7 @@ class ColorArrayNode(Node, ArmLogicTreeNode):
     '''Color array node'''
     bl_idname = 'LNArrayColorNode'
     bl_label = 'Array (Color)'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def __init__(self):
         array_nodes[str(id(self))] = self

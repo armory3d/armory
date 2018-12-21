@@ -7,7 +7,7 @@ class AnimationStateNode(Node, ArmLogicTreeNode):
     '''Animation state node'''
     bl_idname = 'LNAnimationStateNode'
     bl_label = 'Animation State'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')

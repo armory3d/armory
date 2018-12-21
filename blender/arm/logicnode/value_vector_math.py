@@ -8,7 +8,7 @@ class VectorMathNode(Node, ArmLogicTreeNode):
     bl_idname = 'LNVectorMathNode'
     bl_label = 'Vector Math'
     bl_icon = 'CURVE_PATH'
-    property0 = EnumProperty(
+    property0: EnumProperty(
         items = [('Add', 'Add', 'Add'),
                  ('Dot Product', 'Dot Product', 'Dot Product'),
                  ('Multiply', 'Multiply', 'Multiply'),

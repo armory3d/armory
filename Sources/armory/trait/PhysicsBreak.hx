@@ -504,7 +504,7 @@ class ConvexBreaker {
 				na.push(normal.x);
 				na.push(normal.y);
 				na.push(normal.z);
-				ind.push(Std.int(pa.length / 3 - 1));
+				ind.push(Std.int(pa.length / 4 - 1));
 			}
 			else {
 				na[fi * 3] = normal.x;
@@ -530,13 +530,13 @@ class ConvexBreaker {
 		
 		var pos:TVertexArray = {
 			attrib: "pos",
-			size: 3,
+			size: 4,
 			values: paa
 		};
 
 		var nor:TVertexArray = {
 			attrib: "nor",
-			size: 3,
+			size: 2,
 			values: naa
 		};
 

@@ -109,10 +109,10 @@ def make_gi(context_id):
 
     if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
         vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
-        vert.write('voxpositionGeom = (vec3(W * vec4(pos, 1.0)) - eyeSnap) / voxelgiHalfExtents;')
+        vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - eyeSnap) / voxelgiHalfExtents;')
     else: 
-        vert.write('voxpositionGeom = vec3(W * vec4(pos, 1.0)) / voxelgiHalfExtents;')
-    vert.write('wnormalGeom = normalize(N * nor);')
+        vert.write('voxpositionGeom = vec3(W * vec4(pos.xyz, 1.0)) / voxelgiHalfExtents;')
+    vert.write('wnormalGeom = normalize(N * vec3(nor.xy, pos.w));')
     # vert.write('gl_Position = vec4(0.0, 0.0, 0.0, 1.0);')
 
     geom.add_out('vec3 voxposition')
@@ -213,9 +213,9 @@ def make_ao(context_id):
 
     if arm.utils.get_gapi() == 'direct3d11':
 
-        for e in con_voxel.data['vertex_structure']:
+        for e in con_voxel.data['vertex_elements']:
             if e['name'] == 'nor':
-                con_voxel.data['vertex_structure'].remove(e)
+                con_voxel.data['vertex_elements'].remove(e)
                 break
 
         # No geom shader compiler for hlsl yet
@@ -225,13 +225,15 @@ def make_ao(context_id):
 
         vert.add_uniform('mat4 W', '_worldMatrix')
         vert.write('uniform float4x4 W;')
-        vert.write('struct SPIRV_Cross_Input { float3 pos : TEXCOORD0; };')
+        if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
+            vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
+            vert.write('uniform float3 eyeSnap;')
+        vert.write('struct SPIRV_Cross_Input { float4 pos : TEXCOORD0; };')
         vert.write('struct SPIRV_Cross_Output { float4 svpos : SV_POSITION; };')
         vert.write('SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input) {')
         vert.write('  SPIRV_Cross_Output stage_output;')
         voxHalfExt = str(round(rpdat.arm_voxelgi_dimensions / 2.0))
         if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
-            vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
             vert.write('  stage_output.svpos.xyz = (mul(float4(stage_input.pos.xyz, 1.0), W).xyz- eyeSnap) / float3(' + voxHalfExt + ', ' + voxHalfExt + ', ' + voxHalfExt + ');')
         else:
             vert.write('  stage_output.svpos.xyz = mul(float4(stage_input.pos.xyz, 1.0), W).xyz / float3(' + voxHalfExt + ', ' + voxHalfExt + ', ' + voxHalfExt + ');')
@@ -292,9 +294,9 @@ def make_ao(context_id):
 
         if rpdat.arm_voxelgi_revoxelize and rpdat.arm_voxelgi_camera:
             vert.add_uniform('vec3 eyeSnap', '_cameraPositionSnap')
-            vert.write('voxpositionGeom = (vec3(W * vec4(pos, 1.0)) - eyeSnap) / voxelgiHalfExtents;')
+            vert.write('voxpositionGeom = (vec3(W * vec4(pos.xyz, 1.0)) - eyeSnap) / voxelgiHalfExtents;')
         else: 
-            vert.write('voxpositionGeom = vec3(W * vec4(pos, 1.0)) / voxelgiHalfExtents;')
+            vert.write('voxpositionGeom = vec3(W * vec4(pos.xyz, 1.0)) / voxelgiHalfExtents;')
 
         # vert.write('gl_Position = vec4(0.0, 0.0, 0.0, 1.0);')
 

@@ -7,7 +7,7 @@ class GetMeshNode(Node, ArmLogicTreeNode):
     '''Get mesh node'''
     bl_idname = 'LNGetMeshNode'
     bl_label = 'Get Mesh'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')

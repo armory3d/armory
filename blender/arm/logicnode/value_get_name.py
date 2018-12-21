@@ -7,7 +7,7 @@ class GetNameNode(Node, ArmLogicTreeNode):
     '''Get name node'''
     bl_idname = 'LNGetNameNode'
     bl_label = 'Get Name'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')

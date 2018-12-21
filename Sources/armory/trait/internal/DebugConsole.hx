@@ -198,6 +198,7 @@ class DebugConsole extends Trait {
 						var loc = selectedObject.transform.loc;
 						var scale = selectedObject.transform.scale;
 						var rot = selectedObject.transform.rot.getEuler();
+						var dim = selectedObject.transform.dim;
 						rot.mult(180 / 3.141592);
 						var f = 0.0;
 
@@ -265,6 +266,24 @@ class DebugConsole extends Trait {
 						h.text = Math.roundfp(scale.z) + "";
 						f = Std.parseFloat(ui.textInput(h, "Z"));
 						if (ui.changed) scale.z = f;
+
+						ui.row(row4);
+						ui.text("Dimensions");
+
+						h = Id.handle();
+						h.text = Math.roundfp(dim.x) + "";
+						f = Std.parseFloat(ui.textInput(h, "X"));
+						if (ui.changed) dim.x = f;
+
+						h = Id.handle();
+						h.text = Math.roundfp(dim.y) + "";
+						f = Std.parseFloat(ui.textInput(h, "Y"));
+						if (ui.changed) dim.y = f;
+
+						h = Id.handle();
+						h.text = Math.roundfp(dim.z) + "";
+						f = Std.parseFloat(ui.textInput(h, "Z"));
+						if (ui.changed) dim.z = f;
 
 						selectedObject.transform.dirty = true;
 

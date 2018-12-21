@@ -8,13 +8,13 @@ class MouseNode(Node, ArmLogicTreeNode):
     bl_idname = 'LNMouseNode'
     bl_label = 'Mouse State'
     bl_icon = 'CURVE_PATH'
-    property0 = EnumProperty(
+    property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),
                  ('Released', 'Released', 'Released'),
                  ('Moved', 'Moved', 'Moved')],
         name='', default='Down')
-    property1 = EnumProperty(
+    property1: EnumProperty(
         items = [('left', 'left', 'left'),
                  ('right', 'right', 'right'),
                  ('middle', 'middle', 'middle')],

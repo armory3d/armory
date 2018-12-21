@@ -8,7 +8,7 @@ def parse_context(c, sres, asset, defs, vert=None, frag=None):
     con['name'] = c['name']
     con['constants'] = []
     con['texture_units'] = []
-    con['vertex_structure'] = []
+    con['vertex_elements'] = []
 
     # Names
     con['vertex_shader'] = c['vertex_shader'].rsplit('.', 1)[0].split('/')[-1]
@@ -77,13 +77,13 @@ def parse_context(c, sres, asset, defs, vert=None, frag=None):
 def parse_shader(sres, c, con, defs, lines, parse_attributes):
     skip_till_endif = 0
     skip_else = False
-    vertex_structure_parsed = False
-    vertex_structure_parsing = False
+    vertex_elements_parsed = False
+    vertex_elements_parsing = False
     
     stack = []
 
     if parse_attributes == False:
-        vertex_structure_parsed = True
+        vertex_elements_parsed = True
         
     for line in lines:
         line = line.lstrip()
@@ -116,15 +116,15 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
         if skip:
             continue
 
-        if vertex_structure_parsed == False and line.startswith('in '):
-            vertex_structure_parsing = True
+        if vertex_elements_parsed == False and line.startswith('in '):
+            vertex_elements_parsing = True
             vd = {}
             s = line.split(' ')
-            vd['size'] = int(s[1][-1:])
+            vd['data'] = 'float' + s[1][-1:]
             vd['name'] = s[2][:-1]
-            con['vertex_structure'].append(vd)
-        if vertex_structure_parsing == True and len(line) > 0 and line.startswith('//') == False and line.startswith('in ') == False:
-            vertex_structure_parsed = True
+            con['vertex_elements'].append(vd)
+        if vertex_elements_parsing == True and len(line) > 0 and line.startswith('//') == False and line.startswith('in ') == False:
+            vertex_elements_parsed = True
 
         if line.startswith('uniform ') or line.startswith('//!uniform'): # Uniforms included from header files
             s = line.split(' ')

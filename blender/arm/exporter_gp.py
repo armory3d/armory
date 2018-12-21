@@ -106,19 +106,18 @@ def export_grease_pencil_frame(self, frame):
     # TODO: merge into array of vertex arrays
     fo['vertex_array'] = {}
     fo['vertex_array']['attrib'] = 'pos'
-    fo['vertex_array']['size'] = 3
+    fo['vertex_array']['data'] = 'short4norm'
     fo['vertex_array']['values'] = va
     fo['col_array'] = {}
     fo['col_array']['attrib'] = 'col'
-    fo['col_array']['size'] = 4
+    fo['col_array']['data'] = 'short4norm'
     fo['col_array']['values'] = cola
     fo['colfill_array'] = {}
     fo['colfill_array']['attrib'] = 'colfill'
-    fo['colfill_array']['size'] = 4
+    fo['colfill_array']['data'] = 'short4norm'
     fo['colfill_array']['values'] = colfilla
     fo['index_array'] = {}
     fo['index_array']['material'] = 0
-    fo['index_array']['size'] = 3
     fo['index_array']['values'] = indices
     fo['num_stroke_points'] = num_stroke_points
     fo['frame_number'] = frame.frame_number

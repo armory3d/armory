@@ -7,7 +7,7 @@ class ArraySetNode(Node, ArmLogicTreeNode):
     '''Array set node'''
     bl_idname = 'LNArraySetNode'
     bl_label = 'Array Set'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

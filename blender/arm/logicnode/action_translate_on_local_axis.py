@@ -8,7 +8,7 @@ class TranslateOnLocalAxisNode(Node, ArmLogicTreeNode):
     '''TranslateOnLocalAxisNode'''
     bl_idname = 'LNTranslateOnLocalAxisNode'
     bl_label = 'Translate On Local Axis'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

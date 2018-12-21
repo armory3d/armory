@@ -7,7 +7,7 @@ class GetParentNode(Node, ArmLogicTreeNode):
     '''Get parent node'''
     bl_idname = 'LNGetParentNode'
     bl_label = 'Get Parent'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')

@@ -98,7 +98,7 @@ project.addSources('Sources');
                 if not os.path.exists('Libraries/haxebullet'):
                     f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet', rel_path=rel_path))
                 if state.target.startswith('krom') or state.target == 'html5' or state.target == 'node':
-                    ammojs_path = sdk_path + '/lib/haxebullet/js/ammo/ammo.js'
+                    ammojs_path = sdk_path + '/lib/haxebullet/ammo/ammo.js'
                     ammojs_path = ammojs_path.replace('\\', '/').replace('//', '/')
                     f.write(add_assets(ammojs_path, rel_path=rel_path))
                     # haxe.macro.Compiler.includeFile(ammojs_path)
@@ -271,8 +271,6 @@ project.addSources('Sources');
         # if bpy.data.scenes[0].unit_settings.system_rotation == 'DEGREES':
             # assets.add_khafile_def('arm_degrees')
 
-        assets.add_khafile_def('arm_fast')
-
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
 
@@ -332,7 +330,7 @@ def write_config(resx, resy):
 def write_mainhx(scene_name, resx, resy, is_play, is_viewport, is_publish):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
-    scene_ext = '.zip' if (bpy.data.scenes[scene_name].arm_compress and is_publish) else ''
+    scene_ext = '.zip' if (wrd.arm_asset_compression and is_publish) else ''
     if scene_ext == '' and not wrd.arm_minimize:
         scene_ext = '.json'
     winmode = get_winmode(wrd.arm_winmode)

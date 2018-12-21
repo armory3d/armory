@@ -8,7 +8,7 @@ class MathNode(Node, ArmLogicTreeNode):
     bl_idname = 'LNMathNode'
     bl_label = 'Math'
     bl_icon = 'CURVE_PATH'
-    property0 = EnumProperty(
+    property0: EnumProperty(
         items = [('Add', 'Add', 'Add'),
                  ('Multiply', 'Multiply', 'Multiply'),
         		 ('Sine', 'Sine', 'Sine'),
@@ -41,7 +41,7 @@ class MathNode(Node, ArmLogicTreeNode):
     def property1(self):
         return 'true' if self.property1_ else 'false'
 
-    property1_ = BoolProperty(name='Clamp', default=False)
+    property1_: BoolProperty(name='Clamp', default=False)
 
     def init(self, context):
         self.inputs.new('NodeSocketFloat', 'Value')

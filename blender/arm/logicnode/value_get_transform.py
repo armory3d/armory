@@ -7,7 +7,7 @@ class GetTransformNode(Node, ArmLogicTreeNode):
     '''Get transform node'''
     bl_idname = 'LNGetTransformNode'
     bl_label = 'Get Transform'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')

@@ -7,7 +7,7 @@ class GlobalObjectNode(Node, ArmLogicTreeNode):
     '''Global object node'''
     bl_idname = 'LNGlobalObjectNode'
     bl_label = 'Global Object'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
     
     def init(self, context):
         self.outputs.new('ArmNodeSocketObject', 'Object')

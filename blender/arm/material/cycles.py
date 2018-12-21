@@ -332,7 +332,7 @@ def parse_displacement_input(inp):
         l = inp.links[0]
         if l.from_node.type == 'REROUTE':
             return parse_displacement_input(l.from_node.inputs[0])
-        return parse_value_input(inp) # TODO: displacement is a vector now
+        return parse_vector_input(inp)
     else:
         return None
 
@@ -370,10 +370,10 @@ def parse_vector(node, socket):
 
     elif node.type == 'ATTRIBUTE':
         if socket == node.outputs[0]: # Color
-            con.add_elem('col', 3) # Vcols only for now
+            con.add_elem('col', 'short4norm') # Vcols only for now
             return 'vcolor'
         else: # Vector
-            con.add_elem('tex', 2) # UVMaps only for now
+            con.add_elem('tex', 'short2norm') # UVMaps only for now
             mat = mat_get_material()
             mat_users = mat_get_material_users()
             if mat_users != None and mat in mat_users:
@@ -382,7 +382,7 @@ def parse_vector(node, socket):
                     lays = mat_user.data.uv_layers
                     # Second uvmap referenced
                     if len(lays) > 1 and node.attribute_name == lays[1].name:
-                        con.add_elem('tex1', 2)
+                        con.add_elem('tex1', 'short2norm')
                         return 'vec3(texCoord1.x, 1.0 - texCoord1.y, 0.0)'
             return 'vec3(texCoord.x, 1.0 - texCoord.y, 0.0)'
 
@@ -749,13 +749,13 @@ def parse_vector(node, socket):
 
     elif node.type == 'TEX_COORD':
         #obj = node.object
-        #dupli = node.from_dupli
+        #instance = node.from_instance
         if socket == node.outputs[0]: # Generated - bounds
             return 'bposition'
         elif socket == node.outputs[1]: # Normal
             return 'n'
         elif socket == node.outputs[2]: # UV
-            con.add_elem('tex', 2)
+            con.add_elem('tex', 'short2norm')
             return 'vec3(texCoord.x, 1.0 - texCoord.y, 0.0)'
         elif socket == node.outputs[3]: # Object
             return 'mposition'
@@ -767,8 +767,8 @@ def parse_vector(node, socket):
             return 'vec3(0.0)'
 
     elif node.type == 'UVMAP':
-        #dupli = node.from_dupli
-        con.add_elem('tex', 2)
+        #instance = node.from_instance
+        con.add_elem('tex', 'short2norm')
         mat = mat_get_material()
         mat_users = mat_get_material_users()
         if mat_users != None and mat in mat_users:
@@ -777,7 +777,7 @@ def parse_vector(node, socket):
                 lays = mat_user.data.uv_layers
                 # Second uvmap referenced
                 if len(lays) > 1 and node.uv_map == lays[1].name:
-                    con.add_elem('tex1', 2)
+                    con.add_elem('tex1', 'short2norm')
                     return 'vec3(texCoord1.x, 1.0 - texCoord1.y, 0.0)'
         return 'vec3(texCoord.x, 1.0 - texCoord.y, 0.0)'
 
@@ -877,7 +877,7 @@ def parse_vector(node, socket):
         elif op == 'NORMALIZE':
             return 'normalize({0})'.format(vec1)
 
-    elif node.type == 'DISPLACEMENT': # TODO: displacement is a vector now
+    elif node.type == 'DISPLACEMENT':
         height = parse_value_input(node.inputs[0])
         midlevel = parse_value_input(node.inputs[1])
         scale = parse_value_input(node.inputs[2])
@@ -908,7 +908,7 @@ def parse_normal_map_color_input(inp, strength_input=None):
             if strength != '1.0':
                 frag.write('n.xy *= {0};'.format(strength))
         frag.write('n = normalize(TBN * n);')
-        con.add_elem('tang', 3)
+        con.add_elem('tang', 'short4norm')
     frag.write_normal -= 1
 
 def parse_value_input(inp):
@@ -1388,7 +1388,7 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
         return tex_store
     parsed[tex_store] = True
     mat_bind_texture(tex)
-    con.add_elem('tex', 2)
+    con.add_elem('tex', 'short2norm')
     curshader.add_uniform('sampler2D {0}'.format(tex_name), link=tex_link)
     if node.inputs[0].is_linked:
         uv_name = parse_vector_input(node.inputs[0])

@@ -7,9 +7,9 @@ class MeshNode(Node, ArmLogicTreeNode):
     '''Mesh node'''
     bl_idname = 'LNMeshNode'
     bl_label = 'Mesh'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
-    property0 = StringProperty(name='', default='')
+    property0: StringProperty(name='', default='')
     
     def init(self, context):
         self.outputs.new('NodeSocketShader', 'Mesh')

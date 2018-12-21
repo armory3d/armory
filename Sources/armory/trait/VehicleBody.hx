@@ -6,9 +6,6 @@ import iron.object.CameraObject;
 import iron.object.Transform;
 import iron.system.Time;
 import armory.trait.physics.PhysicsWorld;
-#if arm_bullet
-import haxebullet.Bullet;
-#end
 
 class VehicleBody extends Trait {
 
@@ -26,8 +23,8 @@ class VehicleBody extends Trait {
 	var camera:CameraObject;
 
 	var wheels:Array<Object> = [];
-	var vehicle:BtRaycastVehiclePointer = null;
-	var carChassis:BtRigidBodyPointer;
+	var vehicle:bullet.Bt.RaycastVehicle = null;
+	var carChassis:bullet.Bt.RigidBody;
 
 	var chassis_mass = 600.0;
 	var wheelFriction = 1000;
@@ -58,31 +55,31 @@ class VehicleBody extends Trait {
 			wheels.push(iron.Scene.active.root.getChild(n));
 		}
 
-		var wheelDirectionCS0 = BtVector3.create(0, 0, -1);
-		var wheelAxleCS = BtVector3.create(1, 0, 0);
+		var wheelDirectionCS0 = new bullet.Bt.Vector3(0, 0, -1);
+		var wheelAxleCS = new bullet.Bt.Vector3(1, 0, 0);
 
-		var chassisShape = BtBoxShape.create(BtVector3.create(
+		var chassisShape = new bullet.Bt.BoxShape(new bullet.Bt.Vector3(
 				transform.dim.x / 2,
 				transform.dim.y / 2,
 				transform.dim.z / 2));
 
-		var compound = BtCompoundShape.create();
+		var compound = new bullet.Bt.CompoundShape();
 		
-		var localTrans = BtTransform.create();
+		var localTrans = new bullet.Bt.Transform();
 		localTrans.setIdentity();
-		localTrans.setOrigin(BtVector3.create(0, 0, 1));
+		localTrans.setOrigin(new bullet.Bt.Vector3(0, 0, 1));
 
 		compound.addChildShape(localTrans, chassisShape);
 
 		carChassis = createRigidBody(chassis_mass, compound);
 
 		// Create vehicle
-		var tuning = BtVehicleTuning.create();
-		var vehicleRayCaster = BtDefaultVehicleRaycaster.create(physics.world);
-		vehicle = BtRaycastVehicle.create(tuning, carChassis, vehicleRayCaster);
+		var tuning = new bullet.Bt.VehicleTuning();
+		var vehicleRayCaster = new bullet.Bt.DefaultVehicleRaycaster(physics.world);
+		vehicle = new bullet.Bt.RaycastVehicle(tuning, carChassis, vehicleRayCaster);
 
 		// Never deactivate the vehicle
-		carChassis.setActivationState(BtCollisionObject.DISABLE_DEACTIVATION);
+		carChassis.setActivationState(bullet.Bt.CollisionObject.DISABLE_DEACTIVATION);
 
 		// Choose coordinate system
 		var rightIndex = 0; 
@@ -189,32 +186,32 @@ class VehicleBody extends Trait {
 		camera.buildMatrix();
 	}
 
-	function createRigidBody(mass:Float, shape:BtCompoundShapePointer):BtRigidBodyPointer {
+	function createRigidBody(mass:Float, shape:bullet.Bt.CompoundShape):bullet.Bt.RigidBody {
 		
-		var localInertia = BtVector3.create(0, 0, 0);
+		var localInertia = new bullet.Bt.Vector3(0, 0, 0);
 		shape.calculateLocalInertia(mass, localInertia);
 
-		var centerOfMassOffset = BtTransform.create();
+		var centerOfMassOffset = new bullet.Bt.Transform();
 		centerOfMassOffset.setIdentity();
 		
-		var startTransform = BtTransform.create();
+		var startTransform = new bullet.Bt.Transform();
 		startTransform.setIdentity();
-		startTransform.setOrigin(BtVector3.create(
+		startTransform.setOrigin(new bullet.Bt.Vector3(
 			transform.loc.x,
 			transform.loc.y,
 			transform.loc.z));
-		startTransform.setRotation(BtQuaternion.create(
+		startTransform.setRotation(new bullet.Bt.Quaternion(
 			transform.rot.x,
 			transform.rot.y,
 			transform.rot.z,
 			transform.rot.w));
 
-		var myMotionState = BtDefaultMotionState.create(startTransform, centerOfMassOffset);
-		var cInfo = BtRigidBodyConstructionInfo.create(mass, myMotionState, shape, localInertia);
+		var myMotionState = new bullet.Bt.DefaultMotionState(startTransform, centerOfMassOffset);
+		var cInfo = new bullet.Bt.RigidBodyConstructionInfo(mass, myMotionState, shape, localInertia);
 			
-		var body = BtRigidBody.create(cInfo);
-		body.setLinearVelocity(BtVector3.create(0, 0, 0));
-		body.setAngularVelocity(BtVector3.create(0, 0, 0));
+		var body = new bullet.Bt.RigidBody(cInfo);
+		body.setLinearVelocity(new bullet.Bt.Vector3(0, 0, 0));
+		body.setAngularVelocity(new bullet.Bt.Vector3(0, 0, 0));
 		physics.world.addRigidBody(body);
 
 		return body;
@@ -261,8 +258,8 @@ class VehicleWheel {
 		locZ = vehicleTransform.dim.z / 2 + transform.loc.z;
 	}
 
-	public function getConnectionPoint():BtVector3 {
-		return BtVector3.create(locX, locY, locZ);
+	public function getConnectionPoint():bullet.Bt.Vector3 {
+		return new bullet.Bt.Vector3(locX, locY, locZ);
 	}
 #end
 }

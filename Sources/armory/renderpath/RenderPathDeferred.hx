@@ -480,19 +480,15 @@ class RenderPathDeferred {
 
 		#if rp_decals
 		{
-			#if arm_dev
 			path.setDepthFrom("gbuffer0", "gbuffer1"); // Unbind depth so we can read it
 			path.depthToRenderTarget.set("main", path.renderTargets.get("tex"));
 			path.setTarget("gbuffer0", ["gbuffer1"]);
-			#end
 			
 			path.bindTarget("_main", "gbufferD");
 			path.drawDecals("decal");
 			
-			#if arm_dev
 			path.setDepthFrom("gbuffer0", "tex"); // Re-bind depth
 			path.depthToRenderTarget.set("main", path.renderTargets.get("gbuffer0"));
-			#end
 		}
 		#end
 
@@ -679,7 +675,6 @@ class RenderPathDeferred {
 			path.drawShader("shader_datas/deferred_light/deferred_light_VoxelAOvar") :
 			path.drawShader("shader_datas/deferred_light/deferred_light");
 		#end
-		path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
 
 		#if rp_probes
 		if (!path.isProbe) {
@@ -689,6 +684,7 @@ class RenderPathDeferred {
 				if (!p.visible || p.culled) continue;
 				path.currentProbeIndex = i;
 				path.setTarget("tex");
+				path.bindTarget("_main", "gbufferD");
 				path.bindTarget("gbuffer0", "gbuffer0");
 				path.bindTarget("gbuffer1", "gbuffer1");
 				path.bindTarget(p.raw.name, "probeTex");
@@ -701,6 +697,8 @@ class RenderPathDeferred {
 			}
 		}
 		#end
+
+		path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
 
 		// #if rp_volumetriclight
 		// {

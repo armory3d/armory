@@ -8,13 +8,13 @@ class CallGroupNode(Node, ArmLogicTreeNode):
     '''Call group node'''
     bl_idname = 'LNCallGroupNode'
     bl_label = 'Call Node Group'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     @property
     def property0(self):
         return arm.utils.safesrc(bpy.data.worlds['Arm'].arm_project_package) + '.node.' + arm.utils.safesrc(self.property0_)
 
-    property0_ = StringProperty(name='Group', default='')
+    property0_: StringProperty(name='Group', default='')
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

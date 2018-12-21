@@ -50,9 +50,9 @@ def update_trait_group(self, context):
             g.objects.link(o)
 
 class ArmTraitListItem(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty(name="Name", description="A name for this item", default="")
-    enabled_prop = bpy.props.BoolProperty(name="", description="A name for this item", default=True, update=trigger_recompile)
-    type_prop = bpy.props.EnumProperty(
+    name: StringProperty(name="Name", description="A name for this item", default="")
+    enabled_prop: BoolProperty(name="", description="A name for this item", default=True, update=trigger_recompile)
+    type_prop: EnumProperty(
         items = [('Haxe Script', 'Haxe', 'Haxe Script'),
                  ('WebAssembly', 'Wasm', 'WebAssembly'),
                  ('UI Canvas', 'UI', 'UI Canvas'),
@@ -60,13 +60,13 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
                  ('Logic Nodes', 'Nodes', 'Logic Nodes')
                  ],
         name = "Type")
-    class_name_prop = bpy.props.StringProperty(name="Class", description="A name for this item", default="", update=update_trait_group)
-    canvas_name_prop = bpy.props.StringProperty(name="Canvas", description="A name for this item", default="", update=update_trait_group)
-    webassembly_prop = bpy.props.StringProperty(name="Module", description="A name for this item", default="", update=update_trait_group)
-    nodes_name_prop = bpy.props.StringProperty(name="Nodes", description="A name for this item", default="", update=update_trait_group)
+    class_name_prop: StringProperty(name="Class", description="A name for this item", default="", update=update_trait_group)
+    canvas_name_prop: StringProperty(name="Canvas", description="A name for this item", default="", update=update_trait_group)
+    webassembly_prop: StringProperty(name="Module", description="A name for this item", default="", update=update_trait_group)
+    nodes_name_prop: StringProperty(name="Nodes", description="A name for this item", default="", update=update_trait_group)
 
-    arm_traitpropslist = bpy.props.CollectionProperty(type=ArmTraitPropListItem)
-    arm_traitpropslist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
+    arm_traitpropslist: CollectionProperty(type=ArmTraitPropListItem)
+    arm_traitpropslist_index: IntProperty(name="Index for my_list", default=0)
 
 class ArmTraitList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -77,7 +77,7 @@ class ArmTraitList(bpy.types.UIList):
         elif item.type_prop == "WebAssembly":
             custom_icon_value = icons_dict["wasm"].icon_id
         elif item.type_prop == "UI Canvas":
-            custom_icon = "UI"
+            custom_icon = "OBJECT_DATAMODE"
         elif item.type_prop == "Bundled Script":
             custom_icon = 'OBJECT_DATAMODE'
         elif item.type_prop == "Logic Nodes":
@@ -97,8 +97,8 @@ class ArmTraitListNewItem(bpy.types.Operator):
     bl_idname = "arm_traitlist.new_item"
     bl_label = "New"
 
-    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
-    type_prop = bpy.props.EnumProperty(
+    is_object: BoolProperty(name="", description="A name for this item", default=False)
+    type_prop: EnumProperty(
         items = [('Haxe Script', 'Haxe', 'Haxe Script'),
                  ('WebAssembly', 'Wasm', 'WebAssembly'),
                  ('UI Canvas', 'UI', 'UI Canvas'),
@@ -131,7 +131,7 @@ class ArmTraitListDeleteItem(bpy.types.Operator):
     bl_idname = "arm_traitlist.delete_item"
     bl_label = "Deletes an item"
 
-    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
+    is_object: BoolProperty(name="", description="A name for this item", default=False)
 
     @classmethod
     def poll(self, context):
@@ -163,7 +163,7 @@ class ArmTraitListDeleteItemScene(bpy.types.Operator):
     bl_idname = "arm_traitlist.delete_item_scene"
     bl_label = "Deletes an item"
 
-    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
+    is_object: BoolProperty(name="", description="A name for this item", default=False)
 
     @classmethod
     def poll(self, context):
@@ -193,12 +193,12 @@ class ArmTraitListMoveItem(bpy.types.Operator):
     # Move an item in the list
     bl_idname = "arm_traitlist.move_item"
     bl_label = "Move an item in the list"
-    direction = bpy.props.EnumProperty(
+    direction: EnumProperty(
                 items=(
                     ('UP', 'Up', ""),
                     ('DOWN', 'Down', ""),))
 
-    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
+    is_object: BoolProperty(name="", description="A name for this item", default=False)
 
     def move_index(self):
         # Move index of an item render queue while clamping it
@@ -243,7 +243,7 @@ class ArmEditScriptButton(bpy.types.Operator):
     bl_idname = 'arm.edit_script'
     bl_label = 'Edit Script'
 
-    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
+    is_object: BoolProperty(name="", description="A name for this item", default=False)
  
     def execute(self, context):
 
@@ -267,7 +267,7 @@ class ArmEditBundledScriptButton(bpy.types.Operator):
     bl_idname = 'arm.edit_bundled_script'
     bl_label = 'Edit Script'
 
-    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
+    is_object: BoolProperty(name="", description="A name for this item", default=False)
  
     def execute(self, context):
         if not arm.utils.check_saved(self):
@@ -308,7 +308,7 @@ class ArmEditCanvasButton(bpy.types.Operator):
     bl_idname = 'arm.edit_canvas'
     bl_label = 'Edit Canvas'
 
-    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
+    is_object: BoolProperty(name="", description="A name for this item", default=False)
  
     def execute(self, context):
         if self.is_object:
@@ -321,11 +321,12 @@ class ArmEditCanvasButton(bpy.types.Operator):
         
         sdk_path = arm.utils.get_sdk_path()
         armory2d_path = sdk_path + '/lib/armory_tools/armory2d'
-        krom_location, krom_path = arm.utils.krom_paths()
+        bin_ext = '_opengl' if arm.utils.get_os() == 'win' else ''
+        krom_location, krom_path = arm.utils.krom_paths(bin_ext=bin_ext)
         os.chdir(krom_location)
         cpath = canvas_path.replace('\\', '/')
         uiscale = str(arm.utils.get_ui_scale())
-        subprocess.Popen([krom_path, armory2d_path, armory2d_path, '--nosound', cpath, uiscale])
+        subprocess.Popen([krom_path, armory2d_path, armory2d_path, cpath, uiscale])
         return{'FINISHED'}
 
 class ArmNewScriptDialog(bpy.types.Operator):
@@ -333,8 +334,8 @@ class ArmNewScriptDialog(bpy.types.Operator):
     bl_idname = "arm.new_script"
     bl_label = "New Script"
  
-    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
-    class_name = StringProperty(name="Name")
+    is_object: BoolProperty(name="", description="A name for this item", default=False)
+    class_name: StringProperty(name="Name")
  
     def execute(self, context):
         if self.is_object:
@@ -359,8 +360,8 @@ class ArmNewCanvasDialog(bpy.types.Operator):
     bl_idname = "arm.new_canvas"
     bl_label = "New Canvas"
  
-    is_object = bpy.props.BoolProperty(name="", description="A name for this item", default=False)
-    canvas_name = StringProperty(name="Name")
+    is_object: BoolProperty(name="", description="A name for this item", default=False)
+    canvas_name: StringProperty(name="Name")
  
     def execute(self, context):
         if self.is_object:
@@ -419,6 +420,8 @@ class ArmTraitsPanel(bpy.types.Panel):
  
     def draw(self, context):
         layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
         obj = bpy.context.object
         draw_traits(layout, obj, is_object=True)
 
@@ -429,7 +432,9 @@ class ArmSceneTraitsPanel(bpy.types.Panel):
     bl_context = "scene"
  
     def draw(self, context):
-        layout = self.layout        
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
         obj = bpy.context.scene
         draw_traits(layout, obj, is_object=False)
 
@@ -442,12 +447,12 @@ def draw_traits(layout, obj, is_object):
     row.template_list("ArmTraitList", "The_List", obj, "arm_traitlist", obj, "arm_traitlist_index", rows=rows)
     
     col = row.column(align=True)
-    op = col.operator("arm_traitlist.new_item", icon='ZOOMIN', text="")
+    op = col.operator("arm_traitlist.new_item", icon='ADD', text="")
     op.is_object = is_object
     if is_object:
-        op = col.operator("arm_traitlist.delete_item", icon='ZOOMOUT', text="")#.all = False
+        op = col.operator("arm_traitlist.delete_item", icon='REMOVE', text="")#.all = False
     else:
-        op = col.operator("arm_traitlist.delete_item_scene", icon='ZOOMOUT', text="")#.all = False
+        op = col.operator("arm_traitlist.delete_item_scene", icon='REMOVE', text="")#.all = False
     op.is_object = is_object
 
     if len(obj.arm_traitlist) > 1:
@@ -559,10 +564,10 @@ def register():
     bpy.utils.register_class(ArmRefreshCanvasListButton)
     bpy.utils.register_class(ArmTraitsPanel)
     bpy.utils.register_class(ArmSceneTraitsPanel)
-    bpy.types.Object.arm_traitlist = bpy.props.CollectionProperty(type=ArmTraitListItem)
-    bpy.types.Object.arm_traitlist_index = bpy.props.IntProperty(name="Index for arm_traitlist", default=0)
-    bpy.types.Scene.arm_traitlist = bpy.props.CollectionProperty(type=ArmTraitListItem)
-    bpy.types.Scene.arm_traitlist_index = bpy.props.IntProperty(name="Index for arm_traitlist", default=0)
+    bpy.types.Object.arm_traitlist = CollectionProperty(type=ArmTraitListItem)
+    bpy.types.Object.arm_traitlist_index = IntProperty(name="Index for arm_traitlist", default=0)
+    bpy.types.Scene.arm_traitlist = CollectionProperty(type=ArmTraitListItem)
+    bpy.types.Scene.arm_traitlist_index = IntProperty(name="Index for arm_traitlist", default=0)
     icons_dict = bpy.utils.previews.new()
     icons_dir = os.path.join(os.path.dirname(__file__), "custom_icons")
     icons_dict.load("haxe", os.path.join(icons_dir, "haxe.png"), 'IMAGE')

@@ -7,7 +7,7 @@ class ArrayRemoveValueNode(Node, ArmLogicTreeNode):
     '''Array remove value node'''
     bl_idname = 'LNArrayRemoveValueNode'
     bl_label = 'Array Remove Value'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     # def __init__(self):
         # array_nodes[str(id(self))] = self

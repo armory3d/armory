@@ -62,7 +62,7 @@ class RenderPathRaytracer {
 						structure.add("nor", VertexData.Float3);
 						var geom = iron.Scene.active.meshes[0].data.geom;
 
-						var vb = new VertexBuffer(Std.int(geom.positions.length / 3), structure, kha.graphics5.Usage.StaticUsage);
+						var vb = new VertexBuffer(Std.int(geom.positions.length / 4), structure, kha.graphics5.Usage.StaticUsage);
 						var vba = vb.lock();
 						iron.data.Geometry.buildVertices(vba, geom.positions, geom.normals);
 						vb.unlock();

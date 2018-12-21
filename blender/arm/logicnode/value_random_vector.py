@@ -7,7 +7,7 @@ class RandomVectorNode(Node, ArmLogicTreeNode):
     '''Random vector node'''
     bl_idname = 'LNRandomVectorNode'
     bl_label = 'Random (Vector)'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('NodeSocketVector', 'Min')

@@ -24,16 +24,10 @@ def invalidate_instance_cache(self, context):
         return
     invalidate_mesh_cache(self, context)
     for slot in context.object.material_slots:
-        slot.material.is_cached = False
+        slot.material.arm_cached = False
 
 def invalidate_compiler_cache(self, context):
     bpy.data.worlds['Arm'].arm_recompile = True
-
-def update_mat_cache(self, context):
-    if self.is_cached == True:
-        self.lock_cache = True
-    else:
-        pass
 
 def proxy_sync_loc(self, context):
     if context.object == None or context.object.proxy == None:
@@ -121,7 +115,7 @@ def init_properties():
     bpy.types.World.arm_sound_quality = FloatProperty(name="Sound Quality", default=0.9, min=0.0, max=1.0, subtype='FACTOR', update=invalidate_compiler_cache)
     bpy.types.World.arm_minimize = BoolProperty(name="Minimize Data", description="Export scene data in binary", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_minify_js = BoolProperty(name="Minify JS", description="Minimize JavaScript output when publishing", default=True)
-    bpy.types.World.arm_optimize_mesh = BoolProperty(name="Optimize Meshes", description="Export more efficient geometry indices, can prolong build times", default=False, update=assets.invalidate_mesh_data)
+    bpy.types.World.arm_optimize_data = BoolProperty(name="Optimize Data", description="Export more efficient geometry and shader data, prolongs build times", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_deinterleaved_buffers = BoolProperty(name="Deinterleaved Buffers", description="Use deinterleaved vertex buffers", default=False, update=invalidate_compiler_cache)
     bpy.types.World.arm_export_tangents = BoolProperty(name="Export Tangents", description="Precompute tangents for normal mapping, otherwise computed in shader", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_batch_meshes = BoolProperty(name="Batch Meshes", description="Group meshes by materials to speed up rendering", default=False, update=invalidate_compiler_cache)
@@ -188,7 +182,6 @@ def init_properties():
     bpy.types.Object.arm_proxy_sync_materials = BoolProperty(name="Materials", description="Keep materials synchronized with proxy object", default=True, update=proxy_sync_materials)
     bpy.types.Object.arm_proxy_sync_modifiers = BoolProperty(name="Modifiers", description="Keep modifiers synchronized with proxy object", default=True, update=proxy_sync_modifiers)
     bpy.types.Object.arm_proxy_sync_traits = BoolProperty(name="Traits", description="Keep traits synchronized with proxy object", default=True, update=proxy_sync_traits)
-    bpy.types.Object.arm_cached = BoolProperty(name="Object Cached", description="No need to reexport object data", default=True)
     # For speakers
     bpy.types.Speaker.arm_play_on_start = BoolProperty(name="Play on Start", description="Play this sound automatically", default=False)
     bpy.types.Speaker.arm_loop = BoolProperty(name="Loop", description="Loop this sound", default=False)
@@ -197,24 +190,20 @@ def init_properties():
     bpy.types.Mesh.arm_cached = BoolProperty(name="Mesh Cached", description="No need to reexport mesh data", default=False)
     bpy.types.Mesh.arm_aabb = FloatVectorProperty(name="AABB", size=3, default=[0,0,0])
     bpy.types.Mesh.arm_dynamic_usage = BoolProperty(name="Dynamic Usage", description="Mesh data can change at runtime", default=False)
-    bpy.types.Mesh.arm_compress = BoolProperty(name="Compress", description="Pack data into zip file", default=False)
     bpy.types.Curve.arm_cached = BoolProperty(name="Mesh Cached", description="No need to reexport curve data", default=False)
-    bpy.types.Curve.arm_compress = BoolProperty(name="Compress", description="Pack data into zip file", default=False)
+    bpy.types.Curve.arm_aabb = FloatVectorProperty(name="AABB", size=3, default=[0,0,0])
     bpy.types.Curve.arm_dynamic_usage = BoolProperty(name="Dynamic Data Usage", description="Curve data can change at runtime", default=False)
     bpy.types.MetaBall.arm_cached = BoolProperty(name="Mesh Cached", description="No need to reexport metaball data", default=False)
-    bpy.types.MetaBall.arm_compress = BoolProperty(name="Compress", description="Pack data into zip file", default=False)
+    bpy.types.MetaBall.arm_aabb = FloatVectorProperty(name="AABB", size=3, default=[0,0,0])
     bpy.types.MetaBall.arm_dynamic_usage = BoolProperty(name="Dynamic Data Usage", description="Metaball data can change at runtime", default=False)
     # For grease pencil
     # bpy.types.GreasePencil.arm_cached = BoolProperty(name="GP Cached", description="No need to reexport grease pencil data", default=False)
-    # bpy.types.GreasePencil.arm_compress = BoolProperty(name="Compress", description="Pack data into zip file", default=True)
     # For armature
     bpy.types.Armature.arm_cached = BoolProperty(name="Armature Cached", description="No need to reexport armature data", default=False)
-    bpy.types.Armature.arm_compress = BoolProperty(name="Compress", description="Pack data into zip file", default=False)
     # For camera
     bpy.types.Camera.arm_frustum_culling = BoolProperty(name="Frustum Culling", description="Perform frustum culling for this camera", default=True)
 
     # Render path generator
-    bpy.types.World.rp_search = StringProperty(name="Search", default='')
     bpy.types.World.rp_preset = EnumProperty(
         items=[('Desktop', 'Desktop', 'Desktop'),
                ('Mobile', 'Mobile', 'Mobile'),
@@ -240,8 +229,8 @@ def init_properties():
         items=[('none', 'Both', 'None'),
                ('clockwise', 'Front', 'Clockwise'),
                ('counter_clockwise', 'Back', 'Counter-Clockwise')],
-        name="", default='clockwise', description="Draw geometry faces")
-    bpy.types.Material.arm_discard = BoolProperty(name="Discard", default=False, description="Do not render fragments below specified opacity threshold")
+        name="Cull Mode", default='clockwise', description="Draw geometry faces")
+    bpy.types.Material.arm_discard = BoolProperty(name="Alpha Test", default=False, description="Do not render fragments below specified opacity threshold")
     bpy.types.Material.arm_discard_opacity = FloatProperty(name="Mesh Opacity", default=0.2, min=0, max=1)
     bpy.types.Material.arm_discard_opacity_shadows = FloatProperty(name="Shadows Opacity", default=0.1, min=0, max=1)
     bpy.types.Material.arm_custom_material = StringProperty(name="Custom Material", description="Write custom material", default='')
@@ -318,19 +307,11 @@ def init_properties():
         name='Operation', default='add', description='Blending operation', update=assets.invalidate_shader_cache)
     # For scene
     bpy.types.Scene.arm_export = BoolProperty(name="Export", description="Export scene data", default=True)
-    # bpy.types.Scene.arm_gp_export = BoolProperty(name="Export GP", description="Export grease pencil data", default=True)
-    bpy.types.Scene.arm_compress = BoolProperty(name="Compress", description="Pack data into zip file", default=False)
     # For light
-    if bpy.app.version >= (2, 80, 1):
-        bpy.types.Light.arm_clip_start = FloatProperty(name="Clip Start", default=0.1)
-        bpy.types.Light.arm_clip_end = FloatProperty(name="Clip End", default=50.0)
-        bpy.types.Light.arm_fov = FloatProperty(name="Field of View", default=0.84)
-        bpy.types.Light.arm_shadows_bias = FloatProperty(name="Bias", description="Depth offset to fight shadow acne", default=1.0)
-    else:
-        bpy.types.Lamp.arm_clip_start = FloatProperty(name="Clip Start", default=0.1)
-        bpy.types.Lamp.arm_clip_end = FloatProperty(name="Clip End", default=50.0)
-        bpy.types.Lamp.arm_fov = FloatProperty(name="Field of View", default=0.84)
-        bpy.types.Lamp.arm_shadows_bias = FloatProperty(name="Bias", description="Depth offset to fight shadow acne", default=1.0)
+    bpy.types.Light.arm_clip_start = FloatProperty(name="Clip Start", default=0.1)
+    bpy.types.Light.arm_clip_end = FloatProperty(name="Clip End", default=50.0)
+    bpy.types.Light.arm_fov = FloatProperty(name="Field of View", default=0.84)
+    bpy.types.Light.arm_shadows_bias = FloatProperty(name="Bias", description="Depth offset to fight shadow acne", default=1.0)
     bpy.types.World.arm_light_ies_texture = StringProperty(name="IES Texture", default="")
     bpy.types.World.arm_light_clouds_texture = StringProperty(name="Clouds Texture", default="")
 
@@ -347,10 +328,9 @@ def init_properties():
     bpy.types.Material.arm_skip_context = StringProperty(name="Skip Context", default='')
     bpy.types.Material.arm_material_id = IntProperty(name="ID", default=0)
     bpy.types.NodeSocket.is_uniform = BoolProperty(name="Is Uniform", description="Mark node sockets to be processed as material uniforms", default=False)
-    bpy.types.NodeTree.is_cached = BoolProperty(name="Node Tree Cached", description="No need to reexport node tree", default=False)
+    bpy.types.NodeTree.arm_cached = BoolProperty(name="Node Tree Cached", description="No need to reexport node tree", default=False)
     bpy.types.Material.signature = StringProperty(name="Signature", description="Unique string generated from material nodes", default="")
-    bpy.types.Material.is_cached = BoolProperty(name="Material Cached", description="No need to reexport material data", default=False, update=update_mat_cache)
-    bpy.types.Material.lock_cache = BoolProperty(name="Lock Material Cache", description="Prevent is_cached from updating", default=False)
+    bpy.types.Material.arm_cached = BoolProperty(name="Material Cached", description="No need to reexport material data", default=False)
     bpy.types.Node.arm_material_param = BoolProperty(name="Parameter", description="Control this node from script", default=False)
     bpy.types.Node.arm_logic_id = StringProperty(name="ID", description="Nodes with equal identifier will share data", default='')
     bpy.types.Node.arm_watch = BoolProperty(name="Watch", description="Watch value of this node in debug console", default=False)

@@ -33,7 +33,7 @@ def build_node_tree(world):
         solid_mat = rpdat.arm_material_model == 'Solid'
         if rpdat.arm_irradiance and not solid_mat:
             wrd.world_defs += '_Irr'
-        c = world.color if bpy.app.version >= (2, 80, 1) else world.horizon_color
+        c = world.color
         world.arm_envtex_color = [c[0], c[1], c[2], 1.0]
         world.arm_envtex_strength = 1.0
     
@@ -209,7 +209,7 @@ def parse_color(world, node):
         write_probes.write_sky_irradiance(wname)
 
         # Radiance
-        if rpdat.arm_radiance_sky and rpdat.arm_radiance and rpdat.arm_irradiance and not mobile_mat:
+        if rpdat.arm_radiance and rpdat.arm_irradiance and not mobile_mat:
             wrd.world_defs += '_Rad'
             hosek_path = 'armory/Assets/hosek/'
             sdk_path = arm.utils.get_sdk_path()

@@ -7,8 +7,8 @@ class VolumeTriggerNode(Node, ArmLogicTreeNode):
     '''Volume trigger node'''
     bl_idname = 'LNVolumeTriggerNode'
     bl_label = 'Volume Trigger'
-    bl_icon = 'GAME'
-    property0 = EnumProperty(
+    bl_icon = 'QUESTION'
+    property0: EnumProperty(
         items = [('Enter', 'Enter', 'Enter'),
                  ('Leave', 'Leave', 'Leave'),
                  ('Overlap', 'Overlap', 'Overlap')],

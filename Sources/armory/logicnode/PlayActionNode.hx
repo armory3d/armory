@@ -11,8 +11,7 @@ class PlayActionNode extends LogicNode {
 	override function run(from:Int) {
 		var object:Object = inputs[1].get();
 		var action:String = inputs[2].get();
-		// TODO: assume input exists
-		var blendTime:Float = inputs.length > 3 ? inputs[3].get() : 0.2;
+		var blendTime:Float = inputs[3].get();
 		
 		if (object == null) return;
 		var animation = object.animation;

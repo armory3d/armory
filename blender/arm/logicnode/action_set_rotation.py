@@ -7,7 +7,7 @@ class SetRotationNode(Node, ArmLogicTreeNode):
     '''Set rotation node'''
     bl_idname = 'LNSetRotationNode'
     bl_label = 'Set Rotation'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

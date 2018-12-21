@@ -7,7 +7,7 @@ class PrintNode(Node, ArmLogicTreeNode):
     '''Print node'''
     bl_idname = 'LNPrintNode'
     bl_label = 'Print'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

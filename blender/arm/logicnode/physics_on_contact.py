@@ -7,8 +7,8 @@ class OnContactNode(Node, ArmLogicTreeNode):
     '''On contact node'''
     bl_idname = 'LNOnContactNode'
     bl_label = 'On Contact'
-    bl_icon = 'GAME'
-    property0 = EnumProperty(
+    bl_icon = 'QUESTION'
+    property0: EnumProperty(
         items = [('Begin', 'Begin', 'Begin'),
                  ('End', 'End', 'End'),
                  ('Overlap', 'Overlap', 'Overlap')],

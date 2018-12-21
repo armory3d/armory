@@ -7,7 +7,7 @@ class SetMouseLockNode(Node, ArmLogicTreeNode):
     '''Set Mouse Lock node'''
     bl_idname = 'LNSetMouseLockNode'
     bl_label = 'Set Mouse Lock'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

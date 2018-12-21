@@ -8,7 +8,7 @@ class ContainsStringNode(Node, ArmLogicTreeNode):
     bl_idname = 'LNContainsStringNode'
     bl_label = 'Contains String'
     bl_icon = 'CURVE_PATH'
-    property0 = EnumProperty(
+    property0: EnumProperty(
         items = [('Contains', 'Contains', 'Contains'),
                  ('Starts With', 'Starts With', 'Starts With'),
                  ('Ends With', 'Ends With', 'Ends With'),

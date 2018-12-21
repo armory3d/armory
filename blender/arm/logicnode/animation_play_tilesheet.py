@@ -7,7 +7,7 @@ class PlayTilesheetNode(Node, ArmLogicTreeNode):
     '''Play tilesheet node'''
     bl_idname = 'LNPlayTilesheetNode'
     bl_label = 'Play Tilesheet'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

@@ -7,9 +7,9 @@ class PlaySoundNode(Node, ArmLogicTreeNode):
     '''Play sound node'''
     bl_idname = 'LNPlaySoundRawNode'
     bl_label = 'Play Sound'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
-    property0 = StringProperty(name='', default='')
+    property0: StringProperty(name='', default='')
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

@@ -2,7 +2,6 @@ package armory.trait.physics.bullet;
 
 #if arm_bullet
 
-import haxebullet.Bullet;
 import iron.Trait;
 import iron.system.Time;
 import iron.math.Vec4;
@@ -28,12 +27,12 @@ class PhysicsWorld extends Trait {
 	static var sceneRemoved = false;
 
 	#if arm_physics_soft
-	public var world:BtSoftRigidDynamicsWorldPointer;
+	public var world:bullet.Bt.SoftRigidDynamicsWorld;
 	#else
-	public var world:BtDiscreteDynamicsWorldPointer;
+	public var world:bullet.Bt.DiscreteDynamicsWorld;
 	#end
 
-	var dispatcher:BtCollisionDispatcherPointer;
+	var dispatcher:bullet.Bt.CollisionDispatcher;
 	var gimpactRegistered = false;
 	var contacts:Array<ContactPair>;
 	var preUpdates:Array<Void->Void> = null;
@@ -47,8 +46,8 @@ class PhysicsWorld extends Trait {
 	var pairCache:Bool = false;
 
 	static var nullvec = true;
-	static var vec1:BtVector3;
-	static var vec2:BtVector3;
+	var vec1:bullet.Bt.Vector3 = null;
+	var vec2:bullet.Bt.Vector3 = null;
 
 	#if arm_debug
 	public static var physTime = 0.0;
@@ -59,8 +58,8 @@ class PhysicsWorld extends Trait {
 
 		if (nullvec) {
 			nullvec = false;
-			vec1 = BtVector3.create(0, 0, 0);
-			vec2 = BtVector3.create(0, 0, 0);
+			vec1 = new bullet.Bt.Vector3(0, 0, 0);
+			vec2 = new bullet.Bt.Vector3(0, 0, 0);
 		}
 
 		// Scene spawn
@@ -101,47 +100,49 @@ class PhysicsWorld extends Trait {
 	}
 
 	function createPhysics() {
-		var broadphase = BtDbvtBroadphase.create();
+		var broadphase = new bullet.Bt.DbvtBroadphase();
 
 #if arm_physics_soft
-		var collisionConfiguration = BtSoftBodyRigidBodyCollisionConfiguration.create();
+		var collisionConfiguration = new bullet.Bt.SoftBodyRigidBodyCollisionConfiguration();
 #else
-		var collisionConfiguration = BtDefaultCollisionConfiguration.create();
+		var collisionConfiguration = new bullet.Bt.DefaultCollisionConfiguration();
 #end
 		
-		dispatcher = BtCollisionDispatcher.create(collisionConfiguration);
-		var solver = BtSequentialImpulseConstraintSolver.create();
+		dispatcher = new bullet.Bt.CollisionDispatcher(collisionConfiguration);
+		var solver = new bullet.Bt.SequentialImpulseConstraintSolver();
 
 		var g = iron.Scene.active.raw.gravity;
 		var gravity = g == null ? new Vec4(0, 0, -9.81) : new Vec4(g[0], g[1], g[2]);
 
 #if arm_physics_soft
-		var softSolver = BtDefaultSoftBodySolver.create();
-		world = BtSoftRigidDynamicsWorld.create(dispatcher, broadphase, solver, collisionConfiguration, softSolver);
+		var softSolver = new bullet.Bt.DefaultSoftBodySolver();
+		world = new bullet.Bt.SoftRigidDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration, softSolver);
 		vec1.setX(gravity.x);
 		vec1.setY(gravity.y);
 		vec1.setZ(gravity.z);
 		#if js
 		world.getWorldInfo().set_m_gravity(vec1);
-		#elseif cpp
+		#else
 		world.getWorldInfo().m_gravity = vec1;
 		#end
 #else
-		world = BtDiscreteDynamicsWorld.create(dispatcher, broadphase, solver, collisionConfiguration);
+		world = new bullet.Bt.DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
 #end
 
 		setGravity(gravity);
 	}
 
 	public function setGravity(v:Vec4) {
-		vec1.setX(v.x);
-		vec1.setY(v.y);
-		vec1.setZ(v.z);
+		vec1.setValue(v.x, v.y, v.z);
 		world.setGravity(vec1);
 	}
 
 	public function addRigidBody(body:RigidBody) {
+		#if js
 		world.addRigidBodyToGroup(body.body, body.group, body.group);
+		#else
+		world.addRigidBody(body.body, body.group, body.group);
+		#end
 		rbMap.set(body.id, body);
 	}
 
@@ -151,36 +152,37 @@ class PhysicsWorld extends Trait {
 		if (world != null) world.removeRigidBody(body.body);
 		rbMap.remove(body.id);
 		#if js
-		Ammo.destroy(body.motionState);
-		Ammo.destroy(body.btshape);
-		Ammo.destroy(body.body);
-		#elseif cpp
-		var cbody = body.body;
-		untyped __cpp__("delete cbody");
+		bullet.Bt.Ammo.destroy(body.motionState);
+		bullet.Bt.Ammo.destroy(body.btshape);
+		bullet.Bt.Ammo.destroy(body.body);
+		#else
+		body.motionState.delete();
+		body.btshape.delete();
+		body.body.delete();
 		#end
 	}
 
-	public function addKinematicCharacterController(controller:KinematicCharacterController) {
-		if (!pairCache){ // Only create PairCache if needed
-			world.getPairCache().setInternalGhostPairCallback(BtGhostPairCallbackPointer.create());
-			pairCache = true;
-		}
-		world.addAction(controller.character);
-		world.addCollisionObjectToGroup(controller.body, controller.group, controller.group);
-	}
+	// public function addKinematicCharacterController(controller:KinematicCharacterController) {
+	// 	if (!pairCache){ // Only create PairCache if needed
+	// 		world.getPairCache().setInternalGhostPairCallback(BtGhostPairCallbackPointer.create());
+	// 		pairCache = true;
+	// 	}
+	// 	world.addAction(controller.character);
+	// 	world.addCollisionObjectToGroup(controller.body, controller.group, controller.group);
+	// }
 
-	public function removeKinematicCharacterController(controller:KinematicCharacterController) {
-		if (world != null) {
-			world.removeCollisionObject(controller.body);
-			world.removeAction(controller.character);
-		}
-		#if js
-		Ammo.destroy(controller.body);
-		#elseif cpp
-		var cbody = controller.body;
-		untyped __cpp__("delete cbody");
-		#end
-	}
+	// public function removeKinematicCharacterController(controller:KinematicCharacterController) {
+	// 	if (world != null) {
+	// 		world.removeCollisionObject(controller.body);
+	// 		world.removeAction(controller.character);
+	// 	}
+	// 	#if js
+	// 	bullet.Bt.Ammo.destroy(controller.body);
+	// 	#else
+	// 	var cbody = controller.body;
+	// 	untyped __cpp__("delete cbody");
+	// 	#end
+	// }
 
 	/**
 	 * Used to get intersecting rigid bodies with the passed in RigidBody as reference. Often used when checking for object collisions.
@@ -198,10 +200,11 @@ class PhysicsWorld extends Trait {
 			if (c.a == untyped body.body.userIndex) res.push(rbMap.get(c.b));
 			else if (c.b == untyped body.body.userIndex) res.push(rbMap.get(c.a));
 			
-			#elseif cpp
+			#else
 			
-			if (c.a == body.body.getUserIndex()) res.push(rbMap.get(c.b));
-			else if (c.b == body.body.getUserIndex()) res.push(rbMap.get(c.a));
+			var ob:bullet.Bt.CollisionObject = body.body;
+			if (c.a == ob.getUserIndex()) res.push(rbMap.get(c.b));
+			else if (c.b == ob.getUserIndex()) res.push(rbMap.get(c.a));
 			
 			#end
 		}
@@ -218,17 +221,18 @@ class PhysicsWorld extends Trait {
 			if (c.a == untyped body.body.userIndex) res.push(c);
 			else if (c.b == untyped body.body.userIndex) res.push(c);
 			
-			#elseif cpp
+			#else
 			
-			if (c.a == body.body.getUserIndex()) res.push(c);
-			else if (c.b == body.body.getUserIndex()) res.push(c);
+			var ob:bullet.Bt.CollisionObject = body.body;
+			if (c.a == ob.getUserIndex()) res.push(c);
+			else if (c.b == ob.getUserIndex()) res.push(c);
 			
 			#end
 		}
 		return res;
 	}
 
-	public function lateUpdate() {
+	function lateUpdate() {
 		var t = Time.delta * timeScale;
 		if (t == 0.0) return; // Simulation paused
 
@@ -251,29 +255,30 @@ class PhysicsWorld extends Trait {
 	function updateContacts() {
 		contacts = [];
 
-		var numManifolds = dispatcher.getNumManifolds();
+		var disp:bullet.Bt.Dispatcher = dispatcher;
+		var numManifolds = disp.getNumManifolds();
 
 		for (i in 0...numManifolds) {
-			var contactManifold = dispatcher.getManifoldByIndexInternal(i);
+			var contactManifold = disp.getManifoldByIndexInternal(i);
 			#if js
-			var obA = contactManifold.getBody0();
-			var obB = contactManifold.getBody1();
-			var bodyA = untyped Ammo.btRigidBody.prototype.upcast(obA);
-			var bodyB = untyped Ammo.btRigidBody.prototype.upcast(obB);
-			var cp = new ContactPair(untyped bodyA.userIndex, untyped bodyB.userIndex);
-			#elseif cpp
-			var cp = new ContactPair(contactManifold.getBody0().getUserIndex(), contactManifold.getBody1().getUserIndex());
+			var body0 = untyped bullet.Bt.Ammo.btRigidBody.prototype.upcast(contactManifold.getBody0());
+			var body1 = untyped bullet.Bt.Ammo.btRigidBody.prototype.upcast(contactManifold.getBody1());
+			var cp = new ContactPair(untyped body0.userIndex, untyped body1.userIndex);
+			#else
+			var body0:bullet.Bt.CollisionObject = contactManifold.getBody0();
+			var body1:bullet.Bt.CollisionObject = contactManifold.getBody1();
+			var cp = new ContactPair(body0.getUserIndex(), body1.getUserIndex());
 			#end
 
 			var numContacts = contactManifold.getNumContacts();
 			for (j in 0...numContacts) {
-				var pt:BtManifoldPoint = contactManifold.getContactPoint(j);
+				var pt:bullet.Bt.ManifoldPoint = contactManifold.getContactPoint(j);
 				if (pt.getDistance() < 0) {
 					#if js
 					var posA = pt.get_m_positionWorldOnA();
 					var posB = pt.get_m_positionWorldOnB();
 					var nor = pt.get_m_normalWorldOnB();
-					#elseif cpp
+					#else
 					var posA = pt.m_positionWorldOnA;
 					var posB = pt.m_positionWorldOnB;
 					var nor = pt.m_normalWorldOnB;
@@ -300,21 +305,20 @@ class PhysicsWorld extends Trait {
 	public function rayCast(from:Vec4, to:Vec4):RigidBody {
 		var rayFrom = vec1;
 		var rayTo = vec2;
-		rayFrom.setX(from.x);
-		rayFrom.setY(from.y);
-		rayFrom.setZ(from.z);
-		rayTo.setX(to.x);
-		rayTo.setY(to.y);
-		rayTo.setZ(to.z);
+		rayFrom.setValue(from.x, from.y, from.z);
+		rayTo.setValue(to.x, to.y, to.z);
 
-		var rayCallback = ClosestRayResultCallback.create(rayFrom, rayTo);
-		world.rayTest(rayFrom, rayTo, rayCallback);
+		var rayCallback = new bullet.Bt.ClosestRayResultCallback(rayFrom, rayTo);
+		var worldDyn:bullet.Bt.DynamicsWorld = world;
+		var worldCol:bullet.Bt.CollisionWorld = worldDyn;
+		worldCol.rayTest(rayFrom, rayTo, rayCallback);
 		var rb:RigidBody = null;
 
-		if (rayCallback.hasHit()) {
+		var rc:bullet.Bt.RayResultCallback = rayCallback;
+		if (rc.hasHit()) {
 			#if js
 			var co = rayCallback.get_m_collisionObject();
-			var body = untyped Ammo.btRigidBody.prototype.upcast(co);
+			var body = untyped bullet.Bt.Ammo.btRigidBody.prototype.upcast(co);
 			var hit = rayCallback.get_m_hitPointWorld();
 			hitPointWorld.set(hit.x(), hit.y(), hit.z());
 			var norm = rayCallback.get_m_hitNormalWorld();
@@ -330,7 +334,9 @@ class PhysicsWorld extends Trait {
 		}
 
 		#if js
-		Ammo.destroy(rayCallback);
+		bullet.Bt.Ammo.destroy(rayCallback);
+		#else
+		rayCallback.delete();
 		#end
 
 		return rb;

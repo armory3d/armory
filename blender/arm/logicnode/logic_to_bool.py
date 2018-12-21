@@ -7,7 +7,7 @@ class ToBoolNode(Node, ArmLogicTreeNode):
     '''To Bool Node'''
     bl_idname = 'LNToBoolNode'
     bl_label = 'To Bool'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

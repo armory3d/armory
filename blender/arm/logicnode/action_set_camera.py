@@ -7,7 +7,7 @@ class SetCameraNode(Node, ArmLogicTreeNode):
     '''Set camera node'''
     bl_idname = 'LNSetCameraNode'
     bl_label = 'Set Camera'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

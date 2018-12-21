@@ -39,6 +39,9 @@ void main() {
 	vec3 wp = getPos2(invVP, depth, texCoord);
 	vec4 pp = probeVP * vec4(wp.xyz, 1.0);
 	vec2 tc = (pp.xy / pp.w) * 0.5 + 0.5;
+	#ifdef HLSL
+	tc.y = 1.0 - tc.y;
+	#endif
 
 	vec2 enc = g0.rg;
 	vec3 n;

@@ -7,7 +7,7 @@ class NoneNode(Node, ArmLogicTreeNode):
     '''None node'''
     bl_idname = 'LNNoneNode'
     bl_label = 'None'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.outputs.new('NodeSocketShader', 'None')

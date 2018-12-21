@@ -7,7 +7,7 @@ class GetFirstContactNode(Node, ArmLogicTreeNode):
     '''Get first contact node'''
     bl_idname = 'LNGetFirstContactNode'
     bl_label = 'Get First Contact'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketObject', 'Object')

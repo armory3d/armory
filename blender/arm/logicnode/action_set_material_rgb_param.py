@@ -7,7 +7,7 @@ class SetMaterialRgbParamNode(Node, ArmLogicTreeNode):
     '''Set material rgb param node'''
     bl_idname = 'LNSetMaterialRgbParamNode'
     bl_label = 'Set Material RGB Param'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

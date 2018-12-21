@@ -7,7 +7,7 @@ class BooleanArrayNode(Node, ArmLogicTreeNode):
     '''Boolean array node'''
     bl_idname = 'LNArrayBooleanNode'
     bl_label = 'Array (Boolean)'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def __init__(self):
         array_nodes[str(id(self))] = self

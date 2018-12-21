@@ -6,22 +6,22 @@ from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
 class ArmTilesheetActionListItem(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty(
+    name: StringProperty(
            name="Name",
            description="A name for this item",
            default="Untitled")
 
-    start_prop = bpy.props.IntProperty(
+    start_prop: IntProperty(
            name="Start",
            description="A name for this item",
            default=0)
 
-    end_prop = bpy.props.IntProperty(
+    end_prop: IntProperty(
            name="End",
            description="A name for this item",
            default=0)
 
-    loop_prop = bpy.props.BoolProperty(
+    loop_prop: BoolProperty(
            name="Loop",
            description="A name for this item",
            default=True)
@@ -81,7 +81,7 @@ class ArmTilesheetActionListMoveItem(bpy.types.Operator):
     # Move an item in the list
     bl_idname = "arm_tilesheetactionlist.move_item"
     bl_label = "Move an item in the list"
-    direction = bpy.props.EnumProperty(
+    direction: EnumProperty(
                 items=(
                     ('UP', 'Up', ""),
                     ('DOWN', 'Down', ""),))
@@ -128,28 +128,28 @@ class ArmTilesheetActionListMoveItem(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmTilesheetListItem(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty(
+    name: StringProperty(
            name="Name",
            description="A name for this item",
            default="Untitled")
 
-    tilesx_prop = bpy.props.IntProperty(
+    tilesx_prop: IntProperty(
            name="Tiles X",
            description="A name for this item",
            default=0)
 
-    tilesy_prop = bpy.props.IntProperty(
+    tilesy_prop: IntProperty(
            name="Tiles Y",
            description="A name for this item",
            default=0)
 
-    framerate_prop = bpy.props.FloatProperty(
+    framerate_prop: FloatProperty(
            name="Frame Rate",
            description="A name for this item",
            default=4.0)
 
-    arm_tilesheetactionlist = bpy.props.CollectionProperty(type=ArmTilesheetActionListItem)
-    arm_tilesheetactionlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
+    arm_tilesheetactionlist: CollectionProperty(type=ArmTilesheetActionListItem)
+    arm_tilesheetactionlist_index: IntProperty(name="Index for my_list", default=0)
 
 class ArmTilesheetList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -203,7 +203,7 @@ class ArmTilesheetListMoveItem(bpy.types.Operator):
     # Move an item in the list
     bl_idname = "arm_tilesheetlist.move_item"
     bl_label = "Move an item in the list"
-    direction = bpy.props.EnumProperty(
+    direction: EnumProperty(
                 items=(
                     ('UP', 'Up', ""),
                     ('DOWN', 'Down', ""),))
@@ -260,8 +260,8 @@ def register():
     bpy.utils.register_class(ArmTilesheetListDeleteItem)
     bpy.utils.register_class(ArmTilesheetListMoveItem)
 
-    bpy.types.World.arm_tilesheetlist = bpy.props.CollectionProperty(type=ArmTilesheetListItem)
-    bpy.types.World.arm_tilesheetlist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
+    bpy.types.World.arm_tilesheetlist = CollectionProperty(type=ArmTilesheetListItem)
+    bpy.types.World.arm_tilesheetlist_index = IntProperty(name="Index for my_list", default=0)
 
 def unregister():
     bpy.utils.unregister_class(ArmTilesheetListItem)

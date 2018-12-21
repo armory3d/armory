@@ -7,7 +7,7 @@ class SetMaterialImageParamNode(Node, ArmLogicTreeNode):
     '''Set material image param node'''
     bl_idname = 'LNSetMaterialImageParamNode'
     bl_label = 'Set Material Image Param'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

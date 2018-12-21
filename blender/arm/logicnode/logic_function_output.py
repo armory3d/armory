@@ -13,7 +13,7 @@ class FunctionOutputNode(Node, ArmLogicTreeNode):
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('NodeSocketShader', 'Value')
 
-    function_name = StringProperty(name="Name")
+    function_name: StringProperty(name="Name")
 
     def draw_buttons(self, context, layout):
         row = layout.row(align=True)

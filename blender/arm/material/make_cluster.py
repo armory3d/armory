@@ -11,7 +11,7 @@ def write(vert, frag):
     frag.add_uniform('sampler2D clustersData', link='_clustersData')
     if is_shadows:
         frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
-        frag.add_uniform('samplerCube shadowMapPoint[4]', included=True)
+        frag.add_uniform('samplerCubeShadow shadowMapPoint[4]', included=True)
     vert.add_out('vec4 wvpposition')
     vert.write('wvpposition = gl_Position;')
     # wvpposition.z / wvpposition.w
@@ -32,7 +32,7 @@ def write(vert, frag):
             frag.add_uniform('mat4 LWVPSpot1', link='_biasLightWorldViewProjectionMatrixSpot1', included=True)
             frag.add_uniform('mat4 LWVPSpot2', link='_biasLightWorldViewProjectionMatrixSpot2', included=True)
             frag.add_uniform('mat4 LWVPSpot3', link='_biasLightWorldViewProjectionMatrixSpot3', included=True)
-            frag.add_uniform('sampler2D shadowMapSpot[4]', included=True)
+            frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
 
     frag.write('for (int i = 0; i < min(numLights, maxLightsCluster); i++) {')
     frag.write('int li = int(texelFetch(clustersData, ivec2(clusterI, i + 1), 0).r * 255);')

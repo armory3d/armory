@@ -7,7 +7,7 @@ class VectorArrayNode(Node, ArmLogicTreeNode):
     '''Vector array node'''
     bl_idname = 'LNArrayVectorNode'
     bl_label = 'Array (Vector)'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def __init__(self):
         array_nodes[str(id(self))] = self

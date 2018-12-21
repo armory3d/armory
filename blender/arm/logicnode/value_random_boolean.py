@@ -7,7 +7,7 @@ class RandomBooleanNode(Node, ArmLogicTreeNode):
     '''Random boolean node'''
     bl_idname = 'LNRandomBooleanNode'
     bl_label = 'Random (Boolean)'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.outputs.new('NodeSocketBool', 'Bool')

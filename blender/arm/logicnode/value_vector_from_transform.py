@@ -7,8 +7,8 @@ class VectorFromTransformNode(Node, ArmLogicTreeNode):
     '''Vector from transform node'''
     bl_idname = 'LNVectorFromTransformNode'
     bl_label = 'Vector From Transform'
-    bl_icon = 'GAME'
-    property0 = EnumProperty(
+    bl_icon = 'QUESTION'
+    property0: EnumProperty(
         items = [('Up', 'Up', 'Up'),
                  ('Right', 'Right', 'Right'),
                  ('Look', 'Look', 'Look'),

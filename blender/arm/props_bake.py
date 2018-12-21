@@ -5,13 +5,13 @@ from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
 class ArmBakeListItem(bpy.types.PropertyGroup):
-    object_name = bpy.props.StringProperty(
+    object_name: StringProperty(
            name="Name",
            description="A name for this item",
            default="")
 
-    res_x = IntProperty(name="X", description="Texture resolution", default=1024)
-    res_y = IntProperty(name="Y", description="Texture resolution", default=1024)
+    res_x: IntProperty(name="X", description="Texture resolution", default=1024)
+    res_y: IntProperty(name="Y", description="Texture resolution", default=1024)
 
 class ArmBakeList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -70,7 +70,7 @@ class ArmBakeListMoveItem(bpy.types.Operator):
     # Move an item in the list
     bl_idname = "arm_bakelist.move_item"
     bl_label = "Move an item in the list"
-    direction = bpy.props.EnumProperty(
+    direction: EnumProperty(
                 items=(
                     ('UP', 'Up', ""),
                     ('DOWN', 'Down', ""),))
@@ -170,19 +170,13 @@ class ArmBakeButton(bpy.types.Operator):
                 img_node.select = True
                 nodes.active = img_node
         
-        if bpy.app.version >= (2, 80, 1):
-            obs = bpy.context.view_layer.objects
-        else:
-            obs = bpy.context.scene.objects
+        obs = bpy.context.view_layer.objects
 
         # Unwrap
         active = obs.active
         for o in scn.arm_bakelist:
             ob = scn.objects[o.object_name]
-            if bpy.app.version >= (2, 80, 1):
-                uv_layers = ob.data.uv_layers
-            else:
-                uv_layers = ob.data.uv_textures
+            uv_layers = ob.data.uv_layers
             if not 'UVMap_baked' in uv_layers:
                 uvmap = uv_layers.new(name='UVMap_baked')
                 uv_layers.active_index = len(uv_layers) - 1
@@ -191,10 +185,7 @@ class ArmBakeButton(bpy.types.Operator):
                     bpy.ops.uv.lightmap_pack('EXEC_SCREEN', PREF_CONTEXT='ALL_FACES')
                 else:
                     bpy.ops.object.select_all(action='DESELECT')
-                    if bpy.app.version >= (2, 80, 1):
-                        ob.select_set(action='SELECT')
-                    else:
-                        ob.select = True
+                    ob.select_set(action='SELECT')
                     bpy.ops.object.mode_set(mode='EDIT')
                     bpy.ops.mesh.select_all(action='DESELECT')
                     bpy.ops.object.mode_set(mode='OBJECT')
@@ -222,10 +213,7 @@ class ArmBakeButton(bpy.types.Operator):
                     img_node.name = 'Baked Image'
                     img_node.location = (100, 100)
                     img_node.image = bpy.data.images[img_name]
-                    if bpy.app.version >= (2, 80, 1):
-                        mat.node_tree.links.new(img_node.outputs[0], nodes['Principled BSDF'].inputs[0])
-                    else:
-                        mat.node_tree.links.new(img_node.outputs[0], nodes['Diffuse BSDF'].inputs[0])
+                    mat.node_tree.links.new(img_node.outputs[0], nodes['Principled BSDF'].inputs[0])
                 else:
                     mat = bpy.data.materials[n]
                     nodes = mat.node_tree.nodes
@@ -234,10 +222,7 @@ class ArmBakeButton(bpy.types.Operator):
         # Bake
         bpy.ops.object.select_all(action='DESELECT')
         for o in scn.arm_bakelist:
-            if bpy.app.version >= (2, 80, 1):
-                scn.objects[o.object_name].select_set(action='SELECT')
-            else:
-                scn.objects[o.object_name].select = True
+            scn.objects[o.object_name].select_set(action='SELECT')
         obs.active = scn.objects[scn.arm_bakelist[0].object_name]
         bpy.ops.object.bake('INVOKE_DEFAULT', type='COMBINED')
         bpy.ops.object.select_all(action='DESELECT')
@@ -281,10 +266,7 @@ class ArmBakeApplyButton(bpy.types.Operator):
         # Restore uv slots
         for o in scn.arm_bakelist:
             ob = scn.objects[o.object_name]
-            if bpy.app.version >= (2, 80, 1):
-                uv_layers = ob.data.uv_layers
-            else:
-                uv_layers = ob.data.uv_textures
+            uv_layers = ob.data.uv_layers
             uv_layers.active_index = 0
 
         return{'FINISHED'}
@@ -366,8 +348,8 @@ def register():
     bpy.utils.register_class(ArmBakeClearAllButton)
     bpy.utils.register_class(ArmBakeRemoveBakedMaterialsButton)
     bpy.types.Scene.arm_bakelist_scale = FloatProperty(name="Resolution", description="Resolution scale", default=100.0, min=1, max=1000, soft_min=1, soft_max=100.0, subtype='PERCENTAGE')
-    bpy.types.Scene.arm_bakelist = bpy.props.CollectionProperty(type=ArmBakeListItem)
-    bpy.types.Scene.arm_bakelist_index = bpy.props.IntProperty(name="Index for my_list", default=0)
+    bpy.types.Scene.arm_bakelist = CollectionProperty(type=ArmBakeListItem)
+    bpy.types.Scene.arm_bakelist_index = IntProperty(name="Index for my_list", default=0)
     bpy.types.Scene.arm_bakelist_unwrap = EnumProperty(
         items = [('Lightmap Pack', 'Lightmap Pack', 'Lightmap Pack'),
                  ('Smart UV Project', 'Smart UV Project', 'Smart UV Project')],

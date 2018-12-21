@@ -7,7 +7,7 @@ class ReadStorageNode(Node, ArmLogicTreeNode):
     '''ReadStorage node'''
     bl_idname = 'LNReadStorageNode'
     bl_label = 'Read Storage'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('NodeSocketString', 'Key')

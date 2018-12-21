@@ -7,7 +7,7 @@ class RemoveGroupNode(Node, ArmLogicTreeNode):
     '''Remove Group node'''
     bl_idname = 'LNRemoveGroupNode'
     bl_label = 'Remove Group'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

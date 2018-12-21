@@ -7,7 +7,7 @@ class SetActionSpeedNode(Node, ArmLogicTreeNode):
     '''Set action speed node'''
     bl_idname = 'LNSetActionSpeedNode'
     bl_label = 'Set Action Speed'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

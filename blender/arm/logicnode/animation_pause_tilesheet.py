@@ -7,7 +7,7 @@ class PauseTilesheetNode(Node, ArmLogicTreeNode):
     '''Pause tilesheet node'''
     bl_idname = 'LNPauseTilesheetNode'
     bl_label = 'Pause Tilesheet'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

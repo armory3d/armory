@@ -7,7 +7,7 @@ class GroupOutputNode(Node, ArmLogicTreeNode):
     '''Group output node'''
     bl_idname = 'LNGroupOutputNode'
     bl_label = 'Node Group Output'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

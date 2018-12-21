@@ -89,10 +89,9 @@ def add_world_defs():
         wrd.world_defs += '_Legacy'
 
     # Light defines
-    lights = bpy.data.lights if bpy.app.version >= (2, 80, 1) else bpy.data.lamps
     point_lights = 0
     for bo in bpy.data.objects: # TODO: temp
-        if bo.type == 'LIGHT' or bo.type == 'LAMP':
+        if bo.type == 'LIGHT':
             light = bo.data
             if light.type == 'AREA' and '_LTC' not in wrd.world_defs:
                 wrd.world_defs += '_LTC'
@@ -152,11 +151,12 @@ def build():
 
     if rpdat.rp_renderer == 'Deferred' and not rpdat.rp_compositornodes:
         assets.add_shader_pass('copy_pass')
-    if rpdat.rp_renderer == 'Forward' and not rpdat.rp_compositornodes:
-        assets.add_shader_pass('copy_pass')
 
     if rpdat.rp_render_to_texture:
         assets.add_khafile_def('rp_render_to_texture')
+
+        if rpdat.rp_renderer == 'Forward' and not rpdat.rp_compositornodes:
+            assets.add_shader_pass('copy_pass')
 
         if rpdat.rp_compositornodes:
             assets.add_khafile_def('rp_compositornodes')
@@ -225,6 +225,30 @@ def build():
         if rpdat.rp_supersampling == '4':
             assets.add_shader_pass('supersample_resolve')
 
+        assets.add_khafile_def('rp_ssgi={0}'.format(rpdat.rp_ssgi))
+        if rpdat.rp_ssgi != 'Off':
+            wrd.world_defs += '_SSAO'
+            if rpdat.rp_ssgi == 'SSAO':
+                assets.add_shader_pass('ssao_pass')
+                assets.add_shader_pass('blur_edge_pass')
+            else:
+                assets.add_shader_pass('ssgi_pass')
+                assets.add_shader_pass('blur_edge_pass')
+            if rpdat.arm_ssgi_half_res:
+                assets.add_khafile_def('rp_ssgi_half')
+
+        if rpdat.rp_bloom:
+            assets.add_khafile_def('rp_bloom')
+            assets.add_shader_pass('bloom_pass')
+            assets.add_shader_pass('blur_gaus_pass')
+
+        if rpdat.rp_ssr:
+            assets.add_khafile_def('rp_ssr')
+            assets.add_shader_pass('ssr_pass')
+            assets.add_shader_pass('blur_adaptive_pass')
+            if rpdat.arm_ssr_half_res:
+                assets.add_khafile_def('rp_ssr_half')
+
     if rpdat.rp_overlays:
         assets.add_khafile_def('rp_overlays')
 
@@ -256,18 +280,6 @@ def build():
 
     if rpdat.arm_rp_resolution == 'Custom':
         assets.add_khafile_def('rp_resolution_filter={0}'.format(rpdat.arm_rp_resolution_filter))
-
-    assets.add_khafile_def('rp_ssgi={0}'.format(rpdat.rp_ssgi))
-    if rpdat.rp_ssgi != 'Off':
-        wrd.world_defs += '_SSAO'
-        if rpdat.rp_ssgi == 'SSAO':
-            assets.add_shader_pass('ssao_pass')
-            assets.add_shader_pass('blur_edge_pass')
-        else:
-            assets.add_shader_pass('ssgi_pass')
-            assets.add_shader_pass('blur_edge_pass')
-        if rpdat.arm_ssgi_half_res:
-            assets.add_khafile_def('rp_ssgi_half')
 
     if rpdat.rp_renderer == 'Deferred':
         if rpdat.arm_material_model == 'Full':
@@ -302,22 +314,10 @@ def build():
     if rpdat.rp_blending:
         assets.add_khafile_def('rp_blending')
 
-    if rpdat.rp_bloom:
-        assets.add_khafile_def('rp_bloom')
-        assets.add_shader_pass('bloom_pass')
-        assets.add_shader_pass('blur_gaus_pass')
-
     if rpdat.rp_sss:
         assets.add_khafile_def('rp_sss')
         wrd.world_defs += '_SSS'
         assets.add_shader_pass('sss_pass')
-
-    if rpdat.rp_ssr:
-        assets.add_khafile_def('rp_ssr')
-        assets.add_shader_pass('ssr_pass')
-        assets.add_shader_pass('blur_adaptive_pass')
-        if rpdat.arm_ssr_half_res:
-            assets.add_khafile_def('rp_ssr_half')
 
     if (rpdat.rp_ssr and rpdat.arm_ssr_half_res) or (rpdat.rp_ssgi != 'Off' and rpdat.arm_ssgi_half_res):
         assets.add_shader_pass('downsample_depth')

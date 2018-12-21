@@ -9,7 +9,7 @@ class GamepadNode(Node, ArmLogicTreeNode):
     bl_label = 'Gamepad State'
     bl_icon = 'CURVE_PATH'
     
-    property0 = EnumProperty(
+    property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),
                  ('Released', 'Released', 'Released')],
@@ -17,7 +17,7 @@ class GamepadNode(Node, ArmLogicTreeNode):
                  # ('Moved Right', 'Moved Right', 'Moved Right'),],
         name='', default='Started')
     
-    property1 = EnumProperty(
+    property1: EnumProperty(
         items = [('cross', 'cross / a', 'cross / a'),
                  ('circle', 'circle / b', 'circle / b'),
                  ('square', 'square / x', 'square / x'),

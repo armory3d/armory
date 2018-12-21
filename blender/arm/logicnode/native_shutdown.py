@@ -7,7 +7,7 @@ class ShutdownNode(Node, ArmLogicTreeNode):
     '''Shutdown node'''
     bl_idname = 'LNShutdownNode'
     bl_label = 'Shutdown'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

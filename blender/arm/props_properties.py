@@ -3,18 +3,18 @@ from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
 class ArmPropertyListItem(bpy.types.PropertyGroup):
-    type_prop = bpy.props.EnumProperty(
+    type_prop: EnumProperty(
         items = [('string', 'String', 'String'),
                  ('integer', 'Integer', 'Integer'),
                  ('float', 'Float', 'Float'),
                  ('boolean', 'Boolean', 'Boolean'),
                  ],
         name = "Type")
-    name_prop = bpy.props.StringProperty(name="Name", description="A name for this item", default="my_prop")
-    string_prop = bpy.props.StringProperty(name="String", description="A name for this item", default="text")
-    integer_prop = bpy.props.IntProperty(name="Integer", description="A name for this item", default=0)
-    float_prop = bpy.props.FloatProperty(name="Float", description="A name for this item", default=0.0)
-    boolean_prop = bpy.props.BoolProperty(name="Boolean", description="A name for this item", default=False)
+    name_prop: StringProperty(name="Name", description="A name for this item", default="my_prop")
+    string_prop: StringProperty(name="String", description="A name for this item", default="text")
+    integer_prop: IntProperty(name="Integer", description="A name for this item", default=0)
+    float_prop: FloatProperty(name="Float", description="A name for this item", default=0.0)
+    boolean_prop: BoolProperty(name="Boolean", description="A name for this item", default=False)
 
 class ArmPropertyList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -32,7 +32,7 @@ class ArmPropertyListNewItem(bpy.types.Operator):
     bl_idname = "arm_propertylist.new_item"
     bl_label = "New"
 
-    type_prop = bpy.props.EnumProperty(
+    type_prop: EnumProperty(
         items = [('string', 'String', 'String'),
                  ('integer', 'Integer', 'Integer'),
                  ('float', 'Float', 'Float'),
@@ -88,7 +88,7 @@ class ArmPropertyListMoveItem(bpy.types.Operator):
     # Move an item in the list
     bl_idname = "arm_propertylist.move_item"
     bl_label = "Move an item in the list"
-    direction = bpy.props.EnumProperty(
+    direction: EnumProperty(
                 items=(
                     ('UP', 'Up', ""),
                     ('DOWN', 'Down', ""),))
@@ -125,15 +125,15 @@ class ArmPropertyListMoveItem(bpy.types.Operator):
         return{'FINISHED'}
 
 def draw_properties(layout, obj):
-    layout.label("Properties")
+    layout.label(text="Properties")
     rows = 2
     if len(obj.arm_traitlist) > 1:
         rows = 4
     row = layout.row()
     row.template_list("ArmPropertyList", "The_List", obj, "arm_propertylist", obj, "arm_propertylist_index", rows=rows)
     col = row.column(align=True)
-    op = col.operator("arm_propertylist.new_item", icon='ZOOMIN', text="")
-    op = col.operator("arm_propertylist.delete_item", icon='ZOOMOUT', text="")
+    op = col.operator("arm_propertylist.new_item", icon='ADD', text="")
+    op = col.operator("arm_propertylist.delete_item", icon='REMOVE', text="")
     if len(obj.arm_propertylist) > 1:
         col.separator()
         op = col.operator("arm_propertylist.move_item", icon='TRIA_UP', text="")
@@ -147,8 +147,8 @@ def register():
     bpy.utils.register_class(ArmPropertyListNewItem)
     bpy.utils.register_class(ArmPropertyListDeleteItem)
     bpy.utils.register_class(ArmPropertyListMoveItem)
-    bpy.types.Object.arm_propertylist = bpy.props.CollectionProperty(type=ArmPropertyListItem)
-    bpy.types.Object.arm_propertylist_index = bpy.props.IntProperty(name="Index for arm_propertylist", default=0)
+    bpy.types.Object.arm_propertylist = CollectionProperty(type=ArmPropertyListItem)
+    bpy.types.Object.arm_propertylist_index = IntProperty(name="Index for arm_propertylist", default=0)
 
 def unregister():
     bpy.utils.unregister_class(ArmPropertyListItem)

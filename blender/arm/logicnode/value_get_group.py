@@ -7,7 +7,7 @@ class GetGroupNode(Node, ArmLogicTreeNode):
     '''Get group node'''
     bl_idname = 'LNGetGroupNode'
     bl_label = 'Get Group'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('NodeSocketString', 'Name')

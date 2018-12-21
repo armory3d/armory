@@ -7,7 +7,7 @@ class SetVisibleNode(Node, ArmLogicTreeNode):
     '''Set visible node'''
     bl_idname = 'LNSetVisibleNode'
     bl_label = 'Set Visible'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

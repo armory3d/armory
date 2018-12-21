@@ -7,7 +7,7 @@ class SetScaleNode(Node, ArmLogicTreeNode):
     '''Set scale node'''
     bl_idname = 'LNSetScaleNode'
     bl_label = 'Set Scale'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')

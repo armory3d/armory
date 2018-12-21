@@ -7,7 +7,7 @@ class ActiveSceneNode(Node, ArmLogicTreeNode):
     '''Active scene node'''
     bl_idname = 'LNActiveSceneNode'
     bl_label = 'Active Scene'
-    bl_icon = 'GAME'
+    bl_icon = 'QUESTION'
     
     def init(self, context):
         self.outputs.new('NodeSocketShader', 'Scene')
