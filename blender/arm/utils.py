@@ -109,8 +109,8 @@ def bundled_sdk_path():
 # Passed by load_post handler when armsdk is found in project folder
 use_local_sdk = False
 def get_sdk_path():
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons["armory"].preferences
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons["armory"].preferences
     p = bundled_sdk_path()
     if use_local_sdk:
         return get_fp() + '/armsdk/'
@@ -120,13 +120,13 @@ def get_sdk_path():
         return addon_prefs.sdk_path
 
 def get_ffmpeg_path():
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons['armory'].preferences
     return addon_prefs.ffmpeg_path
 
 def get_renderdoc_path():
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons['armory'].preferences
     p = addon_prefs.renderdoc_path
     if p == '' and get_os() == 'win':
         pdefault = 'C:\\Program Files\\RenderDoc\\qrenderdoc.exe'
@@ -135,44 +135,44 @@ def get_renderdoc_path():
     return p
 
 def get_player_gapi():
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons['armory'].preferences
     return 'opengl' if not hasattr(addon_prefs, 'player_gapi_' + get_os()) else getattr(addon_prefs, 'player_gapi_' + get_os())
 
 def get_code_editor():
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons['armory'].preferences
     return 'kodestudio' if not hasattr(addon_prefs, 'code_editor') else addon_prefs.code_editor
 
 def get_ui_scale():
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons['armory'].preferences
     return 1.0 if not hasattr(addon_prefs, 'ui_scale') else addon_prefs.ui_scale
 
 def get_khamake_threads():
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons['armory'].preferences
     return 1 if not hasattr(addon_prefs, 'khamake_threads') else addon_prefs.khamake_threads
 
 def get_save_on_build():
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons['armory'].preferences
     return True if not hasattr(addon_prefs, 'save_on_build') else addon_prefs.save_on_build
 
 def get_viewport_controls():
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons['armory'].preferences
     return 'qwerty' if not hasattr(addon_prefs, 'viewport_controls') else addon_prefs.viewport_controls
 
 def get_legacy_shaders():
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons['armory'].preferences
     return False if not hasattr(addon_prefs, 'legacy_shaders') else addon_prefs.legacy_shaders
 
 def get_relative_paths():
     # Convert absolute paths to relative
-    user_preferences = bpy.context.user_preferences
-    addon_prefs = user_preferences.addons['armory'].preferences
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons['armory'].preferences
     return False if not hasattr(addon_prefs, 'relative_paths') else addon_prefs.relative_paths
 
 def get_node_path():
