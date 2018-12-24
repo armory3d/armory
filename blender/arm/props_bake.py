@@ -185,7 +185,7 @@ class ArmBakeButton(bpy.types.Operator):
                     bpy.ops.uv.lightmap_pack('EXEC_SCREEN', PREF_CONTEXT='ALL_FACES')
                 else:
                     bpy.ops.object.select_all(action='DESELECT')
-                    ob.select_set(action='SELECT')
+                    ob.select_set(True)
                     bpy.ops.object.mode_set(mode='EDIT')
                     bpy.ops.mesh.select_all(action='DESELECT')
                     bpy.ops.object.mode_set(mode='OBJECT')
@@ -222,7 +222,7 @@ class ArmBakeButton(bpy.types.Operator):
         # Bake
         bpy.ops.object.select_all(action='DESELECT')
         for o in scn.arm_bakelist:
-            scn.objects[o.object_name].select_set(action='SELECT')
+            scn.objects[o.object_name].select_set(True)
         obs.active = scn.objects[scn.arm_bakelist[0].object_name]
         bpy.ops.object.bake('INVOKE_DEFAULT', type='COMBINED')
         bpy.ops.object.select_all(action='DESELECT')
@@ -247,7 +247,7 @@ class ArmBakeApplyButton(bpy.types.Operator):
                         has_user = True
                         break
                 if not has_user:
-                    bpy.data.materials.remove(mat, True)
+                    bpy.data.materials.remove(mat, do_unlink=True)
         # Recache lightmaps
         arm.assets.invalidate_unpacked_data(None, None)
         for o in scn.arm_bakelist:
@@ -262,7 +262,7 @@ class ArmBakeApplyButton(bpy.types.Operator):
                 if mat.name.endswith('_temp'):
                     old = slot.material
                     slot.material = bpy.data.materials[old.name.split('_' + ob.name)[0]]
-                    bpy.data.materials.remove(old, True)
+                    bpy.data.materials.remove(old, do_unlink=True)
         # Restore uv slots
         for o in scn.arm_bakelist:
             ob = scn.objects[o.object_name]
@@ -331,7 +331,7 @@ class ArmBakeRemoveBakedMaterialsButton(bpy.types.Operator):
     def execute(self, context):
         for mat in bpy.data.materials:
             if mat.name.endswith('_baked'):
-                bpy.data.materials.remove(mat, True)
+                bpy.data.materials.remove(mat, do_unlink=True)
         return{'FINISHED'}
 
 def register():
