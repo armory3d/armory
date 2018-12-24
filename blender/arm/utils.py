@@ -7,9 +7,16 @@ import zipfile
 import re
 import subprocess
 import webbrowser
+import numpy as np
 import arm.lib.armpack
 import arm.make_state as state
 import arm.log as log
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
 
 def write_arm(filepath, output):
     if filepath.endswith('.zip'):
@@ -17,7 +24,7 @@ def write_arm(filepath, output):
             if bpy.data.worlds['Arm'].arm_minimize:
                 zip_file.writestr('data.arm', arm.lib.armpack.packb(output))
             else:
-                zip_file.writestr('data.json', json.dumps(output, sort_keys=True, indent=4))
+                zip_file.writestr('data.json', json.dumps(output, sort_keys=True, indent=4, cls=NumpyEncoder))
     else:
         if bpy.data.worlds['Arm'].arm_minimize:
             with open(filepath, 'wb') as f:
@@ -25,7 +32,7 @@ def write_arm(filepath, output):
         else:
             filepath_json = filepath.split('.arm')[0] + '.json'
             with open(filepath_json, 'w') as f:
-                f.write(json.dumps(output, sort_keys=True, indent=4))
+                f.write(json.dumps(output, sort_keys=True, indent=4, cls=NumpyEncoder))
 
 def unpack_image(image, path, file_format='JPEG'):
     print('Armory Info: Unpacking to ' + path)
