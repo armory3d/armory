@@ -18,17 +18,17 @@ def on_depsgraph_update_post(self):
         uid = update.id
         if hasattr(uid, 'arm_cached'):
             # uid.arm_cached = False # TODO: does not trigger update
-            if isinstance(uid, bpy.types.Mesh):
+            if isinstance(uid, bpy.types.Mesh) and uid.name in bpy.data.meshes:
                 bpy.data.meshes[uid.name].arm_cached = False
-            elif isinstance(uid, bpy.types.Curve):
+            elif isinstance(uid, bpy.types.Curve) and uid.name in bpy.data.curves:
                 bpy.data.curves[uid.name].arm_cached = False
-            elif isinstance(uid, bpy.types.MetaBall):
+            elif isinstance(uid, bpy.types.MetaBall) and uid.name in bpy.data.metaballs:
                 bpy.data.metaballs[uid.name].arm_cached = False
-            elif isinstance(uid, bpy.types.Armature):
+            elif isinstance(uid, bpy.types.Armature) and uid.name in bpy.data.armatures:
                 bpy.data.armatures[uid.name].arm_cached = False
-            elif isinstance(uid, bpy.types.NodeTree):
+            elif isinstance(uid, bpy.types.NodeTree) and uid.name in bpy.data.node_groups:
                 bpy.data.node_groups[uid.name].arm_cached = False
-            elif isinstance(uid, bpy.types.Material):
+            elif isinstance(uid, bpy.types.Material) and uid.name in bpy.data.materials:
                 bpy.data.materials[uid.name].arm_cached = False
 
 def always():
