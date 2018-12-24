@@ -65,11 +65,11 @@ class CyclesShaderContext {
 		constants = data.constants = [];
 	}
 
-	public function add_elem(name:String, data:String) {
+	public function add_elem(name:String, data_type:String) {
 		for (e in data.vertex_elements) {
 			if (e.name == name) return;
 		}
-		var elem:TVertexElement = { name: name, data: data };
+		var elem:TVertexElement = { name: name, data: data_type };
 		data.vertex_elements.push(elem);
 	}
 
@@ -225,7 +225,7 @@ class CyclesShader {
 	}
 
 	public function write_init(s:String) {
-        main_init = s + '\n' + main_init;
+		main_init = s + '\n' + main_init;
 	}
 
 	public function write(s:String) {
@@ -256,14 +256,24 @@ class CyclesShader {
 		main_attribs += s + '\n';
 	}
 
+	function dataSize(data:String):String {
+		if (data == 'float1') return '1';
+		else if (data == 'float2') return '2';
+		else if (data == 'float3') return '3';
+		else if (data == 'float4') return '4';
+		else if (data == 'short2norm') return '2';
+		else if (data == 'short4norm') return '4';
+		else return '1';
+	}
+
 	function vstruct_to_vsin() {
-        // if self.shader_type != 'vert' or self.ins != [] or not self.vstruct_as_vsin: # Vertex structure as vertex shader input
-            // return
-        var vs = context.data.vertex_elements;
+		// if self.shader_type != 'vert' or self.ins != [] or not self.vstruct_as_vsin: # Vertex structure as vertex shader input
+			// return
+		var vs = context.data.vertex_elements;
 		for (e in vs) {
-			add_in('vec' + e.size + ' ' + e.name);
+			add_in('vec' + dataSize(e.data) + ' ' + e.name);
 		}
-    }
+	}
 
 	public function get() {
 		#if kha_webgl // WebGL2
