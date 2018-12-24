@@ -7,6 +7,6 @@ class SequenceNode extends LogicNode {
 	}
 
 	override function run(from:Int) {
-		runOutput(0);
+		for (i in 0...outputs.length) runOutput(i);
 	}
 }
