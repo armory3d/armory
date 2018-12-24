@@ -1486,7 +1486,6 @@ class ArmoryExporter:
 
         # Update aabb
         self.calc_aabb(bobject)
-        o['dimensions'] = [bobject.data.arm_aabb[0], bobject.data.arm_aabb[1], bobject.data.arm_aabb[2]]
 
         # Process meshes
         if ArmoryExporter.optimize_enabled:
