@@ -18,7 +18,7 @@ class DebugDraw {
 
 	static var inst:DebugDraw = null;
 
-	public var color = 0xffff0000;
+	public var color:kha.Color = 0xffff0000;
 	public var strength = 0.02;
 
 	var vertexBuffer:VertexBuffer;
@@ -146,30 +146,30 @@ class DebugDraw {
 		vbData.set(i + 0, x1);
 		vbData.set(i + 1, y1);
 		vbData.set(i + 2, z1);
-		vbData.set(i + 3, 1.0);
-		vbData.set(i + 4, 0.0);
-		vbData.set(i + 5, 0.0);
+		vbData.set(i + 3, color.R);
+		vbData.set(i + 4, color.G);
+		vbData.set(i + 5, color.B);
 
 		vbData.set(i + 6, x2);
 		vbData.set(i + 7, y2);
 		vbData.set(i + 8, z2);
-		vbData.set(i + 9, 1.0);
-		vbData.set(i + 10, 0.0);
-		vbData.set(i + 11, 0.0);
+		vbData.set(i + 9, color.R);
+		vbData.set(i + 10, color.G);
+		vbData.set(i + 11, color.B);
 
 		vbData.set(i + 12, x2 + strength * l.x);
 		vbData.set(i + 13, y2 + strength * l.y);
 		vbData.set(i + 14, z2 + strength * l.z);
-		vbData.set(i + 15, 1.0);
-		vbData.set(i + 16, 0.0);
-		vbData.set(i + 17, 0.0);
+		vbData.set(i + 15, color.R);
+		vbData.set(i + 16, color.G);
+		vbData.set(i + 17, color.B);
 
 		vbData.set(i + 18, x1 + strength * l.x);
 		vbData.set(i + 19, y1 + strength * l.y);
 		vbData.set(i + 20, z1 + strength * l.z);
-		vbData.set(i + 21, 1.0);
-		vbData.set(i + 22, 0.0);
-		vbData.set(i + 23, 0.0);
+		vbData.set(i + 21, color.R);
+		vbData.set(i + 22, color.G);
+		vbData.set(i + 23, color.B);
 
 		i = lines * 6;
 		ibData[i + 0] = lines * 4 + 0;
