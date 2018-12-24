@@ -324,13 +324,22 @@ class ArmoryProjectPanel(bpy.types.Panel):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
-        wrd = bpy.data.worlds['Arm']
-
         row = layout.row(align=True)
         row.operator("arm.kode_studio")
         row.operator("arm.open_project_folder", icon="FILE_FOLDER")
 
-        layout.label(text="Flags")
+class ArmProjectFlagsPanel(bpy.types.Panel):
+    bl_label = "Flags"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_parent_id = "ArmoryProjectPanel"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
         layout.prop(wrd, 'arm_debug_console')
         layout.prop(wrd, 'arm_cache_build')     
         layout.prop(wrd, 'arm_stream_scene')
@@ -344,7 +353,19 @@ class ArmoryProjectPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_texture_quality')
         layout.prop(wrd, 'arm_sound_quality')
 
-        layout.label(text="Window")
+class ArmProjectWindowPanel(bpy.types.Panel):
+    bl_label = "Window"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_parent_id = "ArmoryProjectPanel"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
         layout.prop(wrd, 'arm_winmode')
         layout.prop(wrd, 'arm_winorient')
         layout.prop(wrd, 'arm_winresize')
@@ -353,9 +374,20 @@ class ArmoryProjectPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_winmaximize')
         layout.prop(wrd, 'arm_winminimize')
         layout.prop(wrd, 'arm_vsync')
-        
 
-        layout.label(text='Modules')
+class ArmProjectModulesPanel(bpy.types.Panel):
+    bl_label = "Modules"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "render"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_parent_id = "ArmoryProjectPanel"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        wrd = bpy.data.worlds['Arm']
         layout.prop(wrd, 'arm_audio')
         layout.prop(wrd, 'arm_physics')
         if wrd.arm_physics != 'Disabled':
@@ -1293,6 +1325,9 @@ def register():
     bpy.utils.register_class(ArmoryPlayerPanel)
     bpy.utils.register_class(ArmoryExporterPanel)
     bpy.utils.register_class(ArmoryProjectPanel)
+    bpy.utils.register_class(ArmProjectFlagsPanel)
+    bpy.utils.register_class(ArmProjectWindowPanel)
+    bpy.utils.register_class(ArmProjectModulesPanel)
     bpy.utils.register_class(ArmRenderPathPanel)
     bpy.utils.register_class(ArmRenderPathRendererPanel)
     bpy.utils.register_class(ArmRenderPathShadowsPanel)
@@ -1339,6 +1374,9 @@ def unregister():
     bpy.utils.unregister_class(ArmoryPlayerPanel)
     bpy.utils.unregister_class(ArmoryExporterPanel)
     bpy.utils.unregister_class(ArmoryProjectPanel)
+    bpy.utils.unregister_class(ArmProjectFlagsPanel)
+    bpy.utils.unregister_class(ArmProjectWindowPanel)
+    bpy.utils.unregister_class(ArmProjectModulesPanel)
     bpy.utils.unregister_class(ArmRenderPathPanel)
     bpy.utils.unregister_class(ArmRenderPathRendererPanel)
     bpy.utils.unregister_class(ArmRenderPathShadowsPanel)
