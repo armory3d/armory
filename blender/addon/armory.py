@@ -145,7 +145,11 @@ def get_fp():
     return os.path.sep.join(s)
 
 def get_sdk_path(context):
-    user_preferences = context.user_preferences
+    blenderVersion = bpy.app.version_string
+    if blenderVersion.find('2.7') != -1:
+        user_preferences = bpy.context.user_preferences
+    elif blenderVersion.find('2.8') != -1:
+        user_preferences = bpy.context.preferences
     addon_prefs = user_preferences.addons["armory"].preferences
     p = bundled_sdk_path()
     if os.path.exists(get_fp() + '/armsdk'):
