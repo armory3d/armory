@@ -12,6 +12,7 @@ import arm.lib.armpack
 import arm.make_state as state
 import arm.log as log
 
+blenderVersion = bpy.app.version_string
 if blenderVersion.find('2.7') != -1:
     user_preferences = bpy.context.user_preferences
 elif blenderVersion.find('2.8') != -1:
