@@ -4,7 +4,11 @@ from bpy.app.handlers import persistent
 
 @persistent
 def handler(scene):
-    user_preferences = bpy.context.user_preferences
+    blenderVersion = bpy.app.version_string
+    if blenderVersion.find('2.7') != -1:
+        user_preferences = bpy.context.user_preferences
+    elif blenderVersion.find('2.8') != -1:
+        user_preferences = bpy.context.preferences
     if not 'armory' in user_preferences.addons:
         enable('armory', default_set=True, persistent=True, handle_error=None)
         bpy.ops.wm.save_userpref()
