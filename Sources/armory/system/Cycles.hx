@@ -182,12 +182,12 @@ class Cycles {
 		if (frag.n) {
 			vert.add_uniform('mat3 N', '_normalMatrix');
 			vert.add_out('vec3 wnormal');
-			vert.write_attrib('wnormal = N * nor;');
+			vert.write_attrib('wnormal = N * vec3(nor.xy, pos.w);');
 			frag.write_attrib('vec3 n = normalize(wnormal);');
 		}
 		else if (vert.n) {
 			vert.add_uniform('mat3 N', '_normalMatrix');
-			vert.write_attrib('vec3 wnormal = normalize(N * nor);');
+			vert.write_attrib('vec3 wnormal = normalize(N * vec3(nor.xy, pos.w));');
 		}
 		if (frag.dotNV) {
 			frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);');

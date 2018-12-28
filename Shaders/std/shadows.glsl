@@ -7,6 +7,10 @@
 uniform vec4 casData[shadowmapCascades * 4 + 4];
 #endif
 
+#ifdef _SMSizeUniform
+uniform vec2 smSizeUniform;
+#endif
+
 float PCF(sampler2DShadow shadowMap, const vec2 uv, const float compare, const vec2 smSize) {
 	float result = texture(shadowMap, vec3(uv + (vec2(-1.0, -1.0) / smSize), compare));
 	result += texture(shadowMap, vec3(uv + (vec2(-1.0, 0.0) / smSize), compare));
@@ -43,7 +47,12 @@ float PCFCube(samplerCubeShadow shadowMapCube, const vec3 lp, vec3 ml, const flo
 	return result / 9.0;
 }
 
-float shadowTest(sampler2DShadow shadowMap, const vec3 lPos, const float shadowsBias, const vec2 smSize) {
+float shadowTest(sampler2DShadow shadowMap, const vec3 lPos, const float shadowsBias) {
+	#ifdef _SMSizeUniform
+	vec2 smSize = smSizeUniform;
+	#else
+	const vec2 smSize = shadowmapSize;
+	#endif
 	if (lPos.x < 0.0 || lPos.y < 0.0 || lPos.x > 1.0 || lPos.y > 1.0) return 1.0;
 	return PCF(shadowMap, lPos.xy, lPos.z - shadowsBias, smSize);
 }
@@ -81,7 +90,12 @@ mat4 getCascadeMat(const float d, out int casi, out int casIndex) {
 	// ..
 }
 
-float shadowTestCascade(sampler2DShadow shadowMap, const vec3 eye, const vec3 p, const float shadowsBias, const vec2 smSize) {
+float shadowTestCascade(sampler2DShadow shadowMap, const vec3 eye, const vec3 p, const float shadowsBias) {
+	#ifdef _SMSizeUniform
+	vec2 smSize = smSizeUniform * vec2(shadowmapCascades, 1.0);
+	#else
+	const vec2 smSize = shadowmapSize * vec2(shadowmapCascades, 1.0);
+	#endif
 	const int c = shadowmapCascades;
 	float d = distance(eye, p);
 
@@ -90,9 +104,10 @@ float shadowTestCascade(sampler2DShadow shadowMap, const vec3 eye, const vec3 p,
 	mat4 LWVP = getCascadeMat(d, casi, casIndex);
 	
 	vec4 lPos = LWVP * vec4(p, 1.0);
+	lPos.xyz /= lPos.w;
 
 	float visibility = 1.0;
-	if (lPos.w > 0.0) visibility = shadowTest(shadowMap, lPos.xyz / lPos.w, shadowsBias, smSize);
+	if (lPos.w > 0.0) visibility = PCF(shadowMap, lPos.xy, lPos.z - shadowsBias, smSize);
 
 	// Blend cascade
 	// https://github.com/TheRealMJP/Shadows
@@ -109,8 +124,9 @@ float shadowTestCascade(sampler2DShadow shadowMap, const vec3 eye, const vec3 p,
 			casData[casIndex2 + 3]);
 
 		vec4 lPos2 = LWVP2 * vec4(p, 1.0);
+		lPos2.xyz /= lPos2.w;
 		float visibility2 = 1.0;
-		if (lPos2.w > 0.0) visibility2 = shadowTest(shadowMap, lPos2.xyz / lPos2.w, shadowsBias, smSize);
+		if (lPos2.w > 0.0) visibility2 = PCF(shadowMap, lPos2.xy, lPos2.z - shadowsBias, smSize);
 
 		float lerpAmt = smoothstep(0.0, blendThres, splitDist);
 		return mix(visibility2, visibility, lerpAmt);

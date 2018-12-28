@@ -79,7 +79,7 @@ class Inc {
 		if (rt == null) {
 			if (path.light.data.raw.shadowmap_cube) {
 				// Cubemap size
-				var size = Std.int(path.light.data.raw.shadowmap_size);
+				var size = path.light.data.raw.shadowmap_size;
 				var t = new RenderTargetRaw();
 				t.name = target;
 				t.width = size;

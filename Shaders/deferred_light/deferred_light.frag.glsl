@@ -79,7 +79,7 @@ uniform mat4 invVP;
 #endif
 
 #ifdef _SMSizeUniform
-uniform vec2 smSizeUniform;
+//!uniform vec2 smSizeUniform;
 #endif
 
 #ifdef _LTC
@@ -305,10 +305,10 @@ void main() {
 	#ifdef _ShadowMap
 	// if (lightShadow == 1) {
 		#ifdef _CSM
-		svisibility = shadowTestCascade(shadowMap, eye, p + n * shadowsBias * 10, shadowsBias, shadowmapSize * vec2(shadowmapCascades, 1.0));
+		svisibility = shadowTestCascade(shadowMap, eye, p + n * shadowsBias * 10, shadowsBias);
 		#else
 		vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100, 1.0);
-		if (lPos.w > 0.0) svisibility = shadowTest(shadowMap, lPos.xyz / lPos.w, shadowsBias, shadowmapSize);
+		if (lPos.w > 0.0) svisibility = shadowTest(shadowMap, lPos.xyz / lPos.w, shadowsBias);
 		#endif
 	// }
 	#endif
