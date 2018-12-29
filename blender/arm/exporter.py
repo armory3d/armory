@@ -755,7 +755,7 @@ class ArmoryExporter:
             if hasattr(bobject, 'users_group') and bobject.users_group != None and len(bobject.users_group) > 0:
                 o['groups'] = []
                 for g in bobject.users_group:
-                    if g.name.startswith('RigidBodyWorld') or g.name.startswith('Trait|'):
+                    if g.name.startswith('RigidBodyWorld'): # or g.name.startswith('Trait|'):
                         continue
                     o['groups'].append(g.name)
 
@@ -1093,70 +1093,6 @@ class ArmoryExporter:
                     oskin['constraints'] = []
                 self.add_constraints(bone, oskin, bone=True)
 
-    def calc_tangents(self, posa, nora, uva, ias, scale_pos):
-        num_verts = int(len(posa) / 4)
-        tangents = np.empty(num_verts * 3, dtype='<f4')
-        # bitangents = np.empty(num_verts * 3, dtype='<f4')
-        for ar in ias:
-            ia = ar['values']
-            num_tris = int(len(ia) / 3)
-            for i in range(0, num_tris):
-                i0 = ia[i * 3    ]
-                i1 = ia[i * 3 + 1]
-                i2 = ia[i * 3 + 2]
-                v0 = Vector((posa[i0 * 4], posa[i0 * 4 + 1], posa[i0 * 4 + 2]))
-                v1 = Vector((posa[i1 * 4], posa[i1 * 4 + 1], posa[i1 * 4 + 2]))
-                v2 = Vector((posa[i2 * 4], posa[i2 * 4 + 1], posa[i2 * 4 + 2]))
-                uv0 = Vector((uva[i0 * 2], uva[i0 * 2 + 1]))
-                uv1 = Vector((uva[i1 * 2], uva[i1 * 2 + 1]))
-                uv2 = Vector((uva[i2 * 2], uva[i2 * 2 + 1]))
-
-                deltaPos1 = v1 - v0
-                deltaPos2 = v2 - v0
-                deltaUV1 = uv1 - uv0
-                deltaUV2 = uv2 - uv0
-                d = (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x)
-                if d != 0:
-                    r = 1.0 / d
-                else:
-                    r = 1.0
-                tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r
-                # bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r
-
-                tangents[i0 * 3    ] += tangent.x
-                tangents[i0 * 3 + 1] += tangent.y
-                tangents[i0 * 3 + 2] += tangent.z
-                tangents[i1 * 3    ] += tangent.x
-                tangents[i1 * 3 + 1] += tangent.y
-                tangents[i1 * 3 + 2] += tangent.z
-                tangents[i2 * 3    ] += tangent.x
-                tangents[i2 * 3 + 1] += tangent.y
-                tangents[i2 * 3 + 2] += tangent.z
-                # bitangents[i0 * 3    ] += bitangent.x
-                # bitangents[i0 * 3 + 1] += bitangent.y
-                # bitangents[i0 * 3 + 2] += bitangent.z
-                # bitangents[i1 * 3    ] += bitangent.x
-                # bitangents[i1 * 3 + 1] += bitangent.y
-                # bitangents[i1 * 3 + 2] += bitangent.z
-                # bitangents[i2 * 3    ] += bitangent.x
-                # bitangents[i2 * 3 + 1] += bitangent.y
-                # bitangents[i2 * 3 + 2] += bitangent.z
-        # Orthogonalize
-        for i in range(0, num_verts):
-            t = Vector((tangents[i * 3], tangents[i * 3 + 1], tangents[i * 3 + 2]))
-            # b = Vector((bitangents[i * 3], bitangents[i * 3 + 1], bitangents[i * 3 + 2]))
-            n = Vector((nora[i * 2], nora[i * 2 + 1], posa[i * 4 + 3] / scale_pos))
-            v = t - n * n.dot(t)
-            v.normalize()
-            # Calculate handedness
-            # cnv = n.cross(v)
-            # if cnv.dot(b) < 0.0:
-                # v = v * -1.0
-            tangents[i * 3    ] = v.x
-            tangents[i * 3 + 1] = v.y
-            tangents[i * 3 + 2] = v.z
-        return tangents
-
     def write_mesh(self, bobject, fp, o):
         # One mesh data per file
         if ArmoryExporter.option_mesh_per_file:
@@ -1178,7 +1114,6 @@ class ArmoryExporter:
     def export_mesh_data(self, exportMesh, bobject, o, has_armature=False):
         exportMesh.calc_normals_split()
         # exportMesh.calc_loop_triangles()
-        # exportMesh.calc_tangents()
 
         loops = exportMesh.loops
         num_verts = len(loops)
@@ -1212,7 +1147,7 @@ class ArmoryExporter:
                 t1data = np.empty(num_verts * 2, dtype='<f4')
             # Scale for packed coords
             maxdim = 1.0
-            lay0 = exportMesh.uv_layers[t0map]
+            lay0 = uv_layers[t0map] # TODO: handle t1map
             for v in lay0.data:
                 if abs(v.uv[0]) > maxdim:
                     maxdim = abs(v.uv[0])
@@ -1223,7 +1158,9 @@ class ArmoryExporter:
                 invscale_tex = (1 / o['scale_tex']) * 32767
             else:
                 invscale_tex = 1 * 32767
-            # TODO: handle t1map
+            if has_tang:
+                exportMesh.calc_tangents(uvmap=lay0.name)
+                tangdata = np.empty(num_verts * 3, dtype='<f4')
         if has_col:
             cdata = np.empty(num_verts * 3, dtype='<f4')
 
@@ -1245,6 +1182,7 @@ class ArmoryExporter:
             v = verts[loop.vertex_index]
             co = v.co
             normal = loop.normal
+            tang = loop.tangent
 
             i4 = i * 4
             i2 = i * 2
@@ -1262,6 +1200,11 @@ class ArmoryExporter:
                     uv = lay1.data[loop.index].uv
                     t1data[i2    ] = uv[0]
                     t1data[i2 + 1] = 1.0 - uv[1]
+                if has_tang:
+                    i3 = i * 3
+                    tangdata[i3    ] = tang[0]
+                    tangdata[i3 + 1] = tang[1]
+                    tangdata[i3 + 2] = tang[2]
             if has_col:
                 i3 = i * 3
                 cdata[i3    ] = pow(v.col[0], 2.2)
@@ -1309,9 +1252,6 @@ class ArmoryExporter:
                         ia['material'] = i
                         break
             o['index_arrays'].append(ia)
-
-        if has_tang:
-            tangdata = self.calc_tangents(pdata, ndata, t0data, o['index_arrays'], scale_pos)
 
         # Pack
         pdata *= invscale_pos
@@ -1636,7 +1576,7 @@ class ArmoryExporter:
         camera = objectRef[1]["objectTable"][0]
         render = self.scene.render
         proj = camera.calc_matrix_camera(
-            self.scene.view_layers[0].depsgraph,
+            bpy.context.depsgraph,
             x=render.resolution_x,
             y=render.resolution_y,
             scale_x=render.pixel_aspect_x,
@@ -2068,7 +2008,7 @@ class ArmoryExporter:
             for group in bpy.data.groups:
                 # Blender automatically stores physics objects in this group,
                 # can cause stuck unused objects, skip for now
-                if group.name.startswith('RigidBodyWorld') or group.name.startswith('Trait|'):
+                if group.name.startswith('RigidBodyWorld'): #or group.name.startswith('Trait|'):
                     continue
                 o = {}
                 o['name'] = group.name

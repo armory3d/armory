@@ -72,7 +72,7 @@ def on_load_post(context):
                     blender.register()
                     sys.path.remove(fp)
 
-    arm.utils.update_trait_groups()
+    # arm.utils.update_trait_groups()
 
 def reload_blend_data():
     armory_pbr = bpy.data.node_groups.get('Armory PBR')

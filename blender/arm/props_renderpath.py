@@ -28,7 +28,7 @@ def update_preset(self, context):
         rpdat.rp_gi = 'Off'
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '1'
-        rpdat.rp_antialiasing = 'FXAA'
+        rpdat.rp_antialiasing = 'SMAA'
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
         rpdat.rp_ssgi = 'SSAO'
@@ -562,6 +562,7 @@ class ArmRPListNewItem(bpy.types.Operator):
         wrd = bpy.data.worlds['Arm']
         wrd.arm_rplist.add()
         wrd.arm_rplist_index = len(wrd.arm_rplist) - 1
+        wrd.arm_rplist[wrd.arm_rplist_index].name = bpy.data.worlds['Arm'].rp_preset
         update_preset(wrd, context)
         return{'FINISHED'}
 
