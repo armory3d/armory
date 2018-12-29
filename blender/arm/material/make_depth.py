@@ -47,7 +47,7 @@ def make(context_id, rpasses, shadowmap=False):
     if is_disp:
         if rpdat.arm_rp_displacement == 'Vertex':
             vert.add_uniform('mat3 N', '_normalMatrix')
-            vert.write('vec3 wnormal = normalize(N * nor);')
+            vert.write('vec3 wnormal = normalize(N * vec3(nor.xy, pos.w));')
             cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=parse_opacity)
             if con_depth.is_elem('tex'):
                 vert.add_out('vec2 texCoord') ## vs only, remove out

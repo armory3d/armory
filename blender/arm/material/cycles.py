@@ -103,7 +103,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
         else:
             curshader = vert
         out_disp = parse_displacement_input(node.inputs[2])
-        curshader.write('float disp = {0};'.format(out_disp))
+        curshader.write('vec3 disp = {0};'.format(out_disp))
 
 def parse_group(node, socket): # Entering group
     index = socket_index(node, socket)
