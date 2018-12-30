@@ -20,28 +20,8 @@
 					"link": "_lightShadowsBias"
 				},
 				{
-					"name": "lightPos",
-					"link": "_lightPosition",
-					"ifdef": ["_Disabled"]
-				},
-				{
-					"name": "lightRadius",
-					"link": "_lightRadius",
-					"ifdef": ["_Disabled"]
-				},
-				{
 					"name": "snoise",
 					"link": "_blueNoise64"
-				},
-				{
-					"name": "lightPlane",
-					"link": "_lightPlane",
-					"ifdef": ["_Disabled"]
-				},
-				{
-					"name": "lightShadow",
-					"link": "_lightCastShadow",
-					"ifdef": ["_Disabled"]
 				},
 				{
 					"name": "eye",
@@ -90,33 +70,8 @@
 					"link": "_lightShadowsBias"
 				},
 				{
-					"name": "lightPos",
-					"link": "_lightPosition",
-					"ifdef": ["_Disabled"]
-				},
-				{
-					"name": "lightRadius",
-					"link": "_lightRadius",
-					"ifdef": ["_Disabled"]
-				},
-				{
 					"name": "lightColor",
 					"link": "_lightColor"
-				},
-				{
-					"name": "snoise",
-					"link": "_noise8",
-					"ifdef": ["_Disabled"]
-				},
-				{
-					"name": "lightPlane",
-					"link": "_lightPlane",
-					"ifdef": ["_Disabled"]
-				},
-				{
-					"name": "lightShadow",
-					"link": "_lightCastShadow",
-					"ifdef": ["_Disabled"]
 				},
 				{
 					"name": "eye",

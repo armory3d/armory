@@ -3,12 +3,9 @@
 
 #include "compiled.inc"
 #include "std/gbuffer.glsl"
-#include "std/shadows.glsl"
 
 uniform sampler2D gbufferD;
-#ifndef _NoShadows
-uniform sampler2D shadowMap;
-#endif
+uniform sampler2DShadow shadowMap;
 uniform sampler2D snoise;
 
 #ifdef _CSM
@@ -17,14 +14,10 @@ uniform sampler2D snoise;
 	uniform mat4 LWVP;
 #endif
 uniform float shadowsBias;
-// uniform vec3 lightPos;
 uniform vec3 lightColor;
 uniform vec3 eye;
 uniform vec3 eyeLook;
 uniform vec2 cameraProj;
-// uniform float lightRadius;
-// uniform int lightShadow;
-// uniform vec2 lightPlane;
 
 in vec2 texCoord;
 in vec3 viewRay;
@@ -35,20 +28,11 @@ const float tAbs = 0.0;
 const float tExt = tScat + tAbs;
 const float stepLen = 1.0 / volumSteps;
 const float lighting = 0.4;
-// float lighting(vec3 p) {
-	// vec3 L = lightPos.xyz - p.xyz;
-	// float Ldist = length(lightPos.xyz - p.xyz);
-	// vec3 Lnorm = L / Ldist;
-
-	// float linearAtenuation = min(1.0, max(0.0, (lightRadius - Ldist) / lightRadius));
-	// return linearAtenuation; //* min(1.0, 1.0 / (Ldist * Ldist));
-// }
 
 void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatteredLightAmount, float stepLenWorld, vec3 viewVecNorm) {
 	curPos += stepLenWorld * viewVecNorm;
 	const float density = 1.0;
 	
-	// float l1 = lighting(curPos) * stepLenWorld * tScat * density;
 	float l1 = lighting * stepLenWorld * tScat * density;
 	curOpticalDepth *= exp(-tExt * stepLenWorld * density);
 
@@ -59,7 +43,7 @@ void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatter
 	vec4 lightPosition = LWVP * vec4(curPos, 1.0);
 	if (lightPosition.w > 0.0) {
 		lightPosition.xyz /= lightPosition.w;
-		visibility = float(texture(shadowMap, lightPosition.xy).r > lightPosition.z - shadowsBias);
+		visibility = texture(shadowMap, vec3(lightPosition.xy, lightPosition.z - shadowsBias));
 	}
 
 	scatteredLightAmount += curOpticalDepth * l1 * visibility;

@@ -301,7 +301,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('FXAA', 'FXAA', 'FXAA'),
                ('SMAA', 'SMAA', 'SMAA'),
                ('TAA', 'TAA', 'TAA')],
-        name="Anti Aliasing", description="Post-process anti aliasing technique", default='FXAA', update=update_renderpath)
+        name="Anti Aliasing", description="Post-process anti aliasing technique", default='SMAA', update=update_renderpath)
     rp_volumetriclight: BoolProperty(name="Volumetric Light", description="Use volumetric lighting", default=False, update=update_renderpath)
     rp_ssr: BoolProperty(name="SSR", description="Screen space reflections", default=False, update=update_renderpath)
     rp_ssgi: EnumProperty(

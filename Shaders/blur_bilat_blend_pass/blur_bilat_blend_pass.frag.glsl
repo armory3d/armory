@@ -39,8 +39,8 @@ void main() {
 		sumfactor += factor;
 		res += factor * col;
 
-		col = textureLod(tex, texCoord - s).r;
-		factor = normpdf3(col - colf, 1.0, 0.0) * fw;
+		col = textureLod(tex, texCoord - s, 0.0).r;
+		factor = normpdf3(col - colf, 1.0) * fw;
 		sumfactor += factor;
 		res += factor * col;
 	}
