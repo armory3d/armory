@@ -165,9 +165,13 @@ def export_mesh_data(self, exportMesh, bobject, o, has_armature=False):
 
     # Scale for packed coords
     maxdim = max(bobject.data.arm_aabb[0], max(bobject.data.arm_aabb[1], bobject.data.arm_aabb[2]))
-    o['scale_pos'] = maxdim / 2
+    if maxdim > 2:
+        o['scale_pos'] = maxdim / 2
+    else:
+        o['scale_pos'] = 1.0
     if has_armature: # Allow up to 2x bigger bounds for skinned mesh
         o['scale_pos'] *= 2.0
+        
     scale_pos = o['scale_pos']
     invscale_pos = (1 / scale_pos) * 32767
 
