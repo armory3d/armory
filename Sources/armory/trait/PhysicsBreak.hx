@@ -8,9 +8,7 @@ import iron.data.MeshData;
 import iron.data.SceneFormat;
 #if arm_bullet
 import armory.trait.physics.bullet.RigidBody;
-import armory.trait.physics.RigidBody;
 import armory.trait.physics.PhysicsWorld;
-import haxebullet.Bullet;
 #end
 
 class PhysicsBreak extends Trait {
@@ -34,7 +32,8 @@ class PhysicsBreak extends Trait {
 		if (physics == null) physics = armory.trait.physics.PhysicsWorld.active;
 
 		body = object.getTrait(RigidBody);
-		breaker.initBreakableObject(cast object, body.mass, new Vec4(), new Vec4(), true);
+		trace(body.mass);
+		breaker.initBreakableObject(cast object, body.mass, body.friction, new Vec4(), new Vec4(), true);
 
 		notifyOnUpdate(update);
 	}
@@ -53,7 +52,7 @@ class PhysicsBreak extends Trait {
 				}
 			}
 
-			var fractureImpulse = 5.0;
+			var fractureImpulse = 4.0;
 			if (maxImpulse > fractureImpulse) {
 				var radialIter = 1;
 				var randIter = 1;
@@ -61,9 +60,8 @@ class PhysicsBreak extends Trait {
 				var numObjects = debris.length;
 				for (o in debris) {
 					var ud = breaker.userDataMap.get(cast o);
-					var friction = 0.5;
-					var margin = 0.06;
-					o.addTrait(new armory.trait.physics.RigidBody(ud.mass, Shape.ConvexHull, friction, margin));
+					var params = [0.04, 0.1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.04, 0.0, 0.0, 0.0];
+					o.addTrait(new RigidBody(Shape.ConvexHull, ud.mass, ud.friction, 0, 1, params));
 					if (cast(o, MeshObject).data.geom.positions.length < 600) {
 						o.addTrait(new PhysicsBreak());
 					}
@@ -116,14 +114,14 @@ class ConvexBreaker {
 		userDataMap = new Map();
 	}
 
-	public function initBreakableObject(object:MeshObject, mass:Float, velocity:Vec4, angularVelocity:Vec4, breakable:Bool) {
+	public function initBreakableObject(object:MeshObject, mass:Float, friction:Float, velocity:Vec4, angularVelocity:Vec4, breakable:Bool) {
 		var ar = object.data.geom.positions;
 		// Create vertices mark
 		var sc = object.transform.scale;
 		var vertices = new Array<Vec4>();
-		for (i in 0...Std.int(ar.length / 3)) {
+		for (i in 0...Std.int(ar.length / 4)) {
 			// Use w component as mark
-			vertices.push(new Vec4(ar[i * 3] * sc.x, ar[i * 3 + 1] * sc.y, ar[i * 3 + 2] * sc.z, 0));
+			vertices.push(new Vec4(ar[i * 4] * sc.x * (1 / 32767), ar[i * 4 + 1] * sc.y * (1 / 32767), ar[i * 4 + 2] * sc.z * (1 / 32767), 0));
 		}
 
 		var ind = object.data.geom.indices[0];
@@ -168,6 +166,7 @@ class ConvexBreaker {
 
 		var userData = new UserData();
 		userData.mass = mass;
+		userData.friction = friction;
 		userData.velocity = velocity.clone();
 		userData.angularVelocity = angularVelocity.clone();
 		userData.breakable = breakable;
@@ -460,7 +459,7 @@ class ConvexBreaker {
 			object1.transform.loc.setFrom(tempCM1);
 			object1.transform.rot.setFrom(object.transform.rot);
 			object1.transform.buildMatrix();
-			initBreakableObject(object1, newMass, userData.velocity, userData.angularVelocity, 2 * radius1 > minSizeForBreak);
+			initBreakableObject(object1, newMass, userData.friction, userData.velocity, userData.angularVelocity, 2 * radius1 > minSizeForBreak);
 			numObjects++;
 		}
 
@@ -470,7 +469,7 @@ class ConvexBreaker {
 			object2.transform.loc.setFrom(tempCM2);
 			object2.transform.rot.setFrom(object.transform.rot);
 			object2.transform.buildMatrix();
-			initBreakableObject(object2, newMass, userData.velocity, userData.angularVelocity, 2 * radius2 > minSizeForBreak);
+			initBreakableObject(object2, newMass, userData.friction, userData.velocity, userData.angularVelocity, 2 * radius2 > minSizeForBreak);
 			numObjects++;
 		}
 
@@ -504,7 +503,7 @@ class ConvexBreaker {
 				na.push(normal.x);
 				na.push(normal.y);
 				na.push(normal.z);
-				ind.push(Std.int(pa.length / 4 - 1));
+				ind.push(Std.int(pa.length / 3 - 1));
 			}
 			else {
 				na[fi * 3] = normal.x;
@@ -521,34 +520,29 @@ class ConvexBreaker {
 		}
 
 		// TODO:
-		var paa = new kha.arrays.Float32Array(pa.length);
-		for (i in 0...pa.length) paa.set(i, pa[i]);
-		var naa = new kha.arrays.Float32Array(na.length);
-		for (i in 0...na.length) naa.set(i, na[i]);
+		var n = Std.int(pa.length / 3);
+		var paa = new kha.arrays.Int16Array(n * 4);
+		var naa = new kha.arrays.Int16Array(n * 2);
+		for (i in 0...n) {
+			paa.set(i * 4    , Std.int(pa[i * 3    ] * 32767));
+			paa.set(i * 4 + 1, Std.int(pa[i * 3 + 1] * 32767));
+			paa.set(i * 4 + 2, Std.int(pa[i * 3 + 2] * 32767));
+			naa.set(i * 2    , Std.int(na[i * 3    ] * 32767));
+			naa.set(i * 2 + 1, Std.int(na[i * 3 + 1] * 32767));
+			paa.set(i * 4 + 3, Std.int(na[i * 3 + 2] * 32767));
+		}
 		var inda = new kha.arrays.Uint32Array(ind.length);
 		for (i in 0...ind.length) inda.set(i, ind[i]);
 		
-		var pos:TVertexArray = {
-			attrib: "pos",
-			size: 4,
-			values: paa
-		};
-
-		var nor:TVertexArray = {
-			attrib: "nor",
-			size: 2,
-			values: naa
-		};
-
-		var indices:TIndexArray = {
-			material: 0,
-			values: inda
-		};
+		var pos:TVertexArray = { attrib: "pos", values: paa };
+		var nor:TVertexArray = { attrib: "nor", values: naa };
+		var indices:TIndexArray = { material: 0, values: inda };
 
 		var rawmesh:TMeshData = { 
 			name: "TempMesh" + (meshIndex++),
 			vertex_arrays: [pos, nor],
-			index_arrays: [indices]
+			index_arrays: [indices],
+			scale_pos: 1.0
 		};
 
 		// Synchronous on Krom
@@ -560,6 +554,7 @@ class ConvexBreaker {
 
 class UserData {
 	public var mass:Float;
+	public var friction:Float;
 	public var velocity:Vec4;
 	public var angularVelocity:Vec4;
 	public var breakable:Bool;

@@ -58,7 +58,7 @@ class RigidBody extends iron.Trait {
 	static var quat = new Quat();
 
 	public function new(shape = Shape.Box, mass = 1.0, friction = 0.5, restitution = 0.0, group = 1,
-						params:Array<Float> = null, flags:Array<Bool>) {
+						params:Array<Float> = null, flags:Array<Bool> = null) {
 		super();
 
 		if (nullvec) {
