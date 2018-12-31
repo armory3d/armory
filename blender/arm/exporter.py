@@ -1485,7 +1485,7 @@ class ArmoryExporter:
         else: # Hemi
             o['type'] = 'sun'
 
-        o['cast_shadow'] = objref.cycles.cast_shadow
+        o['cast_shadow'] = objref.use_shadow
         o['near_plane'] = objref.arm_clip_start
         o['far_plane'] = objref.arm_clip_end
         o['fov'] = objref.arm_fov
