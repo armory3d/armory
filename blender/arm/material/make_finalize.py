@@ -46,7 +46,8 @@ def make(con_mesh):
     frag_mpos = (frag.contains('mposition') and not frag.contains('vec3 mposition')) or vert.contains('mposition')
     if frag_mpos:
         vert.add_out('vec3 mposition')
-        vert.write_attrib('mposition = spos.xyz;')
+        vert.add_uniform('float posUnpack', link='_posUnpack')
+        vert.write_attrib('mposition = spos.xyz * posUnpack;')
     
     if tese != None:
         if frag_mpos:
@@ -54,7 +55,8 @@ def make(con_mesh):
         elif tese.contains('mposition') and not tese.contains('vec3 mposition'):
             vert.add_out('vec3 mposition')
             vert.write_pre = True
-            vert.write('mposition = spos.xyz;')
+            vert.add_uniform('float posUnpack', link='_posUnpack')
+            vert.write('mposition = spos.xyz * posUnpack;')
             vert.write_pre = False
             make_tess.interpolate(tese, 'mposition', 3, declare_out=False)
 
@@ -63,8 +65,9 @@ def make(con_mesh):
         vert.add_out('vec3 bposition')
         vert.add_uniform('vec3 dim', link='_dim')
         vert.add_uniform('vec3 hdim', link='_halfDim')
+        vert.add_uniform('float posUnpack', link='_posUnpack')
         vert.write_pre = True
-        vert.write('bposition = (spos.xyz + hdim) / dim;')
+        vert.write('bposition = (spos.xyz * posUnpack + hdim) / dim;')
         vert.write_pre = False
     
     if tese != None:
@@ -73,7 +76,10 @@ def make(con_mesh):
         elif tese.contains('bposition') and not tese.contains('vec3 bposition'):
             vert.add_out('vec3 bposition')
             vert.write_pre = True
-            vert.write('bposition = spos.xyz;')
+            vert.add_uniform('vec3 dim', link='_dim')
+            vert.add_uniform('vec3 hdim', link='_halfDim')
+            vert.add_uniform('float posUnpack', link='_posUnpack')
+            vert.write('bposition = (spos.xyz * posUnpack + hdim) / dim;')
             vert.write_pre = False
             make_tess.interpolate(tese, 'bposition', 3, declare_out=False)
 
