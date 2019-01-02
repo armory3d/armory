@@ -1353,9 +1353,6 @@ class ArmoryExporter:
         else:
             fp = None
 
-        # Check if mesh is using instanced rendering
-        instanced_type, instanced_data = self.object_process_instancing(table)
-
         # Mesh users have different modifier stack
         for i in range(1, len(table)):
             if not self.mod_equal_stack(bobject, table[i]):
@@ -1450,6 +1447,9 @@ class ArmoryExporter:
                 shapeKeys.key_blocks[m].value = currentMorphValue[m]
 
             mesh.update()
+
+        # Check if mesh is using instanced rendering
+        instanced_type, instanced_data = self.object_process_instancing(table, o['scale_pos'])
 
         # Save offset data for instanced rendering
         if instanced_type > 0:
@@ -2205,7 +2205,7 @@ class ArmoryExporter:
                 return True
         return False
 
-    def object_process_instancing(self, refs):
+    def object_process_instancing(self, refs, scale_pos):
         instanced_type = 0
         instanced_data = None
         for bobject in refs:
@@ -2229,9 +2229,9 @@ class ArmoryExporter:
                         continue
                     if 'Loc' in inst:
                         loc = child.matrix_local.to_translation() # Without parent matrix
-                        instanced_data.append(loc.x)
-                        instanced_data.append(loc.y)
-                        instanced_data.append(loc.z)
+                        instanced_data.append(loc.x / scale_pos)
+                        instanced_data.append(loc.y / scale_pos)
+                        instanced_data.append(loc.z / scale_pos)
                     if 'Rot' in inst:
                         rot = child.matrix_local.to_euler()
                         instanced_data.append(rot.x)

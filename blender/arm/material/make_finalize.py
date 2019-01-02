@@ -66,21 +66,17 @@ def make(con_mesh):
         vert.add_uniform('vec3 dim', link='_dim')
         vert.add_uniform('vec3 hdim', link='_halfDim')
         vert.add_uniform('float posUnpack', link='_posUnpack')
-        vert.write_pre = True
-        vert.write('bposition = (spos.xyz * posUnpack + hdim) / dim;')
-        vert.write_pre = False
+        vert.write_attrib('bposition = (spos.xyz * posUnpack + hdim) / dim;')
     
     if tese != None:
         if frag_bpos:
             make_tess.interpolate(tese, 'bposition', 3, declare_out=True)
         elif tese.contains('bposition') and not tese.contains('vec3 bposition'):
             vert.add_out('vec3 bposition')
-            vert.write_pre = True
             vert.add_uniform('vec3 dim', link='_dim')
             vert.add_uniform('vec3 hdim', link='_halfDim')
             vert.add_uniform('float posUnpack', link='_posUnpack')
-            vert.write('bposition = (spos.xyz * posUnpack + hdim) / dim;')
-            vert.write_pre = False
+            vert.write_attrib('bposition = (spos.xyz * posUnpack + hdim) / dim;')
             make_tess.interpolate(tese, 'bposition', 3, declare_out=False)
 
     frag_wtan = (frag.contains('wtangent') and not frag.contains('vec3 wtangent')) or vert.contains('wtangent')

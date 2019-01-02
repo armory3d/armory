@@ -323,6 +323,10 @@ class Inc {
 		return 2048;
 		#elseif (rp_shadowmap_cascade == 4096)
 		return 4096;
+		#elseif (rp_shadowmap_cascade == 8192)
+		return 8192;
+		#elseif (rp_shadowmap_cascade == 16384)
+		return 16384;
 		#else
 		return 0;
 		#end
