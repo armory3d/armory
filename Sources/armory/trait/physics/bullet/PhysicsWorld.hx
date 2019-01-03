@@ -13,8 +13,9 @@ class ContactPair {
 	public var b:Int;
 	public var posA:Vec4;
 	public var posB:Vec4;
-	public var nor:Vec4;
+	public var normOnB:Vec4;
 	public var impulse:Float;
+	public var distance:Float;
 	public function new(a:Int, b:Int) {
 		this.a = a;
 		this.b = b;
@@ -263,33 +264,36 @@ class PhysicsWorld extends Trait {
 			#if js
 			var body0 = untyped bullet.Bt.Ammo.btRigidBody.prototype.upcast(contactManifold.getBody0());
 			var body1 = untyped bullet.Bt.Ammo.btRigidBody.prototype.upcast(contactManifold.getBody1());
-			var cp = new ContactPair(untyped body0.userIndex, untyped body1.userIndex);
 			#else
 			var body0:bullet.Bt.CollisionObject = contactManifold.getBody0();
 			var body1:bullet.Bt.CollisionObject = contactManifold.getBody1();
-			var cp = new ContactPair(body0.getUserIndex(), body1.getUserIndex());
 			#end
 
 			var numContacts = contactManifold.getNumContacts();
+			var pt:bullet.Bt.ManifoldPoint = null;
+			var posA:bullet.Bt.Vector3 = null;
+			var posB:bullet.Bt.Vector3 = null;
+			var nor:bullet.Bt.Vector3 = null;
+			var cp:ContactPair = null;
 			for (j in 0...numContacts) {
-				var pt:bullet.Bt.ManifoldPoint = contactManifold.getContactPoint(j);
-				if (pt.getDistance() < 0) {
-					#if js
-					var posA = pt.get_m_positionWorldOnA();
-					var posB = pt.get_m_positionWorldOnB();
-					var nor = pt.get_m_normalWorldOnB();
-					#else
-					var posA = pt.m_positionWorldOnA;
-					var posB = pt.m_positionWorldOnB;
-					var nor = pt.m_normalWorldOnB;
-					#end
-					cp.posA = new Vec4(posA.x(), posA.y(), posA.z());
-					cp.posB = new Vec4(posB.x(), posB.y(), posB.z());
-					cp.nor = new Vec4(nor.x(), nor.y(), nor.z());
-					cp.impulse = pt.getAppliedImpulse();
-					contacts.push(cp);
-					break; // TODO: only one contact point for now
-				}
+				pt = contactManifold.getContactPoint(j);
+				#if js
+				posA = pt.get_m_positionWorldOnA();
+				posB = pt.get_m_positionWorldOnB();
+				nor = pt.get_m_normalWorldOnB();
+				cp = new ContactPair(untyped body0.userIndex, untyped body1.userIndex);
+				#else
+				posA = pt.m_positionWorldOnA;
+				posB = pt.m_positionWorldOnB;
+				nor = pt.m_normalWorldOnB;
+				cp = new ContactPair(body0.getUserIndex(), body1.getUserIndex());
+				#end
+				cp.posA = new Vec4(posA.x(), posA.y(), posA.z());
+				cp.posB = new Vec4(posB.x(), posB.y(), posB.z());
+				cp.normOnB = new Vec4(nor.x(), nor.y(), nor.z());
+				cp.impulse = pt.getAppliedImpulse();
+				cp.distance = pt.getDistance();
+				contacts.push(cp);
 			}
 		}
 	}
