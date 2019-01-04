@@ -14,21 +14,6 @@ import arm.proxy
 arm_version = '0.6'
 arm_commit = '$Id$'
 
-def invalidate_mesh_cache(self, context):
-    if context.object == None or context.object.data == None:
-        return
-    context.object.data.arm_cached = False
-
-def invalidate_instance_cache(self, context):
-    if context.object == None or context.object.data == None:
-        return
-    invalidate_mesh_cache(self, context)
-    for slot in context.object.material_slots:
-        slot.material.arm_cached = False
-
-def invalidate_compiler_cache(self, context):
-    bpy.data.worlds['Arm'].arm_recompile = True
-
 def proxy_sync_loc(self, context):
     if context.object == None or context.object.proxy == None:
         return
@@ -70,26 +55,26 @@ def init_properties():
     bpy.types.World.arm_recompile = BoolProperty(name="Recompile", description="Recompile sources on next play", default=True)
     bpy.types.World.arm_version = StringProperty(name="Version", description="Armory SDK version", default="")
     bpy.types.World.arm_commit = StringProperty(name="Version Commit", description="Armory SDK version", default="")
-    bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="", update=invalidate_compiler_cache)
-    bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm", update=invalidate_compiler_cache)
-    bpy.types.World.arm_project_version = StringProperty(name="Version", description="Exported project version", default="1.0", update=invalidate_compiler_cache)
-    bpy.types.World.arm_project_bundle = StringProperty(name="Bundle", description="Exported project bundle", default="", update=invalidate_compiler_cache)
-    bpy.types.World.arm_project_icon = StringProperty(name="Icon (PNG)", description="Exported project icon, must be a PNG image", default="", subtype="FILE_PATH", update=invalidate_compiler_cache)
-    bpy.types.World.arm_project_root = StringProperty(name="Root", description="Set root folder for linked assets", default="", subtype="DIR_PATH", update=invalidate_compiler_cache)
+    bpy.types.World.arm_project_name = StringProperty(name="Name", description="Exported project name", default="", update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_project_package = StringProperty(name="Package", description="Package name for scripts", default="arm", update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_project_version = StringProperty(name="Version", description="Exported project version", default="1.0", update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_project_bundle = StringProperty(name="Bundle", description="Exported project bundle", default="", update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_project_icon = StringProperty(name="Icon (PNG)", description="Exported project icon, must be a PNG image", default="", subtype="FILE_PATH", update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_project_root = StringProperty(name="Root", description="Set root folder for linked assets", default="", subtype="DIR_PATH", update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_physics = EnumProperty(
         items=[('Disabled', 'Disabled', 'Disabled'),
                ('Auto', 'Auto', 'Auto'),
                ('Enabled', 'Enabled', 'Enabled')],
-        name="Physics", default='Auto', update=invalidate_compiler_cache)
+        name="Physics", default='Auto', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_physics_engine = EnumProperty(
         items=[('Bullet', 'Bullet', 'Bullet'),
                ('Oimo', 'Oimo', 'Oimo')],
-        name="Physics Engine", default='Bullet', update=invalidate_compiler_cache)
+        name="Physics Engine", default='Bullet', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_navigation = EnumProperty(
         items=[('Disabled', 'Disabled', 'Disabled'),
                ('Auto', 'Auto', 'Auto'),
                ('Enabled', 'Enabled', 'Enabled')],
-        name="Navigation", default='Auto', update=invalidate_compiler_cache)
+        name="Navigation", default='Auto', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_navigation_engine = EnumProperty(
         items=[('Recast', 'Recast', 'Recast')],
         name="Navigation Engine", default='Recast')
@@ -97,30 +82,30 @@ def init_properties():
         items=[('Disabled', 'Disabled', 'Disabled'),
                ('Enabled', 'Enabled', 'Enabled'),
                ('Auto', 'Auto', 'Auto')],
-        name="Zui", default='Auto', description="Include UI library", update=invalidate_compiler_cache)
+        name="Zui", default='Auto', description="Include UI library", update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_hscript = EnumProperty(
         items=[('Disabled', 'Disabled', 'Disabled'),
                ('Enabled', 'Enabled', 'Enabled')],
-        name="Hscript", default='Disabled', description="Include Hscript library", update=invalidate_compiler_cache)
+        name="Hscript", default='Disabled', description="Include Hscript library", update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_formatlib = EnumProperty(
         items=[('Disabled', 'Disabled', 'Disabled'),
                ('Enabled', 'Enabled', 'Enabled')],
-        name="Format", default='Disabled', description="Include Format library", update=invalidate_compiler_cache)
+        name="Format", default='Disabled', description="Include Format library", update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_audio = EnumProperty(
         items=[('Disabled', 'Disabled', 'Disabled'),
                ('Enabled', 'Enabled', 'Enabled')],
-        name="Audio", default='Enabled', update=invalidate_compiler_cache)
-    bpy.types.World.arm_khafile = StringProperty(name="Khafile", description="Source appended to khafile.js", update=invalidate_compiler_cache)
-    bpy.types.World.arm_texture_quality = FloatProperty(name="Texture Quality", default=1.0, min=0.0, max=1.0, subtype='FACTOR', update=invalidate_compiler_cache)
-    bpy.types.World.arm_sound_quality = FloatProperty(name="Sound Quality", default=0.9, min=0.0, max=1.0, subtype='FACTOR', update=invalidate_compiler_cache)
+        name="Audio", default='Enabled', update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_khafile = StringProperty(name="Khafile", description="Source appended to khafile.js", update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_texture_quality = FloatProperty(name="Texture Quality", default=1.0, min=0.0, max=1.0, subtype='FACTOR', update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_sound_quality = FloatProperty(name="Sound Quality", default=0.9, min=0.0, max=1.0, subtype='FACTOR', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_minimize = BoolProperty(name="Minimize Data", description="Export scene data in binary", default=True, update=assets.invalidate_compiled_data)
     bpy.types.World.arm_minify_js = BoolProperty(name="Minify JS", description="Minimize JavaScript output when publishing", default=True)
     bpy.types.World.arm_optimize_data = BoolProperty(name="Optimize Data", description="Export more efficient geometry and shader data, prolongs build times", default=True, update=assets.invalidate_compiled_data)
-    bpy.types.World.arm_deinterleaved_buffers = BoolProperty(name="Deinterleaved Buffers", description="Use deinterleaved vertex buffers", default=False, update=invalidate_compiler_cache)
+    bpy.types.World.arm_deinterleaved_buffers = BoolProperty(name="Deinterleaved Buffers", description="Use deinterleaved vertex buffers", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_export_tangents = BoolProperty(name="Export Tangents", description="Precompute tangents for normal mapping, otherwise computed in shader", default=True, update=assets.invalidate_compiled_data)
-    bpy.types.World.arm_batch_meshes = BoolProperty(name="Batch Meshes", description="Group meshes by materials to speed up rendering", default=False, update=invalidate_compiler_cache)
+    bpy.types.World.arm_batch_meshes = BoolProperty(name="Batch Meshes", description="Group meshes by materials to speed up rendering", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_batch_materials = BoolProperty(name="Batch Materials", description="Marge similar materials into single pipeline state", default=False, update=assets.invalidate_shader_cache)
-    bpy.types.World.arm_stream_scene = BoolProperty(name="Stream Scene", description="Stream scene content", default=False, update=invalidate_compiler_cache)
+    bpy.types.World.arm_stream_scene = BoolProperty(name="Stream Scene", description="Stream scene content", default=False, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_lod_gen_levels = IntProperty(name="Levels", description="Number of levels to generate", default=3, min=1)
     bpy.types.World.arm_lod_gen_ratio = FloatProperty(name="Decimate Ratio", description="Decimate ratio", default=0.8)
     bpy.types.World.arm_cache_build = BoolProperty(name="Cache Build", description="Cache build files to speed up compilation", default=True)
@@ -129,30 +114,30 @@ def init_properties():
                ('Viewport', 'Viewport', 'Viewport'),
                # ('Viewport Shared', 'Shared', 'Viewport Shared')
                ],
-        name="Camera", description="Viewport camera", default='Scene', update=invalidate_compiler_cache)
+        name="Camera", description="Viewport camera", default='Scene', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_debug_console = BoolProperty(name="Debug Console", description="Show inspector in player and enable debug draw", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_runtime = EnumProperty(
         items=[('Krom', 'Krom', 'Krom'),
                ('Browser', 'Browser', 'Browser')],
         name="Runtime", description="Runtime to use when launching the game", default='Krom', update=assets.invalidate_shader_cache)
     bpy.types.World.arm_loadscreen = BoolProperty(name="Loading Screen", description="Show asset loading progress on published builds", default=True)
-    bpy.types.World.arm_vsync = BoolProperty(name="VSync", description="Vertical Synchronization", default=True, update=invalidate_compiler_cache)
-    bpy.types.World.arm_dce = BoolProperty(name="DCE", description="Enable dead code elimination for publish builds", default=True, update=invalidate_compiler_cache)
-    bpy.types.World.arm_asset_compression = BoolProperty(name="Asset Compression", description="Enable scene data compression", default=False, update=invalidate_compiler_cache)
-    bpy.types.World.arm_write_config = BoolProperty(name="Write Config", description="Allow this project to be configured at runtime via a JSON file", default=False, update=invalidate_compiler_cache)
-    bpy.types.World.arm_compiler_inline = BoolProperty(name="Compiler Inline", description="Favor speed over size", default=True, update=invalidate_compiler_cache)
+    bpy.types.World.arm_vsync = BoolProperty(name="VSync", description="Vertical Synchronization", default=True, update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_dce = BoolProperty(name="DCE", description="Enable dead code elimination for publish builds", default=True, update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_asset_compression = BoolProperty(name="Asset Compression", description="Enable scene data compression", default=False, update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_write_config = BoolProperty(name="Write Config", description="Allow this project to be configured at runtime via a JSON file", default=False, update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_compiler_inline = BoolProperty(name="Compiler Inline", description="Favor speed over size", default=True, update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_winmode = EnumProperty(
         items = [('Window', 'Window', 'Window'),
                  ('Fullscreen', 'Fullscreen', 'Fullscreen')],
-        name="Mode", default='Window', description='Window mode to start in', update=invalidate_compiler_cache)
+        name="Mode", default='Window', description='Window mode to start in', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_winorient = EnumProperty(
         items = [('Multi', 'Multi', 'Multi'),
                  ('Portrait', 'Portrait', 'Portrait'),
                  ('Landscape', 'Landscape', 'Landscape')],
         name="Orientation", default='Landscape', description='Set screen orientation on mobile devices')
-    bpy.types.World.arm_winresize = BoolProperty(name="Resizable", description="Allow window resize", default=False, update=invalidate_compiler_cache)
-    bpy.types.World.arm_winmaximize = BoolProperty(name="Maximizable", description="Allow window maximize", default=False, update=invalidate_compiler_cache)
-    bpy.types.World.arm_winminimize = BoolProperty(name="Minimizable", description="Allow window minimize", default=True, update=invalidate_compiler_cache)
+    bpy.types.World.arm_winresize = BoolProperty(name="Resizable", description="Allow window resize", default=False, update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_winmaximize = BoolProperty(name="Maximizable", description="Allow window maximize", default=False, update=assets.invalidate_compiler_cache)
+    bpy.types.World.arm_winminimize = BoolProperty(name="Minimizable", description="Allow window minimize", default=True, update=assets.invalidate_compiler_cache)
     # For object
     bpy.types.Object.arm_instanced = EnumProperty(
         items = [('Off', 'Off', 'Off'),
@@ -160,7 +145,7 @@ def init_properties():
                  ('Loc + Rot', 'Loc + Rot', 'Loc + Rot'),
                  ('Loc + Scale', 'Loc + Scale', 'Loc + Scale'),
                  ('Loc + Rot + Scale', 'Loc + Rot + Scale', 'Loc + Rot + Scale')],
-        name="Instanced Children", default='Off', description='Use instacing to draw children', update=invalidate_instance_cache)
+        name="Instanced Children", default='Off', description='Use instacing to draw children', update=assets.invalidate_instance_cache)
     bpy.types.Object.arm_export = BoolProperty(name="Export", description="Export object data", default=True)
     bpy.types.Object.arm_spawn = BoolProperty(name="Spawn", description="Auto-add this object when creating scene", default=True)
     bpy.types.Object.arm_mobile = BoolProperty(name="Mobile", description="Object moves during gameplay", default=False)

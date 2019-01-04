@@ -155,9 +155,9 @@ float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	vec3 c2 = 0.5f * (o1 - o2);
 
 	#ifdef HLSL
-	const float factor = voxelgiOcc * 0.9;
+	const float factor = voxelgiOcc * 0.93;
 	#else
-	const float factor = voxelgiOcc * 0.9;
+	const float factor = voxelgiOcc * 0.90;
 	#endif
 	
 	#ifdef _VoxelCones1

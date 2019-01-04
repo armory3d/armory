@@ -144,6 +144,21 @@ def invalidate_unpacked_data(self, context):
     if os.path.isdir(fp + '/compiled/Assets/unpacked'):
         shutil.rmtree(fp + '/compiled/Assets/unpacked', onerror=remove_readonly)
 
+def invalidate_mesh_cache(self, context):
+    if context.object == None or context.object.data == None:
+        return
+    context.object.data.arm_cached = False
+
+def invalidate_instance_cache(self, context):
+    if context.object == None or context.object.data == None:
+        return
+    invalidate_mesh_cache(self, context)
+    for slot in context.object.material_slots:
+        slot.material.arm_cached = False
+
+def invalidate_compiler_cache(self, context):
+    bpy.data.worlds['Arm'].arm_recompile = True
+
 def shader_equal(sh, ar, shtype):
     # Merge equal shaders
     for e in ar:
