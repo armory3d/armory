@@ -32,7 +32,6 @@ class PhysicsBreak extends Trait {
 		if (physics == null) physics = armory.trait.physics.PhysicsWorld.active;
 
 		body = object.getTrait(RigidBody);
-		trace(body.mass);
 		breaker.initBreakableObject(cast object, body.mass, body.friction, new Vec4(), new Vec4(), true);
 
 		notifyOnUpdate(update);
@@ -48,7 +47,7 @@ class PhysicsBreak extends Trait {
 				if (maxImpulse < p.impulse) {
 					maxImpulse = p.impulse;
 					impactPoint = p.posB;
-					impactNormal = p.nor;
+					impactNormal = p.normOnB;
 				}
 			}
 
