@@ -340,7 +340,18 @@ def init_properties_on_load():
     wrd = bpy.data.worlds['Arm']
     # Outdated project
     if bpy.data.filepath != '' and (wrd.arm_version != arm_version or wrd.arm_commit != arm_commit): # Call on project load only
-        print('Project updated to sdk v' + arm_version)
+        
+        # This allows for seamless migration from ealier versions of
+        # Armory that don't have `item.node_tree_prop` set
+        for ob in bpy.data.objects: # TODO: deprecated
+            for trait in ob.arm_traitlist:
+                if trait != None and \
+                   trait.type_prop == 'Logic Nodes' and \
+                   trait.node_tree_prop == None and \
+                   trait.name in bpy.data.node_groups:
+                    trait.node_tree_prop = bpy.data.node_groups[trait.name]
+
+        print('Project updated to sdk v' + arm_version + ' (' + arm_commit + ')')
         wrd.arm_version = arm_version
         wrd.arm_commit = arm_commit
         arm.make.clean()

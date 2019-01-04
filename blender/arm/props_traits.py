@@ -29,7 +29,8 @@ def update_trait_group(self, context):
         elif t.type_prop == 'UI Canvas':
             t.name = t.canvas_name_prop
         elif t.type_prop == 'Logic Nodes':
-            t.name = t.node_tree_prop.name
+            if t.node_tree_prop != None:
+                t.name = t.node_tree_prop.name
         # Fetch props
         if t.type_prop == 'Bundled Script' and t.name != '':
             file_path = arm.utils.get_sdk_path() + '/armory/Sources/armory/trait/' + t.name + '.hx'
@@ -63,7 +64,7 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
     class_name_prop: StringProperty(name="Class", description="A name for this item", default="", update=update_trait_group)
     canvas_name_prop: StringProperty(name="Canvas", description="A name for this item", default="", update=update_trait_group)
     webassembly_prop: StringProperty(name="Module", description="A name for this item", default="", update=update_trait_group)
-    node_tree_prop: PointerProperty(type=NodeTree)
+    node_tree_prop: PointerProperty(type=NodeTree, update=update_trait_group)
     arm_traitpropslist: CollectionProperty(type=ArmTraitPropListItem)
     arm_traitpropslist_index: IntProperty(name="Index for my_list", default=0)
 
@@ -543,15 +544,6 @@ def draw_traits(layout, obj, is_object):
         elif item.type_prop == 'Logic Nodes':
             row = layout.row()
             row.prop_search(item, "node_tree_prop", bpy.data, "node_groups", text="Tree")
-            if item.node_tree_prop != None:
-                item.name = item.node_tree_prop.name
-            else:
-                # This allows for seamless migration from ealier versions of
-                # Armory that have don't have `item.node_tree_prop` set
-                if item.name != "" and bpy.data.node_groups[item.name] != None:
-                    item.node_tree_prop = bpy.data.node_groups[item.name]
-                else:
-                    item.name = ""
 
 def register():
     global icons_dict
