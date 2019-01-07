@@ -1181,6 +1181,8 @@ class ArmoryExporter:
             lay0 = exportMesh.uv_layers[t0map]
             if has_tex1:
                 lay1 = exportMesh.uv_layers[t1map]
+        if has_col:
+            vcol0 = exportMesh.vertex_colors[0].data
 
         for i, loop in enumerate(loops):
             v = verts[loop.vertex_index]
@@ -1210,10 +1212,11 @@ class ArmoryExporter:
                     tangdata[i3 + 1] = tang[1]
                     tangdata[i3 + 2] = tang[2]
             if has_col:
+                col = vcol0[loop.index].color
                 i3 = i * 3
-                cdata[i3    ] = pow(v.col[0], 2.2)
-                cdata[i3 + 1] = pow(v.col[1], 2.2)
-                cdata[i3 + 2] = pow(v.col[2], 2.2)
+                cdata[i3    ] = pow(col[0], 2.2)
+                cdata[i3 + 1] = pow(col[1], 2.2)
+                cdata[i3 + 2] = pow(col[2], 2.2)
 
         mats = exportMesh.materials
         poly_map = []

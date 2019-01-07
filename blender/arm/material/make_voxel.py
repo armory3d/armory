@@ -101,7 +101,7 @@ def make_gi(context_id):
 
     if con_voxel.is_elem('col'):
         vert.add_out('vec3 vcolorGeom')
-        vert.write('vcolorGeom = col;')
+        vert.write('vcolorGeom = col.rgb;')
 
     if con_voxel.is_elem('tex'):
         vert.add_out('vec2 texCoordGeom')

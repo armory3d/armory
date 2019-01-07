@@ -59,7 +59,7 @@ def make(context_id, rpasses, shadowmap=False):
                 vert.write_attrib('texCoord1 = tex1 * texUnpack;')
             if con_depth.is_elem('col'):
                 vert.add_out('vec3 vcolor')
-                vert.write_attrib('vcolor = col;')
+                vert.write_attrib('vcolor = col.rgb;')
             vert.write('wposition += wnormal * disp * 0.1;')
             if shadowmap:
                 vert.add_uniform('mat4 LVP', '_lightViewProjectionMatrix')
@@ -102,7 +102,7 @@ def make(context_id, rpasses, shadowmap=False):
 
             if con_depth.is_elem('col'):
                 vert.add_out('vec3 vcolor')
-                vert.write('vcolor = col;')
+                vert.write('vcolor = col.rgb;')
                 tese.write_pre = True
                 make_tess.interpolate(tese, 'vcolor', 3, declare_out=frag.contains('vcolor'))
                 tese.write_pre = False
@@ -154,7 +154,7 @@ def make(context_id, rpasses, shadowmap=False):
 
             if con_depth.is_elem('col'):
                 vert.add_out('vec3 vcolor')
-                vert.write('vcolor = col;')
+                vert.write('vcolor = col.rgb;')
 
     if parse_opacity:
         opac = mat_state.material.arm_discard_opacity_shadows

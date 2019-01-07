@@ -147,7 +147,7 @@ def make_base(con_mesh, parse_opacity):
 
     if con_mesh.is_elem('col'):
         vert.add_out('vec3 vcolor')
-        vert.write_attrib('vcolor = col;')
+        vert.write_attrib('vcolor = col.rgb;')
         if tese != None:
             tese.write_pre = True
             make_tess.interpolate(tese, 'vcolor', 3, declare_out=frag.contains('vcolor'))
@@ -309,7 +309,7 @@ def make_forward_mobile(con_mesh):
 
     if con_mesh.is_elem('col'):
         vert.add_out('vec3 vcolor')
-        vert.write('vcolor = col;')
+        vert.write('vcolor = col.rgb;')
 
     if con_mesh.is_elem('tang'):
         vert.add_out('mat3 TBN')
@@ -459,7 +459,7 @@ def make_forward_solid(con_mesh):
 
     if con_mesh.is_elem('col'):
         vert.add_out('vec3 vcolor')
-        vert.write('vcolor = col;')
+        vert.write('vcolor = col.rgb;')
 
     make_attrib.write_norpos(con_mesh, vert, write_nor=False)
 
