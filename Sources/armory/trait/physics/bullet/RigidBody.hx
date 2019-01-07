@@ -6,6 +6,7 @@ import iron.math.Vec4;
 import iron.math.Quat;
 import iron.object.Transform;
 import iron.object.MeshObject;
+import iron.data.MeshData;
 
 /**
  * RigidBody is used to allow objects to interact with Physics in your game including collisions and gravity.
@@ -56,6 +57,10 @@ class RigidBody extends iron.Trait {
 	static var trans1:bullet.Bt.Transform;
 	static var trans2:bullet.Bt.Transform;
 	static var quat = new Quat();
+
+	static var convexHullCache = new Map<MeshData, bullet.Bt.ConvexHullShape>();
+	static var triangleMeshCache = new Map<MeshData, bullet.Bt.TriangleMesh>();
+	static var usersCache = new Map<MeshData, Int>();
 
 	public function new(shape = Shape.Box, mass = 1.0, friction = 0.5, restitution = 0.0, group = 1,
 						params:Array<Float> = null, flags:Array<Bool> = null) {
@@ -121,8 +126,7 @@ class RigidBody extends iron.Trait {
 			btshape = new bullet.Bt.SphereShape(withMargin(transform.dim.x / 2));
 		}
 		else if (shape == Shape.ConvexHull) {
-			var shapeConvex = new bullet.Bt.ConvexHullShape();
-			fillConvexHull(shapeConvex, transform.scale, collisionMargin);
+			var shapeConvex = fillConvexHull(transform.scale, collisionMargin);
 			btshape = shapeConvex;
 		}
 		else if (shape == Shape.Cone) {
@@ -149,8 +153,7 @@ class RigidBody extends iron.Trait {
 			btshape = caps;
 		}
 		else if (shape == Shape.Mesh || shape == Shape.Terrain) {
-			var meshInterface = new bullet.Bt.TriangleMesh(true, true);
-			fillTriangleMesh(meshInterface, transform.scale);
+			var meshInterface = fillTriangleMesh(transform.scale);
 			if (mass > 0) {
 				var shapeGImpact = new bullet.Bt.GImpactMeshShape(meshInterface);
 				shapeGImpact.updateBound();
@@ -434,8 +437,19 @@ class RigidBody extends iron.Trait {
 		bodyColl.setCcdMotionThreshold(motionThreshold);
 	}
 
-	function fillConvexHull(shape:bullet.Bt.ConvexHullShape, scale:Vec4, margin:kha.FastFloat) {
+	function fillConvexHull(scale:Vec4, margin:kha.FastFloat):bullet.Bt.ConvexHullShape {
+		// Check whether shape already exists
 		var data = cast(object, MeshObject).data;
+		var shape = convexHullCache.get(data);
+		if (shape != null) {
+			usersCache.set(data, usersCache.get(data) + 1);
+			return shape;
+		}
+		
+		shape = new bullet.Bt.ConvexHullShape();
+		convexHullCache.set(data, shape);
+		usersCache.set(data, 1);
+
 		var positions = data.geom.positions;
 
 		var sx:kha.FastFloat = scale.x * (1.0 - margin) * (1 / 32767);
@@ -454,10 +468,22 @@ class RigidBody extends iron.Trait {
 			vec1.setZ(positions[i * 4 + 2] * sz);
 			shape.addPoint(vec1, true);
 		}
+		return shape;
 	}
 
-	function fillTriangleMesh(triangleMesh:bullet.Bt.TriangleMesh, scale:Vec4) {
+	function fillTriangleMesh(scale:Vec4):bullet.Bt.TriangleMesh {
+		// Check whether shape already exists
 		var data = cast(object, MeshObject).data;
+		var triangleMesh = triangleMeshCache.get(data);
+		if (triangleMesh != null) {
+			usersCache.set(data, usersCache.get(data) + 1);
+			return triangleMesh;
+		}
+		
+		triangleMesh = new bullet.Bt.TriangleMesh(true, true);
+		triangleMeshCache.set(data, triangleMesh);
+		usersCache.set(data, 1);
+
 		var positions = data.geom.positions;
 		var indices = data.geom.indices;
 
@@ -473,18 +499,51 @@ class RigidBody extends iron.Trait {
 
 		for (ar in indices) {
 			for (i in 0...Std.int(ar.length / 3)) {
-				vec1.setX(positions[ar[i * 3 + 0] * 4 + 0] * sx);
-				vec1.setY(positions[ar[i * 3 + 0] * 4 + 1] * sy);
-				vec1.setZ(positions[ar[i * 3 + 0] * 4 + 2] * sz);
-				vec2.setX(positions[ar[i * 3 + 1] * 4 + 0] * sx);
+				vec1.setX(positions[ar[i * 3    ] * 4    ] * sx);
+				vec1.setY(positions[ar[i * 3    ] * 4 + 1] * sy);
+				vec1.setZ(positions[ar[i * 3    ] * 4 + 2] * sz);
+				vec2.setX(positions[ar[i * 3 + 1] * 4    ] * sx);
 				vec2.setY(positions[ar[i * 3 + 1] * 4 + 1] * sy);
 				vec2.setZ(positions[ar[i * 3 + 1] * 4 + 2] * sz);
-				vec3.setX(positions[ar[i * 3 + 2] * 4 + 0] * sx);
+				vec3.setX(positions[ar[i * 3 + 2] * 4    ] * sx);
 				vec3.setY(positions[ar[i * 3 + 2] * 4 + 1] * sy);
 				vec3.setZ(positions[ar[i * 3 + 2] * 4 + 2] * sz);
 				triangleMesh.addTriangle(vec1, vec2, vec3);
 			}
 		}
+		return triangleMesh;
+	}
+
+	public function delete() {
+		#if js
+		bullet.Bt.Ammo.destroy(motionState);
+		bullet.Bt.Ammo.destroy(body);
+		#else
+		motionState.delete();
+		body.delete();
+		#end
+
+		// Delete shape if no other user is found
+		if (shape == Shape.ConvexHull || shape == Shape.Mesh) {
+			var data = cast(object, MeshObject).data;
+			var i = usersCache.get(data) - 1;
+			usersCache.set(data, i);
+			if (i <= 0) {
+				deleteShape();
+				shape == Shape.ConvexHull ?
+					convexHullCache.remove(data) :
+					triangleMeshCache.remove(data);
+			}
+		}
+		else deleteShape();
+	}
+
+	inline function deleteShape() {
+		#if js
+		bullet.Bt.Ammo.destroy(btshape);
+		#else
+		btshape.delete();
+		#end
 	}
 }
 

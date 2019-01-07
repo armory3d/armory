@@ -152,15 +152,7 @@ class PhysicsWorld extends Trait {
 		body.destroyed = true;
 		if (world != null) world.removeRigidBody(body.body);
 		rbMap.remove(body.id);
-		#if js
-		bullet.Bt.Ammo.destroy(body.motionState);
-		bullet.Bt.Ammo.destroy(body.btshape);
-		bullet.Bt.Ammo.destroy(body.body);
-		#else
-		body.motionState.delete();
-		body.btshape.delete();
-		body.body.delete();
-		#end
+		body.delete();
 	}
 
 	// public function addKinematicCharacterController(controller:KinematicCharacterController) {
