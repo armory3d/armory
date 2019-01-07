@@ -5,10 +5,7 @@ from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
 class ArmBakeListItem(bpy.types.PropertyGroup):
-    object_name: StringProperty(
-           name="Name",
-           description="A name for this item",
-           default="")
+    obj: PointerProperty(type=bpy.types.Object, description="The object to bake.")
 
     res_x: IntProperty(name="X", description="Texture resolution", default=1024)
     res_y: IntProperty(name="Y", description="Texture resolution", default=1024)
@@ -21,7 +18,7 @@ class ArmBakeList(bpy.types.UIList):
         # Make sure your code supports all 3 layout types
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             row = layout.row()
-            row.prop(item, "object_name", text="", emboss=False, icon=custom_icon)
+            row.prop(item, "obj", text="", emboss=False, icon=custom_icon)
             col = row.column()
             col.alignment = 'RIGHT'
             col.label(text=str(item.res_x) + 'x' + str(item.res_y))
@@ -121,7 +118,7 @@ class ArmBakeButton(bpy.types.Operator):
 
         # At least one material required for now..
         for o in scn.arm_bakelist:
-            ob = scn.objects[o.object_name]
+            ob = o.obj
             if len(ob.material_slots) == 0:
                 if not 'MaterialDefault' in bpy.data.materials:
                     mat = bpy.data.materials.new(name='MaterialDefault')
@@ -132,7 +129,7 @@ class ArmBakeButton(bpy.types.Operator):
 
         # Single user materials
         for o in scn.arm_bakelist:
-            ob = scn.objects[o.object_name]
+            ob = o.obj
             for slot in ob.material_slots:
                 # Temp material already exists
                 if slot.material.name.endswith('_temp'):
@@ -144,7 +141,7 @@ class ArmBakeButton(bpy.types.Operator):
 
         # Images for baking
         for o in scn.arm_bakelist:
-            ob = scn.objects[o.object_name]
+            ob = o.obj
             img_name = ob.name + '_baked'
             sc = scn.arm_bakelist_scale / 100
             rx = o.res_x * sc
@@ -175,7 +172,7 @@ class ArmBakeButton(bpy.types.Operator):
         # Unwrap
         active = obs.active
         for o in scn.arm_bakelist:
-            ob = scn.objects[o.object_name]
+            ob = o.obj
             uv_layers = ob.data.uv_layers
             if not 'UVMap_baked' in uv_layers:
                 uvmap = uv_layers.new(name='UVMap_baked')
@@ -200,7 +197,7 @@ class ArmBakeButton(bpy.types.Operator):
         # Materials for runtime
         # TODO: use single mat per object
         for o in scn.arm_bakelist:
-            ob = scn.objects[o.object_name]
+            ob = o.obj
             img_name = ob.name + '_baked'
             for slot in ob.material_slots:
                 n = slot.material.name[:-5] + '_baked'
@@ -222,8 +219,8 @@ class ArmBakeButton(bpy.types.Operator):
         # Bake
         bpy.ops.object.select_all(action='DESELECT')
         for o in scn.arm_bakelist:
-            scn.objects[o.object_name].select_set(True)
-        obs.active = scn.objects[scn.arm_bakelist[0].object_name]
+            o.obj.select_set(True)
+        obs.active = scn.arm_bakelist[0].obj
         bpy.ops.object.bake('INVOKE_DEFAULT', type='COMBINED')
         bpy.ops.object.select_all(action='DESELECT')
 
@@ -251,7 +248,7 @@ class ArmBakeApplyButton(bpy.types.Operator):
         # Recache lightmaps
         arm.assets.invalidate_unpacked_data(None, None)
         for o in scn.arm_bakelist:
-            ob = scn.objects[o.object_name]
+            ob = o.obj
             img_name = ob.name + '_baked'
             # Save images
             bpy.data.images[img_name].pack(as_png=True)
@@ -265,7 +262,7 @@ class ArmBakeApplyButton(bpy.types.Operator):
                     bpy.data.materials.remove(old, do_unlink=True)
         # Restore uv slots
         for o in scn.arm_bakelist:
-            ob = scn.objects[o.object_name]
+            ob = o.obj
             uv_layers = ob.data.uv_layers
             uv_layers.active_index = 0
 
@@ -292,7 +289,7 @@ class ArmBakeAddAllButton(bpy.types.Operator):
         scn.arm_bakelist.clear()
         for ob in scn.objects:
             if ob.type == 'MESH':
-                scn.arm_bakelist.add().object_name = ob.name
+                scn.arm_bakelist.add().obj = ob
         return{'FINISHED'}
 
 class ArmBakeAddSelectedButton(bpy.types.Operator):
@@ -302,7 +299,7 @@ class ArmBakeAddSelectedButton(bpy.types.Operator):
 
     def contains(self, scn, ob):
         for o in scn.arm_bakelist:
-            if o.object_name == ob.name:
+            if o == ob:
                 return True
         return False
 
@@ -310,7 +307,7 @@ class ArmBakeAddSelectedButton(bpy.types.Operator):
         scn = context.scene
         for ob in context.selected_objects:
             if ob.type == 'MESH' and not self.contains(scn, ob):
-                scn.arm_bakelist.add().object_name = ob.name
+                scn.arm_bakelist.add().obj = ob
         return{'FINISHED'}
 
 class ArmBakeClearAllButton(bpy.types.Operator):
