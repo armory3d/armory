@@ -423,9 +423,11 @@ def get_active_scene():
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
         return bpy.data.scenes[item.arm_project_scene]
 
-def logic_editor_space():
-    if hasattr(bpy.context, 'window') and bpy.context.window != None:
-        areas = bpy.context.window.screen.areas
+def logic_editor_space(context_screen=None):
+    if context_screen == None:
+        context_screen = bpy.context.screen
+    if context_screen != None:
+        areas = context_screen.areas
         for area in areas:
             if area.type == 'NODE_EDITOR':
                 for space in area.spaces:

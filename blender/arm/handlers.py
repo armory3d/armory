@@ -32,11 +32,16 @@ def on_depsgraph_update_post(self):
                 bpy.data.materials[uid.name].arm_cached = False
 
 def always():
+    # Force ui redraw
     if state.redraw_ui and context_screen != None:
         for area in context_screen.areas:
             if area.type == 'VIEW_3D' or area.type == 'PROPERTIES':
                 area.tag_redraw()
         state.redraw_ui = False
+    # TODO: depsgraph.updates only triggers material trees
+    space = arm.utils.logic_editor_space(context_screen)
+    if space != None:
+        space.node_tree.arm_cached = False
     return 0.5
 
 appended_py_paths = []
