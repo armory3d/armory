@@ -1002,7 +1002,7 @@ class ArmBakePanel(bpy.types.Panel):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
-        scn = context.scene
+        scn = bpy.data.scenes[context.scene.name]
 
         row = layout.row(align=True)
         row.alignment = 'EXPAND'
@@ -1034,7 +1034,7 @@ class ArmBakePanel(bpy.types.Panel):
 
         if scn.arm_bakelist_index >= 0 and len(scn.arm_bakelist) > 0:
             item = scn.arm_bakelist[scn.arm_bakelist_index]
-            layout.prop_search(item, "object_name", scn, "objects", text="Object")
+            layout.prop_search(item, "obj", bpy.data, "objects", text="Object")
             layout.prop(item, "res_x")
             layout.prop(item, "res_y")
 
