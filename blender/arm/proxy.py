@@ -79,14 +79,15 @@ def sync_traits(obj):
 
 def sync_materials(obj):
     # Blender likes to crash here:(
-    proxy_mats = []
-    for slot in obj.proxy.material_slots:
-        proxy_mats.append(slot.name)
-    override = bpy.context.copy()
-    override['object'] = obj
-    obj.active_material_index = 0
-    for i in range(len(obj.material_slots)):
-        bpy.ops.object.material_slot_remove(override)
-    for slot in proxy_mats:
-        bpy.ops.object.material_slot_add(override)
-        obj.material_slots[-1].material = bpy.data.materials[slot]
+    pass
+    # proxy_mats = []
+    # for slot in obj.proxy.material_slots:
+    #     proxy_mats.append(slot.name)
+    # override = bpy.context.copy()
+    # override['object'] = obj
+    # obj.active_material_index = 0
+    # for i in range(len(obj.material_slots)):
+    #     bpy.ops.object.material_slot_remove(override)
+    # for slot in proxy_mats:
+    #     bpy.ops.object.material_slot_add(override)
+    #     obj.material_slots[-1].material = bpy.data.materials[slot]

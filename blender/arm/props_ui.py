@@ -1069,12 +1069,12 @@ class ArmGenLodButton(bpy.types.Operator):
             new_obj.data = obj.data.copy()
             new_obj.name = self.lod_name(obj.name, level)
             new_obj.parent = obj
-            new_obj.hide = True
+            new_obj.hide_viewport = True
             new_obj.hide_render = True
             mod = new_obj.modifiers.new('Decimate', 'DECIMATE')
             mod.ratio = ratio
             ratio *= wrd.arm_lod_gen_ratio
-            context.scene.objects.link(new_obj)
+            context.scene.collection.objects.link(new_obj)
 
         # Screen sizes
         for level in range(0, num_levels):

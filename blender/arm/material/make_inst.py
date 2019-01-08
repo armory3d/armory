@@ -15,7 +15,7 @@ def inst_pos(con, vert):
         vert.write(');')
         vert.write('spos.xyz = mirot * spos.xyz;')
         if con.data['name'] == 'mesh':
-            vert.write('wnormal = transpose(mirot) * wnormal;')
+            vert.write('wnormal = transpose(inverse(mirot)) * wnormal;')
 
     if con.is_elem('iscl'):
         vert.write('spos.xyz *= iscl;')
