@@ -9,8 +9,6 @@ import iron.math.Quat;
 
 class Character extends Trait {
 
-	var actionIdle:String;
-	var actionMove:String;
 	var currentAction:String;
 	var animation:Animation;
 
@@ -19,15 +17,16 @@ class Character extends Trait {
 	var lastLoc:Vec4 = null;
 	var framesIdle = 0; // Number of frames character did not move
 
-	public function new(actionIdle = "idle", actionMove = "run") {
+	@:prop
+	var actionIdle:String = "idle";
+
+	@:prop
+	var actionMove:String = "run";
+
+	public function new() {
 		super();
 
-		if(actionIdle != null && actionMove != null){
-			this.actionIdle = actionIdle;
-			this.actionMove = actionMove;
-			currentAction = actionIdle;
-		}
-		
+		currentAction = actionIdle;	
 		notifyOnInit(init);
 	}
 
