@@ -749,15 +749,15 @@ class ArmoryExporter:
 
             o['mobile'] = bobject.arm_mobile
 
-            if bobject.instance_type == 'COLLECTION' and bobject.instance_group != None:
-                o['group_ref'] = bobject.instance_group.name
+            if bobject.instance_type == 'COLLECTION' and bobject.instance_collection != None:
+                o['group_ref'] = bobject.instance_collection.name
 
-            if hasattr(bobject, 'users_group') and bobject.users_group != None and len(bobject.users_group) > 0:
-                o['groups'] = []
-                for g in bobject.users_group:
-                    if g.name.startswith('RigidBodyWorld'): # or g.name.startswith('Trait|'):
-                        continue
-                    o['groups'].append(g.name)
+            # if bobject.users_collection != None and len(bobject.users_collection) > 0:
+            #     o['groups'] = []
+            #     for g in bobject.users_collection:
+            #         if g.name.startswith('RigidBodyWorld'): # or g.name.startswith('Trait|'):
+            #             continue
+            #         o['groups'].append(g.name)
 
             if bobject.arm_tilesheet != '':
                 o['tilesheet_ref'] = bobject.arm_tilesheet
@@ -1927,17 +1927,18 @@ class ArmoryExporter:
         self.defaultPartMaterialObjects = []
         self.materialToArmObjectDict = dict()
         self.objectToArmObjectDict = dict()
-        self.active_layers = []
+        # self.active_layers = []
         self.bone_tracks = []
-        for i in range(0, len(self.scene.view_layers)):
-            if self.scene.view_layers[i] == True:
-                self.active_layers.append(i)
+        # for i in range(0, len(self.scene.view_layers)):
+            # if self.scene.view_layers[i] == True:
+                # self.active_layers.append(i)
 
         self.preprocess()
 
-        scene_objects = []
-        for lay in self.scene.view_layers:
-            scene_objects += lay.objects
+        # scene_objects = []
+        # for lay in self.scene.view_layers:
+            # scene_objects += lay.objects
+        scene_objects = self.scene.collection.all_objects
         
         for bobject in scene_objects:
             # Map objects to game objects
@@ -2010,9 +2011,9 @@ class ArmoryExporter:
             if not bo.parent:
                 self.export_object(bo, self.scene)
 
-        if hasattr(bpy.data, 'groups') and len(bpy.data.groups) > 0:
+        if len(bpy.data.collections) > 0:
             self.output['groups'] = []
-            for group in bpy.data.groups:
+            for group in bpy.data.collections:
                 # Blender automatically stores physics objects in this group,
                 # can cause stuck unused objects, skip for now
                 if group.name.startswith('RigidBodyWorld'): #or group.name.startswith('Trait|'):
@@ -2032,7 +2033,7 @@ class ArmoryExporter:
                         if has_proxy_user:
                             continue
                         # Add external linked objects
-                        if bobject.name not in scene_objects: # and bobject.ls_linked
+                        if bobject.name not in scene_objects and group.library != None:
                             self.process_bobject(bobject)
                             self.export_object(bobject, self.scene)
                             o['object_refs'].append(arm.utils.asset_name(bobject))
@@ -2247,11 +2248,11 @@ class ArmoryExporter:
                         instanced_data.append(scale.z)
                 break
 
-            # Instance render groups with same children?
-            # elif bobject.instance_type == 'GROUP' and bobject.instance_group != None:
+            # Instance render collections with same children?
+            # elif bobject.instance_type == 'GROUP' and bobject.instance_collection != None:
             #     instanced_type = 1
             #     instanced_data = []
-            #     for child in bpy.data.groups[bobject.instance_group].objects:
+            #     for child in bpy.data.collections[bobject.instance_collection].objects:
             #         loc = child.matrix_local.to_translation()
             #         instanced_data.append(loc.x)
             #         instanced_data.append(loc.y)

@@ -3,9 +3,8 @@
 
 #include "compiled.inc"
 
-// uniform sampler2D gbufferD;
-uniform sampler2D gbuffer0; // saccum
-uniform sampler2D gbuffer1; // srevealage
+uniform sampler2D gbuffer0; // accum
+uniform sampler2D gbuffer1; // revealage
 
 uniform vec2 texSize;
 
