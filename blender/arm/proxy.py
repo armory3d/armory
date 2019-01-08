@@ -14,16 +14,16 @@ def traverse(obj, is_parent=False):
 
     override = bpy.context.copy()
     override['object'] = obj
-    bpy.context.scene.objects.active = obj
+    bpy.context.view_layer.objects.active = obj
     bpy.ops.object.proxy_make(override)
 
     # Reparent created proxies
     for c in obj.children:
         if c.proxy != None:
-            c.parent = bpy.context.scene.objects.active
-            c.matrix_parent_inverse = bpy.context.scene.objects.active.matrix_world.inverted()
+            c.parent = bpy.context.view_layer.objects.active
+            c.matrix_parent_inverse = bpy.context.view_layer.objects.active.matrix_world.inverted()
 
-    active = bpy.context.scene.objects.active
+    active = bpy.context.view_layer.objects.active
     sync_modifiers(active)
     # No transform sync for parent
     if is_parent:
