@@ -1147,12 +1147,19 @@ class ArmoryExporter:
                 t1data = np.empty(num_verts * 2, dtype='<f4')
             # Scale for packed coords
             maxdim = 1.0
-            lay0 = uv_layers[t0map] # TODO: handle t1map
+            lay0 = uv_layers[t0map]
             for v in lay0.data:
                 if abs(v.uv[0]) > maxdim:
                     maxdim = abs(v.uv[0])
                 if abs(v.uv[1]) > maxdim:
                     maxdim = abs(v.uv[1])
+            if has_tex1:
+                lay1 = uv_layers[t1map]
+                for v in lay1.data:
+                    if abs(v.uv[0]) > maxdim:
+                        maxdim = abs(v.uv[0])
+                    if abs(v.uv[1]) > maxdim:
+                        maxdim = abs(v.uv[1])
             if maxdim > 1:
                 o['scale_tex'] = maxdim
                 invscale_tex = (1 / o['scale_tex']) * 32767
