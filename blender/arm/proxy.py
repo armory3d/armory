@@ -1,5 +1,40 @@
-
 import bpy
+
+def proxy_sync_loc(self, context):
+    if context.object == None or context.object.proxy == None:
+        return
+    if context.object.arm_proxy_sync_loc:
+        sync_location(context.object)
+
+def proxy_sync_rot(self, context):
+    if context.object == None or context.object.proxy == None:
+        return
+    if context.object.arm_proxy_sync_rot:
+        sync_rotation(context.object)
+
+def proxy_sync_scale(self, context):
+    if context.object == None or context.object.proxy == None:
+        return
+    if context.object.arm_proxy_sync_scale:
+        sync_scale(context.object)
+
+def proxy_sync_materials(self, context):
+    if context.object == None or context.object.proxy == None:
+        return
+    if context.object.arm_proxy_sync_materials:
+        sync_materials(context.object)
+
+def proxy_sync_modifiers(self, context):
+    if context.object == None or context.object.proxy == None:
+        return
+    if context.object.arm_proxy_sync_modifiers:
+        sync_modifiers(context.object)
+
+def proxy_sync_traits(self, context):
+    if context.object == None or context.object.proxy == None:
+        return
+    if context.object.arm_proxy_sync_traits:
+        sync_traits(context.object)
 
 def make(obj):
     traverse(obj, is_parent=True)
