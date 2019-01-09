@@ -316,6 +316,14 @@ def init_properties_on_load():
                     trait.node_tree_prop = bpy.data.node_groups[trait.name]
 
         for scn in bpy.data.scenes: # TODO: deprecated
+            # Scene traits
+            for trait in scn.arm_traitlist:
+                if trait != None and \
+                   trait.type_prop == 'Logic Nodes' and \
+                   trait.node_tree_prop == None and \
+                   trait.name in bpy.data.node_groups:
+                    trait.node_tree_prop = bpy.data.node_groups[trait.name]
+            # Bake list items
             for item in scn.arm_bakelist:
                 if item != None and \
                    item.obj == None and \
