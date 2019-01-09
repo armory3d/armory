@@ -482,8 +482,8 @@ class RenderPathDeferred {
 		{
 			path.setDepthFrom("gbuffer0", "gbuffer1"); // Unbind depth so we can read it
 			path.depthToRenderTarget.set("main", path.renderTargets.get("tex"));
-			path.setTarget("gbuffer0", ["gbuffer1"]);
 			
+			path.setTarget("gbuffer0", ["gbuffer1"]);
 			path.bindTarget("_main", "gbufferD");
 			path.drawDecals("decal");
 			

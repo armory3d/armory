@@ -5,12 +5,13 @@ import arm.material.make_finalize as make_finalize
 import arm.utils
 
 def make(context_id):
-    # 'compare_mode': 'less' needs read-only depth view
-    con_decal = mat_state.data.add_context({ 'name': context_id, 'depth_write': False, 'compare_mode': 'always', 'cull_mode': 'clockwise',
+
+    vs = [{'name': 'pos', 'data': 'float3'}]
+    con_decal = mat_state.data.add_context({ 'name': context_id, 'vertex_elements': vs, 'depth_write': False, 'compare_mode': 'less', 'cull_mode': 'clockwise',
         'blend_source': 'source_alpha',
         'blend_destination': 'inverse_source_alpha',
         'blend_operation': 'add',
-        'color_write_alpha': False
+        'color_writes_alpha': [False, False]
     })
 
     vert = con_decal.make_vert()
