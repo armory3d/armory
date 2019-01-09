@@ -315,6 +315,13 @@ def init_properties_on_load():
                    trait.name in bpy.data.node_groups:
                     trait.node_tree_prop = bpy.data.node_groups[trait.name]
 
+        for scn in bpy.data.scenes: # TODO: deprecated
+            for item in scn.arm_bakelist:
+                if item != None and \
+                   item.obj == None and \
+                   item.object_name in scn.collection.all_objects:
+                   item.obj = scn.collection.all_objects[item.object_name]
+
         print('Project updated to sdk v' + arm_version + ' (' + arm_commit + ')')
         wrd.arm_version = arm_version
         wrd.arm_commit = arm_commit
