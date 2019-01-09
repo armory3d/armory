@@ -6,12 +6,8 @@
 
 #include "compiled.inc"
 #include "std/gbuffer.glsl"
-// #include "std/math.glsl"
 
 uniform sampler2D gbufferD;
-// uniform sampler2D gbuffer0;
-// uniform sampler2D senvmapRadiance;
-uniform sampler2D snoise;
 
 uniform float time;
 uniform vec3 eye;
@@ -39,9 +35,6 @@ float noise(vec2 p) {
 				mix(hash(i + vec2(0.0, 1.0)), 
 					hash(i + vec2(1.0, 1.0)), u.x), u.y);
 }
-// float noise(vec2 xx) {
-	// return -1.0 + 2.0 * texture(snoise, xx / 20.0).r;
-// }
 float seaOctave(vec2 uv, float choppy) {
 	uv += noise(uv);        
 	vec2 wv = 1.0 - abs(sin(uv));
@@ -58,20 +51,13 @@ float map(vec3 p) {
 	uv.x *= 0.75;
 	
 	float d, h = 0.0;
-	// for(int i = 0; i < 2; i++) {        
+	for(int i = 0; i < 2; i++) {
 		d = seaOctave((uv + (time * seaSpeed)) * freq, choppy);
 		d += seaOctave((uv - (time * seaSpeed)) * freq, choppy);
-		h += d * amp;        
+		h += d * amp;
 		uv *= octavem; freq *= 1.9; amp *= 0.22;
 		choppy = mix(choppy, 1.0, 0.2);
-		//
-		d = seaOctave((uv + (time * seaSpeed)) * freq, choppy);
-		d += seaOctave((uv-(time * seaSpeed)) * freq, choppy);
-		h += d * amp;        
-		uv *= octavem; freq *= 1.9; amp *= 0.22;
-		choppy = mix(choppy, 1.0, 0.2);
-		//
-	// }
+	}
 	return p.z - h;
 }
 float mapDetailed(vec3 p) {
@@ -81,34 +67,13 @@ float mapDetailed(vec3 p) {
 	vec2 uv = p.xy; uv.x *= 0.75;
 	
 	float d, h = 0.0;    
-	// for(int i = 0; i < 4; i++) {       
+	for(int i = 0; i < 4; i++) {       
 		d = seaOctave((uv + (time * seaSpeed)) * freq,choppy);
 		d += seaOctave((uv - (time * seaSpeed)) * freq,choppy);
 		h += d * amp;        
 		uv *= octavem; freq *= 1.9; amp *= 0.22;
 		choppy = mix(choppy, 1.0, 0.2);
-		//
-		d = seaOctave((uv + (time * seaSpeed)) * freq,choppy);
-		d += seaOctave((uv - (time * seaSpeed)) * freq,choppy);
-		h += d * amp;        
-		uv *= octavem; freq *= 1.9; amp *= 0.22;
-		choppy = mix(choppy, 1.0, 0.2);
-		d = seaOctave((uv + (time * seaSpeed)) * freq,choppy);
-		d += seaOctave((uv - (time * seaSpeed)) * freq,choppy);
-		h += d * amp;        
-		uv *= octavem; freq *= 1.9; amp *= 0.22;
-		choppy = mix(choppy, 1.0, 0.2);
-		d = seaOctave((uv + (time * seaSpeed)) * freq,choppy);
-		d += seaOctave((uv - (time * seaSpeed)) * freq,choppy);
-		h += d * amp;        
-		uv *= octavem; freq *= 1.9; amp *= 0.22;
-		choppy = mix(choppy, 1.0, 0.2);
-		d = seaOctave((uv + (time * seaSpeed)) * freq,choppy);
-		d += seaOctave((uv - (time * seaSpeed)) * freq,choppy);
-		h += d * amp;        
-		uv *= octavem; freq *= 1.9; amp *= 0.22;
-		choppy = mix(choppy, 1.0, 0.2);
-	// }
+	}
 	return p.z - h;
 }
 vec3 getNormal(vec3 p, float eps) {
@@ -160,8 +125,7 @@ float specular(vec3 n, vec3 l, vec3 e, float s) {
 vec3 getSeaColor(vec3 p, vec3 n, vec3 l, vec3 eye, vec3 dist) {  
 	float fresnel = 1.0 - max(dot(n, -eye), 0.0);
 	fresnel = pow(fresnel, 3.0) * 0.65;
-	vec3 reflected = getSkyColor(reflect(eye, n));
-	// vec3 reflected = textureLod(senvmapRadiance, envMapEquirect(reflect(eye,n)), 1.0).rgb;    
+	vec3 reflected = getSkyColor(reflect(eye, n));   
 	vec3 refracted = seaBaseColor + diffuse(n, l, 80.0) * seaWaterColor * 0.12; 
 	vec3 color = mix(refracted, reflected, fresnel);
 	float atten = max(1.0 - dot(dist, dist) * 0.001, 0.0);
@@ -172,89 +136,37 @@ vec3 getSeaColor(vec3 p, vec3 n, vec3 l, vec3 eye, vec3 dist) {
 
 void main() {
 	float gdepth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
-	// vec4 colorOriginal = vec4(1.0);//texture(tex, texCoord);
 	if (gdepth == 1.0) {
 		fragColor = vec4(0.0);
 		return;
 	}
 	
-	vec3 color = vec3(1.0);//colorOriginal.rgb;
+	vec3 color = vec3(1.0);
 	vec3 vray = normalize(viewRay);
 	vec3 position = getPos(eye, eyeLook, vray, gdepth, cameraProj);
 	
 	if (eye.z < seaLevel) {
-		// fragColor = colorOriginal;
 		fragColor = vec4(0.0);
 		return;
 	}
 
 	if (position.z > seaLevel + seaMaxAmplitude) {
-		// fragColor = colorOriginal;
 		fragColor = vec4(0.0);
 		return;
 	}
 
-	// const vec3 ld = normalize(vec3(0.3, -0.3, 1.0));
-	// vec3 lightDir = light - position.xyz;
 	vec3 eyeDir = eye - position.xyz;
-	// vec3 ld = normalize(lightDir);
 	vec3 v = normalize(eyeDir);
 	
 	vec3 surfacePoint = heightMapTracing(eye, -v);
-	// surfacePoint.z += seaLevel;
-	// float depth = length(position - surfacePoint);
 	float depthZ = surfacePoint.z - position.z;
 	
-	// float dist = length(surfacePoint - eye);
-	// float epsx = clamp(dot(dist/2.0,dist/2.0) * 0.001, 0.01, 0.1);
 	float dist = max(0.1, length(surfacePoint - eye) * 1.2);
 	float epsx = dot(dist, dist) * 0.00005; // Fade in distance to prevent noise
 	vec3 normal = getNormal(surfacePoint, epsx);
-	// vec3 normal = getNormal(surfacePoint, 0.1);
-	
-	// float fresnel = 1.0 - max(dot(normal,-v),0.0);
-	// fresnel = pow(fresnel,3.0) * 0.65;
-	
-	// vec2 texco = texCoord.xy;
-	// texco.x += sin((time) * 0.002 + 3.0 * abs(position.z)) * (refractionScale * min(depthZ, 1.0));
-	// vec3 refraction = texture(tex, texco).rgb;
-	// vec3 _p = getPos(eye, eyeLook, vray, 1.0 - texture(gbuffer0, texco).a, cameraProj);
-	// if (_p.z > seaLevel) {
-	//     refraction = colorOriginal.rgb;
-	// }
-	
-	// vec3 reflect = textureLod(senvmapRadiance, envMapEquirect(reflect(v,normal)), 2.0).rgb;
-	// vec3 depthN = vec3(depth * fadeSpeed);
-	// vec3 waterCol = vec3(clamp(length(sunColor) / 3.0, 0.0, 1.0));
-	// refraction = mix(mix(refraction, depthColour * waterCol, clamp(depthN / visibility, 0.0, 1.0)), bigDepthColour * waterCol, clamp(depthZ / extinction, 0.0, 1.0));
-
-	// float foam = 0.0;    
-	// // texco = (surfacePoint.xy + v.xy * 0.1) * 0.05 + (time) * 0.00001 * wind + sin((time) * 0.001 + position.x) * 0.005;
-	// // vec2 texco2 = (surfacePoint.xy + v.xy * 0.1) * 0.05 + (time) * 0.00002 * wind + sin((time) * 0.001 + position.y) * 0.005;
-	// // if (depthZ < foamExistence.x) {
-	// //     foam = (texture(fmap, texco).r + texture(fmap, texco2).r) * 0.5;
-	// // }
-	// // else if (depthZ < foamExistence.y) {
-	// //     foam = mix((texture(fmap, texco).r + texture(fmap, texco2).r) * 0.5, 0.0,
-	// //                  (depthZ - foamExistence.x) / (foamExistence.y - foamExistence.x));
-	// // }
-	// // if (seaMaxAmplitude - foamExistence.z > 0.0001) {
-	// //     foam += (texture(fmap, texco).r + texture(fmap, texco2).r) * 0.5 * 
-	// //         clamp((seaLevel - (seaLevel + foamExistence.z)) / (seaMaxAmplitude - foamExistence.z), 0.0, 1.0);
-	// // }
-
-	// vec3 mirrorEye = (2.0 * dot(v, normal) * normal - v);
-	// float dotSpec = clamp(dot(mirrorEye.xyz, -lightDir) * 0.5 + 0.5, 0.0, 1.0);
-	// vec3 specular = (1.0 - fresnel) * clamp(-lightDir.z, 0.0, 1.0) * ((pow(dotSpec, 512.0)) * (shininess * 1.8 + 0.2))* sunColor;
-	// specular += specular * 25 * clamp(shininess - 0.05, 0.0, 1.0) * sunColor;   
-	// color = mix(refraction, reflect, fresnel);
-	// color = clamp(color + max(specular, foam * sunColor), 0.0, 1.0);
-	// color = mix(refraction, color, clamp(depth * shoreHardness, 0.0, 1.0));
 	
 	color = getSeaColor(surfacePoint, normal, ld, -v, surfacePoint - eye) * max(0.5, (envmapStrength + 0.2) * 1.4);
-	// color = pow(color, vec3(2.2));
-	// color = mix(colorOriginal.rgb, color, clamp(depthZ * seaFade, 0.0, 1.0));
-
+	
 	// Fade on horizon
 	vec3 vecn = normalize(vecnormal);
 	color = mix(color, vec3(1.0), clamp((vecn.z + 0.03) * 10.0, 0.0, 1.0));

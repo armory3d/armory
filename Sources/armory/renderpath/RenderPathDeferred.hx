@@ -698,6 +698,14 @@ class RenderPathDeferred {
 		}
 		#end
 
+		#if rp_ocean
+		{
+			path.setTarget("tex");
+			path.bindTarget("_main", "gbufferD");
+			path.drawShader("shader_datas/water_pass/water_pass");
+		}
+		#end
+
 		path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
 
 		// #if rp_volumetriclight
@@ -726,14 +734,6 @@ class RenderPathDeferred {
 		{
 			path.setTarget("tex"); // Re-binds depth
 			path.drawSkydome("shader_datas/world_pass/world_pass");
-		}
-		#end
-
-		#if rp_ocean
-		{
-			path.setTarget("tex");
-			path.bindTarget("_main", "gbufferD");
-			path.drawShader("shader_datas/water_pass/water_pass");
 		}
 		#end
 
