@@ -352,7 +352,7 @@ def make_forward_mobile(con_mesh):
                 frag.add_include('std/shadows.glsl')
                 frag.add_uniform('vec4 casData[shadowmapCascades * 4 + 4]', '_cascadeData', included=True)
                 frag.add_uniform('vec3 eye', '_cameraPosition')
-                frag.write('svisibility = shadowTestCascade(shadowMap, eye, wposition + n * shadowsBias * 10, shadowsBias, shadowmapSize * vec2(shadowmapCascades, 1.0));')
+                frag.write('svisibility = shadowTestCascade(shadowMap, eye, wposition + n * shadowsBias * 10, shadowsBias);')
             else:
                 frag.write('if (lightPosition.w > 0.0) {')
                 frag.write('    vec3 lPos = lightPosition.xyz / lightPosition.w;')
@@ -363,31 +363,31 @@ def make_forward_mobile(con_mesh):
     if '_SinglePoint' in wrd.world_defs:
         frag.add_uniform('vec3 pointPos', '_pointPosition')
         frag.add_uniform('vec3 pointCol', '_pointColor')
+        if '_Spot' in wrd.world_defs:
+            frag.add_uniform('vec3 spotDir', link='_spotDirection')
+            frag.add_uniform('vec2 spotData', link='_spotData')
         frag.write('float visibility = 1.0;')
         frag.write('vec3 ld = pointPos - wposition;')
         frag.write('vec3 l = normalize(ld);')
         frag.write('float dotNL = max(dot(n, l), 0.0);')
-        if '_Spot' in wrd.world_defs:
-            frag.add_uniform('vec3 spotDir', link='_spotDirection')
-            frag.add_uniform('vec2 spotData', link='_spotData')
-            if is_shadows:
+        if is_shadows:
+            frag.add_uniform('float pointBias', link='_pointShadowsBias')
+            frag.add_include('std/shadows.glsl')
+            if '_Spot' in wrd.world_defs:
                 vert.add_out('vec4 spotPosition')
-                vert.add_uniform('mat4 LWVPSpot0', '_biasLightWorldViewProjectionMatrixSpot0')
+                vert.add_uniform('mat4 LWVPSpot0', link='_biasLightWorldViewProjectionMatrixSpot0')
                 vert.write('spotPosition = LWVPSpot0 * spos;')  
-                frag.add_uniform('float pointBias', link='_pointShadowsBias')
                 frag.add_uniform('sampler2DShadow shadowMapSpot[1]')
                 frag.write('if (spotPosition.w > 0.0) {')
                 frag.write('    vec3 lPos = spotPosition.xyz / spotPosition.w;')
-                frag.write('    visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - pointBias).r;')
+                frag.write('    visibility = texture(shadowMapSpot[0], vec3(lPos.xy, lPos.z - pointBias)).r;')
                 frag.write('}')
-        elif is_shadows:
-            frag.add_include('std/shadows.glsl')
-            frag.add_uniform('vec2 lightProj', link='_lightPlaneProj')
-            frag.add_uniform('samplerCubeShadow shadowMapPoint[1]')
-            frag.add_uniform('float pointBias', link='_pointShadowsBias')
-            frag.write('const float s = shadowmapCubePcfSize;') # TODO: incorrect...
-            frag.write('float compare = lpToDepth(ld - n * pointBias * 80, lightProj);')
-            frag.write('visibility = texture(shadowMapPoint[0], vec4(-l + n * pointBias * 80, compare)).r;')
+            else:
+                frag.add_uniform('vec2 lightProj', link='_lightPlaneProj')
+                frag.add_uniform('samplerCubeShadow shadowMapPoint[1]')
+                frag.write('const float s = shadowmapCubePcfSize;') # TODO: incorrect...
+                frag.write('float compare = lpToDepth(ld - n * pointBias * 80, lightProj);')
+                frag.write('visibility = texture(shadowMapPoint[0], vec4(-l + n * pointBias * 80, compare)).r;')
 
         frag.write('direct += basecol * dotNL * pointCol * attenuate(distance(wposition, pointPos)) * visibility;')
 
@@ -554,7 +554,7 @@ def make_forward_base(con_mesh, parse_opacity=False):
                 frag.add_include('std/shadows.glsl')
                 frag.add_uniform('vec4 casData[shadowmapCascades * 4 + 4]', '_cascadeData', included=True)
                 frag.add_uniform('vec3 eye', '_cameraPosition')
-                frag.write('svisibility = shadowTestCascade(shadowMap, eye, wposition + n * shadowsBias * 10, shadowsBias, shadowmapSize * vec2(shadowmapCascades, 1.0));')
+                frag.write('svisibility = shadowTestCascade(shadowMap, eye, wposition + n * shadowsBias * 10, shadowsBias);')
             else:
                 if tese != None:
                     tese.add_out('vec4 lightPosition')
@@ -580,16 +580,18 @@ def make_forward_base(con_mesh, parse_opacity=False):
     if '_SinglePoint' in wrd.world_defs:
         frag.add_uniform('vec3 pointPos', link='_pointPosition')
         frag.add_uniform('vec3 pointCol', link='_pointColor')
-        if is_shadows:
-            frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
-            frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
-            frag.add_uniform('float pointBias', link='_pointShadowsBias')
         if '_Spot' in wrd.world_defs:
             frag.add_uniform('vec3 spotDir', link='_spotDirection')
             frag.add_uniform('vec2 spotData', link='_spotData')
-            if is_shadows:
-                frag.add_uniform('mat4 LWVPSpot0', '_biasLightWorldViewProjectionMatrixSpot0', included=True)
+        if is_shadows:
+            frag.add_uniform('float pointBias', link='_pointShadowsBias')
+            if '_Spot' in wrd.world_defs:
+                # Skip world matrix, already in world-space
+                frag.add_uniform('mat4 LWVPSpot0', link='_biasLightViewProjectionMatrixSpot0', included=True)
                 frag.add_uniform('sampler2DShadow shadowMapSpot[1]', included=True)
+            else:
+                frag.add_uniform('vec2 lightProj', link='_lightPlaneProj', included=True)
+                frag.add_uniform('samplerCubeShadow shadowMapPoint[1]', included=True)
         frag.write('direct += sampleLight(')
         frag.write('  wposition, n, vVec, dotNV, pointPos, pointCol, albedo, roughness, specular, f0')
         if is_shadows:

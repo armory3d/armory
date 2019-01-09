@@ -685,6 +685,8 @@ class ArmRenderPathRendererPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
+        if len(wrd.arm_rplist) <= wrd.arm_rplist_index:
+            return
         rpdat = wrd.arm_rplist[wrd.arm_rplist_index]
 
         layout.prop(rpdat, 'rp_renderer')

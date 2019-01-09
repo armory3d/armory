@@ -186,7 +186,7 @@
 				{
 					"name": "pointBias",
 					"link": "_pointShadowsBias",
-					"ifdef": ["_SinglePoint"]
+					"ifdef": ["_SinglePoint", "_ShadowMap"]
 				},
 				{
 					"name": "spotDir",

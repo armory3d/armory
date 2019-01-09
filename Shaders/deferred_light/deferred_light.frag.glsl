@@ -147,7 +147,9 @@ uniform vec3 sunCol;
 #ifdef _SinglePoint // Fast path for single light
 uniform vec3 pointPos;
 uniform vec3 pointCol;
-uniform float pointBias;
+	#ifdef _ShadowMap
+	uniform float pointBias;
+	#endif
 	#ifdef _Spot
 	uniform vec3 spotDir;
 	uniform vec2 spotData;
