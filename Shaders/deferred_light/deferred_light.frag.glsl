@@ -333,6 +333,10 @@ void main() {
 	svisibility *= tvis;
 	#endif
 
+	#ifdef _LightClouds
+	svisibility *= textureLod(texClouds, vec2(p.xy / 100.0 + time / 80.0), 0.0).r * dot(n, vec3(0,0,1));
+	#endif
+
 	fragColor.rgb += sdirect * svisibility * sunCol;
 #endif
 
@@ -346,10 +350,6 @@ void main() {
 // 	}
 // 	else fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH) * spec;
 // #endif
-
-#ifdef _LightClouds
-	visibility *= textureLod(texClouds, vec2(p.xy / 100.0 + time / 80.0), 0.0).r * dot(n, vec3(0,0,1));
-#endif
 
 #ifdef _SSS
 	if (textureLod(gbuffer2, texCoord, 0.0).a == 2) {
