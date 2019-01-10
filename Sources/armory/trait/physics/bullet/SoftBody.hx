@@ -51,9 +51,9 @@ class SoftBody extends Trait {
 	function fromI16(ar:kha.arrays.Int16Array, scalePos:Float):kha.arrays.Float32Array {
 		var vals = new kha.arrays.Float32Array(Std.int(ar.length / 4) * 3);
 		for (i in 0...Std.int(vals.length / 3)) {
-			vals[i * 3    ] = ar[i * 4    ] / 32767 * scalePos;
-			vals[i * 3 + 1] = ar[i * 4 + 1] / 32767 * scalePos;
-			vals[i * 3 + 2] = ar[i * 4 + 2] / 32767 * scalePos;
+			vals[i * 3    ] = (ar[i * 4    ] / 32767) * scalePos;
+			vals[i * 3 + 1] = (ar[i * 4 + 1] / 32767) * scalePos;
+			vals[i * 3 + 2] = (ar[i * 4 + 2] / 32767) * scalePos;
 		}
 		return vals;
 	}
@@ -170,7 +170,6 @@ class SoftBody extends Trait {
 	function update() {
 		var mo = cast(object, MeshObject);
 		var geom = mo.data.geom;
-		var scalePos = mo.data.scalePos;
 		
 		#if arm_deinterleaved
 		var v = geom.vertexBuffers[0].lockInt16();
@@ -187,6 +186,22 @@ class SoftBody extends Trait {
 		var nodes = body.m_nodes;
 		#end
 
+		var maxdim = 1.0;
+		for (i in 0...numVerts) {
+			var node = nodes.at(i);
+			#if js
+			var nodePos = node.get_m_x();
+			#elseif cpp
+			var nodePos = node.m_x;
+			#end
+			if (nodePos.x() > maxdim) maxdim = nodePos.x();
+			if (nodePos.y() > maxdim) maxdim = nodePos.y();
+			if (nodePos.z() > maxdim) maxdim = nodePos.z();
+		}
+		maxdim *= 2;
+		var scalePos = mo.data.scalePos = maxdim;
+		mo.transform.buildMatrix();
+
 		for (i in 0...numVerts) {
 			var node = nodes.at(i);
 			#if js
@@ -197,16 +212,16 @@ class SoftBody extends Trait {
 			var nodeNor = node.m_n;
 			#end
 			#if arm_deinterleaved
-			v.set(i * 4    , Std.int(nodePos.x() * 32767 / scalePos));
-			v.set(i * 4 + 1, Std.int(nodePos.y() * 32767 / scalePos));
-			v.set(i * 4 + 2, Std.int(nodePos.z() * 32767 / scalePos));
+			v.set(i * 4    , Std.int(nodePos.x() * 32767 * (1 / scalePos)));
+			v.set(i * 4 + 1, Std.int(nodePos.y() * 32767 * (1 / scalePos)));
+			v.set(i * 4 + 2, Std.int(nodePos.z() * 32767 * (1 / scalePos)));
 			n.set(i * 2    , Std.int(nodeNor.x() * 32767));
 			n.set(i * 2 + 1, Std.int(nodeNor.y() * 32767));
 			v.set(i * 4 + 3, Std.int(nodeNor.z() * 32767));
 			#else
-			v.set(i * l    , Std.int(nodePos.x() * 32767 / scalePos));
-			v.set(i * l + 1, Std.int(nodePos.y() * 32767 / scalePos));
-			v.set(i * l + 2, Std.int(nodePos.z() * 32767 / scalePos));
+			v.set(i * l    , Std.int(nodePos.x() * 32767 * (1 / scalePos)));
+			v.set(i * l + 1, Std.int(nodePos.y() * 32767 * (1 / scalePos)));
+			v.set(i * l + 2, Std.int(nodePos.z() * 32767 * (1 / scalePos)));
 			v.set(i * l + 4, Std.int(nodeNor.x() * 32767));
 			v.set(i * l + 5, Std.int(nodeNor.y() * 32767));
 			v.set(i * l + 3, Std.int(nodeNor.z() * 32767));
