@@ -787,9 +787,9 @@ class ArmRenderPathVoxelsPanel(bpy.types.Panel):
         col.enabled = rpdat.rp_gi != 'Off'
         col2 = col.column()
         col2.enabled = rpdat.rp_gi == 'Voxel GI'
-        col2.prop(rpdat, 'arm_voxelgi_bounces')
+        # col2.prop(rpdat, 'arm_voxelgi_bounces')
         col2.prop(rpdat, 'rp_voxelgi_relight')
-        col2.prop(rpdat, 'arm_voxelgi_shadows', text='Shadows')
+        # col2.prop(rpdat, 'arm_voxelgi_shadows', text='Shadows')
         col.prop(rpdat, 'arm_voxelgi_cones')
         col.prop(rpdat, 'rp_voxelgi_resolution')
         col.prop(rpdat, 'rp_voxelgi_resolution_z')

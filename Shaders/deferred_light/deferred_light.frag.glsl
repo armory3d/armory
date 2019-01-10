@@ -315,14 +315,14 @@ void main() {
 	// }
 	#endif
 
-	#ifdef _VoxelGIShadow // #else
-		#ifdef _VoxelGICam
-		vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
-		#else
-		vec3 voxpos = p / voxelgiHalfExtents;
-		#endif
-		if (dotNL > 0.0) svisibility = max(0, 1.0 - traceShadow(voxels, voxpos, l, 0.1, 10.0, n));
-	#endif
+	// #ifdef _VoxelGIShadow // #else
+	// 	#ifdef _VoxelGICam
+	// 	vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
+	// 	#else
+	// 	vec3 voxpos = p / voxelgiHalfExtents;
+	// 	#endif
+	// 	if (dotNL > 0.0) svisibility = max(0, 1.0 - traceShadow(voxels, voxpos, l, 0.1, 10.0, n));
+	// #endif
 
 	#ifdef _SSRS
 	float tvis = traceShadowSS(-sunDir, p, gbufferD, invVP, eye);

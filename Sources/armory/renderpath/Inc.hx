@@ -13,6 +13,7 @@ class Inc {
 	static var voxel_tc:kha.compute.TextureUnit;
 	static var voxel_td:kha.compute.TextureUnit;
 	static var voxel_te:kha.compute.TextureUnit;
+	static var voxel_tf:kha.compute.TextureUnit;
 	static var voxel_ca:kha.compute.ConstantLocation;
 	static var voxel_cb:kha.compute.ConstantLocation;
 	static var voxel_cc:kha.compute.ConstantLocation;
@@ -396,7 +397,8 @@ class Inc {
 			voxel_tb = voxel_sh.getTextureUnit("voxelsNor");
 			voxel_tc = voxel_sh.getTextureUnit("voxels");
 			voxel_td = voxel_sh.getTextureUnit("shadowMap");
-			voxel_te = voxel_sh.getTextureUnit("shadowMapCube");
+			voxel_te = voxel_sh.getTextureUnit("shadowMapSpot");
+			voxel_tf = voxel_sh.getTextureUnit("shadowMapPoint");
 			
 			voxel_ca = voxel_sh.getConstantLocation("lightPos");
 			voxel_cb = voxel_sh.getConstantLocation("lightColor");
@@ -427,17 +429,19 @@ class Inc {
 			kha.compute.Compute.setTexture(voxel_tc, rts.get("voxels").image, kha.compute.Access.Write);
 
 			#if (rp_shadowmap)
-			if (Inc.shadowMapName(l) == "shadowMapCube") {
-				// shadowMapCube
-				kha.compute.Compute.setSampledCubeMap(voxel_te, rts.get("shadowMapCube").cubeMap);
+			if (l.data.raw.type == "sun") {
+				kha.compute.Compute.setSampledTexture(voxel_td, rts.get("shadowMap").image);
+				kha.compute.Compute.setInt(voxel_ce, 1); // lightShadow
+			}
+			else if (l.data.raw.type == "spot") {
+				kha.compute.Compute.setSampledTexture(voxel_te, rts.get("shadowMapSpot[0]").image);
+				kha.compute.Compute.setInt(voxel_ce, 2);
 			}
 			else {
-				// shadowMap
-				kha.compute.Compute.setSampledTexture(voxel_td, rts.get("shadowMap").image);
+				kha.compute.Compute.setSampledCubeMap(voxel_tf, rts.get("shadowMapPoint[0]").cubeMap);
+				kha.compute.Compute.setInt(voxel_ce, 3);
 			}
-			// lightShadow
-			var i = l.data.raw.shadowmap_cube ? 2 : 1;
-			kha.compute.Compute.setInt(voxel_ce, i);
+			
 			// lightProj
 			var near = l.data.raw.near_plane;
 			var far = l.data.raw.far_plane;
@@ -481,22 +485,22 @@ class Inc {
 		var res = Inc.getVoxelRes();
 		path.generateMipmaps("voxels");
 
-		#if (rp_gi_bounces)
-		if (bounce_sh == null) {
-			bounce_sh = path.getComputeShader("voxel_bounce");
-			bounce_ta = bounce_sh.getTextureUnit("voxelsNor");
-			bounce_tb = bounce_sh.getTextureUnit("voxelsFrom");
-			bounce_tc = bounce_sh.getTextureUnit("voxelsTo");
-		}
-		// path.clearImage("voxelsBounce", 0x00000000);
-		kha.compute.Compute.setShader(bounce_sh);
-		kha.compute.Compute.setTexture(bounce_ta, rts.get("voxelsNor").image, kha.compute.Access.Read);
-		kha.compute.Compute.setTexture3DParameters(bounce_tb, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureFilter.LinearFilter, kha.graphics4.TextureFilter.PointFilter, kha.graphics4.MipMapFilter.LinearMipFilter);
-		kha.compute.Compute.setSampledTexture(bounce_tb, rts.get("voxels").image);
-		kha.compute.Compute.setTexture(bounce_tc, rts.get("voxelsBounce").image, kha.compute.Access.Write);
-		kha.compute.Compute.compute(res, res, res);
-		path.generateMipmaps("voxelsBounce");
-		#end
+		// #if (rp_gi_bounces)
+		// if (bounce_sh == null) {
+		// 	bounce_sh = path.getComputeShader("voxel_bounce");
+		// 	bounce_ta = bounce_sh.getTextureUnit("voxelsNor");
+		// 	bounce_tb = bounce_sh.getTextureUnit("voxelsFrom");
+		// 	bounce_tc = bounce_sh.getTextureUnit("voxelsTo");
+		// }
+		// // path.clearImage("voxelsBounce", 0x00000000);
+		// kha.compute.Compute.setShader(bounce_sh);
+		// kha.compute.Compute.setTexture(bounce_ta, rts.get("voxelsNor").image, kha.compute.Access.Read);
+		// kha.compute.Compute.setTexture3DParameters(bounce_tb, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureAddressing.Clamp, kha.graphics4.TextureFilter.LinearFilter, kha.graphics4.TextureFilter.PointFilter, kha.graphics4.MipMapFilter.LinearMipFilter);
+		// kha.compute.Compute.setSampledTexture(bounce_tb, rts.get("voxels").image);
+		// kha.compute.Compute.setTexture(bounce_tc, rts.get("voxelsBounce").image, kha.compute.Access.Write);
+		// kha.compute.Compute.compute(res, res, res);
+		// path.generateMipmaps("voxelsBounce");
+		// #end
 	}
 	#end
 }

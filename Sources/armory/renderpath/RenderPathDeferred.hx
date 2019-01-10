@@ -53,9 +53,9 @@ class RenderPathDeferred {
 			{
 				Inc.initGI("voxelsOpac");
 				Inc.initGI("voxelsNor");
-				#if (rp_gi_bounces)
-				Inc.initGI("voxelsBounce");
-				#end
+				// #if (rp_gi_bounces)
+				// Inc.initGI("voxelsBounce");
+				// #end
 			}
 			#end
 			#if (rp_gi == "Voxel AO")
@@ -591,9 +591,10 @@ class RenderPathDeferred {
 					// Inc.computeVoxelsBegin();
 					// for (i in 0...lights.length) Inc.computeVoxels(i); // Redraws SM
 					// Inc.computeVoxelsEnd();
-					#if (rp_gi_bounces)
-					voxels = "voxelsBounce";
-					#end
+					
+					// #if (rp_gi_bounces)
+					// voxels = "voxelsBounce";
+					// #end
 				#else
 				path.generateMipmaps(voxels); // AO
 				#end

@@ -75,11 +75,11 @@ def add_world_defs():
         if voxelgi:
             wrd.world_defs += '_VoxelGI'
             assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_light/voxel_light.comp.glsl')
-            if rpdat.arm_voxelgi_bounces != "1":
-                assets.add_khafile_def('rp_gi_bounces={0}'.format(rpdat.arm_voxelgi_bounces))
-                assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_bounce/voxel_bounce.comp.glsl')
-            if rpdat.arm_voxelgi_shadows:
-                wrd.world_defs += '_VoxelGIShadow'
+            # if rpdat.arm_voxelgi_bounces != "1":
+            #     assets.add_khafile_def('rp_gi_bounces={0}'.format(rpdat.arm_voxelgi_bounces))
+            #     assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_bounce/voxel_bounce.comp.glsl')
+            # if rpdat.arm_voxelgi_shadows:
+                # wrd.world_defs += '_VoxelGIShadow'
             if rpdat.rp_voxelgi_relight:
                 assets.add_khafile_def('rp_voxelgi_relight')
         elif voxelao:
@@ -273,8 +273,8 @@ def build():
             assets.add_khafile_def('rp_gi={0}'.format(rp_gi))        
             assets.add_khafile_def('rp_voxelgi_resolution={0}'.format(rpdat.rp_voxelgi_resolution))
             assets.add_khafile_def('rp_voxelgi_resolution_z={0}'.format(rpdat.rp_voxelgi_resolution_z))
-            if rpdat.arm_voxelgi_shadows:
-                assets.add_khafile_def('rp_voxelgi_shadows')
+            # if rpdat.arm_voxelgi_shadows:
+                # assets.add_khafile_def('rp_voxelgi_shadows')
         else:
             log.warn('Disabling Voxel GI - unsupported target - use Krom instead')
 

@@ -118,9 +118,9 @@ class RenderPathForward {
 			{
 				Inc.initGI("voxelsOpac");
 				Inc.initGI("voxelsNor");
-				#if (rp_gi_bounces)
-				Inc.initGI("voxelsBounce");
-				#end
+				// #if (rp_gi_bounces)
+				// Inc.initGI("voxelsBounce");
+				// #end
 			}
 			#end
 		}
@@ -269,9 +269,9 @@ class RenderPathForward {
 					Inc.computeVoxelsBegin();
 					Inc.computeVoxels(0);
 					Inc.computeVoxelsEnd();
-					#if (rp_gi_bounces)
-					voxels = "voxelsBounce";
-					#end
+					// #if (rp_gi_bounces)
+					// voxels = "voxelsBounce";
+					// #end
 				#else
 				path.generateMipmaps(voxels); // AO
 				#end

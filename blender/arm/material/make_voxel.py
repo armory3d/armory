@@ -159,44 +159,6 @@ def make_gi(context_id):
 
     frag.write('val = encNor(wnormal);');
     frag.write('imageAtomicMax(voxelsNor, ivec3(voxelgiResolution * voxel), val);')
-        
-        # frag.write('imageStore(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
-        # frag.write('imageAtomicRGBA8Avg(voxels, ivec3(voxelgiResolution * voxel), vec4(color, 1.0));')
-            
-        # frag.write('ivec3 coords = ivec3(voxelgiResolution * voxel);')
-        # if parse_opacity:
-        #     frag.write('vec4 val = vec4(color, opacity);')
-        # else:
-        #     frag.write('vec4 val = vec4(color, 1.0);')
-        # frag.write('val *= 255.0;')
-        # frag.write('uint newVal = encUnsignedNibble(convVec4ToRGBA8(val), 1);')
-        # frag.write('uint prevStoredVal = 0;')
-        # frag.write('uint currStoredVal;')
-        # # frag.write('int counter = 0;')
-        # # frag.write('while ((currStoredVal = imageAtomicCompSwap(voxels, coords, prevStoredVal, newVal)) != prevStoredVal && counter < 16) {')
-        # frag.write('while ((currStoredVal = imageAtomicCompSwap(voxels, coords, prevStoredVal, newVal)) != prevStoredVal) {')
-        # frag.write('    vec4 rval = convRGBA8ToVec4(currStoredVal & 0xFEFEFEFE);')
-        # frag.write('    uint n = decUnsignedNibble(currStoredVal);')
-        # frag.write('    rval = rval * n + val;')
-        # frag.write('    rval /= ++n;')
-        # frag.write('    rval = round(rval / 2) * 2;')
-        # frag.write('    newVal = encUnsignedNibble(convVec4ToRGBA8(rval), n);')
-        # frag.write('    prevStoredVal = currStoredVal;')
-        # # frag.write('    counter++;')
-        # frag.write('}')
-
-        # frag.write('val.rgb *= 255.0f;')
-        # frag.write('uint newVal = convVec4ToRGBA8(val);')
-        # frag.write('uint prevStoredVal = 0;')
-        # frag.write('uint curStoredVal;')
-        # frag.write('while ((curStoredVal = imageAtomicCompSwap(voxels, coords, prevStoredVal, newVal)) != prevStoredVal) {')
-        # frag.write('    prevStoredVal = curStoredVal;')
-        # frag.write('    vec4 rval = convRGBA8ToVec4(curStoredVal);')
-        # frag.write('    rval.xyz = (rval.xyz * rval.w);')
-        # frag.write('    vec4 curValF = rval + val;')
-        # frag.write('    curValF.xyz /= (curValF.w);')
-        # frag.write('    newVal = convVec4ToRGBA8(curValF);')
-        # frag.write('}')
 
     return con_voxel
 
@@ -284,8 +246,6 @@ def make_ao(context_id):
         frag.add_include('std/math.glsl')
         frag.add_include('std/imageatomic.glsl')
         frag.write_header('#extension GL_ARB_shader_image_load_store : enable')
-
-        # frag.add_uniform('layout(r32ui) uimage3D voxels')
         frag.add_uniform('layout(r8) writeonly image3D voxels')
 
         vert.add_include('compiled.inc')
