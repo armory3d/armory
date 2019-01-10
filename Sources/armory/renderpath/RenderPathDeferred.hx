@@ -545,6 +545,10 @@ class RenderPathDeferred {
 		}
 		#end
 
+		#if (rp_shadowmap)
+		Inc.drawShadowMap();
+		#end
+
 		// Voxels
 		#if (rp_gi != "Off")
 		var relight = false;
@@ -588,10 +592,9 @@ class RenderPathDeferred {
 
 			if (relight) {
 				#if (rp_gi == "Voxel GI")
-					// Inc.computeVoxelsBegin();
-					// for (i in 0...lights.length) Inc.computeVoxels(i); // Redraws SM
-					// Inc.computeVoxelsEnd();
-					
+					Inc.computeVoxelsBegin();
+					Inc.computeVoxels();
+					Inc.computeVoxelsEnd();
 					// #if (rp_gi_bounces)
 					// voxels = "voxelsBounce";
 					// #end
@@ -605,22 +608,6 @@ class RenderPathDeferred {
 		// ---
 		// Deferred light
 		// ---
-		var lights = iron.Scene.active.lights;
-		
-		// #if (rp_gi == "Voxel GI")
-		// if (relight) Inc.computeVoxelsBegin();
-		// #end
-		// #if (rp_gi == "Voxel GI")
-		// if (relight) Inc.computeVoxels(i);
-		// #end
-		// #if (rp_gi == "Voxel GI")
-		// if (relight) Inc.computeVoxelsEnd();
-		// #end
-
-		#if (rp_shadowmap)
-		Inc.drawShadowMap();
-		#end
-
 		path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
 		path.setTarget("tex");
 		path.bindTarget("_main", "gbufferD");

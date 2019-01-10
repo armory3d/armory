@@ -414,14 +414,14 @@ class Inc {
 		}
 		path.clearImage("voxels", 0x00000000);
 	}
-	public static function computeVoxels(i:Int) {
+	public static function computeVoxels() {
 		var rts = path.renderTargets;
 		var res = Inc.getVoxelRes();
 		var lights = iron.Scene.active.lights;
-		// for (i in 0...lights.length) {
+		for (i in 0...lights.length) {
 			var l = lights[i];
-			// if (!l.visible) continue;
-			// path.currentLightIndex = i;
+			if (!l.visible) continue;
+			path.light = l;
 
 			kha.compute.Compute.setShader(voxel_sh);
 			kha.compute.Compute.setTexture(voxel_ta, rts.get("voxelsOpac").image, kha.compute.Access.Read);
@@ -478,7 +478,7 @@ class Inc {
 			}
 
 			kha.compute.Compute.compute(res, res, res);
-		// }
+		}
 	}
 	public static function computeVoxelsEnd() {
 		var rts = path.renderTargets;
