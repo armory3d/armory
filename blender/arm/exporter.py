@@ -2550,7 +2550,7 @@ class ArmoryExporter:
             bend = (soft_mod.settings.bend + 1.0) * 10
         trait['parameters'] = [str(soft_type), str(bend), str(soft_mod.settings.mass), str(bobject.arm_soft_body_margin)]
         o['traits'].append(trait)
-        if soft_type == 0 and soft_mod.settings.use_pin_cloth:
+        if soft_type == 0:
             self.add_hook_mod(o, bobject, '', soft_mod.settings.vertex_group_mass)
 
     def add_hook_mod(self, o, bobject, target_name, group_name):
