@@ -115,12 +115,18 @@ class ConvexBreaker {
 
 	public function initBreakableObject(object:MeshObject, mass:Float, friction:Float, velocity:Vec4, angularVelocity:Vec4, breakable:Bool) {
 		var ar = object.data.geom.positions;
+		var scalePos = object.data.scalePos;
 		// Create vertices mark
 		var sc = object.transform.scale;
 		var vertices = new Array<Vec4>();
 		for (i in 0...Std.int(ar.length / 4)) {
 			// Use w component as mark
-			vertices.push(new Vec4(ar[i * 4] * sc.x * (1 / 32767), ar[i * 4 + 1] * sc.y * (1 / 32767), ar[i * 4 + 2] * sc.z * (1 / 32767), 0));
+			vertices.push(new Vec4(
+				ar[i * 4    ] * sc.x * (1 / 32767) * scalePos,
+				ar[i * 4 + 1] * sc.y * (1 / 32767) * scalePos,
+				ar[i * 4 + 2] * sc.z * (1 / 32767) * scalePos,
+				0
+			));
 		}
 
 		var ind = object.data.geom.indices[0];
@@ -482,6 +488,7 @@ class ConvexBreaker {
 		while (points.length > 50) points.pop();
 		var cm = new ConvexHull(points);
 
+		var maxdim = 1.0;
 		var pa = new Array<Float>();
 		var na = new Array<Float>();
 		for (p in cm.vertices) {
@@ -491,12 +498,20 @@ class ConvexBreaker {
 			na.push(0.0);
 			na.push(0.0);
 			na.push(0.0);
+
+			var ax = Math.abs(p.x);
+			var ay = Math.abs(p.y);
+			var az = Math.abs(p.z);
+			if (ax > maxdim) maxdim = ax;
+			if (ay > maxdim) maxdim = ay;
+			if (az > maxdim) maxdim = az;
 		}
+		maxdim *= 2;
 		
 		var ind = new Array<Int>();
 		function addFlatNormal(normal:Vec4, fi:Int) {
 			if (na[fi * 3] != 0.0 || na[fi * 3 + 1] != 0.0 || na[fi * 3 + 2] != 0.0) {
-				pa.push(pa[fi * 3]);
+				pa.push(pa[fi * 3    ]);
 				pa.push(pa[fi * 3 + 1]);
 				pa.push(pa[fi * 3 + 2]);
 				na.push(normal.x);
@@ -505,7 +520,7 @@ class ConvexBreaker {
 				ind.push(Std.int(pa.length / 3 - 1));
 			}
 			else {
-				na[fi * 3] = normal.x;
+				na[fi * 3    ] = normal.x;
 				na[fi * 3 + 1] = normal.y;
 				na[fi * 3 + 2] = normal.z;
 				ind.push(fi);
@@ -522,13 +537,14 @@ class ConvexBreaker {
 		var n = Std.int(pa.length / 3);
 		var paa = new kha.arrays.Int16Array(n * 4);
 		var naa = new kha.arrays.Int16Array(n * 2);
+		var invdim = 1 / maxdim;
 		for (i in 0...n) {
-			paa.set(i * 4    , Std.int(pa[i * 3    ] * 32767));
-			paa.set(i * 4 + 1, Std.int(pa[i * 3 + 1] * 32767));
-			paa.set(i * 4 + 2, Std.int(pa[i * 3 + 2] * 32767));
-			naa.set(i * 2    , Std.int(na[i * 3    ] * 32767));
-			naa.set(i * 2 + 1, Std.int(na[i * 3 + 1] * 32767));
-			paa.set(i * 4 + 3, Std.int(na[i * 3 + 2] * 32767));
+			paa.set(i * 4    , Std.int(pa[i * 3    ] * 32767 * invdim));
+			paa.set(i * 4 + 1, Std.int(pa[i * 3 + 1] * 32767 * invdim));
+			paa.set(i * 4 + 2, Std.int(pa[i * 3 + 2] * 32767 * invdim));
+			naa.set(i * 2    , Std.int(na[i * 3    ] * 32767 * invdim));
+			naa.set(i * 2 + 1, Std.int(na[i * 3 + 1] * 32767 * invdim));
+			paa.set(i * 4 + 3, Std.int(na[i * 3 + 2] * 32767 * invdim));
 		}
 		var inda = new kha.arrays.Uint32Array(ind.length);
 		for (i in 0...ind.length) inda.set(i, ind[i]);
@@ -541,7 +557,7 @@ class ConvexBreaker {
 			name: "TempMesh" + (meshIndex++),
 			vertex_arrays: [pos, nor],
 			index_arrays: [indices],
-			scale_pos: 1.0
+			scale_pos: maxdim
 		};
 
 		// Synchronous on Krom
