@@ -4,33 +4,36 @@
 // https://www.seas.upenn.edu/~pcozzi/OpenGLInsights/OpenGLInsights-SparseVoxelization.pdf
 
 uint convVec4ToRGBA8(vec4 val) {
-  return (uint(val.w) & 0x000000FF) << 24U
-    | (uint(val.z) & 0x000000FF) << 16U
-    | (uint(val.y) & 0x000000FF) << 8U
-    | (uint(val.x) & 0x000000FF);
+	vec4 col = vec4(val) * 255;
+	return (uint(col.w) & 0x000000FF) << 24U
+		 | (uint(col.z) & 0x000000FF) << 16U
+		 | (uint(col.y) & 0x000000FF) << 8U
+		 | (uint(col.x) & 0x000000FF);
 }
 
 vec4 convRGBA8ToVec4(uint val) {
-  return vec4(float((val & 0x000000FF)),
-      float((val & 0x0000FF00) >> 8U),
-      float((val & 0x00FF0000) >> 16U),
-      float((val & 0xFF000000) >> 24U));
+	uvec4 col = uvec4(
+		float((val & 0x000000FF)),
+		float((val & 0x0000FF00) >> 8U),
+		float((val & 0x00FF0000) >> 16U),
+		float((val & 0xFF000000) >> 24U));
+	return vec4(col) / 255;
 }
 
-uint encUnsignedNibble(uint m, uint n) {
-  return (m & 0xFEFEFEFE)
-    | (n & 0x00000001)
-    | (n & 0x00000002) << 7U
-    | (n & 0x00000004) << 14U
-    | (n & 0x00000008) << 21U;
-}
+// uint encUnsignedNibble(uint m, uint n) {
+// 	return (m & 0xFEFEFEFE)
+// 		| (n & 0x00000001)
+// 		| (n & 0x00000002) << 7U
+// 		| (n & 0x00000004) << 14U
+// 		| (n & 0x00000008) << 21U;
+// }
 
-uint decUnsignedNibble(uint m) {
-  return (m & 0x00000001)
-    | (m & 0x00000100) >> 7U
-    | (m & 0x00010000) >> 14U
-    | (m & 0x01000000) >> 21U;
-}
+// uint decUnsignedNibble(uint m) {
+// 	return (m & 0x00000001)
+// 		| (m & 0x00000100) >> 7U
+// 		| (m & 0x00010000) >> 14U
+// 		| (m & 0x01000000) >> 21U;
+// }
 
 // void imageAtomicRGBA8Avg(layout(r32ui) uimage3D img, ivec3 coords, vec4 val) {
 // 	// LSBs are used for the sample counter of the moving average.
@@ -61,12 +64,6 @@ uint decUnsignedNibble(uint m) {
 // 		prevVal = curVal;
 // 		newVal = floatBitsToUint((val + uintBitsToFloat(curVal)));
 // 	}
-// }
-// vec4 convRGBA8ToVec4(uint val) {
-// 	return vec4(float((val & 0x000000FF)), float((val & 0x0000FF00)>>8U) , float((val & 0x00FF0000)>>16U) , float((val & 0xFF000000)>>24U));
-// }
-// uint convVec4ToRGBA8( vec4 val) {
-// 	return (uint(val.w) & 0x000000FF) <<24U | (uint(val.z) & 0x000000FF)<<16U | (uint(val.y) & 0x000000FF)<<8U | (uint(val.x) & 0x000000FF);
 // }
 
 // void imageAtomicRGBA8Avg( layout ( r32ui ) coherent volatile uimage3D imgUI , ivec3 coords , vec4 val ) {
