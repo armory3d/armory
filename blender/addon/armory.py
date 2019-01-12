@@ -248,7 +248,7 @@ class ArmAddonUpdateButton(bpy.types.Operator):
         git_clone(done, sdk_path, 'armory3d/armory_tools', 'lib/armory_tools')
         git_clone(done, sdk_path, 'armory3d/iron_format', 'lib/iron_format')
         git_clone(done, sdk_path, 'armory3d/Krom_bin', 'Krom')
-        git_clone(done, sdk_path, 'Kode/Kha', 'Kha', recursive=True)
+        git_clone(done, sdk_path, 'armory3d/Kha', 'Kha', recursive=True)
         return {"FINISHED"}
 
 class ArmAddonRestoreButton(bpy.types.Operator):
