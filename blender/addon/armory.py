@@ -145,8 +145,8 @@ def get_fp():
     return os.path.sep.join(s)
 
 def get_sdk_path(context):
-    user_preferences = context.user_preferences
-    addon_prefs = user_preferences.addons["armory"].preferences
+    preferences = context.preferences
+    addon_prefs = preferences.addons["armory"].preferences
     p = bundled_sdk_path()
     if os.path.exists(get_fp() + '/armsdk'):
         return get_fp() + '/armsdk'
@@ -312,3 +312,4 @@ def unregister():
 
 if __name__ == "__main__":
     register()
+    

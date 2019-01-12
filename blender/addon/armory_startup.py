@@ -4,8 +4,8 @@ from bpy.app.handlers import persistent
 
 @persistent
 def handler(scene):
-    user_preferences = bpy.context.user_preferences
-    if not 'armory' in user_preferences.addons:
+    preferences = bpy.context.preferences
+    if not 'armory' in preferences.addons:
         enable('armory', default_set=True, persistent=True, handle_error=None)
         bpy.ops.wm.save_userpref()
 
