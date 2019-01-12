@@ -51,7 +51,7 @@ def convert_image(image, path, file_format='JPEG'):
     ren.image_settings.file_format = file_format
     if file_format == 'PNG':
         ren.image_settings.color_mode = 'RGBA'
-    image.save_render(path, bpy.context.scene)
+    image.save_render(path, scene=bpy.context.scene)
     ren.image_settings.quality = orig_quality
     ren.image_settings.file_format = orig_file_format
     ren.image_settings.color_mode = orig_color_mode
