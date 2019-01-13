@@ -125,7 +125,7 @@ class ArmExporterListItem(bpy.types.PropertyGroup):
 class ArmExporterList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here...
-        custom_icon = 'SEALED'
+        custom_icon = 'DOT'
 
         # Make sure your code supports all 3 layout types
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
