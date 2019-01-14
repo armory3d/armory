@@ -32,7 +32,7 @@ class RigidBody extends iron.Trait {
 	var deactivationParams:Array<Float>;
 	var ccd = false; // Continuous collision detection
 	public var group = 1;
-	public var trigger = false;
+	var trigger = false;
 	var bodyScaleX:Float; // Transform scale at creation time
 	var bodyScaleY:Float;
 	var bodyScaleZ:Float;
