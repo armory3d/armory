@@ -234,10 +234,7 @@ class Logic {
 		
 		var v:armory.logicnode.LogicNode = null;
 		
-		if (inp.type == 'ACTION') {
-			v = createClassInstance('NullNode', [tree]);
-		}
-		else if (inp.type == 'OBJECT') {
+		if (inp.type == 'OBJECT') {
 			v = createClassInstance('ObjectNode', [tree, inp.default_value]);
 		}
 		else if (inp.type == 'ANIMACTION') {
@@ -266,6 +263,9 @@ class Logic {
 		}
 		else if (inp.type == 'STRING') {
 			v = createClassInstance('StringNode', [tree, inp.default_value]);
+		}
+		else { // ACTION, ARRAY
+			v = createClassInstance('NullNode', [tree]);
 		}
 		return v;
 	}
