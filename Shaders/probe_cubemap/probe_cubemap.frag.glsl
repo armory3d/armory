@@ -45,7 +45,10 @@ void main() {
 	n = normalize(n);
 
 	vec3 v = wp - eye;
-
+	vec3 r = reflect(v, n);
+	#ifdef HLSL
+	r.y = -r.y;
+	#endif
 	float intensity = clamp((1.0 - roughness) * dot(wp - probep, n), 0.0, 1.0);
-	fragColor.rgb = texture(probeTex, reflect(v, n)).rgb * intensity;
+	fragColor.rgb = texture(probeTex, r).rgb * intensity;
 }

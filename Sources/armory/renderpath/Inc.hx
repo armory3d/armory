@@ -35,6 +35,7 @@ class Inc {
 
 	static var pointIndex = 0;
 	static var spotIndex = 0;
+	static var lastFrame = -1;
 
 	public static function init(_path:RenderPath) {
 		path = _path;
@@ -110,7 +111,13 @@ class Inc {
 
 	public static function drawShadowMap() {
 		#if (rp_shadowmap)
-		
+
+		#if rp_probes
+		// Share shadow map with probe
+		if (lastFrame == RenderPath.active.frame) return;
+		lastFrame = RenderPath.active.frame;
+		#end
+
 		pointIndex = 0;
 		spotIndex = 0;
 		for (l in iron.Scene.active.lights) {
