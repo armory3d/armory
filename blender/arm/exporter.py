@@ -1825,7 +1825,7 @@ class ArmoryExporter:
             o['loop'] = psettings.arm_loop
             o['render_emitter'] = False # TODO
             # Emission
-            o['count'] = psettings.count * psettings.arm_count_mult
+            o['count'] = int(psettings.count * psettings.arm_count_mult)
             o['frame_start'] = int(psettings.frame_start)
             o['frame_end'] = int(psettings.frame_end)
             o['lifetime'] = psettings.lifetime
