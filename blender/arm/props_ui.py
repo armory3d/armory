@@ -102,7 +102,6 @@ class PhysicsPropsPanel(bpy.types.Panel):
             layout.prop(obj, 'arm_rb_linear_factor')
             layout.prop(obj, 'arm_rb_angular_factor')
             layout.prop(obj, 'arm_rb_trigger')
-            layout.prop(obj, 'arm_rb_terrain')
             layout.prop(obj, 'arm_rb_force_deactivation')
             layout.prop(obj, 'arm_rb_ccd')
 
@@ -1136,6 +1135,80 @@ class ArmLodPanel(bpy.types.Panel):
             layout.prop(wrd, 'arm_lod_gen_levels')
             layout.prop(wrd, 'arm_lod_gen_ratio')
 
+class ArmGenTerrainButton(bpy.types.Operator):
+    '''Generate terrain sectors'''
+    bl_idname = 'arm.generate_terrain'
+    bl_label = 'Generate'
+
+    def execute(self, context):
+        scn = context.scene
+        if scn == None:
+            return{'CANCELLED'}
+        sectors = scn.arm_terrain_sectors
+        mat = bpy.data.materials.new(name="Terrain")
+        root_obj = bpy.data.objects.new("Terrain", None)
+        root_obj.location[0] = 0
+        root_obj.location[1] = 0
+        root_obj.location[2] = 0
+        root_obj.arm_export = False
+        scn.collection.objects.link(root_obj)
+        scn.arm_terrain_object = root_obj
+        size = scn.arm_terrain_sector_size
+        height_scale = scn.arm_terrain_height_scale
+
+        for i in range(sectors[0] * sectors[1]):
+            j = str(i + 1).zfill(2)
+            x = i % sectors[0]
+            y = int(i / sectors[0])
+            bpy.ops.mesh.primitive_plane_add(location=(x * size, -y * size, 0))
+            slice_obj = bpy.context.active_object
+            slice_obj.scale[0] = size / 2
+            slice_obj.scale[1] = size / 2
+            slice_obj.scale[2] = height_scale
+            slice_obj.data.materials.append(mat)
+            for p in slice_obj.data.polygons:
+                p.use_smooth = True
+            slice_obj.name = 'Terrain.' + j
+            slice_obj.parent = root_obj
+            sub_mod = slice_obj.modifiers.new('Subdivision', 'SUBSURF')
+            sub_mod.subdivision_type = 'SIMPLE'
+            disp_mod = slice_obj.modifiers.new('Displace', 'DISPLACE')
+            disp_mod.texture_coords = 'UV'
+            disp_mod.texture = bpy.data.textures.new(name='Terrain.' + j, type='IMAGE')
+            disp_mod.texture.extension = 'EXTEND'
+            disp_mod.texture.use_interpolation = False
+            disp_mod.texture.use_mipmap = False
+            disp_mod.texture.image = bpy.data.images.load(filepath=scn.arm_terrain_textures+'/heightmap_' + j + '.png')
+            f = 1
+            levels = 0
+            while f < disp_mod.texture.image.size[0]:
+                f *= 2
+                levels += 1
+            sub_mod.levels = sub_mod.render_levels = levels
+
+        return{'FINISHED'}
+
+class ArmTerrainPanel(bpy.types.Panel):
+    bl_label = "Armory Terrain"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "scene"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        scn = bpy.context.scene
+        if scn == None:
+            return
+        layout.prop(scn, 'arm_terrain_textures')
+        layout.prop(scn, 'arm_terrain_sectors')
+        layout.prop(scn, 'arm_terrain_sector_size')
+        layout.prop(scn, 'arm_terrain_height_scale')
+        layout.operator('arm.generate_terrain')
+        layout.prop(scn, 'arm_terrain_object')
+
 class ArmTilesheetPanel(bpy.types.Panel):
     bl_label = "Armory Tilesheet"
     bl_space_type = "PROPERTIES"
@@ -1352,6 +1425,8 @@ def register():
     bpy.utils.register_class(ArmNavigationPanel)
     bpy.utils.register_class(ArmGenLodButton)
     bpy.utils.register_class(ArmLodPanel)
+    bpy.utils.register_class(ArmGenTerrainButton)
+    bpy.utils.register_class(ArmTerrainPanel)
     bpy.utils.register_class(ArmTilesheetPanel)
     bpy.utils.register_class(ArmProxyPanel)
     bpy.utils.register_class(ArmMakeProxyButton)
@@ -1401,6 +1476,8 @@ def unregister():
     bpy.utils.unregister_class(ArmNavigationPanel)
     bpy.utils.unregister_class(ArmGenLodButton)
     bpy.utils.unregister_class(ArmLodPanel)
+    bpy.utils.unregister_class(ArmGenTerrainButton)
+    bpy.utils.unregister_class(ArmTerrainPanel)
     bpy.utils.unregister_class(ArmTilesheetPanel)
     bpy.utils.unregister_class(ArmProxyPanel)
     bpy.utils.unregister_class(ArmMakeProxyButton)

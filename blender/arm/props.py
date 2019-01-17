@@ -118,7 +118,6 @@ def init_properties():
     bpy.types.Object.arm_rb_linear_factor = FloatVectorProperty(name="Linear Factor", size=3, description="Set to 0 to lock axis", default=[1,1,1])
     bpy.types.Object.arm_rb_angular_factor = FloatVectorProperty(name="Angular Factor", size=3, description="Set to 0 to lock axis", default=[1,1,1])
     bpy.types.Object.arm_rb_trigger = BoolProperty(name="Trigger", description="Disable contact response", default=False)
-    bpy.types.Object.arm_rb_terrain = BoolProperty(name="Terrain", description="Set rigid body collision shape to terrain", default=False)
     bpy.types.Object.arm_rb_force_deactivation = BoolProperty(name="Force Deactivation", description="Force deactivation on all rigid bodies for performance", default=True)
     bpy.types.Object.arm_rb_deactivation_time = FloatProperty(name="Deactivation Time", description="Delay putting rigid body into sleep", default=0.0)
     bpy.types.Object.arm_rb_ccd = BoolProperty(name="Continuous Collision Detection", description="Improve collision for fast moving objects", default=False)
@@ -256,6 +255,11 @@ def init_properties():
         name='Operation', default='add', description='Blending operation', update=assets.invalidate_shader_cache)
     # For scene
     bpy.types.Scene.arm_export = BoolProperty(name="Export", description="Export scene data", default=True)
+    bpy.types.Scene.arm_terrain_textures = StringProperty(name="Textures", description="Set root folder for terrain assets", default="", subtype="DIR_PATH")
+    bpy.types.Scene.arm_terrain_sectors = IntVectorProperty(name="Sectors", description="Number of sectors to generate", default=[1,1], size=2)
+    bpy.types.Scene.arm_terrain_sector_size = FloatProperty(name="Sector Size", description="Dimensions for single sector", default=16)
+    bpy.types.Scene.arm_terrain_height_scale = FloatProperty(name="Height Scale", description="Scale height from the 0-1 range", default=10)
+    bpy.types.Scene.arm_terrain_object = PointerProperty(name="Object", type=bpy.types.Object, description="Terrain root object")
     # For light
     bpy.types.Light.arm_clip_start = FloatProperty(name="Clip Start", default=0.1)
     bpy.types.Light.arm_clip_end = FloatProperty(name="Clip End", default=50.0)

@@ -26,7 +26,7 @@ import arm.material.cycles as cycles
 import arm.exporter_opt as exporter_opt
 import numpy as np
 
-NodeTypeNode = 0
+NodeTypeEmpty = 0
 NodeTypeBone = 1
 NodeTypeMesh = 2
 NodeTypeLight = 3
@@ -82,7 +82,7 @@ class ArmoryExporter:
             return NodeTypeSpeaker
         elif bobject.type == "LIGHT_PROBE":
             return NodeTypeProbe
-        return NodeTypeNode
+        return NodeTypeEmpty
 
     @staticmethod
     def get_shape_keys(mesh):
@@ -480,7 +480,7 @@ class ArmoryExporter:
                         if not bone.parent:
                             self.process_bone(bone)
 
-        if bobject.type != 'MESH' or bobject.arm_instanced == 'Off':
+        if bobject.arm_instanced == 'Off':
             for subbobject in bobject.children:
                 self.process_bobject(subbobject)
 
@@ -986,7 +986,7 @@ class ArmoryExporter:
             if not hasattr(o, 'children') and len(bobject.children) > 0:
                 o['children'] = []
 
-        if bobject.type != 'MESH' or bobject.arm_instanced == 'Off':
+        if bobject.arm_instanced == 'Off':
             for subbobject in bobject.children:
                 self.export_object(subbobject, scene, o)
 
@@ -2013,6 +2013,32 @@ class ArmoryExporter:
                     max_bones = len(armature.bones)
             rpdat.arm_skin_max_bones = max_bones
 
+        # Terrain
+        if self.scene.arm_terrain_object != None:
+            # Append trait
+            if not 'traits' in self.output:
+                self.output['traits'] = []
+            trait = {}
+            trait['type'] = 'Script'
+            trait['class_name'] = 'armory.trait.internal.TerrainPhysics'
+            self.output['traits'].append(trait)
+            ArmoryExporter.import_traits.append(trait['class_name'])
+            ArmoryExporter.export_physics = True
+            assets.add_khafile_def('arm_terrain')
+            # Export material
+            mat = self.scene.arm_terrain_object.children[0].data.materials[0]
+            self.materialArray.append(mat)
+            # Terrain data
+            terrain = {}
+            terrain['name'] = 'Terrain'
+            terrain['sectors_x'] = self.scene.arm_terrain_sectors[0]
+            terrain['sectors_y'] = self.scene.arm_terrain_sectors[1]
+            terrain['sector_size'] = self.scene.arm_terrain_sector_size
+            terrain['height_scale'] = self.scene.arm_terrain_height_scale
+            terrain['material_ref'] = mat.name
+            self.output['terrain_datas'] = [terrain]
+            self.output['terrain_ref'] = 'Terrain'
+
         self.output['objects'] = []
         for bo in scene_objects:
             if not bo.parent:
@@ -2096,7 +2122,7 @@ class ArmoryExporter:
         if (len(self.output['camera_datas']) == 0 or len(bpy.data.cameras) == 0) or not self.camera_spawned:
             self.create_default_camera()
 
-        # Scene root traits
+        # Scene traits
         if wrd.arm_physics != 'Disabled' and ArmoryExporter.export_physics:
             if not 'traits' in self.output:
                 self.output['traits'] = []
@@ -2309,9 +2335,7 @@ class ArmoryExporter:
             ArmoryExporter.export_physics = True
             rb = bobject.rigid_body
             shape = 0 # BOX
-            if bobject.arm_rb_terrain: # Override selected shape as terrain..
-                shape = 7
-            elif rb.collision_shape == 'SPHERE':
+            if rb.collision_shape == 'SPHERE':
                 shape = 1
             elif rb.collision_shape == 'CONVEX_HULL':
                 shape = 2

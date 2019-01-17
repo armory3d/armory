@@ -882,7 +882,7 @@ def parse_vector(node, socket):
         midlevel = parse_value_input(node.inputs[1])
         scale = parse_value_input(node.inputs[2])
         nor = parse_vector_input(node.inputs[3])
-        return 'vec3({0})'.format(height)
+        return '(vec3({0}) * {1})'.format(height, scale)
 
 def parse_normal_map_color_input(inp, strength_input=None):
     global normal_parsed

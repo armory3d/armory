@@ -48,6 +48,10 @@ class RigidBody extends iron.Trait {
 	public var id = 0;
 	public var onReady:Void->Void = null;
 	public var onContact:Array<RigidBody->Void> = null;
+	public var heightData:haxe.io.Bytes = null;
+	#if js
+	static var ammoArray:Int = -1;
+	#end
 
 	static var nullvec = true;
 	static var vec1:bullet.Bt.Vector3;
@@ -152,7 +156,7 @@ class RigidBody extends iron.Trait {
 			var caps:bullet.Bt.CapsuleShape = capsZ;
 			btshape = caps;
 		}
-		else if (shape == Shape.Mesh || shape == Shape.Terrain) {
+		else if (shape == Shape.Mesh) {
 			var meshInterface = fillTriangleMesh(transform.scale);
 			if (mass > 0) {
 				var shapeGImpact = new bullet.Bt.GImpactMeshShape(meshInterface);
@@ -175,10 +179,26 @@ class RigidBody extends iron.Trait {
 				btshape = shapeConcave;
 			}
 		}
-		//else if (shape == Shape.Terrain) {
-			// var data:Array<Dynamic> = [];
-			// btshape = new bullet.Bt.HeightfieldTerrainShape(3, 3, data, 1, -10, 10, 2, 0, true);
-		//}
+		else if (shape == Shape.Terrain) {
+			#if js
+			var length = heightData.length;
+			if (ammoArray == -1) {
+				ammoArray = bullet.Bt.Ammo._malloc(length);
+			}
+			// From texture bytes
+			for (i in 0...length) {
+				bullet.Bt.Ammo.HEAPU8[ammoArray + i] = heightData.get(i);
+			}
+			var slice = Std.int(Math.sqrt(length)); // Assuming square terrain data
+			var axis = 2; // z
+			var dataType = 5; // u8
+			btshape = new bullet.Bt.HeightfieldTerrainShape(slice, slice, ammoArray, 1 / 255, 0, 1, axis, dataType, false);
+			vec1.setX(transform.dim.x / slice);
+			vec1.setY(transform.dim.y / slice);
+			vec1.setZ(transform.dim.z);
+			btshape.setLocalScaling(vec1);
+			#end
+		}
 
 		trans1.setIdentity();
 		vec1.setX(transform.worldx());
