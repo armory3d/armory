@@ -469,7 +469,8 @@ def parse_vector(node, socket):
             tex = {}
             tex['name'] = tex_name
             tex['file'] = ''
-            return '{0}.rgb'.format(texture_store(node, tex, tex_name, True, tex_link=tex_link))
+            to_linear = node.color_space == 'COLOR'
+            return '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear, tex_link=tex_link))
         else:
             tex_store = store_var_name(node) # Pink color for missing texture
             curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0);'.format(tex_store))
