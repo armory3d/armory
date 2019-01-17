@@ -247,10 +247,11 @@ class ArmEditScriptButton(bpy.types.Operator):
  
     def execute(self, context):
 
-        if bpy.data.worlds['Arm'].arm_runtime != 'Browser' or not os.path.exists(arm.utils.get_fp() + "/khafile.js"):
-            print('Generating HTML5 project for Kode Studio')
-            arm.utils.check_default_props()
-            make.build('html5')
+        arm.utils.check_default_props()
+
+        if not os.path.exists(arm.utils.get_fp() + "/khafile.js"):
+            print('Generating Krom project for Kode Studio')
+            make.build('krom')
 
         if self.is_object:
             obj = bpy.context.object
