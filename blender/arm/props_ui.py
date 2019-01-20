@@ -1145,7 +1145,28 @@ class ArmGenTerrainButton(bpy.types.Operator):
         if scn == None:
             return{'CANCELLED'}
         sectors = scn.arm_terrain_sectors
+        size = scn.arm_terrain_sector_size
+        height_scale = scn.arm_terrain_height_scale
+        
+        # Create material
         mat = bpy.data.materials.new(name="Terrain")
+        mat.use_nodes = True
+        nodes = mat.node_tree.nodes
+        links = mat.node_tree.links
+        node = nodes.new('ShaderNodeDisplacement')
+        node.location = (-200, 100)
+        node.inputs[2].default_value = height_scale * 10
+        links.new(nodes['Material Output'].inputs[2], node.outputs[0])
+        node = nodes.new('ShaderNodeTexImage')
+        node.location = (-600, 100)
+        node.color_space = 'NONE'
+        node.interpolation = 'Closest'
+        node.arm_material_param = True
+        node.name = '_TerrainHeight'
+        node.label = '_TerrainHeight' # Height-map texture link for this sector
+        links.new(nodes['Displacement'].inputs[0], nodes['_TerrainHeight'].outputs[0])
+
+        # Create sectors
         root_obj = bpy.data.objects.new("Terrain", None)
         root_obj.location[0] = 0
         root_obj.location[1] = 0
@@ -1153,8 +1174,6 @@ class ArmGenTerrainButton(bpy.types.Operator):
         root_obj.arm_export = False
         scn.collection.objects.link(root_obj)
         scn.arm_terrain_object = root_obj
-        size = scn.arm_terrain_sector_size
-        height_scale = scn.arm_terrain_height_scale
 
         for i in range(sectors[0] * sectors[1]):
             j = str(i + 1).zfill(2)
