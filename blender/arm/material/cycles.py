@@ -1508,7 +1508,7 @@ def make_texture(image_node, tex_name, matname=None):
         if do_convert:
             if not os.path.isfile(unpack_filepath):
                 fmt = 'PNG' if new_ext == 'png' else 'JPEG'
-                arm.utils.unpack_image(image, unpack_filepath, file_format=fmt)
+                arm.utils.convert_image(image, unpack_filepath, file_format=fmt)
         else:
 
             # Write bytes if size is different or file does not exist yet
