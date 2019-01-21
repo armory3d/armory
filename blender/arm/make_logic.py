@@ -147,7 +147,12 @@ def build_node(node, f):
             prop_found = hasattr(node, prop_name)
         if prop_found:
             prop = getattr(node, prop_name)
-            prop = '"' + str(prop) + '"' if isinstance(prop, str) else str(prop)
+            if isinstance(prop, str):
+                prop = '"' + str(prop) + '"'
+            elif hasattr(prop, 'name'): # PointerProperty
+                prop = '"' + str(prop.name) + '"'
+            else:
+                str(prop)
             f.write('\t\t' + name + '.property' + str(i) + ' = ' + prop + ';\n')
     
     # Create inputs

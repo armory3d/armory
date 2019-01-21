@@ -9,7 +9,7 @@ class PlaySoundNode(Node, ArmLogicTreeNode):
     bl_label = 'Play Sound'
     bl_icon = 'QUESTION'
 
-    property0: StringProperty(name='', default='')
+    property0: PointerProperty(name='', type=bpy.types.Sound)
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
