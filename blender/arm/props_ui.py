@@ -469,6 +469,8 @@ class ArmoryPlayButton(bpy.types.Operator):
         if not arm.utils.check_sdkpath(self):
             return {"CANCELLED"}
 
+        arm.utils.check_projectpath(None)
+
         arm.utils.check_default_props()
 
         assets.invalidate_enabled = False
