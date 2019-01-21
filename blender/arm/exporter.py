@@ -2104,6 +2104,12 @@ class ArmoryExporter:
 
             if self.scene.use_gravity:
                 self.output['gravity'] = [self.scene.gravity[0], self.scene.gravity[1], self.scene.gravity[2]]
+                rbw = self.scene.rigidbody_world
+                if rbw != None:
+                    weights = rbw.effector_weights
+                    self.output['gravity'][0] *= weights.all * weights.gravity
+                    self.output['gravity'][1] *= weights.all * weights.gravity
+                    self.output['gravity'][2] *= weights.all * weights.gravity
             else:
                 self.output['gravity'] = [0.0, 0.0, 0.0]
 
