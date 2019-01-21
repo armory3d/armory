@@ -440,6 +440,13 @@ def voxel_support():
     # macos does not support opengl 4.5, needs metal
     return state.target != 'html5' and get_os() != 'mac'
 
+def get_cascade_size(rpdat):
+    cascade_size = int(rpdat.rp_shadowmap_cascade)
+    # Clamp to 4096 per cascade
+    if int(rpdat.rp_shadowmap_cascades) > 1 and cascade_size > 4096:
+        cascade_size = 4096
+    return cascade_size
+
 def check_saved(self):
     if bpy.data.filepath == "":
         msg = "Save blend file first"

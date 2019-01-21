@@ -139,7 +139,7 @@ def build():
 
     if rpdat.rp_shadows:
         assets.add_khafile_def('rp_shadowmap')
-        assets.add_khafile_def('rp_shadowmap_cascade={0}'.format(rpdat.rp_shadowmap_cascade))
+        assets.add_khafile_def('rp_shadowmap_cascade={0}'.format(arm.utils.get_cascade_size(rpdat)))
         assets.add_khafile_def('rp_shadowmap_cube={0}'.format(rpdat.rp_shadowmap_cube))
 
     assets.add_khafile_def('rp_background={0}'.format(rpdat.rp_background))

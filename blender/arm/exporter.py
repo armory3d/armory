@@ -1502,7 +1502,7 @@ class ArmoryExporter:
         o['shadows_bias'] = objref.arm_shadows_bias * 0.0001
         rpdat = arm.utils.get_rp()
         if rpdat.rp_shadows:
-            o['shadowmap_size'] = int(rpdat.rp_shadowmap_cube) if objtype == 'POINT' else int(rpdat.rp_shadowmap_cascade)
+            o['shadowmap_size'] = int(rpdat.rp_shadowmap_cube) if objtype == 'POINT' else arm.utils.get_cascade_size(rpdat)
         else:
             o['shadowmap_size'] = 0
         if o['type'] == 'sun': # Scale bias for ortho light matrix

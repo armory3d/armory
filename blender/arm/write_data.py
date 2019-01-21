@@ -317,7 +317,7 @@ def write_config(resx, resy):
     output['rp_supersample'] = float(rpdat.rp_supersampling)
     rp_shadowmap_cube = int(rpdat.rp_shadowmap_cube) if rpdat.rp_shadows else 0
     output['rp_shadowmap_cube'] = rp_shadowmap_cube
-    rp_shadowmap_cascade = int(rpdat.rp_shadowmap_cascade) if rpdat.rp_shadows else 0
+    rp_shadowmap_cascade = arm.utils.get_cascade_size(rpdat) if rpdat.rp_shadows else 0
     output['rp_shadowmap_cascade'] = rp_shadowmap_cascade
     output['rp_ssgi'] = rpdat.rp_ssgi != 'Off'
     output['rp_ssr'] = rpdat.rp_ssr != 'Off'
@@ -440,7 +440,7 @@ def write_indexhtml(w, h, is_publish):
 add_compiledglsl = ''
 def write_compiledglsl(defs):
     rpdat = arm.utils.get_rp()
-    shadowmap_size = int(rpdat.rp_shadowmap_cascade) if rpdat.rp_shadows else 0
+    shadowmap_size = arm.utils.get_cascade_size(rpdat) if rpdat.rp_shadows else 0
     with open(arm.utils.build_dir() + '/compiled/Shaders/compiled.inc', 'w') as f:
         f.write(
 """#ifndef _COMPILED_GLSL_

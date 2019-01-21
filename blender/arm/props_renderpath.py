@@ -282,7 +282,9 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('512', '512', '512'),
                ('1024', '1024', '1024'),
                ('2048', '2048', '2048'),
-               ('4096', '4096', '4096'),],
+               ('4096', '4096', '4096'),
+               ('8192', '8192', '8192'),
+               ('16384', '16384', '16384'),],
         name="Cascade Size", description="Shadow map resolution", default='1024', update=update_renderpath)
     rp_shadowmap_cascades: EnumProperty(
         items=[('1', '1', '1'),
