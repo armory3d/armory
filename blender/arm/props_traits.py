@@ -22,7 +22,7 @@ def update_trait_group(self, context):
     i = o.arm_traitlist_index
     if i >= 0 and i < len(o.arm_traitlist):
         t = o.arm_traitlist[i]
-        if t.type_prop == 'Haxe Script' or t.type_prop == 'Bundled Script':
+        if t.type_prop == 'Haxe Script' or t.type_prop == 'Bundled Script' or t.type_prop == 'External':
             t.name = t.class_name_prop
         elif t.type_prop == 'WebAssembly':
             t.name = t.webassembly_prop
@@ -58,7 +58,8 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
                  ('WebAssembly', 'Wasm', 'WebAssembly'),
                  ('UI Canvas', 'UI', 'UI Canvas'),
                  ('Bundled Script', 'Bundled', 'Bundled Script'),
-                 ('Logic Nodes', 'Nodes', 'Logic Nodes')
+                 ('Logic Nodes', 'Nodes', 'Logic Nodes'),
+                 ('External', 'External', 'External')
                  ],
         name = "Type")
     class_name_prop: StringProperty(name="Class", description="A name for this item", default="", update=update_trait_group)
@@ -72,7 +73,7 @@ class ArmTraitList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         custom_icon = "NONE"
         custom_icon_value = 0
-        if item.type_prop == "Haxe Script":
+        if item.type_prop == "Haxe Script" or item.type_prop == "External":
             custom_icon_value = icons_dict["haxe"].icon_id
         elif item.type_prop == "WebAssembly":
             custom_icon_value = icons_dict["wasm"].icon_id
@@ -103,13 +104,14 @@ class ArmTraitListNewItem(bpy.types.Operator):
                  ('WebAssembly', 'Wasm', 'WebAssembly'),
                  ('UI Canvas', 'UI', 'UI Canvas'),
                  ('Bundled Script', 'Bundled', 'Bundled Script'),
-                 ('Logic Nodes', 'Nodes', 'Logic Nodes')
+                 ('Logic Nodes', 'Nodes', 'Logic Nodes'),
+                 ('External', 'External', 'External')
                  ],
         name = "Type")
 
     def invoke(self, context, event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self)
+        return wm.invoke_props_dialog(self, width=400)
 
     def draw(self,context):
         layout = self.layout
@@ -545,6 +547,10 @@ def draw_traits(layout, obj, is_object):
         elif item.type_prop == 'Logic Nodes':
             row = layout.row()
             row.prop_search(item, "node_tree_prop", bpy.data, "node_groups", text="Tree")
+
+        elif item.type_prop == 'External':
+            row = layout.row()
+            row.prop(item, "class_name_prop")
 
 def register():
     global icons_dict

@@ -2452,7 +2452,7 @@ class ArmoryExporter:
             self.add_constraints(bobject, o)
 
         for x in o['traits']:
-            ArmoryExporter.import_traits.append(x['class_name'])
+            if (x.get('import_trait') != False): ArmoryExporter.import_traits.append(x['class_name'])
 
     def add_constraints(self, bobject, o, bone=False):
         for con in bobject.constraints:
@@ -2516,6 +2516,11 @@ class ArmoryExporter:
                                 # Relative to the root/Bundled/canvas path
                                 asset = asset[6:] # Strip ../../ to start in project root
                                 assets.add(asset)
+                elif t.type_prop == 'External':
+                    x['type'] = 'Script'
+                    # We don't want to add imports for external traits
+                    x['import_trait'] = False
+                    x['class_name'] = t.class_name_prop
                 else: # Haxe/Bundled Script
                     if t.class_name_prop == '': # Empty class name, skip
                         continue
