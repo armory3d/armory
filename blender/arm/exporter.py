@@ -752,13 +752,6 @@ class ArmoryExporter:
             if bobject.instance_type == 'COLLECTION' and bobject.instance_collection != None:
                 o['group_ref'] = bobject.instance_collection.name
 
-            # if bobject.users_collection != None and len(bobject.users_collection) > 0:
-            #     o['groups'] = []
-            #     for g in bobject.users_collection:
-            #         if g.name.startswith('RigidBodyWorld'): # or g.name.startswith('Trait|'):
-            #             continue
-            #         o['groups'].append(g.name)
-
             if bobject.arm_tilesheet != '':
                 o['tilesheet_ref'] = bobject.arm_tilesheet
                 o['tilesheet_action_ref'] = bobject.arm_tilesheet_action
