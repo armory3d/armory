@@ -142,7 +142,7 @@ def make(context_id, rpasses, shadowmap=False):
             if con_depth.is_elem('tex'):
                 vert.add_out('vec2 texCoord')
                 vert.add_uniform('float texUnpack', link='_texUnpack')
-                if mat_state.material.arm_tilesheet_mat:
+                if mat_state.material.arm_tilesheet_flag:
                     vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
                     vert.write('texCoord = tex * texUnpack + tilesheetOffset;')
                 else:

@@ -187,9 +187,9 @@ def init_properties():
                ('spherical', 'Spherical', 'Spherical'),
                ('cylindrical', 'Cylindrical', 'Cylindrical')],
         name="Billboard", default='off', description="Track camera", update=assets.invalidate_shader_cache)
+    bpy.types.Material.arm_tilesheet_flag = BoolProperty(name="Tilesheet Flag", description="This material is used for tilesheet", default=False)
     bpy.types.Material.arm_particle_flag = BoolProperty(name="Particle Flag", description="This material is used for particles", default=False)
     bpy.types.Material.arm_particle_fade = BoolProperty(name="Particle Fade", description="Fade particles in and out", default=False)
-    bpy.types.Material.arm_tilesheet_mat = BoolProperty(name="Tilesheet", description="Generate tilesheet shaders", default=False)
     bpy.types.Material.arm_blending = BoolProperty(name="Blending", description="Enable additive blending", default=False)
     bpy.types.Material.arm_blending_source = EnumProperty(
         items=[('blend_one', 'One', 'One'),

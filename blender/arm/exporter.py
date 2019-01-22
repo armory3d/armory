@@ -1964,8 +1964,7 @@ class ArmoryExporter:
         elif not bpy.data.worlds['Arm'].arm_minimize:
             self.output['name'] += '.json'
 
-        # Fix material variants
-        # Skinned and non-skined objects can not share material
+        # Create unique material variants for skinning, tilesheets, particles
         matvars = []
         matslots = []
         for bo in scene_objects:
@@ -1981,6 +1980,21 @@ class ArmoryExporter:
                     if mat == None:
                         mat = slot.material.copy()
                         mat.name = mat_name
+                        matvars.append(mat)
+                    slot.material = mat
+            elif bo.arm_tilesheet != '':
+                for slot in bo.material_slots:
+                    if slot.material == None or slot.material.library != None:
+                        continue
+                    if slot.material.name.endswith('_armtile'):
+                        continue
+                    matslots.append(slot)
+                    mat_name = slot.material.name + '_armtile'
+                    mat = bpy.data.materials.get(mat_name)
+                    if mat == None:
+                        mat = slot.material.copy()
+                        mat.name = mat_name
+                        mat.arm_tilesheet_flag = True
                         matvars.append(mat)
                     slot.material = mat
         # Particle and non-particle objects can not share material
@@ -2175,7 +2189,7 @@ class ArmoryExporter:
 
         # Remove created material variants
         for slot in matslots: # Set back to original material
-            orig_mat = bpy.data.materials[slot.material.name[:-8]] # _armskin or _armpart
+            orig_mat = bpy.data.materials[slot.material.name[:-8]] # _armskin, _armpart, _armtile
             orig_mat.export_uvs = slot.material.export_uvs
             orig_mat.export_vcols = slot.material.export_vcols
             orig_mat.export_tangents = slot.material.export_tangents

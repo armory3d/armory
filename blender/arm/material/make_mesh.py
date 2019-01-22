@@ -122,7 +122,7 @@ def make_base(con_mesh, parse_opacity):
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
         vert.add_uniform('float texUnpack', link='_texUnpack')
-        if mat_state.material.arm_tilesheet_mat:
+        if mat_state.material.arm_tilesheet_flag:
             if mat_state.material.arm_particle_flag and rpdat.arm_particles == 'GPU':
                 make_particle.write_tilesheet(vert)
             else:
@@ -301,7 +301,7 @@ def make_forward_mobile(con_mesh):
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
         vert.add_uniform('float texUnpack', link='_texUnpack')
-        if mat_state.material.arm_tilesheet_mat:
+        if mat_state.material.arm_tilesheet_flag:
             vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
             vert.write('texCoord = tex * texUnpack + tilesheetOffset;')
         else:
@@ -451,7 +451,7 @@ def make_forward_solid(con_mesh):
     if con_mesh.is_elem('tex'):
         vert.add_out('vec2 texCoord')
         vert.add_uniform('float texUnpack', link='_texUnpack')
-        if mat_state.material.arm_tilesheet_mat:
+        if mat_state.material.arm_tilesheet_flag:
             vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
             vert.write('texCoord = tex * texUnpack + tilesheetOffset;')
         else:

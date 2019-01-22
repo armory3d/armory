@@ -215,7 +215,6 @@ class MaterialPropsPanel(bpy.types.Panel):
         layout.prop(mat, 'arm_custom_material')
         layout.prop(mat, 'arm_skip_context')
         layout.prop(mat, 'arm_particle_fade')
-        layout.prop(mat, 'arm_tilesheet_mat')
         layout.prop(mat, 'arm_billboard')
         layout.prop(mat, 'arm_blending')
         col = layout.column()
