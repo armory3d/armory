@@ -188,18 +188,19 @@ class PhysicsWorld extends Trait {
 		var res:Array<RigidBody> = [];
 		for (i in 0...contacts.length) {
 			var c = contacts[i];
+			var rb = null;
+
 			#if js
-			
-			if (c.a == untyped body.body.userIndex) res.push(rbMap.get(c.b));
-			else if (c.b == untyped body.body.userIndex) res.push(rbMap.get(c.a));
-			
+			if (c.a == untyped body.body.userIndex) rb = rbMap.get(c.b);
+			else if (c.b == untyped body.body.userIndex) rb = rbMap.get(c.a);
+
 			#else
-			
 			var ob:bullet.Bt.CollisionObject = body.body;
-			if (c.a == ob.getUserIndex()) res.push(rbMap.get(c.b));
-			else if (c.b == ob.getUserIndex()) res.push(rbMap.get(c.a));
-			
+			if (c.a == ob.getUserIndex()) rb = rbMap.get(c.b);
+			else if (c.b == ob.getUserIndex()) rb = rbMap.get(c.a);
 			#end
+
+			if (rb != null && res.indexOf(rb) == -1) res.push(rb);
 		}
 		return res;
 	}
