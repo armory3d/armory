@@ -427,6 +427,7 @@ class ArmNavigationPanel(bpy.types.Panel):
             return
 
         layout.operator("arm.generate_navmesh")
+        layout.operator("arm.remove_navmesh")
 
 class ArmoryGenerateNavmeshButton(bpy.types.Operator):
     '''Generate navmesh from selected meshes'''
@@ -446,11 +447,29 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         obj.arm_traitlist[-1].class_name_prop = 'NavMesh'
 
         # For visualization
-        # TODO
+        # Removed in b28
         # bpy.ops.mesh.navmesh_make('EXEC_DEFAULT')
         # obj = context.active_object
         # obj.hide_render = True
         # obj.arm_export = False
+
+        return{'FINISHED'}
+
+class ArmoryRemoveNavmeshButton(bpy.types.Operator):
+    '''Remove generated navmesh from selected mesh'''
+    bl_idname = 'arm.remove_navmesh'
+    bl_label = 'Remove Navmesh'
+
+    def execute(self, context):
+        obj = context.active_object
+        if obj == None or obj.type != 'MESH':
+            return{'CANCELLED'}
+
+        # Navmesh trait
+        for i in range(len(obj.arm_traitlist)):
+            if obj.arm_traitlist[i].class_name_prop == 'NavMesh':
+                obj.arm_traitlist.remove(i)
+                break
 
         return{'FINISHED'}
 
@@ -1443,6 +1462,7 @@ def register():
     bpy.utils.register_class(ArmoryCleanProjectButton)
     bpy.utils.register_class(ArmoryPublishProjectButton)
     bpy.utils.register_class(ArmoryGenerateNavmeshButton)
+    bpy.utils.register_class(ArmoryRemoveNavmeshButton)
     bpy.utils.register_class(ArmNavigationPanel)
     bpy.utils.register_class(ArmGenLodButton)
     bpy.utils.register_class(ArmLodPanel)
@@ -1494,6 +1514,7 @@ def unregister():
     bpy.utils.unregister_class(ArmoryCleanProjectButton)
     bpy.utils.unregister_class(ArmoryPublishProjectButton)
     bpy.utils.unregister_class(ArmoryGenerateNavmeshButton)
+    bpy.utils.unregister_class(ArmoryRemoveNavmeshButton)
     bpy.utils.unregister_class(ArmNavigationPanel)
     bpy.utils.unregister_class(ArmGenLodButton)
     bpy.utils.unregister_class(ArmLodPanel)
