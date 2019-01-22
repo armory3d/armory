@@ -6,7 +6,7 @@ from arm.logicnode.arm_nodes import *
 class GetGroupNode(Node, ArmLogicTreeNode):
     '''Get group node'''
     bl_idname = 'LNGetGroupNode'
-    bl_label = 'Get Group'
+    bl_label = 'Get Collection'
     bl_icon = 'QUESTION'
 
     def init(self, context):

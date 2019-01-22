@@ -8,7 +8,6 @@ class GetGroupNode extends LogicNode {
 
 	override function get(from:Int):Dynamic {
 		var groupName:String = inputs[0].get();
-
 		return iron.Scene.active.getGroup(groupName);
 	}
 }

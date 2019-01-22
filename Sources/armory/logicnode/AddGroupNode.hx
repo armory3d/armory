@@ -8,11 +8,17 @@ class AddGroupNode extends LogicNode {
 
 	override function run(from:Int) {
 		var groupName:String = inputs[1].get();
+		var raw = iron.Scene.active.raw;
 		
-		if (iron.Scene.active.groups.get(groupName) == null) {
-			iron.Scene.active.groups.set(groupName, []);
+		// Already exists
+		for (g in raw.groups) {
+			if (g.name == groupName) {
+				runOutput(0);
+				return;
+			}
 		}
 
+		raw.groups.push({ name: groupName, object_refs: [] });
 		runOutput(0);
 	}
 }
