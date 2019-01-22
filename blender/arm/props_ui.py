@@ -439,6 +439,11 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         if obj == None or obj.type != 'MESH':
             return{'CANCELLED'}
 
+        # Prevent duplicates
+        for t in obj.arm_traitlist:
+            if t.class_name_prop == 'NavMesh':
+                return{'FINISHED'}
+
         # TODO: build tilecache here
 
         # Navmesh trait
