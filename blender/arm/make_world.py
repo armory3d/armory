@@ -198,7 +198,7 @@ def parse_color(world, node):
         
         wrd.world_defs += '_EnvSky'
         assets.add_khafile_def('arm_hosek')
-                
+        
         world.arm_envtex_sun_direction = [node.sun_direction[0], node.sun_direction[1], node.sun_direction[2]]
         world.arm_envtex_turbidity = node.turbidity
         world.arm_envtex_ground_albedo = node.ground_albedo

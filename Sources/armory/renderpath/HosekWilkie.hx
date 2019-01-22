@@ -113,7 +113,9 @@ class HosekWilkie {
 	public static function recompute(world:WorldData) {
 		if (world == null || world.raw.sun_direction == null) return;
 		if (data == null) data = new HosekWilkieRadianceData();
-		var sunPositionX = Math.acos(world.raw.sun_direction[2]);
+		// Clamp Z for night cycle
+		var sunZ = world.raw.sun_direction[2] > 0 ? world.raw.sun_direction[2] : 0;
+		var sunPositionX = Math.acos(sunZ);
 		var normalizedSunY:kha.FastFloat = 1.15;
 		data.recompute(sunPositionX, world.raw.turbidity, world.raw.ground_albedo, normalizedSunY);
 	}
