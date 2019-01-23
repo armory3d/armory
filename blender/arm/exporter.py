@@ -1739,7 +1739,7 @@ class ArmoryExporter:
             # Attach MovieTexture
             for con in o['contexts']:
                 for tex in con['bind_textures']:
-                    if tex['source'] == 'movie':
+                    if 'source' in tex and tex['source'] == 'movie':
                         trait = {}
                         trait['type'] = 'Script'
                         trait['class_name'] = 'armory.trait.internal.MovieTexture'
