@@ -498,11 +498,11 @@ def make_forward(con_mesh):
 
         if '_LDR' in wrd.world_defs:
             frag.add_include('std/tonemap.glsl')
-            frag.write('fragColor[0].rgb = tonemapFilmic(fragColor.rgb);')
+            frag.write('fragColor[0].rgb = tonemapFilmic(fragColor[0].rgb);')
 
     # Particle opacity
     if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'GPU' and mat_state.material.arm_particle_fade:
-        frag.write('fragColor.rgb *= p_fade;')
+        frag.write('fragColor[0].rgb *= p_fade;')
 
 def make_forward_base(con_mesh, parse_opacity=False):
     global is_displacement
@@ -521,12 +521,12 @@ def make_forward_base(con_mesh, parse_opacity=False):
 
     blend = mat_state.material.arm_blending
     if blend:
-        frag.add_out('vec4 fragColor')
+        frag.add_out('vec4 fragColor[1]')
         if parse_opacity:
-            frag.write('fragColor = vec4(basecol, opacity);')
+            frag.write('fragColor[0] = vec4(basecol, opacity);')
         else:
-            # frag.write('fragColor = vec4(basecol * lightCol * visibility, 1.0);')
-            frag.write('fragColor = vec4(basecol, 1.0);')
+            # frag.write('fragColor[0] = vec4(basecol * lightCol * visibility, 1.0);')
+            frag.write('fragColor[0] = vec4(basecol, 1.0);')
         # TODO: Fade out fragments near depth buffer here
         return
 
