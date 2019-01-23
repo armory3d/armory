@@ -155,7 +155,6 @@ def init_properties():
     bpy.types.World.rp_preset = EnumProperty(
         items=[('Desktop', 'Desktop', 'Desktop'),
                ('Mobile', 'Mobile', 'Mobile'),
-               ('VR', 'VR', 'VR'),
                ('Max', 'Max', 'Max'),
                ('2D/Baked', '2D/Baked', '2D/Baked'),
                ],
