@@ -1,11 +1,24 @@
 package armory.logicnode;
 
+import armory.trait.physics.bullet.PhysicsWorld;
+
 class OnUpdateNode extends LogicNode {
+
+	public var property0:String; // Update, Late Update, Physics Pre-Update
 
 	public function new(tree:LogicTree) {
 		super(tree);
+		tree.notifyOnInit(init);
+	}
 
-		tree.notifyOnUpdate(update);
+	function init() {
+		switch (property0) {
+		case "Late Update": tree.notifyOnLateUpdate(update);
+		#if arm_bullet
+		case "Physics Pre-Update": PhysicsWorld.active.notifyOnPreUpdate(update);
+		#end
+		default /* Update */: tree.notifyOnUpdate(update);
+		}
 	}
 
 	function update() {
