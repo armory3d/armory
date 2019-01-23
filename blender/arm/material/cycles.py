@@ -1582,15 +1582,12 @@ def make_texture(image_node, tex_name, matname=None):
         tex['u_addressing'] = 'clamp'
         tex['v_addressing'] = 'clamp'
     
-    if image.source == 'MOVIE': # Just append movie texture trait for now
-        movie_trait = {}
-        movie_trait['type'] = 'Script'
-        movie_trait['class_name'] = 'armory.trait.internal.MovieTexture'
-        movie_trait['parameters'] = ['"' + tex['file'] + '"']
-        for o in mat_state.mat_armusers[mat_state.material]:
-            o['traits'].append(movie_trait)
+    if image.source == 'MOVIE':
         tex['source'] = 'movie'
-        tex['file'] = '' # MovieTexture will load the video
+        tex['min_filter'] = 'linear'
+        tex['mag_filter'] = 'linear'
+        tex['mipmap_filter'] = 'no'
+        tex['generate_mipmaps'] = False
 
     return tex
 

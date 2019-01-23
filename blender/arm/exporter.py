@@ -21,6 +21,7 @@ import arm.assets as assets
 import arm.log as log
 import arm.material.make as make_material
 import arm.material.mat_batch as mat_batch
+import arm.material.mat_state as mat_state
 import arm.make_renderpath as make_renderpath
 import arm.material.cycles as cycles
 import arm.exporter_opt as exporter_opt
@@ -1734,6 +1735,18 @@ class ArmoryExporter:
             mat_users = self.materialToObjectDict
             mat_armusers = self.materialToArmObjectDict
             sd, rpasses = make_material.parse(material, o, mat_users, mat_armusers)
+            
+            # Attach MovieTexture
+            for con in o['contexts']:
+                for tex in con['bind_textures']:
+                    if tex['source'] == 'movie':
+                        trait = {}
+                        trait['type'] = 'Script'
+                        trait['class_name'] = 'armory.trait.internal.MovieTexture'
+                        ArmoryExporter.import_traits.append(trait['class_name'])
+                        trait['parameters'] = ['"' + tex['file'] + '"']
+                        for user in mat_armusers[material]:
+                            user['traits'].append(trait)
 
             if 'translucent' in rpasses:
                 transluc_used = True

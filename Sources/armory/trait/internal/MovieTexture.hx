@@ -39,14 +39,13 @@ class MovieTexture extends Trait {
 		}
 	}
 
-	function init() {	
-
+	function init() {
 		iron.data.Data.getVideo(videoName, function(vid:kha.Video) {
 			video = vid;
 			video.play(true);
-			
+
 			image = Image.createRenderTarget(getPower2(video.width()), getPower2(video.height()));
-			
+
 			var o = cast(object, iron.object.MeshObject);
 			o.materials[0].contexts[0].textures[0] = image; // Override diffuse texture
 			notifyOnRender2D(render);
@@ -59,7 +58,7 @@ class MovieTexture extends Trait {
 		var g2 = image.g2;
 		g2.begin(true, 0xff000000);
 		g2.color = 0xffffffff;
-		g2.drawVideo(video, 0, 0, 1024, 512);
+		g2.drawVideo(video, 0, 0, image.width, image.height);
 		g2.end();
 		
 		g.begin(false);
