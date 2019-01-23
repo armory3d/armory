@@ -474,21 +474,31 @@ def make_forward_solid(con_mesh):
 
 def make_forward(con_mesh):
     wrd = bpy.data.worlds['Arm']
+    rpdat = arm.utils.get_rp()
     blend = mat_state.material.arm_blending
     parse_opacity = blend and mat_utils.is_transluc(mat_state.material)
-    
+
     make_forward_base(con_mesh, parse_opacity=parse_opacity)
 
     frag = con_mesh.frag
 
     if not blend:
-        frag.add_out('vec4 fragColor')
-        frag.write('fragColor = vec4(direct + indirect, 1.0);')
-    
+        mrt = rpdat.rp_ssr
+        if mrt:
+            # Store light gbuffer for post-processing
+            frag.add_out('vec4 fragColor[2]')
+            frag.add_include('std/gbuffer.glsl')
+            frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
+            frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
+            frag.write('fragColor[0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
+            frag.write('fragColor[1] = vec4(n.xy, packFloat(metallic, roughness), 1.0);')
+        else:
+            frag.add_out('vec4 fragColor[1]')
+            frag.write('fragColor[0] = vec4(direct + indirect, 1.0);')
+
         if '_LDR' in wrd.world_defs:
             frag.add_include('std/tonemap.glsl')
-            frag.write('fragColor.rgb = tonemapFilmic(fragColor.rgb);')
-            # frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
+            frag.write('fragColor[0].rgb = tonemapFilmic(fragColor.rgb);')
 
     # Particle opacity
     if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'GPU' and mat_state.material.arm_particle_fade:
