@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-import armory.trait.physics.bullet.PhysicsWorld;
+import armory.trait.physics.PhysicsWorld;
 
 class OnUpdateNode extends LogicNode {
 
@@ -14,7 +14,7 @@ class OnUpdateNode extends LogicNode {
 	function init() {
 		switch (property0) {
 		case "Late Update": tree.notifyOnLateUpdate(update);
-		#if arm_bullet
+		#if arm_physics
 		case "Physics Pre-Update": PhysicsWorld.active.notifyOnPreUpdate(update);
 		#end
 		default /* Update */: tree.notifyOnUpdate(update);
