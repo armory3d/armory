@@ -68,6 +68,7 @@ def make_base(con_mesh, parse_opacity):
     global write_material_attribs
     global write_material_attribs_post
     global write_vertex_attribs
+    wrd = bpy.data.worlds['Arm']
 
     vert = con_mesh.make_vert()
     frag = con_mesh.make_frag()
@@ -110,6 +111,8 @@ def make_base(con_mesh, parse_opacity):
         frag.write('float metallic;')
         frag.write('float occlusion;')
         frag.write('float specular;')
+        if '_Emission' in wrd.world_defs:
+            frag.write('float emission;')
         if parse_opacity:
             frag.write('float opacity;')
         cycles.parse(mat_state.nodes, con_mesh, vert, frag, geom, tesc, tese, parse_opacity=parse_opacity)
@@ -242,7 +245,12 @@ def make_deferred(con_mesh):
 
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
-    frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), 1.0);')
+    if '_Emission' in wrd.world_defs:
+        frag.write('float matid = 0.0;')
+        frag.write('if (emission > 0) matid = 1.0;')
+    else:
+        frag.write('const float matid = 0.0;')
+    frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), matid);')
     frag.write('fragColor[1] = vec4(basecol.rgb, packFloat2(occlusion, specular));')
 
     if '_gbuffer2' in wrd.world_defs:
@@ -284,6 +292,8 @@ def make_forward_mobile(con_mesh):
     frag.write('float metallic;')
     frag.write('float occlusion;')
     frag.write('float specular;')
+    if '_Emission' in wrd.world_defs:
+        frag.write('float emission;')
 
     arm_discard = mat_state.material.arm_discard
     blend = mat_state.material.arm_blending
@@ -434,6 +444,8 @@ def make_forward_solid(con_mesh):
     frag.write('float metallic;')
     frag.write('float occlusion;')
     frag.write('float specular;')
+    if '_Emission' in wrd.world_defs:
+        frag.write('float emission;')
 
     arm_discard = mat_state.material.arm_discard
     blend = mat_state.material.arm_blending
@@ -661,3 +673,9 @@ def make_forward_base(con_mesh, parse_opacity=False):
             frag.write('indirectSpecular *= f0 * envBRDF.x + envBRDF.y;')
             frag.write('indirect += indirectSpecular * voxelgiSpec * specular;')
             frag.write('}')
+
+    if '_Emission' in wrd.world_defs:
+        frag.write('if (emission > 0.0) {')
+        frag.write('    direct = vec3(0.0);')
+        frag.write('    indirect += basecol;')
+        frag.write('}')

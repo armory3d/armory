@@ -166,7 +166,7 @@ in vec3 viewRay;
 out vec4 fragColor;
 
 void main() {
-	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0); // Normal.xy, metallic/roughness, depth
+	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0); // Normal.xy, metallic/roughness, matid
 	
 	vec3 n;
 	n.z = 1.0 - abs(g0.x) - abs(g0.y);
@@ -276,6 +276,13 @@ void main() {
 	// #else
 	fragColor.rgb *= textureLod(ssaotex, texCoord, 0.0).r;
 	// #endif
+#endif
+
+#ifdef _Emission
+	if (g0.a == 1.0) {
+		fragColor.rgb += g1.rgb; // materialid
+		albedo = vec3(0.0);
+	}
 #endif
 
 	// Show voxels
