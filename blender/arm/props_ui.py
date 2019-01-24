@@ -782,11 +782,11 @@ class ArmRenderPathShadowsPanel(bpy.types.Panel):
         col2.enabled = rpdat.rp_shadowmap_cascades != '1'
         col2.prop(rpdat, 'arm_shadowmap_split')
         col.prop(rpdat, 'arm_shadowmap_bounds')
-        col.prop(rpdat, 'arm_soft_shadows')
-        col2 = col.column()
-        col2.enabled = rpdat.arm_soft_shadows != 'Off'
-        col2.prop(rpdat, 'arm_soft_shadows_penumbra')
-        col2.prop(rpdat, 'arm_soft_shadows_distance')
+        # col.prop(rpdat, 'arm_soft_shadows')
+        # col2 = col.column()
+        # col2.enabled = rpdat.arm_soft_shadows != 'Off'
+        # col2.prop(rpdat, 'arm_soft_shadows_penumbra')
+        # col2.prop(rpdat, 'arm_soft_shadows_distance')
         col.prop(rpdat, 'arm_pcfsize')
 
 class ArmRenderPathVoxelsPanel(bpy.types.Panel):

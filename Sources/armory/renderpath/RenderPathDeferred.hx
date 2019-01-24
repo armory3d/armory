@@ -614,9 +614,6 @@ class RenderPathDeferred {
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
 		path.bindTarget("gbuffer1", "gbuffer1");
-		// 	#if rp_gbuffer2_direct
-		// 	path.bindTarget("gbuffer2", "gbuffer2");
-		// 	#end
 		#if (rp_ssgi != "Off")
 		{
 			if (armory.data.Config.raw.rp_ssgi != false) {
@@ -786,14 +783,13 @@ class RenderPathDeferred {
 			path.setTarget("buf");
 			path.bindTarget("tex", "tex");
 			path.bindTarget("_main", "gbufferD");
-			path.bindTarget("gbuffer2", "gbuffer2");
+			path.bindTarget("gbuffer0", "gbuffer0");
 			path.drawShader("shader_datas/sss_pass/sss_pass_x");
 
 			path.setTarget("tex");
-			// TODO: can not bind tex
-			path.bindTarget("tex", "tex");
+			path.bindTarget("buf", "tex");
 			path.bindTarget("_main", "gbufferD");
-			path.bindTarget("gbuffer2", "gbuffer2");
+			path.bindTarget("gbuffer0", "gbuffer0");
 			path.drawShader("shader_datas/sss_pass/sss_pass_y");
 		}
 		#end

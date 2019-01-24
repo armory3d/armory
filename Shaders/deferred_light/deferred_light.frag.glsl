@@ -345,28 +345,28 @@ void main() {
 	#endif
 
 	fragColor.rgb += sdirect * svisibility * sunCol;
-#endif
 
-// #ifdef _Hair // Aniso
-// 	if (textureLod(gbuffer2, texCoord, 0.0).a == 2) {
+//	#ifdef _Hair // Aniso
+// 	if (g0.a == 2.0) {
 // 		const float shinyParallel = metrough.y;
 // 		const float shinyPerpendicular = 0.1;
 // 		const vec3 v = vec3(0.99146, 0.11664, 0.05832);
 // 		vec3 T = abs(dot(n, v)) > 0.99999 ? cross(n, vec3(0.0, 1.0, 0.0)) : cross(n, v);
 // 		fragColor.rgb = orenNayarDiffuseBRDF(albedo, metrough.y, dotNV, dotNL, dotVH) + wardSpecular(n, h, dotNL, dotNV, dotNH, T, shinyParallel, shinyPerpendicular) * spec;
 // 	}
-// 	else fragColor.rgb = lambertDiffuseBRDF(albedo, dotNL) + specularBRDF(f0, metrough.y, dotNL, dotNH, dotNV, dotVH) * spec;
-// #endif
+//	#endif
 
-#ifdef _SSS
-	if (textureLod(gbuffer2, texCoord, 0.0).a == 2) {
+	#ifdef _SSS
+	if (g0.a == 2.0) {
 		#ifdef _CSM
 		int casi, casindex;
 		mat4 LWVP = getCascadeMat(distance(eye, p), casi, casindex);
 		#endif
-		fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVP, p, n, l, lightPlane.y, shadowMap);
+		fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVP, p, n, sunDir, lightPlane.y, shadowMap);
 	}
-#endif
+	#endif
+
+#endif // _Sun
 
 #ifdef _SinglePoint
 	fragColor.rgb += sampleLight(
@@ -378,6 +378,11 @@ void main() {
 		, true, spotData.x, spotData.y, spotDir
 		#endif
 	);
+	#ifdef _Spot
+	#ifdef _SSS
+	if (g0.a == 2.0) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
+	#endif
+	#endif
 #endif
 
 #ifdef _Clusters

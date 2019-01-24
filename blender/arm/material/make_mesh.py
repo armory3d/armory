@@ -15,7 +15,7 @@ write_material_attribs = None
 write_material_attribs_post = None
 write_vertex_attribs = None
 
-def make(context_id):
+def make(context_id, rpasses):
     rpdat = arm.utils.get_rp()
     rid = rpdat.rp_renderer
 
@@ -53,7 +53,7 @@ def make(context_id):
         else:
             make_forward(con_mesh)
     elif rid == 'Deferred':
-        make_deferred(con_mesh)
+        make_deferred(con_mesh, rpasses)
     elif rid == 'Raytracer':
         make_raytracer(con_mesh)
 
@@ -183,12 +183,12 @@ def make_base(con_mesh, parse_opacity):
         sh.write('wposition += wnormal * disp * 0.1;')
         sh.write('gl_Position = VP * vec4(wposition, 1.0);')
 
-def make_deferred(con_mesh):
+def make_deferred(con_mesh, rpasses):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
 
     arm_discard = mat_state.material.arm_discard
-    parse_opacity = arm_discard
+    parse_opacity = arm_discard or 'translucent' in rpasses
 
     make_base(con_mesh, parse_opacity=parse_opacity)
 
@@ -196,8 +196,11 @@ def make_deferred(con_mesh):
     vert = con_mesh.vert
     tese = con_mesh.tese
 
-    if arm_discard:
-        opac = mat_state.material.arm_discard_opacity
+    if parse_opacity:
+        if arm_discard:
+            opac = mat_state.material.arm_discard_opacity
+        else:
+            opac = '1.0'
         frag.write('if (opacity < {0}) discard;'.format(opac))
 
     gapi = arm.utils.get_gapi()
@@ -245,11 +248,17 @@ def make_deferred(con_mesh):
 
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
-    if '_Emission' in wrd.world_defs:
+    
+    if '_Emission' in wrd.world_defs or '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
         frag.write('float matid = 0.0;')
-        frag.write('if (emission > 0) matid = 1.0;')
+        if '_Emission' in wrd.world_defs:
+            frag.write('if (emission > 0) matid = 1.0;')
+        if '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
+            frag.add_uniform('int materialID')
+            frag.write('if (materialID == 2) matid = 2.0;')
     else:
         frag.write('const float matid = 0.0;')
+
     frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), matid);')
     frag.write('fragColor[1] = vec4(basecol.rgb, packFloat2(occlusion, specular));')
 
@@ -258,9 +267,6 @@ def make_deferred(con_mesh):
             frag.write('vec2 posa = (wvpposition.xy / wvpposition.w) * 0.5 + 0.5;')
             frag.write('vec2 posb = (prevwvpposition.xy / prevwvpposition.w) * 0.5 + 0.5;')
             frag.write('fragColor[2].rg = vec2(posa - posb);')
-        if '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
-            frag.add_uniform('int materialID')
-            frag.write('fragColor[2].a = materialID;')
 
     return con_mesh
 
@@ -488,7 +494,7 @@ def make_forward(con_mesh):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     blend = mat_state.material.arm_blending
-    parse_opacity = blend and mat_utils.is_transluc(mat_state.material)
+    parse_opacity = blend or mat_utils.is_transluc(mat_state.material)
 
     make_forward_base(con_mesh, parse_opacity=parse_opacity)
 
@@ -527,8 +533,11 @@ def make_forward_base(con_mesh, parse_opacity=False):
     frag = con_mesh.frag
     tese = con_mesh.tese
 
-    if arm_discard:
-        opac = mat_state.material.arm_discard_opacity
+    if parse_opacity or arm_discard:
+        if arm_discard:
+            opac = mat_state.material.arm_discard_opacity
+        else:
+            opac = '1.0'
         frag.write('if (opacity < {0}) discard;'.format(opac))
 
     blend = mat_state.material.arm_blending

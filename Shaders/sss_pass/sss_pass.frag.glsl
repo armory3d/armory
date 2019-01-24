@@ -38,7 +38,7 @@
 #include "compiled.inc"
 
 uniform sampler2D gbufferD;
-uniform sampler2D gbuffer2;
+uniform sampler2D gbuffer0;
 uniform sampler2D tex;
 
 uniform vec2 dir;
@@ -85,6 +85,8 @@ vec4 SSSSBlur() {
 	vec2 finalStep = sssWidth * scale * dir;
 	// finalStep *= 1.0;//SSSS_STREGTH_SOURCE; // Modulate it using the alpha channel.
 	finalStep *= 1.0 / 3.0; // Divide by 3 as the kernels range from -3 to 3.
+	
+	finalStep *= 0.05; //
 
 	// Accumulate the center sample:
 	vec4 colorBlurred = colorM;
@@ -111,7 +113,7 @@ vec4 SSSSBlur() {
 
 void main() {
 	// SSS only masked objects
-	if (textureLod(gbuffer2, texCoord, 0.0).a == 2) {
+	if (textureLod(gbuffer0, texCoord, 0.0).a == 2.0) {
 		fragColor = clamp(SSSSBlur(), 0.0, 1.0);
 	}
 	else {

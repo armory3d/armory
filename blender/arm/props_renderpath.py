@@ -218,7 +218,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                # ('Raytracer', 'Raytracer', 'Raytracer'),
                ],
         name="Renderer", description="Renderer type", default='Deferred', update=update_renderpath)
-    rp_depthprepass: BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=True, update=update_renderpath)
+    rp_depthprepass: BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=False, update=update_renderpath)
     rp_hdr: BoolProperty(name="HDR", description="Render in HDR Space", default=True, update=update_renderpath)
     rp_render_to_texture: BoolProperty(name="Post Process", description="Render scene to texture for further processing", default=True, update=update_renderpath)
     rp_background: EnumProperty(

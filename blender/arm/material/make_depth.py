@@ -157,7 +157,10 @@ def make(context_id, rpasses, shadowmap=False):
                 vert.write('vcolor = col.rgb;')
 
     if parse_opacity:
-        opac = mat_state.material.arm_discard_opacity_shadows
+        if mat_state.material.arm_discard:
+            opac = mat_state.material.arm_discard_opacity_shadows
+        else:
+            opac = '1.0'
         frag.write('if (opacity < {0}) discard;'.format(opac))
 
     make_finalize.make(con_depth)

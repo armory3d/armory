@@ -86,11 +86,13 @@ def parse(material, mat_data, mat_users, mat_armusers):
                 sss_node = arm.node_utils.get_node_armorypbr(material.node_tree)
                 if sss_node != None and sss_node.outputs[0].is_linked and (sss_node.inputs[8].is_linked or sss_node.inputs[8].default_value != 0.0):
                     sss = True
+                const = {}
+                const['name'] = 'materialID'
                 if sss:
-                    const = {}
-                    const['name'] = 'materialID'
                     const['int'] = 2
-                    c['bind_constants'].append(const)
+                else:
+                    const['int'] = 0
+                c['bind_constants'].append(const)
 
             # TODO: Mesh only material batching
             if wrd.arm_batch_materials:

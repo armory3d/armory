@@ -78,7 +78,7 @@ def build(material, mat_users, mat_armusers):
             pass
             
         elif rp == 'mesh':
-            con = make_mesh.make(rp)
+            con = make_mesh.make(rp, rpasses)
 
         elif rp == 'shadowmap':
             con = make_depth.make(rp, rpasses, shadowmap=True)
