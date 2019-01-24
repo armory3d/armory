@@ -60,12 +60,12 @@ class ArmExporterListItem(bpy.types.PropertyGroup):
     arm_project_rp: StringProperty(
            name="Render Path",
            description="A name for this item",
-           default="Path")
+           default="")
 
-    arm_project_scene: StringProperty(
+    arm_project_scene: PointerProperty(
             name="Scene",
             description="Scene to load when launching",
-            default="Scene")
+            type=bpy.types.Scene)
 
     arm_project_target: EnumProperty(
         items = [('html5', 'HTML5 (JS)', 'html5'),
@@ -150,6 +150,7 @@ class ArmExporterListNewItem(bpy.types.Operator):
         mdata.arm_exporterlist_index = len(mdata.arm_exporterlist) - 1
         if len(mdata.arm_rplist) > mdata.arm_exporterlist_index:
             mdata.arm_exporterlist[-1].arm_project_rp = mdata.arm_rplist[mdata.arm_rplist_index].name
+        mdata.arm_exporterlist[-1].arm_project_scene = context.scene
         return{'FINISHED'}
 
 class ArmExporterListDeleteItem(bpy.types.Operator):

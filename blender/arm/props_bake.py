@@ -5,7 +5,7 @@ from bpy.types import Menu, Panel, UIList
 from bpy.props import *
 
 class ArmBakeListItem(bpy.types.PropertyGroup):
-    obj: PointerProperty(type=bpy.types.Object, description="The object to bake.")
+    obj: PointerProperty(type=bpy.types.Object, description="The object to bake")
     res_x: IntProperty(name="X", description="Texture resolution", default=1024)
     res_y: IntProperty(name="Y", description="Texture resolution", default=1024)
     object_name: StringProperty(name="Name", description="", default="") # TODO: deprecated

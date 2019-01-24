@@ -535,6 +535,8 @@ class ArmoryBuildProjectButton(bpy.types.Operator):
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
         if item.arm_project_rp == '':
             item.arm_project_rp = wrd.arm_rplist[wrd.arm_rplist_index].name
+        if item.arm_project_scene == None:
+            item.arm_project_scene = context.scene
         # Assume unique rp names
         rplist_index = wrd.arm_rplist_index
         for i in range(0, len(wrd.arm_rplist)):

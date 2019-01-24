@@ -421,7 +421,7 @@ def get_active_scene():
     else:
         wrd = bpy.data.worlds['Arm']
         item = wrd.arm_exporterlist[wrd.arm_exporterlist_index]
-        return bpy.data.scenes[item.arm_project_scene]
+        return item.arm_project_scene
 
 def logic_editor_space(context_screen=None):
     if context_screen == None:
