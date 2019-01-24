@@ -1961,6 +1961,10 @@ class ArmoryExporter:
             # Process
             if not bobject.parent:
                 self.process_bobject(bobject)
+                # Softbody needs connected triangles, use optimized geometry export
+                for mod in bobject.modifiers:
+                    if mod.type == 'CLOTH' or mod.type == 'SOFT_BODY':
+                        ArmoryExporter.optimize_enabled = True
 
         self.process_skinned_meshes()
 

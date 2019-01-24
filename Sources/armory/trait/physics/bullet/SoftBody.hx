@@ -93,7 +93,7 @@ class SoftBody extends Trait {
 		}
 
 		var positions = fromI16(geom.positions, mo.data.scalePos);
-		for (i in 0...Std.int(positions.length / 4)) {
+		for (i in 0...Std.int(positions.length / 3)) {
 			v.set(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
 			v.applyQuat(object.transform.rot);
 			v.x *= object.transform.scale.x;
@@ -122,6 +122,7 @@ class SoftBody extends Trait {
 			worldInfo = physics.world.getWorldInfo();
 			helpersCreated = true;
 		}
+
 		#if js
 		body = helpers.CreateFromTriMesh(worldInfo, cast positions, cast vecind, numtri);
 		#elseif cpp
@@ -176,6 +177,8 @@ class SoftBody extends Trait {
 		var n = geom.vertexBuffers[1].lockInt16();
 		#else
 		var v = geom.vertexBuffer.lockInt16();
+		var vbPos = geom.vertexBufferMap.get("pos");
+		var v2 = vbPos != null ? vbPos.lockInt16() : null; // For shadows
 		var l = geom.structLength;
 		#end
 		var numVerts = Std.int(v.length / l);
@@ -186,7 +189,7 @@ class SoftBody extends Trait {
 		var nodes = body.m_nodes;
 		#end
 
-		var maxdim = 1.0;
+		var scalePos = 1.0;
 		for (i in 0...numVerts) {
 			var node = nodes.at(i);
 			#if js
@@ -194,12 +197,12 @@ class SoftBody extends Trait {
 			#elseif cpp
 			var nodePos = node.m_x;
 			#end
-			if (nodePos.x() > maxdim) maxdim = nodePos.x();
-			if (nodePos.y() > maxdim) maxdim = nodePos.y();
-			if (nodePos.z() > maxdim) maxdim = nodePos.z();
+			if (Math.abs(nodePos.x()) > scalePos) scalePos = Math.abs(nodePos.x());
+			if (Math.abs(nodePos.y()) > scalePos) scalePos = Math.abs(nodePos.y());
+			if (Math.abs(nodePos.z()) > scalePos) scalePos = Math.abs(nodePos.z());
 		}
-		maxdim *= 2;
-		var scalePos = mo.data.scalePos = maxdim;
+		mo.data.scalePos = scalePos;
+		mo.transform.scaleWorld = scalePos;
 		mo.transform.buildMatrix();
 
 		for (i in 0...numVerts) {
@@ -222,9 +225,14 @@ class SoftBody extends Trait {
 			v.set(i * l    , Std.int(nodePos.x() * 32767 * (1 / scalePos)));
 			v.set(i * l + 1, Std.int(nodePos.y() * 32767 * (1 / scalePos)));
 			v.set(i * l + 2, Std.int(nodePos.z() * 32767 * (1 / scalePos)));
+			if (vbPos != null) {
+				v2.set(i * 4    , v.get(i * l    ));
+				v2.set(i * 4 + 1, v.get(i * l + 1));
+				v2.set(i * 4 + 2, v.get(i * l + 2));
+			}
+			v.set(i * l + 3, Std.int(nodeNor.z() * 32767));
 			v.set(i * l + 4, Std.int(nodeNor.x() * 32767));
 			v.set(i * l + 5, Std.int(nodeNor.y() * 32767));
-			v.set(i * l + 3, Std.int(nodeNor.z() * 32767));
 			#end
 		}
 		// for (i in 0...Std.int(geom.indices[0].length / 3)) {
@@ -253,6 +261,7 @@ class SoftBody extends Trait {
 		geom.vertexBuffers[1].unlock();
 		#else
 		geom.vertexBuffer.unlock();
+		if (vbPos != null) vbPos.unlock();
 		#end
 	}
 
