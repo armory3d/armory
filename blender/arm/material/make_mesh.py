@@ -500,6 +500,14 @@ def make_forward(con_mesh):
 
     frag = con_mesh.frag
 
+    if '_LTC' in wrd.world_defs:
+        frag.add_uniform('vec3 lightArea0', '_lightArea0', included=True)
+        frag.add_uniform('vec3 lightArea1', '_lightArea1', included=True)
+        frag.add_uniform('vec3 lightArea2', '_lightArea2', included=True)
+        frag.add_uniform('vec3 lightArea3', '_lightArea3', included=True)
+        frag.add_uniform('sampler2D sltcMat', '_ltcMat', included=True)
+        frag.add_uniform('sampler2D sltcMag', '_ltcMag', included=True)
+
     if not blend:
         mrt = rpdat.rp_ssr
         if mrt:

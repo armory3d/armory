@@ -10,6 +10,12 @@
 #ifdef _VoxelAOvar
 #include "std/conetrace.glsl"
 #endif
+#ifdef _LTC
+#include "std/ltc.glsl"
+#endif
+#ifdef _LightIES
+#include "std/ies.glsl"
+#endif
 
 #ifdef _ShadowMap
 #ifdef _SinglePoint
@@ -34,6 +40,15 @@
 #endif
 #endif
 
+#ifdef _LTC
+uniform vec3 lightArea0;
+uniform vec3 lightArea1;
+uniform vec3 lightArea2;
+uniform vec3 lightArea3;
+uniform sampler2D sltcMat;
+uniform sampler2D sltcMag;
+#endif
+
 vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, const vec3 lp, const vec3 lightCol,
 	const vec3 albedo, const float rough, const float spec, const vec3 f0
 	#ifdef _ShadowMap
@@ -55,11 +70,26 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	float dotVH = dot(v, h);
 	float dotNL = dot(n, l);
 
+	#ifdef _LTC
+	float theta = acos(dotNV);
+	vec2 tuv = vec2(rough, theta / (0.5 * PI));
+	tuv = tuv * LUT_SCALE + LUT_BIAS;
+	vec4 t = textureLod(sltcMat, tuv, 0.0);
+	mat3 invM = mat3(
+		vec3(1.0, 0.0, t.y),
+		vec3(0.0, t.z, 0.0),
+		vec3(t.w, 0.0, t.x));
+	float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lightArea0, lightArea1, lightArea2, lightArea3);
+	ltcspec *= textureLod(sltcMag, tuv, 0.0).a;
+	float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3);
+	vec3 direct = albedo * ltcdiff + ltcspec * spec;
+	#else
 	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) +
 				  specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) * spec;
+	direct *= attenuate(distance(p, lp));
+	#endif
 
 	direct *= lightCol;
-	direct *= attenuate(distance(p, lp));
 
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
@@ -105,24 +135,6 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#ifdef _LightIES
 	direct *= iesAttenuation(-l);
 	#endif
-
-	// #ifdef _LTC
-	// if (lightType == 3) { // Area
-	// 	float theta = acos(dotNV);
-	// 	vec2 tuv = vec2(metrough.y, theta / (0.5 * PI));
-	// 	tuv = tuv * LUT_SCALE + LUT_BIAS;
-	// 	vec4 t = textureLod(sltcMat, tuv, 0.0);
-	// 	mat3 invM = mat3(
-	// 		vec3(1.0, 0.0, t.y),
-	// 		vec3(0.0, t.z, 0.0),
-	// 		vec3(t.w, 0.0, t.x));
-
-	// 	float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lightArea0, lightArea1, lightArea2, lightArea3);
-	// 	ltcspec *= textureLod(sltcMag, tuv, 0.0).a;
-	// 	float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3);
-	// 	fragColor.rgb = albedo * ltcdiff + ltcspec * spec;
-	// }
-	// #endif
 
 	#ifdef _ShadowMap
 		#ifdef _SinglePoint

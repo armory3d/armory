@@ -21,12 +21,6 @@
 #ifdef _SSRS
 #include "std/ssrs.glsl"
 #endif
-#ifdef _LightIES
-#include "std/ies.glsl"
-#endif
-#ifdef _LTC
-#include "std/ltc.glsl"
-#endif
 
 uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
@@ -83,12 +77,12 @@ uniform mat4 invVP;
 #endif
 
 #ifdef _LTC
-uniform vec3 lightArea0;
-uniform vec3 lightArea1;
-uniform vec3 lightArea2;
-uniform vec3 lightArea3;
-uniform sampler2D sltcMat;
-uniform sampler2D sltcMag;
+//!uniform vec3 lightArea0;
+//!uniform vec3 lightArea1;
+//!uniform vec3 lightArea2;
+//!uniform vec3 lightArea3;
+//!uniform sampler2D sltcMat;
+//!uniform sampler2D sltcMag;
 #endif
 
 uniform vec2 cameraProj;
