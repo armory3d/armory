@@ -9,7 +9,7 @@ def make(context_id):
 		'blend_source': 'blend_one', 'blend_destination': 'blend_one', 'blend_operation': 'add', \
 		'alpha_blend_source': 'blend_zero', 'alpha_blend_destination': 'inverse_source_alpha', 'alpha_blend_operation': 'add' })
 
-	make_mesh.make_forward_base(con_transluc, parse_opacity=True)
+	make_mesh.make_forward_base(con_transluc, parse_opacity=True, transluc_pass=True)
 
 	vert = con_transluc.vert
 	frag = con_transluc.frag
@@ -23,9 +23,6 @@ def make(context_id):
 
 	# Remove fragColor = ...;
 	frag.main = frag.main[:frag.main.rfind('fragColor')]
-
-	frag.write('\n')
-	frag.write('if (opacity == 1.0) discard;');
 
 	frag.write('\n')
 	frag.add_uniform('vec3 lightColor', link='_lightColor')

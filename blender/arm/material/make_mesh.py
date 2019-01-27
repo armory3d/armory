@@ -522,7 +522,7 @@ def make_forward(con_mesh):
     if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'GPU' and mat_state.material.arm_particle_fade:
         frag.write('fragColor[0].rgb *= p_fade;')
 
-def make_forward_base(con_mesh, parse_opacity=False):
+def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     global is_displacement
     wrd = bpy.data.worlds['Arm']
 
@@ -536,9 +536,11 @@ def make_forward_base(con_mesh, parse_opacity=False):
     if parse_opacity or arm_discard:
         if arm_discard:
             opac = mat_state.material.arm_discard_opacity
+            frag.write('if (opacity < {0}) discard;'.format(opac))
+        elif transluc_pass:
+            frag.write('if (opacity == 1.0) discard;')
         else:
-            opac = '1.0'
-        frag.write('if (opacity < {0}) discard;'.format(opac))
+            frag.write('if (opacity < 1.0) discard;')
 
     blend = mat_state.material.arm_blending
     if blend:
