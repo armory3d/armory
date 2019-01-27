@@ -628,7 +628,7 @@ class RenderPathDeferred {
 		#if (rp_gi != "Off")
 		if (armory.data.Config.raw.rp_gi != false)
 		{
-			#if (rp_gi == "Voxel AO")
+			#if (arm_config && (rp_gi == "Voxel AO"))
 			voxelao_pass = true;
 			#end
 			path.bindTarget(voxels, "voxels");

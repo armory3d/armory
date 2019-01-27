@@ -238,7 +238,7 @@ def parse_shader(sres, c, con, defs, lines, parse_attributes):
                                 const['link'] = l['link']
                             break
 
-def make(res, base_name, json_data, fp, defs):
+def make(res, base_name, json_data, fp, defs, make_variants):
     sres = {}
     res['shader_datas'].append(sres)
     sres['name'] = base_name
@@ -247,7 +247,8 @@ def make(res, base_name, json_data, fp, defs):
 
     vert = None
     frag = None
-    if 'variants' in json_data and len(json_data['variants']) > 0:
+    has_variants = 'variants' in json_data and len(json_data['variants']) > 0
+    if make_variants and has_variants:
         d = json_data['variants'][0]
         if d in defs:
             # Write shader variant with define

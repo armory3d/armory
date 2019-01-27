@@ -438,7 +438,7 @@ def write_indexhtml(w, h, is_publish):
 """)
 
 add_compiledglsl = ''
-def write_compiledglsl(defs):
+def write_compiledglsl(defs, make_variants):
     rpdat = arm.utils.get_rp()
     shadowmap_size = arm.utils.get_cascade_size(rpdat) if rpdat.rp_shadows else 0
     with open(arm.utils.build_dir() + '/compiled/Shaders/compiled.inc', 'w') as f:
@@ -447,7 +447,7 @@ def write_compiledglsl(defs):
 #define _COMPILED_GLSL_
 """)
         for d in defs:
-            if d.endswith('var'):
+            if make_variants and d.endswith('var'):
                 continue # Write a shader variant instead
             f.write("#define " + d + "\n")
         f.write("""const float PI = 3.1415926535;

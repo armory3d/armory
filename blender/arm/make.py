@@ -34,7 +34,7 @@ def run_proc(cmd, done):
     threading.Thread(target=fn, args=(p, done)).start()
     return p
 
-def compile_shader_pass(res, raw_shaders_path, shader_name, defs):
+def compile_shader_pass(res, raw_shaders_path, shader_name, defs, make_variants):
     os.chdir(raw_shaders_path + '/' + shader_name)
 
     # Open json file
@@ -44,7 +44,7 @@ def compile_shader_pass(res, raw_shaders_path, shader_name, defs):
     json_data = json.loads(json_file)
 
     fp = arm.utils.get_fp_build()
-    arm.lib.make_datas.make(res, shader_name, json_data, fp, defs)
+    arm.lib.make_datas.make(res, shader_name, json_data, fp, defs, make_variants)
 
     path = fp + '/compiled/Shaders'
     c = json_data['contexts'][0]
@@ -147,11 +147,14 @@ def export_data(fp, sdk_path):
     if wrd.arm_debug_console:
         print('Khafile flags: ' + str(assets.khafile_defs))
 
+    # Render path is configurable at runtime
+    has_config = wrd.arm_write_config or os.path.exists(arm.utils.get_fp() + '/Bundled/config.arm')
+
     # Write compiled.inc
     shaders_path = build_dir + '/compiled/Shaders'
     if not os.path.exists(shaders_path):
         os.makedirs(shaders_path)
-    write_data.write_compiledglsl(defs + cdefs)
+    write_data.write_compiledglsl(defs + cdefs, make_variants=has_config)
 
     # Write referenced shader passes
     if not os.path.isfile(build_dir + '/compiled/Shaders/shader_datas.arm') or state.last_world_defs != wrd.world_defs:
@@ -163,11 +166,11 @@ def export_data(fp, sdk_path):
                 continue
             assets.shader_passes_assets[ref] = []
             if ref.startswith('compositor_pass'):
-                compile_shader_pass(res, raw_shaders_path, ref, defs + cdefs)
+                compile_shader_pass(res, raw_shaders_path, ref, defs + cdefs, make_variants=has_config)
             # elif ref.startswith('grease_pencil'):
-                # compile_shader_pass(res, raw_shaders_path, ref, [])
+                # compile_shader_pass(res, raw_shaders_path, ref, [], make_variants=has_config)
             else:
-                compile_shader_pass(res, raw_shaders_path, ref, defs)
+                compile_shader_pass(res, raw_shaders_path, ref, defs, make_variants=has_config)
         arm.utils.write_arm(shaders_path + '/shader_datas.arm', res)
     for ref in assets.shader_passes:
         for s in assets.shader_passes_assets[ref]:
