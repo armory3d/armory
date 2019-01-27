@@ -395,7 +395,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     #     name="Bounces", description="Trace multiple light bounces", default='1', update=update_renderpath)
     arm_voxelgi_camera: BoolProperty(name="Dynamic Camera", description="Use camera as voxelization origin", default=False, update=assets.invalidate_shader_cache)
     # arm_voxelgi_anisotropic: BoolProperty(name="Anisotropic", description="Use anisotropic voxels", default=False, update=update_renderpath)
-    # arm_voxelgi_shadows: BoolProperty(name="Trace Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
+    arm_voxelgi_shadows: BoolProperty(name="Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
     arm_samples_per_pixel: EnumProperty(
         items=[('1', '1', '1'),
                ('2', '2', '2'),

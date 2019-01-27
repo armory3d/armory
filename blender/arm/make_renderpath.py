@@ -78,12 +78,12 @@ def add_world_defs():
             # if rpdat.arm_voxelgi_bounces != "1":
             #     assets.add_khafile_def('rp_gi_bounces={0}'.format(rpdat.arm_voxelgi_bounces))
             #     assets.add_shader_external(arm.utils.get_sdk_path() + '/armory/Shaders/voxel_bounce/voxel_bounce.comp.glsl')
-            # if rpdat.arm_voxelgi_shadows:
-                # wrd.world_defs += '_VoxelGIShadow'
             if rpdat.rp_voxelgi_relight:
                 assets.add_khafile_def('rp_voxelgi_relight')
         elif voxelao:
             wrd.world_defs += '_VoxelAOvar' # Write a shader variant
+            if rpdat.arm_voxelgi_shadows:
+                wrd.world_defs += '_VoxelShadow'
 
     if arm.utils.get_legacy_shaders() and not state.is_viewport:
         wrd.world_defs += '_Legacy'
@@ -94,6 +94,7 @@ def add_world_defs():
         if bo.type == 'LIGHT':
             light = bo.data
             if light.type == 'AREA' and '_LTC' not in wrd.world_defs:
+                point_lights += 1
                 wrd.world_defs += '_LTC'
                 assets.add_khafile_def('arm_ltc')
             if light.type == 'SUN' and '_Sun' not in wrd.world_defs:

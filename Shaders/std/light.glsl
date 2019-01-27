@@ -7,6 +7,9 @@
 #ifdef _ShadowMap
 #include "std/shadows.glsl"
 #endif
+#ifdef _VoxelAOvar
+#include "std/conetrace.glsl"
+#endif
 
 #ifdef _ShadowMap
 #ifdef _SinglePoint
@@ -39,6 +42,11 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#ifdef _Spot
 		, bool isSpot, float spotA, float spotB, vec3 spotDir
 	#endif
+	#ifdef _VoxelAOvar
+	#ifdef _VoxelShadow
+	#endif
+		, sampler3D voxels, vec3 voxpos
+	#endif
 	) {
 	vec3 ld = lp - p;
 	vec3 l = normalize(ld);
@@ -52,6 +60,12 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 
 	direct *= lightCol;
 	direct *= attenuate(distance(p, lp));
+
+	#ifdef _VoxelAOvar
+	#ifdef _VoxelShadow
+	direct *= 1.0 - traceShadow(voxels, voxpos, l, 0.14, 5.0);
+	#endif
+	#endif
 
 	#ifdef _Spot
 	if (isSpot) {

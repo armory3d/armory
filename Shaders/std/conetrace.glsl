@@ -1,3 +1,7 @@
+
+#ifndef _CONETRACE_GLSL_
+#define _CONETRACE_GLSL_
+
 // References
 // https://github.com/Friduric/voxel-cone-tracing
 // https://github.com/Cigg/Voxel-Cone-Tracing
@@ -111,10 +115,6 @@ vec4 traceDiffuse(const vec3 origin, const vec3 normal, sampler3D voxels) {
 	return vec4(0.0);
 }
 
-float traceShadow(sampler3D voxels, const vec3 origin, const vec3 dir, const float aperture, const float targetDistance, const vec3 normal) {
-	return traceCone(voxels, origin + normal * 0.04 * voxelgiOffset, dir, aperture, targetDistance, normal).a;
-}
-
 vec3 traceSpecular(sampler3D voxels, const vec3 pos, const vec3 normal, const vec3 viewDir, const float roughness) {
 	float specularAperture = clamp(tan((3.14159265 / 2) * roughness * 0.75), 0.0174533 * 3.0, 3.14159265);
 	vec3 specularDir = normalize(reflect(-viewDir, normal));
@@ -144,6 +144,10 @@ float traceConeAO(sampler3D voxels, const vec3 origin, vec3 dir, const float ape
 		diam = dist * aperture;
 	}
 	return sampleCol;
+}
+
+float traceShadow(sampler3D voxels, const vec3 origin, const vec3 dir, const float aperture, const float targetDistance) {
+	return traceConeAO(voxels, origin, dir, aperture, targetDistance);
 }
 
 float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels) {
@@ -196,3 +200,5 @@ float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels) {
 
 	return 0.0;
 }
+
+#endif

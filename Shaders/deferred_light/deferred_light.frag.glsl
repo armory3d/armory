@@ -322,14 +322,11 @@ void main() {
 	// }
 	#endif
 
-	// #ifdef _VoxelGIShadow // #else
-	// 	#ifdef _VoxelGICam
-	// 	vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
-	// 	#else
-	// 	vec3 voxpos = p / voxelgiHalfExtents;
-	// 	#endif
-	// 	if (dotNL > 0.0) svisibility = max(0, 1.0 - traceShadow(voxels, voxpos, l, 0.1, 10.0, n));
-	// #endif
+	#ifdef _VoxelAOvar
+	#ifdef _VoxelShadow
+	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, 0.14, 5.0);
+	#endif
+	#endif
 
 	#ifdef _SSRS
 	float tvis = traceShadowSS(-sunDir, p, gbufferD, invVP, eye);
@@ -369,6 +366,7 @@ void main() {
 #endif // _Sun
 
 #ifdef _SinglePoint
+
 	fragColor.rgb += sampleLight(
 		p, n, v, dotNV, pointPos, pointCol, albedo, metrough.y, occspec.y, f0
 		#ifdef _ShadowMap
@@ -377,12 +375,19 @@ void main() {
 		#ifdef _Spot
 		, true, spotData.x, spotData.y, spotDir
 		#endif
+		#ifdef _VoxelAOvar
+		#ifdef _VoxelShadow
+		, voxels, voxpos
+		#endif
+		#endif
 	);
+	
 	#ifdef _Spot
 	#ifdef _SSS
 	if (g0.a == 2.0) fragColor.rgb += fragColor.rgb * SSSSTransmittance(LWVPSpot0, p, n, normalize(pointPos - p), lightPlane.y, shadowMapSpot[0]);
 	#endif
-	#endif
+	#endif	
+
 #endif
 
 #ifdef _Clusters
