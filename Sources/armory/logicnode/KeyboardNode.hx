@@ -8,7 +8,21 @@ class KeyboardNode extends LogicNode {
 	public function new(tree:LogicTree) {
 		super(tree);
 	}
-
+	
+	function update() {
+		var keyboard = iron.system.Input.getKeyboard();
+		var b = false;
+		switch (property0) {
+		case "Down":
+			b = keyboard.down(property1);
+		case "Started":
+			b = keyboard.started(property1);
+		case "Released":
+			b = keyboard.released(property1);
+		}
+		if (b) runOutput(0);
+	}
+	
 	override function get(from:Int):Dynamic {
 		var keyboard = iron.system.Input.getKeyboard();
 		switch (property0) {
