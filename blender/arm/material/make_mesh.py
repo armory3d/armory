@@ -507,6 +507,16 @@ def make_forward(con_mesh):
         frag.add_uniform('vec3 lightArea3', '_lightArea3', included=True)
         frag.add_uniform('sampler2D sltcMat', '_ltcMat', included=True)
         frag.add_uniform('sampler2D sltcMag', '_ltcMag', included=True)
+        if '_ShadowMap' in wrd.world_defs:
+            if '_SinglePoint' in wrd.world_defs:
+                frag.add_uniform('mat4 LWVPSpot0', link='_biasLightViewProjectionMatrixSpot0', included=True)
+                frag.add_uniform('sampler2DShadow shadowMapSpot[1]', included=True)
+            if '_Clusters' in wrd.world_defs:
+                frag.add_uniform('mat4 LWVPSpot0', link='_biasLightWorldViewProjectionMatrixSpot0', included=True)
+                frag.add_uniform('mat4 LWVPSpot1', link='_biasLightWorldViewProjectionMatrixSpot1', included=True)
+                frag.add_uniform('mat4 LWVPSpot2', link='_biasLightWorldViewProjectionMatrixSpot2', included=True)
+                frag.add_uniform('mat4 LWVPSpot3', link='_biasLightWorldViewProjectionMatrixSpot3', included=True)
+                frag.add_uniform('sampler2DShadow shadowMapSpot[4]', included=True)
 
     if not blend:
         mrt = rpdat.rp_ssr
@@ -664,7 +674,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
                 frag.write('const vec2 smSize = shadowmapSize;')
                 frag.write('svisibility = PCF(shadowMap, lPos.xy, lPos.z - shadowsBias, smSize);')
             frag.write('}') # receiveShadow
-        if '_VoxelShadow' and '_VoxelAOvar':
+        if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
             frag.write('svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, 0.14, 5.0);')
         frag.write('direct += (lambertDiffuseBRDF(albedo, sdotNL) + specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * specular) * sunCol * svisibility;')
         # sun
@@ -690,7 +700,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('  , 0, pointBias')
         if '_Spot' in wrd.world_defs:
             frag.write('  , true, spotData.x, spotData.y, spotDir')
-        if '_VoxelShadow' and '_VoxelAOvar':
+        if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
             frag.write('  , voxels, voxpos')
         frag.write(');')
 

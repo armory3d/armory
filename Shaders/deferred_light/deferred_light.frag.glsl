@@ -83,6 +83,19 @@ uniform mat4 invVP;
 //!uniform vec3 lightArea3;
 //!uniform sampler2D sltcMat;
 //!uniform sampler2D sltcMag;
+#ifdef _ShadowMap
+	#ifdef _SinglePoint
+	//!uniform sampler2DShadow shadowMapSpot[1];
+	//!uniform mat4 LWVPSpot0;
+	#endif
+	#ifdef _Clusters
+	//!uniform sampler2DShadow shadowMapSpot[4];
+	//!uniform mat4 LWVPSpot0;
+	//!uniform mat4 LWVPSpot1;
+	//!uniform mat4 LWVPSpot2;
+	//!uniform mat4 LWVPSpot3;
+	#endif
+#endif
 #endif
 
 uniform vec2 cameraProj;

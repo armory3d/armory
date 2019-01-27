@@ -1486,8 +1486,6 @@ class ArmoryExporter:
             o['type'] = 'area'
             o['size'] = objref.size
             o['size_y'] = objref.size_y
-        else: # Hemi
-            o['type'] = 'sun'
 
         o['cast_shadow'] = objref.use_shadow
         o['near_plane'] = objref.arm_clip_start

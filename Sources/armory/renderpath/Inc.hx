@@ -134,7 +134,7 @@ class Inc {
 			path.currentFace = -1;
 
 			if (l.data.raw.type == "point") pointIndex++;
-			else if (l.data.raw.type == "spot") spotIndex++;
+			else if (l.data.raw.type == "spot" || l.data.raw.type == "area") spotIndex++;
 		}
 
 		// One light at a time for now, precompute all lights for tiled

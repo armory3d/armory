@@ -47,6 +47,19 @@ uniform vec3 lightArea2;
 uniform vec3 lightArea3;
 uniform sampler2D sltcMat;
 uniform sampler2D sltcMag;
+#ifdef _ShadowMap
+	#ifdef _SinglePoint
+	uniform sampler2DShadow shadowMapSpot[1];
+	uniform mat4 LWVPSpot0;
+	#endif
+	#ifdef _Clusters
+	uniform sampler2DShadow shadowMapSpot[4];
+	uniform mat4 LWVPSpot0;
+	uniform mat4 LWVPSpot1;
+	uniform mat4 LWVPSpot2;
+	uniform mat4 LWVPSpot3;
+	#endif
+#endif
 #endif
 
 vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, const vec3 lp, const vec3 lightCol,
@@ -95,6 +108,34 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#ifdef _VoxelShadow
 	direct *= 1.0 - traceShadow(voxels, voxpos, l, 0.14, 5.0);
 	#endif
+	#endif
+
+	#ifdef _LTC
+	#ifdef _ShadowMap
+		#ifdef _SinglePoint
+		vec4 lPos = LWVPSpot0 * vec4(p + n * bias * 10, 1.0);
+		direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
+		#endif
+		#ifdef _Clusters
+		if (index == 0) {
+			vec4 lPos = LWVPSpot0 * vec4(p + n * bias * 10, 1.0);
+			direct *= shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, bias);
+		}
+		else if (index == 1) {
+			vec4 lPos = LWVPSpot1 * vec4(p + n * bias * 10, 1.0);
+			direct *= shadowTest(shadowMapSpot[1], lPos.xyz / lPos.w, bias);
+		}
+		else if (index == 2) {
+			vec4 lPos = LWVPSpot2 * vec4(p + n * bias * 10, 1.0);
+			direct *= shadowTest(shadowMapSpot[2], lPos.xyz / lPos.w, bias);
+		}
+		else if (index == 3) {
+			vec4 lPos = LWVPSpot3 * vec4(p + n * bias * 10, 1.0);
+			direct *= shadowTest(shadowMapSpot[3], lPos.xyz / lPos.w, bias);
+		}
+		#endif
+	#endif
+	return direct;
 	#endif
 
 	#ifdef _Spot

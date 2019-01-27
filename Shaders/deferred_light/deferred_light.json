@@ -217,6 +217,26 @@
 					"name": "LWVPSpot3",
 					"link": "_biasLightWorldViewProjectionMatrixSpot3",
 					"ifdef": ["_Spot", "_ShadowMap"]
+				},
+				{
+					"name": "LWVPSpot0",
+					"link": "_biasLightWorldViewProjectionMatrixSpot0",
+					"ifdef": ["_LTC", "_ShadowMap"]
+				},
+				{
+					"name": "LWVPSpot1",
+					"link": "_biasLightWorldViewProjectionMatrixSpot1",
+					"ifdef": ["_LTC", "_ShadowMap"]
+				},
+				{
+					"name": "LWVPSpot2",
+					"link": "_biasLightWorldViewProjectionMatrixSpot2",
+					"ifdef": ["_LTC", "_ShadowMap"]
+				},
+				{
+					"name": "LWVPSpot3",
+					"link": "_biasLightWorldViewProjectionMatrixSpot3",
+					"ifdef": ["_LTC", "_ShadowMap"]
 				}
 			],
 			"vertex_shader": "../include/pass_viewray.vert.glsl",
