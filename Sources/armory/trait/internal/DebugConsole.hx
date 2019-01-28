@@ -306,8 +306,7 @@ class DebugConsole extends Trait {
 						}
 						else if (Std.is(selectedObject, iron.object.CameraObject)) {
 							selectedType = "(Camera)";
-							var scene = iron.Scene.active;
-							var cam = scene.cameras[0];
+							var cam = cast(selectedObject, iron.object.CameraObject);
 							var fovHandle = Id.handle({value: Std.int(cam.data.raw.fov * 100) / 100});
 							cam.data.raw.fov = ui.slider(fovHandle, "FoV", 0.3, 2.0, true);
 							if (ui.changed) {
