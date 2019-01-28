@@ -72,8 +72,8 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
-	#endif
 		, sampler3D voxels, vec3 voxpos
+	#endif
 	#endif
 	) {
 	vec3 ld = lp - p;

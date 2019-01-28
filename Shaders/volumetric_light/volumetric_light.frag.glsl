@@ -4,25 +4,80 @@
 #include "compiled.inc"
 #include "std/gbuffer.glsl"
 #include "std/shadows.glsl"
+#ifdef _Clusters
+#include "std/clusters.glsl"
+#endif
 
 uniform sampler2D gbufferD;
-#ifndef _NoShadows
-uniform sampler2D shadowMap;
-uniform samplerCube shadowMapCube;
-#endif
 uniform sampler2D snoise;
 
-uniform vec2 screenSize;
-uniform mat4 invVP;
-uniform mat4 LWVP;
-uniform vec3 eye;
-uniform vec3 lightPos;
-uniform float lightRadius;
-uniform float shadowsBias;
-uniform int lightShadow;
-uniform vec2 lightProj;
+#ifdef _Clusters
+uniform vec4 lightsArray[maxLights * 2];
+	#ifdef _Spot
+	uniform vec4 lightsArraySpot[maxLights];
+	#endif
+uniform sampler2D clustersData;
+uniform vec2 cameraPlane;
+#endif
 
-in vec4 wvpposition;
+#ifdef _ShadowMap
+#ifdef _SinglePoint
+	#ifdef _Spot
+	uniform sampler2DShadow shadowMapSpot[1];
+	uniform mat4 LWVPSpot0;
+	#else
+	uniform samplerCubeShadow shadowMapPoint[1];
+	uniform vec2 lightProj;
+	#endif
+#endif
+#ifdef _Clusters
+	uniform samplerCubeShadow shadowMapPoint[4];
+	uniform vec2 lightProj;
+	#ifdef _Spot
+	uniform sampler2DShadow shadowMapSpot[4];
+	uniform mat4 LWVPSpot0;
+	uniform mat4 LWVPSpot1;
+	uniform mat4 LWVPSpot2;
+	uniform mat4 LWVPSpot3;
+	#endif
+#endif
+#endif
+
+#ifdef _Sun
+uniform vec3 sunDir;
+uniform vec3 sunCol;
+	#ifdef _ShadowMap
+	uniform sampler2DShadow shadowMap;
+	uniform float shadowsBias;
+	#ifdef _CSM
+	//!uniform vec4 casData[shadowmapCascades * 4 + 4];
+	#else
+	uniform mat4 LWVP;
+	#endif
+	// #ifdef _SoftShadows
+	// uniform sampler2D svisibility;
+	// #else
+	#endif // _ShadowMap
+#endif
+
+#ifdef _SinglePoint // Fast path for single light
+uniform vec3 pointPos;
+uniform vec3 pointCol;
+	#ifdef _ShadowMap
+	uniform float pointBias;
+	#endif
+	#ifdef _Spot
+	uniform vec3 spotDir;
+	uniform vec2 spotData;
+	#endif
+#endif
+
+uniform vec2 cameraProj;
+uniform vec3 eye;
+uniform vec3 eyeLook;
+
+in vec2 texCoord;
+in vec3 viewRay;
 out float fragColor;
 
 const float tScat = 0.08;
@@ -30,51 +85,50 @@ const float tAbs = 0.0;
 const float tExt = tScat + tAbs;
 const float stepLen = 1.0 / volumSteps;
 const float lighting = 0.4;
-// float lighting(vec3 p) {
-	// vec3 L = lightPos.xyz - p.xyz;
-	// float Ldist = length(lightPos.xyz - p.xyz);
-	// vec3 Lnorm = L / Ldist;
-
-	// float linearAtenuation = min(1.0, max(0.0, (lightRadius - Ldist) / lightRadius));
-	// return linearAtenuation; //* min(1.0, 1.0 / (Ldist * Ldist));
-// }
 
 void rayStep(inout vec3 curPos, inout float curOpticalDepth, inout float scatteredLightAmount, float stepLenWorld, vec3 viewVecNorm) {
 	curPos += stepLenWorld * viewVecNorm;
 	const float density = 1.0;
 	
-	// float l1 = lighting(curPos) * stepLenWorld * tScat * density;
 	float l1 = lighting * stepLenWorld * tScat * density;
 	curOpticalDepth *= exp(-tExt * stepLenWorld * density);
 
-	float visibility = 1.0;
+#ifdef _Sun
+	#ifdef _CSM
+    mat4 LWVP = mat4(casData[4 + 0], casData[4 + 1], casData[4 + 2], casData[4 + 3]);
+	#endif
+	vec4 lPos = LWVP * vec4(curPos, 1.0);
+	lPos.xyz /= lPos.w;
+	float visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias));
+#endif
 
-	if (lightShadow == 1) {
-		vec4 lightPosition = LWVP * vec4(curPos, 1.0);
-		if (lightPosition.w > 0.0) {
-			lightPosition.xyz /= lightPosition.w;
-			visibility = float(texture(shadowMap, lightPosition.xy).r > lightPosition.z - shadowsBias);
-		}
+#ifdef _SinglePoint
+	#ifdef _Spot
+	vec4 lPos = LWVPSpot0 * vec4(curPos, 1.0);
+	float visibility = shadowTest(shadowMapSpot[0], lPos.xyz / lPos.w, pointBias);
+	float spotEffect = dot(spotDir, normalize(pointPos - curPos)); // lightDir
+	if (spotEffect < spotData.x) { // x - cutoff, y - cutoff - exponent
+		visibility *= smoothstep(spotData.y, spotData.x, spotEffect);
 	}
-	else { // Cubemap
-		vec3 lp = lightPos - curPos;
-		vec3 l = normalize(lp);
-		visibility = float(texture(shadowMapCube, -l).r + shadowsBias > lpToDepth(lp, lightProj));
-	}
+	#else
+	vec3 ld = pointPos - curPos;
+	float visibility = PCFCube(shadowMapPoint[0], ld, -normalize(ld), pointBias, lightProj, vec3(0.0));
+	#endif
+#endif
+
+#ifdef _Clusters
+#endif
 
 	scatteredLightAmount += curOpticalDepth * l1 * visibility;
 }
 
 void main() {
-	vec2 screenPosition = wvpposition.xy / wvpposition.w;
-	vec2 texCoord = screenPosition * 0.5 + 0.5;
-
 	float pixelRayMarchNoise = textureLod(snoise, texCoord * 100, 0.0).r * 2.0 - 1.0;
 
 	float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
-	vec3 worldPos = getPos2(invVP, depth, texCoord);
+	vec3 p = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
 
-	vec3 viewVec = worldPos - eye;
+	vec3 viewVec = p - eye;
 	float worldPosDist = length(viewVec);
 	vec3 viewVecNorm = viewVec / worldPosDist;
 

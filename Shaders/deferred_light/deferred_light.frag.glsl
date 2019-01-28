@@ -319,14 +319,12 @@ void main() {
 	// #endif
 
 	#ifdef _ShadowMap
-	// if (lightShadow == 1) {
 		#ifdef _CSM
 		svisibility = shadowTestCascade(shadowMap, eye, p + n * shadowsBias * 10, shadowsBias);
 		#else
 		vec4 lPos = LWVP * vec4(p + n * shadowsBias * 100, 1.0);
 		if (lPos.w > 0.0) svisibility = shadowTest(shadowMap, lPos.xyz / lPos.w, shadowsBias);
 		#endif
-	// }
 	#endif
 
 	#ifdef _VoxelAOvar

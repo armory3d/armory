@@ -176,13 +176,12 @@ class RenderPathForward {
 
 		#if rp_volumetriclight
 		{
-			path.loadShader("shader_datas/volumetric_light_quad/volumetric_light_quad");
 			path.loadShader("shader_datas/volumetric_light/volumetric_light");
 			path.loadShader("shader_datas/blur_bilat_pass/blur_bilat_pass_x");
 			path.loadShader("shader_datas/blur_bilat_blend_pass/blur_bilat_blend_pass_y");
 			{
 				var t = new RenderTargetRaw();
-				t.name = "bufvola";
+				t.name = "singlea";
 				t.width = 0;
 				t.height = 0;
 				t.displayp = Inc.getDisplayp();
@@ -192,7 +191,7 @@ class RenderPathForward {
 			}
 			{
 				var t = new RenderTargetRaw();
-				t.name = "bufvolb";
+				t.name = "singleb";
 				t.width = 0;
 				t.height = 0;
 				t.displayp = Inc.getDisplayp();
@@ -399,28 +398,6 @@ class RenderPathForward {
 
 		#if rp_render_to_texture
 		{
-			// #if rp_volumetriclight
-			// {
-			// 	path.setTarget("bufvola");
-			// 	path.bindTarget("_main", "gbufferD");
-			// 	Inc.bindShadowMap();
-			// 	if (path.lightIsSun()) {
-			// 		path.drawShader("shader_datas/volumetric_light_quad/volumetric_light_quad");
-			// 	}
-			// 	else {
-			// 		path.drawLightVolume("shader_datas/volumetric_light/volumetric_light");
-			// 	}
-
-			// 	path.setTarget("bufvolb");
-			// 	path.bindTarget("bufvola", "tex");
-			// 	path.drawShader("shader_datas/blur_bilat_pass/blur_bilat_pass_x");
-
-			// 	path.setTarget("lbuffer0");
-			// 	path.bindTarget("bufvolb", "tex");
-			// 	path.drawShader("shader_datas/blur_bilat_blend_pass/blur_bilat_blend_pass_y");
-			// }
-			// #end
-
 			#if (rp_ssr_half || rp_ssgi_half)
 			path.setTarget("half");
 			path.bindTarget("_main", "texdepth");
@@ -501,6 +478,23 @@ class RenderPathForward {
 					path.bindTarget("bloomtex2", "tex");
 					path.drawShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y_blend");
 				}
+			}
+			#end
+
+			#if rp_volumetriclight
+			{
+				path.setTarget("singlea");
+				path.bindTarget("_main", "gbufferD");
+				Inc.bindShadowMap();
+				path.drawShader("shader_datas/volumetric_light/volumetric_light");
+
+				path.setTarget("singleb");
+				path.bindTarget("singlea", "tex");
+				path.drawShader("shader_datas/blur_bilat_pass/blur_bilat_pass_x");
+
+				path.setTarget("lbuffer0");
+				path.bindTarget("singleb", "tex");
+				path.drawShader("shader_datas/blur_bilat_blend_pass/blur_bilat_blend_pass_y");
 			}
 			#end
 

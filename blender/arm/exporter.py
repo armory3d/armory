@@ -1360,7 +1360,7 @@ class ArmoryExporter:
         # Mesh users have different modifier stack
         for i in range(1, len(table)):
             if not self.mod_equal_stack(bobject, table[i]):
-                log.warn('{0} users {1} and {2} differ in modifier stack - use Make Single User(U) - Object & Data for now'.format(oid, bobject.name, table[i].name))
+                log.warn('{0} users {1} and {2} differ in modifier stack - use Make Single User - Object & Data for now'.format(oid, bobject.name, table[i].name))
                 break
 
         print('Exporting mesh ' + arm.utils.asset_name(bobject.data))

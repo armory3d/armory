@@ -3,56 +3,129 @@
 		{
 			"name": "volumetric_light",
 			"depth_write": false,
-			"compare_mode": "greater",
-			"cull_mode": "counter_clockwise",
+			"compare_mode": "always",
+			"cull_mode": "none",
 			"links": [
 				{
-					"name": "VWVP",
-					"link": "_lightVolumeWorldViewProjectionMatrix"
+					"name": "eye",
+					"link": "_cameraPosition"
+				},
+				{
+					"name": "eyeLook",
+					"link": "_cameraLook"
 				},
 				{
 					"name": "invVP",
 					"link": "_inverseViewProjectionMatrix"
 				},
 				{
-					"name": "LWVP",
-					"link": "_biasLightWorldViewProjectionMatrix"
+					"name": "cameraProj",
+					"link": "_cameraPlaneProj"
+				},
+				{
+					"name": "lightsArray",
+					"link": "_lightsArray",
+					"ifdef": ["_Clusters"]
+				},
+				{
+					"name": "lightsArraySpot",
+					"link": "_lightsArraySpot",
+					"ifdef": ["_Clusters", "_Spot"]
+				},
+				{
+					"name": "clustersData",
+					"link": "_clustersData",
+					"ifdef": ["_Clusters"]
+				},
+				{
+					"name": "cameraPlane",
+					"link": "_cameraPlane",
+					"ifdef": ["_Clusters"]
+				},
+				{
+					"name": "sunDir",
+					"link": "_sunDirection",
+					"ifdef": ["_Sun"]
+				},
+				{
+					"name": "sunCol",
+					"link": "_sunColor",
+					"ifdef": ["_Sun"]
 				},
 				{
 					"name": "shadowsBias",
-					"link": "_lightShadowsBias"
+					"link": "_sunShadowsBias",
+					"ifdef": ["_Sun", "_ShadowMap"]
 				},
 				{
-					"name": "screenSize",
-					"link": "_screenSize"
+					"name": "LWVP",
+					"link": "_biasLightWorldViewProjectionMatrix",
+					"ifndef": ["_CSM"],
+					"ifdef": ["_Sun", "_ShadowMap"]
 				},
 				{
-					"name": "eye",
-					"link": "_cameraPosition"
+					"name": "casData",
+					"link": "_cascadeData",
+					"ifdef": ["_Sun", "_ShadowMap", "_CSM"]
 				},
 				{
-					"name": "lightPos",
-					"link": "_lightPosition"
-				},
-				{
-					"name": "lightRadius",
-					"link": "_lightRadius"
-				},
-				{
-					"name": "snoise",
-					"link": "_blueNoise64"
+					"name": "smSizeUniform",
+					"link": "_shadowMapSize",
+					"ifdef": ["_SMSizeUniform"]
 				},
 				{
 					"name": "lightProj",
-					"link": "_lightPlaneProj"
+					"link": "_lightPlaneProj",
+					"ifdef": ["_ShadowMap"]
 				},
 				{
-					"name": "lightShadow",
-					"link": "_lightCastShadow"
+					"name": "pointPos",
+					"link": "_pointPosition",
+					"ifdef": ["_SinglePoint"]
+				},
+				{
+					"name": "pointCol",
+					"link": "_pointColor",
+					"ifdef": ["_SinglePoint"]
+				},
+				{
+					"name": "pointBias",
+					"link": "_pointShadowsBias",
+					"ifdef": ["_SinglePoint", "_ShadowMap"]
+				},
+				{
+					"name": "spotDir",
+					"link": "_spotDirection",
+					"ifdef": ["_SinglePoint", "_Spot"]
+				},
+				{
+					"name": "spotData",
+					"link": "_spotData",
+					"ifdef": ["_SinglePoint", "_Spot"]
+				},
+				{
+					"name": "LWVPSpot0",
+					"link": "_biasLightWorldViewProjectionMatrixSpot0",
+					"ifdef": ["_Spot", "_ShadowMap"]
+				},
+				{
+					"name": "LWVPSpot1",
+					"link": "_biasLightWorldViewProjectionMatrixSpot1",
+					"ifdef": ["_Spot", "_ShadowMap"]
+				},
+				{
+					"name": "LWVPSpot2",
+					"link": "_biasLightWorldViewProjectionMatrixSpot2",
+					"ifdef": ["_Spot", "_ShadowMap"]
+				},
+				{
+					"name": "LWVPSpot3",
+					"link": "_biasLightWorldViewProjectionMatrixSpot3",
+					"ifdef": ["_Spot", "_ShadowMap"]
 				}
 			],
 			"texture_params": [],
-			"vertex_shader": "../include/pass_volume.vert.glsl",
+			"vertex_shader": "../include/pass_viewray.vert.glsl",
 			"fragment_shader": "volumetric_light.frag.glsl"
 		}
 	]
