@@ -16,7 +16,7 @@ def trigger_recompile(self, context):
     wrd.arm_recompile = True
 
 def update_trait_group(self, context):
-    o = context.object
+    o = context.object if self.is_object else context.scene
     if o == None:
         return
     i = o.arm_traitlist_index
@@ -53,6 +53,7 @@ def update_trait_group(self, context):
 class ArmTraitListItem(bpy.types.PropertyGroup):
     name: StringProperty(name="Name", description="A name for this item", default="")
     enabled_prop: BoolProperty(name="", description="A name for this item", default=True, update=trigger_recompile)
+    is_object: BoolProperty(name="", default=True)
     type_prop: EnumProperty(
         items = [('Haxe Script', 'Haxe', 'Haxe Script'),
                  ('WebAssembly', 'Wasm', 'WebAssembly'),
@@ -121,6 +122,7 @@ class ArmTraitListNewItem(bpy.types.Operator):
         else:
             obj = bpy.context.scene
         trait = obj.arm_traitlist.add()
+        trait.is_object = self.is_object
         trait.type_prop = self.type_prop
         obj.arm_traitlist_index = len(obj.arm_traitlist) - 1
         trigger_recompile(None, None)
