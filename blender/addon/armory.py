@@ -44,7 +44,7 @@ class ArmoryAddonPreferences(AddonPreferences):
         self.sdk_path = bpy.path.reduce_dirs([bpy.path.abspath(self.sdk_path)])[0] + '/'
 
     def ffmpeg_path_update(self, context):
-        if self.skip_update:
+        if self.skip_update or self.ffmpeg_path == '':
             return
         self.skip_update = True
         self.ffmpeg_path = bpy.path.reduce_dirs([bpy.path.abspath(self.ffmpeg_path)])[0]
@@ -312,4 +312,3 @@ def unregister():
 
 if __name__ == "__main__":
     register()
-    
