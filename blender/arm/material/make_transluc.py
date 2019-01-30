@@ -15,7 +15,7 @@ def make(context_id):
 	frag = con_transluc.frag
 	tese = con_transluc.tese
 
-	frag.add_out('vec4[2] fragColor')
+	frag.add_out('vec4 fragColor[2]')
 
 	sh = tese if tese != None else vert
 	sh.add_out('vec4 wvpposition')

@@ -205,7 +205,7 @@ def make_deferred(con_mesh, rpasses):
 
     gapi = arm.utils.get_gapi()
     if '_gbuffer2' in wrd.world_defs:
-        frag.add_out('vec4[3] fragColor')
+        frag.add_out('vec4 fragColor[3]')
         if '_Veloc' in wrd.world_defs:
             if tese == None:
                 vert.add_uniform('mat4 prevWVP', link='_prevWorldViewProjectionMatrix')
@@ -236,9 +236,9 @@ def make_deferred(con_mesh, rpasses):
     elif gapi.startswith('direct3d'):
         vert.add_out('vec4 wvpposition')
         vert.write('wvpposition = gl_Position;')
-        frag.add_out('vec4[2] fragColor')
+        frag.add_out('vec4 fragColor[2]')
     else:
-        frag.add_out('vec4[2] fragColor')
+        frag.add_out('vec4 fragColor[2]')
 
     # Pack gbuffer
     frag.add_include('std/gbuffer.glsl')

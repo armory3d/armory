@@ -35,7 +35,7 @@ def make(context_id):
     frag.add_uniform('sampler2D gbufferD')
     frag.add_uniform('mat4 invVP', '_inverseViewProjectionMatrix')
     frag.add_uniform('mat4 invW', '_inverseWorldMatrix')
-    frag.add_out('vec4[2] fragColor')
+    frag.add_out('vec4 fragColor[2]')
 
     frag.write_attrib('    vec3 n = normalize(wnormal);')
 
