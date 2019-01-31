@@ -282,9 +282,11 @@ def fetch_script_names():
     sources_path = get_fp() + '/Sources/' + safestr(wrd.arm_project_package)
     if os.path.isdir(sources_path):
         os.chdir(sources_path)
-        for file in glob.glob('*.hx'):
+        # Glob supports recursive search since python 3.5 so it should cover both blender 2.79 and 2.8 integrated python
+        for file in glob.glob('**/*.hx', recursive=True):
             name = file.rsplit('.')[0]
-            wrd.arm_scripts_list.add().name = name
+            # Replace the path syntax for package syntax so that it can be searchable in blender traits "Class" dropdown
+            wrd.arm_scripts_list.add().name = name.replace(os.sep, '.')
             fetch_script_props(file)
 
     # Canvas

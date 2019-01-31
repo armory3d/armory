@@ -600,14 +600,20 @@ const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 100) / 10
         f.write("""#endif // _COMPILED_GLSL_
 """)
 
-def write_traithx(class_name):
+def write_traithx(class_path):
     wrd = bpy.data.worlds['Arm']
-    package_path = arm.utils.get_fp() + '/Sources/' + arm.utils.safestr(wrd.arm_project_package)
+    # Split the haxe package syntax in components that will compose the path
+    path_components = class_path.split('.')
+    # extract the full file name (file + ext) from the components
+    class_name = path_components[-1]
+    # Create the absolute trait path (os-safe)
+    package_path = os.sep.join([arm.utils.get_fp(), 'Sources', arm.utils.safestr(wrd.arm_project_package)] + path_components[:-1])
     if not os.path.exists(package_path):
         os.makedirs(package_path)
+    package =  '.'.join([arm.utils.safestr(wrd.arm_project_package)] + path_components[:-1]);
     with open(package_path + '/' + class_name + '.hx', 'w') as f:
         f.write(
-"""package """ + arm.utils.safestr(wrd.arm_project_package) + """;
+"""package """ + package + """;
 
 class """ + class_name + """ extends iron.Trait {
 \tpublic function new() {

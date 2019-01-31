@@ -261,7 +261,8 @@ class ArmEditScriptButton(bpy.types.Operator):
             obj = bpy.context.scene
         item = obj.arm_traitlist[obj.arm_traitlist_index]
         pkg = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
-        hx_path = arm.utils.get_fp() + '/Sources/' + pkg + '/' + item.class_name_prop + '.hx'
+        # Replace the haxe package syntax with the os-dependent path syntax for opening
+        hx_path = arm.utils.get_fp() + '/Sources/' + pkg + '/' + item.class_name_prop.replace('.', os.sep) + '.hx'
         arm.utils.kode_studio(hx_path)
         return{'FINISHED'}
 
