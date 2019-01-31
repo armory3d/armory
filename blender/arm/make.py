@@ -266,19 +266,25 @@ def compile(assets_only=False):
         cmd.append('--parallelAssetConversion')
         cmd.append(str(arm.utils.get_khamake_threads()))
 
+    compilation_server = False
+
     cmd.append('--to')
     if (kha_target_name == 'krom' and not state.is_viewport and not state.is_publish) or (kha_target_name == 'html5' and not state.is_publish):
         cmd.append(arm.utils.build_dir() + '/debug')
+        # Start compilation server
+        if kha_target_name == 'krom' and arm.utils.get_compilation_server() and not assets_only:
+            compilation_server = True
+            arm.lib.server.run_haxe(arm.utils.get_haxe_path())
     else:
         cmd.append(arm.utils.build_dir())
 
-    if assets_only:
+    if assets_only or compilation_server:
         cmd.append('--nohaxe')
         cmd.append('--noproject')
 
     print("Running: ", cmd)
     print("Using project from " + arm.utils.get_fp())
-    state.proc_build = run_proc(cmd, build_done)
+    state.proc_build = run_proc(cmd, assets_done if compilation_server else build_done)
 
 def build_viewport():
     if state.proc_build != None:
@@ -373,6 +379,25 @@ def play_done():
     state.redraw_ui = True
     log.clear()
 
+def assets_done():
+    if state.proc_build == None:
+        return
+    result = state.proc_build.poll()
+    if result == 0:
+        # Connect to the compilation server
+        os.chdir(arm.utils.build_dir() + '/debug/')
+        cmd = [arm.utils.get_haxe_path(), '--connect', '6000', 'project-krom.hxml']
+        state.proc_build = run_proc(cmd, compilation_server_done)
+    else:
+        log.print_info('Build failed, check console')
+
+def compilation_server_done():
+    if os.path.exists('krom/krom.js'):
+        os.chmod('krom/krom.js', stat.S_IWRITE)
+        os.remove('krom/krom.js')
+    os.rename('krom/krom.js.temp', 'krom/krom.js')
+    build_done()
+
 def build_done():
     print('Finished in ' + str(time.time() - profile_time))
     if state.proc_build == None:
@@ -451,7 +476,7 @@ def build_success():
         if wrd.arm_runtime == 'Browser':
             # Start server
             os.chdir(arm.utils.get_fp())
-            t = threading.Thread(name='localserver', target=arm.lib.server.run)
+            t = threading.Thread(name='localserver', target=arm.lib.server.run_tcp)
             t.daemon = True
             t.start()
             html5_app_path = 'http://localhost:8040/' + arm.utils.build_dir() + '/debug/html5'

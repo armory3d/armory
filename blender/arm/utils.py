@@ -161,10 +161,15 @@ def get_khamake_threads():
     addon_prefs = preferences.addons['armory'].preferences
     return 1 if not hasattr(addon_prefs, 'khamake_threads') else addon_prefs.khamake_threads
 
+def get_compilation_server():
+    preferences = bpy.context.preferences
+    addon_prefs = preferences.addons['armory'].preferences
+    return False if not hasattr(addon_prefs, 'compilation_server') else addon_prefs.compilation_server
+
 def get_save_on_build():
     preferences = bpy.context.preferences
     addon_prefs = preferences.addons['armory'].preferences
-    return True if not hasattr(addon_prefs, 'save_on_build') else addon_prefs.save_on_build
+    return False if not hasattr(addon_prefs, 'save_on_build') else addon_prefs.save_on_build
 
 def get_viewport_controls():
     preferences = bpy.context.preferences

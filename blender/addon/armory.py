@@ -50,7 +50,7 @@ class ArmoryAddonPreferences(AddonPreferences):
         self.ffmpeg_path = bpy.path.reduce_dirs([bpy.path.abspath(self.ffmpeg_path)])[0]
 
     def renderdoc_path_update(self, context):
-        if self.skip_update:
+        if self.skip_update or self.renderdoc_path == '':
             return
         self.skip_update = True
         self.renderdoc_path = bpy.path.reduce_dirs([bpy.path.abspath(self.renderdoc_path)])[0]
@@ -77,6 +77,7 @@ class ArmoryAddonPreferences(AddonPreferences):
         name="Code Editor", default='kodestudio', description='Use this editor for editing scripts')
     ui_scale: FloatProperty(name='UI Scale', description='Adjust UI scale for Armory tools', default=1.0, min=1.0, max=4.0)
     khamake_threads: IntProperty(name='Khamake Threads', description='Allow Khamake to spawn multiple processes for faster builds', default=4, min=1)
+    compilation_server: BoolProperty(name='Compilation Server', description='Allow Haxe to create a local compilation server for faster builds', default=False)
     renderdoc_path: StringProperty(name="RenderDoc Path", description="Binary path", subtype="FILE_PATH", update=renderdoc_path_update, default="")
     ffmpeg_path: StringProperty(name="FFMPEG Path", description="Binary path", subtype="FILE_PATH", update=ffmpeg_path_update, default="")
     save_on_build: BoolProperty(name="Save on Build", description="Save .blend", default=False)
@@ -118,6 +119,7 @@ class ArmoryAddonPreferences(AddonPreferences):
             box.prop(self, "viewport_controls")
             box.prop(self, "ui_scale")
             box.prop(self, "khamake_threads")
+            box.prop(self, "compilation_server")
             box.prop(self, "save_on_build")
             box.prop(self, "legacy_shaders")
             box.prop(self, "relative_paths")
