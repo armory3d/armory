@@ -276,7 +276,165 @@ class CyclesShader {
 	}
 
 	public function get() {
-		#if kha_webgl // WebGL2
+
+		if (shader_type == 'vert' && vstruct_as_vsin) {
+			vstruct_to_vsin();
+		}
+
+		#if kha_direct3d11
+		var s = 'SamplerState LinearSampler { Filter = MIN_MAG_LINEAR_MIP_POINT; AddressU = Clamp; AddressV = Clamp; };\n';
+		s += 'SamplerState PointSampler { Filter = MIN_MAG_MIP_POINT; AddressU = Clamp; AddressV = Clamp; };\n';
+		s += '#define sampler2D Texture2D\n';
+		s += '#define sampler3D Texture3D\n';
+		s += '#define texture(tex, coord) tex.Sample(LinearSampler, coord)\n';
+		s += '#define mod(a, b) (a % b)\n';
+		s += '#define vec2 float2\n';
+		s += '#define vec3 float3\n';
+		s += '#define vec4 float4\n';
+		s += '#define ivec2 int2\n';
+		s += '#define ivec3 int3\n';
+		s += '#define ivec4 int4\n';
+		s += '#define mat2 float2x2\n';
+		s += '#define mat3 float3x3\n';
+		s += '#define mat4 float4x4\n';
+		s += '#define dFdx ddx\n';
+		s += '#define dFdy ddy\n';
+		s += '#define inversesqrt rsqrt\n';
+
+		s += header;
+
+		var in_ext = '';
+		var out_ext = '';
+
+		for (a in includes)
+			s += '#include "' + a + '"\n';
+
+		// Input structure
+		var index = 0;
+		if (ins.length > 0) {
+			s += 'struct SPIRV_Cross_Input {\n';
+			index = 0;
+			ins.sort(function(a, b):Int {
+				// Sort inputs by name
+				return a.substring(4) >= b.substring(4) ? 1 : -1;
+			});
+			for (a in ins) {
+				s += '$a$in_ext : TEXCOORD$index;\n';
+				index++;
+			}
+			s += '};\n';
+		}
+
+		// Output structure
+		var num = 0;
+		if (outs.length > 0 || shader_type == 'vert') {
+			s += 'struct SPIRV_Cross_Output {\n';
+			outs.sort(function(a, b):Int {
+				// Sort outputs by name
+				return a.substring(4) >= b.substring(4) ? 1 : -1;
+			});
+			index = 0;
+			if (shader_type == 'vert') {
+				for (a in outs) {
+					s += '$a$out_ext : TEXCOORD$index;\n';
+					index++;
+				}
+				s += 'float4 svpos : SV_POSITION;\n';
+			}
+			else {
+				var out = outs[0];
+				// Multiple render targets
+				if (out.charAt(out.length - 1) == ']') {
+					num = Std.parseInt(out.charAt(out.length - 2)); 
+					s += 'vec4 fragColor[$num] : SV_TARGET0;\n';
+				}
+				else {
+					s += 'vec4 fragColor : SV_TARGET0;\n';
+				}
+			}
+			s += '};\n';
+		}
+
+		for (a in uniforms)
+			s += 'uniform ' + a + ';\n';
+		for (f in functions)
+			s += f + '\n';
+
+		// Begin main
+		if (outs.length > 0 || shader_type == 'vert') {
+			if (ins.length > 0) {
+				s += 'SPIRV_Cross_Output main(SPIRV_Cross_Input stage_input) {\n';
+			}
+			else {
+				s += 'SPIRV_Cross_Output main() {\n';
+			}
+		}
+		else {
+			if (ins.length > 0) {
+				s += 'void main(SPIRV_Cross_Input stage_input) {\n';
+			}
+			else {
+				s += 'void main() {\n';
+			}
+		}
+
+		// Declare inputs
+		for (a in ins) {
+			var b = a.substring(5); // Remove type 'vec4 '
+			s += '$a = stage_input.$b;\n';
+		}
+
+		if (shader_type == 'vert') {
+			s += 'vec4 gl_Position;\n';
+			for (a in outs) {
+				s += '$a;\n';
+			}
+		}
+		else {
+			if (outs.length > 0) {
+				if (num > 0) s += 'vec4 fragColor[$num];\n';
+				else s += 'vec4 fragColor;\n';
+			}
+		}
+
+		s += main_attribs;
+		s += main_textures;
+		s += main_normal;
+		s += main_init;
+		s += main;
+		s += main_end;
+
+		// Write output structure
+		if (shader_type == 'vert') {
+			s += 'SPIRV_Cross_Output stage_output;\n';
+			s += 'stage_output.svpos = gl_Position;\n';
+			for (a in outs) {
+				var b = a.substring(5); // Remove type 'vec4 '
+				s += 'stage_output.$b = $b;\n';
+			}
+
+			s += 'return stage_output;\n';
+			
+		}
+		else {
+			if (outs.length > 0) {
+				s += 'SPIRV_Cross_Output stage_output;\n';
+				if (num > 0) {
+					for (i in 0...num) {
+						s += 'stage_output.fragColor[$i] = fragColor[$i];\n';
+					}
+				}
+				else {
+					s += 'stage_output.fragColor = fragColor;\n';
+				}
+				s += 'return stage_output;\n';
+			}
+		}
+		s += '}\n';
+		
+		#else // kha_opengl
+
+		#if kha_webgl
 		var s = '#version 300 es\n';
 		if (shader_type == 'frag') {
 			s += 'precision mediump float;\n';
@@ -286,14 +444,11 @@ class CyclesShader {
 		var s = '#version 330\n';
 		#end
 
+		s += '#define mul(a, b) b * a\n';
 		s += header;
 
 		var in_ext = '';
 		var out_ext = '';
-
-		if (shader_type == 'vert' && vstruct_as_vsin) {
-			vstruct_to_vsin();
-		}
 
 		for (a in includes)
 			s += '#include "' + a + '"\n';
@@ -313,6 +468,9 @@ class CyclesShader {
 		s += main;
 		s += main_end;
 		s += '}\n';
+
+		#end
+
 		return s;
 	}
 }

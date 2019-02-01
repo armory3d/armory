@@ -252,9 +252,6 @@ float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels, float vran
 	const float blendFac = 1.0;
 	return col / (9.0 * blendFac);
 }
-// float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels) {
-	// traceAO(origin, normal, voxels, 1.0, 1.0);
-// }
 ";
 
 	public static var str_cotangentFrame = "

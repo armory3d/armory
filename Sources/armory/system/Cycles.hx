@@ -141,16 +141,16 @@ class Cycles {
 		if (frag.wposition) {
 			vert.add_uniform('mat4 W', '_worldMatrix');
 			vert.add_out('vec3 wposition');
-			vert.write_attrib('wposition = vec4(W * vec4(pos.xyz, 1.0)).xyz;');
+			vert.write_attrib('wposition = vec4(mul(vec4(pos.xyz, 1.0), W)).xyz;');
 		}
 		else if (vert.wposition) {
 			vert.add_uniform('mat4 W', '_worldMatrix');
-			vert.write_attrib('vec3 wposition = vec4(W * vec4(pos.xyz, 1.0)).xyz;');
+			vert.write_attrib('vec3 wposition = vec4(mul(vec4(pos.xyz, 1.0), W)).xyz;');
 		}
 		if (frag.vposition) {
 			vert.add_uniform('mat4 WV', '_worldViewMatrix');
 			vert.add_out('vec3 vposition');
-			vert.write_attrib('vposition = vec4(WV * vec4(pos.xyz, 1.0)).xyz;');
+			vert.write_attrib('vposition = vec4(mul(vec4(pos.xyz, 1.0), WV)).xyz;');
 		}
 		if (frag.mposition) {
 			vert.add_out('vec3 mposition');
@@ -165,12 +165,12 @@ class Cycles {
 			con.add_elem('tang', 'short4norm');
 			vert.add_uniform('mat3 N', '_normalMatrix');
 			vert.add_out('vec3 wtangent');
-			vert.write_attrib('wtangent = normalize(N * tang);');
+			vert.write_attrib('wtangent = normalize(mul(tang, N));');
 		}
 		if (frag.vVecCam) {
 			vert.add_uniform('mat4 WV', '_worldViewMatrix');
 			vert.add_out('vec3 eyeDirCam');
-			vert.write_attrib('eyeDirCam = vec4(WV * vec4(pos.xyz, 1.0)).xyz; eyeDirCam.z *= -1.0;');
+			vert.write_attrib('eyeDirCam = vec4(mul(vec4(pos.xyz, 1.0), WV)).xyz; eyeDirCam.z *= -1.0;');
 			frag.write_attrib('vec3 vVecCam = normalize(eyeDirCam);');
 		}
 		if (frag.vVec) {
@@ -182,12 +182,12 @@ class Cycles {
 		if (frag.n) {
 			vert.add_uniform('mat3 N', '_normalMatrix');
 			vert.add_out('vec3 wnormal');
-			vert.write_attrib('wnormal = N * vec3(nor.xy, pos.w);');
+			vert.write_attrib('wnormal = mul(vec3(nor.xy, pos.w), N);');
 			frag.write_attrib('vec3 n = normalize(wnormal);');
 		}
 		else if (vert.n) {
 			vert.add_uniform('mat3 N', '_normalMatrix');
-			vert.write_attrib('vec3 wnormal = normalize(N * vec3(nor.xy, pos.w));');
+			vert.write_attrib('vec3 wnormal = normalize(mul(vec3(nor.xy, pos.w), N));');
 		}
 		if (frag.dotNV) {
 			frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);');
@@ -259,7 +259,7 @@ class Cycles {
 		}
 		else {
 			return {
-				out_basecol: 'vec3(0.8)',
+				out_basecol: 'vec3(0.8, 0.8, 0.8)',
 				out_roughness: '0.0',
 				out_metallic: '0.0',
 				out_occlusion: '1.0',
@@ -271,7 +271,7 @@ class Cycles {
 
 	static function parse_shader(node:TNode, socket:TNodeSocket):TShaderOut { 
 		var sout:TShaderOut = {
-			out_basecol: 'vec3(0.8)',
+			out_basecol: 'vec3(0.8, 0.8, 0.8)',
 			out_roughness: '0.0',
 			out_metallic: '0.0',
 			out_occlusion: '1.0',
@@ -411,16 +411,16 @@ class Cycles {
 			if (st == 'RGB' || st == 'RGBA' || st == 'VECTOR')
 				return res_var;
 			else //# VALUE
-				return 'vec3($res_var)';
+				return to_vec3(res_var);
 		}
 		else {
 			if (inp.type == 'VALUE') //# Unlinked reroute
-				return to_vec3([0.0, 0.0, 0.0]);
+				return vec3([0.0, 0.0, 0.0]);
 			else {
 				// if mat_batch() && inp.is_uniform:
 					// return to_uniform(inp);
 				// else
-					return to_vec3(inp.default_value);
+					return vec3(inp.default_value);
 			}
 		}
 	}
@@ -439,7 +439,7 @@ class Cycles {
 			if (socket == node.outputs[0]) { // Color
 				curshader.context.add_elem('col', 'short4norm'); // Vcols only for now
 				// return 'vcolor';
-				return 'vec3(0.0)';
+				return 'vec3(0.0, 0.0, 0.0)';
 			}
 			else { // Vector
 				curshader.context.add_elem('tex', 'short2norm'); // UVMaps only for now
@@ -458,7 +458,7 @@ class Cycles {
 		}
 
 		else if (node.type == 'RGB') {
-			return to_vec3(socket.default_value);
+			return vec3(socket.default_value);
 		}
 
 		else if (node.type == 'TEX_BRICK') {
@@ -500,7 +500,7 @@ class Cycles {
 
 	//     else if (node.type == 'TEX_ENVIRONMENT') {
 	//         // Pass through
-	//         return to_vec3([0.0, 0.0, 0.0])
+	//         return vec3([0.0, 0.0, 0.0])
 	// }
 
 		else if (node.type == 'TEX_GRADIENT') {
@@ -537,7 +537,7 @@ class Cycles {
 			else if (grad == 'SPHERICAL') {
 				f = 'max(1.0 - sqrt($co.x * $co.x + $co.y * $co.y + $co.z * $co.z), 0.0)';
 			}
-			var res = 'vec3(clamp($f, 0.0, 1.0))';
+			var res = to_vec3('clamp($f, 0.0, 1.0)');
 			if (sample_bump) write_bump(node, res);
 			return res;
 		}
@@ -597,7 +597,7 @@ class Cycles {
 			var scale = parse_value_input(node.inputs[1]);
 			// detail = parse_value_input(node.inputs[2])
 			// distortion = parse_value_input(node.inputs[3])
-			var res = 'vec3(tex_musgrave_f($co * $scale * 0.5))';
+			var res = to_vec3('tex_musgrave_f($co * $scale * 0.5)');
 			if (sample_bump) write_bump(node, res);
 			return res;
 		}
@@ -623,11 +623,11 @@ class Cycles {
 		}
 	//     elif node.type == 'TEX_POINTDENSITY':
 	//         # Pass through
-	//         return to_vec3([0.0, 0.0, 0.0])
+	//         return vec3([0.0, 0.0, 0.0])
 
 	//     elif node.type == 'TEX_SKY':
 	//         # Pass through
-	//         return to_vec3([0.0, 0.0, 0.0])
+	//         return vec3([0.0, 0.0, 0.0])
 
 		else if (node.type == 'TEX_VORONOI') {
 			curshader.add_function(CyclesFunctions.str_tex_voronoi);
@@ -648,7 +648,7 @@ class Cycles {
 			coloring = StringTools.replace(coloring, " ", "_");
 			var res = '';
 			if (coloring == 'INTENSITY') {
-				res = 'vec3(tex_voronoi($co * $scale).a)';
+				res = to_vec3('tex_voronoi($co * $scale).a');
 			}
 			else { // Cells
 				res = 'tex_voronoi($co * $scale).rgb';
@@ -668,7 +668,7 @@ class Cycles {
 				curshader.bposition = true;
 			}
 			var scale = parse_value_input(node.inputs[1]);
-			var res = 'vec3(tex_wave_f($co * $scale))';
+			var res = to_vec3('tex_wave_f($co * $scale)');
 			if (sample_bump) write_bump(node, res);
 			return res;
 		}
@@ -683,7 +683,7 @@ class Cycles {
 		else if (node.type == 'GAMMA') {
 			var out_col = parse_vector_input(node.inputs[0]);
 			var gamma = parse_value_input(node.inputs[1]);
-			return 'pow($out_col, vec3($gamma))';
+			return 'pow($out_col, ' + to_vec3('$gamma') + ')';
 		}
 
 		else if (node.type == 'HUE_SAT') {
@@ -699,7 +699,7 @@ class Cycles {
 		else if (node.type == 'INVERT') {
 			var fac = parse_value_input(node.inputs[0]);
 			var out_col = parse_vector_input(node.inputs[1]);
-			return 'mix($out_col, vec3(1.0) - ($out_col), $fac)';
+			return 'mix($out_col, vec3(1.0, 1.0, 1.0) - ($out_col), $fac)';
 		}
 		
 		else if (node.type == 'MIX_RGB') {
@@ -727,10 +727,10 @@ class Cycles {
 				out_col = 'mix($col1, $col1 - $col2, $fac_var)';
 			}
 			else if (blend == 'SCREEN') {
-				out_col = '(vec3(1.0) - (vec3(1.0 - $fac_var) + $fac_var * (vec3(1.0) - $col2)) * (vec3(1.0) - $col1))';
+				out_col = '(vec3(1.0, 1.0, 1.0) - (' + to_vec3('1.0 - $fac_var') + ' + $fac_var * (vec3(1.0, 1.0, 1.0) - $col2)) * (vec3(1.0) - $col1))';
 			}
 			else if (blend == 'DIVIDE') {
-				out_col = '(vec3((1.0 - $fac_var) * $col1 + $fac_var * $col1 / $col2))';
+				out_col = '(' + to_vec3('(1.0 - $fac_var) * $col1 + $fac_var * $col1 / $col2') + ')';
 			}
 			else if (blend == 'DIFFERENCE') {
 				out_col = 'mix($col1, abs($col1 - $col2), $fac_var)';
@@ -763,32 +763,32 @@ class Cycles {
 			// 	out_col = 'mix($col1, $col2, $fac_var)'.format(col1, col2, fac_var) // Revert to mix
 			// }
 			else if (blend == 'SOFT_LIGHT') {
-				out_col = '((1.0 - $fac_var) * $col1 + $fac_var * ((vec3(1.0) - $col1) * $col2 * $col1 + $col1 * (vec3(1.0) - (vec3(1.0) - $col2) * (vec3(1.0) - $col1))));';
+				out_col = '((1.0 - $fac_var) * $col1 + $fac_var * ((vec3(1.0, 1.0, 1.0) - $col1) * $col2 * $col1 + $col1 * (vec3(1.0, 1.0, 1.0) - (vec3(1.0, 1.0, 1.0) - $col2) * (vec3(1.0, 1.0, 1.0) - $col1))));';
 			}
 			// else if (blend == 'LINEAR_LIGHT') {
 				// out_col = 'mix($col1, $col2, $fac_var)'.format(col1, col2, fac_var) # Revert to mix
-				// out_col = '($col1 + $fac_var * (2.0 * ($col2 - vec3(0.5))))'.format(col1, col2, fac_var)
+				// out_col = '($col1 + $fac_var * (2.0 * ($col2 - vec3(0.5, 0.5, 0.5))))'.format(col1, col2, fac_var)
 			// }
-			if (use_clamp) return 'clamp($out_col, vec3(0.0), vec3(1.0))';
+			if (use_clamp) return 'clamp($out_col, vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0))';
 			else return out_col;
 		}
 
 	//     elif node.type == 'BLACKBODY':
 	//         # Pass constant
-	//         return to_vec3([0.84, 0.38, 0.0])
+	//         return vec3([0.84, 0.38, 0.0])
 
 		else if (node.type == 'VALTORGB') { // ColorRamp
 			var fac = parse_value_input(node.inputs[0]);
 			var interp = node.buttons[0].data == 0 ? 'LINEAR' : 'CONSTANT';
 			var elems = node.buttons[0].default_value;
 			if (elems.length == 1) {
-				return to_vec3(elems[0]);
+				return vec3(elems[0]);
 			}
 			// Write cols array
 			var cols_var = node_name(node) + '_cols';
 			curshader.write('vec3 $cols_var[${elems.length}];'); // TODO: Make const
 			for (i in 0...elems.length) {
-				curshader.write('$cols_var[$i] = ${to_vec3(elems[i])};');
+				curshader.write('$cols_var[$i] = ${vec3(elems[i])};');
 			}
 			// Get index
 			var fac_var = node_name(node) + '_fac';
@@ -900,7 +900,7 @@ class Cycles {
 		}
 
 		// elif node.type == 'HAIR_INFO':
-		// 	return 'vec3(0.0)' # Tangent Normal
+		// 	return 'vec3(0.0, 0.0, 0.0)' # Tangent Normal
 
 		else if (node.type == 'OBJECT_INFO') {
 			curshader.wposition = true;
@@ -909,11 +909,11 @@ class Cycles {
 
 		// elif node.type == 'PARTICLE_INFO':
 		// 	if socket == node.outputs[3]: # Location
-		// 		return 'vec3(0.0)'
+		// 		return 'vec3(0.0, 0.0, 0.0)'
 		// 	elif socket == node.outputs[5]: # Velocity
-		// 		return 'vec3(0.0)'
+		// 		return 'vec3(0.0, 0.0, 0.0)'
 		// 	elif socket == node.outputs[6]: # Angular Velocity
-		// 		return 'vec3(0.0)'
+		// 		return 'vec3(0.0, 0.0, 0.0)'
 
 		else if (node.type == 'TANGENT') {
 			curshader.wtangent = true;
@@ -948,7 +948,7 @@ class Cycles {
 				return 'wvpposition.xyz';
 			}
 			else if (socket == node.outputs[6]) { // Reflection
-				return 'vec3(0.0)';
+				return 'vec3(0.0, 0.0, 0.0)';
 			}
 		}
 
@@ -1005,7 +1005,7 @@ class Cycles {
 			var node_rotation = node.buttons[1].default_value;
 			var node_scale = node.buttons[2].default_value;
 			if (node_scale[0] != 1.0 || node_scale[1] != 1.0 || node_scale[2] != 1.0) {
-				out = '($out * ${to_vec3(node_scale)})';
+				out = '($out * ${vec3(node_scale)})';
 			}
 			if (node_rotation[2] != 0.0) {
 				// ZYX rotation, Z axis for now..
@@ -1022,7 +1022,7 @@ class Cycles {
 			//     out = 'vec3({0}.y * {1} - {0}.z * {2}, {0}.y * {2} + {0}.z * {1}, 0.0)'.format(out, math.cos(a), math.sin(a))
 			
 			if (node_translation[0] != 0.0 || node_translation[1] != 0.0 || node_translation[2] != 0.0) {
-				out = '($out + ${to_vec3(node_translation)})';
+				out = '($out + ${vec3(node_translation)})';
 			}
 			// if node.use_min:
 				// out = 'max({0}, vec3({1}, {2}, {3}))'.format(out, node.min[0], node.min[1])
@@ -1033,11 +1033,11 @@ class Cycles {
 
 		else if (node.type == 'NORMAL') {
 			if (socket == node.outputs[0])
-				return to_vec3(node.outputs[0].default_value);
+				return vec3(node.outputs[0].default_value);
 			else if (socket == node.outputs[1]) {
 				var nor = parse_vector_input(node.inputs[0]);
-				var norout = to_vec3(node.outputs[0].default_value);
-				return 'vec3(dot($norout, $nor))';
+				var norout = vec3(node.outputs[0].default_value);
+				return to_vec3('dot($norout, $nor)');
 			}
 		}
 
@@ -1084,7 +1084,7 @@ class Cycles {
 				return '(($vec1 + $vec2) / 2.0)';
 			}
 			else if (op == 'DOT_PRODUCT') {
-				return 'vec3(dot($vec1, $vec2))';
+				return to_vec3('dot($vec1, $vec2)');
 			}
 			else if (op == 'CROSS_PRODUCT') {
 				return 'cross($vec1, $vec2)';
@@ -1099,10 +1099,10 @@ class Cycles {
 			var midlevel = parse_value_input(node.inputs[1]);
 			var scale = parse_value_input(node.inputs[2]);
 			var nor = parse_vector_input(node.inputs[3]);
-			return 'vec3($height)';
+			return to_vec3('$height');
 		}
 
-		return 'vec3(0.0)';
+		return 'vec3(0.0, 0.0, 0.0)';
 	}
 
 	static function parse_normal_map_color_input(inp:TNodeSocket, strength = '1.0') { 
@@ -1151,7 +1151,7 @@ class Cycles {
 			// if c_state.mat_batch() and inp.is_uniform:
 				// return to_uniform(inp)
 			// else:
-				return to_vec1(inp.default_value);
+				return vec1(inp.default_value);
 		}
 	}
 
@@ -1281,7 +1281,7 @@ class Cycles {
 		//         return '0.0'
 
 		else if (node.type == 'VALUE') {
-			return to_vec1(node.outputs[0].default_value);
+			return vec1(node.outputs[0].default_value);
 		}
 
 		// elif node.type == 'WIREFRAME':
@@ -1493,7 +1493,7 @@ class Cycles {
 
 		else if (node.type == 'NORMAL') {
 			var nor = parse_vector_input(node.inputs[0]);
-			var norout = to_vec3(node.outputs[0].default_value);
+			var norout = vec3(node.outputs[0].default_value);
 			return 'dot($norout, $nor)';
 		}
 
@@ -1739,7 +1739,7 @@ class Cycles {
 			sample_bump = false;
 		}
 		if (to_linear) {
-			curshader.write('$tex_store.rgb = pow($tex_store.rgb, vec3(2.2));');
+			curshader.write('$tex_store.rgb = pow($tex_store.rgb, vec3(2.2, 2.2, 2.2));');
 		}
 		return tex_store;
 	}
@@ -1769,7 +1769,7 @@ class Cycles {
 		sample_bump = false;
 	}
 
-	static function to_vec1(v:Float):String {
+	static function vec1(v:Float):String {
 		#if kha_webgl
 		return 'float($v)';
 		#else
@@ -1777,11 +1777,19 @@ class Cycles {
 		#end
 	}
 
-	static function to_vec3(v:Array<Float>):String {
+	static function vec3(v:Array<Float>):String {
 		#if kha_webgl
 		return 'vec3(float(${v[0]}), float(${v[1]}), float(${v[2]}))';
 		#else
 		return 'vec3(${v[0]}, ${v[1]}, ${v[2]})';
+		#end
+	}
+
+	static function to_vec3(s:String):String {
+		#if kha_direct3d11
+		return '($s).xxx';
+		#else
+		return 'vec3($s)';
 		#end
 	}
 
