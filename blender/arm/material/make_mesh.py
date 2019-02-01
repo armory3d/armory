@@ -232,11 +232,6 @@ def make_deferred(con_mesh, rpasses):
                     tese.add_uniform('mat4 prevVP', '_prevViewProjectionMatrix')
                     make_tess.interpolate(tese, 'prevwposition', 3)
                     tese.write('prevwvpposition = prevVP * vec4(prevwposition, 1.0);')
-                
-    elif gapi.startswith('direct3d'):
-        vert.add_out('vec4 wvpposition')
-        vert.write('wvpposition = gl_Position;')
-        frag.add_out('vec4 fragColor[2]')
     else:
         frag.add_out('vec4 fragColor[2]')
 

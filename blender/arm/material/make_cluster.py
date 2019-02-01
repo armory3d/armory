@@ -55,7 +55,7 @@ def write(vert, frag):
         frag.write('    , lightsArray[li * 2 + 1].w') # cutoff
         frag.write('    , lightsArraySpot[li].w') # cutoff - exponent
         frag.write('    , lightsArraySpot[li].xyz') # spotDir
-    if '_VoxelShadow' and '_VoxelAOvar':
+    if '_VoxelShadow' in wrd.world_defs and '_VoxelAOvar' in wrd.world_defs:
         frag.write('  , voxels, voxpos')
     frag.write(');')
 
