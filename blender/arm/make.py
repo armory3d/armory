@@ -514,10 +514,6 @@ def build_success():
             proc.wait()
 
         if target_name == 'krom':
-            # Clean up
-            mapfile = files_path + '/krom.js.temp.map'
-            if os.path.exists(mapfile):
-                os.remove(mapfile)
             # Copy Krom binaries
             if state.target == 'krom-windows':
                 gapi = state.export_gapi
