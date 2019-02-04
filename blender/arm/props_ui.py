@@ -1186,16 +1186,23 @@ class ArmGenTerrainButton(bpy.types.Operator):
         links = mat.node_tree.links
         node = nodes.new('ShaderNodeDisplacement')
         node.location = (-200, 100)
-        node.inputs[2].default_value = height_scale * 10
+        node.inputs[2].default_value = height_scale
+        node.space = 'WORLD'
         links.new(nodes['Material Output'].inputs[2], node.outputs[0])
         node = nodes.new('ShaderNodeTexImage')
         node.location = (-600, 100)
         node.color_space = 'NONE'
         node.interpolation = 'Closest'
+        node.extension = 'EXTEND'
         node.arm_material_param = True
         node.name = '_TerrainHeight'
         node.label = '_TerrainHeight' # Height-map texture link for this sector
         links.new(nodes['Displacement'].inputs[0], nodes['_TerrainHeight'].outputs[0])
+        node = nodes.new('ShaderNodeBump')
+        node.location = (-200, -200)
+        node.inputs[0].default_value = 5.0
+        links.new(nodes['Bump'].inputs[2], nodes['_TerrainHeight'].outputs[0])
+        links.new(nodes['Principled BSDF'].inputs[17], nodes['Bump'].outputs[0])
 
         # Create sectors
         root_obj = bpy.data.objects.new("Terrain", None)
@@ -1213,7 +1220,7 @@ class ArmGenTerrainButton(bpy.types.Operator):
             bpy.ops.mesh.primitive_plane_add(location=(x * size, -y * size, 0))
             slice_obj = bpy.context.active_object
             slice_obj.scale[0] = size / 2
-            slice_obj.scale[1] = size / 2
+            slice_obj.scale[1] = -(size / 2)
             slice_obj.scale[2] = height_scale
             slice_obj.data.materials.append(mat)
             for p in slice_obj.data.polygons:

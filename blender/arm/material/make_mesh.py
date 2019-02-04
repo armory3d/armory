@@ -180,7 +180,7 @@ def make_base(con_mesh, parse_opacity):
         else:
             sh = tese
         sh.add_uniform('mat4 VP', '_viewProjectionMatrix')
-        sh.write('wposition += wnormal * disp * 0.1;')
+        sh.write('wposition += wnormal * disp;')
         sh.write('gl_Position = VP * vec4(wposition, 1.0);')
 
 def make_deferred(con_mesh, rpasses):

@@ -257,7 +257,7 @@ def init_properties():
     bpy.types.Scene.arm_terrain_textures = StringProperty(name="Textures", description="Set root folder for terrain assets", default="", subtype="DIR_PATH")
     bpy.types.Scene.arm_terrain_sectors = IntVectorProperty(name="Sectors", description="Number of sectors to generate", default=[1,1], size=2)
     bpy.types.Scene.arm_terrain_sector_size = FloatProperty(name="Sector Size", description="Dimensions for single sector", default=16)
-    bpy.types.Scene.arm_terrain_height_scale = FloatProperty(name="Height Scale", description="Scale height from the 0-1 range", default=10)
+    bpy.types.Scene.arm_terrain_height_scale = FloatProperty(name="Height Scale", description="Scale height from the 0-1 range", default=5)
     bpy.types.Scene.arm_terrain_object = PointerProperty(name="Object", type=bpy.types.Object, description="Terrain root object")
     # For light
     bpy.types.Light.arm_clip_start = FloatProperty(name="Clip Start", default=0.1)
