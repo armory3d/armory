@@ -254,7 +254,7 @@ def init_properties():
         name='Operation', default='add', description='Blending operation', update=assets.invalidate_shader_cache)
     # For scene
     bpy.types.Scene.arm_export = BoolProperty(name="Export", description="Export scene data", default=True)
-    bpy.types.Scene.arm_terrain_textures = StringProperty(name="Textures", description="Set root folder for terrain assets", default="", subtype="DIR_PATH")
+    bpy.types.Scene.arm_terrain_textures = StringProperty(name="Textures", description="Set root folder for terrain assets", default="//Bundled/", subtype="DIR_PATH")
     bpy.types.Scene.arm_terrain_sectors = IntVectorProperty(name="Sectors", description="Number of sectors to generate", default=[1,1], size=2)
     bpy.types.Scene.arm_terrain_sector_size = FloatProperty(name="Sector Size", description="Dimensions for single sector", default=16)
     bpy.types.Scene.arm_terrain_height_scale = FloatProperty(name="Height Scale", description="Scale height from the 0-1 range", default=5)
