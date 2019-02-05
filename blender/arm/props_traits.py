@@ -38,15 +38,16 @@ def update_trait_group(self, context):
                 arm.utils.fetch_script_props(file_path)
                 arm.utils.fetch_prop(o)
         # Show trait users as collections
-        for col in bpy.data.collections:
-            if col.name.startswith('Trait|') and o.name in col.objects:
-                col.objects.unlink(o)
-        for t in o.arm_traitlist:
-            if 'Trait|' + t.name not in bpy.data.collections:
-                col = bpy.data.collections.new('Trait|' + t.name)
-            else:
-                col = bpy.data.collections['Trait|' + t.name]
-            col.objects.link(o)
+        if self.is_object:
+            for col in bpy.data.collections:
+                if col.name.startswith('Trait|') and o.name in col.objects:
+                    col.objects.unlink(o)
+            for t in o.arm_traitlist:
+                if 'Trait|' + t.name not in bpy.data.collections:
+                    col = bpy.data.collections.new('Trait|' + t.name)
+                else:
+                    col = bpy.data.collections['Trait|' + t.name]
+                col.objects.link(o)
 
 class ArmTraitListItem(bpy.types.PropertyGroup):
     name: StringProperty(name="Name", description="A name for this item", default="")
