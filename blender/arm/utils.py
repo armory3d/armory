@@ -370,19 +370,17 @@ def fetch_bundled_trait_props():
                     fetch_script_props(file_path)
                     fetch_prop(o)
 
-# def update_trait_groups():
-#     if not hasattr(bpy.data, 'groups'):
-#         return
-#     for g in bpy.data.groups:
-#         if g.name.startswith('Trait|'):
-#             bpy.data.groups.remove(g)
-#     for o in bpy.data.objects:
-#         for t in o.arm_traitlist:
-#             if 'Trait|' + t.name not in bpy.data.groups:
-#                 g = bpy.data.groups.new('Trait|' + t.name)
-#             else:
-#                 g = bpy.data.groups['Trait|' + t.name]
-#             g.objects.link(o)
+def update_trait_collections():
+    for col in bpy.data.collections:
+        if col.name.startswith('Trait|'):
+            bpy.data.collections.remove(col)
+    for o in bpy.data.objects:
+        for t in o.arm_traitlist:
+            if 'Trait|' + t.name not in bpy.data.collections:
+                col = bpy.data.collections.new('Trait|' + t.name)
+            else:
+                col = bpy.data.collections['Trait|' + t.name]
+            col.objects.link(o)
 
 def to_hex(val):
     return '#%02x%02x%02x%02x' % (int(val[3] * 255), int(val[0] * 255), int(val[1] * 255), int(val[2] * 255))

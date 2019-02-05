@@ -77,7 +77,8 @@ def on_load_post(context):
                     blender.register()
                     sys.path.remove(fp)
 
-    # arm.utils.update_trait_groups()
+    # Show trait users as collections
+    arm.utils.update_trait_collections()
 
 def reload_blend_data():
     armory_pbr = bpy.data.node_groups.get('Armory PBR')

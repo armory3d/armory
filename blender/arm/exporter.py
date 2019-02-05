@@ -2068,16 +2068,14 @@ class ArmoryExporter:
 
         if len(bpy.data.collections) > 0:
             self.output['groups'] = []
-            for group in bpy.data.collections:
-                # Blender automatically stores physics objects in this group,
-                # can cause stuck unused objects, skip for now
-                if group.name.startswith('RigidBodyWorld'): #or group.name.startswith('Trait|'):
+            for collection in bpy.data.collections:
+                if collection.name.startswith('RigidBodyWorld') or collection.name.startswith('Trait|'):
                     continue
                 o = {}
-                o['name'] = group.name
+                o['name'] = collection.name
                 o['object_refs'] = []
                 # Add unparented objects only, then instantiate full object child tree
-                for bobject in group.objects:
+                for bobject in collection.objects:
                     if bobject.parent == None and bobject.arm_export:
                         # This object is controlled by proxy
                         has_proxy_user = False
@@ -2088,7 +2086,7 @@ class ArmoryExporter:
                         if has_proxy_user:
                             continue
                         # Add external linked objects
-                        if bobject.name not in scene_objects and group.library != None:
+                        if bobject.name not in scene_objects and collection.library != None:
                             self.process_bobject(bobject)
                             self.export_object(bobject, self.scene)
                             o['object_refs'].append(arm.utils.asset_name(bobject))
