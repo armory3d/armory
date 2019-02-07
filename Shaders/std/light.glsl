@@ -99,9 +99,8 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#else
 	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) +
 				  specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) * spec;
-	direct *= attenuate(distance(p, lp));
 	#endif
-
+	direct *= attenuate(distance(p, lp));
 	direct *= lightCol;
 
 	#ifdef _VoxelAOvar
