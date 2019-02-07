@@ -84,6 +84,8 @@ def add_world_defs():
             wrd.world_defs += '_VoxelAOvar' # Write a shader variant
             if rpdat.arm_voxelgi_shadows:
                 wrd.world_defs += '_VoxelShadow'
+            if rpdat.arm_voxelgi_occ == 0.0:
+                wrd.world_defs += '_VoxelAONoTrace'
 
     if arm.utils.get_legacy_shaders() and not state.is_viewport:
         wrd.world_defs += '_Legacy'

@@ -262,11 +262,13 @@ void main() {
 	vec3 voxpos = p / voxelgiHalfExtents;
 	#endif
 	
+	#ifndef _VoxelAONoTrace
 	#ifdef _VoxelGITemporal
 	envl.rgb *= 1.0 - (traceAO(voxpos, n, voxels) * voxelBlend +
 					   traceAO(voxpos, n, voxelsLast) * (1.0 - voxelBlend));
 	#else
 	envl.rgb *= 1.0 - traceAO(voxpos, n, voxels);
+	#endif
 	#endif
 	
 #endif
