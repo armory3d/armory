@@ -92,7 +92,7 @@ class ArmoryAddonPreferences(AddonPreferences):
     def draw(self, context):
         self.skip_update = False
         layout = self.layout
-        layout.label(text="Welcome to Armory! Click 'Save Preferences' at the bottom to keep Armory enabled.")
+        layout.label(text="Welcome to Armory! Click 'Save Preferences' to keep Armory enabled.")
         p = bundled_sdk_path()
         if os.path.exists(p):
             layout.prop(self, "sdk_bundled")
