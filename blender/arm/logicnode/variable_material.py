@@ -12,11 +12,13 @@ class MaterialNode(Node, ArmLogicTreeNode):
 
     @property
     def property0_get(self):
-        if self.property0 not in bpy.data.materials:
-            return self.property0
-        return arm.utils.asset_name(bpy.data.materials[self.property0])
-
-    property0: StringProperty(name='', default='')
+        if self.property0 == None:
+            return ''
+        if self.property0.name not in bpy.data.materials:
+            return self.property0.name
+        return arm.utils.asset_name(bpy.data.materials[self.property0.name])
+    
+    property0: PointerProperty(name='', type=bpy.types.Material)
     
     def init(self, context):
         self.outputs.new('NodeSocketShader', 'Material')

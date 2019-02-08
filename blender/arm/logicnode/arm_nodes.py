@@ -37,14 +37,15 @@ class ArmArraySocket(bpy.types.NodeSocket):
 class ArmObjectSocket(bpy.types.NodeSocket):
     bl_idname = 'ArmNodeSocketObject'
     bl_label = 'Object Socket'
-    default_value: StringProperty(name='Object', default='')
+    default_value_get: PointerProperty(name='Object', type=bpy.types.Object)
+    default_value: StringProperty(name='Object', default='') # TODO: deprecated, using PointerProperty now
 
     def get_default_value(self):
-        if self.default_value == '':
+        if self.default_value_get == None:
             return ''
-        if self.default_value not in bpy.data.objects:
-            return self.default_value
-        return arm.utils.asset_name(bpy.data.objects[self.default_value])
+        if self.default_value_get.name not in bpy.data.objects:
+            return self.default_value_get.name
+        return arm.utils.asset_name(bpy.data.objects[self.default_value_get.name])
 
     def __init__(self):
         global object_sockets
@@ -59,7 +60,7 @@ class ArmObjectSocket(bpy.types.NodeSocket):
             layout.label(text=self.name)
         else:
             row = layout.row(align=True)
-            row.prop_search(self, 'default_value', bpy.context.scene, 'objects', icon='NONE', text='')
+            row.prop_search(self, 'default_value_get', bpy.context.scene, 'objects', icon='NONE', text='')
             op = row.operator('arm.node_eyedrop', text='', icon='EYEDROPPER', emboss=True)
             op.socket_index = str(id(self))
 
@@ -76,20 +77,21 @@ class ArmNodeEyedropButton(bpy.types.Operator):
         global object_sockets
         obj = bpy.context.active_object
         if obj != None:
-            object_sockets[self.socket_index].default_value = obj.name
+            object_sockets[self.socket_index].default_value_get = obj
         return{'FINISHED'}
 
 class ArmAnimActionSocket(bpy.types.NodeSocket):
     bl_idname = 'ArmNodeSocketAnimAction'
     bl_label = 'Action Socket'
-    default_value: StringProperty(name='Action', default='')
+    default_value_get: PointerProperty(name='Action', type=bpy.types.Action)
+    default_value: StringProperty(name='Action', default='') # TODO: deprecated, using PointerProperty now
 
     def get_default_value(self):
-        if self.default_value == '':
+        if self.default_value_get == None:
             return ''
-        if self.default_value not in bpy.data.actions:
-            return self.default_value
-        name = arm.utils.asset_name(bpy.data.actions[self.default_value])
+        if self.default_value_get.name not in bpy.data.actions:
+            return self.default_value_get.name
+        name = arm.utils.asset_name(bpy.data.actions[self.default_value_get.name])
         return arm.utils.safestr(name)
 
     def draw(self, context, layout, node, text):
@@ -98,7 +100,7 @@ class ArmAnimActionSocket(bpy.types.NodeSocket):
         elif self.is_linked:
             layout.label(text=self.name)
         else:
-            layout.prop_search(self, 'default_value', bpy.data, 'actions', icon='NONE', text='')
+            layout.prop_search(self, 'default_value_get', bpy.data, 'actions', icon='NONE', text='')
 
     def draw_color(self, context, node):
         return (0.8, 0.8, 0.8, 1)

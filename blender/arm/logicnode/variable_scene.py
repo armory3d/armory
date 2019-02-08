@@ -9,12 +9,13 @@ class SceneNode(Node, ArmLogicTreeNode):
     bl_label = 'Scene'
     bl_icon = 'QUESTION'
 
-    property0: StringProperty(name='', default='')
+    property0_get: PointerProperty(name='', type=bpy.types.Scene)
+    property0: StringProperty(name='Scene', default='') # TODO: deprecated, using PointerProperty now
     
     def init(self, context):
         self.outputs.new('NodeSocketShader', 'Scene')
 
     def draw_buttons(self, context, layout):
-        layout.prop_search(self, 'property0', bpy.data, 'scenes', icon='NONE', text='')
+        layout.prop_search(self, 'property0_get', bpy.data, 'scenes', icon='NONE', text='')
 
 add_node(SceneNode, category='Variable')

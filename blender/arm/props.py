@@ -317,7 +317,6 @@ def init_properties_on_load():
                    trait.node_tree_prop == None and \
                    trait.name in bpy.data.node_groups:
                     trait.node_tree_prop = bpy.data.node_groups[trait.name]
-
         for scn in bpy.data.scenes: # TODO: deprecated
             # Scene traits
             for trait in scn.arm_traitlist:
@@ -332,6 +331,23 @@ def init_properties_on_load():
                    item.obj == None and \
                    item.object_name in scn.collection.all_objects:
                    item.obj = scn.collection.all_objects[item.object_name]
+        # Update StringProperty to PointerProperty
+        for node_group in bpy.data.node_groups: # TODO: deprecated
+            if node_group.bl_idname == 'ArmLogicTreeType':
+                for node in node_group.nodes:
+                    if hasattr(node, 'property0_get') and node.property0 != '':
+                        if node.bl_idname == 'LNMeshNode':
+                            node.property0_get = bpy.data.meshes[node.property0.strip()]
+                        elif node.bl_idname == 'LNSceneNode':
+                            node.property0_get = bpy.data.scenes[node.property0.strip()]
+                        node.property0 = ''
+                    for inp in node.inputs:
+                        if inp.bl_idname == 'ArmNodeSocketObject' and inp.default_value != '':
+                            inp.default_value_get = bpy.data.objects[inp.default_value]
+                            inp.default_value = ''
+                        elif inp.bl_idname == 'ArmNodeSocketAnimAction' and inp.default_value != '':
+                            inp.default_value_get = bpy.data.actions[inp.default_value]
+                            inp.default_value = ''
 
         print('Project updated to sdk v' + arm_version + ' (' + arm_commit + ')')
         wrd.arm_version = arm_version
