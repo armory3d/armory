@@ -389,14 +389,24 @@ def assets_done():
         cmd = [arm.utils.get_haxe_path(), '--connect', '6000', 'project-krom.hxml']
         state.proc_build = run_proc(cmd, compilation_server_done)
     else:
+        state.proc_build = None
+        state.redraw_ui = True
         log.print_info('Build failed, check console')
 
 def compilation_server_done():
-    if os.path.exists('krom/krom.js'):
-        os.chmod('krom/krom.js', stat.S_IWRITE)
-        os.remove('krom/krom.js')
-    os.rename('krom/krom.js.temp', 'krom/krom.js')
-    build_done()
+    if state.proc_build == None:
+        return
+    result = state.proc_build.poll()
+    if result == 0:
+        if os.path.exists('krom/krom.js'):
+            os.chmod('krom/krom.js', stat.S_IWRITE)
+            os.remove('krom/krom.js')
+        os.rename('krom/krom.js.temp', 'krom/krom.js')
+        build_done()
+    else:
+        state.proc_build = None
+        state.redraw_ui = True
+        log.print_info('Build failed, check console')
 
 def build_done():
     print('Finished in ' + str(time.time() - profile_time))
