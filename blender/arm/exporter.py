@@ -1469,51 +1469,47 @@ class ArmoryExporter:
 
     def export_light(self, objectRef):
         # This function exports a single light object
-        o = {}
-        o['name'] = objectRef[1]["structName"]
+        rpdat = arm.utils.get_rp()
         objref = objectRef[0]
         objtype = objref.type
-
-        if objtype == 'SUN':
-            o['type'] = 'sun'
-        elif objtype == 'POINT':
-            o['type'] = 'point'
-        elif objtype == 'SPOT':
-            o['type'] = 'spot'
-            o['spot_size'] = math.cos(objref.spot_size / 2)
-            o['spot_blend'] = objref.spot_blend / 10 # Cycles defaults to 0.15
-        elif objtype == 'AREA':
-            o['type'] = 'area'
-            o['size'] = objref.size
-            o['size_y'] = objref.size_y
-
+        o = {}
+        o['name'] = objectRef[1]["structName"]
+        o['type'] = objtype.lower()
         o['cast_shadow'] = objref.use_shadow
         o['near_plane'] = objref.arm_clip_start
         o['far_plane'] = objref.arm_clip_end
         o['fov'] = objref.arm_fov
+        o['color'] = [objref.color[0], objref.color[1], objref.color[2]]
+        o['strength'] = objref.energy
         o['shadows_bias'] = objref.arm_shadows_bias * 0.0001
-        rpdat = arm.utils.get_rp()
         if rpdat.rp_shadows:
-            o['shadowmap_size'] = int(rpdat.rp_shadowmap_cube) if objtype == 'POINT' else arm.utils.get_cascade_size(rpdat)
+            if objtype == 'POINT':
+                o['shadowmap_size'] = int(rpdat.rp_shadowmap_cube)
+            else:
+                o['shadowmap_size'] = arm.utils.get_cascade_size(rpdat)
         else:
             o['shadowmap_size'] = 0
-        if o['type'] == 'sun': # Scale bias for ortho light matrix
-            o['shadows_bias'] *= 20.0
+
+        if objtype == 'SUN':
+            o['strength'] *= 0.325
+            o['shadows_bias'] *= 20.0 # Scale bias for ortho light matrix
             if o['shadowmap_size'] > 1024:
                 o['shadows_bias'] *= 1 / (o['shadowmap_size'] / 1024) # Less bias for bigger maps
-        if (objtype == 'POINT' or objtype == 'SPOT') and objref.shadow_soft_size > 0.1:
-            o['light_size'] = objref.shadow_soft_size * 10 # Match to Cycles
-        if objtype == 'POINT':
+        elif objtype == 'POINT':
+            o['strength'] *= 2.6
             o['fov'] = 1.5708 # pi/2
             o['shadowmap_cube'] = True
             o['shadows_bias'] *= 2.0
-
-        o['color'] = [objref.color[0], objref.color[1], objref.color[2]]
-        o['strength'] = objref.energy
-        if o['type'] == 'point' or o['type'] == 'spot':
+            if objref.shadow_soft_size > 0.1:
+                o['light_size'] = objref.shadow_soft_size * 10
+        elif objtype == 'SPOT':
             o['strength'] *= 2.6
-        elif o['type'] == 'sun':
-            o['strength'] *= 0.325
+            o['spot_size'] = math.cos(objref.spot_size / 2)
+            o['spot_blend'] = objref.spot_blend / 10 # Cycles defaults to 0.15
+        elif objtype == 'AREA':
+            o['strength'] *= 40.0
+            o['size'] = objref.size
+            o['size_y'] = objref.size_y
         
         self.output['light_datas'].append(o)
 
