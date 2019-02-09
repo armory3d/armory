@@ -331,7 +331,7 @@ void main() {
 
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow
-	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir, 0.14, 5.0);
+	svisibility *= 1.0 - traceShadow(voxels, voxpos, sunDir);
 	#endif
 	#endif
 

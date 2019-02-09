@@ -840,6 +840,7 @@ class ArmRenderPathVoxelsPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_voxelgi_step')
         col.prop(rpdat, 'arm_voxelgi_range')
         col.prop(rpdat, 'arm_voxelgi_offset')
+        col.prop(rpdat, 'arm_voxelgi_aperture')
 
 class ArmRenderPathWorldPanel(bpy.types.Panel):
     bl_label = "World"

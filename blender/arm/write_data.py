@@ -582,6 +582,7 @@ const float voxelgiEnv = """ + str(round(rpdat.arm_voxelgi_env * 100) / 100) + "
 const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 100) / 100) + """;
 const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
 const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 100) / 100) + """;
+const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) / 100) + """;
 """)
 
         if rpdat.rp_sss_state == 'On':
