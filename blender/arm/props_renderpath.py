@@ -208,7 +208,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     name: StringProperty(
            name="Name",
            description="A name for this item",
-           default="Path")
+           default="Desktop")
 
     rp_driver_list: CollectionProperty(type=bpy.types.PropertyGroup)
     rp_driver: StringProperty(name="Driver", default="Armory", update=assets.invalidate_compiled_data)
