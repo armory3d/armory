@@ -703,8 +703,7 @@ class RenderPathDeferred {
 
 		#if rp_translucency
 		{
-			var hasLight = iron.Scene.active.lights.length > 0;
-			if (hasLight) Inc.drawTranslucency("tex");
+			Inc.drawTranslucency("tex");
 		}
 		#end
 

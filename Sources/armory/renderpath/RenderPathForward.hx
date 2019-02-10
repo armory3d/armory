@@ -30,8 +30,7 @@ class RenderPathForward {
 
 		#if rp_translucency
 		{
-			var hasLight = iron.Scene.active.lights.length > 0;
-			if (hasLight) Inc.drawTranslucency("lbuffer0");
+			Inc.drawTranslucency("lbuffer0");
 		}
 		#end
 	}
