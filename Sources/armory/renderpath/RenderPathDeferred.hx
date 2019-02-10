@@ -418,7 +418,9 @@ class RenderPathDeferred {
 
 		#if rp_dynres
 		{
-			DynamicResolutionScale.run(path);
+			if (armory.data.Config.raw.rp_dynres != false) {
+				DynamicResolutionScale.run(path);
+			}
 		}
 		#end
 

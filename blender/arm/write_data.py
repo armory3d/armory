@@ -326,6 +326,7 @@ def write_config(resx, resy):
     output['rp_bloom'] = rpdat.rp_bloom != 'Off'
     output['rp_motionblur'] = rpdat.rp_motionblur != 'Off'
     output['rp_gi'] = rpdat.rp_gi != 'Off'
+    output['rp_dynres'] = rpdat.rp_dynres
     with open(p + '/config.arm', 'w') as f:
         f.write(json.dumps(output, sort_keys=True, indent=4))
 
