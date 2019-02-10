@@ -241,8 +241,11 @@ def compile(assets_only=False):
     cmd.append(state.export_gapi)
 
     if arm.utils.get_legacy_shaders():
-        cmd.append('--shaderversion')
-        cmd.append('110')
+        if 'html5' in state.target:
+            pass
+        else:
+            cmd.append('--shaderversion')
+            cmd.append('110')
     elif 'android' in state.target or 'ios' in state.target or 'html5' in state.target:
         cmd.append('--shaderversion')
         cmd.append('300')

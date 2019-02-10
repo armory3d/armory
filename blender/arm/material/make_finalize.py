@@ -1,3 +1,4 @@
+import bpy
 import arm.material.make_tess as make_tess
 
 def make(con_mesh):
@@ -104,3 +105,8 @@ def make(con_mesh):
         vert.add_uniform('mat4 WV', '_worldViewMatrix')
         vert.write('eyeDirCam = vec4(WV * spos).xyz; eyeDirCam.z *= -1;')
         frag.write_attrib('vec3 vVecCam = normalize(eyeDirCam);')
+
+    wrd = bpy.data.worlds['Arm']
+    if '_Legacy' in wrd.world_defs:
+        frag.replace('sampler2DShadow', 'sampler2D')
+        frag.replace('samplerCubeShadow', 'samplerCube')

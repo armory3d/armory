@@ -231,6 +231,14 @@ class Shader:
                s in self.main_textures or \
                s in self.main_attribs
 
+    def replace(self, old, new):
+        self.main = self.main.replace(old, new)
+        self.main_init = self.main_init.replace(old, new)
+        self.main_normal = self.main_normal.replace(old, new)
+        self.main_textures = self.main_textures.replace(old, new)
+        self.main_attribs = self.main_attribs.replace(old, new)
+        self.uniforms = [u.replace(old, new) for u in self.uniforms]
+
     def write_init(self, s):
         self.main_init = s + '\n' + self.main_init
 

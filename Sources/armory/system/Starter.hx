@@ -12,6 +12,7 @@ class Starter {
 	#end
 
 	public static function main(scene:String, mode:Int, resize:Bool, min:Bool, max:Bool, w:Int, h:Int, msaa:Int, vsync:Bool, getRenderPath:Void->iron.RenderPath) {
+
 		function start() {
 			if (tasks > 0) return;
 			
@@ -35,7 +36,11 @@ class Starter {
 			if (c.window_maximizable) windowFeatures |= FeatureMaximizable;
 			if (c.window_minimizable) windowFeatures |= FeatureMinimizable;
 			
-			kha.System.start({title: Main.projectName, width: c.window_w, height: c.window_h, window: {mode: windowMode, windowFeatures: windowFeatures}, framebuffer: {samplesPerPixel: c.window_msaa, verticalSync: c.window_vsync}}, function(window:kha.Window) {
+			#if (kha_webgl && (!arm_legacy))
+			try {
+			#end
+
+			kha.System.start({title: Main.projectName, width: c.window_w, height: c.window_h, window: {mode: windowMode, windowFeatures: windowFeatures}, framebuffer: {samplesPerPixel: c.window_msaa, verticalSync: c.window_vsync}}, function(window:kha.Window) {	
 				iron.App.init(function() {
 					#if arm_loadscreen
 					function load(g:kha.graphics2.Graphics) {
@@ -55,6 +60,15 @@ class Starter {
 					});
 				});
 			});
+
+			#if (kha_webgl && (!arm_legacy))
+			}
+			catch (e:Dynamic) {
+				if (!kha.SystemImpl.gl2) {
+					trace("This project was not compiled with legacy shaders flag - please use WebGL 2 capable browser.");
+				}
+			}
+			#end
 		}
 
 		#if (js && arm_bullet)

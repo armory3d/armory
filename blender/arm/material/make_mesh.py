@@ -356,7 +356,7 @@ def make_forward_mobile(con_mesh):
         if is_shadows:
             vert.add_out('vec4 lightPosition')
             vert.add_uniform('mat4 LWVP', '_biasLightWorldViewProjectionMatrix')
-            vert.write('lightPosition = LWVP * spos;')            
+            vert.write('lightPosition = LWVP * spos;')
             frag.add_uniform('sampler2DShadow shadowMap')
             frag.add_uniform('float shadowsBias', '_sunShadowsBias')
             if '_CSM' in wrd.world_defs:
@@ -367,7 +367,10 @@ def make_forward_mobile(con_mesh):
             else:
                 frag.write('if (lightPosition.w > 0.0) {')
                 frag.write('    vec3 lPos = lightPosition.xyz / lightPosition.w;')
-                frag.write('    svisibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;')
+                if '_Legacy' in wrd.world_defs:
+                    frag.write('    svisibility = float(texture(shadowMap, vec2(lPos.xy)).r > lPos.z - shadowsBias);')
+                else:
+                    frag.write('    svisibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;')
                 frag.write('}')
         frag.write('direct += basecol * sdotNL * sunCol * svisibility;')
 
@@ -391,14 +394,20 @@ def make_forward_mobile(con_mesh):
                 frag.add_uniform('sampler2DShadow shadowMapSpot[1]')
                 frag.write('if (spotPosition.w > 0.0) {')
                 frag.write('    vec3 lPos = spotPosition.xyz / spotPosition.w;')
-                frag.write('    visibility = texture(shadowMapSpot[0], vec3(lPos.xy, lPos.z - pointBias)).r;')
+                if '_Legacy' in wrd.world_defs:
+                    frag.write('    visibility = float(texture(shadowMapSpot[0], vec2(lPos.xy)).r > lPos.z - pointBias);')
+                else:
+                    frag.write('    visibility = texture(shadowMapSpot[0], vec3(lPos.xy, lPos.z - pointBias)).r;')
                 frag.write('}')
             else:
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj')
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]')
                 frag.write('const float s = shadowmapCubePcfSize;') # TODO: incorrect...
                 frag.write('float compare = lpToDepth(ld - n * pointBias * 80, lightProj);')
-                frag.write('visibility = texture(shadowMapPoint[0], vec4(-l + n * pointBias * 80, compare)).r;')
+                if '_Legacy' in wrd.world_defs:
+                    frag.write('visibility = float(texture(shadowMapPoint[0], vec3(-l + n * pointBias * 80)).r > compare);')
+                else:
+                    frag.write('visibility = texture(shadowMapPoint[0], vec4(-l + n * pointBias * 80, compare)).r;')
 
         frag.write('direct += basecol * dotNL * pointCol * attenuate(distance(wposition, pointPos)) * visibility;')
 

@@ -89,6 +89,7 @@ def add_world_defs():
 
     if arm.utils.get_legacy_shaders():
         wrd.world_defs += '_Legacy'
+        assets.add_khafile_def('arm_legacy')
 
     # Light defines
     point_lights = 0
