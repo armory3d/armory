@@ -803,13 +803,19 @@ class RenderPathDeferred {
 		#if ((rp_motionblur == "Camera") || (rp_motionblur == "Object"))
 		{
 			if (armory.data.Config.raw.rp_motionblur != false) {
+				#if (rp_motionblur == "Camera")
+				{
+					path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
+				}
+				#end
 				path.setTarget("buf");
 				path.bindTarget("tex", "tex");
-				path.bindTarget("gbuffer0", "gbuffer0");
 				#if (rp_motionblur == "Camera")
 				{
 					path.bindTarget("_main", "gbufferD");
 					path.drawShader("shader_datas/motion_blur_pass/motion_blur_pass");
+					
+					path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
 				}
 				#else
 				{

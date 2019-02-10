@@ -4,7 +4,6 @@
 
 #include "compiled.inc"
 
-uniform sampler2D gbuffer0;
 uniform sampler2D sveloc;
 uniform sampler2D tex;
 // uniform vec2 texStep;
@@ -17,11 +16,6 @@ void main() {
 	vec2 velocity = textureLod(sveloc, texCoord, 0.0).rg * motionBlurIntensity * frameScale;
 	
 	fragColor.rgb = textureLod(tex, texCoord, 0.0).rgb;
-
-	// Do not blur masked objects
-	if (textureLod(gbuffer0, texCoord, 0.0).a == 1.0) {
-		return;
-	}
 
 	// float speed = length(velocity / texStep);
 	// const int MAX_SAMPLES = 8;
