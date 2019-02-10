@@ -5,6 +5,7 @@ import importlib
 from bpy.app.handlers import persistent
 import arm.utils
 import arm.props as props
+import arm.make as make
 import arm.make_state as state
 import arm.api
 
@@ -13,6 +14,7 @@ def on_depsgraph_update_post(self):
     if state.proc_build != None:
         return
 
+    # Recache
     depsgraph = bpy.context.depsgraph
     for update in depsgraph.updates:
         uid = update.id
@@ -30,6 +32,33 @@ def on_depsgraph_update_post(self):
                 bpy.data.node_groups[uid.name].arm_cached = False
             elif isinstance(uid, bpy.types.Material) and uid.name in bpy.data.materials:
                 bpy.data.materials[uid.name].arm_cached = False
+
+    # Send last operator to Krom
+    wrd = bpy.data.worlds['Arm']
+    if state.proc_play != None and \
+       state.target == 'krom' and \
+       wrd.arm_live_patch:
+        ops = bpy.context.window_manager.operators
+        if len(ops) > 0 and ops[-1] != None:
+            send_operator(ops[-1])
+
+def send_operator(op):
+    if hasattr(bpy.context, 'object') and bpy.context.object != None:
+        obj = bpy.context.object.name
+        if op.name == 'Move':
+            vec = bpy.context.object.location
+            js = 'var o = iron.Scene.active.getChild("' + obj + '"); o.transform.loc.set(' + str(vec[0]) + ', ' + str(vec[1]) + ', ' + str(vec[2]) + '); o.transform.dirty = true;'
+            make.write_patch(js)
+        elif op.name == 'Resize':
+            vec = bpy.context.object.scale
+            js = 'var o = iron.Scene.active.getChild("' + obj + '"); o.transform.scale.set(' + str(vec[0]) + ', ' + str(vec[1]) + ', ' + str(vec[2]) + '); o.transform.dirty = true;'
+            make.write_patch(js)
+        elif op.name == 'Rotate':
+            vec = bpy.context.object.rotation_euler.to_quaternion()
+            js = 'var o = iron.Scene.active.getChild("' + obj + '"); o.transform.rot.set(' + str(vec[1]) + ', ' + str(vec[2]) + ', ' + str(vec[3]) + ' ,' + str(vec[0]) + '); o.transform.dirty = true;'
+            make.write_patch(js)
+        else: # Rebuild
+            make.patch()
 
 def always():
     # Force ui redraw

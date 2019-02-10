@@ -2172,6 +2172,13 @@ class ArmoryExporter:
             x['class_name'] = 'armory.trait.internal.DebugConsole'
             x['parameters'] = [str(arm.utils.get_ui_scale())]
             self.output['traits'].append(x)
+        if wrd.arm_live_patch:
+            if not 'traits' in self.output:
+                self.output['traits'] = []
+            x = {}
+            x['type'] = 'Script'
+            x['class_name'] = 'armory.trait.internal.LivePatch'
+            self.output['traits'].append(x)
         if len(self.scene.arm_traitlist) > 0:
             if not 'traits' in self.output:
                 self.output['traits'] = []

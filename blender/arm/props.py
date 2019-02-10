@@ -73,11 +73,10 @@ def init_properties():
     bpy.types.World.arm_lod_gen_levels = IntProperty(name="Levels", description="Number of levels to generate", default=3, min=1)
     bpy.types.World.arm_lod_gen_ratio = FloatProperty(name="Decimate Ratio", description="Decimate ratio", default=0.8)
     bpy.types.World.arm_cache_build = BoolProperty(name="Cache Build", description="Cache build files to speed up compilation", default=True)
+    bpy.types.World.arm_live_patch = BoolProperty(name="Live Patch", description="Live patching for Krom", default=False)
     bpy.types.World.arm_play_camera = EnumProperty(
         items=[('Scene', 'Scene', 'Scene'),
-               ('Viewport', 'Viewport', 'Viewport'),
-               # ('Viewport Shared', 'Shared', 'Viewport Shared')
-               ],
+               ('Viewport', 'Viewport', 'Viewport')],
         name="Camera", description="Viewport camera", default='Scene', update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_debug_console = BoolProperty(name="Debug Console", description="Show inspector in player and enable debug draw", default=False, update=assets.invalidate_shader_cache)
     bpy.types.World.arm_runtime = EnumProperty(

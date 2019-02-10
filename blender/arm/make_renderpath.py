@@ -87,7 +87,7 @@ def add_world_defs():
             if rpdat.arm_voxelgi_occ == 0.0:
                 wrd.world_defs += '_VoxelAONoTrace'
 
-    if arm.utils.get_legacy_shaders() and not state.is_viewport:
+    if arm.utils.get_legacy_shaders():
         wrd.world_defs += '_Legacy'
 
     # Light defines

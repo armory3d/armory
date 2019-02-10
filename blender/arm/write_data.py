@@ -38,7 +38,7 @@ def remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
     func(path)
 
-def write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce, is_viewport, import_traits, import_logicnodes):
+def write_khafilejs(is_play, export_physics, export_navigation, export_ui, is_publish, enable_dce, import_traits, import_logicnodes):
     sdk_path = arm.utils.get_sdk_path()
     rel_path = arm.utils.get_relative_paths() # Convert absolute paths to relative
     wrd = bpy.data.worlds['Arm']
@@ -142,8 +142,10 @@ project.addSources('Sources');
         if enable_dce:
             f.write("project.addParameter('-dce full');\n")
 
-        if is_viewport or wrd.arm_debug_console:
+        if wrd.arm_debug_console or wrd.arm_live_patch:
             import_traits.append('armory.trait.internal.Bridge')
+            if wrd.arm_live_patch:
+                assets.add_khafile_def('arm_patch')
 
         import_traits = list(set(import_traits))
         for i in range(0, len(import_traits)):
@@ -327,15 +329,13 @@ def write_config(resx, resy):
     with open(p + '/config.arm', 'w') as f:
         f.write(json.dumps(output, sort_keys=True, indent=4))
 
-def write_mainhx(scene_name, resx, resy, is_play, is_viewport, is_publish):
+def write_mainhx(scene_name, resx, resy, is_play, is_publish):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
     scene_ext = '.zip' if (wrd.arm_asset_compression and is_publish) else ''
     if scene_ext == '' and not wrd.arm_minimize:
         scene_ext = '.json'
     winmode = get_winmode(wrd.arm_winmode)
-    if is_viewport:
-        winmode = 0
     # Detect custom render path
     pathpack = 'armory'
     if os.path.isfile(arm.utils.get_fp() + '/Sources/' + wrd.arm_project_package + '/renderpath/RenderPathCreator.hx'):

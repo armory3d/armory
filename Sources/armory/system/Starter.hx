@@ -46,6 +46,9 @@ class Starter {
 	                #end
 					iron.Scene.setActive(scene, function(object:iron.object.Object) {
 						iron.RenderPath.setActive(getRenderPath());
+						#if arm_patch
+						iron.Scene.getRenderPath = getRenderPath;
+						#end
 						#if arm_draworder_dist
 						iron.RenderPath.active.drawOrder = iron.RenderPath.DrawOrder.Distance;
 						#end // else shader

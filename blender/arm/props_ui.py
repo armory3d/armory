@@ -339,7 +339,8 @@ class ArmProjectFlagsPanel(bpy.types.Panel):
         layout.use_property_decorate = False
         wrd = bpy.data.worlds['Arm']
         layout.prop(wrd, 'arm_debug_console')
-        layout.prop(wrd, 'arm_cache_build')     
+        layout.prop(wrd, 'arm_cache_build')
+        layout.prop(wrd, 'arm_live_patch')
         layout.prop(wrd, 'arm_stream_scene')
         layout.prop(wrd, 'arm_batch_meshes')
         layout.prop(wrd, 'arm_batch_materials')
@@ -497,7 +498,7 @@ class ArmoryPlayButton(bpy.types.Operator):
         arm.utils.check_default_props()
 
         assets.invalidate_enabled = False
-        make.play(is_viewport=False)
+        make.play()
         assets.invalidate_enabled = True
         return{'FINISHED'}
 

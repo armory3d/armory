@@ -197,11 +197,11 @@ def export_data(fp, sdk_path):
     # Write khafile.js
     enable_dce = state.is_publish and wrd.arm_dce
     import_logic = not state.is_publish and arm.utils.logic_editor_space() != None
-    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, state.is_publish, enable_dce, state.is_viewport, ArmoryExporter.import_traits, import_logic)
+    write_data.write_khafilejs(state.is_play, export_physics, export_navigation, export_ui, state.is_publish, enable_dce, ArmoryExporter.import_traits, import_logic)
 
     # Write Main.hx - depends on write_khafilejs for writing number of assets
     scene_name = arm.utils.get_project_scene_name()
-    write_data.write_mainhx(scene_name, resx, resy, state.is_play, state.is_viewport, state.is_publish)
+    write_data.write_mainhx(scene_name, resx, resy, state.is_play, state.is_publish)
     if scene_name != state.last_scene or resx != state.last_resx or resy != state.last_resy:
         wrd.arm_recompile = True
         state.last_resx = resx
@@ -240,7 +240,7 @@ def compile(assets_only=False):
     cmd.append('-g')
     cmd.append(state.export_gapi)
 
-    if arm.utils.get_legacy_shaders() and not state.is_viewport:
+    if arm.utils.get_legacy_shaders():
         cmd.append('--shaderversion')
         cmd.append('110')
     elif 'android' in state.target or 'ios' in state.target or 'html5' in state.target:
@@ -269,7 +269,7 @@ def compile(assets_only=False):
     compilation_server = False
 
     cmd.append('--to')
-    if (kha_target_name == 'krom' and not state.is_viewport and not state.is_publish) or (kha_target_name == 'html5' and not state.is_publish):
+    if (kha_target_name == 'krom' and not state.is_publish) or (kha_target_name == 'html5' and not state.is_publish):
         cmd.append(arm.utils.build_dir() + '/debug')
         # Start compilation server
         if kha_target_name == 'krom' and arm.utils.get_compilation_server() and not assets_only:
@@ -286,30 +286,13 @@ def compile(assets_only=False):
     print("Using project from " + arm.utils.get_fp())
     state.proc_build = run_proc(cmd, assets_done if compilation_server else build_done)
 
-def build_viewport():
-    if state.proc_build != None:
-        return
-
-    if not arm.utils.check_saved(None):
-        return
-
-    if not arm.utils.check_sdkpath(None):
-        return
-
-    arm.utils.check_default_props()
-
-    assets.invalidate_enabled = False
-    play(is_viewport=True)
-    assets.invalidate_enabled = True
-
-def build(target, is_play=False, is_publish=False, is_viewport=False, is_export=False):
+def build(target, is_play=False, is_publish=False, is_export=False):
     global profile_time
     profile_time = time.time()
 
     state.target = target
     state.is_play = is_play
     state.is_publish = is_publish
-    state.is_viewport = is_viewport
     state.is_export = is_export
 
     # Save blend
@@ -421,40 +404,74 @@ def build_done():
     else:
         log.print_info('Build failed, check console')
 
-def runtime_to_target(is_viewport):
+def patch():
+    if state.proc_build != None:
+        return
+    assets.invalidate_enabled = False
+    fp = arm.utils.get_fp()
+    os.chdir(fp)
+    asset_path = arm.utils.get_fp_build() + '/compiled/Assets/' + arm.utils.safestr(bpy.context.scene.name) + '.arm'
+    exporter.execute(bpy.context, asset_path, scene=bpy.context.scene)
+    if not os.path.isdir(arm.utils.build_dir() + '/compiled/Shaders/std'):
+        raw_shaders_path = arm.utils.get_sdk_path() + '/armory/Shaders/'
+        shutil.copytree(raw_shaders_path + 'std', arm.utils.build_dir() + '/compiled/Shaders/std')
+    node_path = arm.utils.get_node_path()
+    khamake_path = arm.utils.get_khamake_path()
+    cmd = [node_path, khamake_path, 'krom']
+    cmd.append('--shaderversion')
+    cmd.append('330')
+    cmd.append('--parallelAssetConversion')
+    cmd.append('4')
+    cmd.append('--to')
+    cmd.append(arm.utils.build_dir() + '/debug')
+    cmd.append('--nohaxe')
+    cmd.append('--noproject')
+    assets.invalidate_enabled = True
+    state.proc_build = run_proc(cmd, patch_done)
+
+def patch_done():
+    js = 'iron.Scene.patch();'
+    write_patch(js)
+    state.proc_build = None
+
+patch_id = 0
+
+def write_patch(js):
+    global patch_id
+    with open(arm.utils.get_fp_build() + '/debug/krom/krom.patch', 'w') as f:
+        patch_id += 1
+        f.write(str(patch_id) + '\n')
+        f.write(js)
+
+def runtime_to_target():
     wrd = bpy.data.worlds['Arm']
-    if is_viewport or wrd.arm_runtime == 'Krom':
+    if wrd.arm_runtime == 'Krom':
         return 'krom'
     else:
         return 'html5'
 
-def get_khajs_path(is_viewport, target):
-    if is_viewport:
-        return arm.utils.build_dir() + '/krom/krom.js'
-    elif target == 'krom':
+def get_khajs_path(target):
+    if target == 'krom':
         return arm.utils.build_dir() + '/debug/krom/krom.js'
     else: # Browser
         return arm.utils.build_dir() + '/debug/html5/kha.js'
 
-def play(is_viewport):
+def play():
     global scripts_mtime
-    global code_parsed
     wrd = bpy.data.worlds['Arm']
 
     log.clear()
 
-    build(target=runtime_to_target(is_viewport), is_play=True, is_viewport=is_viewport)
+    build(target=runtime_to_target(), is_play=True)
 
-    khajs_path = get_khajs_path(is_viewport, state.target)
+    khajs_path = get_khajs_path(state.target)
     if not wrd.arm_cache_build or \
        not os.path.isfile(khajs_path) or \
        assets.khafile_defs_last != assets.khafile_defs or \
-       state.last_target != state.target or \
-       state.last_is_viewport != state.is_viewport:
+       state.last_target != state.target:
         wrd.arm_recompile = True
 
     state.last_target = state.target
-    state.last_is_viewport = state.is_viewport
 
     # Trait sources modified
     state.mod_scripts = []
@@ -492,6 +509,8 @@ def build_success():
             html5_app_path = 'http://localhost:8040/' + arm.utils.build_dir() + '/debug/html5'
             webbrowser.open(html5_app_path)
         elif wrd.arm_runtime == 'Krom':
+            if wrd.arm_live_patch:
+                open(arm.utils.get_fp_build() + '/debug/krom/krom.patch', 'w').close()
             if arm.utils.get_os() == 'win':
                 bin_ext = '' if state.export_gapi == 'direct3d11' else '_' + state.export_gapi
             else:
