@@ -270,6 +270,9 @@ project.addSources('Sources');
         if is_publish and wrd.arm_loadscreen:
             assets.add_khafile_def('arm_loadscreen')
 
+        if wrd.arm_winresize or state.target == 'html5':
+            assets.add_khafile_def('arm_resizable')
+
         # if bpy.data.scenes[0].unit_settings.system_rotation == 'DEGREES':
             # assets.add_khafile_def('arm_degrees')
 
@@ -310,7 +313,7 @@ def write_config(resx, resy):
     output['window_w'] = int(resx)
     output['window_h'] = int(resy)
     output['window_resizable'] = wrd.arm_winresize
-    output['window_maximizable'] = wrd.arm_winmaximize
+    output['window_maximizable'] = wrd.arm_winresize and wrd.arm_winmaximize
     output['window_minimizable'] = wrd.arm_winminimize
     output['window_vsync'] = wrd.arm_vsync
     rpdat = arm.utils.get_rp()
@@ -387,7 +390,7 @@ class Main {
             """ + str(winmode) + """,
             """ + ('true' if wrd.arm_winresize else 'false') + """,
             """ + ('true' if wrd.arm_winminimize else 'false') + """,
-            """ + ('true' if wrd.arm_winmaximize else 'false') + """,
+            """ + ('true' if (wrd.arm_winresize and wrd.arm_winmaximize) else 'false') + """,
             """ + str(resx) + """,
             """ + str(resy) + """,
             """ + str(int(rpdat.arm_samples_per_pixel)) + """,
