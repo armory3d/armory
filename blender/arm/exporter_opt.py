@@ -198,9 +198,9 @@ def export_mesh_data(self, exportMesh, bobject, o, has_armature=False):
                 t1data[i2 + 1] = 1.0 - uv[1]
         if has_col:
             i3 = i * 3
-            cdata[i3    ] = pow(v.col[0], 2.2)
-            cdata[i3 + 1] = pow(v.col[1], 2.2)
-            cdata[i3 + 2] = pow(v.col[2], 2.2)
+            cdata[i3    ] = v.col[0]
+            cdata[i3 + 1] = v.col[1]
+            cdata[i3 + 2] = v.col[2]
 
     # Indices
     prims = {ma.name if ma else '': [] for ma in exportMesh.materials}

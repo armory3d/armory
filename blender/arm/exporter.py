@@ -1215,9 +1215,9 @@ class ArmoryExporter:
             if has_col:
                 col = vcol0[loop.index].color
                 i3 = i * 3
-                cdata[i3    ] = pow(col[0], 2.2)
-                cdata[i3 + 1] = pow(col[1], 2.2)
-                cdata[i3 + 2] = pow(col[2], 2.2)
+                cdata[i3    ] = col[0]
+                cdata[i3 + 1] = col[1]
+                cdata[i3 + 2] = col[2]
 
         mats = exportMesh.materials
         poly_map = []

@@ -200,7 +200,7 @@ def make_deferred(con_mesh, rpasses):
         if arm_discard:
             opac = mat_state.material.arm_discard_opacity
         else:
-            opac = '1.0'
+            opac = '0.9999' # 1.0 - eps
         frag.write('if (opacity < {0}) discard;'.format(opac))
 
     gapi = arm.utils.get_gapi()
@@ -562,7 +562,8 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
         elif transluc_pass:
             frag.write('if (opacity == 1.0) discard;')
         else:
-            frag.write('if (opacity < 1.0) discard;')
+            opac = '0.9999' # 1.0 - eps
+            frag.write('if (opacity < {0}) discard;'.format(opac))
 
     blend = mat_state.material.arm_blending
     if blend:
