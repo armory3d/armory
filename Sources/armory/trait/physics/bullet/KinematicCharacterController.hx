@@ -11,8 +11,8 @@ import iron.object.MeshObject;
 class KinematicCharacterController extends Trait {
 
 	var shape:ControllerShape;
-	var shapeConvex:bullet.Bt.ConvexShape;
-	var shapeConvexHull:bullet.Bt.ConvexHullShape;
+	var shapeConvex:bullet.ConvexShape;
+	var shapeConvexHull:bullet.ConvexHullShape;
 	var isConvexHull = false;
 
 	public var physics:PhysicsWorld;
@@ -31,17 +31,17 @@ class KinematicCharacterController extends Trait {
 	var currentScaleZ:Float;
 	var jumpSpeed:Float;
 
-	public var body:bullet.Bt.PairCachingGhostObject = null;
-	public var character:bullet.Bt.KinematicCharacterController = null;
+	public var body:bullet.PairCachingGhostObject = null;
+	public var character:bullet.KinematicCharacterController = null;
 	public var ready = false;
 	static var nextId = 0;
 	public var id = 0;
 	public var onReady:Void->Void = null;
 
 	static var nullvec = true;
-	static var vec1:bullet.Bt.Vector3;
-	static var quat1:bullet.Bt.Quaternion;
-	static var trans1:bullet.Bt.Transform;
+	static var vec1:bullet.Vector3;
+	static var quat1:bullet.Quaternion;
+	static var trans1:bullet.Transform;
 	static var quat = new Quat();
 
 	public function new(mass = 1.0, shape = ControllerShape.Capsule, jumpSpeed = 8.0, friction = 0.5, restitution = 0.0,
@@ -50,9 +50,9 @@ class KinematicCharacterController extends Trait {
 
 		if (nullvec) {
 			nullvec = false;
-			vec1 = new bullet.Bt.Vector3(0, 0, 0);
-			quat1 = new bullet.Bt.Quaternion(0, 0, 0, 0);
-			trans1 = new bullet.Bt.Transform();
+			vec1 = new bullet.Vector3(0, 0, 0);
+			quat1 = new bullet.Quaternion(0, 0, 0, 0);
+			trans1 = new bullet.Transform();
 		} 
 
 		this.mass = mass;
@@ -93,21 +93,21 @@ class KinematicCharacterController extends Trait {
 			vec1.setX(withMargin(transform.dim.x / 2));
 			vec1.setY(withMargin(transform.dim.y / 2));
 			vec1.setZ(withMargin(transform.dim.z / 2));
-			shapeConvex = new bullet.Bt.BoxShape(vec1);
+			shapeConvex = new bullet.BoxShape(vec1);
 		}
 		else if (shape == ControllerShape.Sphere) {
 			var width = transform.dim.x;
 			if(transform.dim.y > width) width = transform.dim.y;
 			if(transform.dim.z > width) width = transform.dim.z;
-			shapeConvex = new bullet.Bt.SphereShape(withMargin(width / 2));
+			shapeConvex = new bullet.SphereShape(withMargin(width / 2));
 		}
 		else if (shape == ControllerShape.ConvexHull && mass > 0) {
-			shapeConvexHull = new bullet.Bt.ConvexHullShape();
+			shapeConvexHull = new bullet.ConvexHullShape();
 			isConvexHull = true;
 			addPointsToConvexHull(shapeConvexHull, transform.scale, collisionMargin);
 		}
 		else if (shape == ControllerShape.Cone) {
-			shapeConvex = new bullet.Bt.ConeShapeZ(
+			shapeConvex = new bullet.ConeShapeZ(
 				withMargin(transform.dim.x / 2), // Radius
 				withMargin(transform.dim.z));	 // Height
 		}
@@ -115,11 +115,11 @@ class KinematicCharacterController extends Trait {
 			vec1.setX(withMargin(transform.dim.x / 2));
 			vec1.setY(withMargin(transform.dim.y / 2));
 			vec1.setZ(withMargin(transform.dim.z / 2));
-			shapeConvex = new bullet.Bt.CylinderShapeZ(vec1);
+			shapeConvex = new bullet.CylinderShapeZ(vec1);
 		}
 		else if (shape == ControllerShape.Capsule) {
 			var r = transform.dim.x / 2;
-			shapeConvex = new bullet.Bt.CapsuleShapeZ(
+			shapeConvex = new bullet.CapsuleShapeZ(
 				withMargin(r), // Radius
 				withMargin(transform.dim.z - r * 2)); // Height between 2 sphere centers
 		}
@@ -137,17 +137,17 @@ class KinematicCharacterController extends Trait {
 		quat1.setW(quat.w);
 		trans1.setRotation(quat1);
 
-		body = new bullet.Bt.PairCachingGhostObject();
+		body = new bullet.PairCachingGhostObject();
 		body.setCollisionShape(isConvexHull ? shapeConvexHull : shapeConvex);
-		body.setCollisionFlags(bullet.Bt.CollisionObject.CF_CHARACTER_OBJECT);
+		body.setCollisionFlags(bullet.CollisionObject.CF_CHARACTER_OBJECT);
 		body.setWorldTransform(trans1);
 		body.setFriction(friction);
 		body.setRollingFriction(friction);
 		body.setRestitution(restitution);
 		#if js
-		character = new bullet.Bt.KinematicCharacterController(body, isConvexHull ? shapeConvexHull : shapeConvex, 0.5, 2);
+		character = new bullet.KinematicCharacterController(body, isConvexHull ? shapeConvexHull : shapeConvex, 0.5, 2);
 		#elseif cpp
-		character = new bullet.Bt.KinematicCharacterController.create(body, isConvexHull ? shapeConvexHull : shapeConvex, 0.5, bullet.Bt.Vector3(0.0, 0.0, 1.0));
+		character = new bullet.KinematicCharacterController.create(body, isConvexHull ? shapeConvexHull : shapeConvex, 0.5, bullet.Vector3(0.0, 0.0, 1.0));
 		#end
 		character.setJumpSpeed(jumpSpeed);
 		character.setUseGhostSweepTest(true);
@@ -328,7 +328,7 @@ class KinematicCharacterController extends Trait {
 		physics.world.updateSingleAabb(body);
 	}
 
-	function addPointsToConvexHull(shape:bullet.Bt.ConvexHullShape, scale:Vec4, margin:Float) {
+	function addPointsToConvexHull(shape:bullet.ConvexHullShape, scale:Vec4, margin:Float) {
 		var positions = cast(object, MeshObject).data.geom.positions;
 
 		var sx = scale.x * (1.0 - margin);

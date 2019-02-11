@@ -72,17 +72,6 @@ class Starter {
 			#end
 		}
 
-		#if (js && arm_bullet)
-		function loadLibAmmo(name:String) {
-			kha.Assets.loadBlobFromPath(name, function(b:kha.Blob) {
-				var print = function(s:String) { trace(s); };
-				var loaded = function() { tasks--; start(); };
-				untyped __js__("(1, eval)({0})", b.toString());
-				untyped __js__("Ammo({print:print}).then(loaded)");
-			});
-		}
-		#end
-
 		#if (js && arm_navigation)
 		function loadLib(name:String) {
 			kha.Assets.loadBlobFromPath(name, function(b:kha.Blob) {
@@ -94,7 +83,6 @@ class Starter {
 		#end
 
 		tasks = 1;
-		#if (js && arm_bullet) tasks++; loadLibAmmo("ammo.js"); #end
 		#if (js && arm_navigation) tasks++; loadLib("recast.js"); #end
 		#if (arm_config) tasks++; armory.data.Config.load(function() { tasks--; start(); }); #end
 		tasks--; start();

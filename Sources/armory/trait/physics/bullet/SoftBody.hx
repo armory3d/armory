@@ -30,11 +30,11 @@ class SoftBody extends Trait {
 	public var vertOffsetY = 0.0;
 	public var vertOffsetZ = 0.0;
 
-	public var body:bullet.Bt.SoftBody;
+	public var body:bullet.SoftBody;
 
-	static var helpers:bullet.Bt.SoftBodyHelpers;
+	static var helpers:bullet.SoftBodyHelpers;
 	static var helpersCreated = false;
-	static var worldInfo:bullet.Bt.SoftBodyWorldInfo;
+	static var worldInfo:bullet.SoftBodyWorldInfo;
 
 	public function new(shape = SoftShape.Cloth, bend = 0.5, mass = 1.0, margin = 0.04) {
 		super();
@@ -118,7 +118,7 @@ class SoftBody extends Trait {
 		for (ar in geom.indices) numtri += Std.int(ar.length / 3);
 
 		if (!helpersCreated) {
-			helpers = new bullet.Bt.SoftBodyHelpers();
+			helpers = new bullet.SoftBodyHelpers();
 			worldInfo = physics.world.getWorldInfo();
 			helpersCreated = true;
 		}
@@ -158,7 +158,7 @@ class SoftBody extends Trait {
 		body.getCollisionShape().setMargin(margin);
 
 		physics.world.addSoftBody(body, 1, -1);
-		body.setActivationState(bullet.Bt.CollisionObject.DISABLE_DEACTIVATION);
+		body.setActivationState(bullet.CollisionObject.DISABLE_DEACTIVATION);
 
 		notifyOnUpdate(update);
 	}

@@ -13,25 +13,25 @@ class PhysicsConstraint extends iron.Trait {
 	var disableCollisions:Bool;
 	var breakingThreshold:Float;
 	var limits:Array<Float>;
-	var con:bullet.Bt.TypedConstraint = null;
+	var con:bullet.TypedConstraint = null;
 
 	static var nullvec = true;
-	static var vec1:bullet.Bt.Vector3;
-	static var vec2:bullet.Bt.Vector3;
-	static var vec3:bullet.Bt.Vector3;
-	static var trans1:bullet.Bt.Transform;
-	static var trans2:bullet.Bt.Transform;
+	static var vec1:bullet.Vector3;
+	static var vec2:bullet.Vector3;
+	static var vec3:bullet.Vector3;
+	static var trans1:bullet.Transform;
+	static var trans2:bullet.Transform;
 
 	public function new(body1:String, body2:String, type:String, disableCollisions:Bool, breakingThreshold:Float, limits:Array<Float> = null) {
 		super();
 
 		if (nullvec) {
 			nullvec = false;
-			vec1 = new bullet.Bt.Vector3(0, 0, 0);
-			vec2 = new bullet.Bt.Vector3(0, 0, 0);
-			vec3 = new bullet.Bt.Vector3(0, 0, 0);
-			trans1 = new bullet.Bt.Transform();
-			trans2 = new bullet.Bt.Transform();
+			vec1 = new bullet.Vector3(0, 0, 0);
+			vec2 = new bullet.Vector3(0, 0, 0);
+			vec3 = new bullet.Vector3(0, 0, 0);
+			trans1 = new bullet.Transform();
+			trans2 = new bullet.Transform();
 		}
 		
 		this.body1 = body1;
@@ -69,7 +69,7 @@ class PhysicsConstraint extends iron.Trait {
 			trans2.setOrigin(vec2);
 			
 			if (type == "GENERIC" || type == "FIXED" || type == "POINT") {
-				var c = bullet.Bt.Generic6DofConstraint.new2(rb1.body, rb2.body, trans1, trans2, false);
+				var c = bullet.Generic6DofConstraint.new2(rb1.body, rb2.body, trans1, trans2, false);
 				if (type == "POINT") {
 					vec1.setX(0);
 					vec1.setY(0);
@@ -112,7 +112,7 @@ class PhysicsConstraint extends iron.Trait {
 				axis.setX(0);
 				axis.setY(0);
 				axis.setZ(1);
-				var c = new bullet.Bt.HingeConstraint(rb1.body, rb2.body, vec2, vec1, axis, axis);
+				var c = new bullet.HingeConstraint(rb1.body, rb2.body, vec2, vec1, axis, axis);
 				con = cast c;
 			}
 			// else if (type == "SLIDER") {}
@@ -127,7 +127,7 @@ class PhysicsConstraint extends iron.Trait {
 
 	public function removeFromWorld() {
 		#if js
-		bullet.Bt.Ammo.destroy(con);
+		bullet.Ammo.destroy(con);
 		#end
 	}
 }

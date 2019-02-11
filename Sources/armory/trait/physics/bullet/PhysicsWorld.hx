@@ -39,12 +39,12 @@ class PhysicsWorld extends Trait {
 	static var sceneRemoved = false;
 
 	#if arm_physics_soft
-	public var world:bullet.Bt.SoftRigidDynamicsWorld;
+	public var world:bullet.SoftRigidDynamicsWorld;
 	#else
-	public var world:bullet.Bt.DiscreteDynamicsWorld;
+	public var world:bullet.DiscreteDynamicsWorld;
 	#end
 
-	var dispatcher:bullet.Bt.CollisionDispatcher;
+	var dispatcher:bullet.CollisionDispatcher;
 	var gimpactRegistered = false;
 	var contacts:Array<ContactPair>;
 	var preUpdates:Array<Void->Void> = null;
@@ -58,8 +58,8 @@ class PhysicsWorld extends Trait {
 	var pairCache:Bool = false;
 
 	static var nullvec = true;
-	static var vec1:bullet.Bt.Vector3 = null;
-	static var vec2:bullet.Bt.Vector3 = null;
+	static var vec1:bullet.Vector3 = null;
+	static var vec2:bullet.Vector3 = null;
 
 	#if arm_debug
 	public static var physTime = 0.0;
@@ -70,8 +70,8 @@ class PhysicsWorld extends Trait {
 
 		if (nullvec) {
 			nullvec = false;
-			vec1 = new bullet.Bt.Vector3(0, 0, 0);
-			vec2 = new bullet.Bt.Vector3(0, 0, 0);
+			vec1 = new bullet.Vector3(0, 0, 0);
+			vec2 = new bullet.Vector3(0, 0, 0);
 		}
 
 		// Scene spawn
@@ -112,33 +112,29 @@ class PhysicsWorld extends Trait {
 	}
 
 	function createPhysics() {
-		var broadphase = new bullet.Bt.DbvtBroadphase();
+		var broadphase = new bullet.DbvtBroadphase();
 
 #if arm_physics_soft
-		var collisionConfiguration = new bullet.Bt.SoftBodyRigidBodyCollisionConfiguration();
+		var collisionConfiguration = new bullet.SoftBodyRigidBodyCollisionConfiguration();
 #else
-		var collisionConfiguration = new bullet.Bt.DefaultCollisionConfiguration();
+		var collisionConfiguration = new bullet.DefaultCollisionConfiguration();
 #end
 		
-		dispatcher = new bullet.Bt.CollisionDispatcher(collisionConfiguration);
-		var solver = new bullet.Bt.SequentialImpulseConstraintSolver();
+		dispatcher = new bullet.CollisionDispatcher(collisionConfiguration);
+		var solver = new bullet.SequentialImpulseConstraintSolver();
 
 		var g = iron.Scene.active.raw.gravity;
 		var gravity = g == null ? new Vec4(0, 0, -9.81) : new Vec4(g[0], g[1], g[2]);
 
 #if arm_physics_soft
-		var softSolver = new bullet.Bt.DefaultSoftBodySolver();
-		world = new bullet.Bt.SoftRigidDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration, softSolver);
+		var softSolver = new bullet.DefaultSoftBodySolver();
+		world = new bullet.SoftRigidDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration, softSolver);
 		vec1.setX(gravity.x);
 		vec1.setY(gravity.y);
 		vec1.setZ(gravity.z);
-		#if js
-		world.getWorldInfo().set_m_gravity(vec1);
-		#else
 		world.getWorldInfo().m_gravity = vec1;
-		#end
 #else
-		world = new bullet.Bt.DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
+		world = new bullet.DiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
 #end
 
 		setGravity(gravity);
@@ -150,11 +146,7 @@ class PhysicsWorld extends Trait {
 	}
 
 	public function addRigidBody(body:RigidBody) {
-		#if js
-		world.addRigidBodyToGroup(body.body, body.group, body.group);
-		#else
 		world.addRigidBody(body.body, body.group, body.group);
-		#end
 		rbMap.set(body.id, body);
 	}
 
@@ -181,7 +173,7 @@ class PhysicsWorld extends Trait {
 	// 		world.removeAction(controller.character);
 	// 	}
 	// 	#if js
-	// 	bullet.Bt.Ammo.destroy(controller.body);
+	// 	bullet.Ammo.destroy(controller.body);
 	// 	#else
 	// 	var cbody = controller.body;
 	// 	untyped __cpp__("delete cbody");
@@ -201,15 +193,9 @@ class PhysicsWorld extends Trait {
 			var c = contacts[i];
 			var rb = null;
 
-			#if js
-			if (c.a == untyped body.body.userIndex) rb = rbMap.get(c.b);
-			else if (c.b == untyped body.body.userIndex) rb = rbMap.get(c.a);
-
-			#else
-			var ob:bullet.Bt.CollisionObject = body.body;
+			var ob:bullet.CollisionObject = body.body;
 			if (c.a == ob.getUserIndex()) rb = rbMap.get(c.b);
 			else if (c.b == ob.getUserIndex()) rb = rbMap.get(c.a);
-			#end
 
 			if (rb != null && res.indexOf(rb) == -1) res.push(rb);
 		}
@@ -221,18 +207,10 @@ class PhysicsWorld extends Trait {
 		var res:Array<ContactPair> = [];
 		for (i in 0...contacts.length) {
 			var c = contacts[i];
-			#if js
-			
-			if (c.a == untyped body.body.userIndex) res.push(c);
-			else if (c.b == untyped body.body.userIndex) res.push(c);
-			
-			#else
-			
-			var ob:bullet.Bt.CollisionObject = body.body;
+			var ob:bullet.CollisionObject = body.body;
+
 			if (c.a == ob.getUserIndex()) res.push(c);
 			else if (c.b == ob.getUserIndex()) res.push(c);
-			
-			#end
 		}
 		return res;
 	}
@@ -265,38 +243,26 @@ class PhysicsWorld extends Trait {
 	function updateContacts() {
 		contacts = [];
 
-		var disp:bullet.Bt.Dispatcher = dispatcher;
+		var disp:bullet.Dispatcher = dispatcher;
 		var numManifolds = disp.getNumManifolds();
 
 		for (i in 0...numManifolds) {
 			var contactManifold = disp.getManifoldByIndexInternal(i);
-			#if js
-			var body0 = untyped bullet.Bt.Ammo.btRigidBody.prototype.upcast(contactManifold.getBody0());
-			var body1 = untyped bullet.Bt.Ammo.btRigidBody.prototype.upcast(contactManifold.getBody1());
-			#else
-			var body0:bullet.Bt.CollisionObject = contactManifold.getBody0();
-			var body1:bullet.Bt.CollisionObject = contactManifold.getBody1();
-			#end
+			var body0:bullet.CollisionObject = contactManifold.getBody0();
+			var body1:bullet.CollisionObject = contactManifold.getBody1();
 
 			var numContacts = contactManifold.getNumContacts();
-			var pt:bullet.Bt.ManifoldPoint = null;
-			var posA:bullet.Bt.Vector3 = null;
-			var posB:bullet.Bt.Vector3 = null;
-			var nor:bullet.Bt.Vector3 = null;
+			var pt:bullet.ManifoldPoint = null;
+			var posA:bullet.Vector3 = null;
+			var posB:bullet.Vector3 = null;
+			var nor:bullet.Vector3 = null;
 			var cp:ContactPair = null;
 			for (j in 0...numContacts) {
 				pt = contactManifold.getContactPoint(j);
-				#if js
-				posA = pt.get_m_positionWorldOnA();
-				posB = pt.get_m_positionWorldOnB();
-				nor = pt.get_m_normalWorldOnB();
-				cp = new ContactPair(untyped body0.userIndex, untyped body1.userIndex);
-				#else
 				posA = pt.m_positionWorldOnA;
 				posB = pt.m_positionWorldOnB;
 				nor = pt.m_normalWorldOnB;
 				cp = new ContactPair(body0.getUserIndex(), body1.getUserIndex());
-				#end
 				cp.posA = new Vec4(posA.x(), posA.y(), posA.z());
 				cp.posB = new Vec4(posB.x(), posB.y(), posB.z());
 				cp.normOnB = new Vec4(nor.x(), nor.y(), nor.z());
@@ -323,39 +289,23 @@ class PhysicsWorld extends Trait {
 		rayFrom.setValue(from.x, from.y, from.z);
 		rayTo.setValue(to.x, to.y, to.z);
 
-		var rayCallback = new bullet.Bt.ClosestRayResultCallback(rayFrom, rayTo);
-		var worldDyn:bullet.Bt.DynamicsWorld = world;
-		var worldCol:bullet.Bt.CollisionWorld = worldDyn;
+		var rayCallback = new bullet.ClosestRayResultCallback(rayFrom, rayTo);
+		var worldDyn:bullet.DynamicsWorld = world;
+		var worldCol:bullet.CollisionWorld = worldDyn;
 		worldCol.rayTest(rayFrom, rayTo, rayCallback);
 		var rb:RigidBody = null;
 		var hitInfo:Hit = null;
 
-		var rc:bullet.Bt.RayResultCallback = rayCallback;
+		var rc:bullet.RayResultCallback = rayCallback;
 		if (rc.hasHit()) {
-			#if js
-			var co = rayCallback.get_m_collisionObject();
-			var body = untyped bullet.Bt.Ammo.btRigidBody.prototype.upcast(co);
-			var hit = rayCallback.get_m_hitPointWorld();
-			hitPointWorld.set(hit.x(), hit.y(), hit.z());
-			var norm = rayCallback.get_m_hitNormalWorld();
-			hitNormalWorld.set(norm.x(), norm.y(), norm.z());
-			rb = rbMap.get(untyped body.userIndex);
-			hitInfo = new Hit(rb,hitPointWorld,hitNormalWorld);
-			#elseif cpp
 			var hit = rayCallback.m_hitPointWorld;
 			hitPointWorld.set(hit.x(), hit.y(), hit.z());
 			var norm = rayCallback.m_hitNormalWorld;
 			hitNormalWorld.set(norm.x(), norm.y(), norm.z());
 			rb = rbMap.get(rayCallback.m_collisionObject.getUserIndex());
-			hitInfo = new Hit(rb,hitPointWorld,hitNormalWorld);
-			#end
 		}
 
-		#if js
-		bullet.Bt.Ammo.destroy(rayCallback);
-		#else
 		rayCallback.delete();
-		#end
 
 		return hitInfo;
 	}
