@@ -481,8 +481,12 @@ def parse_vector(node, socket):
             to_linear = node.color_space == 'COLOR'
             return '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear, tex_link=tex_link))
         else:
+            global parsed
             tex_store = store_var_name(node) # Pink color for missing texture
+            parsed[tex_store] = True
+            curshader.write_textures += 1
             curshader.write('vec4 {0} = vec4(1.0, 0.0, 1.0, 1.0);'.format(tex_store))
+            curshader.write_textures -= 1
             return '{0}.rgb'.format(tex_store)
 
     elif node.type == 'TEX_MAGIC':
@@ -1504,7 +1508,7 @@ def make_texture(image_node, tex_name, matname=None):
     ext = s[1].lower()
     do_convert = ext != 'jpg' and ext != 'png' and ext != 'hdr' and ext != 'mp4' # Convert image
     if do_convert:
-        new_ext = 'png' if ext == 'tga' else 'jpg'
+        new_ext = 'png' if (ext == 'tga' or ext == 'dds') else 'jpg'
         tex['file'] = tex['file'].rsplit('.', 1)[0] + '.' + new_ext
 
     if image.packed_file != None or not is_ascii(texfile):

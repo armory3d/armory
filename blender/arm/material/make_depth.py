@@ -46,6 +46,7 @@ def make(context_id, rpasses, shadowmap=False):
 
     if is_disp:
         if rpdat.arm_rp_displacement == 'Vertex':
+            frag.ins = vert.outs
             vert.add_uniform('mat3 N', '_normalMatrix')
             vert.write('vec3 wnormal = normalize(N * vec3(nor.xy, pos.w));')
             cycles.parse(mat_state.nodes, con_depth, vert, frag, geom, tesc, tese, parse_surface=False, parse_opacity=parse_opacity)
