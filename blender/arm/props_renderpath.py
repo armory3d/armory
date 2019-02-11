@@ -328,7 +328,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     
     rp_gi: EnumProperty(
         items=[('Off', 'Off', 'Off'),
-               ('Voxel GI', 'Voxel GI', 'Voxel GI'),
+               ('Voxel GI', 'Voxel GI', 'Voxel GI', 'ERROR', 1),
                ('Voxel AO', 'Voxel AO', 'Voxel AO')
                ],
         name="Global Illumination", description="Dynamic global illumination", default='Off', update=update_renderpath)
