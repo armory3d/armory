@@ -235,9 +235,11 @@ def make_gi(context_id):
             frag.write('    vec3 lPos = lightPosition.xyz / lightPosition.w;')
             frag.write('    visibility = texture(shadowMap, vec3(lPos.xy, lPos.z - shadowsBias)).r;')
             frag.write('}')
-        frag.write('basecol *= visibility;')
+        frag.add_uniform('vec3 sunCol', link="_sunColor")
+        frag.write('basecol *= visibility * sunCol;')
     else:
         print('Armory Warning: Voxel GI requires sun light and enabled shadows')
+        vert.add_out('vec4 lightPositionGeom')
         frag.write('basecol = vec3(0.0);')
 
     frag.write('vec3 voxel = voxposition * 0.5 + 0.5;')
