@@ -1,3 +1,4 @@
+import bpy
 import arm.material.cycles as cycles
 import arm.material.mat_state as mat_state
 import arm.material.mat_utils as mat_utils
@@ -5,6 +6,7 @@ import arm.material.make_finalize as make_finalize
 import arm.utils
 
 def make(context_id):
+    wrd = bpy.data.worlds['Arm']
 
     vs = [{'name': 'pos', 'data': 'float3'}]
     con_decal = mat_state.data.add_context({ 'name': context_id, 'vertex_elements': vs, 'depth_write': False, 'compare_mode': 'less', 'cull_mode': 'clockwise',
@@ -59,6 +61,8 @@ def make(context_id):
     frag.write('float occlusion;')
     frag.write('float specular;')
     frag.write('float opacity;')
+    if '_Emission' in wrd.world_defs:
+        frag.write('float emission;')
     cycles.parse(mat_state.nodes, con_decal, vert, frag, geom, tesc, tese)
 
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
