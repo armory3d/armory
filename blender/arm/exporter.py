@@ -1499,7 +1499,6 @@ class ArmoryExporter:
             o['strength'] *= 2.6
             o['fov'] = 1.5708 # pi/2
             o['shadowmap_cube'] = True
-            o['shadows_bias'] *= 2.0
             if objref.shadow_soft_size > 0.1:
                 o['light_size'] = objref.shadow_soft_size * 10
         elif objtype == 'SPOT':

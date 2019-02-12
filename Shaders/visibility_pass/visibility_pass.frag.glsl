@@ -43,6 +43,9 @@ void main() {
 	else { // Cube
 		vec3 lp = lightPos - p;
 		vec3 l = normalize(lp);
+		#ifdef HLSL
+		l.y = -l.y;
+		#endif
 		fragColor[0] = float(texture(shadowMapCube, -l).r + shadowsBias > lpToDepth(lp, lightProj));
 		fragColor[1] = 0.0;
 	}

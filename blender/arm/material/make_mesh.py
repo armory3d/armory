@@ -403,11 +403,14 @@ def make_forward_mobile(con_mesh):
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj')
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]')
                 frag.write('const float s = shadowmapCubePcfSize;') # TODO: incorrect...
-                frag.write('float compare = lpToDepth(ld - n * pointBias * 80, lightProj);')
+                frag.write('float compare = lpToDepth(ld, lightProj) - pointBias;')
+                frag.write('#ifdef HLSL')
+                frag.write('l.y = -l.y;')
+                frag.write('#endif')
                 if '_Legacy' in wrd.world_defs:
-                    frag.write('visibility = float(texture(shadowMapPoint[0], vec3(-l + n * pointBias * 80)).r > compare);')
+                    frag.write('visibility = float(texture(shadowMapPoint[0], vec3(-l + n * pointBias * 20)).r > compare);')
                 else:
-                    frag.write('visibility = texture(shadowMapPoint[0], vec4(-l + n * pointBias * 80, compare)).r;')
+                    frag.write('visibility = texture(shadowMapPoint[0], vec4(-l + n * pointBias * 20, compare)).r;')
 
         frag.write('direct += basecol * dotNL * pointCol * attenuate(distance(wposition, pointPos)) * visibility;')
 
