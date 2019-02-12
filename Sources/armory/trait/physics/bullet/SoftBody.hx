@@ -1,5 +1,8 @@
 package armory.trait.physics.bullet;
 
+import bullet.CollisionObject;
+import bullet.Generic6DofConstraint;
+import bullet.CollisionShape;
 #if arm_bullet
 
 import iron.math.Vec4;
@@ -123,27 +126,9 @@ class SoftBody extends Trait {
 			helpersCreated = true;
 		}
 
-		#if js
-		body = helpers.CreateFromTriMesh(worldInfo, cast positions, cast vecind, numtri);
-		#elseif cpp
-		untyped __cpp__("body = helpers.CreateFromTriMesh(worldInfo, positions->self.data, (int*)vecind->self.data, numtri);");
-		#end
+		body = helpers.CreateFromTriMesh(worldInfo, cast positions, cast vecind, numtri, false);
 
 		// body.generateClusters(4);
-		
-		#if js
-		var cfg = body.get_m_cfg();
-		cfg.set_viterations(physics.solverIterations);
-		cfg.set_piterations(physics.solverIterations);
-		// cfg.set_collisions(0x0001 + 0x0020 + 0x0040); // self collision
-		// cfg.set_collisions(0x11); // Soft-rigid, soft-soft
-		if (shape == SoftShape.Volume) {
-			cfg.set_kDF(0.1);
-			cfg.set_kDP(0.01);
-			cfg.set_kPR(bend);
-		}
-		
-		#elseif cpp
 		body.m_cfg.viterations = physics.solverIterations;
 		body.m_cfg.piterations = physics.solverIterations;
 		// body.m_cfg.collisions = 0x0001 + 0x0020 + 0x0040;
@@ -152,7 +137,6 @@ class SoftBody extends Trait {
 			body.m_cfg.kDP = 0.01;
 			body.m_cfg.kPR = bend;
 		}
-		#end
 
 		body.setTotalMass(mass, false);
 		body.getCollisionShape().setMargin(margin);
@@ -183,20 +167,12 @@ class SoftBody extends Trait {
 		#end
 		var numVerts = Std.int(v.length / l);
 
-		#if js
-		var nodes = body.get_m_nodes();
-		#elseif cpp
 		var nodes = body.m_nodes;
-		#end
 
 		var scalePos = 1.0;
 		for (i in 0...numVerts) {
 			var node = nodes.at(i);
-			#if js
-			var nodePos = node.get_m_x();
-			#elseif cpp
 			var nodePos = node.m_x;
-			#end
 			if (Math.abs(nodePos.x()) > scalePos) scalePos = Math.abs(nodePos.x());
 			if (Math.abs(nodePos.y()) > scalePos) scalePos = Math.abs(nodePos.y());
 			if (Math.abs(nodePos.z()) > scalePos) scalePos = Math.abs(nodePos.z());
@@ -207,13 +183,8 @@ class SoftBody extends Trait {
 
 		for (i in 0...numVerts) {
 			var node = nodes.at(i);
-			#if js
-			var nodePos = node.get_m_x();
-			var nodeNor = node.get_m_n();
-			#elseif cpp
 			var nodePos = node.m_x;
 			var nodeNor = node.m_n;
-			#end
 			#if arm_deinterleaved
 			v.set(i * 4    , Std.int(nodePos.x() * 32767 * (1 / scalePos)));
 			v.set(i * 4 + 1, Std.int(nodePos.y() * 32767 * (1 / scalePos)));

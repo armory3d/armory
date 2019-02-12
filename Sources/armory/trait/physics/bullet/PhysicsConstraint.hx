@@ -69,7 +69,7 @@ class PhysicsConstraint extends iron.Trait {
 			trans2.setOrigin(vec2);
 			
 			if (type == "GENERIC" || type == "FIXED" || type == "POINT") {
-				var c = bullet.Generic6DofConstraint.new2(rb1.body, rb2.body, trans1, trans2, false);
+				var c = new bullet.Generic6DofConstraint(rb1.body, rb2.body, trans1, trans2, false);
 				if (type == "POINT") {
 					vec1.setX(0);
 					vec1.setY(0);
@@ -112,7 +112,7 @@ class PhysicsConstraint extends iron.Trait {
 				axis.setX(0);
 				axis.setY(0);
 				axis.setZ(1);
-				var c = new bullet.HingeConstraint(rb1.body, rb2.body, vec2, vec1, axis, axis);
+				@:privateAccess var c = bullet.HingeConstraint.new7(rb1.body, rb2.body, vec2, vec1, axis, axis);
 				con = cast c;
 			}
 			// else if (type == "SLIDER") {}
@@ -126,9 +126,7 @@ class PhysicsConstraint extends iron.Trait {
 	}
 
 	public function removeFromWorld() {
-		#if js
-		bullet.Ammo.destroy(con);
-		#end
+		con.delete();
 	}
 }
 

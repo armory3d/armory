@@ -89,21 +89,13 @@ class PhysicsHook extends Trait {
 			var bodyCI = new bullet.RigidBodyConstructionInfo(mass, motionState, shape, inertia);
 			hookRB = new bullet.RigidBody(bodyCI);
 
-			#if js
-			var nodes = sb.body.get_m_nodes();
-			#elseif cpp
 			var nodes = sb.body.m_nodes;
-			#end
 
 			var geom = cast(object, MeshObject).data.geom;
 			var numNodes = Std.int(geom.positions.length / 4);
 			for (i in 0...numNodes) {
 				var node = nodes.at(i);
-				#if js
-				var nodePos = node.get_m_x();
-				#elseif cpp
 				var nodePos = node.m_x;
-				#end
 
 				// Find nodes at marked vertex group locations
 				var numVerts = Std.int(verts.length / 3);
