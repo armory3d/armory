@@ -428,9 +428,9 @@ class RigidBody extends iron.Trait {
 		currentScaleX = v.x;
 		currentScaleY = v.y;
 		currentScaleZ = v.z;
-		vec1.setX(bodyScaleX * v.x);
-		vec1.setY(bodyScaleY * v.y);
-		vec1.setZ(bodyScaleZ * v.z);
+		vec1.setX(v.x / bodyScaleX);
+		vec1.setY(v.y / bodyScaleY);
+		vec1.setZ(v.z / bodyScaleZ);
 		btshape.setLocalScaling(vec1);
 		var worldDyn:bullet.Bt.DynamicsWorld = physics.world;
 		var worldCol:bullet.Bt.CollisionWorld = worldDyn;
