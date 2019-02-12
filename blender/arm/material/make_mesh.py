@@ -403,7 +403,7 @@ def make_forward_mobile(con_mesh):
                 frag.add_uniform('vec2 lightProj', link='_lightPlaneProj')
                 frag.add_uniform('samplerCubeShadow shadowMapPoint[1]')
                 frag.write('const float s = shadowmapCubePcfSize;') # TODO: incorrect...
-                frag.write('float compare = lpToDepth(ld, lightProj) - pointBias;')
+                frag.write('float compare = lpToDepth(ld, lightProj) - pointBias * 1.5;')
                 frag.write('#ifdef HLSL')
                 frag.write('l.y = -l.y;')
                 frag.write('#endif')
