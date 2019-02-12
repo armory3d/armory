@@ -552,11 +552,13 @@ def build_success():
                 ext = '' if gapi == 'direct3d11' else '_' + gapi
                 krom_location = sdk_path + '/Krom/Krom' + ext + '.exe'
                 shutil.copy(krom_location, files_path + '/Krom.exe')
-                os.rename(files_path + '/Krom.exe', files_path + '/' + arm.utils.safestr(wrd.arm_project_name) + '.exe')
+                krom_exe = arm.utils.safestr(wrd.arm_project_name) + '.exe'
+                os.rename(files_path + '/Krom.exe', files_path + '/' + krom_exe)
             elif state.target == 'krom-linux':
                 krom_location = sdk_path + '/Krom/Krom'
                 shutil.copy(krom_location, files_path)
-                os.rename(files_path + '/Krom', files_path + '/' + arm.utils.safestr(wrd.arm_project_name))
+                krom_exe = arm.utils.safestr(wrd.arm_project_name)
+                os.rename(files_path + '/Krom', files_path + '/' + krom_exe)
             else:
                 krom_location = sdk_path + '/Krom/Krom.app'
                 shutil.copytree(krom_location, files_path + '/Krom.app')
@@ -565,7 +567,19 @@ def build_success():
                     f = files_path + '/' + f
                     if os.path.isfile(f):
                         shutil.move(f, files_path + '/Krom.app/Contents/MacOS')
-                os.rename(files_path + '/Krom.app', files_path + '/' + arm.utils.safestr(wrd.arm_project_name) + '.app')
+                krom_exe = arm.utils.safestr(wrd.arm_project_name) + '.app'
+                os.rename(files_path + '/Krom.app', files_path + '/' + krom_exe)
+                krom_exe += '/Contents/MacOS/Krom'
+            # Serialize krom.js into krom.bin
+            if wrd.arm_minify_js:
+                cwd = os.getcwd()
+                os.chdir(files_path)
+                args = [krom_exe, '.', '.', '--writebin']
+                proc = subprocess.Popen(args)
+                proc.wait()
+                os.chdir(cwd)
+                os.remove(files_path + '/krom.js')
+
             # Rename
             ext = state.target.split('-')[-1] # krom-windows
             new_files_path = files_path + '-' + ext
