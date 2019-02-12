@@ -1,3 +1,4 @@
+import bpy
 import arm.material.cycles as cycles
 import arm.material.mat_state as mat_state
 import arm.material.make_mesh as make_mesh
@@ -19,11 +20,12 @@ def make(context_id):
 
 	# Remove fragColor = ...;
 	frag.main = frag.main[:frag.main.rfind('fragColor')]
-
 	frag.write('\n')
-	frag.add_uniform('vec3 lightColor', link='_lightColor')
-	frag.write('float visibility = 1.0;')
-	frag.write('vec4 premultipliedReflect = vec4(vec3(direct * lightColor * visibility + indirect * occlusion) * opacity, opacity);')
+
+	wrd = bpy.data.worlds['Arm']
+	if '_VoxelAO' in wrd.world_defs:
+		frag.write('indirect *= 0.25;')
+	frag.write('vec4 premultipliedReflect = vec4(vec3(direct + indirect * 0.5) * opacity, opacity);')
 	
 	frag.write('float w = clamp(pow(min(1.0, premultipliedReflect.a * 10.0) + 0.01, 3.0) * 1e8 * pow(1.0 - (gl_FragCoord.z) * 0.9, 3.0), 1e-2, 3e3);')
 	frag.write('fragColor[0] = vec4(premultipliedReflect.rgb * w, premultipliedReflect.a);')
