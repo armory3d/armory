@@ -152,22 +152,23 @@ project.addSources('Sources');
             f.write("project.addParameter('" + import_traits[i] + "');\n")
             f.write("""project.addParameter("--macro keep('""" + import_traits[i] + """')");\n""")
 
-        shaderload = state.target == 'krom' or state.target == 'html5'
-        if wrd.arm_cache_build and shaderload and not is_publish:
+        jstarget = state.target == 'krom' or state.target == 'html5'
+        noembed = wrd.arm_cache_build and not is_publish and jstarget
+        if noembed:
             # Load shaders manually
-            assets.add_khafile_def('arm_shaderload')
+            assets.add_khafile_def('arm_noembed')
 
         shaders_path = arm.utils.build_dir() + '/compiled/Shaders/*.glsl'
         if rel_path:
             shaders_path = os.path.relpath(shaders_path, arm.utils.get_fp()).replace('\\', '/')
-        f.write('project.addShaders("' + shaders_path + '");\n')
+        f.write('project.addShaders("' + shaders_path + '", { noembed: ' + str(noembed).lower() + '});\n')
 
         if arm.utils.get_gapi() == 'direct3d11':
             # noprocessing flag - gets renamed to .d3d11
             shaders_path = arm.utils.build_dir() + '/compiled/Hlsl/*.glsl'
             if rel_path:
                 shaders_path = os.path.relpath(shaders_path, arm.utils.get_fp()).replace('\\', '/')
-            f.write('project.addShaders("' + shaders_path + '", { noprocessing: true });\n')
+            f.write('project.addShaders("' + shaders_path + '", { noprocessing: true, noembed: ' + str(noembed).lower() + ' });\n')
 
         # Move assets for published game to /data folder
         use_data_dir = is_publish and (state.target == 'krom-windows' or state.target == 'krom-linux' or state.target == 'windows-hl' or state.target == 'linux-hl')
