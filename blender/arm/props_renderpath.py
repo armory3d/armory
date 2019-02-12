@@ -102,6 +102,7 @@ def update_preset(self, context):
         rpdat.rp_ssgi = 'RTAO'
         rpdat.arm_ssrs = False
         rpdat.rp_ssr = True
+        rpdat.arm_ssr_half_res = False
         rpdat.rp_bloom = True
         rpdat.rp_eyeadapt = False
         rpdat.rp_motionblur = 'Off'
