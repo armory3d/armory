@@ -1631,7 +1631,9 @@ class ArmoryExporter:
             # mat.arm_cached = True
         if is_particle:
             mat.arm_particle_flag = True
+        # Empty material roughness
         mat.use_nodes = True
+        mat.node_tree.nodes['Principled BSDF'].inputs[7].default_value = 0.25
         o = {}
         o['name'] = mat.name
         o['contexts'] = []
