@@ -133,7 +133,8 @@ class DebugConsole extends Trait {
 		var wy = 0;
 		var wh = iron.App.h();
 
-		var bindG = ui.windowDirty(hwin, wx, wy, ww, wh) || hwin.redraws > 0;
+		// var bindG = ui.windowDirty(hwin, wx, wy, ww, wh) || hwin.redraws > 0;
+		var bindG = true;
 		if (bindG) g.end();
 		
 		ui.begin(g);
@@ -506,7 +507,11 @@ class DebugConsole extends Trait {
 			physTime = 0;
 			frames = 0;
 
-			if (htab.position == 2) updateGraph(); // Profile tab selected
+			if (htab.position == 2) {
+				g.end();
+				updateGraph(); // Profile tab selected
+				g.begin(false);
+			}
 		}
 		frameTime = Scheduler.realTime() - lastTime;
 		lastTime = Scheduler.realTime();
