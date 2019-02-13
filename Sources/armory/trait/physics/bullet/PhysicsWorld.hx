@@ -60,6 +60,7 @@ class PhysicsWorld extends Trait {
 	static var nullvec = true;
 	static var vec1:bullet.Vector3 = null;
 	static var vec2:bullet.Vector3 = null;
+	static var vec3:bullet.Vector3 = null;
 
 	#if arm_debug
 	public static var physTime = 0.0;
@@ -72,6 +73,7 @@ class PhysicsWorld extends Trait {
 			nullvec = false;
 			vec1 = new bullet.Vector3(0, 0, 0);
 			vec2 = new bullet.Vector3(0, 0, 0);
+			vec3 = new bullet.Vector3(0, 0, 0);
 		}
 
 		// Scene spawn
@@ -241,34 +243,33 @@ class PhysicsWorld extends Trait {
 	}
 
 	function updateContacts() {
+		var cp:ContactPair = null;
+		var pt:bullet.ManifoldPoint = null;
+		var contactManifold:bullet.PersistentManifold = null;
 		contacts = [];
 
-		var disp:bullet.Dispatcher = dispatcher;
-		var numManifolds = disp.getNumManifolds();
+		for (i in 0...dispatcher.getNumManifolds()) {
+			contactManifold = dispatcher.getManifoldByIndexInternal(i);
 
-		for (i in 0...numManifolds) {
-			var contactManifold = disp.getManifoldByIndexInternal(i);
-			var body0:bullet.CollisionObject = contactManifold.getBody0();
-			var body1:bullet.CollisionObject = contactManifold.getBody1();
-
-			var numContacts = contactManifold.getNumContacts();
-			var pt:bullet.ManifoldPoint = null;
-			var posA:bullet.Vector3 = null;
-			var posB:bullet.Vector3 = null;
-			var nor:bullet.Vector3 = null;
-			var cp:ContactPair = null;
-			for (j in 0...numContacts) {
+			for (j in 0...contactManifold.getNumContacts()) {
 				pt = contactManifold.getContactPoint(j);
-				posA = pt.m_positionWorldOnA;
-				posB = pt.m_positionWorldOnB;
-				nor = pt.m_normalWorldOnB;
-				cp = new ContactPair(body0.getUserIndex(), body1.getUserIndex());
-				cp.posA = new Vec4(posA.x(), posA.y(), posA.z());
-				cp.posB = new Vec4(posB.x(), posB.y(), posB.z());
-				cp.normOnB = new Vec4(nor.x(), nor.y(), nor.z());
+				vec1 = pt.m_positionWorldOnA;
+				vec2 = pt.m_positionWorldOnB;
+				vec3 = pt.m_normalWorldOnB;
+				cp = new ContactPair(
+					contactManifold.getBody0().getUserIndex(),
+					contactManifold.getBody1().getUserIndex()
+				);
+				cp.posA = new Vec4(vec1.x(), vec1.y(), vec1.z());
+				cp.posB = new Vec4(vec2.x(), vec2.y(), vec2.z());
+				cp.normOnB = new Vec4(vec3.x(), vec3.y(), vec3.z());
 				cp.impulse = pt.getAppliedImpulse();
 				cp.distance = pt.getDistance();
 				contacts.push(cp);
+				vec1.delete();
+				vec2.delete();
+				vec3.delete();
+				pt.delete();
 			}
 		}
 	}
