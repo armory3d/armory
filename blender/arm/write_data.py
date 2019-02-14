@@ -142,9 +142,10 @@ project.addSources('Sources');
         if enable_dce:
             f.write("project.addParameter('-dce full');\n")
 
-        if wrd.arm_debug_console or wrd.arm_live_patch:
+        live_patch = wrd.arm_live_patch and state.target == 'krom'
+        if wrd.arm_debug_console or live_patch:
             import_traits.append('armory.trait.internal.Bridge')
-            if wrd.arm_live_patch:
+            if live_patch:
                 assets.add_khafile_def('arm_patch')
 
         import_traits = list(set(import_traits))

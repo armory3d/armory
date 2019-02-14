@@ -1,8 +1,8 @@
 package armory.trait.internal;
 
-#if arm_patch
-
 class LivePatch extends iron.Trait {
+
+#if arm_patch
 
 	static var patchId = 0;
 
@@ -22,6 +22,10 @@ class LivePatch extends iron.Trait {
 			}
 		});
 	}
-}
+
+#else
+
+	public function new() { super(); }
 
 #end
+}
