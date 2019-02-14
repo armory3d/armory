@@ -459,15 +459,19 @@ class RenderPathDeferred {
 
 		#if rp_decals
 		{
+			#if (!kha_opengl)
 			path.setDepthFrom("gbuffer0", "gbuffer1"); // Unbind depth so we can read it
 			path.depthToRenderTarget.set("main", path.renderTargets.get("tex"));
-			
+			#end
+
 			path.setTarget("gbuffer0", ["gbuffer1"]);
 			path.bindTarget("_main", "gbufferD");
 			path.drawDecals("decal");
 			
+			#if (!kha_opengl)
 			path.setDepthFrom("gbuffer0", "tex"); // Re-bind depth
 			path.depthToRenderTarget.set("main", path.renderTargets.get("gbuffer0"));
+			#end
 		}
 		#end
 
@@ -588,7 +592,9 @@ class RenderPathDeferred {
 		// ---
 		// Deferred light
 		// ---
+		#if (!kha_opengl)
 		path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
+		#end
 		path.setTarget("tex");
 		path.bindTarget("_main", "gbufferD");
 		path.bindTarget("gbuffer0", "gbuffer0");
@@ -686,7 +692,9 @@ class RenderPathDeferred {
 		}
 		#end
 
+		#if (!kha_opengl)
 		path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
+		#end
 
 		#if (rp_background == "World")
 		{
@@ -805,7 +813,9 @@ class RenderPathDeferred {
 			if (armory.data.Config.raw.rp_motionblur != false) {
 				#if (rp_motionblur == "Camera")
 				{
+					#if (!kha_opengl)
 					path.setDepthFrom("tex", "gbuffer1"); // Unbind depth so we can read it
+					#end
 				}
 				#end
 				path.setTarget("buf");
@@ -815,7 +825,9 @@ class RenderPathDeferred {
 					path.bindTarget("_main", "gbufferD");
 					path.drawShader("shader_datas/motion_blur_pass/motion_blur_pass");
 					
+					#if (!kha_opengl)
 					path.setDepthFrom("tex", "gbuffer0"); // Re-bind depth
+					#end
 				}
 				#else
 				{
