@@ -87,7 +87,7 @@ def add_world_defs():
             if rpdat.arm_voxelgi_occ == 0.0:
                 wrd.world_defs += '_VoxelAONoTrace'
 
-    if arm.utils.get_legacy_shaders():
+    if arm.utils.get_legacy_shaders() or 'ios' in state.target:
         wrd.world_defs += '_Legacy'
         assets.add_khafile_def('arm_legacy')
 

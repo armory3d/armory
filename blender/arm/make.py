@@ -240,13 +240,13 @@ def compile(assets_only=False):
     cmd.append('-g')
     cmd.append(state.export_gapi)
 
-    if arm.utils.get_legacy_shaders():
-        if 'html5' in state.target:
+    if arm.utils.get_legacy_shaders() or 'ios' in state.target:
+        if 'html5' in state.target or 'ios' in state.target:
             pass
         else:
             cmd.append('--shaderversion')
             cmd.append('110')
-    elif 'android' in state.target or 'ios' in state.target or 'html5' in state.target:
+    elif 'android' in state.target or 'html5' in state.target:
         cmd.append('--shaderversion')
         cmd.append('300')
     else:
@@ -559,6 +559,7 @@ def build_success():
                 shutil.copy(krom_location, files_path)
                 krom_exe = arm.utils.safestr(wrd.arm_project_name)
                 os.rename(files_path + '/Krom', files_path + '/' + krom_exe)
+                krom_exe = './' + krom_exe
             else:
                 krom_location = sdk_path + '/Krom/Krom.app'
                 shutil.copytree(krom_location, files_path + '/Krom.app')
@@ -569,13 +570,13 @@ def build_success():
                         shutil.move(f, files_path + '/Krom.app/Contents/MacOS')
                 krom_exe = arm.utils.safestr(wrd.arm_project_name) + '.app'
                 os.rename(files_path + '/Krom.app', files_path + '/' + krom_exe)
+                krom_exe = './Krom'
             # Serialize krom.js into krom.bin
             if wrd.arm_minify_js:
                 cwd = os.getcwd()
                 fp = files_path
                 if state.target == 'krom-macos':
                     fp += '/' + krom_exe + '/Contents/MacOS'
-                    krom_exe = './Krom'
                 os.chdir(fp)
                 args = [krom_exe, '.', '.', '--writebin']
                 proc = subprocess.Popen(args)
