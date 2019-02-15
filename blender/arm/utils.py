@@ -432,11 +432,10 @@ def logic_editor_space(context_screen=None):
     if context_screen != None:
         areas = context_screen.areas
         for area in areas:
-            if area.type == 'NODE_EDITOR':
-                for space in area.spaces:
-                    if space.type == 'NODE_EDITOR':
-                        if space.node_tree != None and space.node_tree.bl_idname == 'ArmLogicTreeType': # and space.node_tree.is_updated:
-                            return space
+            for space in area.spaces:
+                if space.type == 'NODE_EDITOR':
+                    if space.node_tree != None and space.node_tree.bl_idname == 'ArmLogicTreeType':
+                        return space
     return None
 
 def voxel_support():
