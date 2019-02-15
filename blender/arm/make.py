@@ -524,9 +524,7 @@ def build_success():
             if arm.utils.get_os() == 'win':
                 cmd.append('--consolepid')
                 cmd.append(str(os.getpid()))
-                cmd.append('--sound')
-            elif arm.utils.get_os() == 'mac' or arm.utils.get_os() == 'linux': # TODO: Wait for new Krom audio
-                pass
+            cmd.append('--sound')
             state.proc_play = run_proc(cmd, play_done)
 
     elif state.is_publish:
