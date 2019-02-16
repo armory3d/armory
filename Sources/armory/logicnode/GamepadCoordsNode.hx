@@ -32,6 +32,10 @@ class GamepadCoordsNode extends LogicNode {
 			coords.x = gamepad.rightStick.movementX;
 			coords.y = gamepad.rightStick.movementY;
 			return coords;
+		} else if(from == 4) {
+			return gamepad.down("l2");
+		} else if(from == 5) {
+			return gamepad.down("r2");
 		}
 		return null;
 	}

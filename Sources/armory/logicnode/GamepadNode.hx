@@ -36,11 +36,11 @@ class GamepadNode extends LogicNode {
 		var gamepad = iron.system.Input.getGamepad(num);
 		switch (property0) {
 		case "Down":
-			return gamepad.down(property1);
+			return gamepad.down(property1) > 0.0;
 		case "Started":
-			return gamepad.started(property1) ? 1.0 : 0.0;
+			return gamepad.started(property1);
 		case "Released":
-			return gamepad.released(property1) ? 1.0 : 0.0;
+			return gamepad.released(property1);
 		// case "Moved Left":
 			// return (gamepad.leftStick.movementX != 0 || gamepad.leftStick.movementY != 0) ? 1.0 : 0.0;
 		// case "Moved Right":

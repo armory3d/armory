@@ -14,6 +14,8 @@ class GamepadCoordsNode(Node, ArmLogicTreeNode):
         self.outputs.new('NodeSocketVector', 'Right Stick')
         self.outputs.new('NodeSocketVector', 'Left Movement')
         self.outputs.new('NodeSocketVector', 'Right Movement')
+        self.outputs.new('NodeSocketFloat', 'Left Trigger')
+        self.outputs.new('NodeSocketFloat', 'Right Trigger')
         self.inputs.new('NodeSocketInt', 'Gamepad')
 
 add_node(GamepadCoordsNode, category='Input')

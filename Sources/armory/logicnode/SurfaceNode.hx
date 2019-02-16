@@ -21,7 +21,7 @@ class SurfaceNode extends LogicNode {
 		case "Released":
 			b = surface.released();
 		case "Moved":
-			b = surface.moved;
+			b = surface.moved();
 		}
 		if (b) runOutput(0);
 	}
@@ -30,13 +30,13 @@ class SurfaceNode extends LogicNode {
 		var surface = iron.system.Input.getSurface();
 		switch (property0) {
 		case "Touched":
-			return surface.down;
+			return surface.down();
 		case "Started":
-			return surface.started;
+			return surface.started();
 		case "Released":
-			return surface.released;
+			return surface.released();
 		case "Moved":
-			return surface.moved;
+			return surface.moved();
 		}
 		return false;
 	}
