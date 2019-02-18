@@ -11,7 +11,7 @@ import arm.props_renderpath as props_renderpath
 import arm.proxy
 
 # Armory version
-arm_version = '0.6'
+arm_version = '0.7'
 arm_commit = '$Id$'
 
 def init_properties():
