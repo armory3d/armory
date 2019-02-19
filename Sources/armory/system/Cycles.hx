@@ -130,7 +130,7 @@ class Cycles {
 		if (frag.bposition) {
 			vert.add_out('vec3 bposition');
 			if (frag.ndcpos) {
-				vert.write('bposition = ndc.xyz;');
+				vert.write('bposition = (ndc.xyz / ndc.w);');
 			}
 			else {
 				vert.add_uniform('vec3 dim', '_dim');
@@ -155,7 +155,7 @@ class Cycles {
 		if (frag.mposition) {
 			vert.add_out('vec3 mposition');
 			if (frag.ndcpos) {
-				vert.write('mposition = ndc.xyz;');
+				vert.write('mposition = (ndc.xyz / ndc.w);');
 			}
 			else {
 				vert.write_attrib('mposition = pos.xyz;');

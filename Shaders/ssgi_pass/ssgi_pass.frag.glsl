@@ -53,7 +53,7 @@ float getDeltaDepth(vec3 hitCoord) {
 void rayCast(vec3 dir) {
 	hitCoord = vpos;
 	dir *= ssgiRayStep * 2;
-	float dist = 0.1;
+	float dist = 0.15;
 	for (int i = 0; i < ssgiMaxSteps; i++) {
 		hitCoord += dir;
 		float delta = getDeltaDepth(hitCoord);
