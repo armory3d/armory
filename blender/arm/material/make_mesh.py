@@ -266,6 +266,7 @@ def make_deferred(con_mesh, rpasses):
     return con_mesh
 
 def make_raytracer(con_mesh):
+    con_mesh.data['vertex_elements'] = [{'name': 'pos', 'data': 'float3'}, {'name': 'nor', 'data': 'float3'}]
     wrd = bpy.data.worlds['Arm']
     vert = con_mesh.make_vert()
     frag = con_mesh.make_frag()
