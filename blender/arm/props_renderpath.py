@@ -485,6 +485,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_lens_texture: StringProperty(name="Lens Texture", default="")
     arm_fisheye: BoolProperty(name="Fish Eye", default=False, update=assets.invalidate_shader_cache)
     arm_vignette: BoolProperty(name="Vignette", default=False, update=assets.invalidate_shader_cache)
+    arm_vignette_strength: FloatProperty(name="Strength", default=0.7, update=assets.invalidate_shader_cache)
     arm_lensflare: BoolProperty(name="Lens Flare", default=False, update=assets.invalidate_shader_cache)
     arm_lut_texture: StringProperty(name="LUT Texture", description="Color Grading", default="", update=assets.invalidate_shader_cache)
     arm_skin: EnumProperty(

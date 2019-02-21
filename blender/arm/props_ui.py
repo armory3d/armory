@@ -1006,6 +1006,9 @@ class ArmRenderPathCompositorPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_sharpen_strength')
         layout.prop(rpdat, 'arm_fisheye')
         layout.prop(rpdat, 'arm_vignette')
+        col = layout.column()
+        col.enabled = rpdat.arm_vignette
+        col.prop(rpdat, 'arm_vignette_strength')
         layout.prop(rpdat, 'arm_lensflare')
         layout.prop(rpdat, 'arm_grain')
         col = layout.column()

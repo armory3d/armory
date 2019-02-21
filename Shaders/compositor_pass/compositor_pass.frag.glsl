@@ -110,7 +110,7 @@ vec4 LUTlookup(in vec4 textureColor, in sampler2D lookupTable) {
 }
 
 float vignette() {
-	return 0.3 + 0.7 * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
+	return (1.0 - compoVignetteStrength) + compoVignetteStrength * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
 }
 
 #ifdef _CGlare

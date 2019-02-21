@@ -552,6 +552,11 @@ const int volumSteps = """ + str(rpdat.arm_volumetric_light_steps) + """;
 """const float compoGrainStrength = """ + str(round(rpdat.arm_grain_strength * 100) / 100) + """;
 """)
 
+        if rpdat.arm_vignette:
+            f.write(
+"""const float compoVignetteStrength = """ + str(round(rpdat.arm_vignette_strength * 100) / 100) + """;
+""")
+
         if rpdat.arm_sharpen:
             f.write(
 """const float compoSharpenStrength = """ + str(round(rpdat.arm_sharpen_strength * 100) / 100) + """;
