@@ -275,7 +275,7 @@ def compile(assets_only=False):
     if (kha_target_name == 'krom' and not state.is_publish) or (kha_target_name == 'html5' and not state.is_publish):
         cmd.append(arm.utils.build_dir() + '/debug')
         # Start compilation server
-        if kha_target_name == 'krom' and arm.utils.get_compilation_server() and not assets_only:
+        if kha_target_name == 'krom' and arm.utils.get_compilation_server() and not assets_only and wrd.arm_cache_build:
             compilation_server = True
             arm.lib.server.run_haxe(arm.utils.get_haxe_path())
     else:
@@ -638,5 +638,9 @@ def clean():
     for mat in bpy.data.materials:
         mat.signature = ''
         mat.arm_cached = False
+
+    # Restart compilation server
+    if arm.utils.get_compilation_server():
+        arm.lib.server.kill_haxe()
 
     print('Project cleaned')

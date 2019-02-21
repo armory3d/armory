@@ -23,3 +23,4 @@ def kill_haxe():
 	global haxe_server
 	if haxe_server != None:
 		haxe_server.kill()
+		haxe_server = None
