@@ -216,17 +216,38 @@ class MaterialPropsPanel(bpy.types.Panel):
         layout.prop(mat, 'arm_skip_context')
         layout.prop(mat, 'arm_particle_fade')
         layout.prop(mat, 'arm_billboard')
-        layout.prop(mat, 'arm_blending')
-        col = layout.column()
-        col.enabled = mat.arm_blending
+
+        layout.operator("arm.invalidate_material_cache")
+
+class MaterialBlendingPropsPanel(bpy.types.Panel):
+    bl_label = "Blending"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "material"
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_parent_id = "MaterialPropsPanel"
+
+    def draw_header(self, context):
+        self.layout.prop(bpy.context.material, 'arm_blending', text="")
+
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+        layout.use_property_decorate = False
+        mat = bpy.context.material
+        if mat == None:
+            return
+
+        flow = layout.grid_flow()
+        flow.enabled = mat.arm_blending
+        col = flow.column()
         col.prop(mat, 'arm_blending_source')
         col.prop(mat, 'arm_blending_destination')
         col.prop(mat, 'arm_blending_operation')
+        col = flow.column()
         col.prop(mat, 'arm_blending_source_alpha')
         col.prop(mat, 'arm_blending_destination_alpha')
         col.prop(mat, 'arm_blending_operation_alpha')
-
-        layout.operator("arm.invalidate_material_cache")
 
 class ArmoryPlayerPanel(bpy.types.Panel):
     bl_label = "Armory Player"
@@ -699,7 +720,7 @@ class ArmRenderPathPanel(bpy.types.Panel):
             layout.separator()
             if rpdat.rp_driver != 'Armory' and arm.api.drivers[rpdat.rp_driver]['draw_props'] != None:
                 arm.api.drivers[rpdat.rp_driver]['draw_props'](layout)
-                return    
+                return
 
 class ArmRenderPathRendererPanel(bpy.types.Panel):
     bl_label = "Renderer"
@@ -740,7 +761,7 @@ class ArmRenderPathRendererPanel(bpy.types.Panel):
             layout.prop(rpdat, 'arm_tess_mesh_outer')
             layout.label(text='Shadow')
             layout.prop(rpdat, 'arm_tess_shadows_inner')
-            layout.prop(rpdat, 'arm_tess_shadows_outer')  
+            layout.prop(rpdat, 'arm_tess_shadows_outer')
 
         layout.prop(rpdat, 'arm_particles')
         layout.prop(rpdat, 'arm_skin')
@@ -1183,7 +1204,7 @@ class ArmGenTerrainButton(bpy.types.Operator):
         sectors = scn.arm_terrain_sectors
         size = scn.arm_terrain_sector_size
         height_scale = scn.arm_terrain_height_scale
-        
+
         # Create material
         mat = bpy.data.materials.new(name="Terrain")
         mat.use_nodes = True
@@ -1275,7 +1296,7 @@ class ArmTilesheetPanel(bpy.types.Panel):
     bl_label = "Armory Tilesheet"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
-    bl_context = "object"
+    bl_context = "material"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
@@ -1459,6 +1480,7 @@ def register():
     bpy.utils.register_class(InvalidateCacheButton)
     bpy.utils.register_class(InvalidateMaterialCacheButton)
     bpy.utils.register_class(MaterialPropsPanel)
+    bpy.utils.register_class(MaterialBlendingPropsPanel)
     bpy.utils.register_class(ArmoryPlayerPanel)
     bpy.utils.register_class(ArmoryExporterPanel)
     bpy.utils.register_class(ArmoryProjectPanel)
@@ -1511,6 +1533,7 @@ def unregister():
     bpy.utils.unregister_class(InvalidateCacheButton)
     bpy.utils.unregister_class(InvalidateMaterialCacheButton)
     bpy.utils.unregister_class(MaterialPropsPanel)
+    bpy.utils.unregister_class(MaterialBlendingPropsPanel)
     bpy.utils.unregister_class(ArmoryPlayerPanel)
     bpy.utils.unregister_class(ArmoryExporterPanel)
     bpy.utils.unregister_class(ArmoryProjectPanel)
