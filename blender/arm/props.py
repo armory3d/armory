@@ -339,12 +339,12 @@ def init_properties_on_load():
                             node.property0_get = bpy.data.meshes[node.property0.strip()]
                         elif node.bl_idname == 'LNSceneNode':
                             node.property0_get = bpy.data.scenes[node.property0.strip()]
-                        node.property0 = ''
+                        #node.property0 = ''
                     for inp in node.inputs:
-                        if inp.bl_idname == 'ArmNodeSocketObject' and inp.default_value != '':
+                        if inp.bl_idname == 'ArmNodeSocketObject' and inp.default_value != '' and inp.default_value in bpy.data.objects:
                             inp.default_value_get = bpy.data.objects[inp.default_value]
                             inp.default_value = ''
-                        elif inp.bl_idname == 'ArmNodeSocketAnimAction' and inp.default_value != '':
+                        elif inp.bl_idname == 'ArmNodeSocketAnimAction' and inp.default_value != '' and inp.default_value in bpy.data.actions:
                             inp.default_value_get = bpy.data.actions[inp.default_value]
                             inp.default_value = ''
 
