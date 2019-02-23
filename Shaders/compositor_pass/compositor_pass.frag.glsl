@@ -109,9 +109,11 @@ vec4 LUTlookup(in vec4 textureColor, in sampler2D lookupTable) {
 
 }
 
+#ifdef _CVignette
 float vignette() {
 	return (1.0 - compoVignetteStrength) + compoVignetteStrength * pow(16.0 * texCoord.x * texCoord.y * (1.0 - texCoord.x) * (1.0 - texCoord.y), 0.2);
 }
+#endif
 
 #ifdef _CGlare
 // Based on lense flare implementation by musk
