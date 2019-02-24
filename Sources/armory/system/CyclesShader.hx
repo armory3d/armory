@@ -287,6 +287,7 @@ class CyclesShader {
 		s += '#define sampler2D Texture2D\n';
 		s += '#define sampler3D Texture3D\n';
 		s += '#define texture(tex, coord) tex.Sample(LinearSampler, coord)\n';
+		s += '#define texelFetch(tex, coord, lod) tex.Load(float3(coord.xy, lod))\n';
 		s += '#define mod(a, b) (a % b)\n';
 		s += '#define vec2 float2\n';
 		s += '#define vec3 float3\n';
@@ -300,6 +301,7 @@ class CyclesShader {
 		s += '#define dFdx ddx\n';
 		s += '#define dFdy ddy\n';
 		s += '#define inversesqrt rsqrt\n';
+		s += '#define fract frac\n';
 
 		s += header;
 
