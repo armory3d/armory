@@ -8,10 +8,12 @@ import arm.utils
 import arm.assets as assets
 import arm.make_state as state
 
-def add_armory_library(sdk_path, name, rel_path=False):
+def add_armory_library(sdk_path, name, rel_path=False, project=False):
     if rel_path:
         sdk_path = '../' + os.path.relpath(sdk_path, arm.utils.get_fp()).replace('\\', '/')
-    return ('project.addLibrary("' + sdk_path + '/' + name + '");\n').replace('\\', '/').replace('//', '/')
+    if project: addFunc = 'await project.addProject("'
+    else: addFunc = 'project.addLibrary("'
+    return (addFunc + sdk_path + '/' + name + '");\n').replace('\\', '/').replace('//', '/')
 
 def add_assets(path, quality=1.0, use_data_dir=False, rel_path=False):
     if not bpy.data.worlds['Arm'].arm_minimize and path.endswith('.arm'):
@@ -97,7 +99,7 @@ project.addSources('Sources');
             if wrd.arm_physics_engine == 'Bullet':
                 assets.add_khafile_def('arm_bullet')
                 if not os.path.exists('Libraries/haxebullet'):
-                    f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet', rel_path=rel_path))
+                    f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet', rel_path=rel_path, project=True))
                 if state.target.startswith('krom') or state.target == 'html5' or state.target == 'node':
                     ammojs_path = sdk_path + '/lib/haxebullet/ammo/ammo.js'
                     ammojs_path = ammojs_path.replace('\\', '/').replace('//', '/')
