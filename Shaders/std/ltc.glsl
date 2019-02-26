@@ -11,19 +11,10 @@ vec3 L2;
 vec3 L3;
 vec3 L4;
 
-mat3 transpose2(mat3 v) {
-	mat3 tmp;
-	tmp[0] = vec3(v[0].x, v[1].x, v[2].x);
-	tmp[1] = vec3(v[0].y, v[1].y, v[2].y);
-	tmp[2] = vec3(v[0].z, v[1].z, v[2].z);
-	return tmp;
-}
-
 float integrateEdge(vec3 v1, vec3 v2) {
 	float cosTheta = dot(v1, v2);
-	cosTheta = clamp(cosTheta, -0.9999, 0.9999);
 	float theta = acos(cosTheta);    
-	float res = cross(v1, v2).z * theta / sin(theta);
+	float res = cross(v1, v2).z * ((theta > 0.001) ? theta / sin(theta) : 1.0);
 	return res;
 }
 
@@ -126,7 +117,7 @@ float ltcEvaluate(vec3 N, vec3 V, float dotNV, vec3 P, mat3 Minv, vec3 points0, 
 	T2 = cross(N, T1);
 
 	// Rotate area light in (T1, T2, R) basis
-	Minv = Minv * transpose2(mat3(T1, T2, N));
+	Minv = Minv * transpose(mat3(T1, T2, N));
 
 	// Polygon (allocate 5 vertices for clipping)
 	// vec3 L[5];
