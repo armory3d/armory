@@ -282,11 +282,11 @@ class CyclesShader {
 		}
 
 		#if kha_direct3d11
-		var s = 'SamplerState LinearSampler { Filter = MIN_MAG_LINEAR_MIP_POINT; AddressU = Clamp; AddressV = Clamp; };\n';
-		s += 'SamplerState PointSampler { Filter = MIN_MAG_MIP_POINT; AddressU = Clamp; AddressV = Clamp; };\n';
+		var s = '#define HLSL\n';
 		s += '#define sampler2D Texture2D\n';
 		s += '#define sampler3D Texture3D\n';
-		s += '#define texture(tex, coord) tex.Sample(LinearSampler, coord)\n';
+		s += '#define texture(tex, coord) tex.Sample(tex ## _sampler, coord)\n';
+		s += '#define textureLod(tex, coord, lod) tex.SampleLevel(tex ## _sampler, coord, lod)\n';
 		s += '#define texelFetch(tex, coord, lod) tex.Load(float3(coord.xy, lod))\n';
 		s += '#define mod(a, b) (a % b)\n';
 		s += '#define vec2 float2\n';
@@ -302,6 +302,7 @@ class CyclesShader {
 		s += '#define dFdy ddy\n';
 		s += '#define inversesqrt rsqrt\n';
 		s += '#define fract frac\n';
+		s += '#define mix lerp\n';
 
 		s += header;
 
@@ -357,10 +358,18 @@ class CyclesShader {
 			s += '};\n';
 		}
 
-		for (a in uniforms)
+		for (a in uniforms) {
 			s += 'uniform ' + a + ';\n';
-		for (f in functions)
+			#if kha_direct3d11
+			if (StringTools.startsWith(a, 'sampler')) {
+				s += 'SamplerState ' + a.split(' ')[1] + '_sampler;';
+			}
+			#end
+		}
+
+		for (f in functions) {
 			s += f + '\n';
+		}
 
 		// Begin main
 		if (outs.length > 0 || shader_type == 'vert') {
@@ -409,6 +418,7 @@ class CyclesShader {
 		// Write output structure
 		if (shader_type == 'vert') {
 			s += 'SPIRV_Cross_Output stage_output;\n';
+			s += 'gl_Position.z = (gl_Position.z + gl_Position.w) * 0.5;\n';
 			s += 'stage_output.svpos = gl_Position;\n';
 			for (a in outs) {
 				var b = a.substring(5); // Remove type 'vec4 '

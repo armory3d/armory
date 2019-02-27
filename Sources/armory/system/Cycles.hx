@@ -978,7 +978,7 @@ class Cycles {
 				curshader.write('${sample_bump_res}_fh2 *= ($strength) * 3.0;');
 				curshader.write('vec3 ${sample_bump_res}_a = normalize(vec3(1.0, 0.0, ${sample_bump_res}_fh1));');
 				curshader.write('vec3 ${sample_bump_res}_b = normalize(vec3(0.0, 1.0, ${sample_bump_res}_fh2));');
-				res = 'normalize(mat3(${sample_bump_res}_a, ${sample_bump_res}_b, normalize(vec3(${sample_bump_res}_fh1, ${sample_bump_res}_fh2, 2.0))) * n)';
+				res = 'normalize(mul(n, mat3(${sample_bump_res}_a, ${sample_bump_res}_b, normalize(vec3(${sample_bump_res}_fh1, ${sample_bump_res}_fh2, 2.0)))))';
 				sample_bump_res = '';
 			}
 			else {
@@ -992,10 +992,13 @@ class Cycles {
 			curshader.add_function(armory.system.CyclesFunctions.str_cotangentFrame);
 			if (!curshader.invTBN) {
 				curshader.invTBN = true;
-				curshader.write('mat3 invTBN = inverse(cotangentFrame(n, -vVec, texCoord));');
+				#if kha_direct3d11
+				curshader.write('mat3 invTBN = transpose(cotangentFrame(n, vVec, texCoord));');
+				#else
+				curshader.write('mat3 invTBN = transpose(cotangentFrame(n, -vVec, texCoord));');
+				#end
 			}
-			res = '(normalize(invTBN * normalize($res)) * 0.5 + 0.5)';
-
+			res = '(normalize(mul($res, invTBN)) * 0.5 + 0.5)';
 			return res;
 		}
 
@@ -1119,14 +1122,19 @@ class Cycles {
 				frag.add_function(CyclesFunctions.str_cotangentFrame);
 			}
 			frag.n = true;
+			#if kha_direct3d11
+			frag.write('mat3 TBN = cotangentFrame(n, vVec, texCoord);');
+			#else
 			frag.write('mat3 TBN = cotangentFrame(n, -vVec, texCoord);');
-			frag.write('n = TBN * normalize(texn);');
+			#end
+
+			frag.write('n = mul(normalize(texn), TBN);');
 		}
 		// else:
 		//     frag.write('vec3 n = ({0}) * 2.0 - 1.0;'.format(out_normaltan))
 		//     if (strength != '1.0') frag.write('n.xy *= $strength;');
-		//     # frag.write('n = normalize(TBN * normalize(n));')
-		//     frag.write('n = TBN * normalize(n);')
+		//     # frag.write('n = normalize(mul(normalize(n), TBN));')
+		//     frag.write('n = mul(normalize(n), TBN);')
 		//     con.add_elem('tang', 'short4norm')
 
 		parse_teximage_vector = true;
@@ -1185,9 +1193,13 @@ class Cycles {
 		else if (node.type == 'CAMERA') {
 			// View Z Depth
 			if (socket == node.outputs[1]) {
-				// curshader.add_include('std/math.glsl');
 				curshader.add_uniform('vec2 cameraProj', '_cameraPlaneProj');
+				#if kha_direct3d11
+				curshader.wvpposition = true;
+				return '(cameraProj.y / ((wvpposition.z / wvpposition.w) - cameraProj.x))';
+				#else
 				return '(cameraProj.y / (gl_FragCoord.z - cameraProj.x))';
+				#end
 			}
 			// View Distance
 			else {
@@ -1206,7 +1218,11 @@ class Cycles {
 
 		else if (node.type == 'NEW_GEOMETRY') {
 			if (socket == node.outputs[6]) // Backfacing
+				#if kha_direct3d11
+				return '0.0'; // SV_IsFrontFace
+				#else
 				return '(1.0 - float(gl_FrontFacing))';
+				#end
 			else if (socket == node.outputs[7]) // Pointiness
 				return '0.0';
 		}

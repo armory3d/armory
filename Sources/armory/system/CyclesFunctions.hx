@@ -98,9 +98,9 @@ vec3 random3(const vec3 c) {
 float tex_musgrave_f(const vec3 p) {
 	const float F3 = 0.3333333;
 	const float G3 = 0.1666667;
-	vec3 s = floor(p + dot(p, vec3(F3)));
-	vec3 x = p - s + dot(s, vec3(G3));
-	vec3 e = step(vec3(0.0), x - x.yzx);
+	vec3 s = floor(p + dot(p, vec3(F3, F3, F3)));
+	vec3 x = p - s + dot(s, vec3(G3, G3, G3));
+	vec3 e = step(vec3(0.0, 0.0, 0.0), x - x.yzx);
 	vec3 i1 = e*(1.0 - e.zxy);
 	vec3 i2 = 1.0 - e.zxy*(1.0 - e);
 	vec3 x1 = x - i1 + G3;
@@ -119,7 +119,7 @@ float tex_musgrave_f(const vec3 p) {
 	w *= w;
 	w *= w;
 	d *= w;
-	return clamp(dot(d, vec4(52.0)), 0.0, 1.0);
+	return clamp(dot(d, vec4(52.0, 52.0, 52.0, 52.0)), 0.0, 1.0);
 }
 ";
 
@@ -214,7 +214,7 @@ float traceConeAO(sampler3D voxels, const vec3 origin, vec3 dir, const float ape
 	while (sampleCol < 1.0 && dist < maxDist) {
 		samplePos = dir * dist + origin;
 		float mip = max(log2(diam * voxelgiResolution.x), 0);
-		float mipSample = textureLod(voxels, samplePos * 0.5 + vec3(0.5), mip).r;
+		float mipSample = textureLod(voxels, samplePos * 0.5 + vec3(0.5, 0.5, 0.5), mip).r;
 		sampleCol += (1 - sampleCol) * mipSample;
 		dist += max(diam / 2, VOXEL_SIZE);
 		diam = dist * aperture;
@@ -227,10 +227,9 @@ vec3 tangent(const vec3 n) {
 	if (length(t1) > length(t2)) return normalize(t1);
 	else return normalize(t2);
 }
-float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels, float vrange, float voffset) {
-	const float TAN_22_5 = 0.55785173935;
+float traceAO(const vec3 origin, const vec3 normal, const float vrange, const float voffset) {
 	const float angleMix = 0.5f;
-	const float aperture = TAN_22_5;
+	const float aperture = 0.55785173935;
 	vec3 o1 = normalize(tangent(normal));
 	vec3 o2 = normalize(cross(o1, normal));
 	vec3 c1 = 0.5f * (o1 + o2);
@@ -249,8 +248,7 @@ float traceAO(const vec3 origin, const vec3 normal, sampler3D voxels, float vran
 	col += traceConeAO(voxels, origin, mix(normal, -o2, angleMix), aperture, MAX_DISTANCE, offset);
 	col += traceConeAO(voxels, origin, mix(normal, c1, angleMix), aperture, MAX_DISTANCE, offset);
 	col += traceConeAO(voxels, origin, mix(normal, c2, angleMix), aperture, MAX_DISTANCE, offset);
-	const float blendFac = 1.0;
-	return col / (9.0 * blendFac);
+	return col / 9.0;
 }
 ";
 
