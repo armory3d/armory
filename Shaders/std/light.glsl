@@ -95,7 +95,7 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	float ltcspec = ltcEvaluate(n, v, dotNV, p, invM, lightArea0, lightArea1, lightArea2, lightArea3);
 	ltcspec *= textureLod(sltcMag, tuv, 0.0).a;
 	float ltcdiff = ltcEvaluate(n, v, dotNV, p, mat3(1.0), lightArea0, lightArea1, lightArea2, lightArea3);
-	vec3 direct = albedo * ltcdiff + ltcspec * spec;
+	vec3 direct = albedo * ltcdiff + ltcspec * spec * 0.05;
 	#else
 	vec3 direct = lambertDiffuseBRDF(albedo, dotNL) +
 				  specularBRDF(f0, rough, dotNL, dotNH, dotNV, dotVH) * spec;
