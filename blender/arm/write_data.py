@@ -159,6 +159,8 @@ project.addSources('Sources');
             # Load shaders manually
             assets.add_khafile_def('arm_noembed')
 
+        noembed = False # TODO: always embed shaders for now, check compatibility with haxe compile server
+
         shaders_path = arm.utils.build_dir() + '/compiled/Shaders/*.glsl'
         if rel_path:
             shaders_path = os.path.relpath(shaders_path, arm.utils.get_fp()).replace('\\', '/')
