@@ -325,6 +325,11 @@ class CyclesShader {
 				s += '$a$in_ext : TEXCOORD$index;\n';
 				index++;
 			}
+			// Built-ins
+			if (shader_type == 'vert' && main.indexOf("gl_VertexID") >= 0) {
+				s += 'uint gl_VertexID : SV_VertexID;\n';
+				ins.push('uint gl_VertexID');
+			}
 			s += '};\n';
 		}
 
