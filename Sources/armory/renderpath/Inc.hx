@@ -48,6 +48,16 @@ class Inc {
 				config.rp_shadowmap_cube;
 		}
 		superSample = config.rp_supersample;
+		#else
+		
+		#if (rp_supersampling == 1.5)
+		superSample = 1.5;
+		#elseif (rp_supersampling == 2)
+		superSample = 2.0;
+		#elseif (rp_supersampling == 4)
+		superSample = 4.0;
+		#end
+		
 		#end
 	}
 
@@ -369,15 +379,7 @@ class Inc {
 	}
 
 	public static inline function getSuperSampling():Float {
-		#if (rp_supersampling == 1.5)
-		return 1.5;
-		#elseif (rp_supersampling == 2)
-		return 2.0;
-		#elseif (rp_supersampling == 4)
-		return 4.0;
-		#else
 		return superSample;
-		#end
 	}
 
 	public static inline function getHdrFormat():String {
