@@ -283,9 +283,8 @@ project.addSources('Sources');
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
 
-        khafile_text = wrd.arm_khafile
-        if khafile_text != '':
-            f.write(bpy.data.texts[khafile_text].as_string())
+        if wrd.arm_khafile != None:
+            f.write(wrd.arm_khafile.as_string())
 
         if state.target.startswith('android-native'):
             bundle = 'org.armory3d.' + wrd.arm_project_package if wrd.arm_project_bundle == '' else wrd.arm_project_bundle
