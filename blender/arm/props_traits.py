@@ -429,7 +429,7 @@ class ArmTraitsPanel(bpy.types.Panel):
         draw_traits(layout, obj, is_object=True)
 
 class ArmSceneTraitsPanel(bpy.types.Panel):
-    bl_label = "Armory Traits"
+    bl_label = "Armory Scene Traits"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "scene"
