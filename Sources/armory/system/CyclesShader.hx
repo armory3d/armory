@@ -286,6 +286,7 @@ class CyclesShader {
 		s += '#define sampler2D Texture2D\n';
 		s += '#define sampler3D Texture3D\n';
 		s += '#define texture(tex, coord) tex.Sample(tex ## _sampler, coord)\n';
+		s += '#define textureOffset(tex, coord, offset) tex.Sample(tex ## _sampler, coord, offset)\n';
 		s += '#define textureLod(tex, coord, lod) tex.SampleLevel(tex ## _sampler, coord, lod)\n';
 		s += '#define texelFetch(tex, coord, lod) tex.Load(float3(coord.xy, lod))\n';
 		s += '#define mod(a, b) (a % b)\n';
