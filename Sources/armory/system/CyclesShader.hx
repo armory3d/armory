@@ -368,7 +368,7 @@ class CyclesShader {
 			s += 'uniform ' + a + ';\n';
 			#if kha_direct3d11
 			if (StringTools.startsWith(a, 'sampler')) {
-				s += 'SamplerState ' + a.split(' ')[1] + '_sampler;';
+				s += 'SamplerState ' + a.split(' ')[1] + '_sampler;\n';
 			}
 			#end
 		}

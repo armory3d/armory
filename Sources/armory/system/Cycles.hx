@@ -37,7 +37,6 @@ class Cycles {
 	static var links:Array<TNodeLink>;
 
 	static var parsing_disp:Bool;
-	static var parse_teximage_vector:Bool;
 	static var normal_written:Bool; // Normal socket is linked on shader node - overwrite fs normal
 	static var cotangentFrameWritten:Bool;
 	static var sample_bump:Bool;
@@ -101,7 +100,6 @@ class Cycles {
 		matcon = _matcon;
 
 		parsing_disp = false;
-		parse_teximage_vector = true;
 		normal_written = false;
 		cotangentFrameWritten = false;
 		sample_bump = false;
@@ -282,6 +280,8 @@ class Cycles {
 		// if (node.type == 'GROUP') {
 		if (node.type == 'Armory PBR' || node.type == 'OUTPUT_MATERIAL_PBR') {
 			if (parse_surface) {
+				// Normal - parsed first to retrieve uv coords
+				parse_normal_map_color_input(node.inputs[5]);
 				// Base color
 				sout.out_basecol = parse_vector_input(node.inputs[0]);
 				// Occlusion
@@ -290,8 +290,6 @@ class Cycles {
 				sout.out_roughness = parse_value_input(node.inputs[3]);
 				// Metallic
 				sout.out_metallic = parse_value_input(node.inputs[4]);
-				// Normal
-				parse_normal_map_color_input(node.inputs[5]);
 				// Emission
 				// if (isInputLinked(node.inputs[6]) || node.inputs[6].default_value != 0.0):
 					// out_emission = parse_value_input(node.inputs[8])
@@ -1112,7 +1110,6 @@ class Cycles {
 		// if isInputLinked(inp) == False:
 		//     return
 		frag.write_normal++;
-		parse_teximage_vector = false; // Force texCoord for normal map image vector
 		out_normaltan = parse_vector_input(inp);
 		if (!arm_export_tangents) {
 			frag.write('vec3 texn = ($out_normaltan) * 2.0 - 1.0;');
@@ -1136,8 +1133,6 @@ class Cycles {
 		//     # frag.write('n = normalize(mul(normalize(n), TBN));')
 		//     frag.write('n = mul(normalize(n), TBN);')
 		//     con.add_elem('tang', 'short4norm')
-
-		parse_teximage_vector = true;
 		frag.write_normal--;
 	}
 
@@ -1729,17 +1724,16 @@ class Cycles {
 		return node_name(node) + '_store';
 	}
 
-	public static var texCoordName = 'texCoord';
 	static function texture_store(node:TNode, tex:TBindTexture, tex_name:String, to_linear = false):String {		
 		matcon.bind_textures.push(tex);
 		curshader.context.add_elem('tex', 'short2norm');
 		curshader.add_uniform('sampler2D $tex_name');
 		var uv_name = '';
-		if (getInputLink(node.inputs[0]) != null && parse_teximage_vector) {
+		if (getInputLink(node.inputs[0]) != null) {
 			uv_name = parse_vector_input(node.inputs[0]);
 		}
 		else {
-			uv_name = texCoordName;
+			uv_name = 'texCoord';
 		}
 		var tex_store = store_var_name(node);
 		// if c_state.mat_texture_grad():
