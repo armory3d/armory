@@ -187,6 +187,10 @@ class Cycles {
 			vert.add_uniform('mat3 N', '_normalMatrix');
 			vert.write_attrib('vec3 wnormal = normalize(mul(vec3(nor.xy, pos.w), N));');
 		}
+		if (frag.nAttr) {
+			vert.add_out('vec3 nAttr');
+			vert.write_attrib('nAttr = vec3(nor.xy, pos.w);');
+		}
 		if (frag.dotNV) {
 			frag.write_attrib('float dotNV = max(dot(n, vVec), 0.0);');
 		}
@@ -966,8 +970,8 @@ class Cycles {
 			var height = parse_value_input(node.inputs[2]);
 			sample_bump = false;
 			var nor = parse_vector_input(node.inputs[3]);
-			curshader.n = true;
 			if (sample_bump_res != '') {
+				curshader.nAttr = true;
 				// var ext = node.invert ? ['1', '2', '3', '4'] : ['2', '1', '4', '3'];
 				var ext = ['2', '1', '4', '3'];
 				curshader.write('float ${sample_bump_res}_fh1 = ${sample_bump_res}_${ext[0]} - ${sample_bump_res}_${ext[1]};');
@@ -976,25 +980,21 @@ class Cycles {
 				curshader.write('${sample_bump_res}_fh2 *= ($strength) * 3.0;');
 				curshader.write('vec3 ${sample_bump_res}_a = normalize(vec3(1.0, 0.0, ${sample_bump_res}_fh1));');
 				curshader.write('vec3 ${sample_bump_res}_b = normalize(vec3(0.0, 1.0, ${sample_bump_res}_fh2));');
-				res = 'normalize(mul(n, mat3(${sample_bump_res}_a, ${sample_bump_res}_b, normalize(vec3(${sample_bump_res}_fh1, ${sample_bump_res}_fh2, 2.0)))))';
+				res = 'normalize(mul(nAttr, mat3(${sample_bump_res}_a, ${sample_bump_res}_b, normalize(vec3(${sample_bump_res}_fh1, ${sample_bump_res}_fh2, 2.0)))))';
 				sample_bump_res = '';
 			}
 			else {
+				curshader.n = true;
 				res = 'n';
 			}
 			
 			res = '($res + $nor)';
 
-			// TODO: To tangent
-			curshader.vVec = true;
-			curshader.add_function(armory.system.CyclesFunctions.str_cotangentFrame);
 			if (!curshader.invTBN) {
 				curshader.invTBN = true;
-				#if kha_direct3d11
-				curshader.write('mat3 invTBN = transpose(cotangentFrame(n, vVec, texCoord));');
-				#else
-				curshader.write('mat3 invTBN = transpose(cotangentFrame(n, -vVec, texCoord));');
-				#end
+				curshader.nAttr = true;
+				curshader.add_function(armory.system.CyclesFunctions.str_cotangentFrame);
+				curshader.write('mat3 invTBN = transpose(cotangentFrame(nAttr, -nAttr, texCoord));');
 			}
 			res = '(normalize(mul($res, invTBN)) * 0.5 + 0.5)';
 			return res;

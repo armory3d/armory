@@ -163,6 +163,7 @@ class CyclesShader {
 	public var vVec = false;
 	public var vVecCam = false;
 	public var n = false;
+	public var nAttr = false;
 	public var dotNV = false;
 	public var invTBN = false;
 
