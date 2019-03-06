@@ -3,12 +3,17 @@ package armory.data;
 class Config {
 
 	public static var raw:TConfig = null;
+	public static var configLoaded = false;
 
 	public static function load(done:Void->Void) {
-		iron.data.Data.getBlob('config.arm', function(blob:kha.Blob) {
-			raw = haxe.Json.parse(blob.toString());
-			done();
-		});
+		try {
+			iron.data.Data.getBlob('config.arm', function(blob:kha.Blob) {
+				configLoaded = true;
+				raw = haxe.Json.parse(blob.toString());
+				done();
+			});
+		}
+		catch(e:Dynamic) { done(); }
 	}
 
 	public static function save() {

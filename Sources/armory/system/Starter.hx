@@ -25,6 +25,7 @@ class Starter {
 			if (c.window_maximizable == null) c.window_maximizable = max;
 			if (c.window_w == null) c.window_w = w;
 			if (c.window_h == null) c.window_h = h;
+			if (c.window_scale == null) c.window_scale = 1.0;
 			if (c.window_msaa == null) c.window_msaa = msaa;
 			if (c.window_vsync == null) c.window_vsync = vsync;
 			
