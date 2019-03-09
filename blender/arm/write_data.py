@@ -219,6 +219,7 @@ project.addSources('Sources');
         if wrd.arm_debug_console:
             assets.add_khafile_def('arm_debug')
             f.write(add_shaders(sdk_path + "/armory/Shaders/debug_draw/**", rel_path=rel_path))
+            f.write("project.addParameter('--times');\n")
 
         if export_ui:
             if not os.path.exists('Libraries/zui'):
