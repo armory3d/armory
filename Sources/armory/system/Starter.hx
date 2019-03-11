@@ -55,9 +55,9 @@ class Starter {
 						#if arm_patch
 						iron.Scene.getRenderPath = getRenderPath;
 						#end
-						#if arm_draworder_dist
-						iron.RenderPath.active.drawOrder = iron.RenderPath.DrawOrder.Distance;
-						#end // else shader
+						#if arm_draworder_shader
+						iron.RenderPath.active.drawOrder = iron.RenderPath.DrawOrder.Shader;
+						#end // else Distance
 					});
 				});
 			});
