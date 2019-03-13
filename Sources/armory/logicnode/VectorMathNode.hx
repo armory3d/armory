@@ -40,6 +40,8 @@ class VectorMathNode extends LogicNode {
 			v.z *= v2.z;
 		case "Length":
 			f = v.length();
+		case "Distance":
+			f = v.distanceTo(v2);
 		}
 
 		if (from == 0) return v;
