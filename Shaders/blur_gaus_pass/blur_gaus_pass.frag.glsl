@@ -22,4 +22,5 @@ void main() {
 	}
 	
 	fragColor.rgb *= bloomStrength / 5;
+	fragColor.rgb = min(fragColor.rgb, 64.0);
 }
