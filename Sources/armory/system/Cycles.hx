@@ -44,6 +44,7 @@ class Cycles {
 
 	public static var parse_surface = true;
 	public static var parse_opacity = true;
+	public static var parse_height = false;
 	public static var parse_height_as_channel = false;
 
 	public static var arm_export_tangents = true;
@@ -306,7 +307,7 @@ class Cycles {
 			}
 
 			// Displacement / Height
-			if (node.inputs.length > 7) {
+			if (node.inputs.length > 7 && parse_height) {
 				if (!parse_height_as_channel) curshader = vert;
 				sout.out_height = parse_value_input(node.inputs[7]);
 				if (!parse_height_as_channel) curshader = frag;
