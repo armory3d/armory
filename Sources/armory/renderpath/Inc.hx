@@ -37,6 +37,10 @@ class Inc {
 	static var spotIndex = 0;
 	static var lastFrame = -1;
 
+	#if ((rp_gi != "Off") && arm_config)
+	static var voxelsCreated = false;
+	#end
+
 	public static function init(_path:RenderPath) {
 		path = _path;
 
@@ -214,7 +218,11 @@ class Inc {
 			}
 			path.resize();
 		}
+		// Init voxels
+		#if (rp_gi != "Off")
+		if (!voxelsCreated) initGI();
 		#end
+		#end // arm_config
 	}
 
 	// #if (rp_shadowmap && kha_webgl)
@@ -292,6 +300,12 @@ class Inc {
 
 	#if (rp_gi != "Off")
 	public static function initGI(tname = "voxels") {
+		#if arm_config
+		var config = armory.data.Config.raw;
+		if (config.rp_gi != true || voxelsCreated) return;
+		voxelsCreated = true;
+		#end
+
 		var t = new RenderTargetRaw();
 		t.name = tname;
 		#if (rp_gi == "Voxel AO")
@@ -311,6 +325,20 @@ class Inc {
 		t.is_image = true;
 		t.mipmaps = true;
 		path.createRenderTarget(t);
+
+		#if arm_voxelgi_temporal
+		{
+			var tB = new RenderTargetRaw();
+			tB.name = t.name + "B";
+			tB.format = t.format;
+			tB.width = t.width;
+			tB.height = t.height;
+			tB.depth = t.depth;
+			tB.is_image = t.is_image;
+			tB.mipmaps = t.mipmaps;
+			path.createRenderTarget(tB);
+		}
+		#end
 	}
 	#end
 

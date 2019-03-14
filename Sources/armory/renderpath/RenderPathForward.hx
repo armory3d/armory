@@ -121,20 +121,6 @@ class RenderPathForward {
 		#if (rp_gi != "Off")
 		{
 			Inc.initGI();
-			#if arm_voxelgi_temporal
-			{
-				Inc.initGI("voxelsB");
-			}
-			#end
-			#if (rp_gi == "Voxel GI")
-			{
-				// Inc.initGI("voxelsOpac");
-				// Inc.initGI("voxelsNor");
-				// #if (rp_gi_bounces)
-				// Inc.initGI("voxelsBounce");
-				// #end
-			}
-			#end
 		}
 		#end
 
