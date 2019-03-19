@@ -38,15 +38,9 @@ def write(vert, particle_info=None, shadowmap=False):
         prep = ''
         vert.add_out('float p_lifetime')
     vert.write(prep + 'p_lifetime = pd[0][2];')
-    # todo: properly discard
+    # clip with nan
     vert.write('if (p_age < 0 || p_age > p_lifetime) {')
-    vert.write('    spos.x = spos.y = spos.z = -99999;')
-    if shadowmap:
-        vert.add_uniform('mat4 LWVP', '_lightWorldViewProjectionMatrix')
-        vert.write('    gl_Position = LWVP * spos;')
-    else:
-        vert.add_uniform('mat4 WVP', '_worldViewProjectionMatrix')
-        vert.write('    gl_Position = WVP * spos;')
+    vert.write('    gl_Position /= 0.0;')
     vert.write('    return;')
     vert.write('}')
 
