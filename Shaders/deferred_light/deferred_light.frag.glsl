@@ -145,9 +145,6 @@ uniform vec3 sunCol;
 	#else
 	uniform mat4 LWVP;
 	#endif
-	// #ifdef _SoftShadows
-	// uniform sampler2D svisibility;
-	// #else
 	#endif // _ShadowMap
 #endif
 
@@ -315,10 +312,6 @@ void main() {
 	float svisibility = 1.0;
 	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) +
 				   specularBRDF(f0, metrough.y, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
-
-	// #ifdef _SoftShadows
-	// svisibility = textureLod(svisibility, texCoord, 0.0).r;
-	// #endif
 
 	#ifdef _ShadowMap
 		#ifdef _CSM

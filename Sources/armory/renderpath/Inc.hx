@@ -150,41 +150,7 @@ class Inc {
 			if (l.data.raw.type == "point") pointIndex++;
 			else if (l.data.raw.type == "spot" || l.data.raw.type == "area") spotIndex++;
 		}
-
-		// One light at a time for now, precompute all lights for tiled
-		// #if rp_soft_shadows
-
-		// if (l.raw.type != "point") {
-		// 	path.setTarget("visa"); // Merge using min blend
-		// 	Inc.bindShadowMap();
-		// 	path.drawShader("shader_datas/dilate_pass/dilate_pass_x");
-
-		// 	path.setTarget("visb");
-		// 	path.bindTarget("visa", "shadowMap");
-		// 	path.drawShader("shader_datas/dilate_pass/dilate_pass_y");
-		// }
-
-		// path.setTarget("visa", ["dist"]);
-		// //if (i == 0) path.clearTarget(0x00000000);
-		// if (l.raw.type != "point") path.bindTarget("visb", "dilate");
-		// Inc.bindShadowMap();
-		// //path.bindTarget("_main", "gbufferD");
-		// path.bindTarget("gbuffer0", "gbuffer0");
-		// path.drawShader("shader_datas/visibility_pass/visibility_pass");
 		
-		// path.setTarget("visb");
-		// path.bindTarget("visa", "tex");
-		// path.bindTarget("gbuffer0", "gbuffer0");
-		// path.bindTarget("dist", "dist");
-		// path.drawShader("shader_datas/blur_shadow_pass/blur_shadow_pass_x");
-
-		// path.setTarget("visa");
-		// path.bindTarget("visb", "tex");
-		// path.bindTarget("gbuffer0", "gbuffer0");
-		// path.bindTarget("dist", "dist");
-		// path.drawShader("shader_datas/blur_shadow_pass/blur_shadow_pass_y");
-		// #end
-
 		#end // rp_shadowmap
 	}
 	

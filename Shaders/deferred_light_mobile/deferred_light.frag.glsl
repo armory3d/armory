@@ -77,9 +77,6 @@ uniform vec3 sunCol;
 	#else
 	uniform mat4 LWVP;
 	#endif
-	// #ifdef _SoftShadows
-	// uniform sampler2D svisibility;
-	// #else
 	#endif // _ShadowMap
 #endif
 

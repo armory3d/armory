@@ -339,18 +339,6 @@ def build():
     if rpdat.rp_dynres:
         assets.add_khafile_def('rp_dynres')
 
-    # if rpdat.arm_soft_shadows == 'On':
-    #     if rpdat.rp_shadowmap_cascades == '1':
-    #         assets.add_shader_pass('dilate_pass')
-    #         assets.add_shader_pass('visibility_pass')
-    #         assets.add_shader_pass('blur_shadow_pass')
-    #         assets.add_khafile_def('rp_soft_shadows')
-    #         wrd.world_defs += '_SoftShadows'
-    #         if rpdat.arm_soft_shadows_penumbra != 1:
-    #             wrd.world_defs += '_PenumbraScale'
-    #     else:
-    #         log.warn('Disabling soft shadows - "Armory Render Path - Cascades" requires to be set to 1 for now')
-
     gbuffer2 = '_Veloc' in wrd.world_defs
     if gbuffer2:
         assets.add_khafile_def('rp_gbuffer2')

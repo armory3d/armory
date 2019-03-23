@@ -349,40 +349,6 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if rp_soft_shadows
-		{
-			path.loadShader("shader_datas/dilate_pass/dilate_pass_x");
-			path.loadShader("shader_datas/dilate_pass/dilate_pass_y");
-			path.loadShader("shader_datas/visibility_pass/visibility_pass");
-			path.loadShader("shader_datas/blur_shadow_pass/blur_shadow_pass_x");
-			path.loadShader("shader_datas/blur_shadow_pass/blur_shadow_pass_y");
-			{
-				var t = new RenderTargetRaw();
-				t.name = "visa";
-				t.width = 0;
-				t.height = 0;
-				t.format = 'R16';
-				path.createRenderTarget(t);
-			}
-			{
-				var t = new RenderTargetRaw();
-				t.name = "visb";
-				t.width = 0;
-				t.height = 0;
-				t.format = 'R16';
-				path.createRenderTarget(t);
-			}
-			{
-				var t = new RenderTargetRaw();
-				t.name = "dist";
-				t.width = 0;
-				t.height = 0;
-				t.format = 'R16';
-				path.createRenderTarget(t);
-			}
-		}
-		#end
-
 		#if arm_config
 		{
 			var t = new RenderTargetRaw();
@@ -613,11 +579,7 @@ class RenderPathDeferred {
 
 		#if rp_shadowmap
 		{
-			#if rp_soft_shadows
-			path.bindTarget("visa", "svisibility");
-			#else
 			Inc.bindShadowMap();
-			#end
 		}
 		#end
 		
