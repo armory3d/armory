@@ -59,4 +59,6 @@ typedef TShaderOut = {
 	var out_occlusion:String;
 	var out_opacity:String;
 	var out_height:String;
+	var out_emission:String;
+	var out_subsurface:String;
 }

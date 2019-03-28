@@ -46,6 +46,8 @@ class Cycles {
 	public static var parse_opacity = true;
 	public static var parse_height = false;
 	public static var parse_height_as_channel = false;
+	public static var parse_emission = false;
+	public static var parse_subsurface = false;
 
 	public static var arm_export_tangents = true;
 	public static var out_normaltan:String; // Raw tangent space normal parsed from normal map
@@ -267,7 +269,9 @@ class Cycles {
 				out_metallic: '0.0',
 				out_occlusion: '1.0',
 				out_opacity: '1.0',
-				out_height: '0.0'
+				out_height: '0.0',
+				out_emission: '0.0',
+				out_subsurface: '0.0'
 			};
 		}
 	}
@@ -279,7 +283,9 @@ class Cycles {
 			out_metallic: '0.0',
 			out_occlusion: '1.0',
 			out_opacity: '1.0',
-			out_height: '0.0'
+			out_height: '0.0',
+			out_emission: '0.0',
+			out_subsurface: '0.0'
 		}
 
 		// if (node.type == 'GROUP') {
@@ -297,9 +303,14 @@ class Cycles {
 				sout.out_metallic = parse_value_input(node.inputs[4]);
 				// Emission
 				// if (isInputLinked(node.inputs[6]) || node.inputs[6].default_value != 0.0):
-					// out_emission = parse_value_input(node.inputs[8])
-					// out_basecol = '({0} + {1})'.format(out_basecol, out_emission)
+				if (parse_emission) {
+					sout.out_emission = parse_value_input(node.inputs[6]);
+					// sout.out_basecol = '(${sout.out_basecol} + ${to_vec3(sout.out_emission)})';
+				}
 				// Subsurface
+				if (parse_subsurface) {
+					sout.out_subsurface = parse_value_input(node.inputs[8]);
+				}
 			}
 			
 			if (parse_opacity) {
