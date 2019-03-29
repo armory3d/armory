@@ -122,7 +122,7 @@ class ArmExporterListItem(bpy.types.PropertyGroup):
                  ('webgl', 'WebGL2', 'webgl')],
         name="Graphics API", default='webgl', description='Based on currently selected target', update=update_gapi_html5)
 
-class ArmExporterList(bpy.types.UIList):
+class ARM_UL_ExporterList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here...
         custom_icon = 'DOT'
@@ -220,7 +220,7 @@ class ArmExporterListMoveItem(bpy.types.Operator):
 
 class ArmExporterSpecialsMenu(bpy.types.Menu):
     bl_label = "More"
-    bl_idname = "arm_exporterlist_specials"
+    bl_idname = "ARM_MT_ExporterListSpecials"
 
     def draw(self, context):
         layout = self.layout
@@ -268,7 +268,7 @@ class ArmExporterGpuProfileButton(bpy.types.Operator):
 
 def register():
     bpy.utils.register_class(ArmExporterListItem)
-    bpy.utils.register_class(ArmExporterList)
+    bpy.utils.register_class(ARM_UL_ExporterList)
     bpy.utils.register_class(ArmExporterListNewItem)
     bpy.utils.register_class(ArmExporterListDeleteItem)
     bpy.utils.register_class(ArmExporterListMoveItem)
@@ -281,7 +281,7 @@ def register():
 
 def unregister():
     bpy.utils.unregister_class(ArmExporterListItem)
-    bpy.utils.unregister_class(ArmExporterList)
+    bpy.utils.unregister_class(ARM_UL_ExporterList)
     bpy.utils.unregister_class(ArmExporterListNewItem)
     bpy.utils.unregister_class(ArmExporterListDeleteItem)
     bpy.utils.unregister_class(ArmExporterListMoveItem)

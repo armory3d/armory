@@ -498,7 +498,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_culling: BoolProperty(name="Culling", default=True)
     arm_two_sided_area_light: BoolProperty(name="Two-Sided Area Light", description="Emit light from both faces of area plane", default=False, update=assets.invalidate_shader_cache)
 
-class ArmRPList(bpy.types.UIList):
+class ARM_UL_RPList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         custom_icon = 'OBJECT_DATAMODE'
 
@@ -598,7 +598,7 @@ class ArmRPListMoveItem(bpy.types.Operator):
 
 def register():
     bpy.utils.register_class(ArmRPListItem)
-    bpy.utils.register_class(ArmRPList)
+    bpy.utils.register_class(ARM_UL_RPList)
     bpy.utils.register_class(ArmRPListNewItem)
     bpy.utils.register_class(ArmRPListDeleteItem)
     bpy.utils.register_class(ArmRPListMoveItem)
@@ -608,7 +608,7 @@ def register():
 
 def unregister():
     bpy.utils.unregister_class(ArmRPListItem)
-    bpy.utils.unregister_class(ArmRPList)
+    bpy.utils.unregister_class(ARM_UL_RPList)
     bpy.utils.unregister_class(ArmRPListNewItem)
     bpy.utils.unregister_class(ArmRPListDeleteItem)
     bpy.utils.unregister_class(ArmRPListMoveItem)

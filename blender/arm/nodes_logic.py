@@ -47,9 +47,9 @@ def unregister_nodes():
     registered_nodes = []
     nodeitems_utils.unregister_node_categories('ArmLogicNodes')
 
-class ArmLogicNodePanel(bpy.types.Panel):
+class ARM_PT_LogicNodePanel(bpy.types.Panel):
     bl_label = 'Armory Logic Node'
-    bl_idname = 'ArmLogicNodePanel'
+    bl_idname = 'ARM_PT_LogicNodePanel'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_category = 'Node'
@@ -107,7 +107,7 @@ def draw_menu(self, context):
 
 def register():
     bpy.utils.register_class(ArmLogicTree)
-    bpy.utils.register_class(ArmLogicNodePanel)
+    bpy.utils.register_class(ARM_PT_LogicNodePanel)
     bpy.utils.register_class(ArmOpenNodeSource)
     register_nodes()
     bpy.utils.register_class(ArmNodeSearch)
@@ -118,5 +118,5 @@ def unregister():
     bpy.utils.unregister_class(ArmNodeSearch)
     unregister_nodes()
     bpy.utils.unregister_class(ArmLogicTree)
-    bpy.utils.unregister_class(ArmLogicNodePanel)
+    bpy.utils.unregister_class(ARM_PT_LogicNodePanel)
     bpy.utils.unregister_class(ArmOpenNodeSource)
