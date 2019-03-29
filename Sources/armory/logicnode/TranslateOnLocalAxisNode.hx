@@ -25,12 +25,13 @@ class TranslateOnLocalAxisNode extends LogicNode {
 		else if (l == 2) loc.setFrom(object.transform.world.up());
 		else if (l == 3) loc.setFrom(object.transform.world.right());
 			
+		
 		if (ini) {
 			loc.x = -loc.x;
 			loc.y = -loc.y;
 			loc.z = -loc.z;
 		}	
-						
+			
 		vec.x = loc.x * sp;
 		vec.y = loc.y * sp;
 		vec.z = loc.z * sp;
