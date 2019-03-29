@@ -13,7 +13,7 @@ import arm.api
 import arm.props_properties
 
 # Menu in object region
-class ObjectPropsPanel(bpy.types.Panel):
+class ARM_PT_ObjectPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -50,7 +50,7 @@ class ObjectPropsPanel(bpy.types.Panel):
         # Properties list
         arm.props_properties.draw_properties(layout, obj)
 
-class ModifiersPropsPanel(bpy.types.Panel):
+class ARM_PT_ModifiersPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -66,7 +66,7 @@ class ModifiersPropsPanel(bpy.types.Panel):
             return
         layout.operator("arm.invalidate_cache")
 
-class ParticlesPropsPanel(bpy.types.Panel):
+class ARM_PT_ParticlesPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -84,7 +84,7 @@ class ParticlesPropsPanel(bpy.types.Panel):
         layout.prop(obj.settings, 'arm_loop')
         layout.prop(obj.settings, 'arm_count_mult')
 
-class PhysicsPropsPanel(bpy.types.Panel):
+class ARM_PT_PhysicsPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -109,7 +109,7 @@ class PhysicsPropsPanel(bpy.types.Panel):
             layout.prop(obj, 'arm_soft_body_margin')
 
 # Menu in data region
-class DataPropsPanel(bpy.types.Panel):
+class ARM_PT_DataPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -144,7 +144,7 @@ class DataPropsPanel(bpy.types.Panel):
         elif obj.type == 'ARMATURE':
             pass
 
-class ScenePropsPanel(bpy.types.Panel):
+class ARM_PT_ScenePropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -181,7 +181,7 @@ class InvalidateMaterialCacheButton(bpy.types.Operator):
         context.material.signature = ''
         return{'FINISHED'}
 
-class MaterialPropsPanel(bpy.types.Panel):
+class ARM_PT_MaterialPropsPanel(bpy.types.Panel):
     bl_label = "Armory Props"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -219,13 +219,13 @@ class MaterialPropsPanel(bpy.types.Panel):
 
         layout.operator("arm.invalidate_material_cache")
 
-class MaterialBlendingPropsPanel(bpy.types.Panel):
+class ARM_PT_MaterialBlendingPropsPanel(bpy.types.Panel):
     bl_label = "Blending"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "material"
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = "MaterialPropsPanel"
+    bl_parent_id = "ARM_PT_MaterialPropsPanel"
 
     def draw_header(self, context):
         self.layout.prop(bpy.context.material, 'arm_blending', text="")
@@ -249,7 +249,7 @@ class MaterialBlendingPropsPanel(bpy.types.Panel):
         col.prop(mat, 'arm_blending_destination_alpha')
         col.prop(mat, 'arm_blending_operation_alpha')
 
-class ArmoryPlayerPanel(bpy.types.Panel):
+class ARM_PT_ArmoryPlayerPanel(bpy.types.Panel):
     bl_label = "Armory Player"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -270,7 +270,7 @@ class ArmoryPlayerPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_runtime')
         layout.prop(wrd, 'arm_play_camera')
 
-class ArmoryExporterPanel(bpy.types.Panel):
+class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
     bl_label = "Armory Exporter"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -332,7 +332,7 @@ class ArmoryExporterPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_optimize_data')
         col.prop(wrd, 'arm_asset_compression')
 
-class ArmoryProjectPanel(bpy.types.Panel):
+class ARM_PT_ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -347,12 +347,12 @@ class ArmoryProjectPanel(bpy.types.Panel):
         row.operator("arm.kode_studio")
         row.operator("arm.open_project_folder", icon="FILE_FOLDER")
 
-class ArmProjectFlagsPanel(bpy.types.Panel):
+class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
     bl_label = "Flags"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
-    bl_parent_id = "ArmoryProjectPanel"
+    bl_parent_id = "ARM_PT_ArmoryProjectPanel"
 
     def draw(self, context):
         layout = self.layout
@@ -373,13 +373,13 @@ class ArmProjectFlagsPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_texture_quality')
         layout.prop(wrd, 'arm_sound_quality')
 
-class ArmProjectWindowPanel(bpy.types.Panel):
+class ARM_PT_ProjectWindowPanel(bpy.types.Panel):
     bl_label = "Window"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = "ArmoryProjectPanel"
+    bl_parent_id = "ARM_PT_ArmoryProjectPanel"
 
     def draw(self, context):
         layout = self.layout
@@ -395,13 +395,13 @@ class ArmProjectWindowPanel(bpy.types.Panel):
         layout.prop(wrd, 'arm_winminimize')
         layout.prop(wrd, 'arm_vsync')
 
-class ArmProjectModulesPanel(bpy.types.Panel):
+class ARM_PT_ProjectModulesPanel(bpy.types.Panel):
     bl_label = "Modules"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = "ArmoryProjectPanel"
+    bl_parent_id = "ARM_PT_ArmoryProjectPanel"
 
     def draw(self, context):
         layout = self.layout
@@ -433,7 +433,7 @@ class ArmVirtualInputPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
 
-class ArmNavigationPanel(bpy.types.Panel):
+class ARM_PT_NavigationPanel(bpy.types.Panel):
     bl_label = "Armory Navigation"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -678,7 +678,7 @@ def draw_view3d_header(self, context):
     elif log.info_text != '':
         self.layout.label(text=log.info_text)
 
-class ArmRenderPathPanel(bpy.types.Panel):
+class ARM_PT_RenderPathPanel(bpy.types.Panel):
     bl_label = "Armory Render Path"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -722,13 +722,13 @@ class ArmRenderPathPanel(bpy.types.Panel):
                 arm.api.drivers[rpdat.rp_driver]['draw_props'](layout)
                 return
 
-class ArmRenderPathRendererPanel(bpy.types.Panel):
+class ARM_PT_RenderPathRendererPanel(bpy.types.Panel):
     bl_label = "Renderer"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = "ArmRenderPathPanel"
+    bl_parent_id = "ARM_PT_RenderPathPanel"
 
     def draw(self, context):
         layout = self.layout
@@ -775,13 +775,13 @@ class ArmRenderPathRendererPanel(bpy.types.Panel):
         layout.prop(rpdat, "rp_stereo")
         layout.prop(rpdat, 'arm_culling')
 
-class ArmRenderPathShadowsPanel(bpy.types.Panel):
+class ARM_PT_RenderPathShadowsPanel(bpy.types.Panel):
     bl_label = "Shadows"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = "ArmRenderPathPanel"
+    bl_parent_id = "ARM_PT_RenderPathPanel"
 
     def draw_header(self, context):
         wrd = bpy.data.worlds['Arm']
@@ -810,13 +810,13 @@ class ArmRenderPathShadowsPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_shadowmap_bounds')
         col.prop(rpdat, 'arm_pcfsize')
 
-class ArmRenderPathVoxelsPanel(bpy.types.Panel):
+class ARM_PT_RenderPathVoxelsPanel(bpy.types.Panel):
     bl_label = "Voxels"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = "ArmRenderPathPanel"
+    bl_parent_id = "ARM_PT_RenderPathPanel"
 
     def draw(self, context):
         layout = self.layout
@@ -859,13 +859,13 @@ class ArmRenderPathVoxelsPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_voxelgi_offset')
         col.prop(rpdat, 'arm_voxelgi_aperture')
 
-class ArmRenderPathWorldPanel(bpy.types.Panel):
+class ARM_PT_RenderPathWorldPanel(bpy.types.Panel):
     bl_label = "World"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = "ArmRenderPathPanel"
+    bl_parent_id = "ARM_PT_RenderPathPanel"
 
     def draw(self, context):
         layout = self.layout
@@ -908,13 +908,13 @@ class ArmRenderPathWorldPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_ocean_base_color')
         col.prop(rpdat, 'arm_ocean_water_color')
 
-class ArmRenderPathPostProcessPanel(bpy.types.Panel):
+class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
     bl_label = "Post Process"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = "ArmRenderPathPanel"
+    bl_parent_id = "ARM_PT_RenderPathPanel"
 
     def draw_header(self, context):
         wrd = bpy.data.worlds['Arm']
@@ -986,13 +986,13 @@ class ArmRenderPathPostProcessPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_volumetric_light_air_turbidity')
         col.prop(rpdat, 'arm_volumetric_light_steps')
 
-class ArmRenderPathCompositorPanel(bpy.types.Panel):
+class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
     bl_label = "Compositor"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "render"
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = "ArmRenderPathPanel"
+    bl_parent_id = "ARM_PT_RenderPathPanel"
 
     def draw_header(self, context):
         wrd = bpy.data.worlds['Arm']
@@ -1044,7 +1044,7 @@ class ArmRenderPathCompositorPanel(bpy.types.Panel):
         layout.prop(rpdat, 'arm_lens_texture')
         layout.prop(rpdat, 'arm_lut_texture')
 
-class ArmBakePanel(bpy.types.Panel):
+class ARM_PT_BakePanel(bpy.types.Panel):
     bl_label = "Armory Bake"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -1137,7 +1137,7 @@ class ArmGenLodButton(bpy.types.Operator):
 
         return{'FINISHED'}
 
-class ArmLodPanel(bpy.types.Panel):
+class ARM_PT_LodPanel(bpy.types.Panel):
     bl_label = "Armory Lod"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -1266,7 +1266,7 @@ class ArmGenTerrainButton(bpy.types.Operator):
 
         return{'FINISHED'}
 
-class ArmTerrainPanel(bpy.types.Panel):
+class ARM_PT_TerrainPanel(bpy.types.Panel):
     bl_label = "Armory Terrain"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -1287,7 +1287,7 @@ class ArmTerrainPanel(bpy.types.Panel):
         layout.operator('arm.generate_terrain')
         layout.prop(scn, 'arm_terrain_object')
 
-class ArmTilesheetPanel(bpy.types.Panel):
+class ARM_PT_TilesheetPanel(bpy.types.Panel):
     bl_label = "Armory Tilesheet"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -1345,7 +1345,7 @@ class ArmTilesheetPanel(bpy.types.Panel):
                 layout.prop(adat, "end_prop")
                 layout.prop(adat, "loop_prop")
 
-class ArmProxyPanel(bpy.types.Panel):
+class ARM_PT_ProxyPanel(bpy.types.Panel):
     bl_label = "Armory Proxy"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -1450,9 +1450,9 @@ class ArmPrintTraitsButton(bpy.types.Operator):
                     print('Object {0} - {1}'.format(o.name, tname))
         return{'FINISHED'}
 
-class ArmMaterialNodePanel(bpy.types.Panel):
+class ARM_PT_MaterialNodePanel(bpy.types.Panel):
     bl_label = 'Armory Material Node'
-    bl_idname = 'ArmMaterialNodePanel'
+    bl_idname = 'ARM_PT_MaterialNodePanel'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_category = 'Node'
@@ -1466,30 +1466,30 @@ class ArmMaterialNodePanel(bpy.types.Panel):
             layout.prop(context.active_node, 'arm_material_param')
 
 def register():
-    bpy.utils.register_class(ObjectPropsPanel)
-    bpy.utils.register_class(ModifiersPropsPanel)
-    bpy.utils.register_class(ParticlesPropsPanel)
-    bpy.utils.register_class(PhysicsPropsPanel)
-    bpy.utils.register_class(DataPropsPanel)
-    bpy.utils.register_class(ScenePropsPanel)
+    bpy.utils.register_class(ARM_PT_ObjectPropsPanel)
+    bpy.utils.register_class(ARM_PT_ModifiersPropsPanel)
+    bpy.utils.register_class(ARM_PT_ParticlesPropsPanel)
+    bpy.utils.register_class(ARM_PT_PhysicsPropsPanel)
+    bpy.utils.register_class(ARM_PT_DataPropsPanel)
+    bpy.utils.register_class(ARM_PT_ScenePropsPanel)
     bpy.utils.register_class(InvalidateCacheButton)
     bpy.utils.register_class(InvalidateMaterialCacheButton)
-    bpy.utils.register_class(MaterialPropsPanel)
-    bpy.utils.register_class(MaterialBlendingPropsPanel)
-    bpy.utils.register_class(ArmoryPlayerPanel)
-    bpy.utils.register_class(ArmoryExporterPanel)
-    bpy.utils.register_class(ArmoryProjectPanel)
-    bpy.utils.register_class(ArmProjectFlagsPanel)
-    bpy.utils.register_class(ArmProjectWindowPanel)
-    bpy.utils.register_class(ArmProjectModulesPanel)
-    bpy.utils.register_class(ArmRenderPathPanel)
-    bpy.utils.register_class(ArmRenderPathRendererPanel)
-    bpy.utils.register_class(ArmRenderPathShadowsPanel)
-    bpy.utils.register_class(ArmRenderPathVoxelsPanel)
-    bpy.utils.register_class(ArmRenderPathWorldPanel)
-    bpy.utils.register_class(ArmRenderPathPostProcessPanel)
-    bpy.utils.register_class(ArmRenderPathCompositorPanel)
-    bpy.utils.register_class(ArmBakePanel)
+    bpy.utils.register_class(ARM_PT_MaterialPropsPanel)
+    bpy.utils.register_class(ARM_PT_MaterialBlendingPropsPanel)
+    bpy.utils.register_class(ARM_PT_ArmoryPlayerPanel)
+    bpy.utils.register_class(ARM_PT_ArmoryExporterPanel)
+    bpy.utils.register_class(ARM_PT_ArmoryProjectPanel)
+    bpy.utils.register_class(ARM_PT_ProjectFlagsPanel)
+    bpy.utils.register_class(ARM_PT_ProjectWindowPanel)
+    bpy.utils.register_class(ARM_PT_ProjectModulesPanel)
+    bpy.utils.register_class(ARM_PT_RenderPathPanel)
+    bpy.utils.register_class(ARM_PT_RenderPathRendererPanel)
+    bpy.utils.register_class(ARM_PT_RenderPathShadowsPanel)
+    bpy.utils.register_class(ARM_PT_RenderPathVoxelsPanel)
+    bpy.utils.register_class(ARM_PT_RenderPathWorldPanel)
+    bpy.utils.register_class(ARM_PT_RenderPathPostProcessPanel)
+    bpy.utils.register_class(ARM_PT_RenderPathCompositorPanel)
+    bpy.utils.register_class(ARM_PT_BakePanel)
     # bpy.utils.register_class(ArmVirtualInputPanel)
     bpy.utils.register_class(ArmoryPlayButton)
     bpy.utils.register_class(ArmoryStopButton)
@@ -1502,47 +1502,47 @@ def register():
     bpy.utils.register_class(ArmoryPublishProjectButton)
     bpy.utils.register_class(ArmoryGenerateNavmeshButton)
     bpy.utils.register_class(ArmoryRemoveNavmeshButton)
-    bpy.utils.register_class(ArmNavigationPanel)
+    bpy.utils.register_class(ARM_PT_NavigationPanel)
     bpy.utils.register_class(ArmGenLodButton)
-    bpy.utils.register_class(ArmLodPanel)
+    bpy.utils.register_class(ARM_PT_LodPanel)
     bpy.utils.register_class(ArmGenTerrainButton)
-    bpy.utils.register_class(ArmTerrainPanel)
-    bpy.utils.register_class(ArmTilesheetPanel)
-    bpy.utils.register_class(ArmProxyPanel)
+    bpy.utils.register_class(ARM_PT_TerrainPanel)
+    bpy.utils.register_class(ARM_PT_TilesheetPanel)
+    bpy.utils.register_class(ARM_PT_ProxyPanel)
     bpy.utils.register_class(ArmMakeProxyButton)
     bpy.utils.register_class(ArmProxyToggleAllButton)
     bpy.utils.register_class(ArmProxyApplyAllButton)
     bpy.utils.register_class(ArmSyncProxyButton)
     bpy.utils.register_class(ArmPrintTraitsButton)
-    bpy.utils.register_class(ArmMaterialNodePanel)
+    bpy.utils.register_class(ARM_PT_MaterialNodePanel)
     bpy.types.VIEW3D_HT_header.append(draw_view3d_header)
 
 def unregister():
     bpy.types.VIEW3D_HT_header.remove(draw_view3d_header)
-    bpy.utils.unregister_class(ObjectPropsPanel)
-    bpy.utils.unregister_class(ModifiersPropsPanel)
-    bpy.utils.unregister_class(ParticlesPropsPanel)
-    bpy.utils.unregister_class(PhysicsPropsPanel)
-    bpy.utils.unregister_class(DataPropsPanel)
-    bpy.utils.unregister_class(ScenePropsPanel)
+    bpy.utils.unregister_class(ARM_PT_ObjectPropsPanel)
+    bpy.utils.unregister_class(ARM_PT_ModifiersPropsPanel)
+    bpy.utils.unregister_class(ARM_PT_ParticlesPropsPanel)
+    bpy.utils.unregister_class(ARM_PT_PhysicsPropsPanel)
+    bpy.utils.unregister_class(ARM_PT_DataPropsPanel)
+    bpy.utils.unregister_class(ARM_PT_ScenePropsPanel)
     bpy.utils.unregister_class(InvalidateCacheButton)
     bpy.utils.unregister_class(InvalidateMaterialCacheButton)
-    bpy.utils.unregister_class(MaterialPropsPanel)
-    bpy.utils.unregister_class(MaterialBlendingPropsPanel)
-    bpy.utils.unregister_class(ArmoryPlayerPanel)
-    bpy.utils.unregister_class(ArmoryExporterPanel)
-    bpy.utils.unregister_class(ArmoryProjectPanel)
-    bpy.utils.unregister_class(ArmProjectFlagsPanel)
-    bpy.utils.unregister_class(ArmProjectWindowPanel)
-    bpy.utils.unregister_class(ArmProjectModulesPanel)
-    bpy.utils.unregister_class(ArmRenderPathPanel)
-    bpy.utils.unregister_class(ArmRenderPathRendererPanel)
-    bpy.utils.unregister_class(ArmRenderPathShadowsPanel)
-    bpy.utils.unregister_class(ArmRenderPathVoxelsPanel)
-    bpy.utils.unregister_class(ArmRenderPathWorldPanel)
-    bpy.utils.unregister_class(ArmRenderPathPostProcessPanel)
-    bpy.utils.unregister_class(ArmRenderPathCompositorPanel)
-    bpy.utils.unregister_class(ArmBakePanel)
+    bpy.utils.unregister_class(ARM_PT_MaterialPropsPanel)
+    bpy.utils.unregister_class(ARM_PT_MaterialBlendingPropsPanel)
+    bpy.utils.unregister_class(ARM_PT_ArmoryPlayerPanel)
+    bpy.utils.unregister_class(ARM_PT_ArmoryExporterPanel)
+    bpy.utils.unregister_class(ARM_PT_ArmoryProjectPanel)
+    bpy.utils.unregister_class(ARM_PT_ProjectFlagsPanel)
+    bpy.utils.unregister_class(ARM_PT_ProjectWindowPanel)
+    bpy.utils.unregister_class(ARM_PT_ProjectModulesPanel)
+    bpy.utils.unregister_class(ARM_PT_RenderPathPanel)
+    bpy.utils.unregister_class(ARM_PT_RenderPathRendererPanel)
+    bpy.utils.unregister_class(ARM_PT_RenderPathShadowsPanel)
+    bpy.utils.unregister_class(ARM_PT_RenderPathVoxelsPanel)
+    bpy.utils.unregister_class(ARM_PT_RenderPathWorldPanel)
+    bpy.utils.unregister_class(ARM_PT_RenderPathPostProcessPanel)
+    bpy.utils.unregister_class(ARM_PT_RenderPathCompositorPanel)
+    bpy.utils.unregister_class(ARM_PT_BakePanel)
     # bpy.utils.unregister_class(ArmVirtualInputPanel)
     bpy.utils.unregister_class(ArmoryPlayButton)
     bpy.utils.unregister_class(ArmoryStopButton)
@@ -1555,16 +1555,16 @@ def unregister():
     bpy.utils.unregister_class(ArmoryPublishProjectButton)
     bpy.utils.unregister_class(ArmoryGenerateNavmeshButton)
     bpy.utils.unregister_class(ArmoryRemoveNavmeshButton)
-    bpy.utils.unregister_class(ArmNavigationPanel)
+    bpy.utils.unregister_class(ARM_PT_NavigationPanel)
     bpy.utils.unregister_class(ArmGenLodButton)
-    bpy.utils.unregister_class(ArmLodPanel)
+    bpy.utils.unregister_class(ARM_PT_LodPanel)
     bpy.utils.unregister_class(ArmGenTerrainButton)
-    bpy.utils.unregister_class(ArmTerrainPanel)
-    bpy.utils.unregister_class(ArmTilesheetPanel)
-    bpy.utils.unregister_class(ArmProxyPanel)
+    bpy.utils.unregister_class(ARM_PT_TerrainPanel)
+    bpy.utils.unregister_class(ARM_PT_TilesheetPanel)
+    bpy.utils.unregister_class(ARM_PT_ProxyPanel)
     bpy.utils.unregister_class(ArmMakeProxyButton)
     bpy.utils.unregister_class(ArmProxyToggleAllButton)
     bpy.utils.unregister_class(ArmProxyApplyAllButton)
     bpy.utils.unregister_class(ArmSyncProxyButton)
     bpy.utils.unregister_class(ArmPrintTraitsButton)
-    bpy.utils.unregister_class(ArmMaterialNodePanel)
+    bpy.utils.unregister_class(ARM_PT_MaterialNodePanel)

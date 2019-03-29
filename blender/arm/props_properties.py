@@ -16,7 +16,7 @@ class ArmPropertyListItem(bpy.types.PropertyGroup):
     float_prop: FloatProperty(name="Float", description="A name for this item", default=0.0)
     boolean_prop: BoolProperty(name="Boolean", description="A name for this item", default=False)
 
-class ArmPropertyList(bpy.types.UIList):
+class ARM_UL_PropertyList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # Make sure your code supports all 3 layout types
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
@@ -130,7 +130,7 @@ def draw_properties(layout, obj):
     if len(obj.arm_traitlist) > 1:
         rows = 4
     row = layout.row()
-    row.template_list("ArmPropertyList", "The_List", obj, "arm_propertylist", obj, "arm_propertylist_index", rows=rows)
+    row.template_list("ARM_UL_PropertyList", "The_List", obj, "arm_propertylist", obj, "arm_propertylist_index", rows=rows)
     col = row.column(align=True)
     op = col.operator("arm_propertylist.new_item", icon='ADD', text="")
     op = col.operator("arm_propertylist.delete_item", icon='REMOVE', text="")
@@ -143,7 +143,7 @@ def draw_properties(layout, obj):
 
 def register():
     bpy.utils.register_class(ArmPropertyListItem)
-    bpy.utils.register_class(ArmPropertyList)
+    bpy.utils.register_class(ARM_UL_PropertyList)
     bpy.utils.register_class(ArmPropertyListNewItem)
     bpy.utils.register_class(ArmPropertyListDeleteItem)
     bpy.utils.register_class(ArmPropertyListMoveItem)
@@ -152,7 +152,7 @@ def register():
 
 def unregister():
     bpy.utils.unregister_class(ArmPropertyListItem)
-    bpy.utils.unregister_class(ArmPropertyList)
+    bpy.utils.unregister_class(ARM_UL_PropertyList)
     bpy.utils.unregister_class(ArmPropertyListNewItem)
     bpy.utils.unregister_class(ArmPropertyListDeleteItem)
     bpy.utils.unregister_class(ArmPropertyListMoveItem)

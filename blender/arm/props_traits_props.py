@@ -18,7 +18,7 @@ class ArmTraitPropListItem(bpy.types.PropertyGroup):
            description="A name for this item",
            default="")
 
-class ArmTraitPropList(bpy.types.UIList):
+class ARM_UL_PropList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here...
         custom_icon = 'OBJECT_DATAMODE'
@@ -33,8 +33,8 @@ class ArmTraitPropList(bpy.types.UIList):
 
 def register():
     bpy.utils.register_class(ArmTraitPropListItem)
-    bpy.utils.register_class(ArmTraitPropList)
+    bpy.utils.register_class(ARM_UL_PropList)
 
 def unregister():
     bpy.utils.unregister_class(ArmTraitPropListItem)
-    bpy.utils.unregister_class(ArmTraitPropList)
+    bpy.utils.unregister_class(ARM_UL_PropList)

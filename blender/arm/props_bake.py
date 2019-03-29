@@ -10,7 +10,7 @@ class ArmBakeListItem(bpy.types.PropertyGroup):
     res_y: IntProperty(name="Y", description="Texture resolution", default=1024)
     object_name: StringProperty(name="Name", description="", default="") # TODO: deprecated
 
-class ArmBakeList(bpy.types.UIList):
+class ARM_UL_BakeList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here...
         custom_icon = 'OBJECT_DATAMODE'
@@ -270,7 +270,7 @@ class ArmBakeApplyButton(bpy.types.Operator):
 
 class ArmBakeSpecialsMenu(bpy.types.Menu):
     bl_label = "Bake"
-    bl_idname = "arm_bakelist_specials"
+    bl_idname = "ARM_MT_BakeListSpecials"
 
     def draw(self, context):
         layout = self.layout
@@ -333,7 +333,7 @@ class ArmBakeRemoveBakedMaterialsButton(bpy.types.Operator):
 
 def register():
     bpy.utils.register_class(ArmBakeListItem)
-    bpy.utils.register_class(ArmBakeList)
+    bpy.utils.register_class(ARM_UL_BakeList)
     bpy.utils.register_class(ArmBakeListNewItem)
     bpy.utils.register_class(ArmBakeListDeleteItem)
     bpy.utils.register_class(ArmBakeListMoveItem)
@@ -354,7 +354,7 @@ def register():
 
 def unregister():
     bpy.utils.unregister_class(ArmBakeListItem)
-    bpy.utils.unregister_class(ArmBakeList)
+    bpy.utils.unregister_class(ARM_UL_BakeList)
     bpy.utils.unregister_class(ArmBakeListNewItem)
     bpy.utils.unregister_class(ArmBakeListDeleteItem)
     bpy.utils.unregister_class(ArmBakeListMoveItem)

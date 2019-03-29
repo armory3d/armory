@@ -26,7 +26,7 @@ class ArmTilesheetActionListItem(bpy.types.PropertyGroup):
            description="A name for this item",
            default=True)
 
-class ArmTilesheetActionList(bpy.types.UIList):
+class ARM_UL_TilesheetActionList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here...
         custom_icon = 'OBJECT_DATAMODE'
@@ -151,7 +151,7 @@ class ArmTilesheetListItem(bpy.types.PropertyGroup):
     arm_tilesheetactionlist: CollectionProperty(type=ArmTilesheetActionListItem)
     arm_tilesheetactionlist_index: IntProperty(name="Index for my_list", default=0)
 
-class ArmTilesheetList(bpy.types.UIList):
+class ARM_UL_TilesheetList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here...
         custom_icon = 'OBJECT_DATAMODE'
@@ -249,13 +249,13 @@ class ArmTilesheetListMoveItem(bpy.types.Operator):
 def register():
 
     bpy.utils.register_class(ArmTilesheetActionListItem)
-    bpy.utils.register_class(ArmTilesheetActionList)
+    bpy.utils.register_class(ARM_UL_TilesheetActionList)
     bpy.utils.register_class(ArmTilesheetActionListNewItem)
     bpy.utils.register_class(ArmTilesheetActionListDeleteItem)
     bpy.utils.register_class(ArmTilesheetActionListMoveItem)
 
     bpy.utils.register_class(ArmTilesheetListItem)
-    bpy.utils.register_class(ArmTilesheetList)
+    bpy.utils.register_class(ARM_UL_TilesheetList)
     bpy.utils.register_class(ArmTilesheetListNewItem)
     bpy.utils.register_class(ArmTilesheetListDeleteItem)
     bpy.utils.register_class(ArmTilesheetListMoveItem)
@@ -265,13 +265,13 @@ def register():
 
 def unregister():
     bpy.utils.unregister_class(ArmTilesheetListItem)
-    bpy.utils.unregister_class(ArmTilesheetList)
+    bpy.utils.unregister_class(ARM_UL_TilesheetList)
     bpy.utils.unregister_class(ArmTilesheetListNewItem)
     bpy.utils.unregister_class(ArmTilesheetListDeleteItem)
     bpy.utils.unregister_class(ArmTilesheetListMoveItem)
 
     bpy.utils.unregister_class(ArmTilesheetActionListItem)
-    bpy.utils.unregister_class(ArmTilesheetActionList)
+    bpy.utils.unregister_class(ARM_UL_TilesheetActionList)
     bpy.utils.unregister_class(ArmTilesheetActionListNewItem)
     bpy.utils.unregister_class(ArmTilesheetActionListDeleteItem)
     bpy.utils.unregister_class(ArmTilesheetActionListMoveItem)

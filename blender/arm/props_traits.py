@@ -68,7 +68,7 @@ class ArmTraitListItem(bpy.types.PropertyGroup):
     arm_traitpropslist: CollectionProperty(type=ArmTraitPropListItem)
     arm_traitpropslist_index: IntProperty(name="Index for my_list", default=0)
 
-class ArmTraitList(bpy.types.UIList):
+class ARM_UL_TraitList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         custom_icon = "NONE"
         custom_icon_value = 0
@@ -415,7 +415,7 @@ class ArmRefreshCanvasListButton(bpy.types.Operator):
         arm.utils.fetch_script_names()
         return{'FINISHED'}
 
-class ArmTraitsPanel(bpy.types.Panel):
+class ARM_PT_TraitPanel(bpy.types.Panel):
     bl_label = "Armory Traits"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -428,7 +428,7 @@ class ArmTraitsPanel(bpy.types.Panel):
         obj = bpy.context.object
         draw_traits(layout, obj, is_object=True)
 
-class ArmSceneTraitsPanel(bpy.types.Panel):
+class ARM_PT_SceneTraitPanel(bpy.types.Panel):
     bl_label = "Armory Scene Traits"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
@@ -447,7 +447,7 @@ def draw_traits(layout, obj, is_object):
         rows = 4
     
     row = layout.row()
-    row.template_list("ArmTraitList", "The_List", obj, "arm_traitlist", obj, "arm_traitlist_index", rows=rows)
+    row.template_list("ARM_UL_TraitList", "The_List", obj, "arm_traitlist", obj, "arm_traitlist_index", rows=rows)
     
     col = row.column(align=True)
     op = col.operator("arm_traitlist.new_item", icon='ADD', text="")
@@ -551,7 +551,7 @@ def draw_traits(layout, obj, is_object):
 def register():
     global icons_dict
     bpy.utils.register_class(ArmTraitListItem)
-    bpy.utils.register_class(ArmTraitList)
+    bpy.utils.register_class(ARM_UL_TraitList)
     bpy.utils.register_class(ArmTraitListNewItem)
     bpy.utils.register_class(ArmTraitListDeleteItem)
     bpy.utils.register_class(ArmTraitListDeleteItemScene)
@@ -564,8 +564,8 @@ def register():
     bpy.utils.register_class(ArmNewWasmButton)
     bpy.utils.register_class(ArmRefreshScriptsButton)
     bpy.utils.register_class(ArmRefreshCanvasListButton)
-    bpy.utils.register_class(ArmTraitsPanel)
-    bpy.utils.register_class(ArmSceneTraitsPanel)
+    bpy.utils.register_class(ARM_PT_TraitPanel)
+    bpy.utils.register_class(ARM_PT_SceneTraitPanel)
     bpy.types.Object.arm_traitlist = CollectionProperty(type=ArmTraitListItem)
     bpy.types.Object.arm_traitlist_index = IntProperty(name="Index for arm_traitlist", default=0)
     bpy.types.Scene.arm_traitlist = CollectionProperty(type=ArmTraitListItem)
@@ -578,7 +578,7 @@ def register():
 def unregister():
     global icons_dict
     bpy.utils.unregister_class(ArmTraitListItem)
-    bpy.utils.unregister_class(ArmTraitList)
+    bpy.utils.unregister_class(ARM_UL_TraitList)
     bpy.utils.unregister_class(ArmTraitListNewItem)
     bpy.utils.unregister_class(ArmTraitListDeleteItem)
     bpy.utils.unregister_class(ArmTraitListDeleteItemScene)
@@ -591,6 +591,6 @@ def unregister():
     bpy.utils.unregister_class(ArmNewWasmButton)
     bpy.utils.unregister_class(ArmRefreshScriptsButton)
     bpy.utils.unregister_class(ArmRefreshCanvasListButton)
-    bpy.utils.unregister_class(ArmTraitsPanel)
-    bpy.utils.unregister_class(ArmSceneTraitsPanel)
+    bpy.utils.unregister_class(ARM_PT_TraitPanel)
+    bpy.utils.unregister_class(ARM_PT_SceneTraitPanel)
     bpy.utils.previews.remove(icons_dict)

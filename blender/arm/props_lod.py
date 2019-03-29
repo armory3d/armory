@@ -32,7 +32,7 @@ class ArmLodListItem(bpy.types.PropertyGroup):
            default=0.0,
            update=update_size_prop)
 
-class ArmLodList(bpy.types.UIList):
+class ARM_UL_LodList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # We could write some code to decide which icon to use here...
         custom_icon = 'OBJECT_DATAMODE'
@@ -137,7 +137,7 @@ class ArmLodListMoveItem(bpy.types.Operator):
 
 def register():
     bpy.utils.register_class(ArmLodListItem)
-    bpy.utils.register_class(ArmLodList)
+    bpy.utils.register_class(ARM_UL_LodList)
     bpy.utils.register_class(ArmLodListNewItem)
     bpy.utils.register_class(ArmLodListDeleteItem)
     bpy.utils.register_class(ArmLodListMoveItem)
@@ -148,7 +148,7 @@ def register():
 
 def unregister():
     bpy.utils.unregister_class(ArmLodListItem)
-    bpy.utils.unregister_class(ArmLodList)
+    bpy.utils.unregister_class(ARM_UL_LodList)
     bpy.utils.unregister_class(ArmLodListNewItem)
     bpy.utils.unregister_class(ArmLodListDeleteItem)
     bpy.utils.unregister_class(ArmLodListMoveItem)
