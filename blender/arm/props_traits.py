@@ -488,7 +488,7 @@ def draw_traits(layout, obj, is_object):
                 if len(item.arm_traitpropslist) > 2:
                     propsrows = 4
                 row = layout.row()
-                row.template_list("ArmTraitPropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows) 
+                row.template_list("ARM_UL_PropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows) 
 
             if item.type_prop == 'Haxe Script':
                 row = layout.row(align=True)
