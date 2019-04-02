@@ -228,7 +228,9 @@ class ARM_PT_MaterialBlendingPropsPanel(bpy.types.Panel):
     bl_parent_id = "ARM_PT_MaterialPropsPanel"
 
     def draw_header(self, context):
-        self.layout.prop(bpy.context.material, 'arm_blending', text="")
+        if context.material == None:
+            return
+        self.layout.prop(context.material, 'arm_blending', text="")
 
     def draw(self, context):
         layout = self.layout
