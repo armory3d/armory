@@ -9,7 +9,7 @@ class PrintNode extends LogicNode {
 	override function run(from:Int) {
 		var value:Dynamic = inputs[1].get();
 	
-		trace(value);
+		trace(tree.name + ": " + value);
 
 		runOutput(0);
 	}
