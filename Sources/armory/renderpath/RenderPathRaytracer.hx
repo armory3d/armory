@@ -59,19 +59,22 @@ class RenderPathRaytracer {
 					var structure = new VertexStructure();
 					structure.add("pos", VertexData.Float3);
 					structure.add("nor", VertexData.Float3);
+					structure.add("tex", VertexData.Float2);
 					var md = iron.Scene.active.meshes[0].data;
 					var geom = md.geom;
-					var verts = Std.int(geom.positions.length / 3);
+					var verts = Std.int(geom.positions.length / 4);
 					var vb = new VertexBuffer(verts, structure, kha.graphics5.Usage.StaticUsage);
 					var vba = vb.lock();
 					// iron.data.Geometry.buildVertices(vba, geom.positions, geom.normals);
 					for (i in 0...verts) {
-						vba[i * 6    ] = (geom.positions[i * 4    ] / 32767) * md.scalePos;
-						vba[i * 6 + 1] = (geom.positions[i * 4 + 1] / 32767) * md.scalePos;
-						vba[i * 6 + 2] = (geom.positions[i * 4 + 2] / 32767) * md.scalePos;
-						vba[i * 6 + 3] =  geom.normals  [i * 2    ] / 32767;
-						vba[i * 6 + 4] =  geom.normals  [i * 2 + 1] / 32767;
-						vba[i * 6 + 5] =  geom.positions[i * 4 + 3] / 32767;
+						vba[i * 8    ] = (geom.positions[i * 4    ] / 32767) * md.scalePos;
+						vba[i * 8 + 1] = (geom.positions[i * 4 + 1] / 32767) * md.scalePos;
+						vba[i * 8 + 2] = (geom.positions[i * 4 + 2] / 32767) * md.scalePos;
+						vba[i * 8 + 3] =  geom.normals  [i * 2    ] / 32767;
+						vba[i * 8 + 4] =  geom.normals  [i * 2 + 1] / 32767;
+						vba[i * 8 + 5] =  geom.positions[i * 4 + 3] / 32767;
+						vba[i * 8 + 6] = (geom.uvs[i * 2    ] / 32767) * md.scaleTex;
+						vba[i * 8 + 7] = (geom.uvs[i * 2 + 1] / 32767) * md.scaleTex;
 					}
 					vb.unlock();
 
@@ -144,6 +147,8 @@ class RenderPathRaytracer {
 		
 		g.end();
 		// g.swapBuffers();
+
+		if (iron.system.Input.getMouse().down()) frame = 1.0;
 	}
 	#end
 }
