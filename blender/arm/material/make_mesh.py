@@ -328,7 +328,7 @@ def make_forward_mobile(con_mesh):
     if con_mesh.is_elem('tang'):
         vert.add_out('mat3 TBN')
         make_attrib.write_norpos(con_mesh, vert, declare=True)
-        vert.write('vec3 tangent = normalize(N * tang);')
+        vert.write('vec3 tangent = normalize(N * tang.xyz);')
         vert.write('vec3 bitangent = normalize(cross(wnormal, tangent));')
         vert.write('TBN = mat3(tangent, bitangent, wnormal);')
     else:
