@@ -266,12 +266,14 @@ def make_deferred(con_mesh, rpasses):
     return con_mesh
 
 def make_raytracer(con_mesh):
-    con_mesh.data['vertex_elements'] = [{'name': 'pos', 'data': 'float3'}, {'name': 'nor', 'data': 'float3'}]
+    con_mesh.data['vertex_elements'] = [{'name': 'pos', 'data': 'float3'}, {'name': 'nor', 'data': 'float3'}, {'name': 'tex', 'data': 'float2'}]
     wrd = bpy.data.worlds['Arm']
     vert = con_mesh.make_vert()
     frag = con_mesh.make_frag()
     vert.add_out('vec3 n')
+    vert.add_out('vec2 uv')
     vert.write('n = nor;')
+    vert.write('uv = tex;')
     vert.write('gl_Position = vec4(pos.xyz, 1.0);')
 
 def make_forward_mobile(con_mesh):
