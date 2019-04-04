@@ -61,9 +61,7 @@ class DebugConsole extends Trait {
 		this.scaleFactor = scaleFactor;
 
 		iron.data.Data.getFont('font_default.ttf', function(font:kha.Font) {
-			var theme = Reflect.copy(zui.Themes.dark);
-			theme.WINDOW_BG_COL = 0xee111111;
-			ui = new Zui({scaleFactor: scaleFactor, font: font, theme: theme});
+			ui = new Zui({scaleFactor: scaleFactor, font: font});
 			notifyOnRender2D(render2D);
 			notifyOnUpdate(update);
 			if (haxeTrace == null) {
