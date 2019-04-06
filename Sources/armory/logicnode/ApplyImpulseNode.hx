@@ -13,21 +13,22 @@ class ApplyImpulseNode extends LogicNode {
 	override function run(from:Int) {
 		var object:Object = inputs[1].get();
 		var impulse:Vec4 = inputs[2].get();
-		var local:Bool = inputs[3].get();
-		var look:Vec4; var right:Vec4; var up:Vec4;
+		var local:Bool = inputs.length > 3 ? inputs[3].get() : false;
 		
 		if (object == null || impulse == null) return;
 
 #if arm_physics
 		var rb:RigidBody = object.getTrait(RigidBody);
 		if (!local) {
-		rb.applyImpulse(impulse);
+			rb.applyImpulse(impulse);
 		}
 		else {
-			look = object.transform.world.look().mult(impulse.x);
-			right = object.transform.world.right().mult(impulse.y);
-			up = object.transform.world.up().mult(impulse.z);
-			rb.applyImpulse(look); rb.applyImpulse(right); rb.applyImpulse(up);
+			var look = object.transform.world.look().mult(impulse.x);
+			var right = object.transform.world.right().mult(impulse.y);
+			var up = object.transform.world.up().mult(impulse.z);
+			rb.applyImpulse(look);
+			rb.applyImpulse(right);
+			rb.applyImpulse(up);
 		}
 #end
 
