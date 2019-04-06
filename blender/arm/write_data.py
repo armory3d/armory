@@ -229,11 +229,6 @@ project.addSources('Sources');
             f.write(add_assets(p.replace('\\', '/'), use_data_dir=use_data_dir, rel_path=rel_path))
             assets.add_khafile_def('arm_ui')
 
-        if wrd.arm_hscript == 'Enabled':
-            if not os.path.exists('Libraries/hscript'):
-                f.write(add_armory_library(sdk_path, 'lib/hscript', rel_path=rel_path))
-            assets.add_khafile_def('arm_hscript')
-
         if wrd.arm_formatlib == 'Enabled':
             if not os.path.exists('Libraries/iron_format'):
                 f.write(add_armory_library(sdk_path, 'lib/iron_format', rel_path=rel_path))

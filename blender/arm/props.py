@@ -47,10 +47,6 @@ def init_properties():
                ('Enabled', 'Enabled', 'Enabled'),
                ('Auto', 'Auto', 'Auto')],
         name="Zui", default='Auto', description="Include UI library", update=assets.invalidate_compiler_cache)
-    bpy.types.World.arm_hscript = EnumProperty(
-        items=[('Disabled', 'Disabled', 'Disabled'),
-               ('Enabled', 'Enabled', 'Enabled')],
-        name="Hscript", default='Disabled', description="Include Hscript library", update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_formatlib = EnumProperty(
         items=[('Disabled', 'Disabled', 'Disabled'),
                ('Enabled', 'Enabled', 'Enabled')],

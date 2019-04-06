@@ -135,8 +135,6 @@ def export_data(fp, sdk_path):
         modules.append('navigation')
     if export_ui:
         modules.append('ui')
-    if wrd.arm_hscript == 'Enabled':
-        modules.append('hscript')
     if wrd.arm_formatlib == 'Enabled':
         modules.append('format')
     print('Exported modules: ' + str(modules))
