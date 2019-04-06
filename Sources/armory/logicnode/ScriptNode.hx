@@ -5,7 +5,7 @@ class ScriptNode extends LogicNode {
 	public var property0:String;
 	var result:Dynamic;
 
-	#if arm_hscript
+	#if hscript
 	var parser:hscript.Parser = null;
 	var interp:hscript.Interp = null;
 	var ast:hscript.Expr = null;
@@ -19,7 +19,7 @@ class ScriptNode extends LogicNode {
 
 		var v:Dynamic = inputs[1].get();
 
-		#if arm_hscript
+		#if hscript
 		if (parser == null) {
 			parser = new hscript.Parser();
 			parser.allowJSON = true;

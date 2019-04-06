@@ -11,7 +11,7 @@ class ExpressionNode extends LogicNode {
 
 	override function run(from:Int) {
 
-		#if arm_hscript
+		#if hscript
 		var expr = property0;
 		var parser = new hscript.Parser();
 		var ast = parser.parseString(expr);
