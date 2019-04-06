@@ -126,7 +126,7 @@ def make_base(con_mesh, parse_opacity):
         vert.add_out('vec2 texCoord')
         vert.add_uniform('float texUnpack', link='_texUnpack')
         if mat_state.material.arm_tilesheet_flag:
-            if mat_state.material.arm_particle_flag and rpdat.arm_particles == 'GPU':
+            if mat_state.material.arm_particle_flag and rpdat.arm_particles == 'On':
                 make_particle.write_tilesheet(vert)
             else:
                 vert.add_uniform('vec2 tilesheetOffset', '_tilesheetOffset')
@@ -547,7 +547,7 @@ def make_forward(con_mesh):
             frag.write('fragColor[0].rgb = tonemapFilmic(fragColor[0].rgb);')
 
     # Particle opacity
-    if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'GPU' and mat_state.material.arm_particle_fade:
+    if mat_state.material.arm_particle_flag and arm.utils.get_rp().arm_particles == 'On' and mat_state.material.arm_particle_fade:
         frag.write('fragColor[0].rgb *= p_fade;')
 
 def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):

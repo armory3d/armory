@@ -750,10 +750,10 @@ def parse_vector(node, socket):
     elif node.type == 'PARTICLE_INFO':
         if socket == node.outputs[3]: # Location
             particle_info['location'] = True
-            return 'p_location' if arm.utils.get_rp().arm_particles == 'GPU' else 'vec3(0.0)'
+            return 'p_location' if arm.utils.get_rp().arm_particles == 'On' else 'vec3(0.0)'
         elif socket == node.outputs[5]: # Velocity
             particle_info['velocity'] = True
-            return 'p_velocity' if arm.utils.get_rp().arm_particles == 'GPU' else 'vec3(0.0)'
+            return 'p_velocity' if arm.utils.get_rp().arm_particles == 'On' else 'vec3(0.0)'
         elif socket == node.outputs[6]: # Angular Velocity
             particle_info['angular_velocity'] = True
             return 'vec3(0.0)'
@@ -1051,13 +1051,13 @@ def parse_value(node, socket):
     elif node.type == 'PARTICLE_INFO':
         if socket == node.outputs[0]: # Index
             particle_info['index'] = True
-            return 'p_index' if arm.utils.get_rp().arm_particles == 'GPU' else '0.0'
+            return 'p_index' if arm.utils.get_rp().arm_particles == 'On' else '0.0'
         elif socket == node.outputs[1]: # Age
             particle_info['age'] = True
-            return 'p_age' if arm.utils.get_rp().arm_particles == 'GPU' else '0.0'
+            return 'p_age' if arm.utils.get_rp().arm_particles == 'On' else '0.0'
         elif socket == node.outputs[2]: # Lifetime
             particle_info['lifetime'] = True
-            return 'p_lifetime' if arm.utils.get_rp().arm_particles == 'GPU' else '0.0'
+            return 'p_lifetime' if arm.utils.get_rp().arm_particles == 'On' else '0.0'
         elif socket == node.outputs[4]: # Size
             particle_info['size'] = True
             return '1.0'

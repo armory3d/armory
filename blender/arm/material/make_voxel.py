@@ -66,7 +66,7 @@ def make_gi(context_id):
 
     # Voxelized particles
     particle = mat_state.material.arm_particle_flag
-    if particle and rpdat.arm_particles == 'GPU':
+    if particle and rpdat.arm_particles == 'On':
         # make_particle.write(vert, particle_info=cycles.particle_info)
         frag.write_pre = True
         frag.write('const float p_index = 0;')

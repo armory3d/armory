@@ -10,7 +10,7 @@ def write_vertpos(vert):
     particle = mat_state.material.arm_particle_flag
     # Particles
     if particle:
-        if arm.utils.get_rp().arm_particles == 'GPU':
+        if arm.utils.get_rp().arm_particles == 'On':
             make_particle.write(vert, particle_info=cycles.particle_info)
         # Billboards
         if billboard == 'spherical':
