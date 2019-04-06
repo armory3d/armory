@@ -139,8 +139,6 @@ def init_properties():
     bpy.types.MetaBall.arm_cached = BoolProperty(name="Mesh Cached", description="No need to reexport metaball data", default=False)
     bpy.types.MetaBall.arm_aabb = FloatVectorProperty(name="AABB", size=3, default=[0,0,0])
     bpy.types.MetaBall.arm_dynamic_usage = BoolProperty(name="Dynamic Data Usage", description="Metaball data can change at runtime", default=False)
-    # For grease pencil
-    # bpy.types.GreasePencil.arm_cached = BoolProperty(name="GP Cached", description="No need to reexport grease pencil data", default=False)
     # For armature
     bpy.types.Armature.arm_cached = BoolProperty(name="Armature Cached", description="No need to reexport armature data", default=False)
     # For camera

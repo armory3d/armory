@@ -165,8 +165,6 @@ def export_data(fp, sdk_path):
             assets.shader_passes_assets[ref] = []
             if ref.startswith('compositor_pass'):
                 compile_shader_pass(res, raw_shaders_path, ref, defs + cdefs, make_variants=has_config)
-            # elif ref.startswith('grease_pencil'):
-                # compile_shader_pass(res, raw_shaders_path, ref, [], make_variants=has_config)
             else:
                 compile_shader_pass(res, raw_shaders_path, ref, defs, make_variants=has_config)
         arm.utils.write_arm(shaders_path + '/shader_datas.arm', res)

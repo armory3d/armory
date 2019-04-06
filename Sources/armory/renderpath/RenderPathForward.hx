@@ -42,10 +42,6 @@ class RenderPathForward {
 	public static function init(_path:RenderPath) {
 
 		path = _path;
-
-		// #if (rp_shadowmap && kha_webgl)
-		// Inc.initEmpty();
-		// #end
 		
 		#if (rp_background == "World")
 		{
@@ -291,19 +287,13 @@ class RenderPathForward {
 
 			if (voxelize) {
 				var res = Inc.getVoxelRes();
-
-				// #if (rp_gi == "Voxel GI")
-				// var voxtex = "voxelsOpac";
-				// #else
 				var voxtex = voxels;
-				// #end
 
 				path.clearImage(voxtex, 0x00000000);
 				path.setTarget("");
 				path.setViewport(res, res);
 				path.bindTarget(voxtex, "voxels");
 				#if (rp_gi == "Voxel GI")
-				// path.bindTarget("voxelsNor", "voxelsNor");
 				for (l in iron.Scene.active.lights) {
 					if (!l.visible || !l.data.raw.cast_shadow || l.data.raw.type != "sun") continue;
 					var n = "shadowMap";
@@ -314,13 +304,6 @@ class RenderPathForward {
 				path.drawMeshes("voxel");
 				path.generateMipmaps(voxels);
 			}
-
-			// if (relight) {
-			// 	Inc.computeVoxelsBegin();
-			// 	Inc.computeVoxels();
-			// 	Inc.computeVoxelsEnd();
-			// 	path.generateMipmaps(voxels);
-			// }
 		}
 		#end
 
@@ -531,33 +514,10 @@ class RenderPathForward {
 				path.bindTarget("bufa", "edgesTex");
 				path.drawShader("shader_datas/smaa_blend_weight/smaa_blend_weight");
 
-				// #if (rp_antialiasing == "TAA")
-				// path.setTarget("bufa");
-				// #else
 				path.setTarget(framebuffer);
-				// #end
 				path.bindTarget("buf", "colorTex");
 				path.bindTarget("bufb", "blendTex");
-				// #if (rp_antialiasing == "TAA")
-				// {
-					// path.bindTarget("gbuffer2", "sveloc");
-				// }
-				// #end
 				path.drawShader("shader_datas/smaa_neighborhood_blend/smaa_neighborhood_blend");
-
-				// #if (rp_antialiasing == "TAA")
-				// {
-				// 	path.setTarget(framebuffer);
-				// 	path.bindTarget("bufa", "tex");
-				// 	path.bindTarget("taa", "tex2");
-				// 	path.bindTarget("gbuffer2", "sveloc");
-				// 	path.drawShader("shader_datas/taa_pass/taa_pass");
-
-				// 	path.setTarget("taa");
-				// 	path.bindTarget("bufa", "tex");
-				// 	path.drawShader("shader_datas/copy_pass/copy_pass");
-				// }
-				// #end
 			}
 			#end
 

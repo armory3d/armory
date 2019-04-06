@@ -24,7 +24,6 @@ def update_preset(self, context):
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
-        # rpdat.rp_greasepencil = False
         rpdat.rp_gi = 'Off'
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '1'
@@ -57,7 +56,6 @@ def update_preset(self, context):
         rpdat.rp_hdr = False
         rpdat.rp_background = 'Clear'
         rpdat.rp_stereo = False
-        # rpdat.rp_greasepencil = False
         rpdat.rp_gi = 'Off'
         rpdat.rp_render_to_texture = False
         rpdat.rp_supersampling = '1'
@@ -88,7 +86,6 @@ def update_preset(self, context):
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
-        # rpdat.rp_greasepencil = False
         rpdat.rp_gi = 'Voxel AO'
         rpdat.rp_voxelgi_resolution = '128'
         rpdat.arm_voxelgi_revoxelize = False
@@ -128,7 +125,6 @@ def update_preset(self, context):
         rpdat.rp_hdr = False
         rpdat.rp_background = 'Clear'
         rpdat.rp_stereo = False
-        # rpdat.rp_greasepencil = False
         rpdat.rp_gi = 'Off'
         rpdat.rp_render_to_texture = False
         rpdat.rp_supersampling = '1'
@@ -216,7 +212,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     rp_renderer: EnumProperty(
         items=[('Forward', 'Forward Clustered', 'Forward'),
                ('Deferred', 'Deferred Clustered', 'Deferred'),
-               # ('Raytracer', 'Raytracer', 'Raytracer', 'ERROR', 2),
+               # ('Raytracer', 'Raytracer', 'Raytracer (Direct3D 12)', 'ERROR', 2),
                ],
         name="Renderer", description="Renderer type", default='Deferred', update=update_renderpath)
     rp_depthprepass: BoolProperty(name="Depth Prepass", description="Depth Prepass for mesh context", default=False, update=update_renderpath)
@@ -324,7 +320,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Shader', 'Shader', 'Shader')],
         name='Draw Order', description='Sort objects', default='Auto', update=assets.invalidate_compiled_data)
     rp_stereo: BoolProperty(name="VR", description="Stereo rendering", default=False, update=update_renderpath)
-    rp_greasepencil: BoolProperty(name="Grease Pencil", description="Render Grease Pencil data", default=False, update=update_renderpath)
     rp_ocean: BoolProperty(name="Ocean", description="Ocean pass", default=False, update=update_renderpath)
     
     rp_gi: EnumProperty(
@@ -383,12 +378,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_voxelgi_dimensions: FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_compiled_data)
     arm_voxelgi_revoxelize: BoolProperty(name="Revoxelize", description="Revoxelize scene each frame", default=False, update=assets.invalidate_shader_cache)
     arm_voxelgi_temporal: BoolProperty(name="Temporal Filter", description="Use temporal filtering to stabilize voxels", default=False, update=assets.invalidate_shader_cache)
-    # arm_voxelgi_bounces: EnumProperty(
-    #     items=[('1', '1', '1'),
-    #            ('2', '2', '2')],
-    #     name="Bounces", description="Trace multiple light bounces", default='1', update=update_renderpath)
     arm_voxelgi_camera: BoolProperty(name="Dynamic Camera", description="Use camera as voxelization origin", default=False, update=assets.invalidate_shader_cache)
-    # arm_voxelgi_anisotropic: BoolProperty(name="Anisotropic", description="Use anisotropic voxels", default=False, update=update_renderpath)
     arm_voxelgi_shadows: BoolProperty(name="Shadows", description="Use voxels to render shadows", default=False, update=update_renderpath)
     arm_samples_per_pixel: EnumProperty(
         items=[('1', '1', '1'),

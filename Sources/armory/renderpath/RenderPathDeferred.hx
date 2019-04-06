@@ -25,10 +25,6 @@ class RenderPathDeferred {
 
 		path = _path;
 
-		// #if (rp_shadowmap && kha_webgl)
-		// Inc.initEmpty();
-		// #end
-
 		#if (rp_background == "World")
 		{
 			path.loadShader("shader_datas/world_pass/world_pass");
@@ -443,9 +439,6 @@ class RenderPathDeferred {
 				path.bindTarget("_main", "gbufferD");
 				#end
 				path.bindTarget("gbuffer0", "gbuffer0");
-				// #if (rp_ssgi == "RTGI")
-				// path.bindTarget("gbuffer1", "gbuffer1");
-				// #end
 				path.drawShader("shader_datas/ssgi_pass/ssgi_pass");
 
 				path.setTarget("singleb");
@@ -508,19 +501,13 @@ class RenderPathDeferred {
 
 			if (voxelize) {
 				var res = Inc.getVoxelRes();
-
-				// #if (rp_gi == "Voxel GI")
-				// var voxtex = "voxelsOpac";
-				// #else
 				var voxtex = voxels;
-				// #end
 
 				path.clearImage(voxtex, 0x00000000);
 				path.setTarget("");
 				path.setViewport(res, res);
 				path.bindTarget(voxtex, "voxels");
 				#if (rp_gi == "Voxel GI")
-				// path.bindTarget("voxelsNor", "voxelsNor");
 				for (l in iron.Scene.active.lights) {
 					if (!l.visible || !l.data.raw.cast_shadow || l.data.raw.type != "sun") continue;
 					var n = "shadowMap";
@@ -531,13 +518,6 @@ class RenderPathDeferred {
 				path.drawMeshes("voxel");
 				path.generateMipmaps(voxels);
 			}
-
-			// if (relight) {
-			// 	Inc.computeVoxelsBegin();
-			// 	Inc.computeVoxels();
-			// 	Inc.computeVoxelsEnd();
-			// 	path.generateMipmaps(voxels);
-			// }
 		}
 		#end
 

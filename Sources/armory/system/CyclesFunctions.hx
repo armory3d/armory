@@ -46,17 +46,6 @@ vec4 tex_voronoi(const vec3 x) {
 }
 ";
 
-	// Based on https://www.shadertoy.com/view/4sfGzS
-	// Copyright © 2013 Inigo Quilez
-	// The MIT License - Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-	// float tex_noise_f(const vec3 x) {
-	// vec3 p = floor(x);
-	// vec3 f = fract(x);
-	// f = f * f * (3.0 - 2.0 * f);
-	// vec2 uv = (p.xy + vec2(37.0, 17.0) * p.z) + f.xy;
-	// vec2 rg = texture(snoise256, (uv + 0.5) / 256.0).yx;
-	// return mix(rg.x, rg.y, f.z);
-	// }
 	// By Morgan McGuire @morgan3d, http://graphicscodex.com Reuse permitted under the BSD license.
 	// https://www.shadertoy.com/view/4dS3Wd
 	public static var str_tex_noise = "
