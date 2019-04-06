@@ -23,7 +23,7 @@ def make(context_id):
 	frag.write('\n')
 
 	wrd = bpy.data.worlds['Arm']
-	if '_VoxelAO' in wrd.world_defs:
+	if '_VoxelAOvar' in wrd.world_defs:
 		frag.write('indirect *= 0.25;')
 	frag.write('vec4 premultipliedReflect = vec4(vec3(direct + indirect * 0.5) * opacity, opacity);')
 	

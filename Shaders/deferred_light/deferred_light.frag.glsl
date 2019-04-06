@@ -9,9 +9,6 @@
 #ifdef _Irr
 #include "std/shirr.glsl"
 #endif
-#ifdef _VoxelGI
-#include "std/conetrace.glsl"
-#endif
 #ifdef _VoxelAOvar
 #include "std/conetrace.glsl"
 #endif
@@ -26,9 +23,6 @@ uniform sampler2D gbufferD;
 uniform sampler2D gbuffer0;
 uniform sampler2D gbuffer1;
 
-#ifdef _VoxelGI
-uniform sampler3D voxels;
-#endif
 #ifdef _VoxelAOvar
 uniform sampler3D voxels;
 #endif
@@ -192,30 +186,6 @@ void main() {
 	vec2 envBRDF = textureLod(senvmapBrdf, vec2(metrough.y, 1.0 - dotNV), 0.0).xy;
 #endif
 
-#ifdef _VoxelGI
-	#ifdef _VoxelGICam
-	vec3 voxpos = (p - eyeSnap) / voxelgiHalfExtents;
-	#else
-	vec3 voxpos = p / voxelgiHalfExtents;
-	#endif
-
-	#ifdef _VoxelGITemporal
-	vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels) * voxelBlend + traceDiffuse(voxpos, n, voxelsLast) * (1.0 - voxelBlend);
-	#else
-	vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels);
-	#endif
-
-	fragColor.rgb = indirectDiffuse.rgb * voxelgiDiff * g1.rgb;
-
-	if (occspec.y > 0.0) {
-		vec3 indirectSpecular = traceSpecular(voxels, voxpos, n, v, metrough.y);
-		indirectSpecular *= f0 * envBRDF.x + envBRDF.y;
-		fragColor.rgb += indirectSpecular * voxelgiSpec * occspec.y;
-	}
-
-	// if (!isInsideCube(voxpos)) fragColor = vec4(1.0); // Show bounds
-#endif
-
 	// Envmap
 #ifdef _Irr
 	vec3 envl = shIrradiance(n);
@@ -270,11 +240,7 @@ void main() {
 	
 #endif
 
-#ifdef _VoxelGI
-	fragColor.rgb += envl * voxelgiEnv;
-#else
 	fragColor.rgb = envl;
-#endif
 
 #ifdef _SSAO
 	// #ifdef _RTGI

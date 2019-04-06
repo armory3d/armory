@@ -300,9 +300,11 @@ def init_properties_on_load():
     wrd = bpy.data.worlds['Arm']
     # Outdated project
     if bpy.data.filepath != '' and (wrd.arm_version != arm_version or wrd.arm_commit != arm_commit): # Call on project load only
-        
-        # This allows for seamless migration from ealier versions of
-        # Armory that don't have `item.node_tree_prop` set
+        # This allows for seamless migration from ealier versions of Armory
+        for rp in wrd.arm_rplist:
+            if rp.rp_gi != 'Off':
+                rp.rp_gi = 'Off'
+                rp.rp_voxelao = True
         for ob in bpy.data.objects: # TODO: deprecated
             for trait in ob.arm_traitlist:
                 if trait != None and \

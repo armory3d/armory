@@ -628,7 +628,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag.add_uniform('float envmapStrength', link='_envmapStrength')
     frag.write('indirect *= envmapStrength;')
 
-    if '_VoxelGI' in wrd.world_defs or '_VoxelAO' in wrd.world_defs:
+    if '_VoxelAOvar' in wrd.world_defs:
         frag.add_include('std/conetrace.glsl')
         frag.add_uniform('sampler3D voxels')
         if '_VoxelGICam' in wrd.world_defs:
@@ -636,16 +636,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
             frag.write('vec3 voxpos = (wposition - eyeSnap) / voxelgiHalfExtents;')
         else:
             frag.write('vec3 voxpos = wposition / voxelgiHalfExtents;')
-        if '_VoxelAO' in wrd.world_defs:
-            frag.write('indirect *= vec3(1.0 - traceAO(voxpos, n, voxels));')
-        else:
-            frag.write('vec4 indirectDiffuse = traceDiffuse(voxpos, n, voxels);')
-            frag.write('indirect = indirect * voxelgiEnv + vec3(indirectDiffuse.rgb * voxelgiDiff * basecol);')
-            frag.write('if (specular > 0.0) {')
-            frag.write('vec3 indirectSpecular = traceSpecular(voxels, voxpos, n, vVec, roughness);')
-            frag.write('indirectSpecular *= f0 * envBRDF.x + envBRDF.y;')
-            frag.write('indirect += indirectSpecular * voxelgiSpec * specular;')
-            frag.write('}')
+        frag.write('indirect *= vec3(1.0 - traceAO(voxpos, n, voxels));')
 
     frag.write('vec3 direct = vec3(0.0);')
     frag.add_uniform('bool receiveShadow')

@@ -157,7 +157,7 @@ class Uniforms {
 			}
 		}
 		#end
-		#if arm_voxelgi
+		#if rp_voxelao
 		if (link == "_cameraPositionSnap") {
 			v = iron.object.Uniforms.helpVec;
 			var camera = iron.Scene.active.camera;

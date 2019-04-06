@@ -321,7 +321,7 @@ def write_config(resx, resy):
     output['rp_ssr'] = rpdat.rp_ssr != 'Off'
     output['rp_bloom'] = rpdat.rp_bloom != 'Off'
     output['rp_motionblur'] = rpdat.rp_motionblur != 'Off'
-    output['rp_gi'] = rpdat.rp_gi != 'Off'
+    output['rp_gi'] = rpdat.rp_voxelao
     output['rp_dynres'] = rpdat.rp_dynres
     with open(p + '/config.arm', 'w') as f:
         f.write(json.dumps(output, sort_keys=True, indent=4))
@@ -348,7 +348,7 @@ class Main {
     public static inline var projectName = '""" + arm.utils.safestr(wrd.arm_project_name) + """';
     public static inline var projectPackage = '""" + arm.utils.safestr(wrd.arm_project_package) + """';""")
 
-        if rpdat.rp_gi == 'Voxel GI' or rpdat.rp_gi == 'Voxel AO':
+        if rpdat.rp_voxelao:
             f.write("""
     public static inline var voxelgiVoxelSize = """ + str(rpdat.arm_voxelgi_dimensions) + " / " + str(rpdat.rp_voxelgi_resolution) + """;
     public static inline var voxelgiHalfExtents = """ + str(round(rpdat.arm_voxelgi_dimensions / 2.0)) + """;""")
@@ -566,15 +566,12 @@ const float compoDOFFstop = """ + str(round(bpy.data.cameras[0].gpu_dof.fstop * 
 const float compoDOFLength = 160.0;
 """) # str(round(bpy.data.cameras[0].lens * 100) / 100)
 
-        if rpdat.rp_gi == 'Voxel GI' or rpdat.rp_gi == 'Voxel AO':
+        if rpdat.rp_voxelao:
             halfext = round(rpdat.arm_voxelgi_dimensions / 2.0)
             f.write(
 """const ivec3 voxelgiResolution = ivec3(""" + str(rpdat.rp_voxelgi_resolution) + """, """ + str(rpdat.rp_voxelgi_resolution) + """, """ + str(int(int(rpdat.rp_voxelgi_resolution) * float(rpdat.rp_voxelgi_resolution_z))) + """);
 const vec3 voxelgiHalfExtents = vec3(""" + str(halfext) + """, """ + str(halfext) + """, """ + str(round(halfext * float(rpdat.rp_voxelgi_resolution_z))) + """);
-const float voxelgiDiff = """ + str(round(rpdat.arm_voxelgi_diff * 100) / 100) + """;
-const float voxelgiSpec = """ + str(round(rpdat.arm_voxelgi_spec * 100) / 100) + """;
 const float voxelgiOcc = """ + str(round(rpdat.arm_voxelgi_occ * 100) / 100) + """;
-const float voxelgiEnv = """ + str(round(rpdat.arm_voxelgi_env * 100) / 100) + """ / 10.0;
 const float voxelgiStep = """ + str(round(rpdat.arm_voxelgi_step * 100) / 100) + """;
 const float voxelgiRange = """ + str(round(rpdat.arm_voxelgi_range * 100) / 100) + """;
 const float voxelgiOffset = """ + str(round(rpdat.arm_voxelgi_offset * 100) / 100) + """;

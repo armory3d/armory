@@ -8,7 +8,7 @@ class RenderPathDeferred {
 
 	static var path:RenderPath;
 
-	#if (rp_gi != "Off")
+	#if rp_voxelao
 	static var voxels = "voxels";
 	static var voxelsLast = "voxels";
 	#end
@@ -37,12 +37,10 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if (rp_gi != "Off")
+		#if rp_voxelao
 		{
 			Inc.initGI();
-			#if (rp_gi == "Voxel AO")
 			path.loadShader("shader_datas/deferred_light/deferred_light_VoxelAOvar");
-			#end
 		}
 		#end
 
@@ -478,17 +476,10 @@ class RenderPathDeferred {
 		#end
 
 		// Voxels
-		#if (rp_gi != "Off")
+		#if rp_voxelao
 		if (armory.data.Config.raw.rp_gi != false)
 		{
 			var voxelize = path.voxelize();
-
-			#if ((rp_gi == "Voxel GI") && (rp_voxelgi_relight))
-			// Relight if light was moved
-			for (light in iron.Scene.active.lights) {
-				if (light.transform.diff()) { voxelize = true; break; }
-			}
-			#end
 
 			#if arm_voxelgi_temporal
 			voxelize = ++RenderPathCreator.voxelFrame % RenderPathCreator.voxelFreq == 0;
@@ -507,14 +498,6 @@ class RenderPathDeferred {
 				path.setTarget("");
 				path.setViewport(res, res);
 				path.bindTarget(voxtex, "voxels");
-				#if (rp_gi == "Voxel GI")
-				for (l in iron.Scene.active.lights) {
-					if (!l.visible || !l.data.raw.cast_shadow || l.data.raw.type != "sun") continue;
-					var n = "shadowMap";
-					path.bindTarget(n, n);
-					break;
-				}
-				#end
 				path.drawMeshes("voxel");
 				path.generateMipmaps(voxels);
 			}
@@ -542,10 +525,10 @@ class RenderPathDeferred {
 		}
 		#end
 		var voxelao_pass = false;
-		#if (rp_gi != "Off")
+		#if rp_voxelao
 		if (armory.data.Config.raw.rp_gi != false)
 		{
-			#if (arm_config && (rp_gi == "Voxel AO"))
+			#if arm_config
 			voxelao_pass = true;
 			#end
 			path.bindTarget(voxels, "voxels");

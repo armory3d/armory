@@ -24,7 +24,7 @@ def update_preset(self, context):
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
-        rpdat.rp_gi = 'Off'
+        rpdat.rp_voxelao = False
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'SMAA'
@@ -56,7 +56,7 @@ def update_preset(self, context):
         rpdat.rp_hdr = False
         rpdat.rp_background = 'Clear'
         rpdat.rp_stereo = False
-        rpdat.rp_gi = 'Off'
+        rpdat.rp_voxelao = False
         rpdat.rp_render_to_texture = False
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'Off'
@@ -86,11 +86,10 @@ def update_preset(self, context):
         rpdat.rp_hdr = True
         rpdat.rp_background = 'World'
         rpdat.rp_stereo = False
-        rpdat.rp_gi = 'Voxel AO'
+        rpdat.rp_voxelao = True
         rpdat.rp_voxelgi_resolution = '128'
         rpdat.arm_voxelgi_revoxelize = False
         rpdat.arm_voxelgi_camera = False
-        rpdat.rp_voxelgi_emission = False
         rpdat.rp_render_to_texture = True
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'TAA'
@@ -125,7 +124,7 @@ def update_preset(self, context):
         rpdat.rp_hdr = False
         rpdat.rp_background = 'Clear'
         rpdat.rp_stereo = False
-        rpdat.rp_gi = 'Off'
+        rpdat.rp_voxelao = False
         rpdat.rp_render_to_texture = False
         rpdat.rp_supersampling = '1'
         rpdat.rp_antialiasing = 'Off'
@@ -321,13 +320,13 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name='Draw Order', description='Sort objects', default='Auto', update=assets.invalidate_compiled_data)
     rp_stereo: BoolProperty(name="VR", description="Stereo rendering", default=False, update=update_renderpath)
     rp_ocean: BoolProperty(name="Ocean", description="Ocean pass", default=False, update=update_renderpath)
-    
-    rp_gi: EnumProperty(
+    rp_gi: EnumProperty( # TODO: remove in 0.8
         items=[('Off', 'Off', 'Off'),
                ('Voxel GI', 'Voxel GI', 'Voxel GI', 'ERROR', 1),
                ('Voxel AO', 'Voxel AO', 'Voxel AO')
                ],
         name="Global Illumination", description="Dynamic global illumination", default='Off', update=update_renderpath)
+    rp_voxelao: BoolProperty(name="Voxel AO", description="Voxel-based ambient occlusion", default=False, update=update_renderpath)
     rp_voxelgi_resolution: EnumProperty(
         items=[('32', '32', '32'),
                ('64', '64', '64'),
@@ -374,7 +373,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name="Filter", description="Scaling filter", default='Linear')
     rp_dynres: BoolProperty(name="Dynamic Resolution", description="Dynamic resolution scaling for performance", default=False, update=update_renderpath)
     arm_ssr_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
-    rp_voxelgi_relight: BoolProperty(name="Relight", description="Relight voxels when light is moved", default=True, update=update_renderpath)
     arm_voxelgi_dimensions: FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_compiled_data)
     arm_voxelgi_revoxelize: BoolProperty(name="Revoxelize", description="Revoxelize scene each frame", default=False, update=assets.invalidate_shader_cache)
     arm_voxelgi_temporal: BoolProperty(name="Temporal Filter", description="Use temporal filtering to stabilize voxels", default=False, update=assets.invalidate_shader_cache)
@@ -388,7 +386,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('16', '16', '16')],
         name="MSAA", description="Samples per pixel usable for render paths drawing directly to framebuffer", default='1')  
 
-    arm_voxelgi_diff: FloatProperty(name="Diffuse", description="", default=3.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_cones: EnumProperty(
         items=[('9', '9', '9'),
                ('5', '5', '5'),
@@ -396,9 +393,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('1', '1', '1'),
                ],
         name="Cones", description="Number of cones to trace", default='5', update=assets.invalidate_shader_cache)
-    arm_voxelgi_spec: FloatProperty(name="Specular", description="", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_occ: FloatProperty(name="Occlusion", description="", default=1.0, update=assets.invalidate_shader_cache)
-    arm_voxelgi_env: FloatProperty(name="Env Map", description="Contribute light from environment map", default=0.0, update=assets.invalidate_shader_cache)
+    arm_voxelgi_occ: FloatProperty(name="Intensity", description="", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_step: FloatProperty(name="Step", description="Step size", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_offset: FloatProperty(name="Offset", description="Ray offset", default=1.0, update=assets.invalidate_shader_cache)
     arm_voxelgi_range: FloatProperty(name="Range", description="Maximum range", default=2.0, update=assets.invalidate_shader_cache)
