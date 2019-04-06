@@ -69,10 +69,6 @@ vec4 SSSSBlur() {
 	
 	vec4 colorM = textureLod(tex, texCoord, 0.0);
 
-	// Initialize the stencil buffer in case it was not already available:
-	// if (initStencil) // (Checked in compile time, it's optimized away)
-		// if (SSSS_STREGTH_SOURCE == 0.0) discard;
-
 	// Fetch linear depth of current pixel
 	float depth = textureLod(gbufferD, texCoord, 0.0).r;
 	float depthM = cameraProj.y / (depth - cameraProj.x);

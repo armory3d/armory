@@ -44,14 +44,6 @@ class CyclesShaderContext {
 			vertex_elements: Reflect.hasField(props, 'vertex_elements') ? props.vertex_elements : [ {name: "pos", data: 'short4norm'}, {name: "nor", data: 'short2norm'}]
 		};
 
-		if (props.color_write_red != null)
-			data.color_write_red = props.color_write_red;
-		if (props.color_write_green != null)
-			data.color_write_green = props.color_write_green;
-		if (props.color_write_blue != null)
-			data.color_write_blue = props.color_write_blue;
-		if (props.color_write_alpha != null)
-			data.color_write_alpha = props.color_write_alpha;
 		if (props.color_writes_red != null)
 			data.color_writes_red = props.color_writes_red;
 		if (props.color_writes_green != null)

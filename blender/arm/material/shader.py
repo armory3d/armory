@@ -57,14 +57,6 @@ class ShaderContext:
             self.data['alpha_blend_destination'] = props['alpha_blend_destination']
         if 'alpha_blend_operation' in props:
             self.data['alpha_blend_operation'] = props['alpha_blend_operation']
-        if 'color_write_red' in props:
-            self.data['color_write_red'] = props['color_write_red']
-        if 'color_write_green' in props:
-            self.data['color_write_green'] = props['color_write_green']
-        if 'color_write_blue' in props:
-            self.data['color_write_blue'] = props['color_write_blue']
-        if 'color_write_alpha' in props:
-            self.data['color_write_alpha'] = props['color_write_alpha']
         if 'color_writes_red' in props:
             self.data['color_writes_red'] = props['color_writes_red']
         if 'color_writes_green' in props:
