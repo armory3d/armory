@@ -251,10 +251,6 @@ project.addSources('Sources');
             assets.add_khafile_def('arm_stream')
 
         rpdat = arm.utils.get_rp()
-        if rpdat.arm_skin == 'CPU':
-            assets.add_khafile_def('arm_skin_cpu')
-        elif rpdat.arm_skin == 'GPU (Matrix)':
-            assets.add_khafile_def('arm_skin_mat')
         if rpdat.arm_skin != 'Off':
             assets.add_khafile_def('arm_skin')
 
@@ -598,7 +594,7 @@ const float voxelgiAperture = """ + str(round(rpdat.arm_voxelgi_aperture * 100) 
 """)
 
         # Skinning
-        if rpdat.arm_skin.startswith('GPU'):
+        if rpdat.arm_skin == 'On':
             f.write(
 """const int skinMaxBones = """ + str(rpdat.arm_skin_max_bones) + """;
 """)

@@ -522,7 +522,7 @@ def is_bone_animation_enabled(bobject):
     return False
 
 def export_bone_data(bobject):
-    return bobject.find_armature() and is_bone_animation_enabled(bobject) and get_rp().arm_skin.startswith('GPU')
+    return bobject.find_armature() and is_bone_animation_enabled(bobject) and get_rp().arm_skin == 'On'
 
 def kode_studio_mklink_win(sdk_path):
     # Fight long-path issues on Windows

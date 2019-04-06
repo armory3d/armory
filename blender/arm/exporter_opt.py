@@ -311,15 +311,10 @@ def export_skin(self, bobject, armature, vert_list, o):
 
     # Write the bind pose transform array
     oskin['transformsI'] = []
-    if rpdat.arm_skin == 'CPU':
-        for i in range(bone_count):
-            skeletonI = (armature.matrix_world @ bone_array[i].matrix_local).inverted_safe()
-            oskin['transformsI'].append(self.write_matrix(skeletonI))
-    else:
-        for i in range(bone_count):
-            skeletonI = (armature.matrix_world @ bone_array[i].matrix_local).inverted_safe()
-            skeletonI = (skeletonI @ bobject.matrix_world)
-            oskin['transformsI'].append(self.write_matrix(skeletonI))
+    for i in range(bone_count):
+        skeletonI = (armature.matrix_world @ bone_array[i].matrix_local).inverted_safe()
+        skeletonI = (skeletonI @ bobject.matrix_world)
+        oskin['transformsI'].append(self.write_matrix(skeletonI))
 
     # Export the per-vertex bone influence data
     group_remap = []

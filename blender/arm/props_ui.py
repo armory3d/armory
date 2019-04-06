@@ -768,7 +768,7 @@ class ARM_PT_RenderPathRendererPanel(bpy.types.Panel):
         layout.prop(rpdat, 'arm_particles')
         layout.prop(rpdat, 'arm_skin')
         row = layout.row()
-        row.enabled = rpdat.arm_skin.startswith('GPU')
+        row.enabled = rpdat.arm_skin == 'On'
         row.prop(rpdat, 'arm_skin_max_bones_auto')
         row = layout.row()
         row.enabled = not rpdat.arm_skin_max_bones_auto
