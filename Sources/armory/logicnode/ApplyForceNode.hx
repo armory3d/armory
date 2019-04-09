@@ -23,12 +23,12 @@ class ApplyForceNode extends LogicNode {
 			rb.applyForce(force);
 		}
 		else {
-			var look = object.transform.world.look().mult(force.x);
-			var right = object.transform.world.right().mult(force.y);
+			var look = object.transform.world.look().mult(force.y);
+			var right = object.transform.world.right().mult(force.x);
 			var up = object.transform.world.up().mult(force.z);
 			rb.applyForce(look);
-			rb.applyImpulse(right);
-			rb.applyImpulse(up);
+			rb.applyForce(right);
+			rb.applyForce(up);
 		}
 #end
 
