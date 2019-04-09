@@ -14,6 +14,7 @@ class ApplyForceAtLocationNode(Node, ArmLogicTreeNode):
         self.inputs.new('ArmNodeSocketObject', 'Object')
         self.inputs.new('NodeSocketVector', 'Force')
         self.inputs.new('NodeSocketVector', 'Location')
+        self.inputs.new('NodeSocketBool', 'On Local Axis')
         self.outputs.new('ArmNodeSocketAction', 'Out')
 
 add_node(ApplyForceAtLocationNode, category='Physics')

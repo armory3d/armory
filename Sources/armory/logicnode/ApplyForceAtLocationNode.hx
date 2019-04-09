@@ -14,12 +14,23 @@ class ApplyForceAtLocationNode extends LogicNode {
 		var object:Object = inputs[1].get();
 		var force:Vec4 = inputs[2].get();
         var location:Vec4 = inputs[3].get();
+		var local:Bool = inputs.length > 3 ? inputs[3].get() : false;
 		
 		if (object == null || force == null || location == null) return;
 
 #if arm_physics
 		var rb:RigidBody = object.getTrait(RigidBody);
-		rb.applyForce(force, location);
+		if (!local) {
+			rb.applyForce(force, location);
+		}
+		else {
+			var look = object.transform.world.look().mult(force.y);
+			var right = object.transform.world.right().mult(force.x);
+			var up = object.transform.world.up().mult(force.z);
+			rb.applyForce(look, location);
+			rb.applyForce(right, location);
+			rb.applyForce(up, location);
+		}
 #end
 
 		runOutput(0);

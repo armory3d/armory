@@ -23,8 +23,8 @@ class ApplyImpulseNode extends LogicNode {
 			rb.applyImpulse(impulse);
 		}
 		else {
-			var look = object.transform.world.look().mult(impulse.x);
-			var right = object.transform.world.right().mult(impulse.y);
+			var look = object.transform.world.look().mult(impulse.y);
+			var right = object.transform.world.right().mult(impulse.x);
 			var up = object.transform.world.up().mult(impulse.z);
 			rb.applyImpulse(look);
 			rb.applyImpulse(right);
