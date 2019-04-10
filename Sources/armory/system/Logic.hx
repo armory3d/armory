@@ -3,52 +3,6 @@ package armory.system;
 import armory.logicnode.*;
 import armory.system.CyclesFormat;
 
-// typedef TNodeCanvas = {
-// 	var nodes: Array<TNode>;
-// 	var links: Array<TNodeLink>;
-// }
-
-// typedef TNode = {
-// 	var id: Int;
-// 	var name: String;
-// 	var type: String;
-// 	var x: Float;
-// 	var y: Float;
-// 	var inputs: Array<TNodeSocket>;
-// 	var outputs: Array<TNodeSocket>;
-// 	var buttons: Array<TNodeButton>;
-// 	var color: Int;
-// }
-
-// typedef TNodeSocket = {
-// 	var id: Int;
-// 	var node_id: Int;
-// 	var name: String;
-// 	var type: String;
-// 	var color: Int;
-// 	var default_value: Dynamic;
-// 	@:optional var min: Null<Float>;
-// 	@:optional var max: Null<Float>;
-// }
-
-// typedef TNodeLink = {
-// 	var id: Int;
-// 	var from_id: Int;
-// 	var from_socket: Int;
-// 	var to_id: Int;
-// 	var to_socket: Int;
-// }
-
-// typedef TNodeButton = {
-// 	var name: String;
-// 	var type: String;
-// 	var output: Int;
-// 	@:optional var default_value: Dynamic;
-// 	@:optional var data: Array<String>;
-// 	@:optional var min: Null<Float>;
-// 	@:optional var max: Null<Float>;
-// }
-
 class Logic {
 
 	static var nodes:Array<TNode>;
@@ -129,15 +83,6 @@ class Logic {
 
 		// Get node name
 		var name =  node_name(node);
-
-		// Link nodes using labels
-		// if (node.label != '') {
-			// var l = parsed_labels.get(node.label);
-			// if (l != null) {
-				// return l;
-			// }
-			// parsed_labels.set(node.label, name);
-		// }
 
 		// Check if node already exists
 		if (parsed_nodes.indexOf(name) != -1) {
