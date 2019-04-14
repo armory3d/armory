@@ -257,9 +257,7 @@ def compile(assets_only=False):
         cmd.append('--raytrace')
         cmd.append('dxr')
         dxc_path = fp + '/HlslShaders/dxc.exe'
-        subprocess.Popen([dxc_path, '-Zpr', '-Fo', fp + '/Bundled/pt_raygeneration.o', '-T', 'lib_6_1', fp + '/HlslShaders/pt_raygeneration.hlsl']).wait()
-        subprocess.Popen([dxc_path, '-Zpr', '-Fo', fp + '/Bundled/pt_closesthit.o', '-T', 'lib_6_1', fp + '/HlslShaders/pt_closesthit.hlsl']).wait()
-        subprocess.Popen([dxc_path, '-Zpr', '-Fo', fp + '/Bundled/pt_miss.o', '-T', 'lib_6_1', fp + '/HlslShaders/pt_miss.hlsl']).wait()
+        subprocess.Popen([dxc_path, '-Zpr', '-Fo', fp + '/Bundled/raytrace.cso', '-T', 'lib_6_3', fp + '/HlslShaders/raytrace.hlsl']).wait()
 
     if arm.utils.get_khamake_threads() > 1:
         cmd.append('--parallelAssetConversion')
