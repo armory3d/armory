@@ -395,4 +395,6 @@ void main() {
 		);
 	}
 #endif // _Clusters
+
+	fragColor.a = 1.0; // Mark as opaque
 }

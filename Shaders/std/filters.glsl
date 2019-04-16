@@ -46,15 +46,15 @@ vec3 textureBicubic(sampler2D tex, vec2 tc, vec2 texStep) {
 	return mix(mix(sample3, sample2, sx), mix(sample1, sample0, sx), sy);
 }
 
-vec3 textureSS(sampler2D tex, vec2 tc, vec2 texStep) {
-	vec3 col = texture(tex, tc).rgb;
-	col += texture(tex, tc + vec2(1.5, 0.0) * texStep).rgb;
-	col += texture(tex, tc + vec2(-1.5, 0.0) * texStep).rgb;
-	col += texture(tex, tc + vec2(0.0, 1.5) * texStep).rgb;
-	col += texture(tex, tc + vec2(0.0, -1.5) * texStep).rgb;
-	col += texture(tex, tc + vec2(1.5, 1.5) * texStep).rgb;
-	col += texture(tex, tc + vec2(-1.5, -1.5) * texStep).rgb;
-	col += texture(tex, tc + vec2(1.5, -1.5) * texStep).rgb;
-	col += texture(tex, tc + vec2(-1.5, 1.5) * texStep).rgb;
+vec4 textureSS(sampler2D tex, vec2 tc, vec2 texStep) {
+	vec4 col = texture(tex, tc);
+	col += texture(tex, tc + vec2(1.5, 0.0) * texStep);
+	col += texture(tex, tc + vec2(-1.5, 0.0) * texStep);
+	col += texture(tex, tc + vec2(0.0, 1.5) * texStep);
+	col += texture(tex, tc + vec2(0.0, -1.5) * texStep);
+	col += texture(tex, tc + vec2(1.5, 1.5) * texStep);
+	col += texture(tex, tc + vec2(-1.5, -1.5) * texStep);
+	col += texture(tex, tc + vec2(1.5, -1.5) * texStep);
+	col += texture(tex, tc + vec2(-1.5, 1.5) * texStep);
 	return col / 9.0;
 }

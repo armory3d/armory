@@ -166,4 +166,6 @@ void main() {
 #ifdef _LDR
 	fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));
 #endif
+
+	fragColor.a = 0.0; // Mark as non-opaque
 }
