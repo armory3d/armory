@@ -219,15 +219,15 @@ void main() {
 		textureLod(tex, texCo + dir * 0.5, 0.0).rgb);
 	
 	float lumaB = dot(rgbB, luma);
-	if ((lumaB < lumaMin) || (lumaB > lumaMax)) fragColor.rgb = rgbA;
-	else fragColor.rgb = rgbB;
+	if ((lumaB < lumaMin) || (lumaB > lumaMax)) fragColor = vec4(rgbA, 1.0);
+	else fragColor = vec4(rgbB, 1.0);
 
 #else
 	
 	#ifdef _CDOF
-	fragColor.rgb = dof(texCo, depth, tex, gbufferD, texStep, cameraProj);
+	fragColor = vec4(dof(texCo, depth, tex, gbufferD, texStep, cameraProj), 1.0);
 	#else
-	fragColor.rgb = textureLod(tex, texCo, 0.0).rgb;
+	fragColor = textureLod(tex, texCo, 0.0);
 	#endif
 
 #endif
