@@ -772,17 +772,19 @@ class RenderPathDeferred {
 		var framebuffer = "";
 		#end
 
+		RenderPathCreator.finalTarget = path.currentTarget;
+		
+		var target = "";
 		#if ((rp_antialiasing == "Off") || (rp_antialiasing == "FXAA") || (!rp_render_to_texture))
 		{
-			RenderPathCreator.finalTarget = path.currentTarget;
-			path.setTarget(framebuffer);
+			target = framebuffer;
 		}
 		#else
 		{
-			RenderPathCreator.finalTarget = path.currentTarget;
-			path.setTarget("buf");
+			target = "buf";
 		}
 		#end
+		path.setTarget(target);
 		
 		path.bindTarget("tex", "tex");
 		#if rp_compositordepth
@@ -805,6 +807,7 @@ class RenderPathDeferred {
 
 		#if rp_overlays
 		{
+			path.setTarget(target);
 			path.clearTarget(null, 1.0);
 			path.drawMeshes("overlay");
 		}
