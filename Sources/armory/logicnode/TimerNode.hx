@@ -24,6 +24,8 @@ class TimerNode extends LogicNode {
 			else {
 				removeUpdate();
 				runOutput(1);
+				time = 0;
+				repetitions = 0;
 			}
 		}
 	}
@@ -47,7 +49,12 @@ class TimerNode extends LogicNode {
 		}
 	}
 
-	inline function removeUpdate() { if (running) { running = false; tree.removeUpdate(update); } }
+	inline function removeUpdate() {
+		if (running) {
+			running = false;
+			tree.removeUpdate(update);
+		}
+	}
 
 	override function get(from:Int):Dynamic {
 		if (from == 1) return running;
