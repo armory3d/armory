@@ -67,14 +67,7 @@ class RenderPathDeferred {
 			t.format = Inc.getHdrFormat();
 			t.scale = Inc.getSuperSampling();
 			t.depth_buffer = "main";
-			#if rp_autoexposure
-			t.mipmaps = true;
-			#end
 			path.createRenderTarget(t);
-			#if rp_autoexposure
-			// Texture lod is fetched manually, prevent mipmap filtering
-			t.mipmaps = false;
-			#end
 		}
 
 		{
@@ -275,6 +268,58 @@ class RenderPathDeferred {
 			path.loadShader("shader_datas/blur_gaus_pass/blur_gaus_pass_x");
 			path.loadShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y");
 			path.loadShader("shader_datas/blur_gaus_pass/blur_gaus_pass_y_blend");
+		}
+		#end
+
+		#if rp_autoexposure
+		{
+			var t = new RenderTargetRaw();
+			t.name = "histogram0";
+			t.width = 0;
+			t.height = 0;
+			t.scale = 1 / 4;
+			t.format = Inc.getHdrFormat();
+			path.createRenderTarget(t);
+		}
+		{
+			var t = new RenderTargetRaw();
+			t.name = "histogram1";
+			t.width = 0;
+			t.height = 0;
+			t.scale = 1 / 8;
+			t.format = Inc.getHdrFormat();
+			path.createRenderTarget(t);
+		}
+		{
+			var t = new RenderTargetRaw();
+			t.name = "histogram2";
+			t.width = 0;
+			t.height = 0;
+			t.scale = 1 / 16;
+			t.format = Inc.getHdrFormat();
+			path.createRenderTarget(t);
+		}
+		{
+			var t = new RenderTargetRaw();
+			t.name = "histogram3";
+			t.width = 0;
+			t.height = 0;
+			t.scale = 1 / 32;
+			t.format = Inc.getHdrFormat();
+			path.createRenderTarget(t);
+		}
+		{
+			var t = new RenderTargetRaw();
+			t.name = "histogram4";
+			t.width = 0;
+			t.height = 0;
+			t.scale = 1 / 64;
+			t.format = Inc.getHdrFormat();
+			path.createRenderTarget(t);
+		}
+
+		{
+			path.loadShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
 
@@ -762,7 +807,22 @@ class RenderPathDeferred {
 		// Begin compositor
 		#if rp_autoexposure
 		{
-			path.generateMipmaps("tex");
+			// path.generateMipmaps("tex");
+			path.setTarget("histogram0");
+			path.bindTarget("tex", "tex");
+			path.drawShader("shader_datas/copy_pass/copy_pass");
+			path.setTarget("histogram1");
+			path.bindTarget("histogram0", "tex");
+			path.drawShader("shader_datas/copy_pass/copy_pass");
+			path.setTarget("histogram2");
+			path.bindTarget("histogram1", "tex");
+			path.drawShader("shader_datas/copy_pass/copy_pass");
+			path.setTarget("histogram3");
+			path.bindTarget("histogram2", "tex");
+			path.drawShader("shader_datas/copy_pass/copy_pass");
+			path.setTarget("histogram4");
+			path.bindTarget("histogram3", "tex");
+			path.drawShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
 
@@ -790,6 +850,12 @@ class RenderPathDeferred {
 		#if rp_compositordepth
 		{
 			path.bindTarget("_main", "gbufferD");
+		}
+		#end
+
+		#if rp_autoexposure
+		{
+			path.bindTarget("histogram4", "histogram");
 		}
 		#end
 

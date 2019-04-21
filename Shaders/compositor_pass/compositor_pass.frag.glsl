@@ -20,7 +20,7 @@ uniform sampler2D lensTexture;
 uniform sampler2D lutTexture;
 #endif
 
-#ifdef _Hist
+#ifdef _AutoExposure
 uniform sampler2D histogram;
 #endif
 
@@ -288,8 +288,12 @@ void main() {
 #endif
 
 #ifdef _AutoExposure
-	vec3 expo = textureLod(tex, vec2(0,0), 100).rgb;
-	fragColor.rgb *= vec3(1.0) - min(expo, vec3(autoExposureStrength));
+	vec3 expo = textureLod(histogram, vec2(0.5, 0.5), 0).rgb +
+				textureLod(histogram, vec2(0.1, 0.9), 0).rgb +
+				textureLod(histogram, vec2(0.9, 0.9), 0).rgb +
+				textureLod(histogram, vec2(0.9, 0.1), 0).rgb +
+				textureLod(histogram, vec2(0.9, 0.9), 0).rgb;
+	fragColor.rgb *= 1.0 - min(length(expo) / 5, autoExposureStrength);
 #endif
 #ifdef _Hist // Auto-exposure
 	if (texCoord.x < 0.1) fragColor.rgb = textureLod(histogram, vec2(0, 0), 9.0).rrr; // 512x512
