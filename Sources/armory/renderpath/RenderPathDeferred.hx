@@ -311,15 +311,15 @@ class RenderPathDeferred {
 		{
 			var t = new RenderTargetRaw();
 			t.name = "histogram4";
-			t.width = 0;
-			t.height = 0;
-			t.scale = 1 / 64;
+			t.width = 1;
+			t.height = 1;
 			t.format = Inc.getHdrFormat();
 			path.createRenderTarget(t);
 		}
 
 		{
 			path.loadShader("shader_datas/copy_pass/copy_pass");
+			path.loadShader("shader_datas/histogram_pass/histogram_pass");
 		}
 		#end
 
@@ -807,7 +807,6 @@ class RenderPathDeferred {
 		// Begin compositor
 		#if rp_autoexposure
 		{
-			// path.generateMipmaps("tex");
 			path.setTarget("histogram0");
 			path.bindTarget("tex", "tex");
 			path.drawShader("shader_datas/copy_pass/copy_pass");
@@ -821,8 +820,8 @@ class RenderPathDeferred {
 			path.bindTarget("histogram2", "tex");
 			path.drawShader("shader_datas/copy_pass/copy_pass");
 			path.setTarget("histogram4");
-			path.bindTarget("histogram3", "tex");
-			path.drawShader("shader_datas/copy_pass/copy_pass");
+			path.bindTarget("tex", "tex");
+			path.drawShader("shader_datas/histogram_pass/histogram_pass");
 		}
 		#end
 

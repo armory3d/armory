@@ -288,38 +288,8 @@ void main() {
 #endif
 
 #ifdef _AutoExposure
-	vec3 expo = textureLod(histogram, vec2(0.5, 0.5), 0).rgb +
-				textureLod(histogram, vec2(0.1, 0.9), 0).rgb +
-				textureLod(histogram, vec2(0.9, 0.9), 0).rgb +
-				textureLod(histogram, vec2(0.9, 0.1), 0).rgb +
-				textureLod(histogram, vec2(0.9, 0.9), 0).rgb;
-	fragColor.rgb *= 1.0 - min(length(expo) / 5, autoExposureStrength);
-#endif
-#ifdef _Hist // Auto-exposure
-	if (texCoord.x < 0.1) fragColor.rgb = textureLod(histogram, vec2(0, 0), 9.0).rrr; // 512x512
-	// float minBrightness = 0.03f;
-	// float maxBrightness = 2.0f;
-	// float minAdaptation = 0.60f;
-	// float maxAdaptation = 0.9f;
-	// float minFractionSum = minAdaptation * sumValue;
-	// float maxFractionSum = maxAdaptation * sumValue;
-	// float sumWithoutOutliers = 0.0f;
-	// float sumWithoutOutliersRaw = 0.0f;
-	// for (int i = 0; i < numHistogramBuckets; ++i) {
-	// 	float localValue = luminanceHistogram[i];
-	// 	float vmin = min(localValue, minFractionSum);
-	// 	localValue -= vmin;
-	// 	localValue = localValue - vmin;
-	// 	minFractionSum -= vmin;
-	// 	maxFractionSum -= vmin;
-	// 	localValue = min(localValue, maxFractionSum);
-	// 	maxFractionSum -= localValue;
-	// 	float luminanceAtBucket = GetLuminanceAtBucket(i);
-	// 	sumWithoutOutliers += luminanceAtBucket * localValue;
-	// 	sumWithoutOutliersRaw += localValue;
-	// }
-	// float unclampedLuminance = sumWithoutOutliers / max(0.0001f, sumWithoutOutliersRaw);
-	// float clampedLuminace = clamp(unclampedLuminance, minBrightness, maxBrightness);
+	float expo = 1.3 - clamp(length(textureLod(histogram, vec2(0.5, 0.5), 0).rgb), 0.0, 1.0);
+	fragColor.rgb *= pow(expo, autoExposureStrength);
 #endif
 
 #ifdef _CToneFilmic
