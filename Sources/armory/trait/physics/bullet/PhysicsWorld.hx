@@ -195,9 +195,8 @@ class PhysicsWorld extends Trait {
 			var c = contacts[i];
 			var rb = null;
 
-			var ob:bullet.CollisionObject = body.body;
-			if (c.a == ob.getUserIndex()) rb = rbMap.get(c.b);
-			else if (c.b == ob.getUserIndex()) rb = rbMap.get(c.a);
+			if (c.a == body.body.getUserIndex()) rb = rbMap.get(c.b);
+			else if (c.b == body.body.getUserIndex()) rb = rbMap.get(c.a);
 
 			if (rb != null && res.indexOf(rb) == -1) res.push(rb);
 		}
@@ -209,10 +208,9 @@ class PhysicsWorld extends Trait {
 		var res:Array<ContactPair> = [];
 		for (i in 0...contacts.length) {
 			var c = contacts[i];
-			var ob:bullet.CollisionObject = body.body;
 
-			if (c.a == ob.getUserIndex()) res.push(c);
-			else if (c.b == ob.getUserIndex()) res.push(c);
+			if (c.a == body.body.getUserIndex()) res.push(c);
+			else if (c.b == body.body.getUserIndex()) res.push(c);
 		}
 		return res;
 	}
@@ -291,14 +289,11 @@ class PhysicsWorld extends Trait {
 		rayTo.setValue(to.x, to.y, to.z);
 
 		var rayCallback = new bullet.ClosestRayResultCallback(rayFrom, rayTo);
-		var worldDyn:bullet.DynamicsWorld = world;
-		var worldCol:bullet.CollisionWorld = worldDyn;
-		worldCol.rayTest(rayFrom, rayTo, rayCallback);
+		world.rayTest(rayFrom, rayTo, rayCallback);
 		var rb:RigidBody = null;
 		var hitInfo:Hit = null;
 
-		var rc:bullet.RayResultCallback = rayCallback;
-		if (rc.hasHit()) {
+		if (rayCallback.hasHit()) {
 			var hit = rayCallback.m_hitPointWorld;
 			hitPointWorld.set(hit.x(), hit.y(), hit.z());
 			var norm = rayCallback.m_hitNormalWorld;
