@@ -274,43 +274,7 @@ class RenderPathDeferred {
 		#if rp_autoexposure
 		{
 			var t = new RenderTargetRaw();
-			t.name = "histogram0";
-			t.width = 0;
-			t.height = 0;
-			t.scale = 1 / 4;
-			t.format = Inc.getHdrFormat();
-			path.createRenderTarget(t);
-		}
-		{
-			var t = new RenderTargetRaw();
-			t.name = "histogram1";
-			t.width = 0;
-			t.height = 0;
-			t.scale = 1 / 8;
-			t.format = Inc.getHdrFormat();
-			path.createRenderTarget(t);
-		}
-		{
-			var t = new RenderTargetRaw();
-			t.name = "histogram2";
-			t.width = 0;
-			t.height = 0;
-			t.scale = 1 / 16;
-			t.format = Inc.getHdrFormat();
-			path.createRenderTarget(t);
-		}
-		{
-			var t = new RenderTargetRaw();
-			t.name = "histogram3";
-			t.width = 0;
-			t.height = 0;
-			t.scale = 1 / 32;
-			t.format = Inc.getHdrFormat();
-			path.createRenderTarget(t);
-		}
-		{
-			var t = new RenderTargetRaw();
-			t.name = "histogram4";
+			t.name = "histogram";
 			t.width = 1;
 			t.height = 1;
 			t.format = Inc.getHdrFormat();
@@ -318,7 +282,6 @@ class RenderPathDeferred {
 		}
 
 		{
-			path.loadShader("shader_datas/copy_pass/copy_pass");
 			path.loadShader("shader_datas/histogram_pass/histogram_pass");
 		}
 		#end
@@ -807,20 +770,12 @@ class RenderPathDeferred {
 		// Begin compositor
 		#if rp_autoexposure
 		{
-			path.setTarget("histogram0");
+			path.setTarget("histogram");
+			#if (rp_antialiasing == "TAA")
+			path.bindTarget("taa", "tex");
+			#else
 			path.bindTarget("tex", "tex");
-			path.drawShader("shader_datas/copy_pass/copy_pass");
-			path.setTarget("histogram1");
-			path.bindTarget("histogram0", "tex");
-			path.drawShader("shader_datas/copy_pass/copy_pass");
-			path.setTarget("histogram2");
-			path.bindTarget("histogram1", "tex");
-			path.drawShader("shader_datas/copy_pass/copy_pass");
-			path.setTarget("histogram3");
-			path.bindTarget("histogram2", "tex");
-			path.drawShader("shader_datas/copy_pass/copy_pass");
-			path.setTarget("histogram4");
-			path.bindTarget("tex", "tex");
+			#end
 			path.drawShader("shader_datas/histogram_pass/histogram_pass");
 		}
 		#end
@@ -854,7 +809,7 @@ class RenderPathDeferred {
 
 		#if rp_autoexposure
 		{
-			path.bindTarget("histogram4", "histogram");
+			path.bindTarget("histogram", "histogram");
 		}
 		#end
 

@@ -302,7 +302,6 @@ def build():
 
     if rpdat.rp_compositornodes and rpdat.rp_autoexposure:
         assets.add_khafile_def('rp_autoexposure')
-        assets.add_shader_pass('copy_pass')
         assets.add_shader_pass('histogram_pass')
 
     if rpdat.rp_dynres:
