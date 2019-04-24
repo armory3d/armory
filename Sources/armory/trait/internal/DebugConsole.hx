@@ -52,7 +52,7 @@ class DebugConsole extends Trait {
 	static var lrow = [1/2, 1/2];
 	static var row4 = [1/4, 1/4, 1/4, 1/4];
 
-	public static var f = 1.0;
+	public static var debugFloat = 1.0;
 	public static var watchNodes:Array<armory.logicnode.LogicNode> = [];
 
 	public function new(scaleFactor = 1.0) {
@@ -71,8 +71,8 @@ class DebugConsole extends Trait {
 			// Toggle console
 			kha.input.Keyboard.get().notify(null, null, function(char: String) {
 				if (char == "~") visible = !visible;
-				else if (char == "[") f -= 0.1;
-				else if (char == "]") f += 0.1;
+				else if (char == "[") debugFloat -= 0.1;
+				else if (char == "]") debugFloat += 0.1;
 			});
 		});
 	}

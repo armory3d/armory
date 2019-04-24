@@ -180,6 +180,11 @@ class Uniforms {
 			return armory.renderpath.DynamicResolutionScale.dynamicScale;
 		}
 		#end
+		#if arm_debug
+		if (link == "_debugFloat") {
+			return armory.trait.internal.DebugConsole.debugFloat;
+		}
+		#end
 		return null;
 	}
 }
