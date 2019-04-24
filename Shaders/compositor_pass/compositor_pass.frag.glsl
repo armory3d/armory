@@ -288,7 +288,7 @@ void main() {
 #endif
 
 #ifdef _AutoExposure
-	float expo = 1.3 - clamp(length(textureLod(histogram, vec2(0.5, 0.5), 0).rgb), 0.0, 1.0);
+	float expo = 2.0 - clamp(length(textureLod(histogram, vec2(0.5, 0.5), 0).rgb), 0.0, 1.0);
 	fragColor.rgb *= pow(expo, autoExposureStrength);
 #endif
 
