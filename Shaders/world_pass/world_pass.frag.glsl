@@ -22,11 +22,10 @@
 	uniform vec3 hosekSunDirection;
 #endif
 #ifdef _EnvClouds
-	uniform sampler2D snoise;
+	uniform sampler3D scloudsBase;
+	uniform sampler3D scloudsDetail;
+	uniform sampler2D scloudsMap;
 	uniform float time;
-	// uniform vec3 eye;
-	const float difference = cloudsUpper - cloudsLower;
-	const float steps = 25.0;
 #endif
 #ifdef _EnvTex
 	uniform sampler2D envmap;
@@ -40,7 +39,6 @@
 uniform float envmapStrength;
 #endif
 
-// in vec2 texCoord;
 in vec3 normal;
 out vec4 fragColor;
 
@@ -52,70 +50,61 @@ vec3 hosekWilkie(float cos_theta, float gamma, float cos_gamma) {
 #endif
 
 #ifdef _EnvClouds
-// float hash(vec3 p) {
-	// p = fract(p * vec3(0.16532, 0.17369, 0.15787));
-	// p += dot(p.xyz, p.zyx + 19.19);
-	// return fract(p.x * p.y * p.z);
-// }
-float noise(vec3 x) {
-	vec3 p = floor(x);
-	vec3 f = fract(x);
-	f = f * f * (3.0 - 2.0 * f);
-	vec2 uv = (p.xy + vec2(37.0, 17.0) * p.z) + f.xy;
-	vec2 rg = texture(snoise, (uv + 0.5) / 256.0).yx;
-	return mix(rg.x, rg.y, f.z);
-}
-float fbm(vec3 p) {
-	p *= 0.0005 * cloudsSize;
-	float f = 0.5 * noise(p); p = p * 3.0; p.y += time * cloudsWind.x;
-	f += 0.25 * noise(p); p = p * 2.0; p.y += time * cloudsWind.y;
-	f += 0.125 * noise(p); p = p * 3.0;
-	f += 0.0625 * noise(p); p = p * 3.0;
-	f += 0.03125 * noise(p); p = p * 3.0;
-	f += 0.015625 * noise(p);
-	return f;
-}
-float map(vec3 p) {
-	return fbm(p) - cloudsDensity * 0.6;
-}
-// Weather by David Hoskins, https://www.shadertoy.com/view/4dsXWn
-// Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
-vec3 traceP;
-vec2 doCloudTrace(vec3 add, vec2 shadeSum) {
-	float h = map(traceP);
-	vec2 shade = vec2(traceP.z / difference, max(-h, 0.0));
-	traceP += add;
-	return shadeSum + shade * (1.0 - shadeSum.y);
-}
-vec2 traceCloud(vec3 pos, vec3 dir) {
-	float beg = ((cloudsLower - pos.z) / dir.z);
-	float end = ((cloudsUpper - pos.z) / dir.z);
-	traceP = vec3(pos.x + dir.x * beg, pos.y + dir.y * beg, 0.0);
-	// beg += hash(traceP) * 150.0; // Noisy
-	vec3 add = dir * ((end - beg) / steps);
-
-	vec2 shadeSum = vec2(0.0);
-	for (int i = 0; i < steps; i++) {
-		shadeSum = doCloudTrace(add, shadeSum);
-		if (shadeSum.y >= 1.0) return shadeSum;
-	}
-	return shadeSum;
-}
 // GPU PRO 7 - Real-time Volumetric Cloudscapes
 // https://www.guerrilla-games.com/read/the-real-time-volumetric-cloudscapes-of-horizon-zero-dawn
-vec3 cloudsColor(vec3 R, vec3 pos, vec3 dir) {
-	vec2 traced = traceCloud(pos, dir);
-	float d = traced.x / 200.0 * traced.y + traced.x / 1500.0 * cloudsSecondary;
-	const float g = cloudsEccentricity;
-#ifdef _EnvSky
-	float cosAngle = dot(hosekSunDirection, dir);
-#else // Predefined sun direction
-	float cosAngle = dot(vec3(0.0, -1.0, 0.0), dir);
-#endif
-	float E = 2.0 * exp(-d * cloudsPrecipitation) * (1.0 - exp(-2.0 * d)) * (0.25 * PI) * ((1.0 - g * g) / pow(1.0 + g * g - 2.0 * g * cosAngle, 3.0 / 2.0));
-	return mix(vec3(R), vec3(E * 24.0), d * 12.0);
+// https://github.com/sebh/TileableVolumeNoise
+float remap(float old_val, float old_min, float old_max, float new_min, float new_max) {
+	return new_min + (((old_val - old_min) / (old_max - old_min)) * (new_max - new_min));
 }
-#endif
+
+float getDensityHeightGradientForPoint(float height, float cloud_type) {
+	const vec4 stratusGrad = vec4(0.02f, 0.05f, 0.09f, 0.11f);
+	const vec4 stratocumulusGrad = vec4(0.02f, 0.2f, 0.48f, 0.625f);
+	const vec4 cumulusGrad = vec4(0.01f, 0.0625f, 0.78f, 1.0f);
+	float stratus = 1.0f - clamp(cloud_type * 2.0f, 0, 1);
+	float stratocumulus = 1.0f - abs(cloud_type - 0.5f) * 2.0f;
+	float cumulus = clamp(cloud_type - 0.5f, 0, 1) * 2.0f;
+	vec4 cloudGradient = stratusGrad * stratus + stratocumulusGrad * stratocumulus + cumulusGrad * cumulus;
+	return smoothstep(cloudGradient.x, cloudGradient.y, height) - smoothstep(cloudGradient.z, cloudGradient.w, height);
+}
+
+float sampleCloudDensity(vec3 p) {
+	vec3 weather_data = textureLod(scloudsMap, p.xy, 0).rgb; // Weather map
+	float cloud_base = textureLod(scloudsBase, p, 0).r * 40; // Base noise
+	cloud_base *= getDensityHeightGradientForPoint(p.z, weather_data.b); // Cloud type
+	cloud_base = remap(cloud_base, weather_data.r, 1.0, 0.0, 1.0); // Coverage
+	cloud_base *= weather_data.r;
+	float cloud_detail = textureLod(scloudsDetail, p, 0).r * 2; // Detail noise
+	float cloud_detail_mod = mix(cloud_detail, 1.0 - cloud_detail, clamp(p.z * 10.0, 0, 1));
+	cloud_base = remap(cloud_base, cloud_detail_mod * 0.2, 1.0, 0.0, 1.0);
+	return cloud_base;
+}
+
+vec3 traceClouds(vec3 sky, vec3 dir) {
+	const int steps = 24;
+	const float step_size = 0.5 / float(steps);
+	float T = 1.0;
+	vec4 C = vec4(0.0);
+	vec2 uv = dir.xy / dir.z * 0.4 + cloudsWind * time * 0.1;
+
+	for (int i = 0; i < steps; ++i) {
+		float h = float(i) / float(steps);
+		float d = sampleCloudDensity(vec3(uv * 0.04, h));
+		float Ti = exp(-d * step_size);
+		C.a += (1.0 - Ti) * (1.0 - C.a);
+		if (d > 0) {
+			T *= Ti;
+			if (T < 0.01) break;
+			C.rgb += T * exp(h) * d * step_size * 0.6;
+		}
+		if (C.a > 1.0) break;
+		uv += (dir.xy / dir.z) * step_size;
+	}
+
+	C.a = clamp(C.a, 0.00001, 1);
+	return mix(sky, C.rgb / C.a, C.a);
+}
+#endif // _EnvClouds
 
 void main() {
 
@@ -158,9 +147,7 @@ void main() {
 #endif
 
 #ifdef _EnvClouds
-	// cloudsColor(fragColor.rgb, eye, n)
-	vec3 clouds = cloudsColor(fragColor.rgb, vec3(0.0), n);
-	if (n.z > 0.0) fragColor.rgb = mix(fragColor.rgb, clouds, n.z * 5.0 * envmapStrength);
+	if (n.z > 0.0) fragColor.rgb = mix(fragColor.rgb, traceClouds(fragColor.rgb, n), clamp(n.z * 5.0, 0, 1));
 #endif
 
 #ifdef _LDR
