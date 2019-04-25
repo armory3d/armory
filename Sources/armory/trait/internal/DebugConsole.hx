@@ -71,8 +71,8 @@ class DebugConsole extends Trait {
 			// Toggle console
 			kha.input.Keyboard.get().notify(null, null, function(char: String) {
 				if (char == "~") visible = !visible;
-				else if (char == "[") debugFloat -= 0.1;
-				else if (char == "]") debugFloat += 0.1;
+				else if (char == "[") { debugFloat -= 0.1; trace(debugFloat); }
+				else if (char == "]") { debugFloat += 0.1; trace(debugFloat); }
 			});
 		});
 	}
