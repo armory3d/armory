@@ -618,7 +618,7 @@ class Cycles {
 
 		else if (node.type == 'TEX_NOISE') {
 			curshader.add_function(CyclesFunctions.str_tex_noise);
-			curshader.add_uniform('sampler2D snoise256', '$noise256.png');
+			curshader.add_uniform("sampler2D snoise256", "$noise256.png");
 			var co = '';
 			if (getInputLink(node.inputs[0]) != null) {
 				co = parse_vector_input(node.inputs[0]);
@@ -645,7 +645,7 @@ class Cycles {
 
 		else if (node.type == 'TEX_VORONOI') {
 			curshader.add_function(CyclesFunctions.str_tex_voronoi);
-			curshader.add_uniform('sampler2D snoise256', '$noise256.png');
+			curshader.add_uniform("sampler2D snoise256", "$noise256.png");
 			var co = '';
 			if (getInputLink(node.inputs[0]) != null) {
 				co = parse_vector_input(node.inputs[0]);
@@ -1443,7 +1443,7 @@ class Cycles {
 
 		else if (node.type == 'TEX_NOISE') {
 			curshader.add_function(CyclesFunctions.str_tex_noise);
-			curshader.add_uniform('sampler2D snoise256', '$noise256.png');
+			curshader.add_uniform("sampler2D snoise256", "$noise256.png");
 			var co = '';
 			if (getInputLink(node.inputs[0]) != null) {
 				co = parse_vector_input(node.inputs[0]);
@@ -1465,7 +1465,7 @@ class Cycles {
 
 		else if (node.type == 'TEX_VORONOI') {
 			curshader.add_function(CyclesFunctions.str_tex_voronoi);
-			curshader.add_uniform('sampler2D snoise256', '$noise256.png');
+			curshader.add_uniform("sampler2D snoise256", "$noise256.png");
 			var co = '';
 			if (getInputLink(node.inputs[0]) != null) {
 				co = parse_vector_input(node.inputs[0]);
