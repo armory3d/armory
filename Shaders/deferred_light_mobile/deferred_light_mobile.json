@@ -35,7 +35,7 @@
 				},
 				{
 					"name": "senvmapBrdf",
-					"link": "_envmapBrdf",
+					"link": "$brdf.png",
 					"ifdef": ["_Brdf"]
 				},
 				{

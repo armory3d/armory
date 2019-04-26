@@ -15,14 +15,8 @@ class Uniforms {
 	}
 
 	public static function textureLink(object:Object, mat:MaterialData, link:String):kha.Image {
-		if (link == "_smaaSearch") {
-			return Scene.active.embedded.get('smaa_search.png');
-		}
-		else if (link == "_smaaArea") {
-			return Scene.active.embedded.get('smaa_area.png');
-		}
 		#if arm_ltc
-		else if (link == "_ltcMat") {
+		if (link == "_ltcMat") {
 			if (armory.data.ConstData.ltcMatTex == null) armory.data.ConstData.initLTC();
 			return armory.data.ConstData.ltcMatTex;
 		}
@@ -31,15 +25,6 @@ class Uniforms {
 			return armory.data.ConstData.ltcMagTex;
 		}
 		#end
-		else if (link == "_lensTexture") {
-			return Scene.active.embedded.get('lenstexture.jpg');
-		}
-		else if (link == "_lutTexture") {
-			return Scene.active.embedded.get('luttexture.jpg');
-		}
-		else if (link == "_cloudsTexture") {
-			return Scene.active.embedded.get('cloudstexture.png');
-		}
 		return null;
 	}
 

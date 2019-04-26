@@ -599,7 +599,7 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     frag.write('vec3 f0 = surfaceF0(basecol, metallic);')
 
     if '_Brdf' in wrd.world_defs:
-        frag.add_uniform('sampler2D senvmapBrdf', link='_envmapBrdf')
+        frag.add_uniform('sampler2D senvmapBrdf', link='$brdf.png')
         frag.write('vec2 envBRDF = texture(senvmapBrdf, vec2(roughness, 1.0 - dotNV)).xy;')
 
     if '_Irr' in wrd.world_defs:

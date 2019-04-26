@@ -8,11 +8,11 @@
 			"links": [
 				{
 					"name": "areaTex",
-					"link": "_smaaArea"
+					"link": "$smaa_area.png"
 				},
 				{
 					"name": "searchTex",
-					"link": "_smaaSearch"
+					"link": "$smaa_search.png"
 				},
 				{
 					"name": "screenSize",

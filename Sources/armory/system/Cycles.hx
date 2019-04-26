@@ -618,7 +618,7 @@ class Cycles {
 
 		else if (node.type == 'TEX_NOISE') {
 			curshader.add_function(CyclesFunctions.str_tex_noise);
-			curshader.add_uniform('sampler2D snoise256', '_noise256');
+			curshader.add_uniform('sampler2D snoise256', '$noise256.png');
 			var co = '';
 			if (getInputLink(node.inputs[0]) != null) {
 				co = parse_vector_input(node.inputs[0]);
@@ -645,9 +645,7 @@ class Cycles {
 
 		else if (node.type == 'TEX_VORONOI') {
 			curshader.add_function(CyclesFunctions.str_tex_voronoi);
-	//         c_state.assets_add(c_state.get_sdk_path() + '/armory/Assets/' + 'noise64.png')
-	//         c_state.assets_add_embedded_data('noise64.png')
-			curshader.add_uniform('sampler2D snoise256', '_noise256');
+			curshader.add_uniform('sampler2D snoise256', '$noise256.png');
 			var co = '';
 			if (getInputLink(node.inputs[0]) != null) {
 				co = parse_vector_input(node.inputs[0]);
@@ -1445,7 +1443,7 @@ class Cycles {
 
 		else if (node.type == 'TEX_NOISE') {
 			curshader.add_function(CyclesFunctions.str_tex_noise);
-			curshader.add_uniform('sampler2D snoise256', '_noise256');
+			curshader.add_uniform('sampler2D snoise256', '$noise256.png');
 			var co = '';
 			if (getInputLink(node.inputs[0]) != null) {
 				co = parse_vector_input(node.inputs[0]);
@@ -1467,9 +1465,7 @@ class Cycles {
 
 		else if (node.type == 'TEX_VORONOI') {
 			curshader.add_function(CyclesFunctions.str_tex_voronoi);
-		//         c_state.assets_add(c_state.get_sdk_path() + '/armory/Assets/' + 'noise64.png')
-		//         c_state.assets_add_embedded_data('noise64.png')
-			curshader.add_uniform('sampler2D snoise256', '_noise256');
+			curshader.add_uniform('sampler2D snoise256', '$noise256.png');
 			var co = '';
 			if (getInputLink(node.inputs[0]) != null) {
 				co = parse_vector_input(node.inputs[0]);

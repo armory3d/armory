@@ -134,7 +134,6 @@ def build():
             assets.add_embedded_data('clouds_detail.raw')
             assets.add(assets_path + 'clouds_map.png')
             assets.add_embedded_data('clouds_map.png')
-            assets.add_khafile_def('rp_clouds')
 
     if rpdat.rp_renderer == 'Deferred' and not rpdat.rp_compositornodes:
         assets.add_shader_pass('copy_pass')

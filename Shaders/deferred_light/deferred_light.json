@@ -46,7 +46,7 @@
 				},
 				{
 					"name": "senvmapBrdf",
-					"link": "_envmapBrdf",
+					"link": "$brdf.png",
 					"ifdef": ["_Brdf"]
 				},
 				{
@@ -120,7 +120,7 @@
 				},
 				{
 					"name": "texClouds",
-					"link": "_cloudsTexture",
+					"link": "$cloudstexture.png",
 					"ifdef": ["_LightClouds"]
 				},
 				{
@@ -130,7 +130,7 @@
 				},
 				{
 					"name": "texIES",
-					"link": "_iesTexture",
+					"link": "$iestexture.png",
 					"ifdef": ["_LightIES"]
 				},
 				{

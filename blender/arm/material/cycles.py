@@ -519,7 +519,7 @@ def parse_vector(node, socket):
         curshader.add_function(c_functions.str_tex_noise)
         assets_add(get_sdk_path() + '/armory/Assets/' + 'noise256.png')
         assets_add_embedded_data('noise256.png')
-        curshader.add_uniform('sampler2D snoise256', link='_noise256')
+        curshader.add_uniform('sampler2D snoise256', link='$noise256.png')
         curshader.add_function(c_functions.str_tex_noise)
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
@@ -546,7 +546,7 @@ def parse_vector(node, socket):
         curshader.add_function(c_functions.str_tex_voronoi)
         assets_add(get_sdk_path() + '/armory/Assets/' + 'noise256.png')
         assets_add_embedded_data('noise256.png')
-        curshader.add_uniform('sampler2D snoise256', link='_noise256')
+        curshader.add_uniform('sampler2D snoise256', link='$noise256.png')
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
@@ -1177,7 +1177,7 @@ def parse_value(node, socket):
         curshader.add_function(c_functions.str_tex_noise)
         assets_add(get_sdk_path() + '/armory/Assets/' + 'noise256.png')
         assets_add_embedded_data('noise256.png')
-        curshader.add_uniform('sampler2D snoise256', link='_noise256')
+        curshader.add_uniform('sampler2D snoise256', link='$noise256.png')
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:
@@ -1197,7 +1197,7 @@ def parse_value(node, socket):
         curshader.add_function(c_functions.str_tex_voronoi)
         assets_add(get_sdk_path() + '/armory/Assets/' + 'noise256.png')
         assets_add_embedded_data('noise256.png')
-        curshader.add_uniform('sampler2D snoise256', link='_noise256')
+        curshader.add_uniform('sampler2D snoise256', link='$noise256.png')
         if node.inputs[0].is_linked:
             co = parse_vector_input(node.inputs[0])
         else:

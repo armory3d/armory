@@ -77,17 +77,17 @@
 				},
 				{
 					"name": "scloudsBase",
-					"link": "_cloudsBase",
+					"link": "$clouds_base.raw",
 					"ifdef": ["_EnvClouds"]
 				},
 				{
 					"name": "scloudsDetail",
-					"link": "_cloudsDetail",
+					"link": "$clouds_detail.raw",
 					"ifdef": ["_EnvClouds"]
 				},
 				{
 					"name": "scloudsMap",
-					"link": "_cloudsMap",
+					"link": "$clouds_map.png",
 					"ifdef": ["_EnvClouds"]
 				},
 				{

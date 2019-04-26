@@ -63,7 +63,7 @@
 				},
 				{
 					"name": "lensTexture",
-					"link": "_lensTexture",
+					"link": "$lenstexture.jpg",
 					"ifdef": ["_CLensTex"]
 				},
 				{
@@ -73,7 +73,7 @@
 				},
 				{
 					"name": "lutTexture",
-					"link": "_lutTexture",
+					"link": "$luttexture.jpg",
 					"ifdef": ["_CLUT"]
 				}
 			],

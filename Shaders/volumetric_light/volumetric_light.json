@@ -7,6 +7,10 @@
 			"cull_mode": "none",
 			"links": [
 				{
+					"name": "snoise",
+					"link": "$blue_noise64.png"
+				},
+				{
 					"name": "eye",
 					"link": "_cameraPosition"
 				},
