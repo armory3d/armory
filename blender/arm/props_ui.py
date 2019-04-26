@@ -880,14 +880,12 @@ class ARM_PT_RenderPathWorldPanel(bpy.types.Panel):
         layout.prop(rpdat, 'arm_clouds')
         col = layout.column()
         col.enabled = rpdat.arm_clouds
-        col.prop(rpdat, 'arm_clouds_density')
-        col.prop(rpdat, 'arm_clouds_size')
         col.prop(rpdat, 'arm_clouds_lower')
         col.prop(rpdat, 'arm_clouds_upper')
         col.prop(rpdat, 'arm_clouds_precipitation')
-        col.prop(rpdat, 'arm_clouds_eccentricity')
         col.prop(rpdat, 'arm_clouds_secondary')
         col.prop(rpdat, 'arm_clouds_wind')
+        col.prop(rpdat, 'arm_clouds_steps')
         layout.prop(rpdat, "rp_ocean")
         col = layout.column()
         col.enabled = rpdat.rp_ocean

@@ -81,28 +81,28 @@ float sampleCloudDensity(vec3 p) {
 }
 
 vec3 traceClouds(vec3 sky, vec3 dir) {
-	const int steps = 24;
-	const float step_size = 0.5 / float(steps);
+	const float step_size = 0.5 / float(cloudsSteps);
 	float T = 1.0;
-	vec4 C = vec4(0.0);
-	vec2 uv = dir.xy / dir.z * 0.4 + cloudsWind * time * 0.1;
+	float C = 0.0;
+	float A = 0.0;
+	vec2 uv = dir.xy / dir.z * 0.4 * cloudsLower + cloudsWind * time * 0.02;
 
-	for (int i = 0; i < steps; ++i) {
-		float h = float(i) / float(steps);
+	for (int i = 0; i < cloudsSteps; ++i) {
+		float h = float(i) / float(cloudsSteps);
 		float d = sampleCloudDensity(vec3(uv * 0.04, h));
 		float Ti = exp(-d * step_size);
-		C.a += (1.0 - Ti) * (1.0 - C.a);
+		A += (1.0 - Ti) * (1.0 - A);
 		if (d > 0) {
 			T *= Ti;
 			if (T < 0.01) break;
-			C.rgb += T * exp(h) * d * step_size * 0.6;
+			C += T * exp(h) * d * step_size * 0.6 * cloudsPrecipitation;
 		}
-		if (C.a > 1.0) break;
-		uv += (dir.xy / dir.z) * step_size;
+		if (A > 1.0) break;
+		uv += (dir.xy / dir.z) * step_size * cloudsUpper;
 	}
 
-	C.a = clamp(C.a, 0.00001, 1);
-	return mix(sky, C.rgb / C.a, C.a);
+	A = clamp(A, 0.00001, 1);
+	return mix(sky, vec3(C) / A, A);
 }
 #endif // _EnvClouds
 

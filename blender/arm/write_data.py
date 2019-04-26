@@ -455,14 +455,12 @@ const int shadowmapCascades = """ + str(rpdat.rp_shadowmap_cascades) + """;
 """)
         if rpdat.arm_clouds:
             f.write(
-"""const float cloudsDensity = """ + str(round(rpdat.arm_clouds_density * 100) / 100) + """;
-const float cloudsSize = """ + str(round(rpdat.arm_clouds_size * 100) / 100) + """;
-const float cloudsLower = """ + str(round(rpdat.arm_clouds_lower * 1000)) + """;
-const float cloudsUpper = """ + str(round(rpdat.arm_clouds_upper * 1000)) + """;
-const vec2 cloudsWind = vec2(""" + str(round(rpdat.arm_clouds_wind[0] * 1000) / 1000) + """, """ + str(round(rpdat.arm_clouds_wind[1] * 1000) / 1000) + """);
-const float cloudsSecondary = """ + str(round(rpdat.arm_clouds_secondary * 100) / 100) + """;
+"""const float cloudsLower = """ + str(round(rpdat.arm_clouds_lower * 100) / 100) + """;
+const float cloudsUpper = """ + str(round(rpdat.arm_clouds_upper * 100) / 100) + """;
+const vec2 cloudsWind = vec2(""" + str(round(rpdat.arm_clouds_wind[0] * 100) / 100) + """, """ + str(round(rpdat.arm_clouds_wind[1] * 100) / 100) + """);
 const float cloudsPrecipitation = """ + str(round(rpdat.arm_clouds_precipitation * 100) / 100) + """;
-const float cloudsEccentricity = """ + str(round(rpdat.arm_clouds_eccentricity * 100) / 100) + """;
+const float cloudsSecondary = """ + str(round(rpdat.arm_clouds_secondary * 100) / 100) + """;
+const int cloudsSteps = """ + str(rpdat.arm_clouds_steps) + """;
 """)
         if rpdat.rp_ocean:
             f.write(
