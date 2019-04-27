@@ -69,8 +69,8 @@ float getDensityHeightGradientForPoint(float height, float cloud_type) {
 }
 
 float sampleCloudDensity(vec3 p) {
-	vec3 weather_data = textureLod(scloudsMap, p.xy, 0).rgb; // Weather map
 	float cloud_base = textureLod(scloudsBase, p, 0).r * 40; // Base noise
+	vec3 weather_data = textureLod(scloudsMap, p.xy, 0).rgb; // Weather map
 	cloud_base *= getDensityHeightGradientForPoint(p.z, weather_data.b); // Cloud type
 	cloud_base = remap(cloud_base, weather_data.r, 1.0, 0.0, 1.0); // Coverage
 	cloud_base *= weather_data.r;
@@ -80,29 +80,43 @@ float sampleCloudDensity(vec3 p) {
 	return cloud_base;
 }
 
+float cloudRadiance(vec3 p, vec3 dir){
+	#ifdef _EnvSky
+	vec3 sun_dir = hosekSunDirection;
+	#else
+	vec3 sun_dir = vec3(0, 0, -1);
+	#endif
+	const int steps = 8;
+	float step_size = 0.5 / float(steps);
+	float d = 0.0;
+	p += sun_dir * step_size;
+	for(int i = 0; i < steps; ++i) {
+		d += sampleCloudDensity(p + sun_dir * float(i) * step_size);
+	}
+	return 1.0 - d;
+}
+
 vec3 traceClouds(vec3 sky, vec3 dir) {
 	const float step_size = 0.5 / float(cloudsSteps);
 	float T = 1.0;
 	float C = 0.0;
-	float A = 0.0;
 	vec2 uv = dir.xy / dir.z * 0.4 * cloudsLower + cloudsWind * time * 0.02;
 
 	for (int i = 0; i < cloudsSteps; ++i) {
 		float h = float(i) / float(cloudsSteps);
-		float d = sampleCloudDensity(vec3(uv * 0.04, h));
-		float Ti = exp(-d * step_size);
-		A += (1.0 - Ti) * (1.0 - A);
+		vec3 p = vec3(uv * 0.04, h);
+		float d = sampleCloudDensity(p);
+
 		if (d > 0) {
-			T *= Ti;
-			if (T < 0.01) break;
+			// float radiance = cloudRadiance(p, dir);
 			C += T * exp(h) * d * step_size * 0.6 * cloudsPrecipitation;
+			T *= exp(-d * step_size);
+			if (T < 0.01) break;
 		}
-		if (A > 1.0) break;
 		uv += (dir.xy / dir.z) * step_size * cloudsUpper;
 	}
 
-	A = clamp(A, 0.00001, 1);
-	return mix(sky, vec3(C) / A, A);
+	return vec3(C) + sky * T;
 }
 #endif // _EnvClouds
 
