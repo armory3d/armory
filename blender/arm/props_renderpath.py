@@ -319,7 +319,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Shader', 'Shader', 'Shader')],
         name='Draw Order', description='Sort objects', default='Auto', update=assets.invalidate_compiled_data)
     rp_stereo: BoolProperty(name="VR", description="Stereo rendering", default=False, update=update_renderpath)
-    rp_ocean: BoolProperty(name="Ocean", description="Ocean pass", default=False, update=update_renderpath)
+    rp_water: BoolProperty(name="Water", description="Water surface pass", default=False, update=update_renderpath)
     rp_gi: EnumProperty( # TODO: remove in 0.8
         items=[('Off', 'Off', 'Off'),
                ('Voxel GI', 'Voxel GI', 'Voxel GI', 'ERROR', 1),
@@ -405,15 +405,14 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_clouds_secondary: FloatProperty(name="Secondary", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
     arm_clouds_precipitation: FloatProperty(name="Precipitation", default=1.0, min=0.1, max=10.0, update=assets.invalidate_shader_cache)
     arm_clouds_steps: IntProperty(name="Steps", default=24, min=1, max=240, update=assets.invalidate_shader_cache)
-    arm_ocean_base_color: FloatVectorProperty(name="Base Color", size=3, default=[0.1, 0.19, 0.37], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
-    arm_ocean_water_color: FloatVectorProperty(name="Water Color", size=3, default=[0.6, 0.7, 0.9], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
-    arm_ocean_level: FloatProperty(name="Level", default=0.0, update=assets.invalidate_shader_cache)
-    arm_ocean_amplitude: FloatProperty(name="Amplitude", default=2.5, update=assets.invalidate_shader_cache)
-    arm_ocean_height: FloatProperty(name="Height", default=0.6, update=assets.invalidate_shader_cache)
-    arm_ocean_choppy: FloatProperty(name="Choppy", default=4.0, update=assets.invalidate_shader_cache)
-    arm_ocean_speed: FloatProperty(name="Speed", default=1.5, update=assets.invalidate_shader_cache)
-    arm_ocean_freq: FloatProperty(name="Freq", default=0.16, update=assets.invalidate_shader_cache)
-    arm_ocean_fade: FloatProperty(name="Fade", default=1.8, update=assets.invalidate_shader_cache)
+    arm_water_color: FloatVectorProperty(name="Color", size=3, default=[1,1,1], subtype='COLOR', min=0, max=1, update=assets.invalidate_shader_cache)
+    arm_water_level: FloatProperty(name="Level", default=0.0, update=assets.invalidate_shader_cache)
+    arm_water_displace: FloatProperty(name="Displace", default=1.0, update=assets.invalidate_shader_cache)
+    arm_water_speed: FloatProperty(name="Speed", default=1.0, update=assets.invalidate_shader_cache)
+    arm_water_freq: FloatProperty(name="Freq", default=1.0, update=assets.invalidate_shader_cache)
+    arm_water_density: FloatProperty(name="Density", default=1.0, update=assets.invalidate_shader_cache)
+    arm_water_refract: FloatProperty(name="Refract", default=1.0, update=assets.invalidate_shader_cache)
+    arm_water_reflect: FloatProperty(name="Reflect", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssgi_strength: FloatProperty(name="Strength", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssgi_radius: FloatProperty(name="Radius", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssgi_step: FloatProperty(name="Step", default=2.0, update=assets.invalidate_shader_cache)

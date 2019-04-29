@@ -462,17 +462,16 @@ const float cloudsPrecipitation = """ + str(round(rpdat.arm_clouds_precipitation
 const float cloudsSecondary = """ + str(round(rpdat.arm_clouds_secondary * 100) / 100) + """;
 const int cloudsSteps = """ + str(rpdat.arm_clouds_steps) + """;
 """)
-        if rpdat.rp_ocean:
+        if rpdat.rp_water:
             f.write(
-"""const float seaLevel = """ + str(round(rpdat.arm_ocean_level * 100) / 100) + """;
-const float seaMaxAmplitude = """ + str(round(rpdat.arm_ocean_amplitude * 100) / 100) + """;
-const float seaHeight = """ + str(round(rpdat.arm_ocean_height * 100) / 100) + """;
-const float seaChoppy = """ + str(round(rpdat.arm_ocean_choppy * 100) / 100) + """;
-const float seaSpeed = """ + str(round(rpdat.arm_ocean_speed * 100) / 100) + """;
-const float seaFreq = """ + str(round(rpdat.arm_ocean_freq * 100) / 100) + """;
-const vec3 seaBaseColor = vec3(""" + str(round(rpdat.arm_ocean_base_color[0] * 100) / 100) + """, """ + str(round(rpdat.arm_ocean_base_color[1] * 100) / 100) + """, """ + str(round(rpdat.arm_ocean_base_color[2] * 100) / 100) + """);
-const vec3 seaWaterColor = vec3(""" + str(round(rpdat.arm_ocean_water_color[0] * 100) / 100) + """, """ + str(round(rpdat.arm_ocean_water_color[1] * 100) / 100) + """, """ + str(round(rpdat.arm_ocean_water_color[2] * 100) / 100) + """);
-const float seaFade = """ + str(round(rpdat.arm_ocean_fade * 100) / 100) + """;
+"""const float waterLevel = """ + str(round(rpdat.arm_water_level * 100) / 100) + """;
+const float waterDisplace = """ + str(round(rpdat.arm_water_displace * 100) / 100) + """;
+const float waterSpeed = """ + str(round(rpdat.arm_water_speed * 100) / 100) + """;
+const float waterFreq = """ + str(round(rpdat.arm_water_freq * 100) / 100) + """;
+const vec3 waterColor = vec3(""" + str(round(rpdat.arm_water_color[0] * 100) / 100) + """, """ + str(round(rpdat.arm_water_color[1] * 100) / 100) + """, """ + str(round(rpdat.arm_water_color[2] * 100) / 100) + """);
+const float waterDensity = """ + str(round(rpdat.arm_water_density * 100) / 100) + """;
+const float waterRefract = """ + str(round(rpdat.arm_water_refract * 100) / 100) + """;
+const float waterReflect = """ + str(round(rpdat.arm_water_reflect * 100) / 100) + """;
 """)
         if rpdat.rp_ssgi == 'SSAO' or rpdat.rp_ssgi == 'RTAO' or rpdat.rp_volumetriclight:
             f.write(

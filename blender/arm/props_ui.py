@@ -886,18 +886,17 @@ class ARM_PT_RenderPathWorldPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_clouds_secondary')
         col.prop(rpdat, 'arm_clouds_wind')
         col.prop(rpdat, 'arm_clouds_steps')
-        layout.prop(rpdat, "rp_ocean")
+        layout.prop(rpdat, "rp_water")
         col = layout.column()
-        col.enabled = rpdat.rp_ocean
-        col.prop(rpdat, 'arm_ocean_level')
-        col.prop(rpdat, 'arm_ocean_fade')
-        col.prop(rpdat, 'arm_ocean_amplitude')
-        col.prop(rpdat, 'arm_ocean_height')
-        col.prop(rpdat, 'arm_ocean_choppy')
-        col.prop(rpdat, 'arm_ocean_speed')
-        col.prop(rpdat, 'arm_ocean_freq')
-        col.prop(rpdat, 'arm_ocean_base_color')
-        col.prop(rpdat, 'arm_ocean_water_color')
+        col.enabled = rpdat.rp_water
+        col.prop(rpdat, 'arm_water_level')
+        col.prop(rpdat, 'arm_water_density')
+        col.prop(rpdat, 'arm_water_displace')
+        col.prop(rpdat, 'arm_water_speed')
+        col.prop(rpdat, 'arm_water_freq')
+        col.prop(rpdat, 'arm_water_refract')
+        col.prop(rpdat, 'arm_water_reflect')
+        col.prop(rpdat, 'arm_water_color')
 
 class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
     bl_label = "Post Process"

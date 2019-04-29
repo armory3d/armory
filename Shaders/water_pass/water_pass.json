@@ -13,12 +13,16 @@
 			"alpha_blend_operation": "add",
 			"links": [
 				{
-					"name": "transpV",
-					"link": "_transposeViewMatrix"
+					"name": "sbase",
+					"link": "$water_base.png"
 				},
 				{
-					"name": "invP",
-					"link": "_inverseProjectionMatrix"
+					"name": "sdetail",
+					"link": "$water_detail.png"
+				},
+				{
+					"name": "sfoam",
+					"link": "$water_foam.png"
 				},
 				{
 					"name": "eye",
@@ -47,10 +51,15 @@
 				{
 					"name": "cameraProj",
 					"link": "_cameraPlaneProj"
+				},
+				{
+					"name": "senvmapRadiance",
+					"link": "_envmapRadiance",
+					"ifdef": ["_Rad"]
 				}
 			],
 			"texture_params": [],
-			"vertex_shader": "water_pass.vert.glsl",
+			"vertex_shader": "../include/pass_viewray.vert.glsl",
 			"fragment_shader": "water_pass.frag.glsl"
 		}
 	]

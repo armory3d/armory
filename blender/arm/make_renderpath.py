@@ -281,9 +281,16 @@ def build():
     if rpdat.rp_decals:
         assets.add_khafile_def('rp_decals')
 
-    if rpdat.rp_ocean:
-        assets.add_khafile_def('rp_ocean')
+    if rpdat.rp_water:
+        assets.add_khafile_def('rp_water')
         assets.add_shader_pass('water_pass')
+        assets.add_shader_pass('copy_pass')
+        assets.add(assets_path + 'water_base.png')
+        assets.add_embedded_data('water_base.png')
+        assets.add(assets_path + 'water_detail.png')
+        assets.add_embedded_data('water_detail.png')
+        assets.add(assets_path + 'water_foam.png')
+        assets.add_embedded_data('water_foam.png')
 
     if rpdat.rp_blending:
         assets.add_khafile_def('rp_blending')
