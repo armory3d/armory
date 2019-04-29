@@ -236,9 +236,10 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if rp_ocean
+		#if rp_water
 		{
 			path.loadShader("shader_datas/water_pass/water_pass");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
 
@@ -586,10 +587,14 @@ class RenderPathDeferred {
 		}
 		#end
 
-		#if rp_ocean
+		#if rp_water
 		{
+			path.setTarget("buf");
+			path.bindTarget("tex", "tex");
+			path.drawShader("shader_datas/copy_pass/copy_pass");
 			path.setTarget("tex");
 			path.bindTarget("_main", "gbufferD");
+			path.bindTarget("buf", "tex");
 			path.drawShader("shader_datas/water_pass/water_pass");
 		}
 		#end
