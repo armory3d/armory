@@ -59,10 +59,10 @@ void main() {
 
 	// Sample normal maps
 	vec2 tcnor0 = hit.xy / 3.0;
-	vec3 n0 = textureLod(sdetail, tcnor0 + vec2(time / 30.0, time / 60.0), 0.0).rgb;
+	vec3 n0 = textureLod(sdetail, tcnor0 + vec2(speed / 60.0, speed / 120.0), 0.0).rgb;
 
 	vec2 tcnor1 = hit.xy / 6.0 + n0.xy / 20.0;
-	vec3 n1 = textureLod(sbase, tcnor1 + vec2(time / 20.0, time / 40.0), 0.0).rgb;
+	vec3 n1 = textureLod(sbase, tcnor1 + vec2(speed / 40.0, speed / 80.0), 0.0).rgb;
 	vec3 n2 = normalize(((n1 + n0) / 2.0) * 2.0 - 1.0);
 
 	float ddepth = textureLod(gbufferD, texCoord + (n2.xy * n2.z) / 40.0, 0.0).r * 2.0 - 1.0;
@@ -94,6 +94,6 @@ void main() {
 		vec3 foamMask1 = textureLod(sfoam, tcnor1 * 11, 0.0).rgb;
 		vec3 foam = vec3(1.0) - foamMask0.rrr - foamMask1.bbb;
 		float fac = 1.0 - (fd * (1.0 / 0.1));
-		fragColor.rgb = mix(fragColor.rgb, clamp(foam, 0.0, 1.0), clamp(fac * 2.0, 0.0, 1.0));
+		fragColor.rgb = mix(fragColor.rgb, clamp(foam, 0.0, 1.0), clamp(fac, 0.0, 1.0));
 	}
 }
