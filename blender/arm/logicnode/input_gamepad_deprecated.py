@@ -5,8 +5,8 @@ from arm.logicnode.arm_nodes import *
 
 class GamepadNode(Node, ArmLogicTreeNode):
     '''Gamepad node'''
-    bl_idname = 'LNMergedGamepadNode'
-    bl_label = 'Gamepad'
+    bl_idname = 'LNGamepadNode'
+    bl_label = 'Gamepad State (deprecated)'
     bl_icon = 'CURVE_PATH'
     
     property0: EnumProperty(

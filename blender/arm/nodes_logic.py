@@ -163,24 +163,43 @@ def replace(tree, node):
                     tree.links.new(newnode.inputs[replacement.in_socket_mapping.get(i)], link.from_socket)
     tree.nodes.remove(node)
 
-
+def replaceAll():
+    for tree in bpy.data.node_groups:
+            if tree.bl_idname == "ArmLogicTreeType":
+                for node in tree.nodes:
+                    if node.bl_idname in get_replaced_nodes():
+                        print("Replacing "+ node.bl_idname+ " in Tree "+tree.name)
+                        replace(tree, node)
+        
+    
 class ReplaceNodesOperator(bpy.types.Operator):
     '''Automatically replaces deprecated nodes.'''
     bl_idname = "node.replace"
     bl_label = "Replace Nodes"
 
     def execute(self, context):
-        for tree in bpy.data.node_groups:
-            if tree.bl_idname == "ArmLogicTreeType":
-                for node in tree.nodes:
-                    if node.bl_idname in get_replaced_nodes():
-                        print("Replacing "+ node.bl_idname+ " in Tree "+tree.name)
-                        replace(tree, node)
+        replaceAll()
         return {'FINISHED'}
 
     @classmethod
     def poll(cls, context):
         return context.space_data != None and context.space_data.type == 'NODE_EDITOR'
+
+# Input Replacement Rules
+add_replacement(Replacement("LNOnGamepadNode", "LNMergedGamepadNode", {}, {0: 0}))
+add_replacement(Replacement("LNGamepadNode", "LNMergedGamepadNode", {}, {0: 1}))
+
+add_replacement(Replacement("LNOnMouseNode", "LNMergedMouseNode", {}, {0: 0}))
+add_replacement(Replacement("LNMouseNode", "LNMergedMouseNode", {}, {0: 1}))
+
+add_replacement(Replacement("LNOnSurfaceNode", "LNMergedSurfaceNode", {}, {0: 0}))
+add_replacement(Replacement("LNSurfaceNode", "LNMergedSurfaceNode", {}, {0: 1}))
+
+add_replacement(Replacement("LNOnKeyboardNode", "LNMergedKeyboardNode", {}, {0: 0}))
+add_replacement(Replacement("LNKeyboardNode", "LNMergedKeyboardNode", {}, {0: 1}))
+
+add_replacement(Replacement("LNOnVirtualButtonNode", "LNMergedVirtualButtonNode", {}, {0: 0}))
+add_replacement(Replacement("LNVirtualButtonNode", "LNMergedVirtualButtonNode", {}, {0: 1}))
 
 def register():
     bpy.utils.register_class(ArmLogicTree)

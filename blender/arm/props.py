@@ -9,6 +9,7 @@ import arm.utils
 import arm.make
 import arm.props_renderpath as props_renderpath
 import arm.proxy
+import arm.nodes_logic
 
 # Armory version
 arm_version = '0.7'
@@ -300,6 +301,7 @@ def init_properties_on_load():
     wrd = bpy.data.worlds['Arm']
     # Outdated project
     if bpy.data.filepath != '' and (wrd.arm_version != arm_version or wrd.arm_commit != arm_commit): # Call on project load only
+        arm.nodes_logic.replaceAll()
         # This allows for seamless migration from ealier versions of Armory
         for rp in wrd.arm_rplist: # TODO: deprecated
             if rp.rp_gi != 'Off':

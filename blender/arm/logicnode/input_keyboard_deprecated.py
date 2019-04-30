@@ -5,8 +5,8 @@ from arm.logicnode.arm_nodes import *
 
 class KeyboardNode(Node, ArmLogicTreeNode):
     '''Keyboard node'''
-    bl_idname = 'LNMergedKeyboardNode'
-    bl_label = 'Keyboard'
+    bl_idname = 'LNKeyboardNode'
+    bl_label = 'Keyboard State (deprecated)'
     bl_icon = 'CURVE_PATH'
     
     property0: EnumProperty(
@@ -71,7 +71,6 @@ class KeyboardNode(Node, ArmLogicTreeNode):
         name='', default='space')
 
     def init(self, context):
-        self.outputs.new('ArmNodeSocketAction', 'Out')
         self.outputs.new('NodeSocketBool', 'State')
 
     def draw_buttons(self, context, layout):
