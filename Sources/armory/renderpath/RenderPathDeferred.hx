@@ -820,7 +820,12 @@ class RenderPathDeferred {
 
 		#if rp_compositornodes
 		{
-			if (!path.isProbe) path.drawShader("shader_datas/compositor_pass/compositor_pass");
+			#if rp_probes
+			var isProbe = path.isProbe;
+			#else
+			var isProbe = false;
+			#end
+			if (!isProbe) path.drawShader("shader_datas/compositor_pass/compositor_pass");
 			else path.drawShader("shader_datas/copy_pass/copy_pass");
 		}
 		#else
