@@ -105,10 +105,88 @@ def draw_menu(self, context):
     layout.operator("arm.node_search", text="Search", icon="VIEWZOOM")
     layout.separator()
 
+# node replacement code
+replacements = {}
+
+def add_replacement(item):
+    replacements[item.from_node] = item
+    
+def get_replaced_nodes():
+    return replacements.keys()
+
+def get_replacement_for_node(node):
+    return replacements[node.bl_idname]
+
+class Replacement:
+    # represents a single replacement rule, this can replace exactly one node with another
+    #
+    # from_node: the node type to be removed
+    # to_node: the node type which takes from_node's place
+    # *SocketMapping: a map which defines how the sockets of the old node shall be connected to the new node
+    # {1: 2} means that anything connected to the socket with index 1 on the original node will be connected to the socket with index 2 on the new node
+    def __init__(self, from_node, to_node, in_socket_mapping, out_socket_mapping):
+        self.from_node = from_node
+        self.to_node = to_node
+        self.in_socket_mapping = in_socket_mapping
+        self.out_socket_mapping = out_socket_mapping
+
+# actual replacement code
+def replace(tree, node):
+    replacement = get_replacement_for_node(node)
+    newnode = tree.nodes.new(replacement.to_node)
+    newnode.location = node.location
+    newnode.parent = node.parent
+
+    parent = node.parent
+    while parent is not None:
+        newnode.location[0] += parent.location[0]
+        newnode.location[1] += parent.location[1]
+        parent = parent.parent
+    
+    for link in tree.links:
+        if link.from_node == node:
+            # this is an output link
+            for i in range(0, len(node.outputs)):
+                # check the outputs
+                # i represents the socket index
+                # do we want to remap it & is it the one referenced in the current link
+                if i in replacement.out_socket_mapping.keys() and node.outputs[i] == link.from_socket:
+                    tree.links.new(newnode.outputs[replacement.out_socket_mapping.get(i)], link.to_socket)
+        
+        if link.to_node == node:
+            # this is an input link
+            for i in range(0, len(node.inputs)):
+                # check the inputs
+                # i represents the socket index
+                # do we want to remap it & is it the one referenced socket in the current link
+                if i in replacement.in_socket_mapping.keys() and node.inputs[i] == link.to_socket:
+                    tree.links.new(newnode.inputs[replacement.in_socket_mapping.get(i)], link.from_socket)
+    tree.nodes.remove(node)
+
+
+class ReplaceNodesOperator(bpy.types.Operator):
+    '''Automatically replaces deprecated nodes.'''
+    bl_idname = "node.replace"
+    bl_label = "Replace Nodes"
+
+    def execute(self, context):
+        for tree in bpy.data.node_groups:
+            if tree.bl_idname == "ArmLogicTreeType":
+                for node in tree.nodes:
+                    if node.bl_idname in get_replaced_nodes():
+                        print("Replacing "+ node.bl_idname+ " in Tree "+tree.name)
+                        replace(tree, node)
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.space_data != None and context.space_data.type == 'NODE_EDITOR'
+
 def register():
     bpy.utils.register_class(ArmLogicTree)
     bpy.utils.register_class(ARM_PT_LogicNodePanel)
     bpy.utils.register_class(ArmOpenNodeSource)
+    bpy.utils.register_class(ReplaceNodesOperator)
     register_nodes()
     bpy.utils.register_class(ArmNodeSearch)
     bpy.types.NODE_MT_add.prepend(draw_menu)
@@ -116,6 +194,7 @@ def register():
 def unregister():
     bpy.types.NODE_MT_add.remove(draw_menu)
     bpy.utils.unregister_class(ArmNodeSearch)
+    bpy.utils.unregister_class(ReplaceNodesOperator)
     unregister_nodes()
     bpy.utils.unregister_class(ArmLogicTree)
     bpy.utils.unregister_class(ARM_PT_LogicNodePanel)

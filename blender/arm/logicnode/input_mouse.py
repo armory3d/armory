@@ -6,7 +6,7 @@ from arm.logicnode.arm_nodes import *
 class MouseNode(Node, ArmLogicTreeNode):
     '''Mouse node'''
     bl_idname = 'LNMouseNode'
-    bl_label = 'Mouse State'
+    bl_label = 'Mouse'
     bl_icon = 'CURVE_PATH'
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
@@ -21,6 +21,7 @@ class MouseNode(Node, ArmLogicTreeNode):
         name='', default='left')
     
     def init(self, context):
+        self.outputs.new('ArmNodeSocketAction', 'Out')
         self.outputs.new('NodeSocketBool', 'State')
 
     def draw_buttons(self, context, layout):

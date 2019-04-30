@@ -16,6 +16,7 @@ class VirtualButtonNode(Node, ArmLogicTreeNode):
     property1: StringProperty(name='', default='button')
     
     def init(self, context):
+        self.outputs.new('ArmNodeSocketAction', 'Out')
         self.outputs.new('NodeSocketBool', 'State')
 
     def draw_buttons(self, context, layout):

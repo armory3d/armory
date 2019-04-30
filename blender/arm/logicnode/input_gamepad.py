@@ -6,7 +6,7 @@ from arm.logicnode.arm_nodes import *
 class GamepadNode(Node, ArmLogicTreeNode):
     '''Gamepad node'''
     bl_idname = 'LNGamepadNode'
-    bl_label = 'Gamepad State'
+    bl_label = 'Gamepad'
     bl_icon = 'CURVE_PATH'
     
     property0: EnumProperty(
@@ -22,10 +22,10 @@ class GamepadNode(Node, ArmLogicTreeNode):
                  ('circle', 'circle / b', 'circle / b'),
                  ('square', 'square / x', 'square / x'),
                  ('triangle', 'triangle / y', 'triangle / y'),
-                 ('l1', 'l1', 'l1'),
-                 ('r1', 'r1', 'r1'),
-                 ('l2', 'l2', 'l2'),
-                 ('r2', 'r2', 'r2'),
+                 ('l1', 'l1 / lb', 'l1 / lb'),
+                 ('r1', 'r1 / rb', 'r1 / rb'),
+                 ('l2', 'l2 / lt', 'l2 / lt'),
+                 ('r2', 'r2 / rt', 'r2 / rt'),
                  ('share', 'share', 'share'),
                  ('options', 'options', 'options'),
                  ('l3', 'l3', 'l3'),
@@ -39,7 +39,8 @@ class GamepadNode(Node, ArmLogicTreeNode):
         name='', default='cross')
 
     def init(self, context):
-        self.outputs.new('NodeSocketFloat', 'Value')
+        self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.outputs.new('NodeSocketBool', 'State')
         self.inputs.new('NodeSocketInt', 'Gamepad')
 
     def draw_buttons(self, context, layout):
