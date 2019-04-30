@@ -39,7 +39,6 @@ class GamepadNode(Node, ArmLogicTreeNode):
         name='', default='cross')
 
     def init(self, context):
-        self.outputs.new('ArmNodeSocketAction', 'Out')
         self.outputs.new('NodeSocketBool', 'State')
         self.inputs.new('NodeSocketInt', 'Gamepad')
 
