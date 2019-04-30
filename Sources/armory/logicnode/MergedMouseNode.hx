@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class MouseNode extends LogicNode {
+class MergedMouseNode extends LogicNode {
 
 	public var property0:String;
 	public var property1:String;

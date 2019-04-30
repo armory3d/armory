@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class KeyboardNode extends LogicNode {
+class MergedKeyboardNode extends LogicNode {
 
 	public var property0:String;
 	public var property1:String;

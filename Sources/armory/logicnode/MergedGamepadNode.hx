@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class GamepadNode extends LogicNode {
+class MergedGamepadNode extends LogicNode {
 
 	public var property0:String;
 	public var property1:String;
