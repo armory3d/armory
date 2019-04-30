@@ -138,16 +138,23 @@ def replace(tree, node):
     newnode.location = node.location
     newnode.parent = node.parent
 
-    # map properties
-    for prop in replacement.property_mapping.keys():
-        setattr(newnode, replacement.property_mapping.get(prop), getattr(node, prop))
-
     parent = node.parent
     while parent is not None:
         newnode.location[0] += parent.location[0]
         newnode.location[1] += parent.location[1]
         parent = parent.parent
     
+    
+    # map properties
+    for prop in replacement.property_mapping.keys():
+        setattr(newnode, replacement.property_mapping.get(prop), getattr(node, prop))
+    
+    # map unconnected inputs
+    for in_socket in replacement.in_socket_mapping.keys():
+        if not node.inputs[in_socket].is_linked:
+            newnode.inputs[replacement.in_socket_mapping.get(in_socket)].default_value = node.inputs[in_socket].default_value
+    
+    # map connected inputs
     for link in tree.links:
         if link.from_node == node:
             # this is an output link
@@ -191,14 +198,14 @@ class ReplaceNodesOperator(bpy.types.Operator):
         return context.space_data != None and context.space_data.type == 'NODE_EDITOR'
 
 # Input Replacement Rules
-add_replacement(Replacement("LNOnGamepadNode", "LNMergedGamepadNode", {}, {0: 0}, {"property0": "property0", "property1": "property1"}))
-add_replacement(Replacement("LNGamepadNode", "LNMergedGamepadNode", {}, {0: 1}, {"property0": "property0", "property1": "property1"}))
+add_replacement(Replacement("LNOnGamepadNode", "LNMergedGamepadNode", {0: 0}, {0: 0}, {"property0": "property0", "property1": "property1"}))
+add_replacement(Replacement("LNGamepadNode", "LNMergedGamepadNode", {0: 0}, {0: 1}, {"property0": "property0", "property1": "property1"}))
 
 add_replacement(Replacement("LNOnMouseNode", "LNMergedMouseNode", {}, {0: 0}, {"property0": "property0", "property1": "property1"}))
 add_replacement(Replacement("LNMouseNode", "LNMergedMouseNode", {}, {0: 1}, {"property0": "property0", "property1": "property1"}))
 
-add_replacement(Replacement("LNOnSurfaceNode", "LNMergedSurfaceNode", {}, {0: 0}, {"property0": "property0", "property1": "property1"}))
-add_replacement(Replacement("LNSurfaceNode", "LNMergedSurfaceNode", {}, {0: 1}, {"property0": "property0", "property1": "property1"}))
+add_replacement(Replacement("LNOnSurfaceNode", "LNMergedSurfaceNode", {}, {0: 0}, {"property0": "property0"}))
+add_replacement(Replacement("LNSurfaceNode", "LNMergedSurfaceNode", {}, {0: 1}, {"property0": "property0"}))
 
 add_replacement(Replacement("LNOnKeyboardNode", "LNMergedKeyboardNode", {}, {0: 0}, {"property0": "property0", "property1": "property1"}))
 add_replacement(Replacement("LNKeyboardNode", "LNMergedKeyboardNode", {}, {0: 1}, {"property0": "property0", "property1": "property1"}))
