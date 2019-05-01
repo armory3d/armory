@@ -182,10 +182,8 @@ def parse_shader(node, socket):
                 parse_normal_map_color_input(node.inputs[5])
                 # Emission
                 if node.inputs[6].is_linked or node.inputs[6].default_value != 0.0:
-                    out_emission = '1.0'
-                    emission_strength = parse_value_input(node.inputs[6])
+                    out_emission = parse_value_input(node.inputs[6])
                     emission_found = True
-                    out_basecol = '({0} * {1})'.format(out_basecol, emission_strength)
             if parse_opacity:
                 out_opacity = parse_value_input(node.inputs[1])
         else:

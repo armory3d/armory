@@ -247,7 +247,7 @@ def make_deferred(con_mesh, rpasses):
     if '_Emission' in wrd.world_defs or '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
         frag.write('float matid = 0.0;')
         if '_Emission' in wrd.world_defs:
-            frag.write('if (emission > 0) matid = 1.0;')
+            frag.write('if (emission > 0) { basecol *= emission; matid = 1.0; }')
         if '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
             frag.add_uniform('int materialID')
             frag.write('if (materialID == 2) matid = 2.0;')
@@ -255,7 +255,7 @@ def make_deferred(con_mesh, rpasses):
         frag.write('const float matid = 0.0;')
 
     frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), matid);')
-    frag.write('fragColor[1] = vec4(basecol.rgb, packFloat2(occlusion, specular));')
+    frag.write('fragColor[1] = vec4(basecol, packFloat2(occlusion, specular));')
 
     if '_gbuffer2' in wrd.world_defs:
         if '_Veloc' in wrd.world_defs:
@@ -712,5 +712,5 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_Emission' in wrd.world_defs:
         frag.write('if (emission > 0.0) {')
         frag.write('    direct = vec3(0.0);')
-        frag.write('    indirect += basecol;')
+        frag.write('    indirect += basecol * emission;;')
         frag.write('}')
