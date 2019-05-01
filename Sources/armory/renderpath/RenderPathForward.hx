@@ -18,18 +18,21 @@ class RenderPathForward {
 
 		#if (rp_background == "World")
 		{
+			setTargetMain();
 			path.drawSkydome("shader_datas/world_pass/world_pass");
 		}
 		#end
 
 		#if rp_blending
 		{
+			setTargetMain();
 			path.drawMeshes("blend");
 		}
 		#end
 
 		#if rp_translucency
 		{
+			setTargetMain();
 			Inc.drawTranslucency("lbuffer0");
 		}
 		#end
@@ -257,6 +260,22 @@ class RenderPathForward {
 		#end
 	}
 
+	static function setTargetMain() {
+		#if rp_render_to_texture
+		{
+			#if rp_ssr
+			path.setTarget("lbuffer0", ["lbuffer1"]);
+			#else
+			path.setTarget("lbuffer0");
+			#end
+		}
+		#else
+		{
+			path.setTarget("");
+		}
+		#end
+	}
+
 	public static function commands() {
 
 		#if rp_shadowmap
@@ -292,19 +311,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if rp_render_to_texture
-		{
-			#if rp_ssr
-			path.setTarget("lbuffer0", ["lbuffer1"]);
-			#else
-			path.setTarget("lbuffer0");
-			#end
-		}
-		#else
-		{
-			path.setTarget("");
-		}
-		#end
+		setTargetMain();
 
 		#if (rp_background == "Clear")
 		{
@@ -319,6 +326,7 @@ class RenderPathForward {
 		#if rp_depthprepass
 		{
 			path.drawMeshes("depth");
+			setTargetMain();
 		}
 		#end
 
