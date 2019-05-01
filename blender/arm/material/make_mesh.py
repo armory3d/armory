@@ -712,5 +712,5 @@ def make_forward_base(con_mesh, parse_opacity=False, transluc_pass=False):
     if '_Emission' in wrd.world_defs:
         frag.write('if (emission > 0.0) {')
         frag.write('    direct = vec3(0.0);')
-        frag.write('    indirect += basecol * emission;;')
+        frag.write('    indirect += basecol * emission;')
         frag.write('}')
