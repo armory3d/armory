@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class SurfaceNode extends LogicNode {
+class MergedSurfaceNode extends LogicNode {
 
 	public var property0:String;
 

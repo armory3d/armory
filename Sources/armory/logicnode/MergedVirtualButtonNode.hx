@@ -1,6 +1,6 @@
 package armory.logicnode;
 
-class VirtualButtonNode extends LogicNode {
+class MergedVirtualButtonNode extends LogicNode {
 
 	public var property0:String;
 	public var property1:String;

@@ -124,11 +124,12 @@ class Replacement:
     # to_node: the node type which takes from_node's place
     # *SocketMapping: a map which defines how the sockets of the old node shall be connected to the new node
     # {1: 2} means that anything connected to the socket with index 1 on the original node will be connected to the socket with index 2 on the new node
-    def __init__(self, from_node, to_node, in_socket_mapping, out_socket_mapping):
+    def __init__(self, from_node, to_node, in_socket_mapping, out_socket_mapping, property_mapping):
         self.from_node = from_node
         self.to_node = to_node
         self.in_socket_mapping = in_socket_mapping
         self.out_socket_mapping = out_socket_mapping
+        self.property_mapping = property_mapping
 
 # actual replacement code
 def replace(tree, node):
@@ -143,6 +144,17 @@ def replace(tree, node):
         newnode.location[1] += parent.location[1]
         parent = parent.parent
     
+    
+    # map properties
+    for prop in replacement.property_mapping.keys():
+        setattr(newnode, replacement.property_mapping.get(prop), getattr(node, prop))
+    
+    # map unconnected inputs
+    for in_socket in replacement.in_socket_mapping.keys():
+        if not node.inputs[in_socket].is_linked:
+            newnode.inputs[replacement.in_socket_mapping.get(in_socket)].default_value = node.inputs[in_socket].default_value
+    
+    # map connected inputs
     for link in tree.links:
         if link.from_node == node:
             # this is an output link
@@ -186,20 +198,20 @@ class ReplaceNodesOperator(bpy.types.Operator):
         return context.space_data != None and context.space_data.type == 'NODE_EDITOR'
 
 # Input Replacement Rules
-add_replacement(Replacement("LNOnGamepadNode", "LNMergedGamepadNode", {}, {0: 0}))
-add_replacement(Replacement("LNGamepadNode", "LNMergedGamepadNode", {}, {0: 1}))
+add_replacement(Replacement("LNOnGamepadNode", "LNMergedGamepadNode", {0: 0}, {0: 0}, {"property0": "property0", "property1": "property1"}))
+add_replacement(Replacement("LNGamepadNode", "LNMergedGamepadNode", {0: 0}, {0: 1}, {"property0": "property0", "property1": "property1"}))
 
-add_replacement(Replacement("LNOnMouseNode", "LNMergedMouseNode", {}, {0: 0}))
-add_replacement(Replacement("LNMouseNode", "LNMergedMouseNode", {}, {0: 1}))
+add_replacement(Replacement("LNOnMouseNode", "LNMergedMouseNode", {}, {0: 0}, {"property0": "property0", "property1": "property1"}))
+add_replacement(Replacement("LNMouseNode", "LNMergedMouseNode", {}, {0: 1}, {"property0": "property0", "property1": "property1"}))
 
-add_replacement(Replacement("LNOnSurfaceNode", "LNMergedSurfaceNode", {}, {0: 0}))
-add_replacement(Replacement("LNSurfaceNode", "LNMergedSurfaceNode", {}, {0: 1}))
+add_replacement(Replacement("LNOnSurfaceNode", "LNMergedSurfaceNode", {}, {0: 0}, {"property0": "property0"}))
+add_replacement(Replacement("LNSurfaceNode", "LNMergedSurfaceNode", {}, {0: 1}, {"property0": "property0"}))
 
-add_replacement(Replacement("LNOnKeyboardNode", "LNMergedKeyboardNode", {}, {0: 0}))
-add_replacement(Replacement("LNKeyboardNode", "LNMergedKeyboardNode", {}, {0: 1}))
+add_replacement(Replacement("LNOnKeyboardNode", "LNMergedKeyboardNode", {}, {0: 0}, {"property0": "property0", "property1": "property1"}))
+add_replacement(Replacement("LNKeyboardNode", "LNMergedKeyboardNode", {}, {0: 1}, {"property0": "property0", "property1": "property1"}))
 
-add_replacement(Replacement("LNOnVirtualButtonNode", "LNMergedVirtualButtonNode", {}, {0: 0}))
-add_replacement(Replacement("LNVirtualButtonNode", "LNMergedVirtualButtonNode", {}, {0: 1}))
+add_replacement(Replacement("LNOnVirtualButtonNode", "LNMergedVirtualButtonNode", {}, {0: 0}, {"property0": "property0", "property1": "property1"}))
+add_replacement(Replacement("LNVirtualButtonNode", "LNMergedVirtualButtonNode", {}, {0: 1}, {"property0": "property0", "property1": "property1"}))
 
 def register():
     bpy.utils.register_class(ArmLogicTree)
