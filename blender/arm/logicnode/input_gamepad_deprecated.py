@@ -5,8 +5,8 @@ from arm.logicnode.arm_nodes import *
 
 class GamepadNode(Node, ArmLogicTreeNode):
     '''Gamepad node'''
-    bl_idname = 'LNMergedGamepadNode'
-    bl_label = 'Gamepad'
+    bl_idname = 'LNGamepadNode'
+    bl_label = 'Gamepad State (deprecated)'
     bl_icon = 'CURVE_PATH'
     
     property0: EnumProperty(
@@ -39,7 +39,6 @@ class GamepadNode(Node, ArmLogicTreeNode):
         name='', default='cross')
 
     def init(self, context):
-        self.outputs.new('ArmNodeSocketAction', 'Out')
         self.outputs.new('NodeSocketBool', 'State')
         self.inputs.new('NodeSocketInt', 'Gamepad')
 

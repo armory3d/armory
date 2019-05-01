@@ -5,8 +5,8 @@ from arm.logicnode.arm_nodes import *
 
 class SurfaceNode(Node, ArmLogicTreeNode):
     '''Surface node'''
-    bl_idname = 'LNMergedSurfaceNode'
-    bl_label = 'Surface'
+    bl_idname = 'LNSurfaceNode'
+    bl_label = 'Surface State (deprecated)'
     bl_icon = 'CURVE_PATH'
     property0: EnumProperty(
         items = [('Touched', 'Touched', 'Touched'),
@@ -16,7 +16,6 @@ class SurfaceNode(Node, ArmLogicTreeNode):
         name='', default='Touched')
     
     def init(self, context):
-        self.outputs.new('ArmNodeSocketAction', 'Out')
         self.outputs.new('NodeSocketBool', 'State')
 
     def draw_buttons(self, context, layout):
