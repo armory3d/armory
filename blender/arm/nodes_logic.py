@@ -177,11 +177,11 @@ def replace(tree, node):
 
 def replaceAll():
     for tree in bpy.data.node_groups:
-            if tree.bl_idname == "ArmLogicTreeType":
-                for node in tree.nodes:
-                    if node.bl_idname in get_replaced_nodes():
-                        print("Replacing "+ node.bl_idname+ " in Tree "+tree.name)
-                        replace(tree, node)
+        if tree.bl_idname == "ArmLogicTreeType":
+            for node in tree.nodes:
+                if node.bl_idname in get_replaced_nodes():
+                    print("Replacing "+ node.bl_idname+ " in Tree "+tree.name)
+                    replace(tree, node)
         
     
 class ReplaceNodesOperator(bpy.types.Operator):
@@ -197,6 +197,7 @@ class ReplaceNodesOperator(bpy.types.Operator):
     def poll(cls, context):
         return context.space_data != None and context.space_data.type == 'NODE_EDITOR'
 
+# TODO: deprecated
 # Input Replacement Rules
 add_replacement(Replacement("LNOnGamepadNode", "LNMergedGamepadNode", {0: 0}, {0: 0}, {"property0": "property0", "property1": "property1"}))
 add_replacement(Replacement("LNGamepadNode", "LNMergedGamepadNode", {0: 0}, {0: 1}, {"property0": "property0", "property1": "property1"}))
