@@ -47,8 +47,8 @@ class PhysicsWorld extends Trait {
 	var pairCache:Bool = false;
 
 	static var nullvec = true;
-	var vec1:bullet.Bt.Vector3 = null;
-	var vec2:bullet.Bt.Vector3 = null;
+	static var vec1:bullet.Bt.Vector3 = null;
+	static var vec2:bullet.Bt.Vector3 = null;
 
 	#if arm_debug
 	public static var physTime = 0.0;
