@@ -1031,6 +1031,7 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
         col = layout.column()
         col.enabled = rpdat.rp_autoexposure
         col.prop(rpdat, 'arm_autoexposure_strength', text='Strength')
+        col.prop(rpdat, 'arm_autoexposure_speed', text='Speed')
         layout.prop(rpdat, 'arm_lens_texture')
         layout.prop(rpdat, 'arm_lut_texture')
 

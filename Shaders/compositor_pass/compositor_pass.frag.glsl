@@ -284,12 +284,12 @@ void main() {
 #endif
 
 #ifdef _CExposure
-	fragColor.rgb *= compoExposureStrength;
+	fragColor.rgb += fragColor.rgb * compoExposureStrength;
 #endif
 
 #ifdef _AutoExposure
 	float expo = 2.0 - clamp(length(textureLod(histogram, vec2(0.5, 0.5), 0).rgb), 0.0, 1.0);
-	fragColor.rgb *= pow(expo, autoExposureStrength);
+	fragColor.rgb *= pow(expo, autoExposureStrength * 2.0);
 #endif
 
 #ifdef _CToneFilmic

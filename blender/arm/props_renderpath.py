@@ -33,7 +33,7 @@ def update_preset(self, context):
         rpdat.rp_ssgi = 'SSAO'
         rpdat.rp_ssr = False
         rpdat.rp_bloom = False
-        rpdat.rp_eyeadapt = False
+        rpdat.rp_autoexposure = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Anisotropic'
@@ -65,7 +65,7 @@ def update_preset(self, context):
         rpdat.rp_ssgi = 'Off'
         rpdat.rp_ssr = False
         rpdat.rp_bloom = False
-        rpdat.rp_eyeadapt = False
+        rpdat.rp_autoexposure = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Linear'
@@ -100,7 +100,7 @@ def update_preset(self, context):
         rpdat.rp_ssr = True
         rpdat.arm_ssr_half_res = False
         rpdat.rp_bloom = True
-        rpdat.rp_eyeadapt = False
+        rpdat.rp_autoexposure = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_material_model = 'Full'
@@ -133,7 +133,7 @@ def update_preset(self, context):
         rpdat.rp_ssgi = 'Off'
         rpdat.rp_ssr = False
         rpdat.rp_bloom = False
-        rpdat.rp_eyeadapt = False
+        rpdat.rp_autoexposure = False
         rpdat.rp_motionblur = 'Off'
         rpdat.arm_rp_resolution = 'Display'
         rpdat.arm_texture_filter = 'Linear'
@@ -277,7 +277,6 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ],
         name="SSGI", description="Screen space global illumination", default='SSAO', update=update_renderpath)
     rp_bloom: BoolProperty(name="Bloom", description="Bloom processing", default=False, update=update_renderpath)
-    rp_eyeadapt: BoolProperty(name="Eye Adaptation", description="Auto-exposure based on histogram", default=False, update=update_renderpath)
     rp_motionblur: EnumProperty(
         items=[('Off', 'Off', 'Off'),
                ('Camera', 'Camera', 'Camera'),
@@ -438,6 +437,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_shadowmap_split: FloatProperty(name="Cascade Split", description="Split factor for cascaded shadow maps, higher factor favors detail on close surfaces", default=0.8, update=assets.invalidate_shader_cache)
     arm_shadowmap_bounds: FloatProperty(name="Cascade Bounds", description="Multiply cascade bounds to capture bigger area", default=1.0, update=assets.invalidate_compiled_data)
     arm_autoexposure_strength: FloatProperty(name="Auto Exposure Strength", default=1.0, update=assets.invalidate_shader_cache)
+    arm_autoexposure_speed: FloatProperty(name="Auto Exposure Speed", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssrs_ray_step: FloatProperty(name="Step", default=0.01, update=assets.invalidate_shader_cache)
     # Compositor
     arm_letterbox: BoolProperty(name="Letterbox", default=False, update=assets.invalidate_shader_cache)

@@ -521,6 +521,7 @@ const int volumSteps = """ + str(rpdat.arm_volumetric_light_steps) + """;
         if rpdat.rp_autoexposure:
             f.write(
 """const float autoExposureStrength = """ + str(rpdat.arm_autoexposure_strength) + """;
+const float autoExposureSpeed = """ + str(rpdat.arm_autoexposure_speed) + """;
 """)
 
         # Compositor
@@ -544,9 +545,9 @@ const int volumSteps = """ + str(rpdat.arm_volumetric_light_steps) + """;
 """const float compoSharpenStrength = """ + str(round(rpdat.arm_sharpen_strength * 100) / 100) + """;
 """)
 
-        if bpy.data.scenes[0].cycles.film_exposure != 1.0:
+        if bpy.data.scenes[0].view_settings.exposure != 0.0:
             f.write(
-"""const float compoExposureStrength = """ + str(round(bpy.data.scenes[0].cycles.film_exposure * 100) / 100) + """;
+"""const float compoExposureStrength = """ + str(round(bpy.data.scenes[0].view_settings.exposure * 100) / 100) + """;
 """)
 
         if rpdat.arm_fog:
