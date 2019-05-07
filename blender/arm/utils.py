@@ -580,24 +580,35 @@ def get_kode_bin():
     else:
         return p + '/kodestudio'
 
+def get_vscode_bin():
+    p = get_kode_path()
+    if get_os() == 'win':
+        return p + '/Code.exe'
+    elif get_os() == 'mac':
+        return p + '/Contents/MacOS/Electron'
+    else:
+        return p + '/code'
+
 def kode_studio(hx_path=None):
     project_path = arm.utils.get_fp()
     kode_bin = get_kode_bin()
+    if not os.path.exists(kode_bin):
+        kode_bin = get_vscode_bin()
     if os.path.exists(kode_bin) and get_code_editor() == 'kodestudio':
         if arm.utils.get_os() == 'win':
-            kode_studio_mklink_win(get_sdk_path(), get_kode_path())
+            # kode_studio_mklink_win(get_sdk_path(), get_kode_path())
             args = [kode_bin, arm.utils.get_fp()]
             if hx_path != None:
                 args.append(hx_path)
             subprocess.Popen(args)
         elif arm.utils.get_os() == 'mac':
-            kode_studio_mklink_mac(get_sdk_path(), get_kode_path())
+            # kode_studio_mklink_mac(get_sdk_path(), get_kode_path())
             args = ['"' + kode_bin + '"' + ' "' + arm.utils.get_fp() + '"']
             if hx_path != None:
                 args[0] += ' "' + hx_path + '"'
             subprocess.Popen(args, shell=True)
         else:
-            kode_studio_mklink_linux(get_sdk_path(), get_kode_path())
+            # kode_studio_mklink_linux(get_sdk_path(), get_kode_path())
             args = [kode_bin, arm.utils.get_fp()]
             if hx_path != None:
                 args.append(hx_path)
