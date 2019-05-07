@@ -626,10 +626,10 @@ class ArmoryOpenProjectFolderButton(bpy.types.Operator):
         return{'FINISHED'}
 
 class ArmoryKodeStudioButton(bpy.types.Operator):
-    '''Launch this project in Kode Studio'''
+    '''Launch this project in Kode Studio or VS Code'''
     bl_idname = 'arm.kode_studio'
-    bl_label = 'Kode Studio'
-    bl_description = 'Open Project in Kode Studio'
+    bl_label = 'Code Editor'
+    bl_description = 'Open Project in IDE'
 
     def execute(self, context):
         if not arm.utils.check_saved(self):
