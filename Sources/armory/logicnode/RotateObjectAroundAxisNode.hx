@@ -12,13 +12,13 @@ class RotateObjectAroundAxisNode extends LogicNode {
 
 	override function run(from:Int) {
 		var object:Object = inputs[1].get();
-		var axis:Vec4 = inputs[2].get().normalize();
+		var axis:Vec4 = inputs[2].get();
 		var angle:Float = inputs[3].get();
 
 		if (object == null || axis == null) return;
 
 		// the rotate function already calls buildMatrix
-		object.transform.rotate(axis, angle);
+		object.transform.rotate(axis.normalize(), angle);
 
 		#if arm_physics
 		var rigidBody = object.getTrait(RigidBody);
