@@ -6,6 +6,7 @@ import arm.utils
 
 assets = []
 reserved_names = ['return.']
+khafile_params = []
 khafile_defs = []
 khafile_defs_last = []
 embedded_data = []
@@ -19,6 +20,7 @@ shader_cons = {}
 
 def reset():
     global assets
+    global khafile_params
     global khafile_defs
     global khafile_defs_last
     global embedded_data
@@ -29,6 +31,7 @@ def reset():
     global shader_passes
     global shader_cons
     assets = []
+    khafile_params = []
     khafile_defs_last = khafile_defs
     khafile_defs = []
     embedded_data = []
@@ -64,6 +67,11 @@ def add_khafile_def(d):
     global khafile_defs
     if d not in khafile_defs:
         khafile_defs.append(d)
+
+def add_khafile_param(p):
+    global khafile_params
+    if p not in khafile_params:
+        khafile_params.append(p)
 
 def add_embedded_data(file):
     global embedded_data

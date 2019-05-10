@@ -273,6 +273,9 @@ project.addSources('Sources');
         for d in assets.khafile_defs:
             f.write("project.addDefine('" + d + "');\n")
 
+        for p in assets.khafile_params:
+            f.write("project.addParameter('" + p + "');\n")
+
         if wrd.arm_khafile != None:
             f.write(wrd.arm_khafile.as_string())
 
