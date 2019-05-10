@@ -118,7 +118,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
     if arm.utils.get_os() == 'win':
         subprocess.call([ \
             cmft_path,
-            '--input', input_file,
+            '--input', scaled_file,
             '--filter', 'radiance',
             '--dstFaceSize', str(face_size),
             '--srcFaceSize', str(face_size),
@@ -144,7 +144,7 @@ def write_probes(image_filepath, disable_hdr, cached_num_mips, arm_radiance=True
     else:
         subprocess.call([ \
             cmft_path + \
-            ' --input "' + input_file + '"' + \
+            ' --input "' + scaled_file + '"' + \
             ' --filter radiance' + \
             ' --dstFaceSize ' + str(face_size) + \
             ' --srcFaceSize ' + str(face_size) + \
