@@ -11,7 +11,7 @@ class PrintNode(Node, ArmLogicTreeNode):
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
-        self.inputs.new('NodeSocketShader', 'Value')
+        self.inputs.new('NodeSocketString', 'Value')
         self.outputs.new('ArmNodeSocketAction', 'Out')
 
 add_node(PrintNode, category='Action')
