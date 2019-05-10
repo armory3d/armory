@@ -74,37 +74,6 @@ class ArmOpenNodeSource(bpy.types.Operator):
             webbrowser.open('https://github.com/armory3d/armory/tree/master/Sources/armory/logicnode/' + name + '.hx')
         return{'FINISHED'}
 
-class ArmNodeSearch(bpy.types.Operator):
-    '''Search nodes'''
-    bl_idname = "arm.node_search"
-    bl_label = "Node Search"
-    bl_options = {"REGISTER"}
-    bl_property = "item"
-
-    def get_items(self, context):
-        items = []
-        for n in registered_nodes:
-            items.append((n.bl_idname, n.bl_label, ''))
-        return items
-
-    item: EnumProperty(items=get_items)
-
-    def invoke(self, context, event):
-        context.window_manager.invoke_search_popup(self)
-        return {"CANCELLED"}
-
-    def execute(self, context):
-        bpy.ops.node.add_node(type=self.item, use_transform=True)
-        return bpy.ops.node.translate_attach_remove_on_cancel('INVOKE_DEFAULT')
-
-def draw_menu(self, context):
-    if context.space_data.tree_type != "ArmLogicTreeType":
-        return
-    layout = self.layout
-    layout.operator_context = "INVOKE_DEFAULT"
-    layout.operator("arm.node_search", text="Search", icon="VIEWZOOM")
-    layout.separator()
-
 # node replacement code
 replacements = {}
 
@@ -220,12 +189,8 @@ def register():
     bpy.utils.register_class(ArmOpenNodeSource)
     bpy.utils.register_class(ReplaceNodesOperator)
     register_nodes()
-    bpy.utils.register_class(ArmNodeSearch)
-    bpy.types.NODE_MT_add.prepend(draw_menu)
 
 def unregister():
-    bpy.types.NODE_MT_add.remove(draw_menu)
-    bpy.utils.unregister_class(ArmNodeSearch)
     bpy.utils.unregister_class(ReplaceNodesOperator)
     unregister_nodes()
     bpy.utils.unregister_class(ArmLogicTree)
