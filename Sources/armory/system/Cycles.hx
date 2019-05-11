@@ -48,6 +48,7 @@ class Cycles {
 	public static var parse_height_as_channel = false;
 	public static var parse_emission = false;
 	public static var parse_subsurface = false;
+	public static var triplanar = false; // Sample using texCoord0/1/2 & texCoordBlend
 
 	public static var arm_export_tangents = true;
 	public static var out_normaltan:String; // Raw tangent space normal parsed from normal map
@@ -1744,10 +1745,20 @@ class Cycles {
 			uv_name = 'texCoord';
 		}
 		var tex_store = store_var_name(node);
-		// if c_state.mat_texture_grad():
-			// curshader.write('vec4 {0} = textureGrad({1}, {2}.xy, g2.xy, g2.zw);'.format(tex_store, tex_name, uv_name))
-		// else:
-			curshader.write('vec4 $tex_store = texture($tex_name, $uv_name.xy);');
+
+		if (triplanar) {
+			curshader.write('vec4 $tex_store = vec4(0.0, 0.0, 0.0, 0.0);');
+			curshader.write('if (texCoordBlend.x > 0) $tex_store += texture($tex_name, ${uv_name}0.xy) * texCoordBlend.x;');
+			curshader.write('if (texCoordBlend.y > 0) $tex_store += texture($tex_name, ${uv_name}1.xy) * texCoordBlend.y;');
+			curshader.write('if (texCoordBlend.z > 0) $tex_store += texture($tex_name, ${uv_name}2.xy) * texCoordBlend.z;');
+		}
+		else {
+			// if c_state.mat_texture_grad():
+				// curshader.write('vec4 {0} = textureGrad({1}, {2}.xy, g2.xy, g2.zw);'.format(tex_store, tex_name, uv_name))
+			// else:
+				curshader.write('vec4 $tex_store = texture($tex_name, $uv_name.xy);');
+		}
+		
 		if (sample_bump) {
 			sample_bump_res = tex_store;
 			curshader.write('float ${tex_store}_1 = textureOffset($tex_name, $uv_name.xy, ivec2(-2, 0)).r;');
