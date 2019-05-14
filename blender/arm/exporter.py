@@ -48,6 +48,7 @@ deltaSubtranslationName = ["dxloc", "dyloc", "dzloc"]
 deltaSubrotationName = ["dxrot", "dyrot", "dzrot"]
 deltaSubscaleName = ["dxscl", "dyscl", "dzscl"]
 axisName = ["x", "y", "z"]
+current_output = None
 
 class ArmoryExporter:
     '''Export to Armory format'''
@@ -795,13 +796,15 @@ class ArmoryExporter:
                     self.meshArray[objref]["objectTable"].append(bobject)
 
                 oid = arm.utils.safestr(self.meshArray[objref]["structName"])
-                if ArmoryExporter.option_mesh_per_file:
+
+                wrd = bpy.data.worlds['Arm']
+                if wrd.arm_single_data_file:
+                    o['data_ref'] = oid
+                else:
                     ext = '' if not self.is_compress() else '.zip'
                     if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
                         ext = '.json'
                     o['data_ref'] = 'mesh_' + oid + ext + '/' + oid
-                else:
-                    o['data_ref'] = oid
 
                 o['material_refs'] = []
                 for i in range(len(bobject.material_slots)):
@@ -1083,14 +1086,14 @@ class ArmoryExporter:
                 self.add_constraints(bone, oskin, bone=True)
 
     def write_mesh(self, bobject, fp, o):
-        # One mesh data per file
-        if ArmoryExporter.option_mesh_per_file:
+        wrd = bpy.data.worlds['Arm']
+        if wrd.arm_single_data_file:
+            self.output['mesh_datas'].append(o)
+        else: # One mesh data per file
             mesh_obj = {}
             mesh_obj['mesh_datas'] = [o]
             arm.utils.write_arm(fp, mesh_obj)
             bobject.data.arm_cached = True
-        else:
-            self.output['mesh_datas'].append(o)
 
     def calc_aabb(self, bobject):
         aabb_center = 0.125 * sum((Vector(b) for b in bobject.bound_box), Vector())
@@ -1343,14 +1346,15 @@ class ArmoryExporter:
         bobject = table[0]
         oid = arm.utils.safestr(objectRef[1]["structName"])
 
-        # No export necessary
-        if ArmoryExporter.option_mesh_per_file:
+        wrd = bpy.data.worlds['Arm']
+        if wrd.arm_single_data_file:
+            fp = None
+        else:
             fp = self.get_meshes_file_path('mesh_' + oid, compressed=self.is_compress())
             assets.add(fp)
+            # No export necessary
             if bobject.data.arm_cached and os.path.exists(fp):
                 return
-        else:
-            fp = None
 
         # Mesh users have different modifier stack
         for i in range(1, len(table)):
@@ -1901,17 +1905,18 @@ class ArmoryExporter:
             self.export_mesh(o, scene)
 
     def execute(self, context, filepath, scene=None):
+        global current_output
         profile_time = time.time()
 
-        self.output = {}
-        self.filepath = filepath
-
         self.scene = context.scene if scene == None else scene
+        current_frame, current_subframe = self.scene.frame_current, self.scene.frame_subframe
+
         print('Exporting ' + arm.utils.asset_name(self.scene))
 
-        current_frame, current_subframe = scene.frame_current, scene.frame_subframe
+        self.output = {}
+        current_output = self.output
         self.output['frame_time'] = 1.0 / (self.scene.render.fps / self.scene.render.fps_base)
-
+        self.filepath = filepath
         self.bobjectArray = {}
         self.bobjectBoneArray = {}
         self.meshArray = {}
@@ -2336,7 +2341,6 @@ class ArmoryExporter:
         if not hasattr(ArmoryExporter, 'import_traits'):
             ArmoryExporter.import_traits = [] # Referenced traits
         ArmoryExporter.option_mesh_only = False
-        ArmoryExporter.option_mesh_per_file = True
 
     def preprocess_object(self, bobject): # Returns false if object should not be exported
         export_object = True

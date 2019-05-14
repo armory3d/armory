@@ -333,6 +333,7 @@ class ARM_PT_ArmoryExporterPanel(bpy.types.Panel):
         col.prop(wrd, 'arm_minify_js')
         col.prop(wrd, 'arm_optimize_data')
         col.prop(wrd, 'arm_asset_compression')
+        col.prop(wrd, 'arm_single_data_file')
 
 class ARM_PT_ArmoryProjectPanel(bpy.types.Panel):
     bl_label = "Armory Project"

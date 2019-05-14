@@ -14,6 +14,7 @@ import arm.material.make_depth as make_depth
 import arm.material.make_decal as make_decal
 import arm.material.make_voxel as make_voxel
 import arm.api
+import arm.exporter
 
 rpass_hook = None
 
@@ -103,10 +104,16 @@ def build(material, mat_users, mat_armusers):
 
         write_shaders(rel_path, con, rp, matname)
 
-    arm.utils.write_arm(full_path + '/' + matname + '_data.arm', mat_state.data.get())
     shader_data_name = matname + '_data'
-    shader_data_path = arm.utils.get_fp_build() + '/compiled/Shaders/' + shader_data_name + '.arm'
-    assets.add_shader_data(shader_data_path)
+
+    if wrd.arm_single_data_file:
+        if not 'shader_datas' in arm.exporter.current_output:
+            arm.exporter.current_output['shader_datas'] = []
+        arm.exporter.current_output['shader_datas'].append(mat_state.data.get()['shader_datas'][0])
+    else:
+        arm.utils.write_arm(full_path + '/' + matname + '_data.arm', mat_state.data.get())
+        shader_data_path = arm.utils.get_fp_build() + '/compiled/Shaders/' + shader_data_name + '.arm'
+        assets.add_shader_data(shader_data_path)
 
     return rpasses, mat_state.data, shader_data_name, bind_constants, bind_textures
 
