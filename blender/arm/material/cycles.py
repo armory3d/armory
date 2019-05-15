@@ -468,7 +468,10 @@ def parse_vector(node, socket):
         tex_link = node.name if node.arm_material_param else None
         if tex != None:
             curshader.write_textures += 1
-            to_linear = node.color_space == 'COLOR'
+            if hasattr(node, 'color_space'): # TODO: node.color_space deprecated
+                to_linear = node.color_space == 'COLOR'
+            else:
+                to_linear = node.image != None and node.image.colorspace_settings.name == 'sRGB'
             res = '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear, tex_link=tex_link))
             curshader.write_textures -= 1
             return res
@@ -476,8 +479,7 @@ def parse_vector(node, socket):
             tex = {}
             tex['name'] = tex_name
             tex['file'] = ''
-            to_linear = node.color_space == 'COLOR'
-            return '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear, tex_link=tex_link))
+            return '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear=False, tex_link=tex_link))
         else:
             global parsed
             tex_store = store_var_name(node) # Pink color for missing texture
@@ -1571,8 +1573,6 @@ def make_texture(image_node, tex_name, matname=None):
         interpolation = 'Linear'
     elif texfilter == 'Point':
         interpolation = 'Closest'
-    # if image_node.color_space == NON_COLOR_DATA:
-        # interpolation = image_node.interpolation
 
     # TODO: Blender seems to load full images on size request, cache size instead
     powimage = is_pow(image.size[0]) and is_pow(image.size[1])
