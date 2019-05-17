@@ -47,7 +47,7 @@ def build_node_tree(world):
         write_probes.write_color_irradiance(wname, world.arm_envtex_color)
 
     # film_transparent
-    if bpy.context.scene != None and bpy.context.scene.cycles != None and bpy.context.scene.cycles.film_transparent:
+    if bpy.context.scene != None and hasattr(bpy.context.scene.render, 'film_transparent') and bpy.context.scene.render.film_transparent:
         wrd.world_defs += '_EnvTransp'
         wrd.world_defs += '_EnvCol'
 
