@@ -84,7 +84,7 @@ mat4 getCascadeMat(const float d, out int casi, out int casIndex) {
 	casIndex = casi * 4;
 
 	return mat4(
-		casData[casIndex + 0],
+		casData[casIndex    ],
 		casData[casIndex + 1],
 		casData[casIndex + 2],
 		casData[casIndex + 3]);
@@ -121,7 +121,7 @@ float shadowTestCascade(sampler2DShadow shadowMap, const vec3 eye, const vec3 p,
 	if (splitDist <= blendThres && casi != c - 1) {
 		int casIndex2 = casIndex + 4;
 		mat4 LWVP2 = mat4(
-			casData[casIndex2 + 0],
+			casData[casIndex2    ],
 			casData[casIndex2 + 1],
 			casData[casIndex2 + 2],
 			casData[casIndex2 + 3]);

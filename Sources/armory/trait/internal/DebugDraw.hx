@@ -143,7 +143,7 @@ class DebugDraw {
 		l.add(camera.up());
 
 		var i = lines * 24; // 4 * 6 (structure len)
-		vbData.set(i + 0, x1);
+		vbData.set(i    , x1);
 		vbData.set(i + 1, y1);
 		vbData.set(i + 2, z1);
 		vbData.set(i + 3, color.R);
@@ -172,12 +172,12 @@ class DebugDraw {
 		vbData.set(i + 23, color.B);
 
 		i = lines * 6;
-		ibData[i + 0] = lines * 4 + 0;
+		ibData[i    ] = lines * 4;
 		ibData[i + 1] = lines * 4 + 1;
 		ibData[i + 2] = lines * 4 + 2;
 		ibData[i + 3] = lines * 4 + 2;
 		ibData[i + 4] = lines * 4 + 3;
-		ibData[i + 5] = lines * 4 + 0;
+		ibData[i + 5] = lines * 4;
 
 		lines++;
 	}
