@@ -1,15 +1,39 @@
 import arm.material.cycles as cycles
 import arm.material.mat_state as mat_state
 import arm.material.make_mesh as make_mesh
+import arm.material.mat_utils as mat_utils
 
 def make(context_id):
-	con_overlay = mat_state.data.add_context({ 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' })
+    con = { 'name': context_id, 'depth_write': True, 'compare_mode': 'less', 'cull_mode': 'clockwise' }
+    mat = mat_state.material
+    blend = mat.arm_blending
+    if blend:
+        con['blend_source'] = mat.arm_blending_source
+        con['blend_destination'] = mat.arm_blending_destination
+        con['blend_operation'] = mat.arm_blending_operation
+        con['alpha_blend_source'] = mat.arm_blending_source_alpha
+        con['alpha_blend_destination'] = mat.arm_blending_destination_alpha
+        con['alpha_blend_operation'] = mat.arm_blending_operation_alpha
+    
+    con_overlay = mat_state.data.add_context(con)
 
-	make_mesh.make_base(con_overlay, parse_opacity=False)
+    arm_discard = mat.arm_discard
+    is_transluc = mat_utils.is_transluc(mat)
+    parse_opacity = (blend and is_transluc) or arm_discard
+    make_mesh.make_base(con_overlay, parse_opacity=parse_opacity)
+    
+    frag = con_overlay.frag
 
-	frag = con_overlay.frag
-	frag.add_out('vec4 fragColor')
-	frag.write('fragColor = vec4(basecol, 1.0);')
-	frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
+    if arm_discard:
+        opac = mat.arm_discard_opacity
+        frag.write('if (opacity < {0}) discard;'.format(opac))
 
-	return con_overlay
+    frag.add_out('vec4 fragColor')
+    if blend and parse_opacity:
+        frag.write('fragColor = vec4(basecol, opacity);')
+    else:
+        frag.write('fragColor = vec4(basecol, 1.0);')
+
+    frag.write('fragColor.rgb = pow(fragColor.rgb, vec3(1.0 / 2.2));')
+
+    return con_overlay
