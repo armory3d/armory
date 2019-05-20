@@ -560,9 +560,14 @@ const float compoFogAmountB = """ + str(round(rpdat.arm_fog_amountb * 100) / 100
 const vec3 compoFogColor = vec3(""" + str(round(rpdat.arm_fog_color[0] * 100) / 100) + """, """ + str(round(rpdat.arm_fog_color[1] * 100) / 100) + """, """ + str(round(rpdat.arm_fog_color[2] * 100) / 100) + """);
 """)
 
-        if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].dof_distance > 0.0:
+        focus_distance = 0.0 # TODO: deprecated
+        if len(bpy.data.cameras) > 0:
+            cam = bpy.data.cameras[0]
+            focus_distance = cam.dof.focus_distance if hasattr(cam, 'dof') else cam.dof_distance
+        
+        if len(bpy.data.cameras) > 0 and focus_distance > 0.0:
             f.write(
-"""const float compoDOFDistance = """ + str(round(bpy.data.cameras[0].dof_distance * 100) / 100) + """;
+"""const float compoDOFDistance = """ + str(round(focus_distance * 100) / 100) + """;
 const float compoDOFFstop = """ + str(round(bpy.data.cameras[0].gpu_dof.fstop * 100) / 100) + """;
 const float compoDOFLength = 160.0;
 """) # str(round(bpy.data.cameras[0].lens * 100) / 100)

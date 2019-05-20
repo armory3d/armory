@@ -1419,7 +1419,12 @@ class ArmoryExporter:
 
         armature = bobject.find_armature()
         apply_modifiers = not armature
-        exportMesh = bobject.to_mesh(bpy.context.depsgraph, apply_modifiers, calc_undeformed=False)
+
+        if hasattr(bobject, 'evaluated_get'):
+            bobject_eval = bobject.evaluated_get(self.depsgraph) if apply_modifiers else bobject
+            exportMesh = bobject_eval.to_mesh()
+        else: # TODO: deprecated
+            exportMesh = bobject.to_mesh(self.depsgraph, apply_modifiers, calc_undeformed=False)
 
         if exportMesh == None:
             log.warn(oid + ' was not exported')
@@ -1465,6 +1470,9 @@ class ArmoryExporter:
 
         self.write_mesh(bobject, fp, o)
         # print('Mesh exported in ' + str(time.time() - profile_time))
+
+        if hasattr(bobject, 'evaluated_get'):
+            bobject_eval.to_mesh_clear()
 
     def export_light(self, objectRef):
         # This function exports a single light object
@@ -1576,7 +1584,7 @@ class ArmoryExporter:
         camera = objectRef[1]["objectTable"][0]
         render = self.scene.render
         proj = camera.calc_matrix_camera(
-            bpy.context.depsgraph,
+            self.depsgraph,
             x=render.resolution_x,
             y=render.resolution_y,
             scale_x=render.pixel_aspect_x,
@@ -1940,6 +1948,11 @@ class ArmoryExporter:
         # for i in range(0, len(self.scene.view_layers)):
             # if self.scene.view_layers[i] == True:
                 # self.active_layers.append(i)
+
+        if hasattr(context, 'evaluated_depsgraph_get'):
+            self.depsgraph = context.evaluated_depsgraph_get()
+        else: # TODO: deprecated
+            self.depsgraph = context.depsgraph
 
         self.preprocess()
 

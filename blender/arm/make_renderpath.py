@@ -162,7 +162,13 @@ def build():
             if rpdat.arm_fog:
                 wrd.compo_defs += '_CFog'
                 compo_depth = True
-            if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].dof_distance > 0.0:
+
+            focus_distance = 0.0 # TODO: deprecated
+            if len(bpy.data.cameras) > 0:
+                cam = bpy.data.cameras[0]
+                focus_distance = cam.dof.focus_distance if hasattr(cam, 'dof') else cam.dof_distance
+
+            if len(bpy.data.cameras) > 0 and focus_distance > 0.0:
                 wrd.compo_defs += '_CDOF'
                 compo_depth = True
             if compo_depth:
