@@ -21,7 +21,7 @@ class HosekWilkieRadianceData {
 
 	function evaluateSpline(spline:Array<Float>, index:Int, stride:Int, value:Float):Float {
 		return
-		1 *  Math.pow(1 - value, 5) *                      spline[index     * stride] +
+		1 *  Math.pow(1 - value, 5) *                      spline[index             ] +
 		5 *  Math.pow(1 - value, 4) * Math.pow(value, 1) * spline[index + 1 * stride] +
 		10 * Math.pow(1 - value, 3) * Math.pow(value, 2) * spline[index + 2 * stride] +
 		10 * Math.pow(1 - value, 2) * Math.pow(value, 3) * spline[index + 3 * stride] +
