@@ -15,6 +15,9 @@ def add_world_defs():
     if rpdat.arm_ssrs:
         wrd.world_defs += '_SSRS'
 
+    if rpdat.arm_micro_shadowing:
+        wrd.world_defs += '_MicroShadowing'
+
     if rpdat.arm_two_sided_area_light:
         wrd.world_defs += '_TwoSidedAreaLight'
 

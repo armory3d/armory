@@ -31,6 +31,8 @@ def update_preset(self, context):
         rpdat.rp_compositornodes = True
         rpdat.rp_volumetriclight = False
         rpdat.rp_ssgi = 'SSAO'
+        rpdat.arm_ssrs = False
+        rpdat.arm_micro_shadowing = False
         rpdat.rp_ssr = False
         rpdat.rp_bloom = False
         rpdat.rp_autoexposure = False
@@ -63,6 +65,8 @@ def update_preset(self, context):
         rpdat.rp_compositornodes = False
         rpdat.rp_volumetriclight = False
         rpdat.rp_ssgi = 'Off'
+        rpdat.arm_ssrs = False
+        rpdat.arm_micro_shadowing = False
         rpdat.rp_ssr = False
         rpdat.rp_bloom = False
         rpdat.rp_autoexposure = False
@@ -97,6 +101,7 @@ def update_preset(self, context):
         rpdat.rp_volumetriclight = False
         rpdat.rp_ssgi = 'RTAO'
         rpdat.arm_ssrs = False
+        rpdat.arm_micro_shadowing = False
         rpdat.rp_ssr = True
         rpdat.arm_ssr_half_res = False
         rpdat.rp_bloom = True
@@ -131,6 +136,8 @@ def update_preset(self, context):
         rpdat.rp_compositornodes = False
         rpdat.rp_volumetriclight = False
         rpdat.rp_ssgi = 'Off'
+        rpdat.arm_ssrs = False
+        rpdat.arm_micro_shadowing = False
         rpdat.rp_ssr = False
         rpdat.rp_bloom = False
         rpdat.rp_autoexposure = False
@@ -340,6 +347,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
         name="Resolution Z", description="3D texture z resolution multiplier", default='1.0', update=update_renderpath)
     arm_clouds: BoolProperty(name="Clouds", default=False, update=assets.invalidate_shader_cache)
     arm_ssrs: BoolProperty(name="SSRS", description="Screen-space ray-traced shadows", default=False, update=assets.invalidate_shader_cache)
+    arm_micro_shadowing: BoolProperty(name="Micro Shadowing", description="Micro shadowing based on ambient occlusion", default=False, update=assets.invalidate_shader_cache)
     arm_texture_filter: EnumProperty(
         items=[('Anisotropic', 'Anisotropic', 'Anisotropic'),
                ('Linear', 'Linear', 'Linear'), 

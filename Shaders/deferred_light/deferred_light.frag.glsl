@@ -182,6 +182,10 @@ void main() {
 	vec3 v = normalize(eye - p);
 	float dotNV = max(dot(n, v), 0.0);
 
+#ifdef _MicroShadowing
+	occspec.x = mix(1.0, occspec.x, dotNV); // AO Fresnel
+#endif
+
 #ifdef _Brdf
 	vec2 envBRDF = textureLod(senvmapBrdf, vec2(metrough.y, 1.0 - dotNV), 0.0).xy;
 #endif
@@ -307,6 +311,10 @@ void main() {
 	svisibility *= textureLod(texClouds, vec2(p.xy / 100.0 + time / 80.0), 0.0).r * dot(n, vec3(0,0,1));
 	#endif
 
+	#ifdef _MicroShadowing
+	svisibility *= sdotNL + 2.0 * occspec.x * occspec.x - 1.0;
+	#endif
+
 	fragColor.rgb += sdirect * svisibility * sunCol;
 
 //	#ifdef _Hair // Aniso
@@ -345,6 +353,9 @@ void main() {
 		#ifdef _VoxelShadow
 		, voxels, voxpos
 		#endif
+		#endif
+		#ifdef _MicroShadowing
+		, occspec.x
 		#endif
 	);
 	
@@ -391,6 +402,9 @@ void main() {
 			, lightsArray[li * 2 + 1].w // cutoff
 			, lightsArraySpot[li].w // cutoff - exponent
 			, lightsArraySpot[li].xyz // spotDir
+			#endif
+			#ifdef _MicroShadowing
+			, occspec.x
 			#endif
 		);
 	}

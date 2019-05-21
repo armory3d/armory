@@ -77,6 +77,9 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 		, sampler3D voxels, vec3 voxpos
 	#endif
 	#endif
+	#ifdef _MicroShadowing
+		, float occ
+	#endif
 	) {
 	vec3 ld = lp - p;
 	vec3 l = normalize(ld);
@@ -104,6 +107,10 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#endif
 	direct *= attenuate(distance(p, lp));
 	direct *= lightCol;
+
+	#ifdef _MicroShadowing
+	direct *= dotNL + 2.0 * occ * occ - 1.0;
+	#endif
 
 	#ifdef _VoxelAOvar
 	#ifdef _VoxelShadow

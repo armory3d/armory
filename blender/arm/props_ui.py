@@ -957,6 +957,7 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         col = layout.column()
         col.enabled = rpdat.arm_ssrs
         col.prop(rpdat, 'arm_ssrs_ray_step')
+        layout.prop(rpdat, 'arm_micro_shadowing')
         layout.separator()
         layout.prop(rpdat, "rp_bloom")
         col = layout.column()
