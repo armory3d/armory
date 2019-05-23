@@ -15,7 +15,11 @@ def on_depsgraph_update_post(self):
         return
 
     # Recache
-    depsgraph = bpy.context.depsgraph
+    if hasattr(bpy.context, 'evaluated_depsgraph_get'):
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+    else: # TODO: deprecated
+        depsgraph = bpy.context.depsgraph
+
     for update in depsgraph.updates:
         uid = update.id
         if hasattr(uid, 'arm_cached'):
