@@ -95,7 +95,7 @@ def add_world_defs():
         wrd.world_defs += '_Clusters'
         assets.add_khafile_def('arm_clusters')
 
-    if '_Rad' in wrd.world_defs:
+    if '_Rad' in wrd.world_defs and '_Brdf' not in wrd.world_defs:
         wrd.world_defs += '_Brdf'
 
 def build():
