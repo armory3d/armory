@@ -299,12 +299,10 @@ void main() {
 	#endif
 
 	#ifdef _SSRS
-	float tvis = traceShadowSS(-sunDir, p, gbufferD, invVP, eye);
 	// vec2 coords = getProjectedCoord(hitCoord);
 	// vec2 deltaCoords = abs(vec2(0.5, 0.5) - coords.xy);
 	// float screenEdgeFactor = clamp(1.0 - (deltaCoords.x + deltaCoords.y), 0.0, 1.0);
-	// tvis *= screenEdgeFactor;
-	svisibility *= tvis;
+	svisibility *= traceShadowSS(sunDir, p, gbufferD, invVP, eye);
 	#endif
 
 	#ifdef _LightClouds
@@ -357,6 +355,9 @@ void main() {
 		#ifdef _MicroShadowing
 		, occspec.x
 		#endif
+		#ifdef _SSRS
+		, gbufferD, invVP, eye
+		#endif
 	);
 	
 	#ifdef _Spot
@@ -405,6 +406,9 @@ void main() {
 			#endif
 			#ifdef _MicroShadowing
 			, occspec.x
+			#endif
+			#ifdef _SSRS
+			, gbufferD, invVP, eye
 			#endif
 		);
 	}

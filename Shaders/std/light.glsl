@@ -16,6 +16,9 @@
 #ifdef _LightIES
 #include "std/ies.glsl"
 #endif
+#ifdef _SSRS
+#include "std/ssrs.glsl"
+#endif
 
 #ifdef _ShadowMap
 #ifdef _SinglePoint
@@ -80,6 +83,9 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 	#ifdef _MicroShadowing
 		, float occ
 	#endif
+	#ifdef _SSRS
+		, sampler2D gbufferD, mat4 invVP, vec3 eye
+	#endif
 	) {
 	vec3 ld = lp - p;
 	vec3 l = normalize(ld);
@@ -110,6 +116,10 @@ vec3 sampleLight(const vec3 p, const vec3 n, const vec3 v, const float dotNV, co
 
 	#ifdef _MicroShadowing
 	direct *= dotNL + 2.0 * occ * occ - 1.0;
+	#endif
+
+	#ifdef _SSRS
+	direct *= traceShadowSS(l, p, gbufferD, invVP, eye);
 	#endif
 
 	#ifdef _VoxelAOvar

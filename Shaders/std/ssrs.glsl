@@ -1,3 +1,6 @@
+#ifndef _SSRS_GLSL_
+#define _SSRS_GLSL_
+
 #include "std/gbuffer.glsl"
 
 uniform mat4 VP;
@@ -23,15 +26,11 @@ float getDeltaDepth(vec3 hitCoord, sampler2D gbufferD, mat4 invVP, vec3 eye) {
 
 float traceShadowSS(vec3 dir, vec3 hitCoord, sampler2D gbufferD, mat4 invVP, vec3 eye) {
 	dir *= ssrsRayStep;
-	// for (int i = 0; i < maxSteps; i++) {
+	for (int i = 0; i < 4; i++) {
 		hitCoord += dir;
-		if (getDeltaDepth(hitCoord, gbufferD, invVP, eye) > 0.0) return 0.6;
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord, gbufferD, invVP, eye) > 0.0) return 0.7;
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord, gbufferD, invVP, eye) > 0.0) return 0.8;
-		hitCoord += dir;
-		if (getDeltaDepth(hitCoord, gbufferD, invVP, eye) > 0.0) return 0.9;
-	//}
-	return 1.0;
+		if (getDeltaDepth(hitCoord, gbufferD, invVP, eye) > 0.0) return 1.0;
+	}
+	return 0.0;
 }
+
+#endif
