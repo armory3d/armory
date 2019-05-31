@@ -169,7 +169,11 @@ def build():
             focus_distance = 0.0 # TODO: deprecated
             if len(bpy.data.cameras) > 0:
                 cam = bpy.data.cameras[0]
-                focus_distance = cam.dof.focus_distance if hasattr(cam, 'dof') else cam.dof_distance
+                if hasattr(cam, 'dof'):
+                    if cam.dof.use_dof:
+                        focus_distance = cam.dof.focus_distance
+                else:
+                    focus_distance = cam.dof_distance
 
             if len(bpy.data.cameras) > 0 and focus_distance > 0.0:
                 wrd.compo_defs += '_CDOF'

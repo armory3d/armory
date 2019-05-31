@@ -564,8 +564,13 @@ const vec3 compoFogColor = vec3(""" + str(round(rpdat.arm_fog_color[0] * 100) / 
         fstop = 0.0
         if len(bpy.data.cameras) > 0:
             cam = bpy.data.cameras[0]
-            focus_distance = cam.dof.focus_distance if hasattr(cam, 'dof') else cam.dof_distance
-            fstop = cam.dof.aperture_fstop if hasattr(cam, 'dof') else cam.gpu_dof.fstop
+            if hasattr(cam, 'dof'):
+                if cam.dof.use_dof:
+                    focus_distance = cam.dof.focus_distance
+                    fstop = cam.dof.aperture_fstop
+            else:
+                focus_distance = cam.dof_distance
+                fstop = cam.gpu_dof.fstop
         
         if len(bpy.data.cameras) > 0 and focus_distance > 0.0:
             f.write(
