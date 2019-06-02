@@ -1409,10 +1409,18 @@ def texture_store(node, tex, tex_name, to_linear=False, tex_link=None):
         uv_name = 'vec2({0}.x, 1.0 - {0}.y)'.format(uv_name)
     else:
         uv_name = 'texCoord'
-    if mat_texture_grad():
-        curshader.write('vec4 {0} = textureGrad({1}, {2}.xy, g2.xy, g2.zw);'.format(tex_store, tex_name, uv_name))
+    triplanar = node.projection == 'BOX'
+    if triplanar:
+        curshader.write(f'vec3 texCoordBlend = vec3(0.0); vec2 {uv_name}1 = vec2(0.0); vec2 {uv_name}2 = vec2(0.0);') # Temp
+        curshader.write(f'vec4 {tex_store} = vec4(0.0, 0.0, 0.0, 0.0);')
+        curshader.write(f'if (texCoordBlend.x > 0) {tex_store} += texture({tex_name}, {uv_name}.xy) * texCoordBlend.x;')
+        curshader.write(f'if (texCoordBlend.y > 0) {tex_store} += texture({tex_name}, {uv_name}1.xy) * texCoordBlend.y;')
+        curshader.write(f'if (texCoordBlend.z > 0) {tex_store} += texture({tex_name}, {uv_name}2.xy) * texCoordBlend.z;')
     else:
-        curshader.write('vec4 {0} = texture({1}, {2}.xy);'.format(tex_store, tex_name, uv_name))
+        if mat_texture_grad():
+            curshader.write('vec4 {0} = textureGrad({1}, {2}.xy, g2.xy, g2.zw);'.format(tex_store, tex_name, uv_name))
+        else:
+            curshader.write('vec4 {0} = texture({1}, {2}.xy);'.format(tex_store, tex_name, uv_name))
     if sample_bump:
         sample_bump_res = tex_store
         curshader.write('float {0}_1 = textureOffset({1}, {2}.xy, ivec2(-2, 0)).r;'.format(tex_store, tex_name, uv_name))
