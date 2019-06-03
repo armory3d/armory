@@ -257,7 +257,7 @@ def parse_shader(node, socket):
                 # clearcoar_normal = parse_vector_input(node.inputs[20])
                 # tangent = parse_vector_input(node.inputs[21])
         if parse_opacity:
-            if len(node.inputs) > 18:
+            if len(node.inputs) > 20:
                 out_opacity = parse_value_input(node.inputs[18])
 
     elif node.type == 'BSDF_DIFFUSE':

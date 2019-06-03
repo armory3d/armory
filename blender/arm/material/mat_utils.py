@@ -73,7 +73,7 @@ def is_transluc_type(node):
        node.type == 'BSDF_TRANSPARENT' or \
        node.type == 'BSDF_TRANSLUCENT' or \
        (node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR') and (node.inputs[1].is_linked or node.inputs[1].default_value != 1.0)) or \
-       (node.type == 'BSDF_PRINCIPLED' and len(node.inputs) > 18 and (node.inputs[18].is_linked or node.inputs[18].default_value != 1.0)):
+       (node.type == 'BSDF_PRINCIPLED' and len(node.inputs) > 20 and (node.inputs[18].is_linked or node.inputs[18].default_value != 1.0)):
        return True
     return False
 
@@ -100,6 +100,6 @@ def is_emmisive_traverse(node):
 def is_emmisive_type(node):
     if node.type == 'EMISSION' or \
        (node.type == 'GROUP' and node.node_tree.name.startswith('Armory PBR') and (node.inputs[6].is_linked or node.inputs[6].default_value != 0.0)) or \
-       (node.type == 'BSDF_PRINCIPLED' and len(node.inputs) > 17 and (node.inputs[17].is_linked or node.inputs[17].default_value[0] != 0.0)):
+       (node.type == 'BSDF_PRINCIPLED' and len(node.inputs) > 20 and (node.inputs[17].is_linked or node.inputs[17].default_value[0] != 0.0)):
        return True
     return False
