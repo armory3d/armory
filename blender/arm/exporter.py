@@ -1504,16 +1504,22 @@ class ArmoryExporter:
                 o['shadows_bias'] *= 1 / (o['shadowmap_size'] / 1024) # Less bias for bigger maps
         elif objtype == 'POINT':
             o['strength'] *= 2.6
+            if bpy.app.version >= (2, 80, 72):
+                o['strength'] *= 0.01
             o['fov'] = 1.5708 # pi/2
             o['shadowmap_cube'] = True
             if objref.shadow_soft_size > 0.1:
                 o['light_size'] = objref.shadow_soft_size * 10
         elif objtype == 'SPOT':
             o['strength'] *= 2.6
+            if bpy.app.version >= (2, 80, 72):
+                o['strength'] *= 0.01
             o['spot_size'] = math.cos(objref.spot_size / 2)
             o['spot_blend'] = objref.spot_blend / 10 # Cycles defaults to 0.15
         elif objtype == 'AREA':
             o['strength'] *= 80.0 / (objref.size * objref.size_y)
+            if bpy.app.version >= (2, 80, 72):
+                o['strength'] *= 0.01
             o['size'] = objref.size
             o['size_y'] = objref.size_y
         
@@ -1716,7 +1722,7 @@ class ArmoryExporter:
             if signature != material.signature:
                 material.arm_cached = False
             if signature != None:
-           		material.signature = signature
+                material.signature = signature
 
             o = {}
             o['name'] = arm.utils.asset_name(material)
