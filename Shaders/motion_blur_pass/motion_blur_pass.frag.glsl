@@ -26,6 +26,9 @@ vec2 getVelocity(vec2 coord, float depth) {
 	vec4 previousPos = prevVP * worldPos;
 	previousPos /= previousPos.w;
 	vec2 velocity = (currentPos - previousPos).xy / 40.0;
+	#ifdef HLSL
+	velocity.y = -velocity.y;
+	#endif
 	return velocity;
 }
 
