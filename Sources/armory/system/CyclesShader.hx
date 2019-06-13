@@ -268,7 +268,7 @@ class CyclesShader {
 		}
 	}
 
-	public function get() {
+	public function get():String {
 
 		if (shader_type == 'vert' && vstruct_as_vsin) {
 			vstruct_to_vsin();
