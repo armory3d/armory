@@ -130,6 +130,7 @@ class CyclesShader {
 	public var ins:Array<String> = [];
 	public var outs:Array<String> = [];
 	var uniforms:Array<String> = [];
+	var sharedSamplers:Array<String> = [];
 	var functions = new Map<String, String>();
 	public var main = '';
 	public var main_init = '';
@@ -176,7 +177,7 @@ class CyclesShader {
 		outs.push(s);
 	}
 
-	public function add_uniform(s:String, link:Dynamic = null, included = false) {
+	public function add_uniform(s:String, link:String = null, included = false) {
 		var ar = s.split(' ');
 		// layout(RGBA8) image3D voxels
 		var utype = ar[ar.length - 2];
@@ -199,6 +200,17 @@ class CyclesShader {
 		}
 		if (included == false && uniforms.indexOf(s) == -1) {
 			uniforms.push(s);
+		}
+	}
+
+	public function add_shared_sampler(s:String) {
+		if (sharedSamplers.indexOf(s) == -1) {
+			sharedSamplers.push(s);
+			var ar = s.split(' ');
+			// layout(RGBA8) sampler2D tex
+			var utype = ar[ar.length - 2];
+			var uname = ar[ar.length - 1];
+			context.add_texture_unit(utype, uname, null, false);
 		}
 	}
 
@@ -274,6 +286,11 @@ class CyclesShader {
 			vstruct_to_vsin();
 		}
 
+		var sharedSampler = 'shared_sampler';
+		if (sharedSamplers.length > 0) {
+			sharedSampler = sharedSamplers[0].split(' ')[1] + '_sampler';
+		}
+
 		#if kha_direct3d11
 		var s = '#define HLSL\n';
 		s += '#define sampler2D Texture2D\n';
@@ -281,6 +298,7 @@ class CyclesShader {
 		s += '#define texture(tex, coord) tex.Sample(tex ## _sampler, coord)\n';
 		s += '#define textureOffset(tex, coord, offset) tex.Sample(tex ## _sampler, coord, offset)\n';
 		s += '#define textureLod(tex, coord, lod) tex.SampleLevel(tex ## _sampler, coord, lod)\n';
+		s += '#define textureLodShared(tex, coord, lod) tex.SampleLevel($sharedSampler, coord, lod)\n';
 		s += '#define texelFetch(tex, coord, lod) tex.Load(float3(coord.xy, lod))\n';
 		s += '#define mod(a, b) (a % b)\n';
 		s += '#define vec2 float2\n';
@@ -367,6 +385,15 @@ class CyclesShader {
 			if (StringTools.startsWith(a, 'sampler')) {
 				s += 'SamplerState ' + a.split(' ')[1] + '_sampler;\n';
 			}
+			#end
+		}
+
+		if (sharedSamplers.length > 0) {
+			for (a in sharedSamplers) {
+				s += 'uniform ' + a + ';\n';
+			}
+			#if kha_direct3d11
+			s += 'SamplerState $sharedSampler;\n';
 			#end
 		}
 
@@ -460,6 +487,7 @@ class CyclesShader {
 		#end
 
 		s += '#define mul(a, b) b * a\n';
+		s += '#define textureLodShared textureLod\n';
 		s += header;
 
 		var in_ext = '';
@@ -472,6 +500,8 @@ class CyclesShader {
 		for (a in outs)
 			s += 'out $a$out_ext;\n';
 		for (a in uniforms)
+			s += 'uniform ' + a + ';\n';
+		for (a in sharedSamplers)
 			s += 'uniform ' + a + ';\n';
 		for (f in functions)
 			s += f + '\n';
