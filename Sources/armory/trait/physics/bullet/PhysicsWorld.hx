@@ -227,7 +227,6 @@ class PhysicsWorld extends Trait {
 	}
 	
 	public function findBody(id:Int):RigidBody{
-		if (rbMap.length == 0) return null;
 		var rb = rbMap.get(id);
 		return rb;
 	}
