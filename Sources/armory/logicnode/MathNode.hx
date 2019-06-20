@@ -60,7 +60,7 @@ class MathNode extends LogicNode {
 		case "Ceil":
 			f = Math.ceil(v1);
 		case "Fract":
-			f = iron.math.Math.fract(v1);
+			f = f - Std.int(f);
 		case "Square Root":
 			f = Math.sqrt(v1);
 		}

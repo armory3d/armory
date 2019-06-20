@@ -2,7 +2,6 @@ package armory.logicnode;
 
 import iron.system.Tween;
 import iron.math.Vec4;
-import iron.math.Math;
 
 class VectorMixNode extends LogicNode {
 

@@ -1,6 +1,5 @@
 package armory.trait.internal;
 
-import iron.math.Math;
 import iron.Trait;
 #if arm_debug
 import kha.Scheduler;
@@ -205,17 +204,17 @@ class DebugConsole extends Trait {
 						ui.text("Location");
 
 						h = Id.handle();
-						h.text = Math.roundfp(loc.x) + "";
+						h.text = roundfp(loc.x) + "";
 						f = Std.parseFloat(ui.textInput(h, "X"));
 						if (ui.changed) loc.x = f;
 
 						h = Id.handle();
-						h.text = Math.roundfp(loc.y) + "";
+						h.text = roundfp(loc.y) + "";
 						f = Std.parseFloat(ui.textInput(h, "Y"));
 						if (ui.changed) loc.y = f;
 
 						h = Id.handle();
-						h.text = Math.roundfp(loc.z) + "";
+						h.text = roundfp(loc.z) + "";
 						f = Std.parseFloat(ui.textInput(h, "Z"));
 						if (ui.changed) loc.z = f;
 
@@ -223,18 +222,18 @@ class DebugConsole extends Trait {
 						ui.text("Rotation");
 						
 						h = Id.handle();
-						h.text = Math.roundfp(rot.x) + "";
+						h.text = roundfp(rot.x) + "";
 						f = Std.parseFloat(ui.textInput(h, "X"));
 						var changed = false;
 						if (ui.changed) { changed = true; rot.x = f; }
 
 						h = Id.handle();
-						h.text = Math.roundfp(rot.y) + "";
+						h.text = roundfp(rot.y) + "";
 						f = Std.parseFloat(ui.textInput(h, "Y"));
 						if (ui.changed) { changed = true; rot.y = f; }
 
 						h = Id.handle();
-						h.text = Math.roundfp(rot.z) + "";
+						h.text = roundfp(rot.z) + "";
 						f = Std.parseFloat(ui.textInput(h, "Z"));
 						if (ui.changed) { changed = true; rot.z = f; }
 
@@ -252,17 +251,17 @@ class DebugConsole extends Trait {
 						ui.text("Scale");
 						
 						h = Id.handle();
-						h.text = Math.roundfp(scale.x) + "";
+						h.text = roundfp(scale.x) + "";
 						f = Std.parseFloat(ui.textInput(h, "X"));
 						if (ui.changed) scale.x = f;
 
 						h = Id.handle();
-						h.text = Math.roundfp(scale.y) + "";
+						h.text = roundfp(scale.y) + "";
 						f = Std.parseFloat(ui.textInput(h, "Y"));
 						if (ui.changed) scale.y = f;
 
 						h = Id.handle();
-						h.text = Math.roundfp(scale.z) + "";
+						h.text = roundfp(scale.z) + "";
 						f = Std.parseFloat(ui.textInput(h, "Z"));
 						if (ui.changed) scale.z = f;
 
@@ -270,17 +269,17 @@ class DebugConsole extends Trait {
 						ui.text("Dimensions");
 
 						h = Id.handle();
-						h.text = Math.roundfp(dim.x) + "";
+						h.text = roundfp(dim.x) + "";
 						f = Std.parseFloat(ui.textInput(h, "X"));
 						if (ui.changed) dim.x = f;
 
 						h = Id.handle();
-						h.text = Math.roundfp(dim.y) + "";
+						h.text = roundfp(dim.y) + "";
 						f = Std.parseFloat(ui.textInput(h, "Y"));
 						if (ui.changed) dim.y = f;
 
 						h = Id.handle();
-						h.text = Math.roundfp(dim.z) + "";
+						h.text = roundfp(dim.z) + "";
 						f = Std.parseFloat(ui.textInput(h, "Z"));
 						if (ui.changed) dim.z = f;
 
@@ -522,6 +521,11 @@ class DebugConsole extends Trait {
 	#if arm_physics
 		physTime += armory.trait.physics.PhysicsWorld.physTime;
 	#end
+	}
+
+	static function roundfp(f:Float, precision = 2):Float {
+		f *= Math.pow(10, precision);
+		return Math.round(f) / Math.pow(10, precision);
 	}
 #end
 }
