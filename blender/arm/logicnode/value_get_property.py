@@ -13,5 +13,6 @@ class GetPropertyNode(Node, ArmLogicTreeNode):
         self.inputs.new('ArmNodeSocketObject', 'Object')
         self.inputs.new('NodeSocketString', 'Property')
         self.outputs.new('NodeSocketShader', 'Value')
+        self.outputs.new('NodeSocketString', 'Property')
 
 add_node(GetPropertyNode, category='Value')
