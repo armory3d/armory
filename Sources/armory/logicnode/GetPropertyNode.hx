@@ -12,7 +12,12 @@ class GetPropertyNode extends LogicNode {
 		var object:Object = inputs[0].get();
 		var property:String = inputs[1].get();
 
-		if (object == null || object.properties == null) return null;
-		return object.properties.get(property);
+		if (from == 0) {
+			if (object == null || object.properties == null) return null;
+			return object.properties.get(property);
+		}
+		else {
+			return property;
+		}
 	}
 }
