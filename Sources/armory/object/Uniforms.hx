@@ -170,6 +170,12 @@ class Uniforms {
 			return armory.trait.internal.DebugConsole.debugFloat;
 		}
 		#end
+		#if rp_voxelao
+		if (link == "_voxelBlend") { // Blend current and last voxels
+			var freq = armory.renderpath.RenderPathCreator.voxelFreq;
+			return (armory.renderpath.RenderPathCreator.voxelFrame % freq) / freq;
+		}
+		#end
 		return null;
 	}
 }
