@@ -88,8 +88,9 @@ project.addSources('Sources');
                     f.write('await project.addProject("Subprojects/{0}");\n'.format(lib))
 
         if wrd.arm_audio == 'Disabled':
-            assets.add_khafile_def('arm_no_audio')
             assets.add_khafile_def('kha_no_ogg')
+        else:
+            assets.add_khafile_def('arm_audio')
 
         if export_physics:
             assets.add_khafile_def('arm_physics')
