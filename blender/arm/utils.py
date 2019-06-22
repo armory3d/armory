@@ -3,7 +3,6 @@ import json
 import os
 import glob
 import platform
-import zipfile
 import re
 import subprocess
 import webbrowser
@@ -19,12 +18,8 @@ class NumpyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 def write_arm(filepath, output):
-    if filepath.endswith('.zip'):
-        with zipfile.ZipFile(filepath, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-            if bpy.data.worlds['Arm'].arm_minimize:
-                zip_file.writestr('data.arm', arm.lib.armpack.packb(output))
-            else:
-                zip_file.writestr('data.json', json.dumps(output, sort_keys=True, indent=4, cls=NumpyEncoder))
+    if filepath.endswith('.lz4'):
+        pass
     else:
         if bpy.data.worlds['Arm'].arm_minimize:
             with open(filepath, 'wb') as f:

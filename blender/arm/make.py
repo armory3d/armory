@@ -105,7 +105,7 @@ def export_data(fp, sdk_path):
         os.makedirs(build_dir + '/compiled/Assets')
     for scene in bpy.data.scenes:
         if scene.arm_export:
-            ext = '.zip' if ArmoryExporter.compress_enabled else '.arm'
+            ext = '.lz4' if ArmoryExporter.compress_enabled else '.arm'
             asset_path = build_dir + '/compiled/Assets/' + arm.utils.safestr(scene.name) + ext
             exporter.execute(bpy.context, asset_path, scene=scene)
             if ArmoryExporter.export_physics:

@@ -332,7 +332,7 @@ def write_config(resx, resy):
 def write_mainhx(scene_name, resx, resy, is_play, is_publish):
     wrd = bpy.data.worlds['Arm']
     rpdat = arm.utils.get_rp()
-    scene_ext = '.zip' if (wrd.arm_asset_compression and is_publish) else ''
+    scene_ext = '.lz4' if (wrd.arm_asset_compression and is_publish) else ''
     if scene_ext == '' and not wrd.arm_minimize:
         scene_ext = '.json'
     winmode = get_winmode(wrd.arm_winmode)

@@ -64,7 +64,7 @@ class ArmoryExporter:
         mesh_fp = self.filepath[:(index + 1)] + 'meshes/'
         if not os.path.exists(mesh_fp):
             os.makedirs(mesh_fp)
-        ext = '.zip' if compressed else '.arm'
+        ext = '.lz4' if compressed else '.arm'
         return mesh_fp + object_id + ext
 
     @staticmethod
@@ -172,7 +172,7 @@ class ArmoryExporter:
             aname = arm.utils.safestr(arm.utils.asset_name(action))
             fp = self.get_meshes_file_path('action_' + aname, compressed=self.is_compress())
             assets.add(fp)
-            ext = '.zip' if self.is_compress() else ''
+            ext = '.lz4' if self.is_compress() else ''
             if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
                 ext = '.json'
             o['object_actions'].append('action_' + aname + ext)
@@ -387,7 +387,7 @@ class ArmoryExporter:
             aname = arm.utils.safestr(arm.utils.asset_name(action))
             fp = self.get_meshes_file_path('action_' + aname, compressed=self.is_compress())
             assets.add(fp)
-            ext = '.zip' if self.is_compress() else ''
+            ext = '.lz4' if self.is_compress() else ''
             if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
                 ext = '.json'
             o['object_actions'].append('action_' + aname + ext)
@@ -801,7 +801,7 @@ class ArmoryExporter:
                 if wrd.arm_single_data_file:
                     o['data_ref'] = oid
                 else:
-                    ext = '' if not self.is_compress() else '.zip'
+                    ext = '' if not self.is_compress() else '.lz4'
                     if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
                         ext = '.json'
                     o['data_ref'] = 'mesh_' + oid + ext + '/' + oid
@@ -938,7 +938,7 @@ class ArmoryExporter:
                             export_actions.append(strip.action)
 
                 armatureid = arm.utils.safestr(arm.utils.asset_name(bdata))
-                ext = '.zip' if self.is_compress() else ''
+                ext = '.lz4' if self.is_compress() else ''
                 if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
                     ext = '.json'
                 o['bone_actions'] = []
@@ -1983,8 +1983,8 @@ class ArmoryExporter:
         self.process_skinned_meshes()
 
         self.output['name'] = arm.utils.safestr(self.scene.name)
-        if self.filepath.endswith('.zip'):
-            self.output['name'] += '.zip'
+        if self.filepath.endswith('.lz4'):
+            self.output['name'] += '.lz4'
         elif not bpy.data.worlds['Arm'].arm_minimize:
             self.output['name'] += '.json'
 
