@@ -128,14 +128,15 @@ class ArmoryExporter:
 
         num_keyframes = len(fcurve.keyframe_points)
 
-        if linear_count == num_keyframes:
-            return AnimationTypeLinear
-        if bezier_count == num_keyframes:
-            return AnimationTypeBezier
-        if constant_count == num_keyframes:
-            return AnimationTypeConstant
+        if num_keyframes > 0:
+            if linear_count == num_keyframes:
+                return AnimationTypeLinear
+            if bezier_count == num_keyframes:
+                return AnimationTypeBezier
+            if constant_count == num_keyframes:
+                return AnimationTypeConstant
 
-        # Mixed keyframe interpolation
+        # Sampled or mixed interpolation
         return AnimationTypeSampled
 
     @staticmethod
