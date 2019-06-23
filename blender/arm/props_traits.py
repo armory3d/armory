@@ -245,7 +245,7 @@ class ArmEditScriptButton(bpy.types.Operator):
     bl_label = 'Edit Script'
 
     is_object: BoolProperty(name="", description="A name for this item", default=False)
- 
+
     def execute(self, context):
 
         arm.utils.check_default_props()
@@ -271,11 +271,11 @@ class ArmEditBundledScriptButton(bpy.types.Operator):
     bl_label = 'Edit Script'
 
     is_object: BoolProperty(name="", description="A name for this item", default=False)
- 
+
     def execute(self, context):
         if not arm.utils.check_saved(self):
             return {'CANCELLED'}
-        
+
         if self.is_object:
             obj = bpy.context.object
         else:
@@ -283,7 +283,7 @@ class ArmEditBundledScriptButton(bpy.types.Operator):
         sdk_path = arm.utils.get_sdk_path()
         project_path = arm.utils.get_fp()
         pkg = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
-        item = obj.arm_traitlist[obj.arm_traitlist_index]  
+        item = obj.arm_traitlist[obj.arm_traitlist_index]
         source_hx_path = sdk_path + '/armory/Sources/armory/trait/' + item.class_name_prop + '.hx'
         target_hx_path = project_path + '/Sources/' + pkg + '/' + item.class_name_prop + '.hx'
 
@@ -303,7 +303,7 @@ class ArmEditBundledScriptButton(bpy.types.Operator):
 
         # Edit in Kode Studio
         bpy.ops.arm.edit_script('EXEC_DEFAULT', is_object=self.is_object)
-        
+
         return{'FINISHED'}
 
 class ArmEditCanvasButton(bpy.types.Operator):
@@ -312,7 +312,7 @@ class ArmEditCanvasButton(bpy.types.Operator):
     bl_label = 'Edit Canvas'
 
     is_object: BoolProperty(name="", description="A name for this item", default=False)
- 
+
     def execute(self, context):
         if self.is_object:
             obj = bpy.context.object
@@ -321,7 +321,7 @@ class ArmEditCanvasButton(bpy.types.Operator):
         project_path = arm.utils.get_fp()
         item = obj.arm_traitlist[obj.arm_traitlist_index]
         canvas_path = project_path + '/Bundled/canvas/' + item.canvas_name_prop + '.json'
-        
+
         sdk_path = arm.utils.get_sdk_path()
         armory2d_path = sdk_path + '/lib/armory_tools/armory2d'
         bin_ext = '_opengl' if arm.utils.get_os() == 'win' else ''
@@ -348,10 +348,10 @@ class ArmNewScriptDialog(bpy.types.Operator):
         self.class_name = self.class_name.replace(' ', '')
         write_data.write_traithx(self.class_name)
         arm.utils.fetch_script_names()
-        item = obj.arm_traitlist[obj.arm_traitlist_index] 
-        item.class_name_prop = self.class_name 
+        item = obj.arm_traitlist[obj.arm_traitlist_index]
+        item.class_name_prop = self.class_name
         return {'FINISHED'}
- 
+
     def invoke(self, context, event):
         if not arm.utils.check_saved(self):
             return {'CANCELLED'}
@@ -362,10 +362,10 @@ class ArmNewCanvasDialog(bpy.types.Operator):
     '''Create blank canvas'''
     bl_idname = "arm.new_canvas"
     bl_label = "New Canvas"
- 
+
     is_object: BoolProperty(name="", description="A name for this item", default=False)
     canvas_name: StringProperty(name="Name")
- 
+
     def execute(self, context):
         if self.is_object:
             obj = bpy.context.object
@@ -374,10 +374,10 @@ class ArmNewCanvasDialog(bpy.types.Operator):
         self.canvas_name = self.canvas_name.replace(' ', '')
         write_data.write_canvasjson(self.canvas_name)
         arm.utils.fetch_script_names()
-        item = obj.arm_traitlist[obj.arm_traitlist_index] 
-        item.canvas_name_prop = self.canvas_name 
+        item = obj.arm_traitlist[obj.arm_traitlist_index]
+        item.canvas_name_prop = self.canvas_name
         return {'FINISHED'}
- 
+
     def invoke(self, context, event):
         if not arm.utils.check_saved(self):
             return {'CANCELLED'}
@@ -388,7 +388,7 @@ class ArmNewWasmButton(bpy.types.Operator):
     '''Create new WebAssembly module'''
     bl_idname = 'arm.new_wasm'
     bl_label = 'New Module'
- 
+
     def execute(self, context):
         webbrowser.open('https://webassembly.studio/')
         return{'FINISHED'}
@@ -397,7 +397,7 @@ class ArmRefreshScriptsButton(bpy.types.Operator):
     '''Fetch all script names'''
     bl_idname = 'arm.refresh_scripts'
     bl_label = 'Refresh'
- 
+
     def execute(self, context):
         arm.utils.fetch_bundled_script_names()
         arm.utils.fetch_bundled_trait_props()
@@ -410,7 +410,7 @@ class ArmRefreshCanvasListButton(bpy.types.Operator):
     '''Fetch all canvas names'''
     bl_idname = 'arm.refresh_canvas_list'
     bl_label = 'Refresh'
- 
+
     def execute(self, context):
         arm.utils.fetch_script_names()
         return{'FINISHED'}
@@ -420,7 +420,7 @@ class ARM_PT_TraitPanel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "object"
- 
+
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -433,7 +433,7 @@ class ARM_PT_SceneTraitPanel(bpy.types.Panel):
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "scene"
- 
+
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
@@ -445,10 +445,10 @@ def draw_traits(layout, obj, is_object):
     rows = 2
     if len(obj.arm_traitlist) > 1:
         rows = 4
-    
+
     row = layout.row()
     row.template_list("ARM_UL_TraitList", "The_List", obj, "arm_traitlist", obj, "arm_traitlist_index", rows=rows)
-    
+
     col = row.column(align=True)
     op = col.operator("arm_traitlist.new_item", icon='ADD', text="")
     op.is_object = is_object
@@ -480,7 +480,7 @@ def draw_traits(layout, obj, is_object):
                 if len(bpy.data.worlds['Arm'].arm_bundled_scripts_list) == 0:
                     arm.utils.fetch_bundled_script_names()
                 row.prop_search(item, "class_name_prop", bpy.data.worlds['Arm'], "arm_bundled_scripts_list", text="Class")
-            
+
             # Props
             if len(item.arm_traitpropslist) > 0:
                 propsrow = layout.row()
@@ -488,7 +488,7 @@ def draw_traits(layout, obj, is_object):
                 if len(item.arm_traitpropslist) > 2:
                     propsrows = 4
                 row = layout.row()
-                row.template_list("ARM_UL_PropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows) 
+                row.template_list("ARM_UL_PropList", "The_List", item, "arm_traitpropslist", item, "arm_traitpropslist_index", rows=propsrows)
 
             if item.type_prop == 'Haxe Script':
                 row = layout.row(align=True)
@@ -510,7 +510,7 @@ def draw_traits(layout, obj, is_object):
                 op = column.operator("arm.edit_bundled_script", icon="FILE_SCRIPT")
                 op.is_object = is_object
                 op = row.operator("arm.refresh_scripts")
-        
+
         elif item.type_prop == 'WebAssembly':
             item.name = item.webassembly_prop
             row = layout.row()
@@ -531,7 +531,7 @@ def draw_traits(layout, obj, is_object):
             item.name = item.canvas_name_prop
             row = layout.row()
             row.prop_search(item, "canvas_name_prop", bpy.data.worlds['Arm'], "arm_canvas_list", text="Canvas")
-            
+
             row = layout.row(align=True)
             row.alignment = 'EXPAND'
             column = row.column(align=True)
