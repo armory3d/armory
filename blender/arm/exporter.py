@@ -177,7 +177,7 @@ class ArmoryExporter:
     def export_object_sampled_animation(self, bobject, scene, o):
         # This function exports animation as full 4x4 matrices for each frame
         animation_flag = False
-        
+
         animation_flag = bobject.animation_data != None and bobject.animation_data.action != None and bobject.type != 'ARMATURE'
 
         # Font out
@@ -1078,7 +1078,7 @@ class ArmoryExporter:
                 bone_count = 4
                 bone_values.sort(reverse=True)
                 bone_values = bone_values[:4]
-            
+
             bone_count_array[index] = bone_count
             for bv in bone_values:
                 bone_weight_array[count] = bv[0]
@@ -1192,7 +1192,7 @@ class ArmoryExporter:
             o['scale_pos'] = 1.0
         if has_armature: # Allow up to 2x bigger bounds for skinned mesh
             o['scale_pos'] *= 2.0
-        
+
         scale_pos = o['scale_pos']
         invscale_pos = (1 / scale_pos) * 32767
 
@@ -1543,7 +1543,7 @@ class ArmoryExporter:
                 o['strength'] *= 0.01
             o['size'] = objref.size
             o['size_y'] = objref.size_y
-        
+
         self.output['light_datas'].append(o)
 
     def export_probe(self, objectRef):
@@ -1764,7 +1764,7 @@ class ArmoryExporter:
             mat_users = self.materialToObjectDict
             mat_armusers = self.materialToArmObjectDict
             sd, rpasses = make_material.parse(material, o, mat_users, mat_armusers)
-            
+
             # Attach MovieTexture
             for con in o['contexts']:
                 for tex in con['bind_textures']:
@@ -1987,7 +1987,7 @@ class ArmoryExporter:
         # for lay in self.scene.view_layers:
             # scene_objects += lay.objects
         scene_objects = self.scene.collection.all_objects
-        
+
         for bobject in scene_objects:
             # Map objects to game objects
             o = {}
