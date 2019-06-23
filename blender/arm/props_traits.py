@@ -366,8 +366,8 @@ class ArmNewCanvasDialog(bpy.types.Operator):
     bl_idname = "arm.new_canvas"
     bl_label = "New Canvas"
 
-    is_object: BoolProperty(name="", description="A name for this item", default=False)
-    canvas_name: StringProperty(name="Name")
+    is_object: BoolProperty(name="", description="Is this an object trait?", default=False)
+    canvas_name: StringProperty(name="Name", description="The canvas name")
 
     def execute(self, context):
         if self.is_object:
@@ -386,6 +386,9 @@ class ArmNewCanvasDialog(bpy.types.Operator):
             return {'CANCELLED'}
         self.canvas_name = 'MyCanvas'
         return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        self.layout.prop(self, "canvas_name")
 
 class ArmNewWasmButton(bpy.types.Operator):
     '''Create new WebAssembly module'''
