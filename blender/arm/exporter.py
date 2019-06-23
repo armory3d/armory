@@ -38,6 +38,7 @@ NodeTypeProbe = 7
 AnimationTypeSampled = 0
 AnimationTypeLinear = 1
 AnimationTypeBezier = 2
+AnimationTypeConstant = 3
 ExportEpsilon = 1.0e-6
 
 structIdentifier = ["object", "bone_object", "mesh_object", "light_object", "camera_object", "speaker_object", "decal_object", "probe_object"]
@@ -103,8 +104,14 @@ class ArmoryExporter:
 
     @staticmethod
     def classify_animation_curve(fcurve):
+        """Classifies the type of the fcurve.
+
+        If different keyframes have different interpolation types, the
+        animation gets treated as a sampled one.
+        """
         linear_count = 0
         bezier_count = 0
+        constant_count = 0
 
         for key in fcurve.keyframe_points:
             interp = key.interpolation
@@ -112,13 +119,23 @@ class ArmoryExporter:
                 linear_count += 1
             elif interp == "BEZIER":
                 bezier_count += 1
+            elif interp == "CONSTANT":
+                constant_count += 1
+
+            # Unsupported interpolation
             else:
                 return AnimationTypeSampled
 
-        if bezier_count == 0:
+        num_keyframes = len(fcurve.keyframe_points)
+
+        if linear_count == num_keyframes:
             return AnimationTypeLinear
-        elif linear_count == 0:
+        if bezier_count == num_keyframes:
             return AnimationTypeBezier
+        if constant_count == num_keyframes:
+            return AnimationTypeConstant
+
+        # Mixed keyframe interpolation
         return AnimationTypeSampled
 
     @staticmethod
@@ -264,16 +281,20 @@ class ArmoryExporter:
         # Frame and Value structures are given by the kind parameter.
         tracko = {}
         tracko['target'] = target
+
+        tracko['frames'] = self.export_key_frames(fcurve)
+        tracko['values'] = self.export_key_values(fcurve)
+
         if kind == AnimationTypeBezier:
             tracko['curve'] = 'bezier'
-            tracko['frames'] = self.export_key_frames(fcurve)
-            tracko['values'] = self.export_key_values(fcurve)
+
             tracko['frames_control_minus'], tracko['frames_control_plus'] = self.export_key_frame_control_points(fcurve)
             tracko['values_control_minus'], tracko['values_control_plus'] = self.export_key_value_control_points(fcurve)
-        else:
+        elif kind == AnimationTypeLinear:
             tracko['curve'] = 'linear'
-            tracko['frames'] = self.export_key_frames(fcurve)
-            tracko['values'] = self.export_key_values(fcurve)
+        else:
+            tracko['curve'] = 'constant'
+
         return tracko
 
     def export_object_transform(self, bobject, scene, o):
