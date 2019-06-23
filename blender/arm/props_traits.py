@@ -336,10 +336,10 @@ class ArmNewScriptDialog(bpy.types.Operator):
     '''Create blank script'''
     bl_idname = "arm.new_script"
     bl_label = "New Script"
- 
-    is_object: BoolProperty(name="", description="A name for this item", default=False)
-    class_name: StringProperty(name="Name")
- 
+
+    is_object: BoolProperty(name="Is object", description="Is this an object trait?", default=False)
+    class_name: StringProperty(name="Name", description="The class name")
+
     def execute(self, context):
         if self.is_object:
             obj = bpy.context.object
@@ -357,6 +357,9 @@ class ArmNewScriptDialog(bpy.types.Operator):
             return {'CANCELLED'}
         self.class_name = 'MyTrait'
         return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        self.layout.prop(self, "class_name")
 
 class ArmNewCanvasDialog(bpy.types.Operator):
     '''Create blank canvas'''
