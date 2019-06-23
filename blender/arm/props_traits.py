@@ -337,7 +337,7 @@ class ArmNewScriptDialog(bpy.types.Operator):
     bl_idname = "arm.new_script"
     bl_label = "New Script"
 
-    is_object: BoolProperty(name="Is object", description="Is this an object trait?", default=False)
+    is_object: BoolProperty(name="Object trait", description="Is this an object trait?", default=False)
     class_name: StringProperty(name="Name", description="The class name")
 
     def execute(self, context):
@@ -366,7 +366,7 @@ class ArmNewCanvasDialog(bpy.types.Operator):
     bl_idname = "arm.new_canvas"
     bl_label = "New Canvas"
 
-    is_object: BoolProperty(name="", description="Is this an object trait?", default=False)
+    is_object: BoolProperty(name="Object trait", description="Is this an object trait?", default=False)
     canvas_name: StringProperty(name="Name", description="The canvas name")
 
     def execute(self, context):
