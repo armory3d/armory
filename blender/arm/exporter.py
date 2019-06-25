@@ -238,45 +238,38 @@ class ArmoryExporter:
 
     def export_key_frames(self, fcurve):
         keyo = []
-        key_count = len(fcurve.keyframe_points)
-        for i in range(key_count):
-            frame = fcurve.keyframe_points[i].co[0]
-            keyo.append(int(frame))
+
+        for keyframe in fcurve.keyframe_points:
+            keyo.append(int(keyframe.co[0]))
+
         return keyo
 
     def export_key_frame_control_points(self, fcurve):
         keyminuso = []
-        key_count = len(fcurve.keyframe_points)
-        for i in range(key_count):
-            ctrl = fcurve.keyframe_points[i].handle_left[0]
-            keyminuso.append(ctrl)
         keypluso = []
-        for i in range(key_count):
-            ctrl = fcurve.keyframe_points[i].handle_right[0]
-            keypluso.append(ctrl)
+
+        for keyframe in fcurve.keyframe_points:
+            keyminuso.append(keyframe.handle_left[0])
+            keypluso.append(keyframe.handle_right[0])
 
         return keyminuso, keypluso
 
     def export_key_values(self, fcurve):
         keyo = []
-        key_count = len(fcurve.keyframe_points)
-        for i in range(key_count):
-            value = fcurve.keyframe_points[i].co[1]
-            keyo.append(value)
+
+        for keyframe in fcurve.keyframe_points:
+            keyo.append(keyframe.co[1])
 
         return keyo
 
     def export_key_value_control_points(self, fcurve):
         keyminuso = []
-        key_count = len(fcurve.keyframe_points)
-        for i in range(key_count):
-            ctrl = fcurve.keyframe_points[i].handle_left[1]
-            keyminuso.append(ctrl)
-
         keypluso = []
-        for i in range(key_count):
-            ctrl = fcurve.keyframe_points[i].handle_right[1]
-            keypluso.append(ctrl)
+
+        for keyframe in fcurve.keyframe_points:
+            keyminuso.append(keyframe.handle_left[1])
+            keypluso.append(keyframe.handle_right[1])
+
         return keyminuso, keypluso
 
     def export_animation_track(self, fcurve, kind, target, newline):
