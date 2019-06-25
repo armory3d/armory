@@ -12,19 +12,22 @@ Attribution-ShareAlike 3.0 Unported License:
 http://creativecommons.org/licenses/by-sa/3.0/deed.en_US
 """
 import math
-from mathutils import *
+import os
 import time
-import arm.utils
-import arm.write_probes as write_probes
+
+import numpy as np
+
+from mathutils import *
+import bpy
+
 import arm.assets as assets
+import arm.exporter_opt as exporter_opt
 import arm.log as log
-import arm.material.make as make_material
-import arm.material.mat_batch as mat_batch
-import arm.material.mat_state as mat_state
 import arm.make_renderpath as make_renderpath
 import arm.material.cycles as cycles
-import arm.exporter_opt as exporter_opt
-import numpy as np
+import arm.material.make as make_material
+import arm.material.mat_batch as mat_batch
+import arm.utils
 
 NodeTypeEmpty = 0
 NodeTypeBone = 1
