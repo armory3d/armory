@@ -38,6 +38,7 @@ NodeTypeProbe = 7
 AnimationTypeSampled = 0
 AnimationTypeLinear = 1
 AnimationTypeBezier = 2
+AnimationTypeConstant = 3
 ExportEpsilon = 1.0e-6
 
 structIdentifier = ["object", "bone_object", "mesh_object", "light_object", "camera_object", "speaker_object", "decal_object", "probe_object"]
@@ -103,8 +104,14 @@ class ArmoryExporter:
 
     @staticmethod
     def classify_animation_curve(fcurve):
+        """Classifies the type of the fcurve.
+
+        If different keyframes have different interpolation types, the
+        animation gets treated as a sampled one.
+        """
         linear_count = 0
         bezier_count = 0
+        constant_count = 0
 
         for key in fcurve.keyframe_points:
             interp = key.interpolation
@@ -112,13 +119,24 @@ class ArmoryExporter:
                 linear_count += 1
             elif interp == "BEZIER":
                 bezier_count += 1
+            elif interp == "CONSTANT":
+                constant_count += 1
+
+            # Unsupported interpolation
             else:
                 return AnimationTypeSampled
 
-        if bezier_count == 0:
-            return AnimationTypeLinear
-        elif linear_count == 0:
-            return AnimationTypeBezier
+        num_keyframes = len(fcurve.keyframe_points)
+
+        if num_keyframes > 0:
+            if linear_count == num_keyframes:
+                return AnimationTypeLinear
+            if bezier_count == num_keyframes:
+                return AnimationTypeBezier
+            if constant_count == num_keyframes:
+                return AnimationTypeConstant
+
+        # Sampled or mixed interpolation
         return AnimationTypeSampled
 
     @staticmethod
@@ -160,7 +178,7 @@ class ArmoryExporter:
     def export_object_sampled_animation(self, bobject, scene, o):
         # This function exports animation as full 4x4 matrices for each frame
         animation_flag = False
-        
+
         animation_flag = bobject.animation_data != None and bobject.animation_data.action != None and bobject.type != 'ARMATURE'
 
         # Font out
@@ -264,16 +282,20 @@ class ArmoryExporter:
         # Frame and Value structures are given by the kind parameter.
         tracko = {}
         tracko['target'] = target
+
+        tracko['frames'] = self.export_key_frames(fcurve)
+        tracko['values'] = self.export_key_values(fcurve)
+
         if kind == AnimationTypeBezier:
             tracko['curve'] = 'bezier'
-            tracko['frames'] = self.export_key_frames(fcurve)
-            tracko['values'] = self.export_key_values(fcurve)
+
             tracko['frames_control_minus'], tracko['frames_control_plus'] = self.export_key_frame_control_points(fcurve)
             tracko['values_control_minus'], tracko['values_control_plus'] = self.export_key_value_control_points(fcurve)
-        else:
+        elif kind == AnimationTypeLinear:
             tracko['curve'] = 'linear'
-            tracko['frames'] = self.export_key_frames(fcurve)
-            tracko['values'] = self.export_key_values(fcurve)
+        else:
+            tracko['curve'] = 'constant'
+
         return tracko
 
     def export_object_transform(self, bobject, scene, o):
@@ -1057,7 +1079,7 @@ class ArmoryExporter:
                 bone_count = 4
                 bone_values.sort(reverse=True)
                 bone_values = bone_values[:4]
-            
+
             bone_count_array[index] = bone_count
             for bv in bone_values:
                 bone_weight_array[count] = bv[0]
@@ -1171,7 +1193,7 @@ class ArmoryExporter:
             o['scale_pos'] = 1.0
         if has_armature: # Allow up to 2x bigger bounds for skinned mesh
             o['scale_pos'] *= 2.0
-        
+
         scale_pos = o['scale_pos']
         invscale_pos = (1 / scale_pos) * 32767
 
@@ -1522,7 +1544,7 @@ class ArmoryExporter:
                 o['strength'] *= 0.01
             o['size'] = objref.size
             o['size_y'] = objref.size_y
-        
+
         self.output['light_datas'].append(o)
 
     def export_probe(self, objectRef):
@@ -1743,7 +1765,7 @@ class ArmoryExporter:
             mat_users = self.materialToObjectDict
             mat_armusers = self.materialToArmObjectDict
             sd, rpasses = make_material.parse(material, o, mat_users, mat_armusers)
-            
+
             # Attach MovieTexture
             for con in o['contexts']:
                 for tex in con['bind_textures']:
@@ -1966,7 +1988,7 @@ class ArmoryExporter:
         # for lay in self.scene.view_layers:
             # scene_objects += lay.objects
         scene_objects = self.scene.collection.all_objects
-        
+
         for bobject in scene_objects:
             # Map objects to game objects
             o = {}
