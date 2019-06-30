@@ -18,7 +18,8 @@ class CastPhysicsRayNode extends LogicNode {
 
 #if arm_physics
 		var physics = armory.trait.physics.PhysicsWorld.active;
-		var rb = physics.rayCast(vfrom, vto);
+		var hit = physics.rayCast(vfrom, vto);
+		var rb = (hit != null) ? hit.rb : null;
 
 		if (from == 0) { // Object
 			if (rb != null) return rb.object;
