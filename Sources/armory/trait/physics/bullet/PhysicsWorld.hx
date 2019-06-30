@@ -8,6 +8,17 @@ import iron.math.Vec4;
 import iron.math.RayCaster;
 import iron.data.SceneFormat;
 
+class Hit {
+	public var rb:RigidBody;
+	public var pos:Vec4;
+	public var normal:Vec4;
+	public function new(rb:RigidBody, pos:Vec4, normal:Vec4){
+		this.rb = rb;
+		this.pos = pos;
+		this.normal = normal;
+	}
+}
+
 class ContactPair {
 	public var a:Int;
 	public var b:Int;
@@ -301,10 +312,12 @@ class PhysicsWorld extends Trait {
 		var start = new Vec4();
 		var end = new Vec4();
 		RayCaster.getDirection(start, end, inputX, inputY, camera);
-		return rayCast(camera.transform.world.getLoc(), end);
+		var hit = rayCast(camera.transform.world.getLoc(), end);
+		var rb = (hit != null) ? hit.rb : null;
+		return rb;
 	}
 
-	public function rayCast(from:Vec4, to:Vec4):RigidBody {
+	public function rayCast(from:Vec4, to:Vec4):Hit {
 		var rayFrom = vec1;
 		var rayTo = vec2;
 		rayFrom.setValue(from.x, from.y, from.z);
@@ -315,6 +328,7 @@ class PhysicsWorld extends Trait {
 		var worldCol:bullet.Bt.CollisionWorld = worldDyn;
 		worldCol.rayTest(rayFrom, rayTo, rayCallback);
 		var rb:RigidBody = null;
+		var hitInfo:Hit = null;
 
 		var rc:bullet.Bt.RayResultCallback = rayCallback;
 		if (rc.hasHit()) {
@@ -326,12 +340,14 @@ class PhysicsWorld extends Trait {
 			var norm = rayCallback.get_m_hitNormalWorld();
 			hitNormalWorld.set(norm.x(), norm.y(), norm.z());
 			rb = rbMap.get(untyped body.userIndex);
+			hitInfo = new Hit(rb,hitPointWorld,hitNormalWorld);
 			#elseif cpp
 			var hit = rayCallback.m_hitPointWorld;
 			hitPointWorld.set(hit.x(), hit.y(), hit.z());
 			var norm = rayCallback.m_hitNormalWorld;
 			hitNormalWorld.set(norm.x(), norm.y(), norm.z());
 			rb = rbMap.get(rayCallback.m_collisionObject.getUserIndex());
+			hitInfo = new Hit(rb,hitPointWorld,hitNormalWorld);
 			#end
 		}
 
@@ -341,7 +357,7 @@ class PhysicsWorld extends Trait {
 		rayCallback.delete();
 		#end
 
-		return rb;
+		return hitInfo;
 	}
 
 	public function notifyOnPreUpdate(f:Void->Void) {
