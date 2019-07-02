@@ -1262,6 +1262,34 @@ def parse_value(node, socket):
             out_val = '({0} * {1})'.format(val1, val2)
         elif op == 'DIVIDE':
             out_val = '({0} / {1})'.format(val1, val2)
+        elif op == 'POWER':
+            out_val = 'pow({0}, {1})'.format(val1, val2)
+        elif op == 'LOGARITHM':
+            out_val = 'log({0})'.format(val1)
+        elif op == 'SQRT':
+            out_val = 'sqrt({0})'.format(val1)
+        elif op == 'ABSOLUTE':
+            out_val = 'abs({0})'.format(val1)
+        elif op == 'MINIMUM':
+            out_val = 'min({0}, {1})'.format(val1, val2)
+        elif op == 'MAXIMUM':
+            out_val = 'max({0}, {1})'.format(val1, val2)
+        elif op == 'LESS_THAN':
+            out_val = 'float({0} < {1})'.format(val1, val2)
+        elif op == 'GREATER_THAN':
+            out_val = 'float({0} > {1})'.format(val1, val2)
+        elif op == 'ROUND':
+            # out_val = 'round({0})'.format(val1)
+            out_val = 'floor({0} + 0.5)'.format(val1)
+        elif op == 'FLOOR':
+            out_val = 'floor({0})'.format(val1)
+        elif op == 'CEIL':
+            out_val = 'ceil({0})'.format(val1)
+        elif op == 'FRACT':
+            out_val = 'fract({0})'.format(val1)
+        elif op == 'MODULO':
+            # out_val = 'float({0} % {1})'.format(val1, val2)
+            out_val = 'mod({0}, {1})'.format(val1, val2)
         elif op == 'SINE':
             out_val = 'sin({0})'.format(val1)
         elif op == 'COSINE':
@@ -1274,26 +1302,8 @@ def parse_value(node, socket):
             out_val = 'acos({0})'.format(val1)
         elif op == 'ARCTANGENT':
             out_val = 'atan({0})'.format(val1)
-        elif op == 'POWER':
-            out_val = 'pow({0}, {1})'.format(val1, val2)
-        elif op == 'LOGARITHM':
-            out_val = 'log({0})'.format(val1)
-        elif op == 'MINIMUM':
-            out_val = 'min({0}, {1})'.format(val1, val2)
-        elif op == 'MAXIMUM':
-            out_val = 'max({0}, {1})'.format(val1, val2)
-        elif op == 'ROUND':
-            # out_val = 'round({0})'.format(val1)
-            out_val = 'floor({0} + 0.5)'.format(val1)
-        elif op == 'LESS_THAN':
-            out_val = 'float({0} < {1})'.format(val1, val2)
-        elif op == 'GREATER_THAN':
-            out_val = 'float({0} > {1})'.format(val1, val2)
-        elif op == 'MODULO':
-            # out_val = 'float({0} % {1})'.format(val1, val2)
-            out_val = 'mod({0}, {1})'.format(val1, val2)
-        elif op == 'ABSOLUTE':
-            out_val = 'abs({0})'.format(val1)
+        elif op == 'ARCTAN2':
+            out_val = 'atan({0}, {1})'.format(val1, val2)
         if node.use_clamp:
             return 'clamp({0}, 0.0, 1.0)'.format(out_val)
         else:
