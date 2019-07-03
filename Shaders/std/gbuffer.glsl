@@ -98,7 +98,7 @@ vec4 encodeRGBM(const vec3 rgb) {
 
 vec3 decodeRGBM(const vec4 rgbm) {
 	const float maxRange = 6.0;
-    return rgbm.rgb * rgbm.a * maxRange;
+	return rgbm.rgb * rgbm.a * maxRange;
 }
 
 uint encNor(vec3 n) {
@@ -125,6 +125,51 @@ vec3 decNor(uint val) {
 	vec3 normal = vec3(nor) / 255.0f;
 	normal *= norSigns;
 	return normal;
+}
+
+// GBuffer helper - Sebastien Lagarde
+// https://seblagarde.wordpress.com/2018/09/02/gbuffer-helper-packing-integer-and-float-together/
+float packFloatInt(float f, uint i, uint numBitI, uint numBitTarget) {
+	// Constant optimize by compiler
+	float prec = float(1 << numBitTarget);
+	float maxi = float(1 << numBitI);
+	float precMinusOne = prec - 1.0;
+	float t1 = ((prec / maxi) - 1.0) / precMinusOne;
+	float t2 = (prec / maxi) / precMinusOne;
+	// Code
+	return t1 * f + t2 * float(i);
+}
+
+void unpackFloatInt(float val, uint numBitI, uint numBitTarget, out float f, out uint i) {
+	// Constant optimize by compiler
+	float prec = float(1 << numBitTarget);
+	float maxi = float(1 << numBitI);
+	float precMinusOne = prec - 1.0;
+	float t1 = ((prec / maxi) - 1.0) / precMinusOne;
+	float t2 = (prec / maxi) / precMinusOne;
+	// Code
+	// extract integer part
+	// + rcp(precMinusOne) to deal with precision issue
+	i = int((val / t2) + (1.0 / precMinusOne));
+	// Now that we have i, solve formula in packFloatInt for f
+	//f = (val - t2 * float(i)) / t1 => convert in mads form
+	f = clamp((-t2 * float(i) + val) / t1, 0.0, 1.0); // Saturate in case of precision issue
+}
+
+float packFloatInt8(float f, uint i, uint numBitI) {
+	return packFloatInt(f, i, numBitI, 8);
+}
+
+void unpackFloatInt8(float val, uint numBitI, out float f, out uint i) {
+	unpackFloatInt(val, numBitI, 8, f, i);
+}
+
+float packFloatInt16(float f, uint i, uint numBitI) {
+	return packFloatInt(f, i, numBitI, 16);
+}
+
+void unpackFloatInt16(float val, uint numBitI, out float f, out uint i) {
+	unpackFloatInt(val, numBitI, 16, f, i);
 }
 
 #endif
