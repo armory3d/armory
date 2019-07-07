@@ -67,7 +67,7 @@ def make(context_id):
 
     frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
-    frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), opacity);')
+    frag.write('fragColor[0] = vec4(n.xy, roughness, opacity);')
     frag.write('fragColor[1] = vec4(basecol.rgb, opacity);')
 
     make_finalize.make(con_decal)
