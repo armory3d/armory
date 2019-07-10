@@ -233,11 +233,13 @@ script_props = {}
 script_props_defaults = {}
 def fetch_script_props(file):
     with open(file) as f:
-        if '/' in file:
-            file = file.split('/')[-1]
-        if '\\' in file:
-            file = file.split('\\')[-1]
         name = file.rsplit('.')[0]
+        if 'Sources' in name:
+            name = name[name.index('Sources')+8:]
+        if '/' in name:
+            name = name.replace('/','.')
+        if '\\' in file:
+            name = name.replace('\\','.')
         script_props[name] = []
         script_props_defaults[name] = []
         lines = f.read().splitlines()
