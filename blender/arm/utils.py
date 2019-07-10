@@ -234,6 +234,8 @@ script_props_defaults = {}
 def fetch_script_props(file):
     with open(file) as f:
         name = file.rsplit('.')[0]
+        if 'Sources' in name:
+            name = name[name.index('Sources')+8:]
         if '/' in name:
             name = name.replace('/','.')
         if '\\' in file:
