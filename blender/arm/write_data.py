@@ -154,8 +154,7 @@ project.addSources('Sources');
             f.write("project.addParameter('" + import_traits[i] + "');\n")
             f.write("""project.addParameter("--macro keep('""" + import_traits[i] + """')");\n""")
 
-        jstarget = state.target == 'krom' or state.target == 'html5'
-        noembed = wrd.arm_cache_build and not is_publish and jstarget
+        noembed = wrd.arm_cache_build and not is_publish and state.target == 'krom'
         if noembed:
             # Load shaders manually
             assets.add_khafile_def('arm_noembed')
