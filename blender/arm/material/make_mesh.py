@@ -254,7 +254,7 @@ def make_deferred(con_mesh, rpasses):
     else:
         frag.write('const uint matid = 0;')
 
-    frag.write('fragColor[0] = vec4(n.xy, roughness, packFloatInt16(metallic, matid, 4));')
+    frag.write('fragColor[0] = vec4(n.xy, roughness, packFloatInt16(metallic, matid));')
     frag.write('fragColor[1] = vec4(basecol, packFloat2(occlusion, specular));')
 
     if '_gbuffer2' in wrd.world_defs:

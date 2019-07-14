@@ -105,7 +105,7 @@ void main() {
 	float roughness = g0.b;
 	float metallic;
 	uint matid;
-	unpackFloatInt16(g0.a, 4, metallic, matid);
+	unpackFloatInt16(g0.a, metallic, matid);
 
 	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ
 	vec2 occspec = unpackFloat2(g1.a);
