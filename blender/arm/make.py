@@ -516,7 +516,7 @@ def build_success():
             if arm.utils.get_os() == 'win':
                 cmd.append('--consolepid')
                 cmd.append(str(os.getpid()))
-            if wrd.arm_audio == 'Enabled':
+            if wrd.arm_audio == 'Enabled' and arm.utils.get_os() != 'mac':
                 cmd.append('--sound')
             state.proc_play = run_proc(cmd, play_done)
 
