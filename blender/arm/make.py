@@ -510,11 +510,7 @@ def build_success():
         elif wrd.arm_runtime == 'Krom':
             if wrd.arm_live_patch:
                 open(arm.utils.get_fp_build() + '/debug/krom/krom.patch', 'w').close()
-            if arm.utils.get_os() == 'win':
-                bin_ext = '' if state.export_gapi == 'direct3d11' else '_' + state.export_gapi
-            else:
-                bin_ext = '' if state.export_gapi == 'opengl' else '_' + state.export_gapi
-            krom_location, krom_path = arm.utils.krom_paths(bin_ext=bin_ext)
+            krom_location, krom_path = arm.utils.krom_paths()
             os.chdir(krom_location)
             cmd = [krom_path, arm.utils.get_fp_build() + '/debug/krom', arm.utils.get_fp_build() + '/debug/krom-resources']
             if arm.utils.get_os() == 'win':

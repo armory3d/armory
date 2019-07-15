@@ -85,7 +85,7 @@ def get_gapi():
         return getattr(item, target_to_gapi(item.arm_project_target))
     if wrd.arm_runtime == 'Browser':
         return 'webgl'
-    return arm.utils.get_player_gapi()
+    return 'direct3d11' if get_os() == 'win' else 'opengl'
 
 def get_rp():
     wrd = bpy.data.worlds['Arm']
@@ -138,11 +138,6 @@ def get_renderdoc_path():
         if os.path.exists(pdefault):
             p = pdefault
     return p
-
-def get_player_gapi():
-    preferences = bpy.context.preferences
-    addon_prefs = preferences.addons['armory'].preferences
-    return 'opengl' if not hasattr(addon_prefs, 'player_gapi_' + get_os()) else getattr(addon_prefs, 'player_gapi_' + get_os())
 
 def get_code_editor():
     preferences = bpy.context.preferences
@@ -209,17 +204,17 @@ def get_haxe_path():
 def get_khamake_path():
     return get_kha_path() + '/make'
 
-def krom_paths(bin_ext=''):
+def krom_paths():
     sdk_path = get_sdk_path()
     if arm.utils.get_os() == 'win':
         krom_location = sdk_path + '/Krom'
-        krom_path = krom_location + '/Krom' + bin_ext + '.exe'
+        krom_path = krom_location + '/Krom.exe'
     elif arm.utils.get_os() == 'mac':
         krom_location = sdk_path + '/Krom/Krom.app/Contents/MacOS'
-        krom_path = krom_location + '/Krom' + bin_ext
+        krom_path = krom_location + '/Krom'
     else:
         krom_location = sdk_path + '/Krom'
-        krom_path = krom_location + '/Krom' + bin_ext
+        krom_path = krom_location + '/Krom'
     return krom_location, krom_path
 
 def fetch_bundled_script_names():

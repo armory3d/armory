@@ -321,11 +321,10 @@ class ArmEditCanvasButton(bpy.types.Operator):
         project_path = arm.utils.get_fp()
         item = obj.arm_traitlist[obj.arm_traitlist_index]
         canvas_path = project_path + '/Bundled/canvas/' + item.canvas_name_prop + '.json'
-
         sdk_path = arm.utils.get_sdk_path()
-        armory2d_path = sdk_path + '/lib/armory_tools/armory2d'
-        bin_ext = '_opengl' if arm.utils.get_os() == 'win' else ''
-        krom_location, krom_path = arm.utils.krom_paths(bin_ext=bin_ext)
+        ext = 'd3d11' if arm.utils.get_os() == 'win' else 'opengl'
+        armory2d_path = sdk_path + '/lib/armory_tools/armory2d/' + ext
+        krom_location, krom_path = arm.utils.krom_paths()
         os.chdir(krom_location)
         cpath = canvas_path.replace('\\', '/')
         uiscale = str(arm.utils.get_ui_scale())
