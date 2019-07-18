@@ -8,12 +8,15 @@ class RenderPathCreator {
 	public static var path:RenderPath;
 
 	#if (rp_renderer == "Forward")
+	public static var setTargetMeshes:Void->Void = RenderPathForward.setTargetMeshes;
 	public static var drawMeshes:Void->Void = RenderPathForward.drawMeshes;
 	public static var applyConfig:Void->Void = RenderPathForward.applyConfig;
 	#elseif (rp_renderer == "Deferred")
+	public static var setTargetMeshes:Void->Void = RenderPathDeferred.setTargetMeshes;
 	public static var drawMeshes:Void->Void = RenderPathDeferred.drawMeshes;
 	public static var applyConfig:Void->Void = RenderPathDeferred.applyConfig;
 	#else
+	public static var setTargetMeshes:Void->Void = function() {};
 	public static var drawMeshes:Void->Void = function() {};
 	public static var applyConfig:Void->Void = function() {};
 	#end

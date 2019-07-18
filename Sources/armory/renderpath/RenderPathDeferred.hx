@@ -13,6 +13,18 @@ class RenderPathDeferred {
 	static var voxelsLast = "voxels";
 	#end
 
+	public static function setTargetMeshes() {
+		#if rp_gbuffer2
+		{
+			path.setTarget("gbuffer0", ["gbuffer1", "gbuffer2"]);
+		}
+		#else
+		{
+			path.setTarget("gbuffer0", ["gbuffer1"]);
+		}
+		#end
+	}
+
 	public static function drawMeshes() {
 		path.drawMeshes("mesh");
 	}
@@ -394,13 +406,10 @@ class RenderPathDeferred {
 		{
 			path.setTarget("gbuffer2");
 			path.clearTarget(0xff000000);
-			path.setTarget("gbuffer0", ["gbuffer1", "gbuffer2"]);
-		}
-		#else
-		{
-			path.setTarget("gbuffer0", ["gbuffer1"]);
 		}
 		#end
+
+		RenderPathCreator.setTargetMeshes();
 
 		#if rp_stereo
 		{
