@@ -102,11 +102,15 @@ void main() {
 	n.xy = n.z >= 0.0 ? g0.xy : octahedronWrap(g0.xy);
 	n = normalize(n);
 
-	vec2 metrough = unpackFloat(g0.b);
+	float roughness = g0.b;
+	float metallic;
+	uint matid;
+	unpackFloatInt16(g0.a, metallic, matid);
+
 	vec4 g1 = textureLod(gbuffer1, texCoord, 0.0); // Basecolor.rgb, spec/occ
 	vec2 occspec = unpackFloat2(g1.a);
-	vec3 albedo = surfaceAlbedo(g1.rgb, metrough.x); // g1.rgb - basecolor
-	vec3 f0 = surfaceF0(g1.rgb, metrough.x);
+	vec3 albedo = surfaceAlbedo(g1.rgb, metallic); // g1.rgb - basecolor
+	vec3 f0 = surfaceF0(g1.rgb, metallic);
 
 	float depth = textureLod(gbufferD, texCoord, 0.0).r * 2.0 - 1.0;
 	vec3 p = getPos(eye, eyeLook, normalize(viewRay), depth, cameraProj);
@@ -114,7 +118,7 @@ void main() {
 	float dotNV = max(dot(n, v), 0.0);
 
 #ifdef _Brdf
-	vec2 envBRDF = textureLod(senvmapBrdf, vec2(metrough.y, 1.0 - dotNV), 0.0).xy;
+	vec2 envBRDF = textureLod(senvmapBrdf, vec2(roughness, 1.0 - dotNV), 0.0).xy;
 #endif
 
 	// Envmap
@@ -129,7 +133,7 @@ void main() {
 
 #ifdef _Rad
 	vec3 reflectionWorld = reflect(-v, n);
-	float lod = getMipFromRoughness(metrough.y, envmapNumMipmaps);
+	float lod = getMipFromRoughness(roughness, envmapNumMipmaps);
 	vec3 prefilteredColor = textureLod(senvmapRadiance, envMapEquirect(reflectionWorld), lod).rgb;
 #endif
 
@@ -146,7 +150,7 @@ void main() {
 	envl.rgb += prefilteredColor * (f0 * envBRDF.x + envBRDF.y) * 1.5 * occspec.y;
 #else
 	#ifdef _EnvCol
-	envl.rgb += backgroundCol * surfaceF0(g1.rgb, metrough.x); // f0
+	envl.rgb += backgroundCol * surfaceF0(g1.rgb, metallic); // f0
 	#endif
 #endif
 
@@ -160,7 +164,7 @@ void main() {
 	float sdotNL = dot(n, sunDir);
 	float svisibility = 1.0;
 	vec3 sdirect = lambertDiffuseBRDF(albedo, sdotNL) +
-				   specularBRDF(f0, metrough.y, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
+				   specularBRDF(f0, roughness, sdotNL, sdotNH, dotNV, sdotVH) * occspec.y;
 
 	#ifdef _ShadowMap
 		#ifdef _CSM
@@ -176,7 +180,7 @@ void main() {
 
 #ifdef _SinglePoint
 	fragColor.rgb += sampleLight(
-		p, n, v, dotNV, pointPos, pointCol, albedo, metrough.y, occspec.y, f0
+		p, n, v, dotNV, pointPos, pointCol, albedo, roughness, occspec.y, f0
 		#ifdef _ShadowMap
 			, 0, pointBias
 		#endif
@@ -210,7 +214,7 @@ void main() {
 			lightsArray[li * 2].xyz, // lp
 			lightsArray[li * 2 + 1].xyz, // lightCol
 			albedo,
-			metrough.y,
+			roughness,
 			occspec.y,
 			f0
 			#ifdef _ShadowMap

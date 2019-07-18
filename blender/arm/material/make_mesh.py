@@ -245,16 +245,16 @@ def make_deferred(con_mesh, rpasses):
     frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
     
     if '_Emission' in wrd.world_defs or '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
-        frag.write('float matid = 0.0;')
+        frag.write('uint matid = 0;')
         if '_Emission' in wrd.world_defs:
-            frag.write('if (emission > 0) { basecol *= emission; matid = 1.0; }')
+            frag.write('if (emission > 0) { basecol *= emission; matid = 1; }')
         if '_SSS' in wrd.world_defs or '_Hair' in wrd.world_defs:
             frag.add_uniform('int materialID')
-            frag.write('if (materialID == 2) matid = 2.0;')
+            frag.write('if (materialID == 2) matid = 2;')
     else:
-        frag.write('const float matid = 0.0;')
+        frag.write('const uint matid = 0;')
 
-    frag.write('fragColor[0] = vec4(n.xy, packFloat(metallic, roughness), matid);')
+    frag.write('fragColor[0] = vec4(n.xy, roughness, packFloatInt16(metallic, matid));')
     frag.write('fragColor[1] = vec4(basecol, packFloat2(occlusion, specular));')
 
     if '_gbuffer2' in wrd.world_defs:
@@ -537,7 +537,7 @@ def make_forward(con_mesh):
             frag.write('n /= (abs(n.x) + abs(n.y) + abs(n.z));')
             frag.write('n.xy = n.z >= 0.0 ? n.xy : octahedronWrap(n.xy);')
             frag.write('fragColor[0] = vec4(direct + indirect, packFloat2(occlusion, specular));')
-            frag.write('fragColor[1] = vec4(n.xy, packFloat(metallic, roughness), 1.0);')
+            frag.write('fragColor[1] = vec4(n.xy, roughness, metallic);')
         else:
             frag.add_out('vec4 fragColor[1]')
             frag.write('fragColor[0] = vec4(direct + indirect, 1.0);')

@@ -98,7 +98,7 @@ vec4 encodeRGBM(const vec3 rgb) {
 
 vec3 decodeRGBM(const vec4 rgbm) {
 	const float maxRange = 6.0;
-    return rgbm.rgb * rgbm.a * maxRange;
+	return rgbm.rgb * rgbm.a * maxRange;
 }
 
 uint encNor(vec3 n) {
@@ -125,6 +125,70 @@ vec3 decNor(uint val) {
 	vec3 normal = vec3(nor) / 255.0f;
 	normal *= norSigns;
 	return normal;
+}
+
+// GBuffer helper - Sebastien Lagarde
+// https://seblagarde.wordpress.com/2018/09/02/gbuffer-helper-packing-integer-and-float-together/
+float packFloatInt8(const float f, const uint i) {
+	// Constant optimize by compiler
+	const int numBitTarget = 8;
+	const int numBitI = 4;
+	const float prec = float(1 << numBitTarget);
+	const float maxi = float(1 << numBitI);
+	const float precMinusOne = prec - 1.0;
+	const float t1 = ((prec / maxi) - 1.0) / precMinusOne;
+	const float t2 = (prec / maxi) / precMinusOne;
+	// Code
+	return t1 * f + t2 * float(i);
+}
+
+float packFloatInt16(const float f, const uint i) {
+	// Constant optimize by compiler
+	const int numBitTarget = 16;
+	const int numBitI = 4;
+	const float prec = float(1 << numBitTarget);
+	const float maxi = float(1 << numBitI);
+	const float precMinusOne = prec - 1.0;
+	const float t1 = ((prec / maxi) - 1.0) / precMinusOne;
+	const float t2 = (prec / maxi) / precMinusOne;
+	// Code
+	return t1 * f + t2 * float(i);
+}
+
+void unpackFloatInt8(const float val, out float f, out uint i) {
+	// Constant optimize by compiler
+	const int numBitTarget = 8;
+	const int numBitI = 4;
+	const float prec = float(1 << numBitTarget);
+	const float maxi = float(1 << numBitI);
+	const float precMinusOne = prec - 1.0;
+	const float t1 = ((prec / maxi) - 1.0) / precMinusOne;
+	const float t2 = (prec / maxi) / precMinusOne;
+	// Code
+	// extract integer part
+	// + rcp(precMinusOne) to deal with precision issue
+	i = int((val / t2) + (1.0 / precMinusOne));
+	// Now that we have i, solve formula in packFloatInt for f
+	//f = (val - t2 * float(i)) / t1 => convert in mads form
+	f = clamp((-t2 * float(i) + val) / t1, 0.0, 1.0); // Saturate in case of precision issue
+}
+
+void unpackFloatInt16(const float val, out float f, out uint i) {
+	// Constant optimize by compiler
+	const int numBitTarget = 16;
+	const int numBitI = 4;
+	const float prec = float(1 << numBitTarget);
+	const float maxi = float(1 << numBitI);
+	const float precMinusOne = prec - 1.0;
+	const float t1 = ((prec / maxi) - 1.0) / precMinusOne;
+	const float t2 = (prec / maxi) / precMinusOne;
+	// Code
+	// extract integer part
+	// + rcp(precMinusOne) to deal with precision issue
+	i = int((val / t2) + (1.0 / precMinusOne));
+	// Now that we have i, solve formula in packFloatInt for f
+	//f = (val - t2 * float(i)) / t1 => convert in mads form
+	f = clamp((-t2 * float(i) + val) / t1, 0.0, 1.0); // Saturate in case of precision issue
 }
 
 #endif

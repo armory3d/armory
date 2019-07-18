@@ -23,7 +23,7 @@ void main() {
 
 	vec4 g0 = textureLod(gbuffer0, texCoord, 0.0); // Normal.xy, metallic/roughness, depth
 
-	float roughness = unpackFloat(g0.b).y;
+	float roughness = g0.b;
 	if (roughness > 0.95) {
 		fragColor.rgb = vec3(0.0);
 		return;

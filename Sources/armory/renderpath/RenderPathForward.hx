@@ -13,26 +13,42 @@ class RenderPathForward {
 	static var voxelsLast = "voxels";
 	#end
 
+	public static function setTargetMeshes() {
+		#if rp_render_to_texture
+		{
+			#if rp_ssr
+			path.setTarget("lbuffer0", ["lbuffer1"]);
+			#else
+			path.setTarget("lbuffer0");
+			#end
+		}
+		#else
+		{
+			path.setTarget("");
+		}
+		#end
+	}
+
 	public static function drawMeshes() {
 		path.drawMeshes("mesh");
 
 		#if (rp_background == "World")
 		{
-			setTargetMain();
+			RenderPathCreator.setTargetMeshes();
 			path.drawSkydome("shader_datas/world_pass/world_pass");
 		}
 		#end
 
 		#if rp_blending
 		{
-			setTargetMain();
+			RenderPathCreator.setTargetMeshes();
 			path.drawMeshes("blend");
 		}
 		#end
 
 		#if rp_translucency
 		{
-			setTargetMain();
+			RenderPathCreator.setTargetMeshes();
 			Inc.drawTranslucency("lbuffer0");
 		}
 		#end
@@ -260,22 +276,6 @@ class RenderPathForward {
 		#end
 	}
 
-	static function setTargetMain() {
-		#if rp_render_to_texture
-		{
-			#if rp_ssr
-			path.setTarget("lbuffer0", ["lbuffer1"]);
-			#else
-			path.setTarget("lbuffer0");
-			#end
-		}
-		#else
-		{
-			path.setTarget("");
-		}
-		#end
-	}
-
 	public static function commands() {
 
 		#if rp_shadowmap
@@ -311,7 +311,7 @@ class RenderPathForward {
 		}
 		#end
 
-		setTargetMain();
+		RenderPathCreator.setTargetMeshes();
 
 		#if (rp_background == "Clear")
 		{
@@ -326,7 +326,7 @@ class RenderPathForward {
 		#if rp_depthprepass
 		{
 			path.drawMeshes("depth");
-			setTargetMain();
+			RenderPathCreator.setTargetMeshes();
 		}
 		#end
 
