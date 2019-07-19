@@ -105,43 +105,6 @@ class ArmoryExporter:
         return None
 
     @staticmethod
-    def classify_animation_curve(fcurve):
-        """Classifies the type of the fcurve.
-
-        If different keyframes have different interpolation types, the
-        animation gets treated as a sampled one.
-        """
-        linear_count = 0
-        bezier_count = 0
-        constant_count = 0
-
-        for key in fcurve.keyframe_points:
-            interp = key.interpolation
-            if interp == "LINEAR":
-                linear_count += 1
-            elif interp == "BEZIER":
-                bezier_count += 1
-            elif interp == "CONSTANT":
-                constant_count += 1
-
-            # Unsupported interpolation
-            else:
-                return AnimationTypeSampled
-
-        num_keyframes = len(fcurve.keyframe_points)
-
-        if num_keyframes > 0:
-            if linear_count == num_keyframes:
-                return AnimationTypeLinear
-            if bezier_count == num_keyframes:
-                return AnimationTypeBezier
-            if constant_count == num_keyframes:
-                return AnimationTypeConstant
-
-        # Sampled or mixed interpolation
-        return AnimationTypeSampled
-
-    @staticmethod
     def collect_bone_animation(armature, name):
         path = "pose.bones[\"" + name + "\"]."
         curve_array = []
@@ -236,245 +199,118 @@ class ArmoryExporter:
                 oaction['transform'] = None
                 arm.utils.write_arm(fp, actionf)
 
-    def export_key_frames(self, fcurve):
-        keyo = []
+    def calculate_animation_length(self, action):
+        """Calculates the length of the given action."""
+        start = action.frame_range[0]
+        end = action.frame_range[1]
 
-        for keyframe in fcurve.keyframe_points:
-            keyo.append(int(keyframe.co[0]))
+        # Take FCurve modifiers into account if they have a restricted
+        # frame range
+        for fcurve in action.fcurves:
+            for modifier in fcurve.modifiers:
+                if not modifier.use_restricted_range:
+                    continue
 
-        return keyo
+                if modifier.frame_start < start:
+                    start = modifier.frame_start
 
-    def export_key_frame_control_points(self, fcurve):
-        keyminuso = []
-        keypluso = []
+                if modifier.frame_end > end:
+                    end = modifier.frame_end
 
-        for keyframe in fcurve.keyframe_points:
-            keyminuso.append(keyframe.handle_left[0])
-            keypluso.append(keyframe.handle_right[0])
+        return (int(start), int(end))
 
-        return keyminuso, keypluso
+    def export_animation_track(self, fcurve, frame_range, target):
+        """This function exports a single animation track."""
+        data_ttrack = {}
 
-    def export_key_values(self, fcurve):
-        keyo = []
+        data_ttrack['target'] = target
+        data_ttrack['frames'] = []
+        data_ttrack['values'] = []
 
-        for keyframe in fcurve.keyframe_points:
-            keyo.append(keyframe.co[1])
+        start = frame_range[0]
+        end = frame_range[1]
 
-        return keyo
+        for frame in range(start, end + 1):
+            data_ttrack['frames'].append(frame)
+            data_ttrack['values'].append(fcurve.evaluate(frame))
 
-    def export_key_value_control_points(self, fcurve):
-        keyminuso = []
-        keypluso = []
+        return data_ttrack
 
-        for keyframe in fcurve.keyframe_points:
-            keyminuso.append(keyframe.handle_left[1])
-            keypluso.append(keyframe.handle_right[1])
+    def export_object_transform(self, bobject, o):
+        # Internal target names for single FCurve data paths
+        target_names = {
+            "location": ("xloc", "yloc", "zloc"),
+            "rotation_euler": ("xrot", "yrot", "zrot"),
+            "rotation_quaternion": ("qwrot", "qxrot", "qyrot", "qzrot"),
+            "scale": ("xscl", "yscl", "zscl"),
+            "delta_location": ("dxloc", "dyloc", "dzloc"),
+            "delta_rotation_euler": ("dxrot", "dyrot", "dzrot"),
+            "delta_rotation_quaternion": ("dqwrot", "dqxrot", "dqyrot", "dqzrot"),
+            "delta_scale": ("dxscl", "dyscl", "dzscl"),
+        }
 
-        return keyminuso, keypluso
+        # Static transform
+        o['transform'] = {}
+        o['transform']['values'] = self.write_matrix(bobject.matrix_local)
 
-    def export_animation_track(self, fcurve, kind, target, newline):
-        # This function exports a single animation track. The curve types for the
-        # Frame and Value structures are given by the kind parameter.
-        tracko = {}
-        tracko['target'] = target
-
-        tracko['frames'] = self.export_key_frames(fcurve)
-        tracko['values'] = self.export_key_values(fcurve)
-
-        if kind == AnimationTypeBezier:
-            tracko['curve'] = 'bezier'
-
-            tracko['frames_control_minus'], tracko['frames_control_plus'] = self.export_key_frame_control_points(fcurve)
-            tracko['values_control_minus'], tracko['values_control_plus'] = self.export_key_value_control_points(fcurve)
-        elif kind == AnimationTypeLinear:
-            tracko['curve'] = 'linear'
-        else:
-            tracko['curve'] = 'constant'
-
-        return tracko
-
-    def export_object_transform(self, bobject, scene, o):
-        locAnimCurve = [None, None, None]
-        rotAnimCurve = [None, None, None]
-        sclAnimCurve = [None, None, None]
-        locAnimKind = [0, 0, 0]
-        rotAnimKind = [0, 0, 0]
-        sclAnimKind = [0, 0, 0]
-
-        deltaPosAnimCurve = [None, None, None]
-        deltaRotAnimCurve = [None, None, None]
-        deltaSclAnimCurve = [None, None, None]
-        deltaPosAnimKind = [0, 0, 0]
-        deltaRotAnimKind = [0, 0, 0]
-        deltaSclAnimKind = [0, 0, 0]
-
-        locationAnimated = False
-        rotationAnimated = False
-        scaleAnimated = False
-        locAnimated = [False, False, False]
-        rotAnimated = [False, False, False]
-        sclAnimated = [False, False, False]
-
-        deltaPositionAnimated = False
-        deltaRotationAnimated = False
-        deltaScaleAnimated = False
-        deltaPosAnimated = [False, False, False]
-        deltaRotAnimated = [False, False, False]
-        deltaSclAnimated = [False, False, False]
-
-        mode = bobject.rotation_mode
-        sampledAnimation = mode == "QUATERNION" or mode == "AXIS_ANGLE"
-
-        if not sampledAnimation and bobject.animation_data and bobject.type != 'ARMATURE':
+        # Animated transform
+        if bobject.animation_data is not None and bobject.type != "ARMATURE":
             action = bobject.animation_data.action
-            if action:
+
+            if action is not None:
+                action_name = arm.utils.safestr(arm.utils.asset_name(action))
+
+                if 'object_actions' not in o:
+                    o['object_actions'] = []
+
+                fp = self.get_meshes_file_path('action_' + action_name, compressed=self.is_compress())
+                assets.add(fp)
+                ext = '.lz4' if self.is_compress() else ''
+                if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
+                    ext = '.json'
+                o['object_actions'].append('action_' + action_name + ext)
+
+                oaction = {}
+                oaction['name'] = action.name
+
+                # Export the animation tracks
+                oanim = {}
+                oaction['anim'] = oanim
+
+                frame_range = self.calculate_animation_length(action)
+                oanim['begin'] = frame_range[0]
+                oanim['end'] = frame_range[1]
+
+                oanim['tracks'] = []
+                self.export_pose_markers(oanim, action)
+
                 for fcurve in action.fcurves:
-                    kind = ArmoryExporter.classify_animation_curve(fcurve)
-                    if kind != AnimationTypeSampled:
-                        if fcurve.data_path == "location":
-                            for i in range(3):
-                                if (fcurve.array_index == i) and (not locAnimCurve[i]):
-                                    locAnimCurve[i] = fcurve
-                                    locAnimKind[i] = kind
-                                    locAnimated[i] = True
-                        elif fcurve.data_path == "delta_location":
-                            for i in range(3):
-                                if (fcurve.array_index == i) and (not deltaPosAnimCurve[i]):
-                                    deltaPosAnimCurve[i] = fcurve
-                                    deltaPosAnimKind[i] = kind
-                                    deltaPosAnimated[i] = True
-                        elif fcurve.data_path == "rotation_euler":
-                            for i in range(3):
-                                if (fcurve.array_index == i) and (not rotAnimCurve[i]):
-                                    rotAnimCurve[i] = fcurve
-                                    rotAnimKind[i] = kind
-                                    rotAnimated[i] = True
-                        elif fcurve.data_path == "delta_rotation_euler":
-                            for i in range(3):
-                                if (fcurve.array_index == i) and (not deltaRotAnimCurve[i]):
-                                    deltaRotAnimCurve[i] = fcurve
-                                    deltaRotAnimKind[i] = kind
-                                    deltaRotAnimated[i] = True
-                        elif fcurve.data_path == "scale":
-                            for i in range(3):
-                                if (fcurve.array_index == i) and (not sclAnimCurve[i]):
-                                    sclAnimCurve[i] = fcurve
-                                    sclAnimKind[i] = kind
-                                    sclAnimated[i] = True
-                        elif fcurve.data_path == "delta_scale":
-                            for i in range(3):
-                                if (fcurve.array_index == i) and (not deltaSclAnimCurve[i]):
-                                    deltaSclAnimCurve[i] = fcurve
-                                    deltaSclAnimKind[i] = kind
-                                    deltaSclAnimated[i] = True
-                        elif (fcurve.data_path == "rotation_axis_angle") or (fcurve.data_path == "rotation_quaternion") or (fcurve.data_path == "delta_rotation_quaternion"):
-                            sampledAnimation = True
-                            break
-                    else:
-                        sampledAnimation = True
-                        break
+                    data_path = fcurve.data_path
 
-        locationAnimated = locAnimated[0] | locAnimated[1] | locAnimated[2]
-        rotationAnimated = rotAnimated[0] | rotAnimated[1] | rotAnimated[2]
-        scaleAnimated = sclAnimated[0] | sclAnimated[1] | sclAnimated[2]
+                    try:
+                        data_ttrack = self.export_animation_track(fcurve, frame_range, target_names[data_path][fcurve.array_index])
 
-        deltaPositionAnimated = deltaPosAnimated[0] | deltaPosAnimated[1] | deltaPosAnimated[2]
-        deltaRotationAnimated = deltaRotAnimated[0] | deltaRotAnimated[1] | deltaRotAnimated[2]
-        deltaScaleAnimated = deltaSclAnimated[0] | deltaSclAnimated[1] | deltaSclAnimated[2]
+                    except KeyError:
+                        if data_path not in target_names:
+                            print(f"Action {action_name}: The data path '{data_path}' is not supported (yet)!")
+                            continue
 
-        if (sampledAnimation) or ((not locationAnimated) and (not rotationAnimated) and (not scaleAnimated) and (not deltaPositionAnimated) and (not deltaRotationAnimated) and (not deltaScaleAnimated)):
-            # If there's no keyframe animation at all, then write the object transform as a single 4x4 matrix.
-            # We might still be exporting sampled animation below.
-            o['transform'] = {}
-            o['transform']['values'] = self.write_matrix(bobject.matrix_local)
+                        # Missing target entry for array_index or something else
+                        else:
+                            raise
 
-            if sampledAnimation:
-                o['transform']['target'] = "transform"
-                self.export_object_sampled_animation(bobject, scene, o)
-        else: # Animated
-            structFlag = False
+                    oanim['tracks'].append(data_ttrack)
 
-            o['transform'] = {}
-            o['transform']['values'] = self.write_matrix(bobject.matrix_local)
-
-            if not 'object_actions' in o:
-                o['object_actions'] = []
-
-            action = bobject.animation_data.action
-            aname = arm.utils.safestr(arm.utils.asset_name(action))
-            fp = self.get_meshes_file_path('action_' + aname, compressed=self.is_compress())
-            assets.add(fp)
-            ext = '.lz4' if self.is_compress() else ''
-            if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
-                ext = '.json'
-            o['object_actions'].append('action_' + aname + ext)
-
-            oaction = {}
-            oaction['name'] = action.name
-
-            # Export the animation tracks
-            oanim = {}
-            oaction['anim'] = oanim
-            oanim['begin'] = int(action.frame_range[0])
-            oanim['end'] = int(action.frame_range[1])
-            oanim['tracks'] = []
-            self.export_pose_markers(oanim, action)
-
-            if locationAnimated:
-                for i in range(3):
-                    if locAnimated[i]:
-                        tracko = self.export_animation_track(locAnimCurve[i], locAnimKind[i], subtranslationName[i], structFlag)
-                        oanim['tracks'].append(tracko)
-                        structFlag = True
-
-            if rotationAnimated:
-                for i in range(3):
-                    if rotAnimated[i]:
-                        tracko = self.export_animation_track(rotAnimCurve[i], rotAnimKind[i], subrotationName[i], structFlag)
-                        oanim['tracks'].append(tracko)
-                        structFlag = True
-
-            if scaleAnimated:
-                for i in range(3):
-                    if sclAnimated[i]:
-                        tracko = self.export_animation_track(sclAnimCurve[i], sclAnimKind[i], subscaleName[i], structFlag)
-                        oanim['tracks'].append(tracko)
-                        structFlag = True
-
-            if deltaPositionAnimated:
-                for i in range(3):
-                    if deltaPosAnimated[i]:
-                        tracko = self.export_animation_track(deltaPosAnimCurve[i], deltaPosAnimKind[i], deltaSubtranslationName[i], structFlag)
-                        oanim['tracks'].append(tracko)
-                        oanim['has_delta'] = True
-                        structFlag = True
-
-            if deltaRotationAnimated:
-                for i in range(3):
-                    if deltaRotAnimated[i]:
-                        tracko = self.export_animation_track(deltaRotAnimCurve[i], deltaRotAnimKind[i], deltaSubrotationName[i], structFlag)
-                        oanim['tracks'].append(tracko)
-                        oanim['has_delta'] = True
-                        structFlag = True
-
-            if deltaScaleAnimated:
-                for i in range(3):
-                    if deltaSclAnimated[i]:
-                        tracko = self.export_animation_track(deltaSclAnimCurve[i], deltaSclAnimKind[i], deltaSubscaleName[i], structFlag)
-                        oanim['tracks'].append(tracko)
-                        oanim['has_delta'] = True
-                        structFlag = True
-
-            if True: #action.arm_cached == False or not os.path.exists(fp):
-                print('Exporting object action ' + aname)
-                actionf = {}
-                actionf['objects'] = []
-                actionf['objects'].append(oaction)
-                oaction['type'] = 'object'
-                oaction['name'] = aname
-                oaction['data_ref'] = ''
-                oaction['transform'] = None
-                arm.utils.write_arm(fp, actionf)
+                if True:  #action.arm_cached == False or not os.path.exists(fp):
+                    print('Exporting object action ' + action_name)
+                    actionf = {}
+                    actionf['objects'] = []
+                    actionf['objects'].append(oaction)
+                    oaction['type'] = 'object'
+                    oaction['name'] = action_name
+                    oaction['data_ref'] = ''
+                    oaction['transform'] = None
+                    arm.utils.write_arm(fp, actionf)
 
     def process_bone(self, bone):
         if ArmoryExporter.export_all_flag or bone.select:
@@ -901,12 +737,12 @@ class ArmoryExporter:
                 orig_action = action
                 for a in export_actions:
                     bobject.animation_data.action = a
-                    self.export_object_transform(bobject, scene, o)
+                    self.export_object_transform(bobject, o)
                 if len(export_actions) >= 2 and export_actions[0] is None: # No action assigned
                     o['object_actions'].insert(0, 'null')
                 bobject.animation_data.action = orig_action
             else:
-                self.export_object_transform(bobject, scene, o)
+                self.export_object_transform(bobject, o)
 
             # If the object is parented to a bone and is not relative, then undo the bone's transform
             if bobject.parent_type == "BONE":
