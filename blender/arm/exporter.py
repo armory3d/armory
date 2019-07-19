@@ -44,13 +44,6 @@ AnimationTypeConstant = 3
 ExportEpsilon = 1.0e-6
 
 structIdentifier = ["object", "bone_object", "mesh_object", "light_object", "camera_object", "speaker_object", "decal_object", "probe_object"]
-subtranslationName = ["xloc", "yloc", "zloc"]
-subrotationName = ["xrot", "yrot", "zrot"]
-subscaleName = ["xscl", "yscl", "zscl"]
-deltaSubtranslationName = ["dxloc", "dyloc", "dzloc"]
-deltaSubrotationName = ["dxrot", "dyrot", "dzrot"]
-deltaSubscaleName = ["dxscl", "dyscl", "dzscl"]
-axisName = ["x", "y", "z"]
 current_output = None
 
 class ArmoryExporter:
