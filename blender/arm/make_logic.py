@@ -181,9 +181,9 @@ def build_node(node, f):
         if out.is_linked:
             out_name = ''
             for l in out.links:
-                n = l.to_node
-                out_name += '[' if len(out_name) == 0 else ', '
-                out_name += build_node(n, f)
+                for output in collect_outputs_from_link(l, f):
+                    out_name += '[' if len(out_name) == 0 else ', '
+                    out_name += output
             out_name += ']'
         # Not linked - create node with default values
         else:
@@ -192,6 +192,25 @@ def build_node(node, f):
         f.write('\t\t' + name + '.addOutputs(' + out_name + ');\n')
 
     return name
+
+# If the given link points to a reroute, the outgoings links of that reroute will be recursively checked.
+# Otherwise, the node that this link points to will be added to a list and returned.
+def collect_outputs_from_link(link, f):
+    outputs = []
+    n = link.to_node
+    if n.type == 'REROUTE':
+        # if this link points to a reroute
+        for out in n.outputs:
+            # check whether its output (it should have only one)
+            if out.is_linked:
+                # is connected to some other nodes
+                for l in out.links:
+                    # for any of the links collect the potential output nodes
+                    outputs = outputs + collect_outputs_from_link(l, f)
+    else:
+        # if we reached a "normal" node, add it
+        outputs.append(build_node(n, f))
+    return outputs
     
 def get_root_nodes(node_group):
     roots = []
