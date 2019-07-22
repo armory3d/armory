@@ -196,8 +196,10 @@ def build_node(node, f):
 
     return name
 
-# If the given link points to a reroute, the outgoings links of that reroute will be recursively checked.
-# Otherwise, the node that this link points to will be added to a list and returned.
+# Expects an output socket
+# It first checks all outgoing links for non-reroute nodes and adds them to a list
+# Then it recursively checks all the discoverey reroute nodes
+# Returns all non reroute nodes which are directly or indirectly connected to this output.
 def collect_nodes_from_output(out, f):
     outputs = []
     reroutes = []
