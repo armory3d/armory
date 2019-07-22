@@ -1,31 +1,33 @@
-#  Armory Scene Exporter
-#  http://armory3d.org/
-#
-#  Based on Open Game Engine Exchange
-#  http://opengex.org/
-#  Export plugin for Blender by Eric Lengyel
-#  Copyright 2015, Terathon Software LLC
-#
-#  This software is licensed under the Creative Commons
-#  Attribution-ShareAlike 3.0 Unported License:
-#  http://creativecommons.org/licenses/by-sa/3.0/deed.en_US
+"""
+Armory Scene Exporter
+http://armory3d.org/
 
-import os
-import bpy
+Based on Open Game Engine Exchange
+http://opengex.org/
+Export plugin for Blender by Eric Lengyel
+Copyright 2015, Terathon Software LLC
+
+This software is licensed under the Creative Commons
+Attribution-ShareAlike 3.0 Unported License:
+http://creativecommons.org/licenses/by-sa/3.0/deed.en_US
+"""
 import math
-from mathutils import *
+import os
 import time
-import arm.utils
-import arm.write_probes as write_probes
+
+import numpy as np
+
+from mathutils import *
+import bpy
+
 import arm.assets as assets
+import arm.exporter_opt as exporter_opt
 import arm.log as log
-import arm.material.make as make_material
-import arm.material.mat_batch as mat_batch
-import arm.material.mat_state as mat_state
 import arm.make_renderpath as make_renderpath
 import arm.material.cycles as cycles
-import arm.exporter_opt as exporter_opt
-import numpy as np
+import arm.material.make as make_material
+import arm.material.mat_batch as mat_batch
+import arm.utils
 
 NodeTypeEmpty = 0
 NodeTypeBone = 1
@@ -42,13 +44,6 @@ AnimationTypeConstant = 3
 ExportEpsilon = 1.0e-6
 
 structIdentifier = ["object", "bone_object", "mesh_object", "light_object", "camera_object", "speaker_object", "decal_object", "probe_object"]
-subtranslationName = ["xloc", "yloc", "zloc"]
-subrotationName = ["xrot", "yrot", "zrot"]
-subscaleName = ["xscl", "yscl", "zscl"]
-deltaSubtranslationName = ["dxloc", "dyloc", "dzloc"]
-deltaSubrotationName = ["dxrot", "dyrot", "dzrot"]
-deltaSubscaleName = ["dxscl", "dyscl", "dzscl"]
-axisName = ["x", "y", "z"]
 current_output = None
 
 class ArmoryExporter:
@@ -101,43 +96,6 @@ class ArmoryExporter:
             if bobject_ref[0].name == name:
                 return bobject_ref
         return None
-
-    @staticmethod
-    def classify_animation_curve(fcurve):
-        """Classifies the type of the fcurve.
-
-        If different keyframes have different interpolation types, the
-        animation gets treated as a sampled one.
-        """
-        linear_count = 0
-        bezier_count = 0
-        constant_count = 0
-
-        for key in fcurve.keyframe_points:
-            interp = key.interpolation
-            if interp == "LINEAR":
-                linear_count += 1
-            elif interp == "BEZIER":
-                bezier_count += 1
-            elif interp == "CONSTANT":
-                constant_count += 1
-
-            # Unsupported interpolation
-            else:
-                return AnimationTypeSampled
-
-        num_keyframes = len(fcurve.keyframe_points)
-
-        if num_keyframes > 0:
-            if linear_count == num_keyframes:
-                return AnimationTypeLinear
-            if bezier_count == num_keyframes:
-                return AnimationTypeBezier
-            if constant_count == num_keyframes:
-                return AnimationTypeConstant
-
-        # Sampled or mixed interpolation
-        return AnimationTypeSampled
 
     @staticmethod
     def collect_bone_animation(armature, name):
@@ -234,252 +192,118 @@ class ArmoryExporter:
                 oaction['transform'] = None
                 arm.utils.write_arm(fp, actionf)
 
-    def export_key_frames(self, fcurve):
-        keyo = []
-        key_count = len(fcurve.keyframe_points)
-        for i in range(key_count):
-            frame = fcurve.keyframe_points[i].co[0]
-            keyo.append(int(frame))
-        return keyo
+    def calculate_animation_length(self, action):
+        """Calculates the length of the given action."""
+        start = action.frame_range[0]
+        end = action.frame_range[1]
 
-    def export_key_frame_control_points(self, fcurve):
-        keyminuso = []
-        key_count = len(fcurve.keyframe_points)
-        for i in range(key_count):
-            ctrl = fcurve.keyframe_points[i].handle_left[0]
-            keyminuso.append(ctrl)
-        keypluso = []
-        for i in range(key_count):
-            ctrl = fcurve.keyframe_points[i].handle_right[0]
-            keypluso.append(ctrl)
+        # Take FCurve modifiers into account if they have a restricted
+        # frame range
+        for fcurve in action.fcurves:
+            for modifier in fcurve.modifiers:
+                if not modifier.use_restricted_range:
+                    continue
 
-        return keyminuso, keypluso
+                if modifier.frame_start < start:
+                    start = modifier.frame_start
 
-    def export_key_values(self, fcurve):
-        keyo = []
-        key_count = len(fcurve.keyframe_points)
-        for i in range(key_count):
-            value = fcurve.keyframe_points[i].co[1]
-            keyo.append(value)
+                if modifier.frame_end > end:
+                    end = modifier.frame_end
 
-        return keyo
+        return (int(start), int(end))
 
-    def export_key_value_control_points(self, fcurve):
-        keyminuso = []
-        key_count = len(fcurve.keyframe_points)
-        for i in range(key_count):
-            ctrl = fcurve.keyframe_points[i].handle_left[1]
-            keyminuso.append(ctrl)
+    def export_animation_track(self, fcurve, frame_range, target):
+        """This function exports a single animation track."""
+        data_ttrack = {}
 
-        keypluso = []
-        for i in range(key_count):
-            ctrl = fcurve.keyframe_points[i].handle_right[1]
-            keypluso.append(ctrl)
-        return keyminuso, keypluso
+        data_ttrack['target'] = target
+        data_ttrack['frames'] = []
+        data_ttrack['values'] = []
 
-    def export_animation_track(self, fcurve, kind, target, newline):
-        # This function exports a single animation track. The curve types for the
-        # Frame and Value structures are given by the kind parameter.
-        tracko = {}
-        tracko['target'] = target
+        start = frame_range[0]
+        end = frame_range[1]
 
-        tracko['frames'] = self.export_key_frames(fcurve)
-        tracko['values'] = self.export_key_values(fcurve)
+        for frame in range(start, end + 1):
+            data_ttrack['frames'].append(frame)
+            data_ttrack['values'].append(fcurve.evaluate(frame))
 
-        if kind == AnimationTypeBezier:
-            tracko['curve'] = 'bezier'
+        return data_ttrack
 
-            tracko['frames_control_minus'], tracko['frames_control_plus'] = self.export_key_frame_control_points(fcurve)
-            tracko['values_control_minus'], tracko['values_control_plus'] = self.export_key_value_control_points(fcurve)
-        elif kind == AnimationTypeLinear:
-            tracko['curve'] = 'linear'
-        else:
-            tracko['curve'] = 'constant'
+    def export_object_transform(self, bobject, o):
+        # Internal target names for single FCurve data paths
+        target_names = {
+            "location": ("xloc", "yloc", "zloc"),
+            "rotation_euler": ("xrot", "yrot", "zrot"),
+            "rotation_quaternion": ("qwrot", "qxrot", "qyrot", "qzrot"),
+            "scale": ("xscl", "yscl", "zscl"),
+            "delta_location": ("dxloc", "dyloc", "dzloc"),
+            "delta_rotation_euler": ("dxrot", "dyrot", "dzrot"),
+            "delta_rotation_quaternion": ("dqwrot", "dqxrot", "dqyrot", "dqzrot"),
+            "delta_scale": ("dxscl", "dyscl", "dzscl"),
+        }
 
-        return tracko
+        # Static transform
+        o['transform'] = {}
+        o['transform']['values'] = self.write_matrix(bobject.matrix_local)
 
-    def export_object_transform(self, bobject, scene, o):
-        locAnimCurve = [None, None, None]
-        rotAnimCurve = [None, None, None]
-        sclAnimCurve = [None, None, None]
-        locAnimKind = [0, 0, 0]
-        rotAnimKind = [0, 0, 0]
-        sclAnimKind = [0, 0, 0]
-
-        deltaPosAnimCurve = [None, None, None]
-        deltaRotAnimCurve = [None, None, None]
-        deltaSclAnimCurve = [None, None, None]
-        deltaPosAnimKind = [0, 0, 0]
-        deltaRotAnimKind = [0, 0, 0]
-        deltaSclAnimKind = [0, 0, 0]
-
-        locationAnimated = False
-        rotationAnimated = False
-        scaleAnimated = False
-        locAnimated = [False, False, False]
-        rotAnimated = [False, False, False]
-        sclAnimated = [False, False, False]
-
-        deltaPositionAnimated = False
-        deltaRotationAnimated = False
-        deltaScaleAnimated = False
-        deltaPosAnimated = [False, False, False]
-        deltaRotAnimated = [False, False, False]
-        deltaSclAnimated = [False, False, False]
-
-        mode = bobject.rotation_mode
-        sampledAnimation = mode == "QUATERNION" or mode == "AXIS_ANGLE"
-
-        if not sampledAnimation and bobject.animation_data and bobject.type != 'ARMATURE':
+        # Animated transform
+        if bobject.animation_data is not None and bobject.type != "ARMATURE":
             action = bobject.animation_data.action
-            if action:
+
+            if action is not None:
+                action_name = arm.utils.safestr(arm.utils.asset_name(action))
+
+                if 'object_actions' not in o:
+                    o['object_actions'] = []
+
+                fp = self.get_meshes_file_path('action_' + action_name, compressed=self.is_compress())
+                assets.add(fp)
+                ext = '.lz4' if self.is_compress() else ''
+                if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
+                    ext = '.json'
+                o['object_actions'].append('action_' + action_name + ext)
+
+                oaction = {}
+                oaction['name'] = action.name
+
+                # Export the animation tracks
+                oanim = {}
+                oaction['anim'] = oanim
+
+                frame_range = self.calculate_animation_length(action)
+                oanim['begin'] = frame_range[0]
+                oanim['end'] = frame_range[1]
+
+                oanim['tracks'] = []
+                self.export_pose_markers(oanim, action)
+
                 for fcurve in action.fcurves:
-                    kind = ArmoryExporter.classify_animation_curve(fcurve)
-                    if kind != AnimationTypeSampled:
-                        if fcurve.data_path == "location":
-                            for i in range(3):
-                                if (fcurve.array_index == i) and (not locAnimCurve[i]):
-                                    locAnimCurve[i] = fcurve
-                                    locAnimKind[i] = kind
-                                    locAnimated[i] = True
-                        elif fcurve.data_path == "delta_location":
-                            for i in range(3):
-                                if (fcurve.array_index == i) and (not deltaPosAnimCurve[i]):
-                                    deltaPosAnimCurve[i] = fcurve
-                                    deltaPosAnimKind[i] = kind
-                                    deltaPosAnimated[i] = True
-                        elif fcurve.data_path == "rotation_euler":
-                            for i in range(3):
-                                if (fcurve.array_index == i) and (not rotAnimCurve[i]):
-                                    rotAnimCurve[i] = fcurve
-                                    rotAnimKind[i] = kind
-                                    rotAnimated[i] = True
-                        elif fcurve.data_path == "delta_rotation_euler":
-                            for i in range(3):
-                                if (fcurve.array_index == i) and (not deltaRotAnimCurve[i]):
-                                    deltaRotAnimCurve[i] = fcurve
-                                    deltaRotAnimKind[i] = kind
-                                    deltaRotAnimated[i] = True
-                        elif fcurve.data_path == "scale":
-                            for i in range(3):
-                                if (fcurve.array_index == i) and (not sclAnimCurve[i]):
-                                    sclAnimCurve[i] = fcurve
-                                    sclAnimKind[i] = kind
-                                    sclAnimated[i] = True
-                        elif fcurve.data_path == "delta_scale":
-                            for i in range(3):
-                                if (fcurve.array_index == i) and (not deltaSclAnimCurve[i]):
-                                    deltaSclAnimCurve[i] = fcurve
-                                    deltaSclAnimKind[i] = kind
-                                    deltaSclAnimated[i] = True
-                        elif (fcurve.data_path == "rotation_axis_angle") or (fcurve.data_path == "rotation_quaternion") or (fcurve.data_path == "delta_rotation_quaternion"):
-                            sampledAnimation = True
-                            break
-                    else:
-                        sampledAnimation = True
-                        break
+                    data_path = fcurve.data_path
 
-        locationAnimated = locAnimated[0] | locAnimated[1] | locAnimated[2]
-        rotationAnimated = rotAnimated[0] | rotAnimated[1] | rotAnimated[2]
-        scaleAnimated = sclAnimated[0] | sclAnimated[1] | sclAnimated[2]
+                    try:
+                        data_ttrack = self.export_animation_track(fcurve, frame_range, target_names[data_path][fcurve.array_index])
 
-        deltaPositionAnimated = deltaPosAnimated[0] | deltaPosAnimated[1] | deltaPosAnimated[2]
-        deltaRotationAnimated = deltaRotAnimated[0] | deltaRotAnimated[1] | deltaRotAnimated[2]
-        deltaScaleAnimated = deltaSclAnimated[0] | deltaSclAnimated[1] | deltaSclAnimated[2]
+                    except KeyError:
+                        if data_path not in target_names:
+                            print(f"Action {action_name}: The data path '{data_path}' is not supported (yet)!")
+                            continue
 
-        if (sampledAnimation) or ((not locationAnimated) and (not rotationAnimated) and (not scaleAnimated) and (not deltaPositionAnimated) and (not deltaRotationAnimated) and (not deltaScaleAnimated)):
-            # If there's no keyframe animation at all, then write the object transform as a single 4x4 matrix.
-            # We might still be exporting sampled animation below.
-            o['transform'] = {}
-            o['transform']['values'] = self.write_matrix(bobject.matrix_local)
+                        # Missing target entry for array_index or something else
+                        else:
+                            raise
 
-            if sampledAnimation:
-                o['transform']['target'] = "transform"
-                self.export_object_sampled_animation(bobject, scene, o)
-        else: # Animated
-            structFlag = False
+                    oanim['tracks'].append(data_ttrack)
 
-            o['transform'] = {}
-            o['transform']['values'] = self.write_matrix(bobject.matrix_local)
-
-            if not 'object_actions' in o:
-                o['object_actions'] = []
-
-            action = bobject.animation_data.action
-            aname = arm.utils.safestr(arm.utils.asset_name(action))
-            fp = self.get_meshes_file_path('action_' + aname, compressed=self.is_compress())
-            assets.add(fp)
-            ext = '.lz4' if self.is_compress() else ''
-            if ext == '' and not bpy.data.worlds['Arm'].arm_minimize:
-                ext = '.json'
-            o['object_actions'].append('action_' + aname + ext)
-
-            oaction = {}
-            oaction['name'] = action.name
-
-            # Export the animation tracks
-            oanim = {}
-            oaction['anim'] = oanim
-            oanim['begin'] = int(action.frame_range[0])
-            oanim['end'] = int(action.frame_range[1])
-            oanim['tracks'] = []
-            self.export_pose_markers(oanim, action)
-
-            if locationAnimated:
-                for i in range(3):
-                    if locAnimated[i]:
-                        tracko = self.export_animation_track(locAnimCurve[i], locAnimKind[i], subtranslationName[i], structFlag)
-                        oanim['tracks'].append(tracko)
-                        structFlag = True
-
-            if rotationAnimated:
-                for i in range(3):
-                    if rotAnimated[i]:
-                        tracko = self.export_animation_track(rotAnimCurve[i], rotAnimKind[i], subrotationName[i], structFlag)
-                        oanim['tracks'].append(tracko)
-                        structFlag = True
-
-            if scaleAnimated:
-                for i in range(3):
-                    if sclAnimated[i]:
-                        tracko = self.export_animation_track(sclAnimCurve[i], sclAnimKind[i], subscaleName[i], structFlag)
-                        oanim['tracks'].append(tracko)
-                        structFlag = True
-
-            if deltaPositionAnimated:
-                for i in range(3):
-                    if deltaPosAnimated[i]:
-                        tracko = self.export_animation_track(deltaPosAnimCurve[i], deltaPosAnimKind[i], deltaSubtranslationName[i], structFlag)
-                        oanim['tracks'].append(tracko)
-                        oanim['has_delta'] = True
-                        structFlag = True
-
-            if deltaRotationAnimated:
-                for i in range(3):
-                    if deltaRotAnimated[i]:
-                        tracko = self.export_animation_track(deltaRotAnimCurve[i], deltaRotAnimKind[i], deltaSubrotationName[i], structFlag)
-                        oanim['tracks'].append(tracko)
-                        oanim['has_delta'] = True
-                        structFlag = True
-
-            if deltaScaleAnimated:
-                for i in range(3):
-                    if deltaSclAnimated[i]:
-                        tracko = self.export_animation_track(deltaSclAnimCurve[i], deltaSclAnimKind[i], deltaSubscaleName[i], structFlag)
-                        oanim['tracks'].append(tracko)
-                        oanim['has_delta'] = True
-                        structFlag = True
-
-            if True: #action.arm_cached == False or not os.path.exists(fp):
-                print('Exporting object action ' + aname)
-                actionf = {}
-                actionf['objects'] = []
-                actionf['objects'].append(oaction)
-                oaction['type'] = 'object'
-                oaction['name'] = aname
-                oaction['data_ref'] = ''
-                oaction['transform'] = None
-                arm.utils.write_arm(fp, actionf)
+                if True:  #action.arm_cached == False or not os.path.exists(fp):
+                    print('Exporting object action ' + action_name)
+                    actionf = {}
+                    actionf['objects'] = []
+                    actionf['objects'].append(oaction)
+                    oaction['type'] = 'object'
+                    oaction['name'] = action_name
+                    oaction['data_ref'] = ''
+                    oaction['transform'] = None
+                    arm.utils.write_arm(fp, actionf)
 
     def process_bone(self, bone):
         if ArmoryExporter.export_all_flag or bone.select:
@@ -522,13 +346,13 @@ class ArmoryExporter:
     def export_bone_transform(self, armature, bone, scene, o, action):
 
         pose_bone = armature.pose.bones.get(bone.name)
-        # if pose_bone != None:
+        # if pose_bone is not None:
         #     transform = pose_bone.matrix.copy()
-        #     if pose_bone.parent != None:
+        #     if pose_bone.parent is not None:
         #         transform = pose_bone.parent.matrix.inverted_safe() * transform
         # else:
         transform = bone.matrix_local.copy()
-        if bone.parent != None:
+        if bone.parent is not None:
             transform = (bone.parent.matrix_local.inverted_safe() @ transform)
 
         o['transform'] = {}
@@ -562,7 +386,7 @@ class ArmoryExporter:
     def use_default_material_part(self):
         # Particle object with no material assigned
         for ps in bpy.data.particles:
-            if ps.render_type != 'OBJECT' or ps.instance_object == None:
+            if ps.render_type != 'OBJECT' or ps.instance_object is None:
                 continue
             po = ps.instance_object
             if po not in self.objectToArmObjectDict:
@@ -573,7 +397,7 @@ class ArmoryExporter:
                 o['material_refs'] = ['armdefaultpart'] # Replace armdefault
 
     def export_material_ref(self, bobject, material, index, o):
-        if material == None: # Use default for empty mat slots
+        if material is None: # Use default for empty mat slots
             self.use_default_material(bobject, o)
             return
         if not material in self.materialArray:
@@ -603,7 +427,7 @@ class ArmoryExporter:
 
     def get_viewport_view_matrix(self):
         play_area = self.get_view3d_area()
-        if play_area == None:
+        if play_area is None:
             return None
         for space in play_area.spaces:
             if space.type == 'VIEW_3D':
@@ -612,7 +436,7 @@ class ArmoryExporter:
 
     def get_viewport_projection_matrix(self):
         play_area = self.get_view3d_area()
-        if play_area == None:
+        if play_area is None:
             return None, False
         for space in play_area.spaces:
             if space.type == 'VIEW_3D':
@@ -637,7 +461,7 @@ class ArmoryExporter:
 
     def has_baked_material(self, bobject, materials):
         for mat in materials:
-            if mat == None:
+            if mat is None:
                 continue
             baked_mat = mat.name + '_' + bobject.name + '_baked'
             if baked_mat in bpy.data.materials:
@@ -647,7 +471,7 @@ class ArmoryExporter:
     def slot_to_material(self, bobject, slot):
         mat = slot.material
         # Pick up backed material if present
-        if mat != None:
+        if mat is not None:
             baked_mat = mat.name + '_' + bobject.name + '_baked'
             if baked_mat in bpy.data.materials:
                 mat = bpy.data.materials[baked_mat]
@@ -773,7 +597,7 @@ class ArmoryExporter:
 
             o['mobile'] = bobject.arm_mobile
 
-            if bobject.instance_type == 'COLLECTION' and bobject.instance_collection != None:
+            if bobject.instance_type == 'COLLECTION' and bobject.instance_collection is not None:
                 o['group_ref'] = bobject.instance_collection.name
 
             if bobject.arm_tilesheet != '':
@@ -795,7 +619,7 @@ class ArmoryExporter:
 
             # Export the object reference and material references
             objref = bobject.data
-            if objref != None:
+            if objref is not None:
                 objname = arm.utils.asset_name(objref)
 
             # Lods
@@ -893,11 +717,11 @@ class ArmoryExporter:
                 o['data_ref'] = self.speakerArray[objref]["structName"]
 
             # Export the transform. If object is animated, then animation tracks are exported here
-            if bobject.type != 'ARMATURE' and bobject.animation_data != None:
+            if bobject.type != 'ARMATURE' and bobject.animation_data is not None:
                 action = bobject.animation_data.action
                 export_actions = [action]
                 for track in bobject.animation_data.nla_tracks:
-                    if track.strips == None:
+                    if track.strips is None:
                         continue
                     for strip in track.strips:
                         if strip.action == None or strip.action in export_actions:
@@ -906,12 +730,12 @@ class ArmoryExporter:
                 orig_action = action
                 for a in export_actions:
                     bobject.animation_data.action = a
-                    self.export_object_transform(bobject, scene, o)
-                if len(export_actions) >= 2 and export_actions[0] == None: # No action assigned
+                    self.export_object_transform(bobject, o)
+                if len(export_actions) >= 2 and export_actions[0] is None: # No action assigned
                     o['object_actions'].insert(0, 'null')
                 bobject.animation_data.action = orig_action
             else:
-                self.export_object_transform(bobject, scene, o)
+                self.export_object_transform(bobject, o)
 
             # If the object is parented to a bone and is not relative, then undo the bone's transform
             if bobject.parent_type == "BONE":
@@ -929,31 +753,31 @@ class ArmoryExporter:
                     bone_translation_pose = pose_bone.tail - pose_bone.head
                     o['parent_bone_tail_pose'] = [bone_translation_pose[0], bone_translation_pose[1], bone_translation_pose[2]]
 
-            if bobject.type == 'ARMATURE' and bobject.data != None:
+            if bobject.type == 'ARMATURE' and bobject.data is not None:
                 bdata = bobject.data # Armature data
                 action = None # Reference start action
                 adata = bobject.animation_data
 
                 # Active action
-                if adata != None:
+                if adata is not None:
                     action = adata.action
-                if action == None:
+                if action is None:
                     log.warn('Object ' + bobject.name + ' - No action assigned, setting to pose')
                     bobject.animation_data_create()
                     actions = bpy.data.actions
                     action = actions.get('armorypose')
-                    if action == None:
+                    if action is None:
                         action = actions.new(name='armorypose')
 
                 # Export actions
                 export_actions = [action]
                 # hasattr - armature modifier may reference non-parent armature object to deform with
-                if hasattr(adata, 'nla_tracks') and adata.nla_tracks != None:
+                if hasattr(adata, 'nla_tracks') and adata.nla_tracks is not None:
                     for track in adata.nla_tracks:
-                        if track.strips == None:
+                        if track.strips is None:
                             continue
                         for strip in track.strips:
-                            if strip.action == None:
+                            if strip.action is None:
                                 continue
                             if strip.action.name == action.name:
                                 continue
@@ -995,7 +819,7 @@ class ArmoryExporter:
                 # TODO: cache per action
                 bdata.arm_cached = True
 
-            if parento == None:
+            if parento is None:
                 self.output['objects'].append(o)
             else:
                 parento['children'].append(o)
@@ -1145,7 +969,7 @@ class ArmoryExporter:
             t0map = 0 # Get active uvmap
             t0data = np.empty(num_verts * 2, dtype='<f4')
             uv_layers = exportMesh.uv_layers
-            if uv_layers != None:
+            if uv_layers is not None:
                 if 'UVMap_baked' in uv_layers:
                     for i in range(0, len(uv_layers)):
                         if uv_layers[i].name == 'UVMap_baked':
@@ -1448,7 +1272,7 @@ class ArmoryExporter:
         else: # TODO: deprecated
             exportMesh = bobject.to_mesh(self.depsgraph, apply_modifiers, calc_undeformed=False)
 
-        if exportMesh == None:
+        if exportMesh is None:
             log.warn(oid + ' was not exported')
             return
 
@@ -1562,10 +1386,10 @@ class ArmoryExporter:
         self.output['probe_datas'].append(o)
 
     def get_camera_clear_color(self):
-        if self.scene.world == None:
+        if self.scene.world is None:
             return [0.051, 0.051, 0.051, 1.0]
 
-        if self.scene.world.node_tree == None:
+        if self.scene.world.node_tree is None:
             c = self.scene.world.color
             return [c[0], c[1], c[2], 1.0]
 
@@ -1634,7 +1458,7 @@ class ArmoryExporter:
         objref = objectRef[0]
         if objref.sound:
             # Packed
-            if objref.sound.packed_file != None:
+            if objref.sound.packed_file is not None:
                 unpack_path = arm.utils.get_fp_build() + '/compiled/Assets/unpacked'
                 if not os.path.exists(unpack_path):
                     os.makedirs(unpack_path)
@@ -1686,7 +1510,7 @@ class ArmoryExporter:
 
     def signature_traverse(self, node, sign):
         sign += node.type + '-'
-        if node.type == 'TEX_IMAGE' and node.image != None:
+        if node.type == 'TEX_IMAGE' and node.image is not None:
             sign += node.image.filepath + '-'
         for inp in node.inputs:
             if inp.is_linked:
@@ -1706,7 +1530,7 @@ class ArmoryExporter:
     def get_signature(self, mat):
         nodes = mat.node_tree.nodes
         output_node = cycles.node_by_type(nodes, 'OUTPUT_MATERIAL')
-        if output_node != None:
+        if output_node is not None:
             sign = self.signature_traverse(output_node, '')
             return sign
         return None
@@ -1733,7 +1557,7 @@ class ArmoryExporter:
         # sss_used = False
         for material in self.materialArray:
             # If the material is unlinked, material becomes None
-            if material == None:
+            if material is None:
                 continue
 
             if not material.use_nodes:
@@ -1743,7 +1567,7 @@ class ArmoryExporter:
             signature = self.get_signature(material)
             if signature != material.signature:
                 material.arm_cached = False
-            if signature != None:
+            if signature is not None:
                 material.signature = signature
 
             o = {}
@@ -1850,7 +1674,7 @@ class ArmoryExporter:
             o = {}
             psettings = particleRef[0]
 
-            if psettings == None:
+            if psettings is None:
                 continue
 
             if psettings.instance_object == None or psettings.render_type != 'OBJECT':
@@ -1908,7 +1732,7 @@ class ArmoryExporter:
 
     def export_worlds(self):
         worldRef = self.scene.world
-        if worldRef != None:
+        if worldRef is not None:
             o = {}
             w = worldRef
             o['name'] = w.name
@@ -2016,28 +1840,28 @@ class ArmoryExporter:
         for bo in scene_objects:
             if arm.utils.export_bone_data(bo):
                 for slot in bo.material_slots:
-                    if slot.material == None or slot.material.library != None:
+                    if slot.material == None or slot.material.library is not None:
                         continue
                     if slot.material.name.endswith('_armskin'):
                         continue
                     matslots.append(slot)
                     mat_name = slot.material.name + '_armskin'
                     mat = bpy.data.materials.get(mat_name)
-                    if mat == None:
+                    if mat is None:
                         mat = slot.material.copy()
                         mat.name = mat_name
                         matvars.append(mat)
                     slot.material = mat
             elif bo.arm_tilesheet != '':
                 for slot in bo.material_slots:
-                    if slot.material == None or slot.material.library != None:
+                    if slot.material == None or slot.material.library is not None:
                         continue
                     if slot.material.name.endswith('_armtile'):
                         continue
                     matslots.append(slot)
                     mat_name = slot.material.name + '_armtile'
                     mat = bpy.data.materials.get(mat_name)
-                    if mat == None:
+                    if mat is None:
                         mat = slot.material.copy()
                         mat.name = mat_name
                         mat.arm_tilesheet_flag = True
@@ -2049,14 +1873,14 @@ class ArmoryExporter:
             if bo == None or psys.render_type != 'OBJECT':
                 continue
             for slot in bo.material_slots:
-                if slot.material == None or slot.material.library != None:
+                if slot.material == None or slot.material.library is not None:
                     continue
                 if slot.material.name.endswith('_armpart'):
                     continue
                 matslots.append(slot)
                 mat_name = slot.material.name + '_armpart'
                 mat = bpy.data.materials.get(mat_name)
-                if mat == None:
+                if mat is None:
                     mat = slot.material.copy()
                     mat.name = mat_name
                     mat.arm_particle_flag = True
@@ -2074,7 +1898,7 @@ class ArmoryExporter:
             rpdat.arm_skin_max_bones = max_bones
 
         # Terrain
-        if self.scene.arm_terrain_object != None:
+        if self.scene.arm_terrain_object is not None:
             # Append trait
             if not 'traits' in self.output:
                 self.output['traits'] = []
@@ -2124,7 +1948,7 @@ class ArmoryExporter:
                         if has_proxy_user:
                             continue
                         # Add external linked objects
-                        if bobject.name not in scene_objects and collection.library != None:
+                        if bobject.name not in scene_objects and collection.library is not None:
                             self.process_bobject(bobject)
                             self.export_object(bobject, self.scene)
                             o['object_refs'].append(arm.utils.asset_name(bobject))
@@ -2133,7 +1957,7 @@ class ArmoryExporter:
                 self.output['groups'].append(o)
 
         if not ArmoryExporter.option_mesh_only:
-            if self.scene.camera != None:
+            if self.scene.camera is not None:
                 self.output['camera_ref'] = self.scene.camera.name
             else:
                 if self.scene.name == arm.utils.get_project_scene_name():
@@ -2157,13 +1981,13 @@ class ArmoryExporter:
             self.export_worlds()
             self.export_tilesheets()
 
-            if self.scene.world != None:
+            if self.scene.world is not None:
                 self.output['world_ref'] = self.scene.world.name
 
             if self.scene.use_gravity:
                 self.output['gravity'] = [self.scene.gravity[0], self.scene.gravity[1], self.scene.gravity[2]]
                 rbw = self.scene.rigidbody_world
-                if rbw != None:
+                if rbw is not None:
                     weights = rbw.effector_weights
                     self.output['gravity'][0] *= weights.all * weights.gravity
                     self.output['gravity'][1] *= weights.all * weights.gravity
@@ -2267,7 +2091,7 @@ class ArmoryExporter:
         # Set viewport camera projection
         if is_viewport_camera:
             proj, is_persp = self.get_viewport_projection_matrix()
-            if proj != None:
+            if proj is not None:
                 if is_persp:
                     self.extract_projection(o, proj, with_planes=False)
                 else:
@@ -2281,7 +2105,7 @@ class ArmoryExporter:
         o['material_refs'] = []
         o['transform'] = {}
         viewport_matrix = self.get_viewport_view_matrix()
-        if viewport_matrix != None:
+        if viewport_matrix is not None:
             o['transform']['values'] = self.write_matrix(viewport_matrix.inverted_safe())
             o['local_only'] = True
         else:
@@ -2353,7 +2177,7 @@ class ArmoryExporter:
                 break
 
             # Instance render collections with same children?
-            # elif bobject.instance_type == 'GROUP' and bobject.instance_collection != None:
+            # elif bobject.instance_type == 'GROUP' and bobject.instance_collection is not None:
             #     instanced_type = 1
             #     instanced_data = []
             #     for child in bpy.data.collections[bobject.instance_collection].objects:
@@ -2522,7 +2346,7 @@ class ArmoryExporter:
             co['type'] = con.type
             if bone:
                 co['bone'] = bobject.name
-            if hasattr(con, 'target') and con.target != None:
+            if hasattr(con, 'target') and con.target is not None:
                 if con.type == 'COPY_LOCATION':
                     co['target'] = con.target.name
                     co['use_x'] = con.use_x
@@ -2668,7 +2492,7 @@ class ArmoryExporter:
     def add_rigidbody_constraint(self, o, rbc):
         rb1 = rbc.object1
         rb2 = rbc.object2
-        if rb1 == None or rb2 == None:
+        if rb1 == None or rb2 is None:
             return
         ArmoryExporter.export_physics = True
         phys_pkg = 'bullet' if bpy.data.worlds['Arm'].arm_physics_engine == 'Bullet' else 'oimo'
