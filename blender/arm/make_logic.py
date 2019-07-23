@@ -173,6 +173,10 @@ def build_node(node, f):
         else:
             inp_name = build_default_node(inp)
             inp_from = 0
+        # The input is linked to a reroute, but the reroute is unlinked
+        if inp_name == None:
+            inp_name = build_default_node(inp)
+            inp_from = 0
         # Add input
         f.write('\t\t' + name + '.addInput(' + inp_name + ', ' + str(inp_from) + ');\n')
     
@@ -180,10 +184,9 @@ def build_node(node, f):
     for out in node.outputs:
         if out.is_linked:
             out_name = ''
-            for l in out.links:
-                n = l.to_node
+            for node in collect_nodes_from_output(out, f):
                 out_name += '[' if len(out_name) == 0 else ', '
-                out_name += build_node(n, f)
+                out_name += node
             out_name += ']'
         # Not linked - create node with default values
         else:
@@ -192,6 +195,27 @@ def build_node(node, f):
         f.write('\t\t' + name + '.addOutputs(' + out_name + ');\n')
 
     return name
+
+# Expects an output socket
+# It first checks all outgoing links for non-reroute nodes and adds them to a list
+# Then it recursively checks all the discoverey reroute nodes
+# Returns all non reroute nodes which are directly or indirectly connected to this output.
+def collect_nodes_from_output(out, f):
+    outputs = []
+    reroutes = []
+    # skipped if there are no links
+    for l in out.links:
+        n = l.to_node
+        if n.type == 'REROUTE':
+            # collect all rerouts and process them later
+            reroutes.append(n)
+        else:
+            # immediatly add the current node
+            outputs.append(build_node(n, f))
+    for reroute in reroutes:
+        for o in reroute.outputs:
+            outputs = outputs + collect_nodes_from_output(o, f)
+    return outputs
     
 def get_root_nodes(node_group):
     roots = []
