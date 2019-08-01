@@ -613,11 +613,9 @@ def clean():
     if os.path.isdir(nodes_path):
         shutil.rmtree(nodes_path, onerror=remove_readonly)
 
-    # Remove khafile/korefile/Main.hx
+    # Remove khafile/Main.hx
     if os.path.isfile('khafile.js'):
         os.remove('khafile.js')
-    if os.path.isfile('korefile.js'):
-        os.remove('korefile.js')
     if os.path.isfile('Sources/Main.hx'):
         os.remove('Sources/Main.hx')
 
