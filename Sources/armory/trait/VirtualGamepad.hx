@@ -123,7 +123,6 @@ class VirtualGamepad extends Trait {
 
 	function render2D(g:kha.graphics2.Graphics) {
 		var r = radius;
-		var o = offset;
 		
 		g.color = 0xffaaaaaa;
 
