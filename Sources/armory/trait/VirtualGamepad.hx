@@ -28,9 +28,9 @@ class VirtualGamepad extends Trait {
 	var rightLocked = false;
 
 	@prop
-	public var r = 100; // Radius
+	public var radius = 100; // Radius
 	@prop
-	public var o = 40; // Offset
+	public var offset = 40; // Offset
 
 	public function new() {
 		super();
@@ -46,6 +46,8 @@ class VirtualGamepad extends Trait {
 	}
 
 	function update() {
+		var r = radius;
+		var o = offset;
 
 		leftPadX = r + o;
 		rightPadX = iron.App.w() - r - o;
@@ -120,6 +122,9 @@ class VirtualGamepad extends Trait {
 	}
 
 	function render2D(g:kha.graphics2.Graphics) {
+		var r = radius;
+		var o = offset;
+		
 		g.color = 0xffaaaaaa;
 
 		kha.graphics2.GraphicsExtension.fillCircle(g, leftPadX, leftPadY, r);
