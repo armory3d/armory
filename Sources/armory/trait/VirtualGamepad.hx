@@ -27,17 +27,15 @@ class VirtualGamepad extends Trait {
 	var leftLocked = false;
 	var rightLocked = false;
 
-	var r = 100; // Radius
-	var o = 40; // Offset
+	@prop
+	public var radius = 100; // Radius
+	@prop
+	public var offset = 40; // Offset
 
 	public function new() {
 		super();
 
 		notifyOnInit(function() {
-			
-			leftPadX = r + o;
-			rightPadX = iron.App.w() - r - o;
-			leftPadY = rightPadY = iron.App.h() - r - o;
 
 			gamepad = new Gamepad(0, true);
 			Input.gamepads.push(gamepad);
@@ -48,6 +46,13 @@ class VirtualGamepad extends Trait {
 	}
 
 	function update() {
+		var r = radius;
+		var o = offset;
+
+		leftPadX = r + o;
+		rightPadX = iron.App.w() - r - o;
+		leftPadY = rightPadY = iron.App.h() - r - o;
+
 		var mouse = Input.getMouse();
 		if (mouse.started() && Vec2.distancef(mouse.x, mouse.y, leftPadX, leftPadY) <= r) {
 			leftLocked = true;
@@ -117,6 +122,8 @@ class VirtualGamepad extends Trait {
 	}
 
 	function render2D(g:kha.graphics2.Graphics) {
+		var r = radius;
+		
 		g.color = 0xffaaaaaa;
 
 		kha.graphics2.GraphicsExtension.fillCircle(g, leftPadX, leftPadY, r);
