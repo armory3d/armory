@@ -48,10 +48,6 @@ def init_properties():
                ('Enabled', 'Enabled', 'Enabled'),
                ('Auto', 'Auto', 'Auto')],
         name="Zui", default='Auto', description="Include UI library", update=assets.invalidate_compiler_cache)
-    bpy.types.World.arm_formatlib = EnumProperty(
-        items=[('Disabled', 'Disabled', 'Disabled'),
-               ('Enabled', 'Enabled', 'Enabled')],
-        name="Format", default='Disabled', description="Include Format library", update=assets.invalidate_compiler_cache)
     bpy.types.World.arm_audio = EnumProperty(
         items=[('Disabled', 'Disabled', 'Disabled'),
                ('Enabled', 'Enabled', 'Enabled')],

@@ -228,10 +228,6 @@ project.addSources('Sources');
             p = p.replace('//', '/')
             f.write(add_assets(p.replace('\\', '/'), use_data_dir=use_data_dir, rel_path=rel_path))
             assets.add_khafile_def('arm_ui')
-
-        if wrd.arm_formatlib == 'Enabled':
-            if not os.path.exists('Libraries/iron_format'):
-                f.write(add_armory_library(sdk_path, 'lib/iron_format', rel_path=rel_path))
         
         if wrd.arm_minimize == False:
             assets.add_khafile_def('arm_json')
