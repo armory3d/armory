@@ -57,8 +57,7 @@ class NavAgent extends Trait {
 
 		orient.subvecs(p, object.transform.loc).normalize;
 		var targetAngle = Math.atan2(orient.y, orient.x) + Math.PI / 2;
-
-		locAnim = Tween.to({ target: object.transform.loc, props: { x: p.x, y: p.y /*, z: p.z*/ }, duration: dist / speed, done: function() {
+		locAnim = Tween.to({ target: object.transform.loc, props: { x: p.x, y: p.y , z: p.z }, duration: dist / speed, done: function() {
 			index++;
 			if (index < path.length) go();
 			else removeUpdate(update);
