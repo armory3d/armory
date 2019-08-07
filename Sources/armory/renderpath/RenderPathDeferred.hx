@@ -383,14 +383,6 @@ class RenderPathDeferred {
 	@:access(iron.RenderPath)
 	public static function commands() {
 
-		#if rp_dynres
-		{
-			if (armory.data.Config.raw.rp_dynres != false) {
-				DynamicResolutionScale.run(path);
-			}
-		}
-		#end
-
 		path.setTarget("gbuffer0"); // Only clear gbuffer0
 		#if (rp_background == "Clear")
 		{
@@ -410,6 +402,14 @@ class RenderPathDeferred {
 		#end
 
 		RenderPathCreator.setTargetMeshes();
+
+		#if rp_dynres
+		{
+			if (armory.data.Config.raw.rp_dynres != false) {
+				DynamicResolutionScale.run(path);
+			}
+		}
+		#end
 
 		#if rp_stereo
 		{
