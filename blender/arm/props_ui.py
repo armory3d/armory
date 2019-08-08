@@ -976,6 +976,14 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_volumetric_light_air_color')
         col.prop(rpdat, 'arm_volumetric_light_air_turbidity')
         col.prop(rpdat, 'arm_volumetric_light_steps')
+        layout.separator()
+        layout.prop(rpdat, "rp_chromatic_aberration")
+        col = layout.column()
+        col.enabled = rpdat.rp_chromatic_aberration
+        col.prop(rpdat, 'arm_chromatic_aberration_type')
+        col.prop(rpdat, 'arm_chromatic_aberration_strength')
+        if rpdat.arm_chromatic_aberration_type == "Spectral":
+            col.prop(rpdat, 'arm_chromatic_aberration_samples')
 
 class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
     bl_label = "Compositor"

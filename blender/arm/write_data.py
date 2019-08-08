@@ -565,6 +565,21 @@ const float compoLuminanceMax = """ + str(round(rpdat.arm_lens_texture_masking_l
 const float compoBrightnessExponent = """ + str(round(rpdat.arm_lens_texture_masking_brightnessExp * 100) / 100) + """;
 """)
 
+        if rpdat.rp_chromatic_aberration:
+            f.write(
+"""const float compoChromaticStrength = """ + str(round(rpdat.arm_chromatic_aberration_strength * 100) / 100) + """;
+const int compoChromaticSamples = """ + str(rpdat.arm_chromatic_aberration_samples) + """;
+""")
+
+        if rpdat.arm_chromatic_aberration_type == "Spectral":
+            f.write(
+"""const int compoChromaticType = """ + str(1) + """;
+""")
+        else:
+            f.write(
+"""const int compoChromaticType = """ + str(0) + """;
+""")
+
         focus_distance = 0.0 # TODO: deprecated
         fstop = 0.0
         if len(bpy.data.cameras) > 0:

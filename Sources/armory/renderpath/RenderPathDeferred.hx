@@ -378,6 +378,14 @@ class RenderPathDeferred {
 			path.renderTargets.set(t.name, rt);
 		}
 		#end
+
+		#if rp_chromatic_aberration
+		{
+			path.loadShader("shader_datas/chromatic_aberration_pass/chromatic_aberration_pass");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
+		}
+		#end
+
 	}
 
 	@:access(iron.RenderPath)
@@ -772,6 +780,17 @@ class RenderPathDeferred {
 				path.bindTarget("buf", "tex");
 				path.drawShader("shader_datas/copy_pass/copy_pass");
 			}
+		}
+		#end
+
+		#if rp_chromatic_aberration
+		{
+			path.setTarget("buf");
+			path.bindTarget("tex","tex");
+			path.drawShader("shader_datas/chromatic_aberration_pass/chromatic_aberration_pass");
+			path.setTarget("tex");
+			path.bindTarget("buf", "tex");
+			path.drawShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
 

@@ -333,6 +333,11 @@ def build():
     if rpdat.rp_dynres:
         assets.add_khafile_def('rp_dynres')
 
+    if rpdat.rp_chromatic_aberration:
+        assets.add_shader_pass('copy_pass')
+        assets.add_khafile_def('rp_chromatic_aberration')
+        assets.add_shader_pass('chromatic_aberration_pass')
+
     gbuffer2 = '_Veloc' in wrd.world_defs
     if gbuffer2:
         assets.add_khafile_def('rp_gbuffer2')

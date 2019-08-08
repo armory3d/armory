@@ -379,6 +379,7 @@ class ArmRPListItem(bpy.types.PropertyGroup):
                ('Point', 'Closest', 'Point')],
         name="Filter", description="Scaling filter", default='Linear')
     rp_dynres: BoolProperty(name="Dynamic Resolution", description="Dynamic resolution scaling for performance", default=False, update=update_renderpath)
+    rp_chromatic_aberration: BoolProperty(name="Chromatic Aberration", description="Add chromatic aberration (scene fringe)", default=False, update=assets.invalidate_shader_cache)
     arm_ssr_half_res: BoolProperty(name="Half Res", description="Trace in half resolution", default=True, update=update_renderpath)
     arm_voxelgi_dimensions: FloatProperty(name="Dimensions", description="Voxelization bounds",default=16, update=assets.invalidate_compiled_data)
     arm_voxelgi_revoxelize: BoolProperty(name="Revoxelize", description="Revoxelize scene each frame", default=False, update=assets.invalidate_shader_cache)
@@ -447,6 +448,13 @@ class ArmRPListItem(bpy.types.PropertyGroup):
     arm_autoexposure_strength: FloatProperty(name="Auto Exposure Strength", default=1.0, update=assets.invalidate_shader_cache)
     arm_autoexposure_speed: FloatProperty(name="Auto Exposure Speed", default=1.0, update=assets.invalidate_shader_cache)
     arm_ssrs_ray_step: FloatProperty(name="Step", default=0.01, update=assets.invalidate_shader_cache)
+    arm_chromatic_aberration_type: EnumProperty(
+        items=[('Simple', 'Simple', 'Simple'),
+               ('Spectral', 'Spectral', 'Spectral'),
+               ],
+        name="Aberration type", description="Aberration type", default='Simple', update=assets.invalidate_shader_cache)
+    arm_chromatic_aberration_strength: FloatProperty(name="Strength", default=2.00, update=assets.invalidate_shader_cache)
+    arm_chromatic_aberration_samples: IntProperty(name="Samples", default=32, min=8, update=assets.invalidate_shader_cache)
     # Compositor
     arm_letterbox: BoolProperty(name="Letterbox", default=False, update=assets.invalidate_shader_cache)
     arm_letterbox_size: FloatProperty(name="Size", default=0.1, update=assets.invalidate_shader_cache)
