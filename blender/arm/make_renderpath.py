@@ -184,6 +184,8 @@ def build():
             if rpdat.arm_lens_texture != '':
                 wrd.compo_defs += '_CLensTex'
                 assets.add_embedded_data('lenstexture.jpg')
+                if rpdat.arm_lens_texture_masking:
+                    wrd.compo_defs += '_CLensTexMasking'
             if rpdat.arm_fisheye:
                 wrd.compo_defs += '_CFishEye'
             if rpdat.arm_vignette:

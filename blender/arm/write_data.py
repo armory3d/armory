@@ -556,6 +556,15 @@ const float compoFogAmountB = """ + str(round(rpdat.arm_fog_amountb * 100) / 100
 const vec3 compoFogColor = vec3(""" + str(round(rpdat.arm_fog_color[0] * 100) / 100) + """, """ + str(round(rpdat.arm_fog_color[1] * 100) / 100) + """, """ + str(round(rpdat.arm_fog_color[2] * 100) / 100) + """);
 """)
 
+        if rpdat.arm_lens_texture_masking:
+            f.write(
+"""const float compoCenterMinClip = """ + str(round(rpdat.arm_lens_texture_masking_centerMinClip * 100) / 100) + """;
+const float compoCenterMaxClip = """ + str(round(rpdat.arm_lens_texture_masking_centerMaxClip * 100) / 100) + """;
+const float compoLuminanceMin = """ + str(round(rpdat.arm_lens_texture_masking_luminanceMin * 100) / 100) + """;
+const float compoLuminanceMax = """ + str(round(rpdat.arm_lens_texture_masking_luminanceMax * 100) / 100) + """;
+const float compoBrightnessExponent = """ + str(round(rpdat.arm_lens_texture_masking_brightnessExp * 100) / 100) + """;
+""")
+
         focus_distance = 0.0 # TODO: deprecated
         fstop = 0.0
         if len(bpy.data.cameras) > 0:

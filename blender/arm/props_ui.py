@@ -1034,6 +1034,14 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_autoexposure_strength', text='Strength')
         col.prop(rpdat, 'arm_autoexposure_speed', text='Speed')
         layout.prop(rpdat, 'arm_lens_texture')
+        if rpdat.arm_lens_texture != "":
+            layout.prop(rpdat, 'arm_lens_texture_masking')
+            if rpdat.arm_lens_texture_masking:
+                layout.prop(rpdat, 'arm_lens_texture_masking_centerMinClip')
+                layout.prop(rpdat, 'arm_lens_texture_masking_centerMaxClip')
+                layout.prop(rpdat, 'arm_lens_texture_masking_luminanceMin')
+                layout.prop(rpdat, 'arm_lens_texture_masking_luminanceMax')
+                layout.prop(rpdat, 'arm_lens_texture_masking_brightnessExp')
         layout.prop(rpdat, 'arm_lut_texture')
 
 class ARM_PT_BakePanel(bpy.types.Panel):
