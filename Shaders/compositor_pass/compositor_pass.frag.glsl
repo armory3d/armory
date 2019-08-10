@@ -327,7 +327,23 @@ void main() {
 // #endif
 
 #ifdef _CLensTex
-	fragColor.rgb += textureLod(lensTexture, texCo, 0.0).rgb;
+	#ifdef _CLensTexMasking
+		vec4 scratches = texture(lensTexture, texCo);
+		vec3 scratchBlend = fragColor.rgb + scratches.rgb;
+
+		float centerMaxClip = compoCenterMaxClip;
+		float centerMinClip = compoCenterMinClip;
+		float luminanceMax = compoLuminanceMax;
+		float luminanceMin = compoLuminanceMin;
+		float brightnessExp = compoBrightnessExponent;
+		
+		float center = smoothstep(centerMaxClip, centerMinClip, length(texCo - 0.5));
+		float luminance = dot(fragColor.rgb, vec3(0.299, 0.587, 0.114));
+		float brightnessMap = smoothstep(luminanceMax, luminanceMin, luminance * center);
+		fragColor.rgb = clamp(mix(fragColor.rgb, scratchBlend, brightnessMap * brightnessExp), 0, 1);
+	#else
+		fragColor.rgb += textureLod(lensTexture, texCo, 0.0).rgb;
+	#endif
 #endif
 
 #ifdef _CLetterbox

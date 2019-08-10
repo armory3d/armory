@@ -976,6 +976,14 @@ class ARM_PT_RenderPathPostProcessPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_volumetric_light_air_color')
         col.prop(rpdat, 'arm_volumetric_light_air_turbidity')
         col.prop(rpdat, 'arm_volumetric_light_steps')
+        layout.separator()
+        layout.prop(rpdat, "rp_chromatic_aberration")
+        col = layout.column()
+        col.enabled = rpdat.rp_chromatic_aberration
+        col.prop(rpdat, 'arm_chromatic_aberration_type')
+        col.prop(rpdat, 'arm_chromatic_aberration_strength')
+        if rpdat.arm_chromatic_aberration_type == "Spectral":
+            col.prop(rpdat, 'arm_chromatic_aberration_samples')
 
 class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
     bl_label = "Compositor"
@@ -1034,6 +1042,14 @@ class ARM_PT_RenderPathCompositorPanel(bpy.types.Panel):
         col.prop(rpdat, 'arm_autoexposure_strength', text='Strength')
         col.prop(rpdat, 'arm_autoexposure_speed', text='Speed')
         layout.prop(rpdat, 'arm_lens_texture')
+        if rpdat.arm_lens_texture != "":
+            layout.prop(rpdat, 'arm_lens_texture_masking')
+            if rpdat.arm_lens_texture_masking:
+                layout.prop(rpdat, 'arm_lens_texture_masking_centerMinClip')
+                layout.prop(rpdat, 'arm_lens_texture_masking_centerMaxClip')
+                layout.prop(rpdat, 'arm_lens_texture_masking_luminanceMin')
+                layout.prop(rpdat, 'arm_lens_texture_masking_luminanceMax')
+                layout.prop(rpdat, 'arm_lens_texture_masking_brightnessExp')
         layout.prop(rpdat, 'arm_lut_texture')
 
 class ARM_PT_BakePanel(bpy.types.Panel):
