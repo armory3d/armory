@@ -320,10 +320,15 @@ def fetch_trait_props():
 
 def fetch_prop(o):
     for item in o.arm_traitlist:
-        if item.name not in script_props:
+        name = ''
+        if item.type_prop == 'Bundled Script':
+            name = 'armory.trait.' + item.name
+        else:
+            name = item.name
+        if name not in script_props:
             continue
-        props = script_props[item.name]
-        defaults = script_props_defaults[item.name]
+        props = script_props[name]
+        defaults = script_props_defaults[name]
         # Remove old props
         for i in range(len(item.arm_traitpropslist) - 1, -1, -1):
             ip = item.arm_traitpropslist[i]
