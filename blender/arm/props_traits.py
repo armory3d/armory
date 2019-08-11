@@ -317,8 +317,14 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         if obj.type != 'MESH':
             return{'CANCELLED'}
 
+        if not arm.utils.check_saved(self):
+            return {"CANCELLED"}
+
+        if not arm.utils.check_sdkpath(self):
+            return {"CANCELLED"}
+
         # TODO: build tilecache here
-        
+        print("Started visualization generation")
         # For visualization
         nav_full_path = arm.utils.get_fp_build() + '/compiled/Assets/navigation'
         if not os.path.exists(nav_full_path):
@@ -372,6 +378,8 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.remove_doubles()
         bpy.ops.object.editmode_toggle()
+
+        print("Finished visualization generation")
 
         return{'FINISHED'}
 
