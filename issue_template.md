@@ -1,34 +1,19 @@
-Thanks for helping to contribute to Armory3D!
-To help us fix your issue or implement your feature as quickly as possible, please fill out the following information as best you can:
+Thank you for contributing to Armory!
 
-### SHORT DESCRIPTION:
-_Keep it 1-3 sentences and to the point._
+**Description**
+Issue description.
 
+**To Reproduce**
+Steps to reproduce the behavior.
 
-### EXPECTED RESULT:
-_What did you expect to happen? For a feature request, what would you like to happen?_
+**Expected behavior**
+What you expected to happen.
 
-
-### ACTUAL RESULT:
-_What happens right now that's different from how you expect or want it to work?_
-
-
-### STEPS TO REPRODUCE:
-_Please list clear, step by step instructions to replicate the result you got. For a feature request list the steps to use the feature._
-Steps:
-1.
-2.
-3.
-etc.
-
-### TECHNICAL SPECIFICATIONS:
-_What version(s) of the following did you try:_
+**System**
 Blender:
 Armory:
-Operating system:
-Graphics card & driver:
+OS:
+Graphics card:
 
-
-### TEST FILE TO REPRODUCE:
-_Please create the simplest file possible that demonstrates the issue:_
+**Test File**
 *(drag & drop the zipped .blend file here)*
