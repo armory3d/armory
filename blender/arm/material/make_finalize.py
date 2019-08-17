@@ -106,6 +106,10 @@ def make(con_mesh):
         vert.write('eyeDirCam = vec4(WV * spos).xyz; eyeDirCam.z *= -1;')
         frag.write_attrib('vec3 vVecCam = normalize(eyeDirCam);')
 
+    if frag.contains('nAttr'):
+        vert.add_out('vec3 nAttr')
+        vert.write_attrib('nAttr = vec3(nor.xy, pos.w);')
+
     wrd = bpy.data.worlds['Arm']
     if '_Legacy' in wrd.world_defs:
         frag.replace('sampler2DShadow', 'sampler2D')
