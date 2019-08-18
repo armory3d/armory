@@ -1,0 +1,13 @@
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- script: git clone https://github.com/armory3d/armory_ci
+- script: git clone --recursive https://github.com/kode/Kha.git armory_ci/test1/Kha
+- script: git clone https://github.com/armory3d/iron.git armory_ci/test1/Libraries/iron
+- script: git clone https://github.com/kode/nodejs_bin.git armory_ci/test1/nodejs_bin
+- script: cd armory_ci/test1
+- script: nodejs_bin/node-linux64 Kha/make.js krom
