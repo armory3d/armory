@@ -1,7 +1,7 @@
 armory
 ==============
 
-[![Build Status](https://travis-ci.org/armory3d/armory.svg?branch=master)](https://travis-ci.org/armory3d/armory)
+[![Build Status](https://dev.azure.com/luboslenco/armory/_apis/build/status/armory3d.armory?branchName=master)](https://dev.azure.com/luboslenco/armory/_build/latest?definitionId=4&branchName=master)
 
 [armory3d.org](https://armory3d.org) - [Manual](https://github.com/armory3d/armory/wiki) - [Roadmap](https://github.com/armory3d/armory/projects) - [Community](https://armory3d.org/community)
 
