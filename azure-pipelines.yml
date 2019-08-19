@@ -5,9 +5,13 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- script: git clone https://github.com/armory3d/armory_ci
-- script: git clone --recursive https://github.com/kode/Kha.git armory_ci/test1/Kha
-- script: git clone https://github.com/armory3d/iron.git armory_ci/test1/Libraries/iron
-- script: git clone https://github.com/kode/nodejs_bin.git armory_ci/test1/nodejs_bin
-- script: cd armory_ci/test1
-- script: nodejs_bin/node-linux64 Kha/make.js krom
+- script: |
+    pip install flake8
+    flake8 . --count --select=E901,E999,F821,F822,F823 --show-source --statistics
+    flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    git clone https://github.com/armory3d/armory_ci
+    git clone --recursive https://github.com/kode/Kha.git armory_ci/test1/Kha
+    git clone https://github.com/armory3d/iron.git armory_ci/test1/Libraries/iron
+    git clone https://github.com/kode/nodejs_bin.git armory_ci/test1/nodejs_bin
+    cd armory_ci/test1
+    nodejs_bin/node-linux64 Kha/make.js krom
