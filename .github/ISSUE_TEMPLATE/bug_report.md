@@ -1,3 +1,11 @@
+---
+name: Bug report
+about: Create a bug report
+title: ''
+labels: bug
+assignees: ''
+
+---
 Thank you for contributing to Armory!
 
 **Description**
