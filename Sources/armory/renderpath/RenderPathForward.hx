@@ -139,7 +139,7 @@ class RenderPathForward {
 		}
 		#end
 
-		#if ((rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA") || (rp_ssr && !rp_ssr_half))
+		#if ((rp_antialiasing == "SMAA") || (rp_antialiasing == "TAA") || (rp_ssr && !rp_ssr_half) || (rp_water))
 		{
 			var t = new RenderTargetRaw();
 			t.name = "bufa";
@@ -199,6 +199,13 @@ class RenderPathForward {
 				t.scale = Inc.getSuperSampling();
 				path.createRenderTarget(t);
 			}
+		}
+		#end
+
+		#if rp_water
+		{
+			path.loadShader("shader_datas/water_pass/water_pass");
+			path.loadShader("shader_datas/copy_pass/copy_pass");
 		}
 		#end
 
@@ -456,6 +463,25 @@ class RenderPathForward {
 				path.setTarget("lbuffer0");
 				path.bindTarget("singleb", "tex");
 				path.drawShader("shader_datas/blur_bilat_blend_pass/blur_bilat_blend_pass_y");
+			}
+			#end
+
+			#if rp_water
+			{
+				path.setDepthFrom("lbuffer0", "bufa"); // Unbind depth so we can read it
+				path.depthToRenderTarget.set("main", path.renderTargets.get("buf"));
+
+				path.setTarget("bufa");
+				path.bindTarget("lbuffer0", "tex");
+				path.drawShader("shader_datas/copy_pass/copy_pass");
+
+				path.setTarget("lbuffer0");
+				path.bindTarget("_main", "gbufferD");
+				path.bindTarget("bufa", "tex");
+				path.drawShader("shader_datas/water_pass/water_pass");
+
+				path.setDepthFrom("lbuffer0", "buf"); // Re-bind depth
+				path.depthToRenderTarget.set("main", path.renderTargets.get("lbuffer0"));
 			}
 			#end
 
