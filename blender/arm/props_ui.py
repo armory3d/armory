@@ -1154,7 +1154,6 @@ class ArmGenTerrainButton(bpy.types.Operator):
         links.new(nodes['Material Output'].inputs[2], node.outputs[0])
         node = nodes.new('ShaderNodeTexImage')
         node.location = (-600, 100)
-        node.color_space = 'NONE'
         node.interpolation = 'Closest'
         node.extension = 'EXTEND'
         node.arm_material_param = True
