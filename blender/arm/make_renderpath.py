@@ -166,16 +166,11 @@ def build():
                 wrd.compo_defs += '_CFog'
                 compo_depth = True
 
-            focus_distance = 0.0 # TODO: deprecated
-            if len(bpy.data.cameras) > 0:
-                cam = bpy.data.cameras[0]
-                if hasattr(cam, 'dof'):
-                    if cam.dof.use_dof:
-                        focus_distance = cam.dof.focus_distance
-                else:
-                    focus_distance = cam.dof_distance
+            focus_distance = 0.0
+            if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].dof.use_dof:
+                focus_distance = bpy.data.cameras[0].dof.focus_distance
 
-            if len(bpy.data.cameras) > 0 and focus_distance > 0.0:
+            if focus_distance > 0.0:
                 wrd.compo_defs += '_CDOF'
                 compo_depth = True
             if compo_depth:

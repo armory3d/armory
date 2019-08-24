@@ -226,36 +226,29 @@ def parse_shader(node, socket):
 
     elif node.type == 'BSDF_PRINCIPLED':
         if parse_surface:
-            if len(node.inputs) < 22: # TODO: deprecated
-                write_normal(node.inputs[17])
-                out_basecol = parse_vector_input(node.inputs[0])
-                out_metallic = parse_value_input(node.inputs[4])
-                out_specular = parse_value_input(node.inputs[5])
-                out_roughness = parse_value_input(node.inputs[7])
-            else:
-                write_normal(node.inputs[19])
-                out_basecol = parse_vector_input(node.inputs[0])
-                # subsurface = parse_vector_input(node.inputs[1])
-                # subsurface_radius = parse_vector_input(node.inputs[2])
-                # subsurface_color = parse_vector_input(node.inputs[3])
-                out_metallic = parse_value_input(node.inputs[4])
-                out_specular = parse_value_input(node.inputs[5])
-                # specular_tint = parse_vector_input(node.inputs[6])
-                out_roughness = parse_value_input(node.inputs[7])
-                # aniso = parse_vector_input(node.inputs[8])
-                # aniso_rot = parse_vector_input(node.inputs[9])
-                # sheen = parse_vector_input(node.inputs[10])
-                # sheen_tint = parse_vector_input(node.inputs[11])
-                # clearcoat = parse_vector_input(node.inputs[12])
-                # clearcoat_rough = parse_vector_input(node.inputs[13])
-                # ior = parse_vector_input(node.inputs[14])
-                # transmission = parse_vector_input(node.inputs[15])
-                # transmission_roughness = parse_vector_input(node.inputs[16])
-                if node.inputs[17].is_linked or node.inputs[17].default_value[0] != 0.0:
-                    out_emission = '({0}.x)'.format(parse_vector_input(node.inputs[17]))
-                    emission_found = True
-                # clearcoar_normal = parse_vector_input(node.inputs[20])
-                # tangent = parse_vector_input(node.inputs[21])
+            write_normal(node.inputs[19])
+            out_basecol = parse_vector_input(node.inputs[0])
+            # subsurface = parse_vector_input(node.inputs[1])
+            # subsurface_radius = parse_vector_input(node.inputs[2])
+            # subsurface_color = parse_vector_input(node.inputs[3])
+            out_metallic = parse_value_input(node.inputs[4])
+            out_specular = parse_value_input(node.inputs[5])
+            # specular_tint = parse_vector_input(node.inputs[6])
+            out_roughness = parse_value_input(node.inputs[7])
+            # aniso = parse_vector_input(node.inputs[8])
+            # aniso_rot = parse_vector_input(node.inputs[9])
+            # sheen = parse_vector_input(node.inputs[10])
+            # sheen_tint = parse_vector_input(node.inputs[11])
+            # clearcoat = parse_vector_input(node.inputs[12])
+            # clearcoat_rough = parse_vector_input(node.inputs[13])
+            # ior = parse_vector_input(node.inputs[14])
+            # transmission = parse_vector_input(node.inputs[15])
+            # transmission_roughness = parse_vector_input(node.inputs[16])
+            if node.inputs[17].is_linked or node.inputs[17].default_value[0] != 0.0:
+                out_emission = '({0}.x)'.format(parse_vector_input(node.inputs[17]))
+                emission_found = True
+            # clearcoar_normal = parse_vector_input(node.inputs[20])
+            # tangent = parse_vector_input(node.inputs[21])
         if parse_opacity:
             if len(node.inputs) > 20:
                 out_opacity = parse_value_input(node.inputs[18])
@@ -483,10 +476,7 @@ def parse_vector(node, socket):
         tex_link = node.name if node.arm_material_param else None
         if tex != None:
             curshader.write_textures += 1
-            if hasattr(node, 'color_space'): # TODO: node.color_space deprecated
-                to_linear = node.color_space == 'COLOR'
-            else:
-                to_linear = node.image != None and node.image.colorspace_settings.name == 'sRGB'
+            to_linear = node.image != None and node.image.colorspace_settings.name == 'sRGB'
             res = '{0}.rgb'.format(texture_store(node, tex, tex_name, to_linear, tex_link=tex_link))
             curshader.write_textures -= 1
             return res

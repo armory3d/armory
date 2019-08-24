@@ -15,10 +15,7 @@ def on_depsgraph_update_post(self):
         return
 
     # Recache
-    if hasattr(bpy.context, 'evaluated_depsgraph_get'):
-        depsgraph = bpy.context.evaluated_depsgraph_get()
-    else: # TODO: deprecated
-        depsgraph = bpy.context.depsgraph
+    depsgraph = bpy.context.evaluated_depsgraph_get()
 
     for update in depsgraph.updates:
         uid = update.id

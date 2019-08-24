@@ -1266,11 +1266,8 @@ class ArmoryExporter:
         armature = bobject.find_armature()
         apply_modifiers = not armature
 
-        if hasattr(bobject, 'evaluated_get'):
-            bobject_eval = bobject.evaluated_get(self.depsgraph) if apply_modifiers else bobject
-            exportMesh = bobject_eval.to_mesh()
-        else: # TODO: deprecated
-            exportMesh = bobject.to_mesh(self.depsgraph, apply_modifiers, calc_undeformed=False)
+        bobject_eval = bobject.evaluated_get(self.depsgraph) if apply_modifiers else bobject
+        exportMesh = bobject_eval.to_mesh()
 
         if exportMesh is None:
             log.warn(oid + ' was not exported')
@@ -1795,17 +1792,12 @@ class ArmoryExporter:
         self.defaultPartMaterialObjects = []
         self.materialToArmObjectDict = dict()
         self.objectToArmObjectDict = dict()
-        # self.active_layers = []
         self.bone_tracks = []
+        # self.active_layers = []
         # for i in range(0, len(self.scene.view_layers)):
             # if self.scene.view_layers[i] == True:
                 # self.active_layers.append(i)
-
-        if hasattr(context, 'evaluated_depsgraph_get'):
-            self.depsgraph = context.evaluated_depsgraph_get()
-        else: # TODO: deprecated
-            self.depsgraph = context.depsgraph
-
+        self.depsgraph = context.evaluated_depsgraph_get()
         self.preprocess()
 
         # scene_objects = []

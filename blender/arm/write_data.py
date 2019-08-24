@@ -580,19 +580,13 @@ const int compoChromaticSamples = """ + str(rpdat.arm_chromatic_aberration_sampl
 """const int compoChromaticType = """ + str(0) + """;
 """)
 
-        focus_distance = 0.0 # TODO: deprecated
+        focus_distance = 0.0
         fstop = 0.0
-        if len(bpy.data.cameras) > 0:
-            cam = bpy.data.cameras[0]
-            if hasattr(cam, 'dof'):
-                if cam.dof.use_dof:
-                    focus_distance = cam.dof.focus_distance
-                    fstop = cam.dof.aperture_fstop
-            else:
-                focus_distance = cam.dof_distance
-                fstop = cam.gpu_dof.fstop
+        if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].dof.use_dof:
+            focus_distance = bpy.data.cameras[0].dof.focus_distance
+            fstop = bpy.data.cameras[0].dof.aperture_fstop
         
-        if len(bpy.data.cameras) > 0 and focus_distance > 0.0:
+        if focus_distance > 0.0:
             f.write(
 """const float compoDOFDistance = """ + str(round(focus_distance * 100) / 100) + """;
 const float compoDOFFstop = """ + str(round(fstop * 100) / 100) + """;
