@@ -10,8 +10,7 @@ class SceneNode(Node, ArmLogicTreeNode):
     bl_icon = 'QUESTION'
 
     property0_get: PointerProperty(name='', type=bpy.types.Scene)
-    property0: StringProperty(name='Scene', default='') # TODO: deprecated, using PointerProperty now
-    
+
     def init(self, context):
         self.outputs.new('NodeSocketShader', 'Scene')
 

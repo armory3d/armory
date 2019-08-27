@@ -38,7 +38,6 @@ class ArmObjectSocket(bpy.types.NodeSocket):
     bl_idname = 'ArmNodeSocketObject'
     bl_label = 'Object Socket'
     default_value_get: PointerProperty(name='Object', type=bpy.types.Object)
-    default_value: StringProperty(name='Object', default='') # TODO: deprecated, using PointerProperty now
 
     def get_default_value(self):
         if self.default_value_get == None:
@@ -84,7 +83,6 @@ class ArmAnimActionSocket(bpy.types.NodeSocket):
     bl_idname = 'ArmNodeSocketAnimAction'
     bl_label = 'Action Socket'
     default_value_get: PointerProperty(name='Action', type=bpy.types.Action)
-    default_value: StringProperty(name='Action', default='') # TODO: deprecated, using PointerProperty now
 
     def get_default_value(self):
         if self.default_value_get == None:

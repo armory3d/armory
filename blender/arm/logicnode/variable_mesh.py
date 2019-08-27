@@ -10,7 +10,6 @@ class MeshNode(Node, ArmLogicTreeNode):
     bl_icon = 'QUESTION'
     
     property0_get: PointerProperty(name='', type=bpy.types.Mesh)
-    property0: StringProperty(name='Mesh', default='') # TODO: deprecated, using PointerProperty now
 
     def init(self, context):
         self.outputs.new('NodeSocketShader', 'Mesh')
