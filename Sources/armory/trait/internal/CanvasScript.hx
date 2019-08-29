@@ -65,6 +65,11 @@ class CanvasScript extends Trait {
 		for (e in canvas.elements) if (e.name == name) return e;
 		return null;
 	}
+	
+	// Returns canvas array of elements
+	public function getElements():Array<TElement> {
+		return canvas.elements;
+	}
 
 	// Contains data
 	@:access(zui.Canvas)
