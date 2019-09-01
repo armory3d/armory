@@ -559,19 +559,6 @@ def build_success():
                         shutil.move(f, files_path + '/Krom.app/Contents/MacOS')
                 krom_exe = arm.utils.safestr(wrd.arm_project_name) + '.app'
                 os.rename(files_path + '/Krom.app', files_path + '/' + krom_exe)
-            # Serialize krom.js into krom.bin
-            if wrd.arm_minify_js:
-                cwd = os.getcwd()
-                fp = files_path
-                if state.target == 'krom-macos':
-                    fp += '/' + krom_exe + '/Contents/MacOS'
-                    krom_exe = './Krom'
-                os.chdir(fp)
-                args = [krom_exe, '.', '.', '--writebin']
-                proc = subprocess.Popen(args)
-                proc.wait()
-                os.chdir(cwd)
-                os.remove(fp + '/krom.js')
 
             # Rename
             ext = state.target.split('-')[-1] # krom-windows
