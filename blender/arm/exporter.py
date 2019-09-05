@@ -2243,7 +2243,11 @@ class ArmoryExporter:
             col_group = ''
             for b in rb.collision_collections:
                 col_group = ('1' if b else '0') + col_group
-            x['parameters'] = [str(shape), str(body_mass), str(rb.friction), str(rb.restitution), str(int(col_group, 2))]
+            col_mask = ''
+            for b in bobject.arm_rb_collision_filter_mask:
+                col_mask = ('1' if b else '0') + col_mask
+            
+            x['parameters'] = [str(shape), str(body_mass), str(rb.friction), str(rb.restitution), str(int(col_group, 2)), str(int(col_mask, 2)) ]
             lx = bobject.arm_rb_linear_factor[0]
             ly = bobject.arm_rb_linear_factor[1]
             lz = bobject.arm_rb_linear_factor[2]

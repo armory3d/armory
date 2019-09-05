@@ -151,9 +151,9 @@ class PhysicsWorld extends Trait {
 
 	public function addRigidBody(body:RigidBody) {
 		#if js
-		world.addRigidBodyToGroup(body.body, body.group, body.group);
+		world.addRigidBodyToGroup(body.body, body.group, body.mask);
 		#else
-		world.addRigidBody(body.body, body.group, body.group);
+		world.addRigidBody(body.body, body.group, body.mask);
 		#end
 		rbMap.set(body.id, body);
 	}
@@ -317,13 +317,20 @@ class PhysicsWorld extends Trait {
 		return rb;
 	}
 
-	public function rayCast(from:Vec4, to:Vec4):Hit {
+	public function rayCast(from:Vec4, to:Vec4, group:Int=0x00000001,mask=0xFFFFFFFF):Hit {
 		var rayFrom = vec1;
 		var rayTo = vec2;
 		rayFrom.setValue(from.x, from.y, from.z);
 		rayTo.setValue(to.x, to.y, to.z);
 
 		var rayCallback = new bullet.Bt.ClosestRayResultCallback(rayFrom, rayTo);
+		#if js
+		rayCallback.set_m_collisionFilterGroup(group);
+		rayCallback.set_m_collisionFilterMask(mask);
+		#elseif cpp
+		rayCallback.m_collisionFilterGroup = group;
+		rayCallback.m_collisionFilterMask = mask;
+		#end
 		var worldDyn:bullet.Bt.DynamicsWorld = world;
 		var worldCol:bullet.Bt.CollisionWorld = worldDyn;
 		worldCol.rayTest(rayFrom, rayTo, rayCallback);

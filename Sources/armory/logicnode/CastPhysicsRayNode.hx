@@ -13,12 +13,13 @@ class CastPhysicsRayNode extends LogicNode {
 	override function get(from:Int):Dynamic {
 		var vfrom:Vec4 = inputs[0].get();
 		var vto:Vec4 = inputs[1].get();
+		var mask:Int = inputs[1].get();
 
 		if (vfrom == null || vto == null) return null;
 
 #if arm_physics
 		var physics = armory.trait.physics.PhysicsWorld.active;
-		var hit = physics.rayCast(vfrom, vto);
+		var hit = physics.rayCast(vfrom, vto, 1, mask);
 		var rb = (hit != null) ? hit.rb : null;
 
 		if (from == 0) { // Object

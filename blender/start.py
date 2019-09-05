@@ -7,6 +7,7 @@ import arm.props_exporter
 import arm.props_bake
 import arm.props_renderpath
 import arm.props_properties
+import arm.props_collision_filter_mask
 import arm.props
 import arm.props_ui
 import arm.handlers
@@ -32,6 +33,7 @@ def register(local_sdk=False):
     arm.nodes_logic.register()
     arm.keymap.register()
     arm.handlers.register()
+    arm.props_collision_filter_mask.register()
 
 def unregister():
     global registered
@@ -50,3 +52,4 @@ def unregister():
     arm.props_bake.unregister()
     arm.props_renderpath.unregister()
     arm.props_properties.unregister()
+    arm.props_collision_filter_mask.unregister()
