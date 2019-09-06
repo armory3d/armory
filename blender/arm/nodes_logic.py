@@ -168,20 +168,7 @@ class ReplaceNodesOperator(bpy.types.Operator):
 
 # TODO: deprecated
 # Input Replacement Rules
-add_replacement(Replacement("LNOnGamepadNode", "LNMergedGamepadNode", {0: 0}, {0: 0}, {"property0": "property0", "property1": "property1"}))
-add_replacement(Replacement("LNGamepadNode", "LNMergedGamepadNode", {0: 0}, {0: 1}, {"property0": "property0", "property1": "property1"}))
-
-add_replacement(Replacement("LNOnMouseNode", "LNMergedMouseNode", {}, {0: 0}, {"property0": "property0", "property1": "property1"}))
-add_replacement(Replacement("LNMouseNode", "LNMergedMouseNode", {}, {0: 1}, {"property0": "property0", "property1": "property1"}))
-
-add_replacement(Replacement("LNOnSurfaceNode", "LNMergedSurfaceNode", {}, {0: 0}, {"property0": "property0"}))
-add_replacement(Replacement("LNSurfaceNode", "LNMergedSurfaceNode", {}, {0: 1}, {"property0": "property0"}))
-
-add_replacement(Replacement("LNOnKeyboardNode", "LNMergedKeyboardNode", {}, {0: 0}, {"property0": "property0", "property1": "property1"}))
-add_replacement(Replacement("LNKeyboardNode", "LNMergedKeyboardNode", {}, {0: 1}, {"property0": "property0", "property1": "property1"}))
-
-add_replacement(Replacement("LNOnVirtualButtonNode", "LNMergedVirtualButtonNode", {}, {0: 0}, {"property0": "property0", "property1": "property1"}))
-add_replacement(Replacement("LNVirtualButtonNode", "LNMergedVirtualButtonNode", {}, {0: 1}, {"property0": "property0", "property1": "property1"}))
+# add_replacement(Replacement("LNOnGamepadNode", "LNMergedGamepadNode", {0: 0}, {0: 0}, {"property0": "property0", "property1": "property1"}))
 
 def register():
     bpy.utils.register_class(ArmLogicTree)
