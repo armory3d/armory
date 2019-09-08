@@ -645,7 +645,7 @@ def target_to_gapi(arm_project_target):
         return 'arm_gapi_mac'
     elif arm_project_target == 'macos-hl':
         return 'arm_gapi_mac'
-    elif arm_project_target == 'android-native-hl':
+    elif arm_project_target == 'android-hl':
         return 'arm_gapi_android'
     elif arm_project_target == 'ios-hl':
         return 'arm_gapi_ios'

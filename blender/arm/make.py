@@ -572,7 +572,7 @@ def build_success():
             print('Exported XCode project to ' + files_path + '-build')
         elif target_name.startswith('windows'):
             print('Exported Visual Studio 2017 project to ' + files_path + '-build')
-        elif target_name.startswith('android-native'):
+        elif target_name.startswith('android'):
             print('Exported Android Studio project to ' + files_path + '-build/' + arm.utils.safestr(wrd.arm_project_name))
         elif target_name.startswith('krom'):
             print('Exported Krom package to ' + files_path)

@@ -76,7 +76,7 @@ class ArmExporterListItem(bpy.types.PropertyGroup):
                  ('linux-hl', 'Linux (C)', 'linux-hl'),
                  ('krom-linux', 'Linux (Krom)', 'krom-linux'),
                  ('ios-hl', 'iOS (C)', 'ios-hl'),
-                 ('android-native-hl', 'Android (C)', 'android-native-hl'),
+                 ('android-hl', 'Android (C)', 'android-hl'),
                  ('node', 'Node (JS)', 'node'),
                  ('custom', 'Custom', 'custom'),],
         name="Target", default='html5', description='Build platform')
