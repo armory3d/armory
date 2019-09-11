@@ -119,10 +119,10 @@ def get_sdk_path():
     else:
         return addon_prefs.sdk_path
 
-def get_ide_path():
+def get_ide_bin():
     preferences = bpy.context.preferences
     addon_prefs = preferences.addons["armory"].preferences
-    return '' if not hasattr(addon_prefs, 'ide_path') else addon_prefs.ide_path
+    return '' if not hasattr(addon_prefs, 'ide_bin') else addon_prefs.ide_bin
 
 def get_ffmpeg_path():
     preferences = bpy.context.preferences
@@ -526,7 +526,8 @@ def is_bone_animation_enabled(bobject):
 def export_bone_data(bobject):
     return bobject.find_armature() and is_bone_animation_enabled(bobject) and get_rp().arm_skin == 'On'
 
-def kode_studio_mklink_win(sdk_path, ide_path):
+def kode_studio_mklink_win(sdk_path, ide_bin):
+    ide_path = os.path.dirname(ide_bin)
     # Fight long-path issues on Windows
     if not os.path.exists(ide_path + '/resources/app/kodeExtensions/kha/Kha'):
         source = ide_path + '/resources/app/kodeExtensions/kha/Kha'
@@ -537,7 +538,8 @@ def kode_studio_mklink_win(sdk_path, ide_path):
         target = sdk_path + '/Krom'
         subprocess.check_call('mklink /J "%s" "%s"' % (source, target), shell=True)
 
-def kode_studio_mklink_linux(sdk_path, ide_path):
+def kode_studio_mklink_linux(sdk_path, ide_bin):
+    ide_path = os.path.dirname(ide_bin)
     if not os.path.exists(ide_path + '/resources/app/kodeExtensions/kha/Kha'):
         source = ide_path + '/resources/app/kodeExtensions/kha/Kha'
         target = sdk_path + '/Kha'
@@ -547,7 +549,8 @@ def kode_studio_mklink_linux(sdk_path, ide_path):
         target = sdk_path + '/Krom'
         subprocess.check_call('ln -s "%s" "%s"' % (target, source), shell=True)
 
-def kode_studio_mklink_mac(sdk_path, ide_path):
+def kode_studio_mklink_mac(sdk_path, ide_bin):
+    ide_path = os.path.dirname(ide_bin)
     if not os.path.exists(ide_path + '/Contents/Resources/app/kodeExtensions/kha/Kha'):
         source = ide_path + '/Contents/Resources/app/kodeExtensions/kha/Kha'
         target = sdk_path + '/Kha'
@@ -557,62 +560,83 @@ def kode_studio_mklink_mac(sdk_path, ide_path):
         target = sdk_path + '/Krom'
         subprocess.check_call('ln -fs "%s" "%s"' % (target, source), shell=True)
 
-def get_kode_path():
-    p = get_ide_path()
-    if p == '':
-        if get_os() == 'win':
-            p = get_sdk_path() + '/win32'
-        elif get_os() == 'mac':
-            p = get_sdk_path() + '/KodeStudio.app'
+def open_editor(hx_path=None):
+    ide_bin = get_ide_bin()
+
+    if hx_path is None:
+        hx_path = arm.utils.get_fp()
+
+    if get_code_editor() == 'default':
+        # Get editor environment variables
+        # https://unix.stackexchange.com/q/4859
+        env_v_editor = os.environ.get('VISUAL')
+        env_editor = os.environ.get('EDITOR')
+
+        if env_v_editor is not None:
+            ide_bin = env_v_editor
+        elif env_editor is not None:
+            ide_bin = env_editor
+
+        # No environment variables set -> Let the system decide how to
+        # open the file
         else:
-            p = get_sdk_path() + '/linux64'
-    return p
+            webbrowser.open('file://' + hx_path)
+            return
 
-def get_kode_bin():
-    p = get_kode_path()
-    if get_os() == 'win':
-        return p + '/Kode Studio.exe'
-    elif get_os() == 'mac':
-        return p + '/Contents/MacOS/Electron'
-    else:
-        return p + '/kodestudio'
+    if os.path.exists(ide_bin):
+        args = [ide_bin, arm.utils.get_fp()]
 
-def get_vscode_bin():
-    p = get_kode_path()
-    if get_os() == 'win':
-        return p + '/Code.exe'
-    elif get_os() == 'mac':
-        return p + '/Contents/MacOS/Electron'
-    else:
-        return p + '/code'
+        # Kode Studio or Visual Studio Code
+        if get_code_editor() == 'kodestudio':
+            pass
+            # if arm.utils.get_os() == 'win':
+            #     kode_studio_mklink_win(get_sdk_path(), ide_bin)
+            # elif arm.utils.get_os() == 'mac':
+            #     kode_studio_mklink_mac(get_sdk_path(), ide_bin)
+            # else:
+            #     kode_studio_mklink_linux(get_sdk_path(), ide_bin)
 
-def kode_studio(hx_path=None):
-    project_path = arm.utils.get_fp()
-    kode_bin = get_kode_bin()
-    if not os.path.exists(kode_bin):
-        kode_bin = get_vscode_bin()
-    if os.path.exists(kode_bin) and get_code_editor() == 'kodestudio':
-        if arm.utils.get_os() == 'win':
-            # kode_studio_mklink_win(get_sdk_path(), get_kode_path())
-            args = [kode_bin, arm.utils.get_fp()]
-            if hx_path != None:
-                args.append(hx_path)
-            subprocess.Popen(args)
-        elif arm.utils.get_os() == 'mac':
-            # kode_studio_mklink_mac(get_sdk_path(), get_kode_path())
-            args = ['"' + kode_bin + '"' + ' "' + arm.utils.get_fp() + '"']
-            if hx_path != None:
-                args[0] += ' "' + hx_path + '"'
-            subprocess.Popen(args, shell=True)
+        # Sublime Text
+        elif get_code_editor() == 'sublime':
+            project_name = bpy.data.worlds['Arm'].arm_project_name
+            subl_project_path = arm.utils.get_fp() + f'/{project_name}.sublime-project'
+
+            if not os.path.exists(subl_project_path):
+                generate_sublime_project(subl_project_path)
+
+            args += ['--project', subl_project_path]
+
+            args.append('--add')
+
+        args.append(hx_path)
+
+        if arm.utils.get_os() == 'mac':
+            argstr = ""
+
+            for arg in args:
+                if not (arg.startswith('-') or arg.startswith('--')):
+                    argstr += '"' + arg + '"'
+                argstr += ' '
+
+            subprocess.Popen(argstr[:-1], shell=True)
         else:
-            # kode_studio_mklink_linux(get_sdk_path(), get_kode_path())
-            args = [kode_bin, arm.utils.get_fp()]
-            if hx_path != None:
-                args.append(hx_path)
             subprocess.Popen(args)
+
     else:
-        fp = hx_path if hx_path != None else arm.utils.get_fp()
-        webbrowser.open('file://' + fp)
+        raise FileNotFoundError(f'Code editor executable not found: {ide_bin}. You can change the path in the Armory preferences.')
+
+def generate_sublime_project(subl_project_path):
+    """Generates a [project_name].sublime-project file."""
+    print('Generating Sublime Text project file')
+
+    project_data = {
+        'folders': [
+            {'path': '.'}
+        ],
+    }
+
+    with open(subl_project_path, 'w', encoding='utf-8') as project_file:
+        json.dump(project_data, project_file, ensure_ascii=False, indent=4)
 
 def def_strings_to_array(strdefs):
     defs = strdefs.split('_')

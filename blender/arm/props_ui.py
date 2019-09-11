@@ -347,7 +347,7 @@ class ARM_PT_ArmoryProjectPanel(bpy.types.Panel):
         layout.use_property_split = True
         layout.use_property_decorate = False
         row = layout.row(align=True)
-        row.operator("arm.kode_studio")
+        row.operator("arm.open_editor")
         row.operator("arm.open_project_folder", icon="FILE_FOLDER")
 
 class ARM_PT_ProjectFlagsPanel(bpy.types.Panel):
@@ -559,9 +559,9 @@ class ArmoryOpenProjectFolderButton(bpy.types.Operator):
         webbrowser.open('file://' + arm.utils.get_fp())
         return{'FINISHED'}
 
-class ArmoryKodeStudioButton(bpy.types.Operator):
-    '''Launch this project in Kode Studio or VS Code'''
-    bl_idname = 'arm.kode_studio'
+class ArmoryOpenEditorButton(bpy.types.Operator):
+    '''Launch this project in the IDE'''
+    bl_idname = 'arm.open_editor'
     bl_label = 'Code Editor'
     bl_description = 'Open Project in IDE'
 
@@ -572,10 +572,10 @@ class ArmoryKodeStudioButton(bpy.types.Operator):
         arm.utils.check_default_props()
 
         if not os.path.exists(arm.utils.get_fp() + "/khafile.js"):
-            print('Generating Krom project for Kode Studio')
+            print('Generating Krom project for IDE build configuration')
             make.build('krom')
 
-        arm.utils.kode_studio()
+        arm.utils.open_editor()
         return{'FINISHED'}
 
 class CleanMenu(bpy.types.Menu):
@@ -1436,7 +1436,7 @@ def register():
     bpy.utils.register_class(ArmoryStopButton)
     bpy.utils.register_class(ArmoryBuildProjectButton)
     bpy.utils.register_class(ArmoryOpenProjectFolderButton)
-    bpy.utils.register_class(ArmoryKodeStudioButton)
+    bpy.utils.register_class(ArmoryOpenEditorButton)
     bpy.utils.register_class(CleanMenu)
     bpy.utils.register_class(CleanButtonMenu)
     bpy.utils.register_class(ArmoryCleanProjectButton)
@@ -1486,7 +1486,7 @@ def unregister():
     bpy.utils.unregister_class(ArmoryStopButton)
     bpy.utils.unregister_class(ArmoryBuildProjectButton)
     bpy.utils.unregister_class(ArmoryOpenProjectFolderButton)
-    bpy.utils.unregister_class(ArmoryKodeStudioButton)
+    bpy.utils.unregister_class(ArmoryOpenEditorButton)
     bpy.utils.unregister_class(CleanMenu)
     bpy.utils.unregister_class(CleanButtonMenu)
     bpy.utils.unregister_class(ArmoryCleanProjectButton)

@@ -252,18 +252,19 @@ class ArmEditScriptButton(bpy.types.Operator):
         arm.utils.check_default_props()
 
         if not os.path.exists(arm.utils.get_fp() + "/khafile.js"):
-            print('Generating Krom project for Kode Studio')
+            print('Generating Krom project for IDE build configuration')
             make.build('krom')
 
         if self.is_object:
             obj = bpy.context.object
         else:
             obj = bpy.context.scene
+
         item = obj.arm_traitlist[obj.arm_traitlist_index]
         pkg = arm.utils.safestr(bpy.data.worlds['Arm'].arm_project_package)
         # Replace the haxe package syntax with the os-dependent path syntax for opening
         hx_path = arm.utils.get_fp() + '/Sources/' + pkg + '/' + item.class_name_prop.replace('.', os.sep) + '.hx'
-        arm.utils.kode_studio(hx_path)
+        arm.utils.open_editor(hx_path)
         return{'FINISHED'}
 
 class ArmEditBundledScriptButton(bpy.types.Operator):
