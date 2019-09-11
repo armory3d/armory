@@ -313,7 +313,7 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
     bl_label = 'Generate Navmesh'
     def execute(self, context):
         obj = context.active_object
-        
+
         if obj.type != 'MESH':
             return{'CANCELLED'}
 
@@ -329,10 +329,10 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         nav_full_path = arm.utils.get_fp_build() + '/compiled/Assets/navigation'
         if not os.path.exists(nav_full_path):
             os.makedirs(nav_full_path)
-        
+
         nav_mesh_name = 'nav_' + obj.data.name
         mesh_path = nav_full_path + '/' + nav_mesh_name + '.obj'
-        
+
         with open(mesh_path, 'w') as f:
             for v in obj.data.vertices:
                 f.write("v %.4f " % (v.co[0] * obj.scale.x))
@@ -343,10 +343,10 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
                 for i in reversed(p.vertices): # Flipped normals
                     f.write(" %d" % (i + 1))
                 f.write("\n")
-        
+
         fp_build_name = arm.utils.get_fp_build().rsplit('/')[-1]
         nav_mesh_path = '/' + fp_build_name + '/compiled/Assets/navigation/' + nav_mesh_name
-       
+
         buildnavjs_path = arm.utils.get_sdk_path() + '/lib/haxerecast/buildnavjs'
 
         # append config values
@@ -372,7 +372,7 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         navmesh.rotation_euler = (0,0,0)
         navmesh.location = (obj.location.x,obj.location.y,obj.location.z)
         navmesh.arm_export = False
-        
+
         bpy.context.view_layer.objects.active = navmesh
         bpy.ops.object.editmode_toggle()
         bpy.ops.mesh.select_all(action='SELECT')
