@@ -13,7 +13,7 @@ class CastPhysicsRayNode extends LogicNode {
 	override function get(from:Int):Dynamic {
 		var vfrom:Vec4 = inputs[0].get();
 		var vto:Vec4 = inputs[1].get();
-		var mask:Int = inputs[1].get();
+		var mask:Int = inputs[2].get();
 
 		if (vfrom == null || vto == null) return null;
 
