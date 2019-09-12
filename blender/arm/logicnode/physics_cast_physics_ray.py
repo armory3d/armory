@@ -12,6 +12,7 @@ class CastPhysicsRayNode(Node, ArmLogicTreeNode):
     def init(self, context):
         self.inputs.new('NodeSocketVector', 'From')
         self.inputs.new('NodeSocketVector', 'To')
+        self.inputs.new('NodeSocketInt', 'Collision Filter Mask')
         self.outputs.new('ArmNodeSocketObject', 'Object')
         self.outputs.new('NodeSocketVector', 'Hit')
         self.outputs.new('NodeSocketVector', 'Normal')

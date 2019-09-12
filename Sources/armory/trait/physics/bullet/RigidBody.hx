@@ -32,6 +32,7 @@ class RigidBody extends iron.Trait {
 	var deactivationParams:Array<Float>;
 	var ccd = false; // Continuous collision detection
 	public var group = 1;
+	public var mask = 1;
 	var trigger = false;
 	var bodyScaleX:Float; // Transform scale at creation time
 	var bodyScaleY:Float;
@@ -66,7 +67,7 @@ class RigidBody extends iron.Trait {
 	static var triangleMeshCache = new Map<MeshData, bullet.Bt.TriangleMesh>();
 	static var usersCache = new Map<MeshData, Int>();
 
-	public function new(shape = Shape.Box, mass = 1.0, friction = 0.5, restitution = 0.0, group = 1,
+	public function new(shape = Shape.Box, mass = 1.0, friction = 0.5, restitution = 0.0, group = 1, mask=1,
 						params:Array<Float> = null, flags:Array<Bool> = null) {
 		super();
 
@@ -85,6 +86,7 @@ class RigidBody extends iron.Trait {
 		this.friction = friction;
 		this.restitution = restitution;
 		this.group = group;
+		this.mask = mask;
 
 		if (params == null) params = [0.04, 0.1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0];
 		if (flags == null) flags = [false, false, false];
