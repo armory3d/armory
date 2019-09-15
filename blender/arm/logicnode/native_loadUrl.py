@@ -13,4 +13,4 @@ class LoadUrlNode(Node, ArmLogicTreeNode):
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('NodeSocketString', 'URL')
 
-add_node(LoadUrlNode, category='extension')
+add_node(LoadUrlNode, category='native')
