@@ -1191,6 +1191,13 @@ class ArmoryExporter:
         table = objectRef[1]["objectTable"]
         bobject = table[0]
         oid = arm.utils.safestr(objectRef[1]["structName"])
+        
+        # add a standard triangulate modifier
+        tri_mod = bobject.modifiers.new(name="exportTriangulation", type='TRIANGULATE')
+        # try not to mess with the shading
+        tri_mod.quad_method = "FIXED"
+        tri_mod.keep_custom_normals = True
+        self.depsgraph.update()
 
         wrd = bpy.data.worlds['Arm']
         if wrd.arm_single_data_file:
@@ -1316,6 +1323,8 @@ class ArmoryExporter:
 
         if hasattr(bobject, 'evaluated_get'):
             bobject_eval.to_mesh_clear()
+            
+        bobject.modifiers.remove(tri_mod)
 
     def export_light(self, objectRef):
         # This function exports a single light object
