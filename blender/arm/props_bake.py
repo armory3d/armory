@@ -250,7 +250,7 @@ class ArmBakeApplyButton(bpy.types.Operator):
             ob = o.obj
             img_name = ob.name + '_baked'
             # Save images
-            bpy.data.images[img_name].pack(as_png=True)
+            bpy.data.images[img_name].pack()
             bpy.data.images[img_name].save()
             for slot in ob.material_slots:
                 mat = slot.material
