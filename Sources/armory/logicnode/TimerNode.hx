@@ -57,10 +57,10 @@ class TimerNode extends LogicNode {
 	}
 
 	override function get(from:Int):Dynamic {
-		if (from == 1) return running;
-		else if (from == 2) return time;
-		else if (from == 3) return duration - time;
-		else if (from == 4) return time / duration;
+		if (from == 2) return running;
+		else if (from == 3) return time;
+		else if (from == 4) return duration - time;
+		else if (from == 5) return time / duration;
 		else return repetitions;
 	}
 }
