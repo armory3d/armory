@@ -630,8 +630,11 @@ def generate_sublime_project(subl_project_path):
     print('Generating Sublime Text project file')
 
     project_data = {
-        'folders': [
-            {'path': '.'}
+        "folders": [
+            {
+                "path": ".",
+                "file_exclude_patterns": ["*.blend*", "*.arm"]
+            },
         ],
     }
 
