@@ -1192,10 +1192,20 @@ class ArmoryExporter:
         bobject = table[0]
         oid = arm.utils.safestr(objectRef[1]["structName"])
         
+        # save current auto smooth values
+        option_smooth = bobject.data.use_auto_smooth
+        option_smooth_angle = bobject.data.auto_smooth_angle
+        
+        # if not yet done, turn on auto smooth with 180 degrees
+        if bobject.data.use_auto_smooth != 1:
+            bobject.data.use_auto_smooth = 1
+            bobject.data.auto_smooth_angle = math.pi
+            
         # add a standard triangulate modifier
         tri_mod = bobject.modifiers.new(name="exportTriangulation", type='TRIANGULATE')
         # try not to mess with the shading
         tri_mod.quad_method = "FIXED"
+        tri_mod.ngon_method = "CLIP"
         tri_mod.keep_custom_normals = True
         self.depsgraph.update()
 
@@ -1324,7 +1334,12 @@ class ArmoryExporter:
         if hasattr(bobject, 'evaluated_get'):
             bobject_eval.to_mesh_clear()
             
+        # remove the temporary triangulation
         bobject.modifiers.remove(tri_mod)
+        
+        # restore auto smooth
+        bobject.data.use_auto_smooth = option_smooth
+        bobject.data.auto_smooth_angle = option_smooth_angle
 
     def export_light(self, objectRef):
         # This function exports a single light object
