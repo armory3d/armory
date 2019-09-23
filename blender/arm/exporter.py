@@ -951,7 +951,7 @@ class ArmoryExporter:
 
     def export_mesh_data(self, exportMesh, bobject, o, has_armature=False):
         exportMesh.calc_normals_split()
-        # exportMesh.calc_loop_triangles()
+        exportMesh.calc_loop_triangles()
 
         loops = exportMesh.loops
         num_verts = len(loops)
@@ -1062,7 +1062,7 @@ class ArmoryExporter:
                 cdata[i3    ] = col[0]
                 cdata[i3 + 1] = col[1]
                 cdata[i3 + 2] = col[2]
-
+        
         mats = exportMesh.materials
         poly_map = []
         for i in range(max(len(mats), 1)):
@@ -1071,6 +1071,14 @@ class ArmoryExporter:
             poly_map[poly.material_index].append(poly)
 
         o['index_arrays'] = []
+        
+        # map polygon indices to triangle loops
+        tri_loops = {}
+        for loop in exportMesh.loop_triangles:
+            if loop.polygon_index not in tri_loops:
+                tri_loops[loop.polygon_index] = []
+            tri_loops[loop.polygon_index].append(loop)
+        
         for index, polys in enumerate(poly_map):
             tris = 0
             for poly in polys:
@@ -1081,19 +1089,11 @@ class ArmoryExporter:
 
             i = 0
             for poly in polys:
-                first = poly.loop_start
-                total = poly.loop_total
-                if total == 3:
-                    prim[i    ] = loops[first    ].index
-                    prim[i + 1] = loops[first + 1].index
-                    prim[i + 2] = loops[first + 2].index
+                for loop in tri_loops[poly.index]:
+                    prim[i    ] = loops[loop.loops[0]].index
+                    prim[i + 1] = loops[loop.loops[1]].index
+                    prim[i + 2] = loops[loop.loops[2]].index
                     i += 3
-                else:
-                    for j in range(total - 2):
-                        prim[i    ] = loops[first + total - 1].index
-                        prim[i + 1] = loops[first + j        ].index
-                        prim[i + 2] = loops[first + j + 1    ].index
-                        i += 3
 
             ia = {}
             ia['values'] = prim
