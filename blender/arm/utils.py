@@ -613,6 +613,17 @@ def kode_studio(hx_path=None):
     else:
         fp = hx_path if hx_path != None else arm.utils.get_fp()
         webbrowser.open('file://' + fp)
+        
+def open_folder():
+    if arm.utils.get_os() is 'win':
+        print('not implimented')
+        webbrowser.open('file://' + arm.utils.get_fp())
+    if arm.utils.get_os() is 'mac':
+        subprocess.Popen(['open', arm.utils.get_fp()])
+    if arm.utils.get_os() is 'linux':
+        subprocess.Popen(['xdg-open', arm.utils.get_fp()])
+    else:
+        webbrowser.open('file://' + arm.utils.get_fp())
 
 def def_strings_to_array(strdefs):
     defs = strdefs.split('_')
