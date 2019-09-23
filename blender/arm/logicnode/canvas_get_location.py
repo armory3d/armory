@@ -3,17 +3,17 @@ from bpy.props import *
 from bpy.types import Node, NodeSocket
 from arm.logicnode.arm_nodes import *
 
-class CanvasSetLocationNode(Node, ArmLogicTreeNode):
-    '''Set canvas element location'''
-    bl_idname = 'LNCanvasSetLocationNode'
-    bl_label = 'Canvas Set Location'
+class CanvasGetLocationNode(Node, ArmLogicTreeNode):
+    '''Get canvas element location'''
+    bl_idname = 'LNCanvasGetLocationNode'
+    bl_label = 'Canvas Get Location'
     bl_icon = 'QUESTION'
 
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('NodeSocketString', 'Element')
-        self.inputs.new('NodeSocketFloat', 'X')
-        self.inputs.new('NodeSocketFloat', 'Y')
         self.outputs.new('ArmNodeSocketAction', 'Out')
+        self.outputs.new('NodeSocketFloat', 'X')
+        self.outputs.new('NodeSocketFloat', 'Y')
 
-add_node(CanvasSetLocationNode, category='Canvas')
+add_node(CanvasGetLocationNode, category='Canvas')
