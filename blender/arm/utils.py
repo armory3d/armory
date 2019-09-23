@@ -616,8 +616,7 @@ def kode_studio(hx_path=None):
         
 def open_folder():
     if arm.utils.get_os() is 'win':
-        print('not implimented')
-        webbrowser.open('file://' + arm.utils.get_fp())
+        subprocess.Popen('explorer /select,"' + arm.utils.get_fp() + '"')
     if arm.utils.get_os() is 'mac':
         subprocess.Popen(['open', arm.utils.get_fp()])
     if arm.utils.get_os() is 'linux':
