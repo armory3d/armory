@@ -625,6 +625,16 @@ def open_editor(hx_path=None):
     else:
         raise FileNotFoundError(f'Code editor executable not found: {ide_bin}. You can change the path in the Armory preferences.')
 
+def open_folder():
+    if arm.utils.get_os() is 'win':
+        subprocess.Popen('explorer /select,"' + arm.utils.get_fp() + '"')
+    if arm.utils.get_os() is 'mac':
+        subprocess.Popen(['open', arm.utils.get_fp()])
+    if arm.utils.get_os() is 'linux':
+        subprocess.Popen(['xdg-open', arm.utils.get_fp()])
+    else:
+        webbrowser.open('file://' + arm.utils.get_fp())
+
 def generate_sublime_project(subl_project_path):
     """Generates a [project_name].sublime-project file."""
     print('Generating Sublime Text project file')
