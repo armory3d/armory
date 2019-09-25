@@ -526,40 +526,6 @@ def is_bone_animation_enabled(bobject):
 def export_bone_data(bobject):
     return bobject.find_armature() and is_bone_animation_enabled(bobject) and get_rp().arm_skin == 'On'
 
-def kode_studio_mklink_win(sdk_path, ide_bin):
-    ide_path = os.path.dirname(ide_bin)
-    # Fight long-path issues on Windows
-    if not os.path.exists(ide_path + '/resources/app/kodeExtensions/kha/Kha'):
-        source = ide_path + '/resources/app/kodeExtensions/kha/Kha'
-        target = sdk_path + '/Kha'
-        subprocess.check_call('mklink /J "%s" "%s"' % (source, target), shell=True)
-    if not os.path.exists(ide_path + '/resources/app/kodeExtensions/krom/Krom'):
-        source = ide_path + '/resources/app/kodeExtensions/krom/Krom'
-        target = sdk_path + '/Krom'
-        subprocess.check_call('mklink /J "%s" "%s"' % (source, target), shell=True)
-
-def kode_studio_mklink_linux(sdk_path, ide_bin):
-    ide_path = os.path.dirname(ide_bin)
-    if not os.path.exists(ide_path + '/resources/app/kodeExtensions/kha/Kha'):
-        source = ide_path + '/resources/app/kodeExtensions/kha/Kha'
-        target = sdk_path + '/Kha'
-        subprocess.check_call('ln -s "%s" "%s"' % (target, source), shell=True)
-    if not os.path.exists(ide_path + '/resources/app/kodeExtensions/krom/Krom'):
-        source = ide_path + '/resources/app/kodeExtensions/krom/Krom'
-        target = sdk_path + '/Krom'
-        subprocess.check_call('ln -s "%s" "%s"' % (target, source), shell=True)
-
-def kode_studio_mklink_mac(sdk_path, ide_bin):
-    ide_path = os.path.dirname(ide_bin)
-    if not os.path.exists(ide_path + '/Contents/Resources/app/kodeExtensions/kha/Kha'):
-        source = ide_path + '/Contents/Resources/app/kodeExtensions/kha/Kha'
-        target = sdk_path + '/Kha'
-        subprocess.check_call('ln -fs "%s" "%s"' % (target, source), shell=True)
-    if not os.path.exists(ide_path + '/Contents/Resources/app/kodeExtensions/krom/Krom'):
-        source = ide_path + '/Contents/Resources/app/kodeExtensions/krom/Krom'
-        target = sdk_path + '/Krom'
-        subprocess.check_call('ln -fs "%s" "%s"' % (target, source), shell=True)
-
 def open_editor(hx_path=None):
     ide_bin = get_ide_bin()
 
@@ -586,18 +552,8 @@ def open_editor(hx_path=None):
     if os.path.exists(ide_bin):
         args = [ide_bin, arm.utils.get_fp()]
 
-        # Kode Studio or Visual Studio Code
-        if get_code_editor() == 'kodestudio':
-            pass
-            # if arm.utils.get_os() == 'win':
-            #     kode_studio_mklink_win(get_sdk_path(), ide_bin)
-            # elif arm.utils.get_os() == 'mac':
-            #     kode_studio_mklink_mac(get_sdk_path(), ide_bin)
-            # else:
-            #     kode_studio_mklink_linux(get_sdk_path(), ide_bin)
-
         # Sublime Text
-        elif get_code_editor() == 'sublime':
+        if get_code_editor() == 'sublime':
             project_name = bpy.data.worlds['Arm'].arm_project_name
             subl_project_path = arm.utils.get_fp() + f'/{project_name}.sublime-project'
 
