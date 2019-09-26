@@ -582,11 +582,11 @@ def open_editor(hx_path=None):
         raise FileNotFoundError(f'Code editor executable not found: {ide_bin}. You can change the path in the Armory preferences.')
 
 def open_folder():
-    if arm.utils.get_os() is 'win':
+    if arm.utils.get_os() == 'win':
         subprocess.Popen('explorer /select,"' + arm.utils.get_fp() + '"')
-    if arm.utils.get_os() is 'mac':
+    elif arm.utils.get_os() == 'mac':
         subprocess.Popen(['open', arm.utils.get_fp()])
-    if arm.utils.get_os() is 'linux':
+    elif arm.utils.get_os() == 'linux':
         subprocess.Popen(['xdg-open', arm.utils.get_fp()])
     else:
         webbrowser.open('file://' + arm.utils.get_fp())
