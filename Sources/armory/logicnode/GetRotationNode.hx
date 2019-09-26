@@ -12,19 +12,19 @@ class GetRotationNode extends LogicNode {
 
 	override function get(from:Int):Dynamic {
 		if (from == 0) {
-			var object:Object = inputs[from].get();
+			var object:Object = inputs[0].get();
 			if (object == null) return null;
 			return object.transform.rot.getEuler();
 		}
 		if (from == 1) {
 			//angle
-			var object:Object = inputs[from].get();
+			var object:Object = inputs[0].get();
 			if (object == null) return null;
 			var rot = object.transform.rot;
 			return 2 * Math.acos(rot.w);
 		} else if (from == 2) {
 			//vector
-			var object:Object = inputs[from].get();
+			var object:Object = inputs[0].get();
 			if (object == null) return null;
 			var rot = object.transform.rot;
 			var sqrtW = Math.sqrt(1 - rot.w * rot.w);
