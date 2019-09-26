@@ -13,7 +13,7 @@ class SetRotationNode extends LogicNode {
 
 	override function run(from:Int) {
 		var object:Object = inputs[1].get();
-		var angle:Float = inputs[2].get();
+		var angle:Float = inputs[2].get() * (Math.PI / 180);
 		var vec: Vec3 = inputs[3].get();
 		var angleSin = Math.sin(angle / 2);
 		vec = vec.normalize();
