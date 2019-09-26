@@ -29,6 +29,8 @@ class GetRotationNode extends LogicNode {
 			if (object == null) return null;
 			var rot = object.transform.rot;
 			var sqrtW = Math.sqrt(1 - (rot.w * rot.w));
+			if (sqrtW == 0)
+				return new Vec3(0, 0, 1);
 			return new Vec3(rot.x / sqrtW, rot.y / sqrtW, rot.z / sqrtW);
 		}
 		return null;
