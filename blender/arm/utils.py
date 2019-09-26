@@ -583,7 +583,7 @@ def open_editor(hx_path=None):
 
 def open_folder():
     if arm.utils.get_os() == 'win':
-        subprocess.Popen('explorer /select,"' + arm.utils.get_fp() + '"')
+        subprocess.Popen(['explorer', arm.utils.get_fp()])
     elif arm.utils.get_os() == 'mac':
         subprocess.Popen(['open', arm.utils.get_fp()])
     elif arm.utils.get_os() == 'linux':
