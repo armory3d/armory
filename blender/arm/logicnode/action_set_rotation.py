@@ -19,8 +19,8 @@ class SetRotationNode(Node, ArmLogicTreeNode):
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketVector', 'Euler Angles/Vector')
-        self.inputs.new('NodeSocketFloat', 'Angle/W')
+        self.inputs.new('NodeSocketVector', 'Euler Angles / Vector XYZ')
+        self.inputs.new('NodeSocketFloat', 'Angle / W')
         self.outputs.new('ArmNodeSocketAction', 'Out')
 
     def draw_buttons(self, context, layout):
