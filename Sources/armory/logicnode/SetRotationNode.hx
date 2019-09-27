@@ -36,9 +36,9 @@ class SetRotationNode extends LogicNode {
 		}
 		object.transform.buildMatrix();
 		#if arm_physics
-		//var rigidBody = object.getTrait(RigidBody);
-		//if (rigidBody != null)
-		//	rigidBody.syncTransform();
+		var rigidBody = object.getTrait(RigidBody);
+		if (rigidBody != null)
+			rigidBody.syncTransform();
 		#end
 		runOutput(0);
 	}
