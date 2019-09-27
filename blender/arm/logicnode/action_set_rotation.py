@@ -9,11 +9,21 @@ class SetRotationNode(Node, ArmLogicTreeNode):
     bl_label = 'Set Rotation'
     bl_icon = 'QUESTION'
 
+    property0: EnumProperty(
+        items = [('Euler Angles', 'Euler Angles', 'Euler Angles'),
+                 ('Angle Axies (Radians)', 'Angle Axies (Radians)', 'Angle Axies (Radians)'),
+                 ('Angle Axies (Degrees)', 'Angle Axies (Degrees)', 'Angle Axies (Degrees)'),
+                 ('Quaternion', 'Quaternion', 'Quaternion')],
+        name='', default='Euler Angles')
+
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
         self.inputs.new('ArmNodeSocketObject', 'Object')
-        self.inputs.new('NodeSocketFloat', 'Angle')
-        self.inputs.new('NodeSocketVector', 'Vector')
+        self.inputs.new('NodeSocketVector', 'Euler Angles/Vector')
+        self.inputs.new('NodeSocketFloat', 'Angle/W')
         self.outputs.new('ArmNodeSocketAction', 'Out')
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, 'property0')
 
 add_node(SetRotationNode, category='Action')
