@@ -12,6 +12,10 @@ uniform sampler2D tex;
 uniform sampler2D gbufferD;
 #endif
 
+#ifdef _CGlare
+uniform sampler2D gbufferD;
+#endif
+
 #ifdef _CLensTex
 uniform sampler2D lensTexture;
 #endif
