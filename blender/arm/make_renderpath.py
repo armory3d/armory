@@ -173,9 +173,6 @@ def build():
             if focus_distance > 0.0:
                 wrd.compo_defs += '_CDOF'
                 compo_depth = True
-            if compo_depth:
-                wrd.compo_defs += '_CDepth'
-                assets.add_khafile_def('rp_compositordepth')
             if rpdat.arm_lens_texture != '':
                 wrd.compo_defs += '_CLensTex'
                 assets.add_embedded_data('lenstexture.jpg')
@@ -187,6 +184,7 @@ def build():
                 wrd.compo_defs += '_CVignette'
             if rpdat.arm_lensflare:
                 wrd.compo_defs += '_CGlare'
+                compo_depth = True
             if rpdat.arm_lut_texture != '':
                 wrd.compo_defs += '_CLUT'
                 assets.add_embedded_data('luttexture.jpg')
@@ -194,6 +192,9 @@ def build():
                 wrd.compo_defs += '_CTexStep'
             if '_CDOF' in wrd.compo_defs or '_CFog' in wrd.compo_defs or '_CGlare' in wrd.compo_defs:
                 wrd.compo_defs += '_CCameraProj'
+            if compo_depth:
+                wrd.compo_defs += '_CDepth'
+                assets.add_khafile_def('rp_compositordepth')
             assets.add_shader_pass('compositor_pass')
 
         assets.add_khafile_def('rp_antialiasing={0}'.format(rpdat.rp_antialiasing))
