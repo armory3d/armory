@@ -334,6 +334,7 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         if not os.path.exists(nav_full_path):
             os.makedirs(nav_full_path)
             restart_required = True
+            bpy.ops.wm.save_mainfile()
         
         if restart_required:
             self.report({'ERROR'}, 'Please restart Blender to generate a mesh representation.')
