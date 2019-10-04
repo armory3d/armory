@@ -308,12 +308,15 @@ class ArmEditBundledScriptButton(bpy.types.Operator):
 
         return{'FINISHED'}
 
+restart_required = False
+
 class ArmoryGenerateNavmeshButton(bpy.types.Operator):
     '''Generate navmesh from selected meshes'''
     bl_idname = 'arm.generate_navmesh'
     bl_label = 'Generate Navmesh'
     def execute(self, context):
         obj = context.active_object
+        global restart_required
 
         if obj.type != 'MESH':
             return{'CANCELLED'}
@@ -330,6 +333,12 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         nav_full_path = arm.utils.get_fp_build() + '/compiled/Assets/navigation'
         if not os.path.exists(nav_full_path):
             os.makedirs(nav_full_path)
+            restart_required = True
+        
+        if restart_required:
+            self.report({'ERROR'}, 'Please restart Blender to generate a mesh representation.')
+            print("Failed visualization generation, please restart Blender")
+            return {"CANCELLED"}
 
         nav_mesh_name = 'nav_' + obj.data.name
         mesh_path = nav_full_path + '/' + nav_mesh_name + '.obj'
