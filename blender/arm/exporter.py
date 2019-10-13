@@ -2418,12 +2418,18 @@ class ArmoryExporter:
                                 # face.v.reverse()
                             # bpy.ops.export_scene.obj(override, use_selection=True, filepath=nav_filepath, check_existing=False, use_normals=False, use_uvs=False, use_materials=False)
                             # bobject.scale.y *= -1
+                            armature = bobject.find_armature()
+                            apply_modifiers = not armature
+
+                            bobject_eval = bobject.evaluated_get(self.depsgraph) if apply_modifiers else bobject
+                            exportMesh = bobject_eval.to_mesh()
+                            
                             with open(nav_filepath, 'w') as f:
-                                for v in bobject.data.vertices:
-                                    f.write("v %.4f " % (v.co[0] * bobject.scale.x))
-                                    f.write("%.4f " % (v.co[2] * bobject.scale.z))
-                                    f.write("%.4f\n" % (v.co[1] * bobject.scale.y)) # Flipped
-                                for p in bobject.data.polygons:
+                                for v in exportMesh.vertices:
+                                    f.write("v %.4f " % (v.co[0] * bobject_eval.scale.x))
+                                    f.write("%.4f " % (v.co[2] * bobject_eval.scale.z))
+                                    f.write("%.4f\n" % (v.co[1] * bobject_eval.scale.y)) # Flipped
+                                for p in exportMesh.polygons:
                                     f.write("f")
                                     for i in reversed(p.vertices): # Flipped normals
                                         f.write(" %d" % (i + 1))

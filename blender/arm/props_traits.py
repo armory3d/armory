@@ -308,15 +308,12 @@ class ArmEditBundledScriptButton(bpy.types.Operator):
 
         return{'FINISHED'}
 
-restart_required = False
-
 class ArmoryGenerateNavmeshButton(bpy.types.Operator):
     '''Generate navmesh from selected meshes'''
     bl_idname = 'arm.generate_navmesh'
     bl_label = 'Generate Navmesh'
     def execute(self, context):
         obj = context.active_object
-        global restart_required
 
         if obj.type != 'MESH':
             return{'CANCELLED'}
@@ -327,36 +324,32 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         if not arm.utils.check_sdkpath(self):
             return {"CANCELLED"}
 
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+        armature = obj.find_armature()
+        apply_modifiers = not armature
+
+        obj_eval = obj.evaluated_get(depsgraph) if apply_modifiers else obj
+        exportMesh = obj_eval.to_mesh()
         # TODO: build tilecache here
         print("Started visualization generation")
         # For visualization
         nav_full_path = arm.utils.get_fp_build() + '/compiled/Assets/navigation'
         if not os.path.exists(nav_full_path):
             os.makedirs(nav_full_path)
-            restart_required = True
-            bpy.ops.wm.save_mainfile()
         
-        if restart_required:
-            self.report({'ERROR'}, 'Please restart Blender to generate a mesh representation.')
-            print("Failed visualization generation, please restart Blender")
-            return {"CANCELLED"}
-
-        nav_mesh_name = 'nav_' + obj.data.name
+        nav_mesh_name = 'nav_' + obj_eval.data.name
         mesh_path = nav_full_path + '/' + nav_mesh_name + '.obj'
 
         with open(mesh_path, 'w') as f:
-            for v in obj.data.vertices:
-                f.write("v %.4f " % (v.co[0] * obj.scale.x))
-                f.write("%.4f " % (v.co[2] * obj.scale.z))
-                f.write("%.4f\n" % (v.co[1] * obj.scale.y)) # Flipped
-            for p in obj.data.polygons:
+            for v in exportMesh.vertices:
+                f.write("v %.4f " % (v.co[0] * obj_eval.scale.x))
+                f.write("%.4f " % (v.co[2] * obj_eval.scale.z))
+                f.write("%.4f\n" % (v.co[1] * obj_eval.scale.y)) # Flipped
+            for p in exportMesh.polygons:
                 f.write("f")
                 for i in reversed(p.vertices): # Flipped normals
                     f.write(" %d" % (i + 1))
                 f.write("\n")
-
-        fp_build_name = arm.utils.get_fp_build().rsplit('/')[-1]
-        nav_mesh_path = '/' + fp_build_name + '/compiled/Assets/navigation/' + nav_mesh_name
 
         buildnavjs_path = arm.utils.get_sdk_path() + '/lib/haxerecast/buildnavjs'
 
@@ -372,8 +365,8 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
                     nav_config[name] = value
         nav_config_json = json.dumps(nav_config)
 
-        args = [arm.utils.get_node_path(), buildnavjs_path, nav_mesh_path, nav_config_json]
-        proc = subprocess.Popen(args)
+        args = [arm.utils.get_node_path(), buildnavjs_path, nav_mesh_name, nav_config_json]
+        proc = subprocess.Popen(args, cwd=nav_full_path)
         proc.wait()
 
         navmesh = bpy.ops.import_scene.obj(filepath=mesh_path)
@@ -389,6 +382,8 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.remove_doubles()
         bpy.ops.object.editmode_toggle()
+
+        obj_eval.to_mesh_clear()
 
         print("Finished visualization generation")
 
