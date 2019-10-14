@@ -68,7 +68,7 @@ class NavMesh extends Trait {
 		if (!ready) return;
 		recast.findPath(from.x, from.z, from.y, to.x, to.z, to.y, 200, function(path:Array<RecastWaypoint>) {
 			var ar:Array<Vec4> = [];
-			for (p in path) ar.push(new Vec4(p.x, p.z, (p.y + 1.1)));
+			for (p in path) ar.push(new Vec4(p.x, p.z, p.y));
 			done(ar);
 		});
 	}
