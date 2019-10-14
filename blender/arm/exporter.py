@@ -1062,7 +1062,7 @@ class ArmoryExporter:
                 cdata[i3    ] = col[0]
                 cdata[i3 + 1] = col[1]
                 cdata[i3 + 2] = col[2]
-        
+
         mats = exportMesh.materials
         poly_map = []
         for i in range(max(len(mats), 1)):
@@ -1071,14 +1071,14 @@ class ArmoryExporter:
             poly_map[poly.material_index].append(poly)
 
         o['index_arrays'] = []
-        
+
         # map polygon indices to triangle loops
         tri_loops = {}
         for loop in exportMesh.loop_triangles:
             if loop.polygon_index not in tri_loops:
                 tri_loops[loop.polygon_index] = []
             tri_loops[loop.polygon_index].append(loop)
-        
+
         for index, polys in enumerate(poly_map):
             tris = 0
             for poly in polys:
@@ -1736,6 +1736,17 @@ class ArmoryExporter:
             self.post_export_world(w, o)
             self.output['world_datas'].append(o)
 
+    def export_grease_pencils(self):
+        for gpRef in bpy.data.grease_pencils:
+            fp = self.get_meshes_file_path('greasepencil_' + gpRef.name)
+            assets.add(fp)
+            self.output['grease_pencil_ref'] = 'greasepencil_' + gpRef.name + '/' + gpRef.name
+            assets.add_shader_pass('grease_pencil')
+            gpo = self.post_export_grease_pencil(gpRef)
+            gp_obj = {}
+            gp_obj['grease_pencil_datas'] = [gpo]
+            arm.utils.write_arm(fp, gp_obj)
+
     def is_compress(self):
         return ArmoryExporter.compress_enabled
 
@@ -1971,6 +1982,7 @@ class ArmoryExporter:
             self.export_particle_systems()
             self.output['world_datas'] = []
             self.export_worlds()
+            self.export_grease_pencils()
             self.export_tilesheets()
 
             if self.scene.world is not None:
@@ -2246,7 +2258,7 @@ class ArmoryExporter:
             col_mask = ''
             for b in bobject.arm_rb_collision_filter_mask:
                 col_mask = ('1' if b else '0') + col_mask
-            
+
             x['parameters'] = [str(shape), str(body_mass), str(rb.friction), str(rb.restitution), str(int(col_group, 2)), str(int(col_mask, 2)) ]
             lx = bobject.arm_rb_linear_factor[0]
             ly = bobject.arm_rb_linear_factor[1]
@@ -2423,7 +2435,7 @@ class ArmoryExporter:
 
                             bobject_eval = bobject.evaluated_get(self.depsgraph) if apply_modifiers else bobject
                             exportMesh = bobject_eval.to_mesh()
-                            
+
                             with open(nav_filepath, 'w') as f:
                                 for v in exportMesh.vertices:
                                     f.write("v %.4f " % (v.co[0] * bobject_eval.scale.x))
@@ -2584,6 +2596,85 @@ class ArmoryExporter:
                 po['radiance_mipmaps'] = num_mips
         po['strength'] = strength
         o['probe'] = po
+
+    def post_export_grease_pencil(self, gp):
+        o = {}
+        o['name'] = gp.name
+        o['layers'] = []
+        for layer in gp.layers:
+            o['layers'].append(self.export_grease_pencil_layer(layer))
+        o['shader'] = 'grease_pencil/grease_pencil'
+        return o
+
+    def export_grease_pencil_layer(self, layer):
+        lo = {}
+        lo['name'] = layer.info
+        lo['opacity'] = layer.opacity
+        lo['frames'] = []
+        for frame in layer.frames:
+            if frame.frame_number > self.scene.frame_end:
+                break
+            lo['frames'].append(self.export_grease_pencil_frame(frame))
+        return lo
+
+    def export_grease_pencil_frame(self, frame):
+        va = []
+        cola = []
+        colfilla = []
+        indices = []
+        num_stroke_points = []
+        index_offset = 0
+        for stroke in frame.strokes:
+            for point in stroke.points:
+                va.append(point.co[0])
+                va.append(point.co[1])
+                va.append(point.co[2])
+                # TODO: store index to color pallete only, this is wasteful
+                if stroke.color != None:
+                    cola.append(stroke.color.color[0])
+                    cola.append(stroke.color.color[1])
+                    cola.append(stroke.color.color[2])
+                    cola.append(stroke.color.alpha)
+                    colfilla.append(stroke.color.fill_color[0])
+                    colfilla.append(stroke.color.fill_color[1])
+                    colfilla.append(stroke.color.fill_color[2])
+                    colfilla.append(stroke.color.fill_alpha)
+                else:
+                    cola.append(0.0)
+                    cola.append(0.0)
+                    cola.append(0.0)
+                    cola.append(0.0)
+                    colfilla.append(0.0)
+                    colfilla.append(0.0)
+                    colfilla.append(0.0)
+                    colfilla.append(0.0)
+            for triangle in stroke.triangles:
+                indices.append(triangle.v1 + index_offset)
+                indices.append(triangle.v2 + index_offset)
+                indices.append(triangle.v3 + index_offset)
+            num_stroke_points.append(len(stroke.points))
+            index_offset += len(stroke.points)
+        fo = {}
+        # TODO: merge into array of vertex arrays
+        fo['vertex_array'] = {}
+        fo['vertex_array']['attrib'] = 'pos'
+        fo['vertex_array']['size'] = 3
+        fo['vertex_array']['values'] = va
+        fo['col_array'] = {}
+        fo['col_array']['attrib'] = 'col'
+        fo['col_array']['size'] = 4
+        fo['col_array']['values'] = cola
+        fo['colfill_array'] = {}
+        fo['colfill_array']['attrib'] = 'colfill'
+        fo['colfill_array']['size'] = 4
+        fo['colfill_array']['values'] = colfilla
+        fo['index_array'] = {}
+        fo['index_array']['material'] = 0
+        fo['index_array']['size'] = 3
+        fo['index_array']['values'] = indices
+        fo['num_stroke_points'] = num_stroke_points
+        fo['frame_number'] = frame.frame_number
+        return fo
 
     # https://blender.stackexchange.com/questions/70629
     def mod_equal(self, mod1, mod2):
