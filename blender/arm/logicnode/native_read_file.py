@@ -11,9 +11,9 @@ class ReadFileNode(Node, ArmLogicTreeNode):
     
     def init(self, context):
         self.inputs.new('ArmNodeSocketAction', 'In')
+        self.inputs.new('NodeSocketString', 'File')
         self.inputs.new('NodeSocketBool', 'Use cache')
         self.inputs[-1].default_value = 1
-        self.inputs.new('NodeSocketString', 'File')
         self.outputs.new('ArmNodeSocketAction', 'Loaded')
         self.outputs.new('NodeSocketString', 'String')
 
