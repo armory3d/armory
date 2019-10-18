@@ -9,12 +9,12 @@ class ReadJsonNode extends LogicNode {
 	}
 
 	override function run(from:Int) {
-		// Whether to use the cache
-		var useCache:Bool = inputs[1].get();
-		
 		// Relative or absolute path to file
-		var file:String = inputs[2].get();
+		var file:String = inputs[1].get();
 
+		// Whether to use the cache
+		var useCache:Bool = inputs[2].get();
+		
 		// Load the file asynchronously
 		if(!useCache && iron.data.Data.cachedBlobs.get(file) != null) iron.data.Data.cachedBlobs.remove(file);
 		iron.data.Data.getBlob(file, function(b:kha.Blob) {
