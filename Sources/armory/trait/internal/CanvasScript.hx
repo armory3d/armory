@@ -16,15 +16,15 @@ class CanvasScript extends Trait {
 	public var ready(get, null):Bool;
 	function get_ready():Bool { return canvas != null; }
 
-	public function new(canvasName:String) {
+	public function new(canvasName:String, font:String = "font_default.ttf") {
 		super();
 
 		iron.data.Data.getBlob(canvasName + '.json', function(blob:kha.Blob) {
 
-			iron.data.Data.getFont("font_default.ttf", function(f:kha.Font) {
-
-				cui = new Zui({font: f, theme: zui.Themes.light});			
+			iron.data.Data.getFont(font, function(f:kha.Font) {
+		
 				var c:TCanvas = haxe.Json.parse(blob.toString());
+				cui = new Zui({font: f, theme: zui.Themes.light});	
 				
 				if (c.assets == null || c.assets.length == 0) canvas = c;
 				// Load canvas assets
@@ -69,6 +69,10 @@ class CanvasScript extends Trait {
 	// Returns canvas array of elements
 	public function getElements():Array<TElement> {
 		return canvas.elements;
+	}
+	// Set visibility of all elements of canvas 
+	public function setCanvasVisibility(bool: Bool){
+		for(e in canvas.elements) e.visible = bool;
 	}
 
 	// Contains data
