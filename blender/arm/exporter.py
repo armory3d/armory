@@ -1062,7 +1062,7 @@ class ArmoryExporter:
                 cdata[i3    ] = col[0]
                 cdata[i3 + 1] = col[1]
                 cdata[i3 + 2] = col[2]
-        
+
         mats = exportMesh.materials
         poly_map = []
         for i in range(max(len(mats), 1)):
@@ -1071,14 +1071,14 @@ class ArmoryExporter:
             poly_map[poly.material_index].append(poly)
 
         o['index_arrays'] = []
-        
+
         # map polygon indices to triangle loops
         tri_loops = {}
         for loop in exportMesh.loop_triangles:
             if loop.polygon_index not in tri_loops:
                 tri_loops[loop.polygon_index] = []
             tri_loops[loop.polygon_index].append(loop)
-        
+
         for index, polys in enumerate(poly_map):
             tris = 0
             for poly in polys:
@@ -1489,7 +1489,9 @@ class ArmoryExporter:
             mat.arm_particle_flag = True
         # Empty material roughness
         mat.use_nodes = True
-        mat.node_tree.nodes['Principled BSDF'].inputs[7].default_value = 0.25
+        for node in mat.node_tree.nodes:
+            if node.type == 'BSDF_PRINCIPLED':
+                node.inputs[7].default_value = 0.25
         o = {}
         o['name'] = mat.name
         o['contexts'] = []
@@ -2246,7 +2248,7 @@ class ArmoryExporter:
             col_mask = ''
             for b in bobject.arm_rb_collision_filter_mask:
                 col_mask = ('1' if b else '0') + col_mask
-            
+
             x['parameters'] = [str(shape), str(body_mass), str(rb.friction), str(rb.restitution), str(int(col_group, 2)), str(int(col_mask, 2)) ]
             lx = bobject.arm_rb_linear_factor[0]
             ly = bobject.arm_rb_linear_factor[1]
@@ -2423,7 +2425,7 @@ class ArmoryExporter:
 
                             bobject_eval = bobject.evaluated_get(self.depsgraph) if apply_modifiers else bobject
                             exportMesh = bobject_eval.to_mesh()
-                            
+
                             with open(nav_filepath, 'w') as f:
                                 for v in exportMesh.vertices:
                                     f.write("v %.4f " % (v.co[0] * bobject_eval.scale.x))
