@@ -23,5 +23,25 @@ Armory:
 OS:
 Graphics card:
 
+**Minimal Code**
+*(for large code, use https://pastebin.com/ and paste the link)*
+<details>
+  <summary>Code</summary>
+
+```haxe
+  //Your code here
+```
+</details>
+
+**Error**
+*(for error, use https://pastebin.com/ and paste the link)*
+<details>
+  <summary>Error</summary>
+
+```
+  -Your error here-
+```
+</details>
+
 **Test File**
 *(drag & drop the zipped .blend file here)*
