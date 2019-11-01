@@ -29,7 +29,7 @@ Graphics card:
   <summary>Code</summary>
 
 ```haxe
-  //Your code here
+  //Your code goes here
 ```
 </details>
 
@@ -39,7 +39,7 @@ Graphics card:
   <summary>Error</summary>
 
 ```
-  -Your error here-
+  -Your error log goes here-
 ```
 </details>
 
