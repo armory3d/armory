@@ -8,13 +8,13 @@ class KeyboardNode(Node, ArmLogicTreeNode):
     bl_idname = 'LNMergedKeyboardNode'
     bl_label = 'Keyboard'
     bl_icon = 'CURVE_PATH'
-    
+
     property0: EnumProperty(
         items = [('Down', 'Down', 'Down'),
                  ('Started', 'Started', 'Started'),
                  ('Released', 'Released', 'Released')],
         name='', default='Started')
-    
+
     property1: EnumProperty(
         items = [('a', 'a', 'a'),
                  ('b', 'b', 'b'),
@@ -52,8 +52,8 @@ class KeyboardNode(Node, ArmLogicTreeNode):
                  ('7', '7', '7'),
                  ('8', '8', '8'),
                  ('9', '9', '9'),
-                 ('period', 'period', 'period'),
-                 ('comma', 'comma', 'comma'),
+                 ('.', 'period', 'period'),
+                 (',', 'comma', 'comma'),
                  ('space', 'space', 'space'),
                  ('backspace', 'backspace', 'backspace'),
                  ('tab', 'tab', 'tab'),
