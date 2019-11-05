@@ -59,7 +59,7 @@ class ArmObjectSocket(bpy.types.NodeSocket):
             layout.label(text=self.name)
         else:
             row = layout.row(align=True)
-            row.prop_search(self, 'default_value_get', bpy.context.scene, 'objects', icon='NONE', text='')
+            row.prop_search(self, 'default_value_get', bpy.context.scene, 'objects', icon='NONE', text=self.name)
             op = row.operator('arm.node_eyedrop', text='', icon='EYEDROPPER', emboss=True)
             op.socket_index = str(id(self))
 
