@@ -7,11 +7,7 @@ import iron.object.Object;
 class SetMaterialRgbParamNode extends LogicNode {
 
 	static var registered = false;
-	static var mat:MaterialData = null;
-	static var map = new Map<String, Vec4>();
-
-	static var node = "";
-	static var col:Vec4 = null;
+	static var map = new Map<MaterialData, Map<String, Vec4>>();
 
 	public function new(tree:LogicTree) {
 		super(tree);
@@ -22,13 +18,21 @@ class SetMaterialRgbParamNode extends LogicNode {
 	}
 
 	override function run(from:Int) {
-		mat = inputs[1].get();
+		var mat = inputs[1].get();
 		if (mat == null) return;
-		map.set(inputs[2].get(), inputs[3].get());
+		var entry = map.get(mat);
+		if (entry == null) {
+			entry = new Map();
+			map.set(mat, entry);
+		}
+		entry.set(inputs[2].get(), inputs[3].get()); // Node name, value
 		runOutput(0);
 	}
 
 	static function vec3Link(object:Object, mat:MaterialData, link:String):iron.math.Vec4 {
-		return map.get(link);
+		if (mat == null) return null;
+		var entry = map.get(mat);
+		if (entry == null) return null;
+		return entry.get(link);
 	}
 }

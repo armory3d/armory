@@ -7,8 +7,7 @@ import iron.object.Object;
 class SetMaterialValueParamNode extends LogicNode {
 
 	static var registered = false;
-	static var mat:MaterialData = null;
-	static var map = new Map<String, Null<kha.FastFloat>>();
+	static var map = new Map<MaterialData, Map<String, Null<kha.FastFloat>>>();
 
 	public function new(tree:LogicTree) {
 		super(tree);
@@ -19,13 +18,21 @@ class SetMaterialValueParamNode extends LogicNode {
 	}
 
 	override function run(from:Int) {
-		mat = inputs[1].get();
+		var mat = inputs[1].get();
 		if (mat == null) return;
-		map.set(inputs[2].get(), inputs[3].get()); // Node name, value
+		var entry = map.get(mat);
+		if (entry == null) {
+			entry = new Map();
+			map.set(mat, entry);
+		}
+		entry.set(inputs[2].get(), inputs[3].get()); // Node name, value
 		runOutput(0);
 	}
 
 	static function floatLink(object:Object, mat:MaterialData, link:String):Null<kha.FastFloat> {
-		return map.get(link);
+		if (mat == null) return null;
+		var entry = map.get(mat);
+		if (entry == null) return null;
+		return entry.get(link);
 	}
 }
