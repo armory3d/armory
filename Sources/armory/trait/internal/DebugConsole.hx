@@ -109,7 +109,7 @@ class DebugConsole extends Trait {
 
 		graph.g2.color = 0xff000000;
 		graph.g2.fillRect(280 - 3, 33 - 17, 3, 1);
-		
+
 		graph.g2.end();
 	}
 
@@ -133,7 +133,7 @@ class DebugConsole extends Trait {
 		// var bindG = ui.windowDirty(hwin, wx, wy, ww, wh) || hwin.redraws > 0;
 		var bindG = true;
 		if (bindG) g.end();
-		
+
 		ui.begin(g);
 		if (ui.window(hwin, wx, wy, ww, wh, true)) {
 
@@ -143,7 +143,7 @@ class DebugConsole extends Trait {
 
 				if (ui.panel(Id.handle({selected: true}), "Outliner")) {
 					ui.indent();
-					
+
 					var i = 0;
 					function drawList(h:zui.Zui.Handle, o:iron.object.Object) {
 						if (o.name.charAt(0) == '.') return; // Hidden
@@ -155,7 +155,7 @@ class DebugConsole extends Trait {
 						}
 						if (o.children.length > 0) {
 							ui.row([1/13, 12/13]);
-							b = ui.panel(h.nest(i, {selected: true}), "", 0, true);
+							b = ui.panel(h.nest(i, {selected: true}), "", true);
 							ui.text(o.name);
 						}
 						else {
@@ -181,12 +181,12 @@ class DebugConsole extends Trait {
 
 					ui.unindent();
 				}
-				
+
 				if (selectedObject == null) selectedType = "";
 
 				if (ui.panel(Id.handle({selected: true}), 'Properties $selectedType')) {
 					ui.indent();
-					
+
 					if (selectedObject != null) {
 
 						var h = Id.handle();
@@ -220,7 +220,7 @@ class DebugConsole extends Trait {
 
 						ui.row(row4);
 						ui.text("Rotation");
-						
+
 						h = Id.handle();
 						h.text = roundfp(rot.x) + "";
 						f = Std.parseFloat(ui.textInput(h, "X"));
@@ -249,7 +249,7 @@ class DebugConsole extends Trait {
 
 						ui.row(row4);
 						ui.text("Scale");
-						
+
 						h = Id.handle();
 						h.text = roundfp(scale.x) + "";
 						f = Std.parseFloat(ui.textInput(h, "X"));
@@ -313,7 +313,7 @@ class DebugConsole extends Trait {
 						}
 						else {
 							selectedType = "(Object)";
-							
+
 						}
 					}
 
@@ -332,7 +332,7 @@ class DebugConsole extends Trait {
 					ui.row(lrow);
 					ui.text('Frame');
 					ui.text('$avg ms / $fpsAvg fps', Align.Right);
-					
+
 					ui.row(lrow);
 					ui.text('Render-path');
 					ui.text(Math.round(renderPathTimeAvg * 10000) / 10 + " ms", Align.Right);
@@ -385,7 +385,7 @@ class DebugConsole extends Trait {
 					ui.row(lrow);
 					ui.text('Culled'); // Assumes shadow context for all meshes
 					ui.text(iron.RenderPath.culled + ' / ' + numMeshes * 2, Align.Right);
-					
+
 					#if arm_stream
 					ui.row(lrow);
 					var total = iron.Scene.active.sceneStream.sceneTotal();
@@ -491,12 +491,12 @@ class DebugConsole extends Trait {
 				if (benchFrames > 10) benchTime += t;
 				if (benchFrames == 20) trace(Std.int((benchTime / 10) * 1000000) / 1000); // ms
 			}
-			
+
 			renderPathTimeAvg = renderPathTime / frames;
 			updateTimeAvg = updateTime / frames;
 			animTimeAvg = animTime / frames;
 			physTimeAvg = physTime / frames;
-			
+
 			totalTime = 0;
 			renderPathTime = 0;
 			updateTime = 0;
@@ -515,7 +515,7 @@ class DebugConsole extends Trait {
 	}
 
 	function update() {
-		armory.trait.WalkNavigation.enabled = !(ui.isScrolling || (ui.currentWindow != null && ui.currentWindow.dragging));
+		armory.trait.WalkNavigation.enabled = !(ui.isScrolling || ui.dragHandle != null);
 		updateTime += iron.App.updateTime;
 		animTime += iron.object.Animation.animationTime;
 	#if arm_physics
