@@ -5,7 +5,7 @@ import kha.WindowOptions;
 class Starter {
 
 	static var tasks:Int;
-	
+
 	#if arm_loadscreen
 	public static var drawLoading:kha.graphics2.Graphics->Int->Int->Void = null;
 	public static var numAssets:Int;
@@ -15,7 +15,7 @@ class Starter {
 
 		function start() {
 			if (tasks > 0) return;
-			
+
 			if (armory.data.Config.raw == null) armory.data.Config.raw = {};
 			var c = armory.data.Config.raw;
 
@@ -28,20 +28,21 @@ class Starter {
 			if (c.window_scale == null) c.window_scale = 1.0;
 			if (c.window_msaa == null) c.window_msaa = msaa;
 			if (c.window_vsync == null) c.window_vsync = vsync;
-			
+
 			armory.object.Uniforms.register();
-			
+
 			var windowMode = c.window_mode == 0 ? kha.WindowMode.Windowed : kha.WindowMode.Fullscreen;
 			var windowFeatures = None;
 			if (c.window_resizable) windowFeatures |= FeatureResizable;
 			if (c.window_maximizable) windowFeatures |= FeatureMaximizable;
 			if (c.window_minimizable) windowFeatures |= FeatureMinimizable;
-			
+
 			#if (kha_webgl && (!arm_legacy))
 			try {
 			#end
 
-			kha.System.start({title: Main.projectName, width: c.window_w, height: c.window_h, window: {mode: windowMode, windowFeatures: windowFeatures}, framebuffer: {samplesPerPixel: c.window_msaa, verticalSync: c.window_vsync}}, function(window:kha.Window) {	
+			kha.System.start({title: Main.projectName, width: c.window_w, height: c.window_h, window: {mode: windowMode, windowFeatures: windowFeatures}, framebuffer: {samplesPerPixel: c.window_msaa, verticalSync: c.window_vsync}}, function(window:kha.Window) {
+
 				iron.App.init(function() {
 					#if arm_loadscreen
 					function load(g:kha.graphics2.Graphics) {
@@ -78,7 +79,18 @@ class Starter {
 				var print = function(s:String) { trace(s); };
 				var loaded = function() { tasks--; start(); };
 				untyped __js__("(1, eval)({0})", b.toString());
+				#if kha_krom
+				var instantiateWasm = function(imports, successCallback) {
+					var wasmbin = Krom.loadBlob("ammo.wasm.wasm");
+					var module = new js.lib.webassembly.Module(wasmbin);
+					var inst = new js.lib.webassembly.Instance(module, imports);
+					successCallback(inst);
+					return inst.exports;
+				};
+				untyped __js__("Ammo({print:print, instantiateWasm:instantiateWasm}).then(loaded)");
+				#else
 				untyped __js__("Ammo({print:print}).then(loaded)");
+				#end
 			});
 		}
 		#end
@@ -94,9 +106,27 @@ class Starter {
 		#end
 
 		tasks = 1;
-		#if (js && arm_bullet) tasks++; loadLibAmmo("ammo.js"); #end
-		#if (js && arm_navigation) tasks++; loadLib("recast.js"); #end
-		#if (arm_config) tasks++; armory.data.Config.load(function() { tasks--; start(); }); #end
+
+		#if (js && arm_bullet)
+		tasks++;
+		#if kha_krom
+		loadLibAmmo("ammo.wasm.js");
+		#else
+		loadLibAmmo("ammo.js");
+		#end
+		#end
+
+
+		#if (js && arm_navigation)
+		tasks++;
+		loadLib("recast.js");
+		#end
+
+		#if (arm_config)
+		tasks++;
+		armory.data.Config.load(function() { tasks--; start(); });
+		#end
+
 		tasks--; start();
 	}
 }

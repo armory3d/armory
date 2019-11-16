@@ -79,7 +79,7 @@ project.addSources('Sources');
             for lib in libs:
                 if os.path.isdir('Libraries/' + lib):
                     f.write('project.addLibrary("{0}");\n'.format(lib.replace('//', '/')))
-        
+
         # Subprojects, merge this with libraries
         if os.path.exists('Subprojects'):
             libs = os.listdir('Subprojects')
@@ -98,11 +98,17 @@ project.addSources('Sources');
                 assets.add_khafile_def('arm_bullet')
                 if not os.path.exists('Libraries/haxebullet'):
                     f.write(add_armory_library(sdk_path + '/lib/', 'haxebullet', rel_path=rel_path))
-                if state.target.startswith('krom') or state.target == 'html5' or state.target == 'node':
+                if state.target.startswith('krom'):
+                    ammojs_path = sdk_path + '/lib/haxebullet/ammo/ammo.wasm.js'
+                    ammojs_path = ammojs_path.replace('\\', '/').replace('//', '/')
+                    f.write(add_assets(ammojs_path, rel_path=rel_path))
+                    ammojs_wasm_path = sdk_path + '/lib/haxebullet/ammo/ammo.wasm.wasm'
+                    ammojs_wasm_path = ammojs_wasm_path.replace('\\', '/').replace('//', '/')
+                    f.write(add_assets(ammojs_wasm_path, rel_path=rel_path))
+                elif state.target == 'html5' or state.target == 'node':
                     ammojs_path = sdk_path + '/lib/haxebullet/ammo/ammo.js'
                     ammojs_path = ammojs_path.replace('\\', '/').replace('//', '/')
                     f.write(add_assets(ammojs_path, rel_path=rel_path))
-                    # haxe.macro.Compiler.includeFile(ammojs_path)
             elif wrd.arm_physics_engine == 'Oimo':
                 assets.add_khafile_def('arm_oimo')
                 if not os.path.exists('Libraries/oimo'):
@@ -189,7 +195,7 @@ project.addSources('Sources');
             dest += ', destination: "data/{name}"'
         f.write('project.addAssets("' + assets_path + '", { notinlist: true ' + dest + '});\n')
         f.write('project.addAssets("' + assets_path_sh + '", { notinlist: true ' + dest + '});\n')
-        
+
         shader_data_references = sorted(list(set(assets.shader_datas)))
         for ref in shader_data_references:
             ref = ref.replace('\\', '/').replace('//', '/')
@@ -228,7 +234,7 @@ project.addSources('Sources');
             p = p.replace('//', '/')
             f.write(add_assets(p.replace('\\', '/'), use_data_dir=use_data_dir, rel_path=rel_path))
             assets.add_khafile_def('arm_ui')
-        
+
         if wrd.arm_minimize == False:
             assets.add_khafile_def('arm_json')
 
@@ -585,7 +591,7 @@ const int compoChromaticSamples = """ + str(rpdat.arm_chromatic_aberration_sampl
         if len(bpy.data.cameras) > 0 and bpy.data.cameras[0].dof.use_dof:
             focus_distance = bpy.data.cameras[0].dof.focus_distance
             fstop = bpy.data.cameras[0].dof.aperture_fstop
-        
+
         if focus_distance > 0.0:
             f.write(
 """const float compoDOFDistance = """ + str(round(focus_distance * 100) / 100) + """;
