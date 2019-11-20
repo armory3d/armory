@@ -37,7 +37,7 @@ class Starter {
 			if (c.window_maximizable) windowFeatures |= FeatureMaximizable;
 			if (c.window_minimizable) windowFeatures |= FeatureMinimizable;
 
-			#if (kha_webgl && (!arm_legacy))
+			#if (kha_webgl && (!arm_legacy) && (!kha_node))
 			try {
 			#end
 
@@ -63,7 +63,7 @@ class Starter {
 				});
 			});
 
-			#if (kha_webgl && (!arm_legacy))
+			#if (kha_webgl && (!arm_legacy) && (!kha_node))
 			}
 			catch (e:Dynamic) {
 				if (!kha.SystemImpl.gl2) {
