@@ -826,11 +826,14 @@ def parse_vector(node, socket):
 
     elif node.type == 'MAPPING':
         out = parse_vector_input(node.inputs[0])
-        if node.scale[0] != 1.0 or node.scale[1] != 1.0 or node.scale[2] != 1.0:
-            out = '({0} * vec3({1}, {2}, {3}))'.format(out, node.scale[0], node.scale[1], node.scale[2])
-        if node.rotation[2] != 0.0:
+        scale = node.inputs['Scale'].default_value
+        rotation = node.inputs['Rotation'].default_value
+        location = node.inputs['Location'].default_value if node.inputs['Location'].enabled else [0.0, 0.0, 0.0]
+        if scale[0] != 1.0 or scale[1] != 1.0 or scale[2] != 1.0:
+            out = '({0} * vec3({1}, {2}, {3}))'.format(out, scale[0], scale[1], scale[2])
+        if rotation[2] != 0.0:
             # ZYX rotation, Z axis for now..
-            a = node.rotation[2]
+            a = rotation[2]
             # x * cos(theta) - y * sin(theta)
             # x * sin(theta) + y * cos(theta)
             out = 'vec3({0}.x * {1} - ({0}.y) * {2}, {0}.x * {2} + ({0}.y) * {1}, 0.0)'.format(out, math.cos(a), math.sin(a))
@@ -841,12 +844,13 @@ def parse_vector(node, socket):
         #     a = node.rotation[0]
         #     out = 'vec3({0}.y * {1} - {0}.z * {2}, {0}.y * {2} + {0}.z * {1}, 0.0)'.format(out, math.cos(a), math.sin(a))
         
-        if node.translation[0] != 0.0 or node.translation[1] != 0.0 or node.translation[2] != 0.0:
-            out = '({0} + vec3({1}, {2}, {3}))'.format(out, node.translation[0], node.translation[1], node.translation[2])
-        if node.use_min:
-            out = 'max({0}, vec3({1}, {2}, {3}))'.format(out, node.min[0], node.min[1])
-        if node.use_max:
-             out = 'min({0}, vec3({1}, {2}, {3}))'.format(out, node.max[0], node.max[1])
+        if location[0] != 0.0 or location[1] != 0.0 or location[2] != 0.0:
+            out = '({0} + vec3({1}, {2}, {3}))'.format(out, location[0], location[1], location[2])
+        # use Extension parameter from the Texture node instead
+        # if node.use_min:
+        #     out = 'max({0}, vec3({1}, {2}, {3}))'.format(out, node.min[0], node.min[1])
+        # if node.use_max:
+        #      out = 'min({0}, vec3({1}, {2}, {3}))'.format(out, node.max[0], node.max[1])
         return out
 
     elif node.type == 'NORMAL':
