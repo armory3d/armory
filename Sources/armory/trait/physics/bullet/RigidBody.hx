@@ -26,6 +26,7 @@ class RigidBody extends iron.Trait {
 	public var linearDamping:Float;
 	public var angularDamping:Float;
 	public var animated:Bool;
+	public var staticObj:Bool;
 	public var destroyed = false;
 	var linearFactors:Array<Float>;
 	var angularFactors:Array<Float>;
@@ -100,6 +101,7 @@ class RigidBody extends iron.Trait {
 		this.animated = flags[0];
 		this.trigger = flags[1];
 		this.ccd = flags[2];
+		this.staticObj = flags[3];
 
 		notifyOnAdd(init);
 	}
@@ -219,6 +221,8 @@ class RigidBody extends iron.Trait {
 		vec1.setY(0);
 		vec1.setZ(0);
 		var inertia = vec1;
+
+		if(staticObj || animated) mass = 0;
 		if (mass > 0) btshape.calculateLocalInertia(mass, inertia);
 		var bodyCI = new bullet.Bt.RigidBodyConstructionInfo(mass, motionState, btshape, inertia);
 		body = new bullet.Bt.RigidBody(bodyCI);
@@ -250,8 +254,12 @@ class RigidBody extends iron.Trait {
 			setAngularFactor(angularFactors[0], angularFactors[1], angularFactors[2]);
 		}
 
-		var CF_NO_CONTACT_RESPONSE = 4; // bullet.Bt.CollisionObject.CF_NO_CONTACT_RESPONSE
-		if (trigger) bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() | CF_NO_CONTACT_RESPONSE);
+		if (trigger) bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() | bullet.Bt.CollisionObject.CF_NO_CONTACT_RESPONSE);
+		if (animated){ 
+			bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() | bullet.Bt.CollisionObject.CF_KINEMATIC_OBJECT);
+			bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() & ~bullet.Bt.CollisionObject.CF_STATIC_OBJECT);
+		}
+		if (staticObj && !animated) bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() | bullet.Bt.CollisionObject.CF_STATIC_OBJECT);
 
 		if (ccd) setCcd(transform.radius);
 
@@ -283,7 +291,7 @@ class RigidBody extends iron.Trait {
 
 	function physicsUpdate() {
 		if (!ready) return;
-		if (object.animation != null || animated) {
+		if (animated) {
 			syncTransform();
 		}
 		else {
@@ -447,7 +455,10 @@ class RigidBody extends iron.Trait {
 		quat.fromMat(t.world);
 		quat1.setValue(quat.x, quat.y, quat.z, quat.w);
 		trans1.setRotation(quat1);
-		body.setCenterOfMassTransform(trans1);
+		if(animated)
+		body.getMotionState().setWorldTransform(trans1);
+		else
+		body.setWorldTransform(trans1);
 		if (currentScaleX != t.scale.x || currentScaleY != t.scale.y || currentScaleZ != t.scale.z) setScale(t.scale);
 		activate();
 	}

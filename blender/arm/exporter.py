@@ -2236,7 +2236,7 @@ class ArmoryExporter:
             elif rb.collision_shape == 'CAPSULE':
                 shape = 6
             body_mass = rb.mass
-            is_static = not rb.enabled or (rb.type == 'PASSIVE' and not rb.kinematic)
+            is_static = (not rb.enabled and not rb.kinematic) or (rb.type == 'PASSIVE' and rb.kinematic)
             if is_static:
                 body_mass = 0
             x = {}
@@ -2285,10 +2285,11 @@ class ArmoryExporter:
                 col_margin,
                 deact_lv, deact_av, deact_time
             )
-            body_flags = '[{0}, {1}, {2}]'.format(
+            body_flags = '[{0}, {1}, {2}, {3}]'.format(
                 str(rb.kinematic).lower(),
                 str(bobject.arm_rb_trigger).lower(),
-                str(bobject.arm_rb_ccd).lower()
+                str(bobject.arm_rb_ccd).lower(),
+                str(is_static).lower()
             )
             x['parameters'].append(body_params)
             x['parameters'].append(body_flags)
