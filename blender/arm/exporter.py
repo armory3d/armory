@@ -1763,7 +1763,7 @@ class ArmoryExporter:
         for o in self.meshArray.items():
             self.export_mesh(o, scene)
 
-    def execute(self, context, filepath, scene=None):
+    def execute(self, context, filepath, scene=None, depsgraph=None):
         global current_output
         profile_time = time.time()
 
@@ -1799,7 +1799,7 @@ class ArmoryExporter:
         # for i in range(0, len(self.scene.view_layers)):
             # if self.scene.view_layers[i] == True:
                 # self.active_layers.append(i)
-        self.depsgraph = context.evaluated_depsgraph_get()
+        self.depsgraph = context.evaluated_depsgraph_get() if depsgraph == None else depsgraph
         self.preprocess()
 
         # scene_objects = []

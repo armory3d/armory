@@ -103,11 +103,21 @@ def export_data(fp, sdk_path):
     ArmoryExporter.optimize_enabled = state.is_publish and wrd.arm_optimize_data
     if not os.path.exists(build_dir + '/compiled/Assets'):
         os.makedirs(build_dir + '/compiled/Assets')
+    # have a "zoo" collection in the current scene
+    export_coll = bpy.data.collections.new("export_coll") 
+    bpy.context.scene.collection.children.link(export_coll)
+    for scene in bpy.data.scenes:
+        if scene == bpy.context.scene: continue
+        for o in scene.collection.all_objects:
+            if o.type == "MESH" or o.type == "EMPTY":  export_coll.objects.link(o)
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    bpy.data.collections.remove(export_coll) # destroy "zoo" collection
+    
     for scene in bpy.data.scenes:
         if scene.arm_export:
             ext = '.lz4' if ArmoryExporter.compress_enabled else '.arm'
             asset_path = build_dir + '/compiled/Assets/' + arm.utils.safestr(scene.name) + ext
-            exporter.execute(bpy.context, asset_path, scene=scene)
+            exporter.execute(bpy.context, asset_path, scene=scene, depsgraph=depsgraph)
             if ArmoryExporter.export_physics:
                 physics_found = True
             if ArmoryExporter.export_navigation:
