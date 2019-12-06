@@ -21,23 +21,35 @@ class CanvasScript extends Trait {
 
 		iron.data.Data.getBlob(canvasName + '.json', function(blob:kha.Blob) {
 
-			iron.data.Data.getFont(font, function(f:kha.Font) {
-		
-				var c:TCanvas = haxe.Json.parse(blob.toString());
-				cui = new Zui({font: f, theme: zui.Themes.light});	
-				
-				if (c.assets == null || c.assets.length == 0) canvas = c;
-				// Load canvas assets
-				else {
-					var loaded = 0;
-					for (asset in c.assets) {
-						var file = asset.name;
-						iron.data.Data.getImage(file, function(image:kha.Image) {
-							Canvas.assetMap.set(asset.id, image);
-							if (++loaded >= c.assets.length) canvas = c;
-						});
-					}
+			iron.data.Data.getBlob('_themes.json', function(tBlob:kha.Blob) {
+				if (tBlob.get_length() != 0) {
+					Canvas.themes = haxe.Json.parse(tBlob.toString());
+				} else {
+					trace("\"_themes.json\" is empty! Using default theme instead.");
 				}
+
+				if (Canvas.themes.length == 0) {
+					Canvas.themes.push(zui.Themes.light);
+				}
+
+				iron.data.Data.getFont(font, function(f:kha.Font) {
+					var c:TCanvas = haxe.Json.parse(blob.toString());
+					if (c.theme == null) c.theme = Canvas.themes[0].NAME;
+					cui = new Zui({font: f, theme: Canvas.getTheme(c.theme)});
+
+					if (c.assets == null || c.assets.length == 0) canvas = c;
+					// Load canvas assets
+					else {
+						var loaded = 0;
+						for (asset in c.assets) {
+							var file = asset.name;
+							iron.data.Data.getImage(file, function(image:kha.Image) {
+								Canvas.assetMap.set(asset.id, image);
+								if (++loaded >= c.assets.length) canvas = c;
+							});
+						}
+					}
+				});
 			});
 		});
 
@@ -65,12 +77,12 @@ class CanvasScript extends Trait {
 		for (e in canvas.elements) if (e.name == name) return e;
 		return null;
 	}
-	
+
 	// Returns canvas array of elements
 	public function getElements():Array<TElement> {
 		return canvas.elements;
 	}
-	// Set visibility of all elements of canvas 
+	// Set visibility of all elements of canvas
 	public function setCanvasVisibility(bool: Bool){
 		for(e in canvas.elements) e.visible = bool;
 	}
