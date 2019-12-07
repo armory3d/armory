@@ -64,6 +64,11 @@ class RigidBody extends iron.Trait {
 	static var trans2:bullet.Bt.Transform;
 	static var quat = new Quat();
 
+	static var CF_STATIC_OBJECT= 1;
+	static var CF_KINEMATIC_OBJECT= 2;
+	static var CF_NO_CONTACT_RESPONSE = 4;
+	static var CF_CHARACTER_OBJECT = 16;
+
 	static var convexHullCache = new Map<MeshData, bullet.Bt.ConvexHullShape>();
 	static var triangleMeshCache = new Map<MeshData, bullet.Bt.TriangleMesh>();
 	static var usersCache = new Map<MeshData, Int>();
@@ -254,12 +259,12 @@ class RigidBody extends iron.Trait {
 			setAngularFactor(angularFactors[0], angularFactors[1], angularFactors[2]);
 		}
 
-		if (trigger) bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() | bullet.Bt.CollisionObject.CF_NO_CONTACT_RESPONSE);
+		if (trigger) bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() | CF_NO_CONTACT_RESPONSE);
 		if (animated){ 
-			bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() | bullet.Bt.CollisionObject.CF_KINEMATIC_OBJECT);
-			bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() & ~bullet.Bt.CollisionObject.CF_STATIC_OBJECT);
+			bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() | CF_KINEMATIC_OBJECT);
+			bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() & ~CF_STATIC_OBJECT);
 		}
-		if (staticObj && !animated) bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() | bullet.Bt.CollisionObject.CF_STATIC_OBJECT);
+		if (staticObj && !animated) bodyColl.setCollisionFlags(bodyColl.getCollisionFlags() | CF_STATIC_OBJECT);
 
 		if (ccd) setCcd(transform.radius);
 
@@ -458,7 +463,7 @@ class RigidBody extends iron.Trait {
 		if(animated)
 		body.getMotionState().setWorldTransform(trans1);
 		else
-		body.setWorldTransform(trans1);
+		body.setCenterOfMassTransform(trans1);
 		if (currentScaleX != t.scale.x || currentScaleY != t.scale.y || currentScaleZ != t.scale.z) setScale(t.scale);
 		activate();
 	}
