@@ -2236,7 +2236,7 @@ class ArmoryExporter:
             elif rb.collision_shape == 'CAPSULE':
                 shape = 6
             body_mass = rb.mass
-            is_static = (not rb.enabled and not rb.kinematic) or (rb.type == 'PASSIVE' and rb.kinematic)
+            is_static = (not rb.enabled and not rb.kinematic) or (rb.type == 'PASSIVE' and not rb.kinematic)
             if is_static:
                 body_mass = 0
             x = {}
