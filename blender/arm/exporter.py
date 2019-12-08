@@ -957,7 +957,7 @@ class ArmoryExporter:
         num_verts = len(loops)
         num_uv_layers = len(exportMesh.uv_layers)
         is_baked = self.has_baked_material(bobject, exportMesh.materials)
-        has_tex = (self.get_export_uvs(exportMesh) and num_uv_layers > 0) or is_baked
+        has_tex = (self.get_export_uvs(bobject.data) and num_uv_layers > 0) or is_baked
         has_tex1 = has_tex and num_uv_layers > 1
         num_colors = len(exportMesh.vertex_colors)
         has_col = self.get_export_vcols(exportMesh) and num_colors > 0
