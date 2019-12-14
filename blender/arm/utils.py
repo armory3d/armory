@@ -295,6 +295,8 @@ def fetch_script_names():
     if os.path.isdir(canvas_path):
         os.chdir(canvas_path)
         for file in glob.glob('*.json'):
+            if file == "_themes.json":
+                continue
             wrd.arm_canvas_list.add().name = file.rsplit('.')[0]
     os.chdir(get_fp())
 

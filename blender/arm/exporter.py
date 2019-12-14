@@ -2047,6 +2047,8 @@ class ArmoryExporter:
             for x in self.output['traits']:
                 ArmoryExporter.import_traits.append(x['class_name'])
 
+        self.export_canvas_themes()
+
         # Write embedded data references
         if len(assets.embedded_data) > 0:
             self.output['embedded_datas'] = []
@@ -2459,6 +2461,17 @@ class ArmoryExporter:
                                 value = pt.value
                             x['props'].append(value)
                 o['traits'].append(x)
+
+    def export_canvas_themes(self):
+        path_themes = os.path.join(arm.utils.get_fp(), 'Bundled', 'canvas')
+        file_theme = os.path.join(path_themes, "_themes.json")
+
+        # If there is a canvas but no _themes.json, create it so that
+        # CanvasScript.hx works
+        if os.path.exists(path_themes) and not os.path.exists(file_theme):
+            with open(file_theme, "w+"):
+                pass
+            assets.add(file_theme)
 
     def add_softbody_mod(self, o, bobject, soft_mod, soft_type):
         ArmoryExporter.export_physics = True
