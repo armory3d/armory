@@ -336,7 +336,7 @@ class ArmoryGenerateNavmeshButton(bpy.types.Operator):
         nav_full_path = arm.utils.get_fp_build() + '/compiled/Assets/navigation'
         if not os.path.exists(nav_full_path):
             os.makedirs(nav_full_path)
-        
+
         nav_mesh_name = 'nav_' + obj_eval.data.name
         mesh_path = nav_full_path + '/' + nav_mesh_name + '.obj'
 
@@ -411,7 +411,11 @@ class ArmEditCanvasButton(bpy.types.Operator):
         os.chdir(krom_location)
         cpath = canvas_path.replace('\\', '/')
         uiscale = str(arm.utils.get_ui_scale())
-        subprocess.Popen([krom_path, armory2d_path, armory2d_path, cpath, uiscale])
+        cmd = [krom_path, armory2d_path, armory2d_path, cpath, uiscale]
+        if arm.utils.get_os() == 'win':
+            cmd.append('--consolepid')
+            cmd.append(str(os.getpid()))
+        subprocess.Popen(cmd)
         return{'FINISHED'}
 
 class ArmNewScriptDialog(bpy.types.Operator):
