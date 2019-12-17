@@ -90,7 +90,7 @@ def parse_output(node, _con, _vert, _frag, _geom, _tesc, _tese, _parse_surface, 
             if '_Emission' in wrd.world_defs:
                 frag.write('emission = {0};'.format(out_emission))
         if parse_opacity:
-            frag.write('opacity = {0};'.format(out_opacity))
+            frag.write('opacity = {0} - 0.0002;'.format(out_opacity))
 
     # Volume
     # parse_volume_input(node.inputs[1])
