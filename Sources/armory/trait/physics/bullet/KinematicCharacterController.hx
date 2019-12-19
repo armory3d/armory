@@ -44,6 +44,8 @@ class KinematicCharacterController extends Trait {
 	static var trans1:bullet.Bt.Transform;
 	static var quat = new Quat();
 
+	static inline var CF_CHARACTER_OBJECT = 16;
+
 	public function new(mass = 1.0, shape = ControllerShape.Capsule, jumpSpeed = 8.0, friction = 0.5, restitution = 0.0,
 						collisionMargin = 0.0, animated = false, group = 1) {
 		super();
@@ -53,7 +55,7 @@ class KinematicCharacterController extends Trait {
 			vec1 = new bullet.Bt.Vector3(0, 0, 0);
 			quat1 = new bullet.Bt.Quaternion(0, 0, 0, 0);
 			trans1 = new bullet.Bt.Transform();
-		} 
+		}
 
 		this.mass = mass;
 		this.jumpSpeed = jumpSpeed;
@@ -68,7 +70,7 @@ class KinematicCharacterController extends Trait {
 		notifyOnLateUpdate(lateUpdate);
 		notifyOnRemove(removeFromWorld);
 	}
-	
+
 	inline function withMargin(f:Float):Float {
 		return f - f * collisionMargin;
 	}
@@ -81,7 +83,7 @@ class KinematicCharacterController extends Trait {
 	public function init() {
 		if (ready) return;
 		ready = true;
-		
+
 		transform = object.transform;
 		physics = armory.trait.physics.PhysicsWorld.active;
 
@@ -129,7 +131,7 @@ class KinematicCharacterController extends Trait {
 		vec1.setY(transform.worldy());
 		vec1.setZ(transform.worldz());
 		trans1.setOrigin(vec1);
-		
+
 		quat.fromMat(transform.world);
 		quat1.setX(quat.x);
 		quat1.setY(quat.y);
@@ -139,7 +141,7 @@ class KinematicCharacterController extends Trait {
 
 		body = new bullet.Bt.PairCachingGhostObject();
 		body.setCollisionShape(isConvexHull ? shapeConvexHull : shapeConvex);
-		body.setCollisionFlags(bullet.Bt.CollisionObject.CF_CHARACTER_OBJECT);
+		body.setCollisionFlags(CF_CHARACTER_OBJECT);
 		body.setWorldTransform(trans1);
 		body.setFriction(friction);
 		body.setRollingFriction(friction);
