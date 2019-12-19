@@ -2,7 +2,7 @@ package armory.trait.physics;
 
 #if (!arm_physics)
 
-class KinematicCharacterController extends Trait { public function new() { super(); } }
+class KinematicCharacterController extends iron.Trait { public function new() { super(); } }
 
 #else
 

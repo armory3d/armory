@@ -2,7 +2,7 @@ package armory.trait.physics;
 
 #if (!arm_physics)
 
-class PhysicsConstraint extends Trait { public function new() { super(); } }
+class PhysicsConstraint extends iron.Trait { public function new() { super(); } }
 
 #else
 
