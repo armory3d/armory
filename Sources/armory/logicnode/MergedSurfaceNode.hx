@@ -21,7 +21,7 @@ class MergedSurfaceNode extends LogicNode {
 		case "Released":
 			b = surface.released();
 		case "Moved":
-			b = surface.moved();
+			b = surface.moved;
 		}
 		if (b) runOutput(0);
 	}
@@ -36,7 +36,7 @@ class MergedSurfaceNode extends LogicNode {
 		case "Released":
 			return surface.released();
 		case "Moved":
-			return surface.moved();
+			return surface.moved;
 		}
 		return false;
 	}
